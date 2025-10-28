@@ -90,6 +90,7 @@ using RUINORERP.UI.Network;
 
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.Business.Cache;
+using RUINORERP.UI.Network.Services;
 
 namespace RUINORERP.UI.BaseForm
 {
@@ -135,7 +136,7 @@ namespace RUINORERP.UI.BaseForm
         private void InitializeStateManagement()
         {
 
-           
+
         }
 
         #endregion
@@ -4043,16 +4044,10 @@ namespace RUINORERP.UI.BaseForm
                 MainForm.Instance.uclog.AddLog("保存失败，请重试;或联系管理员。" + rmr.ErrorMsg, UILogType.错误);
                 MainForm.Instance.logger.LogError("保存失败", rmr.ErrorMsg);
             }
-            MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("保存", rmr.ReturnObject, $"结果:{(rmr.Succeeded ? "成功" : "失败")},{rmr.ErrorMsg}");
+            await MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("保存", rmr.ReturnObject, $"结果:{(rmr.Succeeded ? "成功" : "失败")},{rmr.ErrorMsg}");
             return rmr;
         }
 
-
-        public async Task<bool> DeleteImages(T entity)
-        {
-            await Task.Delay(0);
-            return true;
-        }
 
 
         /// <summary>
@@ -4063,19 +4058,24 @@ namespace RUINORERP.UI.BaseForm
         public async virtual Task<bool> DeleteRemoteImages()
         {
             await Task.Delay(0);
-            return false;
+            var ctrpay = Startup.GetFromFac<FileManagementController>();
+            try
+            {
+                var fileDeleteResponse = await ctrpay.DeleteImagesAsync(EditEntity as BaseEntity, true);
+                if (fileDeleteResponse.IsSuccess && fileDeleteResponse.DeletedFileIds != null && fileDeleteResponse.DeletedFileIds.Count > 0)
+                {
+                    return true;
+                }
+                else { return false; }
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+
         }
 
-        /// <summary>
-        /// 删除远程的图片
-        /// </summary>
-        /// <param name="entity"></param>
-        /// <returns></returns>
-        public async virtual Task<bool> DeleteRemoteImages(List<long> FileIds)
-        {
-            await Task.Delay(0);
-            return false;
-        }
+
 
         protected async virtual Task<ReturnResults<T>> Delete()
         {
@@ -4128,7 +4128,6 @@ namespace RUINORERP.UI.BaseForm
 
                         bindingSourceSub.Clear();
 
-                        await DeleteImages(editEntity);
                         //删除远程图片及本地图片
                         await DeleteRemoteImages();
                         //提示一下删除成功

@@ -492,14 +492,14 @@ namespace RUINORERP.Server.Network.CommandHandlers
                         int OtherRelationCount = OtherRelations?.Count ?? 0;
 
                         // 检查文件是否被其他业务引用
-                    if (OtherRelationCount > 0)
-                    {
-                        isReferencedByOtherBusiness = true;
-                    }
-                    else
-                    {
-                        filesToDelete.Add(fileStorageInfo);
-                    }
+                        if (OtherRelationCount > 0)
+                        {
+                            isReferencedByOtherBusiness = true;
+                        }
+                        else
+                        {
+                            filesToDelete.Add(fileStorageInfo);
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -536,7 +536,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                         {
                             // 物理删除：删除实际文件
                             _logger?.LogInformation("执行物理删除，FileId: {FileId}", currentFileId);
-                            
+
                             // 构建搜索路径
                             var searchPaths = new List<string> { _fileStoragePath };
 
@@ -606,7 +606,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                         {
                             fileStorageInfo.Status = 0; // 标记为删除
                             await _fileStorageInfoController.SaveOrUpdate(fileStorageInfo);
-                            _logger?.LogInformation("数据库文件状态更新成功，FileId: {FileId}, 删除类型: {DeleteType}", 
+                            _logger?.LogInformation("数据库文件状态更新成功，FileId: {FileId}, 删除类型: {DeleteType}",
                                 fileStorageInfo.FileId, isPhysicalDelete ? "物理删除" : "逻辑删除");
 
                             deletedCount++;
@@ -625,7 +625,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                         deletedFileIds.Add(currentFileId.ToString());
                     }
                 }
-
+                response.DeletedFileIds = deletedFileIds;
                 // 设置响应消息
                 if (relationDeletedCount > 0)
                 {

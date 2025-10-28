@@ -1318,6 +1318,10 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
 
         private void ClearImage(object sender, EventArgs e)
         {
+            ClearImage();
+        }
+        public void ClearImage()
+        {
             this.Image = null;
             if (MultiImageSupport)
             {
@@ -1326,7 +1330,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                 imageInfos.Clear();
                 currentImageIndex = 0;
                 imagePaths = "";
-                
+
                 // 更新导航控件和页面信息
                 CreateNavigationControls();
                 UpdatePageInfo();

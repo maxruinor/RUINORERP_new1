@@ -3,7 +3,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：10/28/2025 17:14:14
+// 时间：10/28/2025 17:43:46
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -24,6 +24,7 @@ using RUINORERP.Model.Context;
 using System.Linq;
 using RUINOR.Core;
 using RUINORERP.Common.Helper;
+using RUINORERP.Business.Cache;
 
 namespace RUINORERP.Business
 {
@@ -38,14 +39,16 @@ namespace RUINORERP.Business
         //public readonly IUnitOfWorkManage _unitOfWorkManage;
         //public readonly ILogger<BaseController<T>> _logger;
         public Itb_FS_BusinessRelationServices _tb_FS_BusinessRelationServices { get; set; }
+        private readonly EventDrivenCacheManager _eventDrivenCacheManager; 
        // private readonly ApplicationContext _appContext;
        
-        public tb_FS_BusinessRelationController(ILogger<tb_FS_BusinessRelationController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_FS_BusinessRelationServices tb_FS_BusinessRelationServices , ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
+        public tb_FS_BusinessRelationController(ILogger<tb_FS_BusinessRelationController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_FS_BusinessRelationServices tb_FS_BusinessRelationServices ,EventDrivenCacheManager eventDrivenCacheManager, ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
         {
             _logger = logger;
            _unitOfWorkManage = unitOfWorkManage;
            _tb_FS_BusinessRelationServices = tb_FS_BusinessRelationServices;
-            _appContext = appContext;
+           _appContext = appContext;
+           _eventDrivenCacheManager = eventDrivenCacheManager;
         }
       
         
@@ -88,14 +91,14 @@ namespace RUINORERP.Business
                     bool rs = await _tb_FS_BusinessRelationServices.Update(entity);
                     if (rs)
                     {
-                        MyCacheManager.Instance.UpdateEntityList<tb_FS_BusinessRelation>(entity);
+                        _eventDrivenCacheManager.UpdateEntity<tb_FS_BusinessRelation>(entity);
                     }
                     Returnobj = entity;
                 }
                 else
                 {
                     Returnobj = await _tb_FS_BusinessRelationServices.AddReEntityAsync(entity);
-                    MyCacheManager.Instance.UpdateEntityList<tb_FS_BusinessRelation>(entity);
+                    _eventDrivenCacheManager.UpdateEntity<tb_FS_BusinessRelation>(entity);
                 }
 
                 rr.ReturnObject = Returnobj;
@@ -129,14 +132,14 @@ namespace RUINORERP.Business
                     bool rs = await _tb_FS_BusinessRelationServices.Update(entity);
                     if (rs)
                     {
-                        MyCacheManager.Instance.UpdateEntityList<tb_FS_BusinessRelation>(entity);
+                        _eventDrivenCacheManager.UpdateEntity<tb_FS_BusinessRelation>(entity);
                     }
                     Returnobj = entity as T;
                 }
                 else
                 {
                     Returnobj = await _tb_FS_BusinessRelationServices.AddReEntityAsync(entity) as T ;
-                    MyCacheManager.Instance.UpdateEntityList<tb_FS_BusinessRelation>(entity);
+                    _eventDrivenCacheManager.UpdateEntity<tb_FS_BusinessRelation>(entity);
                 }
 
                 rr.ReturnObject = Returnobj;
@@ -161,7 +164,7 @@ namespace RUINORERP.Business
             }
             if (list != null)
             {
-                MyCacheManager.Instance.UpdateEntityList<List<T>>(list);
+                _eventDrivenCacheManager.UpdateEntityList<T>(list);
              }
             return list;
         }
@@ -176,7 +179,7 @@ namespace RUINORERP.Business
             }
             if (list != null)
             {
-                MyCacheManager.Instance.UpdateEntityList<List<T>>(list);
+                _eventDrivenCacheManager.UpdateEntityList<T>(list);
              }
             return list;
         }
@@ -189,7 +192,7 @@ namespace RUINORERP.Business
             if (rs)
             {
                 ////生成时暂时只考虑了一个主键的情况
-                MyCacheManager.Instance.DeleteEntityList<tb_FS_BusinessRelation>(entity);
+                _eventDrivenCacheManager.DeleteEntity<tb_FS_BusinessRelation>(entity.PrimaryKeyID);
             }
             return rs;
         }
@@ -202,9 +205,7 @@ namespace RUINORERP.Business
             if (c>0)
             {
                 rs=true;
-                ////生成时暂时只考虑了一个主键的情况
-                 long[] result = entitys.Select(e => e.RelationId).ToArray();
-                MyCacheManager.Instance.DeleteEntityList<tb_FS_BusinessRelation>(result);
+                _eventDrivenCacheManager.DeleteEntityList<tb_FS_BusinessRelation>(entitys);
             }
             return rs;
         }
@@ -309,7 +310,7 @@ namespace RUINORERP.Business
             if (rs)
             {
                 //////生成时暂时只考虑了一个主键的情况
-                MyCacheManager.Instance.DeleteEntityList<T>(model);
+                 _eventDrivenCacheManager.DeleteEntity<T>(model);
             }
             return rs;
         }
@@ -320,7 +321,8 @@ namespace RUINORERP.Business
         public tb_FS_BusinessRelation AddReEntity(tb_FS_BusinessRelation entity)
         {
             tb_FS_BusinessRelation AddEntity =  _tb_FS_BusinessRelationServices.AddReEntity(entity);
-            MyCacheManager.Instance.UpdateEntityList<tb_FS_BusinessRelation>(AddEntity);
+     
+             _eventDrivenCacheManager.UpdateEntity<tb_FS_BusinessRelation>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
@@ -328,7 +330,7 @@ namespace RUINORERP.Business
          public async Task<tb_FS_BusinessRelation> AddReEntityAsync(tb_FS_BusinessRelation entity)
         {
             tb_FS_BusinessRelation AddEntity = await _tb_FS_BusinessRelationServices.AddReEntityAsync(entity);
-            MyCacheManager.Instance.UpdateEntityList<tb_FS_BusinessRelation>(AddEntity);
+            _eventDrivenCacheManager.UpdateEntity<tb_FS_BusinessRelation>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
@@ -338,7 +340,7 @@ namespace RUINORERP.Business
             long id = await _tb_FS_BusinessRelationServices.Add(entity);
             if(id>0)
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_FS_BusinessRelation>(entity);
+                 _eventDrivenCacheManager.UpdateEntity<tb_FS_BusinessRelation>(entity);
             }
             return id;
         }
@@ -348,7 +350,7 @@ namespace RUINORERP.Business
             List<long> ids = await _tb_FS_BusinessRelationServices.Add(infos);
             if(ids.Count>0)//成功的个数 这里缓存 对不对呢？
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_FS_BusinessRelation>(infos);
+                 _eventDrivenCacheManager.UpdateEntityList<tb_FS_BusinessRelation>(infos);
             }
             return ids;
         }
@@ -359,7 +361,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_FS_BusinessRelationServices.Delete(entity);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_FS_BusinessRelation>(entity);
+                _eventDrivenCacheManager.DeleteEntity<tb_FS_BusinessRelation>(entity);
                 
             }
             return rs;
@@ -370,7 +372,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_FS_BusinessRelationServices.Update(entity);
             if (rs)
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_FS_BusinessRelation>(entity);
+                 _eventDrivenCacheManager.DeleteEntity<tb_FS_BusinessRelation>(entity);
                 entity.ActionStatus = ActionStatus.无操作;
             }
             return rs;
@@ -381,7 +383,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_FS_BusinessRelationServices.DeleteById(id);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_FS_BusinessRelation>(id);
+               _eventDrivenCacheManager.DeleteEntity<tb_FS_BusinessRelation>(id);
             }
             return rs;
         }
@@ -391,7 +393,8 @@ namespace RUINORERP.Business
             bool rs = await _tb_FS_BusinessRelationServices.DeleteByIds(ids);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_FS_BusinessRelation>(ids);
+            
+                   _eventDrivenCacheManager.DeleteEntities<tb_FS_BusinessRelation>(ids.Cast<object>().ToArray());
             }
             return rs;
         }
@@ -403,7 +406,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_FS_BusinessRelation>(list);
+     
+             _eventDrivenCacheManager.UpdateEntityList<tb_FS_BusinessRelation>(list);
             return list;
         }
         
@@ -414,7 +418,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_FS_BusinessRelation>(list);
+    
+             _eventDrivenCacheManager.UpdateEntityList<tb_FS_BusinessRelation>(list);
             return list;
         }
         
@@ -425,7 +430,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_FS_BusinessRelation>(list);
+  
+             _eventDrivenCacheManager.UpdateEntityList<tb_FS_BusinessRelation>(list);
             return list;
         }
         
@@ -436,7 +442,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_FS_BusinessRelation>(list);
+ 
+             _eventDrivenCacheManager.UpdateEntityList<tb_FS_BusinessRelation>(list);
             return list;
         }
         
@@ -454,7 +461,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_FS_BusinessRelation>(list);
+   
+             _eventDrivenCacheManager.UpdateEntityList<tb_FS_BusinessRelation>(list);
             return list;
         }
         
@@ -475,7 +483,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_FS_BusinessRelation>(list);
+ 
+             _eventDrivenCacheManager.UpdateEntityList<tb_FS_BusinessRelation>(list);
             return list;
         }
 
@@ -495,7 +504,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_FS_BusinessRelation>(list);
+  
+             _eventDrivenCacheManager.UpdateEntityList<tb_FS_BusinessRelation>(list);
             return list;
         }
         
@@ -515,7 +525,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_FS_BusinessRelation>(list);
+     
+             _eventDrivenCacheManager.UpdateEntityList<tb_FS_BusinessRelation>(list);
             return list;
         }
         
@@ -553,7 +564,8 @@ namespace RUINORERP.Business
                 entity.HasChanged = false;
             }
 
-            MyCacheManager.Instance.UpdateEntityList<tb_FS_BusinessRelation>(entity);
+         
+             _eventDrivenCacheManager.UpdateEntity<tb_FS_BusinessRelation>(entity);
             return entity as T;
         }
         

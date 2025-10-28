@@ -1868,5 +1868,21 @@ namespace RUINORERP.UI.PSI.SAL
         {
 
         }
+
+        /// <summary>
+        /// 重写删除方法，调用基类删除方法后清空图片控件
+        /// </summary>
+        protected override async Task<ReturnResults<tb_SaleOrder>> Delete()
+        {
+            // 调用基类的删除方法
+            ReturnResults<tb_SaleOrder> result = await base.Delete();
+            // 如果删除成功，清空图片控件
+            if (result.Succeeded && magicPictureBox订金付款凭证 != null)
+            {
+                magicPictureBox订金付款凭证.ClearImage();
+            }
+            
+            return result;
+        }
     }
 }

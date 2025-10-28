@@ -1,5 +1,6 @@
 using AutoMapper;
 using FastReport.Barcode;
+using FastReport.DevComponents.DotNetBar;
 using FastReport.DevComponents.DotNetBar.Controls;
 using FastReport.Table;
 using FastReport.Utils;
@@ -711,16 +712,17 @@ namespace RUINORERP.UI.BaseForm
             var ctrpay = Startup.GetFromFac<FileManagementController>();
             try
             {
-                var list = await ctrpay.DeleteImagesAsync(EditEntity as BaseEntity,true);
+                var fileDeleteResponse = await ctrpay.DeleteImagesAsync(EditEntity as BaseEntity,true);
+                if (fileDeleteResponse.IsSuccess && fileDeleteResponse.DeletedFileIds!=null && fileDeleteResponse.DeletedFileIds.Count > 0)
+                {
+                    return true;
+                }
+                else { return false;}
             }
             catch (Exception ex)
             {
                 return false;
             }
-
-            await Task.Delay(0);
-            return true;
-
         }
 
         protected async virtual void Delete(List<M> Datas)

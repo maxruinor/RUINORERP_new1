@@ -191,7 +191,7 @@ namespace RUINORERP.Business
             if (rs)
             {
                 ////生成时暂时只考虑了一个主键的情况
-                _eventDrivenCacheManager.UpdateEntity<tb_Employee>(entity);
+                _eventDrivenCacheManager.DeleteEntity<tb_Employee>(entity.PrimaryKeyID);
             }
             return rs;
         }
@@ -552,7 +552,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_EmployeeServices.Delete(entity);
             if (rs)
             {
-                _eventDrivenCacheManager.UpdateEntity<tb_Employee>(entity);
+                _eventDrivenCacheManager.DeleteEntity<tb_Employee>(entity);
                 
             }
             return rs;
@@ -563,7 +563,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_EmployeeServices.Update(entity);
             if (rs)
             {
-                 _eventDrivenCacheManager.UpdateEntity<tb_Employee>(entity);
+                _eventDrivenCacheManager.DeleteEntity<tb_Employee>(entity);
                 entity.ActionStatus = ActionStatus.无操作;
             }
             return rs;

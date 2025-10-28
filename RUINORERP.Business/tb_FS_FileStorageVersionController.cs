@@ -3,7 +3,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：10/28/2025 17:14:17
+// 时间：10/28/2025 17:43:48
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -24,6 +24,7 @@ using RUINORERP.Model.Context;
 using System.Linq;
 using RUINOR.Core;
 using RUINORERP.Common.Helper;
+using RUINORERP.Business.Cache;
 
 namespace RUINORERP.Business
 {
@@ -38,14 +39,16 @@ namespace RUINORERP.Business
         //public readonly IUnitOfWorkManage _unitOfWorkManage;
         //public readonly ILogger<BaseController<T>> _logger;
         public Itb_FS_FileStorageVersionServices _tb_FS_FileStorageVersionServices { get; set; }
+        private readonly EventDrivenCacheManager _eventDrivenCacheManager; 
        // private readonly ApplicationContext _appContext;
        
-        public tb_FS_FileStorageVersionController(ILogger<tb_FS_FileStorageVersionController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_FS_FileStorageVersionServices tb_FS_FileStorageVersionServices , ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
+        public tb_FS_FileStorageVersionController(ILogger<tb_FS_FileStorageVersionController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_FS_FileStorageVersionServices tb_FS_FileStorageVersionServices ,EventDrivenCacheManager eventDrivenCacheManager, ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
         {
             _logger = logger;
            _unitOfWorkManage = unitOfWorkManage;
            _tb_FS_FileStorageVersionServices = tb_FS_FileStorageVersionServices;
-            _appContext = appContext;
+           _appContext = appContext;
+           _eventDrivenCacheManager = eventDrivenCacheManager;
         }
       
         
@@ -88,14 +91,14 @@ namespace RUINORERP.Business
                     bool rs = await _tb_FS_FileStorageVersionServices.Update(entity);
                     if (rs)
                     {
-                        MyCacheManager.Instance.UpdateEntityList<tb_FS_FileStorageVersion>(entity);
+                        _eventDrivenCacheManager.UpdateEntity<tb_FS_FileStorageVersion>(entity);
                     }
                     Returnobj = entity;
                 }
                 else
                 {
                     Returnobj = await _tb_FS_FileStorageVersionServices.AddReEntityAsync(entity);
-                    MyCacheManager.Instance.UpdateEntityList<tb_FS_FileStorageVersion>(entity);
+                    _eventDrivenCacheManager.UpdateEntity<tb_FS_FileStorageVersion>(entity);
                 }
 
                 rr.ReturnObject = Returnobj;
@@ -129,14 +132,14 @@ namespace RUINORERP.Business
                     bool rs = await _tb_FS_FileStorageVersionServices.Update(entity);
                     if (rs)
                     {
-                        MyCacheManager.Instance.UpdateEntityList<tb_FS_FileStorageVersion>(entity);
+                        _eventDrivenCacheManager.UpdateEntity<tb_FS_FileStorageVersion>(entity);
                     }
                     Returnobj = entity as T;
                 }
                 else
                 {
                     Returnobj = await _tb_FS_FileStorageVersionServices.AddReEntityAsync(entity) as T ;
-                    MyCacheManager.Instance.UpdateEntityList<tb_FS_FileStorageVersion>(entity);
+                    _eventDrivenCacheManager.UpdateEntity<tb_FS_FileStorageVersion>(entity);
                 }
 
                 rr.ReturnObject = Returnobj;
@@ -161,7 +164,7 @@ namespace RUINORERP.Business
             }
             if (list != null)
             {
-                MyCacheManager.Instance.UpdateEntityList<List<T>>(list);
+                _eventDrivenCacheManager.UpdateEntityList<T>(list);
              }
             return list;
         }
@@ -176,7 +179,7 @@ namespace RUINORERP.Business
             }
             if (list != null)
             {
-                MyCacheManager.Instance.UpdateEntityList<List<T>>(list);
+                _eventDrivenCacheManager.UpdateEntityList<T>(list);
              }
             return list;
         }
@@ -189,7 +192,7 @@ namespace RUINORERP.Business
             if (rs)
             {
                 ////生成时暂时只考虑了一个主键的情况
-                MyCacheManager.Instance.DeleteEntityList<tb_FS_FileStorageVersion>(entity);
+                _eventDrivenCacheManager.DeleteEntity<tb_FS_FileStorageVersion>(entity.PrimaryKeyID);
             }
             return rs;
         }
@@ -202,9 +205,7 @@ namespace RUINORERP.Business
             if (c>0)
             {
                 rs=true;
-                ////生成时暂时只考虑了一个主键的情况
-                 long[] result = entitys.Select(e => e.VersionId).ToArray();
-                MyCacheManager.Instance.DeleteEntityList<tb_FS_FileStorageVersion>(result);
+                _eventDrivenCacheManager.DeleteEntityList<tb_FS_FileStorageVersion>(entitys);
             }
             return rs;
         }
@@ -309,7 +310,7 @@ namespace RUINORERP.Business
             if (rs)
             {
                 //////生成时暂时只考虑了一个主键的情况
-                MyCacheManager.Instance.DeleteEntityList<T>(model);
+                 _eventDrivenCacheManager.DeleteEntity<T>(model);
             }
             return rs;
         }
@@ -320,7 +321,8 @@ namespace RUINORERP.Business
         public tb_FS_FileStorageVersion AddReEntity(tb_FS_FileStorageVersion entity)
         {
             tb_FS_FileStorageVersion AddEntity =  _tb_FS_FileStorageVersionServices.AddReEntity(entity);
-            MyCacheManager.Instance.UpdateEntityList<tb_FS_FileStorageVersion>(AddEntity);
+     
+             _eventDrivenCacheManager.UpdateEntity<tb_FS_FileStorageVersion>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
@@ -328,7 +330,7 @@ namespace RUINORERP.Business
          public async Task<tb_FS_FileStorageVersion> AddReEntityAsync(tb_FS_FileStorageVersion entity)
         {
             tb_FS_FileStorageVersion AddEntity = await _tb_FS_FileStorageVersionServices.AddReEntityAsync(entity);
-            MyCacheManager.Instance.UpdateEntityList<tb_FS_FileStorageVersion>(AddEntity);
+            _eventDrivenCacheManager.UpdateEntity<tb_FS_FileStorageVersion>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
@@ -338,7 +340,7 @@ namespace RUINORERP.Business
             long id = await _tb_FS_FileStorageVersionServices.Add(entity);
             if(id>0)
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_FS_FileStorageVersion>(entity);
+                 _eventDrivenCacheManager.UpdateEntity<tb_FS_FileStorageVersion>(entity);
             }
             return id;
         }
@@ -348,7 +350,7 @@ namespace RUINORERP.Business
             List<long> ids = await _tb_FS_FileStorageVersionServices.Add(infos);
             if(ids.Count>0)//成功的个数 这里缓存 对不对呢？
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_FS_FileStorageVersion>(infos);
+                 _eventDrivenCacheManager.UpdateEntityList<tb_FS_FileStorageVersion>(infos);
             }
             return ids;
         }
@@ -359,7 +361,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_FS_FileStorageVersionServices.Delete(entity);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_FS_FileStorageVersion>(entity);
+                _eventDrivenCacheManager.DeleteEntity<tb_FS_FileStorageVersion>(entity);
                 
             }
             return rs;
@@ -370,7 +372,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_FS_FileStorageVersionServices.Update(entity);
             if (rs)
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_FS_FileStorageVersion>(entity);
+                 _eventDrivenCacheManager.DeleteEntity<tb_FS_FileStorageVersion>(entity);
                 entity.ActionStatus = ActionStatus.无操作;
             }
             return rs;
@@ -381,7 +383,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_FS_FileStorageVersionServices.DeleteById(id);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_FS_FileStorageVersion>(id);
+               _eventDrivenCacheManager.DeleteEntity<tb_FS_FileStorageVersion>(id);
             }
             return rs;
         }
@@ -391,7 +393,8 @@ namespace RUINORERP.Business
             bool rs = await _tb_FS_FileStorageVersionServices.DeleteByIds(ids);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_FS_FileStorageVersion>(ids);
+            
+                   _eventDrivenCacheManager.DeleteEntities<tb_FS_FileStorageVersion>(ids.Cast<object>().ToArray());
             }
             return rs;
         }
@@ -403,7 +406,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_FS_FileStorageVersion>(list);
+     
+             _eventDrivenCacheManager.UpdateEntityList<tb_FS_FileStorageVersion>(list);
             return list;
         }
         
@@ -414,7 +418,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_FS_FileStorageVersion>(list);
+    
+             _eventDrivenCacheManager.UpdateEntityList<tb_FS_FileStorageVersion>(list);
             return list;
         }
         
@@ -425,7 +430,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_FS_FileStorageVersion>(list);
+  
+             _eventDrivenCacheManager.UpdateEntityList<tb_FS_FileStorageVersion>(list);
             return list;
         }
         
@@ -436,7 +442,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_FS_FileStorageVersion>(list);
+ 
+             _eventDrivenCacheManager.UpdateEntityList<tb_FS_FileStorageVersion>(list);
             return list;
         }
         
@@ -454,7 +461,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_FS_FileStorageVersion>(list);
+   
+             _eventDrivenCacheManager.UpdateEntityList<tb_FS_FileStorageVersion>(list);
             return list;
         }
         
@@ -475,7 +483,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_FS_FileStorageVersion>(list);
+ 
+             _eventDrivenCacheManager.UpdateEntityList<tb_FS_FileStorageVersion>(list);
             return list;
         }
 
@@ -495,7 +504,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_FS_FileStorageVersion>(list);
+  
+             _eventDrivenCacheManager.UpdateEntityList<tb_FS_FileStorageVersion>(list);
             return list;
         }
         
@@ -515,7 +525,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_FS_FileStorageVersion>(list);
+     
+             _eventDrivenCacheManager.UpdateEntityList<tb_FS_FileStorageVersion>(list);
             return list;
         }
         
@@ -553,7 +564,8 @@ namespace RUINORERP.Business
                 entity.HasChanged = false;
             }
 
-            MyCacheManager.Instance.UpdateEntityList<tb_FS_FileStorageVersion>(entity);
+         
+             _eventDrivenCacheManager.UpdateEntity<tb_FS_FileStorageVersion>(entity);
             return entity as T;
         }
         

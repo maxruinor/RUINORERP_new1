@@ -48,19 +48,26 @@ namespace RUINORERP.Server.Network.SuperSocket
     {
         private readonly CommandDispatcher _commandDispatcher;
         private readonly ILogger<SuperSocketCommandAdapter> _logger;
-        private ISessionService SessionService => Program.ServiceProvider.GetRequiredService<ISessionService>();
+        private readonly ISessionService _sessionService;
+        
+        /// <summary>
+        /// 会话服务
+        /// </summary>
+        private ISessionService SessionService => _sessionService;
 
         /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="commandDispatcher">命令调度器</param>
-        /// <param name="commandCreationService">命令创建服务</param>
+        /// <param name="sessionService">会话服务</param>
         /// <param name="logger">日志记录器</param>
         public SuperSocketCommandAdapter(
             CommandDispatcher commandDispatcher,
+            ISessionService sessionService,
             ILogger<SuperSocketCommandAdapter> logger = null)
         {
-            _commandDispatcher = commandDispatcher;
+            _commandDispatcher = commandDispatcher ?? throw new ArgumentNullException(nameof(commandDispatcher));
+            _sessionService = sessionService ?? throw new ArgumentNullException(nameof(sessionService));
             _logger = logger;
         }
 
@@ -260,7 +267,6 @@ namespace RUINORERP.Server.Network.SuperSocket
             }
             package.Response = result;
             package.Request = null;
-            package.Direction = PacketDirection.Response;
 
             package.PacketId = IdGenerator.GenerateResponseId(package.PacketId);
             package.Direction = PacketDirection.Response; // 明确设置为响应方向
@@ -305,10 +311,6 @@ namespace RUINORERP.Server.Network.SuperSocket
                 package.SessionId = session.SessionID;
                 package.Direction = PacketDirection.Response;
 
-                //if (package.Response != null && !(package.Response is LoginResponse))
-                //{
-                //    package.Response = null;
-                //}
                 var serializedData = JsonCompressionSerializationService.Serialize<PacketModel>(package);
 
                 // 加密数据
@@ -498,10 +500,17 @@ namespace RUINORERP.Server.Network.SuperSocket
     [Command(Key = "SuperSocketCommandAdapter")]
     public class SuperSocketCommandAdapter : SuperSocketCommandAdapter<IAppSession>
     {
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="commandDispatcher">命令调度器</param>
+        /// <param name="sessionService">会话服务</param>
+        /// <param name="logger">日志记录器</param>
         public SuperSocketCommandAdapter(
             CommandDispatcher commandDispatcher,
+            ISessionService sessionService,
             ILogger<SuperSocketCommandAdapter> logger = null)
-            : base(commandDispatcher, logger)
+            : base(commandDispatcher, sessionService, logger)
         { }
     }
 }

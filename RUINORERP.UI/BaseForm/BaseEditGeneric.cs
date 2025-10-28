@@ -328,10 +328,15 @@ namespace RUINORERP.UI.BaseForm
                 MessageBox.Show($"打开 CHM 文件出错: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
 
-
             string tipTxt = string.Empty;
             //时长timeout默认值设置的是3000ms(也就是3秒)
             int timeout = 3000;
+            
+            // 确保定时器被正确释放
+            if (_timeoutTimer4tips != null)
+            {
+                _timeoutTimer4tips.Dispose();
+            }
             _timeoutTimer4tips = new System.Threading.Timer(OnTimerElapsed, null, timeout, System.Threading.Timeout.Infinite);
             toolTipBase.Hide(this);
             if (fromBtn)
@@ -357,19 +362,6 @@ namespace RUINORERP.UI.BaseForm
                 {
                     KryptonTextBox txt = ActiveControl.Parent as KryptonTextBox;
                     tipTxt = GetHelpInfoByBinding(txt.DataBindings);
-                    //if (txt.DataBindings.Count > 0)
-                    //{
-                    //    string filedName = txt.DataBindings[0].BindingMemberInfo.BindingField;
-                    //    string[] cns = txt.DataBindings[0].BindingManagerBase.Current.ToString().Split('.');
-                    //    string className = cns[cns.Length - 1];
-                    //    var obj = Startup.AutoFacContainer.ResolveNamed<BaseEntity>(className);
-                    //    if (obj.HelpInfos.ContainsKey(filedName))
-                    //    {
-                    //        tipTxt = "【" + obj.FieldNameList.Find(f => f.Key == filedName).Value.Trim() + "】";
-                    //        tipTxt += obj.HelpInfos[filedName].ToString();
-                    //    }
-
-                    //}
                 }
                 else
                 {
@@ -383,11 +375,6 @@ namespace RUINORERP.UI.BaseForm
                 toolTipBase.Show(tipTxt, ActiveControl);
                 #endregion
             }
-
-
-
-
-
         }
 
 
@@ -554,9 +541,10 @@ namespace RUINORERP.UI.BaseForm
                         if (item.GetType().Name == "KryptonComboBox")
                         {
                             KryptonComboBox ktb = item as KryptonComboBox;
+                            // 修复逻辑错误：不应该在找到一个控件有ButtonSpecs后就返回，而应该继续处理其他控件
                             if (ktb.ButtonSpecs.Count > 0)
                             {
-                                return;
+                                continue; // 跳过已经有按钮的控件
                             }
                             if ((item as Control).DataBindings.Count > 0)
                             {

@@ -37,9 +37,9 @@ namespace RUINORERP.Server.Network.DI
             // services.AddSingleton<IUnifiedPacketSpecService, UnifiedPacketSpecService>();
             //   services.AddSingleton<UnifiedCommunicationProcessor>();
     
-            // 注册会话管理服务
+            // 注册会话管理服务 - 只注册一次，通过接口映射确保一致性
             services.AddSingleton<SessionService>();
-            services.AddSingleton<ISessionService, SessionService>();
+            services.AddSingleton<ISessionService>(provider => provider.GetRequiredService<SessionService>());
 
             // 注册服务器消息服务
             services.AddSingleton<ServerMessageService>();
@@ -120,8 +120,8 @@ namespace RUINORERP.Server.Network.DI
 
             // 注册其他服务实现
             //  services.AddSingleton<IFileStorageService, FileStorageService>();
-            builder.RegisterType<SessionService>().AsSelf().SingleInstance();
-            builder.RegisterType<SessionService>().As<ISessionService>().SingleInstance();
+            // 使用链式注册确保SessionService和ISessionService指向同一个实例
+            builder.RegisterType<SessionService>().AsSelf().As<ISessionService>().SingleInstance();
             builder.RegisterType<ServerMessageService>().AsSelf().SingleInstance();
             builder.RegisterType<ServerMessageServiceUsageExample>().AsSelf().SingleInstance();
             builder.RegisterType<MessageServiceUsageExample>().AsSelf().SingleInstance();

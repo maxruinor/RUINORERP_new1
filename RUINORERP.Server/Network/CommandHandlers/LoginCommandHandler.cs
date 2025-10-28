@@ -53,12 +53,27 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// 日志记录器
         /// </summary>
         protected ILogger<LoginCommandHandler> logger { get; set; }
+        
+        /// <summary>
+        /// 会话管理服务
+        /// </summary>
+        protected ISessionService SessionService { get; set; }
+
+        /// <summary>
+        /// Token服务（新的统一Token服务）
+        /// </summary>
+        protected ITokenService TokenService { get; set; }
+
+        /// <summary>
+        /// Token管理器（简化版Token管理）
+        /// </summary>
+        protected TokenManager TokenManager { get; set; }
+        
         /// <summary>
         /// 无参构造函数，用于动态创建实例
         /// </summary>
         public LoginCommandHandler() : base()
-        {
-        }
+        {}
 
         public LoginCommandHandler(ILogger<LoginCommandHandler> _Logger) : base(_Logger)
         {
@@ -72,27 +87,26 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 AuthenticationCommands.RefreshToken
             );
         }
-
-
+        
         /// <summary>
-        /// 会话管理服务
+        /// 完整构造函数，通过依赖注入获取服务
         /// </summary>
-        private ISessionService SessionService => Program.ServiceProvider.GetRequiredService<ISessionService>();
+        public LoginCommandHandler(ILogger<LoginCommandHandler> _Logger, ISessionService sessionService, 
+                                  ITokenService tokenService, TokenManager tokenManager) : base(_Logger)
+        {
+            logger = _Logger;
+            SessionService = sessionService ?? throw new ArgumentNullException(nameof(sessionService));
+            TokenService = tokenService ?? throw new ArgumentNullException(nameof(tokenService));
+            TokenManager = tokenManager ?? throw new ArgumentNullException(nameof(tokenManager));
 
-        /// <summary>
-        /// Token服务（新的统一Token服务）
-        /// </summary>
-        private ITokenService TokenService => Program.ServiceProvider.GetRequiredService<ITokenService>();
-
-        /// <summary>
-        /// Token服务实例（用于方法内部）
-        /// </summary>
-        private ITokenService _tokenService => TokenService;
-
-        /// <summary>
-        /// Token管理器（简化版Token管理）
-        /// </summary>
-        private TokenManager TokenManager => Program.ServiceProvider.GetRequiredService<TokenManager>();
+            // 使用安全方法设置支持的命令
+            SetSupportedCommands(
+                AuthenticationCommands.Login,
+                AuthenticationCommands.Logout,
+                AuthenticationCommands.ValidateToken,
+                AuthenticationCommands.RefreshToken
+            );
+        }
 
 
 
@@ -333,7 +347,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 string newToken;
                 try
                 {
-                    newToken = _tokenService.RefreshToken(refreshToken);
+                    newToken = TokenService.RefreshToken(refreshToken);
                 }
                 catch (Exception ex)
                 {
@@ -379,7 +393,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 // 撤销Token
                 if (executionContext.Token?.AccessToken != null && !string.IsNullOrEmpty(executionContext.Token?.AccessToken))
                 {
-                    _tokenService.RevokeToken(executionContext.Token?.AccessToken);
+                    TokenService.RevokeToken(executionContext.Token?.AccessToken);
                 }
 
                 // 创建响应
@@ -415,7 +429,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 }
 
                 // 使用TokenService验证Token
-                var validationResult = _tokenService.ValidateToken(token);
+                var validationResult = TokenService.ValidateToken(token);
 
                 // 创建响应
                 var response = new LoginResponse
@@ -718,7 +732,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
             try
             {
                 // 使用TokenService进行Token刷新
-                var newToken = _tokenService.RefreshToken(refreshToken);
+                var newToken = TokenService.RefreshToken(refreshToken);
 
                 if (!string.IsNullOrEmpty(newToken))
                 {
@@ -779,9 +793,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
 
 
 
-
-
-        #endregion
+                #endregion
 
 
 
@@ -794,3 +806,4 @@ namespace RUINORERP.Server.Network.CommandHandlers
 
 
 }
+

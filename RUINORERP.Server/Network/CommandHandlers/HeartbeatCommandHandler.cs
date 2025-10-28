@@ -8,13 +8,9 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-// using RUINORERP.Server.Network.Services; // 暂时注释，缺少ISessionService接口定义
-using Microsoft.Extensions.DependencyInjection;
 using RUINORERP.Server.Network.Interfaces.Services;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Errors;
-using RUINORERP.Server.Network.Services;
-// using RUINORERP.Server.Network.Interfaces.Services; // 暂时注释，缺少ISessionService接口定义
 
 namespace RUINORERP.Server.Network.CommandHandlers
 {
@@ -29,20 +25,21 @@ namespace RUINORERP.Server.Network.CommandHandlers
 
         /// <summary>
         /// 无参构造函数，以支持Activator.CreateInstance创建实例
+        /// 注意：这是临时解决方案，优先使用带参构造函数
         /// </summary>
         public HeartbeatCommandHandler() : base()
         {
-            _sessionService = Program.ServiceProvider.GetRequiredService<ISessionService>();
+            // 为了兼容性保留这个构造函数，但实际运行时应使用依赖注入的构造函数
         }
 
         /// <summary>
-        /// 构造函数
+        /// 构造函数 - 通过依赖注入获取服务
         /// </summary>
         public HeartbeatCommandHandler(
              ISessionService sessionService,
             ILogger<HeartbeatCommandHandler> logger = null) : base(logger)
         {
-            _sessionService = sessionService; // 暂时注释，缺少ISessionService接口定义
+            _sessionService = sessionService ?? throw new ArgumentNullException(nameof(sessionService));
 
             // 使用安全方法设置支持的命令
             SetSupportedCommands(SystemCommands.Heartbeat);
@@ -76,7 +73,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// <summary>
         /// 会话管理服务
         /// </summary>
-        private ISessionService SessionService => Program.ServiceProvider.GetRequiredService<ISessionService>();
+        private ISessionService SessionService => _sessionService;
 
         /// <summary>
         /// 处理心跳命令

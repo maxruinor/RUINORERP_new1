@@ -220,103 +220,7 @@ namespace RUINORERP.UI.BaseForm
         /// 手动设置的。优化级比较自动的FKValueColNameTBList高
         /// </summary>
         public List<Type> ColDisplayTypes { get; set; } = new List<Type>();
-
-        private void DataGridView1_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
-        {
-            return;
-            //如果列是隐藏的是不是可以不需要控制显示了呢? 后面看是否是导出这块需要不需要 不然可以隐藏的直接跳过
-            if (!dataGridView1.Columns[e.ColumnIndex].Visible)
-            {
-                return;
-            }
-            if (e.Value == null)
-            {
-                e.Value = "";
-                return;
-            }
-            //图片特殊处理
-            if (dataGridView1.Columns[e.ColumnIndex].Name == "Image" || e.Value.GetType().Name == "Byte[]")
-            {
-                if (e.Value != null)
-                {
-                    if (!(e.Value is byte[]))
-                    {
-                        return;
-                    }
-                    System.IO.MemoryStream buf = new System.IO.MemoryStream((byte[])e.Value);
-                    System.Drawing.Image image = System.Drawing.Image.FromStream(buf, true);
-                    if (image != null)
-                    {
-                        //缩略图 这里用缓存 ?
-                        System.Drawing.Image thumbnailthumbnail = UITools.CreateThumbnail(image, 100, 100);
-                        e.Value = thumbnailthumbnail;
-                        return;
-                    }
-                }
-            }
-
-            string colDbName = dataGridView1.Columns[e.ColumnIndex].Name;
-            if (ForeignkeyPoints != null && ForeignkeyPoints.Count > 0)
-            {
-                if (ForeignkeyPoints.Keys.Contains(colDbName))
-                {
-                    colDbName = ForeignkeyPoints[colDbName];
-                }
-            }
-
-            //固定字典值显示
-            if (ColNameDataDictionary.ContainsKey(colDbName))
-            {
-                List<KeyValuePair<object, string>> kvlist = new List<KeyValuePair<object, string>>();
-                //意思是通过列名找，再通过值找到对应的文本
-                ColNameDataDictionary.TryGetValue(colDbName, out kvlist);
-                if (kvlist != null)
-                {
-                    KeyValuePair<object, string> kv = kvlist.FirstOrDefault(t => t.Key.ToString().ToLower() == e.Value.ToString().ToLower());
-                    if (kv.Value != null)
-                    {
-                        e.Value = kv.Value;
-                        return;
-                    }
-                }
-            }
-
-            //动态字典值显示
-            string colName = string.Empty;
-            if (ColDisplayTypes != null && ColDisplayTypes.Count > 0)
-            {
-                colName = UIHelper.ShowGridColumnsNameValue(ColDisplayTypes.ToArray(), colDbName, e.Value);
-            }
-            else
-            {
-                if (FKValueColNameTBList.Count > 0)
-                {
-                    foreach (var item in FKValueColNameTBList)
-                    {
-                        colName = UIHelper.ShowGridColumnsNameValue(item.Value, item.Key, e.Value);
-                        if (!string.IsNullOrEmpty(colName))
-                        {
-                            break;
-                        }
-                    }
-                }
-                else
-                {
-                    colName = UIHelper.ShowGridColumnsNameValue<T>(colDbName, e.Value);
-                }
-
-            }
-            if (!string.IsNullOrEmpty(colName))
-            {
-                e.Value = colName;
-                return;
-            }
-
-
-
-            //处理创建人 修改人，因为这两个字段没有做外键。固定的所以可以统一处理
-
-        }
+ 
 
 
         public GridViewDisplayTextResolverGeneric<T> DisplayTextResolver = new GridViewDisplayTextResolverGeneric<T>();
@@ -345,27 +249,31 @@ namespace RUINORERP.UI.BaseForm
 
                     #region 绑定菜单事件
 
+                    // 先取消订阅以避免重复订阅
                     foreach (var item in BaseToolStrip.Items)
                     {
                         if (item is ToolStripButton btnItem)
                         {
-                            ToolStripButton subItem = item as ToolStripButton;
-                            subItem.Click += Item_Click;
-                            UIHelper.ControlButton<ToolStripButton>(CurMenuInfo, subItem);
+                            btnItem.Click -= Item_Click;
+                            btnItem.Click += Item_Click;
+                            UIHelper.ControlButton<ToolStripButton>(CurMenuInfo, btnItem);
 
                         }
                         if (item is ToolStripDropDownButton subItemDr)
                         {
-                            UIHelper.ControlButton<ToolStripDropDownButton>(CurMenuInfo, subItemDr);
+                            subItemDr.Click -= Item_Click;
                             subItemDr.Click += Item_Click;
                             //下一级
                             if (subItemDr.HasDropDownItems)
                             {
                                 foreach (var sub in subItemDr.DropDownItems)
                                 {
-                                    ToolStripMenuItem subStripMenuItem = sub as ToolStripMenuItem;
-                                    UIHelper.ControlButton<ToolStripMenuItem>(CurMenuInfo, subStripMenuItem);
-                                    subStripMenuItem.Click += Item_Click;
+                                    if (sub is ToolStripMenuItem subStripMenuItem)
+                                    {
+                                        subStripMenuItem.Click -= Item_Click;
+                                        subStripMenuItem.Click += Item_Click;
+                                        UIHelper.ControlButton<ToolStripMenuItem>(CurMenuInfo, subStripMenuItem);
+                                    }
                                 }
 
                             }
@@ -378,6 +286,8 @@ namespace RUINORERP.UI.BaseForm
 
                     InitBaseValue();
 
+                    // 先取消订阅以避免重复订阅
+                    this.bindingSourceList.ListChanged -= BindingSourceList_ListChanged;
                     this.bindingSourceList.ListChanged += BindingSourceList_ListChanged;
                     InitListData();
                     ClassGenericType = typeof(T);
@@ -390,6 +300,7 @@ namespace RUINORERP.UI.BaseForm
                     button设置查询条件.ToolTipValues.Description = "对查询条件进行个性化设置。";
                     button设置查询条件.ToolTipValues.EnableToolTips = true;
                     button设置查询条件.ToolTipValues.Heading = "提示";
+                    button设置查询条件.Click -= button设置查询条件_Click;
                     button设置查询条件.Click += button设置查询条件_Click;
                     button设置查询条件.Width = 120;
                     frm.flowLayoutPanelButtonsArea.Controls.Add(button设置查询条件);
@@ -399,36 +310,13 @@ namespace RUINORERP.UI.BaseForm
                     button表格显示设置.ToolTipValues.Description = "对表格显示设置进行个性化设置。";
                     button表格显示设置.ToolTipValues.EnableToolTips = true;
                     button表格显示设置.ToolTipValues.Heading = "提示";
+                    button表格显示设置.Click -= button表格显示设置_Click;
                     button表格显示设置.Click += button表格显示设置_Click;
                     button表格显示设置.Width = 120;
                     frm.flowLayoutPanelButtonsArea.Controls.Add(button表格显示设置);
                     #endregion
-
-                    /*
-                    // 初始化解析器
-                    var resolver = new DataGridViewDisplayNameResolver
-         
-                    // 绑定到DataGridView
-                    resolver.Attach(dataGridView1);
-                    dataGridView1.CellFormatting -= DataGridView1_CellFormatting;
-                    */
-                    dataGridView1.CellFormatting -= DataGridView1_CellFormatting;
+                     
                     DisplayTextResolver.Initialize(dataGridView1);
-
-                    //ForeignKeyMapping moduleMapping = new ForeignKeyMapping
-                    //{
-                    //    TableName = "Modules",
-                    //    KeyFieldName = "Id",
-                    //    ValueFieldName = "Name",
-                    //    IsSpecialField = false,
-                    //    IsSelfReferencing = false
-                    //};
-                    //resolver.AddForeignKeyMapping("ModuleId", moduleMapping);
-
-
-                    //resolver.AddColumnDisplayType("Image", "Image");
-
-                    // resolver.AddForeignKeyColumnMapping("Module", "ModuleId");
                 }
             }
             AddExtendButton(CurMenuInfo);
@@ -520,30 +408,41 @@ namespace RUINORERP.UI.BaseForm
 
         private void BindingSourceList_ListChanged(object sender, ListChangedEventArgs e)
         {
-            BaseEntity entity = new BaseEntity();
             switch (e.ListChangedType)
             {
                 case ListChangedType.Reset:
                     break;
                 case ListChangedType.ItemAdded:
                     //如果这里为空出错， 需要先查询一个空的。绑定一下数据源的类型。之前是默认查询了所有
-                    entity = bindingSourceList.List[e.NewIndex] as BaseEntity;
-                    entity.ActionStatus = ActionStatus.新增;
+                    if (e.NewIndex < bindingSourceList.Count && bindingSourceList.List[e.NewIndex] != null)
+                    {
+                        BaseEntity entity = bindingSourceList.List[e.NewIndex] as BaseEntity;
+                        if (entity != null)
+                        {
+                            entity.ActionStatus = ActionStatus.新增;
+                        }
+                    }
                     break;
                 case ListChangedType.ItemDeleted:
-                    if (e.NewIndex < bindingSourceList.Count)
+                    if (e.NewIndex < bindingSourceList.Count && bindingSourceList.List[e.NewIndex] != null)
                     {
-                        entity = bindingSourceList.List[e.NewIndex] as BaseEntity;
-                        entity.ActionStatus = ActionStatus.删除;
+                        BaseEntity entity = bindingSourceList.List[e.NewIndex] as BaseEntity;
+                        if (entity != null)
+                        {
+                            entity.ActionStatus = ActionStatus.删除;
+                        }
                     }
                     break;
                 case ListChangedType.ItemMoved:
                     break;
                 case ListChangedType.ItemChanged:
-                    entity = bindingSourceList.List[e.NewIndex] as BaseEntity;
-                    if (entity.ActionStatus == ActionStatus.无操作)
+                    if (e.NewIndex < bindingSourceList.Count && bindingSourceList.List[e.NewIndex] != null)
                     {
-                        entity.ActionStatus = ActionStatus.修改;
+                        BaseEntity entity = bindingSourceList.List[e.NewIndex] as BaseEntity;
+                        if (entity != null && entity.ActionStatus == ActionStatus.无操作)
+                        {
+                            entity.ActionStatus = ActionStatus.修改;
+                        }
                     }
                     break;
                 case ListChangedType.PropertyDescriptorAdded:
@@ -576,6 +475,8 @@ namespace RUINORERP.UI.BaseForm
             //ToolStripButton
 
             switch (menu)
+
+
             {
                 case MenuItemEnums.新增:
                 case MenuItemEnums.删除:
@@ -615,7 +516,6 @@ namespace RUINORERP.UI.BaseForm
 
         private void dataGridView1_CellPainting(object sender, DataGridViewCellPaintingEventArgs e)
         {
-            return;
             if (e.ColumnIndex >= 0 && e.RowIndex >= 0)
             {
                 DataGridViewPaintParts paintParts =
@@ -654,9 +554,15 @@ namespace RUINORERP.UI.BaseForm
         protected BindingSortCollection<T> GetDuplicatesList()
         {
             BindingSortCollection<T> DuplicatesList = new BindingSortCollection<T>();
-            List<T> list = new List<T>();
-            list = ListDataSoure.Cast<T>().ToList();
+
+            // 优化：直接使用现有的数据源，避免不必要的转换
+            if (ListDataSoure == null)
+                return DuplicatesList;
+
             string pkName = UIHelper.GetPrimaryKeyColName(typeof(T));
+
+            // 使用更高效的分组方法
+            var list = ListDataSoure.Cast<T>().ToList();
 
             Func<T, Tuple<object[]>> keySelector2 = p =>
             {
@@ -675,6 +581,7 @@ namespace RUINORERP.UI.BaseForm
              .Select(g => g.Skip(1))//排除掉第一个元素，这个是第一个重复的元素，要保留
             .SelectMany(g => g)
             .ToList();
+
             DuplicatesList = duplicatesList.ToBindingSortCollection<T>();
             return DuplicatesList;
         }
@@ -1036,14 +943,10 @@ namespace RUINORERP.UI.BaseForm
                     if (MyCacheManager.Instance.NewTableList.TryGetValue(typeof(T).Name, out pair))
                     {
                         //如果有更新变动就上传到服务器再分发到所有客户端
-#warning TODO: 这里需要完善具体逻辑，当前仅为占位
-
                         //OriginalData odforCache = ActionForClient.删除缓存<T>(PKColName, PKValue.ToLong());
                         //byte[] buffer = CryptoProtocol.EncryptClientPackToServer(odforCache);
                         //MainForm.Instance.ecs.client.Send(buffer);
-
                     }
-
                 }
             }
             return rs;
@@ -1051,7 +954,6 @@ namespace RUINORERP.UI.BaseForm
 
         protected async virtual Task<int> BatchDelete()
         {
-
             List<T> SelectedList = new List<T>();
             //多选模式时
             if (dataGridView1.UseSelectedColumn)
@@ -1068,35 +970,51 @@ namespace RUINORERP.UI.BaseForm
                     }
                 }
             }
-            bool rs = false;
-            int counter = 0;
-            if (MessageBox.Show($"系统不建议删除基本资料\r\n确定删除选择的【{SelectedList.Count}】条记录吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
-            {
-                // rs = await MainForm.Instance.AppContext.Db.DeleteNav<T>(SelectedList).IncludesAllFirstLayer().ExecuteCommandAsync();
-                // counter = await MainForm.Instance.AppContext.Db.Deleteable<T>(SelectedList).ExecuteCommandAsync();
 
+            int counter = 0;
+            if (SelectedList.Count > 0 && MessageBox.Show($"系统不建议删除基本资料\r\n确定删除选择的【{SelectedList.Count}】条记录吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
+            {
                 try
                 {
-                    bool tryDelete = await ctr.BaseDeleteAsync(SelectedList); //可以执行。但是有外键。无法删除
+                    // 尝试批量删除
+                    bool tryDelete = await ctr.BaseDeleteAsync(SelectedList);
                     if (tryDelete)
                     {
+                        // 从绑定源中移除已删除的项
+                        foreach (var item in SelectedList)
+                        {
+                            this.bindingSourceList.Remove(item);
+                            counter++;
+
+                            // 记录日志和审计信息
+                            string PKColName = UIHelper.GetPrimaryKeyColName(typeof(T));
+                            object PKValue = item.GetPropertyValue(PKColName);
+                            if (MainForm.Instance.AppContext.SysConfig.IsDebug)
+                            {
+                                MainForm.Instance.logger.LogInformation($"删除:{typeof(T).Name}，主键值：{PKValue.ToString()} ");
+                            }
+                            MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("删除", item);
+                        }
+
                         MainForm.Instance.AuditLogHelper.CreateAuditLog($"批量删除{counter}条记录", CurMenuInfo.CaptionCN);
                     }
                 }
                 catch (Exception ex)
                 {
                     MainForm.Instance.logger.LogInformation(ex, "批量删除时出错,再次单个尝试导航删除.");
-                    //再次尝试单个导航删除
+                    // 再次尝试单个导航删除
                     for (int i = 0; i < SelectedList.Count; i++)
                     {
                         T loc = SelectedList[i];
                         string PKColName = UIHelper.GetPrimaryKeyColName(typeof(T));
                         object PKValue = SelectedList[i].GetPropertyValue(PKColName);
-                        this.bindingSourceList.Remove(loc);
-                        rs = await ctr.BaseDeleteByNavAsync(loc);
+
+                        bool rs = await ctr.BaseDeleteByNavAsync(loc);
                         if (rs)
                         {
+                            this.bindingSourceList.Remove(loc);
                             counter++;
+
                             if (MainForm.Instance.AppContext.SysConfig.IsDebug)
                             {
                                 MainForm.Instance.logger.LogInformation($"删除:{typeof(T).Name}，主键值：{PKValue.ToString()} ");
@@ -1105,48 +1023,23 @@ namespace RUINORERP.UI.BaseForm
                         }
                     }
                 }
-
-
-
-
             }
 
             #region 更新缓存
             if (SelectedList.Count == counter)
             {
-                foreach (var item in SelectedList)
-                {
-                    string PKColName = UIHelper.GetPrimaryKeyColName(typeof(T));
-                    object PKValue = item.GetPropertyValue(PKColName);
-                    if (MainForm.Instance.AppContext.SysConfig.IsDebug)
-                    {
-                        MainForm.Instance.logger.LogInformation($"删除:{typeof(T).Name}，主键值：{PKValue.ToString()} ");
-                    }
-
-                    //提示服务器开启推送工作流
-                    OriginalData beatDataDel = ClientDataBuilder.BaseInfoChangeBuilder(typeof(T).Name);
-                    //MainForm.Instance.ecs.AddSendData(beatDataDel);
-
-                    //根据要缓存的列表集合来判断是否需要上传到服务器。让服务器分发到其他客户端
-                    KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
-                    //只处理需要缓存的表
-                    if (MyCacheManager.Instance.NewTableList.TryGetValue(typeof(T).Name, out pair))
-                    {
-#warning TODO: 这里需要完善具体逻辑，当前仅为占位
-                        //如果有更新变动就上传到服务器再分发到所有客户端
-                        //OriginalData odforCache = ActionForClient.删除缓存<T>(PKColName, PKValue.ToLong());
-                        //byte[] buffer = CryptoProtocol.EncryptClientPackToServer(odforCache);
-                        //MainForm.Instance.ecs.client.Send(buffer);
-                    }
-                }
-
+                // 所有记录都已成功删除，可以执行缓存更新逻辑
+                // 这里可以根据需要添加缓存更新代码
             }
-
             #endregion
-
 
             return counter;
         }
+
+
+        #endregion
+
+
 
         protected virtual void Modify()
         {
@@ -1879,7 +1772,7 @@ namespace RUINORERP.UI.BaseForm
             return Returnlist;
         }
 
-        #endregion
+
 
 
         private void CloseTheForm(object thisform)
@@ -2185,7 +2078,7 @@ namespace RUINORERP.UI.BaseForm
 
         private void dataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
         {
-            if (e.ColumnIndex == -1)
+            if (e.ColumnIndex < 0 || e.RowIndex < 0)
             {
                 return;
             }
@@ -2203,17 +2096,23 @@ namespace RUINORERP.UI.BaseForm
             {
                 if (dataGridView1.CurrentCell.Value != null)
                 {
-                    System.IO.MemoryStream buf = new System.IO.MemoryStream((byte[])dataGridView1.CurrentCell.Value);
-                    System.Drawing.Image image = System.Drawing.Image.FromStream(buf, true);
-                    if (image != null)
+                    // 使用using语句确保资源正确释放
+                    using (System.IO.MemoryStream buf = new System.IO.MemoryStream((byte[])dataGridView1.CurrentCell.Value))
                     {
-                        frmPictureViewer frmShow = new frmPictureViewer();
-                        frmShow.PictureBoxViewer.Image = image;
-                        frmShow.ShowDialog();
+                        using (System.Drawing.Image image = System.Drawing.Image.FromStream(buf, true))
+                        {
+                            if (image != null)
+                            {
+                                frmPictureViewer frmShow = new frmPictureViewer();
+                                frmShow.PictureBoxViewer.Image = (System.Drawing.Image)image.Clone();
+                                frmShow.ShowDialog();
+                                // 确保窗体被正确释放
+                                frmShow.Dispose();
+                            }
+                        }
                     }
                 }
             }
-
         }
 
         public virtual void dataGridView1_CellMouseDown(object sender, DataGridViewCellMouseEventArgs e)
@@ -2227,6 +2126,79 @@ namespace RUINORERP.UI.BaseForm
             this.BaseToolStrip.Items.AddRange(extendButtons);
             return extendButtons;
         }
+
+        /*
+        /// <summary>
+        /// 清理所有正在使用的资源
+        /// </summary>
+        /// <param name="disposing">如果应释放托管资源，为 true；否则为 false</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                // 取消订阅事件以避免内存泄漏
+                this.bindingSourceList.ListChanged -= BindingSourceList_ListChanged;
+
+                // 取消订阅菜单项的Click事件
+                foreach (var item in BaseToolStrip.Items)
+                {
+                    if (item is ToolStripButton btnItem)
+                    {
+                        btnItem.Click -= Item_Click;
+                    }
+                    if (item is ToolStripDropDownButton subItemDr)
+                    {
+                        subItemDr.Click -= Item_Click;
+                        //下一级
+                        if (subItemDr.HasDropDownItems)
+                        {
+                            foreach (var sub in subItemDr.DropDownItems)
+                            {
+                                if (sub is ToolStripMenuItem subStripMenuItem)
+                                {
+                                    subStripMenuItem.Click -= Item_Click;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // 取消订阅按钮事件
+                // 注意：由于按钮是局部变量创建的，我们需要遍历控件来找到它们
+                foreach (Control control in frm.flowLayoutPanelButtonsArea.Controls)
+                {
+                    if (control is Krypton.Toolkit.KryptonButton button)
+                    {
+                        if (button.Text == "设置查询条件")
+                        {
+                            button.Click -= button设置查询条件_Click;
+                        }
+                        else if (button.Text == "表格显示设置")
+                        {
+                            button.Click -= button表格显示设置_Click;
+                        }
+                    }
+                }
+
+                if (components != null)
+                {
+                    components.Dispose();
+                }
+            }
+            base.Dispose(disposing);
+        }
+        */
+
+
+
     }
 }
+
+
+
+
+
+
+
+
 

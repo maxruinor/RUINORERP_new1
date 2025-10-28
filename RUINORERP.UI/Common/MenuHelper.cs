@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -548,31 +548,54 @@ namespace RUINORERP.UI.Common
                         //传实体进去,具体在窗体那边判断    单据实体数据传入加载用
                         if (page.Controls[0] is BaseQuery baseQuery && nodeParameter != null)
                         {
-                            //set value这里设置属性？
-                            if (OnSetQueryConditionsDelegate != null)
+                            //确保在UI线程上执行条件设置和UI加载
+                            baseQuery.BeginInvoke(new Action(() =>
                             {
-                                OnSetQueryConditionsDelegate(baseQuery.QueryDtoProxy, nodeParameter);
-                            }
-                            baseQuery.LoadQueryParametersToUI(baseQuery.QueryDtoProxy, nodeParameter);
+                                //先设置查询条件
+                                if (OnSetQueryConditionsDelegate != null)
+                                {
+                                    OnSetQueryConditionsDelegate(baseQuery.QueryDtoProxy, nodeParameter);
+                                }
+                                //然后加载UI和执行查询
+                                baseQuery.LoadQueryParametersToUI(baseQuery.QueryDtoProxy, nodeParameter);
+                            }));
                         }
 
                         //单表列表查询参数导入
                         //传实体进去,具体在窗体那边判断    单据实体数据传入加载用
                         if (page.Controls[0] is BaseUControl listQuery && nodeParameter != null)
                         {
-                            //set value这里设置属性？
-                            if (OnSetQueryConditionsDelegate != null)
+                            //确保在UI线程上执行条件设置和UI加载，与BaseQuery类型使用相同的优化方式
+                            listQuery.BeginInvoke(new Action(() =>
                             {
-                                OnSetQueryConditionsDelegate(listQuery.QueryDtoProxy, nodeParameter);
-                            }
-                            listQuery.LoadQueryParametersToUI(listQuery.QueryDtoProxy, nodeParameter);
+                                //先设置查询条件
+                                if (OnSetQueryConditionsDelegate != null)
+                                {
+                                    OnSetQueryConditionsDelegate(listQuery.QueryDtoProxy, nodeParameter);
+                                }
+                                //然后加载UI和执行查询
+                                listQuery.LoadQueryParametersToUI(listQuery.QueryDtoProxy, nodeParameter);
+                            }));
                         }
                         else
                         {
                             if (page.Controls[0] is BaseUControl baseUControl)
                             {
-                                //加载默认的
-                                baseUControl.LoadQueryParametersToUI(null, null);
+                                //确保在UI线程上加载默认参数
+                                if (baseUControl.IsHandleCreated)
+                                {
+                                    baseUControl.BeginInvoke(new Action(() =>
+                                    {
+                                        //加载默认的
+                                        baseUControl.LoadQueryParametersToUI(null, null);
+                                    }));
+                                }
+                                else
+                                {
+                                    // 如果句柄未创建，直接调用方法（假设当前线程是UI线程）
+                                    // 或者可以添加HandleCreated事件处理器，但这里简单处理
+                                    baseUControl.LoadQueryParametersToUI(null, null);
+                                }
                             }
                         }
 

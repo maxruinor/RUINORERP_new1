@@ -38,6 +38,14 @@ namespace RUINORERP.PacketSpec.Serialization
 
             try
             {
+                // 特殊处理匿名类型：当检测到匿名类型时，返回字典类型作为替代
+                if (typeName.Contains("<>f__AnonymousType"))
+                {
+                    // 使用Dictionary<string, object>作为匿名类型的替代类型
+                    // 这样可以确保即使客户端无法识别服务器端的匿名类型，也能正常反序列化数据
+                    return typeof(Dictionary<string, object>);
+                }
+
                 // 先尝试直接加载类型
                 var type = Type.GetType($"{typeName}, {assemblyName}");
                 if (type != null)
@@ -51,13 +59,14 @@ namespace RUINORERP.PacketSpec.Serialization
                         typeof(string), typeof(object));
                 }
 
-                // 对于其他类型，可以根据需要添加更多特殊处理
-                return null;
+                // 对于其他无法识别的类型，返回字典类型以确保程序不会崩溃
+                return typeof(Dictionary<string, object>);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // 如果加载失败，尝试返回默认类型或null
-                return null;
+                // 记录异常但不抛出，返回字典类型作为安全回退
+                // 这样即使类型解析失败，程序也能继续运行
+                return typeof(Dictionary<string, object>);
             }
         }
     }

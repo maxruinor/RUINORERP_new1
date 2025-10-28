@@ -38,14 +38,14 @@ namespace RUINORERP.Server.Network.Services
         /// <summary>
         /// 发送弹窗消息给指定用户并等待响应
         /// </summary>
-        /// <param name="targetUserId">目标用户ID</param>
+        /// <param name="targetUserName">目标用户ID</param>
         /// <param name="message">消息内容</param>
         /// <param name="title">消息标题</param>
         /// <param name="timeoutMs">超时时间（毫秒）</param>
         /// <param name="ct">取消令牌</param>
         /// <returns>消息响应</returns>
         public async Task<MessageResponse> SendPopupMessageAsync(
-            string targetUserId,
+            string targetUserName,
             string message,
             string title = "系统消息",
             int timeoutMs = 30000,
@@ -55,7 +55,7 @@ namespace RUINORERP.Server.Network.Services
             {
                 var messageData = new
                 {
-                    TargetUserId = targetUserId,
+                    TargetUserId = targetUserName,
                     Message = message,
                     Title = title,
                     MessageType = "Popup"
@@ -64,7 +64,7 @@ namespace RUINORERP.Server.Network.Services
                 var request = new MessageRequest(MessageCmdType.Unknown, messageData);
                 
                 // 获取目标用户的所有会话
-                var sessions = _sessionService.GetUserSessions(targetUserId);
+                var sessions = _sessionService.GetUserSessions(targetUserName);
                 
                 // 向第一个会话发送消息并等待响应
                 foreach (var session in sessions)

@@ -27,14 +27,21 @@ using RUINORERP.Model.TransModel;
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Commands.Message;
 using RUINORERP.PacketSpec.Models.Responses.Message;
+using RUINORERP.Server.Network.Services;
+using Microsoft.Extensions.Logging;
+using System.Threading;
 
 namespace RUINORERP.Server.Controls
 {
     public partial class UserManagementControl : UserControl
     {
         private readonly ISessionService _sessionService;
-        private readonly Timer _updateTimer;
+        private readonly System.Windows.Forms.Timer _updateTimer;
         private readonly Random _random = new Random();
+
+        private readonly ServerMessageService _serverMessageService;
+        private readonly ILogger<MessageServiceUsageExample> _logger;
+
         public ObservableCollection<UserInfo> UserInfos { get; } = new ObservableCollection<UserInfo>();
         private readonly Dictionary<string, ListViewItem> _itemMap = new Dictionary<string, ListViewItem>();
         private DateTime _lastFullUpdate = DateTime.MinValue;
@@ -52,7 +59,7 @@ namespace RUINORERP.Server.Controls
 
             // 获取新的会话服务实例
             _sessionService = Program.ServiceProvider.GetRequiredService<ISessionService>();
-
+            _serverMessageService = Program.ServiceProvider.GetRequiredService<ServerMessageService>();
             InitializeDataBinding();
 
             // 订阅会话服务事件
@@ -64,7 +71,7 @@ namespace RUINORERP.Server.Controls
             LoadAllSessions();
 
             // 设置定时器用于UI刷新
-            _updateTimer = new Timer { Interval = 1000 };
+            _updateTimer = new System.Windows.Forms.Timer { Interval = 1000 };
             _updateTimer.Tick += UpdateTimer_Tick;
             _updateTimer.Start();
 
@@ -970,37 +977,32 @@ namespace RUINORERP.Server.Controls
             }
         }
 
-        private void HandleSendMessage(List<UserInfo> users)
+        private async void HandleSendMessage(List<UserInfo> users)
         {
+            frmMessager frmMessager = new frmMessager();
+            frmMessager.MustDisplay = true;
+            if(frmMessager.ShowDialog()!=DialogResult.OK)
+            {
+                return;
+            }
+            string message = frmMessager.Message;
             foreach (var user in users)
             {
                 try
                 {
                     // 使用新的SessionService获取会话信息
-                    var session = _sessionService.GetSession(user.SessionId);
-                    if (session != null)
-                    {
-                        #region
-                        //var request = new MessageRequest(MessageCmdType.Unknown, messageData);
 
-                        //// 发送消息并等待响应 - 响应在当前方法中处理
-                        //var responsePacket = await _sessionService.SendCommandAndWaitForResponseAsync(
-                        //    GetUserSessionId(userId),  // 获取用户会话ID
-                        //    MessageCommands.SendPopupMessage,
-                        //    request,
-                        //    30000,  // 30秒超时
-                        //    CancellationToken.None);
+                    #region
+                    var request = new MessageRequest(MessageCmdType.Unknown, "");
 
-                        //// 响应处理在业务层进行
-                        //if (responsePacket?.Response is MessageResponse response)
-                        //{
-                        //}
-                        #endregion
-                    }
-                    else
-                    {
-                        frmMainNew.Instance.PrintErrorLog($"用户 {user.用户名} 的会话不存在");
-                    }
+                    var response = await _serverMessageService.SendPopupMessageAsync(
+                        user.用户名,
+                        message,
+                        "系统通知",
+                        30000, // 30秒超时
+                        CancellationToken.None);
+                    #endregion
+
                 }
                 catch (Exception ex)
                 {

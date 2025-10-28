@@ -825,7 +825,7 @@ namespace RUINORERP.Server.Network.Services
             {
                 // 构建数据包
                 var packet = PacketBuilder.Create()
-                    .WithDirection(PacketDirection.Request)
+                    .WithDirection(PacketDirection.ServerToClient)
                     .WithTimeout(timeoutMs)
                     .WithRequest(request)
                     .Build();
@@ -847,12 +847,12 @@ namespace RUINORERP.Server.Network.Services
                 {
                     packet.ExecutionContext.ExpectedResponseTypeName = responseTypeName;
                 }
-
+         
                 // 序列化和加密数据包
-                var payload = JsonCompressionSerializationService.Serialize<PacketModel>(packet);
-                var original = new OriginalData((byte)packet.CommandId.Category, new[] { packet.CommandId.OperationCode }, payload);
+                var serializedData = JsonCompressionSerializationService.Serialize<PacketModel>(packet);
+                var original = new OriginalData((byte)packet.CommandId.Category, new[] { packet.CommandId.OperationCode }, serializedData);
                 var encrypted = UnifiedEncryptionProtocol.EncryptServerDataToClient(original);
-                
+
                 // 发送数据
                 await sessionInfo.SendAsync(encrypted.ToArray(), ct);
                 
@@ -966,7 +966,7 @@ namespace RUINORERP.Server.Network.Services
                     return false;
                 }
 
-                if (commandId == null)
+                if (commandId.FullCode ==0)
                 {
                     _logger.LogWarning("发送命令失败：命令为空");
                     return false;

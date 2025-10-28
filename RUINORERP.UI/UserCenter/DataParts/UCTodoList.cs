@@ -1,4 +1,5 @@
-﻿using AutoMapper;
+using AutoMapper;
+using Castle.Core.Logging;
 using MathNet.Numerics.Distributions;
 using Netron.GraphLib;
 using Netron.GraphLib.Entitology;
@@ -36,9 +37,11 @@ namespace RUINORERP.UI.UserCenter.DataParts
         private readonly MenuPowerHelper _menuPowerHelper;
         private readonly IBusinessEntityMappingService _mapper;
         private readonly EntityLoader _loader;
-        public UCTodoList(IBusinessEntityMappingService mapper, EntityLoader loader)
+        private readonly ILogger _logger;
+        public UCTodoList(IBusinessEntityMappingService mapper, EntityLoader loader , ILogger logger)
         {
             InitializeComponent();
+            _logger = logger;
             _mapper = mapper;
             _loader = loader;
             // 通过依赖注入获取服务实例
@@ -211,71 +214,182 @@ namespace RUINORERP.UI.UserCenter.DataParts
         /// </summary>
         private void MenuPowerHelper_OnSetQueryConditionsDelegate(object queryDto, QueryParameter nodeParameter)
         {
-            if (queryDto == null)
+            try
             {
-                return;
+                //参数验证
+                if (queryDto == null)
+                {
+                    _logger.Debug("查询Dto对象为空，无法设置查询条件");
+                    return;
+                }
+                
+                if (nodeParameter == null)
+                {
+                    _logger.Debug("节点参数为空，无法设置查询条件");
+                    return;
+                }
+
+                // 查询条件给值前先将条件清空
+                ClearQueryConditions(queryDto, nodeParameter);
+
+                // 设置查询条件值
+                SetQueryConditionValues(queryDto, nodeParameter);
+                
+                _logger.Debug($"成功设置查询条件: 表类型={nodeParameter.tableType?.Name}");
             }
-
-            // 查询条件给值前先将条件清空
-            ClearQueryConditions(queryDto, nodeParameter);
-
-            // 设置查询条件值
-            SetQueryConditionValues(queryDto, nodeParameter);
+            catch (Exception ex)
+            {
+                _logger.Error("设置查询条件时发生错误", ex);
+                //不抛出异常，避免影响UI流程
+            }
         }
+        
         private void ClearQueryConditions(object queryDto, QueryParameter nodeParameter)
         {
-            foreach (var item in nodeParameter.queryFilter.QueryFields)
+            if (nodeParameter.queryFilter?.QueryFields == null)
             {
-                if (item.FKTableName.IsNotEmptyOrNull() && item.IsRelated)
+                _logger.Debug("查询过滤器或查询字段集合为空");
+                return;
+            }
+            
+            try
+            {
+                foreach (var item in nodeParameter.queryFilter.QueryFields)
                 {
-                    queryDto.SetPropertyValue(item.FieldName, -1L);
-                    continue;
-                }
-
-                if (item.FieldPropertyInfo.PropertyType.IsGenericType &&
-                    item.FieldPropertyInfo.PropertyType.GetBaseType().Name == "DateTime")
-                {
-                    queryDto.SetPropertyValue(item.FieldName, null);
-
-                    if (queryDto.ContainsProperty(item.FieldName + "_Start"))
+                    try
                     {
-                        queryDto.SetPropertyValue(item.FieldName + "_Start", null);
-                    }
+                        if (item.FKTableName.IsNotEmptyOrNull() && item.IsRelated)
+                        {
+                            queryDto.SetPropertyValue(item.FieldName, -1L);
+                            continue;
+                        }
 
-                    if (queryDto.ContainsProperty(item.FieldName + "_End"))
+                        // 修复DateTime类型判断，使用更准确的类型检查
+                        if (item.FieldPropertyInfo?.PropertyType != null)
+                        {
+                            bool isDateTimeType = item.FieldPropertyInfo.PropertyType == typeof(DateTime) || 
+                                                (item.FieldPropertyInfo.PropertyType.IsGenericType &&
+                                                 item.FieldPropertyInfo.PropertyType.GetGenericTypeDefinition() == typeof(Nullable<>) &&
+                                                 item.FieldPropertyInfo.PropertyType.GetGenericArguments()[0] == typeof(DateTime));
+                            
+                            if (isDateTimeType)
+                            {
+                                queryDto.SetPropertyValue(item.FieldName, null);
+
+                                if (queryDto.ContainsProperty(item.FieldName + "_Start"))
+                                {
+                                    queryDto.SetPropertyValue(item.FieldName + "_Start", null);
+                                }
+
+                                if (queryDto.ContainsProperty(item.FieldName + "_End"))
+                                {
+                                    queryDto.SetPropertyValue(item.FieldName + "_End", null);
+                                }
+                                
+                                continue;
+                            }
+                        }
+                        
+                        // 清空其他类型字段的值
+                        queryDto.SetPropertyValue(item.FieldName, null);
+                    }
+                    catch (Exception ex)
                     {
-                        queryDto.SetPropertyValue(item.FieldName + "_End", null);
+                        _logger.Warn($"清空字段 {item.FieldName} 值时发生错误", ex);
+                        //继续处理下一个字段
                     }
-
-                    continue;
                 }
+            }
+            catch (Exception ex)
+            {
+                _logger.Error("清空查询条件时发生错误", ex);
             }
         }
 
         private void SetQueryConditionValues(object queryDto, QueryParameter nodeParameter)
         {
-            foreach (ConditionalModel item in nodeParameter.conditionals)
+            if (nodeParameter.conditionals == null)
             {
-                if (item.ConditionalType == ConditionalType.Equal)
+                _logger.Debug("条件列表为空，无需设置查询条件值");
+                return;
+            }
+            
+            try
+            {
+                foreach (ConditionalModel item in nodeParameter.conditionals)
                 {
-                    object value = ConvertFieldValue(item);
-                    queryDto.SetPropertyValue(item.FieldName, value);
+                    try
+                    {
+                        if (item.ConditionalType == ConditionalType.Equal)
+                        {
+                            object value = ConvertFieldValue(item);
+                            if (queryDto.ContainsProperty(item.FieldName))
+                            {
+                                queryDto.SetPropertyValue(item.FieldName, value);
+                                _logger.Debug($"设置字段 {item.FieldName} 值: {value}");
+                            }
+                            else
+                            {
+                                _logger.Warn($"查询Dto对象不包含字段: {item.FieldName}");
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.Error($"设置条件字段 {item.FieldName} 值时发生错误", ex);
+                        //继续处理下一个条件
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                _logger.Error("设置查询条件值时发生错误", ex);
             }
         }
 
         private object ConvertFieldValue(ConditionalModel item)
         {
-            switch (item.CSharpTypeName)
+            try
             {
-                case "int":
-                    return item.FieldValue.ToInt();
-                case "long":
-                    return item.FieldValue.ToLong();
-                case "bool":
-                    return item.FieldValue.ToBool();
-                default:
-                    return item.FieldValue;
+                // 参数验证
+                if (item == null)
+                    return null;
+                    
+                string fieldValue = item.FieldValue;
+                if (string.IsNullOrEmpty(fieldValue))
+                    return fieldValue;
+                    
+                // 使用更健壮的类型转换，处理可能的转换失败
+                switch (item.CSharpTypeName)
+                {
+                    case "int":
+                        if (int.TryParse(fieldValue, out int intValue))
+                            return intValue;
+                        _logger.Warn($"无法将值 {fieldValue} 转换为int类型");
+                        return 0;
+                    case "long":
+                        if (long.TryParse(fieldValue, out long longValue))
+                            return longValue;
+                        _logger.Warn($"无法将值 {fieldValue} 转换为long类型");
+                        return 0L;
+                    case "bool":
+                        if (bool.TryParse(fieldValue, out bool boolValue))
+                            return boolValue;
+                        _logger.Warn($"无法将值 {fieldValue} 转换为bool类型");
+                        return false;
+                    case "DateTime":
+                        if (DateTime.TryParse(fieldValue, out DateTime dateValue))
+                            return dateValue;
+                        _logger.Warn($"无法将值 {fieldValue} 转换为DateTime类型");
+                        return null;
+                    default:
+                        return fieldValue;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.Error("转换字段值时发生错误", ex);
+                return item?.FieldValue;
             }
         }
 

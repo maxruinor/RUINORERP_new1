@@ -63,9 +63,9 @@ namespace RUINORERP.Server.Network.Core
         /// <param name="commandDispatcher">命令调度器</param>
         public NetworkServer(ILogger<NetworkServer> logger, ISessionService sessionManager, CommandDispatcher commandDispatcher)
         {
-            _logger = logger;
-            _sessionManager = sessionManager;
-            _commandDispatcher = commandDispatcher;
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _sessionManager = sessionManager ?? throw new ArgumentNullException(nameof(sessionManager));
+            _commandDispatcher = commandDispatcher ?? throw new ArgumentNullException(nameof(commandDispatcher));
         }
 
         /// <summary>
@@ -209,6 +209,7 @@ namespace RUINORERP.Server.Network.Core
                  .ConfigureServices((context, services) =>
                   {
                       // 注册核心服务 - 使用与全局相同的ISessionService实例
+                      // 确保使用注入的_sessionManager，而不是从Program.ServiceProvider获取
                       services.AddSingleton<ISessionService>(_sessionManager);
 
                       IConfigurationBuilder configurationBuilder = new ConfigurationBuilder();

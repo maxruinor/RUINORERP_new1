@@ -80,14 +80,6 @@ namespace RUINORERP.PacketSpec.Models.Core
             return WithDirection(PacketDirection.Request);
         }
 
-        /// <summary>
-        /// 设置为响应方向（快捷方法）
-        /// </summary>
-        /// <returns>当前构建器实例</returns>
-        public PacketBuilder AsResponse()
-        {
-            return WithDirection(PacketDirection.Response);
-        }
 
         /// <summary>
         /// 设置会话信息

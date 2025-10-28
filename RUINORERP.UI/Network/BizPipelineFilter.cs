@@ -4,6 +4,7 @@ using System.Buffers;
 using RUINORERP.PacketSpec.Security;
 using RUINORERP.PacketSpec.Serialization;
 using RUINORERP.PacketSpec.Models.Core;
+using RUINORERP.PacketSpec.Commands.System;
 
 
 namespace RUINORERP.UI.Network
@@ -68,6 +69,13 @@ namespace RUINORERP.UI.Network
                         if (packageInfo.Packet == null)
                         {
                             System.Diagnostics.Debug.WriteLine("反序列化成功，但结果为null");
+                        }
+                        else
+                        {
+                            if (packageInfo.Packet.CommandId!=SystemCommands.Heartbeat)
+                            {
+
+                            }
                         }
                     }
                     catch (Exception deserializationEx)

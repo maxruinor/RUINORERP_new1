@@ -709,7 +709,6 @@ namespace RUINORERP.UI.FM
         {
             try
             {
-
                 //计算总金额  这些逻辑是不是放到业务层？后面要优化
                 List<tb_FM_StatementDetail> details = sgd.BindingSourceLines.DataSource as List<tb_FM_StatementDetail>;
                 details = details.Where(c => c.IncludedLocalAmount != 0 || c.IncludedForeignAmount != 0).ToList();
@@ -718,11 +717,50 @@ namespace RUINORERP.UI.FM
                     MainForm.Instance.uclog.AddLog("对账金额不能为0");
                     return;
                 }
-                EditEntity.TotalPayableLocalAmount = details.Sum(c => c.IncludedLocalAmount);
+                
+                // 初始化所有金额字段
+                EditEntity.TotalPayableLocalAmount = 0;
+                EditEntity.TotalReceivableLocalAmount = 0;
+                EditEntity.TotalPayableForeignAmount = 0;
+                EditEntity.TotalReceivableForeignAmount = 0;
+                
+                // 根据业务类型和金额正负值分别计算应收和应付金额
+                foreach (var detail in details)
+                {
+                    if (PaymentType == ReceivePaymentType.收款)
+                    {
+                        // 收款对账：正数计入应收，负数也计入应收（表示冲减）
+                        EditEntity.TotalReceivableLocalAmount += detail.IncludedLocalAmount;
+                        EditEntity.TotalReceivableForeignAmount += detail.IncludedForeignAmount;
+                    }
+                    else if (PaymentType == ReceivePaymentType.付款)
+                    {
+                        // 付款对账：正数计入应付，负数也计入应付（表示冲减）
+                        EditEntity.TotalPayableLocalAmount += detail.IncludedLocalAmount;
+                        EditEntity.TotalPayableForeignAmount += detail.IncludedForeignAmount;
+                    }
+                }
+                
+                // 计算净额（代数和）
+                decimal netLocalAmount = EditEntity.TotalPayableLocalAmount + EditEntity.TotalReceivableLocalAmount;
+                decimal netForeignAmount = EditEntity.TotalPayableForeignAmount + EditEntity.TotalReceivableForeignAmount;
+                
+                // 记录冲抵信息
+                bool hasPositiveItems = details.Any(d => d.IncludedLocalAmount > 0);
+                bool hasNegativeItems = details.Any(d => d.IncludedLocalAmount < 0);
+                if (hasPositiveItems && hasNegativeItems)
+                {
+                    MainForm.Instance.uclog.AddLog("当前对账单包含正负金额冲抵项，净额为：" + netLocalAmount.ToString());
+                }
+                
+                // 更新期末余额：期初余额 + 本期发生额净额 - 已收付款净额
+                EditEntity.ClosingBalanceLocalAmount = EditEntity.OpeningBalanceLocalAmount + netLocalAmount - 
+                                                      (EditEntity.TotalPaidLocalAmount - EditEntity.TotalReceivedLocalAmount);
+                EditEntity.ClosingBalanceForeignAmount = EditEntity.OpeningBalanceForeignAmount + netForeignAmount - 
+                                                        (EditEntity.TotalPaidForeignAmount - EditEntity.TotalReceivedForeignAmount);
             }
             catch (Exception ex)
             {
-
                 logger.LogError("计算出错", ex);
                 MainForm.Instance.uclog.AddLog("Sgh_OnCalculateColumnValue" + ex.Message);
             }

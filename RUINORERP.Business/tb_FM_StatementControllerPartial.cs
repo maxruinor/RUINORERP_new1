@@ -275,7 +275,7 @@ namespace RUINORERP.Business
         /// <param name="entities"></param>
         /// <returns></returns>
         /// <exception cref="Exception"></exception>
-        public async Task<tb_FM_Statement> BuildStatement(List<tb_FM_ReceivablePayable> entities)
+        public async Task<tb_FM_Statement> BuildStatement(List<tb_FM_ReceivablePayable> entities, ReceivePaymentType paymentType)
         {
 
             //var customerVendorIds = entities.Select(e => e.CustomerVendor_ID).Distinct().ToList();
@@ -299,7 +299,7 @@ namespace RUINORERP.Business
             statement.ApprovalOpinions = "";
             statement.Modified_at = null;
             statement.Modified_by = null;
-
+            statement.ReceivePaymentType = (int)paymentType;
 
             //注意 映射有逻辑，应收应付的余额为对账金额
             List<tb_FM_StatementDetail> details = new List<tb_FM_StatementDetail>();
@@ -343,7 +343,7 @@ namespace RUINORERP.Business
                 {
                     ReceivePaymentType = g.Key,
                     IncludedLocalAmount = g.Sum(d => d.IncludedLocalAmount)  // 本币金额汇总
-                                                                          // 如果需要外币，可以类似汇总 IncludedForeignAmount
+                                                                             // 如果需要外币，可以类似汇总 IncludedForeignAmount
                 })
                 .ToList();
 
@@ -405,7 +405,7 @@ namespace RUINORERP.Business
             statement.PayeeAccountNo = entities[0].PayeeAccountNo;
             statement.tb_FM_StatementDetails = details;
 
-     
+
             //在收款单明细中，不可以存在：一种应付下有两同的两个应收单。 否则这里会出错。
             var duplicateArapIds = statement.tb_FM_StatementDetails
             .GroupBy(c => c.ARAPId)

@@ -43,17 +43,117 @@ using NPOI.SS.Formula.Functions;
 
 namespace RUINORERP.UI.FM
 {
+    /// <summary>
+    /// 对账单创建中心
+    /// </summary>
     //对账单创建中心
     [MenuAttrAssemblyInfo("对账中心", ModuleMenuDefine.模块定义.财务管理, ModuleMenuDefine.财务管理.对账管理, BizType.对账单)]
     [SharedIdRequired]
     public partial class UCStatementCreator : BaseBillQueryMC<tb_FM_ReceivablePayable, tb_FM_ReceivablePayableDetail>
     {
+        public ReceivePaymentType PaymentType { get; set; }
+
+        // 保存对账类型选择控件的引用
+        private Krypton.Toolkit.KryptonComboBox cmbPaymentType;
+
         public UCStatementCreator()
         {
             InitializeComponent();
             base.RelatedBillEditCol = (c => c.ARAPNo);
+            // 默认设置为收款类型
+            PaymentType = ReceivePaymentType.收款;
+
+            // 订阅查询条件加载完成事件
+            this.Load += UCStatementCreator_Load;
         }
-        //public ReceivePaymentType PaymentType { get; set; }
+
+        private void UCStatementCreator_Load(object sender, EventArgs e)
+        {
+            // 查询条件面板加载完成后，添加对账类型选择框
+            AddPaymentTypeToQueryPanel();
+        }
+
+        private void AddPaymentTypeToQueryPanel()
+        {
+            try
+            {
+                // 查找查询条件面板
+                var queryPanel = this.Controls.Find("kryptonPanelQuery", true).FirstOrDefault() as Krypton.Toolkit.KryptonPanel;
+                if (queryPanel == null || queryPanel.Parent == null)
+                    return;
+
+                // 获取查询面板的父容器
+                var parentContainer = queryPanel.Parent;
+                
+                // 计算新面板和查询面板的位置
+                int paymentPanelHeight = 40;
+                int originalQueryPanelLocation = queryPanel.Location.Y;
+                
+                // 创建新的面板用于放置对账类型选择控件
+                Krypton.Toolkit.KryptonPanel paymentTypePanel = new Krypton.Toolkit.KryptonPanel();
+                paymentTypePanel.Name = "paymentTypePanel";
+                paymentTypePanel.Size = new Size(queryPanel.Width, paymentPanelHeight);
+                paymentTypePanel.Location = new Point(queryPanel.Location.X, queryPanel.Location.Y);
+                paymentTypePanel.Dock = DockStyle.Top;
+                
+                // 创建对账类型选择标签
+                Krypton.Toolkit.KryptonLabel label = new Krypton.Toolkit.KryptonLabel();
+                label.Text = "对账类型";
+                label.Location = new Point(10, 10);
+                label.Size = new Size(80, 24);
+                
+                // 创建下拉选择框
+                cmbPaymentType = new Krypton.Toolkit.KryptonComboBox();
+                cmbPaymentType.Location = new Point(100, 8);
+                cmbPaymentType.Size = new Size(150, 24);
+                cmbPaymentType.Name = "cmbPaymentType";
+                
+                // 添加选项
+                cmbPaymentType.Items.Add("收款对账");
+                cmbPaymentType.Items.Add("付款对账");
+                cmbPaymentType.SelectedIndex = PaymentType == ReceivePaymentType.收款 ? 0 : 1;
+                
+                // 添加选择变化事件
+                cmbPaymentType.SelectedIndexChanged += (s, e) =>
+                {
+                    PaymentType = cmbPaymentType.SelectedIndex == 0 ? ReceivePaymentType.收款 : ReceivePaymentType.付款;
+                    // 刷新查询条件和数据
+                    BuildLimitQueryConditions();
+                    QueryConditionBuilder();
+                    // 重新执行查询
+                    base.QueryDtoProxy = LoadQueryConditionToUI();
+                    base.Query(base.QueryDtoProxy);
+                };
+                
+                // 将控件添加到新面板
+                paymentTypePanel.Controls.Add(label);
+                paymentTypePanel.Controls.Add(cmbPaymentType);
+                
+                // 调整查询面板的位置
+                queryPanel.Location = new Point(queryPanel.Location.X, queryPanel.Location.Y + paymentPanelHeight);
+                queryPanel.Size = new Size(queryPanel.Width, queryPanel.Height - paymentPanelHeight);
+                
+                // 将新面板添加到父容器
+                parentContainer.Controls.Add(paymentTypePanel);
+                
+                // 确保新面板在查询面板之上
+                paymentTypePanel.BringToFront();
+                
+                // 调整父容器的其他控件位置
+                foreach (Control ctrl in parentContainer.Controls)
+                {
+                    if (ctrl != queryPanel && ctrl != paymentTypePanel && ctrl.Location.Y >= originalQueryPanelLocation)
+                    {
+                        ctrl.Location = new Point(ctrl.Location.X, ctrl.Location.Y + paymentPanelHeight);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // 记录异常但不中断程序
+                MainForm.Instance.logger.LogError(ex, "添加对账类型选择控件失败");
+            }
+        }
 
 
         /// <summary>
@@ -64,6 +164,21 @@ namespace RUINORERP.UI.FM
         {
             BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_FM_ReceivablePayableProcessorByStatement).Name);
             QueryConditionFilter = baseProcessor.GetQueryFilter();
+
+            // 清除现有条件以避免重复
+            QueryConditionFilter.FilterLimitExpressions.Clear();
+
+            // 根据PaymentType添加过滤条件
+            var lambda = Expressionable.Create<tb_FM_ReceivablePayable>()
+                              .And(t => t.isdeleted == false)
+                              .And(t => t.AllowAddToStatement == true)
+                              .And(t => t.LocalBalanceAmount != 0)
+                              .And(t => t.ARAPStatus == (int)ARAPStatus.待审核 || t.ARAPStatus == (int)ARAPStatus.待支付 || t.ARAPStatus == (int)ARAPStatus.部分支付)
+                              // 根据选择的对账类型过滤收付款类型
+                              .And(t => t.ReceivePaymentType == (int)PaymentType)
+                         .ToExpression();
+
+            QueryConditionFilter.FilterLimitExpressions.Add(lambda);
         }
 
 
@@ -77,8 +192,8 @@ namespace RUINORERP.UI.FM
             //应收付款中的往来单位额外添加一些条件
             //还是将来利用行级权限来实现？
             var lambdaCv = Expressionable.Create<tb_CustomerVendor>()
-              //.AndIF(PaymentType == ReceivePaymentType.收款, t => t.IsCustomer == true)
-              //.AndIF(PaymentType == ReceivePaymentType.付款, t => t.IsVendor == true)
+              .AndIF(PaymentType == ReceivePaymentType.收款, t => t.IsCustomer == true)
+              .AndIF(PaymentType == ReceivePaymentType.付款, t => t.IsVendor == true)
               .ToExpression();
             QueryField queryField = QueryConditionFilter.QueryFields.Where(c => c.FieldName == customerVendorId).FirstOrDefault();
             queryField.SubFilter.FilterLimitExpressions.Add(lambdaCv);
@@ -88,8 +203,8 @@ namespace RUINORERP.UI.FM
                               .And(t => t.AllowAddToStatement == true)
                               .And(t => t.LocalBalanceAmount != 0)
                               .And(t => t.ARAPStatus == (int)ARAPStatus.待审核 || t.ARAPStatus == (int)ARAPStatus.待支付 || t.ARAPStatus == (int)ARAPStatus.部分支付)
-                         //对账时不管收付款都要查出来。所以才在这里重新建一个
-                         //.And(t => t.ReceivePaymentType == (int)PaymentType)
+                              // 根据选择的对账类型过滤收付款类型
+                              .And(t => t.ReceivePaymentType == (int)PaymentType)
                          // .AndIF(AuthorizeController.GetOwnershipControl(MainForm.Instance.AppContext),t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)
                          .ToExpression();//注意 这一句 不能少
             QueryConditionFilter.FilterLimitExpressions.Add(lambda);
@@ -217,7 +332,7 @@ namespace RUINORERP.UI.FM
             }
 
             var paymentController = MainForm.Instance.AppContext.GetRequiredService<tb_FM_StatementController<tb_FM_Statement>>();
-            tb_FM_Statement statement = await paymentController.BuildStatement(RealList);
+            tb_FM_Statement statement = await paymentController.BuildStatement(RealList, PaymentType);
 
             MenuPowerHelper menuPowerHelper;
             menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();

@@ -5056,9 +5056,6 @@
     <Content Include="SqlScript\死锁维护.sql" />
     <Content Include="SqlScript\维护.sql" />
     <Content Include="SqlScript\销售报表.sql" />
-    <EmbeddedResource Include="SysConfig\DynamicConfig\DynamicConfig.config">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </EmbeddedResource>
     <Content Include="SysConfig\系统设置.txt" />
     <Content Include="TODO.txt" />
     <Content Include="ToolForm\close.bmp" />

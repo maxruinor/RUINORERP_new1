@@ -10,7 +10,7 @@ namespace RUINORERP.Model.ConfigModel
 {
     /// <summary>
     /// 全局验证配置类,随时根据业务需求进行修改，来验证单据输入的数据合法性。
-    /// 可以从客户端或服务器端分布这些配置
+    /// 可以从客户端或服务器端分发这些配置
     /// </summary>
     [Serializable()]
     [DisplayName("全局验证配置")]

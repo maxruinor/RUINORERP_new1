@@ -1,6 +1,7 @@
 using AutoMapper;
 using Castle.Core.Logging;
 using MathNet.Numerics.Distributions;
+using Microsoft.Extensions.Logging;
 using Netron.GraphLib;
 using Netron.GraphLib.Entitology;
 using NPOI.SS.Formula.Functions;
@@ -37,8 +38,8 @@ namespace RUINORERP.UI.UserCenter.DataParts
         private readonly MenuPowerHelper _menuPowerHelper;
         private readonly IEntityMappingService _mapper;
         private readonly EntityLoader _loader;
-        private readonly ILogger _logger;
-        public UCTodoList(IEntityMappingService mapper, EntityLoader loader , ILogger logger)
+        private readonly ILogger<UCTodoList> _logger;
+        public UCTodoList(IEntityMappingService mapper, EntityLoader loader , ILogger<UCTodoList> logger)
         {
             InitializeComponent();
             _logger = logger;

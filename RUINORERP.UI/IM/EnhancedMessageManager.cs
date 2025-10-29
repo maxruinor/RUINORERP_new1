@@ -22,7 +22,6 @@ using System.Reflection;
 using RUINORERP.Business.BizMapperService;
 using SqlSugar;
 using System.Drawing;
-using RUINORERP.Business.BizMapperService;
 using RUINORERP.Model;
 using RUINORERP.UI.Common;
 
@@ -34,14 +33,14 @@ namespace RUINORERP.UI.IM
     public class EnhancedMessageManager : MessageManager
     {
         // 不再需要BizTypeMapper，使用静态的EntityMappingHelper代替
-        private readonly ILogger _logger;
+        private readonly ILogger<EnhancedMessageManager> _logger;
 
         /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="logger">日志记录器</param>
         /// <param name="notificationService">通知服务</param>
-        public EnhancedMessageManager(ILogger logger = null, NotificationService notificationService = null) 
+        public EnhancedMessageManager(ILogger<EnhancedMessageManager> logger = null, NotificationService notificationService = null) 
             : base(logger, notificationService)
         {
             // EntityMappingHelper已经在应用程序启动时初始化，无需在此处创建

@@ -175,7 +175,6 @@
 		<File Ver="2.0.0.122" Name="StackExchange.Redis.dll" />
 		<File Ver="2.0.0.123" Name="SuperSocket.ClientEngine.dll" />
 		<File Ver="2.0.0.123" Name="SuperSocket.ProtoBase.dll" />
-		<File Ver="2.0.0.123" Name="SysConfig\DynamicConfig\DynamicConfig.config" />
 		<File Ver="2.0.0.122" Name="System.Buffers.dll" />
 		<File Ver="2.0.0.122" Name="System.Collections.Immutable.dll" />
 		<File Ver="2.0.0.122" Name="System.ComponentModel.Annotations.dll" />

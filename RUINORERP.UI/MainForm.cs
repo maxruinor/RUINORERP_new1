@@ -48,6 +48,7 @@ using RUINORERP.Business.Security;
 using RUINORERP.Common.Extensions;
 using Castle.Core.Smtp;
 using System.IO;
+using RUINORERP.UI.IM;
 using Org.BouncyCastle.Crypto.Agreement.JPake;
 using System.Text.RegularExpressions;
 using RUINORERP.UI.IM;
@@ -161,9 +162,10 @@ namespace RUINORERP.UI
         //IOptionsSnapshot<T> 的生命周期是作用域（Scoped），这意味着对于每一次HTTP请求，都会提供一个新的实例。如果在请求过程中配置文件发生了更改，这个实例仍然保持旧的值，直到新的请求到达，才会获取到新的配置值。因此，IOptionsSnapshot<T> 适合用在那些需要每个请求都使用最新配置快照的场景
 
         /// <summary>
-        /// 可配置性全局参数 不能设置为只读
+        /// 配置管理器
         /// </summary>
-        public IOptionsMonitor<SystemGlobalconfig> Globalconfig;
+        private ConfigManager _configManager;
+        private readonly NotificationService _notificationService;
 
         #region 当前系统中所有用户信息
         private List<UserInfo> userInfos = new List<UserInfo>();
@@ -864,7 +866,7 @@ namespace RUINORERP.UI
 
 
         public MainForm(ILogger<MainForm> _logger, AuditLogHelper _auditLogHelper,
-            FMAuditLogHelper _fmauditLogHelper, IOptionsMonitor<SystemGlobalconfig> config)
+            FMAuditLogHelper _fmauditLogHelper, ConfigManager configManager, NotificationService notificationService)
         {
             InitializeComponent();
 
@@ -878,13 +880,14 @@ namespace RUINORERP.UI
             fmauditLogHelper = _fmauditLogHelper;
             logger = _logger;
             _main = this;
+            _notificationService = notificationService;
 
             #region 新的客户端通讯模块的调用
             // 通过依赖注入获取核心组件
             communicationService = Startup.ServiceProvider.GetService<ClientCommunicationService>();
 
             // 初始化消息管理器
-            _messageManager = new EnhancedMessageManager(logger, Startup.ServiceProvider?.GetService<NotificationService>());
+            _messageManager = Startup.ServiceProvider.GetService<EnhancedMessageManager>(); 
 
             // 订阅重连失败事件，当重连失败时自动进入注销锁定状态
             if (communicationService != null)
@@ -915,13 +918,13 @@ namespace RUINORERP.UI
 
 
 
-            if (config != null)
+            if (configManager != null)
             {
-                Globalconfig = config;
+                _configManager = configManager;
                 // 监听配置变化
-                Globalconfig.OnChange(updatedConfig =>
+                _configManager.OnChange(updatedConfig =>
                 {
-                    //Console.WriteLine($"Configuration has changed: {updatedConfig.SomeSetting}");
+                    // 更新全局变量配置
                     AppContext.GlobalVariableConfig.IsFromPlatform = updatedConfig.IsFromPlatform;
                     AppContext.GlobalVariableConfig.DirectPrinting = updatedConfig.DirectPrinting;
                 });
@@ -1342,9 +1345,7 @@ namespace RUINORERP.UI
             ProgressManager.Instance.Initialize(lblStatusGlobal, progressBar);
             #endregion
 
-            // 初始化增强版消息管理器
-            _messageManager = new EnhancedMessageManager(logger, Startup.ServiceProvider?.GetService<NotificationService>());
-
+     
 
             InitUpdateSystemWatcher();
 
@@ -1364,13 +1365,10 @@ namespace RUINORERP.UI
             cacheInitializationService.InitializeAllTableSchemas();
 
 
-
-
-            this.Text = "企业数字化集成ERP v2.0" + "-" + Program.ERPVersion;
+            this.Text = "企业数字化集成ERP v3.0" + "-" + Program.ERPVersion;
             //MessageBox.Show("登陆成功后，请要系统设置中添加公司基本资料。");
-
-
-            InitRemind();
+ 
+            _notificationService?.Initialize();
 
             using (StatusBusy busy = new StatusBusy("检测系统是否为最新版本 请稍候"))
             {
@@ -3564,33 +3562,9 @@ namespace RUINORERP.UI
             }
         }
 
-        public void ShowMsg(string msg, string Caption = null)
-        {
-            if (string.IsNullOrEmpty(msg))
-            {
-                return;
-            }
-            try
-            {
-                //
-                //otificationBox.Instance().ShowForm(msg);//显示窗体
-                this.Invoke(new Action(() =>
-                {
-                    if (Caption == null)
-                    {
-                        Caption = "消息提醒";
-                    }
-
-                    MSNRemind(Caption, $"{msg}\r\n  [点击查看]", 2000, 5000, 3000, true, true, false, false, true, true);
-
-                }));
-
-            }
-            catch (Exception ex)
-            {
-
-            }
-        }
+        // 此方法已迁移到 NotificationService
+        // public void ShowMsg(string msg, string Caption = null)
+        // { ... }
 
 
         /*
@@ -3620,70 +3594,7 @@ namespace RUINORERP.UI
         #endregion
 
         #region 提醒
-
-        TaskbarNotifier taskbarNotifier1;
-
-        private void InitRemind()
-        {
-            taskbarNotifier1 = new TaskbarNotifier();
-            taskbarNotifier1.SetBackgroundBitmap(global::RUINORERP.UI.Properties.Resources.skin, Color.FromArgb(255, 0, 255));
-            taskbarNotifier1.SetCloseBitmap(global::RUINORERP.UI.Properties.Resources.close, Color.FromArgb(255, 0, 255), new System.Drawing.Point(127, 8));
-            taskbarNotifier1.TitleRectangle = new System.Drawing.Rectangle(40, 9, 70, 25);
-            taskbarNotifier1.ContentRectangle = new System.Drawing.Rectangle(8, 41, 133, 68);
-            taskbarNotifier1.TitleClick += new EventHandler(TitleClick);
-            taskbarNotifier1.ContentClick += new EventHandler(ContentClick);
-            taskbarNotifier1.CloseClick += new EventHandler(CloseClick);
-        }
-        void TitleClick(object obj, EventArgs ea)
-        {
-            //后面 可以修改ea的值，传类型和值，对应 处理
-        }
-
-
-
-        void ContentClick(object obj, EventArgs ea)
-        {
-            if (1 == 1)
-            {
-                //后面 可以修改ea的值，传类型和值，对应 处理
-            }
-        }
-
-        void CloseClick(object obj, EventArgs ea)
-        {
-            taskbarNotifier1.Close();
-        }
-
-        /// <summary>
-        /// MSN头像
-        /// </summary>
-        /// <param name="Title"></param>
-        /// <param name="Content"></param>
-        /// <param name="DelayShow"></param>
-        /// <param name="DelayStay"></param>
-        /// <param name="DelayHide"></param>
-        /// <param name="CloseClickable"></param>
-        /// <param name="TitleClickable"></param>
-        /// <param name="ContentClickable"></param>
-        /// <param name="SelectionRectangle"></param>
-        /// <param name="KeepVisibleOnMouseOver"></param>
-        /// <param name="ReShowOnMouseOver"></param>
-        public void MSNRemind(string Title, string Content, int DelayShow, int DelayStay, int DelayHide, bool CloseClickable, bool TitleClickable, bool ContentClickable, bool SelectionRectangle, bool KeepVisibleOnMouseOver, bool ReShowOnMouseOver)
-        {
-            if (Title.Length == 0 || Content.Length == 0)
-            {
-                MessageBox.Show("Enter a title and a content Text");
-                return;
-            }
-            taskbarNotifier1.CloseClickable = CloseClickable;
-            taskbarNotifier1.TitleClickable = TitleClickable;
-            taskbarNotifier1.ContentClickable = ContentClickable;
-            taskbarNotifier1.EnableSelectionRectangle = SelectionRectangle;
-            taskbarNotifier1.KeepVisibleOnMousOver = KeepVisibleOnMouseOver;    // Added Rev 002
-            taskbarNotifier1.ReShowOnMouseOver = ReShowOnMouseOver;         // Added Rev 002
-            taskbarNotifier1.Show(Title, Content, DelayShow, DelayStay, DelayHide);
-        }
-
+        // 通知功能已迁移到 NotificationService
         #endregion
 
         private void cmbRoles_SelectedIndexChanged(object sender, EventArgs e)

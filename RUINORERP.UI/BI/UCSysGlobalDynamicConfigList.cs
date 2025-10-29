@@ -71,25 +71,10 @@ namespace RUINORERP.UI.BI
                 {
                     Query();
                 }
-                //await pctr.BaseDeleteAsync(list);
             }
             return rs;
         }
-      
-        public override async Task<List<tb_SysGlobalDynamicConfig>> Save()
-        {
-            List<tb_SysGlobalDynamicConfig> list = await base.Save();
-            if (list.Count > 0)
-            {
-                //哪个变化了就更新哪个
-                ConfigManager configManager = Startup.GetFromFac<ConfigManager>();
-                foreach (var item in list)
-                {
-                    configManager.UpdateConfig(item.ConfigKey, item.ConfigValue);
-                }
-            }
-            return list;
-        }
+     
 
     }
 }

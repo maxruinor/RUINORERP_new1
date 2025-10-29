@@ -48,6 +48,7 @@ using WorkflowCore.Services;
 using RUINORERP.UI.SysConfig;
 using RUINORERP.Business.Security;
 using Castle.Core.Logging;
+using RUINORERP.UI.IM;
 using log4net;
 using RUINORERP.Model.TransModel;
 using RUINORERP.Model.ConfigModel;
@@ -82,6 +83,7 @@ using RUINORERP.UI.UserCenter.DataParts;
 using RUINORERP.UI.Network.Authentication;
 using System.Data;
 using Autofac.Core;
+using Microsoft.Extensions.Options;
 namespace RUINORERP.UI
 {
     public class Startup
@@ -225,7 +227,15 @@ namespace RUINORERP.UI
             services.Configure<SystemGlobalconfig>(builder.GetSection(nameof(SystemGlobalconfig)));
             services.Configure<GlobalValidatorConfig>(builder.GetSection(nameof(GlobalValidatorConfig)));
 
-            services.AddSingleton(typeof(ConfigManager));
+            // 注册ConfigManager为单例，并确保它能正确初始化
+            services.AddSingleton<ConfigManager>(provider =>
+            {
+                var configMonitor = provider.GetRequiredService<IOptionsMonitor<SystemGlobalconfig>>();
+                var validatorMonitor = provider.GetRequiredService<IOptionsMonitor<GlobalValidatorConfig>>();
+                var configManager = new ConfigManager();
+                configManager.Initialize(configMonitor, validatorMonitor);
+                return configManager;
+            });
         }
 
         /// <summary>
@@ -325,7 +335,9 @@ namespace RUINORERP.UI
             });
             // 注册通知服务
             services.AddScoped<NotificationService>();
-
+            // 注册增强版消息管理器
+            services.AddScoped<EnhancedMessageManager>();
+            
             services.AddMemoryCacheSetup();
             services.AddAppContext(Program.AppContextData);
 

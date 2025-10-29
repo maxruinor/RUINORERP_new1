@@ -269,11 +269,7 @@ namespace RUINORERP.UI.PSI.SAL
                     //通过动态参数来设置这个默认值。这样每个公司不同设置按自己的来。
                     entity.IsFromPlatform = AppContext.GlobalVariableConfig.IsFromPlatform;
                     entity.OrderPriority = (int)Priority.正常;
-                    // 监听配置变化
-                    MainForm.Instance.Globalconfig.OnChange((config, value) =>
-                    {
-                        entity.IsFromPlatform = config.IsFromPlatform;
-                    });
+                     
 
                     if (entity.tb_SaleOrderDetails != null && entity.tb_SaleOrderDetails.Count > 0)
                     {

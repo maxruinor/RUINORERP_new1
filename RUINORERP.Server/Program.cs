@@ -87,7 +87,13 @@ namespace RUINORERP.Server
         [STAThread]
         static async Task Main()
         {
+#if DEBUG
+            // 在DEBUG模式下，检查是否有特殊命令行参数来允许多实例运行
+            bool allowMultipleInstances = Environment.GetCommandLineArgs().Contains("--allow-multiple-instances");
+            if (!allowMultipleInstances && SingleInstanceChecker.IsAlreadyRunning())
+#else
             if (SingleInstanceChecker.IsAlreadyRunning())
+#endif
             {
                 // 已有实例运行则退出
                 Process instance = RunningInstance();
@@ -131,7 +137,7 @@ namespace RUINORERP.Server
 
                 #region 初始化csla  
                 try
-                {
+                    {
 
 
 
@@ -260,10 +266,6 @@ namespace RUINORERP.Server
             //Application.Run(new frmMain());
         }
 
-
-
-
-        
 
 
 

@@ -354,7 +354,7 @@
         public Krypton.Docking.KryptonDockingManager kryptonDockingManagerQuery;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
         private System.Windows.Forms.ToolStripLabel 最大行数;
-        private System.Windows.Forms.ToolStripSplitButton toolStripSplitButtonPrint;
+        public System.Windows.Forms.ToolStripSplitButton toolStripSplitButtonPrint;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem1;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem2;
         public System.Windows.Forms.ToolStripButton toolStripButtonDelete;

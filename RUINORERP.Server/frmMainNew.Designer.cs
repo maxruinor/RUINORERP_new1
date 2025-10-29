@@ -28,6 +28,7 @@ namespace RUINORERP.Server
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmMainNew));
             menuStripMain = new System.Windows.Forms.MenuStrip();
             systemToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             startServerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -477,6 +478,7 @@ namespace RUINORERP.Server
             Controls.Add(splitterLog);
             Controls.Add(richTextBoxLog);
             Controls.Add(statusStripMain);
+            Icon = (System.Drawing.Icon)resources.GetObject("$this.Icon");
             MainMenuStrip = menuStripMain;
             Margin = new System.Windows.Forms.Padding(4);
             Name = "frmMainNew";

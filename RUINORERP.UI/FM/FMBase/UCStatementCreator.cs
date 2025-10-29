@@ -40,6 +40,9 @@ using RUINORERP.Global.Model;
 using RUINORERP.UI.ToolForm;
 using Microsoft.Extensions.Logging;
 using NPOI.SS.Formula.Functions;
+using System.Threading;
+using System.Linq.Expressions;
+using RUINORERP.Business.RowLevelAuthService;
 
 namespace RUINORERP.UI.FM
 {
@@ -71,7 +74,24 @@ namespace RUINORERP.UI.FM
         {
             // 查询条件面板加载完成后，添加对账类型选择框
             AddPaymentTypeToQueryPanel();
+
         }
+
+        /// <summary>
+        /// 数据单元格格式化事件，用于在余额对账模式下调整金额显示
+        /// </summary>
+
+
+        // 定义对账类型枚举
+        private enum StatementType
+        {
+            余额对账,
+            收款对账,
+            付款对账
+        }
+
+        // 保存当前选择的对账类型
+        private StatementType CurrentStatementType { get; set; }
 
         private void AddPaymentTypeToQueryPanel()
         {
@@ -84,39 +104,52 @@ namespace RUINORERP.UI.FM
 
                 // 获取查询面板的父容器
                 var parentContainer = queryPanel.Parent;
-                
+
                 // 计算新面板和查询面板的位置
                 int paymentPanelHeight = 40;
                 int originalQueryPanelLocation = queryPanel.Location.Y;
-                
+
                 // 创建新的面板用于放置对账类型选择控件
                 Krypton.Toolkit.KryptonPanel paymentTypePanel = new Krypton.Toolkit.KryptonPanel();
                 paymentTypePanel.Name = "paymentTypePanel";
                 paymentTypePanel.Size = new Size(queryPanel.Width, paymentPanelHeight);
                 paymentTypePanel.Location = new Point(queryPanel.Location.X, queryPanel.Location.Y);
                 paymentTypePanel.Dock = DockStyle.Top;
-                
+
                 // 创建对账类型选择标签
                 Krypton.Toolkit.KryptonLabel label = new Krypton.Toolkit.KryptonLabel();
                 label.Text = "对账类型";
                 label.Location = new Point(10, 10);
                 label.Size = new Size(80, 24);
-                
+
                 // 创建下拉选择框
                 cmbPaymentType = new Krypton.Toolkit.KryptonComboBox();
                 cmbPaymentType.Location = new Point(100, 8);
                 cmbPaymentType.Size = new Size(150, 24);
                 cmbPaymentType.Name = "cmbPaymentType";
-                
-                // 添加选项
+
+                // 添加选项，余额对账作为默认选项排在第一位
+                cmbPaymentType.Items.Add("余额对账");
                 cmbPaymentType.Items.Add("收款对账");
                 cmbPaymentType.Items.Add("付款对账");
-                cmbPaymentType.SelectedIndex = PaymentType == ReceivePaymentType.收款 ? 0 : 1;
-                
+                cmbPaymentType.SelectedIndex = 0; // 默认选择余额对账
+                CurrentStatementType = StatementType.余额对账;
+
                 // 添加选择变化事件
                 cmbPaymentType.SelectedIndexChanged += (s, e) =>
                 {
-                    PaymentType = cmbPaymentType.SelectedIndex == 0 ? ReceivePaymentType.收款 : ReceivePaymentType.付款;
+                    // 更新当前对账类型
+                    CurrentStatementType = (StatementType)cmbPaymentType.SelectedIndex;
+
+                    // 根据选择的对账类型设置PaymentType（用于生成对账单时使用）
+                    if (CurrentStatementType == StatementType.收款对账)
+                        PaymentType = ReceivePaymentType.收款;
+                    else if (CurrentStatementType == StatementType.付款对账)
+                        PaymentType = ReceivePaymentType.付款;
+                    // 余额对账时PaymentType的值将由最终余额决定，这里暂时设为收款
+                    else
+                        PaymentType = ReceivePaymentType.收款;
+
                     // 刷新查询条件和数据
                     BuildLimitQueryConditions();
                     QueryConditionBuilder();
@@ -124,21 +157,21 @@ namespace RUINORERP.UI.FM
                     base.QueryDtoProxy = LoadQueryConditionToUI();
                     base.Query(base.QueryDtoProxy);
                 };
-                
+
                 // 将控件添加到新面板
                 paymentTypePanel.Controls.Add(label);
                 paymentTypePanel.Controls.Add(cmbPaymentType);
-                
+
                 // 调整查询面板的位置
                 queryPanel.Location = new Point(queryPanel.Location.X, queryPanel.Location.Y + paymentPanelHeight);
                 queryPanel.Size = new Size(queryPanel.Width, queryPanel.Height - paymentPanelHeight);
-                
+
                 // 将新面板添加到父容器
                 parentContainer.Controls.Add(paymentTypePanel);
-                
+
                 // 确保新面板在查询面板之上
                 paymentTypePanel.BringToFront();
-                
+
                 // 调整父容器的其他控件位置
                 foreach (Control ctrl in parentContainer.Controls)
                 {
@@ -168,16 +201,27 @@ namespace RUINORERP.UI.FM
             // 清除现有条件以避免重复
             QueryConditionFilter.FilterLimitExpressions.Clear();
 
-            // 根据PaymentType添加过滤条件
-            var lambda = Expressionable.Create<tb_FM_ReceivablePayable>()
+            // 创建基础查询条件
+            var lambdaBuilder = Expressionable.Create<tb_FM_ReceivablePayable>()
                               .And(t => t.isdeleted == false)
                               .And(t => t.AllowAddToStatement == true)
                               .And(t => t.LocalBalanceAmount != 0)
-                              .And(t => t.ARAPStatus == (int)ARAPStatus.待审核 || t.ARAPStatus == (int)ARAPStatus.待支付 || t.ARAPStatus == (int)ARAPStatus.部分支付)
-                              // 根据选择的对账类型过滤收付款类型
-                              .And(t => t.ReceivePaymentType == (int)PaymentType)
-                         .ToExpression();
+                              .And(t => t.ARAPStatus == (int)ARAPStatus.待审核 || t.ARAPStatus == (int)ARAPStatus.待支付 || t.ARAPStatus == (int)ARAPStatus.部分支付);
 
+            // 根据不同的对账类型添加过滤条件
+            if (CurrentStatementType == StatementType.收款对账)
+            {
+                // 收款对账：只显示收款类型的数据
+                lambdaBuilder.And(t => t.ReceivePaymentType == (int)ReceivePaymentType.收款);
+            }
+            else if (CurrentStatementType == StatementType.付款对账)
+            {
+                // 付款对账：只显示付款类型的数据
+                lambdaBuilder.And(t => t.ReceivePaymentType == (int)ReceivePaymentType.付款);
+            }
+            // 余额对账：不过滤收付款类型，显示所有类型的数据
+
+            var lambda = lambdaBuilder.ToExpression();
             QueryConditionFilter.FilterLimitExpressions.Add(lambda);
         }
 
@@ -185,28 +229,50 @@ namespace RUINORERP.UI.FM
 
         public override void BuildLimitQueryConditions()
         {
-
             //这里外层来实现对客户供应商的限制
             string customerVendorId = "".ToFieldName<tb_CustomerVendor>(c => c.CustomerVendor_ID);
 
             //应收付款中的往来单位额外添加一些条件
             //还是将来利用行级权限来实现？
-            var lambdaCv = Expressionable.Create<tb_CustomerVendor>()
-              .AndIF(PaymentType == ReceivePaymentType.收款, t => t.IsCustomer == true)
-              .AndIF(PaymentType == ReceivePaymentType.付款, t => t.IsVendor == true)
-              .ToExpression();
-            QueryField queryField = QueryConditionFilter.QueryFields.Where(c => c.FieldName == customerVendorId).FirstOrDefault();
-            queryField.SubFilter.FilterLimitExpressions.Add(lambdaCv);
+            var lambdaCv = Expressionable.Create<tb_CustomerVendor>();
 
-            var lambda = Expressionable.Create<tb_FM_ReceivablePayable>()
+            // 根据不同的对账类型设置客户供应商过滤条件
+            if (CurrentStatementType == StatementType.收款对账)
+            {
+                // 收款对账：只显示客户
+                lambdaCv.And(t => t.IsCustomer == true);
+            }
+            else if (CurrentStatementType == StatementType.付款对账)
+            {
+                // 付款对账：只显示供应商
+                lambdaCv.And(t => t.IsVendor == true);
+            }
+            // 余额对账：不过滤客户/供应商类型，显示所有
+
+            QueryField queryField = QueryConditionFilter.QueryFields.Where(c => c.FieldName == customerVendorId).FirstOrDefault();
+            queryField.SubFilter.FilterLimitExpressions.Add(lambdaCv.ToExpression());
+
+            // 创建基础查询条件
+            var lambdaBuilder = Expressionable.Create<tb_FM_ReceivablePayable>()
                               .And(t => t.isdeleted == false)
                               .And(t => t.AllowAddToStatement == true)
                               .And(t => t.LocalBalanceAmount != 0)
-                              .And(t => t.ARAPStatus == (int)ARAPStatus.待审核 || t.ARAPStatus == (int)ARAPStatus.待支付 || t.ARAPStatus == (int)ARAPStatus.部分支付)
-                              // 根据选择的对账类型过滤收付款类型
-                              .And(t => t.ReceivePaymentType == (int)PaymentType)
-                         // .AndIF(AuthorizeController.GetOwnershipControl(MainForm.Instance.AppContext),t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)
-                         .ToExpression();//注意 这一句 不能少
+                              .And(t => t.ARAPStatus == (int)ARAPStatus.待审核 || t.ARAPStatus == (int)ARAPStatus.待支付 || t.ARAPStatus == (int)ARAPStatus.部分支付);
+
+            // 根据不同的对账类型添加过滤条件
+            if (CurrentStatementType == StatementType.收款对账)
+            {
+                // 收款对账：只显示收款类型的数据
+                lambdaBuilder.And(t => t.ReceivePaymentType == (int)ReceivePaymentType.收款);
+            }
+            else if (CurrentStatementType == StatementType.付款对账)
+            {
+                // 付款对账：只显示付款类型的数据
+                lambdaBuilder.And(t => t.ReceivePaymentType == (int)ReceivePaymentType.付款);
+            }
+            // 余额对账：不过滤收付款类型，显示所有类型的数据
+
+            var lambda = lambdaBuilder.ToExpression();
             QueryConditionFilter.FilterLimitExpressions.Add(lambda);
             base.LimitQueryConditions = lambda;
         }
@@ -229,7 +295,7 @@ namespace RUINORERP.UI.FM
 
 
 
-        #region 转为收付款单
+        #region 转为对账款单
         public override List<ContextMenuController> AddContextMenu()
         {
             List<ContextMenuController> list = new List<ContextMenuController>();
@@ -331,8 +397,20 @@ namespace RUINORERP.UI.FM
                 return;
             }
 
+            // 计算选中记录的总余额
+            // 按照业务规则：付款类型金额取负号，收款类型保持原样
+            decimal totalBalance = RealList.Sum(item =>
+                item.ReceivePaymentType == (int)ReceivePaymentType.付款 ?
+                -item.LocalBalanceAmount : item.LocalBalanceAmount);
+
+            // 余额对账模式下，根据总余额的正负决定PaymentType
+            ReceivePaymentType finalPaymentType = PaymentType;
+            tb_FM_Statement statement = new();
+
+            //对账模式，直接使用原始数据，因为已经查询时处理过了。针对余额对账，需要重新计算
             var paymentController = MainForm.Instance.AppContext.GetRequiredService<tb_FM_StatementController<tb_FM_Statement>>();
-            tb_FM_Statement statement = await paymentController.BuildStatement(RealList, PaymentType);
+            statement = await paymentController.BuildStatement(RealList, finalPaymentType);
+
 
             MenuPowerHelper menuPowerHelper;
             menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
@@ -351,18 +429,11 @@ namespace RUINORERP.UI.FM
 
         public override void BuildSummaryCols()
         {
+            // 重写汇总逻辑，以支持余额对账模式下的正确汇总
+            // 注意：这里只是定义需要汇总的列，实际汇总计算需要在基类中处理
             base.MasterSummaryCols.Add(c => c.TaxTotalAmount);
 
-            base.MasterSummaryCols.Add(c => c.TotalLocalPayableAmount);
-            base.MasterSummaryCols.Add(c => c.TotalForeignPayableAmount);
-
-            base.MasterSummaryCols.Add(c => c.ForeignBalanceAmount);
-            base.MasterSummaryCols.Add(c => c.LocalBalanceAmount);
-
-            base.MasterSummaryCols.Add(c => c.ForeignPaidAmount);
-            base.MasterSummaryCols.Add(c => c.LocalPaidAmount);
-            base.ChildSummaryCols.Add(c => c.LocalPayableAmount);
-            base.ChildSummaryCols.Add(c => c.TaxLocalAmount);
+            // 金额调整逻辑现在在重写的Query方法中实现，会在查询结果返回后直接处理数据
         }
 
 
@@ -401,7 +472,259 @@ namespace RUINORERP.UI.FM
                 base._UCBillMasterQuery.GridRelated.SetRelatedInfo<tb_FM_ReceivablePayable>(c => c.SourceBillNo, keyNamePair);
             }
             #endregion
-
         }
+        // 重写基类的查询方法，在查询结果返回后应用金额处理逻辑
+        protected override async void Query(object QueryDto, bool UIQuery = true)
+        {
+            // 添加取消令牌支持
+            var cancellationTokenSource = new CancellationTokenSource();
+
+            try
+            {
+                // 记录查询开始
+                MainForm.Instance.logger.LogDebug("开始执行查询，实体类型: {EntityType}", typeof(tb_FM_ReceivablePayable).Name);
+
+                if (UIQuery)
+                {
+                    // 验证UI控件
+                    this.ValidateChildren(System.Windows.Forms.ValidationConstraints.None);
+
+                    if (ValidationHelper.hasValidationErrors(this.Controls))
+                    {
+                        MainForm.Instance.logger.LogWarning("UI验证失败，取消查询");
+                        return;
+                    }
+                }
+
+                // 验证必要参数
+                if (QueryDto == null)
+                {
+                    MainForm.Instance.logger.LogWarning("查询参数为空，取消查询");
+                    return;
+                }
+
+                // 获取控制器
+                BaseController<tb_FM_ReceivablePayable> ctr = null;
+                try
+                {
+                    ctr = Startup.GetFromFacByName<BaseController<tb_FM_ReceivablePayable>>(typeof(tb_FM_ReceivablePayable).Name + "Controller");
+                    if (ctr == null)
+                    {
+                        MainForm.Instance.logger.LogError("无法获取控制器: {ControllerName}", typeof(tb_FM_ReceivablePayable).Name + "Controller");
+                        throw new InvalidOperationException($"无法获取控制器: {typeof(tb_FM_ReceivablePayable).Name}Controller");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MainForm.Instance.logger.LogError(ex, "获取控制器时发生错误");
+                    throw;
+                }
+
+                // 获取分页参数
+                int pageNum = 1;
+                int pageSize = 0;
+                try
+                {
+                    pageSize = int.Parse(txtMaxRow.Text);
+                    if (pageSize <= 0 || pageSize > 5000)
+                    {
+                        MainForm.Instance.logger.LogWarning("无效的页面大小: {PageSize}，使用默认值200", pageSize);
+                        pageSize = 200; // 默认值
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MainForm.Instance.logger.LogWarning(ex, "解析页面大小时发生错误，使用默认值200");
+                    pageSize = 200;
+                }
+
+                // 提取查询条件列名
+                List<string> queryConditions = new List<string>();
+                try
+                {
+                    if (QueryConditionFilter != null && QueryConditionFilter.QueryFields != null)
+                    {
+                        queryConditions = new List<string>(QueryConditionFilter.QueryFields.Select(t => t.FieldName).ToList());
+                        MainForm.Instance.logger.LogDebug("提取查询条件字段: {FieldsCount}个", queryConditions.Count);
+                    }
+                    else
+                    {
+                        MainForm.Instance.logger.LogWarning("QueryConditionFilter或QueryFields为空");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MainForm.Instance.logger.LogError(ex, "提取查询条件时发生错误");
+                }
+
+                // 初始化过滤表达式列表
+                if (QueryConditionFilter.FilterLimitExpressions == null)
+                {
+                    QueryConditionFilter.FilterLimitExpressions = new List<LambdaExpression>();
+                }
+
+                // 应用限制查询条件
+                if (LimitQueryConditions != null && !QueryConditionFilter.FilterLimitExpressions.Contains(LimitQueryConditions))
+                {
+                    QueryConditionFilter.FilterLimitExpressions.Add(LimitQueryConditions);
+                    MainForm.Instance.logger.LogDebug("应用了LimitQueryConditions限制条件");
+                }
+
+                // 获取并应用行级权限过滤
+                string filterClause = string.Empty;
+                try
+                {
+                    var rowAuthService = Startup.GetFromFac<IRowAuthService>();
+                    if (rowAuthService != null)
+                    {
+                        Type entityType = typeof(tb_FM_ReceivablePayable);
+                        filterClause = rowAuthService.GetUserRowAuthFilterClause(entityType, CurMenuInfo.MenuID);
+                        MainForm.Instance.logger.LogDebug("获取行级权限过滤条件: {FilterClause}", filterClause);
+                    }
+                    else
+                    {
+                        MainForm.Instance.logger.LogWarning("无法获取行级权限服务");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MainForm.Instance.logger.LogError(ex, "获取行级权限过滤条件时发生错误");
+                    // 不中断查询，但使用空过滤条件
+                }
+
+                // 执行查询（带超时控制）
+                List<tb_FM_ReceivablePayable> rawList = null;
+                try
+                {
+                    // 设置查询超时（30秒）
+                    cancellationTokenSource.CancelAfter(TimeSpan.FromSeconds(30));
+
+                    // 在异步方法中支持取消
+                    var queryTask = ctr.BaseQueryByAdvancedNavWithConditionsAsync(true, QueryConditionFilter, QueryDto, pageNum, pageSize, filterClause);
+                    rawList = await Task.Run(async () =>
+                    {
+                        return await queryTask as List<tb_FM_ReceivablePayable>;
+                    }, cancellationTokenSource.Token);
+
+                    MainForm.Instance.logger.LogDebug("查询执行完成，返回记录数: {Count}", rawList?.Count ?? 0);
+                }
+                catch (OperationCanceledException)
+                {
+                    MainForm.Instance.logger.LogWarning("查询操作已超时取消");
+                    this.BeginInvoke(new Action(() =>
+                    {
+                        MessageBox.Show("查询执行超时，请调整查询条件重试", "查询超时", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    }));
+                    return;
+                }
+                catch (Exception ex)
+                {
+                    MainForm.Instance.logger.LogError(ex, "执行查询时发生错误");
+                    // 详细记录异常栈
+                    MainForm.Instance.logger.LogError(ex.StackTrace);
+
+                    this.BeginInvoke(new Action(() =>
+                    {
+                        MessageBox.Show($"查询执行失败: {ex.Message}", "查询错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }));
+                    return;
+                }
+
+                // 处理查询结果
+                try
+                {
+                    List<tb_FM_ReceivablePayable> list = rawList ?? new List<tb_FM_ReceivablePayable>();
+
+                    // 余额对账模式下，调整查询结果中的金额正负值
+                    if (CurrentStatementType == StatementType.余额对账)
+                    {
+                        List<tb_FM_ReceivablePayable> adjustedList = new List<tb_FM_ReceivablePayable>();
+                        foreach (var item in list)
+                        {
+                            // 创建数据副本以避免修改原始数据
+                            var adjustedItem = new tb_FM_ReceivablePayable();
+
+                            // 使用反射复制所有公共属性
+                            foreach (var property in typeof(tb_FM_ReceivablePayable).GetProperties())
+                            {
+                                if (property.CanRead && property.CanWrite)
+                                {
+                                    try
+                                    {
+                                        property.SetValue(adjustedItem, property.GetValue(item));
+                                    }
+                                    catch { }
+                                }
+                            }
+
+                            // 根据收付款类型调整金额正负值
+                            if (item.ReceivePaymentType == (int)ReceivePaymentType.付款)
+                            {
+                                // 付款类型直接取负号
+                                adjustedItem.TotalLocalPayableAmount = -adjustedItem.TotalLocalPayableAmount;
+                                adjustedItem.TotalForeignPayableAmount = -adjustedItem.TotalForeignPayableAmount;
+                                adjustedItem.LocalBalanceAmount = -adjustedItem.LocalBalanceAmount;
+                                adjustedItem.ForeignBalanceAmount = -adjustedItem.ForeignBalanceAmount;
+                                adjustedItem.LocalPaidAmount = -adjustedItem.LocalPaidAmount;
+                                adjustedItem.ForeignPaidAmount = -adjustedItem.ForeignPaidAmount;
+                                adjustedItem.TaxTotalAmount = -adjustedItem.TaxTotalAmount;
+                            }
+                            // 收款类型保持原始金额不变
+
+                            adjustedList.Add(adjustedItem);
+                        }
+
+                        // 使用调整后的数据列表
+                        list = adjustedList;
+                    }
+
+                    // 确保在UI线程更新绑定源
+                    this.BeginInvoke(new Action(() =>
+                    {
+                        _UCBillMasterQuery.bindingSourceMaster.DataSource = list.ToBindingSortCollection();
+                        _UCBillMasterQuery.ShowSummaryCols();
+
+                        // 控制打印按钮可见性
+                        toolStripSplitButtonPrint.Visible = list.Count > 0;
+
+                        // 处理结果分析（如果启用）
+                        if (ResultAnalysis && _UCOutlookGridAnalysis1 != null)
+                        {
+                            _UCOutlookGridAnalysis1.ColDisplayTypes = new List<Type>();
+                            _UCOutlookGridAnalysis1.ColDisplayTypes.Add(typeof(tb_FM_ReceivablePayable));
+                            _UCOutlookGridAnalysis1.FieldNameList = _UCBillMasterQuery.newSumDataGridViewMaster.FieldNameList;
+                            _UCOutlookGridAnalysis1.bindingSourceOutlook.DataSource = list;
+                            _UCOutlookGridAnalysis1.ColumnDisplays = _UCBillMasterQuery.newSumDataGridViewMaster.ColumnDisplays;
+                            _UCOutlookGridAnalysis1.LoadDataToGrid<tb_FM_ReceivablePayable>(list);
+                        }
+
+                        MainForm.Instance.logger.LogDebug("查询结果已绑定到UI控件");
+                    }));
+                }
+                catch (Exception ex)
+                {
+                    MainForm.Instance.logger.LogError(ex, "绑定查询结果到UI时发生错误");
+                }
+            }
+            catch (Exception ex)
+            {
+                // 捕获所有未处理的异常
+                MainForm.Instance.logger.LogError(ex, "查询过程中发生未预期的错误");
+
+                // 在UI线程显示错误消息
+                this.BeginInvoke(new Action(() =>
+                {
+                    MessageBox.Show($"查询过程中发生错误: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }));
+            }
+            finally
+            {
+                // 清理资源
+                cancellationTokenSource.Dispose();
+                MainForm.Instance.logger.LogDebug("查询过程完成，资源已清理");
+            }
+        }
+
+
     }
 }

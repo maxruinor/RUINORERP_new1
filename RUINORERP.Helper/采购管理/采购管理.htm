@@ -1,0 +1,300 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        /* 全局样式 */
+        body {
+            font-family: "Microsoft YaHei", Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+
+        /* 标题样式 */
+        h1 {
+            color: #2c3e50;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            font-size: 2em;
+        }
+
+        h2 {
+            color: #34495e;
+            border-left: 4px solid #3498db;
+            padding-left: 15px;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        h3 {
+            color: #555;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+
+        /* 段落样式 */
+        p {
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        /* 列表样式 */
+        ul, ol {
+            margin-bottom: 20px;
+            padding-left: 30px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        /* 表格样式 */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background-color: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        th {
+            background-color: #3498db;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+        }
+
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #eee;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        tr:hover {
+            background-color: #e3f2fd;
+        }
+
+        /* 强调文本 */
+        strong {
+            color: #2c3e50;
+        }
+
+        /* 链接样式 */
+        a {
+            color: #3498db;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+            color: #2980b9;
+        }
+
+        /* 提示框样式*/
+        .tip {
+            background-color: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .warning {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .note {
+            background-color: #d1ecf1;
+            border-left: 4px solid #17a2b8;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 4px 4px 0;
+        }
+    </style>
+    
+    <title>采购管理</title>
+    <meta charset="utf-8">
+</head>
+<body>
+    <div style="background-color: #f0f0f0; padding: 10px; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 5px;">
+    <strong>导航链接：</strong>
+    <a href="生产管理.htm" style="margin-right: 15px;">生产管理</a>
+    <a href="进销存管理.htm" style="margin-right: 15px;">进销存管理</a>
+    <a href="售后管理.htm" style="margin-right: 15px;">售后管理</a>
+    <a href="客户关系管理.htm" style="margin-right: 15px;">客户关系</a>
+    <a href="财务管理.htm" style="margin-right: 15px;">财务管理</a>
+    <a href="行政管理.htm" style="margin-right: 15px;">行政管理</a>
+    <a href="报表管理.htm" style="margin-right: 15px;">报表管理</a>
+    <a href="电商运营.htm" style="margin-right: 15px;">电商运营</a>
+    <a href="基础资料管理.htm" style="margin-right: 15px;">基础资料</a>
+    <a href="系统设置.htm" style="margin-right: 15px;">系统设置</a>
+    <a href="通用功能.htm" style="margin-right: 15px;">通用功能</a>
+    <a href="审核反审核结案业务流程.htm" style="margin-right: 15px;">审核流程</a>
+</div>
+    <h1>采购管理</h1>
+    <p>采购管理模块用于管理企业的采购业务流程，包括供应商管理、采购订单、采购入库等。</p>
+    
+    <h2>功能概述</h2>
+    <p>采购管理主要包括供应商档案管理、采购询价、采购订单、采购入库、采购退货等业务。</p>
+    
+    <h3>供应商管理</h3>
+    <ul>
+        <li>维护供应商基本信息</li>
+        <li>管理供应商联系人信息</li>
+        <li>记录供应商交易历史</li>
+        <li>评估供应商绩效</li>
+    </ul>
+    
+    <h3>采购订单管理</h3>
+    <ul>
+        <li>创建和维护采购订单</li>
+        <li>跟踪订单执行状态</li>
+        <li>处理订单变更</li>
+        <li>订单审批流程</li>
+    </ul>
+    
+    <h3>采购入库管理</h3>
+    <ul>
+        <li>根据采购订单生成入库单</li>
+        <li>记录实际到货信息</li>
+        <li>处理部分到货和超量到货</li>
+        <li>质检和入库确认</li>
+    </ul>
+    
+    <h2>操作流程</h2>
+    <h3>采购订单流程</h3>
+    <ol>
+        <li>选择供应商并创建采购订单</li>
+        <li>填写采购明细信息</li>
+        <li>提交订单审批</li>
+        <li>审批通过后订单生效</li>
+        <li>供应商发货后创建采购入库单</li>
+        <li>质检合格后确认入库</li>
+    </ol>
+    
+    <h3>采购订单审核流程</h3>
+    <p>采购订单创建后需要经过审核流程才能生效：
+    <ol>
+        <li>采购订单创建完成后，状态为"未审核"</li>
+        <li>具有审核权限的用户可以对订单进行审核操作</li>
+        <li>审核时需要填写审核意见，选择"同意"或"拒绝"</li>
+        <li>审核同意后，订单状态更新为"已审核"，可以进行后续入库操作</li>
+        <li>审核拒绝后，订单状态保持"未审核"，需要修改后重新提交审核</li>
+    </ol>
+    </p>
+    
+    <h3>采购订单反审核流程</h3>
+    <p>对于已审核但尚未结案的采购订单，可以执行反审核操作：
+    <ol>
+        <li>选择需要反审核的已审核采购订单</li>
+        <li>点击"反审核"按钮，系统会提示确认操作</li>
+        <li>确认后，订单状态从"已审核"回退到"未审核"状态</li>
+        <li>反审核后的订单可以进行修改操作，修改后需要重新提交审核</li>
+    </ol>
+    </p>
+    
+    <h3>采购订单结案流程</h3>
+    <p>采购订单在完成所有入库操作后可以进行结案：
+    <ol>
+        <li>确保采购订单已审核且所有货物已入库</li>
+        <li>选择需要结案的采购订单</li>
+        <li>点击"结案"按钮，系统会提示确认操作</li>
+        <li>确认后，订单状态更新为"已结案"，不能再进行修改操作</li>
+    </ol>
+    </p>
+    
+    <h3>采购退货流程</h3>
+    <ol>
+        <li>发现质量问题或多余货物</li>
+        <li>创建采购退货单</li>
+        <li>提交退货申请审批</li>
+        <li>审批通过后执行退货</li>
+        <li>记录退货信息并更新库存</li>
+    </ol>
+    
+    <h3>采购退货审核流程</h3>
+    <p>采购退货单创建后需要经过审核流程才能生效：
+    <ol>
+        <li>采购退货单创建完成后，状态为"未审核"</li>
+        <li>具有审核权限的用户可以对退货单进行审核操作</li>
+        <li>审核时需要填写审核意见，选择"同意"或"拒绝"</li>
+        <li>审核同意后，退货单状态更新为"已审核"，可以进行后续出库操作</li>
+        <li>审核拒绝后，退货单状态保持"未审核"，需要修改后重新提交审核</li>
+    </ol>
+    </p>
+    
+    <h3>采购退货反审核流程</h3>
+    <p>对于已审核但尚未结案的采购退货单，可以执行反审核操作：
+    <ol>
+        <li>选择需要反审核的已审核采购退货单</li>
+        <li>点击"反审核"按钮，系统会提示确认操作</li>
+        <li>确认后，退货单状态从"已审核"回退到"未审核"状态</li>
+        <li>反审核后的退货单可以进行修改操作，修改后需要重新提交审核</li>
+    </ol>
+    </p>
+    
+    <h3>采购退货结案流程</h3>
+    <p>采购退货单在完成所有出库操作后可以进行结案：
+    <ol>
+        <li>确保采购退货单已审核且所有货物已出库</li>
+        <li>选择需要结案的采购退货单</li>
+        <li>点击"结案"按钮，系统会提示确认操作</li>
+        <li>确认后，退货单状态更新为"已结案"，不能再进行修改操作</li>
+    </ol>
+    </p>
+    
+    <h2>关键字段说明</h2>
+    <table border="1">
+        <tr>
+            <th>字段名</th>
+            <th>说明</th>
+        </tr>
+        <tr>
+            <td>采购订单号</td>
+            <td>采购订单的唯一标识号</td>
+        </tr>
+        <tr>
+            <td>供应商</td>
+            <td>货物供应方的名称</td>
+        </tr>
+        <tr>
+            <td>采购日期</td>
+            <td>采购订单创建的日期</td>
+        </tr>
+        <tr>
+            <td>要求到货日期</td>
+            <td>供应商应交付货物的日期</td>
+        </tr>
+        <tr>
+            <td>采购数量</td>
+            <td>计划采购的货物数量</td>
+        </tr>
+        <tr>
+            <td>单价</td>
+            <td>货物的采购单价</td>
+        </tr>
+        <tr>
+            <td>金额</td>
+            <td>该项货物的总金额</td>
+        </tr>
+        <tr>
+            <td>已入库数量</td>
+            <td>已实际入库的货物数量</td>
+        </tr>
+    </table>
+</body>
+</html>

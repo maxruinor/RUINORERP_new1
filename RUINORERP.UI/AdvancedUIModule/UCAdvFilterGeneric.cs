@@ -59,7 +59,7 @@ namespace RUINORERP.UI.AdvancedUIModule
             DtoEntityTalbeName = tableName;
             DtoEntityType = typeof(T);
             DtoEntityFieldNameList = UIHelper.GetDtoFieldNameList<T>().OrderBy(v => v.FieldName).ToList();
-
+            DisplayTextResolver = new GridViewDisplayTextResolver(DtoEntityType);
             toolStripBtnExport.Visible = false;
             toolStripBtnImport.Visible = false;
 
@@ -74,14 +74,11 @@ namespace RUINORERP.UI.AdvancedUIModule
             ColNameDataDictionary.TryAdd("OrderPriority", Common.CommonHelper.Instance.GetKeyValuePairs(typeof(Priority)));
             ColNameDataDictionary.TryAdd("RepairStatus", Common.CommonHelper.Instance.GetKeyValuePairs(typeof(RepairStatus)));
             ColNameDataDictionary.TryAdd("ASProcessStatus", Common.CommonHelper.Instance.GetKeyValuePairs(typeof(ASProcessStatus)));
-
-
             InitBaseValue();
             InitListData();
-
-     
+         
         }
-
+        public GridViewDisplayTextResolver DisplayTextResolver;
 
         private tb_MenuInfo InitCurMenuInfo(tb_MenuInfo CurMenuInfo)
         {
@@ -626,6 +623,8 @@ namespace RUINORERP.UI.AdvancedUIModule
                 #endregion
 
             }
+            dataGridView1.CellFormatting -= DataGridView1_CellFormatting;
+            DisplayTextResolver.Initialize(dataGridView1);
         }
 
         #region

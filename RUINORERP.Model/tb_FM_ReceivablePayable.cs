@@ -1,4 +1,4 @@
-﻿
+
 // **************************************
 // 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
@@ -388,6 +388,34 @@ namespace RUINORERP.Model
             get{return _LocalBalanceAmount;}
             set{
             SetProperty(ref _LocalBalanceAmount, value);
+                        }
+        }
+
+        private decimal _LocalReconciledAmount= ((0));
+        /// <summary>
+        /// 已对账本币
+        /// </summary>
+        [AdvQueryAttribute(ColName = "LocalReconciledAmount",ColDesc = "已对账本币")] 
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "LocalReconciledAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "已对账本币" )]
+        public decimal LocalReconciledAmount
+        { 
+            get{return _LocalReconciledAmount;}
+            set{
+            SetProperty(ref _LocalReconciledAmount, value);
+                        }
+        }
+
+        private decimal _ForeignReconciledAmount= ((0));
+        /// <summary>
+        /// 已对账外币
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ForeignReconciledAmount",ColDesc = "已对账外币")] 
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "ForeignReconciledAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "已对账外币" )]
+        public decimal ForeignReconciledAmount
+        { 
+            get{return _ForeignReconciledAmount;}
+            set{
+            SetProperty(ref _ForeignReconciledAmount, value);
                         }
         }
 

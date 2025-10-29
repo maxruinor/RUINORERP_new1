@@ -152,6 +152,13 @@ namespace RUINORERP.Business.BizMapperService
                 SafeRegister<tb_AS_RepairOrder>(BizType.维修工单, e => e.RepairOrderID, e => e.RepairOrderNo, e => e.tb_AS_RepairOrderDetails);
                 SafeRegister<tb_AS_RepairMaterialPickup>(BizType.维修领料单, e => e.RMRID, e => e.MaterialPickupNO, e => e.tb_AS_RepairMaterialPickupDetails);
                 SafeRegister<tb_AS_RepairInStock>(BizType.维修入库单, e => e.RepairInStockID, e => e.RepairInStockNo, e => e.tb_AS_RepairInStockDetails);
+                
+                // CRM相关
+                SafeRegister<tb_CRM_FollowUpPlans>(BizType.CRM跟进计划, e => e.PlanID, e => e.PlanSubject);
+                SafeRegister<tb_CRM_FollowUpRecords>(BizType.CRM跟进记录, e => e.RecordID, e => e.FollowUpSubject);
+                
+                // 包装信息
+                SafeRegister<tb_Packing>(BizType.包装信息, e => e.Pack_ID, e => e.PackagingName);
 
                 _logger.Debug("普通实体映射注册完成，成功：{SuccessCount}，失败：{ErrorCount}", successCount, errorCount);
             }

@@ -155,25 +155,29 @@ namespace RUINORERP.UI.FM
             #region 提前判断是付款还是收款
 
             // 计算收款和付款的总额
+            // 收款类型：使用绝对值确保为正数
             decimal totalReceivable = RealList
                 .Where(x => x.ReceivePaymentType == (int)ReceivePaymentType.收款)  // 收款类型
-                .Sum(x => x.TotalReceivedLocalAmount);
+                .Sum(x => Math.Abs(x.ClosingBalanceLocalAmount));
 
+            // 付款类型：使用绝对值确保为正数
             decimal totalPayable = RealList
                 .Where(x => x.ReceivePaymentType == (int)ReceivePaymentType.付款)  // 付款类型
-                .Sum(x => x.TotalPayableLocalAmount);
+                .Sum(x => Math.Abs(x.ClosingBalanceLocalAmount));
 
             // 计算净额：付款 - 收款
+            // 净额>0表示需要付款，净额<0表示需要收款
             decimal netAmount = totalPayable - totalReceivable;
             ReceivePaymentType LastPaymentType = ReceivePaymentType.付款;
             if (netAmount > 0)
             {
                 LastPaymentType = ReceivePaymentType.付款;
             }
-            if (netAmount < 0)
+            else if (netAmount < 0)
             {
                 LastPaymentType = ReceivePaymentType.收款;
             }
+            // 净额为0时保持默认的付款类型，后续处理会自动处理
             #endregion
 
 

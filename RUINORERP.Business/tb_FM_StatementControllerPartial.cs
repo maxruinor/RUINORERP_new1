@@ -303,13 +303,17 @@ namespace RUINORERP.Business
 
 
 
+
+   
+
         /// <summary>
         /// 生成对账单
         /// </summary>
         /// <param name="entities">应收应付单列表</param>
-        /// <param name="paymentType">付款类型</param>
+        /// <param name="paymentType">付款类型（收款/付款）</param>
+        /// <param name="statementType">对账模式（余额对账/收款对账/付款对账）</param>
         /// <returns>生成的对账单结果</returns>
-        public async Task<ReturnResults<tb_FM_Statement>> BuildStatement(List<tb_FM_ReceivablePayable> entities, ReceivePaymentType paymentType)
+        public async Task<ReturnResults<tb_FM_Statement>> BuildStatement(List<tb_FM_ReceivablePayable> entities, ReceivePaymentType paymentType, StatementType statementType)
         {
             ReturnResults<tb_FM_Statement> rmrs = new ReturnResults<tb_FM_Statement>();
             
@@ -408,20 +412,35 @@ namespace RUINORERP.Business
                 statement.ClosingBalanceForeignAmount = 0; // 可根据需要扩展外币逻辑
 
                 // 计算净额并确定对账单类型
-                // 根据余额对账模式业务规则：
-                // - 当总余额≥0时，生成收款对账单
-                // - 当总余额<0时，生成付款对账单
                 // 使用期末余额作为判断依据，这样会包含期初余额的影响
                 decimal netAmount = statement.ClosingBalanceLocalAmount;
-                if (netAmount >= 0)
+                
+                // 根据对账模式调整对账单类型和提示信息
+                if (statementType == StatementType.收款对账)
                 {
-                    statement.Summary = ($"供应商需要付款给你方（应收），金额：{Math.Abs(netAmount)}（本币）");
+                    // 收款对账模式：总是生成收款对账单
+                    statement.Summary = ($"客户需要付款给你方（应收），金额：{Math.Abs(netAmount)}（本币）");
                     statement.ReceivePaymentType = (int)ReceivePaymentType.收款;
                 }
-                else // netAmount < 0
+                else if (statementType == StatementType.付款对账)
                 {
+                    // 付款对账模式：总是生成付款对账单
                     statement.Summary = ($"最终需要付款给供应商，金额：{Math.Abs(netAmount)}（本币）");
                     statement.ReceivePaymentType = (int)ReceivePaymentType.付款;
+                }
+                else
+                { // 余额对账模式
+                    // 余额对账模式：根据净额确定对账单类型
+                    if (netAmount >= 0)
+                    {
+                        statement.Summary = ($"供应商/客户需要付款给你方（应收），金额：{Math.Abs(netAmount)}（本币）");
+                        statement.ReceivePaymentType = (int)ReceivePaymentType.收款;
+                    }
+                    else // netAmount < 0
+                    {
+                        statement.Summary = ($"最终需要付款给供应商/客户，金额：{Math.Abs(netAmount)}（本币）");
+                        statement.ReceivePaymentType = (int)ReceivePaymentType.付款;
+                    }
                 }
                 
                 // 当净额为0时的特殊提示

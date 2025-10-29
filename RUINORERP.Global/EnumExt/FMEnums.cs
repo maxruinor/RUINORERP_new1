@@ -8,7 +8,13 @@ using System.Threading.Tasks;
 namespace RUINORERP.Global.EnumExt
 {
     #region 关键业务财务数据状态
-
+    // 定义对账类型枚举
+    public enum StatementType
+    {
+        余额对账,
+        收款对账,
+        付款对账
+    }
 
     /// <summary>
     /// 对账状态

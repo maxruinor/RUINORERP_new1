@@ -43,6 +43,7 @@ using NPOI.SS.Formula.Functions;
 using System.Threading;
 using System.Linq.Expressions;
 using RUINORERP.Business.RowLevelAuthService;
+using StatementType = RUINORERP.Global.EnumExt.StatementType;
 
 namespace RUINORERP.UI.FM
 {
@@ -63,8 +64,7 @@ namespace RUINORERP.UI.FM
         {
             InitializeComponent();
             base.RelatedBillEditCol = (c => c.ARAPNo);
-            // 默认设置为收款类型
-            PaymentType = ReceivePaymentType.收款;
+          
 
             // 订阅查询条件加载完成事件
             this.Load += UCStatementCreator_Load;
@@ -77,18 +77,10 @@ namespace RUINORERP.UI.FM
 
         }
 
-        /// <summary>
-        /// 数据单元格格式化事件，用于在余额对账模式下调整金额显示
-        /// </summary>
 
 
-        // 定义对账类型枚举
-        private enum StatementType
-        {
-            余额对账,
-            收款对账,
-            付款对账
-        }
+
+
 
         // 保存当前选择的对账类型
         private StatementType CurrentStatementType { get; set; }
@@ -404,12 +396,18 @@ namespace RUINORERP.UI.FM
                 -item.LocalBalanceAmount : item.LocalBalanceAmount);
 
             // 余额对账模式下，根据总余额的正负决定PaymentType
+            // 总余额≥0时，生成收款对账单；总余额<0时，生成付款对账单
             ReceivePaymentType finalPaymentType = PaymentType;
+            // 如果是余额对账模式，根据总余额决定最终的付款类型
+            if (CurrentStatementType == StatementType.余额对账)
+            {
+                finalPaymentType = totalBalance >= 0 ? ReceivePaymentType.收款 : ReceivePaymentType.付款;
+            }
             tb_FM_Statement statement = new();
 
             //对账模式，直接使用原始数据，因为已经查询时处理过了。针对余额对账，需要重新计算
             var paymentController = MainForm.Instance.AppContext.GetRequiredService<tb_FM_StatementController<tb_FM_Statement>>();
-            ReturnResults<tb_FM_Statement> rrs = await paymentController.BuildStatement(RealList, finalPaymentType);
+            ReturnResults<tb_FM_Statement> rrs = await paymentController.BuildStatement(RealList, finalPaymentType, CurrentStatementType);
             if (rrs.Succeeded)
             {
                 statement = rrs.ReturnObject;

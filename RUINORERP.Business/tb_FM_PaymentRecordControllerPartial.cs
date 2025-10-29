@@ -2141,7 +2141,6 @@ namespace RUINORERP.Business
             //只处理了本币
             for (int i = 0; i < details.Count; i++)
             {
-
                 #region 明细 
                 tb_FM_PaymentRecordDetail paymentRecordDetail = details[i];
                 tb_FM_Statement statement = entities.FirstOrDefault(c => c.StatementId == paymentRecordDetail.SourceBilllId);
@@ -2153,7 +2152,26 @@ namespace RUINORERP.Business
                 {
                     paymentRecordDetail.Summary += entity.Summary;
                 }
-                //应付金额 在 maper中映射了。实会为0，要手动输入
+                
+                // 处理对账单生成收付款单的金额逻辑
+                // 根据对账单类型和余额进行处理：
+                // 1. 付款对账单：确保金额为正数
+                // 2. 收款对账单：确保金额为正数
+                // 3. 余额对账模式：根据余额正负值处理
+                if (statement.ReceivePaymentType == (int)ReceivePaymentType.付款)
+                {
+                    // 付款对账单，无论余额正负，付款金额都应为正数
+                    paymentRecordDetail.LocalAmount = Math.Abs(statement.ClosingBalanceLocalAmount);
+                    paymentRecordDetail.LocalPayableAmount = Math.Abs(statement.ClosingBalanceLocalAmount);
+                }
+                else if (statement.ReceivePaymentType == (int)ReceivePaymentType.收款)
+                {
+                    // 收款对账单，收款金额应为正数
+                    paymentRecordDetail.LocalAmount = Math.Abs(statement.ClosingBalanceLocalAmount);
+                    paymentRecordDetail.LocalPayableAmount = Math.Abs(statement.ClosingBalanceLocalAmount);
+                }
+                // 注意：对于余额对账模式，对账单的ReceivePaymentType已经根据余额正负值确定
+                // 所以上面的条件判断已经包含了余额对账模式下的正确处理
 
                 #endregion
                 NewDetails.Add(paymentRecordDetail);
@@ -2162,23 +2180,18 @@ namespace RUINORERP.Business
             paymentRecord.PaymentDate = System.DateTime.Now;
             paymentRecord.Currency_ID = paymentRecord.Currency_ID;
 
-            //应收的余额给到付款单。创建收款
+            // 重新计算汇总金额
             paymentRecord.TotalForeignAmount = NewDetails.Sum(c => c.ForeignAmount);
             paymentRecord.TotalLocalAmount = NewDetails.Sum(c => c.LocalAmount);
             paymentRecord.TotalLocalPayableAmount = NewDetails.Sum(c => c.LocalPayableAmount);
 
-
             paymentRecord.PayeeAccountNo = entities[0].PayeeAccountNo;
             paymentRecord.tb_FM_PaymentRecordDetails = NewDetails;
 
-            ////到底是付款，还是收款。要加总最后的方向
-            //if (paymentRecord.TotalLocalPayableAmount > 0)
-            //{
-
-            //}
-
+            // 根据对账单类型设置收付款类型
             paymentRecord.ReceivePaymentType = entities[0].ReceivePaymentType;
 
+            // 根据收付款类型生成对应的单据编号
             if (entities[0].ReceivePaymentType == (int)ReceivePaymentType.收款)
             {
                 paymentRecord.PaymentNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.收款单);

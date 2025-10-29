@@ -21,12 +21,12 @@ namespace RUINORERP.Business.BizMapperService
     /// </summary>
     public class EntityLoader
     {
-        private readonly IBusinessEntityMappingService _mappingService;
+        private readonly IEntityMappingService _mappingService;
         private readonly ApplicationContext _context;
         private readonly ILogger<EntityLoader> _logger;
 
         public EntityLoader(
-            IBusinessEntityMappingService mappingService,
+            IEntityMappingService mappingService,
             ApplicationContext context,
             ILogger<EntityLoader> logger)
         {

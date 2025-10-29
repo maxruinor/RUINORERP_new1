@@ -88,8 +88,8 @@ namespace RUINORERP.Server.Workflow.WFReminder
             if (exData.EndTime < System.DateTime.Now)
             {
                 Status = MessageStatus.Cancel;
-                //提醒到期了
-                serviceChannel.ProcessCRMFollowUpPlansData(exData, Status);
+                //提醒到期了 - 将MessageStatus转换为bool类型（true表示已处理）
+                serviceChannel.ProcessCRMFollowUpPlansData(exData, true);
             }
             if (exData.Status != Model.MessageStatus.Cancel)
             {

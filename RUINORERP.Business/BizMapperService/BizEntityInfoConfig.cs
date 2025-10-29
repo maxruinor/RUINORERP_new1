@@ -12,39 +12,39 @@ using Microsoft.Extensions.Logging;
 
 namespace RUINORERP.Business.BizMapperService
 {
-    public class EntityInfoConfig
+    public class BizEntityInfoConfig
     {
-        private readonly ILogger<EntityInfoConfig> _logger;
-        private readonly ConcurrentDictionary<BizType, ERPEntityInfo> _bizTypeToEntityInfo = new ConcurrentDictionary<BizType, ERPEntityInfo>();
-        private readonly ConcurrentDictionary<Type, ERPEntityInfo> _entityTypeToEntityInfo = new ConcurrentDictionary<Type, ERPEntityInfo>();
-        private readonly ConcurrentDictionary<string, ERPEntityInfo> _tableNameToEntityInfo = new ConcurrentDictionary<string, ERPEntityInfo>(StringComparer.OrdinalIgnoreCase);
-        private readonly ConcurrentDictionary<Type, ERPEntityInfo> _sharedTableConfigs = new ConcurrentDictionary<Type, ERPEntityInfo>();
+        private readonly ILogger<BizEntityInfoConfig> _logger;
+        private readonly ConcurrentDictionary<BizType, BizEntityInfo> _bizTypeToEntityInfo = new ConcurrentDictionary<BizType, BizEntityInfo>();
+        private readonly ConcurrentDictionary<Type, BizEntityInfo> _entityTypeToEntityInfo = new ConcurrentDictionary<Type, BizEntityInfo>();
+        private readonly ConcurrentDictionary<string, BizEntityInfo> _tableNameToEntityInfo = new ConcurrentDictionary<string, BizEntityInfo>(StringComparer.OrdinalIgnoreCase);
+        private readonly ConcurrentDictionary<Type, BizEntityInfo> _sharedTableConfigs = new ConcurrentDictionary<Type, BizEntityInfo>();
 
         /// <summary>
         /// 业务类型到实体信息的映射字典
         /// </summary>
-        public ConcurrentDictionary<BizType, ERPEntityInfo> BizTypeToEntityInfo => _bizTypeToEntityInfo;
+        public ConcurrentDictionary<BizType, BizEntityInfo> BizTypeToEntityInfo => _bizTypeToEntityInfo;
         
         /// <summary>
         /// 实体类型到实体信息的映射字典
         /// </summary>
-        public ConcurrentDictionary<Type, ERPEntityInfo> EntityTypeToEntityInfo => _entityTypeToEntityInfo;
+        public ConcurrentDictionary<Type, BizEntityInfo> EntityTypeToEntityInfo => _entityTypeToEntityInfo;
         
         /// <summary>
         /// 表名到实体信息的映射字典（不区分大小写）
         /// </summary>
-        public ConcurrentDictionary<string, ERPEntityInfo> TableNameToEntityInfo => _tableNameToEntityInfo;
+        public ConcurrentDictionary<string, BizEntityInfo> TableNameToEntityInfo => _tableNameToEntityInfo;
         
         /// <summary>
         /// 共用表配置字典
         /// </summary>
-        public ConcurrentDictionary<Type, ERPEntityInfo> SharedTableConfigs => _sharedTableConfigs;
+        public ConcurrentDictionary<Type, BizEntityInfo> SharedTableConfigs => _sharedTableConfigs;
 
         /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="logger">日志记录器</param>
-        public EntityInfoConfig(ILogger<EntityInfoConfig> logger)
+        public BizEntityInfoConfig(ILogger<BizEntityInfoConfig> logger)
         {
             _logger = logger;
             // 不再在构造函数中自动注册映射，而是通过外部调用RegisterCommonMappings方法来触发注册

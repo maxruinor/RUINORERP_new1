@@ -1,4 +1,4 @@
-﻿using RUINORERP.Model;
+using RUINORERP.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,47 +14,55 @@ namespace RUINORERP.UI.IM
         Important,
         Exception
     }
-    // 消息类
-    //后续可以添加更多的属性和方法来处理消息。是否要处理。处理得怎么样。
-    public class IMessage
+    
+    // 消息状态枚举（保留兼容性）
+    public enum MessageStatus
     {
-        // 消息ID
-        public int Id { get; set; }
+        Unread,
+        Read,
+        Processed,
+        Cancel,
+        WaitRminder,
+        Unprocessed
+    }
+    // 注意：MessageStatus枚举已被废弃，使用IsRead布尔属性替代
+    // 消息接口
+    public interface IMessage
+    {
+        /// <summary>
+        /// 消息标题
+        /// </summary>
+        string Title { get; set; }
 
-        // 消息状态
-        public MessageStatus Status { get; set; } = MessageStatus.Unread;
+        /// <summary>
+        /// 消息内容
+        /// </summary>
+        string Content { get; set; }
 
-        // 消息优先级
-        public MessagePriority Priority { get; set; }
+        /// <summary>
+        /// 是否已读
+        /// </summary>
+        bool IsRead { get; set; }
 
-        // 发送时间
-        public string SendTime { get; set; }
+        /// <summary>
+        /// 消息ID
+        /// </summary>
+        int MessageID { get; set; }
 
-        // 发送者
-        public string Sender { get; set; }
+        /// <summary>
+        /// 消息创建时间
+        /// </summary>
+        DateTime CreateTime { get; set; }
 
-        // 消息内容
-        public string Content { get; set; }
+        /// <summary>
+        /// 标记为已读
+        /// </summary>
+        void MarkAsRead();
 
-        // 下次处理者
-        public string NextProcessor { get; set; }
-
-        // 构造函数
-        public IMessage()
-        {
-            SendTime = DateTime.Now.ToString();
-        }
-
-        // 可以添加其他方法来处理消息，例如标记为已读、已处理等
-        public void MarkAsRead()
-        {
-            Status = MessageStatus.Read;
-        }
-
-        public void MarkAsProcessed()
-        {
-            Status = MessageStatus.Processed;
-        }
+        /// <summary>
+        /// 标记为已处理
+        /// </summary>
+        void MarkAsProcessed();
     }
 
 }

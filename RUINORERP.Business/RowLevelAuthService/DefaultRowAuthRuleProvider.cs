@@ -15,7 +15,7 @@ namespace RUINORERP.Business.RowLevelAuthService
     /// </summary>
     public class DefaultRowAuthRuleProvider : IDefaultRowAuthRuleProvider
     {
-        private readonly IBusinessEntityMappingService _entityBizMappingService;
+        private readonly IEntityMappingService _entityBizMappingService;
         private readonly ApplicationContext _context;
         private readonly ILogger<DefaultRowAuthRuleProvider> _logger;
         private readonly Dictionary<RowLevelAuthRule, string> _ruleDescriptions;
@@ -28,7 +28,7 @@ namespace RUINORERP.Business.RowLevelAuthService
         /// <param name="context">应用程序上下文</param>
         /// <param name="logger">日志记录器</param>
         public DefaultRowAuthRuleProvider(
-            IBusinessEntityMappingService entityBizMappingService,
+            IEntityMappingService entityBizMappingService,
             ApplicationContext context,
             ILogger<DefaultRowAuthRuleProvider> logger)
         {
@@ -234,7 +234,7 @@ namespace RUINORERP.Business.RowLevelAuthService
             {
                 throw new ArgumentNullException(nameof(option), "规则选项不能为空");
             }
-            var entityInfoService = _context.GetRequiredService<IBusinessEntityMappingService>();
+            var entityInfoService = _context.GetRequiredService<IEntityMappingService>();
             try
             {
                 // 通过映射服务获取实体信息

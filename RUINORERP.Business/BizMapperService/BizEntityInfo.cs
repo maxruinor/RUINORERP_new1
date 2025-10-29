@@ -11,7 +11,7 @@ namespace RUINORERP.Business.BizMapperService
     /// ERP实体信息类，包含实体的元数据信息
     /// </summary>
     [Serializable()]
-    public class ERPEntityInfo : ICloneable
+    public class BizEntityInfo : ICloneable
     {
         /// <summary>
         /// 付款类型的值对应业务类型收/付款
@@ -57,9 +57,9 @@ namespace RUINORERP.Business.BizMapperService
         /// 创建当前对象的深表副本
         /// </summary>
         /// <returns>当前对象的深表副本</returns>
-        public ERPEntityInfo DeepClone()
+        public BizEntityInfo DeepClone()
         {
-            var clone = (ERPEntityInfo)this.MemberwiseClone();
+            var clone = (BizEntityInfo)this.MemberwiseClone();
             
             // 深拷贝Fields字典
             if (this.Fields != null)
@@ -110,11 +110,11 @@ namespace RUINORERP.Business.BizMapperService
 
     public class EntityInfoBuilder<TEntity> where TEntity : class
     {
-        private ERPEntityInfo _entityInfo;
+        private BizEntityInfo _entityInfo;
 
         internal EntityInfoBuilder()
         {
-            _entityInfo = new ERPEntityInfo
+            _entityInfo = new BizEntityInfo
             {
                 EntityType = typeof(TEntity),
                 TableName = typeof(TEntity).Name
@@ -122,7 +122,7 @@ namespace RUINORERP.Business.BizMapperService
         }
 
 
-        public ERPEntityInfo ERPEntityInfo { get { return _entityInfo; } set { _entityInfo = value; } }
+        public BizEntityInfo ERPEntityInfo { get { return _entityInfo; } set { _entityInfo = value; } }
 
 
         public EntityInfoBuilder<TEntity> WithBizType(BizType bizType)
@@ -232,7 +232,7 @@ namespace RUINORERP.Business.BizMapperService
             _entityInfo.Fields[fieldName] = fieldInfo;
         }
 
-        internal ERPEntityInfo Build()
+        internal BizEntityInfo Build()
         {
             return _entityInfo;
         }

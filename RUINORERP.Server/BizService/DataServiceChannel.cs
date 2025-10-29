@@ -1,4 +1,4 @@
-﻿using Azure.Core;
+using Azure.Core;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualBasic;
 using RUINORERP.Business;
@@ -70,10 +70,14 @@ namespace RUINORERP.Server.BizService
 
         /// <summary>
         /// 如果有超时提醒（即将超时，已经超时），这里可以延后几天来处理。 超时天数 由全局通用配置模块来完成
+        /// <summary>
+        /// 处理CRM跟进计划数据
         /// </summary>
-        /// <param name="reminderData"></param>
-        public async void ProcessCRMFollowUpPlansData(ReminderData reminderData, MessageStatus messageStatu)
+        /// <param name="reminderData">提醒数据</param>
+        /// <param name="isRead">消息是否已读</param>
+        public async void ProcessCRMFollowUpPlansData(ReminderData reminderData, bool isRead)
         {
+            reminderData.IsRead = isRead;
             if (reminderData.BizType == Global.BizType.CRM跟进计划)
             {
                 var plan = await _appContext.Db.Queryable<tb_CRM_FollowUpPlans>()

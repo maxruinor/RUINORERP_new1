@@ -11,16 +11,16 @@ using System.Linq.Expressions;
 
 namespace RUINORERP.Business.BizMapperService
 {
-    public class BusinessEntityMappingService : IBusinessEntityMappingService
+    public class EntityMappingService : IEntityMappingService
     {
-        private readonly ILogger<BusinessEntityMappingService> _logger;
-        private readonly EntityInfoConfig _config;
+        private readonly ILogger<EntityMappingService> _logger;
+        private readonly BizEntityInfoConfig _config;
         private bool _initialized = false;
         private readonly object _lock = new object();
 
-        public BusinessEntityMappingService(EntityInfoConfig config, ILoggerFactory loggerFactory)
+        public EntityMappingService(BizEntityInfoConfig config, ILoggerFactory loggerFactory)
         {
-            _logger = loggerFactory.CreateLogger<BusinessEntityMappingService>();
+            _logger = loggerFactory.CreateLogger<EntityMappingService>();
             _config = config;
         }
 
@@ -61,7 +61,7 @@ namespace RUINORERP.Business.BizMapperService
             EnsureInitialized();
         }
 
-        public ERPEntityInfo GetEntityInfo(BizType bizType)
+        public BizEntityInfo GetEntityInfo(BizType bizType)
         {
             EnsureInitialized();
 
@@ -79,7 +79,7 @@ namespace RUINORERP.Business.BizMapperService
             return null;
         }
 
-        private ERPEntityInfo GetSharedTableEntityInfoForBizType(BizType bizType)
+        private BizEntityInfo GetSharedTableEntityInfoForBizType(BizType bizType)
         {
             try
             {
@@ -126,7 +126,7 @@ namespace RUINORERP.Business.BizMapperService
             }
         }
 
-        public ERPEntityInfo GetEntityInfo(Type entityType)
+        public BizEntityInfo GetEntityInfo(Type entityType)
         {
             EnsureInitialized();
 
@@ -156,7 +156,7 @@ namespace RUINORERP.Business.BizMapperService
         }
 
 
-        public ERPEntityInfo GetEntityInfo(Type entityType, int EnumFlag)
+        public BizEntityInfo GetEntityInfo(Type entityType, int EnumFlag)
         {
             EnsureInitialized();
 
@@ -202,7 +202,7 @@ namespace RUINORERP.Business.BizMapperService
             _logger.LogDebug("未找到实体类型 {0} 对应的实体信息", entityType.FullName);
             return null;
         }
-        public ERPEntityInfo GetEntityInfoByTableName(string tableName)
+        public BizEntityInfo GetEntityInfoByTableName(string tableName)
         {
             EnsureInitialized();
 
@@ -244,7 +244,7 @@ namespace RUINORERP.Business.BizMapperService
             return null;
         }
 
-        public IEnumerable<ERPEntityInfo> GetAllEntityInfos()
+        public IEnumerable<BizEntityInfo> GetAllEntityInfos()
         {
             EnsureInitialized();
 
@@ -343,7 +343,7 @@ namespace RUINORERP.Business.BizMapperService
             return entityInfo?.EntityType;
         }
 
-        private void EnsureTableNameMapping(ERPEntityInfo entityInfo)
+        private void EnsureTableNameMapping(BizEntityInfo entityInfo)
         {
             if (entityInfo == null || string.IsNullOrEmpty(entityInfo.TableName))
                 return;

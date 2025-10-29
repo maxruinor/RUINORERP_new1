@@ -1,4 +1,4 @@
-﻿﻿/*****************************************************************************************
+﻿/*****************************************************************************************
  * 【过时作废文件】OBSOLETE - DEPRECATED - DO NOT USE
  * 此文件已被废弃，不再维护和使用
  * 原因：ClientCmdService目录下的所有文件都已过时，实际已排除在项目外
@@ -188,7 +188,8 @@ namespace RUINORERP.UI.ClientCmdService
                             MessageInfo.SenderEmployeeName = requestUnLockInfo.RequestUserName;
                             MessageInfo.SenderEmployeeID = requestUnLockInfo.RequestUserID;
                             MessageInfo.messageCmd = MessageCmdType.UnLockRequest;
-                            MainForm.Instance.MessageList.Enqueue(MessageInfo);
+                            // 使用消息管理器处理消息
+                            MessageManager.Instance?.AddMessage(MessageInfo);
                         }
                         //每个人都收到请求。请求的人才也能收到提醒 
                         if (requestUnLockInfo.RequestUserID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID)
@@ -216,7 +217,8 @@ namespace RUINORERP.UI.ClientCmdService
                         RefuseInfo.ReminderContent = $"拒绝释放" +
                             $"{refuseUnLockInfo.BillData.BizName}:{refuseUnLockInfo.BillData.BillNo}的锁！。";
                         RefuseInfo.messageCmd = MessageCmdType.Notice;
-                        MainForm.Instance.MessageList.Enqueue(RefuseInfo);
+                        // 使用消息管理器处理消息
+                        MessageManager.Instance?.AddMessage(RefuseInfo);
                         break;
                     case LockCmd.Broadcast:
                         json = ByteOperations.GetString(gd.Two, ref index);

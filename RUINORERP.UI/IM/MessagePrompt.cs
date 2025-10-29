@@ -1,5 +1,6 @@
-﻿using Krypton.Toolkit;
+using Krypton.Toolkit;
 using RUINORERP.Business;
+using RUINORERP.Business.BizMapperService;
 using RUINORERP.Business.CommService;
 using RUINORERP.Business.Processor;
 using RUINORERP.Business.Security;
@@ -121,7 +122,8 @@ namespace RUINORERP.UI.IM
 
         private void btnCancel_Click(object sender, EventArgs e)
         {
-            ResponseToServer(MessageStatus.Read);
+            // 将消息标记为已读状态（取消操作后仍视为已读）
+            ResponseToServer(true);
             // this.DialogResult = DialogResult.Cancel;
             this.DialogResult = DialogResult.OK;
             this.Close();
@@ -130,7 +132,7 @@ namespace RUINORERP.UI.IM
         private void btnOk_Click(object sender, EventArgs e)
         {
             //计划提醒，则把要提醒的计划查出条件找到
-            Type tableType = Bizmapper.GetTableType(ReminderData.BizType);
+            Type tableType = EntityMappingHelper.GetEntityType(ReminderData.BizType);
             //找到要提醒的数据
             var conModel = new List<IConditionalModel>();
             // conModel.Add(new ConditionalModel { FieldName = "DataStatus", ConditionalType = ConditionalType.Equal, FieldValue = "3", CSharpTypeName = "int" });
@@ -171,7 +173,8 @@ namespace RUINORERP.UI.IM
                 menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, instance, parameter);
                 //要卸载，不然会多次执行
                 menuPowerHelper.OnSetQueryConditionsDelegate -= MenuPowerHelper_OnSetQueryConditionsDelegate;
-                ResponseToServer(MessageStatus.Cancel);
+                // 将消息标记为已处理状态（处理后视为已读）
+                ResponseToServer(true);
                 this.DialogResult = DialogResult.OK;
                 this.Close();
 
@@ -244,7 +247,12 @@ namespace RUINORERP.UI.IM
         }
 
 
-        private void ResponseToServer(MessageStatus status = MessageStatus.Unprocessed, int interval = 20)
+        /// <summary>
+        /// 响应服务器，更新消息状态
+        /// </summary>
+        /// <param name="isRead">消息是否已读</param>
+        /// <param name="interval">提醒间隔</param>
+        private void ResponseToServer(bool isRead, int interval = 20)
         {
             #warning  todo by watson
             //回复服务器
@@ -343,7 +351,8 @@ namespace RUINORERP.UI.IM
                         break;
                 }
             }
-            ResponseToServer(MessageStatus.WaitRminder, interval);
+            // 将消息标记为等待提醒状态，使用IsRead=false表示未读
+            ResponseToServer(false, interval);
             this.DialogResult = DialogResult.OK;
             this.Close();
         }

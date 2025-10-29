@@ -32,7 +32,7 @@ namespace RUINORERP.Business.CommService
     {
         private readonly ConcurrentQueue<tb_AuditLogs> _auditLogQueue = new ConcurrentQueue<tb_AuditLogs>();
 
-        private readonly Lazy<IBusinessEntityMappingService> _mapper;
+        private readonly Lazy<IEntityMappingService> _mapper;
 
         private readonly Lazy<BillConverterFactory> _billConverterFactory; // 缓存工厂
         private readonly Lazy<tb_AuditLogsController<tb_AuditLogs>> _AuditLogsController; // 缓存工厂
@@ -52,8 +52,8 @@ namespace RUINORERP.Business.CommService
                 () => _appContext.GetRequiredService<BillConverterFactory>());// 缓存工厂
 
 
-            _mapper = new Lazy<IBusinessEntityMappingService>(
-                () => _appContext.GetRequiredService<IBusinessEntityMappingService>());// 缓存工厂
+            _mapper = new Lazy<IEntityMappingService>(
+                () => _appContext.GetRequiredService<IEntityMappingService>());// 缓存工厂
 
 
             _AuditLogsController = new Lazy<tb_AuditLogsController<tb_AuditLogs>>(() => _appContext.GetRequiredService<tb_AuditLogsController<tb_AuditLogs>>());
@@ -410,7 +410,7 @@ namespace RUINORERP.Business.CommService
         private bool _isFlushing = false;
         public ApplicationContext _appContext;
 
-        private readonly Lazy<IBusinessEntityMappingService> _mapper;
+        private readonly Lazy<IEntityMappingService> _mapper;
 
 
         public FMAuditLogService(IOptions<AuditLogOptions> options, ILogger<FMAuditLogService> logger, ApplicationContext appContext)
@@ -423,8 +423,8 @@ namespace RUINORERP.Business.CommService
                 () => appContext.GetRequiredService<BillConverterFactory>());// 缓存工厂
 
 
-            _mapper = new Lazy<IBusinessEntityMappingService>(
-              () => _appContext.GetRequiredService<IBusinessEntityMappingService>());// 缓存工厂
+            _mapper = new Lazy<IEntityMappingService>(
+              () => _appContext.GetRequiredService<IEntityMappingService>());// 缓存工厂
 
 
 

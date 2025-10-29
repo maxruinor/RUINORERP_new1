@@ -17,7 +17,7 @@ namespace RUINORERP.Business.RowLevelAuthService
     /// </summary>
     public class SmartRuleConfigHelper
     {
-        private readonly IBusinessEntityMappingService _entityInfoService;
+        private readonly IEntityMappingService _entityInfoService;
         private readonly ILogger<SmartRuleConfigHelper> _logger;
 
         /// <summary>
@@ -25,7 +25,7 @@ namespace RUINORERP.Business.RowLevelAuthService
         /// </summary>
         /// <param name="entityInfoService">实体信息服务</param>
         /// <param name="loggerFactory">日志工厂</param>
-        public SmartRuleConfigHelper(IBusinessEntityMappingService entityInfoService, ILoggerFactory loggerFactory)
+        public SmartRuleConfigHelper(IEntityMappingService entityInfoService, ILoggerFactory loggerFactory)
         {
             _entityInfoService = entityInfoService;
             _logger = loggerFactory.CreateLogger<SmartRuleConfigHelper>();

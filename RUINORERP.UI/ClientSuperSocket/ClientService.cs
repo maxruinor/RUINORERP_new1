@@ -554,7 +554,8 @@ namespace RUINORERP.UI.SuperSocketClient
                     //  MessageInfo.SenderID = SessionID;
                     MessageInfo.SenderEmployeeName = 发送者姓名;
                     MessageInfo.ReminderContent = Message;
-                    MainForm.Instance.MessageList.Enqueue(MessageInfo);
+                    // 使用消息管理器处理消息
+                    MessageManager.Instance?.AddMessage(MessageInfo);
                 }
             }
             catch (Exception ex)
@@ -586,7 +587,8 @@ namespace RUINORERP.UI.SuperSocketClient
                 MessageInfo.messageCmd = MessageCmdType.ExceptionLog;
                 MessageInfo.SenderEmployeeName = 发送者姓名;
                 MessageInfo.ReminderContent = Msg;
-                MainForm.Instance.MessageList.Enqueue(MessageInfo);
+                // 使用消息管理器处理消息
+                MessageManager.Instance?.AddMessage(MessageInfo);
             }
             catch (Exception ex)
             {
@@ -870,7 +872,8 @@ namespace RUINORERP.UI.SuperSocketClient
                 else
                 {
                     ReminderData reminderData = obj.ToObject<ReminderData>();
-                    MainForm.Instance.MessageList.Enqueue(reminderData);
+                    // 使用消息管理器处理消息
+                MessageManager.Instance?.AddMessage(reminderData);
                 }
             }
             catch (Exception ex)

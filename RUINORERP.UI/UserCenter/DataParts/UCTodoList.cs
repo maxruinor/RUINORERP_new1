@@ -35,10 +35,10 @@ namespace RUINORERP.UI.UserCenter.DataParts
     {
         // 依赖注入的服务
         private readonly MenuPowerHelper _menuPowerHelper;
-        private readonly IBusinessEntityMappingService _mapper;
+        private readonly IEntityMappingService _mapper;
         private readonly EntityLoader _loader;
         private readonly ILogger _logger;
-        public UCTodoList(IBusinessEntityMappingService mapper, EntityLoader loader , ILogger logger)
+        public UCTodoList(IEntityMappingService mapper, EntityLoader loader , ILogger logger)
         {
             InitializeComponent();
             _logger = logger;
@@ -57,7 +57,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
             InitializeComponent();
             // 通过依赖注入获取服务实例
             _menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
-            _mapper = Startup.GetFromFac<IBusinessEntityMappingService>();
+            _mapper = Startup.GetFromFac<IEntityMappingService>();
             _conditionBuilderFactory = new ConditionBuilderFactory();
         }
 

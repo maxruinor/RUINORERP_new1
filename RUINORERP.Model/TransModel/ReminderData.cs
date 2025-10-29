@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Dynamic.Core.CustomTypeProviders;
@@ -38,7 +38,20 @@ namespace RUINORERP.Model.TransModel
         public long BizKeyID { get; set; }
         public MessageCmdType messageCmd { get; set; } = MessageCmdType.Unknown;
         // 消息状态
-        public MessageStatus Status { get; set; } = MessageStatus.Unread;
+        /// <summary>
+        /// 消息是否已读
+        /// </summary>
+        public bool IsRead { get; set; } = false;
+
+        /// <summary>
+        /// 提醒状态（兼容旧版本）
+        /// </summary>
+        [Obsolete("Use IsRead property instead")]
+        public MessageStatus Status
+        {
+            get { return IsRead ? MessageStatus.Read : MessageStatus.Unread; }
+            set { IsRead = (value == MessageStatus.Read || value == MessageStatus.Processed); }
+        }
 
         // 消息优先级
         public MessagePriority Priority { get; set; }
@@ -94,19 +107,22 @@ namespace RUINORERP.Model.TransModel
 
         public void MarkAsWaitRminder()
         {
-            Status = MessageStatus.WaitRminder;
+            // 等待提醒状态仍保持为未读
+            IsRead = false;
         }
 
         // 可以添加其他方法来处理消息，例如标记为已读、已处理等
         public void MarkAsRead()
         {
-            Status = MessageStatus.Read;
+            // 标记为已读
+            IsRead = true;
         }
 
         public void MarkAsProcessed()
         {
-            Status = MessageStatus.Processed;
+            // 处理完成也标记为已读
+            IsRead = true;
         }
     }
-
 }
+       

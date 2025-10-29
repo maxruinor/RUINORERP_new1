@@ -207,7 +207,7 @@ namespace RUINORERP.UI.BaseForm
                     CurrentBizTypeName = CurrentBizType.ToString();
                 }
                 menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
-                _entityInfoService = Startup.GetFromFac<IBusinessEntityMappingService>();
+                _entityInfoService = Startup.GetFromFac<IEntityMappingService>();
             }
             // 通过依赖注入获取缓存管理器
             _cacheManager = Startup.GetFromFac<IEntityCacheManager>();
@@ -2443,7 +2443,7 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
-        private Business.BizMapperService.IBusinessEntityMappingService _entityInfoService;
+        private Business.BizMapperService.IEntityMappingService _entityInfoService;
 
 
         /// <summary>
@@ -2508,7 +2508,7 @@ namespace RUINORERP.UI.BaseForm
             var statusType = FMPaymentStatusHelper.GetStatusType(EditEntity as BaseEntity);
             if (statusType == typeof(DataStatus))
             {
-                Business.BizMapperService.ERPEntityInfo entityInfo = _entityInfoService.GetEntityInfo<T>();
+                Business.BizMapperService.BizEntityInfo entityInfo = _entityInfoService.GetEntityInfo<T>();
                 if (entityInfo != null)
                 {
                     ae.BillNo = EditEntity.GetPropertyValue(entityInfo.NoField).ToString();
@@ -2519,7 +2519,7 @@ namespace RUINORERP.UI.BaseForm
             else
             {
                 int flag = (int)ReflectionHelper.GetPropertyValue(EditEntity, nameof(ReceivePaymentType)); ;
-                Business.BizMapperService.ERPEntityInfo entityInfo = _entityInfoService.GetEntityInfo<T>(flag);
+                Business.BizMapperService.BizEntityInfo entityInfo = _entityInfoService.GetEntityInfo<T>(flag);
                 if (entityInfo != null)
                 {
                     ae.BillNo = EditEntity.GetPropertyValue(entityInfo.NoField).ToString();

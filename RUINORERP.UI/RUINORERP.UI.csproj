@@ -2102,6 +2102,8 @@
     <Compile Include="HelpSystem\TestControlHelpForm.Designer.cs">
       <DependentUpon>TestControlHelpForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="IM\MainFormMessageExtensions.cs" />
+    <Compile Include="IM\MessageManager.cs" />
     <Compile Include="Monitoring\Auditing\AuditLogHelper.cs" />
     <Compile Include="Common\CustomTupleEqualityComparer.cs" />
     <Compile Include="Common\DuplicateFinder.cs" />

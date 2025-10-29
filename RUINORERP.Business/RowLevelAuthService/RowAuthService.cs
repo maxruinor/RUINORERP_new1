@@ -20,7 +20,7 @@ namespace RUINORERP.Business.RowLevelAuthService
     public class RowAuthService : IRowAuthService
     {
         private readonly IDefaultRowAuthRuleProvider _defaultRuleProvider;
-        private readonly IBusinessEntityMappingService _entityBizMappingService;
+        private readonly IEntityMappingService _entityBizMappingService;
         private readonly ApplicationContext _appContext;
         private readonly ILogger<RowAuthService> _logger;
         private readonly ISqlSugarClient _db;
@@ -37,7 +37,7 @@ namespace RUINORERP.Business.RowLevelAuthService
         /// <param name="cacheManager">内存缓存管理器</param>
         public RowAuthService(
             IDefaultRowAuthRuleProvider defaultRuleProvider,
-            IBusinessEntityMappingService entityBizMappingService,
+            IEntityMappingService entityBizMappingService,
             ApplicationContext context,
             ILogger<RowAuthService> logger,
             ISqlSugarClient db,
@@ -71,7 +71,7 @@ namespace RUINORERP.Business.RowLevelAuthService
                 };
 
                 // 获取实体信息服务
-                var entityInfoService = _appContext.GetRequiredService<IBusinessEntityMappingService>();
+                var entityInfoService = _appContext.GetRequiredService<IEntityMappingService>();
 
                 // 获取实体信息
                 var entityInfo = entityInfoService.GetEntityInfo(bizType);
@@ -121,7 +121,7 @@ namespace RUINORERP.Business.RowLevelAuthService
             try
             {
                 // 获取实体信息服务
-                var entityInfoService = _appContext.GetRequiredService<IBusinessEntityMappingService>();
+                var entityInfoService = _appContext.GetRequiredService<IEntityMappingService>();
 
                 // 获取实体信息
                 var entityInfo = entityInfoService.GetEntityInfo(config.BizType);
@@ -256,7 +256,7 @@ namespace RUINORERP.Business.RowLevelAuthService
             try
             {
                 // 获取实体信息服务
-                var entityInfoService = _appContext.GetRequiredService<IBusinessEntityMappingService>();
+                var entityInfoService = _appContext.GetRequiredService<IEntityMappingService>();
 
                 // 获取实体信息
                 var entityInfo = entityInfoService.GetEntityInfo(bizType);

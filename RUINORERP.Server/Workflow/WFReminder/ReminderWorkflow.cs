@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -54,7 +54,7 @@ namespace RUINORERP.Server.Workflow.WFReminder
                 //   .Input(step => step.Password, data => data.Password)
                 //   .Output(data => data.UserId, step => step.UserId)
                 //默认30秒提醒一次，只要到期 或人为取消提醒（取消计划）才停止
-                  .Recur(data => TimeSpan.FromSeconds(60), data => data.Status == MessageStatus.Cancel || data.EndTime <= System.DateTime.Now)
+                  .Recur(data => TimeSpan.FromSeconds(60), data => data.IsRead || data.EndTime <= System.DateTime.Now)
                   .Do(recur => recur
                   .StartWith<ReminderTask>
                   (
@@ -73,7 +73,7 @@ namespace RUINORERP.Server.Workflow.WFReminder
                   //如果取消提醒停止
                   //.If(t => t.StopRemind == true).Do(d => d.Then<ApprovedStep>().Name("同意"))
                   //.If(t => t.StopRemind == false).Do(d => d.Then<CancelStep>().Name("驳回"))
-                  .If(data => data.Status == MessageStatus.Cancel).Do(context => _logger.LogInformation("提醒!!完成!!!不再提醒了。"))
+                  .If(data => data.IsRead).Do(context => _logger.LogInformation("提醒!!已读，不再提醒。"))
               )
               .Then(
                 context =>

@@ -337,8 +337,8 @@ namespace RUINORERP.Business.DI
         public static void AddBizMapperService(this ContainerBuilder builder)
         {
             // 注册实体信息服务及其依赖项
-            builder.RegisterType<BusinessEntityMappingService>()
-                .As<IBusinessEntityMappingService>()
+            builder.RegisterType<EntityMappingService>()
+                .As<IEntityMappingService>()
                 .SingleInstance()
                 .PropertiesAutowired();
 
@@ -347,7 +347,7 @@ namespace RUINORERP.Business.DI
                 .InstancePerLifetimeScope()
                 .PropertiesAutowired();
 
-            builder.RegisterType<EntityInfoConfig>()
+            builder.RegisterType<BizEntityInfoConfig>()
                 .SingleInstance()
                 .PropertiesAutowired();
 

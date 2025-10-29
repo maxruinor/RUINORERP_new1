@@ -31,8 +31,8 @@ namespace RUINORERP.UI.Network.Services
         private readonly IUnitOfWorkManage _unitOfWorkManage;
         private readonly ILogger<FileManagementController> _logger;
         public readonly ApplicationContext _appContext;
-        private readonly IBusinessEntityMappingService _mapper;
-        public FileManagementController(IBusinessEntityMappingService mapper, IUnitOfWorkManage unitOfWorkManage, ILogger<FileManagementController> logger, ApplicationContext appContext = null)
+        private readonly IEntityMappingService _mapper;
+        public FileManagementController(IEntityMappingService mapper, IUnitOfWorkManage unitOfWorkManage, ILogger<FileManagementController> logger, ApplicationContext appContext = null)
         {
             _mapper = mapper;
             _unitOfWorkManage = unitOfWorkManage;

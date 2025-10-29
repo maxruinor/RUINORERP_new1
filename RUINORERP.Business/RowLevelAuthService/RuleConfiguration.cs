@@ -107,7 +107,7 @@ namespace RUINORERP.Business.RowLevelAuthService
         /// <param name="entityInfo">实体信息</param>
         /// <param name="entityInfoService">实体信息服务</param>
         /// <returns>配置是否有效</returns>
-        public bool IsValidForEntity(ERPEntityInfo entityInfo, IBusinessEntityMappingService entityInfoService)
+        public bool IsValidForEntity(BizEntityInfo entityInfo, IEntityMappingService entityInfoService)
         {
             // 首先执行基本验证
             if (!IsValid())

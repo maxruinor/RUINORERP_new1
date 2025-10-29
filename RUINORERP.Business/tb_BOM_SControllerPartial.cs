@@ -333,8 +333,7 @@ namespace RUINORERP.Business
                 _unitOfWorkManage.BeginTran();
                 tb_ProdDetailController<tb_ProdDetail> ctrDetail = _appContext.GetRequiredService<tb_ProdDetailController<tb_ProdDetail>>();
                 tb_BOM_SController<tb_BOM_S> ctrinv = _appContext.GetRequiredService<tb_BOM_SController<tb_BOM_S>>();
-                BillConverterFactory bcf = _appContext.GetRequiredService<BillConverterFactory>();
-
+             
                 //更新产品表回写他的配方号
                 //entity.tb_proddetail.DataStatus = (int)DataStatus.完结;
                 //entity.tb_proddetail.MainID = entity.MainID;

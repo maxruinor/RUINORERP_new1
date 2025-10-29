@@ -19,6 +19,7 @@ using System.Threading.Tasks;
 
 namespace RUINORERP.UI.ClientCmdService
 {
+    [Obsolete("此类已过时，不再使用")]
     public class ClientCommandDispatcher
     {
         

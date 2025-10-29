@@ -17,6 +17,7 @@ using RUINORERP.Extensions.Middlewares;
 
 namespace RUINORERP.UI.SuperSocketClient
 {
+    [Obsolete("此类已过时，不再使用")]
     public class WorkflowService
     {
 

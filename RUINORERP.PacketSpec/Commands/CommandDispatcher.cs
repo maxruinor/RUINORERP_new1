@@ -424,7 +424,7 @@ namespace RUINORERP.PacketSpec.Commands
                     catch (Polly.CircuitBreaker.BrokenCircuitException ex)
                     {
                         // 熔断器已打开，记录详细信息并返回适当的错误
-                        LogWarning($"命令 {cmd.Packet.CommandId.ToString()}[ID: {commandIdentifier.FullCode}] 的熔断器已打开，拒绝执行: {ex.Message}");
+                      //  LogWarning($"命令 {cmd.Packet.CommandId.ToString()}[ID: {commandIdentifier.FullCode}] 的熔断器已打开，拒绝执行: {ex.Message}");
                         return ResponseFactory.CreateSpecificErrorResponse(cmd.Packet.ExecutionContext, ex, errorMessage: "服务暂时不可用，熔断器已打开");
                     }
 

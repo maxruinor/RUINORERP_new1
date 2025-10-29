@@ -53,7 +53,7 @@ namespace RUINORERP.Server.Controls
             // 
             // toolStrip1
             // 
-            toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { tsbtnSave, tsbtnUndo, tsbtnRedo, toolStripSeparator1, tsbtnRefresh, tsbtnHistory });
+            toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { tsbtnSave, tsbtnUndo, tsbtnRedo, toolStripSeparator1, tsbtnRefresh, tsbtnHistory, tsbtnPublish });
             toolStrip1.Location = new System.Drawing.Point(0, 0);
             toolStrip1.Name = "toolStrip1";
             toolStrip1.Size = new System.Drawing.Size(933, 25);
@@ -105,6 +105,14 @@ namespace RUINORERP.Server.Controls
             tsbtnHistory.Size = new System.Drawing.Size(60, 22);
             tsbtnHistory.Text = "历史记录";
             tsbtnHistory.Click += tsbtnHistory_Click;
+            // 
+            // tsbtnPublish
+            // 
+            tsbtnPublish.ImageTransparentColor = System.Drawing.Color.Magenta;
+            tsbtnPublish.Name = "tsbtnPublish";
+            tsbtnPublish.Size = new System.Drawing.Size(48, 22);
+            tsbtnPublish.Text = "发布";
+            tsbtnPublish.Click += tsbtnPublish_Click;
             // 
             // splitContainer2
             // 
@@ -201,6 +209,7 @@ namespace RUINORERP.Server.Controls
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.ToolStripButton tsbtnRefresh;
         private System.Windows.Forms.ToolStripButton tsbtnHistory;
+        private System.Windows.Forms.ToolStripButton tsbtnPublish;
         private System.Windows.Forms.SplitContainer splitContainer2;
         private System.Windows.Forms.TreeView treeView2;
         private System.Windows.Forms.PropertyGrid propertyGrid1;

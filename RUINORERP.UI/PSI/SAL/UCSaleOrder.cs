@@ -56,6 +56,7 @@ using static RUINOR.WinFormsUI.CustomPictureBox.MagicPictureBox;
 using RUINORERP.Business.Cache;
 using MathNet.Numerics;
 using RUINORERP.UI.Network.Services;
+using RUINORERP.Business.BizMapperService;
 
 namespace RUINORERP.UI.PSI.SAL
 {
@@ -1587,13 +1588,13 @@ namespace RUINORERP.UI.PSI.SAL
             {
                 return false;
             }
-            BillConverterFactory bcf = Startup.GetFromFac<BillConverterFactory>();
+            
             CommonUI.frmOpinion frm = new CommonUI.frmOpinion();
             string PKCol = BaseUIHelper.GetEntityPrimaryKey<tb_SaleOrder>();
             long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
             ApprovalEntity ae = new ApprovalEntity();
             ae.BillID = pkid;
-            CommBillData cbd = bcf.GetBillData<tb_SaleOrder>(EditEntity);
+            CommBillData cbd = EntityMappingHelper.GetBillData<tb_SaleOrder>(EditEntity);
             ae.BillNo = cbd.BillNo;
             ae.bizType = cbd.BizType;
             ae.bizName = cbd.BizName;
@@ -1645,13 +1646,13 @@ namespace RUINORERP.UI.PSI.SAL
             {
                 return false;
             }
-            BillConverterFactory bcf = Startup.GetFromFac<BillConverterFactory>();
+            
             CommonUI.frmOpinion frm = new CommonUI.frmOpinion();
             string PKCol = BaseUIHelper.GetEntityPrimaryKey<tb_SaleOrder>();
             long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
             ApprovalEntity ae = new ApprovalEntity();
             ae.BillID = pkid;
-            CommBillData cbd = bcf.GetBillData<tb_SaleOrder>(EditEntity);
+            CommBillData cbd = EntityMappingHelper.GetBillData<tb_SaleOrder>(EditEntity);
             ae.BillNo = cbd.BillNo;
             ae.bizType = cbd.BizType;
             ae.bizName = cbd.BizName;

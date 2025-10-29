@@ -24,17 +24,17 @@ namespace RUINORERP.Business.BizMapperService
         /// 业务类型到实体信息的映射字典
         /// </summary>
         public ConcurrentDictionary<BizType, BizEntityInfo> BizTypeToEntityInfo => _bizTypeToEntityInfo;
-        
+
         /// <summary>
         /// 实体类型到实体信息的映射字典
         /// </summary>
         public ConcurrentDictionary<Type, BizEntityInfo> EntityTypeToEntityInfo => _entityTypeToEntityInfo;
-        
+
         /// <summary>
         /// 表名到实体信息的映射字典（不区分大小写）
         /// </summary>
         public ConcurrentDictionary<string, BizEntityInfo> TableNameToEntityInfo => _tableNameToEntityInfo;
-        
+
         /// <summary>
         /// 共用表配置字典
         /// </summary>
@@ -150,6 +150,7 @@ namespace RUINORERP.Business.BizMapperService
                 SafeRegister<tb_AS_AfterSaleApply>(BizType.售后申请单, e => e.ASApplyID, e => e.ASApplyNo, e => e.tb_AS_AfterSaleApplyDetails);
                 SafeRegister<tb_AS_AfterSaleDelivery>(BizType.售后交付单, e => e.ASDeliveryID, e => e.ASDeliveryNo, e => e.tb_AS_AfterSaleDeliveryDetails);
                 SafeRegister<tb_AS_RepairOrder>(BizType.维修工单, e => e.RepairOrderID, e => e.RepairOrderNo, e => e.tb_AS_RepairOrderDetails);
+                SafeRegister<tb_AS_RepairMaterialPickup>(BizType.维修领料单, e => e.RMRID, e => e.MaterialPickupNO, e => e.tb_AS_RepairMaterialPickupDetails);
                 SafeRegister<tb_AS_RepairInStock>(BizType.维修入库单, e => e.RepairInStockID, e => e.RepairInStockNo, e => e.tb_AS_RepairInStockDetails);
 
                 _logger.Debug("普通实体映射注册完成，成功：{SuccessCount}，失败：{ErrorCount}", successCount, errorCount);
@@ -374,9 +375,9 @@ namespace RUINORERP.Business.BizMapperService
 
             throw new ArgumentException("Expression must be a member access expression.", nameof(expression));
         }
-      
 
-    
+
+
         #endregion
     }
 }

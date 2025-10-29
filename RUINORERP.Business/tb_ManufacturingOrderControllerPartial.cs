@@ -308,8 +308,8 @@ namespace RUINORERP.Business
                 _unitOfWorkManage.RollbackTran();
                 _logger.Error(ex);
                 rs.Succeeded = false;
-                BizTypeMapper mapper = new BizTypeMapper();
-                rs.ErrorMsg = mapper.GetBizType(typeof(tb_ManufacturingOrder)).ToString() + "事务回滚=>" + ex.Message;
+               
+                rs.ErrorMsg = BizMapperService.EntityMappingHelper.GetBizType(typeof(tb_ManufacturingOrder)).ToString() + "事务回滚=>" + ex.Message;
                 rs.ErrorMsg = ex.Message;
                 //  _logger.Error(approvalEntity.bizName + "事务回滚");
                 return rs;

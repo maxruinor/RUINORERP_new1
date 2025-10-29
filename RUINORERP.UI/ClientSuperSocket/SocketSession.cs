@@ -1,4 +1,4 @@
-﻿using RUINORERP.Model.CommonModel;
+using RUINORERP.Model.CommonModel;
 using RUINORERP.PacketSpec.Protocol;
 using System;
 using System.Collections;
@@ -15,6 +15,7 @@ namespace RUINORERP.UI.SuperSocketClient
     /// <summary>
     /// sokcet功能：消息IM，操作状态，认证在线情况。T人，注册企业。人数同时在线限制
     /// </summary>
+    [Obsolete("此类已过时，不再使用")]
     public class SocketSession
     {
         #region 当前用户信息

@@ -34,9 +34,7 @@ namespace RUINORERP.UI.BI
         {
             InitializeComponent();
             dataGridView1.CellPainting += dataGridView1_CellPainting;
-            mapper = Startup.GetFromFac<BizTypeMapper>();
         }
-        BizTypeMapper mapper = null;
         List<tb_FM_AuditLogs> _AuditLogs = new List<tb_FM_AuditLogs>();
 
         private void btnCancel_Click(object sender, EventArgs e)
@@ -94,7 +92,7 @@ namespace RUINORERP.UI.BI
 
                             #region  恢复单据
                             BizType bizType = (BizType)AuditLog.ObjectType.Value;
-                            Type objType = mapper.GetTableType(bizType);
+                            Type objType = Business.BizMapperService.EntityMappingHelper.GetEntityType(bizType);
 
                             if (objType == null)
                             {

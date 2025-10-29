@@ -61,7 +61,6 @@ namespace RUINORERP.Business
                 //都返工了。正常是不用判断初始库存数据了
                 
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
-                BillConverterFactory bcf = _appContext.GetRequiredService<BillConverterFactory>();
 
                 entity.tb_mrp_reworkreturn = _unitOfWorkManage.GetDbClient().Queryable<tb_MRP_ReworkReturn>()
                      .Includes(a => a.tb_MRP_ReworkEntries, b => b.tb_MRP_ReworkEntryDetails)
@@ -254,7 +253,6 @@ namespace RUINORERP.Business
                 _unitOfWorkManage.BeginTran();
                 
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
-                BillConverterFactory bcf = _appContext.GetRequiredService<BillConverterFactory>();
 
                 foreach (var child in entity.tb_MRP_ReworkEntryDetails)
                 {

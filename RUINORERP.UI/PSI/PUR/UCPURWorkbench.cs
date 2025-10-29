@@ -1,4 +1,4 @@
-﻿﻿using AutoMapper;
+﻿using AutoMapper;
 using FastReport.Barcode;
 using FastReport.DevComponents.DotNetBar.Controls;
 using FastReport.Table;
@@ -17,6 +17,7 @@ using Org.BouncyCastle.Asn1.X509.Qualified;
 using RUINOR.Core;
 using RUINORERP.AutoMapper;
 using RUINORERP.Business;
+using RUINORERP.Business.BizMapperService;
 using RUINORERP.Business.CommService;
 using RUINORERP.Business.Processor;
 using RUINORERP.Business.Security;
@@ -713,7 +714,7 @@ namespace RUINORERP.UI.PUR
                 if (uCPur.kryptonTreeGridView1.CurrentRow.Tag.GetType().BaseType.Name == "BaseEntity")
                 {
                     Type rowOjbType = uCPur.kryptonTreeGridView1.CurrentRow.Tag.GetType();
-                    BizTypeMapper mapper = new BizTypeMapper();
+                    // 使用EntityMappingHelper代替BizTypeMapper
 
                     object PKValue = uCPur.kryptonTreeGridView1.CurrentRow.Tag.GetPropertyValue(UIHelper.GetPrimaryKeyColName(rowOjbType));
 
@@ -728,7 +729,7 @@ namespace RUINORERP.UI.PUR
                         object obj = frmaddg.bindingSourceEdit.AddNew();
                         tb_gl_Comment EntityInfo = obj as tb_gl_Comment;
                         EntityInfo.BusinessID = PKValue.ToLong();
-                        EntityInfo.BizTypeID = (int)mapper.GetBizType(rowOjbType);
+                        EntityInfo.BizTypeID = (int)EntityMappingHelper.GetBizType(rowOjbType);
                         EntityInfo.DbTableName = rowOjbType.Name;
                         BusinessHelper.Instance.InitEntity(EntityInfo);
                         BaseEntity bty = EntityInfo as BaseEntity;

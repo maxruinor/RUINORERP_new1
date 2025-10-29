@@ -36,6 +36,7 @@ namespace RUINORERP.UI.ClientCmdService
     /// 消息处理指令
     /// 消息有多种型式
     /// </summary>
+    [Obsolete("此类已过时，不再使用")]
     public class RequestReceiveMessageCmd : IClientCommand
     {
         public CmdOperation OperationType { get; set; }

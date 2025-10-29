@@ -99,6 +99,8 @@ namespace RUINORERP.Model.TransModel
             }
         }
 
+        public object CreateTime { get; set; }
+
         // 构造函数
         public ReminderData()
         {

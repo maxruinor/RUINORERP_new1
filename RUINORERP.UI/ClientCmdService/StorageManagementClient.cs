@@ -22,6 +22,7 @@ using SuperSocket.ProtoBase;
 namespace RUINORERP.UI.ClientCmdService
 {
     // 客户端代码 - 请求服务器执行管理操作
+    [Obsolete("此类已过时，不再使用")]
     public class StorageManagementClient
     {
         private readonly EasyClient<StringPackageInfo> _easyClient;

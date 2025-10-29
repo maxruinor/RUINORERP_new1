@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -21,6 +21,7 @@ namespace RUINORERP.UI.SuperSocketClient
     /// <summary>
     /// 客户端数据组合后发送到服务器的服务
     /// </summary>
+    [Obsolete("此类已过时，不再使用")]
     public class ClientDataBuilder
     {
 

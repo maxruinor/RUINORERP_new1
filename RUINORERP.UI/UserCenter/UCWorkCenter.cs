@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using ExCSS;
 using Krypton.Docking;
 using Krypton.Navigator;
@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 using Org.BouncyCastle.Utilities;
 using RUINORERP.AutoMapper;
 using RUINORERP.Business;
-using RUINORERP.Business.CommService;
+using RUINORERP.Business.BizMapperService;
 using RUINORERP.Business.Processor;
 using RUINORERP.Business.Security;
 using RUINORERP.Common;
@@ -127,7 +127,7 @@ namespace RUINORERP.UI.UserCenter
 
         }
 
-        BizTypeMapper mapper = new BizTypeMapper();
+        // 使用EntityMappingHelper代替BizTypeMapper
 
         /// <summary>
         /// 待办事项
@@ -254,7 +254,7 @@ namespace RUINORERP.UI.UserCenter
             foreach (var item in bizTypes)
             {
                 TreeNode node = new TreeNode(item.ToString());
-                Type tableType = mapper.GetTableType(item);
+                Type tableType = EntityMappingHelper.GetEntityType(item);
 
                 TreeNode SubNode未提交 = new TreeNode(item.ToString());
                 DataTable queryList未提交 = MainForm.Instance.AppContext.Db.Queryable(tableType.Name, "TN").Where(conModel未提交).ToDataTable();

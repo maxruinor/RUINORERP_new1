@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -36,7 +36,7 @@ using RUINORERP.Global.EnumExt;
 using RUINORERP.UI.UControls;
 using LiveChartsCore.Geo;
 using Netron.GraphLib;
-using RUINORERP.Business.CommService;
+using RUINORERP.Business.BizMapperService;
 using RUINORERP.Global.Model;
 using RUINORERP.UI.ToolForm;
 using Microsoft.Extensions.Logging;
@@ -938,11 +938,11 @@ namespace RUINORERP.UI.FM
             base._UCBillMasterQuery.GridRelated.ComplexType = true;
             //由这个列来决定单号显示哪个的业务窗体
             base._UCBillMasterQuery.GridRelated.SetComplexTargetField<tb_FM_ReceivablePayable>(c => c.SourceBizType, c => c.SourceBillNo);
-            BizTypeMapper mapper = new BizTypeMapper();
+            // 使用EntityMappingHelper代替BizTypeMapper
             //将枚举中的值循环
             foreach (var biztype in Enum.GetValues(typeof(BizType)))
             {
-                var tableName = mapper.GetTableType((BizType)biztype);
+                var tableName = EntityMappingHelper.GetEntityType((BizType)biztype);
                 if (tableName == null)
                 {
                     continue;

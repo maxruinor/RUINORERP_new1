@@ -474,7 +474,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
             //根据类型查找主键。暂时不需要
             //foreach (var bizType in bizTypes)
             //{
-            //    Type tableType = _mapper.GetTableType(bizType);
+            //    Type tableType = _Business.BizMapperService.EntityMappingHelper.GetEntityType(bizType);
             //    if (!DoesTableHaveData(tableType.Name))
             //    {
             //        string pkfeildName = UIHelper.GetPrimaryKeyColName(tableType);

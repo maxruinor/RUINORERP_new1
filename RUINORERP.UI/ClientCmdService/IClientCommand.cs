@@ -22,6 +22,7 @@ namespace RUINORERP.UI.ClientCmdService
     /// <summary>
     /// 客户端的指令 可能是发送功能，也有可能是接收功能
     /// </summary>
+    [Obsolete("此接口已过时，不再使用")]
     public interface IClientCommand : IExcludeFromRegistration
     {
         CommandDirection OperationType { get; set; }

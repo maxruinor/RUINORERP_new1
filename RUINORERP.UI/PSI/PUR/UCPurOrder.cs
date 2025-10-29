@@ -50,6 +50,7 @@ using RUINORERP.Global.Model;
 using RUINORERP.UI.BI;
 using RUINORERP.UI.WorkFlowDesigner.Entities;
 using RUINORERP.Extensions.Middlewares;
+using RUINORERP.Business.BizMapperService;
 
 namespace RUINORERP.UI.PSI.PUR
 {
@@ -1148,8 +1149,8 @@ namespace RUINORERP.UI.PSI.PUR
             long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
             ApprovalEntity ae = new ApprovalEntity();
             ae.BillID = pkid;
-            BillConverterFactory bcf = Startup.GetFromFac<BillConverterFactory>();
-            CommBillData cbd = bcf.GetBillData<tb_PurOrder>(EditEntity);
+            
+            CommBillData cbd = EntityMappingHelper.GetBillData<tb_PurOrder>(EditEntity);
             ae.BillNo = cbd.BillNo;
             ae.bizType = cbd.BizType;
             ae.bizName = cbd.BizName;

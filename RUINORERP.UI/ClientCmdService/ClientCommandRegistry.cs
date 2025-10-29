@@ -19,6 +19,7 @@ using TransInstruction.Enums;
 
 namespace RUINORERP.UI.ClientCmdService
 {
+    [Obsolete("此类已过时，不再使用")]
     public class ClientCommandRegistry
     {
         public ClientCommandRegistry()

@@ -1,4 +1,4 @@
-﻿
+
 using SuperSocket.ProtoBase;
 
 
@@ -6,9 +6,7 @@ using SuperSocket.ProtoBase;
 
 namespace RUINORERP.UI.SuperSocketClient
 {
-
-
-
+    [Obsolete("此类已过时，不再使用")]
     public class BizPackageInfo : IPackageInfo<string>
     {
         public string Key { get; set; }

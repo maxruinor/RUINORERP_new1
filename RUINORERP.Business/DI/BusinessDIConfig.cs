@@ -56,13 +56,7 @@ namespace RUINORERP.Business.DI
                 .AsSelf()
                 .PropertiesAutowired()
                 .SingleInstance();
-
-            // 注册BillConverterFactory - 移除重复注册
-            builder.RegisterType<BillConverterFactory>()
-                .AsImplementedInterfaces()
-                .AsSelf()
-                .PropertiesAutowired()
-                .SingleInstance();
+ 
 
             // 实体业务映射服务已通过AddEntityInfoServicesWithMappings方法注册
             // 此处不再重复注册，以避免冲突

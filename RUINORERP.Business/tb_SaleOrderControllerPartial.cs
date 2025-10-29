@@ -990,8 +990,8 @@ namespace RUINORERP.Business
                 else
                 {
                     _unitOfWorkManage.RollbackTran();
-                    BizTypeMapper mapper = new BizTypeMapper();
-                    rmrs.ErrorMsg = mapper.GetBizType(typeof(tb_SaleOrder)).ToString() + "事务回滚=> 保存出错";
+                   
+                    rmrs.ErrorMsg = BizMapperService.EntityMappingHelper.GetBizType(typeof(tb_SaleOrder)).ToString() + "事务回滚=> 保存出错";
                     rmrs.Succeeded = false;
                 }
             }
@@ -999,8 +999,8 @@ namespace RUINORERP.Business
             {
                 _unitOfWorkManage.RollbackTran();
                 _logger.Error(ex);
-                BizTypeMapper mapper = new BizTypeMapper();
-                rmrs.ErrorMsg = mapper.GetBizType(typeof(tb_SaleOrder)).ToString() + "事务回滚=>" + ex.Message;
+               
+                rmrs.ErrorMsg = BizMapperService.EntityMappingHelper.GetBizType(typeof(tb_SaleOrder)).ToString() + "事务回滚=>" + ex.Message;
                 rmrs.Succeeded = false;
             }
             return rmrs;
@@ -1054,8 +1054,8 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
                 _unitOfWorkManage.RollbackTran();
-                BizTypeMapper mapper = new BizTypeMapper();
-                rmrs.ErrorMsg = mapper.GetBizType(typeof(tb_SaleOrder)).ToString() + "事务回滚=>" + ex.Message;
+               
+                rmrs.ErrorMsg = BizMapperService.EntityMappingHelper.GetBizType(typeof(tb_SaleOrder)).ToString() + "事务回滚=>" + ex.Message;
                 _logger.Error(ex);
                 rmrs.Succeeded = false;
             }
@@ -1108,8 +1108,8 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
                 _unitOfWorkManage.RollbackTran();
-                BizTypeMapper mapper = new BizTypeMapper();
-                rmrs.ErrorMsg = mapper.GetBizType(typeof(tb_SaleOrder)).ToString() + "事务回滚=>" + ex.Message;
+               
+                rmrs.ErrorMsg = BizMapperService.EntityMappingHelper.GetBizType(typeof(tb_SaleOrder)).ToString() + "事务回滚=>" + ex.Message;
                 _logger.Error(ex);
                 rmrs.Succeeded = false;
             }
@@ -1597,8 +1597,8 @@ namespace RUINORERP.Business
                 else
                 {
                     _unitOfWorkManage.RollbackTran();
-                    BizTypeMapper mapper = new BizTypeMapper();
-                    rmrs.ErrorMsg = mapper.GetBizType(typeof(tb_SaleOrder)).ToString() + "事务回滚=> 订单取消失败";
+                   
+                    rmrs.ErrorMsg = BizMapperService.EntityMappingHelper.GetBizType(typeof(tb_SaleOrder)).ToString() + "事务回滚=> 订单取消失败";
                     rmrs.Succeeded = false;
                 }
             }
@@ -1606,8 +1606,8 @@ namespace RUINORERP.Business
             {
                 _unitOfWorkManage.RollbackTran();
                 _logger.Error(ex);
-                BizTypeMapper mapper = new BizTypeMapper();
-                rmrs.ErrorMsg = mapper.GetBizType(typeof(tb_SaleOrder)).ToString() + "事务回滚=>" + ex.Message;
+               
+                rmrs.ErrorMsg = BizMapperService.EntityMappingHelper.GetBizType(typeof(tb_SaleOrder)).ToString() + "事务回滚=>" + ex.Message;
                 rmrs.Succeeded = false;
             }
             return rmrs;

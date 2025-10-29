@@ -54,7 +54,6 @@ namespace RUINORERP.Business
                 _unitOfWorkManage.BeginTran();
                 
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
-                BillConverterFactory bcf = _appContext.GetRequiredService<BillConverterFactory>();
 
                 //减少母件
                 tb_Inventory invMother = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == entity.ProdDetailID && i.Location_ID == entity.Location_ID);
@@ -207,8 +206,7 @@ namespace RUINORERP.Business
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
-                BillConverterFactory bcf = _appContext.GetRequiredService<BillConverterFactory>();
-
+                
 
                 //增加母件
                 tb_Inventory invMother = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == entity.ProdDetailID && i.Location_ID == entity.Location_ID);

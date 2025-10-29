@@ -531,8 +531,8 @@ namespace RUINORERP.Business
                 else
                 {
                     _unitOfWorkManage.RollbackTran();
-                    BizTypeMapper mapper = new BizTypeMapper();
-                    rmrs.ErrorMsg = mapper.GetBizType(typeof(tb_AS_RepairOrder)).ToString() + "事务回滚=> 保存出错";
+                     
+                    rmrs.ErrorMsg = BizMapperService.EntityMappingHelper.GetBizType(typeof(tb_AS_RepairOrder)).ToString() + "事务回滚=> 保存出错";
                     rmrs.Succeeded = false;
                 }
             }
@@ -540,8 +540,8 @@ namespace RUINORERP.Business
             {
                 _unitOfWorkManage.RollbackTran();
                 _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
-                BizTypeMapper mapper = new BizTypeMapper();
-                rmrs.ErrorMsg = mapper.GetBizType(typeof(tb_AS_RepairOrder)).ToString() + "事务回滚=>" + ex.Message;
+                 
+                rmrs.ErrorMsg = BizMapperService.EntityMappingHelper.GetBizType(typeof(tb_AS_RepairOrder)).ToString() + "事务回滚=>" + ex.Message;
                 rmrs.Succeeded = false;
             }
             return rmrs;

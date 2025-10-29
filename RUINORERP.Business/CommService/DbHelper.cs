@@ -29,8 +29,8 @@ namespace RUINORERP.Business.CommService
             
             _unitOfWorkManage = unitOfWorkManage;
             _appContext = appContext;
-            BizTypeMapper mapper = new BizTypeMapper();
-            BizType bizType = mapper.GetBizType(typeof(T).Name);
+      
+            BizType bizType = BizMapperService.EntityMappingHelper.GetBizType(typeof(T).Name);
             BizTypeText = bizType.ToString();
             BizTypeInt = (int)bizType;
         }

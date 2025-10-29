@@ -33,7 +33,7 @@ using RUINORERP.PacketSpec.Models.Core;
 namespace RUINORERP.UI.SuperSocketClient
 {
 
-    [Obsolete]
+    [Obsolete("此类已过时，不再使用")]
     public class EasyClientService
     {
         public delegate void ConnectClosed(bool isconect);

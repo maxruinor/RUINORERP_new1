@@ -2102,6 +2102,13 @@
     <Compile Include="HelpSystem\TestControlHelpForm.Designer.cs">
       <DependentUpon>TestControlHelpForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="IM\BusinessMessagePrompt.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="IM\BusinessMessagePrompt.Designer.cs">
+      <DependentUpon>BusinessMessagePrompt.cs</DependentUpon>
+    </Compile>
+    <Compile Include="IM\EnhancedMessageManager.cs" />
     <Compile Include="IM\MainFormMessageExtensions.cs" />
     <Compile Include="IM\MessageManager.cs" />
     <Compile Include="Monitoring\Auditing\AuditLogHelper.cs" />

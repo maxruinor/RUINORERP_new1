@@ -1,4 +1,4 @@
-﻿using RUINORERP.PacketSpec.Commands.System;
+using RUINORERP.PacketSpec.Commands.System;
 using RUINORERP.PacketSpec.Models;
 using RUINORERP.PacketSpec.Models.Core;
 using System;
@@ -14,6 +14,7 @@ namespace RUINORERP.UI.SuperSocketClient
     /// <summary>
     /// 系统优化服务
     /// </summary>
+    [Obsolete("此类已过时，不再使用")]
     public static class SystemOptimizerService
     {
         public static OriginalData 异常信息发送(string message, Exception exception)

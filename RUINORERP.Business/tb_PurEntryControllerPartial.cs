@@ -70,7 +70,6 @@ namespace RUINORERP.Business
 
                 var ctrtb_BOM_SDetail = _appContext.GetRequiredService<tb_BOM_SDetailController<tb_BOM_SDetail>>();
                 var ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
-                BillConverterFactory bcf = _appContext.GetRequiredService<BillConverterFactory>();
 
                 if (entity.PurOrder_ID.HasValue && entity.PurOrder_ID.Value > 0)
                 {
@@ -543,7 +542,6 @@ namespace RUINORERP.Business
 
 
                 var ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
-                var bcf = _appContext.GetRequiredService<BillConverterFactory>();
 
                 // 使用字典按 (ProdDetailID, LocationID) 分组，存储库存记录及累计数据
                 var inventoryGroups = new Dictionary<(long ProdDetailID, long LocationID), (tb_Inventory Inventory, decimal PurQtySum, bool? IsGift,

@@ -1,4 +1,4 @@
-﻿
+
 using RUINORERP.PacketSpec.Models.Core;
 using SuperSocket.ProtoBase;
 using System;
@@ -20,6 +20,7 @@ namespace RUINORERP.UI.SuperSocketClient
     /// <summary>
     /// 过滤器
     /// </summary>
+    [Obsolete("此类已过时，不再使用")]
     public class BizPipelineFilter : FixedHeaderReceiveFilter<BizPackageInfo>
     {
         /// <summary>

@@ -35,6 +35,7 @@ namespace RUINORERP.UI.ClientCmdService
     /// 请求接收实体的指令
     /// </summary>
     /// <typeparam name="T"></typeparam>
+    [Obsolete("此类已过时，不再使用")]
     public class RequestReceiveEntityCmd : IClientCommand
     {
         public CmdOperation OperationType { get; set; }

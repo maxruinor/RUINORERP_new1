@@ -443,6 +443,22 @@ namespace RUINORERP.Business
         }
 
 
+        public async override Task<List<T>> GetPrintDataSource(long Pickup_MainID)
+        {
+
+            List<tb_AS_RepairMaterialPickup> list = await _appContext.Db.CopyNew().Queryable<tb_AS_RepairMaterialPickup>().Where(m => m.RMRID == Pickup_MainID)
+                             .Includes(a => a.tb_as_repairorder)
+                            .Includes(a => a.tb_employee)
+                            .Includes(a => a.tb_AS_RepairMaterialPickupDetails, b => b.tb_location)
+                            .AsNavQueryable()//加这个前面,超过三级在前面加这一行，并且第四级无VS智能提示，但是可以用
+                              .Includes(a => a.tb_AS_RepairMaterialPickupDetails, b => b.tb_proddetail, c => c.tb_prod, d => d.tb_producttype)
+                              .AsNavQueryable()//加这个前面,超过三级在前面加这一行，并且第四级无VS智能提示，但是可以用
+                              .Includes(a => a.tb_AS_RepairMaterialPickupDetails, b => b.tb_proddetail, c => c.tb_prod, d => d.tb_unit)
+                               .AsNavQueryable()//加这个前面,超过三级在前面加这一行，并且第四级无VS智能提示，但是可以用
+                                 .ToListAsync();
+            return list as List<T>;
+        }
+
     }
 }
 

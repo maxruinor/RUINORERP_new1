@@ -35,180 +35,180 @@ namespace RUINORERP.Business
     /// 目前这个订单 会保存成为一个集合，单行指向一个下拉对象时，就可能要扩展，子查询条件需要设置
     /// </summary>
     /// <typeparam name="M"></typeparam>
-    public class QueryParameter<M>
-    {
-        public ApplicationContext _appContext;
+    //public class QueryParameter<M>
+    //{
+    //    public ApplicationContext _appContext;
 
-        private List<string> subQueryParameter = new List<string>();
+    //    private List<string> subQueryParameter = new List<string>();
 
-        /// <summary>
-        /// 次级查询条件，这里架构不完善，暂时只方便用条件名称来搜索，不处理下拉等特殊情况
-        /// </summary>
-        public List<string> SubQueryParameter { get => subQueryParameter; set => subQueryParameter = value; }
-
-
-        public static Expression<Func<dynamic, bool>> ConvertExpression<T>(Expression<Func<T, bool>> expold)
-        {
-            var param = Expression.Parameter(typeof(object), "t");
-            var cast = Expression.Convert(param, typeof(T));
-            var body = expold.Body.ReplaceParameter(expold.Parameters[0], cast);
-            return Expression.Lambda<Func<dynamic, bool>>(body, param);
-        }
-
-        public QueryParameter()
-        {
-
-        }
-
-        public QueryParameter(ApplicationContext appContext = null)
-        {
-            _appContext = appContext;
-        }
-
-        /// <summary>
-        /// 没有特殊要求时
-        /// </summary>
-        /// <param name="queryFieldExp"></param>
-        public QueryParameter(Expression<Func<M, object>> queryFieldExp)
-        {
-            QueryFieldExpression = queryFieldExp;
-            string tableName = typeof(M).Name;
-
-            /*
-            //次級的
-            //如果M是表，查可以查出这个字段是否为外键关联的，如果是则可以在这里统计处理关联表的查询条件，即子查询条件集合
-            if (tableName.Contains("tb_"))
-            {
-                //主键是long  64位
-                foreach (var field in typeof(T).GetProperties().Where(c => c.PropertyType.Name == ""))
-                {
-                    //获取指定类型的自定义特性
-                    object[] attrs = field.GetCustomAttributes(false);
-                    foreach (var attr in attrs)
-                    {
-                        if (attr is FKRelationAttribute)
-                        {
-                            FKRelationAttribute fkrattr = attr as FKRelationAttribute;
-
-                            var conlist = _appContext.GetRequiredService<tb_CustomerVendorController<tb_CustomerVendor>>().GetQueryParameters();
-
-                            //parameter.SubQueryParameter = new List<string>(conlist.Select(t => t.QueryField).ToList()); ;
-
-                            break;
-                            //fkrattr.FK_ValueColName, fkrattr.FKTableName
-                        }
-                    }
-                }
-            }*/
+    //    /// <summary>
+    //    /// 次级查询条件，这里架构不完善，暂时只方便用条件名称来搜索，不处理下拉等特殊情况
+    //    /// </summary>
+    //    public List<string> SubQueryParameter { get => subQueryParameter; set => subQueryParameter = value; }
 
 
-        }
+    //    public static Expression<Func<dynamic, bool>> ConvertExpression<T>(Expression<Func<T, bool>> expold)
+    //    {
+    //        var param = Expression.Parameter(typeof(object), "t");
+    //        var cast = Expression.Convert(param, typeof(T));
+    //        var body = expold.Body.ReplaceParameter(expold.Parameters[0], cast);
+    //        return Expression.Lambda<Func<dynamic, bool>>(body, param);
+    //    }
 
-        /// <summary>
-        /// 如果是视图时使用，
-        /// </summary>
-        /// <param name="queryFieldExp"></param>
-        /// <param name="RelatedTableTypeForView">这个字段来源于的表实体类型</param>
-        public QueryParameter(Expression<Func<M, object>> queryFieldExp, Type RelatedTableTypeForView)
-        {
-            QueryFieldExpression = queryFieldExp;
-            RelatedTableExpType = RelatedTableTypeForView;
-            IsView = true;
-        }
+    //    public QueryParameter()
+    //    {
 
-        private Expression<Func<M, object>> _QueryFieldExpression;
+    //    }
 
-        public Type limitedExpType { get; set; }
+    //    public QueryParameter(ApplicationContext appContext = null)
+    //    {
+    //        _appContext = appContext;
+    //    }
 
-        /// <summary>
-        /// 标记是否为视图
-        /// </summary>
-        public bool IsView { get; set; }
+    //    /// <summary>
+    //    /// 没有特殊要求时
+    //    /// </summary>
+    //    /// <param name="queryFieldExp"></param>
+    //    public QueryParameter(Expression<Func<M, object>> queryFieldExp)
+    //    {
+    //        QueryFieldExpression = queryFieldExp;
+    //        string tableName = typeof(M).Name;
 
-        /// <summary>
-        /// 相对于视图关联表的类型，限制条件也在这
-        /// </summary>
-        public Type RelatedTableExpType { get; set; }
+    //        /*
+    //        //次級的
+    //        //如果M是表，查可以查出这个字段是否为外键关联的，如果是则可以在这里统计处理关联表的查询条件，即子查询条件集合
+    //        if (tableName.Contains("tb_"))
+    //        {
+    //            //主键是long  64位
+    //            foreach (var field in typeof(T).GetProperties().Where(c => c.PropertyType.Name == ""))
+    //            {
+    //                //获取指定类型的自定义特性
+    //                object[] attrs = field.GetCustomAttributes(false);
+    //                foreach (var attr in attrs)
+    //                {
+    //                    if (attr is FKRelationAttribute)
+    //                    {
+    //                        FKRelationAttribute fkrattr = attr as FKRelationAttribute;
 
-        /// <summary>
-        /// 查询的字段，用表达式的方式避免字段名错误，编译阶段即可发现
-        /// </summary>
-        private Expression<Func<M, object>> QueryFieldExpression
-        {
-            get { return _QueryFieldExpression; }
-            set
-            {
-                _QueryFieldExpression = value;
-                //指定到字符类型，方便使用
-                QueryField = RuinorExpressionHelper. ExpressionToString<M>(_QueryFieldExpression);
-            }
-        }
+    //                        var conlist = _appContext.GetRequiredService<tb_CustomerVendorController<tb_CustomerVendor>>().GetQueryParameters();
+
+    //                        //parameter.SubQueryParameter = new List<string>(conlist.Select(t => t.QueryField).ToList()); ;
+
+    //                        break;
+    //                        //fkrattr.FK_ValueColName, fkrattr.FKTableName
+    //                    }
+    //                }
+    //            }
+    //        }*/
 
 
-        /// <summary>
-        /// 查询的字段
-        /// </summary>
-        public string QueryField { get; set; }
+    //    }
 
-        /// <summary>
-        /// 根据不同的字段类型。给出对应的数据信息
-        /// 以这个类型为标准判断应该处理的方式
-        /// 这块应该可以重构，比方 用接口定义
-        /// </summary>
-        public QueryFieldType QueryFieldType { get; set; }
+    //    /// <summary>
+    //    /// 如果是视图时使用，
+    //    /// </summary>
+    //    /// <param name="queryFieldExp"></param>
+    //    /// <param name="RelatedTableTypeForView">这个字段来源于的表实体类型</param>
+    //    public QueryParameter(Expression<Func<M, object>> queryFieldExp, Type RelatedTableTypeForView)
+    //    {
+    //        QueryFieldExpression = queryFieldExp;
+    //        RelatedTableExpType = RelatedTableTypeForView;
+    //        IsView = true;
+    //    }
 
-        /// <summary>
-        /// 指定了查询字段的数据类型后，就要指定具体数据
-        /// </summary>
+    //    private Expression<Func<M, object>> _QueryFieldExpression;
+
+    //    public Type limitedExpType { get; set; }
+
+    //    /// <summary>
+    //    /// 标记是否为视图
+    //    /// </summary>
+    //    public bool IsView { get; set; }
+
+    //    /// <summary>
+    //    /// 相对于视图关联表的类型，限制条件也在这
+    //    /// </summary>
+    //    public Type RelatedTableExpType { get; set; }
+
+    //    /// <summary>
+    //    /// 查询的字段，用表达式的方式避免字段名错误，编译阶段即可发现
+    //    /// </summary>
+    //    private Expression<Func<M, object>> QueryFieldExpression
+    //    {
+    //        get { return _QueryFieldExpression; }
+    //        set
+    //        {
+    //            _QueryFieldExpression = value;
+    //            //指定到字符类型，方便使用
+    //            QueryField = RuinorExpressionHelper. ExpressionToString<M>(_QueryFieldExpression);
+    //        }
+    //    }
+
+
+    //    /// <summary>
+    //    /// 查询的字段
+    //    /// </summary>
+    //    public string QueryField { get; set; }
+
+    //    /// <summary>
+    //    /// 根据不同的字段类型。给出对应的数据信息
+    //    /// 以这个类型为标准判断应该处理的方式
+    //    /// 这块应该可以重构，比方 用接口定义
+    //    /// </summary>
+    //    public QueryFieldType QueryFieldType { get; set; }
+
+    //    /// <summary>
+    //    /// 指定了查询字段的数据类型后，就要指定具体数据
+    //    /// </summary>
    
 
 
-        /// <summary>
-        /// 字段限制条件
-        /// </summary>
-        public Expression<Func<dynamic, bool>> FieldLimitCondition { get; set; }
+    //    /// <summary>
+    //    /// 字段限制条件
+    //    /// </summary>
+    //    public Expression<Func<dynamic, bool>> FieldLimitCondition { get; set; }
 
 
 
 
-        ///// <summary>
-        ///// 查询视图时，视图中如类型id,不会像表一样在实体中加入关联关系。所以在这里查询条件时手动指定
-        ///// </summary>
-        //public Expression<Func<dynamic, string>> RelatedTableFieldForView { get; set; }
+    //    ///// <summary>
+    //    ///// 查询视图时，视图中如类型id,不会像表一样在实体中加入关联关系。所以在这里查询条件时手动指定
+    //    ///// </summary>
+    //    //public Expression<Func<dynamic, string>> RelatedTableFieldForView { get; set; }
 
 
-        ///// <summary>
-        ///// 字段限制条件  和下面重复了。 要优化一下
-        ///// </summary>
-        ///// <typeparam name="T"></typeparam>
-        ///// <param name="limitexp"></param>
-        ///// <returns></returns>
-        //public Expression<Func<T, bool>> FieldLimitConditions<T>(Expression<Func<T, bool>> limitexp)
-        //{
-        //    limitedExpType = typeof(T);
-        //    Expression<Func<dynamic, bool>> expnew = ConvertExpression(limitexp);
-        //    FieldLimitCondition = expnew;
-        //    return f => true;
-        //}
+    //    ///// <summary>
+    //    ///// 字段限制条件  和下面重复了。 要优化一下
+    //    ///// </summary>
+    //    ///// <typeparam name="T"></typeparam>
+    //    ///// <param name="limitexp"></param>
+    //    ///// <returns></returns>
+    //    //public Expression<Func<T, bool>> FieldLimitConditions<T>(Expression<Func<T, bool>> limitexp)
+    //    //{
+    //    //    limitedExpType = typeof(T);
+    //    //    Expression<Func<dynamic, bool>> expnew = ConvertExpression(limitexp);
+    //    //    FieldLimitCondition = expnew;
+    //    //    return f => true;
+    //    //}
 
-        /// <summary>
-        /// 设置字段绑定时的值集合的过滤条件和上面重复了。 要优化一下
-        /// </summary>
-        /// <typeparam name="C"></typeparam>
-        /// <param name="expression"></param>
-        /// <returns></returns>
-        public void SetFieldLimitCondition<C>(Expression<Func<C, bool>> expression)
-        {
-            limitedExpType = typeof(C);
-            Expression<Func<dynamic, bool>> expnew = ConvertExpression(expression);
-            FieldLimitCondition = expnew;
-        }
-
-
+    //    /// <summary>
+    //    /// 设置字段绑定时的值集合的过滤条件和上面重复了。 要优化一下
+    //    /// </summary>
+    //    /// <typeparam name="C"></typeparam>
+    //    /// <param name="expression"></param>
+    //    /// <returns></returns>
+    //    public void SetFieldLimitCondition<C>(Expression<Func<C, bool>> expression)
+    //    {
+    //        limitedExpType = typeof(C);
+    //        Expression<Func<dynamic, bool>> expnew = ConvertExpression(expression);
+    //        FieldLimitCondition = expnew;
+    //    }
 
 
 
-    }
+
+
+    //}
 
     /// <summary>
     /// 用反射 将type转换为T 

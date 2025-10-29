@@ -349,8 +349,8 @@ namespace RUINORERP.Business
             {
                 _unitOfWorkManage.RollbackTran();
                 _logger.Error(ex);
-                BizTypeMapper mapper = new BizTypeMapper();
-                rmrs.ErrorMsg = mapper.GetBizType(typeof(tb_ProdConversion)).ToString() + "事务回滚=>" + ex.Message;
+               
+                rmrs.ErrorMsg = BizMapperService.EntityMappingHelper.GetBizType(typeof(tb_ProdConversion)).ToString() + "事务回滚=>" + ex.Message;
                 rmrs.Succeeded = false;
             }
             return rmrs;

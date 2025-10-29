@@ -80,6 +80,8 @@ using RUINORERP.Services.DI;
 using RUINORERP.Repository.DI;
 using RUINORERP.UI.UserCenter.DataParts;
 using RUINORERP.UI.Network.Authentication;
+using System.Data;
+using Autofac.Core;
 namespace RUINORERP.UI
 {
     public class Startup
@@ -312,7 +314,17 @@ namespace RUINORERP.UI
             // 注册网络通信服务
             services.AddNetworkServices();
 
-
+            // 注册通知服务相关依赖
+            services.AddSingleton<SmtpClient>();
+            services.AddSingleton<INotificationSender, EmailNotificationSender>();
+            // 注册数据库连接
+            services.AddScoped<IDbConnection>(provider =>
+            {
+                var sqlSugarClient = provider.GetRequiredService<ISqlSugarClient>();
+                return sqlSugarClient.Ado.Connection;
+            });
+            // 注册通知服务
+            services.AddScoped<NotificationService>();
 
             services.AddMemoryCacheSetup();
             services.AddAppContext(Program.AppContextData);
@@ -363,6 +375,8 @@ namespace RUINORERP.UI
         /// </summary>
         public static void ConfigureContainer(ContainerBuilder builder)
         {
+              
+                
             // 基础服务注册
             RegisterBaseServices(builder);
 
@@ -397,11 +411,7 @@ namespace RUINORERP.UI
                 .PropertiesAutowired()
                 .SingleInstance();
 
-            // 注册当前程序集 - 排除不需要注册的类型
-            builder.RegisterAssemblyTypes(Assembly.GetExecutingAssembly())
-                .Where(type => !typeof(IExcludeFromRegistration).IsAssignableFrom(type))
-                .AsImplementedInterfaces()
-                .AsSelf();
+            
         }
 
         /// <summary>
@@ -517,11 +527,36 @@ namespace RUINORERP.UI
             try
             {
                 var assembly = Assembly.LoadFrom(assemblyName);
-                builder.RegisterAssemblyTypes(assembly)
-                    .AsImplementedInterfaces()
-                    .AsSelf()
-                    .InstancePerDependency()
-                    .PropertiesAutowired();
+                
+                // 分离BizTypeMapper和其他类型的注册
+                var bizTypeMapperType = assembly.GetType("RUINORERP.Business.CommService.BizTypeMapper");
+                
+                if (bizTypeMapperType != null)
+                {
+                    // 对BizTypeMapper特殊处理：只注册为自身类型，避免接口拦截问题
+                    builder.RegisterType(bizTypeMapperType)
+                        .AsSelf()
+                        .InstancePerDependency()
+                        .PropertiesAutowired()
+                        .PreserveExistingDefaults();
+                    
+                    // 注册其他类型（排除BizTypeMapper）
+                    builder.RegisterAssemblyTypes(assembly)
+                        .Where(t => t != bizTypeMapperType)
+                        .AsImplementedInterfaces()
+                        .AsSelf()
+                        .InstancePerDependency()
+                        .PropertiesAutowired();
+                }
+                else
+                {
+                    // 常规注册（无BizTypeMapper的程序集）
+                    builder.RegisterAssemblyTypes(assembly)
+                        .AsImplementedInterfaces()
+                        .AsSelf()
+                        .InstancePerDependency()
+                        .PropertiesAutowired();
+                }
             }
             catch (Exception ex)
             {
@@ -621,20 +656,17 @@ namespace RUINORERP.UI
                  .PropertiesAutowired()//指定属性注入
                  .SingleInstance();
 
-            ////覆盖上面自动dll批量注入的方法，因为要用单例模式
-            builder.RegisterType(typeof(RUINORERP.Business.CommService.BillConverterFactory))
-                 .AsImplementedInterfaces() //注册所有实现的接口
-                 .EnableInterfaceInterceptors()
-                 .EnableClassInterceptors()//打开AOP类的虚方法注入 同时启用接口和类拦截器可能导致冲突
-                 .PropertiesAutowired()//指定属性注入
-                 .SingleInstance();
+           
 
 
             // 注册 AuditLogHelper 为可注入服务
             builder.RegisterType<AuditLogHelper>()
                    .AsSelf()
-                   .InstancePerLifetimeScope() // 或根据需要使用 SingleInstance() 或根据需要选择生命周期
-                  .PropertiesAutowired();
+                   .InstancePerLifetimeScope()
+                   .PropertiesAutowired()
+                   .WithParameter(new ResolvedParameter(
+                       (pi, ctx) => pi.ParameterType == typeof(ILogger<AuditLogHelper>),
+                       (pi, ctx) => ctx.Resolve<ILogger<AuditLogHelper>>()));
 
 
             //_containerBuilder = builder;

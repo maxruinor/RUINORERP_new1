@@ -67,7 +67,6 @@ namespace RUINORERP.Business
 
                 
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
-                BillConverterFactory bcf = _appContext.GetRequiredService<BillConverterFactory>();
 
                 //如果引用了缴库单。退库数量不能大于缴库单已交数量
                 if (entity.FG_ID.HasValue && entity.tb_finishedgoodsinv == null)
@@ -222,7 +221,6 @@ namespace RUINORERP.Business
                 _unitOfWorkManage.BeginTran();
                 
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
-                BillConverterFactory bcf = _appContext.GetRequiredService<BillConverterFactory>();
 
                 foreach (var child in entity.tb_MRP_ReworkReturnDetails)
                 {

@@ -57,7 +57,7 @@ namespace RUINORERP.Business
                 _unitOfWorkManage.BeginTran();
 
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
-                BillConverterFactory bcf = _appContext.GetRequiredService<BillConverterFactory>();
+                 
                 if (entity.tb_FinishedGoodsInvDetails == null)
                 {
                     entity.tb_FinishedGoodsInvDetails = await _unitOfWorkManage.GetDbClient().Queryable<tb_FinishedGoodsInvDetail>()

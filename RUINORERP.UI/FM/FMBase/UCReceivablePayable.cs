@@ -955,7 +955,7 @@ namespace RUINORERP.UI.FM
                 return;
             }
 
-            BillConverterFactory bcf = Startup.GetFromFac<BillConverterFactory>();
+            
             CommonUI.frmGenericOpinion<tb_FM_ReceivablePayable> frm = new();
             frm.FormTitle = "坏账处理";
             frm.OpinionLabelText = "坏账原因：";

@@ -68,8 +68,8 @@ namespace RUINORERP.Business
             _unitOfWorkManage = unitOfWorkManage;
             _appContext = appContext;
             _rowLevelAuthFilter = _appContext.GetRequiredService<SqlSugarRowLevelAuthFilter>();
-            BizTypeMapper Bizmapper = new BizTypeMapper();
-            BizType bizType = Bizmapper.GetBizType(typeof(T).Name);
+            
+            BizType bizType = BizMapperService.EntityMappingHelper.GetBizType(typeof(T).Name);
             BizTypeText = bizType.ToString();
             BizTypeInt = (int)bizType;
 

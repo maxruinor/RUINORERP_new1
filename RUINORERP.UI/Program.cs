@@ -536,7 +536,12 @@ namespace RUINORERP.UI
                     #endregion
 
                     // 在应用程序启动时调用此方法进行验证
-                     ValidateLoggingConfiguration();
+                    ValidateLoggingConfiguration();
+
+                    IEntityMappingService entityMappingService = Startup.GetFromFac<IEntityMappingService>();
+                    // 在应用程序启动时设置当前实体映射服务
+                    // 这通常在依赖注入容器配置完成后调用
+                    EntityMappingHelper.SetCurrent(entityMappingService);
 
                     /// 初始化实体映射服务
                     EntityMappingHelper.Initialize();
@@ -576,7 +581,7 @@ namespace RUINORERP.UI
                 Console.WriteLine($"Appender: {appender.Name}, Type: {appender.GetType().Name}");
             }
 
-          
+
         }
 
         private static void BringExistingInstanceToFront()
@@ -848,7 +853,7 @@ namespace RUINORERP.UI
             {
                 // 首先尝试在应用程序目录中查找帮助文件
                 string helpFilePath = Path.Combine(Application.StartupPath, "help.chm");
-                
+
                 // 如果在应用程序目录中找不到，尝试在Helper目录中查找
                 if (!File.Exists(helpFilePath))
                 {
@@ -858,7 +863,7 @@ namespace RUINORERP.UI
                         helpFilePath = Path.Combine(Application.StartupPath, "..\\..\\RUINORERP.Helper\\help.chm");
                     }
                 }
-                
+
                 // 如果找到了帮助文件，则初始化帮助系统
                 if (File.Exists(helpFilePath))
                 {

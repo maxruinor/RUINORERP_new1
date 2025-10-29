@@ -40,6 +40,7 @@ using Autofac;
 using RUINORERP.Server.SmartReminder.Strategies.SafetyStockStrategies;
 using Microsoft.Extensions.Options;
 using RUINORERP.Model.ConfigModel;
+using RUINORERP.Business.BizMapperService;
 
 namespace RUINORERP.Server
 {
@@ -206,6 +207,15 @@ namespace RUINORERP.Server
                     var logger = services.GetService<ILogger<frmMainNew>>();
                     var workflowHost = services.GetService<IWorkflowHost>();
                     var config = services.GetService<IOptionsMonitor<SystemGlobalconfig>>();
+
+                    IEntityMappingService entityMappingService = Startup.GetFromFac<IEntityMappingService>();
+                    // 在应用程序启动时设置当前实体映射服务
+                    // 这通常在依赖注入容器配置完成后调用
+                    EntityMappingHelper.SetCurrent(entityMappingService);
+
+                    /// 初始化实体映射服务
+                    EntityMappingHelper.Initialize();
+
 
                     var newMainForm = new frmMainNew(logger, workflowHost, config);
                     newMainForm._ServiceProvider = services;

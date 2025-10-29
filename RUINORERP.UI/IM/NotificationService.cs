@@ -28,36 +28,7 @@ namespace RUINORERP.UI.IM
             _dbConnection = dbConnection;
         }
 
-        //public void SendNotifications()
-        //{
-        //        var retryCount = notification.RetryCount;
-        //        if (retryCount < MaxRetryCount)
-        //        {
-        //            try
-        //            {
-        //                bool success = _notificationSender.Send(notification);
-        //                if (success)
-        //                {
-        //                    _dbConnection.Execute("UPDATE Notifications SET Status = 'Sent' WHERE Id = @Id", notification);
-        //                }
-        //                else
-        //                {
-        //                    _dbConnection.Execute("UPDATE Notifications SET RetryCount = RetryCount + 1 WHERE Id = @Id", notification);
-        //                }
-        //            }
-        //            catch (Exception ex)
-        //            {
-        //                // Log the exception
-        //                // Update the notification status to 'Failed' or increment retry count
-        //            }
-        //        }
-        //        else
-        //        {
-        //            // Set status to 'Failed' after max retries
-        //            _dbConnection.Execute("UPDATE Notifications SET Status = 'Failed' WHERE Id = @Id", notification);
-        //        }
-         
-        //}
+      
 
 
         public void SendNotification(Notification notification)

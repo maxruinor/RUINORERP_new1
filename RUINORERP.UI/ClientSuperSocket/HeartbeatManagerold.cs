@@ -1,4 +1,4 @@
-﻿using MySqlX.XDevAPI;
+using MySqlX.XDevAPI;
 using RUINORERP.PacketSpec.Models;
 using RUINORERP.PacketSpec.Models.Core;
 using System;
@@ -13,6 +13,7 @@ using System.Web.UI.WebControls;
 
 namespace RUINORERP.UI.ClientSuperSocket
 {
+    [Obsolete("此类已过时，不再使用")]
     public class HeartbeatManagerOld : IDisposable
     {
         private readonly object _lock = new object();

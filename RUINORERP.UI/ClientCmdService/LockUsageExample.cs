@@ -16,6 +16,7 @@ namespace RUINORERP.UI.ClientCmdService
     /// <summary>
     /// 锁功能使用示例
     /// </summary>
+    [Obsolete("此类已过时，不再使用")]
     public class LockUsageExample
     {
         /// <summary>

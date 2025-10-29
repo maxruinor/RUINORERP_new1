@@ -240,7 +240,7 @@ namespace RUINORERP.PacketSpec.Commands
             finally
             {
                 var elapsed = (long)(DateTime.UtcNow - startTime).TotalMilliseconds;
-                _logHandled(Logger, cmd.Packet.CommandId.ToString(), elapsed, success, null);
+               // _logHandled(Logger, cmd.Packet.CommandId.ToString(), elapsed, success, null);
             }
         }
 

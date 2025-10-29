@@ -1,4 +1,7 @@
+using RUINORERP.Common.Extensions;
 using RUINORERP.Global;
+using RUINORERP.Model;
+using RUINORERP.Model.CommonModel;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,61 +10,6 @@ using System.Threading.Tasks;
 
 namespace RUINORERP.Business.BizMapperService
 {
-    /// <summary>
-    /// 实体映射服务扩展方法类
-    /// 提供静态方法以便更便捷地访问实体映射服务的功能
-    /// </summary>
-    public static class EntityMappingServiceExtensions
-    {
-        /// <summary>
-        /// 获取指定实体类型的实体信息
-        /// </summary>
-        /// <typeparam name="TEntity">实体类型</typeparam>
-        /// <param name="service">实体映射服务</param>
-        /// <returns>实体信息对象</returns>
-        public static BizEntityInfo GetEntityInfo<TEntity>(this IEntityMappingService service) where TEntity : class
-        {
-            return service.GetEntityInfo(typeof(TEntity));
-        }
-
-        /// <summary>
-        /// 根据枚举标志获取指定实体类型的实体信息
-        /// </summary>
-        /// <typeparam name="TEntity">实体类型</typeparam>
-        /// <param name="service">实体映射服务</param>
-        /// <param name="enumFlag">枚举标志值</param>
-        /// <returns>实体信息对象</returns>
-        public static BizEntityInfo GetEntityInfo<TEntity>(this IEntityMappingService service, int enumFlag) where TEntity : class
-        {
-            return service.GetEntityInfo(typeof(TEntity), enumFlag);
-        }
-
-        /// <summary>
-        /// 获取指定泛型类型
-        /// </summary>
-        /// <typeparam name="T">实体类型</typeparam>
-        /// <param name="service">实体映射服务</param>
-        /// <returns>实体类型</returns>
-        public static Type GetEntityType<T>(this IEntityMappingService service) where T : class
-        {
-            return typeof(T);
-        }
-
-        /// <summary>
-        /// 根据实体对象获取业务类型
-        /// </summary>
-        /// <typeparam name="T">实体类型</typeparam>
-        /// <param name="service">实体映射服务</param>
-        /// <param name="entity">实体对象</param>
-        /// <returns>业务类型</returns>
-        public static BizType GetBizType<T>(this IEntityMappingService service, T entity) where T : class
-        {
-            if (entity == null)
-                return BizType.无对应数据;
-
-            return service.GetBizType(typeof(T), entity);
-        }
-    }
 
     /// <summary>
     /// 实体映射服务静态访问类
@@ -269,5 +217,29 @@ namespace RUINORERP.Business.BizMapperService
         {
             return Current.GetIdAndName(entity);
         }
+
+        /// <summary>
+        /// 得到相关单据信息
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="Entity"></param>
+        /// <returns></returns>
+        public static CommBillData GetBillData(Type type, object Entity)
+        {
+            CommBillData cbd = new CommBillData();
+            var entityInfo = EntityMappingHelper.GetEntityInfo(type);
+            BizType bizType = EntityMappingHelper.GetBizType(type, Entity);
+            Entity = Entity ?? Activator.CreateInstance(type);
+            cbd.BillNo = Entity.GetPropertyValue(entityInfo.NoField).ToString();
+            cbd.BillID = Entity.GetPropertyValue(entityInfo.IdField).ToLong();
+            cbd.BillNoColName = entityInfo.NoField;
+            cbd.BizName = bizType.ObjToString();
+            return cbd;
+        }
+        public static CommBillData GetBillData<T>(object Entity)
+        {
+            return EntityMappingHelper.GetBillData(typeof(T), Entity);
+        }
+
     }
 }

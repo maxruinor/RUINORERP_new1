@@ -85,12 +85,13 @@ using Org.BouncyCastle.Asn1.X509.Qualified;
 using System.Management;
 using RUINORERP.Business.BizMapperService;
 
-using RUINORERP.Business.CommService;
+using RUINORERP.Business.BizMapperService;
 using RUINORERP.UI.Network;
 
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.Business.Cache;
 using RUINORERP.UI.Network.Services;
+using RUINORERP.Business.CommService;
 
 namespace RUINORERP.UI.BaseForm
 {
@@ -202,8 +203,8 @@ namespace RUINORERP.UI.BaseForm
                     frm.flowLayoutPanelButtonsArea.Controls.Add(button录入数据预设);
 
 
-                    BizTypeMapper mapper = new BizTypeMapper();
-                    CurrentBizType = mapper.GetBizType(typeof(T).Name);
+                    // 使用EntityMappingHelper代替BizTypeMapper
+                    CurrentBizType = EntityMappingHelper.GetBizType(typeof(T).Name);
                     CurrentBizTypeName = CurrentBizType.ToString();
                 }
                 menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
@@ -322,7 +323,7 @@ namespace RUINORERP.UI.BaseForm
             EditEntity.SetPropertyValue(typeof(C).Name + "s", lines);
             OnBindDataToUIEvent(EditEntity, ActionStatus.加载);
         }
-        BizTypeMapper Bizmapper = new BizTypeMapper();
+        // 移除BizTypeMapper，使用EntityMappingHelper
 
         RUINORERP.Common.Helper.XmlHelper manager = new RUINORERP.Common.Helper.XmlHelper();
         private void button加载最新数据_Click(object sender, EventArgs e)
@@ -2239,8 +2240,8 @@ namespace RUINORERP.UI.BaseForm
 
         private void LockBill(long BillID, long userid)
         {
-            BillConverterFactory bcf = Startup.GetFromFac<BillConverterFactory>();
-            CommBillData cbd = bcf.GetBillData(typeof(T), EditEntity);
+            
+            CommBillData cbd = EntityMappingHelper.GetBillData(typeof(T), EditEntity);
 
             LockedInfo lockRequest = new LockedInfo
             {
@@ -2356,14 +2357,14 @@ namespace RUINORERP.UI.BaseForm
             {
                 return false;
             }
-            BillConverterFactory bcf = Startup.GetFromFac<BillConverterFactory>();
+            
             CommonUI.frmOpinion frm = new CommonUI.frmOpinion();
             frm.ShowCloseCaseImage = ReflectionHelper.ExistPropertyName<T>("CloseCaseImagePath");
             string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
             long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
             ApprovalEntity ae = new ApprovalEntity();
             ae.BillID = pkid;
-            CommBillData cbd = bcf.GetBillData<T>(EditEntity);
+            CommBillData cbd = EntityMappingHelper.GetBillData<T>(EditEntity);
             ae.BillNo = cbd.BillNo;
             ae.bizType = cbd.BizType;
             ae.bizName = cbd.BizName;
@@ -2498,8 +2499,8 @@ namespace RUINORERP.UI.BaseForm
 
 
 
-            //BillConverterFactory bcf = Startup.GetFromFac<BillConverterFactory>();
-            //CommBillData cbd = bcf.GetBillData<T>(EditEntity);
+            //
+            //CommBillData cbd = EntityMappingHelper.GetBillData<T>(EditEntity);
             CommonUI.frmApproval frm = new CommonUI.frmApproval();
             string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
             long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
@@ -2940,12 +2941,12 @@ namespace RUINORERP.UI.BaseForm
                 }
             }
 
-            BillConverterFactory bcf = Startup.GetFromFac<BillConverterFactory>();
+            
             CommonUI.frmReApproval frm = new CommonUI.frmReApproval();
 
 
             ae.BillID = pkid;
-            CommBillData cbd = bcf.GetBillData<T>(EditEntity);
+            CommBillData cbd = EntityMappingHelper.GetBillData<T>(EditEntity);
             ae.BillNo = cbd.BillNo;
             ae.bizType = cbd.BizType;
             ae.bizName = cbd.BizName;
@@ -3490,10 +3491,10 @@ namespace RUINORERP.UI.BaseForm
                 //复制性新增 时  PK要清空，单据编号类的,还有他的关联性子集
                 // 获取主键列名
                 string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
-                BillConverterFactory bcf = Startup.GetFromFac<BillConverterFactory>();
+                
                 //这里只是取打印配置信息
                 CommBillData cbd = new CommBillData();
-                cbd = bcf.GetBillData(typeof(T), NewEditEntity);
+                cbd = EntityMappingHelper.GetBillData(typeof(T), NewEditEntity);
 
                 string billNoColName = cbd.BillNoColName;
 
@@ -3541,10 +3542,10 @@ namespace RUINORERP.UI.BaseForm
 
                 // 获取主键列名
                 string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
-                BillConverterFactory bcf = Startup.GetFromFac<BillConverterFactory>();
+                
                 //这里只是取打印配置信息
                 CommBillData cbd = new CommBillData();
-                cbd = bcf.GetBillData(typeof(T), NewEditEntity);
+                cbd = EntityMappingHelper.GetBillData(typeof(T), NewEditEntity);
 
                 string billNoColName = cbd.BillNoColName;
 
@@ -4203,8 +4204,8 @@ namespace RUINORERP.UI.BaseForm
 
                         //如果是销售订单或采购订单可以自动审核，有条件地执行？
                         CommBillData cbd = new CommBillData();
-                        BillConverterFactory bcf = Startup.GetFromFac<BillConverterFactory>();
-                        cbd = bcf.GetBillData<T>(EditEntity as T);
+                        
+                        cbd = EntityMappingHelper.GetBillData<T>(EditEntity as T);
                         ApprovalEntity ae = new ApprovalEntity();
                         ae.ApprovalOpinions = "自动审核";
                         ae.ApprovalResults = true;
@@ -4460,8 +4461,8 @@ namespace RUINORERP.UI.BaseForm
             ucBaseList.Tag = frm;
             frm.kryptonPanel1.Controls.Add(ucBaseList);
             ucBaseList.OnSelectDataRow += UcBaseList_OnSelectDataRow;
-            BizTypeMapper mapper = new BizTypeMapper();
-            var BizTypeText = mapper.GetBizType(typeof(T).Name).ToString();
+            // 使用EntityMappingHelper代替BizTypeMapper
+            var BizTypeText = EntityMappingHelper.GetBizType(typeof(T).Name).ToString();
             frm.Text = "关联查询" + "-" + BizTypeText;
             frm.Show();
 
@@ -4620,10 +4621,10 @@ namespace RUINORERP.UI.BaseForm
                     var LockInfo = MainForm.Instance.lockManager.GetLockStatus(pkid);
                     if (LockInfo != null && LockInfo.LockedByID != userid)
                     {
-                        BillConverterFactory bcf = Startup.GetFromFac<BillConverterFactory>();
+                        
                         //这里只是取打印配置信息
                         CommBillData cbd = new CommBillData();
-                        cbd = bcf.GetBillData(typeof(T), EditEntity);
+                        cbd = EntityMappingHelper.GetBillData(typeof(T), EditEntity);
 
                         ClientLockManagerCmd cmd = new ClientLockManagerCmd(CommandDirection.Send);
 
@@ -4687,9 +4688,9 @@ namespace RUINORERP.UI.BaseForm
 
         public void UNLockByBizName(long userid)
         {
-            BillConverterFactory bcf = Startup.GetFromFac<BillConverterFactory>();
+            
             CommBillData cbd = new CommBillData();
-            cbd = bcf.GetBillData(typeof(T), EditEntity);
+            cbd = EntityMappingHelper.GetBillData(typeof(T), EditEntity);
 
 #warning TODO: 这里需要完善具体逻辑，当前仅为占位
             /*
@@ -4716,9 +4717,9 @@ namespace RUINORERP.UI.BaseForm
 
         public void UNLock(long billid, long userid)
         {
-            BillConverterFactory bcf = Startup.GetFromFac<BillConverterFactory>();
+            
             CommBillData cbd = new CommBillData();
-            cbd = bcf.GetBillData(typeof(T), EditEntity);
+            cbd = EntityMappingHelper.GetBillData(typeof(T), EditEntity);
 #warning TODO: 这里需要完善具体逻辑，当前仅为占位
             /*
             //得到了锁
@@ -4840,7 +4841,7 @@ namespace RUINORERP.UI.BaseForm
                 //打印次数提醒
                 if (item.ContainsProperty("PrintStatus"))
                 {
-                    BizType bizType = Bizmapper.GetBizType(typeof(T).Name);
+                    BizType bizType = EntityMappingHelper.GetBizType(typeof(T).Name);
                     int printCounter = item.GetPropertyValue("PrintStatus").ToString().ToInt();
                     if (printCounter > 0)
                     {

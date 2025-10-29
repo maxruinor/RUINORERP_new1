@@ -274,7 +274,7 @@ namespace RUINORERP.Business
 
                 //得到当前实体对应的业务类型
                 //var _mapper = _appContext.GetRequiredService<EnhancedBizTypeMapper>();
-                //var bizType = _mapper.GetBizType(typeof(T), entity);
+                //var bizType = _BizMapperService.EntityMappingHelper.GetBizType(typeof(T), entity);
                 //应收款中不能存在相同的来源的 正数金额的出库单的应收数据
                 //一个出库不能多次应收。一个出库一个应收（负数除外）。一个应收可以多次收款来抵扣
                 if (entity.SourceBizType.HasValue && entity.SourceBillId.HasValue)

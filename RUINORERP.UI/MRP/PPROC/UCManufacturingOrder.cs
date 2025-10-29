@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -36,7 +36,7 @@ using RUINORERP.Business.Processor;
 using Krypton.Toolkit;
 using RUINORERP.UI.PSI.PUR;
 using RUINORERP.UI.CommonUI;
-using RUINORERP.Business.CommService;
+using RUINORERP.Business.BizMapperService;
 using HLH.WinControl.MyTypeConverter;
 using RUINORERP.Model.CommonModel;
 
@@ -1024,7 +1024,7 @@ protected override void Print()
             return baseRs;
         }
 
-        BizTypeMapper mapper = new BizTypeMapper();
+        // 移除未使用的BizTypeMapper，使用EntityMappingHelper代替
  
 
         private void chkIsOutSourced_CheckedChanged(object sender, EventArgs e)

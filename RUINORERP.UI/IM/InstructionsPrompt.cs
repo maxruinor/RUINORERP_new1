@@ -48,6 +48,39 @@ namespace RUINORERP.UI.IM
         private Timer messageTimer;
 
         public ReminderData ReminderData { get; set; }
+        
+        // 添加公共方法来设置发送者文本
+        public void SetSenderText(string text)
+        {
+            if (txtSender != null)
+            {
+                txtSender.Text = text;
+            }
+        }
+        
+        // 添加公共方法来设置主题文本
+        public void SetSubjectText(string text)
+        {
+            if (txtSubject != null)
+            {
+                txtSubject.Text = text;
+            }
+        }
+        
+        // 添加公共方法来隐藏操作按钮
+        public void HideActionButtons()
+        {
+            if (btnAgree != null)
+            {
+                btnAgree.Visible = false;
+            }
+            
+            if (btnRefuse != null)
+            {
+                btnRefuse.Visible = false;
+            }
+        }
+        
         public InstructionsPrompt()
         {
             InitializeComponent();
@@ -110,7 +143,6 @@ namespace RUINORERP.UI.IM
             messageTimer.Start();
         }
 
-        public BizTypeMapper mapper { get; set; }
         QueryParameter parameter { get; set; }
 
 
@@ -157,7 +189,7 @@ namespace RUINORERP.UI.IM
             this.Close();
             return;
             //计划提醒，则把要提醒的计划查出条件找到
-            Type tableType = mapper.GetTableType(ReminderData.BizType);
+            Type tableType = Business.BizMapperService.EntityMappingHelper.GetEntityType(ReminderData.BizType);
             //找到要提醒的数据
             var conModel = new List<IConditionalModel>();
             // conModel.Add(new ConditionalModel { FieldName = "DataStatus", ConditionalType = ConditionalType.Equal, FieldValue = "3", CSharpTypeName = "int" });

@@ -169,7 +169,7 @@ namespace RUINORERP.UI
         private List<UserInfo> userInfos = new List<UserInfo>();
 
         // 消息管理器 - 处理所有消息相关功能
-        private MessageManager _messageManager;
+        private EnhancedMessageManager _messageManager;  // 修改为增强版消息管理器
 
         /// <summary>
         /// 消息列表（兼容属性）
@@ -180,6 +180,16 @@ namespace RUINORERP.UI
         /// 当前系统所有用户信息列表
         /// </summary>
         public List<UserInfo> UserInfos { get => userInfos; set => userInfos = value; }
+
+
+        /// <summary>
+        /// 获取消息管理器实例
+        /// </summary>
+        /// <returns>消息管理器实例</returns>
+        public MessageManager GetMessageManager()
+        {
+            return _messageManager;
+        }
 
 
         /// <summary>
@@ -198,27 +208,11 @@ namespace RUINORERP.UI
                     // 订阅服务器消息事件
                     _messageManager.SubscribeServerMessageEvents(communicationService);
 
-                    // 初始化消息菜单 - 使用正确的菜单控件
-                    MenuStrip menuStrip = null;
-                    try
-                    {
-                        // 优先查找MenuStripMain控件
-                        menuStrip = this.Controls.Find("MenuStripMain", true).FirstOrDefault() as MenuStrip;
-                        if (menuStrip == null)
-                        {
-                            // 尝试查找任何MenuStrip控件
-                            menuStrip = this.Controls.OfType<MenuStrip>().FirstOrDefault();
-                        }
-                        if (menuStrip != null)
-                        {
-                            _messageManager.InitializeMessageMenu(menuStrip);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        logger?.LogWarning(ex, "初始化消息菜单时出现问题，尝试备用方案");
-                        // 如果查找失败，不抛出异常，让应用继续运行
-                    }
+
+
+
+                    // 如果查找失败，不抛出异常，让应用继续运行
+
 
                     logger?.LogInformation("已成功通过MessageManager订阅服务器消息事件并初始化消息菜单");
 
@@ -713,7 +707,7 @@ namespace RUINORERP.UI
         }
 
 
-           
+
 
 
 
@@ -890,7 +884,7 @@ namespace RUINORERP.UI
             communicationService = Startup.ServiceProvider.GetService<ClientCommunicationService>();
 
             // 初始化消息管理器
-            _messageManager = new MessageManager(_logger, Startup.ServiceProvider?.GetService<NotificationService>());
+            _messageManager = new EnhancedMessageManager(logger, Startup.ServiceProvider?.GetService<NotificationService>());
 
             // 订阅重连失败事件，当重连失败时自动进入注销锁定状态
             if (communicationService != null)
@@ -1348,6 +1342,9 @@ namespace RUINORERP.UI
             ProgressManager.Instance.Initialize(lblStatusGlobal, progressBar);
             #endregion
 
+            // 初始化增强版消息管理器
+            _messageManager = new EnhancedMessageManager(logger, Startup.ServiceProvider?.GetService<NotificationService>());
+
 
             InitUpdateSystemWatcher();
 
@@ -1769,7 +1766,7 @@ namespace RUINORERP.UI
 
         }
 
-   
+
         public AuthorizeController authorizeController;
         private void RefreshData()
         {
@@ -3797,7 +3794,8 @@ namespace RUINORERP.UI
         {
             await UI.Common.UIBizService.RequestCache<tb_UserInfo>(true);
             MainForm.Instance.logger.LogError("LoginWebServer" + System.DateTime.Now.ToString());
-
+            var ss = Business.BizMapperService.EntityMappingHelper.GetEntityType(BizType.采购订单);
+          
             Process[] allProcess = Process.GetProcesses();
             foreach (Process p in allProcess)
             {

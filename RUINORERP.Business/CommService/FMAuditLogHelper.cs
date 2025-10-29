@@ -34,7 +34,6 @@ namespace RUINORERP.Business.CommService
 
         private readonly Lazy<IEntityMappingService> _mapper;
 
-        private readonly Lazy<BillConverterFactory> _billConverterFactory; // 缓存工厂
         private readonly Lazy<tb_AuditLogsController<tb_AuditLogs>> _AuditLogsController; // 缓存工厂
         private readonly Timer _flushTimer;
         private readonly AuditLogOptions _options;
@@ -47,10 +46,7 @@ namespace RUINORERP.Business.CommService
             _appContext = appContext;
             _options = options.Value;
             _logger = logger;
-            // 延迟解析依赖，直到第一次使用时才获取实例
-            _billConverterFactory = new Lazy<BillConverterFactory>(
-                () => _appContext.GetRequiredService<BillConverterFactory>());// 缓存工厂
-
+           
 
             _mapper = new Lazy<IEntityMappingService>(
                 () => _appContext.GetRequiredService<IEntityMappingService>());// 缓存工厂
@@ -119,8 +115,8 @@ namespace RUINORERP.Business.CommService
 
             try
             {
-                BizTypeMapper mapper = new BizTypeMapper();
-                var BizType = mapper.GetBizType(typeof(T).Name);
+           
+                var BizType = BizMapperService.EntityMappingHelper.GetBizType(typeof(T).Name);
                 if (BizType == Global.BizType.默认数据)
                 {
                     var t = typeof(T);
@@ -401,7 +397,7 @@ namespace RUINORERP.Business.CommService
     {
         private readonly ConcurrentQueue<tb_FM_AuditLogs> _auditLogQueue = new ConcurrentQueue<tb_FM_AuditLogs>();
 
-        private readonly Lazy<BillConverterFactory> _billConverterFactory; // 缓存工厂
+      
         private readonly Lazy<tb_FM_AuditLogsController<tb_FM_AuditLogs>> _AuditLogsController; // 缓存工厂
         private readonly Timer _flushTimer;
         private readonly AuditLogOptions _options;
@@ -418,10 +414,7 @@ namespace RUINORERP.Business.CommService
             _appContext = appContext;
             _options = options.Value;
             _logger = logger;
-            // 延迟解析依赖，直到第一次使用时才获取实例
-            _billConverterFactory = new Lazy<BillConverterFactory>(
-                () => appContext.GetRequiredService<BillConverterFactory>());// 缓存工厂
-
+           
 
             _mapper = new Lazy<IEntityMappingService>(
               () => _appContext.GetRequiredService<IEntityMappingService>());// 缓存工厂
@@ -492,7 +485,7 @@ namespace RUINORERP.Business.CommService
             try
             {
                 //BizTypeMapper mapper = new BizTypeMapper();
-                //var BizType = mapper.GetBizType(typeof(T).Name);
+                //var BizType = BizMapperService.EntityMappingHelper.GetBizType(typeof(T).Name);
 
                 //BillConverterFactory bcf = _appContext.GetRequiredService<BillConverterFactory>();
                 //CommBillData cbd = bcf.GetBillData<T>(entity);

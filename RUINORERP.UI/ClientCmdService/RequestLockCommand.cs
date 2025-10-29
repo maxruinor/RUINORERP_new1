@@ -17,6 +17,7 @@ namespace RUINORERP.UI.ClientCmdService
     /// <summary>
     /// 请求锁命令 - 客户端向服务器发送锁相关请求
     /// </summary>
+    [Obsolete("此类已过时，不再使用")]
     public class RequestLockCommand : IClientCommand
     {
         public Guid PacketId { get; set; }

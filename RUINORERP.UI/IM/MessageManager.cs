@@ -27,8 +27,9 @@ namespace RUINORERP.UI.IM
     public class MessageManager : IDisposable
     {
         /// <summary>
-        /// 消息管理器单例实例
+        /// 消息管理器单例实例（已过时，请使用MainForm中的实例）
         /// </summary>
+        [Obsolete("此单例实例已过时，请使用MainForm.GetMessageManager()获取消息管理器实例")]
         public static MessageManager Instance { get; private set; }
     
         // 消息队列锁
@@ -134,8 +135,10 @@ namespace RUINORERP.UI.IM
         {
             this.logger = logger;
             _notificationService = notificationService;
-            // 设置单例实例
+            // 设置单例实例（已过时）
+#pragma warning disable CS0618 // 类型或成员已过时
             Instance = this;
+#pragma warning restore CS0618 // 类型或成员已过时
 
             // 初始化消息处理定时器
             InitializeMessageTimer();

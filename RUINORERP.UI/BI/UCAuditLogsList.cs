@@ -36,7 +36,6 @@ namespace RUINORERP.UI.BI
     public partial class UCAuditLogsList : BaseForm.BaseListGeneric<tb_AuditLogs>, UI.AdvancedUIModule.IContextMenuInfoAuth
     {
 
-        BizTypeMapper mapper = null;
         public UCAuditLogsList()
         {
             InitializeComponent();
@@ -59,9 +58,6 @@ namespace RUINORERP.UI.BI
             button检查数据.ToolTipValues.Heading = "提示";
             button检查数据.Click += button检查数据_Click;
             base.frm.flowLayoutPanelButtonsArea.Controls.Add(button检查数据);
-
-            //mapper=new BizTypeMapper();
-            mapper = Startup.GetFromFac<BizTypeMapper>();
 
         }
         #region 添加 产品跟踪
@@ -168,7 +164,7 @@ namespace RUINORERP.UI.BI
                     #region  恢复单据
 
                     BizType bizType = (BizType)item.ObjectType.Value;
-                    Type objType = mapper.GetTableType(bizType);
+                    Type objType = Business.BizMapperService.EntityMappingHelper.GetEntityType(bizType);
                     if (!string.IsNullOrEmpty(item.DataContent))
                     {
                         if (MessageBox.Show($"当前单据{item.ObjectNo}：将重新生成，请谨慎操作\r\n确定生成吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
@@ -278,11 +274,11 @@ namespace RUINORERP.UI.BI
             GridRelated.ComplexType = true;
             //由这个列来决定单号显示哪个的业务窗体
             GridRelated.SetComplexTargetField<tb_AuditLogs>(c => c.ObjectType, c => c.ObjectNo);
-            BizTypeMapper mapper = new BizTypeMapper();
+     
             //将枚举中的值循环
             foreach (var biztype in Enum.GetValues(typeof(BizType)))
             {
-                var tableName = mapper.GetTableType((BizType)biztype);
+                var tableName = Business.BizMapperService.EntityMappingHelper.GetEntityType((BizType)biztype);
                 if (tableName == null)
                 {
                     continue;

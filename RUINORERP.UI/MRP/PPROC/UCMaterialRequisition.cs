@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -777,10 +777,9 @@ namespace RUINORERP.UI.MRP.MP
                 //传入计划单中订单等相关数据，但由于是弱引用。要用程序控制
                 //2024-6-26修改为强引用了。是不是可以优化？
                 if (SourceBill.PDID.HasValue)
-                {
-                    BizTypeMapper BizMapper = new BizTypeMapper();
-
-                    tb_ProductionDemand productionDemand = await MainForm.Instance.AppContext.Db.Queryable<tb_ProductionDemand>().Where(c => c.PDID == SourceBill.PDID)
+                  {
+                      // 使用EntityMappingHelper代替BizTypeMapper，此处直接查询实体，无需获取类型映射
+                      tb_ProductionDemand productionDemand = await MainForm.Instance.AppContext.Db.Queryable<tb_ProductionDemand>().Where(c => c.PDID == SourceBill.PDID)
                                     .Includes(a => a.tb_productionplan)
                                     .SingleAsync();
 

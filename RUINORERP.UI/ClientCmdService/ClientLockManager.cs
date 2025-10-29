@@ -17,6 +17,7 @@ namespace RUINORERP.UI.ClientCmdService
     /// <summary>
     /// 客户端锁管理器 - 管理客户端的锁状态
     /// </summary>
+    [Obsolete("此类已过时，不再使用")]
     public class ClientLockManager
     {
         /// <summary>

@@ -9,7 +9,6 @@ using RUINORERP.Common.Helper;
 using RUINORERP.Global;
 using RUINORERP.Model;
 using RUINORERP.Model.TransModel;
-
 using RUINORERP.UI.BaseForm;
 using RUINORERP.UI.Common;
 using RUINORERP.UI.SuperSocketClient;
@@ -25,18 +24,17 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-
 namespace RUINORERP.UI.IM
 {
-    public partial class MessagePrompt : Krypton.Toolkit.KryptonForm
+    public partial class BusinessMessagePrompt : KryptonForm
     {
-
         MenuPowerHelper menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
 
         private FlowLayoutPanel messageFlowLayoutPanel;
         private Timer messageTimer;
 
         public ReminderData ReminderData { get; set; }
+    
         
         // 添加公共方法来设置发送者文本
         public void SetSenderText(string text)
@@ -55,8 +53,8 @@ namespace RUINORERP.UI.IM
                 txtSubject.Text = text;
             }
         }
-        
-        public MessagePrompt()
+
+        public BusinessMessagePrompt()
         {
             InitializeComponent();
             // 设置窗体启动位置为手动
@@ -67,7 +65,6 @@ namespace RUINORERP.UI.IM
                 Screen.PrimaryScreen.WorkingArea.Width - this.Width,
                 Screen.PrimaryScreen.WorkingArea.Height - this.Height
             );
-
 
             // 初始化消息流布局面板
             messageFlowLayoutPanel = new FlowLayoutPanel
@@ -120,143 +117,65 @@ namespace RUINORERP.UI.IM
 
         QueryParameter parameter { get; set; }
 
-
-        private void MessagePrompt_Load(object sender, EventArgs e)
+        private void BusinessMessagePrompt_Load(object sender, EventArgs e)
         {
-
-
-
-
             txtContent.Text = Content;
             lblSendTime.Text = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+
             // 确保窗体在显示时位于屏幕右下角
             this.SetDesktopLocation(
                 Screen.PrimaryScreen.WorkingArea.Width - this.Width,
                 Screen.PrimaryScreen.WorkingArea.Height - this.Height
             );
 
+            // 如果是业务消息，显示导航按钮
+            if (ReminderData?.BizType != BizType.无对应数据 && ReminderData?.BizPrimaryKey > 0)
+            {
+                btnNavigate.Visible = true;
+                btnNavigate.Text = $"查看{ReminderData.BizType}单据";
+            }
+            else
+            {
+                btnNavigate.Visible = false;
+            }
+
             AddCommandForWait();
         }
 
         private void btnCancel_Click(object sender, EventArgs e)
         {
-            // 将消息标记为已读状态（取消操作后仍视为已读）
-            ResponseToServer(true);
-            // this.DialogResult = DialogResult.Cancel;
+            MarkMessageAsRead();
             this.DialogResult = DialogResult.OK;
             this.Close();
         }
 
         private void btnOk_Click(object sender, EventArgs e)
         {
-            //计划提醒，则把要提醒的计划查出条件找到
-            Type tableType = EntityMappingHelper.GetEntityType(ReminderData.BizType);
-            //找到要提醒的数据
-            var conModel = new List<IConditionalModel>();
-            // conModel.Add(new ConditionalModel { FieldName = "DataStatus", ConditionalType = ConditionalType.Equal, FieldValue = "3", CSharpTypeName = "int" });
-
-            string FieldName = BaseUIHelper.GetEntityPrimaryKey(tableType);
-
-            conModel.Add(new ConditionalModel { FieldName = FieldName, ConditionalType = ConditionalType.Equal, FieldValue = ReminderData.BizPrimaryKey.ToString(), CSharpTypeName = "long" });
-            //如果有限制条件
-            //if (AuthorizeController.GetOwnershipControl(MainForm.Instance.AppContext))
-            //{
-            //    conModel.Add(new ConditionalModel { FieldName = "Employee_ID", ConditionalType = ConditionalType.Equal, FieldValue = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_ID.ToString(), CSharpTypeName = "long" });
-            //}
-
-            parameter = new QueryParameter();
-            parameter.conditionals = conModel;
-            parameter.tableType = tableType;
-            // 创建实例
-            object instance = Activator.CreateInstance(parameter.tableType);
-            BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(parameter.tableType.Name + "Processor");
-            QueryFilter queryFilter = baseProcessor.GetQueryFilter();
-
-
-            //这里知道ID 在这里虚拟一下主键的查询条件。将ID给过去。一次性查询。或 时间也给过去。
-            //应该是给计划特殊处理。指令系统用上？
-            QueryField queryField = new QueryField();
-            queryField.QueryTargetType = tableType;
-            queryField.FieldName = FieldName;
-            queryField.FieldPropertyInfo = tableType.GetProperties().FirstOrDefault(c => c.Name == FieldName);
-            if (!queryFilter.QueryFields.Contains(queryField))
-            {
-                queryFilter.QueryFields.Add(queryField);
-            }
-            parameter.queryFilter = queryFilter;
-            var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == parameter.tableType.Name && m.ClassPath.Contains("")).FirstOrDefault();
-            if (RelatedBillMenuInfo != null)
-            {
-                menuPowerHelper.OnSetQueryConditionsDelegate += MenuPowerHelper_OnSetQueryConditionsDelegate;
-                menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, instance, parameter);
-                //要卸载，不然会多次执行
-                menuPowerHelper.OnSetQueryConditionsDelegate -= MenuPowerHelper_OnSetQueryConditionsDelegate;
-                // 将消息标记为已处理状态（处理后视为已读）
-                ResponseToServer(true);
-                this.DialogResult = DialogResult.OK;
-                this.Close();
-
-            }
-
+            MarkMessageAsRead();
+            this.DialogResult = DialogResult.OK;
+            this.Close();
         }
 
-        private void MenuPowerHelper_OnSetQueryConditionsDelegate(object QueryDto, UserCenter.QueryParameter nodeParameter)
+        private void btnNavigate_Click(object sender, EventArgs e)
         {
-            if (QueryDto == null)
+            try
             {
-                return;
+                // 导航到具体业务单据
+                // 使用主窗体中的增强版消息管理器实例
+                var messageManager = MainForm.Instance.GetMessageManager() as EnhancedMessageManager;
+                messageManager?.NavigateToBusinessDocument(ReminderData.BizType, ReminderData.BizPrimaryKey);
+
+                // 标记消息为已读
+                MarkMessageAsRead();
+
+                this.DialogResult = DialogResult.OK;
+                this.Close();
             }
-            //查询条件给值前先将条件清空
-            foreach (var item in nodeParameter.queryFilter.QueryFields)
+            catch (Exception ex)
             {
-                if (item.FKTableName.IsNotEmptyOrNull() && item.IsRelated)
-                {
-                    QueryDto.SetPropertyValue(item.FieldName, -1L);
-                    continue;
-                }
-                if (item.FieldPropertyInfo.PropertyType.IsGenericType && item.FieldPropertyInfo.PropertyType.GetBaseType().Name == "DateTime")
-                {
-                    QueryDto.SetPropertyValue(item.FieldName, null);
-                    if (QueryDto.ContainsProperty(item.FieldName + "_Start"))
-                    {
-                        QueryDto.SetPropertyValue(item.FieldName + "_Start", null);
-                    }
-                    if (QueryDto.ContainsProperty(item.FieldName + "_End"))
-                    {
-                        QueryDto.SetPropertyValue(item.FieldName + "_End", null);
-                    }
-                    continue;
-                }
-
+                MessageBox.Show($"导航到业务单据时发生错误: {ex.Message}", "错误", 
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-
-
-
-            //传入查询对象的实例，
-            foreach (ConditionalModel item in nodeParameter.conditionals)
-            {
-                if (item.ConditionalType == ConditionalType.Equal)
-                {
-                    switch (item.CSharpTypeName)
-                    {
-                        case "int":
-                            QueryDto.SetPropertyValue(item.FieldName, item.FieldValue.ToInt());
-                            break;
-                        case "long":
-                            QueryDto.SetPropertyValue(item.FieldName, item.FieldValue.ToLong());
-                            break;
-                        case "bool":
-                            QueryDto.SetPropertyValue(item.FieldName, item.FieldValue.ToBool());
-                            break;
-                        default:
-                            QueryDto.SetPropertyValue(item.FieldName, item.FieldValue);
-                            break;
-                    }
-                }
-            }
-
-
-
         }
 
         private void btnWaitReminder_Click(object sender, EventArgs e)
@@ -264,6 +183,15 @@ namespace RUINORERP.UI.IM
             WaitReminder(sender);
         }
 
+        /// <summary>
+        /// 标记消息为已读
+        /// </summary>
+        private void MarkMessageAsRead()
+        {
+            // 标记消息为已读
+            ReminderData.IsRead = true;
+            // 可以在这里添加更新服务器状态的逻辑
+        }
 
         /// <summary>
         /// 响应服务器，更新消息状态
@@ -287,7 +215,6 @@ namespace RUINORERP.UI.IM
 
         private void AddCommandForWait()
         {
-
             KryptonContextMenuItems contextMenuItems = new KryptonContextMenuItems();
             KryptonContextMenuItem menuItem5分钟后 = new KryptonContextMenuItem();
             KryptonCommand command5分钟后 = new KryptonCommand();
@@ -295,7 +222,6 @@ namespace RUINORERP.UI.IM
             menuItem5分钟后.KryptonCommand = command5分钟后;
             menuItem5分钟后.Text = "五分钟后";
             command5分钟后.Text = menuItem5分钟后.Text;
-
 
             KryptonContextMenuItem menuItem10分钟后 = new KryptonContextMenuItem();
             KryptonCommand command十分钟后 = new KryptonCommand();
@@ -331,7 +257,6 @@ namespace RUINORERP.UI.IM
             {
                 this.kryptonContextMenu1.Items.Add(contextMenuItems);
             }
-
         }
 
         #endregion
@@ -374,6 +299,5 @@ namespace RUINORERP.UI.IM
             this.DialogResult = DialogResult.OK;
             this.Close();
         }
-
     }
 }

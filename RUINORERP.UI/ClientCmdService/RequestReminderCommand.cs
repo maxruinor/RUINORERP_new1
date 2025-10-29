@@ -25,6 +25,7 @@ namespace RUINORERP.UI.ClientCmdService
     /// <summary>
     /// 工作流提醒相关的请求
     /// </summary>
+    [Obsolete("此类已过时，不再使用")]
     public class RequestReminderCommand : IClientCommand
     {
         public CmdOperation OperationType { get; set; }

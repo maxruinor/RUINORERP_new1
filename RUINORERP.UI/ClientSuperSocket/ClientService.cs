@@ -40,6 +40,7 @@ namespace RUINORERP.UI.SuperSocketClient
     /// <summary>
     /// 解析来自服务器的指令及含义
     /// </summary>
+    [Obsolete("此类已过时，不再使用")]
     public class ClientService
     {
 
@@ -554,8 +555,8 @@ namespace RUINORERP.UI.SuperSocketClient
                     //  MessageInfo.SenderID = SessionID;
                     MessageInfo.SenderEmployeeName = 发送者姓名;
                     MessageInfo.ReminderContent = Message;
-                    // 使用消息管理器处理消息
-                    MessageManager.Instance?.AddMessage(MessageInfo);
+                    // 使用增强版消息管理器处理消息
+                    MainForm.Instance.GetMessageManager()?.AddMessage(MessageInfo);
                 }
             }
             catch (Exception ex)
@@ -587,8 +588,8 @@ namespace RUINORERP.UI.SuperSocketClient
                 MessageInfo.messageCmd = MessageCmdType.ExceptionLog;
                 MessageInfo.SenderEmployeeName = 发送者姓名;
                 MessageInfo.ReminderContent = Msg;
-                // 使用消息管理器处理消息
-                MessageManager.Instance?.AddMessage(MessageInfo);
+                // 使用增强版消息管理器处理消息
+                MainForm.Instance.GetMessageManager()?.AddMessage(MessageInfo);
             }
             catch (Exception ex)
             {
@@ -872,8 +873,8 @@ namespace RUINORERP.UI.SuperSocketClient
                 else
                 {
                     ReminderData reminderData = obj.ToObject<ReminderData>();
-                    // 使用消息管理器处理消息
-                MessageManager.Instance?.AddMessage(reminderData);
+                    // 使用增强版消息管理器处理消息
+                    MainForm.Instance.GetMessageManager()?.AddMessage(reminderData);
                 }
             }
             catch (Exception ex)

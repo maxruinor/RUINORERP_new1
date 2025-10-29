@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using RUINORERP.Business;
+using RUINORERP.Business.BizMapperService;
 using RUINORERP.Business.CommService;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Common.Helper;
@@ -37,13 +38,13 @@ namespace RUINORERP.UI.Report
                     continue;
                 }
 
-                BillConverterFactory bcf = Startup.GetFromFac<BillConverterFactory>();
+                
                 //这里只是取打印配置信息
-                CommBillData cbd = bcf.GetBillData<M>(editEntity);
+                CommBillData cbd = EntityMappingHelper.GetBillData<M>(editEntity);
                 string PKCol = BaseUIHelper.GetEntityPrimaryKey<M>();
                 long pkid = 0;
                 pkid = (long)ReflectionHelper.GetPropertyValue(editEntity, PKCol);
-                cbd = bcf.GetBillData<M>(editEntity as M);
+                cbd = EntityMappingHelper.GetBillData<M>(editEntity as M);
 
                 tb_PrintConfig printConfig = MainForm.Instance.AppContext.Db.Queryable<tb_PrintConfig>()
                     .Includes(t => t.tb_PrintTemplates)
@@ -664,26 +665,26 @@ namespace RUINORERP.UI.Report
         /// <returns></returns>
         public static tb_PrintConfig GetPrintConfig<C>()
         {
-            BillConverterFactory bcf = Startup.GetFromFac<BillConverterFactory>();
+            
             //这里只是取打印配置信息
             CommBillData cbd = new CommBillData();
-            cbd = bcf.GetBillData(typeof(C), null);
+            cbd = EntityMappingHelper.GetBillData(typeof(C), null);
             return GetPrintConfig(cbd);
         }
 
 
         public static tb_PrintConfig GetPrintConfig(List<M> EditEntitys)
         {
-            BillConverterFactory bcf = Startup.GetFromFac<BillConverterFactory>();
+            
             //这里只是取打印配置信息
             CommBillData cbd = new CommBillData();
             if (EditEntitys != null && EditEntitys.Count > 0)
             {
-                cbd = bcf.GetBillData(typeof(M), EditEntitys[0]);
+                cbd = EntityMappingHelper.GetBillData(typeof(M), EditEntitys[0]);
             }
             else
             {
-                cbd = bcf.GetBillData(typeof(M), null);
+                cbd = EntityMappingHelper.GetBillData(typeof(M), null);
             }
 
             string PKCol = BaseUIHelper.GetEntityPrimaryKey<M>();
@@ -693,7 +694,7 @@ namespace RUINORERP.UI.Report
                 pkid = (long)ReflectionHelper.GetPropertyValue(EditEntitys[0], PKCol);
             }
 
-            cbd = bcf.GetBillData<M>(EditEntitys[0] as M);
+            cbd = EntityMappingHelper.GetBillData<M>(EditEntitys[0] as M);
             return GetPrintConfig(cbd);
         }
 
@@ -705,7 +706,7 @@ namespace RUINORERP.UI.Report
         private static tb_PrintConfig GetPrintConfig(CommBillData cbd)
         {
 
-            BillConverterFactory bcf = Startup.GetFromFac<BillConverterFactory>();
+            
             tb_PrintConfig printConfig = MainForm.Instance.AppContext.Db.Queryable<tb_PrintConfig>()
                 .Includes(t => t.tb_PrintTemplates)
                 .Where(c => c.BizName == cbd.BizName && c.BizType == (int)cbd.BizType)

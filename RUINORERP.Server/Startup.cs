@@ -231,12 +231,7 @@ namespace RUINORERP.Server
                  .PropertiesAutowired()
                  .SingleInstance();
 
-            builder.RegisterType(typeof(RUINORERP.Business.CommService.BillConverterFactory))
-                 .AsImplementedInterfaces()
-                 .EnableInterfaceInterceptors()
-                 .EnableClassInterceptors()
-                 .PropertiesAutowired()
-                 .SingleInstance();
+           
             #endregion
 
             #region 智能提醒服务配置

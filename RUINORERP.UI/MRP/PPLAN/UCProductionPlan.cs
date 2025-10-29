@@ -39,6 +39,7 @@ using RUINORERP.Model.CommonModel;
 using RUINORERP.Business.CommService;
 using static StackExchange.Redis.Role;
 using RUINORERP.Global.Model;
+using RUINORERP.Business.BizMapperService;
 
 namespace RUINORERP.UI.MRP.MP
 {
@@ -817,13 +818,13 @@ namespace RUINORERP.UI.MRP.MP
             {
                 return false;
             }
-            BillConverterFactory bcf = Startup.GetFromFac<BillConverterFactory>();
+           
             CommonUI.frmOpinion frm = new CommonUI.frmOpinion();
             string PKCol = BaseUIHelper.GetEntityPrimaryKey<tb_ProductionPlan>();
             long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
             ApprovalEntity ae = new ApprovalEntity();
             ae.BillID = pkid;
-            CommBillData cbd = bcf.GetBillData<tb_ProductionPlan>(EditEntity);
+            CommBillData cbd = EntityMappingHelper.GetBillData<tb_ProductionPlan>(EditEntity);
             ae.BillNo = cbd.BillNo;
             ae.bizType = cbd.BizType;
             ae.bizName = cbd.BizName;

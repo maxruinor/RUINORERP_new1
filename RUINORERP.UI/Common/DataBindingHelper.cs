@@ -293,7 +293,7 @@ namespace RUINORERP.UI.Common
 
                             listControl.Dock = DockStyle.Fill;
                             editForm.kryptonPanel1.Controls.Add(listControl);
-                            editForm.Text = $"关联查询-{new BizTypeMapper().GetBizType(typeof(P)).ToString()}";
+                            editForm.Text = $"关联查询-{Business.BizMapperService.EntityMappingHelper.GetBizType(typeof(P)).ToString()}";
 
                             // 显示查询窗体并处理选择结果
                             if (editForm.ShowDialog() == DialogResult.OK)
@@ -388,7 +388,7 @@ namespace RUINORERP.UI.Common
 
                             advancedFilter.Dock = DockStyle.Fill;
                             editForm.kryptonPanel1.Controls.Add(advancedFilter);
-                            editForm.Text = $"关联查询-{new BizTypeMapper().GetBizType(typeof(P)).ToString()}";
+                            editForm.Text = $"关联查询-{Business.BizMapperService.EntityMappingHelper.GetBizType(typeof(P)).ToString()}";
 
                             // 显示查询窗体并处理选择结果
                             if (editForm.ShowDialog() == DialogResult.OK)
@@ -776,8 +776,8 @@ namespace RUINORERP.UI.Common
                                 ucBaseList.Dock = DockStyle.Fill;
                                 frmedit.kryptonPanel1.Controls.Add(ucBaseList);
 
-                                BizTypeMapper mapper = new BizTypeMapper();
-                                var BizTypeText = mapper.GetBizType(typeof(P).Name).ToString();
+                        
+                                var BizTypeText = Business.BizMapperService.EntityMappingHelper.GetBizType(typeof(P).Name).ToString();
                                 frmedit.Text = "关联查询" + "-" + BizTypeText;
 
                                 if (frmedit.ShowDialog() == DialogResult.OK)
@@ -923,9 +923,8 @@ namespace RUINORERP.UI.Common
                                 frmedit.StartPosition = FormStartPosition.CenterScreen;
                                 ucBaseList.Dock = DockStyle.Fill;
                                 frmedit.kryptonPanel1.Controls.Add(ucBaseList);
-
-                                BizTypeMapper mapper = new BizTypeMapper();
-                                var BizTypeText = mapper.GetBizType(typeof(P).Name).ToString();
+ 
+                                var BizTypeText = Business.BizMapperService.EntityMappingHelper.GetBizType(typeof(P).Name).ToString();
                                 frmedit.Text = "关联查询" + "-" + BizTypeText;
 
                                 if (frmedit.ShowDialog() == DialogResult.OK)
@@ -1167,8 +1166,8 @@ namespace RUINORERP.UI.Common
                                 ucBaseList.Dock = DockStyle.Fill;
                                 frmedit.kryptonPanel1.Controls.Add(ucBaseList);
 
-                                BizTypeMapper mapper = new BizTypeMapper();
-                                var BizTypeText = mapper.GetBizType(typeof(P).Name).ToString();
+                         
+                                var BizTypeText = Business.BizMapperService.EntityMappingHelper.GetBizType(typeof(P).Name).ToString();
                                 frmedit.Text = "关联查询" + "-" + BizTypeText;
 
                                 if (frmedit.ShowDialog() == DialogResult.OK)
@@ -1336,9 +1335,8 @@ namespace RUINORERP.UI.Common
                                 ucBaseList.Dock = DockStyle.Fill;
                                 frmedit.kryptonPanel1.Controls.Add(ucBaseList);
 
-
-                                BizTypeMapper mapper = new BizTypeMapper();
-                                var BizTypeText = mapper.GetBizType(typeof(P).Name).ToString();
+ 
+                                var BizTypeText = Business.BizMapperService.EntityMappingHelper.GetBizType(typeof(P).Name).ToString();
                                 frmedit.Text = "关联查询" + "-" + BizTypeText;
 
                                 if (frmedit.ShowDialog() == DialogResult.OK)

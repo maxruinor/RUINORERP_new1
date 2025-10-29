@@ -42,6 +42,7 @@ namespace RUINORERP.UI.ClientCmdService
     /// 锁单指令
     /// 类似客户端的代理作用 请求一个指令后 等待返回值就触发事件 LockManagerProxy
     /// </summary>
+    [Obsolete("此类已过时，不再使用")]
     public class ClientLockManagerCmd : IClientCommand, IDisposable
     {
 
@@ -188,8 +189,8 @@ namespace RUINORERP.UI.ClientCmdService
                             MessageInfo.SenderEmployeeName = requestUnLockInfo.RequestUserName;
                             MessageInfo.SenderEmployeeID = requestUnLockInfo.RequestUserID;
                             MessageInfo.messageCmd = MessageCmdType.UnLockRequest;
-                            // 使用消息管理器处理消息
-                            MessageManager.Instance?.AddMessage(MessageInfo);
+                            // 使用增强版消息管理器处理消息
+                            MainForm.Instance.GetMessageManager()?.AddMessage(MessageInfo);
                         }
                         //每个人都收到请求。请求的人才也能收到提醒 
                         if (requestUnLockInfo.RequestUserID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID)
@@ -217,8 +218,8 @@ namespace RUINORERP.UI.ClientCmdService
                         RefuseInfo.ReminderContent = $"拒绝释放" +
                             $"{refuseUnLockInfo.BillData.BizName}:{refuseUnLockInfo.BillData.BillNo}的锁！。";
                         RefuseInfo.messageCmd = MessageCmdType.Notice;
-                        // 使用消息管理器处理消息
-                        MessageManager.Instance?.AddMessage(RefuseInfo);
+                        // 使用增强版消息管理器处理消息
+                        MainForm.Instance.GetMessageManager()?.AddMessage(RefuseInfo);
                         break;
                     case LockCmd.Broadcast:
                         json = ByteOperations.GetString(gd.Two, ref index);

@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using RUINORERP.Business;
+using RUINORERP.Business.BizMapperService;
 using RUINORERP.Business.CommService;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Common.Helper;
@@ -58,19 +59,20 @@ namespace RUINORERP.UI.Monitoring.Auditing
             auditLog.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID;
             auditLog.ActionType = action;
 
-            BizTypeMapper mapper = new BizTypeMapper();
-            //var BizTypeText = mapper.GetBizType(typeof(T).Name).ToString();
-            var BizType = mapper.GetBizType(typeof(T).Name);
+            // 使用EntityMappingHelper代替BizTypeMapper
+            var BizType = EntityMappingHelper.GetBizType(typeof(T).Name);
             try
             {
-                BillConverterFactory bcf = MainForm.Instance.AppContext.GetRequiredService<BillConverterFactory>();
-                CommBillData cbd = bcf.GetBillData<T>(entity);
+                // 使用EntityMappingHelper获取实体信息，无需通过BillConverterFactory
+                // 直接从实体对象构建审计日志所需信息
+                var entityType = typeof(T);
+                var primaryKey = entityType.GetProperty("ID")?.GetValue(entity, null)?.ToString() ?? string.Empty;
                 auditLog.ObjectType = (int)BizType;
-                //string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
-                //long pkid = (long)ReflectionHelper.GetPropertyValue(entity, PKCol);
-                //auditLog.ObjectId = pkid;
-                auditLog.ObjectId = cbd.BillID;
-                auditLog.ObjectNo = cbd.BillNo;
+                //auditLog.ObjectID = primaryKey;
+                //// 获取实体名称作为对象名称
+                //auditLog.ObjectName = entityType.Name;
+                // 尝试从实体获取BillNo属性作为对象编号
+                auditLog.ObjectNo = entityType.GetProperty("BillNo")?.GetValue(entity, null)?.ToString() ?? string.Empty;
             }
             catch (Exception ex)
             {
@@ -104,12 +106,11 @@ namespace RUINORERP.UI.Monitoring.Auditing
         {
 
             //将操作记录保存到数据库中
-            //BizTypeMapper mapper = new BizTypeMapper();
-            ////var BizTypeText = mapper.GetBizType(typeof(T).Name).ToString();
-            //var BizType = mapper.GetBizType(typeof(T).Name);
+            // 使用EntityMappingHelper代替BizTypeMapper
+            ////var BizTypeText = EntityMappingHelper.GetBizType(typeof(T).Name).ToString();
+            //var BizType = EntityMappingHelper.GetBizType(typeof(T).Name);
 
-            BillConverterFactory bcf = MainForm.Instance.AppContext.GetRequiredService<BillConverterFactory>();
-
+           
             //将操作记录保存到数据库中
             tb_AuditLogs auditLog = new tb_AuditLogs();
             if (MainForm.Instance.AppContext.CurUserInfo == null)
@@ -185,20 +186,14 @@ namespace RUINORERP.UI.Monitoring.Auditing
     public class AuditLogHelper
     {
         private readonly IAuditLogService _auditLogService;
-        // 改为公共构造函数
-        public AuditLogHelper(IAuditLogService auditLogService)
+        private readonly ILogger<AuditLogHelper> _logger;
+        
+        // 改为公共构造函数，使用依赖注入代替直接引用MainForm
+        public AuditLogHelper(IAuditLogService auditLogService, ILogger<AuditLogHelper> logger)
         {
             _auditLogService = auditLogService;
+            _logger = logger;
         }
-
-
-        //public static AuditLogHelper Instance => _lazyInstance.Value;
-        //private static readonly Lazy<AuditLogHelper> _lazyInstance =
-        // new Lazy<AuditLogHelper>(() => new AuditLogHelper());
-        //private AuditLogHelper()
-        //{
-        //    _auditLogService = MainForm.Instance.AppContext.GetRequiredService<IAuditLogService>();
-        //}
 
         public async Task CreateAuditLog<T>(string action, T entity, string description) where T : class
         {
@@ -208,7 +203,8 @@ namespace RUINORERP.UI.Monitoring.Auditing
             }
             catch (Exception ex)
             {
-                MainForm.Instance.uclog.AddLog($"审计日志记录失败:{ex.Message}", Global.UILogType.错误);
+                // 使用ILogger代替直接引用MainForm.Instance
+                _logger.LogError(ex, "审计日志记录失败");
             }
         }
 
@@ -225,7 +221,8 @@ namespace RUINORERP.UI.Monitoring.Auditing
             }
             catch (Exception ex)
             {
-                MainForm.Instance.uclog.AddLog($"审计日志记录失败:{ex.Message}", Global.UILogType.错误);
+                // 使用ILogger代替直接引用MainForm.Instance
+                _logger.LogError(ex, "审计日志记录失败");
             }
         }
 

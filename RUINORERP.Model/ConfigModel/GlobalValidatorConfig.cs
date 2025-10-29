@@ -82,7 +82,19 @@ namespace RUINORERP.Model.ConfigModel
         public bool NeedInputProjectGroup { get; set; } = true;
         #endregion
 
+        #region 财务模块
 
+
+        /// <summary>
+        /// JsonProperty这个属性值要与真的属性值名称一样。不然不起作用。读取出错。
+        /// </summary>
+        [JsonProperty("收付款账户必填")]
+        [Category("财务模块")]
+        [Description("应收款/应付款审核时，收付款账户信息是否必填")]
+        public bool 收付款账户必填 { get; set; } = true;
+        
+ 
+        #endregion
         /// <summary>
         /// JsonProperty这个属性值要与真的属性值名称一样。不然不起作用。读取出错。
         /// </summary>

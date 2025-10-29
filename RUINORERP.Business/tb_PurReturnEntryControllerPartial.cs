@@ -333,7 +333,6 @@ namespace RUINORERP.Business
                 _unitOfWorkManage.BeginTran();
 
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
-                BillConverterFactory bcf = _appContext.GetRequiredService<BillConverterFactory>();
                 List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
                 foreach (var child in entity.tb_PurReturnEntryDetails)
                 {

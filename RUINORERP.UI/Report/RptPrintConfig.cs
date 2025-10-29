@@ -24,6 +24,7 @@ using RUINORERP.Common.Extensions;
 using FastReport.Export.Pdf;
 using FastReport.Preview;
 using System.Diagnostics;
+using RUINORERP.Business.BizMapperService;
 
 namespace RUINORERP.UI.Report
 {
@@ -141,10 +142,10 @@ namespace RUINORERP.UI.Report
             {
                 BusinessHelper.Instance.InitEntity(printConfig);
             }
-            BillConverterFactory bcf = MainForm.Instance.AppContext.GetRequiredService<BillConverterFactory>();
+          
             if (this.PrintDataSources.Count > 0)
             {
-                CommBillData cbd = bcf.GetBillData(this.PrintDataSources[0].GetType(), this.PrintDataSources[0]);
+                CommBillData cbd = EntityMappingHelper.GetBillData(this.PrintDataSources[0].GetType(), this.PrintDataSources[0]);
                 if (cbd.BizName != null)
                 {
                     reportTemplate.BizName = cbd.BizName;
@@ -221,7 +222,7 @@ namespace RUINORERP.UI.Report
         {
             GroupBoxSelectPrinter.Visible = chkSelectPrinter.Checked;
         }
-        BizTypeMapper Bizmapper = new BizTypeMapper();
+     
         //设计报表
         private void PrintReport(RptMode rptMode)
         {
@@ -246,7 +247,7 @@ namespace RUINORERP.UI.Report
                 //打印次数提醒
                 if (PrintDataSources.Count > 0 && PrintDataSources[0].ContainsProperty("PrintStatus"))
                 {
-                    BizType bizType = Bizmapper.GetBizType(PrintDataSources[0].GetType().Name);
+                    BizType bizType = Business.BizMapperService.EntityMappingHelper.GetBizType(PrintDataSources[0].GetType().Name);
                     int printCounter = PrintDataSources[0].GetPropertyValue("PrintStatus").ToString().ToInt();
                     if (printCounter > 0)
                     {
@@ -336,10 +337,10 @@ namespace RUINORERP.UI.Report
                     using (var dialog = new SaveFileDialog())
                     {
                         dialog.Filter = "PDF Files (*.pdf)|*.pdf";
-                        string pdfName = Bizmapper.GetBizType(PrintDataSources[0].GetType().Name).ToString() + ".pdf";
+                        string pdfName = Business.BizMapperService.EntityMappingHelper.GetBizType(PrintDataSources[0].GetType().Name).ToString() + ".pdf";
                         if (listboxBIll.Items.Count > 0)
                         {
-                            pdfName = Bizmapper.GetBizType(PrintDataSources[0].GetType().Name).ToString() + listboxBIll.Items[0].ToString() + ".pdf";
+                            pdfName = Business.BizMapperService.EntityMappingHelper.GetBizType(PrintDataSources[0].GetType().Name).ToString() + listboxBIll.Items[0].ToString() + ".pdf";
                         }
                         dialog.FileName = pdfName;
                         if (dialog.ShowDialog() == DialogResult.OK)
@@ -424,13 +425,12 @@ namespace RUINORERP.UI.Report
                 listboxBIll.Items.Clear();
                 if (PrintDataSources != null)
                 {
-                    BillConverterFactory bcf = MainForm.Instance.AppContext.GetRequiredService<BillConverterFactory>();
-
+                  
                     foreach (var item in PrintDataSources)
                     {
                         try
                         {
-                            CommBillData cbd = bcf.GetBillData(item.GetType(), item);
+                            CommBillData cbd = EntityMappingHelper.GetBillData(item.GetType(), item);
                             if (cbd.BillNo != null)
                             {
                                 listboxBIll.Items.Add(cbd.BillNo);

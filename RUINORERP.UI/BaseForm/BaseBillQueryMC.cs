@@ -5,6 +5,7 @@ using Krypton.Workspace;
 using Microsoft.Extensions.Logging;
 using RUINOR.Core;
 using RUINORERP.Business;
+using RUINORERP.Business.BizMapperService;
 using RUINORERP.Business.CommService;
 using RUINORERP.Business.Processor;
 using RUINORERP.Business.RowLevelAuthService;
@@ -440,7 +441,7 @@ namespace RUINORERP.UI.BaseForm
 
 
 
-        BizTypeMapper Bizmapper = new BizTypeMapper();
+        
         public virtual async Task Print(RptMode rptMode)
         {
             List<M> printItems = new List<M>();
@@ -459,7 +460,7 @@ namespace RUINORERP.UI.BaseForm
                 {
                     if (item.GetPropertyValue("DataStatus").ToString() == ((int)DataStatus.草稿).ToString() || item.GetPropertyValue("DataStatus").ToString() == ((int)DataStatus.新建).ToString())
                     {
-                        BizType bizType = Bizmapper.GetBizType(typeof(M).Name);
+                        BizType bizType = Business.BizMapperService.EntityMappingHelper.GetBizType(typeof(M).Name);
                         if (MessageBox.Show($"当前【{bizType.ToString()}】没有审核,你确定要打印吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2) == DialogResult.No)
                         {
                             continue;
@@ -470,7 +471,7 @@ namespace RUINORERP.UI.BaseForm
                 //打印次数提醒
                 if (item.ContainsProperty("PrintStatus"))
                 {
-                    BizType bizType = Bizmapper.GetBizType(typeof(M).Name);
+                    BizType bizType = Business.BizMapperService.EntityMappingHelper.GetBizType(typeof(M).Name);
                     int printCounter = item.GetPropertyValue("PrintStatus").ToString().ToInt();
                     if (printCounter > 0)
                     {
@@ -690,13 +691,13 @@ namespace RUINORERP.UI.BaseForm
             }
 
 
-            BillConverterFactory bcf = Startup.GetFromFac<BillConverterFactory>();
+     
 
             CommonUI.frmApproval frm = new CommonUI.frmApproval();
             string PKCol = BaseUIHelper.GetEntityPrimaryKey<M>();
             long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
             ae.BillID = pkid;
-            CommBillData cbd = bcf.GetBillData<M>(EditEntity);
+            CommBillData cbd = EntityMappingHelper.GetBillData<M>(EditEntity);
             ae.BillNo = cbd.BillNo;
             ae.bizType = cbd.BizType;
             ae.bizName = cbd.BizName;
@@ -836,13 +837,12 @@ namespace RUINORERP.UI.BaseForm
                     return ae;
                 }
             }
-
-            BillConverterFactory bcf = Startup.GetFromFac<BillConverterFactory>();
+ 
             CommonUI.frmReApproval frm = new CommonUI.frmReApproval();
             string PKCol = BaseUIHelper.GetEntityPrimaryKey<M>();
             long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
             ae.BillID = pkid;
-            CommBillData cbd = bcf.GetBillData<M>(EditEntity);
+            CommBillData cbd = EntityMappingHelper.GetBillData<M>(EditEntity);
             ae.BillNo = cbd.BillNo;
             ae.bizType = cbd.BizType;
             ae.bizName = cbd.BizName;
@@ -2035,16 +2035,16 @@ namespace RUINORERP.UI.BaseForm
                 try
                 {
                     pageSize = int.Parse(txtMaxRow.Text);
-                    if (pageSize <= 0 || pageSize > 1000)
+                    if (pageSize <= 0 || pageSize > 5000)
                     {
-                        MainForm.Instance.logger.LogWarning("无效的页面大小: {PageSize}，使用默认值100", pageSize);
-                        pageSize = 100; // 默认值
+                        MainForm.Instance.logger.LogWarning("无效的页面大小: {PageSize}，使用默认值200", pageSize);
+                        pageSize = 200; // 默认值
                     }
                 }
                 catch (Exception ex)
                 {
-                    MainForm.Instance.logger.LogWarning(ex, "解析页面大小时发生错误，使用默认值100");
-                    pageSize = 100;
+                    MainForm.Instance.logger.LogWarning(ex, "解析页面大小时发生错误，使用默认值200");
+                    pageSize = 200;
                 }
 
                 // 提取查询条件列名

@@ -50,6 +50,7 @@ using NPOI.SS.Formula.Functions;
 using Netron.GraphLib;
 using RUINORERP.Extensions.Middlewares;
 using RUINORERP.Business.Cache;
+using RUINORERP.Business.BizMapperService;
 
 
 namespace RUINORERP.UI.ASS
@@ -843,13 +844,13 @@ namespace RUINORERP.UI.ASS
             {
                 return false;
             }
-            BillConverterFactory bcf = Startup.GetFromFac<BillConverterFactory>();
+           
             CommonUI.frmOpinion frm = new CommonUI.frmOpinion();
             string PKCol = BaseUIHelper.GetEntityPrimaryKey<tb_AS_AfterSaleApply>();
             long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
             ApprovalEntity ae = new ApprovalEntity();
             ae.BillID = pkid;
-            CommBillData cbd = bcf.GetBillData<tb_AS_AfterSaleApply>(EditEntity);
+            CommBillData cbd = EntityMappingHelper.GetBillData<tb_AS_AfterSaleApply>(EditEntity);
             ae.BillNo = cbd.BillNo;
             ae.bizType = cbd.BizType;
             ae.bizName = cbd.BizName;
@@ -901,13 +902,13 @@ namespace RUINORERP.UI.ASS
             {
                 return false;
             }
-            BillConverterFactory bcf = Startup.GetFromFac<BillConverterFactory>();
+      
             CommonUI.frmOpinion frm = new CommonUI.frmOpinion();
             string PKCol = BaseUIHelper.GetEntityPrimaryKey<tb_AS_AfterSaleApply>();
             long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
             ApprovalEntity ae = new ApprovalEntity();
             ae.BillID = pkid;
-            CommBillData cbd = bcf.GetBillData<tb_AS_AfterSaleApply>(EditEntity);
+            CommBillData cbd = EntityMappingHelper.GetBillData<tb_AS_AfterSaleApply>(EditEntity);
             ae.BillNo = cbd.BillNo;
             ae.bizType = cbd.BizType;
             ae.bizName = cbd.BizName;

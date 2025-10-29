@@ -18,6 +18,7 @@ using TransInstruction.Enums;
 
 namespace RUINORERP.UI.ClientCmdService
 {
+    [Obsolete("此类已过时，不再使用")]
     public class ReceiveCacheCommand : IClientCommand
     {
         public string productName { get; set; }

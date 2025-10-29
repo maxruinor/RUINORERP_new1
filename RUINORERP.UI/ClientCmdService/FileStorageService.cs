@@ -1,4 +1,4 @@
-﻿/*****************************************************************************************
+/*****************************************************************************************
  * 【过时作废文件】OBSOLETE - DEPRECATED - DO NOT USE
  * 此文件已被废弃，不再维护和使用
  * 原因：ClientCmdService目录下的所有文件都已过时，实际已排除在项目外
@@ -23,6 +23,7 @@ using TransInstruction;
 
 namespace RUINORERP.UI.ClientCmdService
 {
+    [Obsolete("此类已过时，不再使用")]
     public class FileStorageService : IFileStorageService
     {
         private readonly string _storageRoot;

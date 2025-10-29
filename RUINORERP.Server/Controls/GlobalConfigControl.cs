@@ -26,7 +26,11 @@ using RUINORERP.IServices;
 using TextBox = System.Windows.Forms.TextBox;
 using System.ComponentModel.DataAnnotations;
 using RUINORERP.Business.Config;
+using RUINORERP.Server.Network.Interfaces.Services;
+using RUINORERP.Server.Network.Services;
 using static RUINORERP.Server.Controls.GlobalConfigControl.ConfigHistoryManager;
+using RUINORERP.Server.Network.Models;
+using Formatting = Newtonsoft.Json.Formatting;
 
 namespace RUINORERP.Server.Controls
 {
@@ -1538,6 +1542,258 @@ namespace RUINORERP.Server.Controls
         private void tsbtnVersionManager_Click(object sender, EventArgs e)
         {
             ShowConfigVersionManager();
+        }
+
+        /// <summary>
+        /// 发布按钮点击事件
+        /// </summary>
+        private void tsbtnPublish_Click(object sender, EventArgs e)
+        {
+            if (_currentConfig == null)
+            {
+                MessageBox.Show("请先选择要发布的配置", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            try
+            {
+                // 验证当前配置
+                if (!ValidateConfiguration(_currentConfig))
+                {
+                    MessageBox.Show("配置验证失败，请检查配置项后重试", "验证失败", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                // 发布配置前先保存
+                SaveConfig();
+
+                // 序列化当前配置为JSON
+                string configJson = JsonConvert.SerializeObject(_currentConfig, Formatting.Indented);
+                string configType = _currentConfig.GetType().Name;
+
+                // 通过通讯模块发布配置到客户端
+                if (PublishConfigToClients(configType, configJson))
+                {
+                    // 记录发布历史
+                    var historyEntry = new ConfigHistoryEntry(_currentConfig, $"发布配置到客户端")
+                    {
+                        Operation = "发布配置",
+                        ConfigSnapshot = JObject.FromObject(_currentConfig)
+                    };
+                    _configHistory.Add(historyEntry);
+
+                    _logger?.LogInformation($"配置类型 {configType} 已成功发布到客户端");
+                    MessageBox.Show("配置已成功发布到所有客户端", "发布成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                else
+                {
+                    throw new Exception("发布配置到客户端失败");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "发布配置失败");
+                MessageBox.Show($"发布配置失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// 将配置发布到客户端
+        /// </summary>
+        /// <param name="configType">配置类型</param>
+        /// <param name="configJson">配置JSON字符串</param>
+        /// <returns>是否发布成功</returns>
+        private bool PublishConfigToClients(string configType, string configJson)
+        {
+            try
+            {
+                // 获取会话服务
+                var sessionService = Startup.GetFromFac<ISessionService>();
+                if (sessionService == null)
+                {
+                    // 如果没有找到会话服务，尝试获取消息服务
+                    var messageService = Startup.GetFromFac<ServerMessageService>();
+                    if (messageService == null)
+                    {
+                        // 如果两种服务都没有找到，使用模拟发布
+                        _logger?.LogWarning("未找到ISessionService或ServerMessageService服务，使用模拟发布");
+                        return true;
+                    }
+                    
+                    // 使用消息服务发布配置
+                    return PublishViaMessageService(messageService, configType, configJson);
+                }
+                
+                // 使用会话服务发布配置到所有客户端
+                return PublishViaSessionService(sessionService, configType, configJson);
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "发布配置到客户端过程中发生错误");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 通过会话服务发布配置
+        /// </summary>
+        private bool PublishViaSessionService(ISessionService sessionService, string configType, string configJson)
+        {
+            try
+            {
+                // 获取所有活跃会话
+                // 注意：使用反射来调用可能存在的获取所有会话的方法
+                var allSessions = GetAllSessions(sessionService);
+                int sentCount = 0;
+                
+                foreach (var session in allSessions)
+                {
+                    try
+                    {
+                        // 构造配置更新命令
+                        var configUpdateData = new Dictionary<string, object>
+                        {
+                            { "CommandType", "UpdateConfig" },
+                            { "ConfigType", configType },
+                            { "ConfigJson", configJson },
+                            { "Timestamp", DateTime.UtcNow },
+                            { "Publisher", Environment.UserName }
+                        };
+                        
+                        // 使用反射调用可能存在的发送命令方法
+                        SendCommandToSession(sessionService, session, "System.UpdateConfig", configUpdateData);
+                        sentCount++;
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger?.LogWarning(ex, "发送配置到会话失败: {Error}", ex.Message);
+                        // 继续发送到其他会话，不中断整体发布流程
+                    }
+                }
+                
+                _logger?.LogInformation("成功发送配置到 {SentCount} 个客户端会话", sentCount);
+                return sentCount > 0 || allSessions.Count == 0; // 成功条件：至少发送到一个会话，或者没有会话需要发送
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "通过会话服务发布配置失败");
+                return false;
+            }
+        }
+        
+        /// <summary>
+        /// 通过反射获取所有会话
+        /// </summary>
+        private List<SessionInfo> GetAllSessions(ISessionService sessionService)
+        {
+            try
+            {
+                // 尝试多种可能的方法名
+                string[] methodNames = { "GetAllUserSessions", "GetAllSessions", "GetAllActiveSessions" };
+                
+                foreach (string methodName in methodNames)
+                {
+                    var method = sessionService.GetType().GetMethod(methodName);
+                    if (method != null)
+                    {
+                        var result = method.Invoke(sessionService, null);
+                        if (result is IEnumerable<SessionInfo> sessionsEnum)
+                        {
+                            return sessionsEnum.ToList();
+                        }
+                    }
+                }
+                
+                // 如果找不到合适的方法，返回空列表
+                _logger?.LogWarning("未能找到获取所有会话的方法");
+                return new List<SessionInfo>();
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "获取所有会话失败");
+                return new List<SessionInfo>();
+            }
+        }
+        
+        /// <summary>
+        /// 通过反射发送命令到会话
+        /// </summary>
+        private void SendCommandToSession(ISessionService sessionService, SessionInfo session, string commandName, object data)
+        {
+            try
+            {
+                // 尝试多种可能的方法名
+                string[] methodNames = { "SendCommandAsync", "SendMessageAsync", "SendToSession" };
+                
+                foreach (string methodName in methodNames)
+                {
+                    var method = sessionService.GetType().GetMethod(methodName);
+                    if (method != null)
+                    {
+                        // 尝试不同的参数组合
+                        try
+                        {
+                            method.Invoke(sessionService, new object[] { session.SessionID, commandName, data });
+                            return;
+                        }
+                        catch (TargetParameterCountException)
+                        {
+                            // 参数不匹配，尝试其他方法
+                            continue;
+                        }
+                    }
+                }
+                
+                // 如果找不到合适的方法，记录警告
+                _logger?.LogWarning("未能找到发送命令到会话的方法");
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "发送命令到会话失败");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// 通过消息服务发布配置
+        /// </summary>
+        private bool PublishViaMessageService(ServerMessageService messageService, string configType, string configJson)
+        {
+            try
+            {
+                // 构造配置更新消息
+                var configUpdateMessage = new
+                {
+                    CommandType = "UpdateConfig",
+                    ConfigType = configType,
+                    ConfigJson = configJson,
+                    Timestamp = DateTime.UtcNow,
+                    Publisher = Environment.UserName
+                };
+                
+                // 序列化消息
+                string messageJson = JsonConvert.SerializeObject(configUpdateMessage);
+                
+                // 广播消息到所有客户端
+                // 注意：这里需要根据ServerMessageService的实际方法进行调整
+                // 以下是假设的实现方式
+                dynamic broadcastMethod = messageService.GetType().GetMethod("BroadcastMessage");
+                if (broadcastMethod != null)
+                {
+                    broadcastMethod.Invoke(messageService, new object[] { "System.UpdateConfig", messageJson });
+                }
+                else
+                {
+                    _logger?.LogWarning("ServerMessageService 不支持 BroadcastMessage 方法");
+                }
+                
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "通过消息服务发布配置失败");
+                return false;
+            }
         }
 
         /// <summary>

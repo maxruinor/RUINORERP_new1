@@ -156,7 +156,6 @@ namespace RUINORERP.UI.SysConfig
 
         View_Inventory InventoryDto = new View_Inventory();
 
-        BizTypeMapper mapper = new BizTypeMapper();
 
 
 

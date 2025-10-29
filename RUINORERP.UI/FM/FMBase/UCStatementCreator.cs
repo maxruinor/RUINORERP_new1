@@ -409,21 +409,27 @@ namespace RUINORERP.UI.FM
 
             //对账模式，直接使用原始数据，因为已经查询时处理过了。针对余额对账，需要重新计算
             var paymentController = MainForm.Instance.AppContext.GetRequiredService<tb_FM_StatementController<tb_FM_Statement>>();
-            statement = await paymentController.BuildStatement(RealList, finalPaymentType);
-
-
-            MenuPowerHelper menuPowerHelper;
-            menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
-
-            BizType bizType = BizType.对账单;
-            tb_MenuInfo RelatedMenuInfo = null;
-            RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
-                 && m.BizType == (int)bizType
-                 && m.BIBaseForm == "BaseBillEditGeneric`2")
-                     .FirstOrDefault();
-            if (RelatedMenuInfo != null)
+            ReturnResults<tb_FM_Statement> rrs = await paymentController.BuildStatement(RealList, finalPaymentType);
+            if (rrs.Succeeded)
             {
-                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, statement);
+                statement = rrs.ReturnObject;
+                MenuPowerHelper menuPowerHelper;
+                menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
+
+                BizType bizType = BizType.对账单;
+                tb_MenuInfo RelatedMenuInfo = null;
+                RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
+                     && m.BizType == (int)bizType
+                     && m.BIBaseForm == "BaseBillEditGeneric`2")
+                         .FirstOrDefault();
+                if (RelatedMenuInfo != null)
+                {
+                    await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, statement);
+                }
+            }
+            else
+            {
+                MessageBox.Show(rrs.ErrorMsg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         }
 

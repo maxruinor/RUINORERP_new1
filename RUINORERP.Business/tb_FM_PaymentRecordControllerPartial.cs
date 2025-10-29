@@ -1,4 +1,4 @@
-﻿
+
 // **************************************
 // 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
@@ -47,26 +47,27 @@ namespace RUINORERP.Business
     {
 
         /// <summary>
-        /// 审核了就不能反审了。只能冲销
+        /// 收付款单反审核方法
+        /// 注意：收付款单不支持反审核操作，必须通过红字冲销的方式处理
         /// </summary>
-        /// <param name="ObjectEntity"></param>
-        /// <returns></returns>
-        /// </summary>
-        /// <param name="ObjectEntity"></param>
-        /// <returns></returns>
+        /// <param name="ObjectEntity">要反审核的收付款单实体</param>
+        /// <returns>返回错误信息，指示收付款单不能反审</returns>
         public async override Task<ReturnResults<T>> AntiApprovalAsync(T ObjectEntity)
         {
             ReturnResults<T> rmrs = new ReturnResults<T>();
-            rmrs.ErrorMsg = "付款记录，不能反审。只能红字";
+            rmrs.ErrorMsg = "收付款单不支持反审核操作，请使用红字冲销方式处理";
             await Task.Delay(0);
             return rmrs;
         }
 
         /// <summary>
-        /// 付款单审核通过时，更新对应的业务单据的收款状态。更新余额
-        /// 如:一个订单 开始预付一次，后面再预付一次，全款都付完成要更新为全额预付
-        /// 通常收款付款单审核时。已经处理完了 预收付。除非特殊情况。不可用时。
-        /// 自动核销关联的应收/应付单
+        /// 收付款单审核方法
+        /// 功能说明：
+        /// 1. 验证收付款单基本信息
+        /// 2. 根据来源业务类型分组处理不同业务场景的核销逻辑
+        /// 3. 对账单来源的收付款单采用FIFO（先进先出）方式核销
+        /// 4. 更新相关单据状态并生成核销记录
+        /// 5. 处理关联业务单据的收款状态更新
         /// </summary>
         /// <param name="ObjectEntity"></param>
         /// <returns></returns>
@@ -2095,9 +2096,18 @@ namespace RUINORERP.Business
 
 
         /// <summary>
-        /// 由对账单创建付款单
-        /// 如果收付款，是部分或多次，就是金额少于对账单金额时，按总金额从明细按时间FIFO顺序分配金额
-        /// 核销时也要FIFO
+        /// 由对账单创建收付款单
+        /// 功能说明：
+        /// 1. 根据对账单信息生成收付款单
+        /// 2. 处理明细数据，设置来源业务类型和摘要信息
+        /// 3. 汇总金额（本币/外币）
+        /// 4. 根据收付款类型生成对应编号
+        /// 5. 检查重复单据（同一业务下同一张单据不能重复分次收款）
+        /// 6. 初始化实体并返回草稿状态的收付款单
+        /// 
+        /// 注意事项：
+        /// - 部分或多次收款/付款时，核销过程会按FIFO（先进先出）顺序分配金额
+        /// - 生成的收付款单默认为草稿状态，需要后续审核才能完成实际核销
         /// </summary>
         /// <param name="entities"></param>
         /// <returns></returns>
@@ -2181,11 +2191,11 @@ namespace RUINORERP.Business
             {
                 paymentRecord.PaymentNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.付款单);
             }
-            //在收款单明细中，不可以存在：一种应付下有两同的两个应收单。 否则这里会出错。
-            var checkList = paymentRecord.tb_FM_PaymentRecordDetails.GroupBy(c => c.SourceBizType, c => c.SourceBilllId).ToList();
-            if (checkList.Count > 1)
+            // 数据验证：检查是否存在同一业务下同一张单据重复分次收款的情况
+            var checkList = paymentRecord.tb_FM_PaymentRecordDetails.GroupBy(c => new { c.SourceBizType, c.SourceBilllId }).ToList();
+            if (paymentRecord.tb_FM_PaymentRecordDetails.Count != checkList.Count)
             {
-                throw new Exception("收付款单明细中，同一业务下同一张单据不能重复分次收款。\r\n相同业务下的单据必须为一行。");
+                throw new Exception("收付款单明细中，同一业务下同一张单据不能重复分次收款。\r\n相同业务下的单据必须合并为一行。");
             }
             //SourceBillNos的值来自于tb_FM_PaymentRecordDetails集合中的 SourceBillNo属性的值，用逗号隔开
             paymentRecord.SourceBillNos = string.Join(",", paymentRecord.tb_FM_PaymentRecordDetails.Select(t => t.SourceBillNo).ToArray());

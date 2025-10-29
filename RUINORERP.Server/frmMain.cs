@@ -450,7 +450,7 @@ namespace RUINORERP.Server
                 {
                     if (this.InvokeRequired)
                     {
-                        this.Invoke(new MethodInvoker(() =>
+                        this.Invoke(new System.Windows.Forms.MethodInvoker(() =>
                         {
                             //CheckSystemProtection();
                             CheckCacheList();
@@ -479,7 +479,7 @@ namespace RUINORERP.Server
                 //{
                 //    if (this.InvokeRequired)
                 //    {
-                //        this.Invoke(new MethodInvoker(() => CheckReminderBizDataList()));
+                //        this.Invoke(new System.Windows.Forms.MethodInvoker(() => CheckReminderBizDataList()));
                 //    }
                 //    else
                 //    {
@@ -1334,7 +1334,7 @@ namespace RUINORERP.Server
                 int end = rtb.GetFirstCharIndexFromLine(linesToRemove);
 
                 // 确保richTextBox1控件在主线程中被操作
-                frmMain.Instance.Invoke(new MethodInvoker(() =>
+                frmMain.Instance.Invoke(new System.Windows.Forms.MethodInvoker(() =>
                 {
                     rtb.Text = rtb.Text.Remove(start, end - start);
                 }));

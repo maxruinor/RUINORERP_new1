@@ -76,7 +76,7 @@ namespace RUINORERP.Server.Controls
                 // 刷新DataGridView
                 if (dataGridViewWorkflows.InvokeRequired)
                 {
-                    dataGridViewWorkflows.Invoke(new MethodInvoker(() => dataGridViewWorkflows.Refresh()));
+                    dataGridViewWorkflows.Invoke(new System.Windows.Forms.MethodInvoker(() => dataGridViewWorkflows.Refresh()));
                 }
                 else
                 {

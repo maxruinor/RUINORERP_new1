@@ -1,4 +1,4 @@
-﻿using RUINORERP.Business.CommService;
+using RUINORERP.Business.CommService;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Model.CommonModel;
 using RUINORERP.Model.TransModel;
@@ -138,7 +138,7 @@ namespace RUINORERP.Server
                 if (this.dataGridView1.InvokeRequired)
                 {
                     // 如果当前线程不是UI线程，则使用Invoke来更新UI
-                    this.dataGridView1.Invoke(new MethodInvoker(RefreshDataGridView));
+                    this.dataGridView1.Invoke(new System.Windows.Forms.MethodInvoker(RefreshDataGridView));
                 }
                 else
                 {

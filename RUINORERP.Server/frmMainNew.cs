@@ -865,7 +865,7 @@ namespace RUINORERP.Server
 
                 if (InvokeRequired)
                 {
-                    BeginInvoke(new MethodInvoker(logAction));
+                    BeginInvoke(new System.Windows.Forms.MethodInvoker(logAction));
                 }
                 else
                 {
@@ -894,7 +894,7 @@ namespace RUINORERP.Server
             // 确保所有对RichTextBox的操作都在UI线程中执行
             if (rtb.InvokeRequired)
             {
-                rtb.BeginInvoke(new MethodInvoker(() => EnsureMaxLines(rtb, maxLines)));
+                rtb.BeginInvoke(new System.Windows.Forms.MethodInvoker(() => EnsureMaxLines(rtb, maxLines)));
                 return;
             }
 

@@ -7,7 +7,6 @@ using RUINORERP.Server.Network.Models;
 using RUINORERP.Server.Network.Services;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Commands;
-using RUINORERP.PacketSpec.Commands.FileTransfer;
 using RUINORERP.PacketSpec.Models.Responses;
 using RUINORERP.PacketSpec.Models.Requests;
 using System.Collections.Generic;

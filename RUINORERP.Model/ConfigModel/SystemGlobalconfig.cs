@@ -13,7 +13,7 @@ namespace RUINORERP.Model.ConfigModel
     /// </summary>
     [Serializable()]
     [DisplayName("系统全局配置")]
-    public class SystemGlobalconfig : BaseConfig
+    public class SystemGlobalConfig : BaseConfig
     {
         [JsonProperty("采购日期必填")]
         [Category("采购模块")]

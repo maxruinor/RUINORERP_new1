@@ -20,7 +20,7 @@ namespace RUINORERP.Business.Config
         private readonly ILogger<ConfigValidationService> _logger;
         private readonly Dictionary<string, List<ConfigValidationRule>> _customRules;
         private readonly IValidator<ServerConfig> _serverConfigValidator;
-        private readonly IValidator<SystemGlobalconfig> _systemGlobalconfigValidator;
+        private readonly IValidator<SystemGlobalConfig> _systemGlobalconfigValidator;
         private readonly IValidator<GlobalValidatorConfig> _globalValidatorConfigValidator;
         
         /// <summary>
@@ -33,7 +33,7 @@ namespace RUINORERP.Business.Config
         public ConfigValidationService(
             ILogger<ConfigValidationService> logger,
             IValidator<ServerConfig> serverConfigValidator,
-            IValidator<SystemGlobalconfig> systemGlobalconfigValidator,
+            IValidator<SystemGlobalConfig> systemGlobalconfigValidator,
             IValidator<GlobalValidatorConfig> globalValidatorConfigValidator)
         {
             _logger = logger;
@@ -197,7 +197,7 @@ namespace RUINORERP.Business.Config
             {
                 return _serverConfigValidator as IValidator<T>;
             }
-            else if (configType == typeof(SystemGlobalconfig))
+            else if (configType == typeof(SystemGlobalConfig))
             {
                 return _systemGlobalconfigValidator as IValidator<T>;
             }
@@ -557,7 +557,7 @@ namespace RUINORERP.Business.Config
                 case ServerConfig serverConfig:
                     ValidateServerConfig(serverConfig, result);
                     break;
-                case SystemGlobalconfig systemConfig:
+                case SystemGlobalConfig systemConfig:
                     ValidateSystemConfig(systemConfig, result);
                     break;
                 case GlobalValidatorConfig validatorConfig:
@@ -588,7 +588,7 @@ namespace RUINORERP.Business.Config
         /// <summary>
         /// 验证系统配置
         /// </summary>
-        private void ValidateSystemConfig(SystemGlobalconfig config, ConfigValidationResult result)
+        private void ValidateSystemConfig(SystemGlobalConfig config, ConfigValidationResult result)
         {
             // 系统配置验证逻辑
            

@@ -83,8 +83,11 @@ namespace RUINORERP.Business
                     .SingleAsync();
                 }
 
+                //如果制令单中的关键物料没有发全则不能缴库,或只是提醒，用全局变量控制？
+                if (true)
+                {
 
-
+                }
 
                 #region 由缴库更新库存
 

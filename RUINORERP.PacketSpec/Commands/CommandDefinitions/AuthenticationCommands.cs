@@ -1,6 +1,6 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 
-namespace RUINORERP.PacketSpec.Commands.Authentication
+namespace RUINORERP.PacketSpec.Commands
 {
     /// <summary>
     /// 认证相关命令 - 小型系统简化版，直接进行登录认证

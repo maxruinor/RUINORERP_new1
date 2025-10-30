@@ -19,6 +19,7 @@ using RUINORERP.PacketSpec.Serialization;
 using NPOI.SS.Formula.Functions;
 using Netron.NetronLight;
 using FastReport.Table;
+using RUINORERP.PacketSpec.Commands;
 
 namespace RUINORERP.UI.Network.Services
 {

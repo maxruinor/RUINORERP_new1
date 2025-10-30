@@ -29,8 +29,11 @@ using RUINORERP.Business.Config;
 using RUINORERP.Server.Network.Interfaces.Services;
 using RUINORERP.Server.Network.Services;
 using static RUINORERP.Server.Controls.GlobalConfigControl.ConfigHistoryManager;
+using RUINORERP.PacketSpec.Models.Responses;
+using RUINORERP.PacketSpec.Commands;
 using RUINORERP.Server.Network.Models;
 using Formatting = Newtonsoft.Json.Formatting;
+using RUINORERP.PacketSpec.Models.Requests;
 
 namespace RUINORERP.Server.Controls
 {
@@ -44,18 +47,19 @@ namespace RUINORERP.Server.Controls
         private readonly ConfigFileReceiver _configFileReceiver;
         private readonly ILogger<GlobalConfigControl> _logger;
         private List<ConfigHistoryEntry> _configHistory;
-        
+
         // 新增服务依赖
         private readonly IConfigVersionService _versionService;
         private readonly IConfigEncryptionService _encryptionService;
         private readonly IConfigManagerService _configManagerService;
         private readonly IConfigValidationService _configValidationService;
-        
+        private readonly IGeneralBroadcastService _generalBroadcastService;
+
         // 移除审计日志服务依赖
-        
+
         private readonly string basePath = System.IO.Path.Combine(Directory.GetCurrentDirectory(), "SysConfigFiles");
         private ConfigHistoryManager _historyManager = new ConfigHistoryManager();
-        
+
         /// <summary>
         /// 配置元数据字典 - 用于缓存配置类型和文件信息
         /// </summary>
@@ -65,7 +69,7 @@ namespace RUINORERP.Server.Controls
         /// 配置实体类型列表
         /// </summary>
         private readonly List<Type> _configEntityTypes = new List<Type>();
-        
+
         /// <summary>
         /// 配置元数据类
         /// </summary>
@@ -90,8 +94,11 @@ namespace RUINORERP.Server.Controls
             _encryptionService = Startup.GetFromFac<IConfigEncryptionService>();
             _configManagerService = Startup.GetFromFac<IConfigManagerService>();
             _configValidationService = Startup.GetFromFac<IConfigValidationService>();
-            
+            _generalBroadcastService = Startup.GetFromFac<IGeneralBroadcastService>();
+
             // 默认使用系统全局配置文件初始化，后续操作会根据选择的配置类型使用相应的文件
+
+
             _commandManager = new CommandManager();
             _configHistory = new List<ConfigHistoryEntry>();
 
@@ -99,14 +106,14 @@ namespace RUINORERP.Server.Controls
             _commandManager.CommandExecuted += (s, e) => UpdateButtonStates();
             _commandManager.CommandUndone += (s, e) => UpdateButtonStates();
             _commandManager.CommandRedone += (s, e) => UpdateButtonStates();
-            
+
             // 初始化版本管理工具栏按钮
             InitializeVersionManagementButtons();
-            
+
             // 注册所有配置类型
             RegisterConfigTypes();
         }
-        
+
         /// <summary>
         /// 注册所有配置类型
         /// </summary>
@@ -116,9 +123,9 @@ namespace RUINORERP.Server.Controls
             {
                 // 注册已知的配置类型
                 RegisterConfigType(typeof(ServerConfig), "ServerConfig.json", "ServerConfig");
-                RegisterConfigType(typeof(SystemGlobalconfig), "SystemGlobalConfig.json", "SystemGlobalconfig");
+                RegisterConfigType(typeof(SystemGlobalConfig), "SystemGlobalConfig.json", "SystemGlobalConfig");
                 RegisterConfigType(typeof(GlobalValidatorConfig), "GlobalValidatorConfig.json", "GlobalValidatorConfig");
-                
+
                 // 可以在这里添加对配置目录的扫描，自动发现新的配置类型
                 ScanConfigDirectoryForNewTypes();
             }
@@ -127,7 +134,7 @@ namespace RUINORERP.Server.Controls
                 _logger?.LogError(ex, "注册配置类型失败");
             }
         }
-        
+
         /// <summary>
         /// 注册单个配置类型
         /// </summary>
@@ -141,20 +148,20 @@ namespace RUINORERP.Server.Controls
                 _logger?.LogWarning("尝试注册非BaseConfig类型: {TypeName}", configType.Name);
                 return;
             }
-            
+
             _configMetadataCache[configType.Name] = new ConfigMetadata
             {
                 ConfigType = configType,
                 FileName = fileName,
                 RootNode = rootNode
             };
-            
+
             if (!_configEntityTypes.Contains(configType))
             {
                 _configEntityTypes.Add(configType);
             }
         }
-        
+
         /// <summary>
         /// 扫描配置目录，发现新的配置类型
         /// </summary>
@@ -166,7 +173,7 @@ namespace RUINORERP.Server.Controls
                 {
                     return;
                 }
-                
+
                 var jsonFiles = Directory.GetFiles(basePath, "*.json");
                 foreach (var filePath in jsonFiles)
                 {
@@ -199,7 +206,7 @@ namespace RUINORERP.Server.Controls
                 _logger?.LogError(ex, "扫描配置目录失败");
             }
         }
-        
+
         /// <summary>
         /// 初始化版本管理工具栏按钮
         /// </summary>
@@ -241,7 +248,7 @@ namespace RUINORERP.Server.Controls
                 // 确定描述信息
                 string description = GetConfigDescription(_currentConfig);
                 string configFilePath = System.IO.Path.Combine(basePath, _currentConfigFileName);
-                
+
                 // 获取原始配置用于审计比较
                 BaseConfig originalConfig = null;
                 if (File.Exists(configFilePath))
@@ -261,14 +268,14 @@ namespace RUINORERP.Server.Controls
 
                 // 对敏感配置进行加密
                 var encryptedConfig = _encryptionService.EncryptConfig(_currentConfig);
-                
+
                 // 使用配置管理器服务保存配置
                 bool saveResult = _configManagerService.SaveConfig(encryptedConfig, configFilePath);
                 if (!saveResult)
                 {
                     throw new InvalidOperationException("配置保存失败");
                 }
-                
+
                 // 创建完整的配置JSON对象
                 JObject configJsonObj = JObject.FromObject(encryptedConfig);
                 JObject fullConfigJson = new JObject(new JProperty(_currentConfigRootNode, configJsonObj));
@@ -281,7 +288,7 @@ namespace RUINORERP.Server.Controls
                 // 创建配置版本
                 string versionDescription = $"{description} - 由{Environment.UserName}修改";
                 _versionService.CreateVersion(_currentConfig, _currentConfigFileName, versionDescription);
-                
+
                 // 添加到历史记录
                 var historyEntry = new ConfigHistoryEntry(_currentConfig, description)
                 {
@@ -289,17 +296,16 @@ namespace RUINORERP.Server.Controls
                     ConfigSnapshot = (JObject)fullConfigJson.DeepClone()
                 };
                 _configHistory.Add(historyEntry);
-                
+
                 // 如果是服务器配置，初始化文件存储路径
                 if (_currentConfig is ServerConfig serverConfig)
                 {
                     FileStorageHelper.InitializeStoragePath(serverConfig);
                 }
-                
+
                 // 更新UI状态
                 UpdateButtonStates();
-                
-                MessageBox.Show($"配置已成功保存并创建版本", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
             }
             catch (Exception ex)
             {
@@ -308,7 +314,7 @@ namespace RUINORERP.Server.Controls
             }
         }
 
-      
+
         /// <summary>
         /// 获取配置描述
         /// </summary>
@@ -316,11 +322,11 @@ namespace RUINORERP.Server.Controls
         {
             if (config is ServerConfig)
                 return "服务器配置更新";
-            else if (config is SystemGlobalconfig)
+            else if (config is SystemGlobalConfig)
                 return "系统全局配置更新";
             else if (config is GlobalValidatorConfig)
                 return "全局验证配置更新";
-            
+
             return "配置更新";
         }
 
@@ -359,7 +365,7 @@ namespace RUINORERP.Server.Controls
             return true;
         }
 
- 
+
         /// <summary>
         /// 初始化JSON文件TreeView（左侧树）
         /// </summary>
@@ -373,10 +379,11 @@ namespace RUINORERP.Server.Controls
                 foreach (var metadata in _configMetadataCache.Values)
                 {
                     TreeNode node = new TreeNode(GetDisplayName(metadata.ConfigType));
-                    node.Tag = new ConfigInfo {
-                        FileName = metadata.FileName, 
-                        RootNode = metadata.RootNode, 
-                        ConfigType = metadata.ConfigType 
+                    node.Tag = new ConfigInfo
+                    {
+                        FileName = metadata.FileName,
+                        RootNode = metadata.RootNode,
+                        ConfigType = metadata.ConfigType
                     };
                     treeView2.Nodes.Add(node);
                 }
@@ -390,8 +397,8 @@ namespace RUINORERP.Server.Controls
                 MessageBox.Show($"初始化JSON文件树时发生错误: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-        
-   
+
+
 
         /// <summary>
         /// 获取类型的DisplayName属性值
@@ -402,7 +409,7 @@ namespace RUINORERP.Server.Controls
         {
             var displayNameAttr = type.GetCustomAttributes(typeof(DisplayNameAttribute), false)
                 .FirstOrDefault() as DisplayNameAttribute;
-            
+
             return displayNameAttr?.DisplayName ?? type.Name;
         }
 
@@ -425,7 +432,7 @@ namespace RUINORERP.Server.Controls
                     // 尝试获取属性信息
                     var tagType = e.Node.Tag.GetType();
                     var propertyInfo = tagType.GetProperty("Property");
-                    
+
                     if (propertyInfo != null)
                     {
                         var propertyName = propertyInfo.GetValue(e.Node.Tag)?.ToString();
@@ -477,7 +484,7 @@ namespace RUINORERP.Server.Controls
             public Type ConfigType { get; set; }
         }
 
-        
+
 
         /// <summary>
         /// 加载配置文件
@@ -501,12 +508,12 @@ namespace RUINORERP.Server.Controls
             {
                 JObject configJsonObj = token as JObject;
                 BaseConfig configObject = configJsonObj.ToObject(configType) as BaseConfig;
-                
+
                 if (configObject != null)
                 {
                     // 解密配置对象中的敏感信息
                     configObject = _encryptionService.DecryptConfig(configObject);
-                    
+
                     _currentConfig = configObject;
                     _currentConfigFileName = fileName;
                     _currentConfigRootNode = rootNode;
@@ -545,6 +552,45 @@ namespace RUINORERP.Server.Controls
         /// <summary>
         /// 显示配置历史记录
         /// </summary>
+        /// <summary>
+        /// 广播配置变更给所有客户端
+        /// </summary>
+        private bool BroadcastConfigChange(BaseConfig config)
+        {
+            try
+            {
+                string configData = JsonConvert.SerializeObject(config, Formatting.Indented);
+                // 序列化当前配置为JSON
+                string configType = _currentConfig.GetType().Name;
+
+                // 创建通用请求
+                var request = new GeneralRequest
+                {
+                    Data = new
+                    {
+                        ConfigType = configType,
+                        ConfigData = configData,
+                        Version = DateTime.Now.ToString("yyyyMMddHHmmssfff"),
+                        ForceApply = true
+                    }
+                };
+
+                // 调用通用广播服务
+                _generalBroadcastService?.BroadcastToAllClients(CommandCatalog.Config_ConfigSync, request);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "广播数据失败");
+                // 广播失败不影响配置保存，只记录错误
+                return false;
+            }
+        }
+
+
+
+
         private void ShowConfigHistory()
         {
             var historyForm = new Form
@@ -570,7 +616,7 @@ namespace RUINORERP.Server.Controls
 
             // 只使用本地历史记录
             var allHistory = new List<object>();
-            
+
             // 添加本地历史记录
             foreach (var entry in _configHistory.OrderByDescending(h => h.Timestamp))
             {
@@ -583,18 +629,19 @@ namespace RUINORERP.Server.Controls
                     User = entry.User
                 });
             }
-            
+
             // 去重并按时间排序
             var distinctHistory = allHistory
-                .GroupBy(h => new { 
-                    Timestamp = ((dynamic)h).Timestamp, 
-                    Operation = ((dynamic)h).Operation, 
-                    Description = ((dynamic)h).Description 
+                .GroupBy(h => new
+                {
+                    Timestamp = ((dynamic)h).Timestamp,
+                    Operation = ((dynamic)h).Operation,
+                    Description = ((dynamic)h).Description
                 })
                 .Select(g => g.First())
                 .OrderByDescending(h => ((dynamic)h).Timestamp)
                 .Take(100); // 限制显示数量
-            
+
             // 添加到ListView
             foreach (var entry in distinctHistory)
             {
@@ -615,7 +662,7 @@ namespace RUINORERP.Server.Controls
             var panel = new Panel { Dock = DockStyle.Bottom, Height = 40 };
             var btnExport = new Button { Text = "导出历史记录", Left = 10, Top = 8 };
             var btnClose = new Button { Text = "关闭", Left = 120, Top = 8 };
-            
+
             // 添加版本管理按钮
             var btnVersions = new Button { Text = "管理配置版本", Left = 230, Top = 8 };
             panel.Controls.Add(btnVersions);
@@ -650,7 +697,7 @@ namespace RUINORERP.Server.Controls
                     }
                 }
             };
-            
+
             // 版本管理按钮点击事件
             btnVersions.Click += (s, e) =>
             {
@@ -674,7 +721,7 @@ namespace RUINORERP.Server.Controls
         /// </summary>
         /// <param name="configObject">系统全局配置对象</param>
         /// <returns>验证结果</returns>
-        private bool ValidateSystemGlobalConfiguration(SystemGlobalconfig configObject)
+        private bool ValidateSystemGlobalConfiguration(SystemGlobalConfig configObject)
         {
             var validationResults = new List<string>();
 
@@ -736,7 +783,7 @@ namespace RUINORERP.Server.Controls
                     break;
                 }
             }
-            
+
             // 创建配置详情节点结构
             CreateDetailedConfigurationNodes(configObject, rootNode);
 
@@ -758,10 +805,10 @@ namespace RUINORERP.Server.Controls
             {
                 // 清空子节点
                 rootNode.Nodes.Clear();
-                
+
                 // 创建节点结构
                 CreateConfigurationNodes(configObject, rootNode);
-                
+
                 // 展开节点
                 rootNode.ExpandAll();
             }
@@ -770,7 +817,7 @@ namespace RUINORERP.Server.Controls
                 _logger?.LogError(ex, "绑定配置到UI失败");
             }
         }
-        
+
         /// <summary>
         /// 根据配置对象的属性分类创建TreeView节点
         /// </summary>
@@ -782,31 +829,32 @@ namespace RUINORERP.Server.Controls
             {
                 // 获取配置对象的所有公开属性
                 var properties = configObject.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
-                
+
                 // 按Category分组属性
-                var propertiesByCategory = properties.GroupBy(prop => {
+                var propertiesByCategory = properties.GroupBy(prop =>
+                {
                     var categoryAttr = prop.GetCustomAttributes(typeof(CategoryAttribute), false).FirstOrDefault() as CategoryAttribute;
                     return categoryAttr?.Category ?? "通用设置"; // 如果没有Category属性，使用默认分类
                 });
-                
+
                 // 为每个分类创建节点
                 foreach (var categoryGroup in propertiesByCategory)
                 {
                     TreeNode categoryNode = new TreeNode(categoryGroup.Key);
-                    
+
                     // 为分类中的每个属性创建子节点
                     foreach (var property in categoryGroup)
                     {
                         // 获取属性的DisplayName或使用属性名
                         var displayName = GetPropertyDisplayName(property);
-                        
+
                         TreeNode propertyNode = new TreeNode(displayName);
                         // 保存属性信息到Tag
                         propertyNode.Tag = new { Property = property.Name, Category = categoryGroup.Key };
-                        
+
                         categoryNode.Nodes.Add(propertyNode);
                     }
-                    
+
                     parentNode.Nodes.Add(categoryNode);
                 }
             }
@@ -815,7 +863,7 @@ namespace RUINORERP.Server.Controls
                 _logger?.LogError(ex, "创建配置节点失败");
             }
         }
-        
+
         /// <summary>
         /// 获取属性的DisplayName
         /// </summary>
@@ -825,7 +873,7 @@ namespace RUINORERP.Server.Controls
         {
             var displayNameAttr = property.GetCustomAttributes(typeof(DisplayNameAttribute), false)
                 .FirstOrDefault() as DisplayNameAttribute;
-            
+
             return displayNameAttr?.DisplayName ?? property.Name;
         }
 
@@ -839,7 +887,7 @@ namespace RUINORERP.Server.Controls
             {
                 // 完全依赖配置验证服务进行验证（现在使用FluentValidation）
                 var validationResult = _configValidationService.ValidateConfig(config);
-                
+
                 // 检查验证结果
                 if (!validationResult.IsValid)
                 {
@@ -848,7 +896,7 @@ namespace RUINORERP.Server.Controls
                     MessageBox.Show($"配置验证失败:\n{errorMessage}", "验证错误", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return false;
                 }
-                
+
                 return true;
             }
             catch (Exception ex)
@@ -858,7 +906,7 @@ namespace RUINORERP.Server.Controls
                 return false;
             }
         }
-      
+
 
         /// <summary>
         /// 创建详细配置节点结构
@@ -898,13 +946,13 @@ namespace RUINORERP.Server.Controls
             {
                 // 使用反射创建配置实例
                 BaseConfig configInstance = CreateDefaultConfigInstance(configType);
-                
+
                 // 使用反射设置默认属性值
                 SetDefaultPropertyValues(configInstance, configType);
-                
+
                 // 转换为JSON
                 JObject configJson = JObject.FromObject(configInstance);
-                
+
                 var fullConfig = new JObject(new JProperty(rootNode, configJson));
                 File.WriteAllText(filePath, fullConfig.ToString(Newtonsoft.Json.Formatting.Indented));
             }
@@ -913,7 +961,7 @@ namespace RUINORERP.Server.Controls
                 throw new InvalidOperationException($"创建默认配置失败: {ex.Message}", ex);
             }
         }
-        
+
         /// <summary>
         /// 使用反射创建配置实例
         /// </summary>
@@ -924,7 +972,7 @@ namespace RUINORERP.Server.Controls
             {
                 throw new ArgumentException($"类型 {configType.Name} 不是 BaseConfig 的有效派生类");
             }
-            
+
             try
             {
                 return (BaseConfig)Activator.CreateInstance(configType);
@@ -934,7 +982,7 @@ namespace RUINORERP.Server.Controls
                 throw new InvalidOperationException($"无法创建类型 {configType.Name} 的实例: {ex.Message}", ex);
             }
         }
-        
+
         /// <summary>
         /// 使用反射设置配置对象的默认属性值
         /// </summary>
@@ -944,22 +992,22 @@ namespace RUINORERP.Server.Controls
         {
             // 获取所有公共实例属性
             PropertyInfo[] properties = configType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
-            
+
             foreach (PropertyInfo property in properties)
             {
                 // 检查是否可写
                 if (!property.CanWrite)
                     continue;
-                
+
                 // 尝试设置默认值
                 object defaultValue = null;
-                
+
                 // 对于特定配置类型的特定属性，设置自定义默认值
                 if (configType == typeof(ServerConfig))
                 {
                     defaultValue = GetServerConfigDefaultValue(property.Name, property.PropertyType);
                 }
-                else if (configType == typeof(SystemGlobalconfig))
+                else if (configType == typeof(SystemGlobalConfig))
                 {
                     defaultValue = GetSystemGlobalConfigDefaultValue(property.Name, property.PropertyType);
                 }
@@ -967,7 +1015,7 @@ namespace RUINORERP.Server.Controls
                 {
                     defaultValue = GetGlobalValidatorConfigDefaultValue(property.Name, property.PropertyType);
                 }
-                
+
                 // 如果找到了合适的默认值，设置它
                 if (defaultValue != null)
                 {
@@ -975,7 +1023,7 @@ namespace RUINORERP.Server.Controls
                 }
             }
         }
-        
+
         /// <summary>
         /// 获取服务器配置特定属性的默认值
         /// </summary>
@@ -1003,12 +1051,12 @@ namespace RUINORERP.Server.Controls
                     return "D:\\RUINORERP\\FileStorage";
                 case nameof(ServerConfig.MaxFileSizeMB):
                     return 10;
-             
+
                 default:
                     return GetDefaultValueForType(propertyType);
             }
         }
-        
+
         /// <summary>
         /// 获取系统全局配置特定属性的默认值
         /// </summary>
@@ -1016,20 +1064,20 @@ namespace RUINORERP.Server.Controls
         {
             switch (propertyName)
             {
-                case nameof(SystemGlobalconfig.UseSharedPrinter):
+                case nameof(SystemGlobalConfig.UseSharedPrinter):
                 case "采购日期必填":
-                case nameof(SystemGlobalconfig.IsFromPlatform):
+                case nameof(SystemGlobalConfig.IsFromPlatform):
                     return false;
-                case nameof(SystemGlobalconfig.SomeSetting):
+                case nameof(SystemGlobalConfig.SomeSetting):
                     return "";
-                case nameof(SystemGlobalconfig.OpenProdTypeForSaleCheck):
-                case nameof(SystemGlobalconfig.DirectPrinting):
+                case nameof(SystemGlobalConfig.OpenProdTypeForSaleCheck):
+                case nameof(SystemGlobalConfig.DirectPrinting):
                     return true;
                 default:
                     return GetDefaultValueForType(propertyType);
             }
         }
-        
+
         /// <summary>
         /// 获取全局验证配置特定属性的默认值
         /// </summary>
@@ -1057,7 +1105,7 @@ namespace RUINORERP.Server.Controls
                     return GetDefaultValueForType(propertyType);
             }
         }
-        
+
         /// <summary>
         /// 获取类型的默认值
         /// </summary>
@@ -1078,7 +1126,7 @@ namespace RUINORERP.Server.Controls
             try
             {
                 // 创建系统全局后备配置
-                var fallbackConfig = new SystemGlobalconfig
+                var fallbackConfig = new SystemGlobalConfig
                 {
                     UseSharedPrinter = false,
                     SomeSetting = "",
@@ -1126,7 +1174,7 @@ namespace RUINORERP.Server.Controls
             }
         }
 
-       
+
 
         /// <summary>
         /// 保存按钮点击事件
@@ -1177,7 +1225,7 @@ namespace RUINORERP.Server.Controls
         {
             ShowConfigHistory();
         }
-        
+
         /// <summary>
         /// 显示配置版本管理器
         /// </summary>
@@ -1188,14 +1236,14 @@ namespace RUINORERP.Server.Controls
                 MessageBox.Show("请先选择要管理版本的配置文件", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
-            
+
             var versionForm = new Form
             {
                 Text = $"配置版本管理 - {_currentConfigFileName}",
                 Size = new Size(850, 600),
                 StartPosition = FormStartPosition.CenterParent
             };
-            
+
             var listView = new System.Windows.Forms.ListView
             {
                 Dock = DockStyle.Fill,
@@ -1203,13 +1251,13 @@ namespace RUINORERP.Server.Controls
                 FullRowSelect = true,
                 GridLines = true
             };
-            
+
             listView.Columns.Add("版本号", 80);
             listView.Columns.Add("创建时间", 150);
             listView.Columns.Add("描述", 250);
             listView.Columns.Add("创建者", 120);
             listView.Columns.Add("状态", 80);
-            
+
             // 加载版本列表
             try
             {
@@ -1229,15 +1277,15 @@ namespace RUINORERP.Server.Controls
                 _logger?.LogError(ex, "加载配置版本失败");
                 MessageBox.Show($"加载配置版本失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-            
+
             var panel = new Panel { Dock = DockStyle.Bottom, Height = 60 };
-            
+
             var btnCreateVersion = new Button { Text = "创建新版本", Left = 10, Top = 15 };
             var btnRollback = new Button { Text = "回滚到此版本", Left = 120, Top = 15 };
             var btnCompare = new Button { Text = "比较版本", Left = 240, Top = 15 };
             var btnDelete = new Button { Text = "删除版本", Left = 350, Top = 15 };
             var btnClose = new Button { Text = "关闭", Left = 460, Top = 15 };
-            
+
             // 创建新版本按钮点击事件
             btnCreateVersion.Click += (s, e) =>
             {
@@ -1249,12 +1297,12 @@ namespace RUINORERP.Server.Controls
                         Size = new Size(400, 200),
                         StartPosition = FormStartPosition.CenterParent
                     };
-                    
+
                     var label = new Label { Text = "版本描述:", Left = 20, Top = 20 };
                     var textBox = new TextBox { Left = 20, Top = 40, Width = 340, Multiline = true, Height = 60 };
                     var okButton = new Button { Text = "确定", Left = 150, Top = 110 };
                     var cancelButton = new Button { Text = "取消", Left = 240, Top = 110 };
-                    
+
                     okButton.Click += (s2, e2) =>
                     {
                         try
@@ -1266,9 +1314,9 @@ namespace RUINORERP.Server.Controls
                                 {
                                     versionDesc = "手动创建版本";
                                 }
-                                
+
                                 _versionService.CreateVersion(_currentConfig, _currentConfigFileName, versionDesc);
-                                
+
                                 // 刷新版本列表
                                 listView.Items.Clear();
                                 var versions = _versionService.GetVersions(_currentConfigFileName);
@@ -1281,7 +1329,7 @@ namespace RUINORERP.Server.Controls
                                     item.Tag = version;
                                     listView.Items.Add(item);
                                 }
-                                
+
                                 MessageBox.Show("配置版本创建成功", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
                                 descriptionForm.Close();
                             }
@@ -1292,14 +1340,14 @@ namespace RUINORERP.Server.Controls
                             MessageBox.Show($"创建配置版本失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         }
                     };
-                    
+
                     cancelButton.Click += (s2, e2) => descriptionForm.Close();
-                    
+
                     descriptionForm.Controls.Add(label);
                     descriptionForm.Controls.Add(textBox);
                     descriptionForm.Controls.Add(okButton);
                     descriptionForm.Controls.Add(cancelButton);
-                    
+
                     descriptionForm.ShowDialog(versionForm);
                 }
                 catch (Exception ex)
@@ -1307,7 +1355,7 @@ namespace RUINORERP.Server.Controls
                     _logger?.LogError(ex, "创建版本对话框失败");
                 }
             };
-            
+
             // 回滚按钮点击事件
             btnRollback.Click += (s, e) =>
             {
@@ -1316,40 +1364,40 @@ namespace RUINORERP.Server.Controls
                     MessageBox.Show("请选择要回滚的版本", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return;
                 }
-                
+
                 var selectedVersion = listView.SelectedItems[0].Tag as ConfigVersion;
                 if (selectedVersion == null)
                     return;
-                
+
                 if (selectedVersion.IsActive)
                 {
                     MessageBox.Show("当前已是选中的版本，无需回滚", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return;
                 }
-                
-                if (MessageBox.Show($"确定要回滚到版本 {selectedVersion.VersionNumber} 吗？\n此操作将覆盖当前配置。", 
+
+                if (MessageBox.Show($"确定要回滚到版本 {selectedVersion.VersionNumber} 吗？\n此操作将覆盖当前配置。",
                     "确认回滚", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
                 {
                     try
                     {
                         // 回滚到选定版本
                         bool rollbackSuccess = _versionService.RollbackToVersion(selectedVersion.VersionId);
-                        
+
                         if (rollbackSuccess)
                         {
                             // 重新加载配置
                             _currentConfig = _configManagerService.GetConfig<BaseConfig>(_currentConfigFileName);
-                            
+
                             // 重新加载配置到UI
                             BindConfigurationToUI(_currentConfig);
-                            
+
                             MessageBox.Show("配置回滚成功", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         }
                         else
                         {
                             MessageBox.Show("配置回滚失败", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         }
-                        
+
                         // 添加到本地历史记录，不使用审计日志服务
                         var historyEntry = new ConfigHistoryEntry(_currentConfig, $"回滚到版本 {selectedVersion.VersionNumber}")
                         {
@@ -1357,7 +1405,7 @@ namespace RUINORERP.Server.Controls
                             ConfigSnapshot = JObject.FromObject(_currentConfig)
                         };
                         _configHistory.Add(historyEntry);
-                        
+
                         // 刷新版本列表
                         listView.Items.Clear();
                         var versions = _versionService.GetVersions(_currentConfigFileName);
@@ -1370,7 +1418,7 @@ namespace RUINORERP.Server.Controls
                             item.Tag = version;
                             listView.Items.Add(item);
                         }
-                        
+
                         MessageBox.Show("配置已成功回滚", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
                     catch (Exception ex)
@@ -1380,7 +1428,7 @@ namespace RUINORERP.Server.Controls
                     }
                 }
             };
-            
+
             // 比较版本按钮点击事件
             btnCompare.Click += (s, e) =>
             {
@@ -1389,23 +1437,23 @@ namespace RUINORERP.Server.Controls
                     MessageBox.Show("请选择两个版本进行比较", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return;
                 }
-                
+
                 if (listView.SelectedItems.Count > 2)
                 {
                     MessageBox.Show("一次只能比较两个版本", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return;
                 }
-                
+
                 var version1 = listView.SelectedItems[0].Tag as ConfigVersion;
                 var version2 = listView.SelectedItems[1].Tag as ConfigVersion;
-                
+
                 if (version1 == null || version2 == null)
                     return;
-                
+
                 try
                 {
                     var diffResult = _versionService.CompareVersionsDetailed(version1.VersionId, version2.VersionId);
-                    
+
                     // 显示差异结果
                     var diffForm = new Form
                     {
@@ -1413,7 +1461,7 @@ namespace RUINORERP.Server.Controls
                         Size = new Size(800, 600),
                         StartPosition = FormStartPosition.CenterParent
                     };
-                    
+
                     var diffTextBox = new TextBox
                     {
                         Dock = DockStyle.Fill,
@@ -1422,11 +1470,11 @@ namespace RUINORERP.Server.Controls
                         ScrollBars = ScrollBars.Both,
                         Font = new Font("Consolas", 9)
                     };
-                    
+
                     // 格式化差异结果
                     StringBuilder sb = new StringBuilder();
                     sb.AppendLine($"版本比较: v{version1.VersionNumber} ({version1.CreatedTime:yyyy-MM-dd HH:mm:ss}) vs v{version2.VersionNumber} ({version2.CreatedTime:yyyy-MM-dd HH:mm:ss})\n");
-                    
+
                     if (diffResult.AddedProperties.Count > 0)
                     {
                         sb.AppendLine("新增属性:");
@@ -1436,7 +1484,7 @@ namespace RUINORERP.Server.Controls
                         }
                         sb.AppendLine();
                     }
-                    
+
                     if (diffResult.RemovedProperties.Count > 0)
                     {
                         sb.AppendLine("删除属性:");
@@ -1446,7 +1494,7 @@ namespace RUINORERP.Server.Controls
                         }
                         sb.AppendLine();
                     }
-                    
+
                     if (diffResult.ModifiedProperties.Count > 0)
                     {
                         sb.AppendLine("修改属性:");
@@ -1458,12 +1506,12 @@ namespace RUINORERP.Server.Controls
                         }
                         sb.AppendLine();
                     }
-                    
+
                     if (diffResult.AddedProperties.Count == 0 && diffResult.RemovedProperties.Count == 0 && diffResult.ModifiedProperties.Count == 0)
                     {
                         sb.AppendLine("两个版本的配置完全相同");
                     }
-                    
+
                     diffTextBox.Text = sb.ToString();
                     diffForm.Controls.Add(diffTextBox);
                     diffForm.ShowDialog(versionForm);
@@ -1474,7 +1522,7 @@ namespace RUINORERP.Server.Controls
                     MessageBox.Show($"比较配置版本失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             };
-            
+
             // 删除版本按钮点击事件
             btnDelete.Click += (s, e) =>
             {
@@ -1483,27 +1531,27 @@ namespace RUINORERP.Server.Controls
                     MessageBox.Show("请选择要删除的版本", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return;
                 }
-                
+
                 var selectedVersion = listView.SelectedItems[0].Tag as ConfigVersion;
                 if (selectedVersion == null)
                     return;
-                
+
                 if (selectedVersion.IsActive)
                 {
                     MessageBox.Show("不能删除当前活动的版本", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return;
                 }
-                
-                if (MessageBox.Show($"确定要删除版本 {selectedVersion.VersionNumber} 吗？\n此操作不可撤销。", 
+
+                if (MessageBox.Show($"确定要删除版本 {selectedVersion.VersionNumber} 吗？\n此操作不可撤销。",
                     "确认删除", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
                 {
                     try
                     {
                         _versionService.DeleteVersion(selectedVersion.VersionId);
-                        
+
                         // 从列表中移除
                         listView.Items.Remove(listView.SelectedItems[0]);
-                        
+
                         // 添加到历史记录，不使用审计日志服务
                         var historyEntry = new ConfigHistoryEntry(_currentConfig, $"删除版本 {selectedVersion.VersionNumber}")
                         {
@@ -1511,7 +1559,7 @@ namespace RUINORERP.Server.Controls
                             ConfigSnapshot = JObject.FromObject(_currentConfig)
                         };
                         _configHistory.Add(historyEntry);
-                        
+
                         MessageBox.Show("配置版本已成功删除", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
                     catch (Exception ex)
@@ -1521,21 +1569,21 @@ namespace RUINORERP.Server.Controls
                     }
                 }
             };
-            
+
             btnClose.Click += (s, e) => versionForm.Close();
-            
+
             panel.Controls.Add(btnCreateVersion);
             panel.Controls.Add(btnRollback);
             panel.Controls.Add(btnCompare);
             panel.Controls.Add(btnDelete);
             panel.Controls.Add(btnClose);
-            
+
             versionForm.Controls.Add(listView);
             versionForm.Controls.Add(panel);
-            
+
             versionForm.ShowDialog(this);
         }
-        
+
         /// <summary>
         /// 版本管理按钮点击事件
         /// </summary>
@@ -1566,13 +1614,9 @@ namespace RUINORERP.Server.Controls
 
                 // 发布配置前先保存
                 SaveConfig();
-
-                // 序列化当前配置为JSON
-                string configJson = JsonConvert.SerializeObject(_currentConfig, Formatting.Indented);
-                string configType = _currentConfig.GetType().Name;
-
+               
                 // 通过通讯模块发布配置到客户端
-                if (PublishConfigToClients(configType, configJson))
+                if (BroadcastConfigChange(_currentConfig))
                 {
                     // 记录发布历史
                     var historyEntry = new ConfigHistoryEntry(_currentConfig, $"发布配置到客户端")
@@ -1581,8 +1625,6 @@ namespace RUINORERP.Server.Controls
                         ConfigSnapshot = JObject.FromObject(_currentConfig)
                     };
                     _configHistory.Add(historyEntry);
-
-                    _logger?.LogInformation($"配置类型 {configType} 已成功发布到客户端");
                     MessageBox.Show("配置已成功发布到所有客户端", "发布成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
                 else
@@ -1597,204 +1639,7 @@ namespace RUINORERP.Server.Controls
             }
         }
 
-        /// <summary>
-        /// 将配置发布到客户端
-        /// </summary>
-        /// <param name="configType">配置类型</param>
-        /// <param name="configJson">配置JSON字符串</param>
-        /// <returns>是否发布成功</returns>
-        private bool PublishConfigToClients(string configType, string configJson)
-        {
-            try
-            {
-                // 获取会话服务
-                var sessionService = Startup.GetFromFac<ISessionService>();
-                if (sessionService == null)
-                {
-                    // 如果没有找到会话服务，尝试获取消息服务
-                    var messageService = Startup.GetFromFac<ServerMessageService>();
-                    if (messageService == null)
-                    {
-                        // 如果两种服务都没有找到，使用模拟发布
-                        _logger?.LogWarning("未找到ISessionService或ServerMessageService服务，使用模拟发布");
-                        return true;
-                    }
-                    
-                    // 使用消息服务发布配置
-                    return PublishViaMessageService(messageService, configType, configJson);
-                }
-                
-                // 使用会话服务发布配置到所有客户端
-                return PublishViaSessionService(sessionService, configType, configJson);
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "发布配置到客户端过程中发生错误");
-                return false;
-            }
-        }
 
-        /// <summary>
-        /// 通过会话服务发布配置
-        /// </summary>
-        private bool PublishViaSessionService(ISessionService sessionService, string configType, string configJson)
-        {
-            try
-            {
-                // 获取所有活跃会话
-                // 注意：使用反射来调用可能存在的获取所有会话的方法
-                var allSessions = GetAllSessions(sessionService);
-                int sentCount = 0;
-                
-                foreach (var session in allSessions)
-                {
-                    try
-                    {
-                        // 构造配置更新命令
-                        var configUpdateData = new Dictionary<string, object>
-                        {
-                            { "CommandType", "UpdateConfig" },
-                            { "ConfigType", configType },
-                            { "ConfigJson", configJson },
-                            { "Timestamp", DateTime.UtcNow },
-                            { "Publisher", Environment.UserName }
-                        };
-                        
-                        // 使用反射调用可能存在的发送命令方法
-                        SendCommandToSession(sessionService, session, "System.UpdateConfig", configUpdateData);
-                        sentCount++;
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger?.LogWarning(ex, "发送配置到会话失败: {Error}", ex.Message);
-                        // 继续发送到其他会话，不中断整体发布流程
-                    }
-                }
-                
-                _logger?.LogInformation("成功发送配置到 {SentCount} 个客户端会话", sentCount);
-                return sentCount > 0 || allSessions.Count == 0; // 成功条件：至少发送到一个会话，或者没有会话需要发送
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "通过会话服务发布配置失败");
-                return false;
-            }
-        }
-        
-        /// <summary>
-        /// 通过反射获取所有会话
-        /// </summary>
-        private List<SessionInfo> GetAllSessions(ISessionService sessionService)
-        {
-            try
-            {
-                // 尝试多种可能的方法名
-                string[] methodNames = { "GetAllUserSessions", "GetAllSessions", "GetAllActiveSessions" };
-                
-                foreach (string methodName in methodNames)
-                {
-                    var method = sessionService.GetType().GetMethod(methodName);
-                    if (method != null)
-                    {
-                        var result = method.Invoke(sessionService, null);
-                        if (result is IEnumerable<SessionInfo> sessionsEnum)
-                        {
-                            return sessionsEnum.ToList();
-                        }
-                    }
-                }
-                
-                // 如果找不到合适的方法，返回空列表
-                _logger?.LogWarning("未能找到获取所有会话的方法");
-                return new List<SessionInfo>();
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "获取所有会话失败");
-                return new List<SessionInfo>();
-            }
-        }
-        
-        /// <summary>
-        /// 通过反射发送命令到会话
-        /// </summary>
-        private void SendCommandToSession(ISessionService sessionService, SessionInfo session, string commandName, object data)
-        {
-            try
-            {
-                // 尝试多种可能的方法名
-                string[] methodNames = { "SendCommandAsync", "SendMessageAsync", "SendToSession" };
-                
-                foreach (string methodName in methodNames)
-                {
-                    var method = sessionService.GetType().GetMethod(methodName);
-                    if (method != null)
-                    {
-                        // 尝试不同的参数组合
-                        try
-                        {
-                            method.Invoke(sessionService, new object[] { session.SessionID, commandName, data });
-                            return;
-                        }
-                        catch (TargetParameterCountException)
-                        {
-                            // 参数不匹配，尝试其他方法
-                            continue;
-                        }
-                    }
-                }
-                
-                // 如果找不到合适的方法，记录警告
-                _logger?.LogWarning("未能找到发送命令到会话的方法");
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "发送命令到会话失败");
-                throw;
-            }
-        }
-
-        /// <summary>
-        /// 通过消息服务发布配置
-        /// </summary>
-        private bool PublishViaMessageService(ServerMessageService messageService, string configType, string configJson)
-        {
-            try
-            {
-                // 构造配置更新消息
-                var configUpdateMessage = new
-                {
-                    CommandType = "UpdateConfig",
-                    ConfigType = configType,
-                    ConfigJson = configJson,
-                    Timestamp = DateTime.UtcNow,
-                    Publisher = Environment.UserName
-                };
-                
-                // 序列化消息
-                string messageJson = JsonConvert.SerializeObject(configUpdateMessage);
-                
-                // 广播消息到所有客户端
-                // 注意：这里需要根据ServerMessageService的实际方法进行调整
-                // 以下是假设的实现方式
-                dynamic broadcastMethod = messageService.GetType().GetMethod("BroadcastMessage");
-                if (broadcastMethod != null)
-                {
-                    broadcastMethod.Invoke(messageService, new object[] { "System.UpdateConfig", messageJson });
-                }
-                else
-                {
-                    _logger?.LogWarning("ServerMessageService 不支持 BroadcastMessage 方法");
-                }
-                
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "通过消息服务发布配置失败");
-                return false;
-            }
-        }
 
         /// <summary>
         /// 配置历史记录条目
@@ -1870,38 +1715,38 @@ namespace RUINORERP.Server.Controls
             /// 配置更改命令
             /// </summary>
             public class ChangeConfigCommand : ICommand
-        {
-            private readonly BaseConfig _config;
-            private readonly string _propertyName;
-            private readonly object _oldValue;
-            private readonly object _newValue;
-
-            public ChangeConfigCommand(BaseConfig config, string propertyName, object oldValue, object newValue)
             {
-                _config = config;
-                _propertyName = propertyName;
-                _oldValue = oldValue;
-                _newValue = newValue;
-            }
+                private readonly BaseConfig _config;
+                private readonly string _propertyName;
+                private readonly object _oldValue;
+                private readonly object _newValue;
 
-            public void Execute()
-            {
-                var prop = _config.GetType().GetProperty(_propertyName);
-                if (prop != null && prop.CanWrite)
+                public ChangeConfigCommand(BaseConfig config, string propertyName, object oldValue, object newValue)
                 {
-                    prop.SetValue(_config, _newValue);
+                    _config = config;
+                    _propertyName = propertyName;
+                    _oldValue = oldValue;
+                    _newValue = newValue;
+                }
+
+                public void Execute()
+                {
+                    var prop = _config.GetType().GetProperty(_propertyName);
+                    if (prop != null && prop.CanWrite)
+                    {
+                        prop.SetValue(_config, _newValue);
+                    }
+                }
+
+                public void Undo()
+                {
+                    var prop = _config.GetType().GetProperty(_propertyName);
+                    if (prop != null && prop.CanWrite)
+                    {
+                        prop.SetValue(_config, _oldValue);
+                    }
                 }
             }
-
-            public void Undo()
-            {
-                var prop = _config.GetType().GetProperty(_propertyName);
-                if (prop != null && prop.CanWrite)
-                {
-                    prop.SetValue(_config, _oldValue);
-                }
-            }
-        }
 
             /// <summary>
             /// 命令管理器扩展

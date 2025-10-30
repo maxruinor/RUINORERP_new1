@@ -272,6 +272,8 @@ namespace RUINORERP.Model.CommonModel
 
         }
 
+        public string UserGroup { get; set; }
+
         public event PropertyChangedEventHandler PropertyChanged;
 
         protected virtual void OnPropertyChanged(string propertyName)

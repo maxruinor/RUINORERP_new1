@@ -10,7 +10,6 @@ using System.Windows.Forms;
 using System.Threading;
 using Microsoft.Extensions.Logging;
 using RUINORERP.UI.BaseForm;
-using RUINORERP.PacketSpec.Commands.Message;
 using RUINORERP.UI.Log;
 using System.ComponentModel;
 using RUINORERP.Business;

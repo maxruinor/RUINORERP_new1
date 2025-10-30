@@ -1,6 +1,4 @@
 using RUINORERP.Model.TransModel;
-using RUINORERP.PacketSpec.Commands.Message;
-using RUINORERP.PacketSpec.Models.Requests.Message;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.Global;
 using System.Threading;
+using RUINORERP.PacketSpec.Models.Requests.Message;
 
 namespace RUINORERP.Server.Network.Services
 {

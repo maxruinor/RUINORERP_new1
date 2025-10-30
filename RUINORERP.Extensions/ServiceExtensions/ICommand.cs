@@ -85,9 +85,9 @@ namespace RUINORERP.Extensions.ServiceExtensions
                 throw new ArgumentNullException(nameof(config), "配置对象不能为空");
 
             // 验证服务器配置
-            if (config["SystemGlobalconfig"] != null)
+            if (config["SystemGlobalConfig"] != null)
             {
-                var serverConfig = config["SystemGlobalconfig"];
+                var serverConfig = config["SystemGlobalConfig"];
                 
                 // 验证服务器端口
                 if (serverConfig["ServerPort"] != null)

@@ -35,7 +35,7 @@ namespace RUINORERP.Model.Context
         /// <summary>
         /// 这个类中的值，实际是自动生成了json配置文件。并且系统实时监控这个配置文件中的值
         /// </summary>
-        public SystemGlobalconfig GlobalVariableConfig { get; set; } = new SystemGlobalconfig();
+        public SystemGlobalConfig GlobalVariableConfig { get; set; } = new SystemGlobalConfig();
 
         #endregion
 

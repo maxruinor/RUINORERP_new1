@@ -35,6 +35,7 @@ namespace RUINORERP.Server.Controls
             toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             tsbtnRefresh = new System.Windows.Forms.ToolStripButton();
             tsbtnHistory = new System.Windows.Forms.ToolStripButton();
+            tsbtnPublish = new System.Windows.Forms.ToolStripButton();
             splitContainer2 = new System.Windows.Forms.SplitContainer();
             treeView2 = new System.Windows.Forms.TreeView();
             groupBoxConfigEdit = new System.Windows.Forms.GroupBox();
@@ -50,6 +51,14 @@ namespace RUINORERP.Server.Controls
             splitContainer1.Panel1.SuspendLayout();
             splitContainer1.SuspendLayout();
             SuspendLayout();
+            // 
+            // tsbtnPublish
+            // 
+            tsbtnPublish.Image = null;
+            tsbtnPublish.Name = "tsbtnPublish";
+            tsbtnPublish.Size = new System.Drawing.Size(52, 22);
+            tsbtnPublish.Text = "发布";
+            tsbtnPublish.Click += new System.EventHandler(tsbtnPublish_Click);
             // 
             // toolStrip1
             // 

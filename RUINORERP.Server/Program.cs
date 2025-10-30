@@ -212,7 +212,7 @@ namespace RUINORERP.Server
                     // 使用新的Tab形式主窗体
                     var logger = services.GetService<ILogger<frmMainNew>>();
                     var workflowHost = services.GetService<IWorkflowHost>();
-                    var config = services.GetService<IOptionsMonitor<SystemGlobalconfig>>();
+                    var config = services.GetService<IOptionsMonitor<SystemGlobalConfig>>();
 
                     IEntityMappingService entityMappingService = Startup.GetFromFac<IEntityMappingService>();
                     // 在应用程序启动时设置当前实体映射服务

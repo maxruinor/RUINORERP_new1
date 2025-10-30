@@ -234,6 +234,8 @@ namespace RUINORERP.Business.BizMapperService
             cbd.BillID = Entity.GetPropertyValue(entityInfo.IdField).ToLong();
             cbd.BillNoColName = entityInfo.NoField;
             cbd.BizName = bizType.ObjToString();
+            cbd.BizEntityType = type;
+            cbd.BizType = bizType;
             return cbd;
         }
         public static CommBillData GetBillData<T>(object Entity)

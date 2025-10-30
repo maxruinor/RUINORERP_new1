@@ -15,7 +15,6 @@ using RUINORERP.PacketSpec.Models.Responses;
 using RUINORERP.PacketSpec.Enums.Core;
 using RUINORERP.PacketSpec.Commands.Authentication;
 using RUINORERP.PacketSpec.Models.Responses.Authentication;
-using RUINORERP.PacketSpec.Commands.System;
 
 namespace RUINORERP.PacketSpec.Commands
 {

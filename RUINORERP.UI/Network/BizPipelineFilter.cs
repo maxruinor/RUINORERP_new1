@@ -4,7 +4,7 @@ using System.Buffers;
 using RUINORERP.PacketSpec.Security;
 using RUINORERP.PacketSpec.Serialization;
 using RUINORERP.PacketSpec.Models.Core;
-using RUINORERP.PacketSpec.Commands.System;
+using RUINORERP.PacketSpec.Commands;
 
 
 namespace RUINORERP.UI.Network

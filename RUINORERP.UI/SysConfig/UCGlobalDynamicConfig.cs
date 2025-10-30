@@ -61,11 +61,11 @@ namespace RUINORERP.UI.SysConfig
 
         //    #region 系统配置
         //    // 解析JSON，首先获取SystemGlobalConfig节点
-        //    JObject sGconfigJson = JObject.Parse(File.ReadAllText(File.ReadAllText(basePath + "/" + nameof(SystemGlobalconfig) + ".json")));
-        //    JObject sgConfigJson = sGconfigJson["SystemGlobalconfig"] as JObject;
+        //    JObject sGconfigJson = JObject.Parse(File.ReadAllText(File.ReadAllText(basePath + "/" + nameof(SystemGlobalConfig) + ".json")));
+        //    JObject sgConfigJson = sGconfigJson["SystemGlobalConfig"] as JObject;
 
         //    // 将SystemGlobalConfig节点转换为SystemGlobalConfig对象
-        //    SystemGlobalconfig SgconfigObject = sgConfigJson.ToObject<SystemGlobalconfig>();
+        //    SystemGlobalConfig SgconfigObject = sgConfigJson.ToObject<SystemGlobalConfig>();
 
 
         //    //ThreeStateTreeNode nd = new ThreeStateTreeNode();
@@ -73,7 +73,7 @@ namespace RUINORERP.UI.SysConfig
         //    //treeView1.Nodes.Add(nd);
 
         //    // 假设config.json已经被反序列化为Config对象
-        //    // SystemGlobalconfig configObject = JsonConvert.DeserializeObject<SystemGlobalconfig>(File.ReadAllText("config.json"));
+        //    // SystemGlobalConfig configObject = JsonConvert.DeserializeObject<SystemGlobalConfig>(File.ReadAllText("config.json"));
         //    // 绑定到TreeView
         //    TreeNode sgConfigNode = new TreeNode("全局配置");
         //    sgConfigNode.Tag = SgconfigObject;
@@ -127,7 +127,7 @@ namespace RUINORERP.UI.SysConfig
                 //treeView1.Nodes.Add(nd);
 
                 // 假设config.json已经被反序列化为Config对象
-                // SystemGlobalconfig configObject = JsonConvert.DeserializeObject<SystemGlobalconfig>(File.ReadAllText("config.json"));
+                // SystemGlobalConfig configObject = JsonConvert.DeserializeObject<SystemGlobalConfig>(File.ReadAllText("config.json"));
                 // 绑定到TreeView
                 TreeNode ValidatorConfigNode = new TreeNode(nodeText);
                 ValidatorConfigNode.Tag = configObject;
@@ -146,7 +146,7 @@ namespace RUINORERP.UI.SysConfig
                 //treeView1.Nodes.Add(nd);
 
                 // 假设config.json已经被反序列化为Config对象
-                // SystemGlobalconfig configObject = JsonConvert.DeserializeObject<SystemGlobalconfig>(File.ReadAllText("config.json"));
+                // SystemGlobalConfig configObject = JsonConvert.DeserializeObject<SystemGlobalConfig>(File.ReadAllText("config.json"));
                 // 绑定到TreeView
                 TreeNode ValidatorConfigNode = new TreeNode(nodeText);
                 ValidatorConfigNode.Tag = configObject;
@@ -167,7 +167,7 @@ namespace RUINORERP.UI.SysConfig
             treeView1.Nodes.Clear();
 
             GetConfig<GlobalValidatorConfig>("验证配置");
-            GetConfig<SystemGlobalconfig>("系统配置");
+            GetConfig<SystemGlobalConfig>("系统配置");
 
             //LoadData();
         }
@@ -365,12 +365,12 @@ namespace RUINORERP.UI.SysConfig
 
             //如果有更新变动就上传到服务器再分发到所有客户端
 
-            //SystemGlobalconfig 下面类型有问题应该要根据选择的节点来配置
+            //SystemGlobalConfig 下面类型有问题应该要根据选择的节点来配置
 
 #warning TODO: 这里需要完善具体逻辑，当前仅为占位
 
             /*
-            OriginalData odforCache = ActionForClient.更新动态配置<SystemGlobalconfig>(propertyGrid1.SelectedObject);
+            OriginalData odforCache = ActionForClient.更新动态配置<SystemGlobalConfig>(propertyGrid1.SelectedObject);
             byte[] buffer = CryptoProtocol.EncryptClientPackToServer(odforCache);
             MainForm.Instance.ecs.client.Send(buffer);
 

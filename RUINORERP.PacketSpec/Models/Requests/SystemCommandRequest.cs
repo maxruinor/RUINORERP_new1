@@ -1,7 +1,6 @@
-using System;
-
+﻿using System;
+using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Commands.Authentication;
-using RUINORERP.PacketSpec.Commands.System;
 using RUINORERP.PacketSpec.Core;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Requests;

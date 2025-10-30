@@ -436,5 +436,73 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         public const ushort Lock_ForwardDocumentLock = 0x080E;
         #endregion
+
+        #region 配置命令 (0x09xx)
+        /// <summary>
+        /// 配置更新 - 更新系统配置信息
+        /// </summary>
+        public const ushort Config_ConfigUpdate = 0x0900;
+
+        /// <summary>
+        /// 配置请求 - 请求系统配置信息
+        /// </summary>
+        public const ushort Config_ConfigRequest = 0x0901;
+
+        /// <summary>
+        /// 配置同步 - 同步系统配置信息
+        /// </summary>
+        public const ushort Config_ConfigSync = 0x0902;
+        #endregion
+
+        #region 复合型命令 (0x10xx)
+        /// <summary>
+        /// 复合命令执行 - 执行包含多个子命令的复合操作
+        /// </summary>
+        public const ushort Composite_CompositeCommandExecute = 0x1000;
+
+        /// <summary>
+        /// 复合命令结果 - 复合命令执行结果反馈
+        /// </summary>
+        public const ushort Composite_CompositeCommandResult = 0x1001;
+        #endregion
+
+        #region 连接管理命令 (0x11xx)
+        /// <summary>
+        /// 连接状态通知 - 通知连接状态变化
+        /// </summary>
+        public const ushort Connection_ConnectionStatusNotification = 0x1100;
+
+        /// <summary>
+        /// 连接请求 - 请求建立新连接
+        /// </summary>
+        public const ushort Connection_ConnectionRequest = 0x1101;
+
+        /// <summary>
+        /// 连接断开 - 请求断开连接
+        /// </summary>
+        public const ushort Connection_ConnectionDisconnect = 0x1102;
+
+        /// <summary>
+        /// 连接池管理 - 管理连接池相关操作
+        /// </summary>
+        public const ushort Connection_ConnectionPoolManagement = 0x1103;
+        #endregion
+
+        #region 特殊功能命令 (0x90xx)
+        /// <summary>
+        /// 特殊操作 - 预留的特殊功能操作命令
+        /// </summary>
+        public const ushort Special_SpecialOperation = 0x9000;
+
+        /// <summary>
+        /// 诊断模式 - 系统诊断模式命令
+        /// </summary>
+        public const ushort Special_DiagnosticMode = 0x9001;
+
+        /// <summary>
+        /// 调试信息 - 获取系统调试信息
+        /// </summary>
+        public const ushort Special_DebugInfo = 0x9002;
+        #endregion
     }
 }

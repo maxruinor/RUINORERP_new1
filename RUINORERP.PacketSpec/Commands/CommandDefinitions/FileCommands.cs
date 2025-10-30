@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel;
 
-namespace RUINORERP.PacketSpec.Commands.FileTransfer
+namespace RUINORERP.PacketSpec.Commands
 {
     /// <summary>
     /// 文件相关命令

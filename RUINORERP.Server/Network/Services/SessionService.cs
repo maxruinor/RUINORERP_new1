@@ -1045,19 +1045,19 @@ namespace RUINORERP.Server.Network.Services
                 // 根据命令类型触发特定事件
                 switch (packet.CommandId.FullCode)
                 {
-                    case var code when code == PacketSpec.Commands.Message.MessageCommands.SendPopupMessage.FullCode:
+                    case var code when code == PacketSpec.Commands.MessageCommands.SendPopupMessage.FullCode:
                         PopupMessageResponseReceived?.Invoke(this, eventArgs);
                         break;
-                    case var code when code == PacketSpec.Commands.Message.MessageCommands.SendMessageToUser.FullCode:
+                    case var code when code == PacketSpec.Commands.MessageCommands.SendMessageToUser.FullCode:
                         UserMessageResponseReceived?.Invoke(this, eventArgs);
                         break;
-                    case var code when code == PacketSpec.Commands.Message.MessageCommands.SendMessageToDepartment.FullCode:
+                    case var code when code == PacketSpec.Commands.MessageCommands.SendMessageToDepartment.FullCode:
                         DepartmentMessageResponseReceived?.Invoke(this, eventArgs);
                         break;
-                    case var code when code == PacketSpec.Commands.Message.MessageCommands.BroadcastMessage.FullCode:
+                    case var code when code == PacketSpec.Commands.MessageCommands.BroadcastMessage.FullCode:
                         BroadcastMessageResponseReceived?.Invoke(this, eventArgs);
                         break;
-                    case var code when code == PacketSpec.Commands.Message.MessageCommands.SendSystemNotification.FullCode:
+                    case var code when code == PacketSpec.Commands.MessageCommands.SendSystemNotification.FullCode:
                         SystemNotificationResponseReceived?.Invoke(this, eventArgs);
                         break;
                 }

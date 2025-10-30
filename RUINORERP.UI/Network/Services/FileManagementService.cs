@@ -1,6 +1,5 @@
 using Microsoft.Extensions.Logging;
 using RUINORERP.PacketSpec.Commands;
-using RUINORERP.PacketSpec.Commands.FileTransfer;
 using RUINORERP.PacketSpec.Core;
 using RUINORERP.PacketSpec.Errors;
 using RUINORERP.PacketSpec.Models;

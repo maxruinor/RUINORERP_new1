@@ -5,8 +5,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using RUINORERP.PacketSpec.Commands;
-using RUINORERP.PacketSpec.Commands.Message;
-using RUINORERP.PacketSpec.Models.Requests.Message;
 using RUINORERP.PacketSpec.Models.Responses.Message;
 using RUINORERP.Server.Network.Models;
 using RUINORERP.Server.Network.Services;
@@ -15,6 +13,7 @@ using RUINORERP.Server.Network.Interfaces.Services;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.Model.TransModel;
 using System.Windows.Forms;
+using RUINORERP.PacketSpec.Models.Requests.Message;
 
 namespace RUINORERP.Server.Network.CommandHandlers
 {

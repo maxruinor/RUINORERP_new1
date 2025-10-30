@@ -338,7 +338,7 @@ namespace RUINORERP.Server
             // 批量检查并创建配置文件
             EnsureConfigFilesExist(configDirectory, new[]
             {
-                (typeof(SystemGlobalconfig), nameof(SystemGlobalconfig)),
+                (typeof(SystemGlobalConfig), nameof(SystemGlobalConfig)),
                 (typeof(GlobalValidatorConfig), nameof(GlobalValidatorConfig)),
                 (typeof(ServerConfig), nameof(ServerConfig))
             });
@@ -347,7 +347,7 @@ namespace RUINORERP.Server
             // 读取自定义的 JSON 配置文件
             var builder = new ConfigurationBuilder()
                 .SetBasePath(System.IO.Path.Combine(Directory.GetCurrentDirectory(), "SysConfigFiles"))
-                .AddJsonFile(nameof(SystemGlobalconfig) + ".json", optional: false, reloadOnChange: true)
+                .AddJsonFile(nameof(SystemGlobalConfig) + ".json", optional: false, reloadOnChange: true)
                 .AddJsonFile(nameof(GlobalValidatorConfig) + ".json", optional: false, reloadOnChange: true)
                 .AddJsonFile(nameof(ServerConfig) + ".json", optional: false, reloadOnChange: true)
                 // 添加环境变量支持，提高配置灵活性
@@ -358,7 +358,7 @@ namespace RUINORERP.Server
             services.AddSingleton<IConfiguration>(builder);
             
             // 配置Options模式，支持依赖注入IOptions<T>接口
-            services.Configure<SystemGlobalconfig>(builder.GetSection(nameof(SystemGlobalconfig)));
+            services.Configure<SystemGlobalConfig>(builder.GetSection(nameof(SystemGlobalConfig)));
             services.Configure<GlobalValidatorConfig>(builder.GetSection(nameof(GlobalValidatorConfig)));
             services.Configure<ServerConfig>(builder.GetSection(nameof(ServerConfig)));
             

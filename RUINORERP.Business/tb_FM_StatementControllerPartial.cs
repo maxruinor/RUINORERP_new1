@@ -29,6 +29,7 @@ using RUINORERP.Global.EnumExt;
 using RUINORERP.Business.StatusManagerService;
 using RUINORERP.Global;
 using RUINORERP.Business.BizMapperService;
+using System.Runtime.InteropServices.ComTypes;
 
 namespace RUINORERP.Business
 {
@@ -74,7 +75,7 @@ namespace RUINORERP.Business
                 var paymentRecordList = await _appContext.Db.Queryable<tb_FM_PaymentRecord>()
                             .Where(c => c.tb_FM_PaymentRecordDetails.Any(d => d.SourceBilllId == entity.StatementId && d.SourceBizType == (int)BizType.对账单))
                             .ToListAsync();
-                
+
                 // 检查是否存在已支付的收付款单，如有则不允许反审
                 if (paymentRecordList != null && paymentRecordList.Count > 0)
                 {
@@ -108,11 +109,11 @@ namespace RUINORERP.Business
                     arap.LocalReconciledAmount -= detail.IncludedLocalAmount;
                     arap.ForeignReconciledAmount -= detail.IncludedForeignAmount;
                     arap.AllowAddToStatement = true;
-                    
+
                     // 确保金额不会变为负数
                     arap.LocalReconciledAmount = Math.Max(0, arap.LocalReconciledAmount);
                     arap.ForeignReconciledAmount = Math.Max(0, arap.ForeignReconciledAmount);
-                    
+
                     await _unitOfWorkManage.GetDbClient().Updateable(arap).ExecuteCommandAsync();
                 }
 
@@ -121,7 +122,7 @@ namespace RUINORERP.Business
                 entity.ApprovalResults = false;
                 entity.ApprovalStatus = (int)ApprovalStatus.未审核;
                 BusinessHelper.Instance.ApproverEntity(entity);
-                
+
                 // 更新对账单
                 var result = await _unitOfWorkManage.GetDbClient().Updateable(entity).UpdateColumns(it => new
                 {
@@ -130,7 +131,7 @@ namespace RUINORERP.Business
                     it.ApprovalResults,
                     it.ApprovalOpinions
                 }).ExecuteCommandAsync();
-                
+
                 _unitOfWorkManage.CommitTran();
                 rmrs.Succeeded = true;
                 rmrs.ReturnObject = entity as T;
@@ -171,7 +172,7 @@ namespace RUINORERP.Business
         {
             ReturnResults<T> rmrs = new ReturnResults<T>();
             tb_FM_Statement entity = ObjectEntity as tb_FM_Statement;
-            
+
             try
             {
                 // 基础验证
@@ -199,7 +200,7 @@ namespace RUINORERP.Business
 
                 // 获取对账单明细中的应收付款单ID
                 long[] arapIds = entity.tb_FM_StatementDetails.Select(m => m.ARAPId).ToArray();
-                
+
                 // 检查是否存在重复对账的应收付款单（已被标记为不允许再次加入对账单）
                 var duplicateAddList = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_ReceivablePayable>()
                                .Where(it => it.AllowAddToStatement == false)
@@ -215,14 +216,14 @@ namespace RUINORERP.Business
                     rmrs.ReturnObject = entity as T;
                     return rmrs;
                 }
-                
+
                 // 检查内存中的对账单明细是否有重复的应收付款单
                 var duplicateArapIds = entity.tb_FM_StatementDetails
                     .GroupBy(c => c.ARAPId)
                     .Where(g => g.Count() > 1)
                     .Select(g => g.Key)
                     .ToList();
-                    
+
                 if (duplicateArapIds.Any())
                 {
                     rmrs.ErrorMsg = $"对账单明细中，以下应收付款单存在重复对账：{string.Join(",", duplicateArapIds)}";
@@ -252,14 +253,14 @@ namespace RUINORERP.Business
                     arap.LocalReconciledAmount += detail.IncludedLocalAmount;
                     arap.ForeignReconciledAmount += detail.IncludedForeignAmount;
                     arap.AllowAddToStatement = false;
-                    
+
                     // 验证已对账金额不超过未核销金额
-                    if (arap.LocalReconciledAmount > arap.LocalBalanceAmount || 
+                    if (arap.LocalReconciledAmount > arap.LocalBalanceAmount ||
                         arap.ForeignReconciledAmount > arap.ForeignBalanceAmount)
                     {
                         throw new Exception($"应收付款单{arap.ARAPNo}的已对账金额超过未核销金额，请检查数据");
                     }
-                    
+
                     await _unitOfWorkManage.GetDbClient().Updateable(arap).ExecuteCommandAsync();
                 }
 
@@ -267,9 +268,9 @@ namespace RUINORERP.Business
                 entity.ApprovalStatus = (int)ApprovalStatus.已审核;
                 entity.ApprovalResults = true;
                 entity.StatementStatus = (int)StatementStatus.已确认;
-                
+
                 BusinessHelper.Instance.ApproverEntity(entity);
-                
+
                 // 更新对账单
                 var result = await _unitOfWorkManage.GetDbClient().Updateable(entity).UpdateColumns(it => new
                 {
@@ -279,7 +280,7 @@ namespace RUINORERP.Business
                     it.ApprovalOpinions,
                     it.PayeeInfoID,
                 }).ExecuteCommandAsync();
-                
+
                 if (result <= 0)
                 {
                     _unitOfWorkManage.RollbackTran();
@@ -304,7 +305,7 @@ namespace RUINORERP.Business
 
 
 
-   
+
 
         /// <summary>
         /// 生成对账单
@@ -313,10 +314,10 @@ namespace RUINORERP.Business
         /// <param name="paymentType">付款类型（收款/付款）</param>
         /// <param name="statementType">对账模式（余额对账/收款对账/付款对账）</param>
         /// <returns>生成的对账单结果</returns>
-        public async Task<ReturnResults<tb_FM_Statement>> BuildStatement(List<tb_FM_ReceivablePayable> entities, ReceivePaymentType paymentType, StatementType statementType)
+        public async Task<ReturnResults<tb_FM_Statement>> BuildStatement(List<tb_FM_ReceivablePayable> entities, ReceivePaymentType receivePaymentType, StatementType statementType)
         {
             ReturnResults<tb_FM_Statement> rmrs = new ReturnResults<tb_FM_Statement>();
-            
+
             try
             {
                 // 验证是否为同一客户/供应商
@@ -327,7 +328,7 @@ namespace RUINORERP.Business
                     rmrs.Succeeded = false;
                     return rmrs;
                 }
-  
+
                 long customerVendorId = customerVendorIds.First();
 
                 // 创建对账单基本信息
@@ -341,9 +342,10 @@ namespace RUINORERP.Business
                 statement.ApprovalOpinions = "";
                 statement.Modified_at = null;
                 statement.Modified_by = null;
-                statement.ReceivePaymentType = (int)paymentType;
+                statement.ReceivePaymentType = (int)receivePaymentType;
+                statement.StatementType = (int)statementType;
                 statement.CustomerVendor_ID = customerVendorId;
-
+                statement.Employee_ID = _appContext.CurUserInfo.UserInfo.Employee_ID.Value;
                 // 生成对账单明细，考虑已对账金额
                 List<tb_FM_StatementDetail> details = new List<tb_FM_StatementDetail>();
 
@@ -377,90 +379,30 @@ namespace RUINORERP.Business
                 DateTime startDate = entities.Min(c => c.BusinessDate).Value;
                 statement.OpeningBalanceLocalAmount = await GetOpeningBalance(customerVendorIds.ToArray(), startDate);
                 statement.OpeningBalanceForeignAmount = 0; // 可根据需要扩展外币逻辑
-
-                // 计算期间收款和付款总额
-                // 根据余额对账模式的业务规则：
-                // - 收款类型的数据保持正数
-                // - 付款类型的数据在计算时应该以负数形式参与汇总
-                statement.TotalReceivableLocalAmount = details
-                    .Where(c => c.ReceivePaymentType == (int)ReceivePaymentType.收款)
-                    .Sum(c => c.IncludedLocalAmount);
-                
-                // 付款类型的数据直接使用原始值汇总，不使用绝对值
-                // 这样可以正确处理采购退货等场景下的负数付款金额
-                statement.TotalPayableLocalAmount = details
-                    .Where(c => c.ReceivePaymentType == (int)ReceivePaymentType.付款)
-                    .Sum(c => c.IncludedLocalAmount);
-                
-                // 期间收款和付款暂时设为0，实际应根据对账期间内的收付款记录计算
+                                                           // 期间收款总额：生成对账单时设置为零，后续通过收付款确认业务来更新
                 statement.TotalReceivedLocalAmount = 0;
+                // 期间付款总额：生成对账单时设置为零，后续通过收付款确认业务来更新
                 statement.TotalPaidLocalAmount = 0;
-                statement.TotalReceivableForeignAmount = 0;
-                statement.TotalPayableForeignAmount = 0;
+                // 期间收款外币总额：生成对账单时设置为零，后续通过收付款确认业务来更新
                 statement.TotalReceivedForeignAmount = 0;
+
+                // 期间付款外币总额：生成对账单时设置为零，后续通过收付款确认业务来更新
                 statement.TotalPaidForeignAmount = 0;
-
-                // 正确计算期末余额
-                // 期末余额 = 期初余额 + 期间应收 + 期间应付（已包含正负号） + 期间收款 + 期间付款（已包含正负号）
-                // 由于现在付款金额直接使用原始值（可能为负数或正数），不需要再作为减项处理
-                // 使用括号明确计算顺序，提高代码可读性
-                statement.ClosingBalanceLocalAmount = (statement.OpeningBalanceLocalAmount + 
-                                                      statement.TotalReceivableLocalAmount + 
-                                                      statement.TotalPayableLocalAmount + 
-                                                      statement.TotalReceivedLocalAmount + 
-                                                      statement.TotalPaidLocalAmount);
-                statement.ClosingBalanceForeignAmount = 0; // 可根据需要扩展外币逻辑
-
-                // 计算净额并确定对账单类型
-                // 使用期末余额作为判断依据，这样会包含期初余额的影响
-                decimal netAmount = statement.ClosingBalanceLocalAmount;
-                
-                // 根据对账模式调整对账单类型和提示信息
-                if (statementType == StatementType.收款对账)
-                {
-                    // 收款对账模式：总是生成收款对账单
-                    statement.Summary = ($"客户需要付款给你方（应收），金额：{Math.Abs(netAmount)}（本币）");
-                    statement.ReceivePaymentType = (int)ReceivePaymentType.收款;
-                }
-                else if (statementType == StatementType.付款对账)
-                {
-                    // 付款对账模式：总是生成付款对账单
-                    statement.Summary = ($"最终需要付款给供应商，金额：{Math.Abs(netAmount)}（本币）");
-                    statement.ReceivePaymentType = (int)ReceivePaymentType.付款;
-                }
-                else
-                { // 余额对账模式
-                    // 余额对账模式：根据净额确定对账单类型
-                    if (netAmount >= 0)
-                    {
-                        statement.Summary = ($"供应商/客户需要付款给你方（应收），金额：{Math.Abs(netAmount)}（本币）");
-                        statement.ReceivePaymentType = (int)ReceivePaymentType.收款;
-                    }
-                    else // netAmount < 0
-                    {
-                        statement.Summary = ($"最终需要付款给供应商/客户，金额：{Math.Abs(netAmount)}（本币）");
-                        statement.ReceivePaymentType = (int)ReceivePaymentType.付款;
-                    }
-                }
-                
-                // 当净额为0时的特殊提示
-                if (netAmount == 0)
-                {
-                    statement.Summary = ("双方无欠款，金额已平。");
-                }
+                //计算总金额
+                CalculateTotalAmount(statement, details, receivePaymentType, statementType);
 
                 // 设置对账单基本信息
                 statement.StatementNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.对账单);
                 statement.StartDate = startDate;
                 statement.EndDate = entities.Max(c => c.BusinessDate).Value;
-                
+
                 // 设置收款信息（如果有）
                 if (entities.Count > 0 && entities[0].PayeeInfoID.HasValue)
                 {
                     statement.PayeeInfoID = entities[0].PayeeInfoID;
                     statement.PayeeAccountNo = entities[0].PayeeAccountNo;
                 }
-                
+
                 statement.tb_FM_StatementDetails = details;
 
                 // 检查是否有重复的应收付款单
@@ -469,7 +411,7 @@ namespace RUINORERP.Business
                     .Where(g => g.Count() > 1)
                     .Select(g => g.Key)
                     .ToList();
-                
+
                 if (duplicateArapIds.Any())
                 {
                     rmrs.ErrorMsg = $"对账单明细中，以下应收付款单存在重复对账：{string.Join(",", duplicateArapIds)}";
@@ -480,7 +422,7 @@ namespace RUINORERP.Business
                 statement.ARAPNos = string.Join(",", entities.Select(c => c.ARAPNo).ToArray());
                 BusinessHelper.Instance.InitEntity(statement);
                 statement.StatementStatus = (int)StatementStatus.草稿;
-                
+
                 rmrs.Succeeded = true;
                 rmrs.ReturnObject = statement;
                 return rmrs;
@@ -494,7 +436,108 @@ namespace RUINORERP.Business
             }
         }
 
-        
+
+        /// <summary>
+        /// 期末，期间金额进行计算
+        /// </summary>
+        /// <param name="statement"></param>
+        /// <param name="details"></param>
+        /// <param name="receivePaymentType"></param>
+        /// <param name="statementType"></param>
+        /// <exception cref="Exception"></exception>
+        public void CalculateTotalAmount(tb_FM_Statement statement, List<tb_FM_StatementDetail> details, ReceivePaymentType receivePaymentType, StatementType statementType)
+        {
+            // 计算期间收款和付款总额
+            // 严格按照使用说明书的业务规则：
+            // - 收款类型的数据保持正数
+            // - 付款类型的数据直接使用原始值汇总，不使用绝对值
+            statement.TotalReceivableLocalAmount = details
+                .Where(c => c.ReceivePaymentType == (int)ReceivePaymentType.收款)
+                .Sum(c => c.IncludedLocalAmount);
+
+            // 付款类型的数据直接使用原始值汇总，不使用绝对值
+            // 确保正确处理采购退货等场景下的负数付款金额
+            statement.TotalPayableLocalAmount = details
+                .Where(c => c.ReceivePaymentType == (int)ReceivePaymentType.付款)
+                .Sum(c => c.IncludedLocalAmount);
+
+
+            // 设置外币金额
+            statement.TotalReceivableForeignAmount = details
+                .Where(c => c.ReceivePaymentType == (int)ReceivePaymentType.收款)
+                .Sum(c => c.IncludedForeignAmount);
+
+            statement.TotalPayableForeignAmount = details
+                .Where(c => c.ReceivePaymentType == (int)ReceivePaymentType.付款)
+                .Sum(c => c.IncludedForeignAmount);
+
+
+            // 正确计算期末余额
+            // 假如：不是余额对账时是单向的，则全部累加就是期末余额，下面会针对余额对账再次计算覆盖
+            statement.ClosingBalanceLocalAmount = (statement.OpeningBalanceLocalAmount + statement.TotalReceivableLocalAmount + statement.TotalPayableLocalAmount);
+
+
+            if (statementType == StatementType.余额对账)
+            {
+                #region  余额对账要特殊处理
+                if (receivePaymentType == ReceivePaymentType.付款)
+                {
+                    //付款时，收进来算减去的金额
+                    statement.TotalReceivableLocalAmount = -statement.TotalReceivableLocalAmount;
+                    statement.ClosingBalanceLocalAmount = (statement.OpeningBalanceLocalAmount - statement.TotalReceivableLocalAmount +
+                                                  statement.TotalPayableLocalAmount);
+
+                    statement.Summary = ($"最终需要付款给供应商，金额：{statement.ClosingBalanceLocalAmount}（本币）");
+                    statement.ReceivePaymentType = (int)ReceivePaymentType.付款;
+
+                }
+                else if (receivePaymentType == ReceivePaymentType.收款)
+                {
+                    statement.TotalPayableLocalAmount = -statement.TotalPayableLocalAmount;
+                    //收款时，付出去的算减去的金额
+                    statement.ClosingBalanceLocalAmount = (statement.OpeningBalanceLocalAmount + statement.TotalReceivableLocalAmount -
+                                                  statement.TotalPayableLocalAmount);
+
+                    statement.Summary = ($"客户需要付款给你方（应收），金额：{statement.ClosingBalanceLocalAmount}（本币）");
+                    statement.ReceivePaymentType = (int)ReceivePaymentType.收款;
+                }
+                #endregion
+            }
+
+            statement.ClosingBalanceForeignAmount = 0; // 可根据需要扩展外币逻辑
+            decimal netForeignAmount = statement.ClosingBalanceForeignAmount;
+
+            if (netForeignAmount < 0 && statementType == StatementType.余额对账)
+            {
+                throw new Exception("计算错误。余额对账时，结果不会为负数。");
+            }
+
+            // 根据对账模式调整对账单类型和提示信息
+            if (statementType == StatementType.收款对账)
+            {
+                // 收款对账模式：总是生成收款对账单
+                // 调整期末余额为正数，确保与收款类型匹配
+                statement.ClosingBalanceForeignAmount = Math.Abs(netForeignAmount);
+                statement.Summary = ($"客户需要付款给你方（应收），金额：{statement.ClosingBalanceLocalAmount}（本币）");
+                statement.ReceivePaymentType = (int)ReceivePaymentType.收款;
+            }
+            else if (statementType == StatementType.付款对账)
+            {
+                // 付款对账模式：总是生成付款对账单
+                // 调整期末余额为正数，确保与付款类型匹配
+                statement.ClosingBalanceForeignAmount = Math.Abs(netForeignAmount);
+                statement.Summary = ($"最终需要付款给供应商，金额：{statement.ClosingBalanceLocalAmount}（本币）");
+                statement.ReceivePaymentType = (int)ReceivePaymentType.付款;
+            }
+
+            // 当净额为0时的特殊提示
+            if (statement.ClosingBalanceLocalAmount == 0)
+            {
+                statement.ClosingBalanceLocalAmount = 0; // 确保余额为0
+                statement.ClosingBalanceForeignAmount = 0; // 确保外币余额为0
+                statement.Summary = ("双方无欠款，金额已平。");
+            }
+        }
 
 
         /// <summary>
@@ -510,7 +553,7 @@ namespace RUINORERP.Business
         public async Task<decimal> GetOpeningBalance(long[] CustomerVendorIds, DateTime? asOfDate = null)
         {
             DateTime cutoffDate = asOfDate ?? DateTime.Now;
-            
+
             //获取所有已审核未结的对账单，并且结束日期在截至日期之前
             List<tb_FM_Statement> list = await _appContext.Db.CopyNew().Queryable<tb_FM_Statement>()
                 .Where(m => CustomerVendorIds.Contains(m.CustomerVendor_ID))
@@ -536,7 +579,7 @@ namespace RUINORERP.Business
 
             //结余
             var ClosingBalanceLocalAmount = list.Sum(c => c.ClosingBalanceLocalAmount);
-            
+
             //二次验证
             var ClosingBalance = OpeningBalanceLocalAmount + TotalReceivableLocalAmount - TotalPayableLocalAmount + TotalReceivedLocalAmount - TotalPaidLocalAmount;
 

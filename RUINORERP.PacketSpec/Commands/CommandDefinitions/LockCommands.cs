@@ -1,6 +1,6 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 
-namespace RUINORERP.PacketSpec.Commands.Lock
+namespace RUINORERP.PacketSpec.Commands
 {
     /// <summary>
     /// 锁管理相关命令

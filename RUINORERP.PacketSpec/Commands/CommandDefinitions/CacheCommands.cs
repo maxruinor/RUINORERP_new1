@@ -2,7 +2,7 @@
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Enums;
 
-namespace RUINORERP.PacketSpec.Commands.Cache
+namespace RUINORERP.PacketSpec.Commands
 {
     /// <summary>
     /// 缓存相关命令 - 简化版

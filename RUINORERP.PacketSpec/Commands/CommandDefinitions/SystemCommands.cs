@@ -1,6 +1,6 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 
-namespace RUINORERP.PacketSpec.Commands.System
+namespace RUINORERP.PacketSpec.Commands
 {
     /// <summary>
     /// 系统相关命令

@@ -10,11 +10,15 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Reflection;
 using System;
+using System.Linq;
 using RUINORERP.Business.CommService;
 using RUINORERP.Business.Cache;
 using RUINORERP.UI.Network.Services.Cache;
 using RUINORERP.PacketSpec.Serialization;
 using RUINORERP.Business;
+using RUINORERP.Model.ConfigModel;
+using RUINORERP.UI.SysConfig;
+using RUINORERP.UI.Network.Interfaces;
 
 namespace RUINORERP.UI.Network.DI
 {
@@ -89,6 +93,26 @@ namespace RUINORERP.UI.Network.DI
             services.AddSingleton<FileManagementController>();
             services.AddSingleton<FileManagementService>();
             
+            // 注册配置相关服务
+            // 为配置类型添加Options模式支持
+            services.AddOptions<SystemGlobalConfig>();
+            services.AddOptions<ServerConfig>();
+            services.AddOptions<GlobalValidatorConfig>();
+            
+            // 注册OptionsMonitorConfigManager单例服务
+            services.AddSingleton<OptionsMonitorConfigManager>();
+            services.AddSingleton<IConfigurationManager, ConfigurationManager>();
+            
+            // 扫描并注册所有命令处理器
+            var commandHandlerTypes = Assembly.GetExecutingAssembly().GetTypes()
+                .Where(t => typeof(ICommandHandler).IsAssignableFrom(t) && !t.IsAbstract && !t.IsInterface);
+            
+            foreach (var handlerType in commandHandlerTypes)
+            {
+                services.AddTransient(typeof(ICommandHandler), handlerType);
+                services.AddTransient(handlerType);
+            }
+            
         }
 
 
@@ -150,6 +174,13 @@ namespace RUINORERP.UI.Network.DI
             builder.RegisterType<SimplifiedMessageService>().AsSelf().InstancePerDependency();
             builder.RegisterType<SystemManagementService>().AsSelf().InstancePerDependency();
             builder.RegisterType<AuthenticationManagementService>().AsSelf().InstancePerDependency();
+
+            // 注册配置相关服务
+            builder.RegisterType<OptionsMonitorConfigManager>().AsSelf().SingleInstance();
+            builder.RegisterType<OptionsMonitorConfigManager>().As<IOptionsMonitor<SystemGlobalConfig>>().SingleInstance();
+            builder.RegisterType<OptionsMonitorConfigManager>().As<IOptionsMonitor<ServerConfig>>().SingleInstance();
+            builder.RegisterType<OptionsMonitorConfigManager>().As<IOptionsMonitor<GlobalValidatorConfig>>().SingleInstance();
+            builder.RegisterType<ConfigurationManager>().As<IConfigurationManager>().SingleInstance();
 
             // 注册文件管理控制器
             builder.RegisterType<FileManagementController>()

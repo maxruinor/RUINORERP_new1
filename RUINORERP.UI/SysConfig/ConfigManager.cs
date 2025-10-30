@@ -39,15 +39,15 @@ namespace RUINORERP.UI.SysConfig
         #endregion
         
         #region 配置属性
-        private IOptionsMonitor<SystemGlobalconfig> _globalConfigMonitor;
+        private IOptionsMonitor<SystemGlobalConfig> _globalConfigMonitor;
         private IOptionsMonitor<GlobalValidatorConfig> _validatorConfigMonitor;
         
         // 本地存储的配置对象，用于不依赖IOptionsMonitor的场景
-        private SystemGlobalconfig _localGlobalConfig;
+        private SystemGlobalConfig _localGlobalConfig;
         private GlobalValidatorConfig _localValidatorConfig;
         
         // 存储配置变更订阅
-        private readonly List<Action<SystemGlobalconfig>> _globalConfigSubscribers = new List<Action<SystemGlobalconfig>>();
+        private readonly List<Action<SystemGlobalConfig>> _globalConfigSubscribers = new List<Action<SystemGlobalConfig>>();
         private readonly List<Action<GlobalValidatorConfig>> _validatorConfigSubscribers = new List<Action<GlobalValidatorConfig>>();
         
         // 数据库配置缓存
@@ -56,7 +56,7 @@ namespace RUINORERP.UI.SysConfig
         /// <summary>
         /// 系统全局配置监控器
         /// </summary>
-        public IOptionsMonitor<SystemGlobalconfig> GlobalConfigMonitor
+        public IOptionsMonitor<SystemGlobalConfig> GlobalConfigMonitor
         {
             get => _globalConfigMonitor;
             set
@@ -98,7 +98,7 @@ namespace RUINORERP.UI.SysConfig
         /// <summary>
         /// 当前系统全局配置
         /// </summary>
-        public SystemGlobalconfig GlobalConfig 
+        public SystemGlobalConfig GlobalConfig 
         {
             get 
             {
@@ -143,7 +143,7 @@ namespace RUINORERP.UI.SysConfig
         /// </summary>
         /// <param name="configMonitor">系统全局配置监控器</param>
         /// <param name="validatorMonitor">验证配置监控器</param>
-        public void Initialize(IOptionsMonitor<SystemGlobalconfig> configMonitor, IOptionsMonitor<GlobalValidatorConfig> validatorMonitor)
+        public void Initialize(IOptionsMonitor<SystemGlobalConfig> configMonitor, IOptionsMonitor<GlobalValidatorConfig> validatorMonitor)
         {
             // 初始化配置监控器
             GlobalConfigMonitor = configMonitor;
@@ -211,7 +211,7 @@ namespace RUINORERP.UI.SysConfig
             }
             
             // 监控系统全局配置文件
-            _globalConfigWatcher = CreateFileWatcher(nameof(SystemGlobalconfig));
+            _globalConfigWatcher = CreateFileWatcher(nameof(SystemGlobalConfig));
             _globalConfigWatcher.Changed += OnGlobalConfigFileChanged;
             
             // 监控验证配置文件
@@ -243,7 +243,7 @@ namespace RUINORERP.UI.SysConfig
         public void EnsureConfigFilesExist()
         {
             // 确保系统全局配置文件存在
-            EnsureConfigFileExists<SystemGlobalconfig>();
+            EnsureConfigFileExists<SystemGlobalConfig>();
             
             // 确保验证配置文件存在
             EnsureConfigFileExists<GlobalValidatorConfig>();
@@ -318,7 +318,7 @@ namespace RUINORERP.UI.SysConfig
         /// <summary>
         /// 系统全局配置变更处理
         /// </summary>
-        private void OnGlobalConfigChanged(SystemGlobalconfig updatedConfig)
+        private void OnGlobalConfigChanged(SystemGlobalConfig updatedConfig)
         {
             // 更新本地配置
             _localGlobalConfig = updatedConfig;
@@ -370,7 +370,7 @@ namespace RUINORERP.UI.SysConfig
         /// </summary>
         /// <param name="listener">配置变更监听器</param>
         /// <returns>用于取消订阅的IDisposable对象</returns>
-        public IDisposable OnChange(Action<SystemGlobalconfig> listener)
+        public IDisposable OnChange(Action<SystemGlobalConfig> listener)
         {
             // 直接调用现有方法，保持接口兼容
             return OnGlobalConfigChange(listener);
@@ -381,7 +381,7 @@ namespace RUINORERP.UI.SysConfig
         /// </summary>
         /// <param name="listener">配置变更监听器</param>
         /// <returns>用于取消订阅的IDisposable对象</returns>
-        public IDisposable OnGlobalConfigChange(Action<SystemGlobalconfig> listener)
+        public IDisposable OnGlobalConfigChange(Action<SystemGlobalConfig> listener)
         {
             if (listener == null)
                 throw new ArgumentNullException(nameof(listener));
@@ -437,7 +437,7 @@ namespace RUINORERP.UI.SysConfig
         public void RefreshConfig()
         {
             // 通过FileSystemWatcher触发文件变更事件，以重新加载配置
-            TriggerConfigFileChange<SystemGlobalconfig>();
+            TriggerConfigFileChange<SystemGlobalConfig>();
             TriggerConfigFileChange<GlobalValidatorConfig>();
             
             // 刷新数据库配置
@@ -464,7 +464,7 @@ namespace RUINORERP.UI.SysConfig
         /// 手动更新全局配置
         /// </summary>
         /// <param name="newConfig">新的配置对象</param>
-        public void UpdateGlobalConfig(SystemGlobalconfig newConfig)
+        public void UpdateGlobalConfig(SystemGlobalConfig newConfig)
         {
             if (newConfig == null)
                 throw new ArgumentNullException(nameof(newConfig));
@@ -476,7 +476,7 @@ namespace RUINORERP.UI.SysConfig
             OnGlobalConfigChanged(newConfig);
             
             // 保存到文件
-            SaveConfigToFile(newConfig, Path.Combine(_configDirectory, $"{nameof(SystemGlobalconfig)}.json"));
+            SaveConfigToFile(newConfig, Path.Combine(_configDirectory, $"{nameof(SystemGlobalConfig)}.json"));
         }
         
         /// <summary>
@@ -537,7 +537,7 @@ namespace RUINORERP.UI.SysConfig
             try
             {
                 // 获取配置属性
-                var property = typeof(SystemGlobalconfig).GetProperty(key);
+                var property = typeof(SystemGlobalConfig).GetProperty(key);
                 if (property != null && GlobalConfig != null)
                 {
                     var value = property.GetValue(GlobalConfig);
@@ -563,7 +563,7 @@ namespace RUINORERP.UI.SysConfig
             try
             {
                 // 获取配置属性
-                var property = typeof(SystemGlobalconfig).GetProperty(propertyName);
+                var property = typeof(SystemGlobalConfig).GetProperty(propertyName);
                 if (property != null && GlobalConfig != null)
                 {
                     var value = property.GetValue(GlobalConfig);
@@ -616,7 +616,7 @@ namespace RUINORERP.UI.SysConfig
             }
             
             // 检查系统配置属性
-            var property = typeof(SystemGlobalconfig).GetProperty(key);
+            var property = typeof(SystemGlobalConfig).GetProperty(key);
             return property != null;
         }
         #endregion

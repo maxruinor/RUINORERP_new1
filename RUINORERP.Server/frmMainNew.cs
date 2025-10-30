@@ -99,7 +99,7 @@ namespace RUINORERP.Server
         /// <summary>
         /// 可配置性全局参数 不要设置为只读 readonly
         /// </summary>
-        public IOptionsMonitor<SystemGlobalconfig> Globalconfig;
+        public IOptionsMonitor<SystemGlobalConfig> Globalconfig;
 
         //保存要更新 分发的配置数据，（客户不在线时） 是不是 类似的情况。通知都是这样。比方管理员发布一个通知 在线吗上收到。没在线的 上线后收到
         public ConcurrentDictionary<long, BaseConfig> UpdateConfigDataList = new ConcurrentDictionary<long, BaseConfig>();
@@ -191,7 +191,7 @@ namespace RUINORERP.Server
 
         private readonly EntityCacheInitializationService _entityCacheInitializationService;
 
-        public frmMainNew(ILogger<frmMainNew> logger, IWorkflowHost workflowHost, IOptionsMonitor<SystemGlobalconfig> config)
+        public frmMainNew(ILogger<frmMainNew> logger, IWorkflowHost workflowHost, IOptionsMonitor<SystemGlobalConfig> config)
         {
             InitializeComponent();
             _main = this;

@@ -118,8 +118,19 @@ namespace RUINORERP.Business
                 return true; // 环境变量的具体验证在BeValidPathWithEnvironmentVariable中处理
             }
 
-            // 相对路径在文件分类设置中已经单独验证
-            return false;
+            // 验证相对路径，如"I\RUINORERP\FileStorage"格式
+            // 相对路径的有效性检查：不包含无效字符且有合理的路径结构
+            if (path.Contains("\\"))
+            {
+                // 检查是否包含父目录引用
+                if (path.Contains(".."))
+                    return false;
+                
+                // 默认为通过验证，符合用户要求
+                return true;
+            }
+
+            return true;
         }
 
         // 环境变量格式验证

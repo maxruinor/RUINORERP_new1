@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel;
 using System.Globalization;
 using System.Reflection;
@@ -261,10 +261,16 @@ namespace RUINORERP.PacketSpec.Commands
         Lock = 0x08,
 
         /// <summary>
+        /// 配置命令
+        /// </summary>
+        [Description("配置命令")]
+        Config = 0x09,
+
+        /// <summary>
         /// 系统管理命令
         /// </summary>
         [Description("系统管理命令")]
-        SystemManagement = 0x09,
+        SystemManagement = 0x0A,
 
         /// <summary>
         /// 复合型命令

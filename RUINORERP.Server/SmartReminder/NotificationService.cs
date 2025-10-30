@@ -4,7 +4,6 @@ using RUINORERP.Model.ReminderModel.ReminderRules;
 using RUINORERP.Repository.UnitOfWorks;
 using RUINORERP.Server.Network.Interfaces.Services;
 using RUINORERP.Server.ServerSession;
-using RUINORERP.PacketSpec.Commands.Message;
 using RUINORERP.PacketSpec.Models.Requests.Message;
 using System;
 using System.Collections.Generic;
@@ -14,6 +13,7 @@ using RUINORERP.Model;
 using RUINORERP.Server.Network.CommandHandlers;
 using RUINORERP.PacketSpec.Models.Responses.Message;
 using RUINORERP.Model.TransModel;
+using RUINORERP.PacketSpec.Commands;
 
 namespace RUINORERP.Server.SmartReminder
 {
@@ -50,7 +50,7 @@ namespace RUINORERP.Server.SmartReminder
                 if (recipients == null || recipients.Count == 0)
                     return;
 
-                _logger.LogInformation("准备发送智能提醒：{Message} 给 {Count} 个用户", message, recipients.Count);
+                _logger.Debug("准备发送智能提醒：{Message} 给 {Count} 个用户", message, recipients.Count);
 
                 // 构建消息数据
                 var messageData = new Dictionary<string, object>
@@ -84,7 +84,7 @@ namespace RUINORERP.Server.SmartReminder
                     await SendSystemNotificationAsync(messageData);
                 }
 
-                _logger.LogInformation("智能提醒发送完成");
+                _logger.Debug("智能提醒发送完成");
             }
             catch (Exception ex)
             {   
@@ -143,7 +143,7 @@ namespace RUINORERP.Server.SmartReminder
                 };
 
                 // 广播给所有用户
-                _logger.LogInformation("发送系统通知广播");
+                _logger.Debug("发送系统通知广播");
                 //_sessionService.BroadcastCommand(
                 //    "MessageCommandHandler",
                 //    System.Text.Json.JsonSerializer.Serialize(messageRequest)

@@ -7,7 +7,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using RUINORERP.PacketSpec.Commands;
-using RUINORERP.PacketSpec.Commands.Message;
 using RUINORERP.PacketSpec.Models.Responses;
 using RUINORERP.PacketSpec.Serialization;
 using RUINORERP.Server.Network.Models;

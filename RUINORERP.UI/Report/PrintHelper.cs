@@ -686,15 +686,7 @@ namespace RUINORERP.UI.Report
             {
                 cbd = EntityMappingHelper.GetBillData(typeof(M), null);
             }
-
-            string PKCol = BaseUIHelper.GetEntityPrimaryKey<M>();
-            long pkid = 0;
-            if (!string.IsNullOrEmpty(PKCol))
-            {
-                pkid = (long)ReflectionHelper.GetPropertyValue(EditEntitys[0], PKCol);
-            }
-
-            cbd = EntityMappingHelper.GetBillData<M>(EditEntitys[0] as M);
+;
             return GetPrintConfig(cbd);
         }
 
@@ -705,8 +697,6 @@ namespace RUINORERP.UI.Report
         /// <returns></returns>
         private static tb_PrintConfig GetPrintConfig(CommBillData cbd)
         {
-
-            
             tb_PrintConfig printConfig = MainForm.Instance.AppContext.Db.Queryable<tb_PrintConfig>()
                 .Includes(t => t.tb_PrintTemplates)
                 .Where(c => c.BizName == cbd.BizName && c.BizType == (int)cbd.BizType)

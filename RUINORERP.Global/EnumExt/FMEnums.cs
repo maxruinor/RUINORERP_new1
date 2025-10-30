@@ -11,9 +11,9 @@ namespace RUINORERP.Global.EnumExt
     // 定义对账类型枚举
     public enum StatementType
     {
-        余额对账,
-        收款对账,
-        付款对账
+        余额对账=1,
+        收款对账=2,
+        付款对账=3
     }
 
     /// <summary>

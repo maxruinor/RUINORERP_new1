@@ -11,7 +11,7 @@ namespace RUINORERP.Business
     /// SystemGlobalconfig配置验证器
     /// 用于验证系统全局配置的合法性
     /// </summary>
-    public class SystemGlobalconfigValidator : BaseValidatorGeneric<SystemGlobalconfig>
+    public class SystemGlobalconfigValidator : BaseValidatorGeneric<SystemGlobalConfig>
     {
         // 配置全局参数
         public readonly IOptionsMonitor<GlobalValidatorConfig> ValidatorConfig;

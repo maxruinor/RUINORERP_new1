@@ -1,6 +1,4 @@
 using Microsoft.Extensions.Logging;
-using RUINORERP.PacketSpec.Commands.Message;
-using RUINORERP.PacketSpec.Models.Responses.Message;
 using System;
 using System.Threading;
 using System.Threading.Tasks;

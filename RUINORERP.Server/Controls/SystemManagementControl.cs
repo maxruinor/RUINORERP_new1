@@ -14,7 +14,7 @@ namespace RUINORERP.Server.Controls
 {
     public partial class SystemManagementControl : UserControl
     {
-        private IOptionsMonitor<SystemGlobalconfig> _globalConfig;
+        private IOptionsMonitor<SystemGlobalConfig> _globalConfig;
 
         public SystemManagementControl()
         {

@@ -128,20 +128,24 @@ namespace RUINORERP.UI.Network
             public string CommandId { get; set; }
         }
 
+        private readonly IEnumerable<ICommandHandler> _commandHandlers;
+
         /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="socketClient">Socket客户端接口，提供底层网络通信能力</param>
-        /// <param name="commandCreationService">命令创建服务</param>
         /// <param name="commandDispatcher">命令调度器，用于分发命令到对应的处理类</param>
         /// <param name="logger">日志记录器</param>
+        /// <param name="tokenManager">令牌管理器</param>
+        /// <param name="commandHandlers">命令处理器集合</param>
         /// <param name="networkConfig">网络配置</param>
         /// <exception cref="ArgumentNullException">当参数为null时抛出</exception>
         public ClientCommunicationService(
             ISocketClient socketClient,
-        ICommandDispatcher commandDispatcher,
+            ICommandDispatcher commandDispatcher,
             ILogger<ClientCommunicationService> logger,
-            TokenManager _tokenManager,
+            TokenManager tokenManager,
+            IEnumerable<ICommandHandler> commandHandlers = null,
             NetworkConfig networkConfig = null)
         {
             _socketClient = socketClient ?? throw new ArgumentNullException(nameof(socketClient));
@@ -149,7 +153,8 @@ namespace RUINORERP.UI.Network
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _networkConfig = networkConfig ?? NetworkConfig.Default;
             _eventManager = new ClientEventManager();
-            tokenManager = _tokenManager;
+            this.tokenManager = tokenManager;
+            _commandHandlers = commandHandlers ?? Enumerable.Empty<ICommandHandler>();
             // 初始化请求响应管理相关组件
             _timeoutStatistics = new TimeoutStatisticsManager();
             _errorHandlingStrategyFactory = new ErrorHandlingStrategyFactory();
@@ -196,6 +201,7 @@ namespace RUINORERP.UI.Network
 
             // 订阅命令接收事件
             SubscribeCommandEvents();
+       
         }
 
         /// <summary>
@@ -1269,7 +1275,7 @@ namespace RUINORERP.UI.Network
         private async Task ProcessSystemCommandAsync(PacketModel packet)
         {
             // 处理系统命令，如心跳响应等
-            if (packet.CommandId.FullCode == PacketSpec.Commands.System.SystemCommands.HeartbeatResponse.FullCode)
+            if (packet.CommandId.FullCode == SystemCommands.HeartbeatResponse.FullCode)
             {
                 // 处理心跳响应，重置失败计数
                 lock (_syncLock)
@@ -1513,6 +1519,7 @@ namespace RUINORERP.UI.Network
 
 
 
+
         /// <summary>
         /// 订阅命令接收事件
         /// </summary>
@@ -1526,7 +1533,7 @@ namespace RUINORERP.UI.Network
         /// 当接收到服务器命令时触发
         /// 这个处理命令的过程，类型服务器处理。后面处理逻辑也是一样。只是在客户端而已。对于复杂的情况有用。
         /// </summary>
-        /// <param name="commandId">命令ID</param>
+        /// <param name="packetModel">数据包模型</param>
         /// <param name="data">命令数据</param>
         private async void OnCommandReceived(PacketModel packetModel, object data)
         {
@@ -1535,7 +1542,7 @@ namespace RUINORERP.UI.Network
                 _logger.Debug("接收到服务器命令: {CommandId}", packetModel.CommandId);
 
                 // 使用命令调度器处理命令
-                await ProcessCommandAsync(packetModel);
+                await _commandDispatcher.DispatchAsync(packetModel);
             }
             catch (Exception ex)
             {

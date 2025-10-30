@@ -52,6 +52,7 @@ using RUINORERP.Business.StatusManagerService;
 using FastReport;
 using FastReport.Data;
 using RUINORERP.Extensions.Middlewares;
+using StatementType = RUINORERP.Global.EnumExt.StatementType;
 
 namespace RUINORERP.UI.FM
 {
@@ -207,12 +208,19 @@ namespace RUINORERP.UI.FM
                     //清空
                     cmbPayeeInfoID.DataBindings.Clear();
                 }
+
+
             }
             else
             {
                 entity.ActionStatus = ActionStatus.新增;
                 entity.StatementStatus = (int)StatementStatus.草稿;
-                entity.ReceivePaymentType = (int)PaymentType;
+                //不能覆盖生成时给定的值
+                if (entity.ReceivePaymentType == 0)
+                {
+                    entity.ReceivePaymentType = (int)PaymentType;
+                }
+
                 entity.ActionStatus = ActionStatus.新增;
 
 
@@ -231,6 +239,16 @@ namespace RUINORERP.UI.FM
                 cmbPayeeInfoID.Items.Clear();
 
             }
+
+            if (entity.ReceivePaymentType == (int)ReceivePaymentType.付款)
+            {
+                lblBillText.Text = "付款对账单";
+            }
+            else
+            {
+                lblBillText.Text = "收款对账单";
+            }
+
             DataBindingHelper.BindData4Cmb<tb_FM_Account>(entity, k => k.Account_id, v => v.Account_name, cmbAccount_id);
             DataBindingHelper.BindData4TextBox<tb_FM_Statement>(entity, t => t.ApprovalOpinions, txtApprovalOpinions, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
@@ -635,6 +653,9 @@ namespace RUINORERP.UI.FM
             listCols.SetCol_NeverVisible<tb_FM_StatementDetail>(c => c.RemainingForeignAmount);
             listCols.SetCol_NeverVisible<tb_FM_StatementDetail>(c => c.WrittenOffForeignAmount);
 
+            listCols.SetCol_ReadOnly<tb_FM_StatementDetail>(c => c.WrittenOffLocalAmount);
+            listCols.SetCol_ReadOnly<tb_FM_StatementDetail>(c => c.RemainingLocalAmount);
+
             UIHelper.ControlChildColumnsInvisible(CurMenuInfo, listCols);
             UIHelper.ControlChildColumnsInvisible(CurMenuInfo, listCols);
             if (!AppContext.SysConfig.UseBarCode)
@@ -703,61 +724,24 @@ namespace RUINORERP.UI.FM
             }
 
         }
-
+ 
 
         void TotalSum()
-        {
+            {
+
             try
             {
-                //计算总金额  这些逻辑是不是放到业务层？后面要优化
+                // 严格按照使用说明书的业务规则计算对账单汇总数据
                 List<tb_FM_StatementDetail> details = sgd.BindingSourceLines.DataSource as List<tb_FM_StatementDetail>;
                 details = details.Where(c => c.IncludedLocalAmount != 0 || c.IncludedForeignAmount != 0).ToList();
-                if (details.Count == 0)
-                {
-                    MainForm.Instance.uclog.AddLog("对账金额不能为0");
-                    return;
-                }
+                //if (details.Count == 0)
+                //{
+                //    MainForm.Instance.uclog.AddLog("对账金额不能为0");
+                //    return;
+                //}
+                var paymentController = MainForm.Instance.AppContext.GetRequiredService<tb_FM_StatementController<tb_FM_Statement>>();
+                paymentController.CalculateTotalAmount(EditEntity, details, (ReceivePaymentType)EditEntity.ReceivePaymentType, (StatementType)EditEntity.StatementType);
                 
-                // 初始化所有金额字段
-                EditEntity.TotalPayableLocalAmount = 0;
-                EditEntity.TotalReceivableLocalAmount = 0;
-                EditEntity.TotalPayableForeignAmount = 0;
-                EditEntity.TotalReceivableForeignAmount = 0;
-                
-                // 根据业务类型和金额正负值分别计算应收和应付金额
-                foreach (var detail in details)
-                {
-                    if (PaymentType == ReceivePaymentType.收款)
-                    {
-                        // 收款对账：正数计入应收，负数也计入应收（表示冲减）
-                        EditEntity.TotalReceivableLocalAmount += detail.IncludedLocalAmount;
-                        EditEntity.TotalReceivableForeignAmount += detail.IncludedForeignAmount;
-                    }
-                    else if (PaymentType == ReceivePaymentType.付款)
-                    {
-                        // 付款对账：正数计入应付，负数也计入应付（表示冲减）
-                        EditEntity.TotalPayableLocalAmount += detail.IncludedLocalAmount;
-                        EditEntity.TotalPayableForeignAmount += detail.IncludedForeignAmount;
-                    }
-                }
-                
-                // 计算净额（代数和）
-                decimal netLocalAmount = EditEntity.TotalPayableLocalAmount + EditEntity.TotalReceivableLocalAmount;
-                decimal netForeignAmount = EditEntity.TotalPayableForeignAmount + EditEntity.TotalReceivableForeignAmount;
-                
-                // 记录冲抵信息
-                bool hasPositiveItems = details.Any(d => d.IncludedLocalAmount > 0);
-                bool hasNegativeItems = details.Any(d => d.IncludedLocalAmount < 0);
-                if (hasPositiveItems && hasNegativeItems)
-                {
-                    MainForm.Instance.uclog.AddLog("当前对账单包含正负金额冲抵项，净额为：" + netLocalAmount.ToString());
-                }
-                
-                // 更新期末余额：期初余额 + 本期发生额净额 - 已收付款净额
-                EditEntity.ClosingBalanceLocalAmount = EditEntity.OpeningBalanceLocalAmount + netLocalAmount - 
-                                                      (EditEntity.TotalPaidLocalAmount - EditEntity.TotalReceivedLocalAmount);
-                EditEntity.ClosingBalanceForeignAmount = EditEntity.OpeningBalanceForeignAmount + netForeignAmount - 
-                                                        (EditEntity.TotalPaidForeignAmount - EditEntity.TotalReceivedForeignAmount);
             }
             catch (Exception ex)
             {

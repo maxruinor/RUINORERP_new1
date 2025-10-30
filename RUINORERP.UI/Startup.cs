@@ -220,17 +220,17 @@ namespace RUINORERP.UI
             // 读取配置
             var builder = new ConfigurationBuilder()
                 .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), "SysConfigFiles"))
-                .AddJsonFile(nameof(SystemGlobalconfig) + ".json", optional: false, reloadOnChange: true)
+                .AddJsonFile(nameof(SystemGlobalConfig) + ".json", optional: false, reloadOnChange: true)
                 .AddJsonFile(nameof(GlobalValidatorConfig) + ".json", optional: false, reloadOnChange: true)
                 .Build();
 
-            services.Configure<SystemGlobalconfig>(builder.GetSection(nameof(SystemGlobalconfig)));
+            services.Configure<SystemGlobalConfig>(builder.GetSection(nameof(SystemGlobalConfig)));
             services.Configure<GlobalValidatorConfig>(builder.GetSection(nameof(GlobalValidatorConfig)));
 
             // 注册ConfigManager为单例，并确保它能正确初始化
             services.AddSingleton<ConfigManager>(provider =>
             {
-                var configMonitor = provider.GetRequiredService<IOptionsMonitor<SystemGlobalconfig>>();
+                var configMonitor = provider.GetRequiredService<IOptionsMonitor<SystemGlobalConfig>>();
                 var validatorMonitor = provider.GetRequiredService<IOptionsMonitor<GlobalValidatorConfig>>();
                 var configManager = new ConfigManager();
                 configManager.Initialize(configMonitor, validatorMonitor);
@@ -250,11 +250,11 @@ namespace RUINORERP.UI
             }
 
             // 创建系统全局配置
-            string systemGlobalConfigPath = Path.Combine(configDirectory, nameof(SystemGlobalconfig) + ".json");
+            string systemGlobalConfigPath = Path.Combine(configDirectory, nameof(SystemGlobalConfig) + ".json");
             if (!File.Exists(systemGlobalConfigPath))
             {
-                var systemGlobalConfig = new SystemGlobalconfig();
-                string systemGlobalConfigJson = JsonConvert.SerializeObject(new { SystemGlobalconfig = systemGlobalConfig }, Formatting.Indented);
+                var systemGlobalConfig = new SystemGlobalConfig();
+                string systemGlobalConfigJson = JsonConvert.SerializeObject(new { SystemGlobalConfig = systemGlobalConfig }, Formatting.Indented);
                 File.WriteAllText(systemGlobalConfigPath, systemGlobalConfigJson);
             }
 
@@ -1000,12 +1000,12 @@ namespace RUINORERP.UI
                 Directory.CreateDirectory(configDirectory);
             }
 
-            // 检查并生成 SystemGlobalconfig 配置文件
-            string systemGlobalConfigPath = Path.Combine(configDirectory, nameof(SystemGlobalconfig) + ".json");
+            // 检查并生成 SystemGlobalConfig 配置文件
+            string systemGlobalConfigPath = Path.Combine(configDirectory, nameof(SystemGlobalConfig) + ".json");
             if (!File.Exists(systemGlobalConfigPath))
             {
-                var systemGlobalConfig = new SystemGlobalconfig();
-                string systemGlobalConfigJson = JsonConvert.SerializeObject(new { SystemGlobalconfig = systemGlobalConfig }, Formatting.Indented);
+                var systemGlobalConfig = new SystemGlobalConfig();
+                string systemGlobalConfigJson = JsonConvert.SerializeObject(new { SystemGlobalConfig = systemGlobalConfig }, Formatting.Indented);
                 File.WriteAllText(systemGlobalConfigPath, systemGlobalConfigJson);
             }
 
@@ -1022,11 +1022,11 @@ namespace RUINORERP.UI
             // 读取自定义的 JSON 配置文件
             var builder = new ConfigurationBuilder()
                 .SetBasePath(System.IO.Path.Combine(Directory.GetCurrentDirectory(), "SysConfigFiles"))
-                .AddJsonFile(nameof(SystemGlobalconfig) + ".json", optional: false, reloadOnChange: true)
+                .AddJsonFile(nameof(SystemGlobalConfig) + ".json", optional: false, reloadOnChange: true)
                 .AddJsonFile(nameof(GlobalValidatorConfig) + ".json", optional: false, reloadOnChange: true)
                 .Build();
 
-            services.Configure<SystemGlobalconfig>(builder.GetSection(nameof(SystemGlobalconfig)));
+            services.Configure<SystemGlobalConfig>(builder.GetSection(nameof(SystemGlobalConfig)));
             services.Configure<GlobalValidatorConfig>(builder.GetSection(nameof(GlobalValidatorConfig)));
 
             services.AddSingleton(typeof(ConfigManager));

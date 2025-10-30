@@ -10,6 +10,8 @@ namespace RUINORERP.PacketSpec.Models.Responses
     /// 响应基类 - 提供所有响应的公共属性和方法
     /// Message: 用于传达操作结果的通用信息，无论成功还是失败都应该有值
     /// ErrorMessage: 专门用于存储详细的错误信息，只有在失败时才有意义，成功时应为null
+    /// 响应方不是固定指服务器方，而是指回复。
+    /// 广播发送时应该传入请求数据，而不是响应数据。"响应"是指回复，而不是特指服务器指令。
     /// </summary>
     public class ResponseBase : IResponse
     {

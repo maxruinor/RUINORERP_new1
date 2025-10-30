@@ -3,9 +3,7 @@ using System.Text;
 using Newtonsoft.Json;
 using RUINORERP.PacketSpec.Enums.Core;
 using RUINORERP.PacketSpec.Commands;
-using static RUINORERP.PacketSpec.Commands.FileTransfer.FileCommands;
 using RUINORERP.PacketSpec.Commands.Authentication;
-using RUINORERP.PacketSpec.Commands.FileTransfer;
 using RUINORERP.PacketSpec.Models.Requests;
 
 namespace RUINORERP.PacketSpec.Models.Core

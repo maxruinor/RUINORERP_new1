@@ -121,18 +121,43 @@ namespace RUINORERP.UI.Common
 
 
         // 初始化方法
-        public void Initialize(DataGridView dataGridView)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="dataGridView"></param>
+        /// <param name="ColDisplayTypes">外部指定类型</param>
+        public void Initialize(DataGridView dataGridView, params Type[] ColDisplayTypes)
         {
             // 初始化固定字典映射
             displayHelper.InitializeFixedDictionaryMappings(_type);
             displayHelper.InitializeReferenceKeyMapping(_type);
+            if (ColDisplayTypes != null)
+            {
+                //视图统计时指定的表，根据这个表去找外键
+                foreach (var ColDisplayType in ColDisplayTypes)
+                {
+                    displayHelper.InitializeReferenceKeyMapping(ColDisplayType);
+                }
+              
+            }
             dataGridView.CellFormatting += DataGridView_CellFormatting;
         }
 
+        public void Initialize( Type[] ColDisplayTypes)
+        {
+            if (ColDisplayTypes != null)
+            {
+                //视图统计时指定的表，根据这个表去找外键
+                foreach (var ColDisplayType in ColDisplayTypes)
+                {
+                    displayHelper.InitializeReferenceKeyMapping(ColDisplayType);
+                }
 
+            }
+        }
 
-        // 添加外键映射
-        public void AddReferenceKeyMapping(string columnName, ReferenceKeyMapping mapping)
+            // 添加外键映射
+            public void AddReferenceKeyMapping(string columnName, ReferenceKeyMapping mapping)
         {
             if (!ReferenceKeyMappings.Contains(mapping))
             {

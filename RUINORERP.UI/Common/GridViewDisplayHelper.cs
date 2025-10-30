@@ -92,6 +92,10 @@ namespace RUINORERP.UI.Common
         /// </summary>
         public ConcurrentDictionary<string, List<KeyValuePair<string, string>>> ReferenceTableList { get; set; } = new ConcurrentDictionary<string, List<KeyValuePair<string, string>>>();
 
+        /// <summary>
+        /// 指定枚举类型
+        /// </summary>
+        /// <param name="_type"></param>
         public void InitializeFixedDictionaryMappings(Type _type)
         {
             // 动态检查类型是否包含指定的属性

@@ -53,18 +53,15 @@ namespace RUINORERP.UI.PSI.SAL
             base._UCMasterQuery.ColDisplayTypes.Add(typeof(tb_Unit));
             base._UCMasterQuery.ColDisplayTypes.Add(typeof(tb_ProdCategories));
 
+            base._UCMasterQuery.DisplayTextResolver.Initialize(base._UCMasterQuery.ColDisplayTypes.ToArray());
+
+
             base._UCOutlookGridGroupAnalysis.ColDisplayTypes = base._UCMasterQuery.ColDisplayTypes;
             base._UCOutlookGridGroupAnalysis.GridRelated.SetRelatedInfo<View_SaleOutItems, tb_SaleOrder>(c => c.SaleOrderNo, r => r.SOrderNo);
             base._UCOutlookGridGroupAnalysis.GridRelated.SetRelatedInfo<View_SaleOutItems, tb_SaleOut>(c => c.SaleOutNo, r => r.SaleOutNo);
         }
 
-        //public override void BuildColNameDataDictionary()
-        //{
-        //    System.Linq.Expressions.Expression<Func<tb_SaleOut, int?>> exprPayStatus;
-        //    exprPayStatus = (p) => p.PayStatus;
-        //    base.MasterColNameDataDictionary.TryAdd(exprPayStatus.GetMemberInfo().Name, Common.CommonHelper.Instance.GetKeyValuePairs(typeof(PayStatus)));
-        //    base.BuildColNameDataDictionary();
-        //}
+
 
 
         public override void BuildLimitQueryConditions()

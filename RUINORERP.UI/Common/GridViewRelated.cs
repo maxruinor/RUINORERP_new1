@@ -83,58 +83,11 @@ namespace RUINORERP.UI.Common
             ComplexTargtetField.Add(new KeyValuePair<string, string>(_ExpBizType.GetMemberInfo().Name, _ExpBillNo.GetMemberInfo().Name));
         }
 
-        //public void GuideToForm<T>(tb_MenuInfo RelatedMenuInfo, string GridViewColumnFieldName, string RelatedTargetColName, object RelatedTargetEntity)
-        //{
-        //    // 应该是只是双击单号才生效
-        //    if (GridViewColumnFieldName == RelatedTargetColName)
-        //    {
-        //        //要把单据信息显示的菜单传过去
-        //        if (RelatedMenuInfo != null)
-        //        {
-
-
-        //            menuPowerHelper.ExecuteEvents(RelatedMenuInfo, RelatedTargetEntity);
-        //        }
-        //        else
-        //        {
-        //            MessageBox.Show("请确认你有足够权限查询对应单据，或请联系管理员。");
-        //        }
-        //    }
-        //}
+       
 
 
 
-        //public void GuideToForm(tb_MenuInfo RelatedMenuInfo, string GridViewColumnFieldName,  object RelatedTargetEntity)
-        //{
-        //    // 应该是只是双击单号才生效
-        //    if (GridViewColumnFieldName == RelatedTargetColName)
-        //    {
-        //        //要把单据信息显示的菜单传过去
-        //        if (RelatedMenuInfo != null)
-        //        {
-        //            menuPowerHelper.ExecuteEvents(RelatedMenuInfo, RelatedTargetEntity);
-        //        }
-        //        else
-        //        {
-        //            MessageBox.Show("请确认你有足够权限查询对应单据，或请联系管理员。");
-        //        }
-        //    }
-        //}
 
-
-        ///// <summary>
-        ///// 设置关联单据的列
-        ///// 关联单据的列，key:引用单号列名  value:前面是表名+|+原始单号列名
-        ///// </summary>
-        ///// <typeparam name="T"></typeparam>
-        ///// <typeparam name="M"></typeparam>
-        ///// <param name="table"></param>
-        ///// <param name="expBillNoColName"></param>
-        ///// <returns></returns>
-        //public void SetRelatedBillCols<T>(Expression<Func<T, string>> expSourceBillNoColName, Expression<Func<M, string>> expRefBillNoColName)
-        //{
-        //    RelatedBillCols.TryAdd(expRefBillNoColName.GetMemberInfo().Name, typeof(T).Name + "|" + expSourceBillNoColName.GetMemberInfo().Name);
-        //}
 
         /// <summary>
         ///  设置关联单据的列,T1:来源表，显示的实体，目标是指向，要打开的窗体用的实体，以及关联的列的字段名，可能是ID，也可能是单号
@@ -157,27 +110,6 @@ namespace RUINORERP.UI.Common
             }
         }
 
-
-        ///// <summary>
-        /////  设置关联单据的列,T1:来源表，显示的实体，目标是指向，要打开的窗体用的实体，
-        /////  分析out表格中 实际只要知道目标表名即可，和 来源实体中的对应列名，因为打开 窗体时判断了。写死的,后面优化吧TODO:
-        ///// 
-        ///// </summary>
-        ///// <typeparam name="T1">来源 表格目前显示的实体</typeparam>
-        ///// <param name="_ExpSourceUniqueField">要打开的窗体用的实体名</param>
-        //public void SetRelatedInfo<T1>(Expression<Func<T1, object>> _ExpSourceUniqueField, string TargetTableName)
-        //{
-        //    RelatedInfo relatedInfo = new RelatedInfo();
-        //    relatedInfo.SourceTableName = typeof(T1).Name;
-        //    relatedInfo.TargetTableName = new KeyNamePair(TargetTableName, string.Empty);
-
-        //    relatedInfo.SourceUniqueField = _ExpSourceUniqueField.GetMemberInfo().Name;
-
-        //    if (!RelatedInfoList.Any(c => c.TargetTableName.Key == TargetTableName))
-        //    {
-        //        RelatedInfoList.Add(relatedInfo);
-        //    }
-        //}
 
         /// <summary>
         ///  设置关联单据的列,T1:来源表，显示的实体，目标是指向，要打开的窗体用的实体，
@@ -404,7 +336,7 @@ namespace RUINORERP.UI.Common
         /// <param name="GridViewColumnFieldName"></param>
         /// <param name="CurrentRow"></param>
         /// <returns></returns>
-        public void GuideToForm(string GridViewColumnFieldName, DataGridViewRow CurrentRow)
+        public async void GuideToForm(string GridViewColumnFieldName, DataGridViewRow CurrentRow)
         {
 
             tb_MenuInfo RelatedMenuInfo = null;
@@ -475,7 +407,7 @@ namespace RUINORERP.UI.Common
                     //双击打开的目标是自己时，就是传入查询当前的实体，其它的，就要下面去查询了。通过：GuideToForm
                     if (RelatedMenuInfo != null)
                     {
-                        menuPowerHelper.ExecuteEvents(RelatedMenuInfo, entity);
+                       await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, entity);
                     }
                     else
                     {
@@ -491,7 +423,7 @@ namespace RUINORERP.UI.Common
 
         }
 
-        public void OpenTargetEntity(tb_MenuInfo RelatedMenuInfo, string tableName, object billno)
+        public async void OpenTargetEntity(tb_MenuInfo RelatedMenuInfo, string tableName, object billno)
         {
 
             // 1. 把表名变成实体类型
@@ -500,7 +432,7 @@ namespace RUINORERP.UI.Common
             var entity = _loader.LoadEntityInternal(entityType, billno);
             if (entity != null)
             {
-                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, entity);
+                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, entity);
                 return;
             }
 
@@ -520,7 +452,7 @@ namespace RUINORERP.UI.Common
                     .WhereIF(billno.GetType() == typeof(long), c => c.SaleOutRe_ID == billno.ToLong())
                     .WhereIF(billno.GetType() == typeof(string), c => c.ReturnNo == billno.ToString())
                     .Single();
-                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
+                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
             }
 
             if (tableName == typeof(tb_FM_ExpenseClaim).Name)
@@ -530,7 +462,7 @@ namespace RUINORERP.UI.Common
                     .WhereIF(billno.GetType() == typeof(long), c => c.ClaimMainID == billno.ToLong())
                     .WhereIF(billno.GetType() == typeof(string), c => c.ClaimNo == billno.ToString())
                     .Single();
-                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
+                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
             }
             if (tableName == typeof(tb_FM_OtherExpense).Name)
             {
@@ -549,7 +481,7 @@ namespace RUINORERP.UI.Common
                     .WhereIF(billno.GetType() == typeof(long), c => c.PPID == billno.ToLong())
                     .WhereIF(billno.GetType() == typeof(string), c => c.PPNo == billno.ToString())
                     .Single();
-                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
+                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
             }
 
             if (tableName == typeof(tb_ProductionDemand).Name)
@@ -564,7 +496,7 @@ namespace RUINORERP.UI.Common
                     .WhereIF(billno.GetType() == typeof(long), c => c.PDID == billno.ToLong())
                     .WhereIF(billno.GetType() == typeof(string), c => c.PDNo == billno.ToString())
                     .Single();
-                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
+                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
             }
 
             if (tableName == typeof(tb_BOM_S).Name)
@@ -576,7 +508,7 @@ namespace RUINORERP.UI.Common
                     .WhereIF(billno.GetType() == typeof(long), c => c.BOM_ID == billno.ToLong())
                     .WhereIF(billno.GetType() == typeof(string), c => c.BOM_No == billno.ToString())
                     .Single();
-                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
+                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
             }
 
             if (tableName == typeof(tb_MaterialRequisition).Name)
@@ -586,7 +518,7 @@ namespace RUINORERP.UI.Common
                     .WhereIF(billno.GetType() == typeof(long), c => c.MR_ID == billno.ToLong())
                     .WhereIF(billno.GetType() == typeof(string), c => c.MaterialRequisitionNO == billno.ToString())
                     .Single();
-                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
+                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
             }
             if (tableName == typeof(tb_MaterialReturn).Name)
             {
@@ -595,7 +527,7 @@ namespace RUINORERP.UI.Common
                     .WhereIF(billno.GetType() == typeof(long), c => c.MRE_ID == billno.ToLong())
                     .WhereIF(billno.GetType() == typeof(string), c => c.BillNo == billno.ToString())
                     .Single();
-                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
+                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
             }
 
             if (tableName == typeof(tb_FinishedGoodsInv).Name)
@@ -605,7 +537,7 @@ namespace RUINORERP.UI.Common
                     .WhereIF(billno.GetType() == typeof(long), c => c.FG_ID == billno.ToLong())
                     .WhereIF(billno.GetType() == typeof(string), c => c.DeliveryBillNo == billno.ToString())
                     .Single();
-                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
+                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
             }
 
 
@@ -616,7 +548,7 @@ namespace RUINORERP.UI.Common
                     .WhereIF(billno.GetType() == typeof(long), c => c.MOID == billno.ToLong())
                     .WhereIF(billno.GetType() == typeof(string), c => c.MONO == billno.ToString())
                     .Single();
-                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
+                await  menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
             }
 
             if (tableName == typeof(tb_SaleOrder).Name)
@@ -626,7 +558,7 @@ namespace RUINORERP.UI.Common
                     .WhereIF(billno.GetType() == typeof(long), c => c.SOrder_ID == billno.ToLong())
                     .WhereIF(billno.GetType() == typeof(string), c => c.SOrderNo == billno.ToString())
                     .Single();
-                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
+                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
             }
 
             if (tableName == typeof(tb_SaleOut).Name)

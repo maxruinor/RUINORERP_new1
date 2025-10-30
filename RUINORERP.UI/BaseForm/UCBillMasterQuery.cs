@@ -110,8 +110,13 @@ namespace RUINORERP.UI.BaseForm
             //dataGridView1.DataSource = ListDataSoure;
             //dataGridView1.FieldNameList = this.FieldNameList;
 
-            newSumDataGridViewMaster.CellFormatting -= DataGridView1_CellFormatting;
-            DisplayTextResolver.Initialize(newSumDataGridViewMaster);
+            //视图要指定类型才能找到外键 暂时还是要用格式化来显示名称项目
+            if (entityType.Name.StartsWith("tb_"))
+            {
+                newSumDataGridViewMaster.CellFormatting -= DataGridView1_CellFormatting;
+                DisplayTextResolver.Initialize(newSumDataGridViewMaster, ColDisplayTypes.ToArray());
+            }
+
         }
 
         private void BindingSourceMaster_CurrentChanged(object sender, EventArgs e)
@@ -179,12 +184,12 @@ namespace RUINORERP.UI.BaseForm
             {
                 return;
             }
-          
+
             if (newSumDataGridViewMaster.CurrentRow != null && newSumDataGridViewMaster.CurrentCell != null)
             {
                 if (newSumDataGridViewMaster.CurrentRow.DataBoundItem != null)
                 {
-                   GridRelated.GuideToForm(newSumDataGridViewMaster.Columns[e.ColumnIndex].Name, newSumDataGridViewMaster.CurrentRow);
+                    GridRelated.GuideToForm(newSumDataGridViewMaster.Columns[e.ColumnIndex].Name, newSumDataGridViewMaster.CurrentRow);
                 }
 
             }

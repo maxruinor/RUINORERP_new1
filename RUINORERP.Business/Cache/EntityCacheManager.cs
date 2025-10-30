@@ -30,7 +30,7 @@ namespace RUINORERP.Business.Cache
         private readonly ICacheDataProvider _cacheDataProvider;
         private readonly ICacheSyncMetadata _cacheSyncMetadata;
         #endregion
-        
+
         #region 缓存同步元数据接口实现
         /// <summary>
         /// 获取指定表的缓存同步元数据
@@ -117,17 +117,17 @@ namespace RUINORERP.Business.Cache
             {
                 var listCacheKey = GenerateCacheKey(CacheKeyType.List, tableName);
                 var cachedListObj = _cacheManager.Get(listCacheKey);
-                
+
                 if (cachedListObj == null)
                     return;
-                    
+
                 var schemaInfo = _tableSchemaManager.GetSchemaInfo(tableName);
                 if (schemaInfo == null)
                     return;
 
                 var entityId = entity.GetCachePropertyValue(schemaInfo.PrimaryKeyField);
                 bool updated = false;
-                
+
                 // 根据缓存对象类型选择适当的更新方法
                 if (cachedListObj is JArray jArray)
                 {
@@ -141,7 +141,7 @@ namespace RUINORERP.Business.Cache
                 {
                     updated = UpdateGenericListEntity(cachedListObj, schemaInfo.PrimaryKeyField, entityId, entity, tableName);
                 }
-                
+
                 // 如果已更新，则将列表放回缓存
                 if (updated)
                 {
@@ -154,7 +154,7 @@ namespace RUINORERP.Business.Cache
                 _logger?.LogError(ex, $"更新表 {tableName} 的列表缓存中的实体时发生错误");
             }
         }
-        
+
         /// <summary>
         /// 比较两个实体ID是否匹配
         /// </summary>
@@ -162,7 +162,7 @@ namespace RUINORERP.Business.Cache
         {
             return id1?.ToString() == id2?.ToString();
         }
-        
+
         /// <summary>
         /// 更新JArray中的实体
         /// </summary>
@@ -179,7 +179,7 @@ namespace RUINORERP.Business.Cache
             }
             return false;
         }
-        
+
         /// <summary>
         /// 更新ExpandoObject列表中的实体
         /// </summary>
@@ -188,25 +188,25 @@ namespace RUINORERP.Business.Cache
             for (int i = 0; i < expandoList.Count; i++)
             {
                 var expando = expandoList[i] as IDictionary<string, object>;
-                if (expando != null && expando.ContainsKey(primaryKeyField) && 
+                if (expando != null && expando.ContainsKey(primaryKeyField) &&
                     AreEntityIdsMatching(expando[primaryKeyField], entityId))
                 {
                     // 创建新的ExpandoObject并复制属性
                     var newExpando = new ExpandoObject();
                     var expandoDict = (IDictionary<string, object>)newExpando;
-                    
+
                     foreach (var prop in entity.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance))
                     {
                         expandoDict[prop.Name] = prop.GetValue(entity);
                     }
-                    
+
                     expandoList[i] = newExpando;
                     return true;
                 }
             }
             return false;
         }
-        
+
         /// <summary>
         /// 更新强类型List<T>中的实体
         /// </summary>
@@ -214,10 +214,10 @@ namespace RUINORERP.Business.Cache
         {
             var listType = cachedListObj.GetType();
             var itemType = listType.GenericTypeArguments[0];
-            
+
             // 创建一个强类型的列表引用
             var typedList = Convert.ChangeType(cachedListObj, typeof(List<>).MakeGenericType(itemType));
-            
+
             if (typedList is IList list)
             {
                 for (int i = 0; i < list.Count; i++)
@@ -379,7 +379,7 @@ namespace RUINORERP.Business.Cache
                         try
                         {
                             List<T> list = null;
-                            
+
                             // 处理当T是Object类型的情况
                             if (typeof(T) == typeof(object))
                             {
@@ -388,14 +388,14 @@ namespace RUINORERP.Business.Cache
                                 if (entityType != null)
                                 {
                                     _logger?.LogDebug($"检测到T是Object类型，从表名 {tableName} 获取实体类型: {entityType.Name}");
-                                    
+
                                     // 使用反射创建并调用正确类型的GetEntityListFromSource方法
                                     var getListMethod = typeof(ICacheDataProvider).GetMethod("GetEntityListFromSource");
                                     if (getListMethod != null)
                                     {
                                         var genericMethod = getListMethod.MakeGenericMethod(entityType);
                                         var stronglyTypedList = genericMethod.Invoke(_cacheDataProvider, new object[] { tableName }) as IEnumerable;
-                                        
+
                                         if (stronglyTypedList != null)
                                         {
                                             // 转换为List<object>返回
@@ -409,16 +409,16 @@ namespace RUINORERP.Business.Cache
                                 // 正常情况：直接使用T类型查询
                                 list = _cacheDataProvider.GetEntityListFromSource<T>(tableName);
                             }
-                            
+
                             // 即使列表为空也要缓存，避免空表频繁查询数据库
                             if (list != null)
                             {
                                 // 将获取到的数据（包括空列表）更新到缓存
                                 PutToCache(cacheKey, list, "List", tableName);
-                                
+
                                 // 直接更新缓存同步元数据
                                 UpdateCacheSyncMetadataAfterEntityChange(tableName);
-                                
+
                                 return list;
                             }
                         }
@@ -498,7 +498,7 @@ namespace RUINORERP.Business.Cache
             try
             {
                 var tableName = typeof(T).Name;
-                
+
                 // 直接从列表缓存中查找实体
                 // GetEntityList方法内部已经处理了缓存过期的情况
                 var list = GetEntityList<T>(tableName);
@@ -530,14 +530,14 @@ namespace RUINORERP.Business.Cache
                                 if (entityType != null)
                                 {
                                     _logger?.LogDebug($"检测到T是Object类型，从表名 {tableName} 获取实体类型: {entityType.Name}");
-                                    
+
                                     // 使用反射创建并调用正确类型的GetEntityFromSource方法
                                     var getEntityMethod = typeof(ICacheDataProvider).GetMethod("GetEntityFromSource");
                                     if (getEntityMethod != null)
                                     {
                                         var genericMethod = getEntityMethod.MakeGenericMethod(entityType);
                                         entityFound = genericMethod.Invoke(_cacheDataProvider, new object[] { tableName, idValue }) as T;
-                                        
+
                                         if (entityFound != null)
                                         {
                                             // 只更新列表缓存
@@ -637,18 +637,23 @@ namespace RUINORERP.Business.Cache
                 // 如果需要缓存访问统计，可以使用特定的键格式
                 var accessStatisticsKey = $"Access_Display_{tableName}_{idValue}";
 
-                // 直接从实体中获取显示值
-                var entity = GetEntity(tableName, idValue);
-                if (entity != null)
-                {
-                    var schemaInfo = _tableSchemaManager.GetSchemaInfo(tableName);
-                    if (schemaInfo != null)
+
+                var schemaInfo = _tableSchemaManager.GetSchemaInfo(tableName);
+                if (schemaInfo != null)
+                {   // 直接从实体中获取显示值
+                    var entity = GetEntity(tableName, idValue);
+                    if (entity != null)
                     {
                         var displayValue = entity.GetCachePropertyValue(schemaInfo.DisplayField);
                         // 更新缓存访问统计
                         UpdateCacheAccessStatistics(accessStatisticsKey, true, "Display", tableName, displayValue);
                         return displayValue;
                     }
+                }
+                else
+                {
+                    //不在缓存中的表。直接返回原值
+                    return idValue;
                 }
 
                 // 如果实体缓存也没有，则尝试从数据源直接获取显示值（如果提供了数据提供者）
@@ -720,9 +725,9 @@ namespace RUINORERP.Business.Cache
 
             // 直接更新列表缓存中的该实体
             UpdateEntityInList(tableName, entity);
-            
+
             _logger?.LogDebug($"已更新表 {tableName} 列表缓存中的单个实体");
-            
+
             // 更新缓存同步元数据
             UpdateCacheSyncMetadataAfterEntityChange(tableName);
         }
@@ -750,13 +755,13 @@ namespace RUINORERP.Business.Cache
                 // 获取实体类型信息
                 var entityType = _tableSchemaManager.GetEntityType(tableName);
                 var schemaInfo = _tableSchemaManager.GetSchemaInfo(tableName);
-                
+
                 // 判断是否为单个实体对象（非字符串、非集合类型，且类型匹配或可转换）
-                if (list != null && 
-                    !(list is string) && 
+                if (list != null &&
+                    !(list is string) &&
                     !(list is Newtonsoft.Json.Linq.JArray) &&
-                    !(list is IEnumerable) && 
-                    entityType != null && 
+                    !(list is IEnumerable) &&
+                    entityType != null &&
                     schemaInfo != null)
                 {
                     // 获取列表缓存，检查是否已存在
@@ -770,10 +775,10 @@ namespace RUINORERP.Business.Cache
                             // 需要根据实体类型进行适当转换
                             var entity = Convert.ChangeType(list, entityType);
                             UpdateEntityInList(tableName, entity);
-                            
+
                             // 更新缓存同步元数据
                             UpdateCacheSyncMetadataAfterEntityChange(tableName);
-                            
+
                             return;
                         }
                         catch (Exception ex)
@@ -782,7 +787,7 @@ namespace RUINORERP.Business.Cache
                         }
                     }
                 }
-                
+
                 // 修复：确保存储的是正确类型的列表
                 object cacheValue = list;
 
@@ -830,7 +835,7 @@ namespace RUINORERP.Business.Cache
                 if (cacheValue is List<System.Dynamic.ExpandoObject> expandoList)
                 {
                     // 获取实体类型
-         
+
                     if (entityType != null)
                     {
                         // 创建正确类型的List
@@ -887,16 +892,16 @@ namespace RUINORERP.Business.Cache
             {
                 return;
             }
-            
+
             // 直接更新列表缓存中的该实体
             UpdateEntityInList(tableName, entity);
-            
+
             _logger?.LogDebug($"已更新表 {tableName} 列表缓存中的单个实体");
-            
+
             // 更新缓存同步元数据
             UpdateCacheSyncMetadataAfterEntityChange(tableName);
         }
-        
+
         /// <summary>
         /// 检查并记录表是否可缓存，封装智能过滤逻辑
         /// </summary>
@@ -1006,7 +1011,7 @@ namespace RUINORERP.Business.Cache
             // 生成缓存键并直接删除缓存
             var cacheKey = GenerateCacheKey(CacheKeyType.List, tableName);
             RemoveFromCache(cacheKey);
-            
+
             // 更新缓存同步元数据
             UpdateCacheSyncMetadataAfterEntityChange(tableName);
             _logger?.Debug($"已删除表 {tableName} 的整个列表缓存");
@@ -1045,18 +1050,18 @@ namespace RUINORERP.Business.Cache
         private void UpdateCacheSyncMetadataAfterEntityChange(string tableName)
         {
             if (_cacheSyncMetadata == null) return;
-            
+
             try
             {
                 var cacheKey = GenerateCacheKey(CacheKeyType.List, tableName);
                 var cachedList = _cacheManager.Get(cacheKey);
-                
+
                 if (cachedList != null)
                 {
                     // 使用专门的方法计算数据数量和大小
                     int dataCount = CalculateDataCount(cachedList);
                     long estimatedSize = EstimateObjectSize(cachedList);
-                    
+
                     _cacheSyncMetadata.UpdateTableSyncInfo(tableName, dataCount, estimatedSize);
                     _logger?.LogDebug($"已更新表 {tableName} 的缓存同步元数据，数据数量: {dataCount}");
                 }
@@ -1080,7 +1085,7 @@ namespace RUINORERP.Business.Cache
         private int CalculateDataCount(object cacheObject)
         {
             if (cacheObject == null) return 0;
-            
+
             if (cacheObject is ICollection collection)
             {
                 return collection.Count;
@@ -1089,10 +1094,10 @@ namespace RUINORERP.Business.Cache
             {
                 return jArray.Count;
             }
-            
+
             return 0;
         }
-        
+
         private void RemoveEntityFromList(string tableName, object primaryKeyValue)
         {
             try
@@ -1120,7 +1125,7 @@ namespace RUINORERP.Business.Cache
                         {
                             list.Remove(entityToRemove);
                             PutToCache(cacheKey, list, "List", tableName);
-                            
+
                             // 更新缓存同步元数据
                             UpdateCacheSyncMetadataAfterEntityChange(tableName);
                         }
@@ -1154,7 +1159,7 @@ namespace RUINORERP.Business.Cache
 
                         // 获取原始列表大小用于比较
                         int originalCount = list.Count;
-                        
+
                         list.RemoveAll(e =>
                         {
                             var idPropertyValue = e.GetCachePropertyValue(schemaInfo.PrimaryKeyField);
@@ -1308,7 +1313,7 @@ namespace RUINORERP.Business.Cache
             return _tableSchemaManager.GetEntityType(tableName);
         }
 
- 
+
 
         #endregion
 
@@ -1501,7 +1506,7 @@ namespace RUINORERP.Business.Cache
                         // 检查现有值是否为列表且有数据
                         var existingList = existingValue as System.Collections.IList;
                         var newList = value as System.Collections.IList;
-                        
+
                         if (existingList != null && newList != null)
                         {
                             // 当原列表有数据，而新列表数据更少或为空时记录
@@ -1580,7 +1585,7 @@ namespace RUINORERP.Business.Cache
             _cacheManager.Remove(cacheKey);
         }
 
- 
+
 
         /// <summary>
         /// 检查缓存大小并在必要时进行清理

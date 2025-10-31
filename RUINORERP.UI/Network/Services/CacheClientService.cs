@@ -348,6 +348,37 @@ namespace RUINORERP.UI.Network.Services
             catch (Exception ex)
             {
                 _log.LogError(ex, "全量订阅基础业务表时发生错误");
+                // 添加重试机制
+                await RetrySubscribeAllBaseTablesAsync();
+            }
+        }
+
+        /// <summary>
+        /// 重试订阅所有基础业务表
+        /// </summary>
+        private async Task RetrySubscribeAllBaseTablesAsync(int maxRetries = 3)
+        {
+            for (int i = 1; i <= maxRetries; i++)
+            {
+                try
+                {
+                    _log.LogInformation($"重试订阅基础业务表，第{i}次尝试");
+                    await SubscribeTablesByTypeAsync(TableType.Base);
+                    await SubscribeTablesByTypeAsync(TableType.Business);
+                    _log.LogInformation("重试订阅基础业务表成功");
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    _log.LogError(ex, $"第{i}次重试订阅基础业务表失败");
+                    if (i == maxRetries)
+                    {
+                        _log.LogError("达到最大重试次数，订阅基础业务表失败");
+                        throw;
+                    }
+                    // 等待一段时间后重试
+                    await Task.Delay(1000 * i);
+                }
             }
         }
 

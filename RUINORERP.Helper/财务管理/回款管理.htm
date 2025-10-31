@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        /* 全局样式 */
+        body {
+            font-family: "Microsoft YaHei", Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+
+        /* 标题样式 */
+        h1 {
+            color: #2c3e50;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            font-size: 2em;
+        }
+
+        h2 {
+            color: #34495e;
+            border-left: 4px solid #3498db;
+            padding-left: 15px;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        h3 {
+            color: #555;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+
+        /* 段落样式 */
+        p {
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        /* 列表样式 */
+        ul, ol {
+            margin-bottom: 20px;
+            padding-left: 30px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        /* 表格样式 */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background-color: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        th {
+            background-color: #3498db;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+        }
+
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #eee;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        tr:hover {
+            background-color: #e3f2fd;
+        }
+
+        /* 强调文本 */
+        strong {
+            color: #2c3e50;
+        }
+
+        /* 链接样式 */
+        a {
+            color: #3498db;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+            color: #2980b9;
+        }
+
+        /* 提示框样式*/
+        .tip {
+            background-color: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .warning {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .note {
+            background-color: #d1ecf1;
+            border-left: 4px solid #17a2b8;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 4px 4px 0;
+        }
+    </style>
+    
+    <title>回款管理</title>
+    <meta charset="utf-8">
+</head>
+<body>
+    <div style="background-color: #f0f0f0; padding: 10px; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 5px;">
+    <strong>导航链接：</strong>
+    <a href="生产管理.htm" style="margin-right: 15px;">生产管理</a>
+    <a href="进销存管理.htm" style="margin-right: 15px;">进销存管理</a>
+    <a href="售后管理.htm" style="margin-right: 15px;">售后管理</a>
+    <a href="客户关系管理.htm" style="margin-right: 15px;">客户关系</a>
+    <a href="财务管理.htm" style="margin-right: 15px;">财务管理</a>
+    <a href="行政管理.htm" style="margin-right: 15px;">行政管理</a>
+    <a href="报表管理.htm" style="margin-right: 15px;">报表管理</a>
+    <a href="电商运营.htm" style="margin-right: 15px;">电商运营</a>
+    <a href="基础资料管理.htm" style="margin-right: 15px;">基础资料</a>
+    <a href="系统设置.htm" style="margin-right: 15px;">系统设置</a>
+    <a href="通用功能.htm" style="margin-right: 15px;">通用功能</a>
+    <a href="审核反审核结案业务流程.htm" style="margin-right: 15px;">审核流程</a>
+</div>
+    <h1>回款管理</h1>
+    <p>回款管理模块用于跟踪客户付款情况和应收账款管理。</p>
+    
+    <h2>功能概述</h2>
+    <p>回款管理主要包括以下功能：</p>
+    <ul>
+        <li><strong>应收账款管理</strong>：管理客户的应收账款</li>
+        <li><strong>回款记录管理</strong>：记录客户的回款情况</li>
+        <li><strong>回款计划制定</strong>：制定客户回款计划</li>
+        <li><strong>回款跟踪分析</strong>：跟踪和分析回款情况</li>
+        <li><strong>逾期催款管理</strong>：管理逾期应收账款的催款</li>
+    </ul>
+    
+    <h2>核心业务流程</h2>
+    <h3>1. 应收账款确认流程</h3>
+    <p>根据销售订单和出库单确认客户的应收账款。</p>
+    
+    <h3>2. 客户回款记录流程</h3>
+    <p>记录客户的回款情况，更新应收账款余额。</p>
+    
+    <h3>3. 回款计划执行流程</h3>
+    <p>按制定的回款计划跟踪客户回款情况。</p>
+    
+    <h3>4. 回款管理审核流程</h3>
+    <p>回款管理中的各类单据都需要经过审核流程才能生效：
+    <ul>
+        <li><strong>审核权限</strong>：只有具备审核权限的用户才能执行审核操作</li>
+        <li><strong>审核状态</strong>：单据审核后状态更新为"已审核"</li>
+        <li><strong>审核结果</strong>：审核可以是"同意"或"拒绝"，拒绝的单据需要修改后重新提交</li>
+    </ul>
+    </p>
+    
+    <h3>5. 回款管理反审核流程</h3>
+    <p>反审核是撤销已审核单据的操作，用于修正审核错误或业务变更：
+    <ul>
+        <li><strong>反审核条件</strong>：只有已审核且未结案的单据才能执行反审核</li>
+        <li><strong>反审核影响</strong>：反审核后单据状态回退到审核前状态</li>
+        <li><strong>数据恢复</strong>：反审核会恢复单据到审核前的数据状态</li>
+    </ul>
+    </p>
+    
+    <h3>6. 回款管理结案流程</h3>
+    <p>结案是标记回款业务完成状态的操作，结案后的单据通常不能再修改：
+    <ul>
+        <li><strong>结案条件</strong>：只有已审核的单据才能执行结案操作</li>
+        <li><strong>结案状态</strong>：单据结案后状态更新为"已结案"</li>
+        <li><strong>业务完整性</strong>：结案通常表示该笔回款业务已全部完成</li>
+    </ul>
+    </p>
+    
+    <h2>主要单据类型</h2>
+    <ul>
+        <li><strong>应收账款单</strong>：记录客户的应收账款</li>
+        <li><strong>客户回款单</strong>：记录客户的回款情况</li>
+        <li><strong>回款计划表</strong>：制定客户回款计划</li>
+        <li><strong>回款跟踪表</strong>：跟踪客户回款情况</li>
+    </ul>
+    
+    <h2>审核状态说明</h2>
+    <p>回款管理中的单据具有以下审核状态：</p>
+    <ul>
+        <li><strong>未审核</strong>：单据创建后初始状态，尚未提交审核</li>
+        <li><strong>已审核</strong>：单据已通过审核，可以参与后续处理流程</li>
+        <li><strong>驳回</strong>：单据审核被拒绝，需要修改后重新提交审核</li>
+    </ul>
+    
+    <h2>结案状态说明</h2>
+    <p>回款管理中的单据具有以下结案状态：</p>
+    <ul>
+        <li><strong>未结案</strong>：单据审核通过但回款业务尚未完成</li>
+        <li><strong>已结案</strong>：单据回款业务全部完成，不能再进行修改操作</li>
+    </ul>
+    
+    <h2>关键字段说明</h2>
+    <table border="1">
+        <tr>
+            <th>字段名</th>
+            <th>说明</th>
+        </tr>
+        <tr>
+            <td>应收账款编号</td>
+            <td>应收账款单的唯一标识号</td>
+        </tr>
+        <tr>
+            <td>客户名称</td>
+            <td>应收账款的客户名称</td>
+        </tr>
+        <tr>
+            <td>应收日期</td>
+            <td>应收账款的应收日期</td>
+        </tr>
+        <tr>
+            <td>应收金额</td>
+            <td>应收账款的金额</td>
+        </tr>
+        <tr>
+            <td>已收金额</td>
+            <td>已收的金额</td>
+        </tr>
+        <tr>
+            <td>未收金额</td>
+            <td>未收的金额</td>
+        </tr>
+        <tr>
+            <td>回款状态</td>
+            <td>回款的状态</td>
+        </tr>
+        <tr>
+            <td>逾期天数</td>
+            <td>逾期的天数</td>
+        </tr>
+    </table>
+</body>
+</html>

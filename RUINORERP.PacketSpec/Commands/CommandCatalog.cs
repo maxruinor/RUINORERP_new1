@@ -488,6 +488,33 @@ namespace RUINORERP.PacketSpec.Commands
         public const ushort Connection_ConnectionPoolManagement = 0x1103;
         #endregion
 
+        #region 业务编码命令 (0x0Fxx)
+        /// <summary>
+        /// 业务编码操作 - 生成业务相关编码
+        /// </summary>
+        public const ushort BizCode_BizCodeOperation = 0x0F00;
+
+        /// <summary>
+        /// 生成业务单据编号 - 根据业务类型生成单据编号
+        /// </summary>
+        public const ushort BizCode_GenerateBizBillNo = 0x0F01;
+
+        /// <summary>
+        /// 生成基础信息编号 - 根据数据表生成基础信息编号
+        /// </summary>
+        public const ushort BizCode_GenerateBaseInfoNo = 0x0F02;
+
+        /// <summary>
+        /// 生成产品编码 - 生成产品编号
+        /// </summary>
+        public const ushort BizCode_GenerateProductNo = 0x0F03;
+
+        /// <summary>
+        /// 生成产品SKU编码 - 生成产品SKU编号
+        /// </summary>
+        public const ushort BizCode_GenerateProductSKUNo = 0x0F04;
+        #endregion
+
         #region 特殊功能命令 (0x90xx)
         /// <summary>
         /// 特殊操作 - 预留的特殊功能操作命令

@@ -84,9 +84,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Class1.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="ProcessAction.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -236,10 +233,6 @@
     <ProjectReference Include="..\HLH.Lib\HLH.Lib.csproj">
       <Project>{d9c7b9fb-8234-4c54-8a7a-4172878e3586}</Project>
       <Name>HLH.Lib</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\SiteRules\SiteRules.csproj">
-      <Project>{b0717dfa-442a-40eb-b7c4-4171da4194c1}</Project>
-      <Name>SiteRules</Name>
     </ProjectReference>
     <ProjectReference Include="..\WinLib\WinLib.csproj">
       <Project>{4346acb3-cf7f-4797-bae6-681e32e10ff5}</Project>

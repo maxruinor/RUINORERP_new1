@@ -74,23 +74,23 @@ namespace RUINORERP.UI.Network
 
         public string SessionID { get; set; }
         /// <summary>
-        /// 连接状态 - 确保状态同步
+        /// 获取客户端是否已连接到服务器
         /// </summary>
         public bool IsConnected
         {
             get
             {
-                // 检查Socket实际状态并同步内部状态
-                var socketConnected = _client?.Socket?.Connected == true;
-                
-                // 如果Socket已断开但内部状态仍为连接，则同步更新
-                if (!socketConnected && _isConnected)
+                try
                 {
-                    _isConnected = false;
-                    _logger?.LogDebug("检测到Socket连接已断开，同步更新连接状态");
+                    // 检查Socket实际状态，确保连接状态准确反映实际连接情况
+                    return _isConnected && _client?.Socket != null && _client.Socket.Connected;
                 }
-                
-                return _isConnected && socketConnected;
+                catch (Exception ex)
+                {
+                    _logger?.LogError(ex, "检查连接状态时发生异常");
+                    // 在出现异常时，认为连接已断开
+                    return false;
+                }
             }
         }
 
@@ -193,8 +193,22 @@ namespace RUINORERP.UI.Network
                 await Task.Run(() =>
                 {
                     cancellationToken.ThrowIfCancellationRequested();
+                    // 在发送过程中再次检查连接状态
+                    if (_client.Socket == null || !_client.Socket.Connected)
+                    {
+                        _isConnected = false;
+                        _logger?.LogWarning("发送数据过程中发现Socket连接已断开");
+                        throw new InvalidOperationException("连接已断开");
+                    }
                     _client.Send(data);
                 }, cancellationToken).ConfigureAwait(false);
+                
+                // 发送完成后再次检查连接状态
+                if (_client.Socket == null || !_client.Socket.Connected)
+                {
+                    _isConnected = false;
+                    _logger?.LogWarning("发送数据完成后发现Socket连接已断开");
+                }
                 
                 _logger?.LogDebug("成功发送数据到服务器，数据长度: {DataLength}", data?.Length ?? 0);
             }

@@ -7,14 +7,17 @@
    </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="BizCodeGeneration\**" />
     <Compile Remove="Cache\**" />
     <Compile Remove="SystemService\**" />
     <Compile Remove="UseCsla\**" />
     <Compile Remove="Validator_back\**" />
+    <EmbeddedResource Remove="BizCodeGeneration\**" />
     <EmbeddedResource Remove="Cache\**" />
     <EmbeddedResource Remove="SystemService\**" />
     <EmbeddedResource Remove="UseCsla\**" />
     <EmbeddedResource Remove="Validator_back\**" />
+    <None Remove="BizCodeGeneration\**" />
     <None Remove="Cache\**" />
     <None Remove="SystemService\**" />
     <None Remove="UseCsla\**" />
@@ -26,11 +29,6 @@
     <Compile Remove="AutoMapper\ConventionBasedProfile.cs" />
     <Compile Remove="AutoMapper\CslaProfile.cs" />
     <Compile Remove="AutoMapper\CustomProfileAll.cs" />
-    <Compile Remove="BizCodeGeneration\BizNumberGenerator.cs" />
-    <Compile Remove="BizCodeGeneration\ConfigurableNumberGenerator.cs" />
-    <Compile Remove="BizCodeGeneration\ISerialNumberGenerator.cs" />
-    <Compile Remove="BizCodeGeneration\RedisSerialNumberGenerator.cs" />
-    <Compile Remove="BizCodeGeneration\SerialNumberGeneratorFactory.cs" />
     <Compile Remove="BizMapperService\EnhancedBizTypeMapper.cs" />
     <Compile Remove="BizMapperService\EntityBizMappingService.cs" />
     <Compile Remove="BizMapperService\EntityBizMappingServiceAdapter.cs" />
@@ -116,7 +114,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\BNR\BNR.csproj" />
     <ProjectReference Include="..\HLH.Lib\HLH.Lib.csproj" />
     <ProjectReference Include="..\RUINORERP.Common\RUINORERP.Common.csproj" />
     <ProjectReference Include="..\RUINORERP.Extensions\RUINORERP.Extensions.csproj" />
@@ -135,7 +132,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="BizCodeGeneration\" />
     <Folder Include="IocExtensions\" />
   </ItemGroup>
 

@@ -36,6 +36,9 @@ using System.Text;
 using System.Windows.Forms;
 using Timer = System.Threading.Timer;
 using System.Collections.Generic;
+using RUINORERP.UI.SysConfig;
+using Newtonsoft.Json;
+using RUINORERP.UI.Network.ClientCommandHandlers;
 
 namespace RUINORERP.UI.Network
 {
@@ -67,6 +70,11 @@ namespace RUINORERP.UI.Network
         // 心跳管理器
         private readonly HeartbeatManager _heartbeatManager;        // 日志记录器
         private readonly ILogger<ClientCommunicationService> _logger;
+        // 配置管理器，用于处理配置同步
+        private readonly OptionsMonitorConfigManager _optionsMonitorConfigManager;
+        
+        // 客户端命令调度器，用于分发命令到对应的客户端处理类
+        private readonly IClientCommandDispatcher _clientCommandDispatcher;
 
         // 连接状态标志
         private bool _isConnected;
@@ -92,6 +100,11 @@ namespace RUINORERP.UI.Network
         private readonly ConcurrentQueue<QueuedCommand> _queuedCommands = new ConcurrentQueue<QueuedCommand>();
         private bool _isProcessingQueue = false;
         private readonly SemaphoreSlim _queueProcessingLock = new SemaphoreSlim(1, 1);
+
+        /// <summary>
+        /// 命令队列处理延迟时间(毫秒)，用于避免大量请求同时发送
+        /// </summary>
+        private const int QueueProcessingDelayMs = 10;
 
         /// <summary>
         /// 队列命令模型，支持单向命令和带响应命令
@@ -137,6 +150,8 @@ namespace RUINORERP.UI.Network
         /// <param name="commandDispatcher">命令调度器，用于分发命令到对应的处理类</param>
         /// <param name="logger">日志记录器</param>
         /// <param name="tokenManager">令牌管理器</param>
+        /// <param name="optionsMonitorConfigManager">配置管理器，用于处理配置同步</param>
+        /// <param name="clientCommandDispatcher">客户端命令调度器</param>
         /// <param name="commandHandlers">命令处理器集合</param>
         /// <param name="networkConfig">网络配置</param>
         /// <exception cref="ArgumentNullException">当参数为null时抛出</exception>
@@ -145,6 +160,8 @@ namespace RUINORERP.UI.Network
             ICommandDispatcher commandDispatcher,
             ILogger<ClientCommunicationService> logger,
             TokenManager tokenManager,
+            OptionsMonitorConfigManager optionsMonitorConfigManager,
+            IClientCommandDispatcher clientCommandDispatcher,
             IEnumerable<ICommandHandler> commandHandlers = null,
             NetworkConfig networkConfig = null)
         {
@@ -154,6 +171,8 @@ namespace RUINORERP.UI.Network
             _networkConfig = networkConfig ?? NetworkConfig.Default;
             _eventManager = new ClientEventManager();
             this.tokenManager = tokenManager;
+            _optionsMonitorConfigManager = optionsMonitorConfigManager ?? throw new ArgumentNullException(nameof(optionsMonitorConfigManager));
+            _clientCommandDispatcher = clientCommandDispatcher ?? throw new ArgumentNullException(nameof(clientCommandDispatcher));
             _commandHandlers = commandHandlers ?? Enumerable.Empty<ICommandHandler>();
             // 初始化请求响应管理相关组件
             _timeoutStatistics = new TimeoutStatisticsManager();
@@ -175,6 +194,9 @@ namespace RUINORERP.UI.Network
 
             // 初始化定时清理任务
             _cleanupTimer = new Timer(CleanupTimeoutRequests, null, TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1));
+            
+            // 初始化并启动客户端命令调度器
+            InitializeClientCommandDispatcher();
             UI.Common.HardwareInfo hardwareInfo = Startup.GetFromFac<HardwareInfo>();
             // 生成客户端ID
             if (string.IsNullOrEmpty(_socketClient.ClientID))
@@ -567,7 +589,7 @@ namespace RUINORERP.UI.Network
                     }
 
                     // 添加短暂延迟，避免大量请求同时发送
-                    await Task.Delay(10);
+                    await Task.Delay(QueueProcessingDelayMs);
                 }
 
                 _logger.Debug("命令队列处理完成");
@@ -851,11 +873,13 @@ namespace RUINORERP.UI.Network
 
             try
             {
-                // 优先使用事件机制处理命令，避免重复处理
+                // 优先使用事件机制处理命令
                 _eventManager.OnCommandReceived(packet, packet.Response);
 
-                // 如果事件机制没有处理该命令（没有订阅者），则使用命令调度器处理
-                if (!_eventManager.HasCommandSubscribers(packet))
+                // 对于配置同步命令，始终使用命令调度器处理，确保配置正确更新
+                // 其他命令仍遵循原有逻辑，只有在没有事件订阅者时才使用调度器处理
+                if (packet.CommandId.FullCode == GeneralCommands.ConfigSync.FullCode ||
+                    !_eventManager.HasCommandSubscribers(packet))
                 {
                     await ProcessCommandAsync(packet);
                 }
@@ -1232,6 +1256,25 @@ namespace RUINORERP.UI.Network
 
 
         /// <summary>
+        /// 初始化客户端命令调度器
+        /// </summary>
+        private void InitializeClientCommandDispatcher()
+        {
+            try
+            {
+                // 初始化并启动客户端命令调度器
+                _clientCommandDispatcher.InitializeAsync().Wait();
+                _clientCommandDispatcher.StartAsync().Wait();
+                
+                _logger.LogInformation("客户端命令调度器初始化并启动成功");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "初始化客户端命令调度器失败");
+            }
+        }
+
+        /// <summary>
         /// 处理接收到的命令
         /// </summary>
         /// <param name="Packet">数据包</param>
@@ -1239,7 +1282,17 @@ namespace RUINORERP.UI.Network
         {
             try
             {
+                // 首先尝试使用客户端专用命令调度器处理命令
+                bool dispatchedByClientDispatcher = await _clientCommandDispatcher.DispatchAsync(Packet);
+                
+                if (dispatchedByClientDispatcher)
+                {
+                    // 如果命令已被客户端命令调度器处理，直接返回
+                    _logger.LogDebug("命令 {CommandId} 已被客户端命令调度器处理", Packet.CommandId);
+                    return;
+                }
 
+                // 如果客户端命令调度器未处理，则回退到原有的命令处理逻辑
                 // 根据命令类别进行特殊处理
                 switch (Packet.CommandId.Category)
                 {
@@ -1265,6 +1318,65 @@ namespace RUINORERP.UI.Network
             {
                 _eventManager.OnErrorOccurred(new Exception($"处理命令 {Packet.CommandId} 时发生错误: {ex.Message}", ex));
                 _logger.LogError(ex, "处理命令时发生错误");
+            }
+        }
+        
+        /// <summary>
+        /// 处理配置相关命令（保留作为备用，主要功能已移至ConfigCommandHandler）
+        /// </summary>
+        /// <param name="packet">数据包</param>
+        private async Task ProcessConfigCommandAsync(PacketModel packet)
+        {
+            try
+            {
+                // 检查是否是配置同步命令
+                if (packet.CommandId.FullCode == RUINORERP.PacketSpec.Commands.GeneralCommands.ConfigSync.FullCode)
+                {
+                    // 提取配置类型和配置数据
+                    if (packet.Request is IDictionary<string, object> requestData)
+                    {
+                        if (requestData.TryGetValue("ConfigType", out var configTypeObj) &&
+                            requestData.TryGetValue("ConfigData", out var configDataObj))
+                        {
+                            string configType = configTypeObj.ToString();
+                            string configData = JsonConvert.SerializeObject(configDataObj);
+                            
+                            _logger.LogInformation("接收到配置同步命令: {ConfigType}", configType);
+                            
+                            // 调用OptionsMonitorConfigManager处理配置同步
+                            _optionsMonitorConfigManager.HandleConfigSync(configType, configData);
+                        }
+                    }
+                    else if (packet.Request != null)
+                    {
+                        // 如果请求不是字典类型，尝试直接解析JSON
+                        string jsonData = JsonConvert.SerializeObject(packet.Request);
+                        var requestObj = JsonConvert.DeserializeObject<Dictionary<string, object>>(jsonData);
+                        
+                        if (requestObj != null && 
+                            requestObj.TryGetValue("ConfigType", out var configTypeObj) &&
+                            requestObj.TryGetValue("ConfigData", out var configDataObj))
+                        {
+                            string configType = configTypeObj.ToString();
+                            string configData = JsonConvert.SerializeObject(configDataObj);
+                            
+                            _logger.LogInformation("接收到配置同步命令: {ConfigType}", configType);
+                            
+                            // 调用OptionsMonitorConfigManager处理配置同步
+                            _optionsMonitorConfigManager.HandleConfigSync(configType, configData);
+                        }
+                    }
+                }
+                else
+                {
+                    // 其他配置命令尝试使用客户端命令调度器处理
+                    await _clientCommandDispatcher.DispatchAsync(packet);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "处理配置命令时发生错误，命令ID: {CommandId}", packet.CommandId);
+                throw;
             }
         }
 
@@ -1657,40 +1769,8 @@ namespace RUINORERP.UI.Network
                     {
                         _logger.Debug($"连接已断开，将带响应命令{commandId.Name}加入队列等待发送");
 
-                        // 创建任务完成源
-                        var packetTcs = new TaskCompletionSource<PacketModel>();
-                        var responseTcs = new TaskCompletionSource<TResponse>();
-
-                        // 当packetTcs完成时，将结果转换为TResponse并设置到responseTcs
-                        _ = packetTcs.Task.ContinueWith(task =>
-                        {
-                            if (task.IsCanceled)
-                                responseTcs.TrySetCanceled();
-                            else if (task.IsFaulted)
-                                responseTcs.TrySetException(task.Exception);
-                            else if (task.Result != null && task.Result.Response != null)
-                                responseTcs.TrySetResult(task.Result.Response as TResponse);
-                            else
-                                responseTcs.TrySetResult(ResponseFactory.CreateSpecificErrorResponse<TResponse>("未收到有效响应数据"));
-                        });
-
-                        // 将请求加入队列
-                        _queuedCommands.Enqueue(new QueuedCommand
-                        {
-                            CommandId = commandId,
-                            Data = request,
-                            CancellationToken = ct,
-                            DataType = request.GetType(),
-                            ResponseCompletionSource = packetTcs,
-                            IsResponseCommand = true,
-                            TimeoutMs = timeoutMs
-                        });
-
-                        // 在后台尝试重连
-                        _ = Task.Run(() => TryReconnectAsync());
-
-                        // 返回任务结果，让调用者等待连接恢复后发送
-                        return await responseTcs.Task;
+                        // 使用提取的私有方法处理队列逻辑
+                        return await EnqueueCommandWithResponseAsync<TResponse>(commandId, request, ct, timeoutMs);
                     }
 
                     // 如果未启用自动重连，返回错误响应
@@ -1723,40 +1803,8 @@ namespace RUINORERP.UI.Network
                 {
                     _logger.Debug($"因网络异常，将带响应命令{commandId.Name}加入队列等待发送");
 
-                    // 创建任务完成源
-                    var packetTcs = new TaskCompletionSource<PacketModel>();
-                    var responseTcs = new TaskCompletionSource<TResponse>();
-
-                    // 当packetTcs完成时，将结果转换为TResponse并设置到responseTcs
-                    _ = packetTcs.Task.ContinueWith(task =>
-                    {
-                        if (task.IsCanceled)
-                            responseTcs.TrySetCanceled();
-                        else if (task.IsFaulted)
-                            responseTcs.TrySetException(task.Exception);
-                        else if (task.Result != null && task.Result.Response != null)
-                            responseTcs.TrySetResult(task.Result.Response as TResponse);
-                        else
-                            responseTcs.TrySetResult(ResponseFactory.CreateSpecificErrorResponse<TResponse>("未收到有效响应数据") as TResponse);
-                    });
-
-                    // 将请求加入队列
-                    _queuedCommands.Enqueue(new QueuedCommand
-                    {
-                        CommandId = commandId,
-                        Data = request,
-                        CancellationToken = ct,
-                        DataType = request.GetType(),
-                        ResponseCompletionSource = packetTcs,
-                        IsResponseCommand = true,
-                        TimeoutMs = timeoutMs
-                    });
-
-                    // 在后台尝试重连
-                    _ = Task.Run(() => TryReconnectAsync());
-
-                    // 返回任务结果，让调用者等待连接恢复后发送
-                    return await responseTcs.Task;
+                    // 使用提取的私有方法处理队列逻辑
+                    return await EnqueueCommandWithResponseAsync<TResponse>(commandId, request, ct, timeoutMs);
                 }
 
                 // 如果是操作取消异常，重新抛出
@@ -1768,6 +1816,54 @@ namespace RUINORERP.UI.Network
                 // 返回错误响应
                 return ResponseFactory.CreateSpecificErrorResponse<TResponse>($"命令执行失败: {ex.Message}");
             }
+        }
+
+        /// <summary>
+        /// 将带响应命令加入队列并等待处理
+        /// </summary>
+        /// <typeparam name="TResponse">响应数据类型</typeparam>
+        /// <param name="commandId">命令ID</param>
+        /// <param name="request">请求数据</param>
+        /// <param name="ct">取消令牌</param>
+        /// <param name="timeoutMs">超时时间（毫秒）</param>
+        /// <returns>响应数据</returns>
+        private async Task<TResponse> EnqueueCommandWithResponseAsync<TResponse>(CommandId commandId, IRequest request, CancellationToken ct, int timeoutMs)
+            where TResponse : class, IResponse
+        {
+            // 创建任务完成源
+            var packetTcs = new TaskCompletionSource<PacketModel>();
+            var responseTcs = new TaskCompletionSource<TResponse>();
+
+            // 当packetTcs完成时，将结果转换为TResponse并设置到responseTcs
+            _ = packetTcs.Task.ContinueWith(task =>
+            {
+                if (task.IsCanceled)
+                    responseTcs.TrySetCanceled();
+                else if (task.IsFaulted)
+                    responseTcs.TrySetException(task.Exception);
+                else if (task.Result != null && task.Result.Response != null)
+                    responseTcs.TrySetResult(task.Result.Response as TResponse);
+                else
+                    responseTcs.TrySetResult(ResponseFactory.CreateSpecificErrorResponse<TResponse>("未收到有效响应数据") as TResponse);
+            });
+
+            // 将请求加入队列
+            _queuedCommands.Enqueue(new QueuedCommand
+            {
+                CommandId = commandId,
+                Data = request,
+                CancellationToken = ct,
+                DataType = request.GetType(),
+                ResponseCompletionSource = packetTcs,
+                IsResponseCommand = true,
+                TimeoutMs = timeoutMs
+            });
+
+            // 在后台尝试重连
+            _ = Task.Run(() => TryReconnectAsync());
+
+            // 返回任务结果，让调用者等待连接恢复后发送
+            return await responseTcs.Task;
         }
 
 

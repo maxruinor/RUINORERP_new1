@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using RUINORERP.Business.Cache;
 using RUINORERP.Business.CommService;
+using System.Threading;
 
 namespace RUINORERP.Server
 {
@@ -11,31 +12,14 @@ namespace RUINORERP.Server
     /// </summary>
     public static class CacheManager
     {
-        private static readonly object _lock = new object();
-        private static IEntityCacheManager _instance;
+        private static readonly Lazy<IEntityCacheManager> _instance = 
+            new Lazy<IEntityCacheManager>(() => Startup.GetFromFac<IEntityCacheManager>(), LazyThreadSafetyMode.ExecutionAndPublication);
 
         /// <summary>
         /// 获取缓存管理器实例
         /// </summary>
-        private static IEntityCacheManager Instance
-        {
-            get
-            {
-                if (_instance == null)
-                {
-                    lock (_lock)
-                    {
-                        if (_instance == null)
-                        {
-                            // 从依赖注入容器获取缓存管理器实例
-                            _instance = Startup.GetFromFac<IEntityCacheManager>();
-                        }
-                    }
-                }
-                return _instance;
-            }
-        }
-
+        private static IEntityCacheManager Instance => _instance.Value;
+        
         #region 缓存查询方法
 
         /// <summary>

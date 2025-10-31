@@ -2110,6 +2110,12 @@
     </Compile>
     <Compile Include="IM\EnhancedMessageManager.cs" />
     <Compile Include="IM\MainFormMessageExtensions.cs" />
+    <Compile Include="IM\MessageListControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="IM\MessageListControl.Designer.cs">
+      <DependentUpon>MessageListControl.cs</DependentUpon>
+    </Compile>
     <Compile Include="IM\MessageManager.cs" />
     <Compile Include="Monitoring\Auditing\AuditLogHelper.cs" />
     <Compile Include="Common\CustomTupleEqualityComparer.cs" />
@@ -2277,6 +2283,15 @@
     <Compile Include="Network\Authentication\TokenRefreshService.cs" />
     <Compile Include="Network\BizPackageInfo.cs" />
     <Compile Include="Network\BizPipelineFilter.cs" />
+    <Compile Include="Network\ClientCommandHandlers\BaseClientCommandHandler.cs" />
+    <Compile Include="Network\ClientCommandHandlers\ClientCommandDispatcher.cs" />
+    <Compile Include="Network\ClientCommandHandlers\ClientCommandHandlerAttribute.cs" />
+    <Compile Include="Network\ClientCommandHandlers\ClientCommandHandlerModule.cs" />
+    <Compile Include="Network\ClientCommandHandlers\ClientCommandHandlerRegistry.cs" />
+    <Compile Include="Network\ClientCommandHandlers\ConfigCommandHandler.cs" />
+    <Compile Include="Network\ClientCommandHandlers\IClientCommandDispatcher.cs" />
+    <Compile Include="Network\ClientCommandHandlers\IClientCommandHandler.cs" />
+    <Compile Include="Network\ClientCommandHandlers\MessageCommandHandler.cs" />
     <!-- ClientCommandProcessor.cs 已整合到ClientCommunicationService.cs，不再单独编译 -->
     <!-- <Compile Include="Network\ClientCommandProcessor.cs" /> -->
     <Compile Include="Network\ClientEventManager.cs" />
@@ -2299,6 +2314,7 @@
     <Compile Include="Network\RetryStrategy\FixedIntervalRetryStrategy.cs" />
     <Compile Include="Network\RetryStrategy\IRetryStrategy.cs" />
     <Compile Include="Network\Services\AuthenticationManagementService.cs" />
+    <Compile Include="Network\Services\BizCodeService.cs" />
     <Compile Include="Network\Services\CacheClientService.cs" />
     <Compile Include="Network\Services\Cache\CacheRequestManager.cs" />
     <Compile Include="Network\Services\Cache\CacheResponseProcessor.cs" />
@@ -3565,6 +3581,7 @@
     <Content Include="部署相关.txt" />
     <EmbeddedResource Include="AboutBox.resx">
       <DependentUpon>AboutBox.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="ADM\HR\UCAttendance.resx">
       <DependentUpon>UCAttendance.cs</DependentUpon>
@@ -4838,10 +4855,6 @@
       <Project>{300df611-e6a4-447f-86cb-fd409c50ce8a}</Project>
       <Name>AutoUpdate</Name>
     </ProjectReference>
-    <ProjectReference Include="..\BNR\BNR.csproj">
-      <Project>{641456f0-b8e6-43a0-ac66-d8778a4bb08e}</Project>
-      <Name>BNR</Name>
-    </ProjectReference>
     <ProjectReference Include="..\CommonProcess\CommonProcess.csproj">
       <Project>{3a6491bd-4731-42ea-8ffe-61489c2f7c55}</Project>
       <Name>CommonProcess</Name>
@@ -4933,10 +4946,6 @@
     <ProjectReference Include="..\RUINORERP.WF\RUINORERP.WF.csproj">
       <Project>{fde50ffc-02cb-42ac-a7ca-f3c3d7da61c2}</Project>
       <Name>RUINORERP.WF</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\SiteRules\SiteRules.csproj">
-      <Project>{b0717dfa-442a-40eb-b7c4-4171da4194c1}</Project>
-      <Name>SiteRules</Name>
     </ProjectReference>
     <ProjectReference Include="..\SourceGrid\SourceGrid.csproj">
       <Project>{2a5a1657-dba8-4117-8e2a-9f1236ace9e2}</Project>

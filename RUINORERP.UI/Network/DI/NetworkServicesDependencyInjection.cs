@@ -168,6 +168,7 @@ namespace RUINORERP.UI.Network.DI
 
             // 注册业务服务
             builder.RegisterType<UserLoginService>().AsSelf().SingleInstance();
+            builder.RegisterType<BizCodeService>().AsSelf().SingleInstance();
             builder.RegisterType<CacheClientService>().AsSelf().SingleInstance();
             // CacheClientService构造函数会自动注入所需的依赖项
             builder.RegisterType<MessageService>().AsSelf().InstancePerDependency();

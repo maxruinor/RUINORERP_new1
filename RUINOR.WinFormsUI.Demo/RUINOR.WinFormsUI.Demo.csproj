@@ -214,10 +214,6 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\BNR\BNR.csproj">
-      <Project>{641456f0-b8e6-43a0-ac66-d8778a4bb08e}</Project>
-      <Name>BNR</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Krypton Components\Krypton.Docking\Krypton.Docking 2022.csproj">
       <Project>{125fce9b-8cc7-457e-924a-f86790e0609e}</Project>
       <Name>Krypton.Docking 2022</Name>

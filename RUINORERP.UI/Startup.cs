@@ -438,7 +438,9 @@ namespace RUINORERP.UI
                 ServicesDIConfig.ConfigureContainer(builder);      // Services项目
                 RepositoryDIConfig.ConfigureContainer(builder);    // Repository项目
                 IServicesDIConfig.ConfigureContainer(builder);     // IServices项目
-
+                
+                // 注册客户端命令处理模块
+                builder.RegisterModule(new RUINORERP.UI.Network.ClientCommandHandlers.ClientCommandHandlerModule());
 
             }
             catch (Exception ex)

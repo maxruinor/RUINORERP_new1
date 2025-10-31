@@ -113,9 +113,6 @@ namespace RUINORERP.Server.Network.Core
 
                 // 设置默认端口，以防配置读取失败
 
-                // 声明一个外部作用域的变量，将在ConfigureServerOptions中被赋值
-                ERPServerOptions serverOptions = null;
-
                 _host = MultipleServerHostBuilder.Create()
                 .AddServer<SuperSocketService<ServerPackageInfo>, ServerPackageInfo, PacketPipelineFilter>(builder =>
                 {
@@ -123,27 +120,18 @@ namespace RUINORERP.Server.Network.Core
                     builder.ConfigureServerOptions((ctx, config) =>
                        {
                            // 根据SuperSocket 2.0文档，配置应该从"serverOptions"节点读取
-                           // 1. 首先尝试从"serverOptions"节点读取配置（符合SuperSocket官方文档）
-                           ERPServerOptions localServerOptions = config.GetSection("serverOptions").Get<ERPServerOptions>();
-
-                           // 2. 如果"serverOptions"节点不存在或配置无效，则尝试从"ERPServer"节点读取（向后兼容）
-                           if (localServerOptions == null || !localServerOptions.Listeners.Any())
-                           {
-                               localServerOptions = config.GetSection("ERPServer").Get<ERPServerOptions>() ?? new ERPServerOptions();
-
-                               // 3. 确保至少有一个监听器配置
-                               localServerOptions.Validate();
-                           }
-
-                           // 设置外部作用域的变量，以便ConfigureSuperSocket回调可以使用
-                           serverOptions = localServerOptions;
+                           // 简化配置读取逻辑，统一从"serverOptions"节点读取配置
+                           var serverOptions = config.GetSection("serverOptions").Get<ERPServerOptions>() ?? new ERPServerOptions();
+                           
+                           // 确保至少有一个监听器配置
+                           serverOptions.Validate();
 
                            // 设置服务器端口和最大连接数
-                           Serverport = localServerOptions.Listeners[0].Port;
-                           (_sessionManager as SessionService)!.MaxSessionCount = localServerOptions.MaxConnectionCount;
+                           Serverport = serverOptions.Listeners[0].Port;
+                           (_sessionManager as SessionService)!.MaxSessionCount = serverOptions.MaxConnectionCount;
 
                            // 返回配置节点，以便SuperSocket可以使用
-                           return config.GetSection("serverOptions").Exists() ? config.GetSection("serverOptions") : config.GetSection("ERPServer");
+                           return config.GetSection("serverOptions");
                        })
                    .UseSession<SessionInfo>()
                    .UseCommand(commandOptions =>
@@ -155,6 +143,8 @@ namespace RUINORERP.Server.Network.Core
 
                     .ConfigureSuperSocket(options =>
                     {
+                        // 从配置上下文中读取serverOptions
+                        var serverOptions = ctx.Configuration.GetSection("serverOptions").Get<ERPServerOptions>();
                         if (serverOptions != null)
                         {
                             // 使用从配置中读取的serverOptions对象设置SuperSocket选项
@@ -215,10 +205,6 @@ namespace RUINORERP.Server.Network.Core
                       var cfgBuilder = configurationBuilder.AddJsonFile("appsettings.json");//默认读取：当前运行目录
                       IConfiguration configuration = cfgBuilder.Build();
                       services.AddPacketSpecServices(configuration);
-                      // 从全局服务提供者获取并注册CommandDispatcher
-                      // 这解决了SuperSocketCommandAdapter无法解析CommandDispatcher的问题
-                      var commandDispatcher = Program.ServiceProvider.GetRequiredService<CommandDispatcher>();
-                      services.AddSingleton<CommandDispatcher>(commandDispatcher);
 
  
                       // 注册命令调度器和适配器

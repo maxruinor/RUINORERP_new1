@@ -1,5 +1,4 @@
-﻿using BNR;
-using RUINORERP.Common.CustomAttribute;
+﻿using RUINORERP.Common.CustomAttribute;
 using RUINORERP.Extensions.Redis;
 using RUINORERP.Global;
 using RUINORERP.Global.EnumExt;
@@ -71,7 +70,7 @@ namespace RUINORERP.Business
             //RedisHelper.ConnectionString = "192.168.0.254:6379";
             RedisHelper.DbNum = 1;//使用第一个数据库
             //RedisSequenceParameter 对应 redis  类中有特性标识
-            BNRFactory.Default.Register("redis", new RedisSequenceParameter(RedisHelper.Db));
+            //BNRFactory.Default.Register("redis", new RedisSequenceParameter(RedisHelper.Db));
         }
 
         private static BizCodeGenerator m_instance = null;
@@ -170,7 +169,7 @@ namespace RUINORERP.Business
 
 
 
-            string BaseInfoNo = BNRFactory.Default.Create(rule);
+            string BaseInfoNo = "";// BNRFactory.Default.Create(rule);
             return BaseInfoNo;
         }
 
@@ -221,7 +220,7 @@ namespace RUINORERP.Business
                 default:
                     break;
             }
-            string BaseInfoNo = BNRFactory.Default.Create(rule);
+            string BaseInfoNo = "";// BNRFactory.Default.Create(rule);
             return ParaConst + BaseInfoNo;
         }
 
@@ -402,139 +401,16 @@ namespace RUINORERP.Business
             //  BizCode = BNRFactory.Default.Create(rule);
             // DefaultRedis.Instance.Host.AddWriteHost("localhost");
             // var number =  BNRFactory.Default.Create("[CN:广州][redis:[D:yyyy]/000000]");
-            BizCode = BNRFactory.Default.Create(rule);
+            BizCode = "";// BNRFactory.Default.Create(rule);
 
             return BizCode;
         }
 
-        /*
-        #region 优化用到的方法
-
-
-        // 优化后的单号生成方法
-        public string GetBizBillNo(BizType bt, string companyCode = "CN")
-        {
-            string prefix = GetBizPrefix(bt);
-            string datePart = GetDatePart(bt);
-            string sequence = GetSequence(bt, datePart);
-            string checkDigit = GetCheckDigit(prefix + datePart + sequence);
-
-            return $"{prefix}{datePart}{sequence}{checkDigit}";
-        }
-
-        // 获取业务前缀
-        private string GetBizPrefix(BizType bt)
-        {
-            switch (bt)
-            {
-                case BizType.销售订单: return "SO";
-                case BizType.销售出库单: return "STO";
-                case BizType.采购订单: return "PO";
-                case BizType.采购入库单: return "PIO";
-                case BizType.制令单: return "MO";
-                case BizType.BOM物料清单: return "BOM";
-                case BizType.生产领料单: return "MPR";
-                case BizType.应收款单: return "AR";
-                case BizType.应付款单: return "AP";
-                case BizType.付款单: return "PYM";
-                case BizType.收款单: return "RCP";
-                default: return "SYS";
-            }
-        }
-
-        // 获取日期部分
-        private string GetDatePart(BizType bt)
-        {
-            // 关键业务使用年月日格式，次要业务使用年月格式
-            if (bt == BizType.销售订单 || bt == BizType.采购订单 || bt == BizType.制令单)
-                return DateTime.Now.ToString("yyyyMMdd");
-            else
-                return DateTime.Now.ToString("yyyyMM");
-        }
-
-        // 获取流水号（确保分布式环境唯一）
-        private string GetSequence(BizType bt, string datePart)
-        {
-            string key = $"SEQ:{bt}:{datePart}";
-            // 使用Redis原子操作生成流水号
-            long seq = redisDb.Increment(key);
-
-            // 根据业务类型设置流水号长度
-            int length = bt == BizType.BOM物料清单 ? 4 : 5;
-            return seq.ToString().PadLeft(length, '0');
-        }
-
-        // 生成校验码（增强数据完整性）
-        private string GetCheckDigit(string code)
-        {
-            int sum = 0;
-            for (int i = 0; i < code.Length; i++)
-            {
-                if (char.IsLetter(code[i]))
-                    sum += (code[i] - 'A' + 10) * (i % 2 == 0 ? 3 : 1);
-                else
-                    sum += int.Parse(code[i].ToString()) * (i % 2 == 0 ? 3 : 1);
-            }
-            int checkDigit = (10 - sum % 10) % 10;
-            return checkDigit.ToString();
-        }
-
-        // 优化后的基本信息编号生成
-        public string GetBaseInfoNo(BaseInfoType bit)
-        {
-            string prefix = GetBasePrefix(bit);
-            string sequence = redisDb.Increment($"BASE:{bit}").ToString().PadLeft(5, '0');
-            return $"{prefix}{sequence}";
-        }
-
-        private string GetBasePrefix(BaseInfoType bit)
-        {
-            switch (bit)
-            {
-                case BaseInfoType.ProductNo: return "PRD";
-                case BaseInfoType.Employee: return "EMP";
-                case BaseInfoType.Department: return "DEPT";
-                case BaseInfoType.Storehouse: return "WH";
-                case BaseInfoType.Supplier: return "SUPL";
-                case BaseInfoType.Customer: return "CUST";
-                default: return "SYS";
-            }
-        }
-
-        // 分布式环境下的单号生成优化
-        public string GetDistributedBizNo(BizType bt)
-        {
-            // 生成包含服务器标识的唯一键
-            string serverId = Environment.MachineName;
-            string key = $"BIZ:{bt}:{DateTime.Now:yyyyMMdd}:{serverId}";
-
-            // 使用Redis的Lua脚本确保原子性
-            string script = @"
-        local key = KEYS[1]
-        local val = redis.call('get', key)
-        if val then
-            return val
-        else
-            local seq = redis.call('incr', key)
-            redis.call('expire', key, 86400) -- 24小时过期
-            return seq
-        end
-    ";
-
-            long seq = redisDb.ScriptEvaluate(script, new RedisKey[] { key });
-            string datePart = DateTime.Now.ToString("yyyyMMdd");
-            string serverCode = serverId.Length > 2 ? serverId.Substring(0, 2).ToUpper() : serverId.ToUpper();
-
-            return $"BT{serverCode}{datePart}{seq.ToString().PadLeft(6, '0')}";
-        }
-
-
-        #endregion
-        */
+        
         public string GetProdNo(tb_ProdCategories pc)
         {
             string rule = "{S:OD}{CN:广州}{D:yyyyMM}{redis:{S:ORDER}{CN:广州}{D:yyyyMM}/00000000}{N:{S:ORDER_SUB}{CN:广州}{D:yyyyMM}/00000000}";
-            string BizCode = BNRFactory.Default.Create(rule);
+            string BizCode = "";// BNRFactory.Default.Create(rule);
 
             return BizCode;
         }
@@ -578,16 +454,7 @@ namespace RUINORERP.Business
         }
     }
 
-    /// <summary>
-    /// 合表时根据这个参考生成对应的业务编号
-    /// 如：预收付款表。
-    /// 是预收 还是预付通过这个参数来定
-    /// </summary>
-    public class BizCodeParameter
-    {
-        //财务用
-        public ReceivePaymentType PaymentType = ReceivePaymentType.收款;
 
-    }
+ 
 
 }

@@ -169,18 +169,26 @@ namespace RUINORERP.Server.Comm
 
                 if (lockInfo.IsLocked && (now - lockInfo.LockTime) > timeout)
                 {
-                    //// 创建一个新的锁记录，标记单据为未锁定
-                    //var newLockInfo = new LockInfo { IsLocked = false, LockedByID = 0, LockTime = DateTime.Now };
+                    // 创建一个新的锁记录，标记单据为未锁定
+                    var newLockInfo = new LockInfo 
+                    { 
+                        IsLocked = false, 
+                        LockedByID = 0, 
+                        LockTime = DateTime.Now,
+                        BizName = lockInfo.BizName,
+                        BillNo = lockInfo.BillNo,
+                        BillID = lockInfo.BillID
+                    };
 
-                    //// 更新锁记录到字典中
-                    //if (_lockDictionary.TryUpdate(documentId, newLockInfo, lockInfo))
-                    //{
-                    //    // 如果更新成功，检查是否需要删除记录
-                    //    if (!newLockInfo.IsLocked)
-                    //    {
-                    keysToRemove.Add(documentId);
-                    //    }
-                    //}
+                    // 更新锁记录到字典中
+                    if (_lockDictionary.TryUpdate(documentId, newLockInfo, lockInfo))
+                    {
+                        // 如果更新成功，检查是否需要删除记录
+                        if (!newLockInfo.IsLocked)
+                        {
+                            keysToRemove.Add(documentId);
+                        }
+                    }
                 }
             }
 
@@ -247,8 +255,6 @@ namespace RUINORERP.Server.Comm
 
     public class LockInfo
     {
-
-
         /// <summary>
         /// 业务类型
         /// 一个业务类型同时会有锁定一个单
@@ -269,29 +275,37 @@ namespace RUINORERP.Server.Comm
         public long LockedByID { get; set; } // 锁定用户
 
         private string _LockedByName;
+        private static readonly object _lockObject = new object();
+        
         public string LockedByName
         {
             get
             {
-                if (string.IsNullOrEmpty(_LockedByName))
+                lock (_lockObject)
                 {
-                    tb_UserInfo userInfo = MyCacheManager.Instance.GetEntity<tb_UserInfo>(LockedByID);
-                    if (userInfo != null)
+                    if (string.IsNullOrEmpty(_LockedByName))
                     {
-                        _LockedByName = userInfo.UserName;
+                        tb_UserInfo userInfo = MyCacheManager.Instance.GetEntity<tb_UserInfo>(LockedByID);
+                        if (userInfo != null)
+                        {
+                            _LockedByName = userInfo.UserName;
+                        }
                     }
+                    return _LockedByName;
                 }
-                return _LockedByName;
             }
             set
             {
-                _LockedByName = value;
-                if (string.IsNullOrEmpty(_LockedByName))
+                lock (_lockObject)
                 {
-                    tb_UserInfo userInfo = MyCacheManager.Instance.GetEntity<tb_UserInfo>(LockedByID);
-                    if (userInfo != null)
+                    _LockedByName = value;
+                    if (string.IsNullOrEmpty(_LockedByName))
                     {
-                        _LockedByName = userInfo.UserName;
+                        tb_UserInfo userInfo = MyCacheManager.Instance.GetEntity<tb_UserInfo>(LockedByID);
+                        if (userInfo != null)
+                        {
+                            _LockedByName = userInfo.UserName;
+                        }
                     }
                 }
             }

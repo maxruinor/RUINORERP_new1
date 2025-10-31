@@ -234,7 +234,10 @@ namespace RUINORERP.Server.Controls
             {
                 if (_currentConfig == null || string.IsNullOrEmpty(_currentConfigFileName) || string.IsNullOrEmpty(_currentConfigRootNode))
                 {
-                    MessageBox.Show("没有可保存的配置对象", "警告", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    _logger?.LogWarning("没有可保存的配置对象");
+                    // 获取主窗体实例并打印信息日志
+                    var mainForm = Application.OpenForms.OfType<frmMainNew>().FirstOrDefault();
+                    mainForm?.PrintInfoLog("没有可保存的配置对象");
                     return;
                 }
 
@@ -310,7 +313,10 @@ namespace RUINORERP.Server.Controls
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "配置保存失败");
-                MessageBox.Show($"保存配置时发生错误: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                _logger?.LogError(ex, "配置保存失败");
+                // 获取主窗体实例并打印错误日志
+                var mainForm = Application.OpenForms.OfType<frmMainNew>().FirstOrDefault();
+                mainForm?.PrintErrorLog($"保存配置时发生错误: {ex.Message}");
             }
         }
 
@@ -358,7 +364,10 @@ namespace RUINORERP.Server.Controls
             if (validationResults.Count > 0)
             {
                 var errorMessage = string.Join("\n", validationResults);
-                MessageBox.Show($"全局验证配置验证失败:\n{errorMessage}", "验证错误", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                _logger?.LogWarning($"全局验证配置验证失败: {errorMessage}");
+                // 获取主窗体实例并打印信息日志
+                var mainForm = Application.OpenForms.OfType<frmMainNew>().FirstOrDefault();
+                mainForm?.PrintInfoLog($"全局验证配置验证失败: {errorMessage}");
                 return false;
             }
 
@@ -394,7 +403,10 @@ namespace RUINORERP.Server.Controls
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "初始化JSON文件TreeView失败");
-                MessageBox.Show($"初始化JSON文件树时发生错误: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                _logger?.LogError(ex, "初始化JSON文件TreeView失败");
+                // 获取主窗体实例并打印错误日志
+                var mainForm = Application.OpenForms.OfType<frmMainNew>().FirstOrDefault();
+                mainForm?.PrintErrorLog($"初始化JSON文件树时发生错误: {ex.Message}");
             }
         }
 
@@ -451,7 +463,10 @@ namespace RUINORERP.Server.Controls
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "处理TreeView选择事件失败");
-                MessageBox.Show($"处理配置选择时发生错误: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                _logger?.LogError(ex, "处理TreeView选择事件失败");
+                // 获取主窗体实例并打印错误日志
+                var mainForm = Application.OpenForms.OfType<frmMainNew>().FirstOrDefault();
+                mainForm?.PrintErrorLog($"处理配置选择时发生错误: {ex.Message}");
             }
         }
 
@@ -576,7 +591,7 @@ namespace RUINORERP.Server.Controls
                 };
 
                 // 调用通用广播服务
-                _generalBroadcastService?.BroadcastToAllClients(CommandCatalog.Config_ConfigSync, request);
+                _generalBroadcastService?.BroadcastToAllClients(GeneralCommands.ConfigSync, request);
 
                 return true;
             }
@@ -689,11 +704,17 @@ namespace RUINORERP.Server.Controls
                         });
 
                         File.WriteAllText(saveDialog.FileName, JsonConvert.SerializeObject(historyData, Newtonsoft.Json.Formatting.Indented));
-                        MessageBox.Show("历史记录导出成功", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        _logger?.LogInformation("历史记录导出成功");
+                        // 获取主窗体实例并打印信息日志
+                        var mainForm = Application.OpenForms.OfType<frmMainNew>().FirstOrDefault();
+                        mainForm?.PrintInfoLog("历史记录导出成功");
                     }
                     catch (Exception ex)
                     {
-                        MessageBox.Show($"导出失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        _logger?.LogError(ex, "导出历史记录失败");
+                        // 获取主窗体实例并打印错误日志
+                        var mainForm = Application.OpenForms.OfType<frmMainNew>().FirstOrDefault();
+                        mainForm?.PrintErrorLog($"导出失败: {ex.Message}");
                     }
                 }
             };
@@ -740,7 +761,10 @@ namespace RUINORERP.Server.Controls
             if (validationResults.Count > 0)
             {
                 var errorMessage = string.Join("\n", validationResults);
-                MessageBox.Show($"系统全局配置验证失败:\n{errorMessage}", "验证错误", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                _logger?.LogWarning($"系统全局配置验证失败: {errorMessage}");
+                // 获取主窗体实例并打印信息日志
+                var mainForm = Application.OpenForms.OfType<frmMainNew>().FirstOrDefault();
+                mainForm?.PrintInfoLog($"系统全局配置验证失败: {errorMessage}");
                 return false;
             }
 
@@ -893,7 +917,10 @@ namespace RUINORERP.Server.Controls
                 {
                     // 获取完整的错误信息
                     string errorMessage = validationResult.GetErrorMessage();
-                    MessageBox.Show($"配置验证失败:\n{errorMessage}", "验证错误", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    _logger?.LogWarning($"配置验证失败: {errorMessage}");
+                    // 获取主窗体实例并打印信息日志
+                    var mainForm = Application.OpenForms.OfType<frmMainNew>().FirstOrDefault();
+                    mainForm?.PrintInfoLog($"配置验证失败: {errorMessage}");
                     return false;
                 }
 
@@ -902,7 +929,10 @@ namespace RUINORERP.Server.Controls
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "验证配置失败");
-                MessageBox.Show($"验证配置时发生错误: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                _logger?.LogError(ex, "验证配置失败");
+                // 获取主窗体实例并打印错误日志
+                var mainForm = Application.OpenForms.OfType<frmMainNew>().FirstOrDefault();
+                mainForm?.PrintErrorLog($"验证配置时发生错误: {ex.Message}");
                 return false;
             }
         }
@@ -1137,12 +1167,17 @@ namespace RUINORERP.Server.Controls
                 };
 
                 BindConfigurationToUI(fallbackConfig);
-                MessageBox.Show("使用默认系统全局配置启动，请检查配置文件后重新加载", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                _logger?.LogWarning("使用默认系统全局配置启动，请检查配置文件后重新加载");
+                // 获取主窗体实例并打印信息日志
+                var mainForm = Application.OpenForms.OfType<frmMainNew>().FirstOrDefault();
+                mainForm?.PrintInfoLog("使用默认系统全局配置启动，请检查配置文件后重新加载");
             }
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "创建后备配置失败");
-                MessageBox.Show("无法加载配置，系统将使用最小化配置运行", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                // 获取主窗体实例并打印错误日志
+                var mainForm = Application.OpenForms.OfType<frmMainNew>().FirstOrDefault();
+                mainForm?.PrintErrorLog("无法加载配置，系统将使用最小化配置运行");
             }
         }
 
@@ -1170,7 +1205,9 @@ namespace RUINORERP.Server.Controls
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "属性值更改处理失败");
-                MessageBox.Show($"处理属性更改时发生错误: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                // 获取主窗体实例并打印错误日志
+                var mainForm = Application.OpenForms.OfType<frmMainNew>().FirstOrDefault();
+                mainForm?.PrintErrorLog($"处理属性更改时发生错误: {ex.Message}");
             }
         }
 
@@ -1233,7 +1270,10 @@ namespace RUINORERP.Server.Controls
         {
             if (string.IsNullOrEmpty(_currentConfigFileName))
             {
-                MessageBox.Show("请先选择要管理版本的配置文件", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                _logger?.LogInformation("请先选择要管理版本的配置文件");
+                // 获取主窗体实例并打印信息日志
+                var mainForm = Application.OpenForms.OfType<frmMainNew>().FirstOrDefault();
+                mainForm?.PrintInfoLog("请先选择要管理版本的配置文件");
                 return;
             }
 
@@ -1275,7 +1315,9 @@ namespace RUINORERP.Server.Controls
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "加载配置版本失败");
-                MessageBox.Show($"加载配置版本失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                // 获取主窗体实例并打印错误日志
+                var mainForm = Application.OpenForms.OfType<frmMainNew>().FirstOrDefault();
+                mainForm?.PrintErrorLog($"加载配置版本失败: {ex.Message}");
             }
 
             var panel = new Panel { Dock = DockStyle.Bottom, Height = 60 };
@@ -1330,14 +1372,19 @@ namespace RUINORERP.Server.Controls
                                     listView.Items.Add(item);
                                 }
 
-                                MessageBox.Show("配置版本创建成功", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                                _logger?.LogInformation("配置版本创建成功");
+                                // 获取主窗体实例并打印信息日志
+                                var mainForm = Application.OpenForms.OfType<frmMainNew>().FirstOrDefault();
+                                mainForm?.PrintInfoLog("配置版本创建成功");
                                 descriptionForm.Close();
                             }
                         }
                         catch (Exception ex)
                         {
                             _logger?.LogError(ex, "创建配置版本失败");
-                            MessageBox.Show($"创建配置版本失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            // 获取主窗体实例并打印错误日志
+                            var mainForm = Application.OpenForms.OfType<frmMainNew>().FirstOrDefault();
+                            mainForm?.PrintErrorLog($"创建配置版本失败: {ex.Message}");
                         }
                     };
 
@@ -1361,7 +1408,9 @@ namespace RUINORERP.Server.Controls
             {
                 if (listView.SelectedItems.Count == 0)
                 {
-                    MessageBox.Show("请选择要回滚的版本", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    _logger?.LogInformation("请选择要回滚的版本");
+                    // 使用单例方式获取主窗体并打印信息日志
+                    frmMainNew.Instance?.PrintInfoLog("请选择要回滚的版本");
                     return;
                 }
 
@@ -1371,10 +1420,17 @@ namespace RUINORERP.Server.Controls
 
                 if (selectedVersion.IsActive)
                 {
-                    MessageBox.Show("当前已是选中的版本，无需回滚", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    _logger?.LogInformation("当前已是选中的版本，无需回滚");
+                    // 获取主窗体实例并打印信息日志
+                    var mainForm = Application.OpenForms.OfType<frmMainNew>().FirstOrDefault();
+                    mainForm?.PrintInfoLog("当前已是选中的版本，无需回滚");
                     return;
                 }
 
+                // 使用单例方式获取主窗体并打印确认信息
+                frmMainNew.Instance?.PrintInfoLog($"用户正在考虑回滚到版本 {selectedVersion.VersionNumber}，此操作将覆盖当前配置。");
+
+                // 注意：此处保留MessageBox用于确认操作，因为这是需要用户显式确认的关键操作
                 if (MessageBox.Show($"确定要回滚到版本 {selectedVersion.VersionNumber} 吗？\n此操作将覆盖当前配置。",
                     "确认回滚", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
                 {
@@ -1391,11 +1447,15 @@ namespace RUINORERP.Server.Controls
                             // 重新加载配置到UI
                             BindConfigurationToUI(_currentConfig);
 
-                            MessageBox.Show("配置回滚成功", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            _logger?.LogInformation("配置回滚成功");
+                            // 使用单例方式获取主窗体并打印信息日志
+                            frmMainNew.Instance?.PrintInfoLog("配置回滚成功");
                         }
                         else
                         {
-                            MessageBox.Show("配置回滚失败", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            _logger?.LogError("配置回滚失败");
+                            // 使用单例方式获取主窗体并打印错误日志
+                            frmMainNew.Instance?.PrintErrorLog("配置回滚失败");
                         }
 
                         // 添加到本地历史记录，不使用审计日志服务
@@ -1419,12 +1479,15 @@ namespace RUINORERP.Server.Controls
                             listView.Items.Add(item);
                         }
 
-                        MessageBox.Show("配置已成功回滚", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        _logger?.LogInformation("配置已成功回滚");
+                        // 使用单例方式获取主窗体并打印信息日志
+                        frmMainNew.Instance?.PrintInfoLog("配置已成功回滚");
                     }
                     catch (Exception ex)
                     {
                         _logger?.LogError(ex, "回滚配置版本失败");
-                        MessageBox.Show($"回滚配置版本失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        // 使用单例方式获取主窗体并打印错误日志
+                        frmMainNew.Instance?.PrintErrorLog($"回滚配置版本失败: {ex.Message}");
                     }
                 }
             };
@@ -1434,13 +1497,19 @@ namespace RUINORERP.Server.Controls
             {
                 if (listView.SelectedItems.Count < 2)
                 {
-                    MessageBox.Show("请选择两个版本进行比较", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    _logger?.LogInformation("请选择两个版本进行比较");
+                    // 获取主窗体实例并打印信息日志
+                    var mainForm = Application.OpenForms.OfType<frmMainNew>().FirstOrDefault();
+                    mainForm?.PrintInfoLog("请选择两个版本进行比较");
                     return;
                 }
 
                 if (listView.SelectedItems.Count > 2)
                 {
-                    MessageBox.Show("一次只能比较两个版本", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    _logger?.LogInformation("一次只能比较两个版本");
+                    // 获取主窗体实例并打印信息日志
+                    var mainForm = Application.OpenForms.OfType<frmMainNew>().FirstOrDefault();
+                    mainForm?.PrintInfoLog("一次只能比较两个版本");
                     return;
                 }
 
@@ -1519,7 +1588,9 @@ namespace RUINORERP.Server.Controls
                 catch (Exception ex)
                 {
                     _logger?.LogError(ex, "比较配置版本失败");
-                    MessageBox.Show($"比较配置版本失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    // 获取主窗体实例并打印错误日志
+                    var mainForm = Application.OpenForms.OfType<frmMainNew>().FirstOrDefault();
+                    mainForm?.PrintErrorLog($"比较配置版本失败: {ex.Message}");
                 }
             };
 
@@ -1528,7 +1599,10 @@ namespace RUINORERP.Server.Controls
             {
                 if (listView.SelectedItems.Count == 0)
                 {
-                    MessageBox.Show("请选择要删除的版本", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    _logger?.LogInformation("请选择要删除的版本");
+                    // 获取主窗体实例并打印信息日志
+                    var mainForm = Application.OpenForms.OfType<frmMainNew>().FirstOrDefault();
+                    mainForm?.PrintInfoLog("请选择要删除的版本");
                     return;
                 }
 
@@ -1538,7 +1612,10 @@ namespace RUINORERP.Server.Controls
 
                 if (selectedVersion.IsActive)
                 {
-                    MessageBox.Show("不能删除当前活动的版本", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    _logger?.LogInformation("不能删除当前活动的版本");
+                    // 获取主窗体实例并打印信息日志
+                    var mainForm = Application.OpenForms.OfType<frmMainNew>().FirstOrDefault();
+                    mainForm?.PrintInfoLog("不能删除当前活动的版本");
                     return;
                 }
 
@@ -1584,13 +1661,7 @@ namespace RUINORERP.Server.Controls
             versionForm.ShowDialog(this);
         }
 
-        /// <summary>
-        /// 版本管理按钮点击事件
-        /// </summary>
-        private void tsbtnVersionManager_Click(object sender, EventArgs e)
-        {
-            ShowConfigVersionManager();
-        }
+
 
         /// <summary>
         /// 发布按钮点击事件
@@ -1614,7 +1685,7 @@ namespace RUINORERP.Server.Controls
 
                 // 发布配置前先保存
                 SaveConfig();
-               
+
                 // 通过通讯模块发布配置到客户端
                 if (BroadcastConfigChange(_currentConfig))
                 {
@@ -1625,7 +1696,9 @@ namespace RUINORERP.Server.Controls
                         ConfigSnapshot = JObject.FromObject(_currentConfig)
                     };
                     _configHistory.Add(historyEntry);
-                    MessageBox.Show("配置已成功发布到所有客户端", "发布成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    //MessageBox.Show("配置已成功发布到所有客户端", "发布成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    var mainForm = Application.OpenForms.OfType<frmMainNew>().FirstOrDefault();
+                    mainForm?.PrintInfoLog($"配置已成功发布到所有客户端");
                 }
                 else
                 {

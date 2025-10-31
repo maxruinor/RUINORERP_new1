@@ -143,6 +143,8 @@ namespace RUINORERP.Server.Workflow
             {
                 _logger.LogError(ex, "获取已引用文件名失败");
                 data.Result.Errors.Add($"获取已引用文件名失败: {ex.Message}");
+                // 在出现异常时返回终止执行结果
+                return ExecutionResult.Next();
             }
 
             // 将结果存储在工作流数据对象中
@@ -330,6 +332,8 @@ namespace RUINORERP.Server.Workflow
     /// </summary>
     public static class TempImageCleanupWorkflowConfig
     {
+        private static System.Timers.Timer _timer;
+        
         /// <summary>
         /// 注册工作流
         /// </summary>
@@ -363,8 +367,8 @@ namespace RUINORERP.Server.Workflow
                 var interval = nextRunTime - now;
 
                 // 首次延迟执行
-                var timer = new System.Timers.Timer(interval.TotalMilliseconds);
-                timer.Elapsed += async (sender, e) =>
+                _timer = new System.Timers.Timer(interval.TotalMilliseconds);
+                _timer.Elapsed += async (sender, e) =>
                 {
                     frmMainNew.Instance.PrintInfoLog($"开始执行临时图片清理任务: {System.DateTime.Now.ToString()}");
                     try
@@ -378,9 +382,9 @@ namespace RUINORERP.Server.Workflow
                     }
 
                     // 改为每天执行一次
-                    timer.Interval = TimeSpan.FromDays(1).TotalMilliseconds;
+                    _timer.Interval = TimeSpan.FromDays(1).TotalMilliseconds;
                 };
-                timer.Start();
+                _timer.Start();
 
                 return true;
             }
@@ -388,6 +392,19 @@ namespace RUINORERP.Server.Workflow
             {
                 Console.WriteLine($"临时图片清理工作流注册错误: {ex.Message}");
                 return false;
+            }
+        }
+        
+        /// <summary>
+        /// 释放资源
+        /// </summary>
+        public static void Dispose()
+        {
+            if (_timer != null)
+            {
+                _timer.Stop();
+                _timer.Dispose();
+                _timer = null;
             }
         }
     }

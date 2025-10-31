@@ -38,7 +38,7 @@ namespace RUINORERP.Server.Network.Services
         /// <param name="commandId">命令ID</param>
         /// <param name="request">请求数据</param>
         /// <returns>异步任务</returns>
-        public async Task BroadcastToAllClients(ushort commandId, GeneralRequest request)
+        public async Task BroadcastToAllClients(CommandId commandId, GeneralRequest request)
         {
             try
             {
@@ -53,7 +53,7 @@ namespace RUINORERP.Server.Network.Services
                     try
                     {
                         // 使用SessionService中的SendCommandAsync方法发送请求（无需等待响应）
-                        await _sessionManager.SendCommandAsync(session.SessionID, CommandId.FromUInt16(commandId), request);
+                        await _sessionManager.SendCommandAsync(session.SessionID, commandId, request);
                         broadcastCount++;
                     }
                     catch (Exception ex)
@@ -79,7 +79,7 @@ namespace RUINORERP.Server.Network.Services
         /// <param name="commandId">命令ID</param>
         /// <param name="request">请求数据</param>
         /// <returns>异步任务</returns>
-        public async Task BroadcastToSession(string sessionId, ushort commandId, GeneralRequest request)
+        public async Task BroadcastToSession(string sessionId, CommandId commandId, GeneralRequest request)
         {
             try
             {
@@ -110,7 +110,7 @@ namespace RUINORERP.Server.Network.Services
         /// <param name="commandId">命令ID</param>
         /// <param name="request">请求数据</param>
         /// <returns>异步任务</returns>
-        public async Task BroadcastToUserGroup(string userGroup, ushort commandId, GeneralRequest request)
+        public async Task BroadcastToUserGroup(string userGroup,  CommandId commandId, GeneralRequest request)
         {
             try
             {
@@ -150,7 +150,7 @@ namespace RUINORERP.Server.Network.Services
         /// <param name="commandId">命令ID</param>
         /// <param name="request">请求数据</param>
         /// <returns>响应数据列表</returns>
-        public async Task<GeneralResponse[]> SendRequestToAllClients(ushort commandId, GeneralRequest request)
+        public async Task<GeneralResponse[]> SendRequestToAllClients(CommandId commandId, GeneralRequest request)
         {
             try
             {
@@ -203,7 +203,7 @@ namespace RUINORERP.Server.Network.Services
         /// <param name="commandId">命令ID</param>
         /// <param name="request">请求数据</param>
         /// <returns>响应数据</returns>
-        public async Task<GeneralResponse> SendRequestToSession(string sessionId, ushort commandId, GeneralRequest request)
+        public async Task<GeneralResponse> SendRequestToSession(string sessionId,  CommandId commandId, GeneralRequest request)
         {
             try
             {
@@ -245,7 +245,7 @@ namespace RUINORERP.Server.Network.Services
         /// <param name="commandId">命令ID</param>
         /// <param name="request">请求数据</param>
         /// <returns>响应数据列表</returns>
-        public async Task<GeneralResponse[]> SendRequestToUserGroup(string userGroup, ushort commandId, GeneralRequest request)
+        public async Task<GeneralResponse[]> SendRequestToUserGroup(string userGroup,  CommandId commandId, GeneralRequest request)
         {
             try
             {

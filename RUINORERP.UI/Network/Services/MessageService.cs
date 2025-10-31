@@ -1,7 +1,6 @@
 using Microsoft.Extensions.Logging;
 using RUINORERP.Model.TransModel;
 using RUINORERP.PacketSpec.Commands;
-using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Requests.Message;
 using RUINORERP.PacketSpec.Models.Responses.Message;
 using RUINORERP.UI.Network;
@@ -15,6 +14,7 @@ namespace RUINORERP.UI.Network.Services
     /// 消息服务类 - 提供客户端消息发送和接收功能
     /// 支持向指定用户、部门发送消息，以及广播消息等功能
     /// 支持双向通信，既可以发送消息也可以接收消息
+    /// 注意：消息接收通过MessageCommandHandler集成到客户端命令处理架构
     /// </summary>
     public class MessageService
     {
@@ -57,174 +57,92 @@ namespace RUINORERP.UI.Network.Services
         {
             _communicationService = communicationService ?? throw new ArgumentNullException(nameof(communicationService));
             _logger = logger;
-
-            // 订阅消息相关的命令
-            SubscribeToMessages();
+            
+            // 注意：不再直接订阅通信服务，消息接收通过MessageCommandHandler集成到客户端命令处理架构
         }
 
         /// <summary>
-        /// 订阅消息相关的命令
+        /// 触发弹窗消息接收事件 (由MessageCommandHandler调用)
         /// </summary>
-        private void SubscribeToMessages()
-        {
-            // 订阅弹窗消息
-            _communicationService.SubscribeCommand(
-                MessageCommands.SendPopupMessage,
-                (packet, data) => HandlePopupMessageReceived(packet, data));
-
-            // 订阅用户消息
-            _communicationService.SubscribeCommand(
-                MessageCommands.SendMessageToUser,
-                (packet, data) => HandleUserMessageReceived(packet, data));
-
-            // 订阅部门消息
-            _communicationService.SubscribeCommand(
-                MessageCommands.SendMessageToDepartment,
-                (packet, data) => HandleDepartmentMessageReceived(packet, data));
-
-            // 订阅广播消息
-            _communicationService.SubscribeCommand(
-                MessageCommands.BroadcastMessage,
-                (packet, data) => HandleBroadcastMessageReceived(packet, data));
-
-            // 订阅系统通知
-            _communicationService.SubscribeCommand(
-                MessageCommands.SendSystemNotification,
-                (packet, data) => HandleSystemNotificationReceived(packet, data));
-        }
-
-        /// <summary>
-        /// 处理接收到的弹窗消息
-        /// </summary>
-        private void HandlePopupMessageReceived(PacketModel packet, object data)
+        /// <param name="args">事件参数</param>
+        public void OnPopupMessageReceived(MessageReceivedEventArgs args)
         {
             try
             {
-                var messageData = data as MessageResponse;
-                if (messageData?.Data != null)
-                {
-                    var args = new MessageReceivedEventArgs
-                    {
-                        MessageType = "Popup",
-                        Data = messageData.Data,
-                        Timestamp = DateTime.Now
-                    };
-
-                    PopupMessageReceived?.Invoke(args);
-                    _logger?.LogDebug("接收到弹窗消息");
-                }
+                PopupMessageReceived?.Invoke(args);
+                _logger?.LogDebug("触发弹窗消息事件");
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "处理弹窗消息时发生异常");
+                _logger?.LogError(ex, "触发弹窗消息事件时发生异常");
             }
         }
 
         /// <summary>
-        /// 处理接收到的用户消息
+        /// 触发用户消息接收事件 (由MessageCommandHandler调用)
         /// </summary>
-        private void HandleUserMessageReceived(PacketModel packet, object data)
+        /// <param name="args">事件参数</param>
+        public void OnUserMessageReceived(MessageReceivedEventArgs args)
         {
             try
             {
-                var messageData = data as MessageResponse;
-                if (messageData?.Data != null)
-                {
-                    var args = new MessageReceivedEventArgs
-                    {
-                        MessageType = "User",
-                        Data = messageData.Data,
-                        Timestamp = DateTime.Now
-                    };
-
-                    UserMessageReceived?.Invoke(args);
-                    _logger?.LogDebug("接收到用户消息");
-                }
+                UserMessageReceived?.Invoke(args);
+                _logger?.LogDebug("触发用户消息事件");
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "处理用户消息时发生异常");
+                _logger?.LogError(ex, "触发用户消息事件时发生异常");
             }
         }
 
         /// <summary>
-        /// 处理接收到的部门消息
+        /// 触发部门消息接收事件 (由MessageCommandHandler调用)
         /// </summary>
-        private void HandleDepartmentMessageReceived(PacketModel packet, object data)
+        /// <param name="args">事件参数</param>
+        public void OnDepartmentMessageReceived(MessageReceivedEventArgs args)
         {
             try
             {
-                var messageData = data as MessageResponse;
-                if (messageData?.Data != null)
-                {
-                    var args = new MessageReceivedEventArgs
-                    {
-                        MessageType = "Department",
-                        Data = messageData.Data,
-                        Timestamp = DateTime.Now
-                    };
-
-                    DepartmentMessageReceived?.Invoke(args);
-                    _logger?.LogDebug("接收到部门消息");
-                }
+                DepartmentMessageReceived?.Invoke(args);
+                _logger?.LogDebug("触发部门消息事件");
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "处理部门消息时发生异常");
+                _logger?.LogError(ex, "触发部门消息事件时发生异常");
             }
         }
 
         /// <summary>
-        /// 处理接收到的广播消息
+        /// 触发广播消息接收事件 (由MessageCommandHandler调用)
         /// </summary>
-        private void HandleBroadcastMessageReceived(PacketModel packet, object data)
+        /// <param name="args">事件参数</param>
+        public void OnBroadcastMessageReceived(MessageReceivedEventArgs args)
         {
             try
             {
-                var messageData = data as MessageResponse;
-                if (messageData?.Data != null)
-                {
-                    var args = new MessageReceivedEventArgs
-                    {
-                        MessageType = "Broadcast",
-                        Data = messageData.Data,
-                        Timestamp = DateTime.Now
-                    };
-
-                    BroadcastMessageReceived?.Invoke(args);
-                    _logger?.LogDebug("接收到广播消息");
-                }
+                BroadcastMessageReceived?.Invoke(args);
+                _logger?.LogDebug("触发广播消息事件");
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "处理广播消息时发生异常");
+                _logger?.LogError(ex, "触发广播消息事件时发生异常");
             }
         }
 
         /// <summary>
-        /// 处理接收到的系统通知
+        /// 触发系统通知接收事件 (由MessageCommandHandler调用)
         /// </summary>
-        private void HandleSystemNotificationReceived(PacketModel packet, object data)
+        /// <param name="args">事件参数</param>
+        public void OnSystemNotificationReceived(MessageReceivedEventArgs args)
         {
             try
             {
-                var messageData = data as MessageResponse;
-                if (messageData?.Data != null)
-                {
-                    var args = new MessageReceivedEventArgs
-                    {
-                        MessageType = "SystemNotification",
-                        Data = messageData.Data,
-                        Timestamp = DateTime.Now
-                    };
-
-                    SystemNotificationReceived?.Invoke(args);
-                    _logger?.LogDebug("接收到系统通知");
-                }
+                SystemNotificationReceived?.Invoke(args);
+                _logger?.LogDebug("触发系统通知事件");
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "处理系统通知时发生异常");
+                _logger?.LogError(ex, "触发系统通知事件时发生异常");
             }
         }
 

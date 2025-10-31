@@ -15,7 +15,6 @@ using RUINORERP.Model;
 using RUINORERP.Business;
 using RUINORERP.UI.Common;
 using RUINORERP.Common.Helper;
-using BNR;
 using System.IO;
 using FluentValidation;
 using RUINORERP.Global;
@@ -34,6 +33,7 @@ using Netron.GraphLib;
 using RUINOR.WinFormsUI.TileListView;
 using RUINORERP.Business.CommService;
 using RUINORERP.Extensions.Middlewares;
+using RUINORERP.UI.Network.Services;
 
 namespace RUINORERP.UI.ProductEAV
 {
@@ -303,8 +303,8 @@ namespace RUINORERP.UI.ProductEAV
             //InitDataToCmbByEnumDynamicGeneratedDataSource<tb_Prod>(typeof(GoodsSource), e => e.SourceType.ToString(), cmbSourceType);
             //EnumBindingHelper bindingHelper = new EnumBindingHelper();
             //https://www.cnblogs.com/cdaniu/p/15236857.html
-            
-    
+
+
         }
 
 
@@ -534,7 +534,7 @@ namespace RUINORERP.UI.ProductEAV
             this.Close();
         }
 
-        
+
         /// <summary>
         /// 得到关系列表
         /// </summary>
@@ -576,7 +576,7 @@ namespace RUINORERP.UI.ProductEAV
 
                         #region
                         tb_Prod_Attr_Relation rela = new tb_Prod_Attr_Relation();
-                  
+
                         var detail = MainForm.Instance.mapper.Map<tb_ProdDetail>(item);
                         //rela.Property_ID = -1;
                         //rela.PropertyValueID = -1;
@@ -623,7 +623,7 @@ namespace RUINORERP.UI.ProductEAV
         }
 
 
-      
+
         //这个方法比较耗时
         private List<tb_ProdDetail> GetDetailsAndRelations(tb_Prod baseInfo, List<Eav_ProdDetails> removeList)
         {
@@ -636,7 +636,7 @@ namespace RUINORERP.UI.ProductEAV
                 {
                     Eav_ProdDetails epd = item as Eav_ProdDetails;
                     tb_ProdDetail detail = new tb_ProdDetail();
-               
+
                     //为null的不需要，不然会覆盖
                     detail = MainForm.Instance.mapper.Map<tb_ProdDetail>(epd);
 
@@ -748,7 +748,7 @@ namespace RUINORERP.UI.ProductEAV
                 {
                     tb_ProdDetail detail = new tb_ProdDetail();
                     Eav_ProdDetails epd = item as Eav_ProdDetails;
-                    
+
                     //为null的不需要，不然会覆盖
                     detail = MainForm.Instance.mapper.Map<tb_ProdDetail>(epd);
                     if (epd.tb_ProdDetail != null)
@@ -780,7 +780,7 @@ namespace RUINORERP.UI.ProductEAV
         private tb_Prod_Attr_Relation SKUDetailToRelateion(Eav_ProdDetails item, List<tb_ProdPropertyValue> prodPropertyValues, string propertyValueName)
         {
             tb_Prod_Attr_Relation rela = new tb_Prod_Attr_Relation();
-            
+
             var detail = MainForm.Instance.mapper.Map<tb_ProdDetail>(item);
             tb_ProdPropertyValue ppv = prodPropertyValues.FirstOrDefault(p => p.PropertyValueName == propertyValueName);
             rela.Property_ID = ppv.Property_ID;
@@ -828,7 +828,7 @@ namespace RUINORERP.UI.ProductEAV
                 //详情直接清空，因为是新增 ，属性这块不清楚。后面再优化：TODO:
 
                 _EditEntity.tb_ProdDetails = new List<tb_ProdDetail>();
-            
+
                 _EditEntity.tb_Prod_Attr_Relations = new List<tb_Prod_Attr_Relation>();
                 // 在类目属性选择后
                 //if (_EditEntity.tb_ProdDetails != null && _EditEntity.tb_ProdDetails.Count > 0)
@@ -1016,7 +1016,7 @@ namespace RUINORERP.UI.ProductEAV
                 }
             };
 
-            if (EditEntity.ProdBaseID==0)
+            if (EditEntity.ProdBaseID == 0)
             {
                 _EditEntity.PropertyType = 1;// cmbPropertyType   1为单属性
             }
@@ -1105,6 +1105,7 @@ namespace RUINORERP.UI.ProductEAV
 
         private void ControlToDataSource(object sender, ConvertEventArgs cevent)
         {
+            BizCodeService bizCodeService = Startup.GetFromFac<BizCodeService>();
             // The method converts back to decimal type only. 
             //if (cevent.DesiredType != typeof(decimal)) return;
             if (string.IsNullOrEmpty(cevent.Value.ToString()) || cevent.Value.ToString() == "类目根结节")
@@ -1117,10 +1118,7 @@ namespace RUINORERP.UI.ProductEAV
                 if (entity != null)
                 {
                     cevent.Value = entity.Category_ID;
-                    //同时给出品号的建议类目代码
-                    txtNo.Text = BNRFactory.Default.Create("{CN:" + entity.Category_name + "}");
-                    //txtNo.Text = BNRFactory.Default.Create("{S:OD}{CN:广州}");
-
+                   txtNo.Text = BNRFactory.Default.Create("{CN:" + entity.Category_name + "}");
                 }
                 else
                 {
@@ -1615,7 +1613,7 @@ namespace RUINORERP.UI.ProductEAV
                 {
                     isMultProperty = true;
                 }
-                
+
                 //明细转为中间数据视图
                 Eav_ProdDetails ppg = MainForm.Instance.mapper.Map<Eav_ProdDetails>(detail);
                 ppg.GroupName = groupName;

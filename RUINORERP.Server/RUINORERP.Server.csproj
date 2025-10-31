@@ -205,7 +205,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\BNR\BNR.csproj" />
     <ProjectReference Include="..\HLH.Lib\HLH.Lib.csproj" />
     <ProjectReference Include="..\RUINORERP.Business\RUINORERP.Business.csproj" />
     <ProjectReference Include="..\RUINORERP.Common\RUINORERP.Common.csproj" />

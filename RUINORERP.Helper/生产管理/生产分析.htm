@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        /* 全局样式 */
+        body {
+            font-family: "Microsoft YaHei", Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+
+        /* 标题样式 */
+        h1 {
+            color: #2c3e50;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            font-size: 2em;
+        }
+
+        h2 {
+            color: #34495e;
+            border-left: 4px solid #3498db;
+            padding-left: 15px;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        h3 {
+            color: #555;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+
+        /* 段落样式 */
+        p {
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        /* 列表样式 */
+        ul, ol {
+            margin-bottom: 20px;
+            padding-left: 30px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        /* 表格样式 */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background-color: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        th {
+            background-color: #3498db;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+        }
+
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #eee;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        tr:hover {
+            background-color: #e3f2fd;
+        }
+
+        /* 强调文本 */
+        strong {
+            color: #2c3e50;
+        }
+
+        /* 链接样式 */
+        a {
+            color: #3498db;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+            color: #2980b9;
+        }
+
+        /* 提示框样式*/
+        .tip {
+            background-color: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .warning {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .note {
+            background-color: #d1ecf1;
+            border-left: 4px solid #17a2b8;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 4px 4px 0;
+        }
+    </style>
+    
+    <title>生产分析</title>
+    <meta charset="utf-8">
+</head>
+<body>
+    <div style="background-color: #f0f0f0; padding: 10px; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 5px;">
+    <strong>导航链接：</strong>
+    <a href="生产管理.htm" style="margin-right: 15px;">生产管理</a>
+    <a href="进销存管理.htm" style="margin-right: 15px;">进销存管理</a>
+    <a href="售后管理.htm" style="margin-right: 15px;">售后管理</a>
+    <a href="客户关系管理.htm" style="margin-right: 15px;">客户关系</a>
+    <a href="财务管理.htm" style="margin-right: 15px;">财务管理</a>
+    <a href="行政管理.htm" style="margin-right: 15px;">行政管理</a>
+    <a href="报表管理.htm" style="margin-right: 15px;">报表管理</a>
+    <a href="电商运营.htm" style="margin-right: 15px;">电商运营</a>
+    <a href="基础资料管理.htm" style="margin-right: 15px;">基础资料</a>
+    <a href="系统设置.htm" style="margin-right: 15px;">系统设置</a>
+    <a href="通用功能.htm" style="margin-right: 15px;">通用功能</a>
+    <a href="审核反审核结案业务流程.htm" style="margin-right: 15px;">审核流程</a>
+</div>
+    <h1>生产分析</h1>
+    <p>生产分析模块用于提供生产相关的统计分析报表，帮助企业了解生产状况。</p>
+    
+    <h2>功能概述</h2>
+    <p>生产分析主要包括以下功能：</p>
+    <ul>
+        <li><strong>生产计划分析</strong>：分析生产计划完成情况</li>
+        <li><strong>生产效率分析</strong>：分析生产效率和产能利用率</li>
+        <li><strong>产品质量分析</strong>：分析产品质量和合格率</li>
+        <li><strong>生产成本分析</strong>：分析生产成本构成和变化趋势</li>
+        <li><strong>生产设备分析</strong>：分析生产设备使用情况</li>
+    </ul>
+    
+    <h2>核心业务流程</h2>
+    <h3>1. 生产数据分析流程</h3>
+    <p>收集生产过程中的各类数据进行分析。</p>
+    
+    <h3>2. 报表生成流程</h3>
+    <p>根据分析结果生成各类生产分析报表。</p>
+    
+    <h3>3. 报表分发流程</h3>
+    <p>将生成的报表分发给相关人员或部门。</p>
+    
+    <h2>主要报表类型</h2>
+    <ul>
+        <li><strong>生产计划完成率报表</strong>：分析生产计划完成情况</li>
+        <li><strong>生产效率分析报表</strong>：分析生产效率和产能利用率</li>
+        <li><strong>产品质量统计报表</strong>：分析产品质量和合格率</li>
+        <li><strong>生产成本分析报表</strong>：分析生产成本构成和变化趋势</li>
+        <li><strong>设备利用率报表</strong>：分析生产设备使用情况</li>
+    </ul>
+    
+    <h2>关键字段说明</h2>
+    <table border="1">
+        <tr>
+            <th>字段名</th>
+            <th>说明</th>
+        </tr>
+        <tr>
+            <td>分析期间</td>
+            <td>生产分析的时间范围</td>
+        </tr>
+        <tr>
+            <td>产品名称</td>
+            <td>分析的产品名称</td>
+        </tr>
+        <tr>
+            <td>计划产量</td>
+            <td>计划生产的数量</td>
+        </tr>
+        <tr>
+            <td>实际产量</td>
+            <td>实际生产的数量</td>
+        </tr>
+        <tr>
+            <td>完成率</td>
+            <td>生产计划完成率</td>
+        </tr>
+        <tr>
+            <td>合格率</td>
+            <td>产品质量合格率</td>
+        </tr>
+        <tr>
+            <td>生产成本</td>
+            <td>产品的生产成本</td>
+        </tr>
+        <tr>
+            <td>设备利用率</td>
+            <td>生产设备利用率</td>
+        </tr>
+    </table>
+</body>
+</html>

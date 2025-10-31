@@ -284,9 +284,8 @@ namespace RUINORERP.Business.Cache
         /// </summary>
         /// <param name="keyType">缓存键类型</param>
         /// <param name="tableName">表名</param>
-        /// <param name="primaryKeyValue">主键值（不再使用）</param>
+        /// <param name="primaryKeyValue">主键值（用于实体和显示值缓存）</param>
         /// <returns>格式化的缓存键</returns>
-        /// <remarks>当前只支持List类型的缓存键生成</remarks>
         public string GenerateCacheKey(CacheKeyType keyType, string tableName, object primaryKeyValue = null)
         {
             try
@@ -296,15 +295,36 @@ namespace RUINORERP.Business.Cache
                     throw new ArgumentNullException(nameof(tableName), "表名不能为空");
                 }
 
-                // 当前只支持List类型，忽略其他类型
-                if (keyType != CacheKeyType.List)
+                // 根据不同的缓存类型生成不同格式的缓存键
+                switch (keyType)
                 {
-                    _logger?.LogWarning($"当前只支持List类型的缓存键生成，请求的类型: {keyType}");
+                    case CacheKeyType.List:
+                        // 实体列表缓存键格式：Table_{表名}_List
+                        return $"Table_{tableName}_List";
+                    
+                    case CacheKeyType.Entity:
+                        // 单个实体缓存键格式：Table_{表名}_Entity_{主键值}
+                        // 对于实体缓存，主键值是必需的
+                        if (primaryKeyValue == null)
+                        {
+                            throw new ArgumentNullException(nameof(primaryKeyValue), "对于Entity类型的缓存键，主键值不能为空");
+                        }
+                        return $"Table_{tableName}_Entity_{primaryKeyValue}";
+                    
+                    case CacheKeyType.DisplayValue:
+                        // 显示值缓存键格式：Table_{表名}_Display_{主键值}
+                        return $"Table_{tableName}_Display_{primaryKeyValue ?? string.Empty}";
+                    
+                    case CacheKeyType.QueryResult:
+                        // 查询结果缓存键格式：Table_{表名}_Query_{查询标识}
+                        // 使用主键值作为查询标识（可以是查询条件的哈希值或其他标识）
+                        return $"Table_{tableName}_Query_{primaryKeyValue ?? string.Empty}";
+                    
+                    default:
+                        // 对于未明确支持的类型，记录警告并使用默认格式
+                        _logger?.LogWarning($"不支持的缓存键类型: {keyType}，使用默认格式");
+                        return $"Table_{tableName}_{keyType}_{primaryKeyValue ?? string.Empty}";
                 }
-
-                // 统一格式：Table_{表名}_List
-                // 不再使用主键值，因为现在只存储列表缓存
-                return $"Table_{tableName}_{CacheKeyType.List}";
             }
             catch (Exception ex)
             {
@@ -705,7 +725,7 @@ namespace RUINORERP.Business.Cache
 
         /// <summary>
         /// 更新列表缓存中的单个实体（智能过滤，只处理需要缓存的表）
-        /// 注意：现在只更新列表缓存，不再更新单个实体和显示值缓存
+        /// 会自动清理相关的Entity和DisplayValue缓存，保持缓存一致性
         /// </summary>
         public void UpdateEntity<T>(T entity) where T : class
         {
@@ -726,7 +746,7 @@ namespace RUINORERP.Business.Cache
             // 直接更新列表缓存中的该实体
             UpdateEntityInList(tableName, entity);
 
-            _logger?.LogDebug($"已更新表 {tableName} 列表缓存中的单个实体");
+            _logger?.LogDebug($"已更新表 {tableName} 列表缓存中的单个实体，并自动清理相关的Entity和DisplayValue缓存");
 
             // 更新缓存同步元数据
             UpdateCacheSyncMetadataAfterEntityChange(tableName);

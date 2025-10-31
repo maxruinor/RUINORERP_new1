@@ -1,4 +1,4 @@
-﻿using RUINORERP.Model;
+using RUINORERP.Model;
 using SqlSugar;
 using System;
 using System.Collections.Generic;
@@ -120,11 +120,35 @@ namespace RUINORERP.Server.SmartReminder
                         var irule = rule as IReminderRule;
                         if (irule == null)
                         {
-                            _logger.LogWarning("规则类型转换失败: {RuleType}", rule.GetType().Name);
+                            _logger.LogWarning("规则类型转换失败: {RuleType}", rule?.GetType().Name);
                             continue;
                         }
-                         
-                        reminderContext = await CreateContextAsync(irule);
+                        
+                        // 使用try-catch块确保即使在创建上下文过程中出现异常也能正确处理
+                        IDisposable disposableContext = null;
+                        try
+                        {
+                            reminderContext = await CreateContextAsync(irule);
+                            disposableContext = reminderContext as IDisposable;
+                        }
+                        catch (Exception contextEx)
+                        {
+                            _logger.LogError(contextEx, "为规则 {RuleId} 创建上下文时出错", rule?.GetType().Name);
+                            // 确保即使创建上下文失败也能释放已创建的资源
+                            if (disposableContext != null)
+                            {
+                                try
+                                {
+                                    disposableContext.Dispose();
+                                }
+                                catch (Exception disposeEx)
+                                {
+                                    _logger.LogError(disposeEx, "释放创建失败的上下文资源时出错");
+                                }
+                            }
+                            // 即使创建上下文失败，也继续处理下一个规则
+                            continue;
+                        }
 
                         //这里要从数据库配置中转换过来
                         ReminderBizType reminderBiz = (ReminderBizType)irule.ReminderBizType;
@@ -147,7 +171,14 @@ namespace RUINORERP.Server.SmartReminder
                         // 释放上下文资源
                         if (reminderContext is IDisposable disposableContext)
                         {
-                            disposableContext.Dispose();
+                            try
+                            {
+                                disposableContext.Dispose();
+                            }
+                            catch (Exception disposeEx)
+                            {
+                                _logger.LogError(disposeEx, "释放上下文资源时出错");
+                            }
                         }
                     }
                 }
@@ -161,7 +192,14 @@ namespace RUINORERP.Server.SmartReminder
                 // 确保释放信号量
                 if (lockAcquired)
                 {
-                    _checkLock.Release();
+                    try
+                    {
+                        _checkLock.Release();
+                    }
+                    catch (Exception releaseEx)
+                    {
+                        _logger.LogError(releaseEx, "释放检查锁时出错");
+                    }
                     lockAcquired = false;
                 }
                 _logger.LogDebug("检测任务执行完成 - {Time}", System.DateTime.Now);
@@ -172,12 +210,21 @@ namespace RUINORERP.Server.SmartReminder
 
         private async Task<IReminderContext> CreateContextAsync(IReminderRule rule)
         {
-            return rule.ReminderBizType switch
+            try
             {
-                (int)ReminderBizType.安全库存提醒 => await CreateInventoryContextAsync(rule),
-                //ReminderBizType.单据审批提醒 => await CreateOrderContextAsync(rule),
-                _ => throw new NotSupportedException()
-            };
+                return rule.ReminderBizType switch
+                {
+                    (int)ReminderBizType.安全库存提醒 => await CreateInventoryContextAsync(rule),
+                    //ReminderBizType.单据审批提醒 => await CreateOrderContextAsync(rule),
+                    _ => throw new NotSupportedException($"不支持的提醒业务类型: {rule.ReminderBizType}")
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "创建提醒上下文时发生异常，返回默认空上下文");
+                // 确保即使在创建上下文过程中出现异常，也能返回一个默认的上下文对象
+                return new InventoryContext(new List<tb_Inventory>());
+            }
         }
 
         private async Task<IReminderContext> CreateInventoryContextAsync(IReminderRule rule)
@@ -206,7 +253,8 @@ namespace RUINORERP.Server.SmartReminder
             catch (Exception ex)
             {
                 _logger.LogError(ex, "创建库存上下文失败");
-                return resultContext; // 返回空上下文
+                // 确保在出现异常时也返回一个有效的上下文对象
+                return resultContext ?? new InventoryContext(new List<tb_Inventory>()); // 返回空上下文
             }
         }
 

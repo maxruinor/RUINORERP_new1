@@ -285,6 +285,12 @@ namespace RUINORERP.PacketSpec.Commands
         Connection = 0x11,
 
         /// <summary>
+        /// 业务编码命令
+        /// </summary>
+        [Description("业务编码命令")]
+        BizCode = 0x0F,
+
+        /// <summary>
         /// 特殊功能命令
         /// </summary>
         [Description("特殊功能命令")]

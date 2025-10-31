@@ -546,8 +546,21 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 if (currentSession == null || existingSession == null)
                     return false;
 
-                // 如果IP地址相同，则认为是本地重复登录
-                return currentSession.ClientIp == existingSession.ClientIp;
+                // 如果IP地址相同，则可能是本地重复登录
+                // 但需要进一步检查设备信息和用户代理以避免误判
+                if (currentSession.ClientIp == existingSession.ClientIp)
+                {
+                    // 检查设备信息是否相同
+                    bool deviceInfoMatch = string.Equals(
+                        currentSession.DeviceInfo, 
+                        existingSession.DeviceInfo, 
+                        StringComparison.OrdinalIgnoreCase);
+                    
+                    // 如果IP相同且设备信息也相同，则认为是同一设备
+                    return deviceInfoMatch;
+                }
+                
+                return false;
             }
             catch (Exception ex)
             {

@@ -54,11 +54,11 @@ namespace RUINORERP.Server.Controls
             // 
             // tsbtnPublish
             // 
-            tsbtnPublish.Image = null;
+            tsbtnPublish.ImageTransparentColor = System.Drawing.Color.Magenta;
             tsbtnPublish.Name = "tsbtnPublish";
-            tsbtnPublish.Size = new System.Drawing.Size(52, 22);
+            tsbtnPublish.Size = new System.Drawing.Size(48, 22);
             tsbtnPublish.Text = "发布";
-            tsbtnPublish.Click += new System.EventHandler(tsbtnPublish_Click);
+            tsbtnPublish.Click += tsbtnPublish_Click;
             // 
             // toolStrip1
             // 
@@ -114,14 +114,7 @@ namespace RUINORERP.Server.Controls
             tsbtnHistory.Size = new System.Drawing.Size(60, 22);
             tsbtnHistory.Text = "历史记录";
             tsbtnHistory.Click += tsbtnHistory_Click;
-            // 
-            // tsbtnPublish
-            // 
-            tsbtnPublish.ImageTransparentColor = System.Drawing.Color.Magenta;
-            tsbtnPublish.Name = "tsbtnPublish";
-            tsbtnPublish.Size = new System.Drawing.Size(48, 22);
-            tsbtnPublish.Text = "发布";
-            tsbtnPublish.Click += tsbtnPublish_Click;
+
             // 
             // splitContainer2
             // 

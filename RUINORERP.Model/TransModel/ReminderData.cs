@@ -19,7 +19,9 @@ namespace RUINORERP.Model.TransModel
         Business = 6,
         Prompt = 7,
         UnLockRequest = 8,
-        ExceptionLog = 9
+        ExceptionLog = 9,
+        Broadcast = 10,
+        Approve = 11
     }
 
     /// <summary>
@@ -100,6 +102,8 @@ namespace RUINORERP.Model.TransModel
         }
 
         public object CreateTime { get; set; }
+        public DateTime ReadTime { get; set; }
+        public string Title { get; set; }
 
         // 构造函数
         public ReminderData()

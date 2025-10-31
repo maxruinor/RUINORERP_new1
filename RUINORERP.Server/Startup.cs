@@ -171,7 +171,11 @@ namespace RUINORERP.Server
             builder.RegisterType<AutoComplete>()
                 .WithParameter((pi, c) => pi.ParameterType == typeof(SearchType), (pi, c) => SearchType.Document);
                 
-            builder.RegisterType<BizCodeGenerator>(); // 注册拦截器
+            // 注册业务编码生成相关服务
+            builder.RegisterType<BizCodeGenerator>(); // 注册原有的业务编码生成器
+            builder.RegisterType<BNRFactory>().AsSelf().SingleInstance(); // 注册BNR工厂
+            builder.RegisterType<DatabaseSequenceService>().AsSelf().InstancePerLifetimeScope(); // 注册数据库序列服务
+            builder.RegisterType<BizCodeService>().As<IBizCodeService>().InstancePerLifetimeScope(); // 注册业务编码服务
             
             // 注册AOP拦截器
             builder.RegisterType<BaseDataCacheAOP>(); // 注册拦截器

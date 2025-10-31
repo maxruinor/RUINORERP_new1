@@ -126,16 +126,41 @@ namespace RUINORERP.Server.SmartReminder
         // Timer回调使用void返回类型，避免异常被吞没
         private void TimerCallback(object state)
         {
-            // 不等待异步任务完成，避免阻塞Timer线程池
-            _ = RetryAsync(async () => await SafeCheckRemindersAsync(),
-                "定时器触发的提醒检查", MaxRetryAttempts, CancellationToken.None)
-                .ContinueWith(task =>
-                {
-                    if (task.IsFaulted && task.Exception != null)
+            try
+            {
+                // 不等待异步任务完成，避免阻塞Timer线程池
+                _ = RetryAsync(async () => 
                     {
-                        _logger.LogError(task.Exception, "安全检查提醒过程中发生未处理异常，已达到最大重试次数");
-                    }
-                });
+                        try
+                        {
+                            return await SafeCheckRemindersAsync();
+                        }
+                        catch (Exception innerEx)
+                        {
+                            // 捕获异步操作中的异常并记录详细信息
+                            _logger.LogError(innerEx, "SafeCheckRemindersAsync执行过程中发生异常");
+                            throw; // 重新抛出以触发重试逻辑
+                        }
+                    },
+                    "定时器触发的提醒检查", MaxRetryAttempts, CancellationToken.None)
+                    .ContinueWith(task =>
+                    {
+                        if (task.IsFaulted && task.Exception != null)
+                        {
+                            // 处理所有未观察到的异常，避免异常被吞没有
+                            _logger.LogError(task.Exception, "安全检查提醒过程中发生未处理异常，已达到最大重试次数");
+                            // 处理AggregateException，记录内部异常详情
+                            foreach (var ex in task.Exception.Flatten().InnerExceptions)
+                            {
+                                _logger.LogError(ex, "重试过程中的内部异常详情");
+                            }
+                        }
+                    }, TaskContinuationOptions.ExecuteSynchronously); // 同步执行，确保异常被立即处理
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "TimerCallback执行过程中发生同步异常");
+            }
         }
 
         private void StopMonitoring()

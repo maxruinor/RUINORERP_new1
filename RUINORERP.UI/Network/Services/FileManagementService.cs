@@ -16,6 +16,7 @@ using System.Collections.Generic;
 using System.Linq;
 using RUINOR.WinFormsUI.CustomPictureBox;
 using RUINORERP.Model;
+using System.Drawing;
 
 namespace RUINORERP.UI.Network.Services
 {
@@ -30,6 +31,8 @@ namespace RUINORERP.UI.Network.Services
         private readonly ILogger<FileManagementService> _log;
         private readonly SemaphoreSlim _fileOperationLock = new SemaphoreSlim(1, 1); // 防止并发文件操作请求
         private bool _isDisposed = false;
+        // 图片扩展名常量，避免重复创建数组
+        private static readonly string[] ImageExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tiff", ".webp" };
 
         /// <summary>
         /// 构造函数
@@ -43,6 +46,81 @@ namespace RUINORERP.UI.Network.Services
         {
             _communicationService = communicationService ?? throw new ArgumentNullException(nameof(communicationService));
             _log = logger;
+        }
+
+        /// <summary>
+        /// 验证文件数据是否为有效的图片文件
+        /// </summary>
+        /// <param name="fileData">文件数据</param>
+        /// <returns>如果是有效的图片文件返回true，否则返回false</returns>
+        private bool IsValidImageFile(byte[] fileData)
+        {
+            if (fileData == null || fileData.Length == 0)
+                return false;
+
+            try
+            {
+                // 尝试从字节数组创建图像以验证是否为有效的图片文件
+                using (var ms = new MemoryStream(fileData))
+                {
+                    using (var image = Image.FromStream(ms))
+                    {
+                        // 检查图像的宽度和高度以确保是有效的图像
+                        return image.Width > 0 && image.Height > 0;
+                    }
+                }
+            }
+            catch
+            {
+                // 如果出现任何异常，说明不是有效的图片文件
+                return false;
+            }
+        }
+
+        private bool IsValidImageFile(Stream stream)
+        {
+            try
+            {
+                using (var image = Image.FromStream(stream))
+                {
+                    // 检查图像的宽度和高度以确保是有效的图像
+                    return image.Width > 0 && image.Height > 0;
+                }
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 验证文件是否为有效的图片文件
+        /// </summary>
+        /// <param name="filePath">文件路径</param>
+        /// <returns>是否为有效的图片文件</returns>
+        private bool IsValidImageFile(string filePath)
+        {
+            try
+            {
+                // 首先检查扩展名
+                string extension = Path.GetExtension(filePath)?.ToLowerInvariant();
+                if (string.IsNullOrEmpty(extension) ||
+                    !new[] { ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tiff", ".webp" }.Contains(extension))
+                {
+                    return false;
+                }
+
+                // 然后验证文件内容
+                using (var image = Image.FromFile(filePath))
+                {
+                    // 检查图像的宽度和高度以确保是有效的图像
+                    return image.Width > 0 && image.Height > 0;
+                }
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         /// <summary>
@@ -79,20 +157,16 @@ namespace RUINORERP.UI.Network.Services
                     return FileDeleteResponse.CreateFailure("未连接到服务器，请检查网络连接后重试");
                 }
 
-             
-
-                // 验证是否为图片文件 - 基于文件扩展名
-                string[] imageExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tiff", ".webp" };
-
-
+                // 验证是否为图片文件 - 基于文件扩展名和内容检查
                 // 验证是否为图片文件
-                bool isImageFile = imageExtensions.Contains(fileStorageInfo.FileExtension) ||
-                                    imageExtensions.Contains(fileStorageInfo.FileType) ||
-                                  fileStorageInfo.FileType.Contains("image/") ||
-                                  fileStorageInfo.FileType.Contains("图片") ||
-                                  fileStorageInfo.FileType.Contains("image");
+                bool isImageFile = ImageExtensions.Contains(fileStorageInfo.FileExtension?.ToLower()) ||
+                                    ImageExtensions.Contains(fileStorageInfo.FileType?.ToLower()) ||
+                                  (fileStorageInfo.FileType?.Contains("image/") ?? false) ||
+                                  (fileStorageInfo.FileType?.Contains("图片") ?? false) ||
+                                  (fileStorageInfo.FileType?.Contains("image") ?? false);
 
-                if (!isImageFile)
+                // 增加文件内容类型检查，确保真正删除的是图片文件
+                if (!isImageFile && !IsValidImageFile(fileStorageInfo.FileData))
                 {
                     return FileDeleteResponse.CreateFailure("只能删除图片文件");
                 }
@@ -144,7 +218,6 @@ namespace RUINORERP.UI.Network.Services
                 if (lockAcquired && _fileOperationLock.CurrentCount == 0)
                 {
                     _fileOperationLock.Release();
-                    lockAcquired = false;
                 }
             }
         }
@@ -227,7 +300,6 @@ namespace RUINORERP.UI.Network.Services
                 if (lockAcquired && _fileOperationLock.CurrentCount == 0)
                 {
                     _fileOperationLock.Release();
-                    lockAcquired = false;
                 }
             }
         }
@@ -464,16 +536,9 @@ namespace RUINORERP.UI.Network.Services
             finally
             {
                 // 确保只在成功获取锁的情况下才尝试释放，避免重复释放
-                if (lockAcquired && _fileOperationLock.CurrentCount >= 0)
+                if (lockAcquired && _fileOperationLock.CurrentCount == 0)
                 {
-                    try
-                    {
-                        _fileOperationLock.Release();
-                    }
-                    catch (Exception ex)
-                    {
-                        _log?.LogError(ex, "释放文件操作锁时发生异常");
-                    }
+                    _fileOperationLock.Release();
                 }
             }
         }
@@ -549,16 +614,9 @@ namespace RUINORERP.UI.Network.Services
             finally
             {
                 // 确保只在成功获取锁的情况下才尝试释放，避免重复释放
-                if (lockAcquired && _fileOperationLock.CurrentCount >= 0)
+                if (lockAcquired && _fileOperationLock.CurrentCount == 0)
                 {
-                    try
-                    {
-                        _fileOperationLock.Release();
-                    }
-                    catch (Exception ex)
-                    {
-                        _log?.LogError(ex, "释放文件操作锁时发生异常");
-                    }
+                    _fileOperationLock.Release();
                 }
             }
         }

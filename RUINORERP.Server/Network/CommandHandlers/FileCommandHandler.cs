@@ -378,54 +378,63 @@ namespace RUINORERP.Server.Network.CommandHandlers
 
         /// <summary>
         /// 根据文件信息查找物理文件
-        /// 搜索策略：1. 分类目录 2. 根目录
+        /// 优化的搜索策略：先精确匹配，后通配符匹配；优先搜索最可能存在的目录
         /// </summary>
         /// <param name="fileInfo">文件信息</param>
         /// <returns>找到的文件路径，找不到返回null</returns>
         private async Task<string> FindPhysicalFileAsync(tb_FS_FileStorageInfo fileInfo)
         {
             _logger?.Debug("开始执行文件查找策略，FileId: {FileId}", fileInfo?.FileId);
-            // 搜索策略：1. 分类目录 2. 根目录
 
-            // 优化搜索模式，提高性能
-            var searchPatterns = new List<string>();
+            // 优化搜索模式 - 分为精确匹配和通配符匹配两组
+            var exactMatchPatterns = new List<string>();
+            var wildcardPatterns = new List<string>();
             
-            // 优先使用精确匹配
-            // 从StoragePath中提取文件名（如果有）
+            // 1. 优先使用精确匹配模式
+            // 从StoragePath直接尝试（精确路径）
+            if (!string.IsNullOrEmpty(fileInfo.StoragePath) && File.Exists(fileInfo.StoragePath))
+            {
+                _logger?.Debug("StoragePath直接存在，返回完整路径: {Path}", fileInfo.StoragePath);
+                return fileInfo.StoragePath;
+            }
+            
+            // 从StoragePath中提取文件名（精确匹配）
             if (!string.IsNullOrEmpty(fileInfo.StoragePath))
             {
                 var fileNameFromPath = Path.GetFileName(fileInfo.StoragePath);
                 if (!string.IsNullOrEmpty(fileNameFromPath))
                 {
-                    searchPatterns.Add(fileNameFromPath);
-                    _logger?.LogDebug("添加StoragePath中的文件名到搜索模式: {FileName}", fileNameFromPath);
+                    exactMatchPatterns.Add(fileNameFromPath);
+                    _logger?.LogDebug("添加StoragePath中的文件名到精确匹配模式: {FileName}", fileNameFromPath);
                 }
             }
             
-            // 其次是存储文件名（如果有）
+            // 存储文件名（精确匹配）
             if (!string.IsNullOrEmpty(fileInfo.StorageFileName))
             {
-                searchPatterns.Add(fileInfo.StorageFileName);
+                exactMatchPatterns.Add(fileInfo.StorageFileName);
+                
                 // 仅在必要时使用通配符
                 if (!fileInfo.StorageFileName.Contains('.'))
                 {
-                    searchPatterns.Add($"{fileInfo.StorageFileName}.*");
+                    wildcardPatterns.Add($"{fileInfo.StorageFileName}.*");
                 }
             }
             
-            // 根据文件ID搜索（作为备用方案）
-            searchPatterns.Add($"{fileInfo.FileId}.*");
+            // 2. 备用通配符模式
+            // 根据文件ID搜索
+            wildcardPatterns.Add($"{fileInfo.FileId}.*");
             
             // 如果有哈希值，也作为搜索条件
             if (!string.IsNullOrEmpty(fileInfo.HashValue))
             {
-                searchPatterns.Add($"{fileInfo.HashValue}.*");
+                wildcardPatterns.Add($"{fileInfo.HashValue}.*");
             }
 
-            // 搜索目录列表
+            // 搜索目录列表 - 按照优先级排序
             var searchDirectories = new List<string>();
 
-            // 首先尝试从StoragePath中提取目录信息（如果有）
+            // 1. 首先尝试从StoragePath中提取目录信息（最可能的位置）
             if (!string.IsNullOrEmpty(fileInfo.StoragePath))
             {
                 var directoryFromPath = Path.GetDirectoryName(fileInfo.StoragePath);
@@ -436,7 +445,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 }
             }
 
-            // 分类目录（包括YYMM子目录）
+            // 2. 业务类型目录 - 减少子目录搜索数量，只搜索最近3个月
             if (fileInfo.BusinessType.HasValue)
             {
                 var baseBusinessPath = Path.Combine(_fileStoragePath, fileInfo.BusinessType.Value.ToString());
@@ -444,13 +453,13 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 {
                     searchDirectories.Add(baseBusinessPath);
 
-                    // 获取并添加YYMM子目录（按时间倒序）
+                    // 获取并添加YYMM子目录（按时间倒序，减少数量）
                     try
                     {
                         var subDirs = Directory.GetDirectories(baseBusinessPath)
                                              .Where(dir => Directory.Exists(dir))
                                              .OrderByDescending(dir => dir)
-                                             .Take(6); // 只搜索最近6个月的目录
+                                             .Take(3); // 只搜索最近3个月的目录
                         searchDirectories.AddRange(subDirs);
                     }
                     catch (Exception ex)
@@ -460,34 +469,45 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 }
             }
 
-            // 最后添加根目录作为兜底
-            searchDirectories.Add(_fileStoragePath);
+            // 3. 最后添加根目录作为兜底
+            if (!searchDirectories.Contains(_fileStoragePath))
+            {
+                searchDirectories.Add(_fileStoragePath);
+            }
 
             // 去重
             searchDirectories = searchDirectories.Distinct().ToList();
 
-            // 搜索所有可能的目录和模式
-            foreach (var directory in searchDirectories)
+            // 优化搜索策略：先使用精确模式在所有目录搜索，再使用通配符模式
+            // 这样可以在找到精确匹配时立即返回，减少不必要的通配符搜索
+            var allPatterns = new List<List<string>> { exactMatchPatterns, wildcardPatterns };
+            
+            foreach (var patternGroup in allPatterns)
             {
-                if (!Directory.Exists(directory)) continue;
-
-                _logger?.LogDebug("在目录中搜索: {Directory}", directory);
-                foreach (var pattern in searchPatterns)
+                if (patternGroup.Count == 0) continue;
+                
+                foreach (var directory in searchDirectories)
                 {
-                    try
+                    if (!Directory.Exists(directory)) continue;
+
+                    _logger?.LogDebug("在目录中搜索: {Directory}", directory);
+                    foreach (var pattern in patternGroup)
                     {
-                        _logger?.LogDebug("使用模式搜索: {Pattern}", pattern);
-                        var files = Directory.GetFiles(directory, pattern);
-                        if (files.Length > 0)
+                        try
                         {
-                            _logger?.Debug("找到匹配的文件: {FilePath}", files[0]);
-                            return files[0];
+                            _logger?.LogDebug("使用模式搜索: {Pattern}", pattern);
+                            var files = Directory.GetFiles(directory, pattern);
+                            if (files.Length > 0)
+                            {
+                                _logger?.Debug("找到匹配的文件: {FilePath}", files[0]);
+                                return files[0];
+                            }
                         }
-                    }
-                    catch (Exception ex)
-                    {
-                        // 记录错误但继续搜索
-                        _logger?.LogWarning(ex, "搜索文件时出错: 目录={Directory}, 模式={Pattern}", directory, pattern);
+                        catch (Exception ex)
+                        {
+                            // 记录错误但继续搜索
+                            _logger?.LogWarning(ex, "搜索文件时出错: 目录={Directory}, 模式={Pattern}", directory, pattern);
+                        }
                     }
                 }
             }

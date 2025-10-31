@@ -1,4 +1,4 @@
-﻿using RUINORERP.Server.Comm;
+using RUINORERP.Server.Comm;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -78,7 +78,7 @@ public class BlacklistManager : INotifyCollectionChanged
         _bannedIPs.TryRemove(ip, out _);
 
         if (_uiContext == null)
-            throw new InvalidOperationException("UI context not initialized. Call Initialize() first.");
+            throw new InvalidOperationException($"无法解除IP地址[{ip}]的封禁: UI上下文未初始化。请在使用黑名单管理功能前先调用Initialize()方法初始化UI上下文。");
 
         if (_uiContext == SynchronizationContext.Current)
         {

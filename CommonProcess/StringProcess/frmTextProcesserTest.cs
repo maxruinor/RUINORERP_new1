@@ -3,7 +3,6 @@ using HLH.Lib.Helper;
 using NSoup;
 using NSoup.Nodes;
 using NSoup.Select;
-using SiteRules.aliexpress;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -459,9 +458,9 @@ namespace CommonProcess.StringProcess
                 string json = richTextBox结果.Text;
                 HLH.Lib.Helper.JsonHelper jh = new JsonHelper();
                 object objJson = jh.GetObjectByJsonString(richTextBox结果.Text);
-                SiteRules.aliexpress.SkuModule skumodule = new SiteRules.aliexpress.SkuModule();
-                //objJson 必需是对应类的json文本 
-                skumodule = jh.JsonEntityLast<SkuModule>(objJson, false, "SiteRules.dll");
+                //SiteRules.aliexpress.SkuModule skumodule = new SiteRules.aliexpress.SkuModule();
+                ////objJson 必需是对应类的json文本 
+                //skumodule = jh.JsonEntityLast<SkuModule>(objJson, false, "SiteRules.dll");
 
             }
             richTextBox结果.Clear();

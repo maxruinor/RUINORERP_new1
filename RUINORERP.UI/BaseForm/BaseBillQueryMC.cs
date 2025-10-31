@@ -2103,7 +2103,7 @@ namespace RUINORERP.UI.BaseForm
                     Application.Idle -= idleHandler;
 
                     // 短暂延迟确保所有UI更新完成
-                    await Task.Delay(200);
+                    await Task.Delay(150);
 
                     // 确保在执行查询前，参数已经正确加载到UI控件并与QueryDtoProxy同步
                     // 这里UIQuery设置为true，让Query方法执行UI验证，确保控件与数据模型的一致性
@@ -2727,8 +2727,10 @@ namespace RUINORERP.UI.BaseForm
                     }
                     _UCBillMasterQuery.GridRelated.SetRelatedInfo(typeof(M).Name, RelatedBillEditCol.GetMemberInfo().Name);
                 }
-                QueryDtoProxy = LoadQueryConditionToUI();
-
+                if (QueryDtoProxy==null)
+                {
+                    QueryDtoProxy = LoadQueryConditionToUI();
+                }
             }
 
 

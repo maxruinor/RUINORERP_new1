@@ -39,7 +39,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
         private readonly IEntityMappingService _mapper;
         private readonly EntityLoader _loader;
         private readonly ILogger<UCTodoList> _logger;
-        public UCTodoList(IEntityMappingService mapper, EntityLoader loader , ILogger<UCTodoList> logger)
+        public UCTodoList(IEntityMappingService mapper, EntityLoader loader, ILogger<UCTodoList> logger)
         {
             InitializeComponent();
             _logger = logger;
@@ -150,7 +150,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
             return config ?? new tb_WorkCenterConfig();
         }
 
-        private void kryptonTreeViewJobList_NodeMouseDoubleClickAsync(object sender, TreeNodeMouseClickEventArgs e)
+        private async void kryptonTreeViewJobList_NodeMouseDoubleClickAsync(object sender, TreeNodeMouseClickEventArgs e)
         {
             // e.Node
             //导航到指向的单据界面
@@ -178,9 +178,10 @@ namespace RUINORERP.UI.UserCenter.DataParts
 
 
 
-                            _menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, instance, nodeParameter);
-                            //要卸载，不然会多次执行
+                            // 为了保持一致性，也使用相同的模式
                             _menuPowerHelper.OnSetQueryConditionsDelegate -= MenuPowerHelper_OnSetQueryConditionsDelegate;
+                            _menuPowerHelper.OnSetQueryConditionsDelegate += MenuPowerHelper_OnSetQueryConditionsDelegate;
+                            await _menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, instance, nodeParameter);
                             #endregion
                         }
                         else
@@ -193,10 +194,13 @@ namespace RUINORERP.UI.UserCenter.DataParts
                             nodeParameter.queryFilter = QueryConditionFilter;
                             // 创建实例
                             object instance = Activator.CreateInstance(nodeParameter.tableType);
-                            _menuPowerHelper.OnSetQueryConditionsDelegate += MenuPowerHelper_OnSetQueryConditionsDelegate;
-                            _menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, instance, nodeParameter);
-                            //要卸载，不然会多次执行
+                            // 先移除已注册的处理程序（如果有），确保不会重复注册
                             _menuPowerHelper.OnSetQueryConditionsDelegate -= MenuPowerHelper_OnSetQueryConditionsDelegate;
+                            // 重新注册事件处理程序
+                            _menuPowerHelper.OnSetQueryConditionsDelegate += MenuPowerHelper_OnSetQueryConditionsDelegate;
+                            // 执行事件，由于内部使用BeginInvoke，实际执行是异步的
+                            await _menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, instance, nodeParameter);
+
                             #endregion
                         }
 
@@ -223,7 +227,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                     _logger.Debug("查询Dto对象为空，无法设置查询条件");
                     return;
                 }
-                
+
                 if (nodeParameter == null)
                 {
                     _logger.Debug("节点参数为空，无法设置查询条件");
@@ -235,7 +239,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
 
                 // 设置查询条件值
                 SetQueryConditionValues(queryDto, nodeParameter);
-                
+
                 _logger.Debug($"成功设置查询条件: 表类型={nodeParameter.tableType?.Name}");
             }
             catch (Exception ex)
@@ -244,7 +248,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 //不抛出异常，避免影响UI流程
             }
         }
-        
+
         private void ClearQueryConditions(object queryDto, QueryParameter nodeParameter)
         {
             if (nodeParameter.queryFilter?.QueryFields == null)
@@ -252,7 +256,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 _logger.Debug("查询过滤器或查询字段集合为空");
                 return;
             }
-            
+
             try
             {
                 foreach (var item in nodeParameter.queryFilter.QueryFields)
@@ -265,14 +269,21 @@ namespace RUINORERP.UI.UserCenter.DataParts
                             continue;
                         }
 
+                        //打印状态设计得很特殊。int类型用的下拉。
+                        if (item.FieldType == QueryFieldType.CmbEnum)
+                        {
+                            queryDto.SetPropertyValue(item.FieldName, -1L);
+                            continue;
+                        }
+
                         // 修复DateTime类型判断，使用更准确的类型检查
                         if (item.FieldPropertyInfo?.PropertyType != null)
                         {
-                            bool isDateTimeType = item.FieldPropertyInfo.PropertyType == typeof(DateTime) || 
+                            bool isDateTimeType = item.FieldPropertyInfo.PropertyType == typeof(DateTime) ||
                                                 (item.FieldPropertyInfo.PropertyType.IsGenericType &&
                                                  item.FieldPropertyInfo.PropertyType.GetGenericTypeDefinition() == typeof(Nullable<>) &&
                                                  item.FieldPropertyInfo.PropertyType.GetGenericArguments()[0] == typeof(DateTime));
-                            
+
                             if (isDateTimeType)
                             {
                                 queryDto.SetPropertyValue(item.FieldName, null);
@@ -286,11 +297,11 @@ namespace RUINORERP.UI.UserCenter.DataParts
                                 {
                                     queryDto.SetPropertyValue(item.FieldName + "_End", null);
                                 }
-                                
+
                                 continue;
                             }
                         }
-                        
+
                         // 清空其他类型字段的值
                         queryDto.SetPropertyValue(item.FieldName, null);
                     }
@@ -314,7 +325,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 _logger.Debug("条件列表为空，无需设置查询条件值");
                 return;
             }
-            
+
             try
             {
                 foreach (ConditionalModel item in nodeParameter.conditionals)
@@ -355,11 +366,11 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 // 参数验证
                 if (item == null)
                     return null;
-                    
+
                 string fieldValue = item.FieldValue;
                 if (string.IsNullOrEmpty(fieldValue))
                     return fieldValue;
-                    
+
                 // 使用更健壮的类型转换，处理可能的转换失败
                 switch (item.CSharpTypeName)
                 {

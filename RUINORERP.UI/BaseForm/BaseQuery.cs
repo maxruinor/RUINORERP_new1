@@ -35,7 +35,7 @@ namespace RUINORERP.UI.BaseForm
         /// 从工作台点击过来的时候，这个保存初始化时的查询参数
         ///  这个可用可不用。
         /// </summary>
-        public object QueryDtoProxy { get; set; }
+        public object QueryDtoProxy { get; set; } 
 
 
         /// <summary>

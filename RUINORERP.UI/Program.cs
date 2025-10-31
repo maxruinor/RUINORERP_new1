@@ -44,6 +44,7 @@ using RUINORERP.UI.Common;
 using SqlSugar;
 using RUINORERP.UI.Network.DI;
 using RUINORERP.Business.BizMapperService;
+using RUINORERP.Business.Cache;
 
 
 namespace RUINORERP.UI
@@ -538,6 +539,13 @@ namespace RUINORERP.UI
                     // 在应用程序启动时调用此方法进行验证
                     ValidateLoggingConfiguration();
 
+
+                    IEntityCacheManager entityCacheManager = Startup.GetFromFac<IEntityCacheManager>();
+                    // 在应用程序启动时设置当前实体映射服务
+                    // 这通常在依赖注入容器配置完成后调用
+                    EntityCacheHelper.SetCurrent(entityCacheManager);
+
+
                     IEntityMappingService entityMappingService = Startup.GetFromFac<IEntityMappingService>();
                     // 在应用程序启动时设置当前实体映射服务
                     // 这通常在依赖注入容器配置完成后调用
@@ -545,6 +553,10 @@ namespace RUINORERP.UI
 
                     /// 初始化实体映射服务
                     EntityMappingHelper.Initialize();
+
+
+
+
 
                     var form1 = Startup.ServiceProvider.GetService<MainForm>();
                     Application.Run(form1);

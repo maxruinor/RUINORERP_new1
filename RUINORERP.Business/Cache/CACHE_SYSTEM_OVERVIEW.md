@@ -263,7 +263,54 @@ cacheManager.InitializeTableSchema<MyEntity>(
 - 利用CacheClientService的智能请求机制避免重复请求
 - 在请求缓存前先检查本地缓存有效性，减少网络请求
 
-## 9. 注意事项
+## 9. 静态帮助类使用
+
+为了简化缓存系统的使用，系统提供了EntityCacheHelper静态帮助类，允许在不直接注入IEntityCacheManager的情况下访问缓存功能。
+
+### 9.1 EntityCacheHelper初始化
+
+在应用启动时，需要初始化EntityCacheHelper，将IEntityCacheManager实例注入到静态帮助类中：
+
+```csharp
+// 在应用程序启动时，依赖注入容器配置完成后
+var cacheManager = services.GetRequiredService<IEntityCacheManager>();
+EntityCacheHelper.SetCurrent(cacheManager);
+```
+
+### 9.2 使用EntityCacheHelper
+
+一旦初始化完成，就可以在任何代码中直接使用EntityCacheHelper访问缓存功能，无需依赖注入：
+
+```csharp
+// 获取实体列表
+var entityList = EntityCacheHelper.GetEntityList<MyEntity>();
+
+// 更新实体
+EntityCacheHelper.UpdateEntity(entity);
+
+// 删除实体列表缓存
+EntityCacheHelper.DeleteEntityList<MyEntity>();
+
+// 获取缓存统计信息
+var hitRatio = EntityCacheHelper.HitRatio;
+var cacheItemCount = EntityCacheHelper.CacheItemCount;
+```
+
+### 9.3 EntityCacheHelper的优势
+
+- **简化代码**：无需在每个需要使用缓存的类中注入IEntityCacheManager
+- **统一访问点**：提供一致的缓存访问方式
+- **完整功能**：提供IEntityCacheManager和ICacheStatistics接口的所有功能
+- **易于使用**：与直接使用IEntityCacheManager实例的API保持一致
+
+### 9.4 使用注意事项
+
+- 确保在应用启动时正确初始化EntityCacheHelper
+- 在多线程环境中，EntityCacheHelper内部使用的IEntityCacheManager实例应确保线程安全
+- 避免在静态构造函数或其他可能导致初始化顺序问题的地方使用EntityCacheHelper
+- 在单元测试中，可以通过SetCurrent方法注入模拟的IEntityCacheManager实例
+
+## 10. 注意事项
 
 - 缓存系统设计为内存缓存，应用重启后缓存会丢失
 - 确保缓存操作的线程安全性，特别是在并发场景下

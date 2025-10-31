@@ -776,7 +776,7 @@ namespace RUINORERP.UI.Common
                                 ucBaseList.Dock = DockStyle.Fill;
                                 frmedit.kryptonPanel1.Controls.Add(ucBaseList);
 
-                        
+
                                 var BizTypeText = Business.BizMapperService.EntityMappingHelper.GetBizType(typeof(P).Name).ToString();
                                 frmedit.Text = "关联查询" + "-" + BizTypeText;
 
@@ -923,7 +923,7 @@ namespace RUINORERP.UI.Common
                                 frmedit.StartPosition = FormStartPosition.CenterScreen;
                                 ucBaseList.Dock = DockStyle.Fill;
                                 frmedit.kryptonPanel1.Controls.Add(ucBaseList);
- 
+
                                 var BizTypeText = Business.BizMapperService.EntityMappingHelper.GetBizType(typeof(P).Name).ToString();
                                 frmedit.Text = "关联查询" + "-" + BizTypeText;
 
@@ -1166,7 +1166,7 @@ namespace RUINORERP.UI.Common
                                 ucBaseList.Dock = DockStyle.Fill;
                                 frmedit.kryptonPanel1.Controls.Add(ucBaseList);
 
-                         
+
                                 var BizTypeText = Business.BizMapperService.EntityMappingHelper.GetBizType(typeof(P).Name).ToString();
                                 frmedit.Text = "关联查询" + "-" + BizTypeText;
 
@@ -1335,7 +1335,7 @@ namespace RUINORERP.UI.Common
                                 ucBaseList.Dock = DockStyle.Fill;
                                 frmedit.kryptonPanel1.Controls.Add(ucBaseList);
 
- 
+
                                 var BizTypeText = Business.BizMapperService.EntityMappingHelper.GetBizType(typeof(P).Name).ToString();
                                 frmedit.Text = "关联查询" + "-" + BizTypeText;
 
@@ -2028,7 +2028,7 @@ namespace RUINORERP.UI.Common
         }
 
 
-        public static void BindData4Cmb<T>(object entity, Expression<Func<T, long>> expkey, Expression<Func<T, string>> expValue, KryptonComboBox cmbBox, Expression<Func<T, bool>> expCondition)
+        public static void BindData4Cmb<T>(object entity, Expression<Func<T, long>> expkey, Expression<Func<T, string>> expValue, KryptonComboBox cmbBox, Expression<Func<T, bool>> expCondition) where T : class
         {
             // 检查是否需要在UI线程上执行
             if (cmbBox.InvokeRequired)
@@ -2111,7 +2111,7 @@ namespace RUINORERP.UI.Common
         }
 
 
-        public static void BindData4Cmb<T>(object entity, Expression<Func<T, long>> expkey, Expression<Func<T, string>> expValue, KryptonComboBox cmbBox, Expression<Func<T, bool>> expCondition, bool WithClear)
+        public static void BindData4Cmb<T>(object entity, Expression<Func<T, long>> expkey, Expression<Func<T, string>> expValue, KryptonComboBox cmbBox, Expression<Func<T, bool>> expCondition, bool WithClear) where T : class
         {
             BindData4Cmb<T>(entity, expkey, expValue, cmbBox, expCondition);
         }
@@ -2140,7 +2140,7 @@ namespace RUINORERP.UI.Common
 
 
 
-        public static void BindData4CmbRefWithLimited<T>(object entity, string expkey, string expValue, string tableName, KryptonComboBox cmbBox, Expression<Func<T, bool>> expCondition)
+        public static void BindData4CmbRefWithLimited<T>(object entity, string expkey, string expValue, string tableName, KryptonComboBox cmbBox, Expression<Func<T, bool>> expCondition) where T : class
         {
             cmbBox.DataBindings.Clear();
             InitDataToCmbWithCondition<T>(expkey, expValue, tableName, cmbBox, expCondition);
@@ -2211,7 +2211,7 @@ namespace RUINORERP.UI.Common
         /// <param name="tableName">"tb_Location"</param>
         /// <param name="cmbBox"></param>
         /// <param name="expCondition">tb_Location中的过滤条件：Param_0.Is_enabled == True</param>
-        public static void BindData4CmbRefWithLimitedByAlias<T>(object entity, string expkey, string pointkey, string expValue, string tableName, KryptonComboBox cmbBox, Expression<Func<T, bool>> expCondition)
+        public static void BindData4CmbRefWithLimitedByAlias<T>(object entity, string expkey, string pointkey, string expValue, string tableName, KryptonComboBox cmbBox, Expression<Func<T, bool>> expCondition) where T : class
         {
             cmbBox.DataBindings.Clear();
             InitDataToCmbWithCondition<T>(expkey, expValue, tableName, cmbBox, expCondition);
@@ -2278,7 +2278,7 @@ namespace RUINORERP.UI.Common
         /// <param name="tableName"></param>
         /// <param name="cmbBox"></param>
         /// <param name="expCondition"></param>
-        public static void BindData4CmbChkRefWithLimited<T>(object entity, string expkey, string expValue, string tableName, CheckBoxComboBox cmbBox, Expression<Func<T, bool>> expCondition)
+        public static void BindData4CmbChkRefWithLimited<T>(object entity, string expkey, string expValue, string tableName, CheckBoxComboBox cmbBox, Expression<Func<T, bool>> expCondition) where T : class
         {
             //查询DTO实体 其中有一个属性会同步对应选中的结果。这样后面SQL就对这个选的结果进行处理。
             //cmbBox.DataBindings.Clear();
@@ -3153,7 +3153,7 @@ namespace RUINORERP.UI.Common
         /// <param name="expression"></param>
         /// <param name="expValue"></param>
         /// <param name="cmbBox"></param>
-        public static void InitDataToCmb<T>(Expression<Func<T, long>> expression, Expression<Func<T, string>> expValue, KryptonComboBox cmbBox, Expression<Func<T, bool>> expCondition)
+        public static void InitDataToCmb<T>(Expression<Func<T, long>> expression, Expression<Func<T, string>> expValue, KryptonComboBox cmbBox, Expression<Func<T, bool>> expCondition) where T : class
         {
             MemberInfo minfo = expression.GetMemberInfo();
             string key = minfo.Name;
@@ -3367,19 +3367,22 @@ namespace RUINORERP.UI.Common
         /// <param name="expression"></param>
         /// <param name="expValue"></param>
         /// <param name="cmbBox"></param>
-        public static void InitDataToCmbWithCondition<T>(string key, string value, string tableName, KryptonComboBox cmbBox, Expression<Func<T, bool>> expCondition)
+        public static void InitDataToCmbWithCondition<T>(string key, string value, string tableName, KryptonComboBox cmbBox, Expression<Func<T, bool>> expCondition) where T : class
         {
 
             BindingSource bs = new BindingSource();
-            ICommonController bdc = Startup.GetFromFac<Business.CommService.ICommonController>();
-            var list = bdc.GetBindSource<T>(tableName, expCondition);
-            // Func<T, bool> funCondition = ExpressionHelper.ConvertToFunc<T>(expCondition);
-            List<T> Newlist = list.ToList();
-            InsertSelectItem<T>(key, value, Newlist);
 
+            var EntityList = EntityCacheHelper.GetEntityList<T>(tableName);
+            if (EntityList == null)
+            {
+                ICommonController bdc = Startup.GetFromFac<Business.CommService.ICommonController>();
+                EntityList = bdc.GetBindSource<T>(tableName, expCondition);
+            }
+            List<T> Newlist = EntityList.ToList();
+            InsertSelectItem<T>(key, value, Newlist);
             var blv = new BindingListView<T>(Newlist);
             bs = new BindingSource { DataSource = blv };
-            //bs.DataSource = Newlist;
+
             cmbBox.Tag = tableName;
             ComboBoxHelper.InitDropList(bs, cmbBox, key, value, ComboBoxStyle.DropDown, false);
 
@@ -3394,18 +3397,21 @@ namespace RUINORERP.UI.Common
         /// <param name="expression"></param>
         /// <param name="expValue"></param>
         /// <param name="cmbBox"></param>
-        public static void InitDataToCmbChkWithCondition<T>(string key, string value, string tableName, CheckBoxComboBox cmbBox, Expression<Func<T, bool>> expCondition)
+        public static void InitDataToCmbChkWithCondition<T>(string key, string value, string tableName, CheckBoxComboBox cmbBox, Expression<Func<T, bool>> expCondition) where T : class
         {
             if (expCondition == null)
             {
                 expCondition = c => true;
             }
-            ICommonController bdc = Startup.GetFromFac<Business.CommService.ICommonController>();
-            var list = bdc.GetBindSource<T>(tableName, expCondition);
-            // Func<T, bool> funCondition = ExpressionHelper.ConvertToFunc<T>(expCondition);
-            List<T> Newlist = list.ToList();
-            // InsertSelectItem<T>(key, value, Newlist);
-            //bs.DataSource = Newlist;
+
+            //先从缓存中取值
+            var EntityList = EntityCacheHelper.GetEntityList<T>(tableName);
+            if (EntityList == null)
+            {
+                ICommonController bdc = Startup.GetFromFac<Business.CommService.ICommonController>();
+                EntityList = bdc.GetBindSource<T>(tableName, expCondition);
+            }
+            List<T> Newlist = EntityList.ToList();
             //将数据 源转换一下
             List<CmbChkItem> cmbItems = new List<CmbChkItem>();
             foreach (var item in Newlist)
@@ -3624,7 +3630,7 @@ namespace RUINORERP.UI.Common
                                             // 处理类型转换失败的情况
                                         }
                                     }
-                        
+
 
                                     #region  强类型 转换失败
                                     //var lastlist = ((IEnumerable<dynamic>)convertedList).Select(item => Activator.CreateInstance(elementType)).ToList();

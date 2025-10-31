@@ -551,10 +551,10 @@ namespace RUINORERP.UI.Common
                             //确保在UI线程上执行条件设置和UI加载
                             baseQuery.BeginInvoke(new Action(() =>
                             {
-                                if (baseQuery.QueryDtoProxy==null)
-                                {
-                                    baseQuery.QueryDtoProxy = baseQuery.LoadQueryConditionToUI(5);
-                                }
+                                //if (baseQuery.QueryDtoProxy==null)
+                                //{
+                                //    baseQuery.QueryDtoProxy = baseQuery.LoadQueryConditionToUI(5);
+                                //}
                                
                                 //先设置查询条件
                                 if (OnSetQueryConditionsDelegate != null)
@@ -562,7 +562,7 @@ namespace RUINORERP.UI.Common
                                     OnSetQueryConditionsDelegate(baseQuery.QueryDtoProxy, nodeParameter);
                                 }
                                 //然后加载UI和执行查询 上在委托将查询条件传过去 。会默认执行一个查询。
-                                //baseQuery.LoadQueryParametersToUI(baseQuery.QueryDtoProxy, nodeParameter);
+                                baseQuery.LoadQueryParametersToUI(baseQuery.QueryDtoProxy, nodeParameter);
                             }));
                         }
 

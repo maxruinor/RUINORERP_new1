@@ -2008,8 +2008,6 @@ namespace RUINORERP.UI.BaseForm
                         continue;
                     }
                 }
-
-
                 //传入查询对象的实例，有两种情况，一种是直接指定的条件。一种是 后面重新组合的  主要是 or， 如 应收中的部分支付和待支付都是要回款的。
 
                 if (nodeParameter.conditionals is List<IConditionalModel>)
@@ -2085,9 +2083,6 @@ namespace RUINORERP.UI.BaseForm
                     }
 
                 }
-
-
-
             }
 
             // 使用Control.BeginInvoke确保在UI线程上执行查询，避免使用固定延迟
@@ -2127,7 +2122,6 @@ namespace RUINORERP.UI.BaseForm
         {
             // 添加取消令牌支持
             var cancellationTokenSource = new CancellationTokenSource();
-
             try
             {
                 // 记录查询开始
@@ -2393,14 +2387,8 @@ namespace RUINORERP.UI.BaseForm
         {
             //M 主表的主键不显示
             //下面已经统一处理了。
-
             //ChildRelatedInvisibleCols
-
-
             //找到子表中对应的主表的主键列，设置为不可见,下面统一处理了。
-
-
-
         }
 
         /// <summary>
@@ -2555,17 +2543,12 @@ namespace RUINORERP.UI.BaseForm
         KryptonCheckBox cbbatch = new KryptonCheckBox();
         private async void BaseBillQueryMC_Load(object sender, EventArgs e)
         {
-            
-
-            
-
 
                 MainForm.Instance.AppContext.log.ActionName = sender.ToString();
                 await UIBizService.RequestCache<M>();
                 await UIBizService.RequestCache<C>();
                 //去检测产品视图的缓存并且转换为强类型
                 await UIBizService.RequestCache(typeof(View_ProdDetail));
-
                 Builder();
                 this.CurMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == typeof(M).Name && m.ClassPath == this.ToString()).FirstOrDefault();
                 if (CurMenuInfo == null && !MainForm.Instance.AppContext.IsSuperUser)

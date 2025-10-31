@@ -2,14 +2,12 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data.SqlClient;
+using System.Diagnostics;
 using System.Linq;
 using System.Linq.Dynamic.Core;
 using System.Linq.Dynamic.Core.CustomTypeProviders;
 using System.Reflection;
-using System.Text.RegularExpressions;
-using System.Threading;
 using System.Threading.Tasks;
-using System.Web.UI.WebControls.WebParts;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,301 +15,258 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using RUINORERP.Common.DB;
 using RUINORERP.Common.Log4Net;
-using RUINORERP.Common.LogHelper;
 using RUINORERP.Model;
 using RUINORERP.Model.Context;
 using SqlSugar;
 
 namespace RUINORERP.Extensions
 {
-
     /// <summary>
-    /// 2023-9-18 前使用
-    /// 但是2024-7-30调试时 发现在使用第一个方法
+    /// SqlSugar ORM 配置扩展类
+    /// 提供数据库连接和AOP配置的静态方法
     /// </summary>
     public static class SqlsugarSetup
     {
-
+        /// <summary>
+        /// SQL日志检查委托
+        /// </summary>
+        /// <param name="sql">执行的SQL语句</param>
         public delegate void CheckHandler(string sql);
 
-        [Browsable(true), Description("引发外部事件")]
+        /// <summary>
+        /// SQL执行检查事件
+        /// </summary>
+        [Browsable(true), Description("SQL执行检查事件")]
         public static event CheckHandler CheckEvent;
 
-
+        /// <summary>
+        /// SQL错误提醒委托
+        /// </summary>
+        /// <param name="sugarException">SqlSugar异常</param>
+        /// <returns>是否已处理</returns>
         public delegate bool RemindHandler(SqlSugarException sugarException);
-        [Browsable(true), Description("引发外部提醒事件")]
+
+        /// <summary>
+        /// SQL错误提醒事件
+        /// </summary>
+        [Browsable(true), Description("SQL错误提醒事件")]
         public static event RemindHandler RemindEvent;
 
-
-
-
-        public static void AddSqlsugarSetup(this IServiceCollection services,
-        ApplicationContext AppContextData, string connectString)
+        /// <summary>
+        /// 添加SqlSugar配置，使用ApplicationContext
+        /// </summary>
+        /// <param name="services">服务集合</param>
+        /// <param name="appContextData">应用上下文数据</param>
+        /// <param name="connectString">数据库连接字符串</param>
+        public static void AddSqlsugarSetup(this IServiceCollection services, ApplicationContext appContextData, string connectString)
         {
+            if (services == null) throw new ArgumentNullException(nameof(services));
+            if (appContextData == null) throw new ArgumentNullException(nameof(appContextData));
+            if (string.IsNullOrEmpty(connectString)) throw new ArgumentNullException(nameof(connectString));
 
-            var logProvider = new Log4NetProviderByCustomeDb("Log4net_db.config", connectString, AppContextData);
-            var logger = logProvider.CreateLogger("SqlsugarSetup");
+            var logProvider = new Log4NetProviderByCustomeDb("Log4net_db.config", connectString, appContextData);
+            var logger = logProvider.CreateLogger(typeof(SqlsugarSetup).FullName);
 
             StaticConfig.DynamicExpressionParserType = typeof(DynamicExpressionParser);
             var memoryCache = new MemoryCache(new MemoryCacheOptions());
-            SqlSugarScope sqlSugar = new SqlSugarScope(new ConnectionConfig()
-            {
-
-                DbType = SqlSugar.DbType.SqlServer,
-                ConnectionString = connectString,
-                IsAutoCloseConnection = true,
-                InitKeyType = InitKeyType.Attribute,//就改这一行
-
-                ConfigureExternalServices = new ConfigureExternalServices()
+            
+            SqlSugarScope sqlSugar = new SqlSugarScope(
+                new ConnectionConfig
                 {
-                    DataInfoCacheService = new SqlSugarMemoryCacheService(memoryCache),
+                    DbType = SqlSugar.DbType.SqlServer,
+                    ConnectionString = connectString,
+                    IsAutoCloseConnection = true,
+                    InitKeyType = InitKeyType.Attribute,
+                    ConfigureExternalServices = new ConfigureExternalServices
+                    {
+                        DataInfoCacheService = new SqlSugarMemoryCacheService(memoryCache),
+                    },
+                    MoreSettings = new ConnMoreSettings
+                    {
+                        IsWithNoLockQuery = true,
+                        DisableNvarchar = true,
+                        IsAutoRemoveDataCache = true,
+                    }
                 },
+                db => ConfigureDbAop(db, logger, appContextData)
+            );
 
-                MoreSettings = new ConnMoreSettings()
-                {
-                    IsWithNoLockQuery = true,
-                    DisableNvarchar = true,
-                    //DbMinDate = DateTime.MinValue, //加上就出错。不加已经处理好了。 
-                    IsAutoRemoveDataCache = true,
-
-                }
-            },
-                db =>
-                {
-                    db.Ado.CommandTimeOut = 30;//单位秒
-
-                    //单例参数配置，所有上下文生效       
-                    db.Aop.OnLogExecuting = (sql, pars) =>
-                        {
-                            //获取原生SQL推荐 5.1.4.63  性能OK
-                            Console.WriteLine(UtilMethods.GetNativeSql(sql, pars));
-
-                            if (CheckEvent != null)
-                            {
-                                if (sql.Contains("tb_FM_ReceivablePayable"))
-                                {
-
-                                }
-                                Console.WriteLine(Common.DB.SqlProfiler.FormatParam(sql, pars));
-                                //kimi查询到说这个性能更好
-                                CheckEvent(Common.DB.SqlProfiler.FormatParam(sql, pars));
-                            }
-                        };
-
-
-                    //技巧：拿到非ORM注入对象
-                    //services.GetService<注入对象>();
-
-                    // 差异日志
-
-                    db.Aop.OnDiffLogEvent = async u =>
-                    {
-                        await Task.Delay(0);
-                        /*
-                        if (!db.EnableDiffLog) return;
-
-                        var LogDiff = new SysLogDiff
-
-                        {
-
-                            // 操作后记录（字段描述、列名、值、表名、表描述）
-
-                            AfterData = JsonConvert.SerializeObject(u.AfterData),
-
-                            // 操作前记录（字段描述、列名、值、表名、表描述）
-
-                            BeforeData = JsonConvert.SerializeObject(u.BeforeData),
-
-                            // 传进来的对象
-
-                            BusinessData = JsonConvert.SerializeObject(u.BusinessData),
-
-                            // 枚举（insert、update、delete）
-
-                            DiffType = u.DiffType.ToString(),
-
-                            Sql = UtilMethods.GetSqlString(config.DbType, u.Sql, u.Parameters),
-
-                            Parameters = JsonConvert.SerializeObject(u.Parameters),
-
-                            Duration = u.Time == null ? 0 : (long)u.Time.Value.TotalMilliseconds
-
-                        };
-
-                        await db.GetConnectionScope(SqlSugarConst.ConfigId).Insertable(LogDiff).ExecuteCommandAsync();
-
-                        Console.ForegroundColor = ConsoleColor.Red;
-
-                        Console.WriteLine(DateTime.Now + $"\r\n**********差异日志开始**********\r\n{Environment.NewLine}{JsonConvert.SerializeObject(LogDiff)}{Environment.NewLine}**********差异日志结束**********\r\n");
-                        */
-                    };
-
-                    db.Aop.OnError = (e) =>
-                    {
-
-                        //try
-                        //{
-
-                        //    string errorsql = SqlProfiler.FormatParam(e.Sql, e.Parametres as SugarParameter[]);
-                        //    logger.LogError("db.Aop.OnError:" + e.Message + errorsql);
-                        //}
-                        //catch (Exception exx)
-                        //{
-                        //    Console.WriteLine(exx.Message);
-                        //}
-
-
-                        try
-                        {
-                            string errorsql = SqlProfiler.FormatParam(e.Sql, e.Parametres as SugarParameter[]);
-                            Exception exception = e.GetBaseException();
-                            logger.LogError("SQL执行错误" + errorsql, e);
-                            if (e.InnerException != null && e.InnerException is SqlException sqlEx && sqlEx.Number == 1205)
-                            {
-                                var deadlockInfo = new
-                                {
-                                    Time = DateTime.Now,
-                                    // SessionId = db.Ado.SqlStackTrace.SugarStackTraceList.SessionId,
-                                    StackTrace = e.StackTrace,
-                                    Sql = errorsql
-                                };
-                                logger.LogError("deadlock:", JsonConvert.SerializeObject(deadlockInfo) + "\n");
-
-                                // 自动重试逻辑
-                                //int retryCount = 0;
-                                //while (retryCount < 3)
-                                //{
-                                //    try
-                                //    {
-                                //        Thread.Sleep(100 * retryCount); // 指数退避
-                                //        //RetryOperation(e.Sql); // 重试原SQL
-                                //        return;
-                                //    }
-                                //    catch { retryCount++; }
-                                //}
-
-
-                            }
-
-
-                            // 控制台输出用于调试
-
-                            //Console.WriteLine($"[SQL ERROR] {DateTime.Now:HH:mm:ss} {errorsql}");
-                        }
-                        catch (Exception ex)
-                        {
-                            Console.WriteLine($"日志记录失败: {ex.Message}\n原始错误: {e.Message}");
-                            logger.LogError("记录SQL日志时出错了", ex);
-                        }
-                        if (RemindEvent != null)
-                        {
-                            //kimi查询到说这个性能更好
-                            RemindEvent(e);
-                        }
-                    };
-
-                    db.Aop.OnLogExecuted = (sql, pars) =>
-                    {
-                        //Console.WriteLine("执行成功：" + sql);//输出sql
-                        if (AppContextData.IsDebug)
-                        {
-                            //Console.WriteLine(Common.DB.SqlProfiler.FormatParam(sql, pars));
-                            //logger.LogInformation(SqlProfiler.FormatParam(sql, pars as SugarParameter[]));
-                        }
-
-                    };
-
-                });
-
-            services.AddSingleton<ISqlSugarClient>(sqlSugar);//这边是SqlSugarScope用AddSingleton
-            AppContextData.Db = sqlSugar;
+            services.AddSingleton<ISqlSugarClient>(sqlSugar); // SqlSugarScope 应当使用单例模式
+            appContextData.Db = sqlSugar;
         }
 
-
-
-        public static void AddSqlsugarSetup(this IServiceCollection services,
-            IConfiguration configuration, string dbName = "ConnectString")
+        /// <summary>
+        /// 添加SqlSugar配置，使用IConfiguration
+        /// </summary>
+        /// <param name="services">服务集合</param>
+        /// <param name="configuration">配置对象</param>
+        /// <param name="dbName">数据库配置键名</param>
+        public static void AddSqlsugarSetup(this IServiceCollection services, IConfiguration configuration, string dbName = "ConnectString")
         {
-            var memoryCache = new MemoryCache(new MemoryCacheOptions());
-            SqlSugarScope sqlSugar = new SqlSugarScope(new ConnectionConfig()
+            if (services == null) throw new ArgumentNullException(nameof(services));
+            if (configuration == null) throw new ArgumentNullException(nameof(configuration));
+            if (string.IsNullOrEmpty(dbName)) throw new ArgumentNullException(nameof(dbName));
+
+            string connectString = configuration[dbName];
+            if (string.IsNullOrEmpty(connectString))
             {
-                DbType = SqlSugar.DbType.SqlServer,
-                ConnectionString = configuration[dbName],
-                IsAutoCloseConnection = true,
+                throw new ArgumentException($"配置键 '{dbName}' 未找到或连接字符串为空", nameof(dbName));
+            }
 
-                ConfigureExternalServices = new ConfigureExternalServices()
+            var memoryCache = new MemoryCache(new MemoryCacheOptions());
+            
+            SqlSugarScope sqlSugar = new SqlSugarScope(
+                new ConnectionConfig
                 {
-                    DataInfoCacheService = new SqlSugarMemoryCacheService(memoryCache)
+                    DbType = SqlSugar.DbType.SqlServer,
+                    ConnectionString = connectString,
+                    IsAutoCloseConnection = true,
+                    ConfigureExternalServices = new ConfigureExternalServices
+                    {
+                        DataInfoCacheService = new SqlSugarMemoryCacheService(memoryCache)
+                    }
+                },
+                db => ConfigureDbAop(db, null, null) // 没有logger和appContextData
+            );
+
+            services.AddSingleton<ISqlSugarClient>(sqlSugar);
+        }
+
+        /// <summary>
+        /// 配置数据库AOP事件
+        /// </summary>
+        /// <param name="db">SqlSugar数据库对象</param>
+        /// <param name="logger">日志记录器</param>
+        /// <param name="appContextData">应用上下文数据</param>
+        private static void ConfigureDbAop(SqlSugarClient db, ILogger logger, ApplicationContext appContextData)
+        {
+            db.Ado.CommandTimeOut = 30; // 单位秒
+
+            // 配置SQL执行前事件
+            db.Aop.OnLogExecuting = (sql, pars) =>
+            {
+                // 获取调用堆栈以识别调用方法
+                string callerMethod = GetCallerMethodName();
+
+                // 获取原生SQL并添加调用方法信息
+                string nativeSql = UtilMethods.GetNativeSql(sql, pars);
+                string sqlWithCaller = $"{callerMethod}:{nativeSql}";
+                Console.WriteLine(sqlWithCaller);
+
+                // 触发自定义检查事件
+                if (CheckEvent != null)
+                {
+                    string formattedSql = Common.DB.SqlProfiler.FormatParam(sql, pars);
+                    string formattedSqlWithCaller = $"{callerMethod}:{formattedSql}";
+                    Console.WriteLine(formattedSqlWithCaller);
+                    CheckEvent(formattedSqlWithCaller);
                 }
-                ,
+            };
 
-
-            },
-                db =>
+            // 配置SQL执行错误事件
+            db.Aop.OnError = (e) =>
+            {
+                try
                 {
-                    //单例参数配置，所有上下文生效       
-                    db.Aop.OnLogExecuting = (sql, pars) =>
+                    string errorsql = SqlProfiler.FormatParam(e.Sql, e.Parametres as SugarParameter[]);
+                    Exception exception = e.GetBaseException();
+                    
+                    // 记录错误日志
+                    if (logger != null)
                     {
-                        Console.WriteLine(sql);//输出sql
-
-                        if (CheckEvent != null)
-                        {
-                            CheckEvent(Common.DB.SqlProfiler.FormatParam(sql, pars));
-                        }
-                    };
-
-
-                    //技巧：拿到非ORM注入对象
-                    //services.GetService<注入对象>();
-
-                    // 差异日志
-
-                    db.Aop.OnDiffLogEvent = async u =>
+                        logger.LogError("SQL执行错误: {ErrorMessage}, SQL: {Sql}", exception.Message, errorsql, e);
+                    }
+                    else
                     {
-                        await Task.Delay(0);
-                        /*
-                        if (!db.EnableDiffLog) return;
-
-                        var LogDiff = new SysLogDiff
-
+                        Console.WriteLine($"SQL执行错误: {exception.Message}, SQL: {errorsql}");
+                    }
+                    
+                    // 检测死锁异常
+                    if (e.InnerException != null && e.InnerException is SqlException sqlEx && sqlEx.Number == 1205)
+                    {
+                        var deadlockInfo = new
                         {
-
-                            // 操作后记录（字段描述、列名、值、表名、表描述）
-
-                            AfterData = JsonConvert.SerializeObject(u.AfterData),
-
-                            // 操作前记录（字段描述、列名、值、表名、表描述）
-
-                            BeforeData = JsonConvert.SerializeObject(u.BeforeData),
-
-                            // 传进来的对象
-
-                            BusinessData = JsonConvert.SerializeObject(u.BusinessData),
-
-                            // 枚举（insert、update、delete）
-
-                            DiffType = u.DiffType.ToString(),
-
-                            Sql = UtilMethods.GetSqlString(config.DbType, u.Sql, u.Parameters),
-
-                            Parameters = JsonConvert.SerializeObject(u.Parameters),
-
-                            Duration = u.Time == null ? 0 : (long)u.Time.Value.TotalMilliseconds
-
+                            Time = DateTime.Now,
+                            StackTrace = e.StackTrace,
+                            Sql = errorsql
                         };
+                        
+                        if (logger != null)
+                        {
+                            logger.LogError("检测到数据库死锁: {DeadlockInfo}", JsonConvert.SerializeObject(deadlockInfo), e);
+                        }
+                        else
+                        {
+                            Console.WriteLine($"检测到数据库死锁: {JsonConvert.SerializeObject(deadlockInfo)}");
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"日志记录失败: {ex.Message}\n原始错误: {e.Message}");
+                    if (logger != null)
+                    {
+                        logger.LogError("记录SQL错误日志时出错", ex);
+                    }
+                }
+                
+                // 触发提醒事件
+                if (RemindEvent != null)
+                {
+                    RemindEvent(e);
+                }
+            };
 
-                        await db.GetConnectionScope(SqlSugarConst.ConfigId).Insertable(LogDiff).ExecuteCommandAsync();
+            // 配置SQL执行后事件
+            db.Aop.OnLogExecuted = (sql, pars) =>
+            {
+                // 在调试模式下记录详细信息
+                if (appContextData != null && appContextData.IsDebug)
+                {
+                    // 调试模式下可启用详细日志记录
+                }
+            };
 
-                        Console.ForegroundColor = ConsoleColor.Red;
+            // 配置差异日志事件（当前为空实现）
+            db.Aop.OnDiffLogEvent = async u =>
+            {
+                // 异步延迟以避免阻塞
+                await Task.Delay(0);
+                // 差异日志功能暂未实现，可以根据需要启用
+            };
+        }
 
-                        Console.WriteLine(DateTime.Now + $"\r\n**********差异日志开始**********\r\n{Environment.NewLine}{JsonConvert.SerializeObject(LogDiff)}{Environment.NewLine}**********差异日志结束**********\r\n");
-                        */
-                    };
-
-
-                });
-
-            services.AddSingleton<ISqlSugarClient>(sqlSugar);//这边是SqlSugarScope用AddSingleton
+        /// <summary>
+        /// 获取调用方法名称
+        /// </summary>
+        /// <returns>调用方法的名称</returns>
+        private static string GetCallerMethodName()
+        {
+            string callerMethod = "未知方法";
+            try
+            {
+                // 创建StackTrace对象，跳过3个堆栈帧（当前方法、OnLogExecuting调用和匿名方法）
+                StackTrace stackTrace = new StackTrace(3, false);
+                if (stackTrace.FrameCount > 0)
+                {
+                    // 获取第一个非框架方法
+                    for (int i = 0; i < stackTrace.FrameCount; i++)
+                    {
+                        StackFrame frame = stackTrace.GetFrame(i);
+                        MethodBase method = frame.GetMethod();
+                        // 跳过系统框架方法
+                        if (method != null && !method.DeclaringType.FullName.StartsWith("SqlSugar") && 
+                            !method.DeclaringType.FullName.StartsWith("System") &&
+                            !method.DeclaringType.FullName.StartsWith("Microsoft"))
+                        {
+                            callerMethod = $"{method.DeclaringType.Name}.{method.Name}";
+                            break;
+                        }
+                    }
+                }
+            }
+            catch { /* 捕获异常以避免影响正常SQL执行 */ }
+            return callerMethod;
         }
 
 

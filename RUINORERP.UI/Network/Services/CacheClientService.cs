@@ -214,7 +214,12 @@ namespace RUINORERP.UI.Network.Services
                     }
                 });
 
-                await Task.WhenAll(tasks);
+                // 过滤掉可能的null任务，防止ArgumentException异常
+                var validTasks = tasks.Where(t => t != null).ToList();
+                if (validTasks.Any())
+                {
+                    await Task.WhenAll(validTasks);
+                }
             }
             catch (Exception ex)
             {
@@ -323,7 +328,12 @@ namespace RUINORERP.UI.Network.Services
                     }
                 });
 
-                await Task.WhenAll(tasks);
+                // 过滤掉可能的null任务，防止ArgumentException异常
+                var validTasks = tasks.Where(t => t != null).ToList();
+                if (validTasks.Any())
+                {
+                    await Task.WhenAll(validTasks);
+                }
 
                 _log.LogInformation("类型{0}表订阅完成: 成功={1}, 失败={2}",
                     tableType, tables.Count - failedTables.Count, failedTables.Count);

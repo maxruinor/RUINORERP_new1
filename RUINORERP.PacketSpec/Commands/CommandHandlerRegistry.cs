@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -90,7 +90,13 @@ namespace RUINORERP.PacketSpec.Commands
 
 
         /// <summary>
+        /// 已扫描的程序集缓存，用于避免重复扫描
+        /// </summary>
+        private readonly HashSet<string> _scannedAssemblies = new HashSet<string>();
+
+        /// <summary>
         /// 异步初始化注册表，扫描并注册命令处理器
+        /// 优化：避免重复扫描和注册相同的程序集和处理器
         /// </summary>
         /// <param name="cancellationToken">取消令牌</param>
         /// <param name="assemblies">要扫描的程序集，如果为空则扫描当前执行程序集</param>
@@ -102,26 +108,46 @@ namespace RUINORERP.PacketSpec.Commands
                 _lock.EnterWriteLock();
                 try
                 {
-                    if (IsInitialized)
-                    {
-                        _logger?.Debug("命令处理器注册表已经初始化，跳过重复初始化");
-                        return true;
-                    }
-
                     // 如果没有指定程序集，则扫描当前执行程序集
                     if (assemblies == null || assemblies.Length == 0)
                     {
                         assemblies = new[] { Assembly.GetExecutingAssembly() };
-                        _logger?.Debug("未指定程序集，使用当前执行程序集: {AssemblyName}", assemblies[0].FullName);
+                        _logger?.LogDebug("未指定程序集，使用当前执行程序集: {AssemblyName}", assemblies[0].FullName);
                     }
 
-                    // 扫描并注册命令处理器
+                    // 筛选出之前未扫描过的程序集
+                    var newAssemblies = assemblies.Where(a => !_scannedAssemblies.Contains(a.FullName)).ToArray();
+                    
+                    // 记录已扫描的程序集
+                    foreach (var assembly in assemblies)
+                    {
+                        _scannedAssemblies.Add(assembly.FullName);
+                    }
+
+                    // 检查是否已经初始化
+                    if (IsInitialized)
+                    {
+                        // 如果已经初始化且有新的程序集需要扫描
+                        if (newAssemblies.Length > 0)
+                        {
+                            _logger?.LogDebug("命令处理器注册表已经初始化，现在将扫描新的程序集并添加新的处理器: {AssemblyCount} 个程序集", newAssemblies.Length);
+                            await ScanAndRegisterHandlersAsync(newAssemblies, cancellationToken);
+                            _logger?.LogDebug("新程序集扫描完成，更新后的处理器数量: {HandlerCount}，命令映射数量: {CommandCount}",
+                                HandlerCount, CommandHandlerMapCount);
+                        }
+                        else
+                        {
+                            _logger?.LogDebug("命令处理器注册表已经初始化，所有指定的程序集都已扫描过，无需重复扫描");
+                        }
+                        return true;
+                    }
+
+                    // 首次初始化时扫描并注册命令处理器
+                    _logger?.LogDebug("首次初始化，开始扫描并注册命令处理器: {AssemblyCount} 个程序集", assemblies.Length);
                     await ScanAndRegisterHandlersAsync(assemblies, cancellationToken);
 
-                   
-
                     IsInitialized = true;
-                    _logger?.Debug("命令处理器注册表初始化成功: 已注册 {HandlerCount} 个处理器，{CommandCount} 个命令映射",
+                    _logger?.LogDebug("命令处理器注册表初始化成功: 已注册 {HandlerCount} 个处理器，{CommandCount} 个命令映射",
                         HandlerCount, CommandHandlerMapCount);
                     return true;
                 }
@@ -179,7 +205,12 @@ namespace RUINORERP.PacketSpec.Commands
                         }
                     });
 
-                    await Task.WhenAll(registrationTasks);
+                    // 过滤掉可能的null任务，防止ArgumentException异常
+                    var validRegistrationTasks = registrationTasks.Where(t => t != null).ToList();
+                    if (validRegistrationTasks.Any())
+                    {
+                        await Task.WhenAll(validRegistrationTasks);
+                    }
                 }
                 catch (ReflectionTypeLoadException ex)
                 {

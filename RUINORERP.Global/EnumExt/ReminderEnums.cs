@@ -8,6 +8,11 @@ using System.Threading.Tasks;
 namespace RUINORERP.Global.EnumExt
 {
 
+    public enum ReminderType
+    {
+        Notification,
+    }
+
     public enum RuleEngineType
     {
         //RulesEngine/Roslyn
@@ -18,40 +23,40 @@ namespace RUINORERP.Global.EnumExt
     public enum ReminderBizType
     {
         [Description("安全库存提醒")]
-        安全库存提醒=1,
+        安全库存提醒 = 1,
 
         [Description("库存积压提醒")]
-        库存积压提醒=2,
+        库存积压提醒 = 2,
 
         [Description("库存盘点提醒")]
-        库存盘点提醒=3,
+        库存盘点提醒 = 3,
 
         [Description("付款到期提醒")]
-        付款到期提醒=4,
+        付款到期提醒 = 4,
 
         [Description("收款逾期提醒")]
-        收款逾期提醒=5,
+        收款逾期提醒 = 5,
 
         [Description("生产任务到期提醒")]
-        生产任务到期提醒=6,
+        生产任务到期提醒 = 6,
 
         [Description("原材料短缺提醒")]
-        原材料短缺提醒=7,
+        原材料短缺提醒 = 7,
 
         [Description("潜在客户跟进提醒")]
-        潜在客户跟进提醒=8,
+        潜在客户跟进提醒 = 8,
 
         [Description("客户订单跟进提醒")]
-        客户订单跟进提醒=9,
+        客户订单跟进提醒 = 9,
 
         [Description("专利预警提醒")]
-        专利预警提醒=10,
+        专利预警提醒 = 10,
 
         [Description("单据审批提醒")]
-        单据审批提醒=11,
+        单据审批提醒 = 11,
 
         [Description("其他提醒")]
-        其他提醒=12
+        其他提醒 = 12
     }
 
 

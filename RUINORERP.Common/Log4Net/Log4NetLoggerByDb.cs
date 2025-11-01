@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -135,17 +135,17 @@ namespace RUINORERP.Common.Log4Net
                     return;
                 }
                 
-                // 设置log4net的上下文属性，这样自定义布局器才能正确获取这些值
-                log4net.ThreadContext.Properties["User_ID"] = _appcontext.log.User_ID;
-                log4net.ThreadContext.Properties["ModName"] = _appcontext.log.ModName;
-                log4net.ThreadContext.Properties["ActionName"] = _appcontext.log.ActionName;
-                log4net.ThreadContext.Properties["IP"] = _appcontext.log.IP;
-                log4net.ThreadContext.Properties["Path"] = _appcontext.log.Path;
-                log4net.ThreadContext.Properties["MAC"] = _appcontext.log.MAC;
-                log4net.ThreadContext.Properties["MachineName"] = _appcontext.log.MachineName;
-                log4net.ThreadContext.Properties["Operator"] = _appcontext.CurrentUser.客户端版本 ?? "未登录用户";
-                log4net.ThreadContext.Properties["Message"] = message;
-                log4net.ThreadContext.Properties["Exception"] = exception?.StackTrace;
+                // 使用MappedDiagnosticsContext确保线程安全
+                log4net.MDC.Set("User_ID", _appcontext.log.User_ID.ToString());
+                log4net.MDC.Set("ModName", _appcontext.log.ModName);
+                log4net.MDC.Set("ActionName", _appcontext.log.ActionName);
+                log4net.MDC.Set("IP", _appcontext.log.IP);
+                log4net.MDC.Set("Path", _appcontext.log.Path);
+                log4net.MDC.Set("MAC", _appcontext.log.MAC);
+                log4net.MDC.Set("MachineName", _appcontext.log.MachineName);
+                log4net.MDC.Set("Operator", _appcontext.CurrentUser.客户端版本 ?? "未登录用户");
+                log4net.MDC.Set("Message", message ?? "");
+                log4net.MDC.Set("Exception", exception?.StackTrace ?? "");
                 
                 // 简化日志记录过程，直接使用消息和异常对象
 
@@ -171,29 +171,32 @@ namespace RUINORERP.Common.Log4Net
                                         string exMessage = ex.Message;
                                         string exStackTrace = ex.StackTrace;
                                         
-                                        if (ex.InnerException != null)
+                                        // 递归处理所有层级的InnerException
+                                        Exception innerEx = ex.InnerException;
+                                        while (innerEx != null)
                                         {
-                                            exMessage += "\r\n" + ex.InnerException.Message;
-                                            exStackTrace += "\r\n" + ex.InnerException.StackTrace;
+                                            exMessage += "\r\n" + innerEx.Message;
+                                            exStackTrace += "\r\n" + innerEx.StackTrace;
+                                            innerEx = innerEx.InnerException;
                                         }
                                         
                                         // 更新上下文属性
                                         if (!string.IsNullOrEmpty(message))
                                         {
-                                            log4net.ThreadContext.Properties["Message"] = message + "\r\n" + exMessage;
+                                            log4net.MDC.Set("Message", message + "\r\n" + exMessage);
                                         }
                                         else
                                         {
-                                            log4net.ThreadContext.Properties["Message"] = exMessage;
+                                            log4net.MDC.Set("Message", exMessage);
                                         }
                                         
                                         if (!string.IsNullOrEmpty(exception?.StackTrace))
                                         {
-                                            log4net.ThreadContext.Properties["Exception"] = exception.StackTrace + "\r\n" + exStackTrace;
+                                            log4net.MDC.Set("Exception", exception.StackTrace + "\r\n" + exStackTrace);
                                         }
                                         else
                                         {
-                                            log4net.ThreadContext.Properties["Exception"] = exStackTrace;
+                                            log4net.MDC.Set("Exception", exStackTrace);
                                         }
                                     }
                                 }
@@ -272,7 +275,7 @@ namespace RUINORERP.Common.Log4Net
 
                         AdoNetAppender adoNetAppender = new AdoNetAppender();
                         // 增加缓冲区大小以减少数据库连接开销
-                        adoNetAppender.BufferSize = 1; // 批量写入100条日志
+                        adoNetAppender.BufferSize = 100; // 批量写入100条日志
                         adoNetAppender.Lossy = false; // 确保不丢失日志
 
                         adoNetAppender.ConnectionType = "System.Data.SqlClient.SqlConnection, System.Data, Version=1.0.3300.0, Culture=neutral, PublicKeyToken=b77a5c561934e089";
@@ -306,45 +309,17 @@ namespace RUINORERP.Common.Log4Net
                         adoNetAppender.AddParameter(new AdoNetAppenderParameter { ParameterName = "@log_level", DbType = System.Data.DbType.String, Size = 50, Layout = new Layout2RawLayoutAdapter(new PatternLayout("%level")) });
                         adoNetAppender.AddParameter(new AdoNetAppenderParameter { ParameterName = "@logger", DbType = System.Data.DbType.String, Size = 255, Layout = new Layout2RawLayoutAdapter(new PatternLayout("%logger")) });
 
-                        log4net.Layout.PatternLayout layout = new EnhancedCustomLayout() { ConversionPattern = "%property{Operator}" };
-                        layout.ActivateOptions();
-                        adoNetAppender.AddParameter(new AdoNetAppenderParameter { ParameterName = "@Operator", DbType = System.Data.DbType.String, Size = 4000, Layout = new Layout2RawLayoutAdapter(layout) });
-
-                        layout = new EnhancedCustomLayout() { ConversionPattern = "%property{User_ID}" };
-                        layout.ActivateOptions();
-                        adoNetAppender.AddParameter(new AdoNetAppenderParameter { ParameterName = "@User_ID", DbType = System.Data.DbType.Int64, Size = 4000, Layout = new Layout2RawLayoutAdapter(layout) });
-
-                        layout = new EnhancedCustomLayout() { ConversionPattern = "%property{ModName}" };
-                        layout.ActivateOptions();
-                        adoNetAppender.AddParameter(new AdoNetAppenderParameter { ParameterName = "@ModName", DbType = System.Data.DbType.String, Size = 214748364, Layout = new Layout2RawLayoutAdapter(layout) });
-
-                        layout = new EnhancedCustomLayout() { ConversionPattern = "%property{MAC}" };
-                        layout.ActivateOptions();
-                        adoNetAppender.AddParameter(new AdoNetAppenderParameter { ParameterName = "@MAC", DbType = System.Data.DbType.String, Size = 214748364, Layout = new Layout2RawLayoutAdapter(layout) });
-
-                        layout = new EnhancedCustomLayout() { ConversionPattern = "%property{IP}" };
-                        layout.ActivateOptions();
-                        adoNetAppender.AddParameter(new AdoNetAppenderParameter { ParameterName = "@IP", DbType = System.Data.DbType.String, Size = 214748364, Layout = new Layout2RawLayoutAdapter(layout) });
-
-                        layout = new EnhancedCustomLayout() { ConversionPattern = "%property{Path}" };
-                        layout.ActivateOptions();
-                        adoNetAppender.AddParameter(new AdoNetAppenderParameter { ParameterName = "@Path", DbType = System.Data.DbType.String, Size = 214748364, Layout = new Layout2RawLayoutAdapter(layout) });
-
-                        layout = new EnhancedCustomLayout() { ConversionPattern = "%property{ActionName}" };
-                        layout.ActivateOptions();
-                        adoNetAppender.AddParameter(new AdoNetAppenderParameter { ParameterName = "@ActionName", DbType = System.Data.DbType.String, Size = 214748364, Layout = new Layout2RawLayoutAdapter(layout) });
-
-                        layout = new EnhancedCustomLayout() { ConversionPattern = "%property{MachineName}" };
-                        layout.ActivateOptions();
-                        adoNetAppender.AddParameter(new AdoNetAppenderParameter { ParameterName = "@MachineName", DbType = System.Data.DbType.String, Size = 214748364, Layout = new Layout2RawLayoutAdapter(layout) });
-
-                        layout = new EnhancedCustomLayout() { ConversionPattern = "%property{Message}" };
-                        layout.ActivateOptions();
-                        adoNetAppender.AddParameter(new AdoNetAppenderParameter { ParameterName = "@Message", DbType = System.Data.DbType.String, Size = 214748364, Layout = new Layout2RawLayoutAdapter(layout) });
-
-                        layout = new EnhancedCustomLayout() { ConversionPattern = "%property{Exception}" };
-                        layout.ActivateOptions();
-                        adoNetAppender.AddParameter(new AdoNetAppenderParameter { ParameterName = "@Exception", DbType = System.Data.DbType.String, Size = 214748364, Layout = new Layout2RawLayoutAdapter(layout) });
+                        // 提取公共方法减少重复代码
+                        AddParameter(adoNetAppender, "@Operator", System.Data.DbType.String, 4000, "%property{Operator}");
+                        AddParameter(adoNetAppender, "@User_ID", System.Data.DbType.Int64, 4000, "%property{User_ID}");
+                        AddParameter(adoNetAppender, "@ModName", System.Data.DbType.String, 214748364, "%property{ModName}");
+                        AddParameter(adoNetAppender, "@MAC", System.Data.DbType.String, 214748364, "%property{MAC}");
+                        AddParameter(adoNetAppender, "@IP", System.Data.DbType.String, 214748364, "%property{IP}");
+                        AddParameter(adoNetAppender, "@Path", System.Data.DbType.String, 214748364, "%property{Path}");
+                        AddParameter(adoNetAppender, "@ActionName", System.Data.DbType.String, 214748364, "%property{ActionName}");
+                        AddParameter(adoNetAppender, "@MachineName", System.Data.DbType.String, 214748364, "%property{MachineName}");
+                        AddParameter(adoNetAppender, "@Message", System.Data.DbType.String, 214748364, "%property{Message}");
+                        AddParameter(adoNetAppender, "@Exception", System.Data.DbType.String, 214748364, "%property{Exception}");
                         
                         // 只在所有参数添加完成后调用一次ActivateOptions
                         adoNetAppender.ActivateOptions();
@@ -358,6 +333,27 @@ namespace RUINORERP.Common.Log4Net
 
             // 返回共享的日志仓库实例
             return _sharedLoggerRepository;
+        }
+
+        /// <summary>
+        /// 添加参数到AdoNetAppender
+        /// </summary>
+        /// <param name="appender">AdoNetAppender实例</param>
+        /// <param name="paramName">参数名称</param>
+        /// <param name="dbType">数据库类型</param>
+        /// <param name="size">参数大小</param>
+        /// <param name="conversionPattern">转换模式</param>
+        private void AddParameter(AdoNetAppender appender, string paramName, System.Data.DbType dbType, int size, string conversionPattern)
+        {
+            var layout = new EnhancedCustomLayout { ConversionPattern = conversionPattern };
+            layout.ActivateOptions();
+            appender.AddParameter(new AdoNetAppenderParameter
+            {
+                ParameterName = paramName,
+                DbType = dbType,
+                Size = size,
+                Layout = new Layout2RawLayoutAdapter(layout)
+            });
         }
 
         public static ILog CreateLogerByCustomeDb(ILoggerRepository loggerRepository)

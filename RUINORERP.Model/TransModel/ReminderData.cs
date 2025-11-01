@@ -1,3 +1,4 @@
+using RUINORERP.Global.EnumExt;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -104,6 +105,9 @@ namespace RUINORERP.Model.TransModel
         public object CreateTime { get; set; }
         public DateTime ReadTime { get; set; }
         public string Title { get; set; }
+        public string Content { get; set; }
+        public ReminderType MessageType { get; set; }
+        public bool IsSystemMessage { get; set; }
 
         // 构造函数
         public ReminderData()

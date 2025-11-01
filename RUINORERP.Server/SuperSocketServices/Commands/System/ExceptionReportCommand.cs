@@ -249,10 +249,11 @@ namespace RUINORERP.Server.Commands
                         };
 
                         var request = new MessageRequest(MessageCmdType.Unknown, messageData);
-                        var success = _sessionService.SendCommandAsync(
+                        // 使用异步调用避免阻塞
+                        var success = await _sessionService.SendCommandAsync(
                             adminSession.SessionID, 
                             MessageCommands.SendMessageToUser, 
-                            request).Result; // 注意：这里使用.Result是为了保持原有的同步行为
+                            request); // 注意：这里使用.Result是为了保持原有的同步行为
                         
                         if (!success)
                         {
@@ -363,10 +364,10 @@ namespace RUINORERP.Server.Commands
                     };
 
                     var request = new MessageRequest(MessageCmdType.Unknown, messageData);
-                    var success = _sessionService.SendCommandAsync(
+                    var success = await _sessionService.SendCommandAsync(
                         session.SessionID, 
                         MessageCommands.SendMessageToUser, 
-                        request).Result; // 注意：这里使用.Result是为了保持原有的同步行为
+                        request); // 使用异步调用避免阻塞
                         
                     if (!success)
                     {

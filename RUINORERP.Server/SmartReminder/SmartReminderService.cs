@@ -114,10 +114,10 @@ namespace RUINORERP.Server.SmartReminder
             }
 
             _timer = new Timer(
-                TimerCallback,
-                null,
-                TimeSpan.FromSeconds(15), // 首次检查延迟，等待其他服务初始化
-                interval);
+                    TimerCallback,
+                    null,
+                    (int)TimeSpan.FromSeconds(15).TotalMilliseconds, // 首次检查延迟，等待其他服务初始化
+                    (int)interval.TotalMilliseconds);
 
             _isRunning = true;
             _logger.LogInformation("监控服务已启动，间隔: {Interval}", interval);
@@ -133,7 +133,7 @@ namespace RUINORERP.Server.SmartReminder
                     {
                         try
                         {
-                            return await SafeCheckRemindersAsync();
+                            await SafeCheckRemindersAsync();
                         }
                         catch (Exception innerEx)
                         {
@@ -147,7 +147,7 @@ namespace RUINORERP.Server.SmartReminder
                     {
                         if (task.IsFaulted && task.Exception != null)
                         {
-                            // 处理所有未观察到的异常，避免异常被吞没有
+                            // 处理所有未观察到的异常，避免异常被吞没
                             _logger.LogError(task.Exception, "安全检查提醒过程中发生未处理异常，已达到最大重试次数");
                             // 处理AggregateException，记录内部异常详情
                             foreach (var ex in task.Exception.Flatten().InnerExceptions)

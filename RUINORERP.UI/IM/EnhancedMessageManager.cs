@@ -25,6 +25,7 @@ using RUINORERP.Model;
 using RUINORERP.UI.Common;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
+using RUINORERP.Global.EnumExt;
 
 namespace RUINORERP.UI.IM
 {
@@ -36,7 +37,17 @@ namespace RUINORERP.UI.IM
     {
         // 消息列表
         private readonly BindingList<ReminderData> _messages;
+        
+        /// <summary>
+        /// 消息列表（兼容属性）
+        /// </summary>
+        public BindingList<ReminderData> Messages
+        {
+            get { return _messages; }
+        }
         private readonly Timer _messageCheckTimer;
+        // 通信服务引用
+        private ClientCommunicationService _communicationService;
         private int _unreadMessageCount;
         private bool _disposed = false;
         private readonly ILogger<EnhancedMessageManager> _logger;
@@ -339,7 +350,11 @@ namespace RUINORERP.UI.IM
         /// </summary>
         public event EventHandler MessageStatusChanged;
 
-        // 删除重复的MessageStatusChanged事件定义
+        // 保存消息到存储（模拟实现，实际项目中可能需要持久化到数据库）
+        private void SaveMessageToStorage(ReminderData message)
+        {   // 这里可以添加消息持久化逻辑
+            _logger?.LogDebug("保存消息到存储: {Title}", message.RemindSubject ?? message.Title ?? "无标题");
+        }
         
         /// <summary>
         /// 触发新消息接收事件
@@ -358,9 +373,6 @@ namespace RUINORERP.UI.IM
             MessageStatusChanged?.Invoke(this, new EventArgs());
         }
         
-        /// <summary>
-        /// 添加消息到列表
-        /// </summary>
         /// <summary>
         /// 添加消息到列表
         /// </summary>
@@ -686,6 +698,210 @@ namespace RUINORERP.UI.IM
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// 显示消息列表（兼容方法）
+        /// </summary>
+        public void ShowMessageList()
+        {
+            ShowEnhancedMessageList();
+        }
+
+        /// <summary>
+        /// 订阅服务器消息事件（兼容方法，接收通信服务参数）
+        /// </summary>
+        public void SubscribeServerMessageEvents(ClientCommunicationService communicationService)
+        {   // 保存通信服务引用
+            _communicationService = communicationService;
+            
+            // 实现服务器消息订阅逻辑
+            if (_communicationService != null)
+            {
+                _logger?.LogInformation("开始订阅服务器消息事件");
+                
+                // 订阅服务器推送的弹窗消息
+                _communicationService.SubscribeCommand(MessageCommands.SendPopupMessage, (packet, data) =>
+                {
+                    var args = new MessageReceivedEventArgs
+                    {
+                        MessageType = "Popup",
+                        Data = data,
+                        Timestamp = DateTime.Now
+                    };
+                    OnPopupMessageReceived(args);
+                });
+                
+                // 订阅服务器推送的普通消息
+                _communicationService.SubscribeCommand(MessageCommands.SendMessageToUser, (packet, data) =>
+                {
+                    var args = new MessageReceivedEventArgs
+                    {
+                        MessageType = "User",
+                        Data = data,
+                        Timestamp = DateTime.Now
+                    };
+                    OnUserMessageReceived(args);
+                });
+                
+                // 订阅系统通知
+                _communicationService.SubscribeCommand(MessageCommands.SendSystemNotification, (packet, data) =>
+                {
+                    var args = new MessageReceivedEventArgs
+                    {
+                        MessageType = "SystemNotification",
+                        Data = data,
+                        Timestamp = DateTime.Now
+                    };
+                    OnSystemNotificationReceived(args);
+                });
+                
+                _logger?.LogInformation("已成功订阅服务器消息事件");
+            }
+        }
+        
+        /// <summary>
+        /// 订阅服务器消息事件（无参数版本）
+        /// </summary>
+        public void SubscribeServerMessageEvents()
+        {   // 如果已有通信服务，则订阅消息事件
+            if (_communicationService != null)
+            {
+                SubscribeServerMessageEvents(_communicationService);
+            }
+        }
+
+        /// <summary>
+        /// 未读消息数量（兼容属性）
+        /// </summary>
+        public int UnreadMessageCount
+        {
+            get { return GetUnreadMessageCount(); }
+        }
+        
+        /// <summary>
+        /// 保存消息到存储（兼容方法，无参数版本）
+        /// </summary>
+        public void SaveMessageToStorage()
+        {
+            _logger?.LogInformation("执行消息存储操作");
+            // 可以在这里实现批量保存逻辑
+            foreach (var message in _messages.Where(m => !m.IsRead))
+            {
+                SaveMessageToStorage(message);
+            }
+        }
+
+        /// <summary>
+        /// 标记消息为已读（根据ID）
+        /// </summary>
+        /// <param name="messageId">消息ID</param>
+        public void MarkMessageAsRead(int messageId)
+        {   // 使用Id属性而不是ID属性
+            var message = _messages.FirstOrDefault(m => m.Id == messageId.ToString());
+            if (message != null)
+            {   message.IsRead = true;
+                message.ReadTime = DateTime.Now;
+                OnMessageStatusChanged();
+            }
+        }
+        
+        /// <summary>
+        /// 标记消息为已读（根据标题和内容，兼容旧版）
+        /// </summary>
+        /// <param name="title">消息标题</param>
+        /// <param name="content">消息内容</param>
+        public void MarkMessageAsRead(string title, string content)
+        {   try
+            {   lock (_messagesLock)
+                {   // 查找匹配的消息
+                    var message = _messages.FirstOrDefault(m =>
+                        (m.RemindSubject == title || m.Title == title) &&
+                        (m.ReminderContent == content || m.Content == content) &&
+                        !m.IsRead);
+                    
+                    if (message != null)
+                    {   message.IsRead = true;
+                        message.ReadTime = DateTime.Now;
+                        
+                        // 触发消息状态变更事件
+                        OnMessageStatusChanged();
+                        _logger?.LogInformation($"通过标题和内容标记消息为已读: {title}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {   _logger?.LogError(ex, "通过标题和内容标记消息为已读时发生异常");
+            }
+        }
+
+        /// <summary>
+        /// 添加系统通知
+        /// </summary>
+        /// <param name="title">通知标题</param>
+        /// <param name="content">通知内容</param>
+        /// <param name="messageType">消息类型</param>
+        public void AddSystemNotification(string title, string content, ReminderType messageType = ReminderType.Notification)
+        {
+            var notification = new ReminderData
+            {
+                Title = title,
+                Content = content,
+                MessageType = messageType,
+                CreateTime = DateTime.Now,
+                IsRead = false,
+                IsSystemMessage = true
+            };
+            AddMessage(notification);
+        }
+
+        /// <summary>
+        /// 添加消息（3参数重载，接收ReminderType类型）
+        /// </summary>
+        /// <param name="title">标题</param>
+        /// <param name="content">内容</param>
+        /// <param name="messageType">消息类型</param>
+        public void AddMessage(string title, string content, ReminderType messageType)
+        {   var message = new ReminderData
+            {   RemindSubject = title,
+                ReminderContent = content,
+                Title = title,
+                Content = content,
+                MessageType = messageType,
+                CreateTime = DateTime.Now,
+                SendTime = DateTime.Now.ToString(),
+                IsRead = false
+            };
+            AddMessage(message);
+        }
+        
+        /// <summary>
+        /// 添加消息（3参数重载，接收DateTime类型，兼容旧版）
+        /// </summary>
+        /// <param name="source">消息来源</param>
+        /// <param name="content">消息内容</param>
+        /// <param name="sendTime">发送时间</param>
+        public void AddMessage(string source, string content, DateTime sendTime)
+        {   try
+            {   // 创建ReminderData对象
+                var message = new ReminderData
+                {   SenderEmployeeName = source,
+                    ReminderContent = content,
+                    SendTime = sendTime.ToString(),
+                    RemindSubject = source,
+                    IsRead = false,
+                    messageCmd = MessageCmdType.Message,
+                    CreateTime = sendTime
+                };
+                
+                // 调用主方法
+                AddMessage(message);
+                
+                _logger?.LogInformation($"已添加文本消息，来源: {source}");
+            }
+            catch (Exception ex)
+            {   _logger?.LogError(ex, "添加文本消息到队列时发生异常");
+            }
         }
 
         /// <summary>

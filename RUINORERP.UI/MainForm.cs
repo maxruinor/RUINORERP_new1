@@ -188,7 +188,7 @@ namespace RUINORERP.UI
         /// 获取消息管理器实例
         /// </summary>
         /// <returns>消息管理器实例</returns>
-        public MessageManager GetMessageManager()
+        public EnhancedMessageManager GetMessageManager()
         {
             return _messageManager;
         }

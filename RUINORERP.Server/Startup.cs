@@ -80,6 +80,8 @@ using RUINORERP.Business.Cache;
 using RUINORERP.Server.Services;
 using RUINORERP.Server.Network.Monitoring;
 using RUINORERP.Server.Network.Core;
+using RUINORERP.Server.Services.BizCode;
+using RUINORERP.Server.BNR;
 
 namespace RUINORERP.Server
 {
@@ -327,9 +329,6 @@ namespace RUINORERP.Server
         /// <param name="services">服务集合</param>
         public static void ConfigureServices(IServiceCollection services)
         {
-            // 注册旧系统CommandDispatcher（临时保留，逐步迁移）
-            services.AddSingleton<CommandDispatcher>();
-
 
             #region 配置文件检查和创建
             // 配置文件所在的目录
@@ -400,6 +399,10 @@ namespace RUINORERP.Server
 
             services.AddScoped(typeof(IBaseRepository<>), typeof(BaseRepository<>)); // 注入仓储
             services.AddTransient<IUnitOfWorkManage, UnitOfWorkManage>(); // 注入工作单元
+            
+            // 手动注册业务编码服务
+            services.AddTransient<RUINORERP.IServices.IBizCodeService, RUINORERP.Server.Services.BizCode.BizCodeService>();
+            services.AddTransient<RUINORERP.Server.BNR.BNRFactory>(); // 注册BizCodeService依赖的BNRFactory
 
             //Add Memory Cache
             services.AddOptions();
@@ -407,21 +410,7 @@ namespace RUINORERP.Server
             services.AddMemoryCacheSetup();
             services.AddDistributedMemoryCache();
 
-            // 注释掉重复的CacheManager缓存服务注册，使用BusinessDIConfig.cs中注册的OptimizedCacheManager
-            // services.AddSingleton<ICacheManager<object>>(provider =>
-            // {
-            //     return CacheFactory.Build<object>(settings =>
-            //     {
-            //         settings
-            //             .WithSystemRuntimeCacheHandle()
-            //             .WithExpiration(ExpirationMode.Absolute, TimeSpan.FromMinutes(30));
-            //     });
-            // });
-
-            // 注册统一缓存管理器
-            // services.AddSingleton<UnifiedCacheManager>();
-            // services.AddSingleton<CacheSyncService>();
-            // services.AddSingleton<CacheEventPublisher>();
+            
 
             IConfigurationBuilder configurationBuilder = new ConfigurationBuilder();
             var cfgBuilder = configurationBuilder.AddJsonFile("appsettings.json");//默认读取：当前运行目录

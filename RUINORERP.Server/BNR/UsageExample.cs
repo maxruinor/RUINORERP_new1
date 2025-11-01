@@ -10,7 +10,7 @@ namespace RUINORERP.Server.BNR.Examples
         public static void Main(string[] args)
         {
             // 设置数据库连接字符串（在实际项目中，这应该是您的主数据库连接字符串）
-            DatabaseSequenceParameter.SetDefaultConnectionString("Server=your_server;Database=your_database;User Id=your_user;Password=your_password;");
+           // DatabaseSequenceParameter.SetDefaultConnectionString("Server=your_server;Database=your_database;User Id=your_user;Password=your_password;");
             
             // 创建BNR工厂实例
             var factory = new BNRFactory();

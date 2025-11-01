@@ -37,37 +37,7 @@ namespace RUINORERP.PacketSpec.Models.Responses
             }
         }
 
-        /// <summary>
-        /// 从服务容器初始化默认命令处理器注册表
-        /// 用于在应用程序启动时设置单例实例
-        /// </summary>
-        /// <param name="serviceProvider">服务提供者</param>
-        public static void InitializeFromServiceProvider(IServiceProvider serviceProvider)
-        {
-            if (serviceProvider == null)
-                throw new ArgumentNullException(nameof(serviceProvider));
-
-            try
-            {
-                var registry = serviceProvider.GetService<CommandHandlerRegistry>();
-                if (registry != null)
-                {
-                    SetDefaultCommandHandlerRegistry(registry);
-                    _logger?.Debug("响应工厂已从服务容器初始化默认命令处理器注册表");
-                }
-                else
-                {
-                    _logger?.LogWarning("无法从服务容器获取CommandHandlerRegistry实例");
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "从服务容器初始化响应工厂失败");
-                throw;
-            }
-        }
-
-
+   
         /// <summary>
         /// 静态日志记录器
         /// </summary>

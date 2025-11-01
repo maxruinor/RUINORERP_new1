@@ -27,7 +27,7 @@ namespace RUINORERP.Server.BNR
         /// <returns>序号值</returns>
         public long GetNextSequenceValue(string key)
         {
-            return _sqlSugarClient.Ado.UseTran(() =>
+            var dbResult = _sqlSugarClient.Ado.UseTran(() =>
             {
                 // 1. 尝试更新现有记录
                 var rowsAffected = _sqlSugarClient.Ado.ExecuteCommand(
@@ -46,13 +46,15 @@ namespace RUINORERP.Server.BNR
                 else
                 {
                     // 3. 获取更新后的值
-                    var result = _sqlSugarClient.Ado.GetScalar<long>(
+                    var result = Convert.ToInt64(_sqlSugarClient.Ado.GetScalar(
                         "SELECT CurrentValue FROM SequenceNumbers WHERE SequenceKey = @SequenceKey",
-                        new { SequenceKey = key });
+                        new { SequenceKey = key }));
                     
                     return result;
                 }
             });
+            
+            return dbResult.Data;
         }
         
         /// <summary>
@@ -62,9 +64,10 @@ namespace RUINORERP.Server.BNR
         /// <returns>当前序号值</returns>
         public long GetCurrentSequenceValue(string key)
         {
-            var result = _sqlSugarClient.Ado.GetScalar<long?>(
+            var resultValue = _sqlSugarClient.Ado.GetScalar(
                 "SELECT CurrentValue FROM SequenceNumbers WHERE SequenceKey = @SequenceKey",
                 new { SequenceKey = key });
+            long? result = resultValue != null ? Convert.ToInt64(resultValue) : null;
                 
             return result ?? 0;
         }
@@ -111,9 +114,10 @@ namespace RUINORERP.Server.BNR
         /// <returns>是否存在</returns>
         public bool SequenceExists(string key)
         {
-            var count = _sqlSugarClient.Ado.GetScalar<int>(
+            var countValue = _sqlSugarClient.Ado.GetScalar(
                 "SELECT COUNT(1) FROM SequenceNumbers WHERE SequenceKey = @SequenceKey",
                 new { SequenceKey = key });
+            int count = Convert.ToInt32(countValue);
                 
             return count > 0;
         }

@@ -782,7 +782,9 @@ namespace RUINORERP.Server.Network.Services
                     }
                 });
 
-                var results = await Task.WhenAll(disconnectTasks);
+                // 过滤掉可能的null任务，防止ArgumentException异常
+                var validDisconnectTasks = disconnectTasks.Where(t => t != null).ToList();
+                var results = validDisconnectTasks.Any() ? await Task.WhenAll(validDisconnectTasks) : Array.Empty<int>();
                 successCount = results.Sum();
 
                 _logger.LogInformation($"用户会话断开完成: Username={username}, 总会话数={userSessions.Count}, 成功断开={successCount}");

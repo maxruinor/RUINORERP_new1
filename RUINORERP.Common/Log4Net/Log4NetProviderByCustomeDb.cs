@@ -35,6 +35,13 @@ namespace RUINORERP.Common.Log4Net
 
         public void Dispose()
         {
+            foreach (var logger in _loggers.Values)
+            {
+                if (logger is IDisposable disposableLogger)
+                {
+                    disposableLogger.Dispose();
+                }
+            }
             _loggers.Clear();
         }
 

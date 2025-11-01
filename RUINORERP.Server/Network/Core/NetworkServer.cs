@@ -109,10 +109,23 @@ namespace RUINORERP.Server.Network.Core
                 // 减少日志输出，仅在调试模式下显示已注册的处理器信息
                 #if DEBUG
                 LogRegisteredHandlers();
-                #endif
+#endif
+                ERPServerOptions serverOptions = null;
 
                 // 设置默认端口，以防配置读取失败
 
+
+                // 获取全局服务提供者，确保SuperSocket服务器使用与应用程序相同的服务
+                var globalServiceProvider = Program.ServiceProvider;
+                
+                // 将全局服务提供者设置给命令调度器
+                // 这确保命令处理器能够访问Startup中注册的所有服务
+                if (globalServiceProvider != null && _commandDispatcher is RUINORERP.PacketSpec.Commands.CommandDispatcher commandDispatcherImpl)
+                {   
+                    commandDispatcherImpl.ServiceProvider = globalServiceProvider;
+                    _logger.LogInformation("已将全局服务提供者设置给命令调度器");
+                }
+                
                 _host = MultipleServerHostBuilder.Create()
                 .AddServer<SuperSocketService<ServerPackageInfo>, ServerPackageInfo, PacketPipelineFilter>(builder =>
                 {
@@ -121,8 +134,8 @@ namespace RUINORERP.Server.Network.Core
                        {
                            // 根据SuperSocket 2.0文档，配置应该从"serverOptions"节点读取
                            // 简化配置读取逻辑，统一从"serverOptions"节点读取配置
-                           var serverOptions = config.GetSection("serverOptions").Get<ERPServerOptions>() ?? new ERPServerOptions();
-                           
+                            serverOptions = config.GetSection("serverOptions").Get<ERPServerOptions>() ?? new ERPServerOptions();
+                            
                            // 确保至少有一个监听器配置
                            serverOptions.Validate();
 
@@ -138,13 +151,10 @@ namespace RUINORERP.Server.Network.Core
                    {
                        // 注册SuperSocket命令适配器
                        commandOptions.AddCommand<SuperSocketCommandAdapter<IAppSession>>();
-                       //commandOptions.AddCommand<SuperSocketCommandAdapter>();
                    })
 
                     .ConfigureSuperSocket(options =>
                     {
-                        // 从配置上下文中读取serverOptions
-                        var serverOptions = ctx.Configuration.GetSection("serverOptions").Get<ERPServerOptions>();
                         if (serverOptions != null)
                         {
                             // 使用从配置中读取的serverOptions对象设置SuperSocket选项
@@ -192,28 +202,41 @@ namespace RUINORERP.Server.Network.Core
                 })
                     .ConfigureLogging((hostCtx, loggingBuilder) =>
                     {
+                        // 复制全局日志配置，确保日志一致性
+                        if (globalServiceProvider != null)
+                        {
+                            // 获取全局日志工厂配置
+                            var globalLoggerFactory = globalServiceProvider.GetService<ILoggerFactory>();
+                            if (globalLoggerFactory != null)
+                            {
+                                loggingBuilder.AddConfiguration(hostCtx.Configuration.GetSection("Logging"));
+                                // 添加全局日志提供者
+                            }
+                        }
                         loggingBuilder.AddConsole();
                     })
 
                  .ConfigureServices((context, services) =>
                   {
-                      // 注册核心服务 - 使用与全局相同的ISessionService实例
-                      // 确保使用注入的_sessionManager，而不是从Program.ServiceProvider获取
-                      services.AddSingleton<ISessionService>(_sessionManager);
-
-                      IConfigurationBuilder configurationBuilder = new ConfigurationBuilder();
-                      var cfgBuilder = configurationBuilder.AddJsonFile("appsettings.json");//默认读取：当前运行目录
-                      IConfiguration configuration = cfgBuilder.Build();
-                      services.AddPacketSpecServices(configuration);
-
- 
-                      // 注册命令调度器和适配器
-                      services.AddLogging(builder =>
+                      // 使用全局服务提供者的服务
+                      if (globalServiceProvider != null)
                       {
-                          builder.AddConsole();
-                          builder.SetMinimumLevel(LogLevel.Information);
-                      });
-                      // 注册命令处理器 - 这些处理器会被CommandDispatcher自动发现
+                          // 从全局服务提供者复制所有注册的服务
+                          // 这种方法可以确保SuperSocket服务器使用与应用程序相同的服务实例
+                          CopyServicesFromGlobalProvider(globalServiceProvider, services);
+                      }
+                      else
+                      {
+                          // 回退方案：如果全局服务提供者不可用，使用本地服务
+                          services.AddSingleton<ISessionService>(_sessionManager);
+                          services.AddSingleton(_commandDispatcher);
+                          
+                          services.AddLogging(builder =>
+                          {
+                              builder.AddConsole();
+                              builder.SetMinimumLevel(LogLevel.Information);
+                          });
+                      }
                   }).Build();
                 
                 // 启动服务器，使用StartAsync而不是RunAsync，这样不会阻塞线程
@@ -332,6 +355,37 @@ namespace RUINORERP.Server.Network.Core
         {
             _logger?.LogDebug($"[NetworkServer] {message}");
             Console.WriteLine($"[NetworkServer] INFO: {message}");
+        }
+
+        /// <summary>
+        /// 从全局服务提供者复制服务到当前服务集合
+        /// 确保SuperSocket服务器可以访问与应用程序相同的服务实例
+        /// </summary>
+        /// <param name="globalProvider">全局服务提供者</param>
+        /// <param name="services">当前服务集合</param>
+        private void CopyServicesFromGlobalProvider(IServiceProvider globalProvider, IServiceCollection services)
+        {
+            try
+            {
+                // 注册核心服务为单例，确保使用与全局相同的实例
+                services.AddSingleton<ISessionService>(_sessionManager);
+                services.AddSingleton(_commandDispatcher);
+                
+                // 注册全局服务提供者本身，以便在需要时可以访问所有全局服务
+                services.AddSingleton(globalProvider);
+                
+                // 这里可以根据需要显式注册其他必要的服务
+                // 例如：
+                // services.AddSingleton(globalProvider.GetService<ILoggerFactory>());
+                // services.AddSingleton(globalProvider.GetService<ISqlSugarClient>());
+                // services.AddSingleton(globalProvider.GetService<IConfiguration>());
+                
+                _logger.LogInformation("已将全局服务提供者集成到SuperSocket服务器");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "从全局服务提供者复制服务时出错");
+            }
         }
 
         private void LogError(string message, Exception ex = null)

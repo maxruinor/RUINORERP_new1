@@ -878,9 +878,6 @@
     <Compile Include="BusyDialog.Designer.cs">
       <DependentUpon>BusyDialog.cs</DependentUpon>
     </Compile>
-    <Compile Include="ClientSuperSocket\ClientDataBuilder.cs" />
-    <Compile Include="ClientSuperSocket\SystemOptimizerService.cs" />
-    <Compile Include="ClientSuperSocket\WorkflowService.cs" />
     <Compile Include="CommonUI\frmOpinion.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -2116,7 +2113,6 @@
     <Compile Include="IM\MessageListControl.Designer.cs">
       <DependentUpon>MessageListControl.cs</DependentUpon>
     </Compile>
-    <Compile Include="IM\MessageManager.cs" />
     <Compile Include="Monitoring\Auditing\AuditLogHelper.cs" />
     <Compile Include="Common\CustomTupleEqualityComparer.cs" />
     <Compile Include="Common\DuplicateFinder.cs" />

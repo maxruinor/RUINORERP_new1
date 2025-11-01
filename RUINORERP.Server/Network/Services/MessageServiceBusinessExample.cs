@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace RUINORERP.Server.Network.Services
@@ -93,7 +94,12 @@ namespace RUINORERP.Server.Network.Services
                 }
                 
                 // 等待所有发送请求提交完成（不是等待响应）
-                await Task.WhenAll(tasks);
+                // 过滤掉可能的null任务，防止ArgumentException异常
+                var validTasks = tasks.Where(t => t != null).ToList();
+                if (validTasks.Any())
+                {
+                    await Task.WhenAll(validTasks);
+                }
                 
                 _logger?.LogInformation("批量用户通知发送请求提交完成: UserCount={UserCount}", userIds.Length);
                 

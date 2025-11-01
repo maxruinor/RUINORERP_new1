@@ -99,23 +99,18 @@ namespace RUINORERP.PacketSpec.DI
             // 注意：实际实现通过Autofac容器注册，确保能解析TokenServiceOptions
 
 
+
+          // 确保CommandHandlerRegistry已注册，且在CommandDispatcher之前注册
+            services.AddSingleton<CommandHandlerRegistry>();
+
             // 注册命令调度器
             services.AddSingleton<CommandDispatcher>();
             services.AddSingleton<ICommandDispatcher, CommandDispatcher>();
-      
 
-            // 注册命令创建服务（新增）
-            //services.AddSingleton<CommandCreationService>();
-            //services.AddSingleton<ICommandCreationService, CommandCreationService>();
-            
-            // 注意：CommandScanner已不再被CommandDispatcher使用，因此不再注册
 
             // 注册命令处理器工厂
             services.AddSingleton<ICommandHandlerFactory, CommandHandlerFactory>();
-            
-            // 注册命令处理器注册表
-            services.AddSingleton<CommandHandlerRegistry>();
-            
+
             // 注册熔断器指标收集器
             services.AddSingleton<CircuitBreakerMetrics>();
             
@@ -151,10 +146,20 @@ namespace RUINORERP.PacketSpec.DI
             builder.RegisterType<JsonSerializationService>()
                 .As<IJsonSerializationService>()
                 .SingleInstance();
-            
+
+            // 注册命令处理器注册表
+            builder.RegisterType<CommandHandlerRegistry>()
+                .AsSelf()
+                .SingleInstance();
 
             // 注册命令调度器
             builder.RegisterType<CommandDispatcher>().AsSelf().SingleInstance();
+
+
+            // 注册命令处理器工厂
+            builder.RegisterType<CommandHandlerFactory>()
+                .As<ICommandHandlerFactory>()
+                .SingleInstance();
 
 
             // 注册Token服务选项 - 支持自定义配置
@@ -192,24 +197,11 @@ namespace RUINORERP.PacketSpec.DI
                 .As<ITokenService>()
                 .SingleInstance();
 
-
-            // 注册命令创建服务（新增）
-            //builder.RegisterType<CommandCreationService>()
-            //    .AsSelf()
-            //    .As<ICommandCreationService>()
-            //    .SingleInstance();
-
+ 
           
 
-            // 注册命令处理器工厂
-            builder.RegisterType<CommandHandlerFactory>()
-                .As<ICommandHandlerFactory>()
-                .SingleInstance();
             
-            // 注册命令处理器注册表
-            builder.RegisterType<CommandHandlerRegistry>()
-                .AsSelf()
-                .SingleInstance();
+
             
             // 注册熔断器指标收集器
             builder.RegisterType<CircuitBreakerMetrics>()

@@ -1103,9 +1103,8 @@ namespace RUINORERP.UI.ProductEAV
 
         }
 
-        private void ControlToDataSource(object sender, ConvertEventArgs cevent)
+        private async void ControlToDataSource(object sender, ConvertEventArgs cevent)
         {
-            BizCodeService bizCodeService = Startup.GetFromFac<BizCodeService>();
             // The method converts back to decimal type only. 
             //if (cevent.DesiredType != typeof(decimal)) return;
             if (string.IsNullOrEmpty(cevent.Value.ToString()) || cevent.Value.ToString() == "类目根结节")
@@ -1118,24 +1117,61 @@ namespace RUINORERP.UI.ProductEAV
                 if (entity != null)
                 {
                     cevent.Value = entity.Category_ID;
-                   txtNo.Text = BNRFactory.Default.Create("{CN:" + entity.Category_name + "}");
+                    // 使用新的BizCodeService生成产品编号
+                    try
+                    {
+                        var bizCodeService = Startup.GetFromFac<BizCodeService>();
+                        if (bizCodeService != null)
+                        {
+                            txtNo.Text = await bizCodeService.GenerateProductNoAsync(entity.Category_ID);
+                        }
+                        else
+                        {
+                            // 降级方案：如果服务不可用，使用原来的方法
+                           // txtNo.Text = BNRFactory.Default.Create("{CN:" + entity.Category_name + "}");
+                            MessageBox.Show("警告：无法使用服务器生成产品编码，已使用本地生成方式", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        // 异常处理：发生错误时使用本地生成方式作为备用
+                        //txtNo.Text = BNRFactory.Default.Create("{CN:" + entity.Category_name + "}");
+                        MessageBox.Show($"生成产品编码时发生错误：{ex.Message}\n已使用本地生成方式作为备用", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
                 }
                 else
                 {
                     cevent.Value = 0;
                 }
             }
-
-
-
         }
 
-        private void chkAutoCreateProdNo_CheckedChanged(object sender, EventArgs e)
+        private async void chkAutoCreateProdNo_CheckedChanged(object sender, EventArgs e)
         {
             txtNo.ReadOnly = chkAutoCreateProdNo.Checked;
             if (chkAutoCreateProdNo.Checked)
             {
-                txtNo.Text = Common.BarCodeCreator.CreateProductBarCode(EditEntity.Category_ID.ToString(), true, "32324");
+                // 使用新的BizCodeService生成产品编号
+                try
+                {
+                    var bizCodeService = Startup.GetFromFac<RUINORERP.UI.Network.Services.BizCodeService>();
+                    if (bizCodeService != null)
+                    {
+                        txtNo.Text = await bizCodeService.GenerateProductNoAsync(EditEntity.Category_ID.Value);
+                    }
+                    else
+                    {
+                        // 降级方案：如果服务不可用，使用原来的方法
+                        txtNo.Text = Common.BarCodeCreator.CreateProductBarCode(EditEntity.Category_ID.ToString(), true, "32324");
+                        MessageBox.Show("警告：无法使用服务器生成产品编码，已使用本地生成方式", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // 异常处理：发生错误时使用本地生成方式作为备用
+                    txtNo.Text = Common.BarCodeCreator.CreateProductBarCode(EditEntity.Category_ID.ToString(), true, "32324");
+                    MessageBox.Show($"生成产品编码时发生错误：{ex.Message}\n已使用本地生成方式作为备用", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
             }
             else
             {

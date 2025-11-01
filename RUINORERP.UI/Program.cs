@@ -55,6 +55,31 @@ namespace RUINORERP.UI
         /// 应用程序的版本信息
         /// </summary>
         public static string ERPVersion { get; set; }
+        
+        /// <summary>
+        /// 全局配置对象
+        /// </summary>
+        public static IConfiguration Configuration { get; private set; }
+        
+        /// <summary>
+        /// 初始化全局配置
+        /// </summary>
+        private static void InitializeConfiguration()
+        {
+            // 创建配置目录和文件
+            string configDirectory = Path.Combine(Directory.GetCurrentDirectory(), "SysConfigFiles");
+            if (!Directory.Exists(configDirectory))
+            {
+                Directory.CreateDirectory(configDirectory);
+            }
+            
+            // 读取配置
+            var builder = new ConfigurationBuilder()
+                .SetBasePath(configDirectory)
+                .AddJsonFile("SystemGlobalConfig.json", optional: true, reloadOnChange: true);
+                
+            Configuration = builder.Build();
+        }
 
         private static ApplicationContext _AppContextData;
         public static ApplicationContext AppContextData
@@ -79,6 +104,9 @@ namespace RUINORERP.UI
         /// </summary>
         private static void InitializeLogging()
         {
+            // 先初始化配置
+            InitializeConfiguration();
+            
             try
             {
                 // 配置log4net（使用基础配置，主要日志配置由Startup中的ConfigureLogging方法处理）
@@ -118,15 +146,6 @@ namespace RUINORERP.UI
         /// <param name="services"></param>
         public static void ConfigureRepository(IServiceCollection services)
         {
-            //手动注册 测试过程。这里只是实现批量一次注入
-            //services.AddScoped(typeof(IUnitRepository), typeof(UnitRepository)); // 注入仓储
-            //services.AddTransient<IUnitService, UnitService>();
-            //services.AddScoped<Tb_Unit>();
-            //Services.AddTransient<UnitController>();
-
-            //services.AddSingleton<ISqlSugarClient>(sqlSugar); // 单例注册
-            //services.AddScoped(typeof(SqlSugarRepository<>)); // 仓储注册
-            //services.AddUnitOfWork<SqlSugarUnitOfWork>(); // 事务与工作单元注册
 
 
 
@@ -220,76 +239,10 @@ namespace RUINORERP.UI
             #endregion
         }
 
-        /*
-
-        /// <summary>
-        /// 注入服务
-        /// </summary>
-        /// <param name="services"></param>
-        static void ConfigureServices(IServiceCollection services)
-        {
-
-            //services.AddScoped<ICurrentUser, CurrentUser>();
-
-            ////注入配置文件，各种配置在这里先定义
-            ////register configuration
-            //IConfigurationBuilder cfgBuilder = new Microsoft.Extensions.Configuration.ConfigurationBuilder()
-            //    .SetBasePath(Directory.GetCurrentDirectory())
-            ////.AddJsonFile("appsettings.json")
-            ////2.重新添加json配置文件
-            //.AddJsonFile("appsettings.json", false, false) //3.最后一个参数就是是否热更新的布尔值
-            //    .AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT")}.json", optional: true, reloadOnChange: false)
-            //    ;
-            //IConfiguration configuration = cfgBuilder.Build();
-            //services.AddSingleton<IConfiguration>(configuration);
-
-
-            // 基于接口的注册
-            //services.AddSingleton<IUserService, UserService>();
-            //services.AddSingleton<IUserRepository, UserReposotory>();
-            / 
-
-
-
-            //services.AddScoped(typeof(IBaseRepository<>), typeof(SqlSugarBaseRepository<>)); // 注入仓储
-            //Services.AddScoped(typeof(IUnitRepository)<>),typeof(RUINORERP.Repository.UnitRepository<>)); // 注入仓储
-
-            //services.AddTransient<IUnitOfWork, UnitOfWork>(); // 注入工作单元
-
-            //AutoMapper.IConfigurationProvider config = new MapperConfiguration(cfg =>
-            //{
-            //    cfg.AddProfile<MappingProfile>();
-            //});
-            //services.AddSingleton(config);
-            // if (services.IsNull()) throw new ArgumentNullException(nameof(services));
-
-            //  services.AddSingleton(typeof(AutoMapperConfig));
-            // 
-
-            // services.AddScoped<IMapper, Mapper>();
-            //  services.AddSingleton<IMapper>(mapper);
-
-            //var sqlSugarScope = new SqlSugarScope(new ConnectionConfig
-            //{
-            //    ConnectionString = "Server=192.168.0.250;Database=erp;UID=sa;Password=sa",
-            //    DbType = DbType.SqlServer,
-            //    IsAutoCloseConnection = true,
-            //});
-            //services.AddSingleton<ISqlSugarClient>(sqlSugarScope); // SqlSugar 官网推荐用单例模式注入
-            //  services.AddSqlsugarSetup();
-            // services.AddSingleton(typeof(MainForm_test));
-            // services.AddTransient(typeof(Form2));
-
-            // 注入窗体
-            //RegisterForm();
-            // 注入IniHelper
-            // services.AddScoped<IIniHelper, IniHelper>();
-
+       
 
         }
-        */
-
-
+        
         static void CreateConfig()
         {
             //这里可以弄一个ICONFIG
@@ -799,8 +752,8 @@ namespace RUINORERP.UI
                 return;
             }
 
-            // 防止重复显示相同的错误
-            string errorHash = e.Exception.StackTrace?.GetHashCode().ToString() ?? e.Exception.Message.GetHashCode().ToString();
+            // 改进缓存键生成策略，结合异常类型、消息和堆栈跟踪
+            string errorHash = $"{e.Exception.GetType().FullName}:{e.Exception.Message}:{e.Exception.StackTrace}".GetHashCode().ToString();
             if (_errorCache.TryGetValue(errorHash, out _))
             {
                 return;

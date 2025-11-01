@@ -202,7 +202,6 @@ namespace RUINORERP.Server
                     #endregion
 
 
-
                     Startup.AutofacContainerScope = services.GetAutofacRoot();
 
                     //ILogger<frmMain> logger = services.GetService<ILogger<frmMain>>();
@@ -221,12 +220,10 @@ namespace RUINORERP.Server
 
                     /// 初始化实体映射服务
                     EntityMappingHelper.Initialize();
-
-
-                    var newMainForm = new frmMainNew(logger, workflowHost, config);
-                    newMainForm._ServiceProvider = services;
-                    Application.Run(newMainForm);
-                    //myhost.StartAsync();
+                    var form1 = Startup.GetFromFac<frmMainNew>();
+                    Application.Run(form1);
+                    // var newMainForm = new frmMainNew(logger, workflowHost, config);
+                   // Application.Run(newMainForm);
 
                 }
                 catch (Exception ex)

@@ -15,7 +15,7 @@ namespace RUINORERP.PacketSpec.Commands
     /// </summary>
     public sealed class CommandHandlerFactory : ICommandHandlerFactory
     {
-        private readonly IServiceProvider _serviceProvider;
+        private volatile IServiceProvider _serviceProvider;
         private readonly ConcurrentDictionary<Type, Func<ICommandHandler>> _factoryCache = new();
 
         /// <summary>
@@ -103,6 +103,18 @@ namespace RUINORERP.PacketSpec.Commands
                 var factory = CreateFactoryMethod(handlerType);
                 _factoryCache.TryAdd(handlerType, factory);
             }
+        }
+
+        /// <summary>
+        /// 更新服务提供者 - 支持从外部（如CommandDispatcher）设置全局服务提供者
+        /// 这使得处理器可以访问Startup中注册的所有全局服务
+        /// </summary>
+        /// <param name="serviceProvider">新的服务提供者</param>
+        public void UpdateServiceProvider(IServiceProvider serviceProvider)
+        {
+            _serviceProvider = serviceProvider;
+            // 清除缓存，强制重新创建工厂方法以使用新的服务提供者
+            _factoryCache.Clear();
         }
 
         /// <summary>

@@ -39,6 +39,8 @@ namespace RUINORERP.UI.Network.DI
         {
             // 注册核心网络组件
             services.AddSingleton<ISocketClient, SuperSocketClient>();
+            // 确保CommandHandlerRegistry已注册，且在CommandDispatcher之前注册
+            services.AddSingleton<CommandHandlerRegistry>();
             services.AddSingleton<ICommandDispatcher, CommandDispatcher>();
             services.AddSingleton<ClientCommunicationService>();
             services.AddSingleton<ClientEventManager>();

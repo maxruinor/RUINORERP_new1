@@ -124,7 +124,6 @@ namespace RUINORERP.Server
         //一个消息缓存列表，有处理过的。未处理的。未看的。临时性还是固定到表的？
         public Queue<ReminderData> MessageList = new Queue<ReminderData>();
         public IServiceCollection _services { get; set; }
-        public IServiceProvider _ServiceProvider { get; set; }
 
         public bool IsDebug { get; set; } = false;
 
@@ -197,7 +196,6 @@ namespace RUINORERP.Server
             _main = this;
             _sessionService = Program.ServiceProvider.GetRequiredService<ISessionService>();
             _logger = logger;
-            _services = Startup.services;
             WorkflowHost = workflowHost;
 
             // 注入缓存初始化服务

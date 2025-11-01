@@ -17,7 +17,7 @@ namespace RUINORERP.UI.IM
         /// </summary>
         /// <param name="messageManager">消息管理器实例</param>
         /// <param name="logger">日志记录器</param>
-        public static void ShowMessageListWithErrorHandling(this MessageManager messageManager, ILogger logger = null)
+        public static void ShowMessageListWithErrorHandling(this EnhancedMessageManager messageManager, ILogger logger = null)
         {
             try
             {
@@ -60,7 +60,7 @@ namespace RUINORERP.UI.IM
         /// </summary>
         /// <param name="form">窗体实例</param>
         /// <param name="messageManager">消息管理器实例</param>
-        public static void UpdateMessageStatusDisplay(this Form form, MessageManager messageManager)
+        public static void UpdateMessageStatusDisplay(this Form form, EnhancedMessageManager messageManager)
         {
             if (messageManager == null) return;
             

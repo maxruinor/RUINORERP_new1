@@ -1,4 +1,5 @@
 using System;
+using RUINORERP.Server; // 添加对Program类所在命名空间的引用
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -48,6 +49,7 @@ namespace RUINORERP.Server.Network.SuperSocket
         private readonly CommandDispatcher _commandDispatcher;
         private readonly ILogger<SuperSocketCommandAdapter> _logger;
         private readonly ISessionService _sessionService;
+        private readonly IServiceProvider _serviceProvider; // 添加服务提供者字段
         
         /// <summary>
         /// 会话服务
@@ -63,11 +65,22 @@ namespace RUINORERP.Server.Network.SuperSocket
         public SuperSocketCommandAdapter(
             CommandDispatcher commandDispatcher,
             ISessionService sessionService,
-            ILogger<SuperSocketCommandAdapter> logger = null)
+            ILogger<SuperSocketCommandAdapter> logger = null,
+            IServiceProvider serviceProvider = null)
         {
             _commandDispatcher = commandDispatcher ?? throw new ArgumentNullException(nameof(commandDispatcher));
             _sessionService = sessionService ?? throw new ArgumentNullException(nameof(sessionService));
             _logger = logger;
+            
+            // 优先使用注入的服务提供者，如果没有则使用全局服务提供者
+            _serviceProvider = serviceProvider ?? Program.ServiceProvider;
+            
+            // 确保命令调度器使用相同的服务提供者
+            if (_commandDispatcher != null && _serviceProvider != null)
+            {
+                _commandDispatcher.ServiceProvider = _serviceProvider;
+                _logger?.LogDebug("SuperSocketCommandAdapter已配置为使用全局服务提供者");
+            }
         }
 
         /// <summary>
@@ -104,10 +117,24 @@ namespace RUINORERP.Server.Network.SuperSocket
                     package.Packet.ExecutionContext.SessionId = session.SessionID;
                 }
 
-                // 确保命令调度器已初始化
+                // 检查命令调度器初始化状态
+                // 注意：CommandDispatcher应该在NetworkServer启动时已经初始化，这里只是验证
                 if (!_commandDispatcher.IsInitialized)
                 {
-                    await _commandDispatcher.InitializeAsync(cancellationToken);
+                    _logger?.LogCritical("严重错误：CommandDispatcher未初始化！这表明NetworkServer启动流程存在问题。");
+                    await SendErrorResponseAsync(session, package, UnifiedErrorCodes.System_InternalError, CancellationToken.None);
+                    return;
+                }
+                
+                // 记录处理器数量，便于调试和监控
+                if (_commandDispatcher.HandlerCount == 0)
+                {
+                    _logger?.LogWarning("CommandDispatcher已初始化但没有注册任何处理器！");
+                }
+                else
+                {
+                    _logger?.LogDebug("CommandDispatcher状态正常，已注册处理器数量: {HandlerCount}", 
+                        _commandDispatcher.HandlerCount);
                 }
 
                 // 获取现有会话信息
@@ -129,24 +156,31 @@ namespace RUINORERP.Server.Network.SuperSocket
                 try
                 {
                     // 使用链接的取消令牌，考虑命令超时设置
-                    // 修复：正确创建链接令牌源，避免修改原始cancellationToken
-                    CancellationTokenSource linkedCts;
-                    if (cancellationToken != CancellationToken.None)
-                    {
-                        // 如果传入了有效的取消令牌，则创建链接令牌源
-                        linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-                    }
-                    else
-                    {
-                        // 否则创建新的令牌源
-                        linkedCts = new CancellationTokenSource();
-                    }
+                // 修复：正确创建链接令牌源，避免修改原始cancellationToken
+                CancellationTokenSource linkedCts;
+                if (cancellationToken != CancellationToken.None)
+                {
+                    // 如果传入了有效的取消令牌，则创建链接令牌源
+                    linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                }
+                else
+                {
+                    // 否则创建新的令牌源
+                    linkedCts = new CancellationTokenSource();
+                }
 
-                    // 如果命令有设置超时时间，则使用命令的超时时间，否则使用默认300秒
-                    //这里设置大一点按执行时间算。每个处理类自己定义了不同的时间
-                    var timeout = TimeSpan.FromSeconds(300);
-                    linkedCts.CancelAfter(timeout);
-                    result = await _commandDispatcher.DispatchAsync(package.Packet, linkedCts.Token);
+                // 如果命令有设置超时时间，则使用命令的超时时间，否则使用默认300秒
+                //这里设置大一点按执行时间算。每个处理类自己定义了不同的时间
+                var timeout = TimeSpan.FromSeconds(300);
+                linkedCts.CancelAfter(timeout);
+                
+                // 确保命令执行上下文包含全局服务提供者
+                if (package.Packet?.ExecutionContext != null)
+                {
+                    //package.Packet.ExecutionContext.ServiceProvider = _serviceProvider;
+                }
+                
+                result = await _commandDispatcher.DispatchAsync(package.Packet, linkedCts.Token);
 
                     // 释放令牌源资源
                     linkedCts.Dispose();
@@ -505,11 +539,13 @@ namespace RUINORERP.Server.Network.SuperSocket
         /// <param name="commandDispatcher">命令调度器</param>
         /// <param name="sessionService">会话服务</param>
         /// <param name="logger">日志记录器</param>
+        /// <param name="serviceProvider">服务提供者</param>
         public SuperSocketCommandAdapter(
             CommandDispatcher commandDispatcher,
             ISessionService sessionService,
-            ILogger<SuperSocketCommandAdapter> logger = null)
-            : base(commandDispatcher, sessionService, logger)
+            ILogger<SuperSocketCommandAdapter> logger = null,
+            IServiceProvider serviceProvider = null)
+            : base(commandDispatcher, sessionService, logger, serviceProvider)
         { }
     }
 }

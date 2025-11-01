@@ -71,26 +71,46 @@ namespace RUINORERP.PacketSpec.Commands
         public bool IsInitialized => _isInitialized;
 
         /// <summary>
+        /// 全局服务提供者
+        /// 用于在命令处理过程中访问系统中注册的所有服务
+        /// </summary>
+        public IServiceProvider ServiceProvider 
+        { 
+            get => _serviceProvider;
+            set 
+            { 
+                _serviceProvider = value;
+                // 当设置服务提供者时，将其传递给命令处理器工厂
+                if (_serviceProvider != null && _handlerFactory != null)
+                {
+                    //_handlerFactory.UpdateServiceProvider(_serviceProvider);
+                }
+            } 
+        }
+        
+        private IServiceProvider _serviceProvider;
+
+        /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="logger">日志记录器</param>
         /// <param name="handlerFactory">处理器工厂</param>
         /// <param name="maxConcurrencyPerCommand">每个命令的最大并发数</param>
         /// <param name="circuitBreakerPolicy">熔断器策略，默认为6次失败后熔断，30秒后恢复</param>
-        public CommandDispatcher(ILogger<CommandDispatcher> logger, ICommandHandlerFactory handlerFactory = null,
-            int maxConcurrencyPerCommand = 0,
+        public CommandDispatcher(ILogger<CommandDispatcher> logger, CommandHandlerRegistry handlerRegistry, ICommandHandlerFactory handlerFactory = null,
+              int maxConcurrencyPerCommand = 0,
             IAsyncPolicy<IResponse> circuitBreakerPolicy = null,
             CircuitBreakerPolicyManager circuitBreakerPolicyManager = null,
-            CircuitBreakerMetrics metrics = null,
-            CommandHandlerRegistry handlerRegistry = null)
+            CircuitBreakerMetrics metrics = null
+            )
         {
-            Logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            Logger = logger;
             _handlerFactory = handlerFactory;
             _commandHistory = new ConcurrentDictionary<CommandId, DateTime>();
             _dispatchSemaphore = new SemaphoreSlim(1, 1);
-            // 创建CommandHandlerRegistry实例，使用null作为默认logger
-            _handlerRegistry = handlerRegistry ?? new CommandHandlerRegistry(handlerFactory, null);
-
+            // 使用传入的handlerRegistry或创建新实例
+            // 注意：CommandHandlerRegistry构造函数需要handlerFactory作为第一个参数
+            _handlerRegistry = handlerRegistry;
             MaxConcurrencyPerCommand = maxConcurrencyPerCommand > 0 ? maxConcurrencyPerCommand : Environment.ProcessorCount;
 
             // 使用传入的熔断器策略，如果未提供则使用默认策略
@@ -152,16 +172,24 @@ namespace RUINORERP.PacketSpec.Commands
         {
             try
             {
-                if (_isInitialized)
-                    return true;
-
-                // 确保处理器工厂已初始化（保留向后兼容）
-                if (_handlerFactory == null)
+                // 如果没有指定程序集，则扫描当前执行程序集
+                if (assemblies == null || assemblies.Length == 0)
                 {
-                    _handlerFactory = new CommandHandlerFactory();
+                    assemblies = new[] { Assembly.GetExecutingAssembly() };
+                    Logger?.LogDebug("未指定程序集，使用当前执行程序集: {AssemblyName}", assemblies[0].FullName);
                 }
 
-                LogInfo("初始化命令调度器...");
+                // 检查是否已经初始化
+                if (_isInitialized)
+                {
+                    // 如果已经初始化且提供了新的程序集参数，扫描新程序集并添加新处理器
+                    Logger?.LogDebug("命令调度器已初始化，现在将扫描新程序集并添加新的处理器: {AssemblyCount} 个程序集", assemblies.Length);
+                }
+                else
+                {
+                    // 首次初始化时记录信息
+                    Logger?.LogDebug("首次初始化命令调度器，开始扫描并注册命令处理器: {AssemblyCount} 个程序集", assemblies.Length);
+                }
 
                 // 使用CommandHandlerRegistry进行扫描和注册处理器
                 await _handlerRegistry.InitializeAsync(cancellationToken, assemblies);
@@ -169,7 +197,16 @@ namespace RUINORERP.PacketSpec.Commands
                 // 将命令处理器注册表设置到响应工厂，用于响应类型缓存
                 ResponseFactory.SetDefaultCommandHandlerRegistry(_handlerRegistry);
 
-                _isInitialized = true;
+                // 如果是首次初始化，设置初始化标志
+                if (!_isInitialized)
+                {
+                    _isInitialized = true;
+                    Logger?.LogDebug("命令调度器初始化成功，处理器数量: {HandlerCount}", HandlerCount);
+                }
+                else
+                {
+                    Logger?.LogDebug("新程序集扫描完成，更新后的处理器数量: {HandlerCount}", HandlerCount);
+                }
 
                 // 启动后台消费者线程
                 for (int i = 0; i < 3; i++)
@@ -209,7 +246,7 @@ namespace RUINORERP.PacketSpec.Commands
                     }, cancellationToken);
                 }
 
-                LogInfo($"命令调度器初始化完成，已注册 {HandlerCount} 个处理器");
+                LogDebug($"命令调度器初始化完成，已注册 {HandlerCount} 个处理器");
                 return true;
             }
             catch (Exception ex)
@@ -226,7 +263,6 @@ namespace RUINORERP.PacketSpec.Commands
         /// <param name="cancellationToken">取消令牌</param>
         // ScanAndRegisterHandlersAsync方法已被CommandHandlerRegistry替代
         // 处理器的扫描、注册和缓存现在由CommandHandlerRegistry类统一管理
-
         /// <summary>
         /// 异步分发数据包
         /// </summary>
@@ -297,7 +333,7 @@ namespace RUINORERP.PacketSpec.Commands
                 return ResponseFactory.CreateSpecificErrorResponse(cmd.Packet, errorMessage: "命令对象不能为空");
             }
 
-            if (cmd.Packet.CommandId!= SystemCommands.Heartbeat)
+            if (cmd.Packet.CommandId != SystemCommands.Heartbeat)
             {
 
             }
@@ -423,7 +459,7 @@ namespace RUINORERP.PacketSpec.Commands
                     catch (Polly.CircuitBreaker.BrokenCircuitException ex)
                     {
                         // 熔断器已打开，记录详细信息并返回适当的错误
-                      //  LogWarning($"命令 {cmd.Packet.CommandId.ToString()}[ID: {commandIdentifier.FullCode}] 的熔断器已打开，拒绝执行: {ex.Message}");
+                        //  LogWarning($"命令 {cmd.Packet.CommandId.ToString()}[ID: {commandIdentifier.FullCode}] 的熔断器已打开，拒绝执行: {ex.Message}");
                         return ResponseFactory.CreateSpecificErrorResponse(cmd.Packet.ExecutionContext, ex, errorMessage: "服务暂时不可用，熔断器已打开");
                     }
 
@@ -437,7 +473,7 @@ namespace RUINORERP.PacketSpec.Commands
                     {
                         // 使用ExecutionContext中的响应类型名称，通过CommandHandlerRegistry获取响应类型
                         // 确保响应创建工厂从缓存中取值
-                        return ResponseFactory.CreateSpecificErrorResponse(cmd.Packet,  errorMessage: "处理器返回空结果");
+                        return ResponseFactory.CreateSpecificErrorResponse(cmd.Packet, errorMessage: "处理器返回空结果");
                     }
 
                     return response;
@@ -959,15 +995,23 @@ namespace RUINORERP.PacketSpec.Commands
                         channel?.Writer.TryComplete();
                     }
 
-                    // 等待所有处理任务完成
-                    Task.WhenAll(_channelProcessors).GetAwaiter().GetResult();
+                    // 等待所有处理任务完成，过滤掉可能的null任务
+                    var validChannelProcessors = _channelProcessors.Where(p => p != null).ToList();
+                    if (validChannelProcessors.Any())
+                    {
+                        Task.WhenAll(validChannelProcessors).GetAwaiter().GetResult();
+                    }
 
                     // 使用处理器注册表获取所有处理器
                     List<ICommandHandler> allHandlers = _handlerRegistry?.GetAllHandlers().ToList() ?? new List<ICommandHandler>();
 
-                    // 停止所有处理器
+                    // 停止所有处理器，过滤掉可能的null任务
                     var stopTasks = allHandlers.Select(h => h.StopAsync(CancellationToken.None));
-                    Task.WhenAll(stopTasks).GetAwaiter().GetResult();
+                    var validStopTasks = stopTasks.Where(t => t != null).ToList();
+                    if (validStopTasks.Any())
+                    {
+                        Task.WhenAll(validStopTasks).GetAwaiter().GetResult();
+                    }
 
                     // 释放所有处理器
                     foreach (var handler in allHandlers)
@@ -991,7 +1035,7 @@ namespace RUINORERP.PacketSpec.Commands
                 }
 
                 _disposed = true;
-                 }
+            }
 
             GC.SuppressFinalize(this);
         }

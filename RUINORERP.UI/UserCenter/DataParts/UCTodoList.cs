@@ -512,7 +512,9 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 tasks.Add(ProcessBizTypeNodeAsync(bizType));
             }
 
-            var nodes = await Task.WhenAll(tasks);
+            // 过滤掉可能的null任务，防止ArgumentException异常
+            var validTasks = tasks.Where(t => t != null).ToList();
+            var nodes = validTasks.Any() ? await Task.WhenAll(validTasks) : Array.Empty<TreeNode>();
             List<TreeNode> treeNodes = new List<TreeNode>();
             foreach (var node in nodes.Where(n => n != null))
             {

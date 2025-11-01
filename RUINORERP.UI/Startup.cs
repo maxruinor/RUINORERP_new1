@@ -194,6 +194,31 @@ namespace RUINORERP.UI
                 // 清除所有现有提供者，避免冲突
                 logBuilder.ClearProviders();
 
+                // 添加日志过滤规则
+                logBuilder.AddFilter((category, logLevel) =>
+                {
+                    // 从系统配置中获取日志级别设置
+                    var configSection = Program.Configuration?.GetSection("SystemGlobalConfig");
+                    var globalLogLevel = configSection?.GetValue<string>("LogLevel") ?? "Information";
+                    LogLevel systemLogLevel;
+                    
+                    // 尝试解析日志级别
+                    if (!Enum.TryParse(globalLogLevel, true, out systemLogLevel))
+                    {
+                        systemLogLevel = LogLevel.Information; // 默认级别
+                    }
+                    
+                    // 为WorkflowCore设置特殊的日志级别控制
+                    if (category.StartsWith("WorkflowCore"))
+                    {
+                        // 可以在这里专门为WorkflowCore设置不同的级别，或者使用系统统一级别
+                        return logLevel >= systemLogLevel;
+                    }
+                    
+                    // 其他日志使用系统统一级别
+                    return logLevel >= systemLogLevel;
+                });
+
                 // 添加自定义的数据库日志提供者
                 if (!string.IsNullOrEmpty(newconn))
                 {

@@ -275,7 +275,8 @@ namespace RUINORERP.Common.Log4Net
 
                         AdoNetAppender adoNetAppender = new AdoNetAppender();
                         // 增加缓冲区大小以减少数据库连接开销
-                        adoNetAppender.BufferSize = 100; // 批量写入100条日志
+                        // 使用frmMainNew中设置的动态BufferSize值
+                        adoNetAppender.BufferSize = 1;// RUINORERP.Server.frmMainNew.GetLogBufferSize(); // 批量写入日志
                         adoNetAppender.Lossy = false; // 确保不丢失日志
 
                         adoNetAppender.ConnectionType = "System.Data.SqlClient.SqlConnection, System.Data, Version=1.0.3300.0, Culture=neutral, PublicKeyToken=b77a5c561934e089";

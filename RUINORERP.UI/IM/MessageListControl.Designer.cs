@@ -1,4 +1,4 @@
-namespace RUINORERP.UI.Controls
+namespace RUINORERP.UI.IM
 {
     partial class MessageListControl
     {

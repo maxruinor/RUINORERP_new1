@@ -33,7 +33,7 @@ using RUINORERP.Business.CommService;
 
 using RUINORERP.Global;
 using RUINORERP.Model.TransModel;
-using RUINORERP.UI.SuperSocketClient;
+
 using FastReport.DevComponents.DotNetBar;
 using RUINORERP.Extensions.Middlewares;
 

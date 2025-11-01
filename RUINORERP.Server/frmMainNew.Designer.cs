@@ -40,6 +40,7 @@ namespace RUINORERP.Server
             cacheManagementToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             workflowManagementToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             blacklistManagementToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            sequenceManagementToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             configurationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             systemConfigToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             registrationInfoToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -58,6 +59,10 @@ namespace RUINORERP.Server
             toolStripButtonCacheManagement = new System.Windows.Forms.ToolStripButton();
             toolStripButtonWorkflowTest = new System.Windows.Forms.ToolStripButton();
             toolStripButtonSystemConfig = new System.Windows.Forms.ToolStripButton();
+            toolStripButtonSequenceManagement = new System.Windows.Forms.ToolStripButton();
+            toolStripButtonSystemCheck = new System.Windows.Forms.ToolStripButton();
+            toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
+            toolStripButtonNetworkMonitor = new System.Windows.Forms.ToolStripButton();
             statusStripMain = new System.Windows.Forms.StatusStrip();
             toolStripStatusLabelServerStatus = new System.Windows.Forms.ToolStripStatusLabel();
             toolStripStatusLabelConnectionCount = new System.Windows.Forms.ToolStripStatusLabel();
@@ -65,6 +70,7 @@ namespace RUINORERP.Server
             splitContainerMain = new System.Windows.Forms.SplitContainer();
             panelNavigation = new System.Windows.Forms.Panel();
             buttonDataViewer = new System.Windows.Forms.Button();
+            buttonSequenceManagement = new System.Windows.Forms.Button();
             buttonSystemConfig = new System.Windows.Forms.Button();
             buttonBlacklist = new System.Windows.Forms.Button();
             buttonWorkflow = new System.Windows.Forms.Button();
@@ -74,6 +80,7 @@ namespace RUINORERP.Server
             tabControlMain = new System.Windows.Forms.TabControl();
             richTextBoxLog = new System.Windows.Forms.RichTextBox();
             splitterLog = new System.Windows.Forms.Splitter();
+            toolStripButtonDebugMode = new System.Windows.Forms.ToolStripDropDownButton();
             menuStripMain.SuspendLayout();
             toolStripMain.SuspendLayout();
             statusStripMain.SuspendLayout();
@@ -131,7 +138,7 @@ namespace RUINORERP.Server
             // 
             // managementToolStripMenuItem
             // 
-            managementToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] { userManagementToolStripMenuItem, cacheManagementToolStripMenuItem, workflowManagementToolStripMenuItem, blacklistManagementToolStripMenuItem });
+            managementToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] { userManagementToolStripMenuItem, cacheManagementToolStripMenuItem, workflowManagementToolStripMenuItem, blacklistManagementToolStripMenuItem, sequenceManagementToolStripMenuItem });
             managementToolStripMenuItem.Name = "managementToolStripMenuItem";
             managementToolStripMenuItem.Size = new System.Drawing.Size(64, 21);
             managementToolStripMenuItem.Text = "管理(&M)";
@@ -163,6 +170,13 @@ namespace RUINORERP.Server
             blacklistManagementToolStripMenuItem.Size = new System.Drawing.Size(136, 22);
             blacklistManagementToolStripMenuItem.Text = "黑名单管理";
             blacklistManagementToolStripMenuItem.Click += blacklistManagementToolStripMenuItem_Click;
+            // 
+            // sequenceManagementToolStripMenuItem
+            // 
+            sequenceManagementToolStripMenuItem.Name = "sequenceManagementToolStripMenuItem";
+            sequenceManagementToolStripMenuItem.Size = new System.Drawing.Size(136, 22);
+            sequenceManagementToolStripMenuItem.Text = "序号管理";
+            sequenceManagementToolStripMenuItem.Click += sequenceManagementToolStripMenuItem_Click;
             // 
             // configurationToolStripMenuItem
             // 
@@ -229,7 +243,7 @@ namespace RUINORERP.Server
             // 
             // toolStripMain
             // 
-            toolStripMain.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { toolStripButtonStartServer, toolStripButtonStopServer, toolStripSeparator1, toolStripButtonRefreshData, toolStripButtonUserManagement, toolStripButtonCacheManagement, toolStripButtonWorkflowTest, toolStripButtonSystemConfig });
+            toolStripMain.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { toolStripButtonStartServer, toolStripButtonStopServer, toolStripSeparator1, toolStripButtonRefreshData, toolStripButtonUserManagement, toolStripButtonCacheManagement, toolStripButtonWorkflowTest, toolStripButtonSystemConfig, toolStripButtonSequenceManagement, toolStripButtonSystemCheck, toolStripSeparator2, toolStripButtonDebugMode, toolStripButtonNetworkMonitor });
             toolStripMain.Location = new System.Drawing.Point(0, 27);
             toolStripMain.Name = "toolStripMain";
             toolStripMain.Size = new System.Drawing.Size(1167, 25);
@@ -297,6 +311,39 @@ namespace RUINORERP.Server
             toolStripButtonSystemConfig.Text = "系统配置";
             toolStripButtonSystemConfig.Click += toolStripButtonSystemConfig_Click;
             // 
+            // toolStripButtonSequenceManagement
+            // 
+            toolStripButtonSequenceManagement.ImageTransparentColor = System.Drawing.Color.Magenta;
+            toolStripButtonSequenceManagement.Name = "toolStripButtonSequenceManagement";
+            toolStripButtonSequenceManagement.Size = new System.Drawing.Size(60, 22);
+            toolStripButtonSequenceManagement.Text = "序号管理";
+            toolStripButtonSequenceManagement.Click += toolStripButtonSequenceManagement_Click;
+            // 
+            // toolStripButtonSystemCheck
+            // 
+            toolStripButtonSystemCheck.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            toolStripButtonSystemCheck.Image = (System.Drawing.Image)resources.GetObject("toolStripButtonSystemCheck.Image");
+            toolStripButtonSystemCheck.ImageTransparentColor = System.Drawing.Color.Magenta;
+            toolStripButtonSystemCheck.Name = "toolStripButtonSystemCheck";
+            toolStripButtonSystemCheck.Size = new System.Drawing.Size(60, 22);
+            toolStripButtonSystemCheck.Text = "系统检测";
+            toolStripButtonSystemCheck.Click += toolStripButtonSystemCheck_Click;
+            // 
+            // toolStripSeparator2
+            // 
+            toolStripSeparator2.Name = "toolStripSeparator2";
+            toolStripSeparator2.Size = new System.Drawing.Size(6, 25);
+            // 
+            // toolStripButtonNetworkMonitor
+            // 
+            toolStripButtonNetworkMonitor.CheckOnClick = true;
+            toolStripButtonNetworkMonitor.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            toolStripButtonNetworkMonitor.ImageTransparentColor = System.Drawing.Color.Magenta;
+            toolStripButtonNetworkMonitor.Name = "toolStripButtonNetworkMonitor";
+            toolStripButtonNetworkMonitor.Size = new System.Drawing.Size(60, 22);
+            toolStripButtonNetworkMonitor.Text = "网络监控";
+            toolStripButtonNetworkMonitor.Click += toolStripButtonNetworkMonitor_Click;
+            // 
             // statusStripMain
             // 
             statusStripMain.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { toolStripStatusLabelServerStatus, toolStripStatusLabelConnectionCount, toolStripStatusLabelMessage });
@@ -346,6 +393,7 @@ namespace RUINORERP.Server
             // panelNavigation
             // 
             panelNavigation.Controls.Add(buttonDataViewer);
+            panelNavigation.Controls.Add(buttonSequenceManagement);
             panelNavigation.Controls.Add(buttonSystemConfig);
             panelNavigation.Controls.Add(buttonBlacklist);
             panelNavigation.Controls.Add(buttonWorkflow);
@@ -369,6 +417,17 @@ namespace RUINORERP.Server
             buttonDataViewer.Text = "数据查看";
             buttonDataViewer.UseVisualStyleBackColor = true;
             buttonDataViewer.Click += buttonDataViewer_Click;
+            // 
+            // buttonSequenceManagement
+            // 
+            buttonSequenceManagement.Location = new System.Drawing.Point(13, 451);
+            buttonSequenceManagement.Margin = new System.Windows.Forms.Padding(4);
+            buttonSequenceManagement.Name = "buttonSequenceManagement";
+            buttonSequenceManagement.Size = new System.Drawing.Size(140, 42);
+            buttonSequenceManagement.TabIndex = 7;
+            buttonSequenceManagement.Text = "序号管理";
+            buttonSequenceManagement.UseVisualStyleBackColor = true;
+            buttonSequenceManagement.Click += buttonSequenceManagement_Click;
             // 
             // buttonSystemConfig
             // 
@@ -467,6 +526,15 @@ namespace RUINORERP.Server
             splitterLog.TabIndex = 5;
             splitterLog.TabStop = false;
             // 
+            // toolStripButtonDebugMode
+            // 
+            toolStripButtonDebugMode.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            toolStripButtonDebugMode.ImageTransparentColor = System.Drawing.Color.Magenta;
+            toolStripButtonDebugMode.Name = "toolStripButtonDebugMode";
+            toolStripButtonDebugMode.Size = new System.Drawing.Size(69, 22);
+            toolStripButtonDebugMode.Text = "调试模式";
+            toolStripButtonDebugMode.Click += toolStripButtonDebugMode_Click;
+            // 
             // frmMainNew
             // 
             AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
@@ -513,6 +581,7 @@ namespace RUINORERP.Server
         private System.Windows.Forms.ToolStripMenuItem cacheManagementToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem workflowManagementToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem blacklistManagementToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem sequenceManagementToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem configurationToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem systemConfigToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem registrationInfoToolStripMenuItem;
@@ -538,6 +607,7 @@ namespace RUINORERP.Server
         private System.Windows.Forms.SplitContainer splitContainerMain;
         private System.Windows.Forms.Panel panelNavigation;
         private System.Windows.Forms.Button buttonDataViewer;
+        private System.Windows.Forms.Button buttonSequenceManagement;
         private System.Windows.Forms.Button buttonSystemConfig;
         private System.Windows.Forms.Button buttonBlacklist;
         private System.Windows.Forms.Button buttonWorkflow;
@@ -547,5 +617,10 @@ namespace RUINORERP.Server
         private System.Windows.Forms.TabControl tabControlMain;
         private System.Windows.Forms.RichTextBox richTextBoxLog;
         private System.Windows.Forms.Splitter splitterLog;
+        private System.Windows.Forms.ToolStripButton toolStripButtonSystemCheck;
+        private System.Windows.Forms.ToolStripButton toolStripButtonSequenceManagement;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
+        private System.Windows.Forms.ToolStripButton toolStripButtonNetworkMonitor;
+        private System.Windows.Forms.ToolStripDropDownButton toolStripButtonDebugMode;
     }
 }

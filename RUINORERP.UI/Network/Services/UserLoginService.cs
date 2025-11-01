@@ -69,9 +69,6 @@ namespace RUINORERP.UI.Network.Services
             _silentTokenRefresher.OnRefreshSucceeded += OnRefreshSucceeded;
             _silentTokenRefresher.OnRefreshFailed += OnTokenRefreshFailed;
 
-            // 订阅通信服务的连接状态变更事件
-            _communicationService.CommandReceived += OnCommandReceived;
-
             // 通过事件管理器订阅连接状态变更事件
             _eventManager.ConnectionStatusChanged += OnConnectionStatusChanged;
 
@@ -538,11 +535,11 @@ namespace RUINORERP.UI.Network.Services
                     _silentTokenRefresher.OnRefreshFailed -= OnTokenRefreshFailed;
                 }
 
-                // 取消订阅通信服务事件
-                if (_communicationService != null)
-                {
-                    _communicationService.CommandReceived -= OnCommandReceived;
-                }
+                // 移除对不存在的CommandReceived事件的订阅
+                // if (_communicationService != null)
+                // {
+                //     _communicationService.CommandReceived -= OnCommandReceived;
+                // }
                 if (_eventManager != null)
                 {
                     _eventManager.ConnectionStatusChanged -= OnConnectionStatusChanged;

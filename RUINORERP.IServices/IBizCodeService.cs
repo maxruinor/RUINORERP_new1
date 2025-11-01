@@ -11,7 +11,7 @@ namespace RUINORERP.IServices
     /// 业务编码服务接口
     /// 提供业务单据编号、基础信息编号等编码生成功能
     /// </summary>
-    public interface IBizCodeService
+    public interface IBizCodeGenerateService
     {
 
 

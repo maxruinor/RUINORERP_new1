@@ -300,18 +300,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
             if (message == null || message.CommandId.Name != "Message")
                 return;
 
-            // 直接调用HandleSpecificMessageCommandAsync来处理消息
-            // 这是为了保持与现有处理逻辑的一致性
-            await HandleSpecificMessageCommandAsync(message);
-        }
-
-        /// <summary>
-        /// 处理特定的消息命令
-        /// </summary>
-        /// <param name="message">消息数据包</param>
-        private async Task HandleSpecificMessageCommandAsync(PacketModel message)
-        {
-            // 复用现有的HandleAsync方法来处理消息
+            // 直接使用HandleAsync方法处理消息
             await HandleAsync(message);
         }
     }

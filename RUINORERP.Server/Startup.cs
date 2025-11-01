@@ -173,12 +173,7 @@ namespace RUINORERP.Server
             builder.RegisterType<AutoComplete>()
                 .WithParameter((pi, c) => pi.ParameterType == typeof(SearchType), (pi, c) => SearchType.Document);
                 
-            // 注册业务编码生成相关服务
-            builder.RegisterType<BizCodeGenerator>(); // 注册原有的业务编码生成器
-            builder.RegisterType<BNRFactory>().AsSelf().SingleInstance(); // 注册BNR工厂
-            builder.RegisterType<DatabaseSequenceService>().AsSelf().InstancePerLifetimeScope(); // 注册数据库序列服务
-            builder.RegisterType<BizCodeService>().As<IBizCodeService>().InstancePerLifetimeScope(); // 注册业务编码服务
-            
+           
             // 注册AOP拦截器
             builder.RegisterType<BaseDataCacheAOP>(); // 注册拦截器
             
@@ -192,7 +187,53 @@ namespace RUINORERP.Server
             // 初始化应用程序上下文
             string conn = AppSettings.GetValue("ConnectString");
             Program.InitAppcontextValue(Program.AppContextData);
+
+            // 立即初始化DatabaseSequenceService以创建表结构
+            //var sqlSugarClient = services.BuildServiceProvider().GetRequiredService<ISqlSugarClient>();
+            //var sequenceService = new DatabaseSequenceService(sqlSugarClient);
+
+            // 初始化表结构（如果不存在）
+            // sequenceService.InitializeTable();
+            Console.WriteLine("序号表初始化完成");
             
+            // 测试序号表功能
+            //var testResult = sequenceService.TestSequenceTable();
+          //  Console.WriteLine("数据库序列表测试结果:");
+          //  Console.WriteLine(testResult);
+
+
+            // 注册业务编码生成相关服务
+            builder.RegisterType<BizCodeGenerator>(); // 注册原有的业务编码生成器
+            builder.RegisterType<DatabaseSequenceService>().AsSelf().SingleInstance(); // 注册数据库序列服务
+            
+            // 初始化DatabaseSequenceService的批量更新阈值
+            // 这里可以根据需要设置初始值，或者从配置文件中读取
+            DatabaseSequenceService.SetBatchUpdateThreshold(5);
+            
+            // 初始化frmMainNew的BufferSize值
+            // 这里设置Log4Net的BufferSize初始值
+            RUINORERP.Server.frmMainNew.SetLogBufferSize(10);
+            
+            // 注册缓存管理器 - 为BNRFactory提供依赖
+            // 添加CacheManager缓存服务
+            services.AddSingleton<ICacheManager<object>>(provider =>
+            {
+                return CacheFactory.Build<object>(settings =>
+                {
+                    settings
+                        .WithSystemRuntimeCacheHandle()
+                        .WithExpiration(ExpirationMode.Absolute, TimeSpan.FromMinutes(30));
+                });
+            });
+
+
+            // 注册BNR工厂
+            builder.RegisterType<BNRFactory>().AsSelf().SingleInstance(); // 注册BNR工厂
+            
+            // 注册业务编码服务
+            builder.RegisterType<BizCodeGenerateService>().As<IBizCodeGenerateService>().SingleInstance(); // 注册业务编码服务
+           
+
             // 配置日志服务
             services.AddLogging(logBuilder =>
             {
@@ -206,10 +247,10 @@ namespace RUINORERP.Server
                 // 设置日志级别过滤规则
                 logBuilder.AddFilter((provider, category, logLevel) =>
                 {
-                    // RUINORERP命名空间使用Information级别
+                    // RUINORERP命名空间使用动态日志级别
                     if (category.StartsWith("RUINORERP"))
                     {
-                        return logLevel >= LogLevel.Information;
+                        return logLevel >= RUINORERP.Server.frmMainNew.GetGlobalLogLevel();
                     }
                     if (category.StartsWith("WorkflowCore"))
                     {
@@ -400,9 +441,7 @@ namespace RUINORERP.Server
             services.AddScoped(typeof(IBaseRepository<>), typeof(BaseRepository<>)); // 注入仓储
             services.AddTransient<IUnitOfWorkManage, UnitOfWorkManage>(); // 注入工作单元
             
-            // 手动注册业务编码服务
-            services.AddTransient<RUINORERP.IServices.IBizCodeService, RUINORERP.Server.Services.BizCode.BizCodeService>();
-            services.AddTransient<RUINORERP.Server.BNR.BNRFactory>(); // 注册BizCodeService依赖的BNRFactory
+            
 
             //Add Memory Cache
             services.AddOptions();

@@ -107,20 +107,68 @@ namespace RUINORERP.Server.BNR
         /// <returns>递增后的值</returns>
         private long IncrementCounter(string key)
         {
-            // 获取当前值
-            var currentValue = _cacheManager.Get<long>(key);
-            
-            // 如果不存在，初始化为1
-            if (currentValue == 0)
+            try
             {
-                _cacheManager.Add(key, 1);
-                return 1;
+                // 尝试使用原子操作方式递增
+                // 如果缓存中不存在，初始化为1
+                long newValue = 1;
+                
+                // 这里使用一个循环来确保原子性操作
+                // 尝试最多3次，避免无限循环
+                int maxRetries = 3;
+                for (int i = 0; i < maxRetries; i++)
+                {    
+                    // 1. 先尝试获取当前值
+                    var currentValue = _cacheManager.Get<long?>(key);
+                    
+                    if (currentValue.HasValue)
+                    {
+                        // 2a. 如果值存在，使用Update方法更新
+                        newValue = currentValue.Value + 1;
+                        
+                        // 使用Update方法进行值更新
+                        object resultObj = _cacheManager.Update(key, v => (long)v + 1);
+                        long result = resultObj != null ? Convert.ToInt64(resultObj) : 1;
+                        
+                        // 设置过期时间
+                        _cacheManager.Expire(key, ExpirationMode.Absolute, TimeSpan.FromDays(30));
+                        
+                        return result;
+                    }
+                    else
+                    {
+                        // 2b. 如果值不存在，使用GetOrAdd添加初始值
+                        // GetOrAdd会返回现有值或添加新值并返回
+                        newValue = 1; // 初始值为1
+                        object resultObj = _cacheManager.GetOrAdd(key, newValue);
+                        long result = resultObj != null ? Convert.ToInt64(resultObj) : 1;
+                        
+                        // 设置过期时间
+                        _cacheManager.Expire(key, ExpirationMode.Absolute, TimeSpan.FromDays(30));
+                        
+                        // 如果GetOrAdd返回1，表示是新添加的值
+                        if (result == 1)
+                        {
+                            return 1;
+                        }
+                        // 如果返回值不是1，表示在并发情况下其他线程已经添加，需要重试
+                    }
+                    
+                    // 短暂等待后重试
+                    if (i < maxRetries - 1)
+                    {
+                        System.Threading.Thread.Sleep(10);
+                    }
+                }
+                
+                // 如果多次重试后仍未成功，尝试最后一次获取值
+                var finalValue = _cacheManager.Get<long?>(key);
+                return finalValue ?? 1;
             }
-            
-            // 递增并更新
-            long newValue = currentValue + 1;
-            _cacheManager.Put(key, newValue);
-            return newValue;
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"CacheManager递增操作失败: {ex.Message}", ex);
+            }
         }
     
       

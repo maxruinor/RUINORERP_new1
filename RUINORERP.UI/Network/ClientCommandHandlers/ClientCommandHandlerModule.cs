@@ -56,30 +56,33 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                 .InstancePerLifetimeScope();
 
             // 注册初始化任务，在容器构建完成后执行
-            builder.RegisterBuildCallback(container =>
+            // 使用异步初始化方法，避免在构建回调中使用同步等待
+            builder.Register(async (context, cancellationToken) =>
             {
                 try
                 {
                     // 获取命令调度器
-                    var commandDispatcher = container.Resolve<IClientCommandDispatcher>();
+                    var commandDispatcher = context.Resolve<IClientCommandDispatcher>();
                     
                     // 获取命令处理器注册器
-                    var handlerRegistry = container.Resolve<ClientCommandHandlerRegistry>();
+                    var handlerRegistry = context.Resolve<ClientCommandHandlerRegistry>();
                     
-                    // 同步执行初始化操作
-                    commandDispatcher.InitializeAsync().Wait();
-                    commandDispatcher.StartAsync().Wait();
+                    // 异步初始化并启动调度器
+                    await commandDispatcher.InitializeAsync();
+                    await commandDispatcher.StartAsync();
                     
-                    // 注册所有命令处理器
-                    int registeredCount = handlerRegistry.RegisterAllHandlersAsync().Result;
+                    // 异步注册所有命令处理器
+                    int registeredCount = await handlerRegistry.RegisterAllHandlersAsync();
                     
                     Logger.Info($"成功注册 {registeredCount} 个客户端命令处理器");
+                    return registeredCount;
                 }
                 catch (Exception ex)
                 {
                     Logger.Error(ex, "初始化客户端命令处理系统失败");
+                    return 0;
                 }
-            });
+            }).As<int>().SingleInstance().AutoActivate();
         }
     }
 }

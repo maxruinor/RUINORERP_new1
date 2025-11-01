@@ -26,7 +26,7 @@ using RUINORERP.UI.UserCenter;
 using RUINORERP.Business;
 using RUINORERP.UI.IM;
 
-using RUINORERP.UI.SuperSocketClient;
+
 using System.Net;
 
 using Microsoft.Extensions.Hosting;
@@ -887,7 +887,7 @@ namespace RUINORERP.UI
             communicationService = Startup.ServiceProvider.GetService<ClientCommunicationService>();
 
             // 初始化消息管理器
-            _messageManager = Startup.ServiceProvider.GetService<EnhancedMessageManager>(); 
+            _messageManager = Startup.ServiceProvider.GetService<EnhancedMessageManager>();
 
             // 订阅重连失败事件，当重连失败时自动进入注销锁定状态
             if (communicationService != null)
@@ -1137,9 +1137,33 @@ namespace RUINORERP.UI
             return pageLog;
         }
 
+
+        private KryptonPage NewIMList()
+        {
+            #region 消息中心
+            // 获取MessageManager实例
+            var messageManager = GetMessageManager();
+            // 创建MessageListControl实例，直接在构造函数中传入messageManager参数
+            MessageListControl messageListControl = new RUINORERP.UI.IM.MessageListControl(messageManager);
+            // 创建消息中心tab页
+            KryptonPage pageMessageCenter = NewPage("消息中心", 1, messageListControl);
+            pageMessageCenter.TextTitle = "消息中心";
+            pageMessageCenter.TextDescription = "系统消息和通知";
+            pageMessageCenter.UniqueName = "消息中心";
+            pageMessageCenter.AllowDrop = false;
+            pageMessageCenter.ClearFlags(KryptonPageFlags.All);
+            #endregion
+            KryptonPage pageMsgList = NewPage("消息中心", 2, messageListControl);
+            //pageMsg.ClearFlags(KryptonPageFlags.All);
+            pageMsgList.ClearFlags(KryptonPageFlags.DockingAllowClose);
+            pageMsgList.ClearFlags(KryptonPageFlags.DockingAllowFloating);//控制托出的单独窗体是否能关掉
+            pageMsgList.Height = 30;
+            return pageMsgList;
+        }
+
+
         //private KryptonPage NewIMMsg()
-        //{
-        //    ucMsg.Height = 30;
+
         //    KryptonPage pageMsg = NewPage("通讯中心", 2, ucMsg);
         //    //pageMsg.ClearFlags(KryptonPageFlags.All);
         //    pageMsg.ClearFlags(KryptonPageFlags.DockingAllowClose);
@@ -1345,7 +1369,7 @@ namespace RUINORERP.UI
             ProgressManager.Instance.Initialize(lblStatusGlobal, progressBar);
             #endregion
 
-     
+
 
             InitUpdateSystemWatcher();
 
@@ -1367,7 +1391,7 @@ namespace RUINORERP.UI
 
             this.Text = "企业数字化集成ERP v3.0" + "-" + Program.ERPVersion;
             //MessageBox.Show("登陆成功后，请要系统设置中添加公司基本资料。");
- 
+
             _notificationService?.Initialize();
 
             using (StatusBusy busy = new StatusBusy("检测系统是否为最新版本 请稍候"))
@@ -1952,11 +1976,11 @@ namespace RUINORERP.UI
                     //kryptonDockingManager1.MakeAutoHiddenRequest(myppages[1].UniqueName);   IMMMMMM
                 }
 
-                //KryptonPage IMPage = NewIMMsg();
-                //IMPage.AllowDrop = false;
-                //IMPage.SetFlags(KryptonPageFlags.All);
-                //kryptonDockingManager1.AddDockspace("Control", DockingEdge.Right, new KryptonPage[] { IMPage });
-                //kryptonDockingManager1.MakeAutoHiddenRequest(IMPage.UniqueName);//默认加载时隐藏
+                KryptonPage IMPage = NewIMList();
+                IMPage.AllowDrop = false;
+                IMPage.SetFlags(KryptonPageFlags.All);
+                kryptonDockingManager1.AddDockspace("Control", DockingEdge.Right, new KryptonPage[] { IMPage });
+                kryptonDockingManager1.MakeAutoHiddenRequest(IMPage.UniqueName);//默认加载时隐藏
 
                 InitCenterPages();
                 LoadDefaultSkinMenu();
@@ -2141,7 +2165,7 @@ namespace RUINORERP.UI
         {
             if (AuthorizeController.GetShowDebugInfoAuthorization(AppContext))
             {
-                //MainForm.Instance.uclog.AddLog(sql);
+
                 logManager.AddLog("sql", sql);
             }
         }
@@ -2300,7 +2324,7 @@ namespace RUINORERP.UI
                         MessageBox.Show("初始密码【123456】有风险，请及时修改！\r\n修改路径：【系统设置】->【个性化设置】->【密码修改】", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     }
 
-                    LoginWebServer();
+
 #warning TODO: 这里需要完善具体逻辑，当前仅为占位
 
                     //ClientLockManagerCmd cmd = new ClientLockManagerCmd(CommandDirection.Send);
@@ -2495,27 +2519,8 @@ namespace RUINORERP.UI
                 #endregion
 
                 _UCWorkbenches = Startup.GetFromFac<UCWorkbenches>(); //获取服务Service1
-                /*
-                #region 工作台
 
-                KryptonPage pWorkbenches = new KryptonPage();
-                pWorkbenches.Text = "我的工作台";
-                pWorkbenches.TextTitle = "我的工作台";
-                pWorkbenches.TextDescription = "我的工作台";
-                pWorkbenches.UniqueName = "我的工作台";
-                //  p.ImageSmall = imageListSmall.Images[image];
-                // Form2 frm = new Form2();
-                // frm.Controls.Add(_UCInitControlCenter);
-                // frm.Show();
-                // Add the control for display inside the page
-                _UCWorkbenches.Dock = DockStyle.Fill;
-                //_UCWorkbenches.TopLevel = false;
-                pWorkbenches.Controls.Add(_UCWorkbenches);
 
-                #endregion
-                */
-
-                //var _UCWorkCenter = Startup.GetFromFac<UCWorkCenter>(); //获取服务Service1
 
                 #region 工作台
 
@@ -2548,6 +2553,8 @@ namespace RUINORERP.UI
                 pageWorkbenches.AllowDrop = false;
                 pageWorkbenches.ClearFlags(KryptonPageFlags.All);
                 cell.Pages.Add(pageWorkbenches);
+
+
 
                 //pWorkbenches.AllowDrop = false;
                 //pWorkbenches.ClearFlags(KryptonPageFlags.All);
@@ -3706,7 +3713,7 @@ namespace RUINORERP.UI
             await UI.Common.UIBizService.RequestCache<tb_UserInfo>(true);
             MainForm.Instance.logger.LogError("LoginWebServer" + System.DateTime.Now.ToString());
             var ss = Business.BizMapperService.EntityMappingHelper.GetEntityType(BizType.采购订单);
-          
+
             Process[] allProcess = Process.GetProcesses();
             foreach (Process p in allProcess)
             {

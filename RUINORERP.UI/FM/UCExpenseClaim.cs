@@ -735,28 +735,7 @@ namespace RUINORERP.UI.FM
 
             #region 删除主图的结案图。一般没有结案是没有的。结案就不会有结案图了。也有特殊情况。
 
-            //if (!string.IsNullOrEmpty(EditEntity.CloseCaseImagePath))
-            //{
-            //    // 检查是否为多图片路径
-            //    if (EditEntity.CloseCaseImagePath.Contains(";"))
-            //    {
-            //        // 多图片路径处理
-            //        var fileIds = EditEntity.CloseCaseImagePath.Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
-            //        bool deleteResult = await UI.Common.ImageManagementHelper.DeleteImagesAsync(
-            //            fileIds, 
-            //            MainForm.Instance.AppContext);
-            //        MainForm.Instance.PrintInfoLog($"批量删除图片: {(deleteResult ? "Success" : "Failed")}");
-            //    }
-            //    else
-            //    {
-            //        // 单图片路径处理
-            //        // 使用ImageManagementHelper替代HttpWebService
-            //        bool deleteResult = await UI.Common.ImageManagementHelper.DeleteImageAsync(
-            //            EditEntity.CloseCaseImagePath, 
-            //            MainForm.Instance.AppContext);
-            //        MainForm.Instance.PrintInfoLog($"删除图片: {(deleteResult ? "Success" : "Failed")}");
-            //    }
-            //}
+            
             #endregion
 
             bool result = true;

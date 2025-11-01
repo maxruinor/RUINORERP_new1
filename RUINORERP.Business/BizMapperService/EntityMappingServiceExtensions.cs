@@ -230,7 +230,7 @@ namespace RUINORERP.Business.BizMapperService
             var entityInfo = EntityMappingHelper.GetEntityInfo(type);
             BizType bizType = EntityMappingHelper.GetBizType(type, Entity);
             Entity = Entity ?? Activator.CreateInstance(type);
-            cbd.BillNo = Entity.GetPropertyValue(entityInfo.NoField).ToString();
+            cbd.BillNo = Entity.GetPropertyValue(entityInfo.NoField)?.ToString();
             cbd.BillID = Entity.GetPropertyValue(entityInfo.IdField).ToLong();
             cbd.BillNoColName = entityInfo.NoField;
             cbd.BizName = bizType.ObjToString();

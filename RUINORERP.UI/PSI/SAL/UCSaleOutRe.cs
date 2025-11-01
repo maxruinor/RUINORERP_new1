@@ -163,6 +163,12 @@ namespace RUINORERP.UI.PSI.SAL
                                     }
 
                                     #region 生成新的退款单
+
+                                    //未核销金额为0 ，不用生成
+                                    if (receivablePayable.LocalBalanceAmount == 0)
+                                    {
+                                        return;
+                                    }
                                     //生成
                                     var newPaymentRecord = paymentController.BuildPaymentRecord(new List<tb_FM_ReceivablePayable> { receivablePayable });
                                     if (newPaymentRecord.TotalForeignAmount == 0 && newPaymentRecord.TotalLocalAmount == 0)

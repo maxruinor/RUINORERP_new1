@@ -24,7 +24,7 @@ using RUINORERP.Global.EnumExt;
 using RUINORERP.Global.EnumExt.CRM;
 using RUINORERP.Global;
 using RUINORERP.UI.BaseForm;
-using RUINORERP.UI.SuperSocketClient;
+
 using RUINORERP.UI.SysConfig;
 
 using AutoUpdateTools;
@@ -227,7 +227,7 @@ namespace RUINORERP.UI.CRM
 
                         //request.SenderEmployeeName = MainForm.Instance.AppContext.CurUserInfo.Name;
 
-                        OriginalData beatDataDel = ClientDataBuilder.工作流提醒请求(request);
+                        //OriginalData beatDataDel = ClientDataBuilder.工作流提醒请求(request);
                         //MainForm.Instance.ecs.AddSendData(beatDataDel);
                     }
                 }

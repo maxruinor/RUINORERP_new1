@@ -21,15 +21,15 @@ namespace RUINORERP.Server.Network.CommandHandlers
     [CommandHandler("BizCodeCommandHandler", priority: 50)]
     public class BizCodeCommandHandler : BaseCommandHandler
     {
-        private readonly ILogger<BizCodeCommandHandler> _logger;
-        private readonly BizCodeService _bizCodeService;
+        private readonly ILogger<BizCodeCommandHandler> logger;
+        private readonly BizCodeGenerateService _bizCodeService;
 
         /// <summary>
         /// 构造函数
         /// </summary>
-        public BizCodeCommandHandler(ILogger<BizCodeCommandHandler> logger, BizCodeService bizCodeService) : base(logger)
+        public BizCodeCommandHandler(ILogger<BizCodeCommandHandler> logger, BizCodeGenerateService bizCodeService) : base(logger)
         {
-            _logger = logger;
+            this.logger = logger;
             _bizCodeService = bizCodeService;
 
             // 设置支持的命令
@@ -46,7 +46,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// </summary>
         protected override async Task<IResponse> OnHandleAsync(QueuedCommand cmd, CancellationToken cancellationToken)
         {
-            _logger?.LogDebug("接收到业务编码生成命令: {CommandId}", cmd.Packet.CommandId);
+            logger?.LogDebug("接收到业务编码生成命令: {CommandId}", cmd.Packet.CommandId);
 
             try
             {
@@ -72,12 +72,12 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     }
                 }
 
-                _logger?.LogWarning("接收到不支持的业务编码命令: {CommandId}", commandId);
+                logger?.LogWarning("接收到不支持的业务编码命令: {CommandId}", commandId);
                 return ResponseFactory.CreateSpecificErrorResponse(cmd.Packet, $"不支持的业务编码命令: {commandId}");
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "处理业务编码命令时出错，命令: {CommandId}", cmd.Packet.CommandId);
+                logger?.LogError(ex, "处理业务编码命令时出错，命令: {CommandId}", cmd.Packet.CommandId);
                 return ResponseFactory.CreateSpecificErrorResponse(cmd.Packet.ExecutionContext, ex, $"处理业务编码命令 {cmd.Packet.CommandId} 时出错: {ex.Message}");
             }
         }
@@ -92,7 +92,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 // 使用业务编码服务生成编号
                 string billNo = _bizCodeService.GenerateBizBillNo(request.BizType, request.BizCodePara);
                 
-                _logger?.LogInformation($"成功生成业务单据编号: {billNo}, 业务类型: {request.BizType}");
+                logger?.LogDebug($"成功生成业务单据编号: {billNo}, 业务类型: {request.BizType}");
                 
                 // 返回成功响应
                 return new BizCodeResponse
@@ -104,7 +104,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "生成业务单据编号失败");
+                logger?.LogError(ex, "生成业务单据编号失败");
                 return new BizCodeResponse
                 {
                     IsSuccess = false,
@@ -133,7 +133,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     baseInfoNo = _bizCodeService.GenerateBaseInfoNo(request.BaseInfoType);
                 }
                 
-                _logger?.LogInformation($"成功生成基础信息编号: {baseInfoNo}, 信息类型: {request.BaseInfoType}");
+                logger?.LogInformation($"成功生成基础信息编号: {baseInfoNo}, 信息类型: {request.BaseInfoType}");
                 
                 // 返回成功响应
                 return new BizCodeResponse
@@ -145,7 +145,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "生成基础信息编号失败");
+                logger?.LogError(ex, "生成基础信息编号失败");
                 return new BizCodeResponse
                 {
                     IsSuccess = false,
@@ -165,7 +165,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 // 生成产品编码
                 string productNo = _bizCodeService.GenerateProductNo();
                 
-                _logger?.LogInformation($"成功生成产品编码: {productNo}");
+                logger?.LogInformation($"成功生成产品编码: {productNo}");
                 
                 // 返回成功响应
                 return new BizCodeResponse
@@ -177,7 +177,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "生成产品编码失败");
+                logger?.LogError(ex, "生成产品编码失败");
                 return new BizCodeResponse
                 {
                     IsSuccess = false,
@@ -197,7 +197,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 // 生成产品SKU编码
                 string productSkuNo = _bizCodeService.GenerateProductSKUNo();
                 
-                _logger?.LogInformation($"成功生成产品SKU编码: {productSkuNo}");
+                logger?.LogInformation($"成功生成产品SKU编码: {productSkuNo}");
                 
                 // 返回成功响应
                 return new BizCodeResponse
@@ -209,7 +209,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "生成产品SKU编码失败");
+                logger?.LogError(ex, "生成产品SKU编码失败");
                 return new BizCodeResponse
                 {
                     IsSuccess = false,

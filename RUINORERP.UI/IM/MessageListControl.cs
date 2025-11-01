@@ -7,7 +7,7 @@ using RUINORERP.UI.IM;
 using RUINORERP.Model.TransModel;
 using RUINORERP.Common.Extensions;
 
-namespace RUINORERP.UI.Controls
+namespace RUINORERP.UI.IM
 {
     /// <summary>
     /// 消息列表控件，用于显示和管理系统消息

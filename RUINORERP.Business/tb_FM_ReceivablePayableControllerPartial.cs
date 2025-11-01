@@ -2619,6 +2619,10 @@ namespace RUINORERP.Business
                     {
                         details[i].Quantity = -olditem.Qty;
                     }
+                    else
+                    {
+                        details[i].Quantity = olditem.Qty;
+                    }
                     //制造费   
                     details[i].UnitPrice = olditem.ManuFee;
                     details[i].LocalPayableAmount = olditem.ManuFee * details[i].Quantity.Value;

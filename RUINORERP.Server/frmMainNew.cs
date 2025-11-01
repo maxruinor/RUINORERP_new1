@@ -18,7 +18,6 @@ using System.Threading.Tasks;
 using System.Timers;
 using System.Windows.Forms;
 using System.IO;
-using System.Linq;
 using RUINORERP.Model.ConfigModel;
 using Autofac;
 using Autofac.Core;
@@ -49,7 +48,6 @@ using RUINORERP.Global;
 using RUINORERP.Model;
 using RUINORERP.Model.Base;
 using RUINORERP.Model.CommonModel;
-using RUINORERP.Model.ConfigModel;
 using RUINORERP.Model.TransModel;
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Models;
@@ -79,6 +77,10 @@ using RUINORERP.Server.Controls;
 using RUINORERP.PacketSpec.Serialization;
 using System.Reflection;
 using RUINORERP.Business.Config;
+using RUINORERP.Server.Services.BizCode;
+using RUINORERP.Server.BNR;
+using TextBox = System.Windows.Forms.TextBox;
+using Button = System.Windows.Forms.Button;
 
 namespace RUINORERP.Server
 {
@@ -126,8 +128,42 @@ namespace RUINORERP.Server
         public IServiceCollection _services { get; set; }
 
         public bool IsDebug { get; set; } = false;
-
         private static frmMainNew _main;
+        /// <summary>
+        /// 网络监控开关状态
+        /// </summary>
+        public bool IsNetworkMonitorEnabled { get; set; } = false;
+
+        /// <summary>
+        /// 全局日志级别控制器
+        /// </summary>
+        private static LogLevel _currentLogLevel = LogLevel.Error;
+
+        /// <summary>
+        /// 日志级别菜单项列表
+        /// </summary>
+        private static int _batchUpdateThreshold = 5;
+        
+        /// <summary>
+        /// Log4Net BufferSize값
+        /// </summary>
+        private static int _logBufferSize = 10;
+
+        /// <summary>
+        /// 日志级别
+        /// </summary>
+        private List<ToolStripMenuItem> _logLevelMenuItems = new List<ToolStripMenuItem>();
+
+        /// <summary>
+        /// 批량 업데이트 임계값 메뉴항목 리스트
+        /// </summary>
+        private List<ToolStripMenuItem> _batchThresholdMenuItems = new List<ToolStripMenuItem>();
+        
+        /// <summary>
+        /// BufferSize 메뉴항목 리스트
+        /// </summary>
+        private List<ToolStripMenuItem> _bufferSizeMenuItems = new List<ToolStripMenuItem>();
+
         public static frmMainNew Instance
         {
             get { return _main; }
@@ -146,6 +182,65 @@ namespace RUINORERP.Server
         /// <summary>
         /// 初始化服务器信息更新定时器
         /// </summary>
+        /// <summary>
+        /// 디버그 모드 버튼 클릭 이벤트
+        /// </summary>
+        /// <param name="sender">이벤트 소스</param>
+        /// <param name="e">事件参数</param>
+        private void toolStripButtonDebugMode_Click(object sender, EventArgs e)
+        {
+            // 드롭다운 메뉴를 표시하거나 디버그 모드를 직접 전환
+            if (toolStripButtonDebugMode.HasDropDownItems)
+            {
+                // 이미 드롭다운 메뉴 항목이 있는 경우 메뉴 표시
+                toolStripButtonDebugMode.ShowDropDown();
+            }
+            else
+            {
+                // 为保持与旧版本的兼容性，直接切换调试模式
+                IsDebug = !IsDebug;
+
+                if (IsDebug)
+                {
+                    // 调试模式激活，将日志级别设置为Debug
+                    SetGlobalLogLevel(LogLevel.Debug);
+                    PrintInfoLog("调试模式已激活。日志级别已设置为Debug。");
+                    toolStripButtonDebugMode.BackColor = Color.LightBlue;
+                }
+                else
+                {
+                    // 调试模式关闭，将日志级别恢复为Error
+                    SetGlobalLogLevel(LogLevel.Error);
+                    PrintInfoLog("调试模式已关闭。日志级别已恢复为Error。");
+                    toolStripButtonDebugMode.BackColor = Color.Transparent;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 网络监控按钮点击事件
+        /// </summary>
+        /// <param name="sender">事件源</param>
+        /// <param name="e">事件参数</param>
+        private void toolStripButtonNetworkMonitor_Click(object sender, EventArgs e)
+        {
+            IsNetworkMonitorEnabled = toolStripButtonNetworkMonitor.Checked;
+
+            if (IsNetworkMonitorEnabled)
+            {
+                PrintInfoLog("网络监控已激活。将显示所有套接字收发信息。");
+                toolStripButtonNetworkMonitor.BackColor = Color.LightGreen;
+            }
+            else
+            {
+                PrintInfoLog("网络监控已关闭。将不再显示套接字收发信息。");
+                toolStripButtonNetworkMonitor.BackColor = Color.Transparent;
+            }
+
+            // 通知SuperSocketCommandAdapter网络监控状态变更
+            RUINORERP.Server.Network.SuperSocket.SuperSocketCommandAdapter<IAppSession>.SetNetworkMonitorEnabled(IsNetworkMonitorEnabled);
+
+        }
         private void InitializeServerInfoTimer()
         {
             _serverInfoTimer = new System.Windows.Forms.Timer();
@@ -166,21 +261,21 @@ namespace RUINORERP.Server
                     // 更新UI显示
                     this.BeginInvoke(new Action(() =>
                     {
-                        // 更新状态栏显示服务器信息
+                        // 更新状态栏服务器信息
                         toolStripStatusLabelServerStatus.Text = $"服务状态: {serverInfo.Status}";
                         toolStripStatusLabelConnectionCount.Text = $"连接数: {serverInfo.CurrentConnections}/{serverInfo.MaxConnections}";
 
-                        // 更新额外的服务器信息
+                        // 更新附加服务器信息
                         toolStripStatusLabelMessage.Text = $"服务器IP: {serverInfo.ServerIp}, 端口: {serverInfo.Port}";
 
-                        // 记录服务器信息到日志
+                        // 记录服务器信息日志
                         // PrintInfoLog($"服务器信息 - IP: {serverInfo.ServerIp}, 端口: {serverInfo.Port}, 当前连接: {serverInfo.CurrentConnections}, 最大连接: {serverInfo.MaxConnections}");
                     }));
                 }
             }
             catch (Exception ex)
             {
-                Instance.PrintInfoLog("更新服务器信息时出错: " + ex.Message);
+                Instance.PrintInfoLog("服务器信息更新过程中发生错误: " + ex.Message);
             }
         }
 
@@ -205,7 +300,7 @@ namespace RUINORERP.Server
             InitializeServerInfoTimer();
 
             Globalconfig = config;
-            // 监听配置变化
+            // 监听配置变更
             Globalconfig.OnChange(updatedConfig =>
             {
                 Console.WriteLine($"Configuration has changed: {updatedConfig.SomeSetting}");
@@ -217,7 +312,10 @@ namespace RUINORERP.Server
             // 初始化菜单和工具栏事件
             InitializeMenuAndToolbarEvents();
 
-            // 初始化服务器监控Tab页（默认显示）
+            // 로그 레벨 메뉴 초기화
+            InitializeLogLevelMenu();
+
+            // 初始化服务器监控选项卡页面（默认显示）
             InitializeDefaultTab();
         }
 
@@ -226,28 +324,477 @@ namespace RUINORERP.Server
         /// </summary>
         private void InitializeMenuAndToolbarEvents()
         {
-            // 注意：事件绑定已在设计器文件中完成，此处仅保留扩展功能的事件绑定
-            // 避免重复绑定导致事件处理程序被多次调用
+            // 注意：事件绑定已在设计器文件中完成。此处仅保留附加功能的事件绑定
+            // 防止因重复绑定导致事件处理程序被多次调用
 
             // 工具栏事件 - 这些需要在代码中额外绑定
             toolStripButtonRefreshData.Click += (s, e) => RefreshCurrentTab();
 
-            // 如果需要添加新的控件事件，请在此处添加
+            // 추가 컨트롤 이벤트가 필요한 경우 여기에 추가
         }
 
         /// <summary>
-        /// 初始化默认Tab页
+        /// 初始化日志级别菜单
+        /// </summary>
+        private void InitializeLogLevelMenu()
+        {
+            try
+            {
+                // 清空现有菜单项
+                toolStripButtonDebugMode.DropDownItems.Clear();
+                _logLevelMenuItems.Clear();
+                _batchThresholdMenuItems.Clear();
+                _bufferSizeMenuItems.Clear();
+
+                // 获取所有LogLevel枚举值
+                var logLevels = Enum.GetValues(typeof(LogLevel)).Cast<LogLevel>();
+
+                // 为每个LogLevel创建菜单项
+                foreach (var level in logLevels)
+                {
+                    var menuItem = new ToolStripMenuItem(level.ToString());
+                    menuItem.Tag = level;
+                    menuItem.Click += LogLevelMenuItem_Click;
+                    toolStripButtonDebugMode.DropDownItems.Add(menuItem);
+                    _logLevelMenuItems.Add(menuItem);
+                }
+
+                // 添加分隔符
+                var separator1 = new ToolStripSeparator();
+                toolStripButtonDebugMode.DropDownItems.Add(separator1);
+
+                // 添加批量更新阈值菜单项
+                var batchThresholdMenu = new ToolStripMenuItem("批量更新阈值");
+                var thresholdValues = new int[] { 1, 5, 10, 20, 50 };
+                
+                foreach (var threshold in thresholdValues)
+                {
+                    var thresholdItem = new ToolStripMenuItem(threshold.ToString());
+                    thresholdItem.Tag = threshold;
+                    thresholdItem.Click += BatchThresholdMenuItem_Click;
+                    batchThresholdMenu.DropDownItems.Add(thresholdItem);
+                    _batchThresholdMenuItems.Add(thresholdItem);
+                }
+                
+                // 添加自定义阈值选项
+                var customThresholdItem = new ToolStripMenuItem("自定义...");
+                customThresholdItem.Click += CustomThresholdMenuItem_Click;
+                batchThresholdMenu.DropDownItems.Add(customThresholdItem);
+                
+                toolStripButtonDebugMode.DropDownItems.Add(batchThresholdMenu);
+
+                // 添加分隔符
+                var separator2 = new ToolStripSeparator();
+                toolStripButtonDebugMode.DropDownItems.Add(separator2);
+
+                // 添加BufferSize菜单项
+                var bufferSizeMenu = new ToolStripMenuItem("日志BufferSize");
+                var bufferSizeValues = new int[] { 1, 10, 50, 100, 200 };
+                
+                foreach (var bufferSize in bufferSizeValues)
+                {
+                    var bufferSizeItem = new ToolStripMenuItem(bufferSize.ToString());
+                    bufferSizeItem.Tag = bufferSize;
+                    bufferSizeItem.Click += BufferSizeMenuItem_Click;
+                    bufferSizeMenu.DropDownItems.Add(bufferSizeItem);
+                    _bufferSizeMenuItems.Add(bufferSizeItem);
+                }
+                
+                // 添加自定义BufferSize选项
+                var customBufferSizeItem = new ToolStripMenuItem("自定义...");
+                customBufferSizeItem.Click += CustomBufferSizeMenuItem_Click;
+                bufferSizeMenu.DropDownItems.Add(customBufferSizeItem);
+                
+                toolStripButtonDebugMode.DropDownItems.Add(bufferSizeMenu);
+
+                // 添加分隔符和调试模式开关
+                var separator3 = new ToolStripSeparator();
+                toolStripButtonDebugMode.DropDownItems.Add(separator3);
+
+                var debugModeItem = new ToolStripMenuItem("调试模式开关");
+                debugModeItem.Checked = IsDebug;
+                debugModeItem.Click += (s, e) =>
+                {
+                    IsDebug = !IsDebug;
+                    debugModeItem.Checked = IsDebug;
+                    
+                    if (IsDebug)
+                    {
+                        // 启用调试模式，设置日志级别为Debug
+                        SetGlobalLogLevel(LogLevel.Debug);
+                        PrintInfoLog("调试模式已启用，日志级别设置为Debug");
+                        toolStripButtonDebugMode.BackColor = Color.LightBlue;
+                    }
+                    else
+                    {
+                        // 禁用调试模式，恢复日志级别为Error
+                        SetGlobalLogLevel(LogLevel.Error);
+                        PrintInfoLog("调试模式已禁用，日志级别恢复为Error");
+                        toolStripButtonDebugMode.BackColor = Color.Transparent;
+                    }
+                };
+                toolStripButtonDebugMode.DropDownItems.Add(debugModeItem);
+
+                // 更新菜单项选中状态
+                UpdateLogLevelMenuCheckState();
+                UpdateBatchThresholdMenuCheckState();
+                UpdateBufferSizeMenuCheckState();
+            }
+            catch (Exception ex)
+            {
+                PrintErrorLog($"初始化日志级别菜单时出错: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 更新日志级别菜单项的选中状态
+        /// </summary>
+        private void UpdateLogLevelMenuCheckState()
+        {
+            foreach (var menuItem in _logLevelMenuItems)
+            {
+                if (menuItem.Tag is LogLevel level)
+                {
+                    menuItem.Checked = level == _currentLogLevel;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 更新批量更新阈值菜单项的选中状态
+        /// </summary>
+        private void UpdateBatchThresholdMenuCheckState()
+        {
+            foreach (var menuItem in _batchThresholdMenuItems)
+            {
+                if (menuItem.Tag is int threshold)
+                {
+                    menuItem.Checked = threshold == _batchUpdateThreshold;
+                }
+            }
+        }
+        
+        /// <summary>
+        /// 更新BufferSize菜单项的选中状态
+        /// </summary>
+        private void UpdateBufferSizeMenuCheckState()
+        {
+            foreach (var menuItem in _bufferSizeMenuItems)
+            {
+                if (menuItem.Tag is int bufferSize)
+                {
+                    menuItem.Checked = bufferSize == _logBufferSize;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 日志级别菜单项点击事件
+        /// </summary>
+        private void LogLevelMenuItem_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (sender is ToolStripMenuItem menuItem && menuItem.Tag is LogLevel level)
+                {
+                    // 设置全局日志级别
+                    SetGlobalLogLevel(level);
+                    
+                    // 메뉴 항목 선택 상태 업데이트
+                    UpdateLogLevelMenuCheckState();
+                    
+                    // 记录日志级别变更
+                    PrintInfoLog($"全局日志级别已设置: {level}");
+                }
+            }
+            catch (Exception ex)
+            {
+                PrintErrorLog($"设置日志级别时发生错误: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 批量更新阈值菜单项点击事件
+        /// </summary>
+        private void BatchThresholdMenuItem_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (sender is ToolStripMenuItem menuItem && menuItem.Tag is int threshold)
+                {
+                    // 设置批量更新阈值
+                    SetBatchUpdateThreshold(threshold);
+                    
+                    // 메뉴 항목 선택 상태 업데이트
+                    UpdateBatchThresholdMenuCheckState();
+                    
+                    // 记录阈值变更
+                    PrintInfoLog($"数据库批量更新阈值已设置: {threshold}");
+                }
+            }
+            catch (Exception ex)
+            {
+                PrintErrorLog($"设置批量更新阈值时发生错误: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 自定义阈值菜单项点击事件
+        /// </summary>
+        private void CustomThresholdMenuItem_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                using (var inputForm = new Form())
+                {
+                    inputForm.Text = "自定义阈值设置";
+                    inputForm.Width = 300;
+                    inputForm.Height = 150;
+                    inputForm.StartPosition = FormStartPosition.CenterParent;
+                    inputForm.FormBorderStyle = FormBorderStyle.FixedDialog;
+                    inputForm.MaximizeBox = false;
+                    inputForm.MinimizeBox = false;
+
+                    var label = new Label();
+                    label.Text = "请输入批量更新阈值:";
+                    label.Location = new Point(20, 20);
+                    label.AutoSize = true;
+
+                    var textBox = new TextBox();
+                    textBox.Location = new Point(20, 45);
+                    textBox.Width = 200;
+                    textBox.Text = _batchUpdateThreshold.ToString();
+
+                    var okButton = new Button();
+                    okButton.Text = "确定";
+                    okButton.Location = new Point(60, 80);
+                    okButton.DialogResult = DialogResult.OK;
+
+                    var cancelButton = new Button();
+                    cancelButton.Text = "取消";
+                    cancelButton.Location = new Point(160, 80);
+                    cancelButton.DialogResult = DialogResult.Cancel;
+
+                    inputForm.Controls.Add(label);
+                    inputForm.Controls.Add(textBox);
+                    inputForm.Controls.Add(okButton);
+                    inputForm.Controls.Add(cancelButton);
+
+                    inputForm.AcceptButton = okButton;
+                    inputForm.CancelButton = cancelButton;
+
+                    if (inputForm.ShowDialog() == DialogResult.OK)
+                    {
+                        if (int.TryParse(textBox.Text, out int threshold) && threshold > 0)
+                        {
+                            // 일괄 업데이트 임계값 설정
+                            SetBatchUpdateThreshold(threshold);
+                            
+                            // 메뉴 항목 선택 상태 업데이트
+                            UpdateBatchThresholdMenuCheckState();
+                            
+                            // 임계값 변경 기록
+                            PrintInfoLog($"데이터베이스 일괄 업데이트 임계값이 설정되었습니다: {threshold}");
+                        }
+                        else
+                        {
+                            MessageBox.Show("请输入有效的正整数阈值。", "输入错误", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                PrintErrorLog($"设置自定义阈值时发生错误: {ex.Message}");
+            }
+        }
+        
+        /// <summary>
+        /// BufferSize菜单项点击事件
+        /// </summary>
+        private void BufferSizeMenuItem_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (sender is ToolStripMenuItem menuItem && menuItem.Tag is int bufferSize)
+                {
+                    // 设置BufferSize
+                    SetLogBufferSize(bufferSize);
+                    
+                    // 메뉴 항목 선택 상태 업데이트
+                    UpdateBufferSizeMenuCheckState();
+                    
+                    // 记录BufferSize变更
+                    PrintInfoLog($"日志BufferSize已设置: {bufferSize}");
+                }
+            }
+            catch (Exception ex)
+            {
+                PrintErrorLog($"设置BufferSize时发生错误: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 自定义BufferSize菜单项点击事件
+        /// </summary>
+        private void CustomBufferSizeMenuItem_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                using (var inputForm = new Form())
+                {
+                    inputForm.Text = "自定义BufferSize设置";
+                    inputForm.Width = 300;
+                    inputForm.Height = 150;
+                    inputForm.StartPosition = FormStartPosition.CenterParent;
+                    inputForm.FormBorderStyle = FormBorderStyle.FixedDialog;
+                    inputForm.MaximizeBox = false;
+                    inputForm.MinimizeBox = false;
+
+                    var label = new Label();
+                    label.Text = "请输入BufferSize值:";
+                    label.Location = new Point(20, 20);
+                    label.AutoSize = true;
+
+                    var textBox = new TextBox();
+                    textBox.Location = new Point(20, 45);
+                    textBox.Width = 200;
+                    textBox.Text = _logBufferSize.ToString();
+
+                    var okButton = new Button();
+                    okButton.Text = "确定";
+                    okButton.Location = new Point(60, 80);
+                    okButton.DialogResult = DialogResult.OK;
+
+                    var cancelButton = new Button();
+                    cancelButton.Text = "取消";
+                    cancelButton.Location = new Point(160, 80);
+                    cancelButton.DialogResult = DialogResult.Cancel;
+
+                    inputForm.Controls.Add(label);
+                    inputForm.Controls.Add(textBox);
+                    inputForm.Controls.Add(okButton);
+                    inputForm.Controls.Add(cancelButton);
+
+                    inputForm.AcceptButton = okButton;
+                    inputForm.CancelButton = cancelButton;
+
+                    if (inputForm.ShowDialog() == DialogResult.OK)
+                    {
+                        if (int.TryParse(textBox.Text, out int bufferSize) && bufferSize > 0)
+                        {
+                            // BufferSize 설정
+                            SetLogBufferSize(bufferSize);
+                            
+                            // 메뉴 항목 선택 상태 업데이트
+                            UpdateBufferSizeMenuCheckState();
+                            
+                            // BufferSize 변경 기록
+                            PrintInfoLog($"로그 BufferSize가 설정되었습니다: {bufferSize}");
+                        }
+                        else
+                        {
+                            MessageBox.Show("请输入有效的正整数BufferSize值。", "输入错误", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                PrintErrorLog($"设置自定义BufferSize时发生错误: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 설정全局日志级别
+        /// </summary>
+        /// <param name="logLevel">日志级别</param>
+        public static void SetGlobalLogLevel(LogLevel logLevel)
+        {
+            _currentLogLevel = logLevel;
+            // 记录日志级别变更
+            var loggerFactory = Program.ServiceProvider.GetService<ILoggerFactory>();
+            var logger = loggerFactory?.CreateLogger<frmMainNew>();
+            logger?.LogInformation($"全局日志级别已设置: {logLevel}");
+            
+            // 更新菜单项选中状态
+            Instance?.UpdateLogLevelMenuCheckState();
+        }
+
+        /// <summary>
+        /// 设置数据库批量更新阈值
+        /// </summary>
+        /// <param name="threshold">批量更新阈值</param>
+        public static void SetBatchUpdateThreshold(int threshold)
+        {
+            if (threshold > 0)
+            {
+                _batchUpdateThreshold = threshold;
+                // 设置DatabaseSequenceService的阈值
+                DatabaseSequenceService.SetBatchUpdateThreshold(threshold);
+                
+                // 업데이트 메뉴 항목 선택 상태
+                Instance?.UpdateBatchThresholdMenuCheckState();
+            }
+        }
+
+        /// <summary>
+        /// 设置日志BufferSize
+        /// </summary>
+        /// <param name="bufferSize">BufferSize值</param>
+        public static void SetLogBufferSize(int bufferSize)
+        {
+            if (bufferSize > 0)
+            {
+                _logBufferSize = bufferSize;
+                // 设置Log4Net的BufferSize
+                UpdateLogBufferSize(bufferSize);
+                
+                // 업데이트 메뉴 항목 선택 상태
+                Instance?.UpdateBufferSizeMenuCheckState();
+            }
+        }
+
+        /// <summary>
+        /// 获取当前全局日志级别
+        /// </summary>
+        /// <returns>当前日志级别</returns>
+        public static LogLevel GetGlobalLogLevel()
+        {
+            return _currentLogLevel;
+        }
+
+        /// <summary>
+        /// 获取当前批量更新阈值
+        /// </summary>
+        /// <returns>当前阈值</returns>
+        public static int GetBatchUpdateThreshold()
+        {
+            return _batchUpdateThreshold;
+        }
+
+        /// <summary>
+        /// 获取当前日志BufferSize
+        /// </summary>
+        /// <returns>当前BufferSize值</returns>
+        public static int GetLogBufferSize()
+        {
+            return _logBufferSize;
+        }
+
+        /// <summary>
+        /// 初始化默认选项卡页面
         /// </summary>
         private void InitializeDefaultTab()
         {
             try
             {
-                // 默认显示服务器监控Tab页
+                // 默认显示服务器监控选项卡页面
                 ShowTabPage("服务器监控");
             }
             catch (Exception ex)
             {
-                PrintErrorLog($"初始化默认Tab页时出错: {ex.Message}");
+                PrintErrorLog($"初始化默认选项卡页面时发生错误: {ex.Message}");
             }
         }
 
@@ -256,17 +803,17 @@ namespace RUINORERP.Server
         /// </summary>
         private void InitializeNavigationButtons()
         {
-            // 事件绑定已在设计器文件中完成，此处不再需要lambda绑定
-            // 保留此方法以便后续扩展
+            // 事件绑定已在设计器文件中完成。此处不需要Lambda绑定
+            // 保留此方法以备后续扩展
         }
 
         /// <summary>
-        /// 显示指定的Tab页
+        /// 显示指定的选项卡页面
         /// </summary>
-        /// <param name="tabName">Tab页名称</param>
+        /// <param name="tabName">选项卡页面名称</param>
         private void ShowTabPage(string tabName)
         {
-            // 查找是否已存在该Tab页
+            // 이미 해당 탭 페이지가 있는지 확인
             TabPage existingTabPage = null;
             foreach (TabPage tabPage in tabControlMain.TabPages)
             {
@@ -277,13 +824,13 @@ namespace RUINORERP.Server
                 }
             }
 
-            // 如果不存在，则创建新的Tab页
+            // 존재하지 않으면 새로운 탭 페이지 생성
             if (existingTabPage == null)
             {
                 existingTabPage = new TabPage(tabName);
                 tabControlMain.TabPages.Add(existingTabPage);
 
-                // 根据Tab页名称创建对应的内容控件
+                // 根据选项卡页面名称创建对应的内容控件
                 Control contentControl = CreateContentControl(tabName);
                 if (contentControl != null)
                 {
@@ -292,12 +839,9 @@ namespace RUINORERP.Server
                 }
             }
 
-            // 切换到该Tab页
+            // 해당 탭 페이지로 전환
             tabControlMain.SelectedTab = existingTabPage;
         }
-
-
-      
 
         /// <summary>
         /// 检查服务器配置是否有效
@@ -317,32 +861,32 @@ namespace RUINORERP.Server
                     return false;
                 }
 
-                // 从依赖注入容器获取配置验证服务（现在使用FluentValidation实现）
+                // 从依赖注入容器获取配置验证服务（当前使用FluentValidation）
                 var validationService = Program.ServiceProvider.GetRequiredService<RUINORERP.Business.Config.IConfigValidationService>();
-                
-                // 执行配置验证 - 现在会使用我们实现的FluentValidation验证器
+
+                // 구성 검증 실행 - 이제 FluentValidation 검증기를 사용합니다
                 var validationResult = validationService.ValidateConfig(serverConfig);
-                
-                // 检查验证结果
+
+                // 검증 결과 확인
                 if (!validationResult.IsValid)
                 {
                     PrintErrorLog($"配置验证失败: {validationResult.GetErrorMessage()}");
                     MessageBox.Show($"服务器配置验证失败:\n{validationResult.GetErrorMessage()}", "配置错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return false;
                 }
-                
-                // 注意：详细的路径验证（包括环境变量解析、路径可访问性检查等）
-                // 已经在ServerConfigValidator中实现，这里保留一些额外的确保逻辑
+
+                // 注意：详细路径验证（环境变量解析、路径可访问性检查等）
+                // 이미 ServerConfigValidator에서 구현되어 있으므로 여기서는 추가적인 보장 로직을 유지합니다
                 PrintInfoLog("正在执行额外的文件存储路径验证...");
                 IConfigManagerService configManagerService = Startup.GetFromFac<IConfigManagerService>();
-                // 解析环境变量路径（作为额外的验证保障）
+                // 环境变量路径解析（作为额外的验证保障）
                 string resolvedPath = configManagerService.ResolveEnvironmentVariables(serverConfig.FileStoragePath);
-                
+
                 if (!string.IsNullOrEmpty(resolvedPath))
                 {
                     try
                     {
-                        // 确保目录存在，如果不存在则尝试创建（这是一个主动操作，而非严格验证）
+                        // 디렉터리 존재 여부 확인, 존재하지 않으면 생성 (이것은 활성화된 작업이지만 엄격한 검증이 아닙니다)
                         if (!Directory.Exists(resolvedPath))
                         {
                             PrintInfoLog($"文件存储目录不存在，正在创建: {resolvedPath}");
@@ -350,18 +894,18 @@ namespace RUINORERP.Server
                             PrintInfoLog($"文件存储目录创建成功: {resolvedPath}");
                         }
 
-                       
 
-                        PrintInfoLog($"文件存储路径检查通过: {resolvedPath}");
+
+                        PrintInfoLog($"文件存储路径验证成功: {resolvedPath}");
                     }
                     catch (Exception ex)
                     {
-                        // 这里的异常处理主要是为了记录日志，因为基本验证已经通过
-                        PrintInfoLog($"文件路径操作时发生警告: {ex.Message}");
+                        // 此处的异常处理主要用于日志记录，基本验证已经通过
+                        PrintInfoLog($"文件路径操作时出现警告: {ex.Message}");
                     }
                 }
-                
-                PrintInfoLog("服务器配置检查全部通过");
+
+                PrintInfoLog("服务器配置检查完成");
                 return true;
             }
             catch (Exception ex)
@@ -374,16 +918,16 @@ namespace RUINORERP.Server
 
         /// <summary>
         /// 获取服务器配置实例
-        /// 使用依赖注入容器中的ServerConfig单例或通过ConfigManagerService加载配置
+        /// 通过依赖注入容器的ServerConfig单例或ConfigManagerService加载配置
         /// </summary>
         private RUINORERP.Model.ConfigModel.ServerConfig GetServerConfig()
         {
             try
             {
-                // 优先使用DI容器中的ServerConfig单例（已通过Startup.cs配置）
+                // 优先使用依赖注入容器的ServerConfig单例（在Startup.cs中配置）
                 var serverConfig = Startup.GetFromFac<ServerConfig>();
-                
-                // 如果需要进行环境变量解析或其他后处理，可以使用ConfigManagerService
+
+                // 환경 변수 해석 또는 기타 후처리가 필요한 경우 ConfigManagerService 사용
                 if (serverConfig != null && !string.IsNullOrEmpty(serverConfig.FileStoragePath))
                 {
                     var configManager = Startup.GetFromFac<RUINORERP.Business.Config.IConfigManagerService>();
@@ -392,13 +936,13 @@ namespace RUINORERP.Server
                         serverConfig.FileStoragePath = configManager.ResolveEnvironmentVariables(serverConfig.FileStoragePath);
                     }
                 }
-                
+
                 PrintInfoLog("服务器配置加载成功");
                 return serverConfig;
             }
             catch (Exception ex)
             {
-                PrintErrorLog($"加载服务器配置失败: {ex.Message}");
+                PrintErrorLog($"服务器配置加载失败: {ex.Message}");
                 return null;
             }
         }
@@ -425,78 +969,87 @@ namespace RUINORERP.Server
         /// </summary>
         private async Task StartServerAsync()
         {
-            // 防止重复启动
+            // 중복 시작 방지
             if (!toolStripButtonStartServer.Enabled)
             {
-                PrintInfoLog("服务器正在启动或已启动，请勿重复操作");
+                PrintInfoLog("服务器已经启动或正在启动中。请避免重复操作");
                 return;
             }
 
             try
             {
-                // 检查服务器配置
+                // 서버 구성 확인
                 if (!CheckServerConfiguration())
                 {
-                    PrintErrorLog("服务器配置检查失败，启动被取消");
-                    ShowTabPage("系统配置");
+                    PrintErrorLog("服务器配置检查失败，启动已取消");
+                ShowTabPage("系统配置");
                     return;
                 }
 
-                // 立即禁用启动按钮，防止重复点击
+                // 즉시 시작 버튼 비활성화, 중복 클릭 방지
                 SetServerButtonsEnabled(false);
 
-                PrintInfoLog("开始启动服务器...");
+                PrintInfoLog("服务器启动中...");
 
-                // 启动核心服务
+                // 핵심 서비스 시작
                 await StartServerCore();
 
                 PrintInfoLog("服务器启动完成");
 
-                // 启动服务器后异步加载缓存，不阻塞UI
-                PrintInfoLog("开始异步加载缓存数据...");
-                Task.Run(async () =>
+                // 구성에 따라 시작 시 캐시 로드 여부 결정
+                var serverConfig = GetServerConfig();
+                if (serverConfig != null && serverConfig.LoadCacheOnStartup)
                 {
-                    try
+                    // 服务器启动后异步加载缓存，不阻塞UI
+                    PrintInfoLog("开始异步加载缓存数据...");
+                    await Task.Run(async () =>
                     {
-                        // 记录开始时间，便于分析性能
-                        var startTime = DateTime.Now;
-
-                        // 执行缓存初始化
-                        await _entityCacheInitializationService.InitializeAllCacheAsync();
-
-                        // 计算耗时并记录完成信息
-                        var elapsedTime = DateTime.Now - startTime;
-                        this.BeginInvoke(new Action(() =>
+                        try
                         {
-                            PrintInfoLog($"缓存数据加载完成，耗时: {elapsedTime.TotalSeconds:F2}秒");
-                        }));
-                    }
-                    catch (Exception ex)
-                    {
-                        // 更详细的错误记录
-                        this.BeginInvoke(new Action(() =>
-                        {
-                            PrintErrorLog($"加载缓存数据时出错: {ex.Message}");
-                            // 对于关键错误，可以记录更详细的信息
-                            PrintErrorLog($"异常类型: {ex.GetType().Name}");
+                            // 记录开始时间用于性能分析
+                            var startTime = DateTime.Now;
 
-                            // 如果有内部异常，也记录下来
-                            if (ex.InnerException != null)
+                            // 캐시 초기화 실행
+                            await _entityCacheInitializationService.InitializeAllCacheAsync();
+
+                            // 소요 시간 계산 및 완료 정보 기록
+                            var elapsedTime = DateTime.Now - startTime;
+                            this.BeginInvoke(new Action(() =>
                             {
-                                PrintErrorLog($"内部异常: {ex.InnerException.Message}");
-                            }
-                        }));
-                    }
-                });
+                                PrintInfoLog($"缓存数据加载完成，耗时: {elapsedTime.TotalSeconds:F2}秒");
+                            }));
+                        }
+                        catch (Exception ex)
+                        {
+                            // 더 자세한 오류 기록
+                            this.BeginInvoke(new Action(() =>
+                            {
+                                PrintErrorLog($"加载缓存数据时发生错误: {ex.Message}");
+                                // 중요한 오류의 경우 더 자세한 정보 기록
+                                PrintErrorLog($"异常类型: {ex.GetType().Name}");
+
+                                // 내부 예외가 있는 경우 기록
+                                if (ex.InnerException != null)
+                                {
+                                    PrintErrorLog($"内部异常: {ex.InnerException.Message}");
+                                }
+                            }));
+                        }
+                    });
+                }
+                else if (serverConfig != null)
+                {
+                    PrintInfoLog("根据配置，启动时不执行缓存数据加载");
+                }
             }
             catch (Exception ex)
             {
-                PrintErrorLog($"启动服务器时出错: {ex.Message}");
+                PrintErrorLog($"启动服务器时发生错误: {ex.Message}");
 
-                // 发生错误时重新启用启动按钮
+                // 오류 발생 시 시작 버튼 다시 활성화
                 SetServerButtonsEnabled(true, false);
 
-                MessageBox.Show($"启动服务器时出错: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"启动服务器时发生错误: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -509,22 +1062,22 @@ namespace RUINORERP.Server
             {
                 PrintInfoLog("正在停止服务器...");
 
-                // 调用ShutdownAsync方法停止服务器
+                // ShutdownAsync 메서드 호출하여 서버 중지
                 await ShutdownAsync();
 
-                // 停止定时器
+                // 타이머 중지
                 _serverInfoTimer?.Stop();
 
-                // 更新UI状态
+                // UI 상태 업데이트
                 SetServerButtonsEnabled(true, false);
 
                 PrintInfoLog("服务器已停止");
-                MessageBox.Show("服务器已停止", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show("服务器已成功停止", "操作成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {
-                PrintErrorLog($"停止服务器时出错: {ex.Message}");
-                MessageBox.Show($"停止服务器时出错: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                PrintErrorLog($"停止服务器时发生错误: {ex.Message}");
+                MessageBox.Show($"停止服务器时发生错误: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -546,13 +1099,13 @@ namespace RUINORERP.Server
                 // 重新初始化数据库配置
                 DbInit();
 
-                PrintInfoLog("配置已重新加载");
-                MessageBox.Show("配置已重新加载", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                PrintInfoLog("配置重新加载完成");
+                MessageBox.Show("配置重新加载完成", "操作成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {
-                PrintErrorLog($"重新加载配置时出错: {ex.Message}");
-                MessageBox.Show($"重新加载配置时出错: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                PrintErrorLog($"重新加载配置时发生错误: {ex.Message}");
+                MessageBox.Show($"重新加载配置时发生错误: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -564,24 +1117,24 @@ namespace RUINORERP.Server
             try
             {
                 // 确认退出
-                DialogResult result = MessageBox.Show("确定要退出应用程序吗？", "确认退出", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                DialogResult result = MessageBox.Show("确定要退出应用程序吗？", "退出确认", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
                 if (result == DialogResult.Yes)
                 {
                     // 停止服务器
                     await StopServerAsync();
 
-                    // 关闭主窗体
+                    // 关闭主窗口
                     this.Close();
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"退出应用程序时出错: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"退出应用程序时发生错误: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
         /// <summary>
-        /// 关闭所有Tab页
+        /// 关闭所有选项卡页面
         /// </summary>
         private void CloseAllTabs()
         {
@@ -590,10 +1143,10 @@ namespace RUINORERP.Server
                 // 确认关闭
                 if (tabControlMain.TabPages.Count > 1)
                 {
-                    DialogResult result = MessageBox.Show($"确定要关闭所有 {tabControlMain.TabPages.Count - 1} 个Tab页吗？", "确认关闭", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                    DialogResult result = MessageBox.Show($"确定要关闭所有 {tabControlMain.TabPages.Count - 1} 个选项卡页面吗？", "关闭确认", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
                     if (result == DialogResult.Yes)
                     {
-                        // 关闭除第一个Tab页外的所有Tab页
+                        // 关闭除第一个选项卡页面外的所有页面
                         for (int i = tabControlMain.TabPages.Count - 1; i > 0; i--)
                         {
                             tabControlMain.TabPages.RemoveAt(i);
@@ -602,12 +1155,12 @@ namespace RUINORERP.Server
                 }
                 else
                 {
-                    MessageBox.Show("没有可关闭的Tab页", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBox.Show("没有可关闭的选项卡页面", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"关闭Tab页时出错: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"关闭选项卡页面时发生错误: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -628,7 +1181,7 @@ namespace RUINORERP.Server
         }
 
         /// <summary>
-        /// 刷新当前Tab页
+        /// 刷新当前选项卡页面
         /// </summary>
         private void RefreshCurrentTab()
         {
@@ -660,26 +1213,26 @@ namespace RUINORERP.Server
                         tabControlMain.SelectedTab.Controls.Add(newControl);
                     }
 
-                    MessageBox.Show($"{tabName} 页面已刷新", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBox.Show($"{tabName}页面已刷新", "操作成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"刷新页面时出错: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"刷新页面时发生错误: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
         /// <summary>
-        /// 根据Tab页名称创建对应的内容控件
+        /// 根据选项卡页面名称创建对应的内容控件
         /// </summary>
-        /// <param name="tabName">Tab页名称</param>
+        /// <param name="tabName">选项卡页面名称</param>
         /// <returns>内容控件</returns>
         private Control CreateContentControl(string tabName)
         {
             switch (tabName)
             {
                 case "服务器监控":
-                    // 创建服务器监控控件实例，传入正在运行的NetworkServer实例
+                    // 创建服务器监控控件实例，并传入正在运行的NetworkServer实例
                     var serverMonitorControl = new ServerMonitorControl(_networkServer);
                     serverMonitorControl.Dock = DockStyle.Fill;
                     return serverMonitorControl;
@@ -689,7 +1242,7 @@ namespace RUINORERP.Server
                     userManagementControl.Dock = DockStyle.Fill;
                     return userManagementControl;
                 case "缓存管理":
-                    // 这里将创建缓存管理控件
+                    // 在这里创建缓存管理控件
                     return CreateCacheManagementControl();
                 case "工作流管理":
                     // 创建工作流管理控件实例
@@ -715,6 +1268,10 @@ namespace RUINORERP.Server
                     var registrationManagementControl = new RegistrationManagementControl();
                     registrationManagementControl.Dock = DockStyle.Fill;
                     return registrationManagementControl;
+                case "序列管理":
+                    var sequenceManagementControl = new Controls.SequenceManagementControl();
+                    sequenceManagementControl.Dock = DockStyle.Fill;
+                    return sequenceManagementControl;
                 default:
                     return null;
             }
@@ -740,7 +1297,7 @@ namespace RUINORERP.Server
             Initialize();
         }
 
-        #region 注册缓存用的类型
+        #region 已注册的缓存类型
 
 
         public static void Initialize()
@@ -748,10 +1305,10 @@ namespace RUINORERP.Server
             // 预注册常用类型
             TypeResolver.PreRegisterCommonTypes();
 
-            // 注册当前程序集中的所有类型
+            // 注册当前程序集的所有类型
             Assembly.GetExecutingAssembly().RegisterAllTypesFromAssembly();
 
-            // 注册其他相关程序集
+            // 注册相关的其他程序集
             var relatedAssemblies = new[]
             {
             "RUINORERP.PacketSpec",
@@ -787,9 +1344,9 @@ namespace RUINORERP.Server
         }
 
         /// <summary>
-        /// 刷新数据 - 已废弃，请使用RefreshCurrentTab方法
+        /// 데이터 새로 고침 - 폐기됨, RefreshCurrentTab 메서드 사용 권장
         /// </summary>
-        [Obsolete("请使用RefreshCurrentTab方法替代")]
+        [Obsolete("RefreshCurrentTab 메서드를 대체하여 사용하세요")]
         private void RefreshData()
         {
             try
@@ -800,7 +1357,7 @@ namespace RUINORERP.Server
             catch (Exception ex)
             {
                 // 记录错误但不中断程序
-                Console.WriteLine($"刷新监控数据时出错: {ex.Message}");
+                Console.WriteLine($"刷新监控数据时发生错误: {ex.Message}");
             }
         }
 
@@ -815,14 +1372,14 @@ namespace RUINORERP.Server
 
                 var serverInfo = _networkServer.GetServerInfo();
 
-                // 更新状态栏显示服务器信息
+                // 更新状态栏中的服务器信息
                 toolStripStatusLabelServerStatus.Text = $"服务状态: {serverInfo.Status}";
                 toolStripStatusLabelConnectionCount.Text = $"连接数: {serverInfo.CurrentConnections}/{serverInfo.MaxConnections}";
                 toolStripStatusLabelMessage.Text = $"服务器IP: {serverInfo.ServerIp}, 端口: {serverInfo.Port}";
             }
             catch (Exception ex)
             {
-                PrintInfoLog("更新服务器状态时出错: " + ex.Message);
+                PrintInfoLog("更新服务器状态时发生错误: " + ex.Message);
             }
         }
 
@@ -842,7 +1399,7 @@ namespace RUINORERP.Server
         }
 
         /// <summary>
-        /// 安全执行日志操作
+        /// 执行安全的日志操作
         /// </summary>
         private void SafeLogOperation(string msg, Color color)
         {
@@ -872,12 +1429,12 @@ namespace RUINORERP.Server
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"日志操作出错: {ex.Message}");
+                Console.WriteLine($"日志操作时发生错误: {ex.Message}");
             }
         }
 
         /// <summary>
-        /// 打印错误日志到主窗体的RichTextBox控件，使用红色文本显示
+        /// 将错误日志输出到主窗口的RichTextBox控件并以红色文本显示
         /// </summary>
         /// <param name="msg">错误消息内容</param>
         public void PrintErrorLog(string msg)
@@ -889,7 +1446,7 @@ namespace RUINORERP.Server
 
         private void EnsureMaxLines(RichTextBox rtb, int maxLines)
         {
-            // 确保所有对RichTextBox的操作都在UI线程中执行
+            // 确保所有RichTextBox操作在UI线程中执行
             if (rtb.InvokeRequired)
             {
                 rtb.BeginInvoke(new System.Windows.Forms.MethodInvoker(() => EnsureMaxLines(rtb, maxLines)));
@@ -898,10 +1455,10 @@ namespace RUINORERP.Server
 
             try
             {
-                // 计算当前的行数
+                // 计算当前行数
                 int currentLines = rtb.GetLineFromCharIndex(rtb.Text.Length) + 1;
 
-                // 如果行数超过了最大限制，则删除旧的行
+                // 如果行数超过最大限制则删除旧行
                 if (currentLines > maxLines)
                 {
                     int linesToRemove = currentLines - maxLines;
@@ -916,8 +1473,8 @@ namespace RUINORERP.Server
             }
             catch (Exception ex)
             {
-                // 记录错误但不抛出异常，避免影响主程序
-                Console.WriteLine($"EnsureMaxLines error: {ex.Message}");
+                // 记录错误但不抛出异常以避免影响程序
+                Console.WriteLine($"EnsureMaxLines错误: {ex.Message}");
             }
         }
 
@@ -929,7 +1486,7 @@ namespace RUINORERP.Server
 
         IHost host;
         /// <summary>
-        /// 启动服务器核心逻辑
+        /// 服务器核心逻辑启动
         /// </summary>
         private async Task StartServerCore()
         {
@@ -939,7 +1496,7 @@ namespace RUINORERP.Server
             {
                 var _logger = Startup.GetFromFac<ILogger<frmMainNew>>();
 
-                // 从DI容器获取NetworkServer实例
+                // 从依赖注入容器获取NetworkServer实例
                 if (_networkServer == null)
                 {
                     _networkServer = Startup.GetFromFac<NetworkServer>();
@@ -966,17 +1523,17 @@ namespace RUINORERP.Server
                     var reminderService = Startup.GetFromFac<SmartReminderService>();
                     await Task.Run(async () => await reminderService.StartAsync(CancellationToken.None));
 
-                    // 每120秒（120000毫秒）执行一次检查
+                    // 每秒检查一次
                     System.Threading.Timer timerStatus = new System.Threading.Timer(CheckAndRemoveExpiredSessions, null, 0, 1000);
 
-                    //加载提醒数据
+                    // 加载提醒数据
                     DataServiceChannel loadService = Startup.GetFromFac<DataServiceChannel>();
                     loadService.LoadCRMFollowUpPlansData(ReminderBizDataList);
 
-                    //启动每天要执行的定时任务
+                    // 启动每日执行的定时任务
                     GlobalScheduledData globalScheduled = new GlobalScheduledData();
                     var DailyworkflowId = await WorkflowHost.StartWorkflow("NightlyWorkflow", 1, globalScheduled);
-                    PrintInfoLog($"NightlyWorkflow每日任务启动{DailyworkflowId}。");
+                    PrintInfoLog($"NightlyWorkflow每日任务启动{DailyworkflowId}.");
 
                     // 初始化配置
                     await Task.Run(async () => await InitConfig(false));
@@ -993,18 +1550,18 @@ namespace RUINORERP.Server
             {
                 _logger?.LogError($"NetworkServer启动异常: {hostex.Message}", hostex);
                 PrintErrorLog($"NetworkServer启动异常: {hostex.Message}");
-                throw; // 重新抛出异常，让上层处理
+                throw; // 重新抛出异常以便上层处理
             }
         }
 
         /// <summary>
-        /// 关闭服务器
+        /// 服务器关闭
         /// </summary>
         public async Task ShutdownAsync()
         {
             try
             {
-                // 停止NetworkServer
+                // 关闭NetworkServer
                 if (_networkServer != null)
                 {
                     await _networkServer.StopAsync();
@@ -1021,7 +1578,7 @@ namespace RUINORERP.Server
             }
             catch (Exception e)
             {
-                PrintErrorLog($"关闭SocketServer失败：{e.Message}");
+                PrintErrorLog($"SocketServer关闭失败: {e.Message}");
             }
             finally
             {
@@ -1128,8 +1685,8 @@ namespace RUINORERP.Server
             {
                 var sut = new ServiceCollection()
                     .AddMemoryCache()
-                    .AddDistributedMemoryCache() // 为了测试，我们就不使用redis之类的东西了，用个内存实现模拟就好
-                    .AddSingleton<ICacheAdapter, MemoryCacheAdapter>()  // 添加缓存适配器
+                    .AddDistributedMemoryCache() // 为测试使用内存实现模拟，而不使用redis等
+                    .AddSingleton<ICacheAdapter, MemoryCacheAdapter>()  // 캐시 어댑터 추가
                     .AddSingleton<ICacheAdapter>(i => new DistributedCacheAdapter(i.GetRequiredService<IDistributedCache>(), "distribute"))
                     .BuildServiceProvider();
 
@@ -1171,8 +1728,8 @@ namespace RUINORERP.Server
                     var endTime = DateTime.Now;
                     var executionTime = endTime - startTime;
 
-                    PrintInfoLog($"初始化缓存完成，执行时间: {executionTime.TotalSeconds:F2} 秒");
-                    _logger?.LogInformation($"初始化缓存完成，执行时间: {executionTime.TotalSeconds:F2} 秒");
+                    PrintInfoLog($"缓存初始化完成, 执行时间: {executionTime.TotalSeconds:F2} 秒");
+                    _logger?.LogInformation($"缓存初始化完成, 执行时间: {executionTime.TotalSeconds:F2} 秒");
                 }
             }
             catch (Exception ex)
@@ -1183,7 +1740,7 @@ namespace RUINORERP.Server
         }
 
         /// <summary>
-        /// 检查并移除过期的会话
+        /// 检查并移除过期会话
         /// </summary>
         /// <param name="state">定时器状态</param>
         private void CheckAndRemoveExpiredSessions(object state)
@@ -1198,29 +1755,29 @@ namespace RUINORERP.Server
                     int cleanedCount = sessionService.CleanupTimeoutSessions();
                     if (cleanedCount > 0)
                     {
-                        PrintInfoLog($"清理了 {cleanedCount} 个超时会话");
+                        PrintInfoLog($"已清理 {cleanedCount} 个超时会话");
                     }
                 }
             }
             catch (Exception ex)
             {
-                PrintErrorLog($"检查过期会话时出错: {ex.Message}");
+                PrintErrorLog($"检查过期会话时发生错误: {ex.Message}");
             }
         }
 
         /// <summary>
-        /// 验证注册信息
+        /// 检查注册信息
         /// </summary>
         /// <param name="regInfo">注册信息</param>
-        /// <returns>是否注册有效</returns>
+        /// <returns>注册是否有效</returns>
         public bool CheckRegistered(tb_sys_RegistrationInfo regInfo)
         {
-            string key = "ruinor1234567890"; // 这应该是一个保密的密钥
-            string machineCode = regInfo.MachineCode; // 这可以是机器的硬件信息或其他唯一标识
-            // 假设用户输入的注册码
+            string key = "ruinor1234567890"; // 这应该是一个密钥
+            string machineCode = regInfo.MachineCode; // 这可能是计算机的硬件信息或唯一标识符
+            // 사용자가 입력한 등록 코드 가정
             string userProvidedCode = regInfo.RegistrationCode;
             bool isValid = SecurityService.ValidateRegistrationCode(userProvidedCode, key, machineCode);
-            Console.WriteLine($"Is the provided registration code valid? {isValid}");
+            Console.WriteLine($"提供的注册码是否有效? {isValid}");
             return isValid;
         }
 
@@ -1230,13 +1787,13 @@ namespace RUINORERP.Server
         public string UniqueHarewareInfo { get; set; }
 
         /// <summary>
-        /// 创建机器码
+        /// 生成机器码
         /// </summary>
         /// <param name="regInfo">注册信息</param>
         /// <returns>机器码</returns>
         public string CreateMachineCode(tb_sys_RegistrationInfo regInfo)
         {
-            //指定关键字段 这些字段生成加密的机器码
+            // 指定用于生成加密机器码的关键字段
             List<string> cols = new List<string>();
             cols.Add("CompanyName");
             cols.Add("ContactName");
@@ -1247,14 +1804,14 @@ namespace RUINORERP.Server
             cols.Add("LicenseType");
             cols.Add("FunctionModule");
 
-            //只序列化指定的列
+            // 지정된 열만 직렬화
             JsonSerializerSettings settings = new JsonSerializerSettings
             {
                 ContractResolver = new SelectiveContractResolver(cols),
                 Converters = new List<JsonConverter> { new Newtonsoft.Json.Converters.IsoDateTimeConverter { DateTimeFormat = "yyyy-MM-dd HH:mm:ss" } }
             };
 
-            // 序列化对象
+            // 객체 직렬화
             string jsonString = JsonConvert.SerializeObject(regInfo, settings);
             string originalInfo = this.UniqueHarewareInfo + jsonString;
             string key = "ruinor1234567890";
@@ -1330,6 +1887,16 @@ namespace RUINORERP.Server
         private void buttonDataViewer_Click(object sender, EventArgs e)
         {
             ShowTabPage("数据查看");
+        }
+
+        /// <summary>
+        /// 序列管理导航按钮点击事件
+        /// </summary>
+        /// <param name="sender">事件源</param>
+        /// <param name="e">事件参数</param>
+        private void buttonSequenceManagement_Click(object sender, EventArgs e)
+        {
+            ShowTabPage("序列管理");
         }
 
         /// <summary>
@@ -1478,7 +2045,7 @@ namespace RUINORERP.Server
 
 
         /// <summary>
-        /// 启动服务器菜单项点击事件
+        /// 服务器启动菜单项点击事件
         /// </summary>
         /// <param name="sender">事件源</param>
         /// <param name="e">事件参数</param>
@@ -1488,7 +2055,7 @@ namespace RUINORERP.Server
         }
 
         /// <summary>
-        /// 停止服务器菜单项点击事件
+        /// 服务器停止菜单项点击事件
         /// </summary>
         /// <param name="sender">事件源</param>
         /// <param name="e">事件参数</param>
@@ -1498,7 +2065,7 @@ namespace RUINORERP.Server
         }
 
         /// <summary>
-        /// 重新加载配置菜单项点击事件
+        /// 配置重新加载菜单项点击事件
         /// </summary>
         /// <param name="sender">事件源</param>
         /// <param name="e">事件参数</param>
@@ -1531,7 +2098,7 @@ namespace RUINORERP.Server
         /// 缓存管理菜单项点击事件
         /// </summary>
         /// <param name="sender">事件源</param>
-        /// <param name="e">事件参数</param>
+        /// <param name="e">이벤트 매개변수</param>
         private void cacheManagementToolStripMenuItem_Click(object sender, EventArgs e)
         {
             ShowTabPage("缓存管理");
@@ -1555,6 +2122,16 @@ namespace RUINORERP.Server
         private void blacklistManagementToolStripMenuItem_Click(object sender, EventArgs e)
         {
             ShowTabPage("黑名单管理");
+        }
+
+        /// <summary>
+        /// 序列管理菜单项点击事件
+        /// </summary>
+        /// <param name="sender">事件源</param>
+        /// <param name="e">事件参数</param>
+        private void sequenceManagementToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowTabPage("序列管理");
         }
 
         /// <summary>
@@ -1588,7 +2165,7 @@ namespace RUINORERP.Server
         }
 
         /// <summary>
-        /// 关闭所有菜单项点击事件
+        /// 全部关闭菜单项点击事件
         /// </summary>
         /// <param name="sender">事件源</param>
         /// <param name="e">事件参数</param>
@@ -1634,7 +2211,7 @@ namespace RUINORERP.Server
         }
 
         /// <summary>
-        /// 启动服务器工具栏按钮点击事件
+        /// 服务器启动工具栏按钮点击事件
         /// </summary>
         /// <param name="sender">事件源</param>
         /// <param name="e">事件参数</param>
@@ -1644,7 +2221,7 @@ namespace RUINORERP.Server
         }
 
         /// <summary>
-        /// 停止服务器工具栏按钮点击事件
+        /// 服务器停止工具栏按钮点击事件
         /// </summary>
         /// <param name="sender">事件源</param>
         /// <param name="e">事件参数</param>
@@ -1654,7 +2231,7 @@ namespace RUINORERP.Server
         }
 
         /// <summary>
-        /// 刷新数据工具栏按钮点击事件
+        /// 数据刷新工具栏按钮点击事件
         /// </summary>
         /// <param name="sender">事件源</param>
         /// <param name="e">事件参数</param>
@@ -1671,6 +2248,16 @@ namespace RUINORERP.Server
         private void toolStripButtonUserManagement_Click(object sender, EventArgs e)
         {
             ShowTabPage("用户管理");
+        }
+
+        /// <summary>
+        /// 序列管理工具栏按钮点击事件
+        /// </summary>
+        /// <param name="sender">事件源</param>
+        /// <param name="e">事件参数</param>
+        private void toolStripButtonSequenceManagement_Click(object sender, EventArgs e)
+        {
+            ShowTabPage("序列管理");
         }
 
         /// <summary>
@@ -1701,6 +2288,51 @@ namespace RUINORERP.Server
 
             panel.Controls.Add(label);
             return panel;
+        }
+
+        private void toolStripButtonSystemCheck_Click(object sender, EventArgs e)
+        {
+            BizCodeGenerateService _bizCodeService = Startup.GetFromFac<BizCodeGenerateService>();
+            var ss = _bizCodeService.GenerateBizBillNo(BizType.请购单);
+            PrintInfoLog(ss);
+            _logger.LogInformation("Information");
+            _logger.Debug("Debug");
+            _logger.Warn("Warn");
+            _logger.LogError("error");
+
+        }
+
+        /// <summary>
+        /// 更新Log4Net的BufferSize
+        /// </summary>
+        /// <param name="bufferSize">新的BufferSize值</param>
+        private static void UpdateLogBufferSize(int bufferSize)
+        {
+            try
+            {
+                // 获取日志存储库
+                var loggerRepository = log4net.LogManager.GetRepository("RUINORERP_Shared_LoggerRepository");
+                if (loggerRepository != null)
+                {
+                    // 获取所有appender
+                    var appenders = loggerRepository.GetAppenders();
+                    foreach (var appender in appenders)
+                    {
+                        // 如果是AdoNetAppender，则更新BufferSize
+                        if (appender is log4net.Appender.AdoNetAppender adoNetAppender)
+                        {
+                            adoNetAppender.BufferSize = bufferSize;
+                            // 激活选项以应用更改
+                            adoNetAppender.ActivateOptions();
+                            Console.WriteLine($"Log4Net BufferSize已更新为{bufferSize}。");
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"更新Log4Net BufferSize时发生错误: {ex.Message}");
+            }
         }
     }
 }

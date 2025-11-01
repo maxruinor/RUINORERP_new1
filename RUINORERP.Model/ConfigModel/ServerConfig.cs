@@ -71,6 +71,11 @@ namespace RUINORERP.Model.ConfigModel
         [Category("缓存配置")]
         [Description("缓存连接字符串")]
         public string CacheConnectionString { get; set; } = "";
+
+        [JsonProperty("LoadCacheOnStartup")]
+        [Category("缓存配置")]
+        [Description("是否在启动服务器时就加载缓存表")]
+        public bool LoadCacheOnStartup { get; set; } = false;
         #endregion
 
         #region 日志配置

@@ -29,7 +29,7 @@ using System.Threading;
 using Microsoft.Extensions.Logging;
 using RUINORERP.UI.AdvancedUIModule;
 using RUINORERP.Extensions.Middlewares;
-using RUINORERP.UI.SuperSocketClient;
+
 using RUINORERP.Business.CommService;
 using System.Windows.Documents;
 using FastReport.Forms;
@@ -2711,7 +2711,7 @@ namespace RUINORERP.UI.SysConfig
                     }
 
                     //提示服务器开启推送工作流
-                    OriginalData beatDataDel = ClientDataBuilder.BaseInfoChangeBuilder(typeof(T).Name);
+                    //OriginalData beatDataDel = ClientDataBuilder.BaseInfoChangeBuilder(typeof(T).Name);
                     //MainForm.Instance.ecs.AddSendData(beatDataDel);
                     RUINORERP.UI.Common.CacheManager.DeleteEntity(typeof(T).Name, PKValue.ToLong());
 

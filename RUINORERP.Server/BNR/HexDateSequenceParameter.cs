@@ -19,8 +19,6 @@ namespace RUINORERP.Server.BNR
             int year = DateTime.Now.Year;
             int month = DateTime.Now.Month;
             int day = DateTime.Now.Day;
-
-            //    sb.Append(DateTime.Now.ToString("yy")+ month.ToString("X")+ day.ToString("X"));
             sb.Append(year.ToString("X") + month.ToString("X") + day.ToString("X"));
         }
    

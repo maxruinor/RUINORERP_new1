@@ -37,8 +37,8 @@ using System.Windows.Forms;
 using Timer = System.Threading.Timer;
 using System.Collections.Generic;
 using RUINORERP.UI.SysConfig;
-using Newtonsoft.Json;
 using RUINORERP.UI.Network.ClientCommandHandlers;
+using RUINORERP.Common.Helper;
 
 namespace RUINORERP.UI.Network
 {
@@ -539,6 +539,7 @@ namespace RUINORERP.UI.Network
                             _logger.Debug("处理队列中的带响应命令: {CommandId}", queuedCommand.CommandId.Name);
 
                             // 调用SendCommandAsync方法
+                            // 不管响应？
                             var result = await SendCommandAsync(
                                 queuedCommand.CommandId,
                                 queuedCommand.Data as IRequest,
@@ -874,12 +875,10 @@ namespace RUINORERP.UI.Network
             try
             {
                 // 优先使用事件机制处理命令
-                _eventManager.OnCommandReceived(packet, packet.Response);
+                _eventManager.OnServerPushCommandReceived(packet, packet.Response);
 
-                // 对于配置同步命令，始终使用命令调度器处理，确保配置正确更新
-                // 其他命令仍遵循原有逻辑，只有在没有事件订阅者时才使用调度器处理
-                if (packet.CommandId.FullCode == GeneralCommands.ConfigSync.FullCode ||
-                    !_eventManager.HasCommandSubscribers(packet))
+                // 只有在没有事件订阅者时才使用调度器处理
+                if (!_eventManager.HasCommandSubscribers(packet))
                 {
                     await ProcessCommandAsync(packet);
                 }
@@ -901,12 +900,12 @@ namespace RUINORERP.UI.Network
 
             try
             {
-                // 使用命令调度器处理命令
+                // 使用统一的命令处理流程
                 await ProcessCommandAsync(packet);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "处理通用命令时发生错误: {CommandId}", packet.CommandId);
+                _logger.LogError(ex, "处理通用命令 {CommandId} 时发生错误", packet.CommandId);
                 _eventManager.OnErrorOccurred(new Exception($"处理通用命令 {packet.CommandId} 时发生错误: {ex.Message}", ex));
             }
         }
@@ -1277,58 +1276,68 @@ namespace RUINORERP.UI.Network
         /// <summary>
         /// 处理接收到的命令
         /// </summary>
-        /// <param name="Packet">数据包</param>
-        private async Task ProcessCommandAsync(PacketModel Packet)
+        /// <param name="packet">数据包</param>
+        private async Task ProcessCommandAsync(PacketModel packet)
         {
             try
             {
+                _logger.LogDebug("开始处理命令: {CommandId}", packet.CommandId);
+                
                 // 首先尝试使用客户端专用命令调度器处理命令
-                bool dispatchedByClientDispatcher = await _clientCommandDispatcher.DispatchAsync(Packet);
+                bool dispatchedByClientDispatcher = await _clientCommandDispatcher.DispatchAsync(packet);
                 
                 if (dispatchedByClientDispatcher)
                 {
                     // 如果命令已被客户端命令调度器处理，直接返回
-                    _logger.LogDebug("命令 {CommandId} 已被客户端命令调度器处理", Packet.CommandId);
+                    _logger.LogDebug("命令 {CommandId} 已被客户端命令调度器处理", packet.CommandId);
                     return;
                 }
 
                 // 如果客户端命令调度器未处理，则回退到原有的命令处理逻辑
                 // 根据命令类别进行特殊处理
-                switch (Packet.CommandId.Category)
+                switch (packet.CommandId.Category)
                 {
                     case CommandCategory.System:
-                        await ProcessSystemCommandAsync(Packet);
+                        await ProcessSystemCommandAsync(packet);
                         break;
 
                     case CommandCategory.Cache:
-                        await ProcessCacheCommandAsync(Packet);
+                        await ProcessCacheCommandAsync(packet);
                         break;
 
                     case CommandCategory.Authentication:
-                        await ProcessAuthenticationCommandAsync(Packet);
+                        await ProcessAuthenticationCommandAsync(packet);
+                        break;
+                        
+                    case CommandCategory.Config:
+                        // 配置命令处理 - 主要通过ConfigCommandHandler处理，此处保留作为备用
+                        await ProcessConfigCommandAsync(packet);
                         break;
 
                     default:
                         // 使用命令调度器处理其他命令
-                        await _commandDispatcher.DispatchAsync(Packet, CancellationToken.None).ConfigureAwait(false);
+                        _logger.LogDebug("使用主命令调度器处理命令: {CommandId}", packet.CommandId);
+                        await _commandDispatcher.DispatchAsync(packet, CancellationToken.None).ConfigureAwait(false);
                         break;
                 }
             }
             catch (Exception ex)
             {
-                _eventManager.OnErrorOccurred(new Exception($"处理命令 {Packet.CommandId} 时发生错误: {ex.Message}", ex));
-                _logger.LogError(ex, "处理命令时发生错误");
+                _eventManager.OnErrorOccurred(new Exception($"处理命令 {packet.CommandId} 时发生错误: {ex.Message}", ex));
+                _logger.LogError(ex, "处理命令 {CommandId} 时发生错误", packet.CommandId);
             }
         }
         
         /// <summary>
-        /// 处理配置相关命令（保留作为备用，主要功能已移至ConfigCommandHandler）
+        /// 处理配置相关命令（作为ConfigCommandHandler的备用机制）
         /// </summary>
         /// <param name="packet">数据包</param>
         private async Task ProcessConfigCommandAsync(PacketModel packet)
         {
             try
             {
+                _logger.LogDebug("使用备用机制处理配置命令: {CommandId}", packet.CommandId);
+                
                 // 检查是否是配置同步命令
                 if (packet.CommandId.FullCode == RUINORERP.PacketSpec.Commands.GeneralCommands.ConfigSync.FullCode)
                 {
@@ -1345,6 +1354,10 @@ namespace RUINORERP.UI.Network
                             
                             // 调用OptionsMonitorConfigManager处理配置同步
                             _optionsMonitorConfigManager.HandleConfigSync(configType, configData);
+                        }
+                        else
+                        {
+                            _logger.LogWarning("配置同步命令数据格式不正确，缺少必需字段");
                         }
                     }
                     else if (packet.Request != null)
@@ -1633,11 +1646,12 @@ namespace RUINORERP.UI.Network
 
 
         /// <summary>
-        /// 订阅命令接收事件
+        /// 初始化命令处理相关功能
         /// </summary>
         private void SubscribeCommandEvents()
         {
-            _eventManager.CommandReceived += OnCommandReceived;
+            // 不再订阅CommandReceived事件，因为它没有被触发
+            // 命令处理现在通过OnServerPushCommandReceived和SubscribeCommand机制完成
             _logger.Debug("客户端命令处理器已启动，开始监听服务器命令");
         }
 
@@ -1668,6 +1682,8 @@ namespace RUINORERP.UI.Network
         /// </summary>
         public void Dispose()
         {
+            // 取消订阅命令接收事件
+            _eventManager.CommandReceived -= OnCommandReceived;
             Dispose(true);
             GC.SuppressFinalize(this);
         }
@@ -1776,8 +1792,7 @@ namespace RUINORERP.UI.Network
                     // 如果未启用自动重连，返回错误响应
                     return ResponseFactory.CreateSpecificErrorResponse<TResponse>("连接已断开，无法发送请求");
                 }
-
-                var packet = await SendCommandAsync(commandId, request, ct, timeoutMs);
+                var packet = await SendRequestAsync<IRequest, TResponse>(commandId, request, ct, timeoutMs);
 
                 if (packet == null)
                 {

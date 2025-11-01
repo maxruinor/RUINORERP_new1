@@ -28,14 +28,8 @@ namespace SourceGrid.Cells.Editors
         public readonly static ImageWebPickEditor Default = new ImageWebPickEditor(typeof(string));
 
         #region Constructor
-        /// <summary>
-        /// Construct an Editor of type ImagePicker.
-        /// </summary>
-        //public ImageWebPicker() : base(typeof(byte[]))
-        //{
-        //}
+        
         ///web下载图片 只是显示图片名称
-        //public ImageWebPickEditor() : base(typeof(string))
         public ImageWebPickEditor(Type p_Type) : base(p_Type)
         {
 

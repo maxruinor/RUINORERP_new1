@@ -1,4 +1,4 @@
-﻿using RUINORERP.PacketSpec.Models.Core;
+using RUINORERP.PacketSpec.Models.Core;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -113,8 +113,8 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                 }
 
                 // 初始化并启动处理器
-                handler.InitializeAsync().Wait();
-                handler.StartAsync().Wait();
+                await handler.InitializeAsync();
+                await handler.StartAsync();
 
                 // 注册处理器
                 _handlers[handler.HandlerId] = handler;
@@ -176,7 +176,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                 var handler = _handlers[handlerId];
 
                 // 停止处理器
-                handler.StopAsync().Wait();
+                await handler.StopAsync();
 
                 // 从命令映射中移除
                 foreach (var command in handler.SupportedCommands)

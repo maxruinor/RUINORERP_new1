@@ -12,7 +12,7 @@ using RUINORERP.Model.TransModel;
 
 using RUINORERP.UI.BaseForm;
 using RUINORERP.UI.Common;
-using RUINORERP.UI.SuperSocketClient;
+
 using RUINORERP.UI.UserCenter;
 using SqlSugar;
 using System;

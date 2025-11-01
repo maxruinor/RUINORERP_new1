@@ -991,7 +991,7 @@ namespace RUINORERP.Server.Controls
                     // 使用新的SessionService获取会话信息
 
                     #region
-                    var request = new MessageRequest(MessageCmdType.Unknown, "");
+                    var request = new MessageRequest(MessageCmdType.Prompt, "");
 
                     var response = await _serverMessageService.SendPopupMessageAsync(
                         user.用户名,

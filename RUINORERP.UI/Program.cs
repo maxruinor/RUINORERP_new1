@@ -31,7 +31,6 @@ using RUINORERP.WF.BizOperation;
 using RUINORERP.Common.Extensions;
 using System.Threading;
 using SuperSocket.ClientEngine;
-using RUINORERP.UI.SuperSocketClient;
 using RUINORERP.Business.Security;
 using AutoUpdate;
 using System.Xml.Linq;
@@ -241,7 +240,7 @@ namespace RUINORERP.UI
 
        
 
-        }
+  
         
         static void CreateConfig()
         {
@@ -765,7 +764,7 @@ namespace RUINORERP.UI
             // 发送错误信息并记录日志
             try
             {
-                SystemOptimizerService.异常信息发送(e.Exception.Message, e.Exception);
+                //TODO list 请实现将用户客户端报出来的异常发送到服务器。转发给管理员。
             }
             catch (Exception ex)
             {
@@ -804,7 +803,7 @@ namespace RUINORERP.UI
             {
                 str = string.Format("Application UnhandledError:{0}", e);
             }
-            SystemOptimizerService.异常信息发送(error.Message, error);
+            //    //TODO list 请实现将用户客户端报出来的异常发送到服务器。转发给管理员。
             MainForm.Instance.uclog.AddLog("应用域", str);
             MainForm.Instance.logger.LogError("当前域_未处理异常2,请更新到新版本，如果无法解决，请联系管理员", error);
             MessageBox.Show(str, "系统错误", MessageBoxButtons.OK, MessageBoxIcon.Error);

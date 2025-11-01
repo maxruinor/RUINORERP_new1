@@ -290,7 +290,7 @@ namespace RUINORERP.Server.Network.Services
                     // 触发会话更新事件
                     SessionUpdated?.Invoke(existingSession);
 
-                    _logger.LogDebug($"更新会话信息: {sessionInfo.SessionID}");
+                    //_logger.LogDebug($"更新会话信息: {sessionInfo.SessionID}");
                     return true;
                 }
 
@@ -854,6 +854,14 @@ namespace RUINORERP.Server.Network.Services
                 var serializedData = JsonCompressionSerializationService.Serialize<PacketModel>(packet);
                 var original = new OriginalData((byte)packet.CommandId.Category, new[] { packet.CommandId.OperationCode }, serializedData);
                 var encrypted = UnifiedEncryptionProtocol.EncryptServerDataToClient(original);
+
+
+                //// 网络监控：发送响应
+                //if (IsNetworkMonitorEnabled)
+                //{
+                //    _logger?.LogDebug("[网络监控] 发送响应: SessionId={SessionId}, CommandId={CommandId}, PacketId={PacketId}",
+                //        package.SessionId, package.CommandId.ToString(), package.PacketId);
+                //}
 
                 // 发送数据
                 await sessionInfo.SendAsync(encrypted.ToArray(), ct);

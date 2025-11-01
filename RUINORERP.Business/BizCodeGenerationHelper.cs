@@ -53,7 +53,7 @@ namespace RUINORERP.Business
     /// 业务编号生成助手 如果生成的序列号会重复，可能单机上不会重复。多台同时操作。
     /// 可能会重复员。则可以通知服务器上生成。socket传送
     /// </summary>
-
+    [Obsolete("已经过期，请使用")]
     public class BizCodeGenerator
     {
 

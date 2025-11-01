@@ -50,11 +50,25 @@ namespace RUINORERP.Server.Network.SuperSocket
         private readonly ILogger<SuperSocketCommandAdapter> _logger;
         private readonly ISessionService _sessionService;
         private readonly IServiceProvider _serviceProvider; // 添加服务提供者字段
-        
+
         /// <summary>
         /// 会话服务
         /// </summary>
         private ISessionService SessionService => _sessionService;
+
+        /// <summary>
+        /// 网络监控开关
+        /// </summary>
+        public static bool IsNetworkMonitorEnabled { get; private set; }
+
+        /// <summary>
+        /// 设置网络监控开关状态
+        /// </summary>
+        /// <param name="enabled">是否启用</param>
+        public static void SetNetworkMonitorEnabled(bool enabled)
+        {
+            IsNetworkMonitorEnabled = enabled;
+        }
 
         /// <summary>
         /// 构造函数
@@ -71,10 +85,10 @@ namespace RUINORERP.Server.Network.SuperSocket
             _commandDispatcher = commandDispatcher ?? throw new ArgumentNullException(nameof(commandDispatcher));
             _sessionService = sessionService ?? throw new ArgumentNullException(nameof(sessionService));
             _logger = logger;
-            
+
             // 优先使用注入的服务提供者，如果没有则使用全局服务提供者
             _serviceProvider = serviceProvider ?? Program.ServiceProvider;
-            
+
             // 确保命令调度器使用相同的服务提供者
             if (_commandDispatcher != null && _serviceProvider != null)
             {
@@ -93,6 +107,14 @@ namespace RUINORERP.Server.Network.SuperSocket
         /// <returns>执行结果任务</returns>
         public async ValueTask ExecuteAsync(TAppSession session, ServerPackageInfo package, CancellationToken cancellationToken)
         {
+            // 网络监控：接收数据包
+            if (IsNetworkMonitorEnabled)
+            {
+                _logger?.LogDebug("[网络监控] 接收数据包: SessionId={SessionId}, CommandId={CommandId}, PacketId={PacketId}",
+                    session.SessionID, package?.Packet?.CommandId.ToString(), package?.Packet?.PacketId);
+                frmMainNew.Instance.PrintInfoLog($"[网络监控] 接收数据包: SessionId={session.SessionID}, CommandId={package?.Packet?.CommandId.ToString()},RequestID={package?.Packet?.Request.RequestId} PacketId={package?.Packet?.PacketId}");
+            }
+
             if (package == null)
             {
                 _logger?.LogWarning("接收到空的数据包");
@@ -125,7 +147,7 @@ namespace RUINORERP.Server.Network.SuperSocket
                     await SendErrorResponseAsync(session, package, UnifiedErrorCodes.System_InternalError, CancellationToken.None);
                     return;
                 }
-                
+
                 // 记录处理器数量，便于调试和监控
                 if (_commandDispatcher.HandlerCount == 0)
                 {
@@ -133,7 +155,7 @@ namespace RUINORERP.Server.Network.SuperSocket
                 }
                 else
                 {
-                    _logger?.LogDebug("CommandDispatcher状态正常，已注册处理器数量: {HandlerCount}", 
+                    _logger?.LogDebug("CommandDispatcher状态正常，已注册处理器数量: {HandlerCount}",
                         _commandDispatcher.HandlerCount);
                 }
 
@@ -156,31 +178,31 @@ namespace RUINORERP.Server.Network.SuperSocket
                 try
                 {
                     // 使用链接的取消令牌，考虑命令超时设置
-                // 修复：正确创建链接令牌源，避免修改原始cancellationToken
-                CancellationTokenSource linkedCts;
-                if (cancellationToken != CancellationToken.None)
-                {
-                    // 如果传入了有效的取消令牌，则创建链接令牌源
-                    linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-                }
-                else
-                {
-                    // 否则创建新的令牌源
-                    linkedCts = new CancellationTokenSource();
-                }
+                    // 修复：正确创建链接令牌源，避免修改原始cancellationToken
+                    CancellationTokenSource linkedCts;
+                    if (cancellationToken != CancellationToken.None)
+                    {
+                        // 如果传入了有效的取消令牌，则创建链接令牌源
+                        linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                    }
+                    else
+                    {
+                        // 否则创建新的令牌源
+                        linkedCts = new CancellationTokenSource();
+                    }
 
-                // 如果命令有设置超时时间，则使用命令的超时时间，否则使用默认300秒
-                //这里设置大一点按执行时间算。每个处理类自己定义了不同的时间
-                var timeout = TimeSpan.FromSeconds(300);
-                linkedCts.CancelAfter(timeout);
-                
-                // 确保命令执行上下文包含全局服务提供者
-                if (package.Packet?.ExecutionContext != null)
-                {
-                    //package.Packet.ExecutionContext.ServiceProvider = _serviceProvider;
-                }
-                
-                result = await _commandDispatcher.DispatchAsync(package.Packet, linkedCts.Token);
+                    // 如果命令有设置超时时间，则使用命令的超时时间，否则使用默认300秒
+                    //这里设置大一点按执行时间算。每个处理类自己定义了不同的时间
+                    var timeout = TimeSpan.FromSeconds(300);
+                    linkedCts.CancelAfter(timeout);
+
+                    // 确保命令执行上下文包含全局服务提供者
+                    if (package.Packet?.ExecutionContext != null)
+                    {
+                        //package.Packet.ExecutionContext.ServiceProvider = _serviceProvider;
+                    }
+
+                    result = await _commandDispatcher.DispatchAsync(package.Packet, linkedCts.Token);
 
                     // 释放令牌源资源
                     linkedCts.Dispose();
@@ -198,6 +220,13 @@ namespace RUINORERP.Server.Network.SuperSocket
                 if (result == null)
                 {
                     result = ResponseFactory.CreateSpecificErrorResponse(package.Packet.ExecutionContext, UnifiedErrorCodes.System_InternalError.Message);
+                }
+
+                // 网络监控：命令处理完成
+                if (IsNetworkMonitorEnabled)
+                {
+                    _logger?.LogDebug("[网络监控] 命令处理完成: SessionId={SessionId}, CommandId={CommandId}, Success={Success}",
+                        session.SessionID, package.Packet.CommandId.ToString(), result.IsSuccess);
                 }
 
                 // 使用新的 CancellationToken.None 来确保响应能够发送，即使命令处理超时
@@ -236,7 +265,7 @@ namespace RUINORERP.Server.Network.SuperSocket
                 {
                     sessionService.HandleClientResponse(packet);
                 }
-                
+
                 _logger?.LogDebug("处理响应包完成，请求ID: {RequestId}", packet?.ExecutionContext?.RequestId);
             }
             catch (Exception ex)
@@ -355,6 +384,13 @@ namespace RUINORERP.Server.Network.SuperSocket
                 // 发送数据并捕获可能的异常
                 try
                 {
+                    // 网络监控：发送响应
+                    if (IsNetworkMonitorEnabled)
+                    {
+                        _logger?.LogDebug("[网络监控] 发送响应: SessionId={SessionId}, CommandId={CommandId}, PacketId={PacketId}",
+                            package.SessionId, package.CommandId.ToString(), package.PacketId);
+                    }
+
                     await (session as SessionInfo).SendAsync(encryptedData.ToArray(), cancellationToken);
                 }
                 catch (TaskCanceledException ex) when (ex.InnerException is OperationCanceledException && cancellationToken.IsCancellationRequested)

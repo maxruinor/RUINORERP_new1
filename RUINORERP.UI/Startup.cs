@@ -1251,7 +1251,7 @@ DuplicateCheckService 这个 具体类 并不会被注册为可解析的 key。
 因此你在解析时 只能用接口。
              */
             // 内存缓存配置
-            // 纯内存缓存
+      
 
             // 纯内存缓存
             var cache = CacheFactory.Build<object>(c =>

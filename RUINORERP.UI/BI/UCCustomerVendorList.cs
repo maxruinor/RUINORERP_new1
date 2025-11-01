@@ -27,7 +27,7 @@ using RUINORERP.UI.AdvancedUIModule;
 using RUINORERP.Global.EnumExt.CRM;
 using RUINORERP.Global;
 using RUINORERP.Model.TransModel;
-using RUINORERP.UI.SuperSocketClient;
+
 
 using AutoUpdateTools;
 using NPOI.SS.Formula.Functions;

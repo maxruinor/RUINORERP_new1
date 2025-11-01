@@ -1,4 +1,4 @@
-﻿﻿using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -44,6 +44,7 @@ using RUINORERP.Business.CommService;
 using RUINORERP.Business.Security;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.Business.BizMapperService;
+using RUINORERP.UI.Network.Services;
 
 
 namespace RUINORERP.UI.PSI.PUR
@@ -87,7 +88,7 @@ namespace RUINORERP.UI.PSI.PUR
 
         }
 
-        public override void BindData(tb_BuyingRequisition entity, ActionStatus actionStatus)
+        public override async void BindData(tb_BuyingRequisition entity, ActionStatus actionStatus)
         {
             if (actionStatus == ActionStatus.删除)
             {
@@ -110,7 +111,9 @@ namespace RUINORERP.UI.PSI.PUR
             {
                 entity.ActionStatus = ActionStatus.新增;
                 entity.DataStatus = (int)DataStatus.草稿;
-                entity.PuRequisitionNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.请购单);
+                var bizCodeService = Startup.GetFromFac<BizCodeService>();
+                entity.PuRequisitionNo=await bizCodeService.GenerateBizBillNoAsync(BizType.请购单);
+                //entity.PuRequisitionNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.请购单);
                 entity.ApplicationDate = System.DateTime.Now;
                 entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
                 if (entity.tb_BuyingRequisitionDetails != null && entity.tb_BuyingRequisitionDetails.Count > 0)
@@ -583,7 +586,7 @@ namespace RUINORERP.UI.PSI.PUR
             long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
             ApprovalEntity ae = new ApprovalEntity();
             ae.BillID = pkid;
-            
+
             CommBillData cbd = EntityMappingHelper.GetBillData<tb_BuyingRequisition>(EditEntity);
             ae.BillNo = cbd.BillNo;
             ae.bizType = cbd.BizType;

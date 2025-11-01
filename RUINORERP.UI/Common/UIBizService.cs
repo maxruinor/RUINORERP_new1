@@ -22,7 +22,7 @@ using RUINORERP.Model.TransModel;
 
 using RUINORERP.UI.BaseForm;
 using RUINORERP.UI.Network.Services;
-using RUINORERP.UI.SuperSocketClient;
+
 using RUINORERP.UI.UControls;
 using RUINORERP.UI.UCSourceGrid;
 using RUINORERP.UI.UserPersonalized;

@@ -1,5 +1,5 @@
 using Krypton.Toolkit;
-using RUINORERP.Business;
+using Microsoft.Extensions.Logging;
 using RUINORERP.Business.BizMapperService;
 using RUINORERP.Business.CommService;
 using RUINORERP.Business.Processor;
@@ -11,9 +11,7 @@ using RUINORERP.Model;
 using RUINORERP.Model.TransModel;
 using RUINORERP.UI.BaseForm;
 using RUINORERP.UI.Common;
-
 using RUINORERP.UI.UserCenter;
-using SqlSugar;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -26,18 +24,25 @@ using System.Windows.Forms;
 
 namespace RUINORERP.UI.IM
 {
-    public partial class BusinessMessagePrompt : KryptonForm
+    public partial class BusinessMessagePrompt : BaseMessagePrompt
     {
-        MenuPowerHelper menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
-
         private FlowLayoutPanel messageFlowLayoutPanel;
         private Timer messageTimer;
-
-        public ReminderData ReminderData { get; set; }
-    
         
-        // 添加公共方法来设置发送者文本
-        public void SetSenderText(string text)
+        /// <summary>
+        /// 初始化组件
+        /// </summary>
+        protected override void InitializeComponents()
+        {
+            InitializeComponent();
+            InitializeMessageComponents();
+        }
+        
+        /// <summary>
+        /// 设置发送者文本
+        /// </summary>
+        /// <param name="text">发送者名称</param>
+        public override void SetSenderText(string text)
         {
             if (txtSender != null)
             {
@@ -45,8 +50,11 @@ namespace RUINORERP.UI.IM
             }
         }
         
-        // 添加公共方法来设置主题文本
-        public void SetSubjectText(string text)
+        /// <summary>
+        /// 设置主题文本
+        /// </summary>
+        /// <param name="text">消息主题</param>
+        public override void SetSubjectText(string text)
         {
             if (txtSubject != null)
             {
@@ -54,18 +62,23 @@ namespace RUINORERP.UI.IM
             }
         }
 
-        public BusinessMessagePrompt()
+        public BusinessMessagePrompt() : base()
         {
-            InitializeComponent();
-            // 设置窗体启动位置为手动
-            this.StartPosition = FormStartPosition.Manual;
-
-            // 设置窗体的初始位置为屏幕右下角
-            this.SetDesktopLocation(
-                Screen.PrimaryScreen.WorkingArea.Width - this.Width,
-                Screen.PrimaryScreen.WorkingArea.Height - this.Height
-            );
-
+        }
+        
+        /// <summary>
+        /// 带参数的构造函数
+        /// </summary>
+        /// <param name="messageData">消息数据</param>
+        public BusinessMessagePrompt(MessageData messageData) : base(messageData)
+        {            
+        }
+        
+        /// <summary>
+        /// 初始化消息组件
+        /// </summary>
+        private void InitializeMessageComponents()
+        {
             // 初始化消息流布局面板
             messageFlowLayoutPanel = new FlowLayoutPanel
             {
@@ -84,76 +97,186 @@ namespace RUINORERP.UI.IM
             messageTimer.Tick += MessageTimer_Tick;
         }
 
-        public string Content { get; set; } = string.Empty;
-
         private void MessageTimer_Tick(object sender, EventArgs e)
         {
             // 模拟消息到达，显示新消息
-            ShowMessage(Content);
+            if (MessageData != null)
+            {
+                ShowMessage(MessageData);
+            }
         }
-
-        private void ShowMessage(string message)
+        
+        /// <summary>
+        /// 更新消息显示
+        /// 根据业务消息数据更新UI组件
+        /// </summary>
+        protected override void UpdateMessageDisplay()
         {
+            try
+            {
+                if (MessageData == null) return;
+                
+                // 设置基本信息
+                if (txtSender != null) txtSender.Text = MessageData.Sender ?? "系统";
+                if (txtSubject != null) txtSubject.Text = MessageData.Title ?? "业务消息";
+                if (txtContent != null) txtContent.Text = MessageData.Content;
+                
+                // 业务消息特定处理
+               // this.Icon = Properties.Resources.Business;
+                
+                // 显示业务相关信息
+                if (MessageData.BizType != BizType.无对应数据 && MessageData.BizId > 0)
+                {
+                    // 显示业务类型和ID信息
+                    string bizInfo = $"业务类型: {MessageData.BizType}, 业务ID: {MessageData.BizId}";
+                    Logger.LogDebug(bizInfo);
+                    // 注意：txtBizInfo控件不存在，信息已记录到日志
+                }
+                
+                // 处理业务数据
+                if (MessageData.BizData != null)
+                {
+                    // 可以在这里解析和显示BizData中的业务信息
+                    Logger.LogDebug($"显示业务数据: {MessageData.BizData}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "更新业务消息显示时发生错误");
+            }
+        }
+        
+        /// <summary>
+        /// 显示消息标签
+        /// 为业务消息创建并显示标签
+        /// </summary>
+        /// <param name="messageData">消息数据</param>
+        private void ShowMessage(MessageData messageData)
+        {            
+            if (messageData == null) return;
+            
             // 创建一个新的消息标签
             Label messageLabel = new Label
             {
-                Text = message,
+                Text = messageData.Content ?? "空消息",
                 AutoSize = true,
-                ForeColor = SystemColors.ControlText,
-                BackColor = SystemColors.Control,
+                Margin = new Padding(10),
+                Font = new Font("Microsoft YaHei UI", 9),
+                ForeColor = Color.White,
+                BackColor = Color.FromArgb(70, 130, 180),
+                Padding = new Padding(10),
                 BorderStyle = BorderStyle.FixedSingle
             };
-
-            // 将消息标签添加到流布局面板
+            
+            // 添加到消息流布局面板
             messageFlowLayoutPanel.Controls.Add(messageLabel);
-
+            
+            // 设置标签的点击事件
+            messageLabel.Click += (sender, e) =>
+            {
+                this.BringToFront();
+                this.Focus();
+            };
+            
+            // 自动移除旧消息，保留最新的5条
+            if (messageFlowLayoutPanel.Controls.Count > 5)
+            {
+                messageFlowLayoutPanel.Controls.RemoveAt(0);
+            }
+            
             // 调整窗体大小以适应消息
             this.Width = messageFlowLayoutPanel.Width + messageFlowLayoutPanel.Padding.Horizontal;
             this.Height = messageFlowLayoutPanel.Height + messageFlowLayoutPanel.Padding.Vertical;
-
+            
             // 计时器启动，用于在一定时间后隐藏消息
             messageTimer.Start();
         }
-
+        
         QueryParameter parameter { get; set; }
 
         private void BusinessMessagePrompt_Load(object sender, EventArgs e)
         {
-            txtContent.Text = Content;
-            lblSendTime.Text = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-
+            // 使用MessageData设置内容
+            if (MessageData != null)
+            {
+                if (txtContent != null) txtContent.Text = MessageData.Content ?? string.Empty;
+                if (lblSendTime != null) 
+                    lblSendTime.Text = MessageData.SendTime.ToString("yyyy-MM-dd HH:mm:ss") ?? DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                
+                // 如果是业务消息，显示导航按钮
+                if (btnNavigate != null && MessageData.BizType != BizType.无对应数据 && MessageData.BizId > 0)
+                {
+                    btnNavigate.Visible = true;
+                    btnNavigate.Text = $"查看{MessageData.BizType}单据";
+                }
+                else if (btnNavigate != null)
+                {
+                    btnNavigate.Visible = false;
+                }
+            }
+            
             // 确保窗体在显示时位于屏幕右下角
             this.SetDesktopLocation(
                 Screen.PrimaryScreen.WorkingArea.Width - this.Width,
                 Screen.PrimaryScreen.WorkingArea.Height - this.Height
             );
 
-            // 如果是业务消息，显示导航按钮
-            if (ReminderData?.BizType != BizType.无对应数据 && ReminderData?.BizPrimaryKey > 0)
-            {
-                btnNavigate.Visible = true;
-                btnNavigate.Text = $"查看{ReminderData.BizType}单据";
-            }
-            else
-            {
-                btnNavigate.Visible = false;
-            }
-
             AddCommandForWait();
         }
 
         private void btnCancel_Click(object sender, EventArgs e)
-        {
+        {            
             MarkMessageAsRead();
             this.DialogResult = DialogResult.OK;
             this.Close();
         }
 
         private void btnOk_Click(object sender, EventArgs e)
-        {
+        {            
             MarkMessageAsRead();
             this.DialogResult = DialogResult.OK;
             this.Close();
+        }
+
+ 
+
+        /// <summary>
+        /// 标记消息为已读
+        /// 使用MessageManager更新消息状态
+        /// </summary>
+        private void MarkMessageAsRead()
+        {            
+            try
+            {
+                if (MessageData != null && !MessageData.IsRead)
+                {
+                    MessageData.MarkAsRead();
+                    
+                    // 异步更新消息状态
+                    Task.Run(async () =>
+                    {
+                        try
+                        {
+                            // 使用EnhancedMessageManager来标记消息为已读
+                            var messageManager = Startup.GetFromFac<EnhancedMessageManager>();
+                            if (messageManager != null)
+                            {
+                                messageManager.MarkAsRead(MessageData.Id);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.LogError(ex, "异步更新消息状态时发生错误");
+                        }
+                    });
+                    
+                    Logger.LogDebug($"消息已标记为已读: {MessageData.Id}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "标记消息为已读时发生错误");
+            }
         }
 
         private void btnNavigate_Click(object sender, EventArgs e)
@@ -162,19 +285,21 @@ namespace RUINORERP.UI.IM
             {
                 // 导航到具体业务单据
                 // 使用主窗体中的增强版消息管理器实例
-                var messageManager = MainForm.Instance.GetMessageManager() as EnhancedMessageManager;
-                messageManager?.NavigateToBusinessDocument(ReminderData.BizType, ReminderData.BizPrimaryKey);
+                var messageManager = Startup.GetFromFac<EnhancedMessageManager>();
+                messageManager?.NavigateToBusinessDocument(MessageData.BizType, MessageData.BizId);
 
                 // 标记消息为已读
                 MarkMessageAsRead();
-
+                
                 this.DialogResult = DialogResult.OK;
                 this.Close();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"导航到业务单据时发生错误: {ex.Message}", "错误", 
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MainForm.Instance.logger.LogError(ex, "导航到业务单据时发生错误");
+                // 显示错误消息
+                MainForm.Instance.PrintInfoLog("导航到业务单据失败，请稍后重试。");
+                this.Close();
             }
         }
 
@@ -183,15 +308,7 @@ namespace RUINORERP.UI.IM
             WaitReminder(sender);
         }
 
-        /// <summary>
-        /// 标记消息为已读
-        /// </summary>
-        private void MarkMessageAsRead()
-        {
-            // 标记消息为已读
-            ReminderData.IsRead = true;
-            // 可以在这里添加更新服务器状态的逻辑
-        }
+
 
         /// <summary>
         /// 响应服务器，更新消息状态

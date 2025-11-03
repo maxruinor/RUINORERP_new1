@@ -1,4 +1,4 @@
-﻿﻿using Krypton.Toolkit;
+﻿using Krypton.Toolkit;
 using RUINORERP.Business;
 using RUINORERP.Business.CommService;
 using RUINORERP.Business.Processor;
@@ -31,6 +31,8 @@ using RUINORERP.PacketSpec.Commands;
 
 using RUINORERP.PacketSpec.Enums;
 using Timer = System.Windows.Forms.Timer;
+using Microsoft.Extensions.Logging;
+using RUINORERP.UI.Network.Services;
 
 namespace RUINORERP.UI.IM
 {
@@ -47,7 +49,12 @@ namespace RUINORERP.UI.IM
         private FlowLayoutPanel messageFlowLayoutPanel;
         private Timer messageTimer;
 
-        public ReminderData ReminderData { get; set; }
+        private MessageData _messageData;
+        public MessageData MessageData
+        {
+            get => _messageData;
+            set => _messageData = value;
+        }
         
         // 添加公共方法来设置发送者文本
         public void SetSenderText(string text)
@@ -84,6 +91,36 @@ namespace RUINORERP.UI.IM
         public InstructionsPrompt()
         {
             InitializeComponent();
+            InitializeForm();
+        }
+        
+        /// <summary>
+        /// 带参数的构造函数
+        /// </summary>
+        /// <param name="messageData">消息数据</param>
+        /// <param name="logger">日志记录器</param>
+        /// <param name="messageService">消息服务</param>
+        public InstructionsPrompt(MessageData messageData, ILogger logger, MessageService messageService)
+        {
+            InitializeComponent();
+            _messageData = messageData;
+            InitializeForm();
+            
+            // 更新显示的消息内容
+            if (_messageData != null)
+            {
+                txtSender.Text = _messageData.Sender ?? "系统";
+                txtSubject.Text = _messageData.Title ?? "系统通知";
+                txtContent.Text = _messageData.Content;
+                Content = _messageData.Content;
+            }
+        }
+        
+        /// <summary>
+        /// 初始化窗体
+        /// </summary>
+        private void InitializeForm()
+        {
             // 设置窗体启动位置为手动
             this.StartPosition = FormStartPosition.Manual;
 
@@ -92,7 +129,6 @@ namespace RUINORERP.UI.IM
                 Screen.PrimaryScreen.WorkingArea.Width - this.Width,
                 Screen.PrimaryScreen.WorkingArea.Height - this.Height
             );
-
 
             // 初始化消息流布局面板
             messageFlowLayoutPanel = new FlowLayoutPanel
@@ -161,7 +197,7 @@ namespace RUINORERP.UI.IM
 
         private void btnCancel_Click(object sender, EventArgs e)
         {
-            RefuseUnLock(ReminderData);
+            RefuseUnLock();
             // this.DialogResult = DialogResult.Cancel;
             this.DialogResult = DialogResult.OK;
             this.Close();
@@ -174,67 +210,21 @@ namespace RUINORERP.UI.IM
             //ClientLockManagerCmd cmd = new ClientLockManagerCmd(CommandDirection.Send);
             //cmd.lockCmd = LockCmd.UNLOCK;
             //UnLockInfo lockRequest = new UnLockInfo();
-            //lockRequest.BillID = ReminderData.BizKeyID;
+            //lockRequest.BillID = _messageData.BizId;
             //lockRequest.LockedUserID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
             //lockRequest.LockedUserName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name;
             //lockRequest.MenuID = 0;
             //lockRequest.PacketId = cmd.PacketId;
-            //if (lockRequest.BillData == null && ReminderData.BizData != null)
+            //if (lockRequest.BillData == null && _messageData.BizData != null)
             //{
-            //    lockRequest.BillData = ReminderData.BizData as CommBillData;
+            //    lockRequest.BillData = _messageData.BizData as CommBillData;
             //}
             //cmd.RequestInfo = lockRequest;
             //MainForm.Instance.dispatcher.DispatchAsync(cmd, CancellationToken.None);
             this.DialogResult = DialogResult.OK;
             this.Close();
-            return;
-            //计划提醒，则把要提醒的计划查出条件找到
-            Type tableType = Business.BizMapperService.EntityMappingHelper.GetEntityType(ReminderData.BizType);
-            //找到要提醒的数据
-            var conModel = new List<IConditionalModel>();
-            // conModel.Add(new ConditionalModel { FieldName = "DataStatus", ConditionalType = ConditionalType.Equal, FieldValue = "3", CSharpTypeName = "int" });
-
-            string FieldName = BaseUIHelper.GetEntityPrimaryKey(tableType);
-
-            conModel.Add(new ConditionalModel { FieldName = FieldName, ConditionalType = ConditionalType.Equal, FieldValue = ReminderData.BizPrimaryKey.ToString(), CSharpTypeName = "long" });
-            //如果有限制条件
-            //if (AuthorizeController.GetOwnershipControl(MainForm.Instance.AppContext))
-            //{
-            //    conModel.Add(new ConditionalModel { FieldName = "Employee_ID", ConditionalType = ConditionalType.Equal, FieldValue = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_ID.ToString(), CSharpTypeName = "long" });
-            //}
-
-            parameter = new QueryParameter();
-            parameter.conditionals = conModel;
-            parameter.tableType = tableType;
-            // 创建实例
-            object instance = Activator.CreateInstance(parameter.tableType);
-            BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(parameter.tableType.Name + "Processor");
-            QueryFilter queryFilter = baseProcessor.GetQueryFilter();
-
-
-            //这里知道ID 在这里虚拟一下主键的查询条件。将ID给过去。一次性查询。或 时间也给过去。
-            //应该是给计划特殊处理。指令系统用上？
-            QueryField queryField = new QueryField();
-            queryField.QueryTargetType = tableType;
-            queryField.FieldName = FieldName;
-            queryField.FieldPropertyInfo = tableType.GetProperties().FirstOrDefault(c => c.Name == FieldName);
-            if (!queryFilter.QueryFields.Contains(queryField))
-            {
-                queryFilter.QueryFields.Add(queryField);
             }
-            parameter.queryFilter = queryFilter;
-            var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == parameter.tableType.Name && m.ClassPath.Contains("")).FirstOrDefault();
-            if (RelatedBillMenuInfo != null)
-            {
-                menuPowerHelper.OnSetQueryConditionsDelegate += MenuPowerHelper_OnSetQueryConditionsDelegate;
-                menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, instance, parameter);
-                //要卸载，不然会多次执行
-                menuPowerHelper.OnSetQueryConditionsDelegate -= MenuPowerHelper_OnSetQueryConditionsDelegate;
-
-                this.DialogResult = DialogResult.OK;
-                this.Close();
-            }
-        }
+        
 
         private void MenuPowerHelper_OnSetQueryConditionsDelegate(object QueryDto, UserCenter.QueryParameter nodeParameter)
         {
@@ -304,7 +294,7 @@ namespace RUINORERP.UI.IM
         /// 拒绝
         /// </summary>
         /// <param name="billid"></param>
-        private void RefuseUnLock(ReminderData reminderData)
+        private void RefuseUnLock()
         {
 #warning TODO: 这里需要完善具体逻辑，当前仅为占位
 
@@ -312,16 +302,16 @@ namespace RUINORERP.UI.IM
             //ClientLockManagerCmd cmd = new ClientLockManagerCmd(CommandDirection.Send);
             //cmd.lockCmd = LockCmd.RefuseUnLock;
             //RefuseUnLockInfo lockRequest = new RefuseUnLockInfo();
-            //lockRequest.BillID = reminderData.BizKeyID;
-            //if (lockRequest.BillData == null && ReminderData.BizData != null)
+            //lockRequest.BillID = _messageData.BizId;
+            //if (lockRequest.BillData == null && _messageData.BizData != null)
             //{
-            //    lockRequest.BillData = ReminderData.BizData as CommBillData;
+            //    lockRequest.BillData = _messageData.BizData as CommBillData;
             //}
             //lockRequest.RefuseUserName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name;
             //lockRequest.RefuseUserID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
 
-            //lockRequest.RequestUserName = reminderData.SenderEmployeeName;
-            //lockRequest.RequestUserID = reminderData.SenderEmployeeID;
+            //lockRequest.RequestUserName = _messageData.Sender;
+            //lockRequest.RequestUserID = _messageData.SenderId;
 
             //lockRequest.PacketId = cmd.PacketId;
             //拒绝谁？

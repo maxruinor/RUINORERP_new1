@@ -55,34 +55,28 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                 .AsSelf()
                 .InstancePerLifetimeScope();
 
-            // 注册初始化任务，在容器构建完成后执行
-            // 使用异步初始化方法，避免在构建回调中使用同步等待
-            builder.Register(async (context, cancellationToken) =>
+            // 注册命令处理系统初始化服务
+            // 避免使用async委托与AutoActivate组合，改用专用初始化服务
+            builder.RegisterType<ClientCommandHandlerSystemInitializer>()
+                .AsSelf()
+                .SingleInstance()
+                .PropertiesAutowired();
+                
+            // 注册一个启动时触发的初始化器
+            builder.RegisterBuildCallback(container =>
             {
                 try
                 {
-                    // 获取命令调度器
-                    var commandDispatcher = context.Resolve<IClientCommandDispatcher>();
-                    
-                    // 获取命令处理器注册器
-                    var handlerRegistry = context.Resolve<ClientCommandHandlerRegistry>();
-                    
-                    // 异步初始化并启动调度器
-                    await commandDispatcher.InitializeAsync();
-                    await commandDispatcher.StartAsync();
-                    
-                    // 异步注册所有命令处理器
-                    int registeredCount = await handlerRegistry.RegisterAllHandlersAsync();
-                    
-                    Logger.Info($"成功注册 {registeredCount} 个客户端命令处理器");
-                    return registeredCount;
+                    // 在容器构建完成后获取初始化器并启动初始化流程
+                    // 注意：这里不使用同步等待，而是异步启动并记录任务
+                    var initializer = container.Resolve<ClientCommandHandlerSystemInitializer>();
+                    _ = initializer.InitializeAsync(); // 异步启动，不阻塞容器构建
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error(ex, "初始化客户端命令处理系统失败");
-                    return 0;
+                    Logger.Error(ex, "启动命令处理系统初始化器失败");
                 }
-            }).As<int>().SingleInstance().AutoActivate();
+            });
         }
     }
 }

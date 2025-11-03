@@ -1,3 +1,5 @@
+using System;
+
 namespace RUINORERP.UI.IM
 {
     partial class MessageListControl
@@ -124,6 +126,7 @@ namespace RUINORERP.UI.IM
             this.panelHeader.PerformLayout();
             this.ResumeLayout(false);
         }
+
 
         #endregion
 

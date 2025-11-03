@@ -8,22 +8,7 @@ using System.Threading.Tasks;
 
 namespace RUINORERP.Model.TransModel
 {
-
-    public enum MessageCmdType
-    {
-        Unknown = 0,
-        Message = 1,
-        Reminder = 2,
-        Event = 3,
-        Task = 4,
-        Notice = 5,
-        Business = 6,
-        Prompt = 7,
-        UnLockRequest = 8,
-        ExceptionLog = 9,
-        Broadcast = 10,
-        Approve = 11
-    }
+ 
 
     /// <summary>
     /// 提醒数据用于工作流和所有交互
@@ -39,7 +24,7 @@ namespace RUINORERP.Model.TransModel
         /// 单据主键 这种业务性keyid
         /// </summary>
         public long BizKeyID { get; set; }
-        public MessageCmdType messageCmd { get; set; } = MessageCmdType.Unknown;
+        public MessageType messageCmd { get; set; } = MessageType.Unknown;
         // 消息状态
         /// <summary>
         /// 消息是否已读
@@ -106,7 +91,7 @@ namespace RUINORERP.Model.TransModel
         public DateTime ReadTime { get; set; }
         public string Title { get; set; }
         public string Content { get; set; }
-        public ReminderType MessageType { get; set; }
+        public MessageType MessageType { get; set; }
         public bool IsSystemMessage { get; set; }
 
         // 构造函数

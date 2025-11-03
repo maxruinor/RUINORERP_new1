@@ -1,5 +1,5 @@
 using Krypton.Toolkit;
-using RUINORERP.Business;
+using Microsoft.Extensions.Logging;
 using RUINORERP.Business.BizMapperService;
 using RUINORERP.Business.CommService;
 using RUINORERP.Business.Processor;
@@ -9,10 +9,10 @@ using RUINORERP.Common.Helper;
 using RUINORERP.Global;
 using RUINORERP.Model;
 using RUINORERP.Model.TransModel;
-
+using RUINORERP.PacketSpec.Models.Requests.Message;
 using RUINORERP.UI.BaseForm;
 using RUINORERP.UI.Common;
-
+using RUINORERP.UI.Network.Services;
 using RUINORERP.UI.UserCenter;
 using SqlSugar;
 using System;
@@ -28,46 +28,70 @@ using System.Windows.Forms;
 
 namespace RUINORERP.UI.IM
 {
-    public partial class MessagePrompt : Krypton.Toolkit.KryptonForm
+    public partial class MessagePrompt : BaseMessagePrompt
     {
-
-        MenuPowerHelper menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
-
         private FlowLayoutPanel messageFlowLayoutPanel;
         private Timer messageTimer;
 
-        public ReminderData ReminderData { get; set; }
-        
-        // 添加公共方法来设置发送者文本
-        public void SetSenderText(string text)
+        /// <summary>
+        /// 初始化组件
+        /// </summary>
+        protected override void InitializeComponents()
+        {
+            InitializeComponent();
+            InitializeForm();
+        }
+
+        /// <summary>
+        /// 设置发送者文本
+        /// </summary>
+        /// <param name="text">发送者名称</param>
+        public override void SetSenderText(string text)
         {
             if (txtSender != null)
             {
                 txtSender.Text = text;
             }
         }
-        
-        // 添加公共方法来设置主题文本
-        public void SetSubjectText(string text)
+
+        /// <summary>
+        /// 设置主题文本
+        /// </summary>
+        /// <param name="text">消息主题</param>
+        public override void SetSubjectText(string text)
         {
             if (txtSubject != null)
             {
                 txtSubject.Text = text;
             }
         }
-        
-        public MessagePrompt()
-        {
-            InitializeComponent();
-            // 设置窗体启动位置为手动
-            this.StartPosition = FormStartPosition.Manual;
 
+        public MessagePrompt() : base()
+        {
+        }
+
+        /// <summary>
+        /// 带参数的构造函数
+        /// </summary>
+        /// <param name="messageData">消息数据</param>
+        /// <param name="logger">日志记录器</param>
+        /// <param name="messageService">消息服务</param>
+        public MessagePrompt(MessageData messageData, EnhancedMessageManager messageManager = null, ILogger<MessagePrompt> logger = null)
+            : base(messageData, logger, messageManager)
+        {
+        }
+
+        /// <summary>
+        /// 初始化窗体
+        /// </summary>
+        private void InitializeForm()
+        {
+            // 可以在这里添加额外的初始化代码
             // 设置窗体的初始位置为屏幕右下角
             this.SetDesktopLocation(
                 Screen.PrimaryScreen.WorkingArea.Width - this.Width,
                 Screen.PrimaryScreen.WorkingArea.Height - this.Height
             );
-
 
             // 初始化消息流布局面板
             messageFlowLayoutPanel = new FlowLayoutPanel
@@ -86,6 +110,60 @@ namespace RUINORERP.UI.IM
             };
             messageTimer.Tick += MessageTimer_Tick;
         }
+        /// <summary>
+        /// 更新消息显示
+        /// 根据消息数据更新UI组件
+        /// </summary>
+        protected override void UpdateMessageDisplay()
+        {
+            try
+            {
+
+                if (MessageData == null) return;
+
+                // 设置基本信息
+                if (txtSender != null) txtSender.Text = MessageData.Sender ?? "系统";
+                if (txtSubject != null) txtSubject.Text = MessageData.Title ?? "消息";
+                if (txtContent != null) txtContent.Text = MessageData.Content;
+
+                // 根据消息类型设置不同的显示样式
+                //switch (MessageData.MessageType)
+                //{                    
+                //    case MessageType.Prompt:
+                //        this.Icon = Properties.Resources.info;
+                //        break;
+                //    case MessageType.BusinessData:
+                //        this.Icon = Properties.Resources.Business;
+                //        break;
+                //    case MessageType.System:
+                //        this.Icon = Properties.Resources.System;
+                //        break;
+                //    default:
+                //        this.Icon = Properties.Resources.Message;
+                //        break;
+                //}
+
+                // 设置确认相关控件的可见性
+                if (MessageData.NeedConfirmation)
+                {
+                    // 显示确认按钮等控件
+                    //if (btnConfirm != null) btnConfirm.Visible = true;
+                    //if (btnReject != null) btnReject.Visible = true;
+                }
+
+                // 显示业务相关信息
+                if (MessageData.BizId >= 0)
+                {
+                    // 可以在这里显示业务数据相关信息
+                    Logger.LogDebug($"显示业务消息: 类型={MessageData.BizType}, ID={MessageData.BizId}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "更新消息显示时发生错误");
+            }
+        }
+
 
         public string Content { get; set; } = string.Empty;
 
@@ -147,17 +225,17 @@ namespace RUINORERP.UI.IM
             this.Close();
         }
 
-        private void btnOk_Click(object sender, EventArgs e)
+        private async void btnOk_Click(object sender, EventArgs e)
         {
             //计划提醒，则把要提醒的计划查出条件找到
-            Type tableType = EntityMappingHelper.GetEntityType(ReminderData.BizType);
+            Type tableType = EntityMappingHelper.GetEntityType(MessageData.BizType);
             //找到要提醒的数据
             var conModel = new List<IConditionalModel>();
             // conModel.Add(new ConditionalModel { FieldName = "DataStatus", ConditionalType = ConditionalType.Equal, FieldValue = "3", CSharpTypeName = "int" });
 
             string FieldName = BaseUIHelper.GetEntityPrimaryKey(tableType);
 
-            conModel.Add(new ConditionalModel { FieldName = FieldName, ConditionalType = ConditionalType.Equal, FieldValue = ReminderData.BizPrimaryKey.ToString(), CSharpTypeName = "long" });
+            conModel.Add(new ConditionalModel { FieldName = FieldName, ConditionalType = ConditionalType.Equal, FieldValue = MessageData.BizId.ToString(), CSharpTypeName = "long" });
             //如果有限制条件
             //if (AuthorizeController.GetOwnershipControl(MainForm.Instance.AppContext))
             //{
@@ -187,8 +265,11 @@ namespace RUINORERP.UI.IM
             var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == parameter.tableType.Name && m.ClassPath.Contains("")).FirstOrDefault();
             if (RelatedBillMenuInfo != null)
             {
+                MenuPowerHelper menuPowerHelper;
+                menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
+
                 menuPowerHelper.OnSetQueryConditionsDelegate += MenuPowerHelper_OnSetQueryConditionsDelegate;
-                menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, instance, parameter);
+                await menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, instance, parameter);
                 //要卸载，不然会多次执行
                 menuPowerHelper.OnSetQueryConditionsDelegate -= MenuPowerHelper_OnSetQueryConditionsDelegate;
                 // 将消息标记为已处理状态（处理后视为已读）
@@ -272,15 +353,26 @@ namespace RUINORERP.UI.IM
         /// <param name="interval">提醒间隔</param>
         private void ResponseToServer(bool isRead, int interval = 20)
         {
-            #warning  todo by watson
-            //回复服务器
-            //ClientResponseData response = new ClientResponseData();
-            //response.BizPrimaryKey = ReminderData.BizPrimaryKey;
-            //response.Status = status;
-            //response.RemindInterval = interval;
-            ////向服务器推送工作流提醒的列表 typeof(T).Name
-            //OriginalData beatDataDel = ClientDataBuilder.工作流提醒回复();
-            //MainForm.Instance.ecs.AddSendData(beatDataDel);
+            if (MessageData == null)
+                return;
+
+            try
+            {
+                var requestData = new Dictionary<string, object>
+                {
+                    { "BizId", MessageData.BizId },
+                    { "IsRead", isRead },
+                    { "RemindInterval", interval }
+                };
+
+                var messageRequest = new MessageRequest(MessageType.Message, requestData);
+                //TODO fix
+                //  MessageService.SendMessageToUserAsync(messageRequest).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                Logger?.Error(ex, "向服务器发送消息状态更新时发生错误");
+            }
         }
 
         #region 生成稍候提醒的指令
@@ -373,6 +465,24 @@ namespace RUINORERP.UI.IM
             ResponseToServer(false, interval);
             this.DialogResult = DialogResult.OK;
             this.Close();
+        }
+
+        // 添加导航到业务文档的方法
+        private void NavigateToBusinessDocument()
+        {
+            try
+            {
+                if (MessageData == null)
+                    return;
+
+                var bizManager = Startup.GetFromFac<EnhancedMessageManager>();
+                bizManager?.NavigateToBusinessDocument(MessageData.BizType, MessageData.BizId);
+            }
+            catch (Exception ex)
+            {
+                Logger?.Error(ex, "导航到业务文档时发生错误");
+                throw;
+            }
         }
 
     }

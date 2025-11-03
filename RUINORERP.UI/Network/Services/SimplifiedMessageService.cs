@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using RUINORERP.Model.TransModel;
 using RUINORERP.UI.Network;
 using System;
 using System.Threading;
@@ -37,7 +38,6 @@ namespace RUINORERP.UI.Network.Services
         private void SubscribeToMessages()
         {
             _messageService.PopupMessageReceived += OnPopupMessageReceived;
-            _messageService.UserMessageReceived += OnUserMessageReceived;
             _messageService.DepartmentMessageReceived += OnDepartmentMessageReceived;
             _messageService.BroadcastMessageReceived += OnBroadcastMessageReceived;
             _messageService.SystemNotificationReceived += OnSystemNotificationReceived;
@@ -46,13 +46,13 @@ namespace RUINORERP.UI.Network.Services
         /// <summary>
         /// 处理接收到的弹窗消息
         /// </summary>
-        private void OnPopupMessageReceived(MessageReceivedEventArgs args)
+        private void OnPopupMessageReceived(MessageData messageData)
         {
             try
             {
                 // 这里可以添加自定义的弹窗消息处理逻辑
                 _logger?.LogDebug("接收到弹窗消息");
-                PopupMessageReceived?.Invoke(args);
+                PopupMessageReceived?.Invoke(messageData);
             }
             catch (Exception ex)
             {
@@ -63,13 +63,13 @@ namespace RUINORERP.UI.Network.Services
         /// <summary>
         /// 处理接收到的用户消息
         /// </summary>
-        private void OnUserMessageReceived(MessageReceivedEventArgs args)
+        private void OnUserMessageReceived(MessageData messageData)
         {
             try
             {
                 // 这里可以添加自定义的用户消息处理逻辑
                 _logger?.LogDebug("接收到用户消息");
-                UserMessageReceived?.Invoke(args);
+                UserMessageReceived?.Invoke(messageData);
             }
             catch (Exception ex)
             {
@@ -80,13 +80,13 @@ namespace RUINORERP.UI.Network.Services
         /// <summary>
         /// 处理接收到的部门消息
         /// </summary>
-        private void OnDepartmentMessageReceived(MessageReceivedEventArgs args)
+        private void OnDepartmentMessageReceived(MessageData messageData)
         {
             try
             {
                 // 这里可以添加自定义的部门消息处理逻辑
                 _logger?.LogDebug("接收到部门消息");
-                DepartmentMessageReceived?.Invoke(args);
+                DepartmentMessageReceived?.Invoke(messageData);
             }
             catch (Exception ex)
             {
@@ -97,13 +97,13 @@ namespace RUINORERP.UI.Network.Services
         /// <summary>
         /// 处理接收到的广播消息
         /// </summary>
-        private void OnBroadcastMessageReceived(MessageReceivedEventArgs args)
+        private void OnBroadcastMessageReceived(MessageData messageData)
         {
             try
             {
                 // 这里可以添加自定义的广播消息处理逻辑
                 _logger?.LogDebug("接收到广播消息");
-                BroadcastMessageReceived?.Invoke(args);
+                BroadcastMessageReceived?.Invoke(messageData);
             }
             catch (Exception ex)
             {
@@ -114,13 +114,13 @@ namespace RUINORERP.UI.Network.Services
         /// <summary>
         /// 处理接收到的系统通知
         /// </summary>
-        private void OnSystemNotificationReceived(MessageReceivedEventArgs args)
+        private void OnSystemNotificationReceived(MessageData messageData)
         {
             try
             {
                 // 这里可以添加自定义的系统通知处理逻辑
                 _logger?.LogDebug("接收到系统通知");
-                SystemNotificationReceived?.Invoke(args);
+                SystemNotificationReceived?.Invoke(messageData);
             }
             catch (Exception ex)
             {
@@ -145,7 +145,7 @@ namespace RUINORERP.UI.Network.Services
             try
             {
                 var response = await _messageService.SendMessageToUserAsync(
-                    targetUserId, message, "Text", ct);
+                    targetUserId, message, MessageType.Text, ct);
 
                 return response != null && response.IsSuccess;
             }
@@ -199,7 +199,7 @@ namespace RUINORERP.UI.Network.Services
             try
             {
                 var response = await _messageService.SendMessageToDepartmentAsync(
-                    departmentId, message, "Text", ct);
+                    departmentId, message, MessageType.Text, ct);
 
                 return response != null && response.IsSuccess;
             }
@@ -223,7 +223,7 @@ namespace RUINORERP.UI.Network.Services
             try
             {
                 var response = await _messageService.BroadcastMessageAsync(
-                    message, "Text", ct);
+                    message, MessageType.Text, ct);
 
                 return response != null && response.IsSuccess;
             }
@@ -247,7 +247,7 @@ namespace RUINORERP.UI.Network.Services
             try
             {
                 var response = await _messageService.SendSystemNotificationAsync(
-                    message, "Info", ct);
+                    message, MessageType.System, ct);
 
                 return response != null && response.IsSuccess;
             }
@@ -265,27 +265,27 @@ namespace RUINORERP.UI.Network.Services
         /// <summary>
         /// 当接收到弹窗消息时触发的事件
         /// </summary>
-        public event Action<MessageReceivedEventArgs> PopupMessageReceived;
+        public event Action<MessageData> PopupMessageReceived;
 
         /// <summary>
         /// 当接收到用户消息时触发的事件
         /// </summary>
-        public event Action<MessageReceivedEventArgs> UserMessageReceived;
+        public event Action<MessageData> UserMessageReceived;
 
         /// <summary>
         /// 当接收到部门消息时触发的事件
         /// </summary>
-        public event Action<MessageReceivedEventArgs> DepartmentMessageReceived;
+        public event Action<MessageData> DepartmentMessageReceived;
 
         /// <summary>
         /// 当接收到广播消息时触发的事件
         /// </summary>
-        public event Action<MessageReceivedEventArgs> BroadcastMessageReceived;
+        public event Action<MessageData> BroadcastMessageReceived;
 
         /// <summary>
         /// 当接收到系统通知时触发的事件
         /// </summary>
-        public event Action<MessageReceivedEventArgs> SystemNotificationReceived;
+        public event Action<MessageData> SystemNotificationReceived;
 
         #endregion
     }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -7,11 +7,6 @@ using System.Threading.Tasks;
 
 namespace RUINORERP.Global.EnumExt
 {
-
-    public enum ReminderType
-    {
-        Notification,
-    }
 
     public enum RuleEngineType
     {
@@ -118,10 +113,5 @@ namespace RUINORERP.Global.EnumExt
 
     }
 
-    //public enum HealthStatus
-    //{
-    //    Healthy,
-    //    Degraded,
-    //    Unhealthy
-    //}
+    
 }

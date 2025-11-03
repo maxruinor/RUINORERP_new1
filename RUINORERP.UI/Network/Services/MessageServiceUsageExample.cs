@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using RUINORERP.Model.TransModel;
 using RUINORERP.UI.Network;
 using System;
 using System.Threading;
@@ -34,21 +35,10 @@ namespace RUINORERP.UI.Network.Services
         /// </summary>
         private void SubscribeToMessages()
         {
-            if (_messageService != null)
-            {
-                // 订阅各种消息事件
-                _messageService.PopupMessageReceived += OnPopupMessageReceived;
-                _messageService.UserMessageReceived += OnUserMessageReceived;
-                _messageService.DepartmentMessageReceived += OnDepartmentMessageReceived;
-                _messageService.BroadcastMessageReceived += OnBroadcastMessageReceived;
-                _messageService.SystemNotificationReceived += OnSystemNotificationReceived;
-            }
-
             if (_simplifiedMessageService != null)
             {
                 // 订阅简化版消息服务的事件
                 _simplifiedMessageService.PopupMessageReceived += OnPopupMessageReceived;
-                _simplifiedMessageService.UserMessageReceived += OnUserMessageReceived;
                 _simplifiedMessageService.DepartmentMessageReceived += OnDepartmentMessageReceived;
                 _simplifiedMessageService.BroadcastMessageReceived += OnBroadcastMessageReceived;
                 _simplifiedMessageService.SystemNotificationReceived += OnSystemNotificationReceived;
@@ -58,46 +48,37 @@ namespace RUINORERP.UI.Network.Services
         /// <summary>
         /// 处理弹窗消息
         /// </summary>
-        private void OnPopupMessageReceived(MessageReceivedEventArgs args)
+        private void OnPopupMessageReceived(MessageData messageData)
         {
             // 处理接收到的弹窗消息
-            Console.WriteLine($"接收到弹窗消息: {args.Data}");
-        }
-
-        /// <summary>
-        /// 处理用户消息
-        /// </summary>
-        private void OnUserMessageReceived(MessageReceivedEventArgs args)
-        {
-            // 处理接收到的用户消息
-            Console.WriteLine($"接收到用户消息: {args.Data}");
+            Console.WriteLine($"接收到弹窗消息: {messageData?.Content}");
         }
 
         /// <summary>
         /// 处理部门消息
         /// </summary>
-        private void OnDepartmentMessageReceived(MessageReceivedEventArgs args)
+        private void OnDepartmentMessageReceived(MessageData messageData)
         {
             // 处理接收到的部门消息
-            Console.WriteLine($"接收到部门消息: {args.Data}");
+            Console.WriteLine($"接收到部门消息: {messageData?.Content}");
         }
 
         /// <summary>
         /// 处理广播消息
         /// </summary>
-        private void OnBroadcastMessageReceived(MessageReceivedEventArgs args)
+        private void OnBroadcastMessageReceived(MessageData messageData)
         {
             // 处理接收到的广播消息
-            Console.WriteLine($"接收到广播消息: {args.Data}");
+            Console.WriteLine($"接收到广播消息: {messageData?.Content}");
         }
 
         /// <summary>
         /// 处理系统通知
         /// </summary>
-        private void OnSystemNotificationReceived(MessageReceivedEventArgs args)
+        private void OnSystemNotificationReceived(MessageData messageData)
         {
             // 处理接收到的系统通知
-            Console.WriteLine($"接收到系统通知: {args.Data}");
+            Console.WriteLine($"接收到系统通知: {messageData?.Content}");
         }
 
         /// <summary>

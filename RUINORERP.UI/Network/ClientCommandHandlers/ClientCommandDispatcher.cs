@@ -75,22 +75,27 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
         /// 停止调度器
         /// </summary>
         /// <returns>停止是否成功</returns>
-        public virtual Task<bool> StopAsync()
+        public virtual async Task<bool> StopAsync()
         {
+            List<IClientCommandHandler> handlersToStop;
             lock (_lockObject)
             {
-                if (IsRunning)
+                if (!IsRunning)
                 {
-                    IsRunning = false;
-                    // 停止所有处理器
-                    foreach (var handler in _handlers.Values)
-                    {
-                        handler.StopAsync().Wait();
-                    }
-                    return Task.FromResult(true);
+                    return false;
                 }
-                return Task.FromResult(false);
+                IsRunning = false;
+                // 获取需要停止的处理器列表的副本
+                handlersToStop = _handlers.Values.ToList();
             }
+            
+            // 在lock外异步停止所有处理器
+            foreach (var handler in handlersToStop)
+            {
+                await handler.StopAsync();
+            }
+            
+            return true;
         }
 
         /// <summary>
@@ -103,20 +108,33 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
             if (handler == null)
                 throw new ArgumentNullException(nameof(handler));
 
+            // 先检查处理器是否已注册
+            bool isRegistered;
             lock (_lockObject)
             {
-                // 检查处理器是否已注册
+                isRegistered = _handlers.ContainsKey(handler.HandlerId);
+            }
+
+            if (isRegistered)
+            {
+                LogWarning($"处理器已存在: {handler.HandlerId}");
+                return false;
+            }
+
+            // 在lock外执行异步操作
+            await handler.InitializeAsync();
+            await handler.StartAsync();
+
+            // 注册处理器到集合
+            lock (_lockObject)
+            {
+                // 再次检查以避免竞争条件
                 if (_handlers.ContainsKey(handler.HandlerId))
                 {
-                    LogWarning($"处理器已存在: {handler.HandlerId}");
+                    LogWarning($"处理器在异步操作期间已被注册: {handler.HandlerId}");
                     return false;
                 }
 
-                // 初始化并启动处理器
-                await handler.InitializeAsync();
-                await handler.StartAsync();
-
-                // 注册处理器
                 _handlers[handler.HandlerId] = handler;
 
                 // 更新命令到处理器的映射
@@ -165,6 +183,8 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
             if (string.IsNullOrEmpty(handlerId))
                 throw new ArgumentNullException(nameof(handlerId));
 
+            // 先获取处理器引用
+            IClientCommandHandler handler;
             lock (_lockObject)
             {
                 if (!_handlers.ContainsKey(handlerId))
@@ -172,11 +192,21 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                     LogWarning($"未找到处理器: {handlerId}");
                     return false;
                 }
+                handler = _handlers[handlerId];
+            }
 
-                var handler = _handlers[handlerId];
+            // 在lock外执行异步操作
+            await handler.StopAsync();
 
-                // 停止处理器
-                await handler.StopAsync();
+            // 移除处理器的引用
+            lock (_lockObject)
+            {
+                // 再次检查以避免竞争条件
+                if (!_handlers.ContainsKey(handlerId))
+                {
+                    LogWarning($"处理器在异步操作期间已被移除: {handlerId}");
+                    return false;
+                }
 
                 // 从命令映射中移除
                 foreach (var command in handler.SupportedCommands)

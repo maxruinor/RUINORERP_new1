@@ -16,7 +16,7 @@ namespace RUINORERP.PacketSpec.Models.Responses.Message
         /// <summary>
         /// 命令类型
         /// </summary>
-        public MessageCmdType CommandType { get; set; }
+        public MessageType CommandType { get; set; }
 
         /// <summary>
         /// 响应数据
@@ -35,7 +35,7 @@ namespace RUINORERP.PacketSpec.Models.Responses.Message
         /// <param name="commandType">命令类型</param>
         /// <param name="data">响应数据</param>
         /// <returns>成功的响应实例</returns>
-        public static MessageResponse Success(MessageCmdType commandType, object data)
+        public static MessageResponse Success(MessageType commandType, object data)
         {
             return new MessageResponse
             {
@@ -54,7 +54,7 @@ namespace RUINORERP.PacketSpec.Models.Responses.Message
         /// <param name="errorCode">错误码</param>
         /// <param name="errorMessage">错误消息</param>
         /// <returns>失败的响应实</returns>
-        public static MessageResponse Fail(Model.TransModel.MessageCmdType  commandType, string errorMessage)
+        public static MessageResponse Fail(Model.TransModel.MessageType  commandType, string errorMessage)
         {
             return new MessageResponse
             {

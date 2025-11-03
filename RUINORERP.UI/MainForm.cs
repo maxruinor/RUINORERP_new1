@@ -165,235 +165,19 @@ namespace RUINORERP.UI
         /// 配置管理器
         /// </summary>
         private ConfigManager _configManager;
-        private readonly NotificationService _notificationService;
+        private readonly EnhancedMessageManager _messageManager;
 
         #region 当前系统中所有用户信息
         private List<UserInfo> userInfos = new List<UserInfo>();
 
-        // 消息管理器 - 处理所有消息相关功能
-        private EnhancedMessageManager _messageManager;  // 修改为增强版消息管理器
-
-        /// <summary>
-        /// 消息列表（兼容属性）
-        /// </summary>
-        public Queue<RUINORERP.Model.TransModel.ReminderData> MessageList { get; private set; } = new Queue<RUINORERP.Model.TransModel.ReminderData>();
-
+      
+       
         /// <summary>
         /// 当前系统所有用户信息列表
         /// </summary>
         public List<UserInfo> UserInfos { get => userInfos; set => userInfos = value; }
 
 
-        /// <summary>
-        /// 获取消息管理器实例
-        /// </summary>
-        /// <returns>消息管理器实例</returns>
-        public EnhancedMessageManager GetMessageManager()
-        {
-            return _messageManager;
-        }
-
-
-        /// <summary>
-        /// 订阅服务器消息事件 - 已更新为使用MessageManager
-        /// </summary>
-        private void SubscribeServerMessageEvents()
-        {
-            try
-            {
-                // 使用MessageManager处理消息订阅
-                if (_messageManager != null && communicationService != null)
-                {
-                    // 订阅消息状态变更事件，用于更新UI
-                    _messageManager.MessageStatusChanged += OnMessageStatusChanged;
-
-                    // 订阅服务器消息事件
-                    _messageManager.SubscribeServerMessageEvents(communicationService);
-
-
-
-
-                    // 如果查找失败，不抛出异常，让应用继续运行
-
-
-                    logger?.LogInformation("已成功通过MessageManager订阅服务器消息事件并初始化消息菜单");
-
-                    // 尝试获取并更新未读消息数
-                    try
-                    {
-                        var unreadCount = _messageManager.UnreadMessageCount;
-                        UpdateUnreadMessageCountInUI(unreadCount);
-
-                        if (unreadCount > 0)
-                        {
-                            logger?.LogInformation($"有{unreadCount}条未读消息");
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        logger?.LogWarning(ex, "获取未读消息数时发生异常");
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                logger?.LogError(ex, "订阅服务器消息事件时发生异常");
-            }
-        }
-
-        /// <summary>
-        /// 处理消息接收事件
-        /// </summary>
-        /// <param name="sender">事件发送者</param>
-        /// <param name="e">消息接收事件参数</param>
-        private void OnMessageReceived(object sender, MessageReceivedEventArgs e)
-        {
-            try
-            {
-                // 确保在UI线程上处理
-                if (InvokeRequired)
-                {
-                    Invoke(new Action<object, MessageReceivedEventArgs>(OnMessageReceived), sender, e);
-                    return;
-                }
-
-                // 记录接收到的消息
-                if (e.Data is RUINORERP.Model.TransModel.ReminderData reminderData)
-                {
-                    logger?.LogInformation($"收到新消息 - 类型: {e.MessageType}, 标题: {reminderData.RemindSubject}");
-                }
-                else
-                {
-                    logger?.LogInformation($"收到新消息 - 类型: {e.MessageType}");
-                }
-
-                // 更新UI显示未读消息数量
-                UpdateUnreadMessageCountInUI(_messageManager.UnreadMessageCount);
-            }
-            catch (Exception ex)
-            {
-                logger?.LogError(ex, "处理消息接收事件时发生异常");
-            }
-        }
-
-        /// <summary>
-        /// 处理消息状态变更事件，更新UI显示
-        /// </summary>
-        private void OnMessageStatusChanged(object sender, EventArgs e)
-        {
-            try
-            {
-                if (_messageManager != null)
-                {
-                    int unreadCount = _messageManager.UnreadMessageCount;
-                    UpdateUnreadMessageCountInUI(unreadCount);
-                }
-            }
-            catch (Exception ex)
-            {
-                logger?.LogError(ex, "处理消息状态变更事件时发生异常");
-            }
-        }
-
-        /// <summary>
-        /// 更新UI中未读消息数量显示
-        /// </summary>
-        /// <param name="unreadCount">未读消息数量</param>
-        private void UpdateUnreadMessageCountInUI(int unreadCount)
-        {
-            try
-            {
-                // 确保在UI线程上执行
-                if (InvokeRequired)
-                {
-                    Invoke(new Action<int>(UpdateUnreadMessageCountInUI), unreadCount);
-                    return;
-                }
-
-                // 查找消息菜单项并更新未读数量
-                MenuStrip menuStrip = null;
-                try
-                {
-                    // 优先查找MenuStripMain控件
-                    menuStrip = this.Controls.Find("MenuStripMain", true).FirstOrDefault() as MenuStrip;
-                    if (menuStrip == null)
-                    {
-                        // 尝试查找任何MenuStrip控件
-                        menuStrip = this.Controls.OfType<MenuStrip>().FirstOrDefault();
-                    }
-
-                    if (menuStrip != null)
-                    {
-                        foreach (ToolStripMenuItem item in menuStrip.Items)
-                        {
-                            if (item.Text.StartsWith("消息"))
-                            {
-                                if (unreadCount > 0)
-                                {
-                                    item.Text = $"消息 ({unreadCount})";
-                                    item.Font = new System.Drawing.Font(item.Font, System.Drawing.FontStyle.Bold);
-                                }
-                                else
-                                {
-                                    item.Text = "消息";
-                                    item.Font = new System.Drawing.Font(item.Font, System.Drawing.FontStyle.Regular);
-                                }
-                                break;
-                            }
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    logger?.LogWarning(ex, "更新消息菜单项未读数量时出现问题，继续运行");
-                }
-
-                // 如果启用了状态栏，也在状态栏显示
-                try
-                {
-                    if (this.Controls.ContainsKey("statusStrip1"))
-                    {
-                        var statusStrip = this.Controls["statusStrip1"] as StatusStrip;
-                        if (statusStrip != null)
-                        {
-                            // 查找或创建消息状态标签
-                            ToolStripStatusLabel messageLabel = statusStrip.Items["messageStatusLabel"] as ToolStripStatusLabel;
-                            if (messageLabel == null)
-                            {
-                                messageLabel = new ToolStripStatusLabel("messageStatusLabel");
-                                statusStrip.Items.Add(messageLabel);
-                            }
-
-                            messageLabel.Text = unreadCount > 0 ? $"未读消息: {unreadCount}" : "无未读消息";
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    logger?.LogWarning(ex, "更新状态栏未读消息数量时出现问题，继续运行");
-                }
-            }
-            catch (Exception ex)
-            {
-                logger?.LogError(ex, "更新未读消息数量UI显示时发生异常");
-            }
-        }
-
-        /// <summary>
-        /// 显示消息列表
-        /// </summary>
-        private void ShowMessageList()
-        {
-            try
-            {
-                _messageManager?.ShowMessageList();
-            }
-            catch (Exception ex)
-            {
-                logger?.LogError(ex, "显示消息列表时发生异常");
-                MessageBox.Show("打开消息列表失败: " + ex.Message, "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
 
         /// <summary>
         /// 处理重连失败事件，自动进入注销锁定状态
@@ -442,272 +226,10 @@ namespace RUINORERP.UI
         {
             base.OnFormClosing(e);
 
-            try
-            {
-                // 取消订阅消息状态变更事件
-                if (_messageManager != null)
-                {
-                    _messageManager.MessageStatusChanged -= OnMessageStatusChanged;
-
-                }
-
-                logger?.LogInformation("已成功清理消息相关资源");
-            }
-            catch (Exception ex)
-            {
-                logger?.LogError(ex, "清理消息相关资源时发生异常");
-            }
+           
         }
 
-        /// <summary>
-        /// 处理接收到的弹窗消息 - 已更新为使用MessageManager
-        /// 注意：此方法保留以兼容现有的事件订阅，但实际处理已委托给MessageManager
-        /// </summary>
-        /// <param name="packetModel">数据包模型</param>
-        /// <param name="data">消息数据</param>
-        private void OnPopupMessageReceived(RUINORERP.PacketSpec.Models.Core.PacketModel packetModel, object data)
-        {
-            try
-            {
-                logger?.LogInformation("MainForm: 收到弹窗消息，消息已由MessageManager统一处理");
-                // 此方法仅作为兼容层保留，实际消息处理已由MessageManager的SubscribeServerMessageEvents方法负责
-                // 保留此方法以避免潜在的未处理事件警告
-            }
-            catch (Exception ex)
-            {
-                logger?.LogError(ex, "处理弹窗消息时发生异常");
-            }
-        }
-
-        /// <summary>
-        /// 处理接收到的用户消息
-        /// </summary>
-        /// <param name="packetModel">数据包模型</param>
-        /// <param name="data">消息数据</param>
-        private void OnUserMessageReceived(RUINORERP.PacketSpec.Models.Core.PacketModel packetModel, object data)
-        {
-            try
-            {
-                // 确保在UI线程上处理消息
-                if (InvokeRequired)
-                {
-                    Invoke(new Action<RUINORERP.PacketSpec.Models.Core.PacketModel, object>(OnUserMessageReceived), packetModel, data);
-                    return;
-                }
-
-                // 解析消息数据
-                var messageData = data as Dictionary<string, object>;
-                if (messageData == null)
-                {
-                    // 尝试通过JSON反序列化
-                    try
-                    {
-                        messageData = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>(data.ToString());
-                    }
-                    catch { }
-                }
-
-                string message = "收到服务器消息";
-                string messageType = "Text";
-
-                // 提取消息内容和类型
-                if (messageData != null)
-                {
-                    if (messageData.ContainsKey("Message") && messageData["Message"] != null)
-                        message = messageData["Message"].ToString();
-
-                    if (messageData.ContainsKey("MessageType") && messageData["MessageType"] != null)
-                        messageType = messageData["MessageType"].ToString();
-                }
-
-                // 根据消息类型处理消息
-                switch (messageType)
-                {
-                    case "Popup":
-                        ShowPopupMessage("用户消息", message);
-                        break;
-                    default:
-                        // 对于普通文本消息，可以添加到消息列表或状态栏
-                        AddMessageToList("用户消息", message);
-                        break;
-                }
-
-                // 记录日志
-                logger?.LogInformation($"收到用户消息 - 类型: {messageType}, 内容: {message}");
-            }
-            catch (Exception ex)
-            {
-                logger?.LogError(ex, "处理用户消息时发生异常");
-            }
-        }
-
-        /// <summary>
-        /// 处理接收到的系统通知
-        /// </summary>
-        /// <param name="packetModel">数据包模型</param>
-        /// <param name="data">通知数据</param>
-        private void OnSystemNotificationReceived(RUINORERP.PacketSpec.Models.Core.PacketModel packetModel, object data)
-        {
-            try
-            {
-                // 确保在UI线程上处理通知
-                if (InvokeRequired)
-                {
-                    Invoke(new Action<RUINORERP.PacketSpec.Models.Core.PacketModel, object>(OnSystemNotificationReceived), packetModel, data);
-                    return;
-                }
-
-                // 解析通知数据
-                var notificationData = data as Dictionary<string, object>;
-                if (notificationData == null)
-                {
-                    // 尝试通过JSON反序列化
-                    try
-                    {
-                        notificationData = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>(data.ToString());
-                    }
-                    catch { }
-                }
-
-                string message = "收到系统通知";
-                string notificationType = "Info";
-
-                // 提取通知内容和类型
-                if (notificationData != null)
-                {
-                    if (notificationData.ContainsKey("Message") && notificationData["Message"] != null)
-                        message = notificationData["Message"].ToString();
-
-                    if (notificationData.ContainsKey("NotificationType") && notificationData["NotificationType"] != null)
-                        notificationType = notificationData["NotificationType"].ToString();
-                }
-
-                // 根据通知类型显示不同样式的弹窗
-                ShowSystemNotification(notificationType, message);
-
-                // 记录日志
-                logger?.LogInformation($"收到系统通知 - 类型: {notificationType}, 内容: {message}");
-            }
-            catch (Exception ex)
-            {
-                logger?.LogError(ex, "处理系统通知时发生异常");
-            }
-        }
-
-        /// <summary>
-        /// 显示弹窗消息
-        /// </summary>
-        /// <param name="title">弹窗标题</param>
-        /// <param name="message">弹窗内容</param>
-        private void ShowPopupMessage(string title, string message)
-        {
-            try
-            {
-                // 使用MessageBox显示弹窗消息
-                KryptonMessageBox.Show(message, title, Krypton.Toolkit.KryptonMessageBoxButtons.OK, Krypton.Toolkit.KryptonMessageBoxIcon.Information);
-
-                // 标记最新添加的消息为已读
-                MarkLatestMessageAsRead(title, message);
-            }
-            catch (Exception ex)
-            {
-                logger?.LogError(ex, "显示弹窗消息时发生异常");
-            }
-        }
-
-        /// <summary>
-        /// 标记最新添加的消息为已读
-        /// </summary>
-        /// <param name="title">消息标题</param>
-        /// <param name="content">消息内容</param>
-        private void MarkLatestMessageAsRead(string title, string content)
-        {
-            try
-            {
-                logger?.LogInformation($"尝试标记消息为已读，标题: {title}");
-
-                // 使用MessageManager标记消息为已读
-                _messageManager?.MarkMessageAsRead(title, content);
-
-                // 无需在此处手动更新UI，因为MessageManager会触发MessageStatusChanged事件
-                // UpdateUnreadMessageCountInUI会在事件处理中自动调用
-            }
-            catch (Exception ex)
-            {
-                logger?.LogError(ex, "标记消息为已读时发生异常");
-            }
-        }
-
-        /// <summary>
-        /// 显示系统通知
-        /// </summary>
-        /// <param name="notificationType">通知类型（Info/Warning/Error等）</param>
-        /// <param name="message">通知内容</param>
-        private void ShowSystemNotification(string notificationType, string message)
-        {
-            try
-            {
-                logger?.LogInformation($"显示系统通知，类型: {notificationType}");
-
-                // 使用MessageManager添加系统通知
-                _messageManager?.AddSystemNotification($"系统通知-{notificationType}", message);
-
-                // 无需在此处手动更新UI，因为MessageManager会触发MessageStatusChanged事件
-
-                MessageBoxIcon icon = MessageBoxIcon.Information;
-
-                // 根据通知类型设置图标
-                switch (notificationType?.ToLower() ?? "info")
-                {
-                    case "warning":
-                        icon = MessageBoxIcon.Warning;
-                        break;
-                    case "error":
-                        icon = MessageBoxIcon.Error;
-                        break;
-                    case "question":
-                        icon = MessageBoxIcon.Question;
-                        break;
-                    case "info":
-                    default:
-                        icon = MessageBoxIcon.Information;
-                        break;
-                }
-
-                // 显示通知
-                KryptonMessageBox.Show(message, "系统通知", Krypton.Toolkit.KryptonMessageBoxButtons.OK);
-
-                // 标记已显示的系统通知为已读
-                MarkLatestMessageAsRead($"系统通知-{notificationType}", message);
-            }
-            catch (Exception ex)
-            {
-                logger?.LogError(ex, "显示系统通知时发生异常");
-            }
-        }
-
-        /// <summary>
-        /// 将消息添加到消息列表
-        /// </summary>
-        /// <param name="source">消息来源</param>
-        /// <param name="content">消息内容</param>
-        private void AddMessageToList(string source, string content)
-        {
-            try
-            {
-                logger?.LogInformation($"添加消息到列表，来源: {source}");
-
-                // 使用MessageManager添加消息
-                _messageManager?.AddMessage(source, content, DateTime.Now);
-
-                // 无需在此处手动更新UI，因为MessageManager会触发MessageStatusChanged事件
-            }
-            catch (Exception ex)
-            {
-                logger?.LogError(ex, "添加消息到列表时发生异常");
-            }
-        }
-
+        
 
 
 
@@ -866,8 +388,8 @@ namespace RUINORERP.UI
 
 
         public MainForm(ILogger<MainForm> _logger, AuditLogHelper _auditLogHelper,
-            FMAuditLogHelper _fmauditLogHelper, ConfigManager configManager, NotificationService notificationService)
-        {
+            FMAuditLogHelper _fmauditLogHelper, ConfigManager configManager, EnhancedMessageManager messageManager)
+            { 
             InitializeComponent();
 
             // 通过依赖注入获取缓存管理器
@@ -880,28 +402,21 @@ namespace RUINORERP.UI
             fmauditLogHelper = _fmauditLogHelper;
             logger = _logger;
             _main = this;
-            _notificationService = notificationService;
+            // 初始化消息管理器
+            _messageManager = messageManager;
+            // 订阅消息状态变更事件，用于更新UI显示
+            _messageManager.MessageStatusChanged += OnMessageStatusChanged;
 
             #region 新的客户端通讯模块的调用
             // 通过依赖注入获取核心组件
             communicationService = Startup.ServiceProvider.GetService<ClientCommunicationService>();
 
-            // 初始化消息管理器
-            _messageManager = Startup.ServiceProvider.GetService<EnhancedMessageManager>();
-
+        
             // 订阅重连失败事件，当重连失败时自动进入注销锁定状态
             if (communicationService != null)
             {
                 communicationService.ReconnectFailed += OnReconnectFailed;
-                // 订阅服务器消息事件
-                SubscribeServerMessageEvents();
-
-                // 订阅消息状态变更事件，用于更新UI
-                if (_messageManager != null)
-                {
-                    _messageManager.MessageStatusChanged += OnMessageStatusChanged;
-                    logger?.LogInformation("已订阅消息状态变更事件");
-                }
+              
             }
             #endregion
 
@@ -1138,6 +653,26 @@ namespace RUINORERP.UI
         }
 
 
+        /// <summary>
+        /// 获取消息管理器实例
+        /// </summary>
+        /// <returns>EnhancedMessageManager实例</returns>
+        private EnhancedMessageManager GetMessageManager()
+        {
+            return _messageManager;
+        }
+        
+        /// <summary>
+        /// 处理消息状态变更事件
+        /// </summary>
+        /// <param name="sender">事件发送者</param>
+        /// <param name="message">变更状态的消息</param>
+        private void OnMessageStatusChanged(object sender, MessageData message)
+        {
+            // 在这里可以更新UI，例如状态栏的未读消息计数
+            logger?.LogDebug($"消息状态已变更: {message.Id}, 已读: {message.IsRead}");
+        }
+        
         private KryptonPage NewIMList()
         {
             #region 消息中心
@@ -1387,13 +922,8 @@ namespace RUINORERP.UI
             // 使用CacheInitializationService 只加载要缓存的表结构。缓存从服务器取
             var cacheInitializationService = Startup.GetFromFac<EntityCacheInitializationService>();
             cacheInitializationService.InitializeAllTableSchemas();
-
-
             this.Text = "企业数字化集成ERP v3.0" + "-" + Program.ERPVersion;
             //MessageBox.Show("登陆成功后，请要系统设置中添加公司基本资料。");
-
-            _notificationService?.Initialize();
-
             using (StatusBusy busy = new StatusBusy("检测系统是否为最新版本 请稍候"))
             {
                 //更新是不是可以异步？
@@ -1520,26 +1050,10 @@ namespace RUINORERP.UI
             // 在应用程序启动代码中添加
             var initializationService = Startup.GetFromFac<IDefaultRowAuthPolicyInitializationService>();
             await initializationService.InitializeDefaultPoliciesAsync();
-            // 可以选择异步初始化或同步初始化
-            //Task.Run(async () =>
-            //{
-            //    try
-            //    {
-            //        await initializationService.InitializeDefaultPoliciesAsync();
-            //    }
-            //    catch (Exception ex)
-            //    {
-            //        logger.LogError(ex, "初始化默认行级权限策略时发生错误");
-            //    }
-            //}).GetAwaiter().GetResult(); // 或者使用 await 如果是异步上下文
+            
 
 
 
-
-            System.Windows.Forms.Timer timerStatus = new System.Windows.Forms.Timer();
-            timerStatus.Interval = 1000; // 设置定时器间隔为1000毫秒（1秒）
-            timerStatus.Tick += (sender, e) => RefreshData();
-            timerStatus.Start();
 
             if (AppContext.IsSuperUser)
             {
@@ -1790,114 +1304,7 @@ namespace RUINORERP.UI
 
 
         public AuthorizeController authorizeController;
-        private void RefreshData()
-        {
-            try
-            {
 
-
-                // 更新状态栏信息
-                lblServerStatus.ToolTipText = $"Server:{UserGlobalConfig.Instance.ServerIP},Port:{UserGlobalConfig.Instance.ServerPort},Connected:{communicationService.IsConnected},FreeTime:{GetLastInputTime()}";
-
-                lblServerInfo.Text = lblServerStatus.ToolTipText;
-                if (MessageList.Count > 0)
-                {
-                    ReminderData MessageInfo = MessageList.Dequeue();
-
-                    if (MessageInfo.messageCmd == MessageCmdType.UnLockRequest)
-                    {
-                        // 对于解锁请求，显示特定的提示窗口
-                        InstructionsPrompt instructionsPrompt = new InstructionsPrompt();
-                        instructionsPrompt.ReminderData = MessageInfo;
-                        instructionsPrompt.txtSender.Text = MessageInfo.SenderEmployeeName;
-                        instructionsPrompt.txtSubject.Text = $"请求解锁【{MessageInfo.BizType.ToString()}】";
-                        instructionsPrompt.Content = $"{MessageInfo.ReminderContent}";
-                        instructionsPrompt.Show();
-                        instructionsPrompt.TopMost = true;
-                        return;
-                    }
-                    // 对于其他类型的消息，通过消息管理器处理
-                    _messageManager?.AddMessage(MessageInfo);
-
-                    if (MessageInfo.messageCmd == MessageCmdType.Notice)
-                    {
-                        InstructionsPrompt instructionsPrompt = new InstructionsPrompt();
-                        instructionsPrompt.btnAgree.Visible = false;
-                        instructionsPrompt.btnRefuse.Visible = false;
-                        instructionsPrompt.ReminderData = MessageInfo;
-                        instructionsPrompt.txtSender.Text = MessageInfo.SenderEmployeeName;
-                        instructionsPrompt.txtSubject.Text = MessageInfo.RemindSubject;
-                        instructionsPrompt.Content = MessageInfo.ReminderContent;
-                        instructionsPrompt.Show();
-                        instructionsPrompt.TopMost = true;
-                        return;
-                    }
-
-                    MessagePrompt messager = new MessagePrompt();
-
-                    if (MessageInfo.ReceiverUserIDs == null)
-                    {
-                        if (!string.IsNullOrEmpty(MessageInfo.SenderEmployeeName))
-                        {
-                            MessageInfo.SenderEmployeeName = MessageInfo.SenderEmployeeName;
-                        }
-                        else
-                        {
-                            MessageInfo.SenderEmployeeName = "系统";
-                        }
-
-                    }
-                    else
-                    {
-                        var Employee_ID = MessageInfo.ReceiverUserIDs.FirstOrDefault(c => c == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID);
-                        var userinfo = MainForm.Instance.UserInfos.FirstOrDefault(c => c.Employee_ID == Employee_ID);
-                        if (userinfo == null)
-                        {
-                            if (!string.IsNullOrEmpty(MessageInfo.SenderEmployeeName))
-                            {
-                                MessageInfo.SenderEmployeeName = MessageInfo.SenderEmployeeName;
-                            }
-                            else
-                            {
-                                MessageInfo.SenderEmployeeName = "系统";
-                            }
-                        }
-                        else
-                        {
-                            MessageInfo.SenderEmployeeName = userinfo.姓名;
-                        }
-                    }
-
-
-                    messager.txtSender.Text = MessageInfo.SenderEmployeeName;
-                    if (MessageInfo.RemindSubject.IsNotEmptyOrNull())
-                    {
-                        messager.txtSubject.Text = "【" + MessageInfo.BizType + "】" + MessageInfo.RemindSubject;
-                    }
-                    else
-                    {
-                        messager.txtSubject.Text = "请求协助";
-                    }
-                    //#region 消息命令处理器
-                    //var command = new ReceiveMessageCommand(Model.TransModel.MessageType.Text, "888");
-
-                    //command.message = MessageInfo.ReminderContent;
-                    //_dispatcher.Dispatch(command);
-                    //#endregion
-
-                    messager.Content = MessageInfo.ReminderContent;
-                    messager.ReminderData = MessageInfo;
-                    messager.Show();
-                    messager.TopMost = true;
-                    //MainForm.Instance.ShowMsg(MessageInfo.Content);
-                }
-            }
-            catch (Exception ex)
-            {
-
-
-            }
-        }
 
         private void kryptonDockableWorkspace1_ActivePageChanged(object sender, ActivePageChangedEventArgs e)
         {

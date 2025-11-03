@@ -816,7 +816,6 @@ namespace RUINORERP.UI.Common
         }
 
 
-
         void RegisterMenu(System.Windows.Forms.ToolStripItemCollection bar)
         {
             if ("admin" == "admin")

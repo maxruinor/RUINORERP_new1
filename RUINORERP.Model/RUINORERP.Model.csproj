@@ -43,6 +43,7 @@
     <Compile Remove="tb_ProductCategories.cs" />
     <Compile Remove="tb_ProductPartial.cs" />
     <Compile Remove="tb_sales_order - 副本.cs" />
+    <Compile Remove="TransModel\MessageBase.cs" />
   </ItemGroup>
 
   <ItemGroup>

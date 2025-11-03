@@ -64,7 +64,7 @@ namespace RUINORERP.UI.IM
         {
             if (messageManager == null) return;
             
-            int unreadCount = messageManager.UnreadMessageCount;
+            int unreadCount = messageManager.GetUnreadMessageCount();
             if (unreadCount <= 0) return;
             
             // 查找StatusStrip并更新或创建消息状态栏标签

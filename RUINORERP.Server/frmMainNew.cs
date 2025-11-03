@@ -155,12 +155,12 @@ namespace RUINORERP.Server
         private List<ToolStripMenuItem> _logLevelMenuItems = new List<ToolStripMenuItem>();
 
         /// <summary>
-        /// 批량 업데이트 임계값 메뉴항목 리스트
+        /// 批量更新阈值菜单项列表
         /// </summary>
         private List<ToolStripMenuItem> _batchThresholdMenuItems = new List<ToolStripMenuItem>();
         
         /// <summary>
-        /// BufferSize 메뉴항목 리스트
+        /// BufferSize菜单项列表
         /// </summary>
         private List<ToolStripMenuItem> _bufferSizeMenuItems = new List<ToolStripMenuItem>();
 
@@ -183,16 +183,16 @@ namespace RUINORERP.Server
         /// 初始化服务器信息更新定时器
         /// </summary>
         /// <summary>
-        /// 디버그 모드 버튼 클릭 이벤트
+        /// 调试模式按钮点击事件
         /// </summary>
-        /// <param name="sender">이벤트 소스</param>
+        /// <param name="sender">事件源</param>
         /// <param name="e">事件参数</param>
         private void toolStripButtonDebugMode_Click(object sender, EventArgs e)
         {
-            // 드롭다운 메뉴를 표시하거나 디버그 모드를 직접 전환
+            // 显示下拉菜单或直接切换调试模式
             if (toolStripButtonDebugMode.HasDropDownItems)
             {
-                // 이미 드롭다운 메뉴 항목이 있는 경우 메뉴 표시
+                // 如果已有下拉菜单项则显示菜单
                 toolStripButtonDebugMode.ShowDropDown();
             }
             else
@@ -312,7 +312,7 @@ namespace RUINORERP.Server
             // 初始化菜单和工具栏事件
             InitializeMenuAndToolbarEvents();
 
-            // 로그 레벨 메뉴 초기화
+            // 初始化日志级别菜单
             InitializeLogLevelMenu();
 
             // 初始化服务器监控选项卡页面（默认显示）
@@ -330,7 +330,7 @@ namespace RUINORERP.Server
             // 工具栏事件 - 这些需要在代码中额外绑定
             toolStripButtonRefreshData.Click += (s, e) => RefreshCurrentTab();
 
-            // 추가 컨트롤 이벤트가 필요한 경우 여기에 추가
+            // 如果需要额外的控件事件在此添加
         }
 
         /// <summary>
@@ -500,7 +500,7 @@ namespace RUINORERP.Server
                     // 设置全局日志级别
                     SetGlobalLogLevel(level);
                     
-                    // 메뉴 항목 선택 상태 업데이트
+                    // 更新菜单项选择状态
                     UpdateLogLevelMenuCheckState();
                     
                     // 记录日志级别变更
@@ -525,7 +525,7 @@ namespace RUINORERP.Server
                     // 设置批量更新阈值
                     SetBatchUpdateThreshold(threshold);
                     
-                    // 메뉴 항목 선택 상태 업데이트
+                    // 更新菜单项选择状态
                     UpdateBatchThresholdMenuCheckState();
                     
                     // 记录阈值变更
@@ -587,14 +587,14 @@ namespace RUINORERP.Server
                     {
                         if (int.TryParse(textBox.Text, out int threshold) && threshold > 0)
                         {
-                            // 일괄 업데이트 임계값 설정
+                            // 设置批量更新阈值
                             SetBatchUpdateThreshold(threshold);
                             
-                            // 메뉴 항목 선택 상태 업데이트
+                            // 更新菜单项选择状态
                             UpdateBatchThresholdMenuCheckState();
                             
-                            // 임계값 변경 기록
-                            PrintInfoLog($"데이터베이스 일괄 업데이트 임계값이 설정되었습니다: {threshold}");
+                            // 记录阈值变更
+                            PrintInfoLog($"数据库批量更新阈值已设置: {threshold}");
                         }
                         else
                         {
@@ -621,7 +621,7 @@ namespace RUINORERP.Server
                     // 设置BufferSize
                     SetLogBufferSize(bufferSize);
                     
-                    // 메뉴 항목 선택 상태 업데이트
+                    // 更新菜单项选择状态
                     UpdateBufferSizeMenuCheckState();
                     
                     // 记录BufferSize变更
@@ -683,14 +683,14 @@ namespace RUINORERP.Server
                     {
                         if (int.TryParse(textBox.Text, out int bufferSize) && bufferSize > 0)
                         {
-                            // BufferSize 설정
+                            // 设置BufferSize
                             SetLogBufferSize(bufferSize);
                             
-                            // 메뉴 항목 선택 상태 업데이트
+                            // 更新菜单项选择状态
                             UpdateBufferSizeMenuCheckState();
                             
-                            // BufferSize 변경 기록
-                            PrintInfoLog($"로그 BufferSize가 설정되었습니다: {bufferSize}");
+                            // 记录BufferSize变更
+                            PrintInfoLog($"日志BufferSize已设置: {bufferSize}");
                         }
                         else
                         {
@@ -706,7 +706,7 @@ namespace RUINORERP.Server
         }
 
         /// <summary>
-        /// 설정全局日志级别
+        /// 设置全局日志级别
         /// </summary>
         /// <param name="logLevel">日志级别</param>
         public static void SetGlobalLogLevel(LogLevel logLevel)
@@ -733,7 +733,7 @@ namespace RUINORERP.Server
                 // 设置DatabaseSequenceService的阈值
                 DatabaseSequenceService.SetBatchUpdateThreshold(threshold);
                 
-                // 업데이트 메뉴 항목 선택 상태
+                // 更新菜单项选择状态
                 Instance?.UpdateBatchThresholdMenuCheckState();
             }
         }
@@ -750,7 +750,7 @@ namespace RUINORERP.Server
                 // 设置Log4Net的BufferSize
                 UpdateLogBufferSize(bufferSize);
                 
-                // 업데이트 메뉴 항목 선택 상태
+                // 更新菜单项选择状态
                 Instance?.UpdateBufferSizeMenuCheckState();
             }
         }
@@ -813,7 +813,7 @@ namespace RUINORERP.Server
         /// <param name="tabName">选项卡页面名称</param>
         private void ShowTabPage(string tabName)
         {
-            // 이미 해당 탭 페이지가 있는지 확인
+            // 检查是否已存在该选项卡页面
             TabPage existingTabPage = null;
             foreach (TabPage tabPage in tabControlMain.TabPages)
             {
@@ -824,7 +824,7 @@ namespace RUINORERP.Server
                 }
             }
 
-            // 존재하지 않으면 새로운 탭 페이지 생성
+            // 如果不存在则创建新的选项卡页面
             if (existingTabPage == null)
             {
                 existingTabPage = new TabPage(tabName);
@@ -839,7 +839,7 @@ namespace RUINORERP.Server
                 }
             }
 
-            // 해당 탭 페이지로 전환
+            // 切换到该选项卡页面
             tabControlMain.SelectedTab = existingTabPage;
         }
 
@@ -864,10 +864,10 @@ namespace RUINORERP.Server
                 // 从依赖注入容器获取配置验证服务（当前使用FluentValidation）
                 var validationService = Program.ServiceProvider.GetRequiredService<RUINORERP.Business.Config.IConfigValidationService>();
 
-                // 구성 검증 실행 - 이제 FluentValidation 검증기를 사용합니다
+                // 执行配置验证 - 现在使用FluentValidation验证器
                 var validationResult = validationService.ValidateConfig(serverConfig);
 
-                // 검증 결과 확인
+                // 检查验证结果
                 if (!validationResult.IsValid)
                 {
                     PrintErrorLog($"配置验证失败: {validationResult.GetErrorMessage()}");
@@ -876,7 +876,8 @@ namespace RUINORERP.Server
                 }
 
                 // 注意：详细路径验证（环境变量解析、路径可访问性检查等）
-                // 이미 ServerConfigValidator에서 구현되어 있으므로 여기서는 추가적인 보장 로직을 유지합니다
+                // 注意：详细路径验证（环境变量解析、路径可访问性检查等）
+            // 已在ServerConfigValidator中实现，因此此处保持额外的保障逻辑
                 PrintInfoLog("正在执行额外的文件存储路径验证...");
                 IConfigManagerService configManagerService = Startup.GetFromFac<IConfigManagerService>();
                 // 环境变量路径解析（作为额外的验证保障）
@@ -886,7 +887,7 @@ namespace RUINORERP.Server
                 {
                     try
                     {
-                        // 디렉터리 존재 여부 확인, 존재하지 않으면 생성 (이것은 활성화된 작업이지만 엄격한 검증이 아닙니다)
+                        // 检查目录是否存在，如果不存在则创建（这是一个激活操作，但不是严格验证）
                         if (!Directory.Exists(resolvedPath))
                         {
                             PrintInfoLog($"文件存储目录不存在，正在创建: {resolvedPath}");
@@ -927,7 +928,7 @@ namespace RUINORERP.Server
                 // 优先使用依赖注入容器的ServerConfig单例（在Startup.cs中配置）
                 var serverConfig = Startup.GetFromFac<ServerConfig>();
 
-                // 환경 변수 해석 또는 기타 후처리가 필요한 경우 ConfigManagerService 사용
+                // 如果需要环境变量解析或其他后处理，使用ConfigManagerService
                 if (serverConfig != null && !string.IsNullOrEmpty(serverConfig.FileStoragePath))
                 {
                     var configManager = Startup.GetFromFac<RUINORERP.Business.Config.IConfigManagerService>();
@@ -969,7 +970,7 @@ namespace RUINORERP.Server
         /// </summary>
         private async Task StartServerAsync()
         {
-            // 중복 시작 방지
+            // 防止重复启动
             if (!toolStripButtonStartServer.Enabled)
             {
                 PrintInfoLog("服务器已经启动或正在启动中。请避免重复操作");
@@ -978,7 +979,7 @@ namespace RUINORERP.Server
 
             try
             {
-                // 서버 구성 확인
+                // 检查服务器配置
                 if (!CheckServerConfiguration())
                 {
                     PrintErrorLog("服务器配置检查失败，启动已取消");
@@ -986,17 +987,17 @@ namespace RUINORERP.Server
                     return;
                 }
 
-                // 즉시 시작 버튼 비활성화, 중복 클릭 방지
+                // 立即禁用启动按钮，防止重复点击
                 SetServerButtonsEnabled(false);
 
                 PrintInfoLog("服务器启动中...");
 
-                // 핵심 서비스 시작
+                // 启动核心服务
                 await StartServerCore();
 
                 PrintInfoLog("服务器启动完成");
 
-                // 구성에 따라 시작 시 캐시 로드 여부 결정
+                // 根据配置决定启动时是否加载缓存
                 var serverConfig = GetServerConfig();
                 if (serverConfig != null && serverConfig.LoadCacheOnStartup)
                 {
@@ -1009,10 +1010,10 @@ namespace RUINORERP.Server
                             // 记录开始时间用于性能分析
                             var startTime = DateTime.Now;
 
-                            // 캐시 초기화 실행
+                            // 执行缓存初始化
                             await _entityCacheInitializationService.InitializeAllCacheAsync();
 
-                            // 소요 시간 계산 및 완료 정보 기록
+                            // 计算耗时并记录完成信息
                             var elapsedTime = DateTime.Now - startTime;
                             this.BeginInvoke(new Action(() =>
                             {
@@ -1021,14 +1022,14 @@ namespace RUINORERP.Server
                         }
                         catch (Exception ex)
                         {
-                            // 더 자세한 오류 기록
+                            // 记录更详细的错误
                             this.BeginInvoke(new Action(() =>
                             {
                                 PrintErrorLog($"加载缓存数据时发生错误: {ex.Message}");
-                                // 중요한 오류의 경우 더 자세한 정보 기록
+                                // 对于重要错误记录更详细的信息
                                 PrintErrorLog($"异常类型: {ex.GetType().Name}");
 
-                                // 내부 예외가 있는 경우 기록
+                                // 如果有内部异常则记录
                                 if (ex.InnerException != null)
                                 {
                                     PrintErrorLog($"内部异常: {ex.InnerException.Message}");
@@ -1046,7 +1047,7 @@ namespace RUINORERP.Server
             {
                 PrintErrorLog($"启动服务器时发生错误: {ex.Message}");
 
-                // 오류 발생 시 시작 버튼 다시 활성화
+                // 发生错误时重新激活启动按钮
                 SetServerButtonsEnabled(true, false);
 
                 MessageBox.Show($"启动服务器时发生错误: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -1062,13 +1063,13 @@ namespace RUINORERP.Server
             {
                 PrintInfoLog("正在停止服务器...");
 
-                // ShutdownAsync 메서드 호출하여 서버 중지
+                // 调用ShutdownAsync方法停止服务器
                 await ShutdownAsync();
 
-                // 타이머 중지
+                // 停止定时器
                 _serverInfoTimer?.Stop();
 
-                // UI 상태 업데이트
+                // 更新UI状态
                 SetServerButtonsEnabled(true, false);
 
                 PrintInfoLog("服务器已停止");
@@ -1344,9 +1345,9 @@ namespace RUINORERP.Server
         }
 
         /// <summary>
-        /// 데이터 새로 고침 - 폐기됨, RefreshCurrentTab 메서드 사용 권장
+        /// 数据刷新 - 已废弃，建议使用RefreshCurrentTab方法
         /// </summary>
-        [Obsolete("RefreshCurrentTab 메서드를 대체하여 사용하세요")]
+        [Obsolete("请使用RefreshCurrentTab方法替代")]
         private void RefreshData()
         {
             try
@@ -1686,7 +1687,7 @@ namespace RUINORERP.Server
                 var sut = new ServiceCollection()
                     .AddMemoryCache()
                     .AddDistributedMemoryCache() // 为测试使用内存实现模拟，而不使用redis等
-                    .AddSingleton<ICacheAdapter, MemoryCacheAdapter>()  // 캐시 어댑터 추가
+                    .AddSingleton<ICacheAdapter, MemoryCacheAdapter>()  // 添加缓存适配器
                     .AddSingleton<ICacheAdapter>(i => new DistributedCacheAdapter(i.GetRequiredService<IDistributedCache>(), "distribute"))
                     .BuildServiceProvider();
 
@@ -1774,7 +1775,7 @@ namespace RUINORERP.Server
         {
             string key = "ruinor1234567890"; // 这应该是一个密钥
             string machineCode = regInfo.MachineCode; // 这可能是计算机的硬件信息或唯一标识符
-            // 사용자가 입력한 등록 코드 가정
+            // 假设用户输入的注册码
             string userProvidedCode = regInfo.RegistrationCode;
             bool isValid = SecurityService.ValidateRegistrationCode(userProvidedCode, key, machineCode);
             Console.WriteLine($"提供的注册码是否有效? {isValid}");
@@ -1804,14 +1805,14 @@ namespace RUINORERP.Server
             cols.Add("LicenseType");
             cols.Add("FunctionModule");
 
-            // 지정된 열만 직렬화
+            // 仅序列化指定列
             JsonSerializerSettings settings = new JsonSerializerSettings
             {
                 ContractResolver = new SelectiveContractResolver(cols),
                 Converters = new List<JsonConverter> { new Newtonsoft.Json.Converters.IsoDateTimeConverter { DateTimeFormat = "yyyy-MM-dd HH:mm:ss" } }
             };
 
-            // 객체 직렬화
+            // 对象序列化
             string jsonString = JsonConvert.SerializeObject(regInfo, settings);
             string originalInfo = this.UniqueHarewareInfo + jsonString;
             string key = "ruinor1234567890";
@@ -2098,7 +2099,7 @@ namespace RUINORERP.Server
         /// 缓存管理菜单项点击事件
         /// </summary>
         /// <param name="sender">事件源</param>
-        /// <param name="e">이벤트 매개변수</param>
+        /// <param name="e">事件参数</param>
         private void cacheManagementToolStripMenuItem_Click(object sender, EventArgs e)
         {
             ShowTabPage("缓存管理");

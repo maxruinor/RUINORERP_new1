@@ -2,57 +2,7 @@
 
 namespace RUINORERP.PacketSpec.Enums.Message
 {
-
-    /// <summary>
-    /// 消息类型枚举
-    /// </summary>
-    public enum MessageType
-    {
-        /// <summary>
-        /// 文本消息
-        /// </summary>
-        Text = 0,
-
-        /// <summary>
-        /// 提示消息
-        /// </summary>
-        Prompt = 1,
-
-        /// <summary>
-        /// 即时消息
-        /// </summary>
-        IM = 2,
-
-        /// <summary>
-        /// 业务数据
-        /// </summary>
-        BusinessData = 3,
-
-        /// <summary>
-        /// 事件消息
-        /// </summary>
-        Event = 4,
-
-        /// <summary>
-        /// 系统消息
-        /// </summary>
-        System = 5,
-
-        /// <summary>
-        /// 未知消息
-        /// </summary>
-        Unknown = 6,
-
-        /// <summary>
-        /// 通知消息
-        /// </summary>
-        Notification = 7,
-
-        /// <summary>
-        /// 用户消息
-        /// </summary>
-        UserMessage = 9
-    }
+ 
 
     /// <summary>
     /// 消息提示类型

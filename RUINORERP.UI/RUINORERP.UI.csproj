@@ -2099,6 +2099,9 @@
     <Compile Include="HelpSystem\TestControlHelpForm.Designer.cs">
       <DependentUpon>TestControlHelpForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="IM\BaseMessagePrompt.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="IM\BusinessMessagePrompt.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -2228,7 +2231,6 @@
       <DependentUpon>frmTest.cs</DependentUpon>
     </Compile>
     <Compile Include="IM\FormMoveState.cs" />
-    <Compile Include="IM\IMessage.cs" />
     <Compile Include="IM\InstructionsPrompt.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -2247,7 +2249,6 @@
     <Compile Include="IM\NotificationBox.Designer.cs">
       <DependentUpon>NotificationBox.cs</DependentUpon>
     </Compile>
-    <Compile Include="IM\NotificationService.cs" />
     <Compile Include="IM\WidgetMessager.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -2284,6 +2285,7 @@
     <Compile Include="Network\ClientCommandHandlers\ClientCommandHandlerAttribute.cs" />
     <Compile Include="Network\ClientCommandHandlers\ClientCommandHandlerModule.cs" />
     <Compile Include="Network\ClientCommandHandlers\ClientCommandHandlerRegistry.cs" />
+    <Compile Include="Network\ClientCommandHandlers\ClientCommandHandlerSystemInitializer.cs" />
     <Compile Include="Network\ClientCommandHandlers\ConfigCommandHandler.cs" />
     <Compile Include="Network\ClientCommandHandlers\IClientCommandDispatcher.cs" />
     <Compile Include="Network\ClientCommandHandlers\IClientCommandHandler.cs" />

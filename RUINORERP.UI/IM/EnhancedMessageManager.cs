@@ -1,302 +1,211 @@
-using RUINORERP.Model.TransModel;
-using RUINORERP.UI.Network;
+using RUINORERP.Business;
+using RUINORERP.Business.CommService;
+using RUINORERP.Business.Processor;
+using RUINORERP.Business.Security;
+using RUINORERP.Common.Extensions;
+using RUINORERP.Common.Helper;
+using RUINORERP.Global;
+using RUINORERP.Global.EnumExt;
+using RUINORERP.Model;
+using RUINORERP.UI.BaseForm;
+using RUINORERP.UI.Common;
 using RUINORERP.UI.Network.Services;
+using RUINORERP.UI.UserCenter;
+using SqlSugar;
 using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.Linq;
-using System.Text.RegularExpressions;
-using System.Windows.Forms;
-using System.Threading;
-using Microsoft.Extensions.Logging;
-using RUINORERP.UI.BaseForm;
-using RUINORERP.UI.Log;
 using System.ComponentModel;
-using RUINORERP.Business;
-using RUINORERP.PacketSpec.Commands;
-using Timer = System.Windows.Forms.Timer;
-using RUINORERP.Model.CommonModel;
-using RUINORERP.Global;
-using System.Reflection;
-using RUINORERP.Business.BizMapperService;
-using SqlSugar;
+using System.Data;
 using System.Drawing;
-using RUINORERP.Model;
-using RUINORERP.UI.Common;
-using System.Collections.ObjectModel;
+using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
-using RUINORERP.Global.EnumExt;
+using System.Windows.Forms;
+using RUINORERP.PacketSpec.Commands;
+using RUINORERP.PacketSpec.Enums;
+using RUINORERP.PacketSpec.Models.Requests;
+using RUINORERP.PacketSpec.Models.Responses;
+using RUINORERP.Model.TransModel;
+using RUINORERP.Business.BizMapperService;
+using Microsoft.Extensions.Logging;
+// 移除Microsoft.Extensions.Logging引用，使用应用程序中定义的ILogger
 
 namespace RUINORERP.UI.IM
 {
     /// <summary>
-    /// 增强版消息管理器 - 整合了基础消息管理功能并添加了业务单据导航和增强功能
-    /// 与客户端命令处理架构集成，通过MessageService接收消息
+    /// 增强版消息管理器
+    /// 负责处理各类消息的接收、存储、展示和交互
     /// </summary>
     public class EnhancedMessageManager : IDisposable
     {
-        // 消息列表
-        private readonly BindingList<ReminderData> _messages;
+        private readonly ILogger<EnhancedMessageManager> _logger;
+        private readonly IMessageService _messageService;
+        private readonly List<MessageData> _messageList = new List<MessageData>();
+        private readonly object _messagesLock = new object();
+        private int _unreadMessageCount = 0;
+        private Timer _messageCheckTimer;
+        private bool _disposed = false;
         
         /// <summary>
-        /// 消息列表（兼容属性）
+        /// 消息状态变更事件
         /// </summary>
-        public BindingList<ReminderData> Messages
-        {
-            get { return _messages; }
-        }
-        private readonly Timer _messageCheckTimer;
-        // 通信服务引用
-        private ClientCommunicationService _communicationService;
-        private int _unreadMessageCount;
-        private bool _disposed = false;
-        private readonly ILogger<EnhancedMessageManager> _logger;
-        private readonly NotificationService _notificationService;
-        private readonly MessageService _messageService;
-
-    
-
+        public event EventHandler<MessageData> MessageStatusChanged;
+        
+        /// <summary>
+        /// 未读消息计数变更事件
+        /// </summary>
+        public event EventHandler<int> UnreadMessageCountChanged;
+        
         /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="logger">日志记录器</param>
-        /// <param name="notificationService">通知服务</param>
         /// <param name="messageService">消息服务</param>
-        public EnhancedMessageManager(ILogger<EnhancedMessageManager> logger = null, NotificationService notificationService = null, MessageService messageService = null)
+        public EnhancedMessageManager(ILogger<EnhancedMessageManager> logger, IMessageService messageService)
         {
             _logger = logger;
-            _notificationService = notificationService;
             _messageService = messageService;
-            _messages = new BindingList<ReminderData>();
             
-            // 初始化定时器，用于检查新消息
-            _messageCheckTimer = new Timer();
-            _messageCheckTimer.Interval = 30000; // 30秒检查一次
-            _messageCheckTimer.Tick += OnMessageCheckTimerTick;
+            // 初始化只读字段
+            _messageCheckTimer = new Timer
+            {
+                Interval = 30000 // 30秒检查一次未读消息
+            };
+            _messageCheckTimer.Tick += MessageCheckTimer_Tick;
+            
+            InitializeMessageService();
             _messageCheckTimer.Start();
-            
-            // 订阅消息服务事件
-            if (_messageService != null)
-            {
-                SubscribeToMessageServiceEvents();
-            }
-            
-            _logger?.LogInformation("EnhancedMessageManager已初始化");
         }
         
-        /// <summary>
-        /// 订阅消息服务事件
-        /// </summary>
-        private void SubscribeToMessageServiceEvents()
+        private void InitializeMessageService()
         {
+            if (_messageService == null)
+                return;
+                
+            // 订阅消息服务的各种消息事件
+            _messageService.PopupMessageReceived += messageData => OnPopupMessageReceived(messageData);
+            _messageService.BusinessMessageReceived += messageData => OnBusinessMessageReceived(messageData);
+            _messageService.DepartmentMessageReceived += messageData => OnDepartmentMessageReceived(messageData);
+            _messageService.BroadcastMessageReceived += messageData => OnBroadcastMessageReceived(messageData);
+            _messageService.SystemNotificationReceived += messageData => OnSystemNotificationReceived(messageData);
+            
+            _logger?.Info("已初始化消息服务并订阅所有消息事件");
+        }
+        
+        // 初始化定时器方法已整合到构造函数中
+        
+        private void MessageCheckTimer_Tick(object sender, EventArgs e)
+        {
+            // 定期检查未读消息数量并更新UI
             try
             {
-                // 订阅所有消息相关事件
-                if (_messageService != null)
-                {
-                    _messageService.PopupMessageReceived += OnPopupMessageReceived;
-                    _messageService.UserMessageReceived += OnUserMessageReceived;
-                    _messageService.SystemNotificationReceived += OnSystemNotificationReceived;
-                    _messageService.DepartmentMessageReceived += OnDepartmentMessageReceived;
-                    _messageService.BroadcastMessageReceived += OnBroadcastMessageReceived;
-                }
+                UpdateUnreadMessageCount();
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "订阅消息服务事件失败");
+                _logger?.LogError(ex, "检查未读消息时发生错误");
             }
         }
         
         /// <summary>
-        /// 消息检查定时器触发事件
+        /// 更新未读消息计数
         /// </summary>
-        private void OnMessageCheckTimerTick(object sender, EventArgs e)
+        private void UpdateUnreadMessageCount()
         {
-            try
+            int unreadCount = GetUnreadMessageCount();
+            if (_unreadMessageCount != unreadCount)
             {
-                // 这里可以添加定期检查消息的逻辑
-                // 例如与服务器同步最新消息等
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "定时检查消息时发生异常");
+                _unreadMessageCount = unreadCount;
+                _logger?.LogDebug($"已更新未读消息计数: {unreadCount}");
+                // 未读消息计数变化时，触发未读消息计数变更事件
+                UnreadMessageCountChanged?.Invoke(this, unreadCount);
             }
         }
         
-        /// <summary>
-        /// 处理接收到的弹窗消息
-        /// </summary>
-        private void OnPopupMessageReceived(MessageReceivedEventArgs e)
+        // 处理接收到的弹窗消息
+        private void OnPopupMessageReceived(MessageData messageData)
         {
             try
             {
-                // 修复类型转换问题，确保e.Data是Dictionary类型
-                var dictionaryData = e.Data as Dictionary<string, object>;
-                var messageData = dictionaryData != null ? CreateReminderDataFromDictionary(dictionaryData) : null;
                 if (messageData != null)
                 {
-                    messageData.messageCmd = MessageCmdType.Prompt;
                     AddMessage(messageData);
                     ShowDefaultMessagePrompt(messageData);
                 }
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "处理弹窗消息时发生异常");
+                _logger?.LogError(ex, "处理弹窗消息时发生错误");
             }
         }
+        
+        // 处理接收到的业务消息
+        private void OnBusinessMessageReceived(MessageData messageData)
+        {
+            ProcessBusinessMessage(messageData);
+        }
+        
+        // 处理接收到的部门消息
+        private void OnDepartmentMessageReceived(MessageData messageData)
+        {
+            try
+            {
+                if (messageData != null)
+                {
+                    AddMessage(messageData);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "处理部门消息时发生错误");
+            }
+        }
+        
+        // 处理接收到的广播消息
+        private void OnBroadcastMessageReceived(MessageData messageData)
+        {
+            ShowDefaultMessagePrompt(messageData);
+        }
+        
+        // 处理接收到的系统通知
+        private void OnSystemNotificationReceived(MessageData messageData)
+        {
+            ShowDefaultMessagePrompt(messageData);
+        }
+        
 
-        /// <summary>
-        /// 处理接收到的用户消息
-        /// </summary>
-        private void OnUserMessageReceived(MessageReceivedEventArgs e)
-        {
-            try
-            {
-                // 修复类型转换问题，确保e.Data是Dictionary类型
-                var dictionaryData = e.Data as Dictionary<string, object>;
-                var messageData = dictionaryData != null ? CreateReminderDataFromDictionary(dictionaryData) : null;
-                if (messageData != null)
-                {
-                    messageData.messageCmd = MessageCmdType.Notice;
-                    AddMessage(messageData);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "处理用户消息时发生异常");
-            }
-        }
         
-        /// <summary>
-        /// 处理接收到的系统通知
-        /// </summary>
-        private void OnSystemNotificationReceived(MessageReceivedEventArgs e)
-        {
-            try
-            {
-                var messageData = CreateReminderDataFromDictionary(e.Data as Dictionary<string, object>);
-                if (messageData != null)
-                {
-                    messageData.messageCmd = MessageCmdType.Notice;
-                    AddMessage(messageData);
-                    ShowNoticePrompt(messageData);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "处理系统通知时发生异常");
-            }
-        }
+
         
-        /// <summary>
-        /// 处理接收到的部门消息
-        /// </summary>
-        private void OnDepartmentMessageReceived(MessageReceivedEventArgs e)
-        {
-            try
-            {
-                var messageData = CreateReminderDataFromDictionary(e.Data as Dictionary<string, object>);
-                if (messageData != null)
-                {
-                    messageData.messageCmd = MessageCmdType.Notice; // 使用Notice类型替代不存在的Department类型
-                    AddMessage(messageData);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "处理部门消息时发生异常");
-            }
-        }
-        
-        /// <summary>
-        /// 处理接收到的广播消息
-        /// </summary>
-        private void OnBroadcastMessageReceived(MessageReceivedEventArgs e)
-        {
-            try
-            {
-                var messageData = CreateReminderDataFromDictionary(e.Data as Dictionary<string, object>);
-                if (messageData != null)
-                {
-                    messageData.messageCmd = MessageCmdType.Broadcast;
-                    AddMessage(messageData);
-                    ShowDefaultMessagePrompt(messageData);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "处理广播消息时发生异常");
-            }
-        }
-        
-        /// <summary>
-        /// 从字典创建ReminderData对象
-        /// </summary>
-        private ReminderData CreateReminderDataFromDictionary(Dictionary<string, object> data)
-        {
-            try
-            {
-                // 根据实际数据结构进行适配
-                var messageData = new ReminderData
-                {
-                    Id = data.ContainsKey("Id") ? data["Id"]?.ToString() : Guid.NewGuid().ToString(), // 使用Id属性替代不存在的RemindID
-                    RemindSubject = data.ContainsKey("RemindSubject") ? data["RemindSubject"]?.ToString() : string.Empty,
-                    ReminderContent = data.ContainsKey("ReminderContent") ? data["ReminderContent"]?.ToString() : string.Empty,
-                    SenderEmployeeName = data.ContainsKey("SenderEmployeeName") ? data["SenderEmployeeName"]?.ToString() : string.Empty,
-                    CreateTime = data.ContainsKey("CreateTime") ? Convert.ToDateTime(data["CreateTime"]) : DateTime.Now,
-                    IsRead = false,
-                    BizType = data.ContainsKey("BizType") ? (BizType)Enum.Parse(typeof(BizType), data["BizType"]?.ToString() ?? "无对应数据") : BizType.无对应数据,
-                    BizPrimaryKey = data.ContainsKey("BizPrimaryKey") ? Convert.ToInt64(data["BizPrimaryKey"]) : 0
-                };
-                return messageData;
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "从字典创建ReminderData对象失败");
-                return null;
-            }
-        }
-        
-        // 用于线程安全操作的锁
-        private readonly object _messagesLock = new object();
-        
-        /// <summary>
-        /// 获取未读消息数量
-        /// </summary>
+        // 获取未读消息数量
         public int GetUnreadMessageCount()
         {
             lock (_messagesLock)
             {
-                return _messages.Count(msg => !msg.IsRead);
+                return _messageList.Count(msg => !msg.IsRead);
             }
         }
-
- 
-        /// <summary>
-        /// 获取所有消息
-        /// </summary>
-        public List<ReminderData> GetAllMessages()
-        {
-            return _messages.ToList();
-        }
-        /// <summary>
-        /// 根据ID获取消息
-        /// </summary>
-        /// <param name="id">消息ID</param>
-        public ReminderData GetMessageById(string id)
+        
+        // 获取所有消息
+        public List<MessageData> GetAllMessages()
         {
             lock (_messagesLock)
             {
-                return _messages.FirstOrDefault(msg => msg.Id.ToString() == id);
+                return _messageList.ToList();
             }
         }
-
-        /// <summary>
-        /// 标记消息为已读
-        /// </summary>
-        /// <param name="id">消息ID</param>
-        public void MarkAsRead(string id)
+        
+        // 根据ID获取消息
+        public MessageData GetMessageById(long id)
+        {
+            lock (_messagesLock)
+            {
+                return _messageList.FirstOrDefault(msg => msg.Id == id);
+            }
+        }
+        
+        // 标记消息为已读
+        public void MarkAsRead(long id)
         {
             lock (_messagesLock)
             {
@@ -304,100 +213,86 @@ namespace RUINORERP.UI.IM
                 if (message != null && !message.IsRead)
                 {
                     message.IsRead = true;
-                    // ReminderData类确实有ReadTime属性，可以设置
                     message.ReadTime = DateTime.Now;
-                    
-                    // 触发消息状态变更事件
                     OnMessageStatusChanged(message);
                 }
             }
         }
-
-        /// <summary>
-        /// 标记所有消息为已读
-        /// </summary>
+        
+        // 标记所有消息为已读
         public void MarkAllAsRead()
         {
             try
             {
+                List<MessageData> updatedMessages = new List<MessageData>();
                 lock (_messagesLock)
                 {
-                    foreach (var message in _messages.Where(msg => !msg.IsRead))
+                    foreach (var message in _messageList.Where(msg => !msg.IsRead))
                     {
                         message.IsRead = true;
-                        // ReminderData类确实有ReadTime属性，可以设置
                         message.ReadTime = DateTime.Now;
-                        
-                        // 触发消息状态变更事件
-                        OnMessageStatusChanged(message);
+                        updatedMessages.Add(message);
                     }
+                }
+                
+                // 对每个更新的消息触发状态变更事件
+                foreach (var message in updatedMessages)
+                {
+                    OnMessageStatusChanged(message);
                 }
             }
             catch (Exception ex)
             {
-                _logger?.Error(ex, "将所有消息标记为已读时发生错误");
+                _logger?.LogError(ex, "将所有消息标记为已读时发生错误");
                 throw;
             }
         }
-
-        /// <summary>
-        /// 新消息接收事件
-        /// </summary>
-        public event EventHandler<ReminderData> NewMessageReceived;
-
-        /// <summary>
-        /// 消息状态变更事件
-        /// </summary>
-        public event EventHandler MessageStatusChanged;
-
-        // 保存消息到存储（模拟实现，实际项目中可能需要持久化到数据库）
-        private void SaveMessageToStorage(ReminderData message)
-        {   // 这里可以添加消息持久化逻辑
-            _logger?.LogDebug("保存消息到存储: {Title}", message.RemindSubject ?? message.Title ?? "无标题");
+        
+        // 触发消息状态变更事件
+        protected virtual void OnMessageStatusChanged(MessageData message)
+        {
+            _unreadMessageCount = GetUnreadMessageCount();
+            MessageStatusChanged?.Invoke(this, message);
         }
         
-        /// <summary>
-        /// 触发新消息接收事件
-        /// </summary>
-        private void OnNewMessageReceived(ReminderData message)
+        // 删除消息
+        public void DeleteMessage(long id)
         {
-            NewMessageReceived?.Invoke(this, message);
-        }
-
-        /// <summary>
-        /// 触发消息状态变更事件
-        /// </summary>
-        private void OnMessageStatusChanged(ReminderData message)
-        {
-            // 使用正确的事件调用方式，传递message参数
-            MessageStatusChanged?.Invoke(this, new EventArgs());
+            lock (_messagesLock)
+            {
+                var message = GetMessageById(id);
+                if (message != null)
+                {
+                    _messageList.Remove(message);
+                    // 如果删除的是未读消息，更新未读计数
+                    if (!message.IsRead)
+                    {
+                        _unreadMessageCount = Math.Max(0, _unreadMessageCount - 1);
+                    }
+                }
+            }
+            
+            // 触发状态变更事件，传递null表示消息已被删除
+            OnMessageStatusChanged(null);
         }
         
-        /// <summary>
-        /// 添加消息到列表
-        /// </summary>
-        /// <param name="message">要添加的消息对象</param>
-        public void AddMessage(ReminderData message)
+        // 添加消息
+        public void AddMessage(MessageData message)
         {
             if (message == null)
                 return;
-
+                
             lock (_messagesLock)
             {
-                // 检查是否已存在相同的消息
-                bool exists = _messages.Any(m => m.Id == message.Id);
+                bool exists = _messageList.Any(m => m.Id == message.Id);
                 if (!exists)
                 {
-                    _messages.Insert(0, message);
-                    
-                    // 如果是未读消息，增加未读计数
+                    _messageList.Insert(0, message);
+                     
                     if (!message.IsRead)
                     {
                         _unreadMessageCount++;
                     }
-                    
-                    // 触发新消息接收事件
-                    OnNewMessageReceived(message);
                 }
             }
             
@@ -405,130 +300,87 @@ namespace RUINORERP.UI.IM
             Task.Run(() => ProcessBusinessMessage(message));
         }
         
-
-        
-        /// <summary>
-        /// 标记所有消息为已读
-        /// </summary>
-        public void MarkAllMessagesAsRead()
+        // 添加消息（重载方法）
+        public void AddMessage(string content, string sender = "系统")
         {
-            foreach (var message in _messages.Where(m => !m.IsRead))
+            var message = new MessageData
             {
-                message.IsRead = true;
-            }
-            OnMessageStatusChanged();
+                Id = DateTime.Now.Ticks, // 使用时间戳作为唯一ID
+                Content = content,
+                Sender = sender,
+                CreateTime = DateTime.Now,
+                IsRead = false,
+                MessageType = MessageType.System
+            };
+            AddMessage(message);
         }
-        
-        /// <summary>
-        /// 触发消息状态变更事件
-        /// </summary>
-        protected virtual void OnMessageStatusChanged()
-        {
-            // 重新计算未读消息数量
-            _unreadMessageCount = _messages.Count(m => !m.IsRead);
-            
-            // 触发事件
-            MessageStatusChanged?.Invoke(this, EventArgs.Empty);
-        }
-        
-        /// <summary>
-        /// 释放资源
-        /// </summary>
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-        
-        /// <summary>
-        /// 释放资源的实际实现
-        /// </summary>
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!_disposed)
-            {
-                if (disposing)
-                {
-                    // 释放托管资源
-                    if (_messageCheckTimer != null)
-                    {
-                        _messageCheckTimer.Stop();
-                        _messageCheckTimer.Dispose();
-                    }
-                    
-                    // 取消订阅事件
-                    if (_messageService != null)
-                    {
-                        try
-                        {
-                            _messageService.PopupMessageReceived -= OnPopupMessageReceived;
-                            _messageService.UserMessageReceived -= OnUserMessageReceived;
-                            _messageService.SystemNotificationReceived -= OnSystemNotificationReceived;
-                            _messageService.DepartmentMessageReceived -= OnDepartmentMessageReceived;
-                            _messageService.BroadcastMessageReceived -= OnBroadcastMessageReceived;
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger?.LogError(ex, "取消订阅消息服务事件时发生异常");
-                        }
-                    }
-                }
-                
-                _disposed = true;
-            }
-        }
-        
-        // 析构函数
-        ~EnhancedMessageManager()
-        {
-            Dispose(false);
-        }
-
-        /// <summary>
-        /// 处理业务消息并支持导航到具体业务单据
-        /// </summary>
-        public void ProcessBusinessMessage(ReminderData message)
+   
+        // 处理业务消息
+        public void ProcessBusinessMessage(MessageData messageData)
         {
             try
             {
-                // 根据消息类型显示不同的提示框
-                switch (message.messageCmd)
+                _logger?.Info($"处理业务消息: {messageData.Title}");
+                
+                // 添加到消息列表
+                lock (_messagesLock)
                 {
-                    case MessageCmdType.UnLockRequest:
-                        ShowUnlockRequestPrompt(message);
+                    if (!_messageList.Any(m => m.Id == messageData.Id))
+                    {
+                        _messageList.Add(messageData);
+                        _unreadMessageCount++;
+                        OnMessageStatusChanged(messageData);
+                    }
+                }
+                
+                // 根据消息类型显示不同的提示框
+                switch (messageData.MessageType)
+                {
+                    case MessageType.UnLockRequest:
+                        ShowUnlockRequestPrompt(messageData);
                         break;
-                    case MessageCmdType.Notice:
-                        ShowNoticePrompt(message);
+                    case MessageType.Notice:
+                        ShowNoticePrompt(messageData);
                         break;
-                    case MessageCmdType.Business:
-                        ShowBusinessMessagePrompt(message);
-                        break;
-                    default:
-                        ShowDefaultMessagePrompt(message);
+                    case MessageType.Business:
+                        ShowBusinessMessagePrompt(messageData);
                         break;
                 }
-
-                // 消息已通过事件处理添加到队列，此处无需重复添加
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "处理业务消息时发生异常");
+                _logger?.LogError(ex, "处理业务消息时发生错误");
             }
         }
-
-        /// <summary>
-        /// 显示解锁请求提示
-        /// </summary>
-        private void ShowUnlockRequestPrompt(ReminderData message)
+        
+        // 处理业务消息（公开方法）
+        public void ProcessBusinessMessagePublic(MessageData message)
+        {
+            ProcessBusinessMessage(message);
+        }
+        
+        // 显示默认消息提示
+        private void ShowDefaultMessagePrompt(MessageData messageData)
         {
             try
             {
-                // 创建prompt对象而不是使用未定义的变量
-                InstructionsPrompt prompt = new InstructionsPrompt();
-                prompt.ReminderData = message;
-                prompt.Title = "解锁请求";                
+                _logger?.Info($"显示系统通知: {messageData.Title}");
                 
-                // 在UI线程上显示
+                // 添加到消息列表
+                lock (_messagesLock)
+                {
+                    if (!_messageList.Any(m => m.Id == messageData.Id))
+                    {
+                        _messageList.Add(messageData);
+                        _unreadMessageCount++;
+                        OnMessageStatusChanged(messageData);
+                    }
+                }
+                
+                // 创建消息提示窗口
+                var prompt = new MessagePrompt(messageData, this);
+                
+                // 显示提示窗口
                 if (Application.OpenForms.Count > 0)
                 {
                     Application.OpenForms[0].Invoke(new Action(() =>
@@ -540,109 +392,104 @@ namespace RUINORERP.UI.IM
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "显示解锁请求提示时发生异常");
+                _logger?.LogError(ex, "显示默认消息提示时发生错误");
             }
         }
+        
 
-        /// <summary>
-        /// 显示通知提示
-        /// </summary>
-        private void ShowNoticePrompt(ReminderData message)
+        
+        // 显示解锁请求提示
+        private void ShowUnlockRequestPrompt(MessageData message)
         {
-            var prompt = new InstructionsPrompt();
-            prompt.ReminderData = message;
-            // 使用公共属性而不是直接访问控件
-            prompt.SetSenderText(message.SenderEmployeeName ?? "系统");
-            prompt.SetSubjectText(message.RemindSubject ?? "系统通知");
-            prompt.Content = message.ReminderContent;
-            prompt.HideActionButtons(); // 隐藏操作按钮
-
-            // 在UI线程上显示
-            if (Application.OpenForms.Count > 0)
+            try
             {
-                Application.OpenForms[0].Invoke(new Action(() =>
+                var prompt = new InstructionsPrompt(message, _logger, _messageService);
+                prompt.Title = "解锁请求";
+                
+                if (Application.OpenForms.Count > 0)
                 {
-                    prompt.Show();
-                    prompt.TopMost = true;
-                }));
+                    Application.OpenForms[0].Invoke(new Action(() =>
+                    {
+                        prompt.Show();
+                        prompt.TopMost = true;
+                    }));
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "显示解锁请求提示时发生错误");
             }
         }
-
-        /// <summary>
-        /// 显示默认消息提示
-        /// </summary>
-        private void ShowDefaultMessagePrompt(ReminderData message)
+        
+        // 显示通知提示
+        private void ShowNoticePrompt(MessageData message)
         {
-            var prompt = new MessagePrompt();
-            prompt.ReminderData = message;
-            // 使用公共属性而不是直接访问控件
-            prompt.SetSenderText(message.SenderEmployeeName ?? "系统");
-
-            if (!string.IsNullOrEmpty(message.RemindSubject))
+            try
             {
-                prompt.SetSubjectText($"【{message.BizType}】{message.RemindSubject}");
-            }
-            else
-            {
-                prompt.SetSubjectText("请求协助");
-            }
-
-            prompt.Content = message.ReminderContent;
-
-            // 在UI线程上显示
-            if (Application.OpenForms.Count > 0)
-            {
-                Application.OpenForms[0].Invoke(new Action(() =>
+                var prompt = new InstructionsPrompt(message, _logger, _messageService);
+                prompt.HideActionButtons();
+                
+                if (Application.OpenForms.Count > 0)
                 {
-                    prompt.Show();
-                    prompt.TopMost = true;
-                }));
+                    Application.OpenForms[0].Invoke(new Action(() =>
+                    {
+                        prompt.Show();
+                        prompt.TopMost = true;
+                    }));
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "显示通知提示时发生错误");
             }
         }
-
-        /// <summary>
-        /// 显示业务消息提示并支持导航
-        /// </summary>
-        private void ShowBusinessMessagePrompt(ReminderData message)
+        
+        // 显示默认消息提示 - 移除重复的方法实现
+        
+        // 显示业务消息提示
+        private void ShowBusinessMessagePrompt(MessageData message)
         {
-            var prompt = new BusinessMessagePrompt();
-            prompt.ReminderData = message;
-            // 不再设置BizTypeMapper
-            // 使用公共属性而不是直接访问控件
-            prompt.SetSenderText(message.SenderEmployeeName ?? "系统");
-            prompt.SetSubjectText(message.RemindSubject ?? "业务消息");
-            prompt.Content = message.ReminderContent;
-
-            // 在UI线程上显示
-            if (Application.OpenForms.Count > 0)
+            try
             {
-                Application.OpenForms[0].Invoke(new Action(() =>
+                // 使用依赖注入获取MessagePrompt实例，而不是直接new
+                var prompt = Startup.GetFromFac<MessagePrompt>();
+                if (prompt != null)
                 {
-                    prompt.Show();
-                    prompt.TopMost = true;
-                }));
+                    prompt.MessageData = message;
+                    
+                    if (Application.OpenForms.Count > 0)
+                    {
+                        Application.OpenForms[0].Invoke(new Action(() =>
+                        {
+                            prompt.Show();
+                            prompt.TopMost = true;
+                        }));
+                    }
+                }
+                else
+                {
+                    _logger?.LogWarning("无法从依赖注入容器获取MessagePrompt实例");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "显示业务消息提示时发生错误");
             }
         }
-
-        /// <summary>
-        /// 导航到具体业务单据
-        /// </summary>
+        
+        // 导航到业务单据
         public void NavigateToBusinessDocument(BizType bizType, long bizId)
         {
             try
             {
-                // 获取业务类型对应的实体类型
                 var tableType = EntityMappingHelper.GetEntityType(bizType);
                 if (tableType == null)
                 {
-                    _logger?.LogWarning($"未找到业务类型 {bizType} 对应的实体类型");
+                    _logger?.Info($"未找到业务类型 {bizType} 对应的实体类型");
                     return;
                 }
-
-                // 获取主键字段名
+                
                 var primaryKeyName = BaseUIHelper.GetEntityPrimaryKey(tableType);
-
-                // 构建查询条件
                 var queryConditions = new List<IConditionalModel>
                 {
                     new ConditionalModel 
@@ -653,283 +500,80 @@ namespace RUINORERP.UI.IM
                         CSharpTypeName = "long" 
                     }
                 };
-
-                // 查找对应的菜单信息
+                
                 var menuInfo = FindMenuInfoForEntity(tableType.Name);
                 if (menuInfo == null)
                 {
-                    _logger?.LogWarning($"未找到实体 {tableType.Name} 对应的菜单信息");
+                    _logger?.Info($"未找到实体 {tableType.Name} 对应的菜单信息");
                     return;
                 }
-
-                // 执行菜单事件，打开业务单据
+                
                 var menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
-                var queryParameter = new RUINORERP.UI.UserCenter.QueryParameter
+                var queryParameter = new QueryParameter
                 {
                     conditionals = queryConditions,
                     tableType = tableType
                 };
-
-                // 创建实体实例
+                
                 var instance = Activator.CreateInstance(tableType);
-
-                // 执行菜单事件
                 menuPowerHelper.ExecuteEvents(menuInfo, instance, queryParameter);
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, $"导航到业务单据时发生异常: BizType={bizType}, BizId={bizId}");
+                _logger?.LogError(ex, $"导航到业务单据时发生错误: BizType={bizType}, BizId={bizId}");
             }
         }
-
-        /// <summary>
-        /// 根据实体名称查找菜单信息
-        /// </summary>
+        
+        // 查找菜单信息
         private tb_MenuInfo FindMenuInfoForEntity(string entityName)
         {
-            // 通过MainForm获取菜单列表
-            var mainForm = Application.OpenForms.Cast<Form>().FirstOrDefault(f => f is MainForm) as MainForm;
-            if (mainForm?.MenuList != null)
+            try
             {
-                return mainForm.MenuList.FirstOrDefault(m => 
-                    m.IsVisble && 
-                    m.EntityName == entityName && 
-                    m.BIBaseForm == "BaseBillEditGeneric`2");
+                // 尝试通过MenuPowerHelper获取菜单信息，避免直接依赖MainForm
+                var menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
+                if (menuPowerHelper != null)
+                {
+                    return menuPowerHelper.MenuList.FirstOrDefault(m => 
+                        m.IsVisble && 
+                        m.EntityName == entityName && 
+                        m.BIBaseForm == "BaseBillEditGeneric`2");
+                }
+                
+              
             }
-
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, $"查找实体 {entityName} 对应的菜单信息时发生错误");
+            }
             return null;
         }
-
-        /// <summary>
-        /// 显示消息列表（兼容方法）
-        /// </summary>
+        
+        // 显示消息列表
         public void ShowMessageList()
         {
             ShowEnhancedMessageList();
         }
-
-        /// <summary>
-        /// 订阅服务器消息事件（兼容方法，接收通信服务参数）
-        /// </summary>
-        public void SubscribeServerMessageEvents(ClientCommunicationService communicationService)
-        {   // 保存通信服务引用
-            _communicationService = communicationService;
-            
-            // 实现服务器消息订阅逻辑
-            if (_communicationService != null)
-            {
-                _logger?.LogInformation("开始订阅服务器消息事件");
-                
-                // 订阅服务器推送的弹窗消息
-                _communicationService.SubscribeCommand(MessageCommands.SendPopupMessage, (packet, data) =>
-                {
-                    var args = new MessageReceivedEventArgs
-                    {
-                        MessageType = "Popup",
-                        Data = data,
-                        Timestamp = DateTime.Now
-                    };
-                    OnPopupMessageReceived(args);
-                });
-                
-                // 订阅服务器推送的普通消息
-                _communicationService.SubscribeCommand(MessageCommands.SendMessageToUser, (packet, data) =>
-                {
-                    var args = new MessageReceivedEventArgs
-                    {
-                        MessageType = "User",
-                        Data = data,
-                        Timestamp = DateTime.Now
-                    };
-                    OnUserMessageReceived(args);
-                });
-                
-                // 订阅系统通知
-                _communicationService.SubscribeCommand(MessageCommands.SendSystemNotification, (packet, data) =>
-                {
-                    var args = new MessageReceivedEventArgs
-                    {
-                        MessageType = "SystemNotification",
-                        Data = data,
-                        Timestamp = DateTime.Now
-                    };
-                    OnSystemNotificationReceived(args);
-                });
-                
-                _logger?.LogInformation("已成功订阅服务器消息事件");
-            }
-        }
         
-        /// <summary>
-        /// 订阅服务器消息事件（无参数版本）
-        /// </summary>
-        public void SubscribeServerMessageEvents()
-        {   // 如果已有通信服务，则订阅消息事件
-            if (_communicationService != null)
-            {
-                SubscribeServerMessageEvents(_communicationService);
-            }
-        }
-
-        /// <summary>
-        /// 未读消息数量（兼容属性）
-        /// </summary>
-        public int UnreadMessageCount
-        {
-            get { return GetUnreadMessageCount(); }
-        }
-        
-        /// <summary>
-        /// 保存消息到存储（兼容方法，无参数版本）
-        /// </summary>
-        public void SaveMessageToStorage()
-        {
-            _logger?.LogInformation("执行消息存储操作");
-            // 可以在这里实现批量保存逻辑
-            foreach (var message in _messages.Where(m => !m.IsRead))
-            {
-                SaveMessageToStorage(message);
-            }
-        }
-
-        /// <summary>
-        /// 标记消息为已读（根据ID）
-        /// </summary>
-        /// <param name="messageId">消息ID</param>
-        public void MarkMessageAsRead(int messageId)
-        {   // 使用Id属性而不是ID属性
-            var message = _messages.FirstOrDefault(m => m.Id == messageId.ToString());
-            if (message != null)
-            {   message.IsRead = true;
-                message.ReadTime = DateTime.Now;
-                OnMessageStatusChanged();
-            }
-        }
-        
-        /// <summary>
-        /// 标记消息为已读（根据标题和内容，兼容旧版）
-        /// </summary>
-        /// <param name="title">消息标题</param>
-        /// <param name="content">消息内容</param>
-        public void MarkMessageAsRead(string title, string content)
-        {   try
-            {   lock (_messagesLock)
-                {   // 查找匹配的消息
-                    var message = _messages.FirstOrDefault(m =>
-                        (m.RemindSubject == title || m.Title == title) &&
-                        (m.ReminderContent == content || m.Content == content) &&
-                        !m.IsRead);
-                    
-                    if (message != null)
-                    {   message.IsRead = true;
-                        message.ReadTime = DateTime.Now;
-                        
-                        // 触发消息状态变更事件
-                        OnMessageStatusChanged();
-                        _logger?.LogInformation($"通过标题和内容标记消息为已读: {title}");
-                    }
-                }
-            }
-            catch (Exception ex)
-            {   _logger?.LogError(ex, "通过标题和内容标记消息为已读时发生异常");
-            }
-        }
-
-        /// <summary>
-        /// 添加系统通知
-        /// </summary>
-        /// <param name="title">通知标题</param>
-        /// <param name="content">通知内容</param>
-        /// <param name="messageType">消息类型</param>
-        public void AddSystemNotification(string title, string content, ReminderType messageType = ReminderType.Notification)
-        {
-            var notification = new ReminderData
-            {
-                Title = title,
-                Content = content,
-                MessageType = messageType,
-                CreateTime = DateTime.Now,
-                IsRead = false,
-                IsSystemMessage = true
-            };
-            AddMessage(notification);
-        }
-
-        /// <summary>
-        /// 添加消息（3参数重载，接收ReminderType类型）
-        /// </summary>
-        /// <param name="title">标题</param>
-        /// <param name="content">内容</param>
-        /// <param name="messageType">消息类型</param>
-        public void AddMessage(string title, string content, ReminderType messageType)
-        {   var message = new ReminderData
-            {   RemindSubject = title,
-                ReminderContent = content,
-                Title = title,
-                Content = content,
-                MessageType = messageType,
-                CreateTime = DateTime.Now,
-                SendTime = DateTime.Now.ToString(),
-                IsRead = false
-            };
-            AddMessage(message);
-        }
-        
-        /// <summary>
-        /// 添加消息（3参数重载，接收DateTime类型，兼容旧版）
-        /// </summary>
-        /// <param name="source">消息来源</param>
-        /// <param name="content">消息内容</param>
-        /// <param name="sendTime">发送时间</param>
-        public void AddMessage(string source, string content, DateTime sendTime)
-        {   try
-            {   // 创建ReminderData对象
-                var message = new ReminderData
-                {   SenderEmployeeName = source,
-                    ReminderContent = content,
-                    SendTime = sendTime.ToString(),
-                    RemindSubject = source,
-                    IsRead = false,
-                    messageCmd = MessageCmdType.Message,
-                    CreateTime = sendTime
-                };
-                
-                // 调用主方法
-                AddMessage(message);
-                
-                _logger?.LogInformation($"已添加文本消息，来源: {source}");
-            }
-            catch (Exception ex)
-            {   _logger?.LogError(ex, "添加文本消息到队列时发生异常");
-            }
-        }
-
-        /// <summary>
-        /// 显示增强版消息列表
-        /// </summary>
+        // 显示增强版消息列表
         public void ShowEnhancedMessageList()
         {
             try
             {
-                // 创建消息列表窗口
                 Form messageListForm = new Form
                 {
                     Text = "消息中心",
-                    Size = new System.Drawing.Size(1000, 700),
+                    Size = new Size(1000, 700),
                     StartPosition = FormStartPosition.CenterScreen,
                     Icon = SystemIcons.Information
                 };
-
-                // 获取所有消息的副本
+                
                 var messagesCopy = GetAllMessages().OrderByDescending(m => m.CreateTime).ToList();
-
-                // 创建顶部工具栏
+                
                 ToolStrip toolStrip = new ToolStrip
                 {
                     Dock = DockStyle.Top
                 };
-
-                // 创建数据网格视图
+                
                 DataGridView dataGridView = new DataGridView
                 {
                     Dock = DockStyle.Fill,
@@ -941,249 +585,257 @@ namespace RUINORERP.UI.IM
                     MultiSelect = true,
                     AllowUserToResizeRows = false
                 };
-
-                // 添加刷新按钮
-                ToolStripButton refreshButton = new ToolStripButton("刷新", null, (s, e) => RefreshMessageList(dataGridView));
-                refreshButton.ToolTipText = "刷新消息列表";
-                toolStrip.Items.Add(refreshButton);
-
-                // 添加分隔符
-                toolStrip.Items.Add(new ToolStripSeparator());
-
-                // 添加过滤器标签
-                ToolStripLabel filterLabel = new ToolStripLabel("显示:");
-                toolStrip.Items.Add(filterLabel);
-
-                // 添加过滤器下拉框
-                ToolStripComboBox filterComboBox = new ToolStripComboBox
-                {
-                    DropDownStyle = ComboBoxStyle.DropDownList
-                };
-                filterComboBox.Items.AddRange(new object[] { 
-                    "全部消息", 
-                    "未读消息", 
-                    "已读消息", 
-                    "业务消息", 
-                    "系统通知", 
-                    "解锁请求" 
-                });
-                filterComboBox.SelectedIndex = 0;
-                toolStrip.Items.Add(filterComboBox);
-
-                // 添加列
-                dataGridView.Columns.Add(new DataGridViewTextBoxColumn
-                { 
-                    Name = "BizType", 
-                    HeaderText = "业务类型", 
-                    DataPropertyName = "BizType", 
-                    Width = 120 
-                });
-
-                dataGridView.Columns.Add(new DataGridViewTextBoxColumn
-                { 
-                    Name = "Title", 
-                    HeaderText = "标题", 
-                    DataPropertyName = "RemindSubject", 
-                    Width = 200 
-                });
-
-                dataGridView.Columns.Add(new DataGridViewTextBoxColumn
-                { 
-                    Name = "Content", 
-                    HeaderText = "内容", 
-                    DataPropertyName = "ReminderContent", 
-                    Width = 300, 
-                    AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill 
-                });
-
-                dataGridView.Columns.Add(new DataGridViewTextBoxColumn
-                { 
-                    Name = "Sender", 
-                    HeaderText = "发送者", 
-                    DataPropertyName = "SenderEmployeeName", 
-                    Width = 100 
-                });
-
-                dataGridView.Columns.Add(new DataGridViewTextBoxColumn
-                { 
-                    Name = "Time", 
-                    HeaderText = "时间", 
-                    DataPropertyName = "CreateTime", 
-                    Width = 150 
-                });
-
-                dataGridView.Columns.Add(new DataGridViewCheckBoxColumn
-                { 
-                    Name = "IsRead", 
-                    HeaderText = "已读", 
-                    DataPropertyName = "IsRead", 
-                    Width = 50 
-                });
-
-                // 设置数据源
-                var bindingList = new BindingList<ReminderData>(messagesCopy);
-                dataGridView.DataSource = bindingList;
-
-                // 设置行样式
-                dataGridView.RowPrePaint += (s, e) =>
-                {
-                    if (e.RowIndex >= 0 && e.RowIndex < dataGridView.Rows.Count)
-                    {
-                        var row = dataGridView.Rows[e.RowIndex];
-                        if (row.DataBoundItem is ReminderData message)
-                        {
-                            // 未读消息显示为粗体
-                            if (!message.IsRead)
-                            {
-                                row.DefaultCellStyle.Font = new System.Drawing.Font(dataGridView.Font, System.Drawing.FontStyle.Bold);
-                            }
-                            else
-                            {
-                                row.DefaultCellStyle.Font = new System.Drawing.Font(dataGridView.Font, System.Drawing.FontStyle.Regular);
-                            }
-
-                            // 不同类型的消息显示不同颜色
-                            switch (message.messageCmd)
-                            {
-                                case MessageCmdType.UnLockRequest:
-                                    row.DefaultCellStyle.BackColor = System.Drawing.Color.LightYellow;
-                                    break;
-                                case MessageCmdType.Business:
-                                    row.DefaultCellStyle.BackColor = System.Drawing.Color.LightBlue;
-                                    break;
-                                case MessageCmdType.Notice:
-                                    row.DefaultCellStyle.BackColor = System.Drawing.Color.LightGreen;
-                                    break;
-                                default:
-                                    row.DefaultCellStyle.BackColor = System.Drawing.Color.White;
-                                    break;
-                            }
-                        }
-                    }
-                };
-
-                // 双击事件 - 导航到业务单据或显示详细信息
-                dataGridView.CellDoubleClick += (s, e) =>
-                {
-                    if (e.RowIndex >= 0 && e.RowIndex < dataGridView.Rows.Count)
-                    {
-                        var row = dataGridView.Rows[e.RowIndex];
-                        if (row.DataBoundItem is ReminderData message)
-                        {
-                            HandleMessageDoubleClick(message);
-                        }
-                    }
-                };
-
-                // 创建底部按钮面板
+                
+                // 添加按钮和列
+                AddToolStripButtons(toolStrip, dataGridView);
+                AddDataGridViewColumns(dataGridView);
+                
+                // 设置数据源和样式
+                SetupDataGridViewDataSource(dataGridView, messagesCopy);
+                SetupDataGridViewStyles(dataGridView);
+                
+                // 添加底部按钮
                 Panel buttonPanel = new Panel
                 {
                     Dock = DockStyle.Bottom,
                     Height = 50,
                     BorderStyle = BorderStyle.FixedSingle
                 };
-
-                // 创建标记已读按钮
-                Button markAsReadButton = new Button
-                {
-                    Text = "标记选中为已读",
-                    Location = new System.Drawing.Point(10, 10),
-                    Size = new System.Drawing.Size(120, 30)
-                };
-                markAsReadButton.Click += (sender, e) => MarkSelectedMessagesAsRead(dataGridView);
-                buttonPanel.Controls.Add(markAsReadButton);
-
-                // 创建标记全部已读按钮
-                Button markAllAsReadButton = new Button
-                {
-                    Text = "全部标记为已读",
-                    Location = new System.Drawing.Point(140, 10),
-                    Size = new System.Drawing.Size(120, 30)
-                };
-                markAllAsReadButton.Click += (sender, e) => MarkAllMessagesAsReadWithConfirmation(dataGridView);
-                buttonPanel.Controls.Add(markAllAsReadButton);
-
-                // 创建删除按钮
-                Button deleteButton = new Button
-                {
-                    Text = "删除选中",
-                    Location = new System.Drawing.Point(270, 10),
-                    Size = new System.Drawing.Size(100, 30)
-                };
-                deleteButton.Click += (sender, e) => DeleteSelectedMessages(dataGridView);
-                buttonPanel.Controls.Add(deleteButton);
-
-                // 过滤消息显示
-                filterComboBox.SelectedIndexChanged += (sender, e) =>
-                {
-                    FilterMessages(dataGridView, filterComboBox.SelectedItem.ToString(), bindingList);
-                };
-
-                // 添加控件
+                AddButtonPanelButtons(buttonPanel, dataGridView);
+                
+                // 添加控件到窗体
                 messageListForm.Controls.Add(dataGridView);
                 messageListForm.Controls.Add(buttonPanel);
                 messageListForm.Controls.Add(toolStrip);
-
-                // 显示对话框
+                
                 messageListForm.ShowDialog();
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "显示增强版消息列表时发生异常");
+                _logger?.LogError(ex, "显示消息列表时发生错误");
                 MessageBox.Show("显示消息列表时发生错误: " + ex.Message, "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-
-        /// <summary>
-        /// 处理消息双击事件
-        /// </summary>
-        private void HandleMessageDoubleClick(ReminderData message)
+        
+        // 添加工具栏按钮
+        private void AddToolStripButtons(ToolStrip toolStrip, DataGridView dataGridView)
+        {
+            ToolStripButton refreshButton = new ToolStripButton("刷新", null, (s, e) => RefreshMessageList(dataGridView));
+            refreshButton.ToolTipText = "刷新消息列表";
+            toolStrip.Items.Add(refreshButton);
+            
+            toolStrip.Items.Add(new ToolStripSeparator());
+            
+            ToolStripLabel filterLabel = new ToolStripLabel("显示:");
+            toolStrip.Items.Add(filterLabel);
+            
+            ToolStripComboBox filterComboBox = new ToolStripComboBox
+            {
+                DropDownStyle = ComboBoxStyle.DropDownList
+            };
+            filterComboBox.Items.AddRange(new object[] { 
+                "全部消息", 
+                "未读消息", 
+                "已读消息", 
+                "业务消息", 
+                "系统通知", 
+                "解锁请求" 
+            });
+            filterComboBox.SelectedIndex = 0;
+            filterComboBox.SelectedIndexChanged += (sender, e) =>
+            {
+                FilterMessages(dataGridView, filterComboBox.SelectedItem.ToString());
+            };
+            toolStrip.Items.Add(filterComboBox);
+        }
+        
+        // 添加数据网格视图列
+        private void AddDataGridViewColumns(DataGridView dataGridView)
+        {
+            dataGridView.Columns.Add(new DataGridViewTextBoxColumn
+            { 
+                Name = "BizType", 
+                HeaderText = "业务类型", 
+                DataPropertyName = "BizType", 
+                Width = 120 
+            });
+            
+            dataGridView.Columns.Add(new DataGridViewTextBoxColumn
+            { 
+                Name = "Title", 
+                HeaderText = "标题", 
+                DataPropertyName = "Title", 
+                Width = 200 
+            });
+            
+            dataGridView.Columns.Add(new DataGridViewTextBoxColumn
+            { 
+                Name = "Content", 
+                HeaderText = "内容", 
+                DataPropertyName = "Content", 
+                Width = 300, 
+                AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill 
+            });
+            
+            dataGridView.Columns.Add(new DataGridViewTextBoxColumn
+            { 
+                Name = "Sender", 
+                HeaderText = "发送者", 
+                DataPropertyName = "Sender", 
+                Width = 100 
+            });
+            
+            dataGridView.Columns.Add(new DataGridViewTextBoxColumn
+            { 
+                Name = "Time", 
+                HeaderText = "时间", 
+                DataPropertyName = "CreateTime", 
+                Width = 150 
+            });
+            
+            dataGridView.Columns.Add(new DataGridViewCheckBoxColumn
+            { 
+                Name = "IsRead", 
+                HeaderText = "已读", 
+                DataPropertyName = "IsRead", 
+                Width = 50 
+            });
+        }
+        
+        // 设置数据源
+        private void SetupDataGridViewDataSource(DataGridView dataGridView, List<MessageData> messages)
+        {
+            var bindingList = new BindingList<MessageData>(messages);
+            dataGridView.DataSource = bindingList;
+            
+            // 添加双击事件
+            dataGridView.CellDoubleClick += (s, e) =>
+            {
+                if (e.RowIndex >= 0 && e.RowIndex < dataGridView.Rows.Count)
+                {
+                    var row = dataGridView.Rows[e.RowIndex];
+                    if (row.DataBoundItem is MessageData message)
+                    {
+                        HandleMessageDoubleClick(message);
+                    }
+                }
+            };
+        }
+        
+        // 设置数据网格视图样式
+        private void SetupDataGridViewStyles(DataGridView dataGridView)
+        {
+            dataGridView.RowPrePaint += (s, e) =>
+            {
+                if (e.RowIndex >= 0 && e.RowIndex < dataGridView.Rows.Count)
+                {
+                    var row = dataGridView.Rows[e.RowIndex];
+                    if (row.DataBoundItem is MessageData message)
+                    {
+                        // 未读消息显示为粗体
+                        if (!message.IsRead)
+                        {
+                            row.DefaultCellStyle.Font = new Font(dataGridView.Font, FontStyle.Bold);
+                        }
+                        else
+                        {
+                            row.DefaultCellStyle.Font = new Font(dataGridView.Font, FontStyle.Regular);
+                        }
+                        
+                        // 不同类型的消息显示不同颜色
+                        switch (message.MessageType)
+                        {
+                            case MessageType.UnLockRequest:
+                                row.DefaultCellStyle.BackColor = Color.LightYellow;
+                                break;
+                            case MessageType.Business:
+                                row.DefaultCellStyle.BackColor = Color.LightBlue;
+                                break;
+                            case MessageType.Notice:
+                                row.DefaultCellStyle.BackColor = Color.LightGreen;
+                                break;
+                            default:
+                                row.DefaultCellStyle.BackColor = Color.White;
+                                break;
+                        }
+                    }
+                }
+            };
+        }
+        
+        // 添加底部按钮
+        private void AddButtonPanelButtons(Panel buttonPanel, DataGridView dataGridView)
+        {
+            Button markAsReadButton = new Button
+            {
+                Text = "标记选中为已读",
+                Location = new Point(10, 10),
+                Size = new Size(120, 30)
+            };
+            markAsReadButton.Click += (sender, e) => MarkSelectedMessagesAsRead(dataGridView);
+            buttonPanel.Controls.Add(markAsReadButton);
+            
+            Button markAllAsReadButton = new Button
+            {
+                Text = "全部标记为已读",
+                Location = new Point(140, 10),
+                Size = new Size(120, 30)
+            };
+            markAllAsReadButton.Click += (sender, e) => MarkAllMessagesAsReadWithConfirmation(dataGridView);
+            buttonPanel.Controls.Add(markAllAsReadButton);
+            
+            Button deleteButton = new Button
+            {
+                Text = "删除选中",
+                Location = new Point(270, 10),
+                Size = new Size(100, 30)
+            };
+            deleteButton.Click += (sender, e) => DeleteSelectedMessages(dataGridView);
+            buttonPanel.Controls.Add(deleteButton);
+        }
+        
+        // 处理消息双击事件
+        private void HandleMessageDoubleClick(MessageData message)
         {
             try
             {
-                // 如果是业务消息且有业务主键，导航到具体业务单据
-                if (message.BizType != BizType.无对应数据 && message.BizPrimaryKey > 0)
+                if (message.BizType != BizType.无对应数据 && message.BizId > 0)
                 {
-                    NavigateToBusinessDocument(message.BizType, message.BizPrimaryKey);
-                    // 标记为已读
-                    message.IsRead = true;
-                    OnMessageStatusChanged();
+                    NavigateToBusinessDocument(message.BizType, message.BizId);
+                    MarkAsRead(message.Id);
                 }
                 else
                 {
-                    // 显示消息详细信息
                     ShowMessageDetail(message);
                 }
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "处理消息双击事件时发生异常");
+                _logger?.LogError(ex, "处理消息双击事件时发生错误");
                 MessageBox.Show($"处理消息时发生错误: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-
-        /// <summary>
-        /// 显示消息详细信息
-        /// </summary>
-        private void ShowMessageDetail(ReminderData message)
+        
+        // 显示消息详情
+        private void ShowMessageDetail(MessageData message)
         {
             var detailForm = new Form
             {
                 Text = "消息详情",
-                Size = new System.Drawing.Size(600, 400),
+                Size = new Size(600, 400),
                 StartPosition = FormStartPosition.CenterParent,
                 FormBorderStyle = FormBorderStyle.FixedDialog,
                 MaximizeBox = false,
                 MinimizeBox = false
             };
-
+            
             var tableLayoutPanel = new TableLayoutPanel
             {
                 Dock = DockStyle.Fill,
                 ColumnCount = 2,
                 RowCount = 6
             };
-
+            
             tableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 100));
             tableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
             tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 30));
@@ -1192,15 +844,13 @@ namespace RUINORERP.UI.IM
             tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 30));
             tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 30));
             tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
-
-            // 添加标签和值
+            
             AddLabelValuePair(tableLayoutPanel, 0, "业务类型:", message.BizType.ToString());
-            AddLabelValuePair(tableLayoutPanel, 1, "标题:", message.RemindSubject ?? "");
-            AddLabelValuePair(tableLayoutPanel, 2, "发送者:", message.SenderEmployeeName ?? "");
+            AddLabelValuePair(tableLayoutPanel, 1, "标题:", message.Title ?? "");
+            AddLabelValuePair(tableLayoutPanel, 2, "发送者:", message.Sender ?? "");
             AddLabelValuePair(tableLayoutPanel, 3, "发送时间:", message.CreateTime.ToString());
             AddLabelValuePair(tableLayoutPanel, 4, "状态:", message.IsRead ? "已读" : "未读");
-
-            // 内容区域
+            
             var contentLabel = new Label
             {
                 Text = "内容:",
@@ -1208,24 +858,22 @@ namespace RUINORERP.UI.IM
                 Dock = DockStyle.Fill
             };
             tableLayoutPanel.Controls.Add(contentLabel, 0, 5);
-
+            
             var contentTextBox = new TextBox
             {
-                Text = message.ReminderContent ?? "",
+                Text = message.Content ?? "",
                 Multiline = true,
                 ScrollBars = ScrollBars.Vertical,
                 Dock = DockStyle.Fill,
                 ReadOnly = true
             };
             tableLayoutPanel.Controls.Add(contentTextBox, 1, 5);
-
+            
             detailForm.Controls.Add(tableLayoutPanel);
             detailForm.ShowDialog();
         }
-
-        /// <summary>
-        /// 添加标签和值对到表格布局
-        /// </summary>
+        
+        // 添加标签值对
         private void AddLabelValuePair(TableLayoutPanel panel, int row, string labelText, string valueText)
         {
             var label = new Label
@@ -1235,7 +883,7 @@ namespace RUINORERP.UI.IM
                 Dock = DockStyle.Fill
             };
             panel.Controls.Add(label, 0, row);
-
+            
             var value = new Label
             {
                 Text = valueText,
@@ -1244,56 +892,49 @@ namespace RUINORERP.UI.IM
             };
             panel.Controls.Add(value, 1, row);
         }
-
-        /// <summary>
-        /// 标记选中消息为已读
-        /// </summary>
+        
+        // 标记选中消息为已读
         private void MarkSelectedMessagesAsRead(DataGridView dataGridView)
         {
             if (dataGridView.SelectedRows.Count > 0)
             {
-                var updatedCount = 0;
-
+                int updatedCount = 0;
+                
                 foreach (DataGridViewRow row in dataGridView.SelectedRows)
                 {
-                    if (row.DataBoundItem is ReminderData message && !message.IsRead)
+                    if (row.DataBoundItem is MessageData message && !message.IsRead)
                     {
-                        message.IsRead = true;
+                        MarkAsRead(message.Id);
                         updatedCount++;
                     }
                 }
-
+                
                 if (updatedCount > 0)
                 {
                     dataGridView.Refresh();
-                    OnMessageStatusChanged();
                     MessageBox.Show($"已成功将{updatedCount}条消息标记为已读", "操作成功", 
                         MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
             }
         }
-
-        /// <summary>
-        /// 标记所有消息为已读（带确认）
-        /// </summary>
+        
+        // 标记所有消息为已读（带确认）
         private void MarkAllMessagesAsReadWithConfirmation(DataGridView dataGridView)
         {
             var result = MessageBox.Show(
                 "确定要将所有消息标记为已读吗？", "确认操作", 
                 MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-
+            
             if (result == DialogResult.Yes)
             {
-                MarkAllMessagesAsRead();
+                MarkAllAsRead();
                 dataGridView.Refresh();
                 MessageBox.Show("已成功将所有消息标记为已读", "操作成功", 
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         }
-
-        /// <summary>
-        /// 删除选中消息
-        /// </summary>
+        
+        // 删除选中消息
         private void DeleteSelectedMessages(DataGridView dataGridView)
         {
             if (dataGridView.SelectedRows.Count > 0)
@@ -1301,65 +942,102 @@ namespace RUINORERP.UI.IM
                 var result = MessageBox.Show(
                     $"确定要删除选中的{dataGridView.SelectedRows.Count}条消息吗？", "确认删除", 
                     MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-
+                
                 if (result == DialogResult.Yes)
                 {
-                    var bindingSource = dataGridView.DataSource as BindingSource;
-                    var bindingList = dataGridView.DataSource as BindingList<ReminderData>;
-
+                    var bindingList = dataGridView.DataSource as BindingList<MessageData>;
                     if (bindingList != null)
                     {
-                        // 从绑定列表中移除选中的消息
-                        var selectedMessages = new List<ReminderData>();
+                        var selectedMessages = new List<MessageData>();
                         foreach (DataGridViewRow row in dataGridView.SelectedRows)
                         {
-                            if (row.DataBoundItem is ReminderData message)
+                            if (row.DataBoundItem is MessageData message)
                             {
                                 selectedMessages.Add(message);
                             }
                         }
-
+                        
                         foreach (var message in selectedMessages)
                         {
                             bindingList.Remove(message);
+                            DeleteMessage(message.Id); // 使用DeleteMessage方法
                         }
-
+                        
                         MessageBox.Show($"已成功删除{selectedMessages.Count}条消息", "操作成功", 
                             MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
                 }
             }
         }
-
-        /// <summary>
-        /// 刷新消息列表
-        /// </summary>
+        
+        // 刷新消息列表
         private void RefreshMessageList(DataGridView dataGridView)
         {
             var messagesCopy = GetAllMessages().OrderByDescending(m => m.CreateTime).ToList();
-            var bindingList = new BindingList<ReminderData>(messagesCopy);
-            dataGridView.DataSource = bindingList;
+            dataGridView.DataSource = new BindingList<MessageData>(messagesCopy);
         }
-
-        /// <summary>
-        /// 过滤消息显示
-        /// </summary>
-        private void FilterMessages(DataGridView dataGridView, string filter, BindingList<ReminderData> bindingList)
+        
+        // 过滤消息
+        private void FilterMessages(DataGridView dataGridView, string filter)
         {
             var messagesCopy = GetAllMessages().OrderByDescending(m => m.CreateTime).ToList();
-
-            List<ReminderData> filteredMessages = filter switch
+            
+            List<MessageData> filteredMessages = filter switch
             {
                 "未读消息" => messagesCopy.Where(m => !m.IsRead).ToList(),
                 "已读消息" => messagesCopy.Where(m => m.IsRead).ToList(),
-                "业务消息" => messagesCopy.Where(m => m.messageCmd == MessageCmdType.Business).ToList(),
-                "系统通知" => messagesCopy.Where(m => m.messageCmd == MessageCmdType.Notice).ToList(),
-                "解锁请求" => messagesCopy.Where(m => m.messageCmd == MessageCmdType.UnLockRequest).ToList(),
+                "业务消息" => messagesCopy.Where(m => m.MessageType == MessageType.Business).ToList(),
+                "系统通知" => messagesCopy.Where(m => m.MessageType == MessageType.Notice).ToList(),
+                "解锁请求" => messagesCopy.Where(m => m.MessageType == MessageType.UnLockRequest).ToList(),
                 _ => messagesCopy
             };
-
-            // 应用过滤
-            dataGridView.DataSource = new BindingList<ReminderData>(filteredMessages);
+            
+            dataGridView.DataSource = new BindingList<MessageData>(filteredMessages);
+        }
+        
+        // 释放资源
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+        
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_disposed)
+            {
+                if (disposing)
+                {
+                    if (_messageCheckTimer != null)
+                    {
+                        _messageCheckTimer.Stop();
+                        _messageCheckTimer.Dispose();
+                    }
+                    
+                    if (_messageService != null)
+                    {
+                        try
+                        {
+                            _messageService.PopupMessageReceived -= OnPopupMessageReceived;
+                            _messageService.BusinessMessageReceived -= OnBusinessMessageReceived;
+                            _messageService.DepartmentMessageReceived -= OnDepartmentMessageReceived;
+                            _messageService.BroadcastMessageReceived -= OnBroadcastMessageReceived;
+                            _messageService.SystemNotificationReceived -= OnSystemNotificationReceived;
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger?.LogError(ex, "取消订阅消息服务事件时发生错误");
+                        }
+                    }
+                }
+                
+                _disposed = true;
+            }
+        }
+        
+        ~EnhancedMessageManager()
+        {
+            Dispose(false);
         }
     }
 }

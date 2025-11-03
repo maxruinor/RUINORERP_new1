@@ -90,6 +90,8 @@ namespace RUINORERP.UI.Network.DI
             services.AddSingleton<CacheClientService>();
             services.AddTransient<MessageService>();
             services.AddTransient<SimplifiedMessageService>();
+            services.AddTransient<IMessageService>(provider => provider.GetRequiredService<MessageService>());
+            services.AddScoped<EnhancedMessageManager>();
             services.AddTransient<SystemManagementService>();
             services.AddTransient<AuthenticationManagementService>();
             services.AddSingleton<FileManagementController>();

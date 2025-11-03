@@ -1,4 +1,4 @@
-﻿﻿﻿using LightTalkChatBox;
+﻿﻿using LightTalkChatBox;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -16,6 +16,7 @@ using RUINORERP.UI.ClientCmdService;
 using RUINORERP.Model.TransModel;
 using System.Threading;
 using RUINORERP.PacketSpec.Commands;
+using RUINORERP.Global.EnumExt;
 
 namespace RUINORERP.UI.IM
 {

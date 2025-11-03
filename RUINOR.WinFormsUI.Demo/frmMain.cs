@@ -1,5 +1,4 @@
-﻿using BNR;
-using RUINOR.WinFormsUI.Demo.ChkComboBoxDemo;
+﻿using RUINOR.WinFormsUI.Demo.ChkComboBoxDemo;
 using RUINOR.WinFormsUI.TileListView;
 using RUINORERP.Extensions.Redis;
 using System;
@@ -29,17 +28,7 @@ namespace RUINOR.WinFormsUI.Demo
 
         private void button1_Click(object sender, EventArgs e)
         {
-            // string  rule = "{S:P}{redis:{ORDER}/000}";//bst001
-            //  var number1 =  BNRFactory.Default.Create(rule);
-
-            //string rule2 = "{ N: ORDER / 000}";
-            string rule2 = "{redis:{S:ORDER}/{D:dd}/0000}";
-            rule2 = "{S:NO}{D:yy}{redis:{S:ORDER}{D:dd}/0000}{Hex:yyyyMMdd}";
-            // rule2 = "{S:PO}{redis:key{S:ORDER}{D:dd}/0000}";
-
-            var number2 = BNRFactory.Default.Create(rule2);
-            txtAutoCreatCode.Width = 300;
-            txtAutoCreatCode.Text = number2;
+            
         }
 
         private void button2_Click(object sender, EventArgs e)

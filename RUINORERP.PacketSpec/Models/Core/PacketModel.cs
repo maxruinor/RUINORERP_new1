@@ -10,6 +10,7 @@ using RUINORERP.PacketSpec.Commands.Authentication;
 using System.Net.Sockets;
 using RUINORERP.PacketSpec.Serialization;
 using RUINORERP.PacketSpec.Models.Responses;
+using RUINORERP.Model.TransModel;
 
 namespace RUINORERP.PacketSpec.Models.Core
 {
@@ -172,7 +173,6 @@ namespace RUINORERP.PacketSpec.Models.Core
             Extensions = new Dictionary<string, object>();
             // 初始化默认扩展属性
             SetExtension("Version", "2.0");
-            SetExtension("MessageType", MessageType.Request);
             // 移除CommandData的强制初始化，允许外部设置数据
             // CommandData = Array.Empty<byte>();
         }
@@ -255,14 +255,6 @@ namespace RUINORERP.PacketSpec.Models.Core
             set => SetExtension("Version", value);
         }
 
-        /// <summary>
-        /// 获取消息类型
-        /// </summary>
-        public MessageType MessageType
-        {
-            get => GetExtension<MessageType>("MessageType");
-            set => SetExtension("MessageType", value);
-        }
 
         #endregion
 
@@ -274,7 +266,7 @@ namespace RUINORERP.PacketSpec.Models.Core
         /// <returns>数据包信息字符串</returns>
         public override string ToString()
         {
-            return $"Packet[Id:{PacketId}, Direction:{Direction}, Flag:{Flag}, Version:{Version}, MessageType:{MessageType}]";
+            return $"Packet[Id:{PacketId}, Direction:{Direction}, Flag:{Flag}, Version:{Version}]";
         }
 
 

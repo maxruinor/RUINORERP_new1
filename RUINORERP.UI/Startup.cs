@@ -52,7 +52,6 @@ using RUINORERP.UI.IM;
 using log4net;
 using RUINORERP.Model.TransModel;
 using RUINORERP.Model.ConfigModel;
-using RUINORERP.UI.IM;
 using System.Net.Mail;
 using StackExchange.Redis;
 
@@ -351,15 +350,12 @@ namespace RUINORERP.UI
 
             // 注册通知服务相关依赖
             services.AddSingleton<SmtpClient>();
-            services.AddSingleton<INotificationSender, EmailNotificationSender>();
             // 注册数据库连接
             services.AddScoped<IDbConnection>(provider =>
             {
                 var sqlSugarClient = provider.GetRequiredService<ISqlSugarClient>();
                 return sqlSugarClient.Ado.Connection;
             });
-            // 注册通知服务
-            services.AddScoped<NotificationService>();
             // 注册增强版消息管理器
             services.AddScoped<EnhancedMessageManager>();
             
@@ -1018,7 +1014,6 @@ namespace RUINORERP.UI
         {
             // 不再需要ClientTokenStorage，使用TokenManager代替
             services.AddSingleton<SmtpClient>(new SmtpClient("your.smtp.server"));
-            services.AddTransient<INotificationSender, EmailNotificationSender>();
             #region 创建配置文件-开始
             // 配置文件所在的目录
             string configDirectory = Path.Combine(Directory.GetCurrentDirectory(), "SysConfigFiles");

@@ -47,13 +47,7 @@ namespace RUINORERP.UI.IM
             
             // 订阅消息管理器的事件
             _messageManager.NewMessageReceived += MessageManager_NewMessageReceived;
-            // 修复事件处理程序签名不匹配问题
-            _messageManager.MessageStatusChanged += (sender, e) => { 
-                // 这里可以根据需要提取ReminderData对象
-                // 由于我们没有看到MessageStatusChanged事件的完整定义，假设e中包含消息数据
-                // 或者如果MessageManager有其他方式获取最新状态，可以在这里实现
-                UpdateUnreadCount(); // 至少更新未读计数
-            };
+            _messageManager.MessageStatusChanged += MessageManager_MessageStatusChanged;
             
             // 加载现有消息
             LoadMessages();
@@ -67,8 +61,12 @@ namespace RUINORERP.UI.IM
             try
             {
                 lstMessages.Items.Clear();
+                _unreadCount = 0;
+                
+                // 从消息管理器获取所有消息
                 var messages = _messageManager.GetAllMessages();
                 
+                // 添加消息到列表
                 foreach (var message in messages)
                 {
                     AddMessageToList(message);
@@ -80,6 +78,7 @@ namespace RUINORERP.UI.IM
             {
                 // 记录错误
                 Console.WriteLine($"加载消息时发生错误: {ex.Message}");
+                MessageBox.Show("加载消息失败，请稍后重试", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -87,14 +86,14 @@ namespace RUINORERP.UI.IM
         /// 添加消息到列表
         /// </summary>
         /// <param name="message">消息对象</param>
-        private void AddMessageToList(ReminderData message)
+        private void AddMessageToList(RUINORERP.Model.TransModel.MessageData message)
         {
-            var item = new ListViewItem(message.ReminderContent);
+            var item = new ListViewItem(message.Content);
             item.SubItems.Add(message.Title ?? "无标题");
-            // 确保CreateTime对象能正确转换为字符串
-            item.SubItems.Add(message.CreateTime is DateTime dateTime ? dateTime.ToString("yyyy-MM-dd HH:mm:ss") : message.CreateTime?.ToString() ?? string.Empty);
+            // 使用SendTime作为消息时间
+            item.SubItems.Add(message.SendTime.ToString("yyyy-MM-dd HH:mm:ss"));
             item.SubItems.Add(message.IsRead ? "已读" : "未读");
-            item.SubItems.Add(message.messageCmd.ToString());
+            item.SubItems.Add(message.MessageType.ToString());
             
             // 设置未读消息的样式
             if (!message.IsRead)
@@ -114,39 +113,54 @@ namespace RUINORERP.UI.IM
         {
             _unreadCount = _messageManager.GetUnreadMessageCount();
             lblUnreadCount.Text = $"未读消息: {_unreadCount}";
-            
-            // 如果有未读消息，可以显示气泡提示
-            if (_unreadCount > 0)
-            {
-                ShowNotificationBubble();
-            }
         }
 
         /// <summary>
-        /// 显示通知气泡
+        /// 显示消息通知
         /// </summary>
-        private void ShowNotificationBubble()
+        /// <param name="message">消息对象</param>
+        private void ShowNotification(RUINORERP.Model.TransModel.MessageData message)
         {
-            // 这里可以实现气泡提示逻辑
-            // 例如使用NotifyIcon或自定义控件
-            
-            // 简单的动画效果
-            if (!_isAnimating)
+            // TODO: 实现更复杂的通知逻辑
+            // 这里仅作为示例
+            var notification = new NotifyIcon
             {
-                _isAnimating = true;
-                // 启动动画或通知
-                _notificationTimer.Start();
-            }
+                Icon = SystemIcons.Information,
+                Visible = true,
+                BalloonTipTitle = message.Title ?? "新消息",
+                BalloonTipText = message.Content,
+                BalloonTipIcon = ToolTipIcon.Info
+            };
+            
+            // 显示通知
+            notification.ShowBalloonTip(3000);
+            
+            // 点击通知事件
+            notification.MouseClick += (s, e) =>
+            {
+                // 显示消息详情
+                ShowNoticeDetail(message);
+                notification.Visible = false;
+            };
+            
+            // 定时器，用于隐藏通知
+            Timer timer = new Timer { Interval = 5000 };
+            timer.Tick += (s, e) =>
+            {
+                notification.Visible = false;
+                timer.Dispose();
+            };
+            timer.Start();
         }
 
         /// <summary>
         /// 消息管理器 - 新消息接收事件处理
         /// </summary>
-        private void MessageManager_NewMessageReceived(object sender, ReminderData message)
+        private void MessageManager_NewMessageReceived(object sender, RUINORERP.Model.TransModel.MessageData message)
         {
             if (this.InvokeRequired)
             {
-                this.Invoke(new Action<object, ReminderData>(MessageManager_NewMessageReceived), sender, message);
+                this.Invoke(new Action<object, RUINORERP.Model.TransModel.MessageData>(MessageManager_NewMessageReceived), sender, message);
                 return;
             }
             
@@ -155,37 +169,59 @@ namespace RUINORERP.UI.IM
             
             // 播放声音提示
             PlayNotificationSound();
+            
+            // 如果是未读消息，显示通知
+            if (!message.IsRead)
+            {
+                ShowNotification(message);
+            }
         }
 
         /// <summary>
         /// 消息管理器 - 消息状态变更事件处理
         /// </summary>
-        private void MessageManager_MessageStatusChanged(object sender, ReminderData message)
+        private void MessageManager_MessageStatusChanged(object sender, RUINORERP.Model.TransModel.MessageData message)
         {
             if (this.InvokeRequired)
             {
-                this.Invoke(new Action<object, ReminderData>(MessageManager_MessageStatusChanged), sender, message);
+                this.Invoke(new Action<object, RUINORERP.Model.TransModel.MessageData>(MessageManager_MessageStatusChanged), sender, message);
                 return;
             }
             
-            // 更新消息列表中的对应项
-            foreach (ListViewItem item in lstMessages.Items)
+            // 如果消息为null，通常表示消息已被删除
+            if (message == null)
             {
-                if (item.Tag.ToString() == message.Id.ToString())
+                LoadMessages(); // 重新加载整个列表以更新UI
+            }
+            else
+            {
+                // 更新消息列表中的对应项
+                bool found = false;
+                foreach (ListViewItem item in lstMessages.Items)
                 {
-                    item.SubItems[3].Text = message.IsRead ? "已读" : "未读";
-                    
-                    if (message.IsRead)
+                    if (item.Tag != null && item.Tag.ToString() == message.Id.ToString())
                     {
-                        item.ForeColor = Color.Black;
-                        item.Font = new Font(item.Font, FontStyle.Regular);
+                        found = true;
+                        item.SubItems[3].Text = message.IsRead ? "已读" : "未读";
+                        
+                        if (message.IsRead)
+                        {
+                            item.ForeColor = Color.Black;
+                            item.Font = new Font(item.Font, FontStyle.Regular);
+                        }
+                        else
+                        {
+                            item.ForeColor = Color.Red;
+                            item.Font = new Font(item.Font, FontStyle.Bold);
+                        }
+                        break;
                     }
-                    else
-                    {
-                        item.ForeColor = Color.Red;
-                        item.Font = new Font(item.Font, FontStyle.Bold);
-                    }
-                    break;
+                }
+                
+                // 如果未找到消息项，重新加载整个列表
+                if (!found)
+                {
+                    LoadMessages();
                 }
             }
             
@@ -223,20 +259,21 @@ namespace RUINORERP.UI.IM
             if (lstMessages.SelectedItems.Count > 0)
             {
                 var selectedItem = lstMessages.SelectedItems[0];
-                var messageId = Convert.ToString(selectedItem.Tag);
-                
-                // 获取消息对象
-                var message = _messageManager.GetMessageById(messageId);
-                if (message != null)
+                if (selectedItem.Tag is long messageId)
                 {
-                    // 标记为已读
-                    _messageManager.MarkAsRead(messageId);
-                    
-                    // 触发消息点击事件
-                    MessageClicked?.Invoke(this, new MessageClickedEventArgs(message));
-                    
-                    // 处理业务导航
-                    NavigateToBusiness(message);
+                    // 获取消息对象
+                    var message = _messageManager.GetMessageById(messageId);
+                    if (message != null)
+                    {
+                        // 标记为已读
+                        _messageManager.MarkAsRead(messageId);
+                        
+                        // 触发消息点击事件
+                        MessageClicked?.Invoke(this, new MessageClickedEventArgs(message));
+                        
+                        // 处理业务导航
+                        NavigateToBusiness(message);
+                    }
                 }
             }
         }
@@ -245,22 +282,22 @@ namespace RUINORERP.UI.IM
         /// 根据消息导航到业务窗体
         /// </summary>
         /// <param name="message">消息对象</param>
-        private void NavigateToBusiness(ReminderData message)
+        private void NavigateToBusiness(RUINORERP.Model.TransModel.MessageData message)
         {
             try
             {
                 // 根据消息类型和业务数据导航到相应的业务窗体
-                switch (message.messageCmd)
+                switch (message.MessageType)
                 {
-                    case MessageCmdType.Approve:
+                    case RUINORERP.Model.TransModel.MessageType.Approve:
                         // 导航到审批窗体
-                        NavigateToApprovalForm(message.BizPrimaryKey.ToString(), message.BizType.ToString());
+                        NavigateToApprovalForm(message.BizId.ToString(), message.BizType.ToString());
                         break;
-                    case MessageCmdType.Task:
+                    case RUINORERP.Model.TransModel.MessageType.Task:
                         // 导航到任务窗体
-                        NavigateToTaskForm(message.BizPrimaryKey.ToString());
+                        NavigateToTaskForm(message.BizId.ToString());
                         break;
-                    case MessageCmdType.Notice:
+                    case RUINORERP.Model.TransModel.MessageType.Notice:
                         // 显示通知详情
                         ShowNoticeDetail(message);
                         break;
@@ -295,19 +332,20 @@ namespace RUINORERP.UI.IM
         /// <summary>
         /// 显示通知详情
         /// </summary>
-        private void ShowNoticeDetail(ReminderData message)
+        private void ShowNoticeDetail(RUINORERP.Model.TransModel.MessageData message)
         {
             // TODO: 实现显示通知详情的逻辑
-            MessageBox.Show(message.ReminderContent, message.Title ?? "通知详情", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show(message.Content, message.Title ?? "通知详情", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         private void btnRefresh_Click(object sender, EventArgs e)
         {
             LoadMessages();
         }
-
+      
         private void btnbtnMarkAllRead_Click(object sender, EventArgs e)
         {
+            // 标记所有消息为已读
             _messageManager.MarkAllAsRead();
             LoadMessages(); // 重新加载以更新UI
         }
@@ -321,13 +359,13 @@ namespace RUINORERP.UI.IM
         /// <summary>
         /// 被点击的消息对象
         /// </summary>
-        public ReminderData Message { get; }
+        public RUINORERP.Model.TransModel.MessageData Message { get; }
 
         /// <summary>
         /// 初始化消息点击事件参数
         /// </summary>
         /// <param name="message">消息对象</param>
-        public MessageClickedEventArgs(ReminderData message)
+        public MessageClickedEventArgs(RUINORERP.Model.TransModel.MessageData message)
         {
             Message = message;
         }

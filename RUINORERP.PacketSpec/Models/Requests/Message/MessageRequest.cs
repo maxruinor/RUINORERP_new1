@@ -13,7 +13,7 @@ namespace RUINORERP.PacketSpec.Models.Requests.Message
         /// <summary>
         /// 命令类型
         /// </summary>
-        public MessageCmdType CommandType { get; set; }
+        public MessageType CommandType { get; set; }
 
         /// <summary>
         /// 命令数据
@@ -37,7 +37,7 @@ namespace RUINORERP.PacketSpec.Models.Requests.Message
         /// </summary>
         /// <param name="commandType">命令类型</param>
         /// <param name="data">命令数据</param>
-        public MessageRequest(MessageCmdType commandType, object data)
+        public MessageRequest(MessageType commandType, object data)
         {
             CommandType = commandType;
             Data = data;

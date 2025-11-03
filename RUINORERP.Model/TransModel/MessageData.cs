@@ -1,0 +1,340 @@
+using Newtonsoft.Json;
+using RUINORERP.Global;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace RUINORERP.Model.TransModel
+{
+    /// <summary>
+    /// 消息确认状态枚举
+    /// 表示消息的确认处理状态
+    /// </summary>
+    public enum ConfirmStatus
+    {
+        /// <summary>
+        /// 未确认
+        /// 默认状态，消息尚未被确认
+        /// </summary>
+        Unconfirmed = 0,
+        
+        /// <summary>
+        /// 已确认
+        /// 消息已被接收方确认
+        /// </summary>
+        Confirmed = 1,
+        
+        /// <summary>
+        /// 已拒绝
+        /// 消息被接收方拒绝
+        /// </summary>
+        Rejected = 2,
+        
+        /// <summary>
+        /// 处理中
+        /// 消息正在处理中
+        /// </summary>
+        Processing = 3,
+        
+        /// <summary>
+        /// 已完成
+        /// 消息相关的任务已完成
+        /// </summary>
+        Completed = 4
+    }
+    
+    /// <summary>
+    /// 消息数据模型
+    /// 替代旧的ReminderData类型，用于客户端与服务器之间的消息传递
+    /// </summary>
+    public class MessageData
+    {
+        /// <summary>
+        /// 消息ID
+        /// </summary>
+        public long Id { get; set; }
+
+        /// <summary>
+        /// 消息类型 - 使用统一的MessageType枚举
+        /// </summary>
+        public MessageType MessageType { get; set; }
+
+        /// <summary>
+        /// 发送者ID
+        /// </summary>
+        public long SenderId { get; set; }
+
+        /// <summary>
+        /// 发送者名称
+        /// </summary>
+        public string Sender { get; set; }
+
+        /// <summary>
+        /// 接收者ID列表
+        /// </summary>
+        public List<long> ReceiverIds { get; set; } = new List<long>();
+
+        /// <summary>
+        /// 消息标题
+        /// </summary>
+        public string Title { get; set; }
+
+        /// <summary>
+        /// 消息内容
+        /// </summary>
+        public string Content { get; set; }
+
+        /// <summary>
+        /// 业务类型
+        /// </summary>
+        public BizType BizType { get; set; }
+
+        /// <summary>
+        /// 业务ID
+        /// </summary>
+        public long BizId { get; set; }
+
+        /// <summary>
+        /// 业务数据
+        /// </summary>
+        public object BizData { get; set; }
+
+        /// <summary>
+        /// 发送时间
+        /// </summary>
+        public DateTime SendTime { get; set; }
+        
+        /// <summary>
+        /// 消息创建时间
+        /// 与SendTime保持同步
+        /// </summary>
+        [JsonIgnore]
+        public DateTime CreateTime 
+        { 
+            get => SendTime; 
+            set => SendTime = value; 
+        }
+        
+        /// <summary>
+        /// 接收者ID的别名
+        /// 为保持API兼容性保留
+        /// </summary>
+        [JsonIgnore]
+        public List<long> RecipientIds 
+        { 
+            get => ReceiverIds; 
+            set => ReceiverIds = value; 
+        }
+        
+        /// <summary>
+        /// 消息ID的整数版本
+        /// 为保持API兼容性保留
+        /// </summary>
+        [JsonIgnore]
+        public int MessageID 
+        { 
+            get => Convert.ToInt32(Id); 
+            set => Id = value; 
+        }
+
+        /// <summary>
+        /// 是否已读
+        /// </summary>
+        public bool IsRead { get; set; }
+
+        /// <summary>
+        /// 是否需要确认
+        /// </summary>
+        public bool NeedConfirmation { get; set; }
+
+        /// <summary>
+        /// 确认状态
+        /// </summary>
+        public ConfirmStatus ConfirmStatus { get; set; }
+
+        /// <summary>
+        /// 确认时间
+        /// </summary>
+        public DateTime? ConfirmTime { get; set; }
+
+        /// <summary>
+        /// 扩展数据字典
+        /// </summary>
+        public Dictionary<string, object> ExtendedData { get; set; } = new Dictionary<string, object>();
+
+        /// <summary>
+        /// 转换为请求数据字典
+        /// </summary>
+        /// <returns>包含消息所有属性的字典</returns>
+        public Dictionary<string, object> ToDictionary()
+        {
+            var data = new Dictionary<string, object>
+            {
+                { "Id", Id },
+                { "MessageType", MessageType },
+                { "SenderId", SenderId },
+                { "Sender", Sender },
+                { "ReceiverIds", ReceiverIds },
+                { "Title", Title },
+                { "Content", Content },
+                { "BizType", BizType },
+                { "BizId", BizId },
+                { "SendTime", SendTime },
+                { "IsRead", IsRead },
+                { "NeedConfirmation", NeedConfirmation },
+                { "ConfirmStatus", ConfirmStatus }
+          
+            };
+
+            if (ConfirmTime.HasValue)
+            {
+                data.Add("ConfirmTime", ConfirmTime.Value);
+            }
+
+            if (BizData != null)
+            {
+                data.Add("BizData", BizData);
+            }
+
+            // 添加扩展数据
+            foreach (var item in ExtendedData)
+            {
+                data[item.Key] = item.Value;
+            }
+
+            return data;
+        }
+
+        /// <summary>
+        /// 从字典创建MessageData对象
+        /// </summary>
+        /// <param name="data">包含消息数据的字典</param>
+        /// <returns>创建的MessageData对象</returns>
+        public static MessageData FromDictionary(Dictionary<string, object> data)
+        {
+            var messageData = new MessageData();
+
+            if (data == null)
+                return messageData;
+
+            // 基本属性赋值
+            if (data.ContainsKey("Id") && data["Id"] != null)
+                messageData.Id = Convert.ToInt64(data["Id"]);
+
+            if (data.ContainsKey("MessageType") && data["MessageType"] != null)
+            {
+                // 兼容处理：如果是字符串形式的旧枚举值，需要转换
+                string typeStr = data["MessageType"].ToString();
+                if (Enum.TryParse<MessageType>(typeStr, out var messageType))
+                {
+                    messageData.MessageType = messageType;
+                }
+                else
+                {
+                    // 尝试从数值转换
+                    if (int.TryParse(typeStr, out int typeValue))
+                    {
+                        messageData.MessageType = (MessageType)typeValue;
+                    }
+                    else
+                    {
+                        messageData.MessageType = MessageType.Unknown;
+                    }
+                }
+            }
+
+
+
+            if (data.ContainsKey("SenderId") && data["SenderId"] != null)
+                messageData.SenderId = Convert.ToInt64(data["SenderId"]);
+
+            if (data.ContainsKey("Sender") && data["Sender"] != null)
+                messageData.Sender = data["Sender"].ToString();
+
+            if (data.ContainsKey("ReceiverIds") && data["ReceiverIds"] != null)
+            {
+                var receiverIds = data["ReceiverIds"] as List<object>;
+                if (receiverIds != null)
+                    messageData.ReceiverIds = receiverIds.Select(id => Convert.ToInt64(id)).ToList();
+            }
+
+            if (data.ContainsKey("Title") && data["Title"] != null)
+                messageData.Title = data["Title"].ToString();
+
+            if (data.ContainsKey("Content") && data["Content"] != null)
+                messageData.Content = data["Content"].ToString();
+
+            if (data.ContainsKey("BizType") && data["BizType"] != null)
+                messageData.BizType = (BizType)Enum.Parse(typeof(BizType), data["BizType"].ToString());
+
+            if (data.ContainsKey("BizId") && data["BizId"] != null)
+                messageData.BizId = Convert.ToInt64(data["BizId"]);
+
+            if (data.ContainsKey("SendTime") && data["SendTime"] != null)
+                messageData.SendTime = Convert.ToDateTime(data["SendTime"]);
+
+            if (data.ContainsKey("IsRead") && data["IsRead"] != null)
+                messageData.IsRead = Convert.ToBoolean(data["IsRead"]);
+
+            if (data.ContainsKey("NeedConfirmation") && data["NeedConfirmation"] != null)
+                messageData.NeedConfirmation = Convert.ToBoolean(data["NeedConfirmation"]);
+
+            if (data.ContainsKey("ConfirmStatus") && data["ConfirmStatus"] != null)
+                messageData.ConfirmStatus = (ConfirmStatus)Enum.Parse(typeof(ConfirmStatus), data["ConfirmStatus"].ToString());
+
+            if (data.ContainsKey("ConfirmTime") && data["ConfirmTime"] != null)
+                messageData.ConfirmTime = Convert.ToDateTime(data["ConfirmTime"]);
+
+            
+
+            if (data.ContainsKey("BizData") && data["BizData"] != null)
+                messageData.BizData = data["BizData"];
+
+            // 提取扩展数据
+            var knownKeys = new HashSet<string>
+            {
+                "Id", "MessageType", "SenderId", "Sender", "ReceiverIds",
+                "Title", "Content", "BizType", "BizId", "SendTime", "IsRead",
+                "NeedConfirmation", "ConfirmStatus", "ConfirmTime", "Source", "BizData"
+            };
+
+            foreach (var key in data.Keys)
+            {
+                if (!knownKeys.Contains(key))
+                {
+                    messageData.ExtendedData[key] = data[key];
+                }
+            }
+
+            return messageData;
+        }
+        
+        /// <summary>
+        /// 标记消息为已读
+        /// 更新已读状态并设置阅读时间
+        /// </summary>
+        public void MarkAsRead()
+        {
+            IsRead = true;
+            ReadTime = DateTime.Now;
+        }
+        
+        /// <summary>
+        /// 标记消息为已处理
+        /// 更新确认状态为已完成并设置确认时间
+        /// </summary>
+        public void MarkAsProcessed()
+        {
+            ConfirmStatus = ConfirmStatus.Completed;
+            ConfirmTime = DateTime.Now;
+        }
+        
+      
+        /// <summary>
+        /// 阅读时间
+        /// 兼容UI层使用的属性
+        /// </summary>
+        [JsonIgnore]
+        public DateTime? ReadTime { get; set; }
+    }
+}

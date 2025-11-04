@@ -131,8 +131,8 @@ namespace RUINORERP.UI.Network.DI
             builder.RegisterType<SuperSocketClient>().As<ISocketClient>().SingleInstance();
             // 不再需要ClientTokenStorage，使用TokenManager代替
 
-            // 注册ClientCommunicationService
-            builder.RegisterType<ClientCommunicationService>().AsSelf().SingleInstance();
+            // 注册ClientCommunicationService并实现IMessageSender接口
+            builder.RegisterType<ClientCommunicationService>().AsSelf().As<IMessageSender>().SingleInstance();
 
             // RequestResponseManager已合并到ClientCommunicationService中，不再需要单独注册
             builder.RegisterType<ClientEventManager>().AsSelf().SingleInstance();

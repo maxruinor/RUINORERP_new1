@@ -40,12 +40,14 @@ using RUINORERP.UI.SysConfig;
 using RUINORERP.UI.Network.ClientCommandHandlers;
 using RUINORERP.Common.Helper;
 
+using RUINORERP.PacketSpec.Models.Requests.Message;
+
 namespace RUINORERP.UI.Network
 {
     /// <summary>
     /// 优化后的客户端通信与命令处理服务 - 统一网络通信核心组件
     /// </summary>
-    public class ClientCommunicationService : IDisposable
+    public class ClientCommunicationService : IDisposable, IMessageSender
     {
         /// <summary>
         /// 用户登录服务实例，用于重连后的认证恢复
@@ -1279,6 +1281,20 @@ namespace RUINORERP.UI.Network
         {
             // 直接调用异步版本并等待完成
             InitializeClientCommandDispatcherAsync().Wait();
+        }
+
+        /// <summary>
+        /// 发送带响应的命令
+        /// </summary>
+        /// <typeparam name="TResponse">响应类型</typeparam>
+        /// <param name="command">命令标识符</param>
+        /// <param name="request">请求对象</param>
+        /// <param name="cancellationToken">取消令牌</param>
+        /// <returns>响应对象</returns>
+        public async Task<TResponse> SendCommandWithResponseAsync<TResponse>(CommandId command, MessageRequest request, CancellationToken cancellationToken = default) where TResponse : class, RUINORERP.PacketSpec.Models.Responses.IResponse
+        {
+            // 委托给现有的SendCommandWithResponseAsync方法，使用正确的参数顺序
+            return await SendCommandWithResponseAsync<TResponse>(command, request, cancellationToken, 5000).ConfigureAwait(false);
         }
 
         /// <summary>

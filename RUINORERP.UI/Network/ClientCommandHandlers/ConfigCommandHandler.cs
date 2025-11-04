@@ -67,7 +67,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
 
             // 根据命令ID处理不同的配置命令
             // 使用if-else替代switch，因为FullCode是计算属性而非常量
-            if (packet.CommandId.FullCode == GeneralCommands.ConfigSync.FullCode)
+            if (packet.CommandId == GeneralCommands.ConfigSync)
             {
                 await HandleConfigSyncCommandAsync(packet);
             }

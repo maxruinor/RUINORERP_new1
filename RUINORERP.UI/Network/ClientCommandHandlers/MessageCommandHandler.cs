@@ -83,25 +83,23 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                 }
 
                 // 根据命令ID分发到对应的事件处理
-                ushort commandId = (ushort)packet.CommandId.OperationCode;
-                
-                if (commandId == (ushort)MessageCommands.SendPopupMessage)
+                if (packet.CommandId == MessageCommands.SendPopupMessage)
                 {
                     await HandlePopupMessageAsync(messageData);
                 }
-                else if (commandId == (ushort)MessageCommands.SendMessageToUser)
+                else if (packet.CommandId == MessageCommands.SendMessageToUser)
                 {
                     await HandleUserMessageAsync(messageData);
                 }
-                else if (commandId == (ushort)MessageCommands.SendMessageToDepartment)
+                else if (packet.CommandId == MessageCommands.SendMessageToDepartment)
                 {
                     await HandleDepartmentMessageAsync(messageData);
                 }
-                else if (commandId == (ushort)MessageCommands.BroadcastMessage)
+                else if (packet.CommandId == MessageCommands.BroadcastMessage)
                 {
                     await HandleBroadcastMessageAsync(messageData);
                 }
-                else if (commandId == (ushort)MessageCommands.SendSystemNotification)
+                else if (packet.CommandId == MessageCommands.SendSystemNotification)
                 {
                     await HandleSystemNotificationAsync(messageData);
                 }

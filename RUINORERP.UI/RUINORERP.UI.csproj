@@ -2320,6 +2320,7 @@
     <Compile Include="Network\Services\FileManagementController.cs" />
     <Compile Include="Network\Services\FileManagementService.cs" />
     <Compile Include="Network\Services\FileStorageInfoService.cs" />
+    <Compile Include="Network\Services\IMessageSender.cs" />
     <Compile Include="Network\Services\MessageService.cs" />
     <Compile Include="Network\Services\MessageServiceUsageExample.cs" />
     <Compile Include="Network\Services\SimplifiedMessageService.cs" />

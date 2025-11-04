@@ -19,7 +19,7 @@ namespace RUINORERP.UI.Network.Services
     /// </summary>
     public class MessageService
     {
-        private readonly ClientCommunicationService _communicationService;
+        private readonly IMessageSender _messageSender;
         private readonly ILogger<MessageService> _logger;
 
         /// <summary>
@@ -50,13 +50,13 @@ namespace RUINORERP.UI.Network.Services
         /// <summary>
         /// 构造函数
         /// </summary>
-        /// <param name="communicationService">通信服务</param>
+        /// <param name="messageSender">消息发送器</param>
         /// <param name="logger">日志记录器</param>
         public MessageService(
-            ClientCommunicationService communicationService,
+            IMessageSender messageSender,
             ILogger<MessageService> logger = null)
         {
-            _communicationService = communicationService ?? throw new ArgumentNullException(nameof(communicationService));
+            _messageSender = messageSender ?? throw new ArgumentNullException(nameof(messageSender));
             _logger = logger;
             
             // 注意：不再直接订阅通信服务，消息接收通过MessageCommandHandler集成到客户端命令处理架构
@@ -172,7 +172,7 @@ namespace RUINORERP.UI.Network.Services
                     MessageType = MessageType.Prompt.ToString()
                 };
                 
-                var response = await _communicationService.SendCommandWithResponseAsync<MessageResponse>(
+                var response = await _messageSender.SendCommandWithResponseAsync<MessageResponse>(
                     MessageCommands.SendPopupMessage, request, ct);
 
                 // 只记录关键信息和错误
@@ -219,7 +219,7 @@ namespace RUINORERP.UI.Network.Services
                     AdditionalMessage = additionalMessage,
                     MessageType = MessageType.Prompt.ToString()
                 };
-                var response = await _communicationService.SendCommandWithResponseAsync<MessageResponse>(
+                var response = await _messageSender.SendCommandWithResponseAsync<MessageResponse>(
                     MessageCommands.ForwardPopupMessage, request, cancellationToken);
 
                 // 只记录关键信息和错误
@@ -265,7 +265,7 @@ namespace RUINORERP.UI.Network.Services
                     Message = message,
                     MessageType = messageType.ToString()
                 };
-                var response = await _communicationService.SendCommandWithResponseAsync<MessageResponse>(
+                var response = await _messageSender.SendCommandWithResponseAsync<MessageResponse>(
                     MessageCommands.SendMessageToUser, request, ct);
 
                 // 只记录关键信息和错误
@@ -311,7 +311,7 @@ namespace RUINORERP.UI.Network.Services
                     Message = message,
                     MessageType = messageType.ToString()
                 };
-                var response = await _communicationService.SendCommandWithResponseAsync<MessageResponse>(
+                var response = await _messageSender.SendCommandWithResponseAsync<MessageResponse>(
                     MessageCommands.SendMessageToDepartment, request, ct);
 
                 // 只记录关键信息和错误
@@ -354,7 +354,7 @@ namespace RUINORERP.UI.Network.Services
                     Message = message,
                     MessageType = messageType.ToString()
                 };
-                var response = await _communicationService.SendCommandWithResponseAsync<MessageResponse>(
+                var response = await _messageSender.SendCommandWithResponseAsync<MessageResponse>(
                     MessageCommands.BroadcastMessage, request, ct);
 
                 // 只记录关键信息和错误
@@ -396,7 +396,7 @@ namespace RUINORERP.UI.Network.Services
                     Message = message,
                     NotificationType = notificationType.ToString()
                 };
-                var response = await _communicationService.SendCommandWithResponseAsync<MessageResponse>(
+                var response = await _messageSender.SendCommandWithResponseAsync<MessageResponse>(
                     MessageCommands.SendSystemNotification, request, ct);
 
                 // 只记录关键信息和错误

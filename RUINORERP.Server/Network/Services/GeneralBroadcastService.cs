@@ -63,7 +63,7 @@ namespace RUINORERP.Server.Network.Services
                     }
                 }
 
-                _logger.LogInformation($"请求数据广播完成 - 成功: {broadcastCount}, 失败: {failedCount}");
+                _logger.Debug($"请求数据广播完成 - 成功: {broadcastCount}, 失败: {failedCount}");
             }
             catch (Exception ex)
             {

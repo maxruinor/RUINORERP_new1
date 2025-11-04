@@ -1,12 +1,11 @@
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
 using RUINORERP.Model.ConfigModel;
 using RUINORERP.UI.Network.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace RUINORERP.UI.SysConfig
@@ -174,7 +173,7 @@ namespace RUINORERP.UI.SysConfig
         /// <typeparam name="T">配置类型</typeparam>
         /// <returns>配置对象</returns>
         private T LoadConfigFromFile<T>() where T : class, new()
-        {
+        {            
             try
             {
                 string configType = typeof(T).Name;
@@ -186,18 +185,27 @@ namespace RUINORERP.UI.SysConfig
                     return null;
                 }
                 
+                // 使用UTF8编码读取文件，确保中文能正确解析
                 string jsonContent = File.ReadAllText(configPath, Encoding.UTF8);
                 
                 // 尝试直接解析，如果失败则尝试提取Config属性
                 try
                 {
-                    return JsonSerializer.Deserialize<T>(jsonContent);
+                    return JsonConvert.DeserializeObject<T>(jsonContent);
                 }
                 catch
                 {
                     // 尝试从包含Config属性的对象中提取
-                    var wrapper = JsonSerializer.Deserialize<ConfigWrapper<T>>(jsonContent);
-                    return wrapper?.Config;
+                    try
+                    {
+                        var wrapper = JsonConvert.DeserializeObject<ConfigWrapper<T>>(jsonContent);
+                        return wrapper?.Config;
+                    }
+                    catch
+                    {
+                        _logger.LogWarning($"解析配置文件失败，尝试其他格式: {configType}");
+                        return null;
+                    }
                 }
             }
             catch (Exception ex)
@@ -213,20 +221,22 @@ namespace RUINORERP.UI.SysConfig
         /// <typeparam name="T">配置类型</typeparam>
         /// <param name="config">配置对象</param>
         private void SaveConfigToFile<T>(T config) where T : class
-        {
+        {            
             try
             {
                 string configType = typeof(T).Name;
                 string configPath = Path.Combine(_configDirectory, $"{configType}.json");
                 
-                string jsonContent = JsonSerializer.Serialize(config, new JsonSerializerOptions { WriteIndented = true });
-                 File.WriteAllText(configPath, jsonContent, Encoding.UTF8);
+                // 统一配置文件格式，使用Newtonsoft.Json确保中文能正确序列化
+                string jsonContent = JsonConvert.SerializeObject(config, Formatting.Indented);
+                File.WriteAllText(configPath, jsonContent, Encoding.UTF8);
                 
                 _logger.LogInformation($"配置 {configType} 已保存到文件");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"保存配置 {typeof(T).Name} 到文件失败");
+                throw;
             }
         }
         
@@ -239,39 +249,55 @@ namespace RUINORERP.UI.SysConfig
         {
             try
             {
+                // 确保配置数据不为空
+                if (string.IsNullOrEmpty(configJson))
+                {
+                    throw new ArgumentNullException(nameof(configJson), "配置数据不能为空");
+                }
+                
                 _logger.LogInformation($"处理配置同步: {configType}");
                 
                 switch (configType)
                 {
                     case nameof(SystemGlobalConfig):
-                        var globalConfig = JsonSerializer.Deserialize<SystemGlobalConfig>(configJson);
+                        var globalConfig = JsonConvert.DeserializeObject<SystemGlobalConfig>(configJson);
                         if (globalConfig != null)
                         {
                             UpdateGlobalConfig(globalConfig);
                         }
                         break;
                     case nameof(ServerConfig):
-                        var serverConfig = JsonSerializer.Deserialize<ServerConfig>(configJson);
+                        var serverConfig = JsonConvert.DeserializeObject<ServerConfig>(configJson);
                         if (serverConfig != null)
                         {
                             UpdateServerConfig(serverConfig);
                         }
                         break;
                     case nameof(GlobalValidatorConfig):
-                        var validatorConfig = JsonSerializer.Deserialize<GlobalValidatorConfig>(configJson);
+                        var validatorConfig = JsonConvert.DeserializeObject<GlobalValidatorConfig>(configJson);
                         if (validatorConfig != null)
                         {
                             UpdateValidatorConfig(validatorConfig);
                         }
                         break;
                     default:
-                        _logger.LogWarning($"未知的配置类型: {configType}");
+                        // 对于其他类型配置，委托给ConfigManager处理
+                        if (ConfigManager.Instance != null)
+                        {
+                            _logger.LogInformation($"将未知配置类型 {configType} 转发给ConfigManager处理");
+                            ConfigManager.Instance.HandleConfigSync(configType, configJson);
+                        }
+                        else
+                        {
+                            _logger.LogWarning($"未知的配置类型: {configType} 且ConfigManager不可用");
+                        }
                         break;
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"处理配置同步 {configType} 失败");
+                _logger.LogError(ex, $"处理配置同步 {configType} 失败: {ex.Message}");
+                throw;
             }
         }
         

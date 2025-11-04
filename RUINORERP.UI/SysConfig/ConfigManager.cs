@@ -149,8 +149,9 @@ namespace RUINORERP.UI.SysConfig
             GlobalConfigMonitor = configMonitor;
             ValidatorConfigMonitor = validatorMonitor;
             
-            // 获取配置目录（与Startup.cs中的配置路径保持一致）
-            _configDirectory = Path.Combine(Directory.GetCurrentDirectory(), "SysConfigFiles");
+            // 统一配置目录路径，使用应用程序数据目录，与OptionsMonitorConfigManager保持一致
+            _configDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "RUINORERP", "Configs");
+            Directory.CreateDirectory(_configDirectory);
             
             // 初始化配置文件监控
             InitializeFileWatchers();
@@ -205,10 +206,8 @@ namespace RUINORERP.UI.SysConfig
         /// </summary>
         private void InitializeFileWatchers()
         {
-            if (!Directory.Exists(_configDirectory))
-            {
-                Directory.CreateDirectory(_configDirectory);
-            }
+            // 确保配置目录已初始化并存在
+            EnsureConfigDirectoryExists();
             
             // 监控系统全局配置文件
             _globalConfigWatcher = CreateFileWatcher(nameof(SystemGlobalConfig));
@@ -240,8 +239,29 @@ namespace RUINORERP.UI.SysConfig
         /// <summary>
         /// 确保配置文件存在，如果不存在则创建默认配置
         /// </summary>
+        /// <summary>
+        /// 确保配置目录已初始化并存在
+        /// </summary>
+        private void EnsureConfigDirectoryExists()
+        {
+            // 如果配置目录未初始化，则设置为默认路径
+            if (string.IsNullOrEmpty(_configDirectory))
+            {
+                _configDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "RUINORERP", "Configs");
+            }
+            
+            // 确保配置目录存在
+            if (!Directory.Exists(_configDirectory))
+            {
+                Directory.CreateDirectory(_configDirectory);
+            }
+        }
+        
         public void EnsureConfigFilesExist()
         {
+            // 确保配置目录存在
+            EnsureConfigDirectoryExists();
+            
             // 确保系统全局配置文件存在
             EnsureConfigFileExists<SystemGlobalConfig>();
             
@@ -262,9 +282,8 @@ namespace RUINORERP.UI.SysConfig
             {
                 // 创建默认配置
                 var config = new T();
-                // 创建包含配置对象的字典，而不是使用动态属性名的匿名对象
-                var configObject = new { Config = config, ConfigName = configFileName };
-                string configJson = JsonConvert.SerializeObject(configObject, Formatting.Indented);
+                // 统一配置文件格式，直接序列化配置对象
+                string configJson = Newtonsoft.Json.JsonConvert.SerializeObject(config, Newtonsoft.Json.Formatting.Indented);
                 
                 // 确保目录存在
                 if (!Directory.Exists(_configDirectory))
@@ -272,8 +291,8 @@ namespace RUINORERP.UI.SysConfig
                     Directory.CreateDirectory(_configDirectory);
                 }
                 
-                // 写入配置文件
-                File.WriteAllText(configPath, configJson);
+                // 写入配置文件，使用UTF8编码确保中文能正确保存
+                File.WriteAllText(configPath, configJson, Encoding.UTF8);
             }
         }
         
@@ -305,14 +324,79 @@ namespace RUINORERP.UI.SysConfig
                 // 防止文件被锁定，等待一小段时间
                 Task.Delay(100).Wait();
                 
+                // 重新加载配置对象
+                object updatedConfig = null;
+                if (configType == ConfigType.Global)
+                {
+                    _localGlobalConfig = LoadConfigFromFile<SystemGlobalConfig>(filePath);
+                    updatedConfig = _localGlobalConfig;
+                }
+                else if (configType == ConfigType.Validator)
+                {
+                    _localValidatorConfig = LoadConfigFromFile<GlobalValidatorConfig>(filePath);
+                    updatedConfig = _localValidatorConfig;
+                }
+                
                 // 引发配置变更事件
-                ConfigChanged?.Invoke(this, new ConfigChangedEventArgs { ConfigType = configType });
+                ConfigChanged?.Invoke(this, new ConfigChangedEventArgs { ConfigType = configType, Config = updatedConfig });
             }
             catch (Exception ex)
             {
                 // 记录错误但不中断程序
                 System.Diagnostics.Debug.WriteLine($"处理配置文件变更时出错: {ex.Message}");
             }
+        }
+        
+        /// <summary>
+        /// 从文件加载配置对象
+        /// </summary>
+        /// <typeparam name="T">配置类型</typeparam>
+        /// <param name="filePath">文件路径</param>
+        /// <returns>配置对象</returns>
+        private T LoadConfigFromFile<T>(string filePath) where T : class
+        {
+            try
+            {
+                if (!File.Exists(filePath))
+                {
+                    return null;
+                }
+                
+                // 使用UTF8编码读取文件，确保中文能正确解析
+                string jsonContent = File.ReadAllText(filePath, Encoding.UTF8);
+                
+                // 尝试直接解析配置对象
+                try
+                {
+                    return Newtonsoft.Json.JsonConvert.DeserializeObject<T>(jsonContent);
+                }
+                catch
+                {
+                    // 如果直接解析失败，尝试从包装对象中提取
+                    try
+                    {
+                        var wrapper = Newtonsoft.Json.JsonConvert.DeserializeObject<Wrapper<T>>(jsonContent);
+                        return wrapper?.Config;
+                    }
+                    catch
+                    {
+                        return null;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"从文件加载配置失败: {ex.Message}");
+                return null;
+            }
+        }
+        
+        /// <summary>
+        /// 配置包装器类
+        /// </summary>
+        private class Wrapper<T> where T : class
+        {
+            public T Config { get; set; }
         }
         
         /// <summary>
@@ -507,14 +591,17 @@ namespace RUINORERP.UI.SysConfig
         {
             try
             {
-                // 创建包含配置对象的字典，而不是使用动态属性名的匿名对象
-                var configObject = new { Config = config, ConfigName = typeof(T).Name };
-                string configJson = JsonConvert.SerializeObject(configObject, Formatting.Indented);
-                File.WriteAllText(filePath, configJson);
+                // 确保配置目录已初始化并存在，防止通过Instance直接访问时配置目录为空
+                EnsureConfigDirectoryExists();
+                
+                // 统一配置文件格式，直接序列化配置对象，使用UTF8编码确保中文能正确保存
+                string configJson = Newtonsoft.Json.JsonConvert.SerializeObject(config, Newtonsoft.Json.Formatting.Indented);
+                File.WriteAllText(filePath, configJson, Encoding.UTF8);
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"保存配置文件失败: {ex.Message}");
+                throw;
             }
         }
         #endregion
@@ -627,25 +714,52 @@ namespace RUINORERP.UI.SysConfig
         /// <param name="configDataJson">配置数据JSON字符串</param>
         public void HandleConfigSync(string configType, string configDataJson)
         {
+            HandleConfigSync(configType, configDataJson, false);
+        }
+        
+        /// <summary>
+        /// 处理配置同步
+        /// </summary>
+        /// <param name="configType">配置类型</param>
+        /// <param name="configDataJson">配置数据JSON字符串</param>
+        /// <param name="forceApply">是否强制应用配置</param>
+        public void HandleConfigSync(string configType, string configDataJson, bool forceApply)
+        {
             try
             {
+                // 确保配置数据不为空
+                if (string.IsNullOrEmpty(configDataJson))
+                {
+                    throw new ArgumentNullException(nameof(configDataJson), "配置数据不能为空");
+                }
+                
                 // 根据配置类型处理不同的配置同步
                 switch (configType)
                 {
                     case nameof(SystemGlobalConfig):
                         // 同步系统全局配置
-                        var globalConfig = JsonConvert.DeserializeObject<SystemGlobalConfig>(configDataJson);
+                        var globalConfig = Newtonsoft.Json.JsonConvert.DeserializeObject<SystemGlobalConfig>(configDataJson);
                         if (globalConfig != null)
                         {
                             UpdateGlobalConfig(globalConfig);
+                            // 如果需要强制应用，执行额外的应用逻辑
+                            if (forceApply)
+                            {
+                                ApplySystemGlobalConfig(globalConfig);
+                            }
                         }
                         break;
                     case nameof(GlobalValidatorConfig):
                         // 同步验证配置
-                        var validatorConfig = JsonConvert.DeserializeObject<GlobalValidatorConfig>(configDataJson);
+                        var validatorConfig = Newtonsoft.Json.JsonConvert.DeserializeObject<GlobalValidatorConfig>(configDataJson);
                         if (validatorConfig != null)
                         {
                             UpdateValidatorConfig(validatorConfig);
+                            // 如果需要强制应用，执行额外的应用逻辑
+                            if (forceApply)
+                            {
+                                ApplyGlobalValidatorConfig(validatorConfig);
+                            }
                         }
                         break;
                     case "Database":
@@ -657,7 +771,7 @@ namespace RUINORERP.UI.SysConfig
                         try
                         {
                             // 尝试解析为键值对
-                            var configEntry = JsonConvert.DeserializeObject<Dictionary<string, string>>(configDataJson);
+                            var configEntry = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, string>>(configDataJson);
                             if (configEntry != null && configEntry.Count > 0)
                             {
                                 // 更新数据库配置缓存
@@ -670,6 +784,12 @@ namespace RUINORERP.UI.SysConfig
                                 }
                                 // 触发配置变更事件
                                 ConfigChanged?.Invoke(this, new ConfigChangedEventArgs { ConfigType = ConfigType.Database });
+                                
+                                // 如果需要强制应用，执行额外的应用逻辑
+                                if (forceApply)
+                                {
+                                    OnCustomConfigForceApplied(configType, configDataJson);
+                                }
                             }
                         }
                         catch (Exception ex)
@@ -683,6 +803,58 @@ namespace RUINORERP.UI.SysConfig
             {
                 System.Diagnostics.Debug.WriteLine($"处理配置同步失败: {ex.Message}");
                 throw;
+            }
+        }
+        
+        /// <summary>
+        /// 应用系统全局配置
+        /// </summary>
+        /// <param name="config">系统全局配置</param>
+        private void ApplySystemGlobalConfig(SystemGlobalConfig config)
+        {
+            try
+            {
+                System.Diagnostics.Debug.WriteLine("强制应用系统全局配置");
+                // 这里可以添加具体的应用逻辑
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"强制应用系统全局配置失败: {ex.Message}");
+            }
+        }
+        
+        /// <summary>
+        /// 应用全局验证器配置
+        /// </summary>
+        /// <param name="config">全局验证器配置</param>
+        private void ApplyGlobalValidatorConfig(GlobalValidatorConfig config)
+        {
+            try
+            {
+                System.Diagnostics.Debug.WriteLine("强制应用全局验证器配置");
+                // 这里可以添加具体的应用逻辑
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"强制应用全局验证器配置失败: {ex.Message}");
+            }
+        }
+        
+        /// <summary>
+        /// 当自定义配置被强制应用时触发
+        /// </summary>
+        /// <param name="configType">配置类型</param>
+        /// <param name="configJson">配置JSON数据</param>
+        private void OnCustomConfigForceApplied(string configType, string configJson)
+        {
+            try
+            {
+                System.Diagnostics.Debug.WriteLine($"强制应用自定义配置: {configType}");
+                // 这里可以添加具体的应用逻辑
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"强制应用自定义配置 {configType} 失败: {ex.Message}");
             }
         }
         #endregion
@@ -766,20 +938,25 @@ namespace RUINORERP.UI.SysConfig
     }
     
     /// <summary>
-    /// 配置变更事件参数
-    /// </summary>
-    public class ConfigChangedEventArgs : EventArgs
-    {
-        /// <summary>
-        /// 配置类型
+        /// 配置变更事件参数
         /// </summary>
-        public ConfigType ConfigType { get; set; }
-        
-        /// <summary>
-        /// 变更后的配置对象
-        /// </summary>
-        public object Config { get; set; }
-    }
+        public class ConfigChangedEventArgs : EventArgs
+        {
+            /// <summary>
+            /// 配置类型
+            /// </summary>
+            public ConfigType ConfigType { get; set; }
+            
+            /// <summary>
+            /// 变更后的配置对象
+            /// </summary>
+            public object Config { get; set; }
+            
+            /// <summary>
+            /// 是否强制应用配置
+            /// </summary>
+            public bool ForceApply { get; set; }
+        }
     
     /// <summary>
     /// 用于动态参数表中的值的数据类型

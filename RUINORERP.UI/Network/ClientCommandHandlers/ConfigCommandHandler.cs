@@ -84,65 +84,100 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
         /// </summary>
         /// <param name="packet">数据包</param>
         /// <returns>处理结果</returns>
-        private Task HandleConfigSyncCommandAsync(PacketModel packet)
+        private async Task HandleConfigSyncCommandAsync(PacketModel packet)
         {
             try
             {
                 if (packet.Request is GeneralRequest generalRequest)
                 {
-                    // 尝试将数据解析为包含ConfigType和ConfigData的对象
-                    // 匹配服务器端BroadcastConfigChange方法的数据结构
-                    dynamic requestData = generalRequest.Data;
-                    if (requestData == null)
-                    {
-                        _logger.LogWarning("配置同步命令数据为空");
-                        return Task.CompletedTask;
-                    }
-
                     string configType = null;
                     string configDataJson = null;
-                    string version = null;
                     bool forceApply = false;
+                    string version = null;
 
-                    // 根据数据类型选择不同的解析方式
-                    if (requestData is Dictionary<string, object> dictData)
+                    // 处理不同格式的请求数据
+                    if (generalRequest.Data is Dictionary<string, object> commandData)
                     {
-                        // 处理Dictionary类型数据
-                        _logger.LogDebug("处理Dictionary类型的配置数据");
-                        ParseDictionaryConfigData(dictData, ref configType, ref configDataJson, ref version, ref forceApply);
+                        // 从主命令数据中提取配置信息
+                        if (!TryExtractConfigData(commandData, out configType, out configDataJson))
+                        {
+                            // 如果主命令数据中没有找到，尝试从Parameters中提取
+                            if (commandData.TryGetValue("Parameters", out object parametersObj) && 
+                                parametersObj is Dictionary<string, object> parametersDict)
+                            {
+                                if (!TryExtractConfigData(parametersDict, out configType, out configDataJson))
+                                {
+                                    _logger.LogWarning("配置同步命令缺少必要参数 ConfigType 或 ConfigData");
+                                    return;
+                                }
+                                _logger.LogInformation($"从Parameters获取配置同步数据: {configType}");
+                            }
+                            else
+                            {
+                                _logger.LogWarning("配置同步命令缺少必要参数 ConfigType 或 ConfigData");
+                                return;
+                            }
+                        }
+                        else
+                        {
+                            _logger.LogInformation($"收到配置同步命令: {configType}");
+                        }
+
+                        // 检查是否需要强制应用配置
+                        if (commandData.TryGetValue("ForceApply", out object forceApplyObj))
+                        {
+                            bool.TryParse(forceApplyObj?.ToString(), out forceApply);
+                        }
+
+                        // 检查配置版本信息
+                        if (commandData.TryGetValue("Version", out object versionObj))
+                        {
+                            version = versionObj.ToString();
+                            _logger.LogInformation($"配置版本: {version}");
+                        }
                     }
                     else
                     {
-                        // 尝试从动态对象中提取配置类型和数据
-                        try
+                        // 尝试使用原有的解析方式作为备用
+                        dynamic requestData = generalRequest.Data;
+                        if (requestData != null)
                         {
-                            configType = requestData.ConfigType?.ToString();
-                            configDataJson = requestData.ConfigData?.ToString();
-                            version = requestData.Version?.ToString();
-                            forceApply = requestData.ForceApply ?? false;
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogWarning($"解析配置数据结构失败: {ex.Message}");
-                            // 如果动态类型解析失败，尝试其他方式
-                            TryAlternativeParsing(generalRequest, packet, ref configType, ref configDataJson);
-                        }
-                    }
+                            try
+                            {
+                                configType = requestData.ConfigType?.ToString();
+                                configDataJson = requestData.ConfigData?.ToString();
+                                version = requestData.Version?.ToString();
+                                forceApply = requestData.ForceApply ?? false;
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger.LogWarning($"解析配置数据结构失败: {ex.Message}");
+                                TryAlternativeParsing(generalRequest, packet, ref configType, ref configDataJson);
+                            }
 
-                    if (string.IsNullOrEmpty(configType) || string.IsNullOrEmpty(configDataJson))
-                    {
-                        _logger.LogWarning("配置同步命令缺少必要的配置类型或配置数据");
-                        return Task.CompletedTask;
+                            if (string.IsNullOrEmpty(configType) || string.IsNullOrEmpty(configDataJson))
+                            {
+                                _logger.LogWarning("配置同步命令缺少必要的配置类型或配置数据");
+                                return;
+                            }
+                        }
                     }
 
                     _logger.LogInformation($"开始处理配置同步，配置类型: {configType}");
                     _logger.LogDebug($"配置版本: {version}, 强制应用: {forceApply}");
 
-                    // 调用OptionsMonitorConfigManager处理配置同步（新的配置管理器）
-                    _optionsMonitorConfigManager.HandleConfigSync(configType, configDataJson);
+                    // 统一使用ConfigManager处理配置同步，简化流程
+                    if (ConfigManager.Instance != null)
+                    {
+                        ConfigManager.Instance.HandleConfigSync(configType, configDataJson, forceApply);
+                    }
+                    else
+                    {
+                        _logger.LogWarning("ConfigManager实例不可用");
+                    }
                     
-                    // 同时调用ConfigManager的实例来处理配置（确保向后兼容）
-                    ConfigManager.Instance.HandleConfigSync(configType, configDataJson);
+                    // 同时调用OptionsMonitorConfigManager处理配置同步（确保向后兼容）
+                    _optionsMonitorConfigManager.HandleConfigSync(configType, configDataJson);
                     
                     _logger.LogInformation($"配置同步已处理，配置类型: {configType}");
                 }
@@ -151,8 +186,59 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
             {
                 _logger.LogError(ex, "处理配置同步命令时发生异常");
             }
+        }
 
-            return Task.CompletedTask;
+        /// <summary>
+        /// 尝试从字典中提取配置类型和数据
+        /// </summary>
+        /// <param name="dataDict">数据字典</param>
+        /// <param name="configType">配置类型</param>
+        /// <param name="configDataJson">配置数据JSON字符串</param>
+        /// <returns>是否成功提取</returns>
+        private bool TryExtractConfigData(Dictionary<string, object> dataDict, out string configType, out string configDataJson)
+        {
+            configType = null;
+            configDataJson = null;
+            
+            try
+            {
+                // 提取配置类型
+                if (!dataDict.TryGetValue("ConfigType", out object configTypeObj))
+                {
+                    return false;
+                }
+                
+                configType = configTypeObj.ToString();
+                
+                // 提取配置数据
+                if (!dataDict.TryGetValue("ConfigData", out object configDataObj))
+                {
+                    return false;
+                }
+                
+                // 使用Newtonsoft.Json序列化
+                if (configDataObj is Dictionary<string, object> configDataDict)
+                {
+                    configDataJson = JsonConvert.SerializeObject(configDataDict);
+                }
+                else if (configDataObj is string)
+                {
+                    // 如果已经是JSON字符串，直接使用
+                    configDataJson = configDataObj.ToString();
+                }
+                else
+                {
+                    // 其他类型对象直接序列化
+                    configDataJson = JsonConvert.SerializeObject(configDataObj);
+                }
+                
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "提取配置数据失败");
+                return false;
+            }
         }
 
         /// <summary>

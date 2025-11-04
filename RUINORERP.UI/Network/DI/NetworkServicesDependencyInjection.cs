@@ -21,148 +21,218 @@ using RUINORERP.UI.SysConfig;
 using RUINORERP.UI.Network.Interfaces;
 using RUINORERP.UI.IM;
 using RUINORERP.UI.Network.ClientCommandHandlers;
+using System.Collections.Generic;
 
 namespace RUINORERP.UI.Network.DI
 {
+    /// <summary>
+    /// 简单的IOptionsMonitor包装器
+    /// 避免复杂的依赖关系导致的循环引用问题
+    /// </summary>
+    /// <summary>
+    /// 简单的IOptions<T>实现，避免复杂依赖导致的循环引用
+    /// </summary>
+    /// <typeparam name="TOptions">选项类型</typeparam>
+    internal class SimpleOptions<TOptions> : IOptions<TOptions> where TOptions : class, new()
+    {
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="value">选项值</param>
+        public SimpleOptions(TOptions value)
+        {
+            Value = value;
+        }
+
+        /// <summary>
+        /// 获取选项值
+        /// </summary>
+        public TOptions Value { get; }
+    }
+
+    /// <summary>
+    /// 简单的IOptionsMonitor包装器
+    /// 避免复杂的依赖关系导致的循环引用问题
+    /// </summary>
+    internal class SimpleOptionsMonitorWrapper : IOptionsMonitor<object>
+    {
+        private readonly object _value;
+        private readonly Type _optionsType;
+
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="optionsType">选项类型</param>
+        /// <param name="value">选项值实例</param>
+        public SimpleOptionsMonitorWrapper(Type optionsType, object value)
+        {
+            _optionsType = optionsType;
+            _value = value;
+        }
+
+        /// <summary>
+        /// 获取当前配置值
+        /// </summary>
+        public object CurrentValue => _value;
+
+        /// <summary>
+        /// 获取命名配置值（简单实现，始终返回当前值）
+        /// </summary>
+        /// <param name="name">配置名称</param>
+        /// <returns>配置值</returns>
+        public object Get(string name) => _value;
+
+        /// <summary>
+        /// 注册变更通知（简单实现，不执行实际操作）
+        /// </summary>
+        /// <param name="listener">变更监听器</param>
+        /// <returns>用于取消注册的IDisposable</returns>
+        public IDisposable OnChange(Action<object, string> listener) => new NoopDisposable();
+
+        /// <summary>
+        /// 空的Disposable实现
+        /// </summary>
+        private class NoopDisposable : IDisposable
+        {
+            public void Dispose() { }
+        }
+    }
+
     /// <summary>
     /// Network项目服务依赖注入配置类
     /// 负责注册所有Network项目中的服务和接口
     /// </summary>
     public static class NetworkServicesDependencyInjection
     {
-
-
-
-        /// <summary>
-        /// 配置Network服务依赖注入
-        /// </summary>
-        /// <param name="services">服务集合</param>
-        public static void AddNetworkServices(this IServiceCollection services)
-        {
-            // 注册核心网络组件
-            services.AddSingleton<ISocketClient, SuperSocketClient>();
-            services.AddSingleton<IClientCommandDispatcher, ClientCommandDispatcher>();
-            services.AddSingleton<ClientCommunicationService>();
-            services.AddSingleton<ClientEventManager>();
-
-            services.AddSingleton<UICacheSubscriptionManager>();
-            
-            // 注册缓存相关服务
-            services.AddSingleton<IEntityCacheManager, EntityCacheManager>();
-            services.AddSingleton<EventDrivenCacheManager>();
-            services.AddSingleton<CacheRequestManager>();
-            services.AddSingleton<CacheResponseProcessor>();
-
-
-            // 注册TokenManager相关服务
-            // 首先配置TokenServiceOptions
-            services.Configure<TokenServiceOptions>(options =>
-            {
-                options.SecretKey = "RUINORERP-Default-Secret-Key-2024";
-                options.DefaultExpiryHours = 8;
-                options.Issuer = "RUINORERP";
-                options.Audience = "RUINORERP-Users";
-                options.ValidateIssuer = true;
-                options.ValidateAudience = true;
-                options.ValidateLifetime = true;
-                options.ClockSkewSeconds = 300;
-            });
-
-            // 注册TokenStorage
-            services.AddSingleton<ITokenStorage, MemoryTokenStorage>();
-
-            // 注册TokenService - 需要从IOptions中获取TokenServiceOptions
-            services.AddSingleton<ITokenService>(provider =>
-            {
-                var options = provider.GetRequiredService<Microsoft.Extensions.Options.IOptions<TokenServiceOptions>>().Value;
-                return new JwtTokenService(options);
-            });
-
-            // 注册TokenManager
-            services.AddSingleton<TokenManager>();
-
-            // 注册Token刷新服务
-            services.AddSingleton<TokenRefreshService>();
-            services.AddSingleton<SilentTokenRefresher>();
-
-            // 注册业务服务
-            services.AddTransient<UserLoginService>();
-            services.AddSingleton<CacheClientService>();
-            services.AddTransient<MessageService>();
-            services.AddTransient<SimplifiedMessageService>();
-            services.AddScoped<EnhancedMessageManager>();
-            services.AddTransient<SystemManagementService>();
-            services.AddTransient<AuthenticationManagementService>();
-            services.AddSingleton<FileManagementController>();
-            services.AddSingleton<FileManagementService>();
-            
-            // 注册配置相关服务
-            // 为配置类型添加Options模式支持
-            services.AddOptions<SystemGlobalConfig>();
-            services.AddOptions<ServerConfig>();
-            services.AddOptions<GlobalValidatorConfig>();
-            
-            // 注册OptionsMonitorConfigManager单例服务
-            services.AddSingleton<OptionsMonitorConfigManager>();
-            services.AddSingleton<IConfigurationManager, ConfigurationManager>();
-            
-            // 扫描并注册所有命令处理器
-            var commandHandlerTypes = Assembly.GetExecutingAssembly().GetTypes()
-                .Where(t => typeof(ICommandHandler).IsAssignableFrom(t) && !t.IsAbstract && !t.IsInterface);
-            
-            foreach (var handlerType in commandHandlerTypes)
-            {
-                services.AddTransient(typeof(ICommandHandler), handlerType);
-                services.AddTransient(handlerType);
-            }
-            
-        }
-
-
         /// <summary>
         /// 配置Network服务Autofac容器
+        /// 包含所有网络相关服务的注册配置
         /// </summary>
         /// <param name="builder">容器构建器</param>
         public static void ConfigureNetworkServicesContainer(this ContainerBuilder builder)
         {
             // 注册核心网络组件
             builder.RegisterType<SuperSocketClient>().As<ISocketClient>().SingleInstance();
-            // 不再需要ClientTokenStorage，使用TokenManager代替
 
-            // 注册ClientCommunicationService并实现IMessageSender接口
-            builder.RegisterType<ClientCommunicationService>().AsSelf().As<IMessageSender>().SingleInstance();
+            // 注册客户端命令调度器
+            builder.RegisterType<ClientCommandDispatcher>()
+                .As<IClientCommandDispatcher>()
+                .InstancePerLifetimeScope();
 
-            // RequestResponseManager已合并到ClientCommunicationService中，不再需要单独注册
             builder.RegisterType<ClientEventManager>().AsSelf().SingleInstance();
 
             // 注册缓存订阅管理器
             builder.RegisterType<UICacheSubscriptionManager>().AsSelf().SingleInstance();
-            
+
             // 注册缓存相关服务
             builder.RegisterType<EntityCacheManager>().As<IEntityCacheManager>().SingleInstance();
             builder.RegisterType<EventDrivenCacheManager>().AsSelf().SingleInstance();
             builder.RegisterType<CacheRequestManager>().AsSelf().SingleInstance();
             builder.RegisterType<CacheResponseProcessor>().AsSelf().SingleInstance();
 
-            // 注册HeartbeatManager，并使用属性注入解决循环依赖
+            // 注册HeartbeatManager，移除对ClientCommunicationService的直接依赖
             builder.RegisterType<HeartbeatManager>().AsSelf().SingleInstance()
                 .WithParameter((pi, ctx) => pi.ParameterType == typeof(int) && pi.Name == "heartbeatIntervalMs",
                               (pi, ctx) => 30000) // 默认30秒心跳间隔
                 .WithParameter((pi, ctx) => pi.ParameterType == typeof(int) && pi.Name == "heartbeatTimeoutMs",
                               (pi, ctx) => 5000); // 默认5秒超时
 
+            // 先注册一个 Lazy<ClientCommunicationService> 实例
+            builder.Register(c => new Lazy<ClientCommunicationService>(() => c.Resolve<ClientCommunicationService>(), true))
+                .As<Lazy<ClientCommunicationService>>()
+                .SingleInstance();
 
+            // 使用工厂方法注册ClientCommunicationService，避免循环依赖
+            builder.Register(c => 
+            {
+                // 手动解析所有依赖项，避免依赖注入容器自动解析时可能产生的循环引用
+                var socketClient = c.Resolve<ISocketClient>();
+                var logger = c.Resolve<ILogger<ClientCommunicationService>>();
+                var tokenManager = c.Resolve<TokenManager>();
+                var optionsMonitorConfigManager = c.Resolve<OptionsMonitorConfigManager>();
+                var clientCommandDispatcher = c.Resolve<IClientCommandDispatcher>();
+                var heartbeatManager = c.Resolve<HeartbeatManager>();
+                var clientEventManager = c.Resolve<ClientEventManager>(); // 获取已注册的ClientEventManager单例
+                var commandHandlers = c.Resolve<IEnumerable<ICommandHandler>>();
+                
+                // 创建ClientCommunicationService实例
+                var communicationService = new ClientCommunicationService(
+                    socketClient,
+                    logger,
+                    tokenManager,
+                    optionsMonitorConfigManager,
+                    clientCommandDispatcher,
+                    heartbeatManager,
+                    clientEventManager,
+                    commandHandlers
+                );
+                
+                // 设置HeartbeatManager的ClientCommunicationService引用
+                heartbeatManager.SetCommunicationService(communicationService);
+                
+                return communicationService;
+            })
+            .AsSelf()
+            .As<IMessageSender>()
+            .SingleInstance()
+            .OnActivated(e => 
+            {
+                // 在激活后显式初始化命令调度器，而不是在构造函数中
+                // 这避免了在构造过程中触发依赖解析导致的循环引用
+                try
+                {
+                    // 注意：这里需要确保ClientCommunicationService有一个公共的InitializeCommandDispatcher方法
+                    // 如果没有，需要添加一个
+                    var initializeMethod = e.Instance.GetType().GetMethod("InitializeClientCommandDispatcher", BindingFlags.NonPublic | BindingFlags.Instance);
+                    if (initializeMethod != null)
+                    {
+                        initializeMethod.Invoke(e.Instance, null);
+                    }
+                    else
+                    {
+                        e.Context.Resolve<ILogger<ClientCommunicationService>>()?
+                            .LogWarning("未找到InitializeClientCommandDispatcher方法");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    e.Context.Resolve<ILogger<ClientCommunicationService>>()?
+                        .LogError(ex, "初始化命令调度器失败");
+                }
+            });
 
-            // 注册TokenManager相关服务
+            // 配置TokenServiceOptions - 使用自定义IOptions实现，避免OptionsWrapper可能导致的循环依赖
+            var tokenServiceOptions = new TokenServiceOptions
+            {
+                SecretKey = "RUINORERP-Default-Secret-Key-2024",
+                DefaultExpiryHours = 8,
+                Issuer = "RUINORERP",
+                Audience = "RUINORERP-Users",
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ClockSkewSeconds = 300
+            };
+            
+            // 直接注册TokenServiceOptions实例
+            builder.RegisterInstance(tokenServiceOptions).SingleInstance();
+            
+            // 使用自定义的SimpleOptions实现，避免OptionsWrapper可能导致的循环依赖
+            builder.RegisterInstance(new SimpleOptions<TokenServiceOptions>(tokenServiceOptions))
+                .As<IOptions<TokenServiceOptions>>()
+                .SingleInstance();
+
+            // 注册TokenStorage
             builder.RegisterType<MemoryTokenStorage>().As<ITokenStorage>().SingleInstance();
 
-            // 注册TokenService - 需要从IOptions中获取TokenServiceOptions
-            builder.Register<ITokenService>(context =>
+            // 注册TokenService - 从IOptions中获取TokenServiceOptions，与参考代码风格一致
+            builder.Register<ITokenService>(provider =>
             {
-                var options = context.Resolve<Microsoft.Extensions.Options.IOptions<TokenServiceOptions>>().Value;
+                var options = provider.Resolve<IOptions<TokenServiceOptions>>().Value;
                 return new JwtTokenService(options);
             }).SingleInstance();
 
+            // 注册TokenManager
             builder.RegisterType<TokenManager>().AsSelf().SingleInstance();
 
             // 注册Token刷新服务
@@ -173,20 +243,13 @@ namespace RUINORERP.UI.Network.DI
             builder.RegisterType<UserLoginService>().AsSelf().SingleInstance();
             builder.RegisterType<BizCodeService>().AsSelf().SingleInstance();
             builder.RegisterType<CacheClientService>().AsSelf().SingleInstance();
-            // CacheClientService构造函数会自动注入所需的依赖项
             builder.RegisterType<MessageService>().AsSelf().SingleInstance();
             builder.RegisterType<SimplifiedMessageService>().AsSelf().InstancePerDependency();
+            builder.RegisterType<EnhancedMessageManager>().AsSelf().InstancePerLifetimeScope();
             builder.RegisterType<SystemManagementService>().AsSelf().InstancePerDependency();
             builder.RegisterType<AuthenticationManagementService>().AsSelf().InstancePerDependency();
 
-            // 注册配置相关服务
-            builder.RegisterType<OptionsMonitorConfigManager>().AsSelf().SingleInstance();
-            builder.RegisterType<OptionsMonitorConfigManager>().As<IOptionsMonitor<SystemGlobalConfig>>().SingleInstance();
-            builder.RegisterType<OptionsMonitorConfigManager>().As<IOptionsMonitor<ServerConfig>>().SingleInstance();
-            builder.RegisterType<OptionsMonitorConfigManager>().As<IOptionsMonitor<GlobalValidatorConfig>>().SingleInstance();
-            builder.RegisterType<ConfigurationManager>().As<IConfigurationManager>().SingleInstance();
-
-            // 注册文件管理控制器
+            // 注册文件管理服务
             builder.RegisterType<FileManagementController>()
                 .AsSelf()
                 .InstancePerLifetimeScope()
@@ -195,14 +258,54 @@ namespace RUINORERP.UI.Network.DI
                 .AsSelf()
                 .InstancePerLifetimeScope()
                 .PropertiesAutowired();
-            
-            // 从ClientCommandHandlerModule移植的命令处理器注册逻辑
-            // 重新注册客户端命令调度器，使用InstancePerLifetimeScope生命周期
-            builder.RegisterType<ClientCommandDispatcher>()
-                .As<IClientCommandDispatcher>()
-                .InstancePerLifetimeScope();
 
-            // 注册命令处理器，同时注册为IClientCommandHandler接口，确保依赖注入可以正确解析
+            // 注册配置相关服务
+            // 注册配置类型
+            builder.RegisterType<SystemGlobalConfig>().AsSelf().SingleInstance();
+            builder.RegisterType<ServerConfig>().AsSelf().SingleInstance();
+            builder.RegisterType<GlobalValidatorConfig>().AsSelf().SingleInstance();
+
+            // 为配置类型注册IOptions - 使用自定义SimpleOptions实现，避免循环依赖
+            builder.Register(c => new SimpleOptions<SystemGlobalConfig>(c.Resolve<SystemGlobalConfig>()))
+                .As<IOptions<SystemGlobalConfig>>()
+                .SingleInstance();
+            builder.Register(c => new SimpleOptions<ServerConfig>(c.Resolve<ServerConfig>()))
+                .As<IOptions<ServerConfig>>()
+                .SingleInstance();
+            builder.Register(c => new SimpleOptions<GlobalValidatorConfig>(c.Resolve<GlobalValidatorConfig>()))
+                .As<IOptions<GlobalValidatorConfig>>()
+                .SingleInstance();
+                
+            // 简化配置服务注册，避免循环依赖
+            // 移除OptionsManager、OptionsFactory、ConfigureFromConfigurationOptions等可能导致循环依赖的注册
+            
+            // 注册OptionsMonitorConfigManager单例服务（仅作为自身类型注册，不实现IOptionsMonitor接口）
+            builder.RegisterType<OptionsMonitorConfigManager>().AsSelf().SingleInstance();
+            
+            // 简单实现IOptionsMonitor，避免复杂依赖
+            builder.RegisterGeneric((context, types) =>
+            {
+                var optionType = types[0];
+                var optionsInstance = context.Resolve(optionType);
+                return (object)new SimpleOptionsMonitorWrapper(optionType, optionsInstance);
+            }).As(typeof(IOptionsMonitor<>)).SingleInstance();
+
+            // 注册ConfigurationManager
+            builder.RegisterType<ConfigurationManager>().As<IConfigurationManager>().SingleInstance();
+
+            // 扫描并注册所有命令处理器
+            var commandHandlerTypes = Assembly.GetExecutingAssembly().GetTypes()
+                .Where(t => typeof(ICommandHandler).IsAssignableFrom(t) && !t.IsAbstract && !t.IsInterface);
+
+            foreach (var handlerType in commandHandlerTypes)
+            {
+                builder.RegisterType(handlerType)
+                    .AsImplementedInterfaces()
+                    .AsSelf()
+                    .InstancePerLifetimeScope();
+            }
+
+            // 注册特定的命令处理器
             builder.RegisterType<ConfigCommandHandler>()
                 .As<IClientCommandHandler>()
                 .AsSelf()
@@ -212,8 +315,6 @@ namespace RUINORERP.UI.Network.DI
                 .As<IClientCommandHandler>()
                 .AsSelf()
                 .InstancePerLifetimeScope();
-            
-            // 移除RegisterBuildCallback回调，因为我们已经通过构造函数注入解决了循环依赖问题
         }
 
         /// <summary>

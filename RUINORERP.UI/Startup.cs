@@ -345,8 +345,6 @@ namespace RUINORERP.UI
         private static void ConfigureOtherServices(IServiceCollection services)
         {
             services.AddSingleton<HardwareInfo>();
-            // 注册网络通信服务
-            services.AddNetworkServices();
 
             // 注册通知服务相关依赖
             services.AddSingleton<SmtpClient>();
@@ -408,10 +406,13 @@ namespace RUINORERP.UI
         /// </summary>
         public static void ConfigureContainer(ContainerBuilder builder)
         {
-              
+               
                 
             // 基础服务注册
             RegisterBaseServices(builder);
+
+            // 配置网络服务的Autofac容器
+            NetworkServicesDependencyInjection.ConfigureNetworkServicesContainer(builder);
 
             // 项目模块服务注册 - UI层只需引用其他项目DI目录中的注册服务类
             RegisterProjectModuleServices(builder);

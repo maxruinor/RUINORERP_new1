@@ -25,7 +25,7 @@ namespace RUINORERP.UI.Network
     public class HeartbeatManager : IDisposable
     {
         private readonly ISocketClient _socketClient;
-        private readonly ClientCommunicationService _communicationService;
+        private ClientCommunicationService _communicationService;
         private readonly TokenManager _tokenManager;
         private readonly int _heartbeatIntervalMs;
         private readonly int _heartbeatTimeoutMs;
@@ -76,10 +76,19 @@ namespace RUINORERP.UI.Network
 
 
         /// <summary>
-        /// 心跳管理器构造函数 - 直接使用ISocketClient和ClientCommunicationService
+        /// 设置客户端通信服务
+        /// 用于解决循环依赖问题，在服务激活后调用
+        /// </summary>
+        /// <param name="communicationService">客户端通信服务</param>
+        public void SetCommunicationService(ClientCommunicationService communicationService)
+        {
+            _communicationService = communicationService ?? throw new ArgumentNullException(nameof(communicationService));
+        }
+        
+        /// <summary>
+        /// 心跳管理器构造函数 - 移除ClientCommunicationService的直接依赖以避免循环依赖
         /// </summary>
         /// <param name="socketClient">Socket客户端接口，用于直接发送心跳数据</param>
-        /// <param name="communicationService">客户端通信服务，用于处理心跳请求和响应</param>
         /// <param name="tokenManager">Token管理器，用于检查Token状态</param>
         /// <param name="heartbeatIntervalMs">心跳间隔（毫秒）</param>
         /// <param name="heartbeatTimeoutMs">心跳超时时间（毫秒）</param>
@@ -90,7 +99,6 @@ namespace RUINORERP.UI.Network
         /// <param name="logger">日志记录器，可选参数，用于记录心跳过程中的信息和异常</param>
         public HeartbeatManager(
             ISocketClient socketClient,
-            ClientCommunicationService communicationService,
             TokenManager tokenManager,
             int heartbeatIntervalMs,
             int heartbeatTimeoutMs = 5000,
@@ -101,7 +109,6 @@ namespace RUINORERP.UI.Network
             ILogger<HeartbeatManager> logger = null)
         {
             _socketClient = socketClient ?? throw new ArgumentNullException(nameof(socketClient));
-            _communicationService = communicationService ?? throw new ArgumentNullException(nameof(communicationService));
             _tokenManager = tokenManager ?? throw new ArgumentNullException(nameof(tokenManager));
 
             // 参数验证

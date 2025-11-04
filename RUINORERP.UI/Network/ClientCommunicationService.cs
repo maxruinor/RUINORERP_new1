@@ -65,12 +65,12 @@ namespace RUINORERP.UI.Network
         private readonly NetworkConfig _config;
         // Socket客户端，负责底层网络通信
         private readonly ISocketClient _socketClient;
-        // 客户端事件管理器，管理连接状态和命令接收事件
+        // 客户端事件管理器，管理连接状态和命令接收事件（通过依赖注入获取单例）
         private readonly ClientEventManager _eventManager;
         // 命令调度器，用于分发命令到对应的处理类
         private readonly IClientCommandDispatcher _commandDispatcher;
         // 心跳管理器
-        private readonly HeartbeatManager _heartbeatManager;        // 日志记录器
+        private readonly HeartbeatManager _heartbeatManager;
         private readonly ILogger<ClientCommunicationService> _logger;
         // 配置管理器，用于处理配置同步
         private readonly OptionsMonitorConfigManager _optionsMonitorConfigManager;
@@ -153,6 +153,7 @@ namespace RUINORERP.UI.Network
         /// <param name="tokenManager">令牌管理器</param>
         /// <param name="optionsMonitorConfigManager">配置管理器，用于处理配置同步</param>
         /// <param name="clientCommandDispatcher">客户端命令调度器</param>
+        /// <param name="heartbeatManager">心跳管理器</param>
         /// <param name="commandHandlers">命令处理器集合</param>
         /// <param name="networkConfig">网络配置</param>
         /// <exception cref="ArgumentNullException">当参数为null时抛出</exception>
@@ -162,6 +163,8 @@ namespace RUINORERP.UI.Network
             TokenManager tokenManager,
             OptionsMonitorConfigManager optionsMonitorConfigManager,
             IClientCommandDispatcher clientCommandDispatcher,
+            HeartbeatManager heartbeatManager,
+            ClientEventManager eventManager,
             IEnumerable<ICommandHandler> commandHandlers = null,
             NetworkConfig networkConfig = null)
         {
@@ -169,10 +172,11 @@ namespace RUINORERP.UI.Network
             _commandDispatcher = clientCommandDispatcher ?? throw new ArgumentNullException(nameof(clientCommandDispatcher));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _networkConfig = networkConfig ?? NetworkConfig.Default;
-            _eventManager = new ClientEventManager();
+            _eventManager = eventManager ?? throw new ArgumentNullException(nameof(eventManager));
             this.tokenManager = tokenManager;
             _optionsMonitorConfigManager = optionsMonitorConfigManager ?? throw new ArgumentNullException(nameof(optionsMonitorConfigManager));
             _commandHandlers = commandHandlers ?? Enumerable.Empty<ICommandHandler>();
+            _heartbeatManager = heartbeatManager ?? throw new ArgumentNullException(nameof(heartbeatManager));
             // 初始化请求响应管理相关组件
             _timeoutStatistics = new TimeoutStatisticsManager();
             _errorHandlingStrategyFactory = new ErrorHandlingStrategyFactory();
@@ -180,8 +184,8 @@ namespace RUINORERP.UI.Network
             // 初始化定时清理任务
             _cleanupTimer = new Timer(CleanupTimeoutRequests, null, TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1));
             
-            // 初始化并启动客户端命令调度器
-            InitializeClientCommandDispatcher();
+            // 注意：InitializeClientCommandDispatcher不再在构造函数中调用
+            // 已移至依赖注入容器的OnActivated回调中处理，以避免循环依赖
             UI.Common.HardwareInfo hardwareInfo = Startup.GetFromFac<HardwareInfo>();
             // 生成客户端ID
             if (string.IsNullOrEmpty(_socketClient.ClientID))
@@ -189,21 +193,14 @@ namespace RUINORERP.UI.Network
                 _socketClient.ClientID = hardwareInfo.GenerateClientId();
             }
 
-            // 直接创建心跳管理器，传递ISocketClient和ClientCommunicationService
-            // HeartbeatManager不再依赖任何登录服务，直接使用TokenManager
-            _heartbeatManager = new HeartbeatManager(
-                _socketClient,
-                this, // 传递当前ClientCommunicationService实例
-                tokenManager,
-                _networkConfig.HeartbeatIntervalMs,
-                _networkConfig.HeartbeatTimeoutMs
-            );
-
-            // 注册事件处理程序
+            // 注册事件处理程序 - 先取消订阅再订阅，避免重复订阅
+            _socketClient.Received -= OnReceived;
             _socketClient.Received += OnReceived;
+            _socketClient.Closed -= OnClosed;
             _socketClient.Closed += OnClosed;
 
-            // 订阅心跳失败事件
+            // 订阅心跳失败事件 - 先取消订阅再订阅，避免重复订阅
+            _heartbeatManager.HeartbeatFailed -= OnHeartbeatFailed;
             _heartbeatManager.HeartbeatFailed += OnHeartbeatFailed;
 
             // 订阅命令接收事件

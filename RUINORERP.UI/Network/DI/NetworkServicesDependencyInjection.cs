@@ -20,6 +20,7 @@ using RUINORERP.Model.ConfigModel;
 using RUINORERP.UI.SysConfig;
 using RUINORERP.UI.Network.Interfaces;
 using RUINORERP.UI.IM;
+using RUINORERP.UI.Network.ClientCommandHandlers;
 
 namespace RUINORERP.UI.Network.DI
 {
@@ -40,9 +41,7 @@ namespace RUINORERP.UI.Network.DI
         {
             // 注册核心网络组件
             services.AddSingleton<ISocketClient, SuperSocketClient>();
-            // 确保CommandHandlerRegistry已注册，且在CommandDispatcher之前注册
-            services.AddSingleton<CommandHandlerRegistry>();
-            services.AddSingleton<ICommandDispatcher, CommandDispatcher>();
+            services.AddSingleton<IClientCommandDispatcher, ClientCommandDispatcher>();
             services.AddSingleton<ClientCommunicationService>();
             services.AddSingleton<ClientEventManager>();
 
@@ -91,7 +90,6 @@ namespace RUINORERP.UI.Network.DI
             services.AddSingleton<CacheClientService>();
             services.AddTransient<MessageService>();
             services.AddTransient<SimplifiedMessageService>();
-            services.AddTransient<MessageService>();
             services.AddScoped<EnhancedMessageManager>();
             services.AddTransient<SystemManagementService>();
             services.AddTransient<AuthenticationManagementService>();
@@ -176,7 +174,7 @@ namespace RUINORERP.UI.Network.DI
             builder.RegisterType<BizCodeService>().AsSelf().SingleInstance();
             builder.RegisterType<CacheClientService>().AsSelf().SingleInstance();
             // CacheClientService构造函数会自动注入所需的依赖项
-            builder.RegisterType<MessageService>().AsSelf().InstancePerDependency();
+            builder.RegisterType<MessageService>().AsSelf().SingleInstance();
             builder.RegisterType<SimplifiedMessageService>().AsSelf().InstancePerDependency();
             builder.RegisterType<SystemManagementService>().AsSelf().InstancePerDependency();
             builder.RegisterType<AuthenticationManagementService>().AsSelf().InstancePerDependency();
@@ -197,6 +195,24 @@ namespace RUINORERP.UI.Network.DI
                 .AsSelf()
                 .InstancePerLifetimeScope()
                 .PropertiesAutowired();
+            
+            // 从ClientCommandHandlerModule移植的命令处理器注册逻辑
+            // 重新注册客户端命令调度器，使用InstancePerLifetimeScope生命周期
+            builder.RegisterType<ClientCommandDispatcher>()
+                .As<IClientCommandDispatcher>()
+                .InstancePerLifetimeScope();
+
+            // 注册命令处理器，同时注册为IClientCommandHandler接口，确保依赖注入可以正确解析
+            builder.RegisterType<ConfigCommandHandler>()
+                .As<IClientCommandHandler>()
+                .AsSelf()
+                .InstancePerLifetimeScope();
+
+            builder.RegisterType<MessageCommandHandler>()
+                .As<IClientCommandHandler>()
+                .AsSelf()
+                .InstancePerLifetimeScope();
+            
             // 移除RegisterBuildCallback回调，因为我们已经通过构造函数注入解决了循环依赖问题
         }
 
@@ -208,8 +224,9 @@ namespace RUINORERP.UI.Network.DI
         {
             return $"Network服务依赖注入配置完成。\n"
                    + $"已注册服务: 16个核心服务（RequestResponseManager已合并到ClientCommunicationService，新增TokenRefreshService和SilentTokenRefresher）\n"
+                   + $"已注册命令处理器: ConfigCommandHandler和MessageCommandHandler（从ClientCommandHandlerModule移植）\n"
                    + $"已注册接口: 3个服务接口\n"
-                   + $"生命周期: 单例模式和瞬态模式\n"
+                   + $"生命周期: 单例模式、瞬态模式和InstancePerLifetimeScope\n"
                    + $"AOP支持: 已启用接口拦截器\n"
                    + $"架构版本: 重构后新架构";
         }

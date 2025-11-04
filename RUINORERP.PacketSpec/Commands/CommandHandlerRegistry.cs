@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -489,7 +489,6 @@ namespace RUINORERP.PacketSpec.Commands
                     return true;
                 }
 
-                _logger?.LogWarning("手动注册命令处理器失败，处理器ID已存在: {HandlerId}", handler.HandlerId);
                 return false;
             }
             finally

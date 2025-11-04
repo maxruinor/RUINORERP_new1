@@ -617,7 +617,6 @@ namespace RUINORERP.PacketSpec.Commands
             {
                 // 使用CommandHandlerRegistry查找处理器
                 var handlers = _handlerRegistry.GetHandlersByCommandId(commandCode);
-
                 if (handlers != null && handlers.Any())
                 {
                     // 过滤出能处理当前命令的处理器

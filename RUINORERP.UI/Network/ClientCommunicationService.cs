@@ -68,7 +68,7 @@ namespace RUINORERP.UI.Network
         // 客户端事件管理器，管理连接状态和命令接收事件
         private readonly ClientEventManager _eventManager;
         // 命令调度器，用于分发命令到对应的处理类
-        private readonly ICommandDispatcher _commandDispatcher;
+        private readonly IClientCommandDispatcher _commandDispatcher;
         // 心跳管理器
         private readonly HeartbeatManager _heartbeatManager;        // 日志记录器
         private readonly ILogger<ClientCommunicationService> _logger;
@@ -76,7 +76,7 @@ namespace RUINORERP.UI.Network
         private readonly OptionsMonitorConfigManager _optionsMonitorConfigManager;
         
         // 客户端命令调度器，用于分发命令到对应的客户端处理类
-        private readonly IClientCommandDispatcher _clientCommandDispatcher;
+
 
         // 连接状态标志
         private bool _isConnected;
@@ -149,7 +149,6 @@ namespace RUINORERP.UI.Network
         /// 构造函数
         /// </summary>
         /// <param name="socketClient">Socket客户端接口，提供底层网络通信能力</param>
-        /// <param name="commandDispatcher">命令调度器，用于分发命令到对应的处理类</param>
         /// <param name="logger">日志记录器</param>
         /// <param name="tokenManager">令牌管理器</param>
         /// <param name="optionsMonitorConfigManager">配置管理器，用于处理配置同步</param>
@@ -159,7 +158,6 @@ namespace RUINORERP.UI.Network
         /// <exception cref="ArgumentNullException">当参数为null时抛出</exception>
         public ClientCommunicationService(
             ISocketClient socketClient,
-            ICommandDispatcher commandDispatcher,
             ILogger<ClientCommunicationService> logger,
             TokenManager tokenManager,
             OptionsMonitorConfigManager optionsMonitorConfigManager,
@@ -168,31 +166,16 @@ namespace RUINORERP.UI.Network
             NetworkConfig networkConfig = null)
         {
             _socketClient = socketClient ?? throw new ArgumentNullException(nameof(socketClient));
-            _commandDispatcher = commandDispatcher ?? throw new ArgumentNullException(nameof(commandDispatcher));
+            _commandDispatcher = clientCommandDispatcher ?? throw new ArgumentNullException(nameof(clientCommandDispatcher));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _networkConfig = networkConfig ?? NetworkConfig.Default;
             _eventManager = new ClientEventManager();
             this.tokenManager = tokenManager;
             _optionsMonitorConfigManager = optionsMonitorConfigManager ?? throw new ArgumentNullException(nameof(optionsMonitorConfigManager));
-            _clientCommandDispatcher = clientCommandDispatcher ?? throw new ArgumentNullException(nameof(clientCommandDispatcher));
             _commandHandlers = commandHandlers ?? Enumerable.Empty<ICommandHandler>();
             // 初始化请求响应管理相关组件
             _timeoutStatistics = new TimeoutStatisticsManager();
             _errorHandlingStrategyFactory = new ErrorHandlingStrategyFactory();
-
-            #region  扫描注册
-            // 获取PacketSpec程序集
-            var packetSpecAssembly = Assembly.GetAssembly(typeof(RUINORERP.PacketSpec.Models.Core.PacketModel));
-            if (packetSpecAssembly == null)
-            {
-                return;
-            }
-            // 获取UI程序集
-            var uiAssembly = Assembly.GetExecutingAssembly();
-
-            // 扫描并注册命令到命令调度器
-            _commandDispatcher.InitializeAsync(CancellationToken.None, packetSpecAssembly, uiAssembly);
-            #endregion
 
             // 初始化定时清理任务
             _cleanupTimer = new Timer(CleanupTimeoutRequests, null, TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1));
@@ -1264,7 +1247,7 @@ namespace RUINORERP.UI.Network
             try
             {
                 // 使用一键式初始化方法，替代单独调用InitializeAsync和StartAsync
-                var result = await _clientCommandDispatcher.InitializeAndStartAsync();
+                var result = await _commandDispatcher.InitializeAndStartAsync();
                 
                 _logger.LogInformation("客户端命令调度器初始化并启动成功，共注册{HandlerCount}个处理器", result.success ? result.registeredCount : 0);
             }
@@ -1308,7 +1291,7 @@ namespace RUINORERP.UI.Network
                 _logger.LogDebug("开始处理命令: {CommandId}", packet.CommandId);
                 
                 // 首先尝试使用客户端专用命令调度器处理命令
-                bool dispatchedByClientDispatcher = await _clientCommandDispatcher.DispatchAsync(packet);
+                bool dispatchedByClientDispatcher = await _commandDispatcher.DispatchAsync(packet);
                 
                 if (dispatchedByClientDispatcher)
                 {
@@ -1341,7 +1324,7 @@ namespace RUINORERP.UI.Network
                     default:
                         // 使用命令调度器处理其他命令
                         _logger.LogDebug("使用主命令调度器处理命令: {CommandId}", packet.CommandId);
-                        await _commandDispatcher.DispatchAsync(packet, CancellationToken.None).ConfigureAwait(false);
+                        await _commandDispatcher.DispatchAsync(packet).ConfigureAwait(false);
                         break;
                 }
             }
@@ -1407,7 +1390,7 @@ namespace RUINORERP.UI.Network
                 else
                 {
                     // 其他配置命令尝试使用客户端命令调度器处理
-                    await _clientCommandDispatcher.DispatchAsync(packet);
+                    await _commandDispatcher.DispatchAsync(packet);
                 }
             }
             catch (Exception ex)
@@ -1424,7 +1407,7 @@ namespace RUINORERP.UI.Network
         private async Task ProcessSystemCommandAsync(PacketModel packet)
         {
             // 处理系统命令，如心跳响应等
-            if (packet.CommandId.FullCode == SystemCommands.HeartbeatResponse.FullCode)
+            if (packet.CommandId.FullCode == SystemCommands.Heartbeat.FullCode)
             {
                 // 处理心跳响应，重置失败计数
                 lock (_syncLock)
@@ -1436,7 +1419,7 @@ namespace RUINORERP.UI.Network
             else
             {
                 // 其他系统命令使用调度器处理
-                await _commandDispatcher.DispatchAsync(packet, CancellationToken.None).ConfigureAwait(false);
+                await _commandDispatcher.DispatchAsync(packet).ConfigureAwait(false);
             }
         }
 
@@ -1448,7 +1431,7 @@ namespace RUINORERP.UI.Network
         {
             // 缓存命令可以使用专门的缓存服务处理
             // 或者使用命令调度器处理
-            await _commandDispatcher.DispatchAsync(packet, CancellationToken.None).ConfigureAwait(false);
+            await _commandDispatcher.DispatchAsync(packet).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -1458,7 +1441,7 @@ namespace RUINORERP.UI.Network
         private async Task ProcessAuthenticationCommandAsync(PacketModel packet)
         {
             // 认证命令使用调度器处理
-            await _commandDispatcher.DispatchAsync(packet, CancellationToken.None).ConfigureAwait(false);
+            await _commandDispatcher.DispatchAsync(packet).ConfigureAwait(false);
         }
 
 

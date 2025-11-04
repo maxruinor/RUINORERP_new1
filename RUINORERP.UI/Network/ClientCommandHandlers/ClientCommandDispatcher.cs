@@ -331,7 +331,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
             var handler = FindHandler(packet);
             if (handler == null)
             {
-                _logger?.LogWarning($"未找到能处理命令ID {packet.CommandId.FullCode} 的处理器");
+                _logger?.LogDebug($"未找到能处理命令ID {packet.CommandId.FullCode} 的处理器");
                 return false;
             }
 

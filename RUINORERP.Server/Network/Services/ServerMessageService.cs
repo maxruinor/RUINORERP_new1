@@ -9,6 +9,7 @@ using RUINORERP.Server.Network.Models;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace RUINORERP.Server.Network.Services
 {
@@ -53,15 +54,17 @@ namespace RUINORERP.Server.Network.Services
         {
             try
             {
-                var messageData = new
+                // 使用MessageData类代替匿名对象，提高类型安全性和可维护性
+                var messageData = new MessageData
                 {
-                    TargetUserId = targetUserName,
-                    Message = message,
+                    MessageType = MessageType.Prompt,
                     Title = title,
-                    MessageType = "Popup"
+                    Content = message,
+                    ReceiverIds = new List<long> { long.TryParse(targetUserName, out long userId) ? userId : 0 },
+                    SendTime = DateTime.Now
                 };
 
-                var request = new MessageRequest(MessageType.Unknown, messageData);
+                var request = new MessageRequest(MessageType.Prompt, messageData);
                 
                 // 获取目标用户的所有会话
                 var sessions = _sessionService.GetUserSessions(targetUserName);
@@ -110,14 +113,16 @@ namespace RUINORERP.Server.Network.Services
         {
             try
             {
-                var messageData = new
+                // 使用MessageData类代替匿名对象，提高类型安全性和可维护性
+                var messageData = new MessageData
                 {
-                    TargetUserId = targetUserId,
-                    Message = message,
-                    MessageType = messageType
+                    MessageType = messageType == "Text" ? MessageType.Text : MessageType.Unknown,
+                    Content = message,
+                    ReceiverIds = new List<long> { long.TryParse(targetUserId, out long userId) ? userId : 0 },
+                    SendTime = DateTime.Now
                 };
 
-                var request = new MessageRequest(MessageType.Unknown, messageData);
+                var request = new MessageRequest(messageData.MessageType, messageData);
                 
                 // 获取目标用户的所有会话
                 var sessions = _sessionService.GetUserSessions(targetUserId);
@@ -166,14 +171,18 @@ namespace RUINORERP.Server.Network.Services
         {
             try
             {
-                var messageData = new
+                // 使用MessageData类代替匿名对象，提高类型安全性和可维护性
+                var messageData = new MessageData
                 {
-                    DepartmentId = departmentId,
-                    Message = message,
-                    MessageType = messageType
+                    MessageType = messageType == "Text" ? MessageType.Text : MessageType.Unknown,
+                    Content = message,
+                    SendTime = DateTime.Now
                 };
+                
+                // 使用扩展数据存储部门ID
+                messageData.ExtendedData["DepartmentId"] = departmentId;
 
-                var request = new MessageRequest(MessageType.Unknown, messageData);
+                var request = new MessageRequest(messageData.MessageType, messageData);
                 
                 // 获取目标部门用户的所有会话
                 // 这里简化处理，实际项目中需要根据部门ID获取部门下的所有用户
@@ -224,13 +233,15 @@ namespace RUINORERP.Server.Network.Services
         {
             try
             {
-                var messageData = new
+                // 使用MessageData类代替匿名对象，提高类型安全性和可维护性
+                var messageData = new MessageData
                 {
-                    Message = message,
-                    MessageType = messageType
+                    MessageType = messageType == "Text" ? MessageType.Text : MessageType.Unknown,
+                    Content = message,
+                    SendTime = DateTime.Now
                 };
 
-                var request = new MessageRequest(MessageType.Unknown, messageData);
+                var request = new MessageRequest(messageData.MessageType, messageData);
                 
                 // 获取所有用户会话
                 var sessions = _sessionService.GetAllUserSessions();
@@ -280,13 +291,18 @@ namespace RUINORERP.Server.Network.Services
         {
             try
             {
-                var messageData = new
+                // 使用MessageData类代替匿名对象，提高类型安全性和可维护性
+                var messageData = new MessageData
                 {
-                    Message = message,
-                    NotificationType = notificationType
+                    MessageType = MessageType.Notice,
+                    Content = message,
+                    SendTime = DateTime.Now
                 };
+                
+                // 使用扩展数据存储通知类型
+                messageData.ExtendedData["NotificationType"] = notificationType;
 
-                var request = new MessageRequest(MessageType.Unknown, messageData);
+                var request = new MessageRequest(MessageType.Notice, messageData);
                 
                 // 获取所有用户会话
                 var sessions = _sessionService.GetAllUserSessions();

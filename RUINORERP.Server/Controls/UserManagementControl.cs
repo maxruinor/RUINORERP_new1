@@ -404,9 +404,10 @@ namespace RUINORERP.Server.Controls
             SetItemColorByStatus(item, user.在线状态);
         }
 
-        private void SetItemColorByStatus(ListViewItem item, bool isOnline)
+        private void SetItemColorByStatus(ListViewItem item, bool isAuthorized)
         {
-            item.ForeColor = isOnline ? Color.Green : Color.Gray;
+            // 根据授权状态设置颜色：已授权显示为绿色，未授权显示为灰色
+            item.ForeColor = isAuthorized ? Color.Green : Color.Gray;
         }
 
         public void UserInfo_PropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -533,10 +534,9 @@ namespace RUINORERP.Server.Controls
                     }
                     else
                     {
-                        // 会话已不存在，标记为离线
-                        userInfo.在线状态 = false;
-                        userInfo.授权状态 = false;
-                        AddOrUpdateUser(userInfo);
+                        // 会话已不存在，直接删除用户而不是标记为离线
+                        RemoveUser(userInfo);
+                        userInfo.PropertyChanged -= UserInfo_PropertyChanged;
                     }
                 }
             }
@@ -582,10 +582,13 @@ namespace RUINORERP.Server.Controls
 
             if (sessionInfo != null)
             {
-                var userInfo = ConvertSessionInfoToUserInfo(sessionInfo);
-                // 更新用户状态为离线而不是直接移除
-                userInfo.在线状态 = false;
-                AddOrUpdateUser(userInfo);
+                // 直接删除断开连接的用户，而不是标记为离线
+                var userToRemove = UserInfos.FirstOrDefault(u => u.SessionId == sessionInfo.SessionID);
+                if (userToRemove != null)
+                {
+                    RemoveUser(userToRemove);
+                    userToRemove.PropertyChanged -= UserInfo_PropertyChanged;
+                }
             }
         }
 
@@ -649,6 +652,8 @@ namespace RUINORERP.Server.Controls
         {
             // 获取选中的用户
             var selectedUsers = new List<UserInfo>();
+            
+            // 先检查是否有复选框选中的用户
             foreach (ListViewItem item in listView1.CheckedItems)
             {
                 if (item.Tag is UserInfo userInfo)
@@ -660,6 +665,21 @@ namespace RUINORERP.Server.Controls
                     }
                 }
             }
+            
+            // 如果没有复选框选中的用户，则使用单选的用户
+            if (selectedUsers.Count == 0 && listView1.SelectedItems.Count > 0)
+            {
+                var selectedItem = listView1.SelectedItems[0];
+                if (selectedItem.Tag is UserInfo userInfo)
+                {
+                    var user = UserInfos.FirstOrDefault(u => u.SessionId == userInfo.SessionId);
+                    if (user != null)
+                    {
+                        selectedUsers.Add(user);
+                    }
+                }
+            }
+            
             return selectedUsers;
         }
 

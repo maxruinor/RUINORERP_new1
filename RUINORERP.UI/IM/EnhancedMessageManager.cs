@@ -342,13 +342,22 @@ namespace RUINORERP.UI.IM
             if (message == null)
                 return;
                 
+            bool isNewMessage = false;
+            
             lock (_messagesLock)
             {
                 bool exists = _messageList.Any(m => m.Id == message.Id);
                 if (!exists)
                 {
                     _messageList.Insert(0, message);
+                    isNewMessage = true;
                 }
+            }
+            
+            // 对于新消息，触发状态变更事件以通知UI更新
+            if (isNewMessage)
+            {
+                OnMessageStatusChanged(message);
             }
             
             // 更新未读消息计数并触发事件

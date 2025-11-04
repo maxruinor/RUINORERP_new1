@@ -8,6 +8,8 @@ using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Models.Requests;
 using System;
 using Microsoft.Extensions.Logging;
+using System.Dynamic;
+using RUINORERP.UI.SysConfig;
 
 namespace RUINORERP.UI.Network.ClientCommandHandlers
 {
@@ -99,38 +101,32 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
 
                     string configType = null;
                     string configDataJson = null;
+                    string version = null;
+                    bool forceApply = false;
 
-                    // 从动态对象中提取配置类型和数据
-                    try
+                    // 根据数据类型选择不同的解析方式
+                    if (requestData is Dictionary<string, object> dictData)
                     {
-                        configType = requestData.ConfigType?.ToString();
-                        configDataJson = requestData.ConfigData?.ToString();
+                        // 处理Dictionary类型数据
+                        _logger.LogDebug("处理Dictionary类型的配置数据");
+                        ParseDictionaryConfigData(dictData, ref configType, ref configDataJson, ref version, ref forceApply);
                     }
-                    catch (Exception ex)
+                    else
                     {
-                        _logger.LogWarning($"解析配置数据结构失败: {ex.Message}");
-                    }
-
-                    // 如果解析失败，尝试使用旧格式作为备选
-                    if (string.IsNullOrEmpty(configType) || string.IsNullOrEmpty(configDataJson))
-                    {
-                        _logger.LogWarning("无法从请求数据中提取配置信息，尝试备用解析方式");
-
-                        // 尝试从Parameters中获取配置数据
-                        if (packet.Request is RequestBase requestBase)
+                        // 尝试从动态对象中提取配置类型和数据
+                        try
                         {
-                            if (requestBase.Parameters?.TryGetValue("ConfigData", out var attachConfigData) ?? false)
-                            {
-                                configDataJson = attachConfigData.ToString();
-                            }
-
-                            // 尝试将整个Data作为配置类型
-                            if (string.IsNullOrEmpty(configType))
-                            {
-                                configType = generalRequest.Data.ToString();
-                            }
+                            configType = requestData.ConfigType?.ToString();
+                            configDataJson = requestData.ConfigData?.ToString();
+                            version = requestData.Version?.ToString();
+                            forceApply = requestData.ForceApply ?? false;
                         }
-
+                        catch (Exception ex)
+                        {
+                            _logger.LogWarning($"解析配置数据结构失败: {ex.Message}");
+                            // 如果动态类型解析失败，尝试其他方式
+                            TryAlternativeParsing(generalRequest, packet, ref configType, ref configDataJson);
+                        }
                     }
 
                     if (string.IsNullOrEmpty(configType) || string.IsNullOrEmpty(configDataJson))
@@ -140,10 +136,14 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                     }
 
                     _logger.LogInformation($"开始处理配置同步，配置类型: {configType}");
+                    _logger.LogDebug($"配置版本: {version}, 强制应用: {forceApply}");
 
-                    // 调用OptionsMonitorConfigManager处理配置同步
-                    // 注意：HandleConfigSync是同步方法，不需要await
+                    // 调用OptionsMonitorConfigManager处理配置同步（新的配置管理器）
                     _optionsMonitorConfigManager.HandleConfigSync(configType, configDataJson);
+                    
+                    // 同时调用ConfigManager的实例来处理配置（确保向后兼容）
+                    ConfigManager.Instance.HandleConfigSync(configType, configDataJson);
+                    
                     _logger.LogInformation($"配置同步已处理，配置类型: {configType}");
                 }
             }
@@ -153,6 +153,76 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
             }
 
             return Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// 从Dictionary中解析配置数据
+        /// </summary>
+        /// <param name="dictData">Dictionary数据</param>
+        /// <param name="configType">配置类型</param>
+        /// <param name="configDataJson">配置数据JSON字符串</param>
+        /// <param name="version">版本信息</param>
+        /// <param name="forceApply">是否强制应用</param>
+        private void ParseDictionaryConfigData(Dictionary<string, object> dictData, ref string configType, ref string configDataJson, ref string version, ref bool forceApply)
+        {
+            // 从Dictionary中提取配置类型
+            if (dictData.TryGetValue("ConfigType", out var typeValue))
+            {
+                configType = typeValue?.ToString();
+            }
+
+            // 从Dictionary中提取配置数据
+            if (dictData.TryGetValue("ConfigData", out var dataValue))
+            {
+                // 检查数据类型，如果是对象则序列化为JSON
+                if (dataValue is Newtonsoft.Json.Linq.JObject || dataValue is ExpandoObject || dataValue is IDictionary<string, object>)
+                {
+                    configDataJson = JsonConvert.SerializeObject(dataValue);
+                }
+                else
+                {
+                    configDataJson = dataValue?.ToString();
+                }
+            }
+
+            // 从Dictionary中提取版本信息
+            if (dictData.TryGetValue("Version", out var versionValue))
+            {
+                version = versionValue?.ToString();
+            }
+
+            // 从Dictionary中提取强制应用标志
+            if (dictData.TryGetValue("ForceApply", out var forceValue))
+            {
+                bool.TryParse(forceValue?.ToString(), out forceApply);
+            }
+        }
+
+        /// <summary>
+        /// 尝试备选的解析方式
+        /// </summary>
+        /// <param name="generalRequest">通用请求</param>
+        /// <param name="packet">数据包</param>
+        /// <param name="configType">配置类型</param>
+        /// <param name="configDataJson">配置数据JSON字符串</param>
+        private void TryAlternativeParsing(GeneralRequest generalRequest, PacketModel packet, ref string configType, ref string configDataJson)
+        {
+            _logger.LogWarning("无法从请求数据中提取配置信息，尝试备用解析方式");
+
+            // 尝试从Parameters中获取配置数据
+            if (packet.Request is RequestBase requestBase)
+            {
+                if (requestBase.Parameters?.TryGetValue("ConfigData", out var attachConfigData) ?? false)
+                {
+                    configDataJson = attachConfigData.ToString();
+                }
+
+                // 尝试将整个Data作为配置类型
+                if (string.IsNullOrEmpty(configType))
+                {
+                    configType = generalRequest.Data.ToString();
+                }
+            }
         }
     }
 }

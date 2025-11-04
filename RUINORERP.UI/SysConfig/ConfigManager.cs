@@ -619,6 +619,72 @@ namespace RUINORERP.UI.SysConfig
             var property = typeof(SystemGlobalConfig).GetProperty(key);
             return property != null;
         }
+        
+        /// <summary>
+        /// 处理配置同步
+        /// </summary>
+        /// <param name="configType">配置类型</param>
+        /// <param name="configDataJson">配置数据JSON字符串</param>
+        public void HandleConfigSync(string configType, string configDataJson)
+        {
+            try
+            {
+                // 根据配置类型处理不同的配置同步
+                switch (configType)
+                {
+                    case nameof(SystemGlobalConfig):
+                        // 同步系统全局配置
+                        var globalConfig = JsonConvert.DeserializeObject<SystemGlobalConfig>(configDataJson);
+                        if (globalConfig != null)
+                        {
+                            UpdateGlobalConfig(globalConfig);
+                        }
+                        break;
+                    case nameof(GlobalValidatorConfig):
+                        // 同步验证配置
+                        var validatorConfig = JsonConvert.DeserializeObject<GlobalValidatorConfig>(configDataJson);
+                        if (validatorConfig != null)
+                        {
+                            UpdateValidatorConfig(validatorConfig);
+                        }
+                        break;
+                    case "Database":
+                        // 刷新数据库配置
+                        Task.Run(() => LoadConfigValues());
+                        break;
+                    default:
+                        // 尝试作为特定配置项进行处理
+                        try
+                        {
+                            // 尝试解析为键值对
+                            var configEntry = JsonConvert.DeserializeObject<Dictionary<string, string>>(configDataJson);
+                            if (configEntry != null && configEntry.Count > 0)
+                            {
+                                // 更新数据库配置缓存
+                                lock (_dbConfigCache)
+                                {
+                                    foreach (var kvp in configEntry)
+                                    {
+                                        _dbConfigCache[kvp.Key] = kvp.Value;
+                                    }
+                                }
+                                // 触发配置变更事件
+                                ConfigChanged?.Invoke(this, new ConfigChangedEventArgs { ConfigType = ConfigType.Database });
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"处理特定配置项失败: {ex.Message}");
+                        }
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"处理配置同步失败: {ex.Message}");
+                throw;
+            }
+        }
         #endregion
         
         #region IDisposable实现

@@ -1,4 +1,4 @@
-﻿using RUINORERP.PacketSpec.Enums.Core;
+using RUINORERP.PacketSpec.Enums.Core;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.UI.SysConfig;
 using System.Collections.Generic;
@@ -7,6 +7,7 @@ using Newtonsoft.Json;
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Models.Requests;
 using System;
+using Microsoft.Extensions.Logging;
 
 namespace RUINORERP.UI.Network.ClientCommandHandlers
 {
@@ -18,20 +19,24 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
     public class ConfigCommandHandler : BaseClientCommandHandler
     {
         private readonly OptionsMonitorConfigManager _optionsMonitorConfigManager;
+        private readonly ILogger<ConfigCommandHandler> _logger;
 
         /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="optionsMonitorConfigManager">配置管理器</param>
-        public ConfigCommandHandler(OptionsMonitorConfigManager optionsMonitorConfigManager)
+        /// <param name="logger">日志记录器</param>
+        public ConfigCommandHandler(OptionsMonitorConfigManager optionsMonitorConfigManager, ILogger<ConfigCommandHandler> logger)
+            : base(logger)
         {
             _optionsMonitorConfigManager = optionsMonitorConfigManager ?? throw new System.ArgumentNullException(nameof(optionsMonitorConfigManager));
+            _logger = logger ?? throw new System.ArgumentNullException(nameof(logger));
 
-            // 设置支持的命令
-            SetSupportedCommands(
-                GeneralCommands.ConfigSync
-            );
+            // 保留通过SetSupportedCommands方法设置命令的方式
+            SetSupportedCommands(GeneralCommands.ConfigSync);
         }
+
+
 
         /// <summary>
         /// 初始化处理器
@@ -42,7 +47,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
             bool initialized = await base.InitializeAsync();
             if (initialized)
             {
-                LogInfo("配置命令处理器初始化成功");
+                _logger.LogDebug("配置命令处理器初始化成功");
             }
             return initialized;
         }
@@ -56,7 +61,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
         {
             if (packet == null || packet.CommandId == null)
             {
-                LogError("收到无效的数据包");
+                _logger.LogError("收到无效的数据包");
                 return;
             }
 
@@ -68,7 +73,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
             }
             else
             {
-                LogWarning($"未处理的配置命令ID: {packet.CommandId.FullCode}");
+                _logger.LogWarning($"未处理的配置命令ID: {packet.CommandId.FullCode}");
             }
         }
 
@@ -88,13 +93,13 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                     dynamic requestData = generalRequest.Data;
                     if (requestData == null)
                     {
-                        LogWarning("配置同步命令数据为空");
+                        _logger.LogWarning("配置同步命令数据为空");
                         return Task.CompletedTask;
                     }
-                    
+
                     string configType = null;
                     string configDataJson = null;
-                    
+
                     // 从动态对象中提取配置类型和数据
                     try
                     {
@@ -103,16 +108,16 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                     }
                     catch (Exception ex)
                     {
-                        LogWarning($"解析配置数据结构失败: {ex.Message}");
+                        _logger.LogWarning($"解析配置数据结构失败: {ex.Message}");
                     }
-                    
+
                     // 如果解析失败，尝试使用旧格式作为备选
                     if (string.IsNullOrEmpty(configType) || string.IsNullOrEmpty(configDataJson))
                     {
-                        LogWarning("无法从请求数据中提取配置信息，尝试备用解析方式");
+                        _logger.LogWarning("无法从请求数据中提取配置信息，尝试备用解析方式");
 
                         // 尝试从Parameters中获取配置数据
-                        if (packet.Request is RequestBase  requestBase)
+                        if (packet.Request is RequestBase requestBase)
                         {
                             if (requestBase.Parameters?.TryGetValue("ConfigData", out var attachConfigData) ?? false)
                             {
@@ -125,28 +130,28 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                                 configType = generalRequest.Data.ToString();
                             }
                         }
-                        
+
                     }
 
                     if (string.IsNullOrEmpty(configType) || string.IsNullOrEmpty(configDataJson))
                     {
-                        LogWarning("配置同步命令缺少必要的配置类型或配置数据");
+                        _logger.LogWarning("配置同步命令缺少必要的配置类型或配置数据");
                         return Task.CompletedTask;
                     }
 
-                    LogInfo($"开始处理配置同步，配置类型: {configType}");
+                    _logger.LogInformation($"开始处理配置同步，配置类型: {configType}");
 
                     // 调用OptionsMonitorConfigManager处理配置同步
                     // 注意：HandleConfigSync是同步方法，不需要await
                     _optionsMonitorConfigManager.HandleConfigSync(configType, configDataJson);
-                    LogInfo($"配置同步已处理，配置类型: {configType}");
+                    _logger.LogInformation($"配置同步已处理，配置类型: {configType}");
                 }
             }
             catch (System.Exception ex)
             {
-                LogError("处理配置同步命令时发生异常", ex);
+                _logger.LogError(ex, "处理配置同步命令时发生异常");
             }
-            
+
             return Task.CompletedTask;
         }
     }

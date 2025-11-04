@@ -326,7 +326,7 @@ namespace RUINORERP.UI
                             UserGlobalConfig.Instance.AutoRminderUpdate = chkAutoReminderUpdate.Checked;
                             UserGlobalConfig.Instance.Serialize();
                             //先指定一下服务器IP
-                            //BizCodeGenerator.Instance.RedisServerIP = UserGlobalConfig.Instance.ServerIP;
+                            //BizCodeService.RedisServerIP = UserGlobalConfig.Instance.ServerIP;
                             Program.AppContextData.IsOnline = true;
                             this.DialogResult = DialogResult.OK;
                             this.Close();

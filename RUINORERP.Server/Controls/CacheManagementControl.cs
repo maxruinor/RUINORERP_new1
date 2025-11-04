@@ -428,7 +428,7 @@ private readonly IEntityCacheManager _entityCacheManager;
                             TableName = tableName
                         };
 
-                        var request = new MessageRequest(MessageCmdType.Unknown, messageData);
+                        var request = new MessageRequest(MessageType.Unknown, messageData);
                         var success = _sessionService.SendCommandAsync(
                             session.SessionID, 
                             MessageCommands.SendMessageToUser, 
@@ -462,7 +462,7 @@ private readonly IEntityCacheManager _entityCacheManager;
                             TableName = tableName
                         };
 
-                        var request = new MessageRequest(MessageCmdType.Unknown, messageData);
+                        var request = new MessageRequest(MessageType.Unknown, messageData);
                         var success = _sessionService.SendCommandAsync(
                             session.SessionID, 
                             MessageCommands.SendMessageToUser, 
@@ -500,7 +500,7 @@ private readonly IEntityCacheManager _entityCacheManager;
                             TableName = tableName
                         };
 
-                        var request = new MessageRequest(MessageCmdType.Unknown, messageData);
+                        var request = new MessageRequest(MessageType.Unknown, messageData);
                         var success = _sessionService.SendCommandAsync(
                             session.SessionID, 
                             MessageCommands.SendMessageToUser, 
@@ -533,7 +533,7 @@ private readonly IEntityCacheManager _entityCacheManager;
                                 TableName = tableName
                             };
 
-                            var request = new MessageRequest(MessageCmdType.Unknown, messageData);
+                            var request = new MessageRequest(MessageType.Unknown, messageData);
                             var success = _sessionService.SendCommandAsync(
                                 session.SessionID, 
                                 MessageCommands.SendMessageToUser, 

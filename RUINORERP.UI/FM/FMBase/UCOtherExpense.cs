@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -26,6 +26,7 @@ using RUINORERP.UI.Report;
 using RUINORERP.UI.BaseForm;
 
 using Microsoft.Extensions.Logging;
+using RUINORERP.UI.Network.Services;
 using SqlSugar;
 using SourceGrid;
 using System.Linq.Expressions;
@@ -105,7 +106,7 @@ namespace RUINORERP.UI.FM.FMBase
                         entity.EXPOrINC = false;
                         if (string.IsNullOrEmpty(entity.ExpenseNo))
                         {
-                            entity.ExpenseNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.其他费用支出);
+                            entity.ExpenseNo = BizCodeService.GetBizBillNo(BizType.其他费用支出);
                         }
                     }
 
@@ -114,7 +115,7 @@ namespace RUINORERP.UI.FM.FMBase
                         entity.EXPOrINC = true;
                         if (string.IsNullOrEmpty(entity.ExpenseNo))
                         {
-                            entity.ExpenseNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.其他费用收入);
+                            entity.ExpenseNo = BizCodeService.GetBizBillNo(BizType.其他费用收入);
                         }
                     }
                 }

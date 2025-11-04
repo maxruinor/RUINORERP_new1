@@ -1,4 +1,4 @@
-﻿using RUINORERP.Business;
+using RUINORERP.Business;
 using RUINORERP.Model;
 using SqlSugar;
 using System;
@@ -38,6 +38,7 @@ using Force.DeepCloner;
 using AutoUpdateTools;
 using RUINORERP.Business.CommService;
 using RUINORERP.Extensions.Middlewares;
+using RUINORERP.UI.Network.Services;
 
 namespace RUINORERP.UI.ProductEAV
 {
@@ -1191,7 +1192,7 @@ namespace RUINORERP.UI.ProductEAV
                                 {
                                     Eav_ProdDetails ppg = new Eav_ProdDetails();
                                     ppg.GroupName = "";
-                                    ppg.SKU = BizCodeGenerator.Instance.GetBaseInfoNo(BaseInfoType.SKU_No);
+                                    ppg.SKU = BizCodeService.GetBaseInfoNo(BaseInfoType.SKU_No.ToString());
                                     bindingSourceSKU明细.Add(ppg);
                                 }
 
@@ -1369,7 +1370,7 @@ namespace RUINORERP.UI.ProductEAV
                 }
                 if (item.SKU.IsNullOrEmpty())
                 {
-                    item.SKU = BizCodeGenerator.Instance.GetBaseInfoNo(BaseInfoType.SKU_No);
+                    item.SKU = BizCodeService.GetBaseInfoNo(BaseInfoType.SKU_No.ToString());
                     if (item.ActionStatus == ActionStatus.新增)
                     {
                         item.ProdDetailID = 0;

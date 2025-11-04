@@ -1,4 +1,4 @@
-﻿using RUINORERP.PacketSpec.Models.Core;
+using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.Global;
 using RUINORERP.Model;
@@ -40,6 +40,11 @@ namespace RUINORERP.PacketSpec.Models.Requests
         /// SKU相关参数 - 用于SKU编码生成的特定参数
         /// </summary>
         public SKUCodeParameter SKUParameter { get; set; }
+
+        /// <summary>
+        /// 条码相关参数 - 用于条码生成的特定参数
+        /// </summary>
+        public BarCodeParameter BarCodeParameter { get; set; }
     }
 
     /// <summary>
@@ -89,5 +94,22 @@ namespace RUINORERP.PacketSpec.Models.Requests
         /// 序号长度 - SKU序号的固定长度
         /// </summary>
         public int SeqLength { get; set; } = 3;
+    }
+
+    /// <summary>
+    /// 条码参数类
+    /// 用于传递条码生成所需的特定参数
+    /// </summary>
+    public class BarCodeParameter
+    {
+        /// <summary>
+        /// 原始编码 - 需要生成条码的基础编码
+        /// </summary>
+        public string OriginalCode { get; set; }
+
+        /// <summary>
+        /// 补位码 - 当编码长度不足时用于补足的字符
+        /// </summary>
+        public char PaddingChar { get; set; } = '0';
     }
 }

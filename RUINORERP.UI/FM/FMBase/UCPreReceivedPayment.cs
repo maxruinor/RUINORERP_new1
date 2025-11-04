@@ -27,6 +27,7 @@ using SqlSugar;
 using RUINORERP.UI.BI;
 using RUINORERP.Business.CommService;
 using RUINORERP.Global.EnumExt;
+using RUINORERP.UI.Network.Services;
 using RUINORERP.UI.SysConfig;
 
 using FastReport.Table;
@@ -214,11 +215,11 @@ namespace RUINORERP.UI.FM
                 {
                     if (PaymentType == ReceivePaymentType.付款)
                     {
-                        entity.PreRPNO = BizCodeGenerator.Instance.GetBizBillNo(BizType.预付款单);
+                        entity.PreRPNO = BizCodeService.GetBizBillNo(BizType.预付款单);
                     }
                     else
                     {
-                        entity.PreRPNO = BizCodeGenerator.Instance.GetBizBillNo(BizType.预收款单);
+                        entity.PreRPNO = BizCodeService.GetBizBillNo(BizType.预收款单);
                     }
                 }
 

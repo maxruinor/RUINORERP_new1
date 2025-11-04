@@ -27,6 +27,7 @@ using SqlSugar;
 using RUINORERP.UI.BI;
 using RUINORERP.Business.CommService;
 using RUINORERP.Global.EnumExt;
+using RUINORERP.UI.Network.Services;
 using RUINORERP.UI.SysConfig;
 
 using FastReport.Table;
@@ -91,7 +92,7 @@ namespace RUINORERP.UI.FM
             {
                 entity.ActionStatus = ActionStatus.新增;
                 entity.DataStatus = (int)DataStatus.草稿;
-                entity.ApplicationNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.付款申请单);
+                entity.ApplicationNo = BizCodeService.GetBizBillNo(BizType.付款申请单);
                 entity.InvoiceDate = System.DateTime.Now;
                 entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
                 //清空

@@ -26,18 +26,19 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
         /// </summary>
         /// <param name="messageService">消息服务</param>
         /// <param name="logger">日志记录器</param>
-        public MessageCommandHandler(MessageService messageService, ILogger<MessageCommandHandler> logger = null)
+        public MessageCommandHandler(MessageService messageService, ILogger<MessageCommandHandler> logger = null) : 
+            base(logger ?? Startup.GetFromFac<ILogger<BaseClientCommandHandler>>())
         {
             _messageService = messageService ?? throw new ArgumentNullException(nameof(messageService));
             _logger = logger ?? Startup.GetFromFac<ILogger<MessageCommandHandler>>();
-
-            // 设置支持的命令
+            
+            // 保留通过SetSupportedCommands方法设置命令的方式，使用枚举值而非硬编码字符串
             SetSupportedCommands(
-                 MessageCommands.SendPopupMessage,
-                 MessageCommands.SendMessageToUser,
-                 MessageCommands.SendMessageToDepartment,
-                 MessageCommands.BroadcastMessage,
-                 MessageCommands.SendSystemNotification
+                MessageCommands.SendPopupMessage,
+                MessageCommands.SendMessageToUser,
+                MessageCommands.SendMessageToDepartment,
+                MessageCommands.BroadcastMessage,
+                MessageCommands.SendSystemNotification
             );
         }
 
@@ -51,7 +52,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
             bool initialized = await base.InitializeAsync();
             if (initialized)
             {
-                LogInfo("消息命令处理器初始化成功");
+                _logger.LogInformation("消息命令处理器初始化成功");
             }
             return initialized;
         }
@@ -65,11 +66,11 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
         {
             if (packet == null || packet.CommandId == null)
             {
-                LogError("收到无效的数据包");
+                _logger.LogError("收到无效的数据包");
                 return;
             }
 
-            LogInfo($"收到消息命令: {(ushort)packet.CommandId}");
+            _logger.LogInformation($"收到消息命令: {(ushort)packet.CommandId}");
 
             try
             {
@@ -77,7 +78,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                 var messageData = ExtractMessageData(packet);
                 if (messageData == null)
                 {
-                    LogWarning("无法解析消息数据");
+                    _logger.LogWarning("无法解析消息数据");
                     return;
                 }
 
@@ -106,12 +107,12 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                 }
                 else
                 {
-                    LogWarning($"未处理的消息命令ID: {packet.CommandId.FullCode}");
+                    _logger.LogWarning($"未处理的消息命令ID: {packet.CommandId.FullCode}");
                 }
             }
             catch (Exception ex)
             {
-                LogError("处理消息命令时发生异常", ex);
+                _logger.LogError(ex, "处理消息命令时发生异常");
             }
         }
 
@@ -124,11 +125,11 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
             {
                 // 触发MessageService中的事件
                 _messageService.OnPopupMessageReceived(messageData);
-                LogInfo("弹窗消息已处理");
+                _logger.LogInformation("弹窗消息已处理");
             }
             catch (Exception ex)
             {
-                LogError("处理弹窗消息命令时发生异常", ex);
+                _logger.LogError(ex, "处理弹窗消息命令时发生异常");
             }
         }
 
@@ -141,11 +142,11 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
             {
                 // 触发MessageService中的事件
                 _messageService.OnBusinessMessageReceived(messageData);
-                LogInfo("用户消息已处理");
+                _logger.LogInformation("用户消息已处理");
             }
             catch (Exception ex)
             {
-                LogError("处理用户消息命令时发生异常", ex);
+                _logger.LogError(ex, "处理用户消息命令时发生异常");
             }
         }
 
@@ -158,11 +159,11 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
             {
                 // 触发MessageService中的事件
                 _messageService.OnDepartmentMessageReceived(messageData);
-                LogInfo("部门消息已处理");
+                _logger.LogInformation("部门消息已处理");
             }
             catch (Exception ex)
             {
-                LogError("处理部门消息命令时发生异常", ex);
+                _logger.LogError(ex, "处理部门消息命令时发生异常");
             }
         }
 
@@ -175,11 +176,11 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
             {
                 // 触发MessageService中的事件
                 _messageService.OnBroadcastMessageReceived(messageData);
-                LogInfo("广播消息已处理");
+                _logger.LogInformation("广播消息已处理");
             }
             catch (Exception ex)
             {
-                LogError("处理广播消息命令时发生异常", ex);
+                _logger.LogError(ex, "处理广播消息命令时发生异常");
             }
         }
 
@@ -194,11 +195,11 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                 messageData.MessageType = MessageType.System;
                 // 触发系统通知事件
                 _messageService.OnSystemNotificationReceived(messageData);
-                LogInfo("系统通知已处理");
+                _logger.LogInformation("系统通知已处理");
             }            
-            catch (Exception ex)
+            catch (Exception ex)            
             {                
-                LogError("处理系统通知命令时发生异常", ex);
+                _logger.LogError(ex, "处理系统通知命令时发生异常");
             }
         }
 
@@ -247,8 +248,8 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                             messageData = MessageData.FromDictionary(dict);
                         }
                         catch (Exception ex)
-                        {                            
-                            LogWarning("无法转换消息数据: {ErrorMessage}"+ ex.Message);
+                        {                             
+                            _logger.LogWarning(ex, "无法转换消息数据");
                         }
                     }
                 }

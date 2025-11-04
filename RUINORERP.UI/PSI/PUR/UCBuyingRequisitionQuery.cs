@@ -279,7 +279,7 @@ namespace RUINORERP.UI.PSI.PUR
                     entity.CustomerVendor_ID = order.CustomerVendor_ID;
                     entity.PurOrder_NO = order.PurOrderNo;
                 }
-                entity.PurEntryNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.采购入库单);
+                entity.PurEntryNo = BizCodeService.GetBizBillNo(BizType.采购入库单);
                 //保存到数据库
                 BusinessHelper.Instance.InitEntity(entity);
             }

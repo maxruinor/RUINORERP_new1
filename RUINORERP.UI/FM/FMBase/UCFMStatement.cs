@@ -15,6 +15,7 @@ using RUINORERP.UI.UCSourceGrid;
 using System.Reflection;
 using System.Collections.Concurrent;
 using RUINORERP.Common.CollectionExtension;
+using RUINORERP.UI.Network.Services;
 using static RUINORERP.UI.Common.DataBindingHelper;
 using static RUINORERP.UI.Common.GUIUtils;
 using RUINORERP.Model.Dto;
@@ -92,7 +93,7 @@ namespace RUINORERP.UI.FM
                     foreach (var item in PaymentRecords)
                     {
                         var rqpara = new Model.CommonModel.RelatedQueryParameter();
-                        if (PaymentType == ReceivePaymentType.收款)
+                        if (item.ReceivePaymentType == (int)ReceivePaymentType.收款)
                         {
                             rqpara.bizType = BizType.收款单;
                         }
@@ -124,7 +125,7 @@ namespace RUINORERP.UI.FM
                     foreach (var item in receivablePayables)
                     {
                         var rqpara = new Model.CommonModel.RelatedQueryParameter();
-                        if (PaymentType == ReceivePaymentType.收款)
+                        if (item.ReceivePaymentType == (int)ReceivePaymentType.收款)
                         {
                             rqpara.bizType = BizType.应收款单;
                         }
@@ -228,7 +229,7 @@ namespace RUINORERP.UI.FM
                 //entity.DueDate = System.DateTime.Now;
                 if (string.IsNullOrEmpty(entity.StatementNo))
                 {
-                    entity.StatementNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.对账单);
+                    entity.StatementNo = BizCodeService.GetBizBillNo(BizType.对账单);
                 }
 
                 entity.StatementStatus = (int)StatementStatus.草稿;
@@ -724,10 +725,10 @@ namespace RUINORERP.UI.FM
             }
 
         }
- 
+
 
         void TotalSum()
-            {
+        {
 
             try
             {
@@ -741,7 +742,7 @@ namespace RUINORERP.UI.FM
                 //}
                 var paymentController = MainForm.Instance.AppContext.GetRequiredService<tb_FM_StatementController<tb_FM_Statement>>();
                 paymentController.CalculateTotalAmount(EditEntity, details, (ReceivePaymentType)EditEntity.ReceivePaymentType, (StatementType)EditEntity.StatementType);
-                
+
             }
             catch (Exception ex)
             {

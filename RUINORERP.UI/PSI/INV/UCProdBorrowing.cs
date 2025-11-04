@@ -43,6 +43,7 @@ using System.Diagnostics;
 using Netron.GraphLib;
 using LiveChartsCore.Geo;
 using RUINORERP.Model.CommonModel;
+using RUINORERP.UI.Network.Services;
 
 namespace RUINORERP.UI.PSI.INV
 {
@@ -134,7 +135,7 @@ namespace RUINORERP.UI.PSI.INV
                 entity.DataStatus = (int)DataStatus.草稿;
                 if (string.IsNullOrEmpty(entity.BorrowNo))
                 {
-                    entity.BorrowNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.借出单);
+                    entity.BorrowNo = BizCodeService.GetBizBillNo(BizType.借出单);
                 }
 
                 entity.DueDate = System.DateTime.Now.AddDays(30);//最长时间为30天

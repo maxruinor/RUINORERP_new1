@@ -151,11 +151,6 @@ namespace RUINORERP.UI.FM
 
         private void UCPaymentRecordQuery_Load(object sender, EventArgs e)
         {
-            //if (kryptonPanelQuery.Controls.Contains())
-            //{
-
-            //}
-
             #region 双击单号后按业务类型查询显示对应业务窗体
             base._UCBillChildQuery.GridRelated.ComplexType = true;
             //由这个列来决定单号显示哪个的业务窗体

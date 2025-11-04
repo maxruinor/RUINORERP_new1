@@ -19,6 +19,7 @@ using RUINORERP.Business;
 using RUINORERP.Model.ConfigModel;
 using RUINORERP.UI.SysConfig;
 using RUINORERP.UI.Network.Interfaces;
+using RUINORERP.UI.IM;
 
 namespace RUINORERP.UI.Network.DI
 {
@@ -90,7 +91,7 @@ namespace RUINORERP.UI.Network.DI
             services.AddSingleton<CacheClientService>();
             services.AddTransient<MessageService>();
             services.AddTransient<SimplifiedMessageService>();
-            services.AddTransient<IMessageService>(provider => provider.GetRequiredService<MessageService>());
+            services.AddTransient<MessageService>();
             services.AddScoped<EnhancedMessageManager>();
             services.AddTransient<SystemManagementService>();
             services.AddTransient<AuthenticationManagementService>();

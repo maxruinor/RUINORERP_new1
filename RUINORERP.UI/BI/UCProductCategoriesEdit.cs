@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -18,6 +18,7 @@ using System.Globalization;
 using RUINORERP.UI.Common;
 using RUINORERP.Global;
 using RUINOR.WinFormsUI;
+using RUINORERP.UI.Network.Services;
 
 namespace RUINORERP.UI.BI
 {
@@ -37,7 +38,7 @@ namespace RUINORERP.UI.BI
             _EditEntity = entity as tb_ProdCategories;
             if (_EditEntity.Category_ID == 0)
             {
-                _EditEntity.CategoryCode = BizCodeGenerator.Instance.GetBaseInfoNo(BaseInfoType.ProductNo);
+                _EditEntity.CategoryCode = BizCodeService.GetBaseInfoNo(BaseInfoType.ProductNo.ToString());
             }
             DataBindingHelper.BindData4TextBox<tb_ProdCategories>(entity, t => t.Category_name, txtcategory_name, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_ProdCategories>(entity, t => t.CategoryCode, txtcategoryCode, BindDataType4TextBox.Text, false);

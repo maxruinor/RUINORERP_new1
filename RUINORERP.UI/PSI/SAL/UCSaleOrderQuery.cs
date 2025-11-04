@@ -971,7 +971,7 @@ namespace RUINORERP.UI.PSI.SAL
                     entity.CustomerVendor_ID = saleorder.CustomerVendor_ID;
                     entity.SaleOrderNo = saleorder.SOrderNo;
                 }
-                entity.SaleOutNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.销售出库单);
+                entity.SaleOutNo = BizCodeService.GetBizBillNo(BizType.销售出库单);
                 BusinessHelper.Instance.InitEntity(entity);
                 //保存到数据库
 

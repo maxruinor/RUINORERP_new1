@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -17,6 +17,7 @@ using RUINORERP.UI.Common;
 using RUINORERP.Business;
 using RUINORERP.Global;
 using RUINORERP.UI.SysConfig;
+using RUINORERP.UI.Network.Services;
 
 namespace RUINORERP.UI.BI
 {
@@ -36,7 +37,7 @@ namespace RUINORERP.UI.BI
             _EditEntity = entity as tb_ProjectGroup;
             if (_EditEntity.ProjectGroup_ID == 0)
             {
-                _EditEntity.ProjectGroupCode = BizCodeGenerator.Instance.GetBaseInfoNo(BaseInfoType.ProjectGroupCode);
+                _EditEntity.ProjectGroupCode = BizCodeService.GetBaseInfoNo(BaseInfoType.ProjectGroupCode.ToString());
                 btnAssigneeEmployee.Visible = false;
             }
             DataBindingHelper.BindData4TextBox<tb_ProjectGroup>(entity, t => t.ProjectGroupCode, txtProjectGroupCode, BindDataType4TextBox.Text, false);

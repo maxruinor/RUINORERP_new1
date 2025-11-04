@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -24,6 +24,7 @@ using RUINORERP.Business.AutoMapper;
 using RUINORERP.Business.Processor;
 using RUINORERP.Business.Security;
 using SqlSugar;
+using RUINORERP.UI.Network.Services;
 
 namespace RUINORERP.UI.BI
 {
@@ -47,7 +48,7 @@ namespace RUINORERP.UI.BI
             {
                 if (Text.Contains("其他"))
                 {
-                    _EditEntity.CVCode = BizCodeGenerator.Instance.GetBaseInfoNo(BaseInfoType.CVOther);
+                    _EditEntity.CVCode = BizCodeService.GetBaseInfoNo(BaseInfoType.CVOther);
                     //txtIsCustomer.Enabled = false;
                     //txtIsVendor.Enabled = false;
                     chkOther.Enabled = true;
@@ -55,7 +56,7 @@ namespace RUINORERP.UI.BI
                 }
                 if (Text.Contains("客户"))
                 {
-                    _EditEntity.CVCode = BizCodeGenerator.Instance.GetBaseInfoNo(BaseInfoType.Customer);
+                    _EditEntity.CVCode = BizCodeService.GetBaseInfoNo(BaseInfoType.Customer);
                     _EditEntity.IsCustomer = true;
                     chkNoNeedSource.Visible = true;
                     lblCustomerCreditDays.Visible = true;
@@ -71,7 +72,7 @@ namespace RUINORERP.UI.BI
                 }
                 if (Text.Contains("供应商"))
                 {
-                    _EditEntity.CVCode = BizCodeGenerator.Instance.GetBaseInfoNo(BaseInfoType.Supplier);
+                    _EditEntity.CVCode = BizCodeService.GetBaseInfoNo(BaseInfoType.Supplier);
                     _EditEntity.IsVendor = true;
                     chkNoNeedSource.Visible = true;
                     lblCustomerCreditDays.Visible = false;
@@ -87,7 +88,7 @@ namespace RUINORERP.UI.BI
                 }
                 if (string.IsNullOrEmpty(_EditEntity.CVCode))
                 {
-                    _EditEntity.CVCode = BizCodeGenerator.Instance.GetBaseInfoNo(BaseInfoType.BusinessPartner);
+                    _EditEntity.CVCode = BizCodeService.GetBaseInfoNo(BaseInfoType.BusinessPartner);
                 }
 
                 //新建时默认启用

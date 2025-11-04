@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -26,6 +26,7 @@ using RUINORERP.Global.EnumExt;
 using Microsoft.Extensions.Logging;
 using RUINORERP.Model.Dto;
 using Microsoft.Extensions.DependencyInjection;
+using RUINORERP.UI.Network.Services;
 
 namespace RUINORERP.UI.Common
 {
@@ -93,7 +94,7 @@ namespace RUINORERP.UI.Common
                         ?? new tb_ModuleDefinition
                         {
                             ModuleName = moduleDto.Name,
-                            ModuleNo = BizCodeGenerator.Instance.GetBaseInfoNo(BaseInfoType.ModuleDefinition),
+                            ModuleNo = BizCodeService.GetBaseInfoNo(BaseInfoType.ModuleDefinition),
                             Available = true,
                             Visible = true
                         };
@@ -897,7 +898,7 @@ namespace RUINORERP.UI.Common
                 //定义模块
                 tb_ModuleDefinition mod = new tb_ModuleDefinition();
                 mod.ModuleName = item.Name;
-                mod.ModuleNo = BizCodeGenerator.Instance.GetBaseInfoNo(BaseInfoType.ModuleDefinition);
+                mod.ModuleNo = BizCodeService.GetBaseInfoNo(BaseInfoType.ModuleDefinition);
                 mod.Available = true;
                 mod.Visible = true;
                 tb_ModuleDefinition isExistt = ExistModuleList.FirstOrDefault(e => e.ModuleName == mod.ModuleName);

@@ -43,6 +43,7 @@ using StackExchange.Redis;
 using RUINORERP.Global.EnumExt;
 using static Google.Protobuf.Reflection.SourceCodeInfo.Types;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
+using RUINORERP.UI.Network.Services;
 
 namespace RUINORERP.UI.PSI.INV
 {
@@ -148,7 +149,7 @@ namespace RUINORERP.UI.PSI.INV
                     entity.DataStatus = (int)DataStatus.草稿;
                     if (string.IsNullOrEmpty(entity.CheckNo))
                     {
-                        entity.CheckNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.盘点单);
+                        entity.CheckNo = BizCodeService.GetBizBillNo(BizType.盘点单);
                     }
                     entity.Check_date = System.DateTime.Now;
                     entity.CarryingDate = System.DateTime.Now;

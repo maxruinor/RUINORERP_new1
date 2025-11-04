@@ -37,7 +37,8 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 BizCodeCommands.GenerateBizBillNo,
                 BizCodeCommands.GenerateBaseInfoNo,
                 BizCodeCommands.GenerateProductNo,
-                BizCodeCommands.GenerateProductSKUNo
+                BizCodeCommands.GenerateProductSKUNo,
+                BizCodeCommands.GenerateBarCode
             );
         }
 
@@ -69,6 +70,10 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     else if (commandId == BizCodeCommands.GenerateProductSKUNo)
                     {
                         return await HandleGenerateProductSKUNoAsync(request, cmd.Packet.ExecutionContext, cancellationToken);
+                    }
+                    else if (commandId == BizCodeCommands.GenerateBarCode)
+                    {
+                        return await HandleGenerateBarCodeAsync(request, cmd.Packet.ExecutionContext, cancellationToken);
                     }
                 }
 
@@ -121,27 +126,42 @@ namespace RUINORERP.Server.Network.CommandHandlers
         {
             try
             {
-                string baseInfoNo;
-                if (!string.IsNullOrEmpty(request.ParaConst))
+                // 尝试将字符串转换为枚举类型
+                if (Enum.TryParse<BaseInfoType>(request.BaseInfoType, true, out var baseInfoType))
                 {
-                    // 使用常量参数生成编号
-                    baseInfoNo = _bizCodeService.GenerateBaseInfoNo(request.BaseInfoType, request.ParaConst);
+                    string baseInfoNo;
+                    if (!string.IsNullOrEmpty(request.ParaConst))
+                    {
+                        // 使用常量参数生成编号
+                        baseInfoNo = _bizCodeService.GenerateBaseInfoNo(baseInfoType, request.ParaConst);
+                    }
+                    else
+                    {
+                        // 使用默认方式生成编号
+                        baseInfoNo = _bizCodeService.GenerateBaseInfoNo(baseInfoType);
+                    }
+                    
+                    logger?.LogInformation($"成功生成基础信息编号: {baseInfoNo}, 信息类型: {baseInfoType}");
+                    
+                    // 返回成功响应
+                    return new BizCodeResponse
+                    {
+                        IsSuccess = true,
+                        GeneratedCode = baseInfoNo,
+                        Message = "基础信息编号生成成功"
+                    };
                 }
                 else
                 {
-                    // 使用默认方式生成编号
-                    baseInfoNo = _bizCodeService.GenerateBaseInfoNo(request.BaseInfoType);
+                    // 枚举转换失败，记录错误
+                    logger?.LogError($"无效的基础信息类型: {request.BaseInfoType}");
+                    return new BizCodeResponse
+                    {
+                        IsSuccess = false,
+                        ErrorMessage = $"无效的基础信息类型: {request.BaseInfoType}",
+                        Message = "生成基础信息编号失败"
+                    };
                 }
-                
-                logger?.LogInformation($"成功生成基础信息编号: {baseInfoNo}, 信息类型: {request.BaseInfoType}");
-                
-                // 返回成功响应
-                return new BizCodeResponse
-                {
-                    IsSuccess = true,
-                    GeneratedCode = baseInfoNo,
-                    Message = "基础信息编号生成成功"
-                };
             }
             catch (Exception ex)
             {
@@ -218,7 +238,46 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 };
             }
         }
-       
-     
+
+        /// <summary>
+        /// 处理生成条码请求
+        /// </summary>
+        private async Task<IResponse> HandleGenerateBarCodeAsync(BizCodeRequest request, CommandContext executionContext, CancellationToken cancellationToken)
+        {
+            try
+            {
+                // 验证条码参数
+                if (request.BarCodeParameter == null || string.IsNullOrEmpty(request.BarCodeParameter.OriginalCode))
+                {
+                    throw new ArgumentException("条码生成参数不完整，缺少原始编码");
+                }
+
+                // 生成条码
+                string barcode = _bizCodeService.GenerateBarCode(
+                    request.BarCodeParameter.OriginalCode,
+                    request.BarCodeParameter.PaddingChar);
+                
+                logger?.LogInformation($"成功生成条码: {barcode}, 原始编码: {request.BarCodeParameter.OriginalCode}");
+                
+                // 返回成功响应
+                return new BizCodeResponse
+                {
+                    IsSuccess = true,
+                    GeneratedCode = barcode,
+                    Message = "条码生成成功"
+                };
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "生成条码失败");
+                return new BizCodeResponse
+                {
+                    IsSuccess = false,
+                    ErrorMessage = ex.Message,
+                    Message = "生成条码失败"
+                };
+            }
+        }
+        
     }
 }

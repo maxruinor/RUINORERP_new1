@@ -39,6 +39,7 @@ using RUINORERP.UI.CommonUI;
 using RUINORERP.Business.BizMapperService;
 using HLH.WinControl.MyTypeConverter;
 using RUINORERP.Model.CommonModel;
+using RUINORERP.UI.Network.Services;
 
 namespace RUINORERP.UI.MRP.MP
 {
@@ -146,7 +147,7 @@ namespace RUINORERP.UI.MRP.MP
                     entity.DataStatus = (int)DataStatus.草稿;
                     if (entity.MONO.IsNullOrEmpty())
                     {
-                        entity.MONO = BizCodeGenerator.Instance.GetBizBillNo(BizType.制令单);
+                        entity.MONO = BizCodeService.GetBizBillNo(BizType.制令单);
                     }
                     entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
                     entity.Created_at = System.DateTime.Now;

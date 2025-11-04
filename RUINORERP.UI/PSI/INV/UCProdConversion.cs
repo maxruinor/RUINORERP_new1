@@ -41,6 +41,7 @@ using Krypton.Toolkit;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.Business.CommService;
 using RUINORERP.Extensions.Middlewares;
+using RUINORERP.UI.Network.Services;
 
 
 
@@ -100,7 +101,7 @@ namespace RUINORERP.UI.PSI.INV
                 entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
                 if (string.IsNullOrEmpty(entity.ConversionNo))
                 {
-                    entity.ConversionNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.产品转换单);
+                    entity.ConversionNo = BizCodeService.GetBizBillNo(BizType.产品转换单);
                 }
                 entity.ConversionDate = System.DateTime.Now;
                 if (entity.tb_ProdConversionDetails != null && entity.tb_ProdConversionDetails.Count > 0)

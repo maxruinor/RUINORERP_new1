@@ -69,7 +69,7 @@ namespace RUINORERP.Server.Network.Services
                     MessageType = "Popup"
                 };
 
-                var request = new MessageRequest(MessageCmdType.Unknown, messageData);
+                var request = new MessageRequest(MessageType.Unknown, messageData);
                 
                 // 发送消息并等待响应 - 同步等待方式
                 var responsePacket = await _sessionService.SendCommandAndWaitForResponseAsync(
@@ -131,7 +131,7 @@ namespace RUINORERP.Server.Network.Services
                     MessageType = "Text"
                 };
 
-                var request = new MessageRequest(MessageCmdType.Unknown, messageData);
+                var request = new MessageRequest(MessageType.Unknown, messageData);
                 
                 // 发送消息并等待响应
                 var responsePacket = await _sessionService.SendCommandAndWaitForResponseAsync(
@@ -191,7 +191,7 @@ namespace RUINORERP.Server.Network.Services
                     MessageType = "Popup"
                 };
 
-                var request = new MessageRequest(MessageCmdType.Unknown, messageData);
+                var request = new MessageRequest(MessageType.Unknown, messageData);
                 
                 // 发送消息（不等待响应，通过事件处理）
                 var success = await _sessionService.SendCommandAsync(

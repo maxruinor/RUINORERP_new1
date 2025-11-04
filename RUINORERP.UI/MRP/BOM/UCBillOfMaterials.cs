@@ -1,4 +1,4 @@
-﻿﻿using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -25,6 +25,7 @@ using RUINORERP.Global;
 using RUINORERP.UI.Report;
 using RUINORERP.UI.BaseForm;
 using Microsoft.Extensions.Logging;
+using RUINORERP.UI.Network.Services;
 using SqlSugar;
 using SourceGrid;
 using System.Linq.Expressions;
@@ -1296,7 +1297,7 @@ namespace RUINORERP.UI.MRP.BOM
                 EditEntity.ActionStatus = ActionStatus.新增;
                 if (string.IsNullOrEmpty(entity.BOM_No))
                 {
-                    entity.BOM_No = BizCodeGenerator.Instance.GetBizBillNo(BizType.BOM物料清单);
+                    entity.BOM_No = BizCodeService.GetBizBillNo(BizType.BOM物料清单);
                 }
                 EditEntity.Effective_at = System.DateTime.Now;
                 EditEntity.ApprovalStatus = (int)ApprovalStatus.未审核;
@@ -1537,7 +1538,7 @@ namespace RUINORERP.UI.MRP.BOM
             EditEntity.Approver_at = null;
             EditEntity.ProdDetailID = 0;
             EditEntity.SKU = null;
-            EditEntity.BOM_No = BizCodeGenerator.Instance.GetBizBillNo(BizType.BOM物料清单);
+            EditEntity.BOM_No = BizCodeService.GetBizBillNo(BizType.BOM物料清单);
 
             BusinessHelper.Instance.InitEntity(EditEntity);
             foreach (var item in EditEntity.tb_BOM_SDetails)

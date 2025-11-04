@@ -29,6 +29,10 @@
         private void InitializeComponent()
         {
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
+            this.lblExchangeRate = new Krypton.Toolkit.KryptonLabel();
+            this.txtExchangeRate = new Krypton.Toolkit.KryptonTextBox();
+            this.lblCurrency_ID = new Krypton.Toolkit.KryptonLabel();
+            this.cmbCurrency_ID = new Krypton.Toolkit.KryptonComboBox();
             this.chkIsCustomizedOrder = new Krypton.Toolkit.KryptonCheckBox();
             this.cmbProcessWay = new Krypton.Toolkit.KryptonComboBox();
             this.kryptonLabel1 = new Krypton.Toolkit.KryptonLabel();
@@ -72,10 +76,8 @@
             this.txtTotalQty = new Krypton.Toolkit.KryptonTextBox();
             this.txtTotalTaxAmount = new Krypton.Toolkit.KryptonTextBox();
             this.lblTotalTaxAmount = new Krypton.Toolkit.KryptonLabel();
-            this.lblExchangeRate = new Krypton.Toolkit.KryptonLabel();
-            this.txtExchangeRate = new Krypton.Toolkit.KryptonTextBox();
-            this.lblCurrency_ID = new Krypton.Toolkit.KryptonLabel();
-            this.cmbCurrency_ID = new Krypton.Toolkit.KryptonComboBox();
+            this.kryptonLabel5 = new Krypton.Toolkit.KryptonLabel();
+            this.cmbPayStatus = new Krypton.Toolkit.KryptonComboBox();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
@@ -84,6 +86,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1.Panel2)).BeginInit();
             this.kryptonSplitContainer1.Panel2.SuspendLayout();
             this.kryptonSplitContainer1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.cmbCurrency_ID)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbProcessWay)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbPaytype_ID)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbCustomerVendor_ID)).BeginInit();
@@ -95,7 +98,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer2.Panel2)).BeginInit();
             this.kryptonSplitContainer2.Panel2.SuspendLayout();
             this.kryptonSplitContainer2.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.cmbCurrency_ID)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.cmbPayStatus)).BeginInit();
             this.SuspendLayout();
             // 
             // kryptonSplitContainer1
@@ -108,6 +111,8 @@
             // 
             // kryptonSplitContainer1.Panel1
             // 
+            this.kryptonSplitContainer1.Panel1.Controls.Add(this.kryptonLabel5);
+            this.kryptonSplitContainer1.Panel1.Controls.Add(this.cmbPayStatus);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblExchangeRate);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.txtExchangeRate);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblCurrency_ID);
@@ -155,6 +160,38 @@
             this.kryptonSplitContainer1.SplitterDistance = 279;
             this.kryptonSplitContainer1.TabIndex = 4;
             // 
+            // lblExchangeRate
+            // 
+            this.lblExchangeRate.Location = new System.Drawing.Point(1051, 118);
+            this.lblExchangeRate.Name = "lblExchangeRate";
+            this.lblExchangeRate.Size = new System.Drawing.Size(36, 20);
+            this.lblExchangeRate.TabIndex = 203;
+            this.lblExchangeRate.Values.Text = "汇率";
+            // 
+            // txtExchangeRate
+            // 
+            this.txtExchangeRate.Location = new System.Drawing.Point(1093, 116);
+            this.txtExchangeRate.Name = "txtExchangeRate";
+            this.txtExchangeRate.Size = new System.Drawing.Size(136, 23);
+            this.txtExchangeRate.TabIndex = 204;
+            // 
+            // lblCurrency_ID
+            // 
+            this.lblCurrency_ID.Location = new System.Drawing.Point(805, 66);
+            this.lblCurrency_ID.Name = "lblCurrency_ID";
+            this.lblCurrency_ID.Size = new System.Drawing.Size(36, 20);
+            this.lblCurrency_ID.TabIndex = 201;
+            this.lblCurrency_ID.Values.Text = "币别";
+            // 
+            // cmbCurrency_ID
+            // 
+            this.cmbCurrency_ID.DropDownWidth = 100;
+            this.cmbCurrency_ID.IntegralHeight = false;
+            this.cmbCurrency_ID.Location = new System.Drawing.Point(846, 66);
+            this.cmbCurrency_ID.Name = "cmbCurrency_ID";
+            this.cmbCurrency_ID.Size = new System.Drawing.Size(157, 21);
+            this.cmbCurrency_ID.TabIndex = 202;
+            // 
             // chkIsCustomizedOrder
             // 
             this.chkIsCustomizedOrder.Enabled = false;
@@ -168,18 +205,20 @@
             // 
             this.cmbProcessWay.DropDownWidth = 100;
             this.cmbProcessWay.IntegralHeight = false;
-            this.cmbProcessWay.Location = new System.Drawing.Point(362, 125);
+            this.cmbProcessWay.Location = new System.Drawing.Point(846, 143);
             this.cmbProcessWay.Name = "cmbProcessWay";
-            this.cmbProcessWay.Size = new System.Drawing.Size(167, 21);
+            this.cmbProcessWay.Size = new System.Drawing.Size(157, 21);
             this.cmbProcessWay.TabIndex = 150;
+            this.cmbProcessWay.SelectedIndexChanged += new System.EventHandler(this.cmbProcessWay_SelectedIndexChanged);
             // 
             // kryptonLabel1
             // 
-            this.kryptonLabel1.Location = new System.Drawing.Point(300, 125);
+            this.kryptonLabel1.Location = new System.Drawing.Point(784, 143);
             this.kryptonLabel1.Name = "kryptonLabel1";
             this.kryptonLabel1.Size = new System.Drawing.Size(62, 20);
             this.kryptonLabel1.TabIndex = 146;
             this.kryptonLabel1.Values.Text = "处理方式";
+            this.kryptonLabel1.Click += new System.EventHandler(this.kryptonLabel1_Click);
             // 
             // lblDataStatus
             // 
@@ -529,37 +568,22 @@
             this.lblTotalTaxAmount.TabIndex = 113;
             this.lblTotalTaxAmount.Values.Text = "合计税额";
             // 
-            // lblExchangeRate
+            // kryptonLabel5
             // 
-            this.lblExchangeRate.Location = new System.Drawing.Point(1051, 118);
-            this.lblExchangeRate.Name = "lblExchangeRate";
-            this.lblExchangeRate.Size = new System.Drawing.Size(36, 20);
-            this.lblExchangeRate.TabIndex = 203;
-            this.lblExchangeRate.Values.Text = "汇率";
+            this.kryptonLabel5.Location = new System.Drawing.Point(294, 128);
+            this.kryptonLabel5.Name = "kryptonLabel5";
+            this.kryptonLabel5.Size = new System.Drawing.Size(62, 20);
+            this.kryptonLabel5.TabIndex = 205;
+            this.kryptonLabel5.Values.Text = "付款状态";
             // 
-            // txtExchangeRate
+            // cmbPayStatus
             // 
-            this.txtExchangeRate.Location = new System.Drawing.Point(1093, 116);
-            this.txtExchangeRate.Name = "txtExchangeRate";
-            this.txtExchangeRate.Size = new System.Drawing.Size(136, 23);
-            this.txtExchangeRate.TabIndex = 204;
-            // 
-            // lblCurrency_ID
-            // 
-            this.lblCurrency_ID.Location = new System.Drawing.Point(805, 66);
-            this.lblCurrency_ID.Name = "lblCurrency_ID";
-            this.lblCurrency_ID.Size = new System.Drawing.Size(36, 20);
-            this.lblCurrency_ID.TabIndex = 201;
-            this.lblCurrency_ID.Values.Text = "币别";
-            // 
-            // cmbCurrency_ID
-            // 
-            this.cmbCurrency_ID.DropDownWidth = 100;
-            this.cmbCurrency_ID.IntegralHeight = false;
-            this.cmbCurrency_ID.Location = new System.Drawing.Point(846, 66);
-            this.cmbCurrency_ID.Name = "cmbCurrency_ID";
-            this.cmbCurrency_ID.Size = new System.Drawing.Size(157, 21);
-            this.cmbCurrency_ID.TabIndex = 202;
+            this.cmbPayStatus.DropDownWidth = 100;
+            this.cmbPayStatus.IntegralHeight = false;
+            this.cmbPayStatus.Location = new System.Drawing.Point(362, 127);
+            this.cmbPayStatus.Name = "cmbPayStatus";
+            this.cmbPayStatus.Size = new System.Drawing.Size(167, 21);
+            this.cmbPayStatus.TabIndex = 206;
             // 
             // UCPurEntryRe
             // 
@@ -579,6 +603,7 @@
             this.kryptonSplitContainer1.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).EndInit();
             this.kryptonSplitContainer1.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.cmbCurrency_ID)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbProcessWay)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbPaytype_ID)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbCustomerVendor_ID)).EndInit();
@@ -591,7 +616,7 @@
             this.kryptonSplitContainer2.Panel2.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer2)).EndInit();
             this.kryptonSplitContainer2.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.cmbCurrency_ID)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.cmbPayStatus)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -647,5 +672,7 @@
         private Krypton.Toolkit.KryptonTextBox txtExchangeRate;
         private Krypton.Toolkit.KryptonLabel lblCurrency_ID;
         private Krypton.Toolkit.KryptonComboBox cmbCurrency_ID;
+        private Krypton.Toolkit.KryptonLabel kryptonLabel5;
+        private Krypton.Toolkit.KryptonComboBox cmbPayStatus;
     }
 }

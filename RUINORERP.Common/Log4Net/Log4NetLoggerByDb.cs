@@ -100,7 +100,7 @@ namespace RUINORERP.Common.Log4Net
             try
             {
 
-                #region 记录日志信息
+               
 
                 if (!IsEnabled(logLevel))
                 {
@@ -244,7 +244,7 @@ namespace RUINORERP.Common.Log4Net
                             break;
                     }
                 }
-                #endregion
+                 
             }
             catch (Exception exx)
             {
@@ -355,26 +355,6 @@ namespace RUINORERP.Common.Log4Net
                 Size = size,
                 Layout = new Layout2RawLayoutAdapter(layout)
             });
-        }
-
-        public static ILog CreateLogerByCustomeDb(ILoggerRepository loggerRepository)
-        {
-
-            ILog log = LogManager.GetLogger(loggerRepository.Name, "erp_log");
-
-            //CustomLogContent message = new CustomLogContent();
-            //message.Message = "审核成功111";
-            //message.UserName = "金朝钱222";
-            ////  message.Url = Request.Url.ToString();
-            //// message.ModName = "其他入库";
-            //// message.ActionName = "审核";
-            //// message.Name = "Bill20150505";
-            //log.Info(message);
-            //// logger.Debug(message);
-
-            return log;
-
-
         }
 
 

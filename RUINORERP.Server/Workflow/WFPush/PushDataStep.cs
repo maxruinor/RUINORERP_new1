@@ -50,7 +50,7 @@ namespace RUINORERP.Server.Workflow.WFPush
                         Data = messageJson
                     };
 
-                    var request = new MessageRequest(MessageCmdType.Unknown, messageObject);
+                    var request = new MessageRequest(MessageType.Unknown, messageObject);
                     var success = _sessionService.SendCommandAsync(
                         session.SessionID, 
                         MessageCommands.SendMessageToUser, 

@@ -72,7 +72,7 @@ namespace RUINORERP.Server.Network.Services
                     MessageType = "Popup"
                 };
 
-                var request = new MessageRequest(MessageCmdType.Unknown, messageData);
+                var request = new MessageRequest(MessageType.Unknown, messageData);
                 
                 // 发送消息并等待响应
                 var responsePacket = await sessionService.SendCommandAndWaitForResponseAsync(

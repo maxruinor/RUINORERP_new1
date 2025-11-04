@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -16,6 +16,7 @@ using RUINORERP.Business.LogicaService;
 using RUINORERP.Business;
 using RUINORERP.UI.Common;
 using RUINORERP.Global;
+using RUINORERP.UI.Network.Services;
 
 namespace RUINORERP.UI.BI
 {
@@ -36,7 +37,7 @@ namespace RUINORERP.UI.BI
             _EditEntity = entity as tb_Location;
             if (_EditEntity.Location_ID == 0)
             {
-                _EditEntity.LocationCode = BizCodeGenerator.Instance.GetBaseInfoNo(BaseInfoType.Location);
+                _EditEntity.LocationCode = BizCodeService.GetBaseInfoNo(BaseInfoType.Location.ToString());
             }
             DataBindingHelper.BindData4Cmb<tb_LocationType>(entity, k => k.LocationType_ID, v=>v.TypeName, txtLocationType_ID);
             DataBindingHelper.BindData4TextBox<tb_Location>(entity, t => t.Name, txtName, BindDataType4TextBox.Text, false);

@@ -49,7 +49,7 @@ namespace RUINORERP.Server.Network.Services
                     MessageType = "Popup"
                 };
 
-                var request = new MessageRequest(MessageCmdType.Unknown, messageData);
+                var request = new MessageRequest(MessageType.Unknown, messageData);
                 
                 // 发送消息并等待响应
                 var responsePacket = await _sessionService.SendCommandAndWaitForResponseAsync(
@@ -101,7 +101,7 @@ namespace RUINORERP.Server.Network.Services
                     MessageType = "Text"
                 };
 
-                var request = new MessageRequest(MessageCmdType.Unknown, messageData);
+                var request = new MessageRequest(MessageType.Unknown, messageData);
                 
                 // 发送消息（不等待响应）
                 var success = await _sessionService.SendCommandAsync(
@@ -150,7 +150,7 @@ namespace RUINORERP.Server.Network.Services
                             MessageType = "Broadcast"
                         };
 
-                        var request = new MessageRequest(MessageCmdType.Unknown, messageData);
+                        var request = new MessageRequest(MessageType.Unknown, messageData);
                         
                         // 发送消息（不等待响应）
                         var success = await _sessionService.SendCommandAsync(

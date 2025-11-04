@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -20,6 +20,7 @@ using RUINORERP.UI.Common;
 using RUINORERP.Global;
 using FastReport.Utils;
 using RUINORERP.Common.Extensions;
+using RUINORERP.UI.Network.Services;
 
 namespace RUINORERP.UI.BI
 {
@@ -44,7 +45,7 @@ namespace RUINORERP.UI.BI
             _EditEntity = entity as tb_Employee;
             if (_EditEntity.Employee_ID == 0)
             {
-                _EditEntity.Employee_NO = BizCodeGenerator.Instance.GetBaseInfoNo(BaseInfoType.Employee);
+                _EditEntity.Employee_NO = BizCodeService.GetBaseInfoNo(BaseInfoType.Employee.ToString());
                 _EditEntity.Is_enabled = true;
             }
 

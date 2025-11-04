@@ -783,7 +783,7 @@ namespace RUINORERP.Server.Controls
                             ServerAddress = newServerAddress
                         };
 
-                        var request = new MessageRequest(MessageCmdType.Unknown, messageData);
+                        var request = new MessageRequest(MessageType.Unknown, messageData);
                         var success = _sessionService.SendCommandAsync(
                             session.SessionID,
                             MessageCommands.SendMessageToUser,
@@ -843,7 +843,7 @@ namespace RUINORERP.Server.Controls
                             ServerAddress = newServerAddress
                         };
 
-                        var request = new MessageRequest(MessageCmdType.Unknown, messageData);
+                        var request = new MessageRequest(MessageType.Message, messageData);
                         var success = _sessionService.SendCommandAsync(
                             session.SessionID,
                             MessageCommands.SendMessageToUser,
@@ -904,7 +904,7 @@ namespace RUINORERP.Server.Controls
                             Command = "FORCE_LOGOUT"
                         };
 
-                        var request = new MessageRequest(MessageCmdType.Unknown, messageData);
+                        var request = new MessageRequest(MessageType.Unknown, messageData);
                         var success = _sessionService.SendCommandAsync(
                             session.SessionID,
                             MessageCommands.SendMessageToUser,
@@ -948,7 +948,7 @@ namespace RUINORERP.Server.Controls
                             Command = "DELETE_CONFIG"
                         };
 
-                        var request = new MessageRequest(MessageCmdType.Unknown, messageData);
+                        var request = new MessageRequest(MessageType.Unknown, messageData);
                         var success = _sessionService.SendCommandAsync(
                             session.SessionID,
                             MessageCommands.SendMessageToUser,
@@ -991,7 +991,7 @@ namespace RUINORERP.Server.Controls
                     // 使用新的SessionService获取会话信息
 
                     #region
-                    var request = new MessageRequest(MessageCmdType.Prompt, "");
+                    var request = new MessageRequest(MessageType.Prompt, "");
 
                     var response = await _serverMessageService.SendPopupMessageAsync(
                         user.用户名,
@@ -1025,7 +1025,7 @@ namespace RUINORERP.Server.Controls
                             Command = "PUSH_CACHE"
                         };
 
-                        var request = new MessageRequest(MessageCmdType.Unknown, messageData);
+                        var request = new MessageRequest(MessageType.Unknown, messageData);
                         var success = _sessionService.SendCommandAsync(
                             session.SessionID,
                             MessageCommands.SendMessageToUser,
@@ -1068,7 +1068,7 @@ namespace RUINORERP.Server.Controls
                             Command = "PUSH_UPDATE"
                         };
 
-                        var request = new MessageRequest(MessageCmdType.Unknown, messageData);
+                        var request = new MessageRequest(MessageType.Unknown, messageData);
                         var success = _sessionService.SendCommandAsync(
                             session.SessionID,
                             MessageCommands.SendMessageToUser,
@@ -1111,7 +1111,7 @@ namespace RUINORERP.Server.Controls
                             Command = "PUSH_SYS_CONFIG"
                         };
 
-                        var request = new MessageRequest(MessageCmdType.Unknown, messageData);
+                        var request = new MessageRequest(MessageType.Unknown, messageData);
                         var success = _sessionService.SendCommandAsync(
                             session.SessionID,
                             MessageCommands.SendMessageToUser,
@@ -1170,7 +1170,7 @@ namespace RUINORERP.Server.Controls
                             Command = "PUSH_CACHE"
                         };
 
-                        var request = new MessageRequest(MessageCmdType.Unknown, messageData);
+                        var request = new MessageRequest(MessageType.Unknown, messageData);
                         var success = _sessionService.SendCommandAsync(
                             session.SessionID,
                             MessageCommands.SendMessageToUser,
@@ -1212,7 +1212,7 @@ namespace RUINORERP.Server.Controls
                             Command = "SHUTDOWN"
                         };
 
-                        var request = new MessageRequest(MessageCmdType.Unknown, messageData);
+                        var request = new MessageRequest(MessageType.Unknown, messageData);
                         var success = _sessionService.SendCommandAsync(
                             session.SessionID,
                             MessageCommands.SendMessageToUser,
@@ -1388,7 +1388,7 @@ namespace RUINORERP.Server.Controls
                             Command = "PUSH_UPDATE"
                         };
 
-                        var request = new MessageRequest(MessageCmdType.Unknown, messageData);
+                        var request = new MessageRequest(MessageType.Unknown, messageData);
                         var success = _sessionService.SendCommandAsync(
                             session.SessionID,
                             MessageCommands.SendMessageToUser,
@@ -1445,7 +1445,7 @@ namespace RUINORERP.Server.Controls
                             Command = "PUSH_SYS_CONFIG"
                         };
 
-                        var request = new MessageRequest(MessageCmdType.Unknown, messageData);
+                        var request = new MessageRequest(MessageType.Unknown, messageData);
                         var success = _sessionService.SendCommandAsync(
                             session.SessionID,
                             MessageCommands.SendMessageToUser,

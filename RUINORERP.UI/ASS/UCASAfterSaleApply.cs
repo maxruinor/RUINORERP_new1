@@ -51,6 +51,7 @@ using Netron.GraphLib;
 using RUINORERP.Extensions.Middlewares;
 using RUINORERP.Business.Cache;
 using RUINORERP.Business.BizMapperService;
+using RUINORERP.UI.Network.Services;
 
 
 namespace RUINORERP.UI.ASS
@@ -245,7 +246,7 @@ namespace RUINORERP.UI.ASS
                     entity.Priority = (int)Priority.正常;
                     if (string.IsNullOrEmpty(entity.ASApplyNo))
                     {
-                        entity.ASApplyNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.售后申请单);
+                        entity.ASApplyNo = BizCodeService.GetBizBillNo(BizType.售后申请单);
                     }
                     entity.ASProcessStatus = (int)ASProcessStatus.登记;
                     entity.RepairEvaluationOpinion = string.Empty;

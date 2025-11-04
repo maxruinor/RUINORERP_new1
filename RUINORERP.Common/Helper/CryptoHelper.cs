@@ -86,29 +86,72 @@ namespace RUINORERP.Common.Helper
                 Console.WriteLine($"尝试获取连接字符串 '{name}'...");
                 string encryptedConnectionString = null;
                 
-                // 1. 首先尝试从ConnectionStrings配置节获取
-                var connSetting = ConfigurationManager.ConnectionStrings[name];
-                if (connSetting != null)
+                // 1. 安全地从ConnectionStrings配置节获取，避免AccessViolationException
+                try
                 {
-                    encryptedConnectionString = connSetting.ConnectionString;
-                    Console.WriteLine($"从ConnectionStrings获取到连接字符串 '{name}'");
+                    if (ConfigurationManager.ConnectionStrings != null && ConfigurationManager.ConnectionStrings.Count > 0)
+                    {
+                        var connSetting = ConfigurationManager.ConnectionStrings[name];
+                        if (connSetting != null)
+                        {
+                            encryptedConnectionString = connSetting.ConnectionString;
+                            Console.WriteLine($"从ConnectionStrings获取到连接字符串 '{name}'");
+                        }
+                    }
+                }
+                catch (Exception connEx)
+                {
+                    Console.WriteLine($"访问ConnectionStrings时出错: {connEx.Message}");
+                    // 继续尝试其他方式，不立即抛出异常
                 }
 
                 // 2. 如果ConnectionStrings中没有，尝试从AppSettings获取
                 if (string.IsNullOrEmpty(encryptedConnectionString))
                 {
-                    encryptedConnectionString = ConfigurationManager.AppSettings[name];
-                    if (!string.IsNullOrEmpty(encryptedConnectionString))
+                    try
                     {
-                        Console.WriteLine($"从AppSettings获取到连接字符串 '{name}'");
+                        if (ConfigurationManager.AppSettings != null)
+                        {
+                            encryptedConnectionString = ConfigurationManager.AppSettings[name];
+                            if (!string.IsNullOrEmpty(encryptedConnectionString))
+                            {
+                                Console.WriteLine($"从AppSettings获取到连接字符串 '{name}'");
+                            }
+                        }
+                    }
+                    catch (Exception appEx)
+                    {
+                        Console.WriteLine($"访问AppSettings时出错: {appEx.Message}");
                     }
                 }
 
                 // 3. 特别处理：如果找不到指定名称的连接字符串，尝试使用通用的"ConnectString"配置
+                // 避免递归调用导致的潜在问题
                 if (string.IsNullOrEmpty(encryptedConnectionString) && name != "ConnectString")
                 {
                     Console.WriteLine($"尝试使用通用连接字符串 'ConnectString' 替代 '{name}'");
-                    return GetDecryptedConnectionString("ConnectString");
+                    try
+                    {
+                        // 直接获取ConnectString，避免递归调用
+                        if (ConfigurationManager.ConnectionStrings != null)
+                        {
+                            var connectSetting = ConfigurationManager.ConnectionStrings["ConnectString"];
+                            if (connectSetting != null)
+                            {
+                                encryptedConnectionString = connectSetting.ConnectionString;
+                            }
+                        }
+                        
+                        // 如果ConnectionStrings中没有，尝试AppSettings
+                        if (string.IsNullOrEmpty(encryptedConnectionString) && ConfigurationManager.AppSettings != null)
+                        {
+                            encryptedConnectionString = ConfigurationManager.AppSettings["ConnectString"];
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"获取通用连接字符串时出错: {ex.Message}");
+                    }
                 }
 
                 // 4. 如果仍然找不到，抛出异常
@@ -130,6 +173,11 @@ namespace RUINORERP.Common.Helper
                 }
                 
                 return decryptedConnectionString;
+            }
+            catch (AccessViolationException ave)
+            {
+                Console.WriteLine($"内存访问冲突错误 - 获取连接字符串 '{name}': {ave.Message}");
+                throw new ApplicationException($"内存访问冲突: 无法安全访问配置文件中的连接字符串 '{name}'", ave);
             }
             catch (Exception ex)
             {

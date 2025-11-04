@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Text;
 using RUINORERP.Global;
 using RUINORERP.Model;
+using System.Linq;
 
 namespace RUINORERP.Server.Services.BizCode
 {
@@ -69,11 +70,11 @@ namespace RUINORERP.Server.Services.BizCode
         /// <summary>
         /// 生成基础信息编号
         /// </summary>
-        /// <param name="infoType">信息类型</param>
+        /// <param name="infoType">信息类型枚举</param>
         /// <returns>生成的信息编号</returns>
-        public string GenerateBaseInfoNo(string infoType)
+        public string GenerateBaseInfoNo(BaseInfoType infoType)
         {
-            // 根据信息类型选择不同的规则
+            // 根据信息类型枚举选择不同的规则
             string rule = GetBaseInfoNoRule(infoType);
             return _bnrFactory.Create(rule);
         }
@@ -81,16 +82,58 @@ namespace RUINORERP.Server.Services.BizCode
         /// <summary>
         /// 生成基础信息编号（带参数）
         /// </summary>
-        /// <param name="infoType">信息类型</param>
+        /// <param name="infoType">信息类型枚举</param>
         /// <param name="paraConst">常量参数</param>
         /// <returns>生成的信息编号</returns>
-        public string GenerateBaseInfoNo(string infoType, string paraConst)
+        public string GenerateBaseInfoNo(BaseInfoType infoType, string paraConst)
         {
-            // 根据信息类型和常量参数选择规则
+            // 根据信息类型枚举和常量参数选择规则
             string rule = GetBaseInfoNoRule(infoType, paraConst);
             string result = _bnrFactory.Create(rule);
             
             // 如果有常量参数，将其添加到结果前面
+            if (!string.IsNullOrEmpty(paraConst))
+            {
+                return paraConst + result;
+            }
+            
+            return result;
+        }
+        
+        /// <summary>
+        /// 生成基础信息编号（兼容字符串类型参数）
+        /// </summary>
+        /// <param name="infoTypeStr">信息类型字符串</param>
+        /// <returns>生成的信息编号</returns>
+        public string GenerateBaseInfoNo(string infoTypeStr)
+        {
+            // 尝试将字符串转换为枚举
+            if (Enum.TryParse<BaseInfoType>(infoTypeStr, true, out var infoType))
+            {
+                return GenerateBaseInfoNo(infoType);
+            }
+            // 如果转换失败，使用字符串处理（保留兼容性）
+            string rule = GetBaseInfoNoRule(infoTypeStr);
+            return _bnrFactory.Create(rule);
+        }
+        
+        /// <summary>
+        /// 生成基础信息编号（兼容字符串类型参数，带常量参数）
+        /// </summary>
+        /// <param name="infoTypeStr">信息类型字符串</param>
+        /// <param name="paraConst">常量参数</param>
+        /// <returns>生成的信息编号</returns>
+        public string GenerateBaseInfoNo(string infoTypeStr, string paraConst)
+        {
+            // 尝试将字符串转换为枚举
+            if (Enum.TryParse<BaseInfoType>(infoTypeStr, true, out var infoType))
+            {
+                return GenerateBaseInfoNo(infoType, paraConst);
+            }
+            // 如果转换失败，使用字符串处理（保留兼容性）
+            string rule = GetBaseInfoNoRule(infoTypeStr, paraConst);
+            string result = _bnrFactory.Create(rule);
+            
             if (!string.IsNullOrEmpty(paraConst))
             {
                 return paraConst + result;
@@ -283,9 +326,9 @@ namespace RUINORERP.Server.Services.BizCode
         }
         
         /// <summary>
-        /// 获取基础信息编号规则
+        /// 获取基础信息编号规则（字符串版本，仅用于兼容性）
         /// </summary>
-        /// <param name="infoType">信息类型</param>
+        /// <param name="infoType">信息类型字符串</param>
         /// <returns>编码规则</returns>
         private string GetBaseInfoNoRule(string infoType)
         {
@@ -329,9 +372,9 @@ namespace RUINORERP.Server.Services.BizCode
         }
         
         /// <summary>
-        /// 获取基础信息编号规则（带参数）
+        /// 获取基础信息编号规则（带参数，字符串版本，仅用于兼容性）
         /// </summary>
-        /// <param name="infoType">信息类型</param>
+        /// <param name="infoType">信息类型字符串</param>
         /// <param name="paraConst">常量参数</param>
         /// <returns>编码规则</returns>
         private string GetBaseInfoNoRule(string infoType, string paraConst)
@@ -352,32 +395,117 @@ namespace RUINORERP.Server.Services.BizCode
         }
         
         /// <summary>
-        /// 生成条码
+        /// 获取基础信息编号规则（枚举版本，主要使用版本）
         /// </summary>
-        /// <param name="code">原始编码</param>
-        /// <param name="bwcode">条码补位码</param>
-        /// <returns>生成的条码</returns>
-        public string GenerateBarCode(string code, char bwcode = '0')
+        /// <param name="infoType">信息类型枚举</param>
+        /// <returns>编码规则</returns>
+        private string GetBaseInfoNoRule(BaseInfoType infoType)
+        {
+            // 根据信息类型枚举返回对应的规则
+            switch (infoType)
+            {
+                case BaseInfoType.Employee: // 员工编号
+                    return "{{S:EMP}}{{DB:{S:Employee}/000}}".ToUpper();
+                case BaseInfoType.Supplier: // 供应商编号
+                    return "{{S:SU}}{{DB:{S:Supplier}/000}}".ToUpper();
+                case BaseInfoType.Customer: // 客户编号
+                    return "{{S:CU}}{{DB:{S:Customer}/000}}".ToUpper();
+                case BaseInfoType.Storehouse: // 仓库编号
+                    return "{{S:ST}}{{DB:{S:Storehouse}/000}}".ToUpper();
+                case BaseInfoType.ProductNo: // 产品编号
+                    return "{{S:P}}{{Hex:yyMM}}{{DB:{S:ProductNo}/000}}".ToUpper();
+                case BaseInfoType.Location: // 库位编号
+                    return "{{S:L}}{{DB:{S:LOC}/000}}".ToUpper();
+                case BaseInfoType.SKU_No: // SKU编号
+                    return "{{S:SK}}{{Hex:yyMM}}{{DB:SKU_No/0000}}".ToUpper();
+                case BaseInfoType.ModuleDefinition: // 模块定义
+                    return "{{S:MD}}{{DB:{S:ModuleDefinition}/000}}".ToUpper();
+                case BaseInfoType.Department: // 部门编号
+                    return "{{S:D}}{{DB:{S:Department}/000}}".ToUpper();
+                case BaseInfoType.CVOther: // CVOther编号
+                    return "{{S:CV}}{{DB:{S:CVOther}/000}}".ToUpper();
+                case BaseInfoType.StoreCode: // 门店编号
+                    return "{{S:SHOP}}{{DB:{S:StoreCode}/000}}".ToUpper();
+                case BaseInfoType.ProCategories: // 产品分类编号
+                    return "{{S:C}}{{DB:{S:ProCategories}/000}}".ToUpper();
+                case BaseInfoType.BusinessPartner: // 业务伙伴编号
+                    return "{{S:BP}}{{DB:{S:BusinessPartner}/0000}}".ToUpper();
+                case BaseInfoType.ShortCode: // 简码
+                    return "{{S:SC}}{{DB:{S:ShortCode}/000}}".ToUpper();
+                case BaseInfoType.ProjectGroupCode: // 项目组编号
+                    return "{{S:PG}}{{DB:{S:ProjectGroupCode}/000}}".ToUpper();
+                default:
+                    // 默认规则
+                    return $"{{S:{infoType}}}{{DB:{infoType}/000}}".ToUpper();
+            }
+        }
+        
+        /// <summary>
+        /// 获取基础信息编号规则（带参数，枚举版本）
+        /// </summary>
+        /// <param name="infoType">信息类型枚举</param>
+        /// <param name="paraConst">常量参数</param>
+        /// <returns>编码规则</returns>
+        private string GetBaseInfoNoRule(BaseInfoType infoType, string paraConst)
+        {
+            // 根据信息类型枚举和常量参数返回对应的规则
+            switch (infoType)
+            {
+                case BaseInfoType.ShortCode: // 简码
+                    return $"{{DB:S:{paraConst}/000}}".ToUpper();
+                case BaseInfoType.FMSubject: // 会计科目
+                    return "{{DB:BST/000}}".ToUpper();
+                case BaseInfoType.CRM_RegionCode: // 地区编码
+                    return "{{DB:CRC/00}}".ToUpper();
+                default:
+                    // 默认规则
+                    return $"{{DB:{paraConst}/000}}".ToUpper();
+            }
+        }
+        
+        /// <summary>
+        /// 生成唯一的条码
+        /// </summary>
+        /// <param name="originalCode">原始编码</param>
+        /// <param name="paddingChar">条码补位字符</param>
+        /// <returns>生成的唯一的13位ENA条码</returns>
+        public string GenerateBarCode(string originalCode, char paddingChar = '0')
         {   
+            if (string.IsNullOrEmpty(originalCode))
+            {   
+                throw new ArgumentNullException(nameof(originalCode), "原始编码不能为空");
+            }
+            
+            // 为了确保唯一性，我们生成一个基于原始编码但添加了时间戳和随机数的组合编码
+            string uniqueBaseCode = GenerateUniqueBaseCode(originalCode);
+            
             //条码校验
             string ENA_13str = "131313131313";
             //定义输出条码
             string barcode = "";
             //临时生成条码
-            string tmpbarcode = code;
+            string tmpbarcode = uniqueBaseCode;
+            
             //判断条码长度不足12位用补位码补足
             if (tmpbarcode.Length < 12)
             {   
-                tmpbarcode = tmpbarcode.PadLeft(12, bwcode);
+                tmpbarcode = tmpbarcode.PadLeft(12, paddingChar);
             }
+            // 如果超过12位，只取后12位
+            else if (tmpbarcode.Length > 12)
+            {   
+                tmpbarcode = tmpbarcode.Substring(tmpbarcode.Length - 12);
+            }
+            
             //计算校验位
             string checkstr = "";
             int sum = 0, j = 0;
-            for (int i = 0; i < ENA_13str.Length; i++)
+            for (int i = 0; i < 12; i++)
             {   
                 sum = sum + int.Parse(tmpbarcode[i].ToString())
                       * int.Parse(ENA_13str[i].ToString());
             }
+            
             //取余数，如果余数大于0则校验位为10-J，否则为0
             j = sum % 10;
             if (j > 0) checkstr = (10 - j).ToString();
@@ -387,6 +515,43 @@ namespace RUINORERP.Server.Services.BizCode
             barcode = tmpbarcode + checkstr;
 
             return barcode;
+        }
+        
+        /// <summary>
+        /// 生成唯一的基础编码
+        /// 结合原始编码、时间戳和随机数，确保生成的编码具有高度唯一性
+        /// </summary>
+        /// <param name="originalCode">原始编码</param>
+        /// <returns>唯一的基础编码</returns>
+        private string GenerateUniqueBaseCode(string originalCode)
+        {   
+            // 使用当前时间戳（精确到毫秒）和一个随机数来增强唯一性
+            string timestamp = DateTime.Now.ToString("HHmmssfff");
+            string random = new Random().Next(100, 999).ToString();
+            
+            // 将原始编码、时间戳和随机数组合起来
+            // 为了避免过长，只取原始编码的前几位（如果原始编码很长）
+            string shortOriginalCode = originalCode.Length > 5 ? originalCode.Substring(0, 5) : originalCode;
+            
+            // 移除可能的非数字字符，只保留数字
+            string numericCode = new string(shortOriginalCode.Where(char.IsDigit).ToArray());
+            
+            // 如果原始编码中没有数字，则使用ASCII码值
+            if (string.IsNullOrEmpty(numericCode))
+            {   
+                numericCode = string.Join("", shortOriginalCode.Take(5).Select(c => ((int)c % 10).ToString()));
+            }
+            
+            // 组合最终的唯一编码
+            string uniqueCode = numericCode + timestamp + random;
+            
+            // 确保编码不会太长（最多20位）
+            if (uniqueCode.Length > 20)
+            {   
+                uniqueCode = uniqueCode.Substring(uniqueCode.Length - 20);
+            }
+            
+            return uniqueCode;
         }
     }
 }

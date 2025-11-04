@@ -10,6 +10,7 @@ using System.Windows.Forms;
 using RUINORERP.Common;
 using RUINORERP.UI.Common;
 using RUINORERP.Model;
+using RUINORERP.UI.Network.Services;
 using RUINORERP.Business;
 using RUINORERP.UI.UCSourceGrid;
 using System.Reflection;
@@ -157,7 +158,7 @@ namespace RUINORERP.UI.PSI.PUR
 
                 if (string.IsNullOrEmpty(entity.PurReEntryNo))
                 {
-                    entity.PurReEntryNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.采购退货入库);
+                    entity.PurReEntryNo = BizCodeService.GetBizBillNo(BizType.采购退货入库);
                 }
                 if (entity.tb_purentryre != null && entity.tb_purentryre.Currency_ID.HasValue)
                 {

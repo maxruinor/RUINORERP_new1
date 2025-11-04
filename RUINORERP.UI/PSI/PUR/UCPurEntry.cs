@@ -20,6 +20,7 @@ using RUINORERP.UI.AdvancedUIModule;
 using RUINORERP.UI.BaseForm;
 using RUINORERP.UI.BusinessService.CalculationService;
 using RUINORERP.UI.Common;
+using RUINORERP.UI.Network.Services;
 using RUINORERP.UI.PSI.SAL;
 using RUINORERP.UI.UCSourceGrid;
 using SourceGrid;
@@ -177,7 +178,7 @@ namespace RUINORERP.UI.PSI.PUR
 
                 if (string.IsNullOrEmpty(entity.PurEntryNo))
                 {
-                    entity.PurEntryNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.采购入库单);
+                    entity.PurEntryNo = BizCodeService.GetBizBillNo(BizType.采购入库单);
                 }
 
                 if (entity.tb_purorder != null)

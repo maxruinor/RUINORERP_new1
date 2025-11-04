@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -27,6 +27,7 @@ using RUINORERP.UI.BaseForm;
 
 using Microsoft.Extensions.Logging;
 using RUINOR.Core;
+using RUINORERP.UI.Network.Services;
 using SqlSugar;
 using System.Linq.Expressions;
 using AutoMapper;
@@ -115,7 +116,7 @@ namespace RUINORERP.UI.ASS
                     entity.DataStatus = (int)DataStatus.草稿;
                     if (entity.MaterialPickupNO.IsNullOrEmpty())
                     {
-                        entity.MaterialPickupNO = BizCodeGenerator.Instance.GetBizBillNo(BizType.维修领料单);
+                        entity.MaterialPickupNO = BizCodeService.GetBizBillNo(BizType.维修领料单);
                     }
                     entity.DeliveryDate = System.DateTime.Now;
                     entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;

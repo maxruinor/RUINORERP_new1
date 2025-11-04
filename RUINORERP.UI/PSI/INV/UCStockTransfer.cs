@@ -40,6 +40,7 @@ using RUINORERP.Business.AutoMapper;
 using RUINORERP.Business.Processor;
 using RUINORERP.Business.Security;
 using RUINORERP.Global.EnumExt;
+using RUINORERP.UI.Network.Services;
 
 namespace RUINORERP.UI.PSI.INV
 {
@@ -101,7 +102,7 @@ namespace RUINORERP.UI.PSI.INV
                 entity.DataStatus = (int)DataStatus.草稿;
                 if (string.IsNullOrEmpty(entity.StockTransferNo))
                 {
-                    entity.StockTransferNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.调拨单);
+                    entity.StockTransferNo = BizCodeService.GetBizBillNo(BizType.调拨单);
                 }
                 entity.Transfer_date = System.DateTime.Now;
                 entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;

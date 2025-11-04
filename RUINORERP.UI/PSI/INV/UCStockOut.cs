@@ -39,6 +39,7 @@ using AutoMapper;
 using RUINORERP.Business.AutoMapper;
 using RUINORERP.Business.Processor;
 using RUINORERP.Business.Security;
+using RUINORERP.UI.Network.Services;
 
 namespace RUINORERP.UI.PSI.INV
 {
@@ -102,7 +103,7 @@ namespace RUINORERP.UI.PSI.INV
                 entity.DataStatus = (int)DataStatus.草稿;
                 if (string.IsNullOrEmpty(entity.BillNo))
                 {
-                    entity.BillNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.其他出库单);
+                    entity.BillNo = BizCodeService.GetBizBillNo(BizType.其他出库单);
                 }
                 entity.Bill_Date = System.DateTime.Now;
                 entity.Out_date = System.DateTime.Now;

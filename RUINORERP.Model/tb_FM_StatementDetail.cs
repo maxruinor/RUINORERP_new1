@@ -81,6 +81,21 @@ namespace RUINORERP.Model
                         }
         }
 
+        private string _ARAPNo;
+        /// <summary>
+        /// 单据编号
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ARAPNo", ColDesc = "单据编号")]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "ARAPNo", Length = 30, IsNullable = true, ColumnDescription = "单据编号")]
+        public string ARAPNo
+        {
+            get { return _ARAPNo; }
+            set
+            {
+                SetProperty(ref _ARAPNo, value);
+            }
+        }
+
         private int _ReceivePaymentType;
         /// <summary>
         /// 收付类型

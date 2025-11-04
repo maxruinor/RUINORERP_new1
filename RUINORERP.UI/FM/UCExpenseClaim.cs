@@ -48,6 +48,7 @@ using System.Configuration;
 
 using RUINORERP.Extensions.Middlewares;
 using Image = System.Drawing.Image;
+using RUINORERP.UI.Network.Services;
 
 namespace RUINORERP.UI.FM
 {
@@ -105,7 +106,7 @@ namespace RUINORERP.UI.FM
                 entity.DocumentDate = System.DateTime.Now;
                 if (string.IsNullOrEmpty(entity.ClaimNo))
                 {
-                    entity.ClaimNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.费用报销单);
+                    entity.ClaimNo = BizCodeService.GetBizBillNo(BizType.费用报销单);
                 }
 
                 //新增时，默认币别为人民币

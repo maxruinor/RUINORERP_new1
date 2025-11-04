@@ -1,4 +1,5 @@
-﻿using RUINORERP.PacketSpec.Commands;
+using Microsoft.Extensions.Logging;
+using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Enums.Core;
 using RUINORERP.PacketSpec.Models.Core;
 using System;
@@ -16,7 +17,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
     public abstract class BaseClientCommandHandler : IClientCommandHandler
     {
         private readonly object _lockObject = new object();
-
+        private readonly ILogger<BaseClientCommandHandler> _logger;
         /// <summary>
         /// 处理器唯一标识
         /// </summary>
@@ -26,6 +27,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
         /// 处理器名称
         /// </summary>
         public string Name { get; private set; }
+        public string HandlerName { get; private set; }
 
         /// <summary>
         /// 处理器优先级
@@ -45,8 +47,9 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
         /// <summary>
         /// 构造函数
         /// </summary>
-        protected BaseClientCommandHandler()
+        protected BaseClientCommandHandler(ILogger<BaseClientCommandHandler> logger)
         {
+            _logger = logger;
             HandlerId = GenerateHandlerId();
             InitializeHandlerInfo();
         }
@@ -62,26 +65,26 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
 
         /// <summary>
         /// 初始化处理器信息
-        /// 从特性中获取名称和优先级
+        /// 从特性中获取名称、优先级
         /// </summary>
         private void InitializeHandlerInfo()
         {
             var attribute = GetType().GetCustomAttributes(typeof(ClientCommandHandlerAttribute), false)
                 .FirstOrDefault() as ClientCommandHandlerAttribute;
-
+            
             if (attribute != null)
             {
-                Name = attribute.Name;
+                HandlerName = attribute.Name;
                 Priority = attribute.Priority;
             }
             else
             {
-                Name = GetType().Name;
+                HandlerName = GetType().Name;
                 Priority = 50; // 默认优先级
             }
-
-            // 默认为空的支持命令列表，子类应通过SetSupportedCommands方法设置
-            SupportedCommands = Array.Empty<CommandId>();
+            
+            // 初始化支持的命令列表，实际命令将通过SetSupportedCommands方法设置
+            SupportedCommands = Array.Empty<CommandId>().ToList();
         }
 
         /// <summary>
@@ -180,49 +183,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
         /// <returns>处理结果</returns>
         public abstract Task HandleAsync(PacketModel packet);
 
-        /// <summary>
-        /// 记录调试日志
-        /// </summary>
-        /// <param name="message">日志消息</param>
-        protected virtual void LogDebug(string message)
-        {
-            // 基类提供空实现，子类可以重写以提供实际的日志记录
-            Debug.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}] DEBUG [{Name}] {message}");
-        }
-
-        /// <summary>
-        /// 记录信息日志
-        /// </summary>
-        /// <param name="message">日志消息</param>
-        protected virtual void LogInfo(string message)
-        {
-            Debug.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}] INFO [{Name}] {message}");
-        }
-
-        /// <summary>
-        /// 记录警告日志
-        /// </summary>
-        /// <param name="message">日志消息</param>
-        protected virtual void LogWarning(string message)
-        {
-            Debug.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}] WARNING [{Name}] {message}");
-        }
-
-        /// <summary>
-        /// 记录错误日志
-        /// </summary>
-        /// <param name="message">日志消息</param>
-        /// <param name="ex">异常对象</param>
-        protected virtual void LogError(string message, Exception ex = null)
-        {
-            if (ex != null)
-            {
-                Debug.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}] ERROR [{Name}] {message} - {ex.Message}\n{ex.StackTrace}");
-            }
-            else
-            {
-                Debug.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}] ERROR [{Name}] {message}");
-            }
-        }
+          
+         
     }
 }

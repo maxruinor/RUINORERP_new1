@@ -40,6 +40,7 @@ using RUINORERP.Business.CommService;
 using static StackExchange.Redis.Role;
 using RUINORERP.Global.Model;
 using RUINORERP.Business.BizMapperService;
+using RUINORERP.UI.Network.Services;
 
 namespace RUINORERP.UI.MRP.MP
 {
@@ -137,7 +138,7 @@ namespace RUINORERP.UI.MRP.MP
                     entity.DataStatus = (int)DataStatus.草稿;
                     if (entity.PPNo.IsNullOrEmpty())
                     {
-                        entity.PPNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.生产计划单);
+                        entity.PPNo = BizCodeService.GetBizBillNo(BizType.生产计划单);
                     }
                     entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
                     entity.PlanDate = System.DateTime.Now;

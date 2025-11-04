@@ -35,7 +35,7 @@ var messageData = new {
     Title = "系统通知"
 };
 
-var request = new MessageRequest(MessageCmdType.Unknown, messageData);
+var request = new MessageRequest(MessageType.Unknown, messageData);
 
 // 发送消息并等待响应
 var responsePacket = await sessionService.SendCommandAndWaitForResponseAsync(
@@ -71,7 +71,7 @@ var messageData = new {
     MessageType = "Text"
 };
 
-var request = new MessageRequest(MessageCmdType.Unknown, messageData);
+var request = new MessageRequest(MessageType.Unknown, messageData);
 
 // 发送单向消息
 var success = await sessionService.SendCommandAsync(
@@ -134,7 +134,7 @@ var messageData = new {
     MessageType = "Text"
 };
 
-var request = new MessageRequest(MessageCmdType.Unknown, messageData);
+var request = new MessageRequest(MessageType.Unknown, messageData);
 
 // 发送单向消息
 await sessionService.SendCommandAsync(
@@ -182,7 +182,7 @@ messageService.PopupMessageReceived += (args) => {
 
 ```csharp
 // 客户端发送响应
-var response = MessageResponse.Success(MessageCmdType.Unknown, new { Status = "Processed" });
+var response = MessageResponse.Success(MessageType.Unknown, new { Status = "Processed" });
 // 通过ClientCommunicationService发送响应
 ```
 
@@ -224,7 +224,7 @@ catch (Exception ex)
 ```csharp
 public async Task<bool> SendImportantNotificationAsync(string userId, string message)
 {
-    var request = new MessageRequest(MessageCmdType.Unknown, new { 
+    var request = new MessageRequest(MessageType.Unknown, new { 
         TargetUserId = userId, 
         Message = message 
     });
@@ -263,7 +263,7 @@ public class NotificationService
     
     public async Task SendNotificationAsync(string userId, string message)
     {
-        var request = new MessageRequest(MessageCmdType.Unknown, new { 
+        var request = new MessageRequest(MessageType.Unknown, new { 
             TargetUserId = userId, 
             Message = message 
         });

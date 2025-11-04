@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Data;
+using RUINORERP.UI.Network.Services;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -95,7 +96,7 @@ namespace RUINORERP.UI.MRP.PQC
                 entity.EntryDate = System.DateTime.Now;
                 if (string.IsNullOrEmpty(entity.ReworkEntryNo))
                 {
-                    entity.ReworkEntryNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.返工入库单);
+                    entity.ReworkEntryNo = BizCodeService.GetBizBillNo(BizType.返工入库单);
                 }
                 entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
                 if (entity.tb_MRP_ReworkEntryDetails != null && entity.tb_MRP_ReworkEntryDetails.Count > 0)

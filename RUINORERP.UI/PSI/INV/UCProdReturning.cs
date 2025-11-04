@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Data;
+using RUINORERP.UI.Network.Services;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -127,7 +128,7 @@ namespace RUINORERP.UI.PSI.INV
                 entity.DataStatus = (int)DataStatus.草稿;
                 if (string.IsNullOrEmpty(entity.ReturnNo))
                 {
-                    entity.ReturnNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.归还单);
+                    entity.ReturnNo = BizCodeService.GetBizBillNo(BizType.归还单);
                 }
                 entity.ReturnDate = System.DateTime.Now;
                 if (entity.tb_ProdReturningDetails != null && entity.tb_ProdReturningDetails.Count > 0)

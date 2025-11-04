@@ -1,90 +1,82 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using Autofac;
-using Krypton.Navigator;
-using Krypton.Toolkit;
-using Krypton.Workspace;
-using LiveChartsCore.Geo;
 using Microsoft.Extensions.Logging;
-using NPOI.SS.Formula.Functions;
-using RUINORERP.Business;
-using RUINORERP.Business.Processor;
 using RUINORERP.Common.Helper;
 using RUINORERP.Model;
 using RUINORERP.UI.BaseForm;
-using RUINORERP.UI.BusinessService.SmartMenuService;
-using RUINORERP.UI.FM;
-using RUINORERP.UI.PSI.SAL;
+using Krypton.Navigator;
+using Krypton.Toolkit;
+using Krypton.Workspace;
 using RUINORERP.UI.UserCenter;
+using RUINORERP.Business;
+using RUINORERP.UI.BusinessService.SmartMenuService;
 
 namespace RUINORERP.UI.Common
 {
     public class MenuPowerHelper
     {
-
-
-        #region 添加一个事件来将查询参数设置的过程在这里实现
-
-        //sgd 要提供当前操作的行 列 值
+        #region 事件定义
 
         public delegate void SetQueryConditionsDelegate(object QueryDto, QueryParameter nodeParameter);
-
         /// <summary>
         /// 设置查询参数
         /// </summary>
         public event SetQueryConditionsDelegate OnSetQueryConditionsDelegate;
 
+        public delegate void RelatedHandler(MenuPowerHelper power, object obj);
+        public event RelatedHandler RelatedEvent;
+
+        public delegate void OtherHandler(object obj);
+        [Browsable(true), Description("引发外部事件")]
+        public event OtherHandler OtherEvent;
+
         #endregion
 
+        #region 属性和字段
 
         public RUINORERP.Model.Context.ApplicationContext appContext;
-
         private readonly MenuTracker _menuTracker;
         public readonly ILogger<MenuPowerHelper> _logger;
+
         /// <summary>
-        /// 应该有基类，以后对  角色组，用户 各种方式的权限做不同处理 多态等
+        /// 获取所有已加载的菜单列表，方便外部使用
         /// </summary>
-        /// 
+        public List<tb_MenuInfo> MenuList { get; private set; }
+
+        public System.Windows.Forms.MenuStrip MainMenu { get; set; }
+
+        #endregion
+
+        #region 构造函数
 
         public MenuPowerHelper(MenuTracker menuTracker, ILogger<MenuPowerHelper> logger, RUINORERP.Model.Context.ApplicationContext _appContext = null)
         {
             appContext = _appContext;
             _logger = logger;
             _menuTracker = menuTracker;
+            MenuList = new List<tb_MenuInfo>();
         }
-
-
-        public System.Windows.Forms.MenuStrip MainMenu { get; set; }
-
-        List<tb_MenuInfo> MenuList = new List<tb_MenuInfo>();
-
-        #region 添加事件功能
-
-        public delegate void RelatedHandler(MenuPowerHelper power, object obj);
-
-        public event RelatedHandler RelatedEvent;
 
         #endregion
 
-        #region IPower 成员
+        #region 菜单管理
 
         tb_MenuInfoController<tb_MenuInfo> mc = Startup.GetFromFac<tb_MenuInfoController<tb_MenuInfo>>();
+
         /// <summary>
-        /// 加载菜单明码模式 20160823优化
+        /// 加载菜单
         /// </summary>
-        /// <param name="ms"></param>
-        /// <param name="InitSupperUser">admin用户初始化时使用加载菜单</param>
+        /// <param name="ms">菜单条控件</param>
+        /// <returns>加载的菜单列表</returns>
         public List<tb_MenuInfo> AddMenu(System.Windows.Forms.MenuStrip ms)
         {
-            //菜单列表
-            List<tb_MenuInfo> resourceList = new List<tb_MenuInfo>();
+            //清空当前菜单列表并重新加载
+            MenuList.Clear();
             //临时创一个菜单组为空
             ToolStripMenuItem[] fixedItems = new ToolStripMenuItem[ms.Items.Count];
             //将窗口，文件等 菜单 写死的 保存到上面那个临时的组中，清空主菜单下所有子菜单。
@@ -100,7 +92,7 @@ namespace RUINORERP.UI.Common
                     {
                         var modmenus = item.tb_MenuInfos;
                         modmenus = modmenus.OrderBy(t => t.Sort).ToList();
-                        resourceList.AddRange(modmenus);
+                        MenuList.AddRange(modmenus);
                         LoadMenu(ms.Items, modmenus, 0);
                     }
                 }
@@ -132,7 +124,7 @@ namespace RUINORERP.UI.Common
 
                 ////加入权限，有权限才加载，除初次管理员加载
                 LoadMenu(ms.Items, tempList, 0);
-                resourceList.AddRange(tempList);
+                MenuList.AddRange(tempList);
             }
 
             //最后加上窗口菜单
@@ -140,20 +132,19 @@ namespace RUINORERP.UI.Common
             AddwindowsCloseMenu(fixedItems);
             //注册菜单  可以多级
             RegisterMySubMenu(ms.Items);
-            return resourceList;
+
+            //返回完整的菜单列表
+            return MenuList;
         }
 
 
         private void AddwindowsCloseMenu(ToolStripMenuItem[] fixedItems)
         {
-            //这个时候临时的不再为空，实际为【窗口】
             foreach (ToolStripMenuItem item in fixedItems)
             {
-                //暂时写死
                 if (item.Text.Contains("窗口"))
                 {
                     ToolStripMenuItem windowsCloseMenu = new ToolStripMenuItem();
-                    // windowsMenu.Tag = var;
                     windowsCloseMenu.Text = "【关闭所有窗口(&C)】";
                     windowsCloseMenu.Click += windowsCloseMenu_Click;
                     item.DropDownItems.Add(windowsCloseMenu);
@@ -179,26 +170,16 @@ namespace RUINORERP.UI.Common
 
         private void LoadMenu(ToolStripItemCollection ms, List<tb_MenuInfo> resourceList, long ID)
         {
-            List<tb_MenuInfo> mlist = resourceList.FindAll(delegate (tb_MenuInfo p) { return p.Parent_id == ID; });
+            // 使用LINQ替代委托，提高可读性和性能
+            List<tb_MenuInfo> mlist = resourceList.Where(p => p.Parent_id == ID).ToList();
             var sortlist = mlist.OrderBy(t => t.Sort);
 
-            //var sortlist = mlist.OrderBy(o => o.CaptionCN).ThenByDescending(t => t.Sort).ToList();
-            //mlist = mlist.Sort(new MenuNameComparer());
             foreach (tb_MenuInfo var in sortlist)
             {
                 if (var.CaptionCN.IsNullOrEmpty())
                 {
                     _logger.LogError($"{var.MenuID}{var.MenuName}菜单名称为空，请检查数据");
                     continue;
-                }
-                if (var.CaptionCN.Contains("异常"))
-                {
-
-                }
-
-                if (var.CaptionCN.Contains("审计"))
-                {
-
                 }
 
                 //如果是普通用户 不启用就直接返回
@@ -237,10 +218,6 @@ namespace RUINORERP.UI.Common
 
 
 
-        public delegate void OtherHandler(object obj);
-
-        [Browsable(true), Description("引发外部事件")]
-        public event OtherHandler OtherEvent;
 
 
         private void ControlWindowsMenu(ToolStripItemCollection menus)
@@ -555,7 +532,7 @@ namespace RUINORERP.UI.Common
                                 //{
                                 //    baseQuery.QueryDtoProxy = baseQuery.LoadQueryConditionToUI(5);
                                 //}
-                               
+
                                 //先设置查询条件
                                 if (OnSetQueryConditionsDelegate != null)
                                 {
@@ -769,44 +746,19 @@ namespace RUINORERP.UI.Common
 
         #endregion
 
-        /*
-
-         *  //通过反射来执行类的静态方法
-            Type tx = typeof(ConsoleApplication1.Program);
-            MethodInfo mf = tx.GetMethod("Display", BindingFlags.NonPublic|BindingFlags.Static, null, new Type[] { }, null);
-            string saf = (string)mf.Invoke(null,null);
-
-            Console.WriteLine(saf);
-
-            Console.ReadKey();
 
 
-            //通过反射来执行类的实例方法
-            //string[] str = new string[2];
-            Program p1 = new Program();
-            Type t = p1.GetType();
-             //因为此句我分析好久
-            MethodInfo mi = t.GetMethod("Spec", BindingFlags.NonPublic | BindingFlags.Instance, null, new Type[] { }, null);
-
-            //通过反射执行ReturnAutoID方法，返回AutoID值
-            string strx = mi.Invoke(p1, null).ToString();
-            Console.WriteLine(strx);
-            Console.ReadKey();
-         * 
-         */
-
-        #region  注册或者注销 菜单事件
+        #region 菜单事件注册
 
         /// <summary>
-        /// 递归注册菜单事件 20160824
+        /// 递归注册菜单事件
         /// </summary>
-        /// <param name="menus"></param>
+        /// <param name="menus">菜单项集合</param>
         void RegisterMySubMenu(ToolStripItemCollection menus)
         {
             foreach (ToolStripMenuItem m in menus)
             {
-                m.Click += new EventHandler(doWithMenu);
-
+                m.Click += doWithMenu;
                 m.Visible = true;
                 if (m.HasDropDownItems)
                 {
@@ -815,163 +767,9 @@ namespace RUINORERP.UI.Common
             }
         }
 
-
-        void RegisterMenu(System.Windows.Forms.ToolStripItemCollection bar)
-        {
-            if ("admin" == "admin")
-            {
-                for (int j = 0; j < bar.Count; j++)
-                {
-                    if (bar[j].GetType().ToString() == "System.Windows.Forms.ToolStripMenuItem")
-                    {
-                        bar[j].Click += new EventHandler(doWithMenu);
-                        bar[j].Visible = true;
-
-                    }
-                }
-            }
-
-        }
-
-
-
-        void UnRegisterMenu(System.Windows.Forms.ToolStripItemCollection bar)
-        {
-            if ("admin" == "admin")
-            {
-                for (int j = 0; j < bar.Count; j++)
-                {
-                    if (bar[j].GetType().ToString() == "System.Windows.Forms.ToolStripMenuItem")
-                    {
-                        bar[j].Click -= new EventHandler(doWithMenu);
-                        bar[j].Visible = true;
-                    }
-                }
-            }
-        }
-
         #endregion
 
-        private static List<tb_MenuInfo> roleResourceList = new List<tb_MenuInfo>();
-
-        /// <summary>
-        /// 每个用户登陆时，取他的所有的权限资源关系。缓存起来
-        /// </summary>
-        public static List<tb_MenuInfo> RoleResourceList
-        {
-            get { return roleResourceList; }
-            set { roleResourceList = value; }
-        }
-
-
-        /// <summary>
-        /// 判断是否拥有权限
-        /// </summary>
-        /// <param name="ownerID">所属id，包括用户id，和角色组id</param>
-        /// <param name="Resource">资源id</param>
-        /// <returns></returns>
-        public static bool HasRights(int ownerID, int ResourceID)
-        {
-            /*
-            RoleResourceRelationEntity Relation = new RoleResourceRelationEntity();
-            if (RoleResourceList.Count == 0)
-            {
-
-                RoleResourceList = Relation.GetAllByQuery(" RoleID =" + ownerID);
-            }
-
-            Relation = RoleResourceList.Find(delegate (RoleResourceRelationEntity r) { return r.ResourceID == ResourceID && r.RoleID == ownerID; });
-            if (Relation != null)
-            {
-                return Relation.Authorized;
-            }
-            else
-            {
-                MessageBox.Show("您没有权限执行此项操作。", "提醒", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return false;
-            }*/
-            return true;
-        }
-
-        /// <summary>
-        /// 判断是否拥有权限
-        /// </summary>
-        /// <param name="ownerID">所属id，包括用户id，和角色组id</param>
-        /// <param name="Resource">资源id</param>
-        /// <returns></returns>
-        public static bool HasRights(int ownerID, int ResourceID, bool showNotice)
-        {
-            /*
-            RoleResourceRelationEntity Relation = new RoleResourceRelationEntity();
-            if (RoleResourceList.Count == 0)
-            {
-
-                RoleResourceList = Relation.GetAllByQuery(" RoleID =" + ownerID);
-            }
-
-            Relation = RoleResourceList.Find(delegate (RoleResourceRelationEntity r) { return r.ResourceID == ResourceID && r.RoleID == ownerID; });
-            if (Relation != null)
-            {
-                return Relation.Authorized;
-            }
-            else
-            {
-                if (showNotice)
-                {
-                    MessageBox.Show("您没有权限执行此项操作。", "提醒", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                }
-                return false;
-            }*/
-            return true;
-        }
-
-
-        /// <summary>
-        /// 初始化角色设置
-        /// </summary>
-        /// <returns></returns>
-        public static bool initPower()
-        {
-            //删除角色
-            // PowerRoleEntity entity = new PowerRoleEntity();
-            // entity.Delete(" delete from PowerRole  ");
-            return true;
-        }
-
-
-        /// <summary>
-        /// 初始化角色资源关系设置
-        /// </summary>
-        /// <returns></returns>
-        public static bool initRoleResourceRelation()
-        {
-            // PowerRoleEntity entity = new PowerRoleEntity();
-            // entity.Delete(" delete from RoleResourceRelation  ");
-            return true;
-
-        }
-
-
-        /// <summary>
-        /// 初始化角色资源关系设置
-        /// </summary>
-        /// <returns></returns>
-        public static bool initUserResourceRelation()
-        {
-            if (MessageBox.Show("本删除操作是不能恢复的\r你确定要删除吗?", "询问", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2) == DialogResult.Yes)
-            {
-                //删除角色
-                //  PowerRoleEntity entity = new PowerRoleEntity();
-                // entity.Delete(" delete from UserResourceRelation  ");
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
-
-        #endregion
+        #endregion  
     }
     // 自定义的比较器，按照字符串的长度进行比较
     public sealed class MenuNameComparer : IComparer<tb_MenuInfo>

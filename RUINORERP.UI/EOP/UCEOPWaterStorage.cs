@@ -79,7 +79,7 @@ namespace RUINORERP.UI.EOP
                 EditEntity.ActionStatus = ActionStatus.新增;
                 if (string.IsNullOrEmpty(EditEntity.WSRNo))
                 {
-                    //_EditEntity.WSRNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.销售订单);
+                    //_EditEntity.WSRNo = BizCodeService.GetBizBillNo(BizType.销售订单);
                     EditEntity.WSRNo = "WSR" + DateTime.Now.ToString("yyMMddHHmmssfff");
                 }
                 EditEntity.OrderDate = DateTime.Now;

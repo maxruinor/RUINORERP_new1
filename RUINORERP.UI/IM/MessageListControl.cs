@@ -46,8 +46,8 @@ namespace RUINORERP.UI.IM
             _notificationTimer.Tick += NotificationTimer_Tick;
             
             // 订阅消息管理器的事件
-            _messageManager.NewMessageReceived += MessageManager_NewMessageReceived;
             _messageManager.MessageStatusChanged += MessageManager_MessageStatusChanged;
+            _messageManager.UnreadMessageCountChanged += MessageManager_UnreadMessageCountChanged;
             
             // 加载现有消息
             LoadMessages();
@@ -154,27 +154,40 @@ namespace RUINORERP.UI.IM
         }
 
         /// <summary>
-        /// 消息管理器 - 新消息接收事件处理
+        /// 消息管理器 - 未读消息数量变化事件处理
         /// </summary>
-        private void MessageManager_NewMessageReceived(object sender, RUINORERP.Model.TransModel.MessageData message)
+        private void MessageManager_UnreadMessageCountChanged(object sender, int count)
         {
             if (this.InvokeRequired)
             {
-                this.Invoke(new Action<object, RUINORERP.Model.TransModel.MessageData>(MessageManager_NewMessageReceived), sender, message);
+                this.Invoke(new Action<object, int>(MessageManager_UnreadMessageCountChanged), sender, count);
                 return;
             }
             
-            AddMessageToList(message);
+            // 处理未读消息数量变化
             UpdateUnreadCount();
             
-            // 播放声音提示
-            PlayNotificationSound();
-            
-            // 如果是未读消息，显示通知
-            if (!message.IsRead)
+            // 未读消息数量增加时刷新消息列表
+            if (count > _unreadCount)
             {
-                ShowNotification(message);
+                // 播放声音提示
+                PlayNotificationSound();
+                
+                // 重新加载消息列表以获取新消息
+                LoadMessages();
+                
+                // 启动动画通知
+                StartNotificationAnimation();
             }
+        }
+        
+        /// <summary>
+        /// 启动通知动画
+        /// </summary>
+        private void StartNotificationAnimation()
+        {
+            _isAnimating = true;
+            _notificationTimer.Start();
         }
 
         /// <summary>

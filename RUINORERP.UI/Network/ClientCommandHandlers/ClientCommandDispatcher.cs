@@ -1,3 +1,4 @@
+using Autofac;
 using RUINORERP.PacketSpec.Models.Core;
 using System;
 using System.Collections.Generic;
@@ -5,6 +6,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace RUINORERP.UI.Network.ClientCommandHandlers
 {
@@ -17,6 +19,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
         private readonly object _lockObject = new object();
         private readonly Dictionary<string, IClientCommandHandler> _handlers = new Dictionary<string, IClientCommandHandler>();
         private readonly Dictionary<ulong, List<IClientCommandHandler>> _commandToHandlersMap = new Dictionary<ulong, List<IClientCommandHandler>>();
+        private readonly ILogger<ClientCommandDispatcher> _logger;
 
         /// <summary>
         /// 已注册的处理器列表
@@ -38,6 +41,15 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
         public bool IsRunning { get; private set; } = false;
 
         /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="logger">日志记录器</param>
+        public ClientCommandDispatcher(ILogger<ClientCommandDispatcher> logger = null)
+        {
+            _logger = logger;
+        }
+        
+        /// <summary>
         /// 初始化调度器
         /// </summary>
         /// <returns>初始化是否成功</returns>
@@ -48,6 +60,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                 if (!IsRunning)
                 {
                     // 可以在这里进行一些初始化操作
+                    _logger?.LogInformation("调度器初始化成功");
                     return Task.FromResult(true);
                 }
                 return Task.FromResult(false);
@@ -117,7 +130,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
 
             if (isRegistered)
             {
-                LogWarning($"处理器已存在: {handler.HandlerId}");
+                _logger?.LogWarning($"处理器已存在: {handler.HandlerId}");
                 return false;
             }
 
@@ -130,10 +143,10 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
             {
                 // 再次检查以避免竞争条件
                 if (_handlers.ContainsKey(handler.HandlerId))
-                {
-                    LogWarning($"处理器在异步操作期间已被注册: {handler.HandlerId}");
-                    return false;
-                }
+                    {
+                        _logger?.LogWarning($"处理器在异步操作期间已被注册: {handler.HandlerId}");
+                        return false;
+                    }
 
                 _handlers[handler.HandlerId] = handler;
 
@@ -149,7 +162,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                     _commandToHandlersMap[command.FullCode].Sort((h1, h2) => h2.Priority.CompareTo(h1.Priority));
                 }
 
-                LogInfo($"成功注册处理器: {handler.Name} (ID: {handler.HandlerId}), 支持 {handler.SupportedCommands.Count} 个命令");
+                _logger?.LogInformation($"成功注册处理器: {handler.Name} (ID: {handler.HandlerId}), 支持 {handler.SupportedCommands.Count} 个命令");
                 return true;
             }
         }
@@ -188,10 +201,10 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
             lock (_lockObject)
             {
                 if (!_handlers.ContainsKey(handlerId))
-                {
-                    LogWarning($"未找到处理器: {handlerId}");
-                    return false;
-                }
+                    {
+                        _logger?.LogWarning($"未找到处理器: {handlerId}");
+                        return false;
+                    }
                 handler = _handlers[handlerId];
             }
 
@@ -203,10 +216,10 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
             {
                 // 再次检查以避免竞争条件
                 if (!_handlers.ContainsKey(handlerId))
-                {
-                    LogWarning($"处理器在异步操作期间已被移除: {handlerId}");
-                    return false;
-                }
+                    {
+                        _logger?.LogWarning($"处理器在异步操作期间已被移除: {handlerId}");
+                        return false;
+                    }
 
                 // 从命令映射中移除
                 foreach (var command in handler.SupportedCommands)
@@ -224,7 +237,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                 // 从处理器列表中移除
                 _handlers.Remove(handlerId);
 
-                LogInfo($"成功移除处理器: {handler.Name} (ID: {handlerId})");
+                _logger?.LogInformation($"成功移除处理器: {handler.Name} (ID: {handlerId})");
                 return true;
             }
         }
@@ -259,64 +272,105 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
         {
             if (!IsRunning)
             {
-                LogWarning("调度器未运行，无法分发命令");
+                _logger?.LogWarning("调度器未运行，无法分发命令");
                 return false;
             }
 
             if (packet == null)
             {
-                LogWarning("收到空的数据包");
+                _logger?.LogWarning("收到空的数据包");
                 return false;
             }
 
             var handler = FindHandler(packet);
             if (handler == null)
             {
-                LogWarning($"未找到能处理命令ID {packet.CommandId.FullCode} 的处理器");
+                _logger?.LogWarning($"未找到能处理命令ID {packet.CommandId.FullCode} 的处理器");
                 return false;
             }
 
             try
             {
-                LogDebug($"分发命令ID {packet.CommandId.FullCode} 到处理器 {handler.Name}");
+                _logger?.LogDebug($"分发命令ID {packet.CommandId.FullCode} 到处理器 {handler.Name}");
                 await handler.HandleAsync(packet);
                 return true;
             }
             catch (Exception ex)
             {
-                LogError($"处理器 {handler.Name} 处理命令时出错: {ex.Message}", ex);
+                _logger?.LogError(ex, $"处理器 {handler.Name} 处理命令时出错: {ex.Message}");
                 return false;
             }
         }
 
         /// <summary>
-        /// 扫描并注册程序集中的命令处理器
+        /// 扫描并注册程序集中的命令处理器（仅扫描当前程序集）
         /// </summary>
         /// <returns>扫描并注册的处理器数量</returns>
         public virtual async Task<int> ScanAndRegisterHandlersAsync()
+        {
+            // 默认扫描当前程序集，不使用依赖注入
+            return await ScanAndRegisterHandlersAsync(new[] { Assembly.GetExecutingAssembly() }, null);
+        }
+
+        /// <summary>
+        /// 扫描并注册指定程序集中的命令处理器
+        /// </summary>
+        /// <param name="assemblies">要扫描的程序集列表</param>
+        /// <param name="lifetimeScope">Autofac生命周期作用域，用于依赖注入</param>
+        /// <returns>扫描并注册的处理器数量</returns>
+        public virtual async Task<int> ScanAndRegisterHandlersAsync(IEnumerable<Assembly> assemblies, ILifetimeScope lifetimeScope)
         {
             int registeredCount = 0;
 
             try
             {
-                // 获取当前程序集
-                var currentAssembly = Assembly.GetExecutingAssembly();
+                // 确保assemblies不为null
+                assemblies = assemblies ?? new[] { Assembly.GetExecutingAssembly() };
 
-                // 查找所有实现了IClientCommandHandler接口并且带有ClientCommandHandlerAttribute特性的类
-                var handlerTypes = currentAssembly.GetTypes()
-                    .Where(t => typeof(IClientCommandHandler).IsAssignableFrom(t) && !t.IsInterface && !t.IsAbstract
-                                && t.GetCustomAttribute<ClientCommandHandlerAttribute>() != null)
-                    .ToList();
+                List<Type> handlerTypes = new List<Type>();
+                
+                // 扫描所有指定的程序集
+                foreach (var assembly in assemblies)
+                {
+                    var types = assembly.GetTypes()
+                        .Where(t => typeof(IClientCommandHandler).IsAssignableFrom(t) && !t.IsInterface && !t.IsAbstract
+                                    && t.GetCustomAttribute<ClientCommandHandlerAttribute>() != null)
+                        .ToList();
+                    
+                    handlerTypes.AddRange(types);
+                }
 
-                LogInfo($"扫描到 {handlerTypes.Count} 个命令处理器类型");
+                _logger?.LogInformation($"从{assemblies.Count()}个程序集中扫描到 {handlerTypes.Count} 个命令处理器类型");
 
                 // 创建并注册每个处理器
                 foreach (var type in handlerTypes)
                 {
                     try
                     {
-                        // 使用无参构造函数创建实例
-                        var handler = (IClientCommandHandler)Activator.CreateInstance(type);
+                        IClientCommandHandler handler;
+                        
+                        // 优先使用依赖注入容器创建实例
+                        if (lifetimeScope != null && lifetimeScope.IsRegistered(type))
+                        {
+                            handler = (IClientCommandHandler)lifetimeScope.Resolve(type);
+                            _logger?.LogInformation($"通过依赖注入创建处理器 {type.Name}");
+                        }
+                        else
+                        {
+                            try
+                            {
+                                // 尝试通过无参构造函数创建
+                                handler = (IClientCommandHandler)Activator.CreateInstance(type);
+                                _logger?.LogInformation($"通过无参构造函数创建处理器 {type.Name}");
+                            }
+                            catch (MissingMethodException)
+                            {
+                                // 如果无参构造函数不存在，尝试使用反射和依赖注入创建
+                                _logger?.LogWarning($"处理器 {type.Name} 没有无参构造函数，尝试使用依赖注入");
+                                handler = null;
+                            }
+                        }
+                        
                         if (handler != null)
                         {
                             bool success = await RegisterHandlerAsync(handler);
@@ -325,65 +379,27 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                                 registeredCount++;
                             }
                         }
+                        else
+                        {
+                            _logger?.LogWarning($"无法创建处理器 {type.Name} 的实例");
+                        }
                     }
                     catch (Exception ex)
                     {
-                        LogError($"创建处理器 {type.Name} 实例时出错: {ex.Message}", ex);
+                        _logger?.LogError(ex, $"创建处理器 {type.Name} 实例时出错: {ex.Message}");
                     }
                 }
 
-                LogInfo($"成功注册 {registeredCount} 个命令处理器");
+                _logger?.LogInformation($"成功注册 {registeredCount} 个命令处理器");
             }
             catch (Exception ex)
             {
-                LogError($"扫描程序集时出错: {ex.Message}", ex);
+                _logger?.LogError(ex, $"扫描程序集时出错: {ex.Message}");
             }
 
             return registeredCount;
         }
 
-        /// <summary>
-        /// 记录调试日志
-        /// </summary>
-        /// <param name="message">日志消息</param>
-        protected virtual void LogDebug(string message)
-        {
-            Debug.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}] DEBUG [ClientCommandDispatcher] {message}");
-        }
 
-        /// <summary>
-        /// 记录信息日志
-        /// </summary>
-        /// <param name="message">日志消息</param>
-        protected virtual void LogInfo(string message)
-        {
-            Debug.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}] INFO [ClientCommandDispatcher] {message}");
-        }
-
-        /// <summary>
-        /// 记录警告日志
-        /// </summary>
-        /// <param name="message">日志消息</param>
-        protected virtual void LogWarning(string message)
-        {
-            Debug.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}] WARNING [ClientCommandDispatcher] {message}");
-        }
-
-        /// <summary>
-        /// 记录错误日志
-        /// </summary>
-        /// <param name="message">日志消息</param>
-        /// <param name="ex">异常对象</param>
-        protected virtual void LogError(string message, Exception ex = null)
-        {
-            if (ex != null)
-            {
-                Debug.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}] ERROR [ClientCommandDispatcher] {message} - {ex.Message}\n{ex.StackTrace}");
-            }
-            else
-            {
-                Debug.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}] ERROR [ClientCommandDispatcher] {message}");
-            }
-        }
     }
 }

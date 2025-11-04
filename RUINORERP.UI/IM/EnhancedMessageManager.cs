@@ -39,7 +39,7 @@ namespace RUINORERP.UI.IM
     public class EnhancedMessageManager : IDisposable
     {
         private readonly ILogger<EnhancedMessageManager> _logger;
-        private readonly IMessageService _messageService;
+        private readonly MessageService _messageService;
         private readonly List<MessageData> _messageList = new List<MessageData>();
         private readonly object _messagesLock = new object();
         private int _unreadMessageCount = 0;
@@ -61,7 +61,7 @@ namespace RUINORERP.UI.IM
         /// </summary>
         /// <param name="logger">日志记录器</param>
         /// <param name="messageService">消息服务</param>
-        public EnhancedMessageManager(ILogger<EnhancedMessageManager> logger, IMessageService messageService)
+        public EnhancedMessageManager(ILogger<EnhancedMessageManager> logger, MessageService messageService)
         {
             _logger = logger;
             _messageService = messageService;
@@ -288,13 +288,11 @@ namespace RUINORERP.UI.IM
                 if (!exists)
                 {
                     _messageList.Insert(0, message);
-                     
-                    if (!message.IsRead)
-                    {
-                        _unreadMessageCount++;
-                    }
                 }
             }
+            
+            // 更新未读消息计数并触发事件
+            UpdateUnreadMessageCount();
             
             // 异步处理业务逻辑
             Task.Run(() => ProcessBusinessMessage(message));

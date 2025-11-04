@@ -513,6 +513,11 @@ namespace RUINORERP.PacketSpec.Commands
         /// 生成产品SKU编码 - 生成产品SKU编号
         /// </summary>
         public const ushort BizCode_GenerateProductSKUNo = 0x0F04;
+
+        /// <summary>
+        /// 生成条码 - 根据原始编码生成条形码
+        /// </summary>
+        public const ushort BizCode_GenerateBarCode = 0x0F05;
         #endregion
 
         #region 特殊功能命令 (0x90xx)

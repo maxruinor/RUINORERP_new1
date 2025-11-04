@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Data;
 using System.Linq;
 using System.Text;
+using RUINORERP.UI.Network.Services;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using RUINORERP.Common;
@@ -116,14 +117,7 @@ namespace RUINORERP.UI.PSI.SAL
                 }
                 if (saleOutRe.RefundStatus.Value >= (int)RefundStatus.未退款等待退货)
                 {
-                    //在回仓库后操作的情况，多数是审核动作。生成在退仓时生成了
-                    //if (
-                    //    saleOutRe.DataStatus >= (int)DataStatus.确认
-                    //    && saleOutRe.ApprovalStatus == (int)ApprovalStatus.已审核
-                    //    && saleOutRe.ApprovalResults.HasValue
-                    //    && saleOutRe.ApprovalResults.Value)
-
-                    //{
+                     
                     #region 销售退回单 如果启用了财务模块    这里有一个情况是仓库退回时已经生成。这里确认退款只是审核
                     AuthorizeController authorizeController = MainForm.Instance.AppContext.GetRequiredService<AuthorizeController>();
                     if (authorizeController.EnableFinancialModule())
@@ -131,7 +125,6 @@ namespace RUINORERP.UI.PSI.SAL
                         if (MainForm.Instance.AppContext.FMConfig.AutoAuditReceiveable)
                         {
                             var paymentController = MainForm.Instance.AppContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
-
 
                             #region 自动审核应收款单
 
@@ -385,7 +378,7 @@ namespace RUINORERP.UI.PSI.SAL
                     entity.DataStatus = (int)DataStatus.草稿;
                     if (string.IsNullOrEmpty(entity.ReturnNo))
                     {
-                        entity.ReturnNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.销售退回单);
+                        entity.ReturnNo = BizCodeService.GetBizBillNo(BizType.销售退回单);
                     }
 
                     if (entity.tb_SaleOutReDetails != null && entity.tb_SaleOutReDetails.Count > 0)

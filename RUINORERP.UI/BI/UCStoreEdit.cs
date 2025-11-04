@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -16,6 +16,7 @@ using RUINORERP.Business.LogicaService;
 using RUINORERP.UI.Common;
 using RUINORERP.Business;
 using RUINORERP.Global;
+using RUINORERP.UI.Network.Services;
 
 namespace RUINORERP.UI.BI
 {
@@ -34,7 +35,7 @@ namespace RUINORERP.UI.BI
             _EditEntity = entity as tb_OnlineStoreInfo;
             if (_EditEntity.Store_ID == 0)
             {
-                _EditEntity.StoreCode = BizCodeGenerator.Instance.GetBaseInfoNo(BaseInfoType.StoreCode);
+                _EditEntity.StoreCode = BizCodeService.GetBaseInfoNo(BaseInfoType.StoreCode.ToString());
             }
             DataBindingHelper.BindData4TextBox<tb_OnlineStoreInfo>(entity, t => t.StoreCode, txtStoreCode, BindDataType4TextBox.Text, false);
 

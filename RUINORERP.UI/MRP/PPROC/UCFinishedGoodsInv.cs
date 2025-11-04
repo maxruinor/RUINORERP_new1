@@ -14,6 +14,7 @@ using RUINORERP.Model.Dto;
 
 using RUINORERP.UI.BaseForm;
 using RUINORERP.UI.Common;
+using RUINORERP.UI.Network.Services;
 using RUINORERP.UI.UCSourceGrid;
 using SourceGrid;
 using SqlSugar;
@@ -134,7 +135,7 @@ namespace RUINORERP.UI.PSI.PUR
                 entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
                 if (string.IsNullOrEmpty(entity.DeliveryBillNo))
                 {
-                    entity.DeliveryBillNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.缴库单);
+                    entity.DeliveryBillNo = BizCodeService.GetBizBillNo(BizType.缴库单);
                 }
                 entity.DeliveryDate = System.DateTime.Now;
                 if (entity.tb_FinishedGoodsInvDetails != null && entity.tb_FinishedGoodsInvDetails.Count > 0)

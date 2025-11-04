@@ -1,5 +1,6 @@
-﻿using RUINORERP.PacketSpec.Models.Core;
+using RUINORERP.PacketSpec.Models.Core;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Threading.Tasks;
 
 namespace RUINORERP.UI.Network.ClientCommandHandlers
@@ -78,5 +79,13 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
         /// </summary>
         /// <returns>扫描并注册的处理器数量</returns>
         Task<int> ScanAndRegisterHandlersAsync();
+        
+        /// <summary>
+        /// 扫描并注册指定程序集中的命令处理器
+        /// </summary>
+        /// <param name="assemblies">要扫描的程序集列表</param>
+        /// <param name="lifetimeScope">Autofac生命周期作用域，用于依赖注入</param>
+        /// <returns>扫描并注册的处理器数量</returns>
+        Task<int> ScanAndRegisterHandlersAsync(IEnumerable<Assembly> assemblies, Autofac.ILifetimeScope lifetimeScope);
     }
 }

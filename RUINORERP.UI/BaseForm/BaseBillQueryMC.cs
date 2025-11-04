@@ -130,6 +130,9 @@ namespace RUINORERP.UI.BaseForm
                     {
                         frm = new frmFormProperty();
                     }
+                    
+                    // 预初始化控件，确保在子类Load事件执行时_UCBillChildQuery不为null
+                    PreInitializeControls();
 
                     //提前统一插入批量处理的菜单按钮
 
@@ -138,8 +141,11 @@ namespace RUINORERP.UI.BaseForm
                     {
                         //this.Text = cb.CheckState.ToString();
                         //kryptonNavigator1.Button.CloseButtonDisplay = ButtonDisplay.Hide;
-                        _UCBillMasterQuery.newSumDataGridViewMaster.MultiSelect = cbbatch.Checked;
-                        _UCBillMasterQuery.newSumDataGridViewMaster.UseSelectedColumn = cbbatch.Checked;
+                        if(_UCBillMasterQuery != null && _UCBillMasterQuery.newSumDataGridViewMaster != null)
+                        {
+                            _UCBillMasterQuery.newSumDataGridViewMaster.MultiSelect = cbbatch.Checked;
+                            _UCBillMasterQuery.newSumDataGridViewMaster.UseSelectedColumn = cbbatch.Checked;
+                        }
                     };
                     ToolStripControlHost host = new ToolStripControlHost(cbbatch);
                     BaseToolStrip.Items.Insert(0, host);
@@ -2975,17 +2981,32 @@ namespace RUINORERP.UI.BaseForm
 
         private KryptonPage ChildQuery()
         {
-            _UCBillChildQuery = new UCBillChildQuery();
-
-            if (_UCBillChildQuery.GridRelated.RelatedInfoList.Count == 0 && RelatedBillEditCol != null)
+            // 如果_UCBillChildQuery已经在PreInitializeControls中初始化，则直接使用，否则创建新实例
+            if (_UCBillChildQuery == null)
             {
-                _UCBillChildQuery.GridRelated.SetRelatedInfo(typeof(C).Name, RelatedBillEditCol.GetMemberInfo().Name);
+                _UCBillChildQuery = new UCBillChildQuery();
+                _UCBillChildQuery.Name = "_UCBillChildQuery";
+                _UCBillChildQuery.entityType = typeof(C);
+                _UCBillChildQuery.ColNameDataDictionary = ChildColNameDataDictionary;
+                
+                // 设置关联信息
+                if (_UCBillChildQuery.GridRelated.RelatedInfoList.Count == 0 && RelatedBillEditCol != null)
+                {
+                    _UCBillChildQuery.GridRelated.SetRelatedInfo(typeof(C).Name, RelatedBillEditCol.GetMemberInfo().Name);
+                }
             }
 
-            _UCBillChildQuery.Name = "_UCBillChildQuery";
-            _UCBillChildQuery.entityType = typeof(C);
+            // 设置其他属性
             List<string> childlist = RuinorExpressionHelper.ExpressionListToStringList(ChildSummaryCols);
-            _UCBillChildQuery.InvisibleCols = RuinorExpressionHelper.ExpressionListToHashSet(ChildInvisibleCols);
+            
+            // 确保InvisibleCols不为null并添加必要的列
+            if (_UCBillChildQuery.InvisibleCols == null)
+            {
+                _UCBillChildQuery.InvisibleCols = new HashSet<string>();
+            }
+            _UCBillChildQuery.InvisibleCols.UnionWith(RuinorExpressionHelper.ExpressionListToHashSet(ChildInvisibleCols));
+            
+            // 处理外键列隐藏
             List<BaseDtoField> tempChildFiledList = UIHelper.GetDtoFieldNameList<C>();//<M>
             foreach (var item in tempChildFiledList)
             {
@@ -3001,10 +3022,10 @@ namespace RUINORERP.UI.BaseForm
                     }
                 }
             }
+            
             _UCBillChildQuery.DefaultHideCols = new HashSet<string>();
             UIHelper.ControlColumnsInvisible(CurMenuInfo, _UCBillChildQuery.InvisibleCols, _UCBillChildQuery.DefaultHideCols, true);
             _UCBillChildQuery.SummaryCols = childlist;
-            _UCBillChildQuery.ColNameDataDictionary = ChildColNameDataDictionary;
             KryptonPage page = NewPage("明细信息", 1, _UCBillChildQuery);
             // Document pages cannot be docked or auto hidden
             page.ClearFlags(KryptonPageFlags.DockingAllowAutoHidden | KryptonPageFlags.DockingAllowDocked);
@@ -3039,6 +3060,34 @@ namespace RUINORERP.UI.BaseForm
 
         public UCBillMasterQuery _UCBillMasterQuery;
         public UCBillChildQuery _UCBillChildQuery;
+        
+        /// <summary>
+        /// 预初始化子控件
+        /// </summary>
+        private void PreInitializeControls()
+        {            
+            // 提前初始化_UCBillChildQuery，确保在子类Load事件执行时不为null
+            if (HasChildData && _UCBillChildQuery == null)
+            {
+                _UCBillChildQuery = new UCBillChildQuery();
+                _UCBillChildQuery.Name = "_UCBillChildQuery";
+                _UCBillChildQuery.entityType = typeof(C);
+                
+                // 设置基本属性
+                if (_UCBillChildQuery.InvisibleCols == null)
+                {
+                    _UCBillChildQuery.InvisibleCols = new HashSet<string>();
+                }
+                _UCBillChildQuery.DefaultHideCols = new HashSet<string>();
+                _UCBillChildQuery.ColNameDataDictionary = ChildColNameDataDictionary;
+                
+                // 设置关联信息
+                if (_UCBillChildQuery.GridRelated.RelatedInfoList.Count == 0 && RelatedBillEditCol != null)
+                {
+                    _UCBillChildQuery.GridRelated.SetRelatedInfo(typeof(C).Name, RelatedBillEditCol.GetMemberInfo().Name);
+                }
+            }
+        }
 
         private KryptonPage MasterQuery()
         {

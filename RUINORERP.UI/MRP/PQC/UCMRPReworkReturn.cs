@@ -41,6 +41,7 @@ using RUINORERP.UI.PSI.SAL;
 using EnumsNET;
 using RUINORERP.UI.ToolForm;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
+using RUINORERP.UI.Network.Services;
 
 namespace RUINORERP.UI.MRP.PQC
 {
@@ -94,7 +95,7 @@ namespace RUINORERP.UI.MRP.PQC
                 entity.ReturnDate = System.DateTime.Now;
                 if (string.IsNullOrEmpty(entity.ReworkReturnNo))
                 {
-                    entity.ReworkReturnNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.返工退库单);
+                    entity.ReworkReturnNo = BizCodeService.GetBizBillNo(BizType.返工退库单);
                 }
                 entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
                 if (entity.tb_MRP_ReworkReturnDetails != null && entity.tb_MRP_ReworkReturnDetails.Count > 0)

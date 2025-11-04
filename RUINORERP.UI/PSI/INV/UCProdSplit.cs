@@ -41,6 +41,7 @@ using Org.BouncyCastle.Asn1.Cmp;
 using RUINORERP.Business.CommService;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.Extensions.Middlewares;
+using RUINORERP.UI.Network.Services;
 
 
 
@@ -145,7 +146,7 @@ namespace RUINORERP.UI.PSI.INV
                 entity.DataStatus = (int)DataStatus.草稿;
                 if (string.IsNullOrEmpty(entity.SplitNo))
                 {
-                    entity.SplitNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.产品分割单);
+                    entity.SplitNo = BizCodeService.GetBizBillNo(BizType.产品分割单);
                 }
                 entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
                 entity.SplitDate = System.DateTime.Now;

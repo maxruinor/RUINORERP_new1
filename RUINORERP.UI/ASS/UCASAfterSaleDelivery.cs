@@ -51,6 +51,7 @@ using Netron.GraphLib;
 using Krypton.Toolkit;
 using RUINORERP.Extensions.Middlewares;
 using RUINORERP.Business.BizMapperService;
+using RUINORERP.UI.Network.Services;
 
 
 namespace RUINORERP.UI.ASS
@@ -147,7 +148,7 @@ namespace RUINORERP.UI.ASS
 
                     if (string.IsNullOrEmpty(entity.ASDeliveryNo))
                     {
-                        entity.ASDeliveryNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.售后交付单);
+                        entity.ASDeliveryNo = BizCodeService.GetBizBillNo(BizType.售后交付单);
                     }
                     entity.ApprovalOpinions = string.Empty;
                     entity.DeliveryDate = System.DateTime.Now;

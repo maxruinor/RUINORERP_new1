@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -822,7 +822,7 @@ namespace RUINORERP.UI.ProductEAV
                 _EditEntity.ActionStatus = ActionStatus.新增;
                 long maxid = await mcProdBase.GetMaxID();
                 //生成编号
-                _EditEntity.ProductNo = BizCodeGenerator.Instance.GetBaseInfoNo(BaseInfoType.ProductNo);
+                _EditEntity.ProductNo = BizCodeService.GetBaseInfoNo(BaseInfoType.ProductNo.ToString());
                 //_EditEntity.ShortCode = maxid.ToString().PadLeft(4, '0');//推荐
                 //助记码要在类目选择后生成，要有规律
                 //详情直接清空，因为是新增 ，属性这块不清楚。后面再优化：TODO:
@@ -937,7 +937,7 @@ namespace RUINORERP.UI.ProductEAV
                                 constpara = para.ToPinYin(true).Substring(0, 3);
                             }
 
-                            _EditEntity.ShortCode = BizCodeGenerator.Instance.GetBaseInfoNo(BaseInfoType.ShortCode, constpara); //推荐
+                            _EditEntity.ShortCode = BizCodeService.GetBaseInfoNo(BaseInfoType.ShortCode.ToString(), constpara); //推荐
                         }
                     }
                 }
@@ -972,7 +972,7 @@ namespace RUINORERP.UI.ProductEAV
                                     {
                                         Eav_ProdDetails ppg = new Eav_ProdDetails();
                                         ppg.GroupName = "";
-                                        ppg.SKU = BizCodeGenerator.Instance.GetBaseInfoNo(BaseInfoType.SKU_No);
+                                        ppg.SKU = BizCodeService.GetBaseInfoNo(BaseInfoType.SKU_No.ToString());
                                         bindingSourceList.Add(ppg);
                                     }
 
@@ -1128,7 +1128,7 @@ namespace RUINORERP.UI.ProductEAV
                         else
                         {
                             // 降级方案：如果服务不可用，使用原来的方法
-                           // txtNo.Text = BNRFactory.Default.Create("{CN:" + entity.Category_name + "}");
+                            // txtNo.Text = BNRFactory.Default.Create("{CN:" + entity.Category_name + "}");
                             MessageBox.Show("警告：无法使用服务器生成产品编码，已使用本地生成方式", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                         }
                     }
@@ -1944,11 +1944,13 @@ namespace RUINORERP.UI.ProductEAV
                 {
                     Eav_ProdDetails ppg = new Eav_ProdDetails();
                     ppg.GroupName = newItem;
-                    ppg.SKU = BizCodeGenerator.Instance.GetBaseInfoNo(BaseInfoType.SKU_No);
+                    ppg.SKU = BizCodeService.GetProductSKUNo(EditEntity.ProdBaseID, EditEntity.ProductNo);
                     if (MainForm.Instance.AppContext.SysConfig.UseBarCode)
                     {
                         //补码
-                        ppg.BarCode = BizCodeGenerator.Instance.GetBarCode(ppg.SKU, EditEntity.CNName.Substring(0).ToCharArray()[0]);
+                        // 使用SKU编号作为条码生成的原始编码，确保条码与产品的唯一性关联
+                        // 这样即使产品名称相同，由于SKU编号不同，生成的条码也会不同
+                        ppg.BarCode = BizCodeService.GetBarCode(ppg.SKU);
                     }
                     bindingSourceList.Add(ppg);
                 }
@@ -1975,7 +1977,7 @@ namespace RUINORERP.UI.ProductEAV
                     {
                         Eav_ProdDetails ppg = new Eav_ProdDetails();
                         ppg.GroupName = item;
-                        ppg.SKU = BizCodeGenerator.Instance.GetBaseInfoNo(BaseInfoType.SKU_No);
+                        ppg.SKU = BizCodeService.GetBaseInfoNo(BaseInfoType.SKU_No.ToString());
                         bindingSourceList.Add(ppg);
 
                     }

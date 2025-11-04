@@ -49,6 +49,7 @@ using RUINORERP.UI.ToolForm;
 using Netron.GraphLib;
 using LiveChartsCore.Geo;
 using RUINORERP.Extensions.Middlewares;
+using RUINORERP.UI.Network.Services;
 
 namespace RUINORERP.UI.PSI.SAL
 {
@@ -299,7 +300,7 @@ namespace RUINORERP.UI.PSI.SAL
                     entity.OutDate = System.DateTime.Now;
                     if (string.IsNullOrEmpty(entity.SaleOutNo))
                     {
-                        entity.SaleOutNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.销售出库单);
+                        entity.SaleOutNo = BizCodeService.GetBizBillNo(BizType.销售出库单);
                     }
 
                     if (entity.tb_SaleOutDetails != null && entity.tb_SaleOutDetails.Count > 0)

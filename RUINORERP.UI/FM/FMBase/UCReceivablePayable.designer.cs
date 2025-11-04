@@ -31,6 +31,10 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(UCReceivablePayable));
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
+            this.lblDocumentDate = new Krypton.Toolkit.KryptonLabel();
+            this.lblBusinessDate = new Krypton.Toolkit.KryptonLabel();
+            this.dtpDocumentDate = new Krypton.Toolkit.KryptonDateTimePicker();
+            this.dtpBusinessDate = new Krypton.Toolkit.KryptonDateTimePicker();
             this.picBox红字 = new System.Windows.Forms.PictureBox();
             this.chkIsForCommission = new Krypton.Toolkit.KryptonCheckBox();
             this.txtPlatformOrderNo = new Krypton.Toolkit.KryptonTextBox();
@@ -92,10 +96,8 @@
             this.lblLocalPaidAmount = new Krypton.Toolkit.KryptonLabel();
             this.txtLocalBalanceAmount = new Krypton.Toolkit.KryptonTextBox();
             this.lblLocalBalanceAmount = new Krypton.Toolkit.KryptonLabel();
-            this.lblBusinessDate = new Krypton.Toolkit.KryptonLabel();
-            this.dtpBusinessDate = new Krypton.Toolkit.KryptonDateTimePicker();
-            this.dtpDocumentDate = new Krypton.Toolkit.KryptonDateTimePicker();
-            this.lblDocumentDate = new Krypton.Toolkit.KryptonLabel();
+            this.txtLocalReconciledAmount = new Krypton.Toolkit.KryptonTextBox();
+            this.lblLocalReconciledAmount = new Krypton.Toolkit.KryptonLabel();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
@@ -200,6 +202,38 @@
             this.kryptonPanel1.Name = "kryptonPanel1";
             this.kryptonPanel1.Size = new System.Drawing.Size(1266, 278);
             this.kryptonPanel1.TabIndex = 4;
+            // 
+            // lblDocumentDate
+            // 
+            this.lblDocumentDate.Location = new System.Drawing.Point(862, 158);
+            this.lblDocumentDate.Name = "lblDocumentDate";
+            this.lblDocumentDate.Size = new System.Drawing.Size(62, 20);
+            this.lblDocumentDate.TabIndex = 233;
+            this.lblDocumentDate.Values.Text = "单据日期";
+            // 
+            // lblBusinessDate
+            // 
+            this.lblBusinessDate.Location = new System.Drawing.Point(524, 161);
+            this.lblBusinessDate.Name = "lblBusinessDate";
+            this.lblBusinessDate.Size = new System.Drawing.Size(62, 20);
+            this.lblBusinessDate.TabIndex = 233;
+            this.lblBusinessDate.Values.Text = "业务日期";
+            // 
+            // dtpDocumentDate
+            // 
+            this.dtpDocumentDate.Location = new System.Drawing.Point(930, 158);
+            this.dtpDocumentDate.Name = "dtpDocumentDate";
+            this.dtpDocumentDate.ShowCheckBox = true;
+            this.dtpDocumentDate.Size = new System.Drawing.Size(212, 21);
+            this.dtpDocumentDate.TabIndex = 234;
+            // 
+            // dtpBusinessDate
+            // 
+            this.dtpBusinessDate.Location = new System.Drawing.Point(592, 161);
+            this.dtpBusinessDate.Name = "dtpBusinessDate";
+            this.dtpBusinessDate.ShowCheckBox = true;
+            this.dtpBusinessDate.Size = new System.Drawing.Size(167, 21);
+            this.dtpBusinessDate.TabIndex = 234;
             // 
             // picBox红字
             // 
@@ -612,9 +646,11 @@
             this.kryptonSplitContainer2.Panel2.Controls.Add(this.lblForeignBalanceAmount);
             this.kryptonSplitContainer2.Panel2.Controls.Add(this.lblForeignPaidAmount);
             this.kryptonSplitContainer2.Panel2.Controls.Add(this.txtForeignBalanceAmount);
+            this.kryptonSplitContainer2.Panel2.Controls.Add(this.lblLocalReconciledAmount);
             this.kryptonSplitContainer2.Panel2.Controls.Add(this.lblTotalForeignAmount);
             this.kryptonSplitContainer2.Panel2.Controls.Add(this.txtForeignPaidAmount);
             this.kryptonSplitContainer2.Panel2.Controls.Add(this.txtTotalLocalPayableAmount);
+            this.kryptonSplitContainer2.Panel2.Controls.Add(this.txtLocalReconciledAmount);
             this.kryptonSplitContainer2.Panel2.Controls.Add(this.txtTotalForeignPayableAmount);
             this.kryptonSplitContainer2.Panel2.Controls.Add(this.lblTotalLocalAmount);
             this.kryptonSplitContainer2.Panel2.Controls.Add(this.txtLocalPaidAmount);
@@ -641,7 +677,7 @@
             // 
             // lblForeignBalanceAmount
             // 
-            this.lblForeignBalanceAmount.Location = new System.Drawing.Point(946, 13);
+            this.lblForeignBalanceAmount.Location = new System.Drawing.Point(1109, 14);
             this.lblForeignBalanceAmount.Name = "lblForeignBalanceAmount";
             this.lblForeignBalanceAmount.Size = new System.Drawing.Size(75, 20);
             this.lblForeignBalanceAmount.TabIndex = 204;
@@ -649,7 +685,7 @@
             // 
             // lblForeignPaidAmount
             // 
-            this.lblForeignPaidAmount.Location = new System.Drawing.Point(756, 13);
+            this.lblForeignPaidAmount.Location = new System.Drawing.Point(919, 14);
             this.lblForeignPaidAmount.Name = "lblForeignPaidAmount";
             this.lblForeignPaidAmount.Size = new System.Drawing.Size(75, 20);
             this.lblForeignPaidAmount.TabIndex = 200;
@@ -657,7 +693,7 @@
             // 
             // txtForeignBalanceAmount
             // 
-            this.txtForeignBalanceAmount.Location = new System.Drawing.Point(1025, 12);
+            this.txtForeignBalanceAmount.Location = new System.Drawing.Point(1188, 13);
             this.txtForeignBalanceAmount.Name = "txtForeignBalanceAmount";
             this.txtForeignBalanceAmount.ReadOnly = true;
             this.txtForeignBalanceAmount.Size = new System.Drawing.Size(75, 23);
@@ -665,7 +701,7 @@
             // 
             // lblTotalForeignAmount
             // 
-            this.lblTotalForeignAmount.Location = new System.Drawing.Point(570, 13);
+            this.lblTotalForeignAmount.Location = new System.Drawing.Point(733, 14);
             this.lblTotalForeignAmount.Name = "lblTotalForeignAmount";
             this.lblTotalForeignAmount.Size = new System.Drawing.Size(75, 20);
             this.lblTotalForeignAmount.TabIndex = 196;
@@ -673,7 +709,7 @@
             // 
             // txtForeignPaidAmount
             // 
-            this.txtForeignPaidAmount.Location = new System.Drawing.Point(832, 12);
+            this.txtForeignPaidAmount.Location = new System.Drawing.Point(995, 13);
             this.txtForeignPaidAmount.Name = "txtForeignPaidAmount";
             this.txtForeignPaidAmount.ReadOnly = true;
             this.txtForeignPaidAmount.Size = new System.Drawing.Size(75, 23);
@@ -681,21 +717,21 @@
             // 
             // txtTotalLocalPayableAmount
             // 
-            this.txtTotalLocalPayableAmount.Location = new System.Drawing.Point(90, 12);
+            this.txtTotalLocalPayableAmount.Location = new System.Drawing.Point(79, 12);
             this.txtTotalLocalPayableAmount.Name = "txtTotalLocalPayableAmount";
             this.txtTotalLocalPayableAmount.Size = new System.Drawing.Size(75, 23);
             this.txtTotalLocalPayableAmount.TabIndex = 199;
             // 
             // txtTotalForeignPayableAmount
             // 
-            this.txtTotalForeignPayableAmount.Location = new System.Drawing.Point(649, 12);
+            this.txtTotalForeignPayableAmount.Location = new System.Drawing.Point(812, 13);
             this.txtTotalForeignPayableAmount.Name = "txtTotalForeignPayableAmount";
             this.txtTotalForeignPayableAmount.Size = new System.Drawing.Size(75, 23);
             this.txtTotalForeignPayableAmount.TabIndex = 197;
             // 
             // lblTotalLocalAmount
             // 
-            this.lblTotalLocalAmount.Location = new System.Drawing.Point(16, 13);
+            this.lblTotalLocalAmount.Location = new System.Drawing.Point(5, 13);
             this.lblTotalLocalAmount.Name = "lblTotalLocalAmount";
             this.lblTotalLocalAmount.Size = new System.Drawing.Size(75, 20);
             this.lblTotalLocalAmount.TabIndex = 198;
@@ -703,7 +739,7 @@
             // 
             // txtLocalPaidAmount
             // 
-            this.txtLocalPaidAmount.Location = new System.Drawing.Point(265, 12);
+            this.txtLocalPaidAmount.Location = new System.Drawing.Point(254, 12);
             this.txtLocalPaidAmount.Name = "txtLocalPaidAmount";
             this.txtLocalPaidAmount.ReadOnly = true;
             this.txtLocalPaidAmount.Size = new System.Drawing.Size(75, 23);
@@ -711,7 +747,7 @@
             // 
             // lblLocalPaidAmount
             // 
-            this.lblLocalPaidAmount.Location = new System.Drawing.Point(187, 13);
+            this.lblLocalPaidAmount.Location = new System.Drawing.Point(176, 13);
             this.lblLocalPaidAmount.Name = "lblLocalPaidAmount";
             this.lblLocalPaidAmount.Size = new System.Drawing.Size(75, 20);
             this.lblLocalPaidAmount.TabIndex = 202;
@@ -719,7 +755,7 @@
             // 
             // txtLocalBalanceAmount
             // 
-            this.txtLocalBalanceAmount.Location = new System.Drawing.Point(457, 12);
+            this.txtLocalBalanceAmount.Location = new System.Drawing.Point(428, 12);
             this.txtLocalBalanceAmount.Name = "txtLocalBalanceAmount";
             this.txtLocalBalanceAmount.ReadOnly = true;
             this.txtLocalBalanceAmount.Size = new System.Drawing.Size(75, 23);
@@ -727,43 +763,26 @@
             // 
             // lblLocalBalanceAmount
             // 
-            this.lblLocalBalanceAmount.Location = new System.Drawing.Point(374, 13);
+            this.lblLocalBalanceAmount.Location = new System.Drawing.Point(345, 13);
             this.lblLocalBalanceAmount.Name = "lblLocalBalanceAmount";
             this.lblLocalBalanceAmount.Size = new System.Drawing.Size(75, 20);
             this.lblLocalBalanceAmount.TabIndex = 206;
             this.lblLocalBalanceAmount.Values.Text = "未核销本币";
             // 
-            // lblBusinessDate
+            // txtLocalReconciledAmount
             // 
-            this.lblBusinessDate.Location = new System.Drawing.Point(524, 161);
-            this.lblBusinessDate.Name = "lblBusinessDate";
-            this.lblBusinessDate.Size = new System.Drawing.Size(62, 20);
-            this.lblBusinessDate.TabIndex = 233;
-            this.lblBusinessDate.Values.Text = "业务日期";
+            this.txtLocalReconciledAmount.Location = new System.Drawing.Point(608, 12);
+            this.txtLocalReconciledAmount.Name = "txtLocalReconciledAmount";
+            this.txtLocalReconciledAmount.Size = new System.Drawing.Size(75, 23);
+            this.txtLocalReconciledAmount.TabIndex = 197;
             // 
-            // dtpBusinessDate
+            // lblLocalReconciledAmount
             // 
-            this.dtpBusinessDate.Location = new System.Drawing.Point(592, 161);
-            this.dtpBusinessDate.Name = "dtpBusinessDate";
-            this.dtpBusinessDate.ShowCheckBox = true;
-            this.dtpBusinessDate.Size = new System.Drawing.Size(167, 21);
-            this.dtpBusinessDate.TabIndex = 234;
-            // 
-            // dtpDocumentDate
-            // 
-            this.dtpDocumentDate.Location = new System.Drawing.Point(930, 158);
-            this.dtpDocumentDate.Name = "dtpDocumentDate";
-            this.dtpDocumentDate.ShowCheckBox = true;
-            this.dtpDocumentDate.Size = new System.Drawing.Size(212, 21);
-            this.dtpDocumentDate.TabIndex = 234;
-            // 
-            // lblDocumentDate
-            // 
-            this.lblDocumentDate.Location = new System.Drawing.Point(862, 158);
-            this.lblDocumentDate.Name = "lblDocumentDate";
-            this.lblDocumentDate.Size = new System.Drawing.Size(62, 20);
-            this.lblDocumentDate.TabIndex = 233;
-            this.lblDocumentDate.Values.Text = "单据日期";
+            this.lblLocalReconciledAmount.Location = new System.Drawing.Point(529, 13);
+            this.lblLocalReconciledAmount.Name = "lblLocalReconciledAmount";
+            this.lblLocalReconciledAmount.Size = new System.Drawing.Size(75, 20);
+            this.lblLocalReconciledAmount.TabIndex = 196;
+            this.lblLocalReconciledAmount.Values.Text = "已对账本币";
             // 
             // UCReceivablePayable
             // 
@@ -875,5 +894,7 @@
         private Krypton.Toolkit.KryptonDateTimePicker dtpBusinessDate;
         private Krypton.Toolkit.KryptonLabel lblDocumentDate;
         private Krypton.Toolkit.KryptonDateTimePicker dtpDocumentDate;
+        private Krypton.Toolkit.KryptonLabel lblLocalReconciledAmount;
+        private Krypton.Toolkit.KryptonTextBox txtLocalReconciledAmount;
     }
 }

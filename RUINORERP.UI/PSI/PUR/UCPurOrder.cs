@@ -12,6 +12,7 @@ using RUINORERP.UI.Common;
 using RUINORERP.Model;
 using RUINORERP.Business;
 using RUINORERP.UI.UCSourceGrid;
+using RUINORERP.UI.Network.Services;
 using System.Reflection;
 using System.Collections.Concurrent;
 using RUINORERP.Common.CollectionExtension;
@@ -217,7 +218,7 @@ namespace RUINORERP.UI.PSI.PUR
                 entity.DataStatus = (int)DataStatus.草稿;
                 if (string.IsNullOrEmpty(entity.PurOrderNo))
                 {
-                    entity.PurOrderNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.采购订单);
+                    entity.PurOrderNo = BizCodeService.GetBizBillNo(BizType.采购订单);
                 }
                 entity.CloseCaseOpinions = string.Empty;
                 entity.ApprovalOpinions = string.Empty;

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -26,6 +26,7 @@ using RUINORERP.UI.Report;
 using RUINORERP.UI.BaseForm;
 
 using Microsoft.Extensions.Logging;
+using RUINORERP.UI.Network.Services;
 using SqlSugar;
 using SourceGrid;
 using System.Linq.Expressions;
@@ -98,7 +99,7 @@ namespace RUINORERP.UI.FM.FMBase
                     {
                         if (string.IsNullOrEmpty(entity.ProfitLossNo))
                         {
-                            entity.ProfitLossNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.损失确认单);
+                            entity.ProfitLossNo = BizCodeService.GetBizBillNo(BizType.损失确认单);
                         }
                     }
 
@@ -106,7 +107,7 @@ namespace RUINORERP.UI.FM.FMBase
                     {
                         if (string.IsNullOrEmpty(entity.ProfitLossNo))
                         {
-                            entity.ProfitLossNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.溢余确认单);
+                            entity.ProfitLossNo = BizCodeService.GetBizBillNo(BizType.溢余确认单);
                         }
                     }
                     entity.ProfitLossDirection = (int)profitLossDirect;

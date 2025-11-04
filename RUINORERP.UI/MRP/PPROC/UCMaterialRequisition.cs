@@ -39,6 +39,7 @@ using System.Web.WebSockets;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Business.CommService;
 using RUINORERP.Model.CommonModel;
+using RUINORERP.UI.Network.Services;
 
 namespace RUINORERP.UI.MRP.MP
 {
@@ -135,7 +136,7 @@ namespace RUINORERP.UI.MRP.MP
                     entity.DataStatus = (int)DataStatus.草稿;
                     if (entity.MaterialRequisitionNO.IsNullOrEmpty())
                     {
-                        entity.MaterialRequisitionNO = BizCodeGenerator.Instance.GetBizBillNo(BizType.生产领料单);
+                        entity.MaterialRequisitionNO = BizCodeService.GetBizBillNo(BizType.生产领料单);
                     }
                     entity.DeliveryDate = System.DateTime.Now;
                     entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;

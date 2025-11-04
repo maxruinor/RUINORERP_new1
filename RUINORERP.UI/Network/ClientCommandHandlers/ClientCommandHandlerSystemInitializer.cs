@@ -22,11 +22,6 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
         /// </summary>
         public IClientCommandDispatcher CommandDispatcher { get; set; }
         
-        /// <summary>
-        /// 命令处理器注册器
-        /// </summary>
-        public ClientCommandHandlerRegistry HandlerRegistry { get; set; }
-        
         static ClientCommandHandlerSystemInitializer()
         {
             // 确保log4net配置正确加载
@@ -51,10 +46,25 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                 await CommandDispatcher.StartAsync();
                 Logger.Info("命令调度器启动完成");
                 
-                // 异步注册所有命令处理器
-                int registeredCount = await HandlerRegistry.RegisterAllHandlersAsync();
-                Logger.Info($"成功注册 {registeredCount} 个客户端命令处理器");
+                // 使用自动扫描注册机制
+                int scannedCount = 0;
+                if (CommandDispatcher is ClientCommandDispatcher dispatcher)
+                {
+                    // 获取当前程序集和相关程序集
+                    var assemblies = new[] 
+                    {
+                        System.Reflection.Assembly.GetExecutingAssembly()
+                    };
+                    
+                    // 从DI容器获取Autofac生命周期作用域
+                    var lifetimeScope = Startup.GetFromFac<Autofac.ILifetimeScope>();
+                    
+                    // 执行自动扫描注册
+                    scannedCount = await dispatcher.ScanAndRegisterHandlersAsync(assemblies, lifetimeScope);
+                    Logger.Info($"通过自动扫描成功注册 {scannedCount} 个客户端命令处理器");
+                }
                 
+                Logger.Info("客户端命令处理器注册完成");
                 Logger.Info("客户端命令处理系统初始化完成");
             }
             catch (Exception ex)

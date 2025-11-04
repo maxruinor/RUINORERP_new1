@@ -1,4 +1,4 @@
-﻿using RUINORERP.PacketSpec.Models.Core;
+using RUINORERP.PacketSpec.Models.Core;
 
 namespace RUINORERP.PacketSpec.Commands
 {
@@ -29,6 +29,11 @@ namespace RUINORERP.PacketSpec.Commands
         /// 生成产品SKU编码命令 - 生成产品SKU编号
         /// </summary>
         public static readonly CommandId GenerateProductSKUNo = new CommandId(CommandCategory.BizCode, (byte)(CommandCatalog.BizCode_GenerateProductSKUNo & 0xFF));
+
+        /// <summary>
+        /// 生成条码命令 - 根据原始编码生成条形码
+        /// </summary>
+        public static readonly CommandId GenerateBarCode = new CommandId(CommandCategory.BizCode, (byte)(CommandCatalog.BizCode_GenerateBarCode & 0xFF));
         #endregion
     }
 }

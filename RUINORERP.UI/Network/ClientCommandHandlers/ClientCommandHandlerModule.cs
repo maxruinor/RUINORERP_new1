@@ -36,10 +36,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                 .As<IClientCommandDispatcher>()
                 .InstancePerLifetimeScope();
 
-            // 注册命令处理器注册器
-            builder.RegisterType<ClientCommandHandlerRegistry>()
-                .AsSelf()
-                .InstancePerLifetimeScope();
+            // 不再需要命令处理器注册器，直接使用ClientCommandDispatcher的扫描注册功能
 
             // 注册消息服务
             builder.RegisterType<RUINORERP.UI.Network.Services.MessageService>()

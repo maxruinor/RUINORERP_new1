@@ -78,7 +78,7 @@ namespace RUINORERP.Server.Workflow.WFApproval.Steps
                         Data = messageJson
                     };
 
-                    var request = new MessageRequest(MessageCmdType.Unknown, messageData);
+                    var request = new MessageRequest(MessageType.Unknown, messageData);
                     var success = _sessionService.SendCommandAsync(
                         session.SessionID, 
                         MessageCommands.SendMessageToUser, 

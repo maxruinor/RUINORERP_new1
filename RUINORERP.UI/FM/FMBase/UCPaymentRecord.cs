@@ -40,6 +40,7 @@ using RUINORERP.Business.StatusManagerService;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
 using LiveChartsCore.Geo;
 using RUINORERP.Extensions.Middlewares;
+using RUINORERP.UI.Network.Services;
 
 
 namespace RUINORERP.UI.FM
@@ -180,13 +181,13 @@ namespace RUINORERP.UI.FM
                 {
                     if (PaymentType == ReceivePaymentType.付款)
                     {
-                        entity.PaymentNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.付款单);
+                        entity.PaymentNo = BizCodeService.GetBizBillNo(BizType.付款单);
                         chkIsForCommission.Visible = true;
                         chkIsFromPlatform.Visible = false;
                     }
                     else
                     {
-                        entity.PaymentNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.收款单);
+                        entity.PaymentNo = BizCodeService.GetBizBillNo(BizType.收款单);
                         chkIsForCommission.Visible = false;
                         chkIsFromPlatform.Visible = true;
                     }

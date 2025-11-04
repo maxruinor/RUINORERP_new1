@@ -37,6 +37,7 @@ using Krypton.Toolkit;
 using RUINORERP.UI.PSI.PUR;
 using System.Web.WebSockets;
 using RUINORERP.Model.CommonModel;
+using RUINORERP.UI.Network.Services;
 
 namespace RUINORERP.UI.MRP.MP
 {
@@ -117,7 +118,7 @@ namespace RUINORERP.UI.MRP.MP
                     entity.DataStatus = (int)DataStatus.草稿;
                     if (entity.BillNo.IsNullOrEmpty())
                     {
-                        entity.BillNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.生产退料单);
+                        entity.BillNo = BizCodeService.GetBizBillNo(BizType.生产退料单);
                     }
                     entity.ReturnDate = System.DateTime.Now;
                     entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;

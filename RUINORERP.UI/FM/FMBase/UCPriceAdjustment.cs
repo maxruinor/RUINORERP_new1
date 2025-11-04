@@ -25,6 +25,7 @@ using RUINORERP.Global;
 using RUINORERP.UI.Report;
 using RUINORERP.UI.BaseForm;
 using Microsoft.Extensions.Logging;
+using RUINORERP.UI.Network.Services;
 using SqlSugar;
 using SourceGrid;
 using System.Linq.Expressions;
@@ -182,11 +183,11 @@ namespace RUINORERP.UI.FM
                 {
                     if (PaymentType == ReceivePaymentType.收款)
                     {
-                        entity.AdjustNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.销售价格调整单);
+                        entity.AdjustNo = BizCodeService.GetBizBillNo(BizType.销售价格调整单);
                     }
                     else
                     {
-                        entity.AdjustNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.采购价格调整单);
+                        entity.AdjustNo = BizCodeService.GetBizBillNo(BizType.采购价格调整单);
                     }
                 }
             }

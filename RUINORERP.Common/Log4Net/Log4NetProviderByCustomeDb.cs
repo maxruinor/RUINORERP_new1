@@ -47,10 +47,11 @@ namespace RUINORERP.Common.Log4Net
 
         private Log4NetLoggerByDb CreateLoggerImplementation(string name)
         {
-            return new Log4NetLoggerByDb(name, Parselog4NetConfigFile(_log4NetConfigFile), ConnectionStr, _appcontext);
+            // 将连接字符串传递给Parselog4NetConfigFile方法，避免内部再次调用CryptoHelper.GetDecryptedConnectionString()
+            return new Log4NetLoggerByDb(name, Parselog4NetConfigFile(_log4NetConfigFile, ConnectionStr), ConnectionStr, _appcontext);
         }
 
-        private static XmlElement Parselog4NetConfigFile(string filename)
+        private static XmlElement Parselog4NetConfigFile(string filename, string connectionString)
         {
             XmlDocument log4netConfig = new XmlDocument();
             
@@ -80,21 +81,36 @@ namespace RUINORERP.Common.Log4Net
             // 查找并替换连接字符串占位符
             try
             {
-                var connectionString = CryptoHelper.GetDecryptedConnectionString();
-                XmlNodeList nodes = log4netConfig.SelectNodes("//connectionString[@value]");
-                foreach (XmlNode node in nodes)
+                // 直接使用传入的连接字符串，避免再次调用CryptoHelper.GetDecryptedConnectionString()
+                // 这样可以确保连接字符串已经被正确解密并且配置文件已经完全加载
+                if (!string.IsNullOrEmpty(connectionString))
                 {
-                    XmlAttribute valueAttr = node.Attributes["value"];
-                    if (valueAttr != null && valueAttr.Value.Contains("${ConnectionString}"))
+                    XmlNodeList nodes = log4netConfig.SelectNodes("//connectionString[@value]");
+                    foreach (XmlNode node in nodes)
                     {
-                        valueAttr.Value = connectionString;
-                        Console.WriteLine($"已在{filename}中替换连接字符串占位符");
+                        XmlAttribute valueAttr = node.Attributes["value"];
+                        if (valueAttr != null)
+                        {
+                            // 检查是否包含占位符或者直接替换加密的连接字符串
+                            if (valueAttr.Value.Contains("${ConnectionString}"))
+                            {
+                                valueAttr.Value = connectionString;
+                                Console.WriteLine($"已在{filename}中替换连接字符串占位符");
+                            }
+                            else
+                            {
+                                // 如果是加密的连接字符串格式，也进行替换
+                                Console.WriteLine($"已在{filename}中使用传入的解密后连接字符串替换原始连接字符串");
+                                valueAttr.Value = connectionString;
+                            }
+                        }
                     }
                 }
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"警告：替换{filename}中的连接字符串占位符失败: " + ex.Message);
+                Console.WriteLine($"异常详情: {ex.StackTrace}");
             }
             
             return log4netConfig["log4net"];

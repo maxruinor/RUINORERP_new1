@@ -105,14 +105,17 @@ namespace RUINORERP.Business
                         .Where(a => a.ARAPId == detail.ARAPId)
                         .FirstAsync();
 
-                    // 回退已对账金额
+                    // 根据单据类型回退已对账金额
+                    // 注意：无论是收款还是付款类型，回退操作都是减去之前添加的金额
+                    // 但付款类型的金额通常为负数，所以实际效果会是增加其绝对值
                     arap.LocalReconciledAmount -= detail.IncludedLocalAmount;
                     arap.ForeignReconciledAmount -= detail.IncludedForeignAmount;
                     arap.AllowAddToStatement = true;
 
-                    // 确保金额不会变为负数
-                    arap.LocalReconciledAmount = Math.Max(0, arap.LocalReconciledAmount);
-                    arap.ForeignReconciledAmount = Math.Max(0, arap.ForeignReconciledAmount);
+                    // 不强制将金额设为非负，以支持负数场景（如退货）
+                    // 使用Math.Round避免精度问题
+                    arap.LocalReconciledAmount = Math.Round(arap.LocalReconciledAmount, 4);
+                    arap.ForeignReconciledAmount = Math.Round(arap.ForeignReconciledAmount, 4);
 
                     await _unitOfWorkManage.GetDbClient().Updateable(arap).ExecuteCommandAsync();
                 }
@@ -249,14 +252,40 @@ namespace RUINORERP.Business
                         .Where(a => a.ARAPId == detail.ARAPId)
                         .FirstAsync();
 
-                    // 更新已对账金额
-                    arap.LocalReconciledAmount += detail.IncludedLocalAmount;
-                    arap.ForeignReconciledAmount += detail.IncludedForeignAmount;
+                    // 根据单据类型更新已对账金额
+                    // 根据对账类型来添加负号
+                    if (entity.ReceivePaymentType==(int)ReceivePaymentType.付款)
+                    {
+                        if (detail.ReceivePaymentType==(int)ReceivePaymentType.收款)
+                        {
+                            arap.LocalReconciledAmount += -detail.IncludedLocalAmount;
+                            arap.ForeignReconciledAmount += -detail.IncludedForeignAmount;
+                        }
+                        else
+                        {
+                            arap.LocalReconciledAmount += detail.IncludedLocalAmount;
+                            arap.ForeignReconciledAmount += detail.IncludedForeignAmount;
+                        }
+                    }
+                    if (entity.ReceivePaymentType == (int)ReceivePaymentType.收款)
+                    {
+                        if (detail.ReceivePaymentType == (int)ReceivePaymentType.付款)
+                        {
+                            arap.LocalReconciledAmount += -detail.IncludedLocalAmount;
+                            arap.ForeignReconciledAmount += -detail.IncludedForeignAmount;
+                        }
+                        else
+                        {
+                            arap.LocalReconciledAmount += detail.IncludedLocalAmount;
+                            arap.ForeignReconciledAmount += detail.IncludedForeignAmount;
+                        }
+                    }
+
                     arap.AllowAddToStatement = false;
 
-                    // 验证已对账金额不超过未核销金额
-                    if (arap.LocalReconciledAmount > arap.LocalBalanceAmount ||
-                        arap.ForeignReconciledAmount > arap.ForeignBalanceAmount)
+                    // 验证已对账金额的绝对值不超过未核销金额的绝对值
+                    if (Math.Abs(arap.LocalReconciledAmount) > Math.Abs(arap.LocalBalanceAmount) ||
+                        Math.Abs(arap.ForeignReconciledAmount) > Math.Abs(arap.ForeignBalanceAmount))
                     {
                         throw new Exception($"应收付款单{arap.ARAPNo}的已对账金额超过未核销金额，请检查数据");
                     }
@@ -368,7 +397,6 @@ namespace RUINORERP.Business
                         rmrs.Succeeded = false;
                         return rmrs;
                     }
-
                     detail.RemainingForeignAmount = detail.IncludedForeignAmount;
                     detail.RemainingLocalAmount = detail.IncludedLocalAmount;
                     detail.Summary = entity.Remark;

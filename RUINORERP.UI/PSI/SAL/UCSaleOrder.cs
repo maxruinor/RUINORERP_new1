@@ -26,6 +26,7 @@ using RUINORERP.UI.Report;
 using RUINORERP.UI.BaseForm;
 using Microsoft.Extensions.Logging;
 using RUINOR.Core;
+using RUINORERP.UI.Network.Services;
 using SqlSugar;
 using System.Linq.Expressions;
 using AutoMapper;
@@ -261,7 +262,7 @@ namespace RUINORERP.UI.PSI.SAL
                     entity.DataStatus = (int)DataStatus.草稿;
                     if (string.IsNullOrEmpty(entity.SOrderNo))
                     {
-                        entity.SOrderNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.销售订单);
+                        entity.SOrderNo = BizCodeService.GetBizBillNo(BizType.销售订单);
                     }
                     entity.CloseCaseOpinions = string.Empty;
                     entity.ApprovalOpinions = string.Empty;

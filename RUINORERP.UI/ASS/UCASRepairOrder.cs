@@ -27,6 +27,7 @@ using RUINORERP.UI.BaseForm;
 
 using Microsoft.Extensions.Logging;
 using RUINOR.Core;
+using RUINORERP.UI.Network.Services;
 using SqlSugar;
 using FluentValidation.Results;
 using System.Linq.Expressions;
@@ -353,7 +354,7 @@ namespace RUINORERP.UI.ASS
                     entity.DataStatus = (int)DataStatus.草稿;
                     if (string.IsNullOrEmpty(entity.RepairOrderNo))
                     {
-                        entity.RepairOrderNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.维修工单);
+                        entity.RepairOrderNo = BizCodeService.GetBizBillNo(BizType.维修工单);
                     }
                     entity.Employee_ID = AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
                     if (entity.tb_AS_RepairOrderDetails != null && entity.tb_AS_RepairOrderDetails.Count > 0)

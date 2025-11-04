@@ -25,6 +25,7 @@ using RUINORERP.Global;
 using RUINORERP.UI.Report;
 using RUINORERP.UI.BaseForm;
 using Microsoft.Extensions.Logging;
+using RUINORERP.UI.Network.Services;
 using SqlSugar;
 using SourceGrid;
 using System.Linq.Expressions;
@@ -295,14 +296,14 @@ namespace RUINORERP.UI.FM
                 {
                     if (PaymentType == ReceivePaymentType.收款)
                     {
-                        entity.ARAPNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.应收款单);
+                        entity.ARAPNo = BizCodeService.GetBizBillNo(BizType.应收款单);
                         chkIsForCommission.Visible = false;
                         chkIsFromPlatform.Visible = true;
 
                     }
                     else
                     {
-                        entity.ARAPNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.应付款单);
+                        entity.ARAPNo = BizCodeService.GetBizBillNo(BizType.应付款单);
                         chkIsForCommission.Visible = true;
                         chkIsFromPlatform.Visible = false;
                     }
@@ -337,6 +338,7 @@ namespace RUINORERP.UI.FM
             DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.LocalPaidAmount.ToString(), txtLocalPaidAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.ForeignBalanceAmount.ToString(), txtForeignBalanceAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.LocalBalanceAmount.ToString(), txtLocalBalanceAmount, BindDataType4TextBox.Money, false);
+            DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.LocalReconciledAmount.ToString(), txtLocalReconciledAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.ShippingFee.ToString(), txtShippingFee, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.PlatformOrderNo, txtPlatformOrderNo, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4CheckBox<tb_FM_ReceivablePayable>(entity, t => t.IsForCommission, chkIsForCommission, false);

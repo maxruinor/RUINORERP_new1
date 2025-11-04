@@ -21,6 +21,7 @@ using RUINORERP.Global.EnumExt;
 using SourceGrid2.Win32;
 using System.Reflection;
 using RUINOR.WinFormsUI;
+using RUINORERP.UI.Network.Services;
 
 namespace RUINORERP.UI.BI
 {
@@ -47,7 +48,7 @@ namespace RUINORERP.UI.BI
                 {
                     上级代码 = _EditEntity.tb_FM_SubjectParent.Subject_code;
                 }
-                _EditEntity.Subject_code = BizCodeGenerator.Instance.GetBaseInfoNo(BaseInfoType.FMSubject, 上级代码);
+                _EditEntity.Subject_code = BizCodeService.GetBaseInfoNo(BaseInfoType.FMSubject, 上级代码);
             }
 
             DataBindingHelper.BindData4RadioGroupTrueFalse<tb_FM_Subject>(entity, t => t.Balance_direction, rdb贷, rdb借);

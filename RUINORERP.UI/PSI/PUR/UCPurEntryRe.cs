@@ -46,6 +46,7 @@ using RUINORERP.UI.AdvancedUIModule;
 using RUINORERP.Model.CommonModel;
 using AutoUpdateTools;
 using ICSharpCode.SharpZipLib.Tar;
+using RUINORERP.UI.Network.Services;
 
 
 namespace RUINORERP.UI.PSI.PUR
@@ -180,7 +181,7 @@ namespace RUINORERP.UI.PSI.PUR
                 entity.ExchangeRate = 1;
                 if (string.IsNullOrEmpty(entity.PurEntryReNo))
                 {
-                    entity.PurEntryReNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.采购退货单);
+                    entity.PurEntryReNo = BizCodeService.GetBizBillNo(BizType.采购退货单);
                 }
 
                 entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
@@ -204,7 +205,14 @@ namespace RUINORERP.UI.PSI.PUR
                 entity.ProcessWay = (int)PurReProcessWay.厂商退款;
             }
             cmbProcessWay.Enabled = false;
-
+            if (entity.DataStatus >= (int)DataStatus.确认)
+            {
+                DataBindingHelper.BindData4CmbByEnum<tb_PurOrder, PayStatus>(entity, k => k.PayStatus, cmbPayStatus, false);
+            }
+            else
+            {
+                DataBindingHelper.BindData4CmbByEnum<tb_PurOrder, PayStatus>(entity, k => k.PayStatus, cmbPayStatus, false, PayStatus.全部付款, PayStatus.部分付款);
+            }
             DataBindingHelper.BindData4TextBox<tb_PurEntryRe>(entity, t => t.ExchangeRate.ToString(), txtExchangeRate, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4Cmb<tb_Currency>(entity, k => k.Currency_ID, v => v.CurrencyName, cmbCurrency_ID);
             DataBindingHelper.BindData4TextBox<tb_PurEntryRe>(entity, v => v.PurEntryNo, txtPurEntryNo, BindDataType4TextBox.Text, true);
@@ -744,6 +752,16 @@ protected async override void ReReview()
                 BusinessHelper.Instance.InitEntity(entity);
                 BindData(entity as tb_PurEntryRe);
             }
+
+        }
+
+        private void kryptonLabel1_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void cmbProcessWay_SelectedIndexChanged(object sender, EventArgs e)
+        {
 
         }
     }

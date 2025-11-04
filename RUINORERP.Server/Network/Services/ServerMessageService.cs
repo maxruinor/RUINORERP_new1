@@ -3,6 +3,7 @@ using RUINORERP.Model.TransModel;
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Requests.Message;
+using RUINORERP.Model.TransModel;
 using RUINORERP.PacketSpec.Models.Responses.Message;
 using RUINORERP.Server.Network.Models;
 using System;
@@ -60,7 +61,7 @@ namespace RUINORERP.Server.Network.Services
                     MessageType = "Popup"
                 };
 
-                var request = new MessageRequest(MessageCmdType.Unknown, messageData);
+                var request = new MessageRequest(MessageType.Unknown, messageData);
                 
                 // 获取目标用户的所有会话
                 var sessions = _sessionService.GetUserSessions(targetUserName);
@@ -78,16 +79,16 @@ namespace RUINORERP.Server.Network.Services
                             ct);
                         
                         return responsePacket?.Response as MessageResponse ?? 
-                               MessageResponse.Fail(MessageCmdType.Unknown,  "未收到有效响应");
+                               MessageResponse.Fail(MessageType.Unknown, "未收到有效响应");
                     }
                 }
                 
-                return MessageResponse.Fail(MessageCmdType.Unknown,  "目标用户不在线");
+                return MessageResponse.Fail(MessageType.Unknown, "目标用户不在线");
             }
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "发送弹窗消息时发生异常");
-                return MessageResponse.Fail(MessageCmdType.Unknown, $"发送消息失败: {ex.Message}");
+                return MessageResponse.Fail(MessageType.Unknown, $"发送消息失败: {ex.Message}");
             }
         }
 
@@ -116,7 +117,7 @@ namespace RUINORERP.Server.Network.Services
                     MessageType = messageType
                 };
 
-                var request = new MessageRequest(MessageCmdType.Unknown, messageData);
+                var request = new MessageRequest(MessageType.Unknown, messageData);
                 
                 // 获取目标用户的所有会话
                 var sessions = _sessionService.GetUserSessions(targetUserId);
@@ -134,16 +135,16 @@ namespace RUINORERP.Server.Network.Services
                             ct);
                         
                         return responsePacket?.Response as MessageResponse ?? 
-                               MessageResponse.Fail(MessageCmdType.Unknown,  "未收到有效响应");
+                               MessageResponse.Fail(MessageType.Unknown, "未收到有效响应");
                     }
                 }
                 
-                return MessageResponse.Fail(MessageCmdType.Unknown,  "目标用户不在线");
+                return MessageResponse.Fail(MessageType.Unknown, "目标用户不在线");
             }
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "发送用户消息时发生异常");
-                return MessageResponse.Fail(MessageCmdType.Unknown,  $"发送消息失败: {ex.Message}");
+                return MessageResponse.Fail(MessageType.Unknown, $"发送消息失败: {ex.Message}");
             }
         }
 
@@ -172,7 +173,7 @@ namespace RUINORERP.Server.Network.Services
                     MessageType = messageType
                 };
 
-                var request = new MessageRequest(MessageCmdType.Unknown, messageData);
+                var request = new MessageRequest(MessageType.Unknown, messageData);
                 
                 // 获取目标部门用户的所有会话
                 // 这里简化处理，实际项目中需要根据部门ID获取部门下的所有用户
@@ -198,12 +199,12 @@ namespace RUINORERP.Server.Network.Services
                     }
                 }
                 
-                return MessageResponse.Success(MessageCmdType.Unknown, new { SendCount = successCount });
+                return MessageResponse.Success(MessageType.Unknown, new { SendCount = successCount });
             }
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "发送部门消息时发生异常");
-                return MessageResponse.Fail(MessageCmdType.Message, $"发送消息失败: {ex.Message}");
+                return MessageResponse.Fail(MessageType.Message, $"发送消息失败: {ex.Message}");
             }
         }
 
@@ -229,7 +230,7 @@ namespace RUINORERP.Server.Network.Services
                     MessageType = messageType
                 };
 
-                var request = new MessageRequest(MessageCmdType.Unknown, messageData);
+                var request = new MessageRequest(MessageType.Unknown, messageData);
                 
                 // 获取所有用户会话
                 var sessions = _sessionService.GetAllUserSessions();
@@ -254,12 +255,12 @@ namespace RUINORERP.Server.Network.Services
                     }
                 }
                 
-                return MessageResponse.Success(MessageCmdType.Unknown, new { SendCount = successCount });
+                return MessageResponse.Success(MessageType.Unknown, new { SendCount = successCount });
             }
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "广播消息时发生异常");
-                return MessageResponse.Fail(MessageCmdType.Message, $"广播消息失败: {ex.Message}");
+                return MessageResponse.Fail(MessageType.Message, $"广播消息失败: {ex.Message}");
             }
         }
 
@@ -285,7 +286,7 @@ namespace RUINORERP.Server.Network.Services
                     NotificationType = notificationType
                 };
 
-                var request = new MessageRequest(MessageCmdType.Unknown, messageData);
+                var request = new MessageRequest(MessageType.Unknown, messageData);
                 
                 // 获取所有用户会话
                 var sessions = _sessionService.GetAllUserSessions();
@@ -310,12 +311,12 @@ namespace RUINORERP.Server.Network.Services
                     }
                 }
                 
-                return MessageResponse.Success(MessageCmdType.Unknown, new { SendCount = successCount });
+                return MessageResponse.Success(MessageType.Unknown, new { SendCount = successCount });
             }
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "发送系统通知时发生异常");
-                return MessageResponse.Fail(MessageCmdType.Message,  $"发送通知失败: {ex.Message}");
+                return MessageResponse.Fail(MessageType.Message, $"发送通知失败: {ex.Message}");
             }
         }
     }

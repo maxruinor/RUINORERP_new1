@@ -197,7 +197,7 @@ namespace RUINORERP.UI.IM
         }
 
         QueryParameter parameter { get; set; }
-
+        public string Title { get; internal set; }
 
         private void MessagePrompt_Load(object sender, EventArgs e)
         {

@@ -77,19 +77,79 @@ namespace RUINORERP.UI.IM
             _messageCheckTimer.Start();
         }
         
+        /// <summary>
+        /// 初始化消息服务
+        /// </summary>
         private void InitializeMessageService()
         {
-            if (_messageService == null)
-                return;
+            try
+            {
+                _logger.LogInformation("开始初始化消息服务订阅");
                 
-            // 订阅消息服务的各种消息事件
-            _messageService.PopupMessageReceived += messageData => OnPopupMessageReceived(messageData);
-            _messageService.BusinessMessageReceived += messageData => OnBusinessMessageReceived(messageData);
-            _messageService.DepartmentMessageReceived += messageData => OnDepartmentMessageReceived(messageData);
-            _messageService.BroadcastMessageReceived += messageData => OnBroadcastMessageReceived(messageData);
-            _messageService.SystemNotificationReceived += messageData => OnSystemNotificationReceived(messageData);
-            
-            _logger?.Info("已初始化消息服务并订阅所有消息事件");
+                // 先检查_messageService是否为null
+                if (_messageService == null)
+                {
+                    _logger.LogError("MessageService实例为null，无法订阅消息事件");
+                    return;
+                }
+                
+                // 取消之前可能存在的订阅，避免重复订阅导致的多次执行
+                _messageService.PopupMessageReceived -= OnPopupMessageReceived;
+                _messageService.BusinessMessageReceived -= OnBusinessMessageReceived;
+                _messageService.DepartmentMessageReceived -= OnDepartmentMessageReceived;
+                _messageService.BroadcastMessageReceived -= OnBroadcastMessageReceived;
+                _messageService.SystemNotificationReceived -= OnSystemNotificationReceived;
+                
+                // 重新订阅所有消息事件
+                _messageService.PopupMessageReceived += OnPopupMessageReceived;
+                _messageService.BusinessMessageReceived += OnBusinessMessageReceived;
+                _messageService.DepartmentMessageReceived += OnDepartmentMessageReceived;
+                _messageService.BroadcastMessageReceived += OnBroadcastMessageReceived;
+                _messageService.SystemNotificationReceived += OnSystemNotificationReceived;
+                
+                _logger.LogInformation("已成功初始化消息服务并订阅所有消息事件");
+                
+                // 记录当前订阅状态，便于调试
+                LogEventSubscriptionStatus();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "初始化消息服务时发生异常");
+            }
+        }
+        
+        /// <summary>
+        /// 记录事件订阅状态，用于调试
+        /// </summary>
+        private void LogEventSubscriptionStatus()
+        {
+            try
+            {
+                if (_messageService == null)
+                    return;
+                    
+                // 使用反射获取事件订阅状态，这在调试时非常有用
+                System.Reflection.FieldInfo popupEventField = _messageService.GetType().GetField("PopupMessageReceived", 
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public);
+                
+                if (popupEventField != null)
+                {
+                    Delegate popupEventDelegate = popupEventField.GetValue(_messageService) as Delegate;
+                    if (popupEventDelegate != null)
+                    {
+                        int handlerCount = popupEventDelegate.GetInvocationList().Length;
+                        _logger.LogInformation("弹窗消息事件当前订阅者数量: {HandlerCount}", handlerCount);
+                    }
+                    else
+                    {
+                        _logger.LogWarning("弹窗消息事件当前没有订阅者");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogDebug(ex, "记录事件订阅状态时发生异常（非关键错误）");
+            }
         }
         
         // 初始化定时器方法已整合到构造函数中

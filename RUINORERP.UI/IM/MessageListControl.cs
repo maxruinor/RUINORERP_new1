@@ -178,8 +178,13 @@ namespace RUINORERP.UI.IM
                 
                 // 启动动画通知
                 StartNotificationAnimation();
+                
+                // 注意：自动弹窗功能由EnhancedMessageManager负责处理
+                // 这里只更新列表UI，不显示弹窗
             }
         }
+        
+
         
         /// <summary>
         /// 启动通知动画

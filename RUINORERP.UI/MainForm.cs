@@ -114,6 +114,7 @@ using Padding = System.Windows.Forms.Padding;
 
 
 
+
 namespace RUINORERP.UI
 {
     public partial class MainForm : KryptonForm
@@ -170,8 +171,8 @@ namespace RUINORERP.UI
         #region 当前系统中所有用户信息
         private List<UserInfo> userInfos = new List<UserInfo>();
 
-      
-       
+
+
         /// <summary>
         /// 当前系统所有用户信息列表
         /// </summary>
@@ -226,10 +227,10 @@ namespace RUINORERP.UI
         {
             base.OnFormClosing(e);
 
-           
+
         }
 
-        
+
 
 
 
@@ -389,7 +390,7 @@ namespace RUINORERP.UI
 
         public MainForm(ILogger<MainForm> _logger, AuditLogHelper _auditLogHelper,
             FMAuditLogHelper _fmauditLogHelper, ConfigManager configManager, EnhancedMessageManager messageManager)
-            { 
+        {
             InitializeComponent();
 
             // 通过依赖注入获取缓存管理器
@@ -411,12 +412,12 @@ namespace RUINORERP.UI
             // 通过依赖注入获取核心组件
             communicationService = Startup.ServiceProvider.GetService<ClientCommunicationService>();
 
-        
+
             // 订阅重连失败事件，当重连失败时自动进入注销锁定状态
             if (communicationService != null)
             {
                 communicationService.ReconnectFailed += OnReconnectFailed;
-              
+
             }
             #endregion
 
@@ -661,7 +662,7 @@ namespace RUINORERP.UI
         {
             return _messageManager;
         }
-        
+
         /// <summary>
         /// 处理消息状态变更事件
         /// </summary>
@@ -672,7 +673,7 @@ namespace RUINORERP.UI
             // 在这里可以更新UI，例如状态栏的未读消息计数
             logger?.LogDebug($"消息状态已变更: {message.Id}, 已读: {message.IsRead}");
         }
-        
+
         private KryptonPage NewIMList()
         {
             #region 消息中心
@@ -1050,7 +1051,7 @@ namespace RUINORERP.UI
             // 在应用程序启动代码中添加
             var initializationService = Startup.GetFromFac<IDefaultRowAuthPolicyInitializationService>();
             await initializationService.InitializeDefaultPoliciesAsync();
-            
+
 
 
 
@@ -3117,6 +3118,13 @@ namespace RUINORERP.UI
 
         private async void btntsbRefresh_Click(object sender, EventArgs e)
         {
+            var validatorMonitor = Startup.GetFromFac<IOptionsMonitor<GlobalValidatorConfig>>();
+            if (validatorMonitor.CurrentValue.SomeSetting.Trim().Length > 0)
+            {
+
+            }
+
+
             await UI.Common.UIBizService.RequestCache<tb_UserInfo>(true);
             MainForm.Instance.logger.LogError("LoginWebServer" + System.DateTime.Now.ToString());
             var ss = Business.BizMapperService.EntityMappingHelper.GetEntityType(BizType.采购订单);

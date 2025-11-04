@@ -3087,6 +3087,37 @@ namespace RUINORERP.UI.BaseForm
                     _UCBillChildQuery.GridRelated.SetRelatedInfo(typeof(C).Name, RelatedBillEditCol.GetMemberInfo().Name);
                 }
             }
+            
+            // 提前初始化_UCBillMasterQuery，确保在子类Load事件执行时不为null
+            if (_UCBillMasterQuery == null)
+            {
+                _UCBillMasterQuery = new UCBillMasterQuery();
+                _UCBillMasterQuery.Name = "_UCBillMasterQuery";
+                _UCBillMasterQuery.entityType = typeof(M);
+                
+                // 设置基本属性
+                if (_UCBillMasterQuery.InvisibleCols == null)
+                {
+                    _UCBillMasterQuery.InvisibleCols = new HashSet<string>();
+                }
+                
+                // 添加主键列到隐藏列表
+                string PKColName = BaseUIHelper.GetEntityPrimaryKey<M>();
+                if (!_UCBillMasterQuery.InvisibleCols.Contains(PKColName))
+                {
+                    _UCBillMasterQuery.InvisibleCols.Add(PKColName);
+                }
+                
+                _UCBillMasterQuery.DefaultHideCols = new HashSet<string>();
+                _UCBillMasterQuery.ColNameDataDictionary = MasterColNameDataDictionary;
+                _UCBillMasterQuery.GridRelated.FromMenuInfo = CurMenuInfo;
+                
+                // 设置关联信息
+                if (_UCBillMasterQuery.GridRelated.RelatedInfoList.Count == 0 && RelatedBillEditCol != null)
+                {
+                    _UCBillMasterQuery.GridRelated.SetRelatedInfo(typeof(M).Name, RelatedBillEditCol.GetMemberInfo().Name);
+                }
+            }
         }
 
         private KryptonPage MasterQuery()

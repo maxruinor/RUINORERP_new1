@@ -48,7 +48,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
         {
             _logger = logger;
         }
-        
+
         /// <summary>
         /// 初始化调度器
         /// </summary>
@@ -59,11 +59,57 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
             {
                 if (!IsRunning)
                 {
-                    // 可以在这里进行一些初始化操作
+                    // 进行初始化操作
+                    _handlers.Clear();
+                    _commandToHandlersMap.Clear();
                     _logger?.LogInformation("调度器初始化成功");
                     return Task.FromResult(true);
                 }
                 return Task.FromResult(false);
+            }
+        }
+        
+        /// <summary>
+        /// 初始化并启动调度系统，包括自动扫描和注册处理器
+        /// 此方法提供完整的一键式初始化流程
+        /// </summary>
+        /// <param name="assemblies">可选，指定要扫描的程序集，不指定则扫描当前程序集</param>
+        /// <returns>初始化是否成功以及注册的处理器数量</returns>
+        public virtual async Task<(bool success, int registeredCount)> InitializeAndStartAsync(IEnumerable<Assembly> assemblies = null)
+        {
+            try
+            {
+                _logger?.LogInformation("开始初始化并启动命令处理系统");
+                
+                // 初始化调度器
+                bool initialized = await InitializeAsync();
+                if (!initialized)
+                {
+                    _logger?.LogWarning("命令调度器初始化失败或已初始化");
+                    return (false, 0);
+                }
+                _logger?.LogInformation("命令调度器初始化完成");
+                
+                // 启动调度器
+                bool started = await StartAsync();
+                if (!started)
+                {
+                    _logger?.LogWarning("命令调度器启动失败或已启动");
+                    return (false, 0);
+                }
+                _logger?.LogInformation("命令调度器启动完成");
+                
+                // 扫描并注册处理器
+                assemblies = assemblies ?? new[] { Assembly.GetExecutingAssembly() };
+                int registeredCount = await ScanAndRegisterHandlersAsync(assemblies);
+                
+                _logger?.LogInformation($"命令处理系统初始化完成，共注册 {registeredCount} 个命令处理器");
+                return (true, registeredCount);
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "初始化并启动命令处理系统失败");
+                return (false, 0);
             }
         }
 
@@ -101,13 +147,13 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                 // 获取需要停止的处理器列表的副本
                 handlersToStop = _handlers.Values.ToList();
             }
-            
+
             // 在lock外异步停止所有处理器
             foreach (var handler in handlersToStop)
             {
                 await handler.StopAsync();
             }
-            
+
             return true;
         }
 
@@ -143,10 +189,10 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
             {
                 // 再次检查以避免竞争条件
                 if (_handlers.ContainsKey(handler.HandlerId))
-                    {
-                        _logger?.LogWarning($"处理器在异步操作期间已被注册: {handler.HandlerId}");
-                        return false;
-                    }
+                {
+                    _logger?.LogWarning($"处理器在异步操作期间已被注册: {handler.HandlerId}");
+                    return false;
+                }
 
                 _handlers[handler.HandlerId] = handler;
 
@@ -201,10 +247,10 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
             lock (_lockObject)
             {
                 if (!_handlers.ContainsKey(handlerId))
-                    {
-                        _logger?.LogWarning($"未找到处理器: {handlerId}");
-                        return false;
-                    }
+                {
+                    _logger?.LogWarning($"未找到处理器: {handlerId}");
+                    return false;
+                }
                 handler = _handlers[handlerId];
             }
 
@@ -216,10 +262,10 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
             {
                 // 再次检查以避免竞争条件
                 if (!_handlers.ContainsKey(handlerId))
-                    {
-                        _logger?.LogWarning($"处理器在异步操作期间已被移除: {handlerId}");
-                        return false;
-                    }
+                {
+                    _logger?.LogWarning($"处理器在异步操作期间已被移除: {handlerId}");
+                    return false;
+                }
 
                 // 从命令映射中移除
                 foreach (var command in handler.SupportedCommands)
@@ -309,16 +355,15 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
         public virtual async Task<int> ScanAndRegisterHandlersAsync()
         {
             // 默认扫描当前程序集，不使用依赖注入
-            return await ScanAndRegisterHandlersAsync(new[] { Assembly.GetExecutingAssembly() }, null);
+            return await ScanAndRegisterHandlersAsync(new[] { Assembly.GetExecutingAssembly() });
         }
 
         /// <summary>
         /// 扫描并注册指定程序集中的命令处理器
         /// </summary>
         /// <param name="assemblies">要扫描的程序集列表</param>
-        /// <param name="lifetimeScope">Autofac生命周期作用域，用于依赖注入</param>
         /// <returns>扫描并注册的处理器数量</returns>
-        public virtual async Task<int> ScanAndRegisterHandlersAsync(IEnumerable<Assembly> assemblies, ILifetimeScope lifetimeScope)
+        public virtual async Task<int> ScanAndRegisterHandlersAsync(IEnumerable<Assembly> assemblies)
         {
             int registeredCount = 0;
 
@@ -328,7 +373,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                 assemblies = assemblies ?? new[] { Assembly.GetExecutingAssembly() };
 
                 List<Type> handlerTypes = new List<Type>();
-                
+
                 // 扫描所有指定的程序集
                 foreach (var assembly in assemblies)
                 {
@@ -336,7 +381,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                         .Where(t => typeof(IClientCommandHandler).IsAssignableFrom(t) && !t.IsInterface && !t.IsAbstract
                                     && t.GetCustomAttribute<ClientCommandHandlerAttribute>() != null)
                         .ToList();
-                    
+
                     handlerTypes.AddRange(types);
                 }
 
@@ -347,30 +392,76 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                 {
                     try
                     {
-                        IClientCommandHandler handler;
-                        
-                        // 优先使用依赖注入容器创建实例
-                        if (lifetimeScope != null && lifetimeScope.IsRegistered(type))
+                        IClientCommandHandler handler = null;
+                        // 优先使用依赖注入容器创建实例 - 支持两种方式：Autofac和Microsoft DI
+                        try
                         {
-                            handler = (IClientCommandHandler)lifetimeScope.Resolve(type);
-                            _logger?.LogInformation($"通过依赖注入创建处理器 {type.Name}");
+                            // 方式1: 尝试从Autofac容器获取
+                            var lifetimeScope = Startup.GetFromFac<ILifetimeScope>();
+                            if (lifetimeScope != null)
+                            {
+                                try
+                                {
+                                    handler = (IClientCommandHandler)lifetimeScope.Resolve(type);
+                                    _logger?.LogInformation($"通过Autofac依赖注入创建处理器 {type.Name}");
+                                }
+                                catch (Exception ex1)
+                                {
+                                    _logger?.LogDebug(ex1, $"使用Autofac创建处理器 {type.Name} 失败，尝试直接注册解析");
+                                    
+                                    // 尝试直接注册然后解析（适用于没有在模块中注册的类型）
+                                    try
+                                    {
+                                        handler = (IClientCommandHandler)Activator.CreateInstance(type);
+                                        _logger?.LogInformation($"通过构造函数直接创建处理器 {type.Name}");
+                                    }
+                                    catch (Exception ex2)
+                                    {
+                                        _logger?.LogError(ex2, $"直接创建处理器 {type.Name} 失败");
+                                    }
+                                }
+                            }
+                            // 方式2: 如果Autofac不可用，尝试Microsoft DI容器
+                            else if (Startup.ServiceProvider != null)
+                            {
+                                try
+                                {
+                                    handler = (IClientCommandHandler)Startup.ServiceProvider.GetService(type);
+                                    if (handler != null)
+                                    {
+                                        _logger?.LogInformation($"通过Microsoft DI创建处理器 {type.Name}");
+                                    }
+                                    else
+                                    {
+                                        // 如果服务未注册，尝试Activator创建
+                                        handler = (IClientCommandHandler)Activator.CreateInstance(type);
+                                        _logger?.LogInformation($"通过构造函数直接创建处理器 {type.Name}");
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    _logger?.LogError(ex, $"使用Microsoft DI创建处理器 {type.Name} 失败");
+                                }
+                            }
+                            // 方式3: 如果没有可用的DI容器，回退到直接创建
+                            else
+                            {
+                                try
+                                {
+                                    handler = (IClientCommandHandler)Activator.CreateInstance(type);
+                                    _logger?.LogInformation($"通过构造函数直接创建处理器 {type.Name}");
+                                }
+                                catch (Exception ex)
+                                {
+                                    _logger?.LogError(ex, $"直接创建处理器 {type.Name} 失败，且没有可用的依赖注入容器");
+                                }
+                            }
                         }
-                        else
+                        catch (Exception ex)
                         {
-                            try
-                            {
-                                // 尝试通过无参构造函数创建
-                                handler = (IClientCommandHandler)Activator.CreateInstance(type);
-                                _logger?.LogInformation($"通过无参构造函数创建处理器 {type.Name}");
-                            }
-                            catch (MissingMethodException)
-                            {
-                                // 如果无参构造函数不存在，尝试使用反射和依赖注入创建
-                                _logger?.LogWarning($"处理器 {type.Name} 没有无参构造函数，尝试使用依赖注入");
-                                handler = null;
-                            }
+                            _logger?.LogError(ex, $"创建处理器 {type.Name} 时发生未预期的错误");
                         }
-                        
+
                         if (handler != null)
                         {
                             bool success = await RegisterHandlerAsync(handler);

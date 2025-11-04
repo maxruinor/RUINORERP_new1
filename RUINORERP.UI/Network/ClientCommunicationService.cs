@@ -1257,20 +1257,28 @@ namespace RUINORERP.UI.Network
         /// <summary>
         /// 初始化客户端命令调度器
         /// </summary>
-        private void InitializeClientCommandDispatcher()
+        private async Task InitializeClientCommandDispatcherAsync()
         {
             try
             {
-                // 初始化并启动客户端命令调度器
-                _clientCommandDispatcher.InitializeAsync().Wait();
-                _clientCommandDispatcher.StartAsync().Wait();
+                // 使用一键式初始化方法，替代单独调用InitializeAsync和StartAsync
+                var result = await _clientCommandDispatcher.InitializeAndStartAsync();
                 
-                _logger.LogInformation("客户端命令调度器初始化并启动成功");
+                _logger.LogInformation("客户端命令调度器初始化并启动成功，共注册{HandlerCount}个处理器", result.success ? result.registeredCount : 0);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "初始化客户端命令调度器失败");
             }
+        }
+
+        /// <summary>
+        /// 同步版本的初始化客户端命令调度器方法
+        /// </summary>
+        private void InitializeClientCommandDispatcher()
+        {
+            // 直接调用异步版本并等待完成
+            InitializeClientCommandDispatcherAsync().Wait();
         }
 
         /// <summary>

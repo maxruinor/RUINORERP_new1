@@ -43,37 +43,17 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                 .As<RUINORERP.UI.Network.Services.MessageService>()
                 .InstancePerLifetimeScope();
 
-            // 注册命令处理器
+            // 注册命令处理器，同时注册为IClientCommandHandler接口，确保依赖注入可以正确解析
             builder.RegisterType<ConfigCommandHandler>()
+                .As<IClientCommandHandler>()
                 .AsSelf()
                 .InstancePerLifetimeScope();
 
             builder.RegisterType<MessageCommandHandler>()
+                .As<IClientCommandHandler>()
                 .AsSelf()
                 .InstancePerLifetimeScope();
 
-            // 注册命令处理系统初始化服务
-            // 避免使用async委托与AutoActivate组合，改用专用初始化服务
-            builder.RegisterType<ClientCommandHandlerSystemInitializer>()
-                .AsSelf()
-                .SingleInstance()
-                .PropertiesAutowired();
-                
-            // 注册一个启动时触发的初始化器
-            builder.RegisterBuildCallback(container =>
-            {
-                try
-                {
-                    // 在容器构建完成后获取初始化器并启动初始化流程
-                    // 注意：这里不使用同步等待，而是异步启动并记录任务
-                    var initializer = container.Resolve<ClientCommandHandlerSystemInitializer>();
-                    _ = initializer.InitializeAsync(); // 异步启动，不阻塞容器构建
-                }
-                catch (Exception ex)
-                {
-                    Logger.Error(ex, "启动命令处理系统初始化器失败");
-                }
-            });
         }
     }
 }

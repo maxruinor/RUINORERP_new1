@@ -84,8 +84,15 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
         /// 扫描并注册指定程序集中的命令处理器
         /// </summary>
         /// <param name="assemblies">要扫描的程序集列表</param>
-        /// <param name="lifetimeScope">Autofac生命周期作用域，用于依赖注入</param>
         /// <returns>扫描并注册的处理器数量</returns>
-        Task<int> ScanAndRegisterHandlersAsync(IEnumerable<Assembly> assemblies, Autofac.ILifetimeScope lifetimeScope);
+        Task<int> ScanAndRegisterHandlersAsync(IEnumerable<Assembly> assemblies);
+        
+        /// <summary>
+        /// 初始化并启动调度系统，包括自动扫描和注册处理器
+        /// 此方法提供完整的一键式初始化流程
+        /// </summary>
+        /// <param name="assemblies">可选，指定要扫描的程序集，不指定则扫描当前程序集</param>
+        /// <returns>初始化是否成功以及注册的处理器数量</returns>
+        Task<(bool success, int registeredCount)> InitializeAndStartAsync(IEnumerable<Assembly> assemblies = null);
     }
 }

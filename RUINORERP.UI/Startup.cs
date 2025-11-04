@@ -737,6 +737,34 @@ namespace RUINORERP.UI
                services.AddAutofac();
            }).Build();
 
+            // 初始化Autofac容器作用域，确保GetFromFac<T>()方法可以正常工作
+            try
+            {
+                // 获取Autofac的根生命周期作用域
+                var rootLifetimeScope = hostBuilder.Services.GetService<ILifetimeScope>();
+                if (rootLifetimeScope != null)
+                {
+                    AutofacContainerScope = rootLifetimeScope;
+                    _logger.Info("Autofac容器作用域已成功初始化");
+                }
+                else
+                {
+                    _logger.Warn("无法获取Autofac的根生命周期作用域");
+                    
+                    // 备选方案：尝试从AutofacServiceProvider获取
+                    var serviceProvider = hostBuilder.Services as AutofacServiceProvider;
+                    if (serviceProvider != null)
+                    {
+                        AutofacContainerScope = serviceProvider.LifetimeScope;
+                        _logger.Info("通过AutofacServiceProvider成功初始化容器作用域");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.Error("初始化Autofac容器作用域失败", ex);
+            }
+
             return hostBuilder;
         }
 

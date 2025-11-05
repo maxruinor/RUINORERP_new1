@@ -10,6 +10,7 @@ namespace RUINORERP.Business.Cache
     /// 缓存同步扩展类
     /// 为IEntityCacheManager提供缓存同步相关的扩展方法
     /// 整合了旧版CacheInfo的功能，使其与新的缓存架构兼容
+    /// 提供便捷的缓存同步操作和基础表缓存管理功能
     /// </summary>
     public static class CacheSyncExtensions
     {
@@ -441,5 +442,66 @@ namespace RUINORERP.Business.Cache
         }
 
         #endregion
+
+        /// <summary>
+        /// 检查并刷新基础表缓存（如果不完整）
+        /// </summary>
+        /// <param name="syncMetadata">缓存同步元数据管理器</param>
+        /// <param name="tableName">表名</param>
+        /// <param name="refreshAction">刷新操作</param>
+        /// <returns>如果执行了刷新操作并成功返回true，否则返回false</returns>
+        public static bool CheckAndRefreshBaseTableCache(this ICacheSyncMetadata syncMetadata, string tableName, Action<string> refreshAction)
+        {
+            if (!syncMetadata.ValidateTableCacheIntegrity(tableName))
+            {
+                try
+                {
+                    refreshAction?.Invoke(tableName);
+                    return syncMetadata.ValidateTableCacheIntegrity(tableName);
+                }
+                catch
+                {
+                    return false;
+                }
+            }
+            return true; // 缓存已经是完整的
+        }
+
+        /// <summary>
+        /// 获取缓存状态的可读描述
+        /// </summary>
+        /// <param name="syncInfo">缓存同步信息</param>
+        /// <returns>缓存状态的可读描述</returns>
+        public static string GetStatusDescription(this CacheSyncInfo syncInfo)
+        {
+            if (syncInfo == null)
+                return "不存在"; 
+                
+            if (syncInfo.DataCount <= 0)
+                return "空缓存";
+                
+            if (syncInfo.HasExpiration && syncInfo.ExpirationTime < DateTime.Now)
+                return "已过期";
+                
+            return "正常";
+        }
+
+        /// <summary>
+        /// 获取缓存大小的可读字符串表示
+        /// </summary>
+        /// <param name="syncInfo">缓存同步信息</param>
+        /// <returns>缓存大小的可读字符串</returns>
+        public static string GetReadableSize(this CacheSyncInfo syncInfo)
+        {
+            if (syncInfo == null || syncInfo.EstimatedSize < 0)
+                return "未知";
+
+            if (syncInfo.EstimatedSize < 1024)
+                return $"{syncInfo.EstimatedSize} B";
+            else if (syncInfo.EstimatedSize < 1024 * 1024)
+                return $"{(syncInfo.EstimatedSize / 1024.0):F2} KB";
+            else
+                return $"{(syncInfo.EstimatedSize / (1024.0 * 1024.0)):F2} MB";
+        }
     }
 }

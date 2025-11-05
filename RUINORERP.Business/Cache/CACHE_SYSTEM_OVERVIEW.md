@@ -1,6 +1,6 @@
 # RUINORERP 统一缓存系统概述
 
-本文档描述了 RUINORERP 系统中的统一缓存管理架构，旨在提供高效、一致的数据缓存机制，支持客户端和服务器端的缓存同步。系统现在采用全新的缓存管理体系，分为缓存管理和缓存同步两个核心部分，以实现更好的可维护性和扩展性。
+本文档描述了 RUINORERP 系统中的统一缓存管理架构，旨在提供高效、一致的数据缓存机制，支持客户端和服务器端的缓存同步。系统采用整合的缓存管理体系，通过缓存管理器和缓存同步元数据管理器实现完整的缓存生命周期管理，提供了更好的可维护性和扩展性。
 
 ## 1. 核心架构
 
@@ -18,10 +18,10 @@
 
 缓存同步负责维护缓存元数据和保证多端数据一致性，主要组件包括：
 
-- **ICacheSyncMetadata 接口**：定义缓存同步元数据的管理方法
-- **CacheSyncMetadataManager 类**：ICacheSyncMetadata 的实现，管理缓存同步元数据
+- **ICacheSyncMetadata 接口**：定义缓存同步元数据的管理方法，包括元数据更新、验证、过期检查和完整性检查
+- **CacheSyncMetadataManager 类**：ICacheSyncMetadata 的实现，管理缓存同步元数据，提供缓存完整性验证和自动刷新功能
 - **CacheSyncInfo 类**：缓存同步信息实体，包含表名、数据量、估计大小和过期时间等信息
-- **CacheSyncExtensions 类**：提供缓存同步相关的扩展方法
+- **CacheSyncExtensions 类**：提供缓存同步相关的扩展方法，包括便捷的缓存更新、验证和可读性增强功能
 - **CacheSubscriptionManager 类**：管理缓存订阅关系，支持服务器端和客户端的缓存变更通知
 
 ## 2. 关键组件详解
@@ -50,7 +50,7 @@
 
 ### 2.3 ICacheSyncMetadata 接口
 
-定义了缓存同步元数据的管理方法：
+定义了缓存同步元数据的管理方法，同时提供缓存状态验证和完整性检查功能：
 
 - **GetTableSyncInfo**：获取表的缓存同步信息
 - **UpdateTableSyncInfo**：更新表的缓存同步信息（接收数据数量和估计大小）
@@ -59,16 +59,22 @@
 - **GetAllTableSyncInfo**：获取所有表的缓存同步元数据
 - **RemoveTableSyncInfo**：从同步元数据中移除指定表
 - **CleanupExpiredSyncInfo**：清理过期的缓存同步元数据
+- **ValidateTableCacheIntegrity**：验证表缓存数据的完整性
+- **GetTablesWithIncompleteCache**：获取所有缓存不完整的表
+- **RefreshIncompleteTables**：刷新缓存信息不完整的表
 
 ### 2.4 CacheSyncMetadataManager 类
 
-实现了 ICacheSyncMetadata 接口：
+实现了 ICacheSyncMetadata 接口，提供全面的缓存元数据管理功能：
 
 - 使用 ConcurrentDictionary 存储缓存同步元数据
 - 提供线程安全的元数据访问和更新方法
 - 支持元数据克隆和验证
 - 实现详细的日志记录和异常处理
 - 自动管理缓存过期时间
+- 提供缓存完整性验证机制，检查缓存是否有效（如行数是否合理）
+- 支持自动识别和刷新不完整的缓存数据
+- 整合了基础表缓存管理功能，用于验证缓存一致性
 
 ### 2.5 CacheSyncInfo 类
 
@@ -84,11 +90,14 @@
 
 ### 2.6 CacheSyncExtensions 类
 
-提供缓存同步相关的扩展方法：
+提供缓存同步相关的扩展方法和基础表缓存管理功能：
 
 - **UpdateEntityListWithSync**：更新实体列表并同步元数据（两个重载版本）
 - **UpdateEntityListWithSync<T>**：泛型版本，支持直接传递实体列表
 - **UpdateEntityListWithSync**：非泛型版本，支持通过表名更新
+- **CheckAndRefreshBaseTableCache**：检查并刷新基础表缓存（如果不完整）
+- **GetStatusDescription**：获取缓存状态的可读描述
+- **GetReadableSize**：获取缓存大小的可读字符串表示
 - 所有扩展方法都正确地更新同步元数据和设置过期时间
 
 ### 2.7 CacheSubscriptionManager 类
@@ -202,6 +211,18 @@ bool isExpired = _cacheSyncMetadata.IsTableExpired("MyEntity");
 
 // 获取同步元数据
 var syncInfo = _cacheSyncMetadata.GetTableSyncInfo("MyEntity");
+
+// 验证缓存完整性
+bool isCacheValid = _cacheSyncMetadata.ValidateTableCacheIntegrity("MyEntity");
+
+// 如果缓存不完整，自动刷新
+if (!isCacheValid)
+{
+    _cacheSyncMetadata.RefreshIncompleteTables(tableName => {
+        // 刷新缓存的具体实现
+        LoadAndUpdateCache(tableName);
+    });
+}
 ```
 
 ### 6.3 缓存订阅操作

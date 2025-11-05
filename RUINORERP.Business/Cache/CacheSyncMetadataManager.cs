@@ -224,5 +224,129 @@ namespace RUINORERP.Business.Cache
                 _logger?.LogError(ex, "清理过期的缓存同步元数据时发生错误");
             }
         }
+
+        /// <summary>
+        /// 验证表缓存数据的完整性
+        /// 只验证元数据是否存在且有效，不直接访问实体缓存
+        /// </summary>
+        /// <param name="tableName">表名</param>
+        /// <returns>如果缓存信息有效返回true，否则返回false</returns>
+        public bool ValidateTableCacheIntegrity(string tableName)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(tableName))
+                    throw new ArgumentNullException(nameof(tableName), "表名不能为空");
+
+                var syncInfo = GetTableSyncInfo(tableName);
+                if (syncInfo == null)
+                {
+                    _logger?.LogWarning("表 {TableName} 的缓存信息不存在，无法验证完整性", tableName);
+                    return false;
+                }
+
+                // 有效的标准是：有数据行数且更新时间合理
+                bool isIntegrity = syncInfo.DataCount > 0 && 
+                                   syncInfo.LastUpdateTime > DateTime.MinValue;
+                
+                if (!isIntegrity)
+                {
+                    _logger?.LogWarning("表 {TableName} 的缓存元数据无效: 数据行数={DataCount}, 更新时间={LastUpdateTime}",
+                        tableName, syncInfo.DataCount, syncInfo.LastUpdateTime);
+                }
+                else
+                {
+                    _logger?.LogDebug("表 {TableName} 的缓存元数据有效", tableName);
+                }
+
+                return isIntegrity;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "验证表 {TableName} 的缓存完整性时发生错误", tableName);
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 获取所有缓存不完整的表
+        /// </summary>
+        /// <returns>缓存不完整的表名列表</returns>
+        public List<string> GetTablesWithIncompleteCache()
+        {
+            try
+            {
+                var incompleteTables = new List<string>();
+                var allTablesInfo = GetAllTableSyncInfo();
+
+                foreach (var kvp in allTablesInfo)
+                {
+                    if (!ValidateTableCacheIntegrity(kvp.Key))
+                    {
+                        incompleteTables.Add(kvp.Key);
+                    }
+                }
+
+                _logger?.LogDebug("发现 {Count} 个表的缓存数据不完整", incompleteTables.Count);
+                return incompleteTables;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "获取缓存不完整的表时发生错误");
+                return new List<string>();
+            }
+        }
+
+        /// <summary>
+        /// 刷新缓存信息不完整的表
+        /// </summary>
+        /// <param name="refreshAction">刷新操作，接收表名作为参数</param>
+        /// <returns>成功执行刷新操作的表数量</returns>
+        public int RefreshIncompleteTables(Action<string> refreshAction)
+        {
+            try
+            {
+                if (refreshAction == null)
+                    throw new ArgumentNullException(nameof(refreshAction), "刷新操作不能为空");
+
+                var incompleteTables = GetTablesWithIncompleteCache();
+                int refreshedCount = 0;
+
+                foreach (var tableName in incompleteTables)
+                {
+                    _logger?.LogInformation("开始执行表 {TableName} 的刷新操作", tableName);
+                    
+                    try
+                    {
+                        // 执行外部提供的刷新操作
+                        refreshAction(tableName);
+                        
+                        // 验证元数据是否有效
+                        if (ValidateTableCacheIntegrity(tableName))
+                        {
+                            refreshedCount++;
+                            _logger?.LogInformation("表 {TableName} 的刷新操作成功且元数据有效", tableName);
+                        }
+                        else
+                        {
+                            _logger?.LogWarning("表 {TableName} 的刷新操作后元数据验证失败", tableName);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger?.LogError(ex, "执行表 {TableName} 的刷新操作时发生错误", tableName);
+                    }
+                }
+
+                _logger?.LogInformation("刷新操作完成，成功执行 {RefreshedCount}/{TotalCount} 个表", 
+                    refreshedCount, incompleteTables.Count);
+                return refreshedCount;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "执行缓存信息不完整的表刷新时发生错误");
+                return 0;
+            }
+        }
     }
 }

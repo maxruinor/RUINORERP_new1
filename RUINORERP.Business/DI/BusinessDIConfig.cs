@@ -56,7 +56,11 @@ namespace RUINORERP.Business.DI
                 .PropertiesAutowired()
                 .SingleInstance();
  
-
+        // 注册新的优化缓存初始化服务
+            builder.RegisterType<EntityCacheInitializationService>()
+                .AsSelf()
+                .SingleInstance()
+                .PropertiesAutowired();
             // 实体业务映射服务已通过AddEntityInfoServicesWithMappings方法注册
             // 此处不再重复注册，以避免冲突
 
@@ -76,11 +80,7 @@ namespace RUINORERP.Business.DI
                 .SingleInstance()
                 .PropertiesAutowired();
                 
-            // 注册新的优化缓存初始化服务
-            builder.RegisterType<EntityCacheInitializationService>()
-                .AsSelf()
-                .SingleInstance()
-                .PropertiesAutowired();
+    
                 
             // 注册事件驱动缓存管理器（单例模式）
             builder.RegisterType<EventDrivenCacheManager>()
@@ -97,12 +97,6 @@ namespace RUINORERP.Business.DI
             // 注册缓存同步元数据管理器，用于管理缓存同步状态信息
             builder.RegisterType<CacheSyncMetadataManager>()
                 .As<ICacheSyncMetadata>()
-                .SingleInstance()
-                .PropertiesAutowired();
-                
-            // 注册基础表缓存管理器，用于监控和验证基础表缓存状态
-            builder.RegisterType<BaseTableCacheManager>()
-                .As<IBaseTableCacheManager>()
                 .SingleInstance()
                 .PropertiesAutowired();
                 

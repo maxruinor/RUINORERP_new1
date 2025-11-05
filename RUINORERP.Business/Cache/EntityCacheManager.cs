@@ -29,7 +29,6 @@ namespace RUINORERP.Business.Cache
         private readonly ILogger<EntityCacheManager> _logger;
         private readonly ICacheDataProvider _cacheDataProvider;
         private readonly ICacheSyncMetadata _cacheSyncMetadata;
-        private readonly IBaseTableCacheManager _baseTableCacheManager;
         #endregion
 
         #region 缓存同步元数据接口实现
@@ -338,7 +337,6 @@ namespace RUINORERP.Business.Cache
         #region 构造函数
         public EntityCacheManager(
             ILogger<EntityCacheManager> logger,
-            IBaseTableCacheManager baseTableCacheManager,
         ICacheDataProvider cacheDataProvider = null,
             ICacheSyncMetadata cacheSyncMetadata = null)
         {
@@ -346,7 +344,6 @@ namespace RUINORERP.Business.Cache
             _tableSchemaManager = TableSchemaManager.Instance;
             _cacheDataProvider = cacheDataProvider;
             _cacheSyncMetadata = cacheSyncMetadata; // 可选依赖
-            _baseTableCacheManager = baseTableCacheManager;
             // 设置缓存大小阈值（最大大小的80%）
             _cacheSizeThreshold = (long)(_maxCacheSize * 0.8);
 
@@ -394,26 +391,27 @@ namespace RUINORERP.Business.Cache
                 // 更新缓存访问统计
                 UpdateCacheAccessStatistics(cacheKey, cachedList != null, "List", tableName, cachedList);
 
-                // 检查是否存在缓存丢失情况：缓存返回了空列表，但基础表缓存信息显示应该有数据
+                // 检查是否存在缓存丢失情况：缓存返回了空列表，但缓存同步元数据显示应该有数据或缓存不完整
                 bool isCacheMissing = false;
                 if (cachedList is List<T> listObj && listObj.Count == 0)
                 {
                     try
                     {
-                        // 尝试通过依赖注入获取基础表缓存管理器实例
-                        if (_baseTableCacheManager != null)
+                        // 使用缓存同步元数据验证缓存完整性
+                        if (_cacheSyncMetadata != null)
                         {
-                            var baseTableCacheInfo = _baseTableCacheManager.GetBaseTableCacheInfo(tableName);
-                            if (baseTableCacheInfo != null && baseTableCacheInfo.DataCount > 0)
+                            // 验证表缓存数据的完整性
+                            bool isCacheValid = _cacheSyncMetadata.ValidateTableCacheIntegrity(tableName);
+                            if (!isCacheValid)
                             {
-                                _logger?.LogWarning($"检测到表 {tableName} 缓存丢失：基础信息显示应有 {baseTableCacheInfo.DataCount} 行数据，但实际缓存为空。将从数据源重新获取。");
+                                _logger?.LogWarning($"检测到表 {tableName} 缓存不完整，将从数据源重新获取数据。");
                                 isCacheMissing = true;
                             }
                         }
                     }
                     catch (Exception ex)
                     {
-                        _logger?.LogDebug(ex, "检查缓存丢失状态时发生错误");
+                        _logger?.LogDebug(ex, "验证缓存完整性时发生错误");
                     }
                 }
 

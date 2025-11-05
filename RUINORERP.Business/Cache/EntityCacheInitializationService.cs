@@ -21,7 +21,7 @@ namespace RUINORERP.Business.Cache
         private readonly IUnitOfWorkManage _unitOfWorkManage;
         private readonly IEntityCacheManager _cacheManager;
         private readonly ILogger<EntityCacheInitializationService> _logger;
-        private readonly IBaseTableCacheManager _baseTableCacheManager;
+        private readonly ICacheSyncMetadata _cacheSyncMetadata;
 
         /// <summary>
         /// 构造函数
@@ -32,10 +32,10 @@ namespace RUINORERP.Business.Cache
         public EntityCacheInitializationService(
             IUnitOfWorkManage unitOfWorkManage,
             IEntityCacheManager cacheManager,
-            IBaseTableCacheManager baseTableCacheManager,
+            ICacheSyncMetadata cacheSyncMetadata,
         ILogger<EntityCacheInitializationService> logger)
         {
-            _baseTableCacheManager=baseTableCacheManager;
+            _cacheSyncMetadata = cacheSyncMetadata ?? throw new ArgumentNullException(nameof(cacheSyncMetadata));
             _unitOfWorkManage = unitOfWorkManage ?? throw new ArgumentNullException(nameof(unitOfWorkManage));
             _cacheManager = cacheManager ?? throw new ArgumentNullException(nameof(cacheManager));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -488,50 +488,41 @@ namespace RUINORERP.Business.Cache
         }
         /// <summary>
         /// 更新基础表缓存信息
-        /// 不仅验证缓存完整性，还会实际更新缓存信息数据
+        /// 只更新元数据，不直接操作实体缓存
         /// </summary>
         /// <param name="tableName">表名</param>
         private void UpdateBaseTableCacheInfo(string tableName)
         {
             try
             {
-                // 尝试获取基础表缓存管理器实例
-                if (_baseTableCacheManager != null)
+                // 获取实体类型
+                var entityType = _cacheManager.GetEntityType(tableName);
+                if (entityType == null)
                 {
-                    _logger.LogDebug($"更新表 {tableName} 的基础缓存信息");
-                    
-                    // 获取实际缓存的实体列表以更新数据计数
-                    var entityList = _cacheManager.GetEntityList<object>(tableName);
-                    int actualCount = entityList?.Count ?? 0;
-                    
-                    // 获取或创建基础表缓存信息
-                    var cacheInfo = _baseTableCacheManager.GetBaseTableCacheInfo(tableName);
-                    if (cacheInfo != null)
-                    {
-                        // 更新数据计数
-                        cacheInfo.DataCount = actualCount;
-                        
-                        // 更新缓存状态
-                        cacheInfo.LastUpdateTime = DateTime.Now;
-                        // 注意：通过DataCount > 0来判断缓存是否已加载，不需要额外的IsLoaded属性
-                        
-                        // 保存更新后的缓存信息
-                        _baseTableCacheManager.SetBaseTableCacheInfo(tableName, cacheInfo);
-                        
-                        _logger.LogDebug($"表 {tableName} 的基础缓存信息已更新: 数据计数={actualCount}");
-                    }
-                    
-                    // 验证缓存完整性
-                    bool isIntegrity = _baseTableCacheManager.ValidateTableCacheIntegrity(tableName);
-                    if (!isIntegrity)
-                    {
-                        _logger.LogWarning($"表 {tableName} 的缓存数据不完整，已更新基础信息但可能需要重新加载");
-                    }
+                    _logger.LogWarning($"未找到表 {tableName} 对应的实体类型，无法更新缓存信息");
+                    return;
+                }
+                
+                // 获取实际缓存的实体列表以更新元数据
+                var entityList = _cacheManager.GetEntityList<object>(tableName);
+                int dataCount = entityList?.Count ?? 0;
+                
+                // 直接使用缓存同步元数据管理器更新元数据
+                _cacheSyncMetadata.UpdateTableSyncInfo(tableName, dataCount);
+
+                _logger.LogDebug("已更新表 {TableName} 的缓存元数据: 数据行数={DataCount}",
+                    tableName, dataCount);
+
+                // 验证元数据完整性
+                bool isValid = _cacheSyncMetadata.ValidateTableCacheIntegrity(tableName);
+                if (!isValid)
+                {
+                    _logger.LogWarning("表 {TableName} 的缓存元数据验证失败", tableName);
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "更新表 {TableName} 的基础缓存信息时发生错误", tableName);
+                _logger.LogError(ex, "更新表 {TableName} 的缓存元数据时发生错误", tableName);
             }
         }
     }

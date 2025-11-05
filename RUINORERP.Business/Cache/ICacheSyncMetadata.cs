@@ -5,8 +5,8 @@ namespace RUINORERP.Business.Cache
 {
     /// <summary>
     /// 缓存同步元数据接口
-    /// 负责管理缓存同步所需的元数据，整合了旧版CacheInfo的功能
-    /// 用于客户端和服务器之间的缓存状态同步和数据一致性维护
+    /// 定义缓存同步元数据的管理方法
+    /// 提供缓存状态验证和完整性检查功能
     /// </summary>
     public interface ICacheSyncMetadata
     {
@@ -55,6 +55,27 @@ namespace RUINORERP.Business.Cache
         /// 清理过期的缓存同步元数据
         /// </summary>
         void CleanupExpiredSyncInfo();
+
+        /// <summary>
+        /// 验证表缓存数据的完整性
+        /// 只验证元数据是否存在且有效，不直接访问实体缓存
+        /// </summary>
+        /// <param name="tableName">表名</param>
+        /// <returns>如果缓存信息有效返回true，否则返回false</returns>
+        bool ValidateTableCacheIntegrity(string tableName);
+
+        /// <summary>
+        /// 获取所有缓存不完整的表
+        /// </summary>
+        /// <returns>缓存不完整的表名列表</returns>
+        List<string> GetTablesWithIncompleteCache();
+
+        /// <summary>
+        /// 刷新缓存信息不完整的表
+        /// </summary>
+        /// <param name="refreshAction">刷新操作，接收表名作为参数</param>
+        /// <returns>成功执行刷新操作的表数量</returns>
+        int RefreshIncompleteTables(Action<string> refreshAction);
     }
 
     /// <summary>

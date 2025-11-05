@@ -204,27 +204,6 @@ namespace RUINORERP.Business.Processor
         }
 
 
-        public string GetSQL()
-        {
-            string sql = string.Empty;
-
-            ////两种条件组合为一起，一种是process中要处理器中设置好的，另一个是UI中 灵活设置的
-            //Expression<Func<T, bool>> expression = c => true;
-            //foreach (var item in GetFilterExpressions())
-            //{
-            //    if (item != null)
-            //    {
-            //        expression = expression.AndAlso(item);
-            //    }
-            //}
-
-            //if (_appContext != null)
-            //{
-            //    SqlFunc.Subqueryable().Where(expression).Any();
-            //}
-            return sql;
-        }
-
 
 
 

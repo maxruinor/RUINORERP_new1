@@ -295,7 +295,8 @@ namespace RUINORERP.UI.FM
                 //创建表达式
                 var lambdaPayeeInfo = Expressionable.Create<tb_FM_PayeeInfo>()
                                 .And(t => t.Is_enabled == true)
-                                .And(t => t.Employee_ID == AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了只能处理自己 的收款信息
+                                //.And(t => t.Employee_ID == AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了只能处理自己 的收款信息
+                                .And(t => t.CustomerVendor_ID == EditEntity.CustomerVendor_ID)
                                 .ToExpression();//注意 这一句 不能少
 
                 BaseProcessor baseProcessorPayeeInfo = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_FM_PayeeInfo).Name + "Processor");

@@ -656,8 +656,6 @@ namespace RUINORERP.Business.Cache
             {
                 // 如果需要缓存访问统计，可以使用特定的键格式
                 var accessStatisticsKey = $"Access_Display_{tableName}_{idValue}";
-
-
                 var schemaInfo = _tableSchemaManager.GetSchemaInfo(tableName);
                 if (schemaInfo != null)
                 {   // 直接从实体中获取显示值
@@ -675,26 +673,6 @@ namespace RUINORERP.Business.Cache
                     //不在缓存中的表。直接返回原值
                     return idValue;
                 }
-
-                // 如果实体缓存也没有，则尝试从数据源直接获取显示值（如果提供了数据提供者）
-                if (_cacheDataProvider != null)
-                {
-                    try
-                    {
-                        var displayValue = _cacheDataProvider.GetDisplayValueFromSource(tableName, idValue);
-                        if (displayValue != null)
-                        {
-                            // 更新缓存访问统计
-                            UpdateCacheAccessStatistics(accessStatisticsKey, true, "Display", tableName, displayValue);
-                            return displayValue;
-                        }
-                    }
-                    catch (Exception dataEx)
-                    {
-                        _logger?.LogError(dataEx, $"从数据源获取表 {tableName} ID为 {idValue} 的显示值时发生错误");
-                    }
-                }
-
                 return null;
             }
             catch (Exception ex)

@@ -25,12 +25,6 @@ namespace RUINORERP.Business.Cache
         /// <returns>实体对象</returns>
         T GetEntityFromSource<T>(string tableName, object idValue) where T : class;
 
-        /// <summary>
-        /// 获取显示值数据
-        /// </summary>
-        /// <param name="tableName">表名</param>
-        /// <param name="idValue">主键值</param>
-        /// <returns>显示值</returns>
-        string GetDisplayValueFromSource(string tableName, object idValue);
+        
     }
 }

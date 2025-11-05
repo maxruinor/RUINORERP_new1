@@ -54,6 +54,7 @@ using RUINORERP.Business.Cache;
 
 using RUINORERP.Extensions.Middlewares;
 using RUINORERP.Business.Cache;
+using System.Collections.Concurrent;
 
 namespace RUINORERP.UI.Common
 {
@@ -2041,6 +2042,7 @@ namespace RUINORERP.UI.Common
 
             BaseProcessor basePro = Startup.GetFromFacByName<BaseProcessor>(typeof(T).Name + "Processor");
             QueryFilter queryFilter = basePro.GetQueryFilter();
+
             queryFilter.FilterLimitExpressions.Add(expCondition);
 
             InitDataToCmb<T>(expkey, expValue, cmbBox, queryFilter.GetFilterExpression<T>());
@@ -3164,11 +3166,10 @@ namespace RUINORERP.UI.Common
 
             BaseProcessor basePro = Startup.GetFromFacByName<BaseProcessor>(typeof(T).Name + "Processor");
             QueryFilter queryFilter = basePro.GetQueryFilter();
+
             queryFilter.FilterLimitExpressions.Add(expCondition);
 
             InitDataToCmbWithCondition<T>(key, value, tableName, cmbBox, queryFilter.GetFilterExpression<T>());
-
-            //InitDataToCmbWithCondition<T>(key, value, tableName, cmbBox, expCondition);
 
         }
 
@@ -3358,29 +3359,521 @@ namespace RUINORERP.UI.Common
 
 
 
+        /// <summary>
+        /// 表达式树安全处理辅助类
+        /// </summary>
+        public static class ExpressionSafeHelper
+        {
+            private static readonly ConcurrentDictionary<string, Delegate> _expressionCache = new ConcurrentDictionary<string, Delegate>();
 
+            /// <summary>
+            /// 安全地编译和执行表达式树
+            /// </summary>
+            public static bool SafeEvaluate<T>(T item, Expression<Func<T, bool>> expression, bool defaultValue = true)
+            {
+                if (item == null || expression == null)
+                    return defaultValue;
+
+                try
+                {
+                    // 使用缓存避免重复编译
+                    string cacheKey = $"{typeof(T).FullName}_{expression.ToString()}";
+
+                    // 尝试从缓存获取编译后的委托
+                    if (_expressionCache.TryGetValue(cacheKey, out var cachedDelegate))
+                    {
+                        try
+                        {
+                            var func = (Func<T, bool>)cachedDelegate;
+                            return func(item);
+                        }
+                        catch
+                        {
+                            // 缓存的委托执行失败，移除缓存并重新编译
+                            _expressionCache.TryRemove(cacheKey, out _);
+                        }
+                    }
+
+                    // 重新构建表达式树，避免变量捕获问题
+                    var safeExpression = RebuildExpression(expression);
+                    
+                    // 尝试编译安全表达式
+                    Func<T, bool> compiledFunc;
+                    try
+                    {
+                        compiledFunc = safeExpression.Compile();
+                    }
+                    catch (Exception compileEx)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"表达式编译失败: {compileEx.Message}");
+                        
+                        // 如果编译失败，尝试使用简单的条件评估作为备选
+                        try
+                        {
+                            return EvaluateSimpleExpression(item, expression.Body);
+                        }
+                        catch
+                        {
+                            return defaultValue;
+                        }
+                    }
+                    
+                    // 缓存编译后的委托
+                    _expressionCache[cacheKey] = compiledFunc;
+                    return compiledFunc(item);
+                }
+                catch (Exception ex)
+                {
+                    // 记录错误但继续执行
+                    System.Diagnostics.Debug.WriteLine($"表达式评估失败: {ex.Message}");
+                    return defaultValue;
+                }
+            }
+            
+            /// <summary>
+            /// 尝试评估简单表达式（作为备选方案）
+            /// </summary>
+            private static bool EvaluateSimpleExpression<T>(T item, Expression expression)
+            {
+                if (expression is BinaryExpression binaryExp)
+                {
+                    // 尝试评估二元表达式的左右两侧
+                    if (binaryExp.NodeType == ExpressionType.AndAlso || 
+                        binaryExp.NodeType == ExpressionType.OrElse)
+                    {
+                        bool leftResult = EvaluateSimpleExpression(item, binaryExp.Left);
+                        if (binaryExp.NodeType == ExpressionType.AndAlso && !leftResult)
+                            return false;
+                        if (binaryExp.NodeType == ExpressionType.OrElse && leftResult)
+                            return true;
+                        return EvaluateSimpleExpression(item, binaryExp.Right);
+                    }
+                    else if (binaryExp.NodeType == ExpressionType.Equal || 
+                             binaryExp.NodeType == ExpressionType.NotEqual)
+                    {
+                        // 尝试获取左侧属性值和右侧常量值
+                        object leftValue = GetExpressionValue(item, binaryExp.Left);
+                        object rightValue = GetExpressionValue(item, binaryExp.Right);
+                        
+                        bool areEqual = object.Equals(leftValue, rightValue);
+                        return binaryExp.NodeType == ExpressionType.Equal ? areEqual : !areEqual;
+                    }
+                }
+                else if (expression is ConstantExpression constExp)
+                {
+                    return constExp.Value as bool? ?? false;
+                }
+                else if (expression is MemberExpression memberExp)
+                {
+                    // 尝试获取属性值并将其转换为布尔值
+                    object value = GetExpressionValue(item, memberExp);
+                    return value as bool? ?? false;
+                }
+                
+                return true; // 无法评估时返回默认值
+            }
+            
+            /// <summary>
+            /// 获取表达式的值
+            /// </summary>
+            private static object GetExpressionValue<T>(T item, Expression expression)
+            {
+                if (expression is ConstantExpression constExp)
+                {
+                    return constExp.Value;
+                }
+                else if (expression is MemberExpression memberExp)
+                {
+                    // 处理属性访问
+                    if (memberExp.Expression != null)
+                    {
+                        if (memberExp.Expression.Type == typeof(T))
+                        {
+                            // 直接访问item的属性
+                            var property = typeof(T).GetProperty(memberExp.Member.Name);
+                            if (property != null)
+                            {
+                                return property.GetValue(item);
+                            }
+                        }
+                        else
+                        {
+                            // 访问其他对象的属性
+                            object objValue = GetExpressionValue(item, memberExp.Expression);
+                            if (objValue != null)
+                            {
+                                if (memberExp.Member is PropertyInfo propInfo)
+                                    return propInfo.GetValue(objValue);
+                                else if (memberExp.Member is FieldInfo fieldInfo)
+                                    return fieldInfo.GetValue(objValue);
+                            }
+                        }
+                    }
+                }
+                
+                return null;
+            }
+
+            /// <summary>
+            /// 重新构建表达式树，解决变量作用域问题
+            /// </summary>
+            private static Expression<Func<T, bool>> RebuildExpression<T>(Expression<Func<T, bool>> originalExpression)
+            {
+                try
+                {
+                    var visitor = new VariableCaptureVisitor();
+                    var newBody = visitor.Visit(originalExpression.Body);
+
+                    // 使用新的参数
+                    var newParameter = Expression.Parameter(typeof(T), "item");
+
+                    // 替换所有使用的参数，而不仅仅是第一个
+                    var usedParams = visitor.GetUsedParameters();
+                    if (usedParams.Any())
+                    {
+                        foreach (var oldParam in usedParams)
+                        {
+                            var parameterReplacer = new ParameterReplacer(oldParam, newParameter);
+                            newBody = parameterReplacer.Visit(newBody);
+                        }
+                    }
+                    else
+                    {
+                        // 如果没有检测到参数，使用原始表达式的参数进行替换
+                        var parameterReplacer = new ParameterReplacer(originalExpression.Parameters[0], newParameter);
+                        newBody = parameterReplacer.Visit(newBody);
+                    }
+
+                    return Expression.Lambda<Func<T, bool>>(newBody, newParameter);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"重新构建表达式失败: {ex.Message}");
+                    // 如果重新构建失败，返回原始表达式的副本，只替换参数名
+                    var newParameter = Expression.Parameter(typeof(T), "item");
+                    var parameterReplacer = new ParameterReplacer(originalExpression.Parameters[0], newParameter);
+                    var newBody = parameterReplacer.Visit(originalExpression.Body);
+                    return Expression.Lambda<Func<T, bool>>(newBody, newParameter);
+                }
+            }
+
+            /// <summary>
+            /// 变量捕获访问者 - 检测并处理捕获的变量和外部引用
+            /// </summary>
+            private class VariableCaptureVisitor : ExpressionVisitor
+            {
+                private readonly List<ParameterExpression> _usedParameters = new List<ParameterExpression>();
+                private readonly List<MemberExpression> _capturedMembers = new List<MemberExpression>();
+                private readonly HashSet<Expression> _visitedExpressions = new HashSet<Expression>(); // 防止循环引用
+
+                public IEnumerable<ParameterExpression> GetUsedParameters() => _usedParameters.Distinct();
+                public IEnumerable<MemberExpression> GetCapturedMembers() => _capturedMembers;
+
+                protected override Expression VisitParameter(ParameterExpression node)
+                {
+                    if (!_usedParameters.Contains(node))
+                    {
+                        _usedParameters.Add(node);
+                    }
+                    return base.VisitParameter(node);
+                }
+
+                protected override Expression VisitMember(MemberExpression node)
+                {
+                    // 防止循环引用
+                    if (_visitedExpressions.Contains(node))
+                    {
+                        return node;
+                    }
+                    _visitedExpressions.Add(node);
+
+                    try
+                    {
+                        // 处理各种类型的成员访问
+                        if (node.Expression != null)
+                        {
+                            // 检测捕获的外部变量 (闭包中的变量)
+                            if (node.Expression.NodeType == ExpressionType.Constant)
+                            {
+                                _capturedMembers.Add(node);
+
+                                // 对于捕获的变量，尝试获取其值并替换为常量
+                                try
+                                {
+                                    var constantExpression = (ConstantExpression)node.Expression;
+                                    var value = GetMemberValue(constantExpression.Value, node.Member);
+                                    return Expression.Constant(value, node.Type);
+                                }
+                                catch
+                                {
+                                    // 如果无法获取值，继续访问表达式的其他部分
+                                }
+                            }
+                            // 处理其他类型的成员表达式，例如方法中的局部变量引用
+                            else if (node.Expression.NodeType == ExpressionType.MemberAccess ||
+                                     node.Expression.NodeType == ExpressionType.Parameter ||
+                                     node.Expression.NodeType == ExpressionType.Call)
+                            {
+                                // 先访问表达式的左侧，确保正确处理嵌套表达式
+                                var visitedExpression = Visit(node.Expression);
+                                if (visitedExpression != node.Expression)
+                                {
+                                    // 如果左侧表达式被修改，创建新的成员表达式
+                                    return Expression.MakeMemberAccess(visitedExpression, node.Member);
+                                }
+                            }
+                        }
+
+                        return base.VisitMember(node);
+                    }
+                    finally
+                    {
+                        _visitedExpressions.Remove(node);
+                    }
+                }
+
+                protected override Expression VisitBinary(BinaryExpression node)
+                {
+                    // 处理二元表达式（如 &&, ||, == 等）
+                    var left = Visit(node.Left);
+                    var right = Visit(node.Right);
+
+                    // 只有当左右表达式有变化时，才创建新的二元表达式
+                    if (left != node.Left || right != node.Right)
+                    {
+                        return Expression.MakeBinary(node.NodeType, left, right, node.IsLiftedToNull, node.Method);
+                    }
+
+                    return base.VisitBinary(node);
+                }
+
+                protected override Expression VisitMethodCall(MethodCallExpression node)
+                {
+                    // 处理方法调用表达式，确保正确处理方法调用中的参数
+                    var visitedObject = node.Object != null ? Visit(node.Object) : null;
+                    var visitedArgs = Visit(node.Arguments);
+
+                    if (visitedObject != node.Object || !visitedArgs.SequenceEqual(node.Arguments))
+                    {
+                        return Expression.Call(visitedObject, node.Method, visitedArgs);
+                    }
+
+                    return base.VisitMethodCall(node);
+                }
+
+                protected override Expression VisitLambda<T>(Expression<T> node)
+                {
+                    // 访问lambda表达式的参数和体
+                    var visitedParameters = node.Parameters.Select(p => Visit(p) as ParameterExpression).ToList();
+                    var visitedBody = Visit(node.Body);
+
+                    if (!visitedParameters.SequenceEqual(node.Parameters) || visitedBody != node.Body)
+                    {
+                        return Expression.Lambda<T>(visitedBody, visitedParameters.ToArray());
+                    }
+
+                    return base.VisitLambda(node);
+                }
+
+                private object GetMemberValue(object instance, MemberInfo member)
+                {
+                    if (member is PropertyInfo property)
+                        return property.GetValue(instance);
+                    else if (member is FieldInfo field)
+                        return field.GetValue(instance);
+                    else
+                        throw new InvalidOperationException($"不支持的成员类型: {member.MemberType}");
+                }
+            }
+
+            /// <summary>
+            /// 参数替换访问者
+            /// </summary>
+            private class ParameterReplacer : ExpressionVisitor
+            {
+                private readonly ParameterExpression _oldParameter;
+                private readonly ParameterExpression _newParameter;
+
+                public ParameterReplacer(ParameterExpression oldParameter, ParameterExpression newParameter)
+                {
+                    _oldParameter = oldParameter;
+                    _newParameter = newParameter;
+                }
+
+                protected override Expression VisitParameter(ParameterExpression node)
+                {
+                    // 直接比较参数引用
+                    if (node == _oldParameter || 
+                        (node.Name == _oldParameter.Name && node.Type == _oldParameter.Type))
+                    {
+                        return _newParameter;
+                    }
+                    return base.VisitParameter(node);
+                }
+
+                // 确保正确处理方法调用中的参数替换
+                protected override Expression VisitMethodCall(MethodCallExpression node)
+                {
+                    var visitedObject = node.Object != null ? Visit(node.Object) : null;
+                    var visitedArgs = Visit(node.Arguments);
+                    return Expression.Call(visitedObject, node.Method, visitedArgs);
+                }
+            }
+        }
 
         /// <summary>
-        /// 绑定数据到下拉（使用了缓存）
+        /// 安全地从List中筛选数据
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="expression"></param>
-        /// <param name="expValue"></param>
-        /// <param name="cmbBox"></param>
+        private static List<T> SafeFilterList<T>(List<T> sourceList, Expression<Func<T, bool>> expCondition) where T : class
+        {
+            if (sourceList == null || !sourceList.Any())
+                return new List<T>();
+
+            if (expCondition == null)
+                return sourceList.ToList();
+
+            try
+            {
+                // 尝试编译表达式树为委托
+                Func<T, bool> filterFunc;
+                try
+                {
+                    // 先尝试直接编译原始表达式
+                    filterFunc = expCondition.Compile();
+                }
+                catch
+                {
+                    // 如果直接编译失败，使用安全评估方法
+                    return sourceList.Where(item => ExpressionSafeHelper.SafeEvaluate(item, expCondition, true)).ToList();
+                }
+
+                // 使用编译后的委托进行筛选（性能更好）
+                return sourceList.Where(filterFunc).ToList();
+            }
+            catch (Exception ex)
+            {
+                // 发生任何错误时返回完整列表
+                System.Diagnostics.Debug.WriteLine($"安全筛选失败: {ex.Message}");
+                // 尝试使用简单的条件提取作为最后的备选方案
+                try
+                {
+                    var conditions = new List<SimpleCondition>();
+                    ExtractConditionsFromBinary(expCondition.Body as BinaryExpression, conditions);
+                    if (conditions.Any())
+                    {
+                        return sourceList.Where(item => MeetsAllConditions(item, conditions)).ToList();
+                    }
+                }
+                catch
+                {
+                    // 备选方案也失败，返回完整列表
+                }
+                return sourceList.ToList();
+            }
+        }
+
+
+
+
+
+        private static void ExtractConditionsFromBinary(BinaryExpression binary, List<SimpleCondition> conditions)
+        {
+            if (binary.Left is MemberExpression leftMember && binary.Right is ConstantExpression rightConstant)
+            {
+                conditions.Add(new SimpleCondition
+                {
+                    PropertyName = leftMember.Member.Name,
+                    Value = rightConstant.Value,
+                    Operator = binary.NodeType
+                });
+            }
+        }
+
+        private static bool MeetsAllConditions<T>(T item, List<SimpleCondition> conditions)
+        {
+            foreach (var condition in conditions)
+            {
+                if (!MeetsCondition(item, condition))
+                    return false;
+            }
+            return true;
+        }
+
+        private static bool MeetsCondition<T>(T item, SimpleCondition condition)
+        {
+            var propertyValue = GetPropertyValue(item, condition.PropertyName);
+
+            return condition.Operator switch
+            {
+                ExpressionType.Equal => Equals(propertyValue, condition.Value),
+                ExpressionType.NotEqual => !Equals(propertyValue, condition.Value),
+                ExpressionType.GreaterThan => Compare(propertyValue, condition.Value) > 0,
+                ExpressionType.LessThan => Compare(propertyValue, condition.Value) < 0,
+                _ => true // 对于不支持的运算符，返回true
+            };
+        }
+
+        private static object GetPropertyValue<T>(T item, string propertyName)
+        {
+            if (item == null) return null;
+            var property = typeof(T).GetProperty(propertyName);
+            return property?.GetValue(item);
+        }
+
+        private static int Compare(object x, object y)
+        {
+            if (x == null && y == null) return 0;
+            if (x == null) return -1;
+            if (y == null) return 1;
+            return Comparer.Default.Compare(x, y);
+        }
+
+        private class SimpleCondition
+        {
+            public string PropertyName { get; set; }
+            public object Value { get; set; }
+            public ExpressionType Operator { get; set; }
+        }
+
+
         public static void InitDataToCmbWithCondition<T>(string key, string value, string tableName, KryptonComboBox cmbBox, Expression<Func<T, bool>> expCondition) where T : class
         {
-
             BindingSource bs = new BindingSource();
 
+            // 初始化筛选后的列表
+            List<T> filteredList = new List<T>();
+
+            // 优先从缓存获取数据
             var EntityList = EntityCacheHelper.GetEntityList<T>(tableName);
-            if (EntityList == null)
+            if (EntityList != null && EntityList.Any())
             {
-                ICommonController bdc = Startup.GetFromFac<Business.CommService.ICommonController>();
-                EntityList = bdc.GetBindSource<T>(tableName, expCondition);
+                // 使用完全避免编译的筛选方法
+                filteredList = SafeFilterList(EntityList, expCondition);
             }
-            List<T> Newlist = EntityList.ToList();
-            InsertSelectItem<T>(key, value, Newlist);
-            var blv = new BindingListView<T>(Newlist);
+            else
+            {
+                // 缓存为空时，尝试从数据库获取
+                try
+                {
+                    ICommonController bdc = Startup.GetFromFac<Business.CommService.ICommonController>();
+                    // 不传递条件，获取所有数据后在内存中筛选
+                    var allData = bdc.GetBindSource<T>(tableName);
+                    if (allData != null && allData.Any())
+                    {
+                        filteredList = SafeFilterList(allData.ToList(), expCondition);
+                    }
+                }
+                catch
+                {
+                    // 忽略数据库错误
+                }
+            }
+
+
+
+            // 插入"请选择"项并设置数据源
+            InsertSelectItem<T>(key, value, filteredList);
+            var blv = new BindingListView<T>(filteredList);
             bs = new BindingSource { DataSource = blv };
 
             cmbBox.Tag = tableName;
@@ -3399,19 +3892,40 @@ namespace RUINORERP.UI.Common
         /// <param name="cmbBox"></param>
         public static void InitDataToCmbChkWithCondition<T>(string key, string value, string tableName, CheckBoxComboBox cmbBox, Expression<Func<T, bool>> expCondition) where T : class
         {
+            // 处理空条件
             if (expCondition == null)
             {
                 expCondition = c => true;
             }
-
-            //先从缓存中取值
+            // 初始化筛选后的列表
+            List<T> filteredList = new List<T>();
+            // 优先从缓存获取数据
             var EntityList = EntityCacheHelper.GetEntityList<T>(tableName);
-            if (EntityList == null)
+            if (EntityList != null && EntityList.Any())
             {
-                ICommonController bdc = Startup.GetFromFac<Business.CommService.ICommonController>();
-                EntityList = bdc.GetBindSource<T>(tableName, expCondition);
+                // 使用完全避免编译的筛选方法
+                filteredList = SafeFilterList(EntityList, expCondition);
             }
-            List<T> Newlist = EntityList.ToList();
+            else
+            {
+                // 缓存为空时，尝试从数据库获取
+                try
+                {
+                    ICommonController bdc = Startup.GetFromFac<Business.CommService.ICommonController>();
+                    // 不传递条件，获取所有数据后在内存中筛选
+                    var allData = bdc.GetBindSource<T>(tableName);
+                    if (allData != null && allData.Any())
+                    {
+                        filteredList = SafeFilterList(allData.ToList(), expCondition);
+                    }
+                }
+                catch
+                {
+                    // 忽略数据库错误
+                }
+            }
+
+            List<T> Newlist = filteredList;
             //将数据 源转换一下
             List<CmbChkItem> cmbItems = new List<CmbChkItem>();
             foreach (var item in Newlist)
@@ -3801,46 +4315,6 @@ namespace RUINORERP.UI.Common
 
 
         #endregion
-
-
-
-
-        #region 枚举绑定数据源的新实现 可以select枚举 选择对应的集合来使用
-        public enum RULE
-        {
-            [Description("Любые, без ограничений")]
-            any,
-            [Description("Любые если будет три в ряд")]
-            anyThree,
-            [Description("Соседние, без ограничений")]
-            nearAny,
-            [Description("Соседние если будет три в ряд")]
-            nearThree
-        }
-
-        public static object Values
-        {
-            get
-            {
-                List<object> list = new List<object>();
-                foreach (RULE rule in Enum.GetValues(typeof(RULE)))
-                {
-                    string desc = rule.GetType().GetMember(rule.ToString())[0].GetCustomAttribute<DescriptionAttribute>().Description;
-                    list.Add(new { value = rule, desc = desc });
-                }
-                return list;
-            }
-        }
-
-        #endregion
-
-
-
-
-
-
-
-
 
 
 

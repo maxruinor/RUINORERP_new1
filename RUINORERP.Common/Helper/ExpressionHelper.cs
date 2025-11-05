@@ -67,18 +67,7 @@ var includeProperties = new List<string>
             var memberInfo = GetPropertyMemberInfo(propertyExpression.Body);
             return memberInfo.Name;
         }
-        //  public static void Include<T, TProperty>(this ICollection<string> properties,
-        //Expression<Func<T, TProperty>> propertyExpression)
-        //  {
-        //      if (properties == null)
-        //          throw new ArgumentNullException(nameof(properties));
-
-        //      if (propertyExpression == null)
-        //          throw new ArgumentNullException(nameof(propertyExpression));
-
-        //      var memberInfo = GetPropertyMemberInfo(propertyExpression.Body);
-        //      properties.Add(memberInfo.Name);
-        //  }
+        
 
 
         /// <summary>

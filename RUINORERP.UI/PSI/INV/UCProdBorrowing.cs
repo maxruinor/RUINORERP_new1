@@ -1,4 +1,4 @@
-﻿﻿using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -44,6 +44,8 @@ using Netron.GraphLib;
 using LiveChartsCore.Geo;
 using RUINORERP.Model.CommonModel;
 using RUINORERP.UI.Network.Services;
+using RUINORERP.Global.EnumExt;
+using RUINORERP.UI.FM;
 
 namespace RUINORERP.UI.PSI.INV
 {
@@ -80,8 +82,46 @@ namespace RUINORERP.UI.PSI.INV
                     }
                 }
 
+
+                //查是否有损失费用单
+                if (borrowing.DataStatus >= (int)DataStatus.确认)
+                {
+                    var ProfitLossList = await MainForm.Instance.AppContext.Db.Queryable<tb_FM_ProfitLoss>()
+                    .Includes(a => a.tb_FM_ProfitLossDetails)
+                    .Where(a => a.SourceBillId == borrowing.BorrowID)
+                    .ToListAsync();
+                    if (ProfitLossList != null && ProfitLossList.Count > 0)
+                    {
+                        foreach (var item in ProfitLossList)
+                        {
+                            var rqp = new Model.CommonModel.RelatedQueryParameter();
+                            if (item.ProfitLossDirection == (int)ProfitLossDirection.损失)
+                            {
+                                rqp.bizType = BizType.损失确认单;
+                            }
+                            else
+                            {
+                                rqp.bizType = BizType.溢余确认单;
+                            }
+
+                            rqp.billId = item.ProfitLossId;
+                            rqp.billNo = item.ProfitLossNo;
+                            ToolStripMenuItem RelatedMenuItem = new ToolStripMenuItem();
+                            RelatedMenuItem.Name = $"{rqp.billId}";
+                            RelatedMenuItem.Tag = rqp;
+                            RelatedMenuItem.Text = $"{rqp.bizType}:{rqp.billNo}";
+                            RelatedMenuItem.ToolTipText = $"{rqp.billNo}金额费用【{item.TotalAmount}】";
+                            RelatedMenuItem.Click += base.MenuItem_Click;
+                            if (!toolStripbtnRelatedQuery.DropDownItems.ContainsKey(rqp.billId.ToString()))
+                            {
+                                toolStripbtnRelatedQuery.DropDownItems.Add(RelatedMenuItem);
+                            }
+                        }
+                    }
+                }
+
             }
-         await   base.LoadRelatedDataToDropDownItemsAsync();
+            await base.LoadRelatedDataToDropDownItemsAsync();
         }
 
         internal override void LoadDataToUI(object Entity)
@@ -457,7 +497,7 @@ namespace RUINORERP.UI.PSI.INV
                     return false;
                 }
                 var aa = details.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
-                if (NeedValidated && aa.Count >0)
+                if (NeedValidated && aa.Count > 0)
                 {
                     System.Windows.Forms.MessageBox.Show("明细中，相同的产品不能多行录入,如有需要,请另建单据保存!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return false;

@@ -124,7 +124,8 @@ namespace RUINORERP.Business.BizMapperService
 
                 // 费用
                 SafeRegister<tb_FM_ExpenseClaim>(BizType.费用报销单, e => e.ClaimMainID, e => e.ClaimNo, e => e.tb_FM_ExpenseClaimDetails);
-
+              
+               
                 // 请购
                 SafeRegister<tb_BuyingRequisition>(BizType.请购单, e => e.PuRequisition_ID, e => e.PuRequisitionNo, e => e.tb_BuyingRequisitionDetails);
 
@@ -216,6 +217,18 @@ namespace RUINORERP.Business.BizMapperService
             try
             {
                 _logger.Debug("开始注册共用表实体映射...");
+
+                // 损溢单
+                SafeRegister<tb_FM_ProfitLoss, int>(
+                    new Dictionary<int, BizType>
+                    {
+                        {(int)ProfitLossDirection.损失, BizType.损失确认单},
+                        {(int)ProfitLossDirection.溢余, BizType.溢余确认单}
+                    },
+                    e => e.ProfitLossDirection,
+                    e => e.ProfitLossId,
+                    e => e.ProfitLossNo,
+                    e => e.tb_FM_ProfitLossDetails);
 
                 // 价格调整单
                 SafeRegister<tb_FM_PriceAdjustment, int>(

@@ -11,6 +11,7 @@ namespace RUINORERP.Business.Cache
 {
     /// <summary>
     /// SqlSugar实现的缓存数据提供者，用于在缓存未命中时从数据库加载数据
+    /// 使用SqlSugar自带的缓存机制
     /// </summary>
     public class SqlSugarCacheDataProvider : ICacheDataProvider
     {
@@ -34,6 +35,7 @@ namespace RUINORERP.Business.Cache
 
         /// <summary>
         /// 从数据源获取实体列表
+        /// 使用SqlSugar自带的缓存机制避免重复查询相同的实体列表
         /// </summary>
         /// <typeparam name="T">实体类型</typeparam>
         /// <param name="tableName">表名</param>
@@ -42,12 +44,17 @@ namespace RUINORERP.Business.Cache
         {
             try
             {
-                _logger?.LogDebug($"从数据库加载表 {tableName} 的实体列表数据");
+                // 生成查询缓存键，包含泛型类型信息
+                string queryCacheKey = $"SqlSugarCache:GetEntityList_{typeof(T).Name}_{tableName}";
                 
-                // 移除using块，让SqlSugar自己管理连接生命周期
+                _logger?.LogDebug($"尝试从缓存获取实体列表：表 {tableName}");
+                
+                // 获取数据库客户端
                 var db = _unitOfWorkManage.GetDbClient();
-                // 直接使用SqlSugar查询表数据
-                return db.Queryable<T>(tableName).ToList();
+                // 使用SqlSugar自带的缓存机制，缓存30秒
+                return db.Queryable<T>(tableName)
+                    .WithCache(queryCacheKey, 30)
+                    .ToList();
             }
             catch (Exception ex)
             {
@@ -58,6 +65,7 @@ namespace RUINORERP.Business.Cache
 
         /// <summary>
         /// 从数据源根据ID获取实体
+        /// 使用SqlSugar自带的缓存机制避免重复查询相同的实体
         /// </summary>
         /// <typeparam name="T">实体类型</typeparam>
         /// <param name="tableName">表名</param>
@@ -67,7 +75,10 @@ namespace RUINORERP.Business.Cache
         {
             try
             {
-                _logger?.LogDebug($"从数据库加载表 {tableName} ID为 {idValue} 的实体数据");
+                // 生成查询缓存键，包含泛型类型信息
+                string queryCacheKey = $"SqlSugarCache:GetEntity_{typeof(T).Name}_{tableName}_{idValue}";
+                
+                _logger?.LogDebug($"尝试从缓存获取实体：表 {tableName} ID为 {idValue}");
                 
                 // 获取表的主键字段信息
                 var schemaInfo = _tableSchemaManager.GetSchemaInfo(tableName);
@@ -77,11 +88,12 @@ namespace RUINORERP.Business.Cache
                     return null;
                 }
 
-                // 移除using块，让SqlSugar自己管理连接生命周期
+                // 获取数据库客户端
                 var db = _unitOfWorkManage.GetDbClient();
-                // 根据主键字段查询实体
+                // 使用SqlSugar自带的缓存机制，缓存60秒
                 return db.Queryable<T>(tableName)
                     .Where($"{schemaInfo.PrimaryKeyField} = @id", new { id = idValue })
+                    .WithCache(queryCacheKey, 60)
                     .First();
             }
             catch (Exception ex)
@@ -91,43 +103,6 @@ namespace RUINORERP.Business.Cache
             }
         }
 
-        /// <summary>
-        /// 从数据源获取显示值
-        /// </summary>
-        /// <param name="tableName">表名</param>
-        /// <param name="idValue">主键值</param>
-        /// <returns>显示值</returns>
-        public string GetDisplayValueFromSource(string tableName, object idValue)
-        {
-            try
-            {
-                _logger?.LogDebug($"从数据库加载表 {tableName} ID为 {idValue} 的显示值");
-                
-                // 获取表的主键和显示字段信息
-                var schemaInfo = _tableSchemaManager.GetSchemaInfo(tableName);
-                if (schemaInfo == null)
-                {
-                    return null;
-                }
-
-                // 移除using块，让SqlSugar自己管理连接生命周期
-                var db = _unitOfWorkManage.GetDbClient();
-                // 只查询显示字段
-                var result = db.Ado.GetDataTable($"SELECT {schemaInfo.DisplayField} FROM {tableName} WHERE {schemaInfo.PrimaryKeyField} = @id", 
-                    new { id = idValue });
-                
-                if (result != null && result.Rows.Count > 0 && result.Rows[0][0] != DBNull.Value)
-                {
-                    return result.Rows[0][0].ToString();
-                }
-                
-                return null;
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, $"从数据库加载表 {tableName} ID为 {idValue} 的显示值时发生错误");
-                return null;
-            }
-        }
+    
     }
 }

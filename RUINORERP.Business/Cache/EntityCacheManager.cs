@@ -29,6 +29,7 @@ namespace RUINORERP.Business.Cache
         private readonly ILogger<EntityCacheManager> _logger;
         private readonly ICacheDataProvider _cacheDataProvider;
         private readonly ICacheSyncMetadata _cacheSyncMetadata;
+        private readonly IBaseTableCacheManager _baseTableCacheManager;
         #endregion
 
         #region 缓存同步元数据接口实现
@@ -301,7 +302,7 @@ namespace RUINORERP.Business.Cache
                     case CacheKeyType.List:
                         // 实体列表缓存键格式：Table_{表名}_List
                         return $"Table_{tableName}_List";
-                    
+
                     case CacheKeyType.Entity:
                         // 单个实体缓存键格式：Table_{表名}_Entity_{主键值}
                         // 对于实体缓存，主键值是必需的
@@ -310,16 +311,16 @@ namespace RUINORERP.Business.Cache
                             throw new ArgumentNullException(nameof(primaryKeyValue), "对于Entity类型的缓存键，主键值不能为空");
                         }
                         return $"Table_{tableName}_Entity_{primaryKeyValue}";
-                    
+
                     case CacheKeyType.DisplayValue:
                         // 显示值缓存键格式：Table_{表名}_Display_{主键值}
                         return $"Table_{tableName}_Display_{primaryKeyValue ?? string.Empty}";
-                    
+
                     case CacheKeyType.QueryResult:
                         // 查询结果缓存键格式：Table_{表名}_Query_{查询标识}
                         // 使用主键值作为查询标识（可以是查询条件的哈希值或其他标识）
                         return $"Table_{tableName}_Query_{primaryKeyValue ?? string.Empty}";
-                    
+
                     default:
                         // 对于未明确支持的类型，记录警告并使用默认格式
                         _logger?.LogWarning($"不支持的缓存键类型: {keyType}，使用默认格式");
@@ -337,14 +338,15 @@ namespace RUINORERP.Business.Cache
         #region 构造函数
         public EntityCacheManager(
             ILogger<EntityCacheManager> logger,
-            ICacheDataProvider cacheDataProvider = null,
+            IBaseTableCacheManager baseTableCacheManager,
+        ICacheDataProvider cacheDataProvider = null,
             ICacheSyncMetadata cacheSyncMetadata = null)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _tableSchemaManager = TableSchemaManager.Instance;
             _cacheDataProvider = cacheDataProvider;
             _cacheSyncMetadata = cacheSyncMetadata; // 可选依赖
-
+            _baseTableCacheManager = baseTableCacheManager;
             // 设置缓存大小阈值（最大大小的80%）
             _cacheSizeThreshold = (long)(_maxCacheSize * 0.8);
 
@@ -372,6 +374,7 @@ namespace RUINORERP.Business.Cache
 
         /// <summary>
         /// 根据表名获取指定类型的实体列表
+        /// 添加缓存丢失检测：当获取到的缓存为空或0行，但基础表缓存信息显示应有数据时，从数据源重新获取
         /// </summary>
         public List<T> GetEntityList<T>(string tableName) where T : class
         {
@@ -391,8 +394,31 @@ namespace RUINORERP.Business.Cache
                 // 更新缓存访问统计
                 UpdateCacheAccessStatistics(cacheKey, cachedList != null, "List", tableName, cachedList);
 
-                // 如果缓存为空或已过期，尝试从数据源获取
-                if (cachedList == null)
+                // 检查是否存在缓存丢失情况：缓存返回了空列表，但基础表缓存信息显示应该有数据
+                bool isCacheMissing = false;
+                if (cachedList is List<T> listObj && listObj.Count == 0)
+                {
+                    try
+                    {
+                        // 尝试通过依赖注入获取基础表缓存管理器实例
+                        if (_baseTableCacheManager != null)
+                        {
+                            var baseTableCacheInfo = _baseTableCacheManager.GetBaseTableCacheInfo(tableName);
+                            if (baseTableCacheInfo != null && baseTableCacheInfo.DataCount > 0)
+                            {
+                                _logger?.LogWarning($"检测到表 {tableName} 缓存丢失：基础信息显示应有 {baseTableCacheInfo.DataCount} 行数据，但实际缓存为空。将从数据源重新获取。");
+                                isCacheMissing = true;
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger?.LogDebug(ex, "检查缓存丢失状态时发生错误");
+                    }
+                }
+
+                // 如果缓存为空、已过期或检测到缓存丢失，尝试从数据源获取
+                if (cachedList == null || isCacheMissing)
                 {
                     if (_cacheDataProvider != null)
                     {

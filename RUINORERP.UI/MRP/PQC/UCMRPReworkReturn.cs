@@ -111,7 +111,7 @@ namespace RUINORERP.UI.MRP.PQC
 
 
             DataBindingHelper.BindData4Cmb<tb_Department>(entity, k => k.DepartmentID, v => v.DepartmentName, cmbDepartmentID);
-            DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
+            DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID, c => c.Is_enabled == true);
             DataBindingHelper.BindData4TextBox<tb_MRP_ReworkReturn>(entity, t => t.TotalQty, txtTotalQty, BindDataType4TextBox.Qty, false);
             DataBindingHelper.BindData4TextBox<tb_MRP_ReworkReturn>(entity, t => t.TotalReworkFee.ToString(), txtTotalReworkFee, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_MRP_ReworkReturn>(entity, t => t.TotalCost.ToString(), txtTotalCost, BindDataType4TextBox.Money, false);

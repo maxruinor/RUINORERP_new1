@@ -62,7 +62,7 @@ namespace RUINORERP.UI.CRM
 
             _EditEntity = record;
 
-            DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
+            DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID, c => c.Is_enabled == true);
 
 
             DataBindingHelper.BindData4CheckBox<tb_CRM_FollowUpRecords>(entity, t => t.HasResponse, chkHasResponse, false);

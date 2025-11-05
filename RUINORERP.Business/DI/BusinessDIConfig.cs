@@ -18,7 +18,6 @@ using RUINORERP.Extensions.AOP;
 using Microsoft.Extensions.DependencyInjection;
 using RUINORERP.Extensions.Middlewares;
 using RUINORERP.Business.Cache;
-using RUINORERP.Business.Cache;
 
 namespace RUINORERP.Business.DI
 {
@@ -67,6 +66,9 @@ namespace RUINORERP.Business.DI
                 .InstancePerLifetimeScope()
                 .PropertiesAutowired();
 
+         
+
+
             // 注册新的优化缓存管理器
             //这里是单例，批量扫描程序集是 .InstancePerDependency()，这意味着每次请求都会创建一个新的实例
             builder.RegisterType<EntityCacheManager>()
@@ -95,6 +97,12 @@ namespace RUINORERP.Business.DI
             // 注册缓存同步元数据管理器，用于管理缓存同步状态信息
             builder.RegisterType<CacheSyncMetadataManager>()
                 .As<ICacheSyncMetadata>()
+                .SingleInstance()
+                .PropertiesAutowired();
+                
+            // 注册基础表缓存管理器，用于监控和验证基础表缓存状态
+            builder.RegisterType<BaseTableCacheManager>()
+                .As<IBaseTableCacheManager>()
                 .SingleInstance()
                 .PropertiesAutowired();
                 

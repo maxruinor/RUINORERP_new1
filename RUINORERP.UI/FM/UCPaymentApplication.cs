@@ -102,7 +102,7 @@ namespace RUINORERP.UI.FM
                 cmbPayeeInfoID.Items.Clear();
             }
 
-            DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
+            DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID, c => c.Is_enabled == true);
 
             DataBindingHelper.BindData4TextBox<tb_FM_PaymentApplication>(entity, t => t.ApplicationNo, txtApplicationNo, BindDataType4TextBox.Qty, false);
             DataBindingHelper.BindData4Cmb<tb_Department>(entity, k => k.DepartmentID, v => v.DepartmentName, cmbDepartmentID);

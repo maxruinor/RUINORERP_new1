@@ -186,7 +186,7 @@ namespace RUINORERP.UI.PSI.PUR
 
             //DataBindingHelper.BindData4CmbByEnum<tb_PurReturnEntry>(entity, k => k.ShippingWay, typeof(PurReProcessWay), cmbProcessWay, true);
             DataBindingHelper.BindData4Cmb<tb_Department>(entity, k => k.DepartmentID, v => v.DepartmentName, cmbDepartmentID);
-            DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
+            DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID, c => c.Is_enabled == true);
             DataBindingHelper.BindData4Cmb<tb_PaymentMethod>(entity, k => k.Paytype_ID, v => v.Paytype_Name, cmbPaytype_ID);
             DataBindingHelper.BindData4TextBox<tb_PurReturnEntry>(entity, t => t.PurReEntryNo, txtPurReEntryNO, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_PurReturnEntry>(entity, t => t.TotalQty.ToString(), txtTotalQty, BindDataType4TextBox.Money, false);

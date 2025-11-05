@@ -114,7 +114,7 @@ namespace RUINORERP.UI.PSI.INV
             DataBindingHelper.BindData4TextBox<tb_ProdConversion>(entity, t => t.TotalConversionQty, txtTotalConversionQty, BindDataType4TextBox.Qty, false);
             DataBindingHelper.BindData4TextBox<tb_ProdConversion>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_ProdConversion>(entity, t => t.Reason, txtReason, BindDataType4TextBox.Text, false);
-            DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
+            DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID, c => c.Is_enabled == true);
             DataBindingHelper.BindData4Cmb<tb_Location>(entity, k => k.Location_ID, v => v.Name, cmbLocation_ID);
             DataBindingHelper.BindData4TextBox<tb_ProdConversion>(entity, t => t.ConversionNo, txtConversionNo, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4DataTime<tb_ProdConversion>(entity, t => t.ConversionDate, dtpConversionDate, false);

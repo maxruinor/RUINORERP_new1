@@ -428,7 +428,7 @@ namespace RUINORERP.UI.PSI.SAL
             DataBindingHelper.BindData4Cmb<tb_Currency>(entity, k => k.Currency_ID, v => v.CurrencyName, cmbCurrency_ID);
             DataBindingHelper.BindData4TextBox<tb_SaleOutRe>(entity, t => t.ExchangeRate.ToString(), txtExchangeRate, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_SaleOutRe>(entity, t => t.ReturnNo, txtReturnNo, BindDataType4TextBox.Text, false);
-            DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
+            DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID, c => c.Is_enabled == true);
             DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID, c => c.IsCustomer == true);
             DataBindingHelper.BindData4TextBox<tb_SaleOutRe>(entity, v => v.SaleOut_NO, txtSaleOutNo, BindDataType4TextBox.Text, true);
             DataBindingHelper.BindData4TextBox<tb_SaleOutRe>(entity, t => t.TotalAmount.ToString(), txtTotalAmount, BindDataType4TextBox.Money, false);

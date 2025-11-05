@@ -82,6 +82,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="Cache\BaseTableCacheExtensions.cs" />
+    <Compile Include="Cache\BaseTableCacheManager.cs" />
     <Compile Include="Cache\CacheChangedEventArgs.cs" />
     <Compile Include="Cache\CacheSyncExtensions.cs" />
     <Compile Include="Cache\CacheSyncMetadataManager.cs" />
@@ -90,6 +92,7 @@
     <Compile Include="Cache\CacheSubscriptionManager.cs" />
     <Compile Include="Cache\EntityCacheInitializationService.cs" />
     <Compile Include="Cache\EntityCacheManager.cs" />
+    <Compile Include="Cache\IBaseTableCacheManager.cs" />
     <Compile Include="Cache\ICacheDataProvider.cs" />
     <Compile Include="Cache\ICacheStatistics.cs" />
     <Compile Include="Cache\ICacheSyncMetadata.cs" />

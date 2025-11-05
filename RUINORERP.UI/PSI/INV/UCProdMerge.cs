@@ -155,7 +155,7 @@ namespace RUINORERP.UI.PSI.INV
             DataBindingHelper.BindData4CmbRelated<tb_BOM_S>(entity, k => k.BOM_ID, v => v.BOM_Name, cmbBOM_ID, false, false);
 
 
-            DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
+            DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID, c => c.Is_enabled == true);
             DataBindingHelper.BindData4Cmb<tb_Location>(entity, k => k.Location_ID, v => v.Name, cmbLocation_ID);
             DataBindingHelper.BindData4TextBox<tb_ProdMerge>(entity, t => t.MergeNo, txtMergeNo, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4DataTime<tb_ProdMerge>(entity, t => t.MergeDate, dtpMergeDate, false);

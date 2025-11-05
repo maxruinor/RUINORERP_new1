@@ -396,7 +396,20 @@ public void LogWorkflowCacheStats()
 }
 ```
 
-## 5. 依赖注入配置
+## 5. 扩展方法列表
+
+| 方法名 | 说明 | 参数 | 返回值 |
+|--------|------|------|--------|
+| `UpdateEntityListWithSync` | 更新实体列表并记录同步信息 | tableName, entityList, cacheSyncMetadata | void |
+| `DefaultSyncMetadata` | 获取默认的同步元数据管理器 | 无 | ICacheSyncMetadata |
+| `CreateBaseTableCacheManager` | 创建基础表缓存管理器实例 | cacheManager, cacheSyncMetadata, logger | IBaseTableCacheManager |
+| `UpdateEntityListWithIntegrityCheck` | 更新实体列表并验证完整性 | tableName, entityList, cacheSyncMetadata, logger | bool |
+| `CheckAndFixCacheIntegrity` | 检查并修复缓存完整性 | tableName, reloadFunction, logger | bool |
+| `GetCacheStatusReport` | 获取缓存状态报告 | baseTableCacheManager | string |
+| `BatchCheckAndFixCacheIntegrity` | 批量检查并修复缓存完整性 | tableNames, reloadFunction | int |
+| `GetCacheHealthScore` | 获取缓存健康评分 | baseTableCacheManager | int |
+
+## 6. 依赖注入配置
 
 为新创建的缓存管理器配置依赖注入：
 
@@ -410,6 +423,9 @@ public void ConfigureServices(IServiceCollection services)
     // 添加新的专用缓存管理器
     services.AddSingleton<WorkflowCacheManager>();
     services.AddSingleton<DocumentCacheManager>();
+    
+    // 添加基础表缓存管理器
+    services.AddScoped<IBaseTableCacheManager, BaseTableCacheManager>();
     
     // 其他服务配置...
 }
@@ -595,11 +611,50 @@ public class ExtendedTableCacheStatistics : TableCacheStatistics
 - 避免缓存过大的数据对象，考虑只缓存必要字段
 - 使用异步操作处理缓存（如果系统支持）
 
-## 9. 注意事项
+## 10. 版本历史
+
+| 版本 | 日期 | 说明 |
+|------|------|------|
+| 1.1 | 当前版本 | 添加基础表缓存管理器功能 |
+| 1.0 | 初始版本 | 基础缓存扩展功能 |
+
+## 11. 基础表缓存管理器集成
+
+基础表缓存管理器是对现有缓存系统的重要扩展，专门用于管理和监控基础表的缓存状态。详细使用说明请参考单独的文档：
+
+- [BASE_TABLE_CACHE_GUIDE.md](BASE_TABLE_CACHE_GUIDE.md) - 基础表缓存管理器完整使用指南
+
+### 11.1 快速集成步骤
+
+1. 注册依赖项：
+```csharp
+services.AddScoped<IBaseTableCacheManager, BaseTableCacheManager>();
+```
+
+2. 在需要的地方注入并使用：
+```csharp
+private readonly IBaseTableCacheManager _baseTableCacheManager;
+
+public MyService(IBaseTableCacheManager baseTableCacheManager)
+{
+    _baseTableCacheManager = baseTableCacheManager;
+}
+```
+
+3. 验证缓存完整性：
+```csharp
+if (!_baseTableCacheManager.ValidateTableCacheIntegrity("Employees"))
+{
+    // 缓存不完整，需要重新加载
+}
+```
+
+## 12. 注意事项
 
 - 缓存系统设计为内存缓存，应用重启后缓存会丢失
 - 确保缓存操作的线程安全性，特别是在并发场景下
 - 缓存大小监控和LRU清理会自动应用于所有缓存类型
 - 对于自定义的复杂缓存需求，可能需要扩展核心缓存接口
+- 基础表缓存管理器主要用于管理系统基础数据，建议与业务数据缓存分开管理
 
 通过遵循本指南，您可以有效地利用现有的缓存体系架构，扩展支持新的业务需求，同时保持系统的一致性和可维护性。

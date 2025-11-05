@@ -2040,12 +2040,9 @@ namespace RUINORERP.UI.Common
 
             cmbBox.DataBindings.Clear();
 
-            BaseProcessor basePro = Startup.GetFromFacByName<BaseProcessor>(typeof(T).Name + "Processor");
-            QueryFilter queryFilter = basePro.GetQueryFilter();
 
-            queryFilter.FilterLimitExpressions.Add(expCondition);
 
-            InitDataToCmb<T>(expkey, expValue, cmbBox, queryFilter.GetFilterExpression<T>());
+            InitDataToCmb<T>(expkey, expValue, cmbBox, expCondition);
             MemberInfo minfo = expkey.GetMemberInfo();
             string key = minfo.Name;
             var depa = new Binding("SelectedValue", entity, key, true, DataSourceUpdateMode.OnValidation);
@@ -2181,15 +2178,6 @@ namespace RUINORERP.UI.Common
                         cmbBox.SelectedItem = null;
                         cmbBox.SelectedIndex = -1;
                         cmbBox.SelectedValue = -1L;//为了验证通过设置为long型
-
-                        // 手动设置验证通过
-                        // ((INotifyPropertyChanged)cmbBox).PropertyChanged -= MyComboBox_PropertyChanged;
-                        // cmbBox.SelectedIndex = -1;
-                        //  ((INotifyPropertyChanged)myComboBox).PropertyChanged += MyComboBox_PropertyChanged;
-
-
-
-                        //cmbBox.SelectedItem
                         #endregion
 
                     };
@@ -2252,14 +2240,6 @@ namespace RUINORERP.UI.Common
                         cmbBox.SelectedIndex = -1;
                         cmbBox.SelectedValue = -1L;//为了验证通过设置为long型
 
-                        // 手动设置验证通过
-                        // ((INotifyPropertyChanged)cmbBox).PropertyChanged -= MyComboBox_PropertyChanged;
-                        // cmbBox.SelectedIndex = -1;
-                        //  ((INotifyPropertyChanged)myComboBox).PropertyChanged += MyComboBox_PropertyChanged;
-
-
-
-                        //cmbBox.SelectedItem
                         #endregion
 
                     };
@@ -3162,15 +3142,7 @@ namespace RUINORERP.UI.Common
             MemberInfo minfoValue = expValue.GetMemberInfo();
             string value = minfoValue.Name;
             string tableName = expression.Parameters[0].Type.Name;
-
-
-            BaseProcessor basePro = Startup.GetFromFacByName<BaseProcessor>(typeof(T).Name + "Processor");
-            QueryFilter queryFilter = basePro.GetQueryFilter();
-
-            queryFilter.FilterLimitExpressions.Add(expCondition);
-
-            InitDataToCmbWithCondition<T>(key, value, tableName, cmbBox, queryFilter.GetFilterExpression<T>());
-
+            InitDataToCmbWithCondition<T>(key, value, tableName, cmbBox, expCondition);
         }
 
         /// <summary>
@@ -3189,7 +3161,6 @@ namespace RUINORERP.UI.Common
             string tableName = expression.Parameters[0].Type.Name;
             InitDataToCmb<T>(key, value, tableName, cmbBox);
         }
-
         public static void InitDataToCmb<T>(Expression<Func<T, long>> expression, KryptonComboBox cmbBox) where T : class
         {
             MemberInfo minfo = expression.GetMemberInfo();
@@ -3396,7 +3367,7 @@ namespace RUINORERP.UI.Common
 
                     // 重新构建表达式树，避免变量捕获问题
                     var safeExpression = RebuildExpression(expression);
-                    
+
                     // 尝试编译安全表达式
                     Func<T, bool> compiledFunc;
                     try
@@ -3406,7 +3377,7 @@ namespace RUINORERP.UI.Common
                     catch (Exception compileEx)
                     {
                         System.Diagnostics.Debug.WriteLine($"表达式编译失败: {compileEx.Message}");
-                        
+
                         // 如果编译失败，尝试使用简单的条件评估作为备选
                         try
                         {
@@ -3417,7 +3388,7 @@ namespace RUINORERP.UI.Common
                             return defaultValue;
                         }
                     }
-                    
+
                     // 缓存编译后的委托
                     _expressionCache[cacheKey] = compiledFunc;
                     return compiledFunc(item);
@@ -3429,7 +3400,7 @@ namespace RUINORERP.UI.Common
                     return defaultValue;
                 }
             }
-            
+
             /// <summary>
             /// 尝试评估简单表达式（作为备选方案）
             /// </summary>
@@ -3438,7 +3409,7 @@ namespace RUINORERP.UI.Common
                 if (expression is BinaryExpression binaryExp)
                 {
                     // 尝试评估二元表达式的左右两侧
-                    if (binaryExp.NodeType == ExpressionType.AndAlso || 
+                    if (binaryExp.NodeType == ExpressionType.AndAlso ||
                         binaryExp.NodeType == ExpressionType.OrElse)
                     {
                         bool leftResult = EvaluateSimpleExpression(item, binaryExp.Left);
@@ -3448,13 +3419,13 @@ namespace RUINORERP.UI.Common
                             return true;
                         return EvaluateSimpleExpression(item, binaryExp.Right);
                     }
-                    else if (binaryExp.NodeType == ExpressionType.Equal || 
+                    else if (binaryExp.NodeType == ExpressionType.Equal ||
                              binaryExp.NodeType == ExpressionType.NotEqual)
                     {
                         // 尝试获取左侧属性值和右侧常量值
                         object leftValue = GetExpressionValue(item, binaryExp.Left);
                         object rightValue = GetExpressionValue(item, binaryExp.Right);
-                        
+
                         bool areEqual = object.Equals(leftValue, rightValue);
                         return binaryExp.NodeType == ExpressionType.Equal ? areEqual : !areEqual;
                     }
@@ -3469,10 +3440,10 @@ namespace RUINORERP.UI.Common
                     object value = GetExpressionValue(item, memberExp);
                     return value as bool? ?? false;
                 }
-                
+
                 return true; // 无法评估时返回默认值
             }
-            
+
             /// <summary>
             /// 获取表达式的值
             /// </summary>
@@ -3510,7 +3481,7 @@ namespace RUINORERP.UI.Common
                         }
                     }
                 }
-                
+
                 return null;
             }
 
@@ -3703,7 +3674,7 @@ namespace RUINORERP.UI.Common
                 protected override Expression VisitParameter(ParameterExpression node)
                 {
                     // 直接比较参数引用
-                    if (node == _oldParameter || 
+                    if (node == _oldParameter ||
                         (node.Name == _oldParameter.Name && node.Type == _oldParameter.Type))
                     {
                         return _newParameter;
@@ -3734,21 +3705,8 @@ namespace RUINORERP.UI.Common
 
             try
             {
-                // 尝试编译表达式树为委托
-                Func<T, bool> filterFunc;
-                try
-                {
-                    // 先尝试直接编译原始表达式
-                    filterFunc = expCondition.Compile();
-                }
-                catch
-                {
-                    // 如果直接编译失败，使用安全评估方法
-                    return sourceList.Where(item => ExpressionSafeHelper.SafeEvaluate(item, expCondition, true)).ToList();
-                }
-
-                // 使用编译后的委托进行筛选（性能更好）
-                return sourceList.Where(filterFunc).ToList();
+                // 如果直接编译失败，使用安全评估方法
+                return sourceList.Where(item => ExpressionSafeHelper.SafeEvaluate(item, expCondition, true)).ToList();
             }
             catch (Exception ex)
             {
@@ -3849,6 +3807,12 @@ namespace RUINORERP.UI.Common
             {
                 // 使用完全避免编译的筛选方法
                 filteredList = SafeFilterList(EntityList, expCondition);
+
+                //过滤失败时用原始的缓存数据
+                if (filteredList.Count == 0 && filteredList.Count < EntityList.Count)
+                {
+                    filteredList = EntityList;
+                }
             }
             else
             {

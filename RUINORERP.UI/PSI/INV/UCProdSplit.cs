@@ -157,7 +157,7 @@ namespace RUINORERP.UI.PSI.INV
                 }
             }
 
-            DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
+            DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID, c => c.Is_enabled == true);
             DataBindingHelper.BindData4Cmb<tb_Location>(entity, k => k.Location_ID, v => v.Name, cmbLocation_ID);
             DataBindingHelper.BindData4TextBox<tb_ProdSplit>(entity, t => t.SplitNo, txtSplitNo, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4DataTime<tb_ProdSplit>(entity, t => t.SplitDate, dtpSplitDate, false);

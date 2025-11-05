@@ -21,6 +21,7 @@ namespace RUINORERP.Business.Cache
         private readonly IUnitOfWorkManage _unitOfWorkManage;
         private readonly IEntityCacheManager _cacheManager;
         private readonly ILogger<EntityCacheInitializationService> _logger;
+        private readonly IBaseTableCacheManager _baseTableCacheManager;
 
         /// <summary>
         /// 构造函数
@@ -31,8 +32,10 @@ namespace RUINORERP.Business.Cache
         public EntityCacheInitializationService(
             IUnitOfWorkManage unitOfWorkManage,
             IEntityCacheManager cacheManager,
-            ILogger<EntityCacheInitializationService> logger)
+            IBaseTableCacheManager baseTableCacheManager,
+        ILogger<EntityCacheInitializationService> logger)
         {
+            _baseTableCacheManager=baseTableCacheManager;
             _unitOfWorkManage = unitOfWorkManage ?? throw new ArgumentNullException(nameof(unitOfWorkManage));
             _cacheManager = cacheManager ?? throw new ArgumentNullException(nameof(cacheManager));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -41,6 +44,7 @@ namespace RUINORERP.Business.Cache
         /// <summary>
         /// 初始化所有缓存
         /// 简化实现，直接使用框架能力
+        /// 确保基础表缓存信息也被正确初始化和管理
         /// </summary>
         /// <returns>初始化任务</returns>
         public async Task InitializeAllCacheAsync()
@@ -48,17 +52,17 @@ namespace RUINORERP.Business.Cache
             try
             {
                 _logger.Debug("开始初始化缓存服务");
-                
+
                 // 初始化所有表结构信息
                 InitializeAllTableSchemas();
 
                 // 获取需要缓存的表名
                 var tableNames = TableSchemaManager.Instance.GetCacheableTableNamesList();
-          
+
 
                 int successCount = 0;
                 int failedCount = 0;
-                
+
                 // 逐个初始化表缓存，简单直接
                 foreach (var tableName in tableNames)
                 {
@@ -68,7 +72,7 @@ namespace RUINORERP.Business.Cache
                         InitializeCacheForTable(tableName);
                         successCount++;
                         _logger.Debug($"表 {tableName} 缓存初始化成功 ({successCount}/{tableNames.Count})");
-                           // 短暂延迟，减少数据库压力
+                        // 短暂延迟，减少数据库压力
                         await Task.Delay(123);
                     }
                     catch (Exception ex)
@@ -78,7 +82,7 @@ namespace RUINORERP.Business.Cache
                         // 继续处理下一个表
                     }
                 }
-                
+
                 _logger.LogInformation($"缓存初始化完成: 成功 {successCount} 个表, 失败 {failedCount} 个表");
             }
             catch (Exception ex)
@@ -95,7 +99,7 @@ namespace RUINORERP.Business.Cache
             try
             {
                 _logger.Debug("开始初始化表结构信息");
-                
+
                 // 注册所有需要缓存的表结构信息
                 // 基础数据表
                 RegistInformation<tb_Company>(k => k.ID, v => v.CNName, tableType: TableType.Base);
@@ -168,7 +172,7 @@ namespace RUINORERP.Business.Cache
 
                 // 补充缺失的表
                 RegistInformation<tb_FieldInfo>(k => k.FieldInfo_ID, v => v.FieldName, tableType: TableType.Base);
-                
+
                 _logger.Debug("表结构信息初始化完成");
             }
             catch (Exception ex)
@@ -191,7 +195,7 @@ namespace RUINORERP.Business.Cache
         {
             // 先初始化表结构
             _cacheManager.InitializeTableSchema(primaryKeyExpression, displayFieldExpression, isView, isCacheable, description, true, otherDisplayFieldExpressions);
-            
+
             // 设置表类型
             string tableName = typeof(T).Name;
             var schemaInfo = TableSchemaManager.Instance.GetSchemaInfo(tableName);
@@ -229,11 +233,14 @@ namespace RUINORERP.Business.Cache
                 var db = _unitOfWorkManage.GetDbClient();
                 // 简单直接地加载数据
                 LoadDataAndUpdateCache(entityType, tableName, db);
+
+                // 初始化后，更新基础表缓存信息
+                UpdateBaseTableCacheInfo(tableName);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"初始化表 {tableName} 的缓存时发生错误");
-                
+
                 // 确保缓存中有一个空列表
                 try
                 {
@@ -249,7 +256,7 @@ namespace RUINORERP.Business.Cache
                 {
                     _logger.LogError(cacheEx, $"更新缓存失败: {cacheEx.Message}");
                 }
-                
+
                 throw;
             }
         }
@@ -288,9 +295,9 @@ namespace RUINORERP.Business.Cache
                 // 检查是否缓存整行数据
                 bool cacheWholeRow = schemaInfo.GetType().GetProperty("CacheWholeRow")?.GetValue(schemaInfo, null) as bool? ?? false;
                 _logger.LogDebug($"开始加载表 {tableName} 数据，缓存策略：{(cacheWholeRow ? "缓存整行" : "只缓存指定字段")}");
-                
+
                 dynamic result;
-                
+
                 // 根据缓存策略决定查询方式
                 if (cacheWholeRow)
                 {
@@ -304,9 +311,9 @@ namespace RUINORERP.Business.Cache
                     var fieldsToSelect = new List<string> { schemaInfo.PrimaryKeyField };
                     fieldsToSelect.AddRange(schemaInfo.DisplayFields.Except(new[] { schemaInfo.PrimaryKeyField }));
                     fieldsToSelect = fieldsToSelect.Distinct().ToList();
-                    
+
                     _logger.LogDebug($"查询策略：只缓存指定字段，表 {tableName} 要加载的字段: {string.Join(", ", fieldsToSelect)}");
-                    
+
                     // 使用SqlSugar的动态查询，直接ToList()获取数据
                     result = db.Queryable(entityType.Name, tableName).ToList();
                 }
@@ -413,10 +420,10 @@ namespace RUINORERP.Business.Cache
             {
                 _logger.Debug($"开始初始化类型为 {tableType} 的表缓存");
                 var tables = TableSchemaManager.Instance.GetCacheableTableNamesByType(tableType);
-                
+
                 int successCount = 0;
                 int failedCount = 0;
-                
+
                 foreach (var tableName in tables)
                 {
                     try
@@ -433,7 +440,7 @@ namespace RUINORERP.Business.Cache
                         _logger.LogError(ex, $"表 {tableName} 缓存初始化失败 ({failedCount}个表失败)");
                     }
                 }
-                
+
                 _logger.Debug($"类型 {tableType} 的表缓存初始化完成: 成功 {successCount} 个表, 失败 {failedCount} 个表");
             }
             catch (Exception ex)
@@ -451,10 +458,10 @@ namespace RUINORERP.Business.Cache
             {
                 _logger.Debug("开始初始化基础业务表缓存");
                 var tables = TableSchemaManager.Instance.GetBaseBusinessTableNames();
-                
+
                 int successCount = 0;
                 int failedCount = 0;
-                
+
                 foreach (var tableName in tables)
                 {
                     try
@@ -471,12 +478,60 @@ namespace RUINORERP.Business.Cache
                         _logger.LogError(ex, $"基础业务表 {tableName} 缓存初始化失败 ({failedCount}个表失败)");
                     }
                 }
-                
+
                 _logger.Debug($"基础业务表缓存初始化完成: 成功 {successCount} 个表, 失败 {failedCount} 个表");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "初始化基础业务表缓存时发生错误");
+            }
+        }
+        /// <summary>
+        /// 更新基础表缓存信息
+        /// 不仅验证缓存完整性，还会实际更新缓存信息数据
+        /// </summary>
+        /// <param name="tableName">表名</param>
+        private void UpdateBaseTableCacheInfo(string tableName)
+        {
+            try
+            {
+                // 尝试获取基础表缓存管理器实例
+                if (_baseTableCacheManager != null)
+                {
+                    _logger.LogDebug($"更新表 {tableName} 的基础缓存信息");
+                    
+                    // 获取实际缓存的实体列表以更新数据计数
+                    var entityList = _cacheManager.GetEntityList<object>(tableName);
+                    int actualCount = entityList?.Count ?? 0;
+                    
+                    // 获取或创建基础表缓存信息
+                    var cacheInfo = _baseTableCacheManager.GetBaseTableCacheInfo(tableName);
+                    if (cacheInfo != null)
+                    {
+                        // 更新数据计数
+                        cacheInfo.DataCount = actualCount;
+                        
+                        // 更新缓存状态
+                        cacheInfo.LastUpdateTime = DateTime.Now;
+                        // 注意：通过DataCount > 0来判断缓存是否已加载，不需要额外的IsLoaded属性
+                        
+                        // 保存更新后的缓存信息
+                        _baseTableCacheManager.SetBaseTableCacheInfo(tableName, cacheInfo);
+                        
+                        _logger.LogDebug($"表 {tableName} 的基础缓存信息已更新: 数据计数={actualCount}");
+                    }
+                    
+                    // 验证缓存完整性
+                    bool isIntegrity = _baseTableCacheManager.ValidateTableCacheIntegrity(tableName);
+                    if (!isIntegrity)
+                    {
+                        _logger.LogWarning($"表 {tableName} 的缓存数据不完整，已更新基础信息但可能需要重新加载");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "更新表 {TableName} 的基础缓存信息时发生错误", tableName);
             }
         }
     }

@@ -138,7 +138,7 @@ namespace RUINORERP.UI.PSI.INV
                 }
             }
 
-            DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
+            DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID, c => c.Is_enabled == true);
 
             DataBindingHelper.BindData4TextBox<tb_ProdReturning>(entity, t => t.ReturnNo, txtBillNo, BindDataType4TextBox.Text, false);
 

@@ -112,7 +112,7 @@ namespace RUINORERP.UI.PSI.INV
             DataBindingHelper.BindData4CmbRefWithLimitedByAlias<tb_Location>(entity, nameof(tb_Location.Location_ID), nameof(tb_StockTransfer.Location_ID_from), nameof(tb_Location.Name), nameof(tb_Location), cmbLocation_ID_from, c => c.Is_enabled == true);
             DataBindingHelper.BindData4CmbRefWithLimitedByAlias<tb_Location>(entity, nameof(tb_Location.Location_ID), nameof(tb_StockTransfer.Location_ID_to), nameof(tb_Location.Name), nameof(tb_Location), cmbLocation_ID_to, c => c.Is_enabled == true);
 
-            DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
+            DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID, c => c.Is_enabled == true);
             DataBindingHelper.BindData4TextBox<tb_StockTransfer>(entity, t => t.StockTransferNo, txtStockTransferNo, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_StockTransfer>(entity, t => t.TotalQty.ToString(), txtTotalQty, BindDataType4TextBox.Qty, false);
             DataBindingHelper.BindData4TextBox<tb_StockTransfer>(entity, t => t.TotalCost.ToString(), txtTotalCost, BindDataType4TextBox.Money, false);

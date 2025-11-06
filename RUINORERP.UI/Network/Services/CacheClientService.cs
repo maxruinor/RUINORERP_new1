@@ -86,11 +86,10 @@ namespace RUINORERP.UI.Network.Services
         private void OnConnectionStateChanged(bool isConnected)
         {
             // 不再需要手动管理缓存队列，现在由ClientCommunicationService自动处理
-            _log.LogInformation("连接状态变化: {0}", isConnected ? "已连接" : "已断开");
+            _log.Debug("连接状态变化: {0}", isConnected ? "已连接" : "已断开");
         }
 
-        // 不再需要ProcessPendingCacheChangesAsync方法，由ClientCommunicationService的队列机制处理
-
+  
         /// <summary>
         /// 注册命令处理程序
         /// </summary>

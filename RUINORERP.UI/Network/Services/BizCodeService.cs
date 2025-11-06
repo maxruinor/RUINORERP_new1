@@ -282,7 +282,7 @@ namespace RUINORERP.UI.Network.Services
             }
             catch (OperationCanceledException ex)
             {
-                _logger?.LogInformation(ex, "业务编码生成操作已被取消");
+                _logger?.LogDebug(ex, "业务编码生成操作已被取消");
                 throw;
             }
             catch (Exception ex)

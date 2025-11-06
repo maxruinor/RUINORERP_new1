@@ -110,7 +110,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                                     _logger.LogWarning("配置同步命令缺少必要参数 ConfigType 或 ConfigData");
                                     return;
                                 }
-                                _logger.LogInformation($"从Parameters获取配置同步数据: {configType}");
+                                _logger.LogDebug($"从Parameters获取配置同步数据: {configType}");
                             }
                             else
                             {
@@ -120,7 +120,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                         }
                         else
                         {
-                            _logger.LogInformation($"收到配置同步命令: {configType}");
+                            _logger.LogDebug($"收到配置同步命令: {configType}");
                         }
 
                         // 检查是否需要强制应用配置
@@ -133,7 +133,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                         if (commandData.TryGetValue("Version", out object versionObj))
                         {
                             version = versionObj.ToString();
-                            _logger.LogInformation($"配置版本: {version}");
+                            _logger.LogDebug($"配置版本: {version}");
                         }
                     }
                     else
@@ -163,7 +163,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                         }
                     }
 
-                    _logger.LogInformation($"开始处理配置同步，配置类型: {configType}");
+                    _logger.LogDebug($"开始处理配置同步，配置类型: {configType}");
                     _logger.LogDebug($"配置版本: {version}, 强制应用: {forceApply}");
 
                     // 统一使用ConfigManager处理配置同步，简化流程
@@ -179,7 +179,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                     // 同时调用OptionsMonitorConfigManager处理配置同步（确保向后兼容）
                     _optionsMonitorConfigManager.HandleConfigSync(configType, configDataJson);
                     
-                    _logger.LogInformation($"配置同步已处理，配置类型: {configType}");
+                    _logger.LogDebug($"配置同步已处理，配置类型: {configType}");
                 }
             }
             catch (System.Exception ex)

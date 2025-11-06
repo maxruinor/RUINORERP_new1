@@ -62,7 +62,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                     // 进行初始化操作
                     _handlers.Clear();
                     _commandToHandlersMap.Clear();
-                    _logger?.LogInformation("调度器初始化成功");
+                    _logger?.LogDebug("调度器初始化成功");
                     return Task.FromResult(true);
                 }
                 return Task.FromResult(false);
@@ -79,7 +79,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
         {
             try
             {
-                _logger?.LogInformation("开始初始化并启动命令处理系统");
+                _logger?.LogDebug("开始初始化并启动命令处理系统");
                 
                 // 初始化调度器
                 bool initialized = await InitializeAsync();
@@ -88,7 +88,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                     _logger?.LogWarning("命令调度器初始化失败或已初始化");
                     return (false, 0);
                 }
-                _logger?.LogInformation("命令调度器初始化完成");
+                _logger?.LogDebug("命令调度器初始化完成");
                 
                 // 启动调度器
                 bool started = await StartAsync();
@@ -97,13 +97,13 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                     _logger?.LogWarning("命令调度器启动失败或已启动");
                     return (false, 0);
                 }
-                _logger?.LogInformation("命令调度器启动完成");
+                _logger?.LogDebug("命令调度器启动完成");
                 
                 // 扫描并注册处理器
                 assemblies = assemblies ?? new[] { Assembly.GetExecutingAssembly() };
                 int registeredCount = await ScanAndRegisterHandlersAsync(assemblies);
                 
-                _logger?.LogInformation($"命令处理系统初始化完成，共注册 {registeredCount} 个命令处理器");
+                _logger?.LogDebug($"命令处理系统初始化完成，共注册 {registeredCount} 个命令处理器");
                 return (true, registeredCount);
             }
             catch (Exception ex)
@@ -208,7 +208,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                     _commandToHandlersMap[command.FullCode].Sort((h1, h2) => h2.Priority.CompareTo(h1.Priority));
                 }
 
-                _logger?.LogInformation($"成功注册处理器: {handler.Name} (ID: {handler.HandlerId}), 支持 {handler.SupportedCommands.Count} 个命令");
+                _logger?.LogDebug($"成功注册处理器: {handler.Name} (ID: {handler.HandlerId}), 支持 {handler.SupportedCommands.Count} 个命令");
                 return true;
             }
         }
@@ -283,7 +283,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                 // 从处理器列表中移除
                 _handlers.Remove(handlerId);
 
-                _logger?.LogInformation($"成功移除处理器: {handler.Name} (ID: {handlerId})");
+                _logger?.LogDebug($"成功移除处理器: {handler.Name} (ID: {handlerId})");
                 return true;
             }
         }
@@ -385,7 +385,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                     handlerTypes.AddRange(types);
                 }
 
-                _logger?.LogInformation($"从{assemblies.Count()}个程序集中扫描到 {handlerTypes.Count} 个命令处理器类型");
+                _logger?.LogDebug($"从{assemblies.Count()}个程序集中扫描到 {handlerTypes.Count} 个命令处理器类型");
 
                 // 创建并注册每个处理器
                 foreach (var type in handlerTypes)
@@ -403,7 +403,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                                 try
                                 {
                                     handler = (IClientCommandHandler)lifetimeScope.Resolve(type);
-                                    _logger?.LogInformation($"通过Autofac依赖注入创建处理器 {type.Name}");
+                                    _logger?.LogDebug($"通过Autofac依赖注入创建处理器 {type.Name}");
                                 }
                                 catch (Exception ex1)
                                 {
@@ -413,7 +413,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                                     try
                                     {
                                         handler = (IClientCommandHandler)Activator.CreateInstance(type);
-                                        _logger?.LogInformation($"通过构造函数直接创建处理器 {type.Name}");
+                                        _logger?.LogDebug($"通过构造函数直接创建处理器 {type.Name}");
                                     }
                                     catch (Exception ex2)
                                     {
@@ -429,13 +429,13 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                                     handler = (IClientCommandHandler)Startup.ServiceProvider.GetService(type);
                                     if (handler != null)
                                     {
-                                        _logger?.LogInformation($"通过Microsoft DI创建处理器 {type.Name}");
+                                        _logger?.LogDebug($"通过Microsoft DI创建处理器 {type.Name}");
                                     }
                                     else
                                     {
                                         // 如果服务未注册，尝试Activator创建
                                         handler = (IClientCommandHandler)Activator.CreateInstance(type);
-                                        _logger?.LogInformation($"通过构造函数直接创建处理器 {type.Name}");
+                                        _logger?.LogDebug($"通过构造函数直接创建处理器 {type.Name}");
                                     }
                                 }
                                 catch (Exception ex)
@@ -449,7 +449,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                                 try
                                 {
                                     handler = (IClientCommandHandler)Activator.CreateInstance(type);
-                                    _logger?.LogInformation($"通过构造函数直接创建处理器 {type.Name}");
+                                    _logger?.LogDebug($"通过构造函数直接创建处理器 {type.Name}");
                                 }
                                 catch (Exception ex)
                                 {
@@ -481,7 +481,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                     }
                 }
 
-                _logger?.LogInformation($"成功注册 {registeredCount} 个命令处理器");
+                _logger?.LogDebug($"成功注册 {registeredCount} 个命令处理器");
             }
             catch (Exception ex)
             {

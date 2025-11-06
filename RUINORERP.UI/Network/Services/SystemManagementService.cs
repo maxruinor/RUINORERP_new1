@@ -196,7 +196,7 @@ namespace RUINORERP.UI.Network.Services
                     true
                 );
 
-                _logger?.LogInformation("电脑关闭指令已执行 - 类型: {ShutdownType}", request.ShutdownType);
+                _logger?.LogDebug("电脑关闭指令已执行 - 类型: {ShutdownType}", request.ShutdownType);
                 return response;
             }
             catch (Exception ex)
@@ -236,7 +236,7 @@ namespace RUINORERP.UI.Network.Services
             // 为了示例，我们只记录日志
             await Task.Delay(100); // 模拟异步操作
 
-            _logger?.LogInformation("准备执行关闭操作 - 类型: {ShutdownType}, 延迟: {DelaySeconds}秒", 
+            _logger?.LogDebug("准备执行关闭操作 - 类型: {ShutdownType}, 延迟: {DelaySeconds}秒", 
                 request.ShutdownType, request.DelaySeconds);
 
             // 实际实现中，这里会执行真正的关闭操作

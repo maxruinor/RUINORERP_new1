@@ -94,7 +94,7 @@ namespace RUINORERP.UI.SysConfig
                 _currentServerConfig = LoadConfigFromFile<ServerConfig>() ?? new ServerConfig();
                 _currentValidatorConfig = LoadConfigFromFile<GlobalValidatorConfig>() ?? new GlobalValidatorConfig();
                 
-                _logger.LogInformation("初始配置加载完成");
+                _logger.LogDebug("初始配置加载完成");
             }
             catch (Exception ex)
             {
@@ -110,7 +110,7 @@ namespace RUINORERP.UI.SysConfig
         {
             // 配置变更现在通过内部方法如UpdateConfig进行处理
             // 不再依赖外部的IOptionsMonitor
-            _logger.LogInformation("配置管理器已初始化，配置变更将通过内部方法和通用命令处理器处理");
+            _logger.LogDebug("配置管理器已初始化，配置变更将通过内部方法和通用命令处理器处理");
         }
         
         /// <summary>
@@ -121,7 +121,7 @@ namespace RUINORERP.UI.SysConfig
         {
             _currentGlobalConfig = config;
             SaveConfigToFile(config);
-            _logger.LogInformation("全局配置已更新");
+            _logger.LogDebug("全局配置已更新");
         }
         
         /// <summary>
@@ -132,7 +132,7 @@ namespace RUINORERP.UI.SysConfig
         {
             _currentServerConfig = config;
             SaveConfigToFile(config);
-            _logger.LogInformation("服务器配置已更新");
+            _logger.LogDebug("服务器配置已更新");
         }
         
         /// <summary>
@@ -143,7 +143,7 @@ namespace RUINORERP.UI.SysConfig
         {
             _currentValidatorConfig = config;
             SaveConfigToFile(config);
-            _logger.LogInformation("验证配置已更新");
+            _logger.LogDebug("验证配置已更新");
         }
         
         /// <summary>
@@ -159,7 +159,7 @@ namespace RUINORERP.UI.SysConfig
                 // 在新的实现中，这些请求应该通过通用命令处理器发送
                 // await _generalCommandHandler.SendDataTransferRequestAsync(nameof(SystemGlobalConfig), "");
                 
-                _logger.LogInformation("已请求最新服务器配置");
+                _logger.LogDebug("已请求最新服务器配置");
             }
             catch (Exception ex)
             {
@@ -181,7 +181,7 @@ namespace RUINORERP.UI.SysConfig
                 
                 if (!File.Exists(configPath))
                 {
-                    _logger.LogInformation($"配置文件不存在: {configType}");
+                    _logger.LogDebug($"配置文件不存在: {configType}");
                     return null;
                 }
                 
@@ -231,7 +231,7 @@ namespace RUINORERP.UI.SysConfig
                 string jsonContent = JsonConvert.SerializeObject(config, Formatting.Indented);
                 File.WriteAllText(configPath, jsonContent, Encoding.UTF8);
                 
-                _logger.LogInformation($"配置 {configType} 已保存到文件");
+                _logger.LogDebug($"配置 {configType} 已保存到文件");
             }
             catch (Exception ex)
             {
@@ -255,7 +255,7 @@ namespace RUINORERP.UI.SysConfig
                     throw new ArgumentNullException(nameof(configJson), "配置数据不能为空");
                 }
                 
-                _logger.LogInformation($"处理配置同步: {configType}");
+                _logger.LogDebug($"处理配置同步: {configType}");
                 
                 switch (configType)
                 {
@@ -284,7 +284,7 @@ namespace RUINORERP.UI.SysConfig
                         // 对于其他类型配置，委托给ConfigManager处理
                         if (ConfigManager.Instance != null)
                         {
-                            _logger.LogInformation($"将未知配置类型 {configType} 转发给ConfigManager处理");
+                            _logger.LogDebug($"将未知配置类型 {configType} 转发给ConfigManager处理");
                             ConfigManager.Instance.HandleConfigSync(configType, configJson);
                         }
                         else
@@ -333,7 +333,7 @@ namespace RUINORERP.UI.SysConfig
             }
             _changeTokens.Clear();
             
-            _logger.LogInformation("配置管理器资源已释放");
+            _logger.LogDebug("配置管理器资源已释放");
         }
     }
 }

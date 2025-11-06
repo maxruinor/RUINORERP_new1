@@ -84,7 +84,7 @@ namespace RUINORERP.UI.IM
         {
             try
             {
-                _logger.LogInformation("开始初始化消息服务订阅");
+                _logger.LogDebug("开始初始化消息服务订阅");
                 
                 // 先检查_messageService是否为null
                 if (_messageService == null)
@@ -107,7 +107,7 @@ namespace RUINORERP.UI.IM
                 _messageService.BroadcastMessageReceived += OnBroadcastMessageReceived;
                 _messageService.SystemNotificationReceived += OnSystemNotificationReceived;
                 
-                _logger.LogInformation("已成功初始化消息服务并订阅所有消息事件");
+                _logger.LogDebug("已成功初始化消息服务并订阅所有消息事件");
                 
                 // 记录当前订阅状态，便于调试
                 LogEventSubscriptionStatus();
@@ -138,7 +138,7 @@ namespace RUINORERP.UI.IM
                     if (popupEventDelegate != null)
                     {
                         int handlerCount = popupEventDelegate.GetInvocationList().Length;
-                        _logger.LogInformation("弹窗消息事件当前订阅者数量: {HandlerCount}", handlerCount);
+                        _logger.LogDebug("弹窗消息事件当前订阅者数量: {HandlerCount}", handlerCount);
                     }
                     else
                     {

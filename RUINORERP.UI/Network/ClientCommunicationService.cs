@@ -1246,7 +1246,7 @@ namespace RUINORERP.UI.Network
                 // 使用一键式初始化方法，替代单独调用InitializeAsync和StartAsync
                 var result = await _commandDispatcher.InitializeAndStartAsync();
                 
-                _logger.LogInformation("客户端命令调度器初始化并启动成功，共注册{HandlerCount}个处理器", result.success ? result.registeredCount : 0);
+                _logger.LogDebug("客户端命令调度器初始化并启动成功，共注册{HandlerCount}个处理器", result.success ? result.registeredCount : 0);
             }
             catch (Exception ex)
             {
@@ -1354,7 +1354,7 @@ namespace RUINORERP.UI.Network
                             string configType = configTypeObj.ToString();
                             string configData = JsonConvert.SerializeObject(configDataObj);
                             
-                            _logger.LogInformation("接收到配置同步命令: {ConfigType}", configType);
+                            _logger.LogDebug("接收到配置同步命令: {ConfigType}", configType);
                             
                             // 调用OptionsMonitorConfigManager处理配置同步
                             _optionsMonitorConfigManager.HandleConfigSync(configType, configData);
@@ -1377,7 +1377,7 @@ namespace RUINORERP.UI.Network
                             string configType = configTypeObj.ToString();
                             string configData = JsonConvert.SerializeObject(configDataObj);
                             
-                            _logger.LogInformation("接收到配置同步命令: {ConfigType}", configType);
+                            _logger.LogDebug("接收到配置同步命令: {ConfigType}", configType);
                             
                             // 调用OptionsMonitorConfigManager处理配置同步
                             _optionsMonitorConfigManager.HandleConfigSync(configType, configData);

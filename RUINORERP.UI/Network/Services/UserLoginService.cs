@@ -186,7 +186,7 @@ namespace RUINORERP.UI.Network.Services
             }
             catch (OperationCanceledException ex)
             {
-                _logger?.LogInformation(ex, "登录操作已被用户取消 - 用户: {Username}", username);
+                _logger?.LogDebug(ex, "登录操作已被用户取消 - 用户: {Username}", username);
                 return ResponseFactory.CreateSpecificErrorResponse<LoginResponse>("登录操作已取消");
             }
             catch (Exception ex)
@@ -420,7 +420,7 @@ namespace RUINORERP.UI.Network.Services
                 // 确保响应不为null并且成功
                 if (response != null && response.IsSuccess)
                 {
-                    _logger?.LogInformation("通过Token验证成功恢复认证状态");
+                    _logger?.LogDebug("通过Token验证成功恢复认证状态");
                     // 更新登录状态
                     _isLoggedIn = true;
                     // SilentTokenRefresher没有Start方法，这里不再需要额外操作
@@ -486,7 +486,7 @@ namespace RUINORERP.UI.Network.Services
         /// </summary>
         private void OnRefreshSucceeded(object sender, TokenInfo e)
         {
-            _logger?.LogInformation("Token refresh succeeded");
+            _logger?.LogDebug("Token refresh succeeded");
             // 更新登录状态
             _isLoggedIn = true;
         }

@@ -212,10 +212,10 @@ namespace RUINORERP.Business
 
                             decimal StatementPaidAmount = RecordDetail.LocalAmount;  // 实际支付金额 用于核销对账单
                             decimal ARAPTotalPaidAmount = RecordDetail.LocalAmount;//用于按FIFO核销应收应付集合
-                            
+
                             // 记录原始支付金额，用于后续验证
                             decimal originalPaymentAmount = RecordDetail.LocalAmount;
-                            
+
                             // 重构FIFO核销逻辑，优化混合对冲场景的处理
                             // 1. 先分离应收款和应付款
                             var receivableList = statement.tb_FM_StatementDetails
@@ -224,23 +224,23 @@ namespace RUINORERP.Business
                                 .OrderBy(c => c.BusinessDate)
                                 .ThenBy(c => c.Created_at)
                                 .ToList();
-                                
+
                             var payableList = statement.tb_FM_StatementDetails
                                 .Where(c => c.tb_fm_receivablepayable.ReceivePaymentType == (int)ReceivePaymentType.付款)
                                 .Select(c => c.tb_fm_receivablepayable)
                                 .OrderBy(c => c.BusinessDate)
                                 .ThenBy(c => c.Created_at)
                                 .ToList();
-                                
+
                             // 2. 根据对账单类型和混合场景决定核销顺序和逻辑
                             List<tb_FM_ReceivablePayable> receivablePayableList = new List<tb_FM_ReceivablePayable>();
-                            
+
                             // 检查是否存在混合对冲场景
                             bool hasMixedTypes = receivableList.Any() && payableList.Any();
-                            
+
                             // 计算对冲金额和实际支付金额
                             decimal offsetAmount = 0;
-                            
+
                             // 计算所有明细的总净额（应收应付的代数和）
                             // 这是所有应收应付单相互抵冲后的最终净额
                             // 例如：应收3102元 + 应付6120元 = 净支付金额3018元
@@ -255,7 +255,7 @@ namespace RUINORERP.Business
                                 // 单一场景：直接计算所有明细的代数和
                                 totalNetAmount = statement.tb_FM_StatementDetails.Sum(sd => sd.tb_fm_receivablepayable.LocalBalanceAmount);
                             }
-                            
+
                             // 业务规则检查：确保实际支付金额不超过净支付金额
                             // 说明：所有明细相互抵冲后的净支付金额是最高可支付限额
                             // 如果实付金额超过这个净额，则属于预付款业务，不应在对账单中处理
@@ -269,13 +269,13 @@ namespace RUINORERP.Business
                                 return rmrs;
 
                             }
-                            
+
                             // 计算实付金额与总净额的关系
                             // 1. 如果实付金额的绝对值等于总净额的绝对值，说明完全匹配，应全额核销所有明细
                             // 2. 否则，按FIFO顺序进行部分核销
-                            bool isExactMatch = Math.Abs(ARAPTotalPaidAmount) >= Math.Abs(totalNetAmount) - 0.01m && 
+                            bool isExactMatch = Math.Abs(ARAPTotalPaidAmount) >= Math.Abs(totalNetAmount) - 0.01m &&
                                               Math.Abs(ARAPTotalPaidAmount) <= Math.Abs(totalNetAmount) + 0.01m;
-                            
+
                             if (hasMixedTypes && statement.ReceivePaymentType == (int)ReceivePaymentType.付款)
                             {
                                 // 对于付款对账单中的混合对冲场景
@@ -283,12 +283,12 @@ namespace RUINORERP.Business
                                 // 使用绝对值计算对冲金额，确保正确处理正负金额
                                 // 对冲金额 = 所有应收款单余额的绝对值总和
                                 offsetAmount = Math.Abs(receivableList.Sum(r => r.LocalBalanceAmount));
-                                
+
                                 // 先核销应收款（对冲项），再核销应付款（实际支付项）
                                 // 按FIFO顺序排列对冲项内部的单据：先按业务日期排序，再按创建时间排序
                                 receivableList = receivableList.OrderBy(c => c.BusinessDate).ThenBy(c => c.Created_at).ToList();
                                 payableList = payableList.OrderBy(c => c.BusinessDate).ThenBy(c => c.Created_at).ToList();
-                                
+
                                 // 构建完整的核销顺序：先对冲项，后实际支付项
                                 receivablePayableList.AddRange(receivableList);
                                 receivablePayableList.AddRange(payableList);
@@ -300,12 +300,12 @@ namespace RUINORERP.Business
                                 // 使用绝对值计算对冲金额，确保正确处理正负金额
                                 // 对冲金额 = 所有应付款单余额的绝对值总和
                                 offsetAmount = Math.Abs(payableList.Sum(p => p.LocalBalanceAmount));
-                                
+
                                 // 先核销应付款（对冲项），再核销应收款（实际支付项）
                                 // 按FIFO顺序排列对冲项内部的单据：先按业务日期排序，再按创建时间排序
                                 payableList = payableList.OrderBy(c => c.BusinessDate).ThenBy(c => c.Created_at).ToList();
                                 receivableList = receivableList.OrderBy(c => c.BusinessDate).ThenBy(c => c.Created_at).ToList();
-                                
+
                                 // 构建完整的核销顺序：先对冲项，后实际支付项
                                 receivablePayableList.AddRange(payableList);
                                 receivablePayableList.AddRange(receivableList);
@@ -332,17 +332,22 @@ namespace RUINORERP.Business
                                 // 对于正负金额混合的场景（如16200元和-400元），我们需要确保正确核销
                                 // 获取明细的剩余未核销金额的绝对值，用于比较计算
                                 decimal absRemainingAmount = Math.Abs(StatementDetail.RemainingLocalAmount);
-                                
+
                                 // 计算本次可核销金额
                                 decimal statementAmountToWriteOff;
                                 
                                 // 核销逻辑判断：
-                                // 1. 如果剩余未核销金额的绝对值小于等于对账单剩余支付金额的绝对值
-                                //    则全额核销该明细
-                                // 2. 否则，按比例进行部分核销
-                                if (absRemainingAmount <= Math.Abs(StatementPaidAmount))
+                                // 1. 如果isExactMatch为true，表示全额核销场景，直接核销所有剩余金额
+                                // 2. 否则，按常规逻辑判断是否全额核销或部分核销
+                                if (isExactMatch)
                                 {
-                                    // 全额核销该明细：核销金额等于剩余未核销金额
+                                    // 全额核销场景：直接核销该明细的所有剩余金额
+                                    statementAmountToWriteOff = StatementDetail.RemainingLocalAmount;
+                                }
+                                else if (absRemainingAmount <= Math.Abs(StatementPaidAmount))
+                                {
+                                    // 非全额核销场景下，如果剩余未核销金额的绝对值小于等于对账单剩余支付金额的绝对值
+                                    // 则全额核销该明细
                                     statementAmountToWriteOff = StatementDetail.RemainingLocalAmount;
                                 }
                                 else
@@ -353,13 +358,15 @@ namespace RUINORERP.Business
                                     // 核销金额 = 明细剩余未核销金额 * 比例（保持原符号方向）
                                     statementAmountToWriteOff = StatementDetail.RemainingLocalAmount * ratio;
                                 }
-                                
+
                                 // 更新核销金额和剩余金额
-                                // 1. 已核销金额：使用绝对值累加，因为无论正负金额，核销都是正向操作
-                                StatementDetail.WrittenOffLocalAmount += Math.Abs(statementAmountToWriteOff);
+                                // 已核销金额：根据原单据类型和金额符号决定如何累加
+                                // 对于应收单（收款类型）：核销金额应保持与原单据相同的符号方向
+                                // 对于应付款单（付款类型）：核销金额应保持与原单据相同的符号方向
+                                StatementDetail.WrittenOffLocalAmount += statementAmountToWriteOff;
                                 // 2. 剩余未核销金额：减去本次核销金额（保留符号，确保正负方向正确）
                                 StatementDetail.RemainingLocalAmount -= statementAmountToWriteOff;
-                                
+
                                 // 确保金额计算精度，避免浮点运算误差导致的问题
                                 // 保留两位小数，符合财务记账要求
                                 StatementDetail.WrittenOffLocalAmount = Math.Round(StatementDetail.WrittenOffLocalAmount, 2);
@@ -377,7 +384,7 @@ namespace RUINORERP.Business
                                 {
                                     StatementDetail.ARAPWriteOffStatus = (int)ARAPWriteOffStatus.部分核销;
                                 }
-                                
+
                                 // 减少对账单剩余待核销金额
                                 // 使用绝对值扣减，确保净额计算正确性
                                 // 例如：核销+100元和-100元，都应减少相同的剩余支付金额
@@ -388,7 +395,7 @@ namespace RUINORERP.Business
                                 // 根据应收/应付类型分别处理核销逻辑
                                 // 重点修复混合对冲场景：确保正确计算对冲和实际支付金额
                                 decimal amountToWriteOff = 0; // 本次核销金额
-                                
+
                                 // 处理混合对冲场景
                                 if (hasMixedTypes)
                                 {
@@ -399,40 +406,33 @@ namespace RUINORERP.Business
                                             // 付款对账单中的应收款单作为对冲项，应全额核销
                                             // 对冲逻辑：应收款直接冲抵应付款，无需实际支付
                                             amountToWriteOff = receivablePayable.LocalBalanceAmount;
-                                            
+
                                             // 记录混合对冲的特殊处理
                                             FMAuditLogHelper fMAuditLog = _appContext.GetRequiredService<FMAuditLogHelper>();
-                                            fMAuditLog.CreateAuditLog<tb_FM_ReceivablePayable>($"付款对账单对冲应收款：核销金额{amountToWriteOff}", 
+                                            fMAuditLog.CreateAuditLog<tb_FM_ReceivablePayable>($"付款对账单对冲应收款：核销金额{amountToWriteOff}",
                                                 receivablePayable);
                                         }
                                         else if (receivablePayable.ReceivePaymentType == (int)ReceivePaymentType.付款) // 应付款单
                                         {
                                             // 付款对账单中的应付款单，核销金额处理逻辑
                                             // 1. 如果实付金额与总净额完全匹配(isExactMatch)，则全额核销应付款单
-                                            // 2. 否则，按FIFO原则进行部分核销
+                                            // 2. 否则，按FIFO原则进行部分核销，同时支持正负金额混合场景
                                             if (isExactMatch)
                                             {
                                                 // 场景：实付金额与总净额完全匹配（例如：应付6120元，应收3102元，实付3018元）
-                                                // 全额核销应付款单
+                                                // 全额核销应付款单，无论金额正负
                                                 amountToWriteOff = receivablePayable.LocalBalanceAmount;
                                             }
                                             else
                                             {
                                                 // 场景：实付金额小于总净额，需要按FIFO顺序部分核销
-                                                // 计算可用支付金额：使用绝对值确保为正数
-                                                decimal availablePayment = Math.Abs(ARAPTotalPaidAmount);
-                                                
-                                                // 计算本次核销金额：取应付款单余额和可用支付金额中的较小值
-                                                // 这样可以确保核销金额不超过应付余额和实际可支付金额
-                                                amountToWriteOff = Math.Min(receivablePayable.LocalBalanceAmount, availablePayment);
-                                                
-                                                // 安全检查：确保核销金额不为负数
-                                                if (amountToWriteOff < 0)
-                                                {
-                                                    amountToWriteOff = 0;
-                                                }
-                                                
-                                                // 按FIFO原则核销：如果实付金额不足以核销所有应付款单，则按时间顺序依次核销
+                                                // 针对正负金额混合的情况（如采购调价/退货等），使用绝对值进行核销计算
+                                                decimal netPaymentAmount = ARAPTotalPaidAmount;
+                                                decimal writeOffBase = Math.Min(Math.Abs(receivablePayable.LocalBalanceAmount), Math.Abs(netPaymentAmount));
+
+                                                // 保持与应付款单相同的符号方向
+                                                // 确保核销金额的符号与原单据保持一致（正数表示应付，负数表示退货/调价）
+                                                amountToWriteOff = receivablePayable.LocalBalanceAmount > 0 ? writeOffBase : -writeOffBase;
                                             }
                                         }
                                     }
@@ -443,37 +443,33 @@ namespace RUINORERP.Business
                                             // 收款对账单中的应付款单作为对冲项，应全额核销
                                             // 对冲逻辑：应付款直接冲抵应收款，无需实际收取
                                             amountToWriteOff = receivablePayable.LocalBalanceAmount;
-                                            
+
                                             // 记录混合对冲的特殊处理
                                             FMAuditLogHelper fMAuditLog = _appContext.GetRequiredService<FMAuditLogHelper>();
-                                            fMAuditLog.CreateAuditLog<tb_FM_ReceivablePayable>($"收款对账单对冲应付款：核销金额{amountToWriteOff}", 
+                                            fMAuditLog.CreateAuditLog<tb_FM_ReceivablePayable>($"收款对账单对冲应付款：核销金额{amountToWriteOff}",
                                                 receivablePayable);
                                         }
                                         else if (receivablePayable.ReceivePaymentType == (int)ReceivePaymentType.收款) // 应收款单
                                         {
                                             // 收款对账单中的应收款单，核销金额处理逻辑
                                             // 1. 如果实付金额与总净额完全匹配(isExactMatch)，则全额核销应收款单
-                                            // 2. 否则，按FIFO原则进行部分核销
+                                            // 2. 否则，按FIFO原则进行部分核销，同时支持正负金额混合场景
                                             if (isExactMatch)
                                             {
                                                 // 场景：实付金额与总净额完全匹配（例如：应收6120元，应付3018元，实收3102元）
-                                                // 全额核销应收款单
+                                                // 全额核销应收款单，无论金额正负
                                                 amountToWriteOff = receivablePayable.LocalBalanceAmount;
                                             }
                                             else
                                             {
                                                 // 场景：实付金额小于总净额，需要按FIFO顺序部分核销
-                                                // 计算可用收取金额：使用绝对值确保为正数
-                                                decimal availablePayment = Math.Abs(ARAPTotalPaidAmount);
-                                                
-                                                // 计算本次核销金额：取应收款单余额和可用收取金额中的较小值
-                                                amountToWriteOff = Math.Min(receivablePayable.LocalBalanceAmount, availablePayment);
-                                                
-                                                // 安全检查：确保核销金额不为负数
-                                                if (amountToWriteOff < 0)
-                                                {
-                                                    amountToWriteOff = 0;
-                                                }
+                                                // 针对正负金额混合的情况（如销售退货等），使用绝对值进行核销计算
+                                                decimal netPaymentAmount = ARAPTotalPaidAmount;
+                                                decimal writeOffBase = Math.Min(Math.Abs(receivablePayable.LocalBalanceAmount), Math.Abs(netPaymentAmount));
+
+                                                // 保持与应收款单相同的符号方向
+                                                // 确保核销金额的符号与原单据保持一致（正数表示应收，负数表示退货）
+                                                amountToWriteOff = receivablePayable.LocalBalanceAmount > 0 ? writeOffBase : -writeOffBase;
                                             }
                                         }
                                     }
@@ -495,7 +491,7 @@ namespace RUINORERP.Business
                                         {
                                             // 获取对账单总支付净额
                                             decimal netPaymentAmount = ARAPTotalPaidAmount;
-                                               
+
                                             if (statement.ReceivePaymentType == (int)ReceivePaymentType.收款)
                                             {
                                                 // 收款对账单场景 - 特别处理多行明细正负金额混合的情况
@@ -504,7 +500,7 @@ namespace RUINORERP.Business
                                                 // 然后根据应收款单的实际方向调整最终的核销金额
                                                 // 核心计算原则：确保金额比较的正确性，同时保留原始单据的符号方向
                                                 decimal writeOffBase = Math.Min(Math.Abs(receivablePayable.LocalBalanceAmount), Math.Abs(netPaymentAmount));
-                                                   
+
                                                 // 保持与应收款单相同的符号方向
                                                 // 确保核销金额的符号与原单据保持一致（正数表示应收，负数表示退货）
                                                 // 财务意义：保证账务处理的准确性，正确反映业务性质
@@ -532,10 +528,10 @@ namespace RUINORERP.Business
                                             // 对于付款对账单：
                                             // 1. 如果应付款单金额为正数（采购入库），正常核销
                                             // 2. 如果应付款单金额为负数（采购退货），需要特殊处理
-                                               
+
                                             // 获取对账单总支付净额（使用ARAPTotalPaidAmount，它已经是考虑了正负的净额）
                                             decimal netPaymentAmount = ARAPTotalPaidAmount;
-                                               
+
                                             // 根据付款单类型和应付款单方向调整核销逻辑
                                             if (statement.ReceivePaymentType == (int)ReceivePaymentType.付款)
                                             {
@@ -545,7 +541,7 @@ namespace RUINORERP.Business
                                                 // 然后根据应付款单的实际方向调整最终的核销金额
                                                 // 核心计算原则：确保金额比较的正确性，同时保留原始单据的符号方向
                                                 decimal writeOffBase = Math.Min(Math.Abs(receivablePayable.LocalBalanceAmount), Math.Abs(netPaymentAmount));
-                                                   
+
                                                 // 保持与应付款单相同的符号方向
                                                 // 确保核销金额的符号与原单据保持一致（正数表示应付，负数表示退货）
                                                 // 财务意义：保证账务处理的准确性，正确反映业务性质
@@ -559,13 +555,13 @@ namespace RUINORERP.Business
                                         }
                                     }
                                 }
-                                
+
                                 // 执行核销操作
                                 if (Math.Abs(amountToWriteOff) > 0)
                                 {
                                     // 使用绝对值进行金额更新，保持符号一致性
                                     decimal absAmountToWriteOff = Math.Abs(amountToWriteOff);
-                                    
+
                                     // 根据应收/应付款单的方向调整余额和已付金额
                                     if (receivablePayable.LocalBalanceAmount > 0)
                                     {
@@ -579,12 +575,12 @@ namespace RUINORERP.Business
                                         receivablePayable.LocalPaidAmount -= absAmountToWriteOff; // 减少已付金额
                                         receivablePayable.LocalBalanceAmount += absAmountToWriteOff; // 增加余额（向零靠近）
                                     }
-                                    
+
                                     // 确保精度，避免浮点误差导致的问题
                                     receivablePayable.LocalPaidAmount = Math.Round(receivablePayable.LocalPaidAmount, 2);
                                     receivablePayable.LocalBalanceAmount = Math.Round(receivablePayable.LocalBalanceAmount, 2);
-                                    
-                                    
+
+
                                     // 在混合对冲场景中，只有非对冲项才需要减少ARAPTotalPaidAmount
                                     // 说明：
                                     // 1. 混合模式：应收3102元 + 应付6120元 + 实付3018元的场景
@@ -595,10 +591,14 @@ namespace RUINORERP.Business
                                     //    - 每次核销都扣减ARAPTotalPaidAmount
                                     // 3. 单一模式：采购应付16200元 + 采购调价-400元 = 实付15800元
                                     //    - 按FIFO顺序核销，每次核销都扣减ARAPTotalPaidAmount
-                                    if (!hasMixedTypes || 
-                                        (statement.ReceivePaymentType == (int)ReceivePaymentType.付款 && 
+                                    
+                                    // 合并全额核销和非全额核销的扣减逻辑，简化代码结构
+                                    // 核心原则：在混合对冲模式下，只有非对冲项才扣减ARAPTotalPaidAmount
+                                    // 无论是否为全额核销场景，此原则都适用
+                                    if (!hasMixedTypes ||
+                                        (statement.ReceivePaymentType == (int)ReceivePaymentType.付款 &&
                                          receivablePayable.ReceivePaymentType == (int)ReceivePaymentType.付款) ||
-                                        (statement.ReceivePaymentType == (int)ReceivePaymentType.收款 && 
+                                        (statement.ReceivePaymentType == (int)ReceivePaymentType.收款 &&
                                          receivablePayable.ReceivePaymentType == (int)ReceivePaymentType.收款))
                                     {
                                         // 使用绝对值扣减ARAPTotalPaidAmount，确保正确处理正负金额
@@ -606,7 +606,7 @@ namespace RUINORERP.Business
                                         ARAPTotalPaidAmount -= absAmountToWriteOff;
                                     }
                                 }
-                  
+
                                 // 更新应收应付单状态
                                 // 使用绝对值判断，确保浮点计算精度问题不影响状态判断
                                 if (Math.Abs(receivablePayable.LocalBalanceAmount) < 0.01m)
@@ -626,10 +626,10 @@ namespace RUINORERP.Business
 
                                 await UpdateSourceDocumentStatus(receivablePayable, entity, saleOrderUpdateList, saleOutUpdateList, SaleOutReUpdateList, purOrderUpdateList, purEntryUpdateList, purEntryReUpdateList,
                                       priceAdjustmentUpdateList, otherExpenseUpdateList, expenseClaimUpdateList, RepairOrderUpdateList, FinishedGoodsInvUpdateList);
-                
+
 
                                 StatementDetailUpdateList.Add(StatementDetail);
-                                
+
                                 // 如果已全额核销所有金额，跳出循环
                                 // 使用绝对值判断，确保净额为0时能正确识别
                                 // 适用于所有场景：
@@ -643,33 +643,63 @@ namespace RUINORERP.Business
                                 if (Math.Abs(StatementPaidAmount) < 0.01m || Math.Abs(ARAPTotalPaidAmount) < 0.01m)
                                     break;
                             }
-                            
+
                             receivablePayableUpdateList.AddRange(receivablePayableList);
 
                             #endregion
 
+                            // 修正TotalPaidLocalAmount和TotalReceivedLocalAmount计算
+                            // 在混合对冲场景下，只计算实际支付部分，不包括对冲项
                             if (statement.ReceivePaymentType == (int)ReceivePaymentType.付款)
                             {
-                                statement.TotalPaidLocalAmount = statement.tb_FM_StatementDetails.Sum(c => c.WrittenOffLocalAmount);
+                                if (hasMixedTypes)
+                                {
+                                    // 混合对冲场景：只计算应付款单的核销金额（实际支付部分）
+                                    // 先按类型过滤，然后计算代数和，最后取绝对值
+                                    // 这样确保同一类型内的正负金额混合情况也能正确计算
+                                    statement.TotalPaidLocalAmount = Math.Abs(statement.tb_FM_StatementDetails
+                                        .Where(d => d.tb_fm_receivablepayable.ReceivePaymentType == (int)ReceivePaymentType.付款)
+                                        .Sum(c => c.WrittenOffLocalAmount));
+                                }
+                                else
+                                {
+                                    // 单一模式：计算所有明细的核销金额的代数和的绝对值
+                                    // 这确保了退款场景下负数金额会正确减少总支付金额
+                                    statement.TotalPaidLocalAmount = Math.Abs(statement.tb_FM_StatementDetails.Sum(c => c.WrittenOffLocalAmount));
+                                }
                             }
                             if (statement.ReceivePaymentType == (int)ReceivePaymentType.收款)
                             {
-                                statement.TotalReceivedLocalAmount = statement.tb_FM_StatementDetails.Sum(c => c.WrittenOffLocalAmount);
+                                if (hasMixedTypes)
+                                {
+                                    // 混合对冲场景：只计算应收款单的核销金额（实际收取部分）
+                                    // 先按类型过滤，然后计算代数和，最后取绝对值
+                                    // 这样确保同一类型内的正负金额混合情况（如收款退款）也能正确计算
+                                    statement.TotalReceivedLocalAmount = Math.Abs(statement.tb_FM_StatementDetails
+                                        .Where(d => d.tb_fm_receivablepayable.ReceivePaymentType == (int)ReceivePaymentType.收款)
+                                        .Sum(c => c.WrittenOffLocalAmount));
+                                }
+                                else
+                                {
+                                    // 单一模式：计算所有明细的核销金额的代数和的绝对值
+                                    // 这确保了退款场景下负数金额会正确减少总收取金额
+                                    statement.TotalReceivedLocalAmount = Math.Abs(statement.tb_FM_StatementDetails.Sum(c => c.WrittenOffLocalAmount));
+                                }
                             }
                             // 改进对账单结清逻辑，正确处理混合对冲和单一退货场景
                             // 1. 计算所有明细的已核销金额和总应核销金额
                             decimal totalWrittenOff = statement.tb_FM_StatementDetails.Sum(c => c.WrittenOffLocalAmount);
                             decimal totalPayable = statement.tb_FM_StatementDetails.Sum(c => Math.Abs(c.IncludedLocalAmount));
-                            
+
                             // 2. 计算对账单的净金额（考虑正负金额的代数和）
                             decimal netAmount = statement.tb_FM_StatementDetails.Sum(c => c.IncludedLocalAmount);
-                            
+
                             // 3. 检查是否所有明细的余额都已清零（全额核销）
                             bool allDetailsFullyWrittenOff = statement.tb_FM_StatementDetails.All(d => Math.Abs(d.RemainingLocalAmount) < 0.01m);
-                            
+
                             // 4. 检查是否符合全额核销条件
                             bool isFullySettled = false;
-                            
+
                             // 场景判断：
                             // - 混合对冲场景：应收3102元+应付6120元=实付3018元
                             // - 单一模式退货：采购应付16200元+采购调价-400元=实付15800元
@@ -687,7 +717,7 @@ namespace RUINORERP.Business
                                 // 常规场景：判断已核销金额是否等于总应核销金额
                                 isFullySettled = Math.Abs(totalWrittenOff - totalPayable) < 0.01m;
                             }
-                            
+
                             // 5. 执行全额核销处理
                             if (isFullySettled)
                             {
@@ -696,7 +726,7 @@ namespace RUINORERP.Business
                                 {
                                     detail.RemainingLocalAmount = 0; // 显式设置为0
                                     detail.ARAPWriteOffStatus = (int)ARAPWriteOffStatus.全额核销;
-                                    
+
                                     // 同时更新对应的应收应付单状态为全部支付
                                     if (detail.tb_fm_receivablepayable != null)
                                     {
@@ -711,44 +741,42 @@ namespace RUINORERP.Business
                             {
                                 statement.StatementStatus = (int)StatementStatus.部分结算;
                             }
-                            // 更精确的期末余额计算，考虑混合对冲场景和应收应付冲抵
+                            // 修正期末余额计算逻辑，确保正确反映实际结算情况
                             if (statement.ReceivePaymentType == (int)ReceivePaymentType.收款)
                             {
-                                // 应收账款逻辑：期末余额 = 期初余额 + 期间应收 - 期间应付 - 期间收款
-                                // 加入期间应付作为冲抵项，反映混合对冲场景下的实际余额
+                                // 应收账款逻辑：期末余额 = 期初余额 + 期间应收 - 期间收款
+                                // 在混合对冲场景下，期间应付已通过核销逻辑冲抵了应收，不需要重复扣减
                                 statement.ClosingBalanceLocalAmount = statement.OpeningBalanceLocalAmount
                                                                      + statement.TotalReceivableLocalAmount
-                                                                     - statement.TotalPayableLocalAmount // 加入应付冲抵项
                                                                      - statement.TotalReceivedLocalAmount;
                             }
                             else if (statement.ReceivePaymentType == (int)ReceivePaymentType.付款)
                             {
-                                // 应付账款逻辑：期末余额 = 期初余额 + 期间应付 - 期间应收 - 期间付款
-                                // 加入期间应收作为冲抵项，反映混合对冲场景下的实际余额
+                                // 应付账款逻辑：期末余额 = 期初余额 + 期间应付 - 期间付款
+                                // 在混合对冲场景下，期间应收已通过核销逻辑冲抵了应付，不需要重复扣减
                                 statement.ClosingBalanceLocalAmount = statement.OpeningBalanceLocalAmount
                                                                      + statement.TotalPayableLocalAmount
-                                                                     - statement.TotalReceivableLocalAmount // 加入应收冲抵项
                                                                      - statement.TotalPaidLocalAmount;
                             }
-                            
+
                             // 添加混合对冲场景的特殊处理
-                            bool hasMixedTypesForAudit = statement.tb_FM_StatementDetails.Any(sd => sd.tb_fm_receivablepayable.ReceivePaymentType == (int)ReceivePaymentType.收款) && 
+                            bool hasMixedTypesForAudit = statement.tb_FM_StatementDetails.Any(sd => sd.tb_fm_receivablepayable.ReceivePaymentType == (int)ReceivePaymentType.收款) &&
                                                 statement.tb_FM_StatementDetails.Any(sd => sd.tb_fm_receivablepayable.ReceivePaymentType == (int)ReceivePaymentType.付款);
-                            
+
                             if (hasMixedTypesForAudit)
                             {
                                 // 混合对冲场景：重新计算净核销金额和明细核销状态
                                 var receivableDetails = statement.tb_FM_StatementDetails
                                     .Where(sd => sd.tb_fm_receivablepayable.ReceivePaymentType == (int)ReceivePaymentType.收款)
                                     .ToList();
-                                    
+
                                 var payableDetails = statement.tb_FM_StatementDetails
                                     .Where(sd => sd.tb_fm_receivablepayable.ReceivePaymentType == (int)ReceivePaymentType.付款)
                                     .ToList();
-                                    
+
                                 decimal netReceivableAmount = receivableDetails.Sum(sd => sd.WrittenOffLocalAmount);
                                 decimal netPayableAmount = payableDetails.Sum(sd => sd.WrittenOffLocalAmount);
-                                
+
                                 // 强制将混合对冲场景下所有明细标记为全额核销
                                 // 业务逻辑：当应收和应付相互对冲且实付金额等于净额时，所有相关单据都应视为全额核销
                                 if (Math.Abs(StatementPaidAmount) < 0.01m) // 确认支付金额已全部使用
@@ -757,7 +785,7 @@ namespace RUINORERP.Business
                                     {
                                         detail.RemainingLocalAmount = 0;
                                         detail.ARAPWriteOffStatus = (int)ARAPWriteOffStatus.全额核销;
-                                        
+
                                         // 同时更新对应的应收应付单状态
                                         if (detail.tb_fm_receivablepayable != null)
                                         {
@@ -768,10 +796,10 @@ namespace RUINORERP.Business
                                     }
                                     statement.StatementStatus = (int)StatementStatus.已结清;
                                 }
-                                    
+
                                 // 记录混合对冲的日志信息
                                 FMAuditLogHelper fMAuditLog = _appContext.GetRequiredService<FMAuditLogHelper>();
-                                fMAuditLog.CreateAuditLog<tb_FM_Statement>($"混合对冲场景：应收核销{netReceivableAmount}，应付核销{netPayableAmount}，净核销{(netPayableAmount - netReceivableAmount)}", 
+                                fMAuditLog.CreateAuditLog<tb_FM_Statement>($"混合对冲场景：应收核销{netReceivableAmount}，应付核销{netPayableAmount}，净核销{(netPayableAmount - netReceivableAmount)}",
                                     statement as tb_FM_Statement);
                             }
 
@@ -838,7 +866,7 @@ namespace RUINORERP.Business
                                     entity.ReversedOriginalId = oldPayment.PaymentId;
                                     entity.IsReversed = true;
                                 }
-                            
+
 
                                 #endregion
 
@@ -865,7 +893,7 @@ namespace RUINORERP.Business
                             await UpdateSourceDocumentStatus(receivablePayable, entity, saleOrderUpdateList, saleOutUpdateList, SaleOutReUpdateList, purOrderUpdateList, purEntryUpdateList, purEntryReUpdateList,
                                      priceAdjustmentUpdateList, otherExpenseUpdateList, expenseClaimUpdateList, RepairOrderUpdateList, FinishedGoodsInvUpdateList);
 
-                          
+
                         }
 
                         receivablePayableUpdateList.AddRange(receivablePayableList);
@@ -944,7 +972,7 @@ namespace RUINORERP.Business
                                         entity.ReversedOriginalId = oldPayment.PaymentId;
                                         entity.IsReversed = true;
                                     }
-                               
+
 
                                     #endregion
 
@@ -1140,7 +1168,7 @@ namespace RUINORERP.Business
                                                                         && SaleOutIds.Contains(c.SourceBillId.Value))
                                                                         .ToListAsync();
 
-                                                      
+
                                                         //一切刚刚好时才能去核销
                                                         foreach (var receivablePayable in receivablePayables)
                                                         {
@@ -1278,6 +1306,8 @@ namespace RUINORERP.Business
 
 
                 }
+
+                #region 更新数据库
 
                 if (FinishedGoodsInvUpdateList.Any())
                 {
@@ -1444,8 +1474,6 @@ namespace RUINORERP.Business
                                 }).ExecuteCommandAsync();
                 }
 
-
-
                 //更新账户余额
                 if (entity.tb_fm_account == null && entity.Account_id.HasValue)
                 {
@@ -1465,6 +1493,9 @@ namespace RUINORERP.Business
 
                     await _unitOfWorkManage.GetDbClient().Updateable<tb_FM_Account>(entity.tb_fm_account).UpdateColumns(it => new { it.CurrentBalance }).ExecuteCommandAsync();
                 }
+
+                #endregion
+
                 #endregion
 
                 entity.ApprovalStatus = (int)ApprovalStatus.已审核;
@@ -1486,8 +1517,8 @@ namespace RUINORERP.Business
                     it.ReversedByPaymentId,
                     it.Paytype_ID
                 }).ExecuteCommandAsync();
+                    
 
- 
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
                 rmrs.Succeeded = true;
@@ -2563,7 +2594,7 @@ namespace RUINORERP.Business
                 {
                     paymentRecordDetail.Summary += entity.Summary;
                 }
-                
+
                 // 处理对账单生成收付款单的金额逻辑
                 // 根据对账单类型和余额进行处理：
                 // 1. 付款对账单：确保金额为正数

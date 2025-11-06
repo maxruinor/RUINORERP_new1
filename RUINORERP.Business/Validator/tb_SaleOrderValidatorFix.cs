@@ -55,7 +55,7 @@ namespace RUINORERP.Business
             RuleFor(x => x.TotalQty).GreaterThan(0).WithMessage("总数量：要大于零。");
             RuleFor(x => x.TotalAmount).GreaterThanOrEqualTo(0).WithMessage("总金额：要大于零。");
             RuleFor(x => x.TotalAmount).Equal(x => x.tb_SaleOrderDetails.Sum(c => (c.TransactionPrice) * c.Quantity) + x.FreightIncome).WithMessage("总金额，成交小计：要等于成交价*数量，包含运费。");
-            RuleFor(x => x.TotalCost).Equal(x => x.tb_SaleOrderDetails.Sum(c => (c.Cost + c.CustomizedCost) * c.Quantity)).WithMessage("总金额，成本小计：要等于（成本价+定制成本）*数量。");
+            RuleFor(x => x.TotalCost).Equal(x => x.tb_SaleOrderDetails.Sum(c => (c.Cost + c.CustomizedCost) * c.Quantity)).WithMessage($"总成本，成本小计：要等于（成本价+定制成本）*数量。");
 
             RuleFor(x => x.PlatformOrderNo).NotEmpty().When(c => c.IsFromPlatform).WithMessage("平台单时，平台订单号不能为空。");
             //RuleFor(x => x.IsFromPlatform).Equal(true).When(c => c.PlatformOrderNo.IsNotEmptyOrNull() && c.PlatformOrderNo.Length > 0).WithMessage("平台订单号不为空时，【平台单】必需勾选。");

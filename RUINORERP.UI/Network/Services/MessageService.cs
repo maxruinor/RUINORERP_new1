@@ -170,7 +170,7 @@ namespace RUINORERP.UI.Network.Services
         {
             try
             {
-                _logger?.LogInformation("直接显示弹窗消息 - ID: {MessageId}, 标题: {Title}", 
+                _logger?.LogDebug("直接显示弹窗消息 - ID: {MessageId}, 标题: {Title}", 
                     messageData?.Id, messageData?.Title);
                 
                 // 检查是否在UI线程

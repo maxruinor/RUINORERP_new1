@@ -80,7 +80,7 @@ namespace RUINORERP.UI.Network.Services
         {
             try
             {
-                _logger?.LogInformation("收到强制下线通知 - 管理员: {AdminUserId}, 原因: {Reason}", 
+                _logger?.LogDebug("收到强制下线通知 - 管理员: {AdminUserId}, 原因: {Reason}", 
                     request.AdminUserId, request.Reason);
 
                 // 这里应该执行实际的下线操作，例如：

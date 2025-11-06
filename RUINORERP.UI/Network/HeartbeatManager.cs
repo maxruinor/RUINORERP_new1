@@ -491,13 +491,13 @@ namespace RUINORERP.UI.Network
                 catch (TaskCanceledException)
                 {
                     // 任务被取消，正常退出
-                    _logger?.LogInformation("心跳任务收到取消信号，准备退出");
+                    _logger?.LogDebug("心跳任务收到取消信号，准备退出");
                     break;
                 }
                 catch (OperationCanceledException ex)
                 {
                     // 操作被取消，正常退出
-                    _logger?.LogInformation(ex, "心跳操作被取消");
+                    _logger?.LogDebug(ex, "心跳操作被取消");
                     break;
                 }
                 catch (Exception ex)
@@ -637,7 +637,7 @@ namespace RUINORERP.UI.Network
                 catch (OperationCanceledException ex)
                 {
                     // 操作被取消，正常退出
-                    _logger?.LogInformation(ex, "资源检查操作被取消");
+                    _logger?.LogDebug(ex, "资源检查操作被取消");
                     break;
                 }
                 catch (Exception ex)

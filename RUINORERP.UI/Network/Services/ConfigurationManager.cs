@@ -64,7 +64,7 @@ namespace RUINORERP.UI.Network.Services
         {
             try
             {
-                _logger.LogInformation($"保存配置: {configType}, 版本: {version}");
+                _logger.LogDebug($"保存配置: {configType}, 版本: {version}");
                 
                 string configPath = GetConfigFilePath(configType);
                 string versionPath = GetVersionFilePath(configType);
@@ -85,7 +85,7 @@ namespace RUINORERP.UI.Network.Services
                     await writer.FlushAsync();
                 }
                 
-                _logger.LogInformation($"配置 {configType} 保存成功");
+                _logger.LogDebug($"配置 {configType} 保存成功");
                 return true;
             }
             catch (Exception ex)
@@ -115,7 +115,7 @@ namespace RUINORERP.UI.Network.Services
                 using (var reader = new StreamReader(configPath, Encoding.UTF8))
                 {
                     string configData = await reader.ReadToEndAsync();
-                    _logger.LogInformation($"配置 {configType} 加载成功");
+                    _logger.LogDebug($"配置 {configType} 加载成功");
                     return configData;
                 }
             }
@@ -165,7 +165,7 @@ namespace RUINORERP.UI.Network.Services
         {
             try
             {
-                _logger.LogInformation($"重载配置: {configType}");
+                _logger.LogDebug($"重载配置: {configType}");
                 
                 // 读取配置文件
                 string configData = await LoadConfigurationAsync(configType);
@@ -179,7 +179,7 @@ namespace RUINORERP.UI.Network.Services
                 // 在这里可以触发配置变更事件，通知应用程序的其他部分重新加载配置
                 // 例如通过事件总线或依赖注入的观察者模式实现
                 
-                _logger.LogInformation($"配置 {configType} 重载成功");
+                _logger.LogDebug($"配置 {configType} 重载成功");
                 return true;
             }
             catch (Exception ex)
@@ -231,7 +231,7 @@ namespace RUINORERP.UI.Network.Services
                     File.Delete(versionPath);
                 }
                 
-                _logger.LogInformation($"配置 {configType} 删除成功");
+                _logger.LogDebug($"配置 {configType} 删除成功");
                 return true;
             }
             catch (Exception ex)

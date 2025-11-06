@@ -52,7 +52,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
             bool initialized = await base.InitializeAsync();
             if (initialized)
             {
-                _logger.LogInformation("消息命令处理器初始化成功");
+                _logger.LogDebug("消息命令处理器初始化成功");
             }
             return initialized;
         }
@@ -70,7 +70,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                 return;
             }
 
-            _logger.LogInformation($"收到消息命令: {(ushort)packet.CommandId}");
+            _logger.LogDebug($"收到消息命令: {(ushort)packet.CommandId}");
 
             try
             {
@@ -123,7 +123,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
             {
                 // 触发MessageService中的事件
                 _messageService.OnPopupMessageReceived(messageData);
-                _logger.LogInformation("弹窗消息已处理");
+                _logger.LogDebug("弹窗消息已处理");
             }
             catch (Exception ex)
             {
@@ -140,7 +140,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
             {
                 // 触发MessageService中的事件
                 _messageService.OnBusinessMessageReceived(messageData);
-                _logger.LogInformation("用户消息已处理");
+                _logger.LogDebug("用户消息已处理");
             }
             catch (Exception ex)
             {
@@ -157,7 +157,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
             {
                 // 触发MessageService中的事件
                 _messageService.OnDepartmentMessageReceived(messageData);
-                _logger.LogInformation("部门消息已处理");
+                _logger.LogDebug("部门消息已处理");
             }
             catch (Exception ex)
             {
@@ -174,7 +174,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
             {
                 // 触发MessageService中的事件
                 _messageService.OnBroadcastMessageReceived(messageData);
-                _logger.LogInformation("广播消息已处理");
+                _logger.LogDebug("广播消息已处理");
             }
             catch (Exception ex)
             {
@@ -193,7 +193,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                 messageData.MessageType = MessageType.System;
                 // 触发系统通知事件
                 _messageService.OnSystemNotificationReceived(messageData);
-                _logger.LogInformation("系统通知已处理");
+                _logger.LogDebug("系统通知已处理");
             }            
             catch (Exception ex)            
             {                

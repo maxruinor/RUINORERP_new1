@@ -2727,7 +2727,7 @@ namespace RUINORERP.UI.BaseForm
                                                     List<tb_FM_ReceivablePayable> receivablePayables = new List<tb_FM_ReceivablePayable>();
                                                     receivablePayables.Add(payable);
 
-                                                    tb_FM_PaymentRecord newPaymentRecord = paymentController.BuildPaymentRecord(receivablePayables);
+                                                    tb_FM_PaymentRecord newPaymentRecord = paymentController.BuildPaymentRecord(receivablePayables).Result;
                                                     newPaymentRecord.Remark = "平台单，已退款，货回仓审核时自动生成的收款单（负数）红字";
                                                     newPaymentRecord.PaymentStatus = (int)PaymentStatus.待审核;
                                                     if (!newPaymentRecord.Paytype_ID.HasValue && saleOutRe.Paytype_ID.HasValue)

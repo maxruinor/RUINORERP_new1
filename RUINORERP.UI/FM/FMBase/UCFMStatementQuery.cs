@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -206,7 +206,7 @@ namespace RUINORERP.UI.FM
             }
 
             var paymentController = MainForm.Instance.AppContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
-            tb_FM_PaymentRecord ReturnObject = paymentController.BuildPaymentRecord(RealList);
+            tb_FM_PaymentRecord ReturnObject = paymentController.BuildPaymentRecord(RealList).Result;
 
 
             tb_FM_PaymentRecord paymentRecord = ReturnObject;

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -1147,7 +1147,7 @@ namespace RUINORERP.UI.PSI.SAL
             .SingleAsync();
             tb_SaleOrderController<tb_SaleOrder> ctr = Startup.GetFromFac<tb_SaleOrderController<tb_SaleOrder>>();
             //tb_SaleOut saleOut = SaleOrderToSaleOut(item);
-            tb_SaleOut saleOut = ctr.SaleOrderToSaleOut(saleorder);
+            tb_SaleOut saleOut = ctr.SaleOrderToSaleOut(saleorder).Result;
             ActionStatus actionStatus = ActionStatus.无操作;
             BindData(saleOut, actionStatus);
             return saleOut;

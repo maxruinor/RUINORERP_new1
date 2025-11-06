@@ -245,7 +245,7 @@ namespace RUINORERP.UI.ASS
 
         }
 
-        private void toolStripButton维修领料_Click(object sender, EventArgs e)
+        private async void toolStripButton维修领料_Click(object sender, EventArgs e)
         {
             if (EditEntity == null)
             {
@@ -275,7 +275,7 @@ namespace RUINORERP.UI.ASS
                     }
 
                     var ctr = Startup.GetFromFac<tb_AS_RepairMaterialPickupController<tb_AS_RepairMaterialPickup>>();
-                    tb_AS_RepairMaterialPickup RepairOrder = ctr.ToRepairMaterialPickup(EditEntity);
+                    tb_AS_RepairMaterialPickup RepairOrder = ctr.ToRepairMaterialPickupAsync(EditEntity).Result;
                     MenuPowerHelper menuPowerHelper;
                     menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
                     tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == nameof(tb_AS_RepairMaterialPickup) && m.BIBaseForm == "BaseBillEditGeneric`2").FirstOrDefault();
@@ -1094,7 +1094,7 @@ namespace RUINORERP.UI.ASS
             if (AfterSaleApply != null)
             {
                 var ctr = Startup.GetFromFac<tb_AS_AfterSaleApplyController<tb_AS_AfterSaleApply>>();
-                tb_AS_RepairOrder RepairOrder = ctr.ToRepairOrder(AfterSaleApply);
+                tb_AS_RepairOrder RepairOrder =await ctr.ToRepairOrder(AfterSaleApply);
                 BindData(RepairOrder as tb_AS_RepairOrder);
             }
             else

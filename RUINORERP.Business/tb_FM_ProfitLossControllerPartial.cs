@@ -1,4 +1,4 @@
-﻿// **************************************
+// **************************************
 // 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
 // 版权：Copyright RUINOR
@@ -29,6 +29,8 @@ using RUINORERP.Global.EnumExt;
 using RUINORERP.Global;
 using RUINORERP.Business.StatusManagerService;
 using RUINORERP.Business.CommService;
+using RUINORERP.Business.Services;
+using System.Threading;
 
 namespace RUINORERP.Business
 {
@@ -219,7 +221,7 @@ namespace RUINORERP.Business
         }
 
 
-        public tb_FM_ProfitLoss BuildProfitLoss(tb_FM_ReceivablePayable entity)
+        public async Task<tb_FM_ProfitLoss> BuildProfitLoss(tb_FM_ReceivablePayable entity)
         {
             #region 创建损溢单费用单
 
@@ -254,20 +256,25 @@ namespace RUINORERP.Business
 
 
             //收不到，就是损失
+            IBizCodeService bizCodeService = _appContext.GetRequiredService<IBizCodeService>();
             if (entity.ReceivePaymentType == (int)ReceivePaymentType.收款)
             {
                 profitLoss.SourceBizType = (int)BizType.应收款单;
                 if (entity.LocalBalanceAmount > 0)
                 {
                     profitLoss.ProfitLossDirection = (int)ProfitLossDirection.损失;
-                    profitLoss.ProfitLossNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.损失确认单);
+                    // 确保异步调用正确执行
+                    profitLoss.ProfitLossNo = await Task.Run(async () => 
+                        await bizCodeService.GenerateBizBillNoAsync(BizType.损失确认单, CancellationToken.None));
                     profitLossDetail.IncomeExpenseDirection = (int)IncomeExpenseDirection.支出;
                 }
                 else
                 {
                     //如果收款是负数， 则是退款（不退就算收入）
                     profitLoss.ProfitLossDirection = (int)ProfitLossDirection.溢余;
-                    profitLoss.ProfitLossNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.溢余确认单);
+                    // 确保异步调用正确执行
+                    profitLoss.ProfitLossNo = await Task.Run(async () => 
+                        await bizCodeService.GenerateBizBillNoAsync(BizType.溢余确认单, CancellationToken.None));
                     profitLossDetail.ExpenseDescription += "的退款";
                     profitLossDetail.IncomeExpenseDirection = (int)IncomeExpenseDirection.收入;
                 }
@@ -279,14 +286,18 @@ namespace RUINORERP.Business
                 if (entity.LocalBalanceAmount > 0)
                 {
                     profitLoss.ProfitLossDirection = (int)ProfitLossDirection.溢余;
-                    profitLoss.ProfitLossNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.溢余确认单);
+                    // 确保异步调用正确执行
+                    profitLoss.ProfitLossNo = await Task.Run(async () => 
+                        await bizCodeService.GenerateBizBillNoAsync(BizType.溢余确认单, CancellationToken.None));
                     profitLossDetail.IncomeExpenseDirection = (int)IncomeExpenseDirection.收入;
                 }
                 else
                 {
                     //如果付款是负数， 则是供应商退款（不退就算损失）
                     profitLoss.ProfitLossDirection = (int)ProfitLossDirection.损失;
-                    profitLoss.ProfitLossNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.损失确认单);
+                    // 确保异步调用正确执行
+                    profitLoss.ProfitLossNo = await Task.Run(async () => 
+                        await bizCodeService.GenerateBizBillNoAsync(BizType.损失确认单, CancellationToken.None));
                     profitLossDetail.ExpenseDescription += "的退款";
                     profitLossDetail.IncomeExpenseDirection = (int)IncomeExpenseDirection.支出;
                 }
@@ -346,7 +357,7 @@ namespace RUINORERP.Business
             return profitLoss;
         }
 
-        public tb_FM_ProfitLoss BuildProfitLoss(tb_Stocktake entity)
+        public async Task<tb_FM_ProfitLoss> BuildProfitLoss(tb_Stocktake entity)
         {
 
             //一张盘点单中的明细 可能有多个产品。有些盘亏，有些盘盈。
@@ -414,15 +425,16 @@ namespace RUINORERP.Business
                 profitLoss.IsIncludeTax = true;
             }
             //最后根据总的情况来判断单据类型
+            IBizCodeService bizCodeService = _appContext.GetRequiredService<IBizCodeService>();
             if (profitLoss.TotalAmount < 0)
             {
                 profitLoss.ProfitLossDirection = (int)ProfitLossDirection.损失;
-                profitLoss.ProfitLossNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.损失确认单);
+                profitLoss.ProfitLossNo = await bizCodeService.GenerateBizBillNoAsync(BizType.损失确认单, CancellationToken.None);
             }
             else
             {
                 profitLoss.ProfitLossDirection = (int)ProfitLossDirection.溢余;
-                profitLoss.ProfitLossNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.溢余确认单);
+                profitLoss.ProfitLossNo = await bizCodeService.GenerateBizBillNoAsync(BizType.溢余确认单, CancellationToken.None);
             }
 
             profitLoss.DataStatus = (int)DataStatus.草稿;
@@ -432,7 +444,7 @@ namespace RUINORERP.Business
             return profitLoss;
         }
 
-        public tb_FM_ProfitLoss BuildProfitLoss(tb_ProdBorrowing entity)
+        public async Task<tb_FM_ProfitLoss> BuildProfitLoss(tb_ProdBorrowing entity)
         {
             #region 创建损溢单费用单
 
@@ -452,11 +464,11 @@ namespace RUINORERP.Business
             profitLoss.SourceBillId = entity.BorrowID;
 
             //收不到，就是损失
-
+            IBizCodeService bizCodeService = _appContext.GetRequiredService<IBizCodeService>();
             profitLoss.SourceBizType = (int)BizType.借出单;
 
             profitLoss.ProfitLossDirection = (int)ProfitLossDirection.损失;
-            profitLoss.ProfitLossNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.损失确认单);
+            profitLoss.ProfitLossNo = await bizCodeService.GenerateBizBillNoAsync(BizType.损失确认单, CancellationToken.None);
 
             profitLoss.PostDate = DateTime.Now;
             profitLoss.DepartmentID = entity.DepartmentID;

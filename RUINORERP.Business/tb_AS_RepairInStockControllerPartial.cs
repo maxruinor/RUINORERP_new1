@@ -1,4 +1,4 @@
-﻿
+
 // **************************************
 // 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
@@ -29,6 +29,8 @@ using RUINORERP.Business.CommService;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.Global;
 using RUINORERP.Business.BizMapperService;
+using RUINORERP.Business.Services;
+using System.Threading;
 
 namespace RUINORERP.Business
 {
@@ -41,7 +43,7 @@ namespace RUINORERP.Business
         /// 转为维修入库单
         /// </summary>
         /// <param name="RepairOrder"></param>
-        public tb_AS_RepairInStock ToRepairInStock(tb_AS_RepairOrder RepairOrder)
+        public async Task<tb_AS_RepairInStock> ToRepairInStock(tb_AS_RepairOrder RepairOrder)
         {
             tb_AS_RepairInStock entity = new tb_AS_RepairInStock();
             //转单
@@ -96,7 +98,8 @@ namespace RUINORERP.Business
                 entity.EntryDate = System.DateTime.Now;
                 BusinessHelper.Instance.InitEntity(entity);
 
-                entity.RepairOrderNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.维修工单);
+                IBizCodeService bizCodeService = _appContext.GetRequiredService<IBizCodeService>();
+                entity.RepairOrderNo = await bizCodeService.GenerateBizBillNoAsync(BizType.维修工单, CancellationToken.None);
                 entity.tb_as_repairorder = RepairOrder;
                 entity.TotalQty = NewDetails.Sum(c => c.Quantity);
 
@@ -491,7 +494,7 @@ namespace RUINORERP.Business
                     //}
                     //else if (entity.TotalQty < entity.tb_as_repairorder.tb_as_aftersaleapply.TotalConfirmedQuantity && entity.tb_as_repairorder.tb_AS_RepairInStocks.Sum(c => c.tb_AS_RepairInStockDetails.Sum(a => a.Quantity)) > 0)
                     //{
-                    //    entity.tb_as_repairorder.tb_as_aftersaleapply.ASProcessStatus = (int)ASProcessStatus.维修中; //部分也算是
+                    //    entity.tb_as_repairorder.tb_as_aftersaleapply.ASProcessStatus = (int)ASProcessStatus.维修中; //部分算是
                     //    await _unitOfWorkManage.GetDbClient().Updateable<tb_AS_AfterSaleApply>(entity.tb_as_repairorder.tb_as_aftersaleapply).UpdateColumns(it => new { it.ASProcessStatus }).ExecuteCommandAsync();
                     //}
 

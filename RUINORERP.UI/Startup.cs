@@ -515,7 +515,7 @@ namespace RUINORERP.UI
             builder.RegisterType<AutoComplete>()
                 .WithParameter((pi, c) => pi.ParameterType == typeof(SearchType), (pi, c) => SearchType.Document);
 
-            builder.RegisterType<BizCodeGenerator>();
+            //builder.RegisterType<BizCodeGenerator>();
             builder.RegisterType<BaseDataCacheAOP>();
 
             builder.RegisterType<Person>()
@@ -656,7 +656,7 @@ namespace RUINORERP.UI
 
             builder.RegisterType<AutoComplete>()
             .WithParameter((pi, c) => pi.ParameterType == typeof(SearchType), (pi, c) => SearchType.Document);
-            builder.RegisterType<BizCodeGenerator>(); // 注册拦截器
+           // builder.RegisterType<BizCodeGenerator>(); // 注册拦截器
                                                       // 注册依赖
             builder.RegisterType<BaseDataCacheAOP>(); // 注册拦截器
                                                       //builder.RegisterType<LogInterceptor>(); // 注册拦截器

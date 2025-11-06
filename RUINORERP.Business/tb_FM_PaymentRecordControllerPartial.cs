@@ -37,6 +37,8 @@ using RUINORERP.Business.CommService;
 using RUINORERP.Business.BizMapperService;
 using Castle.DynamicProxy.Generators.Emitters.SimpleAST;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
+using RUINORERP.Business.Services;
+using System.Threading;
 
 namespace RUINORERP.Business
 {
@@ -2161,7 +2163,7 @@ namespace RUINORERP.Business
         }
 
 
-        public tb_FM_PaymentRecord BuildPaymentRecord(tb_FM_ExpenseClaim entity)
+        public async Task<tb_FM_PaymentRecord> BuildPaymentRecord(tb_FM_ExpenseClaim entity)
         {
             //预收付款单 审核时 自动生成 收付款记录
 
@@ -2178,7 +2180,8 @@ namespace RUINORERP.Business
             paymentRecord.Modified_by = null;
 
             paymentRecord.ReceivePaymentType = (int)ReceivePaymentType.付款;
-            paymentRecord.PaymentNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.费用报销单);
+            IBizCodeService bizCodeService = _appContext.GetRequiredService<IBizCodeService>();
+            paymentRecord.PaymentNo = await bizCodeService.GenerateBizBillNoAsync(BizType.费用报销单);
 
             tb_FM_PaymentRecordDetail paymentRecordDetail = new tb_FM_PaymentRecordDetail();
             #region 明细 
@@ -2234,7 +2237,7 @@ namespace RUINORERP.Business
             return paymentRecord;
         }
 
-        public tb_FM_PaymentRecord BuildPaymentRecord(tb_FM_OtherExpense entity)
+        public async Task<tb_FM_PaymentRecord> BuildPaymentRecord(tb_FM_OtherExpense entity)
         {
             //其它费用收入支出 审核时 自动生成 收付款记录
             tb_FM_PaymentRecord paymentRecord = new tb_FM_PaymentRecord();
@@ -2249,15 +2252,16 @@ namespace RUINORERP.Business
             paymentRecord.Modified_at = null;
             paymentRecord.Modified_by = null;
             //0  支出  1为收入
+            IBizCodeService bizCodeService = _appContext.GetRequiredService<IBizCodeService>();
             if (entity.EXPOrINC == true)
             {
                 paymentRecord.ReceivePaymentType = (int)ReceivePaymentType.收款;
-                paymentRecord.PaymentNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.收款单);
+                paymentRecord.PaymentNo = await bizCodeService.GenerateBizBillNoAsync(BizType.收款单);
             }
             else
             {
                 paymentRecord.ReceivePaymentType = (int)ReceivePaymentType.付款;
-                paymentRecord.PaymentNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.付款单);
+                paymentRecord.PaymentNo =await bizCodeService.GenerateBizBillNoAsync(BizType.付款单);
             }
             tb_FM_PaymentRecordDetail paymentRecordDetail = new tb_FM_PaymentRecordDetail();
             #region 明细 
@@ -2315,13 +2319,7 @@ namespace RUINORERP.Business
             paymentRecord.SourceBillNos = string.Join(",", paymentRecord.tb_FM_PaymentRecordDetails.Select(t => t.SourceBillNo).ToArray());
 
             BusinessHelper.Instance.InitEntity(paymentRecord);
-            //long id = await _unitOfWorkManage.GetDbClient().Insertable<tb_FM_PaymentRecord>(paymentRecord).ExecuteReturnSnowflakeIdAsync();
-            //if (id > 0)
-            //{
-            //    paymentRecordDetail.PaymentId = id;
-            //    await _unitOfWorkManage.GetDbClient().Insertable<tb_FM_PaymentRecordDetail>(paymentRecordDetail).ExecuteReturnSnowflakeIdAsync();
-            //    paymentRecord.tb_FM_PaymentRecordDetails.Add(paymentRecordDetail);
-            //}
+
             return paymentRecord;
         }
 
@@ -2331,7 +2329,7 @@ namespace RUINORERP.Business
         /// <param name="entity">预收付表</param>
         /// <param name="isRefund">true 如果是退款时 金额为负，SettlementType=退款红字</param>
         /// <returns></returns>
-        public tb_FM_PaymentRecord BuildPaymentRecord(List<tb_FM_PreReceivedPayment> entities, bool isRefund)
+        public async Task<tb_FM_PaymentRecord> BuildPaymentRecord(List<tb_FM_PreReceivedPayment> entities, bool isRefund)
         {
             if (entities.Count == 0)
             {
@@ -2353,15 +2351,16 @@ namespace RUINORERP.Business
             paymentRecord.Modified_by = null;
             paymentRecord.ReceivePaymentType = entities[0].ReceivePaymentType;
             paymentRecord.Employee_ID = entities[0].Employee_ID;
+            IBizCodeService bizCodeService = _appContext.GetRequiredService<IBizCodeService>();
             if (entities[0].ReceivePaymentType == (int)ReceivePaymentType.收款)
             {
-                paymentRecord.PaymentNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.收款单);
+                paymentRecord.PaymentNo = await bizCodeService.GenerateBizBillNoAsync(BizType.收款单, CancellationToken.None);
                 //如果合并生成则只能取到第一个，一般只是收款时才可能有对方的付款的水单图片
                 paymentRecord.PaymentImagePath = entities[0].PaymentImagePath;
             }
             else
             {
-                paymentRecord.PaymentNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.付款单);
+                paymentRecord.PaymentNo = await bizCodeService.GenerateBizBillNoAsync(BizType.付款单, CancellationToken.None);
             }
 
             paymentRecord.tb_FM_PaymentRecordDetails = new List<tb_FM_PaymentRecordDetail>();
@@ -2438,7 +2437,7 @@ namespace RUINORERP.Business
         }
 
         // 生成收付款记录表
-        public tb_FM_PaymentRecord BuildPaymentRecord(List<tb_FM_ReceivablePayable> entities, tb_FM_PaymentRecord OriginalPaymentRecord = null)
+        public async Task<tb_FM_PaymentRecord> BuildPaymentRecord(List<tb_FM_ReceivablePayable> entities, tb_FM_PaymentRecord OriginalPaymentRecord = null)
         {
             //通过应收 自动生成 收付款记录
             //如果应收付款单中，已经为部分付款，或可能是从预收付款单中核销了部分。所以这里生成时需要取未核销金额的应收付金额
@@ -2505,9 +2504,10 @@ namespace RUINORERP.Business
             paymentRecord.CustomerVendor_ID = entities[0].CustomerVendor_ID;
             paymentRecord.PayeeAccountNo = entities[0].PayeeAccountNo;
             paymentRecord.tb_FM_PaymentRecordDetails = NewDetails;
+            IBizCodeService bizCodeService = _appContext.GetRequiredService<IBizCodeService>();
             if (entities[0].ReceivePaymentType == (int)ReceivePaymentType.收款)
             {
-                paymentRecord.PaymentNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.收款单);
+                paymentRecord.PaymentNo = await bizCodeService.GenerateBizBillNoAsync(BizType.收款单, CancellationToken.None);
                 if (paymentRecord.tb_FM_PaymentRecordDetails.Where(c => c.IsFromPlatform.HasValue && c.IsFromPlatform == true).ToList().Count == paymentRecord.tb_FM_PaymentRecordDetails.Count)
                 {
                     paymentRecord.IsFromPlatform = true;
@@ -2515,7 +2515,7 @@ namespace RUINORERP.Business
             }
             else
             {
-                paymentRecord.PaymentNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.付款单);
+                paymentRecord.PaymentNo = await bizCodeService.GenerateBizBillNoAsync(BizType.付款单, CancellationToken.None);
             }
             //在收款单明细中，不可以存在：一种应付下有两同的两个应收单。 否则这里会出错。
             var checkList = paymentRecord.tb_FM_PaymentRecordDetails.GroupBy(c => c.SourceBizType, c => c.SourceBilllId).ToList();
@@ -2554,7 +2554,7 @@ namespace RUINORERP.Business
         /// <param name="entities"></param>
         /// <returns></returns>
         /// <exception cref="Exception"></exception>
-        public tb_FM_PaymentRecord BuildPaymentRecord(List<tb_FM_Statement> entities)
+        public async Task<tb_FM_PaymentRecord> BuildPaymentRecord(List<tb_FM_Statement> entities)
         {
             //通过应收 自动生成 收付款记录
             //如果应收付款单中，已经为部分付款，或可能是从预收付款单中核销了部分。所以这里生成时需要取未核销金额的应收付金额
@@ -2634,9 +2634,10 @@ namespace RUINORERP.Business
             paymentRecord.ReceivePaymentType = entities[0].ReceivePaymentType;
 
             // 根据收付款类型生成对应的单据编号
+            IBizCodeService bizCodeService = _appContext.GetRequiredService<IBizCodeService>();
             if (entities[0].ReceivePaymentType == (int)ReceivePaymentType.收款)
             {
-                paymentRecord.PaymentNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.收款单);
+                paymentRecord.PaymentNo = await bizCodeService.GenerateBizBillNoAsync(BizType.收款单, CancellationToken.None);
                 if (paymentRecord.tb_FM_PaymentRecordDetails.Where(c => c.IsFromPlatform.HasValue && c.IsFromPlatform == true).ToList().Count == paymentRecord.tb_FM_PaymentRecordDetails.Count)
                 {
                     paymentRecord.IsFromPlatform = true;
@@ -2644,7 +2645,7 @@ namespace RUINORERP.Business
             }
             else
             {
-                paymentRecord.PaymentNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.付款单);
+                paymentRecord.PaymentNo = await bizCodeService.GenerateBizBillNoAsync(BizType.付款单, CancellationToken.None);
             }
             // 数据验证：检查是否存在同一业务下同一张单据重复分次收款的情况
             var checkList = paymentRecord.tb_FM_PaymentRecordDetails.GroupBy(c => new { c.SourceBizType, c.SourceBilllId }).ToList();

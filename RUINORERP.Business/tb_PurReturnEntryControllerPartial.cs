@@ -281,7 +281,7 @@ namespace RUINORERP.Business
                     {
                         #region 生成应付 ,这里的应付不从预付中抵扣了，只会去用这个蓝字应付去冲销退货时生成的红字应付
                         var ctrpayable = _appContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
-                        tb_FM_ReceivablePayable Payable = ctrpayable.BuildReceivablePayable(entity);
+                        tb_FM_ReceivablePayable Payable =await ctrpayable.BuildReceivablePayable(entity);
                         ReturnMainSubResults<tb_FM_ReceivablePayable> rmr = await ctrpayable.BaseSaveOrUpdateWithChild<tb_FM_ReceivablePayable>(Payable, false);
                         if (rmr.Succeeded)
                         {

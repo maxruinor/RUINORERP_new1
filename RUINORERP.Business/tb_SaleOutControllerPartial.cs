@@ -1,4 +1,4 @@
-﻿
+
 // **************************************
 // 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
@@ -36,6 +36,7 @@ using RUINORERP.Global.EnumExt;
 using Castle.Core.Resource;
 using SharpYaml.Tokens;
 using RUINORERP.Business.BizMapperService;
+using RUINORERP.Business.Services;
 
 
 namespace RUINORERP.Business
@@ -187,7 +188,8 @@ namespace RUINORERP.Business
                         entity.SaleOut_NO = saleout.SaleOutNo;
                         entity.IsFromPlatform = saleout.IsFromPlatform;
                     }
-                    entity.ReturnNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.销售退回单);
+                    IBizCodeService bizCodeService = _appContext.GetRequiredService<IBizCodeService>();
+                    entity.ReturnNo = await bizCodeService.GenerateBizBillNoAsync(BizType.销售退回单);
                     entity.tb_saleout = saleout;
                     entity.TotalQty = NewDetails.Sum(c => c.Quantity);
 
@@ -1258,7 +1260,7 @@ namespace RUINORERP.Business
         /// 转换为销售退库单
         /// </summary>
         /// <param name="saleout"></param>
-        public tb_SaleOutRe SaleOutToSaleOutRe(tb_SaleOut saleout)
+        public async Task<tb_SaleOutRe> SaleOutToSaleOutRe(tb_SaleOut saleout)
         {
             tb_SaleOutRe entity = new tb_SaleOutRe();
             //转单
@@ -1402,8 +1404,9 @@ namespace RUINORERP.Business
                     entity.SaleOut_NO = saleout.SaleOutNo;
                     entity.IsFromPlatform = saleout.IsFromPlatform;
                 }
-                entity.ReturnNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.销售退回单);
-
+                
+                IBizCodeService bizCodeService = _appContext.GetRequiredService<IBizCodeService>();
+                entity.ReturnNo = await bizCodeService.GenerateBizBillNoAsync(BizType.销售退回单);
                 entity.tb_saleout = saleout;
                 entity.TotalQty = NewDetails.Sum(c => c.Quantity);
 

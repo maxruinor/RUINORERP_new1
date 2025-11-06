@@ -785,7 +785,7 @@ namespace RUINORERP.UI.ASS
             if (AfterSaleApply != null)
             {
                 var ctr = Startup.GetFromFac<tb_AS_AfterSaleApplyController<tb_AS_AfterSaleApply>>();
-                tb_AS_AfterSaleDelivery SaleDelivery = ctr.ToAfterSaleDelivery(AfterSaleApply);
+                tb_AS_AfterSaleDelivery SaleDelivery = await ctr.ToAfterSaleDelivery(AfterSaleApply);
                 BindData(SaleDelivery, ActionStatus.无操作);
             }
             else

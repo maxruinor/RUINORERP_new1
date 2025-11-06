@@ -276,7 +276,7 @@ namespace RUINORERP.UI.FM
             }
 
             var paymentController = MainForm.Instance.AppContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
-            tb_FM_PaymentRecord PaymentRecord = paymentController.BuildPaymentRecord(RealList);
+            tb_FM_PaymentRecord PaymentRecord = paymentController.BuildPaymentRecord(RealList).Result;
 
             if (MessageBox.Show($"{PaymentType.ToString()}金额为:{PaymentRecord.TotalLocalAmount.ToString("#.0000")}元，确定吗？", "金额确认", MessageBoxButtons.YesNo, MessageBoxIcon.Asterisk) == DialogResult.No)
             {
@@ -361,7 +361,7 @@ namespace RUINORERP.UI.FM
 
             }
             var paymentController = MainForm.Instance.AppContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
-            tb_FM_PaymentRecord ReturnObject = paymentController.BuildPaymentRecord(RealList);
+            tb_FM_PaymentRecord ReturnObject = paymentController.BuildPaymentRecord(RealList).Result;
             tb_FM_PaymentRecord paymentRecord = ReturnObject;
             MenuPowerHelper menuPowerHelper;
             menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();

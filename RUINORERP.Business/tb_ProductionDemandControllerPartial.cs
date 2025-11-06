@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Text.RegularExpressions;
@@ -28,6 +28,8 @@ using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
 using RUINORERP.Business.CommService;
 using System.Windows.Forms;
 using RUINORERP.Business.BizMapperService;
+using RUINORERP.Business.Services;
+using System.Threading;
 
 namespace RUINORERP.Business
 {
@@ -1024,7 +1026,7 @@ namespace RUINORERP.Business
         /// <summary>
         /// 生成请购单草稿
         /// </summary>
-        public tb_BuyingRequisition GenerateBuyingRequisition(tb_ProductionDemand demand, List<tb_PurGoodsRecommendDetail> PurDetails)
+        public async Task<tb_BuyingRequisition> GenerateBuyingRequisition(tb_ProductionDemand demand, List<tb_PurGoodsRecommendDetail> PurDetails)
         {
             ReturnMainSubResults<tb_BuyingRequisition> rmr = new ReturnMainSubResults<tb_BuyingRequisition>();
 
@@ -1056,7 +1058,8 @@ namespace RUINORERP.Business
             //没有经验通过下面先不计算
 
             BaseController<tb_BuyingRequisition> ctrBuy = _appContext.GetRequiredServiceByName<BaseController<tb_BuyingRequisition>>(typeof(tb_BuyingRequisition).Name + "Controller");
-            BuyingRequisition.PuRequisitionNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.请购单);
+            IBizCodeService bizCodeService = _appContext.GetRequiredService<IBizCodeService>();
+            BuyingRequisition.PuRequisitionNo = await bizCodeService.GenerateBizBillNoAsync(BizType.请购单, CancellationToken.None);
             BuyingRequisition.RefBillID = demand.PDID;
             BuyingRequisition.RefBillNO = demand.PDNo;
             BuyingRequisition.RefBizType = (int)BizType.需求分析;
@@ -1178,7 +1181,8 @@ namespace RUINORERP.Business
             //人工成本 
             //ManufacturingOrder.LaborCost = MakingItem.l;
             // ManufacturingOrder.t = MakingItemBom.LaborCost;
-            ManufacturingOrder.MONO = BizCodeGenerator.Instance.GetBizBillNo(BizType.制令单);
+            IBizCodeService bizCodeService = _appContext.GetRequiredService<IBizCodeService>();
+            ManufacturingOrder.MONO = await bizCodeService.GenerateBizBillNoAsync(BizType.制令单, CancellationToken.None);
             ManufacturingOrder.PDID = demand.PDID;
 
             ManufacturingOrder.PDNO = demand.PDNo;

@@ -1,4 +1,4 @@
-﻿
+
 // **************************************
 // 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
@@ -37,6 +37,8 @@ using System.Collections;
 using RUINORERP.Business.BizMapperService;
 using ZXing;
 using RUINORERP.Business.Processor;
+using RUINORERP.Business.Services;
+using System.Threading;
 
 namespace RUINORERP.Business
 {
@@ -630,7 +632,8 @@ namespace RUINORERP.Business
             payable.BusinessDate = entity.RepairStartDate;
             payable.DocumentDate = entity.Created_at.Value;
 
-            payable.ARAPNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.应收款单);
+            IBizCodeService bizCodeService = _appContext.GetRequiredService<IBizCodeService>();
+            payable.ARAPNo = await bizCodeService.GenerateBizBillNoAsync(BizType.应收款单, CancellationToken.None);
 
             payable.Currency_ID = _appContext.BaseCurrency.Currency_ID;
             payable.ExchangeRate = 1;
@@ -765,7 +768,8 @@ namespace RUINORERP.Business
             }
 
             payable.ReceivePaymentType = (int)ReceivePaymentType.收款;
-            payable.ARAPNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.应收款单);
+            IBizCodeService bizCodeService = _appContext.GetRequiredService<IBizCodeService>();
+            payable.ARAPNo = await bizCodeService.GenerateBizBillNoAsync(BizType.应收款单, CancellationToken.None);
             payable.Currency_ID = entity.Currency_ID;
             payable.ExchangeRate = entity.ExchangeRate;
 
@@ -855,15 +859,16 @@ namespace RUINORERP.Business
             payable.Modified_by = null;
             payable.SourceBillNo = entity.AdjustNo;
             payable.SourceBillId = entity.AdjustId;
+            IBizCodeService bizCodeService = _appContext.GetRequiredService<IBizCodeService>();
             if (entity.ReceivePaymentType == (int)ReceivePaymentType.收款)
             {
                 payable.SourceBizType = (int)BizType.销售价格调整单;
-                payable.ARAPNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.应收款单);
+                payable.ARAPNo = await bizCodeService.GenerateBizBillNoAsync(BizType.应收款单, CancellationToken.None);
                 payable.Remark = $"销售出库单后【价格调整单】{entity.SourceBillNo} 的应收款";
             }
             else
             {
-                payable.ARAPNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.应付款单);
+                payable.ARAPNo = await bizCodeService.GenerateBizBillNoAsync(BizType.应付款单, CancellationToken.None);
                 payable.SourceBizType = (int)BizType.采购价格调整单;
                 payable.Remark = $"采购入库后【价格调整单】{entity.SourceBillNo} 的应付款";
             }
@@ -1015,7 +1020,7 @@ namespace RUINORERP.Business
 
                 //自动添加到损失费用单
                 var ctrProfitloss = _appContext.GetRequiredService<tb_FM_ProfitLossController<tb_FM_ProfitLoss>>();
-                tb_FM_ProfitLoss profitLoss = ctrProfitloss.BuildProfitLoss(receivablePayable);
+                tb_FM_ProfitLoss profitLoss = await ctrProfitloss.BuildProfitLoss(receivablePayable);
                 var rmr = await ctrProfitloss.BaseSaveOrUpdateWithChild<tb_FM_ProfitLoss>(profitLoss);
                 if (rmr.Succeeded)
                 {
@@ -2222,17 +2227,18 @@ namespace RUINORERP.Business
                 }
             }
             //佣金生成应付款单
+            IBizCodeService bizCodeService = _appContext.GetRequiredService<IBizCodeService>();
             if (IsProcessCommission)
             {
                 payable.ReceivePaymentType = (int)ReceivePaymentType.付款;
-                payable.ARAPNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.应付款单);
+                payable.ARAPNo = await bizCodeService.GenerateBizBillNoAsync(BizType.应付款单, CancellationToken.None);
                 payable.DueDate = null;
             }
             else
             {
                 //销售就是收款
                 payable.ReceivePaymentType = (int)ReceivePaymentType.收款;
-                payable.ARAPNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.应收款单);
+                payable.ARAPNo = await bizCodeService.GenerateBizBillNoAsync(BizType.应收款单, CancellationToken.None);
                 if (entity.tb_saleorder.Paytype_ID == _appContext.PaymentMethodOfPeriod.Paytype_ID)
                 {
                     var obj = MyCacheManager.Instance.GetEntity<tb_CustomerVendor>(entity.CustomerVendor_ID);
@@ -2413,8 +2419,9 @@ namespace RUINORERP.Business
             #endregion
 
             //采购就是付款
+            IBizCodeService bizCodeService = _appContext.GetRequiredService<IBizCodeService>();
             payable.ReceivePaymentType = (int)ReceivePaymentType.付款;
-            payable.ARAPNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.应付款单);
+            payable.ARAPNo = await bizCodeService.GenerateBizBillNoAsync(BizType.应付款单, CancellationToken.None);
             if (entity.Currency_ID.HasValue)
             {
                 payable.Currency_ID = entity.Currency_ID.Value;
@@ -2569,7 +2576,8 @@ namespace RUINORERP.Business
             payable.CustomerVendor_ID = entity.CustomerVendor_ID.Value;
 
             payable.ReceivePaymentType = (int)ReceivePaymentType.付款;
-            payable.ARAPNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.应付款单);
+            IBizCodeService bizCodeService = _appContext.GetRequiredService<IBizCodeService>();
+            payable.ARAPNo = await bizCodeService.GenerateBizBillNoAsync(BizType.应付款单, CancellationToken.None);
 
             payable.Currency_ID = _appContext.BaseCurrency.Currency_ID;
 
@@ -2665,7 +2673,7 @@ namespace RUINORERP.Business
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public tb_FM_ReceivablePayable BuildReceivablePayable(tb_PurReturnEntry entity)
+        public async Task<tb_FM_ReceivablePayable> BuildReceivablePayable(tb_PurReturnEntry entity)
         {
             //入库时，全部生成应付，账期的。就加上到期日
             //有付款过的。就去预付中抵扣，不够的金额及状态标识出来生成对账单
@@ -2689,8 +2697,9 @@ namespace RUINORERP.Business
             payable.DepartmentID = entity.DepartmentID;
 
             //采购就是付款
+            IBizCodeService bizCodeService = _appContext.GetRequiredService<IBizCodeService>();
             payable.ReceivePaymentType = (int)ReceivePaymentType.付款;
-            payable.ARAPNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.应付款单);
+            payable.ARAPNo = await bizCodeService.GenerateBizBillNoAsync(BizType.应付款单, CancellationToken.None);
 
             payable.Currency_ID = entity.Currency_ID;
 
@@ -2786,7 +2795,7 @@ namespace RUINORERP.Business
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public tb_FM_ReceivablePayable BuildReceivablePayable(tb_PurEntryRe entity)
+        public async Task<tb_FM_ReceivablePayable> BuildReceivablePayable(tb_PurEntryRe entity)
         {
             tb_FM_ReceivablePayable payable = new tb_FM_ReceivablePayable();
             payable = mapper.Map<tb_FM_ReceivablePayable>(entity);
@@ -2807,7 +2816,8 @@ namespace RUINORERP.Business
             payable.ReceivePaymentType = (int)ReceivePaymentType.付款;
             payable.BusinessDate = entity.ReturnDate;
             payable.DocumentDate = entity.Created_at.Value;
-            payable.ARAPNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.应付款单);
+            IBizCodeService bizCodeService = _appContext.GetRequiredService<IBizCodeService>();
+            payable.ARAPNo = await bizCodeService.GenerateBizBillNoAsync(BizType.应付款单, CancellationToken.None);
             if (entity.Currency_ID.HasValue)
             {
                 payable.Currency_ID = entity.Currency_ID.Value;

@@ -1,4 +1,4 @@
-﻿
+
 // **************************************
 // 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
@@ -33,6 +33,8 @@ using RUINORERP.Global.EnumExt;
 using System.Collections;
 using RUINORERP.Business.BizMapperService;
 using RUINORERP.Business.Cache;
+using RUINORERP.Business.Services;
+using System.Threading;
 
 namespace RUINORERP.Business
 {
@@ -319,7 +321,7 @@ namespace RUINORERP.Business
                         //正常来说。不能重复生成。即使退款也只会有一个对应订单的预收款单。 一个预收款单可以对应正负两个收款单。
                         // 生成预收款单前 检测
                         var ctrpay = _appContext.GetRequiredService<tb_FM_PreReceivedPaymentController<tb_FM_PreReceivedPayment>>();
-                        var PreReceivedPayment = ctrpay.BuildPreReceivedPayment(entity);
+                        var PreReceivedPayment = await ctrpay.BuildPreReceivedPaymentAsync(entity);
                         if (PreReceivedPayment.LocalPrepaidAmount > 0)
                         {
                             ReturnResults<tb_FM_PreReceivedPayment> rmpay = await ctrpay.SaveOrUpdate(PreReceivedPayment);
@@ -685,7 +687,7 @@ namespace RUINORERP.Business
                 //正常来说。不能重复生成。即使退款也只会有一个对应订单的预付款单。 一个预付款单可以对应正负两个收款单。
                 // 生成预付款单前 检测
                 var ctrpay = _appContext.GetRequiredService<tb_FM_PreReceivedPaymentController<tb_FM_PreReceivedPayment>>();
-                var PreReceivedPayment = ctrpay.BuildPreReceivedPayment(entity, PrepaidAmount);
+                var PreReceivedPayment = await ctrpay.BuildPreReceivedPaymentAsync(entity, PrepaidAmount);
                 if (PreReceivedPayment.LocalPrepaidAmount > 0)
                 {
                     ReturnResults<tb_FM_PreReceivedPayment> rmpay = await ctrpay.SaveOrUpdate(PreReceivedPayment);
@@ -746,7 +748,7 @@ namespace RUINORERP.Business
         /// 转换为采购入库单,注意一个订单可以多次转成入库单。
         /// </summary>
         /// <param name="order"></param>
-        public tb_PurEntry PurOrderTotb_PurEntry(tb_PurOrder order)
+        public async Task<tb_PurEntry> PurOrderTotb_PurEntry(tb_PurOrder order)
         {
             tb_PurEntry entity = new tb_PurEntry();
             //转单
@@ -882,7 +884,8 @@ namespace RUINORERP.Business
                     entity.CustomerVendor_ID = order.CustomerVendor_ID;
                     entity.PurOrder_NO = order.PurOrderNo;
                 }
-                entity.PurEntryNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.采购入库单);
+                IBizCodeService bizCodeService = _appContext.GetRequiredService<IBizCodeService>();
+                entity.PurEntryNo = await bizCodeService.GenerateBizBillNoAsync(BizType.采购入库单, CancellationToken.None);
                 //保存到数据库
                 BusinessHelper.Instance.InitEntity(entity);
             }

@@ -70,7 +70,7 @@ namespace RUINORERP.Business
                     //简化流程，不算债权关系，  
                     //更新财务模块 
                     var paymentController = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
-                    tb_FM_PaymentRecord paymentRecord = paymentController.BuildPaymentRecord(entity);
+                    tb_FM_PaymentRecord paymentRecord =await paymentController.BuildPaymentRecord(entity);
                     await paymentController.BaseSaveOrUpdateWithChild<tb_FM_PaymentRecord>(paymentRecord, false);
                     //等待审核
                 }

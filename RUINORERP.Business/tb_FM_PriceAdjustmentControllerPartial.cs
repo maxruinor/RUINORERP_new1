@@ -1,4 +1,4 @@
-﻿
+
 // **************************************
 // 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
@@ -33,6 +33,8 @@ using System.IO.IsolatedStorage;
 using StackExchange.Redis;
 using System.Windows.Forms;
 using System.Text;
+using RUINORERP.Business.Services;
+using System.Threading;
 
 namespace RUINORERP.Business
 {
@@ -435,7 +437,8 @@ namespace RUINORERP.Business
                     }
                     else
                     {
-                        priceAdjustment.AdjustNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.销售价格调整单);
+                        IBizCodeService bizCodeService = _appContext.GetRequiredService<IBizCodeService>();
+                        priceAdjustment.AdjustNo = await bizCodeService.GenerateBizBillNoAsync(BizType.销售价格调整单, CancellationToken.None);
                     }
 
                     priceAdjustment.AdjustDate = System.DateTime.Now;
@@ -529,7 +532,8 @@ namespace RUINORERP.Business
                     }
                     else
                     {
-                        priceAdjustment.AdjustNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.采购价格调整单);
+                        IBizCodeService bizCodeService = _appContext.GetRequiredService<IBizCodeService>();
+                        priceAdjustment.AdjustNo = await bizCodeService.GenerateBizBillNoAsync(BizType.采购价格调整单, CancellationToken.None);
                     }
                     priceAdjustment.AdjustDate = System.DateTime.Now;
                     priceAdjustment.ApprovalOpinions = "";

@@ -308,7 +308,7 @@ namespace RUINORERP.UI.Network.Services
 
                 if (tables.Count == 0)
                 {
-                    _log.LogInformation("没有找到类型为{0}且可缓存的表", tableType);
+                    _log.LogDebug("没有找到类型为{0}且可缓存的表", tableType);
                     return;
                 }
 
@@ -334,7 +334,7 @@ namespace RUINORERP.UI.Network.Services
                     await Task.WhenAll(validTasks);
                 }
 
-                _log.LogInformation("类型{0}表订阅完成: 成功={1}, 失败={2}",
+                _log.LogDebug("类型{0}表订阅完成: 成功={1}, 失败={2}",
                     tableType, tables.Count - failedTables.Count, failedTables.Count);
             }
             catch (Exception ex)
@@ -371,10 +371,10 @@ namespace RUINORERP.UI.Network.Services
             {
                 try
                 {
-                    _log.LogInformation($"重试订阅基础业务表，第{i}次尝试");
+                    _log.LogDebug($"重试订阅基础业务表，第{i}次尝试");
                     await SubscribeTablesByTypeAsync(TableType.Base);
                     await SubscribeTablesByTypeAsync(TableType.Business);
-                    _log.LogInformation("重试订阅基础业务表成功");
+                    _log.LogDebug("重试订阅基础业务表成功");
                     break;
                 }
                 catch (Exception ex)

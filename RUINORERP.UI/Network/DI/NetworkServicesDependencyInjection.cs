@@ -22,6 +22,7 @@ using RUINORERP.UI.Network.Interfaces;
 using RUINORERP.UI.IM;
 using RUINORERP.UI.Network.ClientCommandHandlers;
 using System.Collections.Generic;
+using RUINORERP.Business.Network;
 
 namespace RUINORERP.UI.Network.DI
 {
@@ -133,9 +134,11 @@ namespace RUINORERP.UI.Network.DI
             // 注册HeartbeatManager，移除对ClientCommunicationService的直接依赖
             builder.RegisterType<HeartbeatManager>().AsSelf().SingleInstance()
                 .WithParameter((pi, ctx) => pi.ParameterType == typeof(int) && pi.Name == "heartbeatIntervalMs",
-                              (pi, ctx) => 30000) // 默认30秒心跳间隔
+                               (pi, ctx) => 30000) // 默认30秒心跳间隔
                 .WithParameter((pi, ctx) => pi.ParameterType == typeof(int) && pi.Name == "heartbeatTimeoutMs",
-                              (pi, ctx) => 5000); // 默认5秒超时
+                               (pi, ctx) => 5000); // 默认5秒超时
+            
+     
 
             // 先注册一个 Lazy<ClientCommunicationService> 实例
             builder.Register(c => new Lazy<ClientCommunicationService>(() => c.Resolve<ClientCommunicationService>(), true))

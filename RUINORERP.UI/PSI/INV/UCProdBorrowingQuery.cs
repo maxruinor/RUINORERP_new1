@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -87,7 +87,7 @@ namespace RUINORERP.UI.PSI.INV
                         }
                     }
                     tb_ProdReturningController<tb_ProdReturning> ctr = Startup.GetFromFac<tb_ProdReturningController<tb_ProdReturning>>();
-                    tb_ProdReturning ProdReturning = ctr.BorrowToProdReturning(item);
+                    tb_ProdReturning ProdReturning = ctr.BorrowToProdReturning(item).Result;
 
                     MenuPowerHelper menuPowerHelper;
                     menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
@@ -114,7 +114,7 @@ namespace RUINORERP.UI.PSI.INV
                 if (item.DataStatus == (int)DataStatus.确认 && item.ApprovalStatus == (int)ApprovalStatus.已审核 && item.ApprovalResults.HasValue && item.ApprovalResults.Value)
                 {
                     var ctr = Startup.GetFromFac<tb_FM_ProfitLossController<tb_FM_ProfitLoss>>();
-                    tb_FM_ProfitLoss profitLoss = ctr.BuildProfitLoss(item);
+                    tb_FM_ProfitLoss profitLoss =await ctr.BuildProfitLoss(item);
 
                     MenuPowerHelper menuPowerHelper;
                     menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();

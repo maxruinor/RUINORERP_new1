@@ -1,4 +1,4 @@
-﻿
+
 // **************************************
 // 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
@@ -29,6 +29,7 @@ using RUINORERP.Global;
 using RUINORERP.Business.CommService;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.Business.BizMapperService;
+using RUINORERP.Business.Services;
 
 namespace RUINORERP.Business
 {
@@ -42,7 +43,7 @@ namespace RUINORERP.Business
         /// 转为维修领料单
         /// </summary>
         /// <param name="RepairOrder"></param>
-        public tb_AS_RepairMaterialPickup ToRepairMaterialPickup(tb_AS_RepairOrder RepairOrder)
+        public async Task<tb_AS_RepairMaterialPickup> ToRepairMaterialPickupAsync(tb_AS_RepairOrder RepairOrder)
         {
             tb_AS_RepairMaterialPickup entity = new tb_AS_RepairMaterialPickup();
             //转单
@@ -97,7 +98,8 @@ namespace RUINORERP.Business
 
                 entity.DeliveryDate = System.DateTime.Now;
                 BusinessHelper.Instance.InitEntity(entity);
-                entity.MaterialPickupNO = BizCodeGenerator.Instance.GetBizBillNo(BizType.维修领料单);
+                IBizCodeService bizCodeService = _appContext.GetRequiredService<IBizCodeService>();
+                entity.MaterialPickupNO = await bizCodeService.GenerateBizBillNoAsync(BizType.维修领料单);
                 entity.tb_as_repairorder = RepairOrder;
 
                 BusinessHelper.Instance.InitEntity(entity);

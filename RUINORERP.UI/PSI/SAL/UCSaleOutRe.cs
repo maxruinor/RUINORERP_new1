@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -163,7 +163,7 @@ namespace RUINORERP.UI.PSI.SAL
                                         return;
                                     }
                                     //生成
-                                    var newPaymentRecord = paymentController.BuildPaymentRecord(new List<tb_FM_ReceivablePayable> { receivablePayable });
+                                    var newPaymentRecord =await paymentController.BuildPaymentRecord(new List<tb_FM_ReceivablePayable> { receivablePayable });
                                     if (newPaymentRecord.TotalForeignAmount == 0 && newPaymentRecord.TotalLocalAmount == 0)
                                     {
                                         MessageBox.Show("平台订单，在【平台退款】时自动生成的【收款单】（负数）金额为零。请检查是否重复操作。实际已经【退款】。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -543,7 +543,7 @@ namespace RUINORERP.UI.PSI.SAL
                 //如果是销售订单引入变化则加载明细及相关数据
                 if ((entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改) && entity.SaleOut_MainID.HasValue && entity.SaleOut_MainID.Value > 0 && s2.PropertyName == entity.GetPropertyName<tb_SaleOutRe>(c => c.SaleOut_MainID))
                 {
-                    LoadSaleOutBillData(entity.SaleOut_MainID);
+                    _ = LoadSaleOutBillDataAsync(entity.SaleOut_MainID);
                 }
 
                 if (entity.CustomerVendor_ID > 0 && s2.PropertyName == entity.GetPropertyName<tb_SaleOrder>(c => c.CustomerVendor_ID))
@@ -1192,7 +1192,7 @@ namespace RUINORERP.UI.PSI.SAL
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private async Task LoadSaleOutBillData(long? saleoutid)
+        private async Task LoadSaleOutBillDataAsync(long? saleoutid)
         {
             //要加一个判断 值是否有变化
             //新增时才可以
@@ -1217,7 +1217,7 @@ namespace RUINORERP.UI.PSI.SAL
                 }
 
                 tb_SaleOutController<tb_SaleOut> ctr = Startup.GetFromFac<tb_SaleOutController<tb_SaleOut>>();
-                tb_SaleOutRe saleOutre = ctr.SaleOutToSaleOutRe(saleout);
+                tb_SaleOutRe saleOutre = await ctr.SaleOutToSaleOutRe(saleout);
 
                 BindData(saleOutre as tb_SaleOutRe);
             }

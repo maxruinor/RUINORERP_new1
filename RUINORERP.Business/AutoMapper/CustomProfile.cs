@@ -32,7 +32,13 @@ namespace RUINORERP.Business.AutoMapper
 
             //加工费用的应付款单
             CreateMap<tb_FinishedGoodsInv, tb_FM_ReceivablePayable>();
-            CreateMap<tb_FinishedGoodsInvDetail, tb_FM_ReceivablePayableDetail>();
+            CreateMap<tb_FinishedGoodsInvDetail, tb_FM_ReceivablePayableDetail>()
+           .ForMember(a => a.UnitPrice, o => o.MapFrom(d => d.ManuFee))
+          .ForMember(a => a.Quantity, o => o.MapFrom(d => d.Qty))
+          .ForMember(a => a.ProdDetailID, o => o.MapFrom(d => d.ProdDetailID))
+          .ForMember(a => a.SourceItemRowID, o => o.MapFrom(d => d.Sub_ID))
+          .ForMember(a => a.property, o => o.MapFrom(d => d.property))
+          .ForMember(a => a.Summary, o => o.MapFrom(d => d.Summary));
 
             CreateMap<tb_FM_ReceivablePayable, tb_FM_StatementDetail>()
             .ForMember(a => a.IncludedForeignAmount, o => o.MapFrom(d => d.TotalForeignPayableAmount))

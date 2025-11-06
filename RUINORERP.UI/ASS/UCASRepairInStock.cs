@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -599,7 +599,7 @@ namespace RUINORERP.UI.ASS
             if (RepairOrder != null)
             {
                 var ctr = Startup.GetFromFac<tb_AS_RepairInStockController<tb_AS_RepairInStock>>();
-                tb_AS_RepairInStock RepairInStock = ctr.ToRepairInStock(RepairOrder);
+                tb_AS_RepairInStock RepairInStock = ctr.ToRepairInStock(RepairOrder).Result;
                 BindData(RepairInStock as tb_AS_RepairInStock);
             }
             else

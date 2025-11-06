@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Text.RegularExpressions;
@@ -26,6 +26,8 @@ using System.Windows.Forms;
 using RUINORERP.Global.EnumExt;
 using System.Collections;
 using RUINORERP.Business.BizMapperService;
+using RUINORERP.Business.Services;
+using System.Threading;
 
 namespace RUINORERP.Business
 {
@@ -208,7 +210,7 @@ namespace RUINORERP.Business
                         //正常来说。不能重复生成。即使退款也只会有一个对应订单的预收款单。 一个预收款单可以对应正负两个收款单。
                         // 生成预收款单前 检测
                         var ctrpay = _appContext.GetRequiredService<tb_FM_PreReceivedPaymentController<tb_FM_PreReceivedPayment>>();
-                        var PreReceivedPayment = ctrpay.BuildPreReceivedPayment(entity);
+                        var PreReceivedPayment = await ctrpay.BuildPreReceivedPaymentAsync(entity);
                         if (PreReceivedPayment.LocalPrepaidAmount > 0)
                         {
                             ReturnResults<tb_FM_PreReceivedPayment> rmpay = await ctrpay.SaveOrUpdate(PreReceivedPayment);
@@ -371,7 +373,7 @@ namespace RUINORERP.Business
                 //正常来说。不能重复生成。即使退款也只会有一个对应订单的预收款单。 一个预收款单可以对应正负两个收款单。
                 // 生成预收款单前 检测
                 var ctrpay = _appContext.GetRequiredService<tb_FM_PreReceivedPaymentController<tb_FM_PreReceivedPayment>>();
-                var PreReceivedPayment = ctrpay.BuildPreReceivedPayment(entity, PrepaidAmount);
+                var PreReceivedPayment = await ctrpay.BuildPreReceivedPaymentAsync(entity, PrepaidAmount);
                 if (PreReceivedPayment.LocalPrepaidAmount > 0)
                 {
                     ReturnResults<tb_FM_PreReceivedPayment> rmpay = await ctrpay.SaveOrUpdate(PreReceivedPayment);
@@ -1138,7 +1140,7 @@ namespace RUINORERP.Business
         /// 转换为销售出库单
         /// </summary>
         /// <param name="saleorder"></param>
-        public tb_SaleOut SaleOrderToSaleOut(tb_SaleOrder saleorder)
+        public async Task<tb_SaleOut> SaleOrderToSaleOut(tb_SaleOrder saleorder)
         {
             tb_SaleOut entity = new tb_SaleOut();
             //转单
@@ -1305,7 +1307,8 @@ namespace RUINORERP.Business
                     entity.PlatformOrderNo = saleorder.PlatformOrderNo;
                     entity.IsFromPlatform = saleorder.IsFromPlatform;
                 }
-                entity.SaleOutNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.销售出库单);
+                IBizCodeService bizCodeService = _appContext.GetRequiredService<IBizCodeService>();
+                entity.SaleOutNo = await bizCodeService.GenerateBizBillNoAsync(BizType.销售出库单, CancellationToken.None);
                 //if (NewDetails.Count != details.Count)
                 //{
                 //    //已经出库过，第二次不包括 运费
@@ -1314,8 +1317,6 @@ namespace RUINORERP.Business
                 //    entity.TotalAmount = NewDetails.Sum(c => c.TransactionPrice * c.Quantity);
                 //    entity.TotalTaxAmount = NewDetails.Sum(c => c.SubtotalTaxAmount);
                 //    entity.TotalUntaxedAmount = NewDetails.Sum(c => c.SubtotalUntaxedAmount);
-
-
                 //}
                 entity.tb_saleorder = saleorder;
 
@@ -1468,7 +1469,7 @@ namespace RUINORERP.Business
                                         {
                                             var paymentController = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
                                             bool isRefund = true;
-                                            tb_FM_PaymentRecord paymentRecord = paymentController.BuildPaymentRecord(new List<tb_FM_PreReceivedPayment> { PrePayment }, isRefund);
+                                            tb_FM_PaymentRecord paymentRecord = await paymentController.BuildPaymentRecord(new List<tb_FM_PreReceivedPayment> { PrePayment }, isRefund);
                                             paymentRecord.Remark += "（作废）" + CancelReason;
                                             var rrs = await paymentController.BaseSaveOrUpdateWithChild<tb_FM_PaymentRecord>(paymentRecord, false);
                                             if (rrs.Succeeded)
@@ -1512,7 +1513,7 @@ namespace RUINORERP.Business
                                 {
                                     var paymentController = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
                                     bool isRefund = true;
-                                    tb_FM_PaymentRecord paymentRecord = paymentController.BuildPaymentRecord(new List<tb_FM_PreReceivedPayment> { PrePayment }, isRefund);
+                                    tb_FM_PaymentRecord paymentRecord = await paymentController.BuildPaymentRecord(new List<tb_FM_PreReceivedPayment> { PrePayment }, isRefund);
                                     paymentRecord.Remark += "（作废）" + CancelReason;
                                     var rrs = await paymentController.BaseSaveOrUpdateWithChild<tb_FM_PaymentRecord>(paymentRecord, false);
                                     if (rrs.Succeeded)

@@ -47,7 +47,7 @@ namespace RUINORERP.Business
         Year = 3
     }
 
-
+    /*
 
     /// <summary>
     /// 业务编号生成助手 如果生成的序列号会重复，可能单机上不会重复。多台同时操作。
@@ -454,7 +454,7 @@ namespace RUINORERP.Business
         }
     }
 
-
+    */
  
 
 }

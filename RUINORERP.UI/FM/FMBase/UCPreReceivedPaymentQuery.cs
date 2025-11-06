@@ -366,7 +366,7 @@ namespace RUINORERP.UI.FM
 
 
             var paymentController = MainForm.Instance.AppContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
-            tb_FM_PaymentRecord ReturnObject = paymentController.BuildPaymentRecord(RealList, false);
+            tb_FM_PaymentRecord ReturnObject = paymentController.BuildPaymentRecord(RealList, false).Result;
             tb_FM_PaymentRecord paymentRecord = ReturnObject;
             MenuPowerHelper menuPowerHelper;
             menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
@@ -468,7 +468,7 @@ namespace RUINORERP.UI.FM
             #region  转换为退款单再打开
             tb_FM_PaymentRecordController<tb_FM_PaymentRecord> paymentController = MainForm.Instance.AppContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
             bool isRefund = true;
-            tb_FM_PaymentRecord paymentRecord = paymentController.BuildPaymentRecord(RealList, isRefund);
+            tb_FM_PaymentRecord paymentRecord = paymentController.BuildPaymentRecord(RealList, isRefund).Result;
 
             MenuPowerHelper menuPowerHelper;
             menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();

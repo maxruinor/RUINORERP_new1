@@ -186,7 +186,7 @@ namespace RUINORERP.Business
                     {
                         #region 生成费用单
                         var ctrpayable = _appContext.GetRequiredService<tb_FM_ProfitLossController<tb_FM_ProfitLoss>>();
-                        tb_FM_ProfitLoss profitLoss = ctrpayable.BuildProfitLoss(entity);
+                        tb_FM_ProfitLoss profitLoss =await ctrpayable.BuildProfitLoss(entity);
                         ReturnMainSubResults<tb_FM_ProfitLoss> rmr = await ctrpayable.BaseSaveOrUpdateWithChild<tb_FM_ProfitLoss>(profitLoss);
                         if (rmr.Succeeded)
                         {
@@ -372,7 +372,7 @@ namespace RUINORERP.Business
                     {
                         #region 生成费用单
                         var ctrpayable = _appContext.GetRequiredService<tb_FM_ProfitLossController<tb_FM_ProfitLoss>>();
-                        tb_FM_ProfitLoss profitLoss = ctrpayable.BuildProfitLoss(entity);
+                        tb_FM_ProfitLoss profitLoss = await  ctrpayable.BuildProfitLoss(entity);
                         ReturnMainSubResults<tb_FM_ProfitLoss> rmr = await ctrpayable.BaseSaveOrUpdateWithChild<tb_FM_ProfitLoss>(profitLoss);
                         if (rmr.Succeeded)
                         {

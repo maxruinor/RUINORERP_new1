@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -200,7 +200,7 @@ namespace RUINORERP.UI.ASS
                     }
 
                     var ctr = Startup.GetFromFac<tb_AS_AfterSaleApplyController<tb_AS_AfterSaleApply>>();
-                    tb_AS_RepairOrder RepairOrder = ctr.ToRepairOrder(EditEntity);
+                    tb_AS_RepairOrder RepairOrder = ctr.ToRepairOrder(EditEntity).Result;
                     MenuPowerHelper menuPowerHelper;
                     menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
                     tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == nameof(tb_AS_RepairOrder) && m.BIBaseForm == "BaseBillEditGeneric`2").FirstOrDefault();

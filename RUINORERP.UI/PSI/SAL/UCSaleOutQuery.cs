@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -88,7 +88,7 @@ namespace RUINORERP.UI.PSI.SAL
                         }
                     }
                     tb_SaleOutController<tb_SaleOut> ctr = Startup.GetFromFac<tb_SaleOutController<tb_SaleOut>>();
-                    tb_SaleOutRe saleOutre = ctr.SaleOutToSaleOutRe(item);
+                    tb_SaleOutRe saleOutre = ctr.SaleOutToSaleOutRe(item).Result;
 
                     MenuPowerHelper menuPowerHelper;
                     menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();

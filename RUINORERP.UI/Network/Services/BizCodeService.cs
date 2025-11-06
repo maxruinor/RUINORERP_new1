@@ -13,6 +13,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.Global;
+using RUINORERP.Business.Services;
+using RUINORERP.IServices;
 
 namespace RUINORERP.UI.Network.Services
 {
@@ -22,7 +24,7 @@ namespace RUINORERP.UI.Network.Services
     /// 采用与UserLoginService相似的设计模式，确保统一的网络通信和异常处理
     /// 同时提供静态方法以便兼容旧的调用模式
     /// </summary>
-    public sealed class BizCodeService : IDisposable
+    public sealed class BizCodeService : IBizCodeService
     {
         private readonly ClientCommunicationService _communicationService;
         private readonly ILogger<BizCodeService> _logger;
@@ -56,12 +58,10 @@ namespace RUINORERP.UI.Network.Services
             var request = new BizCodeRequest { BizType = bizType };
             var response = await SendBizCodeCommandAsync(
                 BizCodeCommands.GenerateBizBillNo, request, ct);
-
             if (response.IsSuccess && !string.IsNullOrEmpty(response.GeneratedCode))
             {
                 return response.GeneratedCode;
             }
-
             throw new Exception(response.ErrorMessage ?? "生成业务单据编号失败");
         }
 

@@ -34,6 +34,7 @@ using OfficeOpenXml.Export.ToDataTable;
 using RUINORERP.Business.CommService;
 using System.Windows.Forms;
 using RUINORERP.Business.BizMapperService;
+using RUINORERP.Business.Services;
 
 namespace RUINORERP.Business
 {
@@ -274,7 +275,7 @@ namespace RUINORERP.Business
                 entity.ApprovalResults = true;
 
                 //下面的自动审核会修改PrePaymentStatus状态。所以已经生效生赋值。后面 可能是审核后变为等待核销
-                tb_FM_PaymentRecord paymentRecord = paymentController.BuildPaymentRecord(new List<tb_FM_PreReceivedPayment> { entity }, false);
+                tb_FM_PaymentRecord paymentRecord = await paymentController.BuildPaymentRecord(new List<tb_FM_PreReceivedPayment> { entity }, false);
                 var rrs = await paymentController.BaseSaveOrUpdateWithChild<tb_FM_PaymentRecord>(paymentRecord, false);
                 if (rrs.Succeeded)
                 {
@@ -444,7 +445,7 @@ namespace RUINORERP.Business
         /// <param name="entity"></param>
         ///<param name="PrepaidAmount">手动再次预付款时的金额，</param>
         /// <returns></returns>
-        public tb_FM_PreReceivedPayment BuildPreReceivedPayment(tb_SaleOrder entity, decimal PrepaidAmount = 0)
+        public async Task<tb_FM_PreReceivedPayment> BuildPreReceivedPaymentAsync(tb_SaleOrder entity, decimal PrepaidAmount = 0)
         {
 
             // 外币相关处理 正确是 外币时一定要有汇率
@@ -457,6 +458,8 @@ namespace RUINORERP.Business
             }
 
             #region 生成预收款
+
+       
 
             tb_FM_PreReceivedPayment payable = new tb_FM_PreReceivedPayment();
             payable = mapper.Map<tb_FM_PreReceivedPayment>(entity);
@@ -476,7 +479,8 @@ namespace RUINORERP.Business
             }
             //销售就是收款
             payable.ReceivePaymentType = (int)ReceivePaymentType.收款;
-            payable.PreRPNO = BizCodeGenerator.Instance.GetBizBillNo(BizType.预收款单);
+            IBizCodeService bizCodeService = _appContext.GetRequiredService<IBizCodeService>();
+            payable.PreRPNO = await bizCodeService.GenerateBizBillNoAsync(BizType.预收款单);
             payable.SourceBizType = (int)BizType.销售订单;
             payable.SourceBillNo = entity.SOrderNo;
             payable.SourceBillId = entity.SOrder_ID;
@@ -542,7 +546,7 @@ namespace RUINORERP.Business
         /// <param name="entity"></param>
         /// <param name="SaveToDb"></param>
         /// <returns></returns>
-        public tb_FM_PreReceivedPayment BuildPreReceivedPayment(tb_PurOrder entity, decimal PrepaidAmount = 0)
+        public async Task<tb_FM_PreReceivedPayment> BuildPreReceivedPaymentAsync(tb_PurOrder entity, decimal PrepaidAmount = 0)
         {
 
             // 外币相关处理 正确是 外币时一定要有汇率
@@ -575,7 +579,8 @@ namespace RUINORERP.Business
             //采购就是付款
             payable.ReceivePaymentType = (int)ReceivePaymentType.付款;
 
-            payable.PreRPNO = BizCodeGenerator.Instance.GetBizBillNo(BizType.预付款单);
+            IBizCodeService bizCodeService = _appContext.GetRequiredService<IBizCodeService>();
+            payable.PreRPNO = await bizCodeService.GenerateBizBillNoAsync(BizType.预收款单);
             payable.SourceBizType = (int)BizType.采购订单;
             payable.SourceBillNo = entity.PurOrderNo;
             payable.SourceBillId = entity.PurOrder_ID;

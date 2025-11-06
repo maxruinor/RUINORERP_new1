@@ -1,4 +1,4 @@
-﻿// **************************************
+// **************************************
 // 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
 // 版权：Copyright RUINOR
@@ -30,6 +30,7 @@ using RUINORERP.Business.StatusManagerService;
 using RUINORERP.Global;
 using RUINORERP.Business.BizMapperService;
 using System.Runtime.InteropServices.ComTypes;
+using RUINORERP.Business.Services;
 
 namespace RUINORERP.Business
 {
@@ -420,7 +421,8 @@ namespace RUINORERP.Business
                 CalculateTotalAmount(statement, details, receivePaymentType, statementType);
 
                 // 设置对账单基本信息
-                statement.StatementNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.对账单);
+                IBizCodeService bizCodeService = _appContext.GetRequiredService<IBizCodeService>();
+                statement.StatementNo = await bizCodeService.GenerateBizBillNoAsync(BizType.对账单);
                 statement.StartDate = startDate;
                 statement.EndDate = entities.Max(c => c.BusinessDate).Value;
 

@@ -49,6 +49,7 @@
     <Compile Remove="SaleOrderController.cs" />
     <Compile Remove="Security\Credentials.cs" />
     <Compile Remove="Security\CredentialValidator.cs" />
+    <Compile Remove="Services\IBizCodeService.cs" />
     <Compile Remove="tb_InventoryTransactionControllerPartial.cs" />
     <Compile Remove="tb_OpeningIinventoryController.cs" />
     <Compile Remove="tb_OpeningIinventory_detailController.cs" />

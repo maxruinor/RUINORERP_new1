@@ -1,4 +1,4 @@
-﻿
+
 // **************************************
 // 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
@@ -30,6 +30,7 @@ using RUINORERP.Global;
 using RUINORERP.Business.Security;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.Business.BizMapperService;
+using RUINORERP.Business.Services;
 
 namespace RUINORERP.Business
 {
@@ -43,7 +44,7 @@ namespace RUINORERP.Business
         /// 转换为售后交付单
         /// </summary>
         /// <param name="AfterSaleApply"></param>
-        public tb_AS_AfterSaleDelivery ToAfterSaleDelivery(tb_AS_AfterSaleApply AfterSaleApply)
+        public async Task<tb_AS_AfterSaleDelivery> ToAfterSaleDelivery(tb_AS_AfterSaleApply AfterSaleApply)
         {
             tb_AS_AfterSaleDelivery entity = new tb_AS_AfterSaleDelivery();
             //转单
@@ -116,7 +117,8 @@ namespace RUINORERP.Business
                 }
                 entity.DeliveryDate = System.DateTime.Now;
                 BusinessHelper.Instance.InitEntity(entity);
-                entity.ASDeliveryNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.售后交付单);
+                IBizCodeService bizCodeService = _appContext.GetRequiredService<IBizCodeService>();
+                entity.ASDeliveryNo =await bizCodeService.GenerateBizBillNoAsync(BizType.售后交付单);
                 entity.tb_as_aftersaleapply = AfterSaleApply;
                 entity.TotalDeliveryQty = NewDetails.Sum(c => c.Quantity);
 
@@ -132,7 +134,7 @@ namespace RUINORERP.Business
         /// 维修工单
         /// </summary>
         /// <param name="AfterSaleApply"></param>
-        public tb_AS_RepairOrder ToRepairOrder(tb_AS_AfterSaleApply AfterSaleApply)
+        public async Task<tb_AS_RepairOrder> ToRepairOrder(tb_AS_AfterSaleApply AfterSaleApply)
         {
             tb_AS_RepairOrder entity = new tb_AS_RepairOrder();
             //转单
@@ -187,7 +189,8 @@ namespace RUINORERP.Business
                 entity.RepairStartDate = System.DateTime.Now;
                 BusinessHelper.Instance.InitEntity(entity);
 
-                entity.RepairOrderNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.维修工单);
+                IBizCodeService bizCodeService = _appContext.GetRequiredService<IBizCodeService>();
+                entity.RepairOrderNo = await bizCodeService.GenerateBizBillNoAsync(BizType.维修工单);
                 entity.tb_as_aftersaleapply = AfterSaleApply;
                 entity.TotalQty = NewDetails.Sum(c => c.Quantity);
 

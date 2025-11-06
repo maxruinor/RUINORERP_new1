@@ -1,4 +1,4 @@
-﻿
+
 // **************************************
 // 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
@@ -32,6 +32,8 @@ using System.Collections;
 using static StackExchange.Redis.Role;
 using System.Text;
 using RUINORERP.Business.BizMapperService;
+using RUINORERP.Business.Services;
+using System.Threading;
 
 namespace RUINORERP.Business
 {
@@ -426,7 +428,7 @@ namespace RUINORERP.Business
         /// 转换为销售退库单
         /// </summary>
         /// <param name="prodBorrowing"></param>
-        public tb_ProdReturning BorrowToProdReturning(tb_ProdBorrowing prodBorrowing)
+        public  async Task<tb_ProdReturning> BorrowToProdReturning(tb_ProdBorrowing prodBorrowing)
         {
             tb_ProdReturning entity = new tb_ProdReturning();
             //转单
@@ -492,7 +494,8 @@ namespace RUINORERP.Business
                 entity.ActionStatus = ActionStatus.新增;
                 BusinessHelper.Instance.InitEntity(entity);
                 entity.CustomerVendor_ID = prodBorrowing.CustomerVendor_ID;
-                entity.ReturnNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.归还单);
+                IBizCodeService bizCodeService = _appContext.GetRequiredService<IBizCodeService>();
+                entity.ReturnNo = await bizCodeService.GenerateBizBillNoAsync(BizType.归还单, CancellationToken.None);
                 entity.tb_prodborrowing = prodBorrowing;
 
             }

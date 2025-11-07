@@ -4,10 +4,10 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：02/08/2025 16:32:13
+// 时间：11/07/2025 11:46:21
 // **************************************
 using System;
-﻿using SqlSugar;
+using SqlSugar;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 产品类别表 与行业相关的产品分类
     /// </summary>
     [Serializable()]
-    [Description("产品类别表")]
+    [Description("产品类别表 与行业相关的产品分类")]
     [SugarTable("tb_ProdCategories")]
     public partial class tb_ProdCategories: BaseEntity, ICloneable
     {
@@ -92,21 +92,20 @@ namespace RUINORERP.Model
             SetProperty(ref _Is_enabled, value);
                         }
         }
+
         private int? _CategoryLevel;
         /// <summary>
-        /// 层级
+        /// 
         /// </summary>
-        [AdvQueryAttribute(ColName = "CategoryLevel", ColDesc = "层级")]
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType = "Int32", ColumnName = "CategoryLevel", DecimalDigits = 0, IsNullable = true, ColumnDescription = "层级")]
+        [AdvQueryAttribute(ColName = "CategoryLevel",ColDesc = "")] 
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "CategoryLevel" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "" )]
         public int? CategoryLevel
-        {
-            get { return _CategoryLevel; }
-            set
-            {
-                SetProperty(ref _CategoryLevel, value);
-            }
+        { 
+            get{return _CategoryLevel;}
+            set{
+            SetProperty(ref _CategoryLevel, value);
+                        }
         }
-
 
         private int? _Sort;
         /// <summary>
@@ -121,8 +120,6 @@ namespace RUINORERP.Model
             SetProperty(ref _Sort, value);
                         }
         }
-
-
 
         private long? _Parent_id;
         /// <summary>
@@ -171,32 +168,25 @@ namespace RUINORERP.Model
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(Parent_id))]
-        public virtual tb_ProdCategories tb_prodcategories_parent { get; set; }
+        public virtual tb_ProdCategories tb_prodcategories { get; set; }
 
 
-        //[Browsable(false)]打印报表时的数据源会不显示
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_ProdCategories.Parent_id))]
-        public virtual List<tb_ProdCategories> tb_ProdCategorieses_parents { get; set; }
-        //tb_ProdCategories.Category_ID)
-        //Category_ID.FK_PRODCATEGORES_RE_PRODCATEGORES_PARENT)
-        //tb_ProdCategories.Parent_id)
 
-        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_Prod.Category_ID))]
         public virtual List<tb_Prod> tb_Prods { get; set; }
-        //tb_Prod.Category_ID)
-        //Category_ID.FK_TB_PROD_REFERENCE_TB_PRODC)
-        //tb_ProdCategories.Category_ID)
+
+
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_ProdCategories.Parent_id))]
+        public virtual List<tb_ProdCategories> tb_ProdCategorieses { get; set; }
 
 
         #endregion
 
 
-
+ 
 
 //如果为false,则不可以。
 private bool PK_FK_ID_Check()
@@ -212,6 +202,10 @@ return rs;
 
 
 
+
+
+       
+        
 
         public override object Clone()
         {

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：02/08/2025 16:32:17
+// 时间：11/06/2025 20:42:07
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -161,7 +161,7 @@ namespace RUINORERP.Model
         #endregion
 
 
-
+ 
 
 //如果为false,则不可以。
 private bool PK_FK_ID_Check()
@@ -172,6 +172,11 @@ return rs;
 
 
 
+
+
+
+       
+        
 
         public override object Clone()
         {

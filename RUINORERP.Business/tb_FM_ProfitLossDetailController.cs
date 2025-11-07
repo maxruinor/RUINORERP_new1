@@ -1,9 +1,8 @@
 ﻿// **************************************
-// 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/22/2025 21:05:37
+// 时间：11/06/2025 19:43:11
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -24,6 +23,7 @@ using RUINORERP.Model.Context;
 using System.Linq;
 using RUINOR.Core;
 using RUINORERP.Common.Helper;
+using RUINORERP.Business.Cache;
 
 namespace RUINORERP.Business
 {
@@ -38,14 +38,16 @@ namespace RUINORERP.Business
         //public readonly IUnitOfWorkManage _unitOfWorkManage;
         //public readonly ILogger<BaseController<T>> _logger;
         public Itb_FM_ProfitLossDetailServices _tb_FM_ProfitLossDetailServices { get; set; }
+        private readonly EventDrivenCacheManager _eventDrivenCacheManager; 
        // private readonly ApplicationContext _appContext;
        
-        public tb_FM_ProfitLossDetailController(ILogger<tb_FM_ProfitLossDetailController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_FM_ProfitLossDetailServices tb_FM_ProfitLossDetailServices , ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
+        public tb_FM_ProfitLossDetailController(ILogger<tb_FM_ProfitLossDetailController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_FM_ProfitLossDetailServices tb_FM_ProfitLossDetailServices ,EventDrivenCacheManager eventDrivenCacheManager, ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
         {
             _logger = logger;
            _unitOfWorkManage = unitOfWorkManage;
            _tb_FM_ProfitLossDetailServices = tb_FM_ProfitLossDetailServices;
-            _appContext = appContext;
+           _appContext = appContext;
+           _eventDrivenCacheManager = eventDrivenCacheManager;
         }
       
         
@@ -88,14 +90,14 @@ namespace RUINORERP.Business
                     bool rs = await _tb_FM_ProfitLossDetailServices.Update(entity);
                     if (rs)
                     {
-                        MyCacheManager.Instance.UpdateEntityList<tb_FM_ProfitLossDetail>(entity);
+                        _eventDrivenCacheManager.UpdateEntity<tb_FM_ProfitLossDetail>(entity);
                     }
                     Returnobj = entity;
                 }
                 else
                 {
                     Returnobj = await _tb_FM_ProfitLossDetailServices.AddReEntityAsync(entity);
-                    MyCacheManager.Instance.UpdateEntityList<tb_FM_ProfitLossDetail>(entity);
+                    _eventDrivenCacheManager.UpdateEntity<tb_FM_ProfitLossDetail>(entity);
                 }
 
                 rr.ReturnObject = Returnobj;
@@ -129,14 +131,14 @@ namespace RUINORERP.Business
                     bool rs = await _tb_FM_ProfitLossDetailServices.Update(entity);
                     if (rs)
                     {
-                        MyCacheManager.Instance.UpdateEntityList<tb_FM_ProfitLossDetail>(entity);
+                        _eventDrivenCacheManager.UpdateEntity<tb_FM_ProfitLossDetail>(entity);
                     }
                     Returnobj = entity as T;
                 }
                 else
                 {
                     Returnobj = await _tb_FM_ProfitLossDetailServices.AddReEntityAsync(entity) as T ;
-                    MyCacheManager.Instance.UpdateEntityList<tb_FM_ProfitLossDetail>(entity);
+                    _eventDrivenCacheManager.UpdateEntity<tb_FM_ProfitLossDetail>(entity);
                 }
 
                 rr.ReturnObject = Returnobj;
@@ -161,7 +163,7 @@ namespace RUINORERP.Business
             }
             if (list != null)
             {
-                MyCacheManager.Instance.UpdateEntityList<List<T>>(list);
+                _eventDrivenCacheManager.UpdateEntityList<T>(list);
              }
             return list;
         }
@@ -176,7 +178,7 @@ namespace RUINORERP.Business
             }
             if (list != null)
             {
-                MyCacheManager.Instance.UpdateEntityList<List<T>>(list);
+                _eventDrivenCacheManager.UpdateEntityList<T>(list);
              }
             return list;
         }
@@ -189,7 +191,7 @@ namespace RUINORERP.Business
             if (rs)
             {
                 ////生成时暂时只考虑了一个主键的情况
-                MyCacheManager.Instance.DeleteEntityList<tb_FM_ProfitLossDetail>(entity);
+                _eventDrivenCacheManager.DeleteEntity<tb_FM_ProfitLossDetail>(entity.PrimaryKeyID);
             }
             return rs;
         }
@@ -202,9 +204,7 @@ namespace RUINORERP.Business
             if (c>0)
             {
                 rs=true;
-                ////生成时暂时只考虑了一个主键的情况
-                 long[] result = entitys.Select(e => e.ProfitLossDetail_ID).ToArray();
-                MyCacheManager.Instance.DeleteEntityList<tb_FM_ProfitLossDetail>(result);
+                _eventDrivenCacheManager.DeleteEntityList<tb_FM_ProfitLossDetail>(entitys);
             }
             return rs;
         }
@@ -309,7 +309,7 @@ namespace RUINORERP.Business
             if (rs)
             {
                 //////生成时暂时只考虑了一个主键的情况
-                MyCacheManager.Instance.DeleteEntityList<T>(model);
+                 _eventDrivenCacheManager.DeleteEntity<T>(model);
             }
             return rs;
         }
@@ -320,7 +320,8 @@ namespace RUINORERP.Business
         public tb_FM_ProfitLossDetail AddReEntity(tb_FM_ProfitLossDetail entity)
         {
             tb_FM_ProfitLossDetail AddEntity =  _tb_FM_ProfitLossDetailServices.AddReEntity(entity);
-            MyCacheManager.Instance.UpdateEntityList<tb_FM_ProfitLossDetail>(AddEntity);
+     
+             _eventDrivenCacheManager.UpdateEntity<tb_FM_ProfitLossDetail>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
@@ -328,7 +329,7 @@ namespace RUINORERP.Business
          public async Task<tb_FM_ProfitLossDetail> AddReEntityAsync(tb_FM_ProfitLossDetail entity)
         {
             tb_FM_ProfitLossDetail AddEntity = await _tb_FM_ProfitLossDetailServices.AddReEntityAsync(entity);
-            MyCacheManager.Instance.UpdateEntityList<tb_FM_ProfitLossDetail>(AddEntity);
+            _eventDrivenCacheManager.UpdateEntity<tb_FM_ProfitLossDetail>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
@@ -338,7 +339,7 @@ namespace RUINORERP.Business
             long id = await _tb_FM_ProfitLossDetailServices.Add(entity);
             if(id>0)
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_FM_ProfitLossDetail>(entity);
+                 _eventDrivenCacheManager.UpdateEntity<tb_FM_ProfitLossDetail>(entity);
             }
             return id;
         }
@@ -348,7 +349,7 @@ namespace RUINORERP.Business
             List<long> ids = await _tb_FM_ProfitLossDetailServices.Add(infos);
             if(ids.Count>0)//成功的个数 这里缓存 对不对呢？
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_FM_ProfitLossDetail>(infos);
+                 _eventDrivenCacheManager.UpdateEntityList<tb_FM_ProfitLossDetail>(infos);
             }
             return ids;
         }
@@ -359,7 +360,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_FM_ProfitLossDetailServices.Delete(entity);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_FM_ProfitLossDetail>(entity);
+                _eventDrivenCacheManager.DeleteEntity<tb_FM_ProfitLossDetail>(entity);
                 
             }
             return rs;
@@ -370,7 +371,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_FM_ProfitLossDetailServices.Update(entity);
             if (rs)
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_FM_ProfitLossDetail>(entity);
+                 _eventDrivenCacheManager.DeleteEntity<tb_FM_ProfitLossDetail>(entity);
                 entity.ActionStatus = ActionStatus.无操作;
             }
             return rs;
@@ -381,7 +382,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_FM_ProfitLossDetailServices.DeleteById(id);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_FM_ProfitLossDetail>(id);
+               _eventDrivenCacheManager.DeleteEntity<tb_FM_ProfitLossDetail>(id);
             }
             return rs;
         }
@@ -391,7 +392,8 @@ namespace RUINORERP.Business
             bool rs = await _tb_FM_ProfitLossDetailServices.DeleteByIds(ids);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_FM_ProfitLossDetail>(ids);
+            
+                   _eventDrivenCacheManager.DeleteEntities<tb_FM_ProfitLossDetail>(ids.Cast<object>().ToArray());
             }
             return rs;
         }
@@ -403,7 +405,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_FM_ProfitLossDetail>(list);
+     
+             _eventDrivenCacheManager.UpdateEntityList<tb_FM_ProfitLossDetail>(list);
             return list;
         }
         
@@ -414,7 +417,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_FM_ProfitLossDetail>(list);
+    
+             _eventDrivenCacheManager.UpdateEntityList<tb_FM_ProfitLossDetail>(list);
             return list;
         }
         
@@ -425,7 +429,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_FM_ProfitLossDetail>(list);
+  
+             _eventDrivenCacheManager.UpdateEntityList<tb_FM_ProfitLossDetail>(list);
             return list;
         }
         
@@ -436,7 +441,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_FM_ProfitLossDetail>(list);
+ 
+             _eventDrivenCacheManager.UpdateEntityList<tb_FM_ProfitLossDetail>(list);
             return list;
         }
         
@@ -454,7 +460,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_FM_ProfitLossDetail>(list);
+   
+             _eventDrivenCacheManager.UpdateEntityList<tb_FM_ProfitLossDetail>(list);
             return list;
         }
         
@@ -476,7 +483,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_FM_ProfitLossDetail>(list);
+ 
+             _eventDrivenCacheManager.UpdateEntityList<tb_FM_ProfitLossDetail>(list);
             return list;
         }
 
@@ -497,7 +505,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_FM_ProfitLossDetail>(list);
+  
+             _eventDrivenCacheManager.UpdateEntityList<tb_FM_ProfitLossDetail>(list);
             return list;
         }
         
@@ -518,7 +527,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_FM_ProfitLossDetail>(list);
+     
+             _eventDrivenCacheManager.UpdateEntityList<tb_FM_ProfitLossDetail>(list);
             return list;
         }
         
@@ -557,7 +567,8 @@ namespace RUINORERP.Business
                 entity.HasChanged = false;
             }
 
-            MyCacheManager.Instance.UpdateEntityList<tb_FM_ProfitLossDetail>(entity);
+         
+             _eventDrivenCacheManager.UpdateEntity<tb_FM_ProfitLossDetail>(entity);
             return entity as T;
         }
         

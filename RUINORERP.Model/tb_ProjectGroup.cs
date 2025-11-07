@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/20/2025 16:08:16
+// 时间：11/06/2025 20:42:08
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -261,6 +261,14 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_FM_PaymentRecordDetail.ProjectGroup_ID))]
+        public virtual List<tb_FM_PaymentRecordDetail> tb_FM_PaymentRecordDetails { get; set; }
+        //tb_FM_PaymentRecordDetail.ProjectGroup_ID)
+        //ProjectGroup_ID.FK_FM_PAYMENTRECORDDETAIL_REF_PROJECTGROUP)
+        //tb_ProjectGroup.ProjectGroup_ID)
+
+        //[Browsable(false)]打印报表时的数据源会不显示
+        [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_OtherExpenseDetail.ProjectGroup_ID))]
         public virtual List<tb_FM_OtherExpenseDetail> tb_FM_OtherExpenseDetails { get; set; }
         //tb_FM_OtherExpenseDetail.ProjectGroup_ID)
@@ -277,10 +285,10 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_FM_ReceivablePayable.ProjectGroup_ID))]
-        public virtual List<tb_FM_ReceivablePayable> tb_FM_ReceivablePayables { get; set; }
-        //tb_FM_ReceivablePayable.ProjectGroup_ID)
-        //ProjectGroup_ID.FK_FM_ReceivablePayable_REF_TB_PROJECTGROUP)
+        [Navigate(NavigateType.OneToMany, nameof(tb_ProdBorrowing.ProjectGroup_ID))]
+        public virtual List<tb_ProdBorrowing> tb_ProdBorrowings { get; set; }
+        //tb_ProdBorrowing.ProjectGroup_ID)
+        //ProjectGroup_ID.FK_TB_PRODBORROWING_REF_PROJEECTGROUP)
         //tb_ProjectGroup.ProjectGroup_ID)
 
         //[Browsable(false)]打印报表时的数据源会不显示
@@ -289,22 +297,6 @@ namespace RUINORERP.Model
         public virtual List<tb_AS_RepairInStock> tb_AS_RepairInStocks { get; set; }
         //tb_AS_RepairInStock.ProjectGroup_ID)
         //ProjectGroup_ID.FK_AS_RepairInStock_REF_PROJECTGROUP)
-        //tb_ProjectGroup.ProjectGroup_ID)
-
-        //[Browsable(false)]打印报表时的数据源会不显示
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_FM_ProfitLoss.ProjectGroup_ID))]
-        public virtual List<tb_FM_ProfitLoss> tb_FM_ProfitLosses { get; set; }
-        //tb_FM_ProfitLoss.ProjectGroup_ID)
-        //ProjectGroup_ID.FK_TB_FM_PROFITLOSS_REF_TB_PROJECTGROUP)
-        //tb_ProjectGroup.ProjectGroup_ID)
-
-        //[Browsable(false)]打印报表时的数据源会不显示
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_FM_PaymentRecordDetail.ProjectGroup_ID))]
-        public virtual List<tb_FM_PaymentRecordDetail> tb_FM_PaymentRecordDetails { get; set; }
-        //tb_FM_PaymentRecordDetail.ProjectGroup_ID)
-        //ProjectGroup_ID.FK_FM_PAYMENTRECORDDETAIL_REF_PROJECTGROUP)
         //tb_ProjectGroup.ProjectGroup_ID)
 
         //[Browsable(false)]打印报表时的数据源会不显示
@@ -333,18 +325,18 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_ProjectGroupAccountMapper.ProjectGroup_ID))]
-        public virtual List<tb_ProjectGroupAccountMapper> tb_ProjectGroupAccountMappers { get; set; }
-        //tb_ProjectGroupAccountMapper.ProjectGroup_ID)
-        //ProjectGroup_ID.FK_PROJECTGROUPACCOUNTMAPPER_REF_PROJECTGROUP)
+        [Navigate(NavigateType.OneToMany, nameof(tb_FM_ProfitLoss.ProjectGroup_ID))]
+        public virtual List<tb_FM_ProfitLoss> tb_FM_ProfitLosses { get; set; }
+        //tb_FM_ProfitLoss.ProjectGroup_ID)
+        //ProjectGroup_ID.FK_TB_FM_PROFITLOSS_REF_TB_PROJECTGROUP)
         //tb_ProjectGroup.ProjectGroup_ID)
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_SaleOutRe.ProjectGroup_ID))]
-        public virtual List<tb_SaleOutRe> tb_SaleOutRes { get; set; }
-        //tb_SaleOutRe.ProjectGroup_ID)
-        //ProjectGroup_ID.FK_SALEOUTRE_REF_PROJECTGROUP)
+        [Navigate(NavigateType.OneToMany, nameof(tb_ProjectGroupAccountMapper.ProjectGroup_ID))]
+        public virtual List<tb_ProjectGroupAccountMapper> tb_ProjectGroupAccountMappers { get; set; }
+        //tb_ProjectGroupAccountMapper.ProjectGroup_ID)
+        //ProjectGroup_ID.FK_PROJECTGROUPACCOUNTMAPPER_REF_PROJECTGROUP)
         //tb_ProjectGroup.ProjectGroup_ID)
 
         //[Browsable(false)]打印报表时的数据源会不显示
@@ -357,18 +349,18 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_FM_PriceAdjustment.ProjectGroup_ID))]
-        public virtual List<tb_FM_PriceAdjustment> tb_FM_PriceAdjustments { get; set; }
-        //tb_FM_PriceAdjustment.ProjectGroup_ID)
-        //ProjectGroup_ID.FK_PRICEADJUSTMENT_REF_PROJECTGROUP)
-        //tb_ProjectGroup.ProjectGroup_ID)
-
-        //[Browsable(false)]打印报表时的数据源会不显示
-        [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_EOP_WaterStorage.ProjectGroup_ID))]
         public virtual List<tb_EOP_WaterStorage> tb_EOP_WaterStorages { get; set; }
         //tb_EOP_WaterStorage.ProjectGroup_ID)
         //ProjectGroup_ID.FK_TB_EOP_WATERSTORAGEREGISTER_REF_TB_PROJECTGROUP)
+        //tb_ProjectGroup.ProjectGroup_ID)
+
+        //[Browsable(false)]打印报表时的数据源会不显示
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_FM_PriceAdjustment.ProjectGroup_ID))]
+        public virtual List<tb_FM_PriceAdjustment> tb_FM_PriceAdjustments { get; set; }
+        //tb_FM_PriceAdjustment.ProjectGroup_ID)
+        //ProjectGroup_ID.FK_PRICEADJUSTMENT_REF_PROJECTGROUP)
         //tb_ProjectGroup.ProjectGroup_ID)
 
         //[Browsable(false)]打印报表时的数据源会不显示
@@ -383,7 +375,7 @@ namespace RUINORERP.Model
         #endregion
 
 
-
+ 
 
 //如果为false,则不可以。
 private bool PK_FK_ID_Check()

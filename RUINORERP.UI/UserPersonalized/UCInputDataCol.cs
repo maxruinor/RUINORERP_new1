@@ -81,7 +81,7 @@ namespace RUINORERP.UI.UserPersonalized
                         KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
                         if (queryField.FKTableName.IsNotEmptyOrNull())
                         {
-                            if (MyCacheManager.Instance.NewTableList.TryGetValue(queryField.SubQueryTargetType.Name, out pair))
+                            if (RUINORERP.Business.Cache.EntityCacheHelper.NewTableList.TryGetValue(queryField.SubQueryTargetType.Name, out pair))
                             {
                                 //关联要绑定的类型
                                 Type mytype = queryField.SubQueryTargetType;

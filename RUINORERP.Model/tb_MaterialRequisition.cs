@@ -4,10 +4,10 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：02/08/2025 16:32:05
+// 时间：11/07/2025 11:14:02
 // **************************************
 using System;
-﻿using SqlSugar;
+using SqlSugar;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 领料单(包括生产和托工)
     /// </summary>
     [Serializable()]
-    [Description("领料单")]
+    [Description("领料单(包括生产和托工)")]
     [SugarTable("tb_MaterialRequisition")]
     public partial class tb_MaterialRequisition: BaseEntity, ICloneable
     {
@@ -93,6 +93,20 @@ namespace RUINORERP.Model
                         }
         }
 
+        private long? _Location_ID;
+        /// <summary>
+        /// 经办人
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Location_ID",ColDesc = "经办人")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Location_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "经办人" )]
+        public long? Location_ID
+        { 
+            get{return _Location_ID;}
+            set{
+            SetProperty(ref _Location_ID, value);
+                        }
+        }
+
         private long _Employee_ID;
         /// <summary>
         /// 经办人
@@ -152,8 +166,6 @@ namespace RUINORERP.Model
             SetProperty(ref _MOID, value);
                         }
         }
-
- 
 
         private long? _ProjectGroup_ID;
         /// <summary>
@@ -493,17 +505,17 @@ namespace RUINORERP.Model
                         }
         }
 
-        private bool _Outgoing = false;
+        private bool _Outgoing= false;
         /// <summary>
         /// 外发加工
         /// </summary>
-        [AdvQueryAttribute(ColName = "Outgoing ",ColDesc = "外发加工")] 
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "Outgoing " ,IsNullable = false,ColumnDescription = "外发加工" )]
-        public bool Outgoing 
+        [AdvQueryAttribute(ColName = "Outgoing",ColDesc = "外发加工")] 
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "Outgoing" ,IsNullable = false,ColumnDescription = "外发加工" )]
+        public bool Outgoing
         { 
-            get{return _Outgoing ;}
+            get{return _Outgoing;}
             set{
-            SetProperty(ref _Outgoing , value);
+            SetProperty(ref _Outgoing, value);
                         }
         }
 
@@ -525,52 +537,41 @@ namespace RUINORERP.Model
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(ProjectGroup_ID))]
         public virtual tb_ProjectGroup tb_projectgroup { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(CustomerVendor_ID))]
         public virtual tb_CustomerVendor tb_customervendor { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(MOID))]
         public virtual tb_ManufacturingOrder tb_manufacturingorder { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(DepartmentID))]
         public virtual tb_Department tb_department { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(Employee_ID))]
         public virtual tb_Employee tb_employee { get; set; }
 
 
-        //[Browsable(false)]打印报表时的数据源会不显示
+
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_MaterialReturn.MR_ID))]
         public virtual List<tb_MaterialReturn> tb_MaterialReturns { get; set; }
-        //tb_MaterialReturn.MR_ID)
-        //MR_ID.FK_MATER_REF_MATERE)
-        //tb_MaterialRequisition.MR_ID)
 
-        //[Browsable(false)]打印报表时的数据源会不显示
+
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_MaterialRequisitionDetail.MR_ID))]
         public virtual List<tb_MaterialRequisitionDetail> tb_MaterialRequisitionDetails { get; set; }
-        //tb_MaterialRequisitionDetail.MR_ID)
-        //MR_ID.FK_TB_MATERM_REF_TB_MATERDETAIL)
-        //tb_MaterialRequisition.MR_ID)
 
 
         #endregion
 
 
-
+ 
 
 //如果为false,则不可以。
 private bool PK_FK_ID_Check()
@@ -584,6 +585,8 @@ return rs;
 
 
 
+       
+        
 
         public override object Clone()
         {

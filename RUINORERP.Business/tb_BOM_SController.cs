@@ -1,10 +1,8 @@
-﻿
-// **************************************
-// 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
+﻿// **************************************
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/14/2025 20:39:36
+// 时间：11/06/2025 19:42:59
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -25,13 +23,14 @@ using RUINORERP.Model.Context;
 using System.Linq;
 using RUINOR.Core;
 using RUINORERP.Common.Helper;
+using RUINORERP.Business.Cache;
 
 namespace RUINORERP.Business
 {
     /// <summary>
     /// 标准物料表BOM_BillOfMateria_S-要适当冗余? 生产是从0开始的。先有下级才有上级。
     /// </summary>
-    public partial class tb_BOM_SController<T> : BaseController<T> where T : class
+    public partial class tb_BOM_SController<T>:BaseController<T> where T : class
     {
         /// <summary>
         /// 本为私有修改为公有，暴露出来方便使用
@@ -39,28 +38,30 @@ namespace RUINORERP.Business
         //public readonly IUnitOfWorkManage _unitOfWorkManage;
         //public readonly ILogger<BaseController<T>> _logger;
         public Itb_BOM_SServices _tb_BOM_SServices { get; set; }
-        // private readonly ApplicationContext _appContext;
-
-        public tb_BOM_SController(ILogger<tb_BOM_SController<T>> logger, IUnitOfWorkManage unitOfWorkManage, tb_BOM_SServices tb_BOM_SServices, ApplicationContext appContext = null) : base(logger, unitOfWorkManage, appContext)
+        private readonly EventDrivenCacheManager _eventDrivenCacheManager; 
+       // private readonly ApplicationContext _appContext;
+       
+        public tb_BOM_SController(ILogger<tb_BOM_SController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_BOM_SServices tb_BOM_SServices ,EventDrivenCacheManager eventDrivenCacheManager, ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
         {
             _logger = logger;
-            _unitOfWorkManage = unitOfWorkManage;
-            _tb_BOM_SServices = tb_BOM_SServices;
-            _appContext = appContext;
+           _unitOfWorkManage = unitOfWorkManage;
+           _tb_BOM_SServices = tb_BOM_SServices;
+           _appContext = appContext;
+           _eventDrivenCacheManager = eventDrivenCacheManager;
         }
-
-
+      
+        
         public ValidationResult Validator(tb_BOM_S info)
         {
 
-            // tb_BOM_SValidator validator = new tb_BOM_SValidator();
-            tb_BOM_SValidator validator = _appContext.GetRequiredService<tb_BOM_SValidator>();
+           // tb_BOM_SValidator validator = new tb_BOM_SValidator();
+           tb_BOM_SValidator validator = _appContext.GetRequiredService<tb_BOM_SValidator>();
             ValidationResult results = validator.Validate(info);
             return results;
         }
-
+        
         #region 扩展方法
-
+        
         /// <summary>
         /// 某字段是否存在
         /// </summary>
@@ -70,8 +71,8 @@ namespace RUINORERP.Business
         {
             return await _unitOfWorkManage.GetDbClient().Queryable<T>().Where(exp).AnyAsync();
         }
-
-
+      
+        
         /// <summary>
         /// 雪花ID模式下的新增和修改
         /// </summary>
@@ -89,14 +90,14 @@ namespace RUINORERP.Business
                     bool rs = await _tb_BOM_SServices.Update(entity);
                     if (rs)
                     {
-                        MyCacheManager.Instance.UpdateEntityList<tb_BOM_S>(entity);
+                        _eventDrivenCacheManager.UpdateEntity<tb_BOM_S>(entity);
                     }
                     Returnobj = entity;
                 }
                 else
                 {
                     Returnobj = await _tb_BOM_SServices.AddReEntityAsync(entity);
-                    MyCacheManager.Instance.UpdateEntityList<tb_BOM_S>(entity);
+                    _eventDrivenCacheManager.UpdateEntity<tb_BOM_S>(entity);
                 }
 
                 rr.ReturnObject = Returnobj;
@@ -110,14 +111,14 @@ namespace RUINORERP.Business
             }
             return rr;
         }
-
-
+        
+        
         /// <summary>
         /// 雪花ID模式下的新增和修改
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public async override Task<ReturnResults<T>> BaseSaveOrUpdate(T model)
+        public async override Task<ReturnResults<T>>  BaseSaveOrUpdate(T model)
         {
             ReturnResults<T> rr = new ReturnResults<T>();
             tb_BOM_S entity = model as tb_BOM_S;
@@ -130,14 +131,14 @@ namespace RUINORERP.Business
                     bool rs = await _tb_BOM_SServices.Update(entity);
                     if (rs)
                     {
-                        MyCacheManager.Instance.UpdateEntityList<tb_BOM_S>(entity);
+                        _eventDrivenCacheManager.UpdateEntity<tb_BOM_S>(entity);
                     }
                     Returnobj = entity as T;
                 }
                 else
                 {
-                    Returnobj = await _tb_BOM_SServices.AddReEntityAsync(entity) as T;
-                    MyCacheManager.Instance.UpdateEntityList<tb_BOM_S>(entity);
+                    Returnobj = await _tb_BOM_SServices.AddReEntityAsync(entity) as T ;
+                    _eventDrivenCacheManager.UpdateEntity<tb_BOM_S>(entity);
                 }
 
                 rr.ReturnObject = Returnobj;
@@ -151,8 +152,8 @@ namespace RUINORERP.Business
             }
             return rr;
         }
-
-        public async override Task<List<T>> BaseQueryAsync(string wheresql)
+        
+        public async override Task<List<T>> BaseQueryAsync(string wheresql) 
         {
             List<T> list = await _tb_BOM_SServices.QueryAsync(wheresql) as List<T>;
             foreach (var item in list)
@@ -162,12 +163,12 @@ namespace RUINORERP.Business
             }
             if (list != null)
             {
-                MyCacheManager.Instance.UpdateEntityList<List<T>>(list);
-            }
+                _eventDrivenCacheManager.UpdateEntityList<T>(list);
+             }
             return list;
         }
-
-        public async override Task<List<T>> BaseQueryAsync()
+        
+        public async override Task<List<T>> BaseQueryAsync() 
         {
             List<T> list = await _tb_BOM_SServices.QueryAsync() as List<T>;
             foreach (var item in list)
@@ -177,12 +178,12 @@ namespace RUINORERP.Business
             }
             if (list != null)
             {
-                MyCacheManager.Instance.UpdateEntityList<List<T>>(list);
-            }
+                _eventDrivenCacheManager.UpdateEntityList<T>(list);
+             }
             return list;
         }
-
-
+        
+        
         public async override Task<bool> BaseDeleteAsync(T model)
         {
             tb_BOM_S entity = model as tb_BOM_S;
@@ -190,48 +191,46 @@ namespace RUINORERP.Business
             if (rs)
             {
                 ////生成时暂时只考虑了一个主键的情况
-                MyCacheManager.Instance.DeleteEntityList<tb_BOM_S>(entity);
+                _eventDrivenCacheManager.DeleteEntity<tb_BOM_S>(entity.PrimaryKeyID);
             }
             return rs;
         }
-
+        
         public async override Task<bool> BaseDeleteAsync(List<T> models)
         {
-            bool rs = false;
+            bool rs=false;
             List<tb_BOM_S> entitys = models as List<tb_BOM_S>;
             int c = await _unitOfWorkManage.GetDbClient().Deleteable<tb_BOM_S>(entitys).ExecuteCommandAsync();
-            if (c > 0)
+            if (c>0)
             {
-                rs = true;
-                ////生成时暂时只考虑了一个主键的情况
-                long[] result = entitys.Select(e => e.BOM_ID).ToArray();
-                MyCacheManager.Instance.DeleteEntityList<tb_BOM_S>(result);
+                rs=true;
+                _eventDrivenCacheManager.DeleteEntityList<tb_BOM_S>(entitys);
             }
             return rs;
         }
-
+        
         public override ValidationResult BaseValidator(T info)
         {
             //tb_BOM_SValidator validator = new tb_BOM_SValidator();
-            tb_BOM_SValidator validator = _appContext.GetRequiredService<tb_BOM_SValidator>();
+           tb_BOM_SValidator validator = _appContext.GetRequiredService<tb_BOM_SValidator>();
             ValidationResult results = validator.Validate(info as tb_BOM_S);
             return results;
         }
-
-
-        public async override Task<List<T>> BaseQueryByAdvancedAsync(bool useLike, object dto)
+        
+        
+        public async override Task<List<T>> BaseQueryByAdvancedAsync(bool useLike,object dto) 
         {
-            var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<T>().WhereCustom(useLike, dto);
+            var  querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<T>().WhereCustom(useLike,dto);
             return await querySqlQueryable.ToListAsync();
         }
-
+        
         public async override Task<ReturnMainSubResults<T>> BaseSaveOrUpdateWithChild<C>(T model) where C : class
         {
             bool rs = false;
             RevertCommand command = new RevertCommand();
             ReturnMainSubResults<T> rsms = new ReturnMainSubResults<T>();
-            //缓存当前编辑的对象。如果撤销就回原来的值
-            T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
+                             //缓存当前编辑的对象。如果撤销就回原来的值
+                T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
             try
             {
 
@@ -241,47 +240,47 @@ namespace RUINORERP.Business
                     //Undo操作会执行到的代码
                     CloneHelper.SetValues<T>(entity, oldobj);
                 };
-                // 开启事务，保证数据一致性
+                       // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
-
-                if (entity.BOM_ID > 0)
-                {
-
-                    rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_BOM_S>(entity as tb_BOM_S)
-               .Include(m => m.tb_ProduceGoodsRecommendDetails)
-           .Include(m => m.tb_ProdDetails)
-           .Include(m => m.tb_ProductionDemandDetails)
-           .Include(m => m.tb_ProductionDemandTargetDetails)
-           .Include(m => m.tb_ProdSplits)
-           .Include(m => m.tb_BOM_SDetailSecondaries)
-           .Include(m => m.tb_BOM_SDetails)
-           .Include(m => m.tb_ProdMerges)
-           .Include(m => m.tb_ProductionPlanDetails)
-           .Include(m => m.tb_ManufacturingOrders)
-           .ExecuteCommandAsync();
-                }
-                else
-                {
-                    rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_BOM_S>(entity as tb_BOM_S)
-            .Include(m => m.tb_ProduceGoodsRecommendDetails)
-            .Include(m => m.tb_ProdDetails)
-            .Include(m => m.tb_ProductionDemandDetails)
-            .Include(m => m.tb_ProductionDemandTargetDetails)
-            .Include(m => m.tb_ProdSplits)
-            .Include(m => m.tb_BOM_SDetailSecondaries)
-            .Include(m => m.tb_BOM_SDetails)
-            .Include(m => m.tb_ProdMerges)
-            .Include(m => m.tb_ProductionPlanDetails)
-            .Include(m => m.tb_ManufacturingOrders)
-
-            .ExecuteCommandAsync();
-
-
-                }
-
+                
+            if (entity.BOM_ID > 0)
+            {
+            
+                             rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_BOM_S>(entity as tb_BOM_S)
+                        .Include(m => m.tb_ManufacturingOrders)
+                    .Include(m => m.tb_ProduceGoodsRecommendDetails)
+                    .Include(m => m.tb_ProdDetails)
+                    .Include(m => m.tb_ProductionDemandDetails)
+                    .Include(m => m.tb_ProductionDemandTargetDetails)
+                    .Include(m => m.tb_ProdSplits)
+                    .Include(m => m.tb_BOM_SDetailSecondaries)
+                    .Include(m => m.tb_BOM_SDetails)
+                    .Include(m => m.tb_ProdMerges)
+                    .Include(m => m.tb_ProductionPlanDetails)
+                    .ExecuteCommandAsync();
+                 }
+        else    
+        {
+                        rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_BOM_S>(entity as tb_BOM_S)
+                .Include(m => m.tb_ManufacturingOrders)
+                .Include(m => m.tb_ProduceGoodsRecommendDetails)
+                .Include(m => m.tb_ProdDetails)
+                .Include(m => m.tb_ProductionDemandDetails)
+                .Include(m => m.tb_ProductionDemandTargetDetails)
+                .Include(m => m.tb_ProdSplits)
+                .Include(m => m.tb_BOM_SDetailSecondaries)
+                .Include(m => m.tb_BOM_SDetails)
+                .Include(m => m.tb_ProdMerges)
+                .Include(m => m.tb_ProductionPlanDetails)
+         
+                .ExecuteCommandAsync();
+                                          
+                     
+        }
+        
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
-                rsms.ReturnObject = entity as T;
+                rsms.ReturnObject = entity as T ;
                 entity.PrimaryKeyID = entity.BOM_ID;
                 rsms.Succeeded = rs;
             }
@@ -297,16 +296,17 @@ namespace RUINORERP.Business
 
             return rsms;
         }
-
+        
         #endregion
-
-
+        
+        
         #region override mothed
 
         public async override Task<List<T>> BaseQueryByAdvancedNavAsync(bool useLike, object dto)
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_BOM_S>()
-                                .Includes(m => m.tb_ProduceGoodsRecommendDetails)
+                                .Includes(m => m.tb_ManufacturingOrders)
+                        .Includes(m => m.tb_ProduceGoodsRecommendDetails)
                         .Includes(m => m.tb_ProdDetails)
                         .Includes(m => m.tb_ProductionDemandDetails)
                         .Includes(m => m.tb_ProductionDemandTargetDetails)
@@ -315,161 +315,166 @@ namespace RUINORERP.Business
                         .Includes(m => m.tb_BOM_SDetails)
                         .Includes(m => m.tb_ProdMerges)
                         .Includes(m => m.tb_ProductionPlanDetails)
-                        .Includes(m => m.tb_ManufacturingOrders)
-                                        .WhereCustom(useLike, dto);
-            return await querySqlQueryable.ToListAsync() as List<T>;
+                                        .WhereCustom(useLike, dto);;
+            return await querySqlQueryable.ToListAsync()as List<T>;
         }
 
 
-        public async override Task<bool> BaseDeleteByNavAsync(T model)
+        public async override Task<bool> BaseDeleteByNavAsync(T model) 
         {
             tb_BOM_S entity = model as tb_BOM_S;
-            bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_BOM_S>(m => m.BOM_ID == entity.BOM_ID)
-                               .Include(m => m.tb_ProduceGoodsRecommendDetails)
-                       .Include(m => m.tb_ProdDetails)
-                       .Include(m => m.tb_ProductionDemandDetails)
-                       .Include(m => m.tb_ProductionDemandTargetDetails)
-                       .Include(m => m.tb_ProdSplits)
-                       .Include(m => m.tb_BOM_SDetailSecondaries)
-                       .Include(m => m.tb_BOM_SDetails)
-                       .Include(m => m.tb_ProdMerges)
-                       .Include(m => m.tb_ProductionPlanDetails)
-                       .Include(m => m.tb_ManufacturingOrders)
-                                       .ExecuteCommandAsync();
+             bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_BOM_S>(m => m.BOM_ID== entity.BOM_ID)
+                                .Include(m => m.tb_ManufacturingOrders)
+                        .Include(m => m.tb_ProduceGoodsRecommendDetails)
+                        .Include(m => m.tb_ProdDetails)
+                        .Include(m => m.tb_ProductionDemandDetails)
+                        .Include(m => m.tb_ProductionDemandTargetDetails)
+                        .Include(m => m.tb_ProdSplits)
+                        .Include(m => m.tb_BOM_SDetailSecondaries)
+                        .Include(m => m.tb_BOM_SDetails)
+                        .Include(m => m.tb_ProdMerges)
+                        .Include(m => m.tb_ProductionPlanDetails)
+                                        .ExecuteCommandAsync();
             if (rs)
             {
                 //////生成时暂时只考虑了一个主键的情况
-                MyCacheManager.Instance.DeleteEntityList<T>(model);
+                 _eventDrivenCacheManager.DeleteEntity<T>(model);
             }
             return rs;
         }
         #endregion
-
-
-
+        
+        
+        
         public tb_BOM_S AddReEntity(tb_BOM_S entity)
         {
-            tb_BOM_S AddEntity = _tb_BOM_SServices.AddReEntity(entity);
-            MyCacheManager.Instance.UpdateEntityList<tb_BOM_S>(AddEntity);
+            tb_BOM_S AddEntity =  _tb_BOM_SServices.AddReEntity(entity);
+     
+             _eventDrivenCacheManager.UpdateEntity<tb_BOM_S>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
-
-        public async Task<tb_BOM_S> AddReEntityAsync(tb_BOM_S entity)
+        
+         public async Task<tb_BOM_S> AddReEntityAsync(tb_BOM_S entity)
         {
             tb_BOM_S AddEntity = await _tb_BOM_SServices.AddReEntityAsync(entity);
-            MyCacheManager.Instance.UpdateEntityList<tb_BOM_S>(AddEntity);
+            _eventDrivenCacheManager.UpdateEntity<tb_BOM_S>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
-
+        
         public async Task<long> AddAsync(tb_BOM_S entity)
         {
             long id = await _tb_BOM_SServices.Add(entity);
-            if (id > 0)
+            if(id>0)
             {
-                MyCacheManager.Instance.UpdateEntityList<tb_BOM_S>(entity);
+                 _eventDrivenCacheManager.UpdateEntity<tb_BOM_S>(entity);
             }
             return id;
         }
-
+        
         public async Task<List<long>> AddAsync(List<tb_BOM_S> infos)
         {
             List<long> ids = await _tb_BOM_SServices.Add(infos);
-            if (ids.Count > 0)//成功的个数 这里缓存 对不对呢？
+            if(ids.Count>0)//成功的个数 这里缓存 对不对呢？
             {
-                MyCacheManager.Instance.UpdateEntityList<tb_BOM_S>(infos);
+                 _eventDrivenCacheManager.UpdateEntityList<tb_BOM_S>(infos);
             }
             return ids;
         }
-
-
+        
+        
         public async Task<bool> DeleteAsync(tb_BOM_S entity)
         {
             bool rs = await _tb_BOM_SServices.Delete(entity);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_BOM_S>(entity);
-
+                _eventDrivenCacheManager.DeleteEntity<tb_BOM_S>(entity);
+                
             }
             return rs;
         }
-
+        
         public async Task<bool> UpdateAsync(tb_BOM_S entity)
         {
             bool rs = await _tb_BOM_SServices.Update(entity);
             if (rs)
             {
-                MyCacheManager.Instance.UpdateEntityList<tb_BOM_S>(entity);
+                 _eventDrivenCacheManager.DeleteEntity<tb_BOM_S>(entity);
                 entity.ActionStatus = ActionStatus.无操作;
             }
             return rs;
         }
-
+        
         public async Task<bool> DeleteAsync(long id)
         {
             bool rs = await _tb_BOM_SServices.DeleteById(id);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_BOM_S>(id);
+               _eventDrivenCacheManager.DeleteEntity<tb_BOM_S>(id);
             }
             return rs;
         }
-
-        public async Task<bool> DeleteAsync(long[] ids)
+        
+         public async Task<bool> DeleteAsync(long[] ids)
         {
             bool rs = await _tb_BOM_SServices.DeleteByIds(ids);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_BOM_S>(ids);
+            
+                   _eventDrivenCacheManager.DeleteEntities<tb_BOM_S>(ids.Cast<object>().ToArray());
             }
             return rs;
         }
-
+        
         public virtual async Task<List<tb_BOM_S>> QueryAsync()
         {
-            List<tb_BOM_S> list = await _tb_BOM_SServices.QueryAsync();
+            List<tb_BOM_S> list = await  _tb_BOM_SServices.QueryAsync();
             foreach (var item in list)
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_BOM_S>(list);
+     
+             _eventDrivenCacheManager.UpdateEntityList<tb_BOM_S>(list);
             return list;
         }
-
+        
         public virtual List<tb_BOM_S> Query()
         {
-            List<tb_BOM_S> list = _tb_BOM_SServices.Query();
+            List<tb_BOM_S> list =  _tb_BOM_SServices.Query();
             foreach (var item in list)
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_BOM_S>(list);
+    
+             _eventDrivenCacheManager.UpdateEntityList<tb_BOM_S>(list);
             return list;
         }
-
+        
         public virtual List<tb_BOM_S> Query(string wheresql)
         {
-            List<tb_BOM_S> list = _tb_BOM_SServices.Query(wheresql);
+            List<tb_BOM_S> list =  _tb_BOM_SServices.Query(wheresql);
             foreach (var item in list)
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_BOM_S>(list);
+  
+             _eventDrivenCacheManager.UpdateEntityList<tb_BOM_S>(list);
             return list;
         }
-
-        public virtual async Task<List<tb_BOM_S>> QueryAsync(string wheresql)
+        
+        public virtual async Task<List<tb_BOM_S>> QueryAsync(string wheresql) 
         {
             List<tb_BOM_S> list = await _tb_BOM_SServices.QueryAsync(wheresql);
             foreach (var item in list)
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_BOM_S>(list);
+ 
+             _eventDrivenCacheManager.UpdateEntityList<tb_BOM_S>(list);
             return list;
         }
-
+        
 
 
         /// <summary>
@@ -484,42 +489,44 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_BOM_S>(list);
+   
+             _eventDrivenCacheManager.UpdateEntityList<tb_BOM_S>(list);
             return list;
         }
-
-
-
+        
+        
+        
         /// <summary>
         /// 无参数异步导航查询
         /// </summary>
         /// <returns>数据列表</returns>
-        public virtual async Task<List<tb_BOM_S>> QueryByNavAsync()
+         public virtual async Task<List<tb_BOM_S>> QueryByNavAsync()
         {
             List<tb_BOM_S> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_BOM_S>()
-                               .Includes(t => t.tb_files)
-                               .Includes(t => t.tb_department)
-                               .Includes(t => t.tb_proddetail)
-                               .Includes(t => t.tb_employee)
-                               .Includes(t => t.tb_bomconfighistory)
-                                            .Includes(t => t.tb_ProduceGoodsRecommendDetails)
-                                .Includes(t => t.tb_ProdDetails)
-                                .Includes(t => t.tb_ProductionDemandDetails)
-                                .Includes(t => t.tb_ProductionDemandTargetDetails)
-                                .Includes(t => t.tb_ProdSplits)
-                                .Includes(t => t.tb_BOM_SDetailSecondaries)
-                                .Includes(t => t.tb_BOM_SDetails)
-                                .Includes(t => t.tb_ProdMerges)
-                                .Includes(t => t.tb_ProductionPlanDetails)
-                                .Includes(t => t.tb_ManufacturingOrders)
+                               .Includes(t => t.tb_files )
+                               .Includes(t => t.tb_department )
+                               .Includes(t => t.tb_proddetail )
+                               .Includes(t => t.tb_employee )
+                               .Includes(t => t.tb_bomconfighistory )
+                                            .Includes(t => t.tb_ManufacturingOrders )
+                                .Includes(t => t.tb_ProduceGoodsRecommendDetails )
+                                .Includes(t => t.tb_ProdDetails )
+                                .Includes(t => t.tb_ProductionDemandDetails )
+                                .Includes(t => t.tb_ProductionDemandTargetDetails )
+                                .Includes(t => t.tb_ProdSplits )
+                                .Includes(t => t.tb_BOM_SDetailSecondaries )
+                                .Includes(t => t.tb_BOM_SDetails )
+                                .Includes(t => t.tb_ProdMerges )
+                                .Includes(t => t.tb_ProductionPlanDetails )
                         .ToListAsync();
-
+            
             foreach (var item in list)
             {
                 item.HasChanged = false;
             }
-
-            MyCacheManager.Instance.UpdateEntityList<tb_BOM_S>(list);
+            
+ 
+             _eventDrivenCacheManager.UpdateEntityList<tb_BOM_S>(list);
             return list;
         }
 
@@ -528,78 +535,80 @@ namespace RUINORERP.Business
         /// 带参数异步导航查询
         /// </summary>
         /// <returns>数据列表</returns>
-        public virtual async Task<List<tb_BOM_S>> QueryByNavAsync(Expression<Func<tb_BOM_S, bool>> exp)
+         public virtual async Task<List<tb_BOM_S>> QueryByNavAsync(Expression<Func<tb_BOM_S, bool>> exp)
         {
             List<tb_BOM_S> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_BOM_S>().Where(exp)
-                               .Includes(t => t.tb_files)
-                               .Includes(t => t.tb_department)
-                               .Includes(t => t.tb_proddetail)
-                               .Includes(t => t.tb_employee)
-                               .Includes(t => t.tb_bomconfighistory)
-                                            .Includes(t => t.tb_ProduceGoodsRecommendDetails)
-                                .Includes(t => t.tb_ProdDetails)
-                                .Includes(t => t.tb_ProductionDemandDetails)
-                                .Includes(t => t.tb_ProductionDemandTargetDetails)
-                                .Includes(t => t.tb_ProdSplits)
-                                .Includes(t => t.tb_BOM_SDetailSecondaries)
-                                .Includes(t => t.tb_BOM_SDetails)
-                                .Includes(t => t.tb_ProdMerges)
-                                .Includes(t => t.tb_ProductionPlanDetails)
-                                .Includes(t => t.tb_ManufacturingOrders)
+                               .Includes(t => t.tb_files )
+                               .Includes(t => t.tb_department )
+                               .Includes(t => t.tb_proddetail )
+                               .Includes(t => t.tb_employee )
+                               .Includes(t => t.tb_bomconfighistory )
+                                            .Includes(t => t.tb_ManufacturingOrders )
+                                .Includes(t => t.tb_ProduceGoodsRecommendDetails )
+                                .Includes(t => t.tb_ProdDetails )
+                                .Includes(t => t.tb_ProductionDemandDetails )
+                                .Includes(t => t.tb_ProductionDemandTargetDetails )
+                                .Includes(t => t.tb_ProdSplits )
+                                .Includes(t => t.tb_BOM_SDetailSecondaries )
+                                .Includes(t => t.tb_BOM_SDetails )
+                                .Includes(t => t.tb_ProdMerges )
+                                .Includes(t => t.tb_ProductionPlanDetails )
                         .ToListAsync();
-
+            
             foreach (var item in list)
             {
                 item.HasChanged = false;
             }
-
-            MyCacheManager.Instance.UpdateEntityList<tb_BOM_S>(list);
+            
+  
+             _eventDrivenCacheManager.UpdateEntityList<tb_BOM_S>(list);
             return list;
         }
-
-
+        
+        
         /// <summary>
         /// 带参数异步导航查询
         /// </summary>
         /// <returns>数据列表</returns>
-        public virtual List<tb_BOM_S> QueryByNav(Expression<Func<tb_BOM_S, bool>> exp)
+         public virtual List<tb_BOM_S> QueryByNav(Expression<Func<tb_BOM_S, bool>> exp)
         {
             List<tb_BOM_S> list = _unitOfWorkManage.GetDbClient().Queryable<tb_BOM_S>().Where(exp)
-                            .Includes(t => t.tb_files)
-                            .Includes(t => t.tb_department)
-                            .Includes(t => t.tb_proddetail)
-                            .Includes(t => t.tb_employee)
-                            .Includes(t => t.tb_bomconfighistory)
-                                        .Includes(t => t.tb_ProduceGoodsRecommendDetails)
-                            .Includes(t => t.tb_ProdDetails)
-                            .Includes(t => t.tb_ProductionDemandDetails)
-                            .Includes(t => t.tb_ProductionDemandTargetDetails)
-                            .Includes(t => t.tb_ProdSplits)
-                            .Includes(t => t.tb_BOM_SDetailSecondaries)
-                            .Includes(t => t.tb_BOM_SDetails)
-                            .Includes(t => t.tb_ProdMerges)
-                            .Includes(t => t.tb_ProductionPlanDetails)
-                            .Includes(t => t.tb_ManufacturingOrders)
+                            .Includes(t => t.tb_files )
+                            .Includes(t => t.tb_department )
+                            .Includes(t => t.tb_proddetail )
+                            .Includes(t => t.tb_employee )
+                            .Includes(t => t.tb_bomconfighistory )
+                                        .Includes(t => t.tb_ManufacturingOrders )
+                            .Includes(t => t.tb_ProduceGoodsRecommendDetails )
+                            .Includes(t => t.tb_ProdDetails )
+                            .Includes(t => t.tb_ProductionDemandDetails )
+                            .Includes(t => t.tb_ProductionDemandTargetDetails )
+                            .Includes(t => t.tb_ProdSplits )
+                            .Includes(t => t.tb_BOM_SDetailSecondaries )
+                            .Includes(t => t.tb_BOM_SDetails )
+                            .Includes(t => t.tb_ProdMerges )
+                            .Includes(t => t.tb_ProductionPlanDetails )
                         .ToList();
-
+            
             foreach (var item in list)
             {
                 item.HasChanged = false;
             }
-
-            MyCacheManager.Instance.UpdateEntityList<tb_BOM_S>(list);
+            
+     
+             _eventDrivenCacheManager.UpdateEntityList<tb_BOM_S>(list);
             return list;
         }
-
-
+        
+        
 
         /// <summary>
         /// 高级查询
         /// </summary>
         /// <returns></returns>
-        public async Task<List<tb_BOM_S>> QueryByAdvancedAsync(bool useLike, object dto)
+        public async Task<List<tb_BOM_S>> QueryByAdvancedAsync(bool useLike,object dto)
         {
-            var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_BOM_S>().WhereCustom(useLike, dto);
+            var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_BOM_S>().WhereCustom(useLike,dto);
             return await querySqlQueryable.ToListAsync();
         }
 
@@ -610,42 +619,45 @@ namespace RUINORERP.Business
             T entity = await _tb_BOM_SServices.QueryByIdAsync(id) as T;
             return entity;
         }
-
-
-
+        
+        
+        
         public override async Task<T> BaseQueryByIdNavAsync(object id)
         {
             tb_BOM_S entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_BOM_S>().Where(w => w.BOM_ID == (long)id)
-                             .Includes(t => t.tb_files)
-                            .Includes(t => t.tb_department)
-                            .Includes(t => t.tb_proddetail)
-                            .Includes(t => t.tb_employee)
-                            .Includes(t => t.tb_bomconfighistory)
-                                        .Includes(t => t.tb_ProduceGoodsRecommendDetails)
-                            .Includes(t => t.tb_ProdDetails)
-                            .Includes(t => t.tb_ProductionDemandDetails)
-                            .Includes(t => t.tb_ProductionDemandTargetDetails)
-                            .Includes(t => t.tb_ProdSplits)
-                            .Includes(t => t.tb_BOM_SDetailSecondaries)
-                            .Includes(t => t.tb_BOM_SDetails, b => b.tb_BOM_SDetailSubstituteMaterials)
-                            .Includes(t => t.tb_ProdMerges)
-                            .Includes(t => t.tb_ProductionPlanDetails)
-                            .Includes(t => t.tb_ManufacturingOrders)
-                        .FirstAsync();
-            if (entity != null)
+                             .Includes(t => t.tb_files )
+                            .Includes(t => t.tb_department )
+                            .Includes(t => t.tb_proddetail )
+                            .Includes(t => t.tb_employee )
+                            .Includes(t => t.tb_bomconfighistory )
+                        
+
+                                            .Includes(t => t.tb_ManufacturingOrders )
+                                            .Includes(t => t.tb_ProduceGoodsRecommendDetails )
+                                            .Includes(t => t.tb_ProdDetails )
+                                            .Includes(t => t.tb_ProductionDemandDetails )
+                                            .Includes(t => t.tb_ProductionDemandTargetDetails )
+                                            .Includes(t => t.tb_ProdSplits )
+                                            .Includes(t => t.tb_BOM_SDetailSecondaries )
+                                            .Includes(t => t.tb_BOM_SDetails )
+                                            .Includes(t => t.tb_ProdMerges )
+                                            .Includes(t => t.tb_ProductionPlanDetails )
+                                .FirstAsync();
+            if(entity!=null)
             {
                 entity.HasChanged = false;
             }
 
-            MyCacheManager.Instance.UpdateEntityList<tb_BOM_S>(entity);
+         
+             _eventDrivenCacheManager.UpdateEntity<tb_BOM_S>(entity);
             return entity as T;
         }
-
-
-
-
-
-
+        
+        
+        
+        
+        
+        
     }
 }
 

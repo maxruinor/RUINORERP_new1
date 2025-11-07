@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：11/19/2024 15:29:23
+// 时间：11/06/2025 19:57:47
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -31,7 +31,7 @@ namespace RUINORERP.Business
     /// <summary>
     /// 组合明细统计-只管明细
     /// </summary>
-    public partial class View_ProdMergeItemsController<T> : BaseController<T> where T : class
+    public partial class View_ProdMergeItemsController<T>:BaseController<T> where T : class
     {
         /// <summary>
         /// 本为私有修改为公有，暴露出来方便使用
@@ -39,41 +39,31 @@ namespace RUINORERP.Business
         //public readonly IUnitOfWorkManage _unitOfWorkManage;
         //public readonly ILogger<BaseController<T>> _logger;
         public IView_ProdMergeItemsServices _View_ProdMergeItemsServices { get; set; }
-        // private readonly ApplicationContext _appContext;
-
-        public View_ProdMergeItemsController(ILogger<BaseController<T>> logger, IUnitOfWorkManage unitOfWorkManage, View_ProdMergeItemsServices View_ProdMergeItemsServices, ApplicationContext appContext = null) : base(logger, unitOfWorkManage, appContext)
+       // private readonly ApplicationContext _appContext;
+       
+        public View_ProdMergeItemsController(ILogger<BaseController<T>> logger, IUnitOfWorkManage unitOfWorkManage,View_ProdMergeItemsServices View_ProdMergeItemsServices , ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
         {
             _logger = logger;
-            _unitOfWorkManage = unitOfWorkManage;
-            _View_ProdMergeItemsServices = View_ProdMergeItemsServices;
+           _unitOfWorkManage = unitOfWorkManage;
+           _View_ProdMergeItemsServices = View_ProdMergeItemsServices;
             _appContext = appContext;
         }
-
-
-
-
-        public ValidationResult Validator(View_ProdMergeItems info)
+      
+        
+        
+        
+         public ValidationResult Validator(View_ProdMergeItems info)
         {
-            View_ProdMergeItemsValidator validator = _appContext.GetRequiredService<View_ProdMergeItemsValidator>();
+
+           // View_ProdMergeItemsValidator validator = new View_ProdMergeItemsValidator();
+           View_ProdMergeItemsValidator validator = _appContext.GetRequiredService<View_ProdMergeItemsValidator>();
             ValidationResult results = validator.Validate(info);
             return results;
         }
-
+        
         #region 扩展方法
-
-        /// <summary>
-        /// 某字段是否存在
-        /// </summary>
-        /// <param name="exp">e => e.ModeuleName == mod.ModeuleName</param>
-        /// <returns></returns>
-        public override async Task<bool> ExistFieldValue(Expression<Func<T, bool>> exp)
-        {
-            return await _unitOfWorkManage.GetDbClient().Queryable<T>().Where(exp).AnyAsync();
-        }
-
-
-
-
+        
+      
 
 
         public async override Task<T> BaseQueryByIdAsync(object id)
@@ -81,14 +71,14 @@ namespace RUINORERP.Business
             T entity = await _View_ProdMergeItemsServices.QueryByIdAsync(id) as T;
             return entity;
         }
-
-
+        
+        
 
         #endregion
-
-
-
-
+        
+        
+        
+        
     }
 }
 

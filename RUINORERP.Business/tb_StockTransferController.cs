@@ -1,10 +1,8 @@
-﻿
-// **************************************
-// 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
+﻿// **************************************
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/14/2025 20:39:53
+// 时间：11/06/2025 21:26:32
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -25,6 +23,7 @@ using RUINORERP.Model.Context;
 using System.Linq;
 using RUINOR.Core;
 using RUINORERP.Common.Helper;
+using RUINORERP.Business.Cache;
 
 namespace RUINORERP.Business
 {
@@ -39,14 +38,16 @@ namespace RUINORERP.Business
         //public readonly IUnitOfWorkManage _unitOfWorkManage;
         //public readonly ILogger<BaseController<T>> _logger;
         public Itb_StockTransferServices _tb_StockTransferServices { get; set; }
+        private readonly EventDrivenCacheManager _eventDrivenCacheManager; 
        // private readonly ApplicationContext _appContext;
        
-        public tb_StockTransferController(ILogger<tb_StockTransferController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_StockTransferServices tb_StockTransferServices , ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
+        public tb_StockTransferController(ILogger<tb_StockTransferController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_StockTransferServices tb_StockTransferServices ,EventDrivenCacheManager eventDrivenCacheManager, ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
         {
             _logger = logger;
            _unitOfWorkManage = unitOfWorkManage;
            _tb_StockTransferServices = tb_StockTransferServices;
-            _appContext = appContext;
+           _appContext = appContext;
+           _eventDrivenCacheManager = eventDrivenCacheManager;
         }
       
         
@@ -89,14 +90,14 @@ namespace RUINORERP.Business
                     bool rs = await _tb_StockTransferServices.Update(entity);
                     if (rs)
                     {
-                        MyCacheManager.Instance.UpdateEntityList<tb_StockTransfer>(entity);
+                        _eventDrivenCacheManager.UpdateEntity<tb_StockTransfer>(entity);
                     }
                     Returnobj = entity;
                 }
                 else
                 {
                     Returnobj = await _tb_StockTransferServices.AddReEntityAsync(entity);
-                    MyCacheManager.Instance.UpdateEntityList<tb_StockTransfer>(entity);
+                    _eventDrivenCacheManager.UpdateEntity<tb_StockTransfer>(entity);
                 }
 
                 rr.ReturnObject = Returnobj;
@@ -130,14 +131,14 @@ namespace RUINORERP.Business
                     bool rs = await _tb_StockTransferServices.Update(entity);
                     if (rs)
                     {
-                        MyCacheManager.Instance.UpdateEntityList<tb_StockTransfer>(entity);
+                        _eventDrivenCacheManager.UpdateEntity<tb_StockTransfer>(entity);
                     }
                     Returnobj = entity as T;
                 }
                 else
                 {
                     Returnobj = await _tb_StockTransferServices.AddReEntityAsync(entity) as T ;
-                    MyCacheManager.Instance.UpdateEntityList<tb_StockTransfer>(entity);
+                    _eventDrivenCacheManager.UpdateEntity<tb_StockTransfer>(entity);
                 }
 
                 rr.ReturnObject = Returnobj;
@@ -162,7 +163,7 @@ namespace RUINORERP.Business
             }
             if (list != null)
             {
-                MyCacheManager.Instance.UpdateEntityList<List<T>>(list);
+                _eventDrivenCacheManager.UpdateEntityList<T>(list);
              }
             return list;
         }
@@ -177,7 +178,7 @@ namespace RUINORERP.Business
             }
             if (list != null)
             {
-                MyCacheManager.Instance.UpdateEntityList<List<T>>(list);
+                _eventDrivenCacheManager.UpdateEntityList<T>(list);
              }
             return list;
         }
@@ -190,7 +191,7 @@ namespace RUINORERP.Business
             if (rs)
             {
                 ////生成时暂时只考虑了一个主键的情况
-                MyCacheManager.Instance.DeleteEntityList<tb_StockTransfer>(entity);
+                _eventDrivenCacheManager.DeleteEntity<tb_StockTransfer>(entity.PrimaryKeyID);
             }
             return rs;
         }
@@ -203,9 +204,7 @@ namespace RUINORERP.Business
             if (c>0)
             {
                 rs=true;
-                ////生成时暂时只考虑了一个主键的情况
-                 long[] result = entitys.Select(e => e.StockTransferID).ToArray();
-                MyCacheManager.Instance.DeleteEntityList<tb_StockTransfer>(result);
+                _eventDrivenCacheManager.DeleteEntityList<tb_StockTransfer>(entitys);
             }
             return rs;
         }
@@ -288,8 +287,11 @@ namespace RUINORERP.Business
         public async override Task<List<T>> BaseQueryByAdvancedNavAsync(bool useLike, object dto)
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_StockTransfer>()
-                                .Includes(m => m.tb_StockTransferDetails)
-                                        .WhereCustom(useLike, dto);
+                                .Includes(m => m.tb_employee)
+                            .Includes(m => m.tb_location)
+                            .Includes(m => m.tb_location_locationIdTo)
+                                            .Includes(m => m.tb_StockTransferDetails)
+                                        .WhereCustom(useLike, dto);;
             return await querySqlQueryable.ToListAsync()as List<T>;
         }
 
@@ -303,7 +305,7 @@ namespace RUINORERP.Business
             if (rs)
             {
                 //////生成时暂时只考虑了一个主键的情况
-                MyCacheManager.Instance.DeleteEntityList<T>(model);
+                 _eventDrivenCacheManager.DeleteEntity<T>(model);
             }
             return rs;
         }
@@ -314,7 +316,8 @@ namespace RUINORERP.Business
         public tb_StockTransfer AddReEntity(tb_StockTransfer entity)
         {
             tb_StockTransfer AddEntity =  _tb_StockTransferServices.AddReEntity(entity);
-            MyCacheManager.Instance.UpdateEntityList<tb_StockTransfer>(AddEntity);
+     
+             _eventDrivenCacheManager.UpdateEntity<tb_StockTransfer>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
@@ -322,7 +325,7 @@ namespace RUINORERP.Business
          public async Task<tb_StockTransfer> AddReEntityAsync(tb_StockTransfer entity)
         {
             tb_StockTransfer AddEntity = await _tb_StockTransferServices.AddReEntityAsync(entity);
-            MyCacheManager.Instance.UpdateEntityList<tb_StockTransfer>(AddEntity);
+            _eventDrivenCacheManager.UpdateEntity<tb_StockTransfer>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
@@ -332,7 +335,7 @@ namespace RUINORERP.Business
             long id = await _tb_StockTransferServices.Add(entity);
             if(id>0)
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_StockTransfer>(entity);
+                 _eventDrivenCacheManager.UpdateEntity<tb_StockTransfer>(entity);
             }
             return id;
         }
@@ -342,7 +345,7 @@ namespace RUINORERP.Business
             List<long> ids = await _tb_StockTransferServices.Add(infos);
             if(ids.Count>0)//成功的个数 这里缓存 对不对呢？
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_StockTransfer>(infos);
+                 _eventDrivenCacheManager.UpdateEntityList<tb_StockTransfer>(infos);
             }
             return ids;
         }
@@ -353,7 +356,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_StockTransferServices.Delete(entity);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_StockTransfer>(entity);
+                _eventDrivenCacheManager.DeleteEntity<tb_StockTransfer>(entity);
                 
             }
             return rs;
@@ -364,7 +367,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_StockTransferServices.Update(entity);
             if (rs)
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_StockTransfer>(entity);
+                 _eventDrivenCacheManager.DeleteEntity<tb_StockTransfer>(entity);
                 entity.ActionStatus = ActionStatus.无操作;
             }
             return rs;
@@ -375,7 +378,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_StockTransferServices.DeleteById(id);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_StockTransfer>(id);
+               _eventDrivenCacheManager.DeleteEntity<tb_StockTransfer>(id);
             }
             return rs;
         }
@@ -385,7 +388,8 @@ namespace RUINORERP.Business
             bool rs = await _tb_StockTransferServices.DeleteByIds(ids);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_StockTransfer>(ids);
+            
+                   _eventDrivenCacheManager.DeleteEntities<tb_StockTransfer>(ids.Cast<object>().ToArray());
             }
             return rs;
         }
@@ -397,7 +401,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_StockTransfer>(list);
+     
+             _eventDrivenCacheManager.UpdateEntityList<tb_StockTransfer>(list);
             return list;
         }
         
@@ -408,7 +413,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_StockTransfer>(list);
+    
+             _eventDrivenCacheManager.UpdateEntityList<tb_StockTransfer>(list);
             return list;
         }
         
@@ -419,7 +425,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_StockTransfer>(list);
+  
+             _eventDrivenCacheManager.UpdateEntityList<tb_StockTransfer>(list);
             return list;
         }
         
@@ -430,7 +437,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_StockTransfer>(list);
+ 
+             _eventDrivenCacheManager.UpdateEntityList<tb_StockTransfer>(list);
             return list;
         }
         
@@ -448,7 +456,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_StockTransfer>(list);
+   
+             _eventDrivenCacheManager.UpdateEntityList<tb_StockTransfer>(list);
             return list;
         }
         
@@ -462,8 +471,8 @@ namespace RUINORERP.Business
         {
             List<tb_StockTransfer> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_StockTransfer>()
                                .Includes(t => t.tb_employee )
-                              .Includes(t => t.tb_location_from)
-                               .Includes(t => t.tb_location_to)
+                               .Includes(t => t.tb_location )
+                               .Includes(t => t.tb_location_locationIdTo)
                                             .Includes(t => t.tb_StockTransferDetails )
                         .ToListAsync();
             
@@ -472,7 +481,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_StockTransfer>(list);
+ 
+             _eventDrivenCacheManager.UpdateEntityList<tb_StockTransfer>(list);
             return list;
         }
 
@@ -485,8 +495,8 @@ namespace RUINORERP.Business
         {
             List<tb_StockTransfer> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_StockTransfer>().Where(exp)
                                .Includes(t => t.tb_employee )
-                               .Includes(t => t.tb_location_from )
-                               .Includes(t => t.tb_location_to )
+                               .Includes(t => t.tb_location )
+                               .Includes(t => t.tb_location_locationIdTo)
                                             .Includes(t => t.tb_StockTransferDetails )
                         .ToListAsync();
             
@@ -495,7 +505,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_StockTransfer>(list);
+  
+             _eventDrivenCacheManager.UpdateEntityList<tb_StockTransfer>(list);
             return list;
         }
         
@@ -508,8 +519,8 @@ namespace RUINORERP.Business
         {
             List<tb_StockTransfer> list = _unitOfWorkManage.GetDbClient().Queryable<tb_StockTransfer>().Where(exp)
                             .Includes(t => t.tb_employee )
-                              .Includes(t => t.tb_location_from)
-                               .Includes(t => t.tb_location_to)
+                            .Includes(t => t.tb_location )
+                            .Includes(t => t.tb_location_locationIdTo)
                                         .Includes(t => t.tb_StockTransferDetails )
                         .ToList();
             
@@ -518,7 +529,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_StockTransfer>(list);
+     
+             _eventDrivenCacheManager.UpdateEntityList<tb_StockTransfer>(list);
             return list;
         }
         
@@ -548,16 +560,19 @@ namespace RUINORERP.Business
         {
             tb_StockTransfer entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_StockTransfer>().Where(w => w.StockTransferID == (long)id)
                              .Includes(t => t.tb_employee )
-                              .Includes(t => t.tb_location_from)
-                               .Includes(t => t.tb_location_to)
-                                        .Includes(t => t.tb_StockTransferDetails )
-                        .FirstAsync();
+                            .Includes(t => t.tb_location )
+                            .Includes(t => t.tb_location_locationIdTo )
+                        
+
+                                            .Includes(t => t.tb_StockTransferDetails )
+                                .FirstAsync();
             if(entity!=null)
             {
                 entity.HasChanged = false;
             }
 
-            MyCacheManager.Instance.UpdateEntityList<tb_StockTransfer>(entity);
+         
+             _eventDrivenCacheManager.UpdateEntity<tb_StockTransfer>(entity);
             return entity as T;
         }
         

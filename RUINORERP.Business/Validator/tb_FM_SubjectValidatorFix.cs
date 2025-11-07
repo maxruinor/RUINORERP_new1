@@ -28,7 +28,7 @@ namespace RUINORERP.Business
     {
         public override void Initialize()
         {
-            RuleFor(tb_FM_Subject => tb_FM_Subject.Subject_code).NotNull().WithMessage("科目代码:不能为空。");
+            RuleFor(tb_FM_Subject => tb_FM_Subject.subject_code).NotNull().WithMessage("科目代码:不能为空。");
         }
     }
 

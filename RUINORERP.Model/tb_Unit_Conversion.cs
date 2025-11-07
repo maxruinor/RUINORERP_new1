@@ -4,10 +4,10 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：02/08/2025 16:32:32
+// 时间：11/07/2025 11:46:22
 // **************************************
 using System;
-﻿using SqlSugar;
+using SqlSugar;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -127,37 +127,29 @@ namespace RUINORERP.Model
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(Target_unit_id))]
-        public virtual tb_Unit tb_unit_target { get; set; }
+        public virtual tb_Unit tb_unit { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(Source_unit_id))]
-        public virtual tb_Unit tb_unit_source { get; set; }
+        public virtual tb_Unit tb_unitBySourceUnit { get; set; }
 
 
-        //[Browsable(false)]打印报表时的数据源会不显示
+
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_BOM_SDetail.UnitConversion_ID))]
         public virtual List<tb_BOM_SDetail> tb_BOM_SDetails { get; set; }
-        //tb_BOM_SDetail.UnitConversion_ID)
-        //UnitConversion_ID.FK_BOM_SDetail_REF_UNIT_Conversion)
-        //tb_Unit_Conversion.UnitConversion_ID)
 
-        //[Browsable(false)]打印报表时的数据源会不显示
+
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_BOM_SDetailSubstituteMaterial.UnitConversion_ID))]
         public virtual List<tb_BOM_SDetailSubstituteMaterial> tb_BOM_SDetailSubstituteMaterials { get; set; }
-        //tb_BOM_SDetailSubstituteMaterial.UnitConversion_ID)
-        //UnitConversion_ID.FK_BOM_Substitute_REF_UNIT_Conversion)
-        //tb_Unit_Conversion.UnitConversion_ID)
 
 
         #endregion
 
 
-
+ 
 
 //如果为false,则不可以。
 private bool PK_FK_ID_Check()
@@ -179,6 +171,8 @@ return rs;
 
 
 
+       
+        
 
         public override object Clone()
         {

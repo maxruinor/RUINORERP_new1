@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：02/08/2025 16:32:20
+// 时间：11/06/2025 20:42:09
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -55,15 +55,15 @@ namespace RUINORERP.Model
         /// <summary>
         /// 地区
         /// </summary>
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "Region_ID", DecimalDigits = 0, IsNullable = false, ColumnDescription = "地区")]
-        [FKRelationAttribute("tb_CRM_Region", "Region_ID")]
+        [AdvQueryAttribute(ColName = "Region_ID",ColDesc = "地区")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Region_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "地区" )]
+        [FKRelationAttribute("tb_CRM_Region","Region_ID")]
         public long? Region_ID
-        {
-            get { return _Region_ID; }
-            set
-            {
-                SetProperty(ref _Region_ID, value);
-            }
+        { 
+            get{return _Region_ID;}
+            set{
+            SetProperty(ref _Region_ID, value);
+                        }
         }
 
         private string _ProvinceCNName;
@@ -111,6 +111,11 @@ namespace RUINORERP.Model
         #endregion
 
         #region 扩展属性
+        [SugarColumn(IsIgnore = true)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
+        [Navigate(NavigateType.OneToOne, nameof(Region_ID))]
+        public virtual tb_CRM_Region tb_crm_region { get; set; }
+
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
@@ -132,7 +137,7 @@ namespace RUINORERP.Model
         #endregion
 
 
-
+ 
 
 //如果为false,则不可以。
 private bool PK_FK_ID_Check()
@@ -143,7 +148,11 @@ return rs;
 
 
 
- 
+
+
+
+       
+        
 
         public override object Clone()
         {

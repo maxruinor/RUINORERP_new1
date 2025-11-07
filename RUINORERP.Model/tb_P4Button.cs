@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：02/08/2025 16:32:08
+// 时间：11/06/2025 20:42:00
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -27,7 +27,7 @@ namespace RUINORERP.Model
     {
         public tb_P4Button()
         {
-             
+            
             if (!PK_FK_ID_Check())
             {
                 throw new Exception("按钮权限表tb_P4Button" + "外键ID与对应主主键名称不一致。请修改数据库");
@@ -203,7 +203,7 @@ namespace RUINORERP.Model
         #endregion
 
 
-
+ 
 
 //如果为false,则不可以。
 private bool PK_FK_ID_Check()
@@ -217,7 +217,8 @@ return rs;
 
 
 
-         
+       
+        
 
         public override object Clone()
         {

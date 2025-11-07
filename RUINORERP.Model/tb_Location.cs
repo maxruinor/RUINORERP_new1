@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：02/08/2025 16:32:03
+// 时间：11/06/2025 20:41:56
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -109,21 +109,6 @@ namespace RUINORERP.Model
                         }
         }
 
-        private string _Name;
-        /// <summary>
-        /// 仓库名称
-        /// </summary>
-        [AdvQueryAttribute(ColName = "Name", ColDesc = "仓库名称")]
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "Name", Length = 50, IsNullable = false, ColumnDescription = "仓库名称")]
-        public string Name
-        {
-            get { return _Name; }
-            set
-            {
-                SetProperty(ref _Name, value);
-            }
-        }
-
         private string _Tel;
         /// <summary>
         /// 电话
@@ -138,21 +123,18 @@ namespace RUINORERP.Model
                         }
         }
 
-
-
-        private int _Sort=0;
+        private string _Name;
         /// <summary>
-        /// 排序
+        /// 仓库名称
         /// </summary>
-        [AdvQueryAttribute(ColName = "Sort", ColDesc = "排序")]
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType = "Int32", ColumnName = "Sort", DecimalDigits = 0, IsNullable = false, ColumnDescription = "排序")]
-        public int Sort
-        {
-            get { return _Sort; }
-            set
-            {
-                SetProperty(ref _Sort, value);
-            }
+        [AdvQueryAttribute(ColName = "Name",ColDesc = "仓库名称")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Name" ,Length=50,IsNullable = false,ColumnDescription = "仓库名称" )]
+        public string Name
+        { 
+            get{return _Name;}
+            set{
+            SetProperty(ref _Name, value);
+                        }
         }
 
         private string _Desc;
@@ -166,6 +148,20 @@ namespace RUINORERP.Model
             get{return _Desc;}
             set{
             SetProperty(ref _Desc, value);
+                        }
+        }
+
+        private int _Sort= ((0));
+        /// <summary>
+        /// 排序
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Sort",ColDesc = "排序")] 
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "Sort" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "排序" )]
+        public int Sort
+        { 
+            get{return _Sort;}
+            set{
+            SetProperty(ref _Sort, value);
                         }
         }
 
@@ -193,14 +189,6 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_ProductionPlanDetail.Location_ID))]
-        public virtual List<tb_ProductionPlanDetail> tb_ProductionPlanDetails { get; set; }
-        //tb_ProductionPlanDetail.Location_ID)
-        //Location_ID.FK_PRODUPLANDETAIL_REF_LOCATION)
-        //tb_Location.Location_ID)
-
-        //[Browsable(false)]打印报表时的数据源会不显示
-        [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_StockOutDetail.Location_ID))]
         public virtual List<tb_StockOutDetail> tb_StockOutDetails { get; set; }
         //tb_StockOutDetail.Location_ID)
@@ -209,10 +197,10 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_SaleOutReDetail.Location_ID))]
-        public virtual List<tb_SaleOutReDetail> tb_SaleOutReDetails { get; set; }
-        //tb_SaleOutReDetail.Location_ID)
-        //Location_ID.FK_SOREDETAIL_RE_TB_LOCATAION)
+        [Navigate(NavigateType.OneToMany, nameof(tb_ManufacturingOrder.Location_ID))]
+        public virtual List<tb_ManufacturingOrder> tb_ManufacturingOrders { get; set; }
+        //tb_ManufacturingOrder.Location_ID)
+        //Location_ID.FK_MANUFACTURINGORDER_REF_LOCATION)
         //tb_Location.Location_ID)
 
         //[Browsable(false)]打印报表时的数据源会不显示
@@ -233,14 +221,6 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_PurReturnEntryDetail.Location_ID))]
-        public virtual List<tb_PurReturnEntryDetail> tb_PurReturnEntryDetails { get; set; }
-        //tb_PurReturnEntryDetail.Location_ID)
-        //Location_ID.FK_PURRETURNENTRYDETAIL_REF_LOCATION)
-        //tb_Location.Location_ID)
-
-        //[Browsable(false)]打印报表时的数据源会不显示
-        [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ProduceGoodsRecommendDetail.Location_ID))]
         public virtual List<tb_ProduceGoodsRecommendDetail> tb_ProduceGoodsRecommendDetails { get; set; }
         //tb_ProduceGoodsRecommendDetail.Location_ID)
@@ -255,7 +235,21 @@ namespace RUINORERP.Model
         //Location_ID.FK_MATERIALREDETAIL_REF_LOCATION)
         //tb_Location.Location_ID)
 
-         
+        //[Browsable(false)]打印报表时的数据源会不显示
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_AS_AfterSaleApply.Location_ID))]
+        public virtual List<tb_AS_AfterSaleApply> tb_AS_AfterSaleApplies { get; set; }
+        //tb_AS_AfterSaleApply.Location_ID)
+        //Location_ID.FK_TB_AS_AFTERSALEAPPLY_REF_TB_LOCATION)
+        //tb_Location.Location_ID)
+
+        //[Browsable(false)]打印报表时的数据源会不显示
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_SaleOutDetail.Location_ID))]
+        public virtual List<tb_SaleOutDetail> tb_SaleOutDetails { get; set; }
+        //tb_SaleOutDetail.Location_ID)
+        //Location_ID.FK_TB_SODETAIL_RE_TB_LOCATION)
+        //tb_Location.Location_ID)
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
@@ -263,6 +257,14 @@ namespace RUINORERP.Model
         public virtual List<tb_FinishedGoodsInvDetail> tb_FinishedGoodsInvDetails { get; set; }
         //tb_FinishedGoodsInvDetail.Location_ID)
         //Location_ID.FK_FINISHEDDETAIL_REF_LOCATION)
+        //tb_Location.Location_ID)
+
+        //[Browsable(false)]打印报表时的数据源会不显示
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_AS_AfterSaleDeliveryDetail.Location_ID))]
+        public virtual List<tb_AS_AfterSaleDeliveryDetail> tb_AS_AfterSaleDeliveryDetails { get; set; }
+        //tb_AS_AfterSaleDeliveryDetail.Location_ID)
+        //Location_ID.FK_AS_AFTERSALEdeliverydDetail_REF_LOCATion)
         //tb_Location.Location_ID)
 
         //[Browsable(false)]打印报表时的数据源会不显示
@@ -291,21 +293,19 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_SaleOrderDetail.Location_ID))]
-        public virtual List<tb_SaleOrderDetail> tb_SaleOrderDetails { get; set; }
-        //tb_SaleOrderDetail.Location_ID)
-        //Location_ID.FK_SALEORDERDETAIL_REF_LOCATION)
-        //tb_Location.Location_ID)
-
-        //[Browsable(false)]打印报表时的数据源会不显示
-        [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ProdReturningDetail.Location_ID))]
         public virtual List<tb_ProdReturningDetail> tb_ProdReturningDetails { get; set; }
         //tb_ProdReturningDetail.Location_ID)
         //Location_ID.FK_PRODRetruningdetail_REF_LOCAT)
         //tb_Location.Location_ID)
 
-        
+        //[Browsable(false)]打印报表时的数据源会不显示
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_SaleOrderDetail.Location_ID))]
+        public virtual List<tb_SaleOrderDetail> tb_SaleOrderDetails { get; set; }
+        //tb_SaleOrderDetail.Location_ID)
+        //Location_ID.FK_SALEORDERDETAIL_REF_LOCATION)
+        //tb_Location.Location_ID)
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
@@ -317,10 +317,10 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_PurEntryDetail.Location_ID))]
-        public virtual List<tb_PurEntryDetail> tb_PurEntryDetails { get; set; }
-        //tb_PurEntryDetail.Location_ID)
-        //Location_ID.FK_TB_PUREN_REF_TB_LOCATION)
+        [Navigate(NavigateType.OneToMany, nameof(tb_AS_AfterSaleApplyDetail.Location_ID))]
+        public virtual List<tb_AS_AfterSaleApplyDetail> tb_AS_AfterSaleApplyDetails { get; set; }
+        //tb_AS_AfterSaleApplyDetail.Location_ID)
+        //Location_ID.FK_TB_AS_AFTERSALEAPPLY_REF_LOCATION)
         //tb_Location.Location_ID)
 
         //[Browsable(false)]打印报表时的数据源会不显示
@@ -341,8 +341,16 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_AS_RepairInStockDetail.Location_ID))]
+        public virtual List<tb_AS_RepairInStockDetail> tb_AS_RepairInStockDetails { get; set; }
+        //tb_AS_RepairInStockDetail.Location_ID)
+        //Location_ID.FK_AS_RepairInStockDetail_REF_LOCATION)
+        //tb_Location.Location_ID)
+
+        //[Browsable(false)]打印报表时的数据源会不显示
+        [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_StockTransfer.Location_ID_from))]
-        public virtual List<tb_StockTransfer> tb_StockTransfers_from { get; set; }
+        public virtual List<tb_StockTransfer> tb_StockTransfersFrom { get; set; }
         //tb_StockTransfer.Location_ID)
         //Location_ID.FK_STOCKtransfer_REF_LOCATion_1)
         //tb_Location.Location_ID_from)
@@ -350,10 +358,34 @@ namespace RUINORERP.Model
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_StockTransfer.Location_ID_to))]
-        public virtual List<tb_StockTransfer> tb_StockTransfers_to { get; set; }
+        public virtual List<tb_StockTransfer> tb_StockTransfersTo { get; set; }
         //tb_StockTransfer.Location_ID)
         //Location_ID.FK_STOCKtransfer_REF_LOCATion_2)
         //tb_Location.Location_ID_to)
+
+        //[Browsable(false)]打印报表时的数据源会不显示
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_AS_RepairOrderMaterialDetail.Location_ID))]
+        public virtual List<tb_AS_RepairOrderMaterialDetail> tb_AS_RepairOrderMaterialDetails { get; set; }
+        //tb_AS_RepairOrderMaterialDetail.Location_ID)
+        //Location_ID.FK_AS_RepairOrderMaterialDetail_REF_LOCATION)
+        //tb_Location.Location_ID)
+
+        //[Browsable(false)]打印报表时的数据源会不显示
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_BuyingRequisition.Location_ID))]
+        public virtual List<tb_BuyingRequisition> tb_BuyingRequisitions { get; set; }
+        //tb_BuyingRequisition.Location_ID)
+        //Location_ID.FK_TB_BUYING_REF_TB_LOCAT)
+        //tb_Location.Location_ID)
+
+        //[Browsable(false)]打印报表时的数据源会不显示
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_PurOrderReDetail.Location_ID))]
+        public virtual List<tb_PurOrderReDetail> tb_PurOrderReDetails { get; set; }
+        //tb_PurOrderReDetail.Location_ID)
+        //Location_ID.FK_PURORDERREDETAIL_REF_LOCATION)
+        //tb_Location.Location_ID)
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
@@ -381,18 +413,18 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_BuyingRequisition.Location_ID))]
-        public virtual List<tb_BuyingRequisition> tb_BuyingRequisitions { get; set; }
-        //tb_BuyingRequisition.Location_ID)
-        //Location_ID.FK_TB_BUYING_REF_TB_LOCAT)
+        [Navigate(NavigateType.OneToMany, nameof(tb_AS_RepairOrderDetail.Location_ID))]
+        public virtual List<tb_AS_RepairOrderDetail> tb_AS_RepairOrderDetails { get; set; }
+        //tb_AS_RepairOrderDetail.Location_ID)
+        //Location_ID.FK_AS_RepairOrderDetail_REF_TB_LOCATION)
         //tb_Location.Location_ID)
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_ManufacturingOrderDetail.Location_ID))]
-        public virtual List<tb_ManufacturingOrderDetail> tb_ManufacturingOrderDetails { get; set; }
-        //tb_ManufacturingOrderDetail.Location_ID)
-        //Location_ID.FK_MANUFACTURINGORDERDETAIL_REF_LOCATION)
+        [Navigate(NavigateType.OneToMany, nameof(tb_SaleOutReDetail.Location_ID))]
+        public virtual List<tb_SaleOutReDetail> tb_SaleOutReDetails { get; set; }
+        //tb_SaleOutReDetail.Location_ID)
+        //Location_ID.FK_SOREDETAIL_RE_TB_LOCATAION)
         //tb_Location.Location_ID)
 
         //[Browsable(false)]打印报表时的数据源会不显示
@@ -405,18 +437,18 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_SaleOutDetail.Location_ID))]
-        public virtual List<tb_SaleOutDetail> tb_SaleOutDetails { get; set; }
-        //tb_SaleOutDetail.Location_ID)
-        //Location_ID.FK_TB_SODETAIL_RE_TB_LOCATION)
+        [Navigate(NavigateType.OneToMany, nameof(tb_FM_PriceAdjustmentDetail.Location_ID))]
+        public virtual List<tb_FM_PriceAdjustmentDetail> tb_FM_PriceAdjustmentDetails { get; set; }
+        //tb_FM_PriceAdjustmentDetail.Location_ID)
+        //Location_ID.FK_TB_FM_PRICEADJUSTMENTDETAIL_REF_LOCATION)
         //tb_Location.Location_ID)
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_PurOrderDetail.Location_ID))]
-        public virtual List<tb_PurOrderDetail> tb_PurOrderDetails { get; set; }
-        //tb_PurOrderDetail.Location_ID)
-        //Location_ID.FK_PURORDERDETAIL_REF_LOCATION)
+        [Navigate(NavigateType.OneToMany, nameof(tb_AS_RepairMaterialPickupDetail.Location_ID))]
+        public virtual List<tb_AS_RepairMaterialPickupDetail> tb_AS_RepairMaterialPickupDetails { get; set; }
+        //tb_AS_RepairMaterialPickupDetail.Location_ID)
+        //Location_ID.FK_TB_AS_REPAIRMERIALPICKUPDETAIL_REF_TB_LOCATION)
         //tb_Location.Location_ID)
 
         //[Browsable(false)]打印报表时的数据源会不显示
@@ -429,18 +461,18 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_MRP_ReworkEntryDetail.Location_ID))]
-        public virtual List<tb_MRP_ReworkEntryDetail> tb_MRP_ReworkEntryDetails { get; set; }
-        //tb_MRP_ReworkEntryDetail.Location_ID)
-        //Location_ID.FK_MRP_ReworkEntrydetail_REF_Location)
+        [Navigate(NavigateType.OneToMany, nameof(tb_ProductionPlanDetail.Location_ID))]
+        public virtual List<tb_ProductionPlanDetail> tb_ProductionPlanDetails { get; set; }
+        //tb_ProductionPlanDetail.Location_ID)
+        //Location_ID.FK_PRODUPLANDETAIL_REF_LOCATION)
         //tb_Location.Location_ID)
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_PurEntryReDetail.Location_ID))]
-        public virtual List<tb_PurEntryReDetail> tb_PurEntryReDetails { get; set; }
-        //tb_PurEntryReDetail.Location_ID)
-        //Location_ID.FK_PURENREDETAIL_LOCATION)
+        [Navigate(NavigateType.OneToMany, nameof(tb_MRP_ReworkEntryDetail.Location_ID))]
+        public virtual List<tb_MRP_ReworkEntryDetail> tb_MRP_ReworkEntryDetails { get; set; }
+        //tb_MRP_ReworkEntryDetail.Location_ID)
+        //Location_ID.FK_MRP_ReworkEntrydetail_REF_Location)
         //tb_Location.Location_ID)
 
         //[Browsable(false)]打印报表时的数据源会不显示
@@ -453,18 +485,18 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_PurOrderReDetail.Location_ID))]
-        public virtual List<tb_PurOrderReDetail> tb_PurOrderReDetails { get; set; }
-        //tb_PurOrderReDetail.Location_ID)
-        //Location_ID.FK_PURORDERREDETAIL_REF_LOCATION)
+        [Navigate(NavigateType.OneToMany, nameof(tb_PurEntryDetail.Location_ID))]
+        public virtual List<tb_PurEntryDetail> tb_PurEntryDetails { get; set; }
+        //tb_PurEntryDetail.Location_ID)
+        //Location_ID.FK_TB_PUREN_REF_TB_LOCATION)
         //tb_Location.Location_ID)
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_ManufacturingOrder.Location_ID))]
-        public virtual List<tb_ManufacturingOrder> tb_ManufacturingOrders { get; set; }
-        //tb_ManufacturingOrder.Location_ID)
-        //Location_ID.FK_MANUFACTURINGORDER_REF_LOCATION)
+        [Navigate(NavigateType.OneToMany, nameof(tb_PurOrderDetail.Location_ID))]
+        public virtual List<tb_PurOrderDetail> tb_PurOrderDetails { get; set; }
+        //tb_PurOrderDetail.Location_ID)
+        //Location_ID.FK_PURORDERDETAIL_REF_LOCATION)
         //tb_Location.Location_ID)
 
         //[Browsable(false)]打印报表时的数据源会不显示
@@ -483,11 +515,35 @@ namespace RUINORERP.Model
         //Location_ID.FK_MATERIALREQUISIONDETAIL_REF_LOCATION)
         //tb_Location.Location_ID)
 
+        //[Browsable(false)]打印报表时的数据源会不显示
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_PurEntryReDetail.Location_ID))]
+        public virtual List<tb_PurEntryReDetail> tb_PurEntryReDetails { get; set; }
+        //tb_PurEntryReDetail.Location_ID)
+        //Location_ID.FK_PURENREDETAIL_LOCATION)
+        //tb_Location.Location_ID)
+
+        //[Browsable(false)]打印报表时的数据源会不显示
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_PurReturnEntryDetail.Location_ID))]
+        public virtual List<tb_PurReturnEntryDetail> tb_PurReturnEntryDetails { get; set; }
+        //tb_PurReturnEntryDetail.Location_ID)
+        //Location_ID.FK_PURRETURNENTRYDETAIL_REF_LOCATION)
+        //tb_Location.Location_ID)
+
+        //[Browsable(false)]打印报表时的数据源会不显示
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_ManufacturingOrderDetail.Location_ID))]
+        public virtual List<tb_ManufacturingOrderDetail> tb_ManufacturingOrderDetails { get; set; }
+        //tb_ManufacturingOrderDetail.Location_ID)
+        //Location_ID.FK_MANUFACTURINGORDERDETAIL_REF_LOCATION)
+        //tb_Location.Location_ID)
+
 
         #endregion
 
 
-
+ 
 
 //如果为false,则不可以。
 private bool PK_FK_ID_Check()
@@ -501,6 +557,8 @@ return rs;
 
 
 
+       
+        
 
         public override object Clone()
         {

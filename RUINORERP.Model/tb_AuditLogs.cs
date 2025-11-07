@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：06/06/2025 14:52:03
+// 时间：11/06/2025 20:41:39
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -57,6 +57,7 @@ namespace RUINORERP.Model
         /// </summary>
         [AdvQueryAttribute(ColName = "Employee_ID",ColDesc = "员工信息")] 
         [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Employee_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "员工信息" )]
+        [FKRelationAttribute("tb_Employee","Employee_ID")]
         public long? Employee_ID
         { 
             get{return _Employee_ID;}
@@ -208,12 +209,17 @@ namespace RUINORERP.Model
         #endregion
 
         #region 扩展属性
+        [SugarColumn(IsIgnore = true)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
+        [Navigate(NavigateType.OneToOne, nameof(Employee_ID))]
+        public virtual tb_Employee tb_employee { get; set; }
+
 
 
         #endregion
 
 
-
+ 
 
 //如果为false,则不可以。
 private bool PK_FK_ID_Check()

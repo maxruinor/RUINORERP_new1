@@ -89,14 +89,14 @@ namespace RUINORERP.Business
                     bool rs = await _tb_ReminderAlertHistoryServices.Update(entity);
                     if (rs)
                     {
-                        MyCacheManager.Instance.UpdateEntityList<tb_ReminderAlertHistory>(entity);
+                        Cache.EntityCacheHelper.UpdateEntity<tb_ReminderAlertHistory>(entity);
                     }
                     Returnobj = entity;
                 }
                 else
                 {
                     Returnobj = await _tb_ReminderAlertHistoryServices.AddReEntityAsync(entity);
-                    MyCacheManager.Instance.UpdateEntityList<tb_ReminderAlertHistory>(entity);
+                    Cache.EntityCacheHelper.UpdateEntity<tb_ReminderAlertHistory>(entity);
                 }
 
                 rr.ReturnObject = Returnobj;
@@ -130,14 +130,14 @@ namespace RUINORERP.Business
                     bool rs = await _tb_ReminderAlertHistoryServices.Update(entity);
                     if (rs)
                     {
-                        MyCacheManager.Instance.UpdateEntityList<tb_ReminderAlertHistory>(entity);
+                        Cache.EntityCacheHelper.UpdateEntity<tb_ReminderAlertHistory>(entity);
                     }
                     Returnobj = entity as T;
                 }
                 else
                 {
                     Returnobj = await _tb_ReminderAlertHistoryServices.AddReEntityAsync(entity) as T ;
-                    MyCacheManager.Instance.UpdateEntityList<tb_ReminderAlertHistory>(entity);
+                    Cache.EntityCacheHelper.UpdateEntity<tb_ReminderAlertHistory>(entity);
                 }
 
                 rr.ReturnObject = Returnobj;
@@ -162,7 +162,7 @@ namespace RUINORERP.Business
             }
             if (list != null)
             {
-                MyCacheManager.Instance.UpdateEntityList<List<T>>(list);
+                Cache.EntityCacheHelper.UpdateEntityList<T>(list);
              }
             return list;
         }
@@ -177,7 +177,7 @@ namespace RUINORERP.Business
             }
             if (list != null)
             {
-                MyCacheManager.Instance.UpdateEntityList<List<T>>(list);
+                Cache.EntityCacheHelper.UpdateEntityList<T>(list);
              }
             return list;
         }
@@ -190,7 +190,7 @@ namespace RUINORERP.Business
             if (rs)
             {
                 ////生成时暂时只考虑了一个主键的情况
-                MyCacheManager.Instance.DeleteEntityList<tb_ReminderAlertHistory>(entity);
+                Cache.EntityCacheHelper.DeleteEntity<tb_ReminderAlertHistory>(entity);
             }
             return rs;
         }
@@ -205,7 +205,7 @@ namespace RUINORERP.Business
                 rs=true;
                 ////生成时暂时只考虑了一个主键的情况
                  long[] result = entitys.Select(e => e.HistoryId).ToArray();
-                MyCacheManager.Instance.DeleteEntityList<tb_ReminderAlertHistory>(result);
+                Cache.EntityCacheHelper.DeleteEntity<tb_ReminderAlertHistory>(result);
             }
             return rs;
         }
@@ -310,7 +310,7 @@ namespace RUINORERP.Business
             if (rs)
             {
                 //////生成时暂时只考虑了一个主键的情况
-                MyCacheManager.Instance.DeleteEntityList<T>(model);
+                Cache.EntityCacheHelper.DeleteEntity<T>(model);
             }
             return rs;
         }
@@ -321,7 +321,7 @@ namespace RUINORERP.Business
         public tb_ReminderAlertHistory AddReEntity(tb_ReminderAlertHistory entity)
         {
             tb_ReminderAlertHistory AddEntity =  _tb_ReminderAlertHistoryServices.AddReEntity(entity);
-            MyCacheManager.Instance.UpdateEntityList<tb_ReminderAlertHistory>(AddEntity);
+            Cache.EntityCacheHelper.UpdateEntity<tb_ReminderAlertHistory>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
@@ -329,7 +329,7 @@ namespace RUINORERP.Business
          public async Task<tb_ReminderAlertHistory> AddReEntityAsync(tb_ReminderAlertHistory entity)
         {
             tb_ReminderAlertHistory AddEntity = await _tb_ReminderAlertHistoryServices.AddReEntityAsync(entity);
-            MyCacheManager.Instance.UpdateEntityList<tb_ReminderAlertHistory>(AddEntity);
+            Cache.EntityCacheHelper.UpdateEntity<tb_ReminderAlertHistory>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
@@ -339,7 +339,7 @@ namespace RUINORERP.Business
             long id = await _tb_ReminderAlertHistoryServices.Add(entity);
             if(id>0)
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_ReminderAlertHistory>(entity);
+                 Cache.EntityCacheHelper.UpdateEntity<tb_ReminderAlertHistory>(entity);
             }
             return id;
         }
@@ -349,7 +349,7 @@ namespace RUINORERP.Business
             List<long> ids = await _tb_ReminderAlertHistoryServices.Add(infos);
             if(ids.Count>0)//成功的个数 这里缓存 对不对呢？
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_ReminderAlertHistory>(infos);
+                 Cache.EntityCacheHelper.UpdateEntityList<tb_ReminderAlertHistory>(infos);
             }
             return ids;
         }
@@ -360,7 +360,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_ReminderAlertHistoryServices.Delete(entity);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_ReminderAlertHistory>(entity);
+                Cache.EntityCacheHelper.DeleteEntity<tb_ReminderAlertHistory>(entity);
                 
             }
             return rs;
@@ -371,7 +371,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_ReminderAlertHistoryServices.Update(entity);
             if (rs)
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_ReminderAlertHistory>(entity);
+                 Cache.EntityCacheHelper.UpdateEntity<tb_ReminderAlertHistory>(entity);
                 entity.ActionStatus = ActionStatus.无操作;
             }
             return rs;
@@ -382,7 +382,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_ReminderAlertHistoryServices.DeleteById(id);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_ReminderAlertHistory>(id);
+                Cache.EntityCacheHelper.DeleteEntity<tb_ReminderAlertHistory>(id);
             }
             return rs;
         }
@@ -392,7 +392,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_ReminderAlertHistoryServices.DeleteByIds(ids);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_ReminderAlertHistory>(ids);
+                Cache.EntityCacheHelper.DeleteEntity<tb_ReminderAlertHistory>(ids);
             }
             return rs;
         }
@@ -404,7 +404,7 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_ReminderAlertHistory>(list);
+            Cache.EntityCacheHelper.UpdateEntityList<tb_ReminderAlertHistory>(list);
             return list;
         }
         
@@ -415,7 +415,7 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_ReminderAlertHistory>(list);
+            Cache.EntityCacheHelper.UpdateEntityList<tb_ReminderAlertHistory>(list);
             return list;
         }
         
@@ -426,7 +426,7 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_ReminderAlertHistory>(list);
+            Cache.EntityCacheHelper.UpdateEntityList<tb_ReminderAlertHistory>(list);
             return list;
         }
         
@@ -437,7 +437,7 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_ReminderAlertHistory>(list);
+            Cache.EntityCacheHelper.UpdateEntityList<tb_ReminderAlertHistory>(list);
             return list;
         }
         
@@ -455,7 +455,7 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_ReminderAlertHistory>(list);
+            Cache.EntityCacheHelper.UpdateEntityList<tb_ReminderAlertHistory>(list);
             return list;
         }
         
@@ -477,7 +477,7 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_ReminderAlertHistory>(list);
+            Cache.EntityCacheHelper.UpdateEntityList<tb_ReminderAlertHistory>(list);
             return list;
         }
 
@@ -498,7 +498,7 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_ReminderAlertHistory>(list);
+            Cache.EntityCacheHelper.UpdateEntityList<tb_ReminderAlertHistory>(list);
             return list;
         }
         
@@ -519,7 +519,7 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_ReminderAlertHistory>(list);
+            Cache.EntityCacheHelper.UpdateEntityList<tb_ReminderAlertHistory>(list);
             return list;
         }
         
@@ -556,7 +556,7 @@ namespace RUINORERP.Business
                 entity.HasChanged = false;
             }
 
-            MyCacheManager.Instance.UpdateEntityList<tb_ReminderAlertHistory>(entity);
+            Cache.EntityCacheHelper.UpdateEntity<tb_ReminderAlertHistory>(entity);
             return entity as T;
         }
         

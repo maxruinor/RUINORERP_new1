@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/20/2025 22:58:12
+// 时间：11/06/2025 20:42:21
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 用户角色菜单个性化设置表一个角色用户菜单 三个字段为联合主键 就一行数据
     /// </summary>
     [Serializable()]
-    [Description("菜单个性化设置表")]
+    [Description("用户角色菜单个性化设置表一个角色用户菜单 三个字段为联合主键 就一行数据")]
     [SugarTable("tb_UIMenuPersonalization")]
     public partial class tb_UIMenuPersonalization: BaseEntity, ICloneable
     {
@@ -235,7 +235,7 @@ namespace RUINORERP.Model
         #endregion
 
 
-
+ 
 
 //如果为false,则不可以。
 private bool PK_FK_ID_Check()
@@ -248,6 +248,9 @@ return rs;
 
 
 
+
+       
+        
 
         public override object Clone()
         {

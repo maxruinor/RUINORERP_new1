@@ -1,10 +1,8 @@
-﻿
-// **************************************
-// 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
+﻿// **************************************
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/14/2025 20:39:44
+// 时间：11/07/2025 11:14:02
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -25,6 +23,7 @@ using RUINORERP.Model.Context;
 using System.Linq;
 using RUINOR.Core;
 using RUINORERP.Common.Helper;
+using RUINORERP.Business.Cache;
 
 namespace RUINORERP.Business
 {
@@ -39,14 +38,16 @@ namespace RUINORERP.Business
         //public readonly IUnitOfWorkManage _unitOfWorkManage;
         //public readonly ILogger<BaseController<T>> _logger;
         public Itb_MaterialRequisitionServices _tb_MaterialRequisitionServices { get; set; }
+        private readonly EventDrivenCacheManager _eventDrivenCacheManager; 
        // private readonly ApplicationContext _appContext;
        
-        public tb_MaterialRequisitionController(ILogger<tb_MaterialRequisitionController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_MaterialRequisitionServices tb_MaterialRequisitionServices , ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
+        public tb_MaterialRequisitionController(ILogger<tb_MaterialRequisitionController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_MaterialRequisitionServices tb_MaterialRequisitionServices ,EventDrivenCacheManager eventDrivenCacheManager, ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
         {
             _logger = logger;
            _unitOfWorkManage = unitOfWorkManage;
            _tb_MaterialRequisitionServices = tb_MaterialRequisitionServices;
-            _appContext = appContext;
+           _appContext = appContext;
+           _eventDrivenCacheManager = eventDrivenCacheManager;
         }
       
         
@@ -89,14 +90,14 @@ namespace RUINORERP.Business
                     bool rs = await _tb_MaterialRequisitionServices.Update(entity);
                     if (rs)
                     {
-                        MyCacheManager.Instance.UpdateEntityList<tb_MaterialRequisition>(entity);
+                        _eventDrivenCacheManager.UpdateEntity<tb_MaterialRequisition>(entity);
                     }
                     Returnobj = entity;
                 }
                 else
                 {
                     Returnobj = await _tb_MaterialRequisitionServices.AddReEntityAsync(entity);
-                    MyCacheManager.Instance.UpdateEntityList<tb_MaterialRequisition>(entity);
+                    _eventDrivenCacheManager.UpdateEntity<tb_MaterialRequisition>(entity);
                 }
 
                 rr.ReturnObject = Returnobj;
@@ -130,14 +131,14 @@ namespace RUINORERP.Business
                     bool rs = await _tb_MaterialRequisitionServices.Update(entity);
                     if (rs)
                     {
-                        MyCacheManager.Instance.UpdateEntityList<tb_MaterialRequisition>(entity);
+                        _eventDrivenCacheManager.UpdateEntity<tb_MaterialRequisition>(entity);
                     }
                     Returnobj = entity as T;
                 }
                 else
                 {
                     Returnobj = await _tb_MaterialRequisitionServices.AddReEntityAsync(entity) as T ;
-                    MyCacheManager.Instance.UpdateEntityList<tb_MaterialRequisition>(entity);
+                    _eventDrivenCacheManager.UpdateEntity<tb_MaterialRequisition>(entity);
                 }
 
                 rr.ReturnObject = Returnobj;
@@ -162,7 +163,7 @@ namespace RUINORERP.Business
             }
             if (list != null)
             {
-                MyCacheManager.Instance.UpdateEntityList<List<T>>(list);
+                _eventDrivenCacheManager.UpdateEntityList<T>(list);
              }
             return list;
         }
@@ -177,7 +178,7 @@ namespace RUINORERP.Business
             }
             if (list != null)
             {
-                MyCacheManager.Instance.UpdateEntityList<List<T>>(list);
+                _eventDrivenCacheManager.UpdateEntityList<T>(list);
              }
             return list;
         }
@@ -190,7 +191,7 @@ namespace RUINORERP.Business
             if (rs)
             {
                 ////生成时暂时只考虑了一个主键的情况
-                MyCacheManager.Instance.DeleteEntityList<tb_MaterialRequisition>(entity);
+                _eventDrivenCacheManager.DeleteEntity<tb_MaterialRequisition>(entity.PrimaryKeyID);
             }
             return rs;
         }
@@ -203,9 +204,7 @@ namespace RUINORERP.Business
             if (c>0)
             {
                 rs=true;
-                ////生成时暂时只考虑了一个主键的情况
-                 long[] result = entitys.Select(e => e.MR_ID).ToArray();
-                MyCacheManager.Instance.DeleteEntityList<tb_MaterialRequisition>(result);
+                _eventDrivenCacheManager.DeleteEntityList<tb_MaterialRequisition>(entitys);
             }
             return rs;
         }
@@ -290,9 +289,14 @@ namespace RUINORERP.Business
         public async override Task<List<T>> BaseQueryByAdvancedNavAsync(bool useLike, object dto)
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_MaterialRequisition>()
-                                .Includes(m => m.tb_MaterialReturns)
+                                .Includes(m => m.tb_projectgroup)
+                            .Includes(m => m.tb_customervendor)
+                            .Includes(m => m.tb_manufacturingorder)
+                            .Includes(m => m.tb_department)
+                            .Includes(m => m.tb_employee)
+                                            .Includes(m => m.tb_MaterialReturns)
                         .Includes(m => m.tb_MaterialRequisitionDetails)
-                                        .WhereCustom(useLike, dto);
+                                        .WhereCustom(useLike, dto);;
             return await querySqlQueryable.ToListAsync()as List<T>;
         }
 
@@ -307,7 +311,7 @@ namespace RUINORERP.Business
             if (rs)
             {
                 //////生成时暂时只考虑了一个主键的情况
-                MyCacheManager.Instance.DeleteEntityList<T>(model);
+                 _eventDrivenCacheManager.DeleteEntity<T>(model);
             }
             return rs;
         }
@@ -318,7 +322,8 @@ namespace RUINORERP.Business
         public tb_MaterialRequisition AddReEntity(tb_MaterialRequisition entity)
         {
             tb_MaterialRequisition AddEntity =  _tb_MaterialRequisitionServices.AddReEntity(entity);
-            MyCacheManager.Instance.UpdateEntityList<tb_MaterialRequisition>(AddEntity);
+     
+             _eventDrivenCacheManager.UpdateEntity<tb_MaterialRequisition>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
@@ -326,7 +331,7 @@ namespace RUINORERP.Business
          public async Task<tb_MaterialRequisition> AddReEntityAsync(tb_MaterialRequisition entity)
         {
             tb_MaterialRequisition AddEntity = await _tb_MaterialRequisitionServices.AddReEntityAsync(entity);
-            MyCacheManager.Instance.UpdateEntityList<tb_MaterialRequisition>(AddEntity);
+            _eventDrivenCacheManager.UpdateEntity<tb_MaterialRequisition>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
@@ -336,7 +341,7 @@ namespace RUINORERP.Business
             long id = await _tb_MaterialRequisitionServices.Add(entity);
             if(id>0)
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_MaterialRequisition>(entity);
+                 _eventDrivenCacheManager.UpdateEntity<tb_MaterialRequisition>(entity);
             }
             return id;
         }
@@ -346,7 +351,7 @@ namespace RUINORERP.Business
             List<long> ids = await _tb_MaterialRequisitionServices.Add(infos);
             if(ids.Count>0)//成功的个数 这里缓存 对不对呢？
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_MaterialRequisition>(infos);
+                 _eventDrivenCacheManager.UpdateEntityList<tb_MaterialRequisition>(infos);
             }
             return ids;
         }
@@ -357,7 +362,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_MaterialRequisitionServices.Delete(entity);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_MaterialRequisition>(entity);
+                _eventDrivenCacheManager.DeleteEntity<tb_MaterialRequisition>(entity);
                 
             }
             return rs;
@@ -368,7 +373,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_MaterialRequisitionServices.Update(entity);
             if (rs)
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_MaterialRequisition>(entity);
+                 _eventDrivenCacheManager.DeleteEntity<tb_MaterialRequisition>(entity);
                 entity.ActionStatus = ActionStatus.无操作;
             }
             return rs;
@@ -379,7 +384,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_MaterialRequisitionServices.DeleteById(id);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_MaterialRequisition>(id);
+               _eventDrivenCacheManager.DeleteEntity<tb_MaterialRequisition>(id);
             }
             return rs;
         }
@@ -389,7 +394,8 @@ namespace RUINORERP.Business
             bool rs = await _tb_MaterialRequisitionServices.DeleteByIds(ids);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_MaterialRequisition>(ids);
+            
+                   _eventDrivenCacheManager.DeleteEntities<tb_MaterialRequisition>(ids.Cast<object>().ToArray());
             }
             return rs;
         }
@@ -401,7 +407,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_MaterialRequisition>(list);
+     
+             _eventDrivenCacheManager.UpdateEntityList<tb_MaterialRequisition>(list);
             return list;
         }
         
@@ -412,7 +419,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_MaterialRequisition>(list);
+    
+             _eventDrivenCacheManager.UpdateEntityList<tb_MaterialRequisition>(list);
             return list;
         }
         
@@ -423,7 +431,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_MaterialRequisition>(list);
+  
+             _eventDrivenCacheManager.UpdateEntityList<tb_MaterialRequisition>(list);
             return list;
         }
         
@@ -434,7 +443,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_MaterialRequisition>(list);
+ 
+             _eventDrivenCacheManager.UpdateEntityList<tb_MaterialRequisition>(list);
             return list;
         }
         
@@ -452,7 +462,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_MaterialRequisition>(list);
+   
+             _eventDrivenCacheManager.UpdateEntityList<tb_MaterialRequisition>(list);
             return list;
         }
         
@@ -465,7 +476,11 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_MaterialRequisition>> QueryByNavAsync()
         {
             List<tb_MaterialRequisition> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_MaterialRequisition>()
+                               .Includes(t => t.tb_projectgroup )
+                               .Includes(t => t.tb_customervendor )
                                .Includes(t => t.tb_manufacturingorder )
+                               .Includes(t => t.tb_department )
+                               .Includes(t => t.tb_employee )
                                             .Includes(t => t.tb_MaterialReturns )
                                 .Includes(t => t.tb_MaterialRequisitionDetails )
                         .ToListAsync();
@@ -475,7 +490,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_MaterialRequisition>(list);
+ 
+             _eventDrivenCacheManager.UpdateEntityList<tb_MaterialRequisition>(list);
             return list;
         }
 
@@ -487,7 +503,11 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_MaterialRequisition>> QueryByNavAsync(Expression<Func<tb_MaterialRequisition, bool>> exp)
         {
             List<tb_MaterialRequisition> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_MaterialRequisition>().Where(exp)
+                               .Includes(t => t.tb_projectgroup )
+                               .Includes(t => t.tb_customervendor )
                                .Includes(t => t.tb_manufacturingorder )
+                               .Includes(t => t.tb_department )
+                               .Includes(t => t.tb_employee )
                                             .Includes(t => t.tb_MaterialReturns )
                                 .Includes(t => t.tb_MaterialRequisitionDetails )
                         .ToListAsync();
@@ -497,7 +517,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_MaterialRequisition>(list);
+  
+             _eventDrivenCacheManager.UpdateEntityList<tb_MaterialRequisition>(list);
             return list;
         }
         
@@ -509,7 +530,11 @@ namespace RUINORERP.Business
          public virtual List<tb_MaterialRequisition> QueryByNav(Expression<Func<tb_MaterialRequisition, bool>> exp)
         {
             List<tb_MaterialRequisition> list = _unitOfWorkManage.GetDbClient().Queryable<tb_MaterialRequisition>().Where(exp)
+                            .Includes(t => t.tb_projectgroup )
+                            .Includes(t => t.tb_customervendor )
                             .Includes(t => t.tb_manufacturingorder )
+                            .Includes(t => t.tb_department )
+                            .Includes(t => t.tb_employee )
                                         .Includes(t => t.tb_MaterialReturns )
                             .Includes(t => t.tb_MaterialRequisitionDetails )
                         .ToList();
@@ -519,7 +544,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_MaterialRequisition>(list);
+     
+             _eventDrivenCacheManager.UpdateEntityList<tb_MaterialRequisition>(list);
             return list;
         }
         
@@ -548,16 +574,23 @@ namespace RUINORERP.Business
         public override async Task<T> BaseQueryByIdNavAsync(object id)
         {
             tb_MaterialRequisition entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_MaterialRequisition>().Where(w => w.MR_ID == (long)id)
-                             .Includes(t => t.tb_manufacturingorder )
-                                        .Includes(t => t.tb_MaterialReturns )
-                            .Includes(t => t.tb_MaterialRequisitionDetails )
-                        .FirstAsync();
+                             .Includes(t => t.tb_projectgroup )
+                            .Includes(t => t.tb_customervendor )
+                            .Includes(t => t.tb_manufacturingorder )
+                            .Includes(t => t.tb_department )
+                            .Includes(t => t.tb_employee )
+                        
+
+                                            .Includes(t => t.tb_MaterialReturns )
+                                            .Includes(t => t.tb_MaterialRequisitionDetails )
+                                .FirstAsync();
             if(entity!=null)
             {
                 entity.HasChanged = false;
             }
 
-            MyCacheManager.Instance.UpdateEntityList<tb_MaterialRequisition>(entity);
+         
+             _eventDrivenCacheManager.UpdateEntity<tb_MaterialRequisition>(entity);
             return entity as T;
         }
         

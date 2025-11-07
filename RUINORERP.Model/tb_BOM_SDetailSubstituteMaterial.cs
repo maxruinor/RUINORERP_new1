@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：02/08/2025 16:31:53
+// 时间：11/06/2025 20:41:40
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 标准物料表BOM明细的替代材料表-使用优化级按库存量-成本-保质时间在配置来确定
     /// </summary>
     [Serializable()]
-    [Description("标准物料表BOM明细的替代材料表")]
+    [Description("标准物料表BOM明细的替代材料表-使用优化级按库存量-成本-保质时间在配置来确定")]
     [SugarTable("tb_BOM_SDetailSubstituteMaterial")]
     public partial class tb_BOM_SDetailSubstituteMaterial: BaseEntity, ICloneable
     {
@@ -377,7 +377,7 @@ namespace RUINORERP.Model
         #endregion
 
 
-
+ 
 
 //如果为false,则不可以。
 private bool PK_FK_ID_Check()
@@ -391,6 +391,7 @@ return rs;
 
 
 
+       
         
 
         public override object Clone()

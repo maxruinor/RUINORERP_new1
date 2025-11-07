@@ -42,9 +42,9 @@ namespace RUINORERP.Business.Processor
             QueryFilter queryFilter = new QueryFilter();
              
             //可以根据关联外键自动加载条件，条件用公共虚方法
-            queryFilter.SetQueryField<tb_FM_Subject>(c => c.Subject_name);
-            queryFilter.SetQueryField<tb_FM_Subject>(c => c.Subject_en_name);
-            queryFilter.SetQueryField<tb_FM_Subject>(c => c.Subject_code);
+            queryFilter.SetQueryField<tb_FM_Subject>(c => c.subject_name);
+            queryFilter.SetQueryField<tb_FM_Subject>(c => c.subject_en_name);
+            queryFilter.SetQueryField<tb_FM_Subject>(c => c.subject_code);
             queryFilter.SetQueryField<tb_FM_Subject>(c => c.Subject_Type, false);
             queryFilter.SetQueryField<tb_FM_Subject>(c => c.Balance_direction);
             queryFilter.SetQueryField<tb_FM_Subject>(c => c.Notes);

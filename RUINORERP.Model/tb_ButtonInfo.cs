@@ -4,10 +4,10 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：02/08/2025 16:31:53
+// 时间：11/06/2025 20:41:41
 // **************************************
 using System;
-using SqlSugar;
+﻿using SqlSugar;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -23,7 +23,7 @@ namespace RUINORERP.Model
     [Serializable()]
     [Description("字段信息表")]
     [SugarTable("tb_ButtonInfo")]
-    public partial class tb_ButtonInfo : BaseEntity, ICloneable
+    public partial class tb_ButtonInfo: BaseEntity, ICloneable
     {
         public tb_ButtonInfo()
         {
@@ -40,14 +40,13 @@ namespace RUINORERP.Model
         /// <summary>
         /// 按钮
         /// </summary>
-
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "ButtonInfo_ID", DecimalDigits = 0, IsNullable = false, ColumnDescription = "按钮", IsPrimaryKey = true)]
+ 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ButtonInfo_ID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "按钮" , IsPrimaryKey = true)]
         public long ButtonInfo_ID
-        {
-            get { return _ButtonInfo_ID; }
-            set
-            {
-                SetProperty(ref _ButtonInfo_ID, value);
+        { 
+            get{return _ButtonInfo_ID;}
+            set{
+            SetProperty(ref _ButtonInfo_ID, value);
                 base.PrimaryKeyID = _ButtonInfo_ID;
             }
         }
@@ -56,213 +55,197 @@ namespace RUINORERP.Model
         /// <summary>
         /// 所属菜单
         /// </summary>
-        [AdvQueryAttribute(ColName = "MenuID", ColDesc = "所属菜单")]
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "MenuID", DecimalDigits = 0, IsNullable = true, ColumnDescription = "所属菜单")]
-        [FKRelationAttribute("tb_MenuInfo", "MenuID")]
+        [AdvQueryAttribute(ColName = "MenuID",ColDesc = "所属菜单")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "MenuID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "所属菜单" )]
+        [FKRelationAttribute("tb_MenuInfo","MenuID")]
         public long? MenuID
-        {
-            get { return _MenuID; }
-            set
-            {
-                SetProperty(ref _MenuID, value);
-            }
+        { 
+            get{return _MenuID;}
+            set{
+            SetProperty(ref _MenuID, value);
+                        }
         }
 
         private string _BtnName;
         /// <summary>
         /// 按钮名称
         /// </summary>
-        [AdvQueryAttribute(ColName = "BtnName", ColDesc = "按钮名称")]
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "BtnName", Length = 255, IsNullable = true, ColumnDescription = "按钮名称")]
+        [AdvQueryAttribute(ColName = "BtnName",ColDesc = "按钮名称")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "BtnName" ,Length=255,IsNullable = true,ColumnDescription = "按钮名称" )]
         public string BtnName
-        {
-            get { return _BtnName; }
-            set
-            {
-                SetProperty(ref _BtnName, value);
-            }
+        { 
+            get{return _BtnName;}
+            set{
+            SetProperty(ref _BtnName, value);
+                        }
         }
 
         private string _BtnText;
         /// <summary>
         /// 按钮文本
         /// </summary>
-        [AdvQueryAttribute(ColName = "BtnText", ColDesc = "按钮文本")]
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "BtnText", Length = 250, IsNullable = true, ColumnDescription = "按钮文本")]
+        [AdvQueryAttribute(ColName = "BtnText",ColDesc = "按钮文本")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "BtnText" ,Length=250,IsNullable = true,ColumnDescription = "按钮文本" )]
         public string BtnText
-        {
-            get { return _BtnText; }
-            set
-            {
-                SetProperty(ref _BtnText, value);
-            }
+        { 
+            get{return _BtnText;}
+            set{
+            SetProperty(ref _BtnText, value);
+                        }
         }
 
         private string _HotKey;
         /// <summary>
         /// 热键
         /// </summary>
-        [AdvQueryAttribute(ColName = "HotKey", ColDesc = "热键")]
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "HotKey", Length = 50, IsNullable = true, ColumnDescription = "热键")]
+        [AdvQueryAttribute(ColName = "HotKey",ColDesc = "热键")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "HotKey" ,Length=50,IsNullable = true,ColumnDescription = "热键" )]
         public string HotKey
-        {
-            get { return _HotKey; }
-            set
-            {
-                SetProperty(ref _HotKey, value);
-            }
+        { 
+            get{return _HotKey;}
+            set{
+            SetProperty(ref _HotKey, value);
+                        }
         }
-
 
         private string _ButtonType;
         /// <summary>
         /// 按钮类型
         /// </summary>
-        [AdvQueryAttribute(ColName = "ButtonType", ColDesc = "按钮类型")]
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "ButtonType", Length = 100, IsNullable = true, ColumnDescription = "按钮类型")]
+        [AdvQueryAttribute(ColName = "ButtonType",ColDesc = "按钮类型")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "ButtonType" ,Length=100,IsNullable = true,ColumnDescription = "按钮类型" )]
         public string ButtonType
-        {
-            get { return _ButtonType; }
-            set
-            {
-                SetProperty(ref _ButtonType, value);
-            }
+        { 
+            get{return _ButtonType;}
+            set{
+            SetProperty(ref _ButtonType, value);
+                        }
         }
-
 
         private string _FormName;
         /// <summary>
         /// 窗体名称
         /// </summary>
-        [AdvQueryAttribute(ColName = "FormName", ColDesc = "窗体名称")]
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "FormName", Length = 255, IsNullable = true, ColumnDescription = "窗体名称")]
+        [AdvQueryAttribute(ColName = "FormName",ColDesc = "窗体名称")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "FormName" ,Length=255,IsNullable = true,ColumnDescription = "窗体名称" )]
         public string FormName
-        {
-            get { return _FormName; }
-            set
-            {
-                SetProperty(ref _FormName, value);
-            }
+        { 
+            get{return _FormName;}
+            set{
+            SetProperty(ref _FormName, value);
+                        }
         }
 
         private string _ClassPath;
         /// <summary>
         /// 类路径
         /// </summary>
-        [AdvQueryAttribute(ColName = "ClassPath", ColDesc = "类路径")]
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "ClassPath", Length = 500, IsNullable = true, ColumnDescription = "类路径")]
+        [AdvQueryAttribute(ColName = "ClassPath",ColDesc = "类路径")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "ClassPath" ,Length=500,IsNullable = true,ColumnDescription = "类路径" )]
         public string ClassPath
-        {
-            get { return _ClassPath; }
-            set
-            {
-                SetProperty(ref _ClassPath, value);
-            }
+        { 
+            get{return _ClassPath;}
+            set{
+            SetProperty(ref _ClassPath, value);
+                        }
         }
 
         private bool? _IsForm;
         /// <summary>
         /// 是否为窗体
         /// </summary>
-        [AdvQueryAttribute(ColName = "IsForm", ColDesc = "是否为窗体")]
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType = "Boolean", ColumnName = "IsForm", IsNullable = true, ColumnDescription = "是否为窗体")]
+        [AdvQueryAttribute(ColName = "IsForm",ColDesc = "是否为窗体")] 
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "IsForm" ,IsNullable = true,ColumnDescription = "是否为窗体" )]
         public bool? IsForm
-        {
-            get { return _IsForm; }
-            set
-            {
-                SetProperty(ref _IsForm, value);
-            }
+        { 
+            get{return _IsForm;}
+            set{
+            SetProperty(ref _IsForm, value);
+                        }
         }
 
-        private bool _IsEnabled = true;
+        private bool _IsEnabled= true;
         /// <summary>
         /// 是否启用
         /// </summary>
-        [AdvQueryAttribute(ColName = "IsEnabled", ColDesc = "是否启用")]
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType = "Boolean", ColumnName = "IsEnabled", IsNullable = false, ColumnDescription = "是否启用")]
+        [AdvQueryAttribute(ColName = "IsEnabled",ColDesc = "是否启用")] 
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "IsEnabled" ,IsNullable = false,ColumnDescription = "是否启用" )]
         public bool IsEnabled
-        {
-            get { return _IsEnabled; }
-            set
-            {
-                SetProperty(ref _IsEnabled, value);
-            }
+        { 
+            get{return _IsEnabled;}
+            set{
+            SetProperty(ref _IsEnabled, value);
+                        }
         }
 
         private string _Notes;
         /// <summary>
         /// 备注
         /// </summary>
-        [AdvQueryAttribute(ColName = "Notes", ColDesc = "备注")]
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "Notes", Length = 200, IsNullable = true, ColumnDescription = "备注")]
+        [AdvQueryAttribute(ColName = "Notes",ColDesc = "备注")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Notes" ,Length=200,IsNullable = true,ColumnDescription = "备注" )]
         public string Notes
-        {
-            get { return _Notes; }
-            set
-            {
-                SetProperty(ref _Notes, value);
-            }
+        { 
+            get{return _Notes;}
+            set{
+            SetProperty(ref _Notes, value);
+                        }
         }
 
         private DateTime? _Created_at;
         /// <summary>
         /// 创建时间
         /// </summary>
-        [AdvQueryAttribute(ColName = "Created_at", ColDesc = "创建时间")]
-        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType = "DateTime", ColumnName = "Created_at", IsNullable = true, ColumnDescription = "创建时间")]
+        [AdvQueryAttribute(ColName = "Created_at",ColDesc = "创建时间")] 
+        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "Created_at" ,IsNullable = true,ColumnDescription = "创建时间" )]
         public DateTime? Created_at
-        {
-            get { return _Created_at; }
-            set
-            {
-                SetProperty(ref _Created_at, value);
-            }
+        { 
+            get{return _Created_at;}
+            set{
+            SetProperty(ref _Created_at, value);
+                        }
         }
 
         private long? _Created_by;
         /// <summary>
         /// 创建人
         /// </summary>
-        [AdvQueryAttribute(ColName = "Created_by", ColDesc = "创建人")]
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "Created_by", DecimalDigits = 0, IsNullable = true, ColumnDescription = "创建人")]
+        [AdvQueryAttribute(ColName = "Created_by",ColDesc = "创建人")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Created_by" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "创建人" )]
         public long? Created_by
-        {
-            get { return _Created_by; }
-            set
-            {
-                SetProperty(ref _Created_by, value);
-            }
+        { 
+            get{return _Created_by;}
+            set{
+            SetProperty(ref _Created_by, value);
+                        }
         }
 
         private DateTime? _Modified_at;
         /// <summary>
         /// 修改时间
         /// </summary>
-        [AdvQueryAttribute(ColName = "Modified_at", ColDesc = "修改时间")]
-        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType = "DateTime", ColumnName = "Modified_at", IsNullable = true, ColumnDescription = "修改时间")]
+        [AdvQueryAttribute(ColName = "Modified_at",ColDesc = "修改时间")] 
+        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "Modified_at" ,IsNullable = true,ColumnDescription = "修改时间" )]
         public DateTime? Modified_at
-        {
-            get { return _Modified_at; }
-            set
-            {
-                SetProperty(ref _Modified_at, value);
-            }
+        { 
+            get{return _Modified_at;}
+            set{
+            SetProperty(ref _Modified_at, value);
+                        }
         }
 
         private long? _Modified_by;
         /// <summary>
         /// 修改人
         /// </summary>
-        [AdvQueryAttribute(ColName = "Modified_by", ColDesc = "修改人")]
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "Modified_by", DecimalDigits = 0, IsNullable = true, ColumnDescription = "修改人")]
+        [AdvQueryAttribute(ColName = "Modified_by",ColDesc = "修改人")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Modified_by" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "修改人" )]
         public long? Modified_by
-        {
-            get { return _Modified_by; }
-            set
-            {
-                SetProperty(ref _Modified_by, value);
-            }
+        { 
+            get{return _Modified_by;}
+            set{
+            SetProperty(ref _Modified_by, value);
+                        }
         }
 
         #endregion
@@ -286,20 +269,22 @@ namespace RUINORERP.Model
         #endregion
 
 
+ 
 
-
-        //如果为false,则不可以。
-        private bool PK_FK_ID_Check()
-        {
-            bool rs = true;
-            return rs;
-        }
-
-
-
+//如果为false,则不可以。
+private bool PK_FK_ID_Check()
+{
+  bool rs=true;
+return rs;
+}
 
 
 
+
+
+
+       
+        
 
         public override object Clone()
         {

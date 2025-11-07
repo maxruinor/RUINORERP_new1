@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：02/08/2025 16:32:03
+// 时间：11/06/2025 20:41:55
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -269,7 +269,7 @@ namespace RUINORERP.Model
         /// 实际成本
         /// </summary>
         [AdvQueryAttribute(ColName = "Inv_AdvCost",ColDesc = "实际成本")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "Inv_AdvCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "实际成本")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "Inv_AdvCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "实际成本" )]
         public decimal Inv_AdvCost
         { 
             get{return _Inv_AdvCost;}
@@ -445,11 +445,19 @@ namespace RUINORERP.Model
         //Inventory_ID.FK_TB_INV_A_REFERENCE_TB_INVEN)
         //tb_Inventory.Inventory_ID)
 
+        //[Browsable(false)]打印报表时的数据源会不显示
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_OpeningInventory.Inventory_ID))]
+        public virtual List<tb_OpeningInventory> tb_OpeningInventories { get; set; }
+        //tb_OpeningInventory.Inventory_ID)
+        //Inventory_ID.FK_TB_OPENI_REFERENCE_TB_INVEN)
+        //tb_Inventory.Inventory_ID)
+
 
         #endregion
 
 
-
+ 
 
 //如果为false,则不可以。
 private bool PK_FK_ID_Check()
@@ -463,6 +471,8 @@ return rs;
 
 
 
+       
+        
 
         public override object Clone()
         {

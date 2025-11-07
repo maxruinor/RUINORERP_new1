@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/23/2025 23:27:34
+// 时间：11/06/2025 20:42:01
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 收付款方式与账号映射配置表-销售订单收款时付款方式即可指定到收到哪个账号下面
     /// </summary>
     [Serializable()]
-    [Description("收付款方式与账号映射配置表")]
+    [Description("收付款方式与账号映射配置表-销售订单收款时付款方式即可指定到收到哪个账号下面")]
     [SugarTable("tb_PayMethodAccountMapper")]
     public partial class tb_PayMethodAccountMapper: BaseEntity, ICloneable
     {
@@ -141,7 +141,7 @@ namespace RUINORERP.Model
         #endregion
 
 
-
+ 
 
 //如果为false,则不可以。
 private bool PK_FK_ID_Check()
@@ -154,6 +154,9 @@ return rs;
 
 
 
+
+       
+        
 
         public override object Clone()
         {

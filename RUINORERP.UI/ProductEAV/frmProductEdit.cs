@@ -921,7 +921,7 @@ namespace RUINORERP.UI.ProductEAV
             {
                 if (EditEntity.Category_ID.HasValue && EditEntity.Category_ID.Value > 0 && s2.PropertyName == entity.GetPropertyName<tb_Prod>(c => c.Category_ID))
                 {
-                    var obj = MyCacheManager.Instance.GetEntity<tb_ProdCategories>(EditEntity.Category_ID.Value);
+                    var obj = RUINORERP.Business.Cache.EntityCacheHelper.GetEntity<tb_ProdCategories>(EditEntity.Category_ID.Value);
                     if (obj != null && obj.ToString() != "System.Object")
                     {
                         if (obj is tb_ProdCategories Cate)
@@ -1086,8 +1086,8 @@ namespace RUINORERP.UI.ProductEAV
             }
             else
             {
-                cevent.Value = MyCacheManager.Instance.GetEntity<tb_ProdCategories>(cevent.Value.ToString()).Category_name;
-                //cevent.Value = MyCacheManager.Instance.GetValue<tb_ProductCategories>(cevent.Value);
+                cevent.Value = RUINORERP.Business.Cache.EntityCacheHelper.GetEntity<tb_ProdCategories>(cevent.Value.ToString()).Category_name;
+                //cevent.Value = RUINORERP.Business.Cache.EntityCacheHelper.GetValue<tb_ProductCategories>(cevent.Value);
 
                 //显示名称
                 //tb_ProductCategories entity = list.Find(t => t.category_ID.ToString() == cevent.Value.ToString());
@@ -2203,7 +2203,7 @@ namespace RUINORERP.UI.ProductEAV
         //    if (FKValueColNameTableNameList.TryGetValue(dataGridView1.Columns[columnIndex].Name, out tableName))
         //    {
         //        string ValueDisplayColName = string.Empty;
-        //        var obj = MyCacheManager.Instance.GetValue(tableName, value);
+        //        var obj = RUINORERP.Business.Cache.EntityCacheHelper.GetValue(tableName, value);
         //        NameValue = obj.ToString();
 
         //    }

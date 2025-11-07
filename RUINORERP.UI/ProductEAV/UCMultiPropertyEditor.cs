@@ -1097,7 +1097,7 @@ namespace RUINORERP.UI.ProductEAV
                 List<tb_Prod_Attr_Relation> ProdAttrRelations = item.tb_Prod_Attr_Relations
                     .OrderBy(p => p.Property_ID).ToList();
                 View_ProdDetail viewProdDetail = null;
-                viewProdDetail = MyCacheManager.Instance.GetEntity<View_ProdDetail>(item.ProdDetailID);
+                viewProdDetail = RUINORERP.Business.Cache.EntityCacheHelper.GetEntity<View_ProdDetail>(item.ProdDetailID);
                 if (viewProdDetail == null)
                 {
                     //根据产品明细ID查询View_ProdDetail视图

@@ -1,9 +1,8 @@
 ﻿// **************************************
-// 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/11/2025 15:24:56
+// 时间：11/06/2025 19:43:10
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -24,6 +23,7 @@ using RUINORERP.Model.Context;
 using System.Linq;
 using RUINOR.Core;
 using RUINORERP.Common.Helper;
+using RUINORERP.Business.Cache;
 
 namespace RUINORERP.Business
 {
@@ -38,14 +38,16 @@ namespace RUINORERP.Business
         //public readonly IUnitOfWorkManage _unitOfWorkManage;
         //public readonly ILogger<BaseController<T>> _logger;
         public Itb_FM_PriceAdjustmentDetailServices _tb_FM_PriceAdjustmentDetailServices { get; set; }
+        private readonly EventDrivenCacheManager _eventDrivenCacheManager; 
        // private readonly ApplicationContext _appContext;
        
-        public tb_FM_PriceAdjustmentDetailController(ILogger<tb_FM_PriceAdjustmentDetailController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_FM_PriceAdjustmentDetailServices tb_FM_PriceAdjustmentDetailServices , ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
+        public tb_FM_PriceAdjustmentDetailController(ILogger<tb_FM_PriceAdjustmentDetailController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_FM_PriceAdjustmentDetailServices tb_FM_PriceAdjustmentDetailServices ,EventDrivenCacheManager eventDrivenCacheManager, ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
         {
             _logger = logger;
            _unitOfWorkManage = unitOfWorkManage;
            _tb_FM_PriceAdjustmentDetailServices = tb_FM_PriceAdjustmentDetailServices;
-            _appContext = appContext;
+           _appContext = appContext;
+           _eventDrivenCacheManager = eventDrivenCacheManager;
         }
       
         
@@ -88,14 +90,14 @@ namespace RUINORERP.Business
                     bool rs = await _tb_FM_PriceAdjustmentDetailServices.Update(entity);
                     if (rs)
                     {
-                        MyCacheManager.Instance.UpdateEntityList<tb_FM_PriceAdjustmentDetail>(entity);
+                        _eventDrivenCacheManager.UpdateEntity<tb_FM_PriceAdjustmentDetail>(entity);
                     }
                     Returnobj = entity;
                 }
                 else
                 {
                     Returnobj = await _tb_FM_PriceAdjustmentDetailServices.AddReEntityAsync(entity);
-                    MyCacheManager.Instance.UpdateEntityList<tb_FM_PriceAdjustmentDetail>(entity);
+                    _eventDrivenCacheManager.UpdateEntity<tb_FM_PriceAdjustmentDetail>(entity);
                 }
 
                 rr.ReturnObject = Returnobj;
@@ -129,14 +131,14 @@ namespace RUINORERP.Business
                     bool rs = await _tb_FM_PriceAdjustmentDetailServices.Update(entity);
                     if (rs)
                     {
-                        MyCacheManager.Instance.UpdateEntityList<tb_FM_PriceAdjustmentDetail>(entity);
+                        _eventDrivenCacheManager.UpdateEntity<tb_FM_PriceAdjustmentDetail>(entity);
                     }
                     Returnobj = entity as T;
                 }
                 else
                 {
                     Returnobj = await _tb_FM_PriceAdjustmentDetailServices.AddReEntityAsync(entity) as T ;
-                    MyCacheManager.Instance.UpdateEntityList<tb_FM_PriceAdjustmentDetail>(entity);
+                    _eventDrivenCacheManager.UpdateEntity<tb_FM_PriceAdjustmentDetail>(entity);
                 }
 
                 rr.ReturnObject = Returnobj;
@@ -161,7 +163,7 @@ namespace RUINORERP.Business
             }
             if (list != null)
             {
-                MyCacheManager.Instance.UpdateEntityList<List<T>>(list);
+                _eventDrivenCacheManager.UpdateEntityList<T>(list);
              }
             return list;
         }
@@ -176,7 +178,7 @@ namespace RUINORERP.Business
             }
             if (list != null)
             {
-                MyCacheManager.Instance.UpdateEntityList<List<T>>(list);
+                _eventDrivenCacheManager.UpdateEntityList<T>(list);
              }
             return list;
         }
@@ -189,7 +191,7 @@ namespace RUINORERP.Business
             if (rs)
             {
                 ////生成时暂时只考虑了一个主键的情况
-                MyCacheManager.Instance.DeleteEntityList<tb_FM_PriceAdjustmentDetail>(entity);
+                _eventDrivenCacheManager.DeleteEntity<tb_FM_PriceAdjustmentDetail>(entity.PrimaryKeyID);
             }
             return rs;
         }
@@ -202,9 +204,7 @@ namespace RUINORERP.Business
             if (c>0)
             {
                 rs=true;
-                ////生成时暂时只考虑了一个主键的情况
-                 long[] result = entitys.Select(e => e.AdjustDetailID).ToArray();
-                MyCacheManager.Instance.DeleteEntityList<tb_FM_PriceAdjustmentDetail>(result);
+                _eventDrivenCacheManager.DeleteEntityList<tb_FM_PriceAdjustmentDetail>(entitys);
             }
             return rs;
         }
@@ -309,7 +309,7 @@ namespace RUINORERP.Business
             if (rs)
             {
                 //////生成时暂时只考虑了一个主键的情况
-                MyCacheManager.Instance.DeleteEntityList<T>(model);
+                 _eventDrivenCacheManager.DeleteEntity<T>(model);
             }
             return rs;
         }
@@ -320,7 +320,8 @@ namespace RUINORERP.Business
         public tb_FM_PriceAdjustmentDetail AddReEntity(tb_FM_PriceAdjustmentDetail entity)
         {
             tb_FM_PriceAdjustmentDetail AddEntity =  _tb_FM_PriceAdjustmentDetailServices.AddReEntity(entity);
-            MyCacheManager.Instance.UpdateEntityList<tb_FM_PriceAdjustmentDetail>(AddEntity);
+     
+             _eventDrivenCacheManager.UpdateEntity<tb_FM_PriceAdjustmentDetail>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
@@ -328,7 +329,7 @@ namespace RUINORERP.Business
          public async Task<tb_FM_PriceAdjustmentDetail> AddReEntityAsync(tb_FM_PriceAdjustmentDetail entity)
         {
             tb_FM_PriceAdjustmentDetail AddEntity = await _tb_FM_PriceAdjustmentDetailServices.AddReEntityAsync(entity);
-            MyCacheManager.Instance.UpdateEntityList<tb_FM_PriceAdjustmentDetail>(AddEntity);
+            _eventDrivenCacheManager.UpdateEntity<tb_FM_PriceAdjustmentDetail>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
@@ -338,7 +339,7 @@ namespace RUINORERP.Business
             long id = await _tb_FM_PriceAdjustmentDetailServices.Add(entity);
             if(id>0)
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_FM_PriceAdjustmentDetail>(entity);
+                 _eventDrivenCacheManager.UpdateEntity<tb_FM_PriceAdjustmentDetail>(entity);
             }
             return id;
         }
@@ -348,7 +349,7 @@ namespace RUINORERP.Business
             List<long> ids = await _tb_FM_PriceAdjustmentDetailServices.Add(infos);
             if(ids.Count>0)//成功的个数 这里缓存 对不对呢？
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_FM_PriceAdjustmentDetail>(infos);
+                 _eventDrivenCacheManager.UpdateEntityList<tb_FM_PriceAdjustmentDetail>(infos);
             }
             return ids;
         }
@@ -359,7 +360,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_FM_PriceAdjustmentDetailServices.Delete(entity);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_FM_PriceAdjustmentDetail>(entity);
+                _eventDrivenCacheManager.DeleteEntity<tb_FM_PriceAdjustmentDetail>(entity);
                 
             }
             return rs;
@@ -370,7 +371,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_FM_PriceAdjustmentDetailServices.Update(entity);
             if (rs)
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_FM_PriceAdjustmentDetail>(entity);
+                 _eventDrivenCacheManager.DeleteEntity<tb_FM_PriceAdjustmentDetail>(entity);
                 entity.ActionStatus = ActionStatus.无操作;
             }
             return rs;
@@ -381,7 +382,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_FM_PriceAdjustmentDetailServices.DeleteById(id);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_FM_PriceAdjustmentDetail>(id);
+               _eventDrivenCacheManager.DeleteEntity<tb_FM_PriceAdjustmentDetail>(id);
             }
             return rs;
         }
@@ -391,7 +392,8 @@ namespace RUINORERP.Business
             bool rs = await _tb_FM_PriceAdjustmentDetailServices.DeleteByIds(ids);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_FM_PriceAdjustmentDetail>(ids);
+            
+                   _eventDrivenCacheManager.DeleteEntities<tb_FM_PriceAdjustmentDetail>(ids.Cast<object>().ToArray());
             }
             return rs;
         }
@@ -403,7 +405,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_FM_PriceAdjustmentDetail>(list);
+     
+             _eventDrivenCacheManager.UpdateEntityList<tb_FM_PriceAdjustmentDetail>(list);
             return list;
         }
         
@@ -414,7 +417,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_FM_PriceAdjustmentDetail>(list);
+    
+             _eventDrivenCacheManager.UpdateEntityList<tb_FM_PriceAdjustmentDetail>(list);
             return list;
         }
         
@@ -425,7 +429,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_FM_PriceAdjustmentDetail>(list);
+  
+             _eventDrivenCacheManager.UpdateEntityList<tb_FM_PriceAdjustmentDetail>(list);
             return list;
         }
         
@@ -436,7 +441,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_FM_PriceAdjustmentDetail>(list);
+ 
+             _eventDrivenCacheManager.UpdateEntityList<tb_FM_PriceAdjustmentDetail>(list);
             return list;
         }
         
@@ -454,7 +460,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_FM_PriceAdjustmentDetail>(list);
+   
+             _eventDrivenCacheManager.UpdateEntityList<tb_FM_PriceAdjustmentDetail>(list);
             return list;
         }
         
@@ -478,7 +485,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_FM_PriceAdjustmentDetail>(list);
+ 
+             _eventDrivenCacheManager.UpdateEntityList<tb_FM_PriceAdjustmentDetail>(list);
             return list;
         }
 
@@ -501,7 +509,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_FM_PriceAdjustmentDetail>(list);
+  
+             _eventDrivenCacheManager.UpdateEntityList<tb_FM_PriceAdjustmentDetail>(list);
             return list;
         }
         
@@ -524,7 +533,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_FM_PriceAdjustmentDetail>(list);
+     
+             _eventDrivenCacheManager.UpdateEntityList<tb_FM_PriceAdjustmentDetail>(list);
             return list;
         }
         
@@ -565,7 +575,8 @@ namespace RUINORERP.Business
                 entity.HasChanged = false;
             }
 
-            MyCacheManager.Instance.UpdateEntityList<tb_FM_PriceAdjustmentDetail>(entity);
+         
+             _eventDrivenCacheManager.UpdateEntity<tb_FM_PriceAdjustmentDetail>(entity);
             return entity as T;
         }
         

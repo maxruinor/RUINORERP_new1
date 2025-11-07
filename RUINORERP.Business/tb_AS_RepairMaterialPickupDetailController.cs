@@ -1,10 +1,8 @@
-﻿
-// **************************************
-// 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
+﻿// **************************************
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/24/2025 20:25:40
+// 时间：11/06/2025 19:42:58
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -25,6 +23,7 @@ using RUINORERP.Model.Context;
 using System.Linq;
 using RUINOR.Core;
 using RUINORERP.Common.Helper;
+using RUINORERP.Business.Cache;
 
 namespace RUINORERP.Business
 {
@@ -39,14 +38,16 @@ namespace RUINORERP.Business
         //public readonly IUnitOfWorkManage _unitOfWorkManage;
         //public readonly ILogger<BaseController<T>> _logger;
         public Itb_AS_RepairMaterialPickupDetailServices _tb_AS_RepairMaterialPickupDetailServices { get; set; }
+        private readonly EventDrivenCacheManager _eventDrivenCacheManager; 
        // private readonly ApplicationContext _appContext;
        
-        public tb_AS_RepairMaterialPickupDetailController(ILogger<tb_AS_RepairMaterialPickupDetailController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_AS_RepairMaterialPickupDetailServices tb_AS_RepairMaterialPickupDetailServices , ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
+        public tb_AS_RepairMaterialPickupDetailController(ILogger<tb_AS_RepairMaterialPickupDetailController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_AS_RepairMaterialPickupDetailServices tb_AS_RepairMaterialPickupDetailServices ,EventDrivenCacheManager eventDrivenCacheManager, ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
         {
             _logger = logger;
            _unitOfWorkManage = unitOfWorkManage;
            _tb_AS_RepairMaterialPickupDetailServices = tb_AS_RepairMaterialPickupDetailServices;
-            _appContext = appContext;
+           _appContext = appContext;
+           _eventDrivenCacheManager = eventDrivenCacheManager;
         }
       
         
@@ -89,14 +90,14 @@ namespace RUINORERP.Business
                     bool rs = await _tb_AS_RepairMaterialPickupDetailServices.Update(entity);
                     if (rs)
                     {
-                        MyCacheManager.Instance.UpdateEntityList<tb_AS_RepairMaterialPickupDetail>(entity);
+                        _eventDrivenCacheManager.UpdateEntity<tb_AS_RepairMaterialPickupDetail>(entity);
                     }
                     Returnobj = entity;
                 }
                 else
                 {
                     Returnobj = await _tb_AS_RepairMaterialPickupDetailServices.AddReEntityAsync(entity);
-                    MyCacheManager.Instance.UpdateEntityList<tb_AS_RepairMaterialPickupDetail>(entity);
+                    _eventDrivenCacheManager.UpdateEntity<tb_AS_RepairMaterialPickupDetail>(entity);
                 }
 
                 rr.ReturnObject = Returnobj;
@@ -130,14 +131,14 @@ namespace RUINORERP.Business
                     bool rs = await _tb_AS_RepairMaterialPickupDetailServices.Update(entity);
                     if (rs)
                     {
-                        MyCacheManager.Instance.UpdateEntityList<tb_AS_RepairMaterialPickupDetail>(entity);
+                        _eventDrivenCacheManager.UpdateEntity<tb_AS_RepairMaterialPickupDetail>(entity);
                     }
                     Returnobj = entity as T;
                 }
                 else
                 {
                     Returnobj = await _tb_AS_RepairMaterialPickupDetailServices.AddReEntityAsync(entity) as T ;
-                    MyCacheManager.Instance.UpdateEntityList<tb_AS_RepairMaterialPickupDetail>(entity);
+                    _eventDrivenCacheManager.UpdateEntity<tb_AS_RepairMaterialPickupDetail>(entity);
                 }
 
                 rr.ReturnObject = Returnobj;
@@ -162,7 +163,7 @@ namespace RUINORERP.Business
             }
             if (list != null)
             {
-                MyCacheManager.Instance.UpdateEntityList<List<T>>(list);
+                _eventDrivenCacheManager.UpdateEntityList<T>(list);
              }
             return list;
         }
@@ -177,7 +178,7 @@ namespace RUINORERP.Business
             }
             if (list != null)
             {
-                MyCacheManager.Instance.UpdateEntityList<List<T>>(list);
+                _eventDrivenCacheManager.UpdateEntityList<T>(list);
              }
             return list;
         }
@@ -190,7 +191,7 @@ namespace RUINORERP.Business
             if (rs)
             {
                 ////生成时暂时只考虑了一个主键的情况
-                MyCacheManager.Instance.DeleteEntityList<tb_AS_RepairMaterialPickupDetail>(entity);
+                _eventDrivenCacheManager.DeleteEntity<tb_AS_RepairMaterialPickupDetail>(entity.PrimaryKeyID);
             }
             return rs;
         }
@@ -203,9 +204,7 @@ namespace RUINORERP.Business
             if (c>0)
             {
                 rs=true;
-                ////生成时暂时只考虑了一个主键的情况
-                 long[] result = entitys.Select(e => e.RMPDetailID).ToArray();
-                MyCacheManager.Instance.DeleteEntityList<tb_AS_RepairMaterialPickupDetail>(result);
+                _eventDrivenCacheManager.DeleteEntityList<tb_AS_RepairMaterialPickupDetail>(entitys);
             }
             return rs;
         }
@@ -310,7 +309,7 @@ namespace RUINORERP.Business
             if (rs)
             {
                 //////生成时暂时只考虑了一个主键的情况
-                MyCacheManager.Instance.DeleteEntityList<T>(model);
+                 _eventDrivenCacheManager.DeleteEntity<T>(model);
             }
             return rs;
         }
@@ -321,7 +320,8 @@ namespace RUINORERP.Business
         public tb_AS_RepairMaterialPickupDetail AddReEntity(tb_AS_RepairMaterialPickupDetail entity)
         {
             tb_AS_RepairMaterialPickupDetail AddEntity =  _tb_AS_RepairMaterialPickupDetailServices.AddReEntity(entity);
-            MyCacheManager.Instance.UpdateEntityList<tb_AS_RepairMaterialPickupDetail>(AddEntity);
+     
+             _eventDrivenCacheManager.UpdateEntity<tb_AS_RepairMaterialPickupDetail>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
@@ -329,7 +329,7 @@ namespace RUINORERP.Business
          public async Task<tb_AS_RepairMaterialPickupDetail> AddReEntityAsync(tb_AS_RepairMaterialPickupDetail entity)
         {
             tb_AS_RepairMaterialPickupDetail AddEntity = await _tb_AS_RepairMaterialPickupDetailServices.AddReEntityAsync(entity);
-            MyCacheManager.Instance.UpdateEntityList<tb_AS_RepairMaterialPickupDetail>(AddEntity);
+            _eventDrivenCacheManager.UpdateEntity<tb_AS_RepairMaterialPickupDetail>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
@@ -339,7 +339,7 @@ namespace RUINORERP.Business
             long id = await _tb_AS_RepairMaterialPickupDetailServices.Add(entity);
             if(id>0)
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_AS_RepairMaterialPickupDetail>(entity);
+                 _eventDrivenCacheManager.UpdateEntity<tb_AS_RepairMaterialPickupDetail>(entity);
             }
             return id;
         }
@@ -349,7 +349,7 @@ namespace RUINORERP.Business
             List<long> ids = await _tb_AS_RepairMaterialPickupDetailServices.Add(infos);
             if(ids.Count>0)//成功的个数 这里缓存 对不对呢？
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_AS_RepairMaterialPickupDetail>(infos);
+                 _eventDrivenCacheManager.UpdateEntityList<tb_AS_RepairMaterialPickupDetail>(infos);
             }
             return ids;
         }
@@ -360,7 +360,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_AS_RepairMaterialPickupDetailServices.Delete(entity);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_AS_RepairMaterialPickupDetail>(entity);
+                _eventDrivenCacheManager.DeleteEntity<tb_AS_RepairMaterialPickupDetail>(entity);
                 
             }
             return rs;
@@ -371,7 +371,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_AS_RepairMaterialPickupDetailServices.Update(entity);
             if (rs)
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_AS_RepairMaterialPickupDetail>(entity);
+                 _eventDrivenCacheManager.DeleteEntity<tb_AS_RepairMaterialPickupDetail>(entity);
                 entity.ActionStatus = ActionStatus.无操作;
             }
             return rs;
@@ -382,7 +382,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_AS_RepairMaterialPickupDetailServices.DeleteById(id);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_AS_RepairMaterialPickupDetail>(id);
+               _eventDrivenCacheManager.DeleteEntity<tb_AS_RepairMaterialPickupDetail>(id);
             }
             return rs;
         }
@@ -392,7 +392,8 @@ namespace RUINORERP.Business
             bool rs = await _tb_AS_RepairMaterialPickupDetailServices.DeleteByIds(ids);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_AS_RepairMaterialPickupDetail>(ids);
+            
+                   _eventDrivenCacheManager.DeleteEntities<tb_AS_RepairMaterialPickupDetail>(ids.Cast<object>().ToArray());
             }
             return rs;
         }
@@ -404,7 +405,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_AS_RepairMaterialPickupDetail>(list);
+     
+             _eventDrivenCacheManager.UpdateEntityList<tb_AS_RepairMaterialPickupDetail>(list);
             return list;
         }
         
@@ -415,7 +417,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_AS_RepairMaterialPickupDetail>(list);
+    
+             _eventDrivenCacheManager.UpdateEntityList<tb_AS_RepairMaterialPickupDetail>(list);
             return list;
         }
         
@@ -426,7 +429,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_AS_RepairMaterialPickupDetail>(list);
+  
+             _eventDrivenCacheManager.UpdateEntityList<tb_AS_RepairMaterialPickupDetail>(list);
             return list;
         }
         
@@ -437,7 +441,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_AS_RepairMaterialPickupDetail>(list);
+ 
+             _eventDrivenCacheManager.UpdateEntityList<tb_AS_RepairMaterialPickupDetail>(list);
             return list;
         }
         
@@ -455,7 +460,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_AS_RepairMaterialPickupDetail>(list);
+   
+             _eventDrivenCacheManager.UpdateEntityList<tb_AS_RepairMaterialPickupDetail>(list);
             return list;
         }
         
@@ -478,7 +484,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_AS_RepairMaterialPickupDetail>(list);
+ 
+             _eventDrivenCacheManager.UpdateEntityList<tb_AS_RepairMaterialPickupDetail>(list);
             return list;
         }
 
@@ -500,7 +507,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_AS_RepairMaterialPickupDetail>(list);
+  
+             _eventDrivenCacheManager.UpdateEntityList<tb_AS_RepairMaterialPickupDetail>(list);
             return list;
         }
         
@@ -522,7 +530,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_AS_RepairMaterialPickupDetail>(list);
+     
+             _eventDrivenCacheManager.UpdateEntityList<tb_AS_RepairMaterialPickupDetail>(list);
             return list;
         }
         
@@ -554,13 +563,16 @@ namespace RUINORERP.Business
                              .Includes(t => t.tb_as_repairmaterialpickup )
                             .Includes(t => t.tb_proddetail )
                             .Includes(t => t.tb_location )
-                                    .FirstAsync();
+                        
+
+                                .FirstAsync();
             if(entity!=null)
             {
                 entity.HasChanged = false;
             }
 
-            MyCacheManager.Instance.UpdateEntityList<tb_AS_RepairMaterialPickupDetail>(entity);
+         
+             _eventDrivenCacheManager.UpdateEntity<tb_AS_RepairMaterialPickupDetail>(entity);
             return entity as T;
         }
         

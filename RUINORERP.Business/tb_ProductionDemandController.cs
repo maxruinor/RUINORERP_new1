@@ -1,10 +1,8 @@
-﻿
-// **************************************
-// 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
+﻿// **************************************
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/14/2025 20:39:49
+// 时间：11/06/2025 19:43:19
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -25,6 +23,7 @@ using RUINORERP.Model.Context;
 using System.Linq;
 using RUINOR.Core;
 using RUINORERP.Common.Helper;
+using RUINORERP.Business.Cache;
 
 namespace RUINORERP.Business
 {
@@ -39,14 +38,16 @@ namespace RUINORERP.Business
         //public readonly IUnitOfWorkManage _unitOfWorkManage;
         //public readonly ILogger<BaseController<T>> _logger;
         public Itb_ProductionDemandServices _tb_ProductionDemandServices { get; set; }
+        private readonly EventDrivenCacheManager _eventDrivenCacheManager; 
        // private readonly ApplicationContext _appContext;
        
-        public tb_ProductionDemandController(ILogger<tb_ProductionDemandController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_ProductionDemandServices tb_ProductionDemandServices , ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
+        public tb_ProductionDemandController(ILogger<tb_ProductionDemandController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_ProductionDemandServices tb_ProductionDemandServices ,EventDrivenCacheManager eventDrivenCacheManager, ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
         {
             _logger = logger;
            _unitOfWorkManage = unitOfWorkManage;
            _tb_ProductionDemandServices = tb_ProductionDemandServices;
-            _appContext = appContext;
+           _appContext = appContext;
+           _eventDrivenCacheManager = eventDrivenCacheManager;
         }
       
         
@@ -89,14 +90,14 @@ namespace RUINORERP.Business
                     bool rs = await _tb_ProductionDemandServices.Update(entity);
                     if (rs)
                     {
-                        MyCacheManager.Instance.UpdateEntityList<tb_ProductionDemand>(entity);
+                        _eventDrivenCacheManager.UpdateEntity<tb_ProductionDemand>(entity);
                     }
                     Returnobj = entity;
                 }
                 else
                 {
                     Returnobj = await _tb_ProductionDemandServices.AddReEntityAsync(entity);
-                    MyCacheManager.Instance.UpdateEntityList<tb_ProductionDemand>(entity);
+                    _eventDrivenCacheManager.UpdateEntity<tb_ProductionDemand>(entity);
                 }
 
                 rr.ReturnObject = Returnobj;
@@ -130,14 +131,14 @@ namespace RUINORERP.Business
                     bool rs = await _tb_ProductionDemandServices.Update(entity);
                     if (rs)
                     {
-                        MyCacheManager.Instance.UpdateEntityList<tb_ProductionDemand>(entity);
+                        _eventDrivenCacheManager.UpdateEntity<tb_ProductionDemand>(entity);
                     }
                     Returnobj = entity as T;
                 }
                 else
                 {
                     Returnobj = await _tb_ProductionDemandServices.AddReEntityAsync(entity) as T ;
-                    MyCacheManager.Instance.UpdateEntityList<tb_ProductionDemand>(entity);
+                    _eventDrivenCacheManager.UpdateEntity<tb_ProductionDemand>(entity);
                 }
 
                 rr.ReturnObject = Returnobj;
@@ -162,7 +163,7 @@ namespace RUINORERP.Business
             }
             if (list != null)
             {
-                MyCacheManager.Instance.UpdateEntityList<List<T>>(list);
+                _eventDrivenCacheManager.UpdateEntityList<T>(list);
              }
             return list;
         }
@@ -177,7 +178,7 @@ namespace RUINORERP.Business
             }
             if (list != null)
             {
-                MyCacheManager.Instance.UpdateEntityList<List<T>>(list);
+                _eventDrivenCacheManager.UpdateEntityList<T>(list);
              }
             return list;
         }
@@ -190,7 +191,7 @@ namespace RUINORERP.Business
             if (rs)
             {
                 ////生成时暂时只考虑了一个主键的情况
-                MyCacheManager.Instance.DeleteEntityList<tb_ProductionDemand>(entity);
+                _eventDrivenCacheManager.DeleteEntity<tb_ProductionDemand>(entity.PrimaryKeyID);
             }
             return rs;
         }
@@ -203,9 +204,7 @@ namespace RUINORERP.Business
             if (c>0)
             {
                 rs=true;
-                ////生成时暂时只考虑了一个主键的情况
-                 long[] result = entitys.Select(e => e.PDID).ToArray();
-                MyCacheManager.Instance.DeleteEntityList<tb_ProductionDemand>(result);
+                _eventDrivenCacheManager.DeleteEntityList<tb_ProductionDemand>(entitys);
             }
             return rs;
         }
@@ -248,23 +247,21 @@ namespace RUINORERP.Business
             {
             
                              rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_ProductionDemand>(entity as tb_ProductionDemand)
-                        .Include(m => m.tb_ProduceGoodsRecommendDetails)
+                        .Include(m => m.tb_ManufacturingOrders)
+                    .Include(m => m.tb_ProduceGoodsRecommendDetails)
                     .Include(m => m.tb_ProductionDemandDetails)
                     .Include(m => m.tb_ProductionDemandTargetDetails)
                     .Include(m => m.tb_PurGoodsRecommendDetails)
-                    .Include(m => m.tb_PurOrders)
-                    .Include(m => m.tb_ManufacturingOrders)
                     .ExecuteCommandAsync();
                  }
         else    
         {
                         rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_ProductionDemand>(entity as tb_ProductionDemand)
+                .Include(m => m.tb_ManufacturingOrders)
                 .Include(m => m.tb_ProduceGoodsRecommendDetails)
                 .Include(m => m.tb_ProductionDemandDetails)
                 .Include(m => m.tb_ProductionDemandTargetDetails)
                 .Include(m => m.tb_PurGoodsRecommendDetails)
-                .Include(m => m.tb_PurOrders)
-                .Include(m => m.tb_ManufacturingOrders)
          
                 .ExecuteCommandAsync();
                                           
@@ -298,13 +295,12 @@ namespace RUINORERP.Business
         public async override Task<List<T>> BaseQueryByAdvancedNavAsync(bool useLike, object dto)
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_ProductionDemand>()
-                                .Includes(m => m.tb_ProduceGoodsRecommendDetails)
+                                .Includes(m => m.tb_ManufacturingOrders)
+                        .Includes(m => m.tb_ProduceGoodsRecommendDetails)
                         .Includes(m => m.tb_ProductionDemandDetails)
                         .Includes(m => m.tb_ProductionDemandTargetDetails)
                         .Includes(m => m.tb_PurGoodsRecommendDetails)
-                        .Includes(m => m.tb_PurOrders)
-                        .Includes(m => m.tb_ManufacturingOrders)
-                                        .WhereCustom(useLike, dto);
+                                        .WhereCustom(useLike, dto);;
             return await querySqlQueryable.ToListAsync()as List<T>;
         }
 
@@ -313,17 +309,16 @@ namespace RUINORERP.Business
         {
             tb_ProductionDemand entity = model as tb_ProductionDemand;
              bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_ProductionDemand>(m => m.PDID== entity.PDID)
-                                .Include(m => m.tb_ProduceGoodsRecommendDetails)
+                                .Include(m => m.tb_ManufacturingOrders)
+                        .Include(m => m.tb_ProduceGoodsRecommendDetails)
                         .Include(m => m.tb_ProductionDemandDetails)
                         .Include(m => m.tb_ProductionDemandTargetDetails)
                         .Include(m => m.tb_PurGoodsRecommendDetails)
-                        .Include(m => m.tb_PurOrders)
-                        .Include(m => m.tb_ManufacturingOrders)
                                         .ExecuteCommandAsync();
             if (rs)
             {
                 //////生成时暂时只考虑了一个主键的情况
-                MyCacheManager.Instance.DeleteEntityList<T>(model);
+                 _eventDrivenCacheManager.DeleteEntity<T>(model);
             }
             return rs;
         }
@@ -334,7 +329,8 @@ namespace RUINORERP.Business
         public tb_ProductionDemand AddReEntity(tb_ProductionDemand entity)
         {
             tb_ProductionDemand AddEntity =  _tb_ProductionDemandServices.AddReEntity(entity);
-            MyCacheManager.Instance.UpdateEntityList<tb_ProductionDemand>(AddEntity);
+     
+             _eventDrivenCacheManager.UpdateEntity<tb_ProductionDemand>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
@@ -342,7 +338,7 @@ namespace RUINORERP.Business
          public async Task<tb_ProductionDemand> AddReEntityAsync(tb_ProductionDemand entity)
         {
             tb_ProductionDemand AddEntity = await _tb_ProductionDemandServices.AddReEntityAsync(entity);
-            MyCacheManager.Instance.UpdateEntityList<tb_ProductionDemand>(AddEntity);
+            _eventDrivenCacheManager.UpdateEntity<tb_ProductionDemand>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
@@ -352,7 +348,7 @@ namespace RUINORERP.Business
             long id = await _tb_ProductionDemandServices.Add(entity);
             if(id>0)
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_ProductionDemand>(entity);
+                 _eventDrivenCacheManager.UpdateEntity<tb_ProductionDemand>(entity);
             }
             return id;
         }
@@ -362,7 +358,7 @@ namespace RUINORERP.Business
             List<long> ids = await _tb_ProductionDemandServices.Add(infos);
             if(ids.Count>0)//成功的个数 这里缓存 对不对呢？
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_ProductionDemand>(infos);
+                 _eventDrivenCacheManager.UpdateEntityList<tb_ProductionDemand>(infos);
             }
             return ids;
         }
@@ -373,7 +369,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_ProductionDemandServices.Delete(entity);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_ProductionDemand>(entity);
+                _eventDrivenCacheManager.DeleteEntity<tb_ProductionDemand>(entity);
                 
             }
             return rs;
@@ -384,7 +380,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_ProductionDemandServices.Update(entity);
             if (rs)
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_ProductionDemand>(entity);
+                 _eventDrivenCacheManager.DeleteEntity<tb_ProductionDemand>(entity);
                 entity.ActionStatus = ActionStatus.无操作;
             }
             return rs;
@@ -395,7 +391,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_ProductionDemandServices.DeleteById(id);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_ProductionDemand>(id);
+               _eventDrivenCacheManager.DeleteEntity<tb_ProductionDemand>(id);
             }
             return rs;
         }
@@ -405,7 +401,8 @@ namespace RUINORERP.Business
             bool rs = await _tb_ProductionDemandServices.DeleteByIds(ids);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_ProductionDemand>(ids);
+            
+                   _eventDrivenCacheManager.DeleteEntities<tb_ProductionDemand>(ids.Cast<object>().ToArray());
             }
             return rs;
         }
@@ -417,7 +414,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_ProductionDemand>(list);
+     
+             _eventDrivenCacheManager.UpdateEntityList<tb_ProductionDemand>(list);
             return list;
         }
         
@@ -428,7 +426,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_ProductionDemand>(list);
+    
+             _eventDrivenCacheManager.UpdateEntityList<tb_ProductionDemand>(list);
             return list;
         }
         
@@ -439,7 +438,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_ProductionDemand>(list);
+  
+             _eventDrivenCacheManager.UpdateEntityList<tb_ProductionDemand>(list);
             return list;
         }
         
@@ -450,7 +450,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_ProductionDemand>(list);
+ 
+             _eventDrivenCacheManager.UpdateEntityList<tb_ProductionDemand>(list);
             return list;
         }
         
@@ -468,7 +469,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_ProductionDemand>(list);
+   
+             _eventDrivenCacheManager.UpdateEntityList<tb_ProductionDemand>(list);
             return list;
         }
         
@@ -483,12 +485,11 @@ namespace RUINORERP.Business
             List<tb_ProductionDemand> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_ProductionDemand>()
                                .Includes(t => t.tb_employee )
                                .Includes(t => t.tb_productionplan )
-                                            .Includes(t => t.tb_ProduceGoodsRecommendDetails )
+                                            .Includes(t => t.tb_ManufacturingOrders )
+                                .Includes(t => t.tb_ProduceGoodsRecommendDetails )
                                 .Includes(t => t.tb_ProductionDemandDetails )
                                 .Includes(t => t.tb_ProductionDemandTargetDetails )
                                 .Includes(t => t.tb_PurGoodsRecommendDetails )
-                                .Includes(t => t.tb_PurOrders )
-                                .Includes(t => t.tb_ManufacturingOrders )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -496,7 +497,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_ProductionDemand>(list);
+ 
+             _eventDrivenCacheManager.UpdateEntityList<tb_ProductionDemand>(list);
             return list;
         }
 
@@ -510,12 +512,11 @@ namespace RUINORERP.Business
             List<tb_ProductionDemand> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_ProductionDemand>().Where(exp)
                                .Includes(t => t.tb_employee )
                                .Includes(t => t.tb_productionplan )
-                                            .Includes(t => t.tb_ProduceGoodsRecommendDetails )
+                                            .Includes(t => t.tb_ManufacturingOrders )
+                                .Includes(t => t.tb_ProduceGoodsRecommendDetails )
                                 .Includes(t => t.tb_ProductionDemandDetails )
                                 .Includes(t => t.tb_ProductionDemandTargetDetails )
                                 .Includes(t => t.tb_PurGoodsRecommendDetails )
-                                .Includes(t => t.tb_PurOrders )
-                                .Includes(t => t.tb_ManufacturingOrders )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -523,7 +524,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_ProductionDemand>(list);
+  
+             _eventDrivenCacheManager.UpdateEntityList<tb_ProductionDemand>(list);
             return list;
         }
         
@@ -537,12 +539,11 @@ namespace RUINORERP.Business
             List<tb_ProductionDemand> list = _unitOfWorkManage.GetDbClient().Queryable<tb_ProductionDemand>().Where(exp)
                             .Includes(t => t.tb_employee )
                             .Includes(t => t.tb_productionplan )
-                                        .Includes(t => t.tb_ProduceGoodsRecommendDetails )
+                                        .Includes(t => t.tb_ManufacturingOrders )
+                            .Includes(t => t.tb_ProduceGoodsRecommendDetails )
                             .Includes(t => t.tb_ProductionDemandDetails )
                             .Includes(t => t.tb_ProductionDemandTargetDetails )
                             .Includes(t => t.tb_PurGoodsRecommendDetails )
-                            .Includes(t => t.tb_PurOrders )
-                            .Includes(t => t.tb_ManufacturingOrders )
                         .ToList();
             
             foreach (var item in list)
@@ -550,7 +551,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_ProductionDemand>(list);
+     
+             _eventDrivenCacheManager.UpdateEntityList<tb_ProductionDemand>(list);
             return list;
         }
         
@@ -581,19 +583,21 @@ namespace RUINORERP.Business
             tb_ProductionDemand entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_ProductionDemand>().Where(w => w.PDID == (long)id)
                              .Includes(t => t.tb_employee )
                             .Includes(t => t.tb_productionplan )
-                                        .Includes(t => t.tb_ProduceGoodsRecommendDetails )
-                            .Includes(t => t.tb_ProductionDemandDetails )
-                            .Includes(t => t.tb_ProductionDemandTargetDetails )
-                            .Includes(t => t.tb_PurGoodsRecommendDetails )
-                            .Includes(t => t.tb_PurOrders )
-                            .Includes(t => t.tb_ManufacturingOrders )
-                        .FirstAsync();
+                        
+
+                                            .Includes(t => t.tb_ManufacturingOrders )
+                                            .Includes(t => t.tb_ProduceGoodsRecommendDetails )
+                                            .Includes(t => t.tb_ProductionDemandDetails )
+                                            .Includes(t => t.tb_ProductionDemandTargetDetails )
+                                            .Includes(t => t.tb_PurGoodsRecommendDetails )
+                                .FirstAsync();
             if(entity!=null)
             {
                 entity.HasChanged = false;
             }
 
-            MyCacheManager.Instance.UpdateEntityList<tb_ProductionDemand>(entity);
+         
+             _eventDrivenCacheManager.UpdateEntity<tb_ProductionDemand>(entity);
             return entity as T;
         }
         

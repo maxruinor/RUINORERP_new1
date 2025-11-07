@@ -67,7 +67,7 @@ namespace RUINORERP.UI.Common
             {
                 var node = new TreeNode();
                 node.Name = nodeObj.Subject_id.ToString();
-                node.Text = nodeObj.Subject_code + "【" + nodeObj.Subject_name + "】";
+                node.Text = nodeObj.subject_code + "【" + nodeObj.subject_name + "】";
                 node.Tag = nodeObj;
                 Nodes.Add(node);
                 Bind(node, list, nodeObj.Subject_id);
@@ -82,7 +82,7 @@ namespace RUINORERP.UI.Common
             {
                 var node = new TreeNode();
                 node.Name = nodeObj.Subject_id.ToString();
-                node.Text = nodeObj.Subject_code+"【"+nodeObj.Subject_name+"】";
+                node.Text = nodeObj.subject_code+"【"+nodeObj.subject_name+"】";
                 node.Tag = nodeObj;
                 parNode.Nodes.Add(node);
                 Bind(node, list, nodeObj.Subject_id);

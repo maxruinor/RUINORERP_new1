@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：02/08/2025 16:32:08
+// 时间：11/06/2025 20:42:00
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 订单装箱单，针对特别订单详细处理 也用主子表来做。暂时不搞
     /// </summary>
     [Serializable()]
-    [Description("订单装箱单")]
+    [Description("订单装箱单，针对特别订单详细处理 也用主子表来做。暂时不搞")]
     [SugarTable("tb_OrderPacking")]
     public partial class tb_OrderPacking: BaseEntity, ICloneable
     {
@@ -303,7 +303,7 @@ namespace RUINORERP.Model
         #endregion
 
 
-
+ 
 
 //如果为false,则不可以。
 private bool PK_FK_ID_Check()
@@ -315,6 +315,10 @@ return rs;
 
 
 
+
+
+       
+        
 
         public override object Clone()
         {

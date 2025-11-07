@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/12/2025 21:29:58
+// 时间：11/06/2025 20:41:39
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -272,11 +272,27 @@ namespace RUINORERP.Model
         public virtual tb_CustomerVendor tb_customervendor { get; set; }
 
 
+        //[Browsable(false)]打印报表时的数据源会不显示
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_FM_Invoice.BillingInfo_ID))]
+        public virtual List<tb_FM_Invoice> tb_FM_Invoices { get; set; }
+        //tb_FM_Invoice.BillingInfo_ID)
+        //BillingInfo_ID.FK_TB_FM_IN_REFERENCE_TB_BILLI)
+        //tb_BillingInformation.BillingInfo_ID)
+
+        //[Browsable(false)]打印报表时的数据源会不显示
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_SO_Contract.BillingInfo_ID))]
+        public virtual List<tb_SO_Contract> tb_SO_Contracts { get; set; }
+        //tb_SO_Contract.BillingInfo_ID)
+        //BillingInfo_ID.FK_TB_CONTR_REF_TB_INVOINFO)
+        //tb_BillingInformation.BillingInfo_ID)
+
 
         #endregion
 
 
-
+ 
 
 //如果为false,则不可以。
 private bool PK_FK_ID_Check()
@@ -288,7 +304,9 @@ return rs;
 
 
 
- 
+
+
+       
         
 
         public override object Clone()

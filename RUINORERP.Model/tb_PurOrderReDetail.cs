@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：02/08/2025 16:32:24
+// 时间：11/06/2025 20:42:12
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -18,10 +18,10 @@ using RUINORERP.Global.CustomAttribute;
 namespace RUINORERP.Model
 {
     /// <summary>
-    /// 采购退货单
+    /// 采购退回单
     /// </summary>
     [Serializable()]
-    [Description("采购退货单")]
+    [Description("采购退回单")]
     [SugarTable("tb_PurOrderReDetail")]
     public partial class tb_PurOrderReDetail: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("采购退货单tb_PurOrderReDetail" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("采购退回单tb_PurOrderReDetail" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -123,7 +123,20 @@ namespace RUINORERP.Model
             SetProperty(ref _Quantity, value);
                         }
         }
- 
+
+        private decimal? _Discount;
+        /// <summary>
+        /// 折扣
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Discount",ColDesc = "折扣")] 
+        [SugarColumn(ColumnDataType = "decimal", SqlParameterDbType ="Decimal",  ColumnName = "Discount" , DecimalDigits = 3,IsNullable = true,ColumnDescription = "折扣" )]
+        public decimal? Discount
+        { 
+            get{return _Discount;}
+            set{
+            SetProperty(ref _Discount, value);
+                        }
+        }
 
         private decimal? _TransactionPrice;
         /// <summary>
@@ -181,7 +194,19 @@ namespace RUINORERP.Model
                         }
         }
 
-        
+        private decimal? _commission;
+        /// <summary>
+        /// 抽成金额
+        /// </summary>
+        [AdvQueryAttribute(ColName = "commission",ColDesc = "抽成金额")] 
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "commission" , DecimalDigits = 4,IsNullable = true,ColumnDescription = "抽成金额" )]
+        public decimal? commission
+        { 
+            get{return _commission;}
+            set{
+            SetProperty(ref _commission, value);
+                        }
+        }
 
         private string _Notes;
         /// <summary>
@@ -220,7 +245,7 @@ namespace RUINORERP.Model
         #endregion
 
 
-
+ 
 
 //如果为false,则不可以。
 private bool PK_FK_ID_Check()
@@ -232,7 +257,11 @@ return rs;
 
 
 
- 
+
+
+       
+        
+
         public override object Clone()
         {
             tb_PurOrderReDetail loctype = (tb_PurOrderReDetail)this.MemberwiseClone(); //创建当前对象的浅拷贝。

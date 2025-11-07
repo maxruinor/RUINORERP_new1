@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：02/08/2025 16:31:52
+// 时间：11/06/2025 20:41:39
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 标准物料表BOM_BillOfMateria_S-要适当冗余? 生产是从0开始的。先有下级才有上级。
     /// </summary>
     [Serializable()]
-    [Description("标准物料表")]
+    [Description("标准物料表BOM_BillOfMateria_S-要适当冗余? 生产是从0开始的。先有下级才有上级。")]
     [SugarTable("tb_BOM_S")]
     public partial class tb_BOM_S: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("标准物料表tb_BOM_S" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("标准物料表BOM_BillOfMateria_S-要适当冗余? 生产是从0开始的。先有下级才有上级。tb_BOM_S" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -634,10 +634,10 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_ProductionPlanDetail.BOM_ID))]
-        public virtual List<tb_ProductionPlanDetail> tb_ProductionPlanDetails { get; set; }
-        //tb_ProductionPlanDetail.BOM_ID)
-        //BOM_ID.FK_TB_PRODUPLANDETAIL_REF_BOM_S)
+        [Navigate(NavigateType.OneToMany, nameof(tb_ManufacturingOrder.BOM_ID))]
+        public virtual List<tb_ManufacturingOrder> tb_ManufacturingOrders { get; set; }
+        //tb_ManufacturingOrder.BOM_ID)
+        //BOM_ID.FK_MANUFACTRUINGORDER_REF_BOM_S)
         //tb_BOM_S.BOM_ID)
 
         //[Browsable(false)]打印报表时的数据源会不显示
@@ -706,17 +706,17 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_ManufacturingOrder.BOM_ID))]
-        public virtual List<tb_ManufacturingOrder> tb_ManufacturingOrders { get; set; }
-        //tb_ManufacturingOrder.BOM_ID)
-        //BOM_ID.FK_MANUFACTRUINGORDER_REF_BOM_S)
+        [Navigate(NavigateType.OneToMany, nameof(tb_ProductionPlanDetail.BOM_ID))]
+        public virtual List<tb_ProductionPlanDetail> tb_ProductionPlanDetails { get; set; }
+        //tb_ProductionPlanDetail.BOM_ID)
+        //BOM_ID.FK_TB_PRODUPLANDETAIL_REF_BOM_S)
         //tb_BOM_S.BOM_ID)
 
 
         #endregion
 
 
-
+ 
 
 //如果为false,则不可以。
 private bool PK_FK_ID_Check()
@@ -729,7 +729,9 @@ return rs;
 
 
 
- 
+
+       
+        
 
         public override object Clone()
         {

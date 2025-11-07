@@ -94,7 +94,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                   .Includes(c => c.tb_PurOrderDetails)
                   .Includes(c => c.tb_department)
                   .Includes(c => c.tb_customervendor)
-                  .Includes(c => c.tb_productiondemand)
+                 // .Includes(c => c.tb_productiondemand)
                   .Includes(c => c.tb_paymentmethod)
                   .Includes(c => c.tb_PurOrderDetails)
                   .Includes(c => c.tb_saleorder)

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/23/2025 23:00:48
+// 时间：11/06/2025 20:41:42
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -167,15 +167,14 @@ namespace RUINORERP.Model
         /// <summary>
         /// 传真
         /// </summary>
-        [AdvQueryAttribute(ColName = "Fax", ColDesc = "传真")]
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "Fax", Length = 100, IsNullable = true, ColumnDescription = "传真")]
+        [AdvQueryAttribute(ColName = "Fax",ColDesc = "传真")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Fax" ,Length=100,IsNullable = true,ColumnDescription = "传真" )]
         public string Fax
-        {
-            get { return _Fax; }
-            set
-            {
-                SetProperty(ref _Fax, value);
-            }
+        { 
+            get{return _Fax;}
+            set{
+            SetProperty(ref _Fax, value);
+                        }
         }
 
         private string _Address;
@@ -392,7 +391,21 @@ namespace RUINORERP.Model
 
         #region 扩展属性
 
-       
+        //[Browsable(false)]打印报表时的数据源会不显示
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_FM_Account.ID))]
+        public virtual List<tb_FM_Account> tb_FM_Accounts { get; set; }
+        //tb_FM_Account.ID)
+        //ID.FK_FM_ACCOUNT_REF_COMPANY)
+        //tb_Company.ID)
+
+        //[Browsable(false)]打印报表时的数据源会不显示
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_SO_Contract.ID))]
+        public virtual List<tb_SO_Contract> tb_SO_Contracts { get; set; }
+        //tb_SO_Contract.ID)
+        //ID.FK_TB_SO_CONTRACT_REF_COMPANY)
+        //tb_Company.ID)
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
@@ -402,21 +415,19 @@ namespace RUINORERP.Model
         //ID.FK_DEPARTMENT_REF_COMPANY)
         //tb_Company.ID)
 
-       
-
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_FM_Account.ID))]
-        public virtual List<tb_FM_Account> tb_FM_Accounts { get; set; }
-        //tb_FM_Account.ID)
-        //ID.FK_FM_ACCOUNT_REF_COMPANY)
+        [Navigate(NavigateType.OneToMany, nameof(tb_PO_Contract.ID))]
+        public virtual List<tb_PO_Contract> tb_PO_Contracts { get; set; }
+        //tb_PO_Contract.ID)
+        //ID.FK_PO_CONTRACT_REF_COMPANY)
         //tb_Company.ID)
 
 
         #endregion
 
 
-
+ 
 
 //如果为false,则不可以。
 private bool PK_FK_ID_Check()
@@ -429,6 +440,9 @@ return rs;
 
 
 
+
+       
+        
 
         public override object Clone()
         {

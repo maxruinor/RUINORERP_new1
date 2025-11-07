@@ -30,7 +30,7 @@ namespace RUINORERP.Business
             RuleFor(tb_SaleOutRe => tb_SaleOutRe.ReturnReason).MinimumLength(5).WithMessage("退货原因:不能小于长度,5.");
             // 当不是平台订单时，禁止勾选线下退款
             RuleFor(x => x.OfflineRefund)
-                .Must(value => !value.HasValue || !value.Value)
+                .Must(value => !value )
                 .When(x => !x.IsFromPlatform)
                 .WithMessage("线下退款:非平台订单时，不可以勾选.");
 

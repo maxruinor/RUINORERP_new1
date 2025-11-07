@@ -147,7 +147,7 @@ namespace RUINORERP.Business.Cache
                 // 财务相关
                 RegistInformation<tb_FM_Account>(k => k.Account_id, v => v.Account_name, tableType: TableType.Base);
                 RegistInformation<tb_FM_ExpenseType>(k => k.ExpenseType_id, v => v.Expense_name, tableType: TableType.Base);
-                RegistInformation<tb_FM_Subject>(k => k.Subject_id, v => v.Subject_name, tableType: TableType.Base);
+                RegistInformation<tb_FM_Subject>(k => k.Subject_id, v => v.subject_name, tableType: TableType.Base);
                 RegistInformation<tb_FM_PayeeInfo>(k => k.PayeeInfoID, v => v.Account_name, tableType: TableType.Base);
 
                 // 其他基础数据

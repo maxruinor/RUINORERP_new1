@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：02/08/2025 16:32:06
+// 时间：11/06/2025 20:41:58
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -64,26 +64,13 @@ namespace RUINORERP.Model
             SetProperty(ref _ReworkEntryNo, value);
                         }
         }
-        private bool _IsOutSourced = false;
-        /// <summary>
-        /// 是否托工
-        /// </summary>
-        [AdvQueryAttribute(ColName = "IsOutSourced", ColDesc = "是否托工")]
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType = "Boolean", ColumnName = "IsOutSourced", IsNullable = false, ColumnDescription = "是否托工")]
-        public bool IsOutSourced
-        {
-            get { return _IsOutSourced; }
-            set
-            {
-                SetProperty(ref _IsOutSourced, value);
-            }
-        }
+
         private long? _CustomerVendor_ID;
         /// <summary>
         /// 外发工厂
         /// </summary>
         [AdvQueryAttribute(ColName = "CustomerVendor_ID",ColDesc = "外发工厂")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "CustomerVendor_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "外发工厂")]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "CustomerVendor_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "外发工厂" )]
         [FKRelationAttribute("tb_CustomerVendor","CustomerVendor_ID")]
         public long? CustomerVendor_ID
         { 
@@ -93,12 +80,26 @@ namespace RUINORERP.Model
                         }
         }
 
+        private bool _IsOutSourced= false;
+        /// <summary>
+        /// 是否托工
+        /// </summary>
+        [AdvQueryAttribute(ColName = "IsOutSourced",ColDesc = "是否托工")] 
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "IsOutSourced" ,IsNullable = false,ColumnDescription = "是否托工" )]
+        public bool IsOutSourced
+        { 
+            get{return _IsOutSourced;}
+            set{
+            SetProperty(ref _IsOutSourced, value);
+                        }
+        }
+
         private long? _DepartmentID;
         /// <summary>
-        /// 需求部门
+        /// 生产部门
         /// </summary>
-        [AdvQueryAttribute(ColName = "DepartmentID",ColDesc = "需求部门")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "DepartmentID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "需求部门" )]
+        [AdvQueryAttribute(ColName = "DepartmentID",ColDesc = "生产部门")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "DepartmentID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "生产部门" )]
         [FKRelationAttribute("tb_Department","DepartmentID")]
         public long? DepartmentID
         { 
@@ -483,7 +484,7 @@ namespace RUINORERP.Model
         #endregion
 
 
-
+ 
 
 //如果为false,则不可以。
 private bool PK_FK_ID_Check()
@@ -497,6 +498,8 @@ return rs;
 
 
 
+       
+        
 
         public override object Clone()
         {

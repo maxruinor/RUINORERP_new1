@@ -1,9 +1,8 @@
 ﻿// **************************************
-// 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/20/2025 16:08:00
+// 时间：11/07/2025 10:19:25
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -24,6 +23,7 @@ using RUINORERP.Model.Context;
 using System.Linq;
 using RUINOR.Core;
 using RUINORERP.Common.Helper;
+using RUINORERP.Business.Cache;
 
 namespace RUINORERP.Business
 {
@@ -38,14 +38,16 @@ namespace RUINORERP.Business
         //public readonly IUnitOfWorkManage _unitOfWorkManage;
         //public readonly ILogger<BaseController<T>> _logger;
         public Itb_CurrencyServices _tb_CurrencyServices { get; set; }
+        private readonly EventDrivenCacheManager _eventDrivenCacheManager; 
        // private readonly ApplicationContext _appContext;
        
-        public tb_CurrencyController(ILogger<tb_CurrencyController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_CurrencyServices tb_CurrencyServices , ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
+        public tb_CurrencyController(ILogger<tb_CurrencyController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_CurrencyServices tb_CurrencyServices ,EventDrivenCacheManager eventDrivenCacheManager, ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
         {
             _logger = logger;
            _unitOfWorkManage = unitOfWorkManage;
            _tb_CurrencyServices = tb_CurrencyServices;
-            _appContext = appContext;
+           _appContext = appContext;
+           _eventDrivenCacheManager = eventDrivenCacheManager;
         }
       
         
@@ -88,14 +90,14 @@ namespace RUINORERP.Business
                     bool rs = await _tb_CurrencyServices.Update(entity);
                     if (rs)
                     {
-                        MyCacheManager.Instance.UpdateEntityList<tb_Currency>(entity);
+                        _eventDrivenCacheManager.UpdateEntity<tb_Currency>(entity);
                     }
                     Returnobj = entity;
                 }
                 else
                 {
                     Returnobj = await _tb_CurrencyServices.AddReEntityAsync(entity);
-                    MyCacheManager.Instance.UpdateEntityList<tb_Currency>(entity);
+                    _eventDrivenCacheManager.UpdateEntity<tb_Currency>(entity);
                 }
 
                 rr.ReturnObject = Returnobj;
@@ -129,14 +131,14 @@ namespace RUINORERP.Business
                     bool rs = await _tb_CurrencyServices.Update(entity);
                     if (rs)
                     {
-                        MyCacheManager.Instance.UpdateEntityList<tb_Currency>(entity);
+                        _eventDrivenCacheManager.UpdateEntity<tb_Currency>(entity);
                     }
                     Returnobj = entity as T;
                 }
                 else
                 {
                     Returnobj = await _tb_CurrencyServices.AddReEntityAsync(entity) as T ;
-                    MyCacheManager.Instance.UpdateEntityList<tb_Currency>(entity);
+                    _eventDrivenCacheManager.UpdateEntity<tb_Currency>(entity);
                 }
 
                 rr.ReturnObject = Returnobj;
@@ -161,7 +163,7 @@ namespace RUINORERP.Business
             }
             if (list != null)
             {
-                MyCacheManager.Instance.UpdateEntityList<List<T>>(list);
+                _eventDrivenCacheManager.UpdateEntityList<T>(list);
              }
             return list;
         }
@@ -176,7 +178,7 @@ namespace RUINORERP.Business
             }
             if (list != null)
             {
-                MyCacheManager.Instance.UpdateEntityList<List<T>>(list);
+                _eventDrivenCacheManager.UpdateEntityList<T>(list);
              }
             return list;
         }
@@ -189,7 +191,7 @@ namespace RUINORERP.Business
             if (rs)
             {
                 ////生成时暂时只考虑了一个主键的情况
-                MyCacheManager.Instance.DeleteEntityList<tb_Currency>(entity);
+                _eventDrivenCacheManager.DeleteEntity<tb_Currency>(entity.PrimaryKeyID);
             }
             return rs;
         }
@@ -202,9 +204,7 @@ namespace RUINORERP.Business
             if (c>0)
             {
                 rs=true;
-                ////生成时暂时只考虑了一个主键的情况
-                 long[] result = entitys.Select(e => e.Currency_ID).ToArray();
-                MyCacheManager.Instance.DeleteEntityList<tb_Currency>(result);
+                _eventDrivenCacheManager.DeleteEntityList<tb_Currency>(entitys);
             }
             return rs;
         }
@@ -247,39 +247,41 @@ namespace RUINORERP.Business
             {
             
                              rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_Currency>(entity as tb_Currency)
-                        .Include(m => m.tb_FM_PaymentRecords)
-                    .Include(m => m.tb_FM_ReceivablePayables)
-                    .Include(m => m.tb_FM_StatementDetails)
+                        .Include(m => m.tb_FM_PaymentRecordDetails)
+                    .Include(m => m.tb_PurOrders)
                     .Include(m => m.tb_FM_OtherExpenses)
-                    .Include(m => m.tb_FM_PaymentRecordDetails)
                     .Include(m => m.tb_FM_Accounts)
+                    .Include(m => m.tb_FM_PaymentRecords)
                     .Include(m => m.tb_FM_PaymentApplications)
                     .Include(m => m.tb_FM_GeneralLedgers)
+                    .Include(m => m.tb_FM_StatementDetails)
                     .Include(m => m.tb_FM_ExpenseClaims)
                     .Include(m => m.tb_FM_PaymentSettlements)
                     .Include(m => m.tb_CurrencyExchangeRates)
                     .Include(m => m.tb_CurrencyExchangeRates)
                     .Include(m => m.tb_FM_PriceAdjustments)
                     .Include(m => m.tb_FM_PreReceivedPayments)
+                    .Include(m => m.tb_FM_ReceivablePayables)
                     .ExecuteCommandAsync();
                  }
         else    
         {
                         rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_Currency>(entity as tb_Currency)
-                .Include(m => m.tb_FM_PaymentRecords)
-                .Include(m => m.tb_FM_ReceivablePayables)
-                .Include(m => m.tb_FM_StatementDetails)
-                .Include(m => m.tb_FM_OtherExpenses)
                 .Include(m => m.tb_FM_PaymentRecordDetails)
+                .Include(m => m.tb_PurOrders)
+                .Include(m => m.tb_FM_OtherExpenses)
                 .Include(m => m.tb_FM_Accounts)
+                .Include(m => m.tb_FM_PaymentRecords)
                 .Include(m => m.tb_FM_PaymentApplications)
                 .Include(m => m.tb_FM_GeneralLedgers)
+                .Include(m => m.tb_FM_StatementDetails)
                 .Include(m => m.tb_FM_ExpenseClaims)
                 .Include(m => m.tb_FM_PaymentSettlements)
                 .Include(m => m.tb_CurrencyExchangeRates)
                 .Include(m => m.tb_CurrencyExchangeRates)
                 .Include(m => m.tb_FM_PriceAdjustments)
                 .Include(m => m.tb_FM_PreReceivedPayments)
+                .Include(m => m.tb_FM_ReceivablePayables)
          
                 .ExecuteCommandAsync();
                                           
@@ -313,20 +315,21 @@ namespace RUINORERP.Business
         public async override Task<List<T>> BaseQueryByAdvancedNavAsync(bool useLike, object dto)
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_Currency>()
-                                .Includes(m => m.tb_FM_PaymentRecords)
-                        .Includes(m => m.tb_FM_ReceivablePayables)
-                        .Includes(m => m.tb_FM_StatementDetails)
+                                                .Includes(m => m.tb_FM_PaymentRecordDetails)
+                        .Includes(m => m.tb_PurOrders)
                         .Includes(m => m.tb_FM_OtherExpenses)
-                        .Includes(m => m.tb_FM_PaymentRecordDetails)
                         .Includes(m => m.tb_FM_Accounts)
+                        .Includes(m => m.tb_FM_PaymentRecords)
                         .Includes(m => m.tb_FM_PaymentApplications)
                         .Includes(m => m.tb_FM_GeneralLedgers)
+                        .Includes(m => m.tb_FM_StatementDetails)
                         .Includes(m => m.tb_FM_ExpenseClaims)
                         .Includes(m => m.tb_FM_PaymentSettlements)
                         .Includes(m => m.tb_CurrencyExchangeRates)
-                        .Includes(m => m.tb_CurrencyExchangeRates)
+                        .Includes(m => m.tb_CurrencyExchangeRatesByTargetCurrency)
                         .Includes(m => m.tb_FM_PriceAdjustments)
                         .Includes(m => m.tb_FM_PreReceivedPayments)
+                        .Includes(m => m.tb_FM_ReceivablePayables)
                                         .WhereCustom(useLike, dto);;
             return await querySqlQueryable.ToListAsync()as List<T>;
         }
@@ -336,25 +339,26 @@ namespace RUINORERP.Business
         {
             tb_Currency entity = model as tb_Currency;
              bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_Currency>(m => m.Currency_ID== entity.Currency_ID)
-                                .Include(m => m.tb_FM_PaymentRecords)
-                        .Include(m => m.tb_FM_ReceivablePayables)
-                        .Include(m => m.tb_FM_StatementDetails)
+                                .Include(m => m.tb_FM_PaymentRecordDetails)
+                        .Include(m => m.tb_PurOrders)
                         .Include(m => m.tb_FM_OtherExpenses)
-                        .Include(m => m.tb_FM_PaymentRecordDetails)
                         .Include(m => m.tb_FM_Accounts)
+                        .Include(m => m.tb_FM_PaymentRecords)
                         .Include(m => m.tb_FM_PaymentApplications)
                         .Include(m => m.tb_FM_GeneralLedgers)
+                        .Include(m => m.tb_FM_StatementDetails)
                         .Include(m => m.tb_FM_ExpenseClaims)
                         .Include(m => m.tb_FM_PaymentSettlements)
                         .Include(m => m.tb_CurrencyExchangeRates)
-                        .Include(m => m.tb_CurrencyExchangeRates)
+                        .Include(m => m.tb_CurrencyExchangeRatesByTargetCurrency)
                         .Include(m => m.tb_FM_PriceAdjustments)
                         .Include(m => m.tb_FM_PreReceivedPayments)
+                        .Include(m => m.tb_FM_ReceivablePayables)
                                         .ExecuteCommandAsync();
             if (rs)
             {
                 //////生成时暂时只考虑了一个主键的情况
-                MyCacheManager.Instance.DeleteEntityList<T>(model);
+                 _eventDrivenCacheManager.DeleteEntity<T>(model);
             }
             return rs;
         }
@@ -365,7 +369,8 @@ namespace RUINORERP.Business
         public tb_Currency AddReEntity(tb_Currency entity)
         {
             tb_Currency AddEntity =  _tb_CurrencyServices.AddReEntity(entity);
-            MyCacheManager.Instance.UpdateEntityList<tb_Currency>(AddEntity);
+     
+             _eventDrivenCacheManager.UpdateEntity<tb_Currency>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
@@ -373,7 +378,7 @@ namespace RUINORERP.Business
          public async Task<tb_Currency> AddReEntityAsync(tb_Currency entity)
         {
             tb_Currency AddEntity = await _tb_CurrencyServices.AddReEntityAsync(entity);
-            MyCacheManager.Instance.UpdateEntityList<tb_Currency>(AddEntity);
+            _eventDrivenCacheManager.UpdateEntity<tb_Currency>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
@@ -383,7 +388,7 @@ namespace RUINORERP.Business
             long id = await _tb_CurrencyServices.Add(entity);
             if(id>0)
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_Currency>(entity);
+                 _eventDrivenCacheManager.UpdateEntity<tb_Currency>(entity);
             }
             return id;
         }
@@ -393,7 +398,7 @@ namespace RUINORERP.Business
             List<long> ids = await _tb_CurrencyServices.Add(infos);
             if(ids.Count>0)//成功的个数 这里缓存 对不对呢？
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_Currency>(infos);
+                 _eventDrivenCacheManager.UpdateEntityList<tb_Currency>(infos);
             }
             return ids;
         }
@@ -404,7 +409,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_CurrencyServices.Delete(entity);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_Currency>(entity);
+                _eventDrivenCacheManager.DeleteEntity<tb_Currency>(entity);
                 
             }
             return rs;
@@ -415,7 +420,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_CurrencyServices.Update(entity);
             if (rs)
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_Currency>(entity);
+                 _eventDrivenCacheManager.DeleteEntity<tb_Currency>(entity);
                 entity.ActionStatus = ActionStatus.无操作;
             }
             return rs;
@@ -426,7 +431,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_CurrencyServices.DeleteById(id);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_Currency>(id);
+               _eventDrivenCacheManager.DeleteEntity<tb_Currency>(id);
             }
             return rs;
         }
@@ -436,7 +441,8 @@ namespace RUINORERP.Business
             bool rs = await _tb_CurrencyServices.DeleteByIds(ids);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_Currency>(ids);
+            
+                   _eventDrivenCacheManager.DeleteEntities<tb_Currency>(ids.Cast<object>().ToArray());
             }
             return rs;
         }
@@ -448,7 +454,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_Currency>(list);
+     
+             _eventDrivenCacheManager.UpdateEntityList<tb_Currency>(list);
             return list;
         }
         
@@ -459,7 +466,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_Currency>(list);
+    
+             _eventDrivenCacheManager.UpdateEntityList<tb_Currency>(list);
             return list;
         }
         
@@ -470,7 +478,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_Currency>(list);
+  
+             _eventDrivenCacheManager.UpdateEntityList<tb_Currency>(list);
             return list;
         }
         
@@ -481,7 +490,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_Currency>(list);
+ 
+             _eventDrivenCacheManager.UpdateEntityList<tb_Currency>(list);
             return list;
         }
         
@@ -499,7 +509,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_Currency>(list);
+   
+             _eventDrivenCacheManager.UpdateEntityList<tb_Currency>(list);
             return list;
         }
         
@@ -512,20 +523,21 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_Currency>> QueryByNavAsync()
         {
             List<tb_Currency> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_Currency>()
-                                            .Includes(t => t.tb_FM_PaymentRecords )
-                                .Includes(t => t.tb_FM_ReceivablePayables )
-                                .Includes(t => t.tb_FM_StatementDetails )
+                                            .Includes(t => t.tb_FM_PaymentRecordDetails )
+                                .Includes(t => t.tb_PurOrders )
                                 .Includes(t => t.tb_FM_OtherExpenses )
-                                .Includes(t => t.tb_FM_PaymentRecordDetails )
                                 .Includes(t => t.tb_FM_Accounts )
+                                .Includes(t => t.tb_FM_PaymentRecords )
                                 .Includes(t => t.tb_FM_PaymentApplications )
                                 .Includes(t => t.tb_FM_GeneralLedgers )
+                                .Includes(t => t.tb_FM_StatementDetails )
                                 .Includes(t => t.tb_FM_ExpenseClaims )
                                 .Includes(t => t.tb_FM_PaymentSettlements )
                                 .Includes(t => t.tb_CurrencyExchangeRates )
                                 .Includes(t => t.tb_CurrencyExchangeRates )
                                 .Includes(t => t.tb_FM_PriceAdjustments )
                                 .Includes(t => t.tb_FM_PreReceivedPayments )
+                                .Includes(t => t.tb_FM_ReceivablePayables )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -533,7 +545,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_Currency>(list);
+ 
+             _eventDrivenCacheManager.UpdateEntityList<tb_Currency>(list);
             return list;
         }
 
@@ -545,20 +558,21 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_Currency>> QueryByNavAsync(Expression<Func<tb_Currency, bool>> exp)
         {
             List<tb_Currency> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_Currency>().Where(exp)
-                                            .Includes(t => t.tb_FM_PaymentRecords )
-                                .Includes(t => t.tb_FM_ReceivablePayables )
-                                .Includes(t => t.tb_FM_StatementDetails )
+                                            .Includes(t => t.tb_FM_PaymentRecordDetails )
+                                .Includes(t => t.tb_PurOrders )
                                 .Includes(t => t.tb_FM_OtherExpenses )
-                                .Includes(t => t.tb_FM_PaymentRecordDetails )
                                 .Includes(t => t.tb_FM_Accounts )
+                                .Includes(t => t.tb_FM_PaymentRecords )
                                 .Includes(t => t.tb_FM_PaymentApplications )
                                 .Includes(t => t.tb_FM_GeneralLedgers )
+                                .Includes(t => t.tb_FM_StatementDetails )
                                 .Includes(t => t.tb_FM_ExpenseClaims )
                                 .Includes(t => t.tb_FM_PaymentSettlements )
                                 .Includes(t => t.tb_CurrencyExchangeRates )
-                                .Includes(t => t.tb_CurrencyExchangeRates )
+                                .Includes(t => t.tb_CurrencyExchangeRatesByTargetCurrency )
                                 .Includes(t => t.tb_FM_PriceAdjustments )
                                 .Includes(t => t.tb_FM_PreReceivedPayments )
+                                .Includes(t => t.tb_FM_ReceivablePayables )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -566,7 +580,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_Currency>(list);
+  
+             _eventDrivenCacheManager.UpdateEntityList<tb_Currency>(list);
             return list;
         }
         
@@ -578,20 +593,21 @@ namespace RUINORERP.Business
          public virtual List<tb_Currency> QueryByNav(Expression<Func<tb_Currency, bool>> exp)
         {
             List<tb_Currency> list = _unitOfWorkManage.GetDbClient().Queryable<tb_Currency>().Where(exp)
-                                        .Includes(t => t.tb_FM_PaymentRecords )
-                            .Includes(t => t.tb_FM_ReceivablePayables )
-                            .Includes(t => t.tb_FM_StatementDetails )
+                                        .Includes(t => t.tb_FM_PaymentRecordDetails )
+                            .Includes(t => t.tb_PurOrders )
                             .Includes(t => t.tb_FM_OtherExpenses )
-                            .Includes(t => t.tb_FM_PaymentRecordDetails )
                             .Includes(t => t.tb_FM_Accounts )
+                            .Includes(t => t.tb_FM_PaymentRecords )
                             .Includes(t => t.tb_FM_PaymentApplications )
                             .Includes(t => t.tb_FM_GeneralLedgers )
+                            .Includes(t => t.tb_FM_StatementDetails )
                             .Includes(t => t.tb_FM_ExpenseClaims )
                             .Includes(t => t.tb_FM_PaymentSettlements )
                             .Includes(t => t.tb_CurrencyExchangeRates )
-                            .Includes(t => t.tb_CurrencyExchangeRates )
+                            .Includes(t => t.tb_CurrencyExchangeRatesByTargetCurrency )
                             .Includes(t => t.tb_FM_PriceAdjustments )
                             .Includes(t => t.tb_FM_PreReceivedPayments )
+                            .Includes(t => t.tb_FM_ReceivablePayables )
                         .ToList();
             
             foreach (var item in list)
@@ -599,7 +615,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_Currency>(list);
+     
+             _eventDrivenCacheManager.UpdateEntityList<tb_Currency>(list);
             return list;
         }
         
@@ -630,27 +647,29 @@ namespace RUINORERP.Business
             tb_Currency entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_Currency>().Where(w => w.Currency_ID == (long)id)
                          
 
-                                            .Includes(t => t.tb_FM_PaymentRecords )
-                                            .Includes(t => t.tb_FM_ReceivablePayables )
-                                            .Includes(t => t.tb_FM_StatementDetails )
-                                            .Includes(t => t.tb_FM_OtherExpenses )
                                             .Includes(t => t.tb_FM_PaymentRecordDetails )
+                                            .Includes(t => t.tb_PurOrders )
+                                            .Includes(t => t.tb_FM_OtherExpenses )
                                             .Includes(t => t.tb_FM_Accounts )
+                                            .Includes(t => t.tb_FM_PaymentRecords )
                                             .Includes(t => t.tb_FM_PaymentApplications )
                                             .Includes(t => t.tb_FM_GeneralLedgers )
+                                            .Includes(t => t.tb_FM_StatementDetails )
                                             .Includes(t => t.tb_FM_ExpenseClaims )
                                             .Includes(t => t.tb_FM_PaymentSettlements )
                                             .Includes(t => t.tb_CurrencyExchangeRates )
-                                            .Includes(t => t.tb_CurrencyExchangeRates )
+                                            .Includes(t => t.tb_CurrencyExchangeRatesByTargetCurrency )
                                             .Includes(t => t.tb_FM_PriceAdjustments )
                                             .Includes(t => t.tb_FM_PreReceivedPayments )
+                                            .Includes(t => t.tb_FM_ReceivablePayables )
                                 .FirstAsync();
             if(entity!=null)
             {
                 entity.HasChanged = false;
             }
 
-            MyCacheManager.Instance.UpdateEntityList<tb_Currency>(entity);
+         
+             _eventDrivenCacheManager.UpdateEntity<tb_Currency>(entity);
             return entity as T;
         }
         

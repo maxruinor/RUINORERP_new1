@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：06/24/2025 20:48:59
+// 时间：11/06/2025 19:57:47
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -63,19 +63,7 @@ namespace RUINORERP.Business
         
         #region 扩展方法
         
-        /// <summary>
-        /// 某字段是否存在
-        /// </summary>
-        /// <param name="exp">e => e.ModeuleName == mod.ModeuleName</param>
-        /// <returns></returns>
-        public override async Task<bool> ExistFieldValue(Expression<Func<T, bool>> exp)
-        {
-            return await _unitOfWorkManage.GetDbClient().Queryable<T>().Where(exp).AnyAsync();
-        }
       
-        
-       
-
 
 
         public async override Task<T> BaseQueryByIdAsync(object id)

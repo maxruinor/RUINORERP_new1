@@ -170,7 +170,7 @@ namespace RUINORERP.Business
                 //rrs.Succeeded = true;
                 return true;
                 ////生成时暂时只考虑了一个主键的情况
-                // MyCacheManager.Instance.DeleteEntityList<tb_FM_ExpenseClaim>(entity);
+                // Cache.EntityCacheHelper.DeleteEntityList<tb_FM_ExpenseClaim>(entity);
             }
             return false;
         }

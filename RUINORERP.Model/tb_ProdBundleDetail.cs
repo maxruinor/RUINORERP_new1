@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：02/08/2025 16:32:13
+// 时间：11/06/2025 20:42:04
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -80,20 +80,6 @@ namespace RUINORERP.Model
             SetProperty(ref _ProdDetailID, value);
                         }
         }
-        private string _SKU;
-        /// <summary>
-        /// SKU
-        /// </summary>
-        [AdvQueryAttribute(ColName = "SKU", ColDesc = "SKU")]
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "SKU", Length = 80, IsNullable = true, ColumnDescription = "SKU")]
-        public string SKU
-        {
-            get { return _SKU; }
-            set
-            {
-                SetProperty(ref _SKU, value);
-            }
-        }
 
         private int _Quantity= ((1));
         /// <summary>
@@ -109,20 +95,32 @@ namespace RUINORERP.Model
                         }
         }
 
-
-        private decimal _SaleUnitPrice=0m;
+        private decimal _SaleUnitPrice= ((0));
         /// <summary>
         /// 销售单价
         /// </summary>
-        [AdvQueryAttribute(ColName = "SaleUnitPrice", ColDesc = "销售单价")]
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "SaleUnitPrice", DecimalDigits = 4, IsNullable = false, ColumnDescription = "销售单价")]
+        [AdvQueryAttribute(ColName = "SaleUnitPrice",ColDesc = "销售单价")] 
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "SaleUnitPrice" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "销售单价" )]
         public decimal SaleUnitPrice
-        {
-            get { return _SaleUnitPrice; }
-            set
-            {
-                SetProperty(ref _SaleUnitPrice, value);
-            }
+        { 
+            get{return _SaleUnitPrice;}
+            set{
+            SetProperty(ref _SaleUnitPrice, value);
+                        }
+        }
+
+        private string _SKU;
+        /// <summary>
+        /// SKU
+        /// </summary>
+        [AdvQueryAttribute(ColName = "SKU",ColDesc = "SKU")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "SKU" ,Length=80,IsNullable = true,ColumnDescription = "SKU" )]
+        public string SKU
+        { 
+            get{return _SKU;}
+            set{
+            SetProperty(ref _SKU, value);
+                        }
         }
 
         private string _property;
@@ -237,8 +235,6 @@ namespace RUINORERP.Model
                         }
         }
 
- 
-
         #endregion
 
         #region 扩展属性
@@ -257,7 +253,7 @@ namespace RUINORERP.Model
         #endregion
 
 
-
+ 
 
 //如果为false,则不可以。
 private bool PK_FK_ID_Check()
@@ -270,6 +266,9 @@ return rs;
 
 
 
+
+       
+        
 
         public override object Clone()
         {

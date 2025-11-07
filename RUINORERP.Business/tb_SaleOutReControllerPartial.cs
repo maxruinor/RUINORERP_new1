@@ -128,7 +128,7 @@ namespace RUINORERP.Business
                             if (!exist)
                             {
                                 _unitOfWorkManage.RollbackTran();
-                                View_ProdInfo view_Prod = MyCacheManager.Instance.GetEntity<View_ProdInfo>(child.ProdDetailID);
+                                View_ProdInfo view_Prod = Cache.EntityCacheHelper.GetEntity<View_ProdInfo>(child.ProdDetailID);
                                 if (view_Prod != null)
                                 {
                                     string prodName = "【" + view_Prod.SKU + "】" + view_Prod.CNName;
@@ -183,7 +183,7 @@ namespace RUINORERP.Business
                         {
                             _unitOfWorkManage.RollbackTran();
 
-                            var prodinfo = MyCacheManager.Instance.GetEntity<View_ProdInfo>(child.ProdDetailID);
+                            var prodinfo = Cache.EntityCacheHelper.GetEntity<View_ProdInfo>(child.ProdDetailID);
                             if (prodinfo != null)
                             {
                                 rrs.ErrorMsg = $"销售退回单：{entity.ReturnNo}中，明细{prodinfo.SKU}：{prodinfo.CNName}{prodinfo.prop}退回总数量不能大于出库数量！请检查该出库单是否已经退回过！";
@@ -197,7 +197,7 @@ namespace RUINORERP.Business
                         }
                         if (child.TotalReturnedQty < 0)
                         {
-                            _unitOfWorkManage.RollbackTran(); var prodinfo = MyCacheManager.Instance.GetEntity<View_ProdInfo>(child.ProdDetailID);
+                            _unitOfWorkManage.RollbackTran(); var prodinfo = Cache.EntityCacheHelper.GetEntity<View_ProdInfo>(child.ProdDetailID);
                             if (prodinfo != null)
                             {
                                 rrs.ErrorMsg = $"销售退回单：{entity.ReturnNo}中，明细{prodinfo.SKU}：{prodinfo.CNName}{prodinfo.prop}退回总数量不能小于0！请检查数据后重试！";
@@ -248,7 +248,7 @@ namespace RUINORERP.Business
                             if (orderDetail.TotalReturnedQty > totalOrderTotalQty)
                             {
                                 _unitOfWorkManage.RollbackTran();
-                                View_ProdDetail ProdDetail = MyCacheManager.Instance.GetEntity<View_ProdDetail>(orderDetail.ProdDetailID);
+                                View_ProdDetail ProdDetail = Cache.EntityCacheHelper.GetEntity<View_ProdDetail>(orderDetail.ProdDetailID);
 
                                 if (ProdDetail != null)
                                 {

@@ -1,10 +1,8 @@
-﻿
-// **************************************
-// 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
+﻿// **************************************
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/14/2025 20:39:46
+// 时间：11/06/2025 19:43:15
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -25,11 +23,12 @@ using RUINORERP.Model.Context;
 using System.Linq;
 using RUINOR.Core;
 using RUINORERP.Common.Helper;
+using RUINORERP.Business.Cache;
 
 namespace RUINORERP.Business
 {
     /// <summary>
-    /// 付款方式 付款方式，后面扩展有关账期 账龄分析的字段
+    /// 付款方式 交易方式，后面扩展有关账期 账龄分析的字段
     /// </summary>
     public partial class tb_PaymentMethodController<T>:BaseController<T> where T : class
     {
@@ -39,14 +38,16 @@ namespace RUINORERP.Business
         //public readonly IUnitOfWorkManage _unitOfWorkManage;
         //public readonly ILogger<BaseController<T>> _logger;
         public Itb_PaymentMethodServices _tb_PaymentMethodServices { get; set; }
+        private readonly EventDrivenCacheManager _eventDrivenCacheManager; 
        // private readonly ApplicationContext _appContext;
        
-        public tb_PaymentMethodController(ILogger<tb_PaymentMethodController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_PaymentMethodServices tb_PaymentMethodServices , ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
+        public tb_PaymentMethodController(ILogger<tb_PaymentMethodController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_PaymentMethodServices tb_PaymentMethodServices ,EventDrivenCacheManager eventDrivenCacheManager, ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
         {
             _logger = logger;
            _unitOfWorkManage = unitOfWorkManage;
            _tb_PaymentMethodServices = tb_PaymentMethodServices;
-            _appContext = appContext;
+           _appContext = appContext;
+           _eventDrivenCacheManager = eventDrivenCacheManager;
         }
       
         
@@ -89,14 +90,14 @@ namespace RUINORERP.Business
                     bool rs = await _tb_PaymentMethodServices.Update(entity);
                     if (rs)
                     {
-                        MyCacheManager.Instance.UpdateEntityList<tb_PaymentMethod>(entity);
+                        _eventDrivenCacheManager.UpdateEntity<tb_PaymentMethod>(entity);
                     }
                     Returnobj = entity;
                 }
                 else
                 {
                     Returnobj = await _tb_PaymentMethodServices.AddReEntityAsync(entity);
-                    MyCacheManager.Instance.UpdateEntityList<tb_PaymentMethod>(entity);
+                    _eventDrivenCacheManager.UpdateEntity<tb_PaymentMethod>(entity);
                 }
 
                 rr.ReturnObject = Returnobj;
@@ -130,14 +131,14 @@ namespace RUINORERP.Business
                     bool rs = await _tb_PaymentMethodServices.Update(entity);
                     if (rs)
                     {
-                        MyCacheManager.Instance.UpdateEntityList<tb_PaymentMethod>(entity);
+                        _eventDrivenCacheManager.UpdateEntity<tb_PaymentMethod>(entity);
                     }
                     Returnobj = entity as T;
                 }
                 else
                 {
                     Returnobj = await _tb_PaymentMethodServices.AddReEntityAsync(entity) as T ;
-                    MyCacheManager.Instance.UpdateEntityList<tb_PaymentMethod>(entity);
+                    _eventDrivenCacheManager.UpdateEntity<tb_PaymentMethod>(entity);
                 }
 
                 rr.ReturnObject = Returnobj;
@@ -162,7 +163,7 @@ namespace RUINORERP.Business
             }
             if (list != null)
             {
-                MyCacheManager.Instance.UpdateEntityList<List<T>>(list);
+                _eventDrivenCacheManager.UpdateEntityList<T>(list);
              }
             return list;
         }
@@ -177,7 +178,7 @@ namespace RUINORERP.Business
             }
             if (list != null)
             {
-                MyCacheManager.Instance.UpdateEntityList<List<T>>(list);
+                _eventDrivenCacheManager.UpdateEntityList<T>(list);
              }
             return list;
         }
@@ -190,7 +191,7 @@ namespace RUINORERP.Business
             if (rs)
             {
                 ////生成时暂时只考虑了一个主键的情况
-                MyCacheManager.Instance.DeleteEntityList<tb_PaymentMethod>(entity);
+                _eventDrivenCacheManager.DeleteEntity<tb_PaymentMethod>(entity.PrimaryKeyID);
             }
             return rs;
         }
@@ -203,9 +204,7 @@ namespace RUINORERP.Business
             if (c>0)
             {
                 rs=true;
-                ////生成时暂时只考虑了一个主键的情况
-                 long[] result = entitys.Select(e => e.Paytype_ID).ToArray();
-                MyCacheManager.Instance.DeleteEntityList<tb_PaymentMethod>(result);
+                _eventDrivenCacheManager.DeleteEntityList<tb_PaymentMethod>(entitys);
             }
             return rs;
         }
@@ -249,20 +248,28 @@ namespace RUINORERP.Business
             
                              rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_PaymentMethod>(entity as tb_PaymentMethod)
                         .Include(m => m.tb_PurReturnEntries)
-                
-                    .Include(m => m.tb_SaleOutRes)
+                    .Include(m => m.tb_FM_PaymentRecords)
+                    .Include(m => m.tb_PurEntryRes)
+                    .Include(m => m.tb_AS_RepairOrders)
+                    .Include(m => m.tb_PurEntries)
+                    .Include(m => m.tb_FM_PriceAdjustments)
                     .Include(m => m.tb_CustomerVendors)
-                    .Include(m => m.tb_SaleOrders)
+                    .Include(m => m.tb_FM_PreReceivedPayments)
+                    .Include(m => m.tb_PayMethodAccountMappers)
                     .ExecuteCommandAsync();
                  }
         else    
         {
                         rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_PaymentMethod>(entity as tb_PaymentMethod)
                 .Include(m => m.tb_PurReturnEntries)
-             
-                .Include(m => m.tb_SaleOutRes)
+                .Include(m => m.tb_FM_PaymentRecords)
+                .Include(m => m.tb_PurEntryRes)
+                .Include(m => m.tb_AS_RepairOrders)
+                .Include(m => m.tb_PurEntries)
+                .Include(m => m.tb_FM_PriceAdjustments)
                 .Include(m => m.tb_CustomerVendors)
-                .Include(m => m.tb_SaleOrders)
+                .Include(m => m.tb_FM_PreReceivedPayments)
+                .Include(m => m.tb_PayMethodAccountMappers)
          
                 .ExecuteCommandAsync();
                                           
@@ -297,10 +304,15 @@ namespace RUINORERP.Business
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_PaymentMethod>()
                                 .Includes(m => m.tb_PurReturnEntries)
-                        
+                        .Includes(m => m.tb_FM_PaymentRecords)
+                        .Includes(m => m.tb_PurEntryRes)
+                        .Includes(m => m.tb_AS_RepairOrders)
+                        .Includes(m => m.tb_PurEntries)
+                        .Includes(m => m.tb_FM_PriceAdjustments)
                         .Includes(m => m.tb_CustomerVendors)
-                        .Includes(m => m.tb_SaleOrders)
-                                        .WhereCustom(useLike, dto);
+                        .Includes(m => m.tb_FM_PreReceivedPayments)
+                        .Includes(m => m.tb_PayMethodAccountMappers)
+                                        .WhereCustom(useLike, dto);;
             return await querySqlQueryable.ToListAsync()as List<T>;
         }
 
@@ -310,17 +322,19 @@ namespace RUINORERP.Business
             tb_PaymentMethod entity = model as tb_PaymentMethod;
              bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_PaymentMethod>(m => m.Paytype_ID== entity.Paytype_ID)
                                 .Include(m => m.tb_PurReturnEntries)
-                       
+                        .Include(m => m.tb_FM_PaymentRecords)
                         .Include(m => m.tb_PurEntryRes)
-                        .Include(m => m.tb_PurOrders)
-                        .Include(m => m.tb_SaleOutRes)
+                        .Include(m => m.tb_AS_RepairOrders)
+                        .Include(m => m.tb_PurEntries)
+                        .Include(m => m.tb_FM_PriceAdjustments)
                         .Include(m => m.tb_CustomerVendors)
-                        .Include(m => m.tb_SaleOrders)
+                        .Include(m => m.tb_FM_PreReceivedPayments)
+                        .Include(m => m.tb_PayMethodAccountMappers)
                                         .ExecuteCommandAsync();
             if (rs)
             {
                 //////生成时暂时只考虑了一个主键的情况
-                MyCacheManager.Instance.DeleteEntityList<T>(model);
+                 _eventDrivenCacheManager.DeleteEntity<T>(model);
             }
             return rs;
         }
@@ -331,7 +345,8 @@ namespace RUINORERP.Business
         public tb_PaymentMethod AddReEntity(tb_PaymentMethod entity)
         {
             tb_PaymentMethod AddEntity =  _tb_PaymentMethodServices.AddReEntity(entity);
-            MyCacheManager.Instance.UpdateEntityList<tb_PaymentMethod>(AddEntity);
+     
+             _eventDrivenCacheManager.UpdateEntity<tb_PaymentMethod>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
@@ -339,7 +354,7 @@ namespace RUINORERP.Business
          public async Task<tb_PaymentMethod> AddReEntityAsync(tb_PaymentMethod entity)
         {
             tb_PaymentMethod AddEntity = await _tb_PaymentMethodServices.AddReEntityAsync(entity);
-            MyCacheManager.Instance.UpdateEntityList<tb_PaymentMethod>(AddEntity);
+            _eventDrivenCacheManager.UpdateEntity<tb_PaymentMethod>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
@@ -349,7 +364,7 @@ namespace RUINORERP.Business
             long id = await _tb_PaymentMethodServices.Add(entity);
             if(id>0)
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_PaymentMethod>(entity);
+                 _eventDrivenCacheManager.UpdateEntity<tb_PaymentMethod>(entity);
             }
             return id;
         }
@@ -359,7 +374,7 @@ namespace RUINORERP.Business
             List<long> ids = await _tb_PaymentMethodServices.Add(infos);
             if(ids.Count>0)//成功的个数 这里缓存 对不对呢？
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_PaymentMethod>(infos);
+                 _eventDrivenCacheManager.UpdateEntityList<tb_PaymentMethod>(infos);
             }
             return ids;
         }
@@ -370,7 +385,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_PaymentMethodServices.Delete(entity);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_PaymentMethod>(entity);
+                _eventDrivenCacheManager.DeleteEntity<tb_PaymentMethod>(entity);
                 
             }
             return rs;
@@ -381,7 +396,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_PaymentMethodServices.Update(entity);
             if (rs)
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_PaymentMethod>(entity);
+                 _eventDrivenCacheManager.DeleteEntity<tb_PaymentMethod>(entity);
                 entity.ActionStatus = ActionStatus.无操作;
             }
             return rs;
@@ -392,7 +407,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_PaymentMethodServices.DeleteById(id);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_PaymentMethod>(id);
+               _eventDrivenCacheManager.DeleteEntity<tb_PaymentMethod>(id);
             }
             return rs;
         }
@@ -402,7 +417,8 @@ namespace RUINORERP.Business
             bool rs = await _tb_PaymentMethodServices.DeleteByIds(ids);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_PaymentMethod>(ids);
+            
+                   _eventDrivenCacheManager.DeleteEntities<tb_PaymentMethod>(ids.Cast<object>().ToArray());
             }
             return rs;
         }
@@ -414,7 +430,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_PaymentMethod>(list);
+     
+             _eventDrivenCacheManager.UpdateEntityList<tb_PaymentMethod>(list);
             return list;
         }
         
@@ -425,7 +442,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_PaymentMethod>(list);
+    
+             _eventDrivenCacheManager.UpdateEntityList<tb_PaymentMethod>(list);
             return list;
         }
         
@@ -436,7 +454,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_PaymentMethod>(list);
+  
+             _eventDrivenCacheManager.UpdateEntityList<tb_PaymentMethod>(list);
             return list;
         }
         
@@ -447,7 +466,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_PaymentMethod>(list);
+ 
+             _eventDrivenCacheManager.UpdateEntityList<tb_PaymentMethod>(list);
             return list;
         }
         
@@ -465,7 +485,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_PaymentMethod>(list);
+   
+             _eventDrivenCacheManager.UpdateEntityList<tb_PaymentMethod>(list);
             return list;
         }
         
@@ -479,11 +500,14 @@ namespace RUINORERP.Business
         {
             List<tb_PaymentMethod> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_PaymentMethod>()
                                             .Includes(t => t.tb_PurReturnEntries )
-                              
-                                .Includes(t => t.tb_PurOrders )
-                                .Includes(t => t.tb_SaleOutRes )
+                                .Includes(t => t.tb_FM_PaymentRecords )
+                                .Includes(t => t.tb_PurEntryRes )
+                                .Includes(t => t.tb_AS_RepairOrders )
+                                .Includes(t => t.tb_PurEntries )
+                                .Includes(t => t.tb_FM_PriceAdjustments )
                                 .Includes(t => t.tb_CustomerVendors )
-                                .Includes(t => t.tb_SaleOrders )
+                                .Includes(t => t.tb_FM_PreReceivedPayments )
+                                .Includes(t => t.tb_PayMethodAccountMappers )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -491,7 +515,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_PaymentMethod>(list);
+ 
+             _eventDrivenCacheManager.UpdateEntityList<tb_PaymentMethod>(list);
             return list;
         }
 
@@ -504,11 +529,14 @@ namespace RUINORERP.Business
         {
             List<tb_PaymentMethod> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_PaymentMethod>().Where(exp)
                                             .Includes(t => t.tb_PurReturnEntries )
-                             
-                                .Includes(t => t.tb_PurOrders )
-                                .Includes(t => t.tb_SaleOutRes )
+                                .Includes(t => t.tb_FM_PaymentRecords )
+                                .Includes(t => t.tb_PurEntryRes )
+                                .Includes(t => t.tb_AS_RepairOrders )
+                                .Includes(t => t.tb_PurEntries )
+                                .Includes(t => t.tb_FM_PriceAdjustments )
                                 .Includes(t => t.tb_CustomerVendors )
-                                .Includes(t => t.tb_SaleOrders )
+                                .Includes(t => t.tb_FM_PreReceivedPayments )
+                                .Includes(t => t.tb_PayMethodAccountMappers )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -516,7 +544,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_PaymentMethod>(list);
+  
+             _eventDrivenCacheManager.UpdateEntityList<tb_PaymentMethod>(list);
             return list;
         }
         
@@ -529,12 +558,14 @@ namespace RUINORERP.Business
         {
             List<tb_PaymentMethod> list = _unitOfWorkManage.GetDbClient().Queryable<tb_PaymentMethod>().Where(exp)
                                         .Includes(t => t.tb_PurReturnEntries )
-                            
+                            .Includes(t => t.tb_FM_PaymentRecords )
                             .Includes(t => t.tb_PurEntryRes )
-                            .Includes(t => t.tb_PurOrders )
-                            .Includes(t => t.tb_SaleOutRes )
+                            .Includes(t => t.tb_AS_RepairOrders )
+                            .Includes(t => t.tb_PurEntries )
+                            .Includes(t => t.tb_FM_PriceAdjustments )
                             .Includes(t => t.tb_CustomerVendors )
-                            .Includes(t => t.tb_SaleOrders )
+                            .Includes(t => t.tb_FM_PreReceivedPayments )
+                            .Includes(t => t.tb_PayMethodAccountMappers )
                         .ToList();
             
             foreach (var item in list)
@@ -542,7 +573,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_PaymentMethod>(list);
+     
+             _eventDrivenCacheManager.UpdateEntityList<tb_PaymentMethod>(list);
             return list;
         }
         
@@ -571,19 +603,25 @@ namespace RUINORERP.Business
         public override async Task<T> BaseQueryByIdNavAsync(object id)
         {
             tb_PaymentMethod entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_PaymentMethod>().Where(w => w.Paytype_ID == (long)id)
-                                         .Includes(t => t.tb_PurReturnEntries )
-                          
-                            .Includes(t => t.tb_PurOrders )
-                            .Includes(t => t.tb_SaleOutRes )
-                            .Includes(t => t.tb_CustomerVendors )
-                            .Includes(t => t.tb_SaleOrders )
-                        .FirstAsync();
+                         
+
+                                            .Includes(t => t.tb_PurReturnEntries )
+                                            .Includes(t => t.tb_FM_PaymentRecords )
+                                            .Includes(t => t.tb_PurEntryRes )
+                                            .Includes(t => t.tb_AS_RepairOrders )
+                                            .Includes(t => t.tb_PurEntries )
+                                            .Includes(t => t.tb_FM_PriceAdjustments )
+                                            .Includes(t => t.tb_CustomerVendors )
+                                            .Includes(t => t.tb_FM_PreReceivedPayments )
+                                            .Includes(t => t.tb_PayMethodAccountMappers )
+                                .FirstAsync();
             if(entity!=null)
             {
                 entity.HasChanged = false;
             }
 
-            MyCacheManager.Instance.UpdateEntityList<tb_PaymentMethod>(entity);
+         
+             _eventDrivenCacheManager.UpdateEntity<tb_PaymentMethod>(entity);
             return entity as T;
         }
         

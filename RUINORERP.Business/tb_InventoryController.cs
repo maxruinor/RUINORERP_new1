@@ -1,10 +1,8 @@
-﻿
-// **************************************
-// 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
+﻿// **************************************
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/14/2025 20:39:43
+// 时间：11/06/2025 19:43:12
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -25,6 +23,7 @@ using RUINORERP.Model.Context;
 using System.Linq;
 using RUINOR.Core;
 using RUINORERP.Common.Helper;
+using RUINORERP.Business.Cache;
 
 namespace RUINORERP.Business
 {
@@ -39,14 +38,16 @@ namespace RUINORERP.Business
         //public readonly IUnitOfWorkManage _unitOfWorkManage;
         //public readonly ILogger<BaseController<T>> _logger;
         public Itb_InventoryServices _tb_InventoryServices { get; set; }
+        private readonly EventDrivenCacheManager _eventDrivenCacheManager; 
        // private readonly ApplicationContext _appContext;
        
-        public tb_InventoryController(ILogger<tb_InventoryController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_InventoryServices tb_InventoryServices , ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
+        public tb_InventoryController(ILogger<tb_InventoryController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_InventoryServices tb_InventoryServices ,EventDrivenCacheManager eventDrivenCacheManager, ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
         {
             _logger = logger;
            _unitOfWorkManage = unitOfWorkManage;
            _tb_InventoryServices = tb_InventoryServices;
-            _appContext = appContext;
+           _appContext = appContext;
+           _eventDrivenCacheManager = eventDrivenCacheManager;
         }
       
         
@@ -89,14 +90,14 @@ namespace RUINORERP.Business
                     bool rs = await _tb_InventoryServices.Update(entity);
                     if (rs)
                     {
-                        MyCacheManager.Instance.UpdateEntityList<tb_Inventory>(entity);
+                        _eventDrivenCacheManager.UpdateEntity<tb_Inventory>(entity);
                     }
                     Returnobj = entity;
                 }
                 else
                 {
                     Returnobj = await _tb_InventoryServices.AddReEntityAsync(entity);
-                    MyCacheManager.Instance.UpdateEntityList<tb_Inventory>(entity);
+                    _eventDrivenCacheManager.UpdateEntity<tb_Inventory>(entity);
                 }
 
                 rr.ReturnObject = Returnobj;
@@ -130,14 +131,14 @@ namespace RUINORERP.Business
                     bool rs = await _tb_InventoryServices.Update(entity);
                     if (rs)
                     {
-                        MyCacheManager.Instance.UpdateEntityList<tb_Inventory>(entity);
+                        _eventDrivenCacheManager.UpdateEntity<tb_Inventory>(entity);
                     }
                     Returnobj = entity as T;
                 }
                 else
                 {
                     Returnobj = await _tb_InventoryServices.AddReEntityAsync(entity) as T ;
-                    MyCacheManager.Instance.UpdateEntityList<tb_Inventory>(entity);
+                    _eventDrivenCacheManager.UpdateEntity<tb_Inventory>(entity);
                 }
 
                 rr.ReturnObject = Returnobj;
@@ -162,7 +163,7 @@ namespace RUINORERP.Business
             }
             if (list != null)
             {
-                MyCacheManager.Instance.UpdateEntityList<List<T>>(list);
+                _eventDrivenCacheManager.UpdateEntityList<T>(list);
              }
             return list;
         }
@@ -177,7 +178,7 @@ namespace RUINORERP.Business
             }
             if (list != null)
             {
-                MyCacheManager.Instance.UpdateEntityList<List<T>>(list);
+                _eventDrivenCacheManager.UpdateEntityList<T>(list);
              }
             return list;
         }
@@ -190,7 +191,7 @@ namespace RUINORERP.Business
             if (rs)
             {
                 ////生成时暂时只考虑了一个主键的情况
-                MyCacheManager.Instance.DeleteEntityList<tb_Inventory>(entity);
+                _eventDrivenCacheManager.DeleteEntity<tb_Inventory>(entity.PrimaryKeyID);
             }
             return rs;
         }
@@ -203,9 +204,7 @@ namespace RUINORERP.Business
             if (c>0)
             {
                 rs=true;
-                ////生成时暂时只考虑了一个主键的情况
-                 long[] result = entitys.Select(e => e.Inventory_ID).ToArray();
-                MyCacheManager.Instance.DeleteEntityList<tb_Inventory>(result);
+                _eventDrivenCacheManager.DeleteEntityList<tb_Inventory>(entitys);
             }
             return rs;
         }
@@ -249,14 +248,14 @@ namespace RUINORERP.Business
             
                              rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_Inventory>(entity as tb_Inventory)
                         .Include(m => m.tb_Inv_Alert_Attributes)
-                   
+                    .Include(m => m.tb_OpeningInventories)
                     .ExecuteCommandAsync();
                  }
         else    
         {
                         rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_Inventory>(entity as tb_Inventory)
                 .Include(m => m.tb_Inv_Alert_Attributes)
-               
+                .Include(m => m.tb_OpeningInventories)
          
                 .ExecuteCommandAsync();
                                           
@@ -291,8 +290,8 @@ namespace RUINORERP.Business
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_Inventory>()
                                 .Includes(m => m.tb_Inv_Alert_Attributes)
-                      
-                                        .WhereCustom(useLike, dto);
+                        .Includes(m => m.tb_OpeningInventories)
+                                        .WhereCustom(useLike, dto);;
             return await querySqlQueryable.ToListAsync()as List<T>;
         }
 
@@ -302,12 +301,12 @@ namespace RUINORERP.Business
             tb_Inventory entity = model as tb_Inventory;
              bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_Inventory>(m => m.Inventory_ID== entity.Inventory_ID)
                                 .Include(m => m.tb_Inv_Alert_Attributes)
-                      
+                        .Include(m => m.tb_OpeningInventories)
                                         .ExecuteCommandAsync();
             if (rs)
             {
                 //////生成时暂时只考虑了一个主键的情况
-                MyCacheManager.Instance.DeleteEntityList<T>(model);
+                 _eventDrivenCacheManager.DeleteEntity<T>(model);
             }
             return rs;
         }
@@ -318,7 +317,8 @@ namespace RUINORERP.Business
         public tb_Inventory AddReEntity(tb_Inventory entity)
         {
             tb_Inventory AddEntity =  _tb_InventoryServices.AddReEntity(entity);
-            MyCacheManager.Instance.UpdateEntityList<tb_Inventory>(AddEntity);
+     
+             _eventDrivenCacheManager.UpdateEntity<tb_Inventory>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
@@ -326,7 +326,7 @@ namespace RUINORERP.Business
          public async Task<tb_Inventory> AddReEntityAsync(tb_Inventory entity)
         {
             tb_Inventory AddEntity = await _tb_InventoryServices.AddReEntityAsync(entity);
-            MyCacheManager.Instance.UpdateEntityList<tb_Inventory>(AddEntity);
+            _eventDrivenCacheManager.UpdateEntity<tb_Inventory>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
@@ -336,7 +336,7 @@ namespace RUINORERP.Business
             long id = await _tb_InventoryServices.Add(entity);
             if(id>0)
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_Inventory>(entity);
+                 _eventDrivenCacheManager.UpdateEntity<tb_Inventory>(entity);
             }
             return id;
         }
@@ -346,7 +346,7 @@ namespace RUINORERP.Business
             List<long> ids = await _tb_InventoryServices.Add(infos);
             if(ids.Count>0)//成功的个数 这里缓存 对不对呢？
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_Inventory>(infos);
+                 _eventDrivenCacheManager.UpdateEntityList<tb_Inventory>(infos);
             }
             return ids;
         }
@@ -357,7 +357,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_InventoryServices.Delete(entity);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_Inventory>(entity);
+                _eventDrivenCacheManager.DeleteEntity<tb_Inventory>(entity);
                 
             }
             return rs;
@@ -368,7 +368,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_InventoryServices.Update(entity);
             if (rs)
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_Inventory>(entity);
+                 _eventDrivenCacheManager.DeleteEntity<tb_Inventory>(entity);
                 entity.ActionStatus = ActionStatus.无操作;
             }
             return rs;
@@ -379,7 +379,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_InventoryServices.DeleteById(id);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_Inventory>(id);
+               _eventDrivenCacheManager.DeleteEntity<tb_Inventory>(id);
             }
             return rs;
         }
@@ -389,7 +389,8 @@ namespace RUINORERP.Business
             bool rs = await _tb_InventoryServices.DeleteByIds(ids);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_Inventory>(ids);
+            
+                   _eventDrivenCacheManager.DeleteEntities<tb_Inventory>(ids.Cast<object>().ToArray());
             }
             return rs;
         }
@@ -401,7 +402,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_Inventory>(list);
+     
+             _eventDrivenCacheManager.UpdateEntityList<tb_Inventory>(list);
             return list;
         }
         
@@ -412,7 +414,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_Inventory>(list);
+    
+             _eventDrivenCacheManager.UpdateEntityList<tb_Inventory>(list);
             return list;
         }
         
@@ -423,7 +426,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_Inventory>(list);
+  
+             _eventDrivenCacheManager.UpdateEntityList<tb_Inventory>(list);
             return list;
         }
         
@@ -434,7 +438,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_Inventory>(list);
+ 
+             _eventDrivenCacheManager.UpdateEntityList<tb_Inventory>(list);
             return list;
         }
         
@@ -452,7 +457,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_Inventory>(list);
+   
+             _eventDrivenCacheManager.UpdateEntityList<tb_Inventory>(list);
             return list;
         }
         
@@ -469,7 +475,7 @@ namespace RUINORERP.Business
                                .Includes(t => t.tb_proddetail )
                                .Includes(t => t.tb_location )
                                             .Includes(t => t.tb_Inv_Alert_Attributes )
-                              
+                                .Includes(t => t.tb_OpeningInventories )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -477,7 +483,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_Inventory>(list);
+ 
+             _eventDrivenCacheManager.UpdateEntityList<tb_Inventory>(list);
             return list;
         }
 
@@ -493,7 +500,7 @@ namespace RUINORERP.Business
                                .Includes(t => t.tb_proddetail )
                                .Includes(t => t.tb_location )
                                             .Includes(t => t.tb_Inv_Alert_Attributes )
-                             
+                                .Includes(t => t.tb_OpeningInventories )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -501,7 +508,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_Inventory>(list);
+  
+             _eventDrivenCacheManager.UpdateEntityList<tb_Inventory>(list);
             return list;
         }
         
@@ -517,7 +525,7 @@ namespace RUINORERP.Business
                             .Includes(t => t.tb_proddetail )
                             .Includes(t => t.tb_location )
                                         .Includes(t => t.tb_Inv_Alert_Attributes )
-                      
+                            .Includes(t => t.tb_OpeningInventories )
                         .ToList();
             
             foreach (var item in list)
@@ -525,7 +533,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_Inventory>(list);
+     
+             _eventDrivenCacheManager.UpdateEntityList<tb_Inventory>(list);
             return list;
         }
         
@@ -557,15 +566,18 @@ namespace RUINORERP.Business
                              .Includes(t => t.tb_storagerack )
                             .Includes(t => t.tb_proddetail )
                             .Includes(t => t.tb_location )
-                                        .Includes(t => t.tb_Inv_Alert_Attributes )
-              
-                        .FirstAsync();
+                        
+
+                                            .Includes(t => t.tb_Inv_Alert_Attributes )
+                                            .Includes(t => t.tb_OpeningInventories )
+                                .FirstAsync();
             if(entity!=null)
             {
                 entity.HasChanged = false;
             }
 
-            MyCacheManager.Instance.UpdateEntityList<tb_Inventory>(entity);
+         
+             _eventDrivenCacheManager.UpdateEntity<tb_Inventory>(entity);
             return entity as T;
         }
         

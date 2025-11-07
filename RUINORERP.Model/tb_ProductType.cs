@@ -4,10 +4,10 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/28/2025 16:58:35
+// 时间：11/07/2025 10:19:28
 // **************************************
 using System;
-﻿using SqlSugar;
+using SqlSugar;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -97,37 +97,31 @@ namespace RUINORERP.Model
 
         #region 扩展属性
 
-        //[Browsable(false)]打印报表时的数据源会不显示
+
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ManufacturingOrder.Type_ID))]
         public virtual List<tb_ManufacturingOrder> tb_ManufacturingOrders { get; set; }
-        //tb_ManufacturingOrder.Type_ID)
-        //Type_ID.FK_MANUFACTURINGORDER_REF_PRODUCTYPE)
-        //tb_ProductType.Type_ID)
 
-        //[Browsable(false)]打印报表时的数据源会不显示
+
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_Prod.Type_ID))]
         public virtual List<tb_Prod> tb_Prods { get; set; }
-        //tb_Prod.Type_ID)
-        //Type_ID.FK_TB_PROD_REFERENCE_TB_PRODU)
-        //tb_ProductType.Type_ID)
 
-        //[Browsable(false)]打印报表时的数据源会不显示
+
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ProdConversionDetail.Type_ID_from))]
         public virtual List<tb_ProdConversionDetail> tb_ProdConversionDetails { get; set; }
-        //tb_ProdConversionDetail.Type_ID)
-        //Type_ID.FK_TB_PRODConvertiondetail_REFE_TB_PRODU_typeFrom)
-        //tb_ProductType.Type_ID_from)
 
-  
+
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_ProdConversionDetail.Type_ID_to))]
+        public virtual List<tb_ProdConversionDetail> tb_ProdConversionDetailsByTypeIdTo { get; set; }
 
 
         #endregion
 
 
-
+ 
 
 //如果为false,则不可以。
 private bool PK_FK_ID_Check()

@@ -91,7 +91,7 @@ namespace RUINORERP.Business
                 if (entity.ReceivePaymentType == (int)ReceivePaymentType.付款)
                 {
                     // 非平台来源且没有收款信息时，返回错误
-                    if (!entity.IsFromPlatform && !entity.PayeeInfoID.HasValue)
+                    if (!entity.PayeeInfoID.HasValue && !entity.IsFromPlatform.Value)
                     {
                         rmrs.ErrorMsg = $"{entity.PaymentNo}付款时，对方的收款信息必填!";
                         rmrs.Succeeded = false;
@@ -337,7 +337,7 @@ namespace RUINORERP.Business
 
                                 // 计算本次可核销金额
                                 decimal statementAmountToWriteOff;
-                                
+
                                 // 核销逻辑判断：
                                 // 1. 如果isExactMatch为true，表示全额核销场景，直接核销所有剩余金额
                                 // 2. 否则，按常规逻辑判断是否全额核销或部分核销
@@ -593,7 +593,7 @@ namespace RUINORERP.Business
                                     //    - 每次核销都扣减ARAPTotalPaidAmount
                                     // 3. 单一模式：采购应付16200元 + 采购调价-400元 = 实付15800元
                                     //    - 按FIFO顺序核销，每次核销都扣减ARAPTotalPaidAmount
-                                    
+
                                     // 合并全额核销和非全额核销的扣减逻辑，简化代码结构
                                     // 核心原则：在混合对冲模式下，只有非对冲项才扣减ARAPTotalPaidAmount
                                     // 无论是否为全额核销场景，此原则都适用
@@ -1519,7 +1519,7 @@ namespace RUINORERP.Business
                     it.ReversedByPaymentId,
                     it.Paytype_ID
                 }).ExecuteCommandAsync();
-                    
+
 
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
@@ -2009,7 +2009,13 @@ namespace RUINORERP.Business
                                 }
                                 else
                                 {
-                                    returnResults.ErrorMsg = $"可能存在超额退款的单据:{(BizType)groupedByBizType[0].Key}，单号：{billNoGroup.Key.SourceBillNo}";
+                                    StringBuilder serrorBuilder = new StringBuilder();
+                                    serrorBuilder.AppendLine($"可能存在超额退款的单据:{(BizType)groupedByBizType[0].Key}，单号：{billNoGroup.Key.SourceBillNo}");
+                                    serrorBuilder.AppendLine("超额退款详情：");
+                                    serrorBuilder.AppendLine($"  - 预收/付款单已支付金额: {PreReceivedPayment.LocalPaidAmount}");
+                                    serrorBuilder.AppendLine($"  - 当前退款金额: {totalLocalAmount}");
+                                    serrorBuilder.AppendLine("请检查退款金额是否正确。");
+                                    returnResults.ErrorMsg = serrorBuilder.ToString();
                                     // 其他情况均视为不合法
                                     return false;
                                 }
@@ -2019,8 +2025,18 @@ namespace RUINORERP.Business
                         // 检查 
 
                     }
-                    returnResults.ErrorMsg = $"{(ReceivePaymentType)paymentDetails[0].tb_fm_paymentrecord.ReceivePaymentType}单中不能存在相同业务来源的单据:{(BizType)groupedByBizType[0].Key}，单号：{billNoGroup.Key.SourceBillNo}";
-                    returnResults.ErrorMsg += $"\r\n通常是生成了重复{(ReceivePaymentType)paymentDetails[0].tb_fm_paymentrecord.ReceivePaymentType}单。请仔细核对！";
+                    StringBuilder errorBuilder = new StringBuilder();
+                    errorBuilder.AppendLine($"{(ReceivePaymentType)paymentDetails[0].tb_fm_paymentrecord.ReceivePaymentType}单中不能存在相同业务来源的单据:{(BizType)groupedByBizType[0].Key}，单号：{billNoGroup.Key.SourceBillNo}");
+                    errorBuilder.AppendLine($"重复{((ReceivePaymentType)paymentDetails[0].tb_fm_paymentrecord.ReceivePaymentType).ToString()}单详情：");
+
+                    // 显示所有重复单据的详细信息
+                    foreach (var item in paymentDetails)
+                    {
+                        errorBuilder.AppendLine($"  - 来源单据:{item.SourceBillNo}，金额:{item.LocalAmount}");
+                    }
+
+                    errorBuilder.AppendLine($"通常是生成了重复{(ReceivePaymentType)paymentDetails[0].tb_fm_paymentrecord.ReceivePaymentType}单。请仔细核对！");
+                    returnResults.ErrorMsg = errorBuilder.ToString();
                     // 其他情况均视为不合法
                     return false;
                 }
@@ -2061,36 +2077,68 @@ namespace RUINORERP.Business
                 // 如果支付金额大于应付金额，这是错误情况
                 if (totalPaidAmount > totalLocalPayableAmount)
                 {
-                    throw new Exception($"业务类型 {bizType} 的总支付金额 {totalPaidAmount} 不能超过总应付金额 {totalLocalPayableAmount}。");
+                    StringBuilder errorBuilder = new StringBuilder();
+                    errorBuilder.AppendLine($"业务类型 {(BizType)bizType} 的总支付金额 {totalPaidAmount} 不能超过总应付金额 {totalLocalPayableAmount}。");
+                    errorBuilder.AppendLine("付款金额明细：");
+
+                    foreach (var detail in detailList)
+                    {
+                        errorBuilder.AppendLine($"  - 来源单号：{detail.SourceBillNo}，支付金额：{detail.LocalAmount}，应付金额：{detail.LocalPayableAmount}");
+                    }
+
+                    throw new Exception(errorBuilder.ToString());
                 }
 
                 // 如果支付金额小于应付金额，检查部分付款的单据数量
-                int partialPaymentCount = 0;
+                List<tb_FM_PaymentRecordDetail> partialPaymentDetails = new List<tb_FM_PaymentRecordDetail>();
 
                 foreach (var detail in detailList)
                 {
                     // 如果支付金额小于应付金额，则是部分付款
                     if (detail.LocalAmount < detail.LocalPayableAmount)
                     {
-                        partialPaymentCount++;
+                        partialPaymentDetails.Add(detail);
 
                         // 如果部分付款的单据超过一张，则抛出异常
-                        if (partialPaymentCount > 1)
+                        if (partialPaymentDetails.Count > 1)
                         {
-                            throw new Exception($"业务类型 {bizType} 中，最多只能有一张单据进行部分付款。请调整支付金额或选择单据。");
+                            StringBuilder errorBuilder = new StringBuilder();
+                            errorBuilder.AppendLine($"业务类型 {(BizType)bizType} 中，最多只能有一张单据进行部分付款。请调整支付金额或选择单据。");
+                            errorBuilder.AppendLine("以下是部分付款的单据信息：");
+
+                            foreach (var partialDetail in partialPaymentDetails)
+                            {
+                                errorBuilder.AppendLine($"  - 来源单号：{partialDetail.SourceBillNo}，支付金额：{partialDetail.LocalAmount}，应付金额：{partialDetail.LocalPayableAmount}");
+                            }
+
+                            throw new Exception(errorBuilder.ToString());
                         }
                     }
                     // 如果支付金额大于应付金额，也是错误情况
                     else if (detail.LocalAmount > detail.LocalPayableAmount)
                     {
-                        throw new Exception($"业务类型 {bizType} 中，单据 {detail.SourceBillNo} 的支付金额不能超过应付金额 {detail.LocalPayableAmount}。");
+                        StringBuilder errorBuilder = new StringBuilder();
+                        errorBuilder.AppendLine($"业务类型 {(BizType)bizType} 中，单据 {detail.SourceBillNo} 的支付金额 {detail.LocalAmount} 不能超过应付金额 {detail.LocalPayableAmount}。");
+                        errorBuilder.AppendLine("超额支付详情：");
+                        errorBuilder.AppendLine($"  - 单据ID：{detail.SourceBillNo}");
+                        errorBuilder.AppendLine($"  - 支付金额：{detail.LocalAmount}");
+                        errorBuilder.AppendLine($"  - 应付金额：{detail.LocalPayableAmount}");
+                        errorBuilder.AppendLine($"  - 超额金额：{detail.LocalAmount - detail.LocalPayableAmount}");
+                        errorBuilder.AppendLine("请调整支付金额后重试。");
+                        throw new Exception(errorBuilder.ToString());
                     }
                 }
 
                 // 如果没有部分付款的单据，但总支付金额小于总应付金额，这也是错误情况
-                if (partialPaymentCount == 0 && totalPaidAmount < totalLocalPayableAmount)
+                if (partialPaymentDetails.Count == 0 && totalPaidAmount < totalLocalPayableAmount)
                 {
-                    throw new Exception($"业务类型 {bizType} 的总支付金额 {totalPaidAmount} 小于总应付金额 {totalLocalPayableAmount}，但没有单据被标记为部分付款。");
+                    StringBuilder errorBuilder = new StringBuilder();
+                    errorBuilder.AppendLine($"业务类型 {(BizType)bizType} 的总支付金额 {totalPaidAmount} 小于总应付金额 {totalLocalPayableAmount}，但没有单据被标记为部分付款。");
+                    errorBuilder.AppendLine("提示：");
+                    errorBuilder.AppendLine("1. 如要进行全额支付，请确保总支付金额等于总应付金额");
+                    errorBuilder.AppendLine("2. 如需进行部分支付，请将其中一张单据的支付金额设为小于其应付金额");
+                    errorBuilder.AppendLine("3. 系统限制每次只能对一张单据进行部分支付");
+                    throw new Exception(errorBuilder.ToString());
                 }
             }
 
@@ -2261,7 +2309,7 @@ namespace RUINORERP.Business
             else
             {
                 paymentRecord.ReceivePaymentType = (int)ReceivePaymentType.付款;
-                paymentRecord.PaymentNo =await bizCodeService.GenerateBizBillNoAsync(BizType.付款单);
+                paymentRecord.PaymentNo = await bizCodeService.GenerateBizBillNoAsync(BizType.付款单);
             }
             tb_FM_PaymentRecordDetail paymentRecordDetail = new tb_FM_PaymentRecordDetail();
             #region 明细 
@@ -2518,13 +2566,29 @@ namespace RUINORERP.Business
                 paymentRecord.PaymentNo = await bizCodeService.GenerateBizBillNoAsync(BizType.付款单, CancellationToken.None);
             }
             //在收款单明细中，不可以存在：一种应付下有两同的两个应收单。 否则这里会出错。
-            var checkList = paymentRecord.tb_FM_PaymentRecordDetails.GroupBy(c => c.SourceBizType, c => c.SourceBilllId).ToList();
-            if (checkList.Count > 1)
+            // 查找重复的单据（按业务类型和单据ID组合）
+            var duplicates = paymentRecord.tb_FM_PaymentRecordDetails
+                .GroupBy(c => new { c.SourceBizType, c.SourceBilllId })
+                .Where(g => g.Count() > 1)
+                .ToList();
+
+            if (duplicates.Any())
             {
-                throw new Exception("收付款单明细中，同一业务下同一张单据不能重复分次收款。\r\n相同业务下的单据必须为一行。");
-                //rs.ErrorMsg = ("收付款单明细中，同一业务下同一张单据不能重复分次收款。\r\n相同业务下的单据必须为一行。");
-                //rs.ReturnObject = paymentRecord;
-                //return rs;
+                StringBuilder errorBuilder = new StringBuilder();
+                errorBuilder.AppendLine("收付款单明细中，同一业务下同一张单据不能重复分次收款。");
+                errorBuilder.AppendLine("重复单据详情：");
+
+                foreach (var duplicateGroup in duplicates)
+                {
+                    errorBuilder.AppendLine($"  - 业务类型: {(BizType)duplicateGroup.Key.SourceBizType}，单据ID: {duplicateGroup.Key.SourceBilllId}");
+                    foreach (var item in duplicateGroup)
+                    {
+                        errorBuilder.AppendLine($"    - 明细来源: {item.SourceBillNo}，金额: {item.LocalAmount}");
+                    }
+                }
+
+                errorBuilder.AppendLine("\r\n相同业务下的单据必须合并为一行。");
+                throw new Exception(errorBuilder.ToString());
             }
             //SourceBillNos的值来自于tb_FM_PaymentRecordDetails集合中的 SourceBillNo属性的值，用逗号隔开
             paymentRecord.SourceBillNos = string.Join(",", paymentRecord.tb_FM_PaymentRecordDetails.Select(t => t.SourceBillNo).ToArray());
@@ -2648,10 +2712,29 @@ namespace RUINORERP.Business
                 paymentRecord.PaymentNo = await bizCodeService.GenerateBizBillNoAsync(BizType.付款单, CancellationToken.None);
             }
             // 数据验证：检查是否存在同一业务下同一张单据重复分次收款的情况
-            var checkList = paymentRecord.tb_FM_PaymentRecordDetails.GroupBy(c => new { c.SourceBizType, c.SourceBilllId }).ToList();
-            if (paymentRecord.tb_FM_PaymentRecordDetails.Count != checkList.Count)
+            // 查找重复的单据（按业务类型和单据ID组合）
+            var duplicates = paymentRecord.tb_FM_PaymentRecordDetails
+                .GroupBy(c => new { c.SourceBizType, c.SourceBilllId })
+                .Where(g => g.Count() > 1)
+                .ToList();
+
+            if (duplicates.Any())
             {
-                throw new Exception("收付款单明细中，同一业务下同一张单据不能重复分次收款。\r\n相同业务下的单据必须合并为一行。");
+                StringBuilder errorBuilder = new StringBuilder();
+                errorBuilder.AppendLine("收付款单明细中，同一业务下同一张单据不能重复分次收款。");
+                errorBuilder.AppendLine("重复单据详情：");
+
+                foreach (var duplicateGroup in duplicates)
+                {
+                    errorBuilder.AppendLine($"  - 业务类型: {(BizType)duplicateGroup.Key.SourceBizType}，单据ID: {duplicateGroup.Key.SourceBilllId}");
+                    foreach (var item in duplicateGroup)
+                    {
+                        errorBuilder.AppendLine($"    - 明细来源: {item.SourceBillNo}，金额: {item.LocalAmount}");
+                    }
+                }
+
+                errorBuilder.AppendLine("\r\n相同业务下的单据必须合并为一行。");
+                throw new Exception(errorBuilder.ToString());
             }
             //SourceBillNos的值来自于tb_FM_PaymentRecordDetails集合中的 SourceBillNo属性的值，用逗号隔开
             paymentRecord.SourceBillNos = string.Join(",", paymentRecord.tb_FM_PaymentRecordDetails.Select(t => t.SourceBillNo).ToArray());
@@ -2692,7 +2775,7 @@ namespace RUINORERP.Business
                 //rrs.Succeeded = true;
                 return true;
                 ////生成时暂时只考虑了一个主键的情况
-                // MyCacheManager.Instance.DeleteEntityList<tb_FM_PaymentRecordController>(entity);
+                // Cache.EntityCacheHelper.DeleteEntityList<tb_FM_PaymentRecordController>(entity);
             }
             return false;
         }
@@ -2840,10 +2923,10 @@ namespace RUINORERP.Business
                             .Includes(a => a.tb_customervendor)
                              .AsNavQueryable()//加这个前面,超过三级在前面加这一行，并且第四级无VS智能提示，但是可以用
                               .Includes(a => a.tb_FM_PaymentRecordDetails)
-                              .Includes(a => a.tb_FM_PaymentRecords_Originals)
-                              .Includes(a => a.tb_FM_PaymentRecords_Reverseds)
-                              .Includes(a => a.tb_fm_paymentrecord_Original)
-                              .Includes(a => a.tb_fm_paymentrecord_Reversed)
+                              .Includes(a => a.tb_FM_PaymentRecords)
+                              .Includes(a => a.tb_FM_PaymentRecordsByReversedOriginal)
+                              .Includes(a => a.tb_fm_paymentrecord)
+                              .Includes(a => a.tb_fm_paymentrecordByReversedOriginal)
                             .ToListAsync();
 
 

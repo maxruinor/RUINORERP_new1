@@ -1,10 +1,8 @@
-﻿
-// **************************************
-// 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
+﻿// **************************************
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/25/2025 18:51:44
+// 时间：11/07/2025 10:19:27
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -25,6 +23,7 @@ using RUINORERP.Model.Context;
 using System.Linq;
 using RUINOR.Core;
 using RUINORERP.Common.Helper;
+using RUINORERP.Business.Cache;
 
 namespace RUINORERP.Business
 {
@@ -39,14 +38,16 @@ namespace RUINORERP.Business
         //public readonly IUnitOfWorkManage _unitOfWorkManage;
         //public readonly ILogger<BaseController<T>> _logger;
         public Itb_FM_PreReceivedPaymentServices _tb_FM_PreReceivedPaymentServices { get; set; }
+        private readonly EventDrivenCacheManager _eventDrivenCacheManager; 
        // private readonly ApplicationContext _appContext;
        
-        public tb_FM_PreReceivedPaymentController(ILogger<tb_FM_PreReceivedPaymentController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_FM_PreReceivedPaymentServices tb_FM_PreReceivedPaymentServices , ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
+        public tb_FM_PreReceivedPaymentController(ILogger<tb_FM_PreReceivedPaymentController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_FM_PreReceivedPaymentServices tb_FM_PreReceivedPaymentServices ,EventDrivenCacheManager eventDrivenCacheManager, ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
         {
             _logger = logger;
            _unitOfWorkManage = unitOfWorkManage;
            _tb_FM_PreReceivedPaymentServices = tb_FM_PreReceivedPaymentServices;
-            _appContext = appContext;
+           _appContext = appContext;
+           _eventDrivenCacheManager = eventDrivenCacheManager;
         }
       
         
@@ -89,14 +90,14 @@ namespace RUINORERP.Business
                     bool rs = await _tb_FM_PreReceivedPaymentServices.Update(entity);
                     if (rs)
                     {
-                        MyCacheManager.Instance.UpdateEntityList<tb_FM_PreReceivedPayment>(entity);
+                        _eventDrivenCacheManager.UpdateEntity<tb_FM_PreReceivedPayment>(entity);
                     }
                     Returnobj = entity;
                 }
                 else
                 {
                     Returnobj = await _tb_FM_PreReceivedPaymentServices.AddReEntityAsync(entity);
-                    MyCacheManager.Instance.UpdateEntityList<tb_FM_PreReceivedPayment>(entity);
+                    _eventDrivenCacheManager.UpdateEntity<tb_FM_PreReceivedPayment>(entity);
                 }
 
                 rr.ReturnObject = Returnobj;
@@ -130,14 +131,14 @@ namespace RUINORERP.Business
                     bool rs = await _tb_FM_PreReceivedPaymentServices.Update(entity);
                     if (rs)
                     {
-                        MyCacheManager.Instance.UpdateEntityList<tb_FM_PreReceivedPayment>(entity);
+                        _eventDrivenCacheManager.UpdateEntity<tb_FM_PreReceivedPayment>(entity);
                     }
                     Returnobj = entity as T;
                 }
                 else
                 {
                     Returnobj = await _tb_FM_PreReceivedPaymentServices.AddReEntityAsync(entity) as T ;
-                    MyCacheManager.Instance.UpdateEntityList<tb_FM_PreReceivedPayment>(entity);
+                    _eventDrivenCacheManager.UpdateEntity<tb_FM_PreReceivedPayment>(entity);
                 }
 
                 rr.ReturnObject = Returnobj;
@@ -162,7 +163,7 @@ namespace RUINORERP.Business
             }
             if (list != null)
             {
-                MyCacheManager.Instance.UpdateEntityList<List<T>>(list);
+                _eventDrivenCacheManager.UpdateEntityList<T>(list);
              }
             return list;
         }
@@ -177,7 +178,7 @@ namespace RUINORERP.Business
             }
             if (list != null)
             {
-                MyCacheManager.Instance.UpdateEntityList<List<T>>(list);
+                _eventDrivenCacheManager.UpdateEntityList<T>(list);
              }
             return list;
         }
@@ -190,7 +191,7 @@ namespace RUINORERP.Business
             if (rs)
             {
                 ////生成时暂时只考虑了一个主键的情况
-                MyCacheManager.Instance.DeleteEntityList<tb_FM_PreReceivedPayment>(entity);
+                _eventDrivenCacheManager.DeleteEntity<tb_FM_PreReceivedPayment>(entity.PrimaryKeyID);
             }
             return rs;
         }
@@ -203,9 +204,7 @@ namespace RUINORERP.Business
             if (c>0)
             {
                 rs=true;
-                ////生成时暂时只考虑了一个主键的情况
-                 long[] result = entitys.Select(e => e.PreRPID).ToArray();
-                MyCacheManager.Instance.DeleteEntityList<tb_FM_PreReceivedPayment>(result);
+                _eventDrivenCacheManager.DeleteEntityList<tb_FM_PreReceivedPayment>(entitys);
             }
             return rs;
         }
@@ -293,7 +292,15 @@ namespace RUINORERP.Business
         public async override Task<List<T>> BaseQueryByAdvancedNavAsync(bool useLike, object dto)
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PreReceivedPayment>()
-                                //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
+                                .Includes(m => m.tb_currency)
+                            .Includes(m => m.tb_fm_account)
+                            .Includes(m => m.tb_fm_payeeinfo)
+                            .Includes(m => m.tb_paymentmethod)
+                            .Includes(m => m.tb_projectgroup)
+                            .Includes(m => m.tb_customervendor)
+                            .Includes(m => m.tb_department)
+                            .Includes(m => m.tb_employee)
+                                            //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
                 .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
                                 .WhereCustom(useLike, dto);;
             return await querySqlQueryable.ToListAsync()as List<T>;
@@ -310,7 +317,7 @@ namespace RUINORERP.Business
             if (rs)
             {
                 //////生成时暂时只考虑了一个主键的情况
-                MyCacheManager.Instance.DeleteEntityList<T>(model);
+                 _eventDrivenCacheManager.DeleteEntity<T>(model);
             }
             return rs;
         }
@@ -321,7 +328,8 @@ namespace RUINORERP.Business
         public tb_FM_PreReceivedPayment AddReEntity(tb_FM_PreReceivedPayment entity)
         {
             tb_FM_PreReceivedPayment AddEntity =  _tb_FM_PreReceivedPaymentServices.AddReEntity(entity);
-            MyCacheManager.Instance.UpdateEntityList<tb_FM_PreReceivedPayment>(AddEntity);
+     
+             _eventDrivenCacheManager.UpdateEntity<tb_FM_PreReceivedPayment>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
@@ -329,7 +337,7 @@ namespace RUINORERP.Business
          public async Task<tb_FM_PreReceivedPayment> AddReEntityAsync(tb_FM_PreReceivedPayment entity)
         {
             tb_FM_PreReceivedPayment AddEntity = await _tb_FM_PreReceivedPaymentServices.AddReEntityAsync(entity);
-            MyCacheManager.Instance.UpdateEntityList<tb_FM_PreReceivedPayment>(AddEntity);
+            _eventDrivenCacheManager.UpdateEntity<tb_FM_PreReceivedPayment>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
@@ -339,7 +347,7 @@ namespace RUINORERP.Business
             long id = await _tb_FM_PreReceivedPaymentServices.Add(entity);
             if(id>0)
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_FM_PreReceivedPayment>(entity);
+                 _eventDrivenCacheManager.UpdateEntity<tb_FM_PreReceivedPayment>(entity);
             }
             return id;
         }
@@ -349,7 +357,7 @@ namespace RUINORERP.Business
             List<long> ids = await _tb_FM_PreReceivedPaymentServices.Add(infos);
             if(ids.Count>0)//成功的个数 这里缓存 对不对呢？
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_FM_PreReceivedPayment>(infos);
+                 _eventDrivenCacheManager.UpdateEntityList<tb_FM_PreReceivedPayment>(infos);
             }
             return ids;
         }
@@ -360,7 +368,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_FM_PreReceivedPaymentServices.Delete(entity);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_FM_PreReceivedPayment>(entity);
+                _eventDrivenCacheManager.DeleteEntity<tb_FM_PreReceivedPayment>(entity);
                 
             }
             return rs;
@@ -371,7 +379,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_FM_PreReceivedPaymentServices.Update(entity);
             if (rs)
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_FM_PreReceivedPayment>(entity);
+                 _eventDrivenCacheManager.DeleteEntity<tb_FM_PreReceivedPayment>(entity);
                 entity.ActionStatus = ActionStatus.无操作;
             }
             return rs;
@@ -382,7 +390,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_FM_PreReceivedPaymentServices.DeleteById(id);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_FM_PreReceivedPayment>(id);
+               _eventDrivenCacheManager.DeleteEntity<tb_FM_PreReceivedPayment>(id);
             }
             return rs;
         }
@@ -392,7 +400,8 @@ namespace RUINORERP.Business
             bool rs = await _tb_FM_PreReceivedPaymentServices.DeleteByIds(ids);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_FM_PreReceivedPayment>(ids);
+            
+                   _eventDrivenCacheManager.DeleteEntities<tb_FM_PreReceivedPayment>(ids.Cast<object>().ToArray());
             }
             return rs;
         }
@@ -404,7 +413,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_FM_PreReceivedPayment>(list);
+     
+             _eventDrivenCacheManager.UpdateEntityList<tb_FM_PreReceivedPayment>(list);
             return list;
         }
         
@@ -415,7 +425,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_FM_PreReceivedPayment>(list);
+    
+             _eventDrivenCacheManager.UpdateEntityList<tb_FM_PreReceivedPayment>(list);
             return list;
         }
         
@@ -426,7 +437,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_FM_PreReceivedPayment>(list);
+  
+             _eventDrivenCacheManager.UpdateEntityList<tb_FM_PreReceivedPayment>(list);
             return list;
         }
         
@@ -437,7 +449,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_FM_PreReceivedPayment>(list);
+ 
+             _eventDrivenCacheManager.UpdateEntityList<tb_FM_PreReceivedPayment>(list);
             return list;
         }
         
@@ -455,7 +468,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_FM_PreReceivedPayment>(list);
+   
+             _eventDrivenCacheManager.UpdateEntityList<tb_FM_PreReceivedPayment>(list);
             return list;
         }
         
@@ -483,7 +497,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_FM_PreReceivedPayment>(list);
+ 
+             _eventDrivenCacheManager.UpdateEntityList<tb_FM_PreReceivedPayment>(list);
             return list;
         }
 
@@ -510,7 +525,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_FM_PreReceivedPayment>(list);
+  
+             _eventDrivenCacheManager.UpdateEntityList<tb_FM_PreReceivedPayment>(list);
             return list;
         }
         
@@ -537,7 +553,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_FM_PreReceivedPayment>(list);
+     
+             _eventDrivenCacheManager.UpdateEntityList<tb_FM_PreReceivedPayment>(list);
             return list;
         }
         
@@ -574,13 +591,16 @@ namespace RUINORERP.Business
                             .Includes(t => t.tb_customervendor )
                             .Includes(t => t.tb_department )
                             .Includes(t => t.tb_employee )
-                                    .FirstAsync();
+                        
+
+                                .FirstAsync();
             if(entity!=null)
             {
                 entity.HasChanged = false;
             }
 
-            MyCacheManager.Instance.UpdateEntityList<tb_FM_PreReceivedPayment>(entity);
+         
+             _eventDrivenCacheManager.UpdateEntity<tb_FM_PreReceivedPayment>(entity);
             return entity as T;
         }
         

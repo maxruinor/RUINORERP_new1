@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：02/08/2025 16:31:56
+// 时间：11/06/2025 20:41:44
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -85,7 +85,6 @@ namespace RUINORERP.Model
         /// </summary>
         [AdvQueryAttribute(ColName = "Parent_region_id",ColDesc = " 父地区")] 
         [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Parent_region_id" , DecimalDigits = 0,IsNullable = true,ColumnDescription = " 父地区" )]
-        [FKRelationAttribute("tb_CRM_Region","Parent_region_id")]
         public long? Parent_region_id
         { 
             get{return _Parent_region_id;}
@@ -139,7 +138,14 @@ namespace RUINORERP.Model
         #endregion
 
         #region 扩展属性
-       
+
+        //[Browsable(false)]打印报表时的数据源会不显示
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_Provinces.Region_ID))]
+        public virtual List<tb_Provinces> tb_Provinceses { get; set; }
+        //tb_Provinces.Region_ID)
+        //Region_ID.FK_TB_PROVI_REFERENCE_TB_CRM_R)
+        //tb_CRM_Region.Region_ID)
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
@@ -149,26 +155,26 @@ namespace RUINORERP.Model
         //Region_ID.FK_CRM_Customer_REF_CRM_Region)
         //tb_CRM_Region.Region_ID)
 
-        
 
         #endregion
 
 
-
+ 
 
 //如果为false,则不可以。
 private bool PK_FK_ID_Check()
 {
   bool rs=true;
-         if("Region_ID"!="Parent_region_id")
-        {
-        // rs=false;
-        }
 return rs;
 }
 
 
 
+
+
+
+       
+        
 
         public override object Clone()
         {

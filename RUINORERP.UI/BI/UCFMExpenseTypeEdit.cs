@@ -15,7 +15,6 @@ using RUINORERP.UI.BaseForm;
 using RUINORERP.Business.LogicaService;
 using RUINORERP.UI.Common;
 using RUINORERP.Business;
-using FastReport;
 using RUINORERP.Global;
 using RUINORERP.Global.EnumExt;
 
@@ -32,7 +31,7 @@ namespace RUINORERP.UI.BI
 
         public override void BindData(BaseEntity entity)
         {
-            DataBindingHelper.BindData4Cmb<tb_FM_Subject>(entity, k => k.Subject_id, v => v.Subject_name, cmbsubject_id);
+            DataBindingHelper.BindData4Cmb<tb_FM_Subject>(entity, k => k.Subject_id, v => v.subject_name, cmbsubject_id);
 
             DataBindingHelper.BindData4TextBox<tb_FM_ExpenseType>(entity, t => t.Expense_name, txtExpense_name, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4CmbByEnum<tb_FM_ExpenseType, ReceivePaymentType>(entity, k => k.ReceivePaymentType, cmbReceivePaymentType, false);

@@ -1,10 +1,8 @@
-﻿
-// **************************************
-// 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
+﻿// **************************************
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/14/2025 20:39:47
+// 时间：11/06/2025 19:43:17
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -25,6 +23,7 @@ using RUINORERP.Model.Context;
 using System.Linq;
 using RUINOR.Core;
 using RUINORERP.Common.Helper;
+using RUINORERP.Business.Cache;
 
 namespace RUINORERP.Business
 {
@@ -39,14 +38,16 @@ namespace RUINORERP.Business
         //public readonly IUnitOfWorkManage _unitOfWorkManage;
         //public readonly ILogger<BaseController<T>> _logger;
         public Itb_ProdBundleServices _tb_ProdBundleServices { get; set; }
+        private readonly EventDrivenCacheManager _eventDrivenCacheManager; 
        // private readonly ApplicationContext _appContext;
        
-        public tb_ProdBundleController(ILogger<tb_ProdBundleController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_ProdBundleServices tb_ProdBundleServices , ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
+        public tb_ProdBundleController(ILogger<tb_ProdBundleController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_ProdBundleServices tb_ProdBundleServices ,EventDrivenCacheManager eventDrivenCacheManager, ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
         {
             _logger = logger;
            _unitOfWorkManage = unitOfWorkManage;
            _tb_ProdBundleServices = tb_ProdBundleServices;
-            _appContext = appContext;
+           _appContext = appContext;
+           _eventDrivenCacheManager = eventDrivenCacheManager;
         }
       
         
@@ -89,14 +90,14 @@ namespace RUINORERP.Business
                     bool rs = await _tb_ProdBundleServices.Update(entity);
                     if (rs)
                     {
-                        MyCacheManager.Instance.UpdateEntityList<tb_ProdBundle>(entity);
+                        _eventDrivenCacheManager.UpdateEntity<tb_ProdBundle>(entity);
                     }
                     Returnobj = entity;
                 }
                 else
                 {
                     Returnobj = await _tb_ProdBundleServices.AddReEntityAsync(entity);
-                    MyCacheManager.Instance.UpdateEntityList<tb_ProdBundle>(entity);
+                    _eventDrivenCacheManager.UpdateEntity<tb_ProdBundle>(entity);
                 }
 
                 rr.ReturnObject = Returnobj;
@@ -130,14 +131,14 @@ namespace RUINORERP.Business
                     bool rs = await _tb_ProdBundleServices.Update(entity);
                     if (rs)
                     {
-                        MyCacheManager.Instance.UpdateEntityList<tb_ProdBundle>(entity);
+                        _eventDrivenCacheManager.UpdateEntity<tb_ProdBundle>(entity);
                     }
                     Returnobj = entity as T;
                 }
                 else
                 {
                     Returnobj = await _tb_ProdBundleServices.AddReEntityAsync(entity) as T ;
-                    MyCacheManager.Instance.UpdateEntityList<tb_ProdBundle>(entity);
+                    _eventDrivenCacheManager.UpdateEntity<tb_ProdBundle>(entity);
                 }
 
                 rr.ReturnObject = Returnobj;
@@ -162,7 +163,7 @@ namespace RUINORERP.Business
             }
             if (list != null)
             {
-                MyCacheManager.Instance.UpdateEntityList<List<T>>(list);
+                _eventDrivenCacheManager.UpdateEntityList<T>(list);
              }
             return list;
         }
@@ -177,7 +178,7 @@ namespace RUINORERP.Business
             }
             if (list != null)
             {
-                MyCacheManager.Instance.UpdateEntityList<List<T>>(list);
+                _eventDrivenCacheManager.UpdateEntityList<T>(list);
              }
             return list;
         }
@@ -190,7 +191,7 @@ namespace RUINORERP.Business
             if (rs)
             {
                 ////生成时暂时只考虑了一个主键的情况
-                MyCacheManager.Instance.DeleteEntityList<tb_ProdBundle>(entity);
+                _eventDrivenCacheManager.DeleteEntity<tb_ProdBundle>(entity.PrimaryKeyID);
             }
             return rs;
         }
@@ -203,9 +204,7 @@ namespace RUINORERP.Business
             if (c>0)
             {
                 rs=true;
-                ////生成时暂时只考虑了一个主键的情况
-                 long[] result = entitys.Select(e => e.BundleID).ToArray();
-                MyCacheManager.Instance.DeleteEntityList<tb_ProdBundle>(result);
+                _eventDrivenCacheManager.DeleteEntityList<tb_ProdBundle>(entitys);
             }
             return rs;
         }
@@ -248,15 +247,15 @@ namespace RUINORERP.Business
             {
             
                              rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_ProdBundle>(entity as tb_ProdBundle)
-                        .Include(m => m.tb_Packings)
-                    .Include(m => m.tb_ProdBundleDetails)
+                        .Include(m => m.tb_ProdBundleDetails)
+                    .Include(m => m.tb_Packings)
                     .ExecuteCommandAsync();
                  }
         else    
         {
                         rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_ProdBundle>(entity as tb_ProdBundle)
-                .Include(m => m.tb_Packings)
                 .Include(m => m.tb_ProdBundleDetails)
+                .Include(m => m.tb_Packings)
          
                 .ExecuteCommandAsync();
                                           
@@ -290,9 +289,9 @@ namespace RUINORERP.Business
         public async override Task<List<T>> BaseQueryByAdvancedNavAsync(bool useLike, object dto)
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_ProdBundle>()
-                                .Includes(m => m.tb_Packings)
-                        .Includes(m => m.tb_ProdBundleDetails)
-                                        .WhereCustom(useLike, dto);
+                                .Includes(m => m.tb_ProdBundleDetails)
+                        .Includes(m => m.tb_Packings)
+                                        .WhereCustom(useLike, dto);;
             return await querySqlQueryable.ToListAsync()as List<T>;
         }
 
@@ -301,13 +300,13 @@ namespace RUINORERP.Business
         {
             tb_ProdBundle entity = model as tb_ProdBundle;
              bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_ProdBundle>(m => m.BundleID== entity.BundleID)
-                                .Include(m => m.tb_Packings)
-                        .Include(m => m.tb_ProdBundleDetails)
+                                .Include(m => m.tb_ProdBundleDetails)
+                        .Include(m => m.tb_Packings)
                                         .ExecuteCommandAsync();
             if (rs)
             {
                 //////生成时暂时只考虑了一个主键的情况
-                MyCacheManager.Instance.DeleteEntityList<T>(model);
+                 _eventDrivenCacheManager.DeleteEntity<T>(model);
             }
             return rs;
         }
@@ -318,7 +317,8 @@ namespace RUINORERP.Business
         public tb_ProdBundle AddReEntity(tb_ProdBundle entity)
         {
             tb_ProdBundle AddEntity =  _tb_ProdBundleServices.AddReEntity(entity);
-            MyCacheManager.Instance.UpdateEntityList<tb_ProdBundle>(AddEntity);
+     
+             _eventDrivenCacheManager.UpdateEntity<tb_ProdBundle>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
@@ -326,7 +326,7 @@ namespace RUINORERP.Business
          public async Task<tb_ProdBundle> AddReEntityAsync(tb_ProdBundle entity)
         {
             tb_ProdBundle AddEntity = await _tb_ProdBundleServices.AddReEntityAsync(entity);
-            MyCacheManager.Instance.UpdateEntityList<tb_ProdBundle>(AddEntity);
+            _eventDrivenCacheManager.UpdateEntity<tb_ProdBundle>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
@@ -336,7 +336,7 @@ namespace RUINORERP.Business
             long id = await _tb_ProdBundleServices.Add(entity);
             if(id>0)
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_ProdBundle>(entity);
+                 _eventDrivenCacheManager.UpdateEntity<tb_ProdBundle>(entity);
             }
             return id;
         }
@@ -346,7 +346,7 @@ namespace RUINORERP.Business
             List<long> ids = await _tb_ProdBundleServices.Add(infos);
             if(ids.Count>0)//成功的个数 这里缓存 对不对呢？
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_ProdBundle>(infos);
+                 _eventDrivenCacheManager.UpdateEntityList<tb_ProdBundle>(infos);
             }
             return ids;
         }
@@ -357,7 +357,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_ProdBundleServices.Delete(entity);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_ProdBundle>(entity);
+                _eventDrivenCacheManager.DeleteEntity<tb_ProdBundle>(entity);
                 
             }
             return rs;
@@ -368,7 +368,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_ProdBundleServices.Update(entity);
             if (rs)
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_ProdBundle>(entity);
+                 _eventDrivenCacheManager.DeleteEntity<tb_ProdBundle>(entity);
                 entity.ActionStatus = ActionStatus.无操作;
             }
             return rs;
@@ -379,7 +379,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_ProdBundleServices.DeleteById(id);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_ProdBundle>(id);
+               _eventDrivenCacheManager.DeleteEntity<tb_ProdBundle>(id);
             }
             return rs;
         }
@@ -389,7 +389,8 @@ namespace RUINORERP.Business
             bool rs = await _tb_ProdBundleServices.DeleteByIds(ids);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_ProdBundle>(ids);
+            
+                   _eventDrivenCacheManager.DeleteEntities<tb_ProdBundle>(ids.Cast<object>().ToArray());
             }
             return rs;
         }
@@ -401,7 +402,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_ProdBundle>(list);
+     
+             _eventDrivenCacheManager.UpdateEntityList<tb_ProdBundle>(list);
             return list;
         }
         
@@ -412,7 +414,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_ProdBundle>(list);
+    
+             _eventDrivenCacheManager.UpdateEntityList<tb_ProdBundle>(list);
             return list;
         }
         
@@ -423,7 +426,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_ProdBundle>(list);
+  
+             _eventDrivenCacheManager.UpdateEntityList<tb_ProdBundle>(list);
             return list;
         }
         
@@ -434,7 +438,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_ProdBundle>(list);
+ 
+             _eventDrivenCacheManager.UpdateEntityList<tb_ProdBundle>(list);
             return list;
         }
         
@@ -452,7 +457,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_ProdBundle>(list);
+   
+             _eventDrivenCacheManager.UpdateEntityList<tb_ProdBundle>(list);
             return list;
         }
         
@@ -466,8 +472,8 @@ namespace RUINORERP.Business
         {
             List<tb_ProdBundle> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_ProdBundle>()
                                .Includes(t => t.tb_unit )
-                                            .Includes(t => t.tb_Packings )
-                                .Includes(t => t.tb_ProdBundleDetails )
+                                            .Includes(t => t.tb_ProdBundleDetails )
+                                .Includes(t => t.tb_Packings )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -475,7 +481,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_ProdBundle>(list);
+ 
+             _eventDrivenCacheManager.UpdateEntityList<tb_ProdBundle>(list);
             return list;
         }
 
@@ -488,8 +495,8 @@ namespace RUINORERP.Business
         {
             List<tb_ProdBundle> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_ProdBundle>().Where(exp)
                                .Includes(t => t.tb_unit )
-                                            .Includes(t => t.tb_Packings )
-                                .Includes(t => t.tb_ProdBundleDetails )
+                                            .Includes(t => t.tb_ProdBundleDetails )
+                                .Includes(t => t.tb_Packings )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -497,7 +504,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_ProdBundle>(list);
+  
+             _eventDrivenCacheManager.UpdateEntityList<tb_ProdBundle>(list);
             return list;
         }
         
@@ -510,8 +518,8 @@ namespace RUINORERP.Business
         {
             List<tb_ProdBundle> list = _unitOfWorkManage.GetDbClient().Queryable<tb_ProdBundle>().Where(exp)
                             .Includes(t => t.tb_unit )
-                                        .Includes(t => t.tb_Packings )
-                            .Includes(t => t.tb_ProdBundleDetails )
+                                        .Includes(t => t.tb_ProdBundleDetails )
+                            .Includes(t => t.tb_Packings )
                         .ToList();
             
             foreach (var item in list)
@@ -519,7 +527,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_ProdBundle>(list);
+     
+             _eventDrivenCacheManager.UpdateEntityList<tb_ProdBundle>(list);
             return list;
         }
         
@@ -549,15 +558,18 @@ namespace RUINORERP.Business
         {
             tb_ProdBundle entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_ProdBundle>().Where(w => w.BundleID == (long)id)
                              .Includes(t => t.tb_unit )
-                                        .Includes(t => t.tb_Packings )
-                            .Includes(t => t.tb_ProdBundleDetails )
-                        .FirstAsync();
+                        
+
+                                            .Includes(t => t.tb_ProdBundleDetails )
+                                            .Includes(t => t.tb_Packings )
+                                .FirstAsync();
             if(entity!=null)
             {
                 entity.HasChanged = false;
             }
 
-            MyCacheManager.Instance.UpdateEntityList<tb_ProdBundle>(entity);
+         
+             _eventDrivenCacheManager.UpdateEntity<tb_ProdBundle>(entity);
             return entity as T;
         }
         

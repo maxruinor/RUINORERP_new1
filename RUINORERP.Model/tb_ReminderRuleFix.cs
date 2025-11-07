@@ -41,13 +41,6 @@ namespace RUINORERP.Model
         {
             get
             {
-                //if (NotifyChannels.Count > 0)
-                //{
-                //    //转换为枚举的值以,号隔开
-                //    _NotifyChannelDisplayText = string.Join(",", NotifyChannels.Select(x => x.ToString()));
-                //}
-                //return _NotifyChannelDisplayText;
-
                 if (NotifyChannels == null || NotifyChannels.Count == 0)
                 {
                     return string.Empty;

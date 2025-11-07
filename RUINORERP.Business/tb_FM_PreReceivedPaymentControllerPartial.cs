@@ -1,4 +1,4 @@
-﻿
+
 // **************************************
 // 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Text.RegularExpressions;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using RUINORERP.IServices;
@@ -414,8 +415,38 @@ namespace RUINORERP.Business
 
                         }
                     }
-                    returnResults.ErrorMsg = $"不能存在相同业务来源的数据:{(BizType)groupedByBizType[0].Key}，来源单号为:{groupedByBillNo[0].Key}";
-                    returnResults.ErrorMsg += $"\r\n通常是生成了重复的预{PaymentType}单。请仔细核对！";
+                    // 构建包含所有重复单据详细信息的错误消息
+                    StringBuilder errorBuilder = new StringBuilder();
+                    errorBuilder.AppendLine($"错误：不能存在相同业务来源的数据");
+                    errorBuilder.AppendLine($"业务类型：{(BizType)bizTypeGroup.Key}");
+                    errorBuilder.AppendLine($"来源单号：{billNoGroup.Key}");
+                    errorBuilder.AppendLine();
+                    errorBuilder.AppendLine($"重复预{PaymentType}单详情：");
+                    
+                    int index = 1;
+                    // 显示所有重复单据的详细信息
+                    foreach (var item in items)
+                    {
+                        errorBuilder.AppendLine($"{index}. 单据编号: {item.PreRPNO}");
+                        errorBuilder.AppendLine($"   金额: {item.LocalPrepaidAmount}");
+                        errorBuilder.AppendLine($"   交易方向: {(ReceivePaymentType)(item.ReceivePaymentType)}");
+                        errorBuilder.AppendLine($"   创建时间: {item.Created_at}");
+                        errorBuilder.AppendLine($"   创建用户: {item.Created_by}");
+                        errorBuilder.AppendLine();
+                        index++;
+                    }
+
+                    errorBuilder.AppendLine("可能原因：");
+                    errorBuilder.AppendLine($"1. 生成了重复的预{PaymentType}单");
+                    errorBuilder.AppendLine("2. 导入数据时发生重复");
+                    errorBuilder.AppendLine("3. 系统操作错误导致重复记录");
+                    errorBuilder.AppendLine();
+                    errorBuilder.AppendLine("解决建议：");
+                    errorBuilder.AppendLine("1. 检查并删除重复的预收款单");
+                    errorBuilder.AppendLine("2. 确保每张业务单据只对应一张预收款单");
+                    errorBuilder.AppendLine("3. 如需多次预收款，请确保业务来源信息不同");
+                    
+                    returnResults.ErrorMsg = errorBuilder.ToString();
                     // 其他情况均视为不合法
                     return false;
                 }
@@ -434,7 +465,7 @@ namespace RUINORERP.Business
                 //rrs.Succeeded = true;
                 return true;
                 ////生成时暂时只考虑了一个主键的情况
-                // MyCacheManager.Instance.DeleteEntityList<tb_FM_PreReceivedPaymentController>(entity);
+                // Cache.EntityCacheHelper.DeleteEntityList<tb_FM_PreReceivedPaymentController>(entity);
             }
             return false;
         }
@@ -452,14 +483,14 @@ namespace RUINORERP.Business
             decimal exchangeRate = 1; // 获取销售订单的汇率
             if (_appContext.BaseCurrency.Currency_ID != entity.Currency_ID)
             {
-                exchangeRate = entity.ExchangeRate; // 获取销售订单的汇率
+                exchangeRate = 1; // 获取销售订单的汇率
                                                     // 这里可以考虑获取最新的汇率，而不是直接使用销售订单的汇率
                                                     // exchangeRate = GetLatestExchangeRate(entity.Currency_ID.Value, _appContext.BaseCurrency.Currency_ID);
             }
 
             #region 生成预收款
 
-       
+
 
             tb_FM_PreReceivedPayment payable = new tb_FM_PreReceivedPayment();
             payable = mapper.Map<tb_FM_PreReceivedPayment>(entity);
@@ -553,7 +584,7 @@ namespace RUINORERP.Business
             decimal exchangeRate = 1; // 获取销售订单的汇率
             if (_appContext.BaseCurrency.Currency_ID != entity.Currency_ID)
             {
-                exchangeRate = entity.ExchangeRate; // 获取销售订单的汇率
+                exchangeRate = 1; // 获取销售订单的汇率
                                                     // 这里可以考虑获取最新的汇率，而不是直接使用销售订单的汇率
                                                     // exchangeRate = GetLatestExchangeRate(entity.Currency_ID.Value, _appContext.BaseCurrency.Currency_ID);
             }

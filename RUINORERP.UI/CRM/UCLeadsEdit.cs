@@ -48,7 +48,7 @@ namespace RUINORERP.UI.CRM
             if (_EditEntity.LeadID == 0)
             {
                 _EditEntity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
-                //var obj = MyCacheManager.Instance.GetEntity(nameof(tb_Employee), _EditEntity.Employee_ID);
+                //var obj = RUINORERP.Business.Cache.EntityCacheHelper.GetEntity(nameof(tb_Employee), _EditEntity.Employee_ID);
                 //if (obj != null)
                 //{
                 //    var emp = obj as tb_Employee;

@@ -527,7 +527,7 @@ namespace RUINORERP.Business
         {
             List<tb_ManufacturingOrder> list = await _appContext.Db.CopyNew().Queryable<tb_ManufacturingOrder>().Where(m => m.MOID == MainID)
                              .Includes(a => a.tb_customervendor)
-                             .Includes(a => a.tb_customervendor_out)
+                             .Includes(a => a.tb_customervendorOut)
                              .Includes(a => a.tb_employee)
                               .Includes(a => a.tb_department)
                               .Includes(a => a.tb_location)

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：02/08/2025 16:32:00
+// 时间：11/06/2025 20:41:48
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -112,10 +112,10 @@ namespace RUINORERP.Model
 
         private long? _Account_id;
         /// <summary>
-        /// 公司账号
+        /// 支付账号
         /// </summary>
-        [AdvQueryAttribute(ColName = "Account_id",ColDesc = "公司账号")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Account_id" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "公司账号")]
+        [AdvQueryAttribute(ColName = "Account_id",ColDesc = "支付账号")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Account_id" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "支付账号" )]
         [FKRelationAttribute("tb_FM_Account","Account_id")]
         public long? Account_id
         { 
@@ -171,10 +171,10 @@ namespace RUINORERP.Model
 
         private decimal _SingleAmount= ((0));
         /// <summary>
-        /// 单项金额
+        /// 单项总金额
         /// </summary>
-        [AdvQueryAttribute(ColName = "SingleAmount",ColDesc = "单项金额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "SingleAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "单项金额")]
+        [AdvQueryAttribute(ColName = "SingleAmount",ColDesc = "单项总金额")] 
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "SingleAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "单项总金额" )]
         public decimal SingleAmount
         { 
             get{return _SingleAmount;}
@@ -197,7 +197,19 @@ namespace RUINORERP.Model
                         }
         }
 
-       
+        private string _Summary;
+        /// <summary>
+        /// 摘要
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Summary",ColDesc = "摘要")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Summary" ,Length=500,IsNullable = true,ColumnDescription = "摘要" )]
+        public string Summary
+        { 
+            get{return _Summary;}
+            set{
+            SetProperty(ref _Summary, value);
+                        }
+        }
 
         private decimal? _TaxRate;
         /// <summary>
@@ -254,20 +266,7 @@ namespace RUINORERP.Model
             SetProperty(ref _EvidenceImagePath, value);
                         }
         }
-        private string _Summary;
-        /// <summary>
-        /// 摘要
-        /// </summary>
-        [AdvQueryAttribute(ColName = "Summary", ColDesc = "摘要")]
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "Summary", Length = 500, IsNullable = true, ColumnDescription = "摘要")]
-        public string Summary
-        {
-            get { return _Summary; }
-            set
-            {
-                SetProperty(ref _Summary, value);
-            }
-        }
+
         #endregion
 
         #region 扩展属性
@@ -306,21 +305,22 @@ namespace RUINORERP.Model
         #endregion
 
 
-
+ 
 
 //如果为false,则不可以。
 private bool PK_FK_ID_Check()
 {
   bool rs=true;
-         if("subject_id"!="Subject_id")
-        {
-        // rs=false;
-        }
 return rs;
 }
 
 
 
+
+
+
+       
+        
 
         public override object Clone()
         {

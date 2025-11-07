@@ -441,8 +441,8 @@ namespace RUINORERP.UI.SysConfig
             .Includes(a => a.tb_unit)
             .Includes(b => b.tb_producttype)
              .AsNavQueryable()
-            .Includes(a => a.tb_prodcategories, b => b.tb_prodcategories_parent, c => c.tb_prodcategories_parent,
-            d => d.tb_prodcategories_parent, e => e.tb_prodcategories_parent, f => f.tb_prodcategories_parent)
+            .Includes(a => a.tb_prodcategories, b => b.tb_prodcategories, c => c.tb_prodcategories,
+            d => d.tb_prodcategories, e => e.tb_prodcategories, f => f.tb_prodcategories)
             .Includes(b => b.tb_storagerack)
             .Includes(a => a.tb_location)
             .Includes(a => a.tb_Packings, b => b.tb_PackingDetails)
@@ -450,7 +450,7 @@ namespace RUINORERP.UI.SysConfig
             .Includes(b => b.tb_Prod_Attr_Relations, c => c.tb_prodpropertyvalue)
             .Includes(b => b.tb_Prod_Attr_Relations, c => c.tb_proddetail)
             .AsNavQueryable()
-            .Includes(b => b.tb_Prod_Attr_Relations, c => c.tb_proddetail, d => d.tb_prod, e => e.tb_prodcategories, h => h.tb_prodcategories_parent, i => i.tb_prodcategories_parent, j => j.tb_prodcategories_parent)
+            .Includes(b => b.tb_Prod_Attr_Relations, c => c.tb_proddetail, d => d.tb_prod, e => e.tb_prodcategories, h => h.tb_prodcategories, i => i.tb_prodcategories, j => j.tb_prodcategories)
              .AsNavQueryable()
             .Includes(b => b.tb_Prod_Attr_Relations, c => c.tb_proddetail, d => d.tb_prod, e => e.tb_unit)
                 .AsNavQueryable()
@@ -459,30 +459,30 @@ namespace RUINORERP.UI.SysConfig
             // .Includes(b => b.tb_ProdDetails, c => c.tb_BOM_Ss, d => d.tb_BOM_SDetailSecondaries)
 
             .AsNavQueryable()
-            .Includes(b => b.tb_ProdDetails, c => c.tb_BOM_Ss, d => d.tb_BOM_SDetails, e => e.tb_unit)//bom主 
+            .Includes(b => b.tb_ProdDetails, c => c.tb_bom_s, d => d.tb_BOM_SDetails, e => e.tb_unit)//bom主 
             .AsNavQueryable()
-            .Includes(a => a.tb_ProdDetails, b => b.tb_BOM_Ss, c => c.tb_BOM_SDetails, d => d.tb_unit_conversion, e => e.tb_unit_target)//bom主 
+            .Includes(a => a.tb_ProdDetails, b => b.tb_BOM_Ss, c => c.tb_BOM_SDetails, d => d.tb_unit_conversion, e => e.tb_unit)//bom主 
             .AsNavQueryable()
-            .Includes(a => a.tb_ProdDetails, b => b.tb_BOM_Ss, c => c.tb_BOM_SDetails, d => d.tb_unit_conversion, e => e.tb_unit_source)//bom主 
+            .Includes(a => a.tb_ProdDetails, b => b.tb_BOM_Ss, c => c.tb_BOM_SDetails, d => d.tb_unit_conversion, e => e.tb_unitBySourceUnit)//bom主 
             .AsNavQueryable()
             .Includes(a => a.tb_ProdDetails, b => b.tb_BOM_Ss, c => c.tb_BOM_SDetails, d => d.tb_proddetail, e => e.tb_prod, f => f.tb_unit)//bom主
             .AsNavQueryable()
             .Includes(a => a.tb_ProdDetails, b => b.tb_BOM_Ss, c => c.tb_BOM_SDetails, d => d.tb_proddetail, e => e.tb_prod, f => f.tb_producttype)//bom主
             .AsNavQueryable()
-            .Includes(a => a.tb_ProdDetails, b => b.tb_BOM_Ss, c => c.tb_BOM_SDetails, d => d.tb_proddetail, e => e.tb_prod, f => f.tb_prodcategories, g => g.tb_prodcategories_parent)//bom主
+            .Includes(a => a.tb_ProdDetails, b => b.tb_BOM_Ss, c => c.tb_BOM_SDetails, d => d.tb_proddetail, e => e.tb_prod, f => f.tb_prodcategories, g => g.tb_prodcategories)//bom主
 
             .AsNavQueryable()
             .Includes(b => b.tb_ProdDetails, c => c.tb_bom_s, d => d.tb_BOM_SDetails, e => e.tb_unit)//bom主 
             .AsNavQueryable()
-            .Includes(a => a.tb_ProdDetails, b => b.tb_bom_s, c => c.tb_BOM_SDetails, d => d.tb_unit_conversion, e => e.tb_unit_target)//bom主 
+            .Includes(a => a.tb_ProdDetails, b => b.tb_bom_s, c => c.tb_BOM_SDetails, d => d.tb_unit_conversion, e => e.tb_unit)//bom主 
             .AsNavQueryable()
-            .Includes(a => a.tb_ProdDetails, b => b.tb_bom_s, c => c.tb_BOM_SDetails, d => d.tb_unit_conversion, e => e.tb_unit_source)//bom主 
+            .Includes(a => a.tb_ProdDetails, b => b.tb_bom_s, c => c.tb_BOM_SDetails, d => d.tb_unit_conversion, e => e.tb_unitBySourceUnit)//bom主 
             .AsNavQueryable()
             .Includes(a => a.tb_ProdDetails, b => b.tb_bom_s, c => c.tb_BOM_SDetails, d => d.tb_proddetail, e => e.tb_prod, f => f.tb_unit)//bom主
             .AsNavQueryable()
             .Includes(a => a.tb_ProdDetails, b => b.tb_bom_s, c => c.tb_BOM_SDetails, d => d.tb_proddetail, e => e.tb_prod, f => f.tb_producttype)//bom主
             .AsNavQueryable()
-            .Includes(a => a.tb_ProdDetails, b => b.tb_bom_s, c => c.tb_BOM_SDetails, d => d.tb_proddetail, e => e.tb_prod, f => f.tb_prodcategories, g => g.tb_prodcategories_parent)//bom主
+            .Includes(a => a.tb_ProdDetails, b => b.tb_bom_s, c => c.tb_BOM_SDetails, d => d.tb_proddetail, e => e.tb_prod, f => f.tb_prodcategories, g => g.tb_prodcategories)//bom主
 
               .AsNavQueryable()
             .Includes(a => a.tb_ProdDetails, b => b.tb_BOM_Ss, c => c.tb_BOM_SDetails, d => d.tb_proddetail, e => e.tb_prod, f => f.tb_Prod_Attr_Relations, g => g.tb_prodproperty)
@@ -526,7 +526,7 @@ namespace RUINORERP.UI.SysConfig
            .Includes(a => a.tb_BOM_SDetails)
             .AsNavQueryable()
            .Includes(a => a.tb_proddetail, b => b.tb_prod, c => c.tb_prodcategories
-           , d => d.tb_prodcategories_parent, e => e.tb_prodcategories_parent, f => f.tb_prodcategories_parent)
+           , d => d.tb_prodcategories, e => e.tb_prodcategories, f => f.tb_prodcategories)
             .AsNavQueryable()
            .Includes(a => a.tb_proddetail, b => b.tb_prod, c => c.tb_producttype)
             .AsNavQueryable()
@@ -734,10 +734,10 @@ namespace RUINORERP.UI.SysConfig
                                                     {
                                                         prodcategoriesList.Add(x.tb_proddetail.tb_prod.tb_prodcategories);
                                                         #region  添加父类目
-                                                        if (x.tb_proddetail.tb_prod.tb_prodcategories.tb_prodcategories_parent != null
-                                                        && !prodcategoriesList.Any(Y => Y.Category_ID == x.tb_proddetail.tb_prod.tb_prodcategories.tb_prodcategories_parent.Category_ID))
+                                                        if (x.tb_proddetail.tb_prod.tb_prodcategories.tb_prodcategories != null
+                                                        && !prodcategoriesList.Any(Y => Y.Category_ID == x.tb_proddetail.tb_prod.tb_prodcategories.tb_prodcategories.Category_ID))
                                                         {
-                                                            prodcategoriesList.Add(x.tb_proddetail.tb_prod.tb_prodcategories.tb_prodcategories_parent);
+                                                            prodcategoriesList.Add(x.tb_proddetail.tb_prod.tb_prodcategories.tb_prodcategories);
                                                         }
                                                         #endregion
                                                     }
@@ -768,8 +768,8 @@ namespace RUINORERP.UI.SysConfig
                                                 {
                                                     UnitConversionList.Add(x.tb_unit_conversion);
                                                 }
-                                                LoadUnitConversion(x.tb_unit_conversion.tb_unit_source, unitList, UnitConversionList);
-                                                LoadUnitConversion(x.tb_unit_conversion.tb_unit_target, unitList, UnitConversionList);
+                                                LoadUnitConversion(x.tb_unit_conversion.tb_unit, unitList, UnitConversionList);
+                                                LoadUnitConversion(x.tb_unit_conversion.tb_unitBySourceUnit, unitList, UnitConversionList);
                                             }
                                             #region  添加单位
                                             LoadUnitConversion(x.tb_unit, unitList, UnitConversionList);
@@ -858,10 +858,10 @@ namespace RUINORERP.UI.SysConfig
                                                         {
                                                             prodcategoriesList.Add(x.tb_proddetail.tb_prod.tb_prodcategories);
                                                             #region  添加父类目
-                                                            if (x.tb_proddetail.tb_prod.tb_prodcategories.tb_prodcategories_parent != null
-                                                            && !prodcategoriesList.Any(Y => Y.Category_ID == x.tb_proddetail.tb_prod.tb_prodcategories.tb_prodcategories_parent.Category_ID))
+                                                            if (x.tb_proddetail.tb_prod.tb_prodcategories.tb_prodcategories != null
+                                                            && !prodcategoriesList.Any(Y => Y.Category_ID == x.tb_proddetail.tb_prod.tb_prodcategories.tb_prodcategories.Category_ID))
                                                             {
-                                                                prodcategoriesList.Add(x.tb_proddetail.tb_prod.tb_prodcategories.tb_prodcategories_parent);
+                                                                prodcategoriesList.Add(x.tb_proddetail.tb_prod.tb_prodcategories.tb_prodcategories);
                                                             }
                                                             #endregion
                                                         }
@@ -1140,18 +1140,18 @@ namespace RUINORERP.UI.SysConfig
 
             #region 单位转换
 
-            if (item.tb_Unit_Conversions_source != null)
+            if (item.tb_Unit_ConversionsBySourceUnit != null)
             {
-                if (item.tb_Unit_Conversions_source != null)
-                    item.tb_Unit_Conversions_source.ForEach(x =>
+                if (item.tb_Unit_ConversionsBySourceUnit != null)
+                    item.tb_Unit_ConversionsBySourceUnit.ForEach(x =>
                     {
-                        if (x.tb_unit_source != null && !unitList.Any(u => u.Unit_ID == x.tb_unit_source.Unit_ID))
+                        if (x.tb_unitBySourceUnit != null && !unitList.Any(u => u.Unit_ID == x.tb_unitBySourceUnit.Unit_ID))
                         {
-                            unitList.Add(x.tb_unit_source);
+                            unitList.Add(x.tb_unitBySourceUnit);
                         }
-                        if (x.tb_unit_target != null && !unitList.Any(u => u.Unit_ID == x.tb_unit_target.Unit_ID))
+                        if (x.tb_unit != null && !unitList.Any(u => u.Unit_ID == x.tb_unit.Unit_ID))
                         {
-                            unitList.Add(x.tb_unit_target);
+                            unitList.Add(x.tb_unit);
                         }
                         if (!UnitConversionList.Any(c => c.UnitConversion_ID == x.UnitConversion_ID))
                         {
@@ -1162,19 +1162,19 @@ namespace RUINORERP.UI.SysConfig
                     );
             }
 
-            if (item.tb_Unit_Conversions_target != null)
+            if (item.tb_Unit_ConversionsBySourceUnit != null)
             {
 
-                if (item.tb_Unit_Conversions_target != null)
-                    item.tb_Unit_Conversions_target.ForEach(x =>
+                if (item.tb_Unit_ConversionsBySourceUnit != null)
+                    item.tb_Unit_ConversionsBySourceUnit.ForEach(x =>
                     {
-                        if (x.tb_unit_source != null && !unitList.Any(u => u.Unit_ID == x.tb_unit_source.Unit_ID))
+                        if (x.tb_unitBySourceUnit != null && !unitList.Any(u => u.Unit_ID == x.tb_unitBySourceUnit.Unit_ID))
                         {
-                            unitList.Add(x.tb_unit_source);
+                            unitList.Add(x.tb_unitBySourceUnit);
                         }
-                        if (x.tb_unit_target != null && !unitList.Any(u => u.Unit_ID == x.tb_unit_target.Unit_ID))
+                        if (x.tb_unit != null && !unitList.Any(u => u.Unit_ID == x.tb_unit.Unit_ID))
                         {
-                            unitList.Add(x.tb_unit_target);
+                            unitList.Add(x.tb_unit);
                         }
                         if (!UnitConversionList.Any(c => c.UnitConversion_ID == x.UnitConversion_ID))
                         {
@@ -1189,14 +1189,14 @@ namespace RUINORERP.UI.SysConfig
 
         private void LoadParentCategory(List<tb_ProdCategories> CategoryList, tb_ProdCategories Category)
         {
-            if (Category.tb_prodcategories_parent != null)
+            if (Category.tb_prodcategories != null)
             {
-                if (!CategoryList.Any(x => x.Category_ID == Category.tb_prodcategories_parent.Category_ID))
+                if (!CategoryList.Any(x => x.Category_ID == Category.tb_prodcategories.Category_ID))
                 {
-                    CategoryList.Add(Category.tb_prodcategories_parent);
-                    if (Category.tb_prodcategories_parent.Category_ID != 0)
+                    CategoryList.Add(Category.tb_prodcategories);
+                    if (Category.tb_prodcategories.Category_ID != 0)
                     {
-                        LoadParentCategory(CategoryList, Category.tb_prodcategories_parent);
+                        LoadParentCategory(CategoryList, Category.tb_prodcategories);
                     }
                 }
 
@@ -1341,51 +1341,51 @@ namespace RUINORERP.UI.SysConfig
             //通过主产品找到关系再到关系中的明细及属性属性值
             //这里要处理掉一些敏感信息 比如价格之类的 供应商之类
             List<tb_Prod> Prods = await MainForm.Instance.AppContext.Db.Queryable<tb_Prod>()
-            .Includes(a => a.tb_unit, b => b.tb_Unit_Conversions_source)
-            .Includes(a => a.tb_unit, b => b.tb_Unit_Conversions_target)
+            .Includes(a => a.tb_unit, b => b.tb_Unit_Conversions)
+            .Includes(a => a.tb_unit, b => b.tb_Unit_ConversionsBySourceUnit)
             .Includes(b => b.tb_producttype)
              .AsNavQueryable()
-            .Includes(a => a.tb_prodcategories, b => b.tb_prodcategories_parent, c => c.tb_prodcategories_parent,
-            d => d.tb_prodcategories_parent, e => e.tb_prodcategories_parent, f => f.tb_prodcategories_parent, g => g.tb_prodcategories_parent)
+            .Includes(a => a.tb_prodcategories, b => b.tb_prodcategories, c => c.tb_prodcategories,
+            d => d.tb_prodcategories, e => e.tb_prodcategories, f => f.tb_prodcategories, g => g.tb_prodcategories)
             //最多能查到7层
-            //            .Includes(b => b.tb_prodcategories, d => d.tb_ProdCategorieses_parents, c => c.tb_prodcategories_parent)
+            //            .Includes(b => b.tb_prodcategories, d => d.tb_ProdCategorieses_parents, c => c.tb_prodcategories)
             .Includes(b => b.tb_storagerack)
             .Includes(a => a.tb_location)
             .Includes(a => a.tb_Packings, b => b.tb_PackingDetails)
             .Includes(b => b.tb_Prod_Attr_Relations, c => c.tb_prodproperty)
             .Includes(b => b.tb_Prod_Attr_Relations, c => c.tb_prodpropertyvalue)
             .AsNavQueryable()
-            .Includes(b => b.tb_Prod_Attr_Relations, c => c.tb_proddetail, d => d.tb_prod, e => e.tb_prodcategories, h => h.tb_prodcategories_parent, i => i.tb_prodcategories_parent, j => j.tb_prodcategories_parent)
+            .Includes(b => b.tb_Prod_Attr_Relations, c => c.tb_proddetail, d => d.tb_prod, e => e.tb_prodcategories, h => h.tb_prodcategories, i => i.tb_prodcategories, j => j.tb_prodcategories)
              .AsNavQueryable()
-            .Includes(b => b.tb_Prod_Attr_Relations, c => c.tb_proddetail, d => d.tb_prod, e => e.tb_unit, f => f.tb_Unit_Conversions_source)
+            .Includes(b => b.tb_Prod_Attr_Relations, c => c.tb_proddetail, d => d.tb_prod, e => e.tb_unit, f => f.tb_Unit_ConversionsBySourceUnit)
               .AsNavQueryable()
-            .Includes(b => b.tb_Prod_Attr_Relations, c => c.tb_proddetail, d => d.tb_prod, e => e.tb_unit, f => f.tb_Unit_Conversions_target)
+            .Includes(b => b.tb_Prod_Attr_Relations, c => c.tb_proddetail, d => d.tb_prod, e => e.tb_unit, f => f.tb_Unit_Conversions)
                 .AsNavQueryable()
             .Includes(b => b.tb_Prod_Attr_Relations, c => c.tb_proddetail, d => d.tb_prod, e => e.tb_producttype)
 
             // .Includes(b => b.tb_ProdDetails, c => c.tb_BOM_Ss, d => d.tb_BOM_SDetailSecondaries)
             //.AsNavQueryable()
-            //.Includes(a => a.tb_ProdDetails, b => b.tb_BOM_Ss, c => c.tb_BOM_SDetails, d => d.tb_unit_conversion, e => e.tb_unit_target)//bom主 
+            //.Includes(a => a.tb_ProdDetails, b => b.tb_BOM_Ss, c => c.tb_BOM_SDetails, d => d.tb_unit_conversion, e => e.tb_unit)//bom主 
             //.AsNavQueryable()
-            //.Includes(a => a.tb_ProdDetails, b => b.tb_BOM_Ss, c => c.tb_BOM_SDetails, d => d.tb_unit_conversion, e => e.tb_unit_source)//bom主 
+            //.Includes(a => a.tb_ProdDetails, b => b.tb_BOM_Ss, c => c.tb_BOM_SDetails, d => d.tb_unit_conversion, e => e.tb_unitBySourceUnit)//bom主 
             //.AsNavQueryable()
             //.Includes(a => a.tb_ProdDetails, b => b.tb_BOM_Ss, c => c.tb_BOM_SDetails, d => d.tb_proddetail, e => e.tb_prod, f => f.tb_unit)//bom主
             //.AsNavQueryable()
             //.Includes(a => a.tb_ProdDetails, b => b.tb_BOM_Ss, c => c.tb_BOM_SDetails, d => d.tb_proddetail, e => e.tb_prod, f => f.tb_producttype)//bom主
             //.AsNavQueryable()
-            //.Includes(a => a.tb_ProdDetails, b => b.tb_BOM_Ss, c => c.tb_BOM_SDetails, d => d.tb_proddetail, e => e.tb_prod, f => f.tb_prodcategories, g => g.tb_prodcategories_parent)//bom主
+            //.Includes(a => a.tb_ProdDetails, b => b.tb_BOM_Ss, c => c.tb_BOM_SDetails, d => d.tb_proddetail, e => e.tb_prod, f => f.tb_prodcategories, g => g.tb_prodcategories)//bom主
             .AsNavQueryable()
             .Includes(b => b.tb_ProdDetails, c => c.tb_bom_s, d => d.tb_BOM_SDetails, e => e.tb_unit)//bom主 
             .AsNavQueryable()
-            .Includes(a => a.tb_ProdDetails, b => b.tb_bom_s, c => c.tb_BOM_SDetails, d => d.tb_unit_conversion, e => e.tb_unit_target)//bom主 
+            .Includes(a => a.tb_ProdDetails, b => b.tb_bom_s, c => c.tb_BOM_SDetails, d => d.tb_unit_conversion, e => e.tb_unit)//bom主 
             .AsNavQueryable()
-            .Includes(a => a.tb_ProdDetails, b => b.tb_bom_s, c => c.tb_BOM_SDetails, d => d.tb_unit_conversion, e => e.tb_unit_source)//bom主 
+            .Includes(a => a.tb_ProdDetails, b => b.tb_bom_s, c => c.tb_BOM_SDetails, d => d.tb_unit_conversion, e => e.tb_unitBySourceUnit)//bom主 
             .AsNavQueryable()
             .Includes(a => a.tb_ProdDetails, b => b.tb_bom_s, c => c.tb_BOM_SDetails, d => d.tb_proddetail, e => e.tb_prod, f => f.tb_unit)//bom主
             .AsNavQueryable()
             .Includes(a => a.tb_ProdDetails, b => b.tb_bom_s, c => c.tb_BOM_SDetails, d => d.tb_proddetail, e => e.tb_prod, f => f.tb_producttype)//bom主
             .AsNavQueryable()
-            .Includes(a => a.tb_ProdDetails, b => b.tb_bom_s, c => c.tb_BOM_SDetails, d => d.tb_proddetail, e => e.tb_prod, f => f.tb_prodcategories, g => g.tb_prodcategories_parent)//bom主
+            .Includes(a => a.tb_ProdDetails, b => b.tb_bom_s, c => c.tb_BOM_SDetails, d => d.tb_proddetail, e => e.tb_prod, f => f.tb_prodcategories, g => g.tb_prodcategories)//bom主
 
              .AsNavQueryable()
             .Includes(a => a.tb_ProdDetails, b => b.tb_BOM_Ss, c => c.tb_BOM_SDetails, d => d.tb_proddetail, e => e.tb_prod, f => f.tb_Prod_Attr_Relations, g => g.tb_prodproperty)

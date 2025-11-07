@@ -1,10 +1,8 @@
-﻿
-// **************************************
-// 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
+﻿// **************************************
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/14/2025 20:39:47
+// 时间：11/06/2025 19:43:16
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -25,6 +23,7 @@ using RUINORERP.Model.Context;
 using System.Linq;
 using RUINOR.Core;
 using RUINORERP.Common.Helper;
+using RUINORERP.Business.Cache;
 
 namespace RUINORERP.Business
 {
@@ -39,14 +38,16 @@ namespace RUINORERP.Business
         //public readonly IUnitOfWorkManage _unitOfWorkManage;
         //public readonly ILogger<BaseController<T>> _logger;
         public Itb_ProcessStepServices _tb_ProcessStepServices { get; set; }
+        private readonly EventDrivenCacheManager _eventDrivenCacheManager; 
        // private readonly ApplicationContext _appContext;
        
-        public tb_ProcessStepController(ILogger<tb_ProcessStepController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_ProcessStepServices tb_ProcessStepServices , ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
+        public tb_ProcessStepController(ILogger<tb_ProcessStepController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_ProcessStepServices tb_ProcessStepServices ,EventDrivenCacheManager eventDrivenCacheManager, ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
         {
             _logger = logger;
            _unitOfWorkManage = unitOfWorkManage;
            _tb_ProcessStepServices = tb_ProcessStepServices;
-            _appContext = appContext;
+           _appContext = appContext;
+           _eventDrivenCacheManager = eventDrivenCacheManager;
         }
       
         
@@ -89,14 +90,14 @@ namespace RUINORERP.Business
                     bool rs = await _tb_ProcessStepServices.Update(entity);
                     if (rs)
                     {
-                        MyCacheManager.Instance.UpdateEntityList<tb_ProcessStep>(entity);
+                        _eventDrivenCacheManager.UpdateEntity<tb_ProcessStep>(entity);
                     }
                     Returnobj = entity;
                 }
                 else
                 {
                     Returnobj = await _tb_ProcessStepServices.AddReEntityAsync(entity);
-                    MyCacheManager.Instance.UpdateEntityList<tb_ProcessStep>(entity);
+                    _eventDrivenCacheManager.UpdateEntity<tb_ProcessStep>(entity);
                 }
 
                 rr.ReturnObject = Returnobj;
@@ -130,14 +131,14 @@ namespace RUINORERP.Business
                     bool rs = await _tb_ProcessStepServices.Update(entity);
                     if (rs)
                     {
-                        MyCacheManager.Instance.UpdateEntityList<tb_ProcessStep>(entity);
+                        _eventDrivenCacheManager.UpdateEntity<tb_ProcessStep>(entity);
                     }
                     Returnobj = entity as T;
                 }
                 else
                 {
                     Returnobj = await _tb_ProcessStepServices.AddReEntityAsync(entity) as T ;
-                    MyCacheManager.Instance.UpdateEntityList<tb_ProcessStep>(entity);
+                    _eventDrivenCacheManager.UpdateEntity<tb_ProcessStep>(entity);
                 }
 
                 rr.ReturnObject = Returnobj;
@@ -162,7 +163,7 @@ namespace RUINORERP.Business
             }
             if (list != null)
             {
-                MyCacheManager.Instance.UpdateEntityList<List<T>>(list);
+                _eventDrivenCacheManager.UpdateEntityList<T>(list);
              }
             return list;
         }
@@ -177,7 +178,7 @@ namespace RUINORERP.Business
             }
             if (list != null)
             {
-                MyCacheManager.Instance.UpdateEntityList<List<T>>(list);
+                _eventDrivenCacheManager.UpdateEntityList<T>(list);
              }
             return list;
         }
@@ -190,7 +191,7 @@ namespace RUINORERP.Business
             if (rs)
             {
                 ////生成时暂时只考虑了一个主键的情况
-                MyCacheManager.Instance.DeleteEntityList<tb_ProcessStep>(entity);
+                _eventDrivenCacheManager.DeleteEntity<tb_ProcessStep>(entity.PrimaryKeyID);
             }
             return rs;
         }
@@ -203,9 +204,7 @@ namespace RUINORERP.Business
             if (c>0)
             {
                 rs=true;
-                ////生成时暂时只考虑了一个主键的情况
-                 long[] result = entitys.Select(e => e.Step_Id).ToArray();
-                MyCacheManager.Instance.DeleteEntityList<tb_ProcessStep>(result);
+                _eventDrivenCacheManager.DeleteEntityList<tb_ProcessStep>(entitys);
             }
             return rs;
         }
@@ -289,7 +288,7 @@ namespace RUINORERP.Business
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_ProcessStep>()
                                 .Includes(m => m.tb_ProcessDefinitions)
-                                        .WhereCustom(useLike, dto);
+                                        .WhereCustom(useLike, dto);;
             return await querySqlQueryable.ToListAsync()as List<T>;
         }
 
@@ -303,7 +302,7 @@ namespace RUINORERP.Business
             if (rs)
             {
                 //////生成时暂时只考虑了一个主键的情况
-                MyCacheManager.Instance.DeleteEntityList<T>(model);
+                 _eventDrivenCacheManager.DeleteEntity<T>(model);
             }
             return rs;
         }
@@ -314,7 +313,8 @@ namespace RUINORERP.Business
         public tb_ProcessStep AddReEntity(tb_ProcessStep entity)
         {
             tb_ProcessStep AddEntity =  _tb_ProcessStepServices.AddReEntity(entity);
-            MyCacheManager.Instance.UpdateEntityList<tb_ProcessStep>(AddEntity);
+     
+             _eventDrivenCacheManager.UpdateEntity<tb_ProcessStep>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
@@ -322,7 +322,7 @@ namespace RUINORERP.Business
          public async Task<tb_ProcessStep> AddReEntityAsync(tb_ProcessStep entity)
         {
             tb_ProcessStep AddEntity = await _tb_ProcessStepServices.AddReEntityAsync(entity);
-            MyCacheManager.Instance.UpdateEntityList<tb_ProcessStep>(AddEntity);
+            _eventDrivenCacheManager.UpdateEntity<tb_ProcessStep>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
@@ -332,7 +332,7 @@ namespace RUINORERP.Business
             long id = await _tb_ProcessStepServices.Add(entity);
             if(id>0)
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_ProcessStep>(entity);
+                 _eventDrivenCacheManager.UpdateEntity<tb_ProcessStep>(entity);
             }
             return id;
         }
@@ -342,7 +342,7 @@ namespace RUINORERP.Business
             List<long> ids = await _tb_ProcessStepServices.Add(infos);
             if(ids.Count>0)//成功的个数 这里缓存 对不对呢？
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_ProcessStep>(infos);
+                 _eventDrivenCacheManager.UpdateEntityList<tb_ProcessStep>(infos);
             }
             return ids;
         }
@@ -353,7 +353,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_ProcessStepServices.Delete(entity);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_ProcessStep>(entity);
+                _eventDrivenCacheManager.DeleteEntity<tb_ProcessStep>(entity);
                 
             }
             return rs;
@@ -364,7 +364,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_ProcessStepServices.Update(entity);
             if (rs)
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_ProcessStep>(entity);
+                 _eventDrivenCacheManager.DeleteEntity<tb_ProcessStep>(entity);
                 entity.ActionStatus = ActionStatus.无操作;
             }
             return rs;
@@ -375,7 +375,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_ProcessStepServices.DeleteById(id);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_ProcessStep>(id);
+               _eventDrivenCacheManager.DeleteEntity<tb_ProcessStep>(id);
             }
             return rs;
         }
@@ -385,7 +385,8 @@ namespace RUINORERP.Business
             bool rs = await _tb_ProcessStepServices.DeleteByIds(ids);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_ProcessStep>(ids);
+            
+                   _eventDrivenCacheManager.DeleteEntities<tb_ProcessStep>(ids.Cast<object>().ToArray());
             }
             return rs;
         }
@@ -397,7 +398,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_ProcessStep>(list);
+     
+             _eventDrivenCacheManager.UpdateEntityList<tb_ProcessStep>(list);
             return list;
         }
         
@@ -408,7 +410,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_ProcessStep>(list);
+    
+             _eventDrivenCacheManager.UpdateEntityList<tb_ProcessStep>(list);
             return list;
         }
         
@@ -419,7 +422,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_ProcessStep>(list);
+  
+             _eventDrivenCacheManager.UpdateEntityList<tb_ProcessStep>(list);
             return list;
         }
         
@@ -430,7 +434,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_ProcessStep>(list);
+ 
+             _eventDrivenCacheManager.UpdateEntityList<tb_ProcessStep>(list);
             return list;
         }
         
@@ -448,7 +453,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_ProcessStep>(list);
+   
+             _eventDrivenCacheManager.UpdateEntityList<tb_ProcessStep>(list);
             return list;
         }
         
@@ -472,7 +478,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_ProcessStep>(list);
+ 
+             _eventDrivenCacheManager.UpdateEntityList<tb_ProcessStep>(list);
             return list;
         }
 
@@ -495,7 +502,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_ProcessStep>(list);
+  
+             _eventDrivenCacheManager.UpdateEntityList<tb_ProcessStep>(list);
             return list;
         }
         
@@ -518,7 +526,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_ProcessStep>(list);
+     
+             _eventDrivenCacheManager.UpdateEntityList<tb_ProcessStep>(list);
             return list;
         }
         
@@ -550,14 +559,17 @@ namespace RUINORERP.Business
                              .Includes(t => t.tb_nextnodes )
                             .Includes(t => t.tb_position )
                             .Includes(t => t.tb_stepbody )
-                                        .Includes(t => t.tb_ProcessDefinitions )
-                        .FirstAsync();
+                        
+
+                                            .Includes(t => t.tb_ProcessDefinitions )
+                                .FirstAsync();
             if(entity!=null)
             {
                 entity.HasChanged = false;
             }
 
-            MyCacheManager.Instance.UpdateEntityList<tb_ProcessStep>(entity);
+         
+             _eventDrivenCacheManager.UpdateEntity<tb_ProcessStep>(entity);
             return entity as T;
         }
         

@@ -179,10 +179,10 @@ namespace RUINORERP.Business
             }
             if (list != null)
             {
-                MyCacheManager.Instance.AddCacheEntityList<List<T>>(list);
+                Cache.EntityCacheHelper.AddCacheEntityList<List<T>>(list);
                 foreach (var item in list)
                 {
-                    MyCacheManager.Instance.AddCacheEntity <<#= table.ClassName #>>(item);
+                    Cache.EntityCacheHelper.AddCacheEntity <<#= table.ClassName #>>(item);
 
                 }
             }
@@ -205,7 +205,7 @@ namespace RUINORERP.Business
             if (rs)
             {
                 //////生成时暂时只考虑了一个主键的情况
-                MyCacheManager.Instance.DeleteEntityList<T>(model);
+                Cache.EntityCacheHelper.DeleteEntity<T>(model);
             }
             return rs;
         }

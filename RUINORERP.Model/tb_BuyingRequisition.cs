@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：02/08/2025 16:31:53
+// 时间：11/06/2025 20:41:41
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 请购单，可能来自销售订单,也可以来自其它日常需求也可能来自生产需求也可以直接录数据，是一个纯业务性的数据表
     /// </summary>
     [Serializable()]
-    [Description("请购单")]
+    [Description("请购单，可能来自销售订单,也可以来自其它日常需求也可能来自生产需求也可以直接录数据，是一个纯业务性的数据表")]
     [SugarTable("tb_BuyingRequisition")]
     public partial class tb_BuyingRequisition: BaseEntity, ICloneable
     {
@@ -193,20 +193,6 @@ namespace RUINORERP.Model
             SetProperty(ref _TotalQty, value);
                         }
         }
-        private string _Purpose;
-        /// <summary>
-        /// 用途
-        /// </summary>
-        [AdvQueryAttribute(ColName = "Purpose", ColDesc = "用途")]
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "Purpose", Length = 200, IsNullable = false, ColumnDescription = "用途")]
-        public string Purpose
-        {
-            get { return _Purpose; }
-            set
-            {
-                SetProperty(ref _Purpose, value);
-            }
-        }
 
         private string _Notes;
         /// <summary>
@@ -233,6 +219,20 @@ namespace RUINORERP.Model
             get{return _DataStatus;}
             set{
             SetProperty(ref _DataStatus, value);
+                        }
+        }
+
+        private string _Purpose;
+        /// <summary>
+        /// 用途
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Purpose",ColDesc = "用途")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Purpose" ,Length=200,IsNullable = true,ColumnDescription = "用途" )]
+        public string Purpose
+        { 
+            get{return _Purpose;}
+            set{
+            SetProperty(ref _Purpose, value);
                         }
         }
 
@@ -436,7 +436,7 @@ namespace RUINORERP.Model
         #endregion
 
 
-
+ 
 
 //如果为false,则不可以。
 private bool PK_FK_ID_Check()
@@ -447,6 +447,11 @@ return rs;
 
 
 
+
+
+
+       
+        
 
         public override object Clone()
         {

@@ -4,10 +4,10 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/25/2025 18:51:45
+// 时间：11/07/2025 10:19:27
 // **************************************
 using System;
-﻿using SqlSugar;
+using SqlSugar;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -124,7 +124,7 @@ namespace RUINORERP.Model
                         }
         }
 
-        private bool _IsFromPlatform;
+        private bool _IsFromPlatform= false;
         /// <summary>
         /// 平台单
         /// </summary>
@@ -137,20 +137,21 @@ namespace RUINORERP.Model
             SetProperty(ref _IsFromPlatform, value);
                         }
         }
+
         private string _PlatformOrderNo;
         /// <summary>
         /// 平台单号
         /// </summary>
-        [AdvQueryAttribute(ColName = "PlatformOrderNo", ColDesc = "平台单号")]
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "PlatformOrderNo", Length = 100, IsNullable = true, ColumnDescription = "平台单号")]
+        [AdvQueryAttribute(ColName = "PlatformOrderNo",ColDesc = "平台单号")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "PlatformOrderNo" ,Length=100,IsNullable = true,ColumnDescription = "平台单号" )]
         public string PlatformOrderNo
-        {
-            get { return _PlatformOrderNo; }
-            set
-            {
-                SetProperty(ref _PlatformOrderNo, value);
-            }
+        { 
+            get{return _PlatformOrderNo;}
+            set{
+            SetProperty(ref _PlatformOrderNo, value);
+                        }
         }
+
         private long? _Employee_ID;
         /// <summary>
         /// 经办人
@@ -665,42 +666,34 @@ namespace RUINORERP.Model
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(Currency_ID))]
         public virtual tb_Currency tb_currency { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(Account_id))]
         public virtual tb_FM_Account tb_fm_account { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(PayeeInfoID))]
         public virtual tb_FM_PayeeInfo tb_fm_payeeinfo { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(Paytype_ID))]
         public virtual tb_PaymentMethod tb_paymentmethod { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(ProjectGroup_ID))]
         public virtual tb_ProjectGroup tb_projectgroup { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(CustomerVendor_ID))]
         public virtual tb_CustomerVendor tb_customervendor { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(DepartmentID))]
         public virtual tb_Department tb_department { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(Employee_ID))]
         public virtual tb_Employee tb_employee { get; set; }
 
@@ -709,7 +702,7 @@ namespace RUINORERP.Model
         #endregion
 
 
-
+ 
 
 //如果为false,则不可以。
 private bool PK_FK_ID_Check()

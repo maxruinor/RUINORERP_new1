@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：02/08/2025 16:32:31
+// 时间：11/06/2025 20:42:19
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -70,7 +70,7 @@ namespace RUINORERP.Model
         /// 功能模块
         /// </summary>
         [AdvQueryAttribute(ColName = "FunctionModule",ColDesc = "功能模块")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "FunctionModule" ,Length=3000,IsNullable = true,ColumnDescription = "功能模块")]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "FunctionModule" ,Length=3000,IsNullable = true,ColumnDescription = "功能模块" )]
         public string FunctionModule
         { 
             get{return _FunctionModule;}
@@ -311,7 +311,7 @@ namespace RUINORERP.Model
         #endregion
 
 
-
+ 
 
 //如果为false,则不可以。
 private bool PK_FK_ID_Check()
@@ -325,6 +325,8 @@ return rs;
 
 
 
+       
+        
 
         public override object Clone()
         {

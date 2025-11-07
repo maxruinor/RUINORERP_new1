@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：02/19/2025 22:58:10
+// 时间：11/06/2025 20:41:54
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -38,10 +38,10 @@ namespace RUINORERP.Model
         #region 属性
         private long _Subject_id;
         /// <summary>
-        /// 会计科目
+        /// 
         /// </summary>
  
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Subject_id" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "会计科目" , IsPrimaryKey = true)]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Subject_id" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "" , IsPrimaryKey = true)]
         public long Subject_id
         { 
             get{return _Subject_id;}
@@ -53,11 +53,10 @@ namespace RUINORERP.Model
 
         private long? _Parent_subject_id;
         /// <summary>
-        /// 上级科目
+        /// 
         /// </summary>
-        [AdvQueryAttribute(ColName = "Parent_subject_id",ColDesc = "上级科目")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Parent_subject_id" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "上级科目" )]
-        [FKRelationAttribute("tb_FM_Subject","Parent_subject_id")]
+        [AdvQueryAttribute(ColName = "Parent_subject_id",ColDesc = "")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Parent_subject_id" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "" )]
         public long? Parent_subject_id
         { 
             get{return _Parent_subject_id;}
@@ -66,45 +65,45 @@ namespace RUINORERP.Model
                         }
         }
 
-        private string _Subject_code;
+        private string _subject_code;
         /// <summary>
         /// 科目代码
         /// </summary>
-        [AdvQueryAttribute(ColName = "Subject_code",ColDesc = "科目代码")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Subject_code" ,Length=50,IsNullable = false,ColumnDescription = "科目代码" )]
-        public string Subject_code
+        [AdvQueryAttribute(ColName = "subject_code",ColDesc = "科目代码")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "subject_code" ,Length=50,IsNullable = false,ColumnDescription = "科目代码" )]
+        public string subject_code
         { 
-            get{return _Subject_code;}
+            get{return _subject_code;}
             set{
-            SetProperty(ref _Subject_code, value);
+            SetProperty(ref _subject_code, value);
                         }
         }
 
-        private string _Subject_name;
+        private string _subject_name;
         /// <summary>
         /// 科目名称
         /// </summary>
-        [AdvQueryAttribute(ColName = "Subject_name",ColDesc = "科目名称")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Subject_name" ,Length=100,IsNullable = false,ColumnDescription = "科目名称" )]
-        public string Subject_name
+        [AdvQueryAttribute(ColName = "subject_name",ColDesc = "科目名称")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "subject_name" ,Length=100,IsNullable = false,ColumnDescription = "科目名称" )]
+        public string subject_name
         { 
-            get{return _Subject_name;}
+            get{return _subject_name;}
             set{
-            SetProperty(ref _Subject_name, value);
+            SetProperty(ref _subject_name, value);
                         }
         }
 
-        private string _Subject_en_name;
+        private string _subject_en_name;
         /// <summary>
-        /// 英文名称
+        /// 科目名称
         /// </summary>
-        [AdvQueryAttribute(ColName = "Subject_en_name",ColDesc = "英文名称")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Subject_en_name" ,Length=100,IsNullable = true,ColumnDescription = "英文名称" )]
-        public string Subject_en_name
+        [AdvQueryAttribute(ColName = "subject_en_name",ColDesc = "科目名称")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "subject_en_name" ,Length=100,IsNullable = true,ColumnDescription = "科目名称" )]
+        public string subject_en_name
         { 
-            get{return _Subject_en_name;}
+            get{return _subject_en_name;}
             set{
-            SetProperty(ref _Subject_en_name, value);
+            SetProperty(ref _subject_en_name, value);
                         }
         }
 
@@ -122,7 +121,7 @@ namespace RUINORERP.Model
                         }
         }
 
-        private bool _Balance_direction= true;
+        private bool _Balance_direction;
         /// <summary>
         /// 余额方向
         /// </summary>
@@ -166,10 +165,10 @@ namespace RUINORERP.Model
 
         private byte[] _Images;
         /// <summary>
-        /// 科目图片
+        /// 类目图片
         /// </summary>
-        [AdvQueryAttribute(ColName = "Images",ColDesc = "科目图片")] 
-        [SugarColumn(ColumnDataType = "image", SqlParameterDbType ="Binary",  ColumnName = "Images" ,Length=2147483647,IsNullable = true,ColumnDescription = "科目图片" )]
+        [AdvQueryAttribute(ColName = "Images",ColDesc = "类目图片")] 
+        [SugarColumn(ColumnDataType = "image", SqlParameterDbType ="Binary",  ColumnName = "Images" ,Length=2147483647,IsNullable = true,ColumnDescription = "类目图片" )]
         public byte[] Images
         { 
             get{return _Images;}
@@ -248,12 +247,12 @@ namespace RUINORERP.Model
                         }
         }
 
-        private bool _isdeleted= false;
+        private bool _isdeleted;
         /// <summary>
-        /// 逻辑删除
+        /// 
         /// </summary>
-        [AdvQueryAttribute(ColName = "isdeleted",ColDesc = "逻辑删除")] 
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "isdeleted" ,IsNullable = false,ColumnDescription = "逻辑删除" )]
+        [AdvQueryAttribute(ColName = "isdeleted",ColDesc = "")] 
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "isdeleted" ,IsNullable = false,ColumnDescription = "" )]
         [Browsable(false)]
         public bool isdeleted
         { 
@@ -266,7 +265,22 @@ namespace RUINORERP.Model
         #endregion
 
         #region 扩展属性
-        
+
+        //[Browsable(false)]打印报表时的数据源会不显示
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_FM_OtherExpenseDetail.Subject_id))]
+        public virtual List<tb_FM_OtherExpenseDetail> tb_FM_OtherExpenseDetails { get; set; }
+        //tb_FM_OtherExpenseDetail.Subject_id)
+        //Subject_id.FK_TB_FM_OT_REFERENCE_TB_FM_SU)
+        //tb_FM_Subject.Subject_id)
+
+        //[Browsable(false)]打印报表时的数据源会不显示
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_FM_Account.Subject_id))]
+        public virtual List<tb_FM_Account> tb_FM_Accounts { get; set; }
+        //tb_FM_Account.Subject_id)
+        //Subject_id.FK_TB_FM_AC_REFERENCE_TB_FM_SU)
+        //tb_FM_Subject.Subject_id)
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
@@ -284,8 +298,6 @@ namespace RUINORERP.Model
         //Subject_id.FK_FM_GENERALLEDGER_REF_FM_SUBJECT)
         //tb_FM_Subject.Subject_id)
 
-       
-
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_ExpenseType.subject_id))]
@@ -295,30 +307,15 @@ namespace RUINORERP.Model
         //tb_FM_Subject.subject_id)
 
 
-   
-
-        //[Browsable(false)]打印报表时的数据源会不显示
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_FM_OtherExpenseDetail.Subject_id))]
-        public virtual List<tb_FM_OtherExpenseDetail> tb_FM_OtherExpenseDetails { get; set; }
-        //tb_FM_OtherExpenseDetail.Subject_id)
-        //Subject_id.FK_TB_FM_OT_REFERENCE_TB_FM_SU)
-        //tb_FM_Subject.Subject_id)
-
-
         #endregion
 
 
-
+ 
 
 //如果为false,则不可以。
 private bool PK_FK_ID_Check()
 {
   bool rs=true;
-         if("Subject_id"!="Parent_subject_id")
-        {
-        // rs=false;
-        }
 return rs;
 }
 
@@ -326,6 +323,8 @@ return rs;
 
 
 
+
+       
         
 
         public override object Clone()

@@ -1,10 +1,8 @@
-﻿
-// **************************************
-// 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
+﻿// **************************************
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/14/2025 20:39:43
+// 时间：11/06/2025 19:43:12
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -25,6 +23,7 @@ using RUINORERP.Model.Context;
 using System.Linq;
 using RUINOR.Core;
 using RUINORERP.Common.Helper;
+using RUINORERP.Business.Cache;
 
 namespace RUINORERP.Business
 {
@@ -39,14 +38,16 @@ namespace RUINORERP.Business
         //public readonly IUnitOfWorkManage _unitOfWorkManage;
         //public readonly ILogger<BaseController<T>> _logger;
         public Itb_LocationServices _tb_LocationServices { get; set; }
+        private readonly EventDrivenCacheManager _eventDrivenCacheManager; 
        // private readonly ApplicationContext _appContext;
        
-        public tb_LocationController(ILogger<tb_LocationController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_LocationServices tb_LocationServices , ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
+        public tb_LocationController(ILogger<tb_LocationController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_LocationServices tb_LocationServices ,EventDrivenCacheManager eventDrivenCacheManager, ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
         {
             _logger = logger;
            _unitOfWorkManage = unitOfWorkManage;
            _tb_LocationServices = tb_LocationServices;
-            _appContext = appContext;
+           _appContext = appContext;
+           _eventDrivenCacheManager = eventDrivenCacheManager;
         }
       
         
@@ -89,14 +90,14 @@ namespace RUINORERP.Business
                     bool rs = await _tb_LocationServices.Update(entity);
                     if (rs)
                     {
-                        MyCacheManager.Instance.UpdateEntityList<tb_Location>(entity);
+                        _eventDrivenCacheManager.UpdateEntity<tb_Location>(entity);
                     }
                     Returnobj = entity;
                 }
                 else
                 {
                     Returnobj = await _tb_LocationServices.AddReEntityAsync(entity);
-                    MyCacheManager.Instance.UpdateEntityList<tb_Location>(entity);
+                    _eventDrivenCacheManager.UpdateEntity<tb_Location>(entity);
                 }
 
                 rr.ReturnObject = Returnobj;
@@ -130,14 +131,14 @@ namespace RUINORERP.Business
                     bool rs = await _tb_LocationServices.Update(entity);
                     if (rs)
                     {
-                        MyCacheManager.Instance.UpdateEntityList<tb_Location>(entity);
+                        _eventDrivenCacheManager.UpdateEntity<tb_Location>(entity);
                     }
                     Returnobj = entity as T;
                 }
                 else
                 {
                     Returnobj = await _tb_LocationServices.AddReEntityAsync(entity) as T ;
-                    MyCacheManager.Instance.UpdateEntityList<tb_Location>(entity);
+                    _eventDrivenCacheManager.UpdateEntity<tb_Location>(entity);
                 }
 
                 rr.ReturnObject = Returnobj;
@@ -162,7 +163,7 @@ namespace RUINORERP.Business
             }
             if (list != null)
             {
-                MyCacheManager.Instance.UpdateEntityList<List<T>>(list);
+                _eventDrivenCacheManager.UpdateEntityList<T>(list);
              }
             return list;
         }
@@ -177,7 +178,7 @@ namespace RUINORERP.Business
             }
             if (list != null)
             {
-                MyCacheManager.Instance.UpdateEntityList<List<T>>(list);
+                _eventDrivenCacheManager.UpdateEntityList<T>(list);
              }
             return list;
         }
@@ -190,7 +191,7 @@ namespace RUINORERP.Business
             if (rs)
             {
                 ////生成时暂时只考虑了一个主键的情况
-                MyCacheManager.Instance.DeleteEntityList<tb_Location>(entity);
+                _eventDrivenCacheManager.DeleteEntity<tb_Location>(entity.PrimaryKeyID);
             }
             return rs;
         }
@@ -203,9 +204,7 @@ namespace RUINORERP.Business
             if (c>0)
             {
                 rs=true;
-                ////生成时暂时只考虑了一个主键的情况
-                 long[] result = entitys.Select(e => e.Location_ID).ToArray();
-                MyCacheManager.Instance.DeleteEntityList<tb_Location>(result);
+                _eventDrivenCacheManager.DeleteEntityList<tb_Location>(entitys);
             }
             return rs;
         }
@@ -248,8 +247,16 @@ namespace RUINORERP.Business
             {
             
                              rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_Location>(entity as tb_Location)
-                      
-                    .Include(m => m.tb_ManufacturingOrders)
+                        .Include(m => m.tb_ProdSplitDetails)
+                    .Include(m => m.tb_StockOutDetails)
+                  
+                    .Include(m => m.tb_PurEntryDetails)
+                    .Include(m => m.tb_PurOrderDetails)
+                    .Include(m => m.tb_StockInDetails)
+                    .Include(m => m.tb_MaterialRequisitionDetails)
+                    .Include(m => m.tb_PurEntryReDetails)
+                    .Include(m => m.tb_PurReturnEntryDetails)
+                    .Include(m => m.tb_ManufacturingOrderDetails)
                     .ExecuteCommandAsync();
                  }
         else    
@@ -257,42 +264,11 @@ namespace RUINORERP.Business
                         rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_Location>(entity as tb_Location)
                 .Include(m => m.tb_ProdSplitDetails)
                 .Include(m => m.tb_StockOutDetails)
-                .Include(m => m.tb_Stocktakes)
-                .Include(m => m.tb_MRP_ReworkReturnDetails)
-                .Include(m => m.tb_PurReturnEntryDetails)
-                .Include(m => m.tb_SaleOrderDetails)
-                .Include(m => m.tb_ProduceGoodsRecommendDetails)
-                .Include(m => m.tb_MaterialReturnDetails)
-                .Include(m => m.tb_FinishedGoodsInvDetails)
-                .Include(m => m.tb_ProductionDemandDetails)
-                .Include(m => m.tb_Prods)
-                .Include(m => m.tb_ProdMergeDetails)
-                .Include(m => m.tb_ProdReturningDetails)
-                .Include(m => m.tb_SaleOutDetails)
-               
-                .Include(m => m.tb_ProductionDemandTargetDetails)
-                .Include(m => m.tb_PurEntryDetails)
-                .Include(m => m.tb_StorageRacks)
-                .Include(m => m.tb_SaleOutReRefurbishedMaterialsDetails)
-    
- 
-                .Include(m => m.tb_BuyingRequisitions)
-                .Include(m => m.tb_PurGoodsRecommendDetails)
-                .Include(m => m.tb_ProdBorrowingDetails)
-                .Include(m => m.tb_ProdSplits)
-                .Include(m => m.tb_ManufacturingOrderDetails)
-                .Include(m => m.tb_ProdConversions)
-                .Include(m => m.tb_PurOrderDetails)
-                .Include(m => m.tb_SaleOutReDetails)
-                .Include(m => m.tb_ProdMerges)
-                .Include(m => m.tb_ProductionPlanDetails)
-                .Include(m => m.tb_MRP_ReworkEntryDetails)
-                .Include(m => m.tb_PurEntryReDetails)
-                .Include(m => m.tb_Inventories)
-                .Include(m => m.tb_PurOrderReDetails)
-                .Include(m => m.tb_StockInDetails)
+              
                 .Include(m => m.tb_MaterialRequisitionDetails)
-                .Include(m => m.tb_ManufacturingOrders)
+                .Include(m => m.tb_PurEntryReDetails)
+                .Include(m => m.tb_PurReturnEntryDetails)
+                .Include(m => m.tb_ManufacturingOrderDetails)
          
                 .ExecuteCommandAsync();
                                           
@@ -328,42 +304,10 @@ namespace RUINORERP.Business
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_Location>()
                                 .Includes(m => m.tb_ProdSplitDetails)
                         .Includes(m => m.tb_StockOutDetails)
-                        .Includes(m => m.tb_Stocktakes)
-                        .Includes(m => m.tb_MRP_ReworkReturnDetails)
+                     
                         .Includes(m => m.tb_PurReturnEntryDetails)
-                        .Includes(m => m.tb_SaleOrderDetails)
-                        .Includes(m => m.tb_ProduceGoodsRecommendDetails)
-                        .Includes(m => m.tb_MaterialReturnDetails)
-                        .Includes(m => m.tb_FinishedGoodsInvDetails)
-                        .Includes(m => m.tb_ProductionDemandDetails)
-                        .Includes(m => m.tb_Prods)
-                        .Includes(m => m.tb_ProdMergeDetails)
-                        .Includes(m => m.tb_ProdReturningDetails)
-                        .Includes(m => m.tb_SaleOutDetails)
-            
-                        .Includes(m => m.tb_ProductionDemandTargetDetails)
-                        .Includes(m => m.tb_PurEntryDetails)
-                        .Includes(m => m.tb_StorageRacks)
-                        .Includes(m => m.tb_SaleOutReRefurbishedMaterialsDetails)
-             
-                        .Includes(m => m.tb_BuyingRequisitions)
-                        .Includes(m => m.tb_PurGoodsRecommendDetails)
-                        .Includes(m => m.tb_ProdBorrowingDetails)
-                        .Includes(m => m.tb_ProdSplits)
                         .Includes(m => m.tb_ManufacturingOrderDetails)
-                        .Includes(m => m.tb_ProdConversions)
-                        .Includes(m => m.tb_PurOrderDetails)
-                        .Includes(m => m.tb_SaleOutReDetails)
-                        .Includes(m => m.tb_ProdMerges)
-                        .Includes(m => m.tb_ProductionPlanDetails)
-                        .Includes(m => m.tb_MRP_ReworkEntryDetails)
-                        .Includes(m => m.tb_PurEntryReDetails)
-                        .Includes(m => m.tb_Inventories)
-                        .Includes(m => m.tb_PurOrderReDetails)
-                        .Includes(m => m.tb_StockInDetails)
-                        .Includes(m => m.tb_MaterialRequisitionDetails)
-                        .Includes(m => m.tb_ManufacturingOrders)
-                                        .WhereCustom(useLike, dto);
+                                        .WhereCustom(useLike, dto);;
             return await querySqlQueryable.ToListAsync()as List<T>;
         }
 
@@ -374,36 +318,18 @@ namespace RUINORERP.Business
              bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_Location>(m => m.Location_ID== entity.Location_ID)
                                 .Include(m => m.tb_ProdSplitDetails)
                         .Include(m => m.tb_StockOutDetails)
+                        .Include(m => m.tb_ManufacturingOrders)
                         .Include(m => m.tb_Stocktakes)
                         .Include(m => m.tb_MRP_ReworkReturnDetails)
-                        .Include(m => m.tb_PurReturnEntryDetails)
-                        .Include(m => m.tb_SaleOrderDetails)
                         .Include(m => m.tb_ProduceGoodsRecommendDetails)
-                        .Include(m => m.tb_MaterialReturnDetails)
-                        .Include(m => m.tb_FinishedGoodsInvDetails)
-                        .Include(m => m.tb_ProductionDemandDetails)
-                        .Include(m => m.tb_Prods)
-                        .Include(m => m.tb_ProdMergeDetails)
-                        .Include(m => m.tb_ProdReturningDetails)
-                        .Include(m => m.tb_SaleOutDetails)
-                 
-                        .Include(m => m.tb_ProdConversions)
-                        .Include(m => m.tb_PurOrderDetails)
-                        .Include(m => m.tb_SaleOutReDetails)
-                        .Include(m => m.tb_ProdMerges)
-                        .Include(m => m.tb_ProductionPlanDetails)
-                        .Include(m => m.tb_MRP_ReworkEntryDetails)
-                        .Include(m => m.tb_PurEntryReDetails)
-                        .Include(m => m.tb_Inventories)
-                        .Include(m => m.tb_PurOrderReDetails)
-                        .Include(m => m.tb_StockInDetails)
-                        .Include(m => m.tb_MaterialRequisitionDetails)
-                        .Include(m => m.tb_ManufacturingOrders)
+                        
+                        .Include(m => m.tb_PurReturnEntryDetails)
+                        .Include(m => m.tb_ManufacturingOrderDetails)
                                         .ExecuteCommandAsync();
             if (rs)
             {
                 //////生成时暂时只考虑了一个主键的情况
-                MyCacheManager.Instance.DeleteEntityList<T>(model);
+                 _eventDrivenCacheManager.DeleteEntity<T>(model);
             }
             return rs;
         }
@@ -414,7 +340,8 @@ namespace RUINORERP.Business
         public tb_Location AddReEntity(tb_Location entity)
         {
             tb_Location AddEntity =  _tb_LocationServices.AddReEntity(entity);
-            MyCacheManager.Instance.UpdateEntityList<tb_Location>(AddEntity);
+     
+             _eventDrivenCacheManager.UpdateEntity<tb_Location>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
@@ -422,7 +349,7 @@ namespace RUINORERP.Business
          public async Task<tb_Location> AddReEntityAsync(tb_Location entity)
         {
             tb_Location AddEntity = await _tb_LocationServices.AddReEntityAsync(entity);
-            MyCacheManager.Instance.UpdateEntityList<tb_Location>(AddEntity);
+            _eventDrivenCacheManager.UpdateEntity<tb_Location>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
@@ -432,7 +359,7 @@ namespace RUINORERP.Business
             long id = await _tb_LocationServices.Add(entity);
             if(id>0)
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_Location>(entity);
+                 _eventDrivenCacheManager.UpdateEntity<tb_Location>(entity);
             }
             return id;
         }
@@ -442,7 +369,7 @@ namespace RUINORERP.Business
             List<long> ids = await _tb_LocationServices.Add(infos);
             if(ids.Count>0)//成功的个数 这里缓存 对不对呢？
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_Location>(infos);
+                 _eventDrivenCacheManager.UpdateEntityList<tb_Location>(infos);
             }
             return ids;
         }
@@ -453,7 +380,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_LocationServices.Delete(entity);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_Location>(entity);
+                _eventDrivenCacheManager.DeleteEntity<tb_Location>(entity);
                 
             }
             return rs;
@@ -464,7 +391,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_LocationServices.Update(entity);
             if (rs)
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_Location>(entity);
+                 _eventDrivenCacheManager.DeleteEntity<tb_Location>(entity);
                 entity.ActionStatus = ActionStatus.无操作;
             }
             return rs;
@@ -475,7 +402,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_LocationServices.DeleteById(id);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_Location>(id);
+               _eventDrivenCacheManager.DeleteEntity<tb_Location>(id);
             }
             return rs;
         }
@@ -485,7 +412,8 @@ namespace RUINORERP.Business
             bool rs = await _tb_LocationServices.DeleteByIds(ids);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_Location>(ids);
+            
+                   _eventDrivenCacheManager.DeleteEntities<tb_Location>(ids.Cast<object>().ToArray());
             }
             return rs;
         }
@@ -497,7 +425,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_Location>(list);
+     
+             _eventDrivenCacheManager.UpdateEntityList<tb_Location>(list);
             return list;
         }
         
@@ -508,7 +437,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_Location>(list);
+    
+             _eventDrivenCacheManager.UpdateEntityList<tb_Location>(list);
             return list;
         }
         
@@ -519,7 +449,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_Location>(list);
+  
+             _eventDrivenCacheManager.UpdateEntityList<tb_Location>(list);
             return list;
         }
         
@@ -530,7 +461,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_Location>(list);
+ 
+             _eventDrivenCacheManager.UpdateEntityList<tb_Location>(list);
             return list;
         }
         
@@ -548,7 +480,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_Location>(list);
+   
+             _eventDrivenCacheManager.UpdateEntityList<tb_Location>(list);
             return list;
         }
         
@@ -565,23 +498,9 @@ namespace RUINORERP.Business
                                .Includes(t => t.tb_locationtype )
                                             .Includes(t => t.tb_ProdSplitDetails )
                                 .Includes(t => t.tb_StockOutDetails )
-                                .Includes(t => t.tb_Stocktakes )
-                                .Includes(t => t.tb_MRP_ReworkReturnDetails )
+                               
                                 .Includes(t => t.tb_PurReturnEntryDetails )
-                                .Includes(t => t.tb_SaleOrderDetails )
-                                .Includes(t => t.tb_ProduceGoodsRecommendDetails )
-                                .Includes(t => t.tb_MaterialReturnDetails )
-                                .Includes(t => t.tb_FinishedGoodsInvDetails )
-                                .Includes(t => t.tb_ProductionDemandDetails )
-                                .Includes(t => t.tb_Prods )
-                                .Includes(t => t.tb_ProdMergeDetails )
-                                .Includes(t => t.tb_ProdReturningDetails )
-                                .Includes(t => t.tb_SaleOutDetails )
-                           
-                                .Includes(t => t.tb_PurOrderReDetails )
-                                .Includes(t => t.tb_StockInDetails )
-                                .Includes(t => t.tb_MaterialRequisitionDetails )
-                                .Includes(t => t.tb_ManufacturingOrders )
+                                .Includes(t => t.tb_ManufacturingOrderDetails )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -589,7 +508,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_Location>(list);
+ 
+             _eventDrivenCacheManager.UpdateEntityList<tb_Location>(list);
             return list;
         }
 
@@ -605,32 +525,9 @@ namespace RUINORERP.Business
                                .Includes(t => t.tb_locationtype )
                                             .Includes(t => t.tb_ProdSplitDetails )
                                 .Includes(t => t.tb_StockOutDetails )
-                                .Includes(t => t.tb_Stocktakes )
-                                .Includes(t => t.tb_MRP_ReworkReturnDetails )
-                                .Includes(t => t.tb_PurReturnEntryDetails )
-                                .Includes(t => t.tb_SaleOrderDetails )
-                                .Includes(t => t.tb_ProduceGoodsRecommendDetails )
-                                .Includes(t => t.tb_MaterialReturnDetails )
-                                .Includes(t => t.tb_FinishedGoodsInvDetails )
-                                .Includes(t => t.tb_ProductionDemandDetails )
-                                .Includes(t => t.tb_Prods )
-                                .Includes(t => t.tb_ProdMergeDetails )
-                                .Includes(t => t.tb_ProdReturningDetails )
-                                .Includes(t => t.tb_SaleOutDetails )
-                               
-                                .Includes(t => t.tb_ManufacturingOrderDetails )
-                                .Includes(t => t.tb_ProdConversions )
-                                .Includes(t => t.tb_PurOrderDetails )
-                                .Includes(t => t.tb_SaleOutReDetails )
-                                .Includes(t => t.tb_ProdMerges )
-                                .Includes(t => t.tb_ProductionPlanDetails )
-                                .Includes(t => t.tb_MRP_ReworkEntryDetails )
-                                .Includes(t => t.tb_PurEntryReDetails )
-                                .Includes(t => t.tb_Inventories )
-                                .Includes(t => t.tb_PurOrderReDetails )
-                                .Includes(t => t.tb_StockInDetails )
-                                .Includes(t => t.tb_MaterialRequisitionDetails )
                                 .Includes(t => t.tb_ManufacturingOrders )
+                            
+                                .Includes(t => t.tb_ManufacturingOrderDetails )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -638,7 +535,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_Location>(list);
+  
+             _eventDrivenCacheManager.UpdateEntityList<tb_Location>(list);
             return list;
         }
         
@@ -654,33 +552,8 @@ namespace RUINORERP.Business
                             .Includes(t => t.tb_locationtype )
                                         .Includes(t => t.tb_ProdSplitDetails )
                             .Includes(t => t.tb_StockOutDetails )
-                            .Includes(t => t.tb_Stocktakes )
-                            .Includes(t => t.tb_MRP_ReworkReturnDetails )
-                            .Includes(t => t.tb_PurReturnEntryDetails )
-                            .Includes(t => t.tb_SaleOrderDetails )
-                            .Includes(t => t.tb_ProduceGoodsRecommendDetails )
-                            .Includes(t => t.tb_MaterialReturnDetails )
-                            .Includes(t => t.tb_FinishedGoodsInvDetails )
-                            .Includes(t => t.tb_ProductionDemandDetails )
-                            .Includes(t => t.tb_Prods )
-                            .Includes(t => t.tb_ProdMergeDetails )
-                            .Includes(t => t.tb_ProdReturningDetails )
-                            
-                            .Includes(t => t.tb_SaleOutReRefurbishedMaterialsDetails )
-                        
+                         
                             .Includes(t => t.tb_ManufacturingOrderDetails )
-                            .Includes(t => t.tb_ProdConversions )
-                            .Includes(t => t.tb_PurOrderDetails )
-                            .Includes(t => t.tb_SaleOutReDetails )
-                            .Includes(t => t.tb_ProdMerges )
-                            .Includes(t => t.tb_ProductionPlanDetails )
-                            .Includes(t => t.tb_MRP_ReworkEntryDetails )
-                            .Includes(t => t.tb_PurEntryReDetails )
-                            .Includes(t => t.tb_Inventories )
-                            .Includes(t => t.tb_PurOrderReDetails )
-                            .Includes(t => t.tb_StockInDetails )
-                            .Includes(t => t.tb_MaterialRequisitionDetails )
-                            .Includes(t => t.tb_ManufacturingOrders )
                         .ToList();
             
             foreach (var item in list)
@@ -688,7 +561,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_Location>(list);
+     
+             _eventDrivenCacheManager.UpdateEntityList<tb_Location>(list);
             return list;
         }
         
@@ -719,44 +593,19 @@ namespace RUINORERP.Business
             tb_Location entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_Location>().Where(w => w.Location_ID == (long)id)
                              .Includes(t => t.tb_employee )
                             .Includes(t => t.tb_locationtype )
-                                        .Includes(t => t.tb_ProdSplitDetails )
-                            .Includes(t => t.tb_StockOutDetails )
-                            .Includes(t => t.tb_Stocktakes )
-                            .Includes(t => t.tb_MRP_ReworkReturnDetails )
-                            .Includes(t => t.tb_PurReturnEntryDetails )
-                            .Includes(t => t.tb_SaleOrderDetails )
-                            .Includes(t => t.tb_ProduceGoodsRecommendDetails )
-                            .Includes(t => t.tb_MaterialReturnDetails )
-                            .Includes(t => t.tb_FinishedGoodsInvDetails )
-                            .Includes(t => t.tb_ProductionDemandDetails )
-                            .Includes(t => t.tb_Prods )
-                            .Includes(t => t.tb_ProdMergeDetails )
-                            .Includes(t => t.tb_ProdReturningDetails )
-             
-                            .Includes(t => t.tb_BuyingRequisitions )
-                            .Includes(t => t.tb_PurGoodsRecommendDetails )
-                            .Includes(t => t.tb_ProdBorrowingDetails )
-                            .Includes(t => t.tb_ProdSplits )
-                            .Includes(t => t.tb_ManufacturingOrderDetails )
-                            .Includes(t => t.tb_ProdConversions )
-                            .Includes(t => t.tb_PurOrderDetails )
-                            .Includes(t => t.tb_SaleOutReDetails )
-                            .Includes(t => t.tb_ProdMerges )
-                            .Includes(t => t.tb_ProductionPlanDetails )
-                            .Includes(t => t.tb_MRP_ReworkEntryDetails )
-                            .Includes(t => t.tb_PurEntryReDetails )
-                            .Includes(t => t.tb_Inventories )
-                            .Includes(t => t.tb_PurOrderReDetails )
-                            .Includes(t => t.tb_StockInDetails )
-                            .Includes(t => t.tb_MaterialRequisitionDetails )
-                            .Includes(t => t.tb_ManufacturingOrders )
-                        .FirstAsync();
+                        
+
+                                        
+                                            .Includes(t => t.tb_PurReturnEntryDetails )
+                                            .Includes(t => t.tb_ManufacturingOrderDetails )
+                                .FirstAsync();
             if(entity!=null)
             {
                 entity.HasChanged = false;
             }
 
-            MyCacheManager.Instance.UpdateEntityList<tb_Location>(entity);
+         
+             _eventDrivenCacheManager.UpdateEntity<tb_Location>(entity);
             return entity as T;
         }
         

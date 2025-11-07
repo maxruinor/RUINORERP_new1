@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：02/08/2025 16:32:32
+// 时间：11/06/2025 20:42:21
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -27,7 +27,7 @@ namespace RUINORERP.Model
     {
         public tb_User_Role()
         {
-             
+            
             if (!PK_FK_ID_Check())
             {
                 throw new Exception("用户角色关系表tb_User_Role" + "外键ID与对应主主键名称不一致。请修改数据库");
@@ -109,7 +109,6 @@ namespace RUINORERP.Model
                         }
         }
 
-
         #endregion
 
         #region 扩展属性
@@ -136,7 +135,7 @@ namespace RUINORERP.Model
         #endregion
 
 
-
+ 
 
 //如果为false,则不可以。
 private bool PK_FK_ID_Check()
@@ -150,7 +149,7 @@ return rs;
 
 
 
-        
+       
         
 
         public override object Clone()

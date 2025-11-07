@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：02/08/2025 16:32:12
+// 时间：11/06/2025 20:42:04
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -94,19 +94,18 @@ namespace RUINORERP.Model
                         }
         }
 
-        private int _TargetQty = 1;
+        private int _TargetQty= ((1));
         /// <summary>
         /// 目标数量
         /// </summary>
-        [AdvQueryAttribute(ColName = "TargetQty", ColDesc = "目标数量")]
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType = "Int32", ColumnName = "TargetQty", DecimalDigits = 0, IsNullable = false, ColumnDescription = "目标数量")]
+        [AdvQueryAttribute(ColName = "TargetQty",ColDesc = "目标数量")] 
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "TargetQty" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "目标数量" )]
         public int TargetQty
-        {
-            get { return _TargetQty; }
-            set
-            {
-                SetProperty(ref _TargetQty, value);
-            }
+        { 
+            get{return _TargetQty;}
+            set{
+            SetProperty(ref _TargetQty, value);
+                        }
         }
 
         private string _ImagesPath;
@@ -387,25 +386,25 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_Packing.BundleID))]
-        public virtual List<tb_Packing> tb_Packings { get; set; }
-        //tb_Packing.BundleID)
-        //BundleID.FK_PACKI_REF_TB_PRODBundle)
-        //tb_ProdBundle.BundleID)
-
-        //[Browsable(false)]打印报表时的数据源会不显示
-        [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ProdBundleDetail.BundleID))]
         public virtual List<tb_ProdBundleDetail> tb_ProdBundleDetails { get; set; }
         //tb_ProdBundleDetail.BundleID)
         //BundleID.FK_PRODBUNDLEDETAIL_REF_PRODBUNDLE)
         //tb_ProdBundle.BundleID)
 
+        //[Browsable(false)]打印报表时的数据源会不显示
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_Packing.BundleID))]
+        public virtual List<tb_Packing> tb_Packings { get; set; }
+        //tb_Packing.BundleID)
+        //BundleID.FK_PACKI_REF_TB_PRODBundle)
+        //tb_ProdBundle.BundleID)
+
 
         #endregion
 
 
-
+ 
 
 //如果为false,则不可以。
 private bool PK_FK_ID_Check()
@@ -418,6 +417,9 @@ return rs;
 
 
 
+
+       
+        
 
         public override object Clone()
         {

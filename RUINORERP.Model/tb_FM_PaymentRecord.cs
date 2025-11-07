@@ -4,10 +4,10 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/01/2025 12:16:51
+// 时间：11/07/2025 10:19:26
 // **************************************
 using System;
-﻿using SqlSugar;
+using SqlSugar;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -40,8 +40,8 @@ namespace RUINORERP.Model
         /// <summary>
         /// 支付记录
         /// </summary>
-
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "PaymentId" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "支付记录", IsPrimaryKey = true)]
+ 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "PaymentId" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "支付记录" , IsPrimaryKey = true)]
         public long PaymentId
         { 
             get{return _PaymentId;}
@@ -56,7 +56,7 @@ namespace RUINORERP.Model
         /// 支付单号
         /// </summary>
         [AdvQueryAttribute(ColName = "PaymentNo",ColDesc = "支付单号")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "PaymentNo" ,Length=30,IsNullable = false,ColumnDescription = "支付单号")]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "PaymentNo" ,Length=30,IsNullable = false,ColumnDescription = "支付单号" )]
         public string PaymentNo
         { 
             get{return _PaymentNo;}
@@ -167,22 +167,33 @@ namespace RUINORERP.Model
                         }
         }
 
-        private bool _IsFromPlatform=false;
+        private bool _IsForCommission=false;
+        /// <summary>
+        /// 用于佣金
+        /// </summary>
+        [AdvQueryAttribute(ColName = "IsForCommission",ColDesc = "用于佣金")] 
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "IsForCommission" ,IsNullable = false,ColumnDescription = "用于佣金" )]
+        public bool IsForCommission
+        { 
+            get{return _IsForCommission;}
+            set{
+            SetProperty(ref _IsForCommission, value);
+                        }
+        }
+
+        private bool? _IsFromPlatform;
         /// <summary>
         /// 平台单
         /// </summary>
         [AdvQueryAttribute(ColName = "IsFromPlatform",ColDesc = "平台单")] 
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "IsFromPlatform" ,IsNullable = false,ColumnDescription = "平台单" )]
-        public bool IsFromPlatform
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "IsFromPlatform" ,IsNullable = true,ColumnDescription = "平台单" )]
+        public bool? IsFromPlatform
         { 
             get{return _IsFromPlatform;}
             set{
             SetProperty(ref _IsFromPlatform, value);
                         }
         }
-
-       
-
 
         private long _Currency_ID;
         /// <summary>
@@ -231,47 +242,42 @@ namespace RUINORERP.Model
         /// <summary>
         /// 实付金额大写
         /// </summary>
-        [AdvQueryAttribute(ColName = "LocalPamountInWords", ColDesc = "实付金额大写")]
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "LocalPamountInWords", Length = 100, IsNullable = false, ColumnDescription = "实付金额大写")]
+        [AdvQueryAttribute(ColName = "LocalPamountInWords",ColDesc = "实付金额大写")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "LocalPamountInWords" ,Length=100,IsNullable = true,ColumnDescription = "实付金额大写" )]
         public string LocalPamountInWords
-        {
-            get { return _LocalPamountInWords; }
-            set
-            {
-                SetProperty(ref _LocalPamountInWords, value);
-            }
+        { 
+            get{return _LocalPamountInWords;}
+            set{
+            SetProperty(ref _LocalPamountInWords, value);
+                        }
         }
 
-
-
-        private decimal _TotalForeignPayableAmount = ((0));
+        private decimal _TotalForeignPayableAmount= ((0));
         /// <summary>
         /// 应付金额外币
         /// </summary>
-        [AdvQueryAttribute(ColName = "TotalForeignPayableAmount", ColDesc = "应付金额外币")]
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "TotalForeignPayableAmount", DecimalDigits = 4, IsNullable = false, ColumnDescription = "应付金额外币")]
+        [AdvQueryAttribute(ColName = "TotalForeignPayableAmount",ColDesc = "应付金额外币")] 
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalForeignPayableAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "应付金额外币" )]
         public decimal TotalForeignPayableAmount
-        {
-            get { return _TotalForeignPayableAmount; }
-            set
-            {
-                SetProperty(ref _TotalForeignPayableAmount, value);
-            }
+        { 
+            get{return _TotalForeignPayableAmount;}
+            set{
+            SetProperty(ref _TotalForeignPayableAmount, value);
+                        }
         }
 
-        private decimal _TotalLocalPayableAmount = ((0));
+        private decimal _TotalLocalPayableAmount= ((0));
         /// <summary>
         /// 应付金额本币
         /// </summary>
-        [AdvQueryAttribute(ColName = "TotalLocalPayableAmount", ColDesc = "应付金额本币")]
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "TotalLocalPayableAmount", DecimalDigits = 4, IsNullable = false, ColumnDescription = "应付金额本币")]
+        [AdvQueryAttribute(ColName = "TotalLocalPayableAmount",ColDesc = "应付金额本币")] 
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalLocalPayableAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "应付金额本币" )]
         public decimal TotalLocalPayableAmount
-        {
-            get { return _TotalLocalPayableAmount; }
-            set
-            {
-                SetProperty(ref _TotalLocalPayableAmount, value);
-            }
+        { 
+            get{return _TotalLocalPayableAmount;}
+            set{
+            SetProperty(ref _TotalLocalPayableAmount, value);
+                        }
         }
 
         private DateTime? _PaymentDate;
@@ -279,7 +285,7 @@ namespace RUINORERP.Model
         /// 支付日期
         /// </summary>
         [AdvQueryAttribute(ColName = "PaymentDate",ColDesc = "支付日期")] 
-        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "PaymentDate" ,IsNullable = true,ColumnDescription = "支付日期")]
+        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "PaymentDate" ,IsNullable = true,ColumnDescription = "支付日期" )]
         public DateTime? PaymentDate
         { 
             get{return _PaymentDate;}
@@ -322,7 +328,7 @@ namespace RUINORERP.Model
         /// 支付状态
         /// </summary>
         [AdvQueryAttribute(ColName = "PaymentStatus",ColDesc = "支付状态")] 
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "PaymentStatus" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "支付状态")]
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "PaymentStatus" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "支付状态" )]
         public int PaymentStatus
         { 
             get{return _PaymentStatus;}
@@ -358,20 +364,7 @@ namespace RUINORERP.Model
             SetProperty(ref _ReferenceNo, value);
                         }
         }
-        private bool _IsForCommission=false;
-        /// <summary>
-        /// 用于佣金
-        /// </summary>
-        [AdvQueryAttribute(ColName = "IsForCommission", ColDesc = "用于佣金")]
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType = "Boolean", ColumnName = "IsForCommission", IsNullable = false, ColumnDescription = "用于佣金")]
-        public bool IsForCommission
-        {
-            get { return _IsForCommission; }
-            set
-            {
-                SetProperty(ref _IsForCommission, value);
-            }
-        }
+
         private bool _IsReversed= false;
         /// <summary>
         /// 是否冲销
@@ -401,19 +394,19 @@ namespace RUINORERP.Model
                         }
         }
 
-        //private string _ReversedOriginalNo;
-        ///// <summary>
-        ///// 冲销单号
-        ///// </summary>
-        //[AdvQueryAttribute(ColName = "ReversedOriginalNo",ColDesc = "冲销单号")] 
-        //[SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "ReversedOriginalNo" ,Length=30,IsNullable = true,ColumnDescription = "冲销单号" )]
-        //public string ReversedOriginalNo
-        //{ 
-        //    get{return _ReversedOriginalNo;}
-        //    set{
-        //    SetProperty(ref _ReversedOriginalNo, value);
-        //                }
-        //}
+        private string _ReversedOriginalNo;
+        /// <summary>
+        /// 冲销单号
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ReversedOriginalNo",ColDesc = "冲销单号")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "ReversedOriginalNo" ,Length=30,IsNullable = true,ColumnDescription = "冲销单号" )]
+        public string ReversedOriginalNo
+        { 
+            get{return _ReversedOriginalNo;}
+            set{
+            SetProperty(ref _ReversedOriginalNo, value);
+                        }
+        }
 
         private long? _ReversedByPaymentId;
         /// <summary>
@@ -430,19 +423,19 @@ namespace RUINORERP.Model
                         }
         }
 
-        //private string _ReversedByPaymentNo;
-        ///// <summary>
-        ///// 被冲销单号
-        ///// </summary>
-        //[AdvQueryAttribute(ColName = "ReversedByPaymentNo",ColDesc = "被冲销单号")] 
-        //[SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "ReversedByPaymentNo" ,Length=30,IsNullable = true,ColumnDescription = "被冲销单号" )]
-        //public string ReversedByPaymentNo
-        //{ 
-        //    get{return _ReversedByPaymentNo;}
-        //    set{
-        //    SetProperty(ref _ReversedByPaymentNo, value);
-        //                }
-        //}
+        private string _ReversedByPaymentNo;
+        /// <summary>
+        /// 被冲销单号
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ReversedByPaymentNo",ColDesc = "被冲销单号")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "ReversedByPaymentNo" ,Length=30,IsNullable = true,ColumnDescription = "被冲销单号" )]
+        public string ReversedByPaymentNo
+        { 
+            get{return _ReversedByPaymentNo;}
+            set{
+            SetProperty(ref _ReversedByPaymentNo, value);
+                        }
+        }
 
         private string _Remark;
         /// <summary>
@@ -617,81 +610,58 @@ namespace RUINORERP.Model
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(Currency_ID))]
         public virtual tb_Currency tb_currency { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(CustomerVendor_ID))]
         public virtual tb_CustomerVendor tb_customervendor { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)] 打印报表时的数据源会不显示
-        [Navigate(NavigateType.OneToOne, nameof(Employee_ID))]
+        [Navigate(NavigateType.OneToOne, nameof(Reimburser))]
         public virtual tb_Employee tb_employee { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)] 打印报表时的数据源会不显示
-        [Navigate(NavigateType.OneToOne, nameof(Reimburser))]
-        public virtual tb_Employee tb_employee_Reimburser { get; set; }
-
-
-        [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(PayeeInfoID))]
         public virtual tb_FM_PayeeInfo tb_fm_payeeinfo { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(Paytype_ID))]
         public virtual tb_PaymentMethod tb_paymentmethod { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(Account_id))]
         public virtual tb_FM_Account tb_fm_account { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(ReversedByPaymentId))]
-        public virtual tb_FM_PaymentRecord tb_fm_paymentrecord_Reversed { get; set; }
+        public virtual tb_FM_PaymentRecord tb_fm_paymentrecord { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(ReversedOriginalId))]
-        public virtual tb_FM_PaymentRecord tb_fm_paymentrecord_Original { get; set; }
+        public virtual tb_FM_PaymentRecord tb_fm_paymentrecordByReversedOriginal { get; set; }
 
 
-        //[Browsable(false)]打印报表时的数据源会不显示
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_FM_PaymentRecord.ReversedByPaymentId))]
-        public virtual List<tb_FM_PaymentRecord> tb_FM_PaymentRecords_Reverseds { get; set; }
-        //tb_FM_PaymentRecord.PaymentId)
-        //PaymentId.FK_TB_FM_PA_REFERENCE_TB_FM_PA_ReversedByPaymentId)
-        //tb_FM_PaymentRecord.ReversedByPaymentId)
 
-        //[Browsable(false)]打印报表时的数据源会不显示
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_FM_PaymentRecord.ReversedOriginalId))]
-        public virtual List<tb_FM_PaymentRecord> tb_FM_PaymentRecords_Originals { get; set; }
-        //tb_FM_PaymentRecord.PaymentId)
-        //PaymentId.FK_TB_FM_PA_REFERENCE_TB_FM_PA_ReversedOriginalId)
-        //tb_FM_PaymentRecord.ReversedOriginalId)
-
-        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_PaymentRecordDetail.PaymentId))]
         public virtual List<tb_FM_PaymentRecordDetail> tb_FM_PaymentRecordDetails { get; set; }
-        //tb_FM_PaymentRecordDetail.PaymentId)
-        //PaymentId.FK_FM_PaymentRecordDetail_REF_TB_FM_PAymentRecord)
-        //tb_FM_PaymentRecord.PaymentId)
+
+
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_FM_PaymentRecord.ReversedByPaymentId))]
+        public virtual List<tb_FM_PaymentRecord> tb_FM_PaymentRecords { get; set; }
+
+
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_FM_PaymentRecord.ReversedOriginalId))]
+        public virtual List<tb_FM_PaymentRecord> tb_FM_PaymentRecordsByReversedOriginal { get; set; }
 
 
         #endregion
 
 
-
+ 
 
 //如果为false,则不可以。
 private bool PK_FK_ID_Check()

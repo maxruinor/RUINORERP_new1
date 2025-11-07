@@ -1,9 +1,8 @@
 ﻿// **************************************
-// 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/22/2025 21:05:38
+// 时间：11/06/2025 19:43:16
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -24,6 +23,7 @@ using RUINORERP.Model.Context;
 using System.Linq;
 using RUINOR.Core;
 using RUINORERP.Common.Helper;
+using RUINORERP.Business.Cache;
 
 namespace RUINORERP.Business
 {
@@ -38,14 +38,16 @@ namespace RUINORERP.Business
         //public readonly IUnitOfWorkManage _unitOfWorkManage;
         //public readonly ILogger<BaseController<T>> _logger;
         public Itb_ProdBorrowingServices _tb_ProdBorrowingServices { get; set; }
+        private readonly EventDrivenCacheManager _eventDrivenCacheManager; 
        // private readonly ApplicationContext _appContext;
        
-        public tb_ProdBorrowingController(ILogger<tb_ProdBorrowingController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_ProdBorrowingServices tb_ProdBorrowingServices , ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
+        public tb_ProdBorrowingController(ILogger<tb_ProdBorrowingController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_ProdBorrowingServices tb_ProdBorrowingServices ,EventDrivenCacheManager eventDrivenCacheManager, ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
         {
             _logger = logger;
            _unitOfWorkManage = unitOfWorkManage;
            _tb_ProdBorrowingServices = tb_ProdBorrowingServices;
-            _appContext = appContext;
+           _appContext = appContext;
+           _eventDrivenCacheManager = eventDrivenCacheManager;
         }
       
         
@@ -88,14 +90,14 @@ namespace RUINORERP.Business
                     bool rs = await _tb_ProdBorrowingServices.Update(entity);
                     if (rs)
                     {
-                        MyCacheManager.Instance.UpdateEntityList<tb_ProdBorrowing>(entity);
+                        _eventDrivenCacheManager.UpdateEntity<tb_ProdBorrowing>(entity);
                     }
                     Returnobj = entity;
                 }
                 else
                 {
                     Returnobj = await _tb_ProdBorrowingServices.AddReEntityAsync(entity);
-                    MyCacheManager.Instance.UpdateEntityList<tb_ProdBorrowing>(entity);
+                    _eventDrivenCacheManager.UpdateEntity<tb_ProdBorrowing>(entity);
                 }
 
                 rr.ReturnObject = Returnobj;
@@ -129,14 +131,14 @@ namespace RUINORERP.Business
                     bool rs = await _tb_ProdBorrowingServices.Update(entity);
                     if (rs)
                     {
-                        MyCacheManager.Instance.UpdateEntityList<tb_ProdBorrowing>(entity);
+                        _eventDrivenCacheManager.UpdateEntity<tb_ProdBorrowing>(entity);
                     }
                     Returnobj = entity as T;
                 }
                 else
                 {
                     Returnobj = await _tb_ProdBorrowingServices.AddReEntityAsync(entity) as T ;
-                    MyCacheManager.Instance.UpdateEntityList<tb_ProdBorrowing>(entity);
+                    _eventDrivenCacheManager.UpdateEntity<tb_ProdBorrowing>(entity);
                 }
 
                 rr.ReturnObject = Returnobj;
@@ -161,7 +163,7 @@ namespace RUINORERP.Business
             }
             if (list != null)
             {
-                MyCacheManager.Instance.UpdateEntityList<List<T>>(list);
+                _eventDrivenCacheManager.UpdateEntityList<T>(list);
              }
             return list;
         }
@@ -176,7 +178,7 @@ namespace RUINORERP.Business
             }
             if (list != null)
             {
-                MyCacheManager.Instance.UpdateEntityList<List<T>>(list);
+                _eventDrivenCacheManager.UpdateEntityList<T>(list);
              }
             return list;
         }
@@ -189,7 +191,7 @@ namespace RUINORERP.Business
             if (rs)
             {
                 ////生成时暂时只考虑了一个主键的情况
-                MyCacheManager.Instance.DeleteEntityList<tb_ProdBorrowing>(entity);
+                _eventDrivenCacheManager.DeleteEntity<tb_ProdBorrowing>(entity.PrimaryKeyID);
             }
             return rs;
         }
@@ -202,9 +204,7 @@ namespace RUINORERP.Business
             if (c>0)
             {
                 rs=true;
-                ////生成时暂时只考虑了一个主键的情况
-                 long[] result = entitys.Select(e => e.BorrowID).ToArray();
-                MyCacheManager.Instance.DeleteEntityList<tb_ProdBorrowing>(result);
+                _eventDrivenCacheManager.DeleteEntityList<tb_ProdBorrowing>(entitys);
             }
             return rs;
         }
@@ -306,7 +306,7 @@ namespace RUINORERP.Business
             if (rs)
             {
                 //////生成时暂时只考虑了一个主键的情况
-                MyCacheManager.Instance.DeleteEntityList<T>(model);
+                 _eventDrivenCacheManager.DeleteEntity<T>(model);
             }
             return rs;
         }
@@ -317,7 +317,8 @@ namespace RUINORERP.Business
         public tb_ProdBorrowing AddReEntity(tb_ProdBorrowing entity)
         {
             tb_ProdBorrowing AddEntity =  _tb_ProdBorrowingServices.AddReEntity(entity);
-            MyCacheManager.Instance.UpdateEntityList<tb_ProdBorrowing>(AddEntity);
+     
+             _eventDrivenCacheManager.UpdateEntity<tb_ProdBorrowing>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
@@ -325,7 +326,7 @@ namespace RUINORERP.Business
          public async Task<tb_ProdBorrowing> AddReEntityAsync(tb_ProdBorrowing entity)
         {
             tb_ProdBorrowing AddEntity = await _tb_ProdBorrowingServices.AddReEntityAsync(entity);
-            MyCacheManager.Instance.UpdateEntityList<tb_ProdBorrowing>(AddEntity);
+            _eventDrivenCacheManager.UpdateEntity<tb_ProdBorrowing>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
@@ -335,7 +336,7 @@ namespace RUINORERP.Business
             long id = await _tb_ProdBorrowingServices.Add(entity);
             if(id>0)
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_ProdBorrowing>(entity);
+                 _eventDrivenCacheManager.UpdateEntity<tb_ProdBorrowing>(entity);
             }
             return id;
         }
@@ -345,7 +346,7 @@ namespace RUINORERP.Business
             List<long> ids = await _tb_ProdBorrowingServices.Add(infos);
             if(ids.Count>0)//成功的个数 这里缓存 对不对呢？
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_ProdBorrowing>(infos);
+                 _eventDrivenCacheManager.UpdateEntityList<tb_ProdBorrowing>(infos);
             }
             return ids;
         }
@@ -356,7 +357,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_ProdBorrowingServices.Delete(entity);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_ProdBorrowing>(entity);
+                _eventDrivenCacheManager.DeleteEntity<tb_ProdBorrowing>(entity);
                 
             }
             return rs;
@@ -367,7 +368,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_ProdBorrowingServices.Update(entity);
             if (rs)
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_ProdBorrowing>(entity);
+                 _eventDrivenCacheManager.DeleteEntity<tb_ProdBorrowing>(entity);
                 entity.ActionStatus = ActionStatus.无操作;
             }
             return rs;
@@ -378,7 +379,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_ProdBorrowingServices.DeleteById(id);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_ProdBorrowing>(id);
+               _eventDrivenCacheManager.DeleteEntity<tb_ProdBorrowing>(id);
             }
             return rs;
         }
@@ -388,7 +389,8 @@ namespace RUINORERP.Business
             bool rs = await _tb_ProdBorrowingServices.DeleteByIds(ids);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_ProdBorrowing>(ids);
+            
+                   _eventDrivenCacheManager.DeleteEntities<tb_ProdBorrowing>(ids.Cast<object>().ToArray());
             }
             return rs;
         }
@@ -400,7 +402,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_ProdBorrowing>(list);
+     
+             _eventDrivenCacheManager.UpdateEntityList<tb_ProdBorrowing>(list);
             return list;
         }
         
@@ -411,7 +414,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_ProdBorrowing>(list);
+    
+             _eventDrivenCacheManager.UpdateEntityList<tb_ProdBorrowing>(list);
             return list;
         }
         
@@ -422,7 +426,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_ProdBorrowing>(list);
+  
+             _eventDrivenCacheManager.UpdateEntityList<tb_ProdBorrowing>(list);
             return list;
         }
         
@@ -433,7 +438,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_ProdBorrowing>(list);
+ 
+             _eventDrivenCacheManager.UpdateEntityList<tb_ProdBorrowing>(list);
             return list;
         }
         
@@ -451,7 +457,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_ProdBorrowing>(list);
+   
+             _eventDrivenCacheManager.UpdateEntityList<tb_ProdBorrowing>(list);
             return list;
         }
         
@@ -477,7 +484,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_ProdBorrowing>(list);
+ 
+             _eventDrivenCacheManager.UpdateEntityList<tb_ProdBorrowing>(list);
             return list;
         }
 
@@ -502,7 +510,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_ProdBorrowing>(list);
+  
+             _eventDrivenCacheManager.UpdateEntityList<tb_ProdBorrowing>(list);
             return list;
         }
         
@@ -527,7 +536,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_ProdBorrowing>(list);
+     
+             _eventDrivenCacheManager.UpdateEntityList<tb_ProdBorrowing>(list);
             return list;
         }
         
@@ -570,7 +580,8 @@ namespace RUINORERP.Business
                 entity.HasChanged = false;
             }
 
-            MyCacheManager.Instance.UpdateEntityList<tb_ProdBorrowing>(entity);
+         
+             _eventDrivenCacheManager.UpdateEntity<tb_ProdBorrowing>(entity);
             return entity as T;
         }
         

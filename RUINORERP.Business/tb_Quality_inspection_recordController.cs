@@ -1,10 +1,8 @@
-﻿
-// **************************************
-// 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
+﻿// **************************************
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/14/2025 20:39:51
+// 时间：11/06/2025 19:43:21
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -25,6 +23,7 @@ using RUINORERP.Model.Context;
 using System.Linq;
 using RUINOR.Core;
 using RUINORERP.Common.Helper;
+using RUINORERP.Business.Cache;
 
 namespace RUINORERP.Business
 {
@@ -39,14 +38,16 @@ namespace RUINORERP.Business
         //public readonly IUnitOfWorkManage _unitOfWorkManage;
         //public readonly ILogger<BaseController<T>> _logger;
         public Itb_Quality_inspection_recordServices _tb_Quality_inspection_recordServices { get; set; }
+        private readonly EventDrivenCacheManager _eventDrivenCacheManager; 
        // private readonly ApplicationContext _appContext;
        
-        public tb_Quality_inspection_recordController(ILogger<tb_Quality_inspection_recordController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_Quality_inspection_recordServices tb_Quality_inspection_recordServices , ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
+        public tb_Quality_inspection_recordController(ILogger<tb_Quality_inspection_recordController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_Quality_inspection_recordServices tb_Quality_inspection_recordServices ,EventDrivenCacheManager eventDrivenCacheManager, ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
         {
             _logger = logger;
            _unitOfWorkManage = unitOfWorkManage;
            _tb_Quality_inspection_recordServices = tb_Quality_inspection_recordServices;
-            _appContext = appContext;
+           _appContext = appContext;
+           _eventDrivenCacheManager = eventDrivenCacheManager;
         }
       
         
@@ -89,14 +90,14 @@ namespace RUINORERP.Business
                     bool rs = await _tb_Quality_inspection_recordServices.Update(entity);
                     if (rs)
                     {
-                        MyCacheManager.Instance.UpdateEntityList<tb_Quality_inspection_record>(entity);
+                        _eventDrivenCacheManager.UpdateEntity<tb_Quality_inspection_record>(entity);
                     }
                     Returnobj = entity;
                 }
                 else
                 {
                     Returnobj = await _tb_Quality_inspection_recordServices.AddReEntityAsync(entity);
-                    MyCacheManager.Instance.UpdateEntityList<tb_Quality_inspection_record>(entity);
+                    _eventDrivenCacheManager.UpdateEntity<tb_Quality_inspection_record>(entity);
                 }
 
                 rr.ReturnObject = Returnobj;
@@ -130,14 +131,14 @@ namespace RUINORERP.Business
                     bool rs = await _tb_Quality_inspection_recordServices.Update(entity);
                     if (rs)
                     {
-                        MyCacheManager.Instance.UpdateEntityList<tb_Quality_inspection_record>(entity);
+                        _eventDrivenCacheManager.UpdateEntity<tb_Quality_inspection_record>(entity);
                     }
                     Returnobj = entity as T;
                 }
                 else
                 {
                     Returnobj = await _tb_Quality_inspection_recordServices.AddReEntityAsync(entity) as T ;
-                    MyCacheManager.Instance.UpdateEntityList<tb_Quality_inspection_record>(entity);
+                    _eventDrivenCacheManager.UpdateEntity<tb_Quality_inspection_record>(entity);
                 }
 
                 rr.ReturnObject = Returnobj;
@@ -162,7 +163,7 @@ namespace RUINORERP.Business
             }
             if (list != null)
             {
-                MyCacheManager.Instance.UpdateEntityList<List<T>>(list);
+                _eventDrivenCacheManager.UpdateEntityList<T>(list);
              }
             return list;
         }
@@ -177,7 +178,7 @@ namespace RUINORERP.Business
             }
             if (list != null)
             {
-                MyCacheManager.Instance.UpdateEntityList<List<T>>(list);
+                _eventDrivenCacheManager.UpdateEntityList<T>(list);
              }
             return list;
         }
@@ -190,7 +191,7 @@ namespace RUINORERP.Business
             if (rs)
             {
                 ////生成时暂时只考虑了一个主键的情况
-                MyCacheManager.Instance.DeleteEntityList<tb_Quality_inspection_record>(entity);
+                _eventDrivenCacheManager.DeleteEntity<tb_Quality_inspection_record>(entity.PrimaryKeyID);
             }
             return rs;
         }
@@ -203,9 +204,7 @@ namespace RUINORERP.Business
             if (c>0)
             {
                 rs=true;
-                ////生成时暂时只考虑了一个主键的情况
-                 long[] result = entitys.Select(e => e.id).ToArray();
-                MyCacheManager.Instance.DeleteEntityList<tb_Quality_inspection_record>(result);
+                _eventDrivenCacheManager.DeleteEntityList<tb_Quality_inspection_record>(entitys);
             }
             return rs;
         }
@@ -257,7 +256,7 @@ namespace RUINORERP.Business
         else    
         {
                                   var result= await _unitOfWorkManage.GetDbClient().Insertable<tb_Quality_inspection_record>(entity as tb_Quality_inspection_record)
-                    .ExecuteCommandAsync();
+                    .ExecuteReturnSnowflakeIdAsync();
                     if (result > 0)
                     {
                         rs = true;
@@ -295,7 +294,7 @@ namespace RUINORERP.Business
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_Quality_inspection_record>()
                                 //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
                 .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
-                                .WhereCustom(useLike, dto);
+                                .WhereCustom(useLike, dto);;
             return await querySqlQueryable.ToListAsync()as List<T>;
         }
 
@@ -310,7 +309,7 @@ namespace RUINORERP.Business
             if (rs)
             {
                 //////生成时暂时只考虑了一个主键的情况
-                MyCacheManager.Instance.DeleteEntityList<T>(model);
+                 _eventDrivenCacheManager.DeleteEntity<T>(model);
             }
             return rs;
         }
@@ -321,7 +320,8 @@ namespace RUINORERP.Business
         public tb_Quality_inspection_record AddReEntity(tb_Quality_inspection_record entity)
         {
             tb_Quality_inspection_record AddEntity =  _tb_Quality_inspection_recordServices.AddReEntity(entity);
-            MyCacheManager.Instance.UpdateEntityList<tb_Quality_inspection_record>(AddEntity);
+     
+             _eventDrivenCacheManager.UpdateEntity<tb_Quality_inspection_record>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
@@ -329,7 +329,7 @@ namespace RUINORERP.Business
          public async Task<tb_Quality_inspection_record> AddReEntityAsync(tb_Quality_inspection_record entity)
         {
             tb_Quality_inspection_record AddEntity = await _tb_Quality_inspection_recordServices.AddReEntityAsync(entity);
-            MyCacheManager.Instance.UpdateEntityList<tb_Quality_inspection_record>(AddEntity);
+            _eventDrivenCacheManager.UpdateEntity<tb_Quality_inspection_record>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
@@ -339,7 +339,7 @@ namespace RUINORERP.Business
             long id = await _tb_Quality_inspection_recordServices.Add(entity);
             if(id>0)
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_Quality_inspection_record>(entity);
+                 _eventDrivenCacheManager.UpdateEntity<tb_Quality_inspection_record>(entity);
             }
             return id;
         }
@@ -349,7 +349,7 @@ namespace RUINORERP.Business
             List<long> ids = await _tb_Quality_inspection_recordServices.Add(infos);
             if(ids.Count>0)//成功的个数 这里缓存 对不对呢？
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_Quality_inspection_record>(infos);
+                 _eventDrivenCacheManager.UpdateEntityList<tb_Quality_inspection_record>(infos);
             }
             return ids;
         }
@@ -360,7 +360,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_Quality_inspection_recordServices.Delete(entity);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_Quality_inspection_record>(entity);
+                _eventDrivenCacheManager.DeleteEntity<tb_Quality_inspection_record>(entity);
                 
             }
             return rs;
@@ -371,7 +371,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_Quality_inspection_recordServices.Update(entity);
             if (rs)
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_Quality_inspection_record>(entity);
+                 _eventDrivenCacheManager.DeleteEntity<tb_Quality_inspection_record>(entity);
                 entity.ActionStatus = ActionStatus.无操作;
             }
             return rs;
@@ -382,7 +382,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_Quality_inspection_recordServices.DeleteById(id);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_Quality_inspection_record>(id);
+               _eventDrivenCacheManager.DeleteEntity<tb_Quality_inspection_record>(id);
             }
             return rs;
         }
@@ -392,7 +392,8 @@ namespace RUINORERP.Business
             bool rs = await _tb_Quality_inspection_recordServices.DeleteByIds(ids);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_Quality_inspection_record>(ids);
+            
+                   _eventDrivenCacheManager.DeleteEntities<tb_Quality_inspection_record>(ids.Cast<object>().ToArray());
             }
             return rs;
         }
@@ -404,7 +405,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_Quality_inspection_record>(list);
+     
+             _eventDrivenCacheManager.UpdateEntityList<tb_Quality_inspection_record>(list);
             return list;
         }
         
@@ -415,7 +417,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_Quality_inspection_record>(list);
+    
+             _eventDrivenCacheManager.UpdateEntityList<tb_Quality_inspection_record>(list);
             return list;
         }
         
@@ -426,7 +429,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_Quality_inspection_record>(list);
+  
+             _eventDrivenCacheManager.UpdateEntityList<tb_Quality_inspection_record>(list);
             return list;
         }
         
@@ -437,7 +441,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_Quality_inspection_record>(list);
+ 
+             _eventDrivenCacheManager.UpdateEntityList<tb_Quality_inspection_record>(list);
             return list;
         }
         
@@ -455,7 +460,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_Quality_inspection_record>(list);
+   
+             _eventDrivenCacheManager.UpdateEntityList<tb_Quality_inspection_record>(list);
             return list;
         }
         
@@ -475,7 +481,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_Quality_inspection_record>(list);
+ 
+             _eventDrivenCacheManager.UpdateEntityList<tb_Quality_inspection_record>(list);
             return list;
         }
 
@@ -494,7 +501,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_Quality_inspection_record>(list);
+  
+             _eventDrivenCacheManager.UpdateEntityList<tb_Quality_inspection_record>(list);
             return list;
         }
         
@@ -513,7 +521,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_Quality_inspection_record>(list);
+     
+             _eventDrivenCacheManager.UpdateEntityList<tb_Quality_inspection_record>(list);
             return list;
         }
         
@@ -542,13 +551,16 @@ namespace RUINORERP.Business
         public override async Task<T> BaseQueryByIdNavAsync(object id)
         {
             tb_Quality_inspection_record entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_Quality_inspection_record>().Where(w => w.id == (long)id)
-                                     .FirstAsync();
+                         
+
+                                .FirstAsync();
             if(entity!=null)
             {
                 entity.HasChanged = false;
             }
 
-            MyCacheManager.Instance.UpdateEntityList<tb_Quality_inspection_record>(entity);
+         
+             _eventDrivenCacheManager.UpdateEntity<tb_Quality_inspection_record>(entity);
             return entity as T;
         }
         

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：02/08/2025 16:32:29
+// 时间：11/06/2025 20:42:17
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 入库单 非生产领料/退料
     /// </summary>
     [Serializable()]
-    [Description("其它入库单")]
+    [Description("入库单 非生产领料/退料")]
     [SugarTable("tb_StockIn")]
     public partial class tb_StockIn: BaseEntity, ICloneable
     {
@@ -57,7 +57,7 @@ namespace RUINORERP.Model
         /// </summary>
         [AdvQueryAttribute(ColName = "Type_ID",ColDesc = "入库类型")] 
         [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Type_ID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "入库类型" )]
-        [FKRelationAttribute("tb_OutInStockType", "Type_ID")]
+        [FKRelationAttribute("tb_OutInStockType","Type_ID")]
         public long Type_ID
         { 
             get{return _Type_ID;}
@@ -410,6 +410,11 @@ namespace RUINORERP.Model
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)] 打印报表时的数据源会不显示
+        [Navigate(NavigateType.OneToOne, nameof(Type_ID))]
+        public virtual tb_OutInStockType tb_outinstocktype { get; set; }
+
+        [SugarColumn(IsIgnore = true)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(CustomerVendor_ID))]
         public virtual tb_CustomerVendor tb_customervendor { get; set; }
 
@@ -418,12 +423,6 @@ namespace RUINORERP.Model
         [Navigate(NavigateType.OneToOne, nameof(Employee_ID))]
         public virtual tb_Employee tb_employee { get; set; }
 
-
-
-        [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)] 打印报表时的数据源会不显示
-        [Navigate(NavigateType.OneToOne, nameof(Type_ID))]
-        public virtual tb_OutInStockType tb_outinstocktype { get; set; }
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
@@ -437,7 +436,7 @@ namespace RUINORERP.Model
         #endregion
 
 
-
+ 
 
 //如果为false,则不可以。
 private bool PK_FK_ID_Check()
@@ -447,7 +446,12 @@ return rs;
 }
 
 
- 
+
+
+
+
+       
+        
 
         public override object Clone()
         {

@@ -1,10 +1,8 @@
-﻿
-// **************************************
-// 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
+﻿// **************************************
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/14/2025 20:39:50
+// 时间：11/06/2025 19:43:20
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -25,6 +23,7 @@ using RUINORERP.Model.Context;
 using System.Linq;
 using RUINOR.Core;
 using RUINORERP.Common.Helper;
+using RUINORERP.Business.Cache;
 
 namespace RUINORERP.Business
 {
@@ -39,14 +38,16 @@ namespace RUINORERP.Business
         //public readonly IUnitOfWorkManage _unitOfWorkManage;
         //public readonly ILogger<BaseController<T>> _logger;
         public Itb_PurEntryReServices _tb_PurEntryReServices { get; set; }
+        private readonly EventDrivenCacheManager _eventDrivenCacheManager; 
        // private readonly ApplicationContext _appContext;
        
-        public tb_PurEntryReController(ILogger<tb_PurEntryReController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_PurEntryReServices tb_PurEntryReServices , ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
+        public tb_PurEntryReController(ILogger<tb_PurEntryReController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_PurEntryReServices tb_PurEntryReServices ,EventDrivenCacheManager eventDrivenCacheManager, ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
         {
             _logger = logger;
            _unitOfWorkManage = unitOfWorkManage;
            _tb_PurEntryReServices = tb_PurEntryReServices;
-            _appContext = appContext;
+           _appContext = appContext;
+           _eventDrivenCacheManager = eventDrivenCacheManager;
         }
       
         
@@ -89,14 +90,14 @@ namespace RUINORERP.Business
                     bool rs = await _tb_PurEntryReServices.Update(entity);
                     if (rs)
                     {
-                        MyCacheManager.Instance.UpdateEntityList<tb_PurEntryRe>(entity);
+                        _eventDrivenCacheManager.UpdateEntity<tb_PurEntryRe>(entity);
                     }
                     Returnobj = entity;
                 }
                 else
                 {
                     Returnobj = await _tb_PurEntryReServices.AddReEntityAsync(entity);
-                    MyCacheManager.Instance.UpdateEntityList<tb_PurEntryRe>(entity);
+                    _eventDrivenCacheManager.UpdateEntity<tb_PurEntryRe>(entity);
                 }
 
                 rr.ReturnObject = Returnobj;
@@ -130,14 +131,14 @@ namespace RUINORERP.Business
                     bool rs = await _tb_PurEntryReServices.Update(entity);
                     if (rs)
                     {
-                        MyCacheManager.Instance.UpdateEntityList<tb_PurEntryRe>(entity);
+                        _eventDrivenCacheManager.UpdateEntity<tb_PurEntryRe>(entity);
                     }
                     Returnobj = entity as T;
                 }
                 else
                 {
                     Returnobj = await _tb_PurEntryReServices.AddReEntityAsync(entity) as T ;
-                    MyCacheManager.Instance.UpdateEntityList<tb_PurEntryRe>(entity);
+                    _eventDrivenCacheManager.UpdateEntity<tb_PurEntryRe>(entity);
                 }
 
                 rr.ReturnObject = Returnobj;
@@ -162,7 +163,7 @@ namespace RUINORERP.Business
             }
             if (list != null)
             {
-                MyCacheManager.Instance.UpdateEntityList<List<T>>(list);
+                _eventDrivenCacheManager.UpdateEntityList<T>(list);
              }
             return list;
         }
@@ -177,7 +178,7 @@ namespace RUINORERP.Business
             }
             if (list != null)
             {
-                MyCacheManager.Instance.UpdateEntityList<List<T>>(list);
+                _eventDrivenCacheManager.UpdateEntityList<T>(list);
              }
             return list;
         }
@@ -190,7 +191,7 @@ namespace RUINORERP.Business
             if (rs)
             {
                 ////生成时暂时只考虑了一个主键的情况
-                MyCacheManager.Instance.DeleteEntityList<tb_PurEntryRe>(entity);
+                _eventDrivenCacheManager.DeleteEntity<tb_PurEntryRe>(entity.PrimaryKeyID);
             }
             return rs;
         }
@@ -203,9 +204,7 @@ namespace RUINORERP.Business
             if (c>0)
             {
                 rs=true;
-                ////生成时暂时只考虑了一个主键的情况
-                 long[] result = entitys.Select(e => e.PurEntryRe_ID).ToArray();
-                MyCacheManager.Instance.DeleteEntityList<tb_PurEntryRe>(result);
+                _eventDrivenCacheManager.DeleteEntityList<tb_PurEntryRe>(entitys);
             }
             return rs;
         }
@@ -292,7 +291,7 @@ namespace RUINORERP.Business
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_PurEntryRe>()
                                 .Includes(m => m.tb_PurReturnEntries)
                         .Includes(m => m.tb_PurEntryReDetails)
-                                        .WhereCustom(useLike, dto);
+                                        .WhereCustom(useLike, dto);;
             return await querySqlQueryable.ToListAsync()as List<T>;
         }
 
@@ -307,7 +306,7 @@ namespace RUINORERP.Business
             if (rs)
             {
                 //////生成时暂时只考虑了一个主键的情况
-                MyCacheManager.Instance.DeleteEntityList<T>(model);
+                 _eventDrivenCacheManager.DeleteEntity<T>(model);
             }
             return rs;
         }
@@ -318,7 +317,8 @@ namespace RUINORERP.Business
         public tb_PurEntryRe AddReEntity(tb_PurEntryRe entity)
         {
             tb_PurEntryRe AddEntity =  _tb_PurEntryReServices.AddReEntity(entity);
-            MyCacheManager.Instance.UpdateEntityList<tb_PurEntryRe>(AddEntity);
+     
+             _eventDrivenCacheManager.UpdateEntity<tb_PurEntryRe>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
@@ -326,7 +326,7 @@ namespace RUINORERP.Business
          public async Task<tb_PurEntryRe> AddReEntityAsync(tb_PurEntryRe entity)
         {
             tb_PurEntryRe AddEntity = await _tb_PurEntryReServices.AddReEntityAsync(entity);
-            MyCacheManager.Instance.UpdateEntityList<tb_PurEntryRe>(AddEntity);
+            _eventDrivenCacheManager.UpdateEntity<tb_PurEntryRe>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
@@ -336,7 +336,7 @@ namespace RUINORERP.Business
             long id = await _tb_PurEntryReServices.Add(entity);
             if(id>0)
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_PurEntryRe>(entity);
+                 _eventDrivenCacheManager.UpdateEntity<tb_PurEntryRe>(entity);
             }
             return id;
         }
@@ -346,7 +346,7 @@ namespace RUINORERP.Business
             List<long> ids = await _tb_PurEntryReServices.Add(infos);
             if(ids.Count>0)//成功的个数 这里缓存 对不对呢？
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_PurEntryRe>(infos);
+                 _eventDrivenCacheManager.UpdateEntityList<tb_PurEntryRe>(infos);
             }
             return ids;
         }
@@ -357,7 +357,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_PurEntryReServices.Delete(entity);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_PurEntryRe>(entity);
+                _eventDrivenCacheManager.DeleteEntity<tb_PurEntryRe>(entity);
                 
             }
             return rs;
@@ -368,7 +368,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_PurEntryReServices.Update(entity);
             if (rs)
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_PurEntryRe>(entity);
+                 _eventDrivenCacheManager.DeleteEntity<tb_PurEntryRe>(entity);
                 entity.ActionStatus = ActionStatus.无操作;
             }
             return rs;
@@ -379,7 +379,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_PurEntryReServices.DeleteById(id);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_PurEntryRe>(id);
+               _eventDrivenCacheManager.DeleteEntity<tb_PurEntryRe>(id);
             }
             return rs;
         }
@@ -389,7 +389,8 @@ namespace RUINORERP.Business
             bool rs = await _tb_PurEntryReServices.DeleteByIds(ids);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_PurEntryRe>(ids);
+            
+                   _eventDrivenCacheManager.DeleteEntities<tb_PurEntryRe>(ids.Cast<object>().ToArray());
             }
             return rs;
         }
@@ -401,7 +402,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_PurEntryRe>(list);
+     
+             _eventDrivenCacheManager.UpdateEntityList<tb_PurEntryRe>(list);
             return list;
         }
         
@@ -412,7 +414,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_PurEntryRe>(list);
+    
+             _eventDrivenCacheManager.UpdateEntityList<tb_PurEntryRe>(list);
             return list;
         }
         
@@ -423,7 +426,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_PurEntryRe>(list);
+  
+             _eventDrivenCacheManager.UpdateEntityList<tb_PurEntryRe>(list);
             return list;
         }
         
@@ -434,7 +438,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_PurEntryRe>(list);
+ 
+             _eventDrivenCacheManager.UpdateEntityList<tb_PurEntryRe>(list);
             return list;
         }
         
@@ -452,7 +457,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_PurEntryRe>(list);
+   
+             _eventDrivenCacheManager.UpdateEntityList<tb_PurEntryRe>(list);
             return list;
         }
         
@@ -479,7 +485,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_PurEntryRe>(list);
+ 
+             _eventDrivenCacheManager.UpdateEntityList<tb_PurEntryRe>(list);
             return list;
         }
 
@@ -505,7 +512,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_PurEntryRe>(list);
+  
+             _eventDrivenCacheManager.UpdateEntityList<tb_PurEntryRe>(list);
             return list;
         }
         
@@ -531,7 +539,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_PurEntryRe>(list);
+     
+             _eventDrivenCacheManager.UpdateEntityList<tb_PurEntryRe>(list);
             return list;
         }
         
@@ -565,15 +574,18 @@ namespace RUINORERP.Business
                             .Includes(t => t.tb_paymentmethod )
                             .Includes(t => t.tb_department )
                             .Includes(t => t.tb_employee )
-                                        .Includes(t => t.tb_PurReturnEntries )
-                            .Includes(t => t.tb_PurEntryReDetails )
-                        .FirstAsync();
+                        
+
+                                            .Includes(t => t.tb_PurReturnEntries )
+                                            .Includes(t => t.tb_PurEntryReDetails )
+                                .FirstAsync();
             if(entity!=null)
             {
                 entity.HasChanged = false;
             }
 
-            MyCacheManager.Instance.UpdateEntityList<tb_PurEntryRe>(entity);
+         
+             _eventDrivenCacheManager.UpdateEntity<tb_PurEntryRe>(entity);
             return entity as T;
         }
         

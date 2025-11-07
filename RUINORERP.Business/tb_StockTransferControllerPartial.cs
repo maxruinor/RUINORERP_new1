@@ -288,8 +288,8 @@ namespace RUINORERP.Business
         public async override Task<List<T>> GetPrintDataSource(long ID)
         {
             List<tb_StockTransfer> list = await _appContext.Db.CopyNew().Queryable<tb_StockTransfer>().Where(m => m.StockTransferID == ID)
-                             .Includes(a => a.tb_location_from)
-                             .Includes(a => a.tb_location_to)
+                             .Includes(a => a.tb_location)
+                             .Includes(a => a.tb_location_locationIdTo)
                             .Includes(a => a.tb_employee)
                               .AsNavQueryable()//加这个前面,超过三级在前面加这一行，并且第四级无VS智能提示，但是可以用
                               .Includes(a => a.tb_StockTransferDetails, b => b.tb_proddetail, c => c.tb_prod, d => d.tb_unit)

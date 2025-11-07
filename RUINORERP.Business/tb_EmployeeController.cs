@@ -1,9 +1,8 @@
 ﻿// **************************************
-// 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/20/2025 16:08:03
+// 时间：11/06/2025 19:43:02
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -39,15 +38,16 @@ namespace RUINORERP.Business
         //public readonly IUnitOfWorkManage _unitOfWorkManage;
         //public readonly ILogger<BaseController<T>> _logger;
         public Itb_EmployeeServices _tb_EmployeeServices { get; set; }
-        // private readonly ApplicationContext _appContext;
-        private readonly EventDrivenCacheManager _eventDrivenCacheManager; // 事件驱动缓存管理器（通过DI注入）
-        public tb_EmployeeController(ILogger<tb_EmployeeController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_EmployeeServices tb_EmployeeServices, EventDrivenCacheManager eventDrivenCacheManager, ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
+        private readonly EventDrivenCacheManager _eventDrivenCacheManager; 
+       // private readonly ApplicationContext _appContext;
+       
+        public tb_EmployeeController(ILogger<tb_EmployeeController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_EmployeeServices tb_EmployeeServices ,EventDrivenCacheManager eventDrivenCacheManager, ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
         {
             _logger = logger;
            _unitOfWorkManage = unitOfWorkManage;
            _tb_EmployeeServices = tb_EmployeeServices;
-            _eventDrivenCacheManager = eventDrivenCacheManager;
-            _appContext = appContext;
+           _appContext = appContext;
+           _eventDrivenCacheManager = eventDrivenCacheManager;
         }
       
         
@@ -249,27 +249,27 @@ namespace RUINORERP.Business
                              rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_Employee>(entity as tb_Employee)
                         .Include(m => m.tb_ProjectGroupEmployeeses)
                     .Include(m => m.tb_AS_AfterSaleDeliveries)
-                    .Include(m => m.tb_FM_PaymentRecords)
                     .Include(m => m.tb_ManufacturingOrders)
                     .Include(m => m.tb_Stocktakes)
                     .Include(m => m.tb_Locations)
                     .Include(m => m.tb_BOM_Ss)
                     .Include(m => m.tb_FM_OtherExpenseDetails)
                     .Include(m => m.tb_AS_AfterSaleApplies)
-                    .Include(m => m.tb_FM_ReceivablePayables)
+                    .Include(m => m.tb_FM_Statements)
                     .Include(m => m.tb_Prods)
+                    .Include(m => m.tb_PurReturnEntries)
                     .Include(m => m.tb_FM_OtherExpenses)
                     .Include(m => m.tb_MaterialReturns)
                     .Include(m => m.tb_PriceRecords)
+                    .Include(m => m.tb_ProdBorrowings)
                     .Include(m => m.tb_AuditLogses)
                     .Include(m => m.tb_AS_RepairInStocks)
                     .Include(m => m.tb_ProdReturnings)
                     .Include(m => m.tb_StockTransfers)
                     .Include(m => m.tb_BuyingRequisitions)
                     .Include(m => m.tb_CRM_FollowUpPlanses)
+                    .Include(m => m.tb_FM_PaymentRecords)
                     .Include(m => m.tb_FM_PaymentApplications)
-                    .Include(m => m.tb_PurReturnEntries)
-                    .Include(m => m.tb_ProdBorrowings)
                     .Include(m => m.tb_CRM_FollowUpRecordses)
                     .Include(m => m.tb_ProdSplits)
                     .Include(m => m.tb_PurEntryRes)
@@ -282,22 +282,20 @@ namespace RUINORERP.Business
                     .Include(m => m.tb_FM_PayeeInfos)
                     .Include(m => m.tb_MRP_ReworkReturns)
                     .Include(m => m.tb_ProdMerges)
-                    .Include(m => m.tb_SaleOutRes)
                     .Include(m => m.tb_PurEntries)
-                    .Include(m => m.tb_FM_PriceAdjustments)
                     .Include(m => m.tb_AS_RepairMaterialPickups)
                     .Include(m => m.tb_EOP_WaterStorages)
-                    .Include(m => m.tb_FinishedGoodsInvs)
                     .Include(m => m.tb_CRM_Customers)
+                    .Include(m => m.tb_FM_PriceAdjustments)
                     .Include(m => m.tb_ProductionDemands)
                     .Include(m => m.tb_StockIns)
                     .Include(m => m.tb_CustomerVendors)
                     .Include(m => m.tb_FM_PreReceivedPayments)
                     .Include(m => m.tb_gl_Comments)
                     .Include(m => m.tb_CRM_Collaborators)
+                    .Include(m => m.tb_FinishedGoodsInvs)
                     .Include(m => m.tb_UserInfos)
                     .Include(m => m.tb_CRM_Leadses)
-                    .Include(m => m.tb_FM_Statements)
                     .ExecuteCommandAsync();
                  }
         else    
@@ -305,27 +303,27 @@ namespace RUINORERP.Business
                         rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_Employee>(entity as tb_Employee)
                 .Include(m => m.tb_ProjectGroupEmployeeses)
                 .Include(m => m.tb_AS_AfterSaleDeliveries)
-                .Include(m => m.tb_FM_PaymentRecords)
                 .Include(m => m.tb_ManufacturingOrders)
                 .Include(m => m.tb_Stocktakes)
                 .Include(m => m.tb_Locations)
                 .Include(m => m.tb_BOM_Ss)
                 .Include(m => m.tb_FM_OtherExpenseDetails)
                 .Include(m => m.tb_AS_AfterSaleApplies)
-                .Include(m => m.tb_FM_ReceivablePayables)
+                .Include(m => m.tb_FM_Statements)
                 .Include(m => m.tb_Prods)
+                .Include(m => m.tb_PurReturnEntries)
                 .Include(m => m.tb_FM_OtherExpenses)
                 .Include(m => m.tb_MaterialReturns)
                 .Include(m => m.tb_PriceRecords)
+                .Include(m => m.tb_ProdBorrowings)
                 .Include(m => m.tb_AuditLogses)
                 .Include(m => m.tb_AS_RepairInStocks)
                 .Include(m => m.tb_ProdReturnings)
                 .Include(m => m.tb_StockTransfers)
                 .Include(m => m.tb_BuyingRequisitions)
                 .Include(m => m.tb_CRM_FollowUpPlanses)
+                .Include(m => m.tb_FM_PaymentRecords)
                 .Include(m => m.tb_FM_PaymentApplications)
-                .Include(m => m.tb_PurReturnEntries)
-                .Include(m => m.tb_ProdBorrowings)
                 .Include(m => m.tb_CRM_FollowUpRecordses)
                 .Include(m => m.tb_ProdSplits)
                 .Include(m => m.tb_PurEntryRes)
@@ -338,22 +336,20 @@ namespace RUINORERP.Business
                 .Include(m => m.tb_FM_PayeeInfos)
                 .Include(m => m.tb_MRP_ReworkReturns)
                 .Include(m => m.tb_ProdMerges)
-                .Include(m => m.tb_SaleOutRes)
                 .Include(m => m.tb_PurEntries)
-                .Include(m => m.tb_FM_PriceAdjustments)
                 .Include(m => m.tb_AS_RepairMaterialPickups)
                 .Include(m => m.tb_EOP_WaterStorages)
-                .Include(m => m.tb_FinishedGoodsInvs)
                 .Include(m => m.tb_CRM_Customers)
+                .Include(m => m.tb_FM_PriceAdjustments)
                 .Include(m => m.tb_ProductionDemands)
                 .Include(m => m.tb_StockIns)
                 .Include(m => m.tb_CustomerVendors)
                 .Include(m => m.tb_FM_PreReceivedPayments)
                 .Include(m => m.tb_gl_Comments)
                 .Include(m => m.tb_CRM_Collaborators)
+                .Include(m => m.tb_FinishedGoodsInvs)
                 .Include(m => m.tb_UserInfos)
                 .Include(m => m.tb_CRM_Leadses)
-                .Include(m => m.tb_FM_Statements)
          
                 .ExecuteCommandAsync();
                                           
@@ -389,27 +385,27 @@ namespace RUINORERP.Business
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_Employee>()
                                 .Includes(m => m.tb_ProjectGroupEmployeeses)
                         .Includes(m => m.tb_AS_AfterSaleDeliveries)
-                        .Includes(m => m.tb_FM_PaymentRecords)
                         .Includes(m => m.tb_ManufacturingOrders)
                         .Includes(m => m.tb_Stocktakes)
                         .Includes(m => m.tb_Locations)
                         .Includes(m => m.tb_BOM_Ss)
                         .Includes(m => m.tb_FM_OtherExpenseDetails)
                         .Includes(m => m.tb_AS_AfterSaleApplies)
-                        .Includes(m => m.tb_FM_ReceivablePayables)
+                        .Includes(m => m.tb_FM_Statements)
                         .Includes(m => m.tb_Prods)
+                        .Includes(m => m.tb_PurReturnEntries)
                         .Includes(m => m.tb_FM_OtherExpenses)
                         .Includes(m => m.tb_MaterialReturns)
                         .Includes(m => m.tb_PriceRecords)
+                        .Includes(m => m.tb_ProdBorrowings)
                         .Includes(m => m.tb_AuditLogses)
                         .Includes(m => m.tb_AS_RepairInStocks)
                         .Includes(m => m.tb_ProdReturnings)
                         .Includes(m => m.tb_StockTransfers)
                         .Includes(m => m.tb_BuyingRequisitions)
                         .Includes(m => m.tb_CRM_FollowUpPlanses)
+                        .Includes(m => m.tb_FM_PaymentRecords)
                         .Includes(m => m.tb_FM_PaymentApplications)
-                        .Includes(m => m.tb_PurReturnEntries)
-                        .Includes(m => m.tb_ProdBorrowings)
                         .Includes(m => m.tb_CRM_FollowUpRecordses)
                         .Includes(m => m.tb_ProdSplits)
                         .Includes(m => m.tb_PurEntryRes)
@@ -422,22 +418,20 @@ namespace RUINORERP.Business
                         .Includes(m => m.tb_FM_PayeeInfos)
                         .Includes(m => m.tb_MRP_ReworkReturns)
                         .Includes(m => m.tb_ProdMerges)
-                        .Includes(m => m.tb_SaleOutRes)
                         .Includes(m => m.tb_PurEntries)
-                        .Includes(m => m.tb_FM_PriceAdjustments)
                         .Includes(m => m.tb_AS_RepairMaterialPickups)
                         .Includes(m => m.tb_EOP_WaterStorages)
-                        .Includes(m => m.tb_FinishedGoodsInvs)
                         .Includes(m => m.tb_CRM_Customers)
+                        .Includes(m => m.tb_FM_PriceAdjustments)
                         .Includes(m => m.tb_ProductionDemands)
                         .Includes(m => m.tb_StockIns)
                         .Includes(m => m.tb_CustomerVendors)
                         .Includes(m => m.tb_FM_PreReceivedPayments)
                         .Includes(m => m.tb_gl_Comments)
                         .Includes(m => m.tb_CRM_Collaborators)
+                        .Includes(m => m.tb_FinishedGoodsInvs)
                         .Includes(m => m.tb_UserInfos)
                         .Includes(m => m.tb_CRM_Leadses)
-                        .Includes(m => m.tb_FM_Statements)
                                         .WhereCustom(useLike, dto);;
             return await querySqlQueryable.ToListAsync()as List<T>;
         }
@@ -449,27 +443,27 @@ namespace RUINORERP.Business
              bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_Employee>(m => m.Employee_ID== entity.Employee_ID)
                                 .Include(m => m.tb_ProjectGroupEmployeeses)
                         .Include(m => m.tb_AS_AfterSaleDeliveries)
-                        .Include(m => m.tb_FM_PaymentRecords)
                         .Include(m => m.tb_ManufacturingOrders)
                         .Include(m => m.tb_Stocktakes)
                         .Include(m => m.tb_Locations)
                         .Include(m => m.tb_BOM_Ss)
                         .Include(m => m.tb_FM_OtherExpenseDetails)
                         .Include(m => m.tb_AS_AfterSaleApplies)
-                        .Include(m => m.tb_FM_ReceivablePayables)
+                        .Include(m => m.tb_FM_Statements)
                         .Include(m => m.tb_Prods)
+                        .Include(m => m.tb_PurReturnEntries)
                         .Include(m => m.tb_FM_OtherExpenses)
                         .Include(m => m.tb_MaterialReturns)
                         .Include(m => m.tb_PriceRecords)
+                        .Include(m => m.tb_ProdBorrowings)
                         .Include(m => m.tb_AuditLogses)
                         .Include(m => m.tb_AS_RepairInStocks)
                         .Include(m => m.tb_ProdReturnings)
                         .Include(m => m.tb_StockTransfers)
                         .Include(m => m.tb_BuyingRequisitions)
                         .Include(m => m.tb_CRM_FollowUpPlanses)
+                        .Include(m => m.tb_FM_PaymentRecords)
                         .Include(m => m.tb_FM_PaymentApplications)
-                        .Include(m => m.tb_PurReturnEntries)
-                        .Include(m => m.tb_ProdBorrowings)
                         .Include(m => m.tb_CRM_FollowUpRecordses)
                         .Include(m => m.tb_ProdSplits)
                         .Include(m => m.tb_PurEntryRes)
@@ -482,27 +476,25 @@ namespace RUINORERP.Business
                         .Include(m => m.tb_FM_PayeeInfos)
                         .Include(m => m.tb_MRP_ReworkReturns)
                         .Include(m => m.tb_ProdMerges)
-                        .Include(m => m.tb_SaleOutRes)
                         .Include(m => m.tb_PurEntries)
-                        .Include(m => m.tb_FM_PriceAdjustments)
                         .Include(m => m.tb_AS_RepairMaterialPickups)
                         .Include(m => m.tb_EOP_WaterStorages)
-                        .Include(m => m.tb_FinishedGoodsInvs)
                         .Include(m => m.tb_CRM_Customers)
+                        .Include(m => m.tb_FM_PriceAdjustments)
                         .Include(m => m.tb_ProductionDemands)
                         .Include(m => m.tb_StockIns)
                         .Include(m => m.tb_CustomerVendors)
                         .Include(m => m.tb_FM_PreReceivedPayments)
                         .Include(m => m.tb_gl_Comments)
                         .Include(m => m.tb_CRM_Collaborators)
+                        .Include(m => m.tb_FinishedGoodsInvs)
                         .Include(m => m.tb_UserInfos)
                         .Include(m => m.tb_CRM_Leadses)
-                        .Include(m => m.tb_FM_Statements)
                                         .ExecuteCommandAsync();
             if (rs)
             {
                 //////生成时暂时只考虑了一个主键的情况
-                _eventDrivenCacheManager.DeleteEntity<T>(model);
+                 _eventDrivenCacheManager.DeleteEntity<T>(model);
             }
             return rs;
         }
@@ -513,7 +505,8 @@ namespace RUINORERP.Business
         public tb_Employee AddReEntity(tb_Employee entity)
         {
             tb_Employee AddEntity =  _tb_EmployeeServices.AddReEntity(entity);
-            _eventDrivenCacheManager.UpdateEntity<tb_Employee>(AddEntity);
+     
+             _eventDrivenCacheManager.UpdateEntity<tb_Employee>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
@@ -563,7 +556,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_EmployeeServices.Update(entity);
             if (rs)
             {
-                _eventDrivenCacheManager.DeleteEntity<tb_Employee>(entity);
+                 _eventDrivenCacheManager.DeleteEntity<tb_Employee>(entity);
                 entity.ActionStatus = ActionStatus.无操作;
             }
             return rs;
@@ -574,7 +567,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_EmployeeServices.DeleteById(id);
             if (rs)
             {
-                _eventDrivenCacheManager.DeleteEntity<tb_Employee>(id);
+               _eventDrivenCacheManager.DeleteEntity<tb_Employee>(id);
             }
             return rs;
         }
@@ -584,7 +577,8 @@ namespace RUINORERP.Business
             bool rs = await _tb_EmployeeServices.DeleteByIds(ids);
             if (rs)
             {
-                _eventDrivenCacheManager.DeleteEntities<tb_Employee>(ids.Cast<object>().ToArray());
+            
+                   _eventDrivenCacheManager.DeleteEntities<tb_Employee>(ids.Cast<object>().ToArray());
             }
             return rs;
         }
@@ -596,7 +590,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            _eventDrivenCacheManager.UpdateEntityList<tb_Employee>(list);
+     
+             _eventDrivenCacheManager.UpdateEntityList<tb_Employee>(list);
             return list;
         }
         
@@ -607,7 +602,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            _eventDrivenCacheManager.UpdateEntityList<tb_Employee>(list);
+    
+             _eventDrivenCacheManager.UpdateEntityList<tb_Employee>(list);
             return list;
         }
         
@@ -618,7 +614,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            _eventDrivenCacheManager.UpdateEntityList<tb_Employee>(list);
+  
+             _eventDrivenCacheManager.UpdateEntityList<tb_Employee>(list);
             return list;
         }
         
@@ -629,7 +626,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            _eventDrivenCacheManager.UpdateEntityList<tb_Employee>(list);
+ 
+             _eventDrivenCacheManager.UpdateEntityList<tb_Employee>(list);
             return list;
         }
         
@@ -647,7 +645,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            _eventDrivenCacheManager.UpdateEntityList<tb_Employee>(list);
+   
+             _eventDrivenCacheManager.UpdateEntityList<tb_Employee>(list);
             return list;
         }
         
@@ -663,27 +662,27 @@ namespace RUINORERP.Business
                                .Includes(t => t.tb_department )
                                             .Includes(t => t.tb_ProjectGroupEmployeeses )
                                 .Includes(t => t.tb_AS_AfterSaleDeliveries )
-                                .Includes(t => t.tb_FM_PaymentRecords )
                                 .Includes(t => t.tb_ManufacturingOrders )
                                 .Includes(t => t.tb_Stocktakes )
                                 .Includes(t => t.tb_Locations )
                                 .Includes(t => t.tb_BOM_Ss )
                                 .Includes(t => t.tb_FM_OtherExpenseDetails )
                                 .Includes(t => t.tb_AS_AfterSaleApplies )
-                                .Includes(t => t.tb_FM_ReceivablePayables )
+                                .Includes(t => t.tb_FM_Statements )
                                 .Includes(t => t.tb_Prods )
+                                .Includes(t => t.tb_PurReturnEntries )
                                 .Includes(t => t.tb_FM_OtherExpenses )
                                 .Includes(t => t.tb_MaterialReturns )
                                 .Includes(t => t.tb_PriceRecords )
+                                .Includes(t => t.tb_ProdBorrowings )
                                 .Includes(t => t.tb_AuditLogses )
                                 .Includes(t => t.tb_AS_RepairInStocks )
                                 .Includes(t => t.tb_ProdReturnings )
                                 .Includes(t => t.tb_StockTransfers )
                                 .Includes(t => t.tb_BuyingRequisitions )
                                 .Includes(t => t.tb_CRM_FollowUpPlanses )
+                                .Includes(t => t.tb_FM_PaymentRecords )
                                 .Includes(t => t.tb_FM_PaymentApplications )
-                                .Includes(t => t.tb_PurReturnEntries )
-                                .Includes(t => t.tb_ProdBorrowings )
                                 .Includes(t => t.tb_CRM_FollowUpRecordses )
                                 .Includes(t => t.tb_ProdSplits )
                                 .Includes(t => t.tb_PurEntryRes )
@@ -696,22 +695,20 @@ namespace RUINORERP.Business
                                 .Includes(t => t.tb_FM_PayeeInfos )
                                 .Includes(t => t.tb_MRP_ReworkReturns )
                                 .Includes(t => t.tb_ProdMerges )
-                                .Includes(t => t.tb_SaleOutRes )
                                 .Includes(t => t.tb_PurEntries )
-                                .Includes(t => t.tb_FM_PriceAdjustments )
                                 .Includes(t => t.tb_AS_RepairMaterialPickups )
                                 .Includes(t => t.tb_EOP_WaterStorages )
-                                .Includes(t => t.tb_FinishedGoodsInvs )
                                 .Includes(t => t.tb_CRM_Customers )
+                                .Includes(t => t.tb_FM_PriceAdjustments )
                                 .Includes(t => t.tb_ProductionDemands )
                                 .Includes(t => t.tb_StockIns )
                                 .Includes(t => t.tb_CustomerVendors )
                                 .Includes(t => t.tb_FM_PreReceivedPayments )
                                 .Includes(t => t.tb_gl_Comments )
                                 .Includes(t => t.tb_CRM_Collaborators )
+                                .Includes(t => t.tb_FinishedGoodsInvs )
                                 .Includes(t => t.tb_UserInfos )
                                 .Includes(t => t.tb_CRM_Leadses )
-                                .Includes(t => t.tb_FM_Statements )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -719,7 +716,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            _eventDrivenCacheManager.UpdateEntityList<tb_Employee>(list);
+ 
+             _eventDrivenCacheManager.UpdateEntityList<tb_Employee>(list);
             return list;
         }
 
@@ -734,27 +732,27 @@ namespace RUINORERP.Business
                                .Includes(t => t.tb_department )
                                             .Includes(t => t.tb_ProjectGroupEmployeeses )
                                 .Includes(t => t.tb_AS_AfterSaleDeliveries )
-                                .Includes(t => t.tb_FM_PaymentRecords )
                                 .Includes(t => t.tb_ManufacturingOrders )
                                 .Includes(t => t.tb_Stocktakes )
                                 .Includes(t => t.tb_Locations )
                                 .Includes(t => t.tb_BOM_Ss )
                                 .Includes(t => t.tb_FM_OtherExpenseDetails )
                                 .Includes(t => t.tb_AS_AfterSaleApplies )
-                                .Includes(t => t.tb_FM_ReceivablePayables )
+                                .Includes(t => t.tb_FM_Statements )
                                 .Includes(t => t.tb_Prods )
+                                .Includes(t => t.tb_PurReturnEntries )
                                 .Includes(t => t.tb_FM_OtherExpenses )
                                 .Includes(t => t.tb_MaterialReturns )
                                 .Includes(t => t.tb_PriceRecords )
+                                .Includes(t => t.tb_ProdBorrowings )
                                 .Includes(t => t.tb_AuditLogses )
                                 .Includes(t => t.tb_AS_RepairInStocks )
                                 .Includes(t => t.tb_ProdReturnings )
                                 .Includes(t => t.tb_StockTransfers )
                                 .Includes(t => t.tb_BuyingRequisitions )
                                 .Includes(t => t.tb_CRM_FollowUpPlanses )
+                                .Includes(t => t.tb_FM_PaymentRecords )
                                 .Includes(t => t.tb_FM_PaymentApplications )
-                                .Includes(t => t.tb_PurReturnEntries )
-                                .Includes(t => t.tb_ProdBorrowings )
                                 .Includes(t => t.tb_CRM_FollowUpRecordses )
                                 .Includes(t => t.tb_ProdSplits )
                                 .Includes(t => t.tb_PurEntryRes )
@@ -767,22 +765,20 @@ namespace RUINORERP.Business
                                 .Includes(t => t.tb_FM_PayeeInfos )
                                 .Includes(t => t.tb_MRP_ReworkReturns )
                                 .Includes(t => t.tb_ProdMerges )
-                                .Includes(t => t.tb_SaleOutRes )
                                 .Includes(t => t.tb_PurEntries )
-                                .Includes(t => t.tb_FM_PriceAdjustments )
                                 .Includes(t => t.tb_AS_RepairMaterialPickups )
                                 .Includes(t => t.tb_EOP_WaterStorages )
-                                .Includes(t => t.tb_FinishedGoodsInvs )
                                 .Includes(t => t.tb_CRM_Customers )
+                                .Includes(t => t.tb_FM_PriceAdjustments )
                                 .Includes(t => t.tb_ProductionDemands )
                                 .Includes(t => t.tb_StockIns )
                                 .Includes(t => t.tb_CustomerVendors )
                                 .Includes(t => t.tb_FM_PreReceivedPayments )
                                 .Includes(t => t.tb_gl_Comments )
                                 .Includes(t => t.tb_CRM_Collaborators )
+                                .Includes(t => t.tb_FinishedGoodsInvs )
                                 .Includes(t => t.tb_UserInfos )
                                 .Includes(t => t.tb_CRM_Leadses )
-                                .Includes(t => t.tb_FM_Statements )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -790,7 +786,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            _eventDrivenCacheManager.UpdateEntityList<tb_Employee>(list);
+  
+             _eventDrivenCacheManager.UpdateEntityList<tb_Employee>(list);
             return list;
         }
         
@@ -805,27 +802,27 @@ namespace RUINORERP.Business
                             .Includes(t => t.tb_department )
                                         .Includes(t => t.tb_ProjectGroupEmployeeses )
                             .Includes(t => t.tb_AS_AfterSaleDeliveries )
-                            .Includes(t => t.tb_FM_PaymentRecords )
                             .Includes(t => t.tb_ManufacturingOrders )
                             .Includes(t => t.tb_Stocktakes )
                             .Includes(t => t.tb_Locations )
                             .Includes(t => t.tb_BOM_Ss )
                             .Includes(t => t.tb_FM_OtherExpenseDetails )
                             .Includes(t => t.tb_AS_AfterSaleApplies )
-                            .Includes(t => t.tb_FM_ReceivablePayables )
+                            .Includes(t => t.tb_FM_Statements )
                             .Includes(t => t.tb_Prods )
+                            .Includes(t => t.tb_PurReturnEntries )
                             .Includes(t => t.tb_FM_OtherExpenses )
                             .Includes(t => t.tb_MaterialReturns )
                             .Includes(t => t.tb_PriceRecords )
+                            .Includes(t => t.tb_ProdBorrowings )
                             .Includes(t => t.tb_AuditLogses )
                             .Includes(t => t.tb_AS_RepairInStocks )
                             .Includes(t => t.tb_ProdReturnings )
                             .Includes(t => t.tb_StockTransfers )
                             .Includes(t => t.tb_BuyingRequisitions )
                             .Includes(t => t.tb_CRM_FollowUpPlanses )
+                            .Includes(t => t.tb_FM_PaymentRecords )
                             .Includes(t => t.tb_FM_PaymentApplications )
-                            .Includes(t => t.tb_PurReturnEntries )
-                            .Includes(t => t.tb_ProdBorrowings )
                             .Includes(t => t.tb_CRM_FollowUpRecordses )
                             .Includes(t => t.tb_ProdSplits )
                             .Includes(t => t.tb_PurEntryRes )
@@ -838,22 +835,20 @@ namespace RUINORERP.Business
                             .Includes(t => t.tb_FM_PayeeInfos )
                             .Includes(t => t.tb_MRP_ReworkReturns )
                             .Includes(t => t.tb_ProdMerges )
-                            .Includes(t => t.tb_SaleOutRes )
                             .Includes(t => t.tb_PurEntries )
-                            .Includes(t => t.tb_FM_PriceAdjustments )
                             .Includes(t => t.tb_AS_RepairMaterialPickups )
                             .Includes(t => t.tb_EOP_WaterStorages )
-                            .Includes(t => t.tb_FinishedGoodsInvs )
                             .Includes(t => t.tb_CRM_Customers )
+                            .Includes(t => t.tb_FM_PriceAdjustments )
                             .Includes(t => t.tb_ProductionDemands )
                             .Includes(t => t.tb_StockIns )
                             .Includes(t => t.tb_CustomerVendors )
                             .Includes(t => t.tb_FM_PreReceivedPayments )
                             .Includes(t => t.tb_gl_Comments )
                             .Includes(t => t.tb_CRM_Collaborators )
+                            .Includes(t => t.tb_FinishedGoodsInvs )
                             .Includes(t => t.tb_UserInfos )
                             .Includes(t => t.tb_CRM_Leadses )
-                            .Includes(t => t.tb_FM_Statements )
                         .ToList();
             
             foreach (var item in list)
@@ -861,7 +856,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            _eventDrivenCacheManager.UpdateEntityList<tb_Employee>(list);
+     
+             _eventDrivenCacheManager.UpdateEntityList<tb_Employee>(list);
             return list;
         }
         
@@ -895,27 +891,27 @@ namespace RUINORERP.Business
 
                                             .Includes(t => t.tb_ProjectGroupEmployeeses )
                                             .Includes(t => t.tb_AS_AfterSaleDeliveries )
-                                            .Includes(t => t.tb_FM_PaymentRecords )
                                             .Includes(t => t.tb_ManufacturingOrders )
                                             .Includes(t => t.tb_Stocktakes )
                                             .Includes(t => t.tb_Locations )
                                             .Includes(t => t.tb_BOM_Ss )
                                             .Includes(t => t.tb_FM_OtherExpenseDetails )
                                             .Includes(t => t.tb_AS_AfterSaleApplies )
-                                            .Includes(t => t.tb_FM_ReceivablePayables )
+                                            .Includes(t => t.tb_FM_Statements )
                                             .Includes(t => t.tb_Prods )
+                                            .Includes(t => t.tb_PurReturnEntries )
                                             .Includes(t => t.tb_FM_OtherExpenses )
                                             .Includes(t => t.tb_MaterialReturns )
                                             .Includes(t => t.tb_PriceRecords )
+                                            .Includes(t => t.tb_ProdBorrowings )
                                             .Includes(t => t.tb_AuditLogses )
                                             .Includes(t => t.tb_AS_RepairInStocks )
                                             .Includes(t => t.tb_ProdReturnings )
                                             .Includes(t => t.tb_StockTransfers )
                                             .Includes(t => t.tb_BuyingRequisitions )
                                             .Includes(t => t.tb_CRM_FollowUpPlanses )
+                                            .Includes(t => t.tb_FM_PaymentRecords )
                                             .Includes(t => t.tb_FM_PaymentApplications )
-                                            .Includes(t => t.tb_PurReturnEntries )
-                                            .Includes(t => t.tb_ProdBorrowings )
                                             .Includes(t => t.tb_CRM_FollowUpRecordses )
                                             .Includes(t => t.tb_ProdSplits )
                                             .Includes(t => t.tb_PurEntryRes )
@@ -928,29 +924,28 @@ namespace RUINORERP.Business
                                             .Includes(t => t.tb_FM_PayeeInfos )
                                             .Includes(t => t.tb_MRP_ReworkReturns )
                                             .Includes(t => t.tb_ProdMerges )
-                                            .Includes(t => t.tb_SaleOutRes )
                                             .Includes(t => t.tb_PurEntries )
-                                            .Includes(t => t.tb_FM_PriceAdjustments )
                                             .Includes(t => t.tb_AS_RepairMaterialPickups )
                                             .Includes(t => t.tb_EOP_WaterStorages )
-                                            .Includes(t => t.tb_FinishedGoodsInvs )
                                             .Includes(t => t.tb_CRM_Customers )
+                                            .Includes(t => t.tb_FM_PriceAdjustments )
                                             .Includes(t => t.tb_ProductionDemands )
                                             .Includes(t => t.tb_StockIns )
                                             .Includes(t => t.tb_CustomerVendors )
                                             .Includes(t => t.tb_FM_PreReceivedPayments )
                                             .Includes(t => t.tb_gl_Comments )
                                             .Includes(t => t.tb_CRM_Collaborators )
+                                            .Includes(t => t.tb_FinishedGoodsInvs )
                                             .Includes(t => t.tb_UserInfos )
                                             .Includes(t => t.tb_CRM_Leadses )
-                                            .Includes(t => t.tb_FM_Statements )
                                 .FirstAsync();
             if(entity!=null)
             {
                 entity.HasChanged = false;
             }
 
-            _eventDrivenCacheManager.UpdateEntity<tb_Employee>(entity);
+         
+             _eventDrivenCacheManager.UpdateEntity<tb_Employee>(entity);
             return entity as T;
         }
         

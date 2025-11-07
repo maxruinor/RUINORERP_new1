@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/01/2025 12:16:53
+// 时间：11/06/2025 21:26:30
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -208,34 +208,33 @@ namespace RUINORERP.Model
             SetProperty(ref _LocalAmount, value);
                         }
         }
-        private decimal _ForeignPayableAmount = ((0));
+
+        private decimal _ForeignPayableAmount= ((0));
         /// <summary>
         /// 应付金额外币
         /// </summary>
-        [AdvQueryAttribute(ColName = "ForeignPayableAmount", ColDesc = "应付金额外币")]
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "ForeignPayableAmount", DecimalDigits = 4, IsNullable = false, ColumnDescription = "应付金额外币")]
+        [AdvQueryAttribute(ColName = "ForeignPayableAmount",ColDesc = "应付金额外币")] 
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "ForeignPayableAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "应付金额外币" )]
         public decimal ForeignPayableAmount
-        {
-            get { return _ForeignPayableAmount; }
-            set
-            {
-                SetProperty(ref _ForeignPayableAmount, value);
-            }
+        { 
+            get{return _ForeignPayableAmount;}
+            set{
+            SetProperty(ref _ForeignPayableAmount, value);
+                        }
         }
 
-        private decimal _LocalPayableAmount = ((0));
+        private decimal _LocalPayableAmount= ((0));
         /// <summary>
         /// 应付金额本币
         /// </summary>
-        [AdvQueryAttribute(ColName = "LocalPayableAmount", ColDesc = "应付金额本币")]
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "LocalPayableAmount", DecimalDigits = 4, IsNullable = false, ColumnDescription = "应付金额本币")]
+        [AdvQueryAttribute(ColName = "LocalPayableAmount",ColDesc = "应付金额本币")] 
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "LocalPayableAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "应付金额本币" )]
         public decimal LocalPayableAmount
-        {
-            get { return _LocalPayableAmount; }
-            set
-            {
-                SetProperty(ref _LocalPayableAmount, value);
-            }
+        { 
+            get{return _LocalPayableAmount;}
+            set{
+            SetProperty(ref _LocalPayableAmount, value);
+                        }
         }
 
         private string _Summary;
@@ -256,22 +255,18 @@ namespace RUINORERP.Model
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(Currency_ID))]
         public virtual tb_Currency tb_currency { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(ProjectGroup_ID))]
         public virtual tb_ProjectGroup tb_projectgroup { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(PaymentId))]
         public virtual tb_FM_PaymentRecord tb_fm_paymentrecord { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(DepartmentID))]
         public virtual tb_Department tb_department { get; set; }
 
@@ -280,7 +275,7 @@ namespace RUINORERP.Model
         #endregion
 
 
-
+ 
 
 //如果为false,则不可以。
 private bool PK_FK_ID_Check()

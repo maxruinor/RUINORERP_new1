@@ -1,10 +1,8 @@
-﻿
-// **************************************
-// 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
+﻿// **************************************
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/14/2025 20:39:38
+// 时间：11/06/2025 19:43:00
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -25,6 +23,7 @@ using RUINORERP.Model.Context;
 using System.Linq;
 using RUINOR.Core;
 using RUINORERP.Common.Helper;
+using RUINORERP.Business.Cache;
 
 namespace RUINORERP.Business
 {
@@ -39,14 +38,16 @@ namespace RUINORERP.Business
         //public readonly IUnitOfWorkManage _unitOfWorkManage;
         //public readonly ILogger<BaseController<T>> _logger;
         public Itb_CRM_CustomerServices _tb_CRM_CustomerServices { get; set; }
+        private readonly EventDrivenCacheManager _eventDrivenCacheManager; 
        // private readonly ApplicationContext _appContext;
        
-        public tb_CRM_CustomerController(ILogger<tb_CRM_CustomerController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_CRM_CustomerServices tb_CRM_CustomerServices , ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
+        public tb_CRM_CustomerController(ILogger<tb_CRM_CustomerController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_CRM_CustomerServices tb_CRM_CustomerServices ,EventDrivenCacheManager eventDrivenCacheManager, ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
         {
             _logger = logger;
            _unitOfWorkManage = unitOfWorkManage;
            _tb_CRM_CustomerServices = tb_CRM_CustomerServices;
-            _appContext = appContext;
+           _appContext = appContext;
+           _eventDrivenCacheManager = eventDrivenCacheManager;
         }
       
         
@@ -89,14 +90,14 @@ namespace RUINORERP.Business
                     bool rs = await _tb_CRM_CustomerServices.Update(entity);
                     if (rs)
                     {
-                        MyCacheManager.Instance.UpdateEntityList<tb_CRM_Customer>(entity);
+                        _eventDrivenCacheManager.UpdateEntity<tb_CRM_Customer>(entity);
                     }
                     Returnobj = entity;
                 }
                 else
                 {
                     Returnobj = await _tb_CRM_CustomerServices.AddReEntityAsync(entity);
-                    MyCacheManager.Instance.UpdateEntityList<tb_CRM_Customer>(entity);
+                    _eventDrivenCacheManager.UpdateEntity<tb_CRM_Customer>(entity);
                 }
 
                 rr.ReturnObject = Returnobj;
@@ -130,14 +131,14 @@ namespace RUINORERP.Business
                     bool rs = await _tb_CRM_CustomerServices.Update(entity);
                     if (rs)
                     {
-                        MyCacheManager.Instance.UpdateEntityList<tb_CRM_Customer>(entity);
+                        _eventDrivenCacheManager.UpdateEntity<tb_CRM_Customer>(entity);
                     }
                     Returnobj = entity as T;
                 }
                 else
                 {
                     Returnobj = await _tb_CRM_CustomerServices.AddReEntityAsync(entity) as T ;
-                    MyCacheManager.Instance.UpdateEntityList<tb_CRM_Customer>(entity);
+                    _eventDrivenCacheManager.UpdateEntity<tb_CRM_Customer>(entity);
                 }
 
                 rr.ReturnObject = Returnobj;
@@ -162,7 +163,7 @@ namespace RUINORERP.Business
             }
             if (list != null)
             {
-                MyCacheManager.Instance.UpdateEntityList<List<T>>(list);
+                _eventDrivenCacheManager.UpdateEntityList<T>(list);
              }
             return list;
         }
@@ -177,7 +178,7 @@ namespace RUINORERP.Business
             }
             if (list != null)
             {
-                MyCacheManager.Instance.UpdateEntityList<List<T>>(list);
+                _eventDrivenCacheManager.UpdateEntityList<T>(list);
              }
             return list;
         }
@@ -190,7 +191,7 @@ namespace RUINORERP.Business
             if (rs)
             {
                 ////生成时暂时只考虑了一个主键的情况
-                MyCacheManager.Instance.DeleteEntityList<tb_CRM_Customer>(entity);
+                _eventDrivenCacheManager.DeleteEntity<tb_CRM_Customer>(entity.PrimaryKeyID);
             }
             return rs;
         }
@@ -203,9 +204,7 @@ namespace RUINORERP.Business
             if (c>0)
             {
                 rs=true;
-                ////生成时暂时只考虑了一个主键的情况
-                 long[] result = entitys.Select(e => e.Customer_id).ToArray();
-                MyCacheManager.Instance.DeleteEntityList<tb_CRM_Customer>(result);
+                _eventDrivenCacheManager.DeleteEntityList<tb_CRM_Customer>(entitys);
             }
             return rs;
         }
@@ -298,7 +297,7 @@ namespace RUINORERP.Business
                         .Includes(m => m.tb_CRM_FollowUpPlanses)
                         .Includes(m => m.tb_CRM_FollowUpRecordses)
                         .Includes(m => m.tb_CRM_Collaborators)
-                                        .WhereCustom(useLike, dto);
+                                        .WhereCustom(useLike, dto);;
             return await querySqlQueryable.ToListAsync()as List<T>;
         }
 
@@ -315,7 +314,7 @@ namespace RUINORERP.Business
             if (rs)
             {
                 //////生成时暂时只考虑了一个主键的情况
-                MyCacheManager.Instance.DeleteEntityList<T>(model);
+                 _eventDrivenCacheManager.DeleteEntity<T>(model);
             }
             return rs;
         }
@@ -326,7 +325,8 @@ namespace RUINORERP.Business
         public tb_CRM_Customer AddReEntity(tb_CRM_Customer entity)
         {
             tb_CRM_Customer AddEntity =  _tb_CRM_CustomerServices.AddReEntity(entity);
-            MyCacheManager.Instance.UpdateEntityList<tb_CRM_Customer>(AddEntity);
+     
+             _eventDrivenCacheManager.UpdateEntity<tb_CRM_Customer>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
@@ -334,7 +334,7 @@ namespace RUINORERP.Business
          public async Task<tb_CRM_Customer> AddReEntityAsync(tb_CRM_Customer entity)
         {
             tb_CRM_Customer AddEntity = await _tb_CRM_CustomerServices.AddReEntityAsync(entity);
-            MyCacheManager.Instance.UpdateEntityList<tb_CRM_Customer>(AddEntity);
+            _eventDrivenCacheManager.UpdateEntity<tb_CRM_Customer>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
@@ -344,7 +344,7 @@ namespace RUINORERP.Business
             long id = await _tb_CRM_CustomerServices.Add(entity);
             if(id>0)
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_CRM_Customer>(entity);
+                 _eventDrivenCacheManager.UpdateEntity<tb_CRM_Customer>(entity);
             }
             return id;
         }
@@ -354,7 +354,7 @@ namespace RUINORERP.Business
             List<long> ids = await _tb_CRM_CustomerServices.Add(infos);
             if(ids.Count>0)//成功的个数 这里缓存 对不对呢？
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_CRM_Customer>(infos);
+                 _eventDrivenCacheManager.UpdateEntityList<tb_CRM_Customer>(infos);
             }
             return ids;
         }
@@ -365,7 +365,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_CRM_CustomerServices.Delete(entity);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_CRM_Customer>(entity);
+                _eventDrivenCacheManager.DeleteEntity<tb_CRM_Customer>(entity);
                 
             }
             return rs;
@@ -376,7 +376,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_CRM_CustomerServices.Update(entity);
             if (rs)
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_CRM_Customer>(entity);
+                 _eventDrivenCacheManager.DeleteEntity<tb_CRM_Customer>(entity);
                 entity.ActionStatus = ActionStatus.无操作;
             }
             return rs;
@@ -387,7 +387,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_CRM_CustomerServices.DeleteById(id);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_CRM_Customer>(id);
+               _eventDrivenCacheManager.DeleteEntity<tb_CRM_Customer>(id);
             }
             return rs;
         }
@@ -397,7 +397,8 @@ namespace RUINORERP.Business
             bool rs = await _tb_CRM_CustomerServices.DeleteByIds(ids);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_CRM_Customer>(ids);
+            
+                   _eventDrivenCacheManager.DeleteEntities<tb_CRM_Customer>(ids.Cast<object>().ToArray());
             }
             return rs;
         }
@@ -409,7 +410,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_CRM_Customer>(list);
+     
+             _eventDrivenCacheManager.UpdateEntityList<tb_CRM_Customer>(list);
             return list;
         }
         
@@ -420,7 +422,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_CRM_Customer>(list);
+    
+             _eventDrivenCacheManager.UpdateEntityList<tb_CRM_Customer>(list);
             return list;
         }
         
@@ -431,7 +434,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_CRM_Customer>(list);
+  
+             _eventDrivenCacheManager.UpdateEntityList<tb_CRM_Customer>(list);
             return list;
         }
         
@@ -442,7 +446,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_CRM_Customer>(list);
+ 
+             _eventDrivenCacheManager.UpdateEntityList<tb_CRM_Customer>(list);
             return list;
         }
         
@@ -460,7 +465,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_CRM_Customer>(list);
+   
+             _eventDrivenCacheManager.UpdateEntityList<tb_CRM_Customer>(list);
             return list;
         }
         
@@ -490,7 +496,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_CRM_Customer>(list);
+ 
+             _eventDrivenCacheManager.UpdateEntityList<tb_CRM_Customer>(list);
             return list;
         }
 
@@ -519,7 +526,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_CRM_Customer>(list);
+  
+             _eventDrivenCacheManager.UpdateEntityList<tb_CRM_Customer>(list);
             return list;
         }
         
@@ -548,7 +556,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_CRM_Customer>(list);
+     
+             _eventDrivenCacheManager.UpdateEntityList<tb_CRM_Customer>(list);
             return list;
         }
         
@@ -583,17 +592,20 @@ namespace RUINORERP.Business
                             .Includes(t => t.tb_crm_leads )
                             .Includes(t => t.tb_employee )
                             .Includes(t => t.tb_provinces )
-                                        .Includes(t => t.tb_CRM_Contacts )
-                            .Includes(t => t.tb_CRM_FollowUpPlanses )
-                            .Includes(t => t.tb_CRM_FollowUpRecordses )
-                            .Includes(t => t.tb_CRM_Collaborators )
-                        .FirstAsync();
+                        
+
+                                            .Includes(t => t.tb_CRM_Contacts )
+                                            .Includes(t => t.tb_CRM_FollowUpPlanses )
+                                            .Includes(t => t.tb_CRM_FollowUpRecordses )
+                                            .Includes(t => t.tb_CRM_Collaborators )
+                                .FirstAsync();
             if(entity!=null)
             {
                 entity.HasChanged = false;
             }
 
-            MyCacheManager.Instance.UpdateEntityList<tb_CRM_Customer>(entity);
+         
+             _eventDrivenCacheManager.UpdateEntity<tb_CRM_Customer>(entity);
             return entity as T;
         }
         

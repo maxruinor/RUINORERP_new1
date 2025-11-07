@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/23/2025 23:00:50
+// 时间：11/06/2025 20:41:47
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -65,16 +65,30 @@ namespace RUINORERP.Model
             SetProperty(ref _DepartmentID, value);
                         }
         }
- 
 
-        private long _ID;
+        private long? _Subject_id;
+        /// <summary>
+        /// 会计科目
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Subject_id",ColDesc = "会计科目")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Subject_id" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "会计科目" )]
+        [FKRelationAttribute("tb_FM_Subject","Subject_id")]
+        public long? Subject_id
+        { 
+            get{return _Subject_id;}
+            set{
+            SetProperty(ref _Subject_id, value);
+                        }
+        }
+
+        private long? _ID;
         /// <summary>
         /// 所属公司
         /// </summary>
         [AdvQueryAttribute(ColName = "ID",ColDesc = "所属公司")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "所属公司" )]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "所属公司" )]
         [FKRelationAttribute("tb_Company","ID")]
-        public long ID
+        public long? ID
         { 
             get{return _ID;}
             set{
@@ -153,12 +167,12 @@ namespace RUINORERP.Model
                         }
         }
 
-        private decimal _OpeningBalance;
+        private decimal _OpeningBalance= ((0));
         /// <summary>
         /// 初始余额
         /// </summary>
         [AdvQueryAttribute(ColName = "OpeningBalance",ColDesc = "初始余额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "OpeningBalance" , DecimalDigits = 4,IsNullable = true,ColumnDescription = "初始余额" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "OpeningBalance" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "初始余额" )]
         public decimal OpeningBalance
         { 
             get{return _OpeningBalance;}
@@ -167,12 +181,12 @@ namespace RUINORERP.Model
                         }
         }
 
-        private decimal _CurrentBalance;
+        private decimal _CurrentBalance= ((0));
         /// <summary>
         /// 当前余额
         /// </summary>
         [AdvQueryAttribute(ColName = "CurrentBalance",ColDesc = "当前余额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "CurrentBalance" , DecimalDigits = 4,IsNullable = true,ColumnDescription = "当前余额" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "CurrentBalance" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "当前余额" )]
         public decimal CurrentBalance
         { 
             get{return _CurrentBalance;}
@@ -199,6 +213,11 @@ namespace RUINORERP.Model
         [Navigate(NavigateType.OneToOne, nameof(ID))]
         public virtual tb_Company tb_company { get; set; }
 
+        [SugarColumn(IsIgnore = true)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
+        [Navigate(NavigateType.OneToOne, nameof(Subject_id))]
+        public virtual tb_FM_Subject tb_fm_subject { get; set; }
+
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
@@ -206,6 +225,14 @@ namespace RUINORERP.Model
         public virtual List<tb_FM_OtherExpenseDetail> tb_FM_OtherExpenseDetails { get; set; }
         //tb_FM_OtherExpenseDetail.Account_id)
         //Account_id.FK_TB_FM_OT_REFERENCE_TB_FM_AC)
+        //tb_FM_Account.Account_id)
+
+        //[Browsable(false)]打印报表时的数据源会不显示
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_FM_Statement.Account_id))]
+        public virtual List<tb_FM_Statement> tb_FM_Statements { get; set; }
+        //tb_FM_Statement.Account_id)
+        //Account_id.FK_FM_STATEMENT_REF_FM_ACCOUNT)
         //tb_FM_Account.Account_id)
 
         //[Browsable(false)]打印报表时的数据源会不显示
@@ -234,6 +261,22 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_FM_PaymentSettlement.Account_id))]
+        public virtual List<tb_FM_PaymentSettlement> tb_FM_PaymentSettlements { get; set; }
+        //tb_FM_PaymentSettlement.Account_id)
+        //Account_id.FK_FM_PAYMENTSETTLEMENT_REF_FM_ACCOUNT)
+        //tb_FM_Account.Account_id)
+
+        //[Browsable(false)]打印报表时的数据源会不显示
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_ProjectGroupAccountMapper.Account_id))]
+        public virtual List<tb_ProjectGroupAccountMapper> tb_ProjectGroupAccountMappers { get; set; }
+        //tb_ProjectGroupAccountMapper.Account_id)
+        //Account_id.FK_PROJECTGROUPACCOUNTMAPPER_REF_FM_ACCOUNT)
+        //tb_FM_Account.Account_id)
+
+        //[Browsable(false)]打印报表时的数据源会不显示
+        [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_PreReceivedPayment.Account_id))]
         public virtual List<tb_FM_PreReceivedPayment> tb_FM_PreReceivedPayments { get; set; }
         //tb_FM_PreReceivedPayment.Account_id)
@@ -248,21 +291,11 @@ namespace RUINORERP.Model
         //Account_id.FK_PAYMETHODACCOUNTMAPPER_REF_FM_ACCOUNT)
         //tb_FM_Account.Account_id)
 
-        
-
-        //[Browsable(false)]打印报表时的数据源会不显示
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_FM_ReceivablePayable.Account_id))]
-        public virtual List<tb_FM_ReceivablePayable> tb_FM_ReceivablePayables { get; set; }
-        //tb_FM_ReceivablePayable.Account_id)
-        //Account_id.FK_FM_RECEIVABLEPAYABLE_REF_FM_ACCOUNT)
-        //tb_FM_Account.Account_id)
-
 
         #endregion
 
 
-
+ 
 
 //如果为false,则不可以。
 private bool PK_FK_ID_Check()
@@ -273,6 +306,11 @@ return rs;
 
 
 
+
+
+
+       
+        
 
         public override object Clone()
         {

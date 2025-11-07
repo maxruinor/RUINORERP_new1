@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：02/08/2025 16:32:06
+// 时间：11/06/2025 20:41:58
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -127,18 +127,18 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_FlowchartDefinition.ModuleID))]
-        public virtual List<tb_FlowchartDefinition> tb_FlowchartDefinitions { get; set; }
-        //tb_FlowchartDefinition.ModuleID)
-        //ModuleID.FK_TB_FLOWC_REF_TB_MODULEDe)
-        //tb_ModuleDefinition.ModuleID)
-
-        //[Browsable(false)]打印报表时的数据源会不显示
-        [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_MenuInfo.ModuleID))]
         public virtual List<tb_MenuInfo> tb_MenuInfos { get; set; }
         //tb_MenuInfo.ModuleID)
         //ModuleID.FK_TB_MENUI_REFERENCE_TB_MODUL)
+        //tb_ModuleDefinition.ModuleID)
+
+        //[Browsable(false)]打印报表时的数据源会不显示
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_FlowchartDefinition.ModuleID))]
+        public virtual List<tb_FlowchartDefinition> tb_FlowchartDefinitions { get; set; }
+        //tb_FlowchartDefinition.ModuleID)
+        //ModuleID.FK_TB_FLOWC_REF_TB_MODULEDe)
         //tb_ModuleDefinition.ModuleID)
 
         //[Browsable(false)]打印报表时的数据源会不显示
@@ -149,13 +149,19 @@ namespace RUINORERP.Model
         //ModuleID.FK_TB_P4MEN_REFERENCE_TB_MODUL)
         //tb_ModuleDefinition.ModuleID)
 
-        
+        //[Browsable(false)]打印报表时的数据源会不显示
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_P4Module.ModuleID))]
+        public virtual List<tb_P4Module> tb_P4Modules { get; set; }
+        //tb_P4Module.ModuleID)
+        //ModuleID.FK_TB_P4MOD_REFERENCE_TB_MODUL)
+        //tb_ModuleDefinition.ModuleID)
 
 
         #endregion
 
 
-
+ 
 
 //如果为false,则不可以。
 private bool PK_FK_ID_Check()
@@ -168,6 +174,9 @@ return rs;
 
 
 
+
+       
+        
 
         public override object Clone()
         {

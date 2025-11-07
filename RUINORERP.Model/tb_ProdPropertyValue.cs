@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：02/08/2025 16:32:16
+// 时间：11/06/2025 20:42:06
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -71,7 +71,7 @@ namespace RUINORERP.Model
         /// 属性值名称
         /// </summary>
         [AdvQueryAttribute(ColName = "PropertyValueName",ColDesc = "属性值名称")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "PropertyValueName" ,Length=50,IsNullable = false,ColumnDescription = "属性值名称" )]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "PropertyValueName" ,Length=20,IsNullable = false,ColumnDescription = "属性值名称" )]
         public string PropertyValueName
         { 
             get{return _PropertyValueName;}
@@ -85,7 +85,7 @@ namespace RUINORERP.Model
         /// 属性值描述
         /// </summary>
         [AdvQueryAttribute(ColName = "PropertyValueDesc",ColDesc = "属性值描述")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "PropertyValueDesc" ,Length=100,IsNullable = true,ColumnDescription = "属性值描述" )]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "PropertyValueDesc" ,Length=50,IsNullable = true,ColumnDescription = "属性值描述" )]
         public string PropertyValueDesc
         { 
             get{return _PropertyValueDesc;}
@@ -214,7 +214,7 @@ namespace RUINORERP.Model
         #endregion
 
 
-
+ 
 
 //如果为false,则不可以。
 private bool PK_FK_ID_Check()
@@ -227,6 +227,9 @@ return rs;
 
 
 
+
+       
+        
 
         public override object Clone()
         {

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：02/08/2025 16:32:01
+// 时间：11/06/2025 20:41:49
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 其它费用记录表，账户管理，财务系统中使用,像基础资料一样单表操作简单
     /// </summary>
     [Serializable()]
-    [Description("其它费用记录表明细")]
+    [Description("其它费用记录表，账户管理，财务系统中使用,像基础资料一样单表操作简单")]
     [SugarTable("tb_FM_OtherExpenseDetail")]
     public partial class tb_FM_OtherExpenseDetail: BaseEntity, ICloneable
     {
@@ -189,7 +189,7 @@ namespace RUINORERP.Model
         /// 单项总金额
         /// </summary>
         [AdvQueryAttribute(ColName = "SingleTotalAmount",ColDesc = "单项总金额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "SingleTotalAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "单项总金额")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "SingleTotalAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "单项总金额" )]
         public decimal SingleTotalAmount
         { 
             get{return _SingleTotalAmount;}
@@ -345,21 +345,22 @@ namespace RUINORERP.Model
         #endregion
 
 
-
+ 
 
 //如果为false,则不可以。
 private bool PK_FK_ID_Check()
 {
   bool rs=true;
-         if("subject_id"!="Subject_id")
-        {
-        // rs=false;
-        }
 return rs;
 }
 
 
 
+
+
+
+       
+        
 
         public override object Clone()
         {

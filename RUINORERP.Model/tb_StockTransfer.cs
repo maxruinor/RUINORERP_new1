@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：02/08/2025 16:32:30
+// 时间：11/06/2025 21:26:32
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 调拨单-两个仓库之间的库存转移
     /// </summary>
     [Serializable()]
-    [Description("调拨单")]
+    [Description("调拨单-两个仓库之间的库存转移")]
     [SugarTable("tb_StockTransfer")]
     public partial class tb_StockTransfer: BaseEntity, ICloneable
     {
@@ -353,34 +353,28 @@ namespace RUINORERP.Model
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(Employee_ID))]
         public virtual tb_Employee tb_employee { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(Location_ID_from))]
-        public virtual tb_Location tb_location_from { get; set; }
+        public virtual tb_Location tb_location { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(Location_ID_to))]
-        public virtual tb_Location tb_location_to { get; set; }
+        public virtual tb_Location tb_location_locationIdTo { get; set; }
 
 
-        //[Browsable(false)]打印报表时的数据源会不显示
+
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_StockTransferDetail.StockTransferID))]
         public virtual List<tb_StockTransferDetail> tb_StockTransferDetails { get; set; }
-        //tb_StockTransferDetail.StockTransferID)
-        //StockTransferID.FK_TB_STOCK_REFERENCE_TB_STOCK)
-        //tb_StockTransfer.StockTransferID)
 
 
         #endregion
 
 
-
+ 
 
 //如果为false,则不可以。
 private bool PK_FK_ID_Check()
@@ -401,7 +395,9 @@ return rs;
 
 
 
- 
+
+       
+        
 
         public override object Clone()
         {

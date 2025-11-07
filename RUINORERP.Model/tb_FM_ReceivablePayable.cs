@@ -1,10 +1,10 @@
-
+﻿
 // **************************************
 // 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/06/2025 15:41:51
+// 时间：11/06/2025 21:26:31
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -165,7 +165,7 @@ namespace RUINORERP.Model
                         }
         }
 
-        private bool? _IsExpenseType=false;
+        private bool? _IsExpenseType= false;
         /// <summary>
         /// 费用单据
         /// </summary>
@@ -179,7 +179,7 @@ namespace RUINORERP.Model
                         }
         }
 
-        private bool _IsForCommission;
+        private bool _IsForCommission=false;
         /// <summary>
         /// 用于佣金
         /// </summary>
@@ -363,6 +363,34 @@ namespace RUINORERP.Model
                         }
         }
 
+        private decimal _ForeignReconciledAmount= ((0));
+        /// <summary>
+        /// 已对账外币
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ForeignReconciledAmount",ColDesc = "已对账外币")] 
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "ForeignReconciledAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "已对账外币" )]
+        public decimal ForeignReconciledAmount
+        { 
+            get{return _ForeignReconciledAmount;}
+            set{
+            SetProperty(ref _ForeignReconciledAmount, value);
+                        }
+        }
+
+        private decimal _LocalReconciledAmount= ((0));
+        /// <summary>
+        /// 已对账本币
+        /// </summary>
+        [AdvQueryAttribute(ColName = "LocalReconciledAmount",ColDesc = "已对账本币")] 
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "LocalReconciledAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "已对账本币" )]
+        public decimal LocalReconciledAmount
+        { 
+            get{return _LocalReconciledAmount;}
+            set{
+            SetProperty(ref _LocalReconciledAmount, value);
+                        }
+        }
+
         private decimal _ForeignBalanceAmount= ((0));
         /// <summary>
         /// 未核销外币
@@ -388,34 +416,6 @@ namespace RUINORERP.Model
             get{return _LocalBalanceAmount;}
             set{
             SetProperty(ref _LocalBalanceAmount, value);
-                        }
-        }
-
-        private decimal _LocalReconciledAmount= ((0));
-        /// <summary>
-        /// 已对账本币
-        /// </summary>
-        [AdvQueryAttribute(ColName = "LocalReconciledAmount",ColDesc = "已对账本币")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "LocalReconciledAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "已对账本币" )]
-        public decimal LocalReconciledAmount
-        { 
-            get{return _LocalReconciledAmount;}
-            set{
-            SetProperty(ref _LocalReconciledAmount, value);
-                        }
-        }
-
-        private decimal _ForeignReconciledAmount= ((0));
-        /// <summary>
-        /// 已对账外币
-        /// </summary>
-        [AdvQueryAttribute(ColName = "ForeignReconciledAmount",ColDesc = "已对账外币")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "ForeignReconciledAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "已对账外币" )]
-        public decimal ForeignReconciledAmount
-        { 
-            get{return _ForeignReconciledAmount;}
-            set{
-            SetProperty(ref _ForeignReconciledAmount, value);
                         }
         }
 
@@ -750,67 +750,53 @@ namespace RUINORERP.Model
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(Currency_ID))]
         public virtual tb_Currency tb_currency { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(Account_id))]
         public virtual tb_FM_Account tb_fm_account { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(PayeeInfoID))]
         public virtual tb_FM_PayeeInfo tb_fm_payeeinfo { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(CustomerVendor_ID))]
         public virtual tb_CustomerVendor tb_customervendor { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(ProjectGroup_ID))]
         public virtual tb_ProjectGroup tb_projectgroup { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(Employee_ID))]
         public virtual tb_Employee tb_employee { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(InvoiceId))]
         public virtual tb_FM_Invoice tb_fm_invoice { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(DepartmentID))]
         public virtual tb_Department tb_department { get; set; }
 
 
-        //[Browsable(false)]打印报表时的数据源会不显示
+
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_StatementDetail.ARAPId))]
         public virtual List<tb_FM_StatementDetail> tb_FM_StatementDetails { get; set; }
-        //tb_FM_StatementDetail.ARAPId)
-        //ARAPId.FK_TB_FM_ST_REFERENCE_TB_FM_RE)
-        //tb_FM_ReceivablePayable.ARAPId)
 
-        //[Browsable(false)]打印报表时的数据源会不显示
+
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_ReceivablePayableDetail.ARAPId))]
         public virtual List<tb_FM_ReceivablePayableDetail> tb_FM_ReceivablePayableDetails { get; set; }
-        //tb_FM_ReceivablePayableDetail.ARAPId)
-        //ARAPId.FK_TB_FM_RE_REFERENCE_TB_FM_RE)
-        //tb_FM_ReceivablePayable.ARAPId)
 
 
         #endregion
 
 
-
+ 
 
 //如果为false,则不可以。
 private bool PK_FK_ID_Check()

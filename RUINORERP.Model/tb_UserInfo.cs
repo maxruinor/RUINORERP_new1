@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：02/08/2025 16:32:32
+// 时间：11/06/2025 20:42:22
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -27,7 +27,7 @@ namespace RUINORERP.Model
     {
         public tb_UserInfo()
         {
-            //
+            
             if (!PK_FK_ID_Check())
             {
                 throw new Exception("用户表tb_UserInfo" + "外键ID与对应主主键名称不一致。请修改数据库");
@@ -251,20 +251,19 @@ namespace RUINORERP.Model
         //User_ID.FK_TB_USER_REFERENCE_TB_USERI)
         //tb_UserInfo.User_ID)
 
-
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(Logs.User_ID))]
-        public virtual List<Logs> Logses { get; set; }
-        //Logs.User_ID)
-        //User_ID.FK_LOGS_REFERENCE_TB_USERI)
+        [Navigate(NavigateType.OneToMany, nameof(tb_P4RowAuthPolicyByUser.User_ID))]
+        public virtual List<tb_P4RowAuthPolicyByUser> tb_P4RowAuthPolicyByUsers { get; set; }
+        //tb_P4RowAuthPolicyByUser.User_ID)
+        //User_ID.FK_TB_P4ROWAUTHPOLICYBYUSER_REF_TB_USERINFO)
         //tb_UserInfo.User_ID)
 
 
         #endregion
 
 
-
+ 
 
 //如果为false,则不可以。
 private bool PK_FK_ID_Check()
@@ -278,7 +277,7 @@ return rs;
 
 
 
-    
+       
         
 
         public override object Clone()

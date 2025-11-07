@@ -4,10 +4,10 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：02/08/2025 16:32:07
+// 时间：11/07/2025 11:04:22
 // **************************************
 using System;
-﻿using SqlSugar;
+using SqlSugar;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -64,27 +64,13 @@ namespace RUINORERP.Model
             SetProperty(ref _ReworkReturnNo, value);
                         }
         }
-        private bool _IsOutSourced = false;
-        /// <summary>
-        /// 是否托工
-        /// </summary>
-        [AdvQueryAttribute(ColName = "IsOutSourced", ColDesc = "是否托工")]
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType = "Boolean", ColumnName = "IsOutSourced", IsNullable = false, ColumnDescription = "是否托工")]
-        public bool IsOutSourced
-        {
-            get { return _IsOutSourced; }
-            set
-            {
-                SetProperty(ref _IsOutSourced, value);
-            }
-        }
 
         private long? _CustomerVendor_ID;
         /// <summary>
         /// 外发工厂
         /// </summary>
         [AdvQueryAttribute(ColName = "CustomerVendor_ID",ColDesc = "外发工厂")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "CustomerVendor_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "外发工厂")]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "CustomerVendor_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "外发工厂" )]
         [FKRelationAttribute("tb_CustomerVendor","CustomerVendor_ID")]
         public long? CustomerVendor_ID
         { 
@@ -94,12 +80,26 @@ namespace RUINORERP.Model
                         }
         }
 
+        private bool _IsOutSourced= false;
+        /// <summary>
+        /// 是否托工
+        /// </summary>
+        [AdvQueryAttribute(ColName = "IsOutSourced",ColDesc = "是否托工")] 
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "IsOutSourced" ,IsNullable = false,ColumnDescription = "是否托工" )]
+        public bool IsOutSourced
+        { 
+            get{return _IsOutSourced;}
+            set{
+            SetProperty(ref _IsOutSourced, value);
+                        }
+        }
+
         private long? _DepartmentID;
         /// <summary>
         /// 生产部门
         /// </summary>
         [AdvQueryAttribute(ColName = "DepartmentID",ColDesc = "生产部门")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "DepartmentID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "生产部门")]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "DepartmentID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "生产部门" )]
         [FKRelationAttribute("tb_Department","DepartmentID")]
         public long? DepartmentID
         { 
@@ -126,11 +126,11 @@ namespace RUINORERP.Model
 
         private long? _FG_ID;
         /// <summary>
-        /// 缴库单
+        /// 制令单
         /// </summary>
-        [AdvQueryAttribute(ColName = "FG_ID",ColDesc = "缴库单")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "FG_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "缴库单")]
-        [FKRelationAttribute("tb_FinishedGoodsInv", "FG_ID")]
+        [AdvQueryAttribute(ColName = "FG_ID",ColDesc = "制令单")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "FG_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "制令单" )]
+        [FKRelationAttribute("tb_FinishedGoodsInv","FG_ID")]
         public long? FG_ID
         { 
             get{return _FG_ID;}
@@ -141,10 +141,10 @@ namespace RUINORERP.Model
 
         private string _DeliveryBillNo;
         /// <summary>
-        /// 缴库单号
+        /// 制令单号
         /// </summary>
-        [AdvQueryAttribute(ColName = "DeliveryBillNo",ColDesc = "缴库单号")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "DeliveryBillNo" ,Length=100,IsNullable = true,ColumnDescription = "缴库单号")]
+        [AdvQueryAttribute(ColName = "DeliveryBillNo",ColDesc = "制令单号")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "DeliveryBillNo" ,Length=100,IsNullable = true,ColumnDescription = "制令单号" )]
         public string DeliveryBillNo
         { 
             get{return _DeliveryBillNo;}
@@ -494,47 +494,37 @@ namespace RUINORERP.Model
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(CustomerVendor_ID))]
         public virtual tb_CustomerVendor tb_customervendor { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(Employee_ID))]
         public virtual tb_Employee tb_employee { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(FG_ID))]
         public virtual tb_FinishedGoodsInv tb_finishedgoodsinv { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(DepartmentID))]
         public virtual tb_Department tb_department { get; set; }
 
 
-        //[Browsable(false)]打印报表时的数据源会不显示
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_MRP_ReworkEntry.ReworkReturnID))]
-        public virtual List<tb_MRP_ReworkEntry> tb_MRP_ReworkEntries { get; set; }
-        //tb_MRP_ReworkEntry.ReworkReturnID)
-        //ReworkReturnID.FK_TB_MRP_ReworkEntry_REF_TB_MRP_ReworkRetrun)
-        //tb_MRP_ReworkReturn.ReworkReturnID)
 
-        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_MRP_ReworkReturnDetail.ReworkReturnID))]
         public virtual List<tb_MRP_ReworkReturnDetail> tb_MRP_ReworkReturnDetails { get; set; }
-        //tb_MRP_ReworkReturnDetail.ReworkReturnID)
-        //ReworkReturnID.FK_MRP_ReworkRetrun_REF_MRP_ReworkRetrunDetail)
-        //tb_MRP_ReworkReturn.ReworkReturnID)
+
+
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_MRP_ReworkEntry.ReworkReturnID))]
+        public virtual List<tb_MRP_ReworkEntry> tb_MRP_ReworkEntries { get; set; }
 
 
         #endregion
 
 
-
+ 
 
 //如果为false,则不可以。
 private bool PK_FK_ID_Check()
@@ -546,6 +536,10 @@ return rs;
 
 
 
+
+
+       
+        
 
         public override object Clone()
         {

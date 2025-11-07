@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：02/08/2025 16:32:30
+// 时间：11/06/2025 21:26:33
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -183,12 +183,10 @@ namespace RUINORERP.Model
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(StockTransferID))]
         public virtual tb_StockTransfer tb_stocktransfer { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(ProdDetailID))]
         public virtual tb_ProdDetail tb_proddetail { get; set; }
 
@@ -197,7 +195,7 @@ namespace RUINORERP.Model
         #endregion
 
 
-
+ 
 
 //如果为false,则不可以。
 private bool PK_FK_ID_Check()
@@ -210,7 +208,9 @@ return rs;
 
 
 
- 
+
+       
+        
 
         public override object Clone()
         {

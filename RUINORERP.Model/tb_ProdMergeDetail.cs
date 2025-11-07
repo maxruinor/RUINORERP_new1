@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：02/08/2025 16:32:15
+// 时间：11/06/2025 20:42:06
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -124,21 +124,6 @@ namespace RUINORERP.Model
                         }
         }
 
-        private decimal _UnitCost = ((0));
-        /// <summary>
-        /// 单位成本
-        /// </summary>
-        [AdvQueryAttribute(ColName = "UnitCost", ColDesc = "单位成本")]
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "UnitCost", DecimalDigits = 4, IsNullable = false, ColumnDescription = "单位成本")]
-        public decimal UnitCost
-        {
-            get { return _UnitCost; }
-            set
-            {
-                SetProperty(ref _UnitCost, value);
-            }
-        }
-
         private string _Summary;
         /// <summary>
         /// 摘要
@@ -150,6 +135,20 @@ namespace RUINORERP.Model
             get{return _Summary;}
             set{
             SetProperty(ref _Summary, value);
+                        }
+        }
+
+        private decimal _UnitCost= ((0));
+        /// <summary>
+        /// 单位成本
+        /// </summary>
+        [AdvQueryAttribute(ColName = "UnitCost",ColDesc = "单位成本")] 
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "UnitCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "单位成本" )]
+        public decimal UnitCost
+        { 
+            get{return _UnitCost;}
+            set{
+            SetProperty(ref _UnitCost, value);
                         }
         }
 
@@ -176,7 +175,7 @@ namespace RUINORERP.Model
         #endregion
 
 
-
+ 
 
 //如果为false,则不可以。
 private bool PK_FK_ID_Check()
@@ -189,6 +188,9 @@ return rs;
 
 
 
+
+       
+        
 
         public override object Clone()
         {

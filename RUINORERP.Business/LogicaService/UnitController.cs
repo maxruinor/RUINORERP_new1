@@ -44,8 +44,8 @@ namespace RUINORERP.Business.LogicaService
         {
             tb_Unit unit = await _Itb_UnitServices.AddReEntityAsync(entity);
             //string key = "tb_Unit:Unit_ID:" + entity.Unit_ID.ToString();
-            //Extensions.Middlewares.MyCacheManager.Instance.Cache.Add(key, entity.UnitName);
-            MyCacheManager.Instance.UpdateEntityList<tb_Unit>(entity);
+            //Extensions.Middlewares.Cache.EntityCacheHelper.Cache.Add(key, entity.UnitName);
+            Cache.EntityCacheHelper.UpdateEntity<tb_Unit>(entity);
             return unit;
         }
 
@@ -60,7 +60,7 @@ namespace RUINORERP.Business.LogicaService
             bool rs = await _Itb_UnitServices.Update(entity);
             if (rs)
             {
-                MyCacheManager.Instance.UpdateEntityList<tb_Unit>(entity);
+                Cache.EntityCacheHelper.UpdateEntity<tb_Unit>(entity);
             }
             return rs;
         }
@@ -70,7 +70,7 @@ namespace RUINORERP.Business.LogicaService
             bool rs = await _Itb_UnitServices.Delete(entity);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_Unit>(entity);
+                Cache.EntityCacheHelper.DeleteEntity<tb_Unit>(entity);
             }
             return rs;
         }

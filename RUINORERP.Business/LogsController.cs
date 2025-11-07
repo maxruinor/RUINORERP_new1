@@ -1,10 +1,8 @@
-﻿
-// **************************************
-// 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
+﻿// **************************************
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/14/2025 20:39:36
+// 时间：11/06/2025 19:42:57
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -25,13 +23,14 @@ using RUINORERP.Model.Context;
 using System.Linq;
 using RUINOR.Core;
 using RUINORERP.Common.Helper;
+using RUINORERP.Business.Cache;
 
 namespace RUINORERP.Business
 {
     /// <summary>
     /// 
     /// </summary>
-    public partial class LogsController<T> : BaseController<T> where T : class
+    public partial class LogsController<T>:BaseController<T> where T : class
     {
         /// <summary>
         /// 本为私有修改为公有，暴露出来方便使用
@@ -39,28 +38,30 @@ namespace RUINORERP.Business
         //public readonly IUnitOfWorkManage _unitOfWorkManage;
         //public readonly ILogger<BaseController<T>> _logger;
         public ILogsServices _LogsServices { get; set; }
-        // private readonly ApplicationContext _appContext;
-
-        public LogsController(ILogger<LogsController<T>> logger, IUnitOfWorkManage unitOfWorkManage, LogsServices LogsServices, ApplicationContext appContext = null) : base(logger, unitOfWorkManage, appContext)
+        private readonly EventDrivenCacheManager _eventDrivenCacheManager; 
+       // private readonly ApplicationContext _appContext;
+       
+        public LogsController(ILogger<LogsController<T>> logger, IUnitOfWorkManage unitOfWorkManage,LogsServices LogsServices ,EventDrivenCacheManager eventDrivenCacheManager, ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
         {
             _logger = logger;
-            _unitOfWorkManage = unitOfWorkManage;
-            _LogsServices = LogsServices;
-            _appContext = appContext;
+           _unitOfWorkManage = unitOfWorkManage;
+           _LogsServices = LogsServices;
+           _appContext = appContext;
+           _eventDrivenCacheManager = eventDrivenCacheManager;
         }
-
-
+      
+        
         public ValidationResult Validator(Logs info)
         {
 
-            // LogsValidator validator = new LogsValidator();
-            LogsValidator validator = _appContext.GetRequiredService<LogsValidator>();
+           // LogsValidator validator = new LogsValidator();
+           LogsValidator validator = _appContext.GetRequiredService<LogsValidator>();
             ValidationResult results = validator.Validate(info);
             return results;
         }
-
+        
         #region 扩展方法
-
+        
         /// <summary>
         /// 某字段是否存在
         /// </summary>
@@ -70,8 +71,8 @@ namespace RUINORERP.Business
         {
             return await _unitOfWorkManage.GetDbClient().Queryable<T>().Where(exp).AnyAsync();
         }
-
-
+      
+        
         /// <summary>
         /// 雪花ID模式下的新增和修改
         /// </summary>
@@ -89,14 +90,14 @@ namespace RUINORERP.Business
                     bool rs = await _LogsServices.Update(entity);
                     if (rs)
                     {
-                        MyCacheManager.Instance.UpdateEntityList<Logs>(entity);
+                        _eventDrivenCacheManager.UpdateEntity<Logs>(entity);
                     }
                     Returnobj = entity;
                 }
                 else
                 {
                     Returnobj = await _LogsServices.AddReEntityAsync(entity);
-                    MyCacheManager.Instance.UpdateEntityList<Logs>(entity);
+                    _eventDrivenCacheManager.UpdateEntity<Logs>(entity);
                 }
 
                 rr.ReturnObject = Returnobj;
@@ -110,14 +111,14 @@ namespace RUINORERP.Business
             }
             return rr;
         }
-
-
+        
+        
         /// <summary>
         /// 雪花ID模式下的新增和修改
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public async override Task<ReturnResults<T>> BaseSaveOrUpdate(T model)
+        public async override Task<ReturnResults<T>>  BaseSaveOrUpdate(T model)
         {
             ReturnResults<T> rr = new ReturnResults<T>();
             Logs entity = model as Logs;
@@ -130,14 +131,14 @@ namespace RUINORERP.Business
                     bool rs = await _LogsServices.Update(entity);
                     if (rs)
                     {
-                        MyCacheManager.Instance.UpdateEntityList<Logs>(entity);
+                        _eventDrivenCacheManager.UpdateEntity<Logs>(entity);
                     }
                     Returnobj = entity as T;
                 }
                 else
                 {
-                    Returnobj = await _LogsServices.AddReEntityAsync(entity) as T;
-                    MyCacheManager.Instance.UpdateEntityList<Logs>(entity);
+                    Returnobj = await _LogsServices.AddReEntityAsync(entity) as T ;
+                    _eventDrivenCacheManager.UpdateEntity<Logs>(entity);
                 }
 
                 rr.ReturnObject = Returnobj;
@@ -151,8 +152,8 @@ namespace RUINORERP.Business
             }
             return rr;
         }
-
-        public async override Task<List<T>> BaseQueryAsync(string wheresql)
+        
+        public async override Task<List<T>> BaseQueryAsync(string wheresql) 
         {
             List<T> list = await _LogsServices.QueryAsync(wheresql) as List<T>;
             foreach (var item in list)
@@ -162,12 +163,12 @@ namespace RUINORERP.Business
             }
             if (list != null)
             {
-                MyCacheManager.Instance.UpdateEntityList<List<T>>(list);
-            }
+                _eventDrivenCacheManager.UpdateEntityList<T>(list);
+             }
             return list;
         }
-
-        public async override Task<List<T>> BaseQueryAsync()
+        
+        public async override Task<List<T>> BaseQueryAsync() 
         {
             List<T> list = await _LogsServices.QueryAsync() as List<T>;
             foreach (var item in list)
@@ -177,12 +178,12 @@ namespace RUINORERP.Business
             }
             if (list != null)
             {
-                MyCacheManager.Instance.UpdateEntityList<List<T>>(list);
-            }
+                _eventDrivenCacheManager.UpdateEntityList<T>(list);
+             }
             return list;
         }
-
-
+        
+        
         public async override Task<bool> BaseDeleteAsync(T model)
         {
             Logs entity = model as Logs;
@@ -190,48 +191,46 @@ namespace RUINORERP.Business
             if (rs)
             {
                 ////生成时暂时只考虑了一个主键的情况
-                MyCacheManager.Instance.DeleteEntityList<Logs>(entity);
+                _eventDrivenCacheManager.DeleteEntity<Logs>(entity.PrimaryKeyID);
             }
             return rs;
         }
-
+        
         public async override Task<bool> BaseDeleteAsync(List<T> models)
         {
-            bool rs = false;
+            bool rs=false;
             List<Logs> entitys = models as List<Logs>;
             int c = await _unitOfWorkManage.GetDbClient().Deleteable<Logs>(entitys).ExecuteCommandAsync();
-            if (c > 0)
+            if (c>0)
             {
-                rs = true;
-                ////生成时暂时只考虑了一个主键的情况
-                long[] result = entitys.Select(e => e.ID).ToArray();
-                MyCacheManager.Instance.DeleteEntityList<Logs>(result);
+                rs=true;
+                _eventDrivenCacheManager.DeleteEntityList<Logs>(entitys);
             }
             return rs;
         }
-
+        
         public override ValidationResult BaseValidator(T info)
         {
             //LogsValidator validator = new LogsValidator();
-            LogsValidator validator = _appContext.GetRequiredService<LogsValidator>();
+           LogsValidator validator = _appContext.GetRequiredService<LogsValidator>();
             ValidationResult results = validator.Validate(info as Logs);
             return results;
         }
-
-
-        public async override Task<List<T>> BaseQueryByAdvancedAsync(bool useLike, object dto)
+        
+        
+        public async override Task<List<T>> BaseQueryByAdvancedAsync(bool useLike,object dto) 
         {
-            var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<T>().WhereCustom(useLike, dto);
+            var  querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<T>().WhereCustom(useLike,dto);
             return await querySqlQueryable.ToListAsync();
         }
-
+        
         public async override Task<ReturnMainSubResults<T>> BaseSaveOrUpdateWithChild<C>(T model) where C : class
         {
             bool rs = false;
             RevertCommand command = new RevertCommand();
             ReturnMainSubResults<T> rsms = new ReturnMainSubResults<T>();
-            //缓存当前编辑的对象。如果撤销就回原来的值
-            T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
+                             //缓存当前编辑的对象。如果撤销就回原来的值
+                T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
             try
             {
 
@@ -241,34 +240,34 @@ namespace RUINORERP.Business
                     //Undo操作会执行到的代码
                     CloneHelper.SetValues<T>(entity, oldobj);
                 };
-                // 开启事务，保证数据一致性
+                       // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
-
-                if (entity.ID > 0)
-                {
-
-                    var result = await _unitOfWorkManage.GetDbClient().Updateable<Logs>(entity as Logs)
-       .ExecuteCommandAsync();
+                
+            if (entity.ID > 0)
+            {
+            
+                                 var result= await _unitOfWorkManage.GetDbClient().Updateable<Logs>(entity as Logs)
+                    .ExecuteCommandAsync();
                     if (result > 0)
                     {
                         rs = true;
                     }
-                }
-                else
-                {
-                    var result = await _unitOfWorkManage.GetDbClient().Insertable<Logs>(entity as Logs)
-      .ExecuteCommandAsync();
+            }
+        else    
+        {
+                                  var result= await _unitOfWorkManage.GetDbClient().Insertable<Logs>(entity as Logs)
+                    .ExecuteReturnSnowflakeIdAsync();
                     if (result > 0)
                     {
                         rs = true;
                     }
-
-
-                }
-
+                                              
+                     
+        }
+        
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
-                rsms.ReturnObject = entity as T;
+                rsms.ReturnObject = entity as T ;
                 entity.PrimaryKeyID = entity.ID;
                 rsms.Succeeded = rs;
             }
@@ -284,163 +283,169 @@ namespace RUINORERP.Business
 
             return rsms;
         }
-
+        
         #endregion
-
-
+        
+        
         #region override mothed
 
         public async override Task<List<T>> BaseQueryByAdvancedNavAsync(bool useLike, object dto)
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<Logs>()
-                //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
+                                //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
                 .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
-                                .WhereCustom(useLike, dto);
-            return await querySqlQueryable.ToListAsync() as List<T>;
+                                .WhereCustom(useLike, dto);;
+            return await querySqlQueryable.ToListAsync()as List<T>;
         }
 
 
-        public async override Task<bool> BaseDeleteByNavAsync(T model)
+        public async override Task<bool> BaseDeleteByNavAsync(T model) 
         {
             Logs entity = model as Logs;
-            bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<Logs>(m => m.ID == entity.ID)
-               //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
-               .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
-                               .ExecuteCommandAsync();
+             bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<Logs>(m => m.ID== entity.ID)
+                                //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
+                .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
+                                .ExecuteCommandAsync();
             if (rs)
             {
                 //////生成时暂时只考虑了一个主键的情况
-                MyCacheManager.Instance.DeleteEntityList<T>(model);
+                 _eventDrivenCacheManager.DeleteEntity<T>(model);
             }
             return rs;
         }
         #endregion
-
-
-
+        
+        
+        
         public Logs AddReEntity(Logs entity)
         {
-            Logs AddEntity = _LogsServices.AddReEntity(entity);
-            MyCacheManager.Instance.UpdateEntityList<Logs>(AddEntity);
+            Logs AddEntity =  _LogsServices.AddReEntity(entity);
+     
+             _eventDrivenCacheManager.UpdateEntity<Logs>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
-
-        public async Task<Logs> AddReEntityAsync(Logs entity)
+        
+         public async Task<Logs> AddReEntityAsync(Logs entity)
         {
             Logs AddEntity = await _LogsServices.AddReEntityAsync(entity);
-            MyCacheManager.Instance.UpdateEntityList<Logs>(AddEntity);
+            _eventDrivenCacheManager.UpdateEntity<Logs>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
-
+        
         public async Task<long> AddAsync(Logs entity)
         {
             long id = await _LogsServices.Add(entity);
-            if (id > 0)
+            if(id>0)
             {
-                MyCacheManager.Instance.UpdateEntityList<Logs>(entity);
+                 _eventDrivenCacheManager.UpdateEntity<Logs>(entity);
             }
             return id;
         }
-
+        
         public async Task<List<long>> AddAsync(List<Logs> infos)
         {
             List<long> ids = await _LogsServices.Add(infos);
-            if (ids.Count > 0)//成功的个数 这里缓存 对不对呢？
+            if(ids.Count>0)//成功的个数 这里缓存 对不对呢？
             {
-                MyCacheManager.Instance.UpdateEntityList<Logs>(infos);
+                 _eventDrivenCacheManager.UpdateEntityList<Logs>(infos);
             }
             return ids;
         }
-
-
+        
+        
         public async Task<bool> DeleteAsync(Logs entity)
         {
             bool rs = await _LogsServices.Delete(entity);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<Logs>(entity);
-
+                _eventDrivenCacheManager.DeleteEntity<Logs>(entity);
+                
             }
             return rs;
         }
-
+        
         public async Task<bool> UpdateAsync(Logs entity)
         {
             bool rs = await _LogsServices.Update(entity);
             if (rs)
             {
-                MyCacheManager.Instance.UpdateEntityList<Logs>(entity);
+                 _eventDrivenCacheManager.DeleteEntity<Logs>(entity);
                 entity.ActionStatus = ActionStatus.无操作;
             }
             return rs;
         }
-
+        
         public async Task<bool> DeleteAsync(long id)
         {
             bool rs = await _LogsServices.DeleteById(id);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<Logs>(id);
+               _eventDrivenCacheManager.DeleteEntity<Logs>(id);
             }
             return rs;
         }
-
-        public async Task<bool> DeleteAsync(long[] ids)
+        
+         public async Task<bool> DeleteAsync(long[] ids)
         {
             bool rs = await _LogsServices.DeleteByIds(ids);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<Logs>(ids);
+            
+                   _eventDrivenCacheManager.DeleteEntities<Logs>(ids.Cast<object>().ToArray());
             }
             return rs;
         }
-
+        
         public virtual async Task<List<Logs>> QueryAsync()
         {
-            List<Logs> list = await _LogsServices.QueryAsync();
+            List<Logs> list = await  _LogsServices.QueryAsync();
             foreach (var item in list)
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<Logs>(list);
+     
+             _eventDrivenCacheManager.UpdateEntityList<Logs>(list);
             return list;
         }
-
+        
         public virtual List<Logs> Query()
         {
-            List<Logs> list = _LogsServices.Query();
+            List<Logs> list =  _LogsServices.Query();
             foreach (var item in list)
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<Logs>(list);
+    
+             _eventDrivenCacheManager.UpdateEntityList<Logs>(list);
             return list;
         }
-
+        
         public virtual List<Logs> Query(string wheresql)
         {
-            List<Logs> list = _LogsServices.Query(wheresql);
+            List<Logs> list =  _LogsServices.Query(wheresql);
             foreach (var item in list)
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<Logs>(list);
+  
+             _eventDrivenCacheManager.UpdateEntityList<Logs>(list);
             return list;
         }
-
-        public virtual async Task<List<Logs>> QueryAsync(string wheresql)
+        
+        public virtual async Task<List<Logs>> QueryAsync(string wheresql) 
         {
             List<Logs> list = await _LogsServices.QueryAsync(wheresql);
             foreach (var item in list)
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<Logs>(list);
+ 
+             _eventDrivenCacheManager.UpdateEntityList<Logs>(list);
             return list;
         }
-
+        
 
 
         /// <summary>
@@ -455,27 +460,29 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<Logs>(list);
+   
+             _eventDrivenCacheManager.UpdateEntityList<Logs>(list);
             return list;
         }
-
-
-
+        
+        
+        
         /// <summary>
         /// 无参数异步导航查询
         /// </summary>
         /// <returns>数据列表</returns>
-        public virtual async Task<List<Logs>> QueryByNavAsync()
+         public virtual async Task<List<Logs>> QueryByNavAsync()
         {
             List<Logs> list = await _unitOfWorkManage.GetDbClient().Queryable<Logs>()
                                     .ToListAsync();
-
+            
             foreach (var item in list)
             {
                 item.HasChanged = false;
             }
-
-            MyCacheManager.Instance.UpdateEntityList<Logs>(list);
+            
+ 
+             _eventDrivenCacheManager.UpdateEntityList<Logs>(list);
             return list;
         }
 
@@ -484,48 +491,50 @@ namespace RUINORERP.Business
         /// 带参数异步导航查询
         /// </summary>
         /// <returns>数据列表</returns>
-        public virtual async Task<List<Logs>> QueryByNavAsync(Expression<Func<Logs, bool>> exp)
+         public virtual async Task<List<Logs>> QueryByNavAsync(Expression<Func<Logs, bool>> exp)
         {
             List<Logs> list = await _unitOfWorkManage.GetDbClient().Queryable<Logs>().Where(exp)
                                     .ToListAsync();
-
+            
             foreach (var item in list)
             {
                 item.HasChanged = false;
             }
-
-            MyCacheManager.Instance.UpdateEntityList<Logs>(list);
+            
+  
+             _eventDrivenCacheManager.UpdateEntityList<Logs>(list);
             return list;
         }
-
-
+        
+        
         /// <summary>
         /// 带参数异步导航查询
         /// </summary>
         /// <returns>数据列表</returns>
-        public virtual List<Logs> QueryByNav(Expression<Func<Logs, bool>> exp)
+         public virtual List<Logs> QueryByNav(Expression<Func<Logs, bool>> exp)
         {
             List<Logs> list = _unitOfWorkManage.GetDbClient().Queryable<Logs>().Where(exp)
                                     .ToList();
-
+            
             foreach (var item in list)
             {
                 item.HasChanged = false;
             }
-
-            MyCacheManager.Instance.UpdateEntityList<Logs>(list);
+            
+     
+             _eventDrivenCacheManager.UpdateEntityList<Logs>(list);
             return list;
         }
-
-
+        
+        
 
         /// <summary>
         /// 高级查询
         /// </summary>
         /// <returns></returns>
-        public async Task<List<Logs>> QueryByAdvancedAsync(bool useLike, object dto)
+        public async Task<List<Logs>> QueryByAdvancedAsync(bool useLike,object dto)
         {
-            var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<Logs>().WhereCustom(useLike, dto);
+            var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<Logs>().WhereCustom(useLike,dto);
             return await querySqlQueryable.ToListAsync();
         }
 
@@ -536,27 +545,30 @@ namespace RUINORERP.Business
             T entity = await _LogsServices.QueryByIdAsync(id) as T;
             return entity;
         }
-
-
-
+        
+        
+        
         public override async Task<T> BaseQueryByIdNavAsync(object id)
         {
             Logs entity = await _unitOfWorkManage.GetDbClient().Queryable<Logs>().Where(w => w.ID == (long)id)
-                                     .FirstAsync();
-            if (entity != null)
+                         
+
+                                .FirstAsync();
+            if(entity!=null)
             {
                 entity.HasChanged = false;
             }
 
-            MyCacheManager.Instance.UpdateEntityList<Logs>(entity);
+         
+             _eventDrivenCacheManager.UpdateEntity<Logs>(entity);
             return entity as T;
         }
-
-
-
-
-
-
+        
+        
+        
+        
+        
+        
     }
 }
 

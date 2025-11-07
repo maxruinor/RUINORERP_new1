@@ -4,10 +4,10 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/16/2025 12:02:51
+// 时间：11/07/2025 10:19:26
 // **************************************
 using System;
-﻿using SqlSugar;
+using SqlSugar;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -71,7 +71,7 @@ namespace RUINORERP.Model
         /// </summary>
         [AdvQueryAttribute(ColName = "BaseCurrencyID",ColDesc = "基本币别")] 
         [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "BaseCurrencyID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "基本币别" )]
-        [FKRelationAttribute("tb_Currency", "BaseCurrencyID")]
+        [FKRelationAttribute("tb_Currency","BaseCurrencyID")]
         public long BaseCurrencyID
         { 
             get{return _BaseCurrencyID;}
@@ -86,7 +86,7 @@ namespace RUINORERP.Model
         /// </summary>
         [AdvQueryAttribute(ColName = "TargetCurrencyID",ColDesc = "目标币别")] 
         [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "TargetCurrencyID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "目标币别" )]
-        [FKRelationAttribute("tb_Currency", "TargetCurrencyID")]
+        [FKRelationAttribute("tb_Currency","TargetCurrencyID")]
         public long TargetCurrencyID
         { 
             get{return _TargetCurrencyID;}
@@ -165,22 +165,19 @@ namespace RUINORERP.Model
                         }
         }
 
-
         private string _Notes;
         /// <summary>
-        /// 备注
+        /// 
         /// </summary>
-        [AdvQueryAttribute(ColName = "Notes", ColDesc = "备注")]
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "Notes", Length = 1500, IsNullable = true, ColumnDescription = "备注")]
+        [AdvQueryAttribute(ColName = "Notes",ColDesc = "")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Notes" ,Length=100,IsNullable = true,ColumnDescription = "" )]
         public string Notes
-        {
-            get { return _Notes; }
-            set
-            {
-                SetProperty(ref _Notes, value);
-            }
+        { 
+            get{return _Notes;}
+            set{
+            SetProperty(ref _Notes, value);
+                        }
         }
-
 
         private DateTime? _Created_at;
         /// <summary>
@@ -242,21 +239,19 @@ namespace RUINORERP.Model
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(BaseCurrencyID))]
-        public virtual tb_Currency tb_currencyBase { get; set; }
+        public virtual tb_Currency tb_currency { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(TargetCurrencyID))]
-        public virtual tb_Currency tb_currencyTarget { get; set; }
+        public virtual tb_Currency tb_currencyByTargetCurrency { get; set; }
 
 
 
         #endregion
 
 
-
+ 
 
 //如果为false,则不可以。
 private bool PK_FK_ID_Check()
@@ -275,6 +270,10 @@ return rs;
 
 
 
+
+
+
+       
         
 
         public override object Clone()

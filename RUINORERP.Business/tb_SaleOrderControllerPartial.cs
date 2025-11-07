@@ -1178,7 +1178,7 @@ namespace RUINORERP.Business
                     var aa = details.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
                     if (aa.Count > 0 && details[i].SaleOrderDetail_ID > 0)
                     {
-                        obj = MyCacheManager.Instance.GetEntity<View_ProdDetail>(details[i].ProdDetailID);
+                        obj = Cache.EntityCacheHelper.GetEntity<View_ProdDetail>(details[i].ProdDetailID);
                         #region 产品ID可能大于1行，共用料号情况
                         tb_SaleOrderDetail item = saleorder.tb_SaleOrderDetails.FirstOrDefault(c => c.ProdDetailID == details[i].ProdDetailID
                         && c.Location_ID == details[i].Location_ID
@@ -1188,7 +1188,7 @@ namespace RUINORERP.Business
                         //这时有一种情况就是订单时没有成本。没有产品。出库前有类似采购入库确定的成本
                         if (details[i].Cost == 0)
                         {
-                            obj = MyCacheManager.Instance.GetEntity<View_ProdDetail>(details[i].ProdDetailID);
+                            obj = Cache.EntityCacheHelper.GetEntity<View_ProdDetail>(details[i].ProdDetailID);
                             if (obj != null && obj.GetType().Name != "Object" && obj is View_ProdDetail prodDetail)
                             {
                                 details[i].Cost = obj.Inv_Cost.Value;
@@ -1205,7 +1205,7 @@ namespace RUINORERP.Business
                         {
                             if (obj == null)
                             {
-                                obj = MyCacheManager.Instance.GetEntity<View_ProdDetail>(details[i].ProdDetailID);
+                                obj = Cache.EntityCacheHelper.GetEntity<View_ProdDetail>(details[i].ProdDetailID);
                             }
                             tipsMsg.Add($"销售订单{saleorder.SOrderNo}，{obj.CNName + obj.Specifications}已出库数为{item.TotalDeliveredQty}，可出库数为{details[i].Quantity}，当前行数据忽略！");
                         }
@@ -1223,7 +1223,7 @@ namespace RUINORERP.Business
                         //这时有一种情况就是订单时没有成本。没有产品。出库前有类似采购入库确定的成本
                         if (details[i].Cost == 0)
                         {
-                            obj = MyCacheManager.Instance.GetEntity<View_ProdDetail>(details[i].ProdDetailID);
+                            obj = Cache.EntityCacheHelper.GetEntity<View_ProdDetail>(details[i].ProdDetailID);
                             if (obj != null && obj.GetType().Name != "Object" && obj is View_ProdDetail prodDetail)
                             {
                                 if (obj.Inv_Cost == null)
@@ -1245,7 +1245,7 @@ namespace RUINORERP.Business
                         {
                             if (obj == null)
                             {
-                                obj = MyCacheManager.Instance.GetEntity<View_ProdDetail>(details[i].ProdDetailID);
+                                obj = Cache.EntityCacheHelper.GetEntity<View_ProdDetail>(details[i].ProdDetailID);
                             }
                             tipsMsg.Add($"当前订单的SKU:{obj.SKU}{obj.CNName}已出库数量为{details[i].Quantity}，当前行数据将不会加载到明细！");
                         }

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：05/13/2025 22:52:41
+// 时间：11/06/2025 20:41:45
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 往来单位类型,如级别，电商，大客户，亚马逊等
     /// </summary>
     [Serializable()]
-    [Description("往来单位类型")]
+    [Description("往来单位类型,如级别，电商，大客户，亚马逊等")]
     [SugarTable("tb_CustomerVendorType")]
     public partial class tb_CustomerVendorType: BaseEntity, ICloneable
     {
@@ -81,10 +81,10 @@ namespace RUINORERP.Model
 
         private int _BusinessPartnerType;
         /// <summary>
-        /// 往来单位类型
+        /// 
         /// </summary>
-        [AdvQueryAttribute(ColName = "BusinessPartnerType",ColDesc = "往来单位类型")] 
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "BusinessPartnerType" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "往来单位类型")]
+        [AdvQueryAttribute(ColName = "BusinessPartnerType",ColDesc = "")] 
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "BusinessPartnerType" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "" )]
         public int BusinessPartnerType
         { 
             get{return _BusinessPartnerType;}
@@ -109,7 +109,7 @@ namespace RUINORERP.Model
         #endregion
 
 
-
+ 
 
 //如果为false,则不可以。
 private bool PK_FK_ID_Check()
@@ -121,7 +121,10 @@ return rs;
 
 
 
- 
+
+
+       
+        
 
         public override object Clone()
         {

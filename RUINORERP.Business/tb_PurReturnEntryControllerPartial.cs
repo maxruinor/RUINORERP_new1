@@ -83,7 +83,7 @@ namespace RUINORERP.Business
                 //如果入库明细中的产品。不存在于采购退货单中。审核失败。
                 foreach (var child in entity.tb_PurReturnEntryDetails)
                 {
-                    if (!entity.is_force_offset.GetValueOrDefault() && !entity.tb_purentryre.tb_PurEntryReDetails.Any(c => c.ProdDetailID == child.ProdDetailID && c.Location_ID == child.Location_ID))
+                    if (!entity.is_force_offset && !entity.tb_purentryre.tb_PurEntryReDetails.Any(c => c.ProdDetailID == child.ProdDetailID && c.Location_ID == child.Location_ID))
                     {
                         rs.Succeeded = false;
                         _unitOfWorkManage.RollbackTran();
@@ -178,7 +178,7 @@ namespace RUINORERP.Business
 
                         var inQty = detailList.Where(c => c.ProdDetailID == entity.tb_purentryre.tb_PurEntryReDetails[i].ProdDetailID
                         && c.PurEntryRe_CID == entity.tb_purentryre.tb_PurEntryReDetails[i].PurEntryRe_CID).Sum(c => c.Quantity);
-                        if (inQty > entity.tb_purentryre.tb_PurEntryReDetails[i].Quantity && !entity.is_force_offset.GetValueOrDefault())
+                        if (inQty > entity.tb_purentryre.tb_PurEntryReDetails[i].Quantity && !entity.is_force_offset)
                         {
                             string msg = $"【{prodName}】的采购退货入库数量不能大于退货单中对应行的数量\r\n" + $"或存在针对当前采购退货单重复录入了采购退货入库单。";
                             rs.ErrorMsg = msg;
@@ -196,7 +196,7 @@ namespace RUINORERP.Business
                             //算出交付的数量
                             entity.tb_purentryre.tb_PurEntryReDetails[i].DeliveredQuantity += RowQty;
                             //如果已交数据大于 退货单数量 给出警告实际操作中 使用其他方式将备品入库
-                            if (entity.tb_purentryre.tb_PurEntryReDetails[i].DeliveredQuantity > entity.tb_purentryre.tb_PurEntryReDetails[i].Quantity && !entity.is_force_offset.GetValueOrDefault())
+                            if (entity.tb_purentryre.tb_PurEntryReDetails[i].DeliveredQuantity > entity.tb_purentryre.tb_PurEntryReDetails[i].Quantity && !entity.is_force_offset)
                             {
                                 _unitOfWorkManage.RollbackTran();
                                 throw new Exception($"采购退货入库：{entity.PurReEntryNo}审核时，对应的采购退货单：{entity.tb_purentryre.PurEntryReNo}中，入库总数量不能大于退货数量！");
@@ -210,7 +210,7 @@ namespace RUINORERP.Business
                             .Where(c => c.ProdDetailID == entity.tb_purentryre.tb_PurEntryReDetails[i].ProdDetailID
                          && c.Location_ID == entity.tb_purentryre.tb_PurEntryReDetails[i].Location_ID
                         ).Sum(c => c.Quantity);
-                        if (inQty > entity.tb_purentryre.tb_PurEntryReDetails[i].Quantity && !entity.is_force_offset.GetValueOrDefault())
+                        if (inQty > entity.tb_purentryre.tb_PurEntryReDetails[i].Quantity && !entity.is_force_offset)
                         {
                             string msg = $"采购退回入库单:{entity.PurReEntryNo}的【{prodName}】的入库数量不能大于【采购退货单】中对应行的数量\r\n" + $"或存在针对当前采购退货单重复录入了采购入库单。";
                             rs.ErrorMsg = msg;
@@ -227,7 +227,7 @@ namespace RUINORERP.Business
                                 ).Sum(c => c.Quantity);
                             entity.tb_purentryre.tb_PurEntryReDetails[i].DeliveredQuantity += RowQty;
                             //如果已交数据大于 退货单数量 给出警告实际操作中 使用其他方式将备品入库
-                            if (entity.tb_purentryre.tb_PurEntryReDetails[i].DeliveredQuantity > entity.tb_purentryre.tb_PurEntryReDetails[i].Quantity && !entity.is_force_offset.GetValueOrDefault())
+                            if (entity.tb_purentryre.tb_PurEntryReDetails[i].DeliveredQuantity > entity.tb_purentryre.tb_PurEntryReDetails[i].Quantity && !entity.is_force_offset)
                             {
                                 _unitOfWorkManage.RollbackTran();
                                 throw new Exception($"采购退回入库单：{entity.PurReEntryNo}审核时，对应的退货单：{entity.tb_purentryre.PurEntryReNo}，入库总数量不能大于退货单数量！");

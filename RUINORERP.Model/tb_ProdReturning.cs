@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：02/08/2025 16:32:16
+// 时间：11/06/2025 20:42:06
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 归还单，如果部分无法归还，则强制结案借出单。生成一个财务数据做记录。
     /// </summary>
     [Serializable()]
-    [Description("归还单")]
+    [Description("归还单，如果部分无法归还，则强制结案借出单。生成一个财务数据做记录。")]
     [SugarTable("tb_ProdReturning")]
     public partial class tb_ProdReturning: BaseEntity, ICloneable
     {
@@ -408,7 +408,7 @@ namespace RUINORERP.Model
         #endregion
 
 
-
+ 
 
 //如果为false,则不可以。
 private bool PK_FK_ID_Check()
@@ -420,6 +420,10 @@ return rs;
 
 
 
+
+
+       
+        
 
         public override object Clone()
         {

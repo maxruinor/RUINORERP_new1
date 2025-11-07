@@ -216,7 +216,7 @@ namespace RUINORERP.UI.BI
                     tb_FM_Subject pc = clist.Find(t => t.Subject_id == int.Parse(e.Value.ToString()));
                     if (pc != null)
                     {
-                        e.Value = pc.Subject_name;
+                        e.Value = pc.subject_name;
                     }
 
                 }

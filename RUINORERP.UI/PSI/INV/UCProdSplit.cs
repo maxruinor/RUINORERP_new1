@@ -792,7 +792,7 @@ namespace RUINORERP.UI.PSI.INV
                             bOM_SDetail.Qty = (RowDetails.FirstOrDefault(c => c.ProdDetailID == bOM_SDetail.ProdDetailID
 
                             ).UsedQty * EditEntity.SplitParentQty / bomOutQty).ToInt();
-                            View_ProdDetail obj = MyCacheManager.Instance.GetEntity<View_ProdDetail>(item.ProdDetailID);
+                            View_ProdDetail obj = RUINORERP.Business.Cache.EntityCacheHelper.GetEntity<View_ProdDetail>(item.ProdDetailID);
                             if (obj != null)
                             {
                                 bOM_SDetail.property = obj.prop;

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：02/08/2025 16:32:13
+// 时间：11/06/2025 20:42:04
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -237,19 +237,18 @@ namespace RUINORERP.Model
                         }
         }
 
-        private decimal _TargetInitCost;
+        private decimal _TargetInitCost= ((0));
         /// <summary>
         /// 初始成本
         /// </summary>
-        [AdvQueryAttribute(ColName = "TargetInitCost", ColDesc = "初始成本")]
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "TargetInitCost", DecimalDigits = 4, IsNullable = false, ColumnDescription = "初始成本")]
+        [AdvQueryAttribute(ColName = "TargetInitCost",ColDesc = "初始成本")] 
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TargetInitCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "初始成本" )]
         public decimal TargetInitCost
-        {
-            get { return _TargetInitCost; }
-            set
-            {
-                SetProperty(ref _TargetInitCost, value);
-            }
+        { 
+            get{return _TargetInitCost;}
+            set{
+            SetProperty(ref _TargetInitCost, value);
+                        }
         }
 
         private long _Type_ID_to;
@@ -353,24 +352,24 @@ namespace RUINORERP.Model
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(ProdDetailID_to))]
-        public virtual tb_ProdDetail tb_proddetail_to { get; set; }
+        public virtual tb_ProdDetail tb_proddetailTo { get; set; }
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(Type_ID_from))]
-        public virtual tb_ProductType tb_producttype_from { get; set; }
+        public virtual tb_ProductType tb_producttype { get; set; }
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(Type_ID_to))]
-        public virtual tb_ProductType tb_producttype_to { get; set; }
+        public virtual tb_ProductType tb_producttypeTo { get; set; }
 
 
 
         #endregion
 
 
-
+ 
 
 //如果为false,则不可以。
 private bool PK_FK_ID_Check()
@@ -397,6 +396,11 @@ return rs;
 
 
 
+
+
+
+       
+        
 
         public override object Clone()
         {

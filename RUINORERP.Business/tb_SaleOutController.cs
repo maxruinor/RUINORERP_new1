@@ -1,10 +1,8 @@
-﻿
-// **************************************
-// 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
+﻿// **************************************
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/14/2025 20:39:52
+// 时间：11/07/2025 11:29:30
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -25,6 +23,7 @@ using RUINORERP.Model.Context;
 using System.Linq;
 using RUINOR.Core;
 using RUINORERP.Common.Helper;
+using RUINORERP.Business.Cache;
 
 namespace RUINORERP.Business
 {
@@ -39,14 +38,16 @@ namespace RUINORERP.Business
         //public readonly IUnitOfWorkManage _unitOfWorkManage;
         //public readonly ILogger<BaseController<T>> _logger;
         public Itb_SaleOutServices _tb_SaleOutServices { get; set; }
+        private readonly EventDrivenCacheManager _eventDrivenCacheManager; 
        // private readonly ApplicationContext _appContext;
        
-        public tb_SaleOutController(ILogger<tb_SaleOutController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_SaleOutServices tb_SaleOutServices , ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
+        public tb_SaleOutController(ILogger<tb_SaleOutController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_SaleOutServices tb_SaleOutServices ,EventDrivenCacheManager eventDrivenCacheManager, ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
         {
             _logger = logger;
            _unitOfWorkManage = unitOfWorkManage;
            _tb_SaleOutServices = tb_SaleOutServices;
-            _appContext = appContext;
+           _appContext = appContext;
+           _eventDrivenCacheManager = eventDrivenCacheManager;
         }
       
         
@@ -89,14 +90,14 @@ namespace RUINORERP.Business
                     bool rs = await _tb_SaleOutServices.Update(entity);
                     if (rs)
                     {
-                        MyCacheManager.Instance.UpdateEntityList<tb_SaleOut>(entity);
+                        _eventDrivenCacheManager.UpdateEntity<tb_SaleOut>(entity);
                     }
                     Returnobj = entity;
                 }
                 else
                 {
                     Returnobj = await _tb_SaleOutServices.AddReEntityAsync(entity);
-                    MyCacheManager.Instance.UpdateEntityList<tb_SaleOut>(entity);
+                    _eventDrivenCacheManager.UpdateEntity<tb_SaleOut>(entity);
                 }
 
                 rr.ReturnObject = Returnobj;
@@ -130,14 +131,14 @@ namespace RUINORERP.Business
                     bool rs = await _tb_SaleOutServices.Update(entity);
                     if (rs)
                     {
-                        MyCacheManager.Instance.UpdateEntityList<tb_SaleOut>(entity);
+                        _eventDrivenCacheManager.UpdateEntity<tb_SaleOut>(entity);
                     }
                     Returnobj = entity as T;
                 }
                 else
                 {
                     Returnobj = await _tb_SaleOutServices.AddReEntityAsync(entity) as T ;
-                    MyCacheManager.Instance.UpdateEntityList<tb_SaleOut>(entity);
+                    _eventDrivenCacheManager.UpdateEntity<tb_SaleOut>(entity);
                 }
 
                 rr.ReturnObject = Returnobj;
@@ -162,7 +163,7 @@ namespace RUINORERP.Business
             }
             if (list != null)
             {
-                MyCacheManager.Instance.UpdateEntityList<List<T>>(list);
+                _eventDrivenCacheManager.UpdateEntityList<T>(list);
              }
             return list;
         }
@@ -177,7 +178,7 @@ namespace RUINORERP.Business
             }
             if (list != null)
             {
-                MyCacheManager.Instance.UpdateEntityList<List<T>>(list);
+                _eventDrivenCacheManager.UpdateEntityList<T>(list);
              }
             return list;
         }
@@ -190,7 +191,7 @@ namespace RUINORERP.Business
             if (rs)
             {
                 ////生成时暂时只考虑了一个主键的情况
-                MyCacheManager.Instance.DeleteEntityList<tb_SaleOut>(entity);
+                _eventDrivenCacheManager.DeleteEntity<tb_SaleOut>(entity.PrimaryKeyID);
             }
             return rs;
         }
@@ -203,9 +204,7 @@ namespace RUINORERP.Business
             if (c>0)
             {
                 rs=true;
-                ////生成时暂时只考虑了一个主键的情况
-                 long[] result = entitys.Select(e => e.SaleOut_MainID).ToArray();
-                MyCacheManager.Instance.DeleteEntityList<tb_SaleOut>(result);
+                _eventDrivenCacheManager.DeleteEntityList<tb_SaleOut>(entitys);
             }
             return rs;
         }
@@ -290,9 +289,14 @@ namespace RUINORERP.Business
         public async override Task<List<T>> BaseQueryByAdvancedNavAsync(bool useLike, object dto)
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_SaleOut>()
-                                .Includes(m => m.tb_SaleOutDetails)
+                                .Includes(m => m.tb_employee)
+                            .Includes(m => m.tb_saleorder)
+                            .Includes(m => m.tb_paymentmethod)
+                            .Includes(m => m.tb_customervendor)
+                            .Includes(m => m.tb_projectgroup)
+                                            .Includes(m => m.tb_SaleOutDetails)
                         .Includes(m => m.tb_SaleOutRes)
-                                        .WhereCustom(useLike, dto);
+                                        .WhereCustom(useLike, dto);;
             return await querySqlQueryable.ToListAsync()as List<T>;
         }
 
@@ -307,7 +311,7 @@ namespace RUINORERP.Business
             if (rs)
             {
                 //////生成时暂时只考虑了一个主键的情况
-                MyCacheManager.Instance.DeleteEntityList<T>(model);
+                 _eventDrivenCacheManager.DeleteEntity<T>(model);
             }
             return rs;
         }
@@ -318,7 +322,8 @@ namespace RUINORERP.Business
         public tb_SaleOut AddReEntity(tb_SaleOut entity)
         {
             tb_SaleOut AddEntity =  _tb_SaleOutServices.AddReEntity(entity);
-            MyCacheManager.Instance.UpdateEntityList<tb_SaleOut>(AddEntity);
+     
+             _eventDrivenCacheManager.UpdateEntity<tb_SaleOut>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
@@ -326,7 +331,7 @@ namespace RUINORERP.Business
          public async Task<tb_SaleOut> AddReEntityAsync(tb_SaleOut entity)
         {
             tb_SaleOut AddEntity = await _tb_SaleOutServices.AddReEntityAsync(entity);
-            MyCacheManager.Instance.UpdateEntityList<tb_SaleOut>(AddEntity);
+            _eventDrivenCacheManager.UpdateEntity<tb_SaleOut>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
@@ -336,7 +341,7 @@ namespace RUINORERP.Business
             long id = await _tb_SaleOutServices.Add(entity);
             if(id>0)
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_SaleOut>(entity);
+                 _eventDrivenCacheManager.UpdateEntity<tb_SaleOut>(entity);
             }
             return id;
         }
@@ -346,7 +351,7 @@ namespace RUINORERP.Business
             List<long> ids = await _tb_SaleOutServices.Add(infos);
             if(ids.Count>0)//成功的个数 这里缓存 对不对呢？
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_SaleOut>(infos);
+                 _eventDrivenCacheManager.UpdateEntityList<tb_SaleOut>(infos);
             }
             return ids;
         }
@@ -357,7 +362,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_SaleOutServices.Delete(entity);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_SaleOut>(entity);
+                _eventDrivenCacheManager.DeleteEntity<tb_SaleOut>(entity);
                 
             }
             return rs;
@@ -368,7 +373,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_SaleOutServices.Update(entity);
             if (rs)
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_SaleOut>(entity);
+                 _eventDrivenCacheManager.DeleteEntity<tb_SaleOut>(entity);
                 entity.ActionStatus = ActionStatus.无操作;
             }
             return rs;
@@ -379,7 +384,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_SaleOutServices.DeleteById(id);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_SaleOut>(id);
+               _eventDrivenCacheManager.DeleteEntity<tb_SaleOut>(id);
             }
             return rs;
         }
@@ -389,7 +394,8 @@ namespace RUINORERP.Business
             bool rs = await _tb_SaleOutServices.DeleteByIds(ids);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_SaleOut>(ids);
+            
+                   _eventDrivenCacheManager.DeleteEntities<tb_SaleOut>(ids.Cast<object>().ToArray());
             }
             return rs;
         }
@@ -401,7 +407,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_SaleOut>(list);
+     
+             _eventDrivenCacheManager.UpdateEntityList<tb_SaleOut>(list);
             return list;
         }
         
@@ -412,7 +419,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_SaleOut>(list);
+    
+             _eventDrivenCacheManager.UpdateEntityList<tb_SaleOut>(list);
             return list;
         }
         
@@ -423,7 +431,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_SaleOut>(list);
+  
+             _eventDrivenCacheManager.UpdateEntityList<tb_SaleOut>(list);
             return list;
         }
         
@@ -434,7 +443,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_SaleOut>(list);
+ 
+             _eventDrivenCacheManager.UpdateEntityList<tb_SaleOut>(list);
             return list;
         }
         
@@ -452,7 +462,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_SaleOut>(list);
+   
+             _eventDrivenCacheManager.UpdateEntityList<tb_SaleOut>(list);
             return list;
         }
         
@@ -465,6 +476,11 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_SaleOut>> QueryByNavAsync()
         {
             List<tb_SaleOut> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_SaleOut>()
+                               .Includes(t => t.tb_employee )
+                               .Includes(t => t.tb_saleorder )
+                               .Includes(t => t.tb_paymentmethod )
+                               .Includes(t => t.tb_customervendor )
+                               .Includes(t => t.tb_projectgroup )
                                             .Includes(t => t.tb_SaleOutDetails )
                                 .Includes(t => t.tb_SaleOutRes )
                         .ToListAsync();
@@ -474,7 +490,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_SaleOut>(list);
+ 
+             _eventDrivenCacheManager.UpdateEntityList<tb_SaleOut>(list);
             return list;
         }
 
@@ -486,6 +503,11 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_SaleOut>> QueryByNavAsync(Expression<Func<tb_SaleOut, bool>> exp)
         {
             List<tb_SaleOut> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_SaleOut>().Where(exp)
+                               .Includes(t => t.tb_employee )
+                               .Includes(t => t.tb_saleorder )
+                               .Includes(t => t.tb_paymentmethod )
+                               .Includes(t => t.tb_customervendor )
+                               .Includes(t => t.tb_projectgroup )
                                             .Includes(t => t.tb_SaleOutDetails )
                                 .Includes(t => t.tb_SaleOutRes )
                         .ToListAsync();
@@ -495,7 +517,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_SaleOut>(list);
+  
+             _eventDrivenCacheManager.UpdateEntityList<tb_SaleOut>(list);
             return list;
         }
         
@@ -507,6 +530,11 @@ namespace RUINORERP.Business
          public virtual List<tb_SaleOut> QueryByNav(Expression<Func<tb_SaleOut, bool>> exp)
         {
             List<tb_SaleOut> list = _unitOfWorkManage.GetDbClient().Queryable<tb_SaleOut>().Where(exp)
+                            .Includes(t => t.tb_employee )
+                            .Includes(t => t.tb_saleorder )
+                            .Includes(t => t.tb_paymentmethod )
+                            .Includes(t => t.tb_customervendor )
+                            .Includes(t => t.tb_projectgroup )
                                         .Includes(t => t.tb_SaleOutDetails )
                             .Includes(t => t.tb_SaleOutRes )
                         .ToList();
@@ -516,7 +544,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_SaleOut>(list);
+     
+             _eventDrivenCacheManager.UpdateEntityList<tb_SaleOut>(list);
             return list;
         }
         
@@ -545,19 +574,31 @@ namespace RUINORERP.Business
         public override async Task<T> BaseQueryByIdNavAsync(object id)
         {
             tb_SaleOut entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_SaleOut>().Where(w => w.SaleOut_MainID == (long)id)
-                                         .Includes(t => t.tb_SaleOutDetails )
-                            .Includes(t => t.tb_SaleOutRes )
-                        .FirstAsync();
+                             .Includes(t => t.tb_employee )
+                            .Includes(t => t.tb_saleorder )
+                            .Includes(t => t.tb_paymentmethod )
+                            .Includes(t => t.tb_customervendor )
+                            .Includes(t => t.tb_projectgroup )
+                        
+
+                                            .Includes(t => t.tb_SaleOutDetails )
+                                            .Includes(t => t.tb_SaleOutRes )
+                                .FirstAsync();
             if(entity!=null)
             {
                 entity.HasChanged = false;
             }
 
-            MyCacheManager.Instance.UpdateEntityList<tb_SaleOut>(entity);
+         
+             _eventDrivenCacheManager.UpdateEntity<tb_SaleOut>(entity);
             return entity as T;
         }
-
-    
+        
+        
+        
+        
+        
+        
     }
 }
 

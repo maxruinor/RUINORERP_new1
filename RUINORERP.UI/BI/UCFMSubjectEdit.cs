@@ -46,15 +46,15 @@ namespace RUINORERP.UI.BI
                 string 上级代码 = "1";
                 if (_EditEntity.tb_FM_SubjectParent != null)
                 {
-                    上级代码 = _EditEntity.tb_FM_SubjectParent.Subject_code;
+                    上级代码 = _EditEntity.tb_FM_SubjectParent.subject_code;
                 }
-                _EditEntity.Subject_code = BizCodeService.GetBaseInfoNo(BaseInfoType.FMSubject, 上级代码);
+                _EditEntity.subject_code = BizCodeService.GetBaseInfoNo(BaseInfoType.FMSubject, 上级代码);
             }
 
             DataBindingHelper.BindData4RadioGroupTrueFalse<tb_FM_Subject>(entity, t => t.Balance_direction, rdb贷, rdb借);
-            DataBindingHelper.BindData4TextBox<tb_FM_Subject>(entity, t => t.Subject_code, txtsubject_code, BindDataType4TextBox.Text, false);
-            DataBindingHelper.BindData4TextBox<tb_FM_Subject>(entity, t => t.Subject_name, txtsubject_name, BindDataType4TextBox.Text, false);
-            DataBindingHelper.BindData4TextBox<tb_FM_Subject>(entity, t => t.Subject_en_name, txtsubject_en_name, BindDataType4TextBox.Text, false);
+            DataBindingHelper.BindData4TextBox<tb_FM_Subject>(entity, t => t.subject_code, txtsubject_code, BindDataType4TextBox.Text, false);
+            DataBindingHelper.BindData4TextBox<tb_FM_Subject>(entity, t => t.subject_name, txtsubject_name, BindDataType4TextBox.Text, false);
+            DataBindingHelper.BindData4TextBox<tb_FM_Subject>(entity, t => t.subject_en_name, txtsubject_en_name, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4CmbByEnum<tb_FM_Subject, SubjectType>(entity, k => k.Subject_Type,  cmbSubject_Type, false);
             DataBindingHelper.BindData4CheckBox<tb_FM_Subject>(entity, t => t.Is_enabled, chkIs_enabled, false);
             //有默认值
@@ -98,7 +98,7 @@ namespace RUINORERP.UI.BI
                         tb_FM_Subject entity = SubjectList.Find(t => t.Subject_id.ToString() == cevent.Value.ToString());
                         if (entity != null)
                         {
-                            cevent.Value = entity.Subject_code + "【" + entity.Subject_name + "】";
+                            cevent.Value = entity.subject_code + "【" + entity.subject_name + "】";
                             cmbtreeview.Tag = entity;
                         }
                         else
@@ -120,9 +120,9 @@ namespace RUINORERP.UI.BI
             }
             else
             {
-                //tb_FM_Subject entity = list.Find(t => t.Subject_name == cevent.Value.ToString());
+                //tb_FM_Subject entity = list.Find(t => t.subject_name == cevent.Value.ToString());
                 //这里是按 显示的文本来找，这里显示格式变化了一下。
-                tb_FM_Subject entity = SubjectList.Find(t => t.Subject_code + "【" + t.Subject_name + "】" == cevent.Value.ToString());
+                tb_FM_Subject entity = SubjectList.Find(t => t.subject_code + "【" + t.subject_name + "】" == cevent.Value.ToString());
 
                 if (entity != null)
                 {
@@ -146,7 +146,7 @@ namespace RUINORERP.UI.BI
             {
                 var node = new TreeNode();
                 node.Name = nodeObj.Subject_id.ToString();
-                node.Text = nodeObj.Subject_name;
+                node.Text = nodeObj.subject_name;
                 node.Tag = nodeObj;
                 parNode.Nodes.Add(node);
                 Bind(node, list, nodeObj.Subject_id);

@@ -1,10 +1,8 @@
-﻿
-// **************************************
-// 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
+﻿// **************************************
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/14/2025 20:39:50
+// 时间：11/06/2025 19:43:20
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -25,6 +23,7 @@ using RUINORERP.Model.Context;
 using System.Linq;
 using RUINOR.Core;
 using RUINORERP.Common.Helper;
+using RUINORERP.Business.Cache;
 
 namespace RUINORERP.Business
 {
@@ -39,14 +38,16 @@ namespace RUINORERP.Business
         //public readonly IUnitOfWorkManage _unitOfWorkManage;
         //public readonly ILogger<BaseController<T>> _logger;
         public Itb_ProvincesServices _tb_ProvincesServices { get; set; }
+        private readonly EventDrivenCacheManager _eventDrivenCacheManager; 
        // private readonly ApplicationContext _appContext;
        
-        public tb_ProvincesController(ILogger<tb_ProvincesController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_ProvincesServices tb_ProvincesServices , ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
+        public tb_ProvincesController(ILogger<tb_ProvincesController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_ProvincesServices tb_ProvincesServices ,EventDrivenCacheManager eventDrivenCacheManager, ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
         {
             _logger = logger;
            _unitOfWorkManage = unitOfWorkManage;
            _tb_ProvincesServices = tb_ProvincesServices;
-            _appContext = appContext;
+           _appContext = appContext;
+           _eventDrivenCacheManager = eventDrivenCacheManager;
         }
       
         
@@ -89,14 +90,14 @@ namespace RUINORERP.Business
                     bool rs = await _tb_ProvincesServices.Update(entity);
                     if (rs)
                     {
-                        MyCacheManager.Instance.UpdateEntityList<tb_Provinces>(entity);
+                        _eventDrivenCacheManager.UpdateEntity<tb_Provinces>(entity);
                     }
                     Returnobj = entity;
                 }
                 else
                 {
                     Returnobj = await _tb_ProvincesServices.AddReEntityAsync(entity);
-                    MyCacheManager.Instance.UpdateEntityList<tb_Provinces>(entity);
+                    _eventDrivenCacheManager.UpdateEntity<tb_Provinces>(entity);
                 }
 
                 rr.ReturnObject = Returnobj;
@@ -130,14 +131,14 @@ namespace RUINORERP.Business
                     bool rs = await _tb_ProvincesServices.Update(entity);
                     if (rs)
                     {
-                        MyCacheManager.Instance.UpdateEntityList<tb_Provinces>(entity);
+                        _eventDrivenCacheManager.UpdateEntity<tb_Provinces>(entity);
                     }
                     Returnobj = entity as T;
                 }
                 else
                 {
                     Returnobj = await _tb_ProvincesServices.AddReEntityAsync(entity) as T ;
-                    MyCacheManager.Instance.UpdateEntityList<tb_Provinces>(entity);
+                    _eventDrivenCacheManager.UpdateEntity<tb_Provinces>(entity);
                 }
 
                 rr.ReturnObject = Returnobj;
@@ -162,7 +163,7 @@ namespace RUINORERP.Business
             }
             if (list != null)
             {
-                MyCacheManager.Instance.UpdateEntityList<List<T>>(list);
+                _eventDrivenCacheManager.UpdateEntityList<T>(list);
              }
             return list;
         }
@@ -177,7 +178,7 @@ namespace RUINORERP.Business
             }
             if (list != null)
             {
-                MyCacheManager.Instance.UpdateEntityList<List<T>>(list);
+                _eventDrivenCacheManager.UpdateEntityList<T>(list);
              }
             return list;
         }
@@ -190,7 +191,7 @@ namespace RUINORERP.Business
             if (rs)
             {
                 ////生成时暂时只考虑了一个主键的情况
-                MyCacheManager.Instance.DeleteEntityList<tb_Provinces>(entity);
+                _eventDrivenCacheManager.DeleteEntity<tb_Provinces>(entity.PrimaryKeyID);
             }
             return rs;
         }
@@ -203,9 +204,7 @@ namespace RUINORERP.Business
             if (c>0)
             {
                 rs=true;
-                ////生成时暂时只考虑了一个主键的情况
-                 long[] result = entitys.Select(e => e.ProvinceID).ToArray();
-                MyCacheManager.Instance.DeleteEntityList<tb_Provinces>(result);
+                _eventDrivenCacheManager.DeleteEntityList<tb_Provinces>(entitys);
             }
             return rs;
         }
@@ -292,7 +291,7 @@ namespace RUINORERP.Business
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_Provinces>()
                                 .Includes(m => m.tb_Citieses)
                         .Includes(m => m.tb_CRM_Customers)
-                                        .WhereCustom(useLike, dto);
+                                        .WhereCustom(useLike, dto);;
             return await querySqlQueryable.ToListAsync()as List<T>;
         }
 
@@ -307,7 +306,7 @@ namespace RUINORERP.Business
             if (rs)
             {
                 //////生成时暂时只考虑了一个主键的情况
-                MyCacheManager.Instance.DeleteEntityList<T>(model);
+                 _eventDrivenCacheManager.DeleteEntity<T>(model);
             }
             return rs;
         }
@@ -318,7 +317,8 @@ namespace RUINORERP.Business
         public tb_Provinces AddReEntity(tb_Provinces entity)
         {
             tb_Provinces AddEntity =  _tb_ProvincesServices.AddReEntity(entity);
-            MyCacheManager.Instance.UpdateEntityList<tb_Provinces>(AddEntity);
+     
+             _eventDrivenCacheManager.UpdateEntity<tb_Provinces>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
@@ -326,7 +326,7 @@ namespace RUINORERP.Business
          public async Task<tb_Provinces> AddReEntityAsync(tb_Provinces entity)
         {
             tb_Provinces AddEntity = await _tb_ProvincesServices.AddReEntityAsync(entity);
-            MyCacheManager.Instance.UpdateEntityList<tb_Provinces>(AddEntity);
+            _eventDrivenCacheManager.UpdateEntity<tb_Provinces>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
@@ -336,7 +336,7 @@ namespace RUINORERP.Business
             long id = await _tb_ProvincesServices.Add(entity);
             if(id>0)
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_Provinces>(entity);
+                 _eventDrivenCacheManager.UpdateEntity<tb_Provinces>(entity);
             }
             return id;
         }
@@ -346,7 +346,7 @@ namespace RUINORERP.Business
             List<long> ids = await _tb_ProvincesServices.Add(infos);
             if(ids.Count>0)//成功的个数 这里缓存 对不对呢？
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_Provinces>(infos);
+                 _eventDrivenCacheManager.UpdateEntityList<tb_Provinces>(infos);
             }
             return ids;
         }
@@ -357,7 +357,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_ProvincesServices.Delete(entity);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_Provinces>(entity);
+                _eventDrivenCacheManager.DeleteEntity<tb_Provinces>(entity);
                 
             }
             return rs;
@@ -368,7 +368,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_ProvincesServices.Update(entity);
             if (rs)
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_Provinces>(entity);
+                 _eventDrivenCacheManager.DeleteEntity<tb_Provinces>(entity);
                 entity.ActionStatus = ActionStatus.无操作;
             }
             return rs;
@@ -379,7 +379,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_ProvincesServices.DeleteById(id);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_Provinces>(id);
+               _eventDrivenCacheManager.DeleteEntity<tb_Provinces>(id);
             }
             return rs;
         }
@@ -389,7 +389,8 @@ namespace RUINORERP.Business
             bool rs = await _tb_ProvincesServices.DeleteByIds(ids);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_Provinces>(ids);
+            
+                   _eventDrivenCacheManager.DeleteEntities<tb_Provinces>(ids.Cast<object>().ToArray());
             }
             return rs;
         }
@@ -401,7 +402,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_Provinces>(list);
+     
+             _eventDrivenCacheManager.UpdateEntityList<tb_Provinces>(list);
             return list;
         }
         
@@ -412,7 +414,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_Provinces>(list);
+    
+             _eventDrivenCacheManager.UpdateEntityList<tb_Provinces>(list);
             return list;
         }
         
@@ -423,7 +426,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_Provinces>(list);
+  
+             _eventDrivenCacheManager.UpdateEntityList<tb_Provinces>(list);
             return list;
         }
         
@@ -434,7 +438,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_Provinces>(list);
+ 
+             _eventDrivenCacheManager.UpdateEntityList<tb_Provinces>(list);
             return list;
         }
         
@@ -452,7 +457,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_Provinces>(list);
+   
+             _eventDrivenCacheManager.UpdateEntityList<tb_Provinces>(list);
             return list;
         }
         
@@ -465,6 +471,7 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_Provinces>> QueryByNavAsync()
         {
             List<tb_Provinces> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_Provinces>()
+                               .Includes(t => t.tb_crm_region )
                                             .Includes(t => t.tb_Citieses )
                                 .Includes(t => t.tb_CRM_Customers )
                         .ToListAsync();
@@ -474,7 +481,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_Provinces>(list);
+ 
+             _eventDrivenCacheManager.UpdateEntityList<tb_Provinces>(list);
             return list;
         }
 
@@ -486,6 +494,7 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_Provinces>> QueryByNavAsync(Expression<Func<tb_Provinces, bool>> exp)
         {
             List<tb_Provinces> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_Provinces>().Where(exp)
+                               .Includes(t => t.tb_crm_region )
                                             .Includes(t => t.tb_Citieses )
                                 .Includes(t => t.tb_CRM_Customers )
                         .ToListAsync();
@@ -495,7 +504,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_Provinces>(list);
+  
+             _eventDrivenCacheManager.UpdateEntityList<tb_Provinces>(list);
             return list;
         }
         
@@ -507,6 +517,7 @@ namespace RUINORERP.Business
          public virtual List<tb_Provinces> QueryByNav(Expression<Func<tb_Provinces, bool>> exp)
         {
             List<tb_Provinces> list = _unitOfWorkManage.GetDbClient().Queryable<tb_Provinces>().Where(exp)
+                            .Includes(t => t.tb_crm_region )
                                         .Includes(t => t.tb_Citieses )
                             .Includes(t => t.tb_CRM_Customers )
                         .ToList();
@@ -516,7 +527,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_Provinces>(list);
+     
+             _eventDrivenCacheManager.UpdateEntityList<tb_Provinces>(list);
             return list;
         }
         
@@ -545,15 +557,19 @@ namespace RUINORERP.Business
         public override async Task<T> BaseQueryByIdNavAsync(object id)
         {
             tb_Provinces entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_Provinces>().Where(w => w.ProvinceID == (long)id)
-                                         .Includes(t => t.tb_Citieses )
-                            .Includes(t => t.tb_CRM_Customers )
-                        .FirstAsync();
+                             .Includes(t => t.tb_crm_region )
+                        
+
+                                            .Includes(t => t.tb_Citieses )
+                                            .Includes(t => t.tb_CRM_Customers )
+                                .FirstAsync();
             if(entity!=null)
             {
                 entity.HasChanged = false;
             }
 
-            MyCacheManager.Instance.UpdateEntityList<tb_Provinces>(entity);
+         
+             _eventDrivenCacheManager.UpdateEntity<tb_Provinces>(entity);
             return entity as T;
         }
         

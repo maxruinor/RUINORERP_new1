@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/20/2025 22:58:11
+// 时间：11/06/2025 20:42:21
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -178,7 +178,19 @@ namespace RUINORERP.Model
                         }
         }
 
-         
+        private string _Default2;
+        /// <summary>
+        /// 默认值2
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Default2",ColDesc = "默认值2")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Default2" ,Length=255,IsNullable = true,ColumnDescription = "默认值2" )]
+        public string Default2
+        { 
+            get{return _Default2;}
+            set{
+            SetProperty(ref _Default2, value);
+                        }
+        }
 
         private bool? _EnableDefault1;
         /// <summary>
@@ -194,7 +206,19 @@ namespace RUINORERP.Model
                         }
         }
 
-       
+        private bool? _EnableDefault2;
+        /// <summary>
+        /// 启用默认值2
+        /// </summary>
+        [AdvQueryAttribute(ColName = "EnableDefault2",ColDesc = "启用默认值2")] 
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "EnableDefault2" ,IsNullable = true,ColumnDescription = "启用默认值2" )]
+        public bool? EnableDefault2
+        { 
+            get{return _EnableDefault2;}
+            set{
+            SetProperty(ref _EnableDefault2, value);
+                        }
+        }
 
         private bool? _Focused= false;
         /// <summary>
@@ -224,7 +248,19 @@ namespace RUINORERP.Model
                         }
         }
 
-       
+        private int? _DiffDays2;
+        /// <summary>
+        /// 差异天数2
+        /// </summary>
+        [AdvQueryAttribute(ColName = "DiffDays2",ColDesc = "差异天数2")] 
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "DiffDays2" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "差异天数2" )]
+        public int? DiffDays2
+        { 
+            get{return _DiffDays2;}
+            set{
+            SetProperty(ref _DiffDays2, value);
+                        }
+        }
 
         private DateTime? _Created_at;
         /// <summary>
@@ -295,7 +331,7 @@ namespace RUINORERP.Model
         #endregion
 
 
-
+ 
 
 //如果为false,则不可以。
 private bool PK_FK_ID_Check()
@@ -308,6 +344,9 @@ return rs;
 
 
 
+
+       
+        
 
         public override object Clone()
         {

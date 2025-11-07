@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：02/08/2025 16:31:58
+// 时间：11/06/2025 20:41:46
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 收藏表 收藏订单 产品 库存报警等
     /// </summary>
     [Serializable()]
-    [Description("收藏表")]
+    [Description("收藏表 收藏订单 产品 库存报警等")]
     [SugarTable("tb_Favorite")]
     public partial class tb_Favorite: BaseEntity, ICloneable
     {
@@ -241,7 +241,7 @@ namespace RUINORERP.Model
         #endregion
 
 
-
+ 
 
 //如果为false,则不可以。
 private bool PK_FK_ID_Check()
@@ -254,7 +254,10 @@ return rs;
 
 
 
- 
+
+       
+        
+
         public override object Clone()
         {
             tb_Favorite loctype = (tb_Favorite)this.MemberwiseClone(); //创建当前对象的浅拷贝。

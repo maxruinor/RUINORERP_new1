@@ -1,10 +1,8 @@
-﻿
-// **************************************
-// 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
+﻿// **************************************
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/14/2025 20:39:38
+// 时间：11/06/2025 19:43:00
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -25,6 +23,7 @@ using RUINORERP.Model.Context;
 using System.Linq;
 using RUINOR.Core;
 using RUINORERP.Common.Helper;
+using RUINORERP.Business.Cache;
 
 namespace RUINORERP.Business
 {
@@ -39,14 +38,16 @@ namespace RUINORERP.Business
         //public readonly IUnitOfWorkManage _unitOfWorkManage;
         //public readonly ILogger<BaseController<T>> _logger;
         public Itb_ConNodeConditionsServices _tb_ConNodeConditionsServices { get; set; }
+        private readonly EventDrivenCacheManager _eventDrivenCacheManager; 
        // private readonly ApplicationContext _appContext;
        
-        public tb_ConNodeConditionsController(ILogger<tb_ConNodeConditionsController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_ConNodeConditionsServices tb_ConNodeConditionsServices , ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
+        public tb_ConNodeConditionsController(ILogger<tb_ConNodeConditionsController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_ConNodeConditionsServices tb_ConNodeConditionsServices ,EventDrivenCacheManager eventDrivenCacheManager, ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
         {
             _logger = logger;
            _unitOfWorkManage = unitOfWorkManage;
            _tb_ConNodeConditionsServices = tb_ConNodeConditionsServices;
-            _appContext = appContext;
+           _appContext = appContext;
+           _eventDrivenCacheManager = eventDrivenCacheManager;
         }
       
         
@@ -89,14 +90,14 @@ namespace RUINORERP.Business
                     bool rs = await _tb_ConNodeConditionsServices.Update(entity);
                     if (rs)
                     {
-                        MyCacheManager.Instance.UpdateEntityList<tb_ConNodeConditions>(entity);
+                        _eventDrivenCacheManager.UpdateEntity<tb_ConNodeConditions>(entity);
                     }
                     Returnobj = entity;
                 }
                 else
                 {
                     Returnobj = await _tb_ConNodeConditionsServices.AddReEntityAsync(entity);
-                    MyCacheManager.Instance.UpdateEntityList<tb_ConNodeConditions>(entity);
+                    _eventDrivenCacheManager.UpdateEntity<tb_ConNodeConditions>(entity);
                 }
 
                 rr.ReturnObject = Returnobj;
@@ -130,14 +131,14 @@ namespace RUINORERP.Business
                     bool rs = await _tb_ConNodeConditionsServices.Update(entity);
                     if (rs)
                     {
-                        MyCacheManager.Instance.UpdateEntityList<tb_ConNodeConditions>(entity);
+                        _eventDrivenCacheManager.UpdateEntity<tb_ConNodeConditions>(entity);
                     }
                     Returnobj = entity as T;
                 }
                 else
                 {
                     Returnobj = await _tb_ConNodeConditionsServices.AddReEntityAsync(entity) as T ;
-                    MyCacheManager.Instance.UpdateEntityList<tb_ConNodeConditions>(entity);
+                    _eventDrivenCacheManager.UpdateEntity<tb_ConNodeConditions>(entity);
                 }
 
                 rr.ReturnObject = Returnobj;
@@ -162,7 +163,7 @@ namespace RUINORERP.Business
             }
             if (list != null)
             {
-                MyCacheManager.Instance.UpdateEntityList<List<T>>(list);
+                _eventDrivenCacheManager.UpdateEntityList<T>(list);
              }
             return list;
         }
@@ -177,7 +178,7 @@ namespace RUINORERP.Business
             }
             if (list != null)
             {
-                MyCacheManager.Instance.UpdateEntityList<List<T>>(list);
+                _eventDrivenCacheManager.UpdateEntityList<T>(list);
              }
             return list;
         }
@@ -190,7 +191,7 @@ namespace RUINORERP.Business
             if (rs)
             {
                 ////生成时暂时只考虑了一个主键的情况
-                MyCacheManager.Instance.DeleteEntityList<tb_ConNodeConditions>(entity);
+                _eventDrivenCacheManager.DeleteEntity<tb_ConNodeConditions>(entity.PrimaryKeyID);
             }
             return rs;
         }
@@ -203,9 +204,7 @@ namespace RUINORERP.Business
             if (c>0)
             {
                 rs=true;
-                ////生成时暂时只考虑了一个主键的情况
-                 long[] result = entitys.Select(e => e.ConNodeConditions_Id).ToArray();
-                MyCacheManager.Instance.DeleteEntityList<tb_ConNodeConditions>(result);
+                _eventDrivenCacheManager.DeleteEntityList<tb_ConNodeConditions>(entitys);
             }
             return rs;
         }
@@ -289,7 +288,7 @@ namespace RUINORERP.Business
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_ConNodeConditions>()
                                 .Includes(m => m.tb_NextNodeses)
-                                        .WhereCustom(useLike, dto);
+                                        .WhereCustom(useLike, dto);;
             return await querySqlQueryable.ToListAsync()as List<T>;
         }
 
@@ -303,7 +302,7 @@ namespace RUINORERP.Business
             if (rs)
             {
                 //////生成时暂时只考虑了一个主键的情况
-                MyCacheManager.Instance.DeleteEntityList<T>(model);
+                 _eventDrivenCacheManager.DeleteEntity<T>(model);
             }
             return rs;
         }
@@ -314,7 +313,8 @@ namespace RUINORERP.Business
         public tb_ConNodeConditions AddReEntity(tb_ConNodeConditions entity)
         {
             tb_ConNodeConditions AddEntity =  _tb_ConNodeConditionsServices.AddReEntity(entity);
-            MyCacheManager.Instance.UpdateEntityList<tb_ConNodeConditions>(AddEntity);
+     
+             _eventDrivenCacheManager.UpdateEntity<tb_ConNodeConditions>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
@@ -322,7 +322,7 @@ namespace RUINORERP.Business
          public async Task<tb_ConNodeConditions> AddReEntityAsync(tb_ConNodeConditions entity)
         {
             tb_ConNodeConditions AddEntity = await _tb_ConNodeConditionsServices.AddReEntityAsync(entity);
-            MyCacheManager.Instance.UpdateEntityList<tb_ConNodeConditions>(AddEntity);
+            _eventDrivenCacheManager.UpdateEntity<tb_ConNodeConditions>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
@@ -332,7 +332,7 @@ namespace RUINORERP.Business
             long id = await _tb_ConNodeConditionsServices.Add(entity);
             if(id>0)
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_ConNodeConditions>(entity);
+                 _eventDrivenCacheManager.UpdateEntity<tb_ConNodeConditions>(entity);
             }
             return id;
         }
@@ -342,7 +342,7 @@ namespace RUINORERP.Business
             List<long> ids = await _tb_ConNodeConditionsServices.Add(infos);
             if(ids.Count>0)//成功的个数 这里缓存 对不对呢？
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_ConNodeConditions>(infos);
+                 _eventDrivenCacheManager.UpdateEntityList<tb_ConNodeConditions>(infos);
             }
             return ids;
         }
@@ -353,7 +353,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_ConNodeConditionsServices.Delete(entity);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_ConNodeConditions>(entity);
+                _eventDrivenCacheManager.DeleteEntity<tb_ConNodeConditions>(entity);
                 
             }
             return rs;
@@ -364,7 +364,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_ConNodeConditionsServices.Update(entity);
             if (rs)
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_ConNodeConditions>(entity);
+                 _eventDrivenCacheManager.DeleteEntity<tb_ConNodeConditions>(entity);
                 entity.ActionStatus = ActionStatus.无操作;
             }
             return rs;
@@ -375,7 +375,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_ConNodeConditionsServices.DeleteById(id);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_ConNodeConditions>(id);
+               _eventDrivenCacheManager.DeleteEntity<tb_ConNodeConditions>(id);
             }
             return rs;
         }
@@ -385,7 +385,8 @@ namespace RUINORERP.Business
             bool rs = await _tb_ConNodeConditionsServices.DeleteByIds(ids);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_ConNodeConditions>(ids);
+            
+                   _eventDrivenCacheManager.DeleteEntities<tb_ConNodeConditions>(ids.Cast<object>().ToArray());
             }
             return rs;
         }
@@ -397,7 +398,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_ConNodeConditions>(list);
+     
+             _eventDrivenCacheManager.UpdateEntityList<tb_ConNodeConditions>(list);
             return list;
         }
         
@@ -408,7 +410,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_ConNodeConditions>(list);
+    
+             _eventDrivenCacheManager.UpdateEntityList<tb_ConNodeConditions>(list);
             return list;
         }
         
@@ -419,7 +422,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_ConNodeConditions>(list);
+  
+             _eventDrivenCacheManager.UpdateEntityList<tb_ConNodeConditions>(list);
             return list;
         }
         
@@ -430,7 +434,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_ConNodeConditions>(list);
+ 
+             _eventDrivenCacheManager.UpdateEntityList<tb_ConNodeConditions>(list);
             return list;
         }
         
@@ -448,7 +453,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_ConNodeConditions>(list);
+   
+             _eventDrivenCacheManager.UpdateEntityList<tb_ConNodeConditions>(list);
             return list;
         }
         
@@ -469,7 +475,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_ConNodeConditions>(list);
+ 
+             _eventDrivenCacheManager.UpdateEntityList<tb_ConNodeConditions>(list);
             return list;
         }
 
@@ -489,7 +496,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_ConNodeConditions>(list);
+  
+             _eventDrivenCacheManager.UpdateEntityList<tb_ConNodeConditions>(list);
             return list;
         }
         
@@ -509,7 +517,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_ConNodeConditions>(list);
+     
+             _eventDrivenCacheManager.UpdateEntityList<tb_ConNodeConditions>(list);
             return list;
         }
         
@@ -538,14 +547,17 @@ namespace RUINORERP.Business
         public override async Task<T> BaseQueryByIdNavAsync(object id)
         {
             tb_ConNodeConditions entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_ConNodeConditions>().Where(w => w.ConNodeConditions_Id == (long)id)
-                                         .Includes(t => t.tb_NextNodeses )
-                        .FirstAsync();
+                         
+
+                                            .Includes(t => t.tb_NextNodeses )
+                                .FirstAsync();
             if(entity!=null)
             {
                 entity.HasChanged = false;
             }
 
-            MyCacheManager.Instance.UpdateEntityList<tb_ConNodeConditions>(entity);
+         
+             _eventDrivenCacheManager.UpdateEntity<tb_ConNodeConditions>(entity);
             return entity as T;
         }
         

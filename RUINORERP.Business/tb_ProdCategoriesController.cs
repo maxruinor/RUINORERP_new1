@@ -1,10 +1,8 @@
-﻿
-// **************************************
-// 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
+﻿// **************************************
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/14/2025 20:39:47
+// 时间：11/07/2025 11:46:21
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -25,6 +23,7 @@ using RUINORERP.Model.Context;
 using System.Linq;
 using RUINOR.Core;
 using RUINORERP.Common.Helper;
+using RUINORERP.Business.Cache;
 
 namespace RUINORERP.Business
 {
@@ -39,14 +38,16 @@ namespace RUINORERP.Business
         //public readonly IUnitOfWorkManage _unitOfWorkManage;
         //public readonly ILogger<BaseController<T>> _logger;
         public Itb_ProdCategoriesServices _tb_ProdCategoriesServices { get; set; }
+        private readonly EventDrivenCacheManager _eventDrivenCacheManager; 
        // private readonly ApplicationContext _appContext;
        
-        public tb_ProdCategoriesController(ILogger<tb_ProdCategoriesController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_ProdCategoriesServices tb_ProdCategoriesServices , ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
+        public tb_ProdCategoriesController(ILogger<tb_ProdCategoriesController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_ProdCategoriesServices tb_ProdCategoriesServices ,EventDrivenCacheManager eventDrivenCacheManager, ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
         {
             _logger = logger;
            _unitOfWorkManage = unitOfWorkManage;
            _tb_ProdCategoriesServices = tb_ProdCategoriesServices;
-            _appContext = appContext;
+           _appContext = appContext;
+           _eventDrivenCacheManager = eventDrivenCacheManager;
         }
       
         
@@ -89,14 +90,14 @@ namespace RUINORERP.Business
                     bool rs = await _tb_ProdCategoriesServices.Update(entity);
                     if (rs)
                     {
-                        MyCacheManager.Instance.UpdateEntityList<tb_ProdCategories>(entity);
+                        _eventDrivenCacheManager.UpdateEntity<tb_ProdCategories>(entity);
                     }
                     Returnobj = entity;
                 }
                 else
                 {
                     Returnobj = await _tb_ProdCategoriesServices.AddReEntityAsync(entity);
-                    MyCacheManager.Instance.UpdateEntityList<tb_ProdCategories>(entity);
+                    _eventDrivenCacheManager.UpdateEntity<tb_ProdCategories>(entity);
                 }
 
                 rr.ReturnObject = Returnobj;
@@ -130,14 +131,14 @@ namespace RUINORERP.Business
                     bool rs = await _tb_ProdCategoriesServices.Update(entity);
                     if (rs)
                     {
-                        MyCacheManager.Instance.UpdateEntityList<tb_ProdCategories>(entity);
+                        _eventDrivenCacheManager.UpdateEntity<tb_ProdCategories>(entity);
                     }
                     Returnobj = entity as T;
                 }
                 else
                 {
                     Returnobj = await _tb_ProdCategoriesServices.AddReEntityAsync(entity) as T ;
-                    MyCacheManager.Instance.UpdateEntityList<tb_ProdCategories>(entity);
+                    _eventDrivenCacheManager.UpdateEntity<tb_ProdCategories>(entity);
                 }
 
                 rr.ReturnObject = Returnobj;
@@ -162,7 +163,7 @@ namespace RUINORERP.Business
             }
             if (list != null)
             {
-                MyCacheManager.Instance.UpdateEntityList<List<T>>(list);
+                _eventDrivenCacheManager.UpdateEntityList<T>(list);
              }
             return list;
         }
@@ -177,7 +178,7 @@ namespace RUINORERP.Business
             }
             if (list != null)
             {
-                MyCacheManager.Instance.UpdateEntityList<List<T>>(list);
+                _eventDrivenCacheManager.UpdateEntityList<T>(list);
              }
             return list;
         }
@@ -190,7 +191,7 @@ namespace RUINORERP.Business
             if (rs)
             {
                 ////生成时暂时只考虑了一个主键的情况
-                MyCacheManager.Instance.DeleteEntityList<tb_ProdCategories>(entity);
+                _eventDrivenCacheManager.DeleteEntity<tb_ProdCategories>(entity.PrimaryKeyID);
             }
             return rs;
         }
@@ -203,9 +204,7 @@ namespace RUINORERP.Business
             if (c>0)
             {
                 rs=true;
-                ////生成时暂时只考虑了一个主键的情况
-                 long[] result = entitys.Select(e => e.Category_ID).ToArray();
-                MyCacheManager.Instance.DeleteEntityList<tb_ProdCategories>(result);
+                _eventDrivenCacheManager.DeleteEntityList<tb_ProdCategories>(entitys);
             }
             return rs;
         }
@@ -249,14 +248,14 @@ namespace RUINORERP.Business
             
                              rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_ProdCategories>(entity as tb_ProdCategories)
                         .Include(m => m.tb_Prods)
-                    .Include(m => m.tb_ProdCategorieses_parents)
+                    .Include(m => m.tb_ProdCategorieses)
                     .ExecuteCommandAsync();
                  }
         else    
         {
                         rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_ProdCategories>(entity as tb_ProdCategories)
                 .Include(m => m.tb_Prods)
-                .Include(m => m.tb_ProdCategorieses_parents)
+                .Include(m => m.tb_ProdCategorieses)
          
                 .ExecuteCommandAsync();
                                           
@@ -290,9 +289,10 @@ namespace RUINORERP.Business
         public async override Task<List<T>> BaseQueryByAdvancedNavAsync(bool useLike, object dto)
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_ProdCategories>()
-                                .Includes(m => m.tb_Prods)
-                        .Includes(m => m.tb_ProdCategorieses_parents)
-                                        .WhereCustom(useLike, dto);
+                                .Includes(m => m.tb_prodcategories)
+                                            .Includes(m => m.tb_Prods)
+                        .Includes(m => m.tb_ProdCategorieses)
+                                        .WhereCustom(useLike, dto);;
             return await querySqlQueryable.ToListAsync()as List<T>;
         }
 
@@ -302,12 +302,12 @@ namespace RUINORERP.Business
             tb_ProdCategories entity = model as tb_ProdCategories;
              bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_ProdCategories>(m => m.Category_ID== entity.Category_ID)
                                 .Include(m => m.tb_Prods)
-                        .Include(m => m.tb_ProdCategorieses_parents)
+                        .Include(m => m.tb_ProdCategorieses)
                                         .ExecuteCommandAsync();
             if (rs)
             {
                 //////生成时暂时只考虑了一个主键的情况
-                MyCacheManager.Instance.DeleteEntityList<T>(model);
+                 _eventDrivenCacheManager.DeleteEntity<T>(model);
             }
             return rs;
         }
@@ -318,7 +318,8 @@ namespace RUINORERP.Business
         public tb_ProdCategories AddReEntity(tb_ProdCategories entity)
         {
             tb_ProdCategories AddEntity =  _tb_ProdCategoriesServices.AddReEntity(entity);
-            MyCacheManager.Instance.UpdateEntityList<tb_ProdCategories>(AddEntity);
+     
+             _eventDrivenCacheManager.UpdateEntity<tb_ProdCategories>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
@@ -326,7 +327,7 @@ namespace RUINORERP.Business
          public async Task<tb_ProdCategories> AddReEntityAsync(tb_ProdCategories entity)
         {
             tb_ProdCategories AddEntity = await _tb_ProdCategoriesServices.AddReEntityAsync(entity);
-            MyCacheManager.Instance.UpdateEntityList<tb_ProdCategories>(AddEntity);
+            _eventDrivenCacheManager.UpdateEntity<tb_ProdCategories>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
@@ -336,7 +337,7 @@ namespace RUINORERP.Business
             long id = await _tb_ProdCategoriesServices.Add(entity);
             if(id>0)
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_ProdCategories>(entity);
+                 _eventDrivenCacheManager.UpdateEntity<tb_ProdCategories>(entity);
             }
             return id;
         }
@@ -346,7 +347,7 @@ namespace RUINORERP.Business
             List<long> ids = await _tb_ProdCategoriesServices.Add(infos);
             if(ids.Count>0)//成功的个数 这里缓存 对不对呢？
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_ProdCategories>(infos);
+                 _eventDrivenCacheManager.UpdateEntityList<tb_ProdCategories>(infos);
             }
             return ids;
         }
@@ -357,7 +358,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_ProdCategoriesServices.Delete(entity);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_ProdCategories>(entity);
+                _eventDrivenCacheManager.DeleteEntity<tb_ProdCategories>(entity);
                 
             }
             return rs;
@@ -368,7 +369,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_ProdCategoriesServices.Update(entity);
             if (rs)
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_ProdCategories>(entity);
+                 _eventDrivenCacheManager.DeleteEntity<tb_ProdCategories>(entity);
                 entity.ActionStatus = ActionStatus.无操作;
             }
             return rs;
@@ -379,7 +380,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_ProdCategoriesServices.DeleteById(id);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_ProdCategories>(id);
+               _eventDrivenCacheManager.DeleteEntity<tb_ProdCategories>(id);
             }
             return rs;
         }
@@ -389,7 +390,8 @@ namespace RUINORERP.Business
             bool rs = await _tb_ProdCategoriesServices.DeleteByIds(ids);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_ProdCategories>(ids);
+            
+                   _eventDrivenCacheManager.DeleteEntities<tb_ProdCategories>(ids.Cast<object>().ToArray());
             }
             return rs;
         }
@@ -401,7 +403,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_ProdCategories>(list);
+     
+             _eventDrivenCacheManager.UpdateEntityList<tb_ProdCategories>(list);
             return list;
         }
         
@@ -412,7 +415,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_ProdCategories>(list);
+    
+             _eventDrivenCacheManager.UpdateEntityList<tb_ProdCategories>(list);
             return list;
         }
         
@@ -423,7 +427,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_ProdCategories>(list);
+  
+             _eventDrivenCacheManager.UpdateEntityList<tb_ProdCategories>(list);
             return list;
         }
         
@@ -434,7 +439,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_ProdCategories>(list);
+ 
+             _eventDrivenCacheManager.UpdateEntityList<tb_ProdCategories>(list);
             return list;
         }
         
@@ -452,7 +458,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_ProdCategories>(list);
+   
+             _eventDrivenCacheManager.UpdateEntityList<tb_ProdCategories>(list);
             return list;
         }
         
@@ -465,9 +472,9 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_ProdCategories>> QueryByNavAsync()
         {
             List<tb_ProdCategories> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_ProdCategories>()
-                               .Includes(t => t.tb_ProdCategorieses_parents)
+                               .Includes(t => t.tb_prodcategories )
                                             .Includes(t => t.tb_Prods )
-                                .Includes(t => t.tb_ProdCategorieses_parents)
+                                .Includes(t => t.tb_ProdCategorieses )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -475,7 +482,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_ProdCategories>(list);
+ 
+             _eventDrivenCacheManager.UpdateEntityList<tb_ProdCategories>(list);
             return list;
         }
 
@@ -487,9 +495,9 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_ProdCategories>> QueryByNavAsync(Expression<Func<tb_ProdCategories, bool>> exp)
         {
             List<tb_ProdCategories> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_ProdCategories>().Where(exp)
-                               .Includes(t => t.tb_ProdCategorieses_parents)
+                               .Includes(t => t.tb_prodcategories )
                                             .Includes(t => t.tb_Prods )
-                                .Includes(t => t.tb_ProdCategorieses_parents)
+                                .Includes(t => t.tb_ProdCategorieses )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -497,7 +505,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_ProdCategories>(list);
+  
+             _eventDrivenCacheManager.UpdateEntityList<tb_ProdCategories>(list);
             return list;
         }
         
@@ -509,9 +518,9 @@ namespace RUINORERP.Business
          public virtual List<tb_ProdCategories> QueryByNav(Expression<Func<tb_ProdCategories, bool>> exp)
         {
             List<tb_ProdCategories> list = _unitOfWorkManage.GetDbClient().Queryable<tb_ProdCategories>().Where(exp)
-                            .Includes(t => t.tb_ProdCategorieses_parents)
+                            .Includes(t => t.tb_prodcategories )
                                         .Includes(t => t.tb_Prods )
-                            .Includes(t => t.tb_ProdCategorieses_parents)
+                            .Includes(t => t.tb_ProdCategorieses )
                         .ToList();
             
             foreach (var item in list)
@@ -519,7 +528,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_ProdCategories>(list);
+     
+             _eventDrivenCacheManager.UpdateEntityList<tb_ProdCategories>(list);
             return list;
         }
         
@@ -548,16 +558,19 @@ namespace RUINORERP.Business
         public override async Task<T> BaseQueryByIdNavAsync(object id)
         {
             tb_ProdCategories entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_ProdCategories>().Where(w => w.Category_ID == (long)id)
-                             .Includes(t => t.tb_ProdCategorieses_parents)
-                                        .Includes(t => t.tb_Prods )
-                            .Includes(t => t.tb_ProdCategorieses_parents)
-                        .FirstAsync();
+                             .Includes(t => t.tb_prodcategories )
+                        
+
+                                            .Includes(t => t.tb_Prods )
+                                            .Includes(t => t.tb_ProdCategorieses )
+                                .FirstAsync();
             if(entity!=null)
             {
                 entity.HasChanged = false;
             }
 
-            MyCacheManager.Instance.UpdateEntityList<tb_ProdCategories>(entity);
+         
+             _eventDrivenCacheManager.UpdateEntity<tb_ProdCategories>(entity);
             return entity as T;
         }
         

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：02/08/2025 16:31:59
+// 时间：11/06/2025 20:41:47
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -18,10 +18,10 @@ using RUINORERP.Global.CustomAttribute;
 namespace RUINORERP.Model
 {
     /// <summary>
-    /// 缴库单明细
+    /// 成品入库单明细
     /// </summary>
     [Serializable()]
-    [Description("缴库单明细")]
+    [Description("成品入库单明细")]
     [SugarTable("tb_FinishedGoodsInvDetail")]
     public partial class tb_FinishedGoodsInvDetail: BaseEntity, ICloneable
     {
@@ -252,26 +252,12 @@ namespace RUINORERP.Model
                         }
         }
 
-        //private decimal _SubtotalMaterialCost= ((0));
-        ///// <summary>
-        ///// 材料小计
-        ///// </summary>
-        //[AdvQueryAttribute(ColName = "SubtotalMaterialCost",ColDesc = "材料小计")] 
-        //[SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "SubtotalMaterialCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "材料小计" )]
-        //public decimal SubtotalMaterialCost
-        //{ 
-        //    get{return _SubtotalMaterialCost;}
-        //    set{
-        //    SetProperty(ref _SubtotalMaterialCost, value);
-        //                }
-        //}
-
         private decimal _ProductionAllCost= ((0));
         /// <summary>
         /// 成本小计
         /// </summary>
         [AdvQueryAttribute(ColName = "ProductionAllCost",ColDesc = "成本小计")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "ProductionAllCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "成本小计")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "ProductionAllCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "成本小计" )]
         public decimal ProductionAllCost
         { 
             get{return _ProductionAllCost;}
@@ -341,7 +327,7 @@ namespace RUINORERP.Model
         #endregion
 
 
-
+ 
 
 //如果为false,则不可以。
 private bool PK_FK_ID_Check()
@@ -353,6 +339,10 @@ return rs;
 
 
 
+
+
+       
+        
 
         public override object Clone()
         {

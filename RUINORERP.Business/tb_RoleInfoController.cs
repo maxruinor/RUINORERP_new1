@@ -1,10 +1,8 @@
-﻿
-// **************************************
-// 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
+﻿// **************************************
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/14/2025 20:39:51
+// 时间：11/06/2025 19:43:21
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -25,6 +23,7 @@ using RUINORERP.Model.Context;
 using System.Linq;
 using RUINOR.Core;
 using RUINORERP.Common.Helper;
+using RUINORERP.Business.Cache;
 
 namespace RUINORERP.Business
 {
@@ -39,14 +38,16 @@ namespace RUINORERP.Business
         //public readonly IUnitOfWorkManage _unitOfWorkManage;
         //public readonly ILogger<BaseController<T>> _logger;
         public Itb_RoleInfoServices _tb_RoleInfoServices { get; set; }
+        private readonly EventDrivenCacheManager _eventDrivenCacheManager; 
        // private readonly ApplicationContext _appContext;
        
-        public tb_RoleInfoController(ILogger<tb_RoleInfoController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_RoleInfoServices tb_RoleInfoServices , ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
+        public tb_RoleInfoController(ILogger<tb_RoleInfoController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_RoleInfoServices tb_RoleInfoServices ,EventDrivenCacheManager eventDrivenCacheManager, ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
         {
             _logger = logger;
            _unitOfWorkManage = unitOfWorkManage;
            _tb_RoleInfoServices = tb_RoleInfoServices;
-            _appContext = appContext;
+           _appContext = appContext;
+           _eventDrivenCacheManager = eventDrivenCacheManager;
         }
       
         
@@ -89,14 +90,14 @@ namespace RUINORERP.Business
                     bool rs = await _tb_RoleInfoServices.Update(entity);
                     if (rs)
                     {
-                        MyCacheManager.Instance.UpdateEntityList<tb_RoleInfo>(entity);
+                        _eventDrivenCacheManager.UpdateEntity<tb_RoleInfo>(entity);
                     }
                     Returnobj = entity;
                 }
                 else
                 {
                     Returnobj = await _tb_RoleInfoServices.AddReEntityAsync(entity);
-                    MyCacheManager.Instance.UpdateEntityList<tb_RoleInfo>(entity);
+                    _eventDrivenCacheManager.UpdateEntity<tb_RoleInfo>(entity);
                 }
 
                 rr.ReturnObject = Returnobj;
@@ -130,14 +131,14 @@ namespace RUINORERP.Business
                     bool rs = await _tb_RoleInfoServices.Update(entity);
                     if (rs)
                     {
-                        MyCacheManager.Instance.UpdateEntityList<tb_RoleInfo>(entity);
+                        _eventDrivenCacheManager.UpdateEntity<tb_RoleInfo>(entity);
                     }
                     Returnobj = entity as T;
                 }
                 else
                 {
                     Returnobj = await _tb_RoleInfoServices.AddReEntityAsync(entity) as T ;
-                    MyCacheManager.Instance.UpdateEntityList<tb_RoleInfo>(entity);
+                    _eventDrivenCacheManager.UpdateEntity<tb_RoleInfo>(entity);
                 }
 
                 rr.ReturnObject = Returnobj;
@@ -162,7 +163,7 @@ namespace RUINORERP.Business
             }
             if (list != null)
             {
-                MyCacheManager.Instance.UpdateEntityList<List<T>>(list);
+                _eventDrivenCacheManager.UpdateEntityList<T>(list);
              }
             return list;
         }
@@ -177,7 +178,7 @@ namespace RUINORERP.Business
             }
             if (list != null)
             {
-                MyCacheManager.Instance.UpdateEntityList<List<T>>(list);
+                _eventDrivenCacheManager.UpdateEntityList<T>(list);
              }
             return list;
         }
@@ -190,7 +191,7 @@ namespace RUINORERP.Business
             if (rs)
             {
                 ////生成时暂时只考虑了一个主键的情况
-                MyCacheManager.Instance.DeleteEntityList<tb_RoleInfo>(entity);
+                _eventDrivenCacheManager.DeleteEntity<tb_RoleInfo>(entity.PrimaryKeyID);
             }
             return rs;
         }
@@ -203,9 +204,7 @@ namespace RUINORERP.Business
             if (c>0)
             {
                 rs=true;
-                ////生成时暂时只考虑了一个主键的情况
-                 long[] result = entitys.Select(e => e.RoleID).ToArray();
-                MyCacheManager.Instance.DeleteEntityList<tb_RoleInfo>(result);
+                _eventDrivenCacheManager.DeleteEntityList<tb_RoleInfo>(entitys);
             }
             return rs;
         }
@@ -250,8 +249,10 @@ namespace RUINORERP.Business
                              rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_RoleInfo>(entity as tb_RoleInfo)
                         .Include(m => m.tb_P4Fields)
                     .Include(m => m.tb_User_Roles)
+                    .Include(m => m.tb_P4RowAuthPolicyByRoles)
                     .Include(m => m.tb_P4Buttons)
                     .Include(m => m.tb_P4Menus)
+                    .Include(m => m.tb_P4Modules)
                     .ExecuteCommandAsync();
                  }
         else    
@@ -259,8 +260,10 @@ namespace RUINORERP.Business
                         rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_RoleInfo>(entity as tb_RoleInfo)
                 .Include(m => m.tb_P4Fields)
                 .Include(m => m.tb_User_Roles)
+                .Include(m => m.tb_P4RowAuthPolicyByRoles)
                 .Include(m => m.tb_P4Buttons)
                 .Include(m => m.tb_P4Menus)
+                .Include(m => m.tb_P4Modules)
          
                 .ExecuteCommandAsync();
                                           
@@ -296,9 +299,11 @@ namespace RUINORERP.Business
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_RoleInfo>()
                                 .Includes(m => m.tb_P4Fields)
                         .Includes(m => m.tb_User_Roles)
+                        .Includes(m => m.tb_P4RowAuthPolicyByRoles)
                         .Includes(m => m.tb_P4Buttons)
                         .Includes(m => m.tb_P4Menus)
-                                        .WhereCustom(useLike, dto);
+                        .Includes(m => m.tb_P4Modules)
+                                        .WhereCustom(useLike, dto);;
             return await querySqlQueryable.ToListAsync()as List<T>;
         }
 
@@ -309,13 +314,15 @@ namespace RUINORERP.Business
              bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_RoleInfo>(m => m.RoleID== entity.RoleID)
                                 .Include(m => m.tb_P4Fields)
                         .Include(m => m.tb_User_Roles)
+                        .Include(m => m.tb_P4RowAuthPolicyByRoles)
                         .Include(m => m.tb_P4Buttons)
                         .Include(m => m.tb_P4Menus)
+                        .Include(m => m.tb_P4Modules)
                                         .ExecuteCommandAsync();
             if (rs)
             {
                 //////生成时暂时只考虑了一个主键的情况
-                MyCacheManager.Instance.DeleteEntityList<T>(model);
+                 _eventDrivenCacheManager.DeleteEntity<T>(model);
             }
             return rs;
         }
@@ -326,7 +333,8 @@ namespace RUINORERP.Business
         public tb_RoleInfo AddReEntity(tb_RoleInfo entity)
         {
             tb_RoleInfo AddEntity =  _tb_RoleInfoServices.AddReEntity(entity);
-            MyCacheManager.Instance.UpdateEntityList<tb_RoleInfo>(AddEntity);
+     
+             _eventDrivenCacheManager.UpdateEntity<tb_RoleInfo>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
@@ -334,7 +342,7 @@ namespace RUINORERP.Business
          public async Task<tb_RoleInfo> AddReEntityAsync(tb_RoleInfo entity)
         {
             tb_RoleInfo AddEntity = await _tb_RoleInfoServices.AddReEntityAsync(entity);
-            MyCacheManager.Instance.UpdateEntityList<tb_RoleInfo>(AddEntity);
+            _eventDrivenCacheManager.UpdateEntity<tb_RoleInfo>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
@@ -344,7 +352,7 @@ namespace RUINORERP.Business
             long id = await _tb_RoleInfoServices.Add(entity);
             if(id>0)
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_RoleInfo>(entity);
+                 _eventDrivenCacheManager.UpdateEntity<tb_RoleInfo>(entity);
             }
             return id;
         }
@@ -354,7 +362,7 @@ namespace RUINORERP.Business
             List<long> ids = await _tb_RoleInfoServices.Add(infos);
             if(ids.Count>0)//成功的个数 这里缓存 对不对呢？
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_RoleInfo>(infos);
+                 _eventDrivenCacheManager.UpdateEntityList<tb_RoleInfo>(infos);
             }
             return ids;
         }
@@ -365,7 +373,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_RoleInfoServices.Delete(entity);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_RoleInfo>(entity);
+                _eventDrivenCacheManager.DeleteEntity<tb_RoleInfo>(entity);
                 
             }
             return rs;
@@ -376,7 +384,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_RoleInfoServices.Update(entity);
             if (rs)
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_RoleInfo>(entity);
+                 _eventDrivenCacheManager.DeleteEntity<tb_RoleInfo>(entity);
                 entity.ActionStatus = ActionStatus.无操作;
             }
             return rs;
@@ -387,7 +395,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_RoleInfoServices.DeleteById(id);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_RoleInfo>(id);
+               _eventDrivenCacheManager.DeleteEntity<tb_RoleInfo>(id);
             }
             return rs;
         }
@@ -397,7 +405,8 @@ namespace RUINORERP.Business
             bool rs = await _tb_RoleInfoServices.DeleteByIds(ids);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_RoleInfo>(ids);
+            
+                   _eventDrivenCacheManager.DeleteEntities<tb_RoleInfo>(ids.Cast<object>().ToArray());
             }
             return rs;
         }
@@ -409,7 +418,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_RoleInfo>(list);
+     
+             _eventDrivenCacheManager.UpdateEntityList<tb_RoleInfo>(list);
             return list;
         }
         
@@ -420,7 +430,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_RoleInfo>(list);
+    
+             _eventDrivenCacheManager.UpdateEntityList<tb_RoleInfo>(list);
             return list;
         }
         
@@ -431,7 +442,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_RoleInfo>(list);
+  
+             _eventDrivenCacheManager.UpdateEntityList<tb_RoleInfo>(list);
             return list;
         }
         
@@ -442,7 +454,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_RoleInfo>(list);
+ 
+             _eventDrivenCacheManager.UpdateEntityList<tb_RoleInfo>(list);
             return list;
         }
         
@@ -460,7 +473,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_RoleInfo>(list);
+   
+             _eventDrivenCacheManager.UpdateEntityList<tb_RoleInfo>(list);
             return list;
         }
         
@@ -476,8 +490,10 @@ namespace RUINORERP.Business
                                .Includes(t => t.tb_rolepropertyconfig )
                                             .Includes(t => t.tb_P4Fields )
                                 .Includes(t => t.tb_User_Roles )
+                                .Includes(t => t.tb_P4RowAuthPolicyByRoles )
                                 .Includes(t => t.tb_P4Buttons )
                                 .Includes(t => t.tb_P4Menus )
+                                .Includes(t => t.tb_P4Modules )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -485,7 +501,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_RoleInfo>(list);
+ 
+             _eventDrivenCacheManager.UpdateEntityList<tb_RoleInfo>(list);
             return list;
         }
 
@@ -500,8 +517,10 @@ namespace RUINORERP.Business
                                .Includes(t => t.tb_rolepropertyconfig )
                                             .Includes(t => t.tb_P4Fields )
                                 .Includes(t => t.tb_User_Roles )
+                                .Includes(t => t.tb_P4RowAuthPolicyByRoles )
                                 .Includes(t => t.tb_P4Buttons )
                                 .Includes(t => t.tb_P4Menus )
+                                .Includes(t => t.tb_P4Modules )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -509,7 +528,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_RoleInfo>(list);
+  
+             _eventDrivenCacheManager.UpdateEntityList<tb_RoleInfo>(list);
             return list;
         }
         
@@ -524,8 +544,10 @@ namespace RUINORERP.Business
                             .Includes(t => t.tb_rolepropertyconfig )
                                         .Includes(t => t.tb_P4Fields )
                             .Includes(t => t.tb_User_Roles )
+                            .Includes(t => t.tb_P4RowAuthPolicyByRoles )
                             .Includes(t => t.tb_P4Buttons )
                             .Includes(t => t.tb_P4Menus )
+                            .Includes(t => t.tb_P4Modules )
                         .ToList();
             
             foreach (var item in list)
@@ -533,7 +555,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_RoleInfo>(list);
+     
+             _eventDrivenCacheManager.UpdateEntityList<tb_RoleInfo>(list);
             return list;
         }
         
@@ -563,17 +586,22 @@ namespace RUINORERP.Business
         {
             tb_RoleInfo entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_RoleInfo>().Where(w => w.RoleID == (long)id)
                              .Includes(t => t.tb_rolepropertyconfig )
-                                        .Includes(t => t.tb_P4Fields )
-                            .Includes(t => t.tb_User_Roles )
-                            .Includes(t => t.tb_P4Buttons )
-                            .Includes(t => t.tb_P4Menus )
-                        .FirstAsync();
+                        
+
+                                            .Includes(t => t.tb_P4Fields )
+                                            .Includes(t => t.tb_User_Roles )
+                                            .Includes(t => t.tb_P4RowAuthPolicyByRoles )
+                                            .Includes(t => t.tb_P4Buttons )
+                                            .Includes(t => t.tb_P4Menus )
+                                            .Includes(t => t.tb_P4Modules )
+                                .FirstAsync();
             if(entity!=null)
             {
                 entity.HasChanged = false;
             }
 
-            MyCacheManager.Instance.UpdateEntityList<tb_RoleInfo>(entity);
+         
+             _eventDrivenCacheManager.UpdateEntity<tb_RoleInfo>(entity);
             return entity as T;
         }
         

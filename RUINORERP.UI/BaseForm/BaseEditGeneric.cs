@@ -252,7 +252,7 @@ namespace RUINORERP.UI.BaseForm
                         BindingSource NewBsList = new BindingSource();
                         //将List<T>类型的结果是object的转换为指定类型的List
                         //var lastlist = ((IEnumerable<dynamic>)rslist).Select(item => Activator.CreateInstance(mytype)).ToList();
-                        var cachelist = MyCacheManager.Instance.CacheEntityList.Get(fktableName);
+                        var cachelist = RUINORERP.Business.Cache.EntityCacheHelper.CacheEntityList.Get(fktableName);
                         if (cachelist != null)
                         {
                             // 获取原始 List<T> 的类型参数
@@ -267,7 +267,7 @@ namespace RUINORERP.UI.BaseForm
                             {
                                 //Type elementType = Assembly.LoadFrom(Global.GlobalConstants.ModelDLL_NAME).GetType(Global.GlobalConstants.Model_NAME + "." + fktableName);
                                 Type elementType = null;
-                                MyCacheManager.Instance.NewTableTypeList.TryGetValue(fktableName, out elementType);
+                                RUINORERP.Business.Cache.EntityCacheHelper.NewTableTypeList.TryGetValue(fktableName, out elementType);
                                 List<object> myList = TypeHelper.ConvertJArrayToList(elementType, cachelist as JArray);
 
                                 #region  jsonlist
@@ -275,9 +275,7 @@ namespace RUINORERP.UI.BaseForm
                                 #endregion
 
                             }
-                            //下面使用了ktb.DataBindings.Count。下面方法不能清掉重新绑定
                             Common.DataBindingHelper.InitDataToCmb(NewBsList, ktb.ValueMember, ktb.DisplayMember, ktb);
-
                             ////因为选择中 实体数据并没有更新，下面两行是将对象对应的属性给一个选中的值。
                             object selectValue = RUINORERP.Common.Helper.ReflectionHelper.GetPropertyValue(obj, ktb.ValueMember);
                             Binding binding = null;

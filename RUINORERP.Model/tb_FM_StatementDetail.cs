@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/06/2025 15:41:55
+// 时间：11/06/2025 20:41:54
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -85,15 +85,14 @@ namespace RUINORERP.Model
         /// <summary>
         /// 单据编号
         /// </summary>
-        [AdvQueryAttribute(ColName = "ARAPNo", ColDesc = "单据编号")]
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "ARAPNo", Length = 30, IsNullable = true, ColumnDescription = "单据编号")]
+        [AdvQueryAttribute(ColName = "ARAPNo",ColDesc = "单据编号")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "ARAPNo" ,Length=30,IsNullable = true,ColumnDescription = "单据编号" )]
         public string ARAPNo
-        {
-            get { return _ARAPNo; }
-            set
-            {
-                SetProperty(ref _ARAPNo, value);
-            }
+        { 
+            get{return _ARAPNo;}
+            set{
+            SetProperty(ref _ARAPNo, value);
+                        }
         }
 
         private int _ReceivePaymentType;
@@ -110,13 +109,13 @@ namespace RUINORERP.Model
                         }
         }
 
-        private DateTime? _DocumentDate;
+        private DateTime _DocumentDate;
         /// <summary>
         /// 单据日期
         /// </summary>
         [AdvQueryAttribute(ColName = "DocumentDate",ColDesc = "单据日期")] 
-        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "DocumentDate" ,IsNullable = true,ColumnDescription = "单据日期" )]
-        public DateTime? DocumentDate
+        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "DocumentDate" ,IsNullable = false,ColumnDescription = "单据日期" )]
+        public DateTime DocumentDate
         { 
             get{return _DocumentDate;}
             set{
@@ -124,13 +123,13 @@ namespace RUINORERP.Model
                         }
         }
 
-        private DateTime? _BusinessDate;
+        private DateTime _BusinessDate;
         /// <summary>
         /// 业务日期
         /// </summary>
         [AdvQueryAttribute(ColName = "BusinessDate",ColDesc = "业务日期")] 
-        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "BusinessDate" ,IsNullable = true,ColumnDescription = "业务日期" )]
-        public DateTime? BusinessDate
+        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "BusinessDate" ,IsNullable = false,ColumnDescription = "业务日期" )]
+        public DateTime BusinessDate
         { 
             get{return _BusinessDate;}
             set{
@@ -302,7 +301,7 @@ namespace RUINORERP.Model
         #endregion
 
 
-
+ 
 
 //如果为false,则不可以。
 private bool PK_FK_ID_Check()

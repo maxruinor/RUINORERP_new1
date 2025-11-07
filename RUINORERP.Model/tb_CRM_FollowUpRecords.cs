@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：02/08/2025 16:31:56
+// 时间：11/06/2025 20:41:43
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -186,7 +186,7 @@ namespace RUINORERP.Model
         /// 跟进结果
         /// </summary>
         [AdvQueryAttribute(ColName = "FollowUpResult",ColDesc = "跟进结果")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "FollowUpResult" ,Length=500,IsNullable = true,ColumnDescription = "跟进结果")]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "FollowUpResult" ,Length=500,IsNullable = true,ColumnDescription = "跟进结果" )]
         public string FollowUpResult
         { 
             get{return _FollowUpResult;}
@@ -200,7 +200,7 @@ namespace RUINORERP.Model
         /// 备注
         /// </summary>
         [AdvQueryAttribute(ColName = "Notes",ColDesc = "备注")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Notes" ,Length=1000,IsNullable = true,ColumnDescription = "备注")]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Notes" ,Length=1000,IsNullable = true,ColumnDescription = "备注" )]
         public string Notes
         { 
             get{return _Notes;}
@@ -308,7 +308,7 @@ namespace RUINORERP.Model
         #endregion
 
 
-
+ 
 
 //如果为false,则不可以。
 private bool PK_FK_ID_Check()
@@ -319,6 +319,11 @@ return rs;
 
 
 
+
+
+
+       
+        
 
         public override object Clone()
         {

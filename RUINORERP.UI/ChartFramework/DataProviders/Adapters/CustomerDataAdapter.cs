@@ -120,7 +120,7 @@ namespace RUINORERP.UI.ChartFramework.DataProviders.Adapters
                 foreach (var group in seriesGroups)
                 {
                     string seriesName = group.Key.ToString();
-                    tb_Employee Employee = MyCacheManager.Instance.GetEntity<tb_Employee>(seriesName.ToLong());
+                    tb_Employee Employee = RUINORERP.Business.Cache.EntityCacheHelper.GetEntity<tb_Employee>(seriesName.ToLong());
                     if (Employee != null)
                     {
                         seriesName = Employee.Employee_Name;

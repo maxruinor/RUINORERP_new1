@@ -4,10 +4,10 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：02/08/2025 16:32:11
+// 时间：11/07/2025 12:17:06
 // **************************************
 using System;
-﻿using SqlSugar;
+using SqlSugar;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -279,10 +279,6 @@ namespace RUINORERP.Model
             SetProperty(ref _CustomerVendor_ID, value);
                         }
         }
-
-
-        
-
 
         private long? _Location_ID;
         /// <summary>
@@ -558,75 +554,58 @@ namespace RUINORERP.Model
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(Employee_ID))]
         public virtual tb_Employee tb_employee { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(CustomerVendor_ID))]
         public virtual tb_CustomerVendor tb_customervendor { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(DepartmentID))]
         public virtual tb_Department tb_department { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(Location_ID))]
         public virtual tb_Location tb_location { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(Category_ID))]
         public virtual tb_ProdCategories tb_prodcategories { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(Type_ID))]
         public virtual tb_ProductType tb_producttype { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(Unit_ID))]
         public virtual tb_Unit tb_unit { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(Rack_ID))]
         public virtual tb_StorageRack tb_storagerack { get; set; }
 
 
-        //[Browsable(false)]打印报表时的数据源会不显示
+
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ProdDetail.ProdBaseID))]
         public virtual List<tb_ProdDetail> tb_ProdDetails { get; set; }
-        //tb_ProdDetail.ProdBaseID)
-        //ProdBaseID.FK_TB_PRODD_REFERENCE_TB_PROD)
-        //tb_Prod.ProdBaseID)
 
-        //[Browsable(false)]打印报表时的数据源会不显示
+
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_Prod_Attr_Relation.ProdBaseID))]
         public virtual List<tb_Prod_Attr_Relation> tb_Prod_Attr_Relations { get; set; }
-        //tb_Prod_Attr_Relation.ProdBaseID)
-        //ProdBaseID.FK_TB_PROD__REF_TB_PROD_4)
-        //tb_Prod.ProdBaseID)
 
-        //[Browsable(false)]打印报表时的数据源会不显示
+
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_Packing.ProdBaseID))]
         public virtual List<tb_Packing> tb_Packings { get; set; }
-        //tb_Packing.ProdBaseID)
-        //ProdBaseID.FK_PACKingSpec_REF_PROD)
-        //tb_Prod.ProdBaseID)
 
 
         #endregion
 
 
-
+ 
 
 //如果为false,则不可以。
 private bool PK_FK_ID_Check()
@@ -639,6 +618,8 @@ return rs;
 
 
 
+
+       
         
 
         public override object Clone()

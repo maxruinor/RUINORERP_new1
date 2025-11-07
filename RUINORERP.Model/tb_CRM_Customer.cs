@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：02/08/2025 16:31:55
+// 时间：11/06/2025 20:41:43
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 目标客户-公海客户CRM系统中使用，给成交客户作外键引用
     /// </summary>
     [Serializable()]
-    [Description("目标客户")]
+    [Description("目标客户-公海客户CRM系统中使用，给成交客户作外键引用")]
     [SugarTable("tb_CRM_Customer")]
     public partial class tb_CRM_Customer: BaseEntity, ICloneable
     {
@@ -56,7 +56,7 @@ namespace RUINORERP.Model
         /// 客户名称
         /// </summary>
         [AdvQueryAttribute(ColName = "CustomerName",ColDesc = "客户名称")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "CustomerName" ,Length=255,IsNullable = true,ColumnDescription = "客户名称" )]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "CustomerName" ,Length=50,IsNullable = true,ColumnDescription = "客户名称" )]
         public string CustomerName
         { 
             get{return _CustomerName;}
@@ -590,7 +590,7 @@ namespace RUINORERP.Model
         #endregion
 
 
-
+ 
 
 //如果为false,则不可以。
 private bool PK_FK_ID_Check()
@@ -601,7 +601,11 @@ return rs;
 
 
 
- 
+
+
+
+       
+        
 
         public override object Clone()
         {

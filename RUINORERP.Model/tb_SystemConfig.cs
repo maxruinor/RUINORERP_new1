@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/24/2025 20:25:45
+// 时间：11/06/2025 20:42:20
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -401,22 +401,19 @@ namespace RUINORERP.Model
                         }
         }
 
-
         private string _FunctionConfiguration;
         /// <summary>
         /// 功能配置
         /// </summary>
-        [AdvQueryAttribute(ColName = "FunctionConfiguration", ColDesc = "功能配置")]
-        [SugarColumn(ColumnDataType = "text", SqlParameterDbType = "String", ColumnName = "FunctionConfiguration", Length = 2147483647, IsNullable = false, ColumnDescription = "功能配置")]
+        [AdvQueryAttribute(ColName = "FunctionConfiguration",ColDesc = "功能配置")] 
+        [SugarColumn(ColumnDataType = "text", SqlParameterDbType ="String",  ColumnName = "FunctionConfiguration" ,Length=2147483647,IsNullable = true,ColumnDescription = "功能配置" )]
         public string FunctionConfiguration
-        {
-            get { return _FunctionConfiguration; }
-            set
-            {
-                SetProperty(ref _FunctionConfiguration, value);
-            }
+        { 
+            get{return _FunctionConfiguration;}
+            set{
+            SetProperty(ref _FunctionConfiguration, value);
+                        }
         }
-
 
         #endregion
 
@@ -426,10 +423,10 @@ namespace RUINORERP.Model
         #endregion
 
 
+ 
 
-
-        //如果为false,则不可以。
-        private bool PK_FK_ID_Check()
+//如果为false,则不可以。
+private bool PK_FK_ID_Check()
 {
   bool rs=true;
 return rs;

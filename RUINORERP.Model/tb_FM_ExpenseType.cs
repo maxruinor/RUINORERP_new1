@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/20/2025 16:08:04
+// 时间：11/06/2025 20:41:48
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -147,11 +147,19 @@ namespace RUINORERP.Model
         //ExpenseType_id.FK_EXPENSECLAIMDETAIL_REF_EXPENSETYPE)
         //tb_FM_ExpenseType.ExpenseType_id)
 
+        //[Browsable(false)]打印报表时的数据源会不显示
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_FM_ReceivablePayableDetail.ExpenseType_id))]
+        public virtual List<tb_FM_ReceivablePayableDetail> tb_FM_ReceivablePayableDetails { get; set; }
+        //tb_FM_ReceivablePayableDetail.ExpenseType_id)
+        //ExpenseType_id.FK_TB_FM_RECEIVABLEPAYABLEDETAIL_REF_FM_EXPENSETYPE)
+        //tb_FM_ExpenseType.ExpenseType_id)
+
 
         #endregion
 
 
-
+ 
 
 //如果为false,则不可以。
 private bool PK_FK_ID_Check()

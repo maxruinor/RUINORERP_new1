@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：02/08/2025 16:32:08
+// 时间：11/06/2025 20:42:00
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 出入库类型  非生产领料/退料  借出，归还  报损报溢？单独处理？
     /// </summary>
     [Serializable()]
-    [Description("其它出入库类型")]
+    [Description("出入库类型  非生产领料/退料  借出，归还  报损报溢？单独处理？")]
     [SugarTable("tb_OutInStockType")]
     public partial class tb_OutInStockType: BaseEntity, ICloneable
     {
@@ -119,11 +119,19 @@ namespace RUINORERP.Model
         //Type_ID.FK_TB_STOCKOUT_REF_TB_OUTIN_TYPE)
         //tb_OutInStockType.Type_ID)
 
+        //[Browsable(false)]打印报表时的数据源会不显示
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_StockIn.Type_ID))]
+        public virtual List<tb_StockIn> tb_StockIns { get; set; }
+        //tb_StockIn.Type_ID)
+        //Type_ID.FK_STOCKIN1_REF_OUTINSTOCKType)
+        //tb_OutInStockType.Type_ID)
+
 
         #endregion
 
 
-
+ 
 
 //如果为false,则不可以。
 private bool PK_FK_ID_Check()
@@ -135,6 +143,10 @@ return rs;
 
 
 
+
+
+       
+        
 
         public override object Clone()
         {

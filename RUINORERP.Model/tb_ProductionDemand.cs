@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：02/08/2025 16:32:18
+// 时间：11/06/2025 20:42:07
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 生产需求分析表 是一个中间表，由计划生产单或销售订单带入数据来分析，产生采购订单再产生制令单，分析时有三步，库存不足项（包括有成品材料所有项），采购商品建议，自制品成品建议,中间表保存记录而已，操作UI上会有生成采购订单，或生产单等操作
     /// </summary>
     [Serializable()]
-    [Description("生产需求分析表")]
+    [Description("生产需求分析表 是一个中间表，由计划生产单或销售订单带入数据来分析，产生采购订单再产生制令单，分析时有三步，库存不足项（包括有成品材料所有项），采购商品建议，自制品成品建议,中间表保存记录而已，操作UI上会有生成采购订单，或生产单等操作")]
     [SugarTable("tb_ProductionDemand")]
     public partial class tb_ProductionDemand: BaseEntity, ICloneable
     {
@@ -350,10 +350,10 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_PurOrder.PDID))]
-        public virtual List<tb_PurOrder> tb_PurOrders { get; set; }
-        //tb_PurOrder.PDID)
-        //PDID.FK_PURORDER_REF_TB_PRODDEMAND)
+        [Navigate(NavigateType.OneToMany, nameof(tb_ManufacturingOrder.PDID))]
+        public virtual List<tb_ManufacturingOrder> tb_ManufacturingOrders { get; set; }
+        //tb_ManufacturingOrder.PDID)
+        //PDID.FK_MANUFACTURINGORDER_REF_PRODUCTIONDEMAND)
         //tb_ProductionDemand.PDID)
 
         //[Browsable(false)]打印报表时的数据源会不显示
@@ -388,19 +388,11 @@ namespace RUINORERP.Model
         //PDID.FK_TB_PURGO_REFERENCE_TB_PRODU)
         //tb_ProductionDemand.PDID)
 
-        //[Browsable(false)]打印报表时的数据源会不显示
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_ManufacturingOrder.PDID))]
-        public virtual List<tb_ManufacturingOrder> tb_ManufacturingOrders { get; set; }
-        //tb_ManufacturingOrder.PDID)
-        //PDID.FK_MANUFACTURINGORDER_REF_PRODUCTIONDEMAND)
-        //tb_ProductionDemand.PDID)
-
 
         #endregion
 
 
-
+ 
 
 //如果为false,则不可以。
 private bool PK_FK_ID_Check()
@@ -412,6 +404,9 @@ return rs;
 
 
 
+
+
+       
         
 
         public override object Clone()

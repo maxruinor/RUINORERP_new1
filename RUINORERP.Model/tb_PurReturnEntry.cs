@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：02/08/2025 16:32:24
+// 时间：11/06/2025 20:42:12
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -112,10 +112,10 @@ namespace RUINORERP.Model
 
         private long? _Paytype_ID;
         /// <summary>
-        /// 付款方式
+        /// 付款类型
         /// </summary>
-        [AdvQueryAttribute(ColName = "Paytype_ID",ColDesc = "付款方式")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Paytype_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "付款方式" )]
+        [AdvQueryAttribute(ColName = "Paytype_ID",ColDesc = "付款类型")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Paytype_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "付款类型" )]
         [FKRelationAttribute("tb_PaymentMethod","Paytype_ID")]
         public long? Paytype_ID
         { 
@@ -124,21 +124,7 @@ namespace RUINORERP.Model
             SetProperty(ref _Paytype_ID, value);
                         }
         }
-        private long _Currency_ID;
-        /// <summary>
-        /// 币别
-        /// </summary>
-        [AdvQueryAttribute(ColName = "Currency_ID", ColDesc = "币别")]
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "Currency_ID", DecimalDigits = 0, IsNullable = false, ColumnDescription = "币别")]
-        [FKRelationAttribute("tb_Currency", "Currency_ID")]
-        public long Currency_ID
-        {
-            get { return _Currency_ID; }
-            set
-            {
-                SetProperty(ref _Currency_ID, value);
-            }
-        }
+
         private long? _PurEntryRe_ID;
         /// <summary>
         /// 采购退货单
@@ -165,6 +151,20 @@ namespace RUINORERP.Model
             get{return _PurEntryReNo;}
             set{
             SetProperty(ref _PurEntryReNo, value);
+                        }
+        }
+
+        private long _Currency_ID;
+        /// <summary>
+        /// 币别
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Currency_ID",ColDesc = "币别")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Currency_ID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "币别" )]
+        public long Currency_ID
+        { 
+            get{return _Currency_ID;}
+            set{
+            SetProperty(ref _Currency_ID, value);
                         }
         }
 
@@ -212,7 +212,7 @@ namespace RUINORERP.Model
 
         private DateTime _BillDate;
         /// <summary>
-        /// 单据日期 应该叫入库日期
+        /// 单据日期
         /// </summary>
         [AdvQueryAttribute(ColName = "BillDate",ColDesc = "单据日期")] 
         [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "BillDate" ,IsNullable = false,ColumnDescription = "单据日期" )]
@@ -252,23 +252,19 @@ namespace RUINORERP.Model
                         }
         }
 
-        private bool? _is_force_offset = false;
+        private bool _is_force_offset= false;
         /// <summary>
         /// 强制核销模式
-        /// 为真是跳过检测数量
         /// </summary>
-        [AdvQueryAttribute(ColName = "is_force_offset", ColDesc = "强制核销模式")]
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType = "Boolean", ColumnName = "is_force_offset", IsNullable = true, ColumnDescription = "强制核销模式")]
-        [Browsable(false)]
-        public bool? is_force_offset
-        {
-            get { return _is_force_offset; }
-            set
-            {
-                SetProperty(ref _is_force_offset, value);
-            }
+        [AdvQueryAttribute(ColName = "is_force_offset",ColDesc = "强制核销模式")] 
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "is_force_offset" ,IsNullable = false,ColumnDescription = "强制核销模式" )]
+        public bool is_force_offset
+        { 
+            get{return _is_force_offset;}
+            set{
+            SetProperty(ref _is_force_offset, value);
+                        }
         }
-
 
         private bool _isdeleted= false;
         /// <summary>
@@ -425,7 +421,19 @@ namespace RUINORERP.Model
                         }
         }
 
- 
+        private decimal? _Deposit= ((0));
+        /// <summary>
+        /// 订金
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Deposit",ColDesc = "订金")] 
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "Deposit" , DecimalDigits = 4,IsNullable = true,ColumnDescription = "订金" )]
+        public decimal? Deposit
+        { 
+            get{return _Deposit;}
+            set{
+            SetProperty(ref _Deposit, value);
+                        }
+        }
 
         private int? _TaxDeductionType;
         /// <summary>
@@ -441,7 +449,19 @@ namespace RUINORERP.Model
                         }
         }
 
-        
+        private decimal? _TotalDiscountAmount;
+        /// <summary>
+        /// 折扣金额总计
+        /// </summary>
+        [AdvQueryAttribute(ColName = "TotalDiscountAmount",ColDesc = "折扣金额总计")] 
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalDiscountAmount" , DecimalDigits = 4,IsNullable = true,ColumnDescription = "折扣金额总计" )]
+        public decimal? TotalDiscountAmount
+        { 
+            get{return _TotalDiscountAmount;}
+            set{
+            SetProperty(ref _TotalDiscountAmount, value);
+                        }
+        }
 
         private bool? _ReceiptInvoiceClosed;
         /// <summary>
@@ -582,7 +602,7 @@ namespace RUINORERP.Model
         #endregion
 
 
-
+ 
 
 //如果为false,则不可以。
 private bool PK_FK_ID_Check()
@@ -594,7 +614,10 @@ return rs;
 
 
 
- 
+
+
+       
+        
 
         public override object Clone()
         {

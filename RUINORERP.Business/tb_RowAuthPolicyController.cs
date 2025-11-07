@@ -1,9 +1,8 @@
 ﻿// **************************************
-// 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/04/2025 14:48:21
+// 时间：11/06/2025 19:43:22
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -24,6 +23,7 @@ using RUINORERP.Model.Context;
 using System.Linq;
 using RUINOR.Core;
 using RUINORERP.Common.Helper;
+using RUINORERP.Business.Cache;
 
 namespace RUINORERP.Business
 {
@@ -38,14 +38,16 @@ namespace RUINORERP.Business
         //public readonly IUnitOfWorkManage _unitOfWorkManage;
         //public readonly ILogger<BaseController<T>> _logger;
         public Itb_RowAuthPolicyServices _tb_RowAuthPolicyServices { get; set; }
+        private readonly EventDrivenCacheManager _eventDrivenCacheManager; 
        // private readonly ApplicationContext _appContext;
        
-        public tb_RowAuthPolicyController(ILogger<tb_RowAuthPolicyController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_RowAuthPolicyServices tb_RowAuthPolicyServices , ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
+        public tb_RowAuthPolicyController(ILogger<tb_RowAuthPolicyController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_RowAuthPolicyServices tb_RowAuthPolicyServices ,EventDrivenCacheManager eventDrivenCacheManager, ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
         {
             _logger = logger;
            _unitOfWorkManage = unitOfWorkManage;
            _tb_RowAuthPolicyServices = tb_RowAuthPolicyServices;
-            _appContext = appContext;
+           _appContext = appContext;
+           _eventDrivenCacheManager = eventDrivenCacheManager;
         }
       
         
@@ -88,14 +90,14 @@ namespace RUINORERP.Business
                     bool rs = await _tb_RowAuthPolicyServices.Update(entity);
                     if (rs)
                     {
-                        MyCacheManager.Instance.UpdateEntityList<tb_RowAuthPolicy>(entity);
+                        _eventDrivenCacheManager.UpdateEntity<tb_RowAuthPolicy>(entity);
                     }
                     Returnobj = entity;
                 }
                 else
                 {
                     Returnobj = await _tb_RowAuthPolicyServices.AddReEntityAsync(entity);
-                    MyCacheManager.Instance.UpdateEntityList<tb_RowAuthPolicy>(entity);
+                    _eventDrivenCacheManager.UpdateEntity<tb_RowAuthPolicy>(entity);
                 }
 
                 rr.ReturnObject = Returnobj;
@@ -129,14 +131,14 @@ namespace RUINORERP.Business
                     bool rs = await _tb_RowAuthPolicyServices.Update(entity);
                     if (rs)
                     {
-                        MyCacheManager.Instance.UpdateEntityList<tb_RowAuthPolicy>(entity);
+                        _eventDrivenCacheManager.UpdateEntity<tb_RowAuthPolicy>(entity);
                     }
                     Returnobj = entity as T;
                 }
                 else
                 {
                     Returnobj = await _tb_RowAuthPolicyServices.AddReEntityAsync(entity) as T ;
-                    MyCacheManager.Instance.UpdateEntityList<tb_RowAuthPolicy>(entity);
+                    _eventDrivenCacheManager.UpdateEntity<tb_RowAuthPolicy>(entity);
                 }
 
                 rr.ReturnObject = Returnobj;
@@ -161,7 +163,7 @@ namespace RUINORERP.Business
             }
             if (list != null)
             {
-                MyCacheManager.Instance.UpdateEntityList<List<T>>(list);
+                _eventDrivenCacheManager.UpdateEntityList<T>(list);
              }
             return list;
         }
@@ -176,7 +178,7 @@ namespace RUINORERP.Business
             }
             if (list != null)
             {
-                MyCacheManager.Instance.UpdateEntityList<List<T>>(list);
+                _eventDrivenCacheManager.UpdateEntityList<T>(list);
              }
             return list;
         }
@@ -189,7 +191,7 @@ namespace RUINORERP.Business
             if (rs)
             {
                 ////生成时暂时只考虑了一个主键的情况
-                MyCacheManager.Instance.DeleteEntityList<tb_RowAuthPolicy>(entity);
+                _eventDrivenCacheManager.DeleteEntity<tb_RowAuthPolicy>(entity.PrimaryKeyID);
             }
             return rs;
         }
@@ -202,9 +204,7 @@ namespace RUINORERP.Business
             if (c>0)
             {
                 rs=true;
-                ////生成时暂时只考虑了一个主键的情况
-                 long[] result = entitys.Select(e => e.PolicyId).ToArray();
-                MyCacheManager.Instance.DeleteEntityList<tb_RowAuthPolicy>(result);
+                _eventDrivenCacheManager.DeleteEntityList<tb_RowAuthPolicy>(entitys);
             }
             return rs;
         }
@@ -306,7 +306,7 @@ namespace RUINORERP.Business
             if (rs)
             {
                 //////生成时暂时只考虑了一个主键的情况
-                MyCacheManager.Instance.DeleteEntityList<T>(model);
+                 _eventDrivenCacheManager.DeleteEntity<T>(model);
             }
             return rs;
         }
@@ -317,7 +317,8 @@ namespace RUINORERP.Business
         public tb_RowAuthPolicy AddReEntity(tb_RowAuthPolicy entity)
         {
             tb_RowAuthPolicy AddEntity =  _tb_RowAuthPolicyServices.AddReEntity(entity);
-            MyCacheManager.Instance.UpdateEntityList<tb_RowAuthPolicy>(AddEntity);
+     
+             _eventDrivenCacheManager.UpdateEntity<tb_RowAuthPolicy>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
@@ -325,7 +326,7 @@ namespace RUINORERP.Business
          public async Task<tb_RowAuthPolicy> AddReEntityAsync(tb_RowAuthPolicy entity)
         {
             tb_RowAuthPolicy AddEntity = await _tb_RowAuthPolicyServices.AddReEntityAsync(entity);
-            MyCacheManager.Instance.UpdateEntityList<tb_RowAuthPolicy>(AddEntity);
+            _eventDrivenCacheManager.UpdateEntity<tb_RowAuthPolicy>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
@@ -335,7 +336,7 @@ namespace RUINORERP.Business
             long id = await _tb_RowAuthPolicyServices.Add(entity);
             if(id>0)
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_RowAuthPolicy>(entity);
+                 _eventDrivenCacheManager.UpdateEntity<tb_RowAuthPolicy>(entity);
             }
             return id;
         }
@@ -345,7 +346,7 @@ namespace RUINORERP.Business
             List<long> ids = await _tb_RowAuthPolicyServices.Add(infos);
             if(ids.Count>0)//成功的个数 这里缓存 对不对呢？
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_RowAuthPolicy>(infos);
+                 _eventDrivenCacheManager.UpdateEntityList<tb_RowAuthPolicy>(infos);
             }
             return ids;
         }
@@ -356,7 +357,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_RowAuthPolicyServices.Delete(entity);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_RowAuthPolicy>(entity);
+                _eventDrivenCacheManager.DeleteEntity<tb_RowAuthPolicy>(entity);
                 
             }
             return rs;
@@ -367,7 +368,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_RowAuthPolicyServices.Update(entity);
             if (rs)
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_RowAuthPolicy>(entity);
+                 _eventDrivenCacheManager.DeleteEntity<tb_RowAuthPolicy>(entity);
                 entity.ActionStatus = ActionStatus.无操作;
             }
             return rs;
@@ -378,7 +379,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_RowAuthPolicyServices.DeleteById(id);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_RowAuthPolicy>(id);
+               _eventDrivenCacheManager.DeleteEntity<tb_RowAuthPolicy>(id);
             }
             return rs;
         }
@@ -388,7 +389,8 @@ namespace RUINORERP.Business
             bool rs = await _tb_RowAuthPolicyServices.DeleteByIds(ids);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_RowAuthPolicy>(ids);
+            
+                   _eventDrivenCacheManager.DeleteEntities<tb_RowAuthPolicy>(ids.Cast<object>().ToArray());
             }
             return rs;
         }
@@ -400,7 +402,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_RowAuthPolicy>(list);
+     
+             _eventDrivenCacheManager.UpdateEntityList<tb_RowAuthPolicy>(list);
             return list;
         }
         
@@ -411,7 +414,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_RowAuthPolicy>(list);
+    
+             _eventDrivenCacheManager.UpdateEntityList<tb_RowAuthPolicy>(list);
             return list;
         }
         
@@ -422,7 +426,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_RowAuthPolicy>(list);
+  
+             _eventDrivenCacheManager.UpdateEntityList<tb_RowAuthPolicy>(list);
             return list;
         }
         
@@ -433,7 +438,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_RowAuthPolicy>(list);
+ 
+             _eventDrivenCacheManager.UpdateEntityList<tb_RowAuthPolicy>(list);
             return list;
         }
         
@@ -451,7 +457,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_RowAuthPolicy>(list);
+   
+             _eventDrivenCacheManager.UpdateEntityList<tb_RowAuthPolicy>(list);
             return list;
         }
         
@@ -473,7 +480,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_RowAuthPolicy>(list);
+ 
+             _eventDrivenCacheManager.UpdateEntityList<tb_RowAuthPolicy>(list);
             return list;
         }
 
@@ -494,7 +502,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_RowAuthPolicy>(list);
+  
+             _eventDrivenCacheManager.UpdateEntityList<tb_RowAuthPolicy>(list);
             return list;
         }
         
@@ -515,7 +524,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_RowAuthPolicy>(list);
+     
+             _eventDrivenCacheManager.UpdateEntityList<tb_RowAuthPolicy>(list);
             return list;
         }
         
@@ -554,7 +564,8 @@ namespace RUINORERP.Business
                 entity.HasChanged = false;
             }
 
-            MyCacheManager.Instance.UpdateEntityList<tb_RowAuthPolicy>(entity);
+         
+             _eventDrivenCacheManager.UpdateEntity<tb_RowAuthPolicy>(entity);
             return entity as T;
         }
         

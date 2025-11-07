@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：02/19/2025 23:00:25
+// 时间：11/06/2025 20:41:48
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -136,17 +136,17 @@ namespace RUINORERP.Model
                         }
         }
 
-        private int? _SourceBill_BizType;
+        private int? _SourceBizType;
         /// <summary>
         /// 来源业务
         /// </summary>
-        [AdvQueryAttribute(ColName = "SourceBill_BizType",ColDesc = "来源业务")] 
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "SourceBill_BizType" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "来源业务" )]
-        public int? SourceBill_BizType
+        [AdvQueryAttribute(ColName = "SourceBizType",ColDesc = "来源业务")] 
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "SourceBizType" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "来源业务" )]
+        public int? SourceBizType
         { 
-            get{return _SourceBill_BizType;}
+            get{return _SourceBizType;}
             set{
-            SetProperty(ref _SourceBill_BizType, value);
+            SetProperty(ref _SourceBizType, value);
                         }
         }
 
@@ -379,7 +379,7 @@ namespace RUINORERP.Model
         #endregion
 
 
-
+ 
 
 //如果为false,则不可以。
 private bool PK_FK_ID_Check()
@@ -388,6 +388,13 @@ private bool PK_FK_ID_Check()
 return rs;
 }
 
+
+
+
+
+
+       
+        
 
         public override object Clone()
         {

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：02/08/2025 16:32:13
+// 时间：11/06/2025 20:42:04
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 产品转换单 A变成B出库,AB相近。可能只是换说明书或刷机  A  数量  加或减 。B数量增加或减少。
     /// </summary>
     [Serializable()]
-    [Description("产品转换单")]
+    [Description("产品转换单 A变成B出库,AB相近。可能只是换说明书或刷机  A  数量  加或减 。B数量增加或减少。")]
     [SugarTable("tb_ProdConversion")]
     public partial class tb_ProdConversion: BaseEntity, ICloneable
     {
@@ -346,7 +346,7 @@ namespace RUINORERP.Model
         #endregion
 
 
-
+ 
 
 //如果为false,则不可以。
 private bool PK_FK_ID_Check()
@@ -359,6 +359,9 @@ return rs;
 
 
 
+
+       
+        
 
         public override object Clone()
         {

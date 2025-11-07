@@ -1,10 +1,8 @@
-﻿
-// **************************************
-// 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
+﻿// **************************************
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/14/2025 20:39:48
+// 时间：11/07/2025 12:17:07
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -25,6 +23,7 @@ using RUINORERP.Model.Context;
 using System.Linq;
 using RUINOR.Core;
 using RUINORERP.Common.Helper;
+using RUINORERP.Business.Cache;
 
 namespace RUINORERP.Business
 {
@@ -39,14 +38,16 @@ namespace RUINORERP.Business
         //public readonly IUnitOfWorkManage _unitOfWorkManage;
         //public readonly ILogger<BaseController<T>> _logger;
         public Itb_ProdDetailServices _tb_ProdDetailServices { get; set; }
+        private readonly EventDrivenCacheManager _eventDrivenCacheManager; 
        // private readonly ApplicationContext _appContext;
        
-        public tb_ProdDetailController(ILogger<tb_ProdDetailController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_ProdDetailServices tb_ProdDetailServices , ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
+        public tb_ProdDetailController(ILogger<tb_ProdDetailController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_ProdDetailServices tb_ProdDetailServices ,EventDrivenCacheManager eventDrivenCacheManager, ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
         {
             _logger = logger;
            _unitOfWorkManage = unitOfWorkManage;
            _tb_ProdDetailServices = tb_ProdDetailServices;
-            _appContext = appContext;
+           _appContext = appContext;
+           _eventDrivenCacheManager = eventDrivenCacheManager;
         }
       
         
@@ -89,14 +90,14 @@ namespace RUINORERP.Business
                     bool rs = await _tb_ProdDetailServices.Update(entity);
                     if (rs)
                     {
-                        MyCacheManager.Instance.UpdateEntityList<tb_ProdDetail>(entity);
+                        _eventDrivenCacheManager.UpdateEntity<tb_ProdDetail>(entity);
                     }
                     Returnobj = entity;
                 }
                 else
                 {
                     Returnobj = await _tb_ProdDetailServices.AddReEntityAsync(entity);
-                    MyCacheManager.Instance.UpdateEntityList<tb_ProdDetail>(entity);
+                    _eventDrivenCacheManager.UpdateEntity<tb_ProdDetail>(entity);
                 }
 
                 rr.ReturnObject = Returnobj;
@@ -130,14 +131,14 @@ namespace RUINORERP.Business
                     bool rs = await _tb_ProdDetailServices.Update(entity);
                     if (rs)
                     {
-                        MyCacheManager.Instance.UpdateEntityList<tb_ProdDetail>(entity);
+                        _eventDrivenCacheManager.UpdateEntity<tb_ProdDetail>(entity);
                     }
                     Returnobj = entity as T;
                 }
                 else
                 {
                     Returnobj = await _tb_ProdDetailServices.AddReEntityAsync(entity) as T ;
-                    MyCacheManager.Instance.UpdateEntityList<tb_ProdDetail>(entity);
+                    _eventDrivenCacheManager.UpdateEntity<tb_ProdDetail>(entity);
                 }
 
                 rr.ReturnObject = Returnobj;
@@ -162,7 +163,7 @@ namespace RUINORERP.Business
             }
             if (list != null)
             {
-                MyCacheManager.Instance.UpdateEntityList<List<T>>(list);
+                _eventDrivenCacheManager.UpdateEntityList<T>(list);
              }
             return list;
         }
@@ -177,7 +178,7 @@ namespace RUINORERP.Business
             }
             if (list != null)
             {
-                MyCacheManager.Instance.UpdateEntityList<List<T>>(list);
+                _eventDrivenCacheManager.UpdateEntityList<T>(list);
              }
             return list;
         }
@@ -190,7 +191,7 @@ namespace RUINORERP.Business
             if (rs)
             {
                 ////生成时暂时只考虑了一个主键的情况
-                MyCacheManager.Instance.DeleteEntityList<tb_ProdDetail>(entity);
+                _eventDrivenCacheManager.DeleteEntity<tb_ProdDetail>(entity.PrimaryKeyID);
             }
             return rs;
         }
@@ -203,9 +204,7 @@ namespace RUINORERP.Business
             if (c>0)
             {
                 rs=true;
-                ////生成时暂时只考虑了一个主键的情况
-                 long[] result = entitys.Select(e => e.ProdDetailID).ToArray();
-                MyCacheManager.Instance.DeleteEntityList<tb_ProdDetail>(result);
+                _eventDrivenCacheManager.DeleteEntityList<tb_ProdDetail>(entitys);
             }
             return rs;
         }
@@ -250,41 +249,57 @@ namespace RUINORERP.Business
                              rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_ProdDetail>(entity as tb_ProdDetail)
                         .Include(m => m.tb_ProdSplitDetails)
                     .Include(m => m.tb_StockOutDetails)
+                    .Include(m => m.tb_ManufacturingOrders)
                     .Include(m => m.tb_MRP_ReworkReturnDetails)
-                    .Include(m => m.tb_PurReturnEntryDetails)
                     .Include(m => m.tb_BOM_Ss)
-                    .Include(m => m.tb_SaleOrderDetails)
                     .Include(m => m.tb_ProduceGoodsRecommendDetails)
                     .Include(m => m.tb_MaterialReturnDetails)
+                    .Include(m => m.tb_PurReturnEntryDetails)
+                    .Include(m => m.tb_SaleOutDetails)
                     .Include(m => m.tb_FinishedGoodsInvDetails)
+                    .Include(m => m.tb_AS_AfterSaleDeliveryDetails)
                     .Include(m => m.tb_ProductionDemandDetails)
                     .Include(m => m.tb_ProdMergeDetails)
                     .Include(m => m.tb_ProdReturningDetails)
-              
-                    .Include(m => m.tb_SaleOutDetails)
+                    .Include(m => m.tb_SaleOrderDetails)
                     .Include(m => m.tb_PriceRecords)
-                    .Include(m => m.tb_StocktakeDetails)
                     .Include(m => m.tb_ProductionDemandTargetDetails)
-                    .Include(m => m.tb_PurEntryDetails)
                     .Include(m => m.tb_Prod_Attr_Relations)
+                    .Include(m => m.tb_AS_AfterSaleApplyDetails)
                     .Include(m => m.tb_SaleOutReRefurbishedMaterialsDetails)
-        
-                    .Include(m => m.tb_PurOrderDetails)
-                    .Include(m => m.tb_BOM_SDetails)
+                    .Include(m => m.tb_ProdBundleDetails)
+                    .Include(m => m.tb_AS_RepairInStockDetails)
+                    .Include(m => m.tb_Packings)
+                    .Include(m => m.tb_AS_RepairOrderMaterialDetails)
+                    .Include(m => m.tb_PurOrderReDetails)
+                    .Include(m => m.tb_PurGoodsRecommendDetails)
+                    .Include(m => m.tb_ProdBorrowingDetails)
+                    .Include(m => m.tb_ProdSplits)
+                    .Include(m => m.tb_BuyingRequisitionDetails)
+                    .Include(m => m.tb_AS_RepairOrderDetails)
                     .Include(m => m.tb_SaleOutReDetails)
+                    .Include(m => m.tb_ProdConversionDetails)
+                    .Include(m => m.tb_ProdConversionDetails)
+                    .Include(m => m.tb_BOM_SDetailSecondaries)
+                    .Include(m => m.tb_FM_PriceAdjustmentDetails)
+                    .Include(m => m.tb_BOM_SDetails)
+                    .Include(m => m.tb_AS_RepairMaterialPickupDetails)
                     .Include(m => m.tb_ProdMerges)
                     .Include(m => m.tb_ProductionPlanDetails)
                     .Include(m => m.tb_MRP_ReworkEntryDetails)
-                    .Include(m => m.tb_PurEntryReDetails)
                     .Include(m => m.tb_Inventories)
+                    .Include(m => m.tb_PurEntryDetails)
+                    .Include(m => m.tb_FM_ReceivablePayableDetails)
                     .Include(m => m.tb_BOM_SDetailSubstituteMaterials)
-                    .Include(m => m.tb_PurOrderReDetails)
+                    .Include(m => m.tb_PurOrderDetails)
                     .Include(m => m.tb_PackingDetails)
+                    .Include(m => m.tb_FM_ProfitLossDetails)
                     .Include(m => m.tb_StockInDetails)
                     .Include(m => m.tb_MaterialRequisitionDetails)
-                    .Include(m => m.tb_ProdBundleDetails)
-                    .Include(m => m.tb_ManufacturingOrders)
+                    .Include(m => m.tb_StocktakeDetails)
+                    .Include(m => m.tb_PurEntryReDetails)
                     .Include(m => m.tb_StockTransferDetails)
+                    .Include(m => m.tb_ManufacturingOrderDetails)
                     .ExecuteCommandAsync();
                  }
         else    
@@ -292,29 +307,57 @@ namespace RUINORERP.Business
                         rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_ProdDetail>(entity as tb_ProdDetail)
                 .Include(m => m.tb_ProdSplitDetails)
                 .Include(m => m.tb_StockOutDetails)
+                .Include(m => m.tb_ManufacturingOrders)
                 .Include(m => m.tb_MRP_ReworkReturnDetails)
-                .Include(m => m.tb_PurReturnEntryDetails)
                 .Include(m => m.tb_BOM_Ss)
-                .Include(m => m.tb_SaleOrderDetails)
                 .Include(m => m.tb_ProduceGoodsRecommendDetails)
                 .Include(m => m.tb_MaterialReturnDetails)
+                .Include(m => m.tb_PurReturnEntryDetails)
+                .Include(m => m.tb_SaleOutDetails)
                 .Include(m => m.tb_FinishedGoodsInvDetails)
+                .Include(m => m.tb_AS_AfterSaleDeliveryDetails)
                 .Include(m => m.tb_ProductionDemandDetails)
                 .Include(m => m.tb_ProdMergeDetails)
                 .Include(m => m.tb_ProdReturningDetails)
-                .Include(m => m.tb_SaleOutDetails)
+                .Include(m => m.tb_SaleOrderDetails)
                 .Include(m => m.tb_PriceRecords)
-                .Include(m => m.tb_StocktakeDetails)
                 .Include(m => m.tb_ProductionDemandTargetDetails)
-      
-                .Include(m => m.tb_BOM_SDetailSubstituteMaterials)
+                .Include(m => m.tb_Prod_Attr_Relations)
+                .Include(m => m.tb_AS_AfterSaleApplyDetails)
+                .Include(m => m.tb_SaleOutReRefurbishedMaterialsDetails)
+                .Include(m => m.tb_ProdBundleDetails)
+                .Include(m => m.tb_AS_RepairInStockDetails)
+                .Include(m => m.tb_Packings)
+                .Include(m => m.tb_AS_RepairOrderMaterialDetails)
                 .Include(m => m.tb_PurOrderReDetails)
+                .Include(m => m.tb_PurGoodsRecommendDetails)
+                .Include(m => m.tb_ProdBorrowingDetails)
+                .Include(m => m.tb_ProdSplits)
+                .Include(m => m.tb_BuyingRequisitionDetails)
+                .Include(m => m.tb_AS_RepairOrderDetails)
+                .Include(m => m.tb_SaleOutReDetails)
+                .Include(m => m.tb_ProdConversionDetails)
+                .Include(m => m.tb_ProdConversionDetails)
+                .Include(m => m.tb_BOM_SDetailSecondaries)
+                .Include(m => m.tb_FM_PriceAdjustmentDetails)
+                .Include(m => m.tb_BOM_SDetails)
+                .Include(m => m.tb_AS_RepairMaterialPickupDetails)
+                .Include(m => m.tb_ProdMerges)
+                .Include(m => m.tb_ProductionPlanDetails)
+                .Include(m => m.tb_MRP_ReworkEntryDetails)
+                .Include(m => m.tb_Inventories)
+                .Include(m => m.tb_PurEntryDetails)
+                .Include(m => m.tb_FM_ReceivablePayableDetails)
+                .Include(m => m.tb_BOM_SDetailSubstituteMaterials)
+                .Include(m => m.tb_PurOrderDetails)
                 .Include(m => m.tb_PackingDetails)
+                .Include(m => m.tb_FM_ProfitLossDetails)
                 .Include(m => m.tb_StockInDetails)
                 .Include(m => m.tb_MaterialRequisitionDetails)
-                .Include(m => m.tb_ProdBundleDetails)
-                .Include(m => m.tb_ManufacturingOrders)
+                .Include(m => m.tb_StocktakeDetails)
+                .Include(m => m.tb_PurEntryReDetails)
                 .Include(m => m.tb_StockTransferDetails)
+                .Include(m => m.tb_ManufacturingOrderDetails)
          
                 .ExecuteCommandAsync();
                                           
@@ -348,44 +391,62 @@ namespace RUINORERP.Business
         public async override Task<List<T>> BaseQueryByAdvancedNavAsync(bool useLike, object dto)
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_ProdDetail>()
-                                .Includes(m => m.tb_ProdSplitDetails)
+                                .Includes(m => m.tb_bom_s)
+                            .Includes(m => m.tb_prod)
+                                            .Includes(m => m.tb_ProdSplitDetails)
                         .Includes(m => m.tb_StockOutDetails)
+                        .Includes(m => m.tb_ManufacturingOrders)
                         .Includes(m => m.tb_MRP_ReworkReturnDetails)
-                        .Includes(m => m.tb_PurReturnEntryDetails)
                         .Includes(m => m.tb_BOM_Ss)
-                        .Includes(m => m.tb_SaleOrderDetails)
                         .Includes(m => m.tb_ProduceGoodsRecommendDetails)
                         .Includes(m => m.tb_MaterialReturnDetails)
+                        .Includes(m => m.tb_PurReturnEntryDetails)
+                        .Includes(m => m.tb_SaleOutDetails)
                         .Includes(m => m.tb_FinishedGoodsInvDetails)
+                        .Includes(m => m.tb_AS_AfterSaleDeliveryDetails)
                         .Includes(m => m.tb_ProductionDemandDetails)
                         .Includes(m => m.tb_ProdMergeDetails)
                         .Includes(m => m.tb_ProdReturningDetails)
-               
-                        .Includes(m => m.tb_SaleOutDetails)
+                        .Includes(m => m.tb_SaleOrderDetails)
                         .Includes(m => m.tb_PriceRecords)
-                        .Includes(m => m.tb_StocktakeDetails)
                         .Includes(m => m.tb_ProductionDemandTargetDetails)
-                        .Includes(m => m.tb_PurEntryDetails)
                         .Includes(m => m.tb_Prod_Attr_Relations)
+                        .Includes(m => m.tb_AS_AfterSaleApplyDetails)
                         .Includes(m => m.tb_SaleOutReRefurbishedMaterialsDetails)
+                        .Includes(m => m.tb_ProdBundleDetails)
+                        .Includes(m => m.tb_AS_RepairInStockDetails)
                         .Includes(m => m.tb_Packings)
+                        .Includes(m => m.tb_AS_RepairOrderMaterialDetails)
+                        .Includes(m => m.tb_PurOrderReDetails)
                         .Includes(m => m.tb_PurGoodsRecommendDetails)
-                 
+                        .Includes(m => m.tb_ProdBorrowingDetails)
+                        .Includes(m => m.tb_ProdSplits)
+                        .Includes(m => m.tb_BuyingRequisitionDetails)
+                        .Includes(m => m.tb_AS_RepairOrderDetails)
                         .Includes(m => m.tb_SaleOutReDetails)
+                        .Includes(m => m.tb_ProdConversionDetails)
+                        .Includes(m => m.tb_ProdConversionDetailsByProddetailidTo)
+                        .Includes(m => m.tb_BOM_SDetailSecondaries)
+                        .Includes(m => m.tb_FM_PriceAdjustmentDetails)
+                        .Includes(m => m.tb_BOM_SDetails)
+                        .Includes(m => m.tb_AS_RepairMaterialPickupDetails)
                         .Includes(m => m.tb_ProdMerges)
                         .Includes(m => m.tb_ProductionPlanDetails)
                         .Includes(m => m.tb_MRP_ReworkEntryDetails)
-                        .Includes(m => m.tb_PurEntryReDetails)
                         .Includes(m => m.tb_Inventories)
+                        .Includes(m => m.tb_PurEntryDetails)
+                        .Includes(m => m.tb_FM_ReceivablePayableDetails)
                         .Includes(m => m.tb_BOM_SDetailSubstituteMaterials)
-                        .Includes(m => m.tb_PurOrderReDetails)
+                        .Includes(m => m.tb_PurOrderDetails)
                         .Includes(m => m.tb_PackingDetails)
+                        .Includes(m => m.tb_FM_ProfitLossDetails)
                         .Includes(m => m.tb_StockInDetails)
                         .Includes(m => m.tb_MaterialRequisitionDetails)
-                        .Includes(m => m.tb_ProdBundleDetails)
-                        .Includes(m => m.tb_ManufacturingOrders)
+                        .Includes(m => m.tb_StocktakeDetails)
+                        .Includes(m => m.tb_PurEntryReDetails)
                         .Includes(m => m.tb_StockTransferDetails)
-                                        .WhereCustom(useLike, dto);
+                        .Includes(m => m.tb_ManufacturingOrderDetails)
+                                        .WhereCustom(useLike, dto);;
             return await querySqlQueryable.ToListAsync()as List<T>;
         }
 
@@ -396,43 +457,62 @@ namespace RUINORERP.Business
              bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_ProdDetail>(m => m.ProdDetailID== entity.ProdDetailID)
                                 .Include(m => m.tb_ProdSplitDetails)
                         .Include(m => m.tb_StockOutDetails)
+                        .Include(m => m.tb_ManufacturingOrders)
                         .Include(m => m.tb_MRP_ReworkReturnDetails)
-                        .Include(m => m.tb_PurReturnEntryDetails)
                         .Include(m => m.tb_BOM_Ss)
-                        .Include(m => m.tb_SaleOrderDetails)
                         .Include(m => m.tb_ProduceGoodsRecommendDetails)
                         .Include(m => m.tb_MaterialReturnDetails)
+                        .Include(m => m.tb_PurReturnEntryDetails)
+                        .Include(m => m.tb_SaleOutDetails)
                         .Include(m => m.tb_FinishedGoodsInvDetails)
+                        .Include(m => m.tb_AS_AfterSaleDeliveryDetails)
                         .Include(m => m.tb_ProductionDemandDetails)
                         .Include(m => m.tb_ProdMergeDetails)
                         .Include(m => m.tb_ProdReturningDetails)
-        
-                        .Include(m => m.tb_SaleOutDetails)
+                        .Include(m => m.tb_SaleOrderDetails)
                         .Include(m => m.tb_PriceRecords)
-                        .Include(m => m.tb_StocktakeDetails)
                         .Include(m => m.tb_ProductionDemandTargetDetails)
-                        .Include(m => m.tb_PurEntryDetails)
                         .Include(m => m.tb_Prod_Attr_Relations)
+                        .Include(m => m.tb_AS_AfterSaleApplyDetails)
                         .Include(m => m.tb_SaleOutReRefurbishedMaterialsDetails)
-              
+                        .Include(m => m.tb_ProdBundleDetails)
+                        .Include(m => m.tb_AS_RepairInStockDetails)
+                        .Include(m => m.tb_Packings)
+                        .Include(m => m.tb_AS_RepairOrderMaterialDetails)
+                        .Include(m => m.tb_PurOrderReDetails)
+                        .Include(m => m.tb_PurGoodsRecommendDetails)
+                        .Include(m => m.tb_ProdBorrowingDetails)
+                        .Include(m => m.tb_ProdSplits)
+                        .Include(m => m.tb_BuyingRequisitionDetails)
+                        .Include(m => m.tb_AS_RepairOrderDetails)
+                        .Include(m => m.tb_SaleOutReDetails)
+                        .Include(m => m.tb_ProdConversionDetails)
+                        .Include(m => m.tb_ProdConversionDetailsByProddetailidTo)
+                        .Include(m => m.tb_BOM_SDetailSecondaries)
+                        .Include(m => m.tb_FM_PriceAdjustmentDetails)
+                        .Include(m => m.tb_BOM_SDetails)
+                        .Include(m => m.tb_AS_RepairMaterialPickupDetails)
                         .Include(m => m.tb_ProdMerges)
                         .Include(m => m.tb_ProductionPlanDetails)
                         .Include(m => m.tb_MRP_ReworkEntryDetails)
-                        .Include(m => m.tb_PurEntryReDetails)
                         .Include(m => m.tb_Inventories)
+                        .Include(m => m.tb_PurEntryDetails)
+                        .Include(m => m.tb_FM_ReceivablePayableDetails)
                         .Include(m => m.tb_BOM_SDetailSubstituteMaterials)
-                        .Include(m => m.tb_PurOrderReDetails)
+                        .Include(m => m.tb_PurOrderDetails)
                         .Include(m => m.tb_PackingDetails)
+                        .Include(m => m.tb_FM_ProfitLossDetails)
                         .Include(m => m.tb_StockInDetails)
                         .Include(m => m.tb_MaterialRequisitionDetails)
-                        .Include(m => m.tb_ProdBundleDetails)
-                        .Include(m => m.tb_ManufacturingOrders)
+                        .Include(m => m.tb_StocktakeDetails)
+                        .Include(m => m.tb_PurEntryReDetails)
                         .Include(m => m.tb_StockTransferDetails)
+                        .Include(m => m.tb_ManufacturingOrderDetails)
                                         .ExecuteCommandAsync();
             if (rs)
             {
                 //////生成时暂时只考虑了一个主键的情况
-                MyCacheManager.Instance.DeleteEntityList<T>(model);
+                 _eventDrivenCacheManager.DeleteEntity<T>(model);
             }
             return rs;
         }
@@ -443,7 +523,8 @@ namespace RUINORERP.Business
         public tb_ProdDetail AddReEntity(tb_ProdDetail entity)
         {
             tb_ProdDetail AddEntity =  _tb_ProdDetailServices.AddReEntity(entity);
-            MyCacheManager.Instance.UpdateEntityList<tb_ProdDetail>(AddEntity);
+     
+             _eventDrivenCacheManager.UpdateEntity<tb_ProdDetail>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
@@ -451,7 +532,7 @@ namespace RUINORERP.Business
          public async Task<tb_ProdDetail> AddReEntityAsync(tb_ProdDetail entity)
         {
             tb_ProdDetail AddEntity = await _tb_ProdDetailServices.AddReEntityAsync(entity);
-            MyCacheManager.Instance.UpdateEntityList<tb_ProdDetail>(AddEntity);
+            _eventDrivenCacheManager.UpdateEntity<tb_ProdDetail>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
@@ -461,7 +542,7 @@ namespace RUINORERP.Business
             long id = await _tb_ProdDetailServices.Add(entity);
             if(id>0)
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_ProdDetail>(entity);
+                 _eventDrivenCacheManager.UpdateEntity<tb_ProdDetail>(entity);
             }
             return id;
         }
@@ -471,7 +552,7 @@ namespace RUINORERP.Business
             List<long> ids = await _tb_ProdDetailServices.Add(infos);
             if(ids.Count>0)//成功的个数 这里缓存 对不对呢？
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_ProdDetail>(infos);
+                 _eventDrivenCacheManager.UpdateEntityList<tb_ProdDetail>(infos);
             }
             return ids;
         }
@@ -482,7 +563,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_ProdDetailServices.Delete(entity);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_ProdDetail>(entity);
+                _eventDrivenCacheManager.DeleteEntity<tb_ProdDetail>(entity);
                 
             }
             return rs;
@@ -493,7 +574,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_ProdDetailServices.Update(entity);
             if (rs)
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_ProdDetail>(entity);
+                 _eventDrivenCacheManager.DeleteEntity<tb_ProdDetail>(entity);
                 entity.ActionStatus = ActionStatus.无操作;
             }
             return rs;
@@ -504,7 +585,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_ProdDetailServices.DeleteById(id);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_ProdDetail>(id);
+               _eventDrivenCacheManager.DeleteEntity<tb_ProdDetail>(id);
             }
             return rs;
         }
@@ -514,7 +595,8 @@ namespace RUINORERP.Business
             bool rs = await _tb_ProdDetailServices.DeleteByIds(ids);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_ProdDetail>(ids);
+            
+                   _eventDrivenCacheManager.DeleteEntities<tb_ProdDetail>(ids.Cast<object>().ToArray());
             }
             return rs;
         }
@@ -526,7 +608,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_ProdDetail>(list);
+     
+             _eventDrivenCacheManager.UpdateEntityList<tb_ProdDetail>(list);
             return list;
         }
         
@@ -537,7 +620,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_ProdDetail>(list);
+    
+             _eventDrivenCacheManager.UpdateEntityList<tb_ProdDetail>(list);
             return list;
         }
         
@@ -548,7 +632,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_ProdDetail>(list);
+  
+             _eventDrivenCacheManager.UpdateEntityList<tb_ProdDetail>(list);
             return list;
         }
         
@@ -559,7 +644,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_ProdDetail>(list);
+ 
+             _eventDrivenCacheManager.UpdateEntityList<tb_ProdDetail>(list);
             return list;
         }
         
@@ -577,7 +663,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_ProdDetail>(list);
+   
+             _eventDrivenCacheManager.UpdateEntityList<tb_ProdDetail>(list);
             return list;
         }
         
@@ -594,39 +681,57 @@ namespace RUINORERP.Business
                                .Includes(t => t.tb_prod )
                                             .Includes(t => t.tb_ProdSplitDetails )
                                 .Includes(t => t.tb_StockOutDetails )
+                                .Includes(t => t.tb_ManufacturingOrders )
                                 .Includes(t => t.tb_MRP_ReworkReturnDetails )
-                                .Includes(t => t.tb_PurReturnEntryDetails )
                                 .Includes(t => t.tb_BOM_Ss )
-                                .Includes(t => t.tb_SaleOrderDetails )
                                 .Includes(t => t.tb_ProduceGoodsRecommendDetails )
                                 .Includes(t => t.tb_MaterialReturnDetails )
+                                .Includes(t => t.tb_PurReturnEntryDetails )
+                                .Includes(t => t.tb_SaleOutDetails )
                                 .Includes(t => t.tb_FinishedGoodsInvDetails )
+                                .Includes(t => t.tb_AS_AfterSaleDeliveryDetails )
                                 .Includes(t => t.tb_ProductionDemandDetails )
                                 .Includes(t => t.tb_ProdMergeDetails )
                                 .Includes(t => t.tb_ProdReturningDetails )
-               
-                                .Includes(t => t.tb_SaleOutDetails )
+                                .Includes(t => t.tb_SaleOrderDetails )
                                 .Includes(t => t.tb_PriceRecords )
-                                .Includes(t => t.tb_StocktakeDetails )
                                 .Includes(t => t.tb_ProductionDemandTargetDetails )
-                                .Includes(t => t.tb_PurEntryDetails )
                                 .Includes(t => t.tb_Prod_Attr_Relations )
+                                .Includes(t => t.tb_AS_AfterSaleApplyDetails )
                                 .Includes(t => t.tb_SaleOutReRefurbishedMaterialsDetails )
+                                .Includes(t => t.tb_ProdBundleDetails )
+                                .Includes(t => t.tb_AS_RepairInStockDetails )
                                 .Includes(t => t.tb_Packings )
-                          
+                                .Includes(t => t.tb_AS_RepairOrderMaterialDetails )
+                                .Includes(t => t.tb_PurOrderReDetails )
+                                .Includes(t => t.tb_PurGoodsRecommendDetails )
+                                .Includes(t => t.tb_ProdBorrowingDetails )
+                                .Includes(t => t.tb_ProdSplits )
+                                .Includes(t => t.tb_BuyingRequisitionDetails )
+                                .Includes(t => t.tb_AS_RepairOrderDetails )
+                                .Includes(t => t.tb_SaleOutReDetails )
+                                .Includes(t => t.tb_ProdConversionDetails )
+                                .Includes(t => t.tb_ProdConversionDetails )
+                                .Includes(t => t.tb_BOM_SDetailSecondaries )
+                                .Includes(t => t.tb_FM_PriceAdjustmentDetails )
+                                .Includes(t => t.tb_BOM_SDetails )
+                                .Includes(t => t.tb_AS_RepairMaterialPickupDetails )
                                 .Includes(t => t.tb_ProdMerges )
                                 .Includes(t => t.tb_ProductionPlanDetails )
                                 .Includes(t => t.tb_MRP_ReworkEntryDetails )
-                                .Includes(t => t.tb_PurEntryReDetails )
                                 .Includes(t => t.tb_Inventories )
+                                .Includes(t => t.tb_PurEntryDetails )
+                                .Includes(t => t.tb_FM_ReceivablePayableDetails )
                                 .Includes(t => t.tb_BOM_SDetailSubstituteMaterials )
-                                .Includes(t => t.tb_PurOrderReDetails )
+                                .Includes(t => t.tb_PurOrderDetails )
                                 .Includes(t => t.tb_PackingDetails )
+                                .Includes(t => t.tb_FM_ProfitLossDetails )
                                 .Includes(t => t.tb_StockInDetails )
                                 .Includes(t => t.tb_MaterialRequisitionDetails )
-                                .Includes(t => t.tb_ProdBundleDetails )
-                                .Includes(t => t.tb_ManufacturingOrders )
+                                .Includes(t => t.tb_StocktakeDetails )
+                                .Includes(t => t.tb_PurEntryReDetails )
                                 .Includes(t => t.tb_StockTransferDetails )
+                                .Includes(t => t.tb_ManufacturingOrderDetails )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -634,7 +739,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_ProdDetail>(list);
+ 
+             _eventDrivenCacheManager.UpdateEntityList<tb_ProdDetail>(list);
             return list;
         }
 
@@ -650,40 +756,57 @@ namespace RUINORERP.Business
                                .Includes(t => t.tb_prod )
                                             .Includes(t => t.tb_ProdSplitDetails )
                                 .Includes(t => t.tb_StockOutDetails )
+                                .Includes(t => t.tb_ManufacturingOrders )
                                 .Includes(t => t.tb_MRP_ReworkReturnDetails )
-                                .Includes(t => t.tb_PurReturnEntryDetails )
                                 .Includes(t => t.tb_BOM_Ss )
-                                .Includes(t => t.tb_SaleOrderDetails )
                                 .Includes(t => t.tb_ProduceGoodsRecommendDetails )
                                 .Includes(t => t.tb_MaterialReturnDetails )
+                                .Includes(t => t.tb_PurReturnEntryDetails )
+                                .Includes(t => t.tb_SaleOutDetails )
                                 .Includes(t => t.tb_FinishedGoodsInvDetails )
+                                .Includes(t => t.tb_AS_AfterSaleDeliveryDetails )
                                 .Includes(t => t.tb_ProductionDemandDetails )
                                 .Includes(t => t.tb_ProdMergeDetails )
                                 .Includes(t => t.tb_ProdReturningDetails )
-                      
-                                .Includes(t => t.tb_SaleOutDetails )
+                                .Includes(t => t.tb_SaleOrderDetails )
                                 .Includes(t => t.tb_PriceRecords )
-                                .Includes(t => t.tb_StocktakeDetails )
                                 .Includes(t => t.tb_ProductionDemandTargetDetails )
-                                .Includes(t => t.tb_PurEntryDetails )
                                 .Includes(t => t.tb_Prod_Attr_Relations )
+                                .Includes(t => t.tb_AS_AfterSaleApplyDetails )
                                 .Includes(t => t.tb_SaleOutReRefurbishedMaterialsDetails )
+                                .Includes(t => t.tb_ProdBundleDetails )
+                                .Includes(t => t.tb_AS_RepairInStockDetails )
                                 .Includes(t => t.tb_Packings )
-                 
+                                .Includes(t => t.tb_AS_RepairOrderMaterialDetails )
+                                .Includes(t => t.tb_PurOrderReDetails )
+                                .Includes(t => t.tb_PurGoodsRecommendDetails )
+                                .Includes(t => t.tb_ProdBorrowingDetails )
+                                .Includes(t => t.tb_ProdSplits )
+                                .Includes(t => t.tb_BuyingRequisitionDetails )
+                                .Includes(t => t.tb_AS_RepairOrderDetails )
                                 .Includes(t => t.tb_SaleOutReDetails )
+                                .Includes(t => t.tb_ProdConversionDetails )
+                                .Includes(t => t.tb_ProdConversionDetailsByProddetailidTo )
+                                .Includes(t => t.tb_BOM_SDetailSecondaries )
+                                .Includes(t => t.tb_FM_PriceAdjustmentDetails )
+                                .Includes(t => t.tb_BOM_SDetails )
+                                .Includes(t => t.tb_AS_RepairMaterialPickupDetails )
                                 .Includes(t => t.tb_ProdMerges )
                                 .Includes(t => t.tb_ProductionPlanDetails )
                                 .Includes(t => t.tb_MRP_ReworkEntryDetails )
-                                .Includes(t => t.tb_PurEntryReDetails )
                                 .Includes(t => t.tb_Inventories )
+                                .Includes(t => t.tb_PurEntryDetails )
+                                .Includes(t => t.tb_FM_ReceivablePayableDetails )
                                 .Includes(t => t.tb_BOM_SDetailSubstituteMaterials )
-                                .Includes(t => t.tb_PurOrderReDetails )
+                                .Includes(t => t.tb_PurOrderDetails )
                                 .Includes(t => t.tb_PackingDetails )
+                                .Includes(t => t.tb_FM_ProfitLossDetails )
                                 .Includes(t => t.tb_StockInDetails )
                                 .Includes(t => t.tb_MaterialRequisitionDetails )
-                                .Includes(t => t.tb_ProdBundleDetails )
-                                .Includes(t => t.tb_ManufacturingOrders )
+                                .Includes(t => t.tb_StocktakeDetails )
+                                .Includes(t => t.tb_PurEntryReDetails )
                                 .Includes(t => t.tb_StockTransferDetails )
+                                .Includes(t => t.tb_ManufacturingOrderDetails )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -691,7 +814,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_ProdDetail>(list);
+  
+             _eventDrivenCacheManager.UpdateEntityList<tb_ProdDetail>(list);
             return list;
         }
         
@@ -707,43 +831,57 @@ namespace RUINORERP.Business
                             .Includes(t => t.tb_prod )
                                         .Includes(t => t.tb_ProdSplitDetails )
                             .Includes(t => t.tb_StockOutDetails )
+                            .Includes(t => t.tb_ManufacturingOrders )
                             .Includes(t => t.tb_MRP_ReworkReturnDetails )
-                            .Includes(t => t.tb_PurReturnEntryDetails )
                             .Includes(t => t.tb_BOM_Ss )
-                            .Includes(t => t.tb_SaleOrderDetails )
                             .Includes(t => t.tb_ProduceGoodsRecommendDetails )
                             .Includes(t => t.tb_MaterialReturnDetails )
+                            .Includes(t => t.tb_PurReturnEntryDetails )
+                            .Includes(t => t.tb_SaleOutDetails )
                             .Includes(t => t.tb_FinishedGoodsInvDetails )
+                            .Includes(t => t.tb_AS_AfterSaleDeliveryDetails )
                             .Includes(t => t.tb_ProductionDemandDetails )
                             .Includes(t => t.tb_ProdMergeDetails )
                             .Includes(t => t.tb_ProdReturningDetails )
-                 
-                            .Includes(t => t.tb_SaleOutDetails )
+                            .Includes(t => t.tb_SaleOrderDetails )
                             .Includes(t => t.tb_PriceRecords )
-                            .Includes(t => t.tb_StocktakeDetails )
                             .Includes(t => t.tb_ProductionDemandTargetDetails )
-                            .Includes(t => t.tb_PurEntryDetails )
                             .Includes(t => t.tb_Prod_Attr_Relations )
+                            .Includes(t => t.tb_AS_AfterSaleApplyDetails )
                             .Includes(t => t.tb_SaleOutReRefurbishedMaterialsDetails )
+                            .Includes(t => t.tb_ProdBundleDetails )
+                            .Includes(t => t.tb_AS_RepairInStockDetails )
                             .Includes(t => t.tb_Packings )
+                            .Includes(t => t.tb_AS_RepairOrderMaterialDetails )
+                            .Includes(t => t.tb_PurOrderReDetails )
                             .Includes(t => t.tb_PurGoodsRecommendDetails )
                             .Includes(t => t.tb_ProdBorrowingDetails )
-                   
-                            .Includes(t => t.tb_BOM_SDetails )
+                            .Includes(t => t.tb_ProdSplits )
+                            .Includes(t => t.tb_BuyingRequisitionDetails )
+                            .Includes(t => t.tb_AS_RepairOrderDetails )
                             .Includes(t => t.tb_SaleOutReDetails )
+                            .Includes(t => t.tb_ProdConversionDetails )
+                            .Includes(t => t.tb_ProdConversionDetailsByProddetailidTo )
+                            .Includes(t => t.tb_BOM_SDetailSecondaries )
+                            .Includes(t => t.tb_FM_PriceAdjustmentDetails )
+                            .Includes(t => t.tb_BOM_SDetails )
+                            .Includes(t => t.tb_AS_RepairMaterialPickupDetails )
                             .Includes(t => t.tb_ProdMerges )
                             .Includes(t => t.tb_ProductionPlanDetails )
                             .Includes(t => t.tb_MRP_ReworkEntryDetails )
-                            .Includes(t => t.tb_PurEntryReDetails )
                             .Includes(t => t.tb_Inventories )
+                            .Includes(t => t.tb_PurEntryDetails )
+                            .Includes(t => t.tb_FM_ReceivablePayableDetails )
                             .Includes(t => t.tb_BOM_SDetailSubstituteMaterials )
-                            .Includes(t => t.tb_PurOrderReDetails )
+                            .Includes(t => t.tb_PurOrderDetails )
                             .Includes(t => t.tb_PackingDetails )
+                            .Includes(t => t.tb_FM_ProfitLossDetails )
                             .Includes(t => t.tb_StockInDetails )
                             .Includes(t => t.tb_MaterialRequisitionDetails )
-                            .Includes(t => t.tb_ProdBundleDetails )
-                            .Includes(t => t.tb_ManufacturingOrders )
+                            .Includes(t => t.tb_StocktakeDetails )
+                            .Includes(t => t.tb_PurEntryReDetails )
                             .Includes(t => t.tb_StockTransferDetails )
+                            .Includes(t => t.tb_ManufacturingOrderDetails )
                         .ToList();
             
             foreach (var item in list)
@@ -751,7 +889,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_ProdDetail>(list);
+     
+             _eventDrivenCacheManager.UpdateEntityList<tb_ProdDetail>(list);
             return list;
         }
         
@@ -782,50 +921,69 @@ namespace RUINORERP.Business
             tb_ProdDetail entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_ProdDetail>().Where(w => w.ProdDetailID == (long)id)
                              .Includes(t => t.tb_bom_s )
                             .Includes(t => t.tb_prod )
-                                        .Includes(t => t.tb_ProdSplitDetails )
-                            .Includes(t => t.tb_StockOutDetails )
-                            .Includes(t => t.tb_MRP_ReworkReturnDetails )
-                            .Includes(t => t.tb_PurReturnEntryDetails )
-                            .Includes(t => t.tb_BOM_Ss )
-                            .Includes(t => t.tb_SaleOrderDetails )
-                            .Includes(t => t.tb_ProduceGoodsRecommendDetails )
-                            .Includes(t => t.tb_MaterialReturnDetails )
-                            .Includes(t => t.tb_FinishedGoodsInvDetails )
-                            .Includes(t => t.tb_ProductionDemandDetails )
-                            .Includes(t => t.tb_ProdMergeDetails )
-                            .Includes(t => t.tb_ProdReturningDetails )
-             
-                            .Includes(t => t.tb_SaleOutDetails )
-                            .Includes(t => t.tb_PriceRecords )
-                            .Includes(t => t.tb_StocktakeDetails )
-                            .Includes(t => t.tb_ProductionDemandTargetDetails )
-                            .Includes(t => t.tb_PurEntryDetails )
-                            .Includes(t => t.tb_Prod_Attr_Relations )
-                            .Includes(t => t.tb_SaleOutReRefurbishedMaterialsDetails )
-                            .Includes(t => t.tb_Packings )
-                            .Includes(t => t.tb_PurGoodsRecommendDetails )
-                   
-                            .Includes(t => t.tb_SaleOutReDetails )
-                            .Includes(t => t.tb_ProdMerges )
-                            .Includes(t => t.tb_ProductionPlanDetails )
-                            .Includes(t => t.tb_MRP_ReworkEntryDetails )
-                            .Includes(t => t.tb_PurEntryReDetails )
-                            .Includes(t => t.tb_Inventories )
-                            .Includes(t => t.tb_BOM_SDetailSubstituteMaterials )
-                            .Includes(t => t.tb_PurOrderReDetails )
-                            .Includes(t => t.tb_PackingDetails )
-                            .Includes(t => t.tb_StockInDetails )
-                            .Includes(t => t.tb_MaterialRequisitionDetails )
-                            .Includes(t => t.tb_ProdBundleDetails )
-                            .Includes(t => t.tb_ManufacturingOrders )
-                            .Includes(t => t.tb_StockTransferDetails )
-                        .FirstAsync();
+                        
+
+                                            .Includes(t => t.tb_ProdSplitDetails )
+                                            .Includes(t => t.tb_StockOutDetails )
+                                            .Includes(t => t.tb_ManufacturingOrders )
+                                            .Includes(t => t.tb_MRP_ReworkReturnDetails )
+                                            .Includes(t => t.tb_BOM_Ss )
+                                            .Includes(t => t.tb_ProduceGoodsRecommendDetails )
+                                            .Includes(t => t.tb_MaterialReturnDetails )
+                                            .Includes(t => t.tb_PurReturnEntryDetails )
+                                            .Includes(t => t.tb_SaleOutDetails )
+                                            .Includes(t => t.tb_FinishedGoodsInvDetails )
+                                            .Includes(t => t.tb_AS_AfterSaleDeliveryDetails )
+                                            .Includes(t => t.tb_ProductionDemandDetails )
+                                            .Includes(t => t.tb_ProdMergeDetails )
+                                            .Includes(t => t.tb_ProdReturningDetails )
+                                            .Includes(t => t.tb_SaleOrderDetails )
+                                            .Includes(t => t.tb_PriceRecords )
+                                            .Includes(t => t.tb_ProductionDemandTargetDetails )
+                                            .Includes(t => t.tb_Prod_Attr_Relations )
+                                            .Includes(t => t.tb_AS_AfterSaleApplyDetails )
+                                            .Includes(t => t.tb_SaleOutReRefurbishedMaterialsDetails )
+                                            .Includes(t => t.tb_ProdBundleDetails )
+                                            .Includes(t => t.tb_AS_RepairInStockDetails )
+                                            .Includes(t => t.tb_Packings )
+                                            .Includes(t => t.tb_AS_RepairOrderMaterialDetails )
+                                            .Includes(t => t.tb_PurOrderReDetails )
+                                            .Includes(t => t.tb_PurGoodsRecommendDetails )
+                                            .Includes(t => t.tb_ProdBorrowingDetails )
+                                            .Includes(t => t.tb_ProdSplits )
+                                            .Includes(t => t.tb_BuyingRequisitionDetails )
+                                            .Includes(t => t.tb_AS_RepairOrderDetails )
+                                            .Includes(t => t.tb_SaleOutReDetails )
+                                            .Includes(t => t.tb_ProdConversionDetails )
+                                            .Includes(t => t.tb_ProdConversionDetailsByProddetailidTo )
+                                            .Includes(t => t.tb_BOM_SDetailSecondaries )
+                                            .Includes(t => t.tb_FM_PriceAdjustmentDetails )
+                                            .Includes(t => t.tb_BOM_SDetails )
+                                            .Includes(t => t.tb_AS_RepairMaterialPickupDetails )
+                                            .Includes(t => t.tb_ProdMerges )
+                                            .Includes(t => t.tb_ProductionPlanDetails )
+                                            .Includes(t => t.tb_MRP_ReworkEntryDetails )
+                                            .Includes(t => t.tb_Inventories )
+                                            .Includes(t => t.tb_PurEntryDetails )
+                                            .Includes(t => t.tb_FM_ReceivablePayableDetails )
+                                            .Includes(t => t.tb_BOM_SDetailSubstituteMaterials )
+                                            .Includes(t => t.tb_PurOrderDetails )
+                                            .Includes(t => t.tb_PackingDetails )
+                                            .Includes(t => t.tb_FM_ProfitLossDetails )
+                                            .Includes(t => t.tb_StockInDetails )
+                                            .Includes(t => t.tb_MaterialRequisitionDetails )
+                                            .Includes(t => t.tb_StocktakeDetails )
+                                            .Includes(t => t.tb_PurEntryReDetails )
+                                            .Includes(t => t.tb_StockTransferDetails )
+                                            .Includes(t => t.tb_ManufacturingOrderDetails )
+                                .FirstAsync();
             if(entity!=null)
             {
                 entity.HasChanged = false;
             }
 
-            MyCacheManager.Instance.UpdateEntityList<tb_ProdDetail>(entity);
+         
+             _eventDrivenCacheManager.UpdateEntity<tb_ProdDetail>(entity);
             return entity as T;
         }
         

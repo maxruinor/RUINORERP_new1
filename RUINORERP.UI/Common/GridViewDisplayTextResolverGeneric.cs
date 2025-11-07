@@ -113,7 +113,7 @@ namespace RUINORERP.UI.Common
             // 使用新的缓存管理器，不再需要检查表是否在缓存中
               {
                  KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
-                 if (MyCacheManager.Instance.NewTableList.TryGetValue(mapping.ReferenceTableName, out pair))
+                 if (RUINORERP.Business.Cache.EntityCacheHelper.NewTableList.TryGetValue(mapping.ReferenceTableName, out pair))
                  {
                      //要显示的默认值是从缓存表中获取的字段名，默认是主键ID字段对应的名称
                      mapping.ReferenceDefaultDisplayFieldName = pair.Value;
@@ -214,7 +214,7 @@ namespace RUINORERP.UI.Common
             }
             if (typeof(T).Name.Contains("tb_"))
             {
-                MyCacheManager.Instance.SetFkColList(typeof(T));
+                RUINORERP.Business.Cache.EntityCacheHelper.SetFkColList(typeof(T));
             }
             e.Value = displayHelper.GetGridViewDisplayText(typeof(T).Name, columnName, e.Value);
             return;

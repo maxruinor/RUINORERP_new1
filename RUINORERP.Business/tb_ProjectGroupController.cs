@@ -1,9 +1,8 @@
 ﻿// **************************************
-// 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/20/2025 16:08:16
+// 时间：11/06/2025 19:43:19
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -24,6 +23,7 @@ using RUINORERP.Model.Context;
 using System.Linq;
 using RUINOR.Core;
 using RUINORERP.Common.Helper;
+using RUINORERP.Business.Cache;
 
 namespace RUINORERP.Business
 {
@@ -38,14 +38,16 @@ namespace RUINORERP.Business
         //public readonly IUnitOfWorkManage _unitOfWorkManage;
         //public readonly ILogger<BaseController<T>> _logger;
         public Itb_ProjectGroupServices _tb_ProjectGroupServices { get; set; }
+        private readonly EventDrivenCacheManager _eventDrivenCacheManager; 
        // private readonly ApplicationContext _appContext;
        
-        public tb_ProjectGroupController(ILogger<tb_ProjectGroupController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_ProjectGroupServices tb_ProjectGroupServices , ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
+        public tb_ProjectGroupController(ILogger<tb_ProjectGroupController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_ProjectGroupServices tb_ProjectGroupServices ,EventDrivenCacheManager eventDrivenCacheManager, ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
         {
             _logger = logger;
            _unitOfWorkManage = unitOfWorkManage;
            _tb_ProjectGroupServices = tb_ProjectGroupServices;
-            _appContext = appContext;
+           _appContext = appContext;
+           _eventDrivenCacheManager = eventDrivenCacheManager;
         }
       
         
@@ -88,14 +90,14 @@ namespace RUINORERP.Business
                     bool rs = await _tb_ProjectGroupServices.Update(entity);
                     if (rs)
                     {
-                        MyCacheManager.Instance.UpdateEntityList<tb_ProjectGroup>(entity);
+                        _eventDrivenCacheManager.UpdateEntity<tb_ProjectGroup>(entity);
                     }
                     Returnobj = entity;
                 }
                 else
                 {
                     Returnobj = await _tb_ProjectGroupServices.AddReEntityAsync(entity);
-                    MyCacheManager.Instance.UpdateEntityList<tb_ProjectGroup>(entity);
+                    _eventDrivenCacheManager.UpdateEntity<tb_ProjectGroup>(entity);
                 }
 
                 rr.ReturnObject = Returnobj;
@@ -129,14 +131,14 @@ namespace RUINORERP.Business
                     bool rs = await _tb_ProjectGroupServices.Update(entity);
                     if (rs)
                     {
-                        MyCacheManager.Instance.UpdateEntityList<tb_ProjectGroup>(entity);
+                        _eventDrivenCacheManager.UpdateEntity<tb_ProjectGroup>(entity);
                     }
                     Returnobj = entity as T;
                 }
                 else
                 {
                     Returnobj = await _tb_ProjectGroupServices.AddReEntityAsync(entity) as T ;
-                    MyCacheManager.Instance.UpdateEntityList<tb_ProjectGroup>(entity);
+                    _eventDrivenCacheManager.UpdateEntity<tb_ProjectGroup>(entity);
                 }
 
                 rr.ReturnObject = Returnobj;
@@ -161,7 +163,7 @@ namespace RUINORERP.Business
             }
             if (list != null)
             {
-                MyCacheManager.Instance.UpdateEntityList<List<T>>(list);
+                _eventDrivenCacheManager.UpdateEntityList<T>(list);
              }
             return list;
         }
@@ -176,7 +178,7 @@ namespace RUINORERP.Business
             }
             if (list != null)
             {
-                MyCacheManager.Instance.UpdateEntityList<List<T>>(list);
+                _eventDrivenCacheManager.UpdateEntityList<T>(list);
              }
             return list;
         }
@@ -189,7 +191,7 @@ namespace RUINORERP.Business
             if (rs)
             {
                 ////生成时暂时只考虑了一个主键的情况
-                MyCacheManager.Instance.DeleteEntityList<tb_ProjectGroup>(entity);
+                _eventDrivenCacheManager.DeleteEntity<tb_ProjectGroup>(entity.PrimaryKeyID);
             }
             return rs;
         }
@@ -202,9 +204,7 @@ namespace RUINORERP.Business
             if (c>0)
             {
                 rs=true;
-                ////生成时暂时只考虑了一个主键的情况
-                 long[] result = entitys.Select(e => e.ProjectGroup_ID).ToArray();
-                MyCacheManager.Instance.DeleteEntityList<tb_ProjectGroup>(result);
+                _eventDrivenCacheManager.DeleteEntityList<tb_ProjectGroup>(entitys);
             }
             return rs;
         }
@@ -249,20 +249,19 @@ namespace RUINORERP.Business
                              rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_ProjectGroup>(entity as tb_ProjectGroup)
                         .Include(m => m.tb_ProjectGroupEmployeeses)
                     .Include(m => m.tb_AS_AfterSaleDeliveries)
+                    .Include(m => m.tb_FM_PaymentRecordDetails)
                     .Include(m => m.tb_FM_OtherExpenseDetails)
                     .Include(m => m.tb_AS_AfterSaleApplies)
-                    .Include(m => m.tb_FM_ReceivablePayables)
+                    .Include(m => m.tb_ProdBorrowings)
                     .Include(m => m.tb_AS_RepairInStocks)
-                    .Include(m => m.tb_FM_ProfitLosses)
-                    .Include(m => m.tb_FM_PaymentRecordDetails)
                     .Include(m => m.tb_ProductionPlans)
                     .Include(m => m.tb_FM_ExpenseClaimDetails)
                     .Include(m => m.tb_AS_RepairOrders)
+                    .Include(m => m.tb_FM_ProfitLosses)
                     .Include(m => m.tb_ProjectGroupAccountMappers)
-                    .Include(m => m.tb_SaleOutRes)
                     .Include(m => m.tb_PurEntries)
-                    .Include(m => m.tb_FM_PriceAdjustments)
                     .Include(m => m.tb_EOP_WaterStorages)
+                    .Include(m => m.tb_FM_PriceAdjustments)
                     .Include(m => m.tb_FM_PreReceivedPayments)
                     .ExecuteCommandAsync();
                  }
@@ -271,20 +270,19 @@ namespace RUINORERP.Business
                         rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_ProjectGroup>(entity as tb_ProjectGroup)
                 .Include(m => m.tb_ProjectGroupEmployeeses)
                 .Include(m => m.tb_AS_AfterSaleDeliveries)
+                .Include(m => m.tb_FM_PaymentRecordDetails)
                 .Include(m => m.tb_FM_OtherExpenseDetails)
                 .Include(m => m.tb_AS_AfterSaleApplies)
-                .Include(m => m.tb_FM_ReceivablePayables)
+                .Include(m => m.tb_ProdBorrowings)
                 .Include(m => m.tb_AS_RepairInStocks)
-                .Include(m => m.tb_FM_ProfitLosses)
-                .Include(m => m.tb_FM_PaymentRecordDetails)
                 .Include(m => m.tb_ProductionPlans)
                 .Include(m => m.tb_FM_ExpenseClaimDetails)
                 .Include(m => m.tb_AS_RepairOrders)
+                .Include(m => m.tb_FM_ProfitLosses)
                 .Include(m => m.tb_ProjectGroupAccountMappers)
-                .Include(m => m.tb_SaleOutRes)
                 .Include(m => m.tb_PurEntries)
-                .Include(m => m.tb_FM_PriceAdjustments)
                 .Include(m => m.tb_EOP_WaterStorages)
+                .Include(m => m.tb_FM_PriceAdjustments)
                 .Include(m => m.tb_FM_PreReceivedPayments)
          
                 .ExecuteCommandAsync();
@@ -321,20 +319,19 @@ namespace RUINORERP.Business
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_ProjectGroup>()
                                 .Includes(m => m.tb_ProjectGroupEmployeeses)
                         .Includes(m => m.tb_AS_AfterSaleDeliveries)
+                        .Includes(m => m.tb_FM_PaymentRecordDetails)
                         .Includes(m => m.tb_FM_OtherExpenseDetails)
                         .Includes(m => m.tb_AS_AfterSaleApplies)
-                        .Includes(m => m.tb_FM_ReceivablePayables)
+                        .Includes(m => m.tb_ProdBorrowings)
                         .Includes(m => m.tb_AS_RepairInStocks)
-                        .Includes(m => m.tb_FM_ProfitLosses)
-                        .Includes(m => m.tb_FM_PaymentRecordDetails)
                         .Includes(m => m.tb_ProductionPlans)
                         .Includes(m => m.tb_FM_ExpenseClaimDetails)
                         .Includes(m => m.tb_AS_RepairOrders)
+                        .Includes(m => m.tb_FM_ProfitLosses)
                         .Includes(m => m.tb_ProjectGroupAccountMappers)
-                        .Includes(m => m.tb_SaleOutRes)
                         .Includes(m => m.tb_PurEntries)
-                        .Includes(m => m.tb_FM_PriceAdjustments)
                         .Includes(m => m.tb_EOP_WaterStorages)
+                        .Includes(m => m.tb_FM_PriceAdjustments)
                         .Includes(m => m.tb_FM_PreReceivedPayments)
                                         .WhereCustom(useLike, dto);;
             return await querySqlQueryable.ToListAsync()as List<T>;
@@ -347,26 +344,25 @@ namespace RUINORERP.Business
              bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_ProjectGroup>(m => m.ProjectGroup_ID== entity.ProjectGroup_ID)
                                 .Include(m => m.tb_ProjectGroupEmployeeses)
                         .Include(m => m.tb_AS_AfterSaleDeliveries)
+                        .Include(m => m.tb_FM_PaymentRecordDetails)
                         .Include(m => m.tb_FM_OtherExpenseDetails)
                         .Include(m => m.tb_AS_AfterSaleApplies)
-                        .Include(m => m.tb_FM_ReceivablePayables)
+                        .Include(m => m.tb_ProdBorrowings)
                         .Include(m => m.tb_AS_RepairInStocks)
-                        .Include(m => m.tb_FM_ProfitLosses)
-                        .Include(m => m.tb_FM_PaymentRecordDetails)
                         .Include(m => m.tb_ProductionPlans)
                         .Include(m => m.tb_FM_ExpenseClaimDetails)
                         .Include(m => m.tb_AS_RepairOrders)
+                        .Include(m => m.tb_FM_ProfitLosses)
                         .Include(m => m.tb_ProjectGroupAccountMappers)
-                        .Include(m => m.tb_SaleOutRes)
                         .Include(m => m.tb_PurEntries)
-                        .Include(m => m.tb_FM_PriceAdjustments)
                         .Include(m => m.tb_EOP_WaterStorages)
+                        .Include(m => m.tb_FM_PriceAdjustments)
                         .Include(m => m.tb_FM_PreReceivedPayments)
                                         .ExecuteCommandAsync();
             if (rs)
             {
                 //////生成时暂时只考虑了一个主键的情况
-                MyCacheManager.Instance.DeleteEntityList<T>(model);
+                 _eventDrivenCacheManager.DeleteEntity<T>(model);
             }
             return rs;
         }
@@ -377,7 +373,8 @@ namespace RUINORERP.Business
         public tb_ProjectGroup AddReEntity(tb_ProjectGroup entity)
         {
             tb_ProjectGroup AddEntity =  _tb_ProjectGroupServices.AddReEntity(entity);
-            MyCacheManager.Instance.UpdateEntityList<tb_ProjectGroup>(AddEntity);
+     
+             _eventDrivenCacheManager.UpdateEntity<tb_ProjectGroup>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
@@ -385,7 +382,7 @@ namespace RUINORERP.Business
          public async Task<tb_ProjectGroup> AddReEntityAsync(tb_ProjectGroup entity)
         {
             tb_ProjectGroup AddEntity = await _tb_ProjectGroupServices.AddReEntityAsync(entity);
-            MyCacheManager.Instance.UpdateEntityList<tb_ProjectGroup>(AddEntity);
+            _eventDrivenCacheManager.UpdateEntity<tb_ProjectGroup>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
@@ -395,7 +392,7 @@ namespace RUINORERP.Business
             long id = await _tb_ProjectGroupServices.Add(entity);
             if(id>0)
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_ProjectGroup>(entity);
+                 _eventDrivenCacheManager.UpdateEntity<tb_ProjectGroup>(entity);
             }
             return id;
         }
@@ -405,7 +402,7 @@ namespace RUINORERP.Business
             List<long> ids = await _tb_ProjectGroupServices.Add(infos);
             if(ids.Count>0)//成功的个数 这里缓存 对不对呢？
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_ProjectGroup>(infos);
+                 _eventDrivenCacheManager.UpdateEntityList<tb_ProjectGroup>(infos);
             }
             return ids;
         }
@@ -416,7 +413,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_ProjectGroupServices.Delete(entity);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_ProjectGroup>(entity);
+                _eventDrivenCacheManager.DeleteEntity<tb_ProjectGroup>(entity);
                 
             }
             return rs;
@@ -427,7 +424,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_ProjectGroupServices.Update(entity);
             if (rs)
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_ProjectGroup>(entity);
+                 _eventDrivenCacheManager.DeleteEntity<tb_ProjectGroup>(entity);
                 entity.ActionStatus = ActionStatus.无操作;
             }
             return rs;
@@ -438,7 +435,7 @@ namespace RUINORERP.Business
             bool rs = await _tb_ProjectGroupServices.DeleteById(id);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_ProjectGroup>(id);
+               _eventDrivenCacheManager.DeleteEntity<tb_ProjectGroup>(id);
             }
             return rs;
         }
@@ -448,7 +445,8 @@ namespace RUINORERP.Business
             bool rs = await _tb_ProjectGroupServices.DeleteByIds(ids);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_ProjectGroup>(ids);
+            
+                   _eventDrivenCacheManager.DeleteEntities<tb_ProjectGroup>(ids.Cast<object>().ToArray());
             }
             return rs;
         }
@@ -460,7 +458,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_ProjectGroup>(list);
+     
+             _eventDrivenCacheManager.UpdateEntityList<tb_ProjectGroup>(list);
             return list;
         }
         
@@ -471,7 +470,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_ProjectGroup>(list);
+    
+             _eventDrivenCacheManager.UpdateEntityList<tb_ProjectGroup>(list);
             return list;
         }
         
@@ -482,7 +482,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_ProjectGroup>(list);
+  
+             _eventDrivenCacheManager.UpdateEntityList<tb_ProjectGroup>(list);
             return list;
         }
         
@@ -493,7 +494,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_ProjectGroup>(list);
+ 
+             _eventDrivenCacheManager.UpdateEntityList<tb_ProjectGroup>(list);
             return list;
         }
         
@@ -511,7 +513,8 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_ProjectGroup>(list);
+   
+             _eventDrivenCacheManager.UpdateEntityList<tb_ProjectGroup>(list);
             return list;
         }
         
@@ -527,20 +530,19 @@ namespace RUINORERP.Business
                                .Includes(t => t.tb_department )
                                             .Includes(t => t.tb_ProjectGroupEmployeeses )
                                 .Includes(t => t.tb_AS_AfterSaleDeliveries )
+                                .Includes(t => t.tb_FM_PaymentRecordDetails )
                                 .Includes(t => t.tb_FM_OtherExpenseDetails )
                                 .Includes(t => t.tb_AS_AfterSaleApplies )
-                                .Includes(t => t.tb_FM_ReceivablePayables )
+                                .Includes(t => t.tb_ProdBorrowings )
                                 .Includes(t => t.tb_AS_RepairInStocks )
-                                .Includes(t => t.tb_FM_ProfitLosses )
-                                .Includes(t => t.tb_FM_PaymentRecordDetails )
                                 .Includes(t => t.tb_ProductionPlans )
                                 .Includes(t => t.tb_FM_ExpenseClaimDetails )
                                 .Includes(t => t.tb_AS_RepairOrders )
+                                .Includes(t => t.tb_FM_ProfitLosses )
                                 .Includes(t => t.tb_ProjectGroupAccountMappers )
-                                .Includes(t => t.tb_SaleOutRes )
                                 .Includes(t => t.tb_PurEntries )
-                                .Includes(t => t.tb_FM_PriceAdjustments )
                                 .Includes(t => t.tb_EOP_WaterStorages )
+                                .Includes(t => t.tb_FM_PriceAdjustments )
                                 .Includes(t => t.tb_FM_PreReceivedPayments )
                         .ToListAsync();
             
@@ -549,7 +551,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_ProjectGroup>(list);
+ 
+             _eventDrivenCacheManager.UpdateEntityList<tb_ProjectGroup>(list);
             return list;
         }
 
@@ -564,20 +567,19 @@ namespace RUINORERP.Business
                                .Includes(t => t.tb_department )
                                             .Includes(t => t.tb_ProjectGroupEmployeeses )
                                 .Includes(t => t.tb_AS_AfterSaleDeliveries )
+                                .Includes(t => t.tb_FM_PaymentRecordDetails )
                                 .Includes(t => t.tb_FM_OtherExpenseDetails )
                                 .Includes(t => t.tb_AS_AfterSaleApplies )
-                                .Includes(t => t.tb_FM_ReceivablePayables )
+                                .Includes(t => t.tb_ProdBorrowings )
                                 .Includes(t => t.tb_AS_RepairInStocks )
-                                .Includes(t => t.tb_FM_ProfitLosses )
-                                .Includes(t => t.tb_FM_PaymentRecordDetails )
                                 .Includes(t => t.tb_ProductionPlans )
                                 .Includes(t => t.tb_FM_ExpenseClaimDetails )
                                 .Includes(t => t.tb_AS_RepairOrders )
+                                .Includes(t => t.tb_FM_ProfitLosses )
                                 .Includes(t => t.tb_ProjectGroupAccountMappers )
-                                .Includes(t => t.tb_SaleOutRes )
                                 .Includes(t => t.tb_PurEntries )
-                                .Includes(t => t.tb_FM_PriceAdjustments )
                                 .Includes(t => t.tb_EOP_WaterStorages )
+                                .Includes(t => t.tb_FM_PriceAdjustments )
                                 .Includes(t => t.tb_FM_PreReceivedPayments )
                         .ToListAsync();
             
@@ -586,7 +588,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_ProjectGroup>(list);
+  
+             _eventDrivenCacheManager.UpdateEntityList<tb_ProjectGroup>(list);
             return list;
         }
         
@@ -601,20 +604,19 @@ namespace RUINORERP.Business
                             .Includes(t => t.tb_department )
                                         .Includes(t => t.tb_ProjectGroupEmployeeses )
                             .Includes(t => t.tb_AS_AfterSaleDeliveries )
+                            .Includes(t => t.tb_FM_PaymentRecordDetails )
                             .Includes(t => t.tb_FM_OtherExpenseDetails )
                             .Includes(t => t.tb_AS_AfterSaleApplies )
-                            .Includes(t => t.tb_FM_ReceivablePayables )
+                            .Includes(t => t.tb_ProdBorrowings )
                             .Includes(t => t.tb_AS_RepairInStocks )
-                            .Includes(t => t.tb_FM_ProfitLosses )
-                            .Includes(t => t.tb_FM_PaymentRecordDetails )
                             .Includes(t => t.tb_ProductionPlans )
                             .Includes(t => t.tb_FM_ExpenseClaimDetails )
                             .Includes(t => t.tb_AS_RepairOrders )
+                            .Includes(t => t.tb_FM_ProfitLosses )
                             .Includes(t => t.tb_ProjectGroupAccountMappers )
-                            .Includes(t => t.tb_SaleOutRes )
                             .Includes(t => t.tb_PurEntries )
-                            .Includes(t => t.tb_FM_PriceAdjustments )
                             .Includes(t => t.tb_EOP_WaterStorages )
+                            .Includes(t => t.tb_FM_PriceAdjustments )
                             .Includes(t => t.tb_FM_PreReceivedPayments )
                         .ToList();
             
@@ -623,7 +625,8 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_ProjectGroup>(list);
+     
+             _eventDrivenCacheManager.UpdateEntityList<tb_ProjectGroup>(list);
             return list;
         }
         
@@ -657,20 +660,19 @@ namespace RUINORERP.Business
 
                                             .Includes(t => t.tb_ProjectGroupEmployeeses )
                                             .Includes(t => t.tb_AS_AfterSaleDeliveries )
+                                            .Includes(t => t.tb_FM_PaymentRecordDetails )
                                             .Includes(t => t.tb_FM_OtherExpenseDetails )
                                             .Includes(t => t.tb_AS_AfterSaleApplies )
-                                            .Includes(t => t.tb_FM_ReceivablePayables )
+                                            .Includes(t => t.tb_ProdBorrowings )
                                             .Includes(t => t.tb_AS_RepairInStocks )
-                                            .Includes(t => t.tb_FM_ProfitLosses )
-                                            .Includes(t => t.tb_FM_PaymentRecordDetails )
                                             .Includes(t => t.tb_ProductionPlans )
                                             .Includes(t => t.tb_FM_ExpenseClaimDetails )
                                             .Includes(t => t.tb_AS_RepairOrders )
+                                            .Includes(t => t.tb_FM_ProfitLosses )
                                             .Includes(t => t.tb_ProjectGroupAccountMappers )
-                                            .Includes(t => t.tb_SaleOutRes )
                                             .Includes(t => t.tb_PurEntries )
-                                            .Includes(t => t.tb_FM_PriceAdjustments )
                                             .Includes(t => t.tb_EOP_WaterStorages )
+                                            .Includes(t => t.tb_FM_PriceAdjustments )
                                             .Includes(t => t.tb_FM_PreReceivedPayments )
                                 .FirstAsync();
             if(entity!=null)
@@ -678,7 +680,8 @@ namespace RUINORERP.Business
                 entity.HasChanged = false;
             }
 
-            MyCacheManager.Instance.UpdateEntityList<tb_ProjectGroup>(entity);
+         
+             _eventDrivenCacheManager.UpdateEntity<tb_ProjectGroup>(entity);
             return entity as T;
         }
         

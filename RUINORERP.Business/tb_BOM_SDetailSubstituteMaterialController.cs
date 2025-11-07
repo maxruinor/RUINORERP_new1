@@ -1,10 +1,8 @@
-﻿
-// **************************************
-// 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
+﻿// **************************************
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/14/2025 20:39:37
+// 时间：11/06/2025 19:42:59
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -25,13 +23,14 @@ using RUINORERP.Model.Context;
 using System.Linq;
 using RUINOR.Core;
 using RUINORERP.Common.Helper;
+using RUINORERP.Business.Cache;
 
 namespace RUINORERP.Business
 {
     /// <summary>
     /// 标准物料表BOM明细的替代材料表-使用优化级按库存量-成本-保质时间在配置来确定
     /// </summary>
-    public partial class tb_BOM_SDetailSubstituteMaterialController<T> : BaseController<T> where T : class
+    public partial class tb_BOM_SDetailSubstituteMaterialController<T>:BaseController<T> where T : class
     {
         /// <summary>
         /// 本为私有修改为公有，暴露出来方便使用
@@ -39,28 +38,30 @@ namespace RUINORERP.Business
         //public readonly IUnitOfWorkManage _unitOfWorkManage;
         //public readonly ILogger<BaseController<T>> _logger;
         public Itb_BOM_SDetailSubstituteMaterialServices _tb_BOM_SDetailSubstituteMaterialServices { get; set; }
-        // private readonly ApplicationContext _appContext;
-
-        public tb_BOM_SDetailSubstituteMaterialController(ILogger<tb_BOM_SDetailSubstituteMaterialController<T>> logger, IUnitOfWorkManage unitOfWorkManage, tb_BOM_SDetailSubstituteMaterialServices tb_BOM_SDetailSubstituteMaterialServices, ApplicationContext appContext = null) : base(logger, unitOfWorkManage, appContext)
+        private readonly EventDrivenCacheManager _eventDrivenCacheManager; 
+       // private readonly ApplicationContext _appContext;
+       
+        public tb_BOM_SDetailSubstituteMaterialController(ILogger<tb_BOM_SDetailSubstituteMaterialController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_BOM_SDetailSubstituteMaterialServices tb_BOM_SDetailSubstituteMaterialServices ,EventDrivenCacheManager eventDrivenCacheManager, ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
         {
             _logger = logger;
-            _unitOfWorkManage = unitOfWorkManage;
-            _tb_BOM_SDetailSubstituteMaterialServices = tb_BOM_SDetailSubstituteMaterialServices;
-            _appContext = appContext;
+           _unitOfWorkManage = unitOfWorkManage;
+           _tb_BOM_SDetailSubstituteMaterialServices = tb_BOM_SDetailSubstituteMaterialServices;
+           _appContext = appContext;
+           _eventDrivenCacheManager = eventDrivenCacheManager;
         }
-
-
+      
+        
         public ValidationResult Validator(tb_BOM_SDetailSubstituteMaterial info)
         {
 
-            // tb_BOM_SDetailSubstituteMaterialValidator validator = new tb_BOM_SDetailSubstituteMaterialValidator();
-            tb_BOM_SDetailSubstituteMaterialValidator validator = _appContext.GetRequiredService<tb_BOM_SDetailSubstituteMaterialValidator>();
+           // tb_BOM_SDetailSubstituteMaterialValidator validator = new tb_BOM_SDetailSubstituteMaterialValidator();
+           tb_BOM_SDetailSubstituteMaterialValidator validator = _appContext.GetRequiredService<tb_BOM_SDetailSubstituteMaterialValidator>();
             ValidationResult results = validator.Validate(info);
             return results;
         }
-
+        
         #region 扩展方法
-
+        
         /// <summary>
         /// 某字段是否存在
         /// </summary>
@@ -70,8 +71,8 @@ namespace RUINORERP.Business
         {
             return await _unitOfWorkManage.GetDbClient().Queryable<T>().Where(exp).AnyAsync();
         }
-
-
+      
+        
         /// <summary>
         /// 雪花ID模式下的新增和修改
         /// </summary>
@@ -89,14 +90,14 @@ namespace RUINORERP.Business
                     bool rs = await _tb_BOM_SDetailSubstituteMaterialServices.Update(entity);
                     if (rs)
                     {
-                        MyCacheManager.Instance.UpdateEntityList<tb_BOM_SDetailSubstituteMaterial>(entity);
+                        _eventDrivenCacheManager.UpdateEntity<tb_BOM_SDetailSubstituteMaterial>(entity);
                     }
                     Returnobj = entity;
                 }
                 else
                 {
                     Returnobj = await _tb_BOM_SDetailSubstituteMaterialServices.AddReEntityAsync(entity);
-                    MyCacheManager.Instance.UpdateEntityList<tb_BOM_SDetailSubstituteMaterial>(entity);
+                    _eventDrivenCacheManager.UpdateEntity<tb_BOM_SDetailSubstituteMaterial>(entity);
                 }
 
                 rr.ReturnObject = Returnobj;
@@ -110,14 +111,14 @@ namespace RUINORERP.Business
             }
             return rr;
         }
-
-
+        
+        
         /// <summary>
         /// 雪花ID模式下的新增和修改
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public async override Task<ReturnResults<T>> BaseSaveOrUpdate(T model)
+        public async override Task<ReturnResults<T>>  BaseSaveOrUpdate(T model)
         {
             ReturnResults<T> rr = new ReturnResults<T>();
             tb_BOM_SDetailSubstituteMaterial entity = model as tb_BOM_SDetailSubstituteMaterial;
@@ -130,14 +131,14 @@ namespace RUINORERP.Business
                     bool rs = await _tb_BOM_SDetailSubstituteMaterialServices.Update(entity);
                     if (rs)
                     {
-                        MyCacheManager.Instance.UpdateEntityList<tb_BOM_SDetailSubstituteMaterial>(entity);
+                        _eventDrivenCacheManager.UpdateEntity<tb_BOM_SDetailSubstituteMaterial>(entity);
                     }
                     Returnobj = entity as T;
                 }
                 else
                 {
-                    Returnobj = await _tb_BOM_SDetailSubstituteMaterialServices.AddReEntityAsync(entity) as T;
-                    MyCacheManager.Instance.UpdateEntityList<tb_BOM_SDetailSubstituteMaterial>(entity);
+                    Returnobj = await _tb_BOM_SDetailSubstituteMaterialServices.AddReEntityAsync(entity) as T ;
+                    _eventDrivenCacheManager.UpdateEntity<tb_BOM_SDetailSubstituteMaterial>(entity);
                 }
 
                 rr.ReturnObject = Returnobj;
@@ -151,8 +152,8 @@ namespace RUINORERP.Business
             }
             return rr;
         }
-
-        public async override Task<List<T>> BaseQueryAsync(string wheresql)
+        
+        public async override Task<List<T>> BaseQueryAsync(string wheresql) 
         {
             List<T> list = await _tb_BOM_SDetailSubstituteMaterialServices.QueryAsync(wheresql) as List<T>;
             foreach (var item in list)
@@ -162,12 +163,12 @@ namespace RUINORERP.Business
             }
             if (list != null)
             {
-                MyCacheManager.Instance.UpdateEntityList<List<T>>(list);
-            }
+                _eventDrivenCacheManager.UpdateEntityList<T>(list);
+             }
             return list;
         }
-
-        public async override Task<List<T>> BaseQueryAsync()
+        
+        public async override Task<List<T>> BaseQueryAsync() 
         {
             List<T> list = await _tb_BOM_SDetailSubstituteMaterialServices.QueryAsync() as List<T>;
             foreach (var item in list)
@@ -177,12 +178,12 @@ namespace RUINORERP.Business
             }
             if (list != null)
             {
-                MyCacheManager.Instance.UpdateEntityList<List<T>>(list);
-            }
+                _eventDrivenCacheManager.UpdateEntityList<T>(list);
+             }
             return list;
         }
-
-
+        
+        
         public async override Task<bool> BaseDeleteAsync(T model)
         {
             tb_BOM_SDetailSubstituteMaterial entity = model as tb_BOM_SDetailSubstituteMaterial;
@@ -190,48 +191,46 @@ namespace RUINORERP.Business
             if (rs)
             {
                 ////生成时暂时只考虑了一个主键的情况
-                MyCacheManager.Instance.DeleteEntityList<tb_BOM_SDetailSubstituteMaterial>(entity);
+                _eventDrivenCacheManager.DeleteEntity<tb_BOM_SDetailSubstituteMaterial>(entity.PrimaryKeyID);
             }
             return rs;
         }
-
+        
         public async override Task<bool> BaseDeleteAsync(List<T> models)
         {
-            bool rs = false;
+            bool rs=false;
             List<tb_BOM_SDetailSubstituteMaterial> entitys = models as List<tb_BOM_SDetailSubstituteMaterial>;
             int c = await _unitOfWorkManage.GetDbClient().Deleteable<tb_BOM_SDetailSubstituteMaterial>(entitys).ExecuteCommandAsync();
-            if (c > 0)
+            if (c>0)
             {
-                rs = true;
-                ////生成时暂时只考虑了一个主键的情况
-                long[] result = entitys.Select(e => e.SubstituteMaterialID).ToArray();
-                MyCacheManager.Instance.DeleteEntityList<tb_BOM_SDetailSubstituteMaterial>(result);
+                rs=true;
+                _eventDrivenCacheManager.DeleteEntityList<tb_BOM_SDetailSubstituteMaterial>(entitys);
             }
             return rs;
         }
-
+        
         public override ValidationResult BaseValidator(T info)
         {
             //tb_BOM_SDetailSubstituteMaterialValidator validator = new tb_BOM_SDetailSubstituteMaterialValidator();
-            tb_BOM_SDetailSubstituteMaterialValidator validator = _appContext.GetRequiredService<tb_BOM_SDetailSubstituteMaterialValidator>();
+           tb_BOM_SDetailSubstituteMaterialValidator validator = _appContext.GetRequiredService<tb_BOM_SDetailSubstituteMaterialValidator>();
             ValidationResult results = validator.Validate(info as tb_BOM_SDetailSubstituteMaterial);
             return results;
         }
-
-
-        public async override Task<List<T>> BaseQueryByAdvancedAsync(bool useLike, object dto)
+        
+        
+        public async override Task<List<T>> BaseQueryByAdvancedAsync(bool useLike,object dto) 
         {
-            var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<T>().WhereCustom(useLike, dto);
+            var  querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<T>().WhereCustom(useLike,dto);
             return await querySqlQueryable.ToListAsync();
         }
-
+        
         public async override Task<ReturnMainSubResults<T>> BaseSaveOrUpdateWithChild<C>(T model) where C : class
         {
             bool rs = false;
             RevertCommand command = new RevertCommand();
             ReturnMainSubResults<T> rsms = new ReturnMainSubResults<T>();
-            //缓存当前编辑的对象。如果撤销就回原来的值
-            T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
+                             //缓存当前编辑的对象。如果撤销就回原来的值
+                T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
             try
             {
 
@@ -241,34 +240,34 @@ namespace RUINORERP.Business
                     //Undo操作会执行到的代码
                     CloneHelper.SetValues<T>(entity, oldobj);
                 };
-                // 开启事务，保证数据一致性
+                       // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
-
-                if (entity.SubstituteMaterialID > 0)
-                {
-
-                    var result = await _unitOfWorkManage.GetDbClient().Updateable<tb_BOM_SDetailSubstituteMaterial>(entity as tb_BOM_SDetailSubstituteMaterial)
-       .ExecuteCommandAsync();
+                
+            if (entity.SubstituteMaterialID > 0)
+            {
+            
+                                 var result= await _unitOfWorkManage.GetDbClient().Updateable<tb_BOM_SDetailSubstituteMaterial>(entity as tb_BOM_SDetailSubstituteMaterial)
+                    .ExecuteCommandAsync();
                     if (result > 0)
                     {
                         rs = true;
                     }
-                }
-                else
-                {
-                    var result = await _unitOfWorkManage.GetDbClient().Insertable<tb_BOM_SDetailSubstituteMaterial>(entity as tb_BOM_SDetailSubstituteMaterial)
-      .ExecuteCommandAsync();
+            }
+        else    
+        {
+                                  var result= await _unitOfWorkManage.GetDbClient().Insertable<tb_BOM_SDetailSubstituteMaterial>(entity as tb_BOM_SDetailSubstituteMaterial)
+                    .ExecuteReturnSnowflakeIdAsync();
                     if (result > 0)
                     {
                         rs = true;
                     }
-
-
-                }
-
+                                              
+                     
+        }
+        
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
-                rsms.ReturnObject = entity as T;
+                rsms.ReturnObject = entity as T ;
                 entity.PrimaryKeyID = entity.SubstituteMaterialID;
                 rsms.Succeeded = rs;
             }
@@ -284,163 +283,169 @@ namespace RUINORERP.Business
 
             return rsms;
         }
-
+        
         #endregion
-
-
+        
+        
         #region override mothed
 
         public async override Task<List<T>> BaseQueryByAdvancedNavAsync(bool useLike, object dto)
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_BOM_SDetailSubstituteMaterial>()
-                //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
+                                //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
                 .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
-                                .WhereCustom(useLike, dto);
-            return await querySqlQueryable.ToListAsync() as List<T>;
+                                .WhereCustom(useLike, dto);;
+            return await querySqlQueryable.ToListAsync()as List<T>;
         }
 
 
-        public async override Task<bool> BaseDeleteByNavAsync(T model)
+        public async override Task<bool> BaseDeleteByNavAsync(T model) 
         {
             tb_BOM_SDetailSubstituteMaterial entity = model as tb_BOM_SDetailSubstituteMaterial;
-            bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_BOM_SDetailSubstituteMaterial>(m => m.SubstituteMaterialID == entity.SubstituteMaterialID)
-               //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
-               .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
-                               .ExecuteCommandAsync();
+             bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_BOM_SDetailSubstituteMaterial>(m => m.SubstituteMaterialID== entity.SubstituteMaterialID)
+                                //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
+                .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
+                                .ExecuteCommandAsync();
             if (rs)
             {
                 //////生成时暂时只考虑了一个主键的情况
-                MyCacheManager.Instance.DeleteEntityList<T>(model);
+                 _eventDrivenCacheManager.DeleteEntity<T>(model);
             }
             return rs;
         }
         #endregion
-
-
-
+        
+        
+        
         public tb_BOM_SDetailSubstituteMaterial AddReEntity(tb_BOM_SDetailSubstituteMaterial entity)
         {
-            tb_BOM_SDetailSubstituteMaterial AddEntity = _tb_BOM_SDetailSubstituteMaterialServices.AddReEntity(entity);
-            MyCacheManager.Instance.UpdateEntityList<tb_BOM_SDetailSubstituteMaterial>(AddEntity);
+            tb_BOM_SDetailSubstituteMaterial AddEntity =  _tb_BOM_SDetailSubstituteMaterialServices.AddReEntity(entity);
+     
+             _eventDrivenCacheManager.UpdateEntity<tb_BOM_SDetailSubstituteMaterial>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
-
-        public async Task<tb_BOM_SDetailSubstituteMaterial> AddReEntityAsync(tb_BOM_SDetailSubstituteMaterial entity)
+        
+         public async Task<tb_BOM_SDetailSubstituteMaterial> AddReEntityAsync(tb_BOM_SDetailSubstituteMaterial entity)
         {
             tb_BOM_SDetailSubstituteMaterial AddEntity = await _tb_BOM_SDetailSubstituteMaterialServices.AddReEntityAsync(entity);
-            MyCacheManager.Instance.UpdateEntityList<tb_BOM_SDetailSubstituteMaterial>(AddEntity);
+            _eventDrivenCacheManager.UpdateEntity<tb_BOM_SDetailSubstituteMaterial>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
-
+        
         public async Task<long> AddAsync(tb_BOM_SDetailSubstituteMaterial entity)
         {
             long id = await _tb_BOM_SDetailSubstituteMaterialServices.Add(entity);
-            if (id > 0)
+            if(id>0)
             {
-                MyCacheManager.Instance.UpdateEntityList<tb_BOM_SDetailSubstituteMaterial>(entity);
+                 _eventDrivenCacheManager.UpdateEntity<tb_BOM_SDetailSubstituteMaterial>(entity);
             }
             return id;
         }
-
+        
         public async Task<List<long>> AddAsync(List<tb_BOM_SDetailSubstituteMaterial> infos)
         {
             List<long> ids = await _tb_BOM_SDetailSubstituteMaterialServices.Add(infos);
-            if (ids.Count > 0)//成功的个数 这里缓存 对不对呢？
+            if(ids.Count>0)//成功的个数 这里缓存 对不对呢？
             {
-                MyCacheManager.Instance.UpdateEntityList<tb_BOM_SDetailSubstituteMaterial>(infos);
+                 _eventDrivenCacheManager.UpdateEntityList<tb_BOM_SDetailSubstituteMaterial>(infos);
             }
             return ids;
         }
-
-
+        
+        
         public async Task<bool> DeleteAsync(tb_BOM_SDetailSubstituteMaterial entity)
         {
             bool rs = await _tb_BOM_SDetailSubstituteMaterialServices.Delete(entity);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_BOM_SDetailSubstituteMaterial>(entity);
-
+                _eventDrivenCacheManager.DeleteEntity<tb_BOM_SDetailSubstituteMaterial>(entity);
+                
             }
             return rs;
         }
-
+        
         public async Task<bool> UpdateAsync(tb_BOM_SDetailSubstituteMaterial entity)
         {
             bool rs = await _tb_BOM_SDetailSubstituteMaterialServices.Update(entity);
             if (rs)
             {
-                MyCacheManager.Instance.UpdateEntityList<tb_BOM_SDetailSubstituteMaterial>(entity);
+                 _eventDrivenCacheManager.DeleteEntity<tb_BOM_SDetailSubstituteMaterial>(entity);
                 entity.ActionStatus = ActionStatus.无操作;
             }
             return rs;
         }
-
+        
         public async Task<bool> DeleteAsync(long id)
         {
             bool rs = await _tb_BOM_SDetailSubstituteMaterialServices.DeleteById(id);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_BOM_SDetailSubstituteMaterial>(id);
+               _eventDrivenCacheManager.DeleteEntity<tb_BOM_SDetailSubstituteMaterial>(id);
             }
             return rs;
         }
-
-        public async Task<bool> DeleteAsync(long[] ids)
+        
+         public async Task<bool> DeleteAsync(long[] ids)
         {
             bool rs = await _tb_BOM_SDetailSubstituteMaterialServices.DeleteByIds(ids);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_BOM_SDetailSubstituteMaterial>(ids);
+            
+                   _eventDrivenCacheManager.DeleteEntities<tb_BOM_SDetailSubstituteMaterial>(ids.Cast<object>().ToArray());
             }
             return rs;
         }
-
+        
         public virtual async Task<List<tb_BOM_SDetailSubstituteMaterial>> QueryAsync()
         {
-            List<tb_BOM_SDetailSubstituteMaterial> list = await _tb_BOM_SDetailSubstituteMaterialServices.QueryAsync();
+            List<tb_BOM_SDetailSubstituteMaterial> list = await  _tb_BOM_SDetailSubstituteMaterialServices.QueryAsync();
             foreach (var item in list)
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_BOM_SDetailSubstituteMaterial>(list);
+     
+             _eventDrivenCacheManager.UpdateEntityList<tb_BOM_SDetailSubstituteMaterial>(list);
             return list;
         }
-
+        
         public virtual List<tb_BOM_SDetailSubstituteMaterial> Query()
         {
-            List<tb_BOM_SDetailSubstituteMaterial> list = _tb_BOM_SDetailSubstituteMaterialServices.Query();
+            List<tb_BOM_SDetailSubstituteMaterial> list =  _tb_BOM_SDetailSubstituteMaterialServices.Query();
             foreach (var item in list)
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_BOM_SDetailSubstituteMaterial>(list);
+    
+             _eventDrivenCacheManager.UpdateEntityList<tb_BOM_SDetailSubstituteMaterial>(list);
             return list;
         }
-
+        
         public virtual List<tb_BOM_SDetailSubstituteMaterial> Query(string wheresql)
         {
-            List<tb_BOM_SDetailSubstituteMaterial> list = _tb_BOM_SDetailSubstituteMaterialServices.Query(wheresql);
+            List<tb_BOM_SDetailSubstituteMaterial> list =  _tb_BOM_SDetailSubstituteMaterialServices.Query(wheresql);
             foreach (var item in list)
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_BOM_SDetailSubstituteMaterial>(list);
+  
+             _eventDrivenCacheManager.UpdateEntityList<tb_BOM_SDetailSubstituteMaterial>(list);
             return list;
         }
-
-        public virtual async Task<List<tb_BOM_SDetailSubstituteMaterial>> QueryAsync(string wheresql)
+        
+        public virtual async Task<List<tb_BOM_SDetailSubstituteMaterial>> QueryAsync(string wheresql) 
         {
             List<tb_BOM_SDetailSubstituteMaterial> list = await _tb_BOM_SDetailSubstituteMaterialServices.QueryAsync(wheresql);
             foreach (var item in list)
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_BOM_SDetailSubstituteMaterial>(list);
+ 
+             _eventDrivenCacheManager.UpdateEntityList<tb_BOM_SDetailSubstituteMaterial>(list);
             return list;
         }
-
+        
 
 
         /// <summary>
@@ -455,31 +460,33 @@ namespace RUINORERP.Business
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_BOM_SDetailSubstituteMaterial>(list);
+   
+             _eventDrivenCacheManager.UpdateEntityList<tb_BOM_SDetailSubstituteMaterial>(list);
             return list;
         }
-
-
-
+        
+        
+        
         /// <summary>
         /// 无参数异步导航查询
         /// </summary>
         /// <returns>数据列表</returns>
-        public virtual async Task<List<tb_BOM_SDetailSubstituteMaterial>> QueryByNavAsync()
+         public virtual async Task<List<tb_BOM_SDetailSubstituteMaterial>> QueryByNavAsync()
         {
             List<tb_BOM_SDetailSubstituteMaterial> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_BOM_SDetailSubstituteMaterial>()
-                               .Includes(t => t.tb_bom_sdetail)
-                               .Includes(t => t.tb_unit)
-                               .Includes(t => t.tb_unit_conversion)
-                               .Includes(t => t.tb_proddetail)
+                               .Includes(t => t.tb_bom_sdetail )
+                               .Includes(t => t.tb_unit )
+                               .Includes(t => t.tb_unit_conversion )
+                               .Includes(t => t.tb_proddetail )
                                     .ToListAsync();
-
+            
             foreach (var item in list)
             {
                 item.HasChanged = false;
             }
-
-            MyCacheManager.Instance.UpdateEntityList<tb_BOM_SDetailSubstituteMaterial>(list);
+            
+ 
+             _eventDrivenCacheManager.UpdateEntityList<tb_BOM_SDetailSubstituteMaterial>(list);
             return list;
         }
 
@@ -488,56 +495,58 @@ namespace RUINORERP.Business
         /// 带参数异步导航查询
         /// </summary>
         /// <returns>数据列表</returns>
-        public virtual async Task<List<tb_BOM_SDetailSubstituteMaterial>> QueryByNavAsync(Expression<Func<tb_BOM_SDetailSubstituteMaterial, bool>> exp)
+         public virtual async Task<List<tb_BOM_SDetailSubstituteMaterial>> QueryByNavAsync(Expression<Func<tb_BOM_SDetailSubstituteMaterial, bool>> exp)
         {
             List<tb_BOM_SDetailSubstituteMaterial> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_BOM_SDetailSubstituteMaterial>().Where(exp)
-                               .Includes(t => t.tb_bom_sdetail)
-                               .Includes(t => t.tb_unit)
-                               .Includes(t => t.tb_unit_conversion)
-                               .Includes(t => t.tb_proddetail)
+                               .Includes(t => t.tb_bom_sdetail )
+                               .Includes(t => t.tb_unit )
+                               .Includes(t => t.tb_unit_conversion )
+                               .Includes(t => t.tb_proddetail )
                                     .ToListAsync();
-
+            
             foreach (var item in list)
             {
                 item.HasChanged = false;
             }
-
-            MyCacheManager.Instance.UpdateEntityList<tb_BOM_SDetailSubstituteMaterial>(list);
+            
+  
+             _eventDrivenCacheManager.UpdateEntityList<tb_BOM_SDetailSubstituteMaterial>(list);
             return list;
         }
-
-
+        
+        
         /// <summary>
         /// 带参数异步导航查询
         /// </summary>
         /// <returns>数据列表</returns>
-        public virtual List<tb_BOM_SDetailSubstituteMaterial> QueryByNav(Expression<Func<tb_BOM_SDetailSubstituteMaterial, bool>> exp)
+         public virtual List<tb_BOM_SDetailSubstituteMaterial> QueryByNav(Expression<Func<tb_BOM_SDetailSubstituteMaterial, bool>> exp)
         {
             List<tb_BOM_SDetailSubstituteMaterial> list = _unitOfWorkManage.GetDbClient().Queryable<tb_BOM_SDetailSubstituteMaterial>().Where(exp)
-                            .Includes(t => t.tb_bom_sdetail)
-                            .Includes(t => t.tb_unit)
-                            .Includes(t => t.tb_unit_conversion)
-                            .Includes(t => t.tb_proddetail)
+                            .Includes(t => t.tb_bom_sdetail )
+                            .Includes(t => t.tb_unit )
+                            .Includes(t => t.tb_unit_conversion )
+                            .Includes(t => t.tb_proddetail )
                                     .ToList();
-
+            
             foreach (var item in list)
             {
                 item.HasChanged = false;
             }
-
-            MyCacheManager.Instance.UpdateEntityList<tb_BOM_SDetailSubstituteMaterial>(list);
+            
+     
+             _eventDrivenCacheManager.UpdateEntityList<tb_BOM_SDetailSubstituteMaterial>(list);
             return list;
         }
-
-
+        
+        
 
         /// <summary>
         /// 高级查询
         /// </summary>
         /// <returns></returns>
-        public async Task<List<tb_BOM_SDetailSubstituteMaterial>> QueryByAdvancedAsync(bool useLike, object dto)
+        public async Task<List<tb_BOM_SDetailSubstituteMaterial>> QueryByAdvancedAsync(bool useLike,object dto)
         {
-            var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_BOM_SDetailSubstituteMaterial>().WhereCustom(useLike, dto);
+            var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_BOM_SDetailSubstituteMaterial>().WhereCustom(useLike,dto);
             return await querySqlQueryable.ToListAsync();
         }
 
@@ -548,31 +557,34 @@ namespace RUINORERP.Business
             T entity = await _tb_BOM_SDetailSubstituteMaterialServices.QueryByIdAsync(id) as T;
             return entity;
         }
-
-
-
+        
+        
+        
         public override async Task<T> BaseQueryByIdNavAsync(object id)
         {
             tb_BOM_SDetailSubstituteMaterial entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_BOM_SDetailSubstituteMaterial>().Where(w => w.SubstituteMaterialID == (long)id)
-                             .Includes(t => t.tb_bom_sdetail)
-                            .Includes(t => t.tb_unit)
-                            .Includes(t => t.tb_unit_conversion)
-                            .Includes(t => t.tb_proddetail)
-                                    .FirstAsync();
-            if (entity != null)
+                             .Includes(t => t.tb_bom_sdetail )
+                            .Includes(t => t.tb_unit )
+                            .Includes(t => t.tb_unit_conversion )
+                            .Includes(t => t.tb_proddetail )
+                        
+
+                                .FirstAsync();
+            if(entity!=null)
             {
                 entity.HasChanged = false;
             }
 
-            MyCacheManager.Instance.UpdateEntityList<tb_BOM_SDetailSubstituteMaterial>(entity);
+         
+             _eventDrivenCacheManager.UpdateEntity<tb_BOM_SDetailSubstituteMaterial>(entity);
             return entity as T;
         }
-
-
-
-
-
-
+        
+        
+        
+        
+        
+        
     }
 }
 

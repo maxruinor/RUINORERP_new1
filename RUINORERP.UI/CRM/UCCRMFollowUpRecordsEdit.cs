@@ -134,7 +134,7 @@ namespace RUINORERP.UI.CRM
                 //引入相关数据
                 if ((record.ActionStatus == ActionStatus.新增 || record.ActionStatus == ActionStatus.修改) && record.PlanID.HasValue && record.PlanID.Value > 0 && s2.PropertyName == entity.GetPropertyName<tb_CRM_FollowUpRecords>(c => c.PlanID))
                 {
-                    var obj = MyCacheManager.Instance.GetEntity<tb_CRM_FollowUpPlans>(record.PlanID);
+                    var obj = RUINORERP.Business.Cache.EntityCacheHelper.GetEntity<tb_CRM_FollowUpPlans>(record.PlanID);
                     if (obj != null && obj.ToString() != "System.Object")
                     {
                         if (obj is tb_CRM_FollowUpPlans cv)
@@ -321,7 +321,7 @@ namespace RUINORERP.UI.CRM
                             //根据要缓存的列表集合来判断是否需要上传到服务器。让服务器分发到其他客户端
                             KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
                             //只处理需要缓存的表
-                            if (MyCacheManager.Instance.NewTableList.TryGetValue(typeof(tb_CRM_FollowUpPlans).Name, out pair))
+                            if (RUINORERP.Business.Cache.EntityCacheHelper.NewTableList.TryGetValue(typeof(tb_CRM_FollowUpPlans).Name, out pair))
                             {
 #warning TODO: 这里需要完善具体逻辑，当前仅为占位
                                 //如果有更新变动就上传到服务器再分发到所有客户端

@@ -9,6 +9,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -458,9 +459,39 @@ namespace RUINORERP.Business
                     // 情况3：混合方向（应收+应付）且各自合法
                     if (!hasError) continue;
 
-                    // 错误处理
-                    returnResults.ErrorMsg = $"业务来源：{(BizType)bizTypeGroup.Key}，单号:{billNoGroup.Key}\r\n"
-                        + $"应{(ReceivePaymentType)ReceivablePayables[0].ReceivePaymentType}单已经存在，数据不能重复，请检查。";
+                    // 错误处理 - 显示所有重复单据的详细信息
+                    StringBuilder errorMsgBuilder = new StringBuilder();
+                    errorMsgBuilder.AppendLine($"错误：发现重复的应收应付单据");
+                    errorMsgBuilder.AppendLine($"业务类型：{(BizType)bizTypeGroup.Key}");
+                    errorMsgBuilder.AppendLine($"来源单号：{billNoGroup.Key}");
+                    errorMsgBuilder.AppendLine($"交易方向：{(ReceivePaymentType)items[0].ReceivePaymentType}");
+                    errorMsgBuilder.AppendLine();
+                    errorMsgBuilder.AppendLine("重复单据详细信息：");
+
+                    int index = 1;
+                    // 显示所有重复单据的详细信息
+                    foreach (var item in items)
+                    {
+                        errorMsgBuilder.AppendLine($"{index}. 单据编号: {item.ARAPNo}");
+                        errorMsgBuilder.AppendLine($"   金额: {item.LocalBalanceAmount}");
+                        errorMsgBuilder.AppendLine($"   交易方向: {(ReceivePaymentType)item.ReceivePaymentType}");
+                        errorMsgBuilder.AppendLine($"   创建时间: {item.Created_at}");
+                        errorMsgBuilder.AppendLine($"   创建用户: {item.Created_by}");
+                        errorMsgBuilder.AppendLine();
+                        index++;
+                    }
+
+                    errorMsgBuilder.AppendLine("可能原因：");
+                    errorMsgBuilder.AppendLine("1. 重复生成了应收应付单据");
+                    errorMsgBuilder.AppendLine("2. 导入数据时发生重复");
+                    errorMsgBuilder.AppendLine("3. 系统操作错误导致重复记录");
+                    errorMsgBuilder.AppendLine();
+                    errorMsgBuilder.AppendLine("解决建议：");
+                    errorMsgBuilder.AppendLine("1. 检查并删除多余的重复单据");
+                    errorMsgBuilder.AppendLine("2. 确保每张业务单据只对应一张应收应付单据");
+                    errorMsgBuilder.AppendLine("3. 如需多次收付款，请确保使用正确的操作流程");
+
+                    returnResults.ErrorMsg = errorMsgBuilder.ToString();
                     return false;
                 }
             }
@@ -610,7 +641,7 @@ namespace RUINORERP.Business
             //如果部门还是没有值 则从缓存中加载,如果项目有所属部门的话
             if (payable.ProjectGroup_ID.HasValue && !payable.DepartmentID.HasValue)
             {
-                var projectgroup = MyCacheManager.Instance.GetEntity<tb_ProjectGroup>(entity.ProjectGroup_ID);
+                var projectgroup = Cache.EntityCacheHelper.GetEntity<tb_ProjectGroup>(entity.ProjectGroup_ID);
                 if (projectgroup != null && projectgroup.ToString() != "System.Object")
                 {
                     if (projectgroup is tb_ProjectGroup pj)
@@ -751,7 +782,7 @@ namespace RUINORERP.Business
             }
             if (payable.ProjectGroup_ID.HasValue && !payable.DepartmentID.HasValue)
             {
-                var projectgroup = MyCacheManager.Instance.GetEntity<tb_ProjectGroup>(entity.ProjectGroup_ID);
+                var projectgroup = Cache.EntityCacheHelper.GetEntity<tb_ProjectGroup>(entity.ProjectGroup_ID);
                 if (projectgroup != null && projectgroup.ToString() != "System.Object")
                 {
                     if (projectgroup is tb_ProjectGroup pj)
@@ -821,7 +852,7 @@ namespace RUINORERP.Business
             {
                 payable.Remark += " 平台单号:" + entity.PlatformOrderNo;
             }
-            if (entity.OfflineRefund.HasValue && entity.OfflineRefund.Value)
+            if (entity.OfflineRefund)
             {
                 payable.Remark += " 线下退款";
             }
@@ -876,7 +907,7 @@ namespace RUINORERP.Business
             //如果部门还是没有值 则从缓存中加载,如果项目有所属部门的话
             if (payable.ProjectGroup_ID.HasValue && !payable.DepartmentID.HasValue)
             {
-                var projectgroup = MyCacheManager.Instance.GetEntity<tb_ProjectGroup>(entity.ProjectGroup_ID);
+                var projectgroup = Cache.EntityCacheHelper.GetEntity<tb_ProjectGroup>(entity.ProjectGroup_ID);
                 if (projectgroup != null && projectgroup.ToString() != "System.Object")
                 {
                     if (projectgroup is tb_ProjectGroup pj)
@@ -895,7 +926,7 @@ namespace RUINORERP.Business
             //如果部门还是没有值 则从缓存中加载,如果项目有所属部门的话
             if (payable.ProjectGroup_ID.HasValue && !payable.DepartmentID.HasValue)
             {
-                var projectgroup = MyCacheManager.Instance.GetEntity<tb_ProjectGroup>(entity.ProjectGroup_ID);
+                var projectgroup = Cache.EntityCacheHelper.GetEntity<tb_ProjectGroup>(entity.ProjectGroup_ID);
                 if (projectgroup != null && projectgroup.ToString() != "System.Object")
                 {
                     if (projectgroup is tb_ProjectGroup pj)
@@ -914,7 +945,7 @@ namespace RUINORERP.Business
             payable.BusinessDate = entity.AdjustDate;
             payable.DocumentDate = entity.Created_at.Value;
             payable.Currency_ID = entity.Currency_ID;
-            var obj = MyCacheManager.Instance.GetEntity<tb_CustomerVendor>(entity.CustomerVendor_ID);
+            var obj = Cache.EntityCacheHelper.GetEntity<tb_CustomerVendor>(entity.CustomerVendor_ID);
             if (obj != null && obj.ToString() != "System.Object")
             {
                 if (obj is tb_CustomerVendor cv)
@@ -2210,7 +2241,7 @@ namespace RUINORERP.Business
             //如果部门还是没有值 则从缓存中加载,如果项目有所属部门的话
             if (payable.ProjectGroup_ID.HasValue && !payable.DepartmentID.HasValue)
             {
-                var projectgroup = MyCacheManager.Instance.GetEntity<tb_ProjectGroup>(entity.ProjectGroup_ID);
+                var projectgroup = Cache.EntityCacheHelper.GetEntity<tb_ProjectGroup>(entity.ProjectGroup_ID);
                 if (projectgroup != null && projectgroup.ToString() != "System.Object")
                 {
                     if (projectgroup is tb_ProjectGroup pj)
@@ -2241,7 +2272,7 @@ namespace RUINORERP.Business
                 payable.ARAPNo = await bizCodeService.GenerateBizBillNoAsync(BizType.应收款单, CancellationToken.None);
                 if (entity.tb_saleorder.Paytype_ID == _appContext.PaymentMethodOfPeriod.Paytype_ID)
                 {
-                    var obj = MyCacheManager.Instance.GetEntity<tb_CustomerVendor>(entity.CustomerVendor_ID);
+                    var obj = Cache.EntityCacheHelper.GetEntity<tb_CustomerVendor>(entity.CustomerVendor_ID);
                     if (obj != null && obj.ToString() != "System.Object")
                     {
                         if (obj is tb_CustomerVendor cv)
@@ -2399,7 +2430,7 @@ namespace RUINORERP.Business
             #region 如果部门还是没有值 则从缓存中加载,如果项目有所属部门的话 
             if (payable.ProjectGroup_ID.HasValue && !payable.DepartmentID.HasValue)
             {
-                var projectgroup = MyCacheManager.Instance.GetEntity<tb_ProjectGroup>(entity.ProjectGroup_ID);
+                var projectgroup = Cache.EntityCacheHelper.GetEntity<tb_ProjectGroup>(entity.ProjectGroup_ID);
                 if (projectgroup != null && projectgroup.ToString() != "System.Object")
                 {
                     if (projectgroup is tb_ProjectGroup pj)
@@ -2435,7 +2466,7 @@ namespace RUINORERP.Business
             //如果销售订单中付款方式不为空，并且是账期时
             if (entity.tb_purorder.Paytype_ID.HasValue && entity.tb_purorder.Paytype_ID == _appContext.PaymentMethodOfPeriod.Paytype_ID)
             {
-                var obj = MyCacheManager.Instance.GetEntity<tb_CustomerVendor>(entity.CustomerVendor_ID);
+                var obj = Cache.EntityCacheHelper.GetEntity<tb_CustomerVendor>(entity.CustomerVendor_ID);
                 if (obj != null && obj.ToString() != "System.Object")
                 {
                     if (obj is tb_CustomerVendor cv)
@@ -2585,7 +2616,7 @@ namespace RUINORERP.Business
             payable.DocumentDate = entity.Created_at.Value;
             //如果销售订单中付款方式不为空，并且是账期时
 
-            var obj = MyCacheManager.Instance.GetEntity<tb_CustomerVendor>(entity.CustomerVendor_ID);
+            var obj = Cache.EntityCacheHelper.GetEntity<tb_CustomerVendor>(entity.CustomerVendor_ID);
             if (obj != null && obj.ToString() != "System.Object")
             {
                 if (obj is tb_CustomerVendor cv)
@@ -2888,7 +2919,7 @@ namespace RUINORERP.Business
                 //rrs.Succeeded = true;
                 return true;
                 ////生成时暂时只考虑了一个主键的情况
-                // MyCacheManager.Instance.DeleteEntityList<tb_FM_ReceivablePayableController>(entity);
+                // Cache.EntityCacheHelper.DeleteEntityList<tb_FM_ReceivablePayableController>(entity);
             }
             return false;
         }

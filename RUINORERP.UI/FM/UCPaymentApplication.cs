@@ -191,7 +191,7 @@ namespace RUINORERP.UI.FM
                         if (entity.PayeeInfoID > 0)
                         {
                             tb_FM_PayeeInfo payeeInfo = null;
-                            var obj = MyCacheManager.Instance.GetEntity<tb_FM_PayeeInfo>(entity.PayeeInfoID);
+                            var obj = RUINORERP.Business.Cache.EntityCacheHelper.GetEntity<tb_FM_PayeeInfo>(entity.PayeeInfoID);
                             if (obj != null && obj.ToString() != "System.Object")
                             {
                                 if (obj is tb_FM_PayeeInfo cv)
@@ -237,7 +237,7 @@ namespace RUINORERP.UI.FM
             //加载收款信息
             if (entity.PayeeInfoID > 0)
             {
-                var obj = MyCacheManager.Instance.GetEntity<tb_FM_PayeeInfo>(entity.PayeeInfoID);
+                var obj = RUINORERP.Business.Cache.EntityCacheHelper.GetEntity<tb_FM_PayeeInfo>(entity.PayeeInfoID);
                 if (obj != null && obj.ToString() != "System.Object")
                 {
                     if (obj is tb_FM_PayeeInfo cv)

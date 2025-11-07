@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：02/08/2025 16:32:27
+// 时间：11/06/2025 20:42:14
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -180,6 +180,20 @@ namespace RUINORERP.Model
                         }
         }
 
+        private decimal _CustomizedCost= ((0));
+        /// <summary>
+        /// 定制成本
+        /// </summary>
+        [AdvQueryAttribute(ColName = "CustomizedCost",ColDesc = "定制成本")] 
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "CustomizedCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "定制成本" )]
+        public decimal CustomizedCost
+        { 
+            get{return _CustomizedCost;}
+            set{
+            SetProperty(ref _CustomizedCost, value);
+                        }
+        }
+
         private decimal _Cost= ((0));
         /// <summary>
         /// 成本
@@ -192,22 +206,6 @@ namespace RUINORERP.Model
             set{
             SetProperty(ref _Cost, value);
                         }
-        }
-
-
-        private decimal _CustomizedCost = ((0));
-        /// <summary>
-        /// 定制成本
-        /// </summary>
-        [AdvQueryAttribute(ColName = "CustomizedCost", ColDesc = "定制成本")]
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "CustomizedCost", DecimalDigits = 4, IsNullable = false, ColumnDescription = "定制成本")]
-        public decimal CustomizedCost
-        {
-            get { return _CustomizedCost; }
-            set
-            {
-                SetProperty(ref _CustomizedCost, value);
-            }
         }
 
         private decimal _SubtotalCostAmount= ((0));
@@ -238,22 +236,19 @@ namespace RUINORERP.Model
                         }
         }
 
-
-        private decimal _UnitCommissionAmount = ((0));
+        private decimal _UnitCommissionAmount= ((0));
         /// <summary>
         /// 单品佣金
         /// </summary>
-        [AdvQueryAttribute(ColName = "UnitCommissionAmount", ColDesc = "单品佣金")]
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "UnitCommissionAmount", DecimalDigits = 4, IsNullable = false, ColumnDescription = "单品佣金")]
+        [AdvQueryAttribute(ColName = "UnitCommissionAmount",ColDesc = "单品佣金")] 
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "UnitCommissionAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "单品佣金" )]
         public decimal UnitCommissionAmount
-        {
-            get { return _UnitCommissionAmount; }
-            set
-            {
-                SetProperty(ref _UnitCommissionAmount, value);
-            }
+        { 
+            get{return _UnitCommissionAmount;}
+            set{
+            SetProperty(ref _UnitCommissionAmount, value);
+                        }
         }
-
 
         private decimal _CommissionAmount= ((0));
         /// <summary>
@@ -296,7 +291,20 @@ namespace RUINORERP.Model
             SetProperty(ref _SubtotalTaxAmount, value);
                         }
         }
-      
+
+        private decimal _SubtotalUntaxedAmount= ((0));
+        /// <summary>
+        /// 未税本位币
+        /// </summary>
+        [AdvQueryAttribute(ColName = "SubtotalUntaxedAmount",ColDesc = "未税本位币")] 
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "SubtotalUntaxedAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "未税本位币" )]
+        public decimal SubtotalUntaxedAmount
+        { 
+            get{return _SubtotalUntaxedAmount;}
+            set{
+            SetProperty(ref _SubtotalUntaxedAmount, value);
+                        }
+        }
 
         private string _Summary;
         /// <summary>
@@ -324,20 +332,6 @@ namespace RUINORERP.Model
             set{
             SetProperty(ref _CustomerPartNo, value);
                         }
-        }
-        private string _SaleFlagCode;
-        /// <summary>
-        /// 标识代码
-        /// </summary>
-        [AdvQueryAttribute(ColName = "SaleFlagCode", ColDesc = "标识代码")]
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "SaleFlagCode", Length = 100, IsNullable = true, ColumnDescription = "标识代码")]
-        public string SaleFlagCode
-        {
-            get { return _SaleFlagCode; }
-            set
-            {
-                SetProperty(ref _SaleFlagCode, value);
-            }
         }
 
         private bool _Gift= false;
@@ -368,6 +362,20 @@ namespace RUINORERP.Model
                         }
         }
 
+        private string _SaleFlagCode;
+        /// <summary>
+        /// 标识代码
+        /// </summary>
+        [AdvQueryAttribute(ColName = "SaleFlagCode",ColDesc = "标识代码")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "SaleFlagCode" ,Length=200,IsNullable = true,ColumnDescription = "标识代码" )]
+        public string SaleFlagCode
+        { 
+            get{return _SaleFlagCode;}
+            set{
+            SetProperty(ref _SaleFlagCode, value);
+                        }
+        }
+
         #endregion
 
         #region 扩展属性
@@ -391,7 +399,7 @@ namespace RUINORERP.Model
         #endregion
 
 
-
+ 
 
 //如果为false,则不可以。
 private bool PK_FK_ID_Check()
@@ -402,7 +410,12 @@ return rs;
 
 
 
- 
+
+
+
+       
+        
+
         public override object Clone()
         {
             tb_SaleOrderDetail loctype = (tb_SaleOrderDetail)this.MemberwiseClone(); //创建当前对象的浅拷贝。

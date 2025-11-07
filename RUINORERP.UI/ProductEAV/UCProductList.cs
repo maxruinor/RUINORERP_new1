@@ -232,19 +232,9 @@ namespace RUINORERP.UI.ProductEAV
                             //}
                             //根据要缓存的列表集合来判断是否需要上传到服务器。让服务器分发到其他客户端
                             KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
-                            //只处理需要缓存的表
-                            if (RUINORERP.Business.Cache.EntityCacheHelper.NewTableList.TryGetValue(typeof(tb_Prod).Name, out pair))
-                            {
-#warning TODO: 这里需要完善具体逻辑，当前仅为占位
-                                //如果有更新变动就上传到服务器再分发到所有客户端
-                                /*
-                                OriginalData odforCache = ActionForClient.更新缓存<tb_Prod>(rr.ReturnObject);
-                                byte[] buffer = CryptoProtocol.EncryptClientPackToServer(odforCache);
-                                MainForm.Instance.ecs.client.Send(buffer);*/
-                            }
 
-                            //因为有SKU明细 复杂。要查一下才能接着修改。或缓存下来他们的关系更复杂
-                            // Query();
+                            base._eventDrivenCacheManager.UpdateEntity<tb_Prod>(rr.ReturnObject);
+                            
                         }
                         else
                         {

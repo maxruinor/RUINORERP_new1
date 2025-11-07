@@ -67,6 +67,13 @@ namespace RUINORERP.Business.Cache
         /// 获取指定表名的显示值
         /// </summary>
         object GetDisplayValue(string tableName, object idValue);
+        
+        /// <summary>
+        /// 根据表名获取实体列表，返回强类型集合
+        /// </summary>
+        /// <param name="tableName">表名</param>
+        /// <returns>实体列表，类型为表对应的强类型集合</returns>
+        dynamic GetEntityListByTableName(string tableName);
         #endregion
 
         #region 缓存更新方法

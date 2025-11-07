@@ -705,6 +705,40 @@ namespace RUINORERP.Business.Cache
                 return null;
             }
         }
+        
+        /// <summary>
+        /// 根据表名获取实体列表，返回强类型集合
+        /// </summary>
+        /// <param name="tableName">表名</param>
+        /// <returns>实体列表，类型为表对应的强类型集合</returns>
+        public dynamic GetEntityListByTableName(string tableName)
+        {
+            try
+            {
+                // 获取表对应的实体类型
+                var entityType = _tableSchemaManager.GetEntityType(tableName);
+                if (entityType == null)
+                {
+                    _logger?.LogWarning($"无法获取表 {tableName} 对应的实体类型");
+                    return null;
+                }
+                
+                _logger?.LogDebug($"检测到表 {tableName} 对应的实体类型: {entityType.Name}");
+                
+                // 使用反射调用泛型的GetEntityList方法
+                var getListMethod = typeof(EntityCacheManager)
+                    .GetMethod(nameof(GetEntityList), new[] { typeof(string) })
+                    .MakeGenericMethod(entityType);
+                
+                // 调用方法并返回结果
+                return getListMethod.Invoke(this, new object[] { tableName });
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, $"获取表 {tableName} 的实体列表时发生错误");
+                return null;
+            }
+        }
         #endregion
 
         #region 缓存更新方法实现

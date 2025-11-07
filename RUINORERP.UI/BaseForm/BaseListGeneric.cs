@@ -60,6 +60,7 @@ using RUINORERP.Global;
 using RUINORERP.UI.Monitoring.Auditing;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.Extensions.Middlewares;
+using RUINORERP.Business.Cache;
 
 
 
@@ -107,6 +108,7 @@ namespace RUINORERP.UI.BaseForm
             List<ContextMenuController> list = new List<ContextMenuController>();
             return list;
         }
+        public readonly EventDrivenCacheManager _eventDrivenCacheManager;
 
         /// <summary>
         /// 用来保存外键表名与外键主键列名  通过这个打到对应的名称。
@@ -220,7 +222,7 @@ namespace RUINORERP.UI.BaseForm
         /// 手动设置的。优化级比较自动的FKValueColNameTBList高
         /// </summary>
         public List<Type> ColDisplayTypes { get; set; } = new List<Type>();
- 
+
 
 
         public GridViewDisplayTextResolverGeneric<T> DisplayTextResolver = new GridViewDisplayTextResolverGeneric<T>();
@@ -228,6 +230,7 @@ namespace RUINORERP.UI.BaseForm
         public BaseListGeneric()
         {
             InitializeComponent();
+            _eventDrivenCacheManager = Startup.GetFromFac<EventDrivenCacheManager>();
             if (System.ComponentModel.LicenseManager.UsageMode != System.ComponentModel.LicenseUsageMode.Designtime)
             {
                 if (!this.DesignMode)
@@ -315,7 +318,7 @@ namespace RUINORERP.UI.BaseForm
                     button表格显示设置.Width = 120;
                     frm.flowLayoutPanelButtonsArea.Controls.Add(button表格显示设置);
                     #endregion
-                     
+
                     DisplayTextResolver.Initialize(dataGridView1);
                 }
             }
@@ -599,12 +602,12 @@ namespace RUINORERP.UI.BaseForm
             this.dataGridView1.DataSource = ListDataSoure.DataSource;
         }
 
-        private void Item_Click(object sender, EventArgs e)
+        private async void Item_Click(object sender, EventArgs e)
         {
             MainForm.Instance.AppContext.log.ActionName = sender.ToString();
             if (sender.ToString().Length > 0)
             {
-                DoButtonClick(EnumHelper.GetEnumByString<MenuItemEnums>(sender.ToString()));
+              await  DoButtonClick(EnumHelper.GetEnumByString<MenuItemEnums>(sender.ToString()));
             }
             else
             {
@@ -624,10 +627,7 @@ namespace RUINORERP.UI.BaseForm
         public event AdvQueryShowPageHandler<BaseEntityDto> AdvQueryShowPageEvent;
 
 
-        /// <summary>
-        /// 有些要限制显示内容，如果销售人员看不到供应商。
-        /// </summary>
-       // public Expression<Func<T, bool>> LimitQueryConditions { get; set; }
+        
 
         /// <summary>
         /// 如果需要查询条件查询，就要在子类中重写这个方法
@@ -654,7 +654,7 @@ namespace RUINORERP.UI.BaseForm
             switch (menuItem)
             {
                 case MenuItemEnums.新增:
-                    Add();
+                  await  Add();
                     break;
                 case MenuItemEnums.复制性新增:
                     AddByCopy();
@@ -936,17 +936,7 @@ namespace RUINORERP.UI.BaseForm
                     //提示服务器开启推送工作流
                     //OriginalData beatDataDel = ClientDataBuilder.BaseInfoChangeBuilder(typeof(T).Name);
                     //MainForm.Instance.ecs.AddSendData(beatDataDel);
-
-                    //根据要缓存的列表集合来判断是否需要上传到服务器。让服务器分发到其他客户端
-                    KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
-                    //只处理需要缓存的表
-                    if (RUINORERP.Business.Cache.EntityCacheHelper.NewTableList.TryGetValue(typeof(T).Name, out pair))
-                    {
-                        //如果有更新变动就上传到服务器再分发到所有客户端
-                        //OriginalData odforCache = ActionForClient.删除缓存<T>(PKColName, PKValue.ToLong());
-                        //byte[] buffer = CryptoProtocol.EncryptClientPackToServer(odforCache);
-                        //MainForm.Instance.ecs.client.Send(buffer);
-                    }
+                    _eventDrivenCacheManager.DeleteEntities(PKColName, PKValue.ToLong());
                 }
             }
             return rs;
@@ -996,7 +986,7 @@ namespace RUINORERP.UI.BaseForm
                             MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("删除", item);
                         }
 
-                        MainForm.Instance.AuditLogHelper.CreateAuditLog($"批量删除{counter}条记录", CurMenuInfo.CaptionCN);
+                      await  MainForm.Instance.AuditLogHelper.CreateAuditLog($"批量删除{counter}条记录", CurMenuInfo.CaptionCN);
                     }
                 }
                 catch (Exception ex)
@@ -1302,9 +1292,9 @@ namespace RUINORERP.UI.BaseForm
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="dto"></param>
-        private void UcAdv_QueryEvent(bool useLike, BaseEntityDto dto)
+        private async Task UcAdv_QueryEvent(bool useLike, BaseEntityDto dto)
         {
-            AdvQueryShowResult(useLike, dto);
+           await AdvQueryShowResult(useLike, dto);
         }
 
 
@@ -1724,10 +1714,7 @@ namespace RUINORERP.UI.BaseForm
                                             //成功后。旧文件名部分要和上传成功后新文件名部分一致。后面修改只修改新文件名部分。再对比
                                             MainForm.Instance.PrintInfoLog("UploadSuccessful for base List:" + newfileName);
                                         }
-                                        else
-                                        {
-                                            MainForm.Instance.LoginWebServer();
-                                        }
+                                        
                                     }
                                 }
                             }
@@ -1742,22 +1729,8 @@ namespace RUINORERP.UI.BaseForm
                             //MainForm.Instance.AuditLogHelper.CreateAuditLog("保存", CurMenuInfo.CaptionCN);
                             MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("保存", rr.ReturnObject);
                             //list.Add(rr.ReturnObject);
-
-                            //根据要缓存的列表集合来判断是否需要上传到服务器。让服务器分发到其他客户端
-                            KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
-                            //只处理需要缓存的表
-                            if (RUINORERP.Business.Cache.EntityCacheHelper.NewTableList.TryGetValue(typeof(T).Name, out pair))
-                            {
-#warning TODO: 这里需要完善具体逻辑，当前仅为占位
-
-                                //如果有更新变动就上传到服务器再分发到所有客户端
-                                //OriginalData odforCache = ActionForClient.更新缓存<T>(rr.ReturnObject);
-                                //byte[] buffer = CryptoProtocol.EncryptClientPackToServer(odforCache);
-                                //MainForm.Instance.ecs.client.Send(buffer);
-                            }
-
+                            _eventDrivenCacheManager.UpdateEntity<T>(rr.ReturnObject);
                         }
-                        //tb_Unit Entity = await ctr.AddReEntityAsync(entity);
                         //如果新增 保存后。还是新增加状态，因为增加另一条。所以保存不为灰色。所以会重复增加
                         break;
                     case ActionStatus.删除:
@@ -1814,9 +1787,9 @@ namespace RUINORERP.UI.BaseForm
         }
 
 
-        protected override void Exit(object thisform)
+        protected override async void Exit(object thisform)
         {
-            UIBizService.SaveGridSettingData(CurMenuInfo, dataGridView1, typeof(T));
+          await  UIBizService.SaveGridSettingData(CurMenuInfo, dataGridView1, typeof(T));
             if (!Edited)
             {
                 //退出
@@ -1944,10 +1917,10 @@ namespace RUINORERP.UI.BaseForm
             {
                 foreach (Type item in ColDisplayTypes)
                 {
-                    UIBizService.RequestCache(item);
+                    await UIBizService.RequestCache(item);
                 }
             }
-            UIBizService.RequestCache<T>();
+            await UIBizService.RequestCache<T>();
             #endregion
 
             if (!this.DesignMode)

@@ -250,9 +250,7 @@ namespace RUINORERP.UI.BaseForm
                         object obj = ucBaseList.Tag;
                         //从缓存中重新加载 
                         BindingSource NewBsList = new BindingSource();
-                        //将List<T>类型的结果是object的转换为指定类型的List
-                        //var lastlist = ((IEnumerable<dynamic>)rslist).Select(item => Activator.CreateInstance(mytype)).ToList();
-                        var cachelist = RUINORERP.Business.Cache.EntityCacheHelper.CacheEntityList.Get(fktableName);
+                        var cachelist = RUINORERP.Business.Cache.EntityCacheHelper.GetEntityListByTableName(fktableName);
                         if (cachelist != null)
                         {
                             // 获取原始 List<T> 的类型参数
@@ -262,18 +260,6 @@ namespace RUINORERP.UI.BaseForm
                                 #region  强类型时
                                 NewBsList.DataSource = ((IEnumerable<dynamic>)cachelist);
                                 #endregion
-                            }
-                            else if (TypeHelper.IsJArrayList(listType))
-                            {
-                                //Type elementType = Assembly.LoadFrom(Global.GlobalConstants.ModelDLL_NAME).GetType(Global.GlobalConstants.Model_NAME + "." + fktableName);
-                                Type elementType = null;
-                                RUINORERP.Business.Cache.EntityCacheHelper.NewTableTypeList.TryGetValue(fktableName, out elementType);
-                                List<object> myList = TypeHelper.ConvertJArrayToList(elementType, cachelist as JArray);
-
-                                #region  jsonlist
-                                NewBsList.DataSource = myList;
-                                #endregion
-
                             }
                             Common.DataBindingHelper.InitDataToCmb(NewBsList, ktb.ValueMember, ktb.DisplayMember, ktb);
                             ////因为选择中 实体数据并没有更新，下面两行是将对象对应的属性给一个选中的值。

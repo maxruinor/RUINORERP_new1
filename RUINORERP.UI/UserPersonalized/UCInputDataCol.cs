@@ -1,4 +1,4 @@
-﻿    using FastReport.Editor.Dialogs;
+﻿using FastReport.Editor.Dialogs;
 using Krypton.Toolkit;
 using Microsoft.Extensions.Logging;
 using Netron.GraphLib;
@@ -78,10 +78,10 @@ namespace RUINORERP.UI.UserPersonalized
                         DefaultCmb.Text = "";
                         DefaultCmb.Width = 150;
                         //只处理需要缓存的表
-                        KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
                         if (queryField.FKTableName.IsNotEmptyOrNull())
                         {
-                            if (RUINORERP.Business.Cache.EntityCacheHelper.NewTableList.TryGetValue(queryField.SubQueryTargetType.Name, out pair))
+                            var schemaInfo = RUINORERP.Business.Cache.TableSchemaManager.Instance.GetSchemaInfo(queryField.SubQueryTargetType.Name);
+                            if (schemaInfo != null)
                             {
                                 //关联要绑定的类型
                                 Type mytype = queryField.SubQueryTargetType;
@@ -92,7 +92,7 @@ namespace RUINORERP.UI.UserPersonalized
                                     if (mytype != null)
                                     {
                                         MethodInfo mf = dbh.GetType().GetMethod("BindData4CmbRef").MakeGenericMethod(new Type[] { mytype });
-                                        object[] args = new object[5] { TargetEntityDto, pair.Key, pair.Value, queryField.FKTableName, DefaultCmb };
+                                        object[] args = new object[5] { TargetEntityDto, schemaInfo.PrimaryKeyField, schemaInfo.DisplayField, queryField.FKTableName, DefaultCmb };
                                         mf.Invoke(dbh, args);
                                     }
                                     else
@@ -111,17 +111,17 @@ namespace RUINORERP.UI.UserPersonalized
                                     #region 
                                     //绑定下拉
 
-                                    if (pair.Key == queryField.FieldName)
+                                    if (schemaInfo.PrimaryKeyField == queryField.FieldName)
                                     {
                                         MethodInfo mf1 = dbh.GetType().GetMethod("BindData4CmbRefWithLimited").MakeGenericMethod(new Type[] { mytype });
-                                        object[] args1 = new object[6] { TargetEntityDto, pair.Key, pair.Value, queryField.FKTableName, DefaultCmb, whereExp };
+                                        object[] args1 = new object[6] { TargetEntityDto, schemaInfo.PrimaryKeyField, schemaInfo.DisplayField, queryField.FKTableName, DefaultCmb, whereExp };
                                         mf1.Invoke(dbh, args1);
                                     }
                                     else
                                     {
                                         MethodInfo mf1 = dbh.GetType().GetMethod("BindData4CmbRefWithLimitedByAlias").MakeGenericMethod(new Type[] { mytype });
                                         //注意这样
-                                        object[] args1 = new object[7] { TargetEntityDto, pair.Key, queryField.FieldName, pair.Value, queryField.FKTableName, DefaultCmb, whereExp };
+                                        object[] args1 = new object[7] { TargetEntityDto, schemaInfo.PrimaryKeyField, queryField.FieldName, schemaInfo.DisplayField, queryField.FKTableName, DefaultCmb, whereExp };
                                         mf1.Invoke(dbh, args1);
                                     }
 
@@ -212,7 +212,7 @@ namespace RUINORERP.UI.UserPersonalized
                         chkEnableDefault1.Visible = true;
                         //给个默认值先，不然会报空错误
                         ReflectionHelper.SetPropertyValue(TargetEntityDto, queryField.FieldName, 0);
-                       
+
                         #endregion
                         break;
                     default:
@@ -281,7 +281,7 @@ namespace RUINORERP.UI.UserPersonalized
 
             if (entity.EnableDefault1.HasValue && entity.EnableDefault1.Value)
             {
-                if (entity.Default1!=null)
+                if (entity.Default1 != null)
                 {
                     //object defaultValue = queryField.FieldPropertyInfo
                     // 进行类型转换
@@ -289,7 +289,7 @@ namespace RUINORERP.UI.UserPersonalized
 
                     TargetEntityDto.SetPropertyValue(entity.FieldName, convertedValue);
                 }
-                
+
             }
 
             entity.PropertyChanged += (sender, s2) =>

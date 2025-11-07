@@ -250,19 +250,7 @@ namespace RUINORERP.UI.CRM
                                 ReturnResults<tb_CRM_Customer> resultCustomer = await ctr_Customer.BaseSaveOrUpdate(sourceEntity);
                                 if (resultCustomer.Succeeded)
                                 {
-                                    //根据要缓存的列表集合来判断是否需要上传到服务器。让服务器分发到其他客户端
-                                    KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
-                                    //只处理需要缓存的表
-                                    if (RUINORERP.Business.Cache.EntityCacheHelper.NewTableList.TryGetValue(typeof(tb_CustomerVendor).Name, out pair))
-                                    {
-                                        //如果有更新变动就上传到服务器再分发到所有客户端
-
-#warning TODO: 这里需要完善具体逻辑，当前仅为占位
-
-                                        //OriginalData odforCache = ActionForClient.更新缓存<tb_CustomerVendor>(result.ReturnObject);
-                                        //byte[] buffer = CryptoProtocol.EncryptClientPackToServer(odforCache);
-                                        //MainForm.Instance.ecs.client.Send(buffer);
-                                    }
+                                    base._eventDrivenCacheManager.UpdateEntity<tb_CustomerVendor>(result.ReturnObject);
                                 }
                                 MainForm.Instance.ShowStatusText("添加成功!");
                             }

@@ -97,6 +97,17 @@ namespace RUINORERP.Business.Cache
         {
             return Current.GetDisplayValue(tableName, idValue);
         }
+        
+        /// <summary>
+        /// 根据表名获取实体列表，返回强类型集合
+        /// 无需传入泛型类型T，系统会自动根据表名解析对应的实体类型
+        /// </summary>
+        /// <param name="tableName">表名</param>
+        /// <returns>实体列表，类型为表对应的强类型集合</returns>
+        public static dynamic GetEntityListByTableName(string tableName)
+        {
+            return Current.GetEntityListByTableName(tableName);
+        }
         #endregion
 
         #region 缓存更新方法

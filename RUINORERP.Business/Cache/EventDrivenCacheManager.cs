@@ -58,13 +58,13 @@ namespace RUINORERP.Business.Cache
         public void UpdateEntityList<T>(List<T> list) where T : class
         {
             var tableName = typeof(T).Name;
-            
+
             // 智能过滤：只处理需要缓存的表
             if (!IsTableCacheable(tableName))
             {
                 return;
             }
-            
+
             // 更新缓存并触发事件
             _cacheManager.UpdateEntityList(list);
             OnCacheChanged(tableName, CacheOperation.Set, list);
@@ -78,13 +78,13 @@ namespace RUINORERP.Business.Cache
         public void UpdateEntity<T>(T entity) where T : class
         {
             var tableName = typeof(T).Name;
-            
+
             // 智能过滤：只处理需要缓存的表
             if (!IsTableCacheable(tableName))
             {
                 return;
             }
-            
+
             // 更新缓存并触发事件
             _cacheManager.UpdateEntity(entity);
             OnCacheChanged(tableName, CacheOperation.Set, entity);
@@ -98,13 +98,13 @@ namespace RUINORERP.Business.Cache
         public void DeleteEntity<T>(object idValue) where T : class
         {
             var tableName = typeof(T).Name;
-            
+
             // 智能过滤：只处理需要缓存的表
             if (!IsTableCacheable(tableName))
             {
                 return;
             }
-            
+
             // 删除缓存并触发事件
             _cacheManager.DeleteEntity<T>(idValue);
             OnCacheChanged(tableName, CacheOperation.Remove, idValue);
@@ -118,18 +118,18 @@ namespace RUINORERP.Business.Cache
         public void DeleteEntityList<T>(List<T> entities) where T : class
         {
             var tableName = typeof(T).Name;
-            
+
             // 智能过滤：只处理需要缓存的表
             if (!IsTableCacheable(tableName))
             {
                 return;
             }
-            
+
             // 删除缓存并触发事件
             _cacheManager.DeleteEntityList(entities);
             OnCacheChanged(tableName, CacheOperation.Remove, entities);
         }
-        
+
         /// <summary>
         /// 删除指定表的整个实体列表缓存并触发事件
         /// </summary>
@@ -141,7 +141,7 @@ namespace RUINORERP.Business.Cache
             {
                 return;
             }
-            
+
             // 删除缓存并触发事件
             _cacheManager.DeleteEntityList(tableName);
             OnCacheChanged(tableName, CacheOperation.Remove, null);
@@ -168,14 +168,14 @@ namespace RUINORERP.Business.Cache
         /// </summary>
         /// <param name="tableName">表名</param>
         /// <param name="primaryKeyValues">主键值数组</param>
-        public void DeleteEntities(string tableName, object[] primaryKeyValues)
+        public void DeleteEntities(string tableName, params object[] primaryKeyValues)
         {
             // 智能过滤：只处理需要缓存的表
             if (!IsTableCacheable(tableName))
             {
                 return;
             }
-            
+
             ProcessDeleteEntities(() =>
             {
                 _cacheManager.DeleteEntities(tableName, primaryKeyValues);

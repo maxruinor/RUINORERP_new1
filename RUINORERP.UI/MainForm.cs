@@ -165,7 +165,7 @@ namespace RUINORERP.UI
         /// <summary>
         /// 配置管理器
         /// </summary>
-        private ConfigManager _configManager;
+        private UIConfigManager _configManager;
         private readonly EnhancedMessageManager _messageManager;
 
         #region 当前系统中所有用户信息
@@ -389,7 +389,7 @@ namespace RUINORERP.UI
 
 
         public MainForm(ILogger<MainForm> _logger, AuditLogHelper _auditLogHelper,
-            FMAuditLogHelper _fmauditLogHelper, ConfigManager configManager, EnhancedMessageManager messageManager)
+            FMAuditLogHelper _fmauditLogHelper, UIConfigManager configManager, EnhancedMessageManager messageManager)
         {
             InitializeComponent();
 
@@ -916,7 +916,7 @@ namespace RUINORERP.UI
 
             //cache.Set("test1", "test123");
 
-            ConfigManager configManager = Startup.GetFromFac<ConfigManager>();
+            UIConfigManager configManager = Startup.GetFromFac<UIConfigManager>();
             await configManager.LoadConfigValues();
 
 

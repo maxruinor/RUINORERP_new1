@@ -22,37 +22,38 @@ namespace RUINORERP.UI.SysConfig
     /// 负责管理系统全局配置和验证配置，包括初始化、监控文件变化等功能
     /// 同时支持从数据库加载动态配置
     /// </summary>
-    public class ConfigManager : IDisposable
+    [Obsolete("")]
+    public class UIConfigManager : IDisposable
     {
         #region 单例模式实现
-        private static readonly Lazy<ConfigManager> _instance = new Lazy<ConfigManager>(() => new ConfigManager());
-        
+        private static readonly Lazy<UIConfigManager> _instance = new Lazy<UIConfigManager>(() => new UIConfigManager());
+
         /// <summary>
         /// 获取配置管理器实例
         /// </summary>
-        public static ConfigManager Instance => _instance.Value;
-        
+        public static UIConfigManager Instance => _instance.Value;
+
         /// <summary>
         /// 默认构造函数
         /// </summary>
-        public ConfigManager() { }
+        public UIConfigManager() { }
         #endregion
-        
+
         #region 配置属性
         private IOptionsMonitor<SystemGlobalConfig> _globalConfigMonitor;
         private IOptionsMonitor<GlobalValidatorConfig> _validatorConfigMonitor;
-        
+
         // 本地存储的配置对象，用于不依赖IOptionsMonitor的场景
         private SystemGlobalConfig _localGlobalConfig;
         private GlobalValidatorConfig _localValidatorConfig;
-        
+
         // 存储配置变更订阅
         private readonly List<Action<SystemGlobalConfig>> _globalConfigSubscribers = new List<Action<SystemGlobalConfig>>();
         private readonly List<Action<GlobalValidatorConfig>> _validatorConfigSubscribers = new List<Action<GlobalValidatorConfig>>();
-        
+
         // 数据库配置缓存
         private readonly Dictionary<string, string> _dbConfigCache = new Dictionary<string, string>();
-        
+
         /// <summary>
         /// 系统全局配置监控器
         /// </summary>
@@ -64,7 +65,7 @@ namespace RUINORERP.UI.SysConfig
                 if (_globalConfigMonitor != value)
                 {
                     _globalConfigMonitor = value;
-                    
+
                     // 订阅配置变更事件
                     if (_globalConfigMonitor != null)
                     {
@@ -73,7 +74,7 @@ namespace RUINORERP.UI.SysConfig
                 }
             }
         }
-        
+
         /// <summary>
         /// 验证配置监控器
         /// </summary>
@@ -85,7 +86,7 @@ namespace RUINORERP.UI.SysConfig
                 if (_validatorConfigMonitor != value)
                 {
                     _validatorConfigMonitor = value;
-                    
+
                     // 订阅配置变更事件
                     if (_validatorConfigMonitor != null)
                     {
@@ -94,13 +95,13 @@ namespace RUINORERP.UI.SysConfig
                 }
             }
         }
-        
+
         /// <summary>
         /// 当前系统全局配置
         /// </summary>
-        public SystemGlobalConfig GlobalConfig 
+        public SystemGlobalConfig GlobalConfig
         {
-            get 
+            get
             {
                 // 优先使用IOptionsMonitor的值，否则使用本地存储的值
                 return _globalConfigMonitor?.CurrentValue ?? _localGlobalConfig;
@@ -110,13 +111,13 @@ namespace RUINORERP.UI.SysConfig
                 _localGlobalConfig = value;
             }
         }
-        
+
         /// <summary>
         /// 当前验证配置
         /// </summary>
-        public GlobalValidatorConfig ValidatorConfig 
+        public GlobalValidatorConfig ValidatorConfig
         {
-            get 
+            get
             {
                 // 优先使用IOptionsMonitor的值，否则使用本地存储的值
                 return _validatorConfigMonitor?.CurrentValue ?? _localValidatorConfig;
@@ -127,17 +128,17 @@ namespace RUINORERP.UI.SysConfig
             }
         }
         #endregion
-        
+
         #region 配置文件监控
         private FileSystemWatcher _globalConfigWatcher;
         private FileSystemWatcher _validatorConfigWatcher;
         private string _configDirectory;
-        
+
         /// <summary>
         /// 配置变更事件
         /// </summary>
-        public event EventHandler<ConfigChangedEventArgs> ConfigChanged;
-        
+        public event EventHandler<UIConfigChangedEventArgs> ConfigChanged;
+
         /// <summary>
         /// 初始化配置管理器
         /// </summary>
@@ -148,21 +149,21 @@ namespace RUINORERP.UI.SysConfig
             // 初始化配置监控器
             GlobalConfigMonitor = configMonitor;
             ValidatorConfigMonitor = validatorMonitor;
-            
+
             // 统一配置目录路径，使用应用程序数据目录，与OptionsMonitorConfigManager保持一致
             _configDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "RUINORERP", "Configs");
             Directory.CreateDirectory(_configDirectory);
-            
+
             // 初始化配置文件监控
             InitializeFileWatchers();
-            
+
             // 确保配置文件存在
             EnsureConfigFilesExist();
-            
+
             // 异步加载数据库配置
             Task.Run(() => LoadConfigValues());
         }
-        
+
         /// <summary>
         /// 从数据库加载配置值
         /// </summary>
@@ -178,7 +179,7 @@ namespace RUINORERP.UI.SysConfig
                 {
                     return;
                 }
-                
+
                 // 清空并重新加载缓存
                 lock (_dbConfigCache)
                 {
@@ -191,16 +192,16 @@ namespace RUINORERP.UI.SysConfig
                         }
                     }
                 }
-                
+
                 // 触发配置变更事件
-                ConfigChanged?.Invoke(this, new ConfigChangedEventArgs { ConfigType = ConfigType.Database });
+                ConfigChanged?.Invoke(this, new UIConfigChangedEventArgs { ConfigType = ConfigType.Database });
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"从数据库加载配置失败: {ex.Message}");
             }
         }
-        
+
         /// <summary>
         /// 初始化文件监控器
         /// </summary>
@@ -208,16 +209,16 @@ namespace RUINORERP.UI.SysConfig
         {
             // 确保配置目录已初始化并存在
             EnsureConfigDirectoryExists();
-            
+
             // 监控系统全局配置文件
             _globalConfigWatcher = CreateFileWatcher(nameof(SystemGlobalConfig));
             _globalConfigWatcher.Changed += OnGlobalConfigFileChanged;
-            
+
             // 监控验证配置文件
             _validatorConfigWatcher = CreateFileWatcher(nameof(GlobalValidatorConfig));
             _validatorConfigWatcher.Changed += OnValidatorConfigFileChanged;
         }
-        
+
         /// <summary>
         /// 创建文件监控器
         /// </summary>
@@ -232,10 +233,10 @@ namespace RUINORERP.UI.SysConfig
                 NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.Size,
                 EnableRaisingEvents = true
             };
-            
+
             return watcher;
         }
-        
+
         /// <summary>
         /// 确保配置文件存在，如果不存在则创建默认配置
         /// </summary>
@@ -249,26 +250,26 @@ namespace RUINORERP.UI.SysConfig
             {
                 _configDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "RUINORERP", "Configs");
             }
-            
+
             // 确保配置目录存在
             if (!Directory.Exists(_configDirectory))
             {
                 Directory.CreateDirectory(_configDirectory);
             }
         }
-        
+
         public void EnsureConfigFilesExist()
         {
             // 确保配置目录存在
             EnsureConfigDirectoryExists();
-            
+
             // 确保系统全局配置文件存在
             EnsureConfigFileExists<SystemGlobalConfig>();
-            
+
             // 确保验证配置文件存在
             EnsureConfigFileExists<GlobalValidatorConfig>();
         }
-        
+
         /// <summary>
         /// 确保指定类型的配置文件存在
         /// </summary>
@@ -277,25 +278,25 @@ namespace RUINORERP.UI.SysConfig
         {
             string configFileName = typeof(T).Name;
             string configPath = Path.Combine(_configDirectory, $"{configFileName}.json");
-            
+
             if (!File.Exists(configPath))
             {
                 // 创建默认配置
                 var config = new T();
                 // 统一配置文件格式，直接序列化配置对象
                 string configJson = Newtonsoft.Json.JsonConvert.SerializeObject(config, Newtonsoft.Json.Formatting.Indented);
-                
+
                 // 确保目录存在
                 if (!Directory.Exists(_configDirectory))
                 {
                     Directory.CreateDirectory(_configDirectory);
                 }
-                
+
                 // 写入配置文件，使用UTF8编码确保中文能正确保存
                 File.WriteAllText(configPath, configJson, Encoding.UTF8);
             }
         }
-        
+
         /// <summary>
         /// 系统全局配置文件变更处理
         /// </summary>
@@ -303,7 +304,7 @@ namespace RUINORERP.UI.SysConfig
         {
             HandleConfigFileChanged(e.FullPath, ConfigType.Global);
         }
-        
+
         /// <summary>
         /// 验证配置文件变更处理
         /// </summary>
@@ -311,7 +312,7 @@ namespace RUINORERP.UI.SysConfig
         {
             HandleConfigFileChanged(e.FullPath, ConfigType.Validator);
         }
-        
+
         /// <summary>
         /// 处理配置文件变更
         /// </summary>
@@ -323,7 +324,7 @@ namespace RUINORERP.UI.SysConfig
             {
                 // 防止文件被锁定，等待一小段时间
                 Task.Delay(100).Wait();
-                
+
                 // 重新加载配置对象
                 object updatedConfig = null;
                 if (configType == ConfigType.Global)
@@ -336,9 +337,9 @@ namespace RUINORERP.UI.SysConfig
                     _localValidatorConfig = LoadConfigFromFile<GlobalValidatorConfig>(filePath);
                     updatedConfig = _localValidatorConfig;
                 }
-                
+
                 // 引发配置变更事件
-                ConfigChanged?.Invoke(this, new ConfigChangedEventArgs { ConfigType = configType, Config = updatedConfig });
+                ConfigChanged?.Invoke(this, new UIConfigChangedEventArgs { ConfigType = configType, Config = updatedConfig });
             }
             catch (Exception ex)
             {
@@ -346,7 +347,7 @@ namespace RUINORERP.UI.SysConfig
                 System.Diagnostics.Debug.WriteLine($"处理配置文件变更时出错: {ex.Message}");
             }
         }
-        
+
         /// <summary>
         /// 从文件加载配置对象
         /// </summary>
@@ -361,10 +362,10 @@ namespace RUINORERP.UI.SysConfig
                 {
                     return null;
                 }
-                
+
                 // 使用UTF8编码读取文件，确保中文能正确解析
                 string jsonContent = File.ReadAllText(filePath, Encoding.UTF8);
-                
+
                 // 尝试直接解析配置对象
                 try
                 {
@@ -390,7 +391,7 @@ namespace RUINORERP.UI.SysConfig
                 return null;
             }
         }
-        
+
         /// <summary>
         /// 配置包装器类
         /// </summary>
@@ -398,7 +399,7 @@ namespace RUINORERP.UI.SysConfig
         {
             public T Config { get; set; }
         }
-        
+
         /// <summary>
         /// 系统全局配置变更处理
         /// </summary>
@@ -406,10 +407,10 @@ namespace RUINORERP.UI.SysConfig
         {
             // 更新本地配置
             _localGlobalConfig = updatedConfig;
-            
+
             // 触发事件
-            ConfigChanged?.Invoke(this, new ConfigChangedEventArgs { ConfigType = ConfigType.Global, Config = updatedConfig });
-            
+            ConfigChanged?.Invoke(this, new UIConfigChangedEventArgs { ConfigType = ConfigType.Global, Config = updatedConfig });
+
             // 通知所有订阅者
             foreach (var subscriber in _globalConfigSubscribers.ToList())
             {
@@ -423,7 +424,7 @@ namespace RUINORERP.UI.SysConfig
                 }
             }
         }
-        
+
         /// <summary>
         /// 验证配置变更处理
         /// </summary>
@@ -431,10 +432,10 @@ namespace RUINORERP.UI.SysConfig
         {
             // 更新本地配置
             _localValidatorConfig = updatedConfig;
-            
+
             // 触发事件
-            ConfigChanged?.Invoke(this, new ConfigChangedEventArgs { ConfigType = ConfigType.Validator, Config = updatedConfig });
-            
+            ConfigChanged?.Invoke(this, new UIConfigChangedEventArgs { ConfigType = ConfigType.Validator, Config = updatedConfig });
+
             // 通知所有订阅者
             foreach (var subscriber in _validatorConfigSubscribers.ToList())
             {
@@ -448,7 +449,7 @@ namespace RUINORERP.UI.SysConfig
                 }
             }
         }
-        
+
         /// <summary>
         /// 订阅系统全局配置变更，类似于IOptionsMonitor.OnChange
         /// </summary>
@@ -459,7 +460,7 @@ namespace RUINORERP.UI.SysConfig
             // 直接调用现有方法，保持接口兼容
             return OnGlobalConfigChange(listener);
         }
-        
+
         /// <summary>
         /// 订阅系统全局配置变更的具体实现
         /// </summary>
@@ -469,13 +470,13 @@ namespace RUINORERP.UI.SysConfig
         {
             if (listener == null)
                 throw new ArgumentNullException(nameof(listener));
-                
+
             _globalConfigSubscribers.Add(listener);
-            
+
             // 返回用于取消订阅的对象
             return new UnsubscribeToken(() => _globalConfigSubscribers.Remove(listener));
         }
-        
+
         /// <summary>
         /// 订阅验证配置变更，类似于IOptionsMonitor.OnChange
         /// </summary>
@@ -485,13 +486,13 @@ namespace RUINORERP.UI.SysConfig
         {
             if (listener == null)
                 throw new ArgumentNullException(nameof(listener));
-                
+
             _validatorConfigSubscribers.Add(listener);
-            
+
             // 返回用于取消订阅的对象
             return new UnsubscribeToken(() => _validatorConfigSubscribers.Remove(listener));
         }
-        
+
         /// <summary>
         /// 用于取消订阅的令牌类
         /// </summary>
@@ -499,12 +500,12 @@ namespace RUINORERP.UI.SysConfig
         {
             private readonly Action _unsubscribeAction;
             private bool _isDisposed;
-            
+
             public UnsubscribeToken(Action unsubscribeAction)
             {
                 _unsubscribeAction = unsubscribeAction ?? throw new ArgumentNullException(nameof(unsubscribeAction));
             }
-            
+
             public void Dispose()
             {
                 if (!_isDisposed)
@@ -514,7 +515,7 @@ namespace RUINORERP.UI.SysConfig
                 }
             }
         }
-        
+
         /// <summary>
         /// 手动刷新配置
         /// </summary>
@@ -523,11 +524,11 @@ namespace RUINORERP.UI.SysConfig
             // 通过FileSystemWatcher触发文件变更事件，以重新加载配置
             TriggerConfigFileChange<SystemGlobalConfig>();
             TriggerConfigFileChange<GlobalValidatorConfig>();
-            
+
             // 刷新数据库配置
             Task.Run(() => LoadConfigValues());
         }
-        
+
         /// <summary>
         /// 触发配置文件变更，用于手动刷新配置
         /// </summary>
@@ -536,14 +537,14 @@ namespace RUINORERP.UI.SysConfig
         {
             string configFileName = typeof(T).Name;
             string configPath = Path.Combine(_configDirectory, $"{configFileName}.json");
-            
+
             if (File.Exists(configPath))
             {
                 // 通过修改文件的最后写入时间来触发变更事件
                 File.SetLastWriteTime(configPath, DateTime.Now);
             }
         }
-        
+
         /// <summary>
         /// 手动更新全局配置
         /// </summary>
@@ -552,17 +553,17 @@ namespace RUINORERP.UI.SysConfig
         {
             if (newConfig == null)
                 throw new ArgumentNullException(nameof(newConfig));
-                
+
             // 更新本地配置
             _localGlobalConfig = newConfig;
-            
+
             // 触发配置变更处理
             OnGlobalConfigChanged(newConfig);
-            
+
             // 保存到文件
             SaveConfigToFile(newConfig, Path.Combine(_configDirectory, $"{nameof(SystemGlobalConfig)}.json"));
         }
-        
+
         /// <summary>
         /// 手动更新验证配置
         /// </summary>
@@ -571,19 +572,19 @@ namespace RUINORERP.UI.SysConfig
         {
             if (newConfig == null)
                 throw new ArgumentNullException(nameof(newConfig));
-                
+
             // 更新本地配置
             _localValidatorConfig = newConfig;
-            
+
             // 触发配置变更处理
             OnValidatorConfigChanged(newConfig);
-            
+
             // 保存到文件
             SaveConfigToFile(newConfig, Path.Combine(_configDirectory, $"{nameof(GlobalValidatorConfig)}.json"));
         }
-        
 
-        
+
+
         /// <summary>
         /// 将配置保存到文件
         /// </summary>
@@ -593,7 +594,7 @@ namespace RUINORERP.UI.SysConfig
             {
                 // 确保配置目录已初始化并存在，防止通过Instance直接访问时配置目录为空
                 EnsureConfigDirectoryExists();
-                
+
                 // 统一配置文件格式，直接序列化配置对象，使用UTF8编码确保中文能正确保存
                 string configJson = Newtonsoft.Json.JsonConvert.SerializeObject(config, Newtonsoft.Json.Formatting.Indented);
                 File.WriteAllText(filePath, configJson, Encoding.UTF8);
@@ -605,7 +606,7 @@ namespace RUINORERP.UI.SysConfig
             }
         }
         #endregion
-        
+
         #region 配置值获取
         /// <summary>
         /// 获取配置值（优先从数据库配置中查找，然后从系统配置中查找）
@@ -619,7 +620,7 @@ namespace RUINORERP.UI.SysConfig
             {
                 return dbValue;
             }
-            
+
             // 然后尝试从系统配置中查找
             try
             {
@@ -638,7 +639,7 @@ namespace RUINORERP.UI.SysConfig
                 return string.Empty;
             }
         }
-        
+
         /// <summary>
         /// 获取泛型配置值（仅从系统配置中查找）
         /// </summary>
@@ -672,7 +673,7 @@ namespace RUINORERP.UI.SysConfig
                 return default;
             }
         }
-        
+
         /// <summary>
         /// 获取数据库配置值
         /// </summary>
@@ -684,11 +685,11 @@ namespace RUINORERP.UI.SysConfig
             {
                 return value;
             }
-            
+
             System.Diagnostics.Debug.WriteLine($"数据库配置键 '{key}' 未找到");
             return string.Empty;
         }
-        
+
         /// <summary>
         /// 检查配置键是否存在
         /// </summary>
@@ -701,12 +702,12 @@ namespace RUINORERP.UI.SysConfig
             {
                 return true;
             }
-            
+
             // 检查系统配置属性
             var property = typeof(SystemGlobalConfig).GetProperty(key);
             return property != null;
         }
-        
+
         /// <summary>
         /// 处理配置同步
         /// </summary>
@@ -716,7 +717,7 @@ namespace RUINORERP.UI.SysConfig
         {
             HandleConfigSync(configType, configDataJson, false);
         }
-        
+
         /// <summary>
         /// 处理配置同步
         /// </summary>
@@ -732,7 +733,7 @@ namespace RUINORERP.UI.SysConfig
                 {
                     throw new ArgumentNullException(nameof(configDataJson), "配置数据不能为空");
                 }
-                
+
                 // 根据配置类型处理不同的配置同步
                 switch (configType)
                 {
@@ -783,8 +784,8 @@ namespace RUINORERP.UI.SysConfig
                                     }
                                 }
                                 // 触发配置变更事件
-                                ConfigChanged?.Invoke(this, new ConfigChangedEventArgs { ConfigType = ConfigType.Database });
-                                
+                                ConfigChanged?.Invoke(this, new UIConfigChangedEventArgs { ConfigType = ConfigType.Database });
+
                                 // 如果需要强制应用，执行额外的应用逻辑
                                 if (forceApply)
                                 {
@@ -805,7 +806,7 @@ namespace RUINORERP.UI.SysConfig
                 throw;
             }
         }
-        
+
         /// <summary>
         /// 应用系统全局配置
         /// </summary>
@@ -822,7 +823,7 @@ namespace RUINORERP.UI.SysConfig
                 System.Diagnostics.Debug.WriteLine($"强制应用系统全局配置失败: {ex.Message}");
             }
         }
-        
+
         /// <summary>
         /// 应用全局验证器配置
         /// </summary>
@@ -839,7 +840,7 @@ namespace RUINORERP.UI.SysConfig
                 System.Diagnostics.Debug.WriteLine($"强制应用全局验证器配置失败: {ex.Message}");
             }
         }
-        
+
         /// <summary>
         /// 当自定义配置被强制应用时触发
         /// </summary>
@@ -858,10 +859,10 @@ namespace RUINORERP.UI.SysConfig
             }
         }
         #endregion
-        
+
         #region IDisposable实现
         private bool _disposed = false;
-        
+
         /// <summary>
         /// 释放资源
         /// </summary>
@@ -870,7 +871,7 @@ namespace RUINORERP.UI.SysConfig
             Dispose(true);
             GC.SuppressFinalize(this);
         }
-        
+
         /// <summary>
         /// 释放资源
         /// </summary>
@@ -888,34 +889,34 @@ namespace RUINORERP.UI.SysConfig
                         _globalConfigWatcher.Dispose();
                         _globalConfigWatcher = null;
                     }
-                    
+
                     if (_validatorConfigWatcher != null)
                     {
                         _validatorConfigWatcher.Changed -= OnValidatorConfigFileChanged;
                         _validatorConfigWatcher.Dispose();
                         _validatorConfigWatcher = null;
                     }
-                    
+
                     // 清空订阅列表
                     _globalConfigSubscribers.Clear();
                     _validatorConfigSubscribers.Clear();
                     _dbConfigCache.Clear();
                 }
-                
+
                 _disposed = true;
             }
         }
-        
+
         /// <summary>
         /// 析构函数
         /// </summary>
-        ~ConfigManager()
+        ~UIConfigManager()
         {
             Dispose(false);
         }
         #endregion
     }
-    
+
     /// <summary>
     /// 配置类型枚举
     /// </summary>
@@ -925,39 +926,39 @@ namespace RUINORERP.UI.SysConfig
         /// 系统全局配置
         /// </summary>
         Global,
-        
+
         /// <summary>
         /// 验证配置
         /// </summary>
         Validator,
-        
+
         /// <summary>
         /// 数据库配置
         /// </summary>
         Database
     }
-    
+
     /// <summary>
-        /// 配置变更事件参数
+    /// 配置变更事件参数
+    /// </summary>
+    public class UIConfigChangedEventArgs : EventArgs
+    {
+        /// <summary>
+        /// 配置类型
         /// </summary>
-        public class ConfigChangedEventArgs : EventArgs
-        {
-            /// <summary>
-            /// 配置类型
-            /// </summary>
-            public ConfigType ConfigType { get; set; }
-            
-            /// <summary>
-            /// 变更后的配置对象
-            /// </summary>
-            public object Config { get; set; }
-            
-            /// <summary>
-            /// 是否强制应用配置
-            /// </summary>
-            public bool ForceApply { get; set; }
-        }
-    
+        public ConfigType ConfigType { get; set; }
+
+        /// <summary>
+        /// 变更后的配置对象
+        /// </summary>
+        public object Config { get; set; }
+
+        /// <summary>
+        /// 是否强制应用配置
+        /// </summary>
+        public bool ForceApply { get; set; }
+    }
+
     /// <summary>
     /// 用于动态参数表中的值的数据类型
     /// </summary>

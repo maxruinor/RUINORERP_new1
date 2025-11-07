@@ -20,7 +20,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
     [ClientCommandHandler("ConfigCommandHandler", 60)]
     public class ConfigCommandHandler : BaseClientCommandHandler
     {
-        private readonly OptionsMonitorConfigManager _optionsMonitorConfigManager;
+        private readonly IConfigManagerService _configManagerService;
         private readonly ILogger<ConfigCommandHandler> _logger;
 
         /// <summary>
@@ -28,10 +28,10 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
         /// </summary>
         /// <param name="optionsMonitorConfigManager">配置管理器</param>
         /// <param name="logger">日志记录器</param>
-        public ConfigCommandHandler(OptionsMonitorConfigManager optionsMonitorConfigManager, ILogger<ConfigCommandHandler> logger)
+        public ConfigCommandHandler(IConfigManagerService configManagerService, ILogger<ConfigCommandHandler> logger)
             : base(logger)
         {
-            _optionsMonitorConfigManager = optionsMonitorConfigManager ?? throw new System.ArgumentNullException(nameof(optionsMonitorConfigManager));
+            _configManagerService = configManagerService ?? throw new System.ArgumentNullException(nameof(configManagerService));
             _logger = logger ?? throw new System.ArgumentNullException(nameof(logger));
 
             // 保留通过SetSupportedCommands方法设置命令的方式
@@ -167,17 +167,41 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                     _logger.LogDebug($"配置版本: {version}, 强制应用: {forceApply}");
 
                     // 统一使用ConfigManager处理配置同步，简化流程
-                    if (ConfigManager.Instance != null)
+                    if (UIConfigManager.Instance != null)
                     {
-                        ConfigManager.Instance.HandleConfigSync(configType, configDataJson, forceApply);
+                        UIConfigManager.Instance.HandleConfigSync(configType, configDataJson, forceApply);
                     }
                     else
                     {
                         _logger.LogWarning("ConfigManager实例不可用");
                     }
                     
-                    // 同时调用OptionsMonitorConfigManager处理配置同步（确保向后兼容）
-                    _optionsMonitorConfigManager.HandleConfigSync(configType, configDataJson);
+                    // 使用新的配置管理服务处理配置同步
+                    try
+                    {
+                        _logger.LogInformation("使用新的配置管理服务处理配置同步，配置类型: {ConfigType}", configType);
+                        
+                        // 根据配置类型使用相应的泛型方法
+                        switch (configType)
+                        {
+                            case "SystemGlobalConfig":
+                                await _configManagerService.LoadConfigFromJsonAsync<SystemGlobalConfig>(configDataJson);
+                                break;
+                            case "UIConfig":
+                                await _configManagerService.LoadConfigFromJsonAsync<UIConfig>(configDataJson);
+                                break;
+                            case "DBConfig":
+                                await _configManagerService.LoadConfigFromJsonAsync<DBConfig>(configDataJson);
+                                break;
+                            default:
+                                _logger.LogWarning("未知的配置类型: {ConfigType}", configType);
+                                break;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "使用新的配置管理服务处理配置同步时发生异常，配置类型: {ConfigType}", configType);
+                    }
                     
                     _logger.LogDebug($"配置同步已处理，配置类型: {configType}");
                 }

@@ -18,7 +18,6 @@ using RUINORERP.PacketSpec.Serialization;
 using RUINORERP.Business;
 using RUINORERP.Model.ConfigModel;
 using RUINORERP.UI.SysConfig;
-using RUINORERP.UI.Network.Interfaces;
 using RUINORERP.UI.IM;
 using RUINORERP.UI.Network.ClientCommandHandlers;
 using System.Collections.Generic;
@@ -51,53 +50,7 @@ namespace RUINORERP.UI.Network.DI
         public TOptions Value { get; }
     }
 
-    /// <summary>
-    /// 简单的IOptionsMonitor包装器
-    /// 避免复杂的依赖关系导致的循环引用问题
-    /// </summary>
-    internal class SimpleOptionsMonitorWrapper : IOptionsMonitor<object>
-    {
-        private readonly object _value;
-        private readonly Type _optionsType;
-
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="optionsType">选项类型</param>
-        /// <param name="value">选项值实例</param>
-        public SimpleOptionsMonitorWrapper(Type optionsType, object value)
-        {
-            _optionsType = optionsType;
-            _value = value;
-        }
-
-        /// <summary>
-        /// 获取当前配置值
-        /// </summary>
-        public object CurrentValue => _value;
-
-        /// <summary>
-        /// 获取命名配置值（简单实现，始终返回当前值）
-        /// </summary>
-        /// <param name="name">配置名称</param>
-        /// <returns>配置值</returns>
-        public object Get(string name) => _value;
-
-        /// <summary>
-        /// 注册变更通知（简单实现，不执行实际操作）
-        /// </summary>
-        /// <param name="listener">变更监听器</param>
-        /// <returns>用于取消注册的IDisposable</returns>
-        public IDisposable OnChange(Action<object, string> listener) => new NoopDisposable();
-
-        /// <summary>
-        /// 空的Disposable实现
-        /// </summary>
-        private class NoopDisposable : IDisposable
-        {
-            public void Dispose() { }
-        }
-    }
+ 
 
     /// <summary>
     /// Network项目服务依赖注入配置类
@@ -152,7 +105,6 @@ namespace RUINORERP.UI.Network.DI
                 var socketClient = c.Resolve<ISocketClient>();
                 var logger = c.Resolve<ILogger<ClientCommunicationService>>();
                 var tokenManager = c.Resolve<TokenManager>();
-                var optionsMonitorConfigManager = c.Resolve<OptionsMonitorConfigManager>();
                 var clientCommandDispatcher = c.Resolve<IClientCommandDispatcher>();
                 var heartbeatManager = c.Resolve<HeartbeatManager>();
                 var clientEventManager = c.Resolve<ClientEventManager>(); // 获取已注册的ClientEventManager单例
@@ -163,7 +115,6 @@ namespace RUINORERP.UI.Network.DI
                     socketClient,
                     logger,
                     tokenManager,
-                    optionsMonitorConfigManager,
                     clientCommandDispatcher,
                     heartbeatManager,
                     clientEventManager,
@@ -278,23 +229,7 @@ namespace RUINORERP.UI.Network.DI
             builder.Register(c => new SimpleOptions<GlobalValidatorConfig>(c.Resolve<GlobalValidatorConfig>()))
                 .As<IOptions<GlobalValidatorConfig>>()
                 .SingleInstance();
-                
-            // 简化配置服务注册，避免循环依赖
-            // 移除OptionsManager、OptionsFactory、ConfigureFromConfigurationOptions等可能导致循环依赖的注册
-            
-            // 注册OptionsMonitorConfigManager单例服务（仅作为自身类型注册，不实现IOptionsMonitor接口）
-            builder.RegisterType<OptionsMonitorConfigManager>().AsSelf().SingleInstance();
-            
-            // 简单实现IOptionsMonitor，避免复杂依赖
-            builder.RegisterGeneric((context, types) =>
-            {
-                var optionType = types[0];
-                var optionsInstance = context.Resolve(optionType);
-                return (object)new SimpleOptionsMonitorWrapper(optionType, optionsInstance);
-            }).As(typeof(IOptionsMonitor<>)).SingleInstance();
-
-            // 注册ConfigurationManager
-            builder.RegisterType<ConfigurationManager>().As<IConfigurationManager>().SingleInstance();
+    
 
             // 扫描并注册所有命令处理器
             var commandHandlerTypes = Assembly.GetExecutingAssembly().GetTypes()

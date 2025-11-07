@@ -592,7 +592,7 @@ namespace RUINORERP.UI.FM
             bool result = await Submit(PrePaymentStatus.待审核);
             if (result)
             {
-                ConfigManager configManager = Startup.GetFromFac<ConfigManager>();
+                UIConfigManager configManager = Startup.GetFromFac<UIConfigManager>();
                 var temppath = configManager.GetValue("WebServerUrl");
                 if (string.IsNullOrEmpty(temppath))
                 {

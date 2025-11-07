@@ -1,37 +1,38 @@
-﻿using RUINORERP.Model.ConfigModel;
+using RUINORERP.Model.ConfigModel;
 using System;
 using System.IO;
-using System.Reflection;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
 
 namespace RUINORERP.Business.Config
 {
     /// <summary>
-    /// 配置管理服务实现
-    /// 处理配置文件的加载、保存和默认值创建
+    /// 配置管理服务实现 - 包装泛型服务，支持配置刷新、事件通知和灵活加载
     /// </summary>
     public class ConfigManagerService : IConfigManagerService
     {
-        private readonly IConfigEncryptionService _encryptionService;
         private readonly ILogger<ConfigManagerService> _logger;
         private readonly IConfiguration _configuration;
+        private readonly IServiceProvider _serviceProvider;
         private readonly string _configDirectory;
 
         /// <summary>
         /// 构造函数
         /// </summary>
-        /// <param name="encryptionService">加密服务</param>
         /// <param name="logger">日志记录器</param>
         /// <param name="configuration">配置对象</param>
-        public ConfigManagerService(IConfigEncryptionService encryptionService, ILogger<ConfigManagerService> logger, IConfiguration configuration)
+        /// <param name="serviceProvider">服务提供程序，用于获取泛型配置服务</param>
+        public ConfigManagerService(
+            ILogger<ConfigManagerService> logger,
+            IConfiguration configuration,
+            IServiceProvider serviceProvider)
         {
-            _encryptionService = encryptionService;
             _logger = logger;
             _configuration = configuration;
-            // 设置配置目录路径（仅用于保存配置文件）
+            _serviceProvider = serviceProvider;
+            
+            // 设置配置目录路径
             _configDirectory = Path.Combine(Directory.GetCurrentDirectory(), "SysConfigFiles");
             
             // 确保配置目录存在
@@ -41,183 +42,326 @@ namespace RUINORERP.Business.Config
             }
         }
 
-        public T GetConfig<T>(string configType) where T : BaseConfig
+        /// <summary>
+        /// 获取配置
+        /// </summary>
+        /// <typeparam name="T">配置类型</typeparam>
+        /// <param name="configType">配置类型名称</param>
+        /// <returns>配置对象</returns>
+        public T GetConfig<T>(string configType) where T : BaseConfig, new()
         {
             return LoadConfig<T>(configType);
         }
 
         /// <summary>
-        /// 加载配置文件
-        /// 优先使用IConfiguration进行配置加载，提高性能并支持热重载
+        /// 获取配置（无参数版本）
         /// </summary>
-        public T LoadConfig<T>(string configType) where T : BaseConfig
+        /// <typeparam name="T">配置类型</typeparam>
+        /// <returns>配置对象</returns>
+        public T GetConfig<T>() where T : BaseConfig, new()
         {
             try
             {
-                _logger.Debug("从IConfiguration加载配置: {ConfigType}", configType);
-                
-                // 从IConfiguration中获取配置节
-                var configSection = _configuration.GetSection(configType);
-                if (configSection != null && configSection.Exists())
-                {
-                    T config = Activator.CreateInstance<T>();
-                    configSection.Bind(config);
-                    
-                    // 解密配置中的敏感字段
-                    config = _encryptionService.DecryptConfig(config);
-                    
-                    // 解析环境变量
-                    if (config is ServerConfig serverConfig)
-                    {
-                        serverConfig.FileStoragePath = ResolveEnvironmentVariables(serverConfig.FileStoragePath);
-                    }
-                    
-                    _logger.Debug("配置加载成功: {ConfigType}", configType);
-                    return config;
-                }
-                
-                // 如果IConfiguration中没有找到配置，尝试从文件加载（作为后备）
-                _logger.LogWarning("IConfiguration中未找到配置，尝试从文件加载: {ConfigType}", configType);
-                return LoadConfigFromFile<T>(configType);
+                var service = GetGenericConfigService<T>();
+                return service.CurrentConfig;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "获取配置失败: {ConfigType}", typeof(T).Name);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// 加载配置
+        /// </summary>
+        /// <typeparam name="T">配置类型</typeparam>
+        /// <param name="configType">配置类型名称</param>
+        /// <returns>配置对象</returns>
+        public T LoadConfig<T>(string configType) where T : BaseConfig, new()
+        {
+            try
+            {
+                // 使用泛型服务加载配置
+                var service = GetGenericConfigService<T>();
+                return service.LoadConfig();
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "加载配置失败: {ConfigType}", configType);
-                // 加载失败，返回默认配置
-                return CreateAndSaveDefaultConfig<T>(configType);
-            }
-        }
-        
-        /// <summary>
-        /// 从文件加载配置（作为后备方案）
-        /// </summary>
-        private T LoadConfigFromFile<T>(string configType) where T : BaseConfig
-        {
-            string filePath = GetConfigFilePath(configType);
-            
-            if (File.Exists(filePath))
-            {
-                _logger.Debug("从文件加载配置: {FilePath}", filePath);
-                string jsonContent = File.ReadAllText(filePath);
-                
-                try
-                {
-                    // 尝试直接反序列化
-                    T config = JsonConvert.DeserializeObject<T>(jsonContent);
-                    
-                    // 解密配置中的敏感字段
-                    config = _encryptionService.DecryptConfig(config);
-                    
-                    // 解析环境变量
-                    if (config is ServerConfig serverConfig)
-                    {
-                        serverConfig.FileStoragePath = ResolveEnvironmentVariables(serverConfig.FileStoragePath);
-                    }
-                    
-                    return config;
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "文件反序列化失败: {FilePath}", filePath);
-                }
-            }
-            
-            return null;
-        }
-        
-        /// <summary>
-        /// 解析路径中的环境变量
-        /// </summary>
-        /// <param name="path">包含环境变量的路径</param>
-        /// <returns>解析后的实际路径</returns>
-        public string ResolveEnvironmentVariables(string path)
-        {
-            if (string.IsNullOrEmpty(path))
-                return path;
-                
-            try
-            {
-                // 使用环境变量展开路径中的%ENV_VAR%格式变量
-                return Environment.ExpandEnvironmentVariables(path);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "解析环境变量失败: {Path}", path);
-                return path; // 解析失败时返回原始路径
+                throw;
             }
         }
 
         /// <summary>
-        /// 异步加载配置文件
+        /// 加载配置（无参数版本）
         /// </summary>
-        public async Task<T> LoadConfigAsync<T>(string configType) where T : BaseConfig
-        {
-            return await Task.Run(() => LoadConfig<T>(configType));
-        }
-
-        /// <summary>
-        /// 保存配置文件
-        /// </summary>
-        public bool SaveConfig<T>(T config, string configType) where T : BaseConfig
+        /// <typeparam name="T">配置类型</typeparam>
+        /// <returns>配置对象</returns>
+        public T LoadConfig<T>() where T : BaseConfig, new()
         {
             try
             {
-                if (config == null)
-                {
-                    _logger.LogWarning("保存配置失败：配置对象为空");
-                    return false;
-                }
-
-
-
-                // 加密配置中的敏感字段
-                T encryptedConfig = _encryptionService.EncryptConfig(config);
-
-                string filePath = GetConfigFilePath(configType);
-                
-                // 保存配置到文件
-                string jsonContent = JsonConvert.SerializeObject(encryptedConfig, Formatting.Indented);
-                File.WriteAllText(filePath, jsonContent);
-                
-                _logger.Debug("配置保存成功: {ConfigType}", configType);
-                return true;
+                var service = GetGenericConfigService<T>();
+                return service.LoadConfig();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "保存配置文件失败: {ConfigType}", configType);
+                _logger.LogError(ex, "加载配置失败: {ConfigType}", typeof(T).Name);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// 异步加载配置
+        /// </summary>
+        /// <typeparam name="T">配置类型</typeparam>
+        /// <param name="configType">配置类型名称</param>
+        /// <returns>配置对象</returns>
+        public async Task<T> LoadConfigAsync<T>(string configType) where T : BaseConfig, new()
+        {
+            try
+            {
+                var service = GetGenericConfigService<T>();
+                return await service.LoadConfigAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "异步加载配置失败: {ConfigType}", configType);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// 异步加载配置（无参数版本）
+        /// </summary>
+        /// <typeparam name="T">配置类型</typeparam>
+        /// <returns>配置对象</returns>
+        public async Task<T> LoadConfigAsync<T>() where T : BaseConfig, new()
+        {
+            try
+            {
+                var service = GetGenericConfigService<T>();
+                return await service.LoadConfigAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "异步加载配置失败: {ConfigType}", typeof(T).Name);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// 从指定路径加载配置
+        /// </summary>
+        /// <typeparam name="T">配置类型</typeparam>
+        /// <param name="filePath">配置文件路径</param>
+        /// <returns>配置对象</returns>
+        public T LoadConfigFromPath<T>(string filePath) where T : BaseConfig, new()
+        {
+            try
+            {
+                var service = GetGenericConfigService<T>();
+                return service.LoadConfigFromPath(filePath);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "从指定路径加载配置失败: {ConfigType}, 路径: {FilePath}", typeof(T).Name, filePath);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// 异步从指定路径加载配置
+        /// </summary>
+        /// <typeparam name="T">配置类型</typeparam>
+        /// <param name="filePath">配置文件路径</param>
+        /// <returns>配置对象</returns>
+        public async Task<T> LoadConfigFromPathAsync<T>(string filePath) where T : BaseConfig, new()
+        {
+            try
+            {
+                var service = GetGenericConfigService<T>();
+                return await service.LoadConfigFromPathAsync(filePath);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "异步从指定路径加载配置失败: {ConfigType}, 路径: {FilePath}", typeof(T).Name, filePath);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// 从JSON字符串加载配置
+        /// </summary>
+        /// <typeparam name="T">配置类型</typeparam>
+        /// <param name="jsonContent">JSON格式的配置内容</param>
+        /// <returns>配置对象</returns>
+        public T LoadConfigFromJson<T>(string jsonContent) where T : BaseConfig, new()
+        {
+            try
+            {
+                var service = GetGenericConfigService<T>();
+                return service.LoadConfigFromJson(jsonContent);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "从JSON字符串加载配置失败: {ConfigType}", typeof(T).Name);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// 异步从JSON字符串加载配置
+        /// </summary>
+        /// <typeparam name="T">配置类型</typeparam>
+        /// <param name="jsonContent">JSON格式的配置内容</param>
+        /// <returns>配置对象</returns>
+        public async Task<T> LoadConfigFromJsonAsync<T>(string jsonContent) where T : BaseConfig, new()
+        {
+            try
+            {
+                var service = GetGenericConfigService<T>();
+                return await service.LoadConfigFromJsonAsync(jsonContent);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "异步从JSON字符串加载配置失败: {ConfigType}", typeof(T).Name);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// 刷新配置（重新从持久化存储加载）
+        /// </summary>
+        /// <typeparam name="T">配置类型</typeparam>
+        /// <returns>刷新后的配置对象</returns>
+        public T RefreshConfig<T>() where T : BaseConfig, new()
+        {
+            try
+            {
+                var service = GetGenericConfigService<T>();
+                return service.RefreshConfig();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "刷新配置失败: {ConfigType}", typeof(T).Name);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// 异步刷新配置（重新从持久化存储加载）
+        /// </summary>
+        /// <typeparam name="T">配置类型</typeparam>
+        /// <returns>刷新后的配置对象</returns>
+        public async Task<T> RefreshConfigAsync<T>() where T : BaseConfig, new()
+        {
+            try
+            {
+                var service = GetGenericConfigService<T>();
+                return await service.RefreshConfigAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "异步刷新配置失败: {ConfigType}", typeof(T).Name);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// 保存配置
+        /// </summary>
+        /// <typeparam name="T">配置类型</typeparam>
+        /// <param name="config">配置对象</param>
+        /// <param name="configType">配置类型名称</param>
+        /// <returns>是否保存成功</returns>
+        public bool SaveConfig<T>(T config, string configType) where T : BaseConfig, new()
+        {
+            try
+            {
+                var service = GetGenericConfigService<T>();
+                return service.SaveConfig(config);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "保存配置失败: {ConfigType}", configType);
                 return false;
             }
         }
 
         /// <summary>
-        /// 异步保存配置文件
+        /// 保存配置（无参数版本）
         /// </summary>
-        public async Task<bool> SaveConfigAsync<T>(T config, string configType) where T : BaseConfig
-        {
-            return await Task.Run(() => SaveConfig(config, configType));
-        }
-
-        /// <summary>
-        /// 创建配置默认值
-        /// </summary>
-        public T CreateDefaultConfig<T>() where T : BaseConfig
+        /// <typeparam name="T">配置类型</typeparam>
+        /// <param name="config">配置对象</param>
+        /// <returns>是否保存成功</returns>
+        public bool SaveConfig<T>(T config) where T : BaseConfig, new()
         {
             try
             {
-                // 使用反射创建实例
-                T config = Activator.CreateInstance<T>();
-                
+                var service = GetGenericConfigService<T>();
+                return service.SaveConfig(config);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "保存配置失败: {ConfigType}", typeof(T).Name);
+                return false;
+            }
+        }
 
-                
-                // 尝试调用InitDefault方法（如果存在）
-                MethodInfo initMethod = typeof(T).GetMethod("InitDefault", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-                if (initMethod != null && initMethod.GetParameters().Length == 0)
-                {
-                    initMethod.Invoke(config, null);
-                }
-                
-                _logger.Debug("创建默认配置: {ConfigType}", typeof(T).Name);
-                return config;
+        /// <summary>
+        /// 异步保存配置
+        /// </summary>
+        /// <typeparam name="T">配置类型</typeparam>
+        /// <param name="config">配置对象</param>
+        /// <param name="configType">配置类型名称</param>
+        /// <returns>是否保存成功</returns>
+        public async Task<bool> SaveConfigAsync<T>(T config, string configType) where T : BaseConfig, new()
+        {
+            try
+            {
+                var service = GetGenericConfigService<T>();
+                return await service.SaveConfigAsync(config);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "异步保存配置失败: {ConfigType}", configType);
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 异步保存配置（无参数版本）
+        /// </summary>
+        /// <typeparam name="T">配置类型</typeparam>
+        /// <param name="config">配置对象</param>
+        /// <returns>是否保存成功</returns>
+        public async Task<bool> SaveConfigAsync<T>(T config) where T : BaseConfig, new()
+        {
+            try
+            {
+                var service = GetGenericConfigService<T>();
+                return await service.SaveConfigAsync(config);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "异步保存配置失败: {ConfigType}", typeof(T).Name);
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 创建默认配置
+        /// </summary>
+        /// <typeparam name="T">配置类型</typeparam>
+        /// <returns>默认配置对象</returns>
+        public T CreateDefaultConfig<T>() where T : BaseConfig, new()
+        {
+            try
+            {
+                var service = GetGenericConfigService<T>();
+                return service.CreateDefaultConfig();
             }
             catch (Exception ex)
             {
@@ -229,6 +373,8 @@ namespace RUINORERP.Business.Config
         /// <summary>
         /// 检查配置文件是否存在
         /// </summary>
+        /// <param name="configType">配置类型名称</param>
+        /// <returns>配置文件是否存在</returns>
         public bool ConfigFileExists(string configType)
         {
             return File.Exists(GetConfigFilePath(configType));
@@ -237,6 +383,8 @@ namespace RUINORERP.Business.Config
         /// <summary>
         /// 获取配置文件路径
         /// </summary>
+        /// <param name="configType">配置类型名称</param>
+        /// <returns>配置文件路径</returns>
         public string GetConfigFilePath(string configType)
         {
             // 检查是否已经包含.json后缀，如果没有则添加
@@ -248,22 +396,129 @@ namespace RUINORERP.Business.Config
         }
 
         /// <summary>
-        /// 重置配置为默认值
+        /// 重置为默认配置
         /// </summary>
-        public T ResetToDefault<T>(string configType) where T : BaseConfig
+        /// <typeparam name="T">配置类型</typeparam>
+        /// <param name="configType">配置类型名称</param>
+        /// <returns>重置后的默认配置对象</returns>
+        public T ResetToDefault<T>(string configType) where T : BaseConfig, new()
         {
-            // 创建默认配置并保存
-            return CreateAndSaveDefaultConfig<T>(configType);
+            try
+            {
+                var service = GetGenericConfigService<T>();
+                return service.ResetToDefault();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "重置配置失败: {ConfigType}", configType);
+                throw;
+            }
         }
 
         /// <summary>
-        /// 创建并保存默认配置
+        /// 重置为默认配置（无参数版本）
         /// </summary>
-        private T CreateAndSaveDefaultConfig<T>(string configType) where T : BaseConfig
+        /// <typeparam name="T">配置类型</typeparam>
+        /// <returns>重置后的默认配置对象</returns>
+        public T ResetToDefault<T>() where T : BaseConfig, new()
         {
-            T config = CreateDefaultConfig<T>();
-            SaveConfig(config, configType);
-            return config;
+            try
+            {
+                var service = GetGenericConfigService<T>();
+                return service.ResetToDefault();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "重置配置失败: {ConfigType}", typeof(T).Name);
+                throw;
+            }
+        }
+        
+        /// <summary>
+        /// 解析环境变量
+        /// </summary>
+        /// <param name="path">包含环境变量的路径字符串</param>
+        /// <returns>解析后的路径</returns>
+        public string ResolveEnvironmentVariables(string path)
+        {
+            if (string.IsNullOrEmpty(path))
+                return path;
+                
+            try
+            {
+                return Environment.ExpandEnvironmentVariables(path);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "解析环境变量失败: {Path}", path);
+                return path;
+            }
+        }
+
+        /// <summary>
+        /// 注册配置变更事件处理器
+        /// </summary>
+        /// <typeparam name="T">配置类型</typeparam>
+        /// <param name="handler">配置变更事件处理器</param>
+        public void RegisterConfigChangedHandler<T>(EventHandler<ConfigChangedEventArgs<T>> handler) where T : BaseConfig, new()
+        {
+            try
+            {
+                var service = GetGenericConfigService<T>();
+                service.ConfigChanged += handler;
+                _logger.LogInformation("已注册配置变更事件处理器: {ConfigType}", typeof(T).Name);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "注册配置变更事件处理器失败: {ConfigType}", typeof(T).Name);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// 注销配置变更事件处理器
+        /// </summary>
+        /// <typeparam name="T">配置类型</typeparam>
+        /// <param name="handler">配置变更事件处理器</param>
+        public void UnregisterConfigChangedHandler<T>(EventHandler<ConfigChangedEventArgs<T>> handler) where T : BaseConfig, new()
+        {
+            try
+            {
+                var service = GetGenericConfigService<T>();
+                service.ConfigChanged -= handler;
+                _logger.LogInformation("已注销配置变更事件处理器: {ConfigType}", typeof(T).Name);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "注销配置变更事件处理器失败: {ConfigType}", typeof(T).Name);
+                throw;
+            }
+        }
+        
+        /// <summary>
+        /// 获取泛型配置服务
+        /// </summary>
+        /// <typeparam name="T">配置类型</typeparam>
+        /// <returns>泛型配置服务</returns>
+        private IGenericConfigService<T> GetGenericConfigService<T>() where T : BaseConfig, new()
+        {
+            try
+            {
+                var genericServiceType = typeof(IGenericConfigService<>).MakeGenericType(typeof(T));
+                var service = _serviceProvider.GetService(genericServiceType) as IGenericConfigService<T>;
+                
+                if (service == null)
+                {
+                    throw new InvalidOperationException($"未找到类型 {typeof(T).Name} 的配置服务");
+                }
+                
+                return service;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "获取泛型配置服务失败: {ConfigType}", typeof(T).Name);
+                throw;
+            }
         }
     }
 }

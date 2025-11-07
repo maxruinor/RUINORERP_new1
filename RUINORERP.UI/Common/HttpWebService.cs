@@ -36,11 +36,11 @@ namespace RUINORERP.UI.Common
         /// </summary>
         public IUnitOfWorkManage _unitOfWorkManage;
         public ILogger<HttpWebService> _logger;
-        public ConfigManager _configManager;
+        public UIConfigManager _configManager;
         public ImageProcessingService _imageProcessingService;
 
         public HttpWebService(ILogger<HttpWebService> logger, IUnitOfWorkManage unitOfWorkManage,
-          ConfigManager configManager, ImageProcessingService imageProcessingService, RUINORERP.Model.Context.ApplicationContext appContext = null)
+          UIConfigManager configManager, ImageProcessingService imageProcessingService, RUINORERP.Model.Context.ApplicationContext appContext = null)
         {
             _logger = logger;
             _unitOfWorkManage = unitOfWorkManage;

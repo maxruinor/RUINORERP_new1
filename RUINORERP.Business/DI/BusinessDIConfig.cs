@@ -19,6 +19,7 @@ using Microsoft.Extensions.DependencyInjection;
 using RUINORERP.Extensions.Middlewares;
 using RUINORERP.Business.Cache;
 using RUINORERP.Business.Services;
+using RUINORERP.Business.Config;
 using RUINORERP.IServices;
 
 namespace RUINORERP.Business.DI
@@ -168,7 +169,19 @@ namespace RUINORERP.Business.DI
             // 注册业务编码服务
             RegisterBizCodeServices(builder);
 
-           
+            // 注册泛型配置服务
+            builder.RegisterGeneric(typeof(GenericConfigService<>))
+                .As(typeof(IGenericConfigService<>))
+                .InstancePerDependency()
+                .PropertiesAutowired();
+
+            // 注册泛型配置版本服务
+            builder.RegisterGeneric(typeof(GenericConfigVersionService<>))
+                .As(typeof(GenericConfigVersionService<>))
+                .InstancePerDependency()
+                .PropertiesAutowired();
+
+            
  
             AddBizMapperService(builder);
         }

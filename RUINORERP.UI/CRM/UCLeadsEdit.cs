@@ -106,7 +106,7 @@ namespace RUINORERP.UI.CRM
 
         private void UCLeadsEdit_Load(object sender, EventArgs e)
         {
-            ConfigManager configManager = Startup.GetFromFac<ConfigManager>();
+            UIConfigManager configManager = Startup.GetFromFac<UIConfigManager>();
             //“|”号隔开
             string GetCustomerSource = configManager.GetValue("GetCustomerSource");
             //设置常用获客来源

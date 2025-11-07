@@ -729,7 +729,7 @@ namespace RUINORERP.UI.FM
                                         //实际应该可以直接传二进制数据，但是暂时没有实现，所以先保存到本地，再上传
                                         //ImageProcessor.SaveBytesAsImage(valueImageWeb.CellImageBytes, fileName);
                                         HttpWebService httpWebService = Startup.GetFromFac<HttpWebService>();
-                                        ConfigManager configManager = Startup.GetFromFac<ConfigManager>();
+                                        UIConfigManager configManager = Startup.GetFromFac<UIConfigManager>();
                                         var upladurl = configManager.GetValue("WebServerUploadUrl");
                                         string uploadRsult = await httpWebService.UploadImageAsyncOK(upladurl, fileName, valueImageWeb.CellImageBytes, "upload");
                                         //string uploadRsult = await HttpHelper.UploadImageAsyncOK("http://192.168.0.99:8080/upload/", fileName, "upload");
@@ -848,7 +848,7 @@ namespace RUINORERP.UI.FM
             bool rs = await base.Submit();
             if (rs)
             {
-                ConfigManager configManager = Startup.GetFromFac<ConfigManager>();
+                UIConfigManager configManager = Startup.GetFromFac<UIConfigManager>();
                 var temppath = configManager.GetValue("WebServerUrl");
                 if (string.IsNullOrEmpty(temppath))
                 {

@@ -83,6 +83,8 @@ namespace RUINORERP.Server.Controls
         private BaseConfig _currentConfig; // 当前配置对象
         private string _currentConfigFileName; // 当前配置文件名
         private string _currentConfigRootNode; // 当前配置根节点
+        private Type _currentConfigType; // 当前配置类型
+        private readonly IServiceProvider _serviceProvider;
 
         public GlobalConfigControl()
         {
@@ -95,6 +97,7 @@ namespace RUINORERP.Server.Controls
             _configManagerService = Startup.GetFromFac<IConfigManagerService>();
             _configValidationService = Startup.GetFromFac<IConfigValidationService>();
             _generalBroadcastService = Startup.GetFromFac<IGeneralBroadcastService>();
+            _serviceProvider = Startup.GetFromFac<IServiceProvider>();
 
             // 默认使用系统全局配置文件初始化，后续操作会根据选择的配置类型使用相应的文件
 
@@ -208,6 +211,67 @@ namespace RUINORERP.Server.Controls
         }
 
         /// <summary>
+        /// 获取泛型配置服务
+        /// </summary>
+        /// <typeparam name="T">配置类型，必须继承自BaseConfig</typeparam>
+        /// <returns>泛型配置服务实例</returns>
+        private IGenericConfigService<T> GetConfigService<T>() where T : BaseConfig, new()
+        {
+            var serviceType = typeof(IGenericConfigService<>).MakeGenericType(typeof(T));
+            return _serviceProvider.GetService(serviceType) as IGenericConfigService<T>;
+        }
+
+        /// <summary>
+        /// 简化配置加载方法
+        /// </summary>
+        /// <typeparam name="T">配置类型，必须继承自BaseConfig</typeparam>
+        private void LoadConfiguration<T>() where T : BaseConfig, new()
+        {
+            try
+            {
+                var service = GetConfigService<T>();
+                if (service != null)
+                {
+                    _currentConfig = service.LoadConfig();
+                    _currentConfigType = typeof(T);
+                    BindConfigurationToUI(_currentConfig);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "加载配置失败: {ConfigType}", typeof(T).Name);
+            }
+        }
+
+        /// <summary>
+        /// 简化配置保存方法
+        /// </summary>
+        /// <typeparam name="T">配置类型，必须继承自BaseConfig</typeparam>
+        /// <param name="config">配置对象</param>
+        /// <returns>保存是否成功</returns>
+        private bool SaveConfiguration<T>(T config) where T : BaseConfig, new()
+        {
+            try
+            {
+                var service = GetConfigService<T>();
+                if (service != null)
+                {
+                    // 创建版本
+                    var versionService = Startup.GetFromFac<GenericConfigVersionService<T>>();
+                    versionService?.CreateVersion(config, $"用户修改 - {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+                    
+                    return service.SaveConfig(config);
+                }
+                return false;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "保存配置失败: {ConfigType}", typeof(T).Name);
+                return false;
+            }
+        }
+
+        /// <summary>
         /// 初始化版本管理工具栏按钮
         /// </summary>
         private void InitializeVersionManagementButtons()
@@ -252,45 +316,68 @@ namespace RUINORERP.Server.Controls
                 string description = GetConfigDescription(_currentConfig);
                 string configFilePath = System.IO.Path.Combine(basePath, _currentConfigFileName);
 
-                // 获取原始配置用于审计比较
-                BaseConfig originalConfig = null;
-                if (File.Exists(configFilePath))
+                // 使用泛型保存方法
+                bool saveResult = false;
+                if (_currentConfig is ServerConfig serverConfig)
                 {
-                    string json = File.ReadAllText(configFilePath);
-                    JObject configJson = JObject.Parse(json);
-                    if (configJson.TryGetValue(_currentConfigRootNode, out JToken token))
+                    saveResult = SaveConfiguration(serverConfig);
+                }
+                else if (_currentConfig is SystemGlobalConfig sysConfig)
+                {
+                    saveResult = SaveConfiguration(sysConfig);
+                }
+                else if (_currentConfig is GlobalValidatorConfig validatorConfig)
+                {
+                    saveResult = SaveConfiguration(validatorConfig);
+                }
+                else
+                {
+                    // 获取原始配置用于审计比较
+                    BaseConfig originalConfig = null;
+                    if (File.Exists(configFilePath))
                     {
-                        originalConfig = ((JObject)token).ToObject(_currentConfig.GetType()) as BaseConfig;
-                        if (originalConfig != null)
+                        string json = File.ReadAllText(configFilePath);
+                        JObject configJson = JObject.Parse(json);
+                        if (configJson.TryGetValue(_currentConfigRootNode, out JToken token))
                         {
-                            // 解密原始配置以便比较
-                            originalConfig = _encryptionService.DecryptConfig(originalConfig);
+                            originalConfig = ((JObject)token).ToObject(_currentConfig.GetType()) as BaseConfig;
+                            if (originalConfig != null)
+                            {
+                                // 解密原始配置以便比较
+                                originalConfig = _encryptionService.DecryptConfig(originalConfig);
+                            }
                         }
                     }
+
+                    // 对敏感配置进行加密
+                    var encryptedConfig = _encryptionService.EncryptConfig(_currentConfig);
+
+                    // 使用配置管理器服务保存配置
+                    saveResult = _configManagerService.SaveConfig(encryptedConfig, configFilePath);
+                    if (!saveResult)
+                    {
+                        throw new InvalidOperationException("配置保存失败");
+                    }
+
+                    // 创建配置版本
+                    string versionDescription = $"{description} - 由{Environment.UserName}修改";
+                    _versionService.CreateVersion(_currentConfig, _currentConfigFileName, versionDescription);
                 }
 
-                // 对敏感配置进行加密
-                var encryptedConfig = _encryptionService.EncryptConfig(_currentConfig);
-
-                // 使用配置管理器服务保存配置
-                bool saveResult = _configManagerService.SaveConfig(encryptedConfig, configFilePath);
                 if (!saveResult)
                 {
                     throw new InvalidOperationException("配置保存失败");
                 }
 
-                // 创建完整的配置JSON对象
-                JObject configJsonObj = JObject.FromObject(encryptedConfig);
+                // 创建完整的配置JSON对象（对非泛型情况也需要）
+                var encryptedConfigForJSON = _encryptionService.EncryptConfig(_currentConfig);
+                JObject configJsonObj = JObject.FromObject(encryptedConfigForJSON);
                 JObject fullConfigJson = new JObject(new JProperty(_currentConfigRootNode, configJsonObj));
 
                 // 执行保存命令
                 var configFileReceiver = new ConfigFileReceiver(configFilePath);
                 EditConfigCommand command = new EditConfigCommand(configFileReceiver, fullConfigJson, description);
                 _commandManager.ExecuteCommand(command);
-
-                // 创建配置版本
-                string versionDescription = $"{description} - 由{Environment.UserName}修改";
-                _versionService.CreateVersion(_currentConfig, _currentConfigFileName, versionDescription);
 
                 // 添加到历史记录
                 var historyEntry = new ConfigHistoryEntry(_currentConfig, description)
@@ -506,44 +593,71 @@ namespace RUINORERP.Server.Controls
         /// </summary>
         private void LoadConfigurationFile(string fileName, string rootNode, Type configType)
         {
-            string configFilePath = System.IO.Path.Combine(basePath, fileName);
-
-            if (!File.Exists(configFilePath))
+            try
             {
-                _logger?.LogWarning("配置文件不存在，创建默认配置: {FilePath}", configFilePath);
-                CreateDefaultConfiguration(configType, configFilePath, rootNode);
-            }
+                _currentConfigFileName = fileName;
+                _currentConfigRootNode = rootNode;
+                _currentConfigType = configType;
 
-            // 读取配置文件
-            string json = File.ReadAllText(configFilePath);
-            JObject configJson = JObject.Parse(json);
-
-            // 解析配置对象
-            if (configJson.TryGetValue(rootNode, out JToken token))
-            {
-                JObject configJsonObj = token as JObject;
-                BaseConfig configObject = configJsonObj.ToObject(configType) as BaseConfig;
-
-                if (configObject != null)
+                // 使用泛型加载方法
+                if (configType == typeof(ServerConfig))
                 {
-                    // 解密配置对象中的敏感信息
-                    configObject = _encryptionService.DecryptConfig(configObject);
-
-                    _currentConfig = configObject;
-                    _currentConfigFileName = fileName;
-                    _currentConfigRootNode = rootNode;
-
-                    // 绑定到UI
-                    BindConfigurationToUI(configObject);
+                    LoadConfiguration<ServerConfig>();
+                }
+                else if (configType == typeof(SystemGlobalConfig))
+                {
+                    LoadConfiguration<SystemGlobalConfig>();
+                }
+                else if (configType == typeof(GlobalValidatorConfig))
+                {
+                    LoadConfiguration<GlobalValidatorConfig>();
                 }
                 else
                 {
-                    throw new InvalidOperationException($"无法解析配置对象: {configType.Name}");
+                    // 对于未知类型，使用原有加载逻辑
+                    string configFilePath = System.IO.Path.Combine(basePath, fileName);
+
+                    if (!File.Exists(configFilePath))
+                    {
+                        _logger?.LogWarning("配置文件不存在，创建默认配置: {FilePath}", configFilePath);
+                        CreateDefaultConfiguration(configType, configFilePath, rootNode);
+                    }
+
+                    // 读取配置文件
+                    string json = File.ReadAllText(configFilePath);
+                    JObject configJson = JObject.Parse(json);
+
+                    // 解析配置对象
+                    if (configJson.TryGetValue(rootNode, out JToken token))
+                    {
+                        JObject configJsonObj = token as JObject;
+                        BaseConfig configObject = configJsonObj.ToObject(configType) as BaseConfig;
+
+                        if (configObject != null)
+                        {
+                            // 解密配置对象中的敏感信息
+                            configObject = _encryptionService.DecryptConfig(configObject);
+
+                            _currentConfig = configObject;
+
+                            // 绑定到UI
+                            BindConfigurationToUI(configObject);
+                        }
+                        else
+                        {
+                            throw new InvalidOperationException($"无法解析配置对象: {configType.Name}");
+                        }
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException($"配置文件格式错误，缺少 {rootNode} 节点");
+                    }
                 }
             }
-            else
+            catch (Exception ex)
             {
-                throw new InvalidOperationException($"配置文件格式错误，缺少 {rootNode} 节点");
+                _logger?.LogError(ex, "加载配置文件失败: {FileName}", fileName);
+                throw;
             }
         }
 

@@ -376,7 +376,7 @@ namespace RUINORERP.UI.FM
             bool rs = await base.Submit();
             if (rs)
             {
-                ConfigManager configManager = Startup.GetFromFac<ConfigManager>();
+                UIConfigManager configManager = Startup.GetFromFac<UIConfigManager>();
                 var temppath = configManager.GetValue("WebServerUrl");
                 if (string.IsNullOrEmpty(temppath))
                 {

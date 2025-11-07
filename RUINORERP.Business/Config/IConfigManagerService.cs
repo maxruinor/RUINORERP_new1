@@ -15,7 +15,7 @@ namespace RUINORERP.Business.Config
         /// <typeparam name="T">配置类型</typeparam>
         /// <param name="configType">配置类型名称</param>
         /// <returns>配置对象</returns>
-        T GetConfig<T>(string configType) where T : BaseConfig;
+        T GetConfig<T>(string configType) where T : BaseConfig, new();
 
         /// <summary>
         /// 加载配置文件
@@ -23,7 +23,7 @@ namespace RUINORERP.Business.Config
         /// <typeparam name="T">配置类型</typeparam>
         /// <param name="configType">配置类型名称</param>
         /// <returns>配置对象</returns>
-        T LoadConfig<T>(string configType) where T : BaseConfig;
+        T LoadConfig<T>(string configType) where T : BaseConfig, new();
 
         /// <summary>
         /// 异步加载配置文件
@@ -31,7 +31,7 @@ namespace RUINORERP.Business.Config
         /// <typeparam name="T">配置类型</typeparam>
         /// <param name="configType">配置类型名称</param>
         /// <returns>配置对象</returns>
-        Task<T> LoadConfigAsync<T>(string configType) where T : BaseConfig;
+        Task<T> LoadConfigAsync<T>(string configType) where T : BaseConfig, new();
 
         /// <summary>
         /// 保存配置文件
@@ -40,7 +40,7 @@ namespace RUINORERP.Business.Config
         /// <param name="config">配置对象</param>
         /// <param name="configType">配置类型名称</param>
         /// <returns>是否保存成功</returns>
-        bool SaveConfig<T>(T config, string configType) where T : BaseConfig;
+        bool SaveConfig<T>(T config, string configType) where T : BaseConfig, new();
 
         /// <summary>
         /// 异步保存配置文件
@@ -49,14 +49,14 @@ namespace RUINORERP.Business.Config
         /// <param name="config">配置对象</param>
         /// <param name="configType">配置类型名称</param>
         /// <returns>是否保存成功</returns>
-        Task<bool> SaveConfigAsync<T>(T config, string configType) where T : BaseConfig;
+        Task<bool> SaveConfigAsync<T>(T config, string configType) where T : BaseConfig, new();
 
         /// <summary>
         /// 创建配置默认值
         /// </summary>
         /// <typeparam name="T">配置类型</typeparam>
         /// <returns>默认配置对象</returns>
-        T CreateDefaultConfig<T>() where T : BaseConfig;
+        T CreateDefaultConfig<T>() where T : BaseConfig, new();
 
         /// <summary>
         /// 检查配置文件是否存在
@@ -78,7 +78,7 @@ namespace RUINORERP.Business.Config
         /// <typeparam name="T">配置类型</typeparam>
         /// <param name="configType">配置类型名称</param>
         /// <returns>重置后的配置对象</returns>
-        T ResetToDefault<T>(string configType) where T : BaseConfig;
+        T ResetToDefault<T>(string configType) where T : BaseConfig, new();
         
         /// <summary>
         /// 解析路径中的环境变量

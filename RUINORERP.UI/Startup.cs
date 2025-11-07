@@ -252,11 +252,11 @@ namespace RUINORERP.UI
             services.Configure<GlobalValidatorConfig>(builder.GetSection(nameof(GlobalValidatorConfig)));
 
             // 注册ConfigManager为单例，并确保它能正确初始化
-            services.AddSingleton<ConfigManager>(provider =>
+            services.AddSingleton<UIConfigManager>(provider =>
             {
                 var configMonitor = provider.GetRequiredService<IOptionsMonitor<SystemGlobalConfig>>();
                 var validatorMonitor = provider.GetRequiredService<IOptionsMonitor<GlobalValidatorConfig>>();
-                var configManager = new ConfigManager();
+                var configManager = new UIConfigManager();
                 configManager.Initialize(configMonitor, validatorMonitor);
                 return configManager;
             });
@@ -1077,7 +1077,7 @@ namespace RUINORERP.UI
             services.Configure<SystemGlobalConfig>(builder.GetSection(nameof(SystemGlobalConfig)));
             services.Configure<GlobalValidatorConfig>(builder.GetSection(nameof(GlobalValidatorConfig)));
 
-            services.AddSingleton(typeof(ConfigManager));
+            services.AddSingleton(typeof(UIConfigManager));
             //services.AddSingleton(typeof(MainForm_test));//MDI最大。才开一次才能单例
             services.AddSingleton(typeof(MainForm));//MDI最大。才开一次才能单例
                                                     // 注册工作流定义

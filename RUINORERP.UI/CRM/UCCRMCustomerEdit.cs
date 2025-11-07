@@ -425,7 +425,7 @@ namespace RUINORERP.UI.CRM
             }
 
             //通过动态配置得到。
-            ConfigManager configManager = Startup.GetFromFac<ConfigManager>();
+            UIConfigManager configManager = Startup.GetFromFac<UIConfigManager>();
 
 
             //“|”号隔开

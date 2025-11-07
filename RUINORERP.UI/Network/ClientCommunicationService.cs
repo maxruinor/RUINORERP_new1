@@ -72,8 +72,6 @@ namespace RUINORERP.UI.Network
         // 心跳管理器
         private readonly HeartbeatManager _heartbeatManager;
         private readonly ILogger<ClientCommunicationService> _logger;
-        // 配置管理器，用于处理配置同步
-        private readonly OptionsMonitorConfigManager _optionsMonitorConfigManager;
         
         // 客户端命令调度器，用于分发命令到对应的客户端处理类
 
@@ -161,7 +159,6 @@ namespace RUINORERP.UI.Network
             ISocketClient socketClient,
             ILogger<ClientCommunicationService> logger,
             TokenManager tokenManager,
-            OptionsMonitorConfigManager optionsMonitorConfigManager,
             IClientCommandDispatcher clientCommandDispatcher,
             HeartbeatManager heartbeatManager,
             ClientEventManager eventManager,
@@ -174,7 +171,6 @@ namespace RUINORERP.UI.Network
             _networkConfig = networkConfig ?? NetworkConfig.Default;
             _eventManager = eventManager ?? throw new ArgumentNullException(nameof(eventManager));
             this.tokenManager = tokenManager;
-            _optionsMonitorConfigManager = optionsMonitorConfigManager ?? throw new ArgumentNullException(nameof(optionsMonitorConfigManager));
             _commandHandlers = commandHandlers ?? Enumerable.Empty<ICommandHandler>();
             _heartbeatManager = heartbeatManager ?? throw new ArgumentNullException(nameof(heartbeatManager));
             // 初始化请求响应管理相关组件
@@ -1357,7 +1353,6 @@ namespace RUINORERP.UI.Network
                             _logger.LogDebug("接收到配置同步命令: {ConfigType}", configType);
                             
                             // 调用OptionsMonitorConfigManager处理配置同步
-                            _optionsMonitorConfigManager.HandleConfigSync(configType, configData);
                         }
                         else
                         {
@@ -1380,7 +1375,6 @@ namespace RUINORERP.UI.Network
                             _logger.LogDebug("接收到配置同步命令: {ConfigType}", configType);
                             
                             // 调用OptionsMonitorConfigManager处理配置同步
-                            _optionsMonitorConfigManager.HandleConfigSync(configType, configData);
                         }
                     }
                 }

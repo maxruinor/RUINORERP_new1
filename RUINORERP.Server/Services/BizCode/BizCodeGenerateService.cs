@@ -15,7 +15,7 @@ namespace RUINORERP.Server.Services.BizCode
     /// 业务编码服务实现
     /// 包装BNRFactory功能，提供业务编码生成服务
     /// </summary>
-    public class BizCodeGenerateService : IBizCodeGenerateService
+    public class BizCodeGenerateService 
     {
         private readonly BNRFactory _bnrFactory;
         

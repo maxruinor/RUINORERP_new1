@@ -203,7 +203,6 @@ namespace RUINORERP.Server
 
 
             // 注册业务编码生成相关服务
-            builder.RegisterType<BizCodeGenerator>(); // 注册原有的业务编码生成器
             builder.RegisterType<DatabaseSequenceService>().AsSelf().SingleInstance(); // 注册数据库序列服务
             
             // 初始化DatabaseSequenceService的批量更新阈值
@@ -231,7 +230,7 @@ namespace RUINORERP.Server
             builder.RegisterType<BNRFactory>().AsSelf().SingleInstance(); // 注册BNR工厂
             
             // 注册业务编码服务
-            builder.RegisterType<BizCodeGenerateService>().As<IBizCodeGenerateService>().SingleInstance(); // 注册业务编码服务
+            builder.RegisterType<BizCodeGenerateService>().AsSelf().SingleInstance(); // 注册业务编码服务
            
 
             // 配置日志服务

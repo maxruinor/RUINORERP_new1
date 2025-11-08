@@ -180,9 +180,15 @@ namespace RUINORERP.Business.DI
                 .As(typeof(GenericConfigVersionService<>))
                 .InstancePerDependency()
                 .PropertiesAutowired();
-
             
- 
+            // 为ConfigManagerService添加单独的注册，禁用接口拦截
+            // 这是因为ConfigManagerService实现的接口可能不是公开可见的，或者有其他问题导致不能使用接口拦截
+            builder.RegisterType<ConfigManagerService>()
+                .As<IConfigManagerService>()
+                .AsSelf()
+                .PropertiesAutowired()
+                .InstancePerDependency();
+             
             AddBizMapperService(builder);
         }
 

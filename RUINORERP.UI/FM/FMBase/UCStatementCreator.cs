@@ -86,6 +86,9 @@ namespace RUINORERP.UI.FM
         // 保存当前选择的对账类型
         private StatementType CurrentStatementType { get; set; }
 
+        /// <summary>
+        /// 动态创建对账类型的下拉选项
+        /// </summary>
         private void AddPaymentTypeToQueryPanel()
         {
             try
@@ -131,17 +134,26 @@ namespace RUINORERP.UI.FM
                 // 添加选择变化事件
                 cmbPaymentType.SelectedIndexChanged += (s, e) =>
                 {
-                    // 更新当前对账类型
-                    CurrentStatementType = (StatementType)cmbPaymentType.SelectedIndex;
-
-                    // 根据选择的对账类型设置PaymentType（用于生成对账单时使用）
-                    if (CurrentStatementType == StatementType.收款对账)
-                        PaymentType = ReceivePaymentType.收款;
-                    else if (CurrentStatementType == StatementType.付款对账)
-                        PaymentType = ReceivePaymentType.付款;
-                    // 余额对账时PaymentType的值将由最终余额决定，这里暂时设为收款
-                    else
-                        PaymentType = ReceivePaymentType.收款;
+                    // 更新当前对账类型，根据下拉框选择正确映射到枚举值
+                    switch (cmbPaymentType.SelectedIndex)
+                    {
+                        case 0: // 余额对账
+                            CurrentStatementType = StatementType.余额对账;
+                            PaymentType = ReceivePaymentType.收款; // 余额对账时暂时设为收款
+                            break;
+                        case 1: // 收款对账
+                            CurrentStatementType = StatementType.收款对账;
+                            PaymentType = ReceivePaymentType.收款;
+                            break;
+                        case 2: // 付款对账
+                            CurrentStatementType = StatementType.付款对账;
+                            PaymentType = ReceivePaymentType.付款;
+                            break;
+                        default:
+                            CurrentStatementType = StatementType.余额对账;
+                            PaymentType = ReceivePaymentType.收款;
+                            break;
+                    }
 
                     // 刷新查询条件和数据
                     BuildLimitQueryConditions();
@@ -477,7 +489,7 @@ namespace RUINORERP.UI.FM
         {
 
             /*
-             - **总体原则**：根据选中数据的总余额正负值，系统自动决定生成收款对账单或付款对账单
+             - **总体原则**：如果对账类型为余额对账，则根据选中数据的总余额正负值，系统自动决定生成收款对账单或付款对账单
             - **具体计算方法**：
               - 系统通过对应收款单和应付款单金额进行冲销抵扣，计算出总金额
               - 收款类型数据作为进项，使用加法计算
@@ -493,9 +505,29 @@ namespace RUINORERP.UI.FM
             {
                 List<tb_FM_ReceivablePayable> list = RealList ?? new List<tb_FM_ReceivablePayable>();
 
-                // 余额对账模式下，调整查询结果中的金额正负值
-                if (CurrentStatementType == StatementType.余额对账)
+                // 根据不同的对账类型处理
+                if (CurrentStatementType == StatementType.收款对账)
                 {
+                    // 收款对账直接返回收款类型
+                    return ReceivePaymentType.收款;
+                }
+                else if (CurrentStatementType == StatementType.付款对账)
+                {
+                    // 付款对账直接返回付款类型
+                    return ReceivePaymentType.付款;
+                }
+                else if (CurrentStatementType == StatementType.余额对账)
+                {
+                    // 余额对账需要根据RealList中的类型来判断处理方式
+                    var receivePaymentTypes = list.Select(x => x.ReceivePaymentType).Distinct().ToList();
+                    
+                    // 如果只有一种类型，则直接使用该类型
+                    if (receivePaymentTypes.Count == 1)
+                    {
+                        return (ReceivePaymentType)receivePaymentTypes.First();
+                    }
+                    
+                    // 如果有两种类型，则按现有逻辑通过余额对冲后的结果来决定方向
                     List<tb_FM_ReceivablePayable> adjustedList = new List<tb_FM_ReceivablePayable>();
                     foreach (var item in list)
                     {
@@ -534,21 +566,26 @@ namespace RUINORERP.UI.FM
 
                     // 使用调整后的数据列表
                     list = adjustedList;
-                }
-                statementType = ReceivePaymentType.付款;
-                var LastAmount = list.Sum(c => c.LocalBalanceAmount);
-                if (LastAmount > 0)
-                {
-                    statementType = ReceivePaymentType.收款;
-                }
-                if (LastAmount < 0)
-                {
-                    statementType = ReceivePaymentType.付款;
+                    
+                    var LastAmount = list.Sum(c => c.LocalBalanceAmount);
+                    if (LastAmount > 0)
+                    {
+                        statementType = ReceivePaymentType.收款;
+                    }
+                    else if (LastAmount < 0)
+                    {
+                        statementType = ReceivePaymentType.付款;
+                    }
+                    else
+                    {
+                        // 余额为0时，默认使用收款类型
+                        statementType = ReceivePaymentType.收款;
+                    }
                 }
             }
             catch (Exception ex)
             {
-                MainForm.Instance.logger.LogError(ex, "绑定查询结果到UI时发生错误");
+                MainForm.Instance.logger.LogError(ex, "获取对账单类型时发生错误");
             }
 
             return statementType;

@@ -1,4 +1,4 @@
-﻿﻿using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.IdentityModel.Tokens;
@@ -26,15 +26,33 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
 
         public async Task<TokenInfo> GenerateAndStoreTokenAsync(string userId, string userName, IDictionary<string, object> claims = null)
         {
-            var token = _tokenService.GenerateToken(userId, userName, claims);
-            var tokenInfo = new TokenInfo 
-            { 
-                AccessToken = token,
-                ExpiresAt = DateTime.Now.AddHours(8)
-            };
-            
-            await _tokenStorage.SetTokenAsync(tokenInfo);
-            return tokenInfo;
+            // 如果TokenService支持生成令牌对（访问令牌和刷新令牌）
+            if (_tokenService is JwtTokenService jwtTokenService)
+            {
+                var tokens = jwtTokenService.GenerateTokens(userId, userName, claims);
+                var tokenInfo = new TokenInfo 
+                { 
+                    AccessToken = tokens.AccessToken,
+                    RefreshToken = tokens.RefreshToken,
+                    ExpiresAt = DateTime.Now.AddHours(8)
+                };
+                
+                await _tokenStorage.SetTokenAsync(tokenInfo);
+                return tokenInfo;
+            }
+            else
+            {
+                // 兼容旧版本，仅生成访问令牌
+                var token = _tokenService.GenerateToken(userId, userName, claims);
+                var tokenInfo = new TokenInfo 
+                { 
+                    AccessToken = token,
+                    ExpiresAt = DateTime.Now.AddHours(8)
+                };
+                
+                await _tokenStorage.SetTokenAsync(tokenInfo);
+                return tokenInfo;
+            }
         }
 
         public async Task<TokenValidationResult> ValidateStoredTokenAsync()

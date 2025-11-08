@@ -66,9 +66,18 @@ namespace RUINORERP.Business.Cache
                 syncInfo.DataCount = dataCount;
                 syncInfo.EstimatedSize = estimatedSize;
                 syncInfo.LastUpdateTime = DateTime.Now;
-
-                _logger?.LogDebug("已更新表 {TableName} 的缓存同步元数据: 数据数量={DataCount}, 估计大小={EstimatedSize} 字节",
-                    tableName, dataCount, estimatedSize);
+                
+                // 特殊处理空表情况，确保空表缓存也能被正确记录和管理
+                if (dataCount == 0)
+                {
+                    _logger?.LogDebug("已更新空表 {TableName} 的缓存同步元数据: 数据数量=0, 估计大小={EstimatedSize} 字节",
+                        tableName, estimatedSize);
+                }
+                else
+                {
+                    _logger?.LogDebug("已更新表 {TableName} 的缓存同步元数据: 数据数量={DataCount}, 估计大小={EstimatedSize} 字节",
+                        tableName, dataCount, estimatedSize);
+                }
             }
             catch (Exception ex)
             {
@@ -245,9 +254,14 @@ namespace RUINORERP.Business.Cache
                     return false;
                 }
 
-                // 有效的标准是：有数据行数且更新时间合理
-                bool isIntegrity = syncInfo.DataCount > 0 && 
-                                   syncInfo.LastUpdateTime > DateTime.MinValue;
+                // 有效的标准是：更新时间合理，且如果有数据行数（包括0）记录
+                // 将空表（DataCount=0）也视为有效的缓存，避免频繁查询数据库
+                bool isIntegrity = syncInfo.LastUpdateTime > DateTime.MinValue;
+                
+                // 记录空表缓存验证情况
+                if (syncInfo.DataCount == 0) {
+                    _logger?.LogDebug("表 {TableName} 为空表，缓存已验证为完整（DataCount=0）", tableName);
+                }
                 
                 if (!isIntegrity)
                 {

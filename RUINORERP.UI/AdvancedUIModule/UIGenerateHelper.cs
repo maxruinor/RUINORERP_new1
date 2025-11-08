@@ -672,7 +672,9 @@ namespace RUINORERP.UI.AdvancedUIModule
                             newDto.SetPropertyValue(dtpKeyName1, datetimeValue1);
                         }
                         DataBindingHelper.BindData4DataTime(newDto, datetimeValue1, dtpKeyName1, dtpgroup.dtp1, true);
-        
+                        // 确保控件可见
+                        dtpgroup.dtp1.Visible = true;
+                        dtpgroup.dtp1.ShowCheckBox = true;
 
                         dtpgroup.dtp2.Name = dtpKeyName2;
                         object datetimeValue2 = ReflectionHelper.GetPropertyValue(newDto, dtpKeyName2);
@@ -683,6 +685,9 @@ namespace RUINORERP.UI.AdvancedUIModule
                             dtpgroup.dtp2.Value = System.DateTime.Now.AddDays(queryField.DiffDays2.Value);
                         }
                         DataBindingHelper.BindData4DataTime(newDto, datetimeValue2, dtpKeyName2, dtpgroup.dtp2, true);
+                        // 确保控件可见
+                        dtpgroup.dtp2.Visible = true;
+                        dtpgroup.dtp2.ShowCheckBox = true;
 
 
                         //如果时间区间的参数不为空。看参数里设置默认选中情况
@@ -714,6 +719,8 @@ namespace RUINORERP.UI.AdvancedUIModule
                     
                         //时间控件更长为260px，这里要特殊处理
                         dtpgroup.Location = new System.Drawing.Point(_x, _y);
+                        dtpgroup.Size = new System.Drawing.Size(260, 25); // 确保大小正确
+                        dtpgroup.Visible = true; // 确保控件可见
                         _x = _x + 260;
                         UcPanel.Controls.Add(dtpgroup);
                         UcPanel.Controls.Add(lbl);

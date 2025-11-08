@@ -274,12 +274,21 @@ namespace RUINORERP.Server.Controls
 
                 // 使用配置管理器服务保存配置（服务内部会处理加密和文件路径）
                 // 使用反射调用泛型SaveConfig方法，避免BaseConfig作为泛型参数的编译错误
-                MethodInfo saveMethod = _configManagerService.GetType().GetMethod("SaveConfig", new[] { _currentConfigType, typeof(string) });
+                // 使用更精确的方法查找，获取带有两个参数的SaveConfig泛型方法
+                MethodInfo saveMethod = typeof(IConfigManagerService)
+                    .GetMethods()
+                    .Where(m => m.Name == "SaveConfig" && m.IsGenericMethod && m.GetParameters().Length == 2)
+                    .FirstOrDefault();
+                
                 bool saveResult = false;
                 if (saveMethod != null)
                 {
                     saveMethod = saveMethod.MakeGenericMethod(_currentConfigType);
                     saveResult = (bool)saveMethod.Invoke(_configManagerService, new object[] { _currentConfig, _currentConfigType.Name });
+                }
+                else
+                {
+                    _logger?.LogError("未找到匹配的SaveConfig方法");
                 }
                 
                 if (!saveResult)
@@ -516,7 +525,19 @@ namespace RUINORERP.Server.Controls
                 _logger?.LogInformation("开始加载配置文件: {FileName}, 类型: {ConfigType}", fileName, configType.Name);
                 
                 // 调用配置管理器服务的LoadConfig方法，使用反射以支持任意配置类型
-                MethodInfo loadMethod = typeof(IConfigManagerService).GetMethod("LoadConfig", Type.EmptyTypes);
+                // 使用更精确的方法查找，获取无参数版本的LoadConfig泛型方法
+                MethodInfo loadMethod = typeof(IConfigManagerService)
+                    .GetMethods()
+                    .Where(m => m.Name == "LoadConfig" && m.IsGenericMethod && m.GetParameters().Length == 0)
+                    .FirstOrDefault();
+                
+                if (loadMethod == null)
+                {
+                    _logger?.LogError("未找到匹配的LoadConfig方法");
+                    CreateDefaultConfiguration(configType, fileName, rootNode);
+                    return;
+                }
+                
                 MethodInfo genericLoadMethod = loadMethod.MakeGenericMethod(configType);
                 
                 BaseConfig config = genericLoadMethod.Invoke(_configManagerService, null) as BaseConfig;

@@ -270,22 +270,18 @@ namespace RUINORERP.UI.FM
                 entity.ARAPStatus = (int)ARAPStatus.草稿;
                 entity.ReceivePaymentType = (int)PaymentType;
                 entity.ActionStatus = ActionStatus.新增;
+                entity.DocumentDate = System.DateTime.Now;
+                entity.BusinessDate = System.DateTime.Now;
 
-                //    entity.DocumentDate = System.DateTime.Now;
-                //}
-                //if (!entity.BusinessDate.HasValue)
-                //{
-                //    entity.BusinessDate = System.DateTime.Now;
-                //}
                 //默认新建的都是费用，
                 //明细一开始就是大于0的，则是转单过来的。则不是费用
-                    if (entity.tb_FM_ReceivablePayableDetails.Count > 0)
+                if (entity.tb_FM_ReceivablePayableDetails != null && entity.tb_FM_ReceivablePayableDetails.Count > 0)
                 {
                     entity.IsExpenseType = false;
                 }
                 else
                 {
-                    entity.IsExpenseType = false;
+                    entity.IsExpenseType = true;
                 }
 
 
@@ -957,7 +953,7 @@ namespace RUINORERP.UI.FM
                 return;
             }
 
-            
+
             CommonUI.frmGenericOpinion<tb_FM_ReceivablePayable> frm = new();
             frm.FormTitle = "坏账处理";
             frm.OpinionLabelText = "坏账原因：";

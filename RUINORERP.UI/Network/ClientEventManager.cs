@@ -45,12 +45,12 @@ namespace RUINORERP.UI.Network
         public event Action ReconnectFailed;
 
         public event Action<string, TimeSpan> RequestCompleted; // 新增：请求完成事件
-        
+
         // 专门用于服务器推送命令的事件
         public event Action<PacketModel, object> ServerPushCommandReceived;
-        
+
         // 专门用于特定命令的事件
-        private readonly Dictionary<CommandId, Action<PacketModel, object>> _specificCommandHandlers = 
+        private readonly Dictionary<CommandId, Action<PacketModel, object>> _specificCommandHandlers =
             new Dictionary<CommandId, Action<PacketModel, object>>();
 
         public void OnRequestCompleted(string requestId, TimeSpan duration)
@@ -93,7 +93,7 @@ namespace RUINORERP.UI.Network
                 }
             }
         }
-        
+
         /// <summary>
         /// 取消订阅特定命令
         /// </summary>
@@ -113,7 +113,7 @@ namespace RUINORERP.UI.Network
                 }
             }
         }
-        
+
         /// <summary>
         /// 触发服务器推送命令事件
         /// </summary>
@@ -122,7 +122,7 @@ namespace RUINORERP.UI.Network
         public void OnServerPushCommandReceived(PacketModel packet, object data)
         {
             ServerPushCommandReceived?.Invoke(packet, data);
-            
+
             // 触发特定命令处理
             lock (_lock)
             {
@@ -211,7 +211,7 @@ namespace RUINORERP.UI.Network
             if (handler == null)
             {
                 // 如果没有注册错误处理程序，则记录到日志
-                LogException(ex, "未处理的异常");
+                LogException(ex, "未处理的异常:" + ex.Message);
                 return;
             }
 

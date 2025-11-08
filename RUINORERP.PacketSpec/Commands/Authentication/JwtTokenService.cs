@@ -36,13 +36,13 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
         }
 
         /// <summary>
-        /// 生成JWT令牌
+        /// 生成JWT访问令牌
         /// </summary>
         /// <param name="userId">用户ID</param>
         /// <param name="userName">用户名</param>
         /// <param name="additionalClaims">附加声明（可选）</param>
-        /// <returns>生成的JWT令牌字符串</returns>
-        public string GenerateToken(string userId, string userName, IDictionary<string, object> additionalClaims = null)
+        /// <returns>生成的JWT访问令牌字符串</returns>
+        public string GenerateAccessToken(string userId, string userName, IDictionary<string, object> additionalClaims = null)
         {
             var claims = new List<Claim>
             {
@@ -137,6 +137,10 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
                     ExpiresAt = result.ExpiryTime ?? DateTime.MinValue,
                     TokenType = "Bearer"
                 };
+                
+                // 检查是否是刷新令牌
+                var isRefreshToken = principal.FindFirst("token_type")?.Value == "refresh";
+                result.IsRefreshToken = isRefreshToken;
 
                 return result;
             }
@@ -161,13 +165,58 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
         }
 
         /// <summary>
-        /// 刷新JWT令牌
+        /// 生成刷新令牌
+        /// 刷新令牌是一个长期有效的令牌，用于在访问令牌过期后获取新的访问令牌
+        /// </summary>
+        /// <param name="userId">用户ID</param>
+        /// <param name="userName">用户名</param>
+        /// <returns>生成的刷新令牌</returns>
+        public string GenerateRefreshToken(string userId, string userName)
+        {
+            var claims = new List<Claim>
+            {
+                new Claim(JwtRegisteredClaimNames.Sub, userId),
+                new Claim(JwtRegisteredClaimNames.UniqueName, userName),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                new Claim("token_type", "refresh") // 添加token_type声明，标识这是一个刷新令牌
+            };
+
+            // 刷新令牌的过期时间可以设置得更长，例如7天
+            var expires = DateTime.Now.AddDays(7);
+
+            var token = new JwtSecurityToken(
+                issuer: _options.Issuer,
+                audience: _options.Audience,
+                claims: claims,
+                expires: expires,
+                signingCredentials: _signingCredentials
+            );
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
+        /// <summary>
+        /// 生成令牌对（访问令牌和刷新令牌）
+        /// </summary>
+        /// <param name="userId">用户ID</param>
+        /// <param name="userName">用户名</param>
+        /// <param name="additionalClaims">附加声明（可选）</param>
+        /// <returns>包含访问令牌和刷新令牌的元组</returns>
+        public (string AccessToken, string RefreshToken) GenerateTokens(string userId, string userName, IDictionary<string, object> additionalClaims = null)
+        {
+            var accessToken = GenerateAccessToken(userId, userName, additionalClaims);
+            var refreshToken = GenerateRefreshToken(userId, userName);
+            return (AccessToken: accessToken, RefreshToken: refreshToken);
+        }
+
+        /// <summary>
+        /// 刷新JWT令牌对
         /// </summary>
         /// <param name="refreshToken">刷新令牌</param>
-        /// <returns>新生成的访问令牌</returns>
+        /// <returns>包含新访问令牌和新刷新令牌的元组</returns>
         /// <exception cref="ArgumentException">当刷新令牌为空时抛出</exception>
         /// <exception cref="SecurityTokenException">当令牌验证失败时抛出</exception>
-        public string RefreshToken(string refreshToken)
+        public (string AccessToken, string RefreshToken) RefreshTokens(string refreshToken)
         {
             if (string.IsNullOrEmpty(refreshToken))
                 throw new ArgumentException("刷新Token不能为空", nameof(refreshToken));
@@ -177,8 +226,19 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
             if (!refreshValidation.IsValid)
                 throw new SecurityTokenException($"刷新Token无效: {refreshValidation.ErrorMessage}");
 
-            // 生成新的访问Token，保持用户信息一致
-            return GenerateToken(refreshValidation.UserId, refreshValidation.UserName);
+            // 生成新的令牌对，保持用户信息一致
+            return GenerateTokens(refreshValidation.UserId, refreshValidation.UserName);
+        }
+
+        /// <summary>
+        /// 刷新JWT访问令牌（兼容旧接口）
+        /// </summary>
+        /// <param name="refreshToken">刷新令牌</param>
+        /// <returns>新生成的访问令牌</returns>
+        public string RefreshToken(string refreshToken)
+        {
+            var tokens = RefreshTokens(refreshToken);
+            return tokens.AccessToken;
         }
 
         /// <summary>
@@ -190,6 +250,18 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
         {
             // 简化实现，实际项目中应使用Redis等存储被撤销的Token
             // 此处仅作为接口实现占位
+        }
+        
+        /// <summary>
+        /// 生成JWT令牌（兼容旧方法，内部调用GenerateAccessToken）
+        /// </summary>
+        /// <param name="userId">用户ID</param>
+        /// <param name="userName">用户名</param>
+        /// <param name="additionalClaims">附加声明（可选）</param>
+        /// <returns>生成的JWT令牌字符串</returns>
+        public string GenerateToken(string userId, string userName, IDictionary<string, object> additionalClaims = null)
+        {
+            return GenerateAccessToken(userId, userName, additionalClaims);
         }
     }
 }

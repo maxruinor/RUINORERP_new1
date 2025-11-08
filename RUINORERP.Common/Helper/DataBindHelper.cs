@@ -466,9 +466,10 @@ namespace RUINORERP.Common.Helper
             //数据源的数据类型转换为控件要求的数据类型。
             dtpdata.Format += (s, args) =>
             {
-                if (args.Value == null || args.Value.ToString() == "0001-01-01 00:00:00")
+                if (args.Value == null || args.Value.ToString() == "0001-01-01 00:00:00" || string.IsNullOrEmpty(args.Value.ToString()))
                 {
-                    args.Value = " ";
+                    // 不要设置空格式，而是设置默认值
+                    args.Value = DateTime.Now;
                 }
 
             };
@@ -480,11 +481,12 @@ namespace RUINORERP.Common.Helper
             dtp.Validating += dtp_Validating;
             dtp.ValueChanged += Dtp_CheckedChanged;
 
-            if (datetimeValue == null)
-            {
-                dtp.Format = DateTimePickerFormat.Custom;
-                dtp.CustomFormat = "   ";
-            }
+            // 不要设置空格式，保持默认格式
+            //if (datetimeValue == null)
+            //{
+            //    dtp.Format = DateTimePickerFormat.Custom;
+            //    dtp.CustomFormat = "   ";
+            //}
 
             dtp.DataBindings.Add(dtpdata);
         }

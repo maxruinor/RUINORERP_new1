@@ -2300,7 +2300,6 @@
     <Compile Include="Network\ErrorHandling\TimeoutErrorHandlingStrategy.cs" />
     <Compile Include="Network\Exceptions\NetworkCommunicationException.cs" />
     <Compile Include="Network\HeartbeatManager.cs" />
-    <Compile Include="Network\Interfaces\IConfigurationManager.cs" />
     <Compile Include="Network\ISocketClient.cs" />
     <Compile Include="Network\ClientCommunicationService.cs" />
     <Compile Include="Network\NetworkConfig.cs" />
@@ -2315,7 +2314,6 @@
     <Compile Include="Network\Services\Cache\CacheResponseProcessor.cs" />
     <Compile Include="Network\Services\Cache\CacheUtility.cs" />
     <Compile Include="Network\Services\Cache\UICacheSubscriptionManager.cs" />
-    <Compile Include="Network\Services\ConfigurationManager.cs" />
     <Compile Include="Network\Services\FileManagementController.cs" />
     <Compile Include="Network\Services\FileManagementService.cs" />
     <Compile Include="Network\Services\FileStorageInfoService.cs" />
@@ -2354,7 +2352,6 @@
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Startup.cs" />
-    <Compile Include="SysConfig\OptionsMonitorConfigManager.cs" />
     <Compile Include="UControls\JsonViewer.cs" />
     <Compile Include="UControls\JsonViewer.Designer.cs">
       <DependentUpon>JsonViewer.cs</DependentUpon>
@@ -2992,7 +2989,7 @@
       <DependentUpon>UCPermissionConfig.cs</DependentUpon>
     </Compile>
     <Compile Include="StatusBusy.cs" />
-    <Compile Include="SysConfig\ConfigManager.cs" />
+    <Compile Include="SysConfig\UIConfigManager.cs" />
     <Compile Include="SysConfig\DataImportExportManager.cs" />
     <Compile Include="SysConfig\UCButtonInfoEdit.cs">
       <SubType>Form</SubType>

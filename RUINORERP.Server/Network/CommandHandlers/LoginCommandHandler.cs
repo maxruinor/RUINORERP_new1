@@ -344,10 +344,23 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 }
 
                 // 使用TokenService刷新Token
-                string newToken;
+                string newAccessToken;
+                string newRefreshToken;
                 try
                 {
-                    newToken = TokenService.RefreshToken(refreshToken);
+                    // 使用新的RefreshTokens方法获取令牌对
+                    if (TokenService is JwtTokenService jwtTokenService)
+                    {
+                        var tokens = jwtTokenService.RefreshTokens(refreshToken);
+                        newAccessToken = tokens.AccessToken;
+                        newRefreshToken = tokens.RefreshToken;
+                    }
+                    else
+                    {
+                        // 兼容旧版本，使用RefreshToken方法
+                        newAccessToken = TokenService.RefreshToken(refreshToken);
+                        newRefreshToken = newAccessToken; // 旧版本下刷新令牌与访问令牌相同
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -359,8 +372,8 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 {
                     IsSuccess = true,
                     Message = "Token刷新成功",
-                    NewAccessToken = newToken,
-                    NewRefreshToken = newToken, // 在简化版本中，我们可能需要调整这个逻辑
+                    NewAccessToken = newAccessToken,
+                    NewRefreshToken = newRefreshToken, // 现在使用独立的刷新令牌
                     ExpireTime = DateTime.Now.AddHours(8)
                 };
 
@@ -745,11 +758,25 @@ namespace RUINORERP.Server.Network.CommandHandlers
             try
             {
                 // 使用TokenService进行Token刷新
-                var newToken = TokenService.RefreshToken(refreshToken);
-
-                if (!string.IsNullOrEmpty(newToken))
+                if (TokenService is JwtTokenService jwtTokenService)
                 {
-                    return (true, newToken, null);
+                    // 使用新的RefreshTokens方法获取令牌对
+                    var tokens = jwtTokenService.RefreshTokens(refreshToken);
+                    
+                    if (!string.IsNullOrEmpty(tokens.AccessToken))
+                    {
+                        return (true, tokens.AccessToken, null);
+                    }
+                }
+                else
+                {
+                    // 兼容旧版本，使用RefreshToken方法
+                    var newToken = TokenService.RefreshToken(refreshToken);
+                    
+                    if (!string.IsNullOrEmpty(newToken))
+                    {
+                        return (true, newToken, null);
+                    }
                 }
 
                 return (false, null, "无法生成有效的刷新令牌");

@@ -149,14 +149,20 @@ namespace RUINORERP.UI.UserPersonalized
                         object datetimeValue1 = ReflectionHelper.GetPropertyValue(TargetEntityDto, queryField.ExtendedAttribute[0].ColName);
                         DataBindingHelper.BindData4DataTime(TargetEntityDto, datetimeValue1, queryField.ExtendedAttribute[0].ColName, dtpgroup.dtp1, true);
                         dtpgroup.dtp1.Checked = true;
+                        dtpgroup.dtp1.Visible = true; // 确保控件可见
+                        dtpgroup.dtp1.ShowCheckBox = true; // 确保显示复选框
 
                         dtpgroup.dtp2.Name = queryField.ExtendedAttribute[1].ColName;
                         object datetimeValue2 = ReflectionHelper.GetPropertyValue(TargetEntityDto, queryField.ExtendedAttribute[1].ColName);
                         DataBindingHelper.BindData4DataTime(TargetEntityDto, datetimeValue2, queryField.ExtendedAttribute[1].ColName, dtpgroup.dtp2, true);
                         dtpgroup.dtp2.Checked = true;
+                        dtpgroup.dtp2.Visible = true; // 确保控件可见
+                        dtpgroup.dtp2.ShowCheckBox = true; // 确保显示复选框
+                        
                         //时间控件更长为260px，这里要特殊处理
                         dtpgroup.Location = new System.Drawing.Point(txtDefault1.Location.X, txtDefault1.Location.Y);
-                        dtpgroup.Size = new System.Drawing.Size(260, 100);
+                        dtpgroup.Size = new System.Drawing.Size(260, 25); // 确保大小正确
+                        dtpgroup.Visible = true; // 确保控件可见
                         this.Controls.Add(dtpgroup);
 
                         #endregion

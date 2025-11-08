@@ -9,7 +9,8 @@ using RUINORERP.PacketSpec.Models.Requests;
 using System;
 using Microsoft.Extensions.Logging;
 using System.Dynamic;
-using RUINORERP.UI.SysConfig;
+using RUINORERP.Business.Config;
+using RUINORERP.Model.ConfigModel;
 
 namespace RUINORERP.UI.Network.ClientCommandHandlers
 {
@@ -187,12 +188,10 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                             case "SystemGlobalConfig":
                                 await _configManagerService.LoadConfigFromJsonAsync<SystemGlobalConfig>(configDataJson);
                                 break;
-                            case "UIConfig":
-                                await _configManagerService.LoadConfigFromJsonAsync<UIConfig>(configDataJson);
+                            case "GlobalValidatorConfig":
+                                await _configManagerService.LoadConfigFromJsonAsync<GlobalValidatorConfig>(configDataJson);
                                 break;
-                            case "DBConfig":
-                                await _configManagerService.LoadConfigFromJsonAsync<DBConfig>(configDataJson);
-                                break;
+
                             default:
                                 _logger.LogWarning("未知的配置类型: {ConfigType}", configType);
                                 break;

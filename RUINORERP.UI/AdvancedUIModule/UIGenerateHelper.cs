@@ -44,11 +44,6 @@ namespace RUINORERP.UI.AdvancedUIModule
 {
     public class UIGenerateHelper
     {
-        //public static BaseEntity CreateQueryUI<Q>(bool useLike, Krypton.Toolkit.KryptonPanel UcPanel, QueryFilter queryFilter, decimal DefineColNum) where Q : class
-        //{
-        //    return CreateQueryUI(typeof(Q), useLike, UcPanel, queryFilter, DefineColNum);
-        //}
-
 
         public static BaseEntity CreateQueryUI(Type type, bool useLike, Krypton.Toolkit.KryptonPanel UcPanel, QueryFilter queryFilter, decimal DefineColNum)
         {
@@ -70,7 +65,6 @@ namespace RUINORERP.UI.AdvancedUIModule
             {
                 queryConditions = menuPersonalization.tb_UIQueryConditions;
             }
-
 
             List<QueryField> queryFields = queryFilter.QueryFields;
             if (queryFilter == null)
@@ -124,7 +118,7 @@ namespace RUINORERP.UI.AdvancedUIModule
 
             Type newtype = null;
             object newDto = null;
-            newtype = AttributesBuilder_New2024(type, queryFilter);
+            newtype = UIQueryPropertyBuilder.AttributesBuilder_New2024(type, queryFilter);
             newDto = Activator.CreateInstance(newtype);
 
             BaseEntity Query = newDto as BaseEntity;
@@ -225,7 +219,6 @@ namespace RUINORERP.UI.AdvancedUIModule
                 #endregion
             }
 
-
             #region 定义表格布局的行和列
             //把时间排后面
             queryFields = queryFields.OrderBy(d => d.ExtendedAttribute.Count).ToList();
@@ -268,74 +261,77 @@ namespace RUINORERP.UI.AdvancedUIModule
                 TotalRows = rows;
             }
 
-            //==
-
             #endregion
 
-
-
-            int _x = 0, _y = 0, _Tabindex = 210;
+            int _x = 20, _y = 20, _Tabindex = 210;
             Stopwatch sw = new Stopwatch();
             sw.Start();
+
+            //计算每列的宽度 - 调整列间距为15像素
+            int spacing = 15; // 列间距设为15像素
+            int baseColumnWidth = (UcPanel.Width - 40 + spacing * (RowOfColNum - 1)) / RowOfColNum; // 基础列宽计算
+            //baseColumnWidth = 200;
+            // 创建数组存储每列的最大宽度（用于特殊处理日期组合控件）
+            int[] maxColumnWidths = new int[RowOfColNum];
+            for (int i = 0; i < RowOfColNum; i++)
+            {
+                maxColumnWidths[i] = baseColumnWidth; // 初始化为基础列宽
+            }
 
             //保存一起每一行第一列的X的起点
             List<int> xList = new List<int>();
 
             for (int c = 0; c < queryFields.Count; c++)
             {
-
-
+                // 根据当前索引计算行列位置
+                int currentRow = c / RowOfColNum;
+                int currentCol = c % RowOfColNum;
+                int controlTotalWidth = 0; // 控制总宽度变量，用于更新列宽
+                
+                // 计算累计的X偏移量，考虑前面所有列的最大宽度
+                int cumulativeX = 20;
+                for (int i = 0; i < currentCol; i++)
+                {
+                    cumulativeX += maxColumnWidths[i];
+                }
+                
+                // 设置当前控件的X和Y坐标
+                _x = cumulativeX;
+                _y = 20 + currentRow * 32; // 32为行高
+                
                 QueryField queryField = queryFields[c];
+                _Tabindex = currentCol + currentRow + _Tabindex;
 
-                //当前所在列
-                int currentColIndex = (c % RowOfColNum) + 1;
-
-
-                _x = 20 + c % RowOfColNum * 250;//计算控件在X轴位置
-
-                int maxtextLen = GetTargetColumnData(queryFields, RowOfColNum, currentColIndex).Max(t => t.Caption.Length);
+                int currentColIndex = currentCol + 1;
+                int maxtextLen = UIQueryPropertyBuilder.GetTargetColumnData(queryFields, RowOfColNum, currentColIndex).Max(t => t.Caption.Length);
 
                 if (queryField.Caption.Length < maxtextLen)
                 {
                     // 使用 PadLeft 方法将字符串左边补空格，达到 maxtextLen 的长度,使用全角空格进行填充
                     queryField.Caption = queryField.Caption.PadLeft(maxtextLen, '　');
-                    //_x = _x + (maxtextLen - queryField.Caption.Length) * 18;
                 }
-                if (c % RowOfColNum == 0)
-                {
-                    _y = 20 + 32 * c / RowOfColNum;//计算控件在Y轴的位置
-                }
-                _Tabindex = c % RowOfColNum + c / RowOfColNum + _Tabindex;
-
-                if (xList.Count > 0 && c % RowOfColNum == 0 && c > 0)
-                {
-                    //第二行起时
-                    _x = xList[0];
-                }
-                KryptonLabel lbl = new KryptonLabel();
-                lbl.Text = queryField.Caption;
-                // 获取Graphics对象
-                Graphics graphics = UcPanel.CreateGraphics();
-
-                // 计算文本宽度
-                float textWidth = UITools.CalculateTextWidth(lbl.Text, lbl.Font, graphics);
-                // 设置Label的宽度
-                lbl.Width = (int)textWidth + 10; // 加上一些额外的空间
-
-
-                //lbl.Dock = DockStyle.Right;
-                lbl.Size = new Size(100, 30);
-                lbl.Location = new System.Drawing.Point(_x, _y);
-
-                if (c % RowOfColNum == 0)
+                
+                // 保存每行第一个控件的X坐标
+                if (currentCol == 0)
                 {
                     xList.Add(_x);
                 }
-
-                //一行控件平行
-                //一个字算18px
-                //_x = _x + 18 * queryField.Caption.Length;
-                _x = _x + (textWidth / queryField.Caption.Length).ToInt() * queryField.Caption.Length + 7;
+                KryptonLabel lbl = new KryptonLabel();
+                lbl.Text = queryField.Caption;
+                
+                // 获取Graphics对象计算文本宽度
+                Graphics graphics = UcPanel.CreateGraphics();
+                float textWidth = UITools.CalculateTextWidth(lbl.Text, lbl.Font, graphics);
+                
+                // 设置Label的宽度
+                int labelWidth = (int)textWidth + 10; // 加上一些额外的空间
+                lbl.Width = labelWidth;
+                
+                // 设置标签位置
+                lbl.Location = new System.Drawing.Point(_x, _y);
+                
+                // 计算控件起始位置，考虑标签宽度 - 间距减少
+                _x = _x + labelWidth + 2; // 标签和控件之间留2px间距（减少为原来的约三分之一）
 
                 DataBindingHelper dbh = new DataBindingHelper();
                 KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
@@ -401,6 +397,17 @@ namespace RUINORERP.UI.AdvancedUIModule
                         tb_box_cmb.Location = new System.Drawing.Point(_x, _y);
                         UcPanel.Controls.Add(tb_box_cmb);
                         UcPanel.Controls.Add(lbl);
+                        
+                        // 特殊处理：更新当前列的最大宽度
+                        currentCol = c % RowOfColNum;
+                        controlTotalWidth = labelWidth + tb_box_cmb.Width + 10; // 标签宽度 + 控件宽度 + 一些额外空间
+                        if (controlTotalWidth > maxColumnWidths[currentCol])
+                        {
+                            maxColumnWidths[currentCol] = controlTotalWidth;
+                        }
+                        
+                        // 更新_x位置，添加控件间距（3像素）
+                        _x = _x + tb_box_cmb.Width + 3; // 控件间距设为3像素
                         #endregion
                         break;
 
@@ -461,6 +468,17 @@ namespace RUINORERP.UI.AdvancedUIModule
                         choiceCanIgnore.Location = new System.Drawing.Point(_x, _y);
                         UcPanel.Controls.Add(choiceCanIgnore);
                         UcPanel.Controls.Add(lbl);
+                        
+                        // 特殊处理：更新当前列的最大宽度
+                        currentCol = c % RowOfColNum;
+                        controlTotalWidth = labelWidth + choiceCanIgnore.Width + 10; // 标签宽度 + 控件宽度 + 一些额外空间
+                        if (controlTotalWidth > maxColumnWidths[currentCol])
+                        {
+                            maxColumnWidths[currentCol] = controlTotalWidth;
+                        }
+                        
+                        // 更新_x位置，添加控件间距（3像素）
+                        _x = _x + choiceCanIgnore.Width + 3; // 控件间距设为3像素
                         #endregion
                         break;
                     case AdvQueryProcessType.CmbMultiChoice:
@@ -517,6 +535,17 @@ namespace RUINORERP.UI.AdvancedUIModule
                         cmb.Location = new System.Drawing.Point(_x, _y);
                         UcPanel.Controls.Add(cmb);
                         UcPanel.Controls.Add(lbl);
+                        
+                        // 特殊处理：更新当前列的最大宽度
+                        currentCol = c % RowOfColNum;
+                        controlTotalWidth = labelWidth + cmb.Width + 10; // 标签宽度 + 控件宽度 + 一些额外空间
+                        if (controlTotalWidth > maxColumnWidths[currentCol])
+                        {
+                            maxColumnWidths[currentCol] = controlTotalWidth;
+                        }
+                        
+                        // 更新_x位置，添加控件间距（3像素）
+                        _x = _x + cmb.Width + 3; // 控件间距设为3像素
                         #endregion
                         break;
                     case AdvQueryProcessType.defaultSelect:
@@ -600,6 +629,17 @@ namespace RUINORERP.UI.AdvancedUIModule
                         DefaultCmb.Location = new System.Drawing.Point(_x, _y);
                         UcPanel.Controls.Add(DefaultCmb);
                         UcPanel.Controls.Add(lbl);
+                        
+                        // 更新当前列的最大宽度
+                        currentCol = c % RowOfColNum;
+                        controlTotalWidth = labelWidth + DefaultCmb.Width + 10; // 标签宽度 + 控件宽度 + 一些额外空间
+                        if (controlTotalWidth > maxColumnWidths[currentCol])
+                        {
+                            maxColumnWidths[currentCol] = controlTotalWidth;
+                        }
+                        
+                        // 更新_x位置，添加控件间距（3像素）
+                        _x = _x + DefaultCmb.Width + 3; // 控件间距设为3像素
                         #endregion
                         break;
                     case AdvQueryProcessType.EnumSelect:
@@ -650,6 +690,17 @@ namespace RUINORERP.UI.AdvancedUIModule
                         UcPanel.Controls.Add(eNumCmb);
                         UcPanel.Controls.Add(lbl);
 
+                        // 更新当前列的最大宽度
+                        currentCol = c % RowOfColNum;
+                        controlTotalWidth = labelWidth + eNumCmb.Width + 10; // 标签宽度 + 控件宽度 + 一些额外空间
+                        if (controlTotalWidth > maxColumnWidths[currentCol])
+                        {
+                            maxColumnWidths[currentCol] = controlTotalWidth;
+                        }
+                        
+                        // 更新_x位置，添加控件间距（3像素）
+                        _x = _x + eNumCmb.Width + 3; // 控件间距设为3像素
+
                         //cmb.SelectedIndex = -1;
 
                         #endregion
@@ -657,11 +708,9 @@ namespace RUINORERP.UI.AdvancedUIModule
                         break;
                     case AdvQueryProcessType.datetimeRange:
                         UCAdvDateTimerPickerGroup dtpgroup = new UCAdvDateTimerPickerGroup();
-                        //dtpgroup.Width = 260;
                         dtpgroup.Name = queryField.FieldName;
                         string dtpKeyName1 = queryField.ExtendedAttribute[0].ColName;
                         string dtpKeyName2 = queryField.ExtendedAttribute[1].ColName;
-
 
                         dtpgroup.dtp1.Name = dtpKeyName1;
                         object datetimeValue1 = ReflectionHelper.GetPropertyValue(newDto, dtpKeyName1);
@@ -688,7 +737,6 @@ namespace RUINORERP.UI.AdvancedUIModule
                         // 确保控件可见
                         dtpgroup.dtp2.Visible = true;
                         dtpgroup.dtp2.ShowCheckBox = true;
-
 
                         //如果时间区间的参数不为空。看参数里设置默认选中情况
                         if (queryField.QueryFieldDataPara != null)
@@ -717,13 +765,39 @@ namespace RUINORERP.UI.AdvancedUIModule
                             dtpgroup.dtp2.Checked = queryField.EnableDefault2.Value;
                         }
                     
-                        //时间控件更长为260px，这里要特殊处理
+                        // 标签宽度已在循环开始时计算，直接使用已定义的labelWidth
+                        // 获取Graphics对象重新计算文本宽度（如果需要更精确的计算）
+                        Graphics labelGraphics = UcPanel.CreateGraphics();
+                        float labelTextWidth = UITools.CalculateTextWidth(lbl.Text, lbl.Font, labelGraphics);
+                        labelWidth = (int)labelTextWidth + 10; // 更新已定义的labelWidth变量
+                        
+                        // 调整标签宽度以确保文本完全显示
+                        lbl.Width = labelWidth;
+                        
+                        // 设置标签位置
+                        lbl.Location = new System.Drawing.Point(_x, _y);
+                        
+                        // 确保日期控件大小正确
+                        dtpgroup.Size = new System.Drawing.Size(280, 25);
+                        // 与其他控件保持一致，直接使用_x作为位置
                         dtpgroup.Location = new System.Drawing.Point(_x, _y);
-                        dtpgroup.Size = new System.Drawing.Size(260, 25); // 确保大小正确
-                        dtpgroup.Visible = true; // 确保控件可见
-                        _x = _x + 260;
+                        dtpgroup.Visible = true;
+                        
+                        // 添加控件到面板
+                        // 与其他控件保持一致的添加顺序
                         UcPanel.Controls.Add(dtpgroup);
                         UcPanel.Controls.Add(lbl);
+                        
+                        // 特殊处理：对于日期组合控件，更新当前列的最大宽度
+                        currentCol = c % RowOfColNum;
+                        controlTotalWidth = labelWidth + dtpgroup.Width + 10; // 标签宽度 + 控件宽度 + 一些额外空间
+                        if (controlTotalWidth > maxColumnWidths[currentCol])
+                        {
+                            maxColumnWidths[currentCol] = controlTotalWidth;
+                        }
+                        
+                        // 更新_x位置，添加控件间距（3像素）
+                        _x = _x + dtpgroup.Width + 3; // 控件间距设为3像素
                         break;
                     case AdvQueryProcessType.datetime:
                         KryptonDateTimePicker dtp = new KryptonDateTimePicker();
@@ -746,6 +820,17 @@ namespace RUINORERP.UI.AdvancedUIModule
                         dtp.Location = new System.Drawing.Point(_x, _y);
                         UcPanel.Controls.Add(dtp);
                         UcPanel.Controls.Add(lbl);
+                        
+                        // 更新当前列的最大宽度
+                        currentCol = c % RowOfColNum;
+                        controlTotalWidth = labelWidth + dtp.Width + 10; // 标签宽度 + 控件宽度 + 一些额外空间
+                        if (controlTotalWidth > maxColumnWidths[currentCol])
+                        {
+                            maxColumnWidths[currentCol] = controlTotalWidth;
+                        }
+                        
+                        // 更新_x位置，添加控件间距（3像素）
+                        _x = _x + dtp.Width + 3; // 控件间距设为3像素
                         break;
                     case AdvQueryProcessType.stringLike:
                         KryptonTextBox tb_box = new KryptonTextBox();
@@ -770,6 +855,17 @@ namespace RUINORERP.UI.AdvancedUIModule
                         tb_box.ContextMenu = menu;
                         UcPanel.Controls.Add(tb_box);
                         UcPanel.Controls.Add(lbl);
+                        
+                        // 更新当前列的最大宽度
+                        currentCol = c % RowOfColNum;
+                        controlTotalWidth = labelWidth + tb_box.Width + 10; // 标签宽度 + 控件宽度 + 一些额外空间
+                        if (controlTotalWidth > maxColumnWidths[currentCol])
+                        {
+                            maxColumnWidths[currentCol] = controlTotalWidth;
+                        }
+                        
+                        // 更新_x位置，添加控件间距（3像素）
+                        _x = _x + tb_box.Width + 3; // 控件间距设为3像素
                         break;
 
                     case AdvQueryProcessType.stringEquals:
@@ -781,6 +877,17 @@ namespace RUINORERP.UI.AdvancedUIModule
                         tb_boxEquals.Location = new System.Drawing.Point(_x, _y);
                         UcPanel.Controls.Add(tb_boxEquals);
                         UcPanel.Controls.Add(lbl);
+                        
+                        // 更新当前列的最大宽度
+                        currentCol = c % RowOfColNum;
+                        controlTotalWidth = labelWidth + tb_boxEquals.Width + 10; // 标签宽度 + 控件宽度 + 一些额外空间
+                        if (controlTotalWidth > maxColumnWidths[currentCol])
+                        {
+                            maxColumnWidths[currentCol] = controlTotalWidth;
+                        }
+                        
+                        // 更新_x位置，添加控件间距（3像素）
+                        _x = _x + tb_boxEquals.Width + 3; // 控件间距设为3像素
                         break;
 
                     case AdvQueryProcessType.useYesOrNoToAll:
@@ -793,6 +900,17 @@ namespace RUINORERP.UI.AdvancedUIModule
                         chkgroup.Location = new System.Drawing.Point(_x, _y);
                         UcPanel.Controls.Add(chkgroup);
                         UcPanel.Controls.Add(lbl);
+                        
+                        // 更新当前列的最大宽度
+                        currentCol = c % RowOfColNum;
+                        controlTotalWidth = labelWidth + chkgroup.Width + 10; // 标签宽度 + 控件宽度 + 一些额外空间
+                        if (controlTotalWidth > maxColumnWidths[currentCol])
+                        {
+                            maxColumnWidths[currentCol] = controlTotalWidth;
+                        }
+                        
+                        // 更新_x位置，添加控件间距（3像素）
+                        _x = _x + chkgroup.Width + 3; // 控件间距设为3像素
                         break;
 
                     case AdvQueryProcessType.YesOrNo:
@@ -805,7 +923,17 @@ namespace RUINORERP.UI.AdvancedUIModule
                         chk.Location = new System.Drawing.Point(_x, _y);
                         UcPanel.Controls.Add(chk);
                         UcPanel.Controls.Add(lbl);
-
+                        
+                        // 更新当前列的最大宽度
+                        currentCol = c % RowOfColNum;
+                        controlTotalWidth = labelWidth + chk.Width + 10; // 标签宽度 + 控件宽度 + 一些额外空间
+                        if (controlTotalWidth > maxColumnWidths[currentCol])
+                        {
+                            maxColumnWidths[currentCol] = controlTotalWidth;
+                        }
+                        
+                        // 更新_x位置，添加控件间距（3像素）
+                        _x = _x + chk.Width + 3; // 控件间距设为3像素
                         break;
                     default:
 
@@ -813,17 +941,12 @@ namespace RUINORERP.UI.AdvancedUIModule
 
                         break;
                 }
-                //比方每一行4列时，则第C个0起，相等时就是第二行了。
-                if (RowOfColNum == c + 1)
-                {
-                    row++;
-                }
-
             }
 
             // 更新面板高度
-            UcPanel.Parent.Height = _y + 30;
-            UcPanel.Height = _y + 30;
+            int totalRows = (queryFields.Count + RowOfColNum - 1) / RowOfColNum; // 计算总行数
+            UcPanel.Parent.Height = 20 + totalRows * 32 + 30; // 20是上边距，32是行高，30是底部留空
+            UcPanel.Height = 20 + totalRows * 32 + 30;
 
             sw.Stop();
             TimeSpan dt = sw.Elapsed;
@@ -836,360 +959,6 @@ namespace RUINORERP.UI.AdvancedUIModule
 
 
 
-
-
-        /// <summary>
-        /// 动态构建一些特性，针对不同的数据类型，比方日期等变动一个新的实体类型
-        /// 注意这里构建代理类时是在原以字段后面加上Proxy,字段是_加下划线,这个在解析查询条件时会用到
-        /// </summary>
-        /// <param name="type"></param>
-        /// <returns></returns>
-        public static Type AttributesBuilder_New2024(Type type, QueryFilter queryFilter)
-        {
-            //TypeBuilder
-            var aName = new System.Reflection.AssemblyName(Assembly.GetExecutingAssembly().GetName().Name);
-            var ab = AppDomain.CurrentDomain.DefineDynamicAssembly(aName, AssemblyBuilderAccess.Run);
-            var mb = ab.DefineDynamicModule(aName.Name);
-            var tb = mb.DefineType(type.Name + "Proxy", System.Reflection.TypeAttributes.Public, type);
-            #region 前期处理  根据指定的类型  生成对应的相关属性
-
-
-            #region 查询
-            //这里构建AdvExtQueryAttribute一个构造函数，注意参数个数
-            var attrCtorParams = new Type[] { typeof(string), typeof(string), typeof(string), typeof(AdvQueryProcessType) };
-            var attrCtorInfo = typeof(AdvExtQueryAttribute).GetConstructor(attrCtorParams);
-
-            var DtoEntityFieldNameList = UIHelper.GetDtoFieldNameList(type);
-
-            foreach (var oldCol in DtoEntityFieldNameList)
-            {
-                var coldata = oldCol as BaseDtoField;
-                coldata.ColDataType = coldata.ColDataType.GetBaseType();
-                if (coldata.ColDataType.Name == "Byte[]")
-                {
-                    continue;
-                }
-                QueryField queryField = queryFilter.QueryFields.Find(x => x.FieldName == coldata.FieldName);
-                if (queryField == null)
-                {
-                    continue;
-                }
-                EnumDataType edt = (EnumDataType)Enum.Parse(typeof(EnumDataType), coldata.ColDataType.Name);
-                //应该是没有具体指定就用数据类型来进行统一处理
-                switch (edt)
-                {
-                    case EnumDataType.Boolean:
-                        if (!coldata.FieldName.Contains("isdeleted"))
-                        {
-                            string newBoolProName1 = coldata.FieldName + "_Enable";
-                            var attrBoolBuilder1 = new CustomAttributeBuilder(attrCtorInfo, new object[] { coldata.FieldName, "是", newBoolProName1, AdvQueryProcessType.useYesOrNoToAll });
-                            //动态属性要提前创建生成，后面要实体化传入控件
-                            PropertyBuilder newBoolProp1 = AddProperty(tb, newBoolProName1, typeof(bool));
-                            newBoolProp1.SetCustomAttribute(attrBoolBuilder1);
-                        }
-                        else
-                        {
-                            //逻辑删除 也生成可以查询的条件。和上面的一样by watson 2025-8-08
-                            string newBoolProName1 = coldata.FieldName + "_Enable";
-                            var attrBoolBuilder1 = new CustomAttributeBuilder(attrCtorInfo, new object[] { coldata.FieldName, "是", newBoolProName1, AdvQueryProcessType.useYesOrNoToAll });
-                            //动态属性要提前创建生成，后面要实体化传入控件
-                            PropertyBuilder newBoolProp1 = AddProperty(tb, newBoolProName1, typeof(bool));
-                            newBoolProp1.SetCustomAttribute(attrBoolBuilder1);
-                        }
-                        break;
-                    case EnumDataType.Char:
-                        break;
-                    case EnumDataType.Single:
-                        break;
-                    case EnumDataType.Double:
-                        break;
-                    case EnumDataType.Decimal:
-                        break;
-                    case EnumDataType.SByte:
-                        break;
-                    case EnumDataType.Byte:
-                        break;
-                    case EnumDataType.Int16:
-                    case EnumDataType.UInt16:
-                    case EnumDataType.Int32:
-                    case EnumDataType.UInt32:
-                    case EnumDataType.Int64:
-                    case EnumDataType.UInt64:
-                    case EnumDataType.IntPtr:
-                    case EnumDataType.UIntPtr:
-
-                        if (queryField.AdvQueryFieldType == AdvQueryProcessType.CmbMultiChoiceCanIgnore)
-                        {
-                            //先成一个标记可忽略的属性
-                            string newCmbMultiChoiceCanIgnore = coldata.FieldName + "_CmbMultiChoiceCanIgnore";
-                            var attrBuilderCmbMultiChoiceCanIgnore = new CustomAttributeBuilder(attrCtorInfo, new object[] { coldata.FieldName, "多选可忽略", newCmbMultiChoiceCanIgnore, AdvQueryProcessType.CmbMultiChoiceCanIgnore });
-                            //动态属性要提前创建生成，后面要实体化传入控件
-                            PropertyBuilder newPropCmbMultiChoiceCanIgnore = AddProperty(tb, newCmbMultiChoiceCanIgnore, typeof(bool));
-                            newPropCmbMultiChoiceCanIgnore.SetCustomAttribute(attrBuilderCmbMultiChoiceCanIgnore);
-
-                            #region 动态属性要提前创建生成，后面要实体化传入控件
-
-                            string newProNameMultiChoiceResults = coldata.FieldName + "_MultiChoiceResults";
-                            var attrBuilderMultiChoiceResults = new CustomAttributeBuilder(attrCtorInfo, new object[] { coldata.FieldName, "多选结果", newProNameMultiChoiceResults, AdvQueryProcessType.CmbMultiChoice });
-                            //动态属性要提前创建生成，后面要实体化传入控件
-                            PropertyBuilder newPropMultiChoiceResults = AddProperty(tb, newProNameMultiChoiceResults, typeof(List<object>));
-                            newPropMultiChoiceResults.SetCustomAttribute(attrBuilderMultiChoiceResults);
-                            #endregion
-
-                            //string newSelectProName1 = coldata.FieldName + "_请选择";
-                            //var attrSelectBuilder1 = new CustomAttributeBuilder(attrCtorInfo, new object[] { coldata.FieldName, "请选择", newSelectProName1, AdvQueryProcessType.CmbMultiChoice });
-                            ////动态属性要提前创建生成，后面要实体化传入控件
-                            //PropertyBuilder newlikeProp1 = AddProperty(tb, newSelectProName1);
-                            //newlikeProp1.SetCustomAttribute(attrSelectBuilder1);
-                            break;
-                        }
-
-                        if (queryField.AdvQueryFieldType == AdvQueryProcessType.CmbMultiChoice)
-                        {
-
-                            #region 动态属性要提前创建生成，后面要实体化传入控件
-
-                            string newProNameMultiChoiceResults = coldata.FieldName + "_MultiChoiceResults";
-                            var attrBuilderMultiChoiceResults = new CustomAttributeBuilder(attrCtorInfo, new object[] { coldata.FieldName, "多选结果", newProNameMultiChoiceResults, AdvQueryProcessType.CmbMultiChoice });
-                            //动态属性要提前创建生成，后面要实体化传入控件
-                            PropertyBuilder newPropMultiChoiceResults = AddProperty(tb, newProNameMultiChoiceResults, typeof(List<object>));
-                            newPropMultiChoiceResults.SetCustomAttribute(attrBuilderMultiChoiceResults);
-                            #endregion
-
-                            //string newSelectProName1 = coldata.FieldName + "_请选择";
-                            //var attrSelectBuilder1 = new CustomAttributeBuilder(attrCtorInfo, new object[] { coldata.FieldName, "请选择", newSelectProName1, AdvQueryProcessType.CmbMultiChoice });
-                            ////动态属性要提前创建生成，后面要实体化传入控件
-                            //PropertyBuilder newlikeProp1 = AddProperty(tb, newSelectProName1);
-                            //newlikeProp1.SetCustomAttribute(attrSelectBuilder1);
-                            break;
-                        }
-                        if (queryField.AdvQueryFieldType == AdvQueryProcessType.defaultSelect)
-                        {
-
-                            string newSelectProName1 = coldata.FieldName + "_请选择";
-                            var attrSelectBuilder1 = new CustomAttributeBuilder(attrCtorInfo, new object[] { coldata.FieldName, "请选择", newSelectProName1, AdvQueryProcessType.defaultSelect });
-                            //动态属性要提前创建生成，后面要实体化传入控件
-                            PropertyBuilder newlikeProp1 = AddProperty(tb, newSelectProName1);
-                            newlikeProp1.SetCustomAttribute(attrSelectBuilder1);
-                            break;
-                        }
-
-                        break;
-                        //下拉
-                        if (coldata.IsFKRelationAttribute)
-                        {
-                            if (coldata.fKRelationAttribute.CmbMultiChoice)
-                            {
-                                #region 动态属性要提前创建生成，后面要实体化传入控件
-                                string newProNameMultiChoiceResults = coldata.FieldName + "_MultiChoiceResults";
-                                var attrBuilderMultiChoiceResults = new CustomAttributeBuilder(attrCtorInfo, new object[] { coldata.FieldName, "多选结果", newProNameMultiChoiceResults, AdvQueryProcessType.CmbMultiChoice });
-                                //动态属性要提前创建生成，后面要实体化传入控件
-                                //PropertyBuilder newPropMultiChoiceResults = AddProperty(tb, newProNameMultiChoiceResults);
-
-                                //这个属性 在控件里定义了一个对应的MultiChoiceResults 属性是类型是List<object>
-                                PropertyBuilder newPropMultiChoiceResults = AddProperty(tb, newProNameMultiChoiceResults, typeof(List<object>));
-                                newPropMultiChoiceResults.SetCustomAttribute(attrBuilderMultiChoiceResults);
-                                #endregion
-
-                                string newSelectProName1 = coldata.FieldName + "_请选择";
-                                var attrSelectBuilder1 = new CustomAttributeBuilder(attrCtorInfo, new object[] { coldata.FieldName, "请选择", newSelectProName1, AdvQueryProcessType.defaultSelect });
-                                //动态属性要提前创建生成，后面要实体化传入控件
-                                PropertyBuilder newlikeProp1 = AddProperty(tb, newSelectProName1);
-                                newlikeProp1.SetCustomAttribute(attrSelectBuilder1);
-                            }
-                            else
-                            {
-                                string newSelectProName1 = coldata.FieldName + "_请选择";
-                                var attrSelectBuilder1 = new CustomAttributeBuilder(attrCtorInfo, new object[] { coldata.FieldName, "请选择", newSelectProName1, AdvQueryProcessType.defaultSelect });
-                                //动态属性要提前创建生成，后面要实体化传入控件
-                                PropertyBuilder newlikeProp1 = AddProperty(tb, newSelectProName1);
-                                newlikeProp1.SetCustomAttribute(attrSelectBuilder1);
-                            }
-
-                        }
-                        break;
-                    case EnumDataType.Object:
-                        break;
-                    case EnumDataType.String:
-                        //如果没有设置则默认为like。如果设置了则是开启了like就生成like属性
-                        if ((!queryField.UseLike.HasValue) || (queryField.UseLike.HasValue && queryField.UseLike.Value == true))
-                        {
-                            string newlikeProNameString = coldata.FieldName + "_Like";
-                            var attrlikeBuilder1 = new CustomAttributeBuilder(attrCtorInfo, new object[] { coldata.FieldName, "like", newlikeProNameString, AdvQueryProcessType.stringLike });
-                            //动态属性要提前创建生成，后面要实体化传入控件
-                            PropertyBuilder newlikePropstring = AddProperty(tb, newlikeProNameString);
-                            newlikePropstring.SetCustomAttribute(attrlikeBuilder1);
-                        }
-
-                        break;
-                    case EnumDataType.DateTime:
-
-                        string newProName1 = coldata.FieldName + "_Start";
-                        string newProName2 = coldata.FieldName + "_End";
-                        var attrBuilder1 = new CustomAttributeBuilder(attrCtorInfo, new object[] { coldata.FieldName, "时间起", newProName1, AdvQueryProcessType.datetimeRange });
-                        var attrBuilder2 = new CustomAttributeBuilder(attrCtorInfo, new object[] { coldata.FieldName, "时间止", newProName2, AdvQueryProcessType.datetimeRange });
-                        //动态属性要提前创建生成，后面要实体化传入控件
-                        PropertyBuilder newProp1 = AddProperty(tb, newProName1, typeof(DateTime?));//起始时间是可以选空的，实际如果不可空的话，要调试到这里看什么情况
-                                                                                                   //动态属性要提前创建生成，后面要实体化传入控件
-                        PropertyBuilder newProp2 = AddProperty(tb, newProName2, typeof(DateTime?));
-                        newProp1.SetCustomAttribute(attrBuilder1);
-                        newProp2.SetCustomAttribute(attrBuilder2);
-                        break;
-                    default:
-                        break;
-                }
-            }
-            #endregion
-
-
-            #endregion
-            Type newtype = tb.CreateType();
-            return newtype;
-        }
-
-        /// <summary>
-        /// 从来源数组中按每个行存放列的个数，获取指定列序号下的数据
-        /// </summary>
-        /// <param name="targetList">来源数组</param>
-        /// <param name="RowOfColNum">每行存放列数</param>
-        /// <param name="TargetColIndex">指定的列序号（从1开始）</param>
-        /// <returns>指定列序号下的数据列表</returns>
-        public static List<QueryField> GetTargetColumnData(List<QueryField> targetList, int RowOfColNum, int TargetColIndex)
-        {
-            List<QueryField> columnData = new List<QueryField>();
-            if (targetList == null || targetList.Count == 0 || RowOfColNum <= 0 || TargetColIndex <= 0 || TargetColIndex > RowOfColNum)
-            {
-                return columnData; // 返回空列表
-            }
-
-            for (int i = 0; i < targetList.Count; i++)
-            {
-                // 计算当前数据项所在的列序号
-                int currentColIndex = (i % RowOfColNum) + 1;
-                if (currentColIndex == TargetColIndex)
-                {
-                    columnData.Add(targetList[i]);
-                }
-            }
-            return columnData;
-        }
-
-
-        private static PropertyBuilder AddProperty(TypeBuilder tb, string MemberName)
-        {
-            #region  动态创建字段
-
-
-            // string MemberName = "Watson_ok";
-            Type memberType = typeof(string);
-            FieldBuilder fbNumber = tb.DefineField("m_" + MemberName, memberType, FieldAttributes.Private);
-
-
-            PropertyBuilder pbNumber = tb.DefineProperty(
-                MemberName,
-                System.Reflection.PropertyAttributes.HasDefault,
-                memberType,
-                null);
-
-
-            MethodAttributes getSetAttr = MethodAttributes.Public |
-                MethodAttributes.SpecialName | MethodAttributes.HideBySig;
-
-
-            MethodBuilder mbNumberGetAccessor = tb.DefineMethod(
-                "get_" + MemberName,
-                getSetAttr,
-                memberType,
-                Type.EmptyTypes);
-
-            ILGenerator numberGetIL = mbNumberGetAccessor.GetILGenerator();
-
-            numberGetIL.Emit(OpCodes.Ldarg_0);
-            numberGetIL.Emit(OpCodes.Ldfld, fbNumber);
-            numberGetIL.Emit(OpCodes.Ret);
-
-            // Define the "set" accessor method for Number, which has no return
-            // type and takes one argument of type int (Int32).
-            MethodBuilder mbNumberSetAccessor = tb.DefineMethod(
-                "set_" + MemberName,
-                getSetAttr,
-                null,
-                new Type[] { memberType });
-
-            ILGenerator numberSetIL = mbNumberSetAccessor.GetILGenerator();
-            // Load the instance and then the numeric argument, then store the
-            // argument in the field.
-            numberSetIL.Emit(OpCodes.Ldarg_0);
-            numberSetIL.Emit(OpCodes.Ldarg_1);
-            numberSetIL.Emit(OpCodes.Stfld, fbNumber);
-            numberSetIL.Emit(OpCodes.Ret);
-
-            // Last, map the "get" and "set" accessor methods to the 
-            // PropertyBuilder. The property is now complete. 
-            pbNumber.SetGetMethod(mbNumberGetAccessor);
-            pbNumber.SetSetMethod(mbNumberSetAccessor);
-            #endregion
-
-            return pbNumber;
-        }
-
-        private static PropertyBuilder AddProperty(TypeBuilder tb, string MemberName, Type memberType)
-        {
-            #region  动态创建字段
-
-
-            // string MemberName = "Watson_ok";
-
-            FieldBuilder fbNumber = tb.DefineField("m_" + MemberName, memberType, FieldAttributes.Private);
-
-
-            PropertyBuilder pbNumber = tb.DefineProperty(
-                MemberName,
-                System.Reflection.PropertyAttributes.HasDefault,
-                memberType,
-                null);
-
-
-            MethodAttributes getSetAttr = MethodAttributes.Public |
-                MethodAttributes.SpecialName | MethodAttributes.HideBySig;
-
-
-            MethodBuilder mbNumberGetAccessor = tb.DefineMethod(
-                "get_" + MemberName,
-                getSetAttr,
-                memberType,
-                Type.EmptyTypes);
-
-            ILGenerator numberGetIL = mbNumberGetAccessor.GetILGenerator();
-
-            numberGetIL.Emit(OpCodes.Ldarg_0);
-            numberGetIL.Emit(OpCodes.Ldfld, fbNumber);
-            numberGetIL.Emit(OpCodes.Ret);
-
-            // Define the "set" accessor method for Number, which has no return
-            // type and takes one argument of type int (Int32).
-            MethodBuilder mbNumberSetAccessor = tb.DefineMethod(
-                "set_" + MemberName,
-                getSetAttr,
-                null,
-                new Type[] { memberType });
-
-            ILGenerator numberSetIL = mbNumberSetAccessor.GetILGenerator();
-            // Load the instance and then the numeric argument, then store the
-            // argument in the field.
-            numberSetIL.Emit(OpCodes.Ldarg_0);
-            numberSetIL.Emit(OpCodes.Ldarg_1);
-            numberSetIL.Emit(OpCodes.Stfld, fbNumber);
-            numberSetIL.Emit(OpCodes.Ret);
-
-            // Last, map the "get" and "set" accessor methods to the 
-            // PropertyBuilder. The property is now complete. 
-            pbNumber.SetGetMethod(mbNumberGetAccessor);
-            pbNumber.SetSetMethod(mbNumberSetAccessor);
-            #endregion
-
-            return pbNumber;
-        }
 
 
     }

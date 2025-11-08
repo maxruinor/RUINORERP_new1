@@ -50,7 +50,6 @@
             checkBoxProperties1.ForeColor = System.Drawing.SystemColors.ControlText;
             this.chkMulti.CheckBoxProperties = checkBoxProperties1;
             this.chkMulti.DisplayMemberSingleItem = "";
-            this.chkMulti.Dock = System.Windows.Forms.DockStyle.Fill;
             this.chkMulti.FormattingEnabled = true;
             this.chkMulti.Location = new System.Drawing.Point(0, 0);
             this.chkMulti.Margin = new System.Windows.Forms.Padding(0);
@@ -86,7 +85,7 @@
             // 
             this.kryptonSplitContainer右边详情.Panel2.Controls.Add(this.kryptonPanelQuery);
             this.kryptonSplitContainer右边详情.Panel2MinSize = 10;
-            this.kryptonSplitContainer右边详情.Size = new System.Drawing.Size(180, 22);
+            this.kryptonSplitContainer右边详情.Size = new System.Drawing.Size(190, 22);
             this.kryptonSplitContainer右边详情.SplitterDistance = 16;
             this.kryptonSplitContainer右边详情.SplitterWidth = 1;
             this.kryptonSplitContainer右边详情.TabIndex = 3;
@@ -99,7 +98,7 @@
             this.kryptonPanelQuery.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonPanelQuery.Location = new System.Drawing.Point(0, 0);
             this.kryptonPanelQuery.Name = "kryptonPanelQuery";
-            this.kryptonPanelQuery.Size = new System.Drawing.Size(163, 22);
+            this.kryptonPanelQuery.Size = new System.Drawing.Size(173, 22);
             this.kryptonPanelQuery.TabIndex = 2;
             // 
             // groupLine1
@@ -107,7 +106,7 @@
             this.groupLine1.Dock = System.Windows.Forms.DockStyle.Bottom;
             this.groupLine1.Location = new System.Drawing.Point(0, 21);
             this.groupLine1.Name = "groupLine1";
-            this.groupLine1.Size = new System.Drawing.Size(163, 1);
+            this.groupLine1.Size = new System.Drawing.Size(173, 1);
             this.groupLine1.TabIndex = 2;
             // 
             // UCCmbMultiChoiceCanIgnore
@@ -117,7 +116,7 @@
             this.BackColor = System.Drawing.SystemColors.GradientActiveCaption;
             this.Controls.Add(this.kryptonSplitContainer右边详情);
             this.Name = "UCCmbMultiChoiceCanIgnore";
-            this.Size = new System.Drawing.Size(180, 22);
+            this.Size = new System.Drawing.Size(190, 22);
             this.Load += new System.EventHandler(this.UCCmbMultiChoiceCanIgnore_Load);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer右边详情.Panel1)).EndInit();
             this.kryptonSplitContainer右边详情.Panel1.ResumeLayout(false);

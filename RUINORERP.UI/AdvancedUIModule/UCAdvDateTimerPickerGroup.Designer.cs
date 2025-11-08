@@ -38,7 +38,7 @@ namespace RUINORERP.UI.AdvancedUIModule
             // dtp1
             // 
             this.dtp1.Checked = false;
-            this.dtp1.Location = new System.Drawing.Point(2, 2);
+            this.dtp1.Location = new System.Drawing.Point(0, 2);
             this.dtp1.Name = "dtp1";
             this.dtp1.ShowCheckBox = true;
             this.dtp1.Size = new System.Drawing.Size(125, 21);
@@ -47,7 +47,7 @@ namespace RUINORERP.UI.AdvancedUIModule
             // dtp2
             // 
             this.dtp2.Checked = false;
-            this.dtp2.Location = new System.Drawing.Point(136, 2);
+            this.dtp2.Location = new System.Drawing.Point(140, 2);
             this.dtp2.Name = "dtp2";
             this.dtp2.ShowCheckBox = true;
             this.dtp2.Size = new System.Drawing.Size(125, 21);
@@ -55,7 +55,7 @@ namespace RUINORERP.UI.AdvancedUIModule
             // 
             // kryptonLabel1
             // 
-            this.kryptonLabel1.Location = new System.Drawing.Point(122, 2);
+            this.kryptonLabel1.Location = new System.Drawing.Point(128, 3);
             this.kryptonLabel1.Name = "kryptonLabel1";
             this.kryptonLabel1.Size = new System.Drawing.Size(19, 20);
             this.kryptonLabel1.TabIndex = 2;
@@ -69,7 +69,7 @@ namespace RUINORERP.UI.AdvancedUIModule
             this.Controls.Add(this.dtp1);
             this.Controls.Add(this.kryptonLabel1);
             this.Name = "UCAdvDateTimerPickerGroup";
-            this.Size = new System.Drawing.Size(260, 25);
+            this.Size = new System.Drawing.Size(265, 25);
             this.Load += new System.EventHandler(this.UCAdvDateTimerPickerGroup_Load);
             this.ResumeLayout(false);
             this.PerformLayout();

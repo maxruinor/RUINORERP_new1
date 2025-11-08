@@ -49,7 +49,7 @@
             // rdb1
             // 
             this.rdb1.AutoSize = true;
-            this.rdb1.Location = new System.Drawing.Point(4, 11);
+            this.rdb1.Location = new System.Drawing.Point(2, 8);
             this.rdb1.Margin = new System.Windows.Forms.Padding(0);
             this.rdb1.Name = "rdb1";
             this.rdb1.Size = new System.Drawing.Size(47, 16);
@@ -68,7 +68,7 @@
             this.groupBox1.Margin = new System.Windows.Forms.Padding(0);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Padding = new System.Windows.Forms.Padding(0);
-            this.groupBox1.Size = new System.Drawing.Size(121, 30);
+            this.groupBox1.Size = new System.Drawing.Size(105, 25);
             this.groupBox1.TabIndex = 1;
             this.groupBox1.TabStop = false;
             this.groupBox1.Visible = false;
@@ -77,7 +77,7 @@
             // rdb2
             // 
             this.rdb2.AutoSize = true;
-            this.rdb2.Location = new System.Drawing.Point(64, 12);
+            this.rdb2.Location = new System.Drawing.Point(55, 8);
             this.rdb2.Margin = new System.Windows.Forms.Padding(0);
             this.rdb2.Name = "rdb2";
             this.rdb2.Size = new System.Drawing.Size(47, 16);
@@ -91,7 +91,7 @@
             this.chk.Dock = System.Windows.Forms.DockStyle.Fill;
             this.chk.Location = new System.Drawing.Point(0, 0);
             this.chk.Name = "chk";
-            this.chk.Size = new System.Drawing.Size(18, 30);
+            this.chk.Size = new System.Drawing.Size(15, 25);
             this.chk.TabIndex = 2;
             this.chk.Values.Text = "";
             this.chk.CheckedChanged += new System.EventHandler(this.chk_CheckedChanged);
@@ -112,8 +112,8 @@
             // kryptonSplitContainer右边详情.Panel2
             // 
             this.kryptonSplitContainer右边详情.Panel2.Controls.Add(this.kryptonPanelQuery);
-            this.kryptonSplitContainer右边详情.Size = new System.Drawing.Size(140, 30);
-            this.kryptonSplitContainer右边详情.SplitterDistance = 18;
+            this.kryptonSplitContainer右边详情.Size = new System.Drawing.Size(120, 25);
+            this.kryptonSplitContainer右边详情.SplitterDistance = 15;
             this.kryptonSplitContainer右边详情.SplitterWidth = 1;
             this.kryptonSplitContainer右边详情.TabIndex = 4;
             // 
@@ -125,15 +125,15 @@
             this.kryptonPanelQuery.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonPanelQuery.Location = new System.Drawing.Point(0, 0);
             this.kryptonPanelQuery.Name = "kryptonPanelQuery";
-            this.kryptonPanelQuery.Size = new System.Drawing.Size(121, 30);
+            this.kryptonPanelQuery.Size = new System.Drawing.Size(104, 25);
             this.kryptonPanelQuery.TabIndex = 2;
             // 
             // groupLine1
             // 
             this.groupLine1.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.groupLine1.Location = new System.Drawing.Point(0, 29);
+            this.groupLine1.Location = new System.Drawing.Point(0, 24);
             this.groupLine1.Name = "groupLine1";
-            this.groupLine1.Size = new System.Drawing.Size(121, 1);
+            this.groupLine1.Size = new System.Drawing.Size(104, 1);
             this.groupLine1.TabIndex = 2;
             // 
             // UCAdvYesOrNO
@@ -143,7 +143,7 @@
             this.BackColor = System.Drawing.SystemColors.GradientActiveCaption;
             this.Controls.Add(this.kryptonSplitContainer右边详情);
             this.Name = "UCAdvYesOrNO";
-            this.Size = new System.Drawing.Size(140, 30);
+            this.Size = new System.Drawing.Size(120, 25);
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer右边详情.Panel1)).EndInit();

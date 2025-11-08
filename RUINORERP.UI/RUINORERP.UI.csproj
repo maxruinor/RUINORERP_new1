@@ -659,7 +659,6 @@
       <DependentUpon>UCAdvYesOrNO.cs</DependentUpon>
     </Compile>
     <Compile Include="AdvancedUIModule\UIGenerateHelper.cs" />
-    <Compile Include="AdvancedUIModule\UIQueryHelper.cs" />
     <Compile Include="ASS\UCASAfterSaleDelivery.cs">
       <SubType>UserControl</SubType>
     </Compile>

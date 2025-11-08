@@ -163,7 +163,10 @@ namespace RUINORERP.UI.UserPersonalized
                         dtpgroup.Location = new System.Drawing.Point(txtDefault1.Location.X, txtDefault1.Location.Y);
                         dtpgroup.Size = new System.Drawing.Size(260, 25); // 确保大小正确
                         dtpgroup.Visible = true; // 确保控件可见
+                        // 先添加控件再添加到父容器，确保布局正确
                         this.Controls.Add(dtpgroup);
+                        // 确保控件在父容器中的位置正确
+                        dtpgroup.BringToFront();
 
                         #endregion
                         break;

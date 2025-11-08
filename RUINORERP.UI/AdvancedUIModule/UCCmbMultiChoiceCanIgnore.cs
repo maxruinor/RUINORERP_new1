@@ -241,7 +241,8 @@ namespace RUINORERP.UI.AdvancedUIModule
                             if (item != null)
                             {
                                 object selectValue = ReflectionHelper.GetPropertyValue(item, valueField);
-                                if (selectValue != null)
+                                // 忽略空值和空字符串
+                                if (selectValue != null && !string.IsNullOrEmpty(selectValue.ToString()))
                                 {
                                     selectedValues.Add(selectValue);
                                 }
@@ -262,7 +263,11 @@ namespace RUINORERP.UI.AdvancedUIModule
                         chkMulti.MultiChoiceResults.Clear();
                         foreach (var value in newSelectedValues)
                         {
-                            chkMulti.MultiChoiceResults.Add(value);
+                            // 再次检查，确保不添加空值和空字符串
+                            if (value != null && !string.IsNullOrEmpty(value.ToString()))
+                            {
+                                chkMulti.MultiChoiceResults.Add(value);
+                            }
                         }
 
                         // 更新所有复选框的选中状态
@@ -270,7 +275,11 @@ namespace RUINORERP.UI.AdvancedUIModule
                         {
                             if (cbItem.ComboBoxItem is ObjectSelectionWrapper<CmbChkItem> wrapper)
                             {
-                                cbItem.Checked = newSelectedValues.Contains(wrapper.Item.Key);
+                                // 确保wrapper.Item.Key不为空
+                                if (wrapper.Item.Key != null && !string.IsNullOrEmpty(wrapper.Item.Key.ToString()))
+                                {
+                                    cbItem.Checked = newSelectedValues.Contains(wrapper.Item.Key);
+                                }
                             }
                         }
                     }

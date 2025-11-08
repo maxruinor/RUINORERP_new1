@@ -2286,38 +2286,7 @@ namespace RUINORERP.UI.Common
             };
             cmbBox.DataBindings.Add(depa);
 
-            #region 添加清除功能
-            //不重复添加
-            //if (cmbBox.ButtonSpecs.Where(b => b.UniqueName == "btnclear").Any())
-            //{
-            //    return;
-            //}
-            //if ((cmbBox as Control).DataBindings.Count > 0)
-            //{
-            //    if (cmbBox.DataBindings.Count > 0 && cmbBox.DataSource is BindingSource)
-            //    {
-            //        ButtonSpecAny bsa = new ButtonSpecAny();
-            //        // bsa.Image = Image.FromStream(GetResource("RUINORERP.UI.ResourceFile.search.ico"));
-            //        // bsa.Tag = ktb;
-            //        // cmbBox.Tag = targetEntity;
-            //        bsa.UniqueName = "btnclear";
-            //        bsa.Type = PaletteButtonSpecStyle.Close;
-            //        bsa.Edge = PaletteRelativeEdgeAlign.Near;
-            //        //bsa.Click += BsaEdit_Click;
-            //        bsa.Click += (sender, e) =>
-            //        {
-            //            #region
-            //            cmbBox.DataSource = cmbBox.DataSource;
-            //            cmbBox.Text = "";
-            //            InitDataToCmbWithCondition<T>(expkey, expValue, tableName, cmbBox, expCondition);
-            //            cmbBox.SelectedItem = null;
-            //            cmbBox.SelectedValue = -1;
-            //            #endregion
-
-            //        };
-            //        cmbBox.ButtonSpecs.Add(bsa);
-            //    }
-            //}
+            
             #endregion
         }
 

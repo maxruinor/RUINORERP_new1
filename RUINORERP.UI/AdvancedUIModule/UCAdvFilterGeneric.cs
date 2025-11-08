@@ -76,7 +76,7 @@ namespace RUINORERP.UI.AdvancedUIModule
             ColNameDataDictionary.TryAdd("ASProcessStatus", Common.CommonHelper.Instance.GetKeyValuePairs(typeof(ASProcessStatus)));
             InitBaseValue();
             InitListData();
-         
+
         }
         public GridViewDisplayTextResolver DisplayTextResolver;
 
@@ -91,7 +91,7 @@ namespace RUINORERP.UI.AdvancedUIModule
             CurMenuInfo.ModuleID = ModuleID;//这个模块
             CurMenuInfo.MenuType = "行为菜单";
             CurMenuInfo.Sort = -99999;
-            CurMenuInfo.CaptionCN="高级查询";
+            CurMenuInfo.CaptionCN = "高级查询";
             CurMenuInfo.MenuName = "高级查询";
             //CurMenuInfo = MainForm.Instance.AppContext.Db.Insertable<tb_MenuInfo>(CurMenuInfo).ExecuteReturnEntity();
             return CurMenuInfo;
@@ -135,7 +135,7 @@ namespace RUINORERP.UI.AdvancedUIModule
             //这里不这样了，直接用登陆时查出来的。按菜单路径找到菜单 去再搜索 字段。
             //    显示按钮也一样的思路
             this.dataGridView1.FieldNameList = UIHelper.GetFieldNameColList(typeof(T));
-           
+
 
 
             //重构？
@@ -260,7 +260,7 @@ namespace RUINORERP.UI.AdvancedUIModule
                 return;
 
             dataGridView1.ReadOnly = true;
-           
+
             BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
             //QueryConditions 如果条件为0，则会查询全部结果
             //List<T> list = await ctr.BaseQueryByAdvancedNavWithConditionsAsync(true, QueryConditions, LimitQueryConditions, dto);
@@ -300,17 +300,83 @@ namespace RUINORERP.UI.AdvancedUIModule
 
         protected void SelectedData()
         {
-            if (bindingSourceList.Current != null)
+            // 检查是否有选中项
+            bool hasSelection = false;
+            // 创建一个包含所有选中行的列表
+            List<T> selectedItemsList = new List<T>();
+
+            // 检查是否是NewSumDataGridView并且使用Selected列进行多选
+            if (dataGridView1 is RUINORERP.UI.UControls.NewSumDataGridView newSumDgv && newSumDgv.UseSelectedColumn)
             {
+                // 查找Selected列
+                DataGridViewCheckBoxColumn selectedColumn = dataGridView1.Columns["Selected"] as DataGridViewCheckBoxColumn;
+                if (selectedColumn != null)
+                {
+                    // 遍历所有行，收集Selected列为true的行
+                    foreach (DataGridViewRow row in dataGridView1.Rows)
+                    {
+                        if (row.DataBoundItem != null && 
+                            row.Cells[selectedColumn.Index].Value != null && 
+                            Convert.ToBoolean(row.Cells[selectedColumn.Index].Value))
+                        {
+                            if (row.DataBoundItem is T item)
+                            {
+                                selectedItemsList.Add(item);
+                            }
+                        }
+                    }
+                }
+                hasSelection = selectedItemsList.Count > 0;
+            }
+            // 如果使用标准的DataGridView多选功能
+            else if (dataGridView1.MultiSelect && dataGridView1.SelectedRows.Count > 0)
+            {
+                hasSelection = true;
+                // 遍历所有选中的行
+                foreach (DataGridViewRow row in dataGridView1.SelectedRows)
+                {
+                    if (row.DataBoundItem != null && row.DataBoundItem is T item)
+                    {
+                        selectedItemsList.Add(item);
+                    }
+                }
+            }
+            // 单选模式
+            else if (bindingSourceList.Current != null)
+            {
+                hasSelection = true;
+                if (bindingSourceList.Current is T currentItem)
+                {
+                    selectedItemsList.Add(currentItem);
+                }
+                
                 if (OnSelectDataRow != null)
                 {
                     OnSelectDataRow(bindingSourceList.Current);
                 }
-                //将选中的值保存到这里，用在 复杂编辑UI时 编辑外键的其他资料
-                base.Tag = bindingSourceList;//传过去的是bindingSourceList。选中的值用bindingSourceList.Current
-                //退出
+            }
+            
+            // 处理选中的结果
+            if (hasSelection && selectedItemsList.Count > 0)
+            {
+                // 使用选中的项创建新的BindingList
+                BindingList<T> selectedItemsBindingList = new BindingList<T>(selectedItemsList);
+                BindingSource selectedBindingSource = new BindingSource { DataSource = selectedItemsBindingList };
 
+                // 设置返回的数据源为选中项
+                base.Tag = selectedBindingSource;
+                ListDataSoure = selectedBindingSource;
+            }
+            else if (hasSelection)
+            {
+                // 单选模式下的处理
+                base.Tag = bindingSourceList;//传过去的是bindingSourceList。选中的值用bindingSourceList.Current
                 ListDataSoure = bindingSourceList;
+            }
+
+            if (hasSelection)
+            {
+                // 退出
                 Form frm = (this as Control).Parent.Parent as Form;
                 frm.DialogResult = DialogResult.OK;
                 frm.Close();

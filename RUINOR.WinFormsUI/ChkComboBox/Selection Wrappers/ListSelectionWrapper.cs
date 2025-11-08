@@ -259,7 +259,8 @@ namespace RUINOR.WinFormsUI.ChkComboBox
 
         public override string ToString()
         {
-            return Name.ToString();
+            // 处理Name为null的情况
+            return Name?.ToString() ?? "";
         }
 
         public string desc { get; set; }
@@ -267,8 +268,8 @@ namespace RUINOR.WinFormsUI.ChkComboBox
 
         public CmbChkItem(string pkey, string pname)
         {
-            key = pkey;
-            name = pname;
+            key = pkey ?? "";  // 处理pkey为null的情况
+            name = pname ?? ""; // 处理pname为null的情况
         }
 
 
@@ -276,3 +277,5 @@ namespace RUINOR.WinFormsUI.ChkComboBox
     }
 
 }
+
+

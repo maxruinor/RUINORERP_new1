@@ -47,10 +47,12 @@ namespace RUINOR.WinFormsUI.ChkComboBox
             {
                 if (_MultiChoiceResults != value)
                 {
-                    _MultiChoiceResults = value;
-                    // 当属性值改变时，可以触发一些逻辑，例如更新控件的显示
-                    //EventArgs eventArgs = new EventArgs();
-                    //OnCheckBoxCheckedChanged(this, eventArgs);
+                    _MultiChoiceResults = value ?? new List<object>();
+                    // 当属性值改变时，更新CheckBox的选中状态
+                    if (IsHandleCreated && _CheckBoxComboBoxListControl != null)
+                    {
+                        UpdateCheckedStates();
+                    }
                 }
             }
         }
@@ -123,7 +125,9 @@ namespace RUINOR.WinFormsUI.ChkComboBox
                 {
                     if (sb.Length > 0)
                         sb.Append(", ");
-                    sb.Append(Item.Text);
+                    // 检查Item.Text是否为空或null
+                    string itemText = Item.Text ?? "";
+                    sb.Append(itemText);
                 }
             }
             return sb.ToString();
@@ -231,18 +235,40 @@ namespace RUINOR.WinFormsUI.ChkComboBox
                 //数据源绑定情况才
                 if (objectSelection != null)
                 {
+                    // 检查objectSelection.Item是否为null
+                    if (objectSelection.Item != null)
+                    {
+                        if (changedItem.Checked)
+                        {
+                            if (!MultiChoiceResults.Contains(objectSelection.Item.Key))
+                            {
+                                MultiChoiceResults.Add(objectSelection.Item.Key);
+                            }
+                        }
+                        else
+                        {
+                            if (MultiChoiceResults.Contains(objectSelection.Item.Key))
+                            {
+                                MultiChoiceResults.Remove(objectSelection.Item.Key);
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    // 处理非ObjectSelectionWrapper类型的数据
                     if (changedItem.Checked)
                     {
-                        if (!MultiChoiceResults.Contains(objectSelection.Item.Key))
+                        if (!MultiChoiceResults.Contains(changedItem.ComboBoxItem))
                         {
-                            MultiChoiceResults.Add(objectSelection.Item.Key);
+                            MultiChoiceResults.Add(changedItem.ComboBoxItem);
                         }
                     }
                     else
                     {
-                        if (MultiChoiceResults.Contains(objectSelection.Item.Key))
+                        if (MultiChoiceResults.Contains(changedItem.ComboBoxItem))
                         {
-                            MultiChoiceResults.Remove(objectSelection.Item.Key);
+                            MultiChoiceResults.Remove(changedItem.ComboBoxItem);
                         }
                     }
                 }
@@ -314,6 +340,29 @@ namespace RUINOR.WinFormsUI.ChkComboBox
             foreach (CheckBoxComboBoxItem Item in CheckBoxItems)
                 if (Item.Checked)
                     Item.Checked = false;
+        }
+
+        /// <summary>
+        /// 根据MultiChoiceResults更新所有CheckBox的选中状态
+        /// </summary>
+        public void UpdateCheckedStates()
+        {
+            foreach (CheckBoxComboBoxItem cbItem in CheckBoxItems)
+            {
+                ObjectSelectionWrapper<CmbChkItem> wrapper = cbItem.ComboBoxItem as ObjectSelectionWrapper<CmbChkItem>;
+                if (wrapper != null)
+                {
+                    // 检查wrapper.Item是否为null
+                    if (wrapper.Item != null)
+                    {
+                        cbItem.Checked = MultiChoiceResults.Contains(wrapper.Item.Key);
+                    }
+                }
+                else
+                {
+                    cbItem.Checked = MultiChoiceResults.Contains(cbItem.ComboBoxItem);
+                }
+            }
         }
 
         #endregion
@@ -590,6 +639,9 @@ namespace RUINOR.WinFormsUI.ChkComboBox
                 && !DesignMode)
                 _CheckBoxComboBox.CheckBoxItems[0].Visible = false;
 
+            // 同步完成后，更新CheckBox的选中状态
+            _CheckBoxComboBox.UpdateCheckedStates();
+
             ResumeLayout();
         }
 
@@ -618,7 +670,23 @@ namespace RUINOR.WinFormsUI.ChkComboBox
             if (_CheckBoxComboBox.DataSource != null)
                 AddBindings();
             else
-                Text = comboBoxItem.ToString();
+                // 检查comboBoxItem是否为null，避免空引用异常
+                Text = comboBoxItem?.ToString() ?? "";
+
+            // 检查该项是否应该被选中
+            ObjectSelectionWrapper<CmbChkItem> wrapper = comboBoxItem as ObjectSelectionWrapper<CmbChkItem>;
+            if (wrapper != null)
+            {
+                // 检查wrapper.Item是否为null
+                if (wrapper.Item != null)
+                {
+                    Checked = _CheckBoxComboBox.MultiChoiceResults.Contains(wrapper.Item.Key);
+                }
+            }
+            else
+            {
+                Checked = _CheckBoxComboBox.MultiChoiceResults.Contains(comboBoxItem);
+            }
         }
         #endregion
 

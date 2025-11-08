@@ -68,7 +68,7 @@ namespace RUINORERP.Business
             _unitOfWorkManage = unitOfWorkManage;
             _appContext = appContext;
             _rowLevelAuthFilter = _appContext.GetRequiredService<SqlSugarRowLevelAuthFilter>();
-            
+
             BizType bizType = BizMapperService.EntityMappingHelper.GetBizType(typeof(T).Name);
             BizTypeText = bizType.ToString();
             BizTypeInt = (int)bizType;
@@ -978,442 +978,117 @@ namespace RUINORERP.Business
         /// <param name="pageSize"></param>
         /// <param name="RowAuthFilter">行级数据过滤条件</param>
         /// <returns></returns>
+        /// <summary>
+        /// 基于高级导航条件的异步查询方法
+        /// </summary>
+        /// <param name="useLike">是否使用LIKE查询</param>
+        /// <param name="QueryConditionFilter">查询条件过滤器</param>
+        /// <param name="dto">数据传输对象</param>
+        /// <param name="pageNum">页码</param>
+        /// <param name="pageSize">每页大小</param>
+        /// <param name="additionalSqlWhere">额外的SQL条件</param>
+        /// <returns>查询结果列表</returns>
         public async virtual Task<List<T>> BaseQueryByAdvancedNavWithConditionsAsync(bool useLike,
             QueryFilter QueryConditionFilter, object dto, int pageNum, int pageSize, string additionalSqlWhere = "")
         {
-            ISugarQueryable<T> querySqlQueryable;
-
+            // 获取查询条件和Lambda表达式
             List<string> queryConditions = QueryConditionFilter.GetQueryConditions();
-
             Expression<Func<T, bool>> whereLambda = QueryConditionFilter.GetFilterExpression<T>();
 
-            //根据ISugarQueryable IN NOT的语法拼接
-            List<string> sqlList = new List<string>();
-            string sql = string.Empty;
-            string where = string.Empty;
-            string select = string.Empty;
-            ExpressionToSql expressionToSql = new ExpressionToSql();
-            int counter = 0;
-            foreach (var item in QueryConditionFilter.QueryFields)
-            {
-                //如果这个item的字段 在T中是？类型 说明可有可无？则不用加子限制条件？如产品中供应商不一定填写了。
-                PropertyInfo propertyInfo = typeof(T).GetProperty(item.FieldName);
-                if (item.SubFilter.FilterLimitExpressions.Count > 0 && propertyInfo.PropertyType.Name != "Nullable`1")
-                {
-                    select = $" EXISTS ( SELECT [{item.SubFilter.QueryTargetType.Name}].{item.FieldName} FROM [{item.SubFilter.QueryTargetType.Name}] WHERE [{typeof(T).Name}].{item.FieldName}= [{item.SubFilter.QueryTargetType.Name}].{item.FieldName}  ";
-                    where = expressionToSql.GetSql(item.SubFilter.QueryTargetType, item.SubFilter.GetFilterLimitExpression(item.SubFilter.QueryTargetType));
-                    where = $" and ({where})) ";
-                    counter++;
-                }
-                sql = select + where;
-                if (!sql.IsNotEmptyOrNull() && !sqlList.Contains(sql) && sql.ToString().Length > 0)
-                {
-                    sqlList.Add(sql);
-                }
+            // 构建子查询条件
+            List<string> subQueryConditions = BuildSubQueryConditions(QueryConditionFilter);
 
+            // 初始化基础查询
+            var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<T>();
+            
+            //基础表不用导航 
+            if(!Cache.TableSchemaManager.Instance.GetAllTableNames().Contains(typeof(T).Name))
+            {
+                // 自动更新导航关系(最多两层)
+                querySqlQueryable.IncludesAllFirstLayer();
             }
-            //if (counter > 1)
-            //{
-            //    throw new Exception("多个子限制条件的情况，请联系管理员处理！" + sql);
-            //}
 
-            if (queryConditions == null || queryConditions.Count == 0)
+            
+
+            // 应用查询条件
+            if (queryConditions != null && queryConditions.Count > 0)
             {
-                if (typeof(T).GetProperties().ContainsProperty("isdeleted"))
-                {
-                    querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<T>()
-                    //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
-                    .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
-                    .WhereIF(whereLambda != null, whereLambda)
-                    .Where("isdeleted=@isdeleted", new { isdeleted = 0 });
-                }
-                else
-                {
-                    querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<T>()
-                  //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
-                  .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
-                  .WhereIF(whereLambda != null, whereLambda)
-                  ;
-                }
+                querySqlQueryable = querySqlQueryable.WhereAdv(useLike, queryConditions, dto);
 
-            }
-            else
-            {
-                if (typeof(T).GetProperties().ContainsProperty("isdeleted"))
+                // 应用子查询条件(仅在有查询条件时)
+                foreach (var subQuery in subQueryConditions)
                 {
-                    querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<T>()
-                                //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
-                                .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
-                                .WhereAdv(useLike, queryConditions, dto)
-                                .WhereIF(whereLambda != null, whereLambda)
-                                .Where("isdeleted=@isdeleted", new { isdeleted = 0 });
-                }
-                else
-                {
-                    querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<T>()
-                   //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
-                   .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
-                   .WhereIF(whereLambda != null, whereLambda)
-                   .WhereAdv(useLike, queryConditions, dto);
-
-                    foreach (var SqlItem in sqlList)
+                    if (!string.IsNullOrEmpty(subQuery))
                     {
-                        if (!string.IsNullOrEmpty(SqlItem))
-                        {
-                            //如果有子查询。暂时这样上面SQL拼接处理。
-                            querySqlQueryable = querySqlQueryable.Where(SqlItem);
-                        }
+                        querySqlQueryable = querySqlQueryable.Where(subQuery);
                     }
-
                 }
             }
 
-            // 添加额外的SQL条件
+            // 应用Lambda表达式条件
+            if (whereLambda != null)
+            {
+                querySqlQueryable = querySqlQueryable.Where(whereLambda);
+            }
+
+            // 应用isdeleted条件(如果存在该属性)
+            if (typeof(T).GetProperties().ContainsProperty("isdeleted"))
+            {
+                querySqlQueryable = querySqlQueryable.Where("isdeleted=@isdeleted", new { isdeleted = 0 });
+            }
+
+            // 应用额外的SQL条件和行级权限过滤
             if (!string.IsNullOrEmpty(additionalSqlWhere))
             {
-                // 应用行级权限过滤（使用注入的过滤器实例）
                 querySqlQueryable = _rowLevelAuthFilter.ApplyFilter<T>(querySqlQueryable, additionalSqlWhere);
             }
 
+            // 返回分页结果
             return await querySqlQueryable.ToPageListAsync(pageNum, pageSize) as List<T>;
         }
 
-
-
-        #region 2024-7-23再次优化 ,因为无法调试，所以将拼接去掉T单独出来 测试使用
-
-
-        [Obsolete("测试用的方法")]
-        public static StringBuilder GetWhereCondition(bool useLike, List<string> _queryConditions, object whereObj, Type colType)
+        /// <summary>
+        /// 构建子查询条件
+        /// </summary>
+        /// <param name="queryFilter">查询过滤器</param>
+        /// <returns>子查询条件列表</returns>
+        private List<string> BuildSubQueryConditions(QueryFilter queryFilter)
         {
-            StringBuilder sb = new StringBuilder();
-            if (whereObj == null)
-            {
-                return sb;
-            }
-            List<string> queryConditions = new List<string>();
-            foreach (var item in _queryConditions)
-            {
+            List<string> sqlList = new List<string>();
+            ExpressionToSql expressionToSql = new ExpressionToSql();
 
-                var conValue = whereObj.GetPropertyValue(item);
-                if (conValue == null || conValue.ToString() != "-1")
+            foreach (var item in queryFilter.QueryFields)
+            {
+                // 检查字段是否为可空类型，如果是则跳过子查询
+                PropertyInfo propertyInfo = typeof(T).GetProperty(item.FieldName);
+                if (item.SubFilter.FilterLimitExpressions.Count > 0 &&
+                    propertyInfo != null &&
+                    propertyInfo.PropertyType.Name != "Nullable`1")
                 {
-                    queryConditions.Add(item);
-                }
-            }
+                    // 构建EXISTS子查询
+                    string tableName = typeof(T).Name;
+                    string targetTableName = item.SubFilter.QueryTargetType.Name;
+                    string fieldName = item.FieldName;
 
-            //这里的思路是将各种情况的where集合分类处理，最后拼接，如果有条件限制，则集合中过滤掉
+                    string selectClause = $"EXISTS (SELECT [{targetTableName}].[{fieldName}] FROM [{targetTableName}] WHERE [{tableName}].[{fieldName}] = [{targetTableName}].[{fieldName}]";
+                    string whereClause = expressionToSql.GetSql(item.SubFilter.QueryTargetType,
+                        item.SubFilter.GetFilterLimitExpression(item.SubFilter.QueryTargetType));
 
-
-            var whereObjType = whereObj.GetType();
-            Dictionary<string, object> whereDic = new Dictionary<string, object>();      //装载where条件
-            Dictionary<string, List<int>> inDic = new Dictionary<string, List<int>>();       //装载in条件
-            Dictionary<string, object> dicTimeRange = new Dictionary<string, object>();  //装载时间区间类型的条件
-            Dictionary<string, object> dicLike = new Dictionary<string, object>();//装载like类型的条件
-            var expSb = new StringBuilder();//条件是拼接的所以声明在前面
-            #region 先取扩展特性的字段 自定义的标记解析
-            List<AdvExtQueryAttribute> tempAdvExtList = new List<AdvExtQueryAttribute>();
-            foreach (PropertyInfo field in whereObj.GetType().GetProperties())
-            {
-                foreach (Attribute attr in field.GetCustomAttributes(true))
-                {
-                    if (attr is AdvExtQueryAttribute)
+                    if (!string.IsNullOrEmpty(whereClause))
                     {
-                        var advLikeAttr = attr as AdvExtQueryAttribute;
-                        tempAdvExtList.Add(advLikeAttr);
-                    }
-                }
-            }
-
-            AdvQueryAttribute entityAttr;
-
-
-
-            foreach (var property in whereObjType.GetProperties())
-            {
-                foreach (Attribute attr in property.GetCustomAttributes(true))
-                {
-                    entityAttr = attr as AdvQueryAttribute;
-                    if (null != entityAttr)
-                    {
-                        if (entityAttr.ColDesc.Trim().Length > 0)
+                        string subQuery = $"{selectClause} AND ({whereClause}))";
+                        if (!sqlList.Contains(subQuery))
                         {
-                            var curName = property.Name;
-                            if (property.PropertyType.Name.Equals("List`1"))  //集合
-                            {
-                                var curValue = property.GetValue(whereObj, null);
-                                inDic.Add(curName, (List<int>)curValue);
-                            }
-                            else
-                            {
-                                List<AdvExtQueryAttribute> extlist = tempAdvExtList.Where(w => w.RelatedFields == curName).ToList();
-                                if (extlist.Count > 0)
-                                {
-                                    if (property.PropertyType.IsGenericType && property.PropertyType.GetGenericTypeDefinition() == typeof(Nullable<>))
-                                    {
-                                        colType = Nullable.GetUnderlyingType(property.PropertyType);
-                                    }
-                                    else
-                                    {
-                                        colType = property.PropertyType;
-                                    }
-
-                                    switch (extlist[0].ProcessType)
-                                    {
-                                        case RUINORERP.Global.AdvQueryProcessType.defaultSelect:
-
-                                            var curValue = property.GetValue(whereObj, null);
-                                            if (curValue == null) continue;   //排除参数值为null的查询条件
-                                            if (string.IsNullOrEmpty(curValue.ToString())) continue;
-
-                                            //重点代码 这之前为int，实际下拉基本是long
-                                            long selectID = 0;
-                                            if (long.TryParse(curValue.ToString(), out selectID))
-                                            {
-                                                if (selectID != -1 && selectID != 0)
-                                                {
-                                                    whereDic.Add(curName, curValue);
-                                                }
-                                            }
-
-                                            break;
-                                        case RUINORERP.Global.AdvQueryProcessType.datetimeRange:
-                                            if (whereObj.GetPropertyValue(extlist[0].ColName) != null)
-                                            {
-                                                // sb.Append(extlist[0].RelatedFields).Append($" >= @{whereObj.GetPropertyValue(extlist[0].ColName)}");
-                                                DateTime time1 = Convert.ToDateTime(whereObj.GetPropertyValue(extlist[0].ColName).ToString());
-                                                //var v_str1 = string.Format("{0}", time1.ToString("yyyy-MM-dd HH:mm:ss"));
-                                                var v_str1 = string.Format("{0}", time1.ToString("yyyy-MM-dd"));
-                                                dicTimeRange.Add(extlist[0].ColName, v_str1);
-                                            }
-                                            if (whereObj.GetPropertyValue(extlist[1].ColName) != null)
-                                            {
-                                                DateTime time2 = Convert.ToDateTime(whereObj.GetPropertyValue(extlist[1].ColName).ToString());
-                                                //                                                var v_str2 = string.Format("{0}", time2.ToString("yyyy-MM-dd HH:mm:ss"));
-                                                var v_str2 = string.Format("{0}", time2.ToString("yyyy-MM-dd"));
-                                                dicTimeRange.Add(extlist[1].ColName, v_str2 + " 23:59:59");
-                                            }
-                                            break;
-                                        case RUINORERP.Global.AdvQueryProcessType.stringLike:
-                                            //扩展属性 直接like
-                                            var curlikeValue = whereObj.GetPropertyValue(extlist[0].RelatedFields);
-                                            if (curlikeValue == null) continue;   //排除参数值为null的查询条件
-                                            if (string.IsNullOrEmpty(curlikeValue.ToString())) continue;
-                                            dicLike.Add(extlist[0].RelatedFields, curlikeValue);
-                                            break;
-                                        case RUINORERP.Global.AdvQueryProcessType.useYesOrNoToAll:
-                                            var UseboolObj = whereObj.GetPropertyValue(extlist[0].ColName);
-                                            bool useBool = UseboolObj.ToBool();
-                                            if (useBool)
-                                            {
-                                                var curBoolValue = property.GetValue(whereObj, null);
-                                                if (curBoolValue == null) continue;   //排除参数值为null的查询条件
-                                                if (string.IsNullOrEmpty(curBoolValue.ToString())) continue;
-                                                whereDic.Add(curName, curBoolValue);
-                                            }
-                                            break;
-                                        default:
-                                            break;
-                                    }
-
-
-                                }
-                                else
-                                {
-                                    var curValue = property.GetValue(whereObj, null);
-                                    if (curValue == null) continue;   //排除参数值为null的查询条件
-                                    if (string.IsNullOrEmpty(curValue.ToString())) continue;
-                                    whereDic.Add(curName, curValue);
-                                }
-
-                            }
-                        }
-
-                    }
-                }
-
-            }
-
-            #endregion
-
-            #region  LIKE 处理
-            StringBuilder sblike = new StringBuilder();
-            if (dicLike.Count > 0)
-            {
-                // 动态拼接
-
-                List<string> para = new List<string>();
-                for (int i = 0; i < dicLike.Keys.Count; i++)
-                {
-
-                    var keys = dicLike.Keys.ToArray();
-                    var values = dicLike.Values.ToArray();
-                    // 如果有条件，并且字段不存在给定的条件中，则忽略
-                    if (queryConditions.Count > 0 && !queryConditions.Where(c => c == keys[i]).Any())
-                    {
-                        continue;
-                    }
-                    //自定义查询拼接
-                    para.Add(keys[i]);
-                    para.Add("like");
-                    para.Add("{string}:%" + values[i].ToString() + "%");
-                    para.Add("&&");
-                }
-                if (para.Count > 1 && para.Contains("&&"))
-                {
-                    para.RemoveAt(para.Count - 1);
-                }
-
-                var whereFunc = ObjectFuncModel.Create("Format", para.ToArray());
-
-
-
-            }
-            #endregion
-
-            #region  时间等区间
-            StringBuilder sbr = new StringBuilder();
-            if (dicTimeRange.Count > 0)
-            {
-                // 动态拼接
-                for (int i = 0; i < dicTimeRange.Keys.Count; i++)
-                {
-                    var keys = dicTimeRange.Keys.ToArray();
-                    var values = dicTimeRange.Values.ToArray();
-                    // 如果有条件，并且字段不存在给定的条件中，则忽略
-                    if (useLike)
-                    {
-                        if (queryConditions.Count > 0 && !queryConditions.Where(c => keys[i].Contains(c)).Any())
-                        {
-                            continue;
+                            sqlList.Add(subQuery);
                         }
                     }
-                    else
-                    {
-                        if (queryConditions.Count > 0 && !queryConditions.Where(c => c == keys[i]).Any())
-                        {
-                            continue;
-                        }
-                    }
-
-                    //自定义查询拼接
-                    if (keys[i].Contains("_Start"))
-                    {
-                        // $"{property.Name} = Convert.ToDateTime(\"{value}\") ";
-                        sbr.Append($"{tempAdvExtList.FindLast(f => f.ColName == keys[i]).RelatedFields} >=\"{values[i]}\" ").Append(" and ");
-                        continue;
-                    }
-
-                    if (keys[i].Contains("_End"))
-                    {
-                        sbr.Append($"{tempAdvExtList.FindLast(f => f.ColName == keys[i]).RelatedFields} <=\"{values[i]}\" ").Append(" and ");
-                        continue;
-                    }
-                    //sbr.Append(fieldNames[i]).Append($" == @{i}").Append(" && ");
-                }
-                var lambdaStr = sbr.ToString();
-                if (lambdaStr.Trim().Length > 0 && lambdaStr.Contains("and"))
-                {
-                    lambdaStr = lambdaStr.Substring(0, lambdaStr.Length - " and ".Length);
-                }
-                // 构建表达式
-                // var Expression = DynamicExpressionParser.ParseLambda<T, bool>(new ParsingConfig(), true, lambdaStr, dicTimeRange.Values);
-                //sugarQueryableWhere = sugarQueryableWhere.Where(Expression);
-            }
-            #endregion
-
-            #region  in 类型条件处理
-            foreach (var item in inDic)
-            {
-                var key = item.Key;
-                var value = item.Value;
-                // 如果有条件，并且字段不存在给定的条件中，则忽略
-                if (queryConditions.Count > 0 && !queryConditions.Where(c => c == key).Any())
-                {
-                    continue;
-                }
-
-                //转换in条件表达式树
-                // var e2 = DynamicExpressionParser.ParseLambda<T, object>(new ParsingConfig(), true, expSb.ToString(), whereObj);
-
-                //https://www.coder.work/article/7717381
-                //https://www.cnblogs.com/myzony/p/9143692.html  
-                // 构建表达式
-                // DynamicExpressionParser.ParseLambda<TEntity, bool>(new ParsingConfig(), false, lambdaStr, parameters.Values.ToArray());
-
-
-                //sugarQueryableWhere = sugarQueryableWhere.In(e2, value);
-            }
-
-            #endregion
-
-            #region  大部分的 where处理
-            foreach (var property in colType.GetProperties())
-            {
-                foreach (var item in whereDic)
-                {
-                    var key = item.Key;
-                    var value = item.Value;
-                    if (property.Name != key) continue;
-                    // 如果有条件，并且字段不存在给定的条件中，则忽略
-                    if (queryConditions.Count > 0 && !queryConditions.Where(c => c == key).Any())
-                    {
-                        continue;
-                    }
-                    if (value.ToString() == "0001-01-01 00:00:00")
-                    {
-                        continue;
-                    }
-                    //如果是时间要特殊处理,下拉值也在whereDic中
-                    if (item.Value.GetType().ToString().ToLower().Contains("time"))
-                    {
-                        if (item.Value.ObjToString().ToDateTime() < System.DateTime.Now.AddYears(-50))
-                        {
-                            continue;
-                        }
-                        //只到日期
-                        value = string.Format("{0}", item.Value.ObjToString().ToDateTime().ToString("yyyy-MM-dd"));
-                        #region 日期处理  当一个时间条件时 会限制到具体时间，思路是将他变为一个区间
-
-                        //DateTime startDate = Convert.ToDateTime(item.Value.ObjToString().ToDateTime().ToString("yyyy-MM-dd"));
-                        //DateTime endDate = Convert.ToDateTime(item.Value.ObjToString().ToDateTime().ToString("yyyy-MM-dd"));
-
-                        DateTime startDate = Convert.ToDateTime(value);
-                        DateTime endDate = Convert.ToDateTime(value);
-
-                        var formattedEndDate = endDate.Date.AddDays(1);
-                        expSb.Append($"{property.Name} >=\"{startDate}\" ").Append(" and ");
-                        expSb.Append($"{property.Name} <=\"{formattedEndDate}\" ").Append(" and ");
-                        #endregion
-                    }
-                    else
-                    {
-                        expSb.Append(SqlSugarHelper.ProcessExp(property, value));          //拼接where条件
-                        expSb.Append(" and ");
-                    }
                 }
             }
-            expSb.Append(sb.ToString());
-            if (expSb.Length != 0)                                     //转换where条件表达式树
-            {
-                var exp = expSb.ToString().Remove(expSb.Length - 4, 4);
-                System.Console.WriteLine(exp);
-                //https://www.coder.work/article/7717381  看这里
-                // var e = DynamicExpressionParser.ParseLambda<T, bool>(new ParsingConfig(), true, exp, whereObj);
-                //ew ParsingConfig(), true, "City = @0", "London"
-                //sugarQueryableWhere = sugarQueryable.Where(e);
-            }
 
-            #endregion
-
-            return sb;
+            return sqlList;
         }
 
 
-
-
-
-        #endregion
 
 
 
@@ -1432,18 +1107,6 @@ namespace RUINORERP.Business
             // throw new Exception("子类要重写BaseQueryByAdvancedNavAsync");
         }
 
-        /// <summary>
-        /// where的条件查询
-        /// </summary>
-        /// <param name="exp"></param>
-        /// <returns></returns>
-        public virtual List<T> BaseQueryByWhere(Expression<Func<T, bool>> exp)
-        {
-            //  var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<T>();
-            var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<T>().Where(exp);
-            return querySqlQueryable.ToList();
-            // throw new Exception("子类要重写BaseQueryByAdvancedNavAsync");
-        }
 
 
 

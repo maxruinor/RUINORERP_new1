@@ -75,6 +75,9 @@ namespace RUINORERP.UI.AdvancedUIModule
                 int inputWidth = 150; // 默认宽度
                 switch (queryField.AdvQueryFieldType)
                 {
+                    case AdvQueryProcessType.CmbMultiChoiceCanIgnore:
+                        inputWidth = 190;
+                        break;
                     case AdvQueryProcessType.datetimeRange:
                         inputWidth = 280; // 日期范围控件较宽
                         break;
@@ -430,8 +433,10 @@ namespace RUINORERP.UI.AdvancedUIModule
                         UCCmbMultiChoiceCanIgnore choiceCanIgnore = new UCCmbMultiChoiceCanIgnore();
                         choiceCanIgnore.Name = queryField.FieldName;
                         choiceCanIgnore.Text = "";
-                        choiceCanIgnore.Width = 150;
-
+                        choiceCanIgnore.Width = 190;
+                        // 设置实体类型和查询过滤器，用于查询按钮功能
+                        choiceCanIgnore.TargetEntityType = queryField.SubFilter.QueryTargetType;
+                        choiceCanIgnore.QueryFilter = queryField.SubFilter;
 
                         //只处理需要缓存的表
                         pair = new KeyValuePair<string, string>();
@@ -748,7 +753,7 @@ namespace RUINORERP.UI.AdvancedUIModule
                         }
                     
                         // 确保日期控件大小正确
-                        dtpgroup.Size = new System.Drawing.Size(280, 25);
+                        dtpgroup.Size = new System.Drawing.Size(265, 25);
                         // 设置日期控件位置
                         dtpgroup.Location = new System.Drawing.Point(_x, _y);
                         dtpgroup.Visible = true;

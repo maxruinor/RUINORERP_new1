@@ -7,6 +7,17 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Reflection;
+using RUINORERP.Business;
+using RUINORERP.Common.Helper;
+using RUINORERP.Global;
+using Krypton.Toolkit;
+using RUINORERP.IServices;
+using RUINORERP.Business.Processor;
+using RUINORERP.Model;
+using RUINORERP.UI.BaseForm;
+using RUINORERP.Business.Cache;
+using RUINOR.WinFormsUI.ChkComboBox;
 
 namespace RUINORERP.UI.AdvancedUIModule
 {
@@ -19,7 +30,7 @@ namespace RUINORERP.UI.AdvancedUIModule
         {
             InitializeComponent();
             chkCanIgnore.CheckedChanged += chkCanIgnore_CheckedChanged;
-           
+
         }
         ContextMenuStrip contentMenu1;
         private void chkCanIgnore_CheckedChanged(object sender, EventArgs e)
@@ -29,7 +40,7 @@ namespace RUINORERP.UI.AdvancedUIModule
 
         private void UCCmbMultiChoiceCanIgnore_Load(object sender, EventArgs e)
         {
-            chkCanIgnore.Checked=true;
+            chkCanIgnore.Checked = true;
 
             contentMenu1 = new ContextMenuStrip();
             contentMenu1.Items.Add("全选");
@@ -66,9 +77,209 @@ namespace RUINORERP.UI.AdvancedUIModule
 
         }
 
+        /// <summary>
+        /// 实体类型，用于查询窗口
+        /// </summary>
+        private Type _targetEntityType;
+
+        /// <summary>
+        /// 获取或设置目标实体类型
+        /// </summary>
+        public Type TargetEntityType
+        {
+            get { return _targetEntityType; }
+            set { _targetEntityType = value; }
+        }
+
+        /// <summary>
+        /// 查询过滤器，用于限制查询结果
+        /// </summary>
+        private QueryFilter _queryFilter;
+
+        /// <summary>
+        /// 获取或设置查询过滤器
+        /// </summary>
+        public QueryFilter QueryFilter
+        {
+            get { return _queryFilter; }
+            set { _queryFilter = value; }
+        }
+
+        /// <summary>
+        /// 点击查询按钮时触发，打开实体查询窗口
+        /// </summary>
+        /// <param name="sender">事件发送者</param>
+        /// <param name="e">事件参数</param>
         private void btnRef_Click(object sender, EventArgs e)
         {
+            if (_targetEntityType == null)
+            {
+                // 尝试从Tag属性获取实体类型
+                if (this.Tag != null && this.Tag is Type)
+                {
+                    _targetEntityType = this.Tag as Type;
+                }
+                else
+                {
+                    MessageBox.Show("未设置目标实体类型，无法打开查询窗口。", "操作提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+            }
 
+            try
+            {
+                // 获取实体表名
+                string entityTypeName = _targetEntityType.Name;
+
+                // 检查用户权限
+                tb_MenuInfo menuinfo = MainForm.Instance.MenuList.FirstOrDefault(t => t.EntityName == entityTypeName);
+                if (menuinfo == null)
+                {
+                    MessageBox.Show("您没有执行此菜单的权限，或配置参数不正确。请联系管理员。", "权限提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                // 创建查询窗口和列表控件
+                BaseUControl ucBaseList = null;
+                bool canEdit = false; // 默认为只读查询模式
+
+                if (canEdit)
+                {
+                    // 编辑模式（如果需要）
+                    ucBaseList = Startup.GetFromFacByName<BaseUControl>(menuinfo.FormName);
+                    ucBaseList.QueryConditionFilter = _queryFilter;
+                }
+                else
+                {
+                    // 查询模式
+                    Type genericType = typeof(UCAdvFilterGeneric<>).MakeGenericType(_targetEntityType);
+                    ucBaseList = Activator.CreateInstance(genericType) as BaseUControl;
+                    if (ucBaseList != null)
+                    {
+                        ucBaseList.QueryConditionFilter = _queryFilter;
+                        ucBaseList.Tag = this;
+                    }
+                }
+
+                if (ucBaseList != null)
+                {
+                    // 设置为选择模式
+                    ucBaseList.Runway = BaseListRunWay.选中模式;
+
+                    // 创建并配置查询窗口
+                    frmBaseEditList frmedit = new frmBaseEditList();
+                    frmedit.StartPosition = FormStartPosition.CenterScreen;
+                    ucBaseList.Dock = DockStyle.Fill;
+                    frmedit.kryptonPanel1.Controls.Add(ucBaseList);
+
+                    // 设置窗口标题
+                    var BizTypeText = Business.BizMapperService.EntityMappingHelper.GetBizType(entityTypeName).ToString();
+                    frmedit.Text = "关联查询" + "-" + BizTypeText;
+                    // 显示窗口并处理选择结果
+                    if (frmedit.ShowDialog() == DialogResult.OK)
+                    {
+                        ProcessSelectedResults(ucBaseList);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("打开查询窗口时发生错误：" + ex.Message, "错误提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// 处理从查询窗口返回的选择结果
+        /// </summary>
+        /// <param name="ucBaseList">查询窗口的列表控件</param>
+        private void ProcessSelectedResults(BaseUControl ucBaseList)
+        {
+            if (ucBaseList.Tag == null)
+                return;
+
+            try
+            {
+                // 获取选择的数据
+                BindingSource bs = ucBaseList.ListDataSoure as BindingSource;
+                if (bs != null && bs.List != null && bs.List.Count > 0)
+                {
+                    // 保存现有的选中项，确保不丢失
+                    List<object> existingSelectedValues = new List<object>();
+                    if (chkMulti.MultiChoiceResults != null)
+                    {
+                        existingSelectedValues.AddRange(chkMulti.MultiChoiceResults);
+                    }
+
+                    string valueField = string.Empty;
+                    string displayField = string.Empty;
+
+                    // 尝试从CheckBoxComboBox的绑定信息中获取字段名
+                    if (chkMulti.DataBindings.Count > 0)
+                    {
+                        Binding binding = chkMulti.DataBindings[0];
+                        valueField = binding.BindingMemberInfo.BindingField;
+                    }
+
+                    // 如果没有绑定信息，尝试获取主键字段
+                    if (string.IsNullOrEmpty(valueField))
+                    {
+                        var cacheManager = Startup.GetFromFac<IEntityCacheManager>();
+                        var tableSchema = cacheManager.GetTableSchema(_targetEntityType.Name);
+                        if (tableSchema != null)
+                        {
+                            valueField = tableSchema.PrimaryKeyField;
+                            displayField = tableSchema.DisplayField;
+                        }
+                    }
+
+                    if (!string.IsNullOrEmpty(valueField))
+                    {
+                        // 处理多选情况，获取所有选中项
+                        List<object> selectedValues = new List<object>();
+                        foreach (var item in bs.List)
+                        {
+                            if (item != null)
+                            {
+                                object selectValue = ReflectionHelper.GetPropertyValue(item, valueField);
+                                if (selectValue != null)
+                                {
+                                    selectedValues.Add(selectValue);
+                                }
+                            }
+                        }
+
+                        // 创建新的MultiChoiceResults集合，包含原有的和新选择的项
+                        List<object> newSelectedValues = new List<object>(existingSelectedValues);
+                        foreach (var selectValue in selectedValues)
+                        {
+                            if (!newSelectedValues.Contains(selectValue))
+                            {
+                                newSelectedValues.Add(selectValue);
+                            }
+                        }
+
+                        // 更新MultiChoiceResults
+                        chkMulti.MultiChoiceResults.Clear();
+                        foreach (var value in newSelectedValues)
+                        {
+                            chkMulti.MultiChoiceResults.Add(value);
+                        }
+
+                        // 更新所有复选框的选中状态
+                        foreach (CheckBoxComboBoxItem cbItem in chkMulti.CheckBoxItems)
+                        {
+                            if (cbItem.ComboBoxItem is ObjectSelectionWrapper<CmbChkItem> wrapper)
+                            {
+                                cbItem.Checked = newSelectedValues.Contains(wrapper.Item.Key);
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("处理选择结果时发生错误：" + ex.Message, "错误提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
     }
 }

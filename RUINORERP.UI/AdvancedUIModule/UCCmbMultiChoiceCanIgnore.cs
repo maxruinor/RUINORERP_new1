@@ -66,5 +66,9 @@ namespace RUINORERP.UI.AdvancedUIModule
 
         }
 
+        private void btnRef_Click(object sender, EventArgs e)
+        {
+
+        }
     }
 }

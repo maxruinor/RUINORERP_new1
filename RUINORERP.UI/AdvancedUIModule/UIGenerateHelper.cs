@@ -44,6 +44,61 @@ namespace RUINORERP.UI.AdvancedUIModule
 {
     public class UIGenerateHelper
     {
+        /// <summary>
+        /// 预计算每列的最大宽度，确保布局整齐
+        /// </summary>
+        /// <param name="queryFields">查询字段列表</param>
+        /// <param name="columnCount">列数</param>
+        /// <param name="panel">容器面板</param>
+        /// <returns>每列的宽度字典</returns>
+        private static Dictionary<int, int> CalculateColumnWidths(List<QueryField> queryFields, int columnCount, Krypton.Toolkit.KryptonPanel panel)
+        {
+            // 初始化每列宽度为最小值
+            Dictionary<int, int> columnWidths = new Dictionary<int, int>();
+            for (int i = 0; i < columnCount; i++)
+            {
+                columnWidths[i] = 200; // 默认最小宽度
+            }
+
+            // 遍历所有查询字段，计算每列所需的最大宽度
+            for (int i = 0; i < queryFields.Count; i++)
+            {
+                QueryField queryField = queryFields[i];
+                int columnIndex = i % columnCount;
+
+                // 计算标签宽度
+                Graphics graphics = panel.CreateGraphics();
+                float textWidth = UITools.CalculateTextWidth(queryField.Caption, SystemFonts.DefaultFont, graphics);
+                int labelWidth = (int)textWidth + 10; // 加上一些额外的空间
+
+                // 根据控件类型估算输入控件宽度
+                int inputWidth = 150; // 默认宽度
+                switch (queryField.AdvQueryFieldType)
+                {
+                    case AdvQueryProcessType.datetimeRange:
+                        inputWidth = 280; // 日期范围控件较宽
+                        break;
+                    case AdvQueryProcessType.datetime:
+                        inputWidth = 130; // 日期控件
+                        break;
+                    case AdvQueryProcessType.YesOrNo:
+                    case AdvQueryProcessType.useYesOrNoToAll:
+                        inputWidth = 50; // 复选框较窄
+                        break;
+                }
+
+                // 计算总宽度（标签宽度 + 输入控件宽度 + 间距）
+                int totalWidth = labelWidth + inputWidth + 15; // 15为标签和控件之间的间距
+
+                // 更新该列的最大宽度
+                if (totalWidth > columnWidths[columnIndex])
+                {
+                    columnWidths[columnIndex] = totalWidth;
+                }
+            }
+
+            return columnWidths;
+        }
 
         public static BaseEntity CreateQueryUI(Type type, bool useLike, Krypton.Toolkit.KryptonPanel UcPanel, QueryFilter queryFilter, decimal DefineColNum)
         {
@@ -235,50 +290,19 @@ namespace RUINORERP.UI.AdvancedUIModule
 
             //定义每列放几组控件
             int RowOfColNum = 4;
-            int row = 0;
             if (menuPersonalization != null)
             {
                 RowOfColNum = menuPersonalization.QueryConditionCols.ToInt();
             }
 
-            //计算有多少列 cols没有使用 余数
-            int cols = queryFields.Count % RowOfColNum;
+            // 预计算每列的最大宽度，确保布局整齐
+            Dictionary<int, int> columnWidths = CalculateColumnWidths(queryFields, RowOfColNum, UcPanel);
 
-            #region 计算有多少行,再计算多少列，每列中的元素下标
-            int TotalRows = 0;
-            int rows = 0;
-            rows = queryFields.Count / RowOfColNum;
-
-            //% 运算符在 C# 中表示取模运算，即返回除法的余数。
-            //并且余数是计算后面宽的一个数据来源，比方 10个控件，4个一行，余数是2。第三行就是2个，第一列是3个，第二列也是3个，第三，第四就是2个
-            int remainder = queryFields.Count % RowOfColNum;
-            if (remainder % RowOfColNum > 0)
-            {
-                TotalRows = rows + 1;
-            }
-            else
-            {
-                TotalRows = rows;
-            }
-
-            #endregion
-
-            int _x = 20, _y = 20, _Tabindex = 210;
+            int _x = 20, _y = 20;
             Stopwatch sw = new Stopwatch();
             sw.Start();
 
-            //计算每列的宽度 - 调整列间距为15像素
-            int spacing = 15; // 列间距设为15像素
-            int baseColumnWidth = (UcPanel.Width - 40 + spacing * (RowOfColNum - 1)) / RowOfColNum; // 基础列宽计算
-            //baseColumnWidth = 200;
-            // 创建数组存储每列的最大宽度（用于特殊处理日期组合控件）
-            int[] maxColumnWidths = new int[RowOfColNum];
-            for (int i = 0; i < RowOfColNum; i++)
-            {
-                maxColumnWidths[i] = baseColumnWidth; // 初始化为基础列宽
-            }
-
-            //保存一起每一行第一列的X的起点
+            // 保存每一行第一列的X起点
             List<int> xList = new List<int>();
 
             for (int c = 0; c < queryFields.Count; c++)
@@ -286,13 +310,12 @@ namespace RUINORERP.UI.AdvancedUIModule
                 // 根据当前索引计算行列位置
                 int currentRow = c / RowOfColNum;
                 int currentCol = c % RowOfColNum;
-                int controlTotalWidth = 0; // 控制总宽度变量，用于更新列宽
                 
-                // 计算累计的X偏移量，考虑前面所有列的最大宽度
+                // 计算累计的X偏移量，考虑前面所有列的宽度
                 int cumulativeX = 20;
                 for (int i = 0; i < currentCol; i++)
                 {
-                    cumulativeX += maxColumnWidths[i];
+                    cumulativeX += columnWidths[i];
                 }
                 
                 // 设置当前控件的X和Y坐标
@@ -300,7 +323,6 @@ namespace RUINORERP.UI.AdvancedUIModule
                 _y = 20 + currentRow * 32; // 32为行高
                 
                 QueryField queryField = queryFields[c];
-                _Tabindex = currentCol + currentRow + _Tabindex;
 
                 int currentColIndex = currentCol + 1;
                 int maxtextLen = UIQueryPropertyBuilder.GetTargetColumnData(queryFields, RowOfColNum, currentColIndex).Max(t => t.Caption.Length);
@@ -398,14 +420,6 @@ namespace RUINORERP.UI.AdvancedUIModule
                         UcPanel.Controls.Add(tb_box_cmb);
                         UcPanel.Controls.Add(lbl);
                         
-                        // 特殊处理：更新当前列的最大宽度
-                        currentCol = c % RowOfColNum;
-                        controlTotalWidth = labelWidth + tb_box_cmb.Width + 10; // 标签宽度 + 控件宽度 + 一些额外空间
-                        if (controlTotalWidth > maxColumnWidths[currentCol])
-                        {
-                            maxColumnWidths[currentCol] = controlTotalWidth;
-                        }
-                        
                         // 更新_x位置，添加控件间距（3像素）
                         _x = _x + tb_box_cmb.Width + 3; // 控件间距设为3像素
                         #endregion
@@ -469,14 +483,6 @@ namespace RUINORERP.UI.AdvancedUIModule
                         UcPanel.Controls.Add(choiceCanIgnore);
                         UcPanel.Controls.Add(lbl);
                         
-                        // 特殊处理：更新当前列的最大宽度
-                        currentCol = c % RowOfColNum;
-                        controlTotalWidth = labelWidth + choiceCanIgnore.Width + 10; // 标签宽度 + 控件宽度 + 一些额外空间
-                        if (controlTotalWidth > maxColumnWidths[currentCol])
-                        {
-                            maxColumnWidths[currentCol] = controlTotalWidth;
-                        }
-                        
                         // 更新_x位置，添加控件间距（3像素）
                         _x = _x + choiceCanIgnore.Width + 3; // 控件间距设为3像素
                         #endregion
@@ -535,14 +541,6 @@ namespace RUINORERP.UI.AdvancedUIModule
                         cmb.Location = new System.Drawing.Point(_x, _y);
                         UcPanel.Controls.Add(cmb);
                         UcPanel.Controls.Add(lbl);
-                        
-                        // 特殊处理：更新当前列的最大宽度
-                        currentCol = c % RowOfColNum;
-                        controlTotalWidth = labelWidth + cmb.Width + 10; // 标签宽度 + 控件宽度 + 一些额外空间
-                        if (controlTotalWidth > maxColumnWidths[currentCol])
-                        {
-                            maxColumnWidths[currentCol] = controlTotalWidth;
-                        }
                         
                         // 更新_x位置，添加控件间距（3像素）
                         _x = _x + cmb.Width + 3; // 控件间距设为3像素
@@ -630,14 +628,6 @@ namespace RUINORERP.UI.AdvancedUIModule
                         UcPanel.Controls.Add(DefaultCmb);
                         UcPanel.Controls.Add(lbl);
                         
-                        // 更新当前列的最大宽度
-                        currentCol = c % RowOfColNum;
-                        controlTotalWidth = labelWidth + DefaultCmb.Width + 10; // 标签宽度 + 控件宽度 + 一些额外空间
-                        if (controlTotalWidth > maxColumnWidths[currentCol])
-                        {
-                            maxColumnWidths[currentCol] = controlTotalWidth;
-                        }
-                        
                         // 更新_x位置，添加控件间距（3像素）
                         _x = _x + DefaultCmb.Width + 3; // 控件间距设为3像素
                         #endregion
@@ -690,14 +680,6 @@ namespace RUINORERP.UI.AdvancedUIModule
                         UcPanel.Controls.Add(eNumCmb);
                         UcPanel.Controls.Add(lbl);
 
-                        // 更新当前列的最大宽度
-                        currentCol = c % RowOfColNum;
-                        controlTotalWidth = labelWidth + eNumCmb.Width + 10; // 标签宽度 + 控件宽度 + 一些额外空间
-                        if (controlTotalWidth > maxColumnWidths[currentCol])
-                        {
-                            maxColumnWidths[currentCol] = controlTotalWidth;
-                        }
-                        
                         // 更新_x位置，添加控件间距（3像素）
                         _x = _x + eNumCmb.Width + 3; // 控件间距设为3像素
 
@@ -765,36 +747,16 @@ namespace RUINORERP.UI.AdvancedUIModule
                             dtpgroup.dtp2.Checked = queryField.EnableDefault2.Value;
                         }
                     
-                        // 标签宽度已在循环开始时计算，直接使用已定义的labelWidth
-                        // 获取Graphics对象重新计算文本宽度（如果需要更精确的计算）
-                        Graphics labelGraphics = UcPanel.CreateGraphics();
-                        float labelTextWidth = UITools.CalculateTextWidth(lbl.Text, lbl.Font, labelGraphics);
-                        labelWidth = (int)labelTextWidth + 10; // 更新已定义的labelWidth变量
-                        
-                        // 调整标签宽度以确保文本完全显示
-                        lbl.Width = labelWidth;
-                        
-                        // 设置标签位置
-                        lbl.Location = new System.Drawing.Point(_x, _y);
-                        
                         // 确保日期控件大小正确
                         dtpgroup.Size = new System.Drawing.Size(280, 25);
-                        // 与其他控件保持一致，直接使用_x作为位置
+                        // 设置日期控件位置
                         dtpgroup.Location = new System.Drawing.Point(_x, _y);
                         dtpgroup.Visible = true;
                         
                         // 添加控件到面板
-                        // 与其他控件保持一致的添加顺序
-                        UcPanel.Controls.Add(dtpgroup);
+                        // 先添加标签再添加控件，确保标签不会被覆盖
                         UcPanel.Controls.Add(lbl);
-                        
-                        // 特殊处理：对于日期组合控件，更新当前列的最大宽度
-                        currentCol = c % RowOfColNum;
-                        controlTotalWidth = labelWidth + dtpgroup.Width + 10; // 标签宽度 + 控件宽度 + 一些额外空间
-                        if (controlTotalWidth > maxColumnWidths[currentCol])
-                        {
-                            maxColumnWidths[currentCol] = controlTotalWidth;
-                        }
+                        UcPanel.Controls.Add(dtpgroup);
                         
                         // 更新_x位置，添加控件间距（3像素）
                         _x = _x + dtpgroup.Width + 3; // 控件间距设为3像素
@@ -817,17 +779,14 @@ namespace RUINORERP.UI.AdvancedUIModule
 
                         DataBindingHelper.BindData4DataTime(newDto, datetimeValue, queryField.FieldName, dtp, true);
                         dtp.Checked = true;
-                        dtp.Location = new System.Drawing.Point(_x, _y);
-                        UcPanel.Controls.Add(dtp);
-                        UcPanel.Controls.Add(lbl);
                         
-                        // 更新当前列的最大宽度
-                        currentCol = c % RowOfColNum;
-                        controlTotalWidth = labelWidth + dtp.Width + 10; // 标签宽度 + 控件宽度 + 一些额外空间
-                        if (controlTotalWidth > maxColumnWidths[currentCol])
-                        {
-                            maxColumnWidths[currentCol] = controlTotalWidth;
-                        }
+                        // 设置控件位置
+                        dtp.Location = new System.Drawing.Point(_x, _y);
+                        
+                        // 添加控件到面板
+                        // 先添加标签再添加控件，确保标签不会被覆盖
+                        UcPanel.Controls.Add(lbl);
+                        UcPanel.Controls.Add(dtp);
                         
                         // 更新_x位置，添加控件间距（3像素）
                         _x = _x + dtp.Width + 3; // 控件间距设为3像素
@@ -856,14 +815,6 @@ namespace RUINORERP.UI.AdvancedUIModule
                         UcPanel.Controls.Add(tb_box);
                         UcPanel.Controls.Add(lbl);
                         
-                        // 更新当前列的最大宽度
-                        currentCol = c % RowOfColNum;
-                        controlTotalWidth = labelWidth + tb_box.Width + 10; // 标签宽度 + 控件宽度 + 一些额外空间
-                        if (controlTotalWidth > maxColumnWidths[currentCol])
-                        {
-                            maxColumnWidths[currentCol] = controlTotalWidth;
-                        }
-                        
                         // 更新_x位置，添加控件间距（3像素）
                         _x = _x + tb_box.Width + 3; // 控件间距设为3像素
                         break;
@@ -877,14 +828,6 @@ namespace RUINORERP.UI.AdvancedUIModule
                         tb_boxEquals.Location = new System.Drawing.Point(_x, _y);
                         UcPanel.Controls.Add(tb_boxEquals);
                         UcPanel.Controls.Add(lbl);
-                        
-                        // 更新当前列的最大宽度
-                        currentCol = c % RowOfColNum;
-                        controlTotalWidth = labelWidth + tb_boxEquals.Width + 10; // 标签宽度 + 控件宽度 + 一些额外空间
-                        if (controlTotalWidth > maxColumnWidths[currentCol])
-                        {
-                            maxColumnWidths[currentCol] = controlTotalWidth;
-                        }
                         
                         // 更新_x位置，添加控件间距（3像素）
                         _x = _x + tb_boxEquals.Width + 3; // 控件间距设为3像素
@@ -901,14 +844,6 @@ namespace RUINORERP.UI.AdvancedUIModule
                         UcPanel.Controls.Add(chkgroup);
                         UcPanel.Controls.Add(lbl);
                         
-                        // 更新当前列的最大宽度
-                        currentCol = c % RowOfColNum;
-                        controlTotalWidth = labelWidth + chkgroup.Width + 10; // 标签宽度 + 控件宽度 + 一些额外空间
-                        if (controlTotalWidth > maxColumnWidths[currentCol])
-                        {
-                            maxColumnWidths[currentCol] = controlTotalWidth;
-                        }
-                        
                         // 更新_x位置，添加控件间距（3像素）
                         _x = _x + chkgroup.Width + 3; // 控件间距设为3像素
                         break;
@@ -923,14 +858,6 @@ namespace RUINORERP.UI.AdvancedUIModule
                         chk.Location = new System.Drawing.Point(_x, _y);
                         UcPanel.Controls.Add(chk);
                         UcPanel.Controls.Add(lbl);
-                        
-                        // 更新当前列的最大宽度
-                        currentCol = c % RowOfColNum;
-                        controlTotalWidth = labelWidth + chk.Width + 10; // 标签宽度 + 控件宽度 + 一些额外空间
-                        if (controlTotalWidth > maxColumnWidths[currentCol])
-                        {
-                            maxColumnWidths[currentCol] = controlTotalWidth;
-                        }
                         
                         // 更新_x位置，添加控件间距（3像素）
                         _x = _x + chk.Width + 3; // 控件间距设为3像素

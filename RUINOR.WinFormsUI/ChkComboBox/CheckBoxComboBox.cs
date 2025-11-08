@@ -109,7 +109,7 @@ namespace RUINOR.WinFormsUI.ChkComboBox
         /// </summary>
         internal string GetCSVText(bool skipFirstItem)
         {
-            string ListText = String.Empty;
+            StringBuilder sb = new StringBuilder();
             int StartIndex =
                 DropDownStyle == ComboBoxStyle.DropDownList
                 && DataSource == null
@@ -120,9 +120,13 @@ namespace RUINOR.WinFormsUI.ChkComboBox
             {
                 CheckBoxComboBoxItem Item = _CheckBoxComboBoxListControl.Items[Index];
                 if (Item.Checked)
-                    ListText += string.IsNullOrEmpty(ListText) ? Item.Text : String.Format(", {0}", Item.Text);
+                {
+                    if (sb.Length > 0)
+                        sb.Append(", ");
+                    sb.Append(Item.Text);
+                }
             }
-            return ListText;
+            return sb.ToString();
         }
 
         #endregion
@@ -219,41 +223,32 @@ namespace RUINOR.WinFormsUI.ChkComboBox
 
         protected void OnCheckBoxCheckedChanged(object sender, EventArgs e)
         {
-
-
-            #region 设置自定义设置的多选值结果
-            if (CheckBoxItems != null)
+            // 获取触发事件的CheckBox项
+            CheckBoxComboBoxItem changedItem = sender as CheckBoxComboBoxItem;
+            if (changedItem != null)
             {
-                foreach (var item in CheckBoxItems)
+                ObjectSelectionWrapper<CmbChkItem> objectSelection = changedItem.ComboBoxItem as ObjectSelectionWrapper<CmbChkItem>;
+                //数据源绑定情况才
+                if (objectSelection != null)
                 {
-                    ObjectSelectionWrapper<CmbChkItem> objectSelection = item.ComboBoxItem as ObjectSelectionWrapper<CmbChkItem>;
-                    //数据源绑定情况才
-                    if (objectSelection != null)
+                    if (changedItem.Checked)
                     {
-                        if (item.Checked)
+                        if (!MultiChoiceResults.Contains(objectSelection.Item.Key))
                         {
-                            if (!MultiChoiceResults.Contains(objectSelection.Item.Key))
-                            {
-                                MultiChoiceResults.Add(objectSelection.Item.Key);
-                            }
-                        }
-                        else
-                        {
-                            if (MultiChoiceResults.Contains(objectSelection.Item.Key))
-                            {
-                                MultiChoiceResults.Remove(objectSelection.Item.Key);
-                            }
+                            MultiChoiceResults.Add(objectSelection.Item.Key);
                         }
                     }
-
+                    else
+                    {
+                        if (MultiChoiceResults.Contains(objectSelection.Item.Key))
+                        {
+                            MultiChoiceResults.Remove(objectSelection.Item.Key);
+                        }
+                    }
                 }
             }
-            #endregion
-
-
 
             string ListText = GetCSVText(true);
-
 
             // The DropDownList style seems to require that the text
             // part of the "textbox" should match a single item.
@@ -486,80 +481,108 @@ namespace RUINOR.WinFormsUI.ChkComboBox
                 _CheckBoxComboBox.SelectedIndex = 0;
                 _CheckBoxComboBox._MustAddHiddenItem = false;
             }
-            Controls.Clear();
-            #region Disposes all items that are no longer in the combo box list
 
-            for (int Index = _Items.Count - 1; Index >= 0; Index--)
+            // 检查是否需要完全重建控件列表
+            bool needsRebuild = false;
+            
+            // 检查现有项是否与ComboBox项匹配
+            if (_Items.Count != _CheckBoxComboBox.Items.Count)
             {
-                CheckBoxComboBoxItem Item = _Items[Index];
-                if (!_CheckBoxComboBox.Items.Contains(Item.ComboBoxItem))
-                {
-                    _Items.Remove(Item);
-                    Item.Dispose();
-                }
+                needsRebuild = true;
             }
-
-            #endregion
-            #region Recreate the list in the same order of the combo box items
-
-            bool HasHiddenItem =
-                _CheckBoxComboBox.DropDownStyle == ComboBoxStyle.DropDownList
-                && _CheckBoxComboBox.DataSource == null
-                && !DesignMode;
-
-            CheckBoxComboBoxItemList NewList = new CheckBoxComboBoxItemList(_CheckBoxComboBox);
-            for (int Index0 = 0; Index0 <= _CheckBoxComboBox.Items.Count - 1; Index0++)
+            else
             {
-                object Object = _CheckBoxComboBox.Items[Index0];
-                CheckBoxComboBoxItem Item = null;
-                // The hidden item could match any other item when only
-                // one other item was selected.
-                if (Index0 == 0 && HasHiddenItem && _Items.Count > 0)
-                    Item = _Items[0];
-                else
+                for (int i = 0; i < _Items.Count; i++)
                 {
-                    int StartIndex = HasHiddenItem
-                        ? 1 // Skip the hidden item, it could match 
-                        : 0;
-                    for (int Index1 = StartIndex; Index1 <= _Items.Count - 1; Index1++)
+                    if (_Items[i].ComboBoxItem != _CheckBoxComboBox.Items[i])
                     {
-                        if (_Items[Index1].ComboBoxItem == Object)
-                        {
-                            Item = _Items[Index1];
-                            break;
-                        }
+                        needsRebuild = true;
+                        break;
                     }
                 }
-                if (Item == null)
-                {
-                    Item = new CheckBoxComboBoxItem(_CheckBoxComboBox, Object);
-                    Item.ApplyProperties(_CheckBoxComboBox.CheckBoxProperties);
-                }
-                NewList.Add(Item);
-                Item.Dock = DockStyle.Top;
             }
-            _Items.Clear();
-            _Items.AddRange(NewList);
 
-            #endregion
-            #region Add the items to the controls in reversed order to maintain correct docking order
-
-            if (NewList.Count > 0)
+            if (needsRebuild)
             {
-                // This reverse helps to maintain correct docking order.
-                NewList.Reverse();
-                // If you get an error here that "Cannot convert to the desired 
-                // type, it probably means the controls are not binding correctly.
-                // The Checked property is binded to the ValueMember property. 
-                // It must be a bool for example.
-                //如果您在此处收到错误“无法转换为所需
-                //类型，这可能意味着控件绑定不正确。
-                //Checked属性绑定到ValueMember属性。
-                //例如，它一定是一个bool。
-                Controls.AddRange(NewList.ToArray());
-            }
+                // 只有在需要时才清除和重建控件
+                Controls.Clear();
+                
+                #region Disposes all items that are no longer in the combo box list
 
-            #endregion
+                for (int Index = _Items.Count - 1; Index >= 0; Index--)
+                {
+                    CheckBoxComboBoxItem Item = _Items[Index];
+                    if (!_CheckBoxComboBox.Items.Contains(Item.ComboBoxItem))
+                    {
+                        _Items.Remove(Item);
+                        Item.Dispose();
+                    }
+                }
+
+                #endregion
+                
+                #region Recreate the list in the same order of the combo box items
+
+                bool HasHiddenItem =
+                    _CheckBoxComboBox.DropDownStyle == ComboBoxStyle.DropDownList
+                    && _CheckBoxComboBox.DataSource == null
+                    && !DesignMode;
+
+                CheckBoxComboBoxItemList NewList = new CheckBoxComboBoxItemList(_CheckBoxComboBox);
+                for (int Index0 = 0; Index0 <= _CheckBoxComboBox.Items.Count - 1; Index0++)
+                {
+                    object Object = _CheckBoxComboBox.Items[Index0];
+                    CheckBoxComboBoxItem Item = null;
+                    // The hidden item could match any other item when only
+                    // one other item was selected.
+                    if (Index0 == 0 && HasHiddenItem && _Items.Count > 0)
+                        Item = _Items[0];
+                    else
+                    {
+                        int StartIndex = HasHiddenItem
+                            ? 1 // Skip the hidden item, it could match 
+                            : 0;
+                        for (int Index1 = StartIndex; Index1 <= _Items.Count - 1; Index1++)
+                        {
+                            if (_Items[Index1].ComboBoxItem == Object)
+                            {
+                                Item = _Items[Index1];
+                                break;
+                            }
+                        }
+                    }
+                    if (Item == null)
+                    {
+                        Item = new CheckBoxComboBoxItem(_CheckBoxComboBox, Object);
+                        Item.ApplyProperties(_CheckBoxComboBox.CheckBoxProperties);
+                    }
+                    NewList.Add(Item);
+                    Item.Dock = DockStyle.Top;
+                }
+                _Items.Clear();
+                _Items.AddRange(NewList);
+
+                #endregion
+                
+                #region Add the items to the controls in reversed order to maintain correct docking order
+
+                if (NewList.Count > 0)
+                {
+                    // This reverse helps to maintain correct docking order.
+                    NewList.Reverse();
+                    // If you get an error here that "Cannot convert to the desired 
+                    // type, it probably means the controls are not binding correctly.
+                    // The Checked property is binded to the ValueMember property. 
+                    // It must be a bool for example.
+                    //如果您在此处收到错误“无法转换为所需
+                    //类型，这可能意味着控件绑定不正确。
+                    //Checked属性绑定到ValueMember属性。
+                    //例如，它一定是一个bool。
+                    Controls.AddRange(NewList.ToArray());
+                }
+
+                #endregion
+            }
 
             // Keep the first item invisible
             if (_CheckBoxComboBox.DropDownStyle == ComboBoxStyle.DropDownList

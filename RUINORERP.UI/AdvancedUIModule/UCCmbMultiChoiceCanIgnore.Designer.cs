@@ -34,6 +34,7 @@
             this.chkCanIgnore = new Krypton.Toolkit.KryptonCheckBox();
             this.kryptonSplitContainer右边详情 = new Krypton.Toolkit.KryptonSplitContainer();
             this.kryptonPanelQuery = new Krypton.Toolkit.KryptonPanel();
+            this.btnRef = new System.Windows.Forms.Button();
             this.groupLine1 = new WinLib.Line.GroupLine();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer右边详情)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer右边详情.Panel1)).BeginInit();
@@ -55,7 +56,7 @@
             this.chkMulti.Margin = new System.Windows.Forms.Padding(0);
             this.chkMulti.MultiChoiceResults = ((System.Collections.Generic.List<object>)(resources.GetObject("chkMulti.MultiChoiceResults")));
             this.chkMulti.Name = "chkMulti";
-            this.chkMulti.Size = new System.Drawing.Size(163, 20);
+            this.chkMulti.Size = new System.Drawing.Size(159, 20);
             this.chkMulti.TabIndex = 0;
             // 
             // chkCanIgnore
@@ -93,6 +94,7 @@
             // kryptonPanelQuery
             // 
             this.kryptonPanelQuery.AutoSize = true;
+            this.kryptonPanelQuery.Controls.Add(this.btnRef);
             this.kryptonPanelQuery.Controls.Add(this.groupLine1);
             this.kryptonPanelQuery.Controls.Add(this.chkMulti);
             this.kryptonPanelQuery.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -100,6 +102,16 @@
             this.kryptonPanelQuery.Name = "kryptonPanelQuery";
             this.kryptonPanelQuery.Size = new System.Drawing.Size(173, 22);
             this.kryptonPanelQuery.TabIndex = 2;
+            // 
+            // btnRef
+            // 
+            this.btnRef.Image = global::RUINORERP.UI.Properties.Resources.help4;
+            this.btnRef.Location = new System.Drawing.Point(162, 0);
+            this.btnRef.Name = "btnRef";
+            this.btnRef.Size = new System.Drawing.Size(10, 23);
+            this.btnRef.TabIndex = 3;
+            this.btnRef.UseVisualStyleBackColor = true;
+            this.btnRef.Click += new System.EventHandler(this.btnRef_Click);
             // 
             // groupLine1
             // 
@@ -138,5 +150,6 @@
         private Krypton.Toolkit.KryptonSplitContainer kryptonSplitContainer右边详情;
         internal Krypton.Toolkit.KryptonPanel kryptonPanelQuery;
         private WinLib.Line.GroupLine groupLine1;
+        private System.Windows.Forms.Button btnRef;
     }
 }

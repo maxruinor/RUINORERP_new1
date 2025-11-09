@@ -201,8 +201,19 @@ namespace RUINORERP.UI.AdvancedUIModule
                     frmedit.kryptonPanel1.Controls.Add(ucBaseList);
 
                     // 设置窗口标题
-                    var BizTypeText = Business.BizMapperService.EntityMappingHelper.GetBizType(entityTypeName).ToString();
+                    var bizType = Business.BizMapperService.EntityMappingHelper.GetBizType(entityTypeName);
+                    string BizTypeText = string.Empty;
+                    // 如果业务类型为"无对应数据"，则尝试获取实体的描述信息
+                    if (bizType == RUINORERP.Global.BizType.无对应数据)
+                    {
+                        BizTypeText = Business.BizMapperService.EntityMappingHelper.GetEntityDescription(_targetEntityType);
+                    }
+                    else
+                    {
+                        BizTypeText = bizType.ToString();
+                    }
                     frmedit.Text = "关联查询" + "-" + BizTypeText;
+
                     // 显示窗口并处理选择结果
                     if (frmedit.ShowDialog() == DialogResult.OK)
                     {

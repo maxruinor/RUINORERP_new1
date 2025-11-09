@@ -61,6 +61,7 @@ using RUINORERP.UI.Monitoring.Auditing;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.Extensions.Middlewares;
 using RUINORERP.Business.Cache;
+using System.Web.Caching;
 
 
 
@@ -607,7 +608,7 @@ namespace RUINORERP.UI.BaseForm
             MainForm.Instance.AppContext.log.ActionName = sender.ToString();
             if (sender.ToString().Length > 0)
             {
-              await  DoButtonClick(EnumHelper.GetEnumByString<MenuItemEnums>(sender.ToString()));
+                await DoButtonClick(EnumHelper.GetEnumByString<MenuItemEnums>(sender.ToString()));
             }
             else
             {
@@ -627,7 +628,7 @@ namespace RUINORERP.UI.BaseForm
         public event AdvQueryShowPageHandler<BaseEntityDto> AdvQueryShowPageEvent;
 
 
-        
+
 
         /// <summary>
         /// 如果需要查询条件查询，就要在子类中重写这个方法
@@ -654,7 +655,7 @@ namespace RUINORERP.UI.BaseForm
             switch (menuItem)
             {
                 case MenuItemEnums.新增:
-                  await  Add();
+                    await Add();
                     break;
                 case MenuItemEnums.复制性新增:
                     AddByCopy();
@@ -986,7 +987,7 @@ namespace RUINORERP.UI.BaseForm
                             MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("删除", item);
                         }
 
-                      await  MainForm.Instance.AuditLogHelper.CreateAuditLog($"批量删除{counter}条记录", CurMenuInfo.CaptionCN);
+                        await MainForm.Instance.AuditLogHelper.CreateAuditLog($"批量删除{counter}条记录", CurMenuInfo.CaptionCN);
                     }
                 }
                 catch (Exception ex)
@@ -1294,7 +1295,7 @@ namespace RUINORERP.UI.BaseForm
         /// <param name="dto"></param>
         private async Task UcAdv_QueryEvent(bool useLike, BaseEntityDto dto)
         {
-           await AdvQueryShowResult(useLike, dto);
+            await AdvQueryShowResult(useLike, dto);
         }
 
 
@@ -1312,6 +1313,25 @@ namespace RUINORERP.UI.BaseForm
         {
             BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(T).Name + "Processor");
             QueryConditionFilter = baseProcessor.GetQueryFilter();
+
+            //基础表如果没有设置查询条件，则生成最基础的名称查询
+            var schemaInfo = TableSchemaManager.Instance.GetSchemaInfo(typeof(T).Name);
+            if (schemaInfo != null && QueryConditionFilter.QueryFields.Count == 0)
+            {
+                QueryField queryField = new QueryField();
+                queryField.QueryTargetType = typeof(T);
+                queryField.FieldName = schemaInfo.DisplayField;
+                queryField.IsEnabled = true;
+                queryField.FieldPropertyInfo = typeof(T).GetProperties().FirstOrDefault(c => c.Name == schemaInfo.DisplayField);
+                queryField.AdvQueryFieldType = AdvQueryProcessType.stringLike;
+                //上面没有调用其他方法来SET这里要添加
+                if (!QueryConditionFilter.QueryFields.Contains(queryField))
+                {
+                    QueryConditionFilter.QueryFields.Add(queryField);
+                }
+
+            }
+
         }
 
         /// <summary>
@@ -1714,7 +1734,7 @@ namespace RUINORERP.UI.BaseForm
                                             //成功后。旧文件名部分要和上传成功后新文件名部分一致。后面修改只修改新文件名部分。再对比
                                             MainForm.Instance.PrintInfoLog("UploadSuccessful for base List:" + newfileName);
                                         }
-                                        
+
                                     }
                                 }
                             }
@@ -1789,7 +1809,7 @@ namespace RUINORERP.UI.BaseForm
 
         protected override async void Exit(object thisform)
         {
-          await  UIBizService.SaveGridSettingData(CurMenuInfo, dataGridView1, typeof(T));
+            await UIBizService.SaveGridSettingData(CurMenuInfo, dataGridView1, typeof(T));
             if (!Edited)
             {
                 //退出

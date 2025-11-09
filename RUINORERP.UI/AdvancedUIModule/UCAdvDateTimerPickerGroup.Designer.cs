@@ -41,35 +41,35 @@ namespace RUINORERP.UI.AdvancedUIModule
             this.dtp1.Location = new System.Drawing.Point(0, 2);
             this.dtp1.Name = "dtp1";
             this.dtp1.ShowCheckBox = true;
-            this.dtp1.Size = new System.Drawing.Size(125, 21);
+            this.dtp1.Size = new System.Drawing.Size(118, 21);
             this.dtp1.TabIndex = 0;
+            // 
+            // kryptonLabel1
+            // 
+            this.kryptonLabel1.Location = new System.Drawing.Point(121, 3);
+            this.kryptonLabel1.Name = "kryptonLabel1";
+            this.kryptonLabel1.Size = new System.Drawing.Size(17, 19);
+            this.kryptonLabel1.TabIndex = 2;
+            this.kryptonLabel1.Values.Text = "~";
             // 
             // dtp2
             // 
             this.dtp2.Checked = false;
-            this.dtp2.Location = new System.Drawing.Point(140, 2);
+            this.dtp2.Location = new System.Drawing.Point(142, 2);
             this.dtp2.Name = "dtp2";
             this.dtp2.ShowCheckBox = true;
-            this.dtp2.Size = new System.Drawing.Size(125, 21);
+            this.dtp2.Size = new System.Drawing.Size(118, 21);
             this.dtp2.TabIndex = 1;
-            // 
-            // kryptonLabel1
-            // 
-            this.kryptonLabel1.Location = new System.Drawing.Point(128, 3);
-            this.kryptonLabel1.Name = "kryptonLabel1";
-            this.kryptonLabel1.Size = new System.Drawing.Size(19, 20);
-            this.kryptonLabel1.TabIndex = 2;
-            this.kryptonLabel1.Values.Text = "~";
             // 
             // UCAdvDateTimerPickerGroup
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.dtp2);
-            this.Controls.Add(this.dtp1);
             this.Controls.Add(this.kryptonLabel1);
+            this.Controls.Add(this.dtp1);
             this.Name = "UCAdvDateTimerPickerGroup";
-            this.Size = new System.Drawing.Size(265, 25);
+            this.Size = new System.Drawing.Size(260, 25);
             this.Load += new System.EventHandler(this.UCAdvDateTimerPickerGroup_Load);
             this.ResumeLayout(false);
             this.PerformLayout();

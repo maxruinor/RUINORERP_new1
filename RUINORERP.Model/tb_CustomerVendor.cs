@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 客户厂商表 开票资料这种与财务有关另外开表
     /// </summary>
     [Serializable()]
-    [Description("客户厂商表 开票资料这种与财务有关另外开表")]
+    [Description("客户厂商表")]
     [SugarTable("tb_CustomerVendor")]
     public partial class tb_CustomerVendor: BaseEntity, ICloneable
     {

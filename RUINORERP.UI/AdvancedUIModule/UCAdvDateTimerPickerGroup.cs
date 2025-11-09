@@ -31,11 +31,6 @@ namespace RUINORERP.UI.AdvancedUIModule
             dtp1.Visible = true;
             dtp2.Visible = true;
             kryptonLabel1.Visible = true;
-            
-            // 确保控件位置正确
-            dtp1.Location = new Point(0, 2);
-            kryptonLabel1.Location = new Point(128, 3);
-            dtp2.Location = new Point(140, 2);
         }
     }
 }

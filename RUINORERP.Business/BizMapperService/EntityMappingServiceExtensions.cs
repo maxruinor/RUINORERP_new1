@@ -243,5 +243,45 @@ namespace RUINORERP.Business.BizMapperService
             return EntityMappingHelper.GetBillData(typeof(T), Entity);
         }
 
+        /// <summary>
+        /// 获取实体类型的Description描述
+        /// 如果实体类有Description属性，则返回该描述；否则返回实体类名
+        /// </summary>
+        /// <param name="entityType">实体类型</param>
+        /// <returns>实体的描述信息</returns>
+        public static string GetEntityDescription(Type entityType)
+        {
+            if (entityType == null)
+                throw new ArgumentNullException(nameof(entityType));
+
+            // 尝试获取实体类的Description特性
+            var descriptionAttr = entityType.GetCustomAttributes(typeof(System.ComponentModel.DescriptionAttribute), true)
+                .FirstOrDefault() as System.ComponentModel.DescriptionAttribute;
+
+            if (descriptionAttr != null && !string.IsNullOrEmpty(descriptionAttr.Description))
+            {
+                return descriptionAttr.Description;
+            }
+
+            // 如果没有Description特性，则返回实体类名（去掉tb_前缀，如果存在的话）
+            string className = entityType.Name;
+            if (className.StartsWith("tb_", StringComparison.OrdinalIgnoreCase))
+            {
+                className = className.Substring(3);
+            }
+
+            return className;
+        }
+
+        /// <summary>
+        /// 获取实体类型的Description描述（泛型版本）
+        /// </summary>
+        /// <typeparam name="TEntity">实体类型</typeparam>
+        /// <returns>实体的描述信息</returns>
+        public static string GetEntityDescription<TEntity>() where TEntity : class
+        {
+            return GetEntityDescription(typeof(TEntity));
+        }
+
     }
 }

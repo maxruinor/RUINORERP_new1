@@ -272,7 +272,15 @@ namespace RUINORERP.UI.UserCenter.DataParts
                         //打印状态设计得很特殊。int类型用的下拉。
                         if (item.FieldType == QueryFieldType.CmbEnum)
                         {
-                            if (item.FieldPropertyInfo !=null&& item.FieldPropertyInfo.PropertyType.Name== "Int32")
+                            if (item.FieldPropertyInfo != null && item.FieldPropertyInfo.PropertyType.FullName.Contains("System.Int32"))
+                            {
+                                queryDto.SetPropertyValue(item.FieldName, -1);
+                            }
+                            if (item.FieldPropertyInfo != null && item.FieldPropertyInfo.PropertyType.FullName.Contains("System.Int64"))
+                            {
+                                queryDto.SetPropertyValue(item.FieldName, -1L);
+                            }
+                            if (item.FieldPropertyInfo != null && item.FieldPropertyInfo.PropertyType.Name == "Int32")
                             {
                                 queryDto.SetPropertyValue(item.FieldName, -1);
                             }
@@ -281,7 +289,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                                 queryDto.SetPropertyValue(item.FieldName, -1L);
                             }
 
-                    
+
                             continue;
                         }
 

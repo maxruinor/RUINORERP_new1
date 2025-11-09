@@ -34,6 +34,7 @@ using RUINORERP.UI.BaseForm;
 using RUINORERP.Model.Models;
 using RUINORERP.UI.UserPersonalized;
 using RUINORERP.Global.EnumExt;
+using RUINORERP.Business.Cache;
 
 
 namespace RUINORERP.UI.AdvancedUIModule
@@ -631,6 +632,26 @@ namespace RUINORERP.UI.AdvancedUIModule
                         }
                     }
                 }
+
+
+                //基础表如果没有设置查询条件，则生成最基础的名称查询
+                var schemaInfo = TableSchemaManager.Instance.GetSchemaInfo(typeof(T).Name);
+                if (schemaInfo != null && QueryConditionFilter.QueryFields.Count == 0)
+                {
+                    QueryField queryField = new QueryField();
+                    queryField.QueryTargetType = typeof(T);
+                    queryField.FieldName = schemaInfo.DisplayField;
+                    queryField.IsEnabled = true;
+                    queryField.FieldPropertyInfo = typeof(T).GetProperties().FirstOrDefault(c => c.Name == schemaInfo.DisplayField);
+                    queryField.AdvQueryFieldType = AdvQueryProcessType.stringLike;
+                    //上面没有调用其他方法来SET这里要添加
+                    if (!QueryConditionFilter.QueryFields.Contains(queryField))
+                    {
+                        QueryConditionFilter.QueryFields.Add(queryField);
+                    }
+
+                }
+
 
                 tb_UIMenuPersonalization menuSetting = MainForm.Instance.AppContext.CurrentUser_Role_Personalized.tb_UIMenuPersonalizations.FirstOrDefault(c => c.MenuID == CurMenuInfo.MenuID);
                 if (menuSetting != null)

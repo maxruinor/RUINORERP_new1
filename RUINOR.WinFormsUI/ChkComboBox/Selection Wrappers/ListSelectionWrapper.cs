@@ -1,10 +1,11 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Reflection;
 using System.ComponentModel;
+using System.Threading.Tasks;
 
 namespace RUINOR.WinFormsUI.ChkComboBox
 {
@@ -70,6 +71,10 @@ namespace RUINOR.WinFormsUI.ChkComboBox
         /// Used to indicate NOT to use ToString(), but read this property instead as a display value.
         /// </summary>
         private string _DisplayNameProperty = null;
+        /// <summary>
+        /// 缓存SelectedNames属性值，避免重复计算
+        /// </summary>
+        private string _selectedNamesCache = null;
 
         #endregion
 
@@ -83,23 +88,44 @@ namespace RUINOR.WinFormsUI.ChkComboBox
         public string DisplayNameProperty
         {
             get { return _DisplayNameProperty; }
-            set { _DisplayNameProperty = value; }
+            set 
+            { 
+                if (_DisplayNameProperty != value)
+                {
+                    _DisplayNameProperty = value;
+                    // 清除SelectedNames缓存，因为子项的Name可能会变化
+                    _selectedNamesCache = null;
+                }
+            }
         }
         /// <summary>
         /// Builds a concatenation list of selected items in the list.
+        /// 使用缓存机制避免重复计算，提高性能
         /// </summary>
         public string SelectedNames
         {
             get
             {
-                string Text = "";
-                foreach (ObjectSelectionWrapper<T> Item in this)
-                    if (Item.Selected)
-                        Text += (
-                            string.IsNullOrEmpty(Text)
-                            ? String.Format("\"{0}\"", Item.Name)
-                            : String.Format(" & \"{0}\"", Item.Name));
-                return Text;
+                // 如果缓存为空，需要重新计算
+                if (_selectedNamesCache == null)
+                {
+                    // 使用StringBuilder代替字符串连接，性能更好
+                    StringBuilder sb = new StringBuilder();
+                    foreach (ObjectSelectionWrapper<T> item in this)
+                    {
+                        if (item.Selected)
+                        {
+                            if (sb.Length > 0)
+                                sb.Append(" & ");
+                            
+                            sb.AppendFormat("\"{0}\"", item.Name);
+                        }
+                    }
+                    
+                    _selectedNamesCache = sb.ToString();
+                }
+                
+                return _selectedNamesCache;
             }
         }
         /// <summary>
@@ -108,7 +134,15 @@ namespace RUINOR.WinFormsUI.ChkComboBox
         public bool ShowCounts
         {
             get { return _ShowCounts; }
-            set { _ShowCounts = value; }
+            set 
+            { 
+                if (_ShowCounts != value)
+                {
+                    _ShowCounts = value;
+                    // 清除SelectedNames缓存，因为子项的Name可能会变化
+                    _selectedNamesCache = null;
+                }
+            }
         }
 
         #endregion
@@ -122,6 +156,9 @@ namespace RUINOR.WinFormsUI.ChkComboBox
         {
             foreach (ObjectSelectionWrapper<T> Item in this)
                 Item.Count = 0;
+                
+            // 清除SelectedNames缓存，因为子项的Name可能会变化
+            _selectedNamesCache = null;
         }
         /// <summary>
         /// Creates a ObjectSelectionWrapper item.
@@ -131,17 +168,28 @@ namespace RUINOR.WinFormsUI.ChkComboBox
         /// <returns></returns>
         private ObjectSelectionWrapper<T> CreateSelectionWrapper(IEnumerator Object)
         {
-            Type[] Types = new Type[] { typeof(T), this.GetType() };
-            ConstructorInfo CI = typeof(ObjectSelectionWrapper<T>).GetConstructor(Types);
-            if (CI == null)
-                throw new Exception(String.Format(
-                              "The selection wrapper class {0} must have a constructor with ({1} Item, {2} Container) parameters.",
-                              typeof(ObjectSelectionWrapper<T>),
-                              typeof(T),
-                              this.GetType()));
-            object[] parameters = new object[] { Object.Current, this };
-            object result = CI.Invoke(parameters);
-            return (ObjectSelectionWrapper<T>)result;
+            return CreateSelectionWrapper((T)Object.Current);
+        }
+        
+        private ObjectSelectionWrapper<T> CreateSelectionWrapper(T item)
+        {
+            // 创建新的选择包装器
+            ObjectSelectionWrapper<T> wrapper = new ObjectSelectionWrapper<T>(item, this);
+            // 订阅PropertyChanged事件
+            wrapper.PropertyChanged += new PropertyChangedEventHandler(OnWrapperPropertyChanged);
+            return wrapper;
+        }
+        
+        /// <summary>
+        /// 处理ObjectSelectionWrapper的属性变更事件
+        /// 当子项的Selected或Count属性变化时，清除SelectedNames缓存
+        /// </summary>
+        /// <param name="sender">事件发送者</param>
+        /// <param name="e">属性变更事件参数</param>
+        private void OnWrapperPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            // 清除SelectedNames缓存，因为子项的状态变化可能会影响SelectedNames的值
+            _selectedNamesCache = null;
         }
 
         public ObjectSelectionWrapper<T> FindObjectWithItem(T Object)
@@ -202,15 +250,128 @@ namespace RUINOR.WinFormsUI.ChkComboBox
         */
         private void Populate()
         {
-            Clear();
-            /*
-            for(int Index = 0; Index <= _Source.Count -1; Index++)
-                Add(CreateSelectionWrapper(_Source[Index]));
-             */
-            IEnumerator Enumerator = _Source.GetEnumerator();
-            if (Enumerator != null)
-                while (Enumerator.MoveNext())
-                    Add(CreateSelectionWrapper(Enumerator));
+            // 清除之前的缓存
+            _selectedNamesCache = null;
+            
+            // 清空现有数据
+            this.Clear();
+
+            // 当使用BindingList作为数据源时，需要特别处理
+            BindingList<T> bindingList = _Source as BindingList<T>;
+            if (bindingList != null)
+            {
+                // 移除之前可能添加的事件处理
+                bindingList.ListChanged -= new ListChangedEventHandler(bindingList_ListChanged);
+                // 添加新的事件处理
+                bindingList.ListChanged += new ListChangedEventHandler(bindingList_ListChanged);
+            }
+
+            try
+            {
+                // 尝试获取数据源的元素数量
+                int itemCount;
+                ICollection<T> collection = _Source as ICollection<T>;
+                if (collection != null)
+                {
+                    itemCount = collection.Count;
+                }
+                else
+                {
+                    // 对于不支持ICollection接口的数据源，尝试使用LINQ Count()
+                    // 注意：这可能会导致遍历整个集合
+                    try
+                    {
+                        // 使用LINQ的Count扩展方法获取元素数量
+                        itemCount = Enumerable.Count<T>(_Source as IEnumerable<T>);
+                    }
+                    catch
+                    {
+                        // 如果Count()不可用，使用默认值
+                        itemCount = 0;
+                    }
+                }
+
+                // 性能优化：对于大量数据，使用批量创建和添加
+                if (itemCount > 100 || itemCount == 0) // 阈值可以根据实际情况调整
+                {
+                    // 预先分配容量，避免动态扩容
+                    List<ObjectSelectionWrapper<T>> wrappers = new List<ObjectSelectionWrapper<T>>(itemCount > 0 ? itemCount : 100);
+                    
+                    // 对于大数据集，考虑使用并行处理
+                    // 注意：只有当CreateSelectionWrapper是线程安全的时才能使用并行
+                    if (itemCount > 500)
+                    {
+                        // 只有数据源是数组或列表等支持并行处理的类型时才使用并行
+                        if (_Source is T[] || _Source is List<T>)
+                        {
+                            try
+                            {
+                                // 使用临时列表收集并行处理结果
+                                List<ObjectSelectionWrapper<T>> tempWrappers = new List<ObjectSelectionWrapper<T>>(itemCount);
+                                object syncLock = new object();
+                                
+                                // 显式指定类型参数
+                                Parallel.ForEach<T>(_Source as IEnumerable<T>, item =>
+                                {
+                                    ObjectSelectionWrapper<T> wrapper = CreateSelectionWrapper(item);
+                                    lock (syncLock)
+                                    {
+                                        tempWrappers.Add(wrapper);
+                                    }
+                                });
+                                
+                                wrappers.AddRange(tempWrappers);
+                            }
+                            catch
+                            {
+                                // 并行处理出错时，退回到串行处理
+                                foreach (T item in _Source)
+                                {
+                                    wrappers.Add(CreateSelectionWrapper(item));
+                                }
+                            }
+                        }
+                        else
+                        {
+                            // 不支持并行处理的数据源，使用串行处理
+                            foreach (T item in _Source)
+                            {
+                                wrappers.Add(CreateSelectionWrapper(item));
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // 中等数据量或未知数据量，使用串行处理但批量添加
+                        foreach (T item in _Source)
+                        {
+                            wrappers.Add(CreateSelectionWrapper(item));
+                        }
+                    }
+                    
+                    // 批量添加到集合
+                    this.AddRange(wrappers);
+                }
+                else
+                {
+                    // 小数据量，保持原有逻辑
+                    foreach (T item in _Source)
+                    {
+                        // 创建新的选择包装器
+                        ObjectSelectionWrapper<T> wrapper = CreateSelectionWrapper(item);
+                        this.Add(wrapper);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // 发生异常时，使用简单的遍历方式
+                foreach (T item in _Source)
+                {
+                    ObjectSelectionWrapper<T> wrapper = CreateSelectionWrapper(item);
+                    this.Add(wrapper);
+                }
+            }
         }
 
         #endregion
@@ -219,6 +380,13 @@ namespace RUINOR.WinFormsUI.ChkComboBox
 
         private void ListSelectionWrapper_ListChanged(object sender, ListChangedEventArgs e)
         {
+            // 如果是BindingList，使用专门的处理方法
+            if (_Source is BindingList<T>)
+            {
+                bindingList_ListChanged(sender, e);
+                return;
+            }
+            
             switch (e.ListChangedType)
             {
                 case ListChangedType.ItemAdded:
@@ -231,6 +399,63 @@ namespace RUINOR.WinFormsUI.ChkComboBox
                     Populate();
                     break;
             }
+            
+            // 列表变化时清除缓存
+            _selectedNamesCache = null;
+        }
+        
+        void bindingList_ListChanged(object sender, ListChangedEventArgs e)
+        {
+            // 根据不同的列表变更类型进行处理
+            switch (e.ListChangedType)
+            {
+                case ListChangedType.ItemAdded:
+                    // 添加新项
+                    if (e.NewIndex >= 0 && e.NewIndex < ((IList)_Source).Count)
+                    {
+                        T item = ((IList<T>)_Source)[e.NewIndex];
+                        ObjectSelectionWrapper<T> wrapper = CreateSelectionWrapper(item);
+                        this.Insert(e.NewIndex, wrapper);
+                    }
+                    break;
+                case ListChangedType.ItemDeleted:
+                    // 删除项
+                    if (e.NewIndex >= 0 && e.NewIndex < this.Count)
+                    {
+                        // 移除事件订阅
+                        ObjectSelectionWrapper<T> wrapper = this[e.NewIndex];
+                        wrapper.PropertyChanged -= new PropertyChangedEventHandler(OnWrapperPropertyChanged);
+                        // 从集合中移除
+                        this.RemoveAt(e.NewIndex);
+                    }
+                    break;
+                case ListChangedType.ItemChanged:
+                    // 项变更
+                    if (e.NewIndex >= 0 && e.NewIndex < ((IList)_Source).Count && e.NewIndex < this.Count)
+                    {
+                        T newItem = ((IList<T>)_Source)[e.NewIndex];
+                        ObjectSelectionWrapper<T> wrapper = this[e.NewIndex];
+                        // 更新包装器中的项
+                        wrapper.Item = newItem;
+                    }
+                    break;
+                case ListChangedType.Reset:
+                    // 重置列表
+                    Populate();
+                    return; // 直接返回，Populate中已经清除了缓存
+                case ListChangedType.ItemMoved:
+                    // 项移动
+                    if (e.NewIndex >= 0 && e.OldIndex >= 0 && e.OldIndex < this.Count && e.NewIndex <= this.Count)
+                    {
+                        ObjectSelectionWrapper<T> wrapper = this[e.OldIndex];
+                        this.RemoveAt(e.OldIndex);
+                        this.Insert(e.NewIndex, wrapper);
+                    }
+                    break;
+            }
+            
+            // 清除缓存
+            _selectedNamesCache = null;
         }
 
         #endregion

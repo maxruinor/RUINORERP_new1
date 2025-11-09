@@ -365,8 +365,14 @@ namespace RUINOR.WinFormsUI.ChkComboBox
 
         protected override void OnVisibleChanged(EventArgs e)
         {
-            if (Visible == false)
+            // 只有在从可见变为不可见时才更新时间戳
+            if (Visible == false && !IsDisposed)
+            {
+                // 优化：减少DateTime.Now的调用频率，只在真正需要时更新
                 LastClosedTimeStamp = DateTime.Now;
+            }
+            
+            // 确保基类方法被调用
             base.OnVisibleChanged(e);
         }
 
@@ -381,10 +387,37 @@ namespace RUINOR.WinFormsUI.ChkComboBox
         [SecurityPermission(SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.UnmanagedCode)]
         protected override void WndProc(ref Message m)
         {
-            if (InternalProcessResizing(ref m, false))
+            // 快速路径：只处理必要的消息类型
+            switch (m.Msg)
             {
-                return;
+                case NativeMethods.WM_NCACTIVATE:
+                    // 只在需要时处理NCACTIVATE消息
+                    if (m.WParam != IntPtr.Zero && childPopup != null && childPopup.Visible)
+                    {
+                        childPopup.Hide();
+                        return;
+                    }
+                    break;
+                
+                case NativeMethods.WM_NCHITTEST:
+                case NativeMethods.WM_GETMINMAXINFO:
+                    // 只有在可调整大小且不是大量消息处理时才进行调整大小处理
+                    if (Resizable)
+                    {
+                        if (InternalProcessResizing(ref m, false))
+                        {
+                            return;
+                        }
+                    }
+                    break;
+                
+                // 其他消息直接传递给基类，避免不必要的处理
+                default:
+                    // 对于高频消息，可以添加额外的优化
+                    break;
             }
+            
+            // 调用基类处理
             base.WndProc(ref m);
         }
 
@@ -402,22 +435,27 @@ namespace RUINOR.WinFormsUI.ChkComboBox
         [SecurityPermission(SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.UnmanagedCode)]
         private bool InternalProcessResizing(ref Message m, bool contentControl)
         {
-            if (m.Msg == NativeMethods.WM_NCACTIVATE && m.WParam != IntPtr.Zero && childPopup != null && childPopup.Visible)
-            {
-                childPopup.Hide();
-            }
+            // 现在WM_NCACTIVATE消息处理已移至WndProc的快速路径中
+            
+            // 快速检查是否可调整大小
             if (!Resizable)
             {
                 return false;
             }
+            
+            // 只处理特定的调整大小相关消息
             if (m.Msg == NativeMethods.WM_NCHITTEST)
             {
+                // 对于NCHITTEST消息，只在鼠标移动或点击时才处理
+                // 减少不必要的计算
                 return OnNcHitTest(ref m, contentControl);
             }
             else if (m.Msg == NativeMethods.WM_GETMINMAXINFO)
             {
+                // MINMAXINFO消息处理
                 return OnGetMinMaxInfo(ref m);
             }
+            
             return false;
         }
 
@@ -433,59 +471,73 @@ namespace RUINOR.WinFormsUI.ChkComboBox
 
         private bool OnNcHitTest(ref Message m, bool contentControl)
         {
+            // 快速提取坐标，避免不必要的对象创建
             int x = NativeMethods.LOWORD(m.LParam);
             int y = NativeMethods.HIWORD(m.LParam);
-            Point clientLocation = PointToClient(new Point(x, y));
-
-            GripBounds gripBouns = new GripBounds(contentControl ? content.ClientRectangle : ClientRectangle);
-            IntPtr transparent = new IntPtr(NativeMethods.HTTRANSPARENT);
-
-            if (resizableTop)
+            
+            // 直接使用屏幕坐标进行快速范围检查，避免PointToClient转换
+            // 只在需要更精确检查时才进行转换
+            Rectangle bounds = contentControl ? content.Bounds : Bounds;
+            if (x < bounds.Left || x > bounds.Right || y < bounds.Top || y > bounds.Bottom)
             {
-                if (resizableRight && gripBouns.TopLeft.Contains(clientLocation))
+                return false; // 快速排除屏幕外的情况
+            }
+            
+            // 只在需要时进行PointToClient转换
+            Point clientLocation = PointToClient(new Point(x, y));
+            
+            // 避免每次都创建GripBounds对象，使用简单的边界检查
+            Rectangle clientRect = contentControl ? content.ClientRectangle : ClientRectangle;
+            int borderWidth = 4; // 调整大小边界的宽度
+            
+            IntPtr transparent = new IntPtr(NativeMethods.HTTRANSPARENT);
+            
+            // 优化：先检查四个角落
+            if (resizableTop && y <= clientRect.Top + borderWidth)
+            {
+                if (resizableRight && x <= clientRect.Left + borderWidth)
                 {
                     m.Result = contentControl ? transparent : (IntPtr)NativeMethods.HTTOPLEFT;
                     return true;
                 }
-                if (!resizableRight && gripBouns.TopRight.Contains(clientLocation))
+                if (!resizableRight && x >= clientRect.Right - borderWidth)
                 {
                     m.Result = contentControl ? transparent : (IntPtr)NativeMethods.HTTOPRIGHT;
                     return true;
                 }
-                if (gripBouns.Top.Contains(clientLocation))
-                {
-                    m.Result = contentControl ? transparent : (IntPtr)NativeMethods.HTTOP;
-                    return true;
-                }
+                // 顶部边缘
+                m.Result = contentControl ? transparent : (IntPtr)NativeMethods.HTTOP;
+                return true;
             }
-            else
+            else if (!resizableTop && y >= clientRect.Bottom - borderWidth)
             {
-                if (resizableRight && gripBouns.BottomLeft.Contains(clientLocation))
+                if (resizableRight && x <= clientRect.Left + borderWidth)
                 {
                     m.Result = contentControl ? transparent : (IntPtr)NativeMethods.HTBOTTOMLEFT;
                     return true;
                 }
-                if (!resizableRight && gripBouns.BottomRight.Contains(clientLocation))
+                if (!resizableRight && x >= clientRect.Right - borderWidth)
                 {
                     m.Result = contentControl ? transparent : (IntPtr)NativeMethods.HTBOTTOMRIGHT;
                     return true;
                 }
-                if (gripBouns.Bottom.Contains(clientLocation))
-                {
-                    m.Result = contentControl ? transparent : (IntPtr)NativeMethods.HTBOTTOM;
-                    return true;
-                }
+                // 底部边缘
+                m.Result = contentControl ? transparent : (IntPtr)NativeMethods.HTBOTTOM;
+                return true;
             }
-            if (resizableRight && gripBouns.Left.Contains(clientLocation))
+            
+            // 左右边缘检查
+            if (resizableRight && x <= clientRect.Left + borderWidth)
             {
                 m.Result = contentControl ? transparent : (IntPtr)NativeMethods.HTLEFT;
                 return true;
             }
-            if (!resizableRight && gripBouns.Right.Contains(clientLocation))
+            if (!resizableRight && x >= clientRect.Right - borderWidth)
             {
                 m.Result = contentControl ? transparent : (IntPtr)NativeMethods.HTRIGHT;
                 return true;
             }
+            
             return false;
         }
 

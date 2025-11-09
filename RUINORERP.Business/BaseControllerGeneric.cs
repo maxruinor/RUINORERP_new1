@@ -345,30 +345,6 @@ namespace RUINORERP.Business
 
 
 
-        ///// <summary>
-        ///// 本为私有修改为公有，暴露出来方便使用
-        ///// </summary>
-        //public readonly IUnitOfWorkManage _unitOfWorkManage;
-        //public readonly ILogger<BaseController<T>> _logger;
-        //public IBaseServices<T> _IBaseServices { get; set; }
-
-
-        //public BaseController(ILogger<BaseController<T>> logger, IUnitOfWorkManage unitOfWorkManage,IBaseServices<T> iBaseServices)
-        //{
-        //    _logger = logger;
-        //    _unitOfWorkManage = unitOfWorkManage;
-        //    _IBaseServices = iBaseServices;
-        //}
-
-        //public BaseController(ILogger<BaseController<T>> logger, IUnitOfWorkManage unitOfWorkManage, IBaseServices<T> iBaseServices)
-        //{
-        //    _logger = logger;
-        //    _unitOfWorkManage = unitOfWorkManage;
-        //    _IBaseServices = iBaseServices;
-        //    IBaseRepository<T> baseDal = new BaseRepository<T>();
-        //    _IBaseServices = new RUINORERP.Services.BASE.BaseServices<T>(baseDal);
-        //}
-
 
 
         #region 方法
@@ -379,17 +355,7 @@ namespace RUINORERP.Business
 
         #region 公共虚拟方法
 
-        //public virtual Task<object> BaseUniqueQueryByIdAsync(object id)
-        //{
-        //    //子类重写
-        //    throw new Exception("子类要重写BaseQueryByIdAsync");
-        //}
-
-        //public async override Task<object> BaseUniqueQueryByIdAsync(object id)
-        //{
-        //    object entity = await _tb_BOM_SServices.QueryByIdAsync(id) as object;
-        //    return entity;
-        //}
+        
 
         public virtual Task<T> BaseQueryByIdAsync(object id)
         {

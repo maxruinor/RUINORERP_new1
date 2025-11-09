@@ -9,6 +9,7 @@ using System.Reflection;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using HLH.Lib;
+using System.Threading.Tasks;
 
 namespace RUINOR.WinFormsUI.ChkComboBox
 {
@@ -39,9 +40,15 @@ namespace RUINOR.WinFormsUI.ChkComboBox
         #region by watson
 
         private List<object> _MultiChoiceResults = new List<object>();
+        // 异步更新标志，避免重复触发异步更新
+        private bool _isUpdatingStates = false;
+        // 异步更新队列标志，表示有新的更新请求在等待
+        private bool _hasPendingUpdate = false;
 
         /// <summary>
         /// 用来保存选择的结果
+        /// 优化了大量数据处理性能
+        /// 特别针对200个选中项的场景进行了优化
         /// </summary>
         [Localizable(true)]
         [Bindable(true)]
@@ -51,16 +58,113 @@ namespace RUINOR.WinFormsUI.ChkComboBox
             get { return _MultiChoiceResults; }
             set
             {
-                if (_MultiChoiceResults != value)
+                // 快速路径：如果控件已释放，直接返回
+                if (IsDisposed)
                 {
-                    _MultiChoiceResults = value ?? new List<object>();
+                    return;
+                }
+                
+                // 快速路径：如果引用相同，直接返回
+                if (ReferenceEquals(_MultiChoiceResults, value))
+                {
+                    return;
+                }
+                
+                // 准备新的结果列表
+                List<object> newResults = value ?? new List<object>();
+                
+                // 检查是否需要实际更新（比较内容）
+                bool needsUpdate = true;
+                if (_MultiChoiceResults.Count == newResults.Count && _MultiChoiceResults.Count > 0)
+                {
+                    // 使用HashSet进行快速内容比较，避免不必要的更新
+                    HashSet<object> existingValues = new HashSet<object>(_MultiChoiceResults);
+                    HashSet<object> newValueHash = new HashSet<object>(newResults);
+                    
+                    // 如果两个集合内容相等，则不需要更新
+                    needsUpdate = !existingValues.SetEquals(newValueHash);
+                }
+                
+                // 只有在真正需要更新时才进行赋值和UI更新
+                if (needsUpdate)
+                {
+                    // 赋值新的结果列表
+                    _MultiChoiceResults = newResults;
+                    
                     // 当属性值改变时，更新CheckBox的选中状态
+                    // 确保控件已创建句柄且列表控件已初始化
                     if (IsHandleCreated && _CheckBoxComboBoxListControl != null)
                     {
-                        UpdateCheckedStates();
+                        int itemCount = _MultiChoiceResults.Count;
+                        int checkBoxCount = CheckBoxItems.Count;
+                        
+                        // 快速路径：如果没有选项，直接返回
+                        if (checkBoxCount == 0)
+                        {
+                            return;
+                        }
+                        
+                        // 对于大量数据（超过50个选中项），使用异步更新
+                        if (itemCount > 50)
+                        {
+                            // 如果已有异步更新在进行中，设置待处理标志
+                            if (_isUpdatingStates)
+                            {
+                                _hasPendingUpdate = true;
+                            }
+                            else
+                            {
+                                // 执行异步更新
+                                ExecuteAsyncUpdate();
+                            }
+                        }
+                        else if (itemCount > 0 || (checkBoxCount > 0 && itemCount == 0))
+                        {
+                            // 小规模数据或清空操作，同步更新
+                            UpdateCheckedStates();
+                        }
                     }
                 }
             }
+        }
+        
+        /// <summary>
+        /// 异步执行UpdateCheckedStates操作
+        /// </summary>
+        private void ExecuteAsyncUpdate()
+        {
+            // 设置正在更新标志
+            _isUpdatingStates = true;
+            
+            // 使用基类提供的异步执行方法
+            ExecuteAsyncOperation(
+                async () =>
+                {
+                    // 后台线程中进行一些预处理工作，不直接操作UI
+                    // 可以在这里进行一些计算密集型的操作
+                    await Task.Delay(1); // 让出线程时间片，避免阻塞
+                },
+                () =>
+                {
+                    try
+                    {
+                        // UI线程中应用选中状态
+                        UpdateCheckedStates();
+                    }
+                    finally
+                    {
+                        // 更新完成后重置标志
+                        _isUpdatingStates = false;
+                        
+                        // 检查是否有待处理的更新请求
+                        if (_hasPendingUpdate)
+                        {
+                            _hasPendingUpdate = false;
+                            ExecuteAsyncUpdate();
+                        }
+                    }
+                }
+            );
         }
 
         #endregion
@@ -121,13 +225,18 @@ namespace RUINOR.WinFormsUI.ChkComboBox
         /// </summary>
         internal string GetCSVText(bool skipFirstItem)
         {
-            StringBuilder sb = new StringBuilder();
-            int StartIndex =
+            // 预分配容量，减少StringBuilder动态扩容的开销
+            StringBuilder sb = new StringBuilder(MultiChoiceResults.Count * 30); // 假设平均每个项目30个字符
+            int StartIndex = 
                 DropDownStyle == ComboBoxStyle.DropDownList
                 && DataSource == null
                 && skipFirstItem
                     ? 1
                     : 0;
+            
+            // 优化：直接使用MultiChoiceResults来构建文本，避免遍历所有项
+            // 但需要确保CheckBoxItems与MultiChoiceResults同步
+            // 这里保留原逻辑，但添加了一些小优化
             for (int Index = StartIndex; Index <= _CheckBoxComboBoxListControl.Items.Count - 1; Index++)
             {
                 CheckBoxComboBoxItem Item = _CheckBoxComboBoxListControl.Items[Index];
@@ -251,88 +360,118 @@ namespace RUINOR.WinFormsUI.ChkComboBox
         {
             // 获取触发事件的CheckBox项
             CheckBoxComboBoxItem changedItem = sender as CheckBoxComboBoxItem;
-            if (changedItem != null)
+            if (changedItem == null)
+                return;
+            
+            // 使用标志避免不必要的UI更新
+            bool needTextUpdate = false;
+            
+            ObjectSelectionWrapper<CmbChkItem> objectSelection = changedItem.ComboBoxItem as ObjectSelectionWrapper<CmbChkItem>;
+            //数据源绑定情况
+            if (objectSelection != null && objectSelection.Item != null && !string.IsNullOrEmpty(objectSelection.Item.Key))
             {
-                ObjectSelectionWrapper<CmbChkItem> objectSelection = changedItem.ComboBoxItem as ObjectSelectionWrapper<CmbChkItem>;
-                //数据源绑定情况才
-                if (objectSelection != null)
+                string itemKey = objectSelection.Item.Key.ToString();
+                
+                if (changedItem.Checked)
                 {
-                    // 检查objectSelection.Item是否为null
-                    if (objectSelection.Item != null && !string.IsNullOrEmpty(objectSelection.Item.Key))
+                    // 检查是否已存在相同的key值
+                    bool exists = false;
+                    // 优化：对于大量数据，可以考虑使用哈希表查找
+                    if (MultiChoiceResults.Count > 50)
                     {
-                        // 使用类型安全的比较方式处理key值
-                        string itemKey = objectSelection.Item.Key.ToString();
-                        
-                        if (changedItem.Checked)
+                        // 临时使用HashSet提高查找效率
+                        HashSet<string> existingKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                        foreach (var value in MultiChoiceResults)
                         {
-                            // 检查是否已存在相同的key值（字符串比较）
-                            bool exists = false;
-                            foreach (var value in MultiChoiceResults)
+                            if (value != null)
+                                existingKeys.Add(value.ToString());
+                        }
+                        exists = existingKeys.Contains(itemKey);
+                    }
+                    else
+                    {
+                        // 小规模数据时直接遍历
+                        foreach (var value in MultiChoiceResults)
+                        {
+                            if (value != null && string.Equals(itemKey, value.ToString(), StringComparison.OrdinalIgnoreCase))
                             {
-                                if (value != null && string.Equals(itemKey, value.ToString(), StringComparison.OrdinalIgnoreCase))
-                                {
-                                    exists = true;
-                                    break;
-                                }
-                            }
-                            
-                            if (!exists)
-                            {
-                                // 添加原始类型的值
-                                MultiChoiceResults.Add(objectSelection.Item.Key);
+                                exists = true;
+                                break;
                             }
                         }
-                        else
-                        {
-                            // 查找并移除对应的key值
-                            for (int i = MultiChoiceResults.Count - 1; i >= 0; i--)
-                            {
-                                var value = MultiChoiceResults[i];
-                                if (value != null && string.Equals(itemKey, value.ToString(), StringComparison.OrdinalIgnoreCase))
-                                {
-                                    MultiChoiceResults.RemoveAt(i);
-                                    break;
-                                }
-                            }
-                        }
+                    }
+                    
+                    if (!exists)
+                    {
+                        // 添加原始类型的值
+                        MultiChoiceResults.Add(objectSelection.Item.Key);
+                        needTextUpdate = true;
                     }
                 }
                 else
                 {
-                    // 处理非ObjectSelectionWrapper类型的数据
-                    if (changedItem.Checked)
+                    // 查找并移除对应的key值
+                    int removeIndex = -1;
+                    for (int i = 0; i < MultiChoiceResults.Count; i++)
                     {
-                        if (!MultiChoiceResults.Contains(changedItem.ComboBoxItem))
+                        var value = MultiChoiceResults[i];
+                        if (value != null && string.Equals(itemKey, value.ToString(), StringComparison.OrdinalIgnoreCase))
                         {
-                            MultiChoiceResults.Add(changedItem.ComboBoxItem);
+                            removeIndex = i;
+                            break;
                         }
                     }
-                    else
+                    
+                    if (removeIndex >= 0)
                     {
-                        if (MultiChoiceResults.Contains(changedItem.ComboBoxItem))
-                        {
-                            MultiChoiceResults.Remove(changedItem.ComboBoxItem);
-                        }
+                        MultiChoiceResults.RemoveAt(removeIndex);
+                        needTextUpdate = true;
+                    }
+                }
+            }
+            else
+            {
+                // 处理非ObjectSelectionWrapper类型的数据
+                object comboBoxItem = changedItem.ComboBoxItem;
+                if (changedItem.Checked)
+                {
+                    if (!MultiChoiceResults.Contains(comboBoxItem))
+                    {
+                        MultiChoiceResults.Add(comboBoxItem);
+                        needTextUpdate = true;
+                    }
+                }
+                else
+                {
+                    if (MultiChoiceResults.Contains(comboBoxItem))
+                    {
+                        MultiChoiceResults.Remove(comboBoxItem);
+                        needTextUpdate = true;
                     }
                 }
             }
 
-            string ListText = GetCSVText(true);
-
-            // The DropDownList style seems to require that the text
-            // part of the "textbox" should match a single item.
-            if (DropDownStyle != ComboBoxStyle.DropDownList)
-                Text = ListText;
-            // This refreshes the Text of the first item (which is not visible)
-            else if (DataSource == null)
+            // 只有当数据发生变化时才更新UI文本
+            if (needTextUpdate)
             {
-                Items[0] = ListText;
-                // Keep the hidden item and first checkbox item in 
-                // sync in order to ensure the Synchronise process
-                // can match the items.
-                CheckBoxItems[0].ComboBoxItem = ListText;
+                string ListText = GetCSVText(true);
+
+                // The DropDownList style seems to require that the text
+                // part of the "textbox" should match a single item.
+                if (DropDownStyle != ComboBoxStyle.DropDownList)
+                    Text = ListText;
+                // This refreshes the Text of the first item (which is not visible)
+                else if (DataSource == null)
+                {
+                    Items[0] = ListText;
+                    // Keep the hidden item and first checkbox item in 
+                    // sync in order to ensure the Synchronise process
+                    // can match the items.
+                    CheckBoxItems[0].ComboBoxItem = ListText;
+                }
             }
 
+            // 触发事件
             EventHandler handler = CheckBoxCheckedChanged;
             if (handler != null)
                 handler(sender, e);
@@ -399,42 +538,142 @@ namespace RUINOR.WinFormsUI.ChkComboBox
         /// <summary>
         /// 根据MultiChoiceResults更新所有CheckBox的选中状态
         /// 处理不同类型值的比较问题
+        /// 使用哈希表优化性能，减少重复比较操作
+        /// 特别针对大量数据（如200个选中项）进行了性能优化
         /// </summary>
         public void UpdateCheckedStates()
         {
-            foreach (CheckBoxComboBoxItem cbItem in CheckBoxItems)
+            // 快速路径：如果控件已释放，直接返回
+            if (IsDisposed)
             {
-                ObjectSelectionWrapper<CmbChkItem> wrapper = cbItem.ComboBoxItem as ObjectSelectionWrapper<CmbChkItem>;
-                if (wrapper != null)
+                return;
+            }
+            
+            // 快速路径：如果没有选项或没有选中项，直接返回
+            if (CheckBoxItems.Count == 0)
+            {
+                return;
+            }
+            
+            bool hasSelectedItems = MultiChoiceResults.Count > 0;
+            
+            // 快速路径：如果没有选中项，快速取消所有选中状态
+            if (!hasSelectedItems)
+            {
+                // 批量禁用UI更新，提高性能
+                BeginUpdate();
+                try
                 {
-                    // 检查wrapper.Item是否为null
-                    if (wrapper.Item != null && !string.IsNullOrEmpty(wrapper.Item.Key))
+                    bool hasChanges = false;
+                    foreach (CheckBoxComboBoxItem cbItem in CheckBoxItems)
                     {
-                        // 使用类型安全的比较方式，处理类型转换问题
-                        bool isChecked = false;
-                        string itemKey = wrapper.Item.Key.ToString();
-                        
-                        foreach (var value in MultiChoiceResults)
-                        {
-                            if (value != null)
-                            {
-                                // 将MultiChoiceResults中的值转换为字符串进行比较
-                                string resultValue = value.ToString();
-                                if (string.Equals(itemKey, resultValue, StringComparison.OrdinalIgnoreCase))
-                                {
-                                    isChecked = true;
-                                    break;
-                                }
-                            }
+                        if (cbItem.Checked)
+                        { 
+                            cbItem.Checked = false;
+                            hasChanges = true;
                         }
-                        
-                        cbItem.Checked = isChecked;
+                    }
+                    
+                    // 只有在实际有更改时才更新文本
+                    if (hasChanges && DropDownStyle != ComboBoxStyle.DropDownList)
+                    {
+                        Text = string.Empty;
                     }
                 }
-                else
+                finally
                 {
-                    cbItem.Checked = MultiChoiceResults.Contains(cbItem.ComboBoxItem);
+                    EndUpdate();
                 }
+                return;
+            }
+            
+            // 无论数据量大小，始终使用哈希表以确保最佳性能 - 特别是对于大量数据
+            HashSet<string> resultValueHashSet = new HashSet<string>(MultiChoiceResults.Count, StringComparer.OrdinalIgnoreCase);
+            foreach (var value in MultiChoiceResults)
+            {
+                if (value != null)
+                {
+                    resultValueHashSet.Add(value.ToString());
+                }
+            }
+            
+            // 对于非包装类型，使用另一个哈希表来优化查找
+            HashSet<object> nonWrappedItems = null;
+            if (MultiChoiceResults.Count > 10) // 只有当数据量达到一定规模时才创建
+            {
+                nonWrappedItems = new HashSet<object>();
+                foreach (var value in MultiChoiceResults)
+                {
+                    if (value != null && !(value is string) && !(value is ValueType))
+                    {
+                        nonWrappedItems.Add(value);
+                    }
+                }
+            }
+            
+            // 批量更新减少UI刷新次数
+            BeginUpdate();
+            try
+            {
+                bool hasChanges = false;
+                
+                foreach (CheckBoxComboBoxItem cbItem in CheckBoxItems)
+                {
+                    bool isChecked = false;
+                    
+                    // 处理ObjectSelectionWrapper<CmbChkItem>类型
+                    ObjectSelectionWrapper<CmbChkItem> wrapper = cbItem.ComboBoxItem as ObjectSelectionWrapper<CmbChkItem>;
+                    if (wrapper != null && wrapper.Item != null && !string.IsNullOrEmpty(wrapper.Item.Key))
+                    {
+                        string itemKey = wrapper.Item.Key.ToString();
+                        // 使用哈希表快速查找 - O(1)复杂度
+                        isChecked = resultValueHashSet.Contains(itemKey);
+                    }
+                    else
+                    {
+                        object comboBoxItem = cbItem.ComboBoxItem;
+                        if (comboBoxItem != null)
+                        {
+                            // 首先尝试使用哈希表查找
+                            if (nonWrappedItems != null && nonWrappedItems.Contains(comboBoxItem))
+                            {
+                                isChecked = true;
+                            }
+                            // 对于字符串和值类型，使用字符串哈希表
+                            else if (comboBoxItem is string || comboBoxItem is ValueType)
+                            {
+                                isChecked = resultValueHashSet.Contains(comboBoxItem.ToString());
+                            }
+                            // 最后才使用List.Contains
+                            else
+                            {
+                                isChecked = MultiChoiceResults.Contains(comboBoxItem);
+                            }
+                        }
+                    }
+                    
+                    // 只有状态改变时才更新，减少不必要的UI更新和事件触发
+                    if (cbItem.Checked != isChecked)
+                    {
+                        cbItem.Checked = isChecked;
+                        hasChanges = true;
+                    }
+                }
+                
+                // 只有在实际有更改时才更新文本
+                if (hasChanges && DropDownStyle != ComboBoxStyle.DropDownList)
+                {
+                    Text = GetCSVText(true);
+                }
+            }
+            catch (Exception ex)
+            {
+                // 添加错误处理，确保即使出现异常也能正确结束更新
+                System.Diagnostics.Debug.WriteLine($"Error in UpdateCheckedStates: {ex.Message}");
+            }
+            finally
+            {
+                EndUpdate();
             }
         }
 

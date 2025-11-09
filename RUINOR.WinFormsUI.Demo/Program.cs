@@ -1,4 +1,5 @@
-﻿using RUINOR.WinFormsUI.Demo.CustomPictureBoxDemo;
+﻿using RUINOR.WinFormsUI.Demo.ChkComboBoxDemo;
+using RUINOR.WinFormsUI.Demo.CustomPictureBoxDemo;
 using RUINOR.WinFormsUI.Demo.TreeGridView;
 using System;
 using System.Collections.Generic;
@@ -18,7 +19,7 @@ namespace RUINOR.WinFormsUI.Demo
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new frmPicDemo());
+            Application.Run(new frmChkComboBoxDemo());
             return;
             Application.Run(new frmMain());
             Application.Run(new RUINOR.WinFormsUI.TreeViewColumns.TreeViewColumnsDemo.Form1());

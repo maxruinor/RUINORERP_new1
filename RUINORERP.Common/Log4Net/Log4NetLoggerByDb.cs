@@ -134,9 +134,17 @@ namespace RUINORERP.Common.Log4Net
                     Console.WriteLine("警告: 当前用户上下文为空");
                     return;
                 }
-                
+
                 // 使用MappedDiagnosticsContext确保线程安全
-                log4net.MDC.Set("User_ID", _appcontext.log.User_ID.ToString());
+                if (_appcontext.log.User_ID!=null)
+                {
+                    log4net.MDC.Set("User_ID", _appcontext.log.User_ID.ToString());
+                }
+                else
+                {
+                    log4net.MDC.Set("User_ID", "");
+                }
+             
                 log4net.MDC.Set("ModName", _appcontext.log.ModName);
                 log4net.MDC.Set("ActionName", _appcontext.log.ActionName);
                 log4net.MDC.Set("IP", _appcontext.log.IP);

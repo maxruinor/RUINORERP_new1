@@ -2286,8 +2286,7 @@ namespace RUINORERP.UI.Common
             };
             cmbBox.DataBindings.Add(depa);
 
-            
-            #endregion
+    
         }
 
 
@@ -3869,6 +3868,7 @@ namespace RUINORERP.UI.Common
             ListSelectionWrapper<CmbChkItem> selectionWrappers = new ListSelectionWrapper<CmbChkItem>(cmbItems, "Name");
             cmbBox.BeginUpdate();
             cmbBox.DataSource = selectionWrappers;
+            cmbBox.KeyFieldName = key;
             cmbBox.DisplayMemberSingleItem = "Name";//CmbItem 这个类中显示名称的属性名
             cmbBox.DisplayMember = "NameConcatenated";//固定的？ 将名称可以多选中联系&起来显示？
             cmbBox.ValueMember = "Selected";//固定的一个bool型

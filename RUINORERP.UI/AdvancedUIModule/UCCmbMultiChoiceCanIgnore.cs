@@ -31,6 +31,31 @@ namespace RUINORERP.UI.AdvancedUIModule
             InitializeComponent();
             chkCanIgnore.CheckedChanged += chkCanIgnore_CheckedChanged;
 
+            // 设置按钮样式以更好地显示图片
+            btnRef.BackgroundImageLayout = ImageLayout.Center;
+            btnRef.FlatStyle = FlatStyle.Flat;
+            btnRef.FlatAppearance.BorderSize = 0;
+            btnRef.BackColor = Color.Transparent;
+            btnRef.ImageAlign = ContentAlignment.MiddleCenter;
+            btnRef.TextAlign = ContentAlignment.MiddleCenter;
+            btnRef.Cursor = Cursors.Hand; // 鼠标悬停时显示手型光标
+
+            // 添加鼠标悬停效果
+            btnRef.MouseEnter += (sender, e) =>
+            {
+                btnRef.BackColor = Color.FromArgb(240, 240, 240); // 浅灰色背景
+            };
+            btnRef.MouseLeave += (sender, e) =>
+            {
+                btnRef.BackColor = Color.Transparent;
+            };
+
+            // 设置ComboBox样式
+            chkMulti.FlatStyle = FlatStyle.Flat;
+
+            // 为chkMulti添加边框样式
+            chkMulti.BackColor = Color.White;
+            chkMulti.DropDownStyle = ComboBoxStyle.DropDownList;
         }
         ContextMenuStrip contentMenu1;
         private void chkCanIgnore_CheckedChanged(object sender, EventArgs e)
@@ -51,6 +76,9 @@ namespace RUINORERP.UI.AdvancedUIModule
             contentMenu1.Items[2].Click += new EventHandler(contentMenu1_Inverse);
 
             chkMulti.ContextMenuStrip = contentMenu1;
+
+            // 为chkMulti的容器Panel设置样式
+            panelForBorder.BackColor = Color.White;
         }
 
         private void contentMenu1_CheckAll(object sender, EventArgs e)
@@ -213,13 +241,13 @@ namespace RUINORERP.UI.AdvancedUIModule
                     string valueField = string.Empty;
                     string displayField = string.Empty;
 
-                    // 尝试从CheckBoxComboBox的绑定信息中获取字段名
-                    if (chkMulti.DataBindings.Count > 0)
-                    {
-                        Binding binding = chkMulti.DataBindings[0];
-                        valueField = binding.BindingMemberInfo.BindingField;
-                    }
-
+                    //// 尝试从CheckBoxComboBox的绑定信息中获取字段名
+                    //if (chkMulti.DataBindings.Count > 0)
+                    //{
+                    //    Binding binding = chkMulti.DataBindings[0];
+                    //    valueField = binding.BindingMemberInfo.BindingField;
+                    //}
+                    valueField = chkMulti.KeyFieldName;
                     // 如果没有绑定信息，尝试获取主键字段
                     if (string.IsNullOrEmpty(valueField))
                     {
@@ -270,18 +298,9 @@ namespace RUINORERP.UI.AdvancedUIModule
                             }
                         }
 
-                        // 更新所有复选框的选中状态
-                        foreach (CheckBoxComboBoxItem cbItem in chkMulti.CheckBoxItems)
-                        {
-                            if (cbItem.ComboBoxItem is ObjectSelectionWrapper<CmbChkItem> wrapper)
-                            {
-                                // 确保wrapper.Item.Key不为空
-                                if (wrapper.Item.Key != null && !string.IsNullOrEmpty(wrapper.Item.Key.ToString()))
-                                {
-                                    cbItem.Checked = newSelectedValues.Contains(wrapper.Item.Key);
-                                }
-                            }
-                        }
+                        // 使用CheckBoxComboBox提供的UpdateCheckedStates方法更新所有复选框的选中状态
+                        // 这个方法会根据MultiChoiceResults自动同步UI
+                        chkMulti.UpdateCheckedStates();
                     }
                 }
             }

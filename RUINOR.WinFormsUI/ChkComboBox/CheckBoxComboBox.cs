@@ -13,6 +13,7 @@ using HLH.Lib;
 namespace RUINOR.WinFormsUI.ChkComboBox
 {
     /// <summary>
+    /// 自定义多选下拉框控件，支持多选操作
     /// Martin Lottering : 2007-10-27
     /// --------------------------------
     /// This is a usefull control in Filters. Allows you to save space and can replace a Grouped Box of CheckBoxes.
@@ -23,6 +24,11 @@ namespace RUINOR.WinFormsUI.ChkComboBox
     /// ----------------
     /// ALSO IMPORTANT: In Data Binding when setting the DataSource. The ValueMember must be a bool type property, because it will 
     /// be binded to the Checked property of the displayed CheckBox. Also see the DisplayMemberSingleItem for more information.
+    /// ----------------
+    /// 特别说明：
+    /// 1. 该控件有一个特殊的MultiChoiceResults属性，用于保存选中的数据项集合
+    /// 2. 当设置DataSource属性时，不能同时直接操作Items集合
+    /// 3. 建议通过BindData4CmbChkRefWithLimited方法进行数据绑定，以确保正确初始化
     /// ----------------
     /// Extends the CodeProject PopupComboBox "Simple pop-up control" "http://www.codeproject.com/cs/miscctrl/simplepopup.asp"
     /// by Lukasz Swiatkowski.
@@ -101,6 +107,10 @@ namespace RUINOR.WinFormsUI.ChkComboBox
         /// </summary>
         private string _DisplayMemberSingleItem = null;
         internal bool _MustAddHiddenItem = false;
+        /// <summary>
+        /// 存储业务性主键字段名
+        /// </summary>
+        private string _KeyFieldName = null;
 
         #endregion
 
@@ -165,6 +175,8 @@ namespace RUINOR.WinFormsUI.ChkComboBox
             set
             {
                 base.DataSource = value;
+                // 当设置DataSource时，重置_MustAddHiddenItem标志
+                _MustAddHiddenItem = false;
                 if (!string.IsNullOrEmpty(ValueMember))
                     // This ensures that at least the checkboxitems are available to be initialised.
                     _CheckBoxComboBoxListControl.SynchroniseControlsWithComboBoxItems();
@@ -194,6 +206,16 @@ namespace RUINOR.WinFormsUI.ChkComboBox
         {
             get { if (string.IsNullOrEmpty(_DisplayMemberSingleItem)) return DisplayMember; else return _DisplayMemberSingleItem; }
             set { _DisplayMemberSingleItem = value; }
+        }
+        /// <summary>
+        /// 获取或设置业务性的主键字段名，用于在绑定时从数据源对象中获取对应的值
+        /// </summary>
+        [Browsable(true)]
+        [Description("获取或设置业务性的主键字段名，用于在绑定时从数据源对象中获取对应的值")]
+        public string KeyFieldName
+        {
+            get { return _KeyFieldName; }
+            set { _KeyFieldName = value; }
         }
         /// <summary>
         /// Made this property Browsable again, since the Base Popup hides it. This class uses it again.
@@ -236,20 +258,41 @@ namespace RUINOR.WinFormsUI.ChkComboBox
                 if (objectSelection != null)
                 {
                     // 检查objectSelection.Item是否为null
-                    if (objectSelection.Item != null)
+                    if (objectSelection.Item != null && !string.IsNullOrEmpty(objectSelection.Item.Key))
                     {
+                        // 使用类型安全的比较方式处理key值
+                        string itemKey = objectSelection.Item.Key.ToString();
+                        
                         if (changedItem.Checked)
                         {
-                            if (!MultiChoiceResults.Contains(objectSelection.Item.Key))
+                            // 检查是否已存在相同的key值（字符串比较）
+                            bool exists = false;
+                            foreach (var value in MultiChoiceResults)
                             {
+                                if (value != null && string.Equals(itemKey, value.ToString(), StringComparison.OrdinalIgnoreCase))
+                                {
+                                    exists = true;
+                                    break;
+                                }
+                            }
+                            
+                            if (!exists)
+                            {
+                                // 添加原始类型的值
                                 MultiChoiceResults.Add(objectSelection.Item.Key);
                             }
                         }
                         else
                         {
-                            if (MultiChoiceResults.Contains(objectSelection.Item.Key))
+                            // 查找并移除对应的key值
+                            for (int i = MultiChoiceResults.Count - 1; i >= 0; i--)
                             {
-                                MultiChoiceResults.Remove(objectSelection.Item.Key);
+                                var value = MultiChoiceResults[i];
+                                if (value != null && string.Equals(itemKey, value.ToString(), StringComparison.OrdinalIgnoreCase))
+                                {
+                                    MultiChoiceResults.RemoveAt(i);
+                                    break;
+                                }
                             }
                         }
                     }
@@ -303,11 +346,13 @@ namespace RUINOR.WinFormsUI.ChkComboBox
         protected override void OnDropDownStyleChanged(EventArgs e)
         {
             base.OnDropDownStyleChanged(e);
-
+            // 只有当DataSource为null时才设置_MustAddHiddenItem
             if (DropDownStyle == ComboBoxStyle.DropDownList
                 && DataSource == null
                 && !DesignMode)
                 _MustAddHiddenItem = true;
+            else
+                _MustAddHiddenItem = false; // 其他情况重置标志
         }
 
         protected override void OnResize(EventArgs e)
@@ -329,9 +374,18 @@ namespace RUINOR.WinFormsUI.ChkComboBox
         /// </summary>
         public void Clear()
         {
-            this.Items.Clear();
-            if (DropDownStyle == ComboBoxStyle.DropDownList && DataSource == null)
-                _MustAddHiddenItem = true;
+            if (DataSource == null)
+            {
+                this.Items.Clear();
+                if (DropDownStyle == ComboBoxStyle.DropDownList)
+                    _MustAddHiddenItem = true;
+            }
+            else
+            {
+                // 当使用DataSource时，使用原有的ClearSelection方法清空选择
+                // 不直接操作Items集合以避免"设置DataSource属性后无法修改项集合"异常
+                this.ClearSelection();
+            }
         }        /// <summary>
                  /// Uncheck all items.
                  /// </summary>
@@ -344,6 +398,7 @@ namespace RUINOR.WinFormsUI.ChkComboBox
 
         /// <summary>
         /// 根据MultiChoiceResults更新所有CheckBox的选中状态
+        /// 处理不同类型值的比较问题
         /// </summary>
         public void UpdateCheckedStates()
         {
@@ -353,9 +408,27 @@ namespace RUINOR.WinFormsUI.ChkComboBox
                 if (wrapper != null)
                 {
                     // 检查wrapper.Item是否为null
-                    if (wrapper.Item != null)
+                    if (wrapper.Item != null && !string.IsNullOrEmpty(wrapper.Item.Key))
                     {
-                        cbItem.Checked = MultiChoiceResults.Contains(wrapper.Item.Key);
+                        // 使用类型安全的比较方式，处理类型转换问题
+                        bool isChecked = false;
+                        string itemKey = wrapper.Item.Key.ToString();
+                        
+                        foreach (var value in MultiChoiceResults)
+                        {
+                            if (value != null)
+                            {
+                                // 将MultiChoiceResults中的值转换为字符串进行比较
+                                string resultValue = value.ToString();
+                                if (string.Equals(itemKey, resultValue, StringComparison.OrdinalIgnoreCase))
+                                {
+                                    isChecked = true;
+                                    break;
+                                }
+                            }
+                        }
+                        
+                        cbItem.Checked = isChecked;
                     }
                 }
                 else
@@ -399,6 +472,10 @@ namespace RUINOR.WinFormsUI.ChkComboBox
                 && DataSource == null)
             {
                 _MustAddHiddenItem = true;
+            }
+            else if (m.Msg == 331)
+            {
+                _MustAddHiddenItem = false; // 当DataSource不为null时重置标志
             }
 
             base.WndProc(ref m);
@@ -523,7 +600,8 @@ namespace RUINOR.WinFormsUI.ChkComboBox
         public void SynchroniseControlsWithComboBoxItems()
         {
             SuspendLayout();
-            if (_CheckBoxComboBox._MustAddHiddenItem)
+            // 只有当DataSource为null时才尝试修改Items集合
+            if (_CheckBoxComboBox._MustAddHiddenItem && _CheckBoxComboBox.DataSource == null)
             {
                 _CheckBoxComboBox.Items.Insert(
                     0, _CheckBoxComboBox.GetCSVText(false)); // INVISIBLE ITEM

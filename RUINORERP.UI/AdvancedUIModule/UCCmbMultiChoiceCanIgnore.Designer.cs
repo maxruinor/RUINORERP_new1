@@ -1,4 +1,6 @@
-﻿namespace RUINORERP.UI.AdvancedUIModule
+﻿using RUINOR.WinFormsUI.ChkComboBox;
+
+namespace RUINORERP.UI.AdvancedUIModule
 {
     partial class UCCmbMultiChoiceCanIgnore
     {
@@ -28,7 +30,7 @@
         /// </summary>
         private void InitializeComponent()
         {
-            RUINOR.WinFormsUI.ChkComboBox.CheckBoxProperties checkBoxProperties1 = new RUINOR.WinFormsUI.ChkComboBox.CheckBoxProperties();
+            CheckBoxProperties checkBoxProperties1 = new CheckBoxProperties();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(UCCmbMultiChoiceCanIgnore));
             this.chkMulti = new RUINOR.WinFormsUI.ChkComboBox.CheckBoxComboBox();
             this.chkCanIgnore = new Krypton.Toolkit.KryptonCheckBox();
@@ -36,6 +38,7 @@
             this.kryptonPanelQuery = new Krypton.Toolkit.KryptonPanel();
             this.btnRef = new System.Windows.Forms.Button();
             this.groupLine1 = new WinLib.Line.GroupLine();
+            this.panelForBorder = new System.Windows.Forms.Panel();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer右边详情)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer右边详情.Panel1)).BeginInit();
             this.kryptonSplitContainer右边详情.Panel1.SuspendLayout();
@@ -44,6 +47,7 @@
             this.kryptonSplitContainer右边详情.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelQuery)).BeginInit();
             this.kryptonPanelQuery.SuspendLayout();
+            this.panelForBorder.SuspendLayout();
             this.SuspendLayout();
             // 
             // chkMulti
@@ -52,11 +56,11 @@
             this.chkMulti.CheckBoxProperties = checkBoxProperties1;
             this.chkMulti.DisplayMemberSingleItem = "";
             this.chkMulti.FormattingEnabled = true;
-            this.chkMulti.Location = new System.Drawing.Point(0, 0);
+            this.chkMulti.Location = new System.Drawing.Point(1, 1);
             this.chkMulti.Margin = new System.Windows.Forms.Padding(0);
             this.chkMulti.MultiChoiceResults = ((System.Collections.Generic.List<object>)(resources.GetObject("chkMulti.MultiChoiceResults")));
             this.chkMulti.Name = "chkMulti";
-            this.chkMulti.Size = new System.Drawing.Size(159, 20);
+            this.chkMulti.Size = new System.Drawing.Size(140, 20);
             this.chkMulti.TabIndex = 0;
             // 
             // chkCanIgnore
@@ -96,7 +100,7 @@
             this.kryptonPanelQuery.AutoSize = true;
             this.kryptonPanelQuery.Controls.Add(this.btnRef);
             this.kryptonPanelQuery.Controls.Add(this.groupLine1);
-            this.kryptonPanelQuery.Controls.Add(this.chkMulti);
+            this.kryptonPanelQuery.Controls.Add(this.panelForBorder);
             this.kryptonPanelQuery.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonPanelQuery.Location = new System.Drawing.Point(0, 0);
             this.kryptonPanelQuery.Name = "kryptonPanelQuery";
@@ -106,9 +110,9 @@
             // btnRef
             // 
             this.btnRef.Image = global::RUINORERP.UI.Properties.Resources.help4;
-            this.btnRef.Location = new System.Drawing.Point(162, 0);
+            this.btnRef.Location = new System.Drawing.Point(145, 1);
             this.btnRef.Name = "btnRef";
-            this.btnRef.Size = new System.Drawing.Size(10, 23);
+            this.btnRef.Size = new System.Drawing.Size(20, 20);
             this.btnRef.TabIndex = 3;
             this.btnRef.UseVisualStyleBackColor = true;
             this.btnRef.Click += new System.EventHandler(this.btnRef_Click);
@@ -121,6 +125,16 @@
             this.groupLine1.Size = new System.Drawing.Size(173, 1);
             this.groupLine1.TabIndex = 2;
             // 
+            // panelForBorder
+            // 
+            this.panelForBorder.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.panelForBorder.Controls.Add(this.chkMulti);
+            this.panelForBorder.Location = new System.Drawing.Point(0, 1);
+            this.panelForBorder.Margin = new System.Windows.Forms.Padding(0);
+            this.panelForBorder.Name = "panelForBorder";
+            this.panelForBorder.Size = new System.Drawing.Size(142, 20);
+            this.panelForBorder.TabIndex = 4;
+            // 
             // UCCmbMultiChoiceCanIgnore
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -130,6 +144,7 @@
             this.Name = "UCCmbMultiChoiceCanIgnore";
             this.Size = new System.Drawing.Size(190, 22);
             this.Load += new System.EventHandler(this.UCCmbMultiChoiceCanIgnore_Load);
+            this.Padding = new System.Windows.Forms.Padding(1);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer右边详情.Panel1)).EndInit();
             this.kryptonSplitContainer右边详情.Panel1.ResumeLayout(false);
             this.kryptonSplitContainer右边详情.Panel1.PerformLayout();
@@ -140,6 +155,7 @@
             this.kryptonSplitContainer右边详情.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelQuery)).EndInit();
             this.kryptonPanelQuery.ResumeLayout(false);
+            this.panelForBorder.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -151,5 +167,6 @@
         internal Krypton.Toolkit.KryptonPanel kryptonPanelQuery;
         private WinLib.Line.GroupLine groupLine1;
         private System.Windows.Forms.Button btnRef;
+        private System.Windows.Forms.Panel panelForBorder;
     }
 }

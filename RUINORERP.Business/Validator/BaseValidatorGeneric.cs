@@ -6,6 +6,7 @@ using RUINORERP.Common.Extensions;
 using RUINORERP.Common.Helper;
 using RUINORERP.Extensions.Middlewares;
 using RUINORERP.Model.ConfigModel;
+using RUINORERP.Model.Context;
 using SharpYaml.Tokens;
 using System;
 using System.Collections;
@@ -14,28 +15,58 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using RUINORERP.Business.Config;
 
 namespace RUINORERP.Business
 {
     public abstract class BaseValidatorGeneric<T> : AbstractValidator<T> where T : class
     {
-
-
-        // public readonly IOptionsMonitor<GlobalValidatorConfig> ValidatorConfig;
-
-        //protected BaseValidatorGeneric(IOptionsMonitor<GlobalValidatorConfig> config)
-        //{
-        // ValidatorConfig = config;
-        // 监听配置变化
-        // ValidatorConfig.OnChange(updatedConfig =>
-        //{
-        //    Console.WriteLine($"Configuration has changed: {updatedConfig.SomeSetting}");
-        //});
-        //}
-
-        protected BaseValidatorGeneric()
+        // 应用程序上下文，用于访问服务容器
+        public ApplicationContext _appContext;
+        
+        // 全局验证器配置
+        private GlobalValidatorConfig _validatorConfig;
+        public GlobalValidatorConfig ValidatorConfig 
+        { 
+            get 
+            { 
+                // 每次访问时确保获取最新配置
+                RefreshValidatorConfig();
+                return _validatorConfig;
+            }
+            set { _validatorConfig = value; }
+        }
+        
+        protected BaseValidatorGeneric(ApplicationContext appContext = null)
         {
-
+            _appContext = appContext;
+            
+            // 初始化时获取一次配置
+            RefreshValidatorConfig();
+        }
+        
+        /// <summary>
+        /// 刷新验证器配置，确保获取最新值
+        /// </summary>
+        protected void RefreshValidatorConfig()
+        {
+            if (_appContext != null)
+            {
+                try
+                {
+                    var configManagerService = _appContext.GetRequiredService<IConfigManagerService>();
+                    _validatorConfig = configManagerService.GetConfig<GlobalValidatorConfig>();
+                }
+                catch (Exception ex)
+                {
+                    // 记录错误但不抛出异常，避免验证器初始化失败
+                    Console.WriteLine($"刷新全局验证器配置失败: {ex.Message}");
+                }
+            }
+     
+            
+            // 调用Initialize方法进行验证规则初始化
+            Initialize();
         }
         //public abstract void Initialize();
 

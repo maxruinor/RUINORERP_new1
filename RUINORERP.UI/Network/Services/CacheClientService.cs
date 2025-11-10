@@ -33,7 +33,7 @@ namespace RUINORERP.UI.Network.Services
         private readonly ILogger<CacheClientService> _log;
         private readonly IEntityCacheManager _cacheManager;
         // 客户端使用：管理订阅的表，每个表是否有订阅
-        private readonly ConcurrentDictionary<string, bool> _subscriptions;
+        private ConcurrentDictionary<string, bool> _subscriptions = new ConcurrentDictionary<string, bool>();
 
         private readonly CacheRequestManager _cacheRequestManager; // 新增：使用专门的请求管理器
         private readonly EventDrivenCacheManager _eventDrivenCacheManager; // 事件驱动缓存管理器
@@ -134,7 +134,7 @@ namespace RUINORERP.UI.Network.Services
             {
                 // 发送订阅请求到服务器
                 var cacheResponse = await _cacheRequestManager.SendCacheSubscriptionAsync(tableName, SubscribeAction.Subscribe, null);
-                if (cacheResponse!=null)
+                if (cacheResponse != null)
                 {
                     if (cacheResponse.IsSuccess)
                     {
@@ -146,7 +146,7 @@ namespace RUINORERP.UI.Network.Services
                 {
 
                 }
-               
+
             }
             catch (Exception ex)
             {

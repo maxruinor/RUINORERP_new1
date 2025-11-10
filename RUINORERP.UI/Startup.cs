@@ -27,6 +27,7 @@ using RUINORERP.Services;
 using RUINORERP.IServices;
 using RUINORERP.Extensions.AOP;
 using RUINORERP.Business;
+using RUINORERP.Business.Config;
 using RUINORERP.Common.CustomAttribute;
 using SqlSugar;
 using RUINORERP.Model;
@@ -254,12 +255,14 @@ namespace RUINORERP.UI
             // 注册ConfigManager为单例，并确保它能正确初始化
             services.AddSingleton<UIConfigManager>(provider =>
             {
-                var configMonitor = provider.GetRequiredService<IOptionsMonitor<SystemGlobalConfig>>();
-                var validatorMonitor = provider.GetRequiredService<IOptionsMonitor<GlobalValidatorConfig>>();
                 var configManager = new UIConfigManager();
-                configManager.Initialize(configMonitor, validatorMonitor);
+                configManager.Initialize();
                 return configManager;
             });
+            
+            // 注册ConfigManagerService为单例，确保全局使用同一个实例
+            // 注意：这里需要确保ConfigManagerService已经在Business层正确注册了依赖服务
+            services.AddSingleton<IConfigManagerService, ConfigManagerService>();
         }
 
         /// <summary>

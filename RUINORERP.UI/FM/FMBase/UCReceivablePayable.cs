@@ -216,6 +216,7 @@ namespace RUINORERP.UI.FM
             bool canEdit = entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改 ||
                           (entity.ARAPStatus == (int)ARAPStatus.草稿) || (entity.ARAPStatus == (int)ARAPStatus.待审核);
 
+            DataBindingHelper.BindData4Cmb<tb_FM_PayeeInfo>(entity, k => k.PayeeInfoID, v => v.DisplayText, cmbPayeeInfoID, queryFilterPayeeInfo.GetFilterExpression<tb_FM_PayeeInfo>(), true);
             DataBindingHelper.InitFilterForControlByExpCanEdit<tb_FM_PayeeInfo>(entity, cmbPayeeInfoID, c => c.DisplayText, queryFilterPayeeInfo, canEdit);
 
             // 设置默认值（如果允许编辑且没有选择值）
@@ -223,7 +224,7 @@ namespace RUINORERP.UI.FM
             {
                 //设置一个默认值 如果有默认收款账号时
                 var payeeInfoList = cmbPayeeInfoID.Items.CastToList<tb_FM_PayeeInfo>().Where(c => c.PayeeInfoID != -1).ToList();
-                if (!payeeInfoList.Any(c => c.PayeeInfoID == entity.PayeeInfoID))
+                if (!payeeInfoList.Any(c => c.PayeeInfoID == entity.PayeeInfoID) && entity.CustomerVendor_ID > 0)
                 {
                     if (payeeInfoList.FirstOrDefault(c => c.IsDefault) != null)
                     {
@@ -294,31 +295,6 @@ namespace RUINORERP.UI.FM
                 }
                 entity.PrimaryKeyID = entity.ARAPId;
                 entity.ActionStatus = ActionStatus.加载;
-                ////如果审核了，审核要灰色
-                //if (entity.CustomerVendor_ID > 0)
-                //{
-                //    #region 收款信息可以根据往来单位带出 ，并且可以添加
-
-                //    //创建表达式
-                //    var lambdaPayeeInfo = Expressionable.Create<tb_FM_PayeeInfo>()
-                //                .And(t => t.Is_enabled == true)
-                //                .And(t => t.CustomerVendor_ID == entity.CustomerVendor_ID)
-                //                .ToExpression();//注意 这一句 不能少
-                //    BaseProcessor baseProcessorPayeeInfo = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_FM_PayeeInfo).Name + "Processor");
-                //    QueryFilter queryFilterPayeeInfo = baseProcessorPayeeInfo.GetQueryFilter();
-                //    queryFilterPayeeInfo.FilterLimitExpressions.Add(lambdaPayeeInfo);
-
-                //    DataBindingHelper.BindData4Cmb<tb_FM_PayeeInfo>(entity, k => k.PayeeInfoID, v => v.DisplayText, cmbPayeeInfoID, queryFilterPayeeInfo.GetFilterExpression<tb_FM_PayeeInfo>(), true);
-                //    DataBindingHelper.InitFilterForControlByExpCanEdit<tb_FM_PayeeInfo>(entity, cmbPayeeInfoID, c => c.DisplayText, queryFilterPayeeInfo, true);
-
-
-                //    #endregion
-                //}
-                //else
-                //{
-                //    //清空
-                //    cmbPayeeInfoID.DataBindings.Clear();
-                //}
 
                 //如果状态是已经生效才可能有审核，如果是待收款 才可能有反审
                 if (entity.ARAPStatus == (int)ARAPStatus.待审核)
@@ -453,9 +429,7 @@ namespace RUINORERP.UI.FM
             if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
             {
                 base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService<tb_FM_ReceivablePayableValidator>(), kryptonPanel1.Controls);
-                //UIBaseTool uIBaseTool = new();
-                //uIBaseTool.CurMenuInfo = CurMenuInfo;
-                //uIBaseTool.AddEditableQueryControl<tb_Employee>(cmbEmployee_ID, false);
+                
 
                 #region 收款信息 ，并且可以添加
                 // 使用统一方法加载收款信息
@@ -502,10 +476,6 @@ namespace RUINORERP.UI.FM
                     EditEntity.ActionStatus = ActionStatus.修改;
                 }
 
-                #region 收款信息可以根据往来单位带出 ，并且可以添加
-                // 使用统一方法加载收款信息
-                LoadPayeeInfo(entity);
-                #endregion
 
 
 
@@ -538,7 +508,11 @@ namespace RUINORERP.UI.FM
                         // 根据单据状态决定是否启用下拉控件
                         cmbPayeeInfoID.Enabled = entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改 ||
                                               (entity.ARAPStatus == (int)ARAPStatus.草稿) || (entity.ARAPStatus == (int)ARAPStatus.待审核);
-
+                        
+                        #region 收款信息可以根据往来单位带出 ，并且可以添加
+                         // 使用统一方法加载收款信息
+                        LoadPayeeInfo(entity);
+                        #endregion
                         // 加载收款信息详情
                         await LoadPayeeInfoDetailAsync(entity);
                     }
@@ -563,7 +537,7 @@ namespace RUINORERP.UI.FM
                             }
                             //换往来单位了。对应的收款信息要重置 
                             entity.PayeeInfoID = null;
-                             LoadPayeeInfo(entity);
+                            LoadPayeeInfo(entity);
                             //await LoadPayeeInfoDetailAsync(entity);
                         }
                     }

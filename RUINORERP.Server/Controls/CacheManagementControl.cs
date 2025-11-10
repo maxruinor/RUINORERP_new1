@@ -349,7 +349,6 @@ private readonly IEntityCacheManager _entityCacheManager;
 
                 if (tableNameList == null || tableNameList.Count == 0)
                 {
-                    MessageBox.Show("没有找到缓存表配置", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return;
                 }
 
@@ -396,7 +395,6 @@ private readonly IEntityCacheManager _entityCacheManager;
                 // 刷新缓存统计数据
                 LoadCacheStatistics();
 
-                MessageBox.Show("缓存加载完成", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {
@@ -598,7 +596,6 @@ private readonly IEntityCacheManager _entityCacheManager;
                         frmMainNew.Instance.PrintInfoLog($"加载缓存数据 {tableName} 执行时间：{stopwatchLoadUI.ElapsedMilliseconds} 毫秒");
                     }
 
-                    MessageBox.Show($"表 {tableName} 的缓存数据已加载", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
                 else
                 {
@@ -678,7 +675,6 @@ private readonly IEntityCacheManager _entityCacheManager;
                 {
                     cacheStats.ResetStatistics();
                     LoadCacheStatistics();
-                    MessageBox.Show("缓存统计数据已重置", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
             }
             catch (Exception ex)

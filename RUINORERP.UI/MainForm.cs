@@ -24,6 +24,7 @@ using RUINORERP.UI.Network;
 using System.Reflection;
 using RUINORERP.UI.UserCenter;
 using RUINORERP.Business;
+using RUINORERP.Business.Config;
 using RUINORERP.UI.IM;
 
 
@@ -144,6 +145,17 @@ namespace RUINORERP.UI
             /// 登出中
             /// </summary>
             LoggingOut
+        }
+        
+        /// <summary>
+        /// 系统更新方法（重载）
+        /// </summary>
+        /// <param name="ShowMessageBox">是否显示消息框</param>
+        /// <returns>更新操作是否成功</returns>
+        public async Task<bool> UpdateSys(bool ShowMessageBox)
+        {
+            // 调用带默认参数的方法
+            return await UpdateSys(ShowMessageBox, false);
         }
 
         public UILogManager logManager;
@@ -581,47 +593,58 @@ namespace RUINORERP.UI
             }
         }
         string UpdatefilePath = "UpdateLog.txt";
+
+
         /// <summary>
-        /// 主动更新，就有提示，被动 就不需要提示了。TODO 后面完善
+        /// 系统更新方法
         /// </summary>
-        public async Task<bool> UpdateSys(bool ActiveUpdate)
+        /// <param name="ShowMessageBox">是否显示消息框</param>
+        /// <param name="forceUpdate">是否强制更新，忽略客户端自动更新配置</param>
+        /// <returns>更新操作是否成功</returns>
+        public async Task<bool> UpdateSys(bool ShowMessageBox, bool forceUpdate = false)
         {
             bool rs = false;
-            try
+            var validatorMonitor = Startup.GetFromFac<IOptionsMonitor<SystemGlobalConfig>>();
+            // 如果配置了自动更新或强制更新参数为true，则执行更新检查
+            if (validatorMonitor.CurrentValue.客户端自动更新 || forceUpdate) 
             {
-                AutoUpdate.FrmUpdate Update = new AutoUpdate.FrmUpdate();
-                if (Update.CheckHasUpdates())
+                try
                 {
-                    MessageBox.Show("服务器有新版本，更新前请保存当前操作，关闭系统。", "温馨提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    Process.Start(Update.currentexeName);
-                    // 登录成功，重置注销状态
-                    IsLoggingOut = false;
-                    rs = true;
-
-                    // 等待2秒，确保更新程序启动
-                    await Task.Delay(1500);
-                    //启动另一个exe程序后等待2秒后来检测读取这个文件
-                    // string content = FileHelper.ReadFileContent(UpdatefilePath);
-
-                    // 确保当前程序退出
-                    rs = true;
-
-                }
-                else
-                {
-                    if (ActiveUpdate)
+                    AutoUpdate.FrmUpdate Update = new AutoUpdate.FrmUpdate();
+                    if (Update.CheckHasUpdates())
                     {
-                        MessageBox.Show("已经是最新版本，不需要更新。", "温馨提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        MessageBox.Show("服务器有新版本，更新前请保存当前操作，关闭系统。", "温馨提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        Process.Start(Update.currentexeName);
+                        // 登录成功，重置注销状态
+                        IsLoggingOut = false;
+                        rs = true;
+
+                        // 等待2秒，确保更新程序启动
+                        await Task.Delay(1500);
+                        //启动另一个exe程序后等待2秒后来检测读取这个文件
+                        // string content = FileHelper.ReadFileContent(UpdatefilePath);
+
+                        // 确保当前程序退出
+                        rs = true;
+
                     }
-                    rs = false;
+                    else
+                    {
+                        if (ShowMessageBox)
+                        {
+                            MessageBox.Show("已经是最新版本，不需要更新。", "温馨提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        }
+                        rs = false;
+                    }
+                    await Task.Delay(10); // 假设操作需要一段时间
+                    return rs;
                 }
-                await Task.Delay(10); // 假设操作需要一段时间
-                return rs;
+                catch
+                {
+                    return rs; 
+                }
             }
-            catch
-            {
-                return false;
-            }
+            return rs;
         }
 
 
@@ -3118,12 +3141,23 @@ namespace RUINORERP.UI
 
         private async void btntsbRefresh_Click(object sender, EventArgs e)
         {
-            var validatorMonitor = Startup.GetFromFac<IOptionsMonitor<GlobalValidatorConfig>>();
-            if (validatorMonitor.CurrentValue.SomeSetting.Trim().Length > 0)
+            // 注意：validatorMonitor和validatorConfig来自不同的配置源，可能导致值不一致
+            // validatorMonitor: 通过IOptionsMonitor获取，使用ASP.NET Core配置系统
+            // validatorConfig: 通过ConfigManagerService获取，使用自定义配置管理系统
+            
+            // 使用ConfigManagerService获取最新配置（推荐，确保使用统一的配置源）
+            var configManagerService = Startup.GetFromFac<IConfigManagerService>();
+            var validatorConfig = configManagerService.GetConfig<GlobalValidatorConfig>();
+            if (validatorConfig?.SomeSetting != null && validatorConfig.SomeSetting.Trim().Length > 0)
             {
-
+                // 处理配置值
+                logger.LogInformation("获取到最新的验证配置: {Setting}", validatorConfig.SomeSetting);
             }
-
+            
+            // 避免使用多个不同的配置源，统一使用ConfigManagerService
+            // 以下代码已注释，避免配置不一致问题
+            // var validatorMonitor = Startup.GetFromFac<IOptionsMonitor<GlobalValidatorConfig>>();
+          
 
             await UI.Common.UIBizService.RequestCache<tb_UserInfo>(true);
             MainForm.Instance.logger.LogError("LoginWebServer" + System.DateTime.Now.ToString());

@@ -640,9 +640,7 @@ namespace RUINORERP.Server.Controls
                 
                 // 刷新数据显示
                 RefreshData();
-                
-                // 显示成功消息
-                MessageBox.Show("所有统计信息已重置", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            
             }
             catch (Exception ex)
             {

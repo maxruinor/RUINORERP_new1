@@ -5,6 +5,7 @@ using Newtonsoft.Json;
 using System;
 using System.IO;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace RUINORERP.Business.Config
 {
@@ -264,9 +265,12 @@ namespace RUINORERP.Business.Config
                 // 加密敏感字段
                 T encryptedConfig = _encryptionService.EncryptConfig(config);
                 
-                // 保存到文件
+                // 保存到文件 - 注意：保存格式需要与IOptionsMonitor期望的格式一致
+                // IOptionsMonitor期望配置文件包含类型名称作为根节点
                 string filePath = GetConfigFilePath();
-                string jsonContent = JsonConvert.SerializeObject(encryptedConfig, Formatting.Indented);
+                // 创建包含类型名称的包装对象，确保与IOptionsMonitor的配置结构一致
+                var configWrapper = new Dictionary<string, T> { { typeof(T).Name, encryptedConfig } };
+                string jsonContent = JsonConvert.SerializeObject(configWrapper, Formatting.Indented);
                 File.WriteAllText(filePath, jsonContent);
                 
                 // 触发配置变更事件
@@ -364,14 +368,37 @@ namespace RUINORERP.Business.Config
             try
             {
                 string jsonContent = File.ReadAllText(filePath);
-                T config = JsonConvert.DeserializeObject<T>(jsonContent);
-                config = _encryptionService.DecryptConfig(config);
+                
+                // 尝试以包含根节点的格式读取配置
+                // 格式: { "TypeName": { ...配置内容... } }
+                try
+                {
+                    var configWrapper = JsonConvert.DeserializeObject<Dictionary<string, T>>(jsonContent);
+                    if (configWrapper != null && configWrapper.TryGetValue(typeof(T).Name, out T config))
+                    {
+                        config = _encryptionService.DecryptConfig(config);
+                        
+                        // 触发配置变更事件
+                        OnConfigChanged(config, _currentConfig, "从文件加载(带根节点格式)");
+                        _currentConfig = config;
+                        
+                        return config;
+                    }
+                }
+                catch (Exception innerEx)
+                {
+                    _logger.LogDebug(innerEx, "以带根节点格式读取配置失败，尝试直接读取: {ConfigType}", typeof(T).Name);
+                }
+                
+                // 如果带根节点格式读取失败，尝试直接读取（向后兼容旧格式）
+                T Lastconfig = JsonConvert.DeserializeObject<T>(jsonContent);
+                Lastconfig = _encryptionService.DecryptConfig(Lastconfig);
                 
                 // 触发配置变更事件
-                OnConfigChanged(config, _currentConfig, "从文件加载");
-                _currentConfig = config;
+                OnConfigChanged(Lastconfig, _currentConfig, "从文件加载(直接格式)");
+                _currentConfig = Lastconfig;
                 
-                return config;
+                return Lastconfig;
             }
             catch (Exception ex)
             {

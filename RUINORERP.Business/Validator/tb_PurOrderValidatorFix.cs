@@ -15,6 +15,8 @@ using Microsoft.Extensions.Options;
 using RUINORERP.Model.ConfigModel;
 using RUINORERP.Global;
 using System.Linq;
+using RUINORERP.Business.Config;
+using RUINORERP.Model.Context;
 
 //https://github.com/FluentValidation/FluentValidation 使用实例
 //https://blog.csdn.net/WuLex/article/details/127985756 中文教程
@@ -28,15 +30,6 @@ namespace RUINORERP.Business
     /*public partial class tb_PurOrderValidator:AbstractValidator<tb_PurOrder>*/
     public partial class tb_PurOrderValidator : BaseValidatorGeneric<tb_PurOrder>
     {
-
-        //  /// <summary>
-        //  /// 可配置性全局参数
-        //  /// </summary>
-        //public readonly IOptionsMonitor<SystemGlobalconfig> Globalconfig;
-        //public tb_PurOrderValidator(IOptionsMonitor<SystemGlobalconfig> _Globalconfig)
-        //{
-        //    Globalconfig = _Globalconfig;
-        //}
 
 
         public override void Initialize()
@@ -52,9 +45,10 @@ namespace RUINORERP.Business
                var purOrder = context.InstanceToValidate as tb_PurOrder;
                if (purOrder != null)
                {
+
                    //根据配置判断预交日期是不是必须填写
                    //实际情况是 保存时可能不清楚交期，保存后截图发给供应商后才知道。这时提交才要求
-                   if (ValidatorConfig.CurrentValue.预交日期必填)
+                   if (ValidatorConfig.预交日期必填)
                    {
                        if (purOrder.PreDeliveryDate == null || purOrder.PreDeliveryDate.HasValue)
                        {

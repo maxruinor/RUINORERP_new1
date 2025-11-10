@@ -21,6 +21,7 @@ using RUINORERP.Business.Cache;
 using RUINORERP.Business.Services;
 using RUINORERP.Business.Config;
 using RUINORERP.IServices;
+using RUINORERP.Model.Context;
 
 namespace RUINORERP.Business.DI
 {
@@ -172,6 +173,7 @@ namespace RUINORERP.Business.DI
             // 注册泛型配置服务
             builder.RegisterGeneric(typeof(GenericConfigService<>))
                 .As(typeof(IGenericConfigService<>))
+                .SingleInstance()
                 .InstancePerDependency()
                 .PropertiesAutowired();
 
@@ -185,6 +187,29 @@ namespace RUINORERP.Business.DI
             // 这是因为ConfigManagerService实现的接口可能不是公开可见的，或者有其他问题导致不能使用接口拦截
             builder.RegisterType<ConfigManagerService>()
                 .As<IConfigManagerService>()
+                .AsSelf()
+                .SingleInstance()
+                .PropertiesAutowired()
+                .InstancePerDependency();
+                
+            // 为ConfigEncryptionService添加单独的注册，禁用接口拦截
+            // 这是因为IConfigEncryptionService接口可能不是公开可见的，需要避免接口拦截
+            builder.RegisterType<ConfigEncryptionService>()
+                .As<IConfigEncryptionService>()
+                .AsSelf()
+                .PropertiesAutowired()
+                .InstancePerDependency();
+                
+            // 为ConfigValidationService添加单独的注册，禁用接口拦截
+            builder.RegisterType<ConfigValidationService>()
+                .As<IConfigValidationService>()
+                .AsSelf()
+                .PropertiesAutowired()
+                .InstancePerDependency();
+                
+            // 为ConfigVersionService添加单独的注册，禁用接口拦截
+            builder.RegisterType<ConfigVersionService>()
+                .As<IConfigVersionService>()
                 .AsSelf()
                 .PropertiesAutowired()
                 .InstancePerDependency();
@@ -252,6 +277,19 @@ namespace RUINORERP.Business.DI
                 List<KeyValuePair<string, Type>> ValidatorGenericlist = new List<KeyValuePair<string, Type>>();
                 List<KeyValuePair<string, Type>> NewBaseValidatorGenericlist = new List<KeyValuePair<string, Type>>();
 
+                // 注册BaseValidatorGeneric<T>并确保它能接收ApplicationContext
+                builder.RegisterGeneric(typeof(BaseValidatorGeneric<>))
+                    .WithParameter(new ResolvedParameter(
+                        (pi, ctx) => pi.ParameterType == typeof(ApplicationContext),
+                        (pi, ctx) => ctx.Resolve<ApplicationContext>()
+                    ))
+                    .InstancePerDependency()
+                    .PropertiesAutowired();
+
+                // 注册AbstractValidator<T>
+                builder.RegisterGeneric(typeof(AbstractValidator<>))
+                    .InstancePerDependency();
+
                 for (int i = 0; i < tempTypes.Length; i++)
                 {
                     if (tempTypes[i].BaseType == null) continue;
@@ -265,14 +303,7 @@ namespace RUINORERP.Business.DI
                             tempTypes[i].Name.Replace("`1", ""), tempTypes[i]));
                     }
 
-                    // 基类本身
-                    if (tempTypes[i].Name.Contains("BaseValidatorGeneric") && tempTypes[i].BaseType.IsGenericType)
-                    {
-                        builder.RegisterGeneric(typeof(BaseValidatorGeneric<>));
-                        builder.RegisterGeneric(typeof(AbstractValidator<>));
-                    }
-
-                    // 子类
+                    // 子类 - BaseValidatorGeneric的派生类
                     if (tempTypes[i].BaseType.Name.Contains("BaseValidatorGeneric") && tempTypes[i].BaseType.IsGenericType)
                     {
                         NewBaseValidatorGenericlist.Add(new KeyValuePair<string, Type>(
@@ -286,17 +317,21 @@ namespace RUINORERP.Business.DI
                     builder.RegisterType(item.Value)
                         .AsImplementedInterfaces()
                         .AsSelf()
-                        .SingleInstance()
+                        .InstancePerDependency()
                         .PropertiesAutowired();
                 }
 
-                // 用名称注册新的基类验证器
+                // 用名称注册新的基类验证器，并确保注入ApplicationContext
                 foreach (var item in NewBaseValidatorGenericlist)
                 {
                     builder.RegisterType(item.Value)
                         .AsImplementedInterfaces()
                         .AsSelf()
-                        .SingleInstance()
+                        .InstancePerDependency()
+                        .WithParameter(new ResolvedParameter(
+                            (pi, ctx) => pi.ParameterType == typeof(ApplicationContext),
+                            (pi, ctx) => ctx.Resolve<ApplicationContext>()
+                        ))
                         .PropertiesAutowired();
                 }
             }

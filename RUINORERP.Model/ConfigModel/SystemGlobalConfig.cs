@@ -15,10 +15,10 @@ namespace RUINORERP.Model.ConfigModel
     [DisplayName("系统全局配置")]
     public class SystemGlobalConfig : BaseConfig
     {
-        [JsonProperty("采购日期必填")]
-        [Category("采购模块")]
-        [Description("是否需要填写采购日期")]
-        public bool 采购日期必填 { get; set; }
+        [JsonProperty("客户端自动更新")]
+        [Category("系统设置")]
+        [Description("客户端自动更新")]
+        public bool 客户端自动更新 { get; set; } = true;
 
         [JsonProperty("IsFromPlatform")]
         [Category("销售模块")]

@@ -1,6 +1,5 @@
 using RUINORERP.PacketSpec.Enums.Core;
 using RUINORERP.PacketSpec.Models.Core;
-using RUINORERP.UI.SysConfig;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
@@ -103,7 +102,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                         if (!TryExtractConfigData(commandData, out configType, out configDataJson))
                         {
                             // 如果主命令数据中没有找到，尝试从Parameters中提取
-                            if (commandData.TryGetValue("Parameters", out object parametersObj) && 
+                            if (commandData.TryGetValue("Parameters", out object parametersObj) &&
                                 parametersObj is Dictionary<string, object> parametersDict)
                             {
                                 if (!TryExtractConfigData(parametersDict, out configType, out configDataJson))
@@ -167,41 +166,84 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                     _logger.LogDebug($"开始处理配置同步，配置类型: {configType}");
                     _logger.LogDebug($"配置版本: {version}, 强制应用: {forceApply}");
 
-                    // 统一使用ConfigManager处理配置同步，简化流程
-                    if (UIConfigManager.Instance != null)
-                    {
-                        UIConfigManager.Instance.HandleConfigSync(configType, configDataJson, forceApply);
-                    }
-                    else
-                    {
-                        _logger.LogWarning("ConfigManager实例不可用");
-                    }
-                    
-                    // 使用新的配置管理服务处理配置同步
+                    // 完全使用新的配置管理服务处理配置同步，移除对过时的UIConfigManager的依赖
                     try
                     {
                         _logger.LogInformation("使用新的配置管理服务处理配置同步，配置类型: {ConfigType}", configType);
-                        
+
                         // 根据配置类型使用相应的泛型方法
                         switch (configType)
                         {
                             case "SystemGlobalConfig":
-                                await _configManagerService.LoadConfigFromJsonAsync<SystemGlobalConfig>(configDataJson);
+                                var systemConfig = await _configManagerService.LoadConfigFromJsonAsync<SystemGlobalConfig>(configDataJson);
+                                // 持久化配置到文件系统
+                                bool systemConfigSaved = await _configManagerService.SaveConfigAsync(systemConfig);
+                                if (systemConfigSaved)
+                                {
+                                    _logger.LogInformation("系统全局配置同步并持久化成功");
+                                    // 刷新配置，确保所有依赖该配置的服务获取到最新值
+                                    await _configManagerService.RefreshConfigAsync<SystemGlobalConfig>();
+                                }
+                                else
+                                {
+                                    _logger.LogError("系统全局配置同步失败，无法持久化");
+                                }
                                 break;
                             case "GlobalValidatorConfig":
-                                await _configManagerService.LoadConfigFromJsonAsync<GlobalValidatorConfig>(configDataJson);
+                                var validatorConfig = await _configManagerService.LoadConfigFromJsonAsync<GlobalValidatorConfig>(configDataJson);
+                                // 持久化配置到文件系统
+                                bool validatorConfigSaved = await _configManagerService.SaveConfigAsync(validatorConfig);
+                                if (validatorConfigSaved)
+                                {
+                                    _logger.LogInformation("验证配置同步并持久化成功");
+                                    // 刷新配置，确保所有依赖该配置的服务获取到最新值
+                                    GlobalValidatorConfig globalValidatorConfig = await _configManagerService.RefreshConfigAsync<GlobalValidatorConfig>();
+                                    // 获取容器中的GlobalValidatorConfig实例并更新其属性
+                                    var containerGlobalConfig = Startup.GetFromFac<GlobalValidatorConfig>();
+                                    if (containerGlobalConfig != null)
+                                    {
+                                        // 使用反射或映射将新配置的值复制到容器中的实例
+                                        foreach (var property in typeof(GlobalValidatorConfig).GetProperties())
+                                        {
+                                            if (property.CanRead && property.CanWrite)
+                                            {
+                                                var value = property.GetValue(globalValidatorConfig);
+                                                property.SetValue(containerGlobalConfig, value);
+                                            }
+                                        }
+                                    }
+                                    _logger.LogInformation("GlobalValidatorConfig已在容器中更新");
+                                }
+                                else
+                                {
+                                    _logger.LogError("验证配置同步失败，无法持久化");
+                                }
                                 break;
-
+                            case "Database":
+                                // 数据库配置特殊处理，这里可以根据实际需求实现
+                                _logger.LogInformation("数据库配置同步请求已接收");
+                                break;
                             default:
                                 _logger.LogWarning("未知的配置类型: {ConfigType}", configType);
+
+                                // 尝试作为自定义配置处理
+                                try
+                                {
+                                    // 对于自定义配置，我们可以记录日志并提供扩展点
+                                    _logger.LogInformation("尝试处理自定义配置类型: {ConfigType}", configType);
+                                }
+                                catch (Exception ex)
+                                {
+                                    _logger.LogError(ex, "处理自定义配置类型失败: {ConfigType}", configType);
+                                }
                                 break;
                         }
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(ex, "使用新的配置管理服务处理配置同步时发生异常，配置类型: {ConfigType}", configType);
+                        _logger.LogError(ex, "使用配置管理服务处理配置同步时发生异常，配置类型: {ConfigType}", configType);
                     }
-                    
+
                     _logger.LogDebug($"配置同步已处理，配置类型: {configType}");
                 }
             }
@@ -222,7 +264,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
         {
             configType = null;
             configDataJson = null;
-            
+
             try
             {
                 // 提取配置类型
@@ -230,15 +272,15 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                 {
                     return false;
                 }
-                
+
                 configType = configTypeObj.ToString();
-                
+
                 // 提取配置数据
                 if (!dataDict.TryGetValue("ConfigData", out object configDataObj))
                 {
                     return false;
                 }
-                
+
                 // 使用Newtonsoft.Json序列化
                 if (configDataObj is Dictionary<string, object> configDataDict)
                 {
@@ -254,7 +296,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                     // 其他类型对象直接序列化
                     configDataJson = JsonConvert.SerializeObject(configDataObj);
                 }
-                
+
                 return true;
             }
             catch (Exception ex)

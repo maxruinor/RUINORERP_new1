@@ -344,7 +344,6 @@ namespace RUINORERP.Common.Extensions
         #endregion
 
 
-
         /// <summary>
         /// 检查表达式树是否包含所有指定的条件 by AI ,还没有使用 验证等
         /// /*

@@ -52,7 +52,11 @@ namespace RUINORERP.PacketSpec.Models.Core
         public string UserName { get; set; }
         
         public bool IsAuthenticated { get; set; }
-        
+        /// <summary>
+        /// 是否需要响应
+        /// </summary>
+        public bool NeedResponse { get; set; } = true;
+
         /// <summary>
         /// 期望的响应类型名称 - 用于异常处理时通过反射创建特定类型的响应
         /// 客户端在请求时知道需要什么类型的响应结果，将这个类型名称保存起来

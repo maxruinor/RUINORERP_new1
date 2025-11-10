@@ -191,16 +191,16 @@ namespace RUINORERP.Server.Services.BizCode
             switch (billType.ToUpper())
             {
                 case "SO": // 销售订单
-                    return "{{S:SO}}{{D:yyMMdd}}{{DB:{S:销售订单}{D:yyMM}/000}}".ToUpper();
+                    return "{S:SO}{D:yyMMdd}{DB:{S:销售订单}{D:yyMM}/000}".ToUpper();
                 case "PO": // 采购订单
-                    return "{{S:PO}}{{Hex:yyMMdd}}{{DB:{S:采购订单}{D:yyMM}/000}}".ToUpper();
+                    return "{S:PO}{Hex:yyMMdd}{DB:{S:采购订单}{D:yyMM}/000}".ToUpper();
                 case "IN": // 入库单
-                    return "{{S:IN}}{{D:yyMMdd}}{{DB:{S:其他入库单}{D:yyMM}/000}}".ToUpper();
+                    return "{S:IN}{D:yyMMdd}{DB:{S:其他入库单}{D:yyMM}/000}".ToUpper();
                 case "OUT": // 出库单
-                    return "{{S:OUT}}{{D:yyMMdd}}{{DB:{S:其他出库单}{D:yyMM}/000}}".ToUpper();
+                    return "{S:OUT}{D:yyMMdd}{DB:{S:其他出库单}{D:yyMM}/000}".ToUpper();
                 default:
                     // 默认规则
-                    return $"{{S:{billType}}}{{D:yyMMdd}}{{DB:{billType}/000}}".ToUpper();
+                    return "{S:{billType}}{D:yyMMdd}{DB:{billType}/000}".ToUpper();
             }
         }
         
@@ -216,112 +216,117 @@ namespace RUINORERP.Server.Services.BizCode
             switch (bizType)
             {
                 case BizType.销售订单:
-                    return "{{S:SO:upper}}{{D:yyMMdd}}{{DB:{S:销售订单}{D:yyMM}/000}}";
+                    // 保留按天重置功能，并支持格式美观+无限增长：
+                    // 1. 使用/000格式确保小数字显示为/001、/002等美观格式
+                    // 2. 当数字超过999时，会自动切换为显示完整数字/1000、/1001等
+                    // 3. 既保证了编号的美观性，又避免了格式限制导致的业务中断
+                    // 添加daily重置类型，实现按天重置序号功能
+                    return "{S:SO:upper}{D:yyMMdd}{DB:{S:销售订单}{D:yyMMdd}/000/daily}";
                 case BizType.销售出库单:
-                    return "{{S:SOD:upper}}{{Hex:yyMM}}{{DB:{S:销售出库单}{D:yyMM}/0000}}";
+                    return "{S:SOD:upper}{Hex:yyMM}{DB:{S:销售出库单}{D:yyMM}/0000}";
                 case BizType.销售退回单:
-                    return "{{S:SODR:upper}}{{D:yyMMdd}}{{DB:{S:销售退回单}{D:yyMM}/000}}";
+                    return "{S:SODR:upper}{D:yyMMdd}{DB:{S:销售退回单}{D:yyMM}/000}";
                 case BizType.采购订单:
-                    return "{{S:PO:upper}}{{Hex:yyMMdd}}{{DB:{S:采购订单}{D:yyMM}/000}}";
+                    return "{S:PO:upper}{Hex:yyMMdd}{DB:{S:采购订单}{D:yyMM}/000}";
                 case BizType.采购入库单:
-                    return "{{S:PIR:upper}}{{D:yyMMdd}}{{DB:{S:采购入库单}{D:yyMM}/000}}";
+                    return "{S:PIR:upper}{D:yyMMdd}{DB:{S:采购入库单}{D:yyMM}/000}";
                 case BizType.采购退货单:
-                    return "{{S:PIRR:upper}}{{D:yyMMdd}}{{DB:{S:采购退货单}{D:yyMM}/000}}";
+                    return "{S:PIRR:upper}{D:yyMMdd}{DB:{S:采购退货单}{D:yyMM}/000}";
                 case BizType.其他入库单:
-                    return "{{S:OIR:upper}}{{D:yyMMdd}}{{DB:{S:其他入库单}{D:yyMM}/000}}";
+                    return "{S:OIR:upper}{D:yyMMdd}{DB:{S:其他入库单}{D:yyMM}/000}";
                 case BizType.其他出库单:
-                    return "{{S:OQD:upper}}{{D:yyMMdd}}{{DB:{S:其他出库单}{D:yyMM}/000}}";
+                    return "{S:OQD:upper}{D:yyMMdd}{DB:{S:其他出库单}{D:yyMM}/000}";
                 case BizType.盘点单:
-                    return "{{S:CS:upper}}{{D:yyMMdd}}{{DB:{S:盘点单}{D:yyMM}/000}}";
+                    return "{S:CS:upper}{D:yyMMdd}{DB:{S:盘点单}{D:yyMM}/000}";
                 case BizType.BOM物料清单:
-                    return "{{S:BS:upper}}{{D:yyMMdd}}{{DB:{S:BOM物料清单}{D:yyMM}/000}}";
+                    return "{S:BS:upper}{D:yyMMdd}{DB:{S:BOM物料清单}{D:yyMM}/000}";
                 case BizType.其他费用支出:
-                    return "{{S:EXP:upper}}{{D:yyMMdd}}{{DB:{S:其他费用支出}{D:yyMM}/000}}";
+                    return "{S:EXP:upper}{D:yyMMdd}{DB:{S:其他费用支出}{D:yyMM}/000}";
                 case BizType.其他费用收入:
-                    return "{{S:INC:upper}}{{D:yyMMdd}}{{DB:{S:其他费用收入}{D:yyMM}/000}}";
+                    return "{S:INC:upper}{D:yyMMdd}{DB:{S:其他费用收入}{D:yyMM}/000}";
                 case BizType.费用报销单:
-                    return "{{S:EC:upper}}{{D:yyMMdd}}{{DB:{S:费用报销单}{D:yyMM}/000}}";
+                    return "{S:EC:upper}{D:yyMMdd}{DB:{S:费用报销单}{D:yyMM}/000}";
                 case BizType.生产计划单:
-                    return "{{S:PP:upper}}{{D:yyMMdd}}{{DB:{S:生产计划单}{D:yyMM}/00}}";
+                    return "{S:PP:upper}{D:yyMMdd}{DB:{S:生产计划单}{D:yyMM}/00}";
                 case BizType.需求分析:
-                    return "{{S:PD:upper}}{{D:yyMMdd}}{{DB:{S:生产需求分析}{D:yyMM}/00}}";
+                    return "{S:PD:upper}{D:yyMMdd}{DB:{S:生产需求分析}{D:yyMM}/00}";
                 case BizType.制令单:
-                    return "{{S:MO:upper}}{{D:yyMMdd}}{{DB:{S:制令单}{D:yyMM}/00}}";
+                    return "{S:MO:upper}{D:yyMMdd}{DB:{S:制令单}{D:yyMM}/00}";
                 case BizType.请购单:
-                    return "{{S:RP:upper}}{{D:yyMMdd}}{{DB:{S:请购单}{D:yyMM}/000}}";
+                    return "{S:RP:upper}{D:yyMMdd}{DB:{S:请购单}{D:yyMM}/000}";
                 case BizType.生产领料单:
-                    return "{{S:PRD:upper}}{{D:yyMMdd}}{{DB:{S:生产领料单}{D:yyMM}/000}}";
+                    return "{S:PRD:upper}{D:yyMMdd}{DB:{S:生产领料单}{D:yyMM}/000}";
                 case BizType.生产退料单:
-                    return "{{S:PRR:upper}}{{D:yyMMdd}}{{DB:{S:生产退料单}{D:yyMM}/000}}";
+                    return "{S:PRR:upper}{D:yyMMdd}{DB:{S:生产退料单}{D:yyMM}/000}";
                 case BizType.缴库单:
-                    return "{{S:PR:upper}}{{D:yyMMdd}}{{DB:{S:缴库单}{D:yyMM}/000}}";
+                    return "{S:PR:upper}{D:yyMMdd}{DB:{S:缴库单}{D:yyMM}/000}";
                 case BizType.产品分割单:
-                    return "{{S:PS:upper}}{{D:yyMMdd}}{{DB:{S:产品分割单}{D:yyMM}/00}}";
+                    return "{S:PS:upper}{D:yyMMdd}{DB:{S:产品分割单}{D:yyMM}/00}";
                 case BizType.产品组合单:
-                    return "{{S:PM:upper}}{{D:yyMMdd}}{{DB:{S:产品组合单}{D:yyMM}/00}}";
+                    return "{S:PM:upper}{D:yyMMdd}{DB:{S:产品组合单}{D:yyMM}/00}";
                 case BizType.借出单:
-                    return "{{S:JC:upper}}{{D:yyMMdd}}{{DB:{S:借出单}{D:yyMM}/000}}";
+                    return "{S:JC:upper}{D:yyMMdd}{DB:{S:借出单}{D:yyMM}/000}";
                 case BizType.归还单:
-                    return "{{S:GH:upper}}{{D:yyMMdd}}{{DB:{S:归还单}{D:yyMM}/000}}";
+                    return "{S:GH:upper}{D:yyMMdd}{DB:{S:归还单}{D:yyMM}/000}";
                 case BizType.产品转换单:
-                    return "{{S:ZH:upper}}{{D:yyMMdd}}{{DB:{S:产品转换单}{D:yyMM}/000}}";
+                    return "{S:ZH:upper}{D:yyMMdd}{DB:{S:产品转换单}{D:yyMM}/000}";
                 case BizType.调拨单:
-                    return "{{S:DB:upper}}{{D:yyMMdd}}{{DB:{S:调拨单}{D:yyMM}/000}}";
+                    return "{S:DB:upper}{D:yyMMdd}{DB:{S:调拨单}{D:yyMM}/000}";
                 case BizType.返工退库单:
-                    return "{{S:RW:upper}}{{D:yyMMdd}}{{DB:{S:返工退库单}{D:yyMM}/00}}";
+                    return "{S:RW:upper}{D:yyMMdd}{DB:{S:返工退库单}{D:yyMM}/00}";
                 case BizType.返工入库单:
-                    return "{{S:RE:upper}}{{D:yyMMdd}}{{DB:{S:返工入库单}{D:yyMM}/00}}";
+                    return "{S:RE:upper}{D:yyMMdd}{DB:{S:返工入库单}{D:yyMM}/00}";
                 case BizType.付款申请单:
-                    return "{{S:PA:upper}}{{D:yyMMdd}}{{DB:{S:付款申请单}{D:yyMM}/00}}";
+                    return "{S:PA:upper}{D:yyMMdd}{DB:{S:付款申请单}{D:yyMM}/00}";
                 case BizType.销售合同:
-                    return "{{S:SC-:upper}}{{D:yyMMdd}}{{DB:{S:销售合同}{D:yyMM}/00}}";
+                    return "{S:SC-:upper}{D:yyMMdd}{DB:{S:销售合同}{D:yyMM}/00}";
                 case BizType.预付款单:
-                    return "{{S:YF:upper}}{{D:yyMMdd}}{{DB:{S:预付款单}{D:yyMM}/000}}";
+                    return "{S:YF:upper}{D:yyMMdd}{DB:{S:预付款单}{D:yyMM}/000}";
                 case BizType.预收款单:
-                    return "{{S:YS:upper}}{{D:yyMMdd}}{{DB:{S:预收款单}{D:yyMM}/000}}";
+                    return "{S:YS:upper}{D:yyMMdd}{DB:{S:预收款单}{D:yyMM}/000}";
                 case BizType.付款单:
-                    return "{{S:FK:upper}}{{D:yyMMdd}}{{DB:{S:付款单}{D:yyMM}/000}}";
+                    return "{S:FK:upper}{D:yyMMdd}{DB:{S:付款单}{D:yyMM}/000}";
                 case BizType.收款单:
-                    return "{{S:SK:upper}}{{D:yyMMdd}}{{DB:{S:收款单}{D:yyMM}/000}}";
+                    return "{S:SK:upper}{D:yyMMdd}{DB:{S:收款单}{D:yyMM}/000}";
                 case BizType.应付款单:
-                    return "{{S:AP:upper}}{{D:yyMMdd}}{{DB:{S:应付款单}{D:yyMM}/000}}";
+                    return "{S:AP:upper}{D:yyMMdd}{DB:{S:应付款单}{D:yyMM}/000}";
                 case BizType.应收款单:
-                    return "{{S:AR:upper}}{{D:yyMMdd}}{{DB:{S:应收款单}{D:yyMM}/000}}";
+                    return "{S:AR:upper}{D:yyMMdd}{DB:{S:应收款单}{D:yyMM}/000}";
                 case BizType.对账单:
-                    return "{{S:PS:upper}}{{D:yyMMdd}}{{DB:{S:对账单}{D:yyMM}/000}}";
+                    return "{S:PS:upper}{D:yyMMdd}{DB:{S:对账单}{D:yyMM}/000}";
                 case BizType.损失确认单:
-                    return "{{S:LO:upper}}{{D:yyMMdd}}{{DB:{S:损失确认单}{D:yyMM}/00}}";
+                    return "{S:LO:upper}{D:yyMMdd}{DB:{S:损失确认单}{D:yyMM}/00}";
                 case BizType.溢余确认单:
-                    return "{{S:OY:upper}}{{D:yyMMdd}}{{DB:{S:溢余确认单}{D:yyMM}/00}}";
+                    return "{S:OY:upper}{D:yyMMdd}{DB:{S:溢余确认单}{D:yyMM}/00}";
                 case BizType.付款核销:
-                    return "{{S:FKHX:upper}}{{D:yyMMdd}}{{DB:{S:付款核销}{D:yyMM}/0000}}";
+                    return "{S:FKHX:upper}{D:yyMMdd}{DB:{S:付款核销}{D:yyMM}/0000}";
                 case BizType.收款核销:
-                    return "{{S:SKHX:upper}}{{D:yyMMdd}}{{DB:{S:收款核销}{D:yyMM}/0000}}";
+                    return "{S:SKHX:upper}{D:yyMMdd}{DB:{S:收款核销}{D:yyMM}/0000}";
                 case BizType.销售价格调整单:
-                    return "{{S:SPA:upper}}{{D:yyMMdd}}{{DB:{S:销售价格调整单}{D:yyMM}/000}}";
+                    return "{S:SPA:upper}{D:yyMMdd}{DB:{S:销售价格调整单}{D:yyMM}/000}";
                 case BizType.采购价格调整单:
-                    return "{{S:PPA:upper}}{{D:yyMMdd}}{{DB:{S:采购价格调整单}{D:yyMM}/000}}";
+                    return "{S:PPA:upper}{D:yyMMdd}{DB:{S:采购价格调整单}{D:yyMM}/000}";
                 case BizType.采购退货入库:
-                    return "{{S:PIRRE:upper}}{{D:yyMMdd}}{{DB:{S:采购退货入库}{D:yyMM}/000}}";
+                    return "{S:PIRRE:upper}{D:yyMMdd}{DB:{S:采购退货入库}{D:yyMM}/000}";
                 case BizType.售后申请单:
-                    return "{{S:ASAP:upper}}{{D:yyMMdd}}{{DB:{S:售后申请单}{D:yyMM}/000}}";
+                    return "{S:ASAP:upper}{D:yyMMdd}{DB:{S:售后申请单}{D:yyMM}/000}";
                 case BizType.售后交付单:
-                    return "{{S:ASAPD:upper}}{{D:yyMMdd}}{{DB:{S:售后交付单}{D:yyMM}/000}}";
+                    return "{S:ASAPD:upper}{D:yyMMdd}{DB:{S:售后交付单}{D:yyMM}/000}";
                 case BizType.维修工单:
-                    return "{{S:ASRO:upper}}{{D:yyMMdd}}{{DB:{S:维修工单}{D:yyMM}/000}}";
+                    return "{S:ASRO:upper}{D:yyMMdd}{DB:{S:维修工单}{D:yyMM}/000}";
                 case BizType.维修入库单:
-                    return "{{S:ASRIS:upper}}{{D:yyMMdd}}{{DB:{S:维修入库单}{D:yyMM}/000}}";
+                    return "{S:ASRIS:upper}{D:yyMMdd}{DB:{S:维修入库单}{D:yyMM}/000}";
                 case BizType.维修领料单:
-                    return "{{S:ASRMR:upper}}{{D:yyMMdd}}{{DB:{S:维修领料单}{D:yyMM}/000}}";
+                    return "{S:ASRMR:upper}{D:yyMMdd}{DB:{S:维修领料单}{D:yyMM}/000}";
                 case BizType.报废单:
-                    return "{{S:ASSD:upper}}{{D:yyMMdd}}{{DB:{S:报废单}{D:yyMM}/000}}";
+                    return "{S:ASSD:upper}{D:yyMMdd}{DB:{S:报废单}{D:yyMM}/000}";
                 case BizType.售后借出单:
-                    return "{{S:ASBR:upper}}{{D:yyMMdd}}{{DB:{S:售后借出单}{D:yyMM}/000}}";
+                    return "{S:ASBR:upper}{D:yyMMdd}{DB:{S:售后借出单}{D:yyMM}/000}";
                 case BizType.售后归还单:
-                    return "{{S:ASRE:upper}}{{D:yyMMdd}}{{DB:{S:售后归还单}{D:yyMM}/000}}";
+                    return "{S:ASRE:upper}{D:yyMMdd}{DB:{S:售后归还单}{D:yyMM}/000}";
                 default:
                     // 默认规则 - 为前缀添加大写转换
-                    return $"{{S:{bizType}:upper}}{{D:yyMMdd}}{{DB:{bizType}{{D:yyMM}}/000}}";
+                    return "{S:{bizType}:upper}{D:yyMMdd}{DB:{bizType}{D:yyMM}/000}";
             }
         }
         
@@ -336,38 +341,38 @@ namespace RUINORERP.Server.Services.BizCode
             switch (infoType.ToUpper())
             {
                 case "EMPLOYEE": // 员工编号
-                    return "{{S:EMP}}{{DB:{S:Employee}/000}}".ToUpper();
+                    return "{S:EMP}{DB:{S:Employee}/000}".ToUpper();
                 case "SUPPLIER": // 供应商编号
-                    return "{{S:SU}}{{DB:{S:Supplier}/000}}".ToUpper();
+                    return "{S:SU}{DB:{S:Supplier}/000}".ToUpper();
                 case "CUSTOMER": // 客户编号
-                    return "{{S:CU}}{{DB:{S:Customer}/000}}".ToUpper();
+                    return "{S:CU}{DB:{S:Customer}/000}".ToUpper();
                 case "WAREHOUSE": // 仓库编号
-                    return "{{S:ST}}{{DB:{S:Storehouse}/000}}".ToUpper();
+                    return "{S:ST}{DB:{S:Storehouse}/000}".ToUpper();
                 case "PRODUCTNO": // 产品编号
-                    return "{{S:P}}{{Hex:yyMM}}{{DB:{S:ProductNo}/000}}".ToUpper();
+                    return "{S:P}{Hex:yyMM}{DB:{S:ProductNo}/000}".ToUpper();
                 case "LOCATION": // 库位编号
-                    return "{{S:L}}{{DB:{S:LOC}/000}}".ToUpper();
+                    return "{S:L}{DB:{S:LOC}/000}".ToUpper();
                 case "SKU_NO": // SKU编号
-                    return "{{S:SK}}{{Hex:yyMM}}{{DB:SKU_No/0000}}".ToUpper();
+                    return "{S:SK}{Hex:yyMM}{DB:SKU_No/0000}".ToUpper();
                 case "MODULEDEFINITION": // 模块定义
-                    return "{{S:MD}}{{DB:{S:ModuleDefinition}/000}}".ToUpper();
+                    return "{S:MD}{DB:{S:ModuleDefinition}/000}".ToUpper();
                 case "DEPARTMENT": // 部门编号
-                    return "{{S:D}}{{DB:{S:Department}/000}}".ToUpper();
+                    return "{S:D}{DB:{S:Department}/000}".ToUpper();
                 case "CVOTHER": // CVOther编号
-                    return "{{S:CV}}{{DB:{S:CVOther}/000}}".ToUpper();
+                    return "{S:CV}{DB:{S:CVOther}/000}".ToUpper();
                 case "STORECODE": // 门店编号
-                    return "{{S:SHOP}}{{DB:{S:StoreCode}/000}}".ToUpper();
+                    return "{S:SHOP}{DB:{S:StoreCode}/000}".ToUpper();
                 case "PRODCATEGORIES": // 产品分类编号
-                    return "{{S:C}}{{DB:{S:ProCategories}/000}}".ToUpper();
+                    return "{S:C}{DB:{S:ProCategories}/000}".ToUpper();
                 case "BUSINESSPARTNER": // 业务伙伴编号
-                    return "{{S:BP}}{{DB:{S:BusinessPartner}/0000}}".ToUpper();
+                    return "{S:BP}{DB:{S:BusinessPartner}/0000}".ToUpper();
                 case "SHORTCODE": // 简码
-                    return "{{S:SC}}{{DB:{S:ShortCode}/000}}".ToUpper();
+                    return "{S:SC}{DB:{S:ShortCode}/000}".ToUpper();
                 case "PROJECTGROUPCODE": // 项目组编号
-                    return "{{S:PG}}{{DB:{S:ProjectGroupCode}/000}}".ToUpper();
+                    return "{S:PG}{DB:{S:ProjectGroupCode}/000}".ToUpper();
                 default:
                     // 默认规则
-                    return $"{{S:{infoType}}}{{DB:{infoType}/000}}".ToUpper();
+                    return "{S:{infoType}}{DB:{infoType}/000}".ToUpper();
             }
         }
         
@@ -387,10 +392,10 @@ namespace RUINORERP.Server.Services.BizCode
                 case "FMSUBJECT": // 会计科目
                     return "{{DB:BST/000}}".ToUpper();
                 case "CRM_REGIONCODE": // 地区编码
-                    return "{{DB:CRC/00}}".ToUpper();
+                    return "{DB:CRC/00}".ToUpper();
                 default:
                     // 默认规则
-                    return $"{{DB:{paraConst}/000}}".ToUpper();
+                    return "{DB:{paraConst}/000}".ToUpper();
             }
         }
         
@@ -405,38 +410,38 @@ namespace RUINORERP.Server.Services.BizCode
             switch (infoType)
             {
                 case BaseInfoType.Employee: // 员工编号
-                    return "{{S:EMP}}{{DB:{S:Employee}/000}}".ToUpper();
+                    return "{S:EMP}{DB:{S:Employee}/000}".ToUpper();
                 case BaseInfoType.Supplier: // 供应商编号
-                    return "{{S:SU}}{{DB:{S:Supplier}/000}}".ToUpper();
+                    return "{S:SU}{DB:{S:Supplier}/000}".ToUpper();
                 case BaseInfoType.Customer: // 客户编号
-                    return "{{S:CU}}{{DB:{S:Customer}/000}}".ToUpper();
+                    return "{S:CU}{DB:{S:Customer}/000}".ToUpper();
                 case BaseInfoType.Storehouse: // 仓库编号
-                    return "{{S:ST}}{{DB:{S:Storehouse}/000}}".ToUpper();
+                    return "{S:ST}{DB:{S:Storehouse}/000}".ToUpper();
                 case BaseInfoType.ProductNo: // 产品编号
-                    return "{{S:P}}{{Hex:yyMM}}{{DB:{S:ProductNo}/000}}".ToUpper();
+                    return "{S:P}{Hex:yyMM}{DB:{S:ProductNo}/000}".ToUpper();
                 case BaseInfoType.Location: // 库位编号
-                    return "{{S:L}}{{DB:{S:LOC}/000}}".ToUpper();
+                    return "{S:L}{DB:{S:LOC}/000}".ToUpper();
                 case BaseInfoType.SKU_No: // SKU编号
-                    return "{{S:SK}}{{Hex:yyMM}}{{DB:SKU_No/0000}}".ToUpper();
+                    return "{S:SK}{Hex:yyMM}{DB:SKU_No/0000}".ToUpper();
                 case BaseInfoType.ModuleDefinition: // 模块定义
-                    return "{{S:MD}}{{DB:{S:ModuleDefinition}/000}}".ToUpper();
+                    return "{S:MD}{DB:{S:ModuleDefinition}/000}".ToUpper();
                 case BaseInfoType.Department: // 部门编号
-                    return "{{S:D}}{{DB:{S:Department}/000}}".ToUpper();
+                    return "{S:D}{DB:{S:Department}/000}".ToUpper();
                 case BaseInfoType.CVOther: // CVOther编号
-                    return "{{S:CV}}{{DB:{S:CVOther}/000}}".ToUpper();
+                    return "{S:CV}{DB:{S:CVOther}/000}".ToUpper();
                 case BaseInfoType.StoreCode: // 门店编号
-                    return "{{S:SHOP}}{{DB:{S:StoreCode}/000}}".ToUpper();
+                    return "{S:SHOP}{DB:{S:StoreCode}/000}".ToUpper();
                 case BaseInfoType.ProCategories: // 产品分类编号
-                    return "{{S:C}}{{DB:{S:ProCategories}/000}}".ToUpper();
+                    return "{S:C}{DB:{S:ProCategories}/000}".ToUpper();
                 case BaseInfoType.BusinessPartner: // 业务伙伴编号
-                    return "{{S:BP}}{{DB:{S:BusinessPartner}/0000}}".ToUpper();
+                    return "{S:BP}{DB:{S:BusinessPartner}/0000}".ToUpper();
                 case BaseInfoType.ShortCode: // 简码
-                    return "{{S:SC}}{{DB:{S:ShortCode}/000}}".ToUpper();
+                    return "{S:SC}{DB:{S:ShortCode}/000}".ToUpper();
                 case BaseInfoType.ProjectGroupCode: // 项目组编号
-                    return "{{S:PG}}{{DB:{S:ProjectGroupCode}/000}}".ToUpper();
+                    return "{S:PG}{DB:{S:ProjectGroupCode}/000}".ToUpper();
                 default:
                     // 默认规则
-                    return $"{{S:{infoType}}}{{DB:{infoType}/000}}".ToUpper();
+                    return "{S:{infoType}}{DB:{infoType}/000}".ToUpper();
             }
         }
         
@@ -456,10 +461,10 @@ namespace RUINORERP.Server.Services.BizCode
                 case BaseInfoType.FMSubject: // 会计科目
                     return "{{DB:BST/000}}".ToUpper();
                 case BaseInfoType.CRM_RegionCode: // 地区编码
-                    return "{{DB:CRC/00}}".ToUpper();
+                    return "{DB:CRC/00}".ToUpper();
                 default:
                     // 默认规则
-                    return $"{{DB:{paraConst}/000}}".ToUpper();
+                    return "{DB:{paraConst}/000}".ToUpper();
             }
         }
         

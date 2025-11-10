@@ -75,8 +75,6 @@ namespace RUINORERP.UI.Network.DI
 
             builder.RegisterType<ClientEventManager>().AsSelf().SingleInstance();
 
-            // 注册缓存订阅管理器
-            builder.RegisterType<UICacheSubscriptionManager>().AsSelf().SingleInstance();
 
             // 注册缓存相关服务
             builder.RegisterType<EntityCacheManager>().As<IEntityCacheManager>().SingleInstance();
@@ -87,7 +85,7 @@ namespace RUINORERP.UI.Network.DI
             // 注册HeartbeatManager，移除对ClientCommunicationService的直接依赖
             builder.RegisterType<HeartbeatManager>().AsSelf().SingleInstance()
                 .WithParameter((pi, ctx) => pi.ParameterType == typeof(int) && pi.Name == "heartbeatIntervalMs",
-                               (pi, ctx) => 30000) // 默认30秒心跳间隔
+                               (pi, ctx) => 5000) // 默认30秒心跳间隔
                 .WithParameter((pi, ctx) => pi.ParameterType == typeof(int) && pi.Name == "heartbeatTimeoutMs",
                                (pi, ctx) => 5000); // 默认5秒超时
             
@@ -127,7 +125,6 @@ namespace RUINORERP.UI.Network.DI
                 return communicationService;
             })
             .AsSelf()
-            .As<IMessageSender>()
             .SingleInstance()
             .OnActivated(e => 
             {

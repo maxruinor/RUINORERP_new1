@@ -20,7 +20,7 @@ namespace RUINORERP.UI.Network.Services
     /// </summary>
     public class MessageService
     {
-        private readonly IMessageSender _messageSender;
+        private readonly ClientCommunicationService _messageSender;
         private readonly ILogger<MessageService> _logger;
         
         // 用于消息去重的集合，存储最近处理过的消息ID
@@ -59,7 +59,7 @@ namespace RUINORERP.UI.Network.Services
         /// <param name="messageSender">消息发送器</param>
         /// <param name="logger">日志记录器</param>
         public MessageService(
-            IMessageSender messageSender,
+            ClientCommunicationService messageSender,
             ILogger<MessageService> logger = null)
         {
             _messageSender = messageSender ?? throw new ArgumentNullException(nameof(messageSender));

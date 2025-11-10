@@ -36,21 +36,21 @@ namespace RUINORERP.Server.Network.DI
             // services.AddSingleton<IPacketSpecService, PacketSpecService>();
             // services.AddSingleton<IUnifiedPacketSpecService, UnifiedPacketSpecService>();
             //   services.AddSingleton<UnifiedCommunicationProcessor>();
-    
+
             // 注册会话管理服务 - 只注册一次，通过接口映射确保一致性
             services.AddSingleton<SessionService>();
             services.AddSingleton<ISessionService>(provider => provider.GetRequiredService<SessionService>());
 
             // 注册服务器消息服务
             services.AddSingleton<ServerMessageService>();
-            
+
             // 注册服务器消息服务使用示例
             services.AddSingleton<ServerMessageServiceUsageExample>();
             services.AddSingleton<MessageServiceUsageExample>();
 
             // 注册缓存订阅管理器
             services.AddSingleton<CacheSubscriptionManager>(provider =>
-                new CacheSubscriptionManager(provider.GetRequiredService<Microsoft.Extensions.Logging.ILogger<CacheSubscriptionManager>>(), true));
+                new CacheSubscriptionManager(provider.GetRequiredService<Microsoft.Extensions.Logging.ILogger<CacheSubscriptionManager>>()));
 
             // 注册诊断相关服务
             services.AddSingleton<DiagnosticsService>();
@@ -74,13 +74,13 @@ namespace RUINORERP.Server.Network.DI
 
             // 注册系统命令处理器
             services.AddTransient<SystemCommandHandler>();
-            
+
             // 注册认证命令处理器
             services.AddTransient<AuthenticationCommandHandler>();
-            
+
             // 注册配置命令处理器
             services.AddTransient<GeneralCommandHandler>();
-            
+
             // 注册通用广播服务
             services.AddSingleton<IGeneralBroadcastService, GeneralBroadcastService>();
         }
@@ -136,9 +136,8 @@ namespace RUINORERP.Server.Network.DI
             //  builder.RegisterType<FileStorageManager>().AsSelf().SingleInstance();
 
             // 注册缓存订阅管理器
-            builder.Register(c => new CacheSubscriptionManager(
-                c.Resolve<Microsoft.Extensions.Logging.ILogger<CacheSubscriptionManager>>(), 
-                true)) // 服务器模式
+            builder.Register(c => new CacheSubscriptionManager(c.Resolve<Microsoft.Extensions.Logging.ILogger<CacheSubscriptionManager>>()
+               )) 
                 .As<CacheSubscriptionManager>()
                 .SingleInstance();
 
@@ -176,7 +175,7 @@ namespace RUINORERP.Server.Network.DI
                 .InstancePerDependency();
         }
 
- 
+
 
         /// <summary>
         /// 检查接口是否为命令处理器接口
@@ -192,16 +191,16 @@ namespace RUINORERP.Server.Network.DI
             // 通过接口特征识别命令处理器接口，而不是依赖具体的接口名称
             // 检查是否有HandleAsync方法，接受PacketModel参数并返回ResponseBase
             var methods = interfaceType.GetMethods(BindingFlags.Public | BindingFlags.Instance);
-            var handleMethod = methods.FirstOrDefault(m => 
-                m.Name == "HandleAsync" && 
-                m.GetParameters().Length == 2 && 
+            var handleMethod = methods.FirstOrDefault(m =>
+                m.Name == "HandleAsync" &&
+                m.GetParameters().Length == 2 &&
                 m.GetParameters()[0].ParameterType == typeof(PacketModel) &&
                 m.GetParameters()[1].ParameterType == typeof(CancellationToken) &&
                 m.ReturnType.IsGenericType &&
                 m.ReturnType.GetGenericTypeDefinition() == typeof(Task<>) &&
                 m.ReturnType.GetGenericArguments()[0] == typeof(ResponseBase)
             );
-            
+
             return handleMethod != null;
         }
 

@@ -121,9 +121,17 @@ namespace RUINORERP.Server.Network.SuperSocket
                 await SendErrorResponseAsync(session, package, UnifiedErrorCodes.System_InternalError, CancellationToken.None);
                 return;
             }
+           
 
             try
             {
+                if (package.Packet.ExecutionContext.ExpectedResponseTypeName== "IResponse" &&  IsNetworkMonitorEnabled)
+                {
+                    _logger?.LogDebug("[网络监控] 接收数据包的返回类型没有指定: SessionId={SessionId}, CommandId={CommandId}, PacketId={PacketId}",
+                    session.SessionID, package?.Packet?.CommandId.ToString(), package?.Packet?.PacketId);
+                    frmMainNew.Instance.PrintInfoLog($"[网络监控] 接收数据包的返回类型没有指定: SessionId={session.SessionID}, CommandId={package?.Packet?.CommandId.ToString()},RequestID={package?.Packet?.Request.RequestId} PacketId={package?.Packet?.PacketId}");
+                }
+
                 // 检查是否是响应包（带有RequestId的响应包）
                 if (IsResponsePacket(package.Packet))
                 {

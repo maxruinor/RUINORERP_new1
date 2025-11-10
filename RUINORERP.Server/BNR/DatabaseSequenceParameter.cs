@@ -114,8 +114,44 @@ namespace RUINORERP.Server.BNR
             // 获取下一个序号值，传入重置类型和格式
             var number = _sequenceService.GetNextSequenceValue(sequenceKey, resetType, format);
             
-            // 按指定格式输出序号
-            sb.Append(number.ToString(format));
+            // 智能处理格式掩码，支持固定格式+无限增长
+            try
+            {
+                // 如果格式以"/"开头，包含数字格式（如"/000"）
+                if (format.StartsWith("/") && format.Length > 1)
+                {
+                    // 提取前缀和数字格式部分
+                    string prefix = "/";
+                    string numberFormat = format.Substring(1); // 如"000"
+                    
+                    // 计算格式能表示的最大数字
+                    int maxDigits = numberFormat.Length;
+                    long maxValue = (long)Math.Pow(10, maxDigits) - 1; // 如000最大是999
+                    
+                    if (number <= maxValue)
+                    {
+                        // 当数字小于等于最大可表示值时，使用完整格式
+                        sb.Append(number.ToString(format));
+                    }
+                    else
+                    {
+                        // 当数字超过格式限制时，前缀+原始数字
+                        sb.Append(prefix);
+                        sb.Append(number); // 直接显示完整数字，如/1000, /1001
+                    }
+                }
+                else
+                {
+                    // 其他格式正常处理
+                    sb.Append(number.ToString(format));
+                }
+            }
+            catch (FormatException)
+            {
+                // 如果格式化失败，直接使用前缀+原始数字作为备用方案
+                sb.Append("/");
+                sb.Append(number);
+            }
         }
         
         // 移除静态方法，现在使用依赖注入

@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 
 namespace RUINORERP.PacketSpec.Commands
 {
@@ -145,6 +145,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// 缓存订阅管理 - 用于缓存订阅和取消订阅操作
         /// </summary>
         public const ushort Cache_CacheSubscription = 0x0203;
+
         #endregion
 
         #region 消息命令 (0x03xx)

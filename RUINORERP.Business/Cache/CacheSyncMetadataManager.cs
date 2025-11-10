@@ -236,7 +236,7 @@ namespace RUINORERP.Business.Cache
 
         /// <summary>
         /// 验证表缓存数据的完整性
-        /// 只验证元数据是否存在且有效，不直接访问实体缓存
+        /// 支持空表缓存验证，确保即使是空表也能被正确识别为有效缓存
         /// </summary>
         /// <param name="tableName">表名</param>
         /// <returns>如果缓存信息有效返回true，否则返回false</returns>
@@ -254,23 +254,31 @@ namespace RUINORERP.Business.Cache
                     return false;
                 }
 
-                // 有效的标准是：更新时间合理，且如果有数据行数（包括0）记录
-                // 将空表（DataCount=0）也视为有效的缓存，避免频繁查询数据库
-                bool isIntegrity = syncInfo.LastUpdateTime > DateTime.MinValue;
+                // 定义缓存有效的标准：
+                // 1. 更新时间必须合理（大于最小时间）
+                // 2. 数据行数必须有明确记录（包括0，用于空表）
+                bool isUpdateTimeValid = syncInfo.LastUpdateTime > DateTime.MinValue;
+                bool isDataCountValid = syncInfo.DataCount >= 0;
                 
-                // 记录空表缓存验证情况
-                if (syncInfo.DataCount == 0) {
-                    _logger?.LogDebug("表 {TableName} 为空表，缓存已验证为完整（DataCount=0）", tableName);
+                // 综合验证结果
+                bool isIntegrity = isUpdateTimeValid && isDataCountValid;
+                
+                // 详细记录验证过程和结果
+                if (syncInfo.DataCount == 0)
+                {
+                    _logger?.LogDebug("表 {TableName} 为空表，缓存验证: 更新时间有效={UpdateTimeValid}, 数据行数有效={DataCountValid}, 整体结果={Result}",
+                        tableName, isUpdateTimeValid, isDataCountValid, isIntegrity);
+                }
+                else
+                {
+                    _logger?.LogDebug("表 {TableName} 缓存验证: 更新时间有效={UpdateTimeValid}, 数据行数有效={DataCountValid}, 整体结果={Result}",
+                        tableName, isUpdateTimeValid, isDataCountValid, isIntegrity);
                 }
                 
                 if (!isIntegrity)
                 {
                     _logger?.LogWarning("表 {TableName} 的缓存元数据无效: 数据行数={DataCount}, 更新时间={LastUpdateTime}",
                         tableName, syncInfo.DataCount, syncInfo.LastUpdateTime);
-                }
-                else
-                {
-                    _logger?.LogDebug("表 {TableName} 的缓存元数据有效", tableName);
                 }
 
                 return isIntegrity;

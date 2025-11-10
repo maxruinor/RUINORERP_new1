@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using static RUINORERP.PacketSpec.Models.Responses.ResponseBase;
 
 namespace RUINORERP.PacketSpec.Models.Responses
 {
@@ -38,7 +39,10 @@ namespace RUINORERP.PacketSpec.Models.Responses
         /// </summary>
         DateTime Timestamp { get; set; }
 
-
+        /// <summary>
+        /// 错误类型 - 用于区分系统错误和业务错误
+        /// </summary>
+        ErrorType ResponseErrorType { get; set; }
         /// <summary>
         /// 请求标识 - 用于将响应与原始请求关联，支持异步通信和审计追踪
         /// </summary>

@@ -47,7 +47,7 @@ namespace RUINORERP.UI.Network
     /// <summary>
     /// 优化后的客户端通信与命令处理服务 - 统一网络通信核心组件
     /// </summary>
-    public class ClientCommunicationService : IDisposable, IMessageSender
+    public class ClientCommunicationService : IDisposable
     {
         /// <summary>
         /// 用户登录服务实例，用于重连后的认证恢复
@@ -72,7 +72,7 @@ namespace RUINORERP.UI.Network
         // 心跳管理器
         private readonly HeartbeatManager _heartbeatManager;
         private readonly ILogger<ClientCommunicationService> _logger;
-        
+
         // 客户端命令调度器，用于分发命令到对应的客户端处理类
 
 
@@ -179,7 +179,7 @@ namespace RUINORERP.UI.Network
 
             // 初始化定时清理任务
             _cleanupTimer = new Timer(CleanupTimeoutRequests, null, TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1));
-            
+
             // 注意：InitializeClientCommandDispatcher不再在构造函数中调用
             // 已移至依赖注入容器的OnActivated回调中处理，以避免循环依赖
             UI.Common.HardwareInfo hardwareInfo = Startup.GetFromFac<HardwareInfo>();
@@ -201,7 +201,7 @@ namespace RUINORERP.UI.Network
 
             // 订阅命令接收事件
             SubscribeCommandEvents();
-       
+
         }
 
         /// <summary>
@@ -1241,7 +1241,7 @@ namespace RUINORERP.UI.Network
             {
                 // 使用一键式初始化方法，替代单独调用InitializeAsync和StartAsync
                 var result = await _commandDispatcher.InitializeAndStartAsync();
-                
+
                 _logger.LogDebug("客户端命令调度器初始化并启动成功，共注册{HandlerCount}个处理器", result.success ? result.registeredCount : 0);
             }
             catch (Exception ex)
@@ -1267,11 +1267,11 @@ namespace RUINORERP.UI.Network
         /// <param name="request">请求对象</param>
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>响应对象</returns>
-        public async Task<TResponse> SendCommandWithResponseAsync<TResponse>(CommandId command, MessageRequest request, CancellationToken cancellationToken = default) where TResponse : class, RUINORERP.PacketSpec.Models.Responses.IResponse
-        {
-            // 委托给现有的SendCommandWithResponseAsync方法，使用正确的参数顺序
-            return await SendCommandWithResponseAsync<TResponse>(command, request, cancellationToken, 5000).ConfigureAwait(false);
-        }
+        //public async Task<TResponse> SendCommandWithResponseAsync<TResponse>(CommandId command, MessageRequest request, CancellationToken cancellationToken = default) where TResponse : class, RUINORERP.PacketSpec.Models.Responses.IResponse
+        //{
+        //    // 委托给现有的SendCommandWithResponseAsync方法，使用正确的参数顺序
+        //    return await SendCommandWithResponseAsync<TResponse>(command, request, cancellationToken, 5000).ConfigureAwait(false);
+        //}
 
         /// <summary>
         /// 处理接收到的命令
@@ -1282,10 +1282,10 @@ namespace RUINORERP.UI.Network
             try
             {
                 _logger.LogDebug("开始处理命令: {CommandId}", packet.CommandId);
-                
+
                 // 首先尝试使用客户端专用命令调度器处理命令
                 bool dispatchedByClientDispatcher = await _commandDispatcher.DispatchAsync(packet);
-                
+
                 if (dispatchedByClientDispatcher)
                 {
                     // 如果命令已被客户端命令调度器处理，直接返回
@@ -1308,7 +1308,7 @@ namespace RUINORERP.UI.Network
                     case CommandCategory.Authentication:
                         await ProcessAuthenticationCommandAsync(packet);
                         break;
-                        
+
                     case CommandCategory.Config:
                         // 配置命令处理 - 主要通过ConfigCommandHandler处理，此处保留作为备用
                         await ProcessConfigCommandAsync(packet);
@@ -1327,7 +1327,7 @@ namespace RUINORERP.UI.Network
                 _logger.LogError(ex, "处理命令 {CommandId} 时发生错误", packet.CommandId);
             }
         }
-        
+
         /// <summary>
         /// 处理配置相关命令（作为ConfigCommandHandler的备用机制）
         /// </summary>
@@ -1337,7 +1337,7 @@ namespace RUINORERP.UI.Network
             try
             {
                 _logger.LogDebug("使用备用机制处理配置命令: {CommandId}", packet.CommandId);
-                
+
                 // 检查是否是配置同步命令
                 if (packet.CommandId.FullCode == RUINORERP.PacketSpec.Commands.GeneralCommands.ConfigSync.FullCode)
                 {
@@ -1349,9 +1349,9 @@ namespace RUINORERP.UI.Network
                         {
                             string configType = configTypeObj.ToString();
                             string configData = JsonConvert.SerializeObject(configDataObj);
-                            
+
                             _logger.LogDebug("接收到配置同步命令: {ConfigType}", configType);
-                            
+
                             // 调用OptionsMonitorConfigManager处理配置同步
                         }
                         else
@@ -1364,16 +1364,16 @@ namespace RUINORERP.UI.Network
                         // 如果请求不是字典类型，尝试直接解析JSON
                         string jsonData = JsonConvert.SerializeObject(packet.Request);
                         var requestObj = JsonConvert.DeserializeObject<Dictionary<string, object>>(jsonData);
-                        
-                        if (requestObj != null && 
+
+                        if (requestObj != null &&
                             requestObj.TryGetValue("ConfigType", out var configTypeObj) &&
                             requestObj.TryGetValue("ConfigData", out var configDataObj))
                         {
                             string configType = configTypeObj.ToString();
                             string configData = JsonConvert.SerializeObject(configDataObj);
-                            
+
                             _logger.LogDebug("接收到配置同步命令: {ConfigType}", configType);
-                            
+
                             // 调用OptionsMonitorConfigManager处理配置同步
                         }
                     }
@@ -1481,8 +1481,19 @@ namespace RUINORERP.UI.Network
                 packet.CommandId = commandId;
                 packet.ExecutionContext.SessionId = MainForm.Instance.AppContext.SessionId;
                 packet.ExecutionContext.UserId = MainForm.Instance.AppContext.CurrentUser.UserID;
-                //  CommandContext用于传递响应类型信息
-                packet.ExecutionContext.ExpectedResponseTypeName = ResponseTypeName;
+                if (ResponseTypeName == null)
+                {
+                    //默认给基类。因为服务器处理时只是会在最后响应时才看是否真的需要响应。因为处理中会响应错误信息。
+                    packet.ExecutionContext.NeedResponse = false;
+                    packet.ExecutionContext.ExpectedResponseTypeName = nameof(RUINORERP.PacketSpec.Models.Responses.ResponseBase);
+                }
+                else
+                {
+                    //  CommandContext用于传递响应类型信息
+                    packet.ExecutionContext.ExpectedResponseTypeName = ResponseTypeName;
+                    packet.ExecutionContext.NeedResponse = true;
+                }
+
 
                 await AutoAttachTokenAsync(packet.ExecutionContext);
                 //除登陆登出命令，其他命令都需要附加令牌

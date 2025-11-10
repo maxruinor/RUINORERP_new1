@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 using Polly;
@@ -607,9 +607,10 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         private void InitializePolicies()
         {
-            // 关键命令策略
+            // 关键命令策略 - 只处理异常和空响应
             _categoryPolicies[CommandCategory.Authentication] = Policy
-                .HandleResult<IResponse>(r => r != null && !r.IsSuccess)
+                .Handle<Exception>()
+                .OrResult<IResponse>(r => r == null)
                 .CircuitBreakerAsync<IResponse>(
                     handledEventsAllowedBeforeBreaking: _config.CriticalFailureThreshold,
                     durationOfBreak: _config.CriticalRecoveryTime,
@@ -617,9 +618,10 @@ namespace RUINORERP.PacketSpec.Commands
                     onReset: OnCircuitReset,
                     onHalfOpen: OnCircuitHalfOpen);
 
-            // 标准命令策略
+            // 标准命令策略 - 只处理异常和空响应
             _categoryPolicies[CommandCategory.System] = Policy
-                .HandleResult<IResponse>(r => r != null && !r.IsSuccess)
+                .Handle<Exception>()
+                .OrResult<IResponse>(r => r == null)
                 .CircuitBreakerAsync<IResponse>(
                     handledEventsAllowedBeforeBreaking: _config.StandardFailureThreshold,
                     durationOfBreak: _config.StandardRecoveryTime,
@@ -627,9 +629,10 @@ namespace RUINORERP.PacketSpec.Commands
                     onReset: OnCircuitReset,
                     onHalfOpen: OnCircuitHalfOpen);
 
-            // 批处理命令策略
+            // 批处理命令策略 - 只处理异常和空响应
             _categoryPolicies[CommandCategory.DataSync] = Policy
-                .HandleResult<IResponse>(r => r != null && !r.IsSuccess)
+                .Handle<Exception>()
+                .OrResult<IResponse>(r => r == null)
                 .CircuitBreakerAsync<IResponse>(
                     handledEventsAllowedBeforeBreaking: _config.BatchFailureThreshold,
                     durationOfBreak: _config.BatchRecoveryTime,
@@ -637,9 +640,10 @@ namespace RUINORERP.PacketSpec.Commands
                     onReset: OnCircuitReset,
                     onHalfOpen: OnCircuitHalfOpen);
 
-            // 只读命令策略
+            // 只读命令策略 - 只处理异常和空响应
             _categoryPolicies[CommandCategory.Message] = Policy
-                .HandleResult<IResponse>(r => r != null && !r.IsSuccess)
+                .Handle<Exception>()
+                .OrResult<IResponse>(r => r == null)
                 .CircuitBreakerAsync<IResponse>(
                     handledEventsAllowedBeforeBreaking: _config.ReadOnlyFailureThreshold,
                     durationOfBreak: _config.ReadOnlyRecoveryTime,
@@ -647,9 +651,10 @@ namespace RUINORERP.PacketSpec.Commands
                     onReset: OnCircuitReset,
                     onHalfOpen: OnCircuitHalfOpen);
 
-            // 外部服务命令策略
+            // 外部服务命令策略 - 只处理异常和空响应
             _categoryPolicies[CommandCategory.Workflow] = Policy
-                .HandleResult<IResponse>(r => r != null && !r.IsSuccess)
+                .Handle<Exception>()
+                .OrResult<IResponse>(r => r == null)
                 .CircuitBreakerAsync<IResponse>(
                     handledEventsAllowedBeforeBreaking: _config.ExternalFailureThreshold,
                     durationOfBreak: _config.ExternalRecoveryTime,

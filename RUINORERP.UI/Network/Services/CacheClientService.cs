@@ -20,6 +20,7 @@ using NPOI.SS.Formula.Functions;
 using Netron.NetronLight;
 using FastReport.Table;
 using RUINORERP.PacketSpec.Commands;
+using System.Collections.Concurrent;
 
 namespace RUINORERP.UI.Network.Services
 {
@@ -31,7 +32,9 @@ namespace RUINORERP.UI.Network.Services
     {
         private readonly ILogger<CacheClientService> _log;
         private readonly IEntityCacheManager _cacheManager;
-        private readonly UICacheSubscriptionManager _subscriptionManager;
+        // 客户端使用：管理订阅的表，每个表是否有订阅
+        private readonly ConcurrentDictionary<string, bool> _subscriptions;
+
         private readonly CacheRequestManager _cacheRequestManager; // 新增：使用专门的请求管理器
         private readonly EventDrivenCacheManager _eventDrivenCacheManager; // 事件驱动缓存管理器
         private readonly ClientCommunicationService _commService; // 通信服务
@@ -50,7 +53,6 @@ namespace RUINORERP.UI.Network.Services
         /// <param name="eventDrivenCacheManager">事件驱动缓存管理器</param>
         /// <param name="commService">通信服务</param>
         public CacheClientService(ILogger<CacheClientService> logger,
-            UICacheSubscriptionManager subscriptionManager,
             IEntityCacheManager cacheManager,
             CacheRequestManager cacheRequestManager,
             EventDrivenCacheManager eventDrivenCacheManager,
@@ -64,12 +66,10 @@ namespace RUINORERP.UI.Network.Services
             _cacheRequestManager = cacheRequestManager ?? throw new ArgumentNullException(nameof(cacheRequestManager));
             _eventDrivenCacheManager = eventDrivenCacheManager ?? throw new ArgumentNullException(nameof(eventDrivenCacheManager));
             _commService = commService ?? throw new ArgumentNullException(nameof(commService));
-            // 使用业务层的订阅管理器，避免重复实现
-            _subscriptionManager = subscriptionManager;
 
-            // 订阅缓存变更事件
+            // 订阅的缓存变更事件
             _eventDrivenCacheManager.CacheChanged += OnClientCacheChanged;
-            // 订阅连接状态变化事件
+            // 订阅的连接状态变化事件
             if (_commService is ClientCommunicationService clientCommService)
             {
                 clientCommService.ConnectionStateChanged += OnConnectionStateChanged;
@@ -89,7 +89,7 @@ namespace RUINORERP.UI.Network.Services
             _log.Debug("连接状态变化: {0}", isConnected ? "已连接" : "已断开");
         }
 
-  
+
         /// <summary>
         /// 注册命令处理程序
         /// </summary>
@@ -132,17 +132,25 @@ namespace RUINORERP.UI.Network.Services
 
             try
             {
-                // 添加本地订阅
-                _subscriptionManager.AddSubscription(tableName);
-
                 // 发送订阅请求到服务器
-                await _cacheRequestManager.SendCacheSubscriptionAsync(tableName, "Subscribe", null);
+                var cacheResponse = await _cacheRequestManager.SendCacheSubscriptionAsync(tableName, SubscribeAction.Subscribe, null);
+                if (cacheResponse!=null)
+                {
+                    if (cacheResponse.IsSuccess)
+                    {
+                        bool add = _subscriptions.TryAdd(tableName, true);
+                        //如果已经存在呢？更新？
+                    }
+                }
+                else
+                {
+
+                }
+               
             }
             catch (Exception ex)
             {
                 _log.LogError(ex, "订阅表{0}失败", tableName);
-                // 订阅失败时移除本地订阅
-                _subscriptionManager.RemoveSubscription(tableName);
             }
         }
 
@@ -158,20 +166,15 @@ namespace RUINORERP.UI.Network.Services
                 return;
             }
 
-            // 检查是否已订阅
-            if (!_subscriptionManager.IsSubscribed(tableName))
-            {
-                _log.LogDebug("表{0}未订阅，跳过取消订阅", tableName);
-                return;
-            }
-
             try
             {
                 // 发送取消订阅请求到服务器
-                await _cacheRequestManager.SendCacheSubscriptionAsync(tableName, "Unsubscribe", null);
-
-                // 成功后移除本地订阅
-                _subscriptionManager.RemoveSubscription(tableName);
+                var cacheResponse = await _cacheRequestManager.SendCacheSubscriptionAsync(tableName, SubscribeAction.Unsubscribe, null);
+                if (cacheResponse.IsSuccess)
+                {
+                    bool add = _subscriptions.TryRemove(tableName, out _);
+                    //如果已经存在呢？更新？
+                }
             }
             catch (Exception ex)
             {
@@ -180,118 +183,6 @@ namespace RUINORERP.UI.Network.Services
         }
 
 
-
-        /// <summary>
-        /// 取消所有缓存订阅
-        /// </summary>
-        public async Task UnsubscribeAllAsync()
-        {
-            // 检查是否已释放
-            if (_disposed)
-            {
-                _log.LogWarning("{0}已释放，无法取消所有订阅", _componentName);
-                return;
-            }
-
-            try
-            {
-                // 获取当前已订阅表的快照
-                var subscribedTables = GetSubscribedTables().ToList();
-                var failedTables = new List<string>();
-
-                // 并行取消订阅以提高效率
-                var tasks = subscribedTables.Select(async tableName =>
-                {
-                    try
-                    {
-                        await UnsubscribeCacheAsync(tableName);
-                    }
-                    catch (Exception ex)
-                    {
-                        _log.LogWarning(ex, "取消订阅表{0}失败", tableName);
-                        failedTables.Add(tableName);
-                    }
-                });
-
-                // 过滤掉可能的null任务，防止ArgumentException异常
-                var validTasks = tasks.Where(t => t != null).ToList();
-                if (validTasks.Any())
-                {
-                    await Task.WhenAll(validTasks);
-                }
-            }
-            catch (Exception ex)
-            {
-                _log.LogError(ex, "取消所有缓存订阅过程中发生错误");
-            }
-        }
-
-        /// <summary>
-        /// 检查表是否已订阅
-        /// </summary>
-        public bool IsSubscribed(string tableName)
-        {
-            // 检查是否已释放
-            if (_disposed)
-            {
-                _log.LogWarning("{0}已释放，无法检查订阅状态", _componentName);
-                return false;
-            }
-
-            return _subscriptionManager.IsSubscribed(tableName);
-        }
-
-        /// <summary>
-        /// 获取所有已订阅的表
-        /// </summary>
-        public IEnumerable<string> GetSubscribedTables()
-        {
-            // 检查是否已释放
-            if (_disposed)
-            {
-                _log.LogWarning("{0}已释放，无法获取订阅表列表", _componentName);
-                return Enumerable.Empty<string>();
-            }
-
-            // 使用业务层订阅管理器获取订阅列表
-            return _subscriptionManager.GetSubscriptions();
-        }
-
-        /// <summary>
-        /// 从缓存获取名称
-        /// </summary>
-        public async Task<string> GetNameFromCacheAsync(string tableName, long id)
-        {
-            // 检查是否已释放
-            if (_disposed)
-            {
-                _log.LogWarning("{0}已释放，无法从缓存获取名称", _componentName);
-                return string.Empty;
-            }
-
-            try
-            {
-                // 直接使用IEntityCacheManager的GetDisplayValue方法
-                var displayValue = _cacheManager.GetDisplayValue(tableName, id);
-                string name = displayValue?.ToString() ?? string.Empty;
-
-                if (!string.IsNullOrEmpty(name))
-                {
-                    _log.LogDebug("从缓存获取名称成功，表名={0}，ID={1}，名称={2}",
-                        tableName, id, name);
-                }
-                else
-                {
-                    _log.LogWarning("在表{0}的缓存中未找到ID={1}的记录或显示字段配置", tableName, id);
-                }
-                return name;
-            }
-            catch (Exception ex)
-            {
-                _log.LogError(ex, "从缓存获取名称失败，表名={0}，ID={1}", tableName, id);
-                return string.Empty;
-            }
-        }
 
 
         /// <summary>

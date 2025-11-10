@@ -52,6 +52,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         protected ILogger<CacheCommandHandler> logger { get; set; }
         // 添加新的缓存管理器字段
         private readonly IEntityCacheManager _cacheManager;
+        private readonly ICacheSyncMetadata _syncMetadata;
 
         // 添加构造函数注入CacheSubscriptionManager
         /// <summary>
@@ -61,13 +62,15 @@ namespace RUINORERP.Server.Network.CommandHandlers
             ILogger<CacheCommandHandler> logger,
             ISessionService sessionService,
             CacheSubscriptionManager subscriptionManager, // 通过DI注入
-            IEntityCacheManager cacheManager) // 通过DI注入
+            IEntityCacheManager cacheManager, // 通过DI注入
+            ICacheSyncMetadata syncMetadata) // 通过DI注入
             : base(logger)
         {
             this.logger = logger;
             _sessionService = sessionService;
             _subscriptionManager = subscriptionManager;
             _cacheManager = cacheManager;
+            _syncMetadata = syncMetadata;
 
             // 使用安全方法设置支持的命令 - 适配简化的缓存命令系统
             SetSupportedCommands(
@@ -179,6 +182,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
 
         /// <summary>
         /// 处理缓存订阅命令 - 处理缓存订阅和取消订阅操作
+        /// 支持单个表订阅、单个表取消订阅和批量取消所有表订阅
         /// </summary>
         /// <param name="cmd">缓存订阅命令</param>
         /// <param name="cancellationToken">取消令牌</param>
@@ -187,41 +191,89 @@ namespace RUINORERP.Server.Network.CommandHandlers
         {
             try
             {
-                if (!(cmd.Packet.Request is CacheRequest cacheCommand))
+
+                // 验证请求类型
+                if (!(cmd.Packet.Request is CacheRequest cacheRequest))
                 {
+                    LogWarning($"接收到非缓存请求类型的订阅命令，命令ID: {cmd.Packet.CommandId}");
                     return ResponseFactory.CreateSpecificErrorResponse(cmd.Packet, "不支持的缓存订阅命令格式", UnifiedErrorCodes.Command_ValidationFailed);
                 }
 
-                var cacheRequest = cmd.Packet.Request as CacheRequest;
-                if (cacheRequest == null || string.IsNullOrEmpty(cacheRequest.TableName))
-                {
-                    return ResponseFactory.CreateSpecificErrorResponse(cmd.Packet, "表名不能为空", UnifiedErrorCodes.Command_ValidationFailed);
-                }
-
-                // 获取订阅动作类型
+                // 获取订阅动作类型和会话信息
                 var subscribeAction = cacheRequest.SubscribeAction;
                 var tableName = cacheRequest.TableName;
-                var sessionId = cmd.Packet.ExecutionContext.SessionId;
+                var sessionId = cmd.Packet.ExecutionContext?.SessionId;
+
+                if (string.IsNullOrEmpty(sessionId))
+                {
+                    LogWarning("接收到无会话ID的缓存订阅命令");
+                    return ResponseFactory.CreateSpecificErrorResponse(cmd.Packet, "会话ID不能为空", UnifiedErrorCodes.Command_ValidationFailed);
+                }
+
                 bool success = false;
+                string message = string.Empty;
+
+                // 记录请求日志
+                LogDebug($"收到缓存订阅请求: 会话={sessionId}, 表名={tableName}, 动作={subscribeAction}");
 
                 // 根据订阅动作执行相应操作
                 switch (subscribeAction)
                 {
                     case SubscribeAction.Subscribe:
-                        success = _subscriptionManager.Subscribe(sessionId, tableName);
-                        LogInfo($"客户端订阅缓存: 会话={sessionId}, 表名={tableName}, 结果={success}");
+                        if (string.IsNullOrEmpty(tableName))
+                        {
+                            LogWarning($"客户端尝试订阅空表名，会话={sessionId}");
+                            return ResponseFactory.CreateSpecificErrorResponse(cmd.Packet, "订阅时表名不能为空", UnifiedErrorCodes.Command_ValidationFailed);
+                        }
+
+                        // 验证表是否存在
+                        var entityType = _cacheManager?.GetEntityType(tableName);
+                        if (entityType == null)
+                        {
+                            LogWarning($"客户端尝试订阅不存在的表: 会话={sessionId}, 表名={tableName}");
+                            return ResponseFactory.CreateSpecificErrorResponse(cmd.Packet, $"订阅的表不存在: {tableName}", UnifiedErrorCodes.Biz_DataNotFound);
+                        }
+
+                        // 使用异步方法添加订阅
+                        await _subscriptionManager.AddSubscriptionAsync(tableName, sessionId);
+                        success = true;
+                        message = $"客户端订阅缓存: 会话={sessionId}, 表名={tableName}, 结果={success}";
+                        LogInfo(message);
                         break;
+
                     case SubscribeAction.Unsubscribe:
-                        success = _subscriptionManager.Unsubscribe(sessionId, tableName);
-                        LogInfo($"客户端取消订阅缓存: 会话={sessionId}, 表名={tableName}, 结果={success}");
+                        if (string.IsNullOrEmpty(tableName))
+                        {
+                            // 批量取消所有订阅（TableName为空时表示取消所有）
+                            int unsubscribeCount = _subscriptionManager.RemoveAllSubscriptionsAsync(sessionId);
+                            success = true;
+                            message = $"客户端取消所有订阅: 会话={sessionId}, 共取消 {unsubscribeCount} 个表订阅";
+                            LogInfo(message);
+                        }
+                        else
+                        {
+                            // 单个表取消订阅
+                             _subscriptionManager.RemoveSubscriptionAsync(tableName, sessionId);
+                            success = true;
+                            message = $"客户端取消订阅缓存: 会话={sessionId}, 表名={tableName}";
+                            LogInfo(message);
+                        }
                         break;
+
                     default:
-                        return ResponseFactory.CreateSpecificErrorResponse(cmd.Packet, "未知的订阅动作类型", UnifiedErrorCodes.Command_ValidationFailed);
+                        LogWarning($"收到未知的订阅动作类型: {subscribeAction}, 会话={sessionId}");
+                        return ResponseFactory.CreateSpecificErrorResponse<CacheResponse>("未知的订阅动作类型");
                 }
 
                 // 创建响应
-                var response = ResponseFactory.CreateSpecificSuccessResponse(cmd.Packet?.ExecutionContext, tableName);
-                response.Metadata = new Dictionary<string, object> { { "SubscribeAction", (int)subscribeAction } };
+                var response = new CacheResponse
+                {
+                    RequestId = cacheRequest.RequestId,
+                    TableName = tableName,
+                    IsSuccess = success,
+                    Message = message,
+                    Metadata = new Dictionary<string, object> { { "SubscribeAction", (int)subscribeAction } }
+                };
 
                 return response;
             }
@@ -283,42 +335,62 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// <param name="executionContext">执行上下文</param>
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>处理结果</returns>
-        private async Task<IResponse> ProcessCacheRequestAsync(IRequest request, PacketModel packetModel, CancellationToken cancellationToken)
+        private async Task<CacheResponse> ProcessCacheRequestAsync(IRequest request, PacketModel packetModel, CancellationToken cancellationToken)
         {
             try
             {
-
                 // 获取缓存请求数据
                 CacheRequest cacheRequest = request as CacheRequest;
                 if (cacheRequest == null)
                 {
-                    return ResponseFactory.CreateSpecificErrorResponse(packetModel, "缓存请求数据不能为空");
+                    return ResponseFactory.CreateSpecificErrorResponse<CacheResponse>("缓存请求数据不能为空");
                 }
 
                 // 验证请求数据有效性
                 if (string.IsNullOrEmpty(cacheRequest.TableName))
                 {
-                    return ResponseFactory.CreateSpecificErrorResponse(packetModel, "表名不能为空", UnifiedErrorCodes.Command_ValidationFailed);
+                    return ResponseFactory.CreateSpecificErrorResponse<CacheResponse>("表名不能为空");
                 }
 
                 // 检查是否需要刷新缓存
+                bool cacheRefreshSuccess = true;
                 if (cacheRequest.ForceRefresh || !IsCacheValid(cacheRequest.TableName, cacheRequest.LastRequestTime))
                 {
-                    await RefreshCacheDataAsync(cacheRequest.TableName, cancellationToken);
+                    try
+                    {
+                        await RefreshCacheDataAsync(cacheRequest.TableName, cancellationToken);
+                    }
+                    catch (Exception refreshEx)
+                    {
+                        LogError($"刷新表 {cacheRequest.TableName} 的缓存时发生错误", refreshEx);
+                        cacheRefreshSuccess = false;
+                    }
                 }
 
-                // 获取缓存数据
+                // 即使缓存刷新失败，也尝试获取数据
                 var cacheData = await GetTableDataList(cacheRequest.TableName);
+
+                // 创建响应 - 根据数据获取情况确定成功状态
                 if (cacheData == null)
                 {
-                    return ResponseFactory.CreateSpecificErrorResponse(packetModel, $"缓存数据不存在: {cacheRequest.TableName}", UnifiedErrorCodes.Biz_DataNotFound);
+                    string errorMessage = cacheRefreshSuccess
+                        ? $"缓存数据不存在: {cacheRequest.TableName}"
+                        : "缓存刷新失败且无法获取数据";
+                    LogError(errorMessage);
+                    return ResponseFactory.CreateSpecificErrorResponse<CacheResponse>(errorMessage);
+                }
+
+                // 只有当缓存刷新失败但数据获取成功时，记录警告
+                if (!cacheRefreshSuccess)
+                {
+                    LogWarning($"表 {cacheRequest.TableName} 的缓存刷新失败，但成功从当前缓存获取数据");
                 }
 
                 // 创建缓存响应
                 var cacheResponse = new CacheResponse
                 {
                     RequestId = cacheRequest.RequestId,
-                    Message = "缓存数据获取成功",
+                    Message = cacheRefreshSuccess ? "缓存数据获取成功" : "从缓存获取数据成功（刷新失败）",
                     CacheData = cacheData,
                     TableName = cacheRequest.TableName,
                     CacheTime = DateTime.Now,
@@ -334,7 +406,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
             catch (Exception ex)
             {
                 LogError($"处理缓存请求业务逻辑异常: {ex.Message}", ex);
-                return ResponseFactory.CreateSpecificErrorResponse(packetModel.ExecutionContext, ex);
+                return ResponseFactory.CreateSpecificErrorResponse<CacheResponse>($"处理请求时发生错误: {ex.Message}");
             }
         }
 
@@ -369,7 +441,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
             return typeName;
         }
 
-        private Task<IResponse> ProcessCacheSyncAsync(IRequest request, CommandContext executionContext, CancellationToken cancellationToken)
+        private Task<CacheResponse> ProcessCacheSyncAsync(IRequest request, CommandContext executionContext, CancellationToken cancellationToken)
         {
             try
             {
@@ -377,7 +449,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 CacheRequest updateRequest = request as CacheRequest;
                 if (updateRequest == null)
                 {
-                    return Task.FromResult<IResponse>(ResponseFactory.CreateSpecificErrorResponse(executionContext, "缓存更新请求数据不能为空" + UnifiedErrorCodes.Command_ValidationFailed.Message
+                    return Task.FromResult<CacheResponse>(ResponseFactory.CreateSpecificErrorResponse<CacheResponse>("缓存更新请求数据不能为空" + UnifiedErrorCodes.Command_ValidationFailed.Message
                      ));
                 }
 
@@ -385,7 +457,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 if (string.IsNullOrEmpty(updateRequest.TableName))
                 {
                     LogError("缓存更新表名为空");
-                    return Task.FromResult<IResponse>(ResponseFactory.CreateSpecificErrorResponse(executionContext, "表名不能为空"
+                    return Task.FromResult<CacheResponse>(ResponseFactory.CreateSpecificErrorResponse<CacheResponse>("表名不能为空"
                          ));
                 }
 
@@ -429,18 +501,18 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 if (!updateSuccess)
                 {
                     LogError($"更新缓存数据失败: {updateRequest.TableName}");
-                    return Task.FromResult<IResponse>(ResponseFactory.CreateSpecificErrorResponse(executionContext,$"更新缓存数据失败: 未知错误"));
+                    return Task.FromResult<CacheResponse>(ResponseFactory.CreateSpecificErrorResponse<CacheResponse>($"更新缓存数据失败: 未知错误"));
                 }
 
                 var cacheResponse = new CacheResponse();
                 cacheResponse.Message = "缓存同步成功";
                 cacheResponse.IsSuccess = true;
-                return Task.FromResult<IResponse>(cacheResponse);
+                return Task.FromResult<CacheResponse>(cacheResponse);
             }
             catch (Exception ex)
             {
                 LogError($"处理缓存更新业务逻辑异常: {ex.Message}", ex);
-                return Task.FromResult<IResponse>(ResponseFactory.CreateSpecificErrorResponse(executionContext,$"处理缓存更新业务逻辑异常: {ex.Message}"));
+                return Task.FromResult<CacheResponse>(ResponseFactory.CreateSpecificErrorResponse<CacheResponse>($"处理缓存更新业务逻辑异常: {ex.Message}"));
             }
         }
 
@@ -456,19 +528,62 @@ namespace RUINORERP.Server.Network.CommandHandlers
         {
             try
             {
-                // 目前总是返回true，后续可以根据实际需求实现缓存有效性检查逻辑
+                if (string.IsNullOrEmpty(tableName))
+                {
+                    logger.LogWarning("表名为空，缓存无效");
+                    return false;
+                }
+
+                // 1. 检查缓存是否存在
+                var cacheExists = _cacheManager != null && _cacheManager.GetEntityType(tableName) != null;
+                if (!cacheExists)
+                {
+                    logger.LogDebug("表 {TableName} 的缓存不存在", tableName);
+                    return false;
+                }
+
+                // 2. 使用注入的ICacheSyncMetadata服务验证缓存完整性
+                bool isMetadataValid = true;
+                if (_syncMetadata != null)
+                {
+                    isMetadataValid = _syncMetadata.ValidateTableCacheIntegrity(tableName);
+                }
+
+                if (!isMetadataValid)
+                {
+                    logger.LogWarning("表 {TableName} 的缓存元数据无效", tableName);
+                    return false;
+                }
+
+                // 3. 检查缓存是否过期
+                bool isExpired = false;
+                if (_syncMetadata != null)
+                {
+                    isExpired = _syncMetadata.IsTableExpired(tableName);
+                }
+
+                if (isExpired)
+                {
+                    logger.LogDebug("表 {TableName} 的缓存已过期", tableName);
+                    return false;
+                }
+
+                logger.LogTrace("表 {TableName} 的缓存验证通过", tableName);
                 return true;
             }
-            catch
+            catch (Exception ex)
             {
+                logger.LogError(ex, "验证表 {TableName} 的缓存有效性时发生错误", tableName);
                 return false;
             }
         }
 
         /// <summary>
         /// 刷新缓存数据
+        /// 支持空表缓存初始化，确保即使是空表也能正确更新缓存元数据
         /// </summary>
         /// <param name="tableName">表名</param>
+        /// <param name="cancellationToken">取消令牌</param>
         /// <returns>任务</returns>
         private async Task RefreshCacheDataAsync(string tableName, CancellationToken cancellationToken = default)
         {
@@ -477,21 +592,49 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 // 从数据库加载指定表的数据到缓存
                 try
                 {
-                    // 获取EntityCacheInitializationService实例
-                    var initializationService = Startup.GetFromFac<EntityCacheInitializationService>();
-                    // 调用新方法初始化单个表的缓存
-                    await initializationService.InitializeSingleTableCacheAsync(tableName);
+                    Logger.LogDebug("开始刷新表 {TableName} 的缓存数据", tableName);
+
+                    // 获取实体类型
+                    var entityType = _cacheManager.GetEntityType(tableName);
+                    if (entityType == null)
+                    {
+                        Logger.LogWarning("未找到表 {TableName} 对应的实体类型，刷新失败", tableName);
+                        return;
+                    }
+                    // 从数据库加载指定表的数据到缓存
+                    try
+                    {
+                        // 获取EntityCacheInitializationService实例
+                        var initializationService = Startup.GetFromFac<EntityCacheInitializationService>();
+                        // 调用新方法初始化单个表的缓存
+                        await initializationService.InitializeSingleTableCacheAsync(tableName);
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.LogError(ex, $"加载表 {tableName} 数据时发生错误");
+                        return;
+                    }
+
                 }
                 catch (Exception ex)
                 {
+                    // 异常处理改进：在异常情况下，尝试清理缓存元数据，避免无效状态
+                    try
+                    {
+                        if (_syncMetadata != null)
+                        {
+                            Logger.LogDebug("清理表 {TableName} 的缓存元数据，避免无效状态", tableName);
+                            _syncMetadata.RemoveTableSyncInfo(tableName);
+                        }
+                    }
+                    catch { /* 忽略清理异常 */ }
+
+                    throw;
                 }
-                // 添加一个await Task.CompletedTask来使方法真正成为异步方法
-                // 这样可以避免警告，同时保持向后兼容性
-                await Task.CompletedTask;
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"刷新缓存数据失败: {tableName}");
+                Logger.LogError(ex, "刷新表 {TableName} 的缓存数据时发生错误", tableName);
                 throw;
             }
         }
@@ -717,6 +860,15 @@ namespace RUINORERP.Server.Network.CommandHandlers
         }
 
         /// <summary>
+        /// 记录调试日志
+        /// </summary>
+        /// <param name="message">日志消息</param>
+        private void LogDebug(string message)
+        {
+            logger.LogDebug($"[CacheCommandHandler] {message}");
+        }
+
+        /// <summary>
         /// 记录错误日志
         /// </summary>
         /// <param name="message">日志消息</param>
@@ -737,140 +889,6 @@ namespace RUINORERP.Server.Network.CommandHandlers
 
 
         #endregion
-
-
-
-
-
-        /// <summary>
-        /// 处理缓存订阅命令
-        /// </summary>
-        /// <param name="cmd">缓存订阅命令</param>
-        /// <param name="cancellationToken">取消令牌</param>
-        /// <returns>处理结果</returns>
-        private async Task<IResponse> HandleCacheSubscribeAsync(QueuedCommand cmd, CancellationToken cancellationToken)
-        {
-            try
-            {
-                // 获取执行上下文中的会话ID
-                var sessionId = cmd.Packet?.ExecutionContext?.SessionId;
-                if (string.IsNullOrEmpty(sessionId))
-                {
-                    return ResponseFactory.CreateSpecificErrorResponse(cmd.Packet, "会话ID不能为空", UnifiedErrorCodes.Command_ValidationFailed);
-                }
-
-                // 获取缓存订阅请求数据
-
-                var subscribeRequest = cmd.Packet.Request as CacheRequest;
-                if (subscribeRequest == null)
-                {
-                    return ResponseFactory.CreateSpecificErrorResponse(cmd.Packet, "缓存订阅请求数据不能为空", UnifiedErrorCodes.Command_ValidationFailed)
-                       ;
-                }
-
-                // 验证请求数据
-                if (string.IsNullOrEmpty(subscribeRequest.TableName))
-                {
-                    LogError("缓存订阅表名为空");
-                    return ResponseFactory.CreateSpecificErrorResponse(cmd.Packet, "表名不能为空", UnifiedErrorCodes.Command_ValidationFailed)
-                    ;
-                }
-
-                LogInfo($"处理缓存订阅: 会话={sessionId}, 表名={subscribeRequest.TableName}");
-
-                // 执行订阅操作
-                var subscribeResult = _subscriptionManager.Subscribe(sessionId, subscribeRequest.TableName);
-                if (!subscribeResult)
-                {
-                    LogError($"缓存订阅失败: 会话={sessionId}, 表名={subscribeRequest.TableName}");
-                    return ResponseFactory.CreateSpecificErrorResponse(cmd.Packet, "缓存订阅失败", UnifiedErrorCodes.Biz_OperationFailed.Code)
-                       ;
-                }
-
-                LogInfo($"缓存订阅成功: 会话={sessionId}, 表名={subscribeRequest.TableName}");
-                var cacheResponse = new CacheResponse
-                {
-                    TableName = subscribeRequest.TableName,
-                    IsSuccess = true,
-                    Message = "缓存订阅成功"
-                };
-
-                return cacheResponse;
-            }
-            catch (Exception ex)
-            {
-                LogError($"处理缓存订阅异常: {ex.Message}", ex);
-                return ResponseFactory.CreateSpecificErrorResponse(cmd.Packet?.ExecutionContext, ex);
-            }
-        }
-
-        /// <summary>
-        /// 处理缓存取消订阅命令
-        /// </summary>
-        /// <param name="cmd">缓存取消订阅命令</param>
-        /// <param name="cancellationToken">取消令牌</param>
-        /// <returns>处理结果</returns>
-        private async Task<IResponse> HandleCacheUnsubscribeAsync(QueuedCommand cmd, CancellationToken cancellationToken)
-        {
-            try
-            {
-                // 获取执行上下文中的会话ID
-                var sessionId = cmd.Packet?.ExecutionContext?.SessionId;
-                if (string.IsNullOrEmpty(sessionId))
-                {
-                    return ResponseFactory.CreateSpecificErrorResponse(cmd.Packet, "会话ID不能为空", UnifiedErrorCodes.Command_ValidationFailed)
-                        ;
-                }
-
-                // 获取缓存取消订阅请求数据
-                var unsubscribeRequest = cmd.Packet.Request as CacheRequest;
-                if (unsubscribeRequest == null)
-                {
-                    return ResponseFactory.CreateSpecificErrorResponse(cmd.Packet, "缓存取消订阅请求数据不能为空", UnifiedErrorCodes.Command_ValidationFailed)
-                        ;
-                }
-
-                // 验证请求数据
-                if (string.IsNullOrEmpty(unsubscribeRequest.TableName))
-                {
-                    LogError("缓存取消订阅表名为空");
-                    return ResponseFactory.CreateSpecificErrorResponse(cmd.Packet, "表名不能为空", UnifiedErrorCodes.Command_ValidationFailed)
-                        ;
-                }
-
-                LogInfo($"处理缓存取消订阅: 会话={sessionId}, 表名={unsubscribeRequest.TableName}");
-
-                // 执行取消订阅操作
-                var unsubscribeResult = _subscriptionManager.Unsubscribe(sessionId, unsubscribeRequest.TableName);
-                if (!unsubscribeResult)
-                {
-                    LogError($"缓存取消订阅失败: 会话={sessionId}, 表名={unsubscribeRequest.TableName}");
-                    return ResponseFactory.CreateSpecificErrorResponse(cmd.Packet, "缓存取消订阅失败", UnifiedErrorCodes.Biz_OperationFailed.Code)
-                        ;
-                }
-
-                LogInfo($"缓存取消订阅成功: 会话={sessionId}, 表名={unsubscribeRequest.TableName}");
-                var cacheResponse = new CacheResponse
-                {
-                    TableName = unsubscribeRequest.TableName,
-                    IsSuccess = true,
-                    Message = "缓存取消订阅成功"
-                };
-
-                return cacheResponse;
-            }
-            catch (Exception ex)
-            {
-                LogError($"处理缓存取消订阅异常: {ex.Message}", ex);
-                return ResponseFactory.CreateSpecificErrorResponse(cmd.Packet.ExecutionContext, ex, "处理缓存取消订阅异常");
-            }
-        }
-
-
-
-
-
-
 
 
 

@@ -344,44 +344,7 @@ namespace RUINORERP.Server.Controls
             return "配置更新";
         }
 
-        /// <summary>
-        /// 验证全局验证配置
-        /// </summary>
-        private bool ValidateGlobalValidatorConfiguration(GlobalValidatorConfig configObject)
-        {
-            var validationResults = new List<string>();
-
-            // 验证返工提醒天数
-            if (configObject.ReworkTipDays < 0 || configObject.ReworkTipDays > 365)
-            {
-                validationResults.Add("返工提醒天数必须在0-365范围内");
-            }
-
-            // 验证计划提前提示天数
-            if (configObject.计划提前提示天数 < 0 || configObject.计划提前提示天数 > 365)
-            {
-                validationResults.Add("计划提前提示天数必须在0-365范围内");
-            }
-
-            // 验证销售金额精度
-            if (configObject.MoneyDataPrecision < 0 || configObject.MoneyDataPrecision > 10)
-            {
-                validationResults.Add("销售金额精度必须在0-10范围内");
-            }
-
-            if (validationResults.Count > 0)
-            {
-                var errorMessage = string.Join("\n", validationResults);
-                _logger?.LogWarning($"全局验证配置验证失败: {errorMessage}");
-                // 获取主窗体实例并打印信息日志
-                var mainForm = Application.OpenForms.OfType<frmMainNew>().FirstOrDefault();
-                mainForm?.PrintInfoLog($"全局验证配置验证失败: {errorMessage}");
-                return false;
-            }
-
-            return true;
-        }
-
+      
 
         /// <summary>
         /// 初始化JSON文件TreeView（左侧树）

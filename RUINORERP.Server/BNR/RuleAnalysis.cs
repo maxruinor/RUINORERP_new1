@@ -12,7 +12,8 @@ namespace RUINORERP.Server.BNR
 
         /// <summary>
         /// 执行规则分析，解析包含嵌套表达式的规则字符串
-        /// 支持解析形如{{redis:{S:销售订单}{D:yyMM}/000}}的嵌套表达式
+        /// 支持解析形如{S:RP:upper}和{{redis:{S:销售订单}{D:yyMM}/000}}的嵌套表达式
+        /// 兼容单大括号{}和双大括号{{}}格式
         /// </summary>
         /// <param name="rule">规则字符串</param>
         /// <returns>解析后的表达式数组</returns>
@@ -25,49 +26,21 @@ namespace RUINORERP.Server.BNR
             }
             
             List<string> items = new List<string>();
-            StringBuilder sb = new StringBuilder();
-            
             int i = 0;
+            
             while (i < rule.Length)
             {
-                // 查找以{{开头的表达式
+                // 检查是否为双大括号格式 {{...}}
                 if (i < rule.Length - 1 && rule[i] == '{' && rule[i + 1] == '{')
                 {
-                    // 跳过第一个{{
-                    i += 2;
-                    int startIndex = i;
-                    int braceDepth = 1;
-                    
-                    // 寻找匹配的}}，同时正确处理嵌套花括号
-                    while (i < rule.Length && braceDepth > 0)
-                    {
-                        if (i < rule.Length - 1 && rule[i] == '{' && rule[i + 1] == '{')
-                        {
-                            braceDepth++;
-                            i += 2;
-                        }
-                        else if (i < rule.Length - 1 && rule[i] == '}' && rule[i + 1] == '}')
-                        {
-                            braceDepth--;
-                            i += 2;
-                        }
-                        else
-                        {
-                            i++;
-                        }
-                    }
-                    
-                    // 如果找到了完整的表达式
-                    if (braceDepth == 0 && startIndex < i - 2)
-                    {
-                        // 添加表达式内容（不包含{{和}}）
-                        items.Add(rule.Substring(startIndex, i - 2 - startIndex));
-                    }
-                    else
-                    {
-                        // 没有找到匹配的}}，跳过当前字符
-                        i++;
-                    }
+                    // 处理双大括号格式
+                    ProcessDoubleBraceFormat(rule, ref i, items);
+                }
+                // 检查是否为单大括号格式 {...}
+                else if (rule[i] == '{')
+                {
+                    // 处理单大括号格式
+                    ProcessSingleBraceFormat(rule, ref i, items);
                 }
                 else
                 {
@@ -78,6 +51,81 @@ namespace RUINORERP.Server.BNR
             
             return items.ToArray();
         }
+        
+        /// <summary>
+        /// 处理双大括号格式的表达式 {{...}}
+        /// </summary>
+        private static void ProcessDoubleBraceFormat(string rule, ref int i, List<string> items)
+        {
+            // 跳过第一个{{
+            i += 2;
+            int startIndex = i;
+            int braceDepth = 1;
+            
+            // 寻找匹配的}}，同时正确处理嵌套花括号
+            while (i < rule.Length && braceDepth > 0)
+            {
+                if (i < rule.Length - 1 && rule[i] == '{' && rule[i + 1] == '{')
+                {
+                    braceDepth++;
+                    i += 2;
+                }
+                else if (i < rule.Length - 1 && rule[i] == '}' && rule[i + 1] == '}')
+                {
+                    braceDepth--;
+                    i += 2;
+                }
+                else
+                {
+                    i++;
+                }
+            }
+            
+            // 如果找到了完整的表达式
+            if (braceDepth == 0 && startIndex < i - 2)
+            {
+                // 添加表达式内容（不包含{{和}}）
+                items.Add(rule.Substring(startIndex, i - 2 - startIndex));
+            }
+        }
+        /// <summary>
+        /// 处理单大括号格式的表达式 {...}
+        /// </summary>
+        private static void ProcessSingleBraceFormat(string rule, ref int i, List<string> items)
+        {
+            // 跳过第一个{
+            i++;
+            int startIndex = i;
+            int braceDepth = 1;
+            
+            // 寻找匹配的}，同时正确处理嵌套花括号
+            while (i < rule.Length && braceDepth > 0)
+            {
+                // 检查是否为嵌套的单大括号
+                if (rule[i] == '{')
+                {
+                    braceDepth++;
+                    i++;
+                }
+                else if (rule[i] == '}')
+                {
+                    braceDepth--;
+                    i++;
+                }
+                else
+                {
+                    i++;
+                }
+            }
+            
+            // 如果找到了完整的表达式
+            if (braceDepth == 0 && startIndex < i - 1)
+            {
+                // 添加表达式内容（不包含{和}）
+                items.Add(rule.Substring(startIndex, i - 1 - startIndex));
+            }
+        }
+ 
 
         /// <summary>
         /// 从参数字符串中提取属性类型和值

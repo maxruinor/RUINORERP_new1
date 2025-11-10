@@ -773,14 +773,24 @@ namespace RUINORERP.Server.Controls
                     cbLblAvgResponseTimeValue.Text = "0ms";
                 }
                 
-                // 显示熔断器开关次数
-                cbLblStateChangesValue.Text = globalMetrics.StateChanges.ToString();
-                
                 // 显示熔断器开关次数的详情
                 if (globalMetrics.StateChanges > 0)
                 {
                     // 可以在这里添加更多详细信息的显示，如开关历史记录等
                 }
+                
+                // 更新新增的熔断器指标
+                // 熔断器打开次数
+                cbLblCircuitOpensValue.Text = globalMetrics.CircuitOpens.ToString();
+                
+                // 熔断器关闭次数
+                cbLblCircuitClosesValue.Text = globalMetrics.CircuitCloses.ToString();
+                
+                // 熔断器半开次数
+                cbLblCircuitHalfOpensValue.Text = globalMetrics.CircuitHalfOpens.ToString();
+                
+                // 当前活跃执行数
+                cbLblActiveExecutionsValue.Text = globalMetrics.ActiveExecutions.ToString();
             }
             catch (Exception ex)
             {

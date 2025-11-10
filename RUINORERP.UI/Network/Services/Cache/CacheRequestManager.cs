@@ -83,7 +83,7 @@ namespace RUINORERP.UI.Network.Services.Cache
         /// <summary>
         /// 向服务器发送缓存管理请求
         /// </summary>
-        public async Task<CacheResponse> SendCacheSubscriptionAsync(string tableName, string operationType, Dictionary<string, object> parameters = null)
+        public async Task<CacheResponse> SendCacheSubscriptionAsync(string tableName, SubscribeAction operationType, Dictionary<string, object> parameters = null)
         {
             var validationResult = base.ValidateTableName(tableName);
             if (!validationResult.IsValid)
@@ -97,6 +97,7 @@ namespace RUINORERP.UI.Network.Services.Cache
             {
                 TableName = tableName,
                 Operation = CacheOperation.Manage,
+                SubscribeAction= operationType,
                 Parameters = new Dictionary<string, object>(parameters ?? new Dictionary<string, object>())
                 {
                     { "OperationType", operationType }

@@ -43,9 +43,9 @@ namespace RUINORERP.Server.Network.Services
         private bool _disposed = false;
         private readonly ILogger<SessionService> _logger;
         private readonly CacheSubscriptionManager _subscriptionManager; // 使用统一的订阅管理器
-        
+
         // 存储待处理的请求任务，用于匹配响应
-        private static readonly ConcurrentDictionary<string, TaskCompletionSource<PacketModel>> _pendingRequests = 
+        private static readonly ConcurrentDictionary<string, TaskCompletionSource<PacketModel>> _pendingRequests =
             new ConcurrentDictionary<string, TaskCompletionSource<PacketModel>>();
 
         #endregion
@@ -97,8 +97,7 @@ namespace RUINORERP.Server.Network.Services
             MaxSessionCount = maxSessionCount;
             _sessions = new ConcurrentDictionary<string, SessionInfo>();
             _statistics = SessionStatistics.Create(maxSessionCount);
-            _subscriptionManager = subscriptionManager; // 服务器模式
-            _subscriptionManager.IsServerMode = true;
+            _subscriptionManager = subscriptionManager;
             // 启动清理定时器，每5分钟清理一次超时会话并检查心跳
             _cleanupTimer = new Timer(CleanupAndHeartbeatCallback, null, TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(5));
 
@@ -330,7 +329,7 @@ namespace RUINORERP.Server.Network.Services
                         sessionInfo.DisconnectTime = DateTime.Now;
 
                         // 取消该会话的所有缓存订阅
-                        _subscriptionManager.UnsubscribeAll(sessionId);
+                         _subscriptionManager.RemoveAllSubscriptionsAsync(sessionId);
 
                         // 触发会话断开事件
                         SessionDisconnected?.Invoke(sessionInfo);
@@ -472,10 +471,10 @@ namespace RUINORERP.Server.Network.Services
                     // 更新会话状态
                     sessionInfo.IsConnected = false;
                     sessionInfo.DisconnectTime = DateTime.Now;
-                    
+
                     // 触发会话断开事件
                     SessionDisconnected?.Invoke(sessionInfo);
-                    
+
                     // 调用IServerSessionEventHandler接口的会话断开方法
                     await OnSessionDisconnectedAsync(sessionInfo, closeReason.Reason.ToString());
                 }
@@ -644,10 +643,10 @@ namespace RUINORERP.Server.Network.Services
                 {
                     // 使用专门的UpdateActivity方法更新活动时间和心跳计数
                     sessionInfo.UpdateActivity();
-                    
+
                     // 触发会话更新事件，通知UI更新状态
                     SessionUpdated?.Invoke(sessionInfo);
-                    
+
                     return true;
                 }
                 return false;
@@ -822,7 +821,7 @@ namespace RUINORERP.Server.Network.Services
             where TRequest : class, IRequest
         {
             ct.ThrowIfCancellationRequested();
-            
+
             try
             {
                 // 构建数据包
@@ -843,13 +842,13 @@ namespace RUINORERP.Server.Network.Services
                 packet.CommandId = commandId;
                 packet.ExecutionContext.SessionId = sessionInfo.SessionID;
                 packet.ExecutionContext.UserId = sessionInfo.UserId ?? 0;
-                
+
                 // 设置期望的响应类型信息
                 if (!string.IsNullOrEmpty(responseTypeName))
                 {
                     packet.ExecutionContext.ExpectedResponseTypeName = responseTypeName;
                 }
-         
+
                 // 序列化和加密数据包
                 var serializedData = JsonCompressionSerializationService.Serialize<PacketModel>(packet);
                 var original = new OriginalData((byte)packet.CommandId.Category, new[] { packet.CommandId.OperationCode }, serializedData);
@@ -865,7 +864,7 @@ namespace RUINORERP.Server.Network.Services
 
                 // 发送数据
                 await sessionInfo.SendAsync(encrypted.ToArray(), ct);
-                
+
                 _logger?.LogDebug("数据包发送成功: SessionID={SessionID}, CommandId={CommandId}, RequestId={RequestId}",
                     sessionInfo.SessionID, commandId, request.RequestId);
             }
@@ -886,10 +885,10 @@ namespace RUINORERP.Server.Network.Services
         /// <param name="ct">取消令牌</param>
         /// <returns>响应数据包</returns>
         public async Task<PacketModel> SendCommandAndWaitForResponseAsync<TRequest>(
-            string sessionID, 
-            CommandId commandId, 
-            TRequest request, 
-            int timeoutMs = 30000, 
+            string sessionID,
+            CommandId commandId,
+            TRequest request,
+            int timeoutMs = 30000,
             CancellationToken ct = default)
             where TRequest : class, IRequest
         {
@@ -911,32 +910,32 @@ namespace RUINORERP.Server.Network.Services
                 // 创建任务完成源
                 var tcs = new TaskCompletionSource<PacketModel>();
                 var requestId = request.RequestId;
-                
+
                 // 注册待处理请求
                 _pendingRequests.TryAdd(requestId, tcs);
-                
+
                 try
                 {
                     // 发送命令
                     await SendPacketCoreAsync(sessionInfo, commandId, request, timeoutMs, ct);
-                    
+
                     // 等待响应或超时
                     using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
                     cts.CancelAfter(timeoutMs);
-                    
+
                     var timeoutTask = Task.Delay(timeoutMs, cts.Token);
                     var completedTask = await Task.WhenAny(tcs.Task, timeoutTask);
-                    
+
                     // 从待处理请求中移除
                     _pendingRequests.TryRemove(requestId, out _);
-                    
+
                     if (completedTask == timeoutTask)
                     {
                         throw new TimeoutException($"请求超时（{timeoutMs}ms），指令类型：{commandId.ToString()}，请求ID: {requestId}");
                     }
-                    
+
                     ct.ThrowIfCancellationRequested();
-                    
+
                     return await tcs.Task;
                 }
                 catch (Exception)
@@ -962,9 +961,9 @@ namespace RUINORERP.Server.Network.Services
         /// <param name="ct">取消令牌</param>
         /// <returns>发送是否成功</returns>
         public async Task<bool> SendCommandAsync<TRequest>(
-            string sessionID, 
-            CommandId commandId, 
-            TRequest request, 
+            string sessionID,
+            CommandId commandId,
+            TRequest request,
             CancellationToken ct = default)
             where TRequest : class, IRequest
         {
@@ -976,7 +975,7 @@ namespace RUINORERP.Server.Network.Services
                     return false;
                 }
 
-                if (commandId.FullCode ==0)
+                if (commandId.FullCode == 0)
                 {
                     _logger.LogWarning("发送命令失败：命令为空");
                     return false;
@@ -999,7 +998,7 @@ namespace RUINORERP.Server.Network.Services
                 return false;
             }
         }
-        
+
         /// <summary>
         /// 处理从客户端接收到的响应包
         /// </summary>
@@ -1030,7 +1029,7 @@ namespace RUINORERP.Server.Network.Services
                 _logger?.LogError(ex, "处理客户端响应时发生错误");
             }
         }
-        
+
         /// <summary>
         /// 触发响应事件
         /// </summary>
@@ -1079,7 +1078,7 @@ namespace RUINORERP.Server.Network.Services
         }
         #endregion
 
-    
+
 
         #region ISessionManager 实现 - 统计和监控
 

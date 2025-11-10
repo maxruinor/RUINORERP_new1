@@ -2313,7 +2313,6 @@
     <Compile Include="Network\Services\Cache\CacheRequestManager.cs" />
     <Compile Include="Network\Services\Cache\CacheResponseProcessor.cs" />
     <Compile Include="Network\Services\Cache\CacheUtility.cs" />
-    <Compile Include="Network\Services\Cache\UICacheSubscriptionManager.cs" />
     <Compile Include="Network\Services\FileManagementController.cs" />
     <Compile Include="Network\Services\FileManagementService.cs" />
     <Compile Include="Network\Services\FileStorageInfoService.cs" />

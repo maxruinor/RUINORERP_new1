@@ -28,10 +28,13 @@ namespace RUINORERP.PacketSpec.Commands
         public static readonly CommandId CacheSync = new CommandId(CommandCategory.Cache, (byte)(CommandCatalog.Cache_CacheSync & 0xFF), "CacheSync");
         
         /// <summary>
-        /// 缓存订阅管理 - 用于缓存订阅和取消订阅操作
+        /// 缓存订阅管理 - 用于缓存订阅操作
         /// 通过CacheRequest的SubscribeAction属性区分订阅/取消订阅
         /// </summary>
         public static readonly CommandId CacheSubscription = new CommandId(CommandCategory.Cache, (byte)(CommandCatalog.Cache_CacheSubscription & 0xFF), "CacheSubscription");
+
+       
+
         #endregion
     }
 }

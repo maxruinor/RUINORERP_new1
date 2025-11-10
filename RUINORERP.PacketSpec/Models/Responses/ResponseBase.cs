@@ -16,6 +16,37 @@ namespace RUINORERP.PacketSpec.Models.Responses
     public class ResponseBase : IResponse
     {
         /// <summary>
+        /// 错误类型枚举 - 用于区分不同类型的错误
+        /// </summary>
+        public enum ErrorType
+        {
+            /// <summary>
+            /// 无错误
+            /// </summary>
+            None = 0,
+            
+            /// <summary>
+            /// 业务逻辑错误 - 如验证失败、参数错误等，不应该触发熔断器
+            /// </summary>
+            BusinessError = 1,
+            
+            /// <summary>
+            /// 系统错误 - 如数据库连接失败、服务不可用等，应该触发熔断器
+            /// </summary>
+            SystemError = 2,
+            
+            /// <summary>
+            /// 验证错误 - 如输入参数验证失败，不应该触发熔断器
+            /// </summary>
+            ValidationError = 3,
+            
+            /// <summary>
+            /// 授权错误 - 如权限不足，不应该触发熔断器
+            /// </summary>
+            AuthorizationError = 4
+        }
+
+        /// <summary>
         /// 业务级错误码；0 表示成功
         /// </summary>
         public int ErrorCode { get; set; }
@@ -29,6 +60,11 @@ namespace RUINORERP.PacketSpec.Models.Responses
         /// 操作是否成功
         /// </summary>
         public bool IsSuccess { get; set; }
+
+        /// <summary>
+        /// 错误类型 - 用于区分系统错误和业务错误
+        /// </summary>
+        public ErrorType ResponseErrorType { get; set; }
 
         /// <summary>
         /// 操作结果的通用描述信息；成功或失败时都应提供有意义的描述
@@ -62,6 +98,7 @@ namespace RUINORERP.PacketSpec.Models.Responses
         {
             Timestamp = DateTime.Now;
             Metadata = new Dictionary<string, object>();
+            ResponseErrorType = ErrorType.None;
         }
 
 
@@ -158,6 +195,22 @@ namespace RUINORERP.PacketSpec.Models.Responses
         {
             ExtraData ??= new Dictionary<string, object>();
             ExtraData[key] = value;
+            return this;
+        }
+        
+        /// <summary>
+        /// 设置错误类型和错误信息
+        /// </summary>
+        /// <param name="errorType">错误类型</param>
+        /// <param name="errorMessage">错误信息</param>
+        /// <param name="errorCode">错误码</param>
+        /// <returns>当前响应实例</returns>
+        public ResponseBase WithError(ErrorType errorType, string errorMessage, int errorCode = 400)
+        {
+            this.ResponseErrorType = errorType;
+            this.ErrorMessage = errorMessage;
+            this.ErrorCode = errorCode;
+            this.IsSuccess = false;
             return this;
         }
 

@@ -34,6 +34,15 @@ namespace RUINORERP.Server.Controls
         private System.Windows.Forms.Label cbLblStateChangesValue;
         private System.Windows.Forms.Label cbLblAvgResponseTime;
         private System.Windows.Forms.Label cbLblAvgResponseTimeValue;
+        // 新增的熔断器指标控件声明
+        private System.Windows.Forms.Label cbLblCircuitOpens;
+        private System.Windows.Forms.Label cbLblCircuitOpensValue;
+        private System.Windows.Forms.Label cbLblCircuitCloses;
+        private System.Windows.Forms.Label cbLblCircuitClosesValue;
+        private System.Windows.Forms.Label cbLblCircuitHalfOpens;
+        private System.Windows.Forms.Label cbLblCircuitHalfOpensValue;
+        private System.Windows.Forms.Label cbLblActiveExecutions;
+        private System.Windows.Forms.Label cbLblActiveExecutionsValue;
 
 
 
@@ -103,18 +112,26 @@ namespace RUINORERP.Server.Controls
             lblStatusValue = new System.Windows.Forms.Label();
             lblStatus = new System.Windows.Forms.Label();
             groupBox7 = new System.Windows.Forms.GroupBox();
-            cbLblStatus = new System.Windows.Forms.Label();
-            cbLblStatusValue = new System.Windows.Forms.Label();
-            cbLblTotalRequests = new System.Windows.Forms.Label();
-            cbLblTotalRequestsValue = new System.Windows.Forms.Label();
-            cbLblSuccessRate = new System.Windows.Forms.Label();
-            cbLblSuccessRateValue = new System.Windows.Forms.Label();
-            cbLblFailedRequests = new System.Windows.Forms.Label();
-            cbLblFailedRequestsValue = new System.Windows.Forms.Label();
-            cbLblStateChanges = new System.Windows.Forms.Label();
-            cbLblStateChangesValue = new System.Windows.Forms.Label();
-            cbLblAvgResponseTime = new System.Windows.Forms.Label();
+            cbLblActiveExecutionsValue = new System.Windows.Forms.Label();
+            cbLblActiveExecutions = new System.Windows.Forms.Label();
+            cbLblCircuitHalfOpensValue = new System.Windows.Forms.Label();
+            cbLblCircuitHalfOpens = new System.Windows.Forms.Label();
+            cbLblCircuitClosesValue = new System.Windows.Forms.Label();
+            cbLblCircuitCloses = new System.Windows.Forms.Label();
+            cbLblCircuitOpensValue = new System.Windows.Forms.Label();
+            cbLblCircuitOpens = new System.Windows.Forms.Label();
             cbLblAvgResponseTimeValue = new System.Windows.Forms.Label();
+            cbLblAvgResponseTime = new System.Windows.Forms.Label();
+            cbLblStateChangesValue = new System.Windows.Forms.Label();
+            cbLblStateChanges = new System.Windows.Forms.Label();
+            cbLblFailedRequestsValue = new System.Windows.Forms.Label();
+            cbLblFailedRequests = new System.Windows.Forms.Label();
+            cbLblSuccessRateValue = new System.Windows.Forms.Label();
+            cbLblSuccessRate = new System.Windows.Forms.Label();
+            cbLblTotalRequestsValue = new System.Windows.Forms.Label();
+            cbLblTotalRequests = new System.Windows.Forms.Label();
+            cbLblStatusValue = new System.Windows.Forms.Label();
+            cbLblStatus = new System.Windows.Forms.Label();
             groupBox2 = new System.Windows.Forms.GroupBox();
             lblSystemHealthValue = new System.Windows.Forms.Label();
             lblSystemHealth = new System.Windows.Forms.Label();
@@ -239,7 +256,7 @@ namespace RUINORERP.Server.Controls
             // btnDiagnosticsReport
             // 
             btnDiagnosticsReport.Anchor = System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right;
-            btnDiagnosticsReport.Location = new System.Drawing.Point(18, 196);
+            btnDiagnosticsReport.Location = new System.Drawing.Point(11, 246);
             btnDiagnosticsReport.Margin = new System.Windows.Forms.Padding(4);
             btnDiagnosticsReport.Name = "btnDiagnosticsReport";
             btnDiagnosticsReport.Size = new System.Drawing.Size(88, 33);
@@ -251,7 +268,7 @@ namespace RUINORERP.Server.Controls
             // btnErrorReport
             // 
             btnErrorReport.Anchor = System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right;
-            btnErrorReport.Location = new System.Drawing.Point(204, 196);
+            btnErrorReport.Location = new System.Drawing.Point(197, 246);
             btnErrorReport.Margin = new System.Windows.Forms.Padding(4);
             btnErrorReport.Name = "btnErrorReport";
             btnErrorReport.Size = new System.Drawing.Size(88, 33);
@@ -263,7 +280,7 @@ namespace RUINORERP.Server.Controls
             // btnPerformanceReport
             // 
             btnPerformanceReport.Anchor = System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right;
-            btnPerformanceReport.Location = new System.Drawing.Point(110, 196);
+            btnPerformanceReport.Location = new System.Drawing.Point(103, 246);
             btnPerformanceReport.Margin = new System.Windows.Forms.Padding(4);
             btnPerformanceReport.Name = "btnPerformanceReport";
             btnPerformanceReport.Size = new System.Drawing.Size(88, 33);
@@ -275,7 +292,7 @@ namespace RUINORERP.Server.Controls
             // btnRefresh
             // 
             btnRefresh.Anchor = System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right;
-            btnRefresh.Location = new System.Drawing.Point(18, 252);
+            btnRefresh.Location = new System.Drawing.Point(14, 300);
             btnRefresh.Margin = new System.Windows.Forms.Padding(4);
             btnRefresh.Name = "btnRefresh";
             btnRefresh.Size = new System.Drawing.Size(88, 33);
@@ -287,7 +304,7 @@ namespace RUINORERP.Server.Controls
             // btnResetStats
             // 
             btnResetStats.Anchor = System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right;
-            btnResetStats.Location = new System.Drawing.Point(114, 252);
+            btnResetStats.Location = new System.Drawing.Point(110, 300);
             btnResetStats.Margin = new System.Windows.Forms.Padding(4);
             btnResetStats.Name = "btnResetStats";
             btnResetStats.Size = new System.Drawing.Size(88, 33);
@@ -684,114 +701,113 @@ namespace RUINORERP.Server.Controls
             // 
             // groupBox7
             // 
-            groupBox7.Controls.Add(cbLblStatus);
-            groupBox7.Controls.Add(cbLblStatusValue);
-            groupBox7.Controls.Add(cbLblTotalRequests);
-            groupBox7.Controls.Add(cbLblTotalRequestsValue);
-            groupBox7.Controls.Add(cbLblSuccessRate);
-            groupBox7.Controls.Add(cbLblSuccessRateValue);
-            groupBox7.Controls.Add(cbLblFailedRequests);
-            groupBox7.Controls.Add(cbLblFailedRequestsValue);
-            groupBox7.Controls.Add(cbLblStateChanges);
-            groupBox7.Controls.Add(cbLblStateChangesValue);
-            groupBox7.Controls.Add(cbLblAvgResponseTime);
+            groupBox7.Controls.Add(cbLblActiveExecutionsValue);
+            groupBox7.Controls.Add(cbLblActiveExecutions);
+            groupBox7.Controls.Add(cbLblCircuitHalfOpensValue);
+            groupBox7.Controls.Add(cbLblCircuitHalfOpens);
+            groupBox7.Controls.Add(cbLblCircuitClosesValue);
+            groupBox7.Controls.Add(cbLblCircuitCloses);
+            groupBox7.Controls.Add(cbLblCircuitOpensValue);
+            groupBox7.Controls.Add(cbLblCircuitOpens);
             groupBox7.Controls.Add(cbLblAvgResponseTimeValue);
+            groupBox7.Controls.Add(cbLblAvgResponseTime);
+            groupBox7.Controls.Add(cbLblStateChangesValue);
+            groupBox7.Controls.Add(cbLblStateChanges);
+            groupBox7.Controls.Add(cbLblFailedRequestsValue);
+            groupBox7.Controls.Add(cbLblFailedRequests);
+            groupBox7.Controls.Add(cbLblSuccessRateValue);
+            groupBox7.Controls.Add(cbLblSuccessRate);
+            groupBox7.Controls.Add(cbLblTotalRequestsValue);
+            groupBox7.Controls.Add(cbLblTotalRequests);
+            groupBox7.Controls.Add(cbLblStatusValue);
+            groupBox7.Controls.Add(cbLblStatus);
             groupBox7.Location = new System.Drawing.Point(479, 306);
             groupBox7.Name = "groupBox7";
-            groupBox7.Size = new System.Drawing.Size(642, 259);
+            groupBox7.Size = new System.Drawing.Size(604, 218);
             groupBox7.TabIndex = 25;
             groupBox7.TabStop = false;
             groupBox7.Text = "熔断器监控";
             // 
-            // cbLblStatus
+            // cbLblActiveExecutionsValue
             // 
-            cbLblStatus.AutoSize = true;
-            cbLblStatus.Location = new System.Drawing.Point(10, 25);
-            cbLblStatus.Name = "cbLblStatus";
-            cbLblStatus.Size = new System.Drawing.Size(80, 17);
-            cbLblStatus.TabIndex = 0;
-            cbLblStatus.Text = "熔断器状态：";
+            cbLblActiveExecutionsValue.AutoSize = true;
+            cbLblActiveExecutionsValue.Location = new System.Drawing.Point(530, 90);
+            cbLblActiveExecutionsValue.Name = "cbLblActiveExecutionsValue";
+            cbLblActiveExecutionsValue.Size = new System.Drawing.Size(15, 17);
+            cbLblActiveExecutionsValue.TabIndex = 19;
+            cbLblActiveExecutionsValue.Text = "0";
             // 
-            // cbLblStatusValue
+            // cbLblActiveExecutions
             // 
-            cbLblStatusValue.AutoSize = true;
-            cbLblStatusValue.Location = new System.Drawing.Point(105, 25);
-            cbLblStatusValue.Name = "cbLblStatusValue";
-            cbLblStatusValue.Size = new System.Drawing.Size(32, 17);
-            cbLblStatusValue.TabIndex = 1;
-            cbLblStatusValue.Text = "关闭";
+            cbLblActiveExecutions.AutoSize = true;
+            cbLblActiveExecutions.Location = new System.Drawing.Point(420, 90);
+            cbLblActiveExecutions.Name = "cbLblActiveExecutions";
+            cbLblActiveExecutions.Size = new System.Drawing.Size(104, 17);
+            cbLblActiveExecutions.TabIndex = 18;
+            cbLblActiveExecutions.Text = "当前活跃执行数：";
             // 
-            // cbLblTotalRequests
+            // cbLblCircuitHalfOpensValue
             // 
-            cbLblTotalRequests.AutoSize = true;
-            cbLblTotalRequests.Location = new System.Drawing.Point(200, 25);
-            cbLblTotalRequests.Name = "cbLblTotalRequests";
-            cbLblTotalRequests.Size = new System.Drawing.Size(68, 17);
-            cbLblTotalRequests.TabIndex = 2;
-            cbLblTotalRequests.Text = "总请求数：";
+            cbLblCircuitHalfOpensValue.AutoSize = true;
+            cbLblCircuitHalfOpensValue.Location = new System.Drawing.Point(310, 90);
+            cbLblCircuitHalfOpensValue.Name = "cbLblCircuitHalfOpensValue";
+            cbLblCircuitHalfOpensValue.Size = new System.Drawing.Size(15, 17);
+            cbLblCircuitHalfOpensValue.TabIndex = 17;
+            cbLblCircuitHalfOpensValue.Text = "0";
             // 
-            // cbLblTotalRequestsValue
+            // cbLblCircuitHalfOpens
             // 
-            cbLblTotalRequestsValue.AutoSize = true;
-            cbLblTotalRequestsValue.Location = new System.Drawing.Point(273, 25);
-            cbLblTotalRequestsValue.Name = "cbLblTotalRequestsValue";
-            cbLblTotalRequestsValue.Size = new System.Drawing.Size(15, 17);
-            cbLblTotalRequestsValue.TabIndex = 3;
-            cbLblTotalRequestsValue.Text = "0";
+            cbLblCircuitHalfOpens.AutoSize = true;
+            cbLblCircuitHalfOpens.Location = new System.Drawing.Point(200, 90);
+            cbLblCircuitHalfOpens.Name = "cbLblCircuitHalfOpens";
+            cbLblCircuitHalfOpens.Size = new System.Drawing.Size(104, 17);
+            cbLblCircuitHalfOpens.TabIndex = 16;
+            cbLblCircuitHalfOpens.Text = "熔断器半开次数：";
             // 
-            // cbLblSuccessRate
+            // cbLblCircuitClosesValue
             // 
-            cbLblSuccessRate.AutoSize = true;
-            cbLblSuccessRate.Location = new System.Drawing.Point(350, 25);
-            cbLblSuccessRate.Name = "cbLblSuccessRate";
-            cbLblSuccessRate.Size = new System.Drawing.Size(56, 17);
-            cbLblSuccessRate.TabIndex = 4;
-            cbLblSuccessRate.Text = "成功率：";
+            cbLblCircuitClosesValue.AutoSize = true;
+            cbLblCircuitClosesValue.Location = new System.Drawing.Point(110, 90);
+            cbLblCircuitClosesValue.Name = "cbLblCircuitClosesValue";
+            cbLblCircuitClosesValue.Size = new System.Drawing.Size(15, 17);
+            cbLblCircuitClosesValue.TabIndex = 15;
+            cbLblCircuitClosesValue.Text = "0";
             // 
-            // cbLblSuccessRateValue
+            // cbLblCircuitCloses
             // 
-            cbLblSuccessRateValue.AutoSize = true;
-            cbLblSuccessRateValue.Location = new System.Drawing.Point(411, 25);
-            cbLblSuccessRateValue.Name = "cbLblSuccessRateValue";
-            cbLblSuccessRateValue.Size = new System.Drawing.Size(40, 17);
-            cbLblSuccessRateValue.TabIndex = 5;
-            cbLblSuccessRateValue.Text = "100%";
+            cbLblCircuitCloses.AutoSize = true;
+            cbLblCircuitCloses.Location = new System.Drawing.Point(10, 90);
+            cbLblCircuitCloses.Name = "cbLblCircuitCloses";
+            cbLblCircuitCloses.Size = new System.Drawing.Size(104, 17);
+            cbLblCircuitCloses.TabIndex = 14;
+            cbLblCircuitCloses.Text = "熔断器关闭次数：";
             // 
-            // cbLblFailedRequests
+            // cbLblCircuitOpensValue
             // 
-            cbLblFailedRequests.AutoSize = true;
-            cbLblFailedRequests.Location = new System.Drawing.Point(480, 25);
-            cbLblFailedRequests.Name = "cbLblFailedRequests";
-            cbLblFailedRequests.Size = new System.Drawing.Size(80, 17);
-            cbLblFailedRequests.TabIndex = 6;
-            cbLblFailedRequests.Text = "失败请求数：";
+            cbLblCircuitOpensValue.AutoSize = true;
+            cbLblCircuitOpensValue.Location = new System.Drawing.Point(490, 60);
+            cbLblCircuitOpensValue.Name = "cbLblCircuitOpensValue";
+            cbLblCircuitOpensValue.Size = new System.Drawing.Size(15, 17);
+            cbLblCircuitOpensValue.TabIndex = 13;
+            cbLblCircuitOpensValue.Text = "0";
             // 
-            // cbLblFailedRequestsValue
+            // cbLblCircuitOpens
             // 
-            cbLblFailedRequestsValue.AutoSize = true;
-            cbLblFailedRequestsValue.Location = new System.Drawing.Point(575, 25);
-            cbLblFailedRequestsValue.Name = "cbLblFailedRequestsValue";
-            cbLblFailedRequestsValue.Size = new System.Drawing.Size(15, 17);
-            cbLblFailedRequestsValue.TabIndex = 7;
-            cbLblFailedRequestsValue.Text = "0";
+            cbLblCircuitOpens.AutoSize = true;
+            cbLblCircuitOpens.Location = new System.Drawing.Point(390, 60);
+            cbLblCircuitOpens.Name = "cbLblCircuitOpens";
+            cbLblCircuitOpens.Size = new System.Drawing.Size(104, 17);
+            cbLblCircuitOpens.TabIndex = 12;
+            cbLblCircuitOpens.Text = "熔断器打开次数：";
             // 
-            // cbLblStateChanges
+            // cbLblAvgResponseTimeValue
             // 
-            cbLblStateChanges.AutoSize = true;
-            cbLblStateChanges.Location = new System.Drawing.Point(10, 60);
-            cbLblStateChanges.Name = "cbLblStateChanges";
-            cbLblStateChanges.Size = new System.Drawing.Size(92, 17);
-            cbLblStateChanges.TabIndex = 8;
-            cbLblStateChanges.Text = "状态变化次数：";
-            // 
-            // cbLblStateChangesValue
-            // 
-            cbLblStateChangesValue.AutoSize = true;
-            cbLblStateChangesValue.Location = new System.Drawing.Point(129, 60);
-            cbLblStateChangesValue.Name = "cbLblStateChangesValue";
-            cbLblStateChangesValue.Size = new System.Drawing.Size(15, 17);
-            cbLblStateChangesValue.TabIndex = 9;
-            cbLblStateChangesValue.Text = "0";
+            cbLblAvgResponseTimeValue.AutoSize = true;
+            cbLblAvgResponseTimeValue.Location = new System.Drawing.Point(295, 60);
+            cbLblAvgResponseTimeValue.Name = "cbLblAvgResponseTimeValue";
+            cbLblAvgResponseTimeValue.Size = new System.Drawing.Size(32, 17);
+            cbLblAvgResponseTimeValue.TabIndex = 11;
+            cbLblAvgResponseTimeValue.Text = "0ms";
             // 
             // cbLblAvgResponseTime
             // 
@@ -802,14 +818,95 @@ namespace RUINORERP.Server.Controls
             cbLblAvgResponseTime.TabIndex = 10;
             cbLblAvgResponseTime.Text = "平均响应时间：";
             // 
-            // cbLblAvgResponseTimeValue
+            // cbLblStateChangesValue
             // 
-            cbLblAvgResponseTimeValue.AutoSize = true;
-            cbLblAvgResponseTimeValue.Location = new System.Drawing.Point(295, 60);
-            cbLblAvgResponseTimeValue.Name = "cbLblAvgResponseTimeValue";
-            cbLblAvgResponseTimeValue.Size = new System.Drawing.Size(32, 17);
-            cbLblAvgResponseTimeValue.TabIndex = 11;
-            cbLblAvgResponseTimeValue.Text = "0ms";
+            cbLblStateChangesValue.AutoSize = true;
+            cbLblStateChangesValue.Location = new System.Drawing.Point(129, 60);
+            cbLblStateChangesValue.Name = "cbLblStateChangesValue";
+            cbLblStateChangesValue.Size = new System.Drawing.Size(15, 17);
+            cbLblStateChangesValue.TabIndex = 9;
+            cbLblStateChangesValue.Text = "0";
+            // 
+            // cbLblStateChanges
+            // 
+            cbLblStateChanges.AutoSize = true;
+            cbLblStateChanges.Location = new System.Drawing.Point(10, 60);
+            cbLblStateChanges.Name = "cbLblStateChanges";
+            cbLblStateChanges.Size = new System.Drawing.Size(92, 17);
+            cbLblStateChanges.TabIndex = 8;
+            cbLblStateChanges.Text = "状态变化次数：";
+            // 
+            // cbLblFailedRequestsValue
+            // 
+            cbLblFailedRequestsValue.AutoSize = true;
+            cbLblFailedRequestsValue.Location = new System.Drawing.Point(575, 25);
+            cbLblFailedRequestsValue.Name = "cbLblFailedRequestsValue";
+            cbLblFailedRequestsValue.Size = new System.Drawing.Size(15, 17);
+            cbLblFailedRequestsValue.TabIndex = 7;
+            cbLblFailedRequestsValue.Text = "0";
+            // 
+            // cbLblFailedRequests
+            // 
+            cbLblFailedRequests.AutoSize = true;
+            cbLblFailedRequests.Location = new System.Drawing.Point(480, 25);
+            cbLblFailedRequests.Name = "cbLblFailedRequests";
+            cbLblFailedRequests.Size = new System.Drawing.Size(80, 17);
+            cbLblFailedRequests.TabIndex = 6;
+            cbLblFailedRequests.Text = "失败请求数：";
+            // 
+            // cbLblSuccessRateValue
+            // 
+            cbLblSuccessRateValue.AutoSize = true;
+            cbLblSuccessRateValue.Location = new System.Drawing.Point(411, 25);
+            cbLblSuccessRateValue.Name = "cbLblSuccessRateValue";
+            cbLblSuccessRateValue.Size = new System.Drawing.Size(40, 17);
+            cbLblSuccessRateValue.TabIndex = 5;
+            cbLblSuccessRateValue.Text = "100%";
+            // 
+            // cbLblSuccessRate
+            // 
+            cbLblSuccessRate.AutoSize = true;
+            cbLblSuccessRate.Location = new System.Drawing.Point(350, 25);
+            cbLblSuccessRate.Name = "cbLblSuccessRate";
+            cbLblSuccessRate.Size = new System.Drawing.Size(56, 17);
+            cbLblSuccessRate.TabIndex = 4;
+            cbLblSuccessRate.Text = "成功率：";
+            // 
+            // cbLblTotalRequestsValue
+            // 
+            cbLblTotalRequestsValue.AutoSize = true;
+            cbLblTotalRequestsValue.Location = new System.Drawing.Point(273, 25);
+            cbLblTotalRequestsValue.Name = "cbLblTotalRequestsValue";
+            cbLblTotalRequestsValue.Size = new System.Drawing.Size(15, 17);
+            cbLblTotalRequestsValue.TabIndex = 3;
+            cbLblTotalRequestsValue.Text = "0";
+            // 
+            // cbLblTotalRequests
+            // 
+            cbLblTotalRequests.AutoSize = true;
+            cbLblTotalRequests.Location = new System.Drawing.Point(200, 25);
+            cbLblTotalRequests.Name = "cbLblTotalRequests";
+            cbLblTotalRequests.Size = new System.Drawing.Size(68, 17);
+            cbLblTotalRequests.TabIndex = 2;
+            cbLblTotalRequests.Text = "总请求数：";
+            // 
+            // cbLblStatusValue
+            // 
+            cbLblStatusValue.AutoSize = true;
+            cbLblStatusValue.Location = new System.Drawing.Point(105, 25);
+            cbLblStatusValue.Name = "cbLblStatusValue";
+            cbLblStatusValue.Size = new System.Drawing.Size(32, 17);
+            cbLblStatusValue.TabIndex = 1;
+            cbLblStatusValue.Text = "关闭";
+            // 
+            // cbLblStatus
+            // 
+            cbLblStatus.AutoSize = true;
+            cbLblStatus.Location = new System.Drawing.Point(10, 25);
+            cbLblStatus.Name = "cbLblStatus";
+            cbLblStatus.Size = new System.Drawing.Size(80, 17);
+            cbLblStatus.TabIndex = 0;
+            cbLblStatus.Text = "熔断器状态：";
             // 
             // groupBox2
             // 
@@ -1463,6 +1560,6 @@ namespace RUINORERP.Server.Controls
         private System.Windows.Forms.Button btnErrorReport;
         private System.Windows.Forms.Button btnPerformanceReport;
         private System.Windows.Forms.Button btnDiagnosticsReport;
-       
+     
     }
 }

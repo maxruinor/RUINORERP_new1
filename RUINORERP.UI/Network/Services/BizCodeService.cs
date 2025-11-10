@@ -62,7 +62,7 @@ namespace RUINORERP.UI.Network.Services
             {
                 return response.GeneratedCode;
             }
-            throw new Exception(response.ErrorMessage ?? "生成业务单据编号失败");
+            throw new Exception(response.ErrorMessage ?? "生成业务单据编号失败,请重试。");
         }
 
         /// <summary>

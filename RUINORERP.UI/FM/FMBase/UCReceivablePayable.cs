@@ -53,6 +53,7 @@ using RUINORERP.Business.StatusManagerService;
 using FastReport;
 using FastReport.Data;
 using RUINORERP.Extensions.Middlewares;
+using NPOI.SS.Formula.Functions;
 
 namespace RUINORERP.UI.FM
 {
@@ -187,10 +188,85 @@ namespace RUINORERP.UI.FM
             DataBindingHelper.InitDataToCmb<tb_Employee>(k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
             DataBindingHelper.InitDataToCmb<tb_Currency>(k => k.Currency_ID, v => v.CurrencyName, cmbCurrency_ID);
         }
-        //internal override void LoadDataToUI(object Entity)
-        //{
-        //    BindData(Entity as tb_FM_ReceivablePayable);
-        //}
+
+        /// <summary>
+        /// 统一处理收款信息的加载逻辑
+        /// </summary>
+        /// <param name="entity">应收应付实体</param>
+        private void LoadPayeeInfo(tb_FM_ReceivablePayable entity)
+        {
+            // 创建表达式 - 使用SqlSugar的Expressionable
+            var expressionable = Expressionable.Create<tb_FM_PayeeInfo>()
+                            .And(t => t.Is_enabled == true);
+
+            if (entity.CustomerVendor_ID > 0)
+            {
+                // 使用SqlSugar的Expressionable继续添加条件
+                expressionable = expressionable.And(t => t.CustomerVendor_ID == entity.CustomerVendor_ID);
+            }
+
+            // 最后转换为表达式
+            Expression<Func<tb_FM_PayeeInfo, bool>> lambdaPayeeInfo = expressionable.ToExpression();
+
+            BaseProcessor baseProcessorPayeeInfo = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_FM_PayeeInfo).Name + "Processor");
+            QueryFilter queryFilterPayeeInfo = baseProcessorPayeeInfo.GetQueryFilter();
+            queryFilterPayeeInfo.FilterLimitExpressions.Add(lambdaPayeeInfo);
+
+            // 根据单据状态决定是否允许编辑
+            bool canEdit = entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改 ||
+                          (entity.ARAPStatus == (int)ARAPStatus.草稿) || (entity.ARAPStatus == (int)ARAPStatus.待审核);
+
+            DataBindingHelper.InitFilterForControlByExpCanEdit<tb_FM_PayeeInfo>(entity, cmbPayeeInfoID, c => c.DisplayText, queryFilterPayeeInfo, canEdit);
+
+            // 设置默认值（如果允许编辑且没有选择值）
+            if (canEdit && entity.PayeeInfoID == null)
+            {
+                //设置一个默认值 如果有默认收款账号时
+                var payeeInfoList = cmbPayeeInfoID.Items.CastToList<tb_FM_PayeeInfo>().Where(c => c.PayeeInfoID != -1).ToList();
+                if (!payeeInfoList.Any(c => c.PayeeInfoID == entity.PayeeInfoID))
+                {
+                    if (payeeInfoList.FirstOrDefault(c => c.IsDefault) != null)
+                    {
+                        entity.PayeeInfoID = payeeInfoList.FirstOrDefault(c => c.IsDefault).PayeeInfoID;
+                        btnInfo.Tag = payeeInfoList.FirstOrDefault(c => c.IsDefault);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// 加载收款信息详情
+        /// </summary>
+        /// <param name="entity">应收应付实体</param>
+        private async Task LoadPayeeInfoDetailAsync(tb_FM_ReceivablePayable entity)
+        {
+            if (entity.PayeeInfoID > 0)
+            {
+                tb_FM_PayeeInfo payeeInfo = null;
+                var obj = RUINORERP.Business.Cache.EntityCacheHelper.GetEntity<tb_FM_PayeeInfo>(entity.PayeeInfoID);
+                if (obj != null && obj is tb_FM_PayeeInfo)
+                {
+                    payeeInfo = (tb_FM_PayeeInfo)obj;
+                }
+                else
+                {
+                    //直接加载 不用缓存
+                    payeeInfo = await MainForm.Instance.AppContext.Db.Queryable<tb_FM_PayeeInfo>().Where(c => c.PayeeInfoID == entity.PayeeInfoID).FirstAsync();
+                }
+
+                if (payeeInfo != null)
+                {
+                    btnInfo.Tag = payeeInfo;
+                    btnInfo.Visible = !string.IsNullOrEmpty(payeeInfo.PaymentCodeImagePath);
+                }
+            }
+            else
+            {
+                btnInfo.Tag = string.Empty;
+                btnInfo.Visible = false;
+            }
+        }
+
         public override void BindData(tb_FM_ReceivablePayable entity, ActionStatus actionStatus)
         {
             if (entity == null)
@@ -218,31 +294,31 @@ namespace RUINORERP.UI.FM
                 }
                 entity.PrimaryKeyID = entity.ARAPId;
                 entity.ActionStatus = ActionStatus.加载;
-                //如果审核了，审核要灰色
-                if (entity.CustomerVendor_ID > 0)
-                {
-                    #region 收款信息可以根据往来单位带出 ，并且可以添加
+                ////如果审核了，审核要灰色
+                //if (entity.CustomerVendor_ID > 0)
+                //{
+                //    #region 收款信息可以根据往来单位带出 ，并且可以添加
 
-                    //创建表达式
-                    var lambdaPayeeInfo = Expressionable.Create<tb_FM_PayeeInfo>()
-                                .And(t => t.Is_enabled == true)
-                                .And(t => t.CustomerVendor_ID == entity.CustomerVendor_ID)
-                                .ToExpression();//注意 这一句 不能少
-                    BaseProcessor baseProcessorPayeeInfo = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_FM_PayeeInfo).Name + "Processor");
-                    QueryFilter queryFilterPayeeInfo = baseProcessorPayeeInfo.GetQueryFilter();
-                    queryFilterPayeeInfo.FilterLimitExpressions.Add(lambdaPayeeInfo);
+                //    //创建表达式
+                //    var lambdaPayeeInfo = Expressionable.Create<tb_FM_PayeeInfo>()
+                //                .And(t => t.Is_enabled == true)
+                //                .And(t => t.CustomerVendor_ID == entity.CustomerVendor_ID)
+                //                .ToExpression();//注意 这一句 不能少
+                //    BaseProcessor baseProcessorPayeeInfo = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_FM_PayeeInfo).Name + "Processor");
+                //    QueryFilter queryFilterPayeeInfo = baseProcessorPayeeInfo.GetQueryFilter();
+                //    queryFilterPayeeInfo.FilterLimitExpressions.Add(lambdaPayeeInfo);
 
-                    DataBindingHelper.BindData4Cmb<tb_FM_PayeeInfo>(entity, k => k.PayeeInfoID, v => v.DisplayText, cmbPayeeInfoID, queryFilterPayeeInfo.GetFilterExpression<tb_FM_PayeeInfo>(), true);
-                    DataBindingHelper.InitFilterForControlByExpCanEdit<tb_FM_PayeeInfo>(entity, cmbPayeeInfoID, c => c.DisplayText, queryFilterPayeeInfo, true);
+                //    DataBindingHelper.BindData4Cmb<tb_FM_PayeeInfo>(entity, k => k.PayeeInfoID, v => v.DisplayText, cmbPayeeInfoID, queryFilterPayeeInfo.GetFilterExpression<tb_FM_PayeeInfo>(), true);
+                //    DataBindingHelper.InitFilterForControlByExpCanEdit<tb_FM_PayeeInfo>(entity, cmbPayeeInfoID, c => c.DisplayText, queryFilterPayeeInfo, true);
 
 
-                    #endregion
-                }
-                else
-                {
-                    //清空
-                    cmbPayeeInfoID.DataBindings.Clear();
-                }
+                //    #endregion
+                //}
+                //else
+                //{
+                //    //清空
+                //    cmbPayeeInfoID.DataBindings.Clear();
+                //}
 
                 //如果状态是已经生效才可能有审核，如果是待收款 才可能有反审
                 if (entity.ARAPStatus == (int)ARAPStatus.待审核)
@@ -382,19 +458,8 @@ namespace RUINORERP.UI.FM
                 //uIBaseTool.AddEditableQueryControl<tb_Employee>(cmbEmployee_ID, false);
 
                 #region 收款信息 ，并且可以添加
-
-                //创建表达式
-                var lambdaPayeeInfo = Expressionable.Create<tb_FM_PayeeInfo>()
-                                .And(t => t.Is_enabled == true)
-                                .And(t => t.Employee_ID == AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了只能处理自己 的收款信息
-                                .ToExpression();//注意 这一句 不能少
-
-                BaseProcessor baseProcessorPayeeInfo = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_FM_PayeeInfo).Name + "Processor");
-                QueryFilter queryFilterPayeeInfo = baseProcessorPayeeInfo.GetQueryFilter();
-                queryFilterPayeeInfo.FilterLimitExpressions.Add(lambdaPayeeInfo);
-
-                DataBindingHelper.InitFilterForControlByExpCanEdit<tb_FM_PayeeInfo>(entity, cmbPayeeInfoID, c => c.DisplayText, queryFilterPayeeInfo, true);
-
+                // 使用统一方法加载收款信息
+                LoadPayeeInfo(entity);
                 #endregion
 
 
@@ -438,36 +503,9 @@ namespace RUINORERP.UI.FM
                 }
 
                 #region 收款信息可以根据往来单位带出 ，并且可以添加
-
-                //创建表达式
-                var lambdaPayeeInfo = Expressionable.Create<tb_FM_PayeeInfo>()
-                            .And(t => t.Is_enabled == true)
-                            .And(t => t.CustomerVendor_ID == entity.CustomerVendor_ID)
-                            .ToExpression();//注意 这一句 不能少
-                BaseProcessor baseProcessorPayeeInfo = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_FM_PayeeInfo).Name + "Processor");
-                QueryFilter queryFilterPayeeInfo = baseProcessorPayeeInfo.GetQueryFilter();
-                queryFilterPayeeInfo.FilterLimitExpressions.Add(lambdaPayeeInfo);
-
-                DataBindingHelper.BindData4Cmb<tb_FM_PayeeInfo>(entity, k => k.PayeeInfoID, v => v.DisplayText, cmbPayeeInfoID, queryFilterPayeeInfo.GetFilterExpression<tb_FM_PayeeInfo>(), true);
-                DataBindingHelper.InitFilterForControlByExpCanEdit<tb_FM_PayeeInfo>(entity, cmbPayeeInfoID, c => c.DisplayText, queryFilterPayeeInfo, true);
-
-
+                // 使用统一方法加载收款信息
+                LoadPayeeInfo(entity);
                 #endregion
-                if (entity.PayeeInfoID == null && (entity.ARAPStatus == (int)ARAPStatus.草稿) || (true && entity.ARAPStatus == (int)ARAPStatus.待审核))
-                {
-
-                    //设置一个默认值 如果有默认收款账号时
-                    //如果原来的值，在下拉集合中，则不变。说明是对应厂商的收款信息。如果不是，则看有不有设置默认值
-                    var payeeInfoList = cmbPayeeInfoID.Items.CastToList<tb_FM_PayeeInfo>().Where(c => c.PayeeInfoID != -1).ToList();
-                    if (!payeeInfoList.Any(c => c.PayeeInfoID == entity.PayeeInfoID))
-                    {
-                        if (payeeInfoList.FirstOrDefault(c => c.IsDefault) != null)
-                        {
-                            entity.PayeeInfoID = payeeInfoList.FirstOrDefault(c => c.IsDefault).PayeeInfoID;
-                            btnInfo.Tag = payeeInfoList.FirstOrDefault(c => c.IsDefault);
-                        }
-                    }
-                }
 
 
 
@@ -497,40 +535,12 @@ namespace RUINORERP.UI.FM
 
                     if (s2.PropertyName == entity.GetPropertyName<tb_FM_ReceivablePayable>(c => c.PayeeInfoID))
                     {
-                        cmbPayeeInfoID.Enabled = true;
-                        //加载收款信息
-                        if (entity.PayeeInfoID > 0)
-                        {
-                            tb_FM_PayeeInfo payeeInfo = null;
-                            var obj = RUINORERP.Business.Cache.EntityCacheHelper.GetEntity<tb_FM_PayeeInfo>(entity.PayeeInfoID);
-                            if (obj != null)
-                            {
-                                if (obj is tb_FM_PayeeInfo cv)
-                                {
-                                    payeeInfo = cv;
-                                }
-                            }
-                            else
-                            {
-                                //直接加载 不用缓存
-                                payeeInfo = await MainForm.Instance.AppContext.Db.Queryable<tb_FM_PayeeInfo>().Where(c => c.PayeeInfoID == entity.PayeeInfoID).FirstAsync();
-                            }
-                            if (payeeInfo != null)
-                            {
+                        // 根据单据状态决定是否启用下拉控件
+                        cmbPayeeInfoID.Enabled = entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改 ||
+                                              (entity.ARAPStatus == (int)ARAPStatus.草稿) || (entity.ARAPStatus == (int)ARAPStatus.待审核);
 
-                                if (!string.IsNullOrEmpty(payeeInfo.PaymentCodeImagePath))
-                                {
-                                    btnInfo.Tag = payeeInfo;
-                                    btnInfo.Visible = true;
-                                }
-                                else
-                                {
-                                    btnInfo.Tag = string.Empty;
-                                    btnInfo.Visible = false;
-                                }
-                            }
-                        }
-
+                        // 加载收款信息详情
+                        await LoadPayeeInfoDetailAsync(entity);
                     }
 
                 }
@@ -539,14 +549,24 @@ namespace RUINORERP.UI.FM
                 if (entity.CustomerVendor_ID > 0 && s2.PropertyName == entity.GetPropertyName<tb_FM_ReceivablePayable>(c => c.CustomerVendor_ID))
                 {
                     var obj = RUINORERP.Business.Cache.EntityCacheHelper.GetEntity<tb_CustomerVendor>(entity.CustomerVendor_ID);
-                    if (obj != null && obj.ToString() != "System.Object")
+                    if (obj != null)
                     {
                         if (obj is tb_CustomerVendor cv)
                         {
-                            // entity.DueDate = System.DateTime.Now.AddDays(cv.CreditDays);
+                            if (entity.ReceivePaymentType == (int)ReceivePaymentType.收款 && cv.CustomerCreditDays.HasValue)
+                            {
+                                entity.DueDate = System.DateTime.Now.AddDays(cv.CustomerCreditDays.Value);
+                            }
+                            if (entity.ReceivePaymentType == (int)ReceivePaymentType.付款 && cv.SupplierCreditDays.HasValue)
+                            {
+                                entity.DueDate = System.DateTime.Now.AddDays(cv.SupplierCreditDays.Value);
+                            }
+                            //换往来单位了。对应的收款信息要重置 
+                            entity.PayeeInfoID = null;
+                             LoadPayeeInfo(entity);
+                            //await LoadPayeeInfoDetailAsync(entity);
                         }
                     }
-                    //entity.DueDate = System.DateTime.Now;
                 }
                 if (entity.Currency_ID > 0 && s2.PropertyName == entity.GetPropertyName<tb_FM_ReceivablePayable>(c => c.Currency_ID))
                 {
@@ -784,8 +804,6 @@ namespace RUINORERP.UI.FM
         /// </summary>
         public override void QueryConditionBuilder()
         {
-            //BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_FM_ReceivablePayable).Name + "Processor");
-            //QueryConditionFilter = baseProcessor.GetQueryFilter();
             base.QueryConditionBuilder();
             //创建表达式
             var lambda = Expressionable.Create<tb_FM_ReceivablePayable>()

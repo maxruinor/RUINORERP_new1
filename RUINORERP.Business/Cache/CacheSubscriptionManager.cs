@@ -137,7 +137,7 @@ namespace RUINORERP.Business.Cache
             }
 
 
-            _logger.LogInformation("会话 {SessionId} 的所有订阅已取消，共 {RemovedCount} 个表",
+            _logger.LogDebug("会话 {SessionId} 的所有订阅已取消，共 {RemovedCount} 个表",
                 sessionId, removedCount);
 
             return removedCount;

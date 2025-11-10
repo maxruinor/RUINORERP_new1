@@ -1,10 +1,9 @@
 ﻿
 // **************************************
-// 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/08/2025 13:45:36
+// 时间：11/10/2025 23:38:12
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -13,6 +12,7 @@ using RUINORERP.Model;
 using FluentValidation;
 using RUINORERP.Model.ConfigModel;
 using Microsoft.Extensions.Options;
+using RUINORERP.Model.Context;
 
 //https://github.com/FluentValidation/FluentValidation 使用实例
 //https://blog.csdn.net/WuLex/article/details/127985756 中文教程
@@ -27,21 +27,22 @@ namespace RUINORERP.Business
     public partial class tb_FM_SubjectValidator:BaseValidatorGeneric<tb_FM_Subject>
     {
      
-     //配置全局参数
-     public readonly IOptionsMonitor<GlobalValidatorConfig> ValidatorConfig;
-    
-     public tb_FM_SubjectValidator(IOptionsMonitor<GlobalValidatorConfig> config)
+
+     public tb_FM_SubjectValidator(ApplicationContext appContext = null) : base(appContext)
      {
-     
-        ValidatorConfig = config;
         
  
         
      
  RuleFor(tb_FM_Subject =>tb_FM_Subject.Parent_subject_id).NotEmpty().When(x => x.Parent_subject_id.HasValue);
 
+ RuleFor(tb_FM_Subject =>tb_FM_Subject.subject_code).MaximumMixedLength(50).WithMessage("科目代码:不能超过最大长度,50.");
+ RuleFor(tb_FM_Subject =>tb_FM_Subject.subject_code).NotEmpty().WithMessage("科目代码:不能为空。");
 
+ RuleFor(tb_FM_Subject =>tb_FM_Subject.subject_name).MaximumMixedLength(100).WithMessage("科目名称:不能超过最大长度,100.");
+ RuleFor(tb_FM_Subject =>tb_FM_Subject.subject_name).NotEmpty().WithMessage("科目名称:不能为空。");
 
+ RuleFor(tb_FM_Subject =>tb_FM_Subject.subject_en_name).MaximumMixedLength(100).WithMessage("科目名称:不能超过最大长度,100.");
 
 //***** 
  RuleFor(tb_FM_Subject =>tb_FM_Subject.Subject_Type).NotNull().WithMessage("科目类型:不能为空。");

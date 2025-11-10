@@ -466,7 +466,7 @@ namespace RUINORERP.Business.Config
             {
                 var service = GetGenericConfigService<T>();
                 service.ConfigChanged += handler;
-                _logger.LogInformation("已注册配置变更事件处理器: {ConfigType}", typeof(T).Name);
+                _logger.LogDebug("已注册配置变更事件处理器: {ConfigType}", typeof(T).Name);
             }
             catch (Exception ex)
             {
@@ -486,7 +486,7 @@ namespace RUINORERP.Business.Config
             {
                 var service = GetGenericConfigService<T>();
                 service.ConfigChanged -= handler;
-                _logger.LogInformation("已注销配置变更事件处理器: {ConfigType}", typeof(T).Name);
+                _logger.LogDebug("已注销配置变更事件处理器: {ConfigType}", typeof(T).Name);
             }
             catch (Exception ex)
             {

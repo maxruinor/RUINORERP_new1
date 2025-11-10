@@ -43,7 +43,7 @@ namespace RUINORERP.Business
                  {
                      //根据配置判断平台单是不是必须勾选
                      //实际情况是 保存时可能不清楚交期，保存后截图发给供应商后才知道。这时提交才要求
-                     if (ValidatorConfig.CurrentValue.IsFromPlatform)
+                     if (ValidatorConfig.IsFromPlatform)
                      {
                          //只是默认值。不能强制选择
                          //if (Order.IsFromPlatform)
@@ -78,7 +78,7 @@ namespace RUINORERP.Business
           {
               //根据配置判断平台单是不是必须勾选
               //实际情况是 保存时可能不清楚交期，保存后截图发给供应商后才知道。这时提交才要求
-              if (ValidatorConfig.CurrentValue.IsFromPlatform)
+              if (ValidatorConfig.IsFromPlatform)
               {
                   //只是默认值。不能强制选择
                   //if (Order.IsFromPlatform)

@@ -1,10 +1,9 @@
 ﻿
 // **************************************
-// 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/08/2025 13:46:02
+// 时间：11/10/2025 23:38:19
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -13,6 +12,7 @@ using RUINORERP.Model;
 using FluentValidation;
 using RUINORERP.Model.ConfigModel;
 using Microsoft.Extensions.Options;
+using RUINORERP.Model.Context;
 
 //https://github.com/FluentValidation/FluentValidation 使用实例
 //https://blog.csdn.net/WuLex/article/details/127985756 中文教程
@@ -27,13 +27,9 @@ namespace RUINORERP.Business
     public partial class tb_ProductTypeValidator:BaseValidatorGeneric<tb_ProductType>
     {
      
-     //配置全局参数
-     public readonly IOptionsMonitor<GlobalValidatorConfig> ValidatorConfig;
-    
-     public tb_ProductTypeValidator(IOptionsMonitor<GlobalValidatorConfig> config)
+
+     public tb_ProductTypeValidator(ApplicationContext appContext = null) : base(appContext)
      {
-     
-        ValidatorConfig = config;
         
  
         
@@ -61,16 +57,7 @@ namespace RUINORERP.Business
         }
         
 
-        //private bool DetailedRecordsNotEmpty(List<tb_ProdConversionDetail> details)
-        //{
-        //    bool rs = true;
-        //    if (details == null || details.Count == 0)
-        //    {
-        //        return false;
-        //    }
-        //    return rs;
-        //}
-        
+      
 
 
 

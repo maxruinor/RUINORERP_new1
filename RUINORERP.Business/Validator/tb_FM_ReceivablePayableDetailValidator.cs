@@ -1,10 +1,9 @@
 ﻿
 // **************************************
-// 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/06/2025 15:41:53
+// 时间：11/10/2025 23:38:12
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -13,6 +12,7 @@ using RUINORERP.Model;
 using FluentValidation;
 using RUINORERP.Model.ConfigModel;
 using Microsoft.Extensions.Options;
+using RUINORERP.Model.Context;
 
 //https://github.com/FluentValidation/FluentValidation 使用实例
 //https://blog.csdn.net/WuLex/article/details/127985756 中文教程
@@ -27,13 +27,9 @@ namespace RUINORERP.Business
     public partial class tb_FM_ReceivablePayableDetailValidator:BaseValidatorGeneric<tb_FM_ReceivablePayableDetail>
     {
      
-     //配置全局参数
-     public readonly IOptionsMonitor<GlobalValidatorConfig> ValidatorConfig;
-    
-     public tb_FM_ReceivablePayableDetailValidator(IOptionsMonitor<GlobalValidatorConfig> config)
+
+     public tb_FM_ReceivablePayableDetailValidator(ApplicationContext appContext = null) : base(appContext)
      {
-     
-        ValidatorConfig = config;
         
  
         
@@ -45,6 +41,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_FM_ReceivablePayableDetail =>tb_FM_ReceivablePayableDetail.property).MaximumMixedLength(255).WithMessage("属性:不能超过最大长度,255.");
 
+ RuleFor(tb_FM_ReceivablePayableDetail =>tb_FM_ReceivablePayableDetail.ExpenseType_id).Must(CheckForeignKeyValueCanNull).WithMessage("费用类型:下拉选择值不正确。");
  RuleFor(tb_FM_ReceivablePayableDetail =>tb_FM_ReceivablePayableDetail.ExpenseType_id).NotEmpty().When(x => x.ExpenseType_id.HasValue);
 
  RuleFor(tb_FM_ReceivablePayableDetail =>tb_FM_ReceivablePayableDetail.ExpenseDescription).MaximumMixedLength(300).WithMessage("费用说明:不能超过最大长度,300.");

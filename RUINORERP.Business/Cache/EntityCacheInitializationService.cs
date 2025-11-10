@@ -83,7 +83,7 @@ namespace RUINORERP.Business.Cache
                     }
                 }
 
-                _logger.LogInformation($"缓存初始化完成: 成功 {successCount} 个表, 失败 {failedCount} 个表");
+                _logger.LogDebug($"缓存初始化完成: 成功 {successCount} 个表, 失败 {failedCount} 个表");
             }
             catch (Exception ex)
             {

@@ -46,7 +46,7 @@ namespace RUINORERP.WF.WFApproval.Steps
             // request.Body = Body;
             // await _mailService.SendAsync(request);
             Console.WriteLine($"Your request document has been rejected by {Approver}! DocumentName:{DocumentName},Send mail to:{To}");
-            _logger.LogInformation($"Your request document has been rejected by {Approver}! DocumentName:{DocumentName},Send mail to:{To}");
+            _logger.LogDebug($"Your request document has been rejected by {Approver}! DocumentName:{DocumentName},Send mail to:{To}");
 
             //var approval = _context.ApprovalDatas.FirstOrDefault(x => x.WorkflowId == WorkId);
             //if (approval != null)

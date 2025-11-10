@@ -1,10 +1,9 @@
 ﻿
 // **************************************
-// 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/08/2025 13:46:04
+// 时间：11/10/2025 23:38:20
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -13,6 +12,7 @@ using RUINORERP.Model;
 using FluentValidation;
 using RUINORERP.Model.ConfigModel;
 using Microsoft.Extensions.Options;
+using RUINORERP.Model.Context;
 
 //https://github.com/FluentValidation/FluentValidation 使用实例
 //https://blog.csdn.net/WuLex/article/details/127985756 中文教程
@@ -27,13 +27,9 @@ namespace RUINORERP.Business
     public partial class tb_PurEntryValidator:BaseValidatorGeneric<tb_PurEntry>
     {
      
-     //配置全局参数
-     public readonly IOptionsMonitor<GlobalValidatorConfig> ValidatorConfig;
-    
-     public tb_PurEntryValidator(IOptionsMonitor<GlobalValidatorConfig> config)
+
+     public tb_PurEntryValidator(ApplicationContext appContext = null) : base(appContext)
      {
-     
-        ValidatorConfig = config;
         
  
         
@@ -59,7 +55,9 @@ namespace RUINORERP.Business
  RuleFor(tb_PurEntry =>tb_PurEntry.PurOrder_ID).NotEmpty().When(x => x.PurOrder_ID.HasValue);
 
  RuleFor(tb_PurEntry =>tb_PurEntry.PurOrder_NO).MaximumMixedLength(50).WithMessage("采购订单号:不能超过最大长度,50.");
- 
+
+ RuleFor(tb_PurEntry =>tb_PurEntry.PayStatus).NotEmpty().When(x => x.PayStatus.HasValue);
+
 
  RuleFor(tb_PurEntry =>tb_PurEntry.Currency_ID).NotEmpty().When(x => x.Currency_ID.HasValue);
 
@@ -71,11 +69,13 @@ namespace RUINORERP.Business
 
  RuleFor(x => x.TotalAmount).PrecisionScale(19,4,true).WithMessage("合计金额:小数位不能超过4。");
 
+ RuleFor(x => x.ActualAmount).PrecisionScale(19,4,true).WithMessage("实付金额:小数位不能超过4。");
 
  RuleFor(x => x.TotalTaxAmount).PrecisionScale(19,4,true).WithMessage("合计税额:小数位不能超过4。");
 
  RuleFor(x => x.TotalUntaxedAmount).PrecisionScale(19,4,true).WithMessage("未税总金额:小数位不能超过4。");
 
+ RuleFor(x => x.DiscountAmount).PrecisionScale(19,4,true).WithMessage("折扣金额总计:小数位不能超过4。");
 
 
  RuleFor(tb_PurEntry =>tb_PurEntry.Notes).MaximumMixedLength(1500).WithMessage("备注:不能超过最大长度,1500.");
@@ -103,6 +103,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_PurEntry =>tb_PurEntry.KeepAccountsType).NotEmpty().When(x => x.KeepAccountsType.HasValue);
 
+ RuleFor(x => x.Deposit).PrecisionScale(19,4,true).WithMessage("订金:小数位不能超过4。");
 
  RuleFor(x => x.ForeignShipCost).PrecisionScale(19,4,true).WithMessage("运费外币:小数位不能超过4。");
 

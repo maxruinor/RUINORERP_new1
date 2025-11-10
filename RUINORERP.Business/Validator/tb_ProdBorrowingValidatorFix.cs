@@ -38,7 +38,7 @@ namespace RUINORERP.Business
                     {
                         //根据配置判断预交日期是不是必须填写
                         //实际情况是 保存时可能不清楚交期，保存后截图发给供应商后才知道。这时提交才要求
-                        if (ValidatorConfig.CurrentValue.借出单的接收单位必填)
+                        if (ValidatorConfig.借出单的接收单位必填)
                         {
                             if (entity.CustomerVendor_ID == null || !entity.CustomerVendor_ID.HasValue || entity.CustomerVendor_ID.Value <= 0)
                             {

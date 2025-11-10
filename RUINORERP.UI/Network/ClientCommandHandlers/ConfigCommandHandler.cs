@@ -169,7 +169,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                     // 完全使用新的配置管理服务处理配置同步，移除对过时的UIConfigManager的依赖
                     try
                     {
-                        _logger.LogInformation("使用新的配置管理服务处理配置同步，配置类型: {ConfigType}", configType);
+                        _logger.LogDebug("使用新的配置管理服务处理配置同步，配置类型: {ConfigType}", configType);
 
                         // 根据配置类型使用相应的泛型方法
                         switch (configType)
@@ -180,7 +180,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                                 bool systemConfigSaved = await _configManagerService.SaveConfigAsync(systemConfig);
                                 if (systemConfigSaved)
                                 {
-                                    _logger.LogInformation("系统全局配置同步并持久化成功");
+                                    _logger.LogDebug("系统全局配置同步并持久化成功");
                                     // 刷新配置，确保所有依赖该配置的服务获取到最新值
                                     await _configManagerService.RefreshConfigAsync<SystemGlobalConfig>();
                                 }
@@ -195,7 +195,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                                 bool validatorConfigSaved = await _configManagerService.SaveConfigAsync(validatorConfig);
                                 if (validatorConfigSaved)
                                 {
-                                    _logger.LogInformation("验证配置同步并持久化成功");
+                                    _logger.LogDebug("验证配置同步并持久化成功");
                                     // 刷新配置，确保所有依赖该配置的服务获取到最新值
                                     GlobalValidatorConfig globalValidatorConfig = await _configManagerService.RefreshConfigAsync<GlobalValidatorConfig>();
                                     // 获取容器中的GlobalValidatorConfig实例并更新其属性
@@ -212,7 +212,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                                             }
                                         }
                                     }
-                                    _logger.LogInformation("GlobalValidatorConfig已在容器中更新");
+                                    _logger.LogDebug("GlobalValidatorConfig已在容器中更新");
                                 }
                                 else
                                 {
@@ -221,7 +221,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                                 break;
                             case "Database":
                                 // 数据库配置特殊处理，这里可以根据实际需求实现
-                                _logger.LogInformation("数据库配置同步请求已接收");
+                                _logger.LogDebug("数据库配置同步请求已接收");
                                 break;
                             default:
                                 _logger.LogWarning("未知的配置类型: {ConfigType}", configType);
@@ -230,7 +230,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                                 try
                                 {
                                     // 对于自定义配置，我们可以记录日志并提供扩展点
-                                    _logger.LogInformation("尝试处理自定义配置类型: {ConfigType}", configType);
+                                    _logger.LogDebug("尝试处理自定义配置类型: {ConfigType}", configType);
                                 }
                                 catch (Exception ex)
                                 {

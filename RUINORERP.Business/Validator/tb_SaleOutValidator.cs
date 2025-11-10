@@ -1,10 +1,9 @@
 ﻿
 // **************************************
-// 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/08/2025 13:46:14
+// 时间：11/10/2025 23:38:22
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -13,6 +12,7 @@ using RUINORERP.Model;
 using FluentValidation;
 using RUINORERP.Model.ConfigModel;
 using Microsoft.Extensions.Options;
+using RUINORERP.Model.Context;
 
 //https://github.com/FluentValidation/FluentValidation 使用实例
 //https://blog.csdn.net/WuLex/article/details/127985756 中文教程
@@ -27,21 +27,17 @@ namespace RUINORERP.Business
     public partial class tb_SaleOutValidator:BaseValidatorGeneric<tb_SaleOut>
     {
      
-     //配置全局参数
-     public readonly IOptionsMonitor<GlobalValidatorConfig> ValidatorConfig;
-    
-     public tb_SaleOutValidator(IOptionsMonitor<GlobalValidatorConfig> config)
+
+     public tb_SaleOutValidator(ApplicationContext appContext = null) : base(appContext)
      {
-     
-        ValidatorConfig = config;
         
  
         
      
+ RuleFor(tb_SaleOut =>tb_SaleOut.Employee_ID).Must(CheckForeignKeyValueCanNull).WithMessage("业务员:下拉选择值不正确。");
  RuleFor(tb_SaleOut =>tb_SaleOut.Employee_ID).NotEmpty().When(x => x.Employee_ID.HasValue);
 
-//***** 
- RuleFor(tb_SaleOut =>tb_SaleOut.CustomerVendor_ID).NotNull().WithMessage("客户:不能为空。");
+ RuleFor(tb_SaleOut =>tb_SaleOut.CustomerVendor_ID).Must(CheckForeignKeyValue).WithMessage("客户:下拉选择值不正确。");
 
  RuleFor(tb_SaleOut =>tb_SaleOut.SOrder_ID).Must(CheckForeignKeyValueCanNull).WithMessage("销售订单:下拉选择值不正确。");
  RuleFor(tb_SaleOut =>tb_SaleOut.SOrder_ID).NotEmpty().When(x => x.SOrder_ID.HasValue);
@@ -51,15 +47,18 @@ namespace RUINORERP.Business
  RuleFor(tb_SaleOut =>tb_SaleOut.SaleOutNo).MaximumMixedLength(50).WithMessage("出库单号:不能超过最大长度,50.");
  RuleFor(tb_SaleOut =>tb_SaleOut.SaleOutNo).NotEmpty().WithMessage("出库单号:不能为空。");
 
+ RuleFor(tb_SaleOut =>tb_SaleOut.ProjectGroup_ID).Must(CheckForeignKeyValueCanNull).WithMessage("项目组:下拉选择值不正确。");
  RuleFor(tb_SaleOut =>tb_SaleOut.ProjectGroup_ID).NotEmpty().When(x => x.ProjectGroup_ID.HasValue);
 
  RuleFor(tb_SaleOut =>tb_SaleOut.PayStatus).NotEmpty().When(x => x.PayStatus.HasValue);
 
- 
+//***** 
+ RuleFor(tb_SaleOut =>tb_SaleOut.Currency_ID).NotNull().WithMessage("币别:不能为空。");
 
  RuleFor(x => x.ExchangeRate).PrecisionScale(10,4,true).WithMessage("汇率:小数位不能超过4。");
 
- 
+ RuleFor(tb_SaleOut =>tb_SaleOut.Paytype_ID).Must(CheckForeignKeyValueCanNull).WithMessage("付款类型:下拉选择值不正确。");
+ RuleFor(tb_SaleOut =>tb_SaleOut.Paytype_ID).NotEmpty().When(x => x.Paytype_ID.HasValue);
 
  RuleFor(tb_SaleOut =>tb_SaleOut.RefundStatus).NotEmpty().When(x => x.RefundStatus.HasValue);
 
@@ -89,7 +88,9 @@ namespace RUINORERP.Business
 
  RuleFor(x => x.ForeignTotalAmount).PrecisionScale(19,4,true).WithMessage("金额外币:小数位不能超过4。");
 
- 
+ RuleFor(x => x.CollectedMoney).PrecisionScale(19,4,true).WithMessage("实收金额:小数位不能超过4。");
+
+
 
  RuleFor(tb_SaleOut =>tb_SaleOut.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
 
@@ -107,7 +108,10 @@ namespace RUINORERP.Business
 
  RuleFor(tb_SaleOut =>tb_SaleOut.KeepAccountsType).NotEmpty().When(x => x.KeepAccountsType.HasValue);
 
- 
+ RuleFor(x => x.ForeignDeposit).PrecisionScale(19,4,true).WithMessage("订金外币:小数位不能超过4。");
+
+ RuleFor(x => x.Deposit).PrecisionScale(19,4,true).WithMessage("订金:小数位不能超过4。");
+
  RuleFor(x => x.FreightCost).PrecisionScale(19,4,true).WithMessage("运费成本:小数位不能超过4。");
 
  RuleFor(tb_SaleOut =>tb_SaleOut.TaxDeductionType).NotEmpty().When(x => x.TaxDeductionType.HasValue);
@@ -122,12 +126,17 @@ namespace RUINORERP.Business
 
  RuleFor(x => x.TotalCost).PrecisionScale(19,4,true).WithMessage("总成本:小数位不能超过4。");
 
- 
+ RuleFor(x => x.TaxRate).PrecisionScale(5,3,true).WithMessage("税率:小数位不能超过3。");
+
  RuleFor(x => x.TotalTaxAmount).PrecisionScale(19,4,true).WithMessage("总税额:小数位不能超过4。");
 
- 
+ RuleFor(x => x.TotalUntaxedAmount).PrecisionScale(19,4,true).WithMessage("未税本位币:小数位不能超过4。");
 
- 
+
+ RuleFor(x => x.DiscountAmount).PrecisionScale(19,4,true).WithMessage("优惠金额:小数位不能超过4。");
+
+ RuleFor(x => x.PrePayMoney).PrecisionScale(19,4,true).WithMessage("预收款:小数位不能超过4。");
+
 
            	                //long
                 //SaleOut_MainID

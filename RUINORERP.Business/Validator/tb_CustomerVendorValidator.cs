@@ -1,10 +1,9 @@
 ﻿
 // **************************************
-// 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/08/2025 13:45:21
+// 时间：11/10/2025 23:38:10
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -13,6 +12,7 @@ using RUINORERP.Model;
 using FluentValidation;
 using RUINORERP.Model.ConfigModel;
 using Microsoft.Extensions.Options;
+using RUINORERP.Model.Context;
 
 //https://github.com/FluentValidation/FluentValidation 使用实例
 //https://blog.csdn.net/WuLex/article/details/127985756 中文教程
@@ -21,19 +21,15 @@ using Microsoft.Extensions.Options;
 namespace RUINORERP.Business
 {
     /// <summary>
-    /// 客户厂商表 开票资料这种与财务有关另外开表验证类
+    /// 客户厂商表验证类
     /// </summary>
     /*public partial class tb_CustomerVendorValidator:AbstractValidator<tb_CustomerVendor>*/
     public partial class tb_CustomerVendorValidator:BaseValidatorGeneric<tb_CustomerVendor>
     {
      
-     //配置全局参数
-     public readonly IOptionsMonitor<GlobalValidatorConfig> ValidatorConfig;
-    
-     public tb_CustomerVendorValidator(IOptionsMonitor<GlobalValidatorConfig> config)
+
+     public tb_CustomerVendorValidator(ApplicationContext appContext = null) : base(appContext)
      {
-     
-        ValidatorConfig = config;
         
  
         
@@ -56,6 +52,7 @@ namespace RUINORERP.Business
  RuleFor(tb_CustomerVendor =>tb_CustomerVendor.Paytype_ID).Must(CheckForeignKeyValueCanNull).WithMessage("默认交易方式:下拉选择值不正确。");
  RuleFor(tb_CustomerVendor =>tb_CustomerVendor.Paytype_ID).NotEmpty().When(x => x.Paytype_ID.HasValue);
 
+ RuleFor(tb_CustomerVendor =>tb_CustomerVendor.Customer_id).Must(CheckForeignKeyValueCanNull).WithMessage("目标客户:下拉选择值不正确。");
  RuleFor(tb_CustomerVendor =>tb_CustomerVendor.Customer_id).NotEmpty().When(x => x.Customer_id.HasValue);
 
  RuleFor(tb_CustomerVendor =>tb_CustomerVendor.Area).MaximumMixedLength(50).WithMessage("所在地区:不能超过最大长度,50.");

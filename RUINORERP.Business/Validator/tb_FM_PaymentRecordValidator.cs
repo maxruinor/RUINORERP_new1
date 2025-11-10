@@ -1,10 +1,9 @@
 ﻿
 // **************************************
-// 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/08/2025 13:45:31
+// 时间：11/10/2025 23:38:11
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -13,6 +12,7 @@ using RUINORERP.Model;
 using FluentValidation;
 using RUINORERP.Model.ConfigModel;
 using Microsoft.Extensions.Options;
+using RUINORERP.Model.Context;
 
 //https://github.com/FluentValidation/FluentValidation 使用实例
 //https://blog.csdn.net/WuLex/article/details/127985756 中文教程
@@ -27,13 +27,9 @@ namespace RUINORERP.Business
     public partial class tb_FM_PaymentRecordValidator:BaseValidatorGeneric<tb_FM_PaymentRecord>
     {
      
-     //配置全局参数
-     public readonly IOptionsMonitor<GlobalValidatorConfig> ValidatorConfig;
-    
-     public tb_FM_PaymentRecordValidator(IOptionsMonitor<GlobalValidatorConfig> config)
+
+     public tb_FM_PaymentRecordValidator(ApplicationContext appContext = null) : base(appContext)
      {
-     
-        ValidatorConfig = config;
         
  
         
@@ -60,11 +56,18 @@ namespace RUINORERP.Business
  RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.SourceBillNos).MaximumMixedLength(1000).WithMessage("来源单号:不能超过最大长度,1000.");
 
 
+
  RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.Currency_ID).Must(CheckForeignKeyValue).WithMessage("币别:下拉选择值不正确。");
 
- RuleFor(x => x.TotalForeignAmount).PrecisionScale(19,4,true).WithMessage("支付金额外币:小数位不能超过4。");
+ RuleFor(x => x.TotalForeignAmount).PrecisionScale(19,4,true).WithMessage("实付金额外币:小数位不能超过4。");
 
- RuleFor(x => x.TotalLocalAmount).PrecisionScale(19,4,true).WithMessage("支付金额本币:小数位不能超过4。");
+ RuleFor(x => x.TotalLocalAmount).PrecisionScale(19,4,true).WithMessage("实付金额本币:小数位不能超过4。");
+
+ RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.LocalPamountInWords).MaximumMixedLength(100).WithMessage("实付金额大写:不能超过最大长度,100.");
+
+ RuleFor(x => x.TotalForeignPayableAmount).PrecisionScale(19,4,true).WithMessage("应付金额外币:小数位不能超过4。");
+
+ RuleFor(x => x.TotalLocalPayableAmount).PrecisionScale(19,4,true).WithMessage("应付金额本币:小数位不能超过4。");
 
 
  RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.Employee_ID).NotEmpty().When(x => x.Employee_ID.HasValue);
@@ -82,11 +85,11 @@ namespace RUINORERP.Business
 
  RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.ReversedOriginalId).NotEmpty().When(x => x.ReversedOriginalId.HasValue);
 
- //RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.ReversedOriginalNo).MaximumMixedLength(30).WithMessage("冲销单号:不能超过最大长度,30.");
+ RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.ReversedOriginalNo).MaximumMixedLength(30).WithMessage("冲销单号:不能超过最大长度,30.");
 
  RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.ReversedByPaymentId).NotEmpty().When(x => x.ReversedByPaymentId.HasValue);
 
- //RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.ReversedByPaymentNo).MaximumMixedLength(30).WithMessage("被冲销单号:不能超过最大长度,30.");
+ RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.ReversedByPaymentNo).MaximumMixedLength(30).WithMessage("被冲销单号:不能超过最大长度,30.");
 
  RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.Remark).MaximumMixedLength(300).WithMessage("备注:不能超过最大长度,300.");
 

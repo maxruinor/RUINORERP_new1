@@ -226,7 +226,7 @@ namespace RUINORERP.Business.Config
                     SaveVersions(versions);
                 }
 
-                _logger.LogInformation("配置版本回滚成功: {ConfigType}, v{VersionNumber}", 
+                _logger.LogDebug("配置版本回滚成功: {ConfigType}, v{VersionNumber}", 
                     typeof(T).Name, version.VersionNumber);
                 
                 return true;
@@ -277,7 +277,7 @@ namespace RUINORERP.Business.Config
                     SaveVersions(versions);
                 }
 
-                _logger.LogInformation("配置版本删除成功: {ConfigType}, v{VersionNumber}", 
+                _logger.LogDebug("配置版本删除成功: {ConfigType}, v{VersionNumber}", 
                     typeof(T).Name, version.VersionNumber);
                 
                 return true;

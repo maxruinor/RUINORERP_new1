@@ -40,7 +40,7 @@ namespace RUINORERP.WF.WFApproval.Steps
         {
             WorkId = context.Workflow.Id;
             await Task.Delay(1);
-            // _logger.LogInformation($"Your request document has been approved by {Approver}! DocumentName:{DocumentName},Send mail to:{To}");
+            // _logger.LogDebug($"Your request document has been approved by {Approver}! DocumentName:{DocumentName},Send mail to:{To}");
 
             //var approval = _context.ApprovalDatas.FirstOrDefault(x => x.WorkflowId == WorkId);
             //if (approval != null)

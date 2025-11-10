@@ -45,7 +45,7 @@ namespace RUINORERP.Business
              // if (validEntity != null && validEntity.DataStatus == (int)DataStatus.新建)
              // {
                   //实际情况是 保存时可能不清楚交期。这时提交才要求
-                  if (ValidatorConfig.CurrentValue.预开工日期必填)
+                  if (ValidatorConfig.预开工日期必填)
                   {
                       RuleFor(x => x.PreStartDate).NotNull().WithMessage("预开工日期：必须填写。");
                       RuleFor(x => x.PreStartDate).NotEmpty().When(c => c.PreStartDate.HasValue).WithMessage("预开工日期：必须填写。");
@@ -61,7 +61,7 @@ namespace RUINORERP.Business
                 // if (validEntity != null && validEntity.DataStatus == (int)DataStatus.新建)
                 // {
                 //实际情况是 保存时可能不清楚交期。这时提交才要求
-              if (ValidatorConfig.CurrentValue.预完工日期必填)
+              if (ValidatorConfig.预完工日期必填)
               {
                   RuleFor(x => x.PreEndDate).NotNull().WithMessage("预完工日期：必须填写。");
                   RuleFor(x => x.PreEndDate).NotEmpty().When(c => c.PreStartDate.HasValue).WithMessage("预完工日期：必须填写。");

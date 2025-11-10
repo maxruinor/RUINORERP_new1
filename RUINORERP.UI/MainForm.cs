@@ -449,23 +449,14 @@ namespace RUINORERP.UI
             if (configManager != null)
             {
                 _configManager = configManager;
-                // 监听配置变化
-                _configManager.OnChange(updatedConfig =>
-                {
-                    // 更新全局变量配置
-                    AppContext.GlobalVariableConfig.IsFromPlatform = updatedConfig.IsFromPlatform;
-                    AppContext.GlobalVariableConfig.DirectPrinting = updatedConfig.DirectPrinting;
-                });
+               
             }
 
             AppContext = Program.AppContextData;
             SourceGrid.Cells.Views.Cell viewGreen = new SourceGrid.Cells.Views.Cell();
             // 初始化日志管理器
             logManager = new UILogManager(this, uclog.grid, viewGreen);
-            // var clientCommandRegistry = new ClientCommandRegistry();
-            // var clientCommandHandlers = clientCommandRegistry.AutoRegisterCommandHandler();
-
-
+          
 
             _menuTracker = Startup.GetFromFac<MenuTracker>();
 
@@ -604,9 +595,9 @@ namespace RUINORERP.UI
         public async Task<bool> UpdateSys(bool ShowMessageBox, bool forceUpdate = false)
         {
             bool rs = false;
-            var validatorMonitor = Startup.GetFromFac<IOptionsMonitor<SystemGlobalConfig>>();
+            var validatorMonitor = Startup.GetFromFac<SystemGlobalConfig>();
             // 如果配置了自动更新或强制更新参数为true，则执行更新检查
-            if (validatorMonitor.CurrentValue.客户端自动更新 || forceUpdate) 
+            if (validatorMonitor.客户端自动更新 || forceUpdate) 
             {
                 try
                 {

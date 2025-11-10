@@ -1,10 +1,9 @@
 ﻿
 // **************************************
-// 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/08/2025 13:45:31
+// 时间：11/10/2025 23:38:12
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -13,6 +12,7 @@ using RUINORERP.Model;
 using FluentValidation;
 using RUINORERP.Model.ConfigModel;
 using Microsoft.Extensions.Options;
+using RUINORERP.Model.Context;
 
 //https://github.com/FluentValidation/FluentValidation 使用实例
 //https://blog.csdn.net/WuLex/article/details/127985756 中文教程
@@ -27,13 +27,9 @@ namespace RUINORERP.Business
     public partial class tb_FM_PaymentRecordDetailValidator:BaseValidatorGeneric<tb_FM_PaymentRecordDetail>
     {
      
-     //配置全局参数
-     public readonly IOptionsMonitor<GlobalValidatorConfig> ValidatorConfig;
-    
-     public tb_FM_PaymentRecordDetailValidator(IOptionsMonitor<GlobalValidatorConfig> config)
+
+     public tb_FM_PaymentRecordDetailValidator(ApplicationContext appContext = null) : base(appContext)
      {
-     
-        ValidatorConfig = config;
         
  
         
@@ -63,6 +59,10 @@ namespace RUINORERP.Business
  RuleFor(x => x.ForeignAmount).PrecisionScale(19,4,true).WithMessage("支付金额外币:小数位不能超过4。");
 
  RuleFor(x => x.LocalAmount).PrecisionScale(19,4,true).WithMessage("支付金额本币:小数位不能超过4。");
+
+ RuleFor(x => x.ForeignPayableAmount).PrecisionScale(19,4,true).WithMessage("应付金额外币:小数位不能超过4。");
+
+ RuleFor(x => x.LocalPayableAmount).PrecisionScale(19,4,true).WithMessage("应付金额本币:小数位不能超过4。");
 
  RuleFor(tb_FM_PaymentRecordDetail =>tb_FM_PaymentRecordDetail.Summary).MaximumMixedLength(300).WithMessage("摘要:不能超过最大长度,300.");
 

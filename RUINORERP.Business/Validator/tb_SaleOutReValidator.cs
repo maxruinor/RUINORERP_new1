@@ -1,10 +1,9 @@
 ﻿
 // **************************************
-// 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/08/2025 13:46:16
+// 时间：11/10/2025 23:38:22
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -13,6 +12,7 @@ using RUINORERP.Model;
 using FluentValidation;
 using RUINORERP.Model.ConfigModel;
 using Microsoft.Extensions.Options;
+using RUINORERP.Model.Context;
 
 //https://github.com/FluentValidation/FluentValidation 使用实例
 //https://blog.csdn.net/WuLex/article/details/127985756 中文教程
@@ -27,13 +27,9 @@ namespace RUINORERP.Business
     public partial class tb_SaleOutReValidator:BaseValidatorGeneric<tb_SaleOutRe>
     {
      
-     //配置全局参数
-     public readonly IOptionsMonitor<GlobalValidatorConfig> ValidatorConfig;
-    
-     public tb_SaleOutReValidator(IOptionsMonitor<GlobalValidatorConfig> config)
+
+     public tb_SaleOutReValidator(ApplicationContext appContext = null) : base(appContext)
      {
-     
-        ValidatorConfig = config;
         
  
         
@@ -58,6 +54,8 @@ namespace RUINORERP.Business
 
  RuleFor(tb_SaleOutRe =>tb_SaleOutRe.SaleOut_NO).MaximumMixedLength(50).WithMessage("销售出库单号:不能超过最大长度,50.");
 
+//***** 
+ RuleFor(tb_SaleOutRe =>tb_SaleOutRe.Currency_ID).NotNull().WithMessage("币别:不能为空。");
 
  RuleFor(x => x.ExchangeRate).PrecisionScale(10,4,true).WithMessage("汇率:小数位不能超过4。");
 
@@ -68,6 +66,7 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_SaleOutRe =>tb_SaleOutRe.TotalQty).NotNull().WithMessage("退回总数量:不能为空。");
 
+ RuleFor(x => x.ActualRefundAmount).PrecisionScale(19,4,true).WithMessage("实际退款金额:小数位不能超过4。");
 
  RuleFor(x => x.TotalAmount).PrecisionScale(19,4,true).WithMessage("退款金额合计:小数位不能超过4。");
 
@@ -76,6 +75,7 @@ namespace RUINORERP.Business
 
  RuleFor(x => x.FreightIncome).PrecisionScale(19,4,true).WithMessage("需退运费:小数位不能超过4。");
 
+ RuleFor(x => x.FreightCost).PrecisionScale(19,4,true).WithMessage("运费成本:小数位不能超过4。");
 
  RuleFor(tb_SaleOutRe =>tb_SaleOutRe.TrackNo).MaximumMixedLength(50).WithMessage("物流单号:不能超过最大长度,50.");
 

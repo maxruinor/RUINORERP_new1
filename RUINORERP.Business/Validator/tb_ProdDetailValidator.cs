@@ -1,10 +1,9 @@
 ﻿
 // **************************************
-// 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/08/2025 13:45:55
+// 时间：11/10/2025 23:38:17
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -13,6 +12,7 @@ using RUINORERP.Model;
 using FluentValidation;
 using RUINORERP.Model.ConfigModel;
 using Microsoft.Extensions.Options;
+using RUINORERP.Model.Context;
 
 //https://github.com/FluentValidation/FluentValidation 使用实例
 //https://blog.csdn.net/WuLex/article/details/127985756 中文教程
@@ -27,13 +27,9 @@ namespace RUINORERP.Business
     public partial class tb_ProdDetailValidator:BaseValidatorGeneric<tb_ProdDetail>
     {
      
-     //配置全局参数
-     public readonly IOptionsMonitor<GlobalValidatorConfig> ValidatorConfig;
-    
-     public tb_ProdDetailValidator(IOptionsMonitor<GlobalValidatorConfig> config)
+
+     public tb_ProdDetailValidator(ApplicationContext appContext = null) : base(appContext)
      {
-     
-        ValidatorConfig = config;
         
  
         
@@ -131,6 +127,17 @@ namespace RUINORERP.Business
         
 
         private bool DetailedRecordsNotEmpty(List<tb_MaterialReturnDetail> details)
+        {
+            bool rs = true;
+            if (details == null || details.Count == 0)
+            {
+                return false;
+            }
+            return rs;
+        }
+        
+
+        private bool DetailedRecordsNotEmpty(List<tb_PurReturnEntryDetail> details)
         {
             bool rs = true;
             if (details == null || details.Count == 0)
@@ -295,17 +302,6 @@ namespace RUINORERP.Business
         }
         
 
-        private bool DetailedRecordsNotEmpty(List<tb_StocktakeDetail> details)
-        {
-            bool rs = true;
-            if (details == null || details.Count == 0)
-            {
-                return false;
-            }
-            return rs;
-        }
-        
-
         private bool DetailedRecordsNotEmpty(List<tb_PurGoodsRecommendDetail> details)
         {
             bool rs = true;
@@ -372,18 +368,21 @@ namespace RUINORERP.Business
         }
         
 
-        //private bool DetailedRecordsNotEmpty(List<tb_ProdConversionDetail> details)
-        //{
-        //    bool rs = true;
-        //    if (details == null || details.Count == 0)
-        //    {
-        //        return false;
-        //    }
-        //    return rs;
-        //}
+       
         
 
         private bool DetailedRecordsNotEmpty(List<tb_BOM_SDetailSecondary> details)
+        {
+            bool rs = true;
+            if (details == null || details.Count == 0)
+            {
+                return false;
+            }
+            return rs;
+        }
+        
+
+        private bool DetailedRecordsNotEmpty(List<tb_FM_PriceAdjustmentDetail> details)
         {
             bool rs = true;
             if (details == null || details.Count == 0)
@@ -493,7 +492,7 @@ namespace RUINORERP.Business
         }
         
 
-        private bool DetailedRecordsNotEmpty(List<tb_StockInDetail> details)
+        private bool DetailedRecordsNotEmpty(List<tb_FM_ProfitLossDetail> details)
         {
             bool rs = true;
             if (details == null || details.Count == 0)
@@ -504,7 +503,7 @@ namespace RUINORERP.Business
         }
         
 
-        private bool DetailedRecordsNotEmpty(List<tb_FM_PriceAdjustmentDetail> details)
+        private bool DetailedRecordsNotEmpty(List<tb_StockInDetail> details)
         {
             bool rs = true;
             if (details == null || details.Count == 0)
@@ -526,7 +525,7 @@ namespace RUINORERP.Business
         }
         
 
-        private bool DetailedRecordsNotEmpty(List<tb_PurEntryReDetail> details)
+        private bool DetailedRecordsNotEmpty(List<tb_StocktakeDetail> details)
         {
             bool rs = true;
             if (details == null || details.Count == 0)
@@ -537,7 +536,7 @@ namespace RUINORERP.Business
         }
         
 
-        private bool DetailedRecordsNotEmpty(List<tb_PurReturnEntryDetail> details)
+        private bool DetailedRecordsNotEmpty(List<tb_PurEntryReDetail> details)
         {
             bool rs = true;
             if (details == null || details.Count == 0)

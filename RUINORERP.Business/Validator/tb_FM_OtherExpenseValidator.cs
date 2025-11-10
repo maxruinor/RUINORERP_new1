@@ -1,10 +1,9 @@
 ﻿
 // **************************************
-// 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/08/2025 13:45:29
+// 时间：11/10/2025 23:38:11
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -13,6 +12,7 @@ using RUINORERP.Model;
 using FluentValidation;
 using RUINORERP.Model.ConfigModel;
 using Microsoft.Extensions.Options;
+using RUINORERP.Model.Context;
 
 //https://github.com/FluentValidation/FluentValidation 使用实例
 //https://blog.csdn.net/WuLex/article/details/127985756 中文教程
@@ -27,13 +27,9 @@ namespace RUINORERP.Business
     public partial class tb_FM_OtherExpenseValidator:BaseValidatorGeneric<tb_FM_OtherExpense>
     {
      
-     //配置全局参数
-     public readonly IOptionsMonitor<GlobalValidatorConfig> ValidatorConfig;
-    
-     public tb_FM_OtherExpenseValidator(IOptionsMonitor<GlobalValidatorConfig> config)
+
+     public tb_FM_OtherExpenseValidator(ApplicationContext appContext = null) : base(appContext)
      {
-     
-        ValidatorConfig = config;
         
  
         
@@ -48,6 +44,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_FM_OtherExpense =>tb_FM_OtherExpense.PayStatus).NotEmpty().When(x => x.PayStatus.HasValue);
 
+ RuleFor(tb_FM_OtherExpense =>tb_FM_OtherExpense.Paytype_ID).Must(CheckForeignKeyValueCanNull).WithMessage("付款类型:下拉选择值不正确。");
  RuleFor(tb_FM_OtherExpense =>tb_FM_OtherExpense.Paytype_ID).NotEmpty().When(x => x.Paytype_ID.HasValue);
 
 //有默认值
@@ -57,7 +54,7 @@ namespace RUINORERP.Business
 
  RuleFor(x => x.TaxAmount).PrecisionScale(19,4,true).WithMessage("税额:小数位不能超过4。");
 
- //RuleFor(x => x.TaxRate).PrecisionScale(8,2,true).WithMessage("税率:小数位不能超过2。");
+ RuleFor(x => x.TaxRate).PrecisionScale(8,2,true).WithMessage("税率:小数位不能超过2。");
 
  RuleFor(x => x.UntaxedAmount).PrecisionScale(19,4,true).WithMessage("未税本位币:小数位不能超过4。");
 
@@ -80,7 +77,7 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_FM_OtherExpense =>tb_FM_OtherExpense.PrintStatus).NotNull().WithMessage("打印状态:不能为空。");
 
- //RuleFor(x => x.ApprovedAmount).PrecisionScale(19,4,true).WithMessage("核准金额:小数位不能超过4。");
+ RuleFor(x => x.ApprovedAmount).PrecisionScale(19,4,true).WithMessage("核准金额:小数位不能超过4。");
 
  RuleFor(tb_FM_OtherExpense =>tb_FM_OtherExpense.Currency_ID).Must(CheckForeignKeyValueCanNull).WithMessage("币种:下拉选择值不正确。");
  RuleFor(tb_FM_OtherExpense =>tb_FM_OtherExpense.Currency_ID).NotEmpty().When(x => x.Currency_ID.HasValue);

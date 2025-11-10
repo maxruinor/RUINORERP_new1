@@ -1,10 +1,9 @@
 ﻿
 // **************************************
-// 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/08/2025 13:46:11
+// 时间：11/10/2025 23:38:22
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -13,6 +12,7 @@ using RUINORERP.Model;
 using FluentValidation;
 using RUINORERP.Model.ConfigModel;
 using Microsoft.Extensions.Options;
+using RUINORERP.Model.Context;
 
 //https://github.com/FluentValidation/FluentValidation 使用实例
 //https://blog.csdn.net/WuLex/article/details/127985756 中文教程
@@ -27,13 +27,9 @@ namespace RUINORERP.Business
     public partial class tb_ReminderRuleValidator:BaseValidatorGeneric<tb_ReminderRule>
     {
      
-     //配置全局参数
-     public readonly IOptionsMonitor<GlobalValidatorConfig> ValidatorConfig;
-    
-     public tb_ReminderRuleValidator(IOptionsMonitor<GlobalValidatorConfig> config)
+
+     public tb_ReminderRuleValidator(ApplicationContext appContext = null) : base(appContext)
      {
-     
-        ValidatorConfig = config;
         
  
         
@@ -56,14 +52,18 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_ReminderRule =>tb_ReminderRule.ReminderPriority).NotNull().WithMessage("优先级:不能为空。");
 
- 
- //RuleFor(tb_ReminderRule =>tb_ReminderRule.Condition).NotEmpty().WithMessage("规则条件:不能为空。");
 
- //RuleFor(tb_ReminderRule =>tb_ReminderRule.NotifyRecipientNames).NotEmpty().WithMessage("通知接收人员:不能为空。");
+ RuleFor(tb_ReminderRule =>tb_ReminderRule.NotifyChannels).NotEmpty().WithMessage("通知渠道:不能为空。");
 
- 
 
- //RuleFor(tb_ReminderRule =>tb_ReminderRule.NotifyMessage).NotEmpty().WithMessage("通知消息模板:不能为空。");
+
+ RuleFor(tb_ReminderRule =>tb_ReminderRule.Condition).NotEmpty().WithMessage("规则条件:不能为空。");
+
+ RuleFor(tb_ReminderRule =>tb_ReminderRule.NotifyRecipientNames).NotEmpty().WithMessage("通知接收人员:不能为空。");
+
+ RuleFor(tb_ReminderRule =>tb_ReminderRule.NotifyRecipients).NotEmpty().WithMessage("通知接收人员ID:不能为空。");
+
+ RuleFor(tb_ReminderRule =>tb_ReminderRule.NotifyMessage).NotEmpty().WithMessage("通知消息模板:不能为空。");
 
  RuleFor(tb_ReminderRule =>tb_ReminderRule.JsonConfig).NotEmpty().WithMessage("扩展JSON配置:不能为空。");
 

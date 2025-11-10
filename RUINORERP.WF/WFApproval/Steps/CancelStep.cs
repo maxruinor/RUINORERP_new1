@@ -38,7 +38,7 @@ namespace RUINORERP.WF.WFApproval.Steps
             await Task.Delay(1);
             // await _mailService.SendAsync(request);
 
-            //  _logger.LogInformation($"Send notfication:{Body},Send to {To}");
+            //  _logger.LogDebug($"Send notfication:{Body},Send to {To}");
 
             //var approval = _context.ApprovalDatas.FirstOrDefault(x => x.WorkflowId == WorkId);
             //if (approval != null)

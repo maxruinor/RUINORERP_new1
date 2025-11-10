@@ -1,10 +1,9 @@
 ﻿
 // **************************************
-// 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/08/2025 13:45:25
+// 时间：11/10/2025 23:38:11
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -13,6 +12,7 @@ using RUINORERP.Model;
 using FluentValidation;
 using RUINORERP.Model.ConfigModel;
 using Microsoft.Extensions.Options;
+using RUINORERP.Model.Context;
 
 //https://github.com/FluentValidation/FluentValidation 使用实例
 //https://blog.csdn.net/WuLex/article/details/127985756 中文教程
@@ -27,13 +27,9 @@ namespace RUINORERP.Business
     public partial class tb_FM_AccountValidator:BaseValidatorGeneric<tb_FM_Account>
     {
      
-     //配置全局参数
-     public readonly IOptionsMonitor<GlobalValidatorConfig> ValidatorConfig;
-    
-     public tb_FM_AccountValidator(IOptionsMonitor<GlobalValidatorConfig> config)
+
+     public tb_FM_AccountValidator(ApplicationContext appContext = null) : base(appContext)
      {
-     
-        ValidatorConfig = config;
         
  
         
@@ -41,11 +37,11 @@ namespace RUINORERP.Business
  RuleFor(tb_FM_Account =>tb_FM_Account.DepartmentID).Must(CheckForeignKeyValueCanNull).WithMessage("部门:下拉选择值不正确。");
  RuleFor(tb_FM_Account =>tb_FM_Account.DepartmentID).NotEmpty().When(x => x.DepartmentID.HasValue);
 
- //RuleFor(tb_FM_Account =>tb_FM_Account.Subject_id).Must(CheckForeignKeyValueCanNull).WithMessage("会计科目:下拉选择值不正确。");
- //RuleFor(tb_FM_Account =>tb_FM_Account.Subject_id).NotEmpty().When(x => x.Subject_id.HasValue);
+ RuleFor(tb_FM_Account =>tb_FM_Account.Subject_id).Must(CheckForeignKeyValueCanNull).WithMessage("会计科目:下拉选择值不正确。");
+ RuleFor(tb_FM_Account =>tb_FM_Account.Subject_id).NotEmpty().When(x => x.Subject_id.HasValue);
 
  RuleFor(tb_FM_Account =>tb_FM_Account.ID).Must(CheckForeignKeyValueCanNull).WithMessage("所属公司:下拉选择值不正确。");
- 
+ RuleFor(tb_FM_Account =>tb_FM_Account.ID).NotEmpty().When(x => x.ID.HasValue);
 
  RuleFor(tb_FM_Account =>tb_FM_Account.Currency_ID).Must(CheckForeignKeyValueCanNull).WithMessage("币种:下拉选择值不正确。");
  RuleFor(tb_FM_Account =>tb_FM_Account.Currency_ID).NotEmpty().When(x => x.Currency_ID.HasValue);

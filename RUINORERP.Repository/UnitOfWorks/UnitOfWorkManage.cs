@@ -31,12 +31,12 @@ namespace RUINORERP.Repository.UnitOfWorks
             _logger = logger;
             //_logger.Debug("UnitOfWorkManage初始化成功1");
             //_logger.LogDebug("UnitOfWorkManage初始化成功2");
-            //_logger.LogInformation("UnitOfWorkManage初始化成功3");
+            //_logger.LogDebug("UnitOfWorkManage初始化成功3");
 
             // 检测数据库是否支持嵌套事务
             _supportsNestedTransactions = DetectNestedTransactionSupport();
 
-           // _logger.LogInformation($"事务模式: {(_supportsNestedTransactions ? "嵌套事务(SAVEPOINT)" : "单层事务")}");
+           // _logger.LogDebug($"事务模式: {(_supportsNestedTransactions ? "嵌套事务(SAVEPOINT)" : "单层事务")}");
 
             _appContext = appContext;
         }
@@ -191,7 +191,7 @@ namespace RUINORERP.Repository.UnitOfWorks
 
         //    uow.Db.Open();
         //    uow.Tenant.BeginTran();
-        //    _logger.LogInformation("UnitOfWork Begin");
+        //    _logger.LogDebug("UnitOfWork Begin");
         //    return uow;
         //}
 
@@ -203,7 +203,7 @@ namespace RUINORERP.Repository.UnitOfWorks
         //        if (_tranCount > 1)
         //        {
         //            Console.WriteLine($"_tranCount：{_tranCount}");
-        //            _logger.LogInformation($"_tranCount：{ _tranCount}");
+        //            _logger.LogDebug($"_tranCount：{ _tranCount}");
         //        }
         //        GetDbClient().BeginTran();
         //    }
@@ -224,7 +224,7 @@ namespace RUINORERP.Repository.UnitOfWorks
                     if (newDepth == 1)
                     {
                         _sqlSugarClient.Ado.BeginTran();
-                        //_logger.LogInformation("物理事务已开启");
+                        //_logger.LogDebug("物理事务已开启");
                         return;
                     }
 
@@ -299,7 +299,7 @@ namespace RUINORERP.Repository.UnitOfWorks
 
                     // === 最外层提交逻辑 ===
                     _sqlSugarClient.Ado.CommitTran();
-                    //_logger.LogInformation("事务提交成功");
+                    //_logger.LogDebug("事务提交成功");
                 }
                 catch (Exception ex)
                 {

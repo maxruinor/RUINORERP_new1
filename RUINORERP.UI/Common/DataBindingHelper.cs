@@ -55,6 +55,7 @@ using RUINORERP.Business.Cache;
 using RUINORERP.Extensions.Middlewares;
 using RUINORERP.Business.Cache;
 using System.Collections.Concurrent;
+using FastReport.Utils;
 
 namespace RUINORERP.UI.Common
 {
@@ -294,7 +295,22 @@ namespace RUINORERP.UI.Common
 
                             listControl.Dock = DockStyle.Fill;
                             editForm.kryptonPanel1.Controls.Add(listControl);
-                            editForm.Text = $"关联查询-{Business.BizMapperService.EntityMappingHelper.GetBizType(typeof(P)).ToString()}";
+
+                            var bizType = Business.BizMapperService.EntityMappingHelper.GetBizType(typeof(P).Name);
+                            string BizTypeText = string.Empty;
+                            // 如果业务类型为"无对应数据"，则尝试获取实体的描述信息
+                            if (bizType == RUINORERP.Global.BizType.无对应数据)
+                            {
+                                BizTypeText = Business.BizMapperService.EntityMappingHelper.GetEntityDescription(typeof(P));
+                            }
+                            else
+                            {
+                                BizTypeText = bizType.ToString();
+                            }
+
+                            editForm.Text = "关联查询" + "-" + BizTypeText;
+
+                       
 
                             // 显示查询窗体并处理选择结果
                             if (editForm.ShowDialog() == DialogResult.OK)
@@ -389,7 +405,20 @@ namespace RUINORERP.UI.Common
 
                             advancedFilter.Dock = DockStyle.Fill;
                             editForm.kryptonPanel1.Controls.Add(advancedFilter);
-                            editForm.Text = $"关联查询-{Business.BizMapperService.EntityMappingHelper.GetBizType(typeof(P)).ToString()}";
+                            var bizType = Business.BizMapperService.EntityMappingHelper.GetBizType(typeof(P).Name);
+                            string BizTypeText = string.Empty;
+                            // 如果业务类型为"无对应数据"，则尝试获取实体的描述信息
+                            if (bizType == RUINORERP.Global.BizType.无对应数据)
+                            {
+                                BizTypeText = Business.BizMapperService.EntityMappingHelper.GetEntityDescription(typeof(P));
+                            }
+                            else
+                            {
+                                BizTypeText = bizType.ToString();
+                            }
+
+                            editForm.Text = "关联查询" + "-" + BizTypeText;
+                   
 
                             // 显示查询窗体并处理选择结果
                             if (editForm.ShowDialog() == DialogResult.OK)
@@ -778,7 +807,20 @@ namespace RUINORERP.UI.Common
                                 frmedit.kryptonPanel1.Controls.Add(ucBaseList);
 
 
-                                var BizTypeText = Business.BizMapperService.EntityMappingHelper.GetBizType(typeof(P).Name).ToString();
+                                // 获取业务类型文本
+                                var bizType = Business.BizMapperService.EntityMappingHelper.GetBizType(typeof(P));
+                                string BizTypeText;
+
+                                // 如果业务类型为"无对应数据"，则尝试获取实体的描述信息
+                                if (bizType == RUINORERP.Global.BizType.无对应数据)
+                                {
+                                    BizTypeText = Business.BizMapperService.EntityMappingHelper.GetEntityDescription(typeof(P));
+                                }
+                                else
+                                {
+                                    BizTypeText = bizType.ToString();
+                                }
+
                                 frmedit.Text = "关联查询" + "-" + BizTypeText;
 
                                 if (frmedit.ShowDialog() == DialogResult.OK)
@@ -925,8 +967,20 @@ namespace RUINORERP.UI.Common
                                 ucBaseList.Dock = DockStyle.Fill;
                                 frmedit.kryptonPanel1.Controls.Add(ucBaseList);
 
-                                var BizTypeText = Business.BizMapperService.EntityMappingHelper.GetBizType(typeof(P).Name).ToString();
+                                var bizType = Business.BizMapperService.EntityMappingHelper.GetBizType(typeof(P).Name);
+                                string BizTypeText = string.Empty;
+                                // 如果业务类型为"无对应数据"，则尝试获取实体的描述信息
+                                if (bizType == RUINORERP.Global.BizType.无对应数据)
+                                {
+                                    BizTypeText = Business.BizMapperService.EntityMappingHelper.GetEntityDescription(typeof(P));
+                                }
+                                else
+                                {
+                                    BizTypeText = bizType.ToString();
+                                }
+
                                 frmedit.Text = "关联查询" + "-" + BizTypeText;
+                              
 
                                 if (frmedit.ShowDialog() == DialogResult.OK)
                                 {
@@ -1168,7 +1222,18 @@ namespace RUINORERP.UI.Common
                                 frmedit.kryptonPanel1.Controls.Add(ucBaseList);
 
 
-                                var BizTypeText = Business.BizMapperService.EntityMappingHelper.GetBizType(typeof(P).Name).ToString();
+                                var bizType = Business.BizMapperService.EntityMappingHelper.GetBizType(typeof(P).Name);
+                                string BizTypeText = string.Empty;
+                                // 如果业务类型为"无对应数据"，则尝试获取实体的描述信息
+                                if (bizType == RUINORERP.Global.BizType.无对应数据)
+                                {
+                                    BizTypeText = Business.BizMapperService.EntityMappingHelper.GetEntityDescription(typeof(P));
+                                }
+                                else
+                                {
+                                    BizTypeText = bizType.ToString();
+                                }
+
                                 frmedit.Text = "关联查询" + "-" + BizTypeText;
 
                                 if (frmedit.ShowDialog() == DialogResult.OK)
@@ -1337,7 +1402,22 @@ namespace RUINORERP.UI.Common
                                 frmedit.kryptonPanel1.Controls.Add(ucBaseList);
 
 
-                                var BizTypeText = Business.BizMapperService.EntityMappingHelper.GetBizType(typeof(P).Name).ToString();
+                         
+
+                                var bizType = Business.BizMapperService.EntityMappingHelper.GetBizType(typeof(P).Name);
+                                string BizTypeText = string.Empty;
+                                // 如果业务类型为"无对应数据"，则尝试获取实体的描述信息
+                                if (bizType == RUINORERP.Global.BizType.无对应数据)
+                                {
+                                    BizTypeText = Business.BizMapperService.EntityMappingHelper.GetEntityDescription(typeof(P));
+                                }
+                                else
+                                {
+                                    BizTypeText = bizType.ToString();
+                                }
+
+                    
+
                                 frmedit.Text = "关联查询" + "-" + BizTypeText;
 
                                 if (frmedit.ShowDialog() == DialogResult.OK)
@@ -2286,7 +2366,7 @@ namespace RUINORERP.UI.Common
             };
             cmbBox.DataBindings.Add(depa);
 
-    
+
         }
 
 

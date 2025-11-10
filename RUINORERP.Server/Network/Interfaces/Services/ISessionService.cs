@@ -103,10 +103,15 @@ namespace RUINORERP.Server.Network.Interfaces.Services
         #region 统计和监控
 
         /// <summary>
-        /// 获取会话统计信息
+        /// 获取统计信息
         /// </summary>
         /// <returns>统计信息</returns>
         SessionStatistics GetStatistics();
+        
+        /// <summary>
+        /// 重置会话统计信息
+        /// </summary>
+        void ResetStatistics();
 
         /// <summary>
         /// 清理超时会话

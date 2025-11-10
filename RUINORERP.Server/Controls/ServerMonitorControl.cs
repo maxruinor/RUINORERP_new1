@@ -614,12 +614,41 @@ namespace RUINORERP.Server.Controls
         {
             try
             {
+                // 重置诊断服务的统计信息
                 _diagnosticsService.ResetAllStatistics();
+                
+                // 重置熔断器指标
+                if (_commandDispatcher != null && _commandDispatcher.Metrics != null)
+                {
+                    _commandDispatcher.Metrics.ResetAllMetrics();
+                }
+                
+                // 重置性能监控服务的统计信息
+                _performanceMonitoringService.ResetStatistics();
+                
+                // 重置错误分析服务的统计信息
+                _errorAnalysisService.ResetStatistics();
+                
+                // 重置会话统计信息
+                if (_sessionService != null)
+                {
+                    _sessionService.ResetStatistics();
+                }
+                
+                // 重置缓存统计信息
+                CacheManager.ResetStatistics();
+                
+                // 刷新数据显示
                 RefreshData();
-                MessageBox.Show("统计信息已重置", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                
+                // 显示成功消息
+                MessageBox.Show("所有统计信息已重置", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {
+                // 记录错误并显示错误消息
+                ILogger<ServerMonitorControl> logger = Startup.GetFromFac<ILogger<ServerMonitorControl>>();
+                logger.LogError(ex, "重置统计信息时发生错误");
                 MessageBox.Show($"重置统计信息时出错: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }

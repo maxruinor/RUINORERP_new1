@@ -16,5 +16,10 @@ namespace RUINORERP.Server.Network.Monitoring
         /// </summary>
         /// <returns>错误分析报告</returns>
         string GetErrorAnalysisReport();
+        
+        /// <summary>
+        /// 重置统计信息
+        /// </summary>
+        void ResetStatistics();
     }
 }

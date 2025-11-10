@@ -22,5 +22,10 @@ namespace RUINORERP.Server.Network.Monitoring
         /// </summary>
         /// <returns>实时监控数据</returns>
         RealTimeMonitoringData GetRealTimeData();
+        
+        /// <summary>
+        /// 重置统计信息
+        /// </summary>
+        void ResetStatistics();
     }
 }

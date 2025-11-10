@@ -64,5 +64,19 @@ namespace RUINORERP.Server.Network.Monitoring
 
             return report.ToString();
         }
+        
+        /// <summary>
+        /// 重置统计信息
+        /// </summary>
+        public void ResetStatistics()
+        {
+            // 由于错误分析服务主要依赖于命令处理器的统计信息
+            // 重置所有命令处理器的统计信息
+            var handlers = _commandDispatcher.GetAllHandlers();
+            foreach (var handler in handlers)
+            {
+                handler.ResetStatistics();
+            }
+        }
     }
 }

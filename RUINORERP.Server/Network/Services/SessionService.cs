@@ -38,7 +38,7 @@ namespace RUINORERP.Server.Network.Services
         // 只保留一个会话字典，SessionInfo继承自AppSession，本身就是IAppSession
         private readonly ConcurrentDictionary<string, SessionInfo> _sessions;
         private readonly Timer _cleanupTimer;
-        private readonly SessionStatistics _statistics;
+        private  SessionStatistics _statistics;
         private readonly object _lockObject = new object();
         private bool _disposed = false;
         private readonly ILogger<SessionService> _logger;
@@ -1101,6 +1101,40 @@ namespace RUINORERP.Server.Network.Services
                     LastCleanupTime = _statistics.LastCleanupTime,
                     LastHeartbeatCheck = _statistics.LastHeartbeatCheck
                 };
+            }
+        }
+        
+        /// <summary>
+        /// 重置会话统计信息
+        /// </summary>
+        public void ResetStatistics()
+        {
+            try
+            {
+                lock (_lockObject)
+                {
+                    // 保存不应重置的信息
+                    var currentConnections = ActiveSessionCount;
+                    var serverStartTime = _statistics.ServerStartTime;
+                    
+                    // 创建新的统计信息对象
+                    _statistics = SessionStatistics.Create(MaxSessionCount);
+                    
+                    // 恢复不应重置的信息
+                    _statistics.CurrentConnections = currentConnections;
+                    _statistics.ServerStartTime = serverStartTime;
+                    
+                    // 更新当前时间戳
+                    _statistics.LastCleanupTime = DateTime.Now;
+                    _statistics.LastHeartbeatCheck = DateTime.Now;
+                }
+                
+                _logger.LogInformation("会话统计信息已成功重置");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "重置会话统计信息时发生错误");
+                throw;
             }
         }
 

@@ -89,5 +89,19 @@ namespace RUINORERP.Server.Network.Monitoring
             var success = handlers.Sum(h => h.GetStatistics().SuccessfulCommands);
             return total > 0 ? (double)success / total * 100 : 100;
         }
+        
+        /// <summary>
+        /// 重置统计信息
+        /// </summary>
+        public void ResetStatistics()
+        {
+            // 由于性能监控服务主要依赖于命令处理器的统计信息
+            // 重置所有命令处理器的统计信息
+            var handlers = _commandDispatcher.GetAllHandlers();
+            foreach (var handler in handlers)
+            {
+                handler.ResetStatistics();
+            }
+        }
     }
 }

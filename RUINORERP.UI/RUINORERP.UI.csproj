@@ -894,6 +894,7 @@
     <Compile Include="Common\CheckedListBoxHelper.cs" />
     <Compile Include="Common\ColumnComparer.cs" />
     <Compile Include="Common\ControlExtensions.cs" />
+    <Compile Include="Common\ExpressionSafeHelper.cs" />
     <Compile Include="Common\HardwareHelper.cs" />
     <Compile Include="Common\UIBizService.cs" />
     <Compile Include="HelpSystem\ControlHelpDemoForm.cs">

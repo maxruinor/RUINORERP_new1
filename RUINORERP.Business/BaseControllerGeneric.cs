@@ -356,7 +356,7 @@ namespace RUINORERP.Business
 
         #region 公共虚拟方法
 
-        
+
 
         public virtual Task<T> BaseQueryByIdAsync(object id)
         {
@@ -982,9 +982,9 @@ namespace RUINORERP.Business
 
             // 初始化基础查询
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<T>();
-            
+
             // 自动更新导航关系(最多两层)，但对于基础表可以跳过
-            if(!Cache.TableSchemaManager.Instance.GetAllTableNames().Contains(typeof(T).Name))
+            if (!Cache.TableSchemaManager.Instance.GetAllTableNames().Contains(typeof(T).Name) || typeof(T).Name == typeof(tb_Prod).Name)
             {
                 querySqlQueryable = querySqlQueryable.IncludesAllFirstLayer();
             }

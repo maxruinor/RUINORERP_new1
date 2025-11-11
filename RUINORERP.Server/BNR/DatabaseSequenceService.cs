@@ -302,17 +302,16 @@ namespace RUINORERP.Server.BNR
         
         /// <summary>
         /// 生成动态键
+        /// 优化后：保持键的规范性，同时确保按时间重置功能正常工作
         /// </summary>
         /// <param name="key">基础键</param>
         /// <param name="resetType">重置类型</param>
         /// <returns>动态键</returns>
         private string GenerateDynamicKey(string key, string resetType)
-        {
-            string dynamicKey = key;
+        {            string dynamicKey = key;
             
             if (!string.IsNullOrEmpty(resetType))
-            {
-                switch (resetType.ToUpper())
+            {                switch (resetType.ToUpper())
                 {    
                     case "DAILY":
                         dynamicKey = $"{key}_{DateTime.Now.ToString("yyyyMMdd")}";
@@ -323,8 +322,14 @@ namespace RUINORERP.Server.BNR
                     case "YEARLY":
                         dynamicKey = $"{key}_{DateTime.Now.ToString("yyyy")}";
                         break;
+                    case "NONE":
+                        // 对于NONE类型，保持原始键不变
+                        break;
                 }
             }
+            
+            // 确保键格式规范，避免特殊字符
+            dynamicKey = System.Text.RegularExpressions.Regex.Replace(dynamicKey, "[^a-zA-Z0-9_一-龥]", "_");
             
             return dynamicKey;
         }

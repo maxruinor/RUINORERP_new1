@@ -40,10 +40,10 @@ namespace RUINORERP.Business
                      if (ValidatorConfig.IsFromPlatform)
                      {
                          //只是默认值。不能强制选择
-                         if (Order.IsFromPlatform)
-                         {
-                             context.AddFailure("平台单：必须选择。");
-                         }
+                         //if (Order.IsFromPlatform)
+                         //{
+                         //    context.AddFailure("平台单：必须选择。");
+                         //}
                      }
                  }
              });
@@ -107,10 +107,10 @@ namespace RUINORERP.Business
               if (ValidatorConfig.IsFromPlatform)
               {
                   //只是默认值。不能强制选择
-                  if (Order.IsFromPlatform)
-                  {
-                      context.AddFailure("平台单：必须选择。");
-                  }
+                  //if (Order.IsFromPlatform)
+                  //{
+                  //    context.AddFailure("平台单：必须选择。");
+                  //}
               }
           }
       });

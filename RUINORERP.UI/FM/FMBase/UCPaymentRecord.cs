@@ -41,6 +41,7 @@ using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
 using LiveChartsCore.Geo;
 using RUINORERP.Extensions.Middlewares;
 using RUINORERP.UI.Network.Services;
+using RUINORERP.Business.Cache;
 
 
 namespace RUINORERP.UI.FM
@@ -99,6 +100,24 @@ namespace RUINORERP.UI.FM
                     BaseProcessor baseProcessorPayeeInfo = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_FM_PayeeInfo).Name + "Processor");
                     QueryFilter queryFilterPayeeInfo = baseProcessorPayeeInfo.GetQueryFilter();
                     queryFilterPayeeInfo.FilterLimitExpressions.Add(lambdaPayeeInfo);
+
+                    // 初始化筛选后的列表
+                    List<tb_FM_PayeeInfo> filteredList = new List<tb_FM_PayeeInfo>();
+
+                    // 优先从缓存获取数据
+                    var EntityList = EntityCacheHelper.GetEntityList<tb_FM_PayeeInfo>(nameof(tb_FM_PayeeInfo));
+                    if (EntityList != null && EntityList.Any())
+                    {
+                        // 使用完全避免编译的筛选方法
+                        filteredList = DataBindingHelper.SafeFilterList(EntityList, lambdaPayeeInfo);
+
+                        //过滤失败时用原始的缓存数据
+                        if (filteredList.Count == 0 && filteredList.Count < EntityList.Count)
+                        {
+                            filteredList = EntityList;
+                        }
+                    }
+
 
                     DataBindingHelper.BindData4Cmb<tb_FM_PayeeInfo>(entity, k => k.PayeeInfoID, v => v.DisplayText, cmbPayeeInfoID, queryFilterPayeeInfo.GetFilterExpression<tb_FM_PayeeInfo>(), true);
                     DataBindingHelper.InitFilterForControlByExpCanEdit<tb_FM_PayeeInfo>(entity, cmbPayeeInfoID, c => c.DisplayText, queryFilterPayeeInfo, true);
@@ -286,6 +305,24 @@ namespace RUINORERP.UI.FM
                 BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_CustomerVendor).Name + "Processor");
                 QueryFilter queryFilterC = baseProcessor.GetQueryFilter();
                 queryFilterC.FilterLimitExpressions.Add(lambda);
+
+                // 初始化筛选后的列表
+                List<tb_CustomerVendor> filteredList = new List<tb_CustomerVendor>();
+
+                // 优先从缓存获取数据
+                var EntityList = EntityCacheHelper.GetEntityList<tb_CustomerVendor>(nameof(tb_CustomerVendor));
+                if (EntityList != null && EntityList.Any())
+                {
+                    // 使用完全避免编译的筛选方法
+                    filteredList = DataBindingHelper.SafeFilterList(EntityList, lambda);
+
+                    //过滤失败时用原始的缓存数据
+                    if (filteredList.Count == 0 && filteredList.Count < EntityList.Count)
+                    {
+                        filteredList = EntityList;
+                    }
+                }
+
 
                 //带过滤的下拉绑定要这样
                 DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID, queryFilterC.GetFilterExpression<tb_CustomerVendor>(), true);

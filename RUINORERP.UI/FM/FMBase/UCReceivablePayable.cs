@@ -54,6 +54,7 @@ using FastReport;
 using FastReport.Data;
 using RUINORERP.Extensions.Middlewares;
 using NPOI.SS.Formula.Functions;
+using RUINORERP.Business.Cache;
 
 namespace RUINORERP.UI.FM
 {
@@ -216,6 +217,26 @@ namespace RUINORERP.UI.FM
             bool canEdit = entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改 ||
                           (entity.ARAPStatus == (int)ARAPStatus.草稿) || (entity.ARAPStatus == (int)ARAPStatus.待审核);
 
+
+            #region 测试
+            // 初始化筛选后的列表
+            List<tb_FM_PayeeInfo> filteredList = new List<tb_FM_PayeeInfo>();
+
+            // 优先从缓存获取数据
+            var EntityList = EntityCacheHelper.GetEntityList<tb_FM_PayeeInfo>(nameof(tb_FM_PayeeInfo));
+            if (EntityList != null && EntityList.Any())
+            {
+                // 使用完全避免编译的筛选方法
+                filteredList = SafeFilterList(EntityList, lambdaPayeeInfo);
+
+                //过滤失败时用原始的缓存数据
+                if (filteredList.Count == 0 && filteredList.Count < EntityList.Count)
+                {
+                    filteredList = EntityList;
+                }
+            }
+
+            #endregion
             DataBindingHelper.BindData4Cmb<tb_FM_PayeeInfo>(entity, k => k.PayeeInfoID, v => v.DisplayText, cmbPayeeInfoID, queryFilterPayeeInfo.GetFilterExpression<tb_FM_PayeeInfo>(), true);
             DataBindingHelper.InitFilterForControlByExpCanEdit<tb_FM_PayeeInfo>(entity, cmbPayeeInfoID, c => c.DisplayText, queryFilterPayeeInfo, canEdit);
 
@@ -429,7 +450,7 @@ namespace RUINORERP.UI.FM
             if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
             {
                 base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService<tb_FM_ReceivablePayableValidator>(), kryptonPanel1.Controls);
-                
+
 
                 #region 收款信息 ，并且可以添加
                 // 使用统一方法加载收款信息
@@ -466,6 +487,11 @@ namespace RUINORERP.UI.FM
                 sgh.LoadItemDataToGrid<tb_FM_ReceivablePayableDetail>(grid1, sgd, new List<tb_FM_ReceivablePayableDetail>(), c => c.ProdDetailID);
             }
             UIBizService.SynchronizeColumnOrder(sgd, listCols.Select(c => c.DisplayController).ToList());
+            // 根据单据状态决定是否启用下拉控件
+            var IsEdit = entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改 ||
+                                  (entity.ARAPStatus == (int)ARAPStatus.草稿) || (entity.ARAPStatus == (int)ARAPStatus.待审核);
+
+
             //如果属性变化 则状态为修改
             entity.PropertyChanged += async (sender, s2) =>
             {
@@ -505,43 +531,37 @@ namespace RUINORERP.UI.FM
 
                     if (s2.PropertyName == entity.GetPropertyName<tb_FM_ReceivablePayable>(c => c.PayeeInfoID))
                     {
-                        // 根据单据状态决定是否启用下拉控件
-                        cmbPayeeInfoID.Enabled = entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改 ||
-                                              (entity.ARAPStatus == (int)ARAPStatus.草稿) || (entity.ARAPStatus == (int)ARAPStatus.待审核);
-                        
-                        #region 收款信息可以根据往来单位带出 ，并且可以添加
-                         // 使用统一方法加载收款信息
-                        LoadPayeeInfo(entity);
-                        #endregion
                         // 加载收款信息详情
                         await LoadPayeeInfoDetailAsync(entity);
                     }
 
-                }
-
-                //到期日期应该是根据对应客户的账期的天数来算
-                if (entity.CustomerVendor_ID > 0 && s2.PropertyName == entity.GetPropertyName<tb_FM_ReceivablePayable>(c => c.CustomerVendor_ID))
-                {
-                    var obj = RUINORERP.Business.Cache.EntityCacheHelper.GetEntity<tb_CustomerVendor>(entity.CustomerVendor_ID);
-                    if (obj != null)
+                    //到期日期应该是根据对应客户的账期的天数来算
+                    if (entity.CustomerVendor_ID > 0 && s2.PropertyName == entity.GetPropertyName<tb_FM_ReceivablePayable>(c => c.CustomerVendor_ID))
                     {
-                        if (obj is tb_CustomerVendor cv)
+                        var obj = RUINORERP.Business.Cache.EntityCacheHelper.GetEntity<tb_CustomerVendor>(entity.CustomerVendor_ID);
+                        if (obj != null)
                         {
-                            if (entity.ReceivePaymentType == (int)ReceivePaymentType.收款 && cv.CustomerCreditDays.HasValue)
+                            if (obj is tb_CustomerVendor cv)
                             {
-                                entity.DueDate = System.DateTime.Now.AddDays(cv.CustomerCreditDays.Value);
+                                if (entity.ReceivePaymentType == (int)ReceivePaymentType.收款 && cv.CustomerCreditDays.HasValue)
+                                {
+                                    entity.DueDate = System.DateTime.Now.AddDays(cv.CustomerCreditDays.Value);
+                                }
+                                if (entity.ReceivePaymentType == (int)ReceivePaymentType.付款 && cv.SupplierCreditDays.HasValue)
+                                {
+                                    entity.DueDate = System.DateTime.Now.AddDays(cv.SupplierCreditDays.Value);
+                                }
+                              
                             }
-                            if (entity.ReceivePaymentType == (int)ReceivePaymentType.付款 && cv.SupplierCreditDays.HasValue)
-                            {
-                                entity.DueDate = System.DateTime.Now.AddDays(cv.SupplierCreditDays.Value);
-                            }
-                            //换往来单位了。对应的收款信息要重置 
-                            entity.PayeeInfoID = null;
-                            LoadPayeeInfo(entity);
-                            //await LoadPayeeInfoDetailAsync(entity);
                         }
+
+
+                        //换往来单位了。对应的收款信息要重置 
+                        entity.PayeeInfoID = null;
+                        LoadPayeeInfo(entity);
                     }
                 }
+               
                 if (entity.Currency_ID > 0 && s2.PropertyName == entity.GetPropertyName<tb_FM_ReceivablePayable>(c => c.Currency_ID))
                 {
                     //如果币别是本位币则不显示汇率列

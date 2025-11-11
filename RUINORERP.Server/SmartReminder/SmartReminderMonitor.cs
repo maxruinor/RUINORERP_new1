@@ -282,6 +282,10 @@ namespace RUINORERP.Server.SmartReminder
                     .Where(p => p.IsEnabled)
                     .ToListAsync();
 
+                // 添加短暂等待，减轻数据库连接压力，特别是在快速循环调用时
+                // 20毫秒的等待对于用户感知几乎无影响，但可以有效减少连接冲突
+                await Task.Delay(20);
+
                 _logger.LogDebug("从数据库获取活跃规则，数量: {Count}", policies.Count);
                 
                 // 将结果存入缓存，设置5分钟过期和滑动过期

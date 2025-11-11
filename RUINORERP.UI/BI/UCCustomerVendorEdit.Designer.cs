@@ -31,6 +31,9 @@
             this.btnOk = new Krypton.Toolkit.KryptonButton();
             this.btnCancel = new Krypton.Toolkit.KryptonButton();
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
+            this.chkIs_enabled = new Krypton.Toolkit.KryptonCheckBox();
+            this.lblSpecialNotes = new Krypton.Toolkit.KryptonLabel();
+            this.txtSpecialNotes = new Krypton.Toolkit.KryptonTextBox();
             this.lblMobilePhone = new Krypton.Toolkit.KryptonLabel();
             this.txtMobilePhone = new Krypton.Toolkit.KryptonTextBox();
             this.lblFax = new Krypton.Toolkit.KryptonLabel();
@@ -77,9 +80,6 @@
             this.lblIsVendor = new Krypton.Toolkit.KryptonLabel();
             this.lblNotes = new Krypton.Toolkit.KryptonLabel();
             this.txtNotes = new Krypton.Toolkit.KryptonTextBox();
-            this.lblSpecialNotes = new Krypton.Toolkit.KryptonLabel();
-            this.txtSpecialNotes = new Krypton.Toolkit.KryptonTextBox();
-            this.chkIs_enabled = new Krypton.Toolkit.KryptonCheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
@@ -90,7 +90,7 @@
             // 
             // btnOk
             // 
-            this.btnOk.Location = new System.Drawing.Point(220, 627);
+            this.btnOk.Location = new System.Drawing.Point(243, 641);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(90, 25);
             this.btnOk.TabIndex = 0;
@@ -99,7 +99,7 @@
             // 
             // btnCancel
             // 
-            this.btnCancel.Location = new System.Drawing.Point(338, 627);
+            this.btnCancel.Location = new System.Drawing.Point(361, 641);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(90, 25);
             this.btnCancel.TabIndex = 1;
@@ -165,6 +165,31 @@
             this.kryptonPanel1.PaletteMode = Krypton.Toolkit.PaletteMode.Office2007Blue;
             this.kryptonPanel1.Size = new System.Drawing.Size(747, 690);
             this.kryptonPanel1.TabIndex = 2;
+            // 
+            // chkIs_enabled
+            // 
+            this.chkIs_enabled.Location = new System.Drawing.Point(457, 175);
+            this.chkIs_enabled.Name = "chkIs_enabled";
+            this.chkIs_enabled.Size = new System.Drawing.Size(75, 20);
+            this.chkIs_enabled.TabIndex = 102;
+            this.chkIs_enabled.Values.Text = "是否启用";
+            // 
+            // lblSpecialNotes
+            // 
+            this.lblSpecialNotes.Location = new System.Drawing.Point(109, 439);
+            this.lblSpecialNotes.Name = "lblSpecialNotes";
+            this.lblSpecialNotes.PaletteMode = Krypton.Toolkit.PaletteMode.Office2007Blue;
+            this.lblSpecialNotes.Size = new System.Drawing.Size(62, 20);
+            this.lblSpecialNotes.TabIndex = 100;
+            this.lblSpecialNotes.Values.Text = "特殊要求";
+            // 
+            // txtSpecialNotes
+            // 
+            this.txtSpecialNotes.Location = new System.Drawing.Point(177, 439);
+            this.txtSpecialNotes.Multiline = true;
+            this.txtSpecialNotes.Name = "txtSpecialNotes";
+            this.txtSpecialNotes.Size = new System.Drawing.Size(355, 72);
+            this.txtSpecialNotes.TabIndex = 101;
             // 
             // lblMobilePhone
             // 
@@ -288,7 +313,7 @@
             // 
             // btnAddBillingInformation
             // 
-            this.btnAddBillingInformation.Location = new System.Drawing.Point(616, 612);
+            this.btnAddBillingInformation.Location = new System.Drawing.Point(616, 641);
             this.btnAddBillingInformation.Name = "btnAddBillingInformation";
             this.btnAddBillingInformation.Size = new System.Drawing.Size(90, 25);
             this.btnAddBillingInformation.TabIndex = 83;
@@ -536,31 +561,6 @@
             this.txtNotes.Name = "txtNotes";
             this.txtNotes.Size = new System.Drawing.Size(355, 72);
             this.txtNotes.TabIndex = 32;
-            // 
-            // lblSpecialNotes
-            // 
-            this.lblSpecialNotes.Location = new System.Drawing.Point(109, 439);
-            this.lblSpecialNotes.Name = "lblSpecialNotes";
-            this.lblSpecialNotes.PaletteMode = Krypton.Toolkit.PaletteMode.Office2007Blue;
-            this.lblSpecialNotes.Size = new System.Drawing.Size(62, 20);
-            this.lblSpecialNotes.TabIndex = 100;
-            this.lblSpecialNotes.Values.Text = "特殊要求";
-            // 
-            // txtSpecialNotes
-            // 
-            this.txtSpecialNotes.Location = new System.Drawing.Point(177, 439);
-            this.txtSpecialNotes.Multiline = true;
-            this.txtSpecialNotes.Name = "txtSpecialNotes";
-            this.txtSpecialNotes.Size = new System.Drawing.Size(355, 72);
-            this.txtSpecialNotes.TabIndex = 101;
-            // 
-            // chkIs_enabled
-            // 
-            this.chkIs_enabled.Location = new System.Drawing.Point(457, 175);
-            this.chkIs_enabled.Name = "chkIs_enabled";
-            this.chkIs_enabled.Size = new System.Drawing.Size(75, 20);
-            this.chkIs_enabled.TabIndex = 102;
-            this.chkIs_enabled.Values.Text = "是否启用";
             // 
             // UCCustomerVendorEdit
             // 

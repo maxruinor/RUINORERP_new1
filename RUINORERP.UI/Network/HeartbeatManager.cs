@@ -710,10 +710,17 @@ namespace RUINORERP.UI.Network
         {
             try
             {
+                // 更新客户端版本信息
+                UpdateClientVersionInfo();
+                
                 // 创建心跳命令
                 HeartbeatRequest heartbeatRequest = new HeartbeatRequest();
                 // 设置客户端信息
                 heartbeatRequest.ClientVersion = GetClientVersion();
+                
+                // 设置客户端ID和IP地址
+                heartbeatRequest.ClientId = _socketClient.ClientID;
+                heartbeatRequest.ClientIp = _socketClient.ClientIP;
                 
                 // 避免直接依赖MainForm.Instance，使用更可靠的方式获取用户信息
                 if (_tokenManager != null)
@@ -744,6 +751,18 @@ namespace RUINORERP.UI.Network
                             if (heartbeatRequest.UserInfo != null && !string.IsNullOrEmpty(MainForm.Instance.AppContext.SessionId))
                             {
                                 heartbeatRequest.UserInfo.SessionId = MainForm.Instance.AppContext.SessionId;
+                            }
+                            
+                            // 设置当前模块和当前窗体信息
+                            if (MainForm.Instance.kryptonDockableWorkspace1?.ActivePage != null)
+                            {
+                                heartbeatRequest.UserInfo.当前模块 = "主界面";
+                                heartbeatRequest.UserInfo.当前窗体 = MainForm.Instance.kryptonDockableWorkspace1.ActivePage.Text;
+                            }
+                            else
+                            {
+                                heartbeatRequest.UserInfo.当前模块 = "主界面";
+                                heartbeatRequest.UserInfo.当前窗体 = "工作台";
                             }
                         }
                     }
@@ -914,7 +933,15 @@ namespace RUINORERP.UI.Network
                 if (assembly != null)
                 {
                     var version = assembly.GetName().Version;
-                    return version?.ToString() ?? "1.0.0";
+                    string baseVersion = version?.ToString() ?? "1.0.0";
+                    
+                    // 添加从Program.ERPVersion获取的额外版本信息
+                    if (!string.IsNullOrEmpty(Program.ERPVersion))
+                    {
+                        baseVersion += "-" + Program.ERPVersion;
+                    }
+                    
+                    return baseVersion;
                 }
                 return "1.0.0";
             }
@@ -922,6 +949,28 @@ namespace RUINORERP.UI.Network
             {
                 _logger?.LogWarning(ex, "获取客户端版本号失败，使用默认值");
                 return "1.0.0";
+            }
+        }
+        
+        /// <summary>
+        /// 更新客户端版本信息到当前用户信息中
+        /// </summary>
+        private void UpdateClientVersionInfo()
+        {
+            try
+            {
+                if (MainForm.Instance?.AppContext?.CurrentUser != null)
+                {
+                    string clientVersion = GetClientVersion();
+                    if (!string.IsNullOrEmpty(clientVersion))
+                    {
+                        MainForm.Instance.AppContext.CurrentUser.客户端版本 = clientVersion;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogWarning(ex, "更新客户端版本信息到当前用户信息失败");
             }
         }
 

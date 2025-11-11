@@ -58,6 +58,7 @@ namespace RUINORERP.UI.BI
             DataBindingHelper.BindData4TextBox<tb_FM_PayeeInfo>(entity, t => t.BelongingBank, txtBelongingBank, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_FM_PayeeInfo>(entity, t => t.OpeningBank, txtOpeningBank, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_FM_PayeeInfo>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text, false);
+            DataBindingHelper.BindData4TextBox<tb_FM_PayeeInfo>(entity, t => t.Details, txtDetails, BindDataType4TextBox.Text, false);
             //有默认值
             DataBindingHelper.BindData4RadioGroupTrueFalse<tb_FM_PayeeInfo>(entity, t => t.IsDefault, rdbIsDefaultYes, rdbIsDefaultNo);
             DataBindingHelper.BindData4RadioGroupTrueFalse<tb_FM_PayeeInfo>(entity, t => t.Is_enabled, rdbis_enabledYes, rdbis_enabledNo);
@@ -85,42 +86,92 @@ namespace RUINORERP.UI.BI
                 InitLoadSupplierData(_EditEntity);
             }
 
+            // 预先获取需要的属性名称，避免重复计算
+            string detailsPropertyName = entity.GetPropertyName<tb_FM_PayeeInfo>(c => c.Details);
+            string employeeIdPropertyName = entity.GetPropertyName<tb_FM_PayeeInfo>(c => c.Employee_ID);
+            string customerVendorIdPropertyName = entity.GetPropertyName<tb_FM_PayeeInfo>(c => c.CustomerVendor_ID);
+            string accountTypePropertyName = entity.GetPropertyName<tb_FM_PayeeInfo>(c => c.Account_type);
+            string accountNamePropertyName = entity.GetPropertyName<tb_FM_PayeeInfo>(c => c.Account_name);
+            string accountNoPropertyName = entity.GetPropertyName<tb_FM_PayeeInfo>(c => c.Account_No);
+            string belongingBankPropertyName = entity.GetPropertyName<tb_FM_PayeeInfo>(c => c.BelongingBank);
+            
             entity.PropertyChanged += (sender, s2) =>
             {
                 if (_EditEntity == null)
                 {
                     return;
                 }
+                
+                string propertyName = s2.PropertyName;
+                
+                // 如果是Details属性自身变化，直接返回，避免循环更新
+                if (propertyName == detailsPropertyName)
+                {
+                    return;
+                }
+                
+                // 当员工ID或客户供应商ID变化时，统一更新UI控件可见性
+                if (propertyName == employeeIdPropertyName || propertyName == customerVendorIdPropertyName)
+                {
+                    UpdateUIControlVisibility();
+                }
+                
+                // 只有在相关字段变化时才更新Details
+                if (propertyName == employeeIdPropertyName ||
+                    propertyName == customerVendorIdPropertyName ||
+                    propertyName == accountTypePropertyName ||
+                    propertyName == accountNamePropertyName ||
+                    propertyName == accountNoPropertyName ||
+                    propertyName == belongingBankPropertyName)
+                {
+                    // 获取显示名称
+                    string shortName = string.Empty;
+                    if (_EditEntity.CustomerVendor_ID.HasValue && _EditEntity.CustomerVendor_ID.Value > 0)
+                    {
+                        shortName = cmbCustomerVendor_ID.Text;
+                    }
+                    else if (_EditEntity.Employee_ID.HasValue && _EditEntity.Employee_ID.Value > 0)
+                    {
+                        shortName = cmbEmployee_ID.Text;
+                    }
+                    
+                    // 处理可能为null的字段
+                    string accountType = ((AccountType)_EditEntity.Account_type).ToString();
+                    string accountName = _EditEntity.Account_name ?? "未命名";
+                    string accountNo = _EditEntity.Account_No ?? "无账号";
+                    string belongingBank = _EditEntity.BelongingBank ?? "无银行信息";
+                    
+                    // 组合所有字段更新Details
+                    _EditEntity.Details = $"{shortName}-{accountType}-{accountName}-{accountNo}-{belongingBank}";
+                }
 
-                if (_EditEntity.Employee_ID.HasValue && _EditEntity.Employee_ID.Value > 0 && s2.PropertyName == entity.GetPropertyName<tb_FM_PayeeInfo>(c => c.Employee_ID))
-                {
-                    cmbCustomerVendor_ID.Visible = false;
-                    lblCustomerVendor_ID.Visible = false;
-                }
-                if (_EditEntity.CustomerVendor_ID.HasValue && _EditEntity.CustomerVendor_ID.Value > 0 && s2.PropertyName == entity.GetPropertyName<tb_FM_PayeeInfo>(c => c.CustomerVendor_ID))
-                {
-                    cmbEmployee_ID.Visible = false;
-                    lblEmployee_ID.Visible = false;
-                }
             };
 
-            //如果员工有值。则是来自于员工编辑UI。反之则是客户供应商编辑UI
-            if (_EditEntity.Employee_ID.HasValue && _EditEntity.Employee_ID.Value > 0
-                && !_EditEntity.CustomerVendor_ID.HasValue)
-            {
-                cmbCustomerVendor_ID.Visible = false;
-                lblCustomerVendor_ID.Visible = false;
-                cmbEmployee_ID.Enabled = false;
-                //lblEmployee_ID.Visible = false;
-            }
-            if (_EditEntity.CustomerVendor_ID.HasValue && _EditEntity.CustomerVendor_ID.Value > 0
-                && !_EditEntity.Employee_ID.HasValue)
-            {
-                cmbEmployee_ID.Visible = false;
-                lblEmployee_ID.Visible = false;
-                cmbCustomerVendor_ID.Enabled = false;
-            }
+            // 设置初始UI状态：根据当前实体值决定显示哪些控件
+            UpdateUIControlVisibility();
+            
             base.BindData(entity);
+        }
+        
+        /// <summary>
+        /// 根据实体当前值更新UI控件的可见性
+        /// </summary>
+        private void UpdateUIControlVisibility()
+        {
+            if (_EditEntity == null)
+                return;
+                
+            bool hasEmployeeId = _EditEntity.Employee_ID.HasValue && _EditEntity.Employee_ID.Value > 0;
+            bool hasCustomerVendorId = _EditEntity.CustomerVendor_ID.HasValue && _EditEntity.CustomerVendor_ID.Value > 0;
+            
+            // 员工ID和客户供应商ID二选一显示
+            cmbEmployee_ID.Visible = !hasCustomerVendorId;
+            lblEmployee_ID.Visible = !hasCustomerVendorId;
+            cmbEmployee_ID.Enabled = !hasEmployeeId && !hasCustomerVendorId;
+            
+            cmbCustomerVendor_ID.Visible = !hasEmployeeId;
+            lblCustomerVendor_ID.Visible = !hasEmployeeId;
+            cmbCustomerVendor_ID.Enabled = !hasCustomerVendorId && !hasEmployeeId;
 
         }
         private void InitLoadSupplierData(tb_FM_PayeeInfo entity)

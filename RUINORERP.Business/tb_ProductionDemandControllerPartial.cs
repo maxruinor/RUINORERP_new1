@@ -28,7 +28,6 @@ using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
 using RUINORERP.Business.CommService;
 using System.Windows.Forms;
 using RUINORERP.Business.BizMapperService;
-using RUINORERP.Business.Services;
 using System.Threading;
 
 namespace RUINORERP.Business

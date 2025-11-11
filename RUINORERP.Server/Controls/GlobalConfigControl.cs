@@ -1165,7 +1165,7 @@ namespace RUINORERP.Server.Controls
                 {
                     UseSharedPrinter = false,
                     SomeSetting = "",
-                    采购日期必填 = false,
+                    客户端自动更新=true,
                     IsFromPlatform = false,
                     OpenProdTypeForSaleCheck = true,
                     DirectPrinting = true

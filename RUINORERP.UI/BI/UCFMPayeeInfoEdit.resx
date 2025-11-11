@@ -120,4 +120,16 @@
   <metadata name="errorProviderForAllInput.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
   </metadata>
+  <data name="PicRowImage.RowImage" mimetype="application/x-microsoft.net.object.binary.base64">
+    <value>
+        AAEAAAD/////AQAAAAAAAAAMAgAAAEdSVUlOT1JFUlAuR2xvYmFsLCBWZXJzaW9uPTEuMC4wLjAsIEN1
+        bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49bnVsbAwDAAAAUVN5c3RlbS5EcmF3aW5nLCBWZXJz
+        aW9uPTQuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49YjAzZjVmN2YxMWQ1MGEz
+        YQUBAAAAI1JVSU5PUkVSUC5HbG9iYWwuTW9kZWwuRGF0YVJvd0ltYWdlBwAAABg8b2xkaGFzaD5rX19C
+        YWNraW5nRmllbGQYPG5ld2hhc2g+a19fQmFja2luZ0ZpZWxkGTxyZWFsTmFtZT5rX19CYWNraW5nRmll
+        bGQWPGltYWdlPmtfX0JhY2tpbmdGaWVsZBs8SW1hZ2VCeXRlcz5rX19CYWNraW5nRmllbGQUPERpcj5r
+        X19CYWNraW5nRmllbGQOX0ltYWdlRnVsbE5hbWUBAQEEBwEBFFN5c3RlbS5EcmF3aW5nLkltYWdlAwAA
+        AAICAAAACgoKCgoKCgs=
+</value>
+  </data>
 </root>

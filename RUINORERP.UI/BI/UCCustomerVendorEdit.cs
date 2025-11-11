@@ -25,6 +25,9 @@ using RUINORERP.Business.Processor;
 using RUINORERP.Business.Security;
 using SqlSugar;
 using RUINORERP.UI.Network.Services;
+using RUINORERP.Business.Cache;
+using RUINORERP.UI.AdvancedUIModule;
+using System.Linq.Expressions;
 
 namespace RUINORERP.UI.BI
 {
@@ -269,13 +272,34 @@ namespace RUINORERP.UI.BI
             }
         }
 
-        private void btnAddPayeeInfo_Click(object sender, EventArgs e)
+        private async void btnAddPayeeInfo_Click(object sender, EventArgs e)
         {
             if (_EditEntity.CustomerVendor_ID == 0)
             {
                 MessageBox.Show("请先正确选择往来单位数据。");
                 return;
             }
+
+            // 创建表达式 - 使用SqlSugar的Expressionable
+            var expressionable = Expressionable.Create<tb_FM_PayeeInfo>()
+                            .And(t => t.Is_enabled == true);
+
+            if (_EditEntity.CustomerVendor_ID > 0)
+            {
+                // 使用SqlSugar的Expressionable继续添加条件
+                expressionable = expressionable.And(t => t.CustomerVendor_ID == _EditEntity.CustomerVendor_ID);
+            }
+
+            // 最后转换为表达式
+            Expression<Func<tb_FM_PayeeInfo, bool>> lambdaPayeeInfo = expressionable.ToExpression();
+
+            BaseProcessor baseProcessorPayeeInfo = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_FM_PayeeInfo).Name + "Processor");
+            QueryFilter queryFilterPayeeInfo = baseProcessorPayeeInfo.GetQueryFilter();
+            queryFilterPayeeInfo.FilterLimitExpressions.Add(lambdaPayeeInfo);
+            AddOtherInfo<tb_FM_PayeeInfo>(queryFilterPayeeInfo);
+            return;
+
+
             object frm = Activator.CreateInstance(typeof(UCFMPayeeInfoEdit));
             if (frm.GetType().BaseType.Name.Contains("BaseEditGeneric"))
             {
@@ -292,7 +316,7 @@ namespace RUINORERP.UI.BI
                 frmaddg.BindData(bty);
                 if (frmaddg.ShowDialog() == DialogResult.OK)
                 {
-                    UIBizService.SavePayeeInfo(payeeInfo);
+                    await UIBizService.SavePayeeInfo(payeeInfo);
                 }
             }
         }
@@ -333,7 +357,7 @@ namespace RUINORERP.UI.BI
             .Where(c => c.Customer_id == entity.Customer_id)
             .SingleAsync();
 
-          
+
             MainForm.Instance.mapper.Map(crmCustomer, entity);  // 直接将 crmLeads 的值映射到传入的 entity 对象上，保持了引用
                                                                 // entity = mapper.Map<tb_CRM_Customer>(crmLeads);//这个是直接重新生成了对象。
             entity.ActionStatus = ActionStatus.新增;
@@ -380,13 +404,34 @@ namespace RUINORERP.UI.BI
 
         }
 
-        private void btnAddBillingInformation_Click(object sender, EventArgs e)
+        private async void btnAddBillingInformation_Click(object sender, EventArgs e)
         {
             if (_EditEntity.CustomerVendor_ID == 0)
             {
                 MessageBox.Show("请先正确选择往来单位数据。");
                 return;
             }
+
+            // 创建表达式 - 使用SqlSugar的Expressionable
+            var expressionable = Expressionable.Create<tb_BillingInformation>()
+                            .And(t => t.isdeleted == false);
+
+            if (_EditEntity.CustomerVendor_ID > 0)
+            {
+                // 使用SqlSugar的Expressionable继续添加条件
+                expressionable = expressionable.And(t => t.CustomerVendor_ID == _EditEntity.CustomerVendor_ID);
+            }
+
+            // 最后转换为表达式
+            Expression<Func<tb_BillingInformation, bool>> lambdaPayeeInfo = expressionable.ToExpression();
+
+            BaseProcessor baseProcessorPayeeInfo = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_BillingInformation).Name + "Processor");
+            QueryFilter queryFilterPayeeInfo = baseProcessorPayeeInfo.GetQueryFilter();
+            queryFilterPayeeInfo.FilterLimitExpressions.Add(lambdaPayeeInfo);
+            AddOtherInfo<tb_BillingInformation>(queryFilterPayeeInfo);
+            return;
+
+            return;
             object frm = Activator.CreateInstance(typeof(UCBillingInformationEdit));
             if (frm.GetType().BaseType.Name.Contains("BaseEditGeneric"))
             {
@@ -403,12 +448,65 @@ namespace RUINORERP.UI.BI
                 frmaddg.BindData(bty);
                 if (frmaddg.ShowDialog() == DialogResult.OK)
                 {
-                    UIBizService.SaveBillingInformation(Info);
+                    await UIBizService.SaveBillingInformation(Info);
                 }
             }
         }
 
+        private void AddOtherInfo<P>(QueryFilter queryFilterPayeeInfo)
+        {
+            //取外键表名的代码
+            string fktableName = typeof(P).Name;
+            //调用通用的查询编辑基础资料。
+            //需要对应的类名，如果修改新增了数据要重新加载下拉数据
+            tb_MenuInfo menuinfo = MainForm.Instance.MenuList.FirstOrDefault(t => t.EntityName == fktableName.ToString());
+            if (menuinfo == null)
+            {
+                MainForm.Instance.PrintInfoLog("菜单关联类型为空,或您没有执行此菜单的权限，或配置菜时参数不正确。请联系管理员。");
+                return;
+            }
 
+
+
+
+            //暂时认为基础数据都是这个基类出来的 否则可以根据菜单中的基类类型来判断生成
+            BaseUControl ucBaseList = null;
+
+            //编辑模式
+            ucBaseList = Startup.GetFromFacByName<BaseUControl>(menuinfo.FormName);
+            ucBaseList.QueryConditionFilter = queryFilterPayeeInfo;
+
+
+            ucBaseList.Runway = BaseListRunWay.选中模式;
+            //从这里调用 就是来自于关联窗体，下面这个公共基类用于这个情况。暂时在那个里面来控制.Runway = BaseListRunWay.窗体;
+            frmBaseEditList frmedit = new frmBaseEditList();
+            frmedit.StartPosition = FormStartPosition.CenterScreen;
+            ucBaseList.Dock = DockStyle.Fill;
+            frmedit.kryptonPanel1.Controls.Add(ucBaseList);
+
+
+            var bizType = Business.BizMapperService.EntityMappingHelper.GetBizType(typeof(P).Name);
+            string BizTypeText = string.Empty;
+            // 如果业务类型为"无对应数据"，则尝试获取实体的描述信息
+            if (bizType == RUINORERP.Global.BizType.无对应数据)
+            {
+                BizTypeText = Business.BizMapperService.EntityMappingHelper.GetEntityDescription(typeof(P));
+            }
+            else
+            {
+                BizTypeText = bizType.ToString();
+            }
+
+            frmedit.Text = "关联查询" + "-" + BizTypeText;
+            ucBaseList.QueryDtoProxy = new();
+            ucBaseList.Query();
+            if (frmedit.ShowDialog() == DialogResult.OK)
+            {
+
+
+            }
+
+        }
 
 
     }

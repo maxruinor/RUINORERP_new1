@@ -42,6 +42,11 @@ namespace RUINORERP.PacketSpec.Commands
         /// 退出系统
         /// </summary>
         public const ushort System_ExitSystem = 0x0006;
+        
+        /// <summary>
+        /// 推送版本更新 - 服务器主动推送最新版本信息，要求客户端更新
+        /// </summary>
+        public const ushort System_PushVersionUpdate = 0x0007;
         #endregion
 
         #region 认证命令 (0x01xx)

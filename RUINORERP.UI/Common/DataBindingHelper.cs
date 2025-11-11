@@ -310,7 +310,7 @@ namespace RUINORERP.UI.Common
 
                             editForm.Text = "关联查询" + "-" + BizTypeText;
 
-                       
+
 
                             // 显示查询窗体并处理选择结果
                             if (editForm.ShowDialog() == DialogResult.OK)
@@ -418,7 +418,7 @@ namespace RUINORERP.UI.Common
                             }
 
                             editForm.Text = "关联查询" + "-" + BizTypeText;
-                   
+
 
                             // 显示查询窗体并处理选择结果
                             if (editForm.ShowDialog() == DialogResult.OK)
@@ -980,7 +980,7 @@ namespace RUINORERP.UI.Common
                                 }
 
                                 frmedit.Text = "关联查询" + "-" + BizTypeText;
-                              
+
 
                                 if (frmedit.ShowDialog() == DialogResult.OK)
                                 {
@@ -1326,7 +1326,6 @@ namespace RUINORERP.UI.Common
                                             ktbcombo.SelectedItem = selectItem;
                                         }
                                     }
-
                                 }
 
 
@@ -1402,7 +1401,7 @@ namespace RUINORERP.UI.Common
                                 frmedit.kryptonPanel1.Controls.Add(ucBaseList);
 
 
-                         
+
 
                                 var bizType = Business.BizMapperService.EntityMappingHelper.GetBizType(typeof(P).Name);
                                 string BizTypeText = string.Empty;
@@ -1416,7 +1415,7 @@ namespace RUINORERP.UI.Common
                                     BizTypeText = bizType.ToString();
                                 }
 
-                    
+
 
                                 frmedit.Text = "关联查询" + "-" + BizTypeText;
 
@@ -3743,7 +3742,11 @@ namespace RUINORERP.UI.Common
         /// <summary>
         /// 安全地从List中筛选数据
         /// </summary>
-        private static List<T> SafeFilterList<T>(List<T> sourceList, Expression<Func<T, bool>> expCondition) where T : class
+        /// <summary>
+        /// 安全地从List中筛选数据
+        /// 增强版：改进了对复杂表达式的处理，特别是包含闭包变量和类型转换的表达式
+        /// </summary>
+        public static List<T> SafeFilterList<T>(List<T> sourceList, Expression<Func<T, bool>> expCondition) where T : class
         {
             if (sourceList == null || !sourceList.Any())
                 return new List<T>();
@@ -3753,50 +3756,177 @@ namespace RUINORERP.UI.Common
 
             try
             {
-                // 如果直接编译失败，使用安全评估方法
-                return sourceList.Where(item => ExpressionSafeHelper.SafeEvaluate(item, expCondition, true)).ToList();
+                // 首先尝试使用ExpressionSafeHelper进行安全评估
+                var result = sourceList.Where(item => ExpressionSafeHelper.SafeEvaluate(item, expCondition, true)).ToList();
+
+                // 如果结果为空，可能是评估失败，尝试备选方法
+                if (result.Count == 0)
+                {
+                    System.Diagnostics.Debug.WriteLine($"表达式评估结果为空，尝试使用条件提取方法");
+                    return TryFilterWithConditionExtraction(sourceList, expCondition);
+                }
+
+                return result;
             }
             catch (Exception ex)
             {
-                // 发生任何错误时返回完整列表
+                // 发生错误时，记录日志并尝试备选方案
                 System.Diagnostics.Debug.WriteLine($"安全筛选失败: {ex.Message}");
-                // 尝试使用简单的条件提取作为最后的备选方案
-                try
-                {
-                    var conditions = new List<SimpleCondition>();
-                    ExtractConditionsFromBinary(expCondition.Body as BinaryExpression, conditions);
-                    if (conditions.Any())
-                    {
-                        return sourceList.Where(item => MeetsAllConditions(item, conditions)).ToList();
-                    }
-                }
-                catch
-                {
-                    // 备选方案也失败，返回完整列表
-                }
-                return sourceList.ToList();
+                return TryFilterWithConditionExtraction(sourceList, expCondition);
             }
+        }
+
+        /// <summary>
+        /// 尝试使用条件提取方法进行筛选
+        /// </summary>
+        private static List<T> TryFilterWithConditionExtraction<T>(List<T> sourceList, Expression<Func<T, bool>> expCondition) where T : class
+        {
+            try
+            {
+                var conditions = new List<SimpleCondition>();
+
+                // 处理二元表达式（常见于Where条件）
+                if (expCondition.Body is BinaryExpression binaryExp)
+                {
+                    ExtractConditionsFromBinary(binaryExp, conditions);
+                }
+                // 也可以处理其他类型的表达式
+                else if (expCondition.Body is MemberExpression memberExp)
+                {
+                    // 处理简单的属性访问表达式
+                    conditions.Add(new SimpleCondition
+                    {
+                        PropertyName = memberExp.Member.Name,
+                        Value = true,
+                        Operator = ExpressionType.Equal
+                    });
+                }
+
+                // 如果提取到了条件，使用这些条件进行筛选
+                if (conditions.Any())
+                {
+                    System.Diagnostics.Debug.WriteLine($"成功提取到 {conditions.Count} 个筛选条件");
+                    var filteredList = sourceList.Where(item => MeetsAllConditions(item, conditions)).ToList();
+                    // 只有当筛选有结果时才返回，否则返回原始列表
+                    return filteredList.Count > 0 ? filteredList : sourceList.ToList();
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"条件提取失败: {ex.Message}");
+            }
+
+            // 所有方法都失败时，返回原始列表
+            return sourceList.ToList();
         }
 
 
 
 
 
+        /// <summary>
+        /// 从二元表达式中递归提取条件
+        /// </summary>
         private static void ExtractConditionsFromBinary(BinaryExpression binary, List<SimpleCondition> conditions)
         {
-            if (binary.Left is MemberExpression leftMember && binary.Right is ConstantExpression rightConstant)
+            // 处理逻辑运算符（AndAlso, OrElse），递归提取子条件
+            if (binary.NodeType == ExpressionType.AndAlso || binary.NodeType == ExpressionType.OrElse)
             {
-                conditions.Add(new SimpleCondition
-                {
-                    PropertyName = leftMember.Member.Name,
-                    Value = rightConstant.Value,
-                    Operator = binary.NodeType
-                });
+                // 递归处理左侧
+                if (binary.Left is BinaryExpression leftBinary)
+                    ExtractConditionsFromBinary(leftBinary, conditions);
+                else
+                    ExtractSingleCondition(binary.Left, conditions, binary.NodeType);
+
+                // 递归处理右侧
+                if (binary.Right is BinaryExpression rightBinary)
+                    ExtractConditionsFromBinary(rightBinary, conditions);
+                else
+                    ExtractSingleCondition(binary.Right, conditions, binary.NodeType);
             }
+            else
+            {
+                // 处理单个比较条件
+                ExtractSingleCondition(binary, conditions, binary.NodeType);
+            }
+        }
+
+        /// <summary>
+        /// 提取单个条件
+        /// </summary>
+        private static void ExtractSingleCondition(Expression expression, List<SimpleCondition> conditions, ExpressionType logicalOperator)
+        {
+            if (expression is BinaryExpression binary)
+            {
+                // 尝试获取左侧属性名
+                string propertyName = GetPropertyName(binary.Left);
+                if (!string.IsNullOrEmpty(propertyName))
+                {
+                    // 尝试获取右侧值，支持常量表达式和类型转换表达式
+                    object value = GetExpressionValueFromNode(binary.Right);
+                    if (value != null || binary.Right is ConstantExpression constExp && constExp.Value == null)
+                    {
+                        conditions.Add(new SimpleCondition
+                        {
+                            PropertyName = propertyName,
+                            Value = value,
+                            Operator = binary.NodeType,
+                            LogicalOperator = logicalOperator
+                        });
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// 从表达式节点获取属性名
+        /// </summary>
+        private static string GetPropertyName(Expression expression)
+        {
+            if (expression is MemberExpression memberExpr)
+            {
+                return memberExpr.Member.Name;
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 从表达式节点获取值，支持常量表达式和类型转换表达式
+        /// </summary>
+        private static object GetExpressionValueFromNode(Expression expression)
+        {
+            if (expression is ConstantExpression constExp)
+            {
+                return constExp.Value;
+            }
+            else if (expression is UnaryExpression unaryExp && unaryExp.NodeType == ExpressionType.Convert)
+            {
+                // 处理类型转换表达式，递归获取内部表达式的值
+                return GetExpressionValueFromNode(unaryExp.Operand);
+            }
+            else if (expression is MemberExpression memberExp && memberExp.Expression is ConstantExpression)
+            {
+                // 处理闭包中的变量引用
+                var memberConstExp = (ConstantExpression)memberExp.Expression;
+                try
+                {
+                    if (memberExp.Member is PropertyInfo propInfo)
+                        return propInfo.GetValue(memberConstExp.Value);
+                    else if (memberExp.Member is FieldInfo fieldInfo)
+                        return fieldInfo.GetValue(memberConstExp.Value);
+                }
+                catch
+                {
+                    // 获取失败时返回null
+                }
+            }
+            return null;
         }
 
         private static bool MeetsAllConditions<T>(T item, List<SimpleCondition> conditions)
         {
+            // 对于简单情况，直接检查所有条件
+            // 在更复杂的场景中，可以根据LogicalOperator构建更复杂的条件评估逻辑
             foreach (var condition in conditions)
             {
                 if (!MeetsCondition(item, condition))
@@ -3839,6 +3969,7 @@ namespace RUINORERP.UI.Common
             public string PropertyName { get; set; }
             public object Value { get; set; }
             public ExpressionType Operator { get; set; }
+            public ExpressionType LogicalOperator { get; set; } = ExpressionType.AndAlso; // 默认逻辑运算符为AndAlso
         }
 
 

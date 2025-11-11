@@ -18,7 +18,6 @@ using RUINORERP.Extensions.AOP;
 using Microsoft.Extensions.DependencyInjection;
 using RUINORERP.Extensions.Middlewares;
 using RUINORERP.Business.Cache;
-using RUINORERP.Business.Services;
 using RUINORERP.Business.Config;
 using RUINORERP.IServices;
 using RUINORERP.Model.Context;
@@ -167,8 +166,7 @@ namespace RUINORERP.Business.DI
             // 注册行级权限服务
             RegisterRowLevelAuthServices(builder);
             
-            // 注册业务编码服务
-            RegisterBizCodeServices(builder);
+ 
 
             // 注册泛型配置服务
             builder.RegisterGeneric(typeof(GenericConfigService<>))
@@ -385,27 +383,7 @@ namespace RUINORERP.Business.DI
             }
         }
 
-        /// <summary>
-        /// 注册业务编码服务
-        /// </summary>
-        /// <param name="builder">容器构建器</param>
-        private static void RegisterBizCodeServices(ContainerBuilder builder)
-        {
-            try
-            {
-                // 注册本地业务编码生成服务，作为服务器通信失败时的备用方案
-                // 由于服务器端的BizCodeGenerateService可能不在业务层的引用范围内
-                // 这里注册一个简单的本地实现，如果需要更复杂的功能，可以创建专门的实现类
-                builder.RegisterType<LocalBizCodeGenerateService>()
-                    .As<IBizCodeService>()
-                    .InstancePerLifetimeScope();
-                
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"注册业务编码服务失败: {ex.Message}");
-            }
-        }
+        
 
         /// <summary>
         /// 配置Business项目的服务，初始化实体映射

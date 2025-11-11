@@ -33,7 +33,6 @@ using System.IO.IsolatedStorage;
 using StackExchange.Redis;
 using System.Windows.Forms;
 using System.Text;
-using RUINORERP.Business.Services;
 using System.Threading;
 
 namespace RUINORERP.Business

@@ -2283,6 +2283,7 @@
     <Compile Include="Network\ClientCommandHandlers\BaseClientCommandHandler.cs" />
     <Compile Include="Network\ClientCommandHandlers\ClientCommandDispatcher.cs" />
     <Compile Include="Network\ClientCommandHandlers\ClientCommandHandlerAttribute.cs" />
+    <Compile Include="Network\ClientCommandHandlers\AcceptCommandHandler.cs" />
     <Compile Include="Network\ClientCommandHandlers\ConfigCommandHandler.cs" />
     <Compile Include="Network\ClientCommandHandlers\IClientCommandDispatcher.cs" />
     <Compile Include="Network\ClientCommandHandlers\IClientCommandHandler.cs" />

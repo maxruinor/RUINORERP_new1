@@ -157,7 +157,7 @@ namespace RUINORERP.Extensions
                 if (CheckEvent != null)
                 {
                     string formattedSql = Common.DB.SqlProfiler.FormatParam(sql, pars);
-                    string formattedSqlWithCaller = $"{callerMethod}:{formattedSql}";
+                    string formattedSqlWithCaller = $"{callerMethod}:     {formattedSql}";
                     Console.WriteLine(formattedSqlWithCaller);
                     CheckEvent(formattedSqlWithCaller);
                 }

@@ -22,6 +22,7 @@ using RUINORERP.UI.IM;
 using RUINORERP.UI.Network.ClientCommandHandlers;
 using System.Collections.Generic;
 using RUINORERP.Business.Network;
+using RUINORERP.IServices;
 
 namespace RUINORERP.UI.Network.DI
 {
@@ -50,7 +51,7 @@ namespace RUINORERP.UI.Network.DI
         public TOptions Value { get; }
     }
 
- 
+
 
     /// <summary>
     /// Network项目服务依赖注入配置类
@@ -88,8 +89,8 @@ namespace RUINORERP.UI.Network.DI
                                (pi, ctx) => 5000) // 默认30秒心跳间隔
                 .WithParameter((pi, ctx) => pi.ParameterType == typeof(int) && pi.Name == "heartbeatTimeoutMs",
                                (pi, ctx) => 5000); // 默认5秒超时
-            
-     
+
+
 
             // 先注册一个 Lazy<ClientCommunicationService> 实例
             builder.Register(c => new Lazy<ClientCommunicationService>(() => c.Resolve<ClientCommunicationService>(), true))
@@ -97,7 +98,7 @@ namespace RUINORERP.UI.Network.DI
                 .SingleInstance();
 
             // 使用工厂方法注册ClientCommunicationService，避免循环依赖
-            builder.Register(c => 
+            builder.Register(c =>
             {
                 // 手动解析所有依赖项，避免依赖注入容器自动解析时可能产生的循环引用
                 var socketClient = c.Resolve<ISocketClient>();
@@ -107,7 +108,7 @@ namespace RUINORERP.UI.Network.DI
                 var heartbeatManager = c.Resolve<HeartbeatManager>();
                 var clientEventManager = c.Resolve<ClientEventManager>(); // 获取已注册的ClientEventManager单例
                 var commandHandlers = c.Resolve<IEnumerable<ICommandHandler>>();
-                
+
                 // 创建ClientCommunicationService实例
                 var communicationService = new ClientCommunicationService(
                     socketClient,
@@ -118,15 +119,15 @@ namespace RUINORERP.UI.Network.DI
                     clientEventManager,
                     commandHandlers
                 );
-                
+
                 // 设置HeartbeatManager的ClientCommunicationService引用
                 heartbeatManager.SetCommunicationService(communicationService);
-                
+
                 return communicationService;
             })
             .AsSelf()
             .SingleInstance()
-            .OnActivated(e => 
+            .OnActivated(e =>
             {
                 // 在激活后显式初始化命令调度器，而不是在构造函数中
                 // 这避免了在构造过程中触发依赖解析导致的循环引用
@@ -164,10 +165,10 @@ namespace RUINORERP.UI.Network.DI
                 ValidateLifetime = true,
                 ClockSkewSeconds = 300
             };
-            
+
             // 直接注册TokenServiceOptions实例
             builder.RegisterInstance(tokenServiceOptions).SingleInstance();
-            
+
             // 使用自定义的SimpleOptions实现，避免OptionsWrapper可能导致的循环依赖
             builder.RegisterInstance(new SimpleOptions<TokenServiceOptions>(tokenServiceOptions))
                 .As<IOptions<TokenServiceOptions>>()
@@ -192,7 +193,28 @@ namespace RUINORERP.UI.Network.DI
 
             // 注册业务服务
             builder.RegisterType<UserLoginService>().AsSelf().SingleInstance();
-            builder.RegisterType<BizCodeService>().AsSelf().SingleInstance();
+
+            // 注册本地业务编码生成服务，作为服务器通信失败时的备用方案
+            // 由于服务器端的BizCodeGenerateService可能不在业务层的引用范围内
+            // 这里注册一个简单的本地实现，如果需要更复杂的功能，可以创建专门的实现类
+            //最后注册的优先，所以这里放在一起
+            // 注册LocalBizCodeGenerateService，仅作为自身类型注册，避免接口拦截问题
+            //builder.RegisterType<Business.Services.LocalBizCodeGenerateService>()
+            //    .AsSelf()
+            //    .InstancePerLifetimeScope()
+            //    .PropertiesAutowired()
+            //    .ExternallyOwned() // 标记为外部拥有，避免与拦截器冲突
+            //    .PreserveExistingDefaults(); // 保留现有的默认实现
+            
+            // 注册BizCodeService作为IBizCodeService接口的主要实现
+            builder.RegisterType<BizCodeService>()
+                .As<IBizCodeService>()
+                .AsSelf()
+                .SingleInstance()
+                .PropertiesAutowired()
+                .PreserveExistingDefaults(); // 保留现有的默认实现
+
+
             builder.RegisterType<CacheClientService>().AsSelf().SingleInstance();
             builder.RegisterType<MessageService>().AsSelf().SingleInstance();
             builder.RegisterType<SimplifiedMessageService>().AsSelf().InstancePerDependency();
@@ -226,7 +248,7 @@ namespace RUINORERP.UI.Network.DI
             builder.Register(c => new SimpleOptions<GlobalValidatorConfig>(c.Resolve<GlobalValidatorConfig>()))
                 .As<IOptions<GlobalValidatorConfig>>()
                 .SingleInstance();
-    
+
 
             // 扫描并注册所有命令处理器
             var commandHandlerTypes = Assembly.GetExecutingAssembly().GetTypes()

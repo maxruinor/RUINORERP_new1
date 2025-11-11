@@ -41,6 +41,10 @@ namespace RUINORERP.Model
                     return "请选择";
                 }
 
+                if (!string.IsNullOrEmpty(this.Details))
+                {
+                    return Details;
+                }
                 // 处理可能为null的字段，使用空值合并运算符提供默认值
                 string accountType = ((AccountType)Account_type).ToString();
                 string accountName = Account_name ?? "未命名";

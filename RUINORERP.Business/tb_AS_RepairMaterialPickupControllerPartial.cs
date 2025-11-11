@@ -29,7 +29,6 @@ using RUINORERP.Global;
 using RUINORERP.Business.CommService;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.Business.BizMapperService;
-using RUINORERP.Business.Services;
 
 namespace RUINORERP.Business
 {
@@ -138,7 +137,7 @@ namespace RUINORERP.Business
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 List<tb_Inventory> invList = new List<tb_Inventory>();
 
-                var inventoryGroups = new Dictionary<(long ProdDetailID, long LocationID), (tb_Inventory Inventory, decimal RepairQty)>();
+                var inventoryGroups = new Dictionary<(long ProdDetailID, long LocationID), (tb_Inventory Inventory, decimal RepairQty, DateTime LatestOutboundTime)>();
 
                 //更新 仓的数量减少
                 foreach (var child in entity.tb_AS_RepairMaterialPickupDetails)
@@ -173,7 +172,8 @@ namespace RUINORERP.Business
                         // 初始化分组数据
                         group = (
                             Inventory: inv,
-                            RepairQty: currentRepairQty // 首次累加
+                            RepairQty: currentRepairQty, // 首次累加
+                                   LatestOutboundTime: currentOutboundTime
                                                         //QtySum: currentQty
                         );
                         inventoryGroups[key] = group;
@@ -192,7 +192,8 @@ namespace RUINORERP.Business
                             return rmrs;
                         }
 
-
+                        // 取最新出库时间（若当前时间更新，则覆盖）
+                        group.LatestOutboundTime = System.DateTime.Now;
                         inventoryGroups[key] = group; // 更新分组数据
                     }
                 }

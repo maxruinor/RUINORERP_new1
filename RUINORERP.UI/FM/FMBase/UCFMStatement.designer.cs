@@ -79,6 +79,8 @@
             this.lblPrintStatus = new Krypton.Toolkit.KryptonLabel();
             this.kryptonSplitContainer2 = new Krypton.Toolkit.KryptonSplitContainer();
             this.grid1 = new SourceGrid.Grid();
+            this.kryptonLabel3 = new Krypton.Toolkit.KryptonLabel();
+            this.lblMoneyUpper = new Krypton.Toolkit.KryptonLabel();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
@@ -97,6 +99,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer2.Panel1)).BeginInit();
             this.kryptonSplitContainer2.Panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer2.Panel2)).BeginInit();
+            this.kryptonSplitContainer2.Panel2.SuspendLayout();
             this.kryptonSplitContainer2.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -569,8 +572,13 @@
             // kryptonSplitContainer2.Panel1
             // 
             this.kryptonSplitContainer2.Panel1.Controls.Add(this.grid1);
+            // 
+            // kryptonSplitContainer2.Panel2
+            // 
+            this.kryptonSplitContainer2.Panel2.Controls.Add(this.kryptonLabel3);
+            this.kryptonSplitContainer2.Panel2.Controls.Add(this.lblMoneyUpper);
             this.kryptonSplitContainer2.Size = new System.Drawing.Size(1133, 494);
-            this.kryptonSplitContainer2.SplitterDistance = 455;
+            this.kryptonSplitContainer2.SplitterDistance = 439;
             this.kryptonSplitContainer2.TabIndex = 2;
             // 
             // grid1
@@ -582,10 +590,33 @@
             this.grid1.Name = "grid1";
             this.grid1.OptimizeMode = SourceGrid.CellOptimizeMode.ForRows;
             this.grid1.SelectionMode = SourceGrid.GridSelectionMode.Cell;
-            this.grid1.Size = new System.Drawing.Size(1133, 455);
+            this.grid1.Size = new System.Drawing.Size(1133, 439);
             this.grid1.TabIndex = 2;
             this.grid1.TabStop = true;
             this.grid1.ToolTipText = "";
+            // 
+            // kryptonLabel3
+            // 
+            this.kryptonLabel3.Location = new System.Drawing.Point(291, 17);
+            this.kryptonLabel3.Name = "kryptonLabel3";
+            this.kryptonLabel3.Size = new System.Drawing.Size(88, 20);
+            this.kryptonLabel3.TabIndex = 180;
+            this.kryptonLabel3.Values.Text = "对账金额大写";
+            // 
+            // lblMoneyUpper
+            // 
+            this.lblMoneyUpper.Location = new System.Drawing.Point(386, 9);
+            this.lblMoneyUpper.Name = "lblMoneyUpper";
+            this.lblMoneyUpper.Size = new System.Drawing.Size(57, 34);
+            this.lblMoneyUpper.StateNormal.ShortText.Color1 = System.Drawing.Color.Black;
+            this.lblMoneyUpper.StateNormal.ShortText.Color2 = System.Drawing.Color.Green;
+            this.lblMoneyUpper.StateNormal.ShortText.ColorStyle = Krypton.Toolkit.PaletteColorStyle.Solid;
+            this.lblMoneyUpper.StateNormal.ShortText.Font = new System.Drawing.Font("宋体", 15F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.lblMoneyUpper.StateNormal.ShortText.MultiLine = Krypton.Toolkit.InheritBool.True;
+            this.lblMoneyUpper.StateNormal.ShortText.MultiLineH = Krypton.Toolkit.PaletteRelativeAlign.Near;
+            this.lblMoneyUpper.TabIndex = 179;
+            this.lblMoneyUpper.Values.Image = global::RUINORERP.UI.Properties.Resources.人民币__32;
+            this.lblMoneyUpper.Values.Text = "0";
             // 
             // UCFMStatement
             // 
@@ -614,6 +645,8 @@
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer2.Panel1)).EndInit();
             this.kryptonSplitContainer2.Panel1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer2.Panel2)).EndInit();
+            this.kryptonSplitContainer2.Panel2.ResumeLayout(false);
+            this.kryptonSplitContainer2.Panel2.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer2)).EndInit();
             this.kryptonSplitContainer2.ResumeLayout(false);
             this.ResumeLayout(false);
@@ -674,5 +707,7 @@
         private Krypton.Toolkit.KryptonTextBox txtClosingBalanceForeignAmount;
         private Krypton.Toolkit.KryptonLabel lblClosingBalanceLocalAmount;
         private Krypton.Toolkit.KryptonTextBox txtClosingBalanceLocalAmount;
+        private Krypton.Toolkit.KryptonLabel kryptonLabel3;
+        private Krypton.Toolkit.KryptonLabel lblMoneyUpper;
     }
 }

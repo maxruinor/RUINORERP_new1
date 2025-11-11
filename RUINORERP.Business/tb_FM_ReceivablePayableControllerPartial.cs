@@ -38,7 +38,6 @@ using System.Collections;
 using RUINORERP.Business.BizMapperService;
 using ZXing;
 using RUINORERP.Business.Processor;
-using RUINORERP.Business.Services;
 using System.Threading;
 
 namespace RUINORERP.Business

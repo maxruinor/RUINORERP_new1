@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using FluentValidation.Results;
 using Microsoft.Extensions.Logging;
@@ -954,9 +955,24 @@ namespace RUINORERP.Business
         /// <param name="pageSize">每页大小</param>
         /// <param name="additionalSqlWhere">额外的SQL条件</param>
         /// <returns>查询结果列表</returns>
+        /// <summary>
+        /// 使用高级导航条件进行基础查询
+        /// </summary>
+        /// <param name="useLike">是否使用模糊查询</param>
+        /// <param name="QueryConditionFilter">查询条件过滤器</param>
+        /// <param name="dto">数据传输对象</param>
+        /// <param name="pageNum">页码</param>
+        /// <param name="pageSize">每页大小</param>
+        /// <param name="additionalSqlWhere">额外的SQL条件</param>
+        /// <returns>查询结果列表</returns>
         public async virtual Task<List<T>> BaseQueryByAdvancedNavWithConditionsAsync(bool useLike,
             QueryFilter QueryConditionFilter, object dto, int pageNum, int pageSize, string additionalSqlWhere = "")
         {
+            if (QueryConditionFilter == null)
+            {
+                throw new ArgumentNullException(nameof(QueryConditionFilter), "查询条件过滤器不能为空");
+            }
+
             // 获取查询条件和Lambda表达式
             List<string> queryConditions = QueryConditionFilter.GetQueryConditions();
             Expression<Func<T, bool>> whereLambda = QueryConditionFilter.GetFilterExpression<T>();
@@ -967,27 +983,24 @@ namespace RUINORERP.Business
             // 初始化基础查询
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<T>();
             
-            //基础表不用导航 
+            // 自动更新导航关系(最多两层)，但对于基础表可以跳过
             if(!Cache.TableSchemaManager.Instance.GetAllTableNames().Contains(typeof(T).Name))
             {
-                // 自动更新导航关系(最多两层)
-                querySqlQueryable.IncludesAllFirstLayer();
+                querySqlQueryable = querySqlQueryable.IncludesAllFirstLayer();
             }
 
-            
-
-            // 应用查询条件
+            // 应用查询条件 - 统一处理逻辑，避免重复代码
             if (queryConditions != null && queryConditions.Count > 0)
             {
                 querySqlQueryable = querySqlQueryable.WhereAdv(useLike, queryConditions, dto);
+            }
 
-                // 应用子查询条件(仅在有查询条件时)
-                foreach (var subQuery in subQueryConditions)
+            // 应用子查询条件 - 无论是否有主查询条件，都应该应用子查询
+            foreach (var subQuery in subQueryConditions)
+            {
+                if (!string.IsNullOrEmpty(subQuery))
                 {
-                    if (!string.IsNullOrEmpty(subQuery))
-                    {
-                        querySqlQueryable = querySqlQueryable.Where(subQuery);
-                    }
+                    querySqlQueryable = querySqlQueryable.Where(subQuery);
                 }
             }
 
@@ -1027,26 +1040,63 @@ namespace RUINORERP.Business
             {
                 // 检查字段是否为可空类型，如果是则跳过子查询
                 PropertyInfo propertyInfo = typeof(T).GetProperty(item.FieldName);
-                if (item.SubFilter.FilterLimitExpressions.Count > 0 &&
+                if (item.SubFilter?.FilterLimitExpressions?.Count > 0 &&
                     propertyInfo != null &&
                     propertyInfo.PropertyType.Name != "Nullable`1")
                 {
-                    // 构建EXISTS子查询
-                    string tableName = typeof(T).Name;
-                    string targetTableName = item.SubFilter.QueryTargetType.Name;
-                    string fieldName = item.FieldName;
-
-                    string selectClause = $"EXISTS (SELECT [{targetTableName}].[{fieldName}] FROM [{targetTableName}] WHERE [{tableName}].[{fieldName}] = [{targetTableName}].[{fieldName}]";
-                    string whereClause = expressionToSql.GetSql(item.SubFilter.QueryTargetType,
-                        item.SubFilter.GetFilterLimitExpression(item.SubFilter.QueryTargetType));
-
-                    if (!string.IsNullOrEmpty(whereClause))
+                    try
                     {
-                        string subQuery = $"{selectClause} AND ({whereClause}))";
-                        if (!sqlList.Contains(subQuery))
+                        // 构建EXISTS子查询
+                        string tableName = typeof(T).Name;
+                        string targetTableName = item.SubFilter.QueryTargetType.Name;
+                        string fieldName = item.FieldName;
+
+                        // 构建基础EXISTS子查询
+                        StringBuilder subQueryBuilder = new StringBuilder();
+                        subQueryBuilder.Append($"EXISTS (SELECT 1 FROM [{targetTableName}] ");
+                        subQueryBuilder.Append($"WHERE [{tableName}].[{fieldName}] = [{targetTableName}].[{fieldName}] ");
+
+                        // 获取子查询的过滤条件
+                        var filterExpression = item.SubFilter.GetFilterLimitExpression(item.SubFilter.QueryTargetType);
+                        if (filterExpression != null)
+                        {
+                            string whereClause = expressionToSql.GetSql(item.SubFilter.QueryTargetType, filterExpression);
+                            // 清理并验证whereClause
+                            if (!string.IsNullOrEmpty(whereClause))
+                            {
+                                whereClause = whereClause.Trim();
+                                // 移除无效的条件如 'AND ( isdeleted = '0' AND '1' )'
+                                if (whereClause != "'1'" && !whereClause.Contains("'1'"))
+                                {
+                                    // 确保whereClause不以AND或OR开头
+                                    if (whereClause.StartsWith("AND ", StringComparison.OrdinalIgnoreCase) ||
+                                        whereClause.StartsWith("OR ", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        whereClause = whereClause.Substring(4);
+                                    }
+                                    // 确保whereClause格式正确，包含有效的比较操作符
+                                    if (Regex.IsMatch(whereClause, @"[=<>!]") || whereClause.Contains("LIKE") || whereClause.Contains("IN"))
+                                    {
+                                        subQueryBuilder.Append($"AND ({whereClause}) ");
+                                    }
+                                }
+                            }
+                        }
+
+                        // 关闭子查询
+                        subQueryBuilder.Append(")");
+                        string subQuery = subQueryBuilder.ToString();
+
+                        // 检查子查询是否有效且不重复
+                        if (!string.IsNullOrEmpty(subQuery) && !sqlList.Contains(subQuery) && subQuery.Contains("WHERE"))
                         {
                             sqlList.Add(subQuery);
                         }
+                    }
+                    catch (Exception ex)
+                    {
+                        // 记录子查询构建错误但不中断流程
+                        _logger.LogError(ex, $"构建子查询条件时出错: 字段名={item.FieldName}, 目标类型={item.SubFilter?.QueryTargetType?.Name}");
                     }
                 }
             }

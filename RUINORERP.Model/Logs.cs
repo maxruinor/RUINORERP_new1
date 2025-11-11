@@ -225,6 +225,7 @@ namespace RUINORERP.Model
         /// </summary>
         [AdvQueryAttribute(ColName = "User_ID",ColDesc = "用户")] 
         [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "User_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "用户" )]
+        [FKRelationAttribute("tb_UserInfo", "User_ID")]
         public long? User_ID
         { 
             get{return _User_ID;}

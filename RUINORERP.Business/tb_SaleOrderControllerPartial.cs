@@ -26,7 +26,6 @@ using System.Windows.Forms;
 using RUINORERP.Global.EnumExt;
 using System.Collections;
 using RUINORERP.Business.BizMapperService;
-using RUINORERP.Business.Services;
 using System.Threading;
 
 namespace RUINORERP.Business

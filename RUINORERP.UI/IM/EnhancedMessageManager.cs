@@ -387,7 +387,9 @@ namespace RUINORERP.UI.IM
         {
             try
             {
-                _logger?.Info($"处理业务消息: {messageData.Title}");
+                _logger?.LogInformation($"处理业务消息: {messageData.Title}");
+                
+                bool isNewMessage = false;
                 
                 // 添加到消息列表
                 lock (_messagesLock)
@@ -396,8 +398,14 @@ namespace RUINORERP.UI.IM
                     {
                         _messageList.Add(messageData);
                         _unreadMessageCount++;
-                        OnMessageStatusChanged(messageData);
+                        isNewMessage = true;
                     }
+                }
+                
+                // 在锁外触发事件，避免锁重入问题
+                if (isNewMessage)
+                {
+                    OnMessageStatusChanged(messageData);
                 }
                 
                 // 根据消息类型显示不同的提示框
@@ -431,7 +439,9 @@ namespace RUINORERP.UI.IM
         {
             try
             {
-                _logger?.Info($"显示系统通知: {messageData.Title}");
+                _logger?.LogInformation($"显示系统通知: {messageData.Title}");
+                
+                bool isNewMessage = false;
                 
                 // 添加到消息列表
                 lock (_messagesLock)
@@ -440,8 +450,14 @@ namespace RUINORERP.UI.IM
                     {
                         _messageList.Add(messageData);
                         _unreadMessageCount++;
-                        OnMessageStatusChanged(messageData);
+                        isNewMessage = true;
                     }
+                }
+                
+                // 在锁外触发事件，避免锁重入问题
+                if (isNewMessage)
+                {
+                    OnMessageStatusChanged(messageData);
                 }
                 
                 // 创建消息提示窗口

@@ -41,6 +41,8 @@ namespace RUINORERP.UI.BI
             button检查数据.ToolTipValues.Heading = "提示";
             button检查数据.Click += button检查数据_Click;
             base.frm.flowLayoutPanelButtonsArea.Controls.Add(button检查数据);
+
+            DisplayTextResolver.AddReferenceKeyMapping<tb_UserInfo, Logs>(t => t.User_ID, s => s.User_ID, t => t.UserName);
         }
 
         private void button检查数据_Click(object sender, EventArgs e)

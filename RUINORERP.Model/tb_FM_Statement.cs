@@ -462,6 +462,22 @@ namespace RUINORERP.Model
                         }
         }
 
+        private string _PamountInWords;
+        /// <summary>
+        /// 大写金额
+        /// </summary>
+        [AdvQueryAttribute(ColName = "PamountInWords", ColDesc = "大写金额")]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "PamountInWords", Length = 200, IsNullable = false, ColumnDescription = "大写金额")]
+        public string PamountInWords
+        {
+            get { return _PamountInWords; }
+            set
+            {
+                SetProperty(ref _PamountInWords, value);
+            }
+        }
+
+
         private string _ApprovalOpinions;
         /// <summary>
         /// 审批意见

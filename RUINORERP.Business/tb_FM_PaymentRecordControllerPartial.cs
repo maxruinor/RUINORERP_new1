@@ -37,7 +37,6 @@ using RUINORERP.Business.CommService;
 using RUINORERP.Business.BizMapperService;
 using Castle.DynamicProxy.Generators.Emitters.SimpleAST;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
-using RUINORERP.Business.Services;
 using System.Threading;
 
 namespace RUINORERP.Business
@@ -2675,6 +2674,10 @@ namespace RUINORERP.Business
                     // 收款对账单，收款金额应为正数
                     paymentRecordDetail.LocalAmount = Math.Abs(statement.ClosingBalanceLocalAmount);
                     paymentRecordDetail.LocalPayableAmount = Math.Abs(statement.ClosingBalanceLocalAmount);
+                }
+                else
+                {
+
                 }
                 // 注意：对于余额对账模式，对账单的ReceivePaymentType已经根据余额正负值确定
                 // 所以上面的条件判断已经包含了余额对账模式下的正确处理

@@ -127,17 +127,6 @@ namespace RUINORERP.Model.TransModel
         }
         
         /// <summary>
-        /// 消息ID的整数版本
-        /// 为保持API兼容性保留
-        /// </summary>
-        [JsonIgnore]
-        public int MessageID 
-        { 
-            get => Convert.ToInt32(Id); 
-            set => Id = value; 
-        }
-
-        /// <summary>
         /// 是否已读
         /// </summary>
         public bool IsRead { get; set; }

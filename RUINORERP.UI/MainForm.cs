@@ -286,6 +286,7 @@ namespace RUINORERP.UI
         public FMAuditLogHelper FMAuditLogHelper => fmauditLogHelper;
 
         private System.Threading.Timer _autoSaveTimer;
+        private System.Threading.Timer _clientVersionUpdateTimer;
 
         /// <summary>
 
@@ -465,6 +466,12 @@ namespace RUINORERP.UI
             {
                 _menuTracker.AutoSave();
             }, null, TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(5));
+            
+            // 设置1分钟客户端版本信息更新定时器
+            _clientVersionUpdateTimer = new System.Threading.Timer(_ =>
+            {
+                UpdateCurrentUserModuleAndForm();
+            }, null, TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1));
 
 
 
@@ -502,6 +509,34 @@ namespace RUINORERP.UI
         private void KryptonDockableWorkspace1_WorkspaceCellRemoved(object sender, WorkspaceCellEventArgs e)
         {
 
+        }
+
+
+        /// <summary>
+        /// 更新当前用户信息中的当前模块和当前窗体
+        /// </summary>
+        public void UpdateCurrentUserModuleAndForm()
+        {
+            try
+            {
+                if (AppContext?.CurrentUser != null)
+                {
+                    if (kryptonDockableWorkspace1?.ActivePage != null)
+                    {
+                        AppContext.CurrentUser.当前模块 = "主界面";
+                        AppContext.CurrentUser.当前窗体 = kryptonDockableWorkspace1.ActivePage.Text;
+                    }
+                    else
+                    {
+                        AppContext.CurrentUser.当前模块 = "主界面";
+                        AppContext.CurrentUser.当前窗体 = "工作台";
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                logger?.LogWarning(ex, "更新当前用户模块和窗体信息失败");
+            }
         }
 
 
@@ -1065,6 +1100,9 @@ namespace RUINORERP.UI
             // 在应用程序启动代码中添加
             var initializationService = Startup.GetFromFac<IDefaultRowAuthPolicyInitializationService>();
             await initializationService.InitializeDefaultPoliciesAsync();
+            
+            // 更新当前用户信息中的当前模块和当前窗体
+            UpdateCurrentUserModuleAndForm();
 
 
 
@@ -1324,6 +1362,8 @@ namespace RUINORERP.UI
         private void kryptonDockableWorkspace1_ActivePageChanged(object sender, ActivePageChangedEventArgs e)
         {
             GetActivePage(sender);
+            // 更新当前用户信息中的当前模块和当前窗体
+            UpdateCurrentUserModuleAndForm();
         }
 
         private void GetActivePage(object sender)
@@ -1336,6 +1376,22 @@ namespace RUINORERP.UI
                 if (_kryptonDockableWorkspace.ActiveControl != null)
                 {
                     AppContext.log.Path = _kryptonDockableWorkspace.ActiveControl.ToString();
+                }
+                
+                // 更新当前用户信息中的当前模块和当前窗体
+                if (AppContext?.CurrentUser != null)
+                {
+                    AppContext.CurrentUser.当前模块 = "主界面";
+                    AppContext.CurrentUser.当前窗体 = kp.TextTitle;
+                }
+            }
+            else
+            {
+                // 如果没有活动页面，设置默认值
+                if (AppContext?.CurrentUser != null)
+                {
+                    AppContext.CurrentUser.当前模块 = "主界面";
+                    AppContext.CurrentUser.当前窗体 = "工作台";
                 }
             }
         }

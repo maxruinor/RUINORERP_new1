@@ -140,7 +140,7 @@ namespace RUINORERP.UI
         /// <summary>
         /// Autofac容器配置回调
         /// </summary>
-        void ConfigureAutofacContainer(HostBuilderContext bc, ContainerBuilder builder)        
+        void ConfigureAutofacContainer(HostBuilderContext bc, ContainerBuilder builder)
         {
             Services = new ServiceCollection();
 
@@ -156,8 +156,8 @@ namespace RUINORERP.UI
 
             // 将服务集合注册到Autofac
             builder.Populate(Services);
-            
-          
+
+
         }
         /// <summary>
         /// 配置基础服务
@@ -201,20 +201,20 @@ namespace RUINORERP.UI
                     var configSection = Program.Configuration?.GetSection("SystemGlobalConfig");
                     var globalLogLevel = configSection?.GetValue<string>("LogLevel") ?? "Information";
                     LogLevel systemLogLevel;
-                    
+
                     // 尝试解析日志级别
                     if (!Enum.TryParse(globalLogLevel, true, out systemLogLevel))
                     {
                         systemLogLevel = LogLevel.Information; // 默认级别
                     }
-                    
+
                     // 为WorkflowCore设置特殊的日志级别控制
                     if (category.StartsWith("WorkflowCore"))
                     {
                         // 可以在这里专门为WorkflowCore设置不同的级别，或者使用系统统一级别
                         return logLevel >= systemLogLevel;
                     }
-                    
+
                     // 其他日志使用系统统一级别
                     return logLevel >= systemLogLevel;
                 });
@@ -259,7 +259,7 @@ namespace RUINORERP.UI
                 configManager.Initialize();
                 return configManager;
             });
-            
+
             // 注册ConfigManagerService为单例，确保全局使用同一个实例
             // 注意：这里需要确保ConfigManagerService已经在Business层正确注册了依赖服务
             services.AddSingleton<IConfigManagerService, ConfigManagerService>();
@@ -359,7 +359,7 @@ namespace RUINORERP.UI
             });
             // 注册增强版消息管理器
             services.AddScoped<EnhancedMessageManager>();
-            
+
             services.AddMemoryCacheSetup();
             services.AddAppContext(Program.AppContextData);
 
@@ -409,8 +409,8 @@ namespace RUINORERP.UI
         /// </summary>
         public static void ConfigureContainer(ContainerBuilder builder)
         {
-               
-                
+
+
             // 基础服务注册
             RegisterBaseServices(builder);
 
@@ -448,7 +448,7 @@ namespace RUINORERP.UI
                 .PropertiesAutowired()
                 .SingleInstance();
 
-            
+
         }
 
         /// <summary>
@@ -563,10 +563,10 @@ namespace RUINORERP.UI
             try
             {
                 var assembly = Assembly.LoadFrom(assemblyName);
-                
+
                 // 分离BizTypeMapper和其他类型的注册
                 var bizTypeMapperType = assembly.GetType("RUINORERP.Business.CommService.BizTypeMapper");
-                
+
                 if (bizTypeMapperType != null)
                 {
                     // 对BizTypeMapper特殊处理：只注册为自身类型，避免接口拦截问题
@@ -575,8 +575,22 @@ namespace RUINORERP.UI
                         .InstancePerDependency()
                         .PropertiesAutowired()
                         .PreserveExistingDefaults();
-                    
-                    // 注册其他类型（排除BizTypeMapper）
+
+                    //// 获取LocalBizCodeGenerateService类型
+                    //var localBizCodeType = assembly.GetType("RUINORERP.Business.Services.LocalBizCodeGenerateService");
+
+                    //if (localBizCodeType != null)
+                    //{
+                    //    // 对LocalBizCodeGenerateService特殊处理：只注册为自身类型，避免接口拦截问题
+                    //    builder.RegisterType(localBizCodeType)
+                    //        .AsSelf()
+                    //        .InstancePerDependency()
+                    //        .PropertiesAutowired()
+                    //        .ExternallyOwned() // 标记为外部拥有，避免与拦截器冲突
+                    //        .PreserveExistingDefaults();
+                    //}
+
+                    // 注册其他类型（排除特殊处理的类型）
                     builder.RegisterAssemblyTypes(assembly)
                         .Where(t => t != bizTypeMapperType)
                         .AsImplementedInterfaces()
@@ -659,8 +673,8 @@ namespace RUINORERP.UI
 
             builder.RegisterType<AutoComplete>()
             .WithParameter((pi, c) => pi.ParameterType == typeof(SearchType), (pi, c) => SearchType.Document);
-           // builder.RegisterType<BizCodeGenerator>(); // 注册拦截器
-                                                      // 注册依赖
+            // builder.RegisterType<BizCodeGenerator>(); // 注册拦截器
+            // 注册依赖
             builder.RegisterType<BaseDataCacheAOP>(); // 注册拦截器
                                                       //builder.RegisterType<LogInterceptor>(); // 注册拦截器
                                                       //builder.RegisterType<Person>().EnableClassInterceptors();  // 注册被拦截的类并启用类拦截
@@ -692,7 +706,7 @@ namespace RUINORERP.UI
                  .PropertiesAutowired()//指定属性注入
                  .SingleInstance();
 
-           
+
 
 
             // 注册 AuditLogHelper 为可注入服务
@@ -751,7 +765,7 @@ namespace RUINORERP.UI
                 else
                 {
                     _logger.Warn("无法获取Autofac的根生命周期作用域");
-                    
+
                     // 备选方案：尝试从AutofacServiceProvider获取
                     var serviceProvider = hostBuilder.Services as AutofacServiceProvider;
                     if (serviceProvider != null)
@@ -1275,7 +1289,7 @@ DuplicateCheckService 这个 具体类 并不会被注册为可解析的 key。
 因此你在解析时 只能用接口。
              */
             // 内存缓存配置
-      
+
 
             // 纯内存缓存
             var cache = CacheFactory.Build<object>(c =>

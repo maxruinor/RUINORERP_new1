@@ -29,7 +29,6 @@ using RUINORERP.Business.CommService;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.Global;
 using RUINORERP.Business.BizMapperService;
-using RUINORERP.Business.Services;
 using System.Threading;
 
 namespace RUINORERP.Business

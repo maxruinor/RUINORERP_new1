@@ -57,35 +57,37 @@ namespace RUINORERP.Server.Network.Services
                 // 使用MessageData类代替匿名对象，提高类型安全性和可维护性
                 var messageData = new MessageData
                 {
+                    Id = RUINORERP.Common.SnowflakeIdHelper.IdHelper.GetLongId(),
                     MessageType = MessageType.Prompt,
                     Title = title,
                     Content = message,
+                    Sender="服务器消息",
                     ReceiverIds = new List<long> { long.TryParse(targetUserName, out long userId) ? userId : 0 },
                     SendTime = DateTime.Now
                 };
 
                 var request = new MessageRequest(MessageType.Prompt, messageData);
-                
+
                 // 获取目标用户的所有会话
                 var sessions = _sessionService.GetUserSessions(targetUserName);
-                
+
                 // 向第一个会话发送消息并等待响应
                 foreach (var session in sessions)
                 {
                     if (session is SessionInfo sessionInfo)
                     {
                         var responsePacket = await _sessionService.SendCommandAndWaitForResponseAsync(
-                            session.SessionID, 
-                            MessageCommands.SendPopupMessage, 
-                            request, 
-                            timeoutMs, 
+                            session.SessionID,
+                            MessageCommands.SendPopupMessage,
+                            request,
+                            timeoutMs,
                             ct);
-                        
-                        return responsePacket?.Response as MessageResponse ?? 
+
+                        return responsePacket?.Response as MessageResponse ??
                                MessageResponse.Fail(MessageType.Unknown, "未收到有效响应");
                     }
                 }
-                
+
                 return MessageResponse.Fail(MessageType.Unknown, "目标用户不在线");
             }
             catch (Exception ex)
@@ -123,27 +125,27 @@ namespace RUINORERP.Server.Network.Services
                 };
 
                 var request = new MessageRequest(messageData.MessageType, messageData);
-                
+
                 // 获取目标用户的所有会话
                 var sessions = _sessionService.GetUserSessions(targetUserId);
-                
+
                 // 向第一个会话发送消息并等待响应
                 foreach (var session in sessions)
                 {
                     if (session is SessionInfo sessionInfo)
                     {
                         var responsePacket = await _sessionService.SendCommandAndWaitForResponseAsync(
-                            session.SessionID, 
-                            MessageCommands.SendMessageToUser, 
-                            request, 
-                            timeoutMs, 
+                            session.SessionID,
+                            MessageCommands.SendMessageToUser,
+                            request,
+                            timeoutMs,
                             ct);
-                        
-                        return responsePacket?.Response as MessageResponse ?? 
+
+                        return responsePacket?.Response as MessageResponse ??
                                MessageResponse.Fail(MessageType.Unknown, "未收到有效响应");
                     }
                 }
-                
+
                 return MessageResponse.Fail(MessageType.Unknown, "目标用户不在线");
             }
             catch (Exception ex)
@@ -178,16 +180,16 @@ namespace RUINORERP.Server.Network.Services
                     Content = message,
                     SendTime = DateTime.Now
                 };
-                
+
                 // 使用扩展数据存储部门ID
                 messageData.ExtendedData["DepartmentId"] = departmentId;
 
                 var request = new MessageRequest(messageData.MessageType, messageData);
-                
+
                 // 获取目标部门用户的所有会话
                 // 这里简化处理，实际项目中需要根据部门ID获取部门下的所有用户
                 var sessions = _sessionService.GetAllUserSessions();
-                
+
                 // 向所有会话发送消息并等待响应
                 int successCount = 0;
                 foreach (var session in sessions)
@@ -195,19 +197,19 @@ namespace RUINORERP.Server.Network.Services
                     if (session is SessionInfo sessionInfo)
                     {
                         var responsePacket = await _sessionService.SendCommandAndWaitForResponseAsync(
-                            session.SessionID, 
-                            MessageCommands.SendMessageToDepartment, 
-                            request, 
-                            timeoutMs, 
+                            session.SessionID,
+                            MessageCommands.SendMessageToDepartment,
+                            request,
+                            timeoutMs,
                             ct);
-                        
+
                         if (responsePacket?.Response is MessageResponse response && response.IsSuccess)
                         {
                             successCount++;
                         }
                     }
                 }
-                
+
                 return MessageResponse.Success(MessageType.Unknown, new { SendCount = successCount });
             }
             catch (Exception ex)
@@ -242,10 +244,10 @@ namespace RUINORERP.Server.Network.Services
                 };
 
                 var request = new MessageRequest(messageData.MessageType, messageData);
-                
+
                 // 获取所有用户会话
                 var sessions = _sessionService.GetAllUserSessions();
-                
+
                 // 向所有会话发送消息并等待响应
                 int successCount = 0;
                 foreach (var session in sessions)
@@ -253,19 +255,19 @@ namespace RUINORERP.Server.Network.Services
                     if (session is SessionInfo sessionInfo)
                     {
                         var responsePacket = await _sessionService.SendCommandAndWaitForResponseAsync(
-                            session.SessionID, 
-                            MessageCommands.BroadcastMessage, 
-                            request, 
-                            timeoutMs, 
+                            session.SessionID,
+                            MessageCommands.BroadcastMessage,
+                            request,
+                            timeoutMs,
                             ct);
-                        
+
                         if (responsePacket?.Response is MessageResponse response && response.IsSuccess)
                         {
                             successCount++;
                         }
                     }
                 }
-                
+
                 return MessageResponse.Success(MessageType.Unknown, new { SendCount = successCount });
             }
             catch (Exception ex)
@@ -298,15 +300,15 @@ namespace RUINORERP.Server.Network.Services
                     Content = message,
                     SendTime = DateTime.Now
                 };
-                
+
                 // 使用扩展数据存储通知类型
                 messageData.ExtendedData["NotificationType"] = notificationType;
 
                 var request = new MessageRequest(MessageType.Notice, messageData);
-                
+
                 // 获取所有用户会话
                 var sessions = _sessionService.GetAllUserSessions();
-                
+
                 // 向所有会话发送消息并等待响应
                 int successCount = 0;
                 foreach (var session in sessions)
@@ -314,19 +316,19 @@ namespace RUINORERP.Server.Network.Services
                     if (session is SessionInfo sessionInfo)
                     {
                         var responsePacket = await _sessionService.SendCommandAndWaitForResponseAsync(
-                            session.SessionID, 
-                            MessageCommands.SendSystemNotification, 
-                            request, 
-                            timeoutMs, 
+                            session.SessionID,
+                            MessageCommands.SendSystemNotification,
+                            request,
+                            timeoutMs,
                             ct);
-                        
+
                         if (responsePacket?.Response is MessageResponse response && response.IsSuccess)
                         {
                             successCount++;
                         }
                     }
                 }
-                
+
                 return MessageResponse.Success(MessageType.Unknown, new { SendCount = successCount });
             }
             catch (Exception ex)

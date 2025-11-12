@@ -78,9 +78,9 @@ using RUINORERP.PacketSpec.Serialization;
 using System.Reflection;
 using RUINORERP.Business.Config;
 using RUINORERP.Server.Services.BizCode;
-using RUINORERP.Server.BNR;
 using TextBox = System.Windows.Forms.TextBox;
 using Button = System.Windows.Forms.Button;
+using RUINORERP.Business.BNR;
 
 namespace RUINORERP.Server
 {

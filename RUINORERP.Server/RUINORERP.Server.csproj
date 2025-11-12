@@ -10,16 +10,19 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="BNR\**" />
     <Compile Remove="Cache\**" />
     <Compile Remove="DataPortal\**" />
     <Compile Remove="Network\Tests\**" />
     <Compile Remove="packages\**" />
     <Compile Remove="SuperSocketServices\Commands\Business\**" />
+    <EmbeddedResource Remove="BNR\**" />
     <EmbeddedResource Remove="Cache\**" />
     <EmbeddedResource Remove="DataPortal\**" />
     <EmbeddedResource Remove="Network\Tests\**" />
     <EmbeddedResource Remove="packages\**" />
     <EmbeddedResource Remove="SuperSocketServices\Commands\Business\**" />
+    <None Remove="BNR\**" />
     <None Remove="Cache\**" />
     <None Remove="DataPortal\**" />
     <None Remove="Network\Tests\**" />

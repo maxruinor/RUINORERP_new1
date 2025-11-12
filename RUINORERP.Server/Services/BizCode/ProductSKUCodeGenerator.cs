@@ -79,6 +79,19 @@ namespace RUINORERP.Server.Services.BizCode
         }
 
         /// <summary>
+        /// 生成产品SKU编码（适配方法，用于兼容现有接口）
+        /// </summary>
+        /// <param name="productId">产品ID</param>
+        /// <param name="productCode">产品编码</param>
+        /// <param name="seqLength">序号长度</param>
+        /// <returns>生成的产品SKU编码</returns>
+        public async Task<string> GenerateProductSKUNoAsync(long productId, string productCode, int seqLength = 4)
+        {
+            // 调用现有的GenerateSKUCodeAsync方法，传入空的属性值ID列表
+            return await GenerateSKUCodeAsync(productId, new List<long>());
+        }
+
+        /// <summary>
         /// 获取产品基础信息
         /// </summary>
         /// <param name="productId">产品基础ID</param>

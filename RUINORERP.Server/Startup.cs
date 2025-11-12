@@ -81,7 +81,7 @@ using RUINORERP.Server.Services;
 using RUINORERP.Server.Network.Monitoring;
 using RUINORERP.Server.Network.Core;
 using RUINORERP.Server.Services.BizCode;
-using RUINORERP.Server.BNR;
+using RUINORERP.Business.BNR;
 
 namespace RUINORERP.Server
 {
@@ -232,6 +232,8 @@ namespace RUINORERP.Server
             // 注册业务编码服务
             builder.RegisterType<ServerBizCodeGenerateService>().AsSelf().SingleInstance(); // 注册业务编码服务
             
+            // 注册ProductSKUCodeGenerator服务
+            builder.RegisterType<ProductSKUCodeGenerator>().AsSelf().InstancePerLifetimeScope(); // 注册ProductSKUCodeGenerator服务
            
 
             // 配置日志服务

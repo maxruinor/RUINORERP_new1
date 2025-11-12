@@ -13,18 +13,15 @@ namespace RUINORERP.Global
     public enum EncryptionMethod
     {
         None,
-        /// <summary>
-        /// 16进制转换 - 将数字部分转换为16进制表示
-        /// </summary>
-        Hexadecimal = 0,
-        /// <summary>
-        /// 字符串混淆 - 对字符串部分进行字符替换和位置调整
-        /// </summary>
-        StringObfuscation = 1,
-        /// <summary>
-        /// Base62编码 - 使用Base62算法对部分内容进行编码
-        /// </summary>
-        Base62 = 2
+        [Description("将数字部分转换为16进制表示")]
+        十六进制转换 = 0,
+
+
+        [Description("对字符串部分进行字符替换和位置调整")]
+        字符串混淆 = 1,
+
+        [Description("使用Base62算法对部分内容进行编码")]
+        Base62编码 = 2
     }
     // 日期格式枚举
     public enum DateFormat

@@ -1,5 +1,4 @@
 using RUINORERP.IServices;
-using RUINORERP.Server.BNR;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.Business;
 using System;
@@ -15,6 +14,7 @@ using System.Text.RegularExpressions;
 using System.Numerics;
 using Microsoft.Extensions.Logging;
 using RUINORERP.Server.Network.CommandHandlers;
+using RUINORERP.Business.BNR;
 
 namespace RUINORERP.Server.Services.BizCode
 {
@@ -30,6 +30,7 @@ namespace RUINORERP.Server.Services.BizCode
         private readonly BNRFactory _bnrFactory;
         private readonly tb_sys_BillNoRuleController<tb_sys_BillNoRule> _ruleConfigService;
         private readonly ILogger<ServerBizCodeGenerateService> logger;
+        private readonly ProductSKUCodeGenerator _productSKUCodeGenerator; // 添加ProductSKUCodeGenerator字段
 
         /// <summary>
         /// 构造函数
@@ -38,12 +39,14 @@ namespace RUINORERP.Server.Services.BizCode
         /// <param name="ruleConfigService">规则配置服务</param>
         public ServerBizCodeGenerateService(ILogger<ServerBizCodeGenerateService> logger,
             BNRFactory bnrFactory,
-            tb_sys_BillNoRuleController<tb_sys_BillNoRule> ruleConfigService
+            tb_sys_BillNoRuleController<tb_sys_BillNoRule> ruleConfigService,
+            ProductSKUCodeGenerator productSKUCodeGenerator // 添加ProductSKUCodeGenerator参数
             )
         {
             this.logger = logger;
             _bnrFactory = bnrFactory;
             _ruleConfigService = ruleConfigService;
+            _productSKUCodeGenerator = productSKUCodeGenerator; // 初始化ProductSKUCodeGenerator
         }
 
         #region 混淆/加密相关方法
@@ -66,11 +69,11 @@ namespace RUINORERP.Server.Services.BizCode
 
             switch ((EncryptionMethod)encryptionMethod)
             {
-                case EncryptionMethod.Hexadecimal:
+                case EncryptionMethod.十六进制转换:
                     return ConvertToHex(originalNumber);
-                case EncryptionMethod.StringObfuscation:
+                case EncryptionMethod.字符串混淆:
                     return ApplyStringObfuscation(originalNumber);
-                case EncryptionMethod.Base62:
+                case EncryptionMethod.Base62编码:
                     return ConvertToBase62(originalNumber);
                 default:
                     return originalNumber;
@@ -95,11 +98,11 @@ namespace RUINORERP.Server.Services.BizCode
 
             switch ((EncryptionMethod)encryptionMethod)
             {
-                case EncryptionMethod.Hexadecimal:
+                case EncryptionMethod.十六进制转换:
                     return ConvertFromHex(obfuscatedNumber);
-                case EncryptionMethod.StringObfuscation:
+                case EncryptionMethod.字符串混淆:
                     return ReverseStringObfuscation(obfuscatedNumber);
-                case EncryptionMethod.Base62:
+                case EncryptionMethod.Base62编码:
                     return ConvertFromBase62(obfuscatedNumber);
                 default:
                     return obfuscatedNumber;
@@ -574,6 +577,14 @@ namespace RUINORERP.Server.Services.BizCode
         /// </remarks>
         public async Task<string> GenerateBaseInfoNoAsync(BaseInfoType infoType, string paraConst = null, CancellationToken ct = default)
         {
+            // 特殊处理SKU编号，使用ProductSKUCodeGenerator生成
+            if (infoType == BaseInfoType.SKU_No)
+            {
+                // 对于SKU编号，我们使用ProductSKUCodeGenerator来生成更专业的SKU编码
+                // 这里使用默认的产品ID 0 和空的产品编码，实际使用时应该传入具体的产品信息
+                return await _productSKUCodeGenerator.GenerateProductSKUNoAsync(0, "DEFAULT", 4);
+            }
+            
             string rule;
             int encryptionMethod = 0;  
             
@@ -714,18 +725,43 @@ namespace RUINORERP.Server.Services.BizCode
         /// <returns>生成的产品SKU编码</returns>
         public async Task<string> GenerateProductSKUNoAsync(long productId, string productCode, string attributes = null, int seqLength = 3, CancellationToken ct = default)
         {
-            string rule;
-            
-            // 优先从数据库获取规则配置
-            rule = await GetProductSKUNoRuleFromDatabaseAsync(productId, ct);
-            
-            // 如果数据库中没有配置，则使用默认规则
-            if (string.IsNullOrEmpty(rule))
+            // 使用ProductSKUCodeGenerator生成SKU编码
+            // 如果有属性信息，则使用属性生成SKU编码
+            if (!string.IsNullOrEmpty(attributes))
             {
-                rule = "{S:SK}{Hex:yyMM}{DB:SKU_No/0000}";
+                // 解析属性信息（这里假设attributes是以逗号分隔的属性值ID列表）
+                var attributeValueIds = new List<long>();
+                if (!string.IsNullOrEmpty(attributes))
+                {
+                    var ids = attributes.Split(',');
+                    foreach (var id in ids)
+                    {
+                        if (long.TryParse(id.Trim(), out long attributeId))
+                        {
+                            attributeValueIds.Add(attributeId);
+                        }
+                    }
+                }
+                
+                // 使用ProductSKUCodeGenerator生成基于属性的SKU编码
+                return await _productSKUCodeGenerator.GenerateSKUCodeAsync(productId, attributeValueIds);
             }
-            
-            return _bnrFactory.Create(rule);
+            else
+            {
+                // 如果没有属性信息，则使用默认的SKU编码生成方式
+                string rule;
+                
+                // 优先从数据库获取规则配置
+                rule = await GetProductSKUNoRuleFromDatabaseAsync(productId, ct);
+                
+                // 如果数据库中没有配置，则使用默认规则
+                if (string.IsNullOrEmpty(rule))
+                {
+                    rule = "{S:SK}{Hex:yyMM}{DB:SKU_No/0000}";
+                }
+                
+                return _bnrFactory.Create(rule);
+            }
         }
         
         /// <summary>

@@ -33,6 +33,16 @@ namespace RUINORERP.IServices
         /// <returns>生成的信息编号</returns>
         Task<string> GenerateBaseInfoNoAsync(BaseInfoType infoType, string paraConst = null, CancellationToken ct = default);
 
+        /// <summary>
+        /// 生成产品SKU编码
+        /// </summary>
+        /// <param name="productId">产品ID</param>
+        /// <param name="productCode">产品编码</param>
+        /// <param name="attributes">属性组合信息</param>
+        /// <param name="seqLength">序号长度</param>
+        /// <param name="ct">取消令牌</param>
+        /// <returns>生成的产品SKU编码</returns>
+        Task<string> GenerateProductSKUNoAsync(long productId, string productCode, string attributes = null, int seqLength = 3, CancellationToken ct = default);
       
         /// <summary>
         /// 生成条码

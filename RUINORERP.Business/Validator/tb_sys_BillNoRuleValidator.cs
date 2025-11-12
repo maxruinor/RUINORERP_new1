@@ -1,5 +1,4 @@
-﻿
-// **************************************
+﻿// **************************************
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
@@ -32,6 +31,7 @@ namespace RUINORERP.Business
      {
         
  
+        
         
      
  RuleFor(tb_sys_BillNoRule =>tb_sys_BillNoRule.RuleName).MaximumMixedLength(200).WithMessage("规则名称:不能超过最大长度,200.");
@@ -84,6 +84,8 @@ namespace RUINORERP.Business
 
 
 
+
+
     
           private bool CheckForeignKeyValue(long ForeignKeyID)
         {
@@ -111,4 +113,3 @@ namespace RUINORERP.Business
 }
 
 }
-

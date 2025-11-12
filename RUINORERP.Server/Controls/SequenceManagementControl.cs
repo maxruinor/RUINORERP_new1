@@ -1,3 +1,4 @@
+using RUINORERP.Business.BNR;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -7,7 +8,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using RUINORERP.Server.BNR;
 
 namespace RUINORERP.Server.Controls
 {

@@ -54,6 +54,8 @@ namespace RUINORERP.UI.BI
             // 添加RuleType字段的显示文本解析器
             DisplayTextResolver.AddFixedDictionaryMappingByEnum(t => t.RuleType, typeof(RuleType));
             DisplayTextResolver.AddFixedDictionaryMappingByEnum(t => t.StorageType, typeof(Global.StorageType));
+            // 添加加密方法字段的显示文本解析器
+            DisplayTextResolver.AddFixedDictionaryMappingByEnum(t => t.EncryptionMethod, typeof(EncryptionMethod));
         }
 
         public override async Task<List<tb_sys_BillNoRule>> Save()

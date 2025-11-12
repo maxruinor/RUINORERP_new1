@@ -2,7 +2,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：11/06/2025 19:43:25
+// 时间：11/12/2025 16:18:32
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -292,7 +292,7 @@ namespace RUINORERP.Business
         public async override Task<List<T>> BaseQueryByAdvancedNavAsync(bool useLike, object dto)
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_sys_BillNoRule>()
-                                //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
+                                                //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
                 .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
                                 .WhereCustom(useLike, dto);;
             return await querySqlQueryable.ToListAsync()as List<T>;

@@ -592,9 +592,6 @@ namespace RUINORERP.Model
         [XmlIgnore]
         public List<tb_FS_FileStorageInfo> FileStorageInfoList { get; set; } = new List<tb_FS_FileStorageInfo>();
 
-
-
-
         private static ConcurrentDictionary<string, string> GenerateFieldNameList(Type type)
         {
             if (_fieldNameListCache.TryGetValue(type, out var fieldNameList))

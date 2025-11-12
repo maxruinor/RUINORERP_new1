@@ -116,7 +116,7 @@ namespace RUINORERP.Business
                 }
                 entity.DeliveryDate = System.DateTime.Now;
                 BusinessHelper.Instance.InitEntity(entity);
-                IBizCodeService bizCodeService = _appContext.GetRequiredService<IBizCodeService>();
+                IBizCodeGenerateService bizCodeService = _appContext.GetRequiredService<IBizCodeGenerateService>();
                 entity.ASDeliveryNo =await bizCodeService.GenerateBizBillNoAsync(BizType.售后交付单);
                 entity.tb_as_aftersaleapply = AfterSaleApply;
                 entity.TotalDeliveryQty = NewDetails.Sum(c => c.Quantity);
@@ -188,7 +188,7 @@ namespace RUINORERP.Business
                 entity.RepairStartDate = System.DateTime.Now;
                 BusinessHelper.Instance.InitEntity(entity);
 
-                IBizCodeService bizCodeService = _appContext.GetRequiredService<IBizCodeService>();
+                IBizCodeGenerateService bizCodeService = _appContext.GetRequiredService<IBizCodeGenerateService>();
                 entity.RepairOrderNo = await bizCodeService.GenerateBizBillNoAsync(BizType.维修工单);
                 entity.tb_as_aftersaleapply = AfterSaleApply;
                 entity.TotalQty = NewDetails.Sum(c => c.Quantity);

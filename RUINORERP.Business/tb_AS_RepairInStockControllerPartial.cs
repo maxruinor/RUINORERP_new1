@@ -97,7 +97,7 @@ namespace RUINORERP.Business
                 entity.EntryDate = System.DateTime.Now;
                 BusinessHelper.Instance.InitEntity(entity);
 
-                IBizCodeService bizCodeService = _appContext.GetRequiredService<IBizCodeService>();
+                IBizCodeGenerateService bizCodeService = _appContext.GetRequiredService<IBizCodeGenerateService>();
                 entity.RepairOrderNo = await bizCodeService.GenerateBizBillNoAsync(BizType.维修工单, CancellationToken.None);
                 entity.tb_as_repairorder = RepairOrder;
                 entity.TotalQty = NewDetails.Sum(c => c.Quantity);

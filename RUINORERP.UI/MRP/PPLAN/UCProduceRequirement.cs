@@ -167,7 +167,7 @@ namespace RUINORERP.UI.MRP.MP
                     entity.DataStatus = (int)DataStatus.草稿;
                     if (entity.PDNo.IsNullOrEmpty())
                     {
-                        entity.PDNo = BizCodeService.GetBizBillNo(BizType.需求分析);
+                        entity.PDNo = ClientBizCodeService.GetBizBillNo(BizType.需求分析);
                     }
                     entity.AnalysisDate = System.DateTime.Now;
                     if (entity.tb_ProductionDemandDetails != null && entity.tb_ProductionDemandDetails.Count > 0)

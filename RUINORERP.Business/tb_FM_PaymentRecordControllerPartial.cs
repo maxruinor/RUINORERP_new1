@@ -2301,7 +2301,7 @@ namespace RUINORERP.Business
             paymentRecord.Modified_by = null;
 
             paymentRecord.ReceivePaymentType = (int)ReceivePaymentType.付款;
-            IBizCodeService bizCodeService = _appContext.GetRequiredService<IBizCodeService>();
+            IBizCodeGenerateService bizCodeService = _appContext.GetRequiredService<IBizCodeGenerateService>();
             paymentRecord.PaymentNo = await bizCodeService.GenerateBizBillNoAsync(BizType.费用报销单);
 
             tb_FM_PaymentRecordDetail paymentRecordDetail = new tb_FM_PaymentRecordDetail();
@@ -2373,7 +2373,7 @@ namespace RUINORERP.Business
             paymentRecord.Modified_at = null;
             paymentRecord.Modified_by = null;
             //0  支出  1为收入
-            IBizCodeService bizCodeService = _appContext.GetRequiredService<IBizCodeService>();
+            IBizCodeGenerateService bizCodeService = _appContext.GetRequiredService<IBizCodeGenerateService>();
             if (entity.EXPOrINC == true)
             {
                 paymentRecord.ReceivePaymentType = (int)ReceivePaymentType.收款;
@@ -2472,7 +2472,7 @@ namespace RUINORERP.Business
             paymentRecord.Modified_by = null;
             paymentRecord.ReceivePaymentType = entities[0].ReceivePaymentType;
             paymentRecord.Employee_ID = entities[0].Employee_ID;
-            IBizCodeService bizCodeService = _appContext.GetRequiredService<IBizCodeService>();
+            IBizCodeGenerateService bizCodeService = _appContext.GetRequiredService<IBizCodeGenerateService>();
             if (entities[0].ReceivePaymentType == (int)ReceivePaymentType.收款)
             {
                 paymentRecord.PaymentNo = await bizCodeService.GenerateBizBillNoAsync(BizType.收款单, CancellationToken.None);
@@ -2625,7 +2625,7 @@ namespace RUINORERP.Business
             paymentRecord.CustomerVendor_ID = entities[0].CustomerVendor_ID;
             paymentRecord.PayeeAccountNo = entities[0].PayeeAccountNo;
             paymentRecord.tb_FM_PaymentRecordDetails = NewDetails;
-            IBizCodeService bizCodeService = _appContext.GetRequiredService<IBizCodeService>();
+            IBizCodeGenerateService bizCodeService = _appContext.GetRequiredService<IBizCodeGenerateService>();
             if (entities[0].ReceivePaymentType == (int)ReceivePaymentType.收款)
             {
                 paymentRecord.PaymentNo = await bizCodeService.GenerateBizBillNoAsync(BizType.收款单, CancellationToken.None);
@@ -2775,7 +2775,7 @@ namespace RUINORERP.Business
             paymentRecord.ReceivePaymentType = entities[0].ReceivePaymentType;
 
             // 根据收付款类型生成对应的单据编号
-            IBizCodeService bizCodeService = _appContext.GetRequiredService<IBizCodeService>();
+            IBizCodeGenerateService bizCodeService = _appContext.GetRequiredService<IBizCodeGenerateService>();
             if (entities[0].ReceivePaymentType == (int)ReceivePaymentType.收款)
             {
                 paymentRecord.PaymentNo = await bizCodeService.GenerateBizBillNoAsync(BizType.收款单, CancellationToken.None);

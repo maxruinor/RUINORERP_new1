@@ -230,7 +230,8 @@ namespace RUINORERP.Server
             builder.RegisterType<BNRFactory>().AsSelf().SingleInstance(); // 注册BNR工厂
             
             // 注册业务编码服务
-            builder.RegisterType<BizCodeGenerateService>().AsSelf().SingleInstance(); // 注册业务编码服务
+            builder.RegisterType<ServerBizCodeGenerateService>().AsSelf().SingleInstance(); // 注册业务编码服务
+            
            
 
             // 配置日志服务

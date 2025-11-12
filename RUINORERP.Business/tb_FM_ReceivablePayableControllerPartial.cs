@@ -662,7 +662,7 @@ namespace RUINORERP.Business
             payable.BusinessDate = entity.RepairStartDate;
             payable.DocumentDate = entity.Created_at.Value;
 
-            IBizCodeService bizCodeService = _appContext.GetRequiredService<IBizCodeService>();
+            IBizCodeGenerateService bizCodeService = _appContext.GetRequiredService<IBizCodeGenerateService>();
             payable.ARAPNo = await bizCodeService.GenerateBizBillNoAsync(BizType.应收款单, CancellationToken.None);
 
             payable.Currency_ID = _appContext.BaseCurrency.Currency_ID;
@@ -798,7 +798,7 @@ namespace RUINORERP.Business
             }
 
             payable.ReceivePaymentType = (int)ReceivePaymentType.收款;
-            IBizCodeService bizCodeService = _appContext.GetRequiredService<IBizCodeService>();
+            IBizCodeGenerateService bizCodeService = _appContext.GetRequiredService<IBizCodeGenerateService>();
             payable.ARAPNo = await bizCodeService.GenerateBizBillNoAsync(BizType.应收款单, CancellationToken.None);
             payable.Currency_ID = entity.Currency_ID;
             payable.ExchangeRate = entity.ExchangeRate;
@@ -889,7 +889,7 @@ namespace RUINORERP.Business
             payable.Modified_by = null;
             payable.SourceBillNo = entity.AdjustNo;
             payable.SourceBillId = entity.AdjustId;
-            IBizCodeService bizCodeService = _appContext.GetRequiredService<IBizCodeService>();
+            IBizCodeGenerateService bizCodeService = _appContext.GetRequiredService<IBizCodeGenerateService>();
             if (entity.ReceivePaymentType == (int)ReceivePaymentType.收款)
             {
                 payable.SourceBizType = (int)BizType.销售价格调整单;
@@ -2257,7 +2257,7 @@ namespace RUINORERP.Business
                 }
             }
             //佣金生成应付款单
-            IBizCodeService bizCodeService = _appContext.GetRequiredService<IBizCodeService>();
+            IBizCodeGenerateService bizCodeService = _appContext.GetRequiredService<IBizCodeGenerateService>();
             if (IsProcessCommission)
             {
                 payable.ReceivePaymentType = (int)ReceivePaymentType.付款;
@@ -2449,7 +2449,7 @@ namespace RUINORERP.Business
             #endregion
 
             //采购就是付款
-            IBizCodeService bizCodeService = _appContext.GetRequiredService<IBizCodeService>();
+            IBizCodeGenerateService bizCodeService = _appContext.GetRequiredService<IBizCodeGenerateService>();
             payable.ReceivePaymentType = (int)ReceivePaymentType.付款;
             payable.ARAPNo = await bizCodeService.GenerateBizBillNoAsync(BizType.应付款单, CancellationToken.None);
             if (entity.Currency_ID.HasValue)
@@ -2606,7 +2606,7 @@ namespace RUINORERP.Business
             payable.CustomerVendor_ID = entity.CustomerVendor_ID.Value;
 
             payable.ReceivePaymentType = (int)ReceivePaymentType.付款;
-            IBizCodeService bizCodeService = _appContext.GetRequiredService<IBizCodeService>();
+            IBizCodeGenerateService bizCodeService = _appContext.GetRequiredService<IBizCodeGenerateService>();
             payable.ARAPNo = await bizCodeService.GenerateBizBillNoAsync(BizType.应付款单, CancellationToken.None);
 
             payable.Currency_ID = _appContext.BaseCurrency.Currency_ID;
@@ -2727,7 +2727,7 @@ namespace RUINORERP.Business
             payable.DepartmentID = entity.DepartmentID;
 
             //采购就是付款
-            IBizCodeService bizCodeService = _appContext.GetRequiredService<IBizCodeService>();
+            IBizCodeGenerateService bizCodeService = _appContext.GetRequiredService<IBizCodeGenerateService>();
             payable.ReceivePaymentType = (int)ReceivePaymentType.付款;
             payable.ARAPNo = await bizCodeService.GenerateBizBillNoAsync(BizType.应付款单, CancellationToken.None);
 
@@ -2846,7 +2846,7 @@ namespace RUINORERP.Business
             payable.ReceivePaymentType = (int)ReceivePaymentType.付款;
             payable.BusinessDate = entity.ReturnDate;
             payable.DocumentDate = entity.Created_at.Value;
-            IBizCodeService bizCodeService = _appContext.GetRequiredService<IBizCodeService>();
+            IBizCodeGenerateService bizCodeService = _appContext.GetRequiredService<IBizCodeGenerateService>();
             payable.ARAPNo = await bizCodeService.GenerateBizBillNoAsync(BizType.应付款单, CancellationToken.None);
             if (entity.Currency_ID.HasValue)
             {

@@ -207,8 +207,8 @@ namespace RUINORERP.UI.Network.DI
             //    .PreserveExistingDefaults(); // 保留现有的默认实现
             
             // 注册BizCodeService作为IBizCodeService接口的主要实现
-            builder.RegisterType<BizCodeService>()
-                .As<IBizCodeService>()
+            builder.RegisterType<ClientBizCodeService>()
+                .As<IBizCodeGenerateService>()
                 .AsSelf()
                 .SingleInstance()
                 .PropertiesAutowired()

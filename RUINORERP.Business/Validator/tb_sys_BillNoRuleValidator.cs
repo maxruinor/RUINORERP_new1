@@ -3,7 +3,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：11/10/2025 23:38:23
+// 时间：11/12/2025 16:18:33
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -37,6 +37,9 @@ namespace RUINORERP.Business
  RuleFor(tb_sys_BillNoRule =>tb_sys_BillNoRule.RuleName).MaximumMixedLength(200).WithMessage("规则名称:不能超过最大长度,200.");
  RuleFor(tb_sys_BillNoRule =>tb_sys_BillNoRule.RuleName).NotEmpty().WithMessage("规则名称:不能为空。");
 
+//***** 
+ RuleFor(tb_sys_BillNoRule =>tb_sys_BillNoRule.RuleType).NotNull().WithMessage("规则类型:不能为空。");
+
 
  RuleFor(tb_sys_BillNoRule =>tb_sys_BillNoRule.Prefix).MaximumMixedLength(200).WithMessage("前缀:不能超过最大长度,200.");
  RuleFor(tb_sys_BillNoRule =>tb_sys_BillNoRule.Prefix).NotEmpty().WithMessage("前缀:不能为空。");
@@ -51,7 +54,16 @@ namespace RUINORERP.Business
  RuleFor(tb_sys_BillNoRule =>tb_sys_BillNoRule.RedisKeyPattern).MaximumMixedLength(3000).WithMessage("Redis键模式:不能超过最大长度,3000.");
 
 //***** 
+ RuleFor(tb_sys_BillNoRule =>tb_sys_BillNoRule.StorageType).NotNull().WithMessage("存储数据库类型:不能为空。");
+
+//***** 
+ RuleFor(tb_sys_BillNoRule =>tb_sys_BillNoRule.Priority).NotNull().WithMessage("优先级:不能为空。");
+
+//***** 
  RuleFor(tb_sys_BillNoRule =>tb_sys_BillNoRule.ResetMode).NotNull().WithMessage("重置模式:不能为空。");
+
+ RuleFor(tb_sys_BillNoRule =>tb_sys_BillNoRule.RulePattern).MaximumMixedLength(200).WithMessage("编码规则:不能超过最大长度,200.");
+ RuleFor(tb_sys_BillNoRule =>tb_sys_BillNoRule.RulePattern).NotEmpty().WithMessage("编码规则:不能为空。");
 
 //有默认值
 

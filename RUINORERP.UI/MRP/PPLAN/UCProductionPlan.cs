@@ -138,7 +138,7 @@ namespace RUINORERP.UI.MRP.MP
                     entity.DataStatus = (int)DataStatus.草稿;
                     if (entity.PPNo.IsNullOrEmpty())
                     {
-                        entity.PPNo = BizCodeService.GetBizBillNo(BizType.生产计划单);
+                        entity.PPNo = ClientBizCodeService.GetBizBillNo(BizType.生产计划单);
                     }
                     entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
                     entity.PlanDate = System.DateTime.Now;

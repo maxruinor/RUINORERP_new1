@@ -1,4 +1,4 @@
-﻿namespace RUINORERP.UI.BI
+namespace RUINORERP.UI.BI
 {
     partial class UCsysBillNoRuleEdit
     {
@@ -29,6 +29,11 @@
         private void InitializeComponent()
         {
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
+            this.kryptonLabel1 = new Krypton.Toolkit.KryptonLabel();
+            this.cmbResetMode = new Krypton.Toolkit.KryptonComboBox();
+            this.cmbDateFormat = new Krypton.Toolkit.KryptonComboBox();
+            this.cmbRuleType = new Krypton.Toolkit.KryptonComboBox();
+            this.lblRuleType = new Krypton.Toolkit.KryptonLabel();
             this.btnExample = new Krypton.Toolkit.KryptonButton();
             this.lblRuleName = new Krypton.Toolkit.KryptonLabel();
             this.txtRuleName = new Krypton.Toolkit.KryptonTextBox();
@@ -40,7 +45,6 @@
             this.txtSequenceLength = new Krypton.Toolkit.KryptonTextBox();
             this.lblUseCheckDigit = new Krypton.Toolkit.KryptonLabel();
             this.chkUseCheckDigit = new Krypton.Toolkit.KryptonCheckBox();
-            this.lblRedisKeyPattern = new Krypton.Toolkit.KryptonLabel();
             this.lblResetMode = new Krypton.Toolkit.KryptonLabel();
             this.lblIsActive = new Krypton.Toolkit.KryptonLabel();
             this.chkIsActive = new Krypton.Toolkit.KryptonCheckBox();
@@ -49,21 +53,27 @@
             this.cmbBizType = new Krypton.Toolkit.KryptonComboBox();
             this.btnCancel = new Krypton.Toolkit.KryptonButton();
             this.btnOk = new Krypton.Toolkit.KryptonButton();
-            this.cmbDateFormat = new Krypton.Toolkit.KryptonComboBox();
-            this.cmbResetMode = new Krypton.Toolkit.KryptonComboBox();
-            this.txtRedisKeyPattern = new Krypton.Toolkit.KryptonTextBox();
+            this.kryptonLabel2 = new Krypton.Toolkit.KryptonLabel();
+            this.cmbStorageType = new Krypton.Toolkit.KryptonComboBox();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.cmbBizType)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.cmbDateFormat)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbResetMode)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.cmbDateFormat)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.cmbRuleType)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.cmbBizType)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.cmbStorageType)).BeginInit();
             this.SuspendLayout();
             // 
             // kryptonPanel1
             // 
+            this.kryptonPanel1.Controls.Add(this.kryptonLabel2);
+            this.kryptonPanel1.Controls.Add(this.cmbStorageType);
+            this.kryptonPanel1.Controls.Add(this.kryptonLabel1);
             this.kryptonPanel1.Controls.Add(this.cmbResetMode);
             this.kryptonPanel1.Controls.Add(this.cmbDateFormat);
+            this.kryptonPanel1.Controls.Add(this.cmbRuleType);
+            this.kryptonPanel1.Controls.Add(this.lblRuleType);
             this.kryptonPanel1.Controls.Add(this.btnExample);
             this.kryptonPanel1.Controls.Add(this.lblRuleName);
             this.kryptonPanel1.Controls.Add(this.txtRuleName);
@@ -75,8 +85,6 @@
             this.kryptonPanel1.Controls.Add(this.txtSequenceLength);
             this.kryptonPanel1.Controls.Add(this.lblUseCheckDigit);
             this.kryptonPanel1.Controls.Add(this.chkUseCheckDigit);
-            this.kryptonPanel1.Controls.Add(this.lblRedisKeyPattern);
-            this.kryptonPanel1.Controls.Add(this.txtRedisKeyPattern);
             this.kryptonPanel1.Controls.Add(this.lblResetMode);
             this.kryptonPanel1.Controls.Add(this.lblIsActive);
             this.kryptonPanel1.Controls.Add(this.chkIsActive);
@@ -91,9 +99,52 @@
             this.kryptonPanel1.Size = new System.Drawing.Size(646, 465);
             this.kryptonPanel1.TabIndex = 0;
             // 
+            // kryptonLabel1
+            // 
+            this.kryptonLabel1.Location = new System.Drawing.Point(150, 121);
+            this.kryptonLabel1.Name = "kryptonLabel1";
+            this.kryptonLabel1.Size = new System.Drawing.Size(36, 20);
+            this.kryptonLabel1.TabIndex = 228;
+            this.kryptonLabel1.Values.Text = "前缀";
+            // 
+            // cmbResetMode
+            // 
+            this.cmbResetMode.DropDownWidth = 181;
+            this.cmbResetMode.IntegralHeight = false;
+            this.cmbResetMode.Location = new System.Drawing.Point(192, 237);
+            this.cmbResetMode.Name = "cmbResetMode";
+            this.cmbResetMode.Size = new System.Drawing.Size(300, 21);
+            this.cmbResetMode.TabIndex = 225;
+            // 
+            // cmbDateFormat
+            // 
+            this.cmbDateFormat.DropDownWidth = 181;
+            this.cmbDateFormat.IntegralHeight = false;
+            this.cmbDateFormat.Location = new System.Drawing.Point(192, 150);
+            this.cmbDateFormat.Name = "cmbDateFormat";
+            this.cmbDateFormat.Size = new System.Drawing.Size(300, 21);
+            this.cmbDateFormat.TabIndex = 222;
+            // 
+            // cmbRuleType
+            // 
+            this.cmbRuleType.DropDownWidth = 181;
+            this.cmbRuleType.IntegralHeight = false;
+            this.cmbRuleType.Location = new System.Drawing.Point(192, 38);
+            this.cmbRuleType.Name = "cmbRuleType";
+            this.cmbRuleType.Size = new System.Drawing.Size(300, 21);
+            this.cmbRuleType.TabIndex = 227;
+            // 
+            // lblRuleType
+            // 
+            this.lblRuleType.Location = new System.Drawing.Point(124, 38);
+            this.lblRuleType.Name = "lblRuleType";
+            this.lblRuleType.Size = new System.Drawing.Size(62, 20);
+            this.lblRuleType.TabIndex = 226;
+            this.lblRuleType.Values.Text = "规则类型";
+            // 
             // btnExample
             // 
-            this.btnExample.Location = new System.Drawing.Point(192, 362);
+            this.btnExample.Location = new System.Drawing.Point(553, 369);
             this.btnExample.Name = "btnExample";
             this.btnExample.Size = new System.Drawing.Size(43, 25);
             this.btnExample.TabIndex = 221;
@@ -101,7 +152,7 @@
             // 
             // lblRuleName
             // 
-            this.lblRuleName.Location = new System.Drawing.Point(90, 12);
+            this.lblRuleName.Location = new System.Drawing.Point(124, 12);
             this.lblRuleName.Name = "lblRuleName";
             this.lblRuleName.Size = new System.Drawing.Size(62, 20);
             this.lblRuleName.TabIndex = 201;
@@ -116,7 +167,7 @@
             // 
             // lblBizType
             // 
-            this.lblBizType.Location = new System.Drawing.Point(90, 36);
+            this.lblBizType.Location = new System.Drawing.Point(124, 97);
             this.lblBizType.Name = "lblBizType";
             this.lblBizType.Size = new System.Drawing.Size(62, 20);
             this.lblBizType.TabIndex = 203;
@@ -124,7 +175,7 @@
             // 
             // lblPrefix
             // 
-            this.lblPrefix.Location = new System.Drawing.Point(116, 62);
+            this.lblPrefix.Location = new System.Drawing.Point(150, 38);
             this.lblPrefix.Name = "lblPrefix";
             this.lblPrefix.Size = new System.Drawing.Size(36, 20);
             this.lblPrefix.TabIndex = 205;
@@ -132,14 +183,14 @@
             // 
             // txtPrefix
             // 
-            this.txtPrefix.Location = new System.Drawing.Point(192, 59);
+            this.txtPrefix.Location = new System.Drawing.Point(192, 121);
             this.txtPrefix.Name = "txtPrefix";
             this.txtPrefix.Size = new System.Drawing.Size(300, 23);
             this.txtPrefix.TabIndex = 206;
             // 
             // lblDateFormat
             // 
-            this.lblDateFormat.Location = new System.Drawing.Point(90, 87);
+            this.lblDateFormat.Location = new System.Drawing.Point(124, 151);
             this.lblDateFormat.Name = "lblDateFormat";
             this.lblDateFormat.Size = new System.Drawing.Size(62, 20);
             this.lblDateFormat.TabIndex = 207;
@@ -147,7 +198,7 @@
             // 
             // lblSequenceLength
             // 
-            this.lblSequenceLength.Location = new System.Drawing.Point(77, 115);
+            this.lblSequenceLength.Location = new System.Drawing.Point(111, 181);
             this.lblSequenceLength.Name = "lblSequenceLength";
             this.lblSequenceLength.Size = new System.Drawing.Size(75, 20);
             this.lblSequenceLength.TabIndex = 209;
@@ -155,14 +206,14 @@
             // 
             // txtSequenceLength
             // 
-            this.txtSequenceLength.Location = new System.Drawing.Point(192, 112);
+            this.txtSequenceLength.Location = new System.Drawing.Point(192, 178);
             this.txtSequenceLength.Name = "txtSequenceLength";
             this.txtSequenceLength.Size = new System.Drawing.Size(300, 23);
             this.txtSequenceLength.TabIndex = 210;
             // 
             // lblUseCheckDigit
             // 
-            this.lblUseCheckDigit.Location = new System.Drawing.Point(51, 136);
+            this.lblUseCheckDigit.Location = new System.Drawing.Point(85, 202);
             this.lblUseCheckDigit.Name = "lblUseCheckDigit";
             this.lblUseCheckDigit.Size = new System.Drawing.Size(101, 20);
             this.lblUseCheckDigit.TabIndex = 211;
@@ -170,23 +221,15 @@
             // 
             // chkUseCheckDigit
             // 
-            this.chkUseCheckDigit.Location = new System.Drawing.Point(192, 140);
+            this.chkUseCheckDigit.Location = new System.Drawing.Point(192, 206);
             this.chkUseCheckDigit.Name = "chkUseCheckDigit";
             this.chkUseCheckDigit.Size = new System.Drawing.Size(19, 13);
             this.chkUseCheckDigit.TabIndex = 212;
             this.chkUseCheckDigit.Values.Text = "";
             // 
-            // lblRedisKeyPattern
-            // 
-            this.lblRedisKeyPattern.Location = new System.Drawing.Point(73, 162);
-            this.lblRedisKeyPattern.Name = "lblRedisKeyPattern";
-            this.lblRedisKeyPattern.Size = new System.Drawing.Size(79, 20);
-            this.lblRedisKeyPattern.TabIndex = 214;
-            this.lblRedisKeyPattern.Values.Text = "Redis键模式";
-            // 
             // lblResetMode
             // 
-            this.lblResetMode.Location = new System.Drawing.Point(90, 187);
+            this.lblResetMode.Location = new System.Drawing.Point(124, 237);
             this.lblResetMode.Name = "lblResetMode";
             this.lblResetMode.Size = new System.Drawing.Size(62, 20);
             this.lblResetMode.TabIndex = 215;
@@ -194,7 +237,7 @@
             // 
             // lblIsActive
             // 
-            this.lblIsActive.Location = new System.Drawing.Point(400, 136);
+            this.lblIsActive.Location = new System.Drawing.Point(400, 202);
             this.lblIsActive.Name = "lblIsActive";
             this.lblIsActive.Size = new System.Drawing.Size(62, 20);
             this.lblIsActive.TabIndex = 217;
@@ -202,7 +245,7 @@
             // 
             // chkIsActive
             // 
-            this.chkIsActive.Location = new System.Drawing.Point(473, 140);
+            this.chkIsActive.Location = new System.Drawing.Point(473, 206);
             this.chkIsActive.Name = "chkIsActive";
             this.chkIsActive.Size = new System.Drawing.Size(19, 13);
             this.chkIsActive.TabIndex = 218;
@@ -210,7 +253,7 @@
             // 
             // lblDescription
             // 
-            this.lblDescription.Location = new System.Drawing.Point(90, 217);
+            this.lblDescription.Location = new System.Drawing.Point(124, 267);
             this.lblDescription.Name = "lblDescription";
             this.lblDescription.Size = new System.Drawing.Size(62, 20);
             this.lblDescription.TabIndex = 219;
@@ -218,17 +261,17 @@
             // 
             // txtDescription
             // 
-            this.txtDescription.Location = new System.Drawing.Point(192, 214);
+            this.txtDescription.Location = new System.Drawing.Point(192, 264);
             this.txtDescription.Multiline = true;
             this.txtDescription.Name = "txtDescription";
-            this.txtDescription.Size = new System.Drawing.Size(300, 122);
+            this.txtDescription.Size = new System.Drawing.Size(300, 95);
             this.txtDescription.TabIndex = 220;
             // 
             // cmbBizType
             // 
             this.cmbBizType.DropDownWidth = 181;
             this.cmbBizType.IntegralHeight = false;
-            this.cmbBizType.Location = new System.Drawing.Point(192, 35);
+            this.cmbBizType.Location = new System.Drawing.Point(192, 96);
             this.cmbBizType.Name = "cmbBizType";
             this.cmbBizType.Size = new System.Drawing.Size(300, 21);
             this.cmbBizType.TabIndex = 200;
@@ -251,31 +294,22 @@
             this.btnOk.Values.Text = "确定";
             this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
             // 
-            // cmbDateFormat
+            // kryptonLabel2
             // 
-            this.cmbDateFormat.DropDownWidth = 181;
-            this.cmbDateFormat.IntegralHeight = false;
-            this.cmbDateFormat.Location = new System.Drawing.Point(192, 86);
-            this.cmbDateFormat.Name = "cmbDateFormat";
-            this.cmbDateFormat.Size = new System.Drawing.Size(300, 21);
-            this.cmbDateFormat.TabIndex = 222;
+            this.kryptonLabel2.Location = new System.Drawing.Point(85, 66);
+            this.kryptonLabel2.Name = "kryptonLabel2";
+            this.kryptonLabel2.Size = new System.Drawing.Size(101, 20);
+            this.kryptonLabel2.TabIndex = 230;
+            this.kryptonLabel2.Values.Text = "存储数据库类型";
             // 
-            // cmbResetMode
+            // cmbStorageType
             // 
-            this.cmbResetMode.DropDownWidth = 181;
-            this.cmbResetMode.IntegralHeight = false;
-            this.cmbResetMode.Location = new System.Drawing.Point(192, 187);
-            this.cmbResetMode.Name = "cmbResetMode";
-            this.cmbResetMode.Size = new System.Drawing.Size(300, 21);
-            this.cmbResetMode.TabIndex = 223;
-            // 
-            // txtRedisKeyPattern
-            // 
-            this.txtRedisKeyPattern.Location = new System.Drawing.Point(192, 159);
-            this.txtRedisKeyPattern.Multiline = true;
-            this.txtRedisKeyPattern.Name = "txtRedisKeyPattern";
-            this.txtRedisKeyPattern.Size = new System.Drawing.Size(300, 21);
-            this.txtRedisKeyPattern.TabIndex = 213;
+            this.cmbStorageType.DropDownWidth = 181;
+            this.cmbStorageType.IntegralHeight = false;
+            this.cmbStorageType.Location = new System.Drawing.Point(192, 65);
+            this.cmbStorageType.Name = "cmbStorageType";
+            this.cmbStorageType.Size = new System.Drawing.Size(300, 21);
+            this.cmbStorageType.TabIndex = 229;
             // 
             // UCsysBillNoRuleEdit
             // 
@@ -290,9 +324,11 @@
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).EndInit();
             this.kryptonPanel1.ResumeLayout(false);
             this.kryptonPanel1.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.cmbBizType)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.cmbDateFormat)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbResetMode)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.cmbDateFormat)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.cmbRuleType)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.cmbBizType)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.cmbStorageType)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -313,7 +349,6 @@
         private Krypton.Toolkit.KryptonTextBox txtSequenceLength;
         private Krypton.Toolkit.KryptonLabel lblUseCheckDigit;
         private Krypton.Toolkit.KryptonCheckBox chkUseCheckDigit;
-        private Krypton.Toolkit.KryptonLabel lblRedisKeyPattern;
         private Krypton.Toolkit.KryptonLabel lblResetMode;
         private Krypton.Toolkit.KryptonLabel lblIsActive;
         private Krypton.Toolkit.KryptonCheckBox chkIsActive;
@@ -322,6 +357,10 @@
         private Krypton.Toolkit.KryptonButton btnExample;
         private Krypton.Toolkit.KryptonComboBox cmbDateFormat;
         private Krypton.Toolkit.KryptonComboBox cmbResetMode;
-        private Krypton.Toolkit.KryptonTextBox txtRedisKeyPattern;
+        private Krypton.Toolkit.KryptonLabel lblRuleType;
+        private Krypton.Toolkit.KryptonComboBox cmbRuleType;
+        private Krypton.Toolkit.KryptonLabel kryptonLabel1;
+        private Krypton.Toolkit.KryptonLabel kryptonLabel2;
+        private Krypton.Toolkit.KryptonComboBox cmbStorageType;
     }
 }

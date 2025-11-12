@@ -436,7 +436,7 @@ namespace RUINORERP.Business
                     }
                     else
                     {
-                        IBizCodeService bizCodeService = _appContext.GetRequiredService<IBizCodeService>();
+                        IBizCodeGenerateService bizCodeService = _appContext.GetRequiredService<IBizCodeGenerateService>();
                         priceAdjustment.AdjustNo = await bizCodeService.GenerateBizBillNoAsync(BizType.销售价格调整单, CancellationToken.None);
                     }
 
@@ -531,7 +531,7 @@ namespace RUINORERP.Business
                     }
                     else
                     {
-                        IBizCodeService bizCodeService = _appContext.GetRequiredService<IBizCodeService>();
+                        IBizCodeGenerateService bizCodeService = _appContext.GetRequiredService<IBizCodeGenerateService>();
                         priceAdjustment.AdjustNo = await bizCodeService.GenerateBizBillNoAsync(BizType.采购价格调整单, CancellationToken.None);
                     }
                     priceAdjustment.AdjustDate = System.DateTime.Now;

@@ -7,6 +7,48 @@ using System.Threading.Tasks;
 
 namespace RUINORERP.Global
 {
+    /// <summary>
+    /// 加密方法枚举
+    /// </summary>
+    public enum EncryptionMethod
+    {
+        None,
+        /// <summary>
+        /// 16进制转换 - 将数字部分转换为16进制表示
+        /// </summary>
+        Hexadecimal = 0,
+        /// <summary>
+        /// 字符串混淆 - 对字符串部分进行字符替换和位置调整
+        /// </summary>
+        StringObfuscation = 1,
+        /// <summary>
+        /// Base62编码 - 使用Base62算法对部分内容进行编码
+        /// </summary>
+        Base62 = 2
+    }
+    // 日期格式枚举
+    public enum DateFormat
+    {
+        [Description("年月日yyyyMMdd")]
+        YearMonthDay,  // yyyyMMdd
+        [Description("年月yyyyMM")]
+        YearMonth,     // yyyyMM
+        [Description("年周yyyyWW")]
+        YearWeek       // yyyyWW
+    }
+
+    //0=不重置 1=按日 2=按月 3=按年
+    public enum ResetMode
+    {
+        [Description("不重置")]
+        None = 0,
+        [Description("按日")]
+        Day = 1,
+        [Description("按月")]
+        Month = 2,
+        [Description("按年")]
+        Year = 3
+    }
 
     /// <summary>
     /// 销售出库单退货退款状态
@@ -192,7 +234,7 @@ namespace RUINORERP.Global
 6、优先处理距约定交货日期最近的订单。
      */
     /// <summary>
-    /// 单据优先级
+    /// 优先级
     /// </summary>
     public enum Priority
     {
@@ -238,6 +280,34 @@ namespace RUINORERP.Global
         PageSearch,
     }
 
+    /// <summary>
+    /// 编号规则生成配置时的类型
+    /// </summary>
+    public enum RuleType
+    {
+        业务单据编号,
+        基础信息编号
+    }
+    /// <summary>
+    /// 编码规则存储类型枚举
+    /// </summary>
+    public enum StorageType
+    {
+        /// <summary>
+        /// 数据库存储
+        /// </summary>
+        Database = 0,
+
+        /// <summary>
+        /// Redis存储
+        /// </summary>
+        Redis = 1,
+
+        /// <summary>
+        /// 其他存储
+        /// </summary>
+        Other = 2
+    }
     // [NoWantIOC()]
     public enum BaseInfoType
     {
@@ -430,7 +500,7 @@ namespace RUINORERP.Global
         损失确认单 = 171,
         溢余确认单 = 172,
 
-  
+
         对账单 = 175,
 
 

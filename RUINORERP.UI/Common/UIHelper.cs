@@ -902,6 +902,7 @@ namespace RUINORERP.UI.Common
                         if (sugarColumnAttr.IsPrimaryKey)
                         {
                             PrimaryKeyColName = sugarColumnAttr.ColumnName;
+                            break;
                         }
 
                     }

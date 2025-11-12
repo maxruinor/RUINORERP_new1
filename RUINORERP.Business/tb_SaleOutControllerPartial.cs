@@ -187,7 +187,7 @@ namespace RUINORERP.Business
                         entity.SaleOut_NO = saleout.SaleOutNo;
                         entity.IsFromPlatform = saleout.IsFromPlatform;
                     }
-                    IBizCodeService bizCodeService = _appContext.GetRequiredService<IBizCodeService>();
+                    IBizCodeGenerateService bizCodeService = _appContext.GetRequiredService<IBizCodeGenerateService>();
                     entity.ReturnNo = await bizCodeService.GenerateBizBillNoAsync(BizType.销售退回单);
                     entity.tb_saleout = saleout;
                     entity.TotalQty = NewDetails.Sum(c => c.Quantity);
@@ -1404,7 +1404,7 @@ namespace RUINORERP.Business
                     entity.IsFromPlatform = saleout.IsFromPlatform;
                 }
                 
-                IBizCodeService bizCodeService = _appContext.GetRequiredService<IBizCodeService>();
+                IBizCodeGenerateService bizCodeService = _appContext.GetRequiredService<IBizCodeGenerateService>();
                 entity.ReturnNo = await bizCodeService.GenerateBizBillNoAsync(BizType.销售退回单);
                 entity.tb_saleout = saleout;
                 entity.TotalQty = NewDetails.Sum(c => c.Quantity);

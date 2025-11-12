@@ -181,7 +181,7 @@ namespace RUINORERP.UI.PSI.PUR
                 entity.ExchangeRate = 1;
                 if (string.IsNullOrEmpty(entity.PurEntryReNo))
                 {
-                    entity.PurEntryReNo = BizCodeService.GetBizBillNo(BizType.采购退货单);
+                    entity.PurEntryReNo = ClientBizCodeService.GetBizBillNo(BizType.采购退货单);
                 }
 
                 entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;

@@ -149,7 +149,7 @@ namespace RUINORERP.UI.PSI.INV
                     entity.DataStatus = (int)DataStatus.草稿;
                     if (string.IsNullOrEmpty(entity.CheckNo))
                     {
-                        entity.CheckNo = BizCodeService.GetBizBillNo(BizType.盘点单);
+                        entity.CheckNo = ClientBizCodeService.GetBizBillNo(BizType.盘点单);
                     }
                     entity.Check_date = System.DateTime.Now;
                     entity.CarryingDate = System.DateTime.Now;

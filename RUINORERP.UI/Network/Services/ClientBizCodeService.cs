@@ -9,11 +9,13 @@ using RUINORERP.PacketSpec.Models.Responses;
 using RUINORERP.UI.Network;
 using RUINORERP.UI.Network.Exceptions;
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.Global;
 using RUINORERP.IServices;
+using RUINORERP.Model;
 
 namespace RUINORERP.UI.Network.Services
 {
@@ -23,10 +25,10 @@ namespace RUINORERP.UI.Network.Services
     /// 采用与UserLoginService相似的设计模式，确保统一的网络通信和异常处理
     /// 同时提供静态方法以便兼容旧的调用模式
     /// </summary>
-    public sealed class BizCodeService : IBizCodeService
+    public sealed class ClientBizCodeService : IBizCodeGenerateService
     {
         private readonly ClientCommunicationService _communicationService;
-        private readonly ILogger<BizCodeService> _logger;
+        private readonly ILogger<ClientBizCodeService> _logger;
         private readonly SemaphoreSlim _operationLock = new SemaphoreSlim(1, 1); // 防止并发操作请求
         private bool _isDisposed = false;
 
@@ -36,9 +38,9 @@ namespace RUINORERP.UI.Network.Services
         /// <param name="communicationService">通信服务</param>
         /// <param name="logger">日志记录器</param>
         /// <exception cref="ArgumentNullException">当必要参数为空时抛出</exception>
-        public BizCodeService(
+        public ClientBizCodeService(
             ClientCommunicationService communicationService,
-            ILogger<BizCodeService> logger = null)
+            ILogger<ClientBizCodeService> logger = null)
         {
             _communicationService = communicationService ?? throw new ArgumentNullException(nameof(communicationService));
             _logger = logger;
@@ -221,9 +223,69 @@ namespace RUINORERP.UI.Network.Services
 
             throw new Exception(response.ErrorMessage ?? "生成条码失败");
         }
+        
+        /// <summary>
+        /// 获取所有规则配置
+        /// </summary>
+        /// <param name="ct">取消令牌</param>
+        /// <returns>规则配置列表</returns>
+        public async Task<List<tb_sys_BillNoRule>> GetAllRuleConfigsAsync(CancellationToken ct = default)
+        {
+            var request = new BizCodeRequest();
+            var response = await SendBizCodeCommandAsync(
+                BizCodeCommands.GetAllRuleConfigs, request, ct);
 
+            if (response.IsSuccess && response.RuleConfigs != null)
+            {
+                return response.RuleConfigs;
+            }
 
+            throw new Exception(response.ErrorMessage ?? "获取规则配置失败");
+        }
+        
+        /// <summary>
+        /// 保存规则配置
+        /// </summary>
+        /// <param name="config">规则配置</param>
+        /// <param name="ct">取消令牌</param>
+        /// <returns>任务</returns>
+        public async Task SaveRuleConfigAsync(tb_sys_BillNoRule config, CancellationToken ct = default)
+        {
+            var request = new BizCodeRequest
+            {
+                RuleConfig = config
+            };
+            
+            var response = await SendBizCodeCommandAsync(
+                BizCodeCommands.SaveRuleConfig, request, ct);
 
+            if (!response.IsSuccess)
+            {
+                throw new Exception(response.ErrorMessage ?? "保存规则配置失败");
+            }
+        }
+        
+        /// <summary>
+        /// 删除规则配置
+        /// </summary>
+        /// <param name="id">规则配置ID</param>
+        /// <param name="ct">取消令牌</param>
+        /// <returns>任务</returns>
+        public async Task DeleteRuleConfigAsync(long id, CancellationToken ct = default)
+        {
+            var request = new BizCodeRequest
+            {
+                RuleConfigId = id
+            };
+            
+            var response = await SendBizCodeCommandAsync(
+                BizCodeCommands.DeleteRuleConfig, request, ct);
+
+            if (!response.IsSuccess)
+            {
+                throw new Exception(response.ErrorMessage ?? "删除规则配置失败");
+            }
+        }
 
         /// <summary>
         /// 发送业务编码生成命令的通用方法
@@ -347,7 +409,7 @@ namespace RUINORERP.UI.Network.Services
             try
             {
                 // 从依赖注入容器中获取服务实例
-                var bizCodeService = Startup.GetFromFac<BizCodeService>();
+                var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
                 if (bizCodeService == null)
                 {
                     throw new Exception("无法从容器中获取BizCodeService实例");
@@ -379,7 +441,7 @@ namespace RUINORERP.UI.Network.Services
             try
             {
                 // 从依赖注入容器中获取服务实例
-                var bizCodeService = Startup.GetFromFac<BizCodeService>();
+                var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
                 if (bizCodeService == null)
                 {
                     throw new Exception("无法从容器中获取BizCodeService实例");
@@ -413,7 +475,7 @@ namespace RUINORERP.UI.Network.Services
             try
             {
                 // 从依赖注入容器中获取服务实例
-                var bizCodeService = Startup.GetFromFac<BizCodeService>();
+                var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
                 if (bizCodeService == null)
                 {
                     throw new Exception("无法从容器中获取BizCodeService实例");
@@ -446,7 +508,7 @@ namespace RUINORERP.UI.Network.Services
             try
             {
                 // 从依赖注入容器中获取服务实例
-                var bizCodeService = Startup.GetFromFac<BizCodeService>();
+                var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
                 if (bizCodeService == null)
                 {
                     throw new Exception("无法从容器中获取BizCodeService实例");
@@ -482,7 +544,7 @@ namespace RUINORERP.UI.Network.Services
             try
             {
                 // 从依赖注入容器中获取服务实例
-                var bizCodeService = Startup.GetFromFac<BizCodeService>();
+                var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
                 if (bizCodeService == null)
                 {
                     throw new Exception("无法从容器中获取BizCodeService实例");

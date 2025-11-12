@@ -246,7 +246,7 @@ namespace RUINORERP.UI.ASS
                     entity.Priority = (int)Priority.正常;
                     if (string.IsNullOrEmpty(entity.ASApplyNo))
                     {
-                        entity.ASApplyNo = BizCodeService.GetBizBillNo(BizType.售后申请单);
+                        entity.ASApplyNo = ClientBizCodeService.GetBizBillNo(BizType.售后申请单);
                     }
                     entity.ASProcessStatus = (int)ASProcessStatus.登记;
                     entity.RepairEvaluationOpinion = string.Empty;

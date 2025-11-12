@@ -1057,7 +1057,7 @@ namespace RUINORERP.Business
             //没有经验通过下面先不计算
 
             BaseController<tb_BuyingRequisition> ctrBuy = _appContext.GetRequiredServiceByName<BaseController<tb_BuyingRequisition>>(typeof(tb_BuyingRequisition).Name + "Controller");
-            IBizCodeService bizCodeService = _appContext.GetRequiredService<IBizCodeService>();
+            IBizCodeGenerateService bizCodeService = _appContext.GetRequiredService<IBizCodeGenerateService>();
             BuyingRequisition.PuRequisitionNo = await bizCodeService.GenerateBizBillNoAsync(BizType.请购单, CancellationToken.None);
             BuyingRequisition.RefBillID = demand.PDID;
             BuyingRequisition.RefBillNO = demand.PDNo;
@@ -1180,7 +1180,7 @@ namespace RUINORERP.Business
             //人工成本 
             //ManufacturingOrder.LaborCost = MakingItem.l;
             // ManufacturingOrder.t = MakingItemBom.LaborCost;
-            IBizCodeService bizCodeService = _appContext.GetRequiredService<IBizCodeService>();
+            IBizCodeGenerateService bizCodeService = _appContext.GetRequiredService<IBizCodeGenerateService>();
             ManufacturingOrder.MONO = await bizCodeService.GenerateBizBillNoAsync(BizType.制令单, CancellationToken.None);
             ManufacturingOrder.PDID = demand.PDID;
 

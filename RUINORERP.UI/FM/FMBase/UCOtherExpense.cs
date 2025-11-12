@@ -106,7 +106,7 @@ namespace RUINORERP.UI.FM.FMBase
                         entity.EXPOrINC = false;
                         if (string.IsNullOrEmpty(entity.ExpenseNo))
                         {
-                            entity.ExpenseNo = BizCodeService.GetBizBillNo(BizType.其他费用支出);
+                            entity.ExpenseNo = ClientBizCodeService.GetBizBillNo(BizType.其他费用支出);
                         }
                     }
 
@@ -115,7 +115,7 @@ namespace RUINORERP.UI.FM.FMBase
                         entity.EXPOrINC = true;
                         if (string.IsNullOrEmpty(entity.ExpenseNo))
                         {
-                            entity.ExpenseNo = BizCodeService.GetBizBillNo(BizType.其他费用收入);
+                            entity.ExpenseNo = ClientBizCodeService.GetBizBillNo(BizType.其他费用收入);
                         }
                     }
                 }

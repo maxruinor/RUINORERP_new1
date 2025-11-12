@@ -215,11 +215,11 @@ namespace RUINORERP.UI.FM
                 {
                     if (PaymentType == ReceivePaymentType.付款)
                     {
-                        entity.PreRPNO = BizCodeService.GetBizBillNo(BizType.预付款单);
+                        entity.PreRPNO = ClientBizCodeService.GetBizBillNo(BizType.预付款单);
                     }
                     else
                     {
-                        entity.PreRPNO = BizCodeService.GetBizBillNo(BizType.预收款单);
+                        entity.PreRPNO = ClientBizCodeService.GetBizBillNo(BizType.预收款单);
                     }
                 }
 

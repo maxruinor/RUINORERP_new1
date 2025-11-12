@@ -44,7 +44,7 @@ namespace RUINORERP.UI.CRM
                 {
                     上级代码 = _EditEntity.tb_crm_region.Region_code;
                 }
-                _EditEntity.Region_code = BizCodeService.GetBaseInfoNo(BaseInfoType.CRM_RegionCode.ToString(), 上级代码);
+                _EditEntity.Region_code = ClientBizCodeService.GetBaseInfoNo(BaseInfoType.CRM_RegionCode.ToString(), 上级代码);
             }
 
             DataBindingHelper.BindData4TextBox<tb_CRM_Region>(entity, t => t.Region_Name, txtRegion_Name, BindDataType4TextBox.Text, false);

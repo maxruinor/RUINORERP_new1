@@ -524,6 +524,21 @@ namespace RUINORERP.PacketSpec.Commands
         /// 生成条码 - 根据原始编码生成条形码
         /// </summary>
         public const ushort BizCode_GenerateBarCode = 0x0F05;
+        
+        /// <summary>
+        /// 获取所有规则配置 - 获取所有编号规则配置
+        /// </summary>
+        public const ushort BizCode_GetAllRuleConfigs = 0x0F06;
+        
+        /// <summary>
+        /// 保存规则配置 - 保存编号规则配置
+        /// </summary>
+        public const ushort BizCode_SaveRuleConfig = 0x0F07;
+        
+        /// <summary>
+        /// 删除规则配置 - 删除编号规则配置
+        /// </summary>
+        public const ushort BizCode_DeleteRuleConfig = 0x0F08;
         #endregion
 
         #region 特殊功能命令 (0x90xx)

@@ -3601,6 +3601,7 @@ namespace RUINORERP.UI.BaseForm
 
             BusinessHelper.Instance.InitEntity(EditEntity);
             BusinessHelper.Instance.InitStatusEntity(EditEntity);
+            
             if (OnBindDataToUIEvent != null)
             {
                 bindingSourceSub.Clear();
@@ -3611,7 +3612,10 @@ namespace RUINORERP.UI.BaseForm
             {
                 ReflectionHelper.SetPropertyValue(EditEntity, typeof(ActionStatus).Name, (int)ActionStatus.新增);
             }
-
+            if(EditEntity is BaseEntity baseEntity)
+            {
+                baseEntity.FileStorageInfoList = new List<tb_FS_FileStorageInfo>();
+            }
             ToolBarEnabledControl(MenuItemEnums.新增);
             //bindingSourceEdit.CancelEdit();
             UIHelper.ControlMasterColumnsInvisible(CurMenuInfo, this);
@@ -3756,7 +3760,7 @@ namespace RUINORERP.UI.BaseForm
                 bindingSourceSub.Clear();
 
                 // NewEditEntity = Activator.CreateInstance(typeof(T)) as T;
-
+                
                 NewEditEntity = EditEntity.DeepCloneByjson();
 
                 // 获取需要忽略的属性配置
@@ -3799,6 +3803,7 @@ namespace RUINORERP.UI.BaseForm
             T NewEditEntity = default(T);
             if (OnBindDataToUIEvent != null)
             {
+                
                 bindingSourceSub.Clear();
 
                 NewEditEntity = EditEntity.DeepCloneByjson();
@@ -3824,6 +3829,7 @@ namespace RUINORERP.UI.BaseForm
 
                 ReflectionHelper.SetPropertyValue(NewEditEntity, billNoColName, string.Empty);
 
+                
                 // 重置主实体的主键
                 ResetPrimaryKey(NewEditEntity, PKCol);
 

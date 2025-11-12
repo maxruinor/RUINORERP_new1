@@ -136,7 +136,7 @@ namespace RUINORERP.UI.MRP.MP
                     entity.DataStatus = (int)DataStatus.草稿;
                     if (entity.MaterialRequisitionNO.IsNullOrEmpty())
                     {
-                        entity.MaterialRequisitionNO = BizCodeService.GetBizBillNo(BizType.生产领料单);
+                        entity.MaterialRequisitionNO = ClientBizCodeService.GetBizBillNo(BizType.生产领料单);
                     }
                     entity.DeliveryDate = System.DateTime.Now;
                     entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;

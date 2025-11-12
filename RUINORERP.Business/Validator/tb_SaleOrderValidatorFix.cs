@@ -1,5 +1,4 @@
-﻿
-// **************************************
+﻿// **************************************
 // 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
 // 版权：Copyright RUINOR
@@ -57,14 +56,24 @@ namespace RUINORERP.Business
             RuleFor(x => x.TotalAmount).Equal(x => x.tb_SaleOrderDetails.Sum(c => (c.TransactionPrice) * c.Quantity) + x.FreightIncome).WithMessage("总金额，成交小计：要等于成交价*数量，包含运费。");
             RuleFor(x => x.TotalCost).Equal(x => x.tb_SaleOrderDetails.Sum(c => (c.Cost + c.CustomizedCost) * c.Quantity)).WithMessage($"总成本，成本小计：要等于（成本价+定制成本）*数量。");
 
-            RuleFor(x => x.PlatformOrderNo).NotEmpty().When(c => c.IsFromPlatform).WithMessage("平台单时，平台订单号不能为空。");
-            //RuleFor(x => x.IsFromPlatform).Equal(true).When(c => c.PlatformOrderNo.IsNotEmptyOrNull() && c.PlatformOrderNo.Length > 0).WithMessage("平台订单号不为空时，【平台单】必需勾选。");
-            RuleFor(x => x.IsFromPlatform)
-           .Equal(true) // 等同于 .Must(value => value == true)
-           .When(c => !string.IsNullOrEmpty(c.PlatformOrderNo) && c.PlatformOrderNo.Length > 0)
-           .WithMessage("平台订单号不为空时，【平台单】必需勾选。");
+            // 完善平台单和平台订单号的关联验证，只提示一次
+            RuleFor(x => x)
+                .Custom((saleOrder, context) =>
+                {
+                    bool hasPlatformOrderNo = !string.IsNullOrEmpty(saleOrder.PlatformOrderNo);
+                    bool isFromPlatform = saleOrder.IsFromPlatform;
 
-
+                    // 如果勾选了平台单，平台订单号不能为空
+                    if (isFromPlatform && !hasPlatformOrderNo)
+                    {
+                        context.AddFailure("PlatformOrderNo", "平台单时，平台订单号不能为空。");
+                    }
+                    // 如果填写了平台订单号，必须勾选平台单
+                    else if (hasPlatformOrderNo && !isFromPlatform)
+                    {
+                        context.AddFailure("IsFromPlatform", "平台订单号不为空时，【平台单】必需勾选。");
+                    }
+                });
 
             RuleFor(x => x.PayStatus).GreaterThan(0).WithMessage("付款状态:不能为空。");
             RuleFor(x => x.Paytype_ID).GreaterThan(0).When(c => c.PayStatus != (int)PayStatus.未付款).WithMessage("付款方式:有付款的情况下，付款方式不能为空。");
@@ -74,7 +83,6 @@ namespace RUINORERP.Business
             RuleFor(x => x.ExchangeRate).GreaterThan(0).WithMessage("汇率:必须大于零。");
 
             //RuleFor(tb_SaleOrder => tb_SaleOrder.ProjectGroup_ID).NotNull().WithMessage("项目组:不能为空。");
-
 
             RuleFor(x => x.ProjectGroup_ID)
              .Custom((value, context) =>
@@ -92,9 +100,6 @@ namespace RUINORERP.Business
                      }
                  }
              });
-
-
-
 
             RuleFor(x => x.PayStatus)
              .Custom((value, context) =>
@@ -117,4 +122,3 @@ namespace RUINORERP.Business
         }
     }
 }
-

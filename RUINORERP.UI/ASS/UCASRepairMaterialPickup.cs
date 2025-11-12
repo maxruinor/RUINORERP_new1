@@ -116,7 +116,7 @@ namespace RUINORERP.UI.ASS
                     entity.DataStatus = (int)DataStatus.草稿;
                     if (entity.MaterialPickupNO.IsNullOrEmpty())
                     {
-                        entity.MaterialPickupNO = BizCodeService.GetBizBillNo(BizType.维修领料单);
+                        entity.MaterialPickupNO = ClientBizCodeService.GetBizBillNo(BizType.维修领料单);
                     }
                     entity.DeliveryDate = System.DateTime.Now;
                     entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;

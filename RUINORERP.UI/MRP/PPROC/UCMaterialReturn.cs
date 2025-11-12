@@ -118,7 +118,7 @@ namespace RUINORERP.UI.MRP.MP
                     entity.DataStatus = (int)DataStatus.草稿;
                     if (entity.BillNo.IsNullOrEmpty())
                     {
-                        entity.BillNo = BizCodeService.GetBizBillNo(BizType.生产退料单);
+                        entity.BillNo = ClientBizCodeService.GetBizBillNo(BizType.生产退料单);
                     }
                     entity.ReturnDate = System.DateTime.Now;
                     entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;

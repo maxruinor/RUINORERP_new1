@@ -122,7 +122,7 @@ namespace RUINORERP.UI.ASS
                     entity.DataStatus = (int)DataStatus.草稿;
                     if (string.IsNullOrEmpty(entity.RepairInStockNo))
                     {
-                        entity.RepairInStockNo = BizCodeService.GetBizBillNo(BizType.维修入库单);
+                        entity.RepairInStockNo = ClientBizCodeService.GetBizBillNo(BizType.维修入库单);
                     }
                     entity.Employee_ID = AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
                     if (entity.tb_AS_RepairInStockDetails != null && entity.tb_AS_RepairInStockDetails.Count > 0)

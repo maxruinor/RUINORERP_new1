@@ -34,6 +34,21 @@ namespace RUINORERP.PacketSpec.Commands
         /// 生成条码命令 - 根据原始编码生成条形码
         /// </summary>
         public static readonly CommandId GenerateBarCode = new CommandId(CommandCategory.BizCode, (byte)(CommandCatalog.BizCode_GenerateBarCode & 0xFF));
+        
+        /// <summary>
+        /// 获取所有规则配置命令 - 获取所有编号规则配置
+        /// </summary>
+        public static readonly CommandId GetAllRuleConfigs = new CommandId(CommandCategory.BizCode, (byte)(CommandCatalog.BizCode_GetAllRuleConfigs & 0xFF));
+        
+        /// <summary>
+        /// 保存规则配置命令 - 保存编号规则配置
+        /// </summary>
+        public static readonly CommandId SaveRuleConfig = new CommandId(CommandCategory.BizCode, (byte)(CommandCatalog.BizCode_SaveRuleConfig & 0xFF));
+        
+        /// <summary>
+        /// 删除规则配置命令 - 删除编号规则配置
+        /// </summary>
+        public static readonly CommandId DeleteRuleConfig = new CommandId(CommandCategory.BizCode, (byte)(CommandCatalog.BizCode_DeleteRuleConfig & 0xFF));
         #endregion
     }
 }

@@ -106,7 +106,7 @@ namespace RUINORERP.UI.FM
                 entity.DocumentDate = System.DateTime.Now;
                 if (string.IsNullOrEmpty(entity.ClaimNo))
                 {
-                    entity.ClaimNo = BizCodeService.GetBizBillNo(BizType.费用报销单);
+                    entity.ClaimNo = ClientBizCodeService.GetBizBillNo(BizType.费用报销单);
                 }
 
                 //新增时，默认币别为人民币

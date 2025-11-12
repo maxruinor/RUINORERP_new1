@@ -100,7 +100,7 @@ namespace RUINORERP.UI.PSI.INV
                 entity.DataStatus = (int)DataStatus.草稿;
                 if (string.IsNullOrEmpty(entity.BillNo))
                 {
-                    entity.BillNo = BizCodeService.GetBizBillNo(BizType.其他入库单);
+                    entity.BillNo = ClientBizCodeService.GetBizBillNo(BizType.其他入库单);
                 }
                 entity.Bill_Date = System.DateTime.Now;
                 entity.Enter_Date = System.DateTime.Now;

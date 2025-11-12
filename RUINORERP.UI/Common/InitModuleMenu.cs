@@ -94,7 +94,7 @@ namespace RUINORERP.UI.Common
                         ?? new tb_ModuleDefinition
                         {
                             ModuleName = moduleDto.Name,
-                            ModuleNo = BizCodeService.GetBaseInfoNo(BaseInfoType.ModuleDefinition),
+                            ModuleNo = ClientBizCodeService.GetBaseInfoNo(BaseInfoType.ModuleDefinition),
                             Available = true,
                             Visible = true
                         };
@@ -898,7 +898,7 @@ namespace RUINORERP.UI.Common
                 //定义模块
                 tb_ModuleDefinition mod = new tb_ModuleDefinition();
                 mod.ModuleName = item.Name;
-                mod.ModuleNo = BizCodeService.GetBaseInfoNo(BaseInfoType.ModuleDefinition);
+                mod.ModuleNo = ClientBizCodeService.GetBaseInfoNo(BaseInfoType.ModuleDefinition);
                 mod.Available = true;
                 mod.Visible = true;
                 tb_ModuleDefinition isExistt = ExistModuleList.FirstOrDefault(e => e.ModuleName == mod.ModuleName);

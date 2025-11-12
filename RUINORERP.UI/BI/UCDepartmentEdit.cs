@@ -35,7 +35,7 @@ namespace RUINORERP.UI.BI
             tb_Department _EditEntity = entity as tb_Department;
             if (_EditEntity.DepartmentID == 0)
             {
-                _EditEntity.DepartmentCode = BizCodeService.GetBaseInfoNo(BaseInfoType.Department.ToString());
+                _EditEntity.DepartmentCode = ClientBizCodeService.GetBaseInfoNo(BaseInfoType.Department.ToString());
             }
             DataBindingHelper.BindData4TextBox<tb_Department>(entity, t => t.DepartmentCode, txtDepartmentCode, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_Department>(entity, t => t.DepartmentName, txtDepartmentName, BindDataType4TextBox.Text, false);

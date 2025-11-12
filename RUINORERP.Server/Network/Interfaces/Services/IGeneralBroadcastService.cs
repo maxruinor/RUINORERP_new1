@@ -1,6 +1,7 @@
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Models.Requests;
 using RUINORERP.PacketSpec.Models.Responses;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace RUINORERP.Server.Network.Interfaces.Services
@@ -50,6 +51,16 @@ namespace RUINORERP.Server.Network.Interfaces.Services
         /// <param name="request">请求数据</param>
         /// <returns>响应数据</returns>
         Task<GeneralResponse> SendRequestToSession(string sessionId,  CommandId commandId, GeneralRequest request);
+
+        /// <summary>
+        /// 向特定会话发送请求并等待响应
+        /// </summary>
+        /// <param name="sessionId">会话ID</param>
+        /// <param name="commandId">命令ID</param>
+        /// <param name="request">请求数据</param>
+        /// <returns>响应数据</returns>
+        Task<List<GeneralResponse>> SendRequestToSession(CommandId commandId, GeneralRequest request);
+
 
         /// <summary>
         /// 向特定用户组发送请求并等待响应

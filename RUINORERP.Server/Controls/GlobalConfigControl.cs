@@ -257,8 +257,8 @@ namespace RUINORERP.Server.Controls
                 {
                     _logger?.LogWarning("没有可保存的配置对象");
                     // 获取主窗体实例并打印信息日志
-                var mainFormInstance = Application.OpenForms.OfType<frmMainNew>().FirstOrDefault();
-                mainFormInstance?.PrintInfoLog("没有可保存的配置对象");
+                    var mainFormInstance = Application.OpenForms.OfType<frmMainNew>().FirstOrDefault();
+                    mainFormInstance?.PrintInfoLog("没有可保存的配置对象");
                     return;
                 }
 
@@ -279,7 +279,7 @@ namespace RUINORERP.Server.Controls
                     .GetMethods()
                     .Where(m => m.Name == "SaveConfig" && m.IsGenericMethod && m.GetParameters().Length == 2)
                     .FirstOrDefault();
-                
+
                 bool saveResult = false;
                 if (saveMethod != null)
                 {
@@ -290,12 +290,12 @@ namespace RUINORERP.Server.Controls
                 {
                     _logger?.LogError("未找到匹配的SaveConfig方法");
                 }
-                
+
                 if (!saveResult)
                 {
                     throw new InvalidOperationException("配置保存失败");
                 }
-                
+
                 // 创建配置版本
                 string versionDescription = $"{description} - 由{Environment.UserName}修改";
                 _versionService.CreateVersion(_currentConfig, _currentConfigFileName, versionDescription);
@@ -344,7 +344,7 @@ namespace RUINORERP.Server.Controls
             return "配置更新";
         }
 
-      
+
 
         /// <summary>
         /// 初始化JSON文件TreeView（左侧树）
@@ -486,25 +486,25 @@ namespace RUINORERP.Server.Controls
 
                 // 使用反射调用泛型的配置加载方法
                 _logger?.LogInformation("开始加载配置文件: {FileName}, 类型: {ConfigType}", fileName, configType.Name);
-                
+
                 // 调用配置管理器服务的LoadConfig方法，使用反射以支持任意配置类型
                 // 使用更精确的方法查找，获取无参数版本的LoadConfig泛型方法
                 MethodInfo loadMethod = typeof(IConfigManagerService)
                     .GetMethods()
                     .Where(m => m.Name == "LoadConfig" && m.IsGenericMethod && m.GetParameters().Length == 0)
                     .FirstOrDefault();
-                
+
                 if (loadMethod == null)
                 {
                     _logger?.LogError("未找到匹配的LoadConfig方法");
                     CreateDefaultConfiguration(configType, fileName, rootNode);
                     return;
                 }
-                
+
                 MethodInfo genericLoadMethod = loadMethod.MakeGenericMethod(configType);
-                
+
                 BaseConfig config = genericLoadMethod.Invoke(_configManagerService, null) as BaseConfig;
-                
+
                 if (config != null)
                 {
                     _currentConfig = config;
@@ -551,7 +551,7 @@ namespace RUINORERP.Server.Controls
         /// <summary>
         /// 广播配置变更给所有客户端
         /// </summary>
-        private bool BroadcastConfigChange(BaseConfig config)
+        private async Task<bool> BroadcastConfigChange(BaseConfig config)
         {
             try
             {
@@ -572,7 +572,12 @@ namespace RUINORERP.Server.Controls
                 };
 
                 // 调用通用广播服务
-                _generalBroadcastService?.BroadcastToAllClients(GeneralCommands.ConfigSync, request);
+                var generalResponseList = await _generalBroadcastService?.SendRequestToSession(GeneralCommands.ConfigSync, request);
+
+                foreach (var item in generalResponseList)
+                {
+                    frmMainNew.Instance.PrintInfoLog(item.Message);
+                }
 
                 return true;
             }
@@ -949,10 +954,10 @@ namespace RUINORERP.Server.Controls
             try
             {
                 _logger?.LogInformation("使用配置管理服务创建默认配置: {ConfigType}", configType.Name);
-                
+
                 // 提取文件名
                 string fileName = Path.GetFileName(filePath);
-                
+
                 // 使用配置管理器服务创建并保存默认配置
                 MethodInfo createDefaultMethod = typeof(IConfigManagerService).GetMethod("CreateDefaultConfig", new[] { typeof(string) });
                 if (createDefaultMethod == null)
@@ -964,7 +969,7 @@ namespace RUINORERP.Server.Controls
                         // 调用无参数版本
                         MethodInfo genericMethod = createDefaultMethod.MakeGenericMethod(configType);
                         BaseConfig defaultConfig = genericMethod.Invoke(_configManagerService, null) as BaseConfig;
-                        
+
                         if (defaultConfig != null)
                         {
                             // 保存配置 - 使用反射调用泛型方法，避免BaseConfig作为泛型参数的编译错误
@@ -983,7 +988,7 @@ namespace RUINORERP.Server.Controls
                     // 调用带文件名参数的版本
                     MethodInfo genericMethod = createDefaultMethod.MakeGenericMethod(configType);
                     BaseConfig defaultConfig = genericMethod.Invoke(_configManagerService, new object[] { fileName }) as BaseConfig;
-                    
+
                     if (defaultConfig != null)
                     {
                         _logger?.LogInformation("成功创建默认配置: {ConfigType}", configType.Name);
@@ -1165,7 +1170,7 @@ namespace RUINORERP.Server.Controls
                 {
                     UseSharedPrinter = false,
                     SomeSetting = "",
-                    客户端自动更新=true,
+                    客户端自动更新 = true,
                     IsFromPlatform = false,
                     OpenProdTypeForSaleCheck = true,
                     DirectPrinting = true
@@ -1447,13 +1452,13 @@ namespace RUINORERP.Server.Controls
                         if (rollbackSuccess)
                         {
                             // 重新加载配置 - 使用_currentConfigType确保类型正确
-                        // 使用反射调用泛型GetConfig方法，避免BaseConfig作为泛型参数的编译错误
-                        MethodInfo getMethod = _configManagerService.GetType().GetMethod("GetConfig", new[] { typeof(string) });
-                        if (getMethod != null)
-                        {
-                            getMethod = getMethod.MakeGenericMethod(_currentConfigType);
-                            _currentConfig = getMethod.Invoke(_configManagerService, new object[] { _currentConfigFileName }) as BaseConfig;
-                        }
+                            // 使用反射调用泛型GetConfig方法，避免BaseConfig作为泛型参数的编译错误
+                            MethodInfo getMethod = _configManagerService.GetType().GetMethod("GetConfig", new[] { typeof(string) });
+                            if (getMethod != null)
+                            {
+                                getMethod = getMethod.MakeGenericMethod(_currentConfigType);
+                                _currentConfig = getMethod.Invoke(_configManagerService, new object[] { _currentConfigFileName }) as BaseConfig;
+                            }
 
                             // 重新加载配置到UI
                             BindConfigurationToUI(_currentConfig);
@@ -1677,7 +1682,7 @@ namespace RUINORERP.Server.Controls
         /// <summary>
         /// 发布按钮点击事件
         /// </summary>
-        private void tsbtnPublish_Click(object sender, EventArgs e)
+        private async void tsbtnPublish_Click(object sender, EventArgs e)
         {
             if (_currentConfig == null)
             {
@@ -1697,8 +1702,9 @@ namespace RUINORERP.Server.Controls
                 // 发布配置前先保存
                 SaveConfig();
 
+                var rs = await BroadcastConfigChange(_currentConfig);
                 // 通过通讯模块发布配置到客户端
-                if (BroadcastConfigChange(_currentConfig))
+                if (rs)
                 {
                     // 记录发布历史
                     var historyEntry = new ConfigHistoryEntry(_currentConfig, $"发布配置到客户端")

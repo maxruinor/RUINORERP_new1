@@ -35,7 +35,7 @@ namespace RUINORERP.UI.BI
             _EditEntity = entity as tb_OnlineStoreInfo;
             if (_EditEntity.Store_ID == 0)
             {
-                _EditEntity.StoreCode = BizCodeService.GetBaseInfoNo(BaseInfoType.StoreCode.ToString());
+                _EditEntity.StoreCode = ClientBizCodeService.GetBaseInfoNo(BaseInfoType.StoreCode.ToString());
             }
             DataBindingHelper.BindData4TextBox<tb_OnlineStoreInfo>(entity, t => t.StoreCode, txtStoreCode, BindDataType4TextBox.Text, false);
 

@@ -920,7 +920,7 @@ namespace RUINORERP.UI.ProductEAV
             {
                 if (EditEntity.Category_ID.HasValue && EditEntity.Category_ID.Value > 0 && s2.PropertyName == entity.GetPropertyName<tb_Prod>(c => c.Category_ID))
                 {  //生成编号
-                    var bizCodeService = Startup.GetFromFac<BizCodeService>();
+                    var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
                     var obj = RUINORERP.Business.Cache.EntityCacheHelper.GetEntity<tb_ProdCategories>(EditEntity.Category_ID.Value);
                     if (obj != null && obj.ToString() != "System.Object")
                     {
@@ -979,7 +979,7 @@ namespace RUINORERP.UI.ProductEAV
                                     {
                                         Eav_ProdDetails ppg = new Eav_ProdDetails();
                                         ppg.GroupName = "";
-                                        ppg.SKU = BizCodeService.GetBaseInfoNo(BaseInfoType.SKU_No.ToString());
+                                        ppg.SKU = ClientBizCodeService.GetBaseInfoNo(BaseInfoType.SKU_No.ToString());
                                         bindingSourceList.Add(ppg);
                                     }
 
@@ -1127,7 +1127,7 @@ namespace RUINORERP.UI.ProductEAV
                     // 使用新的BizCodeService生成产品编号
                     try
                     {
-                        var bizCodeService = Startup.GetFromFac<BizCodeService>();
+                        var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
                         if (bizCodeService != null)
                         {
                             txtNo.Text = await bizCodeService.GenerateProductNoAsync(entity.Category_ID);
@@ -1161,7 +1161,7 @@ namespace RUINORERP.UI.ProductEAV
                 // 使用新的BizCodeService生成产品编号
                 try
                 {
-                    var bizCodeService = Startup.GetFromFac<RUINORERP.UI.Network.Services.BizCodeService>();
+                    var bizCodeService = Startup.GetFromFac<RUINORERP.UI.Network.Services.ClientBizCodeService>();
                     if (bizCodeService != null)
                     {
                         txtNo.Text = await bizCodeService.GenerateProductNoAsync(EditEntity.Category_ID.Value);
@@ -1951,13 +1951,13 @@ namespace RUINORERP.UI.ProductEAV
                 {
                     Eav_ProdDetails ppg = new Eav_ProdDetails();
                     ppg.GroupName = newItem;
-                    ppg.SKU = BizCodeService.GetProductSKUNo(EditEntity.ProdBaseID, EditEntity.ProductNo);
+                    ppg.SKU = ClientBizCodeService.GetProductSKUNo(EditEntity.ProdBaseID, EditEntity.ProductNo);
                     if (MainForm.Instance.AppContext.SysConfig.UseBarCode)
                     {
                         //补码
                         // 使用SKU编号作为条码生成的原始编码，确保条码与产品的唯一性关联
                         // 这样即使产品名称相同，由于SKU编号不同，生成的条码也会不同
-                        ppg.BarCode = BizCodeService.GetBarCode(ppg.SKU);
+                        ppg.BarCode = ClientBizCodeService.GetBarCode(ppg.SKU);
                     }
                     bindingSourceList.Add(ppg);
                 }
@@ -1984,7 +1984,7 @@ namespace RUINORERP.UI.ProductEAV
                     {
                         Eav_ProdDetails ppg = new Eav_ProdDetails();
                         ppg.GroupName = item;
-                        ppg.SKU = BizCodeService.GetBaseInfoNo(BaseInfoType.SKU_No.ToString());
+                        ppg.SKU = ClientBizCodeService.GetBaseInfoNo(BaseInfoType.SKU_No.ToString());
                         bindingSourceList.Add(ppg);
 
                     }

@@ -218,7 +218,7 @@ namespace RUINORERP.UI.PSI.PUR
                 entity.DataStatus = (int)DataStatus.草稿;
                 if (string.IsNullOrEmpty(entity.PurOrderNo))
                 {
-                    entity.PurOrderNo = BizCodeService.GetBizBillNo(BizType.采购订单);
+                    entity.PurOrderNo = ClientBizCodeService.GetBizBillNo(BizType.采购订单);
                 }
                 entity.CloseCaseOpinions = string.Empty;
                 entity.ApprovalOpinions = string.Empty;

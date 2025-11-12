@@ -22,12 +22,12 @@ namespace RUINORERP.Server.Network.CommandHandlers
     public class BizCodeCommandHandler : BaseCommandHandler
     {
         private readonly ILogger<BizCodeCommandHandler> logger;
-        private readonly BizCodeGenerateService _bizCodeService;
+        private readonly ServerBizCodeGenerateService _bizCodeService;
 
         /// <summary>
         /// 构造函数
         /// </summary>
-        public BizCodeCommandHandler(ILogger<BizCodeCommandHandler> logger, BizCodeGenerateService bizCodeService) : base(logger)
+        public BizCodeCommandHandler(ILogger<BizCodeCommandHandler> logger, ServerBizCodeGenerateService bizCodeService) : base(logger)
         {
             this.logger = logger;
             _bizCodeService = bizCodeService;
@@ -63,14 +63,6 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     {
                         return await HandleGenerateBaseInfoNoAsync(request, cmd.Packet.ExecutionContext, cancellationToken);
                     }
-                    else if (commandId == BizCodeCommands.GenerateProductNo)
-                    {
-                        return await HandleGenerateProductNoAsync(request, cmd.Packet.ExecutionContext, cancellationToken);
-                    }
-                    else if (commandId == BizCodeCommands.GenerateProductSKUNo)
-                    {
-                        return await HandleGenerateProductSKUNoAsync(request, cmd.Packet.ExecutionContext, cancellationToken);
-                    }
                     else if (commandId == BizCodeCommands.GenerateBarCode)
                     {
                         return await HandleGenerateBarCodeAsync(request, cmd.Packet.ExecutionContext, cancellationToken);
@@ -95,10 +87,10 @@ namespace RUINORERP.Server.Network.CommandHandlers
             try
             {
                 // 使用业务编码服务生成编号
-                string billNo = _bizCodeService.GenerateBizBillNo(request.BizType, request.BizCodePara);
-                
+                string billNo = await _bizCodeService.GenerateBizBillNoAsync(request.BizType);
+
                 logger?.LogDebug($"成功生成业务单据编号: {billNo}, 业务类型: {request.BizType}");
-                
+
                 // 返回成功响应
                 return new BizCodeResponse
                 {
@@ -130,19 +122,12 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 if (Enum.TryParse<BaseInfoType>(request.BaseInfoType, true, out var baseInfoType))
                 {
                     string baseInfoNo;
-                    if (!string.IsNullOrEmpty(request.ParaConst))
-                    {
-                        // 使用常量参数生成编号
-                        baseInfoNo = _bizCodeService.GenerateBaseInfoNo(baseInfoType, request.ParaConst);
-                    }
-                    else
-                    {
-                        // 使用默认方式生成编号
-                        baseInfoNo = _bizCodeService.GenerateBaseInfoNo(baseInfoType);
-                    }
-                    
+
+                    // 使用常量参数生成编号
+                    baseInfoNo = await _bizCodeService.GenerateBaseInfoNoAsync(baseInfoType, request.ParaConst);
+
                     logger?.LogInformation($"成功生成基础信息编号: {baseInfoNo}, 信息类型: {baseInfoType}");
-                    
+
                     // 返回成功响应
                     return new BizCodeResponse
                     {
@@ -175,69 +160,6 @@ namespace RUINORERP.Server.Network.CommandHandlers
             }
         }
 
-        /// <summary>
-        /// 处理生成产品编码请求
-        /// </summary>
-        private async Task<IResponse> HandleGenerateProductNoAsync(BizCodeRequest request, CommandContext executionContext, CancellationToken cancellationToken)
-        {
-            try
-            {
-                // 生成产品编码
-                string productNo = _bizCodeService.GenerateProductNo();
-                
-                logger?.LogInformation($"成功生成产品编码: {productNo}");
-                
-                // 返回成功响应
-                return new BizCodeResponse
-                {
-                    IsSuccess = true,
-                    GeneratedCode = productNo,
-                    Message = "产品编码生成成功"
-                };
-            }
-            catch (Exception ex)
-            {
-                logger?.LogError(ex, "生成产品编码失败");
-                return new BizCodeResponse
-                {
-                    IsSuccess = false,
-                    ErrorMessage = ex.Message,
-                    Message = "生成产品编码失败"
-                };
-            }
-        }
-
-        /// <summary>
-        /// 处理生成产品SKU编码请求
-        /// </summary>
-        private async Task<IResponse> HandleGenerateProductSKUNoAsync(BizCodeRequest request, CommandContext executionContext, CancellationToken cancellationToken)
-        {
-            try
-            {
-                // 生成产品SKU编码
-                string productSkuNo = _bizCodeService.GenerateProductSKUNo();
-                
-                logger?.LogInformation($"成功生成产品SKU编码: {productSkuNo}");
-                
-                // 返回成功响应
-                return new BizCodeResponse
-                {
-                    IsSuccess = true,
-                    GeneratedCode = productSkuNo,
-                    Message = "产品SKU编码生成成功"
-                };
-            }
-            catch (Exception ex)
-            {
-                logger?.LogError(ex, "生成产品SKU编码失败");
-                return new BizCodeResponse
-                {
-                    IsSuccess = false,
-                    ErrorMessage = ex.Message,
-                    Message = "生成产品SKU编码失败"
-                };
-            }
-        }
 
         /// <summary>
         /// 处理生成条码请求
@@ -253,12 +175,11 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 }
 
                 // 生成条码
-                string barcode = _bizCodeService.GenerateBarCode(
-                    request.BarCodeParameter.OriginalCode,
+                string barcode = await _bizCodeService.GenerateBarCodeAsync(request.BarCodeParameter.OriginalCode,
                     request.BarCodeParameter.PaddingChar);
-                
+
                 logger?.LogInformation($"成功生成条码: {barcode}, 原始编码: {request.BarCodeParameter.OriginalCode}");
-                
+
                 // 返回成功响应
                 return new BizCodeResponse
                 {
@@ -278,6 +199,6 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 };
             }
         }
-        
+
     }
 }

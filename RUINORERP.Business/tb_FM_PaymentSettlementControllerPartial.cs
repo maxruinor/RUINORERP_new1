@@ -57,7 +57,7 @@ namespace RUINORERP.Business
             SettlementRecord.IsAutoSettlement = true;
             SettlementRecord.ReceivePaymentType = receivablePayable.ReceivePaymentType;
             SettlementRecord.Account_id = receivablePayable.Account_id;
-            IBizCodeService bizCodeService = _appContext.GetRequiredService<IBizCodeService>();
+            IBizCodeGenerateService bizCodeService = _appContext.GetRequiredService<IBizCodeGenerateService>();
             if (receivablePayable.ReceivePaymentType == (int)ReceivePaymentType.收款)
             {
                 SettlementRecord.TargetBizType = (int)BizType.应收款单;
@@ -124,7 +124,7 @@ namespace RUINORERP.Business
             SettlementRecord.IsAutoSettlement = true;
             SettlementRecord.ReceivePaymentType = receivablePayable.ReceivePaymentType;
             SettlementRecord.Account_id = receivablePayable.Account_id;
-            IBizCodeService bizCodeService = _appContext.GetRequiredService<IBizCodeService>();
+            IBizCodeGenerateService bizCodeService = _appContext.GetRequiredService<IBizCodeGenerateService>();
             if (receivablePayable.ReceivePaymentType == (int)ReceivePaymentType.收款)
             {
                 SettlementRecord.SourceBizType = (int)BizType.预收款单;
@@ -201,7 +201,7 @@ namespace RUINORERP.Business
             SettlementRecord.ActionStatus = ActionStatus.新增;
             SettlementRecord.IsAutoSettlement = true;
             SettlementRecord.ReceivePaymentType = PaymentRecord.ReceivePaymentType;
-            IBizCodeService bizCodeService = _appContext.GetRequiredService<IBizCodeService>();
+            IBizCodeGenerateService bizCodeService = _appContext.GetRequiredService<IBizCodeGenerateService>();
             if (SettlementRecord.ReceivePaymentType == (int)ReceivePaymentType.收款)
             {
                 SettlementRecord.SettlementNo = await bizCodeService.GenerateBizBillNoAsync(BizType.收款核销, CancellationToken.None);

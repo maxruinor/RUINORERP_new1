@@ -175,7 +175,7 @@ namespace RUINORERP.UI.PSI.INV
                 entity.DataStatus = (int)DataStatus.草稿;
                 if (string.IsNullOrEmpty(entity.BorrowNo))
                 {
-                    entity.BorrowNo = BizCodeService.GetBizBillNo(BizType.借出单);
+                    entity.BorrowNo = ClientBizCodeService.GetBizBillNo(BizType.借出单);
                 }
 
                 entity.DueDate = System.DateTime.Now.AddDays(30);//最长时间为30天

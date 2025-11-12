@@ -95,7 +95,7 @@ namespace RUINORERP.UI.MRP.PQC
                 entity.ReturnDate = System.DateTime.Now;
                 if (string.IsNullOrEmpty(entity.ReworkReturnNo))
                 {
-                    entity.ReworkReturnNo = BizCodeService.GetBizBillNo(BizType.返工退库单);
+                    entity.ReworkReturnNo = ClientBizCodeService.GetBizBillNo(BizType.返工退库单);
                 }
                 entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
                 if (entity.tb_MRP_ReworkReturnDetails != null && entity.tb_MRP_ReworkReturnDetails.Count > 0)

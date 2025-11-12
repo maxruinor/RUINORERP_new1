@@ -45,7 +45,7 @@ namespace RUINORERP.UI.BI
             _EditEntity = entity as tb_Employee;
             if (_EditEntity.Employee_ID == 0)
             {
-                _EditEntity.Employee_NO = BizCodeService.GetBaseInfoNo(BaseInfoType.Employee.ToString());
+                _EditEntity.Employee_NO = ClientBizCodeService.GetBaseInfoNo(BaseInfoType.Employee.ToString());
                 _EditEntity.Is_enabled = true;
             }
 

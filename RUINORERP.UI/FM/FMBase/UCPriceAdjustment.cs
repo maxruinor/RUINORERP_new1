@@ -183,11 +183,11 @@ namespace RUINORERP.UI.FM
                 {
                     if (PaymentType == ReceivePaymentType.收款)
                     {
-                        entity.AdjustNo = BizCodeService.GetBizBillNo(BizType.销售价格调整单);
+                        entity.AdjustNo = ClientBizCodeService.GetBizBillNo(BizType.销售价格调整单);
                     }
                     else
                     {
-                        entity.AdjustNo = BizCodeService.GetBizBillNo(BizType.采购价格调整单);
+                        entity.AdjustNo = ClientBizCodeService.GetBizBillNo(BizType.采购价格调整单);
                     }
                 }
             }

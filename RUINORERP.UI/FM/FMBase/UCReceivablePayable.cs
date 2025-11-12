@@ -365,14 +365,14 @@ namespace RUINORERP.UI.FM
                 {
                     if (PaymentType == ReceivePaymentType.收款)
                     {
-                        entity.ARAPNo = BizCodeService.GetBizBillNo(BizType.应收款单);
+                        entity.ARAPNo = ClientBizCodeService.GetBizBillNo(BizType.应收款单);
                         chkIsForCommission.Visible = false;
                         chkIsFromPlatform.Visible = true;
 
                     }
                     else
                     {
-                        entity.ARAPNo = BizCodeService.GetBizBillNo(BizType.应付款单);
+                        entity.ARAPNo = ClientBizCodeService.GetBizBillNo(BizType.应付款单);
                         chkIsForCommission.Visible = true;
                         chkIsFromPlatform.Visible = false;
                     }

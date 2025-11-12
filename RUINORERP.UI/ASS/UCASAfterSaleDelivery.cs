@@ -148,7 +148,7 @@ namespace RUINORERP.UI.ASS
 
                     if (string.IsNullOrEmpty(entity.ASDeliveryNo))
                     {
-                        entity.ASDeliveryNo = BizCodeService.GetBizBillNo(BizType.售后交付单);
+                        entity.ASDeliveryNo = ClientBizCodeService.GetBizBillNo(BizType.售后交付单);
                     }
                     entity.ApprovalOpinions = string.Empty;
                     entity.DeliveryDate = System.DateTime.Now;

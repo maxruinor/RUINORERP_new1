@@ -509,7 +509,7 @@ namespace RUINORERP.Business
             }
             //销售就是收款
             payable.ReceivePaymentType = (int)ReceivePaymentType.收款;
-            IBizCodeService bizCodeService = _appContext.GetRequiredService<IBizCodeService>();
+            IBizCodeGenerateService bizCodeService = _appContext.GetRequiredService<IBizCodeGenerateService>();
             payable.PreRPNO = await bizCodeService.GenerateBizBillNoAsync(BizType.预收款单);
             payable.SourceBizType = (int)BizType.销售订单;
             payable.SourceBillNo = entity.SOrderNo;
@@ -609,7 +609,7 @@ namespace RUINORERP.Business
             //采购就是付款
             payable.ReceivePaymentType = (int)ReceivePaymentType.付款;
 
-            IBizCodeService bizCodeService = _appContext.GetRequiredService<IBizCodeService>();
+            IBizCodeGenerateService bizCodeService = _appContext.GetRequiredService<IBizCodeGenerateService>();
             payable.PreRPNO = await bizCodeService.GenerateBizBillNoAsync(BizType.预收款单);
             payable.SourceBizType = (int)BizType.采购订单;
             payable.SourceBillNo = entity.PurOrderNo;

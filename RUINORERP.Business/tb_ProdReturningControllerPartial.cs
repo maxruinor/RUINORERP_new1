@@ -493,7 +493,7 @@ namespace RUINORERP.Business
                 entity.ActionStatus = ActionStatus.新增;
                 BusinessHelper.Instance.InitEntity(entity);
                 entity.CustomerVendor_ID = prodBorrowing.CustomerVendor_ID;
-                IBizCodeService bizCodeService = _appContext.GetRequiredService<IBizCodeService>();
+                IBizCodeGenerateService bizCodeService = _appContext.GetRequiredService<IBizCodeGenerateService>();
                 entity.ReturnNo = await bizCodeService.GenerateBizBillNoAsync(BizType.归还单, CancellationToken.None);
                 entity.tb_prodborrowing = prodBorrowing;
 

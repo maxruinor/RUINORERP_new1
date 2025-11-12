@@ -1,4 +1,6 @@
 ﻿using RUINORERP.PacketSpec.Models.Core;
+using RUINORERP.Model;
+using System.Collections.Generic;
 
 namespace RUINORERP.PacketSpec.Models.Responses
 {
@@ -40,5 +42,11 @@ namespace RUINORERP.PacketSpec.Models.Responses
         /// 编码生成时间戳
         /// </summary>
         public long Timestamp { get; set; }
+        
+        /// <summary>
+        /// 规则配置列表
+        /// 用于返回所有规则配置信息
+        /// </summary>
+        public List<tb_sys_BillNoRule> RuleConfigs { get; set; }
     }
 }

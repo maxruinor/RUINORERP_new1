@@ -147,7 +147,7 @@ namespace RUINORERP.UI.MRP.MP
                     entity.DataStatus = (int)DataStatus.草稿;
                     if (entity.MONO.IsNullOrEmpty())
                     {
-                        entity.MONO = BizCodeService.GetBizBillNo(BizType.制令单);
+                        entity.MONO = ClientBizCodeService.GetBizBillNo(BizType.制令单);
                     }
                     entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
                     entity.Created_at = System.DateTime.Now;

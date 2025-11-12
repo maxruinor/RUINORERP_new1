@@ -300,7 +300,7 @@ namespace RUINORERP.UI.PSI.SAL
                     entity.OutDate = System.DateTime.Now;
                     if (string.IsNullOrEmpty(entity.SaleOutNo))
                     {
-                        entity.SaleOutNo = BizCodeService.GetBizBillNo(BizType.销售出库单);
+                        entity.SaleOutNo = ClientBizCodeService.GetBizBillNo(BizType.销售出库单);
                     }
 
                     if (entity.tb_SaleOutDetails != null && entity.tb_SaleOutDetails.Count > 0)

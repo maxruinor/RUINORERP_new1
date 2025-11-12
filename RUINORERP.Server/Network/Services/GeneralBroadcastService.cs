@@ -110,7 +110,7 @@ namespace RUINORERP.Server.Network.Services
         /// <param name="commandId">命令ID</param>
         /// <param name="request">请求数据</param>
         /// <returns>异步任务</returns>
-        public async Task BroadcastToUserGroup(string userGroup,  CommandId commandId, GeneralRequest request)
+        public async Task BroadcastToUserGroup(string userGroup, CommandId commandId, GeneralRequest request)
         {
             try
             {
@@ -143,7 +143,7 @@ namespace RUINORERP.Server.Network.Services
                 // 不抛出异常，避免影响主流程
             }
         }
-        
+
         /// <summary>
         /// 向所有客户端发送请求并等待响应
         /// </summary>
@@ -203,7 +203,7 @@ namespace RUINORERP.Server.Network.Services
         /// <param name="commandId">命令ID</param>
         /// <param name="request">请求数据</param>
         /// <returns>响应数据</returns>
-        public async Task<GeneralResponse> SendRequestToSession(string sessionId,  CommandId commandId, GeneralRequest request)
+        public async Task<GeneralResponse> SendRequestToSession(string sessionId, CommandId commandId, GeneralRequest request)
         {
             try
             {
@@ -238,6 +238,51 @@ namespace RUINORERP.Server.Network.Services
             }
         }
 
+
+        /// <summary>
+        /// 向特定会话发送请求并等待响应
+        /// </summary>
+        /// <param name="sessionId">会话ID</param>
+        /// <param name="commandId">命令ID</param>
+        /// <param name="request">请求数据</param>
+        /// <returns>响应数据</returns>
+        public async Task<List<GeneralResponse>> SendRequestToSession(CommandId commandId, GeneralRequest request)
+        {
+            List<GeneralResponse> GeneralResponseList = new List<GeneralResponse>();
+            try
+            {
+                var sessions = _sessionManager.GetAllUserSessions();
+                foreach (var session in sessions)
+                {
+                    if (session != null)
+                    {
+                        // 使用SessionService中的SendCommandAndWaitForResponseAsync方法发送请求并等待响应
+                        var response = await _sessionManager.SendCommandAndWaitForResponseAsync(session.SessionID, CommandId.FromUInt16(commandId), request);
+                        if (response?.Response is GeneralResponse generalResponse)
+                        {
+                            _logger.LogInformation($"向会话 {session.SessionID} 发送请求并接收响应成功");
+                            GeneralResponseList.Add(generalResponse);
+                        }
+                        else
+                        {
+                            _logger.LogWarning($"从会话 {session.SessionID} 接收到无效响应");
+                        }
+                    }
+                    else
+                    {
+                        _logger.LogWarning($"会话 {session.SessionID} 不存在，无法发送请求");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"发送请求并等待响应时发生错误");
+                // 不抛出异常，避免影响主流程
+            }
+            return GeneralResponseList;
+        }
+
+
         /// <summary>
         /// 向特定用户组发送请求并等待响应
         /// </summary>
@@ -245,7 +290,7 @@ namespace RUINORERP.Server.Network.Services
         /// <param name="commandId">命令ID</param>
         /// <param name="request">请求数据</param>
         /// <returns>响应数据列表</returns>
-        public async Task<GeneralResponse[]> SendRequestToUserGroup(string userGroup,  CommandId commandId, GeneralRequest request)
+        public async Task<GeneralResponse[]> SendRequestToUserGroup(string userGroup, CommandId commandId, GeneralRequest request)
         {
             try
             {

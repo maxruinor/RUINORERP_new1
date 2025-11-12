@@ -420,7 +420,7 @@ namespace RUINORERP.Business
                 CalculateTotalAmount(statement, details, receivePaymentType, statementType);
 
                 // 设置对账单基本信息
-                IBizCodeService bizCodeService = _appContext.GetRequiredService<IBizCodeService>();
+                IBizCodeGenerateService bizCodeService = _appContext.GetRequiredService<IBizCodeGenerateService>();
                 statement.StatementNo = await bizCodeService.GenerateBizBillNoAsync(BizType.对账单);
                 statement.StartDate = startDate;
                 statement.EndDate = entities.Max(c => c.BusinessDate).Value;

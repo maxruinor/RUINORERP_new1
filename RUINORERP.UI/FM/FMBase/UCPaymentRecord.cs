@@ -201,13 +201,13 @@ namespace RUINORERP.UI.FM
                 {
                     if (PaymentType == ReceivePaymentType.付款)
                     {
-                        entity.PaymentNo = BizCodeService.GetBizBillNo(BizType.付款单);
+                        entity.PaymentNo = ClientBizCodeService.GetBizBillNo(BizType.付款单);
                         chkIsForCommission.Visible = true;
                         chkIsFromPlatform.Visible = false;
                     }
                     else
                     {
-                        entity.PaymentNo = BizCodeService.GetBizBillNo(BizType.收款单);
+                        entity.PaymentNo = ClientBizCodeService.GetBizBillNo(BizType.收款单);
                         chkIsForCommission.Visible = false;
                         chkIsFromPlatform.Visible = true;
                     }

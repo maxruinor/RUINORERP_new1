@@ -48,7 +48,7 @@ namespace RUINORERP.UI.BI
                 {
                     上级代码 = _EditEntity.tb_FM_SubjectParent.subject_code;
                 }
-                _EditEntity.subject_code = BizCodeService.GetBaseInfoNo(BaseInfoType.FMSubject, 上级代码);
+                _EditEntity.subject_code = ClientBizCodeService.GetBaseInfoNo(BaseInfoType.FMSubject, 上级代码);
             }
 
             DataBindingHelper.BindData4RadioGroupTrueFalse<tb_FM_Subject>(entity, t => t.Balance_direction, rdb贷, rdb借);

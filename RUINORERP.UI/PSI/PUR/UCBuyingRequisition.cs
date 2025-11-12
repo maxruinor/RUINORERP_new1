@@ -111,7 +111,7 @@ namespace RUINORERP.UI.PSI.PUR
             {
                 entity.ActionStatus = ActionStatus.新增;
                 entity.DataStatus = (int)DataStatus.草稿;
-                var bizCodeService = Startup.GetFromFac<BizCodeService>();
+                var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
                 entity.PuRequisitionNo=await bizCodeService.GenerateBizBillNoAsync(BizType.请购单);
                 //entity.PuRequisitionNo = BizCodeService.GetBizBillNo(BizType.请购单);
                 entity.ApplicationDate = System.DateTime.Now;

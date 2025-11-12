@@ -883,7 +883,7 @@ namespace RUINORERP.Business
                     entity.CustomerVendor_ID = order.CustomerVendor_ID;
                     entity.PurOrder_NO = order.PurOrderNo;
                 }
-                IBizCodeService bizCodeService = _appContext.GetRequiredService<IBizCodeService>();
+                IBizCodeGenerateService bizCodeService = _appContext.GetRequiredService<IBizCodeGenerateService>();
                 entity.PurEntryNo = await bizCodeService.GenerateBizBillNoAsync(BizType.采购入库单, CancellationToken.None);
                 //保存到数据库
                 BusinessHelper.Instance.InitEntity(entity);

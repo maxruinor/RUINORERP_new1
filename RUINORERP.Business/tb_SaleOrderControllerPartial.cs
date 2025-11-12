@@ -1306,7 +1306,7 @@ namespace RUINORERP.Business
                     entity.PlatformOrderNo = saleorder.PlatformOrderNo;
                     entity.IsFromPlatform = saleorder.IsFromPlatform;
                 }
-                IBizCodeService bizCodeService = _appContext.GetRequiredService<IBizCodeService>();
+                IBizCodeGenerateService bizCodeService = _appContext.GetRequiredService<IBizCodeGenerateService>();
                 entity.SaleOutNo = await bizCodeService.GenerateBizBillNoAsync(BizType.销售出库单, CancellationToken.None);
                 //if (NewDetails.Count != details.Count)
                 //{
@@ -1381,12 +1381,9 @@ namespace RUINORERP.Business
                     entity.Notes = saleorder.Notes;
                     entity.tb_saleorder = saleorder;
                     entity.ShipCost = saleorder.FreightIncome;
+                    //销售订单单号 转为 采购订单单号
+                    entity.PurOrderNo = saleorder.SOrderNo.Replace("SO", "PO");
                 }
-
-                //销售订单单号 转为 采购订单单号
-                entity.PurOrderNo = saleorder.SOrderNo.Replace("SO", "PO");
-                //entity.PurOrderNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.采购订单);
-
                 entity.tb_saleorder = saleorder;
                 entity.TotalTaxAmount = details.Sum(c => c.TaxAmount);
                 entity.TotalTaxAmount = entity.TotalTaxAmount.ToRoundDecimalPlaces(authorizeController.GetMoneyDataPrecision());

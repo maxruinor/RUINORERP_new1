@@ -1192,7 +1192,7 @@ namespace RUINORERP.UI.ProductEAV
                                 {
                                     Eav_ProdDetails ppg = new Eav_ProdDetails();
                                     ppg.GroupName = "";
-                                    ppg.SKU = BizCodeService.GetBaseInfoNo(BaseInfoType.SKU_No.ToString());
+                                    ppg.SKU = ClientBizCodeService.GetBaseInfoNo(BaseInfoType.SKU_No.ToString());
                                     bindingSourceSKU明细.Add(ppg);
                                 }
 
@@ -1370,7 +1370,7 @@ namespace RUINORERP.UI.ProductEAV
                 }
                 if (item.SKU.IsNullOrEmpty())
                 {
-                    item.SKU = BizCodeService.GetBaseInfoNo(BaseInfoType.SKU_No.ToString());
+                    item.SKU = ClientBizCodeService.GetBaseInfoNo(BaseInfoType.SKU_No.ToString());
                     if (item.ActionStatus == ActionStatus.新增)
                     {
                         item.ProdDetailID = 0;

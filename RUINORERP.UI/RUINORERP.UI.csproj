@@ -2312,7 +2312,7 @@
     <Compile Include="Network\RetryStrategy\FixedIntervalRetryStrategy.cs" />
     <Compile Include="Network\RetryStrategy\IRetryStrategy.cs" />
     <Compile Include="Network\Services\AuthenticationManagementService.cs" />
-    <Compile Include="Network\Services\BizCodeService.cs" />
+    <Compile Include="Network\Services\ClientBizCodeService.cs" />
     <Compile Include="Network\Services\CacheClientService.cs" />
     <Compile Include="Network\Services\Cache\CacheRequestManager.cs" />
     <Compile Include="Network\Services\Cache\CacheResponseProcessor.cs" />

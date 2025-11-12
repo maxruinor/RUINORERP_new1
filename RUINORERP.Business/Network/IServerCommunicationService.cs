@@ -22,7 +22,7 @@ namespace RUINORERP.Business.Network
         /// <param name="bizType">业务类型枚举</param>
         /// <param name="parameter">业务编码参数</param>
         /// <returns>生成的单据编号</returns>
-        string GenerateBizBillNo(BizType bizType, BizCodeParameter parameter = null);
+        string GenerateBizBillNo(BizType bizType);
 
         /// <summary>
         /// 生成基础信息编号

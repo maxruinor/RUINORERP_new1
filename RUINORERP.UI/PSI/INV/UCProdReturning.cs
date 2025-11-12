@@ -128,7 +128,7 @@ namespace RUINORERP.UI.PSI.INV
                 entity.DataStatus = (int)DataStatus.草稿;
                 if (string.IsNullOrEmpty(entity.ReturnNo))
                 {
-                    entity.ReturnNo = BizCodeService.GetBizBillNo(BizType.归还单);
+                    entity.ReturnNo = ClientBizCodeService.GetBizBillNo(BizType.归还单);
                 }
                 entity.ReturnDate = System.DateTime.Now;
                 if (entity.tb_ProdReturningDetails != null && entity.tb_ProdReturningDetails.Count > 0)

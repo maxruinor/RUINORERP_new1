@@ -101,7 +101,7 @@ namespace RUINORERP.UI.PSI.INV
                 entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
                 if (string.IsNullOrEmpty(entity.ConversionNo))
                 {
-                    entity.ConversionNo = BizCodeService.GetBizBillNo(BizType.产品转换单);
+                    entity.ConversionNo = ClientBizCodeService.GetBizBillNo(BizType.产品转换单);
                 }
                 entity.ConversionDate = System.DateTime.Now;
                 if (entity.tb_ProdConversionDetails != null && entity.tb_ProdConversionDetails.Count > 0)

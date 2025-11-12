@@ -208,7 +208,7 @@ namespace RUINORERP.UI.FM
                 //entity.DueDate = System.DateTime.Now;
                 if (string.IsNullOrEmpty(entity.StatementNo))
                 {
-                    entity.StatementNo = BizCodeService.GetBizBillNo(BizType.对账单);
+                    entity.StatementNo = ClientBizCodeService.GetBizBillNo(BizType.对账单);
                 }
 
                 entity.StatementStatus = (int)StatementStatus.草稿;

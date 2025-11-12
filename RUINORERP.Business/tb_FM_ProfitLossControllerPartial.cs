@@ -255,7 +255,7 @@ namespace RUINORERP.Business
 
 
             //收不到，就是损失
-            IBizCodeService bizCodeService = _appContext.GetRequiredService<IBizCodeService>();
+            IBizCodeGenerateService bizCodeService = _appContext.GetRequiredService<IBizCodeGenerateService>();
             if (entity.ReceivePaymentType == (int)ReceivePaymentType.收款)
             {
                 profitLoss.SourceBizType = (int)BizType.应收款单;
@@ -424,7 +424,7 @@ namespace RUINORERP.Business
                 profitLoss.IsIncludeTax = true;
             }
             //最后根据总的情况来判断单据类型
-            IBizCodeService bizCodeService = _appContext.GetRequiredService<IBizCodeService>();
+            IBizCodeGenerateService bizCodeService = _appContext.GetRequiredService<IBizCodeGenerateService>();
             if (profitLoss.TotalAmount < 0)
             {
                 profitLoss.ProfitLossDirection = (int)ProfitLossDirection.损失;
@@ -463,7 +463,7 @@ namespace RUINORERP.Business
             profitLoss.SourceBillId = entity.BorrowID;
 
             //收不到，就是损失
-            IBizCodeService bizCodeService = _appContext.GetRequiredService<IBizCodeService>();
+            IBizCodeGenerateService bizCodeService = _appContext.GetRequiredService<IBizCodeGenerateService>();
             profitLoss.SourceBizType = (int)BizType.借出单;
 
             profitLoss.ProfitLossDirection = (int)ProfitLossDirection.损失;

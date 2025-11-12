@@ -158,7 +158,7 @@ namespace RUINORERP.UI.PSI.PUR
 
                 if (string.IsNullOrEmpty(entity.PurReEntryNo))
                 {
-                    entity.PurReEntryNo = BizCodeService.GetBizBillNo(BizType.采购退货入库);
+                    entity.PurReEntryNo = ClientBizCodeService.GetBizBillNo(BizType.采购退货入库);
                 }
                 if (entity.tb_purentryre != null && entity.tb_purentryre.Currency_ID.HasValue)
                 {

@@ -99,7 +99,7 @@ namespace RUINORERP.UI.FM.FMBase
                     {
                         if (string.IsNullOrEmpty(entity.ProfitLossNo))
                         {
-                            entity.ProfitLossNo = BizCodeService.GetBizBillNo(BizType.损失确认单);
+                            entity.ProfitLossNo = ClientBizCodeService.GetBizBillNo(BizType.损失确认单);
                         }
                     }
 
@@ -107,7 +107,7 @@ namespace RUINORERP.UI.FM.FMBase
                     {
                         if (string.IsNullOrEmpty(entity.ProfitLossNo))
                         {
-                            entity.ProfitLossNo = BizCodeService.GetBizBillNo(BizType.溢余确认单);
+                            entity.ProfitLossNo = ClientBizCodeService.GetBizBillNo(BizType.溢余确认单);
                         }
                     }
                     entity.ProfitLossDirection = (int)profitLossDirect;

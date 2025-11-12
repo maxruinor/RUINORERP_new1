@@ -109,9 +109,10 @@ namespace RUINORERP.UI
         
         }
 
+        private void tb_sys_BillNoRuleEdit_Load(object sender, EventArgs e)
+        {
 
-
-
+        }
     }
 }
 

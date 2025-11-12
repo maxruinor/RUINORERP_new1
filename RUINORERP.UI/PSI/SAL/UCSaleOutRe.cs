@@ -378,7 +378,7 @@ namespace RUINORERP.UI.PSI.SAL
                     entity.DataStatus = (int)DataStatus.草稿;
                     if (string.IsNullOrEmpty(entity.ReturnNo))
                     {
-                        entity.ReturnNo = BizCodeService.GetBizBillNo(BizType.销售退回单);
+                        entity.ReturnNo = ClientBizCodeService.GetBizBillNo(BizType.销售退回单);
                     }
 
                     if (entity.tb_SaleOutReDetails != null && entity.tb_SaleOutReDetails.Count > 0)

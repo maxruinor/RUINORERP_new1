@@ -2291,10 +2291,10 @@ namespace RUINORERP.Server
             return panel;
         }
 
-        private void toolStripButtonSystemCheck_Click(object sender, EventArgs e)
+        private async void toolStripButtonSystemCheck_Click(object sender, EventArgs e)
         {
-            BizCodeGenerateService _bizCodeService = Startup.GetFromFac<BizCodeGenerateService>();
-            var ss = _bizCodeService.GenerateBizBillNo(BizType.请购单);
+            ServerBizCodeGenerateService _bizCodeService = Startup.GetFromFac<ServerBizCodeGenerateService>();
+            var ss =await _bizCodeService.GenerateBizBillNoAsync(BizType.请购单);
             PrintInfoLog(ss);
             _logger.LogInformation("Information");
             _logger.Debug("Debug");

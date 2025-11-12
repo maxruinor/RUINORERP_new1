@@ -4,10 +4,10 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：11/06/2025 20:42:19
+// 时间：11/12/2025 16:18:33
 // **************************************
 using System;
-﻿using SqlSugar;
+using SqlSugar;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -25,6 +25,10 @@ namespace RUINORERP.Model
     [SugarTable("tb_sys_BillNoRule")]
     public partial class tb_sys_BillNoRule: BaseEntity, ICloneable
     {
+
+
+
+
         public tb_sys_BillNoRule()
         {
             
@@ -65,12 +69,26 @@ namespace RUINORERP.Model
                         }
         }
 
+        private int _RuleType= ((0));
+        /// <summary>
+        /// 规则类型
+        /// </summary>
+        [AdvQueryAttribute(ColName = "RuleType",ColDesc = "规则类型")] 
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "RuleType" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "规则类型" )]
+        public int RuleType
+        { 
+            get{return _RuleType;}
+            set{
+            SetProperty(ref _RuleType, value);
+                        }
+        }
+
         private int _BizType;
         /// <summary>
         /// 业务类型
         /// </summary>
  
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "BizType" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "业务类型" , IsPrimaryKey = true)]
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "BizType" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "业务类型")]
         public int BizType
         { 
             get{return _BizType;}
@@ -108,7 +126,7 @@ namespace RUINORERP.Model
                         }
         }
 
-        private int _SequenceLength;
+        private int _SequenceLength=2;
         /// <summary>
         /// 流水号长度
         /// </summary>
@@ -150,6 +168,34 @@ namespace RUINORERP.Model
                         }
         }
 
+        private int _StorageType;
+        /// <summary>
+        /// 存储数据库类型
+        /// </summary>
+        [AdvQueryAttribute(ColName = "StorageType",ColDesc = "存储数据库类型")] 
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "StorageType" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "存储数据库类型" )]
+        public int StorageType
+        { 
+            get{return _StorageType;}
+            set{
+            SetProperty(ref _StorageType, value);
+                        }
+        }
+
+        private int _Priority;
+        /// <summary>
+        /// 优先级
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Priority",ColDesc = "优先级")] 
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "Priority" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "优先级" )]
+        public int Priority
+        { 
+            get{return _Priority;}
+            set{
+            SetProperty(ref _Priority, value);
+                        }
+        }
+
         private int _ResetMode;
         /// <summary>
         /// 重置模式
@@ -161,6 +207,20 @@ namespace RUINORERP.Model
             get{return _ResetMode;}
             set{
             SetProperty(ref _ResetMode, value);
+                        }
+        }
+
+        private string _RulePattern;
+        /// <summary>
+        /// 编码规则
+        /// </summary>
+        [AdvQueryAttribute(ColName = "RulePattern",ColDesc = "编码规则")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "RulePattern" ,Length=200,IsNullable = false,ColumnDescription = "编码规则" )]
+        public string RulePattern
+        { 
+            get{return _RulePattern;}
+            set{
+            SetProperty(ref _RulePattern, value);
                         }
         }
 
@@ -189,6 +249,21 @@ namespace RUINORERP.Model
             get{return _Description;}
             set{
             SetProperty(ref _Description, value);
+                        }
+        }
+
+
+        private int _EncryptionMethod = 0;
+        /// <summary>
+        /// 加密方法：0-None,1-16进制转换，2-字符串混淆，3-Base62编码
+        /// </summary>
+        [AdvQueryAttribute(ColName = "EncryptionMethod",ColDesc = "加密方法")] 
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "EncryptionMethod" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "加密方法" )]
+        public int EncryptionMethod
+        { 
+            get{return _EncryptionMethod;}
+            set{
+            SetProperty(ref _EncryptionMethod, value);
                         }
         }
 

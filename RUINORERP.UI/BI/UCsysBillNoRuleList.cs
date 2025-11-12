@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -38,6 +38,8 @@ namespace RUINORERP.UI.BI
     [MenuAttrAssemblyInfo("编号规则设置", ModuleMenuDefine.模块定义.系统设置, ModuleMenuDefine.系统设置.系统参数)]
     public partial class UCsysBillNoRuleList : BaseForm.BaseListGeneric<tb_sys_BillNoRule>
     {
+ 
+
         public UCsysBillNoRuleList()
         {
             InitializeComponent();
@@ -49,6 +51,9 @@ namespace RUINORERP.UI.BI
 
             DisplayTextResolver.AddFixedDictionaryMappingByEnum(t => t.DateFormat, typeof(DateFormat));
             DisplayTextResolver.AddFixedDictionaryMappingByEnum(t => t.ResetMode, typeof(ResetMode));
+            // 添加RuleType字段的显示文本解析器
+            DisplayTextResolver.AddFixedDictionaryMappingByEnum(t => t.RuleType, typeof(RuleType));
+            DisplayTextResolver.AddFixedDictionaryMappingByEnum(t => t.StorageType, typeof(Global.StorageType));
         }
 
         public override async Task<List<tb_sys_BillNoRule>> Save()

@@ -1,7 +1,8 @@
-using RUINORERP.PacketSpec.Models.Core;
+﻿using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.Global;
 using RUINORERP.Model;
+using System.Collections.Generic;
 
 namespace RUINORERP.PacketSpec.Models.Requests
 {
@@ -27,11 +28,6 @@ namespace RUINORERP.PacketSpec.Models.Requests
         public string ParaConst { get; set; }
 
         /// <summary>
-        /// 业务编码参数 - 扩展参数，可用于传递复杂的编码生成规则或配置
-        /// </summary>
-        public BizCodeParameter BizCodePara { get; set; }
-
-        /// <summary>
         /// 产品相关参数 - 用于产品编码生成的特定参数
         /// </summary>
         public ProductCodeParameter ProductParameter { get; set; }
@@ -45,6 +41,21 @@ namespace RUINORERP.PacketSpec.Models.Requests
         /// 条码相关参数 - 用于条码生成的特定参数
         /// </summary>
         public BarCodeParameter BarCodeParameter { get; set; }
+        
+        /// <summary>
+        /// 规则配置 - 用于规则配置的保存和更新
+        /// </summary>
+        public tb_sys_BillNoRule RuleConfig { get; set; }
+        
+        /// <summary>
+        /// 规则配置ID - 用于规则配置的删除操作
+        /// </summary>
+        public long RuleConfigId { get; set; }
+        
+        /// <summary>
+        /// 规则配置列表 - 用于获取所有规则配置
+        /// </summary>
+        public List<tb_sys_BillNoRule> RuleConfigs { get; set; }
     }
 
     /// <summary>

@@ -102,7 +102,7 @@ namespace RUINORERP.UI.PSI.INV
                 entity.DataStatus = (int)DataStatus.草稿;
                 if (string.IsNullOrEmpty(entity.StockTransferNo))
                 {
-                    entity.StockTransferNo = BizCodeService.GetBizBillNo(BizType.调拨单);
+                    entity.StockTransferNo = ClientBizCodeService.GetBizBillNo(BizType.调拨单);
                 }
                 entity.Transfer_date = System.DateTime.Now;
                 entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;

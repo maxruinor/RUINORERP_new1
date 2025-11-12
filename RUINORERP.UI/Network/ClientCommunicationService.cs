@@ -47,7 +47,7 @@ namespace RUINORERP.UI.Network
     /// <summary>
     /// 优化后的客户端通信与命令处理服务 - 统一网络通信核心组件
     /// </summary>
-    public class ClientCommunicationService : IDisposable
+    public class ClientCommunicationService : IClientCommunicationService
     {
         /// <summary>
         /// 用户登录服务实例，用于重连后的认证恢复
@@ -97,7 +97,7 @@ namespace RUINORERP.UI.Network
         private readonly SemaphoreSlim _connectionLock = new SemaphoreSlim(1, 1);
 
         // 请求队列，用于存储连接断开时的单向命令请求
-        private readonly ConcurrentQueue<QueuedCommand> _queuedCommands = new ConcurrentQueue<QueuedCommand>();
+        private readonly ConcurrentQueue<ClientQueuedCommand> _queuedCommands = new ConcurrentQueue<ClientQueuedCommand>();
         private bool _isProcessingQueue = false;
         private readonly SemaphoreSlim _queueProcessingLock = new SemaphoreSlim(1, 1);
 
@@ -106,20 +106,7 @@ namespace RUINORERP.UI.Network
         /// </summary>
         private const int QueueProcessingDelayMs = 10;
 
-        /// <summary>
-        /// 队列命令模型，支持单向命令和带响应命令
-        /// </summary>
-        private class QueuedCommand
-        {
-            public CommandId CommandId { get; set; }
-            public object Data { get; set; }
-            public CancellationToken CancellationToken { get; set; }
-            public Type DataType { get; set; }
-            public TaskCompletionSource<bool> CompletionSource { get; set; } // 用于单向命令
-            public TaskCompletionSource<PacketModel> ResponseCompletionSource { get; set; } // 用于带响应命令
-            public int TimeoutMs { get; set; } = 30000;
-            public bool IsResponseCommand { get; set; } // 标识是否是带响应的命令
-        }
+
 
         // 用于Token刷新的内部实现
 
@@ -149,7 +136,6 @@ namespace RUINORERP.UI.Network
         /// <param name="socketClient">Socket客户端接口，提供底层网络通信能力</param>
         /// <param name="logger">日志记录器</param>
         /// <param name="tokenManager">令牌管理器</param>
-        /// <param name="optionsMonitorConfigManager">配置管理器，用于处理配置同步</param>
         /// <param name="clientCommandDispatcher">客户端命令调度器</param>
         /// <param name="heartbeatManager">心跳管理器</param>
         /// <param name="commandHandlers">命令处理器集合</param>
@@ -1565,7 +1551,7 @@ namespace RUINORERP.UI.Network
                         var tcs = new TaskCompletionSource<bool>();
 
                         // 将请求加入队列
-                        _queuedCommands.Enqueue(new QueuedCommand
+                        _queuedCommands.Enqueue(new ClientQueuedCommand
                         {
                             CommandId = commandId,
                             Data = request,
@@ -1609,7 +1595,7 @@ namespace RUINORERP.UI.Network
                     var tcs = new TaskCompletionSource<bool>();
 
                     // 将请求加入队列
-                    _queuedCommands.Enqueue(new QueuedCommand
+                    _queuedCommands.Enqueue(new ClientQueuedCommand
                     {
                         CommandId = commandId,
                         Data = request,
@@ -1872,7 +1858,7 @@ namespace RUINORERP.UI.Network
             });
 
             // 将请求加入队列
-            _queuedCommands.Enqueue(new QueuedCommand
+            _queuedCommands.Enqueue(new ClientQueuedCommand
             {
                 CommandId = commandId,
                 Data = request,

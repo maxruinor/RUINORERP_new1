@@ -821,8 +821,7 @@ namespace RUINORERP.UI.ProductEAV
                 _EditEntity.DataStatus = (int)RUINORERP.Global.DataStatus.草稿;
                 _EditEntity.ActionStatus = ActionStatus.新增;
                 long maxid = await mcProdBase.GetMaxID();
-                //生成编号
-                _EditEntity.ProductNo = BizCodeService.GetBaseInfoNo(BaseInfoType.ProductNo.ToString());
+       
                 //_EditEntity.ShortCode = maxid.ToString().PadLeft(4, '0');//推荐
                 //助记码要在类目选择后生成，要有规律
                 //详情直接清空，因为是新增 ，属性这块不清楚。后面再优化：TODO:
@@ -917,10 +916,11 @@ namespace RUINORERP.UI.ProductEAV
             Task task_2 = Task.Run(task_Help);
             //task_2.Wait();  //注释打开则等待task_2延时，注释掉则不等待
 
-            EditEntity.PropertyChanged += (sender, s2) =>
+            EditEntity.PropertyChanged += async (sender, s2) =>
             {
                 if (EditEntity.Category_ID.HasValue && EditEntity.Category_ID.Value > 0 && s2.PropertyName == entity.GetPropertyName<tb_Prod>(c => c.Category_ID))
-                {
+                {  //生成编号
+                    var bizCodeService = Startup.GetFromFac<BizCodeService>();
                     var obj = RUINORERP.Business.Cache.EntityCacheHelper.GetEntity<tb_ProdCategories>(EditEntity.Category_ID.Value);
                     if (obj != null && obj.ToString() != "System.Object")
                     {
@@ -937,9 +937,16 @@ namespace RUINORERP.UI.ProductEAV
                                 constpara = para.ToPinYin(true).Substring(0, 3);
                             }
 
-                            _EditEntity.ShortCode = BizCodeService.GetBaseInfoNo(BaseInfoType.ShortCode.ToString(), constpara); //推荐
+                            _EditEntity.ShortCode =await bizCodeService.GenerateBaseInfoNoAsync(BaseInfoType.ShortCode.ToString(), constpara); //推荐
                         }
                     }
+
+                  
+                    if (bizCodeService != null)
+                    {
+                        _EditEntity.ProductNo = await bizCodeService.GenerateProductNoAsync(EditEntity.Category_ID.Value);
+                    }
+                   
                 }
                 if (EditEntity.PropertyType > 0 && s2.PropertyName == entity.GetPropertyName<tb_Prod>(c => c.PropertyType))
                 {

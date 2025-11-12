@@ -218,6 +218,8 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                                 {
                                     _logger.LogError("验证配置同步失败，无法持久化");
                                 }
+
+                            
                                 break;
                             case "Database":
                                 // 数据库配置特殊处理，这里可以根据实际需求实现

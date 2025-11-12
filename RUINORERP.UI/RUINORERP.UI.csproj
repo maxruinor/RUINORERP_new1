@@ -2292,6 +2292,7 @@
     <!-- ClientCommandProcessor.cs 已整合到ClientCommunicationService.cs，不再单独编译 -->
     <!-- <Compile Include="Network\ClientCommandProcessor.cs" /> -->
     <Compile Include="Network\ClientEventManager.cs" />
+    <Compile Include="Network\ClientQueuedCommand.cs" />
     <!-- ClientNetworkManager.cs 已作废 - 功能整合到CommunicationManager.cs -->
     <!-- <Compile Include="Network\ClientNetworkManager.cs" /> -->
     <Compile Include="Network\DI\NetworkServicesDependencyInjection.cs" />
@@ -2302,6 +2303,7 @@
     <Compile Include="Network\ErrorHandling\TimeoutErrorHandlingStrategy.cs" />
     <Compile Include="Network\Exceptions\NetworkCommunicationException.cs" />
     <Compile Include="Network\HeartbeatManager.cs" />
+    <Compile Include="Network\IClientCommunicationService.cs" />
     <Compile Include="Network\ISocketClient.cs" />
     <Compile Include="Network\ClientCommunicationService.cs" />
     <Compile Include="Network\NetworkConfig.cs" />

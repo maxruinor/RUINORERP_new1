@@ -466,40 +466,7 @@ namespace RUINORERP.UI.Network.Services
             }
         }
 
-        /// <summary>
-        /// 获取产品编码（静态方法，兼容旧的调用模式）
-        /// 内部使用同步方式调用异步方法
-        /// </summary>
-        /// <param name="categoryId">产品类别ID</param>
-        /// <param name="customPrefix">自定义前缀（可选）</param>
-        /// <param name="includeDate">是否包含日期</param>
-        /// <returns>生成的产品编码</returns>
-        /// <exception cref="Exception">生成失败时抛出异常</exception>
-        public static string GetProductNo(long categoryId, string customPrefix = null, bool includeDate = false)
-        {
-            try
-            {
-                // 从依赖注入容器中获取服务实例
-                var bizCodeService = Startup.GetFromFac<BizCodeService>();
-                if (bizCodeService == null)
-                {
-                    throw new Exception("无法从容器中获取BizCodeService实例");
-                }
-
-                // 同步调用异步方法
-                return Task.Run(async () => await bizCodeService.GenerateProductNoAsync(categoryId, customPrefix, includeDate)).Result;
-            }
-            catch (AggregateException ex)
-            {
-                // 解包AggregateException，获取内部异常
-                if (ex.InnerException != null)
-                {
-                    throw ex.InnerException;
-                }
-                throw;
-            }
-        }
-
+        
         /// <summary>
         /// 获取产品SKU编码（静态方法，兼容旧的调用模式）
         /// 内部使用同步方式调用异步方法

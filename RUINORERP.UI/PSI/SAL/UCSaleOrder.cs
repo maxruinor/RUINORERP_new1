@@ -599,6 +599,7 @@ namespace RUINORERP.UI.PSI.SAL
             await DownloadVoucherImageAsync(entity, magicPictureBox订金付款凭证);
         }
 
+        #region 图片相关
 
         /// <summary>
         /// 下载并显示凭证图片 - 增强版本
@@ -631,7 +632,7 @@ namespace RUINORERP.UI.PSI.SAL
                             {
                                 imageDataList.Add(fileStorageInfo.FileData);
                                 imageInfos.Add(ctrpay.ConvertToImageInfo(fileStorageInfo));
-                                EditEntity.AddFileStorageInfo(fileStorageInfo);
+                                AddFileStorageInfo(entity,fileStorageInfo);
                             }
                         }
                     }
@@ -667,6 +668,22 @@ namespace RUINORERP.UI.PSI.SAL
                 MainForm.Instance.uclog.AddLog($"下载凭证图片出错：{ex.Message}");
             }
         }
+
+
+        ///// <summary>
+        ///// 图片ID
+        ///// 删除时根据这个ID删除图片
+        ///// </summary>
+        //public List<tb_FS_FileStorageInfo> FileStorageInfoList = new List<tb_FS_FileStorageInfo>();
+        //public void AddFileStorageInfo(tb_FS_FileStorageInfo FileStorageInfo)
+        //{
+        //    if (FileStorageInfo.FileId <= 0)
+        //        return;
+        //    if (FileStorageInfoList.Contains(FileStorageInfo))
+        //        return;
+        //    FileStorageInfoList.Add(FileStorageInfo);
+        //}
+
 
         /// <summary>
         /// 上传凭证图片 - 增强版本
@@ -854,6 +871,10 @@ namespace RUINORERP.UI.PSI.SAL
                 return false;
             }
         }
+
+        #endregion
+
+
 
 
 

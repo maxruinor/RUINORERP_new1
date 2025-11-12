@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RUINOR.WinFormsUI.CustomPictureBox;
+using System;
 
 namespace RUINORERP.UI.FM
 {
@@ -30,6 +31,7 @@ namespace RUINORERP.UI.FM
             /// </summary>
             private void InitializeComponent()
             {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(UCPaymentRecord));
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
@@ -83,6 +85,7 @@ namespace RUINORERP.UI.FM
             this.lblTotalLocalAmount = new Krypton.Toolkit.KryptonLabel();
             this.txtTotalForeignAmount = new Krypton.Toolkit.KryptonTextBox();
             this.lblTotalForeignAmount = new Krypton.Toolkit.KryptonLabel();
+            this.magicPictureBox付款凭证 = new RUINOR.WinFormsUI.CustomPictureBox.MagicPictureBox();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
@@ -107,6 +110,7 @@ namespace RUINORERP.UI.FM
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer2.Panel2)).BeginInit();
             this.kryptonSplitContainer2.Panel2.SuspendLayout();
             this.kryptonSplitContainer2.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.magicPictureBox付款凭证)).BeginInit();
             this.SuspendLayout();
             // 
             // kryptonSplitContainer1
@@ -124,12 +128,13 @@ namespace RUINORERP.UI.FM
             // kryptonSplitContainer1.Panel2
             // 
             this.kryptonSplitContainer1.Panel2.Controls.Add(this.kryptonSplitContainer2);
-            this.kryptonSplitContainer1.Size = new System.Drawing.Size(1133, 746);
+            this.kryptonSplitContainer1.Size = new System.Drawing.Size(1357, 746);
             this.kryptonSplitContainer1.SplitterDistance = 251;
             this.kryptonSplitContainer1.TabIndex = 4;
             // 
             // kryptonPanel1
             // 
+            this.kryptonPanel1.Controls.Add(this.magicPictureBox付款凭证);
             this.kryptonPanel1.Controls.Add(this.picBox红字);
             this.kryptonPanel1.Controls.Add(this.chkIsForCommission);
             this.kryptonPanel1.Controls.Add(this.lblReimburser);
@@ -173,7 +178,7 @@ namespace RUINORERP.UI.FM
             this.kryptonPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonPanel1.Location = new System.Drawing.Point(0, 0);
             this.kryptonPanel1.Name = "kryptonPanel1";
-            this.kryptonPanel1.Size = new System.Drawing.Size(1133, 251);
+            this.kryptonPanel1.Size = new System.Drawing.Size(1357, 251);
             this.kryptonPanel1.TabIndex = 4;
             // 
             // picBox红字
@@ -493,7 +498,7 @@ namespace RUINORERP.UI.FM
             // 
             // txtApprovalOpinions
             // 
-            this.txtApprovalOpinions.Location = new System.Drawing.Point(929, 168);
+            this.txtApprovalOpinions.Location = new System.Drawing.Point(929, 170);
             this.txtApprovalOpinions.Multiline = true;
             this.txtApprovalOpinions.Name = "txtApprovalOpinions";
             this.txtApprovalOpinions.Size = new System.Drawing.Size(140, 59);
@@ -539,7 +544,7 @@ namespace RUINORERP.UI.FM
             this.kryptonSplitContainer2.Panel2.Controls.Add(this.lblTotalLocalAmount);
             this.kryptonSplitContainer2.Panel2.Controls.Add(this.txtTotalForeignAmount);
             this.kryptonSplitContainer2.Panel2.Controls.Add(this.lblTotalForeignAmount);
-            this.kryptonSplitContainer2.Size = new System.Drawing.Size(1133, 490);
+            this.kryptonSplitContainer2.Size = new System.Drawing.Size(1357, 490);
             this.kryptonSplitContainer2.SplitterDistance = 433;
             this.kryptonSplitContainer2.TabIndex = 2;
             // 
@@ -552,7 +557,7 @@ namespace RUINORERP.UI.FM
             this.grid1.Name = "grid1";
             this.grid1.OptimizeMode = SourceGrid.CellOptimizeMode.ForRows;
             this.grid1.SelectionMode = SourceGrid.GridSelectionMode.Cell;
-            this.grid1.Size = new System.Drawing.Size(1133, 433);
+            this.grid1.Size = new System.Drawing.Size(1357, 433);
             this.grid1.TabIndex = 2;
             this.grid1.TabStop = true;
             this.grid1.ToolTipText = "";
@@ -626,13 +631,28 @@ namespace RUINORERP.UI.FM
             this.lblTotalForeignAmount.TabIndex = 202;
             this.lblTotalForeignAmount.Values.Text = "支付金额外币";
             // 
+            // magicPictureBox付款凭证
+            // 
+            this.magicPictureBox付款凭证.AllowDrop = true;
+            this.magicPictureBox付款凭证.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.magicPictureBox付款凭证.ImagePaths = "";
+            this.magicPictureBox付款凭证.InfoPanelDisplayTime = 3000;
+            this.magicPictureBox付款凭证.Location = new System.Drawing.Point(1116, 27);
+            this.magicPictureBox付款凭证.MultiImageSupport = true;
+            this.magicPictureBox付款凭证.Name = "magicPictureBox付款凭证";
+            this.magicPictureBox付款凭证.RowImage = ((RUINORERP.Global.Model.DataRowImage)(resources.GetObject("magicPictureBox付款凭证.RowImage")));
+            this.magicPictureBox付款凭证.ShowImageInfo = true;
+            this.magicPictureBox付款凭证.Size = new System.Drawing.Size(216, 206);
+            this.magicPictureBox付款凭证.TabIndex = 234;
+            this.magicPictureBox付款凭证.TabStop = false;
+            // 
             // UCPaymentRecord
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.kryptonSplitContainer1);
             this.Name = "UCPaymentRecord";
-            this.Size = new System.Drawing.Size(1133, 771);
+            this.Size = new System.Drawing.Size(1357, 771);
             this.Load += new System.EventHandler(this.UCPaymentRecord_Load);
             this.Controls.SetChildIndex(this.kryptonSplitContainer1, 0);
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).EndInit();
@@ -661,6 +681,7 @@ namespace RUINORERP.UI.FM
             this.kryptonSplitContainer2.Panel2.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer2)).EndInit();
             this.kryptonSplitContainer2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.magicPictureBox付款凭证)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -722,5 +743,6 @@ namespace RUINORERP.UI.FM
         private Krypton.Toolkit.KryptonLabel lblTotalLocalPayableAmount;
         private Krypton.Toolkit.KryptonLabel lblLocalPamountInWords;
         private Krypton.Toolkit.KryptonLabel lblMoneyUpper;
+        private MagicPictureBox magicPictureBox付款凭证;
     }
     }

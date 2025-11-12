@@ -219,7 +219,8 @@ namespace RUINORERP.Business
                 .GroupBy(s => new { s.ProdDetailID, s.Location_ID })
                 .Select(s => new
                 {
-                    Key = s.ProdDetailID + "_" + s.Location_ID,
+                    // 使用SQL + 运算符进行字符串拼接，避免类型转换错误
+                    Key = s.ProdDetailID.ToString() + "_" + s.Location_ID.ToString(),
                     LastTime = SqlFunc.AggregateMax(s.SnapshotTime.Value)
                 })
                 .ToList();

@@ -86,7 +86,7 @@ namespace RUINORERP.Model
 
 
 
-        
+
         /// <summary>
         /// 是否有真实的变化
         /// </summary>
@@ -561,7 +561,7 @@ namespace RUINORERP.Model
         #region 字段基类描述对应列表 - 基类实现
 
         private static readonly ConcurrentDictionary<Type, ConcurrentDictionary<string, string>> _fieldNameListCache = new ConcurrentDictionary<Type, ConcurrentDictionary<string, string>>();
-        
+
         /// <summary>
         /// 外键关系信息缓存
         /// 用于存储每个实体类型的外键关系信息
@@ -583,6 +583,14 @@ namespace RUINORERP.Model
             set { /* 如果需要子类覆盖，可以在这里实现 */ }
         }
 
+
+        //删除时根据这个ID删除图片
+        [Description("文件存储信息列表"), Category("自定属性")]
+        [SugarColumn(IsIgnore = true)]
+        [Browsable(false)]
+        [JsonIgnore]
+        [XmlIgnore]
+        public List<tb_FS_FileStorageInfo> FileStorageInfoList { get; set; } = new List<tb_FS_FileStorageInfo>();
 
 
 
@@ -609,12 +617,12 @@ namespace RUINORERP.Model
             _fieldNameListCache[type] = fieldNameList;
             return fieldNameList;
         }
-        
+
         /// <summary>
         /// 使用表名作为键的外键关系缓存
         /// </summary>
         private static readonly ConcurrentDictionary<string, Dictionary<string, FKRelationInfo>> _fkRelationsByTableName = new ConcurrentDictionary<string, Dictionary<string, FKRelationInfo>>();
-        
+
         /// <summary>
         /// 获取实体的所有外键关系信息
         /// </summary>
@@ -626,13 +634,13 @@ namespace RUINORERP.Model
             {
                 var type = this.GetType();
                 var tableName = GetTableName(type);
-                
+
                 // 使用表名作为缓存键
                 return _fkRelationsByTableName.GetOrAdd(tableName, _ => GenerateFKRelations(type))
                     .Values.ToList();
             }
         }
-        
+
         /// <summary>
         /// 获取实体类型对应的表名
         /// </summary>
@@ -644,7 +652,7 @@ namespace RUINORERP.Model
             var sugarTable = type.GetCustomAttribute<SugarTable>(false);
             return sugarTable?.TableName ?? type.Name;
         }
-        
+
         /// <summary>
         /// 生成实体类型的外键关系信息列表
         /// </summary>
@@ -653,7 +661,7 @@ namespace RUINORERP.Model
         private static Dictionary<string, FKRelationInfo> GenerateFKRelations(Type type)
         {
             var relations = new Dictionary<string, FKRelationInfo>();
-            
+
             // 获取所有公共实例属性
             foreach (var property in type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
             {
@@ -669,7 +677,7 @@ namespace RUINORERP.Model
                         FK_IDColName = fkAttr.FK_IDColName,
                         CmbMultiChoice = fkAttr.CmbMultiChoice
                     };
-                    
+
                     // 使用属性名作为字典键，确保不会重复添加
                     if (!relations.ContainsKey(property.Name))
                     {
@@ -677,10 +685,10 @@ namespace RUINORERP.Model
                     }
                 }
             }
-            
+
             return relations;
         }
-        
+
         /// <summary>
         /// 根据属性名获取外键关系信息
         /// </summary>
@@ -690,22 +698,22 @@ namespace RUINORERP.Model
         {
             var type = this.GetType();
             var tableName = GetTableName(type);
-            
+
             // 直接从字典中查找，提高性能
             if (_fkRelationsByTableName.TryGetValue(tableName, out var relations))
             {
                 relations.TryGetValue(propertyName, out var relationInfo);
                 return relationInfo;
             }
-            
+
             // 如果缓存中没有，则生成并查找
             var generatedRelations = GenerateFKRelations(type);
             _fkRelationsByTableName[tableName] = generatedRelations;
-            
+
             generatedRelations.TryGetValue(propertyName, out var result);
             return result;
         }
-        
+
         /// <summary>
         /// 根据外键表名获取外键关系信息列表
         /// </summary>
@@ -714,18 +722,18 @@ namespace RUINORERP.Model
         public virtual List<FKRelationInfo> GetFKRelationsByTableName(string tableName)
         {
             var entityTypeName = GetTableName(this.GetType());
-            
+
             // 从缓存中获取当前实体的所有外键关系
             if (_fkRelationsByTableName.TryGetValue(entityTypeName, out var relations))
             {
                 // 按外键表名筛选
                 return relations.Values.Where(r => r.FKTableName == tableName).ToList();
             }
-            
+
             // 如果缓存中没有，则生成并筛选
             var generatedRelations = GenerateFKRelations(this.GetType());
             _fkRelationsByTableName[entityTypeName] = generatedRelations;
-            
+
             return generatedRelations.Values.Where(r => r.FKTableName == tableName).ToList();
         }
 
@@ -746,19 +754,7 @@ namespace RUINORERP.Model
         [Browsable(false)]
         public DataRowImage RowImage { get => _RowImage; set => _RowImage = value; }
 
-        /// <summary>
-        /// 图片ID
-        /// 删除时根据这个ID删除图片
-        /// </summary>
-        public List<tb_FS_FileStorageInfo> FileStorageInfoList= new List<tb_FS_FileStorageInfo>();
-        public void AddFileStorageInfo(tb_FS_FileStorageInfo FileStorageInfo)
-        {
-            if (FileStorageInfo.FileId <= 0)
-                return;
-            if (FileStorageInfoList.Contains(FileStorageInfo))
-                return;
-            FileStorageInfoList.Add(FileStorageInfo);
-        }
+
 
 
         private bool? _selected = false;

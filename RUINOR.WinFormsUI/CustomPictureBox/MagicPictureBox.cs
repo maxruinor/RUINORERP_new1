@@ -334,8 +334,14 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                 {
                     try
                     {
-                        // 只处理已更新的图片，使用统一的判断方法
-                        if (i < imageInfos.Count && imageInfos[i] != null && !IsImageNeedingUpdate(i))
+                        // 只处理需要更新的图片，使用统一的判断方法
+                        // 修复：将!IsImageNeedingUpdate(i)改为IsImageNeedingUpdate(i)，确保需要更新的图片被正确处理
+                        bool needsUpdate = i < imageInfos.Count && imageInfos[i] != null &&
+                                          (IsImageNeedingUpdate(i) ||
+                                           imageInfos[i].FileId == 0 ||
+                                           string.IsNullOrEmpty(imageInfos[i].HashValue));
+
+                        if (!needsUpdate)
                         {
                             continue;
                         }
@@ -393,7 +399,12 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                     }
                 }
             }
-            else if (this.Image != null && (imageInfos.Count == 0 || (imageInfos.Count > 0 && imageInfos[0].IsUpdated)))
+            else if (this.Image != null && (imageInfos.Count == 0 ||
+                                           (imageInfos.Count > 0 &&
+                                            (imageInfos[0].IsUpdated ||
+                                             IsImageNeedingUpdate(0) ||
+                                             imageInfos[0].FileId == 0 ||
+                                             string.IsNullOrEmpty(imageInfos[0].HashValue)))))
             {
                 try
                 {
@@ -506,7 +517,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
             _imageCroppingBox.Visible = false;
             _imageCroppingBox.ContextMenuStrip = _cropContextMenu;
             _imageCroppingBox.DoubleClick += new EventHandler(SaveCrop);
-            
+
             if (!this.Controls.Contains(_imageCroppingBox))
             {
                 this.Controls.Add(_imageCroppingBox);
@@ -547,9 +558,9 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
         private void UpdateContextMenu()
         {
             _mainContextMenu.Items.Clear();
-            
+
             bool hasImages = this.Image != null || (MultiImageSupport && images.Count > 0);
-            
+
             if (hasImages)
             {
                 AddImageAvailableMenuItems();
@@ -568,39 +579,39 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
         private void AddImageAvailableMenuItems()
         {
             bool hasAddedMenuItem = false;
-            
+
             // 查看和编辑相关菜单项
             if (ShowViewLargeImageMenuItem)
             {
                 _mainContextMenu.Items.Add(new ToolStripMenuItem(MENU_VIEW_LARGE, null, new EventHandler(ViewLargeImage), MENU_VIEW_LARGE));
                 hasAddedMenuItem = true;
             }
-            
+
             if (ShowCropImageMenuItem)
             {
                 _mainContextMenu.Items.Add(new ToolStripMenuItem(MENU_CROP, null, new EventHandler(StartCrop), MENU_CROP));
                 hasAddedMenuItem = true;
             }
-            
+
             // 添加图片选项
             if (ShowAddImageMenuItem)
             {
                 _mainContextMenu.Items.Add(new ToolStripMenuItem(MENU_ADD_IMAGE, null, new EventHandler(AddImage), MENU_ADD_IMAGE));
                 hasAddedMenuItem = true;
             }
-            
+
             // 如果添加了菜单项，则添加分隔线
             if (hasAddedMenuItem && (ShowClearImageMenuItem || (MultiImageSupport && images.Count > 1 && ShowDeleteCurrentImageMenuItem)))
             {
                 _mainContextMenu.Items.Add(new ToolStripSeparator());
             }
-            
+
             // 清除选项
             if (ShowClearImageMenuItem)
             {
                 _mainContextMenu.Items.Add(new ToolStripMenuItem(MENU_CLEAR_IMAGE, null, new EventHandler(ClearImage), MENU_CLEAR_IMAGE));
             }
-            
+
             // 多图片模式下的额外选项
             if (MultiImageSupport && images.Count > 1 && ShowDeleteCurrentImageMenuItem)
             {
@@ -619,7 +630,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
             {
                 _mainContextMenu.Items.Add(new ToolStripMenuItem(MENU_PASTE_IMAGE, null, new EventHandler(PasteImage), MENU_PASTE_IMAGE));
             }
-            
+
             if (ShowAddImageMenuItem)
             {
                 _mainContextMenu.Items.Add(new ToolStripMenuItem(MENU_ADD_IMAGE, null, new EventHandler(AddImage), MENU_ADD_IMAGE));
@@ -627,12 +638,12 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
         }
 
 
-        
 
 
-        
-   
-        
+
+
+
+
         /// <summary>
         /// 优化的单张图片加载方法，支持byte[]和可选的ImageInfo
         /// </summary>
@@ -646,18 +657,18 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                 this.Image = null;
                 return;
             }
-            
+
             // 处理ImageInfo参数
             List<ImageInfo> imageInfosList = null;
             if (imageInfo != null)
             {
                 imageInfosList = new List<ImageInfo> { imageInfo };
             }
-            
+
             // 调用内部统一加载方法
             LoadImagesInternal(new List<byte[]> { imageBytes }, imageInfosList, isFromServer);
         }
-        
+
         /// <summary>
         /// 优化的多张图片加载方法，支持byte[]列表和可选的ImageInfo列表
         /// </summary>
@@ -671,11 +682,11 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                 this.Image = null;
                 return;
             }
-            
+
             // 调用内部统一加载方法
             LoadImagesInternal(imageBytesList, imageInfosList, isFromServer);
         }
-        
+
         /// <summary>
         /// 内部统一的图片加载实现方法
         /// </summary>
@@ -686,7 +697,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
         {
             images.Clear();
             imageInfos.Clear();
-            
+
             // 自动启用多图片支持
             MultiImageSupport = imageBytesList != null && imageBytesList.Count > 1;
 
@@ -695,7 +706,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                 this.Image = null;
                 return;
             }
-            
+
             // 收集加载失败的图片信息
             List<int> failedImages = new List<int>();
             List<string> errorMessages = new List<string>();
@@ -809,7 +820,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                     ShowCurrentImage();
                     CreateNavigationControls();
                 }
-                
+
                 // 创建信息面板
                 CreateInfoPanel();
                 UpdateInfoPanel();
@@ -818,7 +829,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
             {
                 this.Image = null;
             }
-            
+
             // 如果有加载失败的图片，记录日志
             if (failedImages.Count > 0)
             {
@@ -826,7 +837,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
             }
         }
 
-        
+
 
 
         /// <summary>
@@ -1536,7 +1547,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
             // 重绘 PictureBox
             this.Invalidate();
         }
-              
+
         /// <summary>
         /// 添加图片
         /// </summary>
@@ -1663,8 +1674,8 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                 cropRectangle = new Rectangle(new Point(0, 0), new Size(this.Image.Width, this.Image.Height));
                 this.Cursor = cropCursor;
                 _imageCroppingBox.Visible = true;
-            _imageCroppingBox.TabIndex = this.TabIndex + 1;
-            _imageCroppingBox.Image = this.Image;
+                _imageCroppingBox.TabIndex = this.TabIndex + 1;
+                _imageCroppingBox.Image = this.Image;
             }
         }
 
@@ -1969,7 +1980,8 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                                 FileExtension = GetImageFormatExtension(image),
                                 Width = image?.Width ?? 0,
                                 Height = image?.Height ?? 0,
-                                IsUpdated = true // 标记为需要更新
+                                IsUpdated = true, // 标记为需要更新
+                                HashValue = newhash // 设置哈希值
                             };
                             imageInfos.Add(newImageInfo);
                             _updateManager.MarkImageAsUpdated(newImageInfo); // 标记为需要更新
@@ -1989,7 +2001,8 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                                 FileExtension = GetImageFormatExtension(image),
                                 Width = image?.Width ?? 0,
                                 Height = image?.Height ?? 0,
-                                IsUpdated = true // 标记为需要更新
+                                IsUpdated = true, // 标记为需要更新
+                                HashValue = newhash // 设置哈希值
                             };
                             imageInfos.Add(newImageInfo);
                             _updateManager.MarkImageAsUpdated(newImageInfo); // 标记为需要更新
@@ -2010,6 +2023,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                             imageInfos[0].CreateTime = DateTime.Now;
                             imageInfos[0].FileType = GetImageFormatExtension(image);
                             imageInfos[0].FileExtension = GetImageFormatExtension(image);
+                            imageInfos[0].HashValue = newhash; // 设置哈希值
                             imageInfos[0].IsUpdated = true; // 标记为需要更新
                             _updateManager.MarkImageAsUpdated(imageInfos[0]); // 标记为需要更新
                         }
@@ -2025,7 +2039,8 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                                 FileType = GetImageFormatExtension(image),
                                 Width = image?.Width ?? 0,
                                 Height = image?.Height ?? 0,
-                                IsUpdated = true // 标记为需要更新
+                                IsUpdated = true, // 标记为需要更新
+                                HashValue = newhash // 设置哈希值
                             };
                             imageInfos.Add(newImageInfo);
                             _updateManager.MarkImageAsUpdated(newImageInfo); // 标记为需要更新
@@ -2172,10 +2187,10 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                 ProcessCropOperation();
                 return;
             }
-            
+
             // 检查是否已有图片
             bool hasImage = (this.Image != null) || (MultiImageSupport && images.Count > 0);
-            
+
             if (hasImage)
             {
                 // 如果已有图片，双击显示大图
@@ -2187,7 +2202,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                 AddImageFromFileDialog();
             }
         }
-        
+
         /// <summary>
         /// 处理裁剪操作
         /// </summary>
@@ -2264,7 +2279,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
 
             isCropping = false;
         }
-        
+
         /// <summary>
         /// 从文件对话框添加图片
         /// </summary>
@@ -2351,7 +2366,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                         }
                         UpdateInfoPanel();
                     }
-                    
+
                     // 添加右键菜单项
                     UpdateContextMenu();
                 }
@@ -2641,9 +2656,9 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
             return bmp;
         }
 
-      
-        
-       
+
+
+
         /// <summary>
         /// 获取当前图片路径
         /// </summary>
@@ -3270,7 +3285,8 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
             {
                 for (int i = 0; i < images.Count; i++)
                 {
-                    if (IsImageNeedingUpdate(i))
+                    // 检查是否需要更新，同时确保索引有效
+                    if (i < imageInfos.Count && imageInfos[i] != null && IsImageNeedingUpdate(i))
                     {
                         try
                         {
@@ -3281,6 +3297,9 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                                 imageBytes = ms.ToArray();
                             }
 
+                            // 更新图片信息中的文件大小
+                            imageInfos[i].FileSize = imageBytes.Length;
+
                             updateList.Add(new Tuple<byte[], ImageInfo>(imageBytes, imageInfos[i]));
                         }
                         catch (Exception ex)
@@ -3290,22 +3309,34 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                     }
                 }
             }
-            else if (this.Image != null && imageInfos.Count > 0 && IsImageNeedingUpdate(0))
+            else if (this.Image != null && imageInfos.Count > 0 && imageInfos[0] != null)
             {
-                try
-                {
-                    byte[] imageBytes = null;
-                    using (var ms = new MemoryStream())
-                    {
-                        this.Image.Save(ms, ImageFormat.Jpeg);
-                        imageBytes = ms.ToArray();
-                    }
+                // 单图片模式下，检查是否需要更新（包括新添加的图片）
+                bool needsUpdate = IsImageNeedingUpdate(0) ||
+                                    imageInfos[0].FileId == 0 ||
+                                   string.IsNullOrEmpty(imageInfos[0].HashValue) ||
+                                   imageInfos[0].IsUpdated;
 
-                    updateList.Add(new Tuple<byte[], ImageInfo>(imageBytes, imageInfos[0]));
-                }
-                catch (Exception ex)
+                if (needsUpdate)
                 {
-                    System.Diagnostics.Debug.WriteLine($"获取待更新单张图片数据失败: {ex.Message}");
+                    try
+                    {
+                        byte[] imageBytes = null;
+                        using (var ms = new MemoryStream())
+                        {
+                            this.Image.Save(ms, ImageFormat.Jpeg);
+                            imageBytes = ms.ToArray();
+                        }
+
+                        // 更新图片信息中的文件大小
+                        imageInfos[0].FileSize = imageBytes.Length;
+
+                        updateList.Add(new Tuple<byte[], ImageInfo>(imageBytes, imageInfos[0]));
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"获取待更新单张图片数据失败: {ex.Message}");
+                    }
                 }
             }
 

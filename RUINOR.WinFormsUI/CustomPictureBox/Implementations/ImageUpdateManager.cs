@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using RUINOR.WinFormsUI.CustomPictureBox; // 用于访问ImageInfo类
@@ -40,10 +41,14 @@ namespace RUINOR.WinFormsUI.CustomPictureBox.Implementations
             if (imageInfo == null)
                 throw new System.ArgumentNullException(nameof(imageInfo), "图片信息不能为空");
 
-            // 保存更新前的哈希值
+            // 无论是否有哈希值，都标记为需要更新
+            imageInfo.Metadata["UpdateMarker"] = UPDATE_MARKER;
+            imageInfo.IsUpdated = true;
+            imageInfo.ModifiedAt = DateTime.Now;
+            
+            // 如果有哈希值，也添加到需要更新的集合中
             if (!string.IsNullOrEmpty(imageInfo.HashValue))
             {
-                imageInfo.Metadata["UpdateMarker"] = UPDATE_MARKER;
                 _imagesNeedingUpdate[imageInfo.HashValue] = imageInfo;
             }
         }
@@ -58,7 +63,17 @@ namespace RUINOR.WinFormsUI.CustomPictureBox.Implementations
             if (imageInfo == null)
                 throw new System.ArgumentNullException(nameof(imageInfo), "图片信息不能为空");
 
-            return imageInfo.Metadata.ContainsKey("UpdateMarker") && imageInfo.Metadata["UpdateMarker"] == UPDATE_MARKER || (!string.IsNullOrEmpty(imageInfo.HashValue) && _imagesNeedingUpdate.ContainsKey(imageInfo.HashValue));
+            // 有以下情况之一则认为需要更新：
+            // 1. 有更新标记
+            // 2. 有哈希值且在需要更新的集合中
+            // 3. 没有FileId（新添加的图片）
+            // 4. 没有哈希值（新添加的图片）
+            // 5. IsUpdated标志为true
+            return imageInfo.Metadata.ContainsKey("UpdateMarker") && imageInfo.Metadata["UpdateMarker"] == UPDATE_MARKER || 
+                   (!string.IsNullOrEmpty(imageInfo.HashValue) && _imagesNeedingUpdate.ContainsKey(imageInfo.HashValue)) ||
+                  imageInfo.FileId==0 || 
+                   string.IsNullOrEmpty(imageInfo.HashValue) ||
+                   imageInfo.IsUpdated;
         }
 
         /// <summary>

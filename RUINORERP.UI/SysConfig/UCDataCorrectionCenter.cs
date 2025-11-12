@@ -52,6 +52,7 @@ using Org.BouncyCastle.Crypto;
 using NPOI.SS.UserModel;
 using Org.BouncyCastle.Asn1.Cmp;
 using RUINORERP.UI.FM;
+using RUINORERP.Global.EnumExt;
 
 
 namespace RUINORERP.UI.SysConfig
@@ -83,6 +84,90 @@ namespace RUINORERP.UI.SysConfig
         {
             if (treeViewTableList.SelectedNode != null && treeView1.SelectedNode != null)
             {
+
+
+                if (treeViewTableList.SelectedNode.Tag != null && treeViewTableList.SelectedNode.Name == typeof(tb_FM_PayeeInfo).Name)
+                {
+                    #region PayeeInfo 详细信息补充
+                    var ctrPayeeInfo = Startup.GetFromFac<tb_FM_PayeeInfoController<tb_FM_PayeeInfo>>();
+                    List<tb_FM_PayeeInfo> PayeeInfos = ctrPayeeInfo.Query();
+
+                    foreach (var PayeeInfo in PayeeInfos)
+                    {
+                        // 获取显示名称
+                        string shortName = string.Empty;
+                        if (PayeeInfo.CustomerVendor_ID.HasValue && PayeeInfo.CustomerVendor_ID.Value > 0)
+                        {
+                            var CustomerVendor = RUINORERP.Business.Cache.EntityCacheHelper.GetEntity<tb_CustomerVendor>(PayeeInfo.CustomerVendor_ID);
+                            if (CustomerVendor != null)
+                            {
+                                shortName = CustomerVendor.ShortName;
+                                if (string.IsNullOrEmpty(shortName))
+                                {
+                                    shortName = CustomerVendor.CVName;
+                                }
+                            }
+                        }
+                        else if (PayeeInfo.Employee_ID.HasValue && PayeeInfo.Employee_ID.Value > 0)
+                        {
+                            var Employee = RUINORERP.Business.Cache.EntityCacheHelper.GetEntity<tb_Employee>(PayeeInfo.Employee_ID);
+                            if (Employee != null)
+                            {
+                                shortName = Employee.Employee_Name;
+                            }
+                        }
+
+                        // 处理可能为null的字段，并收集非空字段
+                        List<string> nonEmptyFields = new List<string>();
+
+                        // 添加非空的显示名称
+                        if (!string.IsNullOrEmpty(shortName))
+                        {
+                            nonEmptyFields.Add(shortName);
+                        }
+
+                        // 添加非空的账户类型
+                        string accountType = ((AccountType)PayeeInfo.Account_type).ToString();
+                        if (!string.IsNullOrEmpty(accountType))
+                        {
+                            nonEmptyFields.Add(accountType);
+                        }
+
+                        // 添加非空的账户名称
+                        string accountName = PayeeInfo.Account_name;
+                        if (!string.IsNullOrEmpty(accountName))
+                        {
+                            nonEmptyFields.Add(accountName);
+                        }
+
+                        // 添加非空的账号
+                        string accountNo = PayeeInfo.Account_No;
+                        if (!string.IsNullOrEmpty(accountNo))
+                        {
+                            nonEmptyFields.Add(accountNo);
+                        }
+
+                        // 添加非空的所属银行
+                        string belongingBank = PayeeInfo.BelongingBank;
+                        if (!string.IsNullOrEmpty(belongingBank))
+                        {
+                            nonEmptyFields.Add(belongingBank);
+                        }
+
+                        // 组合非空字段更新Details，使用连字符分隔
+                        PayeeInfo.Details = string.Join("-", nonEmptyFields);
+                    }
+
+                    if (!chkTestMode.Checked)
+                    {
+                        await MainForm.Instance.AppContext.Db.Updateable(PayeeInfos).UpdateColumns(it => new { it.Details }).ExecuteCommandAsync();
+                    }
+
+                    #endregion
+                }
+
+
+
                 if (treeView1.SelectedNode.Text == "菜单枚举类型修复")
                 {
                     if (treeViewTableList.SelectedNode.Tag != null && treeViewTableList.SelectedNode.Name == typeof(tb_MenuInfo).Name)
@@ -506,7 +591,7 @@ namespace RUINORERP.UI.SysConfig
 
                         List<tb_FM_ReceivablePayable> ReceivablePayables = MainForm.Instance.AppContext.Db.Queryable<tb_FM_ReceivablePayable>()
                             .Where(c => c.SourceBizType.HasValue)
-                            .Where(c => !c.BusinessDate.HasValue )
+                            .Where(c => !c.BusinessDate.HasValue)
                             .ToList();
 
                         // 按来源业务类型分组

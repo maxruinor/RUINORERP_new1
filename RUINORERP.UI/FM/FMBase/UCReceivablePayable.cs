@@ -407,7 +407,7 @@ namespace RUINORERP.UI.FM
             DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.LocalPaidAmount.ToString(), txtLocalPaidAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.ForeignBalanceAmount.ToString(), txtForeignBalanceAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.LocalBalanceAmount.ToString(), txtLocalBalanceAmount, BindDataType4TextBox.Money, false);
-            DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.LocalReconciledAmount.ToString(), txtLocalReconciledAmount, BindDataType4TextBox.Money, false);
+                DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.LocalReconciledAmount.ToString(), txtLocalReconciledAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.ShippingFee.ToString(), txtShippingFee, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.PlatformOrderNo, txtPlatformOrderNo, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4CheckBox<tb_FM_ReceivablePayable>(entity, t => t.IsForCommission, chkIsForCommission, false);

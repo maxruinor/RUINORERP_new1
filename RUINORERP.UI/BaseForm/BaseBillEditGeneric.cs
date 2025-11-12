@@ -92,6 +92,7 @@ using RUINORERP.PacketSpec.Commands;
 using RUINORERP.Business.Cache;
 using RUINORERP.UI.Network.Services;
 using RUINORERP.Business.CommService;
+using RUINOR.WinFormsUI.CustomPictureBox;
 
 namespace RUINORERP.UI.BaseForm
 {
@@ -338,6 +339,278 @@ namespace RUINORERP.UI.BaseForm
         {
             await AutoSaveDataAsync();
         }
+
+        #region 图片相关
+
+        /// <summary>
+        /// 下载并显示凭证图片 - 增强版本
+        /// </summary>
+        public async Task DownloadVoucherImageAsync(T entity, MagicPictureBox magicPicBox)
+        {
+            magicPicBox.MultiImageSupport = true;
+            var ctrpay = Startup.GetFromFac<FileManagementController>();
+            try
+            {
+                var list = await ctrpay.DownloadImageAsync(entity as BaseEntity);
+
+                if (list == null || list.Count == 0)
+                {
+                    return;
+                }
+
+                // 简化处理逻辑，直接处理文件存储信息
+                List<byte[]> imageDataList = new List<byte[]>();
+                List<string> imageNames = new List<string>();
+                List<ImageInfo> imageInfos = new List<ImageInfo>();
+
+                foreach (var downloadResponse in list)
+                {
+                    if (downloadResponse.IsSuccess && downloadResponse.FileStorageInfos != null)
+                    {
+                        foreach (var fileStorageInfo in downloadResponse.FileStorageInfos)
+                        {
+                            if (fileStorageInfo.FileData != null && fileStorageInfo.FileData.Length > 0)
+                            {
+                                imageDataList.Add(fileStorageInfo.FileData);
+                                imageInfos.Add(ctrpay.ConvertToImageInfo(fileStorageInfo));
+                                AddFileStorageInfo(entity as BaseEntity,fileStorageInfo);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        logger.LogWarning("图片下载失败: {ErrorMessage}",
+                            downloadResponse.ErrorMessage ?? "未知错误");
+                    }
+                }
+
+                if (imageDataList.Count > 0)
+                {
+                    try
+                    {
+                        // 使用统一的LoadImages方法，自动处理单张和多张图片
+                        magicPicBox.LoadImages(imageDataList, imageInfos, true);
+                        MainForm.Instance.uclog.AddLog($"成功加载 {imageDataList.Count} 张凭证图片");
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogError(ex, "加载图片失败");
+                        MainForm.Instance.uclog.AddLog($"加载图片失败: {ex.Message}");
+                    }
+                }
+                else
+                {
+                    logger.LogInformation("未找到有效的图片数据");
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger.LogError(ex, "下载凭证图片异常");
+                MainForm.Instance.uclog.AddLog($"下载凭证图片出错：{ex.Message}");
+            }
+        }
+
+
+        /// <summary>
+        /// 上传凭证图片 - 增强版本
+        /// </summary>
+        public async Task<bool> UploadVoucherImageAsync(T entity, MagicPictureBox magicPicBox,
+            bool onlyUpdated = true, bool useVersionControl = false)
+        {
+            var ctrpay = Startup.GetFromFac<FileManagementController>();
+            try
+            {
+                // 检查是否有图片需要上传
+                // 对于单个MagicPictureBox控件，直接检查Image属性即可
+                if (magicPicBox.Image == null)
+                {
+                    logger.LogInformation("没有需要上传的图片");
+                    return true;
+                }
+
+                // 根据onlyUpdated参数决定获取所有图片还是仅变更的图片
+                var imageBytesWithInfoList = onlyUpdated ?
+                    magicPicBox.GetUpdatedImageBytesWithInfo() :
+                    magicPicBox.GetAllImageBytesWithInfo();
+
+                if (imageBytesWithInfoList == null || imageBytesWithInfoList.Count == 0)
+                {
+                    logger.LogInformation("没有需要上传的图片数据");
+                    return true;
+                }
+
+                bool allSuccess = true;
+                int successCount = 0;
+
+                // 遍历上传所有图片
+                foreach (var imageDataWithInfo in imageBytesWithInfoList)
+                {
+                    byte[] imageData = imageDataWithInfo.Item1;
+                    ImageInfo imageInfo = imageDataWithInfo.Item2;
+
+                    if (imageData == null || imageData.Length == 0)
+                    {
+                        logger.LogWarning("跳过空图片数据: {FileName}", imageInfo.OriginalFileName);
+                        continue;
+                    }
+
+                    // 检查文件大小限制
+                    if (imageData.Length > 10 * 1024 * 1024) // 10MB限制
+                    {
+                        logger.LogWarning("图片文件过大: {FileName}, Size: {Size}MB",
+                            imageInfo.OriginalFileName, imageData.Length / 1024 / 1024);
+                        MainForm.Instance.uclog.AddLog($"图片 {imageInfo.OriginalFileName} 超过大小限制(10MB)");
+                        allSuccess = false;
+                        continue;
+                    }
+
+                    // 准备版本控制参数
+                    long? existingFileId = null;
+                    string updateReason = null;
+
+                    if (imageInfo.FileId > 0 && imageInfo.IsUpdated)
+                    {
+                        existingFileId = imageInfo.FileId;
+                        updateReason = "图片更新";
+                    }
+
+                    // 上传图片
+                    var response = await ctrpay.UploadImageAsync(entity as BaseEntity, imageInfo.OriginalFileName, imageData, "预付凭证", existingFileId, updateReason, useVersionControl);
+
+                    if (response.IsSuccess)
+                    {
+                        successCount++;
+                        MainForm.Instance.uclog.AddLog($"凭证图片上传成功：{imageInfo.OriginalFileName}");
+
+                        // 上传成功后，将图片标记为未更新
+                        if (imageInfo.IsUpdated)
+                        {
+                            imageInfo.IsUpdated = false;
+                        }
+                    }
+                    else
+                    {
+                        allSuccess = false;
+                        MainForm.Instance.uclog.AddLog($"凭证图片上传失败：{imageInfo.OriginalFileName}，原因：{response.Message}");
+                        logger.LogError("图片上传失败: {FileName}, Error: {Error}",
+                            imageInfo.OriginalFileName, response.Message);
+                    }
+                }
+
+                if (successCount > 0)
+                {
+                    MainForm.Instance.uclog.AddLog($"成功上传 {successCount} 张凭证图片");
+                }
+
+                return allSuccess;
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger.LogError(ex, "上传凭证图片异常");
+                MainForm.Instance.uclog.AddLog($"上传凭证图片出错：{ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 专门处理已更新图片的上传 - 增强版本
+        /// </summary>
+        /// <param name="entity">销售订单实体</param>
+        /// <param name="updatedImages">需要更新的图片列表</param>
+        /// <returns>上传是否成功</returns>
+        public async Task<bool> UploadUpdatedImagesAsync(T entity, List<Tuple<byte[], ImageInfo>> updatedImages)
+        {
+            var ctrpay = Startup.GetFromFac<FileManagementController>();
+            try
+            {
+                if (updatedImages == null || updatedImages.Count == 0)
+                {
+                    logger.LogInformation("没有需要更新的图片");
+                    return true;
+                }
+
+                bool allSuccess = true;
+                int successCount = 0;
+
+                // 遍历上传所有需要更新的图片
+                foreach (var imageDataWithInfo in updatedImages)
+                {
+                    byte[] imageData = imageDataWithInfo.Item1;
+                    ImageInfo imageInfo = imageDataWithInfo.Item2;
+
+                    if (imageData == null || imageData.Length == 0)
+                    {
+                        logger.LogWarning("跳过空图片数据: {FileName}", imageInfo.OriginalFileName);
+                        continue;
+                    }
+
+                    // 检查文件大小限制
+                    if (imageData.Length > 10 * 1024 * 1024) // 10MB限制
+                    {
+                        logger.LogWarning("图片文件过大: {FileName}, Size: {Size}MB",
+                            imageInfo.OriginalFileName, imageData.Length / 1024 / 1024);
+                        MainForm.Instance.uclog.AddLog($"图片 {imageInfo.OriginalFileName} 超过大小限制(10MB)");
+                        allSuccess = false;
+                        continue;
+                    }
+
+                    // 检查是否为更新操作，准备版本控制参数
+                    long? existingFileId = null;
+                    string updateReason = "图片更新";
+
+                    // 如果图片信息包含文件ID且图片已更新
+                    if (imageInfo.FileId > 0 && imageInfo.IsUpdated)
+                    {
+                        existingFileId = imageInfo.FileId;
+                    }
+
+                    // 上传图片，启用版本控制
+                    var response = await ctrpay.UploadImageAsync(entity as BaseEntity, imageInfo.OriginalFileName, imageData, "预付凭证", existingFileId, updateReason, true);
+
+                    if (response.IsSuccess)
+                    {
+                        successCount++;
+                        MainForm.Instance.uclog.AddLog($"凭证图片更新成功：{imageInfo.OriginalFileName}");
+                        // 上传成功后，将图片标记为未更新
+                        imageInfo.IsUpdated = false;
+                    }
+                    else
+                    {
+                        allSuccess = false;
+                        MainForm.Instance.uclog.AddLog($"凭证图片更新失败：{imageInfo.OriginalFileName}，原因：{response.Message}");
+                        logger.LogError("图片更新失败: {FileName}, Error: {Error}",
+                            imageInfo.OriginalFileName, response.Message);
+                    }
+                }
+
+                if (successCount > 0)
+                {
+                    MainForm.Instance.uclog.AddLog($"成功更新 {successCount} 张凭证图片");
+                }
+
+                return allSuccess;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "更新凭证图片异常");
+                MainForm.Instance.uclog.AddLog($"更新凭证图片出错：{ex.Message}");
+                return false;
+            }
+        }
+
+
+ 
+        
+        public void AddFileStorageInfo(BaseEntity entity, tb_FS_FileStorageInfo FileStorageInfo)
+        {
+            if (FileStorageInfo.FileId <= 0)
+                return;
+            if (entity.FileStorageInfoList.Contains(FileStorageInfo))
+                return;
+            entity.FileStorageInfoList.Add(FileStorageInfo);
+        }
+        #endregion
+
 
 
         /// <summary>
@@ -2240,7 +2513,7 @@ namespace RUINORERP.UI.BaseForm
 
         private void LockBill(long BillID, long userid)
         {
-            
+
             CommBillData cbd = EntityMappingHelper.GetBillData(typeof(T), EditEntity);
 
             LockedInfo lockRequest = new LockedInfo
@@ -2357,7 +2630,7 @@ namespace RUINORERP.UI.BaseForm
             {
                 return false;
             }
-            
+
             CommonUI.frmOpinion frm = new CommonUI.frmOpinion();
             frm.ShowCloseCaseImage = ReflectionHelper.ExistPropertyName<T>("CloseCaseImagePath");
             string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
@@ -2941,7 +3214,7 @@ namespace RUINORERP.UI.BaseForm
                 }
             }
 
-            
+
             CommonUI.frmReApproval frm = new CommonUI.frmReApproval();
 
 
@@ -3491,7 +3764,7 @@ namespace RUINORERP.UI.BaseForm
                 //复制性新增 时  PK要清空，单据编号类的,还有他的关联性子集
                 // 获取主键列名
                 string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
-                
+
                 //这里只是取打印配置信息
                 CommBillData cbd = new CommBillData();
                 cbd = EntityMappingHelper.GetBillData(typeof(T), NewEditEntity);
@@ -3542,7 +3815,7 @@ namespace RUINORERP.UI.BaseForm
 
                 // 获取主键列名
                 string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
-                
+
                 //这里只是取打印配置信息
                 CommBillData cbd = new CommBillData();
                 cbd = EntityMappingHelper.GetBillData(typeof(T), NewEditEntity);
@@ -4204,7 +4477,7 @@ namespace RUINORERP.UI.BaseForm
 
                         //如果是销售订单或采购订单可以自动审核，有条件地执行？
                         CommBillData cbd = new CommBillData();
-                        
+
                         cbd = EntityMappingHelper.GetBillData<T>(EditEntity as T);
                         ApprovalEntity ae = new ApprovalEntity();
                         ae.ApprovalOpinions = "自动审核";
@@ -4688,7 +4961,7 @@ namespace RUINORERP.UI.BaseForm
 
         public void UNLockByBizName(long userid)
         {
-            
+
             CommBillData cbd = new CommBillData();
             cbd = EntityMappingHelper.GetBillData(typeof(T), EditEntity);
 
@@ -4717,7 +4990,7 @@ namespace RUINORERP.UI.BaseForm
 
         public void UNLock(long billid, long userid)
         {
-            
+
             CommBillData cbd = new CommBillData();
             cbd = EntityMappingHelper.GetBillData(typeof(T), EditEntity);
 #warning TODO: 这里需要完善具体逻辑，当前仅为占位

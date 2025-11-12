@@ -2147,66 +2147,140 @@ namespace RUINORERP.Business
 
         /// <summary>
         /// 自动分配支付金额的方法
+        /// 根据明细顺序对支付金额进行自动分配，确保实际支付总金额等于各明细分配金额之和
         /// </summary>
-        /// <param name="paymentRecord"></param>
-        /// <param name="details"></param>
-        /// <exception cref="Exception"></exception>
+        /// <param name="paymentRecord">付款单记录</param>
+        /// <param name="details">付款明细列表</param>
+        /// <returns>分配是否成功</returns>
+        /// <exception cref="ArgumentNullException">当参数为空时抛出</exception>
         public bool AutoDistributePaymentAmount(tb_FM_PaymentRecord paymentRecord, List<tb_FM_PaymentRecordDetail> details)
         {
-            bool rs = true;
-            // 按业务类型分组处理
-            var groupedDetails = details.GroupBy(d => d.SourceBizType);
-
-            foreach (var group in groupedDetails)
+            try
             {
-                var detailList = group.ToList();
-                decimal totalLocalPayableAmount = detailList.Sum(d => d.LocalPayableAmount);
+                // 参数验证
+                if (paymentRecord == null)
+                    throw new ArgumentNullException(nameof(paymentRecord), "付款单记录不能为空");
+                if (details == null)
+                    throw new ArgumentNullException(nameof(details), "付款明细列表不能为空");
 
-                // 如果用户输入的总金额等于应付总金额，所有单据全额支付
-                if (paymentRecord.TotalLocalAmount == totalLocalPayableAmount)
+          
+                // 初始化所有明细的支付金额为0
+                foreach (var detail in details)
                 {
-                    foreach (var detail in detailList)
+                    detail.LocalAmount = 0;
+                }
+
+                // 按业务类型分组处理
+                var groupedDetails = details.GroupBy(d => d.SourceBizType);
+                decimal totalDistributedAmount = 0;
+
+                foreach (var group in groupedDetails)
+                {
+                    var detailList = group.ToList();
+                    decimal totalLocalPayableAmount = detailList.Sum(d => d.LocalPayableAmount);
+                    
+                    _logger?.LogDebug($"处理业务类型: {group.Key}，明细数量: {detailList.Count}，应付总金额: {totalLocalPayableAmount}");
+
+                    // 计算该业务类型应分配的金额比例
+                    decimal groupAllocationRatio = 0;
+                    decimal groupTotalPayable = details.Where(d => d.SourceBizType == group.Key).Sum(d => d.LocalPayableAmount);
+                    decimal overallTotalPayable = details.Sum(d => d.LocalPayableAmount);
+                    
+                    if (overallTotalPayable > 0)
                     {
-                        detail.LocalAmount = detail.LocalPayableAmount;
+                        groupAllocationRatio = groupTotalPayable / overallTotalPayable;
                     }
-                    continue;
-                }
+                    
+                    // 计算该业务类型的分配金额
+                    decimal groupAllocatedAmount = Math.Round(paymentRecord.TotalLocalAmount * groupAllocationRatio, 2);
+                    decimal remainingGroupAmount = groupAllocatedAmount;
+                    
+                    _logger?.LogDebug($"业务类型 {group.Key} 的分配比例: {groupAllocationRatio:P2}，分配金额: {groupAllocatedAmount}");
 
-                // 如果用户输入的总金额小于应付总金额，进行自动分配
-                decimal remainingAmount = paymentRecord.TotalLocalAmount;
+                    // 按明细顺序进行分配
+                    for (int i = 0; i < detailList.Count; i++)
+                    {   
+                        var detail = detailList[i];
+                        
+                        // 边界情况检查
+                        if (detail.LocalPayableAmount <= 0)
+                        {
+                            _logger?.LogWarning($"明细 {i + 1} 的应付金额小于等于0，跳过分配: {detail.LocalPayableAmount}");
+                            continue;
+                        }
 
-                // 先处理所有可以全额支付的单据
-                foreach (var detail in detailList)
-                {
-                    if (remainingAmount >= detail.LocalPayableAmount)
+                        // 计算当前明细可分配的金额
+                        decimal allocableAmount;
+                        if (remainingGroupAmount >= detail.LocalPayableAmount)
+                        {
+                            // 全额支付该明细
+                            allocableAmount = detail.LocalPayableAmount;
+                        }
+                        else
+                        {
+                            // 部分支付该明细
+                            allocableAmount = remainingGroupAmount;
+                        }
+                        
+                        // 更新明细支付金额
+                        detail.LocalAmount = allocableAmount;
+                        remainingGroupAmount -= allocableAmount;
+                        totalDistributedAmount += allocableAmount;
+                        
+                        _logger?.LogDebug($"明细 {i + 1} 分配金额: {allocableAmount}，剩余可分配金额: {remainingGroupAmount}");
+
+                        // 如果没有剩余金额，结束分配
+                        if (remainingGroupAmount <= 0)
+                        {
+                            break;
+                        }
+                    }
+                    
+                    // 处理舍入误差，确保分配准确性
+                    if (Math.Abs(remainingGroupAmount) > 0.01m)
                     {
-                        detail.LocalAmount = detail.LocalPayableAmount;
-                        remainingAmount -= detail.LocalPayableAmount;
+                        _logger?.LogWarning($"业务类型 {group.Key} 存在分配误差: {remainingGroupAmount}");
+                        // 尝试将误差分配给最后一个分配的明细
+                        for (int i = detailList.Count - 1; i >= 0; i--)
+                        {
+                            if (detailList[i].LocalAmount > 0)
+                            {
+                                detailList[i].LocalAmount += remainingGroupAmount;
+                                totalDistributedAmount += remainingGroupAmount;
+                                _logger?.LogDebug($"已处理分配误差，调整明细 {i + 1} 的金额: {remainingGroupAmount}");
+                                break;
+                            }
+                        }
                     }
                 }
-
-                // 如果还有剩余金额，分配给最后一张单据（部分支付）
-                if (remainingAmount > 0)
+                
+                // 最终验证：确保分配总额与支付总额一致
+                decimal difference = Math.Abs(totalDistributedAmount - paymentRecord.TotalLocalAmount);
+                if (difference > 0.01m)
                 {
-                    // 找到还没有分配支付金额的单据
-                    var unpaidDetails = detailList.Where(d => d.LocalAmount == 0).ToList();
-
-                    if (unpaidDetails.Count > 0)
+                    // 调整最后一个有支付金额的明细，处理舍入误差
+                    var lastDetail = details.LastOrDefault(d => d.LocalAmount > 0);
+                    if (lastDetail != null)
                     {
-                        // 选择第一张未支付单据进行部分支付
-                        unpaidDetails[0].LocalAmount = remainingAmount;
-                        remainingAmount = 0;
+                        lastDetail.LocalAmount += (paymentRecord.TotalLocalAmount - totalDistributedAmount);
+                        _logger?.LogDebug($"最终调整：修正分配差异 {paymentRecord.TotalLocalAmount - totalDistributedAmount}");
                     }
                 }
-
-                // 如果还有剩余金额，说明分配有问题
-                if (remainingAmount > 0)
-                {
-                    MessageBox.Show("支付金额自动分配失败，请检查数据。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return false;
-                }
+                
+     
+                return true;
             }
-            return rs;
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "支付金额自动分配失败");
+                // 添加用户友好的错误提示
+                string errorMessage = $"支付金额自动分配过程中发生错误：{ex.Message}";
+                if (_logger == null) // 如果没有日志记录器，显示错误消息
+                {
+                    MessageBox.Show(errorMessage, "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                return false;
+            }
         }
 
 

@@ -42,6 +42,7 @@ using LiveChartsCore.Geo;
 using RUINORERP.Extensions.Middlewares;
 using RUINORERP.UI.Network.Services;
 using RUINORERP.Business.Cache;
+using RUINOR.WinFormsUI.CustomPictureBox;
 
 
 namespace RUINORERP.UI.FM
@@ -439,7 +440,7 @@ namespace RUINORERP.UI.FM
             }
 
             //显示图片
-            await LoadImageData(entity.PaymentImagePath);
+            await base.DownloadVoucherImageAsync(entity, magicPictureBox付款凭证);
             base.BindData(entity);
         }
 
@@ -528,28 +529,7 @@ namespace RUINORERP.UI.FM
 
         }
 
-        private async Task LoadImageData(string CloseCaseImagePath)
-        {
-            if (!string.IsNullOrWhiteSpace(CloseCaseImagePath))
-            {
-                HttpWebService httpWebService = Startup.GetFromFac<HttpWebService>();
-                try
-                {
-                    byte[] img = await httpWebService.DownloadImgFileAsync(CloseCaseImagePath);
-                    //  magicPictureBox1.Image = UI.Common.ImageHelper.byteArrayToImage(img);
-                    //  magicPictureBox1.Visible = true;
-                }
-                catch (Exception ex)
-                {
-                    MainForm.Instance.uclog.AddLog(ex.Message, Global.UILogType.错误);
-                }
-            }
-            else
-            {
-                // magicPictureBox1.Visible = false;
-            }
-        }
-
+       
 
         private tb_FM_PaymentRecordController<tb_FM_PaymentRecord> paymentController = null;
         List<tb_FM_PaymentRecordDetail> details = new List<tb_FM_PaymentRecordDetail>();
@@ -613,7 +593,12 @@ namespace RUINORERP.UI.FM
                 //如果来源是应收应付。，是只能一次支付收款。就是总金额要等于明细。如果是来自对账单的。则可以不相等，针对对账单可以多次支付，部分支付。
                 if (NeedValidated && EditEntity.TotalForeignAmount != details.Sum(c => c.ForeignAmount))
                 {
-                    if (MessageBox.Show("总金额外币和明细金额外币总计不相等，保存失败？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1) == DialogResult.No)
+                    decimal totalForeignAmount = EditEntity.TotalForeignAmount;
+                    decimal sumDetailsForeignAmount = details.Sum(c => c.ForeignAmount);
+                    decimal difference = totalForeignAmount - sumDetailsForeignAmount;
+                    string message = string.Format("总金额外币({0})和明细金额外币总计({1})不相等，差额为{2}，是否继续保存？", 
+                        totalForeignAmount, sumDetailsForeignAmount, difference);
+                    if (MessageBox.Show(message, "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1) == DialogResult.No)
                     {
                         return false;
                     }
@@ -632,16 +617,24 @@ namespace RUINORERP.UI.FM
 
                 if (NeedValidated && EditEntity.TotalLocalAmount != details.Sum(c => c.LocalAmount))
                 {
+                    decimal totalLocalAmount = EditEntity.TotalLocalAmount;
+                    decimal sumDetailsLocalAmount = details.Sum(c => c.LocalAmount);
+                    decimal difference = totalLocalAmount - sumDetailsLocalAmount;
+                    
                     if (EditEntity.tb_FM_PaymentRecordDetails.Any(c => c.SourceBizType == (int)BizType.对账单))
                     {
-                        if (MessageBox.Show("总金额本币和明细金额本币之和不相等，你确定是部分支付吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1) == DialogResult.No)
+                        string message = string.Format("总金额本币({0})和明细金额本币总计({1})不相等，差额为{2}，你确定是部分支付吗？", 
+                            totalLocalAmount, sumDetailsLocalAmount, difference);
+                        if (MessageBox.Show(message, "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1) == DialogResult.No)
                         {
                             return false;
                         }
                     }
                     else
                     {
-                        MessageBox.Show("总金额本币和明细金额本币之和不相等，请检查数据后再试!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1);
+                        string message = string.Format("总金额本币({0})和明细金额本币总计({1})不相等，差额为{2}，请检查数据后再试!", 
+                            totalLocalAmount, sumDetailsLocalAmount, difference);
+                        MessageBox.Show(message, "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1);
                         return false;
                     }
                 }
@@ -651,7 +644,8 @@ namespace RUINORERP.UI.FM
                 {
                     if (EditEntity.TotalLocalAmount < 0)
                     {
-                        if (MessageBox.Show("总金额为负数，你确定吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1) == DialogResult.No)
+                        string message = string.Format("总金额为负数({0})，你确定吗？", EditEntity.TotalLocalAmount);
+                        if (MessageBox.Show(message, "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1) == DialogResult.No)
                         {
                             return false;
                         }
@@ -660,16 +654,24 @@ namespace RUINORERP.UI.FM
 
                 if (NeedValidated && EditEntity.TotalLocalAmount != EditEntity.TotalLocalPayableAmount)
                 {
-                    if (EditEntity.TotalLocalAmount < EditEntity.TotalLocalPayableAmount)
+                    decimal totalLocalAmount = EditEntity.TotalLocalAmount;
+                    decimal totalLocalPayableAmount = EditEntity.TotalLocalPayableAmount;
+                    decimal difference = totalLocalAmount - totalLocalPayableAmount;
+                    
+                    if (totalLocalAmount < totalLocalPayableAmount)
                     {
-                        if (MessageBox.Show("实付金额小于应付金额，确定部分支付吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1) == DialogResult.No)
+                        string message = string.Format("实付金额({0})小于应付金额({1})，差额为{2}，确定部分支付吗？", 
+                            totalLocalAmount, totalLocalPayableAmount, difference);
+                        if (MessageBox.Show(message, "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1) == DialogResult.No)
                         {
                             return false;
                         }
                     }
-                    if (EditEntity.TotalLocalAmount > EditEntity.TotalLocalPayableAmount)
+                    if (totalLocalAmount > totalLocalPayableAmount)
                     {
-                        MessageBox.Show("实付金额大于应付金额，请检查数据后再试!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1);
+                        string message = string.Format("实付金额({0})大于应付金额({1})，差额为{2}，请检查数据后再试!", 
+                            totalLocalAmount, totalLocalPayableAmount, difference);
+                        MessageBox.Show(message, "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1);
                         return false;
                     }
                 }
@@ -711,8 +713,18 @@ namespace RUINORERP.UI.FM
                     SaveResult = await base.Save(EditEntity);
                     if (SaveResult.Succeeded)
                     {
-
                         MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.PaymentNo}。");
+                        // 保存成功后上传凭证图片（只上传变更的图片）
+                        if (magicPictureBox付款凭证 != null)
+                        {
+                            // 明确区分处理逻辑
+                            var updatedImages = magicPictureBox付款凭证.GetImagesNeedingUpdate();
+                            if (updatedImages.Count > 0)
+                            {
+                                // 只处理更新的图片
+                                await UploadUpdatedImagesAsync(EditEntity, updatedImages);
+                            }
+                        }
                     }
                     else
                     {
@@ -727,21 +739,7 @@ namespace RUINORERP.UI.FM
                 return false;
             }
         }
-
-        protected override async Task<bool> Submit()
-        {
-            bool result = await Submit(PaymentStatus.待审核);
-            if (result)
-            {
-                UIConfigManager configManager = Startup.GetFromFac<UIConfigManager>();
-                var temppath = configManager.GetValue("WebServerUrl");
-                if (string.IsNullOrEmpty(temppath))
-                {
-                    MainForm.Instance.uclog.AddLog("请先配置图片服务器路径", UILogType.错误);
-                }
-            }
-            return true;
-        }
+     
 
         public override async Task<bool> DeleteRemoteImages()
         {

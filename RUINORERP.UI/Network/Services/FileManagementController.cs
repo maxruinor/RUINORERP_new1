@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using RUINORERP.PacketSpec.Models.Requests;
-using RUINORERP.PacketSpec.Models.Responses;
 using RUINORERP.Model;
 using RUINORERP.Model.Base;
 using RUINORERP.Repository.UnitOfWorks;
@@ -20,6 +19,8 @@ using System.Linq;
 using static NPOI.HSSF.UserModel.HeaderFooter;
 using FastReport.DevComponents.DotNetBar;
 using FastReport.Data;
+using RUINORERP.PacketSpec.Models.Core;
+using RUINORERP.PacketSpec.Models.FileManagement;
 
 namespace RUINORERP.UI.Network.Services
 {

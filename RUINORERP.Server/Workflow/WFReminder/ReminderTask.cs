@@ -8,7 +8,6 @@ using WorkflowCore.Interface;
 using WorkflowCore.Models;
 using System.Numerics;
 using RUINORERP.Server.Network.Interfaces.Services;
-using RUINORERP.Server.ServerSession;
 using Newtonsoft.Json;
 using Azure.Core;
 using RUINORERP.Model.TransModel;
@@ -18,9 +17,8 @@ using RUINORERP.Server.BizService;
 using RUINORERP.PacketSpec.Enums;
 using RUINORERP.PacketSpec.Models;
 using RUINORERP.PacketSpec.Models.Core;
-using RUINORERP.PacketSpec.Models.Requests.Message;
-using RUINORERP.PacketSpec.Models.Responses.Message;
 using RUINORERP.PacketSpec.Commands;
+using RUINORERP.PacketSpec.Models.Messaging;
 
 namespace RUINORERP.Server.Workflow.WFReminder
 {

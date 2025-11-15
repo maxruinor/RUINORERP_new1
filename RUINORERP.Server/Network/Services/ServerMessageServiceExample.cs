@@ -1,8 +1,7 @@
 using Microsoft.Extensions.Logging;
 using RUINORERP.Model.TransModel;
 using RUINORERP.PacketSpec.Commands;
-using RUINORERP.PacketSpec.Models.Requests.Message;
-using RUINORERP.PacketSpec.Models.Responses.Message;
+using RUINORERP.PacketSpec.Models.Messaging;
 using RUINORERP.Server.Network.Models;
 using System;
 using System.Threading;

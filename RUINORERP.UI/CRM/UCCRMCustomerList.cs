@@ -35,7 +35,7 @@ using RUINORERP.Global;
 using RUINORERP.Model.TransModel;
 
 using FastReport.DevComponents.DotNetBar;
-using RUINORERP.Extensions.Middlewares;
+
 
 
 namespace RUINORERP.UI.CRM

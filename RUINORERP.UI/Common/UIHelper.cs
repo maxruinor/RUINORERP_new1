@@ -37,7 +37,7 @@ using FluentValidation.Results;
 using RUINORERP.Global;
 using RUINORERP.Model.Dto;
 using RUINORERP.Model.Utilities;
-using RUINORERP.Extensions.Middlewares;
+
 using RUINORERP.Business.Cache;
 using RUINORERP.UI.Monitoring.Auditing;
 using HLH.Lib.Helper;
@@ -46,16 +46,17 @@ namespace RUINORERP.UI.Common
 {
     public static class UIHelper
     {
-        /// <summary>
-        /// 获取IEntityCacheManager实例
-        /// </summary>
-        private static IEntityCacheManager EntityCacheManager
-        {
-            get
-            {
-                return Startup.GetFromFac<IEntityCacheManager>();
-            }
-        }
+        // 注释掉原来的EntityCacheManager属性，改为使用CacheManager静态类
+        // /// <summary>
+        // 获取IEntityCacheManager实例
+        // </summary>
+        // private static IEntityCacheManager EntityCacheManager
+        // {
+        //     get
+        //     {
+        //         return Startup.GetFromFac<IEntityCacheManager>();
+        //     }
+        // }
         /// <summary>
         /// 获取实体类的中文描述（从Description特性中提取）
         /// </summary>
@@ -1953,8 +1954,8 @@ namespace RUINORERP.UI.Common
                     return "";
                 }
                 string baseTableName = typeof(tb_Employee).Name;
-                // 显式转换确保参数类型正确
-                object result = EntityCacheManager.GetDisplayValue((string)baseTableName, value);
+                // 使用静态缓存管理器方法获取显示值
+                object result = CacheManager.GetDisplayValue((string)baseTableName, value);
                 string displayValue = result?.ToString() ?? string.Empty;
                 if (!string.IsNullOrEmpty(displayValue))
                 {
@@ -1988,7 +1989,7 @@ namespace RUINORERP.UI.Common
                     try
                     {
                         // 在新的缓存体系中，我们直接尝试获取显示值
-                        object result = EntityCacheManager.GetDisplayValue(schemaInfo.TableName, value);
+                        object result = CacheManager.GetDisplayValue(schemaInfo.TableName, value);
                         string displayValue = result?.ToString() ?? string.Empty;
                         if (!string.IsNullOrEmpty(displayValue))
                         {
@@ -2008,7 +2009,7 @@ namespace RUINORERP.UI.Common
             try
             {
                 // 在新的缓存体系中，我们直接尝试获取显示值
-                object result = EntityCacheManager.GetDisplayValue(TableName, value);
+                object result = CacheManager.GetDisplayValue(TableName, value);
                 string displayValue = result?.ToString() ?? string.Empty;
                 if (!string.IsNullOrEmpty(displayValue))
                 {
@@ -2030,7 +2031,7 @@ namespace RUINORERP.UI.Common
                     long id;
                     if (long.TryParse(value?.ToString(), out id))
                     {
-                        object result = EntityCacheManager.GetDisplayValue(TableName, id);
+                        object result = CacheManager.GetDisplayValue(TableName, id);
                         string displayValue = result?.ToString() ?? string.Empty;
                         if (!string.IsNullOrEmpty(displayValue))
                         {
@@ -2053,7 +2054,7 @@ namespace RUINORERP.UI.Common
                         long id;
                         if (long.TryParse(value?.ToString(), out id))
                         {
-                            object result = EntityCacheManager.GetDisplayValue(TableName, id);
+                            object result = CacheManager.GetDisplayValue(TableName, id);
                             string displayValue = result?.ToString() ?? string.Empty;
                             if (!string.IsNullOrEmpty(displayValue))
                             {
@@ -2105,7 +2106,7 @@ namespace RUINORERP.UI.Common
                     long id;
                     if (long.TryParse(value?.ToString(), out id))
                     {
-                        object result = EntityCacheManager.GetDisplayValue(baseTableName, id);
+                        object result = CacheManager.GetDisplayValue(baseTableName, id);
                         string displayValue = result?.ToString() ?? string.Empty;
                         if (!string.IsNullOrEmpty(displayValue))
                         {
@@ -2127,7 +2128,7 @@ namespace RUINORERP.UI.Common
                 long id;
                 if (long.TryParse(value?.ToString(), out id))
                 {
-                    object result = EntityCacheManager.GetDisplayValue(typeof(T).Name, id);
+                    object result = CacheManager.GetDisplayValue(typeof(T).Name, id);
                     string displayValue = result?.ToString() ?? string.Empty;
                     if (!string.IsNullOrEmpty(displayValue))
                     {

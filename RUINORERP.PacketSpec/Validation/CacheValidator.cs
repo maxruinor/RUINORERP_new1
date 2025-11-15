@@ -1,9 +1,9 @@
 ﻿using FluentValidation;
 using RUINORERP.PacketSpec.Commands.Cache;
 using RUINORERP.PacketSpec.Errors;
+using RUINORERP.PacketSpec.Models.Cache;
+using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Requests;
-using RUINORERP.PacketSpec.Models.Requests.Cache;
-using RUINORERP.PacketSpec.Models.Responses.Cache;
 using System;
 
 namespace RUINORERP.PacketSpec.Validation

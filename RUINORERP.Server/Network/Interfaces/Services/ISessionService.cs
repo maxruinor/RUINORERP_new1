@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using RUINORERP.PacketSpec.Commands;
+using RUINORERP.PacketSpec.Models.Common;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.Server.Network.Models;
 using SuperSocket.Server.Abstractions.Session;

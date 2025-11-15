@@ -3,9 +3,9 @@ using System.Collections.Concurrent;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using RUINORERP.PacketSpec.Models.Common;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Requests;
-using RUINORERP.PacketSpec.Models.Responses;
 using RUINORERP.PacketSpec.Serialization;
 
 namespace RUINORERP.PacketSpec.Commands

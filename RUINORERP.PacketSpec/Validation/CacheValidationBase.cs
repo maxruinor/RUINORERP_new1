@@ -2,8 +2,7 @@
 using FluentValidation.Results;
 using RUINORERP.PacketSpec.Commands.Cache;
 using RUINORERP.PacketSpec.Errors;
-using RUINORERP.PacketSpec.Models.Requests.Cache;
-using RUINORERP.PacketSpec.Models.Responses.Cache;
+using RUINORERP.PacketSpec.Models.Cache;
 using System;
 using System.Threading.Tasks;
 

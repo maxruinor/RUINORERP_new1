@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -45,7 +45,8 @@ using RUINORERP.Business.Security;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.Business.BizMapperService;
 using RUINORERP.UI.Network.Services;
-
+using RUINORERP.Model.Base.StatusManager.Core;
+using RUINORERP.UI.StateManagement.UI;
 
 namespace RUINORERP.UI.PSI.PUR
 {

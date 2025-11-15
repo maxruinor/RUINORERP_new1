@@ -581,7 +581,7 @@ namespace RUINORERP.UI.ASS
             if (SourceBill != null)
             {
                 var ctrPickup = Startup.GetFromFac<tb_AS_RepairMaterialPickupController<tb_AS_RepairMaterialPickup>>();
-                var entity = ctrPickup.ToRepairMaterialPickupAsync(SourceBill).Result;
+                var entity =await ctrPickup.ToRepairMaterialPickupAsync(SourceBill);
                 BusinessHelper.Instance.InitEntity(entity);
                 ////编号已经生成，在新点开一个页面时，自动生成。
                 //if (EditEntity.MaterialPickupNO.IsNotEmptyOrNull())

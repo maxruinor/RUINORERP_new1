@@ -5,10 +5,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Base\StateManager\**" />
     <Compile Remove="QueryDto\**" />
     <Compile Remove="QueryDto_back\**" />
+    <EmbeddedResource Remove="Base\StateManager\**" />
     <EmbeddedResource Remove="QueryDto\**" />
     <EmbeddedResource Remove="QueryDto_back\**" />
+    <None Remove="Base\StateManager\**" />
     <None Remove="QueryDto\**" />
     <None Remove="QueryDto_back\**" />
   </ItemGroup>
@@ -29,6 +32,7 @@
     <Compile Remove="Base\MobileFormatter.cs" />
     <Compile Remove="Base\QueryParameter.cs" />
     <Compile Remove="Base\SerializationInfo.cs" />
+    <Compile Remove="Base\StateManager\Obsolete\StateManagementExtensionsV3.cs" />
     <Compile Remove="BillDetailDto\sales_order_detail.cs" />
     <Compile Remove="Models\RoleModulePermission.cs" />
     <Compile Remove="ObjectExtensionUtils.cs" />
@@ -61,6 +65,7 @@
 
   <ItemGroup>
     <Folder Include="AutoMapper\" />
+    <Folder Include="Base\StateManager\Core\" />
     <Folder Include="BillDetailDto\" />
   </ItemGroup>
 

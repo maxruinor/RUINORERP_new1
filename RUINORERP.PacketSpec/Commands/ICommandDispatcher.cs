@@ -1,5 +1,5 @@
-﻿using RUINORERP.PacketSpec.Models.Core;
-using RUINORERP.PacketSpec.Models.Responses;
+﻿using RUINORERP.PacketSpec.Models.Common;
+using RUINORERP.PacketSpec.Models.Core;
 using System;
 using System.Collections.Generic;
 using System.Reflection;

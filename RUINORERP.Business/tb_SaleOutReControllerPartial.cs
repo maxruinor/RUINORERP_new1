@@ -1,4 +1,4 @@
-﻿
+
 // **************************************
 // 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
@@ -17,7 +17,7 @@ using RUINORERP.Repository.UnitOfWorks;
 using RUINORERP.Model;
 using FluentValidation.Results;
 using RUINORERP.Services;
-using RUINORERP.Extensions.Middlewares;
+
 using RUINORERP.Model.Base;
 using RUINORERP.Common.Extensions;
 using RUINORERP.IServices.BASE;
@@ -197,7 +197,8 @@ namespace RUINORERP.Business
                         }
                         if (child.TotalReturnedQty < 0)
                         {
-                            _unitOfWorkManage.RollbackTran(); var prodinfo = Cache.EntityCacheHelper.GetEntity<View_ProdInfo>(child.ProdDetailID);
+                            _unitOfWorkManage.RollbackTran();
+                            var prodinfo = Cache.EntityCacheHelper.GetEntity<View_ProdInfo>(child.ProdDetailID);
                             if (prodinfo != null)
                             {
                                 rrs.ErrorMsg = $"销售退回单：{entity.ReturnNo}中，明细{prodinfo.SKU}：{prodinfo.CNName}{prodinfo.prop}退回总数量不能小于0！请检查数据后重试！";
@@ -206,7 +207,6 @@ namespace RUINORERP.Business
                             {
                                 rrs.ErrorMsg = $"销售退回单：{entity.ReturnNo}中，明细退回总数量不能小于0！请检查数据后重试！";
                             }
-
                             rrs.Succeeded = false;
                             return rrs;
                         }

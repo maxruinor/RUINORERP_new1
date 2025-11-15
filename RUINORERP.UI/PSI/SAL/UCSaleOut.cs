@@ -48,7 +48,7 @@ using System.Threading;
 using RUINORERP.UI.ToolForm;
 using Netron.GraphLib;
 using LiveChartsCore.Geo;
-using RUINORERP.Extensions.Middlewares;
+
 using RUINORERP.UI.Network.Services;
 
 namespace RUINORERP.UI.PSI.SAL
@@ -1147,7 +1147,7 @@ namespace RUINORERP.UI.PSI.SAL
             .SingleAsync();
             tb_SaleOrderController<tb_SaleOrder> ctr = Startup.GetFromFac<tb_SaleOrderController<tb_SaleOrder>>();
             //tb_SaleOut saleOut = SaleOrderToSaleOut(item);
-            tb_SaleOut saleOut = ctr.SaleOrderToSaleOut(saleorder).Result;
+            tb_SaleOut saleOut =await ctr.SaleOrderToSaleOut(saleorder);
             ActionStatus actionStatus = ActionStatus.无操作;
             BindData(saleOut, actionStatus);
             return saleOut;

@@ -15,6 +15,7 @@ using RUINORERP.Model.ConfigModel;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.Model.ReminderModel;
 using RUINORERP.Model.ReminderModel.ReminderRules;
+using System.Linq;
 
 namespace RUINORERP.Model.Context
 {
@@ -24,52 +25,69 @@ namespace RUINORERP.Model.Context
     /// </summary>
     public class ApplicationContext
     {
-        #region ÖÇÄÜÌáĞÑÅäÖÃ×Öµä
+        /// <summary>
+        /// å½“å‰åº”ç”¨ç¨‹åºä¸Šä¸‹æ–‡å®ä¾‹
+        /// </summary>
+        public static ApplicationContext Current
+        {
+            get
+            {
+                var contextManager = new ApplicationContextAccessor(new ApplicationContextManagerAsyncLocal()).GetContextManager();
+                return ((ApplicationContextManagerAsyncLocal)contextManager).ApplicationContext;
+            }
+            set
+            {
+                var contextManager = new ApplicationContextAccessor(new ApplicationContextManagerAsyncLocal()).GetContextManager();
+                ((ApplicationContextManagerAsyncLocal)contextManager).ApplicationContext = value;
+            }
+        }
+
+        #region æ™ºèƒ½æé†’é…ç½®å­—å…¸
         public Dictionary<ReminderBizType, IRuleConfig> RuleConfigDictionary { get; set; }
 
 
         #endregion
 
 
-        #region È«¾Ö¿É¿Ø¼ş±äÁ¿
+        #region å…¨å±€å¯æ§ä»¶å˜é‡
         /// <summary>
-        /// Õâ¸öÀàÖĞµÄÖµ£¬Êµ¼ÊÊÇ×Ô¶¯Éú³ÉÁËjsonÅäÖÃÎÄ¼ş¡£²¢ÇÒÏµÍ³ÊµÊ±¼à¿ØÕâ¸öÅäÖÃÎÄ¼şÖĞµÄÖµ
+        /// è¿™ä¸ªç±»ä¸­çš„å€¼ï¼Œå®é™…æ˜¯è‡ªåŠ¨ç”Ÿæˆäº†jsoné…ç½®æ–‡ä»¶ã€‚å¹¶ä¸”ç³»ç»Ÿå®æ—¶ç›‘æ§è¿™ä¸ªé…ç½®æ–‡ä»¶ä¸­çš„å€¼
         /// </summary>
         public SystemGlobalConfig GlobalVariableConfig { get; set; } = new SystemGlobalConfig();
 
         #endregion
 
-        #region ÒµÎñ»º´æÊı¾İ  ËùÊôÏîÄ¿¼¶
+        #region ä¸šåŠ¡ç¼“å­˜æ•°æ®  æ‰€å±é¡¹ç›®çº§
 
         /// <summary>
-        /// Í¨¹ıÏîÄ¿×é·ÖÅä¹¦ÄÜ£¬µÃµ½¶ÔÓ¦µÄÏîÄ¿×é
+        /// é€šè¿‡é¡¹ç›®ç»„åˆ†é…åŠŸèƒ½ï¼Œå¾—åˆ°å¯¹åº”çš„é¡¹ç›®ç»„
         /// </summary>
         public List<tb_ProjectGroup> projectGroups { get; set; }
 
         #endregion
         /// <summary>
-        /// ÏµÍ³ÔËĞĞµÄ»ù±¾±Ò±ğ-È¡×Ô±Ò±ğ±íÖĞµÄ±¾Î»±Ò
+        /// ç³»ç»Ÿè¿è¡Œçš„åŸºæœ¬å¸åˆ«-å–è‡ªå¸åˆ«è¡¨ä¸­çš„æœ¬ä½å¸
         /// </summary>
         public tb_Currency BaseCurrency { get; set; }
 
         /// <summary>
-        /// ×¨ÃÅ±£´æÒ»ÏÂÕËÆÚµÄĞÅÏ¢£¬Ê¡µÃ±È½ÏÅĞ¶ÏÊ±»¹ÒªÈ¥»º´æÈ¡
+        /// ä¸“é—¨ä¿å­˜ä¸€ä¸‹è´¦æœŸçš„ä¿¡æ¯ï¼Œçœå¾—æ¯”è¾ƒåˆ¤æ–­æ—¶è¿˜è¦å»ç¼“å­˜å–
         /// </summary>
         public tb_PaymentMethod PaymentMethodOfPeriod { get; set; }
 
-        //BillConverterFactory ÖĞ»áÓÃµ½Õâ¸ö¡£UI²ã²ÅÓĞ»º´æ¡£µ¥ÀıÄ£Ê½Ã»ÓĞ×÷ÓÃµ½¡£ÔİÊ±Ã»ÓĞ´¦ÀíÓÃ¡£ÓÃÕâ¸öÊôĞÔÀ´´«Öµ¡£
+        //BillConverterFactory ä¸­ä¼šç”¨åˆ°è¿™ä¸ªã€‚UIå±‚æ‰æœ‰ç¼“å­˜ã€‚å•ä¾‹æ¨¡å¼æ²¡æœ‰ä½œç”¨åˆ°ã€‚æš‚æ—¶æ²¡æœ‰å¤„ç†ç”¨ã€‚ç”¨è¿™ä¸ªå±æ€§æ¥ä¼ å€¼ã€‚
         public List<tb_MenuInfo> UserMenuList;
 
-        #region È«¾Ö±äÁ¿
+        #region å…¨å±€å˜é‡
         public Dictionary<string, string> _DynamicConfigCache { get; set; }
 
         /// <summary>
-        /// ÕâÀï±£´æÁË¿ÉÒÔÊ¹ÓÃµÄ¹¦ÄÜÄ£¿é
+        /// è¿™é‡Œä¿å­˜äº†å¯ä»¥ä½¿ç”¨çš„åŠŸèƒ½æ¨¡å—
         /// </summary>
         public List<GlobalFunctionModule> CanUsefunctionModules { get; set; } = new List<GlobalFunctionModule>();
 
         /// <summary>
-        /// ·şÎñÆ÷Éí·İÑéÖ¤,ÔÚÕâÊ±È«¾Ö±£´æ¡£ºóÃæ»¹Òª±£´æTokenInfo
+        /// æœåŠ¡å™¨èº«ä»½éªŒè¯,åœ¨è¿™æ—¶å…¨å±€ä¿å­˜ã€‚åé¢è¿˜è¦ä¿å­˜TokenInfo
         /// </summary>
         public string SessionId { get; set; }
 
@@ -77,21 +95,21 @@ namespace RUINORERP.Model.Context
 
         #endregion
 
-        #region ¹¤×÷Á÷
+        #region å·¥ä½œæµ
 
         /// <summary>
-        /// ÓÃÓÚ±£´æ×¢²áµÄ¹¤×÷Á÷£¬Ä¿Ç°ÔİÊ±ÓÃÓÚ¿Í»§¶Ë£¬ºóÆÚÓÃÓÚ·şÎñ¶Ë
+        /// ç”¨äºä¿å­˜æ³¨å†Œçš„å·¥ä½œæµï¼Œç›®å‰æš‚æ—¶ç”¨äºå®¢æˆ·ç«¯ï¼ŒåæœŸç”¨äºæœåŠ¡ç«¯
         /// </summary>
         public ConcurrentDictionary<string, string> RegistedWorkflowList = new ConcurrentDictionary<string, string>();
 
 
         /// <summary>
-        /// ¹¤×÷Á÷Ö÷»ú·şÎñ
+        /// å·¥ä½œæµä¸»æœºæœåŠ¡
         /// </summary>
         public IWorkflowHost workflowHost;
 
         /// <summary>
-        /// ¹¤×÷Á÷JSON¶¨ÒåÆ÷
+        /// å·¥ä½œæµJSONå®šä¹‰å™¨
         /// </summary>
         public WorkflowCore.Interface.IDefinitionLoader definitionLoader;
 
@@ -99,19 +117,19 @@ namespace RUINORERP.Model.Context
 
 
         /// <summary>
-        /// ÊÇ·ñÎªµ÷ÊÔ×´Ì¬ Õâ¸öÊÇÉèÖÃµ½ÉÏÏßºóµÄÒ»¸ö ÈÕÖ¾¼ÇÂ¼µÈ
+        /// æ˜¯å¦ä¸ºè°ƒè¯•çŠ¶æ€ è¿™ä¸ªæ˜¯è®¾ç½®åˆ°ä¸Šçº¿åçš„ä¸€ä¸ª æ—¥å¿—è®°å½•ç­‰
         /// </summary>
         //public bool IsDebug { get; set; } = false;
 
-        //ÓÃcontext.SysConfig.IsDebugÌæ»»ÁË
+        //ç”¨context.SysConfig.IsDebugæ›¿æ¢äº†
         //
 
         /// <summary>
-        /// ÊÇ·ñÎª³¬³¬¼¶ÓÃ»§
+        /// æ˜¯å¦ä¸ºè¶…è¶…çº§ç”¨æˆ·
         /// </summary>
         public bool IsSuperUser { get; set; } = false;
 
-        // Òì³£±£´æµÄĞÅÏ¢ Ë­ÔÚÊ²Ã´Ä£¿é ×öÁËÊ²Ã´²Ù×÷ ipµØÖ· Ê±¼ä
+        // å¼‚å¸¸ä¿å­˜çš„ä¿¡æ¯ è°åœ¨ä»€ä¹ˆæ¨¡å— åšäº†ä»€ä¹ˆæ“ä½œ ipåœ°å€ æ—¶é—´
 
         /// <summary>
         /// sugarClient
@@ -119,78 +137,78 @@ namespace RUINORERP.Model.Context
         public ISqlSugarClient Db { get; set; }
 
         /// <summary>
-        /// ÄÚ´æÖĞµÄÒµÎñ¼¶µÄÓÃ»§ĞÅÏ¢
+        /// å†…å­˜ä¸­çš„ä¸šåŠ¡çº§çš„ç”¨æˆ·ä¿¡æ¯
         /// </summary>
         public UserInfo CurrentUser { get; set; } = new UserInfo();
 
 
         /// <summary>
-        /// ¹«Ë¾µÄĞÅÏ¢
+        /// å…¬å¸çš„ä¿¡æ¯
         /// </summary>
         public tb_Company CompanyInfo { get; set; }
 
 
         /// <summary>
-        /// Êı¾İ¿â¼¶µÄÓÃ»§ĞÅÏ¢
+        /// æ•°æ®åº“çº§çš„ç”¨æˆ·ä¿¡æ¯
         /// </summary>
         public ICurrentUserInfo CurUserInfo { get; set; }
         public string Status { get; set; }
 
         /// <summary>
-        /// ÏµÍ³¼¶µÄÅäÖÃ£¬Èç¹ûÈ¨ÏŞÖĞÅäÖÃÁË¡£ÔòÊ¹ÓÃÈ¨ÏŞÖĞµÄ
+        /// ç³»ç»Ÿçº§çš„é…ç½®ï¼Œå¦‚æœæƒé™ä¸­é…ç½®äº†ã€‚åˆ™ä½¿ç”¨æƒé™ä¸­çš„
         /// </summary>
         public tb_SystemConfig SysConfig { get; set; }
 
-        #region ×ÓÅäÖÃÀà ±£´æÓÚÖ÷ÅäÖÃ±ítb_SystemConfig
+        #region å­é…ç½®ç±» ä¿å­˜äºä¸»é…ç½®è¡¨tb_SystemConfig
         public FMConfiguration FMConfig { get; set; } = new FMConfiguration();
         public FunctionConfiguration FunctionConfig { get; set; } = new FunctionConfiguration();
         #endregion
 
 
         /// <summary>
-        /// ½ÇÉ«¼¶µÄÊôĞÔÅäÖÃ£¬×÷ÓÃÓÚµÚÒ»¸ö½ÇÉ«×é,¼´µ±Ç°½ÇÉ«
+        /// è§’è‰²çº§çš„å±æ€§é…ç½®ï¼Œä½œç”¨äºç¬¬ä¸€ä¸ªè§’è‰²ç»„,å³å½“å‰è§’è‰²
         /// </summary>
         public tb_RolePropertyConfig rolePropertyConfig { set; get; } = new tb_RolePropertyConfig();
 
         /// <summary>
-        /// Ò»¸öÈË¿ÉÒÔÓĞ¶à¸ö½ÇÉ«
+        /// ä¸€ä¸ªäººå¯ä»¥æœ‰å¤šä¸ªè§’è‰²
         /// </summary>
         public List<tb_RoleInfo> Roles { get; set; }
 
 
 
         /// <summary>
-        /// ÒµÎñ±àÂë¹æÔò
+        /// ä¸šåŠ¡ç¼–ç è§„åˆ™
         /// </summary>
         public List<tb_sys_BillNoRule> BillNoRules { get; set; }
 
 
         /// <summary>
-        /// µ±Ç°½ÇÉ«
+        /// å½“å‰è§’è‰²
         /// </summary>
         public tb_RoleInfo CurrentRole { get; set; }
 
         /// <summary>
-        /// µ±Ç°ÓÃ»§½ÇÉ«£¨Ò»¸öÈË¿ÉÒÔ¶ÔÓ¦¶à¸ö½ÇÉ«¡£ÅäÖÃ²»Ò»Ñù¡££©
+        /// å½“å‰ç”¨æˆ·è§’è‰²ï¼ˆä¸€ä¸ªäººå¯ä»¥å¯¹åº”å¤šä¸ªè§’è‰²ã€‚é…ç½®ä¸ä¸€æ ·ã€‚ï¼‰
         /// </summary>
         public tb_User_Role CurrentUser_Role { get; set; }
 
 
         /// <summary>
-        /// µ±Ç°ÓÃ»§½ÇÉ«ÏÂµÄ¸öĞÔ»¯ÅäÖÃ
+        /// å½“å‰ç”¨æˆ·è§’è‰²ä¸‹çš„ä¸ªæ€§åŒ–é…ç½®
         /// </summary>
         public tb_UserPersonalized CurrentUser_Role_Personalized { get; set; }
 
 
         /// <summary>
-        /// µ±Ç°½ÇÉ«
+        /// å½“å‰è§’è‰²
         /// </summary>
         public List<tb_WorkCenterConfig> WorkCenterConfigList { get; set; } = new List<tb_WorkCenterConfig>();
 
 
         /// <summary>
-        /// Êµ¼ÊÖ»Ê¹ÓÃÁË²¿·Ö×Ö¶Î£¬Ê¡ÊÂ¡£ºóÃæ¿ÉÒÔµ¥¶À×öÒ»¸ö¹«¹²ĞÅÏ¢ÊµÌåÌæ»»µôTODO
-        ///  ÕâÀïÖ»ÊÇÎªÁËÒì³£ÈÕÖ¾²¿·Ö¡£ºóÃæ¿ÉÒÔ×öÒ»¸öÕı³£²Ù×÷µÄĞĞÎª¸ú×Ù ÀàËÆË¼Â·¡£ÔÙ¼ÓÉÏ×¢Èë
+        /// å®é™…åªä½¿ç”¨äº†éƒ¨åˆ†å­—æ®µï¼Œçœäº‹ã€‚åé¢å¯ä»¥å•ç‹¬åšä¸€ä¸ªå…¬å…±ä¿¡æ¯å®ä½“æ›¿æ¢æ‰TODO
+        ///  è¿™é‡Œåªæ˜¯ä¸ºäº†å¼‚å¸¸æ—¥å¿—éƒ¨åˆ†ã€‚åé¢å¯ä»¥åšä¸€ä¸ªæ­£å¸¸æ“ä½œçš„è¡Œä¸ºè·Ÿè¸ª ç±»ä¼¼æ€è·¯ã€‚å†åŠ ä¸Šæ³¨å…¥
         /// </summary>
         public Logs log { get; set; }
 
@@ -220,7 +238,7 @@ namespace RUINORERP.Model.Context
 
         /// <summary>
         /// Get or set the current ClaimsPrincipal
-        /// ±íÊ¾ÓÃ»§Éí·İµÄ¶ÔÏó
+        /// è¡¨ç¤ºç”¨æˆ·èº«ä»½çš„å¯¹è±¡
         /// </summary>
         public ClaimsPrincipal Principal
         {
@@ -268,12 +286,12 @@ namespace RUINORERP.Model.Context
         #region Settings
 
         /// <summary>
-        /// ÊÇ·ñÏàÍ¬ÓÃ»§ÃûÒÑ¾­µÇÂ½ÁË¡£Ä¬ÈÏ·ñ
+        /// æ˜¯å¦ç›¸åŒç”¨æˆ·åå·²ç»ç™»é™†äº†ã€‚é»˜è®¤å¦
         /// </summary>
         public bool AlreadyLogged { get; set; } = false;
 
         /// <summary>
-        /// ÊÇ·ñÎªÁ¬½Ó×´Ì¬
+        /// æ˜¯å¦ä¸ºè¿æ¥çŠ¶æ€
         /// </summary>
         public bool IsOnline { get; set; } = false;
 
@@ -340,7 +358,39 @@ namespace RUINORERP.Model.Context
 
         #endregion
 
-        #region ×¢ÈëÇı¶¯¸³Öµ Á½¸ö½Ó½ü¡£Ö»ÊÇÒ»¸ö¿ÉÒÔÓÃÃû³Æ
+        #region æœåŠ¡å®ä¾‹ç¼“å­˜
+        /// <summary>
+        /// æœåŠ¡å®ä¾‹ç¼“å­˜å­—å…¸ï¼Œç”¨äºç¼“å­˜å·²è§£æçš„æœåŠ¡å®ä¾‹
+        /// </summary>
+        private static readonly Dictionary<Type, object> _serviceInstanceCache = new Dictionary<Type, object>();
+        
+        /// <summary>
+        /// å¸¦åç§°çš„æœåŠ¡å®ä¾‹ç¼“å­˜å­—å…¸ï¼Œç”¨äºç¼“å­˜å·²è§£æçš„å‘½åæœåŠ¡å®ä¾‹
+        /// </summary>
+        private static readonly Dictionary<string, object> _namedServiceInstanceCache = new Dictionary<string, object>();
+        
+        /// <summary>
+        /// ç¼“å­˜è®¿é—®é”å¯¹è±¡ï¼Œç¡®ä¿çº¿ç¨‹å®‰å…¨
+        /// </summary>
+        private static readonly object _cacheLock = new object();
+        
+        /// <summary>
+        /// ç¼“å­˜å‘½ä¸­æ¬¡æ•°ç»Ÿè®¡
+        /// </summary>
+        private static int _cacheHits = 0;
+        
+        /// <summary>
+        /// ç¼“å­˜æœªå‘½ä¸­æ¬¡æ•°ç»Ÿè®¡
+        /// </summary>
+        private static int _cacheMisses = 0;
+        
+        /// <summary>
+        /// æœ€å¤§ç¼“å­˜å¤§å°é™åˆ¶ï¼Œé˜²æ­¢å†…å­˜æ³„æ¼
+        /// </summary>
+        private const int MaxCacheSize = 1000;
+        #endregion
+
+        #region æ³¨å…¥é©±åŠ¨èµ‹å€¼ ä¸¤ä¸ªæ¥è¿‘ã€‚åªæ˜¯ä¸€ä¸ªå¯ä»¥ç”¨åç§°
 
         public void SetServiceProvider(IServiceProvider serviceProvider)
         {
@@ -358,9 +408,48 @@ namespace RUINORERP.Model.Context
         private IServiceProvider CurrentServiceProvider { get; set; }
 
         /// <summary>
-        ///  AutofacµÄÈİÆ÷
+        ///  Autofacçš„å®¹å™¨
         /// </summary>
         public static ILifetimeScope AutofacContainerScope { get; set; }
+        
+        /// <summary>
+        /// è·å–æœåŠ¡ç¼“å­˜ç»Ÿè®¡ä¿¡æ¯
+        /// </summary>
+        /// <returns>ç¼“å­˜ç»Ÿè®¡ä¿¡æ¯</returns>
+        public ServiceCacheStatistics GetServiceCacheStatistics()
+        {
+            lock (_cacheLock)
+            {
+                int totalCacheSize = _serviceInstanceCache.Count + _namedServiceInstanceCache.Count;
+                int totalRequests = _cacheHits + _cacheMisses;
+                double hitRate = totalRequests > 0 ? (double)_cacheHits / totalRequests * 100 : 0;
+                
+                return new ServiceCacheStatistics
+                {
+                    CacheSize = totalCacheSize,
+                    MaxCacheSize = MaxCacheSize,
+                    HitRate = hitRate,
+                    HitCount = _cacheHits,
+                    MissCount = _cacheMisses,
+                    ServiceCacheSize = _serviceInstanceCache.Count,
+                    NamedServiceCacheSize = _namedServiceInstanceCache.Count
+                };
+            }
+        }
+        
+        /// <summary>
+        /// æ¸…ç©ºæœåŠ¡å®ä¾‹ç¼“å­˜
+        /// </summary>
+        public void ClearServiceCache()
+        {
+            lock (_cacheLock)
+            {
+                _serviceInstanceCache.Clear();
+                _namedServiceInstanceCache.Clear();
+                _cacheHits = 0;
+                _cacheMisses = 0;
+            }
+        }
         public bool IsDebug
         {
             get
@@ -387,7 +476,36 @@ namespace RUINORERP.Model.Context
             if (CurrentServiceProvider == null)
                 throw new NullReferenceException(nameof(CurrentServiceProvider));
 
+            Type serviceType = typeof(T);
+            
+            // å°è¯•ä»ç¼“å­˜è·å–æœåŠ¡å®ä¾‹
+            lock (_cacheLock)
+            {
+                if (_serviceInstanceCache.TryGetValue(serviceType, out object cachedInstance))
+                {
+                    _cacheHits++;
+                    return (T)cachedInstance;
+                }
+                
+                _cacheMisses++;
+            }
+            
+            // ç¼“å­˜æœªå‘½ä¸­ï¼Œä»æœåŠ¡æä¾›è€…è·å–å®ä¾‹
             var result = CurrentServiceProvider.GetRequiredService<T>();
+            
+            // å°†å®ä¾‹æ·»åŠ åˆ°ç¼“å­˜ï¼ˆç®€å•çš„LRUå®ç°ï¼‰
+            lock (_cacheLock)
+            {
+                // å¦‚æœç¼“å­˜å·²æ»¡ï¼Œç§»é™¤æœ€æ—§çš„æ¡ç›®ï¼ˆè¿™é‡Œç®€å•åœ°ç§»é™¤ç¬¬ä¸€ä¸ªï¼‰
+                if (_serviceInstanceCache.Count >= MaxCacheSize)
+                {
+                    var firstKey = _serviceInstanceCache.Keys.First();
+                    _serviceInstanceCache.Remove(firstKey);
+                }
+                
+                _serviceInstanceCache[serviceType] = result;
+            }
+            
             return result;
         }
 
@@ -397,7 +515,42 @@ namespace RUINORERP.Model.Context
             if (AutofacContainerScope == null)
                 throw new NullReferenceException(nameof(AutofacContainerScope));
 
-            return AutofacContainerScope.ResolveNamed<T>(className);
+            if (string.IsNullOrEmpty(className))
+            {
+                return default(T);
+            }
+
+            string cacheKey = $"{typeof(T).FullName}_{className}";
+            
+            // å°è¯•ä»ç¼“å­˜è·å–æœåŠ¡å®ä¾‹
+            lock (_cacheLock)
+            {
+                if (_namedServiceInstanceCache.TryGetValue(cacheKey, out object cachedInstance))
+                {
+                    _cacheHits++;
+                    return (T)cachedInstance;
+                }
+                
+                _cacheMisses++;
+            }
+            
+            // ç¼“å­˜æœªå‘½ä¸­ï¼Œä»Autofacå®¹å™¨è·å–å®ä¾‹
+            var result = AutofacContainerScope.ResolveNamed<T>(className);
+            
+            // å°†å®ä¾‹æ·»åŠ åˆ°ç¼“å­˜ï¼ˆç®€å•çš„LRUå®ç°ï¼‰
+            lock (_cacheLock)
+            {
+                // å¦‚æœç¼“å­˜å·²æ»¡ï¼Œç§»é™¤æœ€æ—§çš„æ¡ç›®ï¼ˆè¿™é‡Œç®€å•åœ°ç§»é™¤ç¬¬ä¸€ä¸ªï¼‰
+                if (_namedServiceInstanceCache.Count >= MaxCacheSize)
+                {
+                    var firstKey = _namedServiceInstanceCache.Keys.First();
+                    _namedServiceInstanceCache.Remove(firstKey);
+                }
+                
+                _namedServiceInstanceCache[cacheKey] = result;
+            }
+            
+            return result;
         }
 
         #endregion
@@ -430,8 +583,36 @@ namespace RUINORERP.Model.Context
         {
             if (CurrentServiceProvider == null)
                 throw new NullReferenceException(nameof(CurrentServiceProvider));
-
-            return CurrentServiceProvider.GetRequiredService(serviceType);
+            
+            // å°è¯•ä»ç¼“å­˜è·å–æœåŠ¡å®ä¾‹
+            lock (_cacheLock)
+            {
+                if (_serviceInstanceCache.TryGetValue(serviceType, out object cachedInstance))
+                {
+                    _cacheHits++;
+                    return cachedInstance;
+                }
+                
+                _cacheMisses++;
+            }
+            
+            // ç¼“å­˜æœªå‘½ä¸­ï¼Œä»æœåŠ¡æä¾›è€…è·å–å®ä¾‹
+            var result = CurrentServiceProvider.GetRequiredService(serviceType);
+            
+            // å°†å®ä¾‹æ·»åŠ åˆ°ç¼“å­˜ï¼ˆç®€å•çš„LRUå®ç°ï¼‰
+            lock (_cacheLock)
+            {
+                // å¦‚æœç¼“å­˜å·²æ»¡ï¼Œç§»é™¤æœ€æ—§çš„æ¡ç›®ï¼ˆè¿™é‡Œç®€å•åœ°ç§»é™¤ç¬¬ä¸€ä¸ªï¼‰
+                if (_serviceInstanceCache.Count >= MaxCacheSize)
+                {
+                    var firstKey = _serviceInstanceCache.Keys.First();
+                    _serviceInstanceCache.Remove(firstKey);
+                }
+                
+                _serviceInstanceCache[serviceType] = result;
+            }
+            
+            return result;
         }
 
         /// <summary>

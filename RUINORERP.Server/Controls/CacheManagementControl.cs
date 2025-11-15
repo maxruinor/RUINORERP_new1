@@ -3,11 +3,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Logging;
 using RUINORERP.Server.Comm;
 using RUINORERP.Common.Extensions;
-using RUINORERP.Extensions.Middlewares;
 using RUINORERP.Model;
 using RUINORERP.Model.CommonModel;
 using RUINORERP.Server.BizService;
-using RUINORERP.Server.ServerSession;
 using RUINORERP.Server.Network.Interfaces.Services;
 using System;
 using System.Collections.Generic;
@@ -27,9 +25,8 @@ using System.Collections;
 using Microsoft.Extensions.DependencyInjection;
 using RUINORERP.Business.Cache;
 using RUINORERP.PacketSpec.Commands;
-using RUINORERP.PacketSpec.Models.Requests.Message;
-using RUINORERP.PacketSpec.Models.Responses.Message;
 using RUINORERP.Model.TransModel;
+using RUINORERP.PacketSpec.Models.Messaging;
 
 namespace RUINORERP.Server.Controls
 {
@@ -162,26 +159,6 @@ private readonly IEntityCacheManager _entityCacheManager;
                 if (listBoxTableList.SelectedItem != null && listBoxTableList.SelectedItem is SuperValue kv)
                 {
                     string tableName = kv.superDataTypeName;
-                    if (tableName == "锁定信息列表")
-                    {
-                        // 显示锁定信息
-                        dataGridView1.DataSource = null;
-                        var lockItems = frmMainNew.Instance.lockManager.GetLockItems();
-                        if (lockItems == null || lockItems.Count == 0)
-                        {
-                            // 创建空表结构，避免绑定空列表导致显示异常
-                            var emptyTable = new DataTable();
-                            emptyTable.Columns.Add("Empty");
-                            emptyTable.Rows.Add("No lock data");
-                            dataGridView1.DataSource = emptyTable;
-                        }
-                        else
-                        {
-                            dataGridView1.DataSource = lockItems;
-                        }
-                        return;
-                    }
-
                     // 使用新的缓存管理器获取数据
                     var cacheManager = Startup.GetFromFac<IEntityCacheManager>();
                     var schemaManager = TableSchemaManager.Instance;
@@ -365,13 +342,7 @@ private readonly IEntityCacheManager _entityCacheManager;
 
                     listBoxTableList.Items.Add(kv);
                 }
-
-                //添加锁定信息
-                if (frmMainNew.Instance.lockManager != null)
-                {
-                    SuperValue kv = new SuperValue($"锁定信息列表{frmMainNew.Instance.lockManager.GetLockItemCount()}", "锁定信息列表");
-                    listBoxTableList.Items.Add(kv);
-                }
+ 
             }
             catch (Exception ex)
             {

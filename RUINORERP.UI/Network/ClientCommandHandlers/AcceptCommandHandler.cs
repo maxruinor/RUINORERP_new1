@@ -14,6 +14,7 @@ using System.IO;
 using System.Threading;
 
 using RUINORERP.PacketSpec.Models.Responses;
+using RUINORERP.PacketSpec.Models.Common;
 
 namespace RUINORERP.UI.Network.ClientCommandHandlers
 {

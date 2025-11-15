@@ -48,7 +48,7 @@ using RUINORERP.Global.EnumExt;
 using RUINORERP.UI.Monitoring.Auditing;
 using NPOI.SS.Formula.Functions;
 using Netron.GraphLib;
-using RUINORERP.Extensions.Middlewares;
+
 using RUINORERP.Business.Cache;
 using RUINORERP.Business.BizMapperService;
 using RUINORERP.UI.Network.Services;
@@ -69,8 +69,8 @@ namespace RUINORERP.UI.ASS
             InitializeComponent();
             //InitDataToCmbByEnumDynamicGeneratedDataSource<tb_AS_AfterSaleApply>(typeof(Priority), e => e.OrderPriority, cmbOrderPriority, false);
             AddPublicEntityObject(typeof(ProductSharePart));
-            // 通过依赖注入获取缓存管理器
-            _cacheManager = Startup.GetFromFac<IEntityCacheManager>();
+            // 使用静态缓存管理器
+            _cacheManager = Startup.GetFromFac<IEntityCacheManager>(); 
             _tableSchemaManager = TableSchemaManager.Instance;
         }
 
@@ -173,7 +173,7 @@ namespace RUINORERP.UI.ASS
             this.BaseToolStrip.Items.AddRange(extendButtons);
             return extendButtons;
         }
-        private void toolStripButton维修评估_Click(object sender, EventArgs e)
+        private async void toolStripButton维修评估_Click(object sender, EventArgs e)
         {
             if (EditEntity == null)
             {
@@ -200,7 +200,7 @@ namespace RUINORERP.UI.ASS
                     }
 
                     var ctr = Startup.GetFromFac<tb_AS_AfterSaleApplyController<tb_AS_AfterSaleApply>>();
-                    tb_AS_RepairOrder RepairOrder = ctr.ToRepairOrder(EditEntity).Result;
+                    tb_AS_RepairOrder RepairOrder =await ctr.ToRepairOrder(EditEntity);
                     MenuPowerHelper menuPowerHelper;
                     menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
                     tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == nameof(tb_AS_RepairOrder) && m.BIBaseForm == "BaseBillEditGeneric`2").FirstOrDefault();

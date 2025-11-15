@@ -10,7 +10,7 @@ using System.Linq;
 using System.Reflection;
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
-using RUINORERP.PacketSpec.Models.Requests.Cache;
+using RUINORERP.PacketSpec.Models.Cache;
 
 namespace RUINORERP.UI.Network.Services.Cache
 {

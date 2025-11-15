@@ -13,6 +13,7 @@ using System.IO;
 using System.Collections.Generic;
 using RUINORERP.Model;
 using System.Linq;
+using RUINORERP.PacketSpec.Models.Common;
 
 namespace RUINORERP.Server.Network.CommandHandlers
 {

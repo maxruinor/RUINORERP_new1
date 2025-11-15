@@ -2,6 +2,7 @@ using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
 using System;
+using System.Linq;
 using RUINORERP.Common.Helper;
 using RUINORERP.Extensions;
 using Microsoft.Extensions.Logging;
@@ -90,6 +91,31 @@ namespace RUINORERP.UI
     {
         // 初始化一个基础日志记录器，用于在完整日志系统初始化前使用
         private static readonly ILog _logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+
+        /// <summary>
+        /// 服务实例缓存，用于优化短时间内多次获取同一服务的性能
+        /// </summary>
+        private static readonly Dictionary<Type, object> _serviceInstanceCache = new Dictionary<Type, object>();
+        
+        /// <summary>
+        /// 服务实例缓存锁，确保线程安全
+        /// </summary>
+        private static readonly object _cacheLock = new object();
+        
+        /// <summary>
+        /// 缓存命中次数统计
+        /// </summary>
+        private static int _cacheHits = 0;
+        
+        /// <summary>
+        /// 缓存未命中次数统计
+        /// </summary>
+        private static int _cacheMisses = 0;
+        
+        /// <summary>
+        /// 最大缓存实例数量，防止内存泄漏
+        /// </summary>
+        private const int MaxCacheSize = 100;
 
 
         /// <summary>
@@ -709,14 +735,7 @@ namespace RUINORERP.UI
 
 
 
-            // 注册 AuditLogHelper 为可注入服务
-            builder.RegisterType<AuditLogHelper>()
-                   .AsSelf()
-                   .InstancePerLifetimeScope()
-                   .PropertiesAutowired()
-                   .WithParameter(new ResolvedParameter(
-                       (pi, ctx) => pi.ParameterType == typeof(ILogger<AuditLogHelper>),
-                       (pi, ctx) => ctx.Resolve<ILogger<AuditLogHelper>>()));
+            // AuditLogHelper 已在 BusinessDIConfig.cs 中注册
 
 
             //_containerBuilder = builder;
@@ -1435,22 +1454,22 @@ DuplicateCheckService 这个 具体类 并不会被注册为可解析的 key。
                 {
 
                 }
-                if (tempTypes[i].Name == "IWorkflowNotificationService")
-                {
-                    builder.RegisterType<WorkflowNotificationService>()
-                    .AsImplementedInterfaces().AsSelf()
-                    .PropertiesAutowired() //属性注入 如果没有这个  public Itb_LocationTypeServices _tb_LocationTypeServices { get; set; }  这个值会没有，所以实际后为null
-                    ;
-                    continue;
-                }
-                if (tempTypes[i].Name == "IStatusMachine")
-                {
-                    builder.RegisterType<BusinessStatusMachine>()
-                    .AsImplementedInterfaces().AsSelf()
-                    .PropertiesAutowired() //属性注入 如果没有这个  public Itb_LocationTypeServices _tb_LocationTypeServices { get; set; }  这个值会没有，所以实际后为null
-                    ;
-                    continue;
-                }
+                //if (tempTypes[i].Name == "IWorkflowNotificationService")
+                //{
+                //    builder.RegisterType<WorkflowNotificationService>()
+                //    .AsImplementedInterfaces().AsSelf()
+                //    .PropertiesAutowired() //属性注入 如果没有这个  public Itb_LocationTypeServices _tb_LocationTypeServices { get; set; }  这个值会没有，所以实际后为null
+                //    ;
+                //    continue;
+                //}
+                //if (tempTypes[i].Name == "IStatusMachine")
+                //{
+                //    builder.RegisterType<BusinessStatusMachine>()
+                //    .AsImplementedInterfaces().AsSelf()
+                //    .PropertiesAutowired() //属性注入 如果没有这个  public Itb_LocationTypeServices _tb_LocationTypeServices { get; set; }  这个值会没有，所以实际后为null
+                //    ;
+                //    continue;
+                //}
                 if (tempTypes[i].Name == "IStatusHandler")
                 {
                     builder.RegisterType<ProductionStatusHandler>()
@@ -1793,6 +1812,37 @@ DuplicateCheckService 这个 具体类 并不会被注册为可解析的 key。
         }
 
         /// <summary>
+        /// 获取服务实例缓存统计信息
+        /// </summary>
+        /// <returns>包含缓存命中率等统计信息的字符串</returns>
+        public static string GetServiceCacheStatistics()
+        {
+            lock (_cacheLock)
+            {
+                int totalRequests = _cacheHits + _cacheMisses;
+                double hitRate = totalRequests > 0 ? (double)_cacheHits / totalRequests * 100 : 0;
+                
+                return $"服务实例缓存统计: 缓存大小={_serviceInstanceCache.Count}/{MaxCacheSize}, " +
+                       $"命中次数={_cacheHits}, 未命中次数={_cacheMisses}, " +
+                       $"命中率={hitRate:F2}%";
+            }
+        }
+
+        /// <summary>
+        /// 清空服务实例缓存
+        /// </summary>
+        public static void ClearServiceCache()
+        {
+            lock (_cacheLock)
+            {
+                _serviceInstanceCache.Clear();
+                _cacheHits = 0;
+                _cacheMisses = 0;
+                _logger.Info("服务实例缓存已清空");
+            }
+        }
+
+        /// <summary>
         /// 程序集是否匹配
         /// </summary>
         public bool Match(string assemblyName)
@@ -1812,24 +1862,53 @@ DuplicateCheckService 这个 具体类 并不会被注册为可解析的 key。
         /// <returns>解析到的服务实例</returns>
         public static T GetFromFac<T>()
         {
+            Type serviceType = typeof(T);
+            
             try
             {
                 // 检查容器是否初始化
                 if (AutofacContainerScope == null)
                 {
-                    _logger.Warn($"警告: AutofacContainerScope尚未初始化，无法解析服务 {typeof(T).FullName}");
+                    _logger.Warn($"警告: AutofacContainerScope尚未初始化，无法解析服务 {serviceType.FullName}");
                     return default(T);
                 }
 
-                // 记录服务解析日志
-                _logger.Debug($"正在从Autofac容器中解析服务: {typeof(T).FullName}");
+                // 尝试从缓存中获取服务实例
+                lock (_cacheLock)
+                {
+                    if (_serviceInstanceCache.TryGetValue(serviceType, out object cachedInstance))
+                    {
+                        _cacheHits++;
+                        _logger.Debug($"从缓存中获取服务: {serviceType.FullName}");
+                        return (T)cachedInstance;
+                    }
+                    
+                    _cacheMisses++;
+                }
+
+                // 缓存中未找到，从容器中解析
                 T service = AutofacContainerScope.Resolve<T>();
-                _logger.Debug($"成功解析服务: {typeof(T).FullName}");
+                
+                // 将解析的服务实例添加到缓存中
+                lock (_cacheLock)
+                {
+                    // 如果缓存已满，移除最旧的条目（简单的LRU实现）
+                    if (_serviceInstanceCache.Count >= MaxCacheSize)
+                    {
+                        var firstKey = _serviceInstanceCache.Keys.First();
+                        _serviceInstanceCache.Remove(firstKey);
+                        _logger.Debug($"缓存已满，移除最旧的服务实例: {firstKey.FullName}");
+                    }
+                    
+                    _serviceInstanceCache[serviceType] = service;
+                    _logger.Debug($"成功解析并缓存服务: {serviceType.FullName}");
+                }
+                
                 return service;
             }
             catch (Exception ex)
             {
-                _logger.Error($"解析服务失败 {typeof(T).FullName}", ex);
+                _logger.Error($"解析服务失败 {serviceType.FullName}", ex);
                 // 错误处理：返回默认值而不是抛出异常，确保应用程序继续运行
                 return default(T);
             }

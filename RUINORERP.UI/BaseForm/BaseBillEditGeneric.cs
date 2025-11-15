@@ -84,15 +84,15 @@ using Winista.Text.HtmlParser.Lex;
 using Org.BouncyCastle.Asn1.X509.Qualified;
 using System.Management;
 using RUINORERP.Business.BizMapperService;
-
-using RUINORERP.Business.BizMapperService;
 using RUINORERP.UI.Network;
-
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.Business.Cache;
 using RUINORERP.UI.Network.Services;
 using RUINORERP.Business.CommService;
 using RUINOR.WinFormsUI.CustomPictureBox;
+using RUINORERP.PacketSpec.Models.Lock;
+using RUINORERP.Model.Base.StatusManager.Core;
+using RUINORERP.UI.StateManagement.UI;
 
 namespace RUINORERP.UI.BaseForm
 {
@@ -100,7 +100,7 @@ namespace RUINORERP.UI.BaseForm
     /// 单据类型的编辑 主表T子表C
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public partial class BaseBillEditGeneric<T, C> : BaseBillEdit, IContextMenuInfoAuth, IToolStripMenuInfoAuth where T : class, new() where C : class, new()
+    public partial class BaseBillEditGeneric<T, C> : BaseBillEdit, IContextMenuInfoAuth, IToolStripMenuInfoAuth where T : BaseEntity, new() where C : class, new()
     {
         public virtual List<UControls.ContextMenuController> AddContextMenu()
         {
@@ -108,6 +108,7 @@ namespace RUINORERP.UI.BaseForm
             return list;
         }
 
+        private LockManagementService lockManagementService;
         public virtual ToolStripItem[] AddExtendButton(tb_MenuInfo menuInfo)
         {
             System.Windows.Forms.ToolStripItem[] extendButtons = new System.Windows.Forms.ToolStripItem[] { };
@@ -131,23 +132,26 @@ namespace RUINORERP.UI.BaseForm
         #endregion
 
 
-        #region 单据状态 及按钮状态控制
-
-        //private UIStateBinder<DataStatus> _UIStateBinder;
-        //private IStatusEvaluator evaluator;
+       
+        /// <summary>
+        /// 初始化状态管理系统
+        /// </summary>
         private void InitializeStateManagement()
         {
-
-
+             
+            
+           
         }
+        
+    
 
-        #endregion
 
         public BaseBillEditGeneric()
         {
             InitializeComponent();
             if (System.ComponentModel.LicenseManager.UsageMode != System.ComponentModel.LicenseUsageMode.Designtime)
             {
+                lockManagementService = Startup.GetFromFac<LockManagementService>();
                 AddExcludeMenuList();
                 AddExtendButton(CurMenuInfo);
                 if (!this.DesignMode)
@@ -273,17 +277,7 @@ namespace RUINORERP.UI.BaseForm
                     {
                         #region  单据数据  后面优化可以多个单?限制5个？
                         await Save(false);
-                        string json = JsonConvert.SerializeObject(EditEntity,
-                            new JsonSerializerSettings
-                            {
-                                ReferenceLoopHandling = ReferenceLoopHandling.Ignore // 或 ReferenceLoopHandling.Serialize
-                            });
-#warning TODO: 这里需要完善具体逻辑，当前仅为占位
 
-                        //OriginalData odforCache = ActionForClient.请求协助处理(MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID,
-                        //  MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name, frm.Content, json, typeof(T).Name);
-                        //byte[] buffer = TransInstruction.CryptoProtocol.EncryptClientPackToServer(odforCache);
-                        //MainForm.Instance.ecs.client.Send(buffer);
                         #endregion
                     }
                 }
@@ -373,7 +367,7 @@ namespace RUINORERP.UI.BaseForm
                             {
                                 imageDataList.Add(fileStorageInfo.FileData);
                                 imageInfos.Add(ctrpay.ConvertToImageInfo(fileStorageInfo));
-                                AddFileStorageInfo(entity as BaseEntity,fileStorageInfo);
+                                AddFileStorageInfo(entity as BaseEntity, fileStorageInfo);
                             }
                         }
                     }
@@ -599,8 +593,8 @@ namespace RUINORERP.UI.BaseForm
         }
 
 
- 
-        
+
+
         public void AddFileStorageInfo(BaseEntity entity, tb_FS_FileStorageInfo FileStorageInfo)
         {
             if (FileStorageInfo.FileId <= 0)
@@ -630,18 +624,11 @@ namespace RUINORERP.UI.BaseForm
             #endregion
 
 
-            #region 转单
+            #region 单据联动
 
-            toolStripbtnConvertDocuments.DropDownItems.Clear();
-            //LoadRelatedDataToDropDownItemsAsync();
-            if (toolStripbtnConvertDocuments.DropDownItems.Count > 0)
-            {
-                toolStripbtnConvertDocuments.Visible = true;
-            }
-            else
-            {
-                toolStripbtnConvertDocuments.Visible = false;
-            }
+            // 调用LoadConvertDocToDropDownItemsAsync加载单据联动选项
+            LoadConvertDocToDropDownItemsAsync();
+
             #endregion
 
 
@@ -778,7 +765,7 @@ namespace RUINORERP.UI.BaseForm
         /// 根据单据实体属性状态来对应显示各种按钮控制
         /// </summary>
         /// <param name="entity"></param>
-        protected virtual void ToolBarEnabledControl(object entity)
+        protected virtual async void ToolBarEnabledControl(object entity)
         {
             if (entity == null) return;
             UIHelper.ControlMasterColumnsInvisible(CurMenuInfo, this);
@@ -835,7 +822,7 @@ namespace RUINORERP.UI.BaseForm
                         toolStripButton结案.Enabled = true;
                         toolStripbtnDelete.Enabled = false;
                         break;
-                    case DataStatus.完结:
+                    case Global.DataStatus.完结:
                         //
                         toolStripbtnModify.Enabled = false;
                         toolStripbtnSubmit.Enabled = false;
@@ -857,129 +844,114 @@ namespace RUINORERP.UI.BaseForm
                 if (pkid > 0)
                 {
                     //如果要锁这个单 看这个单是不是已经被其它人锁，如果没有人锁则我可以锁
-                    //TODO 注意 同一个人，同一个业务单据。只能锁定一张单。所以在锁新单时。清除所有旧单。
+
                     //关闭时会解锁，查询的方式不停加载也要解锁前面的
                     long userid = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
 
                     //解锁这个业务的自己名下的其它单
                     UNLockByBizName(userid);
 
-#warning TODO: 这里需要完善具体逻辑，当前仅为占位
-
-                    /*
-                    if (MainForm.Instance.lockManager.GetLockedBy(pkid) > 0)
+                    var lockinfo = await lockManagementService.CheckLockStatusAsync(pkid, CurMenuInfo.MenuID);
+                    if (lockinfo.LockInfo.UserId == userid)
                     {
-                        var lockinfo = MainForm.Instance.lockManager.GetLockStatus(pkid);
-                        if (lockinfo.LockedByID == userid)
-                        {
-                            //得到了锁 就是自己。得不到就是
-                            tsBtnLocked.AutoToolTip = false;
-                            tsBtnLocked.ToolTipText = string.Empty;
-                            //别人锁定了
-                            string tipMsg = $"您锁定了当前单据。";
-                            MainForm.Instance.uclog.AddLog(tipMsg);
-                            tsBtnLocked.AutoToolTip = true;
-                            tsBtnLocked.ToolTipText = tipMsg;
-                            tsBtnLocked.Visible = true;
-                            tsBtnLocked.Tag = lockinfo;
-                            //自己就表达绿色
-                            this.tsBtnLocked.Image = global::RUINORERP.UI.Properties.Resources.unlockbill;
-
-
-
-                        }
-                        else
-                        {
-                            //别人锁定了
-                            string tipMsg = $"单据已被用户【{lockinfo.LockedByName}】锁定，请刷新后再试,或点击【已锁定】联系锁定人员解锁。";
-                            MainForm.Instance.uclog.AddLog(tipMsg);
-                            tsBtnLocked.AutoToolTip = true;
-                            tsBtnLocked.ToolTipText = tipMsg;
-                            tsBtnLocked.Visible = true;
-                            tsBtnLocked.Tag = lockinfo;
-                            this.tsBtnLocked.Image = global::RUINORERP.UI.Properties.Resources.Lockbill;
-                            toolStripBtnCancel.Visible = true;
-                            toolStripbtnModify.Enabled = false;
-                            toolStripbtnSubmit.Enabled = false;
-                            toolStripBtnReverseReview.Enabled = false;
-                            toolStripbtnReview.Enabled = false;
-                            toolStripButtonSave.Enabled = false;
-                            toolStripbtnDelete.Enabled = false;
-                            toolStripbtnPrint.Enabled = false;
-                            toolStripButton结案.Enabled = false;
-                        }
+                        //得到了锁 就是自己。得不到就是
+                        tsBtnLocked.AutoToolTip = false;
+                        tsBtnLocked.ToolTipText = string.Empty;
+                        //别人锁定了
+                        string tipMsg = $"您锁定了当前单据。";
+                        MainForm.Instance.uclog.AddLog(tipMsg);
+                        tsBtnLocked.AutoToolTip = true;
+                        tsBtnLocked.ToolTipText = tipMsg;
+                        tsBtnLocked.Visible = true;
+                        tsBtnLocked.Tag = lockinfo;
+                        //自己就表达绿色
+                        this.tsBtnLocked.Image = global::RUINORERP.UI.Properties.Resources.unlockbill;
                     }
                     else
                     {
-                        //没人锁定
-                        tsBtnLocked.AutoToolTip = false;
-                        tsBtnLocked.ToolTipText = string.Empty;
-                        tsBtnLocked.Visible = false;
-                        tsBtnLocked.Tag = null;
+                        //别人锁定了
+                        string tipMsg = $"单据已被用户【{lockinfo.LockInfo.UserName}】锁定，请刷新后再试,或点击【已锁定】联系锁定人员解锁。";
+                        MainForm.Instance.uclog.AddLog(tipMsg);
+                        tsBtnLocked.AutoToolTip = true;
+                        tsBtnLocked.ToolTipText = tipMsg;
+                        tsBtnLocked.Visible = true;
+                        tsBtnLocked.Tag = lockinfo;
+                        this.tsBtnLocked.Image = global::RUINORERP.UI.Properties.Resources.Lockbill;
+                        toolStripBtnCancel.Visible = true;
+                        toolStripbtnModify.Enabled = false;
+                        toolStripbtnSubmit.Enabled = false;
+                        toolStripBtnReverseReview.Enabled = false;
+                        toolStripbtnReview.Enabled = false;
+                        toolStripButtonSave.Enabled = false;
+                        toolStripbtnDelete.Enabled = false;
+                        toolStripbtnPrint.Enabled = false;
+                        toolStripButton结案.Enabled = false;
                     }
-                    */
-
-
                 }
+                else
+                {
+                    //没人锁定
+                    tsBtnLocked.AutoToolTip = false;
+                    tsBtnLocked.ToolTipText = string.Empty;
+                    tsBtnLocked.Visible = false;
+                    tsBtnLocked.Tag = null;
+                }
+
 
                 #region 数据状态修改时也会影响到按钮
                 if (entity is BaseEntity baseEntity)
                 {
                     baseEntity.AcceptChanges();
-                    //为了不重复执行
-                    // 定义一个局部变量来存储事件处理程序
-                    EventHandler<ActionStatusChangedEventArgs> eventHandler = (sender, s2) =>
-                    {
-                        if (s2.OldValue != ActionStatus.修改 && s2.NewValue == ActionStatus.修改)
-                        {
-                            LockBill();
-                        }
-                    };
-
-                    // 先移除之前可能添加的处理程序
-                    baseEntity.ActionStatusChanged -= eventHandler;
-                    // 再添加处理程序
-                    baseEntity.ActionStatusChanged += eventHandler;
-
+                    ////为了不重复执行
+                    //// 定义一个局部变量来存储事件处理程序
+                    //EventHandler<ActionStatusChangedEventArgs> eventHandler = async (sender, s2) =>
+                    //{
+                    //    if (s2.OldValue != ActionStatus.修改 && s2.NewValue == ActionStatus.修改)
+                    //    {
+                    //        // 使用新的锁定机制
+                    //        bool lcok = await CheckAndLockBill();
+                    //        if (!lcok)
+                    //        {
+                    //            // 锁定失败，取消编辑操作
+                    //            this.Cancel();
+                    //        }
+                    //    }
+                    //};
+ 
 
                     //如果属性变化 则状态为修改
                     baseEntity.PropertyChanged += (sender, s2) =>
-                {
-                    //权限允许
-                    if ((true && dataStatus == DataStatus.草稿) || (true && dataStatus == DataStatus.新建))
-                    {
-                        baseEntity.ActionStatus = ActionStatus.修改;
-                        ToolBarEnabledControl(MenuItemEnums.修改);
-                    }
+                            {
+                                //权限允许
+                                if ((true && dataStatus == DataStatus.草稿) || (true && dataStatus == DataStatus.新建))
+                                {
+                                    baseEntity.ActionStatus = ActionStatus.修改;
+                                    ToolBarEnabledControl(MenuItemEnums.修改);
+                                }
 
-                    //数据状态变化会影响按钮变化
-                    if (s2.PropertyName == "DataStatus")
-                    {
-                        if (dataStatus == DataStatus.草稿)
-                        {
-                            ToolBarEnabledControl(MenuItemEnums.新增);
-                        }
-                        if (dataStatus == DataStatus.新建)
-                        {
-                            ToolBarEnabledControl(MenuItemEnums.新增);
-                        }
-                        if (dataStatus == DataStatus.确认)
-                        {
-                            ToolBarEnabledControl(MenuItemEnums.审核);
-                        }
+                                //数据状态变化会影响按钮变化
+                                if (s2.PropertyName == "DataStatus")
+                                {
+                                    if (dataStatus == DataStatus.草稿)
+                                    {
+                                        ToolBarEnabledControl(MenuItemEnums.新增);
 
-                        if (dataStatus == DataStatus.完结)
-                        {
-                            ToolBarEnabledControl(MenuItemEnums.结案);
-                        }
+                                    }
+                                    if (dataStatus == DataStatus.新建)
+                                    {
+                                        ToolBarEnabledControl(MenuItemEnums.新增);
+                                    }
+                                    if (dataStatus == DataStatus.确认)
+                                    {
+                                        ToolBarEnabledControl(MenuItemEnums.审核);
+                                    }
 
-                    }
-
-                };
-
-
-
-
+                                    if (dataStatus == DataStatus.完结)
+                                    {
+                                        ToolBarEnabledControl(MenuItemEnums.结案);
+                                    }
+                                }
+                            };
                 }
                 #endregion
             }
@@ -1022,10 +994,24 @@ namespace RUINORERP.UI.BaseForm
             HandleLockStatus(entity as BaseEntity, statusDetector);
 
 
-
         }
 
+
+
+
+
+
+
+
+
+
+
+
+
         #region 状态处理私有方法
+
+
+
 
         private void ConfigureSpecialButtons(dynamic status)
         {
@@ -1101,16 +1087,29 @@ namespace RUINORERP.UI.BaseForm
 
         #region 状态机处理新2025-6-17
 
-        /// <summary>根据单据状态控制工具栏按钮</summary>
+        /// <summary>
+        /// 根据单据状态控制工具栏按钮
+        /// </summary>
+        /// <param name="entity">单据实体</param>
         protected virtual void ToolBarEnabledControl(BaseEntity entity)
         {
             if (entity == null) return;
+            
+            // 如果新架构不可用，回退到旧逻辑
+            ToolBarEnabledControlLegacy(entity);
+        }
+        
+        /// <summary>
+        /// 旧版工具栏按钮控制逻辑（保留作为回退方案）
+        /// </summary>
+        /// <param name="entity">单据实体</param>
+        private void ToolBarEnabledControlLegacy(BaseEntity entity)
+        {
             // 状态检测器
             var statusDetector = new StatusDetector(entity);
 
             // 通用按钮状态
             toolStripbtnAdd.Enabled = statusDetector.IsEditable;
-            //toolStripBtnCancel.Visible = statusDetector.CanCancel;
             toolStripbtnModify.Enabled = statusDetector.IsEditable;
             toolStripbtnDelete.Enabled = statusDetector.IsEditable;
             toolStripButtonSave.Enabled = entity.HasChanged;
@@ -1121,30 +1120,9 @@ namespace RUINORERP.UI.BaseForm
             toolStripBtnReverseReview.Enabled = statusDetector.CanReverseReview;
             toolStripBtnReverseReview.Visible = statusDetector.CanReverseReview;
             toolStripButton结案.Enabled = statusDetector.CanClose;
-            //  RefreshToolbar
-            statusDetector.RefreshToolbar += (actionStatus, statusValue) =>
-            {
-                if (statusValue == null) return;
-
-
-                //if (statusValue == typeof(PrePaymentStatus))
-                //{
-                //    HandlePrePaymentStatus((PrePaymentStatus)statusValue, actionStatus);
-                //}
-                //else if (statusValue == typeof(ARAPStatus))
-                //{
-                //    HandleARAPStatus((ARAPStatus)statusValue, actionStatus);
-                //}
-                //else if (statusValue == typeof(PaymentStatus))
-                //{
-                //    HandlePaymentStatus((PaymentStatus)statusValue, actionStatus);
-                //}
-            };
+            
             // 锁定状态处理
             HandleLockStatus(entity, statusDetector);
-
-            // 注册状态变更事件
-            statusDetector.RegisterStatusChangeHandler();
         }
 
         //private void HandleARAPStatus(ARAPStatus statusValue, ActionStatus actionStatus)
@@ -1283,11 +1261,13 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
-        /// <summary>处理单据锁定状态</summary>
-        private void HandleLockStatus(BaseEntity entity, StatusDetector detector)
+        /// <summary>
+        /// 处理单据锁定状态，更新UI显示
+        /// </summary>
+        /// <param name="entity">单据实体</param>
+        /// <param name="detector">状态检测器</param>
+        private async void HandleLockStatus(BaseEntity entity, StatusDetector detector)
         {
-#warning TODO: 这里需要完善具体逻辑，当前仅为占位
-            /*
             if (entity == null) return;
 
             string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
@@ -1295,45 +1275,72 @@ namespace RUINORERP.UI.BaseForm
 
             if (pkid <= 0) return;
 
-            var lockInfo = MainForm.Instance.lockManager.GetLockStatus(pkid);
-            bool isLocked = lockInfo?.LockedByID > 0;
-            bool isSelfLock = lockInfo?.LockedByID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
-
-            // 更新锁定按钮状态
-            tsBtnLocked.Visible = isLocked;
-            tsBtnLocked.Image = isSelfLock ?
-                Properties.Resources.unlockbill :
-                Properties.Resources.Lockbill;
-
-            tsBtnLocked.ToolTipText = isSelfLock ?
-                "您已锁定当前单据" :
-                $"单据已被【{lockInfo?.LockedByName}】锁定";
-
-            // 被他人锁定时禁用所有操作
-            if (isLocked && !isSelfLock)
+            // 获取LockManagementService实例
+            if (lockManagementService != null)
             {
-                toolStripbtnModify.Enabled = false;
-                toolStripbtnSubmit.Enabled = false;
-                toolStripbtnReview.Enabled = false;
-                toolStripButtonSave.Enabled = false;
-                toolStripbtnDelete.Enabled = false;
+                try
+                {
+                    // 同步获取锁状态
+                    var lockStatus = await lockManagementService.CheckLockStatusAsync(pkid, CurMenuInfo.MenuID);
+                    bool isLocked = lockStatus != null && lockStatus.LockInfo.IsLocked;
 
-                // 根据不同类型禁用特定按钮
-                if (detector.GetActualStatus() is PrePaymentStatus)
-                {
-                    toolStripButton结案.Enabled = false; // 退款按钮
+                    // 获取当前用户ID
+                    long currentUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
+                    bool isSelfLock = isLocked && lockStatus.LockInfo.UserId == currentUserId;
+
+                    // 更新锁定按钮状态
+                    tsBtnLocked.Visible = isLocked;
+                    tsBtnLocked.Image = isSelfLock ?
+                        Properties.Resources.unlockbill :
+                        Properties.Resources.Lockbill;
+
+                    // 更新工具提示
+                    if (isLocked)
+                    {
+                        tsBtnLocked.ToolTipText = isSelfLock ?
+                            "您已锁定当前单据" :
+                            $"单据已被【{lockStatus.LockInfo.UserName}】锁定";
+                    }
+                    else
+                    {
+                        tsBtnLocked.ToolTipText = string.Empty;
+                    }
+
+                    // 被他人锁定时禁用所有操作
+                    if (isLocked && !isSelfLock)
+                    {
+                        toolStripbtnModify.Enabled = false;
+                        toolStripbtnSubmit.Enabled = false;
+                        toolStripbtnReview.Enabled = false;
+                        toolStripButtonSave.Enabled = false;
+                        toolStripbtnDelete.Enabled = false;
+                        toolStripButton结案.Enabled = false;
+                    }
+                    else
+                    {
+                        // 恢复按钮状态（根据实际业务需求调整）
+                        toolStripbtnModify.Enabled = true;
+                        toolStripbtnSubmit.Enabled = true;
+                        toolStripbtnReview.Enabled = true;
+                        toolStripButtonSave.Enabled = true;
+                        toolStripbtnDelete.Enabled = true;
+                        toolStripButton结案.Enabled = true;
+                    }
+
+                    // 存储锁定状态信息
+                    tsBtnLocked.Tag = lockStatus;
                 }
-                else if (detector.GetActualStatus() is ARAPStatus)
+                catch (Exception ex)
                 {
-                    toolStripButton结案.Enabled = false; // 冲销按钮
-                    //toolStripButton坏账.Enabled = false;
+                    MainForm.Instance.uclog.AddLog($"处理锁定状态时发生异常: {ex.Message}", UILogType.错误);
                 }
             }
-            else if (isSelfLock)
-            {
-                // 自己锁定时启用适当操作
-                EnableOperationsBasedOnStatus(detector.GetActualStatus());
-            }*/
+
+
+            // 自己锁定时启用适当操作
+            EnableOperationsBasedOnStatus(detector.GetActualStatus());
+
+
         }
         /// <summary>根据状态启用操作按钮</summary>
         private void EnableOperationsBasedOnStatus(Enum status)
@@ -1370,8 +1377,8 @@ namespace RUINORERP.UI.BaseForm
 
 
         /*
-       private void HandleLockStatus(BaseEntity entity, StatusDetector detector)
-       {    
+        private void HandleLockStatus(BaseEntity entity, StatusDetector detector)
+        {    
            //单据被锁定时。显示锁定图标。并且提示无法操作？
            string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
            long pkid = (long)ReflectionHelper.GetPropertyValue(entity, PKCol);
@@ -1388,8 +1395,8 @@ namespace RUINORERP.UI.BaseForm
                Properties.Resources.Lockbill;
 
            tsBtnLocked.ToolTipText = isSelfLock ?
-      "您已锁定当前单据" :
-      $"单据已被【{lockInfo?.LockedByName}】锁定";
+        "您已锁定当前单据" :
+        $"单据已被【{lockInfo?.LockedByName}】锁定";
            // 被他人锁定时禁用所有操作
            if (isLocked && !isSelfLock)
            {
@@ -1404,7 +1411,7 @@ namespace RUINORERP.UI.BaseForm
            if (pkid > 0)
            {
                //如果要锁这个单 看这个单是不是已经被其它人锁，如果没有人锁则我可以锁
-               //TODO 注意 同一个人，同一个业务单据。只能锁定一张单。所以在锁新单时。清除所有旧单。
+
                //关闭时会解锁，查询的方式不停加载也要解锁前面的
                long userid = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
 
@@ -1465,7 +1472,7 @@ namespace RUINORERP.UI.BaseForm
 
            return;
 
-       }
+        }
 
          */
 
@@ -1831,7 +1838,7 @@ namespace RUINORERP.UI.BaseForm
                 case MenuItemEnums.联查:
                     break;
                 case MenuItemEnums.已锁定:
-#warning TODO: 这里需要完善具体逻辑，当前仅为占位
+
                     /*
                     if (tsBtnLocked.Tag is LockInfo lockRequest)
                     {
@@ -1863,7 +1870,7 @@ namespace RUINORERP.UI.BaseForm
                     break;
 
                 case MenuItemEnums.删除:
-                    if (IsLock())
+                    if (await IsLock())
                     {
                         return;
                     }
@@ -1871,18 +1878,18 @@ namespace RUINORERP.UI.BaseForm
 
                     break;
                 case MenuItemEnums.修改:
-                    if (IsLock())
+                    if (await IsLock())
                     {
                         return;
                     }
-                    LockBill();
+                    await LockBill();
                     Modify();
                     break;
                 case MenuItemEnums.查询:
                     Query();
                     break;
                 case MenuItemEnums.保存:
-                    if (IsLock())
+                    if (await IsLock())
                     {
                         return;
                     }
@@ -1926,7 +1933,7 @@ namespace RUINORERP.UI.BaseForm
 
                     break;
                 case MenuItemEnums.提交:
-                    if (IsLock())
+                    if (await IsLock())
                     {
                         return;
                     }
@@ -1950,11 +1957,11 @@ namespace RUINORERP.UI.BaseForm
                     Property();
                     break;
                 case MenuItemEnums.审核:
-                    if (IsLock())
+                    if (await IsLock())
                     {
                         return;
                     }
-                    LockBill();
+                    await LockBill();
                     toolStripbtnReview.Enabled = false;
                     ReviewResult reviewResult = await Review();
                     if (!reviewResult.Succeeded)
@@ -1965,11 +1972,11 @@ namespace RUINORERP.UI.BaseForm
 
                     break;
                 case MenuItemEnums.反审:
-                    if (IsLock())
+                    if (await IsLock())
                     {
                         return;
                     }
-                    LockBill();
+                    await LockBill();
                     toolStripBtnReverseReview.Enabled = false;
                     bool rs反审 = await ReReview();
                     if (!rs反审)
@@ -1980,14 +1987,14 @@ namespace RUINORERP.UI.BaseForm
 
                     break;
                 case MenuItemEnums.结案:
-                    if (IsLock())
+                    if (await IsLock())
                     {
                         return;
                     }
                     await CloseCaseAsync();
                     break;
                 case MenuItemEnums.反结案:
-                    if (IsLock())
+                    if (await IsLock())
                     {
                         return;
                     }
@@ -2466,148 +2473,271 @@ namespace RUINORERP.UI.BaseForm
         }
 
         /// <summary>
-        ///UI上有显示锁定时不重复锁。后面要优化
+        /// 检查并锁定单据
         /// </summary>
-        public override void LockBill()
+        /// <returns>锁定是否成功</returns>
+        protected virtual async Task<bool> CheckAndLockBill()
         {
             if (EditEntity == null)
+                return false;
+
+            try
             {
-                return;
+                // 获取单据ID
+                string pkCol = BaseUIHelper.GetEntityPrimaryKey<T>();
+                long billId = (long)ReflectionHelper.GetPropertyValue(EditEntity, pkCol);
+
+                // 获取业务数据
+                CommBillData billData = EntityMappingHelper.GetBillData(typeof(T), EditEntity);
+
+                if (lockManagementService == null)
+                {
+                    lockManagementService = Startup.GetFromFac<LockManagementService>();
+                }
+                long currentUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
+                // 检查锁状态
+                var lockStatus = await lockManagementService.CheckLockStatusAsync(billId, CurMenuInfo.MenuID);
+
+                if (lockStatus != null && lockStatus.IsSuccess && lockStatus.LockInfo.IsLocked &&
+                    lockStatus.LockInfo.UserId != currentUserId)
+                {
+                    // 单据已被其他用户锁定
+                    string message = $"单据已被用户 {lockStatus.LockInfo.UserName} 锁定，无法编辑。\n" +
+                                    $"锁定时间：{lockStatus.LockInfo.LockTime:yyyy-MM-dd HH:mm:ss}";
+                    MessageBox.Show(message, "单据锁定",
+                        MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return false;
+                }
+                else
+                {
+                    // 尝试锁定单据
+                    var lockResponse =await lockManagementService.LockAsync(billId, CurMenuInfo.MenuID);
+
+                    if (!lockResponse.IsSuccess)
+                    {
+                        // 锁定失败
+                        MessageBox.Show(lockResponse.Message, "锁定失败",
+                            MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return false;
+                    }
+                }
+
+
+
+                // 更新UI显示
+                this.tsBtnLocked.Image = global::RUINORERP.UI.Properties.Resources.Lockbill;
+
+
+                return true;
             }
-            //如果要锁这个单 看这个单是不是已经被其它人锁，如果没有人锁则我可以锁
-            long userid = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
-
-            // 锁这个单这前要把这个类型的前面的单全部释放出来。一个业务一个人只能锁一个单号
-            UNLockByBizName(userid);
-
-            long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
-            if (pkid > 0)
+            catch (Exception ex)
             {
-#warning TODO: 这里需要完善具体逻辑，当前仅为占位
-                /*
-              var lockeduserid = MainForm.Instance.lockManager.GetLockedBy(pkid);
-              if (lockeduserid != userid)
-              {
-                  if (lockeduserid > 0)
-                  {
-                      //被人锁了
-                      this.tsBtnLocked.Image = global::RUINORERP.UI.Properties.Resources.Lockbill;
-                  }
-                  else
-                  {
-                      LockBill(pkid, userid);
-                  }
-              }
-
-
-              #region 锁定当前单据  后面流程上也要能锁定
-
-
-              #endregion
-              */
+                MainForm.Instance.PrintInfoLog("锁定单据失败: " + ex.Message);
+                MessageBox.Show("锁定单据失败: " + ex.Message, "错误",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
             }
+        }
+
+        /// <summary>
+        /// 解锁单据
+        /// </summary>
+        protected virtual async void UnlockBill()
+        {
+
+            try
+            {
+                // 获取当前用户信息
+                long currentUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
+                string currentUserName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.UserName;
+
+
+                // 获取单据ID
+                string pkCol = BaseUIHelper.GetEntityPrimaryKey<T>();
+                long billId = (long)ReflectionHelper.GetPropertyValue(EditEntity, pkCol);
+
+
+
+                // 获取LockManagementService实例
+                var lockService = Startup.GetFromFac<LockManagementService>();
+                if (lockService == null)
+                {
+                    throw new Exception("无法获取锁定管理服务");
+                }
+
+                // 执行解锁操作
+                var unlockResponse = await lockService.UnlockBillAsync(billId, CurMenuInfo.MenuID);
+
+                if (unlockResponse.IsSuccess)
+                {
+                    // 更新UI显示
+                    this.tsBtnLocked.Image = global::RUINORERP.UI.Properties.Resources.unlockbill;
+                }
+                else
+                {
+                    MessageBox.Show(unlockResponse.Message, "解锁失败",
+                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.PrintInfoLog("解锁单据失败: " + ex.Message);
+                MessageBox.Show("解锁单据失败: " + ex.Message, "错误",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// 管理员强制解锁单据
+        /// </summary>
+        protected virtual void ForceUnlockBill()
+        {
+
+            if (true)
+            {
+                // 更新UI显示
+                this.tsBtnLocked.Image = global::RUINORERP.UI.Properties.Resources.unlockbill;
+                MessageBox.Show("单据已强制解锁", "操作成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+        }
+
+        /// <summary>
+        /// 重写基类的LockBill方法，使用新的锁定机制
+        /// </summary>
+        /// <summary>
+        /// 使用新的锁定模型异步锁定单据
+        /// </summary>
+        /// <returns>锁定是否成功</returns>
+        public override async Task<bool> LockBill()
+        {
+            bool lockSuccess = false;
+
+            if (EditEntity == null)
+                return false;
+
+            try
+            {
+                string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
+                long billId = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
+                if (billId <= 0)
+                    return false;
+
+                if (lockManagementService != null)
+                {
+                    var result = await lockManagementService.LockAsync(billId, CurMenuInfo.MenuID);
+                    lockSuccess = result != null && result.LockInfo.IsLocked;
+
+                    if (lockSuccess)
+                    {
+                        // 更新UI状态
+                        if (tsBtnLocked != null)
+                        {
+                            tsBtnLocked.Visible = true;
+                        }
+
+                        if (AuthorizeController.GetShowDebugInfoAuthorization(MainForm.Instance.AppContext))
+                        {
+                            MainForm.Instance.uclog.AddLog($"单据 {billId} 锁定成功", UILogType.普通消息);
+                        }
+                    }
+                    else
+                    {
+                        MainForm.Instance.uclog.AddLog($"单据 {billId} 锁定失败", UILogType.错误);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.uclog.AddLog($"锁定操作异常: {ex.Message}", UILogType.错误);
+                lockSuccess = false;
+            }
+
+            return lockSuccess;
         }
 
 
 
 
-        private void LockBill(long BillID, long userid)
+        private async Task LockBill(long BillID, long userid)
         {
 
             CommBillData cbd = EntityMappingHelper.GetBillData(typeof(T), EditEntity);
 
-            LockedInfo lockRequest = new LockedInfo
+            if (lockManagementService != null)
             {
-                BillID = BillID,
-                BillData = cbd,
-                LockedUserID = userid,
-                LockedUserName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name,
-                MenuID = CurMenuInfo.MenuID
-            };
-
-#warning TODO: 这里需要完善具体逻辑，当前仅为占位
-            /*
-            using (ClientLockManagerCmd cmd = new ClientLockManagerCmd(CommandDirection.Send))
-            {
-                lockRequest.PacketId = cmd.PacketId;
-                cmd.lockCmd = LockCmd.LOCK;
-                cmd.RequestInfo = lockRequest;
-                // 注册锁定单据的事件处理程序
-                ClientEventManager.Instance.AddCommandHandler(cmd.PacketId, cmd.HandleLockEvent);
-                MainForm.Instance.dispatcher.DispatchAsync(cmd, CancellationToken.None);
-                // 注册一次性事件（确保匿名委托不会重复）
-                cmd.LockChanged += (sender, e) =>
+                var result = await lockManagementService.LockAsync(BillID, CurMenuInfo.MenuID);
+                if (result.IsSuccess && result.LockInfo.IsLocked)
                 {
-                    if (e.requestBaseInfo.BillID != BillID)
+                    // 更新UI状态
+                    if (tsBtnLocked != null)
                     {
-                        return;
+                        tsBtnLocked.Visible = true;
                     }
 
-                    if (e.isSuccess)
+                    if (AuthorizeController.GetShowDebugInfoAuthorization(MainForm.Instance.AppContext))
                     {
-                        this.tsBtnLocked.Visible = true;
-                        this.tsBtnLocked.Image = global::RUINORERP.UI.Properties.Resources.unlockbill;
+                        MainForm.Instance.uclog.AddLog($"单据 {BillID} 锁定成功", UILogType.普通消息);
                     }
-
-                };
-
-
+                }
+                else
+                {
+                    MainForm.Instance.uclog.AddLog($"单据 {BillID} 锁定失败", UILogType.错误);
+                }
             }
-            */
         }
 
-        private bool IsLock()
+        /// <summary>
+        /// 检查单据是否被锁定
+        /// </summary>
+        /// <returns>如果单据被锁定且不是当前用户锁定，则返回true；否则返回false</returns>
+        private async Task<bool> IsLock()
         {
-#warning TODO: 这里需要完善具体逻辑，当前仅为占位
-            /*
-            //如果已经有锁定标记了。即使已经释放了锁。也要刷新数据后才可以保存。不然数据不会统一。
-            if (tsBtnLocked.Tag != null && tsBtnLocked.Tag is LockInfo lockInfo)
-            {
-
-                if (lockInfo.IsLocked && lockInfo.LockedByID != MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID)
-                {
-                    var LockInfoCheck = MainForm.Instance.lockManager.GetLockStatus(lockInfo.BillID);
-                    if (LockInfoCheck == null)
-                    {
-                        return false;
-                    }
-                    //别人锁定了
-                    string tipMsg = $"单据已被用户{lockInfo.LockedByName}锁定，请刷新后再试,或【点击已锁定】联系锁定人员解锁。";
-                    MainForm.Instance.uclog.AddLog(tipMsg);
-                    tsBtnLocked.AutoToolTip = true;
-                    tsBtnLocked.ToolTipText = tipMsg;
-                    tsBtnLocked.Visible = true;
-                    tsBtnLocked.Tag = lockInfo;
-                    this.tsBtnLocked.Image = global::RUINORERP.UI.Properties.Resources.Lockbill;
-                    //显示锁定认为锁定。要刷新数据
-                    MessageBox.Show($"单据已被{lockInfo.LockedByName}锁定，请刷新后重试。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return true;
-                }
-
-            }
-            */
             bool isLocked = false;
             string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
             long pkid = 0;
+
             #region 锁定当前单据  后面流程上也要能锁定
             if (EditEntity != null)
             {
                 pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
                 if (pkid > 0)
                 {
-#warning TODO: 这里需要完善具体逻辑，当前仅为占位
-
-                    /*var lockuserid = MainForm.Instance.lockManager.GetLockedBy(pkid);
-                    if (lockuserid > 0)
+                    // 获取LockManagementService实例
+                    if (lockManagementService != null)
                     {
-                        if (lockuserid != MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID)
+                        try
                         {
-                            //锁定提示
-                            MessageBox.Show($"单据已被用户{lockuserid}锁定，请稍后再试,或联系他解锁。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                            isLocked = true;
+                            // 同步获取锁状态
+                            var lockStatus = await lockManagementService.CheckLockStatusAsync(pkid, CurMenuInfo.MenuID);
+
+                            if (lockStatus != null && lockStatus.LockInfo.IsLocked)
+                            {
+                                // 获取当前用户ID
+                                long currentUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
+
+                                // 如果不是当前用户锁定的单据
+                                if (lockStatus.LockInfo.UserId != currentUserId)
+                                {
+                                    isLocked = true;
+                                    // 更新UI状态
+                                    string tipMsg = $"单据已被用户{lockStatus.LockInfo.UserName}锁定，请刷新后再试,或【点击已锁定】联系锁定人员解锁。";
+                                    MainForm.Instance.uclog.AddLog(tipMsg);
+                                    tsBtnLocked.AutoToolTip = true;
+                                    tsBtnLocked.ToolTipText = tipMsg;
+                                    tsBtnLocked.Visible = true;
+                                    tsBtnLocked.Tag = lockStatus;
+                                    this.tsBtnLocked.Image = global::RUINORERP.UI.Properties.Resources.Lockbill;
+
+                                    // 显示锁定提示
+                                    MessageBox.Show($"单据已被{lockStatus.LockInfo.UserName}锁定，请刷新后重试。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            MainForm.Instance.uclog.AddLog($"检查锁定状态时发生异常: {ex.Message}", UILogType.错误);
                         }
                     }
-                    */
                 }
             }
             #endregion
@@ -2754,6 +2884,7 @@ namespace RUINORERP.UI.BaseForm
                 "ApprovalResults"
             };
 
+          
 
             ApprovalEntity ae = new ApprovalEntity();
             if (ReflectionHelper.ExistPropertyName<T>("ApprovalStatus") && ReflectionHelper.ExistPropertyName<T>("ApprovalResults"))
@@ -2769,8 +2900,6 @@ namespace RUINORERP.UI.BaseForm
                 }
             }
             //如果已经审核并且审核通过，则不能再次审核
-
-
 
             //
             //CommBillData cbd = EntityMappingHelper.GetBillData<T>(EditEntity);
@@ -2802,7 +2931,6 @@ namespace RUINORERP.UI.BaseForm
                 }
             }
 
-
             ae.Approver_by = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
             frm.BindData(ae);
             await Task.Delay(1);
@@ -2825,14 +2953,32 @@ namespace RUINORERP.UI.BaseForm
 
                 if (ae.ApprovalResults == true)
                 {
-                    //审核了。数据状态要更新为
-                    EditEntity.SetPropertyValue(typeof(DataStatus).Name, (int)DataStatus.确认);
+                    ////审核通过，使用v3状态管理系统转换状态
+                    //if (EditEntity.StatusContext != null)
+                    //{
+                    //    try
+                    //    {
+                    //        await EditEntity.TransitionToAsync(DataStatus.确认);
+                    //    }
+                    //    catch (InvalidOperationException ex)
+                    //    {
+                    //        MainForm.Instance.uclog.AddLog($"状态转换失败: {ex.Message}");
+                    //        reviewResult.Succeeded = false;
+                    //        return reviewResult;
+                    //    }
+                    //}
+                    //else
+                    //{
+                    //    // 回退到旧的状态管理系统
+                     EditEntity.SetPropertyValue(typeof(DataStatus).Name, (int)DataStatus.确认);
+                    //}
                 }
                 else
                 {
                     //审核了。驳回 时数据状态要更新为新建。要再次修改后提交
                     #region UI驳回直接保存返回。不用进入审核流程了。
-                    EditEntity.SetPropertyValue(typeof(DataStatus).Name, (int)DataStatus.新建);
+                    
+                    
                     if (ReflectionHelper.ExistPropertyName<T>("ApprovalOpinions"))
                     {
                         EditEntity.SetPropertyValue("ApprovalOpinions", ae.ApprovalOpinions);
@@ -2853,7 +2999,6 @@ namespace RUINORERP.UI.BaseForm
                     reviewResult.Succeeded = rr.Succeeded;
                     return reviewResult;
                     #endregion
-
                 }
 
 
@@ -3000,7 +3145,7 @@ namespace RUINORERP.UI.BaseForm
                                                     List<tb_FM_ReceivablePayable> receivablePayables = new List<tb_FM_ReceivablePayable>();
                                                     receivablePayables.Add(payable);
 
-                                                    tb_FM_PaymentRecord newPaymentRecord = paymentController.BuildPaymentRecord(receivablePayables).Result;
+                                                    tb_FM_PaymentRecord newPaymentRecord =await paymentController.BuildPaymentRecord(receivablePayables);
                                                     newPaymentRecord.Remark = "平台单，已退款，货回仓审核时自动生成的收款单（负数）红字";
                                                     newPaymentRecord.PaymentStatus = (int)PaymentStatus.待审核;
                                                     if (!newPaymentRecord.Paytype_ID.HasValue && saleOutRe.Paytype_ID.HasValue)
@@ -3189,13 +3334,15 @@ namespace RUINORERP.UI.BaseForm
             if (pkid > 0)
             {
                 //判断是否锁定
-                if (IsLock())
+                if (await IsLock())
                 {
                     MainForm.Instance.uclog.AddLog($"单据已被锁定，请刷新后再试");
                     return rs;
                     //分读写锁  保存后就只有读。释放 写？
                 }
             }
+
+          
 
             if (ReflectionHelper.ExistPropertyName<T>("ApprovalStatus") && ReflectionHelper.ExistPropertyName<T>("ApprovalResults"))
             {
@@ -3247,8 +3394,10 @@ namespace RUINORERP.UI.BaseForm
                         //MemberInfo minfo = PNameExp.GetMemberInfo();
                         //string propertyName = minfo.Name;
 
-                        //反审核。驳回 时数据状态要更新为新建。要再次修改后提交
-                        EditEntity.SetPropertyValue(typeof(DataStatus).Name, (int)DataStatus.新建);
+                        
+                            // 回退到旧的状态管理系统
+                            EditEntity.SetPropertyValue(typeof(DataStatus).Name, (int)DataStatus.新建);
+                      
                         if (ReflectionHelper.ExistPropertyName<T>("ApprovalOpinions"))
                         {
                             EditEntity.SetPropertyValue("ApprovalOpinions", ae.ApprovalOpinions);
@@ -3601,7 +3750,7 @@ namespace RUINORERP.UI.BaseForm
 
             BusinessHelper.Instance.InitEntity(EditEntity);
             BusinessHelper.Instance.InitStatusEntity(EditEntity);
-            
+
             if (OnBindDataToUIEvent != null)
             {
                 bindingSourceSub.Clear();
@@ -3612,7 +3761,7 @@ namespace RUINORERP.UI.BaseForm
             {
                 ReflectionHelper.SetPropertyValue(EditEntity, typeof(ActionStatus).Name, (int)ActionStatus.新增);
             }
-            if(EditEntity is BaseEntity baseEntity)
+            if (EditEntity is BaseEntity baseEntity)
             {
                 baseEntity.FileStorageInfoList = new List<tb_FS_FileStorageInfo>();
             }
@@ -3739,11 +3888,137 @@ namespace RUINORERP.UI.BaseForm
         }
 
         /// <summary>
-        ///  加载转单功能
+        /// 加载单据联动选项到下拉菜单
         /// </summary>
         protected virtual void LoadConvertDocToDropDownItemsAsync()
         {
+            // 清空现有菜单项
+            toolStripbtnConvertDocuments.DropDownItems.Clear();
 
+            try
+            {
+                // 获取当前单据类型
+                var sourceDocType = typeof(T);
+
+                // 获取所有可转换的目标单据类型
+                var converterFactory = Startup.GetFromFac<RUINORERP.Business.Document.DocumentConverterFactory>();
+                var availableConversions = converterFactory.GetAvailableConversions<T>();
+
+                // 为每种可转换类型创建菜单项
+                foreach (var conversionOption in availableConversions)
+                {
+                    var menuItem = new ToolStripMenuItem(conversionOption.DisplayName);
+                    // 保存转换选项的引用，避免闭包问题
+                    var targetType = converterFactory.GetTargetType(conversionOption.TargetDocumentType);
+                    menuItem.Click += async (sender, e) =>
+                    {
+                        try
+                        {
+                            // 在后台线程执行转换，避免UI卡顿
+                            await PerformDocumentConversionAsync(targetType);
+                        }
+                        catch (Exception ex)
+                        {
+                            MainForm.Instance.uclog.AddLog("执行单据联动时发生错误: " + ex.Message, Global.UILogType.错误);
+                            MessageBox.Show("执行单据联动时发生错误: " + ex.Message, "操作错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
+                    };
+                    toolStripbtnConvertDocuments.DropDownItems.Add(menuItem);
+                }
+
+                // 根据是否有可转换选项设置按钮可见性
+                toolStripbtnConvertDocuments.Visible = toolStripbtnConvertDocuments.DropDownItems.Count > 0;
+                toolStripbtnConvertDocuments.Text = "联动";
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.uclog.AddLog("加载单据联动选项失败: " + ex.Message, Global.UILogType.错误);
+                toolStripbtnConvertDocuments.Visible = false;
+            }
+        }
+
+        /// <summary>
+        /// 执行单据转换操作
+        /// </summary>
+        /// <param name="targetType">目标单据类型</param>
+        private async Task PerformDocumentConversionAsync(Type targetType)
+        {
+            if (EditEntity == null)
+            {
+                // 使用Invoke确保在UI线程显示消息框
+                this.Invoke((MethodInvoker)delegate
+                {
+                    MessageBox.Show("请先加载或保存单据后再执行联动操作！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                });
+                return;
+            }
+
+            try
+            {
+                // 使用ActionManager执行单据联动
+                var actionManager = Startup.GetFromFac<RUINORERP.Business.Document.ActionManager>();
+
+                // 准备转换选项
+                var options = new RUINORERP.Business.Document.ActionOptions
+                {
+                    UseTransaction = true,
+                    SaveTarget = true
+                };
+
+                // 执行联动操作
+                dynamic result = null;
+                string targetTypeName = targetType?.Name ?? "Unknown";
+
+                // 使用反射调用正确的泛型方法
+                var method = typeof(RUINORERP.Business.Document.ActionManager)
+                    .GetMethod("ExecuteActionAsync")
+                    .MakeGenericMethod(typeof(T), targetType);
+
+                var task = (Task)method.Invoke(actionManager, new object[] { EditEntity, options });
+                await task;
+
+                // 获取结果属性
+                var resultProperty = task.GetType().GetProperty("Result");
+                result = resultProperty?.GetValue(task);
+
+                // 在UI线程处理结果
+                this.Invoke((MethodInvoker)delegate
+                {
+                    if (result != null && result.Success)
+                    {
+                        // 显示成功消息，并提供打开新单据的选项
+                        var dialogResult = MessageBox.Show($"单据联动成功！已生成{targetTypeName}。是否打开新生成的单据？",
+                            "操作成功", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
+
+                        if (dialogResult == DialogResult.Yes && result.Data != null)
+                        {
+                            // 这里可以根据实际情况打开新单据
+                            // 由于没有具体的打开单据方法，暂时只显示消息
+                            MessageBox.Show("新单据已生成", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        }
+                    }
+                    else if (result != null)
+                    {
+                        // 显示失败消息
+                        string errorMsg = result.ErrorMessage ?? "未知错误";
+                        MessageBox.Show("单据联动失败: " + errorMsg, "操作失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                    else
+                    {
+                        MessageBox.Show("不支持的目标单据类型，请联系管理员配置相应的转换器", "操作失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                // 记录错误并显示消息
+                MainForm.Instance.uclog.AddLog("执行单据联动时发生错误: " + ex.Message, Global.UILogType.错误);
+
+                this.Invoke((MethodInvoker)delegate
+                {
+                    MessageBox.Show("执行单据联动时发生错误: " + ex.Message, "操作错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                });
+            }
         }
 
         protected virtual void RelatedQuery()
@@ -3760,7 +4035,7 @@ namespace RUINORERP.UI.BaseForm
                 bindingSourceSub.Clear();
 
                 // NewEditEntity = Activator.CreateInstance(typeof(T)) as T;
-                
+
                 NewEditEntity = EditEntity.DeepCloneByjson();
 
                 // 获取需要忽略的属性配置
@@ -3803,7 +4078,7 @@ namespace RUINORERP.UI.BaseForm
             T NewEditEntity = default(T);
             if (OnBindDataToUIEvent != null)
             {
-                
+
                 bindingSourceSub.Clear();
 
                 NewEditEntity = EditEntity.DeepCloneByjson();
@@ -3829,7 +4104,7 @@ namespace RUINORERP.UI.BaseForm
 
                 ReflectionHelper.SetPropertyValue(NewEditEntity, billNoColName, string.Empty);
 
-                
+
                 // 重置主实体的主键
                 ResetPrimaryKey(NewEditEntity, PKCol);
 
@@ -4262,9 +4537,9 @@ namespace RUINORERP.UI.BaseForm
             else
             {
 
-                if (IsLock())
+                if (await IsLock())
                 {
-#warning TODO: 这里需要完善具体逻辑，当前仅为占位
+
                     //string tipmsg = string.Empty;
                     ////如果已经有锁定标记了。即使已经释放了锁。也要刷新数据后才可以保存。不然数据不会统一。
                     //if (tsBtnLocked.Visible && tsBtnLocked.Tag != null && tsBtnLocked.Tag is LockInfo lockInfo)
@@ -4622,42 +4897,36 @@ namespace RUINORERP.UI.BaseForm
         {
             if (EditEntity == null) return false;
 
+      
+                // 回退到旧的状态管理系统
+                // 获取当前状态
+                var statusProperty = typeof(TStatus).Name;
+                var currentStatus = (TStatus)Enum.ToObject(
+                    typeof(TStatus),
+                    EditEntity.GetPropertyValue(statusProperty)
+                );
 
+                // 验证状态转换
+                try
+                {
+                    FMPaymentStatusHelper.ValidateTransition(currentStatus, targetStatus);
+                }
+                catch (InvalidOperationException ex)
+                {
+                    MainForm.Instance.uclog.AddLog($"提交失败: {ex.Message}");
+                    return false;
+                }
 
-            // 获取当前状态
-            var statusProperty = typeof(TStatus).Name;
-            var currentStatus = (TStatus)Enum.ToObject(
-                typeof(TStatus),
-                EditEntity.GetPropertyValue(statusProperty)
-            );
-
-            // 验证状态转换
-            try
-            {
-                FMPaymentStatusHelper.ValidateTransition(currentStatus, targetStatus);
-            }
-            catch (InvalidOperationException ex)
-            {
-                MainForm.Instance.uclog.AddLog($"提交失败: {ex.Message}");
-                return false;
-            }
-
-
-            if (!FMPaymentStatusHelper.CanSubmit(currentStatus))
-            {
-
-
-                MainForm.Instance.uclog.AddLog("单据非草稿状态，提交失败");
-                toolStripbtnSubmit.Enabled = false;
-                return false;
-            }
-
-            //   // 状态为草稿时直接更新状态  业务方法中判断了。不能重复
-            //ReflectionHelper.SetPropertyValue(EditEntity, statusProperty, (int)(object)targetStatus);
+                if (!FMPaymentStatusHelper.CanSubmit(currentStatus))
+                {
+                    MainForm.Instance.uclog.AddLog("单据非草稿状态，提交失败");
+                    toolStripbtnSubmit.Enabled = false;
+                    return false;
+                }
+          
 
             // 保存实体
             var ctr = Startup.GetFromFacByName<BaseController<T>>($"{typeof(T).Name}Controller");
-            //var result = await controller.BaseSaveOrUpdate(EditEntity as T);
             ReturnResults<T> result = await ctr.SubmitAsync(EditEntity, true);
             if (result.Succeeded)
             {
@@ -4668,12 +4937,12 @@ namespace RUINORERP.UI.BaseForm
                 MainForm.Instance.uclog.AddLog("提交成功");
                 ToolBarEnabledControl(EditEntity);
 
-                // 记录审计日志
-                MainForm.Instance.AuditLogHelper.CreateAuditLog<T>(
-                    "提交",
-                    result.ReturnObject,
-                    $"状态变更: {currentStatus} → {targetStatus}"
-                );
+                //// 记录审计日志
+                //MainForm.Instance.AuditLogHelper.CreateAuditLog<T>(
+                //    "提交",
+                //    result.ReturnObject,
+                //    $"状态变更: {EditEntity.StatusContext?.CurrentStatus} → {targetStatus}"
+                //);
 
                 return true;
             }
@@ -4760,7 +5029,7 @@ namespace RUINORERP.UI.BaseForm
                 bindingSourceSub.Clear();
                 OnBindDataToUIEvent(entity as T, ActionStatus.加载);
 
-                //如果 查出来的数据 能审核 能打印 等显示各种状态 TODO
+
                 ToolBarEnabledControl(entity);
 
                 ToolBarEnabledControl(MenuItemEnums.查询);
@@ -4884,83 +5153,87 @@ namespace RUINORERP.UI.BaseForm
             base.Exit(this);
         }
 
+        /// <summary>
+        /// 使用新的锁定模型请求解锁单据
+        /// 向锁定当前单据的用户发送解锁请求
+        /// </summary>
         public override void RequestUnLock()
         {
-            if (EditEntity != null)
+            if (EditEntity == null)
+                return;
+
+
+            string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
+            long billId = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
+            if (billId <= 0)
+                return;
+
+            // 获取LockManagementService实例
+            if (lockManagementService != null)
             {
-                string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
-                long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
-                if (pkid > 0)
+                // 异步发送解锁请求
+                Task.Run(async () =>
                 {
-#warning TODO: 这里需要完善具体逻辑，当前仅为占位
-                    /*
-
-                    //如果这个锁是自己锁的。就释放
-                    long userid = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
-                    var LockInfo = MainForm.Instance.lockManager.GetLockStatus(pkid);
-                    if (LockInfo != null && LockInfo.LockedByID != userid)
+                    try
                     {
-                        
-                        //这里只是取打印配置信息
-                        CommBillData cbd = new CommBillData();
-                        cbd = EntityMappingHelper.GetBillData(typeof(T), EditEntity);
-
-                        ClientLockManagerCmd cmd = new ClientLockManagerCmd(CommandDirection.Send);
-
-                        cmd.lockCmd = LockCmd.RequestUnLock;
-
-                        RequestUnLockInfo lockRequest = new RequestUnLockInfo();
-                        lockRequest.RequestUserName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name;
-                        lockRequest.RequestUserID = userid;
-                        lockRequest.BillID = pkid;
-                        lockRequest.BillData = cbd;
-                        lockRequest.MenuID = CurMenuInfo.MenuID;
-                        lockRequest.LockedUserID = LockInfo.LockedByID;
-                        lockRequest.LockedUserName = LockInfo.LockedByName;
-                        lockRequest.PacketId = cmd.PacketId;
-                        cmd.RequestInfo = lockRequest;
-                        ClientEventManager.Instance.AddCommandHandler(cmd.PacketId, cmd.HandleLockEvent);
-                        MainForm.Instance.dispatcher.DispatchAsync(cmd, CancellationToken.None);
-                        cmd.LockChanged += (sender, e) =>
-                        {
-                            MessageBox.Show($"已经向锁定者【{lockRequest.LockedUserName}】发送了解锁请求。等待结果中");
-                        };
+                        await lockManagementService.RequestUnlockAsync(billId, CurMenuInfo.MenuID);
+                        MessageBox.Show($"已向锁定用户发送解锁请求，请等待回应。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        MainForm.Instance.uclog.AddLog($"已向锁定用户发送单据 {billId} 的解锁请求", UILogType.普通消息);
                     }
-                    */
-                }
+                    catch (Exception ex)
+                    {
+                        MainForm.Instance.uclog.AddLog($"发送解锁请求失败: {ex.Message}", UILogType.错误);
+                        MessageBox.Show($"发送解锁请求失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                });
             }
         }
 
+
+
         public override void UNLock()
         {
-            if (EditEntity != null)
+            if (EditEntity == null)
+                return;
+
+            try
             {
                 string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
-                long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
-                if (pkid > 0)
+                long billId = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
+                if (billId <= 0)
+                    return;
+
+
+                // 获取LockManagementService实例
+                if (lockManagementService != null)
                 {
-                    //如果这个锁是自己锁的。就释放
-                    long userid = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
-#warning TODO: 这里需要完善具体逻辑，当前仅为占位
-
-                    //if (MainForm.Instance.lockManager.GetLockedBy(pkid) == userid)
-                    //{
-                    //    UNLock(pkid, userid);
-                    //    //先本地再服务器
-                    //    if (MainForm.Instance.lockManager.Unlock(pkid, userid))
-                    //    {
-                    //        MainForm.Instance.PrintInfoLog($"本地删除{pkid}锁成功");
-                    //    }
-                    //    this.tsBtnLocked.Visible = true;
-                    //    this.tsBtnLocked.Image = global::RUINORERP.UI.Properties.Resources.unlockbill;
-                    //}
-
-                    //BizTypeMapper mapper = new BizTypeMapper();
-                    //OriginalData od = ActionForClient.单据锁定释放(pkid, MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID,
-                    //         MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name,
-                    //         (int)mapper.GetBizType(typeof(T)), CurMenuInfo.MenuID);
-                    //MainForm.Instance.ecs.AddSendData(od);
+                    // 异步解锁，使用Task.Run以避免阻塞UI线程
+                    Task.Run(async () =>
+                    {
+                        try
+                        {
+                            await lockManagementService.UnlockBillAsync(billId, CurMenuInfo.MenuID);
+                            if (AuthorizeController.GetShowDebugInfoAuthorization(MainForm.Instance.AppContext))
+                            {
+                                MainForm.Instance.uclog.AddLog($"单据 {billId} 解锁成功", UILogType.提示);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            MainForm.Instance.uclog.AddLog($"单据解锁失败: {ex.Message}", UILogType.错误);
+                        }
+                    });
                 }
+
+                // 更新UI状态
+                if (tsBtnLocked != null)
+                {
+                    tsBtnLocked.Visible = false;
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.uclog.AddLog($"解锁操作异常: {ex.Message}", UILogType.错误);
             }
         }
 
@@ -4971,7 +5244,7 @@ namespace RUINORERP.UI.BaseForm
             CommBillData cbd = new CommBillData();
             cbd = EntityMappingHelper.GetBillData(typeof(T), EditEntity);
 
-#warning TODO: 这里需要完善具体逻辑，当前仅为占位
+
             /*
             //得到了锁
             ClientLockManagerCmd cmd = new ClientLockManagerCmd(CommandDirection.Send);
@@ -4999,7 +5272,7 @@ namespace RUINORERP.UI.BaseForm
 
             CommBillData cbd = new CommBillData();
             cbd = EntityMappingHelper.GetBillData(typeof(T), EditEntity);
-#warning TODO: 这里需要完善具体逻辑，当前仅为占位
+
             /*
             //得到了锁
             ClientLockManagerCmd cmd = new ClientLockManagerCmd(CommandDirection.Send);

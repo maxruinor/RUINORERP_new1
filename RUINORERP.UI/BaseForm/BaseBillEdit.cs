@@ -121,9 +121,10 @@ namespace RUINORERP.UI.BaseForm
             IncludedMenuList.Add(menuItem);
         }
         #endregion
-        public virtual void LockBill()
+        public virtual Task<bool> LockBill()
         {
-
+            // 默认返回未锁定状态
+            return Task.FromResult(false);
         }
 
         public virtual void UNLock()

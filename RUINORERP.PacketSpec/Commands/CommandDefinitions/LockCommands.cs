@@ -3,85 +3,69 @@
 namespace RUINORERP.PacketSpec.Commands
 {
     /// <summary>
-    /// 锁管理相关命令
+    /// 锁管理相关命令 - 优化版本（保持原有CommandId定义方式）
+    /// 优化目标：移除冗余指令，保留核心业务场景所需的最小指令集
     /// </summary>
     public static class LockCommands
     {
-        #region 锁管理命令 (0x08xx)
-        /// <summary>
-        /// 申请锁 - 申请获取资源锁
-        /// </summary>
-        public static readonly CommandId LockRequest = new CommandId(CommandCategory.Lock, (byte)(CommandCatalog.Lock_LockRequest & 0xFF));
+        #region 基础锁定操作 (0x0800-0x0802)
 
         /// <summary>
-        /// 释放锁 - 释放已获取的资源锁
+        /// 锁定单据 - 申请锁定指定单据，防止其他用户同时编辑
+        /// 命令码: 0x0800
         /// </summary>
-        public static readonly CommandId LockRelease = new CommandId(CommandCategory.Lock, (byte)(CommandCatalog.Lock_LockRelease & 0xFF));
+        public static readonly CommandId Lock = new CommandId(CommandCategory.Lock, (byte)(CommandCatalog.Lock_Lock & 0xFF));
 
         /// <summary>
-        /// 锁状态查询 - 查询资源锁状态
+        /// 解锁单据 - 释放已锁定的单据，允许其他用户编辑
+        /// 命令码: 0x0801  
         /// </summary>
-        public static readonly CommandId LockStatus = new CommandId(CommandCategory.Lock, (byte)(CommandCatalog.Lock_LockStatus & 0xFF));
+        public static readonly CommandId Unlock = new CommandId(CommandCategory.Lock, (byte)(CommandCatalog.Lock_Unlock & 0xFF));
 
         /// <summary>
-        /// 强制解锁 - 强制释放资源锁
+        /// 检查锁定状态 - 查询单据当前的锁定状态
+        /// 命令码: 0x0802
         /// </summary>
-        public static readonly CommandId ForceUnlock = new CommandId(CommandCategory.Lock, (byte)(CommandCatalog.Lock_ForceUnlock & 0xFF));
+        public static readonly CommandId CheckLockStatus = new CommandId(CommandCategory.Lock, (byte)(CommandCatalog.Lock_CheckLockStatus & 0xFF));
+
+        #endregion
+
+        #region 锁定冲突处理 (0x0803-0x0805)
 
         /// <summary>
-        /// 检查锁状态 - 检查资源锁是否可用
-        /// </summary>
-        public static readonly CommandId CheckLock = new CommandId(CommandCategory.Lock, (byte)(CommandCatalog.Lock_CheckLock & 0xFF));
-
-        /// <summary>
-        /// 广播 - 广播锁状态信息
-        /// </summary>
-        public static readonly CommandId Broadcast = new CommandId(CommandCategory.Lock, (byte)(CommandCatalog.Lock_Broadcast & 0xFF));
-
-        /// <summary>
-        /// 请求解锁 - 请求释放锁资源
+        /// 请求解锁 - 当单据被其他用户锁定时，请求当前锁定用户释放锁定
+        /// 命令码: 0x0803
         /// </summary>
         public static readonly CommandId RequestUnlock = new CommandId(CommandCategory.Lock, (byte)(CommandCatalog.Lock_RequestUnlock & 0xFF));
 
         /// <summary>
-        /// 拒绝解锁 - 拒绝解锁请求
+        /// 拒绝解锁 - 当前锁定用户拒绝其他用户的解锁请求
+        /// 命令码: 0x0804
         /// </summary>
         public static readonly CommandId RefuseUnlock = new CommandId(CommandCategory.Lock, (byte)(CommandCatalog.Lock_RefuseUnlock & 0xFF));
 
         /// <summary>
-        /// 请求锁定单据 - 请求锁定业务单据
+        /// 同意解锁 - 当前锁定用户同意其他用户的解锁请求并释放锁定
+        /// 命令码: 0x0805
         /// </summary>
-        public static readonly CommandId RequestLock = new CommandId(CommandCategory.Lock, (byte)(CommandCatalog.Lock_RequestLock & 0xFF));
+        public static readonly CommandId AgreeUnlock = new CommandId(CommandCategory.Lock, (byte)(CommandCatalog.Lock_AgreeUnlock & 0xFF));
+
+        #endregion
+
+        #region 系统管理操作 (0x0806-0x0807)
 
         /// <summary>
-        /// 释放锁定的单据 - 释放已锁定的业务单据
+        /// 强制解锁 - 管理员强制释放锁定（特殊情况使用）
+        /// 命令码: 0x0806
         /// </summary>
-        public static readonly CommandId ReleaseLock = new CommandId(CommandCategory.Lock, (byte)(CommandCatalog.Lock_ReleaseLock & 0xFF));
+        public static readonly CommandId ForceUnlock = new CommandId(CommandCategory.Lock, (byte)(CommandCatalog.Lock_ForceUnlock & 0xFF));
 
         /// <summary>
-        /// 强制释放锁定 - 强制释放业务单据锁
-        /// </summary>
-        public static readonly CommandId ForceReleaseLock = new CommandId(CommandCategory.Lock, (byte)(CommandCatalog.Lock_ForceReleaseLock & 0xFF));
-
-        /// <summary>
-        /// 锁定状态查询 - 查询业务单据锁定状态
-        /// </summary>
-        public static readonly CommandId QueryLockStatus = new CommandId(CommandCategory.Lock, (byte)(CommandCatalog.Lock_QueryLockStatus & 0xFF));
-
-        /// <summary>
-        /// 广播锁定状态变化 - 广播业务单据锁定状态变化
+        /// 广播锁定状态 - 向相关用户广播锁定状态变化
+        /// 命令码: 0x0807
         /// </summary>
         public static readonly CommandId BroadcastLockStatus = new CommandId(CommandCategory.Lock, (byte)(CommandCatalog.Lock_BroadcastLockStatus & 0xFF));
 
-        /// <summary>
-        /// 锁管理 - 锁资源管理操作
-        /// </summary>
-        public static readonly CommandId LockManagement = new CommandId(CommandCategory.Lock, (byte)(CommandCatalog.Lock_LockManagement & 0xFF));
-
-        /// <summary>
-        /// 转发单据锁定 - 转发单据锁定请求
-        /// </summary>
-        public static readonly CommandId ForwardDocumentLock = new CommandId(CommandCategory.Lock, (byte)(CommandCatalog.Lock_ForwardDocumentLock & 0xFF));
         #endregion
     }
 }

@@ -8,7 +8,7 @@ using MathNet.Numerics.LinearAlgebra.Factorization;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NPOI.SS.Formula.Functions;
-using RUINORERP.Extensions.Middlewares;
+
 using RUINORERP.Business.Cache;
 //using Google.Protobuf.Reflection;
 //using NetTaste;
@@ -1160,7 +1160,6 @@ namespace RUINORERP.UI.UCSourceGrid
             //List<SGColDisplayHandler> displayHandlers = await UIBizSrvice.SetCustomSourceGridAsync(SGDefine, CurMenuInfo, null, null, false);
 
             //这里卡住会打不开UI单据窗体。这里考虑用缓存保存再查询。
-            //List<SGColDisplayHandler> displayHandlers = Task.Run(() => UIBizSrvice.SetCustomSourceGridAsync(SGDefine, CurMenuInfo, null, null, false)).Result;
             List<SGColDisplayHandler> displayHandlers = UIBizService.SetCustomSourceGrid(SGDefine, CurMenuInfo, null, null, false);
 
             #endregion

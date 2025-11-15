@@ -2,7 +2,6 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using RUINORERP.Business.Cache;
-using RUINORERP.PacketSpec.Models.Responses.Cache;
 using RUINORERP.PacketSpec.Models;
 using System;
 using System.Collections;
@@ -11,6 +10,7 @@ using System.Reflection;
 using RUINORERP.PacketSpec.Commands.Cache;
 using RUINORERP.PacketSpec.Validation;
 using FluentValidation.Results;
+using RUINORERP.PacketSpec.Models.Cache;
 
 namespace RUINORERP.UI.Network.Services.Cache
 {

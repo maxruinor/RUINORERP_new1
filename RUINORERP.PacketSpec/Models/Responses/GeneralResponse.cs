@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RUINORERP.PacketSpec.Models.Core;
+using System;
 
 namespace RUINORERP.PacketSpec.Models.Responses
 {

@@ -927,7 +927,6 @@
     <Compile Include="Common\ProgressExtensions.cs" />
     <Compile Include="Common\ProgressHelper.cs" />
     <Compile Include="Common\TabCloseHandler.cs" />
-    <Compile Include="Common\UIStateManager.cs" />
     <Compile Include="CRM\UCHighSeasCustomerList.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -2117,7 +2116,6 @@
     <Compile Include="IM\MessageListControl.Designer.cs">
       <DependentUpon>MessageListControl.cs</DependentUpon>
     </Compile>
-    <Compile Include="Monitoring\Auditing\AuditLogHelper.cs" />
     <Compile Include="Common\CustomTupleEqualityComparer.cs" />
     <Compile Include="Common\DuplicateFinder.cs" />
     <Compile Include="Common\EnumerableExtensions.cs" />
@@ -2321,6 +2319,7 @@
     <Compile Include="Network\Services\FileManagementService.cs" />
     <Compile Include="Network\Services\FileStorageInfoService.cs" />
     <Compile Include="Network\Services\IMessageSender.cs" />
+    <Compile Include="Network\Services\LockManagementService.cs" />
     <Compile Include="Network\Services\MessageService.cs" />
     <Compile Include="Network\Services\MessageServiceUsageExample.cs" />
     <Compile Include="Network\Services\SimplifiedMessageService.cs" />
@@ -2355,6 +2354,30 @@
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Startup.cs" />
+    <Compile Include="StateManagement\Core\StatusChangeEventArgs.cs" />
+    <!-- StatusTransitionContext.cs 已移至实体层，UI层不再包含此文件 -->
+    <!-- <Compile Include="StateManagement\Core\StatusTransitionContext.cs" /> -->
+    <Compile Include="StateManagement\Core\UnifiedStateManager.cs" />
+    <Compile Include="StateManagement\Factory\IStateManagerFactoryV3.cs" />
+    <Compile Include="StateManagement\Factory\StateManagerFactoryV3.cs" />
+    <Compile Include="StateManagement\StateAwareControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="StateManagement\StateAwareControl.Designer.cs">
+      <DependentUpon>StateAwareControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="StateManagement\UI\DefaultUIStatusRule.cs" />
+    <Compile Include="StateManagement\UI\IStatusUIController.cs" />
+    <Compile Include="StateManagement\UI\UIStatusEventHandler.cs" />
+    <Compile Include="StateManagement\UI\UnifiedStatusUIControllerV3.cs" />
+    <Compile Include="Testing\ApplicationContextCacheTest.cs" />
+    <Compile Include="Testing\FrmServiceCacheTest.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Testing\FrmServiceCacheTest.Designer.cs">
+      <DependentUpon>FrmServiceCacheTest.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Testing\ServiceCachePerformanceTest.cs" />
     <Compile Include="UControls\JsonViewer.cs" />
     <Compile Include="UControls\JsonViewer.Designer.cs">
       <DependentUpon>JsonViewer.cs</DependentUpon>
@@ -3239,6 +3262,8 @@
     </Compile>
     <Compile Include="UserCenter\DataParts\ConditionBuilderFactory.cs" />
     <Compile Include="UserCenter\DataParts\DataBoardUnit.cs" />
+    <Compile Include="UserCenter\DataParts\TaskStatusMonitor.cs" />
+    <Compile Include="UserCenter\DataParts\TaskStatusSyncManager.cs" />
     <Compile Include="UserCenter\DataParts\UCCellSetting.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -3540,7 +3565,6 @@
     <None Include="OpenTK.dll.config" />
     <None Include="ResourceFile\import_32x32.ico" />
     <Content Include="ChartFramework\分层架构设计.txt" />
-    <Content Include="ClientSuperSocket\通讯中心.txt" />
     <Content Include="CRM\商机总览.sql" />
     <Content Include="EOP\Eop.txt" />
     <Content Include="FM\应收付.txt" />
@@ -4598,6 +4622,9 @@
     <EmbeddedResource Include="SysConfig\UCWorkCenterConfig.resx">
       <DependentUpon>UCWorkCenterConfig.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Testing\FrmServiceCacheTest.resx">
+      <DependentUpon>FrmServiceCacheTest.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="ToolForm\frmAdvanceSelectorGeneric.resx">
       <DependentUpon>frmAdvanceSelectorGeneric.cs</DependentUpon>
     </EmbeddedResource>
@@ -5235,6 +5262,11 @@
     <Folder Include="Other\" />
     <Folder Include="PM\" />
     <Folder Include="RM\" />
+    <Folder Include="StateManagement\Documentation\" />
+    <Folder Include="StateManagement\Managers\" />
+    <Folder Include="StateManagement\Rules\" />
+    <Folder Include="StateManagement\Services\" />
+    <Folder Include="StateManagement\Validators\" />
     <Folder Include="SysConfigFiles\" />
     <Folder Include="UCForm\" />
     <Folder Include="UControls\TreeGridView\" />

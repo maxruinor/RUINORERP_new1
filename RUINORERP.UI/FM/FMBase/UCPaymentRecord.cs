@@ -39,7 +39,7 @@ using RUINORERP.Model.CommonModel;
 using RUINORERP.Business.StatusManagerService;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
 using LiveChartsCore.Geo;
-using RUINORERP.Extensions.Middlewares;
+
 using RUINORERP.UI.Network.Services;
 using RUINORERP.Business.Cache;
 using RUINOR.WinFormsUI.CustomPictureBox;
@@ -522,14 +522,6 @@ namespace RUINORERP.UI.FM
             await base.LoadRelatedDataToDropDownItemsAsync();
         }
 
-
-
-        protected override void RelatedQuery()
-        {
-
-        }
-
-       
 
         private tb_FM_PaymentRecordController<tb_FM_PaymentRecord> paymentController = null;
         List<tb_FM_PaymentRecordDetail> details = new List<tb_FM_PaymentRecordDetail>();

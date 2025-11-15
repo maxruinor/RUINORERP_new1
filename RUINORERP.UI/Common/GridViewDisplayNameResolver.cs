@@ -15,7 +15,7 @@ namespace RUINORERP.UI.Common
     using System.IO;
     using System.Linq;
     using System.Windows.Forms;
-    using RUINORERP.Extensions.Middlewares;
+    
     using RUINORERP.Business.Cache;
 
     /// <summary>
@@ -120,10 +120,9 @@ namespace RUINORERP.UI.Common
                 return true;
             }
 
-            // 通过依赖注入获取缓存管理器
-            var cacheManager = Startup.GetFromFac<IEntityCacheManager>();
+            // 使用静态缓存管理器方法获取显示值
             string sourceTableName = typeof(tb_Employee).Name;
-            object displayValue = cacheManager.GetDisplayValue(sourceTableName, value);
+            object displayValue = CacheManager.GetDisplayValue(sourceTableName, value);
             if (displayValue != null)
             {
                 e.Value = displayValue.ToString();
@@ -153,9 +152,8 @@ namespace RUINORERP.UI.Common
             var mapping = ForeignKeyMappings.FirstOrDefault(m => m.SourceColumn == columnName);
             if (mapping == null) return;
 
-            // 通过依赖注入获取缓存管理器
-            var cacheManager = Startup.GetFromFac<IEntityCacheManager>();
-            var displayValue = cacheManager.GetEntity(mapping.TargetTable, mapping.KeyColumn);
+            // 使用静态缓存管理器方法获取实体
+            var displayValue = CacheManager.GetEntity(mapping.TargetTable, mapping.KeyColumn);
 
             if (displayValue != null)
             {

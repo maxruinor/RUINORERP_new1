@@ -1,4 +1,6 @@
-﻿namespace RUINORERP.UI.UserCenter.DataParts
+using System;
+
+namespace RUINORERP.UI.UserCenter.DataParts
 {
     partial class UCTodoList
     {
@@ -15,6 +17,13 @@
         {
             if (disposing && (components != null))
             {
+                // 取消订阅任务状态更新
+                if (_syncSubscriberKey != Guid.Empty)
+                {
+                    TaskStatusSyncManager.Instance.Unsubscribe(_syncSubscriberKey);
+                    _syncSubscriberKey = Guid.Empty;
+                }
+
                 components.Dispose();
             }
             base.Dispose(disposing);

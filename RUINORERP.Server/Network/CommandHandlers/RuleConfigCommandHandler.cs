@@ -2,13 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using RUINORERP.PacketSpec.Commands;
-using RUINORERP.PacketSpec.Models.Requests;
-using RUINORERP.PacketSpec.Models.Responses;
 using RUINORERP.Server.Services.BizCode;
 using RUINORERP.Model;
 using Microsoft.Extensions.Logging;
 using RUINORERP.IServices;
 using System.Threading;
+using RUINORERP.PacketSpec.Models.BizCodeGenerate;
+using RUINORERP.PacketSpec.Models.Core;
 
 namespace RUINORERP.Server.Network.CommandHandlers
 {

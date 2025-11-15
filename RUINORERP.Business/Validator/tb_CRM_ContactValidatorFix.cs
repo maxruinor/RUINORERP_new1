@@ -20,7 +20,7 @@ using Castle.Core.Resource;
 using System.Threading.Tasks;
 using System.Threading;
 using System.Text.RegularExpressions;
-using RUINORERP.Extensions.Middlewares;
+
 
 //https://github.com/FluentValidation/FluentValidation 使用实例
 //https://blog.csdn.net/WuLex/article/details/127985756 中文教程

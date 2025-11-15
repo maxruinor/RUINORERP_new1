@@ -18,6 +18,7 @@ using System.Drawing.Printing;
 using RUINORERP.PacketSpec.Core.DataProcessing;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 using RUINORERP.PacketSpec.Commands;
+using RUINORERP.PacketSpec.Models.Common;
 
 namespace RUINORERP.Server.Network.Core
 {

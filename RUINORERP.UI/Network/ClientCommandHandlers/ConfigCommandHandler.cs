@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using System.Dynamic;
 using RUINORERP.Business.Config;
 using RUINORERP.Model.ConfigModel;
+using RUINORERP.PacketSpec.Models.Common;
 
 namespace RUINORERP.UI.Network.ClientCommandHandlers
 {

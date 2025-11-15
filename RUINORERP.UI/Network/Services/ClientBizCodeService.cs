@@ -16,6 +16,7 @@ using RUINORERP.Global.EnumExt;
 using RUINORERP.Global;
 using RUINORERP.IServices;
 using RUINORERP.Model;
+using RUINORERP.PacketSpec.Models.BizCodeGenerate;
 
 namespace RUINORERP.UI.Network.Services
 {
@@ -529,41 +530,8 @@ namespace RUINORERP.UI.Network.Services
         }
 
         
-        /// <summary>
-        /// 获取产品SKU编码（静态方法，兼容旧的调用模式）
-        /// 内部使用同步方式调用异步方法
-        /// </summary>
-        /// <param name="productId">产品ID</param>
-        /// <param name="productCode">产品编码</param>
-        /// <param name="attributes">属性组合信息</param>
-        /// <param name="seqLength">序号长度</param>
-        /// <returns>生成的产品SKU编码</returns>
-        /// <exception cref="Exception">生成失败时抛出异常</exception>
-        public static string GetProductSKUNo(long productId, string productCode, string attributes = null, int seqLength = 3)
-        {
-            try
-            {
-                // 从依赖注入容器中获取服务实例
-                var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
-                if (bizCodeService == null)
-                {
-                    throw new Exception("无法从容器中获取BizCodeService实例");
-                }
-
-                // 同步调用异步方法
-                return Task.Run(async () => await bizCodeService.GenerateProductSKUNoAsync(productId, productCode, attributes, seqLength)).Result;
-            }
-            catch (AggregateException ex)
-            {
-                // 解包AggregateException，获取内部异常
-                if (ex.InnerException != null)
-                {
-                    throw ex.InnerException;
-                }
-                throw;
-            }
-        }
-
+        
+        
         #endregion
     }
 }

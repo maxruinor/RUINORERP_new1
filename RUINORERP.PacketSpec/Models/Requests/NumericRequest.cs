@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using RUINORERP.PacketSpec.Core;
+using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Validation;
 using SqlSugar.Extensions;
 

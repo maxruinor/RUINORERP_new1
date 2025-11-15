@@ -10,11 +10,9 @@ using Polly;
 using Polly.CircuitBreaker;
 using System.Threading.Channels;
 using RUINORERP.PacketSpec.Core;
-using RUINORERP.PacketSpec.Models.Core;
-using RUINORERP.PacketSpec.Models.Responses;
+using RUINORERP.PacketSpec.Models.Common;
 using RUINORERP.PacketSpec.Enums.Core;
-using RUINORERP.PacketSpec.Commands.Authentication;
-using RUINORERP.PacketSpec.Models.Responses.Authentication;
+using RUINORERP.PacketSpec.Models.Core;
 
 namespace RUINORERP.PacketSpec.Commands
 {
@@ -353,7 +351,7 @@ namespace RUINORERP.PacketSpec.Commands
                 var errorResponse = ResponseFactory.CreateSpecificErrorResponse(cmd?.Packet, errorMessage: "命令对象不能为空");
                 if (errorResponse is ResponseBase errorResponseBase)
                 {
-                    errorResponseBase.ResponseErrorType = ResponseBase.ErrorType.SystemError;
+                    errorResponseBase.ResponseErrorType = ErrorType.SystemError;
                 }
                 return errorResponse;
             }
@@ -402,7 +400,7 @@ namespace RUINORERP.PacketSpec.Commands
                                 // 返回限流响应，设置为业务错误，避免触发全局熔断器
                                 var rateLimitResponse = ResponseFactory.CreateSpecificErrorResponse(cmd.Packet.ExecutionContext,
                                     errorMessage: "请求过于频繁，请稍后再试");
-                                rateLimitResponse.ResponseErrorType = ResponseBase.ErrorType.BusinessError;
+                                rateLimitResponse.ResponseErrorType = ErrorType.BusinessError;
                                 rateLimitResponse.ErrorCode = 429; // 429 - Too Many Requests
 
                                 return rateLimitResponse;
@@ -438,7 +436,7 @@ namespace RUINORERP.PacketSpec.Commands
                                 var fallbackErrorResponse = ResponseFactory.CreateSpecificErrorResponse(cmd.Packet.ExecutionContext, ex, errorMessage: "回退处理器异常");
                                 if (fallbackErrorResponse is ResponseBase fallbackResponseBase)
                                 {
-                                    fallbackResponseBase.ResponseErrorType = ResponseBase.ErrorType.SystemError;
+                                    fallbackResponseBase.ResponseErrorType = ErrorType.SystemError;
                                 }
                                 return fallbackErrorResponse;
                             }
@@ -473,7 +471,7 @@ namespace RUINORERP.PacketSpec.Commands
                     {
                         // 创建错误响应
                         var nullResponse = ResponseFactory.CreateSpecificErrorResponse(cmd.Packet, errorMessage: "处理器返回空结果");
-                        nullResponse.ResponseErrorType = ResponseBase.ErrorType.SystemError;
+                        nullResponse.ResponseErrorType = ErrorType.SystemError;
                         nullResponse.ErrorCode = 500;
                         // 更新自适应熔断指标（空响应视为失败）
                         // 更新自适应熔断指标（视为失败）
@@ -494,7 +492,7 @@ namespace RUINORERP.PacketSpec.Commands
                     {
                         // 正确区分业务错误和系统错误：只有系统错误才视为熔断器的失败
                         bool isSuccess = response.IsSuccess ||
-                                       (response is ResponseBase responseBase && responseBase.ResponseErrorType != ResponseBase.ErrorType.SystemError);
+                                       (response is ResponseBase responseBase && responseBase.ResponseErrorType != ErrorType.SystemError);
                         _metrics.RecordCommandExecution(
                             (cmd.Packet != null && cmd.Packet.CommandId != null) ? cmd.Packet.CommandId.Name : "Unknown",
                             commandCategory,
@@ -530,7 +528,7 @@ namespace RUINORERP.PacketSpec.Commands
                 // 正确区分业务错误和系统错误：只有系统错误才视为熔断器的失败
                 bool isSuccess = response != null &&
                                 (response.IsSuccess ||
-                                (response is ResponseBase responseBase && responseBase.ResponseErrorType != ResponseBase.ErrorType.SystemError));
+                                (response is ResponseBase responseBase && responseBase.ResponseErrorType != ErrorType.SystemError));
 
                 // 计算执行时间并更新自适应熔断指标
                 long executionTimeMs = (long)(DateTime.Now - processingStartTime).TotalMilliseconds;
@@ -544,7 +542,7 @@ namespace RUINORERP.PacketSpec.Commands
                     Logger.LogWarning("命令 {CommandId}[ID: {CommandFullCode}] 的熔断器已打开，拒绝执行: {ExceptionMessage}",
                         cmd.Packet.CommandId.ToString(), cmd.Packet.CommandId.FullCode, ex.Message);
                     var circuitBreakerResponse = ResponseFactory.CreateSpecificErrorResponse<ResponseBase>(errorMessage: "服务暂时不可用，熔断器已打开");
-                    circuitBreakerResponse.ResponseErrorType = ResponseBase.ErrorType.SystemError;
+                    circuitBreakerResponse.ResponseErrorType = ErrorType.SystemError;
                     circuitBreakerResponse.ErrorCode = 503; // Service Unavailable
                     // 计算执行时间并传递给指标收集方法
                     long executionTimeMs = (long)(DateTime.Now - processingStartTime).TotalMilliseconds;
@@ -563,7 +561,7 @@ namespace RUINORERP.PacketSpec.Commands
                     Logger.LogInformation("命令处理超时:{CommandId}", cmd.Packet.CommandId.ToString());
 
                     var timeoutResponse = ResponseFactory.CreateSpecificErrorResponse(cmd.Packet.ExecutionContext, ex, errorMessage: "命令处理超时");
-                    timeoutResponse.ResponseErrorType = ResponseBase.ErrorType.SystemError;
+                    timeoutResponse.ResponseErrorType = ErrorType.SystemError;
                     timeoutResponse.ErrorCode = 504; // Gateway Timeout
 
                     // 计算执行时间并传递给指标收集方法
@@ -581,7 +579,7 @@ namespace RUINORERP.PacketSpec.Commands
                     Logger.LogInformation("命令处理被外部取消: {CommandId}", cmd.Packet.CommandId.ToString());
 
                     var canceledResponse = ResponseFactory.CreateSpecificErrorResponse(cmd.Packet.ExecutionContext, ex, errorMessage: "命令处理被取消");
-                    canceledResponse.ResponseErrorType = ResponseBase.ErrorType.BusinessError; // 取消请求视为业务错误，不触发熔断
+                    canceledResponse.ResponseErrorType = ErrorType.BusinessError; // 取消请求视为业务错误，不触发熔断
 
                     return canceledResponse;
                 }
@@ -595,7 +593,7 @@ namespace RUINORERP.PacketSpec.Commands
                 if (withDetailedExceptions)
                 {
                     var errorResponse = ResponseFactory.CreateSpecificErrorResponse(cmd.Packet.ExecutionContext, ex, errorMessage: "命令分发异常");
-                    errorResponse.ResponseErrorType = ResponseBase.ErrorType.SystemError;
+                    errorResponse.ResponseErrorType = ErrorType.SystemError;
 
                     // 计算执行时间并传递给指标收集方法
                     long executionTimeMs = (long)(DateTime.Now - processingStartTime).TotalMilliseconds;

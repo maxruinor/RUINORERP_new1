@@ -15,19 +15,16 @@
     <Compile Remove="DataPortal\**" />
     <Compile Remove="Network\Tests\**" />
     <Compile Remove="packages\**" />
-    <Compile Remove="SuperSocketServices\Commands\Business\**" />
     <EmbeddedResource Remove="BNR\**" />
     <EmbeddedResource Remove="Cache\**" />
     <EmbeddedResource Remove="DataPortal\**" />
     <EmbeddedResource Remove="Network\Tests\**" />
     <EmbeddedResource Remove="packages\**" />
-    <EmbeddedResource Remove="SuperSocketServices\Commands\Business\**" />
     <None Remove="BNR\**" />
     <None Remove="Cache\**" />
     <None Remove="DataPortal\**" />
     <None Remove="Network\Tests\**" />
     <None Remove="packages\**" />
-    <None Remove="SuperSocketServices\Commands\Business\**" />
   </ItemGroup>
 
   <ItemGroup>
@@ -74,15 +71,6 @@
     <Compile Remove="SmartReminder\CachedRuleEngineCenter.cs" />
     <Compile Remove="SmartReminder\InvReminder\InventoryAlertWorkflow.cs" />
     <Compile Remove="Startup - 复制.cs" />
-    <Compile Remove="SuperSocketServices\Commands\Legacy\BizCommand.cs" />
-    <Compile Remove="SuperSocketServices\Commands\Legacy\LegacyCommAdapter.cs" />
-    <Compile Remove="SuperSocketServices\Commands\Legacy\LegacyCommandAdapter.cs" />
-    <Compile Remove="SuperSocketServices\Commands\Legacy\ServerLockManagerCmd.cs" />
-    <Compile Remove="SuperSocketServices\Commands\Legacy\ServerLockManagerHandler.cs" />
-    <Compile Remove="SuperSocketServices\Commands\Legacy\ServerLoginCommand.cs" />
-    <Compile Remove="SuperSocketServices\Commands\System\ExceptionReportCommand.cs" />
-    <Compile Remove="SuperSocketServices\Commands\System\LockManagementCommand.cs" />
-    <Compile Remove="SuperSocketServices\Commands\System\SystemService.cs" />
     <Compile Remove="SuperSocketServices\Core\UnifiedArchitectureAdapter.cs" />
     <Compile Remove="SuperSocketServices\Pipeline\BizPipelineFilter.cs" />
     <Compile Remove="SuperSocketServices\Pipeline\MyPackageDecoder.cs" />
@@ -228,10 +216,9 @@
     <Folder Include="Network\Core\Cache\" />
     <Folder Include="Network\Documentation\" />
     <Folder Include="Services\Cache\" />
-    <Folder Include="SuperSocketServices\Commands\Legacy\" />
-    <Folder Include="SuperSocketServices\Commands\System\" />
-    <Folder Include="SuperSocketServices\Documentation\" />
+    <Folder Include="SuperSocketServices\Models\" />
     <Folder Include="SuperSocketServices\Pipeline\" />
+    <Folder Include="SuperSocketServices\Services\" />
     <Folder Include="SysConfigFiles\" />
     <Folder Include="Workflow\WFOrder\" />
     <Folder Include="Workflow\WFProduce\" />

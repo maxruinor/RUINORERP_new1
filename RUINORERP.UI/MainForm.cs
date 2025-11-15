@@ -102,12 +102,13 @@ using RUINORERP.Business.RowLevelAuthService;
 using RUINORERP.Plugin;
 using RUINORERP.PacketSpec.Enums;
 using RUINORERP.Business.CommService;
-using RUINORERP.Extensions.Middlewares;
+
 using RUINORERP.Business.Cache;
 using RUINORERP.PacketSpec.Serialization;
 using RUINORERP.UI.Network.Services;
 using System.ComponentModel;
 using Padding = System.Windows.Forms.Padding;
+using RUINORERP.UI.Testing;
 
 
 
@@ -402,7 +403,7 @@ namespace RUINORERP.UI
 
 
         public MainForm(ILogger<MainForm> _logger, AuditLogHelper _auditLogHelper,
-            FMAuditLogHelper _fmauditLogHelper, UIConfigManager configManager, EnhancedMessageManager messageManager)
+            FMAuditLogHelper _fmauditLogHelper,  EnhancedMessageManager messageManager)
         {
             InitializeComponent();
 
@@ -447,11 +448,7 @@ namespace RUINORERP.UI
 
 
 
-            if (configManager != null)
-            {
-                _configManager = configManager;
-               
-            }
+         
 
             AppContext = Program.AppContextData;
             SourceGrid.Cells.Views.Cell viewGreen = new SourceGrid.Cells.Views.Cell();
@@ -3372,8 +3369,33 @@ namespace RUINORERP.UI
 
 
                });
+        }
 
-
+        /// <summary>
+        /// 服务缓存测试菜单项点击事件处理
+        /// </summary>
+        /// <param name="sender">事件发送者</param>
+        /// <param name="e">事件参数</param>
+        private void 服务缓存测试ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                // 创建服务缓存测试窗体实例
+                FrmServiceCacheTest cacheTestForm = new FrmServiceCacheTest();
+                
+                // 设置窗体标题
+                cacheTestForm.Text = "服务实例缓存性能测试工具";
+                
+                // 以模态对话框形式显示窗体
+                cacheTestForm.ShowDialog();
+                
+                logger.LogInformation("服务缓存测试窗体已打开");
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "打开服务缓存测试窗体时发生错误");
+                MessageBox.Show($"打开服务缓存测试窗体时发生错误：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
     }
 }

@@ -16,7 +16,6 @@ namespace RUINORERP.Business.CommService
     public interface IStatusHandler
     {
         bool CanHandle(DataStatus status);
-        void Handle(IStatusMachine machine);
     }
 
     public class ProductionStatusHandler : IStatusHandler
@@ -25,16 +24,9 @@ namespace RUINORERP.Business.CommService
         {
             throw new NotImplementedException();
         }
-
-        public void Handle(IStatusMachine machine)
-        {
-            throw new NotImplementedException();
-        }
     }
 
-    // 注册自定义处理器
-    //services.AddSingleton<IStatusHandler, ProductionStatusHandler>();
-
+    
 
     /// <summary>
     ///多级审批工作流：

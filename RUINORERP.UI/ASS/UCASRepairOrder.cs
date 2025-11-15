@@ -48,7 +48,7 @@ using RUINORERP.UI.PSI.SAL;
 using RUINORERP.Common.Extensions;
 using NPOI.SS.Formula.Functions;
 using ICSharpCode.SharpZipLib.Tar;
-using RUINORERP.Extensions.Middlewares;
+
 
 
 namespace RUINORERP.UI.ASS
@@ -275,13 +275,13 @@ namespace RUINORERP.UI.ASS
                     }
 
                     var ctr = Startup.GetFromFac<tb_AS_RepairMaterialPickupController<tb_AS_RepairMaterialPickup>>();
-                    tb_AS_RepairMaterialPickup RepairOrder = ctr.ToRepairMaterialPickupAsync(EditEntity).Result;
+                    tb_AS_RepairMaterialPickup RepairOrder =await ctr.ToRepairMaterialPickupAsync(EditEntity);
                     MenuPowerHelper menuPowerHelper;
                     menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
                     tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == nameof(tb_AS_RepairMaterialPickup) && m.BIBaseForm == "BaseBillEditGeneric`2").FirstOrDefault();
                     if (RelatedMenuInfo != null)
                     {
-                        menuPowerHelper.ExecuteEvents(RelatedMenuInfo, RepairOrder);
+                       await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, RepairOrder);
                     }
                     return;
                 }

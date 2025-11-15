@@ -1,4 +1,4 @@
-﻿
+
 // **************************************
 // 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
@@ -17,7 +17,7 @@ using RUINORERP.Repository.UnitOfWorks;
 using RUINORERP.Model;
 using FluentValidation.Results;
 using RUINORERP.Services;
-using RUINORERP.Extensions.Middlewares;
+
 using RUINORERP.Model.Base;
 using RUINORERP.Common.Extensions;
 using System.Linq;
@@ -46,10 +46,14 @@ namespace RUINORERP.Business
 
             try
             {
+                // 提前开启事务，确保所有数据库操作都在事务内执行
+                _unitOfWorkManage.BeginTran();
+                
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
 
                 if (entity == null)
                 {
+                    _unitOfWorkManage.RollbackTran();
                     return rmrs;
                 }
     
@@ -71,12 +75,12 @@ namespace RUINORERP.Business
                         if (CheckMode.期初盘点 != cm)
                         {
                             View_ProdDetail view_Prod = await _unitOfWorkManage.GetDbClient().Queryable<View_ProdDetail>().Where(c => c.ProdDetailID == child.ProdDetailID && c.Location_ID == entity.Location_ID).FirstAsync();
-                            _unitOfWorkManage.RollbackTran();
 
                             if (view_Prod == null)
                             {
                                 view_Prod = Cache.EntityCacheHelper.GetEntity<View_ProdDetail>(child.ProdDetailID);
                             }
+                            _unitOfWorkManage.RollbackTran();
                             rmrs.ErrorMsg = $"{view_Prod.SKU}=> {view_Prod.CNName}\r\n当前盘点产品在当前仓库中，无库存数据。请使用【期初盘点】方式盘点。";
                             return rmrs;
                         }
@@ -85,7 +89,7 @@ namespace RUINORERP.Business
                         if (child.UntaxedCost == 0)
                         {
                             View_ProdDetail view_Prod = await _unitOfWorkManage.GetDbClient().Queryable<View_ProdDetail>().Where(c => c.ProdDetailID == child.ProdDetailID && c.Location_ID == entity.Location_ID).FirstAsync();
-                            _unitOfWorkManage.RollbackTran();
+                               _unitOfWorkManage.RollbackTran();
                             rmrs.ErrorMsg = $"{view_Prod.SKU}=> {view_Prod.CNName}\r\n【期初盘点】时，必须输入正确的未税成本价格。";
                             return rmrs;
                         }
@@ -165,8 +169,7 @@ namespace RUINORERP.Business
 
                 }
 
-                // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+                // 事务已经在方法开始处开启
 
 
 

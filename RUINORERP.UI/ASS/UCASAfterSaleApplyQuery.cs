@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -86,9 +86,9 @@ namespace RUINORERP.UI.ASS
 
        
 
-        public List<RuleResultWithFilter> ExecuteRulesWithFilter(RulesEngine.RulesEngine re, tb_UserInfo user, tb_MenuInfo menu)
+        public async Task<List<RuleResultWithFilter>> ExecuteRulesWithFilter(RulesEngine.RulesEngine re, tb_UserInfo user, tb_MenuInfo menu)
         {
-            var results = re.ExecuteAllRulesAsync("QueryFilterRules", user, menu).Result;
+            var results =await re.ExecuteAllRulesAsync("QueryFilterRules", user, menu);
             return results.Select(r => new RuleResultWithFilter
             {
                 IsSuccess = r.IsSuccess,
@@ -101,12 +101,19 @@ namespace RUINORERP.UI.ASS
 
         private async void NewSumDataGridView_标记已打印(object sender, EventArgs e)
         {
-            List<tb_AS_AfterSaleApply> selectlist = GetSelectResult();
-            foreach (var item in selectlist)
+            try
             {
-                item.PrintStatus++;
-                tb_AS_AfterSaleApplyController<tb_AS_AfterSaleApply> ctr = Startup.GetFromFac<tb_AS_AfterSaleApplyController<tb_AS_AfterSaleApply>>();
-                await ctr.SaveOrUpdate(item);
+                List<tb_AS_AfterSaleApply> selectlist = GetSelectResult();
+                foreach (var item in selectlist)
+                {
+                    item.PrintStatus++;
+                    tb_AS_AfterSaleApplyController<tb_AS_AfterSaleApply> ctr = Startup.GetFromFac<tb_AS_AfterSaleApplyController<tb_AS_AfterSaleApply>>();
+                    await ctr.SaveOrUpdate(item);
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.PrintInfoLog($"标记已打印操作失败: {ex.Message}", Color.Red);
             }
         }
 

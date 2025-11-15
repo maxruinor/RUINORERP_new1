@@ -32,8 +32,9 @@ using RUINORERP.Business.Processor;
 using Netron.GraphLib;
 using RUINOR.WinFormsUI.TileListView;
 using RUINORERP.Business.CommService;
-using RUINORERP.Extensions.Middlewares;
+
 using RUINORERP.UI.Network.Services;
+using System.Threading;
 
 namespace RUINORERP.UI.ProductEAV
 {
@@ -1913,14 +1914,17 @@ namespace RUINORERP.UI.ProductEAV
         }
 
 
-        private void CreateSKUList()
+        private async void CreateSKUList()
         {
             List<Eav_ProdDetails> propGroups = new List<Eav_ProdDetails>();
             if (bindingSourceList.DataSource is List<Eav_ProdDetails>)
             {
                 propGroups = bindingSourceList.DataSource as List<Eav_ProdDetails>;
             }
-
+            // 从依赖注入容器中获取服务实例
+            var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
+            
+            
             //如果存在则更新，
             // List<string> rs = ArrayCombination.Combination4Table(para);
             //目前在数据库端控制属性值表中的名称不能重复。再通过对应的值名找对应的属性值ID和属性ID
@@ -1951,7 +1955,7 @@ namespace RUINORERP.UI.ProductEAV
                 {
                     Eav_ProdDetails ppg = new Eav_ProdDetails();
                     ppg.GroupName = newItem;
-                    ppg.SKU = ClientBizCodeService.GetProductSKUNo(EditEntity.ProdBaseID, EditEntity.ProductNo);
+                    ppg.SKU =await bizCodeService.GenerateProductSKUNoAsync(EditEntity.ProdBaseID, EditEntity.ProductNo);
                     if (MainForm.Instance.AppContext.SysConfig.UseBarCode)
                     {
                         //补码

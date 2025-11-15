@@ -16,6 +16,7 @@ using RUINORERP.PacketSpec.Models.Responses;
 using System.Threading.Tasks;
 using RUINORERP.Business.Cache; // 添加缓存订阅管理器的引用
 using RUINORERP.Server.Network.CommandHandlers;
+using RUINORERP.PacketSpec.Models.Common;
 
 namespace RUINORERP.Server.Network.DI
 {
@@ -146,7 +147,7 @@ namespace RUINORERP.Server.Network.DI
             builder.RegisterType<PerformanceMonitoringService>().AsSelf().SingleInstance();
             builder.RegisterType<ErrorAnalysisService>().AsSelf().SingleInstance();
 
-            // 注册锁管理服务
+            // 注册锁管理服务 - 使用新的优化架构
             builder.RegisterType<LockManagerService>().As<ILockManagerService>().SingleInstance();
 
             // 注册服务器端登录请求处理器

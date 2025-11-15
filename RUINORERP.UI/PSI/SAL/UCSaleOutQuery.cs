@@ -88,7 +88,7 @@ namespace RUINORERP.UI.PSI.SAL
                         }
                     }
                     tb_SaleOutController<tb_SaleOut> ctr = Startup.GetFromFac<tb_SaleOutController<tb_SaleOut>>();
-                    tb_SaleOutRe saleOutre = ctr.SaleOutToSaleOutRe(item).Result;
+                    tb_SaleOutRe saleOutre =await ctr.SaleOutToSaleOutRe(item);
 
                     MenuPowerHelper menuPowerHelper;
                     menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();

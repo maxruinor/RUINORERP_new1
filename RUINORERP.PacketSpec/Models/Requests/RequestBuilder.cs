@@ -1,6 +1,8 @@
 ﻿using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Commands.Authentication;
 using RUINORERP.PacketSpec.Core;
+using RUINORERP.PacketSpec.Models.Authentication;
+using RUINORERP.PacketSpec.Models.Core;
 using System;
 
 namespace RUINORERP.PacketSpec.Models.Requests
@@ -70,19 +72,7 @@ namespace RUINORERP.PacketSpec.Models.Requests
             );
         }
         
-        /// <summary>
-        /// 创建简单请求
-        /// </summary>
-        /// <param name="commandId">命令标识符</param>
-        /// <param name="data">附加数据</param>
-        /// <returns>简单请求对象</returns>
-        public static SimpleRequest CreateSimpleRequest(CommandId commandId, object data = null)
-        {
-            return CreateRequest(
-                commandId,
-                new SimpleRequest { Data = data }
-            );
-        }
+         
         
         /// <summary>
         /// 创建布尔值请求

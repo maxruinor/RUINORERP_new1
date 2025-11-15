@@ -87,7 +87,7 @@ namespace RUINORERP.UI.PSI.INV
                         }
                     }
                     tb_ProdReturningController<tb_ProdReturning> ctr = Startup.GetFromFac<tb_ProdReturningController<tb_ProdReturning>>();
-                    tb_ProdReturning ProdReturning = ctr.BorrowToProdReturning(item).Result;
+                    tb_ProdReturning ProdReturning =await ctr.BorrowToProdReturning(item);
 
                     MenuPowerHelper menuPowerHelper;
                     menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();

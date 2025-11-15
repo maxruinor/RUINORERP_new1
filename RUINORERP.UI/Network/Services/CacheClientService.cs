@@ -1,10 +1,8 @@
 using Microsoft.Extensions.Logging;
 using RUINORERP.Business.Cache;
 using RUINORERP.PacketSpec.Commands.Cache;
-using RUINORERP.PacketSpec.Models.Requests.Cache;
 using RUINORERP.PacketSpec.Validation;
 using FluentValidation.Results;
-using RUINORERP.PacketSpec.Models.Responses.Cache;
 using RUINORERP.UI.Network.Services.Cache;
 using System;
 using System.Collections.Generic;
@@ -21,6 +19,7 @@ using Netron.NetronLight;
 using FastReport.Table;
 using RUINORERP.PacketSpec.Commands;
 using System.Collections.Concurrent;
+using RUINORERP.PacketSpec.Models.Cache;
 
 namespace RUINORERP.UI.Network.Services
 {
@@ -350,7 +349,10 @@ namespace RUINORERP.UI.Network.Services
         /// <summary>
         /// 向服务器请求指定表的缓存数据
         /// </summary>
-        public async Task RequestCacheAsync(string tableName)
+        /// <param name="tableName">表名</param>
+        /// <param name="cancellationToken">取消令牌</param>
+        /// <exception cref="OperationCanceledException">当操作被取消时抛出</exception>
+        public async Task RequestCacheAsync(string tableName, CancellationToken cancellationToken = default)
         {
             // 检查是否已释放
             if (_disposed)
@@ -367,12 +369,21 @@ namespace RUINORERP.UI.Network.Services
 
             try
             {
+                // 检查取消令牌
+                cancellationToken.ThrowIfCancellationRequested();
+                
                 // 请求缓存数据
-                await _cacheRequestManager.RequestCacheAsync(tableName);
+                await _cacheRequestManager.RequestCacheAsync(tableName, cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                _log.LogDebug("缓存请求被用户取消，表名={0}", tableName);
+                throw;
             }
             catch (Exception ex)
             {
                 _log.LogError(ex, "请求缓存数据失败，表名={0}", tableName);
+                throw;
             }
         }
 

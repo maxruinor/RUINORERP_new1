@@ -24,7 +24,7 @@ using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 using ValueType = RUINORERP.UI.ChartFramework.Core.ValueType;
-using RUINORERP.Extensions.Middlewares;
+
 
 namespace RUINORERP.UI.ChartFramework.DataProviders.Adapters
 {

@@ -130,7 +130,7 @@ namespace RUINORERP.UI.BaseForm
                     {
                         frm = new frmFormProperty();
                     }
-                    
+
                     // 预初始化控件，确保在子类Load事件执行时_UCBillChildQuery不为null
                     PreInitializeControls();
 
@@ -141,7 +141,7 @@ namespace RUINORERP.UI.BaseForm
                     {
                         //this.Text = cb.CheckState.ToString();
                         //kryptonNavigator1.Button.CloseButtonDisplay = ButtonDisplay.Hide;
-                        if(_UCBillMasterQuery != null && _UCBillMasterQuery.newSumDataGridViewMaster != null)
+                        if (_UCBillMasterQuery != null && _UCBillMasterQuery.newSumDataGridViewMaster != null)
                         {
                             _UCBillMasterQuery.newSumDataGridViewMaster.MultiSelect = cbbatch.Checked;
                             _UCBillMasterQuery.newSumDataGridViewMaster.UseSelectedColumn = cbbatch.Checked;
@@ -392,7 +392,7 @@ namespace RUINORERP.UI.BaseForm
                         bool rs = await CloseCase(selectlist);
                         if (rs)
                         {
-                          await  MainForm.Instance.AuditLogHelper.CreateAuditLog<M>("结案", selectlist[0], $"结案意见:{rs}");
+                            await MainForm.Instance.AuditLogHelper.CreateAuditLog<M>("结案", selectlist[0], $"结案意见:{rs}");
                         }
                     }
                     break;
@@ -404,7 +404,7 @@ namespace RUINORERP.UI.BaseForm
                         //如果当前单据只有一个模块，就直接打印
                         if (PrintConfig.tb_PrintTemplates.Count == 1)
                         {
-                          await  Print(RptMode.PRINT);
+                            await Print(RptMode.PRINT);
                             return;
                         }
                     }
@@ -413,18 +413,18 @@ namespace RUINORERP.UI.BaseForm
                     if (MainForm.Instance.AppContext.CurrentUser_Role_Personalized.SelectTemplatePrint.HasValue
                            && MainForm.Instance.AppContext.CurrentUser_Role_Personalized.SelectTemplatePrint.Value)
                     {
-                      await  Print(RptMode.DESIGN);
+                        await Print(RptMode.DESIGN);
                     }
                     else
                     {
-                      await  Print(RptMode.PRINT);
+                        await Print(RptMode.PRINT);
                     }
                     break;
                 case MenuItemEnums.预览:
-                  await  Print(RptMode.PREVIEW);
+                    await Print(RptMode.PREVIEW);
                     break;
                 case MenuItemEnums.设计:
-                 await   Print(RptMode.DESIGN);
+                    await Print(RptMode.DESIGN);
                     break;
                 case MenuItemEnums.删除:
                     Delete(selectlist);
@@ -447,7 +447,7 @@ namespace RUINORERP.UI.BaseForm
 
 
 
-        
+
         public virtual async Task Print(RptMode rptMode)
         {
             List<M> printItems = new List<M>();
@@ -710,7 +710,7 @@ namespace RUINORERP.UI.BaseForm
             // 多个实体批量审核 - 先弹出审核对话框获取用户审核意见
             // 创建一个用于收集审核信息的ApprovalEntity
             ApprovalEntity batchApprovalInfo = new ApprovalEntity();
-            
+
             // 使用第一个实体的信息来初始化审核对话框
             var firstEntity = EditEntities[0];
             string PKCol = BaseUIHelper.GetEntityPrimaryKey<M>();
@@ -726,7 +726,7 @@ namespace RUINORERP.UI.BaseForm
             CommonUI.frmApproval frm = new CommonUI.frmApproval();
             frm.BindData(batchApprovalInfo);
             await Task.Delay(1);
-            
+
             if (frm.ShowDialog() != DialogResult.OK)
             {
                 // 用户取消审核
@@ -760,9 +760,9 @@ namespace RUINORERP.UI.BaseForm
 
                     var result = await ReviewSingleWithApprovalInfo(entity, entityApprovalInfo);
                     approvalResults.Add(result);
-                    
+
                     // 检查审核是否成功
-                    if (result != null && (ReflectionHelper.ExistPropertyName<M>("ApprovalResults") 
+                    if (result != null && (ReflectionHelper.ExistPropertyName<M>("ApprovalResults")
                         && entity.GetPropertyValue("ApprovalResults")?.ToBool() == true))
                     {
                         successCount++;
@@ -770,11 +770,11 @@ namespace RUINORERP.UI.BaseForm
                     else
                     {
                         hasFailures = true;
-                        string billNo = ReflectionHelper.ExistPropertyName<M>("BillNo") ? 
+                        string billNo = ReflectionHelper.ExistPropertyName<M>("BillNo") ?
                             entity.GetPropertyValue("BillNo")?.ToString() : "未知单据";
                         failureMessages.AppendLine($"单据 {billNo} 审核失败");
                     }
-                    
+
                     // 添加延迟（如果不是最后一个元素）
                     if (delayMs > 0 && i < EditEntities.Count - 1)
                     {
@@ -784,7 +784,7 @@ namespace RUINORERP.UI.BaseForm
                 catch (Exception ex)
                 {
                     hasFailures = true;
-                    string billNo = ReflectionHelper.ExistPropertyName<M>("BillNo") ? 
+                    string billNo = ReflectionHelper.ExistPropertyName<M>("BillNo") ?
                         entity.GetPropertyValue("BillNo")?.ToString() : "未知单据";
                     failureMessages.AppendLine($"单据 {billNo} 审核异常: {ex.Message}");
                 }
@@ -947,7 +947,7 @@ namespace RUINORERP.UI.BaseForm
             return ae;
         }
 
-           
+
 
         /// <summary>
         /// 反审
@@ -983,7 +983,7 @@ namespace RUINORERP.UI.BaseForm
                     return ae;
                 }
             }
- 
+
             CommonUI.frmReApproval frm = new CommonUI.frmReApproval();
             string PKCol = BaseUIHelper.GetEntityPrimaryKey<M>();
             long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
@@ -2421,11 +2421,11 @@ namespace RUINORERP.UI.BaseForm
             {
                 if (_UCBillMasterQuery != null && _UCBillMasterQuery.newSumDataGridViewMaster != null)
                 {
-                  await  UIBizService.SaveGridSettingData(CurMenuInfo, _UCBillMasterQuery.newSumDataGridViewMaster, typeof(M));
+                    await UIBizService.SaveGridSettingData(CurMenuInfo, _UCBillMasterQuery.newSumDataGridViewMaster, typeof(M));
                 }
                 if (_UCBillChildQuery != null && _UCBillChildQuery.newSumDataGridViewChild != null)
                 {
-                await    UIBizService.SaveGridSettingData(CurMenuInfo, _UCBillChildQuery.newSumDataGridViewChild, typeof(C));
+                    await UIBizService.SaveGridSettingData(CurMenuInfo, _UCBillChildQuery.newSumDataGridViewChild, typeof(C));
                 }
 
 
@@ -2550,66 +2550,100 @@ namespace RUINORERP.UI.BaseForm
         private async void BaseBillQueryMC_Load(object sender, EventArgs e)
         {
 
-                MainForm.Instance.AppContext.log.ActionName = sender.ToString();
-                await UIBizService.RequestCache<M>();
-                await UIBizService.RequestCache<C>();
-                //去检测产品视图的缓存并且转换为强类型
-                await UIBizService.RequestCache(typeof(View_ProdDetail));
-                Builder();
-                this.CurMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == typeof(M).Name && m.ClassPath == this.ToString()).FirstOrDefault();
-                if (CurMenuInfo == null && !MainForm.Instance.AppContext.IsSuperUser)
-                {
-                    MessageBox.Show(this.ToString() + "A菜单不能为空，请联系管理员。");
-                    return;
-                }
-                if (!this.DesignMode)
-                {
-                    #region 添加控件内容
-                    ws = kryptonDockingManagerQuery.ManageWorkspace(kryptonDockableWorkspaceQuery);
-                    kryptonDockingManagerQuery.ManageControl(kryptonPanelMainBig, ws);
-                    kryptonDockingManagerQuery.ManageFloating(MainForm.Instance);
+            MainForm.Instance.AppContext.log.ActionName = sender.ToString();
 
-                    //创建面板并加入
-                    KryptonPageCollection Kpages = new KryptonPageCollection();
-                    if (Kpages.Count == 0)
+            //去检测产品视图的缓存并且转换为强类型
+            await UIBizService.RequestCache(typeof(View_ProdDetail));
+            Builder();
+            this.CurMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == typeof(M).Name && m.ClassPath == this.ToString()).FirstOrDefault();
+            if (CurMenuInfo == null && !MainForm.Instance.AppContext.IsSuperUser)
+            {
+                MessageBox.Show(this.ToString() + "A菜单不能为空，请联系管理员。");
+                return;
+            }
+            if (!this.DesignMode)
+            {
+                #region 添加控件内容
+                ws = kryptonDockingManagerQuery.ManageWorkspace(kryptonDockableWorkspaceQuery);
+                kryptonDockingManagerQuery.ManageControl(kryptonPanelMainBig, ws);
+                kryptonDockingManagerQuery.ManageFloating(MainForm.Instance);
+
+                //创建面板并加入
+                KryptonPageCollection Kpages = new KryptonPageCollection();
+                if (Kpages.Count == 0)
+                {
+                    Kpages.Add(MasterQuery());
+                    if (HasChildData)
                     {
-                        Kpages.Add(MasterQuery());
-                        if (HasChildData)
-                        {
-                            Kpages.Add(ChildQuery());
-                        }
-                        if (ChildRelatedEntityType == null)
-                        {
-                            ChildRelatedEntityType = typeof(C);
-                        }
-                        if (this.ChildRelatedEntityType != null)
-                        {
-                            Kpages.Add(Child_RelatedQuery());
-                        }
-                        //如果需要分析功能
-                        if (ResultAnalysis)
-                        {
-                            Kpages.Add(UCOutlookGridAnalysis1Load());
-                        }
+                        Kpages.Add(ChildQuery());
                     }
-
-                    //加载布局
-                    try
+                    if (ChildRelatedEntityType == null)
                     {
-                        if (!Directory.Exists(basePath))
+                        ChildRelatedEntityType = typeof(C);
+                    }
+                    if (this.ChildRelatedEntityType != null)
+                    {
+                        Kpages.Add(Child_RelatedQuery());
+                    }
+                    //如果需要分析功能
+                    if (ResultAnalysis)
+                    {
+                        Kpages.Add(UCOutlookGridAnalysis1Load());
+                    }
+                }
+
+                //加载布局
+                try
+                {
+                    if (!Directory.Exists(basePath))
+                    {
+                        Directory.CreateDirectory(basePath);
+                    }
+                    if (System.IO.File.Exists(xmlfilepath) && AuthorizeController.GetQueryPageLayoutCustomize(MainForm.Instance.AppContext))
+                    {
+                        #region load
+                        // Create the XmlNodeReader object.
+                        XmlDocument doc = new XmlDocument();
+                        doc.Load(xmlfilepath);
+                        XmlNodeReader nodeReader = new XmlNodeReader(doc);
+                        // Set the validation settings.
+                        XmlReaderSettings settings = new XmlReaderSettings();
+
+                        using (XmlReader reader = XmlReader.Create(nodeReader, settings))
                         {
-                            Directory.CreateDirectory(basePath);
+                            while (reader.Read())
+                            {
+                                if (reader.NodeType == XmlNodeType.Element && reader.Name == "DW")
+                                {
+                                    //加载停靠信息
+                                    ws.LoadElementFromXml(reader, Kpages);
+                                }
+                            }
+
                         }
-                        if (System.IO.File.Exists(xmlfilepath) && AuthorizeController.GetQueryPageLayoutCustomize(MainForm.Instance.AppContext))
+                        #endregion
+                    }
+                    else
+                    {
+                        if (CurMenuInfo == null)
+                        {
+                            //找不到当前菜单直接返回
+                            return;
+                        }
+
+                        //没有个性化文件时用默认的
+                        if (!string.IsNullOrEmpty(CurMenuInfo.DefaultLayout))
                         {
                             #region load
-                            // Create the XmlNodeReader object.
-                            XmlDocument doc = new XmlDocument();
-                            doc.Load(xmlfilepath);
-                            XmlNodeReader nodeReader = new XmlNodeReader(doc);
-                            // Set the validation settings.
-                            XmlReaderSettings settings = new XmlReaderSettings();
+                            //加载XML文件
+                            XmlDocument xmldoc = new XmlDocument();
+                            //获取XML字符串
+                            string xmlStr = xmldoc.InnerXml;
+                            //字符串转XML
+                            xmldoc.LoadXml(CurMenuInfo.DefaultLayout);
 
+                            XmlNodeReader nodeReader = new XmlNodeReader(xmldoc);
+                            XmlReaderSettings settings = new XmlReaderSettings();
                             using (XmlReader reader = XmlReader.Create(nodeReader, settings))
                             {
                                 while (reader.Read())
@@ -2624,82 +2658,47 @@ namespace RUINORERP.UI.BaseForm
                             }
                             #endregion
                         }
-                        else
-                        {
-                            if (CurMenuInfo == null)
-                            {
-                                //找不到当前菜单直接返回
-                                return;
-                            }
 
-                            //没有个性化文件时用默认的
-                            if (!string.IsNullOrEmpty(CurMenuInfo.DefaultLayout))
-                            {
-                                #region load
-                                //加载XML文件
-                                XmlDocument xmldoc = new XmlDocument();
-                                //获取XML字符串
-                                string xmlStr = xmldoc.InnerXml;
-                                //字符串转XML
-                                xmldoc.LoadXml(CurMenuInfo.DefaultLayout);
-
-                                XmlNodeReader nodeReader = new XmlNodeReader(xmldoc);
-                                XmlReaderSettings settings = new XmlReaderSettings();
-                                using (XmlReader reader = XmlReader.Create(nodeReader, settings))
-                                {
-                                    while (reader.Read())
-                                    {
-                                        if (reader.NodeType == XmlNodeType.Element && reader.Name == "DW")
-                                        {
-                                            //加载停靠信息
-                                            ws.LoadElementFromXml(reader, Kpages);
-                                        }
-                                    }
-
-                                }
-                                #endregion
-                            }
-
-                        }
                     }
-                    catch (Exception ex)
-                    {
-                        MainForm.Instance.uclog.AddLog("加载查询页布局配置文件出错。" + ex.Message, Global.UILogType.错误);
-                        MainForm.Instance.logger.LogError(ex, "加载查询页布局配置文件出错。");
-                    }
-
-                    //如果加载过的停靠信息中不正常。就手动初始化
-                    foreach (KryptonPage page in Kpages)
-                    {
-                        if (!(page is KryptonStorePage) && !kryptonDockingManagerQuery.ContainsPage(page.UniqueName))
-                        {
-                            switch (page.UniqueName)
-                            {
-                                case "查询条件":
-                                    //kryptonDockingManagerQuery.AddDockspace("Control", DockingEdge.Top, Kpages.Where(p => p.UniqueName == "查询条件").ToArray());
-                                    kryptonDockingManagerQuery.AddDockspace("Control", DockingEdge.Top, Kpages.Where(p => p.UniqueName == "查询条件").ToArray());
-                                    break;
-                                case "明细信息":
-                                    // kryptonDockingManagerQuery.AddDockspace("Control", DockingEdge.Left, Kpages.Where(p => p.UniqueName == "明细信息").ToArray());
-                                    kryptonDockingManagerQuery.AddToWorkspace("Workspace", Kpages.Where(p => p.UniqueName == "明细信息").ToArray());
-                                    break;
-                                case "单据信息":
-                                    kryptonDockingManagerQuery.AddToWorkspace("Workspace", Kpages.Where(p => p.UniqueName == "单据信息").ToArray());
-                                    break;
-                                case "结果分析":
-                                    kryptonDockingManagerQuery.AddToWorkspace("Workspace", Kpages.Where(p => p.UniqueName == "结果分析").ToArray());
-                                    break;
-                                case "关联信息":
-                                    if (ChildRelatedEntityType != null)
-                                    {
-                                        kryptonDockingManagerQuery.AddToWorkspace("Workspace", Kpages.Where(p => p.UniqueName == "关联信息").ToArray());
-                                    }
-                                    break;
-                            }
-                        }
-                    }
-                    #endregion
                 }
+                catch (Exception ex)
+                {
+                    MainForm.Instance.uclog.AddLog("加载查询页布局配置文件出错。" + ex.Message, Global.UILogType.错误);
+                    MainForm.Instance.logger.LogError(ex, "加载查询页布局配置文件出错。");
+                }
+
+                //如果加载过的停靠信息中不正常。就手动初始化
+                foreach (KryptonPage page in Kpages)
+                {
+                    if (!(page is KryptonStorePage) && !kryptonDockingManagerQuery.ContainsPage(page.UniqueName))
+                    {
+                        switch (page.UniqueName)
+                        {
+                            case "查询条件":
+                                //kryptonDockingManagerQuery.AddDockspace("Control", DockingEdge.Top, Kpages.Where(p => p.UniqueName == "查询条件").ToArray());
+                                kryptonDockingManagerQuery.AddDockspace("Control", DockingEdge.Top, Kpages.Where(p => p.UniqueName == "查询条件").ToArray());
+                                break;
+                            case "明细信息":
+                                // kryptonDockingManagerQuery.AddDockspace("Control", DockingEdge.Left, Kpages.Where(p => p.UniqueName == "明细信息").ToArray());
+                                kryptonDockingManagerQuery.AddToWorkspace("Workspace", Kpages.Where(p => p.UniqueName == "明细信息").ToArray());
+                                break;
+                            case "单据信息":
+                                kryptonDockingManagerQuery.AddToWorkspace("Workspace", Kpages.Where(p => p.UniqueName == "单据信息").ToArray());
+                                break;
+                            case "结果分析":
+                                kryptonDockingManagerQuery.AddToWorkspace("Workspace", Kpages.Where(p => p.UniqueName == "结果分析").ToArray());
+                                break;
+                            case "关联信息":
+                                if (ChildRelatedEntityType != null)
+                                {
+                                    kryptonDockingManagerQuery.AddToWorkspace("Workspace", Kpages.Where(p => p.UniqueName == "关联信息").ToArray());
+                                }
+                                break;
+                        }
+                    }
+                }
+                #endregion
+            }
             if (this.DesignMode)
             {
                 return;
@@ -2716,7 +2715,7 @@ namespace RUINORERP.UI.BaseForm
                     }
                     _UCBillMasterQuery.GridRelated.SetRelatedInfo(typeof(M).Name, RelatedBillEditCol.GetMemberInfo().Name);
                 }
-                if (QueryDtoProxy==null)
+                if (QueryDtoProxy == null)
                 {
                     QueryDtoProxy = LoadQueryConditionToUI();
                 }
@@ -2787,10 +2786,12 @@ namespace RUINORERP.UI.BaseForm
 
             //查询不会有
             AddExcludeMenuList(MenuItemEnums.复制性新增);
-        
+
+            //await UIBizService.RequestCache<M>();
+            
         }
 
- 
+
 
         private async void _UCBillMasterQuery_OnSelectDataRow(object entity, object bizKey)
         {
@@ -2988,7 +2989,7 @@ namespace RUINORERP.UI.BaseForm
                 _UCBillChildQuery.Name = "_UCBillChildQuery";
                 _UCBillChildQuery.entityType = typeof(C);
                 _UCBillChildQuery.ColNameDataDictionary = ChildColNameDataDictionary;
-                
+
                 // 设置关联信息
                 if (_UCBillChildQuery.GridRelated.RelatedInfoList.Count == 0 && RelatedBillEditCol != null)
                 {
@@ -2998,14 +2999,14 @@ namespace RUINORERP.UI.BaseForm
 
             // 设置其他属性
             List<string> childlist = RuinorExpressionHelper.ExpressionListToStringList(ChildSummaryCols);
-            
+
             // 确保InvisibleCols不为null并添加必要的列
             if (_UCBillChildQuery.InvisibleCols == null)
             {
                 _UCBillChildQuery.InvisibleCols = new HashSet<string>();
             }
             _UCBillChildQuery.InvisibleCols.UnionWith(RuinorExpressionHelper.ExpressionListToHashSet(ChildInvisibleCols));
-            
+
             // 处理外键列隐藏
             List<BaseDtoField> tempChildFiledList = UIHelper.GetDtoFieldNameList<C>();//<M>
             foreach (var item in tempChildFiledList)
@@ -3022,7 +3023,7 @@ namespace RUINORERP.UI.BaseForm
                     }
                 }
             }
-            
+
             _UCBillChildQuery.DefaultHideCols = new HashSet<string>();
             UIHelper.ControlColumnsInvisible(CurMenuInfo, _UCBillChildQuery.InvisibleCols, _UCBillChildQuery.DefaultHideCols, true);
             _UCBillChildQuery.SummaryCols = childlist;
@@ -3060,19 +3061,19 @@ namespace RUINORERP.UI.BaseForm
 
         public UCBillMasterQuery _UCBillMasterQuery;
         public UCBillChildQuery _UCBillChildQuery;
-        
+
         /// <summary>
         /// 预初始化子控件
         /// </summary>
         private void PreInitializeControls()
-        {            
+        {
             // 提前初始化_UCBillChildQuery，确保在子类Load事件执行时不为null
             if (HasChildData && _UCBillChildQuery == null)
             {
                 _UCBillChildQuery = new UCBillChildQuery();
                 _UCBillChildQuery.Name = "_UCBillChildQuery";
                 _UCBillChildQuery.entityType = typeof(C);
-                
+
                 // 设置基本属性
                 if (_UCBillChildQuery.InvisibleCols == null)
                 {
@@ -3080,38 +3081,38 @@ namespace RUINORERP.UI.BaseForm
                 }
                 _UCBillChildQuery.DefaultHideCols = new HashSet<string>();
                 _UCBillChildQuery.ColNameDataDictionary = ChildColNameDataDictionary;
-                
+
                 // 设置关联信息
                 if (_UCBillChildQuery.GridRelated.RelatedInfoList.Count == 0 && RelatedBillEditCol != null)
                 {
                     _UCBillChildQuery.GridRelated.SetRelatedInfo(typeof(C).Name, RelatedBillEditCol.GetMemberInfo().Name);
                 }
             }
-            
+
             // 提前初始化_UCBillMasterQuery，确保在子类Load事件执行时不为null
             if (_UCBillMasterQuery == null)
             {
                 _UCBillMasterQuery = new UCBillMasterQuery();
                 _UCBillMasterQuery.Name = "_UCBillMasterQuery";
                 _UCBillMasterQuery.entityType = typeof(M);
-                
+
                 // 设置基本属性
                 if (_UCBillMasterQuery.InvisibleCols == null)
                 {
                     _UCBillMasterQuery.InvisibleCols = new HashSet<string>();
                 }
-                
+
                 // 添加主键列到隐藏列表
                 string PKColName = BaseUIHelper.GetEntityPrimaryKey<M>();
                 if (!_UCBillMasterQuery.InvisibleCols.Contains(PKColName))
                 {
                     _UCBillMasterQuery.InvisibleCols.Add(PKColName);
                 }
-                
+
                 _UCBillMasterQuery.DefaultHideCols = new HashSet<string>();
                 _UCBillMasterQuery.ColNameDataDictionary = MasterColNameDataDictionary;
                 _UCBillMasterQuery.GridRelated.FromMenuInfo = CurMenuInfo;
-                
+
                 // 设置关联信息
                 if (_UCBillMasterQuery.GridRelated.RelatedInfoList.Count == 0 && RelatedBillEditCol != null)
                 {

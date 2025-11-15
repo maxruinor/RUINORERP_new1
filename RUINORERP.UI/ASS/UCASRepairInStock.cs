@@ -44,7 +44,7 @@ using RUINORERP.UI.AdvancedUIModule;
 using RUINORERP.UI.SysConfig;
 using RUINORERP.Model.CommonModel;
 using RUINORERP.UI.PSI.SAL;
-using RUINORERP.Extensions.Middlewares;
+
 using RUINORERP.UI.Network.Services;
 
 
@@ -599,7 +599,7 @@ namespace RUINORERP.UI.ASS
             if (RepairOrder != null)
             {
                 var ctr = Startup.GetFromFac<tb_AS_RepairInStockController<tb_AS_RepairInStock>>();
-                tb_AS_RepairInStock RepairInStock = ctr.ToRepairInStock(RepairOrder).Result;
+                tb_AS_RepairInStock RepairInStock =await ctr.ToRepairInStock(RepairOrder);
                 BindData(RepairInStock as tb_AS_RepairInStock);
             }
             else

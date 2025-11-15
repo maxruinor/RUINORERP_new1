@@ -43,10 +43,9 @@
 - `LockCommandHandler` - 锁命令处理器
 
 ### 数据模型
-- `LockedInfo` - 锁定信息
-- `UnLockInfo` - 解锁信息
-- `RequestUnLockInfo` - 请求解锁信息
-- `RefuseUnLockInfo` - 拒绝解锁信息
+- `LockInfo` - 锁定信息
+- `LockRequest` - 锁定请求（包含解锁请求和拒绝解锁信息）
+- `LockResponse` - 锁定响应
 
 ## 使用示例
 

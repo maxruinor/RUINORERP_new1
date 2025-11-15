@@ -60,7 +60,7 @@ using FastReport.DevComponents.DotNetBar;
 using System.Runtime.InteropServices;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.Model.ReminderModel;
-using RUINORERP.Extensions.Middlewares;
+
 using RUINORERP.Business.Cache;
 
 namespace RUINORERP.UI.Common
@@ -405,9 +405,8 @@ namespace RUINORERP.UI.Common
                         return "";
                     }
                     string SourceTableName = typeof(tb_Employee).Name;
-                    // 通过依赖注入获取缓存管理器
-                    var cacheManager = Startup.GetFromFac<IEntityCacheManager>();
-                    object objText = cacheManager.GetDisplayValue(SourceTableName, IdValue);
+                    // 使用静态缓存管理器方法获取显示值
+                    object objText = CacheManager.GetDisplayValue(SourceTableName, IdValue);
                     if (objText != null && objText.ToString() != "System.Object")
                     {
                         return objText.ToString();
@@ -420,9 +419,8 @@ namespace RUINORERP.UI.Common
                 {
                     if (mapping.MappedTargetFieldName == idColName)
                     {
-                        // 通过依赖注入获取缓存管理器
-                        var cacheManager = Startup.GetFromFac<IEntityCacheManager>();
-                        object displayValue = cacheManager.GetDisplayValue(mapping.ReferenceTableName, IdValue);
+                        // 使用静态缓存管理器方法获取显示值
+                        object displayValue = CacheManager.GetDisplayValue(mapping.ReferenceTableName, IdValue);
                         if (displayValue != null)
                         {
                             return displayValue.ToString();
@@ -432,11 +430,10 @@ namespace RUINORERP.UI.Common
                 else
                 {
                     #region 没有映射的情况
-                    // 通过依赖注入获取缓存管理器
-                    var cacheManager = Startup.GetFromFac<IEntityCacheManager>();
+                    // 使用静态缓存管理器方法获取显示值
                     var schemaInfo = TableSchemaManager.Instance.GetSchemaInfo(TargetTableName);
                     // 先尝试直接从目标表获取
-                    object nameValue = cacheManager.GetDisplayValue(TargetTableName, IdValue);
+                    object nameValue = CacheManager.GetDisplayValue(TargetTableName, IdValue);
                     if (nameValue != null && !string.IsNullOrWhiteSpace(nameValue.ToString()))
                     {
                         return nameValue.ToString();

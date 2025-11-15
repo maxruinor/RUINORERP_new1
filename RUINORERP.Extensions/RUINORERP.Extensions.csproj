@@ -97,6 +97,7 @@
     <Folder Include="Authorizations\Behaviors\" />
     <Folder Include="Authorizations\Policys\" />
     <Folder Include="EventHandling\" />
+    <Folder Include="Middlewares\" />
     <Folder Include="NacosConfig\" />
   </ItemGroup>
 </Project>

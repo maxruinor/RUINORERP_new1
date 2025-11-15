@@ -5,7 +5,6 @@ using RUINORERP.PacketSpec.Errors;
 using RUINORERP.PacketSpec.Models;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Requests;
-using RUINORERP.PacketSpec.Models.Responses;
 using RUINORERP.UI.Network;
 using RUINORERP.UI.Network.Exceptions;
 using System;
@@ -17,6 +16,7 @@ using System.Linq;
 using RUINOR.WinFormsUI.CustomPictureBox;
 using RUINORERP.Model;
 using System.Drawing;
+using RUINORERP.PacketSpec.Models.FileManagement;
 
 namespace RUINORERP.UI.Network.Services
 {

@@ -1,4 +1,4 @@
-﻿using Krypton.Docking;
+using Krypton.Docking;
 using Krypton.Navigator;
 using Krypton.Toolkit;
 using Krypton.Workspace;
@@ -83,6 +83,8 @@ namespace RUINORERP.UI
             this.窗口ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.关闭所有窗口ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.刷新菜单ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.系统工具ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.服务缓存测试ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.kryptonManager = new Krypton.Toolkit.KryptonManager(this.components);
             this.kryptonDockableWorkspace1 = new Krypton.Docking.KryptonDockableWorkspace();
             this.imageListSmall = new System.Windows.Forms.ImageList(this.components);
@@ -537,7 +539,8 @@ namespace RUINORERP.UI
             this.menuStripMain.Dock = System.Windows.Forms.DockStyle.None;
             this.menuStripMain.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.menuStripMain.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.窗口ToolStripMenuItem});
+            this.窗口ToolStripMenuItem,
+            this.系统工具ToolStripMenuItem});
             this.menuStripMain.Location = new System.Drawing.Point(0, 0);
             this.menuStripMain.Name = "menuStripMain";
             this.menuStripMain.Size = new System.Drawing.Size(1353, 24);
@@ -564,6 +567,21 @@ namespace RUINORERP.UI
             this.刷新菜单ToolStripMenuItem.Name = "刷新菜单ToolStripMenuItem";
             this.刷新菜单ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.刷新菜单ToolStripMenuItem.Text = "刷新菜单";
+            // 
+            // 系统工具ToolStripMenuItem
+            // 
+            this.系统工具ToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.服务缓存测试ToolStripMenuItem});
+            this.系统工具ToolStripMenuItem.Name = "系统工具ToolStripMenuItem";
+            this.系统工具ToolStripMenuItem.Size = new System.Drawing.Size(71, 20);
+            this.系统工具ToolStripMenuItem.Text = "【系统工具】";
+            // 
+            // 服务缓存测试ToolStripMenuItem
+            // 
+            this.服务缓存测试ToolStripMenuItem.Name = "服务缓存测试ToolStripMenuItem";
+            this.服务缓存测试ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.服务缓存测试ToolStripMenuItem.Text = "服务缓存测试";
+            this.服务缓存测试ToolStripMenuItem.Click += new System.EventHandler(this.服务缓存测试ToolStripMenuItem_Click);
             // 
             // kryptonManager
             // 
@@ -805,6 +823,8 @@ namespace RUINORERP.UI
         private System.Windows.Forms.ToolStripContainer toolStripContainerMenu;
         private System.Windows.Forms.ToolStripDropDownButton toolStripDropDownButton1;
         private System.Windows.Forms.ToolStripComboBox toolStripMenuSearcher;
+        private System.Windows.Forms.ToolStripMenuItem 系统工具ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 服务缓存测试ToolStripMenuItem;
     }
 }
 

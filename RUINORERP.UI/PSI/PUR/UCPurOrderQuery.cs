@@ -167,7 +167,7 @@ namespace RUINORERP.UI.PSI.PUR
             }
         }
 
-        private void NewSumDataGridView_转为采购入库单(object sender, EventArgs e)
+        private async void NewSumDataGridView_转为采购入库单(object sender, EventArgs e)
         {
             List<tb_PurOrder> selectlist = GetSelectResult();
             foreach (var item in selectlist)
@@ -188,14 +188,14 @@ namespace RUINORERP.UI.PSI.PUR
                     }
 
                     tb_PurOrderController<tb_PurOrder> ctr = Startup.GetFromFac<tb_PurOrderController<tb_PurOrder>>();
-                    tb_PurEntry purEntry = ctr.PurOrderTotb_PurEntry(item).Result;
+                    tb_PurEntry purEntry =await ctr.PurOrderTotb_PurEntry(item);
 
                     MenuPowerHelper menuPowerHelper;
                     menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
                     tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == nameof(tb_PurEntry) && m.BIBaseForm == "BaseBillEditGeneric`2").FirstOrDefault();
                     if (RelatedMenuInfo != null)
                     {
-                        menuPowerHelper.ExecuteEvents(RelatedMenuInfo, purEntry);
+                      await  menuPowerHelper.ExecuteEvents(RelatedMenuInfo, purEntry);
                     }
                     return;
                 }
@@ -278,7 +278,7 @@ namespace RUINORERP.UI.PSI.PUR
 
 
                     tb_PurOrderController<tb_PurOrder> ctrPurOrder = Startup.GetFromFac<tb_PurOrderController<tb_PurOrder>>();
-                    tb_PurEntry purEntry = ctrPurOrder.PurOrderTotb_PurEntry(item).Result;
+                    tb_PurEntry purEntry =await ctrPurOrder.PurOrderTotb_PurEntry(item);
                     if (purEntry.tb_PurEntryDetails.Count > 0)
                     {
                         ReturnMainSubResults<tb_PurEntry> rsrs = await ctr.BaseSaveOrUpdateWithChild<tb_PurEntry>(purEntry);

@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Krypton.Toolkit;
 using MySqlX.XDevAPI;
+using RUINORERP.PacketSpec.Models.Common;
 
 namespace RUINORERP.UI.Network
 {/// <summary>

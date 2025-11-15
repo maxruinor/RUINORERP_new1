@@ -2,8 +2,7 @@ using System.Threading.Tasks;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Commands;
 using System.Threading;
-using RUINORERP.PacketSpec.Models.Requests.Message;
-using RUINORERP.PacketSpec.Models.Responses;
+using RUINORERP.PacketSpec.Models.Messaging;
 
 namespace RUINORERP.UI.Network.Services
 {
@@ -21,6 +20,6 @@ namespace RUINORERP.UI.Network.Services
         /// <param name="request">请求对象</param>
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>响应对象</returns>
-        Task<TResponse> SendCommandWithResponseAsync<TResponse>(CommandId command, MessageRequest request, CancellationToken cancellationToken = default) where TResponse : class, RUINORERP.PacketSpec.Models.Responses.IResponse;
+        Task<TResponse> SendCommandWithResponseAsync<TResponse>(CommandId command, MessageRequest request, CancellationToken cancellationToken = default) where TResponse : class, IResponse;
     }
 }

@@ -32,6 +32,10 @@ using System.Windows.Forms;
 
 namespace RUINORERP.UI.UserCenter.DataParts
 {
+    /// <summary>
+    /// 待办事项列表组件
+    /// 集成任务状态实时同步功能
+    /// </summary>
     public partial class UCTodoList : UserControl
     {
         // 依赖注入的服务
@@ -39,6 +43,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
         private readonly IEntityMappingService _mapper;
         private readonly EntityLoader _loader;
         private readonly ILogger<UCTodoList> _logger;
+        private Guid _syncSubscriberKey;
         public UCTodoList(IEntityMappingService mapper, EntityLoader loader, ILogger<UCTodoList> logger)
         {
             InitializeComponent();
@@ -124,13 +129,124 @@ namespace RUINORERP.UI.UserCenter.DataParts
             // 查找匹配的工作中心配置
             CenterConfig = GetWorkCenterConfig(currentRole, currentUser);
 
-
+            // 初始化同步订阅者
+            InitializeSyncSubscriber();
+            
             // 构建待办事项树
             await BuilderToDoListTreeView();
 
             // 设置上下文菜单
             kryptonTreeViewJobList.ContextMenuStrip = contextMenuStrip1;
         }
+
+        /// <summary>
+        /// 初始化同步订阅者
+        /// 订阅任务状态更新事件
+        /// </summary>
+        private void InitializeSyncSubscriber()
+        {
+            _syncSubscriberKey = Guid.NewGuid();
+
+            // 订阅所有业务类型的更新
+            var allBizTypes = Enum.GetValues(typeof(BizType))
+                .Cast<BizType>()
+                .Where(t => t != BizType.无对应数据)
+                .ToList();
+
+            TaskStatusSyncManager.Instance.Subscribe(_syncSubscriberKey, HandleTaskStatusUpdates, allBizTypes);
+            TaskStatusMonitor.Instance.StartMonitoring(allBizTypes);
+        }
+
+        /// <summary>
+        /// 处理任务状态更新列表
+        /// 当接收到任务状态更新时，更新UI显示
+        /// </summary>
+        /// <param name="updates">任务状态更新信息列表</param>
+        private void HandleTaskStatusUpdates(List<TaskStatusUpdate> updates)
+        {
+            try
+            {
+                if (updates == null || !updates.Any())
+                    return;
+
+                // 确保在UI线程中更新
+                if (this.InvokeRequired)
+                {
+                    this.BeginInvoke(new Action<List<TaskStatusUpdate>>(HandleTaskStatusUpdates), updates);
+                    return;
+                }
+
+                // 处理每个更新
+                foreach (var update in updates)
+                {
+                    UpdateTreeNodeForTask(update);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.Error("处理任务状态更新失败", ex);
+            }
+        }
+
+        /// <summary>
+        /// 更新任务对应的树节点
+        /// </summary>
+        /// <param name="update">任务状态更新信息</param>
+        private void UpdateTreeNodeForTask(TaskStatusUpdate update)
+        {
+            if (kryptonTreeViewJobList.Nodes.Count == 0)
+                return;
+
+            // 查找业务类型节点
+            var bizTypeNode = FindBizTypeNode(update.BusinessType);
+            if (bizTypeNode == null)
+                return;
+
+            switch (update.UpdateType)
+            {
+                case TaskStatusUpdateType.Added:
+                case TaskStatusUpdateType.Deleted:
+                case TaskStatusUpdateType.StatusChanged:
+                    // 对于任何状态变化，重新加载业务类型节点
+                    Task.Run(async () => {
+                        try {
+                            var newNode = await ProcessBizTypeNodeAsync(update.BusinessType);
+                            if (newNode != null) {
+                                this.Invoke((Action)(() => {
+                                    // 替换现有节点
+                                    var index = kryptonTreeViewJobList.Nodes.IndexOf(bizTypeNode);
+                                    if (index >= 0) {
+                                        kryptonTreeViewJobList.Nodes[index] = newNode;
+                                        kryptonTreeViewJobList.ExpandAll();
+                                    }
+                                }));
+                            }
+                        } catch (Exception ex) {
+                            _logger.Error("更新业务类型节点失败", ex);
+                        }
+                    });
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// 查找业务类型对应的树节点
+        /// </summary>
+        /// <param name="bizType">业务类型</param>
+        /// <returns>树节点，如果未找到返回null</returns>
+        private TreeNode FindBizTypeNode(BizType bizType)
+        {
+            foreach (TreeNode node in kryptonTreeViewJobList.Nodes)
+            {
+                if (node.Text == bizType.ToString())
+                {
+                    return node;
+                }
+            }
+            return null;
+        }
+
+        
 
         private tb_WorkCenterConfig GetWorkCenterConfig(tb_RoleInfo currentRole, tb_UserInfo currentUser)
         {
@@ -537,6 +653,11 @@ namespace RUINORERP.UI.UserCenter.DataParts
 
 
 
+        /// <summary>
+        /// 处理业务类型节点的异步方法
+        /// </summary>
+        /// <param name="bizType">业务类型</param>
+        /// <returns>构建的树节点</returns>
         private async Task<TreeNode> ProcessBizTypeNodeAsync(BizType bizType)
         {
             if (bizType == BizType.预收款单)

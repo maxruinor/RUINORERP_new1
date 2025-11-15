@@ -12,6 +12,7 @@ using RUINORERP.Server.Network.Models;
 using RUINORERP.Server.Network.Services;
 using RUINORERP.Server.Network.Interfaces.Services;
 using RUINORERP.PacketSpec.Models.Core;
+using RUINORERP.PacketSpec.Models.Common;
 
 namespace RUINORERP.Server.Network.CommandHandlers
 {

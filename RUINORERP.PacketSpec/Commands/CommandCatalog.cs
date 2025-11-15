@@ -366,81 +366,54 @@ namespace RUINORERP.PacketSpec.Commands
         public const ushort DataSync_UpdateGlobalConfig = 0x0708;
         #endregion
 
-        #region 锁管理命令 (0x08xx)
+        #region 锁管理命令 (0x08xx) - 优化版本
         /// <summary>
-        /// 申请锁 - 申请获取资源锁
+        /// 锁定单据 - 申请锁定指定单据，防止其他用户同时编辑
+        /// 命令码: 0x0800
         /// </summary>
-        public const ushort Lock_LockRequest = 0x0800;
+        public const ushort Lock_Lock = 0x0800;
 
         /// <summary>
-        /// 释放锁 - 释放已获取的资源锁
+        /// 解锁单据 - 释放已锁定的单据，允许其他用户编辑
+        /// 命令码: 0x0801
         /// </summary>
-        public const ushort Lock_LockRelease = 0x0801;
+        public const ushort Lock_Unlock = 0x0801;
 
         /// <summary>
-        /// 锁状态查询 - 查询资源锁状态
+        /// 检查锁定状态 - 查询单据当前的锁定状态
+        /// 命令码: 0x0802
         /// </summary>
-        public const ushort Lock_LockStatus = 0x0802;
+        public const ushort Lock_CheckLockStatus = 0x0802;
 
         /// <summary>
-        /// 强制解锁 - 强制释放资源锁
+        /// 请求解锁 - 当单据被其他用户锁定时，请求当前锁定用户释放锁定
+        /// 命令码: 0x0803
         /// </summary>
-        public const ushort Lock_ForceUnlock = 0x0803;
+        public const ushort Lock_RequestUnlock = 0x0803;
 
         /// <summary>
-        /// 检查锁状态 - 检查资源锁是否可用
+        /// 拒绝解锁 - 当前锁定用户拒绝其他用户的解锁请求
+        /// 命令码: 0x0804
         /// </summary>
-        public const ushort Lock_CheckLock = 0x0804;
+        public const ushort Lock_RefuseUnlock = 0x0804;
 
         /// <summary>
-        /// 广播 - 广播锁状态信息
+        /// 同意解锁 - 当前锁定用户同意其他用户的解锁请求并释放锁定
+        /// 命令码: 0x0805
         /// </summary>
-        public const ushort Lock_Broadcast = 0x0805;
+        public const ushort Lock_AgreeUnlock = 0x0805;
 
         /// <summary>
-        /// 请求解锁 - 请求释放锁资源
+        /// 强制解锁 - 管理员强制释放锁定（特殊情况使用）
+        /// 命令码: 0x0806
         /// </summary>
-        public const ushort Lock_RequestUnlock = 0x0806;
+        public const ushort Lock_ForceUnlock = 0x0806;
 
         /// <summary>
-        /// 拒绝解锁 - 拒绝解锁请求
+        /// 广播锁定状态 - 向相关用户广播锁定状态变化
+        /// 命令码: 0x0807
         /// </summary>
-        public const ushort Lock_RefuseUnlock = 0x0807;
-
-        /// <summary>
-        /// 请求锁定单据 - 请求锁定业务单据
-        /// </summary>
-        public const ushort Lock_RequestLock = 0x0808;
-
-        /// <summary>
-        /// 释放锁定的单据 - 释放已锁定的业务单据
-        /// </summary>
-        public const ushort Lock_ReleaseLock = 0x0809;
-
-        /// <summary>
-        /// 强制释放锁定 - 强制释放业务单据锁
-        /// </summary>
-        public const ushort Lock_ForceReleaseLock = 0x080A;
-
-        /// <summary>
-        /// 锁定状态查询 - 查询业务单据锁定状态
-        /// </summary>
-        public const ushort Lock_QueryLockStatus = 0x080B;
-
-        /// <summary>
-        /// 广播锁定状态变化 - 广播业务单据锁定状态变化
-        /// </summary>
-        public const ushort Lock_BroadcastLockStatus = 0x080C;
-
-        /// <summary>
-        /// 锁管理 - 锁资源管理操作
-        /// </summary>
-        public const ushort Lock_LockManagement = 0x080D;
-
-        /// <summary>
-        /// 转发单据锁定 - 转发单据锁定请求
-        /// </summary>
-        public const ushort Lock_ForwardDocumentLock = 0x080E;
+        public const ushort Lock_BroadcastLockStatus = 0x0807;
         #endregion
 
         #region 配置命令 (0x09xx)

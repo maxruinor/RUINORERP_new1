@@ -13,7 +13,7 @@ using RUINORERP.Business.CommService;
 using RUINORERP.Business.Processor;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Common.Helper;
-using RUINORERP.Extensions.Middlewares;
+
 using RUINORERP.Global;
 using RUINORERP.Global.CustomAttribute;
 using RUINORERP.Model;
@@ -40,6 +40,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Caching;
 using System.Windows.Documents;
@@ -1132,9 +1133,6 @@ namespace RUINORERP.UI.Common
             string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
             T prodDetail = null;
 
-            // 获取新的缓存管理器实例
-            var cacheManager = Startup.GetFromFac<IEntityCacheManager>();
-
             // 获取表结构管理器实例
             var tableSchemaManager = TableSchemaManager.Instance;
 
@@ -1144,7 +1142,8 @@ namespace RUINORERP.UI.Common
                 var schemaInfo = tableSchemaManager.GetSchemaInfo(typeof(T).Name);
                 if (schemaInfo != null)
                 {
-                    object obj = cacheManager.GetEntity<T>(ProdDetailID);
+                    // 直接使用CacheManager的GetEntity方法，内部已实现单例模式
+                    object obj = CacheManager.GetEntity<T>(ProdDetailID);
                     if (obj != null && obj.GetType().Name != "Object" && obj is T)
                     {
                         prodDetail = obj as T;
@@ -1198,11 +1197,8 @@ namespace RUINORERP.UI.Common
             List<KeyValuePair<object, string>> proDetailList = new List<KeyValuePair<object, string>>();
             List<View_ProdDetail> list = new List<View_ProdDetail>();
 
-            // 获取新的缓存管理器实例
-            var cacheManager = Startup.GetFromFac<IEntityCacheManager>();
-
-            // 获取View_ProdDetail实体列表
-            list = cacheManager.GetEntityList<View_ProdDetail>();
+            // 直接使用CacheManager的GetEntityList方法，内部已实现单例模式
+            list = CacheManager.GetEntityList<View_ProdDetail>();
 
             foreach (var item in list)
             {
@@ -1447,19 +1443,46 @@ namespace RUINORERP.UI.Common
         }
 
 
-        public static async Task RequestCache<T>(bool forceRefresh = false)
+        /// <summary>
+        /// 请求缓存数据 - 泛型版本
+        /// </summary>
+        /// <typeparam name="T">实体类型</typeparam>
+        /// <param name="forceRefresh">是否强制刷新缓存，默认为false</param>
+        /// <param name="timeoutMs">超时时间（毫秒），默认为5000ms</param>
+        /// <param name="cancellationToken">取消令牌</param>
+        /// <exception cref="OperationCanceledException">当操作被取消时抛出</exception>
+        /// <exception cref="TimeoutException">当请求超时时抛出</exception>
+        public static async Task RequestCache<T>(bool forceRefresh = false, int timeoutMs = 5000, CancellationToken cancellationToken = default)
         {
-            await RequestCache(typeof(T).Name, typeof(T), forceRefresh);
+            await RequestCache(typeof(T).Name, typeof(T), forceRefresh, timeoutMs, cancellationToken);
         }
 
-        public static async Task RequestCache(Type type, bool forceRefresh = false)
+        /// <summary>
+        /// 请求缓存数据 - 类型版本
+        /// </summary>
+        /// <param name="type">实体类型</param>
+        /// <param name="forceRefresh">是否强制刷新缓存，默认为false</param>
+        /// <param name="timeoutMs">超时时间（毫秒），默认为5000ms</param>
+        /// <param name="cancellationToken">取消令牌</param>
+        /// <exception cref="OperationCanceledException">当操作被取消时抛出</exception>
+        /// <exception cref="TimeoutException">当请求超时时抛出</exception>
+        public static async Task RequestCache(Type type, bool forceRefresh = false, int timeoutMs = 5000, CancellationToken cancellationToken = default)
         {
-            await RequestCache(type.Name, type, forceRefresh);
+            await RequestCache(type.Name, type, forceRefresh, timeoutMs, cancellationToken);
         }
 
-        public static async Task RequestCache(BaseEntity entity, bool forceRefresh = false)
+        /// <summary>
+        /// 请求缓存数据 - 实体版本
+        /// </summary>
+        /// <param name="entity">实体实例</param>
+        /// <param name="forceRefresh">是否强制刷新缓存，默认为false</param>
+        /// <param name="timeoutMs">超时时间（毫秒），默认为5000ms</param>
+        /// <param name="cancellationToken">取消令牌</param>
+        /// <exception cref="OperationCanceledException">当操作被取消时抛出</exception>
+        /// <exception cref="TimeoutException">当请求超时时抛出</exception>
+        public static async Task RequestCache(BaseEntity entity, bool forceRefresh = false, int timeoutMs = 5000, CancellationToken cancellationToken = default)
         {
-            await RequestCache(entity.GetType().Name, entity.GetType(), forceRefresh);
+            await RequestCache(entity.GetType().Name, entity.GetType(), forceRefresh, timeoutMs, cancellationToken);
         }
 
         /// <summary>
@@ -1482,80 +1505,109 @@ namespace RUINORERP.UI.Common
         /// <param name="tableName">表名</param>
         /// <param name="type">实体类型，如果提供则使用实体的FKRelations属性获取外键关系</param>
         /// <param name="forceRefresh">是否强制刷新缓存，默认为false</param>
-        public static async Task RequestCache(string tableName, Type type = null, bool forceRefresh = false)
+        /// <param name="timeoutMs">超时时间（毫秒），默认为5000ms</param>
+        /// <param name="cancellationToken">取消令牌</param>
+        /// <exception cref="OperationCanceledException">当操作被取消时抛出</exception>
+        /// <exception cref="TimeoutException">当请求超时时抛出</exception>
+        public static async Task RequestCache(string tableName, Type type = null, bool forceRefresh = false, int timeoutMs = 5000, CancellationToken cancellationToken = default)
         {
-            // 获取新的缓存管理器实例
-            var cacheManager = Startup.GetFromFac<IEntityCacheManager>();
+            // 创建带超时的取消令牌
+            using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            timeoutCts.CancelAfter(timeoutMs);
+            var combinedToken = timeoutCts.Token;
+            
             CacheClientService cacheClient = Startup.GetFromFac<CacheClientService>();
             // 获取表结构管理器实例
             var tableSchemaManager = TableSchemaManager.Instance;
 
-            // 处理主表
-            if (tableSchemaManager.ContainsTable(tableName) && IsCacheableTable(tableName))
+            try
             {
-                // 获取本地缓存数据
-                var entityList = cacheManager.GetEntityList<object>(tableName);
-
-                // 判断逻辑：如果强制刷新缓存，或者本地没有缓存数据，则请求
-                if (forceRefresh || entityList == null || entityList.Count == 0)
+                // 处理主表
+                if (tableSchemaManager.ContainsTable(tableName) && IsCacheableTable(tableName))
                 {
-                    await cacheClient.RequestCacheAsync(tableName);
-                }
-            }
+                    // 直接使用CacheManager的GetEntityList方法，内部已实现单例模式
+                    var entityList = CacheManager.GetEntityList<object>(tableName);
 
-            // 处理关联表 - 优先使用实体类型的FKRelations属性（如果提供了类型）
-            if (type != null && typeof(BaseEntity).IsAssignableFrom(type))
-            {
-                try
-                {
-                    // 创建实体实例来获取FKRelations
-                    BaseEntity entityInstance = (BaseEntity)Activator.CreateInstance(type);
-                    
-                    // 获取所有外键关系
-                    var fkRelations = entityInstance.FKRelations;
-                    
-                    foreach (var relation in fkRelations)
+                    // 判断逻辑：如果强制刷新缓存，或者本地没有缓存数据，则请求
+                    if (forceRefresh || entityList == null || entityList.Count == 0)
                     {
-                        if (IsCacheableTable(relation.FKTableName))
-                        {
-                            var rslist = cacheManager.GetEntityList<object>(relation.FKTableName);
+                        await cacheClient.RequestCacheAsync(tableName, combinedToken);
+                    }
+                }
 
-                            // 简化的判断逻辑：如果本地没有缓存数据，则请求
-                            if (rslist == null || rslist.Count == 0)
+                // 处理关联表 - 优先使用实体类型的FKRelations属性（如果提供了类型）
+                if (type != null && typeof(BaseEntity).IsAssignableFrom(type))
+                {
+                    try
+                    {
+                        // 创建实体实例来获取FKRelations
+                        BaseEntity entityInstance = (BaseEntity)Activator.CreateInstance(type);
+                        
+                        // 获取所有外键关系
+                        var fkRelations = entityInstance.FKRelations;
+                        
+                        foreach (var relation in fkRelations)
+                        {
+                            // 检查取消令牌
+                            combinedToken.ThrowIfCancellationRequested();
+                            
+                            if (IsCacheableTable(relation.FKTableName))
                             {
-                                await cacheClient.RequestCacheAsync(relation.FKTableName);
+                                // 直接使用CacheManager的GetEntityList方法，内部已实现单例模式
+                                var rslist = CacheManager.GetEntityList<object>(relation.FKTableName);
+
+                                // 简化的判断逻辑：如果本地没有缓存数据，则请求
+                                if (rslist == null || rslist.Count == 0)
+                                {
+                                    await cacheClient.RequestCacheAsync(relation.FKTableName, combinedToken);
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception ex) when (!(ex is OperationCanceledException))
+                    {
+                        // 记录异常但继续执行
+                        MainForm.Instance.logger.LogError(ex, $"获取实体{type.Name}的外键关系失败");
+                    }
+                }
+                // 如果没有提供类型或类型处理失败，则使用表结构管理器
+                else
+                {
+                    var schemaInfo = tableSchemaManager.GetSchemaInfo(tableName);
+                    if (schemaInfo != null && schemaInfo.ForeignKeys.Any())
+                    {
+                        // 创建副本以避免枚举时修改集合的异常
+                        var foreignKeys = schemaInfo.ForeignKeys.ToList();
+                        foreach (var fk in foreignKeys)
+                        {
+                            // 检查取消令牌
+                            combinedToken.ThrowIfCancellationRequested();
+                            
+                            if (IsCacheableTable(fk.RelatedTableName))
+                            {
+                                // 直接使用CacheManager的GetEntityList方法，内部已实现单例模式
+                                var rslist = CacheManager.GetEntityList<object>(fk.RelatedTableName);
+
+                                // 简化的判断逻辑：如果本地没有缓存数据，则请求
+                                if (rslist == null || rslist.Count == 0)
+                                {
+                                    await cacheClient.RequestCacheAsync(fk.RelatedTableName, combinedToken);
+                                }
                             }
                         }
                     }
                 }
-                catch (Exception ex)
-                {
-                    // 记录异常但继续执行
-                    MainForm.Instance.logger.LogError(ex, $"获取实体{type.Name}的外键关系失败");
-                }
             }
-            // 如果没有提供类型或类型处理失败，则使用表结构管理器
-            else
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
-                var schemaInfo = tableSchemaManager.GetSchemaInfo(tableName);
-                if (schemaInfo != null && schemaInfo.ForeignKeys.Any())
-                {
-                    // 创建副本以避免枚举时修改集合的异常
-                    var foreignKeys = schemaInfo.ForeignKeys.ToList();
-                    foreach (var fk in foreignKeys)
-                    {
-                        if (IsCacheableTable(fk.RelatedTableName))
-                        {
-                            var rslist = cacheManager.GetEntityList<object>(fk.RelatedTableName);
-
-                            // 简化的判断逻辑：如果本地没有缓存数据，则请求
-                            if (rslist == null || rslist.Count == 0)
-                            {
-                                await cacheClient.RequestCacheAsync(fk.RelatedTableName);
-                            }
-                        }
-                    }
-                }
+                // 用户主动取消，记录日志但不抛出异常
+                MainForm.Instance.logger.LogWarning($"缓存请求被用户取消: {tableName}");
+                throw;
+            }
+            catch (OperationCanceledException)
+            {
+                // 超时取消，转换为TimeoutException
+                throw new TimeoutException($"缓存请求超时({timeoutMs}ms): {tableName}");
             }
         }
 

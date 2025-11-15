@@ -1,4 +1,4 @@
-﻿
+
 // **************************************
 // 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
@@ -17,7 +17,7 @@ using RUINORERP.Repository.UnitOfWorks;
 using RUINORERP.Model;
 using FluentValidation.Results;
 using RUINORERP.Services;
-using RUINORERP.Extensions.Middlewares;
+
 using RUINORERP.Model.Base;
 using RUINORERP.Common.Extensions;
 using RUINORERP.IServices.BASE;
@@ -136,8 +136,9 @@ namespace RUINORERP.Business
             ReturnResults<T> rs = new ReturnResults<T>();
             tb_StockOut entity = ObjectEntity as tb_StockOut;
             try
-            {
-  
+            {  
+                // 开启事务，保证数据一致性
+                _unitOfWorkManage.BeginTran();
                 
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 //更新拟销售量减少
@@ -185,9 +186,6 @@ namespace RUINORERP.Business
                     return rs;
 
                 }
-                // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
-
                 DbHelper<tb_Inventory> InvdbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
                 var Counter = await InvdbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
                 if (Counter == 0)

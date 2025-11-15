@@ -1,4 +1,4 @@
-﻿﻿using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -375,9 +375,9 @@ namespace RUINORERP.UI.PSI.SAL
 
  
 
-        public List<RuleResultWithFilter> ExecuteRulesWithFilter(RulesEngine.RulesEngine re, tb_UserInfo user, tb_MenuInfo menu)
+        public async Task<List<RuleResultWithFilter>> ExecuteRulesWithFilter(RulesEngine.RulesEngine re, tb_UserInfo user, tb_MenuInfo menu)
         {
-            var results = re.ExecuteAllRulesAsync("QueryFilterRules", user, menu).Result;
+            var results =await re.ExecuteAllRulesAsync("QueryFilterRules", user, menu);
             return results.Select(r => new RuleResultWithFilter
             {
                 IsSuccess = r.IsSuccess,
@@ -450,7 +450,7 @@ namespace RUINORERP.UI.PSI.SAL
             }
         }
 
-        private void NewSumDataGridView_转为销售出库单(object sender, EventArgs e)
+        private async void NewSumDataGridView_转为销售出库单(object sender, EventArgs e)
         {
             List<tb_SaleOrder> selectlist = GetSelectResult();
             foreach (var item in selectlist)
@@ -472,13 +472,13 @@ namespace RUINORERP.UI.PSI.SAL
 
                     tb_SaleOrderController<tb_SaleOrder> ctr = Startup.GetFromFac<tb_SaleOrderController<tb_SaleOrder>>();
                     //tb_SaleOut saleOut = SaleOrderToSaleOut(item);
-                    tb_SaleOut saleOut = ctr.SaleOrderToSaleOut(item).Result;
+                    tb_SaleOut saleOut =await ctr.SaleOrderToSaleOut(item);
                     MenuPowerHelper menuPowerHelper;
                     menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
                     tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == nameof(tb_SaleOut) && m.BIBaseForm == "BaseBillEditGeneric`2").FirstOrDefault();
                     if (RelatedMenuInfo != null)
                     {
-                        menuPowerHelper.ExecuteEvents(RelatedMenuInfo, saleOut);
+                     await   menuPowerHelper.ExecuteEvents(RelatedMenuInfo, saleOut);
                     }
                     return;
                 }
@@ -586,171 +586,7 @@ namespace RUINORERP.UI.PSI.SAL
         }
 
 
-        /*
-        public override void BuildLimitQueryConditions()
-        {
-
-            // 注册自定义函数
-            var reSettings = new ReSettings
-            {
-                CustomTypes = new Type[] { typeof(FilterHelper), typeof(tb_UserInfo), typeof(tb_MenuInfo) }
-            };
-
-            // 加载规则配置
-            //var rulesJson = File.ReadAllText("permission_rules.json");
-            //var workflows = new List<Workflow> {
-            //       new Workflow {
-            //           WorkflowName = "QueryFilterRules",
-            //           Rules = JsonConvert.DeserializeObject<List<Rule>>(rulesJson)
-            //       }
-            //   };
-            // 1. 从JSON文件加载工作流配置
-            //var json = File.ReadAllText("permission_rules.json");
-            var json = @"[
-                          {
-                            ""WorkflowName"": ""QueryFilterRules"", // 工作流名称必须与代码中执行时一致
-                            ""Rules"": [ // 必须包含Rules数组
-                              {
-                                ""RuleName"": ""DepartmentFilter"",
-                                ""Expression"": ""t => t.Employee_ID == @EmployeeId &&  t.DepartmentId == @DepartmentId""
-                              },
-                              {
-                                ""RuleName"": ""SoftDelete"",
-                                ""Expression"": ""t => t.isdeleted == false""
-                              }
-                            ]
-                          }
-                        ]";
-
-            var workflows = JsonConvert.DeserializeObject<List<Workflow>>(json); // 注意：反序列化为List<Workflow>
-
-            var re = new RulesEngine.RulesEngine(workflows.ToArray(), reSettings);
-            //var re = new RulesEngine.RulesEngine(workflows.ToArray(), null);
-
-            var user = MainForm.Instance.AppContext.CurUserInfo.UserInfo;
-            var menu = CurMenuInfo;
-
-            // 执行规则
-            // var resultList = await re.ExecuteAllRulesAsync("QueryFilterRules", user, menu);
-            // 执行规则并获取过滤条件
-            var ruleResults = ExecuteRulesWithFilter(re, user, menu);
-
-            //var successResults = resultList.Where(r =>
-            //    r.IsSuccess &&
-            //    r.f == "ApplyFilter" // 根据事件类型过滤
-            //);
-
-            var lambda = Expressionable.Create<tb_SaleOrder>();
-
-            var param = Expression.Parameter(typeof(tb_SaleOrder), "t");
-
-
-            foreach (var result in ruleResults.Where(r => r.IsSuccess && !string.IsNullOrEmpty(r.FilterExpression)))
-            {
-                var resolvedExpr = ReplacePlaceholders(result.FilterExpression, menu, user);
-                //var exprE = DynamicExpressionParser.ParseLambda<tb_SaleOrder, bool>(
-                //    ParsingConfig.Default,
-                //    resolvedExpr
-                //);
-            }
-
-            // 应用基础条件（如无规则时）
-            if (!ruleResults.Any(r => r.IsSuccess))
-            {
-                lambda.And(t => t.isdeleted == false);
-            }
-
-            var results = re.ExecuteAllRulesAsync("QueryFilterRules",
-            new RuleParameter("user", user),
-            new RuleParameter("menu", menu)
-                 ).Result;
-
-            //foreach (var result in ruleResults.Where(r => r.IsSuccess))
-            foreach (var result in results)
-            {
-                #region 解析Expression
-
-                // 从规则中获取过滤表达式字符串
-                var Expr = result.Rule.Expression.ToString();// result.Rule.Actions["FilterExpression"].ToString();
-
-                // 替换占位符（如@UserId → 实际值） 实际值是 由哪个对象来决定的呢？
-                var resolvedExpr = ReplacePlaceholders(Expr, menu, user);
-
-
-                // 解析为Lambda表达式
-
-                var paramUser = Expression.Parameter(typeof(tb_UserInfo), "user");
-                var paramMenu = Expression.Parameter(typeof(tb_MenuInfo), "menu");
-                var paramT = Expression.Parameter(typeof(tb_SaleOrder), "t");
-
-                var resolvedExpr1 = "t => t.Employee_ID == \"121\" && t.DepartmentId == \"121\"";
-
-                // 使用ParsingConfig放宽解析限制
-                var config = new ParsingConfig
-                {
-                    ResolveTypesBySimpleName = true // 允许简单类型名称解析
-                };
-
-                var filterExprLambda1 = DynamicExpressionParser.ParseLambda(
-                    config,
-                    new[] { paramT },
-                    typeof(bool),
-                    resolvedExpr1
-                ) as Expression<Func<tb_SaleOrder, bool>>;
-
-
-
-                if (result.Rule.RuleName == "SalesOrderAccess")
-                {
-                    // 解析条件表达式（如 menu.CaptionCN.Contains("客户")）
-                    var conditionExpr = DynamicExpressionParser.ParseLambda(
-                        new[] { paramUser, paramMenu },
-                        typeof(bool),
-                        resolvedExpr
-                    ) as Expression<Func<tb_SaleOrder, bool>>;
-                    lambda.And(conditionExpr);
-                }
-                else
-                {
-                    resolvedExpr = resolvedExpr1;
-                    // 解析过滤表达式（如 t => t.Employee_ID == 123）
-                    var filterExprLambda = DynamicExpressionParser.ParseLambda(
-                        new[] { paramT },
-                        typeof(bool),
-                        resolvedExpr
-                    ) as Expression<Func<tb_SaleOrder, bool>>;
-
-                    // 添加到SqlSugar的条件组合器
-                    lambda.And(filterExprLambda);
-                }
-
-                #endregion
-                // 从规则中获取过滤表达式字符串
-                var filterExpr = result.Rule.Expression.ToString();// result.Rule.Actions["FilterExpression"].ToString();
-                                                                   // 从Actions中获取过滤条件
-
-                // 替换占位符（如@UserId → 实际值）
-                var resolvedFilterExpr = ReplacePlaceholders(filterExpr, menu, user);
-
-                // 解析为Lambda表达式
-                var Filterparam = Expression.Parameter(typeof(tb_SaleOrder), "t");
-                var Filterexpr = DynamicExpressionParser.ParseLambda(
-                    new[] { Filterparam },
-                    typeof(bool),
-                    resolvedExpr
-                ) as Expression<Func<tb_SaleOrder, bool>>;
-
-                // 添加到SqlSugar的条件组合器
-                lambda.And(Filterexpr);
-            }
-
-            // 必须添加的基础条件（如软删除）
-            lambda.And(t => t.isdeleted == false);
-
-            base.LimitQueryConditions = lambda.ToExpression();
-            //QueryConditionFilter.FilterLimitExpressions.Add(lambda);
-        }
-        */
+    
         /// <summary>
         /// 可以通过  注册 数字要"引号" 转换不然会失败
         /// </summary>
@@ -880,9 +716,8 @@ namespace RUINORERP.UI.PSI.SAL
 
                     }
 
-                    // tb_SaleOut saleOut = SaleOrderToSaleOut(item);
                     tb_SaleOrderController<tb_SaleOrder> ctrOrder = Startup.GetFromFac<tb_SaleOrderController<tb_SaleOrder>>();
-                    tb_SaleOut saleOut = ctrOrder.SaleOrderToSaleOut(item).Result;
+                    tb_SaleOut saleOut =await ctrOrder.SaleOrderToSaleOut(item);
 
                     ReturnMainSubResults<tb_SaleOut> rsrs = await ctr.BaseSaveOrUpdateWithChild<tb_SaleOut>(saleOut);
                     if (rsrs.Succeeded)

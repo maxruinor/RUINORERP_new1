@@ -3,17 +3,15 @@ using RUINORERP.Model.Context;
 using RUINORERP.Model.ReminderModel.ReminderRules;
 using RUINORERP.Repository.UnitOfWorks;
 using RUINORERP.Server.Network.Interfaces.Services;
-using RUINORERP.Server.ServerSession;
-using RUINORERP.PacketSpec.Models.Requests.Message;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using RUINORERP.Model;
 using RUINORERP.Server.Network.CommandHandlers;
-using RUINORERP.PacketSpec.Models.Responses.Message;
 using RUINORERP.Model.TransModel;
 using RUINORERP.PacketSpec.Commands;
+using RUINORERP.PacketSpec.Models.Messaging;
 
 namespace RUINORERP.Server.SmartReminder
 {

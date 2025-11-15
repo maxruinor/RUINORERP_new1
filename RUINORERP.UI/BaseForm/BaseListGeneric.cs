@@ -59,7 +59,7 @@ using RUINORERP.Global.EnumExt;
 using RUINORERP.Global;
 using RUINORERP.UI.Monitoring.Auditing;
 using RUINORERP.PacketSpec.Models.Core;
-using RUINORERP.Extensions.Middlewares;
+
 using RUINORERP.Business.Cache;
 using System.Web.Caching;
 
@@ -1931,6 +1931,20 @@ namespace RUINORERP.UI.BaseForm
             {
                 tsbtnSelected.Visible = false;
             }
+
+            if (!this.DesignMode)
+            {
+                dataGridView1.NeedSaveColumnsXml = false;
+                await UIBizService.SetGridViewAsync(typeof(T), this.dataGridView1, CurMenuInfo);
+                //dataGridView1.ColumnWidthChanged -= DataGridView_ColumnWidthChanged;
+                //dataGridView1.ColumnWidthChanged += DataGridView_ColumnWidthChanged;
+
+                QueryDtoProxy = LoadQueryConditionToUI(4);
+                BaseDataGridView1 = dataGridView1;
+            }
+
+            BuildContextMenuController();
+
             #region 请求缓存
             //通过表名获取需要缓存的关系表再判断是否存在。没有就从服务器请求。这种是全新的请求。后面还要设计更新式请求。
             if (ColDisplayTypes.Count > 0)
@@ -1942,20 +1956,6 @@ namespace RUINORERP.UI.BaseForm
             }
             await UIBizService.RequestCache<T>();
             #endregion
-
-            if (!this.DesignMode)
-            {
-                dataGridView1.NeedSaveColumnsXml = false;
-                await UIBizService.SetGridViewAsync(typeof(T), this.dataGridView1, CurMenuInfo);
-                //dataGridView1.ColumnWidthChanged -= DataGridView_ColumnWidthChanged;
-                //dataGridView1.ColumnWidthChanged += DataGridView_ColumnWidthChanged;
-
-                QueryDtoProxy = LoadQueryConditionToUI(4);
-                BaseDataGridView1 = dataGridView1;
-
-            }
-
-            BuildContextMenuController();
         }
         /// <summary>
         /// 创建右键菜单

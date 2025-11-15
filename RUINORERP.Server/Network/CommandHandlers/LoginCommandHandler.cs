@@ -32,9 +32,9 @@ using System.IdentityModel.Tokens.Jwt;
 using System.IO.Packaging;
 using Azure.Core;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
-using RUINORERP.PacketSpec.Models.Responses.Authentication;
-using RUINORERP.PacketSpec.Models.Responses.Message;
 using log4net.Core;
+using RUINORERP.PacketSpec.Models.Common;
+using RUINORERP.PacketSpec.Models.Authentication;
 
 namespace RUINORERP.Server.Network.CommandHandlers
 {

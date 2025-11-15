@@ -1,7 +1,6 @@
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Enums.Core;
 using RUINORERP.PacketSpec.Models.Core;
-using RUINORERP.PacketSpec.Models.Responses;
 
 using RUINORERP.PacketSpec.Security;
 using RUINORERP.PacketSpec.Serialization;
@@ -40,7 +39,7 @@ using RUINORERP.UI.SysConfig;
 using RUINORERP.UI.Network.ClientCommandHandlers;
 using RUINORERP.Common.Helper;
 
-using RUINORERP.PacketSpec.Models.Requests.Message;
+using RUINORERP.PacketSpec.Models.Common;
 
 namespace RUINORERP.UI.Network
 {
@@ -617,18 +616,25 @@ namespace RUINORERP.UI.Network
         /// </summary>
         /// <typeparam name="TRequest">请求数据类型</typeparam>
         /// <typeparam name="TResponse">响应数据类型</typeparam>
-        /// <param name="command">命令对象</param>
+        /// <param name="commandId">命令ID</param>
+        /// <param name="request">请求数据</param>
         /// <param name="ct">取消令牌</param>
-        /// <param name="timeoutMs">请求超时时间（毫秒）</param>
+        /// <param name="timeoutMs">请求超时时间（毫秒），如果未指定则根据命令类型自动设置</param>
         /// <returns>响应数据对象</returns>
         private async Task<PacketModel> SendRequestAsync<TRequest, TResponse>(
            CommandId commandId,
             TRequest request,
             CancellationToken ct = default,
-            int timeoutMs = 30000)
+            int timeoutMs = 0)
             where TRequest : class, IRequest
             where TResponse : class, IResponse
         {
+            // 根据命令类型设置不同的超时时间
+            if (timeoutMs <= 0)
+            {
+                timeoutMs = GetTimeoutByCommandType(commandId);
+            }
+
             using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
             cts.CancelAfter(timeoutMs);
 
@@ -655,7 +661,7 @@ namespace RUINORERP.UI.Network
                 string ResponseTypeName = typeof(TResponse).AssemblyQualifiedName;
 
                 // 使用现有的SendPacketCoreAsync发送请求，并传递带有响应类型信息的上下文
-                await SendPacketCoreAsync<TRequest>(_socketClient, commandId, request, _networkConfig.DefaultRequestTimeoutMs, ct, ResponseTypeName);
+                await SendPacketCoreAsync<TRequest>(_socketClient, commandId, request, timeoutMs, ct, ResponseTypeName);
 
                 // 等待响应或超时
                 var timeoutTask = Task.Delay(timeoutMs, cts.Token);
@@ -688,6 +694,48 @@ namespace RUINORERP.UI.Network
             {
                 _pendingRequests.TryRemove(request.RequestId, out _);
             }
+        }
+
+        /// <summary>
+        /// 根据命令类型获取超时时间
+        /// </summary>
+        /// <param name="commandId">命令ID</param>
+        /// <returns>超时时间（毫秒）</returns>
+        private int GetTimeoutByCommandType(CommandId commandId)
+        {
+            // 根据命令类型设置不同的超时时间
+            // 缓存相关请求设置较短超时，避免UI阻塞
+            if (commandId.Name.Contains("Cache"))
+            {
+                return 5000; // 缓存请求5秒超时
+            }
+            
+            // 认证相关请求设置较短超时
+            if (commandId.Name.Contains("Auth") || commandId.Name.Contains("Login"))
+            {
+                return 8000; // 认证请求8秒超时
+            }
+            
+            // 查询相关请求
+            if (commandId.Name.Contains("Query") || commandId.Name.Contains("Search"))
+            {
+                return 10000; // 查询请求10秒超时
+            }
+            
+            // 数据保存相关请求
+            if (commandId.Name.Contains("Save") || commandId.Name.Contains("Update") || commandId.Name.Contains("Delete"))
+            {
+                return 15000; // 保存/更新/删除请求15秒超时
+            }
+            
+            // 报表相关请求
+            if (commandId.Name.Contains("Report") || commandId.Name.Contains("Export"))
+            {
+                return 30000; // 报表/导出请求30秒超时
+            }
+            
+            // 默认超时时间
+            return 20000; // 默认20秒超时
         }
 
 
@@ -1471,7 +1519,7 @@ namespace RUINORERP.UI.Network
                 {
                     //默认给基类。因为服务器处理时只是会在最后响应时才看是否真的需要响应。因为处理中会响应错误信息。
                     packet.ExecutionContext.NeedResponse = false;
-                    packet.ExecutionContext.ExpectedResponseTypeName = nameof(RUINORERP.PacketSpec.Models.Responses.ResponseBase);
+                    packet.ExecutionContext.ExpectedResponseTypeName = nameof(RUINORERP.PacketSpec.Models.Core.ResponseBase);
                 }
                 else
                 {

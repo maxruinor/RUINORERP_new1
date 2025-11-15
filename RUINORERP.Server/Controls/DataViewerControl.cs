@@ -9,16 +9,21 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using RUINORERP.Server.Comm;
 using RUINORERP.Business.CommService;
-using RUINORERP.Extensions.Middlewares;
+using Microsoft.Extensions.DependencyInjection;
+using RUINORERP.Server.Network.Services;
+using System.Text;
+using RUINORERP.Server.Network.Interfaces.Services;
 
 namespace RUINORERP.Server.Controls
 {
     public partial class DataViewerControl : UserControl
     {
+        private System.Windows.Forms.Timer refreshTimer;
+
         public DataViewerControl()
         {
             InitializeComponent();
-            InitializeData();
+            InitializeTimer();
         }
 
         private void InitializeData()
@@ -38,6 +43,14 @@ namespace RUINORERP.Server.Controls
             }
         }
 
+        private void InitializeTimer()
+        {
+            refreshTimer = new Timer();
+            refreshTimer.Interval = 30000; // 30秒刷新一次
+            refreshTimer.Tick += RefreshTimer_Tick;
+            refreshTimer.Start();
+        }
+
         private void DataViewerControl_Load(object sender, EventArgs e)
         {
             // 设置控件属性
@@ -55,14 +68,14 @@ namespace RUINORERP.Server.Controls
                 // 添加锁定信息列表
                 listBoxTableList.Items.Add("锁定信息列表");
                 
-                // 添加缓存表列表
-                if (MyCacheManager.Instance != null && MyCacheManager.Instance.NewTableList != null)
-                {
-                    foreach (KeyValuePair<string, KeyValuePair<string, string>> table in MyCacheManager.Instance.NewTableList)
-                    {
-                        listBoxTableList.Items.Add(table.Value.Value);
-                    }
-                }
+                // 添加缓存表列表 - 暂时注释掉，等待缓存管理器修复
+                // if (MyCacheManager.Instance != null && MyCacheManager.Instance.NewTableList != null)
+                // {
+                //     foreach (KeyValuePair<string, KeyValuePair<string, string>> table in MyCacheManager.Instance.NewTableList)
+                //     {
+                //         listBoxTableList.Items.Add(table.Value.Value);
+                //     }
+                // }
                 
                 // 如果有项目，选择第一个
                 if (listBoxTableList.Items.Count > 0)
@@ -112,34 +125,20 @@ namespace RUINORERP.Server.Controls
                 if (tableName == "锁定信息列表")
                 {
                     // 显示锁定信息
-                    var lockItems = frmMainNew.Instance.lockManager.GetLockItems();
+                    var lockManager = Program.ServiceProvider.GetRequiredService<ILockManagerService>();
+                    var lockItems = lockManager.GetLockItems();
                     dataGridViewData.DataSource = lockItems;
                     return;
                 }
                 
-                // 查找对应的表键名
-                string tableKey = null;
-                foreach (KeyValuePair<string, KeyValuePair<string, string>> table in MyCacheManager.Instance.NewTableList)
-                {
-                    if (table.Value.Value.Equals(tableName))
-                    {
-                        tableKey = table.Key;
-                        break;
-                    }
-                }
                 
-                if (string.IsNullOrEmpty(tableKey))
-                {
-                    MessageBox.Show("未找到对应的表数据", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
-                }
                 
-                // 获取缓存数据
-                var cacheData = MyCacheManager.Instance.GetDictDataSource(tableKey);
+                // 获取缓存数据 - 修复类型推断问题
+                var cacheData = RUINORERP.Business.Cache.EntityCacheHelper.GetEntityList<object>(tableName);
                 if (cacheData != null && cacheData.Count > 0)
                 {
                     // 将数据绑定到DataGridView
-                    var bindingList = new BindingList<object>(cacheData.Values.ToList());
+                    var bindingList = new BindingList<object>(cacheData);
                     dataGridViewData.DataSource = bindingList;
                 }
                 else
@@ -211,6 +210,158 @@ namespace RUINORERP.Server.Controls
             catch (Exception ex)
             {
                 MessageBox.Show($"重新加载缓存时出错: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void btnLockStatistics_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                ShowLockStatistics();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"显示锁定统计信息时出错: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void StatsUpdateTimer_Tick(object sender, EventArgs e)
+        {
+            try
+            {
+                UpdateLockStatsDisplay();
+            }
+            catch (Exception ex)
+            {
+                // 静默处理统计更新错误，避免频繁弹窗
+                Console.WriteLine($"更新锁定统计信息显示时出错: {ex.Message}");
+            }
+        }
+
+        private void RefreshTimer_Tick(object sender, EventArgs e)
+        {
+            try
+            {
+                if (listBoxTableList.SelectedItem != null)
+                {
+                    string selectedTable = listBoxTableList.SelectedItem.ToString();
+                    LoadTableData(selectedTable);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"自动刷新数据时出错: {ex.Message}");
+            }
+        }
+
+        private void UpdateLockStatsDisplay()
+        {
+            try
+            {
+                var lockManager = Program.ServiceProvider.GetRequiredService<ILockManagerService>();
+            if (lockManager != null)
+            {
+                var stats = lockManager.GetLockStatistics();
+                    if (stats != null)
+                    {
+                        string statsText = $"锁定统计 - 总数: {stats.TotalLocks}, 活跃: {stats.ActiveLocks}, 等待: {stats.WaitingLocks}, 峰值: {stats.MonitorData?.PeakConcurrentLocks ?? 0}";
+                        
+                        // 如果存在历史记录数，也显示出来
+                        if (stats is RUINORERP.Server.Network.Services.LockInfoStatistics enhancedStats)
+                        {
+                            statsText += $", 历史: {enhancedStats.HistoryRecordCount}";
+                        }
+                        
+                        if (lblLockStats.InvokeRequired)
+                        {
+                            lblLockStats.Invoke(new Action(() => lblLockStats.Text = statsText));
+                        }
+                        else
+                        {
+                            lblLockStats.Text = statsText;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"更新锁定统计信息显示时出错: {ex.Message}");
+            }
+        }
+
+        private void ShowLockStatistics()
+        {
+            try
+            {
+                var lockManager = Program.ServiceProvider.GetRequiredService<ILockManagerService>();
+            if (lockManager != null)
+            {
+                var stats = lockManager.GetLockStatistics();
+                    if (stats != null)
+                    {
+                        var message = new StringBuilder();
+                        message.AppendLine("=== 锁定统计信息 ===");
+                        message.AppendLine($"总锁定数: {stats.TotalLocks}");
+                        message.AppendLine($"活跃锁定数: {stats.ActiveLocks}");
+                        message.AppendLine($"等待锁定数: {stats.RequestingUnlock}");
+                        message.AppendLine($"峰值并发数: {stats.MonitorData?.PeakConcurrentLocks ?? 0}");
+                        message.AppendLine($"过期锁定数: {stats.ExpiredLocks}");
+                        message.AppendLine($"用户锁定数: {stats.LocksByUser}");
+                        message.AppendLine($"历史记录数: {stats.HistoryRecordCount}");
+                        
+                        // 添加监控数据详细信息
+                        if (stats.MonitorData != null)
+                        {
+                            message.AppendLine();
+                            message.AppendLine("=== 监控数据 ===");
+                            message.AppendLine($"总添加数: {stats.MonitorData.TotalLocksAdded}");
+                            message.AppendLine($"总移除数: {stats.MonitorData.TotalLocksRemoved}");
+                            message.AppendLine($"总过期数: {stats.MonitorData.TotalLocksExpired}");
+                            message.AppendLine($"当前并发数: {stats.MonitorData.CurrentConcurrentLocks}");
+                            message.AppendLine($"最后重置时间: {stats.MonitorData.LastResetTime:yyyy-MM-dd HH:mm:ss}");
+                        }
+                        
+                        // 添加业务类型统计
+                        if (stats.LocksByBizType != null && stats.LocksByBizType.Count > 0)
+                        {
+                            message.AppendLine();
+                            message.AppendLine("=== 业务类型统计 ===");
+                            foreach (var bizType in stats.LocksByBizType)
+                            {
+                                message.AppendLine($"{bizType.Key}: {bizType.Value}");
+                            }
+                        }
+                        
+                        // 添加状态统计
+                        if (stats.LocksByStatus != null && stats.LocksByStatus.Count > 0)
+                        {
+                            message.AppendLine();
+                            message.AppendLine("=== 状态统计 ===");
+                            foreach (var status in stats.LocksByStatus)
+                            {
+                                message.AppendLine($"{status.Key}: {status.Value}");
+                            }
+                        }
+                        
+                        // 添加时间戳
+                        message.AppendLine();
+                        message.AppendLine($"统计时间: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+                        
+                        MessageBox.Show(message.ToString(), "锁定统计信息", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                    else
+                    {
+                        MessageBox.Show("无法获取锁定统计信息", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("锁定管理器未初始化", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"显示锁定统计信息时出错: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 

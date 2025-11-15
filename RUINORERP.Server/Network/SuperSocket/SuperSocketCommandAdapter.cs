@@ -27,6 +27,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 using System.Net.Sockets;
 using RUINORERP.Server.Network.Services;
+using RUINORERP.PacketSpec.Models.Common;
 
 namespace RUINORERP.Server.Network.SuperSocket
 {

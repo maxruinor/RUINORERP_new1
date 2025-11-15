@@ -2,7 +2,7 @@
 using Autofac;
 using RUINORERP.PacketSpec.Serialization;
 using RUINORERP.PacketSpec.Commands;
-using RUINORERP.PacketSpec.Models.Core;
+using RUINORERP.PacketSpec.Models.Common;
 using RUINORERP.PacketSpec.Commands.Authentication;
 
 using Microsoft.Extensions.Configuration;

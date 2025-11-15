@@ -16,7 +16,7 @@ using Autofac.Core;
 using Autofac.Extras.DynamicProxy;
 using RUINORERP.Extensions.AOP;
 using Microsoft.Extensions.DependencyInjection;
-using RUINORERP.Extensions.Middlewares;
+
 using RUINORERP.Business.Cache;
 using RUINORERP.Business.Config;
 using RUINORERP.IServices;
@@ -66,13 +66,6 @@ namespace RUINORERP.Business.DI
                 .PropertiesAutowired();
             // 实体业务映射服务已通过AddEntityInfoServicesWithMappings方法注册
             // 此处不再重复注册，以避免冲突
-
-            // 注册MyCacheManager缓存管理器（保持向后兼容）
-            builder.RegisterType<MyCacheManager>()
-                .AsSelf()
-                .InstancePerLifetimeScope()
-                .PropertiesAutowired();
-
          
 
 
@@ -121,6 +114,26 @@ namespace RUINORERP.Business.DI
                 .AsSelf()
                 .InstancePerLifetimeScope()
                 .PropertiesAutowired();
+                
+            // 注册单据转换器工厂
+            builder.RegisterType<RUINORERP.Business.Document.DocumentConverterFactory>()
+                .AsSelf()
+                .SingleInstance()
+                .PropertiesAutowired();
+            
+            // 注册锁定感知的联动操作管理器
+            builder.RegisterType<RUINORERP.Business.Document.LockAwareActionManager>()
+                .AsSelf()
+                .InstancePerLifetimeScope()
+                .PropertiesAutowired();
+            
+            // 注册Redis分布式文档锁定管理器
+            builder.RegisterType<RUINORERP.Business.Lock.RedisDocumentLockManager>()
+                .As<RUINORERP.Business.Lock.IDocumentLockManager>()
+                .SingleInstance()
+                .PropertiesAutowired();
+            
+
 
             builder.RegisterType<DuplicateCheckService>()
                 .As<IDuplicateCheckService>()
@@ -153,6 +166,12 @@ namespace RUINORERP.Business.DI
 
             // 注册审计日志帮助类
             builder.RegisterType<RUINORERP.Business.CommService.FMAuditLogHelper>()
+                .AsSelf()
+                .InstancePerLifetimeScope()
+                .PropertiesAutowired();
+
+            // 注册审计日志帮助类（主类）
+            builder.RegisterType<RUINORERP.Business.CommService.AuditLogHelper>()
                 .AsSelf()
                 .InstancePerLifetimeScope()
                 .PropertiesAutowired();

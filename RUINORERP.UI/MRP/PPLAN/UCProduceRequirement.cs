@@ -1987,7 +1987,7 @@ protected async override Task<ApprovalEntity> ReReview()
             }
 
             tb_ProductionDemandController<tb_ProductionDemand> ctr = Startup.GetFromFac<tb_ProductionDemandController<tb_ProductionDemand>>();
-            tb_BuyingRequisition buyingRequisition = ctr.GenerateBuyingRequisition(EditEntity, EditEntity.tb_PurGoodsRecommendDetails).Result;
+            tb_BuyingRequisition buyingRequisition =await ctr.GenerateBuyingRequisition(EditEntity, EditEntity.tb_PurGoodsRecommendDetails);
 
 
             //要把单据信息传过去RUINORERP.UI.PSI.PUR.UCBuyingRequisition

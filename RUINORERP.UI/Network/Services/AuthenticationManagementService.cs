@@ -8,7 +8,8 @@ using RUINORERP.PacketSpec.Models.Requests;
 using RUINORERP.PacketSpec.Models.Responses;
 using static RUINORERP.PacketSpec.Models.Requests.SystemCommandRequest;
 using RUINORERP.UI.Network;
-using RUINORERP.PacketSpec.Models.Responses.Message;
+using RUINORERP.PacketSpec.Models.Core;
+using RUINORERP.PacketSpec.Models.Messaging;
 
 namespace RUINORERP.UI.Network.Services
 {

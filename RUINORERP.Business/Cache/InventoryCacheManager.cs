@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using RUINORERP.Common.Helper;
-using RUINORERP.Extensions.Middlewares;
 using Microsoft.Extensions.Logging;
 using CacheManager.Core;
 using Newtonsoft.Json.Linq;
@@ -16,12 +15,12 @@ namespace RUINORERP.Business.Cache
     /// 库存缓存管理器
     /// 专门处理库存流水和库存快照的缓存逻辑
     /// 历史数据特性：查询频繁、更新少、多维度查询（时间/仓库/商品）
+    /// 使用统一的ICacheManager<object>进行缓存管理，支持更灵活的缓存策略
     /// </summary>
     public class InventoryCacheManager
     {
-        // 基础缓存管理器（复用现有缓存能力）
-        private readonly MyCacheManager _baseCache;
         private readonly ILogger<InventoryCacheManager> _logger;
+        private readonly ICacheManager<object> _cacheManager;
 
         // 缓存键前缀（避免键冲突）
         private const string SnapshotKeyPrefix = "InventorySnapshot:";
@@ -34,10 +33,10 @@ namespace RUINORERP.Business.Cache
         /// <summary>
         /// 构造函数
         /// </summary>
-        public InventoryCacheManager(MyCacheManager baseCache, ILogger<InventoryCacheManager> logger)
+        public InventoryCacheManager(ILogger<InventoryCacheManager> logger, ICacheManager<object> cacheManager)
         {
-            _baseCache = baseCache ?? throw new ArgumentNullException(nameof(baseCache));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _cacheManager = cacheManager ?? throw new ArgumentNullException(nameof(cacheManager));
         }
 
         #region 库存快照缓存操作
@@ -54,9 +53,9 @@ namespace RUINORERP.Business.Cache
             var cacheKey = GenerateSnapshotKey(warehouseId, productId, snapshotDate);
 
             // 尝试从缓存获取
-            if (_baseCache.CacheEntityList.Exists(cacheKey))
+            var cachedData = _cacheManager.Get(cacheKey);
+            if (cachedData != null)
             {
-                var cachedData = _baseCache.CacheEntityList.Get(cacheKey);
                 _logger.LogDebug($"库存快照缓存命中：{cacheKey}");
                 return ConvertToSnapshotList(cachedData);
             }
@@ -74,29 +73,33 @@ namespace RUINORERP.Business.Cache
 
             var cacheKey = GenerateSnapshotKey(warehouseId, productId, snapshotDate);
 
-            // 转换为可缓存格式并设置过期时间
-            var cacheData = snapshots.Cast<object>().ToList();
-            _baseCache.CacheEntityList.Add(cacheKey, cacheData);
-            _baseCache.CacheEntityList.Expire(cacheKey, ExpirationMode.Absolute, _snapshotExpiration);
+            // 使用缓存管理器更新缓存，设置过期时间
+            _cacheManager.Put(cacheKey, snapshots);
+            _cacheManager.Expire(cacheKey, ExpirationMode.Absolute, _snapshotExpiration);
 
-            _logger.Debug($"设置库存快照缓存：{cacheKey}，记录数：{snapshots.Count}");
+            _logger.LogDebug($"设置库存快照缓存：{cacheKey}，记录数：{snapshots.Count}");
         }
 
         /// <summary>
         /// 批量删除相关快照缓存（如新增快照时）
         /// </summary>
-        public void RemoveRelatedSnapshotCache(long productId)
+        public void RemoveRelatedSnapshotCache(long? warehouseId = null, long? productId = null)
         {
-            // 模糊匹配删除相关缓存（如同一商品的所有快照）
-            //var keysToRemove = _baseCache.CacheEntityList.Keys()
-            //    .Where(k => k.StartsWith(SnapshotKeyPrefix) && k.Contains($"Product:{productId}"))
-            //    .ToList();
-
-            //foreach (var key in keysToRemove)
-            //{
-            //    _baseCache.CacheEntityList.Remove(key);
-            //    _logger.LogDebug($"删除相关库存快照缓存：{key}");
-            //}
+            // 由于无法直接获取所有缓存键，这里采用更精确的方式
+            // 删除指定条件的缓存键
+            var cacheKey = GenerateSnapshotKey(warehouseId, productId, null);
+            
+            // 如果提供了具体的仓库或商品ID，直接删除对应的缓存
+            if (warehouseId.HasValue || productId.HasValue)
+            {
+                _cacheManager.Remove(cacheKey);
+                _logger.LogDebug($"删除库存快照缓存：{cacheKey}");
+            }
+            else
+            {
+                // 如果没有提供具体条件，记录警告信息
+                _logger.LogWarning("未提供具体的仓库或商品ID，无法批量删除库存快照缓存");
+            }
         }
 
         #endregion
@@ -111,9 +114,9 @@ namespace RUINORERP.Business.Cache
         {
             var cacheKey = GenerateTransactionKey(startTime, endTime, warehouseId, productId);
 
-            if (_baseCache.CacheEntityList.Exists(cacheKey))
+            var cachedData = _cacheManager.Get(cacheKey);
+            if (cachedData != null)
             {
-                var cachedData = _baseCache.CacheEntityList.Get(cacheKey);
                 _logger.LogDebug($"库存流水缓存命中：{cacheKey}");
                 return ConvertToTransactionList(cachedData);
             }
@@ -131,12 +134,12 @@ namespace RUINORERP.Business.Cache
                 return;
 
             var cacheKey = GenerateTransactionKey(startTime, endTime, warehouseId, productId);
-            var cacheData = transactions.Cast<object>().ToList();
 
-            _baseCache.CacheEntityList.Add(cacheKey, cacheData);
-            _baseCache.CacheEntityList.Expire(cacheKey, ExpirationMode.Absolute, _transactionExpiration);
+            // 使用缓存管理器更新缓存，设置过期时间
+            _cacheManager.Put(cacheKey, transactions);
+            _cacheManager.Expire(cacheKey, ExpirationMode.Absolute, _transactionExpiration);
 
-            _logger.Debug($"设置库存流水缓存：{cacheKey}，记录数：{transactions.Count}");
+            _logger.LogDebug($"设置库存流水缓存：{cacheKey}，记录数：{transactions.Count}");
         }
 
         /// <summary>
@@ -144,15 +147,13 @@ namespace RUINORERP.Business.Cache
         /// </summary>
         public void InvalidateTransactionCache(long productId)
         {
-            //var keysToRemove = _baseCache.CacheEntityList.GetKeys()
-            //    .Where(k => k.StartsWith(TransactionKeyPrefix) && k.Contains($"Product:{productId}"))
-            //    .ToList();
-
-            //foreach (var key in keysToRemove)
-            //{
-            //    _baseCache.CacheEntityList.Remove(key);
-            //    _logger.LogDebug($"失效库存流水缓存：{key}");
-            //}
+            // 由于无法直接获取所有缓存键，这里采用更精确的方式
+            // 删除指定商品的流水缓存
+            var cacheKey = GenerateTransactionKey(DateTime.MinValue, DateTime.MaxValue, null, productId);
+            
+            // 删除指定商品的流水缓存
+            _cacheManager.Remove(cacheKey);
+            _logger.LogDebug($"失效商品 {productId} 的库存流水缓存");
         }
 
         #endregion
@@ -206,12 +207,20 @@ namespace RUINORERP.Business.Cache
         /// </summary>
         private List<tb_InventorySnapshot> ConvertToSnapshotList(object cachedData)
         {
-            return cachedData switch
+            if (cachedData is List<tb_InventorySnapshot> snapshots)
+                return snapshots;
+
+            // 处理缓存格式转换
+            if (cachedData is List<object> objectList)
             {
-                List<object> objList => objList.OfType<tb_InventorySnapshot>().ToList(),
-                JArray jArray => jArray.ToObject<List<tb_InventorySnapshot>>(),
-                _ => new List<tb_InventorySnapshot>()
-            };
+                return objectList
+                    .Where(obj => obj is tb_InventorySnapshot)
+                    .Cast<tb_InventorySnapshot>()
+                    .ToList();
+            }
+
+            _logger.LogWarning($"库存快照缓存数据格式异常");
+            return new List<tb_InventorySnapshot>();
         }
 
         /// <summary>
@@ -219,12 +228,20 @@ namespace RUINORERP.Business.Cache
         /// </summary>
         private List<tb_InventoryTransaction> ConvertToTransactionList(object cachedData)
         {
-            return cachedData switch
+            if (cachedData is List<tb_InventoryTransaction> transactions)
+                return transactions;
+
+            // 处理缓存格式转换
+            if (cachedData is List<object> objectList)
             {
-                List<object> objList => objList.OfType<tb_InventoryTransaction>().ToList(),
-                JArray jArray => jArray.ToObject<List<tb_InventoryTransaction>>(),
-                _ => new List<tb_InventoryTransaction>()
-            };
+                return objectList
+                    .Where(obj => obj is tb_InventoryTransaction)
+                    .Cast<tb_InventoryTransaction>()
+                    .ToList();
+            }
+
+            _logger.LogWarning($"库存流水缓存数据格式异常");
+            return new List<tb_InventoryTransaction>();
         }
 
         #endregion

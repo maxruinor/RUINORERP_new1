@@ -4,6 +4,7 @@ using System.Threading;
 using Microsoft.Extensions.Logging;
 using RUINORERP.PacketSpec.Models.Core;
 using System.Collections.Generic;
+using RUINORERP.PacketSpec.Models.Common;
 
 namespace RUINORERP.UI.Network
 {

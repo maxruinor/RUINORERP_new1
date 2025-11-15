@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using RUINORERP.PacketSpec.Models.Core;
+using RUINORERP.PacketSpec.Models.Common;
 using System;
 using System.Buffers.Binary;
 using System.Runtime.CompilerServices;

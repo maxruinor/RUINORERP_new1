@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using RUINORERP.PacketSpec.Models;
+using RUINORERP.PacketSpec.Models.Lock;
+using RUINORERP.Server.Network.Services;
 
 namespace RUINORERP.Server.Network.Interfaces.Services
 {
@@ -14,7 +15,7 @@ namespace RUINORERP.Server.Network.Interfaces.Services
         /// </summary>
         /// <param name="lockInfo">锁定信息</param>
         /// <returns>锁定结果</returns>
-        Task<bool> TryLockDocumentAsync(LockedInfo lockInfo);
+        Task<bool> TryLockDocumentAsync(LockInfo lockInfo);
 
         /// <summary>
         /// 解锁单据
@@ -29,13 +30,13 @@ namespace RUINORERP.Server.Network.Interfaces.Services
         /// </summary>
         /// <param name="billId">单据ID</param>
         /// <returns>锁定信息，如果未锁定则返回null</returns>
-        LockedInfo GetLockInfo(long billId);
+        LockInfo GetLockInfo(long billId);
 
         /// <summary>
         /// 获取所有锁定的单据信息
         /// </summary>
         /// <returns>锁定信息列表</returns>
-        List<LockedInfo> GetAllLockedDocuments();
+        List<LockInfo> GetAllLockedDocuments();
 
         /// <summary>
         /// 根据业务类型解锁单据
@@ -55,16 +56,16 @@ namespace RUINORERP.Server.Network.Interfaces.Services
         /// <summary>
         /// 请求解锁单据
         /// </summary>
-        /// <param name="requestInfo">请求信息</param>
+        /// <param name="request">锁定请求信息</param>
         /// <returns>请求结果</returns>
-        Task<bool> RequestUnlockDocumentAsync(RequestUnLockInfo requestInfo);
+        Task<bool> RequestUnlockDocumentAsync(LockRequest request);
 
         /// <summary>
         /// 拒绝解锁请求
         /// </summary>
         /// <param name="refuseInfo">拒绝信息</param>
         /// <returns>拒绝结果</returns>
-        Task<bool> RefuseUnlockRequestAsync(RefuseUnLockInfo refuseInfo);
+        Task<bool> RefuseUnlockRequestAsync(LockRequest refuseInfo);
         
         /// <summary>
         /// 检查用户是否有权限修改单据
@@ -80,5 +81,25 @@ namespace RUINORERP.Server.Network.Interfaces.Services
         /// <param name="billId">单据ID</param>
         /// <returns>锁定用户ID，如果未锁定则返回0</returns>
         long GetLockedUserId(long billId);
+
+ 
+
+        /// <summary>
+        /// 获取锁定项列表
+        /// </summary>
+        /// <returns>锁定项列表</returns>
+        List<LockInfo> GetLockItems();
+
+        /// <summary>
+        /// 获取锁定项数量
+        /// </summary>
+        /// <returns>锁定项数量</returns>
+        int GetLockItemCount();
+
+        /// <summary>
+        /// 获取锁定统计信息
+        /// </summary>
+        /// <returns>锁定统计信息</returns>
+        LockInfoStatistics GetLockStatistics();
     }
 }

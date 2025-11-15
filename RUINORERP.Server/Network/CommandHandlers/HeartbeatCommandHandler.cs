@@ -1,6 +1,5 @@
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Models.Responses;
-using RUINORERP.PacketSpec.Models.Requests;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -10,6 +9,8 @@ using Microsoft.Extensions.Logging;
 using RUINORERP.Server.Network.Interfaces.Services;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Errors;
+using RUINORERP.PacketSpec.Models.Authentication;
+using RUINORERP.PacketSpec.Models.Requests;
 
 namespace RUINORERP.Server.Network.CommandHandlers
 {

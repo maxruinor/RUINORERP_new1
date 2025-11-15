@@ -2,6 +2,7 @@
 using RUINORERP.PacketSpec.Models.Requests;
 using RUINORERP.PacketSpec.Errors;
 using System;
+using RUINORERP.PacketSpec.Models.Core;
 
 namespace RUINORERP.PacketSpec.Validation
 {

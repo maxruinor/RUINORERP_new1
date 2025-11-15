@@ -5,6 +5,7 @@ using RUINORERP.PacketSpec.Security;
 using RUINORERP.PacketSpec.Serialization;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Commands;
+using RUINORERP.PacketSpec.Models.Common;
 
 
 namespace RUINORERP.UI.Network

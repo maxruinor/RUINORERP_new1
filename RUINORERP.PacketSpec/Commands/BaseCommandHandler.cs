@@ -7,14 +7,13 @@ using Microsoft.Extensions.Logging;
 using RUINORERP.PacketSpec.Utilities;
 using RUINORERP.PacketSpec.Serialization;
 using RUINORERP.PacketSpec.Core;
-using RUINORERP.PacketSpec.Models.Responses;
-using RUINORERP.PacketSpec.Models.Responses.Authentication;
 using System.Text;
 using RUINORERP.Global.CustomAttribute;
 using Newtonsoft.Json;
 using RUINORERP.PacketSpec.Errors;
-using RUINORERP.PacketSpec.Models.Core;
+using RUINORERP.PacketSpec.Models.Common;
 using RUINORERP.PacketSpec.Commands.Authentication;
+using RUINORERP.PacketSpec.Models.Core;
 
 namespace RUINORERP.PacketSpec.Commands
 {

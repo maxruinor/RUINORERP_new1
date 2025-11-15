@@ -114,9 +114,11 @@ namespace RUINORERP.Server.Controls
             // 
             // panelButtons
             // 
+            this.panelButtons.Controls.Add(this.btnLockStatistics);
             this.panelButtons.Controls.Add(this.btnReloadCache);
             this.panelButtons.Controls.Add(this.btnExport);
             this.panelButtons.Controls.Add(this.btnRefresh);
+            this.panelButtons.Controls.Add(this.lblLockStats);
             this.panelButtons.Dock = System.Windows.Forms.DockStyle.Bottom;
             this.panelButtons.Location = new System.Drawing.Point(3, 550);
             this.panelButtons.Name = "panelButtons";
@@ -125,7 +127,7 @@ namespace RUINORERP.Server.Controls
             // 
             // btnReloadCache
             // 
-            this.btnReloadCache.Location = new System.Drawing.Point(200, 12);
+            this.btnReloadCache.Location = new System.Drawing.Point(300, 12);
             this.btnReloadCache.Name = "btnReloadCache";
             this.btnReloadCache.Size = new System.Drawing.Size(85, 23);
             this.btnReloadCache.TabIndex = 2;
@@ -135,17 +137,17 @@ namespace RUINORERP.Server.Controls
             // 
             // btnExport
             // 
-            this.btnExport.Location = new System.Drawing.Point(100, 12);
+            this.btnExport.Location = new System.Drawing.Point(205, 12);
             this.btnExport.Name = "btnExport";
             this.btnExport.Size = new System.Drawing.Size(75, 23);
             this.btnExport.TabIndex = 1;
-            this.btnExport.Text = "导出数据";
+            this.btnExport.Text = "导出";
             this.btnExport.UseVisualStyleBackColor = true;
             this.btnExport.Click += new System.EventHandler(this.btnExport_Click);
             // 
             // btnRefresh
             // 
-            this.btnRefresh.Location = new System.Drawing.Point(15, 12);
+            this.btnRefresh.Location = new System.Drawing.Point(115, 12);
             this.btnRefresh.Name = "btnRefresh";
             this.btnRefresh.Size = new System.Drawing.Size(75, 23);
             this.btnRefresh.TabIndex = 0;
@@ -184,5 +186,8 @@ namespace RUINORERP.Server.Controls
         private System.Windows.Forms.Button btnReloadCache;
         private System.Windows.Forms.Button btnExport;
         private System.Windows.Forms.Button btnRefresh;
+        private System.Windows.Forms.Button btnLockStatistics;
+        private System.Windows.Forms.Label lblLockStats;
+        private System.Windows.Forms.Timer statsUpdateTimer;
     }
 }

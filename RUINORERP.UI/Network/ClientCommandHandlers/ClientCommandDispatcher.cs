@@ -7,6 +7,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using RUINORERP.PacketSpec.Models.Common;
 
 namespace RUINORERP.UI.Network.ClientCommandHandlers
 {

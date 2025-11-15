@@ -255,7 +255,8 @@ namespace RUINORERP.PacketSpec.Commands
         DataSync = 0x07,
 
         /// <summary>
-        /// 锁管理命令
+        /// 锁管理命令 - 优化版本：保留核心业务场景所需的最小指令集
+        /// 包含：锁定单据、解锁单据、检查锁定状态、请求解锁、拒绝解锁、同意解锁、强制解锁、广播锁定状态
         /// </summary>
         [Description("锁管理命令")]
         Lock = 0x08,

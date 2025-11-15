@@ -5,7 +5,8 @@ using FluentValidation;
 using FluentValidation.Results;
 using RUINORERP.PacketSpec.Commands;
 using Microsoft.Extensions.Logging;
-using RUINORERP.PacketSpec.Models.Core;
+using RUINORERP.PacketSpec.Models;
+using RUINORERP.PacketSpec.Models.Common;
 
 namespace RUINORERP.PacketSpec.Validation
 {

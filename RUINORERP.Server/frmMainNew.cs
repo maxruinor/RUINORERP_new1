@@ -43,7 +43,6 @@ using RUINORERP.Business.CommService;
 using RUINORERP.Common.Helper;
 using RUINORERP.Common.Log4Net;
 using RUINORERP.Extensions;
-using RUINORERP.Extensions.Middlewares;
 using RUINORERP.Global;
 using RUINORERP.Model;
 using RUINORERP.Model.Base;
@@ -52,10 +51,8 @@ using RUINORERP.Model.TransModel;
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Models;
 using RUINORERP.Server.BizService;
-using RUINORERP.Server.Commands;
 using RUINORERP.Server.Network.Core;
 using RUINORERP.Server.Network.Interfaces.Services;
-using RUINORERP.Server.ServerSession;
 using RUINORERP.Server.SmartReminder;
 using RUINORERP.Server.Workflow.WFReminder;
 using RUINORERP.Server.Workflow.WFScheduled;
@@ -81,6 +78,7 @@ using RUINORERP.Server.Services.BizCode;
 using TextBox = System.Windows.Forms.TextBox;
 using Button = System.Windows.Forms.Button;
 using RUINORERP.Business.BNR;
+using RUINORERP.Server.Network.Services;
 
 namespace RUINORERP.Server
 {
@@ -95,8 +93,6 @@ namespace RUINORERP.Server
         /// 系统保护数据
         /// </summary>
         public tb_sys_RegistrationInfo registrationInfo = new tb_sys_RegistrationInfo();
-
-        public LockManager lockManager = new LockManager();
 
         /// <summary>
         /// 可配置性全局参数 不要设置为只读 readonly

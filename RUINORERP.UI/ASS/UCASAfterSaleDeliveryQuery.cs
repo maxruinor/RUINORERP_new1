@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -60,9 +60,9 @@ namespace RUINORERP.UI.ASS
 
 
 
-        public List<RuleResultWithFilter> ExecuteRulesWithFilter(RulesEngine.RulesEngine re, tb_UserInfo user, tb_MenuInfo menu)
+        public async Task<List<RuleResultWithFilter>> ExecuteRulesWithFilter(RulesEngine.RulesEngine re, tb_UserInfo user, tb_MenuInfo menu)
         {
-            var results = re.ExecuteAllRulesAsync("QueryFilterRules", user, menu).Result;
+            var results =await re.ExecuteAllRulesAsync("QueryFilterRules", user, menu);
             return results.Select(r => new RuleResultWithFilter
             {
                 IsSuccess = r.IsSuccess,

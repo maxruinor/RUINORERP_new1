@@ -22,7 +22,8 @@ using RUINORERP.PacketSpec.Enums.Core;
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Serialization;
 using RUINORERP.PacketSpec.Security;
-using RUINORERP.PacketSpec.Models.Responses.Message;
+using RUINORERP.PacketSpec.Models.Messaging;
+using RUINORERP.PacketSpec.Models.Common;
 
 namespace RUINORERP.Server.Network.Services
 {

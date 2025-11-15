@@ -54,12 +54,12 @@ namespace RUINORERP.UI
         /// 应用程序的版本信息
         /// </summary>
         public static string ERPVersion { get; set; }
-        
+
         /// <summary>
         /// 全局配置对象
         /// </summary>
         public static IConfiguration Configuration { get; private set; }
-        
+
         /// <summary>
         /// 初始化全局配置
         /// </summary>
@@ -71,12 +71,12 @@ namespace RUINORERP.UI
             {
                 Directory.CreateDirectory(configDirectory);
             }
-            
+
             // 读取配置
             var builder = new ConfigurationBuilder()
                 .SetBasePath(configDirectory)
                 .AddJsonFile("SystemGlobalConfig.json", optional: true, reloadOnChange: true);
-                
+
             Configuration = builder.Build();
         }
 
@@ -105,7 +105,7 @@ namespace RUINORERP.UI
         {
             // 先初始化配置
             InitializeConfiguration();
-            
+
             try
             {
                 // 配置log4net（使用基础配置，主要日志配置由Startup中的ConfigureLogging方法处理）
@@ -238,10 +238,10 @@ namespace RUINORERP.UI
             #endregion
         }
 
-       
 
-  
-        
+
+
+
         static void CreateConfig()
         {
             //这里可以弄一个ICONFIG
@@ -516,10 +516,14 @@ namespace RUINORERP.UI
                 }
                 catch (Exception ex)
                 {
-                    var s = ex.Message;
-                    MessageBox.Show(s + "\r\n" + ex.StackTrace);
-                    MessageBox.Show(ex.StackTrace);
-                    Console.Write(ex.StackTrace);
+                    var s = ex.Message + "\r\n" + ex.StackTrace;
+                    if (ex.InnerException != null)
+                    {
+                        s += "\r\n";
+                        s += ex.InnerException.Message + "\r\n" + ex.InnerException.StackTrace;
+                    }
+                    MessageBox.Show(s);
+                    Console.WriteLine(s);
                 }
 
                 return;

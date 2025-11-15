@@ -2,8 +2,6 @@ using Microsoft.Extensions.Logging;
 using RUINORERP.Business.Cache;
 using RUINORERP.Business.CommService;
 using RUINORERP.PacketSpec.Commands.Cache;
-using RUINORERP.PacketSpec.Models.Requests.Cache;
-using RUINORERP.PacketSpec.Models.Responses.Cache;
 using RUINORERP.PacketSpec.Models;
 using RUINORERP.UI.Network;
 using RUINORERP.PacketSpec.Validation;
@@ -15,6 +13,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using System.Threading;
 using RUINORERP.PacketSpec.Commands;
+using RUINORERP.PacketSpec.Models.Cache;
 
 namespace RUINORERP.UI.Network.Services.Cache
 {
@@ -44,7 +43,9 @@ namespace RUINORERP.UI.Network.Services.Cache
         /// <summary>
         /// 向服务器请求指定表的缓存数据
         /// </summary>
-        public async Task RequestCacheAsync(string tableName)
+        /// <param name="tableName">表名</param>
+        /// <param name="cancellationToken">取消令牌</param>
+        public async Task RequestCacheAsync(string tableName, CancellationToken cancellationToken = default)
         {
             var validationResult = base.ValidateTableName(tableName);
             if (!validationResult.IsValid)
@@ -52,6 +53,9 @@ namespace RUINORERP.UI.Network.Services.Cache
                 _log.LogError(validationResult.GetValidationErrors());
                 return;
             }
+
+            // 检查取消令牌
+            cancellationToken.ThrowIfCancellationRequested();
 
             // 检查限流和缓存有效性，任一条件不满足则跳过请求
             if (!CheckRequestFrequency(tableName, CacheOperation.Get))
@@ -71,7 +75,7 @@ namespace RUINORERP.UI.Network.Services.Cache
             {
                 TableName = tableName,
                 Operation = CacheOperation.Get
-            });
+            }, cancellationToken);
 
             // 利用业务层缓存管理器更新缓存（如果响应成功）
             if (response?.IsSuccess == true && response.CacheData != null)
@@ -110,11 +114,15 @@ namespace RUINORERP.UI.Network.Services.Cache
         /// </summary>
         /// <param name="command">命令ID 区别是同步，还是操作</param>  
         /// <param name="request">请求参数</param>
-        internal async Task<CacheResponse> ProcessCacheOperationAsync(CommandId command, CacheRequest request)
+        /// <param name="cancellationToken">取消令牌</param>
+        internal async Task<CacheResponse> ProcessCacheOperationAsync(CommandId command, CacheRequest request, CancellationToken cancellationToken = default)
         {
             // 参数验证
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
+
+            // 检查取消令牌
+            cancellationToken.ThrowIfCancellationRequested();
 
             // 检查请求频率
             if (!CheckRequestFrequency(request.TableName, request.Operation))
@@ -130,7 +138,12 @@ namespace RUINORERP.UI.Network.Services.Cache
             {
                 // 不再需要检查连接状态，直接发送请求
                 // ClientCommunicationService会自动处理连接状态和离线队列
-                return await _communicationService.SendCommandWithResponseAsync<CacheResponse>(command, request, CancellationToken.None);
+                return await _communicationService.SendCommandWithResponseAsync<CacheResponse>(command, request, cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                _log.LogDebug("缓存请求被取消，表名={0}, 操作类型={1}", request.TableName, request.Operation);
+                throw;
             }
             catch (Exception ex)
             {

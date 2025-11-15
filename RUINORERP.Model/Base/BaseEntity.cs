@@ -1,4 +1,4 @@
-﻿
+
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using RUINORERP.Global;
@@ -6,6 +6,7 @@ using RUINORERP.Global.CustomAttribute;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.Global.Model;
 using RUINORERP.Model.Base;
+using RUINORERP.Model.Base.StatusManager;
 using SharpYaml.Tokens;
 using SqlSugar;
 using SqlSugar.Extensions;
@@ -20,9 +21,17 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading.Tasks;
 using System.Xml.Serialization;
+using RUINORERP.Model.StatusManage;
+using RUINORERP.Model.Base.StatusManager.Core;
 namespace RUINORERP.Model
 {
+    /// <summary>
+    /// 操作状态枚举 - 定义实体操作类型
+    /// 【已过时】请使用新的状态管理体系 - 参见RUINORERP.Model.Base.StatusManager命名空间
+    /// 替代方案：使用OperationStatus枚举
+    /// </summary>
     public enum ActionStatus
     {
         无操作,
@@ -38,11 +47,10 @@ namespace RUINORERP.Model
     {
         #region 属性变更追踪
 
-
-
         private readonly ConcurrentDictionary<string, PropertyChangeRecord> _changedProperties = new ConcurrentDictionary<string, PropertyChangeRecord>();
         private static readonly ConcurrentDictionary<Type, string[]> _skipPropertyCache = new ConcurrentDictionary<Type, string[]>();
-        // private readonly Dictionary<string, object> _originalValues = new Dictionary<string, object>();
+
+        #endregion
 
 
         /// <summary>
@@ -171,8 +179,7 @@ namespace RUINORERP.Model
             return null;
         }
 
-        #endregion
-
+ 
 
         #region 像出库时 成本与分摊双向计算的情况
         public void RaisePropertyChanged(string propertyName)
@@ -182,32 +189,15 @@ namespace RUINORERP.Model
 
         #endregion
 
-        #region  状态管理相关代码
+    
         #region 状态字段事件通知
 
 
 
 
 
-        public event EventHandler<StatusChangedEventArgs> StatusChanged;
-        protected virtual void OnPropertyChangedStatus(string propertyName, object oldValue, object newValue)
-        {
-            StatusChanged?.Invoke(this, new StatusChangedEventArgs(propertyName, oldValue, newValue));
-        }
-        protected virtual void OnPropertyChanged(string propertyName, object oldValue, object newValue)
-        {
-            // 触发常规属性变更事件 已经调用 了。
-            // 合并通知逻辑
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-
-            // 检查是否是状态属性变更
-            if (propertyName == _statusPropertyName && !oldValue.Equals(newValue))
-            {
-                // 状态变更处理
-                //OnPropertyChangedStatus(propertyName, oldValue, newValue);
-            }
-        }
-
+ 
+        
 
         #endregion
 
@@ -228,65 +218,11 @@ namespace RUINORERP.Model
 
 
 
-        [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
-        public IStatusEvaluator StatusEvaluator { get => _statusEvaluator; set => _statusEvaluator = value; }
-
-        private string _statusPropertyName;
-
-        private IStatusEvaluator _statusEvaluator;
-
+     
         public BaseEntity()
         {
-            /*
-            // 默认使用基础状态提供器
-            if (this.FieldNameList.Keys.Contains(nameof(DataStatus)))
-            {
-                StatusEvaluator = new BusinessStatusEvaluator();
-                StatusEvaluator.CurrentStatus = (DataStatus)ReflectionHelper.GetPropertyValue(this, "DataStatus").ToInt();
-                StatusEvaluator.ApprovalResult = ReflectionHelper.GetPropertyValue(this, "ApprovalResults").ToBool();
-                _statusPropertyName = nameof(DataStatus);
-                _statusEnumType = typeof(DataStatus);
-                //ApprovalResult = StatusEvaluator.ApprovalResult;
-                StatusEvaluator.StatusChanged += (s, e) => OnPropertyChanged(nameof(StatusEvaluator.CurrentStatus));
-            }
-            else if (this.FieldNameList.Keys.Contains(nameof(PaymentStatus)))
-            {
-                StatusEvaluator = new FinancialStatusEvaluator();
-                StatusEvaluator.CurrentStatus = (PaymentStatus)ReflectionHelper.GetPropertyValue(this, "PaymentStatus").ToInt();
-                StatusEvaluator.ApprovalResult = ReflectionHelper.GetPropertyValue(this, "ApprovalResults").ToBool();
-                _statusPropertyName = nameof(PaymentStatus);
-                _statusEnumType = typeof(PaymentStatus);
-                //ApprovalResult = StatusEvaluator.ApprovalResult;
-                StatusEvaluator.StatusChanged += (s, e) => OnPropertyChanged(nameof(StatusEvaluator.CurrentStatus));
-            }
-            else
-            {
-                //是不是要给一个基础啥都没有的？ 或要判断_statusEvaluator空值情况
-            }
-
-            // 绑定状态变化事件,实体中的字段变化就会反应到到评估计算器中
-            this.StatusChanged += (s, e) =>
-            {
-                if (e.PropertyName == _statusPropertyName && _statusEnumType != null)
-                {
-                    // 将新值转换为对应的枚举类型
-                    object newStatus = Enum.ToObject(_statusEnumType, e.NewValue);
-                    StatusEvaluator.CurrentStatus = (Enum)newStatus;
-                }
-
-                //if (e.PropertyName == nameof(DataStatus))
-                //{
-                //    _statusEvaluator.CurrentStatus = (Enum)Convert.ChangeType(e.NewValue, typeof(Enum));
-                //}
-
-                //if (e.PropertyName == nameof(PaymentStatus))
-                //{
-                //    _statusEvaluator.CurrentStatus = (Enum)Convert.ChangeType(e.NewValue, typeof(Enum));
-                //}
-            };
-            */
-
+            // 初始化新的状态管理系统
+            InitializeStateManager(GetType());
         }
 
 
@@ -510,48 +446,9 @@ namespace RUINORERP.Model
         #endregion
 
 
-        // 允许子类替换状态提供器
-        protected void SetStatusProvider(IStatusEvaluator statusEvaluator)
-        {
-            StatusEvaluator = statusEvaluator;
-            StatusEvaluator.StatusChanged += (s, e) => OnPropertyChanged(nameof(StatusEvaluator.CurrentStatus));
-        }
 
 
-        //private Enum _currentStatus;
 
-        //[SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
-        //public Enum CurrentStatus
-        //{
-        //    get
-        //    {
-        //        if (StatusEvaluator == null)
-        //        {
-        //            return null;
-        //        }
-        //        return _currentStatus;
-        //    }
-        //    set
-        //    {
-        //        SetProperty(ref _currentStatus, value);
-        //    }
-        //}
-
-        //public Enum CurrentStatus => _statusProvider.CurrentStatus;
-
-        //[SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
-        //public bool ApprovalResult { get; set; }
-
-        //event EventHandler<StatusChangedEventArgs> IStatusProvider.StatusChanged
-        //{
-        //    add => StatusEvaluator.StatusChanged += value;
-        //    remove => StatusEvaluator.StatusChanged -= value;
-        //}
-
-
-        #endregion
 
         #endregion
 
@@ -826,6 +723,10 @@ namespace RUINORERP.Model
 
         public event PropertyChangedEventHandler PropertyChanged;
 
+        /// <summary>
+        /// 操作性状态变更事件
+        /// </summary>
+        public event EventHandler<ActionStatusChangedEventArgs> ActionStatusChanged;
 
         /// <summary>
         /// Suppress禁止的意思。 
@@ -835,23 +736,36 @@ namespace RUINORERP.Model
         [SugarColumn(IsIgnore = true)]
         [Browsable(false)]
         public bool SuppressNotifyPropertyChanged { get; set; }
-        protected virtual void OnPropertyChanged(string propertyName)
+        /// <summary>
+        /// 触发属性变更通知
+        /// </summary>
+        /// <param name="propertyName">属性名</param>
+        /// <param name="oldValue">旧值</param>
+        /// <param name="newValue">新值</param>
+        protected virtual void OnPropertyChanged(string propertyName, object oldValue = null, object newValue = null)
         {
-            // 删除此方法或保留为空
-            //if (this.PropertyChanged != null && !SuppressNotifyPropertyChanged)
-            //{
-            //    try
-            //    {
-            //        this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
-            //        HasChanged = true;
-            //    }
-            //    catch (Exception ex)
-            //    {
-
-
-            //    }
-
-            //}
+            if (this.PropertyChanged != null && !SuppressNotifyPropertyChanged)
+            {
+                try
+                {
+                    this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+                    HasChanged = true;
+                    
+                    // 如果是ActionStatus属性变更，触发ActionStatusChanged事件
+                    if (propertyName == nameof(ActionStatus) && ActionStatusChanged != null)
+                    {
+                        var eventArgs = new ActionStatusChangedEventArgs(
+                            (ActionStatus)oldValue, 
+                            (ActionStatus)newValue);
+                        ActionStatusChanged(this, eventArgs);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // 记录异常但不抛出，避免影响主业务流程
+                    System.Diagnostics.Debug.WriteLine($"属性变更通知异常: {ex.Message}");
+                }
+            }
         }
 
         protected virtual void OnPropertyChanged<T>(Expression<Func<T>> expr)
@@ -971,6 +885,9 @@ namespace RUINORERP.Model
         }
 
         #endregion
+
+       
+
         public virtual void Save()
         {
             // 保存后重置变更追踪
@@ -992,13 +909,16 @@ namespace RUINORERP.Model
         public bool HasChanged { get; set; }
 
 
-        // 定义一个事件，用于通知外部实体属性值的变化
-        public event EventHandler<ActionStatusChangedEventArgs> ActionStatusChanged;
+        #region 状态管理增强
 
+     
         private ActionStatus _ActionStatus;
         private ActionStatus _previousActionStatus;
+        
         /// <summary>
         /// 操作状态码,实际的属性变化事件中，调用OnPropertyChanged方法
+        /// 【已过时】请使用新的状态管理体系 - 参见RUINORERP.Model.Base.StateManager命名空间
+        /// 替代方案：使用IStatusProvider.GetOperationStatus()
         /// </summary>
         [SugarColumn(IsIgnore = true)]
         [Browsable(false)]
@@ -1008,18 +928,13 @@ namespace RUINORERP.Model
             set
             {
                 _previousActionStatus = _ActionStatus;
-                OnActionStatusChanged(_previousActionStatus, value);
                 SetProperty(ref _ActionStatus, value);
             }
         }
 
 
-        protected virtual void OnActionStatusChanged(ActionStatus oldValue, ActionStatus newValue)
-        {
-            if (object.Equals(oldValue, newValue)) return;
-            // 触发事件，通知外部实体属性值的变化
-            ActionStatusChanged?.Invoke(this, new ActionStatusChangedEventArgs(oldValue, newValue));
-        }
+        
+        #endregion
 
 
 
@@ -1279,12 +1194,61 @@ namespace RUINORERP.Model
                 return true;
 
             // 跳过不需要记录的属性（根据需要扩展）
-            var skipProperties = new[] { "StatusEvaluator", "FieldNameList", "HelpInfos", "RowImage" };
+            var skipProperties = new[] { "StatusEvaluator", "FieldNameList", "HelpInfos", "RowImage", "ActionStatus", "Selected", "Childs" };
             if (skipProperties.Contains(property.Name))
                 return true;
 
             return false;
         }
+        #endregion
+
+        #region 新状态管理系统方法
+
+        /// <summary>
+        /// 初始化状态管理系统
+        /// </summary>
+        /// <param name="entityType">实体类型</param>
+        /// <param name="initialStatus">初始状态</param>
+        protected virtual void InitializeStateManager(Type entityType, DataStatus initialStatus = DataStatus.新建)
+        {
+            // 如果没有指定初始状态，尝试从子类的DataStatus属性获取
+            if (initialStatus == DataStatus.新建)
+            {
+                var dataStatusProperty = GetDataStatusProperty();
+                if (dataStatusProperty != null)
+                {
+                    var value = (DataStatus?)dataStatusProperty.GetValue(this);
+                    if (value.HasValue)
+                    {
+                        initialStatus = value.Value;
+                    }
+                }
+            }
+            
+           
+        }
+
+       
+
+
+        /// <summary>
+        /// 获取DataStatus属性信息
+        /// </summary>
+        /// <returns>DataStatus属性信息，如果不存在则返回null</returns>
+        protected virtual PropertyInfo GetDataStatusProperty()
+        {
+            var type = GetType();
+            var property = type.GetProperty("DataStatus");
+            
+            // 验证属性类型是否为DataStatus?
+            if (property != null && property.PropertyType == typeof(DataStatus?))
+            {
+                return property;
+            }
+            
+            return null;
+        }
+
         #endregion
 
     }
@@ -1305,17 +1269,6 @@ namespace RUINORERP.Model
 
 
 
-    // 定义一个事件参数类，用于传递新旧值
-    public class ActionStatusChangedEventArgs : EventArgs
-    {
-        public ActionStatus OldValue { get; }
-        public ActionStatus NewValue { get; }
 
-        public ActionStatusChangedEventArgs(ActionStatus oldValue, ActionStatus newValue)
-        {
-            OldValue = oldValue;
-            NewValue = newValue;
-        }
-    }
 
 }

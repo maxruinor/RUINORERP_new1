@@ -2,14 +2,13 @@ using Microsoft.Extensions.Logging;
 using RUINORERP.Model.TransModel;
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Models.Core;
-using RUINORERP.PacketSpec.Models.Requests.Message;
 using RUINORERP.Model.TransModel;
-using RUINORERP.PacketSpec.Models.Responses.Message;
 using RUINORERP.Server.Network.Models;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using RUINORERP.PacketSpec.Models.Messaging;
 
 namespace RUINORERP.Server.Network.Services
 {

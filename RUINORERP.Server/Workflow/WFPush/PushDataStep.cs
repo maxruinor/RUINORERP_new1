@@ -8,10 +8,9 @@ using RUINORERP.Server.Network.Interfaces.Services;
 
 using WorkflowCore.Interface;
 using WorkflowCore.Models;
-using RUINORERP.PacketSpec.Models.Requests.Message;
-using RUINORERP.PacketSpec.Models.Responses.Message;
 using RUINORERP.Model.TransModel;
 using RUINORERP.PacketSpec.Commands;
+using RUINORERP.PacketSpec.Models.Messaging;
 
 namespace RUINORERP.Server.Workflow.WFPush
 {

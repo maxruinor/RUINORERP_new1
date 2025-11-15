@@ -13,6 +13,7 @@ using RUINORERP.PacketSpec.Core;
 using RUINORERP.PacketSpec.Security;
 using Microsoft.Extensions.Logging;
 using System.Net.Sockets;
+using RUINORERP.PacketSpec.Models.Common;
 
 namespace RUINORERP.Server.Network.Models
 {

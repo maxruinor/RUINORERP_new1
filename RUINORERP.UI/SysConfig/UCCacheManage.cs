@@ -1,11 +1,11 @@
-﻿﻿using AutoUpdateTools;
+﻿using AutoUpdateTools;
 using CacheManager.Core;
 using FastReport.DevComponents.DotNetBar.Controls;
 using FastReport.Table;
 using HLH.Lib.Helper;
 using RUINORERP.Business.Cache;
 using RUINORERP.Business.CommService;
-using RUINORERP.Extensions.Middlewares;
+
 using RUINORERP.Model;
 using RUINORERP.Model.CommonModel;
 using RUINORERP.UI.BaseForm;
@@ -39,7 +39,7 @@ namespace RUINORERP.UI.SysConfig
         public UCCacheManage()
         {
             InitializeComponent();
-            // 通过依赖注入获取缓存管理器
+            // 使用静态缓存管理器
             _cacheManager = Startup.GetFromFac<IEntityCacheManager>();
             _tableSchemaManager = TableSchemaManager.Instance;
         }

@@ -9,7 +9,7 @@ using RUINORERP.Common.Helper;
 using RUINORERP.Global;
 using RUINORERP.Model;
 using RUINORERP.Model.TransModel;
-using RUINORERP.PacketSpec.Models.Requests.Message;
+using RUINORERP.PacketSpec.Models.Messaging;
 using RUINORERP.UI.BaseForm;
 using RUINORERP.UI.Common;
 using RUINORERP.UI.Network.Services;

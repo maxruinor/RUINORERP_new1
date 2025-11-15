@@ -32,14 +32,12 @@ using Microsoft.Extensions.Hosting;
 using AutoMapper;
 using RUINORERP.Model.Context;
 using RUINORERP.Server.Workflow;
-using RUINORERP.Server.ServerSession;
 using System.Threading.Tasks;
 using SuperSocket.Server;
 using SuperSocket;
 using System.Runtime.InteropServices;
 using Microsoft.Extensions.Logging.EventLog;
 using SuperSocket.Command;
-using RUINORERP.Server.Commands;
 using Microsoft.Extensions.Options;
 using RUINORERP.Global;
 #pragma warning disable CS0105 // using 指令以前在此命名空间中出现过
@@ -600,22 +598,22 @@ namespace RUINORERP.Server
                 {
 
                 }
-                if (tempTypes[i].Name == "IWorkflowNotificationService")
-                {
-                    builder.RegisterType<WorkflowNotificationService>()
-                    .AsImplementedInterfaces().AsSelf()
-                    .PropertiesAutowired() //属性注入 如果没有这个  public Itb_LocationTypeServices _tb_LocationTypeServices { get; set; }  这个值会没有，所以实际后为null
-                    ;
-                    continue;
-                }
-                if (tempTypes[i].Name == "IStatusMachine")
-                {
-                    builder.RegisterType<BusinessStatusMachine>()
-                    .AsImplementedInterfaces().AsSelf()
-                    .PropertiesAutowired() //属性注入 如果没有这个  public Itb_LocationTypeServices _tb_LocationTypeServices { get; set; }  这个值会没有，所以实际后为null
-                    ;
-                    continue;
-                }
+                //if (tempTypes[i].Name == "IWorkflowNotificationService")
+                //{
+                //    builder.RegisterType<WorkflowNotificationService>()
+                //    .AsImplementedInterfaces().AsSelf()
+                //    .PropertiesAutowired() //属性注入 如果没有这个  public Itb_LocationTypeServices _tb_LocationTypeServices { get; set; }  这个值会没有，所以实际后为null
+                //    ;
+                //    continue;
+                //}
+                //if (tempTypes[i].Name == "IStatusMachine")
+                //{
+                //    builder.RegisterType<BusinessStatusMachine>()
+                //    .AsImplementedInterfaces().AsSelf()
+                //    .PropertiesAutowired() //属性注入 如果没有这个  public Itb_LocationTypeServices _tb_LocationTypeServices { get; set; }  这个值会没有，所以实际后为null
+                //    ;
+                //    continue;
+                //}
                 if (tempTypes[i].Name == "IStatusHandler")
                 {
                     builder.RegisterType<ProductionStatusHandler>()

@@ -8,18 +8,32 @@
 
 V3状态管理系统包含以下核心组件：
 
-1. **UnifiedStateManager** - 统一状态管理器，负责管理实体的三种状态
+1. **IUnifiedStateManager** - 统一状态管理器接口，位于`RUINORERP.Model\Base\StatusManager\Core\IUnifiedStateManager.cs`（8.2KB，199行）
    - 数据状态 (DataStatus)
    - 业务状态 (自定义枚举)
    - 操作状态 (ActionStatus)
+   - 状态转换验证和检查功能
 
-2. **StatusTransitionContext** - 状态转换上下文，负责状态转换过程
+2. **UnifiedStateManager** - 统一状态管理器实现，位于`RUINORERP.UI\StateManagement\Core\UnifiedStateManager.cs`（32.4KB，866行）
+   - 实现IUnifiedStateManager接口
+   - 包含反射缓存和性能优化
+   - 状态变更事件处理
+   - 支持泛型业务状态转换
 
-3. **StateManagerFactoryV3** - 状态管理器工厂，负责创建和管理状态管理器实例
+3. **StatusTransitionEngine** - 状态转换引擎，位于`RUINORERP.Model\Base\StatusManager\Core\StatusTransitionEngine.cs`（11.9KB，308行）
+   - 实现IStatusTransitionEngine接口
+   - 转换规则字典和自定义验证器
+   - 执行状态转换验证和转换
 
-4. **UnifiedStatusUIControllerV3** - UI状态控制器，根据实体状态更新UI控件
+4. **StateManagerFactoryV3** - 状态管理器工厂，位于`RUINORERP.UI\StateManagement\Factory\StateManagerFactoryV3.cs`
+   - 创建和管理状态管理器实例
+   - 支持缓存机制
+   - 注册自定义管理器和转换引擎
 
-5. **StateAwareControl** - 状态感知控件基类，自动绑定实体状态
+5. **StateAwareControl** - 状态感知控件基类
+   - 自动绑定实体状态
+   - 提供LoadDataToUI方法
+   - 集成UI状态控制器
 
 ## 现有代码分析
 
@@ -715,3 +729,4 @@ public partial class UCSaleOrder : BaseBillEditGeneric<tb_SaleOrder, tb_SaleOrde
 - 2025年11月: 更正StateManagerFactoryV3中的注释错误，将"使用Model项目中的UnifiedStateManager"更正为"使用UI项目中的UnifiedStateManager"
 - 2025年11月: 移除StateManagerOptions类中的冗余属性(EnableLogging/EnableValidation/CustomTransitionRules)，统一使用EnableTransitionLogging/EnableTransitionValidation/TransitionRules
 - 2025年11月: 修复所有引用已删除冗余属性的代码，包括UnifiedStateManager.cs、BaseBillEdit.cs、BaseBillEditGeneric.cs和BaseEntity.cs
+- 2025年11月17日: 同步更新V3状态管理系统核心组件实际文件位置和实现特性，确认各核心文件的路径、大小和功能描述

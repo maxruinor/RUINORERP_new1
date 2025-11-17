@@ -250,7 +250,336 @@ namespace RUINORERP.UI.BaseForm
 
                 // 根据状态更新子表相关操作
                 UpdateChildTableOperations(currentStatus.Value);
+                
+                // 更新UI控件状态
+                UpdateUIControlsState(entity);
             }
+        }
+
+        /// <summary>
+        /// 基于实体状态更新UI控件状态
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        protected virtual void UpdateUIControlsState(T entity)
+        {
+            if (entity == null || StatusContext == null)
+                return;
+
+            // 获取当前状态
+            var currentStatus = StatusContext.CurrentStatus;
+            
+            // 根据状态更新控件可见性和可用性
+            UpdateControlsBasedOnStatus(currentStatus);
+        }
+
+        /// <summary>
+        /// 根据状态更新特定控件
+        /// </summary>
+        /// <param name="status">当前状态</param>
+        protected virtual void UpdateControlsBasedOnStatus(object status)
+        {
+            // 根据状态类型进行不同的处理
+            if (status is DataStatus dataStatus)
+            {
+                SetControlsEditable(dataStatus);
+            }
+            else if (status is PrePaymentStatus preStatus)
+            {
+                SetControlsEditable(preStatus);
+            }
+            else if (status is ARAPStatus arapStatus)
+            {
+                SetControlsEditable(arapStatus);
+            }
+            else if (status is PaymentStatus paymentStatus)
+            {
+                SetControlsEditable(paymentStatus);
+            }
+        }
+
+        /// <summary>
+        /// 设置控件编辑状态
+        /// </summary>
+        /// <param name="status">数据状态</param>
+        protected virtual void SetControlsEditable(DataStatus status)
+        {
+            bool isEditable = status == DataStatus.草稿 || status == DataStatus.新建;
+            
+            // 遍历所有控件，设置编辑状态
+            foreach (Control control in this.Controls)
+            {
+                SetControlEditableState(control, isEditable);
+            }
+        }
+
+        /// <summary>
+        /// 设置控件编辑状态（预付款状态）
+        /// </summary>
+        /// <param name="status">预付款状态</param>
+        protected virtual void SetControlsEditable(PrePaymentStatus status)
+        {
+            bool isEditable = status == PrePaymentStatus.草稿;
+            
+            // 遍历所有控件，设置编辑状态
+            foreach (Control control in this.Controls)
+            {
+                SetControlEditableState(control, isEditable);
+            }
+        }
+
+        /// <summary>
+        /// 设置控件编辑状态（应收应付状态）
+        /// </summary>
+        /// <param name="status">应收应付状态</param>
+        protected virtual void SetControlsEditable(ARAPStatus status)
+        {
+            bool isEditable = status == ARAPStatus.草稿;
+            
+            // 遍历所有控件，设置编辑状态
+            foreach (Control control in this.Controls)
+            {
+                SetControlEditableState(control, isEditable);
+            }
+        }
+
+        /// <summary>
+        /// 设置控件编辑状态（付款状态）
+        /// </summary>
+        /// <param name="status">付款状态</param>
+        protected virtual void SetControlsEditable(PaymentStatus status)
+        {
+            bool isEditable = status == PaymentStatus.草稿;
+            
+            // 遍历所有控件，设置编辑状态
+            foreach (Control control in this.Controls)
+            {
+                SetControlEditableState(control, isEditable);
+            }
+        }
+
+        /// <summary>
+        /// 递归设置控件编辑状态
+        /// </summary>
+        /// <param name="control">控件</param>
+        /// <param name="isEditable">是否可编辑</param>
+        private void SetControlEditableState(Control control, bool isEditable)
+        {
+            // 根据控件类型设置编辑状态
+            if (control is KryptonTextBox kryptonTextBox)
+            {
+                kryptonTextBox.ReadOnly = !isEditable;
+            }
+            else if (control is KryptonComboBox kryptonComboBox)
+            {
+                kryptonComboBox.Enabled = isEditable;
+            }
+            else if (control is KryptonCheckBox kryptonCheckBox)
+            {
+                kryptonCheckBox.Enabled = isEditable;
+            }
+            else if (control is KryptonDateTimePicker kryptonDateTimePicker)
+            {
+                kryptonDateTimePicker.Enabled = isEditable;
+            }
+            else if (control is KryptonNumericUpDown kryptonNumericUpDown)
+            {
+                kryptonNumericUpDown.Enabled = isEditable;
+            }
+            else if (control is Grid grid)
+            {
+                //grid.ReadOnly = !isEditable;
+                //grid.AllowUserToAddRows = isEditable;
+                //grid.AllowUserToDeleteRows = isEditable;
+            }
+            
+            // 递归处理子控件
+            foreach (Control childControl in control.Controls)
+            {
+                SetControlEditableState(childControl, isEditable);
+            }
+        }
+
+        /// <summary>
+        /// 处理实体状态变更事件
+        /// </summary>
+        /// <param name="sender">事件发送者</param>
+        /// <param name="e">事件参数</param>
+        protected virtual void HandleEntityStatusChanged(object sender, StateTransitionEventArgs e)
+        {
+            if (e.Entity is T entity)
+            {
+                // 更新UI状态
+                UpdateUIBasedOnGenericEntityState(entity);
+                
+                // 记录状态变更日志
+                if (MainForm.Instance.AppContext.SysConfig.ShowDebugInfo)
+                {
+                    MainForm.Instance.logger.LogDebug($"实体状态已变更: {e.OldStatus} -> {e.NewStatus}");
+                }
+            }
+        }
+
+        /// <summary>
+        /// 检查操作可执行性
+        /// </summary>
+        /// <param name="action">操作类型</param>
+        /// <param name="entity">实体对象</param>
+        /// <returns>是否可执行</returns>
+        protected virtual bool CanExecuteAction(MenuItemEnums action, T entity)
+        {
+            if (entity == null || StatusContext == null)
+                return false;
+
+            // 获取当前状态
+            var currentStatus = StatusContext.CurrentStatus;
+            
+            // 根据操作类型和状态判断是否可执行
+            switch (action)
+            {
+                case MenuItemEnums.新增:
+                    return true; // 新增操作总是允许
+                    
+                case MenuItemEnums.修改:
+                    return IsEditableStatus(currentStatus);
+                    
+                case MenuItemEnums.保存:
+                    return IsEditableStatus(currentStatus);
+                    
+                case MenuItemEnums.删除:
+                    return IsEditableStatus(currentStatus);
+                    
+                case MenuItemEnums.提交:
+                    return CanSubmitStatus(currentStatus);
+                    
+                case MenuItemEnums.审核:
+                    return CanReviewStatus(currentStatus);
+                    
+                case MenuItemEnums.反审:
+                    return CanReverseReviewStatus(currentStatus);
+                    
+                case MenuItemEnums.结案:
+                    return CanCloseCaseStatus(currentStatus);
+                    
+                case MenuItemEnums.反结案:
+                    return CanAntiCloseCaseStatus(currentStatus);
+                    
+                default:
+                    return true; // 默认允许其他操作
+            }
+        }
+
+        /// <summary>
+        /// 判断状态是否可编辑
+        /// </summary>
+        /// <param name="status">状态对象</param>
+        /// <returns>是否可编辑</returns>
+        private bool IsEditableStatus(object status)
+        {
+            if (status is DataStatus dataStatus)
+                return dataStatus == DataStatus.草稿 || dataStatus == DataStatus.新建;
+            else if (status is PrePaymentStatus preStatus)
+                return preStatus == PrePaymentStatus.草稿;
+            else if (status is ARAPStatus arapStatus)
+                return arapStatus == ARAPStatus.草稿;
+            else if (status is PaymentStatus paymentStatus)
+                return paymentStatus == PaymentStatus.草稿;
+            
+            return false;
+        }
+
+        /// <summary>
+        /// 判断状态是否可提交
+        /// </summary>
+        /// <param name="status">状态对象</param>
+        /// <returns>是否可提交</returns>
+        private bool CanSubmitStatus(object status)
+        {
+            if (status is DataStatus dataStatus)
+                return dataStatus == DataStatus.草稿;
+            else if (status is PrePaymentStatus preStatus)
+                return preStatus == PrePaymentStatus.草稿;
+            else if (status is ARAPStatus arapStatus)
+                return arapStatus == ARAPStatus.草稿;
+            else if (status is PaymentStatus paymentStatus)
+                return paymentStatus == PaymentStatus.草稿;
+            
+            return false;
+        }
+
+        /// <summary>
+        /// 判断状态是否可审核
+        /// </summary>
+        /// <param name="status">状态对象</param>
+        /// <returns>是否可审核</returns>
+        private bool CanReviewStatus(object status)
+        {
+            if (status is DataStatus dataStatus)
+                return dataStatus == DataStatus.新建;
+            else if (status is PrePaymentStatus preStatus)
+                return preStatus == PrePaymentStatus.待审核;
+            else if (status is ARAPStatus arapStatus)
+                return arapStatus == ARAPStatus.待审核;
+            else if (status is PaymentStatus paymentStatus)
+                return paymentStatus == PaymentStatus.待审核;
+            
+            return false;
+        }
+
+        /// <summary>
+        /// 判断状态是否可反审核
+        /// </summary>
+        /// <param name="status">状态对象</param>
+        /// <returns>是否可反审核</returns>
+        private bool CanReverseReviewStatus(object status)
+        {
+            if (status is DataStatus dataStatus)
+                return dataStatus == DataStatus.确认;
+            else if (status is PrePaymentStatus preStatus)
+                return preStatus == PrePaymentStatus.待核销 || preStatus == PrePaymentStatus.已生效;
+            else if (status is ARAPStatus arapStatus)
+                return arapStatus == ARAPStatus.待支付;
+            else if (status is PaymentStatus paymentStatus)
+                return false; // 付款状态不支持反审核
+            
+            return false;
+        }
+
+        /// <summary>
+        /// 判断状态是否可结案
+        /// </summary>
+        /// <param name="status">状态对象</param>
+        /// <returns>是否可结案</returns>
+        private bool CanCloseCaseStatus(object status)
+        {
+            if (status is DataStatus dataStatus)
+                return dataStatus == DataStatus.确认;
+            else if (status is PrePaymentStatus preStatus)
+                return preStatus == PrePaymentStatus.待核销;
+            else if (status is ARAPStatus arapStatus)
+                return arapStatus == ARAPStatus.待支付 || arapStatus == ARAPStatus.部分支付;
+            else if (status is PaymentStatus paymentStatus)
+                return paymentStatus == PaymentStatus.已支付;
+            
+            return false;
+        }
+
+        /// <summary>
+        /// 判断状态是否可反结案
+        /// </summary>
+        /// <param name="status">状态对象</param>
+        /// <returns>是否可反结案</returns>
+        private bool CanAntiCloseCaseStatus(object status)
+        {
+            if (status is DataStatus dataStatus)
+                return dataStatus == DataStatus.完结;
+            else if (status is PrePaymentStatus preStatus)
+                return preStatus == PrePaymentStatus.全额核销;
+            else if (status is ARAPStatus arapStatus)
+                return arapStatus == ARAPStatus.全部支付 || arapStatus == ARAPStatus.全部支付;
+            else if (status is PaymentStatus paymentStatus)
+                return paymentStatus == PaymentStatus.已支付;
+            
+            return false;
         }
 
         /// <summary>
@@ -815,6 +1144,12 @@ namespace RUINORERP.UI.BaseForm
                 if (baseEntity.ActionStatus == ActionStatus.新增 || baseEntity.ActionStatus == ActionStatus.修改)
                 {
                     toolStripButtonSave.Enabled = true;
+                }
+                
+                // 检查状态管理器是否已初始化，如果未初始化则初始化
+                if (!baseEntity.IsStateManagerInitialized)
+                {
+                    baseEntity.InitializeStateManager(baseEntity.GetType());
                 }
             }
             BindData(Entity as T);

@@ -26,10 +26,6 @@ using System.Threading.Tasks;
 using System.Xml.Serialization;
 namespace RUINORERP.Model
 {
-    /// <summary>
-    /// 操作状态枚举 - 定义实体操作类型
-    /// 【已过时】请使用新的状态管理体系 - 参见RUINORERP.Model.Base.StatusManager命名空间
-    /// 替代方案：使用OperationStatus枚举
     /// </summary>
     public enum ActionStatus
     {
@@ -1208,7 +1204,7 @@ namespace RUINORERP.Model
         /// </summary>
         /// <param name="entityType">实体类型</param>
         /// <param name="initialStatus">初始状态</param>
-        protected virtual void InitializeStateManager(Type entityType, DataStatus initialStatus = DataStatus.新建)
+        public virtual void InitializeStateManager(Type entityType, DataStatus initialStatus = DataStatus.新建)
         {
             // 如果没有指定初始状态，尝试从子类的DataStatus属性获取
             if (initialStatus == DataStatus.新建)
@@ -1229,7 +1225,8 @@ namespace RUINORERP.Model
             {
                 EntityType = entityType,
                 EnableTransitionLogging = true,
-                EnableTransitionValidation = true
+                EnableTransitionValidation = true,
+                EnableStatusChangedEvents = true
             };
             
             // 初始化状态转换规则
@@ -1238,7 +1235,25 @@ namespace RUINORERP.Model
             // 初始化状态管理器
             // 注意：这里暂时不直接实例化状态管理器，而是提供初始化逻辑
             // 实际的状态管理器实例化将在UI层通过工厂模式完成
+            
+            // 记录状态管理器初始化信息
+            _stateManagerInitialized = true;
         }
+        
+        /// <summary>
+        /// 状态管理器是否已初始化
+        /// </summary>
+        private bool _stateManagerInitialized = false;
+
+        /// <summary>
+        /// 获取状态管理器是否已初始化
+        /// </summary>
+        [Description("列名中文描述"), Category("自定属性")]
+        [SugarColumn(IsIgnore = true)]
+        [Browsable(false)]
+        [JsonIgnore]
+        [XmlIgnore]
+        public bool IsStateManagerInitialized => _stateManagerInitialized;
 
         /// <summary>
         /// 获取DataStatus属性信息
@@ -1352,6 +1367,125 @@ namespace RUINORERP.Model
             // 这里应该从状态管理器获取历史记录
             // 暂时返回空列表
             return new List<StateTransitionRecord>();
+        }
+        
+        /// <summary>
+        /// 获取实体状态描述
+        /// </summary>
+        /// <returns>状态描述文本</returns>
+        public virtual string GetStatusDescription()
+        {
+            var status = GetCurrentDataStatus();
+            if (status == null)
+            {
+                return "未知状态";
+            }
+            
+            switch (status.Value)
+            {
+                case DataStatus.新建:
+                    return "新建";
+                case DataStatus.草稿:
+                    return "草稿";
+                case DataStatus.确认:
+                    return "已确认";
+                case DataStatus.完结:
+                    return "已完结";
+                case DataStatus.作废:
+                    return "已作废";
+                default:
+                    return status.Value.ToString();
+            }
+        }
+        
+        /// <summary>
+        /// 检查实体是否处于可编辑状态
+        /// </summary>
+        /// <returns>是否可编辑</returns>
+        public virtual bool IsEditable()
+        {
+            var status = GetCurrentDataStatus();
+            if (status == null)
+            {
+                return true; // 无状态时默认可编辑
+            }
+            
+            // 新建和草稿状态可编辑
+            return status.Value == DataStatus.新建 || status.Value == DataStatus.草稿;
+        }
+        
+        /// <summary>
+        /// 检查实体是否处于终态（完结或作废）
+        /// </summary>
+        /// <returns>是否处于终态</returns>
+        public virtual bool IsFinalState()
+        {
+            var status = GetCurrentDataStatus();
+            if (status == null)
+            {
+                return false;
+            }
+            
+            return status.Value == DataStatus.完结 || status.Value == DataStatus.作废;
+        }
+        
+        /// <summary>
+        /// 检查实体是否已确认（已确认、完结或作废）
+        /// </summary>
+        /// <returns>是否已确认</returns>
+        public virtual bool IsConfirmed()
+        {
+            var status = GetCurrentDataStatus();
+            if (status == null)
+            {
+                return false;
+            }
+            
+            return status.Value == DataStatus.确认 || 
+                   status.Value == DataStatus.完结 || 
+                   status.Value == DataStatus.作废;
+        }
+        
+        /// <summary>
+        /// 获取可执行的操作列表
+        /// </summary>
+        /// <returns>可执行的操作列表</returns>
+        public virtual List<string> GetAvailableActions()
+        {
+            var actions = new List<string>();
+            var status = GetCurrentDataStatus();
+            
+            if (status == null)
+            {
+                // 无状态时默认可执行所有操作
+                actions.AddRange(new[] { "保存", "提交", "删除", "修改" });
+                return actions;
+            }
+            
+            switch (status.Value)
+            {
+                case DataStatus.新建:
+                    actions.AddRange(new[] { "保存", "提交", "删除", "修改" });
+                    break;
+                    
+                case DataStatus.草稿:
+                    actions.AddRange(new[] { "保存", "提交", "删除", "修改" });
+                    break;
+                    
+                case DataStatus.确认:
+                    actions.AddRange(new[] { "完结", "作废" });
+                    break;
+                    
+                case DataStatus.完结:
+                    // 完结状态下不可执行任何操作
+                    break;
+                    
+                case DataStatus.作废:
+                    // 作废状态下不可执行任何操作
+                    break;
+            }
+            
+            return actions;
         }
 
         #endregion

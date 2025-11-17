@@ -80,7 +80,7 @@ namespace RUINORERP.UI.BaseForm
             RUINORERP.Model.Base.StatusManager.Core.StateTransitionRules.InitializeDefaultRules(options.TransitionRules);
             
             // 注册状态变更事件处理程序
-            this.StateManager.StatusChanged += OnEntityStateChanged;
+            this.StateManager.StatusChanged += HandleEntityStatusChanged;
             
             // 初始化按钮状态管理
             InitializeButtonStateManagement();
@@ -144,6 +144,9 @@ namespace RUINORERP.UI.BaseForm
         protected virtual void UpdateUIBasedOnEntityState(BaseEntity entity)
         {
             if (entity == null) return;
+
+            // 使用新的状态管理器更新UI控件状态
+            UpdateUIControlsState(entity);
             
             // 获取实体的当前数据状态
             if (entity.ContainsProperty(typeof(DataStatus).Name))
@@ -283,6 +286,174 @@ namespace RUINORERP.UI.BaseForm
         protected virtual void SetButtonStateForCompleted()
         {
             // 实现完结状态下的按钮控制逻辑
+        }
+        
+        /// <summary>
+        /// 基于实体状态更新UI控件状态
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        protected virtual void UpdateUIControlsState(BaseEntity entity)
+        {
+            if (entity == null) return;
+            
+            // 获取实体的当前状态
+            var currentStatus = entity.GetCurrentDataStatus();
+            if (currentStatus == null) return;
+            
+            // 使用新的状态管理器更新UI状态
+            if (this.StateManager != null)
+            {
+                var entityStatus = this.StateManager.GetEntityStatus(entity);
+                if (UIController != null)
+                {
+                    // 创建状态上下文
+                    var statusContext = new RUINORERP.Model.Base.StatusManager.Core.StatusTransitionContext(
+                        entity, 
+                        typeof(RUINORERP.Global.DataStatus), 
+                        entityStatus.dataStatus ?? RUINORERP.Global.DataStatus.草稿, 
+                        this.StateManager);
+                    
+                    // 获取当前控件集合
+                    var controls = GetAllControls();
+                    
+                    // 更新UI状态
+                    UIController.UpdateUIStatus(statusContext, controls);
+                }
+            }
+            
+            // 根据状态更新特定控件
+            UpdateControlsBasedOnStatus(currentStatus.Value);
+        }
+        
+        /// <summary>
+        /// 根据状态更新特定控件
+        /// </summary>
+        /// <param name="status">当前状态</param>
+        protected virtual void UpdateControlsBasedOnStatus(DataStatus status)
+        {
+            // 根据状态更新控件的可见性和可用性
+            switch (status)
+            {
+                case DataStatus.新建:
+                case DataStatus.草稿:
+                    // 新建和草稿状态下，大部分控件可用
+                    SetControlsEditable(true);
+                    break;
+                    
+                case DataStatus.确认:
+                    // 确认状态下，部分控件只读
+                    SetControlsEditable(false);
+                    break;
+                    
+                case DataStatus.完结:
+                case DataStatus.作废:
+                    // 完结和作废状态下，所有控件只读
+                    SetControlsEditable(false);
+                    break;
+            }
+        }
+        
+        /// <summary>
+        /// 设置控件的编辑状态
+        /// </summary>
+        /// <param name="editable">是否可编辑</param>
+        protected virtual void SetControlsEditable(bool editable)
+        {
+            // 遍历所有控件，设置编辑状态
+            foreach (var control in GetAllControls())
+            {
+                // 跳过工具栏和状态栏等非输入控件
+                if (control is ToolStrip || control is StatusStrip || control is KryptonHeaderGroup)
+                    continue;
+                
+                // 根据控件类型设置编辑状态
+                if (control is KryptonTextBox txtBox)
+                {
+                    txtBox.ReadOnly = !editable;
+                }
+                else if (control is KryptonComboBox comboBox)
+                {
+                    comboBox.Enabled = editable;
+                }
+                else if (control is KryptonCheckBox checkBox)
+                {
+                    checkBox.Enabled = editable;
+                }
+                else if (control is KryptonDateTimePicker dateTimePicker)
+                {
+                    dateTimePicker.Enabled = editable;
+                }
+                else if (control is KryptonNumericUpDown numericUpDown)
+                {
+                    numericUpDown.Enabled = editable;
+                }
+                // 可以根据需要添加更多控件类型
+            }
+        }
+        
+        /// <summary>
+        /// 处理实体状态变更事件
+        /// </summary>
+        /// <param name="sender">事件发送者</param>
+        /// <param name="e">事件参数</param>
+        protected virtual void HandleEntityStatusChanged(object sender, StateTransitionEventArgs e)
+        {
+            if (e.Entity is BaseEntity entity)
+            {
+                // 更新UI状态
+                UpdateUIBasedOnEntityState(entity);
+                
+                // 记录状态变更日志
+                if (logger != null)
+                {
+                    logger.LogInformation($"实体状态变更: {entity.GetType().Name} ID={entity.PrimaryKeyID} 从 {e.OldStatus} 变更为 {e.NewStatus}");
+                }
+            }
+        }
+        
+        /// <summary>
+        /// 检查当前实体是否可以执行指定操作
+        /// </summary>
+        /// <param name="action">操作类型</param>
+        /// <returns>是否可以执行</returns>
+        protected virtual bool CanExecuteAction(MenuItemEnums action)
+        {
+            if (ListDataSoure?.Current == null)
+                return false;
+                
+            var entity = ListDataSoure.Current as BaseEntity;
+            if (entity == null)
+                return false;
+                
+            // 获取当前状态
+            var currentStatus = entity.GetCurrentDataStatus();
+            if (currentStatus == null)
+                return true; // 无状态时默认允许所有操作
+                
+            // 根据状态和操作类型判断是否可以执行
+            switch (action)
+            {
+                case MenuItemEnums.保存:
+                case MenuItemEnums.修改:
+                case MenuItemEnums.删除:
+                    return entity.IsEditable();
+                    
+                case MenuItemEnums.提交:
+                    return !entity.IsConfirmed();
+                    
+                case MenuItemEnums.审核:
+                case MenuItemEnums.反审:
+                    return entity.IsConfirmed() && !entity.IsFinalState();
+                    
+                case MenuItemEnums.结案:
+                    return entity.IsConfirmed() && !entity.IsFinalState();
+                    
+                case MenuItemEnums.反结案:
+                    return currentStatus == DataStatus.完结;
+                    
+                default:
+                    return true;
+            }
         }
         #region 如果窗体，有些按钮不用出现在这个业务窗体时。这里手动排除。集合有值才行
 
@@ -460,7 +631,72 @@ namespace RUINORERP.UI.BaseForm
 
         protected virtual void DoButtonClick(MenuItemEnums menuItem)
         {
-
+            // 检查是否可以执行该操作
+            if (!CanExecuteAction(menuItem))
+            {
+                MessageBox.Show($"当前状态下不允许执行 {menuItem} 操作", "操作受限", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+            
+            // 根据菜单项执行相应操作
+            switch (menuItem)
+            {
+                case MenuItemEnums.新增:
+                    Add();
+                    break;
+                case MenuItemEnums.修改:
+                    Modify();
+                    break;
+                case MenuItemEnums.删除:
+                    // 删除操作需要特殊处理
+                    break;
+                case MenuItemEnums.保存:
+                    // 保存操作是异步的
+                    _ = Save(true);
+                    break;
+                case MenuItemEnums.提交:
+                    // 提交操作是异步的
+                    _ = Submit();
+                    break;
+                case MenuItemEnums.审核:
+                    // 审核操作是异步的
+                    _ = Review();
+                    break;
+                case MenuItemEnums.反审:
+                    // 反审核操作是异步的
+                    _ = ReReview();
+                    break;
+                case MenuItemEnums.结案:
+                    // 结案操作是异步的
+                    _ = CloseCaseAsync();
+                    break;
+                case MenuItemEnums.反结案:
+                    // 反结案操作是异步的
+                    _ = AntiCloseCaseAsync();
+                    break;
+                case MenuItemEnums.查询:
+                    Query();
+                    break;
+                    break;
+                case MenuItemEnums.刷新:
+                    Refreshs();
+                    break;
+                case MenuItemEnums.关闭:
+                    Exit(this);
+                    break;
+                case MenuItemEnums.属性:
+                    Property();
+                    break;
+                case MenuItemEnums.数据特殊修正:
+                    SpecialDataFix();
+                    break;
+                //case MenuItemEnums.清除:
+                //    Clear(null);
+                    break;
+                default:
+                    // 其他操作
+                    break;
+            }
         }
 
         public class Result
@@ -520,10 +756,7 @@ namespace RUINORERP.UI.BaseForm
 
         }
 
-        protected virtual void AdvQuery()
-        {
-
-        }
+   
 
         protected async virtual Task<bool> Submit()
         {
@@ -630,10 +863,21 @@ namespace RUINORERP.UI.BaseForm
         /// <summary>
         /// 传实体进去,具体在窗体那边判断    单据实体数据传入加载用
         /// </summary>
-        /// <param name="LoadItem"></param>
+        /// <param name="LoadItem">要加载的实体对象</param>
         internal virtual void LoadDataToUI(object LoadItem)
         {
-
+            // 如果加载的是BaseEntity类型的对象，则根据其状态更新UI
+            if (LoadItem is BaseEntity entity)
+            {
+                // 确保实体已初始化状态管理器
+                if (!entity.IsStateManagerInitialized)
+                {
+                    entity.InitializeStateManager(entity.GetType());
+                }
+                
+                // 根据实体状态更新UI
+                UpdateUIBasedOnEntityState(entity);
+            }
         }
 
 

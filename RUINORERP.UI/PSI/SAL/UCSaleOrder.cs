@@ -74,6 +74,19 @@ namespace RUINORERP.UI.PSI.SAL
             //InitDataToCmbByEnumDynamicGeneratedDataSource<tb_SaleOrder>(typeof(Priority), e => e.OrderPriority, cmbOrderPriority, false);
             AddPublicEntityObject(typeof(ProductSharePart));
         }
+
+        /// <summary>
+        /// 初始化状态管理系统
+        /// 重写基类方法以添加销售订单特定的状态管理逻辑
+        /// </summary>
+        protected override void InitializeStateManagement()
+        {
+            // 调用基类的InitializeStateManagement方法
+            base.InitializeStateManagement();
+            
+            // 添加销售订单特定的状态管理初始化逻辑
+            // 可以在这里初始化销售订单特有的状态管理功能
+        }
         IEntityCacheManager cacheManager = Startup.GetFromFac<IEntityCacheManager>();
 
         internal override void LoadDataToUI(object Entity)

@@ -93,6 +93,7 @@ using RUINOR.WinFormsUI.CustomPictureBox;
 using RUINORERP.PacketSpec.Models.Lock;
 using RUINORERP.Model.Base.StatusManager.Core;
 using RUINORERP.UI.StateManagement.UI;
+using RUINORERP.UI.StateManagement.Core;
 
 namespace RUINORERP.UI.BaseForm
 {
@@ -132,18 +133,183 @@ namespace RUINORERP.UI.BaseForm
         #endregion
 
 
-       
+
         /// <summary>
         /// 初始化状态管理系统
+        /// 子类可以重写此方法以添加自定义的状态管理初始化逻辑
         /// </summary>
-        private void InitializeStateManagement()
+        protected override void InitializeStateManagement()
         {
-             
-            
-           
+            // 调用基类的InitializeStateManagement方法
+            base.InitializeStateManagement();
+
+            // 为泛型类型配置状态管理
+            ConfigureGenericStateManager();
+
+            // 注意：StatusContext是在BindEntity方法中创建的，
+            // 所以在这里不能直接访问，需要延迟事件订阅
+            // 事件订阅将在OnStatusContextChanged方法中处理
+
+            // 初始化泛型特定的按钮状态管理
+            InitializeGenericButtonStateManagement();
         }
-        
-    
+
+        /// <summary>
+        /// 状态上下文变更事件处理程序
+        /// 当StatusContext属性变更时调用
+        /// </summary>
+        protected override void OnStatusContextChanged()
+        {
+            // 调用基类方法
+            base.OnStatusContextChanged();
+
+            // 如果StatusContext不为null，订阅状态变更事件
+            if (StatusContext != null)
+            {
+                // 注册泛型特定的状态变更事件处理程序
+                StatusContext.StatusChanged += OnGenericEntityStateChanged;
+            }
+        }
+
+        /// <summary>
+        /// 配置泛型状态管理器
+        /// </summary>
+        protected virtual void ConfigureGenericStateManager()
+        {
+            // 检查状态管理器是否已初始化
+            if (StateManager == null)
+            {
+                return;
+            }
+
+            // 获取主表和子表的类型信息
+            var mainEntityType = typeof(T);
+            var childEntityType = typeof(C);
+
+            // 为泛型实体类型配置状态管理选项
+            var options = new StateManagerOptions
+            {
+                EnableTransitionLogging = true,
+                EnableTransitionValidation = true,
+                EnableStatusChangedEvents = true,
+                EntityType = mainEntityType
+            };
+
+            // 设置状态转换规则
+            options.TransitionRules = new Dictionary<Type, Dictionary<object, List<object>>>();
+            StateTransitionRules.InitializeDefaultRules(options.TransitionRules);
+
+            // 应用配置到状态管理器
+            // 注意：这里需要根据实际的状态管理器API进行调整
+            // 如果状态管理器支持配置更新，可以在这里应用配置
+            // 如果不支持，可能需要重新创建状态管理器实例
+
+            // 如果需要，可以为子表类型也配置状态管理
+            // 这里可以添加子表特定的状态管理逻辑
+        }
+
+        /// <summary>
+        /// 初始化泛型特定的按钮状态管理
+        /// </summary>
+        protected virtual void InitializeGenericButtonStateManagement()
+        {
+            // 根据当前实体状态初始化按钮状态
+            if (EditEntity != null)
+            {
+                UpdateUIBasedOnGenericEntityState(EditEntity);
+            }
+        }
+
+
+        /// <summary>
+        /// 泛型实体状态变更事件处理程序
+        /// </summary>
+        /// <param name="sender">事件发送者</param>
+        /// <param name="e">事件参数</param>
+        protected virtual void OnGenericEntityStateChanged(object sender, StateTransitionEventArgs e)
+        {
+            // 根据状态变更更新UI
+            if (e.Entity is T entity)
+            {
+                UpdateUIBasedOnGenericEntityState(entity);
+            }
+        }
+
+        /// <summary>
+        /// 根据泛型实体状态更新UI
+        /// </summary>
+        /// <param name="entity">泛型实体对象</param>
+        protected virtual void UpdateUIBasedOnGenericEntityState(T entity)
+        {
+            // 获取当前数据状态
+            var currentStatus = entity.GetCurrentDataStatus();
+            if (currentStatus.HasValue)
+            {
+                // 根据状态更新工具栏按钮
+                ToolBarEnabledControl(currentStatus.Value);
+
+                // 根据状态更新子表相关操作
+                UpdateChildTableOperations(currentStatus.Value);
+            }
+        }
+
+        /// <summary>
+        /// 根据状态更新子表操作
+        /// </summary>
+        /// <param name="status">当前数据状态</param>
+        protected virtual void UpdateChildTableOperations(DataStatus status)
+        {
+            // 根据状态控制子表的增删改操作
+            switch (status)
+            {
+                case DataStatus.草稿:
+                    // 草稿状态允许所有操作
+                    EnableChildTableOperations(true, true, true);
+                    break;
+                case DataStatus.新建:
+                    // 新建状态不允许修改
+                    EnableChildTableOperations(false, false, false);
+                    break;
+                case DataStatus.确认:
+                    // 确认状态不允许修改
+                    EnableChildTableOperations(false, false, false);
+                    break;
+                case DataStatus.完结:
+                    // 完结状态不允许修改
+                    EnableChildTableOperations(false, false, false);
+                    break;
+                case DataStatus.作废:
+                    // 作废状态不允许修改
+                    EnableChildTableOperations(false, false, false);
+                    break;
+                default:
+                    // 默认允许所有操作
+                    EnableChildTableOperations(true, true, true);
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// 启用或禁用子表操作
+        /// </summary>
+        /// <param name="allowAdd">是否允许添加</param>
+        /// <param name="allowEdit">是否允许编辑</param>
+        /// <param name="allowDelete">是否允许删除</param>
+        protected virtual void EnableChildTableOperations(bool allowAdd, bool allowEdit, bool allowDelete)
+        {
+            // 这里可以根据实际的子表控件进行操作
+            // 例如：设置子表的只读状态、禁用添加/删除按钮等
+
+            // 示例代码（需要根据实际控件进行调整）：
+            // if (gridViewChild != null)
+            // {
+            //     gridViewChild.ReadOnly = !allowEdit;
+            //     gridViewChild.AllowUserToAddRows = allowAdd;
+            //     gridViewChild.AllowUserToDeleteRows = allowDelete;
+            // }
+        }
+
+
 
 
         public BaseBillEditGeneric()
@@ -917,7 +1083,7 @@ namespace RUINORERP.UI.BaseForm
                     //        }
                     //    }
                     //};
- 
+
 
                     //如果属性变化 则状态为修改
                     baseEntity.PropertyChanged += (sender, s2) =>
@@ -1094,11 +1260,11 @@ namespace RUINORERP.UI.BaseForm
         protected virtual void ToolBarEnabledControl(BaseEntity entity)
         {
             if (entity == null) return;
-            
+
             // 如果新架构不可用，回退到旧逻辑
             ToolBarEnabledControlLegacy(entity);
         }
-        
+
         /// <summary>
         /// 旧版工具栏按钮控制逻辑（保留作为回退方案）
         /// </summary>
@@ -1120,7 +1286,7 @@ namespace RUINORERP.UI.BaseForm
             toolStripBtnReverseReview.Enabled = statusDetector.CanReverseReview;
             toolStripBtnReverseReview.Visible = statusDetector.CanReverseReview;
             toolStripButton结案.Enabled = statusDetector.CanClose;
-            
+
             // 锁定状态处理
             HandleLockStatus(entity, statusDetector);
         }
@@ -2511,7 +2677,7 @@ namespace RUINORERP.UI.BaseForm
                 else
                 {
                     // 尝试锁定单据
-                    var lockResponse =await lockManagementService.LockAsync(billId, CurMenuInfo.MenuID);
+                    var lockResponse = await lockManagementService.LockAsync(billId, CurMenuInfo.MenuID);
 
                     if (!lockResponse.IsSuccess)
                     {
@@ -2884,7 +3050,7 @@ namespace RUINORERP.UI.BaseForm
                 "ApprovalResults"
             };
 
-          
+
 
             ApprovalEntity ae = new ApprovalEntity();
             if (ReflectionHelper.ExistPropertyName<T>("ApprovalStatus") && ReflectionHelper.ExistPropertyName<T>("ApprovalResults"))
@@ -2970,15 +3136,15 @@ namespace RUINORERP.UI.BaseForm
                     //else
                     //{
                     //    // 回退到旧的状态管理系统
-                     EditEntity.SetPropertyValue(typeof(DataStatus).Name, (int)DataStatus.确认);
+                    EditEntity.SetPropertyValue(typeof(DataStatus).Name, (int)DataStatus.确认);
                     //}
                 }
                 else
                 {
                     //审核了。驳回 时数据状态要更新为新建。要再次修改后提交
                     #region UI驳回直接保存返回。不用进入审核流程了。
-                    
-                    
+
+
                     if (ReflectionHelper.ExistPropertyName<T>("ApprovalOpinions"))
                     {
                         EditEntity.SetPropertyValue("ApprovalOpinions", ae.ApprovalOpinions);
@@ -3145,7 +3311,7 @@ namespace RUINORERP.UI.BaseForm
                                                     List<tb_FM_ReceivablePayable> receivablePayables = new List<tb_FM_ReceivablePayable>();
                                                     receivablePayables.Add(payable);
 
-                                                    tb_FM_PaymentRecord newPaymentRecord =await paymentController.BuildPaymentRecord(receivablePayables);
+                                                    tb_FM_PaymentRecord newPaymentRecord = await paymentController.BuildPaymentRecord(receivablePayables);
                                                     newPaymentRecord.Remark = "平台单，已退款，货回仓审核时自动生成的收款单（负数）红字";
                                                     newPaymentRecord.PaymentStatus = (int)PaymentStatus.待审核;
                                                     if (!newPaymentRecord.Paytype_ID.HasValue && saleOutRe.Paytype_ID.HasValue)
@@ -3342,7 +3508,7 @@ namespace RUINORERP.UI.BaseForm
                 }
             }
 
-          
+
 
             if (ReflectionHelper.ExistPropertyName<T>("ApprovalStatus") && ReflectionHelper.ExistPropertyName<T>("ApprovalResults"))
             {
@@ -3394,10 +3560,10 @@ namespace RUINORERP.UI.BaseForm
                         //MemberInfo minfo = PNameExp.GetMemberInfo();
                         //string propertyName = minfo.Name;
 
-                        
-                            // 回退到旧的状态管理系统
-                            EditEntity.SetPropertyValue(typeof(DataStatus).Name, (int)DataStatus.新建);
-                      
+
+                        // 回退到旧的状态管理系统
+                        EditEntity.SetPropertyValue(typeof(DataStatus).Name, (int)DataStatus.新建);
+
                         if (ReflectionHelper.ExistPropertyName<T>("ApprovalOpinions"))
                         {
                             EditEntity.SetPropertyValue("ApprovalOpinions", ae.ApprovalOpinions);
@@ -4897,33 +5063,33 @@ namespace RUINORERP.UI.BaseForm
         {
             if (EditEntity == null) return false;
 
-      
-                // 回退到旧的状态管理系统
-                // 获取当前状态
-                var statusProperty = typeof(TStatus).Name;
-                var currentStatus = (TStatus)Enum.ToObject(
-                    typeof(TStatus),
-                    EditEntity.GetPropertyValue(statusProperty)
-                );
 
-                // 验证状态转换
-                try
-                {
-                    FMPaymentStatusHelper.ValidateTransition(currentStatus, targetStatus);
-                }
-                catch (InvalidOperationException ex)
-                {
-                    MainForm.Instance.uclog.AddLog($"提交失败: {ex.Message}");
-                    return false;
-                }
+            // 回退到旧的状态管理系统
+            // 获取当前状态
+            var statusProperty = typeof(TStatus).Name;
+            var currentStatus = (TStatus)Enum.ToObject(
+                typeof(TStatus),
+                EditEntity.GetPropertyValue(statusProperty)
+            );
 
-                if (!FMPaymentStatusHelper.CanSubmit(currentStatus))
-                {
-                    MainForm.Instance.uclog.AddLog("单据非草稿状态，提交失败");
-                    toolStripbtnSubmit.Enabled = false;
-                    return false;
-                }
-          
+            // 验证状态转换
+            try
+            {
+                FMPaymentStatusHelper.ValidateTransition(currentStatus, targetStatus);
+            }
+            catch (InvalidOperationException ex)
+            {
+                MainForm.Instance.uclog.AddLog($"提交失败: {ex.Message}");
+                return false;
+            }
+
+            if (!FMPaymentStatusHelper.CanSubmit(currentStatus))
+            {
+                MainForm.Instance.uclog.AddLog("单据非草稿状态，提交失败");
+                toolStripbtnSubmit.Enabled = false;
+                return false;
+            }
+
 
             // 保存实体
             var ctr = Startup.GetFromFacByName<BaseController<T>>($"{typeof(T).Name}Controller");

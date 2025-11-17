@@ -481,6 +481,279 @@ namespace RUINORERP.UI.StateManagement
             }
         }
 
+        /// <summary>
+        /// 将实体数据加载到UI控件
+        /// </summary>
+        /// <param name="entity">要加载的实体对象</param>
+        public virtual void LoadDataToUI(BaseEntity entity)
+        {
+            if (entity == null)
+            {
+                System.Diagnostics.Debug.WriteLine("LoadDataToUI: 实体对象为空");
+                return;
+            }
+
+            try
+            {
+                // 绑定实体到状态管理
+                BindEntity(entity);
+                
+                // 获取所有子控件
+                var controls = GetAllControls(this);
+                
+                // 遍历所有控件，将实体数据绑定到对应的UI控件
+                foreach (var control in controls)
+                {
+                    // 跳过容器控件
+                    if (control is ContainerControl || control is ToolStrip || control is MenuStrip || control is StatusStrip)
+                        continue;
+                        
+                    // 根据控件类型和数据绑定设置值
+                    SetControlValue(control, entity);
+                }
+                
+                // 应用当前状态到UI
+                if (AutoApplyStateRules)
+                {
+                    ApplyCurrentStatusToUI();
+                }
+                
+                System.Diagnostics.Debug.WriteLine($"成功将实体 {entity.GetType().Name} 数据加载到UI控件");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"加载数据到UI失败: {ex.Message}");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// 设置控件值
+        /// </summary>
+        /// <param name="control">UI控件</param>
+        /// <param name="entity">实体对象</param>
+        protected virtual void SetControlValue(Control control, BaseEntity entity)
+        {
+            if (control == null || entity == null)
+                return;
+                
+            try
+            {
+                // 检查控件是否有数据绑定
+                if (control.DataBindings.Count > 0)
+                {
+                    // 如果有数据绑定，则由绑定机制处理
+                    return;
+                }
+                
+                // 根据控件名称匹配实体属性
+                string controlName = control.Name;
+                if (string.IsNullOrEmpty(controlName))
+                    return;
+                    
+                // 尝试获取实体属性
+                var property = entity.GetType().GetProperty(controlName);
+                if (property == null)
+                {
+                    // 尝试去掉前缀匹配（如txtName匹配Name属性）
+                    if (controlName.StartsWith("txt") || controlName.StartsWith("lbl") || 
+                        controlName.StartsWith("btn") || controlName.StartsWith("chk") ||
+                        controlName.StartsWith("cmb") || controlName.StartsWith("dtp"))
+                    {
+                        string propertyName = controlName.Substring(3);
+                        property = entity.GetType().GetProperty(propertyName);
+                    }
+                    
+                    if (property == null)
+                        return;
+                }
+                
+                // 获取属性值
+                var value = property.GetValue(entity);
+                if (value == null)
+                    return;
+                    
+                // 根据控件类型设置值
+                switch (control)
+                {
+                    case TextBox textBox:
+                        textBox.Text = value.ToString();
+                        break;
+                        
+                    case Label label:
+                        label.Text = value.ToString();
+                        break;
+                        
+                    case CheckBox checkBox:
+                        if (value is bool boolValue)
+                            checkBox.Checked = boolValue;
+                        else if (bool.TryParse(value.ToString(), out bool parsedBool))
+                            checkBox.Checked = parsedBool;
+                        break;
+                        
+                    case ComboBox comboBox:
+                        comboBox.SelectedItem = value;
+                        break;
+                        
+                    case DateTimePicker dateTimePicker:
+                        if (value is DateTime dateTimeValue)
+                            dateTimePicker.Value = dateTimeValue;
+                        else if (DateTime.TryParse(value.ToString(), out DateTime parsedDateTime))
+                            dateTimePicker.Value = parsedDateTime;
+                        break;
+                        
+                    case NumericUpDown numericUpDown:
+                        if (decimal.TryParse(value.ToString(), out decimal decimalValue))
+                            numericUpDown.Value = decimalValue;
+                        break;
+                        
+                    case RadioButton radioButton:
+                        if (value is bool radioBoolValue)
+                            radioButton.Checked = radioBoolValue;
+                        else if (bool.TryParse(value.ToString(), out bool parsedRadioBool))
+                            radioButton.Checked = parsedRadioBool;
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"设置控件 {control.Name} 的值失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 从UI控件获取数据到实体
+        /// </summary>
+        /// <param name="entity">目标实体对象</param>
+        public virtual void GetDataFromUI(BaseEntity entity)
+        {
+            if (entity == null)
+            {
+                System.Diagnostics.Debug.WriteLine("GetDataFromUI: 实体对象为空");
+                return;
+            }
+
+            try
+            {
+                // 获取所有子控件
+                var controls = GetAllControls(this);
+                
+                // 遍历所有控件，将UI控件的值更新到对应的实体属性
+                foreach (var control in controls)
+                {
+                    // 跳过容器控件
+                    if (control is ContainerControl || control is ToolStrip || control is MenuStrip || control is StatusStrip)
+                        continue;
+                        
+                    // 根据控件类型和数据绑定获取值
+                    GetEntityValue(control, entity);
+                }
+                
+                System.Diagnostics.Debug.WriteLine($"成功从UI控件获取数据到实体 {entity.GetType().Name}");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"从UI获取数据失败: {ex.Message}");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// 从控件获取值并更新到实体
+        /// </summary>
+        /// <param name="control">UI控件</param>
+        /// <param name="entity">实体对象</param>
+        protected virtual void GetEntityValue(Control control, BaseEntity entity)
+        {
+            if (control == null || entity == null)
+                return;
+                
+            try
+            {
+                // 检查控件是否有数据绑定
+                if (control.DataBindings.Count > 0)
+                {
+                    // 如果有数据绑定，则由绑定机制处理
+                    return;
+                }
+                
+                // 根据控件名称匹配实体属性
+                string controlName = control.Name;
+                if (string.IsNullOrEmpty(controlName))
+                    return;
+                    
+                // 尝试获取实体属性
+                var property = entity.GetType().GetProperty(controlName);
+                if (property == null)
+                {
+                    // 尝试去掉前缀匹配（如txtName匹配Name属性）
+                    if (controlName.StartsWith("txt") || controlName.StartsWith("lbl") || 
+                        controlName.StartsWith("btn") || controlName.StartsWith("chk") ||
+                        controlName.StartsWith("cmb") || controlName.StartsWith("dtp"))
+                    {
+                        string propertyName = controlName.Substring(3);
+                        property = entity.GetType().GetProperty(propertyName);
+                    }
+                    
+                    if (property == null)
+                        return;
+                }
+                
+                // 根据控件类型获取值
+                object value = null;
+                switch (control)
+                {
+                    case TextBox textBox:
+                        value = textBox.Text;
+                        break;
+                        
+                    case CheckBox checkBox:
+                        value = checkBox.Checked;
+                        break;
+                        
+                    case ComboBox comboBox:
+                        value = comboBox.SelectedItem;
+                        break;
+                        
+                    case DateTimePicker dateTimePicker:
+                        value = dateTimePicker.Value;
+                        break;
+                        
+                    case NumericUpDown numericUpDown:
+                        value = numericUpDown.Value;
+                        break;
+                        
+                    case RadioButton radioButton:
+                        value = radioButton.Checked;
+                        break;
+                }
+                
+                if (value != null)
+                {
+                    // 尝试转换值类型
+                    if (property.PropertyType != value.GetType())
+                    {
+                        try
+                        {
+                            value = Convert.ChangeType(value, property.PropertyType);
+                        }
+                        catch
+                        {
+                            // 转换失败，跳过
+                            return;
+                        }
+                    }
+                    
+                    // 设置属性值
+                    property.SetValue(entity, value);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"从控件 {control.Name} 获取值失败: {ex.Message}");
+            }
+        }
+
         #endregion
 
         #region 事件处理

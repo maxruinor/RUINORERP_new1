@@ -5266,7 +5266,6 @@
     <Folder Include="StateManagement\Managers\" />
     <Folder Include="StateManagement\Rules\" />
     <Folder Include="StateManagement\Services\" />
-    <Folder Include="StateManagement\Validators\" />
     <Folder Include="SysConfigFiles\" />
     <Folder Include="UCForm\" />
     <Folder Include="UControls\TreeGridView\" />

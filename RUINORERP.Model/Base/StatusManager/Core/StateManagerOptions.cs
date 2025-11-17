@@ -12,6 +12,7 @@ namespace RUINORERP.Model.Base.StatusManager.Core
 {
     /// <summary>
     /// 状态管理器配置选项
+    /// 用于配置状态管理器的行为和特性
     /// </summary>
     public class StateManagerOptions
     {
@@ -31,9 +32,71 @@ namespace RUINORERP.Model.Base.StatusManager.Core
         public bool EnableStatusChangedEvents { get; set; } = true;
 
         /// <summary>
-        /// 自定义状态转换规则
+        /// 是否启用UI状态同步
+        /// 当实体状态变更时，是否自动同步更新UI控件状态
         /// </summary>
-        public Dictionary<Type, Dictionary<object, List<object>>> CustomTransitionRules { get; set; } = 
+        public bool EnableUIStateSync { get; set; } = true;
+
+        /// <summary>
+        /// 实体类型
+        /// </summary>
+        public Type EntityType { get; set; }
+
+        /// <summary>
+        /// 状态转换规则实例
+        /// </summary>
+        public Dictionary<Type, Dictionary<object, List<object>>> TransitionRules { get; set; } = 
             new Dictionary<Type, Dictionary<object, List<object>>>();
+
+        /// <summary>
+        /// 创建默认配置
+        /// </summary>
+        /// <param name="entityType">实体类型</param>
+        /// <returns>默认配置选项</returns>
+        public static StateManagerOptions CreateDefault(Type entityType = null)
+        {
+            return new StateManagerOptions
+            {
+                EntityType = entityType,
+                EnableTransitionLogging = false,
+                EnableTransitionValidation = true,
+                EnableStatusChangedEvents = true,
+                EnableUIStateSync = true
+            };
+        }
+
+        /// <summary>
+        /// 创建严格验证配置
+        /// </summary>
+        /// <param name="entityType">实体类型</param>
+        /// <returns>严格验证配置选项</returns>
+        public static StateManagerOptions CreateStrict(Type entityType = null)
+        {
+            return new StateManagerOptions
+            {
+                EntityType = entityType,
+                EnableTransitionLogging = true,
+                EnableTransitionValidation = true,
+                EnableStatusChangedEvents = true,
+                EnableUIStateSync = true
+            };
+        }
+
+        /// <summary>
+        /// 创建宽松配置
+        /// </summary>
+        /// <param name="entityType">实体类型</param>
+        /// <returns>宽松配置选项</returns>
+        public static StateManagerOptions CreateRelaxed(Type entityType = null)
+        {
+            return new StateManagerOptions
+            {
+                EntityType = entityType,
+                EnableTransitionLogging = false,
+                EnableTransitionValidation = false,
+                EnableStatusChangedEvents = true,
+                EnableUIStateSync = false
+            };
+        }
     }
 }

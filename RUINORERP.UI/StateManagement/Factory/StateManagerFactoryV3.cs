@@ -352,7 +352,7 @@ namespace RUINORERP.UI.StateManagement
                     break;
             }
 
-            // 使用Model项目中的UnifiedStateManager
+            // 使用UI项目中的UnifiedStateManager
             var stateManager = new UnifiedStateManager(options);
             _logger?.LogInformation("已创建状态管理器实例: {Name}", name);
             return stateManager;

@@ -26,7 +26,7 @@ namespace RUINORERP.Model.Base.StatusManager.Core
         /// </summary>
         /// <param name="isValid">转换是否有效</param>
         /// <param name="message">消息</param>
-        public StateTransitionResult(bool isValid, string message = null)
+        public StateTransitionResult(bool isValid = false, string message = null)
         {
             IsValid = isValid;
             Message = message;
@@ -36,6 +36,15 @@ namespace RUINORERP.Model.Base.StatusManager.Core
         /// 转换是否有效
         /// </summary>
         public bool IsValid { get; set; }
+        
+        /// <summary>
+        /// 转换是否成功（与IsValid相同，提供向后兼容性）
+        /// </summary>
+        public bool IsSuccess 
+        { 
+            get => IsValid; 
+            set => IsValid = value; 
+        }
 
         /// <summary>
         /// 消息

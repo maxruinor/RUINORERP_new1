@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -36,10 +36,13 @@ using System.Threading;
 using RUINORERP.Global.EnumExt;
 using NPOI.SS.Formula.Functions;
 using System.Linq.Expressions;
+using RUINORERP.UI.StateManagement;
+using RUINORERP.Model.Base.StatusManager.Core;
+using RUINORERP.UI.StateManagement.Core;
 
 namespace RUINORERP.UI.BaseForm
 {
-    public partial class BaseBillEdit : UserControl
+    public partial class BaseBillEdit : StateAwareControl
     {
 
         public ApplicationContext AppContext { set; get; }
@@ -47,13 +50,239 @@ namespace RUINORERP.UI.BaseForm
         public BaseBillEdit()
         {
             InitializeComponent();
-
+            InitializeStateManagement();
             bwRemoting.DoWork += bwRemoting_DoWork;
             bwRemoting.RunWorkerCompleted += bwRemoting_RunWorkerCompleted;
             bwRemoting.ProgressChanged += bwRemoting_progressChanged;
             //如果打开单时。被其它人锁定。才显示锁定图标
             tsBtnLocked.Visible = false;
 
+        }
+
+        /// <summary>
+        /// 初始化状态管理系统
+        /// 子类可以重写此方法以添加自定义的状态管理初始化逻辑
+        /// </summary>
+        protected virtual void InitializeStateManagement()
+        {
+            // 调用基类的InitializeStateManagement方法
+            base.InitializeStateManagement();
+            
+            // 初始化状态管理器选项
+            var options = new RUINORERP.Model.Base.StatusManager.Core.StateManagerOptions
+            {
+                EnableTransitionLogging = true,
+                EnableTransitionValidation = true,
+                EnableStatusChangedEvents = true
+            };
+            
+            // 设置状态转换规则
+            RUINORERP.Model.Base.StatusManager.Core.StateTransitionRules.InitializeDefaultRules(options.TransitionRules);
+            
+            // 注册状态变更事件处理程序
+            this.StateManager.StatusChanged += OnEntityStateChanged;
+            
+            // 初始化按钮状态管理
+            InitializeButtonStateManagement();
+        }
+        
+        /// <summary>
+        /// 初始化按钮状态管理
+        /// </summary>
+        protected virtual void InitializeButtonStateManagement()
+        {
+            // 根据当前实体状态初始化按钮状态
+            if (this.ListDataSoure?.Current != null)
+            {
+                var entity = this.ListDataSoure.Current as BaseEntity;
+                if (entity != null)
+                {
+                    UpdateUIBasedOnEntityState(entity);
+                }
+            }
+        }
+        
+        /// <summary>
+        /// 实体状态变更事件处理程序
+        /// </summary>
+        /// <param name="sender">事件发送者</param>
+        /// <param name="e">事件参数</param>
+        protected virtual void OnEntityStateChanged(object sender, StateTransitionEventArgs e)
+        {
+            if (this.StateManager != null)
+            {
+                // 根据状态变更更新UI
+                if (e.Entity is BaseEntity entity)
+                {
+                    UpdateUIBasedOnEntityState(entity);
+                    
+                    // 使用新的状态管理器更新UI状态
+                    var entityStatus = this.StateManager.GetEntityStatus(entity);
+                    if (UIController != null)
+                    {
+                        // 创建状态上下文
+                        var statusContext = new RUINORERP.Model.Base.StatusManager.Core.StatusTransitionContext(
+                            entity, 
+                            typeof(RUINORERP.Global.DataStatus), 
+                            entityStatus.dataStatus ?? RUINORERP.Global.DataStatus.草稿, 
+                            this.StateManager);
+                        
+                        // 获取当前控件集合
+                        var controls = GetAllControls();
+                        
+                        // 更新UI状态
+                        UIController.UpdateUIStatus(statusContext, controls);
+                    }
+                }
+            }
+        }
+        
+        /// <summary>
+        /// 根据实体状态更新UI
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        protected virtual void UpdateUIBasedOnEntityState(BaseEntity entity)
+        {
+            if (entity == null) return;
+            
+            // 获取实体的当前数据状态
+            if (entity.ContainsProperty(typeof(DataStatus).Name))
+            {
+                var dataStatus = (DataStatus)int.Parse(entity.GetPropertyValue(typeof(DataStatus).Name).ToString());
+                UpdateUIBasedOnEntityState(entity, dataStatus);
+            }
+        }
+        
+        /// <summary>
+        /// 获取所有控件
+        /// </summary>
+        /// <returns>控件集合</returns>
+        protected virtual IEnumerable<Control> GetAllControls()
+        {
+            var controls = new List<Control>();
+            
+            // 添加当前窗体的控件
+            foreach (Control control in this.Controls)
+            {
+                controls.Add(control);
+                
+                // 递归添加子控件
+                AddChildControls(control, controls);
+            }
+            
+            return controls;
+        }
+        
+        /// <summary>
+        /// 递归添加子控件
+        /// </summary>
+        /// <param name="parent">父控件</param>
+        /// <param name="controls">控件集合</param>
+        private void AddChildControls(Control parent, List<Control> controls)
+        {
+            foreach (Control child in parent.Controls)
+            {
+                controls.Add(child);
+                
+                // 递归添加子控件的子控件
+                if (child.HasChildren)
+                {
+                    AddChildControls(child, controls);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 根据实体状态更新UI的重载方法
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        /// <param name="dataStatus">数据状态</param>
+        protected virtual void UpdateUIBasedOnEntityState(BaseEntity entity, DataStatus dataStatus)
+        {
+            // 根据状态更新工具栏按钮
+            ToolBarEnabledControl(dataStatus);
+            
+            // 使用新的状态管理器更新UI状态
+            if (this.StateManager != null)
+            {
+                var entityStatus = this.StateManager.GetEntityStatus(entity);
+                if (UIController != null)
+                {
+                    // 创建状态上下文
+                    var statusContext = new RUINORERP.Model.Base.StatusManager.Core.StatusTransitionContext(
+                        entity, 
+                        typeof(RUINORERP.Global.DataStatus), 
+                        entityStatus.dataStatus ?? RUINORERP.Global.DataStatus.草稿, 
+                        this.StateManager);
+                    
+                    // 获取当前控件集合
+                    var controls = GetAllControls();
+                    
+                    // 更新UI状态
+                    UIController.UpdateUIStatus(statusContext, controls);
+                }
+            }
+        }
+        
+        /// <summary>
+        /// 根据数据状态控制工具栏按钮的启用状态
+        /// </summary>
+        /// <param name="status">数据状态</param>
+        protected virtual void ToolBarEnabledControl(DataStatus status)
+        {
+            // 根据数据状态控制按钮的启用状态
+            switch (status)
+            {
+                case DataStatus.草稿:
+                    // 新增状态下的按钮控制
+                    SetButtonStateForDraft();
+                    break;
+                case DataStatus.新建:
+                    // 新建状态下的按钮控制
+                    SetButtonStateForNew();
+                    break;
+                case DataStatus.确认:
+                    // 确认状态下的按钮控制
+                    SetButtonStateForConfirmed();
+                    break;
+                case DataStatus.完结:
+                    // 完结状态下的按钮控制
+                    SetButtonStateForCompleted();
+                    break;
+            }
+        }
+        
+        /// <summary>
+        /// 设置草稿状态下的按钮状态
+        /// </summary>
+        protected virtual void SetButtonStateForDraft()
+        {
+            // 实现草稿状态下的按钮控制逻辑
+            // 例如：启用保存、修改按钮，禁用审核、结案按钮等
+        }
+        
+        /// <summary>
+        /// 设置新建状态下的按钮状态
+        /// </summary>
+        protected virtual void SetButtonStateForNew()
+        {
+            // 实现新建状态下的按钮控制逻辑
+        }
+        
+        /// <summary>
+        /// 设置确认状态下的按钮状态
+        /// </summary>
+        protected virtual void SetButtonStateForConfirmed()
+        {
+            // 实现确认状态下的按钮控制逻辑
+        }
+        
+        /// <summary>
+        /// 设置完结状态下的按钮状态
+        /// </summary>
+        protected virtual void SetButtonStateForCompleted()
+        {
+            // 实现完结状态下的按钮控制逻辑
         }
         #region 如果窗体，有些按钮不用出现在这个业务窗体时。这里手动排除。集合有值才行
 

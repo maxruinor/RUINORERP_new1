@@ -833,9 +833,9 @@ namespace RUINORERP.UI.StateManagement.Core
             StateTransitionRules.InitializeDefaultRules(_transitionRules);
             
             // 如果有自定义规则，则应用自定义规则
-            if (_options?.CustomTransitionRules != null)
+            if (_options?.TransitionRules != null)
             {
-                foreach (var customRule in _options.CustomTransitionRules)
+                foreach (var customRule in _options.TransitionRules)
                 {
                     if (!_transitionRules.ContainsKey(customRule.Key))
                     {

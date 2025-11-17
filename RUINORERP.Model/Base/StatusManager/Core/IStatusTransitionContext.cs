@@ -157,6 +157,11 @@ namespace RUINORERP.Model.Base.StatusManager.Core
         string Id { get; }
 
         /// <summary>
+        /// 实体类型
+        /// </summary>
+        Type EntityType { get; }
+
+        /// <summary>
         /// 实体ID
         /// </summary>
         long EntityId { get; }

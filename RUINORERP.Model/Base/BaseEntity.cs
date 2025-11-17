@@ -7,6 +7,7 @@ using RUINORERP.Global.EnumExt;
 using RUINORERP.Global.Model;
 using RUINORERP.Model.Base;
 using RUINORERP.Model.Base.StatusManager;
+using RUINORERP.Model.Base.StatusManager.Core;
 using SharpYaml.Tokens;
 using SqlSugar;
 using SqlSugar.Extensions;
@@ -23,8 +24,6 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
-using RUINORERP.Model.StatusManage;
-using RUINORERP.Model.Base.StatusManager.Core;
 namespace RUINORERP.Model
 {
     /// <summary>
@@ -1225,11 +1224,21 @@ namespace RUINORERP.Model
                 }
             }
             
-           
+            // 创建状态管理器
+            var options = new StateManagerOptions
+            {
+                EntityType = entityType,
+                EnableTransitionLogging = true,
+                EnableTransitionValidation = true
+            };
+            
+            // 初始化状态转换规则
+            StateTransitionRules.InitializeDefaultRules(options.TransitionRules);
+            
+            // 初始化状态管理器
+            // 注意：这里暂时不直接实例化状态管理器，而是提供初始化逻辑
+            // 实际的状态管理器实例化将在UI层通过工厂模式完成
         }
-
-       
-
 
         /// <summary>
         /// 获取DataStatus属性信息
@@ -1247,6 +1256,102 @@ namespace RUINORERP.Model
             }
             
             return null;
+        }
+
+        /// <summary>
+        /// 获取当前实体的数据状态
+        /// </summary>
+        /// <returns>当前数据状态</returns>
+        public virtual DataStatus? GetCurrentDataStatus()
+        {
+            var dataStatusProperty = GetDataStatusProperty();
+            if (dataStatusProperty != null)
+            {
+                return (DataStatus?)dataStatusProperty.GetValue(this);
+            }
+            
+            return null;
+        }
+
+        /// <summary>
+        /// 设置当前实体的数据状态
+        /// </summary>
+        /// <param name="status">要设置的状态</param>
+        /// <returns>设置是否成功</returns>
+        public virtual bool SetCurrentDataStatus(DataStatus status)
+        {
+            var dataStatusProperty = GetDataStatusProperty();
+            if (dataStatusProperty != null && dataStatusProperty.CanWrite)
+            {
+                dataStatusProperty.SetValue(this, status);
+                return true;
+            }
+            
+            return false;
+        }
+
+        /// <summary>
+        /// 检查是否可以转换到指定的数据状态
+        /// </summary>
+        /// <param name="targetStatus">目标状态</param>
+        /// <returns>是否可以转换</returns>
+        public virtual bool CanTransitionToStatus(DataStatus targetStatus)
+        {
+            var currentStatus = GetCurrentDataStatus();
+            if (currentStatus == null)
+            {
+                // 如果当前状态为空，只允许转换到新建状态
+                return targetStatus == DataStatus.新建;
+            }
+            
+            // 这里可以添加更复杂的状态转换逻辑
+            // 基本的状态转换规则
+            switch (currentStatus.Value)
+            {
+                case DataStatus.新建:
+                    return targetStatus == DataStatus.草稿 || targetStatus == DataStatus.确认;
+                    
+                case DataStatus.草稿:
+                    return targetStatus == DataStatus.新建 || targetStatus == DataStatus.确认 || targetStatus == DataStatus.作废;
+                    
+                case DataStatus.确认:
+                    return targetStatus == DataStatus.完结 || targetStatus == DataStatus.作废;
+                    
+                case DataStatus.完结:
+                    return false; // 完结状态不能再转换
+                    
+                case DataStatus.作废:
+                    return false; // 作废状态不能再转换
+                    
+                default:
+                    return false;
+            }
+        }
+
+        /// <summary>
+        /// 尝试转换到指定的数据状态
+        /// </summary>
+        /// <param name="targetStatus">目标状态</param>
+        /// <returns>转换是否成功</returns>
+        public virtual bool TryTransitionToStatus(DataStatus targetStatus)
+        {
+            if (!CanTransitionToStatus(targetStatus))
+            {
+                return false;
+            }
+            
+            return SetCurrentDataStatus(targetStatus);
+        }
+
+        /// <summary>
+        /// 获取状态转换历史记录
+        /// </summary>
+        /// <returns>状态转换历史记录</returns>
+        public virtual List<StateTransitionRecord> GetStateTransitionHistory()
+        {
+            // 这里应该从状态管理器获取历史记录
+            // 暂时返回空列表
+            return new List<StateTransitionRecord>();
         }
 
         #endregion

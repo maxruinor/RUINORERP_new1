@@ -52,6 +52,7 @@ namespace RUINORERP.Business.Processor
             queryFilter.SetQueryField<tb_AS_AfterSaleDelivery, tb_CustomerVendor>(c => c.CustomerVendor_ID, lambda);
 
             //可以根据关联外键自动加载条件，条件用公共虚方法
+            queryFilter.SetQueryField<tb_AS_AfterSaleDelivery>(c => c.ASDeliveryNo);
             queryFilter.SetQueryField<tb_AS_AfterSaleDelivery>(c => c.ASApplyNo);
             queryFilter.SetQueryField<tb_AS_AfterSaleDelivery>(c => c.TrackNo);
             queryFilter.SetQueryField<tb_AS_AfterSaleDelivery>(c => c.ProjectGroup_ID);

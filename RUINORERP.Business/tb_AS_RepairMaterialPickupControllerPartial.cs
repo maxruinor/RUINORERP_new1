@@ -79,7 +79,12 @@ namespace RUINORERP.Business
                     }
                     else
                     {
-                        tipsMsg.Add($"当前维修工单物料中的SKU:{item.tb_proddetail.SKU}已出库数量为{details[i].ActualSentQty}，当前行数据将不会加载到明细！");
+                        var detail = RUINORERP.Business.Cache.EntityCacheHelper.GetEntity<tb_ProdDetail>(item.ProdDetailID);
+                        if (detail != null)
+                        {
+                            item.tb_proddetail = detail;
+                            tipsMsg.Add($"当前维修工单物料中的SKU:{item.tb_proddetail.SKU}已出库数量为{details[i].ActualSentQty}，当前行数据将不会加载到明细！");
+                        }
                     }
                     #endregion
                 }
@@ -174,7 +179,7 @@ namespace RUINORERP.Business
                             Inventory: inv,
                             RepairQty: currentRepairQty, // 首次累加
                                    LatestOutboundTime: currentOutboundTime
-                                                        //QtySum: currentQty
+                        //QtySum: currentQty
                         );
                         inventoryGroups[key] = group;
                         #endregion

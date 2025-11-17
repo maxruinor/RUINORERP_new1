@@ -1,17 +1,14 @@
 /**
  * 文件: StateManagerFactoryV3.cs
- * 说明: 状态管理器工厂V3 - 用于创建和管理状态管理器实例
+ * 说明: 简化版状态管理器工厂 - 提供基本的状态管理器和转换引擎创建功能
  * 创建日期: 2024年
  * 作者: RUINOR ERP开发团队
  */
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
 using Microsoft.Extensions.Logging;
 using RUINORERP.Model;
-using RUINORERP.Model.Base.StatusManager;
 using RUINORERP.Model.Base.StatusManager.Core;
 using RUINORERP.UI.StateManagement.Core;
 using RUINORERP.UI.StateManagement.Factory;
@@ -19,9 +16,10 @@ using RUINORERP.UI.StateManagement.Factory;
 namespace RUINORERP.UI.StateManagement
 {
     /// <summary>
-    /// 状态管理器工厂V3 - 用于创建和管理状态管理器实例
+    /// 简化版状态管理器工厂
+    /// 提供基本的状态管理器和转换引擎创建功能
     /// </summary>
-    public class StateManagerFactoryV3 : IStateManagerFactoryV3
+    public class StateManagerFactoryV3 : IStateManagerFactoryV3, IDisposable
     {
         #region 私有字段
 
@@ -31,14 +29,29 @@ namespace RUINORERP.UI.StateManagement
         private readonly ILogger<StateManagerFactoryV3> _logger;
 
         /// <summary>
-        /// 状态管理器实例缓存
+        /// 默认状态管理器实例
         /// </summary>
-        private readonly ConcurrentDictionary<string, IUnifiedStateManager> _stateManagerCache;
+        private readonly IUnifiedStateManager _defaultStateManager;
 
         /// <summary>
-        /// 状态转换引擎实例缓存
+        /// 默认状态转换引擎实例
         /// </summary>
-        private readonly ConcurrentDictionary<string, IStatusTransitionEngine> _transitionEngineCache;
+        private readonly IStatusTransitionEngine _defaultTransitionEngine;
+
+        /// <summary>
+        /// 自定义状态管理器注册表
+        /// </summary>
+        private readonly Dictionary<Type, Func<IUnifiedStateManager>> _customStateManagers;
+
+        /// <summary>
+        /// 自定义状态转换引擎注册表
+        /// </summary>
+        private readonly Dictionary<string, Func<IStatusTransitionEngine>> _customTransitionEngines;
+
+        /// <summary>
+        /// 是否已释放资源
+        /// </summary>
+        private bool _disposed = false;
 
         #endregion
 
@@ -51,13 +64,22 @@ namespace RUINORERP.UI.StateManagement
         public StateManagerFactoryV3(ILogger<StateManagerFactoryV3> logger = null)
         {
             _logger = logger;
-            _stateManagerCache = new ConcurrentDictionary<string, IUnifiedStateManager>();
-            _transitionEngineCache = new ConcurrentDictionary<string, IStatusTransitionEngine>();
+            
+            // 初始化注册表
+            _customStateManagers = new Dictionary<Type, Func<IUnifiedStateManager>>();
+            _customTransitionEngines = new Dictionary<string, Func<IStatusTransitionEngine>>();
+            
+            // 初始化默认实例
+            var options = new StateManagerOptions();
+            _defaultStateManager = new UnifiedStateManager(options);
+            _defaultTransitionEngine = new StatusTransitionEngine();
+            
+            _logger?.LogInformation("状态管理器工厂已初始化");
         }
 
         #endregion
 
-        #region 公共方法
+        #region 核心接口实现
 
         /// <summary>
         /// 获取统一状态管理器
@@ -65,7 +87,7 @@ namespace RUINORERP.UI.StateManagement
         /// <returns>统一状态管理器实例</returns>
         public IUnifiedStateManager GetStateManager()
         {
-            return GetStateManager("Default");
+            return _defaultStateManager;
         }
 
         /// <summary>
@@ -75,7 +97,7 @@ namespace RUINORERP.UI.StateManagement
         /// <returns>统一状态管理器实例</returns>
         public IUnifiedStateManager GetStateManager<T>() where T : Enum
         {
-            return GetStateManager("Default");
+            return _defaultStateManager;
         }
 
         /// <summary>
@@ -84,7 +106,7 @@ namespace RUINORERP.UI.StateManagement
         /// <returns>状态转换引擎实例</returns>
         public IStatusTransitionEngine GetTransitionEngine()
         {
-            return GetTransitionEngine("Default");
+            return _defaultTransitionEngine;
         }
 
         /// <summary>
@@ -95,7 +117,18 @@ namespace RUINORERP.UI.StateManagement
         /// <returns>状态转换上下文</returns>
         public IStatusTransitionContext CreateTransitionContext(object entity, Type statusType)
         {
-            return CreateTransitionContext((BaseEntity)entity, statusType, null);
+            if (entity == null)
+                throw new ArgumentNullException(nameof(entity));
+            
+            if (statusType == null)
+                throw new ArgumentNullException(nameof(statusType));
+
+            return new StatusTransitionContext(
+                (BaseEntity)entity,
+                statusType,
+                null,
+                _defaultStateManager,
+                _defaultTransitionEngine);
         }
 
         /// <summary>
@@ -106,8 +139,12 @@ namespace RUINORERP.UI.StateManagement
         /// <returns>状态转换上下文</returns>
         public IStatusTransitionContext CreateTransitionContext<T>(object entity) where T : Enum
         {
-            return CreateTransitionContext((BaseEntity)entity, typeof(T), null);
+            return CreateTransitionContext(entity, typeof(T));
         }
+
+        #endregion
+
+        #region 注册方法实现
 
         /// <summary>
         /// 注册自定义状态管理器
@@ -116,9 +153,14 @@ namespace RUINORERP.UI.StateManagement
         /// <param name="factory">状态管理器工厂方法</param>
         public void RegisterStateManager(Type entityType, Func<IUnifiedStateManager> factory)
         {
-            var name = entityType.Name;
-            var stateManager = factory();
-            RegisterStateManager(name, stateManager);
+            if (entityType == null)
+                throw new ArgumentNullException(nameof(entityType));
+            
+            if (factory == null)
+                throw new ArgumentNullException(nameof(factory));
+
+            _customStateManagers[entityType] = factory;
+            _logger?.LogDebug("已注册自定义状态管理器: {EntityType}", entityType.Name);
         }
 
         /// <summary>
@@ -137,21 +179,29 @@ namespace RUINORERP.UI.StateManagement
         /// <param name="factory">状态转换引擎工厂方法</param>
         public void RegisterTransitionEngine(Func<IStatusTransitionEngine> factory)
         {
-            var transitionEngine = factory();
-            RegisterTransitionEngine("Custom", transitionEngine);
+            if (factory == null)
+                throw new ArgumentNullException(nameof(factory));
+
+            _customTransitionEngines["Default"] = factory;
+            _logger?.LogDebug("已注册自定义状态转换引擎");
         }
 
+        #endregion
+
         /// <summary>
-        /// 释放资源
+        /// 获取默认状态转换引擎实例
         /// </summary>
-        public void Dispose()
+        /// <returns>状态转换引擎实例</returns>
+        public IStatusTransitionEngine GetDefaultTransitionEngine()
         {
-            _stateManagerCache.Clear();
-            _transitionEngineCache.Clear();
+            return _defaultTransitionEngine;
         }
 
+   
+        #region 兼容方法（简化版）
+
         /// <summary>
-        /// 获取命名状态管理器实例
+        /// 获取命名状态管理器实例（简化实现）
         /// </summary>
         /// <param name="name">实例名称</param>
         /// <returns>状态管理器实例</returns>
@@ -160,20 +210,14 @@ namespace RUINORERP.UI.StateManagement
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentNullException(nameof(name));
 
-            return _stateManagerCache.GetOrAdd(name, CreateStateManager);
+            // 简化实现：对于不同名称返回默认实例
+            // 在实际应用中可以根据名称返回不同的预配置实例
+            _logger?.LogDebug("获取状态管理器实例: {Name}", name);
+            return _defaultStateManager;
         }
 
         /// <summary>
-        /// 获取默认状态转换引擎实例
-        /// </summary>
-        /// <returns>状态转换引擎实例</returns>
-        public IStatusTransitionEngine GetDefaultTransitionEngine()
-        {
-            return GetTransitionEngine("Default");
-        }
-
-        /// <summary>
-        /// 获取命名状态转换引擎实例
+        /// 获取命名状态转换引擎实例（简化实现）
         /// </summary>
         /// <param name="name">实例名称</param>
         /// <returns>状态转换引擎实例</returns>
@@ -182,11 +226,13 @@ namespace RUINORERP.UI.StateManagement
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentNullException(nameof(name));
 
-            return _transitionEngineCache.GetOrAdd(name, CreateTransitionEngine);
+            // 简化实现：对于不同名称返回默认实例
+            _logger?.LogDebug("获取状态转换引擎实例: {Name}", name);
+            return _defaultTransitionEngine;
         }
 
         /// <summary>
-        /// 创建状态转换上下文
+        /// 创建状态转换上下文（完整参数版本，简化实现）
         /// </summary>
         /// <param name="entity">实体对象</param>
         /// <param name="statusType">状态类型</param>
@@ -197,7 +243,7 @@ namespace RUINORERP.UI.StateManagement
         public IStatusTransitionContext CreateTransitionContext(
             BaseEntity entity,
             Type statusType,
-            object initialStatus,
+            object initialStatus = null,
             string stateManagerName = "Default",
             string transitionEngineName = "Default")
         {
@@ -207,167 +253,55 @@ namespace RUINORERP.UI.StateManagement
             if (statusType == null)
                 throw new ArgumentNullException(nameof(statusType));
 
-            var stateManager = GetStateManager(stateManagerName);
-            var transitionEngine = GetTransitionEngine(transitionEngineName);
-
+            // 简化实现：忽略名称参数，使用默认实例
             return new StatusTransitionContext(
                 entity,
                 statusType,
                 initialStatus,
-                stateManager,
-                transitionEngine);
-        }
-
-        /// <summary>
-        /// 注册自定义状态管理器
-        /// </summary>
-        /// <param name="name">实例名称</param>
-        /// <param name="stateManager">状态管理器实例</param>
-        public void RegisterStateManager(string name, IUnifiedStateManager stateManager)
-        {
-            if (string.IsNullOrEmpty(name))
-                throw new ArgumentNullException(nameof(name));
-
-            if (stateManager == null)
-                throw new ArgumentNullException(nameof(stateManager));
-
-            _stateManagerCache.AddOrUpdate(name, stateManager, (key, oldValue) => stateManager);
-            _logger?.LogInformation("已注册状态管理器实例: {Name}", name);
-        }
-
-        /// <summary>
-        /// 注册自定义状态转换引擎
-        /// </summary>
-        /// <param name="name">实例名称</param>
-        /// <param name="transitionEngine">状态转换引擎实例</param>
-        public void RegisterTransitionEngine(string name, IStatusTransitionEngine transitionEngine)
-        {
-            if (string.IsNullOrEmpty(name))
-                throw new ArgumentNullException(nameof(name));
-
-            if (transitionEngine == null)
-                throw new ArgumentNullException(nameof(transitionEngine));
-
-            _transitionEngineCache.AddOrUpdate(name, transitionEngine, (key, oldValue) => transitionEngine);
-            _logger?.LogInformation("已注册状态转换引擎实例: {Name}", name);
-        }
-
-        /// <summary>
-        /// 移除状态管理器实例
-        /// </summary>
-        /// <param name="name">实例名称</param>
-        /// <returns>是否成功移除</returns>
-        public bool RemoveStateManager(string name)
-        {
-            if (string.IsNullOrEmpty(name))
-                return false;
-
-            var result = _stateManagerCache.TryRemove(name, out _);
-            if (result)
-            {
-                _logger?.LogInformation("已移除状态管理器实例: {Name}", name);
-            }
-
-            return result;
-        }
-
-        /// <summary>
-        /// 移除状态转换引擎实例
-        /// </summary>
-        /// <param name="name">实例名称</param>
-        /// <returns>是否成功移除</returns>
-        public bool RemoveTransitionEngine(string name)
-        {
-            if (string.IsNullOrEmpty(name))
-                return false;
-
-            var result = _transitionEngineCache.TryRemove(name, out _);
-            if (result)
-            {
-                _logger?.LogInformation("已移除状态转换引擎实例: {Name}", name);
-            }
-
-            return result;
-        }
-
-        /// <summary>
-        /// 清除所有实例
-        /// </summary>
-        public void ClearAllInstances()
-        {
-            _stateManagerCache.Clear();
-            _transitionEngineCache.Clear();
-            _logger?.LogInformation("已清除所有状态管理器和转换引擎实例");
-        }
-
-        /// <summary>
-        /// 获取所有状态管理器实例名称
-        /// </summary>
-        /// <returns>实例名称列表</returns>
-        public IEnumerable<string> GetStateManagerNames()
-        {
-            return _stateManagerCache.Keys.ToList();
-        }
-
-        /// <summary>
-        /// 获取所有状态转换引擎实例名称
-        /// </summary>
-        /// <returns>实例名称列表</returns>
-        public IEnumerable<string> GetTransitionEngineNames()
-        {
-            return _transitionEngineCache.Keys.ToList();
+                _defaultStateManager,
+                _defaultTransitionEngine);
         }
 
         #endregion
 
-        #region 私有方法
+        #region IDisposable接口实现
 
         /// <summary>
-        /// 创建状态管理器实例
+        /// 释放资源
         /// </summary>
-        /// <param name="name">实例名称</param>
-        /// <returns>状态管理器实例</returns>
-        private IUnifiedStateManager CreateStateManager(string name)
+        public void Dispose()
         {
-            var options = new StateManagerOptions();
-            
-            // 根据名称配置不同的选项
-            switch (name)
-            {
-                case "Default":
-                    // 默认配置
-                    break;
-                case "Strict":
-                    // 严格模式配置
-                    options.EnableTransitionValidation = true;
-                    options.EnableTransitionLogging = true;
-                    break;
-                case "Relaxed":
-                    // 宽松模式配置
-                    options.EnableTransitionValidation = false;
-                    options.EnableTransitionLogging = false;
-                    break;
-                default:
-                    // 自定义配置，可从配置文件加载
-                    break;
-            }
-
-            // 使用UI项目中的UnifiedStateManager
-            var stateManager = new UnifiedStateManager(options);
-            _logger?.LogInformation("已创建状态管理器实例: {Name}", name);
-            return stateManager;
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
 
         /// <summary>
-        /// 创建状态转换引擎实例
+        /// 释放资源
         /// </summary>
-        /// <param name="name">实例名称</param>
-        /// <returns>状态转换引擎实例</returns>
-        private IStatusTransitionEngine CreateTransitionEngine(string name)
+        /// <param name="disposing">是否正在释放托管资源</param>
+        protected virtual void Dispose(bool disposing)
         {
-            var transitionEngine = new StatusTransitionEngine();
-            _logger?.LogInformation("已创建状态转换引擎实例: {Name}", name);
-            return transitionEngine;
+            if (!_disposed)
+            {
+                if (disposing)
+                {
+                    // 清理注册表
+                    _customStateManagers?.Clear();
+                    _customTransitionEngines?.Clear();
+                    
+                    _logger?.LogInformation("状态管理器工厂资源已释放");
+                }
+
+                _disposed = true;
+            }
+        }
+
+        /// <summary>
+        /// 析构函数
+        /// </summary>
+        ~StateManagerFactoryV3()
+        {
+            Dispose(false);
         }
 
         #endregion

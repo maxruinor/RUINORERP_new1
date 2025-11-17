@@ -9,7 +9,6 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using RUINORERP.Global;
-using RUINORERP.Model.Base;
 
 namespace RUINORERP.Model.Base.StatusManager.Core
 {

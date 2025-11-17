@@ -1139,22 +1139,209 @@ namespace RUINORERP.UI.BaseForm
         internal override void LoadDataToUI(object Entity)
         {
             if (Entity == null) return;
-            if (Entity is BaseEntity baseEntity)
+            
+            // 首先调用基类的实现，确保基础的状态管理集成
+            base.LoadDataToUI(Entity);
+            
+            if (Entity is T typedEntity)
             {
-                if (baseEntity.ActionStatus == ActionStatus.新增 || baseEntity.ActionStatus == ActionStatus.修改)
-                {
-                    toolStripButtonSave.Enabled = true;
-                }
+                // 执行类型化的数据绑定
+                BindData(typedEntity);
                 
-                // 检查状态管理器是否已初始化，如果未初始化则初始化
-                if (!baseEntity.IsStateManagerInitialized)
-                {
-                    baseEntity.InitializeStateManager(baseEntity.GetType());
-                }
+                // 初始化泛型状态管理
+                InitializeStateManagement();
+                
+                // 根据实体状态更新工具栏
+                ToolBarEnabledControl(Entity);
+                
+                // 增强的状态管理集成
+                EnhancedStateManagementIntegration(typedEntity);
             }
-            BindData(Entity as T);
-            InitializeStateManagement();
-            ToolBarEnabledControl(Entity);
+        }
+        
+        /// <summary>
+        /// 增强的状态管理集成
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        protected virtual void EnhancedStateManagementIntegration(T entity)
+        {
+            if (entity is BaseEntity baseEntity && baseEntity.IsStateManagerInitialized)
+            {
+                // 更新状态显示
+                UpdateStatusDisplay(baseEntity);
+                
+                // 根据状态更新操作按钮
+                UpdateActionButtonsByState(baseEntity);
+                
+                // 应用状态特定的UI规则
+                ApplyStateSpecificRules(baseEntity);
+                
+                // 注册状态变更事件处理
+                RegisterStateChangeHandlers(baseEntity);
+                
+                // 记录加载状态日志
+                LogStateLoading(baseEntity);
+            }
+        }
+        
+        /// <summary>
+        /// 更新状态显示
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        protected virtual void UpdateStatusDisplay(BaseEntity entity)
+        {
+            if (entity == null) return;
+            
+            var status = entity.GetCurrentDataStatus();
+            if (status.HasValue)
+            {
+                string statusDescription = entity.GetStatusDescription(status.Value);
+                
+                // 更新状态标签或显示控件
+                // 如果有状态显示控件，可以在这里更新
+                logger.LogInformation($"单据状态更新为: {statusDescription}");
+            }
+        }
+        
+        /// <summary>
+        /// 根据状态更新操作按钮
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        protected virtual void UpdateActionButtonsByState(BaseEntity entity)
+        {
+            if (entity == null) return;
+            
+            // 获取可用操作列表
+            var availableActions = entity.GetAvailableActions();
+            
+            // 根据可用操作更新按钮状态
+            if (availableActions != null)
+            {
+                // 启用保存按钮
+                toolStripButtonSave.Enabled = availableActions.Contains("保存") || 
+                                            availableActions.Contains("修改");
+                
+                // 启用提交按钮
+                toolStripbtnSubmit.Enabled = availableActions.Contains("提交");
+                
+                // 启用审核按钮
+                toolStripbtnReview.Enabled = availableActions.Contains("提交");
+                
+                // 启用删除按钮
+                toolStripbtnDelete.Enabled = availableActions.Contains("删除");
+                
+                // 更新其他按钮状态...
+            }
+        }
+        
+        /// <summary>
+        /// 应用状态特定的UI规则
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        protected virtual void ApplyStateSpecificRules(BaseEntity entity)
+        {
+            if (entity == null) return;
+            
+            // 根据实体状态应用特定的UI规则
+            bool isEditable = entity.IsEditable();
+            bool isConfirmed = entity.IsConfirmed();
+            bool isFinalState = entity.IsFinalState();
+            
+            // 根据编辑状态设置控件
+            SetControlsEditable(isEditable);
+            
+            // 根据确认状态设置特殊控件
+            if (isConfirmed && !isFinalState)
+            {
+                // 已确认但非终态的特殊处理
+                // 例如：显示确认后的操作选项
+            }
+            
+            // 根据终态设置
+            if (isFinalState)
+            {
+                // 终态下的特殊处理
+                // 例如：完全禁用编辑功能
+            }
+        }
+        
+        /// <summary>
+        /// 注册状态变更事件处理
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        protected virtual void RegisterStateChangeHandlers(BaseEntity entity)
+        {
+            // 注意：需要确保实体支持状态变更事件通知
+            // 这里可以添加额外的事件注册逻辑
+        }
+        
+        /// <summary>
+        /// 记录加载状态日志
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        protected virtual void LogStateLoading(BaseEntity entity)
+        {
+            if (entity == null) return;
+            
+            var status = entity.GetCurrentDataStatus();
+            if (status.HasValue)
+            {
+                logger.LogInformation($"加载单据: {typeof(T).Name}, ID: {entity.PrimaryKeyID}, 状态: {entity.GetStatusDescription(status.Value)}");
+            }
+        }
+        
+        /// <summary>
+        /// 执行状态操作
+        /// </summary>
+        /// <param name="actionType">操作类型</param>
+        /// <param name="entity">实体对象</param>
+        /// <returns>是否成功</returns>
+        protected virtual bool ExecuteEntityAction(string actionType, T entity)
+        {
+            if (entity == null || !(entity is BaseEntity baseEntity) || !baseEntity.IsStateManagerInitialized)
+            {
+                return false;
+            }
+            
+            // 检查操作权限
+            if (!CheckActionPermission(baseEntity, actionType))
+            {
+                MessageBox.Show(this, $"当前状态不允许执行{actionType}操作", "操作权限不足", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return false;
+            }
+            
+            // 确定目标状态
+            DataStatus? targetStatus = GetTargetStatusForAction(actionType);
+            if (!targetStatus.HasValue)
+            {
+                return false;
+            }
+            
+            // 执行状态转换
+            return PerformStateTransition(baseEntity, targetStatus.Value, $"执行{actionType}操作");
+        }
+        
+        /// <summary>
+        /// 获取操作对应的目标状态
+        /// </summary>
+        /// <param name="actionType">操作类型</param>
+        /// <returns>目标状态</returns>
+        protected virtual DataStatus? GetTargetStatusForAction(string actionType)
+        {
+            switch (actionType?.ToLower())
+            {
+                case "提交":
+                case "审核":
+                case "确认":
+                    return DataStatus.确认;
+                case "完结":
+                case "完成":
+                    return DataStatus.完结;
+                case "作废":
+                    return DataStatus.作废;
+                default:
+                    return null;
+            }
         }
 
 

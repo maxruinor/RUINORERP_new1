@@ -1,10 +1,11 @@
 /**
  * 文件: StateTransitionResult.cs
- * 说明: 状态转换结果
+ * 说明: 状态转换结果，合并了BaseEntity内部类和StatusManager.Core类的功能
  * 创建日期: 2024年
  * 作者: RUINOR ERP开发团队
  */
 
+using RUINORERP.Global;
 using System;
 
 namespace RUINORERP.Model.Base.StatusManager.Core
@@ -33,26 +34,55 @@ namespace RUINORERP.Model.Base.StatusManager.Core
         }
 
         /// <summary>
-        /// 转换是否有效
+        /// 转换是否成功
         /// </summary>
-        public bool IsValid { get; set; }
-        
+        public bool IsSuccess { get; set; }
+
         /// <summary>
-        /// 转换是否成功（与IsValid相同，提供向后兼容性）
+        /// 错误消息
         /// </summary>
-        public bool IsSuccess 
-        { 
-            get => IsValid; 
-            set => IsValid = value; 
+        public string ErrorMessage { get; set; }
+
+        /// <summary>
+        /// 旧状态
+        /// </summary>
+        public DataStatus? OldStatus { get; set; }
+
+        /// <summary>
+        /// 新状态
+        /// </summary>
+        public DataStatus? NewStatus { get; set; }
+
+        /// <summary>
+        /// 转换时间
+        /// </summary>
+        public DateTime TransitionTime { get; set; }
+
+        /// <summary>
+        /// 转换原因
+        /// </summary>
+        public string TransitionReason { get; set; }
+
+        /// <summary>
+        /// 转换是否有效（兼容StatusManager.Core版本）
+        /// </summary>
+        public bool IsValid
+        {
+            get => IsSuccess;
+            set => IsSuccess = value;
         }
 
         /// <summary>
-        /// 消息
+        /// 消息（兼容StatusManager.Core版本）
         /// </summary>
-        public string Message { get; set; }
+        public string Message
+        {
+            get => ErrorMessage;
+            set => ErrorMessage = value;
+        }
 
         /// <summary>
-        /// 异常信息
+        /// 异常信息（来自StatusManager.Core版本）
         /// </summary>
         public Exception Exception { get; set; }
 

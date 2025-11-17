@@ -58,6 +58,9 @@ using RUINORERP.Business.Cache;
 using MathNet.Numerics;
 using RUINORERP.UI.Network.Services;
 using RUINORERP.Business.BizMapperService;
+using RUINORERP.UI.StateManagement.Core;
+using RUINORERP.Model.Base;
+using RUINORERP.Model.Base.StatusManager.Core;
 
 namespace RUINORERP.UI.PSI.SAL
 {
@@ -83,16 +86,222 @@ namespace RUINORERP.UI.PSI.SAL
         {
             // 调用基类的InitializeStateManagement方法
             base.InitializeStateManagement();
-            
+
             // 添加销售订单特定的状态管理初始化逻辑
-            // 可以在这里初始化销售订单特有的状态管理功能
+            if (EditEntity != null && EditEntity is BaseEntity baseEntity)
+            {
+                // 注册状态变更事件处理
+                baseEntity.StatusChanged += OnSaleOrderStateChanged;
+
+                // 添加销售订单特有的状态转换规则验证
+                AddSaleOrderSpecificStateRules();
+
+                // 初始化状态显示和UI控制
+                UpdateStateDisplay();
+                UpdateSaleOrderSpecificUIByState();
+            }
+        }
+
+        /// <summary>
+        /// 添加销售订单特定的状态规则
+        /// </summary>
+        private void AddSaleOrderSpecificStateRules()
+        {
+            // 可以在这里添加销售订单特有的业务规则验证
+            // 例如：检查订单是否可以确认、是否可以完结等特定业务条件
+        }
+
+        /// <summary>
+        /// 销售订单状态变更事件处理
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void OnSaleOrderStateChanged(object sender, RUINORERP.Model.Base.StatusManager.Core.StateTransitionEventArgs e)
+        {
+            // 处理状态变更后的业务逻辑
+            UpdateStateDisplay();
+            UpdateSaleOrderSpecificUIByState();
+
+            // 记录状态变更日志
+            if (MainForm.Instance != null && sender is tb_SaleOrder saleOrder)
+            {
+                MainForm.Instance.AuditLogHelper.CreateAuditLog<tb_SaleOrder>(
+                    "状态变更",
+                    saleOrder,
+                    $"从{(DataStatus)e.OldStatus}变更为{(DataStatus)e.NewStatus}");
+            }
+        }
+
+        /// <summary>
+        /// 更新状态显示
+        /// </summary>
+        private void UpdateStateDisplay()
+        {
+            if (EditEntity == null) return;
+
+            // 使用v3状态管理系统获取当前状态描述
+            if (EditEntity is BaseEntity baseEntity)
+            {
+                // 获取状态描述
+            DataStatus? currentStatus = baseEntity.GetCurrentDataStatus();
+            string statusDesc = currentStatus.HasValue ? ((DataStatus)currentStatus.Value).ToString() : string.Empty;
+                if (!string.IsNullOrEmpty(statusDesc))
+                {
+                    lblDataStatus.Text = statusDesc;
+                }
+
+                // 更新审核状态显示
+                if (EditEntity.ApprovalStatus.HasValue)
+                {
+                    lblReview.Text = ((ApprovalStatus)EditEntity.ApprovalStatus).ToString();
+                }
+            }
+        }
+
+        /// <summary>
+        /// 根据状态更新销售订单特定的UI
+        /// </summary>
+        private void UpdateSaleOrderSpecificUIByState()
+        {
+            if (EditEntity == null || !(EditEntity is BaseEntity baseEntity)) return;
+
+            DataStatus? status = baseEntity.GetCurrentDataStatus();
+            if (!status.HasValue) return;
+            DataStatus currentStatus = status.Value;
+
+            // 根据不同状态更新销售订单特有的UI元素
+            switch (currentStatus)
+            {
+                case DataStatus.草稿:
+                case DataStatus.新建:
+                    // 草稿或新建状态下的UI设置
+                    cmbPayStatus.Enabled = true;
+                    cmbPaytype_ID.Enabled = true;
+                    break;
+                case DataStatus.确认:
+                    // 确认状态下的UI设置
+                    cmbPayStatus.Enabled = false;
+                    cmbPaytype_ID.Enabled = false;
+                    break;
+                case DataStatus.完结:
+                    // 完结状态下的UI设置
+                    cmbPayStatus.Enabled = false;
+                    cmbPaytype_ID.Enabled = false;
+                    break;
+                case DataStatus.作废:
+                    // 作废状态下的UI设置
+                    // 禁用大部分编辑功能
+                    break;
+            }
+
+            // 检查当前状态下可以执行的操作
+            UpdateAvailableActions();
+        }
+
+        /// <summary>
+        /// 更新可用操作
+        /// </summary>
+        private void UpdateAvailableActions()
+        {
+            if (EditEntity == null || !(EditEntity is BaseEntity baseEntity)) return;
+
+            // 获取当前状态下可用的操作列表
+            List<string> availableActions = baseEntity.GetAvailableActions();
+
+            // 根据可用操作更新UI
+            // 可以在这里为销售订单特定的操作按钮设置可用状态
         }
         IEntityCacheManager cacheManager = Startup.GetFromFac<IEntityCacheManager>();
 
         internal override void LoadDataToUI(object Entity)
         {
-            ActionStatus actionStatus = ActionStatus.无操作;
-            BindData(Entity as tb_SaleOrder, actionStatus);
+            // 调用基类实现以集成v3状态管理
+            base.LoadDataToUI(Entity);
+
+            // 销售订单特定的数据加载逻辑
+            if (Entity is tb_SaleOrder saleOrder)
+            {
+                ActionStatus actionStatus = ActionStatus.无操作;
+                if (saleOrder.SOrder_ID > 0)
+                {
+                    actionStatus = ActionStatus.加载;
+                }
+                else
+                {
+                    actionStatus = ActionStatus.新增;
+                }
+
+                // 绑定数据
+                BindData(saleOrder, actionStatus);
+
+                // 确保状态管理系统已初始化
+                if (!EditEntity.IsStateManagerInitialized)
+                {
+                    EditEntity.InitializeStateManager(saleOrder.GetType());
+                    InitializeStateManagement();
+                }
+            }
+        }
+
+        /// <summary>
+        /// 执行状态转换操作
+        /// </summary>
+        /// <param name="targetStatus">目标状态</param>
+        /// <returns>转换结果</returns>
+        protected async Task<bool> ExecuteStatusTransitionAsync(DataStatus targetStatus)
+        {
+            if (EditEntity == null || !(EditEntity is BaseEntity baseEntity))
+                return false;
+
+            try
+            {
+                // 执行状态转换
+                StateTransitionResult result = baseEntity.ExecuteStateTransition(targetStatus);
+
+                if (result.IsSuccess)
+                {
+                    // 保存状态变更到数据库
+                    await Save(true);
+
+                    // 更新UI显示
+                    UpdateStateDisplay();
+                    UpdateSaleOrderSpecificUIByState();
+                    ToolBarEnabledControl(EditEntity);
+
+                    return true;
+                }
+                else
+                {
+                    // 显示转换失败的原因
+                    if (MainForm.Instance != null)
+                    {
+                        MainForm.Instance.PrintInfoLog(result.ErrorMessage, Color.Red);
+                    }
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                // 记录异常
+                if (MainForm.Instance != null)
+                {
+                    MainForm.Instance.PrintInfoLog($"状态转换异常: {ex.Message}", Color.Red);
+                }
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 检查操作权限
+        /// </summary>
+        /// <param name="actionName">操作名称</param>
+        /// <returns>是否有权限</returns>
+        protected bool CheckActionPermission(string actionName)
+        {
+            if (EditEntity == null || !(EditEntity is BaseEntity baseEntity))
+                return false;
+
+            return baseEntity.CanExecuteAction(actionName);
         }
 
         /// <summary>
@@ -283,7 +492,7 @@ namespace RUINORERP.UI.PSI.SAL
                     //通过动态参数来设置这个默认值。这样每个公司不同设置按自己的来。
                     entity.IsFromPlatform = AppContext.GlobalVariableConfig.IsFromPlatform;
                     entity.OrderPriority = (int)Priority.正常;
-                     
+
 
                     if (entity.tb_SaleOrderDetails != null && entity.tb_SaleOrderDetails.Count > 0)
                     {
@@ -562,7 +771,28 @@ namespace RUINORERP.UI.PSI.SAL
                 }
 
                 //显示 打印状态 如果是草稿状态 不显示打印
-                if ((DataStatus)EditEntity.DataStatus != DataStatus.草稿)
+                if (EditEntity is BaseEntity baseEntity)
+                {
+                    bool canPrint = baseEntity.CanExecuteAction("Print");
+                    toolStripbtnPrint.Enabled = canPrint;
+
+                    if (canPrint)
+                    {
+                        if (EditEntity.PrintStatus == 0)
+                        {
+                            lblPrintStatus.Text = "未打印";
+                        }
+                        else
+                        {
+                            lblPrintStatus.Text = $"打印{EditEntity.PrintStatus}次";
+                        }
+                    }
+                    else
+                    {
+                        toolStripbtnPrint.Enabled = false;
+                    }
+                }
+                else if ((DataStatus)EditEntity.DataStatus != DataStatus.草稿)
                 {
                     toolStripbtnPrint.Enabled = true;
                     if (EditEntity.PrintStatus == 0)
@@ -645,7 +875,7 @@ namespace RUINORERP.UI.PSI.SAL
                             {
                                 imageDataList.Add(fileStorageInfo.FileData);
                                 imageInfos.Add(ctrpay.ConvertToImageInfo(fileStorageInfo));
-                                AddFileStorageInfo(entity,fileStorageInfo);
+                                AddFileStorageInfo(entity, fileStorageInfo);
                             }
                         }
                     }
@@ -1619,7 +1849,7 @@ namespace RUINORERP.UI.PSI.SAL
             {
                 return false;
             }
-            
+
             CommonUI.frmOpinion frm = new CommonUI.frmOpinion();
             string PKCol = BaseUIHelper.GetEntityPrimaryKey<tb_SaleOrder>();
             long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
@@ -1677,7 +1907,7 @@ namespace RUINORERP.UI.PSI.SAL
             {
                 return false;
             }
-            
+
             CommonUI.frmOpinion frm = new CommonUI.frmOpinion();
             string PKCol = BaseUIHelper.GetEntityPrimaryKey<tb_SaleOrder>();
             long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
@@ -1913,7 +2143,7 @@ namespace RUINORERP.UI.PSI.SAL
             {
                 magicPictureBox订金付款凭证.ClearImage();
             }
-            
+
             return result;
         }
     }

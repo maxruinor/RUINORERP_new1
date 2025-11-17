@@ -94,7 +94,7 @@ namespace RUINORERP.Model.Base.StatusManager.Core
                     }
                 }
 
-                return StateTransitionResult.Success($"验证通过：从 {fromStatus} 转换到 {toStatus}");
+                return StateTransitionResult.Success(message: $"验证通过：从 {fromStatus} 转换到 {toStatus}");
             }
             catch (Exception ex)
             {
@@ -300,7 +300,7 @@ namespace RUINORERP.Model.Base.StatusManager.Core
         {
             // 默认转换逻辑
             await Task.CompletedTask;
-            return StateTransitionResult.Success($"成功从 {fromStatus} 转换到 {toStatus}");
+            return StateTransitionResult.Success(message: $"成功从 {fromStatus} 转换到 {toStatus}");
         }
 
         #endregion

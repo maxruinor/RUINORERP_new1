@@ -137,24 +137,7 @@ namespace RUINORERP.UI.BaseForm
             }
         }
         
-        /// <summary>
-        /// 根据实体状态更新UI
-        /// </summary>
-        /// <param name="entity">实体对象</param>
-        protected virtual void UpdateUIBasedOnEntityState(BaseEntity entity)
-        {
-            if (entity == null) return;
 
-            // 使用新的状态管理器更新UI控件状态
-            UpdateUIControlsState(entity);
-            
-            // 获取实体的当前数据状态
-            if (entity.ContainsProperty(typeof(DataStatus).Name))
-            {
-                var dataStatus = (DataStatus)int.Parse(entity.GetPropertyValue(typeof(DataStatus).Name).ToString());
-                UpdateUIBasedOnEntityState(entity, dataStatus);
-            }
-        }
         
         /// <summary>
         /// 获取所有控件
@@ -873,11 +856,192 @@ namespace RUINORERP.UI.BaseForm
                 if (!entity.IsStateManagerInitialized)
                 {
                     entity.InitializeStateManager(entity.GetType());
+                    
+                    // 注册状态变更事件
+                    SubscribeToEntityStateChanges(entity);
                 }
                 
                 // 根据实体状态更新UI
                 UpdateUIBasedOnEntityState(entity);
+                
+                // 更新工具栏和操作按钮状态
+                UpdateToolBarState(entity);
+                
+                // 更新子表操作权限
+                UpdateChildTableOperations(entity);
             }
+        }
+
+        /// <summary>
+        /// 注册实体状态变更事件
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        protected virtual void SubscribeToEntityStateChanges(BaseEntity entity)
+        {
+            // 注意：这里需要确保实体支持状态变更事件通知
+            // 如果BaseEntity有状态变更事件，则在此处订阅
+            // 例如：entity.StatusChanged += OnEntityStatusChanged;
+        }
+
+        /// <summary>
+        /// 实体状态变更事件处理
+        /// </summary>
+        /// <param name="sender">发送者</param>
+        /// <param name="e">事件参数</param>
+        protected virtual void OnEntityStatusChanged(object sender, EventArgs e)
+        {
+            if (sender is BaseEntity entity)
+            {
+                // 状态变更时更新UI
+                BeginInvoke(new Action(() =>
+                {
+                    UpdateUIBasedOnEntityState(entity);
+                    UpdateToolBarState(entity);
+                    UpdateChildTableOperations(entity);
+                }));
+            }
+        }
+
+        /// <summary>
+        /// 根据实体状态更新UI
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        protected virtual void UpdateUIBasedOnEntityState(BaseEntity entity)
+        {
+            if (entity == null || !entity.IsStateManagerInitialized)
+                return;
+
+            var status = entity.GetCurrentDataStatus();
+            if (status == null)
+                return;
+
+            // 获取状态描述
+            string statusDescription = entity.GetStatusDescription();
+            
+            // 更新状态显示
+            UpdateStatusDisplay(statusDescription);
+            
+            // 更新控件编辑状态
+            bool isEditable = entity.IsEditable();
+            UpdateControlsEditableState(isEditable);
+            
+            // 记录状态变更日志
+            LogStateChange(entity);
+        }
+
+        /// <summary>
+        /// 更新状态显示
+        /// </summary>
+        /// <param name="statusDescription">状态描述</param>
+        protected virtual void UpdateStatusDisplay(string statusDescription)
+        {
+            // 子类重写此方法以更新特定的状态显示控件
+        }
+
+        /// <summary>
+        /// 更新工具栏状态
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        protected virtual void UpdateToolBarState(BaseEntity entity)
+        {
+            if (entity == null || !entity.IsStateManagerInitialized)
+                return;
+
+            // 获取可用操作列表
+            var availableActions = entity.GetAvailableActions();
+            
+            // 更新工具栏按钮状态
+            UpdateActionButtons(availableActions);
+        }
+
+        /// <summary>
+        /// 更新操作按钮状态
+        /// </summary>
+        /// <param name="availableActions">可用操作列表</param>
+        protected virtual void UpdateActionButtons(List<string> availableActions)
+        {
+            // 子类重写此方法以更新特定的操作按钮
+        }
+
+        /// <summary>
+        /// 更新子表操作权限
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        protected virtual void UpdateChildTableOperations(BaseEntity entity)
+        {
+            if (entity == null || !entity.IsStateManagerInitialized)
+                return;
+
+            bool isEditable = entity.IsEditable();
+            
+            // 子类重写此方法以更新子表的操作权限
+            EnableChildTableOperations(isEditable);
+        }
+
+        /// <summary>
+        /// 启用或禁用子表操作
+        /// </summary>
+        /// <param name="enabled">是否启用</param>
+        protected virtual void EnableChildTableOperations(bool enabled)
+        {
+            // 子类重写此方法以具体实现子表操作的启用/禁用
+        }
+
+        /// <summary>
+        /// 更新控件编辑状态
+        /// </summary>
+        /// <param name="isEditable">是否可编辑</param>
+        protected virtual void UpdateControlsEditableState(bool isEditable)
+        {
+            // 子类重写此方法以更新特定控件的编辑状态
+        }
+
+        /// <summary>
+        /// 记录状态变更日志
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        protected virtual void LogStateChange(BaseEntity entity)
+        {
+            // 可以在这里添加状态变更日志记录
+        }
+
+        /// <summary>
+        /// 执行状态转换操作
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        /// <param name="targetStatus">目标状态</param>
+        /// <param name="transitionReason">转换原因</param>
+        /// <returns>是否转换成功</returns>
+        protected virtual bool PerformStateTransition(BaseEntity entity, DataStatus targetStatus, string transitionReason = null)
+        {
+            if (entity == null || !entity.IsStateManagerInitialized)
+                return false;
+
+            // 使用v3状态管理的新方法执行状态转换
+            var result = entity.ExecuteStateTransition(targetStatus, transitionReason);
+            
+            if (!result.IsSuccess)
+            {
+                // 显示错误信息
+                MessageBox.Show(this, result.ErrorMessage, "操作失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
+            }
+            
+            return true;
+        }
+
+        /// <summary>
+        /// 检查操作权限
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        /// <param name="actionType">操作类型</param>
+        /// <returns>是否有权限</returns>
+        protected virtual bool CheckActionPermission(BaseEntity entity, string actionType)
+        {
+            if (entity == null || !entity.IsStateManagerInitialized)
+                return false;
+
+            return entity.CanExecuteAction(actionType);
         }
 
 
@@ -956,7 +1120,46 @@ namespace RUINORERP.UI.BaseForm
         public System.Windows.Forms.BindingSource ListDataSoure
         {
             get { return _ListDataSoure; }
-            set { _ListDataSoure = value; }
+            set 
+            { 
+                // 移除旧数据源的事件订阅
+                if (_ListDataSoure != null)
+                {
+                    _ListDataSoure.CurrentChanged -= ListDataSoure_CurrentChanged;
+                }
+                
+                _ListDataSoure = value;
+                
+                // 订阅新数据源的CurrentChanged事件
+                if (_ListDataSoure != null)
+                {
+                    _ListDataSoure.CurrentChanged += ListDataSoure_CurrentChanged;
+                }
+            }
+        }
+        
+        /// <summary>
+        /// 数据源CurrentChanged事件处理程序
+        /// </summary>
+        /// <param name="sender">事件发送者</param>
+        /// <param name="e">事件参数</param>
+        private void ListDataSoure_CurrentChanged(object sender, EventArgs e)
+        {
+            // 处理当前项变更，订阅实体的StatusChanged事件
+            SubscribeToEntityStatusChanged(ListDataSoure.Current as BaseEntity);
+        }
+        
+        /// <summary>
+        /// 订阅实体的StatusChanged事件
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        protected virtual void SubscribeToEntityStatusChanged(BaseEntity entity)
+        {
+            if (entity != null)
+            {
+                // 订阅StatusChanged事件
+                entity.StatusChanged += HandleEntityStatusChanged;
+            }
         }
         private bool editflag;
 

@@ -15,7 +15,6 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Reflection;
-using RUINORERP.Model.Base;
 using Microsoft.Extensions.DependencyInjection;
 using RUINORERP.Model;
 using RUINORERP.Model.Base.StatusManager;
@@ -961,7 +960,7 @@ namespace RUINORERP.UI.StateManagement
                 if (result)
                 {
                     ApplyCurrentStatusToUI();
-                    return StateTransitionResult.Success($"成功转换到数据状态: {targetStatus}");
+                    return StateTransitionResult.Success();
                 }
                 else
                 {
@@ -1034,7 +1033,7 @@ namespace RUINORERP.UI.StateManagement
                 if (result)
                 {
                     ApplyCurrentStatusToUI();
-                    return StateTransitionResult.Success($"成功转换到业务状态: {targetStatus}");
+                    return StateTransitionResult.Success();
                 }
                 else
                 {
@@ -1069,7 +1068,7 @@ namespace RUINORERP.UI.StateManagement
                 if (result)
                 {
                     ApplyCurrentStatusToUI();
-                    return StateTransitionResult.Success($"成功转换到操作状态: {targetStatus}");
+                    return StateTransitionResult.Success();
                 }
                 else
                 {

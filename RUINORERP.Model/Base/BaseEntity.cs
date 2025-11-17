@@ -174,7 +174,7 @@ namespace RUINORERP.Model
             return null;
         }
 
- 
+
 
         #region 像出库时 成本与分摊双向计算的情况
         public void RaisePropertyChanged(string propertyName)
@@ -184,15 +184,15 @@ namespace RUINORERP.Model
 
         #endregion
 
-    
+
         #region 状态字段事件通知
 
 
 
 
 
- 
-        
+
+
 
         #endregion
 
@@ -213,7 +213,7 @@ namespace RUINORERP.Model
 
 
 
-     
+
         public BaseEntity()
         {
             // 初始化新的状态管理系统
@@ -724,6 +724,43 @@ namespace RUINORERP.Model
         public event EventHandler<ActionStatusChangedEventArgs> ActionStatusChanged;
 
         /// <summary>
+        /// 状态变更事件
+        /// </summary>
+        public event EventHandler<StateTransitionEventArgs> StatusChanged;
+
+        /// <summary>
+        /// 触发状态变更事件
+        /// </summary>
+        /// <param name="e">状态转换事件参数</param>
+        protected virtual void OnStatusChanged(StateTransitionEventArgs e)
+        {
+            try
+            {
+                // 类型安全检查
+                if (e == null)
+                {
+                    throw new ArgumentNullException(nameof(e), "StateTransitionEventArgs不能为null");
+                }
+
+                // 安全触发事件
+                var handler = StatusChanged;
+                if (handler != null)
+                {
+                    handler(this, e);
+                }
+            }
+            catch (Exception ex)
+            {
+                // 记录异常但不中断程序流程
+                Debug.WriteLine($"触发StatusChanged事件时发生错误: {ex.Message}");
+                Debug.WriteLine(ex.StackTrace);
+
+                // 可以选择重新抛出异常或者仅记录
+                // throw;
+            }
+        }
+
+        /// <summary>
         /// Suppress禁止的意思。 
         /// 禁止通知属性已更改
         /// 默认值为false ，是支持属性更改通知
@@ -745,12 +782,12 @@ namespace RUINORERP.Model
                 {
                     this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
                     HasChanged = true;
-                    
+
                     // 如果是ActionStatus属性变更，触发ActionStatusChanged事件
                     if (propertyName == nameof(ActionStatus) && ActionStatusChanged != null)
                     {
                         var eventArgs = new ActionStatusChangedEventArgs(
-                            (ActionStatus)oldValue, 
+                            (ActionStatus)oldValue,
                             (ActionStatus)newValue);
                         ActionStatusChanged(this, eventArgs);
                     }
@@ -881,7 +918,7 @@ namespace RUINORERP.Model
 
         #endregion
 
-       
+
 
         public virtual void Save()
         {
@@ -906,10 +943,10 @@ namespace RUINORERP.Model
 
         #region 状态管理增强
 
-     
+
         private ActionStatus _ActionStatus;
         private ActionStatus _previousActionStatus;
-        
+
         /// <summary>
         /// 操作状态码,实际的属性变化事件中，调用OnPropertyChanged方法
         /// 【已过时】请使用新的状态管理体系 - 参见RUINORERP.Model.Base.StateManager命名空间
@@ -928,7 +965,7 @@ namespace RUINORERP.Model
         }
 
 
-        
+
         #endregion
 
 
@@ -1219,7 +1256,7 @@ namespace RUINORERP.Model
                     }
                 }
             }
-            
+
             // 创建状态管理器
             var options = new StateManagerOptions
             {
@@ -1228,18 +1265,18 @@ namespace RUINORERP.Model
                 EnableTransitionValidation = true,
                 EnableStatusChangedEvents = true
             };
-            
+
             // 初始化状态转换规则
             StateTransitionRules.InitializeDefaultRules(options.TransitionRules);
-            
+
             // 初始化状态管理器
             // 注意：这里暂时不直接实例化状态管理器，而是提供初始化逻辑
             // 实际的状态管理器实例化将在UI层通过工厂模式完成
-            
+
             // 记录状态管理器初始化信息
             _stateManagerInitialized = true;
         }
-        
+
         /// <summary>
         /// 状态管理器是否已初始化
         /// </summary>
@@ -1263,13 +1300,13 @@ namespace RUINORERP.Model
         {
             var type = GetType();
             var property = type.GetProperty("DataStatus");
-            
+
             // 验证属性类型是否为DataStatus?
             if (property != null && property.PropertyType == typeof(DataStatus?))
             {
                 return property;
             }
-            
+
             return null;
         }
 
@@ -1284,7 +1321,7 @@ namespace RUINORERP.Model
             {
                 return (DataStatus?)dataStatusProperty.GetValue(this);
             }
-            
+
             return null;
         }
 
@@ -1301,7 +1338,7 @@ namespace RUINORERP.Model
                 dataStatusProperty.SetValue(this, status);
                 return true;
             }
-            
+
             return false;
         }
 
@@ -1318,26 +1355,26 @@ namespace RUINORERP.Model
                 // 如果当前状态为空，只允许转换到新建状态
                 return targetStatus == DataStatus.新建;
             }
-            
+
             // 这里可以添加更复杂的状态转换逻辑
             // 基本的状态转换规则
             switch (currentStatus.Value)
             {
                 case DataStatus.新建:
                     return targetStatus == DataStatus.草稿 || targetStatus == DataStatus.确认;
-                    
+
                 case DataStatus.草稿:
                     return targetStatus == DataStatus.新建 || targetStatus == DataStatus.确认 || targetStatus == DataStatus.作废;
-                    
+
                 case DataStatus.确认:
                     return targetStatus == DataStatus.完结 || targetStatus == DataStatus.作废;
-                    
+
                 case DataStatus.完结:
                     return false; // 完结状态不能再转换
-                    
+
                 case DataStatus.作废:
                     return false; // 作废状态不能再转换
-                    
+
                 default:
                     return false;
             }
@@ -1354,7 +1391,7 @@ namespace RUINORERP.Model
             {
                 return false;
             }
-            
+
             return SetCurrentDataStatus(targetStatus);
         }
 
@@ -1368,7 +1405,7 @@ namespace RUINORERP.Model
             // 暂时返回空列表
             return new List<StateTransitionRecord>();
         }
-        
+
         /// <summary>
         /// 获取实体状态描述
         /// </summary>
@@ -1380,7 +1417,7 @@ namespace RUINORERP.Model
             {
                 return "未知状态";
             }
-            
+
             switch (status.Value)
             {
                 case DataStatus.新建:
@@ -1397,7 +1434,7 @@ namespace RUINORERP.Model
                     return status.Value.ToString();
             }
         }
-        
+
         /// <summary>
         /// 检查实体是否处于可编辑状态
         /// </summary>
@@ -1409,11 +1446,11 @@ namespace RUINORERP.Model
             {
                 return true; // 无状态时默认可编辑
             }
-            
+
             // 新建和草稿状态可编辑
             return status.Value == DataStatus.新建 || status.Value == DataStatus.草稿;
         }
-        
+
         /// <summary>
         /// 检查实体是否处于终态（完结或作废）
         /// </summary>
@@ -1425,10 +1462,10 @@ namespace RUINORERP.Model
             {
                 return false;
             }
-            
+
             return status.Value == DataStatus.完结 || status.Value == DataStatus.作废;
         }
-        
+
         /// <summary>
         /// 检查实体是否已确认（已确认、完结或作废）
         /// </summary>
@@ -1440,12 +1477,12 @@ namespace RUINORERP.Model
             {
                 return false;
             }
-            
-            return status.Value == DataStatus.确认 || 
-                   status.Value == DataStatus.完结 || 
+
+            return status.Value == DataStatus.确认 ||
+                   status.Value == DataStatus.完结 ||
                    status.Value == DataStatus.作废;
         }
-        
+
         /// <summary>
         /// 获取可执行的操作列表
         /// </summary>
@@ -1454,38 +1491,215 @@ namespace RUINORERP.Model
         {
             var actions = new List<string>();
             var status = GetCurrentDataStatus();
-            
+
             if (status == null)
             {
                 // 无状态时默认可执行所有操作
                 actions.AddRange(new[] { "保存", "提交", "删除", "修改" });
                 return actions;
             }
-            
+
             switch (status.Value)
             {
                 case DataStatus.新建:
                     actions.AddRange(new[] { "保存", "提交", "删除", "修改" });
                     break;
-                    
+
                 case DataStatus.草稿:
                     actions.AddRange(new[] { "保存", "提交", "删除", "修改" });
                     break;
-                    
+
                 case DataStatus.确认:
                     actions.AddRange(new[] { "完结", "作废" });
                     break;
-                    
+
                 case DataStatus.完结:
                     // 完结状态下不可执行任何操作
                     break;
-                    
+
                 case DataStatus.作废:
                     // 作废状态下不可执行任何操作
                     break;
             }
-            
+
             return actions;
+        }
+
+        #region v3状态管理增强方法
+
+        /// <summary>
+        /// 统一的状态转换方法，带错误信息返回
+        /// </summary>
+        /// <param name="targetStatus">目标状态</param>
+        /// <param name="errorMessage">错误信息</param>
+        /// <param name="transitionReason">转换原因</param>
+        /// <returns>是否转换成功</returns>
+        public bool TransitionToStatus(DataStatus targetStatus, out string errorMessage, string transitionReason = null)
+        {
+            errorMessage = string.Empty;
+
+            if (!IsStateManagerInitialized)
+            {
+                errorMessage = "状态管理器未初始化";
+                return false;
+            }
+
+            if (!CanTransitionToStatus(targetStatus))
+            {
+                errorMessage = $"无法从{GetStatusDescription()}状态转换到{targetStatus.ToString()}状态";
+                return false;
+            }
+
+            bool result = TryTransitionToStatus(targetStatus);
+            if (!result)
+            {
+                errorMessage = "状态转换失败";
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// 获取指定状态的描述文本
+        /// </summary>
+        /// <param name="status">数据状态</param>
+        /// <returns>状态描述文本</returns>
+        public virtual string GetStatusDescription(DataStatus status)
+        {
+            switch (status)
+            {
+                case DataStatus.新建:
+                    return "新建";
+                case DataStatus.草稿:
+                    return "草稿";
+                case DataStatus.确认:
+                    return "已确认";
+                case DataStatus.完结:
+                    return "已完结";
+                case DataStatus.作废:
+                    return "已作废";
+                default:
+                    return status.ToString();
+            }
+        }
+
+        /// <summary>
+        /// 检查当前状态是否允许执行指定操作
+        /// </summary>
+        /// <param name="actionType">操作类型</param>
+        /// <returns>是否允许执行</returns>
+        public bool CanExecuteAction(string actionType)
+        {
+            if (!IsStateManagerInitialized)
+            {
+                return false;
+            }
+
+            var status = GetCurrentDataStatus();
+            if (status == null)
+            {
+                return false;
+            }
+
+            // 根据当前状态和操作类型判断是否允许执行
+            switch (actionType?.ToLower())
+            {
+                case "save":
+                case "保存":
+                case "修改":
+                    return IsEditable();
+                case "submit":
+                case "提交":
+                    return status.Value == DataStatus.新建 || status.Value == DataStatus.草稿;
+                case "review":
+                case "审核":
+                case "确认":
+                    return status.Value == DataStatus.新建 || status.Value == DataStatus.草稿;
+                case "reversereview":
+                case "反审核":
+                case "取消确认":
+                    return status.Value == DataStatus.确认 && !IsFinalState();
+                case "delete":
+                case "删除":
+                    return !IsConfirmed();
+                case "complete":
+                case "完成":
+                case "完结":
+                    return status.Value == DataStatus.确认;
+                case "void":
+                case "作废":
+                    return !IsFinalState();
+                default:
+                    return false;
+            }
+        }
+
+        /// <summary>
+        /// 执行状态转换并通知相关方
+        /// </summary>
+        /// <param name="targetStatus">目标状态</param>
+        /// <param name="transitionReason">转换原因</param>
+        /// <returns>转换结果</returns>
+        public StateTransitionResult ExecuteStateTransition(DataStatus targetStatus, string transitionReason = null)
+        {
+            var result = new StateTransitionResult();
+
+            if (!IsStateManagerInitialized)
+            {
+                result.IsSuccess = false;
+                result.ErrorMessage = "状态管理器未初始化";
+                return result;
+            }
+
+            if (!CanTransitionToStatus(targetStatus))
+            {
+                result.IsSuccess = false;
+                result.ErrorMessage = $"无法从{GetStatusDescription()}状态转换到{targetStatus.ToString()}状态";
+                return result;
+            }
+
+            var oldStatus = GetCurrentDataStatus();
+            bool transitionResult = TryTransitionToStatus(targetStatus);
+
+            if (transitionResult)
+            {
+                result.IsSuccess = true;
+                result.OldStatus = oldStatus;
+                result.NewStatus = targetStatus;
+                result.TransitionTime = DateTime.Now;
+                result.TransitionReason = transitionReason;
+
+                // 类型安全检查
+                if (oldStatus == null)
+                {
+                    Debug.WriteLine("警告: 状态转换时旧状态为null");
+                }
+
+                try
+                {
+                    // 触发状态变更事件
+                    var transitionArgs = new StateTransitionEventArgs(
+                        this,
+                        typeof(DataStatus),
+                        oldStatus,
+                        targetStatus,
+                        transitionReason);
+                    OnStatusChanged(transitionArgs);
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"创建或触发状态变更事件时发生错误: {ex.Message}");
+                    Debug.WriteLine(ex.StackTrace);
+                    // 记录异常但继续执行，因为状态转换已经完成
+                }
+            }
+            else
+            {
+                result.IsSuccess = false;
+                result.ErrorMessage = "状态转换执行失败";
+            }
+
+            return result;
         }
 
         #endregion
@@ -1506,7 +1720,7 @@ namespace RUINORERP.Model
         }
     }
 
-
+    #endregion
 
 
 

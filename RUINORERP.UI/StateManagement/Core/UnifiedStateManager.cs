@@ -224,7 +224,7 @@ namespace RUINORERP.UI.StateManagement.Core
                 }
             }
 
-            return Task.FromResult(StateTransitionResult.Success());
+            return Task.FromResult(StateTransitionResult.Success(message: string.Empty));
         }
 
         /// <summary>
@@ -426,7 +426,7 @@ namespace RUINORERP.UI.StateManagement.Core
                 }
             }
 
-            return Task.FromResult(StateTransitionResult.Success());
+            return Task.FromResult(StateTransitionResult.Success(message: string.Empty));
         }
 
         /// <summary>
@@ -576,7 +576,7 @@ namespace RUINORERP.UI.StateManagement.Core
                 }
             }
 
-            return Task.FromResult(StateTransitionResult.Success());
+            return Task.FromResult(StateTransitionResult.Success(message: string.Empty));
         }
 
         /// <summary>
@@ -776,7 +776,7 @@ namespace RUINORERP.UI.StateManagement.Core
                         return validationResult;
 
                     SetDataStatusAsync(entity, dataStatus, reason).Wait();
-                    return StateTransitionResult.Success();
+                    return StateTransitionResult.Success(message: string.Empty);
                 }
                 else if (statusType.IsEnum)
                 {
@@ -789,7 +789,7 @@ namespace RUINORERP.UI.StateManagement.Core
                             return validationResult;
 
                         SetActionStatusAsync(entity, actionStatus, reason).Wait();
-                        return StateTransitionResult.Success();
+                        return StateTransitionResult.Success(message: string.Empty);
                     }
                     else
                     {
@@ -799,7 +799,7 @@ namespace RUINORERP.UI.StateManagement.Core
                             return validationResult;
 
                         SetBusinessStatusAsync(entity, statusType, targetStatus, reason).Wait();
-                        return StateTransitionResult.Success();
+                        return StateTransitionResult.Success(message: string.Empty);
                     }
                 }
 

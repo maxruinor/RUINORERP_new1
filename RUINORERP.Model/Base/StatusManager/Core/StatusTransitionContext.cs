@@ -11,8 +11,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using RUINORERP.Global;
-using RUINORERP.Model.Base;
-using RUINORERP.Model.Base.StatusManager;
 
 namespace RUINORERP.Model.Base.StatusManager.Core
 {

@@ -39,6 +39,9 @@ using System.Linq.Expressions;
 using RUINORERP.UI.StateManagement;
 using RUINORERP.Model.Base.StatusManager.Core;
 using RUINORERP.UI.StateManagement.Core;
+using System.Web.UI;
+using Control = System.Windows.Forms.Control;
+using RUINORERP.Model.Base.StatusManager.Factory;
 
 namespace RUINORERP.UI.BaseForm
 {
@@ -64,29 +67,22 @@ namespace RUINORERP.UI.BaseForm
         /// 子类可以重写此方法以添加自定义的状态管理初始化逻辑
         /// </summary>
         protected override void InitializeStateManagement()
-        {   
+        {
             // 调用基类的InitializeStateManagement方法
             base.InitializeStateManagement();
-            
-            // 初始化状态管理器选项
-            var options = new RUINORERP.Model.Base.StatusManager.Core.StateManagerOptions
-            {   
-                EnableTransitionLogging = true,
-                EnableTransitionValidation = true,
-                EnableStatusChangedEvents = true
-            };
-            
-            // 设置状态转换规则
-            RUINORERP.Model.Base.StatusManager.Core.StateTransitionRules.InitializeDefaultRules(options.TransitionRules);
+
+            // 使用单例工厂获取状态管理器，避免重复初始化
+            var factory = StateManagerFactoryV3.Instance;
+            this.StateManager = factory.GetStateManager();
 
             // 注册状态变更事件处理程序
             this.StatusChanged -= HandleStatusChangedEvent;
             this.StatusChanged += HandleStatusChangedEvent;
-            
+
             // 初始化按钮状态管理
             InitializeButtonStateManagement();
         }
-        
+
         /// <summary>
         /// 处理状态变更事件
         /// </summary>
@@ -96,7 +92,7 @@ namespace RUINORERP.UI.BaseForm
         {
             //TODO list
         }
-        
+
         /// <summary>
         /// 初始化按钮状态管理
         /// </summary>
@@ -112,7 +108,7 @@ namespace RUINORERP.UI.BaseForm
                 }
             }
         }
-        
+
         /// <summary>
         /// 实体状态变更事件处理程序
         /// </summary>
@@ -126,30 +122,30 @@ namespace RUINORERP.UI.BaseForm
                 if (e.Entity is BaseEntity entity)
                 {
                     UpdateUIBasedOnEntityState(entity);
-                    
+
                     // 使用新的状态管理器更新UI状态
                     var entityStatus = this.StateManager.GetEntityStatus(entity);
                     if (UIController != null)
                     {
                         // 创建状态上下文
                         var statusContext = new RUINORERP.Model.Base.StatusManager.Core.StatusTransitionContext(
-                            entity, 
-                            typeof(RUINORERP.Global.DataStatus), 
-                            entityStatus.dataStatus ?? RUINORERP.Global.DataStatus.草稿, 
+                            entity,
+                            typeof(RUINORERP.Global.DataStatus),
+                            entityStatus.dataStatus ?? RUINORERP.Global.DataStatus.草稿,
                             this.StateManager);
-                        
+
                         // 获取当前控件集合
                         var controls = GetAllControls();
-                        
+
                         // 更新UI状态
                         UIController.UpdateUIStatus(statusContext, controls);
                     }
                 }
             }
         }
-        
 
-        
+
+
         /// <summary>
         /// 获取所有控件
         /// </summary>
@@ -157,19 +153,19 @@ namespace RUINORERP.UI.BaseForm
         protected virtual IEnumerable<Control> GetAllControls()
         {
             var controls = new List<Control>();
-            
+
             // 添加当前窗体的控件
             foreach (Control control in this.Controls)
             {
                 controls.Add(control);
-                
+
                 // 递归添加子控件
                 AddChildControls(control, controls);
             }
-            
+
             return controls;
         }
-        
+
         /// <summary>
         /// 递归添加子控件
         /// </summary>
@@ -180,7 +176,7 @@ namespace RUINORERP.UI.BaseForm
             foreach (Control child in parent.Controls)
             {
                 controls.Add(child);
-                
+
                 // 递归添加子控件的子控件
                 if (child.HasChildren)
                 {
@@ -189,25 +185,11 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
-      
-        
-        /// <summary>
-        /// 检查当前实体是否可以执行指定操作 - 使用V3状态管理系统优化版本
-        /// </summary>
-        /// <param name="action">操作类型</param>
-        /// <returns>是否可以执行</returns>
-        protected virtual bool CanExecuteAction(MenuItemEnums action)
-        {
-            if (ListDataSoure?.Current == null)
-                return false;
-                
-            var entity = ListDataSoure.Current as BaseEntity;
-            if (entity == null)
-                return false;
-                
-            // 使用实体的状态管理方法检查操作权限
-            return entity.CanExecuteAction(action.ToString());
-        }
+
+
+
+
+
         #region 如果窗体，有些按钮不用出现在这个业务窗体时。这里手动排除。集合有值才行
 
         List<MenuItemEnums> _excludeMenuList = new List<MenuItemEnums>();
@@ -384,13 +366,14 @@ namespace RUINORERP.UI.BaseForm
 
         protected virtual void DoButtonClick(MenuItemEnums menuItem)
         {
+
             // 检查是否可以执行该操作
-            if (!CanExecuteAction(menuItem))
-            {
-                MessageBox.Show($"当前状态下不允许执行 {menuItem} 操作", "操作受限", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-            
+            //if (!CanTransitionToDataStatus(menuItem))
+            //{
+            //    MessageBox.Show($"当前状态下不允许执行 {menuItem} 操作", "操作受限", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            //    return;
+            //}
+
             // 根据菜单项执行相应操作
             switch (menuItem)
             {
@@ -443,8 +426,8 @@ namespace RUINORERP.UI.BaseForm
                 case MenuItemEnums.数据特殊修正:
                     SpecialDataFix();
                     break;
-                //case MenuItemEnums.清除:
-                //    Clear(null);
+                    //case MenuItemEnums.清除:
+                    //    Clear(null);
                     break;
                 default:
                     // 其他操作
@@ -509,7 +492,7 @@ namespace RUINORERP.UI.BaseForm
 
         }
 
-   
+
 
         protected async virtual Task<bool> Submit()
         {
@@ -626,17 +609,17 @@ namespace RUINORERP.UI.BaseForm
                 if (!entity.IsStateManagerInitialized)
                 {
                     entity.InitializeStateManager(entity.GetType());
-                    
+
                     // 注册状态变更事件
                     SubscribeToEntityStateChanges(entity);
                 }
-                
+
                 // 根据实体状态更新UI
                 UpdateUIBasedOnEntityState(entity);
-                
+
                 // 更新工具栏和操作按钮状态
                 UpdateToolBarState(entity);
-                
+
                 // 更新子表操作权限
                 UpdateChildTableOperations(entity);
             }
@@ -666,7 +649,7 @@ namespace RUINORERP.UI.BaseForm
             else
             {
                 // 使用传统状态管理方式
-                UpdateUIWithLegacyStatus(entity);
+                //UpdateUIWithLegacyStatus(entity);
             }
         }
 
@@ -677,43 +660,21 @@ namespace RUINORERP.UI.BaseForm
         private void UpdateUIWithV3StateManager(BaseEntity entity)
         {
             // 获取状态描述
-            string statusDescription = entity.GetStatusDescription();
-            
-            // 更新状态显示
-            UpdateStatusDisplay(statusDescription);
-            
+            //string statusDescription = entity.GetStatusDescription();
+
+            //// 更新状态显示
+            //UpdateStatusDisplay(statusDescription);
+
+            var dataStatus = _stateManager.GetDataStatus(entity);
+
             // 更新控件编辑状态 - 使用基类的SetControlsState方法
-            bool isEditable = entity.IsEditable();
+            bool isEditable = StatusHelper.IsEditableStatus(dataStatus);
             SetControlsState(Controls, isEditable);
-            
+
             // 记录状态变更日志
             LogStateChange(entity);
         }
 
-        /// <summary>
-        /// 使用传统状态管理方式更新UI
-        /// </summary>
-        /// <param name="entity">实体对象</param>
-        private void UpdateUIWithLegacyStatus(BaseEntity entity)
-        {
-            // 获取当前状态
-            var currentStatus = entity.GetCurrentDataStatus();
-            if (currentStatus == null)
-                return;
-
-            // 获取状态描述
-            string statusDescription = entity.GetStatusDescription(currentStatus.Value);
-            
-            // 更新状态显示
-            UpdateStatusDisplay(statusDescription);
-            
-            // 根据状态更新控件编辑状态
-            bool isEditable = currentStatus.Value == DataStatus.新建 || currentStatus.Value == DataStatus.草稿;
-            SetControlsState(Controls, isEditable);
-            
-            // 记录状态变更日志
-            LogStateChange(entity);
-        }
 
         /// <summary>
         /// 更新状态显示
@@ -733,11 +694,11 @@ namespace RUINORERP.UI.BaseForm
             if (entity == null || !entity.IsStateManagerInitialized)
                 return;
 
-            // 获取可用操作列表
-            var availableActions = entity.GetAvailableActions();
-            
-            // 更新工具栏按钮状态
-            UpdateActionButtons(availableActions);
+            //// 获取可用操作列表
+            //var availableActions = entity.GetAvailableActions();
+
+            //// 更新工具栏按钮状态
+            //UpdateActionButtons(availableActions);
         }
 
         /// <summary>
@@ -755,13 +716,13 @@ namespace RUINORERP.UI.BaseForm
         /// <param name="entity">实体对象</param>
         protected virtual void UpdateChildTableOperations(BaseEntity entity)
         {
-            if (entity == null || !entity.IsStateManagerInitialized)
-                return;
+            //if (entity == null || !entity.IsStateManagerInitialized)
+            //    return;
 
-            bool isEditable = entity.IsEditable();
-            
-            // 子类重写此方法以更新子表的操作权限
-            EnableChildTableOperations(isEditable);
+            //bool isEditable = entity.IsEditable();
+
+            //// 子类重写此方法以更新子表的操作权限
+            //EnableChildTableOperations(isEditable);
         }
 
         /// <summary>
@@ -784,30 +745,6 @@ namespace RUINORERP.UI.BaseForm
             // 可以在这里添加状态变更日志记录
         }
 
-        /// <summary>
-        /// 执行状态转换操作 - 使用V3状态管理系统优化版本
-        /// </summary>
-        /// <param name="entity">实体对象</param>
-        /// <param name="targetStatus">目标状态</param>
-        /// <param name="transitionReason">转换原因</param>
-        /// <returns>是否转换成功</returns>
-        protected virtual bool PerformStateTransition(BaseEntity entity, DataStatus targetStatus, string transitionReason = null)
-        {
-            if (entity == null || !entity.IsStateManagerInitialized)
-                return false;
-
-            // 直接使用实体的ExecuteStateTransition方法
-            var result = entity.ExecuteStateTransition(targetStatus, transitionReason);
-            
-            if (!result.IsSuccess)
-            {
-                // 显示错误信息
-                MessageBox.Show(this, result.ErrorMessage, "操作失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return false;
-            }
-            
-            return true;
-        }
 
 
 
@@ -887,16 +824,16 @@ namespace RUINORERP.UI.BaseForm
         public System.Windows.Forms.BindingSource ListDataSoure
         {
             get { return _ListDataSoure; }
-            set 
-            { 
+            set
+            {
                 // 移除旧数据源的事件订阅
                 if (_ListDataSoure != null)
                 {
                     _ListDataSoure.CurrentChanged -= ListDataSoure_CurrentChanged;
                 }
-                
+
                 _ListDataSoure = value;
-                
+
                 // 订阅新数据源的CurrentChanged事件
                 if (_ListDataSoure != null)
                 {
@@ -904,7 +841,7 @@ namespace RUINORERP.UI.BaseForm
                 }
             }
         }
-        
+
         /// <summary>
         /// 数据源CurrentChanged事件处理程序
         /// </summary>
@@ -915,12 +852,12 @@ namespace RUINORERP.UI.BaseForm
             // 处理当前项变更，订阅实体的StatusChanged事件
             SubscribeToEntityStatusChanged(ListDataSoure.Current as BaseEntity);
         }
-        
+
         /// <summary>
         /// 订阅实体的StatusChanged事件 - 使用V3状态管理系统优化版本
         /// </summary>
         /// <param name="entity">实体对象</param>
-        protected  void SubscribeToEntityStatusChanged(BaseEntity entity)
+        protected void SubscribeToEntityStatusChanged(BaseEntity entity)
         {
             if (entity != null)
             {

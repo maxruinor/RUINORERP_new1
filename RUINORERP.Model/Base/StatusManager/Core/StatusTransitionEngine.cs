@@ -247,7 +247,14 @@ namespace RUINORERP.Model.Base.StatusManager.Core
         /// </summary>
         private void InitializeDefaultRules()
         {
+            // 使用单例工厂中的规则，避免重复初始化
+            // 注意：这里需要根据实际情况调整，因为StatusTransitionEngine可能在Model层
+            // 而StateManagerFactoryV3在UI层，可能需要通过其他方式共享规则
+            
+            // 暂时保留原有逻辑，但添加注释说明这是重复初始化点
             StateTransitionRules.InitializeDefaultRules(_transitionRules);
+            
+            // TODO: 考虑将状态规则移到共享层或通过依赖注入获取
         }
 
         /// <summary>

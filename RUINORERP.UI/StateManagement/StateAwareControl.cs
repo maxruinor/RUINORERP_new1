@@ -23,7 +23,8 @@ using RUINORERP.UI.StateManagement.UI;
 using RUINORERP.Model.Base.StatusManager.Core;
 using RUINORERP.Global;
 using RUINORERP.UI.StateManagement.Core;
-using RUINORERP.UI.StateManagement.Factory;
+using RUINORERP.Model.Base.StatusManager.Factory;
+
 
 namespace RUINORERP.UI.StateManagement
 {
@@ -39,7 +40,7 @@ namespace RUINORERP.UI.StateManagement
         /// <summary>
         /// v3统一状态管理器
         /// </summary>
-        private IUnifiedStateManager _stateManager;
+        public IUnifiedStateManager _stateManager;
 
         /// <summary>
         /// v3状态上下文

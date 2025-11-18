@@ -16,8 +16,9 @@ using Microsoft.Extensions.Logging;
 using RUINORERP.Global;
 using RUINORERP.Model;
 using RUINORERP.Model.Base.StatusManager.Core;
+using RUINORERP.Model.Base.StatusManager.Factory;
 
-namespace RUINORERP.UI.StateManagement.Core
+namespace RUINORERP.Model.Base.StatusManager.Core
 {
     /// <summary>
     /// 统一状态管理器实现 - 整合数据性状态和业务性状态管理
@@ -1371,6 +1372,21 @@ namespace RUINORERP.UI.StateManagement.Core
         /// </summary>
         private void InitializeTransitionRules()
         {
+            // 注意：这是重复初始化点，应该使用单例工厂中的规则
+            // 但由于UnifiedStateManager可能被直接实例化，暂时保留原有逻辑
+            
+            // 检查是否可以通过工厂获取规则
+            try
+            {
+                var factory = StateManagerFactoryV3.Instance;
+                // 如果工厂已初始化，可以尝试从工厂获取规则
+                // 这里需要根据实际API调整
+            }
+            catch
+            {
+                // 如果工厂不可用，使用默认规则
+            }
+            
             // 使用预定义的状态转换规则
             StateTransitionRules.InitializeDefaultRules(_transitionRules);
             

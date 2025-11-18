@@ -94,6 +94,7 @@ using RUINORERP.PacketSpec.Models.Lock;
 using RUINORERP.Model.Base.StatusManager.Core;
 using RUINORERP.UI.StateManagement.UI;
 using RUINORERP.UI.StateManagement.Core;
+using RUINORERP.Model.Base.StatusManager.Factory;
 
 namespace RUINORERP.UI.BaseForm
 {
@@ -195,30 +196,14 @@ namespace RUINORERP.UI.BaseForm
             // 检查状态管理器是否已初始化
             if (StateManager == null)
             {
-                return;
+                // 使用单例工厂获取状态管理器，避免重复初始化
+                var factory = StateManagerFactoryV3.Instance;
+                this.StateManager = factory.GetStateManager();
             }
 
             // 获取主表和子表的类型信息
             var mainEntityType = typeof(T);
             var childEntityType = typeof(C);
-
-            // 为泛型实体类型配置状态管理选项
-            var options = new StateManagerOptions
-            {
-                EnableTransitionLogging = true,
-                EnableTransitionValidation = true,
-                EnableStatusChangedEvents = true,
-                EntityType = mainEntityType
-            };
-
-            // 设置状态转换规则
-            options.TransitionRules = new Dictionary<Type, Dictionary<object, List<object>>>();
-            StateTransitionRules.InitializeDefaultRules(options.TransitionRules);
-
-            // 应用配置到状态管理器
-            // 注意：这里需要根据实际的状态管理器API进行调整
-            // 如果状态管理器支持配置更新，可以在这里应用配置
-            // 如果不支持，可能需要重新创建状态管理器实例
 
             // 如果需要，可以为子表类型也配置状态管理
             // 这里可以添加子表特定的状态管理逻辑
@@ -1229,7 +1214,7 @@ namespace RUINORERP.UI.BaseForm
                 RegisterStateChangeHandlers(baseEntity);
                 
                 // 记录加载状态日志
-                LogStateLoading(baseEntity);
+            //    LogStateLoading(baseEntity);
             }
         }
         
@@ -1241,15 +1226,15 @@ namespace RUINORERP.UI.BaseForm
         {
             if (entity == null) return;
             
-            var status = entity.GetCurrentDataStatus();
-            if (status.HasValue)
-            {
-                string statusDescription = entity.GetStatusDescription(status.Value);
+            var status = (DataStatus)entity.GetPropertyValue(nameof(DataStatus));   
+            //if (status.HasValue)
+            //{
+            //   // string statusDescription = entity.GetStatusDescription(status.Value);
                 
-                // 更新状态标签或显示控件
-                // 如果有状态显示控件，可以在这里更新
-                logger.LogInformation($"单据状态更新为: {statusDescription}");
-            }
+            //    // 更新状态标签或显示控件
+            //  //  // 如果有状态显示控件，可以在这里更新
+            //   // logger.LogInformation($"单据状态更新为: {statusDescription}");
+            //}
         }
         
         /// <summary>
@@ -1259,28 +1244,28 @@ namespace RUINORERP.UI.BaseForm
         protected virtual void UpdateActionButtonsByState(BaseEntity entity)
         {
             if (entity == null) return;
-            
+
             // 获取可用操作列表
-            var availableActions = entity.GetAvailableActions();
+            var availableActions = base.GetAvailableDataStatusTransitions().ToList();
             
-            // 根据可用操作更新按钮状态
-            if (availableActions != null)
-            {
-                // 启用保存按钮
-                toolStripButtonSave.Enabled = availableActions.Contains("保存") || 
-                                            availableActions.Contains("修改");
+            //// 根据可用操作更新按钮状态
+            //if (availableActions != null)
+            //{
+            //    // 启用保存按钮
+            //    toolStripButtonSave.Enabled = availableActions.Contains(DataStatus) || 
+            //                                availableActions.Contains("修改");
                 
-                // 启用提交按钮
-                toolStripbtnSubmit.Enabled = availableActions.Contains("提交");
+            //    // 启用提交按钮
+            //    toolStripbtnSubmit.Enabled = availableActions.Contains("提交");
                 
-                // 启用审核按钮
-                toolStripbtnReview.Enabled = availableActions.Contains("提交");
+            //    // 启用审核按钮
+            //    toolStripbtnReview.Enabled = availableActions.Contains("提交");
                 
-                // 启用删除按钮
-                toolStripbtnDelete.Enabled = availableActions.Contains("删除");
+            //    // 启用删除按钮
+            //    toolStripbtnDelete.Enabled = availableActions.Contains("删除");
                 
-                // 更新其他按钮状态...
-            }
+            //    // 更新其他按钮状态...
+            //}
         }
         
         /// <summary>
@@ -1291,26 +1276,26 @@ namespace RUINORERP.UI.BaseForm
         {
             if (entity == null) return;
             
-            // 使用基类的SetControlsState方法设置控件状态
-            bool isEditable = entity.IsEditable();
-            SetControlsState(Controls, isEditable);
+            //// 使用基类的SetControlsState方法设置控件状态
+            //bool isEditable = entity.IsEditable();
+            //SetControlsState(Controls, isEditable);
             
-            // 根据确认状态设置特殊控件
-            bool isConfirmed = entity.IsConfirmed();
-            bool isFinalState = entity.IsFinalState();
+            //// 根据确认状态设置特殊控件
+            //bool isConfirmed = entity.IsConfirmed();
+            //bool isFinalState = entity.IsFinalState();
             
-            if (isConfirmed && !isFinalState)
-            {
-                // 已确认但非终态的特殊处理
-                // 例如：显示确认后的操作选项
-            }
+            //if (isConfirmed && !isFinalState)
+            //{
+            //    // 已确认但非终态的特殊处理
+            //    // 例如：显示确认后的操作选项
+            //}
             
             // 根据终态设置
-            if (isFinalState)
-            {
-                // 终态下的特殊处理
-                // 例如：完全禁用编辑功能
-            }
+            //if (isFinalState)
+            //{
+            //    // 终态下的特殊处理
+            //    // 例如：完全禁用编辑功能
+            //}
         }
         
         /// <summary>
@@ -1323,79 +1308,8 @@ namespace RUINORERP.UI.BaseForm
             // 这里可以添加额外的事件注册逻辑
         }
         
-        /// <summary>
-        /// 记录加载状态日志
-        /// </summary>
-        /// <param name="entity">实体对象</param>
-        protected virtual void LogStateLoading(BaseEntity entity)
-        {
-            if (entity == null) return;
-            
-            var status = entity.GetCurrentDataStatus();
-            if (status.HasValue)
-            {
-                logger.LogInformation($"加载单据: {typeof(T).Name}, ID: {entity.PrimaryKeyID}, 状态: {entity.GetStatusDescription(status.Value)}");
-            }
-        }
-        
-        /// <summary>
-        /// 执行状态操作 - 使用V3状态管理系统优化版本
-        /// </summary>
-        /// <param name="actionType">操作类型</param>
-        /// <param name="entity">实体对象</param>
-        /// <returns>是否成功</returns>
-        protected virtual bool ExecuteEntityAction(string actionType, T entity)
-        {
-            if (entity == null || !(entity is BaseEntity baseEntity) || !baseEntity.IsStateManagerInitialized)
-            {
-                return false;
-            }
-            
-            // 使用基类的CanExecuteAction方法检查操作权限
-            MenuItemEnums actionEnum;
-            if (Enum.TryParse(actionType, out actionEnum))
-            {
-                if (!CanExecuteAction(actionEnum, entity))
-                {
-                    MessageBox.Show(this, $"当前状态不允许执行{actionType}操作", "操作权限不足", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return false;
-                }
-            }
-            
-            // 确定目标状态
-            DataStatus? targetStatus = GetTargetStatusForAction(actionType);
-            if (!targetStatus.HasValue)
-            {
-                return false;
-            }
-            
-            // 执行状态转换
-            return PerformStateTransition(baseEntity, targetStatus.Value, $"执行{actionType}操作");
-        }
-        
-        /// <summary>
-        /// 获取操作对应的目标状态
-        /// </summary>
-        /// <param name="actionType">操作类型</param>
-        /// <returns>目标状态</returns>
-        protected virtual DataStatus? GetTargetStatusForAction(string actionType)
-        {
-            switch (actionType?.ToLower())
-            {
-                case "提交":
-                case "审核":
-                case "确认":
-                    return DataStatus.确认;
-                case "完结":
-                case "完成":
-                    return DataStatus.完结;
-                case "作废":
-                    return DataStatus.作废;
-                default:
-                    return null;
-            }
-        }
-
+       
+      
 
 
 

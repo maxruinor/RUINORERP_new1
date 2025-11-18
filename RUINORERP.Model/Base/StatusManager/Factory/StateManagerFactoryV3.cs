@@ -10,18 +10,28 @@ using System.Collections.Generic;
 using Microsoft.Extensions.Logging;
 using RUINORERP.Model;
 using RUINORERP.Model.Base.StatusManager.Core;
-using RUINORERP.UI.StateManagement.Core;
-using RUINORERP.UI.StateManagement.Factory;
 
-namespace RUINORERP.UI.StateManagement
+
+namespace RUINORERP.Model.Base.StatusManager.Factory
 {
     /// <summary>
     /// 简化版状态管理器工厂
     /// 提供基本的状态管理器和转换引擎创建功能
+    /// 使用单例模式确保全局只有一个实例，避免重复初始化
     /// </summary>
     public class StateManagerFactoryV3 : IStateManagerFactoryV3, IDisposable
     {
         #region 私有字段
+
+        /// <summary>
+        /// 单例实例
+        /// </summary>
+        private static StateManagerFactoryV3 _instance;
+
+        /// <summary>
+        /// 同步锁对象
+        /// </summary>
+        private static readonly object _lock = new object();
 
         /// <summary>
         /// 日志记录器
@@ -53,15 +63,43 @@ namespace RUINORERP.UI.StateManagement
         /// </summary>
         private bool _disposed = false;
 
+        /// <summary>
+        /// 状态转换规则是否已初始化
+        /// </summary>
+        private static bool _rulesInitialized = false;
+
         #endregion
 
         #region 构造函数
 
         /// <summary>
-        /// 初始化状态管理器工厂
+        /// 获取单例实例
         /// </summary>
         /// <param name="logger">日志记录器</param>
-        public StateManagerFactoryV3(ILogger<StateManagerFactoryV3> logger = null)
+        /// <returns>工厂单例实例</returns>
+        public static StateManagerFactoryV3 Instance
+        {
+            get
+            {
+                if (_instance == null)
+                {
+                    lock (_lock)
+                    {
+                        if (_instance == null)
+                        {
+                            _instance = new StateManagerFactoryV3();
+                        }
+                    }
+                }
+                return _instance;
+            }
+        }
+
+        /// <summary>
+        /// 私有构造函数，防止外部实例化
+        /// </summary>
+        /// <param name="logger">日志记录器</param>
+        private StateManagerFactoryV3(ILogger<StateManagerFactoryV3> logger = null)
         {
             _logger = logger;
             
@@ -71,6 +109,14 @@ namespace RUINORERP.UI.StateManagement
             
             // 初始化默认实例
             var options = new StateManagerOptions();
+            
+            // 只初始化一次状态转换规则
+            if (!_rulesInitialized)
+            {
+                StateTransitionRules.InitializeDefaultRules(options.TransitionRules);
+                _rulesInitialized = true;
+            }
+            
             _defaultStateManager = new UnifiedStateManager(options);
             _defaultTransitionEngine = new StatusTransitionEngine();
             

@@ -9,7 +9,7 @@ using System;
 using RUINORERP.Model.Base.StatusManager;
 using RUINORERP.Model.Base.StatusManager.Core;
 
-namespace RUINORERP.UI.StateManagement.Factory
+namespace RUINORERP.Model.Base.StatusManager.Factory
 {
     /// <summary>
     /// 状态管理器工厂V3接口 - 定义状态管理器工厂的接口

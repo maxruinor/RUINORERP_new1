@@ -78,38 +78,7 @@ namespace RUINORERP.UI.PSI.SAL
             AddPublicEntityObject(typeof(ProductSharePart));
         }
 
-        /// <summary>
-        /// 初始化状态管理系统
-        /// 重写基类方法以添加销售订单特定的状态管理逻辑
-        /// </summary>
-        protected override void InitializeStateManagement()
-        {
-            // 调用基类的InitializeStateManagement方法
-            base.InitializeStateManagement();
 
-            // 添加销售订单特定的状态管理初始化逻辑
-            if (EditEntity != null && EditEntity is BaseEntity baseEntity)
-            {
-                // 注册状态变更事件处理
-                baseEntity.StatusChanged += OnSaleOrderStateChanged;
-
-                // 添加销售订单特有的状态转换规则验证
-                AddSaleOrderSpecificStateRules();
-
-                // 初始化状态显示和UI控制
-                UpdateStateDisplay();
-                UpdateSaleOrderSpecificUIByState();
-            }
-        }
-
-        /// <summary>
-        /// 添加销售订单特定的状态规则
-        /// </summary>
-        private void AddSaleOrderSpecificStateRules()
-        {
-            // 可以在这里添加销售订单特有的业务规则验证
-            // 例如：检查订单是否可以确认、是否可以完结等特定业务条件
-        }
 
         /// <summary>
         /// 销售订单状态变更事件处理
@@ -121,15 +90,6 @@ namespace RUINORERP.UI.PSI.SAL
             // 处理状态变更后的业务逻辑
             UpdateStateDisplay();
             UpdateSaleOrderSpecificUIByState();
-
-            // 记录状态变更日志
-            if (MainForm.Instance != null && sender is tb_SaleOrder saleOrder)
-            {
-                MainForm.Instance.AuditLogHelper.CreateAuditLog<tb_SaleOrder>(
-                    "状态变更",
-                    saleOrder,
-                    $"从{(DataStatus)e.OldStatus}变更为{(DataStatus)e.NewStatus}");
-            }
         }
 
         /// <summary>
@@ -143,8 +103,8 @@ namespace RUINORERP.UI.PSI.SAL
             if (EditEntity is BaseEntity baseEntity)
             {
                 // 获取状态描述
-            DataStatus? currentStatus = baseEntity.GetCurrentDataStatus();
-            string statusDesc = currentStatus.HasValue ? ((DataStatus)currentStatus.Value).ToString() : string.Empty;
+                DataStatus? currentStatus = (DataStatus)baseEntity.GetPropertyValue(nameof(DataStatus));
+                string statusDesc = currentStatus.HasValue ? ((DataStatus)currentStatus.Value).ToString() : string.Empty;
                 if (!string.IsNullOrEmpty(statusDesc))
                 {
                     lblDataStatus.Text = statusDesc;
@@ -165,7 +125,7 @@ namespace RUINORERP.UI.PSI.SAL
         {
             if (EditEntity == null || !(EditEntity is BaseEntity baseEntity)) return;
 
-            DataStatus? status = baseEntity.GetCurrentDataStatus();
+            DataStatus? status = (DataStatus)baseEntity.GetPropertyValue(nameof(DataStatus));
             if (!status.HasValue) return;
             DataStatus currentStatus = status.Value;
 
@@ -194,115 +154,14 @@ namespace RUINORERP.UI.PSI.SAL
                     break;
             }
 
-            // 检查当前状态下可以执行的操作
-            UpdateAvailableActions();
+
         }
 
-        /// <summary>
-        /// 更新可用操作
-        /// </summary>
-        private void UpdateAvailableActions()
-        {
-            if (EditEntity == null || !(EditEntity is BaseEntity baseEntity)) return;
 
-            // 获取当前状态下可用的操作列表
-            List<string> availableActions = baseEntity.GetAvailableActions();
-
-            // 根据可用操作更新UI
-            // 可以在这里为销售订单特定的操作按钮设置可用状态
-        }
         IEntityCacheManager cacheManager = Startup.GetFromFac<IEntityCacheManager>();
 
-        internal override void LoadDataToUI(object Entity)
-        {
-            // 调用基类实现以集成v3状态管理
-            base.LoadDataToUI(Entity);
 
-            // 销售订单特定的数据加载逻辑
-            if (Entity is tb_SaleOrder saleOrder)
-            {
-                ActionStatus actionStatus = ActionStatus.无操作;
-                if (saleOrder.SOrder_ID > 0)
-                {
-                    actionStatus = ActionStatus.加载;
-                }
-                else
-                {
-                    actionStatus = ActionStatus.新增;
-                }
 
-                // 绑定数据
-                BindData(saleOrder, actionStatus);
-
-                // 确保状态管理系统已初始化
-                if (!EditEntity.IsStateManagerInitialized)
-                {
-                    EditEntity.InitializeStateManager(saleOrder.GetType());
-                    InitializeStateManagement();
-                }
-            }
-        }
-
-        /// <summary>
-        /// 执行状态转换操作
-        /// </summary>
-        /// <param name="targetStatus">目标状态</param>
-        /// <returns>转换结果</returns>
-        protected async Task<bool> ExecuteStatusTransitionAsync(DataStatus targetStatus)
-        {
-            if (EditEntity == null || !(EditEntity is BaseEntity baseEntity))
-                return false;
-
-            try
-            {
-                // 执行状态转换
-                StateTransitionResult result = baseEntity.ExecuteStateTransition(targetStatus);
-
-                if (result.IsSuccess)
-                {
-                    // 保存状态变更到数据库
-                    await Save(true);
-
-                    // 更新UI显示
-                    UpdateStateDisplay();
-                    UpdateSaleOrderSpecificUIByState();
-                    ToolBarEnabledControl(EditEntity);
-
-                    return true;
-                }
-                else
-                {
-                    // 显示转换失败的原因
-                    if (MainForm.Instance != null)
-                    {
-                        MainForm.Instance.PrintInfoLog(result.ErrorMessage, Color.Red);
-                    }
-                    return false;
-                }
-            }
-            catch (Exception ex)
-            {
-                // 记录异常
-                if (MainForm.Instance != null)
-                {
-                    MainForm.Instance.PrintInfoLog($"状态转换异常: {ex.Message}", Color.Red);
-                }
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// 检查操作权限
-        /// </summary>
-        /// <param name="actionName">操作名称</param>
-        /// <returns>是否有权限</returns>
-        protected bool CheckActionPermission(string actionName)
-        {
-            if (EditEntity == null || !(EditEntity is BaseEntity baseEntity))
-                return false;
-
-            return baseEntity.CanExecuteAction(actionName);
-        }
 
         /// <summary>
         /// 如果需要查询条件查询，就要在子类中重写这个方法
@@ -773,7 +632,7 @@ namespace RUINORERP.UI.PSI.SAL
                 //显示 打印状态 如果是草稿状态 不显示打印
                 if (EditEntity is BaseEntity baseEntity)
                 {
-                    bool canPrint = baseEntity.CanExecuteAction("Print");
+                    bool canPrint = true;// baseEntity.CanExecuteAction("Print");
                     toolStripbtnPrint.Enabled = canPrint;
 
                     if (canPrint)

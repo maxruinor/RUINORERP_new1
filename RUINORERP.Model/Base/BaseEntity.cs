@@ -1552,8 +1552,8 @@ namespace RUINORERP.Model
                 errorMessage = $"无法从{GetStatusDescription()}状态转换到{targetStatus.ToString()}状态";
                 return false;
             }
-
-            bool result = TryTransitionToStatus(targetStatus);
+            
+            bool result = TransitionToStatus(targetStatus, out errorMessage);
             if (!result)
             {
                 errorMessage = "状态转换失败";
@@ -1663,7 +1663,8 @@ namespace RUINORERP.Model
             }
 
             var oldStatus = GetCurrentDataStatus();
-            bool transitionResult = TryTransitionToStatus(targetStatus);
+            string errorMessage = string.Empty;
+            bool transitionResult = TransitionToStatus(targetStatus, out errorMessage);
 
             if (transitionResult)
             {
@@ -1700,7 +1701,7 @@ namespace RUINORERP.Model
             else
             {
                 result.IsSuccess = false;
-                result.ErrorMessage = "状态转换执行失败";
+                result.ErrorMessage = "状态转换执行失败"+ errorMessage;
             }
 
             return result;

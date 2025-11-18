@@ -256,7 +256,7 @@ namespace RUINORERP.UI.BaseForm
        
 
         /// <summary>
-        /// 检查操作可执行性
+        /// 检查操作可执行性 - 使用新的状态管理系统
         /// </summary>
         /// <param name="action">操作类型</param>
         /// <param name="entity">实体对象</param>
@@ -266,6 +266,34 @@ namespace RUINORERP.UI.BaseForm
             if (entity == null || StatusContext == null)
                 return false;
 
+            try
+            {
+                // 使用新的状态管理系统检查操作权限
+                if (UIController != null)
+                {
+                    // action参数已经是MenuItemEnums类型，可以直接使用
+                    return UIController.CanExecuteAction(action, StatusContext);
+                }
+                
+                // 如果UIController不可用，回退到原始逻辑
+                return CanExecuteActionFallback(action, entity);
+            }
+            catch (Exception ex)
+            {
+                // 如果状态管理系统出错，回退到原始逻辑
+                System.Diagnostics.Debug.WriteLine($"使用状态管理系统检查操作权限失败: {ex.Message}");
+                return CanExecuteActionFallback(action, entity);
+            }
+        }
+
+        /// <summary>
+        /// 回退的操作可执行性检查方法（原始逻辑）
+        /// </summary>
+        /// <param name="action">操作类型</param>
+        /// <param name="entity">实体对象</param>
+        /// <returns>是否可执行</returns>
+        private bool CanExecuteActionFallback(MenuItemEnums action, T entity)
+        {
             // 获取当前状态
             var currentStatus = StatusContext.CurrentStatus;
             
@@ -305,50 +333,121 @@ namespace RUINORERP.UI.BaseForm
         }
 
         /// <summary>
-        /// 判断状态是否可编辑
+        /// 判断状态是否可编辑 - 使用新的状态管理系统
         /// </summary>
         /// <param name="status">状态对象</param>
         /// <returns>是否可编辑</returns>
         private bool IsEditableStatus(object status)
         {
-            if (status is DataStatus dataStatus)
-                return dataStatus == DataStatus.草稿 || dataStatus == DataStatus.新建;
-            else if (status is PrePaymentStatus preStatus)
-                return preStatus == PrePaymentStatus.草稿;
-            else if (status is ARAPStatus arapStatus)
-                return arapStatus == ARAPStatus.草稿;
-            else if (status is PaymentStatus paymentStatus)
-                return paymentStatus == PaymentStatus.草稿;
+            try
+            {
+                // 使用新的状态管理系统检查编辑权限
+                if (UIController != null && StatusContext != null)
+                {
+                    // 检查修改操作是否可用
+                    return UIController.CanExecuteAction(MenuItemEnums.修改, StatusContext);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"使用状态管理系统检查编辑权限失败: {ex.Message}");
+            }
             
-            return false;
+            // 如果状态管理系统出错，回退到原始逻辑
+            return IsEditableStatusFallback(status);
         }
 
         /// <summary>
-        /// 判断状态是否可提交
+        /// 回退的编辑状态检查方法（使用StatusHelper）
+        /// </summary>
+        /// <param name="status">状态对象</param>
+        /// <returns>是否可编辑</returns>
+        private bool IsEditableStatusFallback(object status)
+        {
+            // 使用StatusHelper中的IsEditableStatus方法替换原始逻辑
+            return StatusHelper.IsEditableStatus(status);
+        }
+
+        /// <summary>
+        /// 判断状态是否可提交 - 使用新的状态管理系统
         /// </summary>
         /// <param name="status">状态对象</param>
         /// <returns>是否可提交</returns>
         private bool CanSubmitStatus(object status)
         {
+            try
+            {
+                // 使用新的状态管理系统检查提交权限
+                if (UIController != null && StatusContext != null)
+                {
+                    // 检查提交操作是否可用
+                    return UIController.CanExecuteAction(MenuItemEnums.提交, StatusContext);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"使用状态管理系统检查提交权限失败: {ex.Message}");
+            }
+            
+            // 如果状态管理系统出错，回退到原始逻辑
+            return CanSubmitStatusFallback(status);
+        }
+
+        /// <summary>
+        /// 回退的提交状态检查方法（使用StatusHelper）
+        /// </summary>
+        /// <param name="status">状态对象</param>
+        /// <returns>是否可提交</returns>
+        private bool CanSubmitStatusFallback(object status)
+        {
+            // 使用StatusHelper中的IsApprovedStatus方法替换原始逻辑
+            // 提交状态通常对应于草稿状态
             if (status is DataStatus dataStatus)
-                return dataStatus == DataStatus.草稿;
+                return !StatusHelper.IsApprovedStatus(dataStatus);
             else if (status is PrePaymentStatus preStatus)
-                return preStatus == PrePaymentStatus.草稿;
+                return !StatusHelper.IsApprovedStatus(preStatus);
             else if (status is ARAPStatus arapStatus)
-                return arapStatus == ARAPStatus.草稿;
+                return !StatusHelper.IsApprovedStatus(arapStatus);
             else if (status is PaymentStatus paymentStatus)
-                return paymentStatus == PaymentStatus.草稿;
+                return !StatusHelper.IsApprovedStatus(paymentStatus);
             
             return false;
         }
 
         /// <summary>
-        /// 判断状态是否可审核
+        /// 判断状态是否可审核 - 使用新的状态管理系统
         /// </summary>
         /// <param name="status">状态对象</param>
         /// <returns>是否可审核</returns>
         private bool CanReviewStatus(object status)
         {
+            try
+            {
+                // 使用新的状态管理系统检查审核权限
+                if (UIController != null && StatusContext != null)
+                {
+                    // 检查审核操作是否可用
+                    return UIController.CanExecuteAction(MenuItemEnums.审核, StatusContext);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"使用状态管理系统检查审核权限失败: {ex.Message}");
+            }
+            
+            // 如果状态管理系统出错，回退到原始逻辑
+            return CanReviewStatusFallback(status);
+        }
+
+        /// <summary>
+        /// 回退的审核状态检查方法（使用StatusHelper）
+        /// </summary>
+        /// <param name="status">状态对象</param>
+        /// <returns>是否可审核</returns>
+        private bool CanReviewStatusFallback(object status)
+        {
+            // 使用StatusHelper中的IsApprovedStatus方法替换原始逻辑
+            // 审核状态通常对应于新建状态（未审核状态）
             if (status is DataStatus dataStatus)
                 return dataStatus == DataStatus.新建;
             else if (status is PrePaymentStatus preStatus)
@@ -362,14 +461,41 @@ namespace RUINORERP.UI.BaseForm
         }
 
         /// <summary>
-        /// 判断状态是否可反审核
+        /// 判断状态是否可反审核 - 使用新的状态管理系统
         /// </summary>
         /// <param name="status">状态对象</param>
         /// <returns>是否可反审核</returns>
         private bool CanReverseReviewStatus(object status)
         {
+            try
+            {
+                // 使用新的状态管理系统检查反审核权限
+                if (UIController != null && StatusContext != null)
+                {
+                    // 检查反审核操作是否可用
+                    return UIController.CanExecuteAction(MenuItemEnums.反审, StatusContext);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"使用状态管理系统检查反审核权限失败: {ex.Message}");
+            }
+            
+            // 如果状态管理系统出错，回退到原始逻辑
+            return CanReverseReviewStatusFallback(status);
+        }
+
+        /// <summary>
+        /// 回退的反审核状态检查方法（使用StatusHelper）
+        /// </summary>
+        /// <param name="status">状态对象</param>
+        /// <returns>是否可反审核</returns>
+        private bool CanReverseReviewStatusFallback(object status)
+        {
+            // 使用StatusHelper中的IsApprovedStatus方法替换原始逻辑
+            // 反审核状态通常对应于已审核状态
             if (status is DataStatus dataStatus)
-                return dataStatus == DataStatus.确认;
+                return StatusHelper.IsApprovedStatus(dataStatus);
             else if (status is PrePaymentStatus preStatus)
                 return preStatus == PrePaymentStatus.待核销 || preStatus == PrePaymentStatus.已生效;
             else if (status is ARAPStatus arapStatus)
@@ -381,14 +507,41 @@ namespace RUINORERP.UI.BaseForm
         }
 
         /// <summary>
-        /// 判断状态是否可结案
+        /// 判断状态是否可结案 - 使用新的状态管理系统
         /// </summary>
         /// <param name="status">状态对象</param>
         /// <returns>是否可结案</returns>
         private bool CanCloseCaseStatus(object status)
         {
+            try
+            {
+                // 使用新的状态管理系统检查结案权限
+                if (UIController != null && StatusContext != null)
+                {
+                    // 检查结案操作是否可用
+                    return UIController.CanExecuteAction(MenuItemEnums.结案, StatusContext);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"使用状态管理系统检查结案权限失败: {ex.Message}");
+            }
+            
+            // 如果状态管理系统出错，回退到原始逻辑
+            return CanCloseCaseStatusFallback(status);
+        }
+
+        /// <summary>
+        /// 回退的结案状态检查方法（使用StatusHelper）
+        /// </summary>
+        /// <param name="status">状态对象</param>
+        /// <returns>是否可结案</returns>
+        private bool CanCloseCaseStatusFallback(object status)
+        {
+            // 使用StatusHelper中的IsApprovedStatus方法替换原始逻辑
+            // 结案状态通常对应于已审核状态
             if (status is DataStatus dataStatus)
-                return dataStatus == DataStatus.确认;
+                return StatusHelper.IsApprovedStatus(dataStatus);
             else if (status is PrePaymentStatus preStatus)
                 return preStatus == PrePaymentStatus.待核销;
             else if (status is ARAPStatus arapStatus)
@@ -400,14 +553,41 @@ namespace RUINORERP.UI.BaseForm
         }
 
         /// <summary>
-        /// 判断状态是否可反结案
+        /// 判断状态是否可反结案 - 使用新的状态管理系统
         /// </summary>
         /// <param name="status">状态对象</param>
         /// <returns>是否可反结案</returns>
         private bool CanAntiCloseCaseStatus(object status)
         {
+            try
+            {
+                // 使用新的状态管理系统检查反结案权限
+                if (UIController != null && StatusContext != null)
+                {
+                    // 检查反结案操作是否可用
+                    return UIController.CanExecuteAction(MenuItemEnums.反结案, StatusContext);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"使用状态管理系统检查反结案权限失败: {ex.Message}");
+            }
+            
+            // 如果状态管理系统出错，回退到原始逻辑
+            return CanAntiCloseCaseStatusFallback(status);
+        }
+
+        /// <summary>
+        /// 回退的反结案状态检查方法（使用StatusHelper）
+        /// </summary>
+        /// <param name="status">状态对象</param>
+        /// <returns>是否可反结案</returns>
+        private bool CanAntiCloseCaseStatusFallback(object status)
+        {
+            // 使用StatusHelper中的IsDisabledStatus方法替换原始逻辑
+            // 反结案状态通常对应于完结状态
             if (status is DataStatus dataStatus)
-                return dataStatus == DataStatus.完结;
+                return StatusHelper.IsDisabledStatus(dataStatus);
             else if (status is PrePaymentStatus preStatus)
                 return preStatus == PrePaymentStatus.全额核销;
             else if (status is ARAPStatus arapStatus)
@@ -419,10 +599,43 @@ namespace RUINORERP.UI.BaseForm
         }
 
         /// <summary>
-        /// 根据状态更新子表操作
+        /// 根据状态更新子表操作 - 使用新的状态管理系统
         /// </summary>
         /// <param name="status">当前数据状态</param>
         protected virtual void UpdateChildTableOperations(DataStatus status)
+        {
+            try
+            {
+                // 使用新的状态管理系统获取可执行的操作
+                if (UIController != null && StatusContext != null)
+                {
+                    // 获取当前状态下可执行的操作
+                    var availableActions = UIController.GetAvailableActions(StatusContext);
+                    
+                    // 检查是否允许子表操作
+                    bool canAdd = availableActions.Any(a => a.ToString().Contains("新增") || a.ToString().Contains("Add"));
+                    bool canEdit = availableActions.Any(a => a.ToString().Contains("修改") || a.ToString().Contains("Edit"));
+                    bool canDelete = availableActions.Any(a => a.ToString().Contains("删除") || a.ToString().Contains("Delete"));
+                    
+                    // 启用/禁用子表操作
+                    EnableChildTableOperations(canAdd, canEdit, canDelete);
+                    return;
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"使用状态管理系统更新子表操作失败: {ex.Message}");
+            }
+            
+            // 如果状态管理系统出错，回退到原始逻辑
+            UpdateChildTableOperationsFallback(status);
+        }
+
+        /// <summary>
+        /// 回退的子表操作更新方法（原始逻辑）
+        /// </summary>
+        /// <param name="status">当前数据状态</param>
+        private void UpdateChildTableOperationsFallback(DataStatus status)
         {
             // 根据状态控制子表的增删改操作
             switch (status)
@@ -448,8 +661,8 @@ namespace RUINORERP.UI.BaseForm
                     EnableChildTableOperations(false, false, false);
                     break;
                 default:
-                    // 默认允许所有操作
-                    EnableChildTableOperations(true, true, true);
+                    // 默认不允许修改
+                    EnableChildTableOperations(false, false, false);
                     break;
             }
         }

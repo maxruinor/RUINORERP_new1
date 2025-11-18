@@ -46,6 +46,21 @@ namespace RUINORERP.UI.StateManagement.UI
         /// <param name="status">状态</param>
         /// <param name="controls">控件集合</param>
         void ApplyRules(Enum status, IEnumerable<Control> controls);
+
+        /// <summary>
+        /// 检查指定操作在当前状态下是否可执行
+        /// </summary>
+        /// <param name="action">操作类型</param>
+        /// <param name="statusContext">状态上下文</param>
+        /// <returns>是否可执行</returns>
+        bool CanExecuteAction(Enum action, RUINORERP.Model.Base.StatusManager.Core.IStatusTransitionContext statusContext);
+
+        /// <summary>
+        /// 获取当前状态下可执行的操作列表
+        /// </summary>
+        /// <param name="statusContext">状态上下文</param>
+        /// <returns>可执行的操作列表</returns>
+        IEnumerable<Enum> GetAvailableActions(RUINORERP.Model.Base.StatusManager.Core.IStatusTransitionContext statusContext);
     }
 
     /// <summary>

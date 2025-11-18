@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using RUINORERP.Global;
+using RUINORERP.Global.EnumExt;
 using RUINORERP.Model.Base.StatusManager.Core;
 
 namespace RUINORERP.UI.StateManagement.Core
@@ -49,13 +51,13 @@ namespace RUINORERP.UI.StateManagement.Core
             switch (status)
             {
                 case DataStatus dataStatus:
-                    return dataStatus == DataStatus.已审核 || dataStatus == DataStatus.已过账;
+                    return dataStatus == DataStatus.确认 || dataStatus == DataStatus.完结;
                 case PrePaymentStatus preStatus:
-                    return preStatus == PrePaymentStatus.已审核;
+                    return preStatus == PrePaymentStatus.已生效;
                 case ARAPStatus arapStatus:
-                    return arapStatus == ARAPStatus.已审核 || arapStatus == ARAPStatus.已结算;
+                    return arapStatus == ARAPStatus.待支付 || arapStatus == ARAPStatus.部分支付 || arapStatus == ARAPStatus.全部支付;
                 case PaymentStatus paymentStatus:
-                    return paymentStatus == PaymentStatus.已审核;
+                    return paymentStatus == PaymentStatus.已支付;
                 default:
                     return false;
             }
@@ -74,13 +76,14 @@ namespace RUINORERP.UI.StateManagement.Core
             switch (status)
             {
                 case DataStatus dataStatus:
-                    return dataStatus == DataStatus.已禁用;
+                    return dataStatus == DataStatus.作废;
                 case PrePaymentStatus preStatus:
-                    return preStatus == PrePaymentStatus.已禁用;
+                    return preStatus == PrePaymentStatus.已结案;
                 case ARAPStatus arapStatus:
-                    return arapStatus == ARAPStatus.已禁用;
+                    return arapStatus == ARAPStatus.坏账 || arapStatus == ARAPStatus.已冲销;
                 case PaymentStatus paymentStatus:
-                    return paymentStatus == PaymentStatus.已禁用;
+                    // PaymentStatus没有明确的禁用状态，返回false
+                    return false;
                 default:
                     return false;
             }
@@ -124,12 +127,12 @@ namespace RUINORERP.UI.StateManagement.Core
                     return "新建";
                 case DataStatus.草稿:
                     return "草稿";
-                case DataStatus.已审核:
-                    return "已审核";
-                case DataStatus.已过账:
-                    return "已过账";
-                case DataStatus.已禁用:
-                    return "已禁用";
+                case DataStatus.确认:
+                    return "确认";
+                case DataStatus.完结:
+                    return "完结";
+                case DataStatus.作废:
+                    return "作废";
                 default:
                     return status.ToString();
             }
@@ -146,10 +149,18 @@ namespace RUINORERP.UI.StateManagement.Core
             {
                 case PrePaymentStatus.草稿:
                     return "草稿";
-                case PrePaymentStatus.已审核:
-                    return "已审核";
-                case PrePaymentStatus.已禁用:
-                    return "已禁用";
+                case PrePaymentStatus.待审核:
+                    return "待审核";
+                case PrePaymentStatus.已生效:
+                    return "已生效";
+                case PrePaymentStatus.待核销:
+                    return "待核销";
+                case PrePaymentStatus.部分核销:
+                    return "部分核销";
+                case PrePaymentStatus.全额核销:
+                    return "全额核销";
+                case PrePaymentStatus.已结案:
+                    return "已结案";
                 default:
                     return status.ToString();
             }
@@ -166,12 +177,18 @@ namespace RUINORERP.UI.StateManagement.Core
             {
                 case ARAPStatus.草稿:
                     return "草稿";
-                case ARAPStatus.已审核:
-                    return "已审核";
-                case ARAPStatus.已结算:
-                    return "已结算";
-                case ARAPStatus.已禁用:
-                    return "已禁用";
+                case ARAPStatus.待审核:
+                    return "待审核";
+                case ARAPStatus.待支付:
+                    return "待支付";
+                case ARAPStatus.部分支付:
+                    return "部分支付";
+                case ARAPStatus.全部支付:
+                    return "全部支付";
+                case ARAPStatus.坏账:
+                    return "坏账";
+                case ARAPStatus.已冲销:
+                    return "已冲销";
                 default:
                     return status.ToString();
             }
@@ -188,10 +205,10 @@ namespace RUINORERP.UI.StateManagement.Core
             {
                 case PaymentStatus.草稿:
                     return "草稿";
-                case PaymentStatus.已审核:
-                    return "已审核";
-                case PaymentStatus.已禁用:
-                    return "已禁用";
+                case PaymentStatus.待审核:
+                    return "待审核";
+                case PaymentStatus.已支付:
+                    return "已支付";
                 default:
                     return status.ToString();
             }
@@ -202,16 +219,16 @@ namespace RUINORERP.UI.StateManagement.Core
         /// </summary>
         /// <param name="status">当前状态</param>
         /// <returns>可用操作列表</returns>
-        public static List<ActionType> GetAvailableActions(object status)
+        public static List<MenuItemEnums> GetAvailableActions(object status)
         {
-            List<ActionType> actions = new List<ActionType>();
+            List<MenuItemEnums> actions = new List<MenuItemEnums>();
 
             if (status == null)
                 return actions;
 
             // 添加通用操作
-            actions.Add(ActionType.查看);
-            actions.Add(ActionType.刷新);
+            actions.Add(MenuItemEnums.查询);
+            actions.Add(MenuItemEnums.刷新);
 
             // 根据不同状态添加特定操作
             switch (status)
@@ -236,99 +253,85 @@ namespace RUINORERP.UI.StateManagement.Core
         /// <summary>
         /// 为DataStatus添加可用操作
         /// </summary>
-        private static void AddDataStatusActions(List<ActionType> actions, DataStatus status)
+        private static void AddDataStatusActions(List<MenuItemEnums> actions, DataStatus status)
         {
             switch (status)
             {
                 case DataStatus.新建:
                 case DataStatus.草稿:
-                    actions.Add(ActionType.编辑);
-                    actions.Add(ActionType.审核);
+                    actions.Add(MenuItemEnums.修改);
+                    actions.Add(MenuItemEnums.审核);
                     break;
-                case DataStatus.已审核:
-                    actions.Add(ActionType.反审核);
-                    actions.Add(ActionType.过账);
+                case DataStatus.确认:
+                    actions.Add(MenuItemEnums.反审);
+                    actions.Add(MenuItemEnums.结案);
                     break;
-                case DataStatus.已过账:
-                    actions.Add(ActionType.反过账);
+                case DataStatus.完结:
+                    actions.Add(MenuItemEnums.反结案);
                     break;
             }
             
-            // 所有非禁用状态都可以禁用
-            if (status != DataStatus.已禁用)
-                actions.Add(ActionType.禁用);
-            else
-                actions.Add(ActionType.启用);
+            // 所有非作废状态都可以作废
+            if (status != DataStatus.作废)
+                actions.Add(MenuItemEnums.删除);
         }
 
         /// <summary>
         /// 为PrePaymentStatus添加可用操作
         /// </summary>
-        private static void AddPrePaymentStatusActions(List<ActionType> actions, PrePaymentStatus status)
+        private static void AddPrePaymentStatusActions(List<MenuItemEnums> actions, PrePaymentStatus status)
         {
             switch (status)
             {
                 case PrePaymentStatus.草稿:
-                    actions.Add(ActionType.编辑);
-                    actions.Add(ActionType.审核);
+                    actions.Add(MenuItemEnums.修改);
+                    actions.Add(MenuItemEnums.提交);
                     break;
-                case PrePaymentStatus.已审核:
-                    actions.Add(ActionType.反审核);
+                case PrePaymentStatus.待审核:
+                    actions.Add(MenuItemEnums.审核);
+                    break;
+                case PrePaymentStatus.已生效:
+                    actions.Add(MenuItemEnums.反审);
                     break;
             }
-            
-            // 所有非禁用状态都可以禁用
-            if (status != PrePaymentStatus.已禁用)
-                actions.Add(ActionType.禁用);
-            else
-                actions.Add(ActionType.启用);
         }
 
         /// <summary>
         /// 为ARAPStatus添加可用操作
         /// </summary>
-        private static void AddARAPStatusActions(List<ActionType> actions, ARAPStatus status)
+        private static void AddARAPStatusActions(List<MenuItemEnums> actions, ARAPStatus status)
         {
             switch (status)
             {
                 case ARAPStatus.草稿:
-                    actions.Add(ActionType.编辑);
-                    actions.Add(ActionType.审核);
+                    actions.Add(MenuItemEnums.修改);
+                    actions.Add(MenuItemEnums.提交);
                     break;
-                case ARAPStatus.已审核:
-                    actions.Add(ActionType.反审核);
-                    actions.Add(ActionType.结算);
+                case ARAPStatus.待审核:
+                    actions.Add(MenuItemEnums.审核);
+                    break;
+                case ARAPStatus.待支付:
+                case ARAPStatus.部分支付:
+                    actions.Add(MenuItemEnums.反审);
                     break;
             }
-            
-            // 所有非禁用状态都可以禁用
-            if (status != ARAPStatus.已禁用)
-                actions.Add(ActionType.禁用);
-            else
-                actions.Add(ActionType.启用);
         }
 
         /// <summary>
         /// 为PaymentStatus添加可用操作
         /// </summary>
-        private static void AddPaymentStatusActions(List<ActionType> actions, PaymentStatus status)
+        private static void AddPaymentStatusActions(List<MenuItemEnums> actions, PaymentStatus status)
         {
             switch (status)
             {
                 case PaymentStatus.草稿:
-                    actions.Add(ActionType.编辑);
-                    actions.Add(ActionType.审核);
+                    actions.Add(MenuItemEnums.修改);
+                    actions.Add(MenuItemEnums.提交);
                     break;
-                case PaymentStatus.已审核:
-                    actions.Add(ActionType.反审核);
+                case PaymentStatus.待审核:
+                    actions.Add(MenuItemEnums.审核);
                     break;
             }
-            
-            // 所有非禁用状态都可以禁用
-            if (status != PaymentStatus.已禁用)
-                actions.Add(ActionType.禁用);
-            else
-                actions.Add(ActionType.启用);
         }
 
         /// <summary>
@@ -373,19 +376,17 @@ namespace RUINORERP.UI.StateManagement.Core
         /// </summary>
         private static bool IsValidDataStatusTransition(DataStatus from, DataStatus to)
         {
-            // 禁用/启用可以从任何状态进行
-            if (to == DataStatus.已禁用 || from == DataStatus.已禁用)
-                return true;
-
             switch (from)
             {
                 case DataStatus.新建:
                 case DataStatus.草稿:
-                    return to == DataStatus.已审核 || to == DataStatus.草稿;
-                case DataStatus.已审核:
-                    return to == DataStatus.草稿 || to == DataStatus.已过账;
-                case DataStatus.已过账:
-                    return to == DataStatus.已审核;
+                    return to == DataStatus.确认 || to == DataStatus.作废;
+                case DataStatus.确认:
+                    return to == DataStatus.完结 || to == DataStatus.作废;
+                case DataStatus.完结:
+                    return false; // 完结状态不能再转换
+                case DataStatus.作废:
+                    return to == DataStatus.草稿; // 作废后可以重新编辑
                 default:
                     return false;
             }
@@ -396,16 +397,22 @@ namespace RUINORERP.UI.StateManagement.Core
         /// </summary>
         private static bool IsValidPrePaymentStatusTransition(PrePaymentStatus from, PrePaymentStatus to)
         {
-            // 禁用/启用可以从任何状态进行
-            if (to == PrePaymentStatus.已禁用 || from == PrePaymentStatus.已禁用)
-                return true;
-
             switch (from)
             {
                 case PrePaymentStatus.草稿:
-                    return to == PrePaymentStatus.已审核;
-                case PrePaymentStatus.已审核:
-                    return to == PrePaymentStatus.草稿;
+                    return to == PrePaymentStatus.待审核 || to == PrePaymentStatus.已结案;
+                case PrePaymentStatus.待审核:
+                    return to == PrePaymentStatus.已生效 || to == PrePaymentStatus.草稿 || to == PrePaymentStatus.已结案;
+                case PrePaymentStatus.已生效:
+                    return to == PrePaymentStatus.待核销 || to == PrePaymentStatus.部分核销 || to == PrePaymentStatus.全额核销;
+                case PrePaymentStatus.待核销:
+                    return to == PrePaymentStatus.部分核销 || to == PrePaymentStatus.全额核销;
+                case PrePaymentStatus.部分核销:
+                    return to == PrePaymentStatus.全额核销;
+                case PrePaymentStatus.全额核销:
+                    return to == PrePaymentStatus.已结案;
+                case PrePaymentStatus.已结案:
+                    return false; // 已结案状态不能再转换
                 default:
                     return false;
             }
@@ -416,18 +423,21 @@ namespace RUINORERP.UI.StateManagement.Core
         /// </summary>
         private static bool IsValidARAPStatusTransition(ARAPStatus from, ARAPStatus to)
         {
-            // 禁用/启用可以从任何状态进行
-            if (to == ARAPStatus.已禁用 || from == ARAPStatus.已禁用)
-                return true;
-
             switch (from)
             {
                 case ARAPStatus.草稿:
-                    return to == ARAPStatus.已审核;
-                case ARAPStatus.已审核:
-                    return to == ARAPStatus.草稿 || to == ARAPStatus.已结算;
-                case ARAPStatus.已结算:
-                    return to == ARAPStatus.已审核;
+                    return to == ARAPStatus.待审核 || to == ARAPStatus.坏账 || to == ARAPStatus.已冲销;
+                case ARAPStatus.待审核:
+                    return to == ARAPStatus.待支付 || to == ARAPStatus.草稿 || to == ARAPStatus.坏账 || to == ARAPStatus.已冲销;
+                case ARAPStatus.待支付:
+                    return to == ARAPStatus.部分支付 || to == ARAPStatus.全部支付 || to == ARAPStatus.坏账 || to == ARAPStatus.已冲销;
+                case ARAPStatus.部分支付:
+                    return to == ARAPStatus.全部支付 || to == ARAPStatus.坏账 || to == ARAPStatus.已冲销;
+                case ARAPStatus.全部支付:
+                    return to == ARAPStatus.坏账 || to == ARAPStatus.已冲销;
+                case ARAPStatus.坏账:
+                case ARAPStatus.已冲销:
+                    return false; // 坏账和已冲销状态不能再转换
                 default:
                     return false;
             }
@@ -438,16 +448,14 @@ namespace RUINORERP.UI.StateManagement.Core
         /// </summary>
         private static bool IsValidPaymentStatusTransition(PaymentStatus from, PaymentStatus to)
         {
-            // 禁用/启用可以从任何状态进行
-            if (to == PaymentStatus.已禁用 || from == PaymentStatus.已禁用)
-                return true;
-
             switch (from)
             {
                 case PaymentStatus.草稿:
-                    return to == PaymentStatus.已审核;
-                case PaymentStatus.已审核:
-                    return to == PaymentStatus.草稿;
+                    return to == PaymentStatus.待审核;
+                case PaymentStatus.待审核:
+                    return to == PaymentStatus.已支付 || to == PaymentStatus.草稿;
+                case PaymentStatus.已支付:
+                    return false; // 已支付状态不能再转换
                 default:
                     return false;
             }

@@ -78,8 +78,9 @@ namespace RUINORERP.UI.BaseForm
             
             // 设置状态转换规则
             RUINORERP.Model.Base.StatusManager.Core.StateTransitionRules.InitializeDefaultRules(options.TransitionRules);
-            
+
             // 注册状态变更事件处理程序
+            this.StatusChanged -= HandleStatusChangedEvent;
             this.StatusChanged += HandleStatusChangedEvent;
             
             // 初始化按钮状态管理
@@ -651,11 +652,30 @@ namespace RUINORERP.UI.BaseForm
         /// 根据实体状态更新UI - 使用V3状态管理系统优化版本
         /// </summary>
         /// <param name="entity">实体对象</param>
-        protected void UpdateUIBasedOnEntityState(BaseEntity entity)
+        protected virtual void UpdateUIBasedOnEntityState(BaseEntity entity)
         {
-            if (entity == null || !entity.IsStateManagerInitialized)
+            if (entity == null)
                 return;
 
+            // 检查是否使用新的状态管理系统
+            if (entity.IsStateManagerInitialized)
+            {
+                // 使用V3状态管理系统
+                UpdateUIWithV3StateManager(entity);
+            }
+            else
+            {
+                // 使用传统状态管理方式
+                UpdateUIWithLegacyStatus(entity);
+            }
+        }
+
+        /// <summary>
+        /// 使用V3状态管理系统更新UI
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        private void UpdateUIWithV3StateManager(BaseEntity entity)
+        {
             // 获取状态描述
             string statusDescription = entity.GetStatusDescription();
             
@@ -664,6 +684,31 @@ namespace RUINORERP.UI.BaseForm
             
             // 更新控件编辑状态 - 使用基类的SetControlsState方法
             bool isEditable = entity.IsEditable();
+            SetControlsState(Controls, isEditable);
+            
+            // 记录状态变更日志
+            LogStateChange(entity);
+        }
+
+        /// <summary>
+        /// 使用传统状态管理方式更新UI
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        private void UpdateUIWithLegacyStatus(BaseEntity entity)
+        {
+            // 获取当前状态
+            var currentStatus = entity.GetCurrentDataStatus();
+            if (currentStatus == null)
+                return;
+
+            // 获取状态描述
+            string statusDescription = entity.GetStatusDescription(currentStatus.Value);
+            
+            // 更新状态显示
+            UpdateStatusDisplay(statusDescription);
+            
+            // 根据状态更新控件编辑状态
+            bool isEditable = currentStatus.Value == DataStatus.新建 || currentStatus.Value == DataStatus.草稿;
             SetControlsState(Controls, isEditable);
             
             // 记录状态变更日志

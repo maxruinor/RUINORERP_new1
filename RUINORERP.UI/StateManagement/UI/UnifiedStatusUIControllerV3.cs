@@ -48,6 +48,11 @@ namespace RUINORERP.UI.StateManagement.UI
         /// </summary>
         private readonly Dictionary<string, ControlState> _controlStates;
 
+        /// <summary>
+        /// 状态操作规则配置
+        /// </summary>
+        private readonly StatusActionRuleConfiguration _actionRuleConfiguration;
+
         #endregion
 
         #region 构造函数
@@ -64,6 +69,7 @@ namespace RUINORERP.UI.StateManagement.UI
             _uiRules = new Dictionary<string, IUIStatusRule>();
             _controlStateCache = new Dictionary<string, ControlState>();
             _controlStates = new Dictionary<string, ControlState>();
+            _actionRuleConfiguration = new StatusActionRuleConfiguration();
 
             // 注册默认规则
             RegisterDefaultRules();
@@ -80,6 +86,7 @@ namespace RUINORERP.UI.StateManagement.UI
             _uiRules = new Dictionary<string, IUIStatusRule>();
             _controlStateCache = new Dictionary<string, ControlState>();
             _controlStates = new Dictionary<string, ControlState>();
+            _actionRuleConfiguration = new StatusActionRuleConfiguration();
 
             // 注册默认规则
             RegisterDefaultRules();
@@ -430,6 +437,112 @@ namespace RUINORERP.UI.StateManagement.UI
         {
             // 这里可以注册一些默认的UI状态规则
             // 例如：草稿状态下的控件规则、确认状态下的控件规则等
+        }
+
+        /// <summary>
+        /// 检查指定操作在当前状态下是否可执行
+        /// </summary>
+        /// <param name="action">操作类型</param>
+        /// <param name="statusContext">状态上下文</param>
+        /// <returns>是否可执行</returns>
+        public bool CanExecuteAction(Enum action, RUINORERP.Model.Base.StatusManager.Core.IStatusTransitionContext statusContext)
+        {
+            if (action == null || statusContext == null)
+                return false;
+
+            try
+            {
+                // 获取当前状态
+                var dataStatus = statusContext.GetDataStatus();
+                var businessStatus = statusContext.GetBusinessStatus(statusContext.StatusType);
+
+                // 检查数据状态下的操作权限
+                if (dataStatus != null)
+                {
+                    // 使用反射获取IsActionAllowed方法
+                    var method = _actionRuleConfiguration.GetType()
+                        .GetMethod("IsActionAllowed")
+                        .MakeGenericMethod(dataStatus.GetType());
+                    
+                    var result = method.Invoke(_actionRuleConfiguration, new object[] { dataStatus, action });
+                    if (result is bool isAllowed && isAllowed)
+                        return true;
+                }
+
+                // 检查业务状态下的操作权限
+                if (businessStatus != null)
+                {
+                    // 使用反射获取IsActionAllowed方法
+                    var method = _actionRuleConfiguration.GetType()
+                        .GetMethod("IsActionAllowed")
+                        .MakeGenericMethod(businessStatus.GetType());
+                    
+                    var result = method.Invoke(_actionRuleConfiguration, new object[] { businessStatus, action });
+                    if (result is bool isAllowed && isAllowed)
+                        return true;
+                }
+
+                return false;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "检查操作可执行性失败: {Action}", action);
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 获取当前状态下可执行的操作列表
+        /// </summary>
+        /// <param name="statusContext">状态上下文</param>
+        /// <returns>可执行的操作列表</returns>
+        public IEnumerable<Enum> GetAvailableActions(RUINORERP.Model.Base.StatusManager.Core.IStatusTransitionContext statusContext)
+        {
+            if (statusContext == null)
+                return Enumerable.Empty<Enum>();
+
+            try
+            {
+                var allActions = new List<Enum>();
+
+                // 获取当前状态
+                var dataStatus = statusContext.GetDataStatus();
+                var businessStatus = statusContext.GetBusinessStatus(statusContext.StatusType);
+
+                // 获取数据状态下的可执行操作
+                if (dataStatus != null)
+                {
+                    // 使用反射获取GetAllowedActions方法
+                    var method = _actionRuleConfiguration.GetType()
+                        .GetMethod("GetAllowedActions")
+                        .MakeGenericMethod(dataStatus.GetType());
+                    
+                    var result = method.Invoke(_actionRuleConfiguration, new object[] { dataStatus });
+                    if (result is IEnumerable<Enum> actions)
+                        allActions.AddRange(actions);
+                }
+
+                // 获取业务状态下的可执行操作
+                if (businessStatus != null)
+                {
+                    // 使用反射获取GetAllowedActions方法
+                    var method = _actionRuleConfiguration.GetType()
+                        .GetMethod("GetAllowedActions")
+                        .MakeGenericMethod(businessStatus.GetType());
+                    
+                    var result = method.Invoke(_actionRuleConfiguration, new object[] { businessStatus });
+                    if (result is IEnumerable<Enum> actions)
+                        allActions.AddRange(actions);
+                }
+
+                // 去重并返回
+                return allActions.Distinct();
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "获取可执行操作列表失败");
+                return Enumerable.Empty<Enum>();
+            }
         }
 
         #endregion

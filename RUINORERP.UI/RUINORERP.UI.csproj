@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -2354,7 +2354,7 @@
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Startup.cs" />
-
+    <Compile Include="StateManagement\Core\StatusHelper.cs" />
     <!-- StatusTransitionContext.cs 已移至实体层，UI层不再包含此文件 -->
     <!-- <Compile Include="StateManagement\Core\StatusTransitionContext.cs" /> -->
     <Compile Include="StateManagement\Core\UnifiedStateManager.cs" />
@@ -2368,6 +2368,7 @@
     </Compile>
     <Compile Include="StateManagement\UI\DefaultUIStatusRule.cs" />
     <Compile Include="StateManagement\UI\IStatusUIController.cs" />
+    <Compile Include="StateManagement\UI\StatusActionRuleConfiguration.cs" />
     <Compile Include="StateManagement\UI\UIStatusEventHandler.cs" />
     <Compile Include="StateManagement\UI\UnifiedStatusUIControllerV3.cs" />
     <Compile Include="Testing\ApplicationContextCacheTest.cs" />

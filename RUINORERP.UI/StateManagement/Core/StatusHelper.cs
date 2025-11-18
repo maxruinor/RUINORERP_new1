@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using RUINORERP.Global;
 using RUINORERP.Global.EnumExt;
-using RUINORERP.Model.Base.StatusManager.Core;
 
 namespace RUINORERP.UI.StateManagement.Core
 {

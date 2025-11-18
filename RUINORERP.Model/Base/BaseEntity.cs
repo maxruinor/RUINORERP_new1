@@ -7,9 +7,6 @@ using RUINORERP.Global.EnumExt;
 using RUINORERP.Global.Model;
 using RUINORERP.Model.Base;
 using RUINORERP.Model.Base.StatusManager;
-using RUINORERP.Model.Base.StatusManager.Core;
-using RUINORERP.Model.Base.StatusManager.Events;
-using RUINORERP.Model.Base.StatusManager.Factory;
 using SharpYaml.Tokens;
 using SqlSugar;
 using SqlSugar.Extensions;
@@ -216,7 +213,7 @@ namespace RUINORERP.Model
         public BaseEntity()
         {
             // 初始化新的状态管理系统
-            InitializeStateManager(GetType());
+            InitializeStateManager();
         }
 
 
@@ -1234,35 +1231,122 @@ namespace RUINORERP.Model
         #region 新状态管理系统方法
 
         /// <summary>
-        /// 初始化状态管理系统
+        /// 初始化状态管理器
         /// </summary>
-        /// <param name="entityType">实体类型</param>
         /// <param name="initialStatus">初始状态</param>
-        public virtual void InitializeStateManager(Type entityType, DataStatus initialStatus = DataStatus.新建)
+        public virtual void InitializeStateManager(DataStatus initialStatus = DataStatus.新建)
         {
-            // 如果没有指定初始状态，尝试从子类的DataStatus属性获取
-            if (initialStatus == DataStatus.新建)
+            try
             {
-                var dataStatusProperty = this.GetCachedProperties().FirstOrDefault(c => c.Name == "DataStatus");
-                if (dataStatusProperty != null)
+                // 如果没有指定初始状态，尝试从子类的DataStatus属性获取
+                if (initialStatus == DataStatus.新建)
                 {
-                    var value = (DataStatus?)dataStatusProperty.GetValue(this);
-                    if (value.HasValue)
+                    var dataStatusProperty = this.GetCachedProperties().FirstOrDefault(c => c.Name == "DataStatus");
+                    if (dataStatusProperty != null)
                     {
-                        initialStatus = value.Value;
+                        var value = (DataStatus?)dataStatusProperty.GetValue(this);
+                        if (value.HasValue)
+                        {
+                            initialStatus = value.Value;
+                        }
                     }
                 }
+
+                // 使用单例工厂获取状态管理器，避免重复初始化
+                var factory = StateManagerFactoryV3.Instance;
+                var stateManager = factory.GetStateManager();
+
+                // 设置初始状态
+                stateManager.SetEntityDataStatus(this, initialStatus);
+
+                // 记录状态管理器初始化信息
+                _stateManagerInitialized = true;
             }
+            catch (Exception ex)
+            {
+                // 记录错误但不中断程序流程
+                System.Diagnostics.Debug.WriteLine($"初始化状态管理器失败: {ex.Message}");
+            }
+        }
 
-            // 使用单例工厂获取状态管理器，避免重复初始化
-            var factory = StateManagerFactoryV3.Instance;
-            var stateManager = factory.GetStateManager();
-            
-            // 设置初始状态
-            stateManager.SetDataStatusAsync(this, initialStatus);
+        /// <summary>
+        /// 获取实体的数据状态
+        /// </summary>
+        /// <returns>数据状态</returns>
+        public virtual DataStatus GetDataStatus()
+        {
+            try
+            {
+                // 首先检查是否有DataStatus属性
+                var dataStatusProperty = this.GetType().GetProperty("DataStatus");
+                if (dataStatusProperty != null && dataStatusProperty.PropertyType == typeof(DataStatus))
+                {
+                    return (DataStatus)dataStatusProperty.GetValue(this);
+                }
 
-            // 记录状态管理器初始化信息
-            _stateManagerInitialized = true;
+                // 检查是否有Status属性
+                var statusProperty = this.GetType().GetProperty("Status");
+                if (statusProperty != null && statusProperty.PropertyType == typeof(DataStatus))
+                {
+                    return (DataStatus)statusProperty.GetValue(this);
+                }
+
+                // 默认返回草稿状态
+                return DataStatus.草稿;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"获取实体数据状态失败: {ex.Message}");
+                return DataStatus.草稿;
+            }
+        }
+
+        /// <summary>
+        /// 设置实体的数据状态
+        /// </summary>
+        /// <param name="status">数据状态</param>
+        public virtual void SetDataStatus(DataStatus status)
+        {
+            try
+            {
+                var oldStatus = GetDataStatus();
+
+                // 首先尝试设置DataStatus属性
+                var dataStatusProperty = this.GetType().GetProperty("DataStatus");
+                if (dataStatusProperty != null && dataStatusProperty.PropertyType == typeof(DataStatus))
+                {
+                    dataStatusProperty.SetValue(this, status);
+
+                    // 触发状态变更事件
+                    OnStatusChanged(new StateTransitionEventArgs(
+                        this,
+                        typeof(DataStatus),
+                        oldStatus,
+                        status));
+                    return;
+                }
+
+                // 尝试设置Status属性
+                var statusProperty = this.GetType().GetProperty("Status");
+                if (statusProperty != null && statusProperty.PropertyType == typeof(DataStatus))
+                {
+                    statusProperty.SetValue(this, status);
+
+                    // 触发状态变更事件
+                    OnStatusChanged(new StateTransitionEventArgs(
+                        this,
+                        typeof(DataStatus),
+                        oldStatus,
+                        status));
+                    return;
+                }
+
+                System.Diagnostics.Debug.WriteLine($"无法设置实体数据状态：实体类型 {this.GetType().Name} 没有有效的状态属性");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"设置实体数据状态失败: {ex.Message}");
+            }
         }
 
         /// <summary>
@@ -1280,24 +1364,37 @@ namespace RUINORERP.Model
         [XmlIgnore]
         public bool IsStateManagerInitialized => _stateManagerInitialized;
 
+        #endregion
+
     }
 
 
 
+    /// <summary>
+    /// 属性变更记录类
+    /// </summary>
     public class PropertyChangeRecord
     {
+        /// <summary>
+        /// 原始值
+        /// </summary>
         public object OriginalValue { get; }
+
+        /// <summary>
+        /// 当前值
+        /// </summary>
         public object CurrentValue { get; set; }
 
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="originalValue">原始值</param>
+        /// <param name="currentValue">当前值</param>
         public PropertyChangeRecord(object originalValue, object currentValue)
         {
             OriginalValue = originalValue;
             CurrentValue = currentValue;
         }
     }
-
-    #endregion
-
-
 
 }

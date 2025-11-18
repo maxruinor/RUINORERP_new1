@@ -37,11 +37,10 @@ using RUINORERP.Global.EnumExt;
 using NPOI.SS.Formula.Functions;
 using System.Linq.Expressions;
 using RUINORERP.UI.StateManagement;
-using RUINORERP.Model.Base.StatusManager.Core;
 using RUINORERP.UI.StateManagement.Core;
 using System.Web.UI;
 using Control = System.Windows.Forms.Control;
-using RUINORERP.Model.Base.StatusManager.Factory;
+using RUINORERP.Model.Base.StatusManager;
 
 namespace RUINORERP.UI.BaseForm
 {
@@ -128,7 +127,7 @@ namespace RUINORERP.UI.BaseForm
                     if (UIController != null)
                     {
                         // 创建状态上下文
-                        var statusContext = new RUINORERP.Model.Base.StatusManager.Core.StatusTransitionContext(
+                        var statusContext = new StatusTransitionContext(
                             entity,
                             typeof(RUINORERP.Global.DataStatus),
                             entityStatus.dataStatus ?? RUINORERP.Global.DataStatus.草稿,
@@ -608,7 +607,7 @@ namespace RUINORERP.UI.BaseForm
                 // 确保实体已初始化状态管理器
                 if (!entity.IsStateManagerInitialized)
                 {
-                    entity.InitializeStateManager(entity.GetType());
+                    entity.InitializeStateManager();
 
                     // 注册状态变更事件
                     SubscribeToEntityStateChanges(entity);
@@ -1252,6 +1251,102 @@ namespace RUINORERP.UI.BaseForm
                 // 当实体状态变更时，更新UI
                 UpdateUIBasedOnEntityState(entity);
             };
+        }
+
+        /// <summary>
+        /// 设置控件状态
+        /// </summary>
+        /// <param name="controls">控件集合</param>
+        /// <param name="isEditable">是否可编辑</param>
+        protected void SetControlsState(Control.ControlCollection controls, bool isEditable)
+        {
+            foreach (Control control in controls)
+            {
+                // 设置控件的只读状态
+                SetControlReadOnly(control, isEditable);
+
+                // 递归处理子控件
+                if (control.HasChildren)
+                {
+                    SetControlsState(control.Controls, isEditable);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 设置控件只读状态
+        /// </summary>
+        /// <param name="control">控件</param>
+        /// <param name="isEditable">是否可编辑</param>
+        private void SetControlReadOnly(Control control, bool isEditable)
+        {
+            if (control is KryptonTextBox kryptonTextBox)
+            {
+                kryptonTextBox.ReadOnly = !isEditable;
+            }
+            else if (control is TextBox textBox)
+            {
+                textBox.ReadOnly = !isEditable;
+            }
+            else if (control is KryptonComboBox kryptonComboBox)
+            {
+                kryptonComboBox.Enabled = isEditable;
+            }
+            else if (control is ComboBox comboBox)
+            {
+                comboBox.Enabled = isEditable;
+            }
+            else if (control is KryptonCheckBox kryptonCheckBox)
+            {
+                kryptonCheckBox.Enabled = isEditable;
+            }
+            else if (control is CheckBox checkBox)
+            {
+                checkBox.Enabled = isEditable;
+            }
+            else if (control is KryptonDateTimePicker kryptonDateTimePicker)
+            {
+                kryptonDateTimePicker.Enabled = isEditable;
+            }
+            else if (control is DateTimePicker dateTimePicker)
+            {
+                dateTimePicker.Enabled = isEditable;
+            }
+            else if (control is KryptonNumericUpDown kryptonNumericUpDown)
+            {
+                kryptonNumericUpDown.Enabled = isEditable;
+            }
+            else if (control is NumericUpDown numericUpDown)
+            {
+                numericUpDown.Enabled = isEditable;
+            }
+            else if (control is Button button)
+            {
+                // 根据按钮类型和业务逻辑决定是否启用
+                // 这里可以根据实际需求进行调整
+                button.Enabled = isEditable;
+            }
+        }
+
+        /// <summary>
+        /// 订阅状态上下文
+        /// </summary>
+        protected void SubscribeToStatusContext()
+        {
+            // 使用状态管理器订阅状态变更
+            if (this.StateManager != null && this.BoundEntity != null)
+            {
+                // 创建状态上下文
+                var factory = StateManagerFactoryV3.Instance;
+                this.StatusContext = factory.CreateTransitionContext<DataStatus>(this.BoundEntity);
+                
+                // 订阅状态变更事件
+                this.StatusContext.StatusChanged += (sender, e) =>
+                {
+                    // 当状态变更时，更新UI
+                    UpdateUIBasedOnEntityState(this.BoundEntity);
+                };
+            }
         }
     }
 }

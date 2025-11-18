@@ -11,7 +11,6 @@ using System.Linq;
 using System.Windows.Forms;
 using RUINORERP.Model.Base.StatusManager;
 using Microsoft.Extensions.Logging;
-using RUINORERP.Model.Base.StatusManager.Core;
 
 namespace RUINORERP.UI.StateManagement.UI
 {
@@ -31,22 +30,12 @@ namespace RUINORERP.UI.StateManagement.UI
         /// <summary>
         /// 状态管理器
         /// </summary>
-        private readonly RUINORERP.Model.Base.StatusManager.Core.IUnifiedStateManager _stateManager;
+        private readonly IUnifiedStateManager _stateManager;
 
         /// <summary>
         /// UI状态规则字典
         /// </summary>
         private readonly Dictionary<string, IUIStatusRule> _uiRules;
-
-        /// <summary>
-        /// 控件状态缓存
-        /// </summary>
-        private readonly Dictionary<string, ControlState> _controlStateCache;
-        
-        /// <summary>
-        /// 控件状态字典
-        /// </summary>
-        private readonly Dictionary<string, ControlState> _controlStates;
 
         /// <summary>
         /// 状态操作规则配置
@@ -58,34 +47,15 @@ namespace RUINORERP.UI.StateManagement.UI
         #region 构造函数
 
         /// <summary>
-        /// 初始化统一状态UI控制器（带日志记录器）
+        /// 初始化统一状态UI控制器
         /// </summary>
         /// <param name="stateManager">状态管理器</param>
         /// <param name="logger">日志记录器</param>
-        public UnifiedStatusUIControllerV3(RUINORERP.Model.Base.StatusManager.Core.IUnifiedStateManager stateManager, ILogger<UnifiedStatusUIControllerV3> logger = null)
+        public UnifiedStatusUIControllerV3(IUnifiedStateManager stateManager, ILogger<UnifiedStatusUIControllerV3> logger = null)
         {
             _stateManager = stateManager ?? throw new ArgumentNullException(nameof(stateManager));
             _logger = logger;
             _uiRules = new Dictionary<string, IUIStatusRule>();
-            _controlStateCache = new Dictionary<string, ControlState>();
-            _controlStates = new Dictionary<string, ControlState>();
-            _actionRuleConfiguration = new StatusActionRuleConfiguration();
-
-            // 注册默认规则
-            RegisterDefaultRules();
-        }
-
-        /// <summary>
-        /// 初始化统一状态UI控制器
-        /// </summary>
-        /// <param name="stateManager">状态管理器</param>
-        public UnifiedStatusUIControllerV3(RUINORERP.Model.Base.StatusManager.Core.IUnifiedStateManager stateManager)
-        {
-            _stateManager = stateManager ?? throw new ArgumentNullException(nameof(stateManager));
-            _logger = null;
-            _uiRules = new Dictionary<string, IUIStatusRule>();
-            _controlStateCache = new Dictionary<string, ControlState>();
-            _controlStates = new Dictionary<string, ControlState>();
             _actionRuleConfiguration = new StatusActionRuleConfiguration();
 
             // 注册默认规则
@@ -101,7 +71,7 @@ namespace RUINORERP.UI.StateManagement.UI
         /// </summary>
         /// <param name="statusContext">状态上下文</param>
         /// <param name="controls">控件集合</param>
-        public void UpdateUIStatus(RUINORERP.Model.Base.StatusManager.Core.IStatusTransitionContext statusContext, IEnumerable<Control> controls)
+        public void UpdateUIStatus(IStatusTransitionContext statusContext, IEnumerable<Control> controls)
         {
             if (statusContext == null || controls == null)
                 return;
@@ -221,6 +191,86 @@ namespace RUINORERP.UI.StateManagement.UI
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "应用状态规则失败: {Status}", status);
+            }
+        }
+
+        /// <summary>
+        /// 检查操作是否可执行
+        /// </summary>
+        /// <param name="action">操作类型</param>
+        /// <param name="statusContext">状态上下文</param>
+        /// <returns>是否可执行</returns>
+        public bool CanExecuteAction(Enum action, IStatusTransitionContext statusContext)
+        {
+            if (action == null || statusContext == null)
+                return false;
+
+            try
+            {
+                // 获取当前状态
+                var dataStatus = statusContext.GetDataStatus();
+                var businessStatus = statusContext.GetBusinessStatus(statusContext.StatusType);
+
+                // 检查数据状态下的操作权限
+                if (dataStatus != null)
+                {
+                    if (_actionRuleConfiguration.IsActionAllowed(dataStatus, action))
+                        return true;
+                }
+
+                // 检查业务状态下的操作权限
+                if (businessStatus != null)
+                {
+                    if (_actionRuleConfiguration.IsActionAllowed(businessStatus as Enum, action))
+                        return true;
+                }
+
+                return false;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "检查操作可执行性失败: {Action}", action);
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 获取当前状态下可执行的操作列表
+        /// </summary>
+        /// <param name="statusContext">状态上下文</param>
+        /// <returns>可执行的操作列表</returns>
+        public IEnumerable<Enum> GetAvailableActions(IStatusTransitionContext statusContext)
+        {
+            if (statusContext == null)
+                return Enumerable.Empty<Enum>();
+
+            try
+            {
+                var allActions = new List<Enum>();
+
+                // 获取当前状态
+                var dataStatus = statusContext.GetDataStatus();
+                var businessStatus = statusContext.GetBusinessStatus(statusContext.StatusType);
+
+                // 获取数据状态下的可执行操作
+                if (dataStatus != null)
+                {
+                    allActions.AddRange(_actionRuleConfiguration.GetAllowedActions(dataStatus));
+                }
+
+                // 获取业务状态下的可执行操作
+                if (businessStatus != null)
+                {
+                    allActions.AddRange(_actionRuleConfiguration.GetAllowedActions(businessStatus as Enum));
+                }
+
+                // 去重并返回
+                return allActions.Distinct();
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "获取可执行操作列表失败");
+                return Enumerable.Empty<Enum>();
             }
         }
 
@@ -355,43 +405,10 @@ namespace RUINORERP.UI.StateManagement.UI
         /// <param name="isVisible">是否可见</param>
         private void ApplyControlState(Control control, bool isEditable, bool isVisible)
         {
-            // 保存原始状态
-            var controlKey = $"{control.Name}_{control.GetHashCode()}";
-            if (!_controlStates.ContainsKey(controlKey))
-            {
-                _controlStates[controlKey] = new ControlState
-                {
-                    Enabled = control.Enabled,
-                    Visible = control.Visible,
-                    ReadOnly = GetControlReadOnly(control),
-                    BackColor = control.BackColor,
-                    ForeColor = control.ForeColor
-                };
-            }
-
             // 应用新状态
             control.Enabled = isEditable;
             control.Visible = isVisible;
             SetControlReadOnly(control, !isEditable);
-        }
-
-        /// <summary>
-        /// 获取控件只读状态
-        /// </summary>
-        /// <param name="control">控件</param>
-        /// <returns>是否只读</returns>
-        private bool GetControlReadOnly(Control control)
-        {
-            if (control is TextBox textBox)
-                return textBox.ReadOnly;
-            else if (control is ComboBox comboBox)
-                return !comboBox.Enabled;
-            else if (control is NumericUpDown numericUpDown)
-                return numericUpDown.ReadOnly;
-            else if (control is DataGridView dataGridView)
-                return dataGridView.ReadOnly;
-            else
-                return false;
         }
 
         /// <summary>
@@ -439,112 +456,6 @@ namespace RUINORERP.UI.StateManagement.UI
             // 例如：草稿状态下的控件规则、确认状态下的控件规则等
         }
 
-        /// <summary>
-        /// 检查指定操作在当前状态下是否可执行
-        /// </summary>
-        /// <param name="action">操作类型</param>
-        /// <param name="statusContext">状态上下文</param>
-        /// <returns>是否可执行</returns>
-        public bool CanExecuteAction(Enum action, RUINORERP.Model.Base.StatusManager.Core.IStatusTransitionContext statusContext)
-        {
-            if (action == null || statusContext == null)
-                return false;
-
-            try
-            {
-                // 获取当前状态
-                var dataStatus = statusContext.GetDataStatus();
-                var businessStatus = statusContext.GetBusinessStatus(statusContext.StatusType);
-
-                // 检查数据状态下的操作权限
-                if (dataStatus != null)
-                {
-                    // 使用反射获取IsActionAllowed方法
-                    var method = _actionRuleConfiguration.GetType()
-                        .GetMethod("IsActionAllowed")
-                        .MakeGenericMethod(dataStatus.GetType());
-                    
-                    var result = method.Invoke(_actionRuleConfiguration, new object[] { dataStatus, action });
-                    if (result is bool isAllowed && isAllowed)
-                        return true;
-                }
-
-                // 检查业务状态下的操作权限
-                if (businessStatus != null)
-                {
-                    // 使用反射获取IsActionAllowed方法
-                    var method = _actionRuleConfiguration.GetType()
-                        .GetMethod("IsActionAllowed")
-                        .MakeGenericMethod(businessStatus.GetType());
-                    
-                    var result = method.Invoke(_actionRuleConfiguration, new object[] { businessStatus, action });
-                    if (result is bool isAllowed && isAllowed)
-                        return true;
-                }
-
-                return false;
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "检查操作可执行性失败: {Action}", action);
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// 获取当前状态下可执行的操作列表
-        /// </summary>
-        /// <param name="statusContext">状态上下文</param>
-        /// <returns>可执行的操作列表</returns>
-        public IEnumerable<Enum> GetAvailableActions(RUINORERP.Model.Base.StatusManager.Core.IStatusTransitionContext statusContext)
-        {
-            if (statusContext == null)
-                return Enumerable.Empty<Enum>();
-
-            try
-            {
-                var allActions = new List<Enum>();
-
-                // 获取当前状态
-                var dataStatus = statusContext.GetDataStatus();
-                var businessStatus = statusContext.GetBusinessStatus(statusContext.StatusType);
-
-                // 获取数据状态下的可执行操作
-                if (dataStatus != null)
-                {
-                    // 使用反射获取GetAllowedActions方法
-                    var method = _actionRuleConfiguration.GetType()
-                        .GetMethod("GetAllowedActions")
-                        .MakeGenericMethod(dataStatus.GetType());
-                    
-                    var result = method.Invoke(_actionRuleConfiguration, new object[] { dataStatus });
-                    if (result is IEnumerable<Enum> actions)
-                        allActions.AddRange(actions);
-                }
-
-                // 获取业务状态下的可执行操作
-                if (businessStatus != null)
-                {
-                    // 使用反射获取GetAllowedActions方法
-                    var method = _actionRuleConfiguration.GetType()
-                        .GetMethod("GetAllowedActions")
-                        .MakeGenericMethod(businessStatus.GetType());
-                    
-                    var result = method.Invoke(_actionRuleConfiguration, new object[] { businessStatus });
-                    if (result is IEnumerable<Enum> actions)
-                        allActions.AddRange(actions);
-                }
-
-                // 去重并返回
-                return allActions.Distinct();
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "获取可执行操作列表失败");
-                return Enumerable.Empty<Enum>();
-            }
-        }
-
         #endregion
     }
 
@@ -573,12 +484,7 @@ namespace RUINORERP.UI.StateManagement.UI
         /// <summary>
         /// 状态管理器
         /// </summary>
-        public RUINORERP.Model.Base.StatusManager.Core.IUnifiedStateManager StateManager { get; }
-
-        /// <summary>
-        /// 控件状态缓存
-        /// </summary>
-        private readonly Dictionary<string, ControlState> _controlStates;
+        public IUnifiedStateManager StateManager { get; }
 
         #endregion
 
@@ -591,13 +497,12 @@ namespace RUINORERP.UI.StateManagement.UI
         /// <param name="statusType">状态类型</param>
         /// <param name="controls">控件集合</param>
         /// <param name="stateManager">状态管理器</param>
-        public UIStatusContext(Enum status, string statusType, IEnumerable<Control> controls, RUINORERP.Model.Base.StatusManager.Core.IUnifiedStateManager stateManager)
+        public UIStatusContext(Enum status, string statusType, IEnumerable<Control> controls, IUnifiedStateManager stateManager)
         {
             Status = status;
             StatusType = statusType;
             Controls = controls;
             StateManager = stateManager;
-            _controlStates = new Dictionary<string, ControlState>();
         }
 
         #endregion
@@ -611,10 +516,8 @@ namespace RUINORERP.UI.StateManagement.UI
         /// <returns>控件状态</returns>
         public ControlState GetControlState(string controlName)
         {
-            if (string.IsNullOrEmpty(controlName) || !_controlStates.ContainsKey(controlName))
-                return new ControlState();
-
-            return _controlStates[controlName];
+            // 简化实现：返回默认状态
+            return new ControlState();
         }
 
         /// <summary>
@@ -624,10 +527,7 @@ namespace RUINORERP.UI.StateManagement.UI
         /// <param name="state">控件状态</param>
         public void SetControlState(string controlName, ControlState state)
         {
-            if (!string.IsNullOrEmpty(controlName) && state != null)
-            {
-                _controlStates[controlName] = state;
-            }
+            // 简化实现：不保存状态
         }
 
         #endregion

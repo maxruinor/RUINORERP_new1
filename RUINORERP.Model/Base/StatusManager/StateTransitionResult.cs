@@ -8,7 +8,7 @@
 using RUINORERP.Global;
 using System;
 
-namespace RUINORERP.Model.Base.StatusManager.Core
+namespace RUINORERP.Model.Base.StatusManager
 {
     /// <summary>
     /// 状态转换结果

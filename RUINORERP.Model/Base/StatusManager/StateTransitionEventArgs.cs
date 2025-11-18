@@ -1,56 +1,85 @@
+/**
+ * 文件: StateTransitionEventArgs.cs
+ * 说明: 合并版状态转换事件参数
+ * 创建日期: 2024年
+ * 作者: RUINOR ERP开发团队
+ */
+
 using System;
 using System.Collections.Generic;
+using RUINORERP.Global;
 
-namespace RUINORERP.Model.Base.StatusManager.Events
+namespace RUINORERP.Model.Base.StatusManager
 {
     /// <summary>
-    /// 状态变更事件参数基类
-    /// 为所有状态变更相关的事件参数提供通用基础属性和方法
+    /// 状态转换事件参数
+    /// 合并了StateChangeBaseEventArgs的功能，提供完整的状态转换事件信息
     /// </summary>
-    public abstract class StateChangeBaseEventArgs : EventArgs
+    public class StateTransitionEventArgs : EventArgs
     {
+        #region 属性
+
         /// <summary>
         /// 实体对象
         /// </summary>
-        public object Entity { get; protected set; }
+        public BaseEntity Entity { get; set; }
 
         /// <summary>
         /// 状态类型
         /// </summary>
-        public Type StatusType { get; protected set; }
+        public Type StatusType { get; set; }
 
         /// <summary>
         /// 旧状态
         /// </summary>
-        public object OldStatus { get; protected set; }
+        public object OldStatus { get; set; }
 
         /// <summary>
         /// 新状态
         /// </summary>
-        public object NewStatus { get; protected set; }
+        public object NewStatus { get; set; }
 
         /// <summary>
         /// 变更原因
         /// </summary>
-        public string Reason { get; protected set; }
+        public string Reason { get; set; }
 
         /// <summary>
         /// 变更时间
         /// </summary>
-        public DateTime ChangeTime { get; protected set; }
+        public DateTime ChangeTime { get; set; }
 
         /// <summary>
-        /// 执行状态变更的用户ID
+        /// 用户ID
         /// </summary>
-        public string UserId { get; protected set; }
+        public string UserId { get; set; }
+
+        /// <summary>
+        /// 转换是否成功
+        /// </summary>
+        public bool IsSuccess { get; set; } = true;
+
+        /// <summary>
+        /// 转换错误信息
+        /// </summary>
+        public string ErrorMessage { get; set; }
+
+        /// <summary>
+        /// 转换异常
+        /// </summary>
+        public Exception Exception { get; set; }
 
         /// <summary>
         /// 附加数据
         /// </summary>
-        public Dictionary<string, object> AdditionalData { get; protected set; }
+        public Dictionary<string, object> AdditionalData { get; }
+
+        #endregion
+
+        #region 构造函数
 
         /// <summary>
-        /// 初始化状态变更事件参数基类
+        /// 构造函数
         /// </summary>
         /// <param name="entity">实体对象</param>
         /// <param name="statusType">状态类型</param>
@@ -58,8 +87,17 @@ namespace RUINORERP.Model.Base.StatusManager.Events
         /// <param name="newStatus">新状态</param>
         /// <param name="reason">变更原因</param>
         /// <param name="userId">用户ID</param>
+        /// <param name="changeTime">变更时间</param>
         /// <param name="additionalData">附加数据</param>
-        protected StateChangeBaseEventArgs(object entity, Type statusType, object oldStatus, object newStatus, string reason = null, string userId = null, Dictionary<string, object> additionalData = null)
+        public StateTransitionEventArgs(
+            BaseEntity entity,
+            Type statusType,
+            object oldStatus,
+            object newStatus,
+            string reason = null,
+            string userId = null,
+            DateTime? changeTime = null,
+            Dictionary<string, object> additionalData = null)
         {
             Entity = entity ?? throw new ArgumentNullException(nameof(entity));
             StatusType = statusType ?? throw new ArgumentNullException(nameof(statusType));
@@ -67,9 +105,13 @@ namespace RUINORERP.Model.Base.StatusManager.Events
             NewStatus = newStatus;
             Reason = reason;
             UserId = userId;
+            ChangeTime = changeTime ?? DateTime.Now;
             AdditionalData = additionalData ?? new Dictionary<string, object>();
-            ChangeTime = DateTime.Now;
         }
+
+        #endregion
+
+        #region 公共方法
 
         /// <summary>
         /// 检查状态是否实际发生了变更
@@ -89,7 +131,7 @@ namespace RUINORERP.Model.Base.StatusManager.Events
             var statusTypeName = StatusType?.Name ?? "Unknown";
             var oldStatusName = OldStatus?.ToString() ?? "null";
             var newStatusName = NewStatus?.ToString() ?? "null";
-            
+
             return $"状态变更: {statusTypeName} 从 {oldStatusName} 变更为 {newStatusName}";
         }
 
@@ -100,13 +142,13 @@ namespace RUINORERP.Model.Base.StatusManager.Events
         /// <param name="key">键名</param>
         /// <param name="defaultValue">默认值</param>
         /// <returns>数据值</returns>
-        public T GetAdditionalData<T>(string key, T defaultValue = default(T))
+        public T GetAdditionalData<T>(string key, T defaultValue = default)
         {
             if (AdditionalData != null && AdditionalData.TryGetValue(key, out var value) && value is T)
             {
                 return (T)value;
             }
-            
+
             return defaultValue;
         }
 
@@ -122,5 +164,37 @@ namespace RUINORERP.Model.Base.StatusManager.Events
                 AdditionalData[key] = value;
             }
         }
+
+        /// <summary>
+        /// 创建失败的事件参数
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        /// <param name="statusType">状态类型</param>
+        /// <param name="oldStatus">旧状态</param>
+        /// <param name="newStatus">新状态</param>
+        /// <param name="errorMessage">错误信息</param>
+        /// <param name="exception">异常</param>
+        /// <param name="reason">转换原因</param>
+        /// <param name="userId">用户ID</param>
+        /// <returns>失败的事件参数</returns>
+        public static StateTransitionEventArgs CreateFailure(
+            BaseEntity entity,
+            Type statusType,
+            object oldStatus,
+            object newStatus,
+            string errorMessage,
+            Exception exception = null,
+            string reason = null,
+            string userId = null)
+        {
+            return new StateTransitionEventArgs(entity, statusType, oldStatus, newStatus, reason, userId)
+            {
+                IsSuccess = false,
+                ErrorMessage = errorMessage,
+                Exception = exception
+            };
+        }
+
+        #endregion
     }
 }

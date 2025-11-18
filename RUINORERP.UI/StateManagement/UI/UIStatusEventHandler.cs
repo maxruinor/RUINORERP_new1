@@ -10,7 +10,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using RUINORERP.Model.Base.StatusManager.Core;
 using RUINORERP.Model.Base.StatusManager;
 using RUINORERP.UI.StateManagement.Core;
 using RUINORERP.Global;
@@ -460,7 +459,7 @@ namespace RUINORERP.UI.StateManagement.UI
             // 订阅状态上下文变更事件
             eventHandler.SubscribeToStatusChange(
                 stateAwareControl,
-                nameof(stateAwareControl.StatusContextChanged),
+                nameof(stateAwareControl.StatusChanged),
                 async (sender, e) => await eventHandler.HandleStatusChangeAsync(sender, e));
         }
 

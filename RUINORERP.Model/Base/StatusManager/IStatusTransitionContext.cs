@@ -10,7 +10,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using RUINORERP.Global;
 
-namespace RUINORERP.Model.Base.StatusManager.Core
+namespace RUINORERP.Model.Base.StatusManager
 {
     /// <summary>
     /// 状态转换上下文接口 - v3版本
@@ -18,6 +18,10 @@ namespace RUINORERP.Model.Base.StatusManager.Core
     /// </summary>
     public interface IStatusTransitionContext
     {
+        /// <summary>
+        /// 状态变化事件
+        /// </summary>
+        event EventHandler<StateTransitionEventArgs> StatusChanged;
         /// <summary>
         /// 实体对象
         /// </summary>
@@ -54,47 +58,11 @@ namespace RUINORERP.Model.Base.StatusManager.Core
         Dictionary<string, object> AdditionalData { get; }
 
         /// <summary>
-        /// 状态变更事件
-        /// </summary>
-        event EventHandler<StateTransitionEventArgs> StatusChanged;
-
-        /// <summary>
         /// 获取当前状态
         /// </summary>
         /// <typeparam name="T">状态枚举类型</typeparam>
         /// <returns>当前状态</returns>
         T GetCurrentStatus<T>() where T : Enum;
-
-        /// <summary>
-        /// 设置数据性状态
-        /// </summary>
-        /// <param name="status">状态值</param>
-        /// <param name="reason">变更原因</param>
-        /// <returns>设置是否成功</returns>
-        Task<bool> SetDataStatusAsync(DataStatus status, string reason = null);
-
-        /// <summary>
-        /// 设置业务性状态
-        /// </summary>
-        /// <typeparam name="T">业务状态枚举类型</typeparam>
-        /// <param name="status">状态值</param>
-        /// <param name="reason">变更原因</param>
-        /// <returns>设置是否成功</returns>
-        Task<bool> SetBusinessStatusAsync<T>(T status, string reason = null) where T : Enum;
-
-        /// <summary>
-        /// 设置操作状态
-        /// </summary>
-        /// <param name="status">状态值</param>
-        /// <param name="reason">变更原因</param>
-        /// <returns>设置是否成功</returns>
-        Task<bool> SetActionStatusAsync(ActionStatus status, string reason = null);
-
-        /// <summary>
-        /// 获取转换历史
-        /// </summary>
-        /// <returns>转换历史记录</returns>
-        IEnumerable<IStatusTransitionRecord> GetTransitionHistory();
 
         /// <summary>
         /// 获取数据性状态
@@ -150,61 +118,5 @@ namespace RUINORERP.Model.Base.StatusManager.Core
         /// <param name="targetStatus">目标状态</param>
         /// <returns>是否可以转换</returns>
         Task<bool> CanTransitionTo(object targetStatus);
-    }
-
-    /// <summary>
-    /// 状态转换记录接口
-    /// </summary>
-    public interface IStatusTransitionRecord
-    {
-        /// <summary>
-        /// 记录ID
-        /// </summary>
-        string Id { get; }
-
-        /// <summary>
-        /// 实体类型
-        /// </summary>
-        Type EntityType { get; }
-
-        /// <summary>
-        /// 实体ID
-        /// </summary>
-        long EntityId { get; }
-
-        /// <summary>
-        /// 状态类型
-        /// </summary>
-        Type StatusType { get; }
-
-        /// <summary>
-        /// 源状态
-        /// </summary>
-        object FromStatus { get; }
-
-        /// <summary>
-        /// 目标状态
-        /// </summary>
-        object ToStatus { get; }
-
-        /// <summary>
-        /// 转换时间
-        /// </summary>
-        DateTime TransitionTime { get; }
-
-        /// <summary>
-        /// 用户ID
-        /// </summary>
-        string UserId { get; }
-
-        /// <summary>
-        /// 转换原因
-        /// </summary>
-        string Reason { get; }
-
-        /// <summary>
-        /// 附加数据
-        /// </summary>
-        Dictionary<string, object> AdditionalData { get; }
     }
 }

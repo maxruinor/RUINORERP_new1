@@ -2365,7 +2365,6 @@
     </Compile>
     <Compile Include="StateManagement\UI\DefaultUIStatusRule.cs" />
     <Compile Include="StateManagement\UI\IStatusUIController.cs" />
-    <Compile Include="StateManagement\UI\StatusActionRuleConfiguration.cs" />
     <Compile Include="StateManagement\UI\UIStatusEventHandler.cs" />
     <Compile Include="StateManagement\UI\UnifiedStatusUIControllerV3.cs" />
     <Compile Include="Testing\ApplicationContextCacheTest.cs" />

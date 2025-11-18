@@ -9,7 +9,7 @@ using RUINORERP.Global;
 using System;
 using System.Collections.Generic;
 
-namespace RUINORERP.Model.Base.StatusManager.Core
+namespace RUINORERP.Model.Base.StatusManager
 {
     /// <summary>
     /// 状态转换规则管理类
@@ -27,7 +27,7 @@ namespace RUINORERP.Model.Base.StatusManager.Core
 
             // 初始化DataStatus转换规则
             InitializeDataStatusRules(transitionRules);
-            
+
             // 初始化ActionStatus转换规则
             InitializeActionStatusRules(transitionRules);
         }
@@ -78,7 +78,7 @@ namespace RUINORERP.Model.Base.StatusManager.Core
                 throw new ArgumentNullException(nameof(transitionRules));
 
             var statusType = typeof(T);
-            
+
             if (!transitionRules.ContainsKey(statusType))
             {
                 transitionRules[statusType] = new Dictionary<object, List<object>>();
@@ -103,7 +103,7 @@ namespace RUINORERP.Model.Base.StatusManager.Core
                 throw new ArgumentNullException(nameof(transitionRules));
 
             var statusType = typeof(T);
-            
+
             if (transitionRules.ContainsKey(statusType))
             {
                 transitionRules[statusType].Remove(fromStatus);
@@ -124,14 +124,14 @@ namespace RUINORERP.Model.Base.StatusManager.Core
                 throw new ArgumentNullException(nameof(transitionRules));
 
             var statusType = typeof(T);
-            
+
             if (!transitionRules.ContainsKey(statusType))
             {
                 return false;
             }
 
             var rules = transitionRules[statusType];
-            
+
             if (!rules.ContainsKey(fromStatus))
             {
                 return false;

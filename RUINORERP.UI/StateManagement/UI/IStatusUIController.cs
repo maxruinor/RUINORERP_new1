@@ -23,7 +23,7 @@ namespace RUINORERP.UI.StateManagement.UI
         /// </summary>
         /// <param name="statusContext">状态上下文</param>
         /// <param name="controls">控件集合</param>
-        void UpdateUIStatus(RUINORERP.Model.Base.StatusManager.Core.IStatusTransitionContext statusContext, IEnumerable<Control> controls);
+        void UpdateUIStatus(IStatusTransitionContext statusContext, IEnumerable<Control> controls);
 
         /// <summary>
         /// 根据状态更新单个控件状态
@@ -53,14 +53,14 @@ namespace RUINORERP.UI.StateManagement.UI
         /// <param name="action">操作类型</param>
         /// <param name="statusContext">状态上下文</param>
         /// <returns>是否可执行</returns>
-        bool CanExecuteAction(Enum action, RUINORERP.Model.Base.StatusManager.Core.IStatusTransitionContext statusContext);
+        bool CanExecuteAction(Enum action, IStatusTransitionContext statusContext);
 
         /// <summary>
         /// 获取当前状态下可执行的操作列表
         /// </summary>
         /// <param name="statusContext">状态上下文</param>
         /// <returns>可执行的操作列表</returns>
-        IEnumerable<Enum> GetAvailableActions(RUINORERP.Model.Base.StatusManager.Core.IStatusTransitionContext statusContext);
+        IEnumerable<Enum> GetAvailableActions(IStatusTransitionContext statusContext);
     }
 
     /// <summary>
@@ -98,7 +98,7 @@ namespace RUINORERP.UI.StateManagement.UI
         /// <summary>
         /// 状态管理器
         /// </summary>
-        RUINORERP.Model.Base.StatusManager.Core.IUnifiedStateManager StateManager { get; }
+        IUnifiedStateManager StateManager { get; }
 
         /// <summary>
         /// 获取控件状态

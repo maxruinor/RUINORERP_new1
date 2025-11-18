@@ -56,11 +56,9 @@ using LiveChartsCore.Geo;
 using static RUINOR.WinFormsUI.CustomPictureBox.MagicPictureBox;
 using RUINORERP.Business.Cache;
 using MathNet.Numerics;
-using RUINORERP.UI.Network.Services;
 using RUINORERP.Business.BizMapperService;
 using RUINORERP.UI.StateManagement.Core;
 using RUINORERP.Model.Base;
-using RUINORERP.Model.Base.StatusManager.Core;
 
 namespace RUINORERP.UI.PSI.SAL
 {
@@ -80,17 +78,7 @@ namespace RUINORERP.UI.PSI.SAL
 
 
 
-        /// <summary>
-        /// 销售订单状态变更事件处理
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void OnSaleOrderStateChanged(object sender, RUINORERP.Model.Base.StatusManager.Core.StateTransitionEventArgs e)
-        {
-            // 处理状态变更后的业务逻辑
-            UpdateStateDisplay();
-            UpdateSaleOrderSpecificUIByState();
-        }
+ 
 
         /// <summary>
         /// 更新状态显示

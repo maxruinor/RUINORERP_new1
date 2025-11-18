@@ -21,13 +21,6 @@ namespace RUINORERP.UI.StateManagement
             {
                 components.Dispose();
             }
-            
-            // 调用状态管理清理方法
-            if (this is StateAwareControl stateAwareControl)
-            {
-                stateAwareControl.DisposeStateManagement(disposing);
-            }
-            
             base.Dispose(disposing);
         }
 

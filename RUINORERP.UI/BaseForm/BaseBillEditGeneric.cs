@@ -91,10 +91,9 @@ using RUINORERP.UI.Network.Services;
 using RUINORERP.Business.CommService;
 using RUINOR.WinFormsUI.CustomPictureBox;
 using RUINORERP.PacketSpec.Models.Lock;
-using RUINORERP.Model.Base.StatusManager.Core;
 using RUINORERP.UI.StateManagement.UI;
 using RUINORERP.UI.StateManagement.Core;
-using RUINORERP.Model.Base.StatusManager.Factory;
+using RUINORERP.Model.Base.StatusManager;
 
 namespace RUINORERP.UI.BaseForm
 {

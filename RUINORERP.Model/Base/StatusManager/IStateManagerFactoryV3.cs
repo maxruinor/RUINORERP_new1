@@ -6,10 +6,8 @@
  */
 
 using System;
-using RUINORERP.Model.Base.StatusManager;
-using RUINORERP.Model.Base.StatusManager.Core;
 
-namespace RUINORERP.Model.Base.StatusManager.Factory
+namespace RUINORERP.Model.Base.StatusManager
 {
     /// <summary>
     /// 状态管理器工厂V3接口 - 定义状态管理器工厂的接口
@@ -23,13 +21,6 @@ namespace RUINORERP.Model.Base.StatusManager.Factory
         /// </summary>
         /// <returns>统一状态管理器实例</returns>
         IUnifiedStateManager GetStateManager();
-
-        /// <summary>
-        /// 获取指定类型的统一状态管理器
-        /// </summary>
-        /// <typeparam name="T">状态枚举类型</typeparam>
-        /// <returns>统一状态管理器实例</returns>
-        IUnifiedStateManager GetStateManager<T>() where T : Enum;
 
         /// <summary>
         /// 获取状态转换引擎
@@ -52,26 +43,6 @@ namespace RUINORERP.Model.Base.StatusManager.Factory
         /// <param name="entity">实体对象</param>
         /// <returns>状态转换上下文</returns>
         IStatusTransitionContext CreateTransitionContext<T>(object entity) where T : Enum;
-
-        /// <summary>
-        /// 注册自定义状态管理器
-        /// </summary>
-        /// <param name="entityType">实体类型</param>
-        /// <param name="factory">状态管理器工厂方法</param>
-        void RegisterStateManager(Type entityType, Func<IUnifiedStateManager> factory);
-
-        /// <summary>
-        /// 注册自定义状态管理器
-        /// </summary>
-        /// <typeparam name="TEntity">实体类型</typeparam>
-        /// <param name="factory">状态管理器工厂方法</param>
-        void RegisterStateManager<TEntity>(Func<IUnifiedStateManager> factory);
-
-        /// <summary>
-        /// 注册自定义状态转换引擎
-        /// </summary>
-        /// <param name="factory">状态转换引擎工厂方法</param>
-        void RegisterTransitionEngine(Func<IStatusTransitionEngine> factory);
 
         /// <summary>
         /// 释放资源

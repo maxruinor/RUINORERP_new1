@@ -1,6 +1,6 @@
 /**
  * 文件: IUnifiedStateManager.cs
- * 说明: 统一状态管理器接口
+ * 说明: 统一状态管理器接口 - 优化版
  * 创建日期: 2024年
  * 作者: RUINOR ERP开发团队
  */
@@ -41,20 +41,12 @@ namespace RUINORERP.Model.Base.StatusManager.Core
         Task<bool> SetDataStatusAsync(BaseEntity entity, DataStatus status, string reason = null);
         
         /// <summary>
-        /// 获取当前业务性状态
+        /// 获取业务性状态
         /// </summary>
         /// <typeparam name="T">业务状态枚举类型</typeparam>
         /// <param name="entity">实体对象</param>
-        /// <returns>当前业务性状态</returns>
+        /// <returns>业务性状态</returns>
         T GetBusinessStatus<T>(BaseEntity entity) where T : Enum;
-        
-        /// <summary>
-        /// 获取当前业务性状态
-        /// </summary>
-        /// <param name="entity">实体对象</param>
-        /// <param name="statusType">状态类型</param>
-        /// <returns>当前业务性状态</returns>
-        object GetBusinessStatus(BaseEntity entity, Type statusType);
         
         /// <summary>
         /// 设置业务性状态
@@ -65,16 +57,6 @@ namespace RUINORERP.Model.Base.StatusManager.Core
         /// <param name="reason">变更原因</param>
         /// <returns>设置是否成功</returns>
         Task<bool> SetBusinessStatusAsync<T>(BaseEntity entity, T status, string reason = null) where T : Enum;
-        
-        /// <summary>
-        /// 设置业务性状态
-        /// </summary>
-        /// <param name="entity">实体对象</param>
-        /// <param name="statusType">状态类型</param>
-        /// <param name="status">状态值</param>
-        /// <param name="reason">变更原因</param>
-        /// <returns>设置是否成功</returns>
-        Task<bool> SetBusinessStatusAsync(BaseEntity entity, Type statusType, object status, string reason = null);
         
         /// <summary>
         /// 获取当前操作状态
@@ -165,6 +147,14 @@ namespace RUINORERP.Model.Base.StatusManager.Core
         Task<bool> CanTransitionToDataStatus(BaseEntity entity, DataStatus targetStatus);
         
         /// <summary>
+        /// 异步检查是否可以转换到目标数据性状态，并输出错误信息
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        /// <param name="targetStatus">目标状态</param>
+        /// <returns>包含转换结果和错误消息的元组</returns>
+        Task<(bool CanTransition, string ErrorMessage)> CanTransitionToDataStatusAsync(BaseEntity entity, DataStatus targetStatus);
+        
+        /// <summary>
         /// 检查是否可以转换到目标业务性状态
         /// </summary>
         /// <typeparam name="T">业务状态枚举类型</typeparam>
@@ -192,8 +182,48 @@ namespace RUINORERP.Model.Base.StatusManager.Core
         StateTransitionResult RequestTransition(IStatusTransitionContext context, object targetStatus, string reason = null, long userId = 0);
         
         /// <summary>
+        /// 批量设置实体状态
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        /// <param name="dataStatus">数据状态</param>
+        /// <param name="businessStatus">业务状态（可选）</param>
+        /// <param name="actionStatus">操作状态（可选）</param>
+        /// <returns>设置是否成功</returns>
+        Task<bool> SetStatesAsync(object entity, DataStatus dataStatus, Enum businessStatus = null, ActionStatus actionStatus = ActionStatus.无操作);
+        
+        /// <summary>
+        /// 检查实体是否可以更改为目标状态
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        /// <param name="targetStatus">目标状态</param>
+        /// <param name="errorMessage">错误信息输出参数</param>
+        /// <returns>是否可以更改</returns>
+        bool CanChangeStatus(object entity, Enum targetStatus, out string errorMessage);
+        
+        /// <summary>
+        /// 检查实体是否处于指定状态
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        /// <param name="statuses">要检查的状态列表</param>
+        /// <returns>是否处于任一指定状态</returns>
+        bool IsInStatus(object entity, params Enum[] statuses);
+        
+        /// <summary>
+        /// 获取状态转换失败的详细错误信息
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        /// <param name="targetStatus">目标状态</param>
+        /// <returns>错误信息</returns>
+        string GetTransitionErrorMessage(object entity, Enum targetStatus);
+        
+        /// <summary>
         /// 状态变更事件
         /// </summary>
         event EventHandler<StateTransitionEventArgs> StatusChanged;
+
+        /// <summary>
+        /// 清理缓存
+        /// </summary>
+        void ClearCache();
     }
 }

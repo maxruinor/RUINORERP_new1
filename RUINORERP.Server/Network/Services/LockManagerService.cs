@@ -166,7 +166,13 @@ namespace RUINORERP.Server.Network.Services
                 {
                     await _distributedLock.ReleaseAsync(lockKey, lockInfo.LockId);
                 }
-                catch { /* 忽略清理异常 */ }
+                catch (Exception releaseEx)
+                {
+                    // 记录释放锁时的异常，但不中断主流程
+                    _logger.LogWarning(releaseEx, "释放分布式锁时发生异常: BillID={BillID}, LockId={LockId}", 
+                        lockInfo.BillID, 
+                        lockInfo.LockId);
+                }
                 
                 return false;
             }

@@ -174,6 +174,11 @@ namespace RUINORERP.Server
         /// 服务器信息更新定时器
         /// </summary>
         private System.Windows.Forms.Timer _serverInfoTimer;
+        
+        /// <summary>
+        /// 会话清理定时器
+        /// </summary>
+        private System.Threading.Timer _sessionCleanupTimer;
 
         /// <summary>
         /// 初始化服务器信息更新定时器
@@ -237,10 +242,13 @@ namespace RUINORERP.Server
             RUINORERP.Server.Network.SuperSocket.SuperSocketCommandAdapter<IAppSession>.SetNetworkMonitorEnabled(IsNetworkMonitorEnabled);
 
         }
+        /// <summary>
+        /// 初始化服务器信息更新定时器
+        /// </summary>
         private void InitializeServerInfoTimer()
         {
             _serverInfoTimer = new System.Windows.Forms.Timer();
-            _serverInfoTimer.Interval = 1000; // 每秒更新一次
+            _serverInfoTimer.Interval = 5000; // 每5秒更新一次，减少UI线程压力
             _serverInfoTimer.Tick += UpdateServerInfoTimer_Tick;
         }
 
@@ -251,27 +259,42 @@ namespace RUINORERP.Server
         {
             try
             {
-                if (_networkServer != null)
+                // 使用异步方式执行更新，避免阻塞UI线程
+                _ = Task.Run(async () =>
                 {
-                    var serverInfo = _networkServer.GetServerInfo();
-                    // 更新UI显示
-                    this.BeginInvoke(new Action(() =>
+                    try
                     {
-                        // 更新状态栏服务器信息
-                        toolStripStatusLabelServerStatus.Text = $"服务状态: {serverInfo.Status}";
-                        toolStripStatusLabelConnectionCount.Text = $"连接数: {serverInfo.CurrentConnections}/{serverInfo.MaxConnections}";
+                        if (_networkServer != null)
+                        {
+                            var serverInfo = _networkServer.GetServerInfo();
+                            // 更新UI显示
+                            this.Invoke(new Action(() =>
+                            {
+                                // 更新状态栏服务器信息
+                                toolStripStatusLabelServerStatus.Text = $"服务状态: {serverInfo.Status}";
+                                toolStripStatusLabelConnectionCount.Text = $"连接数: {serverInfo.CurrentConnections}/{serverInfo.MaxConnections}";
 
-                        // 更新附加服务器信息
-                        toolStripStatusLabelMessage.Text = $"服务器IP: {serverInfo.ServerIp}, 端口: {serverInfo.Port}";
+                                // 更新附加服务器信息
+                                toolStripStatusLabelMessage.Text = $"服务器IP: {serverInfo.ServerIp}, 端口: {serverInfo.Port}";
 
-                        // 记录服务器信息日志
-                        // PrintInfoLog($"服务器信息 - IP: {serverInfo.ServerIp}, 端口: {serverInfo.Port}, 当前连接: {serverInfo.CurrentConnections}, 最大连接: {serverInfo.MaxConnections}");
-                    }));
-                }
+                                // 记录服务器信息日志
+                                // PrintInfoLog($"服务器信息 - IP: {serverInfo.ServerIp}, 端口: {serverInfo.Port}, 当前连接: {serverInfo.CurrentConnections}, 最大连接: {serverInfo.MaxConnections}");
+                            }));
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        // 确保在UI线程上记录错误日志
+                        this.Invoke(new Action(() =>
+                        {
+                            Instance.PrintInfoLog("服务器信息更新过程中发生错误: " + ex.Message);
+                        }));
+                    }
+                });
             }
             catch (Exception ex)
             {
-                Instance.PrintInfoLog("服务器信息更新过程中发生错误: " + ex.Message);
+                Instance.PrintInfoLog("启动服务器信息更新任务时发生错误: " + ex.Message);
             }
         }
 
@@ -1520,8 +1543,8 @@ namespace RUINORERP.Server
                     var reminderService = Startup.GetFromFac<SmartReminderService>();
                     await Task.Run(async () => await reminderService.StartAsync(CancellationToken.None));
 
-                    // 每秒检查一次
-                    System.Threading.Timer timerStatus = new System.Threading.Timer(CheckAndRemoveExpiredSessions, null, 0, 1000);
+                    // 每5秒检查一次，减少系统负载
+                    _sessionCleanupTimer = new System.Threading.Timer(CheckAndRemoveExpiredSessions, null, 0, 5000);
 
                     // 加载提醒数据
                     DataServiceChannel loadService = Startup.GetFromFac<DataServiceChannel>();
@@ -1571,6 +1594,13 @@ namespace RUINORERP.Server
                     _serverInfoTimer.Stop();
                     _serverInfoTimer.Dispose();
                     _serverInfoTimer = null;
+                }
+                
+                // 清理会话清理定时器资源
+                if (_sessionCleanupTimer != null)
+                {
+                    _sessionCleanupTimer.Dispose();
+                    _sessionCleanupTimer = null;
                 }
             }
             catch (Exception e)

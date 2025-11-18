@@ -123,32 +123,26 @@ namespace RUINORERP.Model.Base.StatusManager.Core
         #region 公共方法
 
         /// <summary>
-        /// 获取数据性状态
+        /// 获取当前状态
         /// </summary>
-        /// <returns>数据性状态</returns>
-        public DataStatus GetDataStatus()
-        {
-            if (StatusType == typeof(DataStatus))
-            {
-                return (DataStatus)CurrentStatus;
-            }
-
-            return _statusManager.GetDataStatus(Entity);
-        }
-
-        /// <summary>
-        /// 获取业务性状态
-        /// </summary>
-        /// <typeparam name="T">业务状态枚举类型</typeparam>
-        /// <returns>业务性状态</returns>
-        public T GetBusinessStatus<T>() where T : Enum
+        /// <typeparam name="T">状态枚举类型</typeparam>
+        /// <returns>当前状态</returns>
+        public T GetCurrentStatus<T>() where T : Enum
         {
             if (StatusType == typeof(T))
             {
                 return (T)CurrentStatus;
             }
 
-            return _statusManager.GetBusinessStatus<T>(Entity);
+            // 根据状态类型调用相应的状态管理器方法
+            if (typeof(T) == typeof(DataStatus))
+            {
+                return (T)(object)_statusManager.GetDataStatus(Entity);
+            }
+            else
+            {
+                return _statusManager.GetBusinessStatus<T>(Entity);
+            }
         }
 
         /// <summary>
@@ -191,6 +185,20 @@ namespace RUINORERP.Model.Base.StatusManager.Core
         }
 
         /// <summary>
+        /// 获取数据性状态
+        /// </summary>
+        /// <returns>数据性状态</returns>
+        public DataStatus GetDataStatus()
+        {
+            if (StatusType == typeof(DataStatus))
+            {
+                return (DataStatus)CurrentStatus;
+            }
+
+            return _statusManager.GetDataStatus(Entity);
+        }
+
+        /// <summary>
         /// 设置数据性状态
         /// </summary>
         /// <param name="status">状态值</param>
@@ -209,6 +217,21 @@ namespace RUINORERP.Model.Base.StatusManager.Core
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// 获取业务性状态
+        /// </summary>
+        /// <typeparam name="T">业务状态枚举类型</typeparam>
+        /// <returns>业务性状态</returns>
+        public T GetBusinessStatus<T>() where T : Enum
+        {
+            if (StatusType == typeof(T))
+            {
+                return (T)CurrentStatus;
+            }
+
+            return _statusManager.GetBusinessStatus<T>(Entity);
         }
 
         /// <summary>
@@ -304,33 +327,7 @@ namespace RUINORERP.Model.Base.StatusManager.Core
             return result;
         }
 
-        /// <summary>
-        /// 验证状态转换
-        /// </summary>
-        /// <param name="targetStatus">目标状态</param>
-        /// <returns>验证结果</returns>
-        public async Task<StateTransitionResult> ValidateTransitionAsync(object targetStatus)
-        {
-            if (targetStatus == null)
-                throw new ArgumentNullException(nameof(targetStatus));
 
-            // 根据状态类型调用适当的验证方法
-            if (StatusType == typeof(DataStatus))
-            {
-                return await _transitionEngine.ValidateTransitionAsync((DataStatus)CurrentStatus, (DataStatus)targetStatus, this);
-            }
-            else if (StatusType == typeof(ActionStatus))
-            {
-                return await _transitionEngine.ValidateTransitionAsync((ActionStatus)CurrentStatus, (ActionStatus)targetStatus, this);
-            }
-            else
-            {
-                // 对于其他枚举类型，使用反射调用泛型方法
-                var method = _transitionEngine.GetType().GetMethod(nameof(_transitionEngine.ValidateTransitionAsync));
-                var genericMethod = method?.MakeGenericMethod(StatusType);
-                return await (Task<StateTransitionResult>)genericMethod?.Invoke(_transitionEngine, new[] { CurrentStatus, targetStatus, this });
-            }
-        }
 
         /// <summary>
         /// 记录转换
@@ -369,33 +366,8 @@ namespace RUINORERP.Model.Base.StatusManager.Core
         {
             try
             {
-                // 根据状态类型调用适当的泛型方法
-                StateTransitionResult validationResult;
-                
-                if (StatusType == typeof(DataStatus))
-                {
-                    validationResult = await _transitionEngine.ValidateTransitionAsync((DataStatus)CurrentStatus, (DataStatus)targetStatus, this);
-                }
-                else if (StatusType == typeof(ActionStatus))
-                {
-                    validationResult = await _transitionEngine.ValidateTransitionAsync((ActionStatus)CurrentStatus, (ActionStatus)targetStatus, this);
-                }
-                else if (StatusType.IsEnum)
-                {
-                    // 使用反射调用泛型方法
-                    var method = _transitionEngine.GetType().GetMethod(nameof(_transitionEngine.ValidateTransitionAsync));
-                    var genericMethod = method.MakeGenericMethod(StatusType);
-                    validationResult = await (Task<StateTransitionResult>)genericMethod.Invoke(_transitionEngine, new[] { CurrentStatus, targetStatus, this });
-                }
-                else
-                {
-                    return StateTransitionResult.Failure("不支持的状态类型");
-                }
-                
-                if (!validationResult.IsValid)
-                {
-                    return validationResult;
-                }
+                // 直接执行转换，不进行单独的验证
+                // 因为ExecuteTransitionAsync方法内部已经包含了验证逻辑
 
                 // 执行转换
                 StateTransitionResult result;
@@ -476,30 +448,41 @@ namespace RUINORERP.Model.Base.StatusManager.Core
         /// <returns>是否可以转换</returns>
         public async Task<bool> CanTransitionTo(object targetStatus)
         {
+            // 获取可用的转换状态列表，检查目标状态是否在其中
+            var availableTransitions = await GetAvailableTransitionsAsync();
+            return availableTransitions.Any(t => t.Equals(targetStatus));
+        }
+
+        /// <summary>
+        /// 获取可转换状态列表（异步版本）
+        /// </summary>
+        /// <returns>可转换状态列表</returns>
+        public async Task<IEnumerable<object>> GetAvailableTransitionsAsync()
+        {
             // 根据状态类型调用适当的泛型方法
-            StateTransitionResult result;
-            
             if (StatusType == typeof(DataStatus))
             {
-                result = await _transitionEngine.ValidateTransitionAsync((DataStatus)CurrentStatus, (DataStatus)targetStatus, this);
+                var transitions = await _transitionEngine.GetAvailableTransitionsAsync((DataStatus)CurrentStatus, this);
+                return transitions.Cast<object>();
             }
             else if (StatusType == typeof(ActionStatus))
             {
-                result = await _transitionEngine.ValidateTransitionAsync((ActionStatus)CurrentStatus, (ActionStatus)targetStatus, this);
+                var transitions = await _transitionEngine.GetAvailableTransitionsAsync((ActionStatus)CurrentStatus, this);
+                return transitions.Cast<object>();
             }
             else if (StatusType.IsEnum)
             {
                 // 使用反射调用泛型方法
-                var method = _transitionEngine.GetType().GetMethod(nameof(_transitionEngine.ValidateTransitionAsync));
+                var method = _transitionEngine.GetType().GetMethod(nameof(_transitionEngine.GetAvailableTransitionsAsync));
                 var genericMethod = method.MakeGenericMethod(StatusType);
-                result = await (Task<StateTransitionResult>)genericMethod.Invoke(_transitionEngine, new[] { CurrentStatus, targetStatus, this });
+                var result = genericMethod.Invoke(_transitionEngine, new[] { CurrentStatus, this });
+                var transitions = await (Task<IEnumerable<object>>)result;
+                return transitions.Cast<object>();
             }
             else
             {
-                return false;
+                return new List<object>();
             }
-            
-            return result.IsValid;
         }
 
         #endregion

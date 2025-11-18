@@ -1,8 +1,9 @@
 /**
  * 文件: StateAwareControl.cs
- * 说明: 状态感知控件基类 - v3版本
+ * 说明: 状态感知控件基类 - v3版本（优化版）
  * 创建日期: 2024年
  * 作者: RUINOR ERP开发团队
+ * 优化: 添加通用控件状态设置方法、异步状态处理能力
  */
 
 using System;
@@ -68,6 +69,11 @@ namespace RUINORERP.UI.StateManagement
         /// 状态上下文变更事件
         /// </summary>
         public event EventHandler<StateTransitionEventArgs> StatusContextChanged;
+        
+        /// <summary>
+        /// 状态变更事件（用于子控件处理）
+        /// </summary>
+        public event EventHandler<StateTransitionEventArgs> StatusChanged;
 
         #endregion
 
@@ -159,7 +165,7 @@ namespace RUINORERP.UI.StateManagement
                     // 如果当前状态不是DataStatus类型，尝试从状态上下文获取
                     try
                     {
-                        return StatusContext.GetDataStatus();
+                        return StatusContext.GetCurrentStatus<DataStatus>();
                     }
                     catch
                     {
@@ -177,7 +183,6 @@ namespace RUINORERP.UI.StateManagement
                     {
                         // 使用状态上下文的异步方法设置状态
                         _ = StatusContext.SetDataStatusAsync(value, "UI状态变更");
-                        OnDataStatusChanged(CurrentDataStatus, value);
                     }
                     catch (Exception ex)
                     {
@@ -203,8 +208,8 @@ namespace RUINORERP.UI.StateManagement
                         // 创建实体状态对象并填充各种状态
                         var entityStatus = new EntityStatus
                         {
-                            dataStatus = StatusContext.GetDataStatus(),
-                            actionStatus = StatusContext.GetActionStatus()
+                            dataStatus = StatusContext.GetCurrentStatus<DataStatus>(),
+                            actionStatus = StatusContext.GetCurrentStatus<ActionStatus>()
                         };
                         
                         // 从状态上下文获取所有业务状态
@@ -464,11 +469,8 @@ namespace RUINORERP.UI.StateManagement
                 if (StatusContext != null)
                 {
                     // 从状态上下文重新获取当前状态
-                    var currentDataStatus = StatusContext.GetDataStatus();
-                    var currentActionStatus = StatusContext.GetActionStatus();
-                    
-                    // 触发状态变更事件
-                    OnDataStatusChanged(CurrentDataStatus, currentDataStatus);
+                    var currentDataStatus = StatusContext.GetCurrentStatus<DataStatus>();
+                    var currentActionStatus = StatusContext.GetCurrentStatus<ActionStatus>();
                     
                     // 更新UI状态
                     ApplyCurrentStatusToUI();
@@ -770,12 +772,6 @@ namespace RUINORERP.UI.StateManagement
         /// </summary>
         protected virtual void OnStatusContextChanged()
         {
-            // 应用当前状态到UI
-            if (AutoApplyStateRules)
-            {
-                ApplyCurrentStatusToUI();
-            }
-
             // 触发StatusContextChanged事件
             StatusContextChanged?.Invoke(this, new StateTransitionEventArgs(
                 BoundEntity,
@@ -790,27 +786,7 @@ namespace RUINORERP.UI.StateManagement
         /// </summary>
         protected virtual void OnUIControllerChanged()
         {
-            // 应用当前状态到UI
-            if (AutoApplyStateRules)
-            {
-                ApplyCurrentStatusToUI();
-            }
-        }
-
-        /// <summary>
-        /// 数据状态变更事件处理
-        /// </summary>
-        /// <param name="oldStatus">旧状态</param>
-        /// <param name="newStatus">新状态</param>
-        protected virtual void OnDataStatusChanged(DataStatus oldStatus, DataStatus newStatus)
-        {
-            // 应用新状态到UI
-            if (AutoApplyStateRules)
-            {
-                ApplyCurrentStatusToUI();
-            }
-
-            // 子类可以重写此方法来处理状态变更
+            // 子类可以重写此方法来处理UI控制器变更
         }
 
         /// <summary>
@@ -820,12 +796,6 @@ namespace RUINORERP.UI.StateManagement
         /// <param name="e">事件参数</param>
         protected virtual void OnStatusContextChanged(object sender, StateTransitionEventArgs e)
         {
-            // 应用新状态到UI
-            if (AutoApplyStateRules)
-            {
-                ApplyCurrentStatusToUI();
-            }
-
             // 触发StatusContextChanged事件
             StatusContextChanged?.Invoke(this, e);
 
@@ -835,7 +805,91 @@ namespace RUINORERP.UI.StateManagement
         #endregion
 
         #region 控件状态管理
-
+        
+        /// <summary>
+        /// 提取通用的控件状态设置方法
+        /// 递归处理所有子控件，支持排除特定类型的控件
+        /// </summary>
+        /// <param name="controls">控件集合</param>
+        /// <param name="enabled">是否启用</param>
+        /// <param name="excludedTypes">需要排除的控件类型</param>
+        protected virtual void SetControlsState(Control.ControlCollection controls, bool enabled, params Type[] excludedTypes)
+        {
+            foreach (Control ctrl in controls)
+            {
+                // 检查是否为排除类型
+                if (excludedTypes != null && Array.Exists(excludedTypes, t => ctrl.GetType() == t))
+                {
+                    continue;
+                }
+                
+                // 设置控件状态
+                if (ctrl.HasChildren)
+                {
+                    SetControlsState(ctrl.Controls, enabled, excludedTypes);
+                }
+                
+                // 根据控件类型设置不同属性
+                if (ctrl is TextBox || ctrl is ComboBox || ctrl is CheckBox || ctrl is DateTimePicker || ctrl is NumericUpDown)
+                {
+                    ctrl.Enabled = enabled;
+                }
+                else if (ctrl is DataGridView)
+                {
+                    ((DataGridView)ctrl).ReadOnly = !enabled;
+                }
+                // 其他控件类型默认设置Enabled属性
+                else
+                {
+                    ctrl.Enabled = enabled;
+                }
+            }
+        }
+        
+        /// <summary>
+        /// 统一状态变更处理
+        /// </summary>
+        /// <param name="sender">事件发送者</param>
+        /// <param name="e">事件参数</param>
+        protected virtual async Task OnStatusChangedAsync(object sender, StateTransitionEventArgs e)
+        {
+            // 统一的状态变更处理逻辑
+            await ApplyCurrentStatusToUIAsync();
+            
+            // 触发事件供派生类处理
+            StatusChanged?.Invoke(sender, e);
+        }
+        
+        /// <summary>
+        /// 异步版本的状态应用方法
+        /// </summary>
+        protected virtual async Task ApplyCurrentStatusToUIAsync()
+        {
+            // 异步实现，支持UI线程调用
+            if (InvokeRequired)
+            {
+                // 使用TaskCompletionSource配合BeginInvoke实现异步调用
+                var tcs = new TaskCompletionSource<bool>();
+                BeginInvoke(new Action(() => 
+                {
+                    try
+                    {
+                        ApplyCurrentStatusToUI();
+                        tcs.SetResult(true);
+                    }
+                    catch (Exception ex)
+                    {
+                        tcs.SetException(ex);
+                    }
+                }));
+                await tcs.Task;
+            }
+            else
+            {
+                ApplyCurrentStatusToUI();
+            }
+        }
+        
         /// <summary>
         /// 设置控件状态
         /// </summary>
@@ -932,6 +986,8 @@ namespace RUINORERP.UI.StateManagement
                 comboBox.Enabled = !readOnly;
             else if (control is NumericUpDown numericUpDown)
                 numericUpDown.ReadOnly = readOnly;
+            else if (control is DataGridView dgv)
+                dgv.ReadOnly = readOnly;
         }
 
         #endregion

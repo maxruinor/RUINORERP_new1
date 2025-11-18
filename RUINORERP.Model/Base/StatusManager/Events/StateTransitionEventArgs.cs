@@ -5,6 +5,7 @@
  * 作者: RUINOR ERP开发团队
  */
 
+using RUINORERP.Model.Base.StatusManager.Events;
 using System;
 using System.Collections.Generic;
 
@@ -13,7 +14,7 @@ namespace RUINORERP.Model.Base.StatusManager.Core
     /// <summary>
     /// 状态转换事件参数
     /// </summary>
-    public class StateTransitionEventArgs : EventArgs
+    public class StateTransitionEventArgs : StateChangeBaseEventArgs
     {
         /// <summary>
         /// 构造函数
@@ -33,41 +34,12 @@ namespace RUINORERP.Model.Base.StatusManager.Core
             string reason = null,
             string userId = null,
             DateTime? transitionTime = null)
+            : base(entity, statusType, oldStatus, newStatus, reason)
         {
-            Entity = entity;
-            StatusType = statusType;
-            OldStatus = oldStatus;
-            NewStatus = newStatus;
-            Reason = reason;
             UserId = userId;
             TransitionTime = transitionTime ?? DateTime.Now;
             AdditionalData = new Dictionary<string, object>();
         }
-
-        /// <summary>
-        /// 实体对象
-        /// </summary>
-        public BaseEntity Entity { get; }
-
-        /// <summary>
-        /// 状态类型
-        /// </summary>
-        public Type StatusType { get; }
-
-        /// <summary>
-        /// 旧状态
-        /// </summary>
-        public object OldStatus { get; }
-
-        /// <summary>
-        /// 新状态
-        /// </summary>
-        public object NewStatus { get; }
-
-        /// <summary>
-        /// 变更原因
-        /// </summary>
-        public string Reason { get; }
 
         /// <summary>
         /// 用户ID

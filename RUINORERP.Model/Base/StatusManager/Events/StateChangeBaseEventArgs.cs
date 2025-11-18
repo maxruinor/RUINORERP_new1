@@ -1,86 +1,65 @@
-/**
- * 文件: StatusChangeEventArgs.cs
- * 说明: 状态变更事件参数类 - v3版本
- * 创建日期: 2024年
- * 作者: RUINOR ERP开发团队
- */
-
 using System;
-using RUINORERP.Model;
-using RUINORERP.Model.Base;
+using System.Collections.Generic;
 
-namespace RUINORERP.UI.StateManagement.Core
+namespace RUINORERP.Model.Base.StatusManager.Events
 {
     /// <summary>
-    /// 状态变更事件参数类 - v3版本
-    /// 用于传递状态变更事件的相关信息
+    /// 状态变更事件参数基类
+    /// 为所有状态变更相关的事件参数提供通用基础属性和方法
     /// </summary>
-    public class StatusChangeEventArgs : EventArgs
+    public abstract class StateChangeBaseEventArgs : EventArgs
     {
-        #region 属性
-
         /// <summary>
-        /// 发生状态变更的实体对象
+        /// 实体对象
         /// </summary>
-        public BaseEntity Entity { get; }
+        public object Entity { get; protected set; }
 
         /// <summary>
         /// 状态类型
         /// </summary>
-        public Type StatusType { get; }
+        public Type StatusType { get; protected set; }
 
         /// <summary>
-        /// 变更前的状态
+        /// 旧状态
         /// </summary>
-        public object OldStatus { get; }
+        public object OldStatus { get; protected set; }
 
         /// <summary>
-        /// 变更后的状态
+        /// 新状态
         /// </summary>
-        public object NewStatus { get; }
+        public object NewStatus { get; protected set; }
 
         /// <summary>
-        /// 状态变更的原因
+        /// 变更原因
         /// </summary>
-        public string Reason { get; }
+        public string Reason { get; protected set; }
 
         /// <summary>
-        /// 状态变更的时间
+        /// 变更时间
         /// </summary>
-        public DateTime ChangeTime { get; }
+        public DateTime ChangeTime { get; protected set; }
 
         /// <summary>
         /// 执行状态变更的用户ID
         /// </summary>
-        public string UserId { get; }
+        public string UserId { get; protected set; }
 
         /// <summary>
         /// 附加数据
         /// </summary>
-        public System.Collections.Generic.Dictionary<string, object> AdditionalData { get; }
-
-        #endregion
-
-        #region 构造函数
+        public Dictionary<string, object> AdditionalData { get; protected set; }
 
         /// <summary>
-        /// 初始化状态变更事件参数
+        /// 初始化状态变更事件参数基类
         /// </summary>
-        /// <param name="entity">发生状态变更的实体对象</param>
+        /// <param name="entity">实体对象</param>
         /// <param name="statusType">状态类型</param>
-        /// <param name="oldStatus">变更前的状态</param>
-        /// <param name="newStatus">变更后的状态</param>
-        /// <param name="reason">状态变更的原因</param>
-        /// <param name="userId">执行状态变更的用户ID</param>
+        /// <param name="oldStatus">旧状态</param>
+        /// <param name="newStatus">新状态</param>
+        /// <param name="reason">变更原因</param>
+        /// <param name="userId">用户ID</param>
         /// <param name="additionalData">附加数据</param>
-        public StatusChangeEventArgs(
-            BaseEntity entity,
-            Type statusType,
-            object oldStatus,
-            object newStatus,
-            string reason = null,
-            string userId = null,
-            System.Collections.Generic.Dictionary<string, object> additionalData = null)
+        protected StateChangeBaseEventArgs(object entity, Type statusType, object oldStatus, object newStatus, string reason = null, string userId = null, Dictionary<string, object> additionalData = null)
         {
             Entity = entity ?? throw new ArgumentNullException(nameof(entity));
             StatusType = statusType ?? throw new ArgumentNullException(nameof(statusType));
@@ -88,13 +67,18 @@ namespace RUINORERP.UI.StateManagement.Core
             NewStatus = newStatus;
             Reason = reason;
             UserId = userId;
-            AdditionalData = additionalData ?? new System.Collections.Generic.Dictionary<string, object>();
+            AdditionalData = additionalData ?? new Dictionary<string, object>();
             ChangeTime = DateTime.Now;
         }
 
-        #endregion
-
-        #region 公共方法
+        /// <summary>
+        /// 检查状态是否实际发生了变更
+        /// </summary>
+        /// <returns>如果旧状态和新状态不同，则返回true</returns>
+        public bool HasChanged()
+        {
+            return !Equals(OldStatus, NewStatus);
+        }
 
         /// <summary>
         /// 获取状态变更的描述信息
@@ -138,7 +122,5 @@ namespace RUINORERP.UI.StateManagement.Core
                 AdditionalData[key] = value;
             }
         }
-
-        #endregion
     }
 }

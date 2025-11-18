@@ -8,6 +8,7 @@ using RUINORERP.Global.Model;
 using RUINORERP.Model.Base;
 using RUINORERP.Model.Base.StatusManager;
 using RUINORERP.Model.Base.StatusManager.Core;
+using RUINORERP.Model.Base.StatusManager.Events;
 using SharpYaml.Tokens;
 using SqlSugar;
 using SqlSugar.Extensions;
@@ -718,10 +719,6 @@ namespace RUINORERP.Model
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        /// <summary>
-        /// 操作性状态变更事件
-        /// </summary>
-        public event EventHandler<ActionStatusChangedEventArgs> ActionStatusChanged;
 
         /// <summary>
         /// 状态变更事件
@@ -784,12 +781,14 @@ namespace RUINORERP.Model
                     HasChanged = true;
 
                     // 如果是ActionStatus属性变更，触发ActionStatusChanged事件
-                    if (propertyName == nameof(ActionStatus) && ActionStatusChanged != null)
+                    if (propertyName == nameof(ActionStatus) && StatusChanged != null)
                     {
-                        var eventArgs = new ActionStatusChangedEventArgs(
-                            (ActionStatus)oldValue,
-                            (ActionStatus)newValue);
-                        ActionStatusChanged(this, eventArgs);
+                        var eventArgs = new StateTransitionEventArgs(
+                            this,
+                            typeof(ActionStatus),
+                            oldValue,
+                            newValue);
+                        StatusChanged(this, eventArgs);
                     }
                 }
                 catch (Exception ex)
@@ -1314,6 +1313,7 @@ namespace RUINORERP.Model
         /// 获取当前实体的数据状态
         /// </summary>
         /// <returns>当前数据状态</returns>
+        [Obsolete("请使用新的状态管理体系 - 参见RUINORERP.Model.Base.StatusManager.Core命名空间，替代方案：使用IUnifiedStateManager.GetCurrentStatus()")]
         public virtual DataStatus? GetCurrentDataStatus()
         {
             var dataStatusProperty = GetDataStatusProperty();
@@ -1347,6 +1347,7 @@ namespace RUINORERP.Model
         /// </summary>
         /// <param name="targetStatus">目标状态</param>
         /// <returns>是否可以转换</returns>
+        [Obsolete("请使用新的状态管理体系 - 参见RUINORERP.Model.Base.StatusManager.Core命名空间，替代方案：使用IUnifiedStateManager.CanTransitionToStatus()")]
         public virtual bool CanTransitionToStatus(DataStatus targetStatus)
         {
             var currentStatus = GetCurrentDataStatus();
@@ -1385,6 +1386,7 @@ namespace RUINORERP.Model
         /// </summary>
         /// <param name="targetStatus">目标状态</param>
         /// <returns>转换是否成功</returns>
+        [Obsolete("请使用新的状态管理体系 - 参见RUINORERP.Model.Base.StatusManager.Core命名空间，替代方案：使用IUnifiedStateManager.TryTransitionToStatus()")]
         public virtual bool TryTransitionToStatus(DataStatus targetStatus)
         {
             if (!CanTransitionToStatus(targetStatus))
@@ -1487,6 +1489,7 @@ namespace RUINORERP.Model
         /// 获取可执行的操作列表
         /// </summary>
         /// <returns>可执行的操作列表</returns>
+        [Obsolete("请使用新的状态管理体系 - 参见RUINORERP.Model.Base.StatusManager.Core命名空间，替代方案：使用IStatusUIController.GetAvailableActions()")]
         public virtual List<string> GetAvailableActions()
         {
             var actions = new List<string>();
@@ -1588,6 +1591,7 @@ namespace RUINORERP.Model
         /// </summary>
         /// <param name="actionType">操作类型</param>
         /// <returns>是否允许执行</returns>
+        [Obsolete("请使用新的状态管理体系 - 参见RUINORERP.Model.Base.StatusManager.Core命名空间，替代方案：使用IStatusUIController.CanExecuteAction()")]
         public bool CanExecuteAction(string actionType)
         {
             if (!IsStateManagerInitialized)

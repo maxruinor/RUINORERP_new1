@@ -1084,13 +1084,15 @@ namespace RUINORERP.Server.Network.Services
         #region ISessionManager 实现 - 统计和监控
 
         /// <summary>
-        /// 获取会话统计信息
+        /// 会话统计信息
         /// </summary>
-        /// <returns>统计信息</returns>
         public SessionStatistics GetStatistics()
         {
             lock (_lockObject)
             {
+                // 清理过期的统计信息
+                CleanExpiredStatistics();
+                
                 return new SessionStatistics
                 {
                     TotalConnections = _statistics.TotalConnections,
@@ -1102,6 +1104,27 @@ namespace RUINORERP.Server.Network.Services
                     LastCleanupTime = _statistics.LastCleanupTime,
                     LastHeartbeatCheck = _statistics.LastHeartbeatCheck
                 };
+            }
+        }
+        
+        /// <summary>
+        /// 清理过期的统计信息
+        /// </summary>
+        private void CleanExpiredStatistics()
+        {
+            try
+            {
+                // 如果距离上次清理已经超过1小时，则重置部分统计信息
+                if (_statistics.LastCleanupTime.AddHours(1) < DateTime.Now)
+                {
+                    // 重置超时会话和心跳失败统计，避免数值无限增长
+                    _statistics.TimeoutSessions = 0;
+                    _statistics.HeartbeatFailures = 0;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "清理过期统计信息时发生错误");
             }
         }
         
@@ -1153,8 +1176,14 @@ namespace RUINORERP.Server.Network.Services
 
                 var removedCount = 0;
 
-                // 使用Parallel.ForEach并行处理超时会话的移除
-                Parallel.ForEach(timeoutSessions, session =>
+                // 限制并行度，防止过度占用系统资源
+                // 根据历史经验，应控制并行度避免影响服务器稳定性
+                var parallelOptions = new ParallelOptions
+                {
+                    MaxDegreeOfParallelism = Environment.ProcessorCount // 限制并行度为CPU核心数
+                };
+
+                Parallel.ForEach(timeoutSessions, parallelOptions, session =>
                 {
                     if (RemoveSession(session.SessionID))
                     {
@@ -1256,7 +1285,10 @@ namespace RUINORERP.Server.Network.Services
                     {
                         try
                         {
-                            session.CloseAsync(CloseReason.ServerShutdown).AsTask().Wait(100);
+                            // 使用异步方式关闭会话，避免阻塞
+                            var closeTask = session.CloseAsync(CloseReason.ServerShutdown);
+                            // 等待最多100毫秒，防止长时间阻塞
+                            closeTask.AsTask().Wait(100);
                         }
                         catch (Exception ex)
                         {
@@ -1276,6 +1308,12 @@ namespace RUINORERP.Server.Network.Services
         #endregion
     }
 }
+
+
+
+
+
+
 
 
 

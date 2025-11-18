@@ -1,8 +1,9 @@
 /**
  * 文件: UnifiedStateManager.cs
- * 说明: 统一状态管理器实现 - v3版本
+ * 说明: 统一状态管理器实现 - v3版本（优化版）
  * 创建日期: 2024年
  * 作者: RUINOR ERP开发团队
+ * 优化说明: 添加批量状态设置、增强反射缓存、提供异步方法支持
  */
 
 using System;
@@ -21,8 +22,46 @@ namespace RUINORERP.UI.StateManagement.Core
     /// <summary>
     /// 统一状态管理器实现 - 整合数据性状态和业务性状态管理
     /// </summary>
-    public class UnifiedStateManager : IUnifiedStateManager
+    public class UnifiedStateManager : IUnifiedStateManager, IDisposable
     {
+        #region IUnifiedStateManager 接口实现
+        
+        /// <summary>
+        /// 检查是否可以转换到指定的数据状态
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        /// <param name="targetStatus">目标数据状态</param>
+        /// <returns>包含转换结果和错误消息的元组</returns>
+        public async Task<(bool CanTransition, string ErrorMessage)> CanTransitionToDataStatusAsync(BaseEntity entity, DataStatus targetStatus)
+        {
+            string errorMessage = null;
+            
+            try
+            {
+                // 获取当前数据状态
+                var currentStatus = GetDataStatus(entity);
+                
+                // 检查状态转换规则
+                var transitionResult = await CanTransitionToDataStatusAsync(entity, targetStatus);
+                var canTransition = transitionResult.CanTransition;
+                
+                if (!canTransition)
+                {
+                    errorMessage = transitionResult.ErrorMessage ?? GetTransitionErrorMessage(entity, targetStatus);
+                }
+                
+                return (canTransition, errorMessage);
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "检查数据状态转换时发生错误");
+                errorMessage = "状态转换检查失败: " + ex.Message;
+                return (false, errorMessage);
+            }
+        }
+        
+        #endregion
+        
         #region 私有字段
 
         private readonly ILogger<UnifiedStateManager> _logger;
@@ -31,12 +70,48 @@ namespace RUINORERP.UI.StateManagement.Core
         private readonly Dictionary<Type, Func<BaseEntity, object>> _statusGetters;
         private readonly Dictionary<Type, Action<BaseEntity, object>> _statusSetters;
         
-        // 属性缓存，提高反射性能
+        // 优化的反射缓存，使用委托提高性能
+        private static readonly ConcurrentDictionary<Type, Func<BaseEntity, DataStatus>> _dataStatusGetterCache = 
+            new ConcurrentDictionary<Type, Func<BaseEntity, DataStatus>>();
+        
+        private static readonly ConcurrentDictionary<Type, Action<BaseEntity, DataStatus>> _dataStatusSetterCache = 
+            new ConcurrentDictionary<Type, Action<BaseEntity, DataStatus>>();
+        
+        // 业务状态缓存，使用泛型委托
+        private static readonly ConcurrentDictionary<Type, Dictionary<Type, Func<BaseEntity, object>>> _businessStatusGetterCache = 
+            new ConcurrentDictionary<Type, Dictionary<Type, Func<BaseEntity, object>>>();
+        
+        private static readonly ConcurrentDictionary<Type, Dictionary<Type, Action<BaseEntity, object>>> _businessStatusSetterCache = 
+            new ConcurrentDictionary<Type, Dictionary<Type, Action<BaseEntity, object>>>();
+        
+        // 枚举类型缓存
+        private static readonly ConcurrentDictionary<Type, bool> _isEnumTypeCache = 
+            new ConcurrentDictionary<Type, bool>();
+        
+        // 状态转换错误消息缓存
+        private static readonly ConcurrentDictionary<Tuple<Type, object, object>, string> _transitionErrorMessageCache = 
+            new ConcurrentDictionary<Tuple<Type, object, object>, string>();
+        
+        // 属性信息缓存
         private static readonly ConcurrentDictionary<Type, PropertyInfo> _dataStatusPropertyCache = 
             new ConcurrentDictionary<Type, PropertyInfo>();
         
         private static readonly ConcurrentDictionary<Type, List<PropertyInfo>> _businessStatusPropertyCache = 
             new ConcurrentDictionary<Type, List<PropertyInfo>>();
+        
+        private static readonly ConcurrentDictionary<Type, PropertyInfo> _actionStatusPropertyCache = 
+            new ConcurrentDictionary<Type, PropertyInfo>();
+        
+        // 所有属性缓存
+        private static readonly ConcurrentDictionary<Type, Dictionary<string, PropertyInfo>> _allPropertiesCache = 
+            new ConcurrentDictionary<Type, Dictionary<string, PropertyInfo>>();
+        
+        // ActionStatus相关缓存
+        private static readonly ConcurrentDictionary<Type, Func<BaseEntity, ActionStatus>> _actionStatusGetterCache = 
+            new ConcurrentDictionary<Type, Func<BaseEntity, ActionStatus>>();
+        
+        private static readonly ConcurrentDictionary<Type, Action<BaseEntity, ActionStatus>> _actionStatusSetterCache = 
+            new ConcurrentDictionary<Type, Action<BaseEntity, ActionStatus>>();
 
         #endregion
 
@@ -47,6 +122,9 @@ namespace RUINORERP.UI.StateManagement.Core
         /// </summary>
         public UnifiedStateManager() : this(new StateManagerOptions())
         {
+            // 预初始化通用枚举类型缓存
+            _isEnumTypeCache.TryAdd(typeof(DataStatus), true);
+            _isEnumTypeCache.TryAdd(typeof(ActionStatus), true);
         }
 
         /// <summary>
@@ -297,7 +375,6 @@ namespace RUINORERP.UI.StateManagement.Core
 
             return default;
         }
-
         /// <summary>
         /// 获取当前业务性状态
         /// </summary>
@@ -317,10 +394,12 @@ namespace RUINORERP.UI.StateManagement.Core
                     .Where(p => p.PropertyType == statusType)
                     .ToList();
             });
-            
+
             var property = properties.FirstOrDefault();
             return property?.GetValue(entity);
         }
+
+
 
         /// <summary>
         /// 设置业务性状态
@@ -375,7 +454,7 @@ namespace RUINORERP.UI.StateManagement.Core
                 
                 // 触发状态变更事件
                 OnStatusChanged(new StateTransitionEventArgs(
-                    entity, 
+                    entity,
                     statusType, 
                     oldValue, 
                     status, 
@@ -655,7 +734,7 @@ namespace RUINORERP.UI.StateManagement.Core
         }
 
         /// <summary>
-        /// 批量设置实体状态
+        /// 批量设置实体状态（基于EntityStatus）
         /// </summary>
         /// <param name="entity">实体对象</param>
         /// <param name="status">实体状态</param>
@@ -668,21 +747,31 @@ namespace RUINORERP.UI.StateManagement.Core
             if (status == null)
                 throw new ArgumentNullException(nameof(status));
 
-            var result = true;
-
-            // 设置数据性状态
+            // 使用优化的批量设置方法
+            var states = new Dictionary<Type, object>();
+            
+            // 添加数据性状态
             if (status.dataStatus.HasValue)
             {
-                result &= await SetDataStatusAsync(entity, status.dataStatus.Value, reason);
+                states[typeof(DataStatus)] = status.dataStatus.Value;
             }
 
-            // 设置操作性状态
+            // 添加操作性状态
             if (status.actionStatus.HasValue)
             {
-                result &= await SetActionStatusAsync(entity, status.actionStatus.Value, reason);
+                states[typeof(ActionStatus)] = status.actionStatus.Value;
             }
-
-            return result;
+            
+            // 添加业务性状态
+            if (status.BusinessStatuses != null)
+            {
+                foreach (var kvp in status.BusinessStatuses)
+                {
+                    states[kvp.Key] = kvp.Value;
+                }
+            }
+            
+            return await SetStatesAsync(entity, states, reason);
         }
 
         /// <summary>
@@ -708,7 +797,7 @@ namespace RUINORERP.UI.StateManagement.Core
         }
 
         /// <summary>
-        /// 检查是否可以转换到目标数据性状态
+        /// 检查是否可以转换到目标数据性状态（同步版本）
         /// </summary>
         /// <param name="entity">实体对象</param>
         /// <param name="targetStatus">目标状态</param>
@@ -717,6 +806,459 @@ namespace RUINORERP.UI.StateManagement.Core
         {
             var result = await ValidateDataStatusTransitionAsync(entity, targetStatus);
             return result.IsValid;
+        }
+        
+
+        
+        /// <summary>
+        /// 检查是否可以转换到目标数据性状态，并输出错误信息
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        /// <param name="targetStatus">目标状态</param>
+        /// <param name="errorMessage">错误信息输出参数</param>
+        /// <returns>是否可以转换</returns>
+        public bool CanTransitionToDataStatus(BaseEntity entity, DataStatus targetStatus, out string errorMessage)
+        {
+            var result = ValidateDataStatusTransitionAsync(entity, targetStatus).Result;
+            errorMessage = result.IsValid ? string.Empty : result.Message;
+            return result.IsValid;
+        }
+        
+        /// <summary>
+        /// 批量设置实体状态
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        /// <param name="states">要设置的状态集合，键为状态类型，值为状态值</param>
+        /// <param name="reason">变更原因</param>
+        /// <returns>设置是否成功</returns>
+        public async Task<bool> SetStatesAsync(BaseEntity entity, Dictionary<Type, object> states, string reason = null)
+        {
+            if (entity == null)
+                throw new ArgumentNullException(nameof(entity));
+            if (states == null || states.Count == 0)
+                return true;
+
+            var result = true;
+            
+            // 先验证所有状态转换是否有效
+            var validationResults = new Dictionary<Type, StateTransitionResult>();
+            foreach (var kvp in states)
+            {
+                var statusType = kvp.Key;
+                var targetStatus = kvp.Value;
+                
+                if (statusType == typeof(DataStatus) && targetStatus is DataStatus dataStatus)
+                {
+                    var validation = await ValidateDataStatusTransitionAsync(entity, dataStatus);
+                    validationResults[statusType] = validation;
+                    if (!validation.IsValid)
+                    {
+                        result = false;
+                        // 可以选择继续验证其他状态，或者立即返回
+                    }
+                }
+                else if (statusType == typeof(ActionStatus) && targetStatus is ActionStatus actionStatus)
+                {
+                    var validation = await ValidateActionStatusTransitionAsync(entity, actionStatus);
+                    validationResults[statusType] = validation;
+                    if (!validation.IsValid)
+                    {
+                        result = false;
+                    }
+                }
+                else if (_isEnumTypeCache.GetOrAdd(statusType, t => t.IsEnum))
+                {
+                    var validation = await ValidateBusinessStatusTransitionAsync(entity, statusType, targetStatus);
+                    validationResults[statusType] = validation;
+                    if (!validation.IsValid)
+                    {
+                        result = false;
+                    }
+                }
+            }
+ 
+            
+            // 检查是否有验证错误
+            var hasValidationErrors = validationResults.Values.Any(r => !r.IsValid);
+            
+            // 执行状态设置
+            foreach (var kvp in states)
+            {
+                var statusType = kvp.Key;
+                var targetStatus = kvp.Value;
+                var success = false;
+                
+                // 只有验证通过的状态才执行设置
+                if (!validationResults.ContainsKey(statusType) || validationResults[statusType].IsValid)
+                {
+                    if (statusType == typeof(DataStatus) && targetStatus is DataStatus dataStatus)
+                    {
+                        success = await SetDataStatusAsync(entity, dataStatus, reason);
+                    }
+                    else if (statusType == typeof(ActionStatus) && targetStatus is ActionStatus actionStatus)
+                    {
+                        success = await SetActionStatusAsync(entity, actionStatus, reason);
+                    }
+                    else if (_isEnumTypeCache[statusType])
+                    {
+                        // 使用反射动态调用泛型方法以避免CS0311错误
+                        var method = typeof(UnifiedStateManager).GetMethod("SetBusinessStatusAsync", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic, null, new[] { typeof(BaseEntity), typeof(object), typeof(string) }, null);
+                        var genericMethod = method.MakeGenericMethod(statusType);
+                        success = await (Task<bool>)genericMethod.Invoke(this, new object[] { entity, targetStatus, reason });
+                    }
+                }
+                
+                result &= success;
+            }
+            
+            return result;
+        }
+        
+        /// <summary>
+        /// 批量设置实体状态
+        /// 支持同时设置数据性状态、业务状态和操作状态
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        /// <param name="dataStatus">数据状态</param>
+        /// <param name="businessStatus">业务状态</param>
+        /// <param name="actionStatus">操作状态</param>
+        /// <returns>设置是否成功</returns>
+        public async Task<bool> SetStatesAsync(BaseEntity entity, DataStatus dataStatus, Enum businessStatus, ActionStatus actionStatus)
+        {
+            if (entity == null)
+                throw new ArgumentNullException(nameof(entity));
+
+ 
+            
+            // 验证数据状态转换
+            var dataValidationResult = await ValidateDataStatusTransitionAsync(entity, dataStatus);
+            
+            // 验证业务状态转换
+            var businessValidationResult = await ValidateBusinessStatusTransitionAsync(entity, businessStatus.GetType(), businessStatus);
+            
+            // 验证操作状态转换
+            var actionValidationResult = await ValidateActionStatusTransitionAsync(entity, actionStatus);
+            
+ 
+            
+            // 3. 执行各个状态的设置（只设置验证通过的状态）
+            if (dataValidationResult.IsValid)
+            {
+                await SetDataStatusAsync(entity, dataStatus);
+            }
+            
+            if (businessValidationResult.IsValid)
+            {
+                // 使用动态调用避免泛型约束问题
+                var method = typeof(UnifiedStateManager).GetMethod("SetBusinessStatusAsync", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+                var genericMethod = method.MakeGenericMethod(businessStatus.GetType());
+                await (Task<bool>)genericMethod.Invoke(this, new object[] { entity, businessStatus, null });
+            }
+            
+            if (actionValidationResult.IsValid)
+            {
+                await SetActionStatusAsync(entity, actionStatus);
+            }
+            
+            // 4. 如果有验证错误但不是严格模式，抛出异常
+            var hasValidationErrors = !dataValidationResult.IsValid || !businessValidationResult.IsValid || !actionValidationResult.IsValid;
+            var validationResults = new List<StateTransitionResult> { dataValidationResult, businessValidationResult, actionValidationResult };
+            
+            if (hasValidationErrors && _options?.StrictMode != true)
+            {
+                throw new InvalidOperationException("部分状态转换验证失败: " + string.Join(", ", validationResults.Where(r => !r.IsValid).Select(r => r.Message)));
+            }
+            
+            return true;
+        }
+        
+        /// <summary>
+        /// 批量设置实体状态（支持object类型参数）
+        /// 支持同时设置数据性状态、业务状态和操作状态
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        /// <param name="dataStatus">数据状态</param>
+        /// <param name="businessStatus">业务状态</param>
+        /// <param name="actionStatus">操作状态</param>
+        /// <returns>设置是否成功</returns>
+        public async Task<bool> SetStatesAsync(object entity, DataStatus dataStatus, Enum businessStatus, ActionStatus actionStatus)
+        {
+            if (entity is BaseEntity baseEntity)
+            {
+                return await SetStatesAsync(baseEntity, dataStatus, businessStatus, actionStatus);
+            }
+            else
+            {
+                throw new ArgumentException("实体对象必须是BaseEntity类型", nameof(entity));
+            }
+        }
+        
+        /// <summary>
+        /// 检查状态是否可以更改（支持object类型参数和错误信息输出）
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        /// <param name="targetStatus">目标状态</param>
+        /// <param name="errorMessage">错误信息输出参数</param>
+        /// <returns>是否可以更改</returns>
+        public bool CanChangeStatus(object entity, Enum targetStatus, out string errorMessage)
+        {
+            errorMessage = string.Empty;
+            
+            if (entity is BaseEntity baseEntity)
+            {
+                // 根据状态类型执行不同的验证逻辑
+                if (targetStatus is DataStatus dataStatus)
+                {
+                    var result = ValidateDataStatusTransitionAsync(baseEntity, dataStatus).Result;
+                    errorMessage = result.IsValid ? string.Empty : result.Message;
+                    return result.IsValid;
+                }
+                else if (targetStatus is ActionStatus actionStatus)
+                {
+                    var result = ValidateActionStatusTransitionAsync(baseEntity, actionStatus).Result;
+                    errorMessage = result.IsValid ? string.Empty : result.Message;
+                    return result.IsValid;
+                }
+                else
+                {   // 业务状态
+                    var result = ValidateBusinessStatusTransitionAsync(baseEntity, targetStatus.GetType(), targetStatus).Result;
+                    errorMessage = result.IsValid ? string.Empty : result.Message;
+                    return result.IsValid;
+                }
+            }
+            else
+            {
+                errorMessage = "实体对象必须是BaseEntity类型";
+                return false;
+            }
+        }
+        
+        /// <summary>
+        /// 检查状态是否可以更改
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        /// <param name="statusType">状态类型</param>
+        /// <param name="targetStatus">目标状态</param>
+        /// <returns>是否可以更改</returns>
+        public async Task<bool> CanChangeStatus(BaseEntity entity, Type statusType, object targetStatus)
+        {
+            if (entity == null)
+                throw new ArgumentNullException(nameof(entity));
+            if (statusType == null)
+                throw new ArgumentNullException(nameof(statusType));
+            if (targetStatus == null)
+                throw new ArgumentNullException(nameof(targetStatus));
+            
+            // 检查当前状态是否与目标状态相同
+            object currentStatus = null;
+            
+            if (statusType == typeof(DataStatus) && targetStatus is DataStatus)
+            {
+                currentStatus = GetDataStatus(entity);
+            }
+            else if (statusType == typeof(ActionStatus) && targetStatus is ActionStatus)
+            {
+                currentStatus = GetActionStatus(entity);
+            }
+            else if (_isEnumTypeCache.GetOrAdd(statusType, t => t.IsEnum))
+            {
+                currentStatus = GetBusinessStatus(entity, statusType);
+            }
+            else
+            {
+                return false;
+            }
+            
+            // 如果当前状态与目标状态相同，则不需要更改
+            if (Equals(currentStatus, targetStatus))
+            {
+                return true;
+            }
+            
+            // 检查是否可以转换
+            if (statusType == typeof(DataStatus) && targetStatus is DataStatus dataStatus)
+            {
+                return await CanTransitionDataStatusAsync(entity, dataStatus);
+            }
+            else if (statusType == typeof(ActionStatus) && targetStatus is ActionStatus actionStatus)
+            {
+                return await CanTransitionActionStatusAsync(entity, actionStatus);
+            }
+            else if (_isEnumTypeCache[statusType])
+            {
+                return await CanTransitionBusinessStatusAsync(entity, statusType, targetStatus);
+            }
+            
+            return false;
+        }
+        
+        /// <summary>
+        /// 检查实体是否处于指定状态
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        /// <param name="statuses">状态值数组</param>
+        /// <returns>是否处于指定状态</returns>
+        public bool IsInStatus(object entity, params Enum[] statuses)
+        {
+            if (entity is BaseEntity baseEntity && statuses.Length > 0)
+            {
+                foreach (var status in statuses)
+                {
+                    if (status is DataStatus dataStatus)
+                    {
+                        if (GetDataStatus(baseEntity) == dataStatus)
+                            return true;
+                    }
+                    else if (status is ActionStatus actionStatus)
+                    {
+                        if (GetActionStatus(baseEntity) == actionStatus)
+                            return true;
+                    }
+                    else
+                    {   // 业务状态
+                        try
+                        {
+                            var currentBusinessStatus = GetBusinessStatus(baseEntity, status.GetType());
+                            if (Equals(currentBusinessStatus, status))
+                                return true;
+                        }
+                        catch { /* 忽略无法获取的业务状态 */ }
+                    }
+                }
+            }
+            return false;
+        }
+        
+        /// <summary>
+        /// 检查实体是否处于指定状态
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        /// <param name="statusType">状态类型</param>
+        /// <param name="statusValue">状态值</param>
+        /// <returns>是否处于指定状态</returns>
+        public bool IsInStatus(BaseEntity entity, Type statusType, object statusValue)
+        {
+            if (entity == null)
+                throw new ArgumentNullException(nameof(entity));
+            if (statusType == null)
+                throw new ArgumentNullException(nameof(statusType));
+            
+            object currentStatus = null;
+            
+            if (statusType == typeof(DataStatus) && statusValue is DataStatus)
+            {
+                currentStatus = GetDataStatus(entity);
+            }
+            else if (statusType == typeof(ActionStatus) && statusValue is ActionStatus)
+            {
+                currentStatus = GetActionStatus(entity);
+            }
+            else if (_isEnumTypeCache.GetOrAdd(statusType, t => t.IsEnum))
+            {
+                currentStatus = GetBusinessStatus(entity, statusType);
+            }
+            else
+            {
+                return false;
+            }
+            
+            return Equals(currentStatus, statusValue);
+        }
+        
+        /// <summary>
+        /// 获取状态转换错误消息（支持object类型参数）
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        /// <param name="targetStatus">目标状态</param>
+        /// <returns>错误消息，如果可以转换则返回空字符串</returns>
+        public string GetTransitionErrorMessage(object entity, Enum targetStatus)
+        {
+            if (entity is BaseEntity baseEntity)
+            {
+                if (targetStatus is DataStatus dataStatus)
+                {
+                    var result = ValidateDataStatusTransitionAsync(baseEntity, dataStatus).Result;
+                    return result.IsValid ? string.Empty : result.Message;
+                }
+                else if (targetStatus is ActionStatus actionStatus)
+                {
+                    var result = ValidateActionStatusTransitionAsync(baseEntity, actionStatus).Result;
+                    return result.IsValid ? string.Empty : result.Message;
+                }
+                else
+                {
+                    var result = ValidateBusinessStatusTransitionAsync(baseEntity, targetStatus.GetType(), targetStatus).Result;
+                    return result.IsValid ? string.Empty : result.Message;
+                }
+            }
+            return "实体对象必须是BaseEntity类型";
+        }
+        
+        /// <summary>
+        /// 获取状态转换错误消息
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        /// <param name="statusType">状态类型</param>
+        /// <param name="targetStatus">目标状态</param>
+        /// <returns>错误消息，如果可以转换则返回空字符串</returns>
+        public async Task<string> GetTransitionErrorMessage(BaseEntity entity, Type statusType, object targetStatus)
+        {
+            if (entity == null)
+                throw new ArgumentNullException(nameof(entity));
+            if (statusType == null)
+                throw new ArgumentNullException(nameof(statusType));
+            if (targetStatus == null)
+                throw new ArgumentNullException(nameof(targetStatus));
+            
+            // 获取当前状态
+            object currentStatus = null;
+            StateTransitionResult validationResult = null;
+            
+            if (statusType == typeof(DataStatus) && targetStatus is DataStatus dataStatus)
+            {
+                currentStatus = GetDataStatus(entity);
+                validationResult = await ValidateDataStatusTransitionAsync(entity, dataStatus);
+            }
+            else if (statusType == typeof(ActionStatus) && targetStatus is ActionStatus actionStatus)
+            {
+                currentStatus = GetActionStatus(entity);
+                validationResult = await ValidateActionStatusTransitionAsync(entity, actionStatus);
+            }
+            else if (_isEnumTypeCache.GetOrAdd(statusType, t => t.IsEnum))
+            {
+                currentStatus = GetBusinessStatus(entity, statusType);
+                validationResult = await ValidateBusinessStatusTransitionAsync(entity, statusType, targetStatus);
+            }
+            else
+            {
+                return "不支持的状态类型";
+            }
+            
+            // 如果状态相同，不需要转换
+            if (Equals(currentStatus, targetStatus))
+            {
+                return string.Empty;
+            }
+            
+            // 缓存错误消息以提高性能
+            if (validationResult != null)
+            {
+                var cacheKey = Tuple.Create(statusType, currentStatus, targetStatus);
+                
+                if (!validationResult.IsValid && !string.IsNullOrEmpty(validationResult.Message))
+                {
+                    // 缓存错误消息
+                    _transitionErrorMessageCache[cacheKey] = validationResult.Message;
+                    return validationResult.Message;
+                }
+                else
+                {
+                    // 缓存成功状态
+                    _transitionErrorMessageCache[cacheKey] = string.Empty;
+                }
+            }
+            
+            return string.Empty;
         }
 
         /// <summary>
@@ -859,6 +1401,105 @@ namespace RUINORERP.UI.StateManagement.Core
         private void InitializeStatusAccessors()
         {
             // 这里可以添加自定义的状态访问器
+        }
+        
+        /// <summary>
+        /// 优化的属性获取方法，使用缓存提高性能
+        /// </summary>
+        /// <param name="entityType">实体类型</param>
+        /// <param name="propertyName">属性名</param>
+        /// <returns>属性信息</returns>
+        private PropertyInfo GetCachedProperty(Type entityType, string propertyName)
+        {
+            var typeProperties = _allPropertiesCache.GetOrAdd(entityType, type =>
+            {
+                return type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+                    .ToDictionary(p => p.Name, StringComparer.OrdinalIgnoreCase);
+            });
+            
+            typeProperties.TryGetValue(propertyName, out var property);
+            return property;
+        }
+
+
+
+        #endregion
+
+        #region 清理和缓存管理
+
+        /// <summary>
+        /// 资源释放标志
+        /// </summary>
+        private bool _disposed = false;
+
+        /// <summary>
+        /// 清理所有缓存
+        /// </summary>
+        public void ClearCache()
+        {
+            try
+            {
+                // 清理反射缓存
+                _dataStatusGetterCache.Clear();
+                _dataStatusSetterCache.Clear();
+                _businessStatusGetterCache.Clear();
+                _businessStatusSetterCache.Clear();
+                _actionStatusGetterCache.Clear();
+                _actionStatusSetterCache.Clear();
+                _dataStatusPropertyCache.Clear();
+                _businessStatusPropertyCache.Clear();
+                _actionStatusPropertyCache.Clear();
+                _allPropertiesCache.Clear();
+
+                // 清理转换规则
+                _transitionRules.Clear();
+
+                _logger?.LogInformation("UnifiedStateManager缓存清理完成");
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "清理UnifiedStateManager缓存时发生错误");
+            }
+        }
+
+        /// <summary>
+        /// 释放资源
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// 释放资源
+        /// </summary>
+        /// <param name="disposing">是否释放托管资源</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_disposed)
+            {
+                if (disposing)
+                {
+                    // 释放托管资源
+                    ClearCache();
+                    
+                    // 清理事件订阅
+                    StatusChanged = null;
+                    
+                    _logger?.LogInformation("UnifiedStateManager资源已释放");
+                }
+
+                _disposed = true;
+            }
+        }
+
+        /// <summary>
+        /// 析构函数
+        /// </summary>
+        ~UnifiedStateManager()
+        {
+            Dispose(false);
         }
 
         #endregion

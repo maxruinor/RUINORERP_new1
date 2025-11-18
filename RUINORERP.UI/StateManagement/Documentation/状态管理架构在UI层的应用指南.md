@@ -79,6 +79,13 @@ public List<string> GetAvailableActions()
 {
     // 返回当前状态下可用的操作列表
 }
+
+// 获取可转换状态列表（异步）
+public async Task<IEnumerable<string>> GetAvailableTransitionsAsync()
+{
+    // 使用状态转换引擎异步获取可转换状态列表
+    // 返回当前状态下可转换的目标状态集合
+}
 ```
 
 ### 3.2 事件机制

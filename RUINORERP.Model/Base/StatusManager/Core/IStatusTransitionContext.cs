@@ -59,30 +59,11 @@ namespace RUINORERP.Model.Base.StatusManager.Core
         event EventHandler<StateTransitionEventArgs> StatusChanged;
 
         /// <summary>
-        /// 获取数据性状态
+        /// 获取当前状态
         /// </summary>
-        /// <returns>数据性状态</returns>
-        DataStatus GetDataStatus();
-
-        /// <summary>
-        /// 获取业务性状态
-        /// </summary>
-        /// <typeparam name="T">业务状态枚举类型</typeparam>
-        /// <returns>业务性状态</returns>
-        T GetBusinessStatus<T>() where T : Enum;
-
-        /// <summary>
-        /// 获取业务性状态
-        /// </summary>
-        /// <param name="statusType">业务状态枚举类型</param>
-        /// <returns>业务性状态</returns>
-        object GetBusinessStatus(Type statusType);
-
-        /// <summary>
-        /// 获取操作状态
-        /// </summary>
-        /// <returns>操作状态</returns>
-        ActionStatus GetActionStatus();
+        /// <typeparam name="T">状态枚举类型</typeparam>
+        /// <returns>当前状态</returns>
+        T GetCurrentStatus<T>() where T : Enum;
 
         /// <summary>
         /// 设置数据性状态
@@ -114,6 +95,32 @@ namespace RUINORERP.Model.Base.StatusManager.Core
         /// </summary>
         /// <returns>转换历史记录</returns>
         IEnumerable<IStatusTransitionRecord> GetTransitionHistory();
+
+        /// <summary>
+        /// 获取数据性状态
+        /// </summary>
+        /// <returns>数据性状态</returns>
+        DataStatus GetDataStatus();
+
+        /// <summary>
+        /// 获取业务性状态
+        /// </summary>
+        /// <param name="statusType">业务状态枚举类型</param>
+        /// <returns>业务性状态</returns>
+        object GetBusinessStatus(Type statusType);
+
+        /// <summary>
+        /// 获取业务性状态
+        /// </summary>
+        /// <typeparam name="T">业务状态枚举类型</typeparam>
+        /// <returns>业务性状态</returns>
+        T GetBusinessStatus<T>() where T : Enum;
+
+        /// <summary>
+        /// 获取操作状态
+        /// </summary>
+        /// <returns>操作状态</returns>
+        ActionStatus GetActionStatus();
 
         /// <summary>
         /// 记录转换

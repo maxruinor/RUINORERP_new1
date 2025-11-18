@@ -64,15 +64,17 @@ namespace RUINORERP.Model.Base.StatusManager.Core
 
         #region 公共方法
 
+
+
         /// <summary>
-        /// 验证状态转换是否有效
+        /// 执行状态转换（包含验证和执行）
         /// </summary>
         /// <typeparam name="T">状态枚举类型</typeparam>
         /// <param name="fromStatus">源状态</param>
         /// <param name="toStatus">目标状态</param>
         /// <param name="context">状态转换上下文</param>
-        /// <returns>验证结果</returns>
-        public async Task<StateTransitionResult> ValidateTransitionAsync<T>(T fromStatus, T toStatus, IStatusTransitionContext context) where T : Enum
+        /// <returns>转换结果</returns>
+        public async Task<StateTransitionResult> ExecuteTransitionAsync<T>(T fromStatus, T toStatus, IStatusTransitionContext context) where T : Enum
         {
             try
             {
@@ -92,34 +94,6 @@ namespace RUINORERP.Model.Base.StatusManager.Core
                     {
                         return StateTransitionResult.Failure($"自定义验证失败：从 {fromStatus} 转换到 {toStatus}");
                     }
-                }
-
-                return StateTransitionResult.Success(message: $"验证通过：从 {fromStatus} 转换到 {toStatus}");
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "验证状态转换失败：从 {FromStatus} 转换到 {ToStatus}", fromStatus, toStatus);
-                return StateTransitionResult.Failure($"验证状态转换失败：{ex.Message}", ex);
-            }
-        }
-
-        /// <summary>
-        /// 执行状态转换
-        /// </summary>
-        /// <typeparam name="T">状态枚举类型</typeparam>
-        /// <param name="fromStatus">源状态</param>
-        /// <param name="toStatus">目标状态</param>
-        /// <param name="context">状态转换上下文</param>
-        /// <returns>转换结果</returns>
-        public async Task<StateTransitionResult> ExecuteTransitionAsync<T>(T fromStatus, T toStatus, IStatusTransitionContext context) where T : Enum
-        {
-            try
-            {
-                // 先验证转换
-                var validationResult = await ValidateTransitionAsync(fromStatus, toStatus, context);
-                if (!validationResult.IsValid)
-                {
-                    return validationResult;
                 }
 
                 // 检查自定义执行器

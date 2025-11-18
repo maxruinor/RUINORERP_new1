@@ -36,6 +36,12 @@ namespace RUINORERP.Model.Base.StatusManager.Core
         /// 当实体状态变更时，是否自动同步更新UI控件状态
         /// </summary>
         public bool EnableUIStateSync { get; set; } = true;
+        
+        /// <summary>
+        /// 是否启用严格模式
+        /// 严格模式下，只要有一个状态转换验证失败，就不执行任何状态设置
+        /// </summary>
+        public bool StrictMode { get; set; } = false;
 
         /// <summary>
         /// 实体类型
@@ -79,6 +85,7 @@ namespace RUINORERP.Model.Base.StatusManager.Core
                 EnableTransitionValidation = true,
                 EnableStatusChangedEvents = true,
                 EnableUIStateSync = true
+      
             };
         }
 

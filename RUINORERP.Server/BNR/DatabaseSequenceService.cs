@@ -36,11 +36,22 @@ namespace RUINORERP.Server.BNR
         // 上次刷新时间
         private DateTime _lastFlushTime;
         
+        // 上次清理时间
+        private DateTime _lastCleanupTime;
+        
+        // 序列缓存过期时间（分钟）
+        private const int SEQUENCE_CACHE_EXPIRATION_MINUTES = 60;
+        
         // 取消令牌，用于控制后台任务的停止
         private CancellationTokenSource _cancellationTokenSource;
         
         // 后台任务
         private Task _backgroundTask;
+        
+        /// <summary>
+        /// 后台刷新间隔（毫秒）
+        /// </summary>
+        private const int BACKGROUND_FLUSH_INTERVAL = 5000; // 5秒，减少过于频繁的检查
         
         /// <summary>
         /// 构造函数
@@ -52,8 +63,9 @@ namespace RUINORERP.Server.BNR
             // 初始化表结构
             InitializeTable();
             
-            // 初始化最后刷新时间
+            // 初始化最后刷新时间和清理时间
             _lastFlushTime = DateTime.Now;
+            _lastCleanupTime = DateTime.Now;
             
             // 初始化取消令牌
             _cancellationTokenSource = new CancellationTokenSource();
@@ -85,13 +97,21 @@ namespace RUINORERP.Server.BNR
                 try
                 {
                     // 等待一段时间，可取消
-                    await Task.Delay(1000, cancellationToken);
+                    await Task.Delay(BACKGROUND_FLUSH_INTERVAL, cancellationToken);
                     
                     // 检查是否需要刷新
                     TimeSpan elapsed = DateTime.Now - _lastFlushTime;
                     if (elapsed.TotalMilliseconds >= CACHE_MAX_LIFETIME || _updateQueue.Count >= _batchUpdateThreshold)
                     {
                         FlushCacheToDatabase();
+                    }
+                    
+                    // 检查是否需要清理过期缓存
+                    TimeSpan cleanupElapsed = DateTime.Now - _lastCleanupTime;
+                    if (cleanupElapsed.TotalMinutes >= SEQUENCE_CACHE_EXPIRATION_MINUTES)
+                    {
+                        CleanupExpiredCache();
+                        _lastCleanupTime = DateTime.Now;
                     }
                 }
                 catch (OperationCanceledException)
@@ -103,6 +123,23 @@ namespace RUINORERP.Server.BNR
                 {
                     Console.WriteLine($"后台刷新任务异常: {ex.Message}");
                 }
+            }
+        }
+        
+        /// <summary>
+        /// 清理过期缓存
+        /// </summary>
+        private void CleanupExpiredCache()
+        {
+            try
+            {
+                // 在实际应用中，可以根据最后访问时间清理过期缓存
+                // 这里简化处理，仅记录日志
+                Console.WriteLine($"执行缓存清理: 当前缓存项数量 {_sequenceCache.Count}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"缓存清理过程中发生异常: {ex.Message}");
             }
         }
         

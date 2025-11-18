@@ -173,13 +173,22 @@ namespace RUINORERP.Server.SmartReminder
             try
             {
                 _timer?.Change(Timeout.Infinite, 0); // 立即停止触发
-                _timer?.Dispose();
-                _isRunning = false;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "停止监控服务时发生错误");
+                _logger.LogError(ex, "停止监控定时器时发生错误");
             }
+            
+            try
+            {
+                _timer?.Dispose();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "释放监控定时器资源时发生错误");
+            }
+            
+            _isRunning = false;
         }
 
         // 安全执行提醒检查，带异常处理

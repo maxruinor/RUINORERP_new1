@@ -172,6 +172,22 @@ namespace RUINORERP.UI.BaseForm
         }
 
         /// <summary>
+        /// 当通用实体状态改变时调用
+        /// </summary>
+        /// <param name="sender">事件发送者</param>
+        /// <param name="e">事件参数</param>
+        protected virtual void OnGenericEntityStateChanged(object sender, StateTransitionEventArgs e)
+        {
+            // 获取实体
+            var entity = e.Entity as BaseEntity;
+            if (entity != null)
+            {
+                // 更新UI状态
+                UpdateUIBasedOnGenericEntityState(entity);
+            }
+        }
+
+        /// <summary>
         /// 配置泛型状态管理器
         /// </summary>
         protected virtual void ConfigureGenericStateManager()
@@ -209,6 +225,22 @@ namespace RUINORERP.UI.BaseForm
         }
 
         /// <summary>
+        /// 根据通用实体状态更新UI
+        /// </summary>
+        /// <param name="entity">实体</param>
+        protected virtual void UpdateUIBasedOnGenericEntityState(BaseEntity entity)
+        {
+            if (entity == null) return;
+
+            // 根据状态更新UI控件
+            // 这里可以添加通用的UI状态更新逻辑
+            // 例如：根据状态启用/禁用某些控件
+            
+            // 调用基类的UI更新方法
+            UpdateUIBasedOnEntityState(entity);
+        }
+
+        /// <summary>
         /// 初始化泛型特定的按钮状态管理
         /// </summary>
         protected virtual void InitializeGenericButtonStateManagement()
@@ -221,203 +253,7 @@ namespace RUINORERP.UI.BaseForm
         }
 
 
-        /// <summary>
-        /// 泛型实体状态变更事件处理程序
-        /// </summary>
-        /// <param name="sender">事件发送者</param>
-        /// <param name="e">事件参数</param>
-        protected virtual void OnGenericEntityStateChanged(object sender, StateTransitionEventArgs e)
-        {
-            // 根据状态变更更新UI
-            if (e.Entity is T entity)
-            {
-                UpdateUIBasedOnGenericEntityState(entity);
-            }
-        }
-
-        /// <summary>
-        /// 根据泛型实体状态更新UI
-        /// </summary>
-        /// <param name="entity">泛型实体对象</param>
-        protected virtual void UpdateUIBasedOnGenericEntityState(T entity)
-        {
-            // 获取当前数据状态
-            var currentStatus = entity.GetCurrentDataStatus();
-            if (currentStatus.HasValue)
-            {
-                // 根据状态更新工具栏按钮
-                ToolBarEnabledControl(currentStatus.Value);
-
-                // 根据状态更新子表相关操作
-                UpdateChildTableOperations(currentStatus.Value);
-                
-                // 更新UI控件状态
-                UpdateUIControlsState(entity);
-            }
-        }
-
-        /// <summary>
-        /// 基于实体状态更新UI控件状态
-        /// </summary>
-        /// <param name="entity">实体对象</param>
-        protected virtual void UpdateUIControlsState(T entity)
-        {
-            if (entity == null || StatusContext == null)
-                return;
-
-            // 获取当前状态
-            var currentStatus = StatusContext.CurrentStatus;
-            
-            // 根据状态更新控件可见性和可用性
-            UpdateControlsBasedOnStatus(currentStatus);
-        }
-
-        /// <summary>
-        /// 根据状态更新特定控件
-        /// </summary>
-        /// <param name="status">当前状态</param>
-        protected virtual void UpdateControlsBasedOnStatus(object status)
-        {
-            // 根据状态类型进行不同的处理
-            if (status is DataStatus dataStatus)
-            {
-                SetControlsEditable(dataStatus);
-            }
-            else if (status is PrePaymentStatus preStatus)
-            {
-                SetControlsEditable(preStatus);
-            }
-            else if (status is ARAPStatus arapStatus)
-            {
-                SetControlsEditable(arapStatus);
-            }
-            else if (status is PaymentStatus paymentStatus)
-            {
-                SetControlsEditable(paymentStatus);
-            }
-        }
-
-        /// <summary>
-        /// 设置控件编辑状态
-        /// </summary>
-        /// <param name="status">数据状态</param>
-        protected virtual void SetControlsEditable(DataStatus status)
-        {
-            bool isEditable = status == DataStatus.草稿 || status == DataStatus.新建;
-            
-            // 遍历所有控件，设置编辑状态
-            foreach (Control control in this.Controls)
-            {
-                SetControlEditableState(control, isEditable);
-            }
-        }
-
-        /// <summary>
-        /// 设置控件编辑状态（预付款状态）
-        /// </summary>
-        /// <param name="status">预付款状态</param>
-        protected virtual void SetControlsEditable(PrePaymentStatus status)
-        {
-            bool isEditable = status == PrePaymentStatus.草稿;
-            
-            // 遍历所有控件，设置编辑状态
-            foreach (Control control in this.Controls)
-            {
-                SetControlEditableState(control, isEditable);
-            }
-        }
-
-        /// <summary>
-        /// 设置控件编辑状态（应收应付状态）
-        /// </summary>
-        /// <param name="status">应收应付状态</param>
-        protected virtual void SetControlsEditable(ARAPStatus status)
-        {
-            bool isEditable = status == ARAPStatus.草稿;
-            
-            // 遍历所有控件，设置编辑状态
-            foreach (Control control in this.Controls)
-            {
-                SetControlEditableState(control, isEditable);
-            }
-        }
-
-        /// <summary>
-        /// 设置控件编辑状态（付款状态）
-        /// </summary>
-        /// <param name="status">付款状态</param>
-        protected virtual void SetControlsEditable(PaymentStatus status)
-        {
-            bool isEditable = status == PaymentStatus.草稿;
-            
-            // 遍历所有控件，设置编辑状态
-            foreach (Control control in this.Controls)
-            {
-                SetControlEditableState(control, isEditable);
-            }
-        }
-
-        /// <summary>
-        /// 递归设置控件编辑状态
-        /// </summary>
-        /// <param name="control">控件</param>
-        /// <param name="isEditable">是否可编辑</param>
-        private void SetControlEditableState(Control control, bool isEditable)
-        {
-            // 根据控件类型设置编辑状态
-            if (control is KryptonTextBox kryptonTextBox)
-            {
-                kryptonTextBox.ReadOnly = !isEditable;
-            }
-            else if (control is KryptonComboBox kryptonComboBox)
-            {
-                kryptonComboBox.Enabled = isEditable;
-            }
-            else if (control is KryptonCheckBox kryptonCheckBox)
-            {
-                kryptonCheckBox.Enabled = isEditable;
-            }
-            else if (control is KryptonDateTimePicker kryptonDateTimePicker)
-            {
-                kryptonDateTimePicker.Enabled = isEditable;
-            }
-            else if (control is KryptonNumericUpDown kryptonNumericUpDown)
-            {
-                kryptonNumericUpDown.Enabled = isEditable;
-            }
-            else if (control is Grid grid)
-            {
-                //grid.ReadOnly = !isEditable;
-                //grid.AllowUserToAddRows = isEditable;
-                //grid.AllowUserToDeleteRows = isEditable;
-            }
-            
-            // 递归处理子控件
-            foreach (Control childControl in control.Controls)
-            {
-                SetControlEditableState(childControl, isEditable);
-            }
-        }
-
-        /// <summary>
-        /// 处理实体状态变更事件
-        /// </summary>
-        /// <param name="sender">事件发送者</param>
-        /// <param name="e">事件参数</param>
-        protected virtual void HandleEntityStatusChanged(object sender, StateTransitionEventArgs e)
-        {
-            if (e.Entity is T entity)
-            {
-                // 更新UI状态
-                UpdateUIBasedOnGenericEntityState(entity);
-                
-                // 记录状态变更日志
-                if (MainForm.Instance.AppContext.SysConfig.ShowDebugInfo)
-                {
-                    MainForm.Instance.logger.LogDebug($"实体状态已变更: {e.OldStatus} -> {e.NewStatus}");
-                }
-            }
-        }
+       
 
         /// <summary>
         /// 检查操作可执行性
@@ -1235,22 +1071,21 @@ namespace RUINORERP.UI.BaseForm
         }
         
         /// <summary>
-        /// 应用状态特定的UI规则
+        /// 应用状态特定的UI规则 - 使用V3状态管理系统优化版本
         /// </summary>
         /// <param name="entity">实体对象</param>
         protected virtual void ApplyStateSpecificRules(BaseEntity entity)
         {
             if (entity == null) return;
             
-            // 根据实体状态应用特定的UI规则
+            // 使用基类的SetControlsState方法设置控件状态
             bool isEditable = entity.IsEditable();
+            SetControlsState(Controls, isEditable);
+            
+            // 根据确认状态设置特殊控件
             bool isConfirmed = entity.IsConfirmed();
             bool isFinalState = entity.IsFinalState();
             
-            // 根据编辑状态设置控件
-            SetControlsEditable(isEditable);
-            
-            // 根据确认状态设置特殊控件
             if (isConfirmed && !isFinalState)
             {
                 // 已确认但非终态的特殊处理
@@ -1291,7 +1126,7 @@ namespace RUINORERP.UI.BaseForm
         }
         
         /// <summary>
-        /// 执行状态操作
+        /// 执行状态操作 - 使用V3状态管理系统优化版本
         /// </summary>
         /// <param name="actionType">操作类型</param>
         /// <param name="entity">实体对象</param>
@@ -1303,11 +1138,15 @@ namespace RUINORERP.UI.BaseForm
                 return false;
             }
             
-            // 检查操作权限
-            if (!CheckActionPermission(baseEntity, actionType))
+            // 使用基类的CanExecuteAction方法检查操作权限
+            MenuItemEnums actionEnum;
+            if (Enum.TryParse(actionType, out actionEnum))
             {
-                MessageBox.Show(this, $"当前状态不允许执行{actionType}操作", "操作权限不足", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return false;
+                if (!CanExecuteAction(actionEnum, entity))
+                {
+                    MessageBox.Show(this, $"当前状态不允许执行{actionType}操作", "操作权限不足", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return false;
+                }
             }
             
             // 确定目标状态

@@ -121,28 +121,7 @@ namespace RUINORERP.Model.Base.StatusManager
 
         #region 公共方法
 
-        /// <summary>
-        /// 获取当前状态
-        /// </summary>
-        /// <typeparam name="T">状态枚举类型</typeparam>
-        /// <returns>当前状态</returns>
-        public T GetCurrentStatus<T>() where T : Enum
-        {
-            if (StatusType == typeof(T))
-            {
-                return (T)CurrentStatus;
-            }
-
-            // 根据状态类型调用相应的状态管理器方法
-            if (typeof(T) == typeof(DataStatus))
-            {
-                return (T)(object)_statusManager.GetDataStatus(Entity);
-            }
-            else
-            {
-                return _statusManager.GetBusinessStatus<T>(Entity);
-            }
-        }
+       
 
         /// <summary>
         /// 获取业务性状态
@@ -167,6 +146,51 @@ namespace RUINORERP.Model.Base.StatusManager
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// 获取当前状态（泛型版本）
+        /// </summary>
+        /// <typeparam name="T">状态枚举类型</typeparam>
+        /// <returns>当前状态</returns>
+        public T GetCurrentStatus<T>() where T : struct, Enum
+        {
+            if (CurrentStatus == null)
+                return default(T);
+
+            try
+            {
+                // 将CurrentStatus转换为T类型
+                return (T)Enum.Parse(typeof(T), CurrentStatus.ToString());
+            }
+            catch
+            {
+                return default(T);
+            }
+        }
+
+        /// <summary>
+        /// 获取业务性状态（泛型版本）
+        /// </summary>
+        /// <typeparam name="T">业务状态枚举类型</typeparam>
+        /// <returns>业务性状态</returns>
+        public T GetBusinessStatus<T>() where T : struct, Enum
+        {
+            var statusType = typeof(T);
+            
+            if (StatusType == statusType)
+            {
+                return (T)CurrentStatus;
+            }
+
+            // 获取实体的状态信息
+            var entityStatus = _statusManager.GetEntityStatus(Entity);
+            if (entityStatus?.BusinessStatuses != null && entityStatus.BusinessStatuses.TryGetValue(statusType, out var status))
+            {
+                return (T)status;
+            }
+
+            return default(T);
         }
 
         /// <summary>
@@ -197,20 +221,7 @@ namespace RUINORERP.Model.Base.StatusManager
             return _statusManager.GetDataStatus(Entity);
         }
 
-        /// <summary>
-        /// 获取业务性状态
-        /// </summary>
-        /// <typeparam name="T">业务状态枚举类型</typeparam>
-        /// <returns>业务性状态</returns>
-        public T GetBusinessStatus<T>() where T : Enum
-        {
-            if (StatusType == typeof(T))
-            {
-                return (T)CurrentStatus;
-            }
-
-            return _statusManager.GetBusinessStatus<T>(Entity);
-        }
+         
 
         /// <summary>
         /// 转换到指定状态

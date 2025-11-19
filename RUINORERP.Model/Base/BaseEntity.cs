@@ -7,6 +7,7 @@ using RUINORERP.Global.EnumExt;
 using RUINORERP.Global.Model;
 using RUINORERP.Model.Base;
 using RUINORERP.Model.Base.StatusManager;
+using RUINORERP.Model.Context;
 using SharpYaml.Tokens;
 using SqlSugar;
 using SqlSugar.Extensions;
@@ -207,13 +208,125 @@ namespace RUINORERP.Model
 
         #region 状态机管理
 
+        /// <summary>
+        /// 状态信息 - 新的简化状态管理系统
+        /// </summary>
+        [SugarColumn(IsIgnore = true)]
+        [Browsable(false)]
+        [JsonIgnore]
+        public EntityStatus StatusInfo { get; set; }
 
+        /// <summary>
+        /// 状态变更事件
+        /// </summary>
+        public event EventHandler<StateTransitionEventArgs> StatusChanged;
 
+        /// <summary>
+        /// 状态变更处理
+        /// </summary>
+        /// <param name="statusType">状态类型</param>
+        /// <param name="newStatus">新状态</param>
+        /// <param name="reason">变更原因</param>
+        protected internal virtual void OnStatusChanged(StatusType statusType, object newStatus, string reason)
+        {
+            StatusChanged?.Invoke(this, new StateTransitionEventArgs(
+                entity: this,
+                statusType: statusType.GetType(),
+                oldStatus: null,
+                newStatus: newStatus,
+                reason: reason,
+                userId: null,
+                changeTime: DateTime.Now
+            ));
+        }
+
+        /// <summary>
+        /// 获取当前数据状态
+        /// </summary>
+        /// <returns>数据状态</returns>
+        public DataStatus GetCurrentDataStatus()
+        {
+            return StatusInfo?.dataStatus ?? DataStatus.草稿;
+        }
+
+        /// <summary>
+        /// 获取当前操作状态
+        /// </summary>
+        /// <returns>操作状态</returns>
+        public ActionStatus GetCurrentActionStatus()
+        {
+            return StatusInfo?.actionStatus ?? ActionStatus.无操作;
+        }
+
+        /// <summary>
+        /// 获取业务状态
+        /// </summary>
+        /// <typeparam name="TBusiness">业务状态枚举类型</typeparam>
+        /// <returns>业务状态</returns>
+        public TBusiness GetCurrentBusinessStatus<TBusiness>() where TBusiness : struct, Enum
+        {
+            return StatusInfo?.GetBusinessStatus<TBusiness>() ?? default;
+        }
+
+        /// <summary>
+        /// 检查是否处于草稿状态
+        /// </summary>
+        /// <returns>是否草稿</returns>
+        public bool IsDraft()
+        {
+            return GetCurrentDataStatus() == DataStatus.草稿;
+        }
+
+        /// <summary>
+        /// 检查是否已审核
+        /// </summary>
+        /// <returns>是否已审核</returns>
+        public bool IsApproved()
+        {
+            return GetCurrentDataStatus() == DataStatus.确认;
+        }
+
+        /// <summary>
+        /// 检查是否已作废
+        /// </summary>
+        /// <returns>是否已作废</returns>
+        public bool IsVoid()
+        {
+            return GetCurrentDataStatus() == DataStatus.作废;
+        }
+
+        /// <summary>
+        /// 检查是否已完成
+        /// </summary>
+        /// <returns>是否已完成</returns>
+        public bool IsCompleted()
+        {
+            return GetCurrentDataStatus() == DataStatus.完结;
+        }
+
+ 
+
+        /// <summary>
+        /// 初始化状态信息（如未初始化）
+        /// </summary>
+        private void InitializeStatusInfo()
+        {
+            if (StatusInfo == null)
+            {
+                StatusInfo = new EntityStatus
+                {
+                    dataStatus = DataStatus.草稿,
+                    actionStatus = ActionStatus.无操作
+                };
+            }
+        }
 
         public BaseEntity()
         {
-            // 初始化新的状态管理系统
-            InitializeStateManager();
+            // 初始化状态信息
+            InitializeStatusInfo();
+            // 初始化属性变更追踪
+            BeginOperation();
         }
 
 
@@ -715,10 +828,7 @@ namespace RUINORERP.Model
         public event PropertyChangedEventHandler PropertyChanged;
 
 
-        /// <summary>
-        /// 状态变更事件
-        /// </summary>
-        public event EventHandler<StateTransitionEventArgs> StatusChanged;
+  
 
         /// <summary>
         /// 触发状态变更事件
@@ -1253,8 +1363,8 @@ namespace RUINORERP.Model
                 }
 
                 // 使用单例工厂获取状态管理器，避免重复初始化
-                var factory = StateManagerFactoryV3.Instance;
-                var stateManager = factory.GetStateManager();
+
+                var stateManager = ApplicationContext.Current.GetRequiredService<IUnifiedStateManager>();
 
                 // 设置初始状态
                 stateManager.SetEntityDataStatus(this, initialStatus);

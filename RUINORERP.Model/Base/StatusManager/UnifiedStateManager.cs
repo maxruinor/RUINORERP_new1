@@ -1,8 +1,13 @@
 /**
  * 文件: UnifiedStateManager.cs
- * 说明: 简化版统一状态管理器 - 整合状态管理功能
+ * 版本: V3增强版 - 统一状态管理器实现
+ * 说明: 借鉴V4优点，增强V3验证机制，保持简洁高效
  * 创建日期: 2024年
  * 作者: RUINOR ERP开发团队
+ * 
+ * 版本标识：
+ * V3增强版: 借鉴V4验证机制实现，避免过度复杂化
+ * 功能: 提供统一的状态管理，集成轻量级规则配置中心
  */
 
 using RUINORERP.Global;
@@ -15,8 +20,9 @@ using Microsoft.Extensions.Logging;
 namespace RUINORERP.Model.Base.StatusManager
 {
     /// <summary>
-    /// 简化版统一状态管理器 - 整合状态管理功能
+    /// 统一状态管理器 - V3增强版
     /// 移除了复杂的反射缓存，简化了状态访问逻辑
+    /// 集成轻量级规则配置中心，增强验证机制
     /// </summary>
     public class UnifiedStateManager : IUnifiedStateManager, IDisposable
     {
@@ -38,6 +44,11 @@ namespace RUINORERP.Model.Base.StatusManager
         private readonly StateManagerOptions _options;
 
         /// <summary>
+        /// 规则配置中心 - 借鉴V4优点
+        /// </summary>
+        private readonly IStateRuleConfiguration _ruleConfiguration;
+
+        /// <summary>
         /// 是否已释放资源
         /// </summary>
         private bool _disposed = false;
@@ -52,19 +63,22 @@ namespace RUINORERP.Model.Base.StatusManager
         #region 构造函数
 
         /// <summary>
-        /// 初始化统一状态管理器
+        /// 初始化统一状态管理器 - V3增强版
         /// </summary>
         /// <param name="options">状态管理选项</param>
         /// <param name="logger">日志记录器</param>
         /// <param name="transitionEngine">状态转换引擎</param>
+        /// <param name="ruleConfiguration">规则配置中心 - 借鉴V4优点</param>
         public UnifiedStateManager(
             StateManagerOptions options = null,
             ILogger<UnifiedStateManager> logger = null,
-            IStatusTransitionEngine transitionEngine = null)
+            IStatusTransitionEngine transitionEngine = null,
+            IStateRuleConfiguration ruleConfiguration = null)
         {
             _options = options ?? StateManagerOptions.CreateDefault();
             _logger = logger;
             _transitionEngine = transitionEngine;
+            _ruleConfiguration = ruleConfiguration; // 集成规则配置中心 - 借鉴V4优点
         }
 
         #endregion
@@ -203,7 +217,7 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <typeparam name="T">业务状态枚举类型</typeparam>
         /// <param name="entity">实体对象</param>
         /// <returns>业务性状态</returns>
-        public T GetBusinessStatus<T>(BaseEntity entity) where T : Enum
+        public T GetBusinessStatus<T>(BaseEntity entity) where T : struct, Enum
         {
             if (entity == null)
                 return default;
@@ -236,7 +250,7 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <param name="status">状态值</param>
         /// <param name="reason">变更原因</param>
         /// <returns>设置是否成功</returns>
-        public async Task<bool> SetBusinessStatusAsync<T>(BaseEntity entity, T status, string reason = null) where T : Enum
+        public async Task<bool> SetBusinessStatusAsync<T>(BaseEntity entity, T status, string reason = null) where T : struct, Enum
         {
             if (entity == null)
                 return false;
@@ -370,7 +384,7 @@ namespace RUINORERP.Model.Base.StatusManager
         }
 
         /// <summary>
-        /// 验证数据性状态转换
+        /// 验证数据性状态转换 - V3增强版：集成规则配置中心和增强验证机制
         /// </summary>
         /// <param name="entity">实体对象</param>
         /// <param name="targetStatus">目标状态</param>
@@ -383,6 +397,19 @@ namespace RUINORERP.Model.Base.StatusManager
             try
             {
                 var currentStatus = GetDataStatus(entity);
+                
+                // V3增强版：使用规则配置中心验证状态转换 - 借鉴V4优点，保持简单
+                if (_ruleConfiguration != null )
+                {
+                    var isValidTransition = _ruleConfiguration.ValidateTransition(currentStatus, targetStatus, entity);
+                    if (!isValidTransition)
+                    {
+                        return StateTransitionResult.Failure($"状态转换规则不允许：{currentStatus} -> {targetStatus}");
+                    }
+                }
+
+        
+
                 // 创建状态转换上下文，不传递日志记录器参数，让StatusTransitionContext自己创建
                 var context = new StatusTransitionContext(entity, typeof(DataStatus), currentStatus, this, _transitionEngine);
                 return await _transitionEngine.ValidateTransitionAsync(currentStatus, targetStatus, context);
@@ -395,13 +422,13 @@ namespace RUINORERP.Model.Base.StatusManager
         }
 
         /// <summary>
-        /// 验证业务性状态转换
+        /// 验证业务性状态转换 - V3增强版：集成规则配置中心和增强验证机制
         /// </summary>
         /// <typeparam name="T">业务状态枚举类型</typeparam>
         /// <param name="entity">实体对象</param>
         /// <param name="targetStatus">目标状态</param>
         /// <returns>验证结果</returns>
-        public async Task<StateTransitionResult> ValidateBusinessStatusTransitionAsync<T>(BaseEntity entity, T targetStatus) where T : Enum
+        public async Task<StateTransitionResult> ValidateBusinessStatusTransitionAsync<T>(BaseEntity entity, T targetStatus) where T : struct, Enum
         {
             if (entity == null)
                 return StateTransitionResult.Failure("实体对象不能为空");
@@ -409,6 +436,19 @@ namespace RUINORERP.Model.Base.StatusManager
             try
             {
                 var currentStatus = GetBusinessStatus<T>(entity);
+                
+                // V3增强版：使用规则配置中心验证状态转换 - 借鉴V4优点，保持简单
+                if (_ruleConfiguration != null)
+                {
+                    var isValidTransition = _ruleConfiguration.ValidateTransition(currentStatus, targetStatus, entity);
+                    if (!isValidTransition)
+                    {
+                        return StateTransitionResult.Failure($"状态转换规则不允许：{currentStatus} -> {targetStatus}");
+                    }
+                }
+
+               
+
                 // 创建状态转换上下文，不传递日志记录器参数，让StatusTransitionContext自己创建
                 var context = new StatusTransitionContext(entity, typeof(T), currentStatus, this, _transitionEngine);
                 return await _transitionEngine.ValidateTransitionAsync(currentStatus, targetStatus, context);
@@ -456,7 +496,7 @@ namespace RUINORERP.Model.Base.StatusManager
                 }
                 else
                 {
-                    return await _transitionEngine.ValidateTransitionAsync((Enum)currentStatus, (Enum)targetStatus, context);
+                    return StateTransitionResult.Failure($"状态类型 {statusType.Name} 必须是枚举类型");
                 }
             }
             catch (Exception ex)
@@ -467,7 +507,7 @@ namespace RUINORERP.Model.Base.StatusManager
         }
 
         /// <summary>
-        /// 验证操作状态转换
+        /// 验证操作状态转换 - V3增强版：集成规则配置中心和增强验证机制
         /// </summary>
         /// <param name="entity">实体对象</param>
         /// <param name="targetStatus">目标状态</param>
@@ -480,6 +520,19 @@ namespace RUINORERP.Model.Base.StatusManager
             try
             {
                 var currentStatus = GetActionStatus(entity);
+                
+                // V3增强版：使用规则配置中心验证状态转换 - 借鉴V4优点，保持简单
+                if (_ruleConfiguration != null)
+                {
+                    var isValidTransition = _ruleConfiguration.ValidateTransition(currentStatus, targetStatus, entity);
+                    if (!isValidTransition)
+                    {
+                        return StateTransitionResult.Failure($"状态转换规则不允许：{currentStatus} -> {targetStatus}");
+                    }
+                }
+
+             
+
                 // 创建状态转换上下文，不传递日志记录器参数，让StatusTransitionContext自己创建
                 var context = new StatusTransitionContext(entity, typeof(ActionStatus), currentStatus, this, _transitionEngine);
                 return await _transitionEngine.ValidateTransitionAsync(currentStatus, targetStatus, context);
@@ -514,32 +567,7 @@ namespace RUINORERP.Model.Base.StatusManager
                 return Enumerable.Empty<DataStatus>();
             }
         }
-
-        /// <summary>
-        /// 获取可转换的业务性状态列表
-        /// </summary>
-        /// <typeparam name="T">业务状态枚举类型</typeparam>
-        /// <param name="entity">实体对象</param>
-        /// <returns>可转换的状态列表</returns>
-        public IEnumerable<T> GetAvailableBusinessStatusTransitions<T>(BaseEntity entity) where T : Enum
-        {
-            if (entity == null)
-                return Enumerable.Empty<T>();
-
-            try
-            {
-                var currentStatus = GetBusinessStatus<T>(entity);
-                // 创建状态转换上下文，不传递日志记录器参数，让StatusTransitionContext自己创建
-                var context = new StatusTransitionContext(entity, typeof(T), currentStatus, this, _transitionEngine);
-                return _transitionEngine.GetAvailableTransitions(currentStatus, context).Cast<T>();
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "获取可转换业务状态列表失败：实体类型 {EntityType}, 状态类型 {StatusType}", entity.GetType().Name, typeof(T).Name);
-                return Enumerable.Empty<T>();
-            }
-        }
-
+ 
         /// <summary>
         /// 获取可转换的业务性状态列表
         /// </summary>
@@ -576,13 +604,66 @@ namespace RUINORERP.Model.Base.StatusManager
                 }
                 else
                 {
-                    return _transitionEngine.GetAvailableTransitions((Enum)currentStatus, context);
+                    return Enumerable.Empty<object>();
                 }
             }
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "获取可转换业务状态列表失败：实体类型 {EntityType}, 状态类型 {StatusType}", entity.GetType().Name, statusType.Name);
                 return Enumerable.Empty<object>();
+            }
+        }
+
+        /// <summary>
+        /// 获取可转换的业务性状态列表（泛型版本）
+        /// </summary>
+        /// <typeparam name="T">业务状态枚举类型</typeparam>
+        /// <param name="entity">实体对象</param>
+        /// <returns>可转换的状态列表</returns>
+        public IEnumerable<T> GetAvailableBusinessStatusTransitions<T>(BaseEntity entity) where T : struct, Enum
+        {
+            if (entity == null)
+                return Enumerable.Empty<T>();
+
+            try
+            {
+                var statusType = typeof(T);
+                
+                // 使用反射获取当前状态
+                var currentStatusProperty = entity.GetType().GetProperties()
+                    .FirstOrDefault(p => p.PropertyType == statusType);
+
+                if (currentStatusProperty == null)
+                {
+                    _logger?.LogWarning("获取可转换业务状态列表失败：实体类型 {EntityType} 没有类型为 {StatusType} 的属性", entity.GetType().Name, statusType.Name);
+                    return Enumerable.Empty<T>();
+                }
+
+                var currentStatus = currentStatusProperty.GetValue(entity);
+                // 创建状态转换上下文，不传递日志记录器参数，让StatusTransitionContext自己创建
+                var context = new StatusTransitionContext(entity, statusType, currentStatus, this, _transitionEngine);
+                
+                // 根据状态类型调用相应的泛型方法
+                if (statusType.IsEnum)
+                {
+                    var method = _transitionEngine.GetType().GetMethod(nameof(_transitionEngine.GetAvailableTransitions))
+                        .MakeGenericMethod(statusType);
+                    var result = method.Invoke(_transitionEngine, new object[] { currentStatus, context });
+                    return (IEnumerable<T>)result;
+                }
+                else
+                {
+                    // 使用反射调用泛型方法
+                    var method = _transitionEngine.GetType().GetMethod(nameof(_transitionEngine.GetAvailableTransitions))
+                        .MakeGenericMethod(statusType);
+                    var result = method.Invoke(_transitionEngine, new object[] { currentStatus, context });
+                    return (IEnumerable<T>)result;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "获取可转换业务状态列表失败：实体类型 {EntityType}, 状态类型 {StatusType}", entity.GetType().Name, typeof(T).Name);
+                return Enumerable.Empty<T>();
             }
         }
 
@@ -641,7 +722,7 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <param name="entity">实体对象</param>
         /// <param name="targetStatus">目标状态</param>
         /// <returns>是否可以转换</returns>
-        public async Task<bool> CanTransitionToBusinessStatus<T>(BaseEntity entity, T targetStatus) where T : Enum
+        public async Task<bool> CanTransitionToBusinessStatus<T>(BaseEntity entity, T targetStatus) where T : struct, Enum
         {
             var result = await ValidateBusinessStatusTransitionAsync(entity, targetStatus);
             return result.IsSuccess;
@@ -762,11 +843,18 @@ namespace RUINORERP.Model.Base.StatusManager
                 // 设置业务状态
                 if (businessStatus != null)
                 {
-                    var businessStatusResult = await SetBusinessStatusAsync(baseEntity, businessStatus);
-                    if (!businessStatusResult)
+                    var businessType = businessStatus.GetType();
+                    if (businessType.IsEnum)
                     {
-                        _logger?.LogWarning("批量设置状态失败：设置业务状态失败");
-                        return false;
+                        var method = typeof(UnifiedStateManager).GetMethod(nameof(SetBusinessStatusAsync))
+                            .MakeGenericMethod(businessType);
+                        var task = (Task<bool>)method.Invoke(this, new object[] { baseEntity, businessStatus, null });
+                        var businessStatusResult = await task;
+                        if (!businessStatusResult)
+                        {
+                            _logger?.LogWarning("批量设置状态失败：设置业务状态失败");
+                            return false;
+                        }
                     }
                 }
 
@@ -843,99 +931,8 @@ namespace RUINORERP.Model.Base.StatusManager
             }
         }
 
-        /// <summary>
-        /// 检查实体是否处于指定状态
-        /// </summary>
-        /// <param name="entity">实体对象</param>
-        /// <param name="statuses">要检查的状态列表</param>
-        /// <returns>是否处于任一指定状态</returns>
-        public bool IsInStatus(object entity, params Enum[] statuses)
-        {
-            if (entity == null || statuses == null || statuses.Length == 0)
-                return false;
-
-            try
-            {
-                var baseEntity = entity as BaseEntity;
-                if (baseEntity == null)
-                    return false;
-
-                foreach (var status in statuses)
-                {
-                    if (status is DataStatus dataStatus)
-                    {
-                        if (GetDataStatus(baseEntity) == dataStatus)
-                            return true;
-                    }
-                    else if (status is ActionStatus actionStatus)
-                    {
-                        if (GetActionStatus(baseEntity) == actionStatus)
-                            return true;
-                    }
-                    else
-                    {
-                        // 业务状态
-                        var statusType = status.GetType();
-                        var method = typeof(UnifiedStateManager).GetMethod(nameof(GetBusinessStatus))
-                            .MakeGenericMethod(statusType);
-                        var currentStatus = method.Invoke(this, new object[] { baseEntity });
-
-                        if (Equals(currentStatus, status))
-                            return true;
-                    }
-                }
-
-                return false;
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "检查实体状态失败：实体类型 {EntityType}", entity.GetType().Name);
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// 获取状态转换失败的详细错误信息
-        /// </summary>
-        /// <param name="entity">实体对象</param>
-        /// <param name="targetStatus">目标状态</param>
-        /// <returns>错误信息</returns>
-        public string GetTransitionErrorMessage(object entity, Enum targetStatus)
-        {
-            if (entity == null)
-                return "实体对象不能为空";
-
-            try
-            {
-                var baseEntity = entity as BaseEntity;
-                if (baseEntity == null)
-                    return "实体不是BaseEntity类型";
-
-                // 根据目标状态类型进行不同的验证
-                if (targetStatus is DataStatus dataStatus)
-                {
-                    var result = ValidateDataStatusTransitionAsync(baseEntity, dataStatus).Result;
-                    return result.ErrorMessage ?? "状态转换验证失败";
-                }
-                else if (targetStatus is ActionStatus actionStatus)
-                {
-                    var result = ValidateActionStatusTransitionAsync(baseEntity, actionStatus).Result;
-                    return result.ErrorMessage ?? "状态转换验证失败";
-                }
-                else
-                {
-                    // 业务状态
-                    var statusType = targetStatus.GetType();
-                    var result = ValidateBusinessStatusTransitionAsync(baseEntity, statusType, targetStatus).Result;
-                    return result.ErrorMessage ?? "状态转换验证失败";
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "获取状态转换错误信息失败：实体类型 {EntityType}, 目标状态 {TargetStatus}", entity.GetType().Name, targetStatus);
-                return $"获取状态转换错误信息失败：{ex.Message}";
-            }
-        }
+      
+        
 
         /// <summary>
         /// 清理缓存

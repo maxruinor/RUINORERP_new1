@@ -1,8 +1,13 @@
 /**
  * 文件: IUnifiedStateManager.cs
- * 说明: 统一状态管理器接口 - 优化版
+ * 版本: V3 - 统一状态管理器接口（原始架构）
+ * 说明: V3原始架构的统一状态管理器接口，提供数据状态、业务状态和操作状态的获取与设置功能
  * 创建日期: 2024年
  * 作者: RUINOR ERP开发团队
+ * 
+ * 版本标识：
+ * V3: 原始复杂架构，包含多个接口和工厂模式
+ * V3架构: 8个接口 + 工厂模式，应用复杂度较高
  */
 
 using RUINORERP.Global;
@@ -53,7 +58,7 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <typeparam name="T">业务状态枚举类型</typeparam>
         /// <param name="entity">实体对象</param>
         /// <returns>业务性状态</returns>
-        T GetBusinessStatus<T>(BaseEntity entity) where T : Enum;
+        T GetBusinessStatus<T>(BaseEntity entity) where T : struct, Enum;
 
         /// <summary>
         /// 设置业务性状态
@@ -63,7 +68,7 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <param name="status">状态值</param>
         /// <param name="reason">变更原因</param>
         /// <returns>设置是否成功</returns>
-        Task<bool> SetBusinessStatusAsync<T>(BaseEntity entity, T status, string reason = null) where T : Enum;
+        Task<bool> SetBusinessStatusAsync<T>(BaseEntity entity, T status, string reason = null) where T : struct, Enum;
 
         /// <summary>
         /// 获取当前操作状态
@@ -96,7 +101,7 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <param name="entity">实体对象</param>
         /// <param name="targetStatus">目标状态</param>
         /// <returns>验证结果</returns>
-        Task<StateTransitionResult> ValidateBusinessStatusTransitionAsync<T>(BaseEntity entity, T targetStatus) where T : Enum;
+        Task<StateTransitionResult> ValidateBusinessStatusTransitionAsync<T>(BaseEntity entity, T targetStatus) where T : struct, Enum;
 
         /// <summary>
         /// 验证业务性状态转换
@@ -128,7 +133,7 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <typeparam name="T">业务状态枚举类型</typeparam>
         /// <param name="entity">实体对象</param>
         /// <returns>可转换的状态列表</returns>
-        IEnumerable<T> GetAvailableBusinessStatusTransitions<T>(BaseEntity entity) where T : Enum;
+        IEnumerable<T> GetAvailableBusinessStatusTransitions<T>(BaseEntity entity) where T : struct, Enum;
 
         /// <summary>
         /// 获取可转换的业务性状态列表
@@ -168,7 +173,7 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <param name="entity">实体对象</param>
         /// <param name="targetStatus">目标状态</param>
         /// <returns>是否可以转换</returns>
-        Task<bool> CanTransitionToBusinessStatus<T>(BaseEntity entity, T targetStatus) where T : Enum;
+        Task<bool> CanTransitionToBusinessStatus<T>(BaseEntity entity, T targetStatus) where T : struct, Enum;
 
         /// <summary>
         /// 检查是否可以转换到目标操作状态
@@ -207,21 +212,8 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <returns>是否可以更改</returns>
         bool CanChangeStatus(object entity, Enum targetStatus, out string errorMessage);
 
-        /// <summary>
-        /// 检查实体是否处于指定状态
-        /// </summary>
-        /// <param name="entity">实体对象</param>
-        /// <param name="statuses">要检查的状态列表</param>
-        /// <returns>是否处于任一指定状态</returns>
-        bool IsInStatus(object entity, params Enum[] statuses);
-
-        /// <summary>
-        /// 获取状态转换失败的详细错误信息
-        /// </summary>
-        /// <param name="entity">实体对象</param>
-        /// <param name="targetStatus">目标状态</param>
-        /// <returns>错误信息</returns>
-        string GetTransitionErrorMessage(object entity, Enum targetStatus);
+        
+ 
 
         /// <summary>
         /// 状态变更事件

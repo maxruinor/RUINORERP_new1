@@ -14,9 +14,8 @@ using Microsoft.Extensions.Logging;
 namespace RUINORERP.Model.Base.StatusManager
 {
     /// <summary>
-    /// 简化版状态转换引擎 - v3版本
-    /// 负责处理状态转换的核心逻辑
-    /// 移除了复杂的自定义验证器和执行器，简化了状态转换逻辑
+    /// 负责处理状态转换的核心逻辑 - V3增强版
+    /// 借鉴V4验证器模式，集成轻量级规则配置中心，保持简洁高效
     /// </summary>
     public class StatusTransitionEngine : IStatusTransitionEngine
     {
@@ -28,21 +27,28 @@ namespace RUINORERP.Model.Base.StatusManager
         private readonly ILogger<StatusTransitionEngine> _logger;
 
         /// <summary>
-        /// 转换规则字典
+        /// 转换规则字典 - 保持V3简洁架构
         /// </summary>
         private readonly Dictionary<Type, Dictionary<object, List<object>>> _transitionRules;
+
+        /// <summary>
+        /// 轻量级规则配置中心 - 借鉴V4优点
+        /// </summary>
+        private readonly IStateRuleConfiguration _ruleConfiguration;
 
         #endregion
 
         #region 构造函数
 
         /// <summary>
-        /// 初始化状态转换引擎
+        /// 初始化状态转换引擎 - V3增强版
         /// </summary>
         /// <param name="logger">日志记录器</param>
-        public StatusTransitionEngine(ILogger<StatusTransitionEngine> logger = null)
+        /// <param name="ruleConfiguration">规则配置中心</param>
+        public StatusTransitionEngine(ILogger<StatusTransitionEngine> logger = null, IStateRuleConfiguration ruleConfiguration = null)
         {
             _logger = logger;
+            _ruleConfiguration = ruleConfiguration ?? new StateRuleConfiguration();
             _transitionRules = new Dictionary<Type, Dictionary<object, List<object>>>();
 
             // 初始化默认规则
@@ -61,18 +67,13 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <param name="toStatus">目标状态</param>
         /// <param name="context">状态转换上下文</param>
         /// <returns>转换结果</returns>
-        public async Task<StateTransitionResult> ExecuteTransitionAsync<T>(T fromStatus, T toStatus, IStatusTransitionContext context) where T : Enum
+        public async Task<StateTransitionResult> ExecuteTransitionAsync<T>(T fromStatus, T toStatus, IStatusTransitionContext context) where T : struct, Enum
         {
             try
             {
-                // 检查基本规则
-                if (!IsTransitionAllowed(fromStatus, toStatus))
-                {
-                    return StateTransitionResult.Failure($"不允许从 {fromStatus} 转换到 {toStatus}");
-                }
-
-                // 默认执行逻辑
-                return await ExecuteDefaultTransitionAsync(fromStatus, toStatus, context);
+                return !IsTransitionAllowed(fromStatus, toStatus)
+                    ? StateTransitionResult.Failure($"不允许从 {fromStatus} 转换到 {toStatus}")
+                    : await ExecuteDefaultTransitionAsync(fromStatus, toStatus, context);
             }
             catch (Exception ex)
             {
@@ -82,26 +83,43 @@ namespace RUINORERP.Model.Base.StatusManager
         }
 
         /// <summary>
-        /// 验证状态转换
+        /// 验证状态转换 - V3增强版：集成规则配置中心验证
         /// </summary>
         /// <typeparam name="T">状态枚举类型</typeparam>
         /// <param name="fromStatus">源状态</param>
         /// <param name="toStatus">目标状态</param>
         /// <param name="context">状态转换上下文</param>
         /// <returns>验证结果</returns>
-        public async Task<StateTransitionResult> ValidateTransitionAsync<T>(T fromStatus, T toStatus, IStatusTransitionContext context) where T : Enum
+        public async Task<StateTransitionResult> ValidateTransitionAsync<T>(T fromStatus, T toStatus, IStatusTransitionContext context) where T : struct, Enum
         {
             try
             {
-                // 检查基本规则
-                if (!IsTransitionAllowed(fromStatus, toStatus))
+                // V3增强版：优先使用规则配置中心验证 - 借鉴V4优点
+                if (_ruleConfiguration != null)
                 {
-                    return StateTransitionResult.Failure($"不允许从 {fromStatus} 转换到 {toStatus}");
+                    var ruleValidationResult = _ruleConfiguration.ValidateTransition(fromStatus, toStatus, context);
+                    if (!ruleValidationResult)
+                    {
+                        _logger?.LogWarning("规则配置中心验证失败: 从 {FromStatus} 到 {ToStatus}", fromStatus, toStatus);
+                        return StateTransitionResult.Failure($"规则配置中心验证失败：不允许从 {fromStatus} 转换到 {toStatus}");
+                    }
+                    _logger?.LogInformation("规则配置中心验证通过: 从 {FromStatus} 到 {ToStatus}", fromStatus, toStatus);
+                    return StateTransitionResult.Success(message: $"验证通过：可以从 {fromStatus} 转换到 {toStatus}");
                 }
 
-                // 默认验证逻辑
-                await Task.CompletedTask;
-                return StateTransitionResult.Success(message: $"验证通过：可以从 {fromStatus} 转换到 {toStatus}");
+                // 保持V3简洁性：基础转换规则验证（备用方案）
+                var allowed = IsTransitionAllowed(fromStatus, toStatus);
+                if (allowed)
+                {
+                    _logger?.LogInformation("基础规则验证通过: 从 {FromStatus} 到 {ToStatus}", fromStatus, toStatus);
+                }
+                else
+                {
+                    _logger?.LogWarning("基础规则验证失败: 从 {FromStatus} 到 {ToStatus}", fromStatus, toStatus);
+                }
+                return allowed
+                    ? StateTransitionResult.Success(message: $"验证通过：可以从 {fromStatus} 转换到 {toStatus}")
+                    : StateTransitionResult.Failure($"不允许从 {fromStatus} 转换到 {toStatus}");
             }
             catch (Exception ex)
             {
@@ -117,7 +135,7 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <param name="currentStatus">当前状态</param>
         /// <param name="context">状态转换上下文</param>
         /// <returns>可转换的状态列表</returns>
-        public IEnumerable<T> GetAvailableTransitions<T>(T currentStatus, IStatusTransitionContext context) where T : Enum
+        public IEnumerable<T> GetAvailableTransitions<T>(T currentStatus, IStatusTransitionContext context) where T : struct, Enum
         {
             try
             {
@@ -168,7 +186,7 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <param name="fromStatus">源状态</param>
         /// <param name="toStatus">目标状态</param>
         /// <returns>是否允许转换</returns>
-        private bool IsTransitionAllowed<T>(T fromStatus, T toStatus) where T : Enum
+        private bool IsTransitionAllowed<T>(T fromStatus, T toStatus) where T : struct, Enum
         {
             return StateTransitionRules.IsTransitionAllowed(_transitionRules, fromStatus, toStatus);
         }
@@ -181,7 +199,7 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <param name="toStatus">目标状态</param>
         /// <param name="context">状态转换上下文</param>
         /// <returns>转换结果</returns>
-        private async Task<StateTransitionResult> ExecuteDefaultTransitionAsync<T>(T fromStatus, T toStatus, IStatusTransitionContext context) where T : Enum
+        private async Task<StateTransitionResult> ExecuteDefaultTransitionAsync<T>(T fromStatus, T toStatus, IStatusTransitionContext context) where T : struct, Enum
         {
             // 默认转换逻辑
             await Task.CompletedTask;

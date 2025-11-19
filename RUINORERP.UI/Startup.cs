@@ -474,6 +474,8 @@ namespace RUINORERP.UI
                 .PropertiesAutowired()
                 .SingleInstance();
 
+            // 注册状态管理服务
+            builder.AddStateManager();
 
         }
 

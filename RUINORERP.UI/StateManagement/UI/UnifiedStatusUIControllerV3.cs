@@ -1,8 +1,13 @@
 /**
  * 文件: UnifiedStatusUIControllerV3.cs
- * 说明: 统一状态UI控制器实现 - v3版本
+ * 版本: V3 - 统一状态UI控制器实现
+ * 说明: 统一状态UI控制器实现 - v3版本，负责根据状态上下文更新UI控件状态
  * 创建日期: 2024年
  * 作者: RUINOR ERP开发团队
+ * 
+ * 版本标识：
+ * V3: 支持数据状态、操作状态和业务状态的UI控制
+ * 公共代码: UI层状态管理控制器，所有版本通用
  */
 
 using System;
@@ -40,7 +45,7 @@ namespace RUINORERP.UI.StateManagement.UI
         /// <summary>
         /// 状态操作规则配置
         /// </summary>
-        private readonly StatusActionRuleConfiguration _actionRuleConfiguration;
+        private readonly IStateRuleConfiguration _actionRuleConfiguration;
 
         #endregion
 
@@ -50,13 +55,14 @@ namespace RUINORERP.UI.StateManagement.UI
         /// 初始化统一状态UI控制器
         /// </summary>
         /// <param name="stateManager">状态管理器</param>
+        /// <param name="actionRuleConfiguration">状态操作规则配置</param>
         /// <param name="logger">日志记录器</param>
-        public UnifiedStatusUIControllerV3(IUnifiedStateManager stateManager, ILogger<UnifiedStatusUIControllerV3> logger = null)
+        public UnifiedStatusUIControllerV3(IUnifiedStateManager stateManager, IStateRuleConfiguration actionRuleConfiguration, ILogger<UnifiedStatusUIControllerV3> logger = null)
         {
             _stateManager = stateManager ?? throw new ArgumentNullException(nameof(stateManager));
+            _actionRuleConfiguration = actionRuleConfiguration ?? throw new ArgumentNullException(nameof(actionRuleConfiguration));
             _logger = logger;
             _uiRules = new Dictionary<string, IUIStatusRule>();
-            _actionRuleConfiguration = new StatusActionRuleConfiguration();
 
             // 注册默认规则
             RegisterDefaultRules();
@@ -214,14 +220,14 @@ namespace RUINORERP.UI.StateManagement.UI
                 // 检查数据状态下的操作权限
                 if (dataStatus != null)
                 {
-                    if (_actionRuleConfiguration.IsActionAllowed(dataStatus, action))
+                    if (_actionRuleConfiguration.IsActionAllowed(dataStatus, action.ToString()))
                         return true;
                 }
 
                 // 检查业务状态下的操作权限
                 if (businessStatus != null)
                 {
-                    if (_actionRuleConfiguration.IsActionAllowed(businessStatus as Enum, action))
+                    if (_actionRuleConfiguration.IsActionAllowed(businessStatus as Enum, action.ToString()))
                         return true;
                 }
 

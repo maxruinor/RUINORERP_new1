@@ -129,28 +129,13 @@ namespace RUINORERP.UI.StateManagement
         /// </summary>
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public DataStatus CurrentDataStatus
-        {
-            get
+        public DataStatus CurrentDataStatus =>
+            StatusContext?.CurrentStatus switch
             {
-                if (StatusContext != null && StatusContext.CurrentStatus != null)
-                {
-                    if (StatusContext.CurrentStatus is DataStatus dataStatus)
-                    {
-                        return dataStatus;
-                    }
-                    try
-                    {
-                        return StatusContext.GetCurrentStatus<DataStatus>();
-                    }
-                    catch
-                    {
-                        return DataStatus.草稿;
-                    }
-                }
-                return DataStatus.草稿;
-            }
-        }
+                DataStatus dataStatus => dataStatus,
+                _ when StatusContext != null => StatusContext.GetCurrentStatus<DataStatus>(),
+                _ => DataStatus.草稿
+            };
 
         /// <summary>
         /// 绑定的实体对象
@@ -170,22 +155,22 @@ namespace RUINORERP.UI.StateManagement
         {
             try
             {
-                // 尝试从服务容器获取状态管理器
+                // 从服务容器获取状态管理器（现在服务已注册）
                 if (Startup.ServiceProvider != null)
                 {
                     _stateManager = Startup.ServiceProvider.GetService<IUnifiedStateManager>();
                     _uiController = Startup.ServiceProvider.GetService<IStatusUIController>();
                 }
 
-                // 如果获取失败，创建默认实例
+                // 如果仍然获取失败，记录错误信息
                 if (_stateManager == null)
                 {
-                    _stateManager = new UnifiedStateManager();
+                    System.Diagnostics.Debug.WriteLine("无法从DI容器获取IUnifiedStateManager服务");
                 }
 
                 if (_uiController == null)
                 {
-                    _uiController = new UnifiedStatusUIControllerV3(_stateManager);
+                    System.Diagnostics.Debug.WriteLine("无法从DI容器获取IStatusUIController服务");
                 }
             }
             catch (Exception ex)
@@ -211,22 +196,27 @@ namespace RUINORERP.UI.StateManagement
             }
 
             BoundEntity = entity;
+            InitializeStatusContext(entity);
+            ApplyCurrentStatusToUI();
+        }
 
+        /// <summary>
+        /// 初始化状态上下文
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        private void InitializeStatusContext(BaseEntity entity)
+        {
             try
             {
-                // 使用状态管理器工厂创建状态上下文
-                var factory = Startup.ServiceProvider?.GetService<IStateManagerFactoryV3>();
-                if (factory != null)
-                {
-                    StatusContext = factory.CreateTransitionContext<DataStatus>(entity);
-                }
+                var factory = Startup.ServiceProvider?.GetService<IUnifiedStateManager>();
+                // 使用单例工厂获取状态管理器，避免重复初始化
+
+                //StatusContext = factory?.CreateTransitionContext<DataStatus>(entity);
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"获取实体状态上下文失败: {ex.Message}");
             }
-
-            ApplyCurrentStatusToUI();
         }
 
         /// <summary>
@@ -262,16 +252,9 @@ namespace RUINORERP.UI.StateManagement
         /// </summary>
         /// <param name="parent">父控件</param>
         /// <returns>控件列表</returns>
-        protected virtual IEnumerable<Control> GetAllControls(Control parent)
-        {
-            var controls = new List<Control>();
-            foreach (Control control in parent.Controls)
-            {
-                controls.Add(control);
-                controls.AddRange(GetAllControls(control));
-            }
-            return controls;
-        }
+        protected virtual IEnumerable<Control> GetAllControls(Control parent) =>
+            parent.Controls.Cast<Control>()
+                .SelectMany(control => new[] { control }.Concat(GetAllControls(control)));
 
         /// <summary>
         /// 刷新状态
@@ -330,9 +313,7 @@ namespace RUINORERP.UI.StateManagement
         public virtual async Task<StateTransitionResult> TransitionToDataStatusAsync(DataStatus targetStatus, string reason = "")
         {
             if (StatusContext == null)
-            {
                 return StateTransitionResult.Failure("状态上下文未初始化");
-            }
 
             try
             {
@@ -343,10 +324,8 @@ namespace RUINORERP.UI.StateManagement
                     ApplyCurrentStatusToUI();
                     return StateTransitionResult.Success();
                 }
-                else
-                {
-                    return StateTransitionResult.Failure($"转换到数据状态失败: {targetStatus}");
-                }
+                
+                return StateTransitionResult.Failure($"转换到数据状态失败: {targetStatus}");
             }
             catch (Exception ex)
             {
@@ -359,33 +338,16 @@ namespace RUINORERP.UI.StateManagement
         /// </summary>
         /// <param name="targetStatus">目标状态</param>
         /// <returns>是否可转换</returns>
-        public virtual async Task<bool> CanTransitionToDataStatus(DataStatus targetStatus)
-        {
-            if (StatusContext == null)
-                return false;
-
-            try
-            {
-                return await StatusContext.CanTransitionTo(targetStatus);
-            }
-            catch
-            {
-                return false;
-            }
-        }
+        public virtual async Task<bool> CanTransitionToDataStatus(DataStatus targetStatus) =>
+            StatusContext != null && await StatusContext.CanTransitionTo(targetStatus);
 
         /// <summary>
         /// 获取可用的数据状态转换列表
         /// </summary>
         /// <returns>可转换的状态列表</returns>
-        public virtual IEnumerable<DataStatus> GetAvailableDataStatusTransitions()
-        {
-            if (StatusContext == null)
-                return Enumerable.Empty<DataStatus>();
-
-            var transitions = StatusContext.GetAvailableTransitions();
-            return transitions.Where(t => t is DataStatus).Cast<DataStatus>();
-        }
+        public virtual IEnumerable<DataStatus> GetAvailableDataStatusTransitions() =>
+            StatusContext?.GetAvailableTransitions()
+                .OfType<DataStatus>() ?? Enumerable.Empty<DataStatus>();
 
         #endregion
     }

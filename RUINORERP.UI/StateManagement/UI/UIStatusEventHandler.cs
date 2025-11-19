@@ -496,8 +496,17 @@ namespace RUINORERP.UI.StateManagement.UI
             if (stateManager == null)
                 throw new ArgumentNullException(nameof(stateManager));
 
+            // 从服务容器获取状态规则配置
+            var actionRuleConfiguration = Startup.GetFromFac<IStateRuleConfiguration>();
+            
+            // 如果获取失败，创建默认实例
+            if (actionRuleConfiguration == null)
+            {
+                actionRuleConfiguration = new StateRuleConfiguration();
+            }
+
             // 创建UI控制器
-            IStatusUIController uiController = new UnifiedStatusUIControllerV3(stateManager);
+            IStatusUIController uiController = new UnifiedStatusUIControllerV3(stateManager, actionRuleConfiguration);
             var handler = new UIStatusEventHandler(uiController, stateManager);
             handler.SubscribeToAllEvents(stateManager);
             return handler;

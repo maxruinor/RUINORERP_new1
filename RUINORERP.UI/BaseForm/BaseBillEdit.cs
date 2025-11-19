@@ -70,9 +70,7 @@ namespace RUINORERP.UI.BaseForm
             // 调用基类的InitializeStateManagement方法
             base.InitializeStateManagement();
 
-            // 使用单例工厂获取状态管理器，避免重复初始化
-            var factory = StateManagerFactoryV3.Instance;
-            this.StateManager = factory.GetStateManager();
+            this.StateManager = ApplicationContext.Current.GetRequiredService<IUnifiedStateManager>(); ;
 
             // 注册状态变更事件处理程序
             this.StatusChanged -= HandleStatusChangedEvent;
@@ -1337,15 +1335,15 @@ namespace RUINORERP.UI.BaseForm
             if (this.StateManager != null && this.BoundEntity != null)
             {
                 // 创建状态上下文
-                var factory = StateManagerFactoryV3.Instance;
-                this.StatusContext = factory.CreateTransitionContext<DataStatus>(this.BoundEntity);
+                //var factory = StateManagerFactoryV3.Instance;
+                //this.StatusContext = factory.CreateTransitionContext<DataStatus>(this.BoundEntity);
                 
-                // 订阅状态变更事件
-                this.StatusContext.StatusChanged += (sender, e) =>
-                {
-                    // 当状态变更时，更新UI
-                    UpdateUIBasedOnEntityState(this.BoundEntity);
-                };
+                //// 订阅状态变更事件
+                //this.StatusContext.StatusChanged += (sender, e) =>
+                //{
+                //    // 当状态变更时，更新UI
+                //    UpdateUIBasedOnEntityState(this.BoundEntity);
+                //};
             }
         }
     }

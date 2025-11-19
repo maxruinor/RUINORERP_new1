@@ -1,8 +1,13 @@
 /**
  * 文件: IStatusTransitionContext.cs
- * 说明: 状态转换上下文接口 - v3版本
+ * 版本: V3 - 状态转换上下文接口（原始架构）
+ * 说明: V3原始架构的状态转换上下文接口，提供状态转换过程中的上下文信息
  * 创建日期: 2024年
  * 作者: RUINOR ERP开发团队
+ * 
+ * 版本标识：
+ * V3: 原始复杂架构，8个接口之一，用于状态转换上下文管理
+ * V3架构: 在V4中被简化合并，减少上下文复杂性
  */
 
 using System;
@@ -62,7 +67,7 @@ namespace RUINORERP.Model.Base.StatusManager
         /// </summary>
         /// <typeparam name="T">状态枚举类型</typeparam>
         /// <returns>当前状态</returns>
-        T GetCurrentStatus<T>() where T : Enum;
+        T GetCurrentStatus<T>() where T : struct, Enum;
 
         /// <summary>
         /// 获取数据性状态
@@ -82,7 +87,7 @@ namespace RUINORERP.Model.Base.StatusManager
         /// </summary>
         /// <typeparam name="T">业务状态枚举类型</typeparam>
         /// <returns>业务性状态</returns>
-        T GetBusinessStatus<T>() where T : Enum;
+        T GetBusinessStatus<T>() where T : struct, Enum;
 
         /// <summary>
         /// 获取操作状态

@@ -1,8 +1,13 @@
 /**
  * 文件: EntityStatus.cs
+ * 版本: V3 - 状态管理核心实体类
  * 说明: 实体状态类 - 包含数据性状态和操作性状态的组合
  * 创建日期: 2024年
  * 作者: RUINOR ERP开发团队
+ * 
+ * 版本标识：
+ * V3: 支持数据状态、操作状态和业务状态的统一管理
+ * 公共代码: 状态管理基础实体，所有版本通用
  */
 
 using System;
@@ -51,7 +56,7 @@ namespace RUINORERP.Model.Base.StatusManager
         /// </summary>
         /// <typeparam name="T">业务状态枚举类型</typeparam>
         /// <returns>业务状态值</returns>
-        public T GetBusinessStatus<T>() where T : Enum
+        public T GetBusinessStatus<T>() where T : struct, Enum
         {
             if (BusinessStatuses.TryGetValue(typeof(T), out var status))
             {
@@ -67,7 +72,7 @@ namespace RUINORERP.Model.Base.StatusManager
         /// </summary>
         /// <typeparam name="T">业务状态枚举类型</typeparam>
         /// <param name="status">业务状态值</param>
-        public void SetBusinessStatus<T>(T status) where T : Enum
+        public void SetBusinessStatus<T>(T status) where T : struct, Enum
         {
             BusinessStatuses[typeof(T)] = status;
         }
@@ -93,7 +98,7 @@ namespace RUINORERP.Model.Base.StatusManager
         /// </summary>
         /// <typeparam name="T">业务状态枚举类型</typeparam>
         /// <returns>是否包含</returns>
-        public bool HasBusinessStatus<T>() where T : Enum
+        public bool HasBusinessStatus<T>() where T : struct, Enum
         {
             return BusinessStatuses.ContainsKey(typeof(T));
         }
@@ -103,7 +108,7 @@ namespace RUINORERP.Model.Base.StatusManager
         /// </summary>
         /// <typeparam name="T">业务状态枚举类型</typeparam>
         /// <returns>是否成功移除</returns>
-        public bool RemoveBusinessStatus<T>() where T : Enum
+        public bool RemoveBusinessStatus<T>() where T : struct, Enum
         {
             return BusinessStatuses.Remove(typeof(T));
         }
@@ -204,5 +209,92 @@ namespace RUINORERP.Model.Base.StatusManager
 
             return $"EntityStatus: {{ {string.Join(", ", parts)} }}";
         }
+
+        #region 状态属性管理
+
+        /// <summary>
+        /// 状态属性存储
+        /// </summary>
+        private Dictionary<StatusType, Dictionary<string, object>> _stateProperties = new Dictionary<StatusType, Dictionary<string, object>>();
+
+        /// <summary>
+        /// 获取状态属性
+        /// </summary>
+        /// <typeparam name="TProperty">属性类型</typeparam>
+        /// <param name="statusType">状态类型</param>
+        /// <param name="propertyName">属性名称</param>
+        /// <returns>属性值</returns>
+        public TProperty GetStateProperty<TProperty>(StatusType statusType, string propertyName)
+        {
+            if (_stateProperties.TryGetValue(statusType, out var properties) &&
+                properties.TryGetValue(propertyName, out var value))
+            {
+                return value is TProperty typedValue ? typedValue : default(TProperty);
+            }
+
+            return default(TProperty);
+        }
+
+        /// <summary>
+        /// 设置状态属性
+        /// </summary>
+        /// <param name="statusType">状态类型</param>
+        /// <param name="propertyName">属性名称</param>
+        /// <param name="value">属性值</param>
+        public void SetStateProperty(StatusType statusType, string propertyName, object value)
+        {
+            if (!_stateProperties.ContainsKey(statusType))
+            {
+                _stateProperties[statusType] = new Dictionary<string, object>();
+            }
+
+            _stateProperties[statusType][propertyName] = value;
+        }
+
+        /// <summary>
+        /// 获取所有状态属性
+        /// </summary>
+        /// <param name="statusType">状态类型</param>
+        /// <returns>状态属性字典</returns>
+        public Dictionary<string, object> GetAllStateProperties(StatusType statusType)
+        {
+            return _stateProperties.TryGetValue(statusType, out var properties) 
+                ? new Dictionary<string, object>(properties) 
+                : new Dictionary<string, object>();
+        }
+
+        /// <summary>
+        /// 清除状态属性
+        /// </summary>
+        /// <param name="statusType">状态类型</param>
+        /// <param name="propertyName">属性名称</param>
+        /// <returns>是否清除成功</returns>
+        public bool ClearStateProperty(StatusType statusType, string propertyName)
+        {
+            if (_stateProperties.TryGetValue(statusType, out var properties))
+            {
+                return properties.Remove(propertyName);
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// 清除所有状态属性
+        /// </summary>
+        /// <param name="statusType">状态类型</param>
+        /// <returns>是否清除成功</returns>
+        public bool ClearAllStateProperties(StatusType statusType)
+        {
+            if (_stateProperties.ContainsKey(statusType))
+            {
+                _stateProperties[statusType].Clear();
+                return true;
+            }
+
+            return false;
+        }
+
+        #endregion
     }
 }

@@ -196,8 +196,8 @@ namespace RUINORERP.UI.BaseForm
             if (StateManager == null)
             {
                 // 使用单例工厂获取状态管理器，避免重复初始化
-                var factory = StateManagerFactoryV3.Instance;
-                this.StateManager = factory.GetStateManager();
+                //var factory = StateManagerFactoryV3.Instance;
+                //this.StateManager = factory.GetStateManager();
             }
 
             // 获取主表和子表的类型信息

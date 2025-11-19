@@ -2363,6 +2363,7 @@
     <Compile Include="StateManagement\StateAwareControl.Designer.cs">
       <DependentUpon>StateAwareControl.cs</DependentUpon>
     </Compile>
+    <Compile Include="StateManagement\StateManagerExtensions.cs" />
     <Compile Include="StateManagement\UI\DefaultUIStatusRule.cs" />
     <Compile Include="StateManagement\UI\IStatusUIController.cs" />
     <Compile Include="StateManagement\UI\UIStatusEventHandler.cs" />

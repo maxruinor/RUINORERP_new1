@@ -18,7 +18,7 @@ using RUINORERP.Global;
 using Autofac;
 using RUINORERP.UI.StateManagement.UI;
 
-namespace RUINORERP.UI.StateManagement
+namespace RUINORERP.UI
 {
     /// <summary>
     /// 状态管理器扩展方法类

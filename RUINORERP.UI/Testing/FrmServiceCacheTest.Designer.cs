@@ -42,6 +42,7 @@ namespace RUINORERP.UI.Testing
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.lblAppContextStats = new System.Windows.Forms.Label();
             this.btnRunConsoleTest = new System.Windows.Forms.Button();
+            this.btnTestCurrentContext = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.SuspendLayout();
@@ -131,6 +132,7 @@ namespace RUINORERP.UI.Testing
             // 
             // groupBox1
             // 
+            this.groupBox1.Controls.Add(this.btnTestCurrentContext);
             this.groupBox1.Controls.Add(this.btnTestAppContext);
             this.groupBox1.Controls.Add(this.lblIterations);
             this.groupBox1.Controls.Add(this.txtIterations);
@@ -140,7 +142,7 @@ namespace RUINORERP.UI.Testing
             this.groupBox1.Controls.Add(this.btnClearCache);
             this.groupBox1.Location = new System.Drawing.Point(12, 35);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(413, 124);
+            this.groupBox1.Size = new System.Drawing.Size(413, 153);
             this.groupBox1.TabIndex = 9;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "测试参数";
@@ -184,6 +186,16 @@ namespace RUINORERP.UI.Testing
             this.btnRunConsoleTest.UseVisualStyleBackColor = true;
             this.btnRunConsoleTest.Click += new System.EventHandler(this.btnRunConsoleTest_Click);
             // 
+            // btnTestCurrentContext
+            // 
+            this.btnTestCurrentContext.Location = new System.Drawing.Point(15, 124);
+            this.btnTestCurrentContext.Name = "btnTestCurrentContext";
+            this.btnTestCurrentContext.Size = new System.Drawing.Size(120, 23);
+            this.btnTestCurrentContext.TabIndex = 14;
+            this.btnTestCurrentContext.Text = "测试Current属性";
+            this.btnTestCurrentContext.UseVisualStyleBackColor = true;
+            this.btnTestCurrentContext.Click += new System.EventHandler(this.btnTestCurrentContext_Click);
+            // 
             // FrmServiceCacheTest
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -219,7 +231,8 @@ namespace RUINORERP.UI.Testing
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.GroupBox groupBox2;
         private System.Windows.Forms.Label lblAppContextStats;
-        private System.Windows.Forms.Button btnTestAppContext;
         private System.Windows.Forms.Button btnRunConsoleTest;
+        private System.Windows.Forms.Button btnTestCurrentContext;
+        private System.Windows.Forms.Button btnTestAppContext;
     }
 }

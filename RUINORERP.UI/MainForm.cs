@@ -111,12 +111,6 @@ using Padding = System.Windows.Forms.Padding;
 using RUINORERP.UI.Testing;
 
 
-
-
-
-
-
-
 namespace RUINORERP.UI
 {
     public partial class MainForm : KryptonForm

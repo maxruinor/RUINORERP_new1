@@ -323,16 +323,12 @@ namespace RUINORERP.UI.StateManagement.UI
         {
             await Task.Run(() =>
             {
-                // 创建状态上下文，使用null作为实体
-                var statusContext = new StatusTransitionContext(
-                    new BaseEntity(), // 创建一个临时的BaseEntity对象
+                // 使用工厂方法创建状态上下文
+                var statusContext = StatusTransitionContextFactory.CreateUIUpdateContext(
                     typeof(DataStatus),
-                    null, // 当前状态为空
-                    _stateManager // 使用状态管理器
+                    status,
+                    "UI状态更新"
                 );
-                
-                // 设置新状态
-                statusContext.SetDataStatusAsync(status, "UI状态更新").Wait();
                 
                 _uiController.UpdateUIStatus(statusContext, controls);
             });
@@ -348,16 +344,12 @@ namespace RUINORERP.UI.StateManagement.UI
         {
             await Task.Run(() =>
             {
-                // 创建状态上下文，使用null作为实体
-                var statusContext = new StatusTransitionContext(
-                    new BaseEntity(), // 创建一个临时的BaseEntity对象
+                // 使用工厂方法创建状态上下文
+                var statusContext = StatusTransitionContextFactory.CreateUIUpdateContext(
                     status.GetType(),
-                    null, // 当前状态为空
-                    _stateManager // 使用状态管理器
+                    status,
+                    "UI状态更新"
                 );
-                
-                // 设置新状态
-                statusContext.SetBusinessStatusAsync(status, "UI状态更新").Wait();
                 
                 _uiController.UpdateUIStatus(statusContext, controls);
             });
@@ -373,16 +365,12 @@ namespace RUINORERP.UI.StateManagement.UI
         {
             await Task.Run(() =>
             {
-                // 创建状态上下文，使用null作为实体
-                var statusContext = new StatusTransitionContext(
-                    new BaseEntity(), // 创建一个临时的BaseEntity对象
+                // 使用工厂方法创建状态上下文
+                var statusContext = StatusTransitionContextFactory.CreateUIUpdateContext(
                     typeof(ActionStatus),
-                    null, // 当前状态为空
-                    _stateManager // 使用状态管理器
+                    status,
+                    "UI状态更新"
                 );
-                
-                // 设置新状态
-                statusContext.SetActionStatusAsync(status, "UI状态更新").Wait();
                 
                 _uiController.UpdateUIStatus(statusContext, controls);
             });
@@ -398,27 +386,15 @@ namespace RUINORERP.UI.StateManagement.UI
         {
             await Task.Run(() =>
             {
-                // 创建状态上下文，使用null作为实体
-                var statusContext = new StatusTransitionContext(
-                    new BaseEntity(), // 创建一个临时的BaseEntity对象
-                    status?.GetType() ?? typeof(object),
-                    null, // 当前状态为空
-                    _stateManager // 使用状态管理器
+                if (status == null)
+                    return;
+
+                // 使用工厂方法创建状态上下文
+                var statusContext = StatusTransitionContextFactory.CreateUIUpdateContext(
+                    status.GetType(),
+                    status,
+                    "UI状态更新"
                 );
-                
-                // 根据状态类型设置新状态
-                if (status is DataStatus dataStatus)
-                {
-                    statusContext.SetDataStatusAsync(dataStatus, "UI状态更新").Wait();
-                }
-                else if (status is Enum businessStatus)
-                {
-                    statusContext.SetBusinessStatusAsync(businessStatus, "UI状态更新").Wait();
-                }
-                else if (status is ActionStatus actionStatus)
-                {
-                    statusContext.SetActionStatusAsync(actionStatus, "UI状态更新").Wait();
-                }
                 
                 _uiController.UpdateUIStatus(statusContext, controls);
             });
@@ -496,17 +472,13 @@ namespace RUINORERP.UI.StateManagement.UI
             if (stateManager == null)
                 throw new ArgumentNullException(nameof(stateManager));
 
-            // 从服务容器获取状态规则配置
-            var actionRuleConfiguration = Startup.GetFromFac<IStateRuleConfiguration>();
-            
-            // 如果获取失败，创建默认实例
-            if (actionRuleConfiguration == null)
+            // 从服务容器获取UI控制器（现在服务已注册）
+            var uiController = Startup.GetFromFac<IStatusUIController>();
+            if (uiController == null)
             {
-                actionRuleConfiguration = new StateRuleConfiguration();
+                throw new InvalidOperationException("无法从服务容器获取IStatusUIController，请确保状态管理服务已正确注册");
             }
 
-            // 创建UI控制器
-            IStatusUIController uiController = new UnifiedStatusUIControllerV3(stateManager, actionRuleConfiguration);
             var handler = new UIStatusEventHandler(uiController, stateManager);
             handler.SubscribeToAllEvents(stateManager);
             return handler;

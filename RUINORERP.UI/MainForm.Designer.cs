@@ -470,7 +470,7 @@ namespace RUINORERP.UI
             this.tsbtnSysTest});
             this.toolStrip1.Location = new System.Drawing.Point(3, 24);
             this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.Size = new System.Drawing.Size(533, 25);
+            this.toolStrip1.Size = new System.Drawing.Size(426, 25);
             this.toolStrip1.TabIndex = 7;
             this.toolStrip1.Text = "toolStrip1";
             // 
@@ -573,7 +573,7 @@ namespace RUINORERP.UI
             this.系统工具ToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.服务缓存测试ToolStripMenuItem});
             this.系统工具ToolStripMenuItem.Name = "系统工具ToolStripMenuItem";
-            this.系统工具ToolStripMenuItem.Size = new System.Drawing.Size(71, 20);
+            this.系统工具ToolStripMenuItem.Size = new System.Drawing.Size(97, 20);
             this.系统工具ToolStripMenuItem.Text = "【系统工具】";
             // 
             // 服务缓存测试ToolStripMenuItem

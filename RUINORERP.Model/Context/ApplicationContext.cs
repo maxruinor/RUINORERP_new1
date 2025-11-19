@@ -16,6 +16,7 @@ using RUINORERP.Global.EnumExt;
 using RUINORERP.Model.ReminderModel;
 using RUINORERP.Model.ReminderModel.ReminderRules;
 using System.Linq;
+using System.Threading;
 
 namespace RUINORERP.Model.Context
 {
@@ -32,15 +33,64 @@ namespace RUINORERP.Model.Context
         {
             get
             {
-                var contextManager = new ApplicationContextAccessor(new ApplicationContextManagerAsyncLocal()).GetContextManager();
-                return ((ApplicationContextManagerAsyncLocal)contextManager).ApplicationContext;
+                // 使用依赖注入获取上下文管理器，避免每次创建新实例
+                if (_applicationContextAccessor != null)
+                {
+                    var serviceProvider = _applicationContextAccessor.ServiceProvider;
+                    if (serviceProvider != null)
+                    {
+                        var context = serviceProvider.GetService<ApplicationContext>();
+                        if (context != null)
+                        {
+                            return context;
+                        }
+                    }
+                }
+
+                // 降级方案：如果依赖注入不可用，使用线程本地存储
+                var currentContext = _currentContext.Value;
+                if (currentContext == null)
+                {
+                    if (_applicationContextAccessor != null)
+                    {
+                        currentContext = new ApplicationContext(_applicationContextAccessor);
+                        _currentContext.Value = currentContext;
+                    }
+                }
+                return currentContext;
             }
             set
             {
-                var contextManager = new ApplicationContextAccessor(new ApplicationContextManagerAsyncLocal()).GetContextManager();
-                ((ApplicationContextManagerAsyncLocal)contextManager).ApplicationContext = value;
+                // 使用依赖注入获取上下文管理器，避免每次创建新实例
+                var accessor = _applicationContextAccessor;
+                if (accessor != null)
+                {
+                    var serviceProvider = accessor.ServiceProvider;
+                    if (serviceProvider != null)
+                    {
+                        var contextManager = serviceProvider.GetService<IContextManager>();
+                        if (contextManager is ApplicationContextManagerAsyncLocal asyncLocalManager)
+                        {
+                            asyncLocalManager.ApplicationContext = value;
+                            return;
+                        }
+                    }
+                }
+
+                // 降级方案：如果依赖注入不可用，使用线程本地存储
+                _currentContext.Value = value;
             }
         }
+
+        /// <summary>
+        /// 静态的ApplicationContextAccessor实例
+        /// </summary>
+        private static ApplicationContextAccessor _applicationContextAccessor;
+
+        /// <summary>
+        /// 线程本地存储的当前上下文实例（降级方案）
+        /// </summary>
+        private static readonly ThreadLocal<ApplicationContext> _currentContext = new ThreadLocal<ApplicationContext>();
 
         #region 智能提醒配置字典
         public Dictionary<ReminderBizType, IRuleConfig> RuleConfigDictionary { get; set; }
@@ -220,10 +270,9 @@ namespace RUINORERP.Model.Context
         public ApplicationContext(ApplicationContextAccessor applicationContextAccessor)
         {
             ApplicationContextAccessor = applicationContextAccessor;
+            // 初始化静态字段
+            _applicationContextAccessor = applicationContextAccessor;
             //ApplicationContextAccessor.GetContextManager().ApplicationContext = this;
-
-
-
 
         }
 
@@ -235,6 +284,15 @@ namespace RUINORERP.Model.Context
         /// the application.
         /// </summary>
         public IContextManager ContextManager => ApplicationContextAccessor.GetContextManager();
+
+        /// <summary>
+        /// Gets the ApplicationContextAccessor instance
+        /// </summary>
+        /// <returns>The ApplicationContextAccessor instance</returns>
+        public ApplicationContextAccessor GetApplicationContextAccessor()
+        {
+            return ApplicationContextAccessor;
+        }
 
         /// <summary>
         /// Get or set the current ClaimsPrincipal
@@ -363,27 +421,27 @@ namespace RUINORERP.Model.Context
         /// 服务实例缓存字典，用于缓存已解析的服务实例
         /// </summary>
         private static readonly Dictionary<Type, object> _serviceInstanceCache = new Dictionary<Type, object>();
-        
+
         /// <summary>
         /// 带名称的服务实例缓存字典，用于缓存已解析的命名服务实例
         /// </summary>
         private static readonly Dictionary<string, object> _namedServiceInstanceCache = new Dictionary<string, object>();
-        
+
         /// <summary>
         /// 缓存访问锁对象，确保线程安全
         /// </summary>
         private static readonly object _cacheLock = new object();
-        
+
         /// <summary>
         /// 缓存命中次数统计
         /// </summary>
         private static int _cacheHits = 0;
-        
+
         /// <summary>
         /// 缓存未命中次数统计
         /// </summary>
         private static int _cacheMisses = 0;
-        
+
         /// <summary>
         /// 最大缓存大小限制，防止内存泄漏
         /// </summary>
@@ -411,7 +469,7 @@ namespace RUINORERP.Model.Context
         ///  Autofac的容器
         /// </summary>
         public static ILifetimeScope AutofacContainerScope { get; set; }
-        
+
         /// <summary>
         /// 获取服务缓存统计信息
         /// </summary>
@@ -423,7 +481,7 @@ namespace RUINORERP.Model.Context
                 int totalCacheSize = _serviceInstanceCache.Count + _namedServiceInstanceCache.Count;
                 int totalRequests = _cacheHits + _cacheMisses;
                 double hitRate = totalRequests > 0 ? (double)_cacheHits / totalRequests * 100 : 0;
-                
+
                 return new ServiceCacheStatistics
                 {
                     CacheSize = totalCacheSize,
@@ -436,7 +494,7 @@ namespace RUINORERP.Model.Context
                 };
             }
         }
-        
+
         /// <summary>
         /// 清空服务实例缓存
         /// </summary>
@@ -477,7 +535,7 @@ namespace RUINORERP.Model.Context
                 throw new NullReferenceException(nameof(CurrentServiceProvider));
 
             Type serviceType = typeof(T);
-            
+
             // 尝试从缓存获取服务实例
             lock (_cacheLock)
             {
@@ -486,13 +544,13 @@ namespace RUINORERP.Model.Context
                     _cacheHits++;
                     return (T)cachedInstance;
                 }
-                
+
                 _cacheMisses++;
             }
-            
+
             // 缓存未命中，从服务提供者获取实例
             var result = CurrentServiceProvider.GetRequiredService<T>();
-            
+
             // 将实例添加到缓存（简单的LRU实现）
             lock (_cacheLock)
             {
@@ -502,10 +560,10 @@ namespace RUINORERP.Model.Context
                     var firstKey = _serviceInstanceCache.Keys.First();
                     _serviceInstanceCache.Remove(firstKey);
                 }
-                
+
                 _serviceInstanceCache[serviceType] = result;
             }
-            
+
             return result;
         }
 
@@ -521,7 +579,7 @@ namespace RUINORERP.Model.Context
             }
 
             string cacheKey = $"{typeof(T).FullName}_{className}";
-            
+
             // 尝试从缓存获取服务实例
             lock (_cacheLock)
             {
@@ -530,13 +588,13 @@ namespace RUINORERP.Model.Context
                     _cacheHits++;
                     return (T)cachedInstance;
                 }
-                
+
                 _cacheMisses++;
             }
-            
+
             // 缓存未命中，从Autofac容器获取实例
             var result = AutofacContainerScope.ResolveNamed<T>(className);
-            
+
             // 将实例添加到缓存（简单的LRU实现）
             lock (_cacheLock)
             {
@@ -546,10 +604,10 @@ namespace RUINORERP.Model.Context
                     var firstKey = _namedServiceInstanceCache.Keys.First();
                     _namedServiceInstanceCache.Remove(firstKey);
                 }
-                
+
                 _namedServiceInstanceCache[cacheKey] = result;
             }
-            
+
             return result;
         }
 
@@ -583,7 +641,7 @@ namespace RUINORERP.Model.Context
         {
             if (CurrentServiceProvider == null)
                 throw new NullReferenceException(nameof(CurrentServiceProvider));
-            
+
             // 尝试从缓存获取服务实例
             lock (_cacheLock)
             {
@@ -592,13 +650,13 @@ namespace RUINORERP.Model.Context
                     _cacheHits++;
                     return cachedInstance;
                 }
-                
+
                 _cacheMisses++;
             }
-            
+
             // 缓存未命中，从服务提供者获取实例
             var result = CurrentServiceProvider.GetRequiredService(serviceType);
-            
+
             // 将实例添加到缓存（简单的LRU实现）
             lock (_cacheLock)
             {
@@ -608,10 +666,10 @@ namespace RUINORERP.Model.Context
                     var firstKey = _serviceInstanceCache.Keys.First();
                     _serviceInstanceCache.Remove(firstKey);
                 }
-                
+
                 _serviceInstanceCache[serviceType] = result;
             }
-            
+
             return result;
         }
 

@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------
+//-----------------------------------------------------------------------
 // <copyright file="ApplicationContextAccessor.cs" company="Marimer LLC">
 //     Copyright (c) Marimer LLC. All rights reserved.
 //     Website: https://cslanet.com
@@ -20,6 +20,11 @@ namespace RUINORERP.Model.Context
     public class ApplicationContextAccessor
     {
         /// <summary>
+        /// 服务提供程序
+        /// </summary>
+        public IServiceProvider ServiceProvider { get; set; }
+
+        /// <summary>
         /// Creates a new instance of the type.
         /// </summary>
         /// <param name="contextManagerList"></param>
@@ -27,6 +32,21 @@ namespace RUINORERP.Model.Context
         /// <param name="serviceProvider"></param>
         public ApplicationContextAccessor(IContextManager localContextManager)
         {
+            ContextManager = localContextManager;
+            if (ContextManager is null)
+            {
+                ContextManager = new ApplicationContextManagerAsyncLocal();
+            }
+        }
+
+        /// <summary>
+        /// Creates a new instance of the type with service provider.
+        /// </summary>
+        /// <param name="localContextManager"></param>
+        /// <param name="serviceProvider"></param>
+        public ApplicationContextAccessor(IContextManager localContextManager, IServiceProvider serviceProvider)
+        {
+            ServiceProvider = serviceProvider;
             ContextManager = localContextManager;
             if (ContextManager is null)
             {

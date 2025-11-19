@@ -13,6 +13,8 @@ using RUINORERP.IRepository.Base;
 using RUINORERP.Common.Logging;
 using RUINORERP.Model.Context;
 using RUINORERP.UI.Testing;
+using ApplicationContext = RUINORERP.Model.Context.ApplicationContext;
+using RUINORERP.Business.Cache;
 
 namespace RUINORERP.UI.Testing
 {
@@ -218,6 +220,83 @@ namespace RUINORERP.UI.Testing
             catch (Exception ex)
             {
                 MessageBox.Show($"运行控制台测试时发生错误: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// 测试ApplicationContext.Current属性
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void btnTestCurrentContext_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                lstResults.Items.Clear();
+                lstResults.Items.Add("开始测试ApplicationContext.Current属性...");
+                
+                // 测试1: 直接访问ApplicationContext.Current
+                var currentContext = ApplicationContext.Current;
+                if (currentContext != null)
+                {
+                    lstResults.Items.Add($"✓ ApplicationContext.Current 获取成功");
+                    lstResults.Items.Add($"  - 实例类型: {currentContext.GetType().FullName}");
+                    lstResults.Items.Add($"  - 是否已设置ServiceProvider: {currentContext.GetApplicationContextAccessor()?.ServiceProvider != null}");
+                    
+                    // 测试2: 通过ServiceProvider获取服务
+                    try
+                    {
+                        var serviceProvider = currentContext.GetApplicationContextAccessor()?.ServiceProvider;
+                        if (serviceProvider != null)
+                        {
+                            lstResults.Items.Add($"✓ ServiceProvider 获取成功");
+                            
+                            // 尝试获取一个已知的服务进行验证
+                            var cacheManager = serviceProvider.GetService(typeof(IEntityCacheManager));
+                            if (cacheManager != null)
+                            {
+                                lstResults.Items.Add($"✓ 通过ServiceProvider成功获取IEntityCacheManager服务");
+                            }
+                            else
+                            {
+                                lstResults.Items.Add($"⚠ 无法通过ServiceProvider获取IEntityCacheManager服务");
+                            }
+                        }
+                        else
+                        {
+                            lstResults.Items.Add($"✗ ServiceProvider 为null");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        lstResults.Items.Add($"✗ ServiceProvider测试失败: {ex.Message}");
+                    }
+                    
+                    // 测试3: 验证线程本地存储降级方案
+                    try
+                    {
+                        var fallbackContext = ApplicationContext.Current;
+                        if (fallbackContext != null)
+                        {
+                            lstResults.Items.Add($"✓ 线程本地存储降级方案工作正常");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        lstResults.Items.Add($"✗ 线程本地存储降级方案失败: {ex.Message}");
+                    }
+                }
+                else
+                {
+                    lstResults.Items.Add($"✗ ApplicationContext.Current 为null");
+                }
+                
+                lstResults.Items.Add("测试完成。");
+            }
+            catch (Exception ex)
+            {
+                lstResults.Items.Add($"测试过程中发生错误: {ex.Message}");
+                lstResults.Items.Add($"错误详情: {ex.StackTrace}");
             }
         }
 

@@ -165,12 +165,12 @@ namespace RUINORERP.UI.StateManagement
                 // 如果仍然获取失败，记录错误信息
                 if (_stateManager == null)
                 {
-                    System.Diagnostics.Debug.WriteLine("无法从DI容器获取IUnifiedStateManager服务");
+                    System.Diagnostics.Debug.WriteLine("无法从DI容器获取IUnifiedStateManager服务，请确保在Startup.cs中调用了builder.AddStateManager()");
                 }
 
                 if (_uiController == null)
                 {
-                    System.Diagnostics.Debug.WriteLine("无法从DI容器获取IStatusUIController服务");
+                    System.Diagnostics.Debug.WriteLine("无法从DI容器获取IStatusUIController服务，请确保在Startup.cs中调用了builder.AddStateManager()");
                 }
             }
             catch (Exception ex)

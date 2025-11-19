@@ -124,12 +124,11 @@ namespace RUINORERP.UI.BaseForm
                     var entityStatus = this.StateManager.GetEntityStatus(entity);
                     if (UIController != null)
                     {
-                        // 创建状态上下文
-                        var statusContext = new StatusTransitionContext(
+                        // 使用工厂方法创建状态上下文
+                        var statusContext = StatusTransitionContextFactory.CreateDataStatusContext(
                             entity,
-                            typeof(RUINORERP.Global.DataStatus),
                             entityStatus.dataStatus ?? RUINORERP.Global.DataStatus.草稿,
-                            this.StateManager);
+                            "UI状态更新");
 
                         // 获取当前控件集合
                         var controls = GetAllControls();

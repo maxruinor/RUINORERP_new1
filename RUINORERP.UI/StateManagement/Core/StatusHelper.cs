@@ -16,6 +16,7 @@ using System.ComponentModel;
 using System.Linq;
 using RUINORERP.Global;
 using RUINORERP.Global.EnumExt;
+using RUINORERP.UI.StateManagement.UI;
 
 namespace RUINORERP.UI.StateManagement.Core
 {
@@ -121,7 +122,12 @@ namespace RUINORERP.UI.StateManagement.Core
             if (status == null) return new List<MenuItemEnums>();
 
             var actions = new List<MenuItemEnums> { MenuItemEnums.查询, MenuItemEnums.刷新 };
-            
+
+            // 新架构替代方案
+           // var uiController = Startup.GetFromFac<IStatusUIController>();
+           // var actions = uiController.GetAvailableActions(currentStatus);
+
+
             // 根据不同状态添加特定操作
             switch (status)
             {

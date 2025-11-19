@@ -426,6 +426,13 @@ namespace RUINORERP.UI
                     AppContextData.SetAutofacContainerScope(Startup.AutofacContainerScope);
                     BusinessHelper.Instance.SetContext(AppContextData);
 
+                    // 设置ApplicationContextAccessor的ServiceProvider，确保ApplicationContext.Current能正常工作
+                    var contextAccessor = AppContextData.GetApplicationContextAccessor();
+                    if (contextAccessor != null)
+                    {
+                        contextAccessor.ServiceProvider = services;
+                    }
+
 
                     #region  启动工作流主机
 

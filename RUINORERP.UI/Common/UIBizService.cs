@@ -1448,11 +1448,11 @@ namespace RUINORERP.UI.Common
         /// </summary>
         /// <typeparam name="T">实体类型</typeparam>
         /// <param name="forceRefresh">是否强制刷新缓存，默认为false</param>
-        /// <param name="timeoutMs">超时时间（毫秒），默认为5000ms</param>
+        /// <param name="timeoutMs">超时时间（毫秒），默认为1500ms（网络优化）</param>
         /// <param name="cancellationToken">取消令牌</param>
         /// <exception cref="OperationCanceledException">当操作被取消时抛出</exception>
         /// <exception cref="TimeoutException">当请求超时时抛出</exception>
-        public static async Task RequestCache<T>(bool forceRefresh = false, int timeoutMs = 5000, CancellationToken cancellationToken = default)
+        public static async Task RequestCache<T>(bool forceRefresh = false, int timeoutMs = 1500, CancellationToken cancellationToken = default)
         {
             await RequestCache(typeof(T).Name, typeof(T), forceRefresh, timeoutMs, cancellationToken);
         }
@@ -1462,11 +1462,11 @@ namespace RUINORERP.UI.Common
         /// </summary>
         /// <param name="type">实体类型</param>
         /// <param name="forceRefresh">是否强制刷新缓存，默认为false</param>
-        /// <param name="timeoutMs">超时时间（毫秒），默认为5000ms</param>
+        /// <param name="timeoutMs">超时时间（毫秒），默认为1500ms（网络优化）</param>
         /// <param name="cancellationToken">取消令牌</param>
         /// <exception cref="OperationCanceledException">当操作被取消时抛出</exception>
         /// <exception cref="TimeoutException">当请求超时时抛出</exception>
-        public static async Task RequestCache(Type type, bool forceRefresh = false, int timeoutMs = 5000, CancellationToken cancellationToken = default)
+        public static async Task RequestCache(Type type, bool forceRefresh = false, int timeoutMs = 1500, CancellationToken cancellationToken = default)
         {
             await RequestCache(type.Name, type, forceRefresh, timeoutMs, cancellationToken);
         }
@@ -1476,11 +1476,11 @@ namespace RUINORERP.UI.Common
         /// </summary>
         /// <param name="entity">实体实例</param>
         /// <param name="forceRefresh">是否强制刷新缓存，默认为false</param>
-        /// <param name="timeoutMs">超时时间（毫秒），默认为5000ms</param>
+        /// <param name="timeoutMs">超时时间（毫秒），默认为1500ms（网络优化）</param>
         /// <param name="cancellationToken">取消令牌</param>
         /// <exception cref="OperationCanceledException">当操作被取消时抛出</exception>
         /// <exception cref="TimeoutException">当请求超时时抛出</exception>
-        public static async Task RequestCache(BaseEntity entity, bool forceRefresh = false, int timeoutMs = 5000, CancellationToken cancellationToken = default)
+        public static async Task RequestCache(BaseEntity entity, bool forceRefresh = false, int timeoutMs = 1500, CancellationToken cancellationToken = default)
         {
             await RequestCache(entity.GetType().Name, entity.GetType(), forceRefresh, timeoutMs, cancellationToken);
         }
@@ -1500,16 +1500,17 @@ namespace RUINORERP.UI.Common
 
 
         /// <summary>
-        /// 请求缓存数据
+        /// 请求缓存数据 - 带降级处理
         /// </summary>
         /// <param name="tableName">表名</param>
         /// <param name="type">实体类型，如果提供则使用实体的FKRelations属性获取外键关系</param>
         /// <param name="forceRefresh">是否强制刷新缓存，默认为false</param>
-        /// <param name="timeoutMs">超时时间（毫秒），默认为5000ms</param>
+        /// <param name="timeoutMs">超时时间（毫秒），默认为1500ms（网络优化）</param>
         /// <param name="cancellationToken">取消令牌</param>
+        /// <param name="useFallback">是否使用降级处理，默认为true</param>
         /// <exception cref="OperationCanceledException">当操作被取消时抛出</exception>
         /// <exception cref="TimeoutException">当请求超时时抛出</exception>
-        public static async Task RequestCache(string tableName, Type type = null, bool forceRefresh = false, int timeoutMs = 5000, CancellationToken cancellationToken = default)
+        public static async Task RequestCache(string tableName, Type type = null, bool forceRefresh = false, int timeoutMs = 1500, CancellationToken cancellationToken = default, bool useFallback = true)
         {
             // 创建带超时的取消令牌
             using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
@@ -1602,12 +1603,42 @@ namespace RUINORERP.UI.Common
             {
                 // 用户主动取消，记录日志但不抛出异常
                 MainForm.Instance.logger.LogWarning($"缓存请求被用户取消: {tableName}");
-                throw;
+                if (!useFallback)
+                {
+                    throw;
+                }
             }
             catch (OperationCanceledException)
             {
-                // 超时取消，转换为TimeoutException
+                // 超时取消，转换为TimeoutException或使用降级处理
+                if (useFallback)
+                {
+                    MainForm.Instance.logger.LogWarning($"缓存请求超时({timeoutMs}ms)，使用降级处理: {tableName}");
+                    // 降级处理：使用本地缓存数据（如果存在）
+                    var localCache = CacheManager.GetEntityList<object>(tableName);
+                    if (localCache != null && localCache.Count > 0)
+                    {
+                        MainForm.Instance.logger.LogInformation($"降级处理成功，使用本地缓存数据: {tableName}");
+                        return;
+                    }
+                }
                 throw new TimeoutException($"缓存请求超时({timeoutMs}ms): {tableName}");
+            }
+            catch (Exception ex) when (useFallback)
+            {
+                // 其他异常时的降级处理
+                MainForm.Instance.logger.LogError(ex, $"缓存请求失败，使用降级处理: {tableName}");
+                
+                // 尝试使用本地缓存数据
+                var localCache = CacheManager.GetEntityList<object>(tableName);
+                if (localCache != null && localCache.Count > 0)
+                {
+                    MainForm.Instance.logger.LogInformation($"降级处理成功，使用本地缓存数据: {tableName}");
+                    return;
+                }
+                
+                // 如果本地也没有数据，记录警告但不抛出异常
+                MainForm.Instance.logger.LogWarning($"降级处理失败，本地无缓存数据: {tableName}");
             }
         }
 

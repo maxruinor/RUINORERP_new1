@@ -69,26 +69,8 @@ namespace RUINORERP.UI.BaseForm
         {
             // 调用基类的InitializeStateManagement方法
             base.InitializeStateManagement();
-
-            this.StateManager = ApplicationContext.Current.GetRequiredService<IUnifiedStateManager>(); ;
-
-            // 注册状态变更事件处理程序
-            this.StatusChanged -= HandleStatusChangedEvent;
-            this.StatusChanged += HandleStatusChangedEvent;
-
-            // 初始化按钮状态管理
-            InitializeButtonStateManagement();
         }
 
-        /// <summary>
-        /// 处理状态变更事件
-        /// </summary>
-        /// <param name="sender">事件发送者</param>
-        /// <param name="e">事件参数</param>
-        private void HandleStatusChangedEvent(object sender, StateTransitionEventArgs e)
-        {
-            //TODO list
-        }
 
         /// <summary>
         /// 初始化按钮状态管理
@@ -106,38 +88,125 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
+     
         /// <summary>
-        /// 实体状态变更事件处理程序
+        /// 处理特定的状态变更逻辑（子类可重写）
         /// </summary>
-        /// <param name="sender">事件发送者</param>
-        /// <param name="e">事件参数</param>
-        protected virtual void OnEntityStateChanged(object sender, StateTransitionEventArgs e)
+        /// <param name="originalState">原始状态</param>
+        /// <param name="newState">新状态</param>
+        /// <param name="reason">变更原因</param>
+        protected virtual void HandleSpecificStateChange(object originalState, object newState, string reason)
         {
-            if (this.StateManager != null)
+            // 子类可以重写此方法以处理特定的状态变更逻辑
+            // 例如：销售订单在确认状态时检查库存，在完结状态时生成出库单等
+        }
+
+      
+
+        /// <summary>
+        /// 根据状态获取颜色
+        /// </summary>
+        /// <param name="status">状态</param>
+        /// <returns>颜色</returns>
+        protected virtual Color GetStatusColor(DataStatus status)
+        {
+            return status switch
             {
-                // 根据状态变更更新UI
-                if (e.Entity is BaseEntity entity)
-                {
-                    UpdateUIBasedOnEntityState(entity);
+                DataStatus.草稿 => Color.Gray,
+                DataStatus.新建 => Color.Blue,
+                DataStatus.确认 => Color.Green,
+                DataStatus.完结 => Color.DarkGreen,
+                DataStatus.作废 => Color.Red,
+                _ => Color.Black
+            };
+        }
 
-                    // 使用新的状态管理器更新UI状态
-                    var entityStatus = this.StateManager.GetEntityStatus(entity);
-                    if (UIController != null)
-                    {
-                        // 使用工厂方法创建状态上下文
-                        var statusContext = StatusTransitionContextFactory.CreateDataStatusContext(
-                            entity,
-                            entityStatus.dataStatus ?? RUINORERP.Global.DataStatus.草稿,
-                            "UI状态更新");
+        /// <summary>
+        /// 更新按钮状态
+        /// </summary>
+        protected virtual void UpdateButtonStates()
+        {
+            
+        }
 
-                        // 获取当前控件集合
-                        var controls = GetAllControls();
+        /// <summary>
+        /// 更新按钮启用状态（子类可重写）
+        /// </summary>
+        /// <param name="currentStatus">当前状态</param>
+        /// <param name="availableTransitions">可用转换</param>
+        protected virtual void UpdateButtonEnabledStates(DataStatus currentStatus, List<DataStatus> availableTransitions)
+        {
+            // 子类可以重写此方法以根据业务逻辑更新按钮状态
+            // 默认实现：根据当前状态设置基本按钮状态
+        }
 
-                        // 更新UI状态
-                        UIController.UpdateUIStatus(statusContext, controls);
-                    }
-                }
+
+        /// <summary>
+        /// 根据状态更新UI控件（子类可重写）
+        /// </summary>
+        /// <param name="currentStatus">当前状态</param>
+        protected virtual void UpdateUIControlsByState(DataStatus currentStatus)
+        {
+            // 子类可以重写此方法以根据状态更新特定UI控件
+            // 例如：禁用/启用某些输入框，显示/隐藏某些控件等
+            
+            // 默认实现：根据状态更新基本控件状态
+            switch (currentStatus)
+            {
+                case DataStatus.草稿:
+                case DataStatus.新建:
+                    EnableEditControls(true);
+                    break;
+                case DataStatus.确认:
+                case DataStatus.完结:
+                case DataStatus.作废:
+                    EnableEditControls(false);
+                    break;
             }
+        }
+
+        /// <summary>
+        /// 启用/禁用编辑控件（子类可重写）
+        /// </summary>
+        /// <param name="enabled">是否启用</param>
+        protected virtual void EnableEditControls(bool enabled)
+        {
+            // 子类可以重写此方法以启用/禁用特定的编辑控件
+            // 默认实现：查找常见的编辑控件并设置状态
+            
+            var editControls = new[] { "txt", "cmb", "dtp", "chk", "rdo" };
+            var controls = GetAllControls().Where(c => editControls.Any(prefix => c.Name.StartsWith(prefix)));
+            
+            foreach (var control in controls)
+            {
+                control.Enabled = enabled;
+            }
+        }
+
+        /// <summary>
+        /// 更新工具栏按钮状态
+        /// </summary>
+        /// <param name="currentStatus">当前状态</param>
+        protected virtual void UpdateToolbarButtons(DataStatus currentStatus)
+        {
+            // 根据当前状态更新工具栏按钮的可见性和启用状态
+            // 子类可以重写此方法以实现特定的业务逻辑
+        }
+
+       
+        /// <summary>
+        /// 执行状态转换
+        /// </summary>
+        /// <param name="targetStatus">目标状态</param>
+        /// <param name="reason">转换原因</param>
+        /// <returns>转换结果</returns>
+        protected virtual async Task<StateTransitionResult> TransitionToAsync(DataStatus targetStatus, string reason = "")
+        {
+            if (StatusContext != null)
+            {
+                return await StatusContext.TransitionTo(targetStatus, reason);
+            }
+            return StateTransitionResult.Failure("状态上下文未初始化");
         }
 
 

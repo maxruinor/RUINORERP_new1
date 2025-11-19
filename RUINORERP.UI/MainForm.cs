@@ -1078,10 +1078,21 @@ namespace RUINORERP.UI
             #endregion
             timer1.Start();
             Stopwatch stopwatchLoadUI = Stopwatch.StartNew();
-            LoadUIMenus();
-            LoadUIForIM_LogPages();
-
-
+            
+            // 异步加载UI，避免阻塞主线程
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    LoadUIMenus();
+                    LoadUIForIM_LogPages();
+                }
+                catch (Exception ex)
+                {
+                    // 记录错误但不影响主流程
+                    MainForm.Instance.logger.LogError(ex, "UI加载过程中发生错误");
+                }
+            });
 
             stopwatchLoadUI.Stop();
             MainForm.Instance.uclog.AddLog($"LoadUIPages 执行时间：{stopwatchLoadUI.ElapsedMilliseconds} 毫秒");
@@ -1110,7 +1121,25 @@ namespace RUINORERP.UI
 
             MainForm.Instance.kryptonDockingManager1.DockspaceRemoved += KryptonDockingManager1_DockspaceRemoved;
 
-            await UIBizService.RequestCache<tb_Currency>();
+            // 异步请求缓存，不阻塞UI线程，添加超时和降级处理
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1.5)); // 1.5秒超时
+                    await UIBizService.RequestCache<tb_Currency>(false, 1500, cts.Token);
+                }
+                catch (TimeoutException)
+                {
+                    // 超时处理：使用本地缓存或默认值
+                    MainForm.Instance.logger.LogWarning("缓存请求超时，使用本地缓存数据");
+                }
+                catch (Exception ex)
+                {
+                    // 其他异常处理
+                    MainForm.Instance.logger.LogError(ex, "缓存请求失败，使用本地缓存数据");
+                }
+            });
 
             // 异步延迟3秒执行本位币别查询事件，不会阻止UI线程
             _ = Task.Run(async () =>

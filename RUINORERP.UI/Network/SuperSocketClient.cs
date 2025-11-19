@@ -10,10 +10,11 @@ using Microsoft.Extensions.Logging;
 using Krypton.Toolkit;
 using MySqlX.XDevAPI;
 using RUINORERP.PacketSpec.Models.Common;
+using System.Linq;
 
 namespace RUINORERP.UI.Network
 {/// <summary>
- /// SuperSocket客户端实现
+ /// SuperSocket客户端实现 - 集成网络健康检查
  /// </summary>
     public class SuperSocketClient : ISocketClient
     {
@@ -22,6 +23,8 @@ namespace RUINORERP.UI.Network
         private string _serverIp;
         private int _port;
         private readonly ILogger<SuperSocketClient> _logger;
+        private NetworkHealthCheckService _healthCheckService;
+        private volatile bool _networkHealthWarningShown;
 
         /// <summary>
         /// 构造函数 - 支持依赖注入
@@ -40,6 +43,7 @@ namespace RUINORERP.UI.Network
             _client.NewPackageReceived += OnPackageReceived;
             _client.Error += OnClientError;
             _client.Closed += OnClientClosed;
+            _networkHealthWarningShown = false;
         }
 
 
@@ -106,7 +110,7 @@ namespace RUINORERP.UI.Network
         public event Action<EventArgs> Closed;
 
         /// <summary>
-        /// 连接到服务器 - 优化连接状态同步
+        /// 连接到服务器 - 集成网络健康检查
         /// </summary>
         /// <param name="serverUrl">服务器地址</param>
         /// <param name="port">端口号</param>
@@ -119,7 +123,46 @@ namespace RUINORERP.UI.Network
 
             try
             {
-                var connected = await _client.ConnectAsync(new IPEndPoint(IPAddress.Parse(serverUrl), port));
+                // 连接前进行网络健康检查
+                if (_healthCheckService != null && !_healthCheckService.IsNetworkHealthy)
+                {
+                    _logger?.LogWarning("网络健康检查失败，延迟连接尝试，目标：{ServerIp}:{Port}", serverUrl, port);
+                    
+                    // 尝试进行一次即时网络检查
+                    var immediateCheck = await _healthCheckService.CheckOnceAsync();
+                    if (!immediateCheck)
+                    {
+                        _logger?.LogError("网络连接不可用，取消连接尝试，目标：{ServerIp}:{Port}", serverUrl, port);
+                        return false;
+                    }
+                }
+
+                // 支持域名解析 - 先尝试解析为IP地址
+                IPAddress ipAddress;
+                try
+                {
+                    // 尝试直接解析为IP地址
+                    ipAddress = IPAddress.Parse(serverUrl);
+                }
+                catch (FormatException)
+                {
+                    // 如果不是IP地址格式，尝试进行域名解析
+                    try
+                    {
+                        var hostEntry = await Dns.GetHostEntryAsync(serverUrl);
+                        ipAddress = hostEntry.AddressList.FirstOrDefault(ip => ip.AddressFamily == AddressFamily.InterNetwork);
+                        if (ipAddress == null)
+                        {
+                            throw new InvalidOperationException($"无法解析域名 '{serverUrl}' 到IPv4地址");
+                        }
+                    }
+                    catch (Exception dnsEx)
+                    {
+                        throw new InvalidOperationException($"域名解析失败 '{serverUrl}': {dnsEx.Message}", dnsEx);
+                    }
+                }
+                
+                var connected = await _client.ConnectAsync(new IPEndPoint(ipAddress, port));
                 
                 if (connected)
                 {
@@ -131,6 +174,12 @@ namespace RUINORERP.UI.Network
                     
                     // 确保状态同步
                     _isConnected = connected && _client.Socket?.Connected == true;
+                    
+                    // 启动网络健康检查服务
+                    if (_isConnected && _healthCheckService == null)
+                    {
+                        InitializeHealthCheckService(serverUrl, port);
+                    }
                    
                 }
                 else
@@ -150,19 +199,64 @@ namespace RUINORERP.UI.Network
         }
 
         /// <summary>
+        /// 初始化网络健康检查服务
+        /// </summary>
+        /// <param name="serverUrl">服务器地址</param>
+        /// <param name="port">端口号</param>
+        private void InitializeHealthCheckService(string serverUrl, int port)
+        {
+            try
+            {
+                _healthCheckService = new NetworkHealthCheckService(serverUrl, port, 30000, null);
+                _healthCheckService.NetworkHealthChanged += OnNetworkHealthChanged;
+                _healthCheckService.Start();
+                _logger?.LogInformation("网络健康检查服务已启动，目标：{ServerIp}:{Port}", serverUrl, port);
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "初始化网络健康检查服务失败");
+            }
+        }
+
+        /// <summary>
+        /// 网络健康状态变化处理
+        /// </summary>
+        private void OnNetworkHealthChanged(bool isHealthy, string message)
+        {
+            if (!isHealthy)
+            {
+                if (!_networkHealthWarningShown)
+                {
+                    _logger?.LogWarning("网络健康状态异常：{Message}", message);
+                    _networkHealthWarningShown = true;
+                }
+            }
+            else
+            {
+                _logger?.LogInformation("网络健康状态已恢复：{Message}", message);
+                _networkHealthWarningShown = false;
+            }
+        }
+
+        /// <summary>
         /// 断开连接
         /// </summary>
         public void Disconnect()
         {
             if (_isConnected)
             {
+                _healthCheckService?.Stop();
+                _healthCheckService?.Dispose();
+                _healthCheckService = null;
+                
                 _client.Close();
                 _isConnected = false;
+                _networkHealthWarningShown = false;
             }
         }
 
         /// <summary>
-        /// 异步发送数据到服务器 - 增强状态同步检查
+        /// 异步发送数据到服务器 - 集成网络健康检查，增强状态同步
         /// </summary>
         /// <param name="data">要发送的数据</param>
         /// <param name="cancellationToken">取消令牌</param>
@@ -170,6 +264,19 @@ namespace RUINORERP.UI.Network
         /// <exception cref="InvalidOperationException">当未连接到服务器或连接断开时抛出</exception>
         public async Task SendAsync(byte[] data, CancellationToken cancellationToken = default)
         {
+            // 发送前检查网络健康状态
+            if (_healthCheckService != null && !_healthCheckService.IsNetworkHealthy)
+            {
+                _logger?.LogWarning("网络健康检查失败，延迟发送数据尝试");
+                
+                // 尝试进行一次即时网络检查
+                var immediateCheck = await _healthCheckService.CheckOnceAsync();
+                if (!immediateCheck)
+                {
+                    throw new InvalidOperationException("网络连接不可用，无法发送数据");
+                }
+            }
+
             // 双重检查连接状态
             if (!_isConnected || _client == null)
             {
@@ -286,6 +393,10 @@ namespace RUINORERP.UI.Network
         {
             if (_client != null)
             {
+                _healthCheckService?.Stop();
+                _healthCheckService?.Dispose();
+                _healthCheckService = null;
+                
                 _client.Close();
                 _client = null;
             }

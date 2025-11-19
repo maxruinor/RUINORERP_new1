@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -660,17 +660,43 @@ namespace RUINORERP.Common.Helper
                     var nullableConverter = new NullableConverter(propertyInfo.PropertyType);
                     try
                     {
-                        propertyInfo.SetValue(instance, Convert.ChangeType(propertyValue, nullableConverter.UnderlyingType), null);
+                        // 检查底层类型是否为值类型或字符串，避免复杂类型转换
+                        var underlyingType = nullableConverter.UnderlyingType;
+                        if (underlyingType.IsValueType || underlyingType == typeof(string))
+                        {
+                            propertyInfo.SetValue(instance, Convert.ChangeType(propertyValue, underlyingType), null);
+                        }
+                        else
+                        {
+                            // 对于复杂类型，直接赋值而不转换
+                            propertyInfo.SetValue(instance, propertyValue, null);
+                        }
                     }
                     catch (Exception ex)
                     {
                         var typeArray = propertyInfo.PropertyType.GetGenericArguments();
-                        propertyInfo.SetValue(instance, Convert.ChangeType(propertyValue, typeArray[0]), null);
+                        var targetType = typeArray[0];
+                        // 检查目标类型是否为值类型或字符串，避免复杂类型转换
+                        if (targetType.IsValueType || targetType == typeof(string))
+                        {
+                            propertyInfo.SetValue(instance, Convert.ChangeType(propertyValue, targetType), null);
+                        }
+                        else
+                        {
+                            // 对于复杂类型，直接赋值而不转换
+                            propertyInfo.SetValue(instance, propertyValue, null);
+                        }
                     }
+                }
+                else if (propertyInfo.PropertyType.IsValueType || propertyInfo.PropertyType == typeof(string))
+                {
+                    // 对于值类型和字符串，使用类型转换
+                    propertyInfo.SetValue(instance, Convert.ChangeType(propertyValue, propertyInfo.PropertyType), null);
                 }
                 else
                 {
-                    propertyInfo.SetValue(instance, Convert.ChangeType(propertyValue, propertyInfo.PropertyType), null);
+                    // 对于复杂类型（如导航属性），直接赋值而不转换
+                    propertyInfo.SetValue(instance, propertyValue, null);
                 }
             }
 
@@ -704,17 +730,43 @@ namespace RUINORERP.Common.Helper
                     var nullableConverter = new NullableConverter(propertyInfo.PropertyType);
                     try
                     {
-                        propertyInfo.SetValue(instance, Convert.ChangeType(propertyInfo.GetValue(t), nullableConverter.UnderlyingType), null);
+                        // 检查底层类型是否为值类型或字符串，避免复杂类型转换
+                        var underlyingType = nullableConverter.UnderlyingType;
+                        if (underlyingType.IsValueType || underlyingType == typeof(string))
+                        {
+                            propertyInfo.SetValue(instance, Convert.ChangeType(propertyInfo.GetValue(t), underlyingType), null);
+                        }
+                        else
+                        {
+                            // 对于复杂类型，直接赋值而不转换
+                            propertyInfo.SetValue(instance, propertyInfo.GetValue(t), null);
+                        }
                     }
                     catch (Exception ex)
                     {
                         var typeArray = propertyInfo.PropertyType.GetGenericArguments();
-                        propertyInfo.SetValue(instance, Convert.ChangeType(propertyInfo.GetValue(t), typeArray[0]), null);
+                        var targetType = typeArray[0];
+                        // 检查目标类型是否为值类型或字符串，避免复杂类型转换
+                        if (targetType.IsValueType || targetType == typeof(string))
+                        {
+                            propertyInfo.SetValue(instance, Convert.ChangeType(propertyInfo.GetValue(t), targetType), null);
+                        }
+                        else
+                        {
+                            // 对于复杂类型，直接赋值而不转换
+                            propertyInfo.SetValue(instance, propertyInfo.GetValue(t), null);
+                        }
                     }
+                }
+                else if (propertyInfo.PropertyType.IsValueType || propertyInfo.PropertyType == typeof(string))
+                {
+                    // 对于值类型和字符串，使用类型转换
+                    propertyInfo.SetValue(instance, Convert.ChangeType(propertyInfo.GetValue(t), propertyInfo.PropertyType), null);
                 }
                 else
                 {
-                    propertyInfo.SetValue(instance, Convert.ChangeType(propertyInfo.GetValue(t), propertyInfo.PropertyType), null);
+                    // 对于复杂类型（如导航属性），直接赋值而不转换
+                    propertyInfo.SetValue(instance, propertyInfo.GetValue(t), null);
                 }
             }
 

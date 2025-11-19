@@ -13,6 +13,8 @@ namespace RUINORERP.Business.BNR
         private Dictionary<string, IParameterHandler> mHandlers = new Dictionary<string, IParameterHandler>();
         private readonly DatabaseSequenceService _databaseSequenceService;
         private readonly ICacheManager<object> _cacheManager;
+        [ThreadStatic]
+        private static string _currentBusinessType;
 
         /// <summary>
         /// 构造函数
@@ -42,6 +44,24 @@ namespace RUINORERP.Business.BNR
             {
                 return mHandlers;
             }
+        }
+
+        /// <summary>
+        /// 设置当前业务类型
+        /// </summary>
+        /// <param name="businessType">业务类型</param>
+        public static void SetCurrentBusinessType(string businessType)
+        {
+            _currentBusinessType = businessType;
+        }
+
+        /// <summary>
+        /// 获取当前业务类型
+        /// </summary>
+        /// <returns>当前业务类型</returns>
+        public static string GetCurrentBusinessType()
+        {
+            return _currentBusinessType;
         }
 
         public void Initialize()

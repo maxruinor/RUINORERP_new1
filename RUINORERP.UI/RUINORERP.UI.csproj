@@ -2305,6 +2305,7 @@
     <Compile Include="Network\ISocketClient.cs" />
     <Compile Include="Network\ClientCommunicationService.cs" />
     <Compile Include="Network\NetworkConfig.cs" />
+    <Compile Include="Network\NetworkHealthCheckService.cs" />
     <Compile Include="Network\RetryStrategy\EnhancedRetryStrategy.cs" />
     <Compile Include="Network\RetryStrategy\ExponentialBackoffRetryStrategy.cs" />
     <Compile Include="Network\RetryStrategy\FixedIntervalRetryStrategy.cs" />

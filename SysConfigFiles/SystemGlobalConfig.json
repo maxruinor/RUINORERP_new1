@@ -1,0 +1,21 @@
+{
+  "SystemGlobalConfig": {
+    "客户端自动更新": true,
+    "IsFromPlatform": false,
+    "OpenProdTypeForSaleCheck": true,
+    "DirectPrinting": false,
+    "AutoPrintAfterSave": false,
+    "UseSharedPrinter": false,
+    "SomeSetting": "",
+    "ServerName": null,
+    "ServerPort": 0,
+    "MaxConnections": 0,
+    "HeartbeatInterval": 0,
+    "DbConnectionString": null,
+    "DbType": null,
+    "CacheType": null,
+    "CacheConnectionString": null,
+    "EnableLogging": false,
+    "LogLevel": null
+  }
+}

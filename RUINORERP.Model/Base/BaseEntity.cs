@@ -24,6 +24,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
+using RUINORERP.Global.Extensions;
 namespace RUINORERP.Model
 {
     /// </summary>
@@ -1341,6 +1342,78 @@ namespace RUINORERP.Model
         #region 新状态管理系统方法
 
         /// <summary>
+        /// 状态管理器实例
+        /// </summary>
+        private IUnifiedStateManager _stateManager;
+
+        /// <summary>
+        /// 状态转换上下文
+        /// </summary>
+        private IStatusTransitionContext _statusContext;
+
+        /// <summary>
+        /// 状态管理器实例（延迟初始化）
+        /// </summary>
+        [SugarColumn(IsIgnore = true)]
+        [Browsable(false)]
+        [JsonIgnore]
+        public IUnifiedStateManager StateManager 
+        { 
+            get 
+            {
+                if (_stateManager == null)
+                {
+                    try
+                    {
+                        _stateManager = ApplicationContext.Current.GetRequiredService<IUnifiedStateManager>();
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"获取状态管理器失败: {ex.Message}");
+                    }
+                }
+                return _stateManager;
+            }
+            protected set
+            {
+                _stateManager = value;
+            }
+        }
+
+        /// <summary>
+        /// 状态转换上下文
+        /// </summary>
+        [SugarColumn(IsIgnore = true)]
+        [Browsable(false)]
+        [JsonIgnore]
+        public IStatusTransitionContext StatusContext 
+        { 
+            get 
+            {
+                if (_statusContext == null && StateManager != null)
+                {
+                    try
+                    {
+                        var currentStatus = GetDataStatus();
+                        _statusContext = StatusTransitionContextFactory.CreateDataStatusContext(
+                            this, 
+                            currentStatus, 
+                            $"BaseEntity_{this.GetType().Name}");
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"创建状态上下文失败: {ex.Message}");
+                    }
+                }
+                return _statusContext;
+            }
+            protected set
+            {
+                _statusContext = value;
+            }
+        }
+
+        /// <summary>
         /// 初始化状态管理器
         /// </summary>
         /// <param name="initialStatus">初始状态</param>
@@ -1362,12 +1435,17 @@ namespace RUINORERP.Model
                     }
                 }
 
-                // 使用单例工厂获取状态管理器，避免重复初始化
-
-                var stateManager = ApplicationContext.Current.GetRequiredService<IUnifiedStateManager>();
-
-                // 设置初始状态
-                stateManager.SetEntityDataStatus(this, initialStatus);
+                // 使用状态管理器设置初始状态
+                if (StateManager != null)
+                {
+                    StateManager.SetEntityDataStatus(this, initialStatus);
+                    
+                    // 创建状态转换上下文
+                    StatusContext = StatusTransitionContextFactory.CreateDataStatusContext(
+                        this, 
+                        initialStatus, 
+                        $"BaseEntity_Initialize_{this.GetType().Name}");
+                }
 
                 // 记录状态管理器初始化信息
                 _stateManagerInitialized = true;
@@ -1473,6 +1551,59 @@ namespace RUINORERP.Model
         [JsonIgnore]
         [XmlIgnore]
         public bool IsStateManagerInitialized => _stateManagerInitialized;
+ 
+ 
+
+      
+        /// <summary>
+        /// 获取当前状态的描述信息
+        /// </summary>
+        /// <returns>状态描述</returns>
+        public virtual string GetCurrentStatusDescription()
+        {
+            try
+            {
+                var currentStatus = GetDataStatus();
+                var statusType = typeof(DataStatus);
+                var memberInfo = statusType.GetMember(currentStatus.ToString()).FirstOrDefault();
+                
+                if (memberInfo != null)
+                {
+                    var descAttr = memberInfo.GetCustomAttribute<System.ComponentModel.DescriptionAttribute>();
+                    return descAttr?.Description ?? currentStatus.ToString();
+                }
+
+                return currentStatus.ToString();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"获取状态描述失败: {ex.Message}");
+                return "未知状态";
+            }
+        }
+
+        
+
+        /// <summary>
+        /// 重置状态管理器
+        /// </summary>
+        public virtual void ResetStateManager()
+        {
+            try
+            {
+                _stateManager = null;
+                _statusContext = null;
+                _stateManagerInitialized = false;
+                
+                System.Diagnostics.Debug.WriteLine($"实体 {this.GetType().Name} 的状态管理器已重置");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"重置状态管理器失败: {ex.Message}");
+            }
+        }
+
+        
 
         #endregion
 

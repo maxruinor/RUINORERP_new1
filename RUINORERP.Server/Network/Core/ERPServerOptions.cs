@@ -28,7 +28,7 @@ namespace RUINORERP.Server.Network.Core
         /// <summary>
         /// 监听端口号
         /// </summary>
-        public int Port { get; set; } = 3003;
+        public int Port { get; set; } = 3009;
 
         /// <summary>
         /// 连接等待队列的最大长度

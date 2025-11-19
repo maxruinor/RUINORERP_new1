@@ -72,8 +72,11 @@ namespace RUINORERP.Business.BNR
             // 记录生成的序列键，便于调试
             Console.WriteLine($"正在为序列键 '{sequenceKey}' 生成下一个序号");
             
-            // 获取下一个序号值，传入重置类型和格式
-            var number = _sequenceService.GetNextSequenceValue(sequenceKey, resetType, format);
+            // 获取业务类型（从BNRFactory中获取）
+            string businessType = BNRFactory.GetCurrentBusinessType();
+            
+            // 获取下一个序号值，传入重置类型、格式和业务类型
+            var number = _sequenceService.GetNextSequenceValue(sequenceKey, resetType, format, null, businessType);
             
             // 智能处理格式掩码，支持固定格式+无限增长
             try

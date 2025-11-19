@@ -81,23 +81,16 @@ namespace RUINORERP.UI.PSI.SAL
  
 
         /// <summary>
-        /// 更新状态显示
+        /// 更新状态显示 - 重写基类方法以使用基类功能
         /// </summary>
-        private void UpdateStateDisplay()
+        protected override void UpdateStateDisplay()
         {
-            if (EditEntity == null) return;
-
-            // 使用v3状态管理系统获取当前状态描述
-            if (EditEntity is BaseEntity baseEntity)
+            // 调用基类的状态显示更新方法
+            base.UpdateStateDisplay();
+            
+            // 销售订单特定的额外处理
+            if (EditEntity != null && EditEntity is BaseEntity baseEntity)
             {
-                // 获取状态描述
-                DataStatus? currentStatus = (DataStatus)baseEntity.GetPropertyValue(nameof(DataStatus));
-                string statusDesc = currentStatus.HasValue ? ((DataStatus)currentStatus.Value).ToString() : string.Empty;
-                if (!string.IsNullOrEmpty(statusDesc))
-                {
-                    lblDataStatus.Text = statusDesc;
-                }
-
                 // 更新审核状态显示
                 if (EditEntity.ApprovalStatus.HasValue)
                 {
@@ -106,43 +99,60 @@ namespace RUINORERP.UI.PSI.SAL
             }
         }
 
+        
+
         /// <summary>
-        /// 根据状态更新销售订单特定的UI
+        /// 根据状态更新销售订单特定的UI - 重写基类方法
         /// </summary>
-        private void UpdateSaleOrderSpecificUIByState()
+        protected  void UpdateSaleOrderSpecificUIByState()
         {
-            if (EditEntity == null || !(EditEntity is BaseEntity baseEntity)) return;
+            if (EditEntity == null) return;
 
-            DataStatus? status = (DataStatus)baseEntity.GetPropertyValue(nameof(DataStatus));
-            if (!status.HasValue) return;
-            DataStatus currentStatus = status.Value;
-
-            // 根据不同状态更新销售订单特有的UI元素
-            switch (currentStatus)
+                 
+            // 销售订单特定的额外处理
+            if (EditEntity is BaseEntity baseEntity)
             {
-                case DataStatus.草稿:
-                case DataStatus.新建:
-                    // 草稿或新建状态下的UI设置
-                    cmbPayStatus.Enabled = true;
-                    cmbPaytype_ID.Enabled = true;
-                    break;
-                case DataStatus.确认:
-                    // 确认状态下的UI设置
-                    cmbPayStatus.Enabled = false;
-                    cmbPaytype_ID.Enabled = false;
-                    break;
-                case DataStatus.完结:
-                    // 完结状态下的UI设置
-                    cmbPayStatus.Enabled = false;
-                    cmbPaytype_ID.Enabled = false;
-                    break;
-                case DataStatus.作废:
-                    // 作废状态下的UI设置
-                    // 禁用大部分编辑功能
-                    break;
+                DataStatus currentStatus = baseEntity.GetDataStatus();
+                
+                // 根据不同状态更新销售订单特有的UI元素
+                switch (currentStatus)
+                {
+                    case DataStatus.草稿:
+                    case DataStatus.新建:
+                        // 草稿或新建状态下的UI设置
+                        cmbPayStatus.Enabled = true;
+                        cmbPaytype_ID.Enabled = true;
+                        break;
+                    case DataStatus.确认:
+                    case DataStatus.完结:
+                    case DataStatus.作废:
+                        // 确认、完结、作废状态下的UI设置
+                        cmbPayStatus.Enabled = false;
+                        cmbPaytype_ID.Enabled = false;
+                        break;
+                }
             }
+        }
 
 
+
+        /// <summary>
+        /// 更新扩展按钮可见性（基于状态管理系统） - 重写基类方法
+        /// 销售订单特有的扩展按钮权限管理
+        /// </summary>
+        protected override void UpdatePermissionBasedButtonVisibility()
+        {
+            base.UpdatePermissionBasedButtonVisibility();
+            
+            // 销售订单特有的扩展按钮可见性处理
+            if (EditEntity is BaseEntity baseEntity)
+            {
+                // 基于状态管理系统检查按钮权限
+                if (toolStripButton定制成本确认 != null)
+                    toolStripButton定制成本确认.Visible = CanExecuteAction("UpdateCustomizedCost");
+                if (toolStripButton反结案 != null)
+                    toolStripButton反结案.Visible = CanExecuteAction("AntiCloseCase");
+            }
         }
 
 
@@ -168,13 +178,77 @@ namespace RUINORERP.UI.PSI.SAL
             QueryConditionFilter.SetFieldLimitCondition(lambda);
         }
 
+        // 状态管理相关方法已简化 - 基类 BaseBillEditGeneric 已处理所有通用状态管理逻辑
 
+        // HandleSaleOrderStateTransition 方法已移除 - 基类 BaseBillEditGeneric 现在处理状态转换逻辑
+
+        /// <summary>
+        /// 销售订单确认时的处理 - 重写基类方法
+        /// 销售订单特有的确认处理逻辑
+        /// </summary>
+        protected  void OnSaleOrderConfirmed()
+        {
+         
+            
+            // 销售订单特有的确认处理
+            MainForm.Instance.uclog.AddLog("销售订单已确认，准备生成后续单据");
+            
+            // 可以在这里添加生成出库单、应收单等逻辑
+            // 更新库存预留等
+        }
+
+        /// <summary>
+        /// 销售订单完结时的处理 - 重写基类方法
+        /// 销售订单特有的完结处理逻辑
+        /// </summary>
+        protected void OnSaleOrderCompleted()
+        {
+        
+            
+            // 销售订单特有的完结处理
+            MainForm.Instance.uclog.AddLog("销售订单已完结，进行最终结算");
+            
+            // 可以在这里添加结算、归档等逻辑
+        }
+
+        /// <summary>
+        /// 销售订单作废时的处理 - 重写基类方法
+        /// 销售订单特有的作废处理逻辑
+        /// </summary>
+        protected void OnSaleOrderCancelled()
+        {
+      
+            
+            // 销售订单特有的作废处理
+            MainForm.Instance.uclog.AddLog("销售订单已作废，释放相关资源");
+            
+            // 可以在这里添加释放库存预留、取消后续单据等逻辑
+        }
+
+
+        /// <summary>
+        /// 更新付款状态
+        /// </summary>
+        /// <returns>异步任务</returns>
         protected async Task UpdatePaymentStatus()
         {
             if (EditEntity == null)
             {
                 return;
             }
+            
+            // 使用新的状态管理系统进行状态验证
+            if (EditEntity is BaseEntity baseEntity)
+            {
+                // 检查是否可以更新付款状态
+                var canUpdatePayment = await CanTransitionToAsync("UpdatePaymentStatus");
+                if (!canUpdatePayment.IsAllowed)
+                {
+                    //MainForm.Instance.uclog.AddLog($"无法更新付款状态：{canUpdatePayment.Message}");
+                    return;
+                }
+            }
+            
             //反审，要审核过，并且通过了，才能反审。
             if (EditEntity.ApprovalStatus.Value == (int)ApprovalStatus.已审核 && !EditEntity.ApprovalResults.HasValue)
             {
@@ -294,13 +368,17 @@ namespace RUINORERP.UI.PSI.SAL
             await base.LoadRelatedDataToDropDownItemsAsync();
         }
 
+        /// <summary>
+        /// 绑定数据到控件
+        /// </summary>
+        /// <param name="entityPara">实体参数</param>
+        /// <param name="actionStatus">操作状态</param>
         public override async void BindData(tb_SaleOrder entityPara, ActionStatus actionStatus)
         {
             tb_SaleOrder entity = entityPara as tb_SaleOrder;
 
             if (entity == null)
             {
-
                 return;
             }
 
@@ -359,6 +437,20 @@ namespace RUINORERP.UI.PSI.SAL
                     UIHelper.ControlForeignFieldInvisible<tb_SaleOrder>(this, false);
                 }
             }
+            
+            // 使用新的状态管理系统处理状态显示
+            if (entity is BaseEntity baseEntity)
+            {
+                // 初始化状态管理
+              //  baseEntity.InitializeStateManagement();
+                
+                // 更新状态显示
+                UpdateStateDisplay();
+                
+                // 根据状态更新UI
+                UpdateSaleOrderSpecificUIByState();
+            }
+            
             //StatusMachine.CurrentDataStatus = (DataStatus)entity.DataStatus;
             //StatusMachine.ApprovalStatus = (ApprovalStatus)entity.ApprovalStatus;
             if (entity.ApprovalStatus.HasValue)
@@ -576,11 +668,7 @@ namespace RUINORERP.UI.PSI.SAL
                     }
                 }
 
-                //数据状态变化会影响按钮变化
-                if (s2.PropertyName == entity.GetPropertyName<tb_SaleOrder>(c => c.DataStatus))
-                {
-                    ToolBarEnabledControl(entity);
-                }
+                 
 
                 //如果客户有变化，带出对应有业务员
                 if (entity.CustomerVendor_ID > 0 && s2.PropertyName == entity.GetPropertyName<tb_SaleOrder>(c => c.CustomerVendor_ID))
@@ -620,7 +708,8 @@ namespace RUINORERP.UI.PSI.SAL
                 //显示 打印状态 如果是草稿状态 不显示打印
                 if (EditEntity is BaseEntity baseEntity)
                 {
-                    bool canPrint = true;// baseEntity.CanExecuteAction("Print");
+                    // 使用新的状态管理系统检查是否可以打印
+                    bool canPrint = CanExecuteAction("Print");
                     toolStripbtnPrint.Enabled = canPrint;
 
                     if (canPrint)
@@ -637,6 +726,7 @@ namespace RUINORERP.UI.PSI.SAL
                     else
                     {
                         toolStripbtnPrint.Enabled = false;
+                        lblPrintStatus.Text = "草稿状态不可打印";
                     }
                 }
                 else if ((DataStatus)EditEntity.DataStatus != DataStatus.草稿)
@@ -654,6 +744,7 @@ namespace RUINORERP.UI.PSI.SAL
                 else
                 {
                     toolStripbtnPrint.Enabled = false;
+                    lblPrintStatus.Text = "草稿状态不可打印";
                 }
             };
 
@@ -1295,6 +1386,16 @@ namespace RUINORERP.UI.PSI.SAL
                 return false;
             }
 
+            // 使用新的状态管理系统验证是否可以保存
+            if (EditEntity is BaseEntity baseEntity)
+            {
+                if (!CanExecuteAction("Save"))
+                {
+                   // MainForm.Instance.uclog.AddLog($"当前状态【{GetDataStatus()}】不允许保存操作");
+                    return false;
+                }
+            }
+
             if (EditEntity.PlatformOrderNo != null)
             {
                 EditEntity.PlatformOrderNo = EditEntity.PlatformOrderNo.Trim();//去空格
@@ -1697,6 +1798,16 @@ namespace RUINORERP.UI.PSI.SAL
                 return false;
             }
 
+            // 使用新的状态管理系统验证是否可以反结案
+            if (EditEntity is BaseEntity baseEntity)
+            {
+                if (!CanExecuteAction("AntiCloseCase"))
+                {
+                   // MainForm.Instance.uclog.AddLog($"当前状态【{GetDataStatus()}】不允许反结案操作");
+                    return false;
+                }
+            }
+
             CommonUI.frmOpinion frm = new CommonUI.frmOpinion();
             string PKCol = BaseUIHelper.GetEntityPrimaryKey<tb_SaleOrder>();
             long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
@@ -1754,6 +1865,8 @@ namespace RUINORERP.UI.PSI.SAL
             {
                 return false;
             }
+
+            
 
             CommonUI.frmOpinion frm = new CommonUI.frmOpinion();
             string PKCol = BaseUIHelper.GetEntityPrimaryKey<tb_SaleOrder>();
@@ -1871,6 +1984,14 @@ namespace RUINORERP.UI.PSI.SAL
                 return;
             }
 
+            // 基于新状态管理系统验证定制成本确认权限
+            BaseEntity baseEntity = EditEntity as BaseEntity;
+            if (baseEntity != null && !CanExecuteAction("UpdateCustomizedCost"))
+            {
+               // MainForm.Instance.uclog.AddLog($"当前状态[{baseEntity.GetCurrentStateName()}]不允许执行定制成本确认操作。");
+                return;
+            }
+
             //反审，要审核过，并且通过了，才能反审。
             if (EditEntity.ApprovalStatus.Value == (int)ApprovalStatus.已审核 && !EditEntity.ApprovalResults.HasValue)
             {
@@ -1983,6 +2104,19 @@ namespace RUINORERP.UI.PSI.SAL
         /// </summary>
         protected override async Task<ReturnResults<tb_SaleOrder>> Delete()
         {
+            if (EditEntity == null)
+            {
+                return new ReturnResults<tb_SaleOrder> { Succeeded = false, ErrorMsg = "没有要删除的数据" };
+            }
+
+            // 基于新状态管理系统验证删除权限
+            BaseEntity baseEntity = EditEntity as BaseEntity;
+            if (baseEntity != null && !CanExecuteAction("Delete"))
+            {
+               // MainForm.Instance.uclog.AddLog($"当前状态[{baseEntity.GetCurrentStateName()}]不允许执行删除操作。");
+                return new ReturnResults<tb_SaleOrder> { Succeeded = false, ErrorMsg = "当前状态不允许删除" };
+            }
+
             // 调用基类的删除方法
             ReturnResults<tb_SaleOrder> result = await base.Delete();
             // 如果删除成功，清空图片控件

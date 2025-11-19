@@ -363,7 +363,8 @@ namespace RUINORERP.Business.BNR
         /// </summary>
         /// <param name="sequenceKey">序列键</param>
         /// <param name="newValue">新值</param>
-        public void UpdateSequenceValue(string sequenceKey, long newValue)
+        /// <param name="businessType">业务类型</param>
+        public void UpdateSequenceValue(string sequenceKey, long newValue, string businessType = null)
         {
             EnsureTableStructure();
             
@@ -379,6 +380,11 @@ namespace RUINORERP.Business.BNR
                 {
                     sequence.CurrentValue = newValue;
                     sequence.LastUpdated = DateTime.Now;
+                    // 如果业务类型不为空且原记录没有业务类型，则更新业务类型
+                    if (!string.IsNullOrEmpty(businessType) && string.IsNullOrEmpty(sequence.BusinessType))
+                    {
+                        sequence.BusinessType = businessType;
+                    }
                     _sqlSugarClient.Updateable(sequence).ExecuteCommand();
                 }
                 else
@@ -388,7 +394,8 @@ namespace RUINORERP.Business.BNR
                         SequenceKey = sequenceKey,
                         CurrentValue = newValue,
                         LastUpdated = DateTime.Now,
-                        CreatedAt = DateTime.Now
+                        CreatedAt = DateTime.Now,
+                        BusinessType = businessType
                     };
                     _sqlSugarClient.Insertable(newSequence).ExecuteCommand();
                 }
@@ -453,7 +460,7 @@ namespace RUINORERP.Business.BNR
                             ResetType = resetType,
                             FormatMask = formatMask,
                             Description = description,
-                            BusinessType = businessType
+                            BusinessType = businessType  // 保存业务类型
                         });
                         return 1;
                     }
@@ -470,7 +477,7 @@ namespace RUINORERP.Business.BNR
                         ResetType = resetType,
                         FormatMask = formatMask,
                         Description = description,
-                        BusinessType = businessType
+                        BusinessType = businessType  // 保存业务类型
                     });
                     
                     return next;
@@ -657,7 +664,8 @@ namespace RUINORERP.Business.BNR
         /// </summary>
         /// <param name="key">序列号键</param>
         /// <param name="newValue">新的值</param>
-        public void ResetSequenceValue(string key, long newValue)
+        /// <param name="businessType">业务类型</param>
+        public void ResetSequenceValue(string key, long newValue, string businessType = null)
         {
             EnsureTableStructure();
             
@@ -673,6 +681,11 @@ namespace RUINORERP.Business.BNR
                 {
                     sequence.CurrentValue = newValue;
                     sequence.LastUpdated = DateTime.Now;
+                    // 如果业务类型不为空且原记录没有业务类型，则更新业务类型
+                    if (!string.IsNullOrEmpty(businessType) && string.IsNullOrEmpty(sequence.BusinessType))
+                    {
+                        sequence.BusinessType = businessType;
+                    }
                     _sqlSugarClient.Updateable(sequence).ExecuteCommand();
                 }
                 else
@@ -682,7 +695,8 @@ namespace RUINORERP.Business.BNR
                         SequenceKey = key,
                         CurrentValue = newValue,
                         LastUpdated = DateTime.Now,
-                        CreatedAt = DateTime.Now
+                        CreatedAt = DateTime.Now,
+                        BusinessType = businessType
                     };
                     _sqlSugarClient.Insertable(newSequence).ExecuteCommand();
                 }

@@ -23,21 +23,14 @@ namespace RUINORERP.Server.Network.CommandHandlers
     {
         private readonly ISessionService _sessionService;
 
-        /// <summary>
-        /// 无参构造函数，以支持Activator.CreateInstance创建实例
-        /// 注意：这是临时解决方案，优先使用带参构造函数
-        /// </summary>
-        public HeartbeatCommandHandler() : base()
-        {
-            // 为了兼容性保留这个构造函数，但实际运行时应使用依赖注入的构造函数
-        }
+      
 
         /// <summary>
         /// 构造函数 - 通过依赖注入获取服务
         /// </summary>
         public HeartbeatCommandHandler(
              ISessionService sessionService,
-            ILogger<HeartbeatCommandHandler> logger = null) : base(logger)
+            ILogger<HeartbeatCommandHandler> logger) : base(logger ?? throw new ArgumentNullException(nameof(logger)))
         {
             _sessionService = sessionService ?? throw new ArgumentNullException(nameof(sessionService));
 

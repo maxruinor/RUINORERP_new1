@@ -6,6 +6,8 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using RUINORERP.PacketSpec.Models.Common;
+using RUINORERP.PacketSpec.Models.Lock;
 
 namespace RUINORERP.UI.Network.ClientCommandHandlers
 {
@@ -88,10 +90,6 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                 {
                     await HandleForceUnlockAsync(packet);
                 }
-                else if (packet.CommandId == LockCommands.CheckLockStatus) // 保留检查锁定的处理
-                {
-                    await HandleCheckLockAsync(packet);
-                }
                 else if (packet.CommandId == LockCommands.BroadcastLockStatus)
                 {
                     await HandleLockBroadcastAsync(packet);
@@ -103,15 +101,10 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                 else if (packet.CommandId == LockCommands.RefuseUnlock)
                 {
                     await HandleRefuseUnlockAsync(packet);
-                }
-                else if (packet.CommandId == LockCommands.Lock || packet.CommandId == LockCommands.Unlock || 
-                         packet.CommandId == LockCommands.ForceUnlock || packet.CommandId == LockCommands.CheckLockStatus)
+                }   
+                else if (packet.CommandId == LockCommands.AgreeUnlock)
                 {
-                    await HandleDocumentLockCommandAsync(packet);
-                }
-                else if (packet.CommandId == LockCommands.BroadcastLockStatus) // 作为转发单据锁定的兼容处理
-                {
-                    await HandleForwardDocumentLockAsync(packet);
+                    await HandleAgreeUnlockAsync(packet);
                 }
                 else
                 {
@@ -120,7 +113,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"处理锁管理命令 {packet.CommandId?.FullCode} 时发生错误");
+                _logger.LogError(ex, $"处理锁管理命令 {packet.CommandId.ToString()} 时发生错误");
             }
         }
 
@@ -135,31 +128,31 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
             {
                 if (packet.Response is LockResponse lockResponse)
                 {
-                    _logger.LogDebug($"收到锁请求响应: 资源ID={lockResponse.ResourceId}, 成功={lockResponse.Success}");
+                    _logger.LogDebug($"收到锁请求响应: 资源ID={lockResponse.LockInfo.BillID}, 成功={lockResponse.IsSuccess}");
 
                     // 处理锁请求响应，通知相关UI组件
-                    if (lockResponse.Success)
+                    if (lockResponse.IsSuccess)
                     {
                         // 锁获取成功，可以更新UI状态
-                        _logger.LogInformation($"成功获取资源 '{lockResponse.ResourceId}' 的锁，锁ID: {lockResponse.LockId}");
-                        
+                        _logger.LogInformation($"成功获取资源 '{lockResponse.LockInfo.BillID}' 的锁，锁ID: {lockResponse.LockInfo.LockId}");
+
                         // 触发锁获取成功事件或更新UI组件状态
                         // 例如：通知正在编辑的表单可以开始编辑
                     }
                     else
                     {
                         // 锁获取失败
-                        _logger.LogWarning($"获取资源 '{lockResponse.ResourceId}' 的锁失败: {lockResponse.ErrorMessage}");
+                        _logger.LogWarning($"获取资源 '{lockResponse.LockInfo.BillID}' 的锁失败: {lockResponse.Message}");
 
                         // 如果有当前锁定信息，可以显示给用户
-                        if (lockResponse.CurrentLockInfo != null)
+                        if (lockResponse.LockInfo != null)
                         {
                             string message = $"资源已被锁定\n" +
-                                            $"锁定用户: {lockResponse.CurrentLockInfo.LockedUserName}\n" +
-                                            $"锁定时间: {lockResponse.LockTime}\n" +
-                                            $"客户端ID: {lockResponse.CurrentLockInfo.ClientId}";
+                                            $"锁定用户: {lockResponse.LockInfo.UserName}\n" +
+                                            $"锁定时间: {lockResponse.LockInfo.LockTime}\n" +
+                                            $"客户端ID: {lockResponse.LockInfo.SessionId}";
                             // 在UI线程显示提示
-                            Application.Current?.Dispatcher?.Invoke(() =>
+                            InvokeOnUiThread(() =>
                             {
                                 MessageBox.Show(message, "锁定提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                             });
@@ -167,13 +160,9 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                         else
                         {
                             // 显示通用的锁定失败消息
-                            Application.Current?.Dispatcher?.Invoke(() =>
+                            InvokeOnUiThread(() =>
                             {
-                                MessageBox.Show(
-                                    $"获取锁失败: {lockResponse.ErrorMessage}", 
-                                    "锁定失败", 
-                                    MessageBoxButtons.OK, 
-                                    MessageBoxIcon.Warning);
+                                MessageBox.Show($"锁定失败：{lockResponse.Message}", "锁定失败", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                             });
                         }
                     }
@@ -181,13 +170,13 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                 // 新增处理锁定请求冲突的逻辑
                 else if (packet.Request is LockRequest lockRequest)
                 {
-                    _logger.LogDebug($"收到锁定请求: BillID={lockRequest.BillID}, UserID={lockRequest.UserId}");
-                    
+                    _logger.LogDebug($"收到锁定请求: BillID={lockRequest.LockInfo.BillID}, UserID={lockRequest.LockInfo.UserId}");
+
                     // 在UI线程显示锁定请求确认对话框
-                    Application.Current?.Dispatcher?.Invoke(() =>
+                    InvokeOnUiThread(() =>
                     {
                         DialogResult result = MessageBox.Show(
-                            $"用户 {lockRequest.UserName} 请求锁定您当前正在编辑的单据 {lockRequest.BillID}。\n\n是否允许锁定？",
+                            $"用户 {lockRequest.LockInfo.UserName} 请求锁定您当前正在编辑的单据 {lockRequest.LockInfo.BillID}。\n\n是否允许锁定？",
                             "锁定请求",
                             MessageBoxButtons.YesNo,
                             MessageBoxIcon.Question);
@@ -195,12 +184,12 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                         // 根据用户选择处理
                         if (result == DialogResult.Yes)
                         {
-                            _logger.LogInformation("用户允许其他用户锁定单据: BillID={BillID}", lockRequest.BillID);
+                            _logger.LogInformation("用户允许其他用户锁定单据: BillID={BillID}", lockRequest.LockInfo.BillID);
                             // 这里可以实现解锁当前单据的逻辑
                         }
                         else
                         {
-                            _logger.LogInformation("用户拒绝其他用户锁定单据: BillID={BillID}", lockRequest.BillID);
+                            _logger.LogInformation("用户拒绝其他用户锁定单据: BillID={BillID}", lockRequest.LockInfo.BillID);
                         }
                     });
                 }
@@ -227,22 +216,27 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
             {
                 if (packet.Response is LockResponse lockResponse)
                 {
-                    _logger.LogDebug($"收到锁释放响应: 资源ID={lockResponse.ResourceId}, 成功={lockResponse.Success}");
+                    _logger.LogDebug($"收到锁释放响应: 资源ID={lockResponse.LockInfo.BillID}, 成功={lockResponse.IsSuccess}");
 
-                    if (lockResponse.Success)
+                    if (lockResponse.IsSuccess)
                     {
-                        _logger.LogInformation($"成功释放资源 '{lockResponse.ResourceId}' 的锁");
-                        // 更新UI状态，通知相关组件锁已释放
+                        _logger.LogInformation($"成功释放资源 '{lockResponse.LockInfo.BillID}' 的锁");
+                        // 触发锁释放成功事件或更新UI组件状态
                     }
                     else
                     {
-                        _logger.LogWarning($"释放资源 '{lockResponse.ResourceId}' 的锁失败: {lockResponse.ErrorMessage}");
+                        _logger.LogWarning($"释放资源 '{lockResponse.LockInfo.BillID}' 的锁失败: {lockResponse.Message}");
+                        // 触发锁释放失败事件
                     }
+                }
+                else
+                {
+                    _logger.LogWarning("锁释放响应类型无效");
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "处理锁释放命令时发生错误");
+                _logger.LogError(ex, "处理锁释放响应时发生错误");
             }
             await Task.CompletedTask;
         }
@@ -258,22 +252,30 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
             {
                 if (packet.Response is LockResponse lockResponse)
                 {
-                    _logger.LogDebug($"收到锁状态查询响应: 资源ID={lockResponse.ResourceId}, 是否已锁定={lockResponse.Success}");
+                    _logger.LogDebug($"收到锁状态查询响应: 资源ID={lockResponse.LockInfo.BillID}, 状态={lockResponse.IsSuccess}");
 
-                    // 处理锁状态信息，更新UI
-                    if (lockResponse.CurrentLockInfo != null)
+                    if (lockResponse.IsSuccess)
                     {
-                        _logger.LogInformation($"资源 '{lockResponse.ResourceId}' 已被用户 '{lockResponse.CurrentLockInfo.LockedUserName}' 锁定");
+                        _logger.LogInformation($"资源 '{lockResponse.LockInfo.BillID}' 的锁状态查询成功");
+
+                        if (lockResponse.LockInfo != null)
+                        {
+                            _logger.LogInformation($"锁信息: 用户={lockResponse.LockInfo.UserName}, 时间={lockResponse.LockInfo.LockTime}");
+                        }
                     }
                     else
                     {
-                        _logger.LogInformation($"资源 '{lockResponse.ResourceId}' 当前未被锁定");
+                        _logger.LogWarning($"资源 '{lockResponse.LockInfo.BillID}' 的锁状态查询失败: {lockResponse.Message}");
                     }
+                }
+                else
+                {
+                    _logger.LogWarning("锁状态查询响应类型无效");
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "处理锁状态查询命令时发生错误");
+                _logger.LogError(ex, "处理锁状态查询响应时发生错误");
             }
             await Task.CompletedTask;
         }
@@ -289,48 +291,31 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
             {
                 if (packet.Response is LockResponse lockResponse)
                 {
-                    _logger.LogDebug($"收到强制解锁响应: 资源ID={lockResponse.ResourceId}, 成功={lockResponse.Success}");
+                    _logger.LogDebug($"收到强制解锁响应: 资源ID={lockResponse.LockInfo.BillID}, 成功={lockResponse.IsSuccess}");
 
-                    if (lockResponse.Success)
+                    if (lockResponse.IsSuccess)
                     {
-                        _logger.LogInformation($"成功强制释放资源 '{lockResponse.ResourceId}' 的锁");
-                        // 更新UI状态，通知相关组件锁已强制释放
+                        _logger.LogInformation($"成功强制释放资源 '{lockResponse.LockInfo.BillID}' 的锁");
+                        // 触发强制解锁成功事件或更新UI组件状态
                     }
                     else
                     {
-                        _logger.LogWarning($"强制释放资源 '{lockResponse.ResourceId}' 的锁失败: {lockResponse.ErrorMessage}");
+                        _logger.LogWarning($"强制释放资源 '{lockResponse.LockInfo.BillID}' 的锁失败: {lockResponse.Message}");
+                        // 触发强制解锁失败事件
                     }
                 }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "处理强制解锁命令时发生错误");
-            }
-            await Task.CompletedTask;
-        }
-
-        /// <summary>
-        /// 处理锁检查命令
-        /// </summary>
-        /// <param name="packet">数据包</param>
-        /// <returns>处理结果</returns>
-        private async Task HandleCheckLockAsync(PacketModel packet)
-        {
-            try
-            {
-                if (packet.Response is LockResponse lockResponse)
+                else
                 {
-                    _logger.LogDebug($"收到锁检查响应: 资源ID={lockResponse.ResourceId}, 可锁定={lockResponse.Success}");
-
-                    // 处理锁检查结果，用于客户端决定是否可以进行操作
+                    _logger.LogWarning("强制解锁响应类型无效");
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "处理锁检查命令时发生错误");
+                _logger.LogError(ex, "处理强制解锁响应时发生错误");
             }
             await Task.CompletedTask;
         }
+
 
         /// <summary>
         /// 处理锁广播命令
@@ -344,7 +329,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                 // 解析广播消息，通知相关组件更新锁状态
                 if (packet.Response is LockResponse lockResponse)
                 {
-                    _logger.LogDebug($"收到锁状态广播: 资源ID={lockResponse.ResourceId}, 状态={lockResponse.Success}");
+                    _logger.LogDebug($"收到锁状态广播: 资源ID={lockResponse.LockInfo.BillID}, 状态={lockResponse.IsSuccess}");
 
                     // 这里可以触发事件或使用消息总线通知应用程序其他部分锁状态已更改
                 }
@@ -371,7 +356,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                     _logger.LogDebug($"收到解锁请求: 单据ID={unlockRequest.LockInfo?.BillID ?? 0}, 请求用户={unlockRequest.RequesterUserName}");
 
                     // 在UI线程显示确认对话框
-                    Application.Current?.Dispatcher?.Invoke(() =>
+                    InvokeOnUiThread(() =>
                     {
                         DialogResult result = MessageBox.Show(
                             $"用户 {unlockRequest.RequesterUserName} 请求解锁您锁定的单据 {unlockRequest.LockInfo?.BillID ?? 0}，是否同意解锁？",
@@ -406,7 +391,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                     _logger.LogDebug($"收到拒绝解锁: 单据ID={refuseInfo.LockInfo?.BillID ?? 0}, 拒绝用户={refuseInfo.RequesterUserName}");
 
                     // 在UI线程显示提示
-                    Application.Current?.Dispatcher?.Invoke(() =>
+                    InvokeOnUiThread(() =>
                     {
                         MessageBox.Show(
                             $"用户 {refuseInfo.RequesterUserName} 拒绝了您的解锁请求",
@@ -424,46 +409,61 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
         }
 
         /// <summary>
-        /// 处理单据锁定相关命令
+        /// 处理同意解锁命令
+        /// 当其他用户同意当前用户的解锁请求时
         /// </summary>
         /// <param name="packet">数据包</param>
         /// <returns>处理结果</returns>
-        private async Task HandleDocumentLockCommandAsync(PacketModel packet)
+        private async Task HandleAgreeUnlockAsync(PacketModel packet)
         {
             try
             {
-                if (packet.Response is LockResponse lockResponse)
+                if (packet.Request is LockRequest agreeInfo)
                 {
-                    _logger.LogDebug($"收到单据锁定命令响应: 资源ID={lockResponse.ResourceId}, 成功={lockResponse.Success}, 命令={packet.CommandId.FullCode}");
+                    _logger.LogDebug($"收到同意解锁: 单据ID={agreeInfo.LockInfo?.BillID ?? 0}, 同意用户={agreeInfo.RequesterUserName}");
 
-                    // 根据不同的命令类型处理单据锁定响应
-                    // 这里可以更新UI状态，通知相关组件
+                    // 在UI线程显示提示
+                    InvokeOnUiThread(() =>
+                    {
+                        MessageBox.Show(
+                            $"用户 {agreeInfo.RequesterUserName} 同意了您的解锁请求，您现在可以编辑此单据",
+                            "解锁请求已同意",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Information);
+                    });
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"处理单据锁定命令 {packet.CommandId.FullCode} 时发生错误");
+                _logger.LogError(ex, "处理同意解锁命令时发生错误");
             }
             await Task.CompletedTask;
         }
 
-        /// <summary>
-        /// 处理转发单据锁定命令
-        /// </summary>
-        /// <param name="packet">数据包</param>
-        /// <returns>处理结果</returns>
-        private async Task HandleForwardDocumentLockAsync(PacketModel packet)
+        // Helper to marshal actions to WinForms UI thread
+        private void InvokeOnUiThread(Action action)
         {
             try
             {
-                _logger.LogDebug($"收到转发单据锁定命令: {packet.CommandId.FullCode}");
-                // 处理转发的单据锁定命令，这里可以触发相应的业务逻辑
+                if (Application.OpenForms != null && Application.OpenForms.Count > 0)
+                {
+                    var form = Application.OpenForms[0];
+                    if (form != null && form.InvokeRequired)
+                    {
+                        form.Invoke((MethodInvoker)delegate { action(); });
+                        return;
+                    }
+                }
+
+                // If no open forms or invoke not required, execute directly
+                action();
             }
-            catch (Exception ex)
+            catch
             {
-                _logger.LogError(ex, "处理转发单据锁定命令时发生错误");
+                // Swallow exceptions from UI invoke to avoid cascading failures
+                try { action(); } catch { }
             }
-            await Task.CompletedTask;
         }
+
     }
 }

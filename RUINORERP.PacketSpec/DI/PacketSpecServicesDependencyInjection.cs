@@ -1,9 +1,10 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 using Autofac;
 using RUINORERP.PacketSpec.Serialization;
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Models.Common;
 using RUINORERP.PacketSpec.Commands.Authentication;
+using RUINORERP.PacketSpec.Commands.Lock;
 
 using Microsoft.Extensions.Configuration;
 using RUINORERP.Model.ConfigModel;
@@ -117,8 +118,11 @@ namespace RUINORERP.PacketSpec.DI
             // 注册命令类型分类器
             services.AddSingleton<CommandTypeClassifier>();
 
-            // 注意：CommandPacketAdapter已由ICommandCreationService替代，不再需要注册
+            // 注册分布式锁相关服务
+            services.AddSingleton<ILocalDistributedLock, LocalDistributedLock>();
+            services.AddSingleton<SmartLockRenewer>();
 
+            // 注意：CommandPacketAdapter已由ICommandCreationService替代，不再需要注册
 
 
 
@@ -223,6 +227,15 @@ namespace RUINORERP.PacketSpec.DI
                 .As<TokenManager>()
                 .SingleInstance();
 
+            // 注册分布式锁相关服务
+            builder.RegisterType<LocalDistributedLock>()
+                .As<ILocalDistributedLock>()
+                .SingleInstance();
+
+            builder.RegisterType<SmartLockRenewer>()
+                .AsSelf()
+                .SingleInstance();
+
             // 注意：不注册抽象的RequestHandlerBase<TRequest, TResponse>类
             // 具体的请求处理器应该在各自的服务项目中注册
         }
@@ -234,11 +247,12 @@ namespace RUINORERP.PacketSpec.DI
         public static string GetPacketSpecServicesStatistics()
         {
             return $"PacketSpec服务依赖注入配置完成。\n"
-                   + $"已注册服务: 5个核心服务\n"
-                   + $"已注册接口: 5个服务接口\n"
+                   + $"已注册服务: 7个核心服务\n"
+                   + $"已注册接口: 6个服务接口\n"
                    + $"生命周期: 单例模式\n"
                    + $"AOP支持: 已启用接口拦截器\n"
-                   + $"新增功能: JSON序列化服务依赖注入支持";
+                   + $"新增功能: JSON序列化服务依赖注入支持\n"
+                   + $"分布式锁: 已启用本地分布式锁和智能锁续期服务";
         }
     }
 }

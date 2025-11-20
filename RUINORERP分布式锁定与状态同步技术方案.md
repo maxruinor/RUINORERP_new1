@@ -1770,13 +1770,13 @@ public class LockAwareDocumentConverterBase : DocumentConverterBase
         
         var lockResponse = await _lockManagerService.HandleLockRequestAsync(lockRequest);
         
-        if (!lockResponse.Success && lockResponse.CurrentLockInfo != null)
+        if (!lockResponse.IsSuccess && lockResponse.LockInfo != null)
         {
             throw new DocumentLockedException(
                 context.SourceDocumentId,
                 context.SourceDocumentType,
-                lockResponse.CurrentLockInfo.UserId,
-                lockResponse.CurrentLockInfo.UserName);
+                lockResponse.LockInfo.UserId,
+                lockResponse.LockInfo.UserName);
         }
     }
     
@@ -1908,16 +1908,16 @@ public class LockAwareActionManager : ActionManager
                 
                 var lockResponse = await _lockManagerService.HandleLockRequestAsync(lockRequest);
                 
-                if (!lockResponse.Success)
+                if (!lockResponse.IsSuccess)
                 {
-                    if (lockResponse.CurrentLockInfo != null)
+                    if (lockResponse.LockInfo != null)
                     {
                         // 文档已被锁定，抛出异常
                         throw new DocumentLockedException(
                             document.DocumentId,
                             document.DocumentType,
-                            lockResponse.CurrentLockInfo.UserId,
-                            lockResponse.CurrentLockInfo.UserName);
+                            lockResponse.LockInfo.UserId,
+                            lockResponse.LockInfo.UserName);
                     }
                     else
                     {
@@ -2540,12 +2540,12 @@ public async Task InitializeDocumentAsync(string documentId, string documentType
         
         var lockResponse = await _lockManagerService.HandleLockRequestAsync(lockRequest);
         
-        if (!lockResponse.Success)
+        if (!lockResponse.IsSuccess)
         {
             // 显示锁定冲突提示
-            if (lockResponse.CurrentLockInfo != null)
+            if (lockResponse.LockInfo != null)
             {
-                ShowLockConflictMessage(lockResponse.CurrentLockInfo);
+                ShowLockConflictMessage(lockResponse.LockInfo);
             }
             else
             {
@@ -2558,7 +2558,7 @@ public async Task InitializeDocumentAsync(string documentId, string documentType
         }
         
         // 锁定成功，保存锁定ID
-        CurrentLockId = lockResponse.LockId;
+        CurrentLockId = lockResponse.LockInfo.LockId;
         
         // 注册锁定续期
         _lockRenewer.RegisterLockForRenewal(
@@ -2846,9 +2846,9 @@ public class EnhancedRedisDistributedLockTests
         var result = await _distributedLock.AcquireLockAsync(lockContext);
         
         // 验证结果
-        Assert.IsTrue(result.Success);
-        Assert.AreEqual("lock1", result.LockId);
-        Assert.AreEqual(2, result.CurrentLockInfo.ReentrantCount);
+        Assert.IsTrue(result.IsSuccess);
+        Assert.AreEqual("lock1", result.LockInfo.LockId);
+        Assert.AreEqual(2, result.LockInfo.ReentrantCount);
         
         // 验证Redis调用
         _redisClientMock.Verify(r => r.SetAsync(
@@ -2956,8 +2956,8 @@ public class LockManagerServiceIntegrationTests : IClassFixture<TestWebApplicati
         
         var lockResponse = await response.Content.ReadFromJsonAsync<LockResponse>();
         Assert.NotNull(lockResponse);
-        Assert.True(lockResponse.Success);
-        Assert.NotNull(lockResponse.LockId);
+        Assert.True(lockResponse.IsSuccess);
+        Assert.NotNull(lockResponse.LockInfo.LockId);
         
         // 验证事件发布
         var lockAcquiredEvents = eventCollector.GetEvents<LockAcquiredEvent>();

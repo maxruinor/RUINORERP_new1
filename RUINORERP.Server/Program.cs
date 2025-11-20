@@ -121,11 +121,11 @@ namespace RUINORERP.Server
         static async Task StartServerUI()
         {
 
-            Application.SetHighDpiMode(HighDpiMode.SystemAware);
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-            Application.ThreadException += Application_ThreadException;
-            Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
+            System.Windows.Forms.Application.SetHighDpiMode(HighDpiMode.SystemAware);
+            System.Windows.Forms.Application.EnableVisualStyles();
+            System.Windows.Forms.Application.SetCompatibleTextRenderingDefault(false);
+            System.Windows.Forms.Application.ThreadException += Application_ThreadException;
+            System.Windows.Forms.Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
 
 
@@ -204,7 +204,7 @@ namespace RUINORERP.Server
 
                     //ILogger<frmMain> logger = services.GetService<ILogger<frmMain>>();
                     //frmMain frmMain1 = new frmMain(logger);
-                    //Application.Run(frmMain1);
+                    //System.Windows.Forms.Application.Run(frmMain1);
 
                     // 使用新的Tab形式主窗体
                     var logger = services.GetService<ILogger<frmMainNew>>();
@@ -219,9 +219,9 @@ namespace RUINORERP.Server
                     /// 初始化实体映射服务
                     EntityMappingHelper.Initialize();
                     var form1 = Startup.GetFromFac<frmMainNew>();
-                    Application.Run(form1);
+                    System.Windows.Forms.Application.Run(form1);
                     // var newMainForm = new frmMainNew(logger, workflowHost, config);
-                   // Application.Run(newMainForm);
+                   // System.Windows.Forms.Application.Run(newMainForm);
 
                 }
                 catch (Exception ex)
@@ -241,7 +241,7 @@ namespace RUINORERP.Server
 
                 // var mainform = Startup.GetFromFac<Form2>(); //获取服务Service1
                 //var mainform = Startup.GetFromFac<MainForm>(); //获取服务Service1
-                // Application.Run(mainform);
+                // System.Windows.Forms.Application.Run(mainform);
 
 
 
@@ -258,7 +258,7 @@ namespace RUINORERP.Server
 #pragma warning restore CS0168 // 声明了变量但从未使用
 
 
-            //Application.Run(new frmMain());
+            //System.Windows.Forms.Application.Run(new frmMain());
         }
 
 

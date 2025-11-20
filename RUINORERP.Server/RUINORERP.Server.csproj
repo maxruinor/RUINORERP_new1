@@ -58,7 +58,6 @@
     <Compile Remove="frmWorkFlowManage.Designer.cs" />
     <Compile Remove="log4netHelper.cs" />
     <Compile Remove="Network\CommandHandlers\ConfigurableBusinessProcessor.cs" />
-    <Compile Remove="Network\CommandHandlers\LockCommandHandler.cs" />
     <Compile Remove="Network\CommandHandlers\SimpleBusinessHandler.cs" />
     <Compile Remove="Network\CoreServices\CacheService.cs" />
     <Compile Remove="Network\CoreServices\FileStorageService.cs" />

@@ -1,0 +1,15 @@
+{
+  "ServerConfig": {
+    "ServerName": "RUINORERP-Server",
+    "ServerPort": 8080,
+    "MaxConnections": 100,
+    "HeartbeatInterval": 60000,
+    "FileStoragePath": "%APPDATA%\\RUINORERP\\FileStorage",
+    "MaxFileSizeMB": 10,
+    "CacheType": "Memory",
+    "CacheConnectionString": "",
+    "LoadCacheOnStartup": false,
+    "EnableLogging": true,
+    "LogLevel": "Info"
+  }
+}

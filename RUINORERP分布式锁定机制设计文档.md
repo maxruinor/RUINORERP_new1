@@ -948,12 +948,12 @@ public class DistributedActionManager : ActionManager
         {
             // 尝试锁定源单据
             lockResponse = await _lockManagerService.TryLockDocumentAsync(lockRequest);
-            if (!lockResponse.Success)
-            {
-                return new ActionResult<TTarget>(false, "操作失败: 单据已被锁定", lockResponse.Message);
-            }
-            
-            lockId = lockResponse.LockId;
+                if (!lockResponse.IsSuccess)
+                {
+                    return new ActionResult<TTarget>(false, "操作失败: 单据已被锁定", lockResponse.Message);
+                }
+
+                lockId = lockResponse.LockInfo.LockId;
             
             // 执行原始的联动操作
             var result = await base.ExecuteActionAsync<TSource, TTarget>(source, options);
@@ -998,7 +998,7 @@ public class DistributedActionManager : ActionManager
         finally
         {
             // 无论操作成功与否，都释放临时锁定
-            if (lockResponse?.Success == true && !string.IsNullOrEmpty(lockId))
+            if (lockResponse?.IsSuccess == true && !string.IsNullOrEmpty(lockId))
             {
                 await _lockManagerService.UnlockDocumentAsync(lockId, resourceId, resourceType);
             }

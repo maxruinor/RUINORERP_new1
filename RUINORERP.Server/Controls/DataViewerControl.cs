@@ -126,7 +126,7 @@ namespace RUINORERP.Server.Controls
                 {
                     // 显示锁定信息
                     var lockManager = Program.ServiceProvider.GetRequiredService<ILockManagerService>();
-                    var lockItems = lockManager.GetLockItems();
+                    var lockItems = lockManager.GetAllLockedDocuments();
                     dataGridViewData.DataSource = lockItems;
                     return;
                 }

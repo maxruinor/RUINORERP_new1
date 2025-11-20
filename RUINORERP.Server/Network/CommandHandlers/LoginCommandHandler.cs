@@ -69,11 +69,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// </summary>
         protected TokenManager TokenManager { get; set; }
         
-        /// <summary>
-        /// 无参构造函数，用于动态创建实例
-        /// </summary>
-        public LoginCommandHandler() : base()
-        {}
+      
 
         public LoginCommandHandler(ILogger<LoginCommandHandler> _Logger) : base(_Logger)
         {

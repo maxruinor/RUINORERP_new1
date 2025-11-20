@@ -142,7 +142,7 @@ namespace RUINORERP.Common.Log4Net
                 }
                 else
                 {
-                    log4net.MDC.Set("User_ID", "");
+                    log4net.MDC.Set("User_ID", "0"); // 使用0代替空字符串，避免格式转换异常
                 }
              
                 log4net.MDC.Set("ModName", _appcontext.log.ModName);
@@ -312,23 +312,24 @@ namespace RUINORERP.Common.Log4Net
                             Console.WriteLine("已应用传入的连接字符串进行日志数据库连接");
                         }
 
-                        // 配置INSERT命令和参数
-                        adoNetAppender.CommandText = "INSERT INTO Logs ([User_ID],[Date],[Level],[Logger],[Message],[Exception],[Operator],[ModName],[MAC],[IP],[Path],[ActionName],[MachineName]) VALUES (@User_ID,@log_date, @log_level, @logger, @Message, @Exception,@Operator,@ModName,@MAC,@IP,@Path,@ActionName,@MachineName)";
+                        // 配置INSERT命令和参数 - 调整字段顺序和参数大小以匹配数据库表结构
+                        adoNetAppender.CommandText = "INSERT INTO Logs ([Date],[Level],[Logger],[Message],[Exception],[Operator],[ModName],[Path],[ActionName],[IP],[MAC],[MachineName],[User_ID]) VALUES (@log_date, @log_level, @logger, @Message, @Exception, @Operator, @ModName, @Path, @ActionName, @IP, @MAC, @MachineName, @User_ID)";
                         adoNetAppender.AddParameter(new AdoNetAppenderParameter { ParameterName = "@log_date", DbType = System.Data.DbType.DateTime, Layout = new log4net.Layout.RawTimeStampLayout() });
-                        adoNetAppender.AddParameter(new AdoNetAppenderParameter { ParameterName = "@log_level", DbType = System.Data.DbType.String, Size = 50, Layout = new Layout2RawLayoutAdapter(new PatternLayout("%level")) });
-                        adoNetAppender.AddParameter(new AdoNetAppenderParameter { ParameterName = "@logger", DbType = System.Data.DbType.String, Size = 255, Layout = new Layout2RawLayoutAdapter(new PatternLayout("%logger")) });
+                        adoNetAppender.AddParameter(new AdoNetAppenderParameter { ParameterName = "@log_level", DbType = System.Data.DbType.String, Size = 10, Layout = new Layout2RawLayoutAdapter(new PatternLayout("%level")) });
+                        adoNetAppender.AddParameter(new AdoNetAppenderParameter { ParameterName = "@logger", DbType = System.Data.DbType.String, Size = 500, Layout = new Layout2RawLayoutAdapter(new PatternLayout("%logger")) });
 
-                        // 提取公共方法减少重复代码
-                        AddParameter(adoNetAppender, "@Operator", System.Data.DbType.String, 4000, "%property{Operator}");
-                        AddParameter(adoNetAppender, "@User_ID", System.Data.DbType.Int64, 4000, "%property{User_ID}");
-                        AddParameter(adoNetAppender, "@ModName", System.Data.DbType.String, 214748364, "%property{ModName}");
-                        AddParameter(adoNetAppender, "@MAC", System.Data.DbType.String, 214748364, "%property{MAC}");
-                        AddParameter(adoNetAppender, "@IP", System.Data.DbType.String, 214748364, "%property{IP}");
-                        AddParameter(adoNetAppender, "@Path", System.Data.DbType.String, 214748364, "%property{Path}");
-                        AddParameter(adoNetAppender, "@ActionName", System.Data.DbType.String, 214748364, "%property{ActionName}");
-                        AddParameter(adoNetAppender, "@MachineName", System.Data.DbType.String, 214748364, "%property{MachineName}");
-                        AddParameter(adoNetAppender, "@Message", System.Data.DbType.String, 214748364, "%property{Message}");
-                        AddParameter(adoNetAppender, "@Exception", System.Data.DbType.String, 214748364, "%property{Exception}");
+                        // 提取公共方法减少重复代码 - 调整参数大小以匹配数据库表结构
+                        AddParameter(adoNetAppender, "@Operator", System.Data.DbType.String, 200, "%property{Operator}");
+                        AddParameter(adoNetAppender, "@User_ID", System.Data.DbType.Int64, 8, "%property{User_ID}");
+                        AddParameter(adoNetAppender, "@ModName", System.Data.DbType.String, 50, "%property{ModName}");
+                        AddParameter(adoNetAppender, "@MAC", System.Data.DbType.String, 30, "%property{MAC}");
+                        AddParameter(adoNetAppender, "@IP", System.Data.DbType.String, 20, "%property{IP}");
+                        AddParameter(adoNetAppender, "@Path", System.Data.DbType.String, 100, "%property{Path}");
+                        AddParameter(adoNetAppender, "@ActionName", System.Data.DbType.String, 50, "%property{ActionName}");
+                        AddParameter(adoNetAppender, "@MachineName", System.Data.DbType.String, 50, "%property{MachineName}");
+                        // 对于text类型的字段，使用较大的大小
+                        AddParameter(adoNetAppender, "@Message", System.Data.DbType.String, int.MaxValue, "%property{Message}");
+                        AddParameter(adoNetAppender, "@Exception", System.Data.DbType.String, int.MaxValue, "%property{Exception}");
                         
                         // 只在所有参数添加完成后调用一次ActivateOptions
                         adoNetAppender.ActivateOptions();

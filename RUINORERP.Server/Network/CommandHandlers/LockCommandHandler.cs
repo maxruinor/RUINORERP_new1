@@ -1,814 +1,467 @@
+using Azure.Core;
+using Microsoft.Extensions.Logging;
+using RUINORERP.Business.CommService;
+using RUINORERP.Common;
+using RUINORERP.Model;
+using RUINORERP.Model.TransModel;
+using RUINORERP.PacketSpec.Commands;
+using RUINORERP.PacketSpec.Commands.Lock;
+using RUINORERP.PacketSpec.Enums.Core;
+using RUINORERP.PacketSpec.Errors;
+using RUINORERP.PacketSpec.Models;
+using RUINORERP.PacketSpec.Models.Common;
+using RUINORERP.PacketSpec.Models.Core;
+using RUINORERP.PacketSpec.Models.Lock;
+using RUINORERP.PacketSpec.Models.Messaging;
+using RUINORERP.PacketSpec.Models.Requests;
+using RUINORERP.PacketSpec.Models.Responses;
+using RUINORERP.Server.BizService;
+using RUINORERP.Server.Network.Interfaces.Services;
+using RUINORERP.Server.Network.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using RUINORERP.PacketSpec.Commands;
-using RUINORERP.PacketSpec.Commands.Lock;
-using RUINORERP.Server.Network.Services.Lock;
-using RUINORERP.PacketSpec.Models;
-using RUINORERP.PacketSpec.Models.Responses;
-using RUINORERP.PacketSpec.Serialization;
-using RUINORERP.Server.Network.Interfaces.Services;
-using RUINORERP.Server.Network.Models;
-using RUINORERP.PacketSpec.Models.Common;
-using RUINORERP.PacketSpec.Models.Core;
 
-namespace RUINORERP.Server.Network.Commands
+namespace RUINORERP.Server.Network.CommandHandlers
 {
     /// <summary>
-    /// 锁命令处理器 - 处理锁相关的命令
+    /// 锁定命令处理器 - 处理客户端的锁定请求
+    /// 包括单据锁定、解锁、强制解锁等操作
     /// </summary>
-    [CommandHandler("LockCommandHandler", priority: CommandPriority.High)]
+    [CommandHandler("LockCommandHandler", priority: 30)]
     public class LockCommandHandler : BaseCommandHandler
     {
+        private readonly ILockManagerService _lockManagerService;
+        private readonly ISessionService _sessionService;
         private readonly ILogger<LockCommandHandler> _logger;
-        private readonly IDictionary<uint, Func<PacketModel, CancellationToken, Task<BaseCommand<IResponse>>>> _commandHandlersMap;
 
-        public LockCommandHandler(ILogger<LockCommandHandler> logger)
+        /// <summary>
+        /// 构造函数 - 通过DI注入依赖项
+        /// </summary>
+        public LockCommandHandler(
+            ILockManagerService lockManagerService,
+            ISessionService sessionService,
+              ILogger<LockCommandHandler> logger = null)
+            :  base(logger)
         {
-            _logger = logger;
-            
-            // 初始化命令处理器映射
-            InitializeCommandHandlersMap();
-            
-            // 使用安全方法设置支持的命令
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _lockManagerService = lockManagerService ?? throw new ArgumentNullException(nameof(lockManagerService));
+            _sessionService = sessionService ?? throw new ArgumentNullException(nameof(sessionService));
+
+            // 设置支持的命令
             SetSupportedCommands(
                 LockCommands.Lock,
                 LockCommands.Unlock,
                 LockCommands.CheckLockStatus,
-                LockCommands.ForceUnlock,
                 LockCommands.RequestUnlock,
-                LockCommands.RefuseUnlock,
-                LockCommands.RequestUnlock,
-                LockCommands.AgreeUnlock,
                 LockCommands.RefuseUnlock,
                 LockCommands.ForceUnlock,
                 LockCommands.BroadcastLockStatus
             );
         }
-        
-        /// <summary>
-        /// 初始化命令处理器映射，实现命令到处理方法的统一映射
-        /// 这种方式提高了代码的可维护性和扩展性，便于后续添加新的命令处理
-        /// </summary>
-        private void InitializeCommandHandlersMap()
-        {
-            _commandHandlersMap = new Dictionary<uint, Func<PacketModel, CancellationToken, Task<BaseCommand<IResponse>>>>
-            {
-                { LockCommands.LockRequest.FullCode, HandleLockRequestAsync },
-                { LockCommands.LockRelease.FullCode, HandleLockReleaseAsync },
-                { LockCommands.ForceUnlock.FullCode, HandleForceUnlockAsync },
-                { LockCommands.RequestUnlock.FullCode, HandleRequestUnlockAsync },
-                { LockCommands.RefuseUnlock.FullCode, HandleRefuseUnlockAsync },
-                { LockCommands.RequestLock.FullCode, HandleDocumentLockRequestAsync },
-                { LockCommands.ReleaseLock.FullCode, HandleDocumentUnlockRequestAsync },
-                { LockCommands.ForceReleaseLock.FullCode, HandleForceUnlockDocumentAsync },
-                { LockCommands.QueryLockStatus.FullCode, HandleQueryLockStatusAsync },
-                { LockCommands.BroadcastLockStatus.FullCode, HandleBroadcastLockStatusAsync }
-            };
-        }
-
-        /// <summary>
-        /// 锁管理服务 - 使用新的优化架构
-        /// </summary>
-        private ILockManagerService LockManagerService => Program.ServiceProvider.GetRequiredService<ILockManagerService>();
-
-        /// <summary>
-        /// 会话管理服务
-        /// </summary>
-        private ISessionService SessionService => Program.ServiceProvider.GetRequiredService<ISessionService>();
-
-        /// <summary>
-        /// 支持的命令类型
-        /// </summary>
-        public override IReadOnlyList<uint> SupportedCommands { get; protected set; }
-
-        /// <summary>
-        /// 处理器优先级
-        /// </summary>
-        public override CommandPriority Priority => CommandPriority.High;
-
-        /// <summary>
-        /// 判断是否可以处理指定命令
-        /// </summary>
-        public override bool CanHandle(PacketModel packet)
-        {
-            return SupportedCommands.Contains(packet.CommandId.FullCode);
-        }
 
         /// <summary>
         /// 核心处理方法，根据命令类型分发到对应的处理函数
-        /// 使用命令处理器映射实现高效的命令路由
         /// </summary>
-        /// <param name="packet">数据包对象</param>
+        /// <param name="cmd">队列命令对象</param>
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>命令处理结果</returns>
-        protected override async Task<ResponseBase> ProcessCommandAsync(PacketModel packet, CancellationToken cancellationToken)
+        protected override async Task<IResponse> OnHandleAsync(QueuedCommand cmd, CancellationToken cancellationToken)
         {
             try
             {
-                var commandId = packet.CommandId.FullCode;
-                
-                // 使用命令处理器映射进行高效路由
-                if (_commandHandlersMap.TryGetValue(commandId, out var handler))
+                var commandId = cmd.Packet.CommandId;
+
+                // 使用字典映射替代冗长的if-else链
+                var commandHandlers = new Dictionary<CommandId, Func<QueuedCommand, CancellationToken, Task<IResponse>>>
                 {
-                    return await handler(packet, cancellationToken);
-                }
-                else
+                    { LockCommands.Lock, HandleLockRequestAsync },
+                    { LockCommands.Unlock, HandleLockReleaseAsync },
+                    { LockCommands.CheckLockStatus, HandleQueryLockStatusAsync },
+                    { LockCommands.RequestUnlock, HandleRequestUnlockAsync },
+                    { LockCommands.RefuseUnlock, HandleRefuseUnlockAsync },
+                    { LockCommands.ForceUnlock, HandleForceUnlockAsync },
+                    { LockCommands.BroadcastLockStatus, HandleBroadcastLockStatusAsync }
+                };
+
+                if (commandHandlers.TryGetValue(commandId, out var handler))
                 {
-                    return BaseCommand<IResponse>.CreateError($"不支持的锁命令类型: {packet.CommandId}", UnifiedErrorCodes.Biz_ValidationFailed.Code)
-                        .WithMetadata("ErrorCode", "UNSUPPORTED_LOCK_COMMAND");
+                    return await handler(cmd, cancellationToken);
                 }
+
+                return ResponseFactory.CreateSpecificErrorResponse<LockResponse>($"不支持的锁定命令类型: {commandId.ToString()}");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"处理锁命令异常: {ex.Message}");
-                return BaseCommand<IResponse>.CreateError($"处理锁命令异常: {ex.Message}", UnifiedErrorCodes.System_InternalError.Code)
-                    .WithMetadata("ErrorCode", "LOCK_HANDLER_ERROR")
-                    .WithMetadata("Exception", ex.Message)
-                    .WithMetadata("StackTrace", ex.StackTrace);
+                _logger.LogError(ex, $"处理锁定命令异常: {ex.Message}");
+                return ResponseFactory.CreateSpecificErrorResponse<LockResponse>($"处理锁定命令异常: {ex.Message}");
             }
         }
 
         /// <summary>
-        /// 处理单据解锁请求命令 - 使用新的锁定体系
+        /// 处理锁定请求命令
         /// </summary>
-        private async Task<BaseCommand<IResponse>> HandleDocumentUnlockRequestAsync(PacketModel packet, CancellationToken cancellationToken)
+        /// <param name="cmd">锁定请求命令</param>
+        /// <param name="cancellationToken">取消令牌</param>
+        /// <returns>处理结果</returns>
+        private async Task<IResponse> HandleLockRequestAsync(QueuedCommand cmd, CancellationToken cancellationToken)
         {
             try
             {
-                // 获取锁申请数据
-                var lockApplyCommand = packet as LockApplyCommand;
-                if (lockApplyCommand == null)
+                // 反序列化请求数据
+                var lockRequest = cmd.Packet.Request as LockRequest;
+                if (lockRequest == null)
                 {
-                    return BaseCommand<IResponse>.CreateError("无效的锁申请命令", UnifiedErrorCodes.Biz_ValidationFailed.Code)
-                        .WithMetadata("ErrorCode", "INVALID_LOCK_APPLY_COMMAND");
+                    return ResponseFactory.CreateSpecificErrorResponse<LockResponse>("无效的锁定请求数据");
                 }
 
-                // 验证命令数据
-                var validationResult = await lockApplyCommand.ValidateAsync(cancellationToken);
-                if (!validationResult.IsValid)
+                // 验证请求数据
+                if (lockRequest.LockInfo.BillID <= 0)
                 {
-                    return BaseCommand<IResponse>.CreateError(validationResult.Errors[0].ErrorMessage, UnifiedErrorCodes.Biz_ValidationFailed.Code)
-                        .WithMetadata("ErrorCode", "INVALID_LOCK_REQUEST");
+                    return ResponseFactory.CreateSpecificErrorResponse<LockResponse>("单据ID不能为空");
                 }
 
-                // 获取会话信息
-                var sessionInfo = SessionService.GetSession(packet.SessionId);
-                if (sessionInfo == null || !sessionInfo.IsAuthenticated)
-                {
-                    return BaseCommand<IResponse>.CreateError("会话无效或未认证", UnifiedErrorCodes.Auth_SessionExpired.Code)
-                        .WithMetadata("ErrorCode", "INVALID_SESSION");
-                }
+                // 请求锁定
+                var lockSuccess = await _lockManagerService.TryLockDocumentAsync(lockRequest.LockInfo);
 
-                // 创建锁定信息 - 使用新的LockInfo模型
-                var lockInfo = new LockInfo
-                {
-                    BillID = lockApplyCommand.BillId,
-                    LockedUserID = sessionInfo.UserId ?? 0,
-                    LockedUserName = sessionInfo.Username,
-                    LockTime = DateTime.Now,
-                    MenuID = 0, // 默认值
-                    LockStatus = LockStatus.Locked
-                };
-
-                // 尝试锁定单据 - 使用新的LockManagerService
-                var lockResult = await LockManagerService.TryLockDocumentAsync(lockInfo);
-                
-                if (lockResult != null)
+                if (lockSuccess)
                 {
                     // 广播锁定状态变化
                     await BroadcastLockStatusAsync();
-                    
-                    var response = new ResponseBase
+
+                    var response = new LockResponse
                     {
+                        IsSuccess = true,
                         Message = "单据锁定成功",
-                        IsSuccess = true
+                        LockInfo = lockRequest.LockInfo
                     };
-                    response.WithMetadata("BillID", lockInfo.BillID);
-                    response.WithMetadata("IsLocked", true);
-                    response.WithMetadata("LockId", lockResult.LockId);
-                    return BaseCommand<IResponse>.CreateSuccess(response);
+                    return response;
                 }
                 else
                 {
-                    return BaseCommand<IResponse>.CreateError("单据锁定失败，可能已被其他用户锁定", UnifiedErrorCodes.Biz_Conflict.Code)
-                        .WithMetadata("ErrorCode", "DOCUMENT_ALREADY_LOCKED");
+                    var response = new LockResponse
+                    {
+                        IsSuccess = false,
+                        Message = "单据锁定失败",
+                        LockInfo = lockRequest.LockInfo
+                    };
+
+                    return response;
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"处理锁申请命令异常: {ex.Message}");
-                return BaseCommand<IResponse>.CreateError($"锁申请异常: {ex.Message}", UnifiedErrorCodes.System_InternalError.Code)
-                    .WithMetadata("ErrorCode", "LOCK_APPLY_EXCEPTION");
+                _logger.LogError(ex, $"处理锁定请求异常: {ex.Message}");
+                return ResponseFactory.CreateSpecificErrorResponse<LockResponse>($"处理锁定请求异常: {ex.Message}");
             }
         }
 
         /// <summary>
-        /// 处理锁释放请求命令 - 使用新的锁定体系
+        /// 处理锁定释放命令
         /// </summary>
-        private async Task<BaseCommand<IResponse>> HandleLockReleaseAsync(PacketModel packet, CancellationToken cancellationToken)
+        /// <param name="cmd">锁定释放命令</param>
+        /// <param name="cancellationToken">取消令牌</param>
+        /// <returns>处理结果</returns>
+        private async Task<IResponse> HandleLockReleaseAsync(QueuedCommand cmd, CancellationToken cancellationToken)
         {
             try
             {
-                // 获取锁释放数据
-                var lockReleaseCommand = packet as LockReleaseCommand;
-                if (lockReleaseCommand == null)
+                // 反序列化请求数据
+                var lockRequest = cmd.Packet.Request as LockRequest;
+                if (lockRequest == null)
                 {
-                    return BaseCommand<IResponse>.CreateError("无效的锁释放命令", UnifiedErrorCodes.Biz_ValidationFailed.Code)
-                        .WithMetadata("ErrorCode", "INVALID_LOCK_RELEASE_COMMAND");
+                    return ResponseFactory.CreateSpecificErrorResponse<LockResponse>("无效的解锁请求数据");
                 }
 
-                // 验证命令数据
-                var validationResult = await lockReleaseCommand.ValidateAsync(cancellationToken);
-                if (!validationResult.IsValid)
+                // 验证请求数据
+                if (lockRequest.LockInfo.BillID <= 0)
                 {
-                    return BaseCommand<IResponse>.CreateError(validationResult.Errors[0].ErrorMessage, UnifiedErrorCodes.Biz_ValidationFailed.Code)
-                        .WithMetadata("ErrorCode", "INVALID_LOCK_RELEASE_REQUEST");
+                    return ResponseFactory.CreateSpecificErrorResponse<LockResponse>("单据ID不能为空");
                 }
 
-                // 获取会话信息
-                var sessionInfo = SessionService.GetSession(packet.SessionId);
-                if (sessionInfo == null || !sessionInfo.IsAuthenticated)
-                {
-                    return BaseCommand<IResponse>.CreateError("会话无效或未认证", UnifiedErrorCodes.Auth_SessionExpired.Code)
-                        .WithMetadata("ErrorCode", "INVALID_SESSION");
-                }
 
-                // 创建锁定信息 - 使用新的LockInfo模型
-                var lockInfo = new LockInfo
-                {
-                    BillID = lockReleaseCommand.BillId,
-                    LockedUserID = sessionInfo.UserId ?? 0,
-                    LockedUserName = sessionInfo.Username,
-                    LockTime = DateTime.Now,
-                    MenuID = 0, // 默认值
-                    LockStatus = LockStatus.Unlocked
-                };
 
-                // 尝试解锁单据 - 使用新的LockManagerService
-                var unlockResult = await LockManagerService.UnlockDocumentAsync(lockInfo);
-                
-                if (unlockResult)
+                // 释放锁定
+                var unlockSuccess = await _lockManagerService.UnlockDocumentAsync(lockRequest.LockInfo.BillID, lockRequest.LockedUserId);
+
+                if (unlockSuccess)
                 {
                     // 广播锁定状态变化
                     await BroadcastLockStatusAsync();
-                    
-                    var response = new ResponseBase
+                    var response = new LockResponse
                     {
+                        IsSuccess = true,
                         Message = "单据解锁成功",
-                        IsSuccess = true
+                        LockInfo = lockRequest.LockInfo
                     };
-                    response.WithMetadata("BillID", lockInfo.BillID);
-                    response.WithMetadata("IsLocked", false);
-                    return BaseCommand<IResponse>.CreateSuccess(response);
+                    return response;
                 }
                 else
                 {
-                    return BaseCommand<IResponse>.CreateError("单据解锁失败，可能未被锁定或无权限解锁", UnifiedErrorCodes.Biz_Conflict.Code)
-                        .WithMetadata("ErrorCode", "DOCUMENT_UNLOCK_FAILED");
+                    var response = new LockResponse
+                    {
+                        IsSuccess = false,
+                        Message = "单据解锁失败",
+                        LockInfo = lockRequest.LockInfo
+                    };
+
+                    return response;
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"处理锁释放命令异常: {ex.Message}");
-                return BaseCommand<IResponse>.CreateError($"锁释放异常: {ex.Message}", UnifiedErrorCodes.System_InternalError.Code)
-                    .WithMetadata("ErrorCode", "LOCK_RELEASE_EXCEPTION");
+                _logger.LogError(ex, $"处理锁定释放异常: {ex.Message}");
+                return ResponseFactory.CreateSpecificErrorResponse<LockResponse>($"处理锁定释放异常: {ex.Message}");
             }
         }
 
         /// <summary>
-        /// 处理强制解锁请求命令 - 使用新的锁定体系
+        /// 处理强制解锁命令
         /// </summary>
-        private async Task<BaseCommand<IResponse>> HandleForceUnlockAsync(PacketModel packet, CancellationToken cancellationToken)
+        /// <param name="cmd">强制解锁命令</param>
+        /// <param name="cancellationToken">取消令牌</param>
+        /// <returns>处理结果</returns>
+        private async Task<IResponse> HandleForceUnlockAsync(QueuedCommand cmd, CancellationToken cancellationToken)
         {
             try
             {
-                // 获取强制解锁数据
-                var forceUnlockCommand = packet as LockForceUnlockCommand;
-                if (forceUnlockCommand == null)
+                // 反序列化请求数据
+                var lockRequest = cmd.Packet.Request as LockRequest;
+                if (lockRequest == null)
                 {
-                    return BaseCommand<IResponse>.CreateError("无效的强制解锁命令", UnifiedErrorCodes.Biz_ValidationFailed.Code)
-                        .WithMetadata("ErrorCode", "INVALID_FORCE_UNLOCK_COMMAND");
+                    return ResponseFactory.CreateSpecificErrorResponse<LockResponse>("无效的强制解锁请求数据");
                 }
 
-                // 验证命令数据
-                var validationResult = await forceUnlockCommand.ValidateAsync(cancellationToken);
-                if (!validationResult.IsValid)
+                // 验证请求数据
+                if (lockRequest.LockInfo.BillID <= 0)
                 {
-                    return BaseCommand<IResponse>.CreateError(validationResult.Errors[0].ErrorMessage, UnifiedErrorCodes.Biz_ValidationFailed.Code)
-                        .WithMetadata("ErrorCode", "INVALID_FORCE_UNLOCK_REQUEST");
+                    return ResponseFactory.CreateSpecificErrorResponse<LockResponse>("单据ID不能为空");
                 }
 
-                // 获取会话信息
-                var sessionInfo = SessionService.GetSession(packet.SessionId);
-                if (sessionInfo == null || !sessionInfo.IsAuthenticated)
-                {
-                    return BaseCommand<IResponse>.CreateError("会话无效或未认证", UnifiedErrorCodes.Auth_SessionExpired.Code)
-                        .WithMetadata("ErrorCode", "INVALID_SESSION");
-                }
 
-                // 创建锁定信息 - 使用新的LockInfo模型
-                var lockInfo = new LockInfo
-                {
-                    BillID = forceUnlockCommand.BillId,
-                    LockedUserID = sessionInfo.UserId ?? 0,
-                    LockedUserName = sessionInfo.Username,
-                    LockTime = DateTime.Now,
-                    MenuID = 0, // 默认值
-                    LockStatus = LockStatus.Unlocked
-                };
-
-                // 强制解锁单据 - 使用新的LockManagerService
-                var forceUnlockResult = await LockManagerService.ForceUnlockDocumentAsync(lockInfo);
-                
+                // 强制解锁
+                var forceUnlockResult = await _lockManagerService.ForceUnlockDocumentAsync(lockRequest.LockInfo.BillID);
                 if (forceUnlockResult)
                 {
                     // 广播锁定状态变化
                     await BroadcastLockStatusAsync();
-                    
-                    var response = new ResponseBase
-                    {
-                        Message = "单据强制解锁成功",
-                        IsSuccess = true
-                    };
-                    response.WithMetadata("BillID", lockInfo.BillID);
-                    response.WithMetadata("IsLocked", false);
-                    return BaseCommand<IResponse>.CreateSuccess(response);
+
+                    var response = ResponseFactory.CreateSpecificSuccessResponse(cmd.Packet.ExecutionContext, "单据强制解锁成功");
+                    return response;
                 }
                 else
                 {
-                    return BaseCommand<IResponse>.CreateError("单据强制解锁失败，可能未被锁定或无权限解锁", UnifiedErrorCodes.Biz_Conflict.Code)
-                        .WithMetadata("ErrorCode", "FORCE_UNLOCK_FAILED");
+                    return ResponseFactory.CreateSpecificErrorResponse<LockResponse>("单据强制解锁失败");
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"处理强制解锁命令异常: {ex.Message}");
-                return BaseCommand<IResponse>.CreateError($"强制解锁异常: {ex.Message}", UnifiedErrorCodes.System_InternalError.Code)
-                    .WithMetadata("ErrorCode", "FORCE_UNLOCK_EXCEPTION");
+                _logger.LogError(ex, $"处理强制解锁异常: {ex.Message}");
+                return ResponseFactory.CreateSpecificErrorResponse(cmd.Packet.ExecutionContext, ex, $"处理强制解锁异常: {ex.Message}");
             }
         }
 
         /// <summary>
         /// 处理请求解锁命令
         /// </summary>
-        private async Task<BaseCommand<IResponse>> HandleRequestUnlockAsync(PacketModel packet, CancellationToken cancellationToken)
+        /// <param name="cmd">请求解锁命令</param>
+        /// <param name="cancellationToken">取消令牌</param>
+        /// <returns>处理结果</returns>
+        private async Task<IResponse> HandleRequestUnlockAsync(QueuedCommand cmd, CancellationToken cancellationToken)
         {
             try
             {
-                // 获取会话信息
-                var sessionInfo = SessionService.GetSession(packet.SessionId);
-                if (sessionInfo == null || !sessionInfo.IsAuthenticated)
+                // 反序列化请求数据
+                var lockRequest = cmd.Packet.Request as LockRequest;
+                if (lockRequest == null)
                 {
-                    return BaseCommand<IResponse>.CreateError("会话无效或未认证", UnifiedErrorCodes.Auth_SessionExpired.Code)
-                        .WithMetadata("ErrorCode", "INVALID_SESSION");
+                    return ResponseFactory.CreateSpecificErrorResponse<LockResponse>("无效的请求解锁数据");
                 }
 
-                // 获取请求解锁信息
-                var requestInfo = packet.GetJsonData<LockRequest>();
-                if (requestInfo == null)
+                // 验证请求数据
+                if (lockRequest.LockInfo.BillID <= 0)
                 {
-                    return BaseCommand<IResponse>.CreateError("请求解锁信息不能为空", UnifiedErrorCodes.Biz_ValidationFailed.Code)
-                        .WithMetadata("ErrorCode", "EMPTY_UNLOCK_REQUEST");
+                    return ResponseFactory.CreateSpecificErrorResponse<LockResponse>("单据ID不能为空");
                 }
 
-                // 设置请求用户信息
-                requestInfo.RequesterUserId = sessionInfo.UserId ?? 0;
-                requestInfo.RequesterUserName = sessionInfo.Username;
 
-                // 请求解锁单据
-                var requestResult = await LockManagerService.RequestUnlockDocumentAsync(requestInfo);
-                
-                if (requestResult)
+                // 请求解锁
+                var requestSuccess = await _lockManagerService.RequestUnlockDocumentAsync(lockRequest);
+                if (requestSuccess)
                 {
-                    var response = new ResponseBase
-                    {
-                        Message = "解锁请求已发送",
-                        IsSuccess = true
-                    };
-                    response.WithMetadata("BillID", requestInfo.LockInfo?.BillID ?? 0);
-                    response.WithMetadata("RequestUserID", requestInfo.RequesterUserId);
-                    return BaseCommand<IResponse>.CreateSuccess(response);
+                    var response = ResponseFactory.CreateSpecificSuccessResponse(cmd.Packet.ExecutionContext, "请求解锁处理完成");
+                    return response;
                 }
                 else
                 {
-                    return BaseCommand<IResponse>.CreateError("解锁请求发送失败", UnifiedErrorCodes.Biz_OperationFailed.Code)
-                        .WithMetadata("ErrorCode", "UNLOCK_REQUEST_FAILED");
+                    return ResponseFactory.CreateSpecificErrorResponse<LockResponse>("请求解锁失败");
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"处理请求解锁命令异常: {ex.Message}");
-                return BaseCommand<IResponse>.CreateError($"请求解锁异常: {ex.Message}", UnifiedErrorCodes.System_InternalError.Code)
-                    .WithMetadata("ErrorCode", "UNLOCK_REQUEST_EXCEPTION");
+                _logger.LogError(ex, $"处理请求解锁异常: {ex.Message}");
+                return ResponseFactory.CreateSpecificErrorResponse(cmd.Packet.ExecutionContext, ex, $"处理请求解锁异常: {ex.Message}");
             }
         }
 
         /// <summary>
         /// 处理拒绝解锁命令
         /// </summary>
-        private async Task<BaseCommand<IResponse>> HandleRefuseUnlockAsync(PacketModel packet, CancellationToken cancellationToken)
+        /// <param name="cmd">拒绝解锁命令</param>
+        /// <param name="cancellationToken">取消令牌</param>
+        /// <returns>处理结果</returns>
+        private async Task<IResponse> HandleRefuseUnlockAsync(QueuedCommand cmd, CancellationToken cancellationToken)
         {
             try
             {
-                // 获取会话信息
-                var sessionInfo = SessionService.GetSession(packet.SessionId);
-                if (sessionInfo == null || !sessionInfo.IsAuthenticated)
+                // 反序列化请求数据
+                var lockRequest = cmd.Packet.Request as LockRequest;
+                if (lockRequest == null)
                 {
-                    return BaseCommand<IResponse>.CreateError("会话无效或未认证", UnifiedErrorCodes.Auth_SessionExpired.Code)
-                        .WithMetadata("ErrorCode", "INVALID_SESSION");
+                    return ResponseFactory.CreateSpecificErrorResponse<LockResponse>("无效的拒绝解锁数据");
                 }
 
-                // 获取拒绝解锁信息
-                var refuseInfo = packet.GetJsonData<LockRequest>();
-                if (refuseInfo == null)
+                // 验证请求数据
+                if (lockRequest.LockInfo.BillID <= 0)
                 {
-                    return BaseCommand<IResponse>.CreateError("拒绝解锁信息不能为空", UnifiedErrorCodes.Biz_ValidationFailed.Code)
-                        .WithMetadata("ErrorCode", "EMPTY_REFUSE_UNLOCK_INFO");
+                    return ResponseFactory.CreateSpecificErrorResponse<LockResponse>("单据ID不能为空");
                 }
 
-                // 设置拒绝用户信息
-                refuseInfo.RequesterUserId = sessionInfo.UserId ?? 0;
-                refuseInfo.RequesterUserName = sessionInfo.Username;
 
-                // 拒绝解锁请求
-                var refuseResult = await LockManagerService.RefuseUnlockRequestAsync(refuseInfo);
-                
-                if (refuseResult)
+                // 拒绝解锁
+                var refuseSuccess = await _lockManagerService.RefuseUnlockRequestAsync(lockRequest);
+
+                if (refuseSuccess)
                 {
-                    var response = new ResponseBase
-                    {
-                        Message = "解锁请求已拒绝",
-                        IsSuccess = true
-                    };
-                    response.WithMetadata("BillID", refuseInfo.LockInfo?.BillID ?? 0);
-                    response.WithMetadata("RefuseUserID", refuseInfo.RequesterUserId);
-                    return BaseCommand<IResponse>.CreateSuccess(response);
+                    var response = ResponseFactory.CreateSpecificSuccessResponse(cmd.Packet.ExecutionContext, "拒绝解锁处理完成");
+                    return response;
                 }
                 else
                 {
-                    return BaseCommand<IResponse>.CreateError("拒绝解锁请求失败", UnifiedErrorCodes.Biz_OperationFailed.Code)
-                        .WithMetadata("ErrorCode", "REFUSE_UNLOCK_REQUEST_FAILED");
+                    return ResponseFactory.CreateSpecificErrorResponse<LockResponse>("拒绝解锁失败");
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"处理拒绝解锁命令异常: {ex.Message}");
-                return BaseCommand<IResponse>.CreateError($"拒绝解锁异常: {ex.Message}", UnifiedErrorCodes.System_InternalError.Code)
-                    .WithMetadata("ErrorCode", "REFUSE_UNLOCK_EXCEPTION");
-            }
-        }
-
-        /// <summary>
-        /// 处理单据锁定申请命令
-        /// </summary>
-        private async Task<BaseCommand<IResponse>> HandleDocumentLockRequestAsync(PacketModel packet, CancellationToken cancellationToken)
-        {
-            try
-            {
-                // 获取单据锁定申请数据
-                var documentLockApplyCommand = packet as DocumentLockApplyCommand;
-                if (documentLockApplyCommand == null)
-                {
-                    return BaseCommand<IResponse>.CreateError("无效的单据锁定申请命令", UnifiedErrorCodes.Biz_ValidationFailed.Code)
-                        .WithMetadata("ErrorCode", "INVALID_DOCUMENT_LOCK_APPLY_COMMAND");
-                }
-
-                // 验证命令数据
-                var validationResult = await documentLockApplyCommand.ValidateAsync(cancellationToken);
-                if (!validationResult.IsValid)
-                {
-                    return BaseCommand<IResponse>.CreateError(validationResult.Errors[0].ErrorMessage, UnifiedErrorCodes.Biz_ValidationFailed.Code)
-                        .WithMetadata("ErrorCode", "INVALID_DOCUMENT_LOCK_REQUEST");
-                }
-
-                // 获取会话信息
-                var sessionInfo = SessionService.GetSession(packet.SessionId);
-                if (sessionInfo == null || !sessionInfo.IsAuthenticated)
-                {
-                    return BaseCommand<IResponse>.CreateError("会话无效或未认证", UnifiedErrorCodes.Auth_SessionExpired.Code)
-                        .WithMetadata("ErrorCode", "INVALID_SESSION");
-                }
-
-                // 创建锁定信息 - 使用新的LockInfo模型
-                var lockInfo = new LockInfo
-                {
-                    BillID = documentLockApplyCommand.BillId,
-                    BillData = documentLockApplyCommand.BillData,
-                    MenuID = documentLockApplyCommand.MenuId,
-                    LockedUserID = sessionInfo.UserId ?? 0,
-                    LockedUserName = sessionInfo.Username,
-                    LockTime = DateTime.Now,
-                    LockStatus = LockStatus.Locked
-                };
-
-                // 尝试锁定单据 - 使用新的LockManagerService
-                var lockResult = await LockManagerService.TryLockDocumentAsync(lockInfo);
-                
-                if (lockResult != null)
-                {
-                    // 广播锁定状态变化
-                    await BroadcastLockStatusAsync();
-                    
-                    var response = new ResponseBase
-                    {
-                        Message = "单据锁定成功",
-                        IsSuccess = true
-                    };
-                    response.WithMetadata("BillID", lockInfo.BillID);
-                    response.WithMetadata("IsLocked", true);
-                    response.WithMetadata("LockId", lockResult.LockId);
-                    return BaseCommand<IResponse>.CreateSuccess(response);
-                }
-                else
-                {
-                    return BaseCommand<IResponse>.CreateError("单据锁定失败，可能已被其他用户锁定", UnifiedErrorCodes.Biz_Conflict.Code)
-                        .WithMetadata("ErrorCode", "DOCUMENT_ALREADY_LOCKED");
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"处理单据锁定申请命令异常: {ex.Message}");
-                return BaseCommand<IResponse>.CreateError($"单据锁定申请异常: {ex.Message}", UnifiedErrorCodes.System_InternalError.Code)
-                    .WithMetadata("ErrorCode", "DOCUMENT_LOCK_APPLY_EXCEPTION");
-            }
-        }
-
-        /// <summary>
-        /// 处理锁申请命令
-        /// </summary>
-        private async Task<BaseCommand<IResponse>> HandleLockRequestAsync(PacketModel packet, CancellationToken cancellationToken)
-        {
-            try
-            {
-                // 获取单据解锁申请数据
-                var documentUnlockCommand = packet as DocumentUnlockCommand;
-                if (documentUnlockCommand == null)
-                {
-                    return BaseCommand<IResponse>.CreateError("无效的单据解锁申请命令", UnifiedErrorCodes.Biz_ValidationFailed.Code)
-                        .WithMetadata("ErrorCode", "INVALID_DOCUMENT_UNLOCK_COMMAND");
-                }
-
-                // 验证命令数据
-                var validationResult = await documentUnlockCommand.ValidateAsync(cancellationToken);
-                if (!validationResult.IsValid)
-                {
-                    return BaseCommand<IResponse>.CreateError(validationResult.Errors[0].ErrorMessage, UnifiedErrorCodes.Biz_ValidationFailed.Code)
-                        .WithMetadata("ErrorCode", "INVALID_DOCUMENT_UNLOCK_REQUEST");
-                }
-
-                // 获取会话信息
-                var sessionInfo = SessionService.GetSession(packet.SessionId);
-                if (sessionInfo == null || !sessionInfo.IsAuthenticated)
-                {
-                    return BaseCommand<IResponse>.CreateError("会话无效或未认证", UnifiedErrorCodes.Auth_SessionExpired.Code)
-                        .WithMetadata("ErrorCode", "INVALID_SESSION");
-                }
-
-                // 创建锁定信息 - 使用新的LockInfo模型
-                var lockInfo = new LockInfo
-                {
-                    BillID = documentUnlockCommand.BillId,
-                    LockedUserID = sessionInfo.UserId ?? 0,
-                    LockedUserName = sessionInfo.Username,
-                    LockTime = DateTime.Now,
-                    MenuID = 0, // 默认值
-                    LockStatus = LockStatus.Unlocked
-                };
-
-                // 解锁单据 - 使用新的LockManagerService
-                var unlockResult = await LockManagerService.UnlockDocumentAsync(lockInfo);
-                
-                if (unlockResult)
-                {
-                    // 广播锁定状态变化
-                    await BroadcastLockStatusAsync();
-                    
-                    var response = new ResponseBase
-                    {
-                        Message = "单据解锁成功",
-                        IsSuccess = true
-                    };
-                    response.WithMetadata("BillID", documentUnlockCommand.BillId);
-                    response.WithMetadata("IsLocked", false);
-                    return BaseCommand<IResponse>.CreateSuccess(response);
-                }
-                else
-                {
-                    return BaseCommand<IResponse>.CreateError("单据解锁失败，可能不是锁定该单据的用户", UnifiedErrorCodes.Biz_OperationFailed.Code)
-                        .WithMetadata("ErrorCode", "DOCUMENT_UNLOCK_FAILED");
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"处理单据解锁申请命令异常: {ex.Message}");
-                return BaseCommand<IResponse>.CreateError($"单据解锁申请异常: {ex.Message}", UnifiedErrorCodes.System_InternalError.Code)
-                    .WithMetadata("ErrorCode", "DOCUMENT_UNLOCK_EXCEPTION");
-            }
-        }
-
-        /// <summary>
-        /// 处理强制解锁单据命令
-        /// </summary>
-        private async Task<BaseCommand<IResponse>> HandleForceUnlockDocumentAsync(PacketModel packet, CancellationToken cancellationToken)
-        {
-            try
-            {
-                // 获取强制解锁申请数据
-                var forceUnlockCommand = packet as ForceUnlockCommand;
-                if (forceUnlockCommand == null)
-                {
-                    return BaseCommand<IResponse>.CreateError("无效的强制解锁申请命令", UnifiedErrorCodes.Biz_ValidationFailed.Code)
-                        .WithMetadata("ErrorCode", "INVALID_FORCE_UNLOCK_COMMAND");
-                }
-
-                // 验证命令数据
-                var validationResult = await forceUnlockCommand.ValidateAsync(cancellationToken);
-                if (!validationResult.IsValid)
-                {
-                    return BaseCommand<IResponse>.CreateError(validationResult.Errors[0].ErrorMessage, UnifiedErrorCodes.Biz_ValidationFailed.Code)
-                        .WithMetadata("ErrorCode", "INVALID_FORCE_UNLOCK_REQUEST");
-                }
-
-                // 获取会话信息
-                var sessionInfo = SessionService.GetSession(packet.SessionId);
-                if (sessionInfo == null || !sessionInfo.IsAuthenticated)
-                {
-                    return BaseCommand<IResponse>.CreateError("会话无效或未认证", UnifiedErrorCodes.Auth_SessionExpired.Code)
-                        .WithMetadata("ErrorCode", "INVALID_SESSION");
-                }
-
-                // 检查是否是管理员用户（这里简化处理，实际应该检查权限）
-                // var isAdmin = sessionInfo.IsAdmin; // 假设有这个属性
-
-                // 创建锁定信息 - 使用新的LockInfo模型
-                var lockInfo = new LockInfo
-                {
-                    BillID = forceUnlockCommand.BillId,
-                    LockedUserID = sessionInfo.UserId ?? 0,
-                    LockedUserName = sessionInfo.Username,
-                    LockTime = DateTime.Now,
-                    MenuID = 0, // 默认值
-                    LockStatus = LockStatus.Unlocked
-                };
-
-                // 强制解锁单据 - 使用新的LockManagerService
-                var forceUnlockResult = await LockManagerService.ForceUnlockDocumentAsync(lockInfo);
-                
-                if (forceUnlockResult)
-                {
-                    // 广播锁定状态变化
-                    await BroadcastLockStatusAsync();
-                    
-                    var response = new ResponseBase
-                    {
-                        Message = "单据强制解锁成功",
-                        IsSuccess = true
-                    };
-                    response.WithMetadata("BillID", forceUnlockCommand.BillId);
-                    response.WithMetadata("IsLocked", false);
-                    return BaseCommand<IResponse>.CreateSuccess(response);
-                }
-                else
-                {
-                    return BaseCommand<IResponse>.CreateError("单据强制解锁失败", UnifiedErrorCodes.Biz_OperationFailed.Code)
-                        .WithMetadata("ErrorCode", "DOCUMENT_FORCE_UNLOCK_FAILED");
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"处理强制解锁单据命令异常: {ex.Message}");
-                return BaseCommand<IResponse>.CreateError($"强制解锁单据异常: {ex.Message}", UnifiedErrorCodes.System_InternalError.Code)
-                    .WithMetadata("ErrorCode", "DOCUMENT_FORCE_UNLOCK_EXCEPTION");
+                _logger.LogError(ex, $"处理拒绝解锁异常: {ex.Message}");
+                return ResponseFactory.CreateSpecificErrorResponse(cmd.Packet.ExecutionContext, ex, $"处理拒绝解锁异常: {ex.Message}");
             }
         }
 
         /// <summary>
         /// 处理查询锁状态命令
         /// </summary>
-        private async Task<BaseCommand<IResponse>> HandleQueryLockStatusAsync(PacketModel packet, CancellationToken cancellationToken)
+        /// <param name="cmd">查询锁状态命令</param>
+        /// <param name="cancellationToken">取消令牌</param>
+        /// <returns>处理结果</returns>
+        private async Task<IResponse> HandleQueryLockStatusAsync(QueuedCommand cmd, CancellationToken cancellationToken)
         {
             try
             {
-                // 获取查询锁状态申请数据
-                var queryLockStatusCommand = packet as QueryLockStatusCommand;
-                if (queryLockStatusCommand == null)
+                // 反序列化请求数据
+                var lockRequest = cmd.Packet.Request as LockRequest;
+                if (lockRequest == null)
                 {
-                    return BaseCommand<IResponse>.CreateError("无效的查询锁状态申请命令", UnifiedErrorCodes.Biz_ValidationFailed.Code)
-                        .WithMetadata("ErrorCode", "INVALID_QUERY_LOCK_STATUS_COMMAND");
+                    return ResponseFactory.CreateSpecificErrorResponse<LockResponse>("无效的查询锁状态数据");
                 }
 
-                // 验证命令数据
-                var validationResult = await queryLockStatusCommand.ValidateAsync(cancellationToken);
-                if (!validationResult.IsValid)
+                // 验证请求数据
+                if (lockRequest.LockInfo.BillID <= 0)
                 {
-                    return BaseCommand<IResponse>.CreateError(validationResult.Errors[0].ErrorMessage, UnifiedErrorCodes.Biz_ValidationFailed.Code)
-                        .WithMetadata("ErrorCode", "INVALID_QUERY_LOCK_STATUS_REQUEST");
+                    return ResponseFactory.CreateSpecificErrorResponse<LockResponse>("单据ID不能为空");
                 }
 
-                // 获取单据锁定信息 - 使用新的LockManagerService
-                var lockInfo = LockManagerService.GetLockInfo(queryLockStatusCommand.BillId);
-                
-                var response = new ResponseBase
-                {
-                    Message = "锁状态查询成功",
-                    IsSuccess = true
-                };
-                response.WithMetadata("BillID", queryLockStatusCommand.BillId);
-                response.WithMetadata("IsLocked", lockInfo != null);
-                response.WithMetadata("LockInfo", lockInfo);
-                return BaseCommand<IResponse>.CreateSuccess(response);
+                // 查询锁状态
+                var lockInfo = _lockManagerService.GetLockInfo(lockRequest.LockInfo.BillID);
+
+                var response = ResponseFactory.CreateSpecificSuccessResponse(cmd.Packet.ExecutionContext, "锁状态查询成功") as LockResponse;
+                response.LockInfo = lockInfo;
+                response.Status = lockInfo?.Status ?? LockStatus.Unlocked;
+                response.RemainingLockTimeMs = lockInfo?.RemainingLockTimeMs ?? 0;
+
+                return response;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"处理查询锁状态命令异常: {ex.Message}");
-                return BaseCommand<IResponse>.CreateError($"查询锁状态异常: {ex.Message}", UnifiedErrorCodes.System_InternalError.Code)
-                    .WithMetadata("ErrorCode", "QUERY_LOCK_STATUS_EXCEPTION");
+                _logger.LogError(ex, $"处理查询锁状态异常: {ex.Message}");
+                return ResponseFactory.CreateSpecificErrorResponse(cmd.Packet.ExecutionContext, ex, $"处理查询锁状态异常: {ex.Message}");
             }
         }
 
         /// <summary>
         /// 处理广播锁状态命令
         /// </summary>
-        private async Task<BaseCommand<IResponse>> HandleBroadcastLockStatusAsync(PacketModel packet, CancellationToken cancellationToken)
+        /// <param name="cmd">广播锁状态命令</param>
+        /// <param name="cancellationToken">取消令牌</param>
+        /// <returns>处理结果</returns>
+        private async Task<IResponse> HandleBroadcastLockStatusAsync(QueuedCommand cmd, CancellationToken cancellationToken)
         {
             try
             {
-                // 获取广播锁状态申请数据
-                var broadcastLockStatusCommand = packet as BroadcastLockStatusCommand;
-                if (broadcastLockStatusCommand == null)
+                // 反序列化请求数据
+                var lockRequest = cmd.Packet.Request as LockRequest;
+                if (lockRequest == null)
                 {
-                    return BaseCommand<IResponse>.CreateError("无效的广播锁状态命令", UnifiedErrorCodes.Biz_ValidationFailed.Code)
-                        .WithMetadata("ErrorCode", "INVALID_BROADCAST_LOCK_STATUS_COMMAND");
+                    return ResponseFactory.CreateSpecificErrorResponse<LockResponse>("无效的广播锁状态数据");
                 }
 
-                // 验证命令数据
-                var validationResult = await broadcastLockStatusCommand.ValidateAsync(cancellationToken);
-                if (!validationResult.IsValid)
-                {
-                    return BaseCommand<IResponse>.CreateError(validationResult.Errors[0].ErrorMessage, UnifiedErrorCodes.Biz_ValidationFailed.Code)
-                        .WithMetadata("ErrorCode", "INVALID_BROADCAST_LOCK_STATUS_REQUEST");
-                }
+                // 广播锁状态
+                await BroadcastLockStatusToAllClientsAsync(new List<LockInfo> { lockRequest.LockInfo });
 
-                // 获取会话信息（广播命令通常不需要会话信息）
+                var response = ResponseFactory.CreateSpecificSuccessResponse(cmd.Packet.ExecutionContext, "锁状态广播成功");
 
-                // 广播锁定状态变化到所有客户端
-                await BroadcastLockStatusToAllClientsAsync(broadcastLockStatusCommand.LockedDocuments);
-                
-                var response = new ResponseBase
-                {
-                    Message = "锁状态广播成功",
-                    IsSuccess = true
-                };
-                response.WithMetadata("LockedDocumentsCount", broadcastLockStatusCommand.LockedDocuments?.Count ?? 0);
-                return BaseCommand<IResponse>.CreateSuccess(response);
+                return response;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"处理广播锁状态命令异常: {ex.Message}");
-                return BaseCommand<IResponse>.CreateError($"广播锁状态异常: {ex.Message}", UnifiedErrorCodes.System_InternalError.Code)
-                    .WithMetadata("ErrorCode", "BROADCAST_LOCK_STATUS_EXCEPTION");
+                _logger.LogError(ex, $"处理广播锁状态异常: {ex.Message}");
+                return ResponseFactory.CreateSpecificErrorResponse(cmd.Packet.ExecutionContext, ex, $"广播锁状态失败: {ex.Message}");
             }
         }
 
         /// <summary>
-        /// 广播锁定状态变化到所有客户端 - 使用新的LockInfo模型
+        /// 广播锁定状态变化到所有客户端
         /// </summary>
         /// <param name="lockedDocuments">锁定的单据信息列表</param>
         private async Task BroadcastLockStatusToAllClientsAsync(IEnumerable<LockInfo> lockedDocuments)
         {
             try
             {
-                // 创建广播命令 - 转换LockInfo到LockedInfo以兼容现有协议
-                var lockedInfoList = lockedDocuments?.Select(lockInfo => new LockedInfo
+                // 创建广播数据
+                var broadcastData = new LockRequest
                 {
-                    BillId = lockInfo.BillID,
-                    LockedUserId = lockInfo.LockedUserID,
-                    LockedUserName = lockInfo.LockedUserName,
-                    LockTime = lockInfo.LockTime
-                }).ToList() ?? new List<LockedInfo>();
-                
-                var broadcastCommand = new BroadcastLockStatusCommand(lockedInfoList);
-                
-                // 序列化数据
-                var serializedData = JsonCompressionSerializationService.Serialize(broadcastCommand, true);
-                
-                // 创建原始数据包
-                var originalData = new OriginalData(
-                    (byte)CommandCategory.Lock,
-                    new byte[] { LockCommands.BroadcastLockStatus.OperationCode },
-                    serializedData
-                );
-                
-                // 向所有在线客户端广播锁定状态更新
-                // 修复：使用正确的广播方法
-                await SessionService.BroadcastMessageAsync(originalData.ToByteArray());
-                
-                _logger.LogInformation($"广播锁定状态变化，当前锁定单据数: {lockedDocuments?.Count ?? 0}");
+                    LockedDocuments = lockedDocuments?.ToList() ?? new List<LockInfo>(),
+                    Timestamp = DateTime.UtcNow
+                };
+
+
+                // 获取所有用户会话
+                var sessions = _sessionService.GetAllUserSessions();
+
+                // 向所有会话发送消息并等待响应
+                int successCount = 0;
+                foreach (var session in sessions)
+                {
+                    if (session is SessionInfo sessionInfo)
+                    {
+                        var responsePacket = await _sessionService.SendCommandAndWaitForResponseAsync(
+                            session.SessionID,
+                         LockCommands.BroadcastLockStatus,
+                            broadcastData
+                             );
+
+                        if (responsePacket?.Response is MessageResponse response && response.IsSuccess)
+                        {
+                            successCount++;
+                        }
+                    }
+                }
+
+                //await _sessionService.SendCommandAsync(LockCommands.BroadcastLockStatus, broadcastRequest);
+
+                _logger.LogInformation($"广播锁定状态变化，当前锁定单据数: {lockedDocuments?.Count() ?? 0}");
             }
             catch (Exception ex)
             {
@@ -823,9 +476,9 @@ namespace RUINORERP.Server.Network.Commands
         {
             try
             {
-                // 获取所有锁定的单据信息 - 使用新的LockManagerService
-                var lockedDocuments = LockManagerService.GetAllLockedDocuments();
-                
+                // 获取所有锁定的单据信息
+                var lockedDocuments = _lockManagerService.GetAllLockedDocuments();
+
                 // 广播到所有客户端
                 await BroadcastLockStatusToAllClientsAsync(lockedDocuments);
             }
@@ -834,7 +487,5 @@ namespace RUINORERP.Server.Network.Commands
                 _logger.LogError(ex, $"广播锁定状态变化时发生异常: {ex.Message}");
             }
         }
-
-
     }
 }

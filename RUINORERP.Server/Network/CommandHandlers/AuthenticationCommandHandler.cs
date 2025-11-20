@@ -26,14 +26,6 @@ namespace RUINORERP.Server.Network.CommandHandlers
         private readonly ILogger<AuthenticationCommandHandler> _logger;
 
         /// <summary>
-        /// 无参构造函数，以支持Activator.CreateInstance创建实例
-        /// </summary>
-        public AuthenticationCommandHandler(ISessionService sessionService) : base()
-        {
-            _sessionService = sessionService;
-        }
-
-        /// <summary>
         /// 构造函数
         /// </summary>
         public AuthenticationCommandHandler(

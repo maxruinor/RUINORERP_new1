@@ -247,6 +247,7 @@ namespace RUINORERP.Server
                 // 设置日志级别过滤规则
                 logBuilder.AddFilter((provider, category, logLevel) =>
                 {
+                    
                     // RUINORERP命名空间使用动态日志级别
                     if (category.StartsWith("RUINORERP"))
                     {
@@ -265,7 +266,7 @@ namespace RUINORERP.Server
                         return logLevel >= LogLevel.Error;
                     }
                     // 其他日志正常记录  
-                    //所有的都变为错误才记录
+                    // 修改为记录Information级别及以上的日志，与客户端保持一致
                     return logLevel >= LogLevel.Error;
                 });
             });
@@ -472,6 +473,7 @@ namespace RUINORERP.Server
             // 注册各项目的服务（使用各项目自己的DI配置）
             services.AddNetworkServices();      // 网络服务
             services.AddPacketSpecServices(configuration);   // PacketSpec服务
+            services.AddUnifiedCommandHandlers(); // 注册所有命令处理器
             
             // 注册网络监控相关服务
             services.AddSingleton<DiagnosticsService>();

@@ -3202,6 +3202,10 @@ namespace RUINORERP.UI
 
         private async void btntsbRefresh_Click(object sender, EventArgs e)
         {
+
+            logger.LogInformation("获取到最新的验证配置111");
+
+            logger.Debug("2222");
             // 注意：validatorMonitor和validatorConfig来自不同的配置源，可能导致值不一致
             // validatorMonitor: 通过IOptionsMonitor获取，使用ASP.NET Core配置系统
             // validatorConfig: 通过ConfigManagerService获取，使用自定义配置管理系统

@@ -157,7 +157,7 @@ namespace RUINORERP.PacketSpec.Commands
         {
             HandlerId = IdGenerator.GenerateHandlerId(this.GetType().Name);
             _statistics = new HandlerStatistics();
-            Logger = _logger;
+            Logger = _logger ?? new LoggerFactory().CreateLogger<BaseCommandHandler>();
             // 初始化ITimestamped属性
             CreatedTime = DateTime.Now;
             TimestampUtc = DateTime.UtcNow;

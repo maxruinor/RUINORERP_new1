@@ -84,6 +84,8 @@ namespace RUINORERP.Server.Network.DI
 
             // 注册通用广播服务
             services.AddSingleton<IGeneralBroadcastService, GeneralBroadcastService>();
+            
+
         }
 
         /// <summary>
@@ -147,6 +149,8 @@ namespace RUINORERP.Server.Network.DI
             builder.RegisterType<PerformanceMonitoringService>().AsSelf().SingleInstance();
             builder.RegisterType<ErrorAnalysisService>().AsSelf().SingleInstance();
 
+
+            
             // 注册锁管理服务 - 使用新的优化架构
             builder.RegisterType<LockManagerService>().As<ILockManagerService>().SingleInstance();
 

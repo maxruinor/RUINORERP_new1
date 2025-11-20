@@ -26,7 +26,7 @@ namespace RUINORERP.Server.Network.Interfaces.Services
         Task<bool> UnlockDocumentAsync(long billId, long userId);
 
         /// <summary>
-        /// 检查单据是否被锁定
+        /// 获取指定单据的锁定信息
         /// </summary>
         /// <param name="billId">单据ID</param>
         /// <returns>锁定信息，如果未锁定则返回null</returns>
@@ -42,9 +42,9 @@ namespace RUINORERP.Server.Network.Interfaces.Services
         /// 根据业务类型解锁单据
         /// </summary>
         /// <param name="userId">用户ID</param>
-        /// <param name="bizName">业务名称</param>
+        /// <param name="billType">单据类型</param>
         /// <returns>解锁结果</returns>
-        Task<bool> UnlockDocumentsByBizNameAsync(long userId, int BillType);
+        Task<bool> UnlockDocumentsByBizNameAsync(long userId, int billType);
 
         /// <summary>
         /// 强制解锁单据（管理员操作）
@@ -81,14 +81,6 @@ namespace RUINORERP.Server.Network.Interfaces.Services
         /// <param name="billId">单据ID</param>
         /// <returns>锁定用户ID，如果未锁定则返回0</returns>
         long GetLockedUserId(long billId);
-
- 
-
-        /// <summary>
-        /// 获取锁定项列表
-        /// </summary>
-        /// <returns>锁定项列表</returns>
-        List<LockInfo> GetLockItems();
 
         /// <summary>
         /// 获取锁定项数量

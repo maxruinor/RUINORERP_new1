@@ -133,13 +133,13 @@ namespace RUINORERP.Server
         /// <summary>
         /// 全局日志级别控制器
         /// </summary>
-        private static LogLevel _currentLogLevel = LogLevel.Error;
+        private static LogLevel _currentLogLevel = LogLevel.Debug;
 
         /// <summary>
         /// 日志级别菜单项列表
         /// </summary>
         private static int _batchUpdateThreshold = 5;
-        
+
         /// <summary>
         /// Log4Net BufferSize값
         /// </summary>
@@ -154,7 +154,7 @@ namespace RUINORERP.Server
         /// 批量更新阈值菜单项列表
         /// </summary>
         private List<ToolStripMenuItem> _batchThresholdMenuItems = new List<ToolStripMenuItem>();
-        
+
         /// <summary>
         /// BufferSize菜单项列表
         /// </summary>
@@ -174,7 +174,7 @@ namespace RUINORERP.Server
         /// 服务器信息更新定时器
         /// </summary>
         private System.Windows.Forms.Timer _serverInfoTimer;
-        
+
         /// <summary>
         /// 会话清理定时器
         /// </summary>
@@ -347,7 +347,7 @@ namespace RUINORERP.Server
             // 防止因重复绑定导致事件处理程序被多次调用
 
             // 工具栏事件 - 这些需要在代码中额外绑定
-            toolStripButtonRefreshData.Click += (s, e) => RefreshCurrentTab();
+            //toolStripButtonRefreshData.Click += (s, e) => RefreshCurrentTab();
 
             // 如果需要额外的控件事件在此添加
         }
@@ -385,7 +385,7 @@ namespace RUINORERP.Server
                 // 添加批量更新阈值菜单项
                 var batchThresholdMenu = new ToolStripMenuItem("批量更新阈值");
                 var thresholdValues = new int[] { 1, 5, 10, 20, 50 };
-                
+
                 foreach (var threshold in thresholdValues)
                 {
                     var thresholdItem = new ToolStripMenuItem(threshold.ToString());
@@ -394,12 +394,12 @@ namespace RUINORERP.Server
                     batchThresholdMenu.DropDownItems.Add(thresholdItem);
                     _batchThresholdMenuItems.Add(thresholdItem);
                 }
-                
+
                 // 添加自定义阈值选项
                 var customThresholdItem = new ToolStripMenuItem("自定义...");
                 customThresholdItem.Click += CustomThresholdMenuItem_Click;
                 batchThresholdMenu.DropDownItems.Add(customThresholdItem);
-                
+
                 toolStripButtonDebugMode.DropDownItems.Add(batchThresholdMenu);
 
                 // 添加分隔符
@@ -409,7 +409,7 @@ namespace RUINORERP.Server
                 // 添加BufferSize菜单项
                 var bufferSizeMenu = new ToolStripMenuItem("日志BufferSize");
                 var bufferSizeValues = new int[] { 1, 10, 50, 100, 200 };
-                
+
                 foreach (var bufferSize in bufferSizeValues)
                 {
                     var bufferSizeItem = new ToolStripMenuItem(bufferSize.ToString());
@@ -418,12 +418,12 @@ namespace RUINORERP.Server
                     bufferSizeMenu.DropDownItems.Add(bufferSizeItem);
                     _bufferSizeMenuItems.Add(bufferSizeItem);
                 }
-                
+
                 // 添加自定义BufferSize选项
                 var customBufferSizeItem = new ToolStripMenuItem("自定义...");
                 customBufferSizeItem.Click += CustomBufferSizeMenuItem_Click;
                 bufferSizeMenu.DropDownItems.Add(customBufferSizeItem);
-                
+
                 toolStripButtonDebugMode.DropDownItems.Add(bufferSizeMenu);
 
                 // 添加分隔符和调试模式开关
@@ -436,7 +436,7 @@ namespace RUINORERP.Server
                 {
                     IsDebug = !IsDebug;
                     debugModeItem.Checked = IsDebug;
-                    
+
                     if (IsDebug)
                     {
                         // 启用调试模式，设置日志级别为Debug
@@ -492,7 +492,7 @@ namespace RUINORERP.Server
                 }
             }
         }
-        
+
         /// <summary>
         /// 更新BufferSize菜单项的选中状态
         /// </summary>
@@ -518,10 +518,10 @@ namespace RUINORERP.Server
                 {
                     // 设置全局日志级别
                     SetGlobalLogLevel(level);
-                    
+
                     // 更新菜单项选择状态
                     UpdateLogLevelMenuCheckState();
-                    
+
                     // 记录日志级别变更
                     PrintInfoLog($"全局日志级别已设置: {level}");
                 }
@@ -543,10 +543,10 @@ namespace RUINORERP.Server
                 {
                     // 设置批量更新阈值
                     SetBatchUpdateThreshold(threshold);
-                    
+
                     // 更新菜单项选择状态
                     UpdateBatchThresholdMenuCheckState();
-                    
+
                     // 记录阈值变更
                     PrintInfoLog($"数据库批量更新阈值已设置: {threshold}");
                 }
@@ -608,10 +608,10 @@ namespace RUINORERP.Server
                         {
                             // 设置批量更新阈值
                             SetBatchUpdateThreshold(threshold);
-                            
+
                             // 更新菜单项选择状态
                             UpdateBatchThresholdMenuCheckState();
-                            
+
                             // 记录阈值变更
                             PrintInfoLog($"数据库批量更新阈值已设置: {threshold}");
                         }
@@ -627,7 +627,7 @@ namespace RUINORERP.Server
                 PrintErrorLog($"设置自定义阈值时发生错误: {ex.Message}");
             }
         }
-        
+
         /// <summary>
         /// BufferSize菜单项点击事件
         /// </summary>
@@ -639,10 +639,10 @@ namespace RUINORERP.Server
                 {
                     // 设置BufferSize
                     SetLogBufferSize(bufferSize);
-                    
+
                     // 更新菜单项选择状态
                     UpdateBufferSizeMenuCheckState();
-                    
+
                     // 记录BufferSize变更
                     PrintInfoLog($"日志BufferSize已设置: {bufferSize}");
                 }
@@ -704,10 +704,10 @@ namespace RUINORERP.Server
                         {
                             // 设置BufferSize
                             SetLogBufferSize(bufferSize);
-                            
+
                             // 更新菜单项选择状态
                             UpdateBufferSizeMenuCheckState();
-                            
+
                             // 记录BufferSize变更
                             PrintInfoLog($"日志BufferSize已设置: {bufferSize}");
                         }
@@ -735,7 +735,7 @@ namespace RUINORERP.Server
             var loggerFactory = Program.ServiceProvider.GetService<ILoggerFactory>();
             var logger = loggerFactory?.CreateLogger<frmMainNew>();
             logger?.LogInformation($"全局日志级别已设置: {logLevel}");
-            
+
             // 更新菜单项选中状态
             Instance?.UpdateLogLevelMenuCheckState();
         }
@@ -751,7 +751,7 @@ namespace RUINORERP.Server
                 _batchUpdateThreshold = threshold;
                 // 设置DatabaseSequenceService的阈值
                 DatabaseSequenceService.SetBatchUpdateThreshold(threshold);
-                
+
                 // 更新菜单项选择状态
                 Instance?.UpdateBatchThresholdMenuCheckState();
             }
@@ -768,7 +768,7 @@ namespace RUINORERP.Server
                 _logBufferSize = bufferSize;
                 // 设置Log4Net的BufferSize
                 UpdateLogBufferSize(bufferSize);
-                
+
                 // 更新菜单项选择状态
                 Instance?.UpdateBufferSizeMenuCheckState();
             }
@@ -896,7 +896,7 @@ namespace RUINORERP.Server
 
                 // 注意：详细路径验证（环境变量解析、路径可访问性检查等）
                 // 注意：详细路径验证（环境变量解析、路径可访问性检查等）
-            // 已在ServerConfigValidator中实现，因此此处保持额外的保障逻辑
+                // 已在ServerConfigValidator中实现，因此此处保持额外的保障逻辑
                 PrintInfoLog("正在执行额外的文件存储路径验证...");
                 IConfigManagerService configManagerService = Startup.GetFromFac<IConfigManagerService>();
                 // 环境变量路径解析（作为额外的验证保障）
@@ -1002,7 +1002,7 @@ namespace RUINORERP.Server
                 if (!CheckServerConfiguration())
                 {
                     PrintErrorLog("服务器配置检查失败，启动已取消");
-                ShowTabPage("系统配置");
+                    ShowTabPage("系统配置");
                     return;
                 }
 
@@ -1595,7 +1595,7 @@ namespace RUINORERP.Server
                     _serverInfoTimer.Dispose();
                     _serverInfoTimer = null;
                 }
-                
+
                 // 清理会话清理定时器资源
                 if (_sessionCleanupTimer != null)
                 {
@@ -2264,6 +2264,9 @@ namespace RUINORERP.Server
         /// <param name="e">事件参数</param>
         private void toolStripButtonRefreshData_Click(object sender, EventArgs e)
         {
+            var logger = Startup.GetFromFac<ILogger<frmMainNew>>();
+            logger.LogInformation("刷新数据3");
+            logger.Info("刷新数据4");
             RefreshCurrentTab();
         }
 
@@ -2320,7 +2323,7 @@ namespace RUINORERP.Server
         private async void toolStripButtonSystemCheck_Click(object sender, EventArgs e)
         {
             ServerBizCodeGenerateService _bizCodeService = Startup.GetFromFac<ServerBizCodeGenerateService>();
-            var ss =await _bizCodeService.GenerateBizBillNoAsync(BizType.请购单);
+            var ss = await _bizCodeService.GenerateBizBillNoAsync(BizType.请购单);
             PrintInfoLog(ss);
             _logger.LogInformation("Information");
             _logger.Debug("Debug");

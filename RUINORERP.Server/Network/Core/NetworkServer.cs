@@ -458,11 +458,11 @@ namespace RUINORERP.Server.Network.Core
                           services.AddSingleton<ISessionService>(_sessionManager);
                           services.AddSingleton(_commandDispatcher);
                           
-                          services.AddLogging(builder =>
-                          {
-                              builder.AddConsole();
-                              builder.SetMinimumLevel(LogLevel.Information);
-                          });
+                          //services.AddLogging(builder =>
+                          //{
+                          //    builder.AddConsole();
+                          //    builder.SetMinimumLevel(LogLevel.Information);
+                          //});
                       }
                   }).Build();
                 

@@ -1,10 +1,11 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Linq.Expressions;
 using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace RUINORERP.PacketSpec.Commands
 {
@@ -216,7 +217,7 @@ namespace RUINORERP.PacketSpec.Commands
                     
                     return (ICommandHandler)Activator.CreateInstance(constructor.DeclaringType, args);
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
                     // 如果DI创建失败，回退到反射创建
                     return CreateReflectionFactoryMethod(constructor)();
@@ -259,9 +260,18 @@ namespace RUINORERP.PacketSpec.Commands
                                 }
                                 else if (paramType == typeof(ILogger<>).MakeGenericType(typeArgs))
                                 {
-                                    // 为ILogger创建默认实例
-                                    var loggerFactory = new LoggerFactory();
-                                    args[i] = loggerFactory.CreateLogger(constructor.DeclaringType);
+                                    // 为ILogger创建默认实例 - 确保logger不为null
+                                    try
+                                    {
+                                        var loggerFactory = new LoggerFactory();
+                                        args[i] = loggerFactory.CreateLogger(constructor.DeclaringType);
+                                    }
+                                    catch
+                                    {
+                                        // 如果创建失败，使用NullLogger作为最后的保障
+                                        var nullLoggerType = typeof(NullLogger<>).MakeGenericType(constructor.DeclaringType);
+                                        args[i] = Activator.CreateInstance(nullLoggerType);
+                                    }
                                 }
                                 else
                                 {

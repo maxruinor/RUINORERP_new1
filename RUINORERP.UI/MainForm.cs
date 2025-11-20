@@ -141,7 +141,7 @@ namespace RUINORERP.UI
             /// </summary>
             LoggingOut
         }
-        
+
         /// <summary>
         /// 系统更新方法（重载）
         /// </summary>
@@ -397,7 +397,7 @@ namespace RUINORERP.UI
 
 
         public MainForm(ILogger<MainForm> _logger, AuditLogHelper _auditLogHelper,
-            FMAuditLogHelper _fmauditLogHelper,  EnhancedMessageManager messageManager)
+            FMAuditLogHelper _fmauditLogHelper, EnhancedMessageManager messageManager)
         {
             InitializeComponent();
 
@@ -442,13 +442,13 @@ namespace RUINORERP.UI
 
 
 
-         
+
 
             AppContext = Program.AppContextData;
             SourceGrid.Cells.Views.Cell viewGreen = new SourceGrid.Cells.Views.Cell();
             // 初始化日志管理器
             logManager = new UILogManager(this, uclog.grid, viewGreen);
-          
+
 
             _menuTracker = Startup.GetFromFac<MenuTracker>();
 
@@ -457,7 +457,7 @@ namespace RUINORERP.UI
             {
                 _menuTracker.AutoSave();
             }, null, TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(5));
-            
+
             // 设置1分钟客户端版本信息更新定时器
             _clientVersionUpdateTimer = new System.Threading.Timer(_ =>
             {
@@ -623,7 +623,7 @@ namespace RUINORERP.UI
             bool rs = false;
             var validatorMonitor = Startup.GetFromFac<SystemGlobalConfig>();
             // 如果配置了自动更新或强制更新参数为true，则执行更新检查
-            if (validatorMonitor.客户端自动更新 || forceUpdate) 
+            if (validatorMonitor.客户端自动更新 || forceUpdate)
             {
                 try
                 {
@@ -658,7 +658,7 @@ namespace RUINORERP.UI
                 }
                 catch
                 {
-                    return rs; 
+                    return rs;
                 }
             }
             return rs;
@@ -997,9 +997,9 @@ namespace RUINORERP.UI
             }
             else
             {
-                UIBizService.RequestCache(typeof(tb_RoleInfo));
-                UIBizService.RequestCache(typeof(tb_ProductType));
-                UIBizService.RequestCache(typeof(View_ProdDetail));
+              await  UIBizService.RequestCache(typeof(tb_RoleInfo), useBackground: true);
+                await UIBizService.RequestCache(typeof(tb_ProductType), useBackground: true);
+                await UIBizService.RequestCache(typeof(View_ProdDetail), useBackground: true);
 
                 using (StatusBusy busy = new StatusBusy("系统正在【初始化】 请稍候"))
                 {
@@ -1078,21 +1078,18 @@ namespace RUINORERP.UI
             #endregion
             timer1.Start();
             Stopwatch stopwatchLoadUI = Stopwatch.StartNew();
-            
-            // 异步加载UI，避免阻塞主线程
-            _ = Task.Run(async () =>
+
+            // 直接在主线程中加载UI，避免线程间操作问题
+            try
             {
-                try
-                {
-                    LoadUIMenus();
-                    LoadUIForIM_LogPages();
-                }
-                catch (Exception ex)
-                {
-                    // 记录错误但不影响主流程
-                    MainForm.Instance.logger.LogError(ex, "UI加载过程中发生错误");
-                }
-            });
+                LoadUIMenus();
+                LoadUIForIM_LogPages();
+            }
+            catch (Exception ex)
+            {
+                // 记录错误但不影响主流程
+                MainForm.Instance.logger.LogError(ex, "UI加载过程中发生错误");
+            }
 
             stopwatchLoadUI.Stop();
             MainForm.Instance.uclog.AddLog($"LoadUIPages 执行时间：{stopwatchLoadUI.ElapsedMilliseconds} 毫秒");
@@ -1102,7 +1099,7 @@ namespace RUINORERP.UI
             // 在应用程序启动代码中添加
             var initializationService = Startup.GetFromFac<IDefaultRowAuthPolicyInitializationService>();
             await initializationService.InitializeDefaultPoliciesAsync();
-            
+
             // 更新当前用户信息中的当前模块和当前窗体
             UpdateCurrentUserModuleAndForm();
 
@@ -1121,23 +1118,18 @@ namespace RUINORERP.UI
 
             MainForm.Instance.kryptonDockingManager1.DockspaceRemoved += KryptonDockingManager1_DockspaceRemoved;
 
-            // 异步请求缓存，不阻塞UI线程，添加超时和降级处理
+            // 异步请求缓存，不阻塞UI线程，使用后台异步模式避免超时问题
             _ = Task.Run(async () =>
             {
                 try
                 {
-                    using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1.5)); // 1.5秒超时
-                    await UIBizService.RequestCache<tb_Currency>(false, 1500, cts.Token);
-                }
-                catch (TimeoutException)
-                {
-                    // 超时处理：使用本地缓存或默认值
-                    MainForm.Instance.logger.LogWarning("缓存请求超时，使用本地缓存数据");
+                    // 使用后台异步模式，不设置超时，让后台管理器处理
+                    await UIBizService.RequestCache<tb_Currency>(false, 15000, CancellationToken.None, useBackground: true);
                 }
                 catch (Exception ex)
                 {
-                    // 其他异常处理
-                    MainForm.Instance.logger.LogError(ex, "缓存请求失败，使用本地缓存数据");
+                    // 异常处理，记录日志但不影响主流程
+                    MainForm.Instance.logger.LogError(ex, "后台缓存请求失败，使用本地缓存数据");
                 }
             });
 
@@ -1148,7 +1140,9 @@ namespace RUINORERP.UI
                 #region 本位币别
                 #region 查询对应的项目组
 
-                PrintInfoLog("正在查询项目组...");
+                // 使用Invoke确保UI操作在主线程中执行
+                this.Invoke(new Action(() => PrintInfoLog("正在查询项目组...")));
+                
                 //todo 后面再优化为缓存级吧
                 List<tb_ProjectGroup> projectGroups = new List<tb_ProjectGroup>();
                 List<tb_ProjectGroupEmployees> groupEmployees = new List<tb_ProjectGroupEmployees>();
@@ -1161,7 +1155,7 @@ namespace RUINORERP.UI
                 #endregion
 
                 #region  本位币别查询
-                PrintInfoLog("正在查询本位币别...");
+                this.Invoke(new Action(() => PrintInfoLog("正在查询本位币别...")));
 
                 List<tb_Currency> currencies = new List<tb_Currency>();
                 currencies = _cacheManager.GetEntityList<tb_Currency>(nameof(tb_Currency));
@@ -1177,11 +1171,11 @@ namespace RUINORERP.UI
                     .Where(c => c.Is_BaseCurrency.HasValue && c.Is_BaseCurrency.Value == true).Single();
                     if (MainForm.Instance.AppContext.BaseCurrency == null)
                     {
-                        MessageBox.Show("请在基础设置中配置本位币别。");
+                        this.Invoke(new Action(() => MessageBox.Show("请在基础设置中配置本位币别。")));
                     }
                 }
 
-                PrintInfoLog("本位币别查询完成。");
+                this.Invoke(new Action(() => PrintInfoLog("本位币别查询完成。")));
                 #endregion
 
 
@@ -1201,7 +1195,7 @@ namespace RUINORERP.UI
             {
                 await Task.Delay(10000);
                 #region  正在查询账期的设置
-                PrintInfoLog("正在查询账期的设置");
+                this.Invoke(new Action(() => PrintInfoLog("正在查询账期的设置")));
 
                 List<tb_PaymentMethod> PaymentMethods = new List<tb_PaymentMethod>();
                 PaymentMethods = _cacheManager.GetEntityList<tb_PaymentMethod>(nameof(tb_PaymentMethod));
@@ -1217,11 +1211,11 @@ namespace RUINORERP.UI
                     .Where(c => c.Paytype_Name == DefaultPaymentMethod.账期.ToString()).Single();
                     if (MainForm.Instance.AppContext.BaseCurrency == null)
                     {
-                        MessageBox.Show("请在基础设置中的付款方式添加【账期】。");
+                        this.Invoke(new Action(() => MessageBox.Show("请在基础设置中的付款方式添加【账期】。")));
                     }
                 }
 
-                PrintInfoLog("账期设置查询完成。");
+                this.Invoke(new Action(() => PrintInfoLog("账期设置查询完成。")));
                 #endregion
             });
 
@@ -1397,7 +1391,7 @@ namespace RUINORERP.UI
                 {
                     AppContext.log.Path = _kryptonDockableWorkspace.ActiveControl.ToString();
                 }
-                
+
                 // 更新当前用户信息中的当前模块和当前窗体
                 if (AppContext?.CurrentUser != null)
                 {
@@ -1815,7 +1809,7 @@ namespace RUINORERP.UI
                         this.Text = AppContext.CompanyInfo.ShortName + "企业数字化集成ERP v2.0" + "-" + Program.ERPVersion;
                     }
 
-                    UIBizService.RequestCache(nameof(tb_RoleInfo));
+                    await UIBizService.RequestCache(nameof(tb_RoleInfo));
 
                     if (loginForm.IsInitPassword)
                     {
@@ -3211,7 +3205,7 @@ namespace RUINORERP.UI
             // 注意：validatorMonitor和validatorConfig来自不同的配置源，可能导致值不一致
             // validatorMonitor: 通过IOptionsMonitor获取，使用ASP.NET Core配置系统
             // validatorConfig: 通过ConfigManagerService获取，使用自定义配置管理系统
-            
+
             // 使用ConfigManagerService获取最新配置（推荐，确保使用统一的配置源）
             var configManagerService = Startup.GetFromFac<IConfigManagerService>();
             var validatorConfig = configManagerService.GetConfig<GlobalValidatorConfig>();
@@ -3220,11 +3214,11 @@ namespace RUINORERP.UI
                 // 处理配置值
                 logger.LogInformation("获取到最新的验证配置: {Setting}", validatorConfig.SomeSetting);
             }
-            
+
             // 避免使用多个不同的配置源，统一使用ConfigManagerService
             // 以下代码已注释，避免配置不一致问题
             // var validatorMonitor = Startup.GetFromFac<IOptionsMonitor<GlobalValidatorConfig>>();
-          
+
 
             await UI.Common.UIBizService.RequestCache<tb_UserInfo>(true);
             MainForm.Instance.logger.LogError("LoginWebServer" + System.DateTime.Now.ToString());
@@ -3405,13 +3399,13 @@ namespace RUINORERP.UI
             {
                 // 创建服务缓存测试窗体实例
                 FrmServiceCacheTest cacheTestForm = new FrmServiceCacheTest();
-                
+
                 // 设置窗体标题
                 cacheTestForm.Text = "服务实例缓存性能测试工具";
-                
+
                 // 以模态对话框形式显示窗体
                 cacheTestForm.ShowDialog();
-                
+
                 logger.LogInformation("服务缓存测试窗体已打开");
             }
             catch (Exception ex)

@@ -1,4 +1,4 @@
-    using RUINORERP.PacketSpec.Models.Requests;
+using RUINORERP.PacketSpec.Models.Requests;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -18,6 +18,7 @@ using RUINORERP.PacketSpec.Commands.Authentication;
 using System.Linq;
 using AutoUpdateTools;
 using RUINORERP.Model.CommonModel;
+using RUINORERP.UI.Services;
 
 namespace RUINORERP.UI.Network
 {
@@ -27,6 +28,7 @@ namespace RUINORERP.UI.Network
         private readonly ISocketClient _socketClient;
         private ClientCommunicationService _communicationService;
         private readonly TokenManager _tokenManager;
+        private readonly IClientSystemInfoService _systemInfoService;
         private readonly int _heartbeatIntervalMs;
         private readonly int _heartbeatTimeoutMs;
         private readonly int _resourceCheckIntervalMs; // 资源检查间隔
@@ -100,6 +102,7 @@ namespace RUINORERP.UI.Network
         public HeartbeatManager(
             ISocketClient socketClient,
             TokenManager tokenManager,
+            IClientSystemInfoService systemInfoService,
             int heartbeatIntervalMs,
             int heartbeatTimeoutMs = 5000,
             int resourceCheckIntervalMs = 600000, // 默认10分钟检查一次资源使用情况
@@ -110,6 +113,7 @@ namespace RUINORERP.UI.Network
         {
             _socketClient = socketClient ?? throw new ArgumentNullException(nameof(socketClient));
             _tokenManager = tokenManager ?? throw new ArgumentNullException(nameof(tokenManager));
+            _systemInfoService = systemInfoService ?? throw new ArgumentNullException(nameof(systemInfoService));
 
             // 参数验证
             if (heartbeatIntervalMs <= 0)
@@ -539,7 +543,6 @@ namespace RUINORERP.UI.Network
         /// <returns>异步任务</returns>
         private async Task ResourceCheckLoopAsync()
         {
-
             while (!_cancellationTokenSource.Token.IsCancellationRequested)
             {
                 try
@@ -555,121 +558,132 @@ namespace RUINORERP.UI.Network
                     {
                         _logger?.LogDebug("开始更新资源使用情况缓存");
 
-                        // 在后台线程中获取资源使用情况
-                        await Task.Run(() =>
+                        try
                         {
-                            try
+                            // 使用客户端系统信息服务获取资源使用情况
+                            var resourceUsage = _systemInfoService.GetResourceUsage();
+                            
+                            lock (_lock)
                             {
-                                // 获取进程信息
-                                var process = Process.GetCurrentProcess();
-
-                                // 获取内存使用量（MB）
-                                long memoryUsage = process.WorkingSet64 / (1024 * 1024);
-
-                                // 获取进程运行时间（秒）
-                                long processUptime = (long)(now - process.StartTime.ToUniversalTime()).TotalSeconds;
-
-                                // 估算CPU使用率
-                                float cpuUsage = 0;
-                                try
-                                {
-                                    using (var searcher = new ManagementObjectSearcher("SELECT LoadPercentage FROM Win32_Processor"))
-                                    {
-                                        foreach (var obj in searcher.Get())
-                                        {
-                                            cpuUsage += Convert.ToSingle(obj["LoadPercentage"]);
-                                        }
-                                        cpuUsage /= Environment.ProcessorCount;
-                                    }
-                                }
-                                catch (Exception ex)
-                                {
-                                    _logger?.LogWarning(ex, "获取CPU使用率失败，使用处理器数量作为默认值");
-                                    cpuUsage = Environment.ProcessorCount;
-                                }
-
-                                // 估算磁盘可用空间（GB）
-                                float diskFreeSpace = 0;
-                                try
-                                {
-                                    foreach (DriveInfo drive in DriveInfo.GetDrives())
-                                    {
-                                        if (drive.IsReady && drive.RootDirectory.FullName == Path.GetPathRoot(Environment.CurrentDirectory))
-                                        {
-                                            diskFreeSpace = drive.AvailableFreeSpace / (1024f * 1024f * 1024f);
-                                            break;
-                                        }
-                                    }
-                                }
-                                catch (Exception ex)
-                                {
-                                    _logger?.LogWarning(ex, "获取磁盘可用空间失败，使用默认值");
-                                    diskFreeSpace = 100; // 默认值
-                                }
-
-                                // 网络带宽使用暂时设为0
-                                float networkUsage = 0;
-
-                                _logger?.LogDebug("资源使用情况已更新 - CPU: {CpuUsage}%, 内存: {MemoryUsage}MB, 磁盘空间: {DiskFreeSpace}GB",
-                                    cpuUsage, memoryUsage, diskFreeSpace);
-
-                                var resourceUsage = ClientResourceUsage.Create(cpuUsage, memoryUsage, networkUsage, diskFreeSpace, processUptime);
-
-                                // 更新缓存
-                                lock (_lock)
-                                {
-                                    _cachedResourceUsage = resourceUsage;
-                                    _lastResourceCheckTime = now;
-                                }
+                                _cachedResourceUsage = resourceUsage;
+                                _lastResourceCheckTime = now;
                             }
-                            catch (Exception ex)
-                            {
-                                _logger?.LogError(ex, "后台更新资源使用情况失败");
-                            }
-                        }, _cancellationTokenSource.Token);
+
+                            _logger?.LogDebug("资源使用情况缓存更新完成 - CPU: {CpuUsage}%, 内存: {MemoryUsage}MB, 磁盘: {DiskFreeSpace}GB",
+                                resourceUsage.CpuUsage, resourceUsage.MemoryUsage, resourceUsage.DiskFreeSpace);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger?.LogError(ex, "使用客户端系统信息服务获取资源使用情况失败，回退到原有逻辑");
+                            
+                            // 回退到原有逻辑
+                            await UpdateResourceUsageFallbackAsync();
+                        }
                     }
-                }
-                catch (TaskCanceledException)
-                {
-                    // 任务被取消，正常退出
-                    break;
-                }
-                catch (OperationCanceledException ex)
-                {
-                    // 操作被取消，正常退出
-                    _logger?.LogDebug(ex, "资源检查操作被取消");
-                    break;
-                }
-                catch (Exception ex)
-                {
-                    // 处理其他异常
-                    _logger?.LogError(ex, "资源检查过程中发生未预期的异常");
-                }
 
-                // 等待下一次资源检查间隔
-                try
-                {
-                    _logger?.LogDebug("等待下一次资源检查，间隔: {ResourceCheckIntervalMs} 毫秒", _resourceCheckIntervalMs);
-                    await Task.Delay(_resourceCheckIntervalMs, _cancellationTokenSource.Token);
+                    // 等待下一次检查
+                    await Task.Delay(1000, _cancellationTokenSource.Token); // 每秒检查一次是否需要更新
                 }
                 catch (TaskCanceledException)
                 {
                     // 正常取消，退出循环
                     break;
                 }
+                catch (Exception ex)
+                {
+                    _logger?.LogError(ex, "资源检查循环中发生异常");
+                    await Task.Delay(5000, _cancellationTokenSource.Token); // 异常后等待5秒再试
+                }
             }
-
         }
 
         /// <summary>
-        /// 释放资源
-        /// 实现IDisposable接口的标准释放模式
+        /// 资源使用情况获取回退方法
+        /// 当客户端系统信息服务不可用时使用原有逻辑
+        /// </summary>
+        /// <returns>异步任务</returns>
+        private async Task UpdateResourceUsageFallbackAsync()
+        {
+            await Task.Run(() =>
+            {
+                try
+                {
+                    // 获取进程信息
+                    var process = Process.GetCurrentProcess();
+                    var now = DateTime.UtcNow;
+
+                    // 获取内存使用量（MB）
+                    long memoryUsage = process.WorkingSet64 / (1024 * 1024);
+
+                    // 获取进程运行时间（秒）
+                    long processUptime = (long)(now - process.StartTime.ToUniversalTime()).TotalSeconds;
+
+                    // 估算CPU使用率
+                    float cpuUsage = 0;
+                    try
+                    {
+                        using (var searcher = new ManagementObjectSearcher("SELECT LoadPercentage FROM Win32_Processor"))
+                        {
+                            foreach (var obj in searcher.Get())
+                            {
+                                cpuUsage += Convert.ToSingle(obj["LoadPercentage"]);
+                            }
+                            cpuUsage /= Environment.ProcessorCount;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger?.LogWarning(ex, "获取CPU使用率失败，使用处理器数量作为默认值");
+                        cpuUsage = Environment.ProcessorCount;
+                    }
+
+                    // 估算磁盘可用空间（GB）
+                    float diskFreeSpace = 0;
+                    try
+                    {
+                        foreach (DriveInfo drive in DriveInfo.GetDrives())
+                        {
+                            if (drive.IsReady && drive.RootDirectory.FullName == Path.GetPathRoot(Environment.CurrentDirectory))
+                            {
+                                diskFreeSpace = drive.AvailableFreeSpace / (1024f * 1024f * 1024f);
+                                break;
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger?.LogWarning(ex, "获取磁盘可用空间失败");
+                    }
+
+                    // 创建资源使用情况对象
+                    var resourceUsage = ClientResourceUsage.Create(
+                        cpuUsage: cpuUsage,
+                        memoryUsage: memoryUsage,
+                        networkUsage: 0, // 暂时无法准确获取
+                        diskFreeSpace: diskFreeSpace,
+                        processUptime: processUptime
+                    );
+
+                    lock (_lock)
+                    {
+                        _cachedResourceUsage = resourceUsage;
+                        _lastResourceCheckTime = now;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger?.LogError(ex, "回退资源使用情况获取失败");
+                }
+            });
+        }
+
         /// <summary>
         /// 释放资源
         /// 实现IDisposable接口，确保所有资源被正确释放
         /// </summary>
         public void Dispose()
-        {            lock (_lock)
+        {
+            lock (_lock)
             {
                 if (!_isDisposed)
                 {
@@ -704,6 +718,10 @@ namespace RUINORERP.UI.Network
         }
 
 
+        /// </summary>
+        /// <summary>
+        /// 创建心跳请求对象
+        /// 构建包含客户端状态、资源使用情况等信息的完整心跳请求
         /// </summary>
         /// <returns>配置完整的心跳命令对象，用于发送给服务器</returns>
         private HeartbeatRequest CreateHeartbeatRequest()
@@ -776,19 +794,26 @@ namespace RUINORERP.UI.Network
 
                 // 设置网络和资源使用信息
                 heartbeatRequest.NetworkLatency = EstimateNetworkLatency();
-                heartbeatRequest.ResourceUsage = GetResourceUsage();
+                
+                // 获取资源使用情况 - 优先使用客户端系统信息服务
+                try
+                {
+                    var systemInfo = _systemInfoService.GetClientSystemInfo();
+                    heartbeatRequest.SystemInfo = systemInfo;
+                    heartbeatRequest.ResourceUsage = systemInfo.ResourceUsage;
+                }
+                catch (Exception ex)
+                {
+                    _logger?.LogWarning(ex, "使用客户端系统信息服务获取系统信息失败，回退到原有资源使用获取方式");
+                    heartbeatRequest.ResourceUsage = GetResourceUsage();
+                }
 
                 return heartbeatRequest;
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "创建心跳命令失败");
-                // 出错时返回基础的心跳命令，但包含基本信息
-                return new HeartbeatRequest
-                {
-                    ClientVersion = GetClientVersion(),
-                    ClientStatus = "ErrorCreatingRequest"
-                };
+                _logger?.LogError(ex, "创建心跳请求时发生异常");
+                throw;
             }
         }
 

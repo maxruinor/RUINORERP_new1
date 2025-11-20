@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using ExCSS;
 using Krypton.Docking;
 using Krypton.Navigator;
@@ -295,7 +295,7 @@ namespace RUINORERP.UI.BaseForm
             MasterColNameDataDictionary.TryAdd(nameof(Priority), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(Priority)));
             MasterColNameDataDictionary.TryAdd(nameof(PurReProcessWay), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(PurReProcessWay)));
 
-          
+
         }
 
 
@@ -890,8 +890,8 @@ namespace RUINORERP.UI.BaseForm
 
             #region 请求缓存
             //通过表名获取需要缓存的关系表再判断是否存在。没有就从服务器请求。这种是全新的请求。后面还要设计更新式请求。
-          await  UIBizService.RequestCache<M>();
-          await  UIBizService.RequestCache<C>();
+            await UIBizService.RequestCache<M>();
+            await UIBizService.RequestCache<C>();
             #endregion
 
             List<M> list = new List<M>();
@@ -1165,13 +1165,13 @@ namespace RUINORERP.UI.BaseForm
         /// </summary>
         /// <returns></returns>
 
-        private KryptonPage UCOutlookGridGroupAnalysisLoad()
+        private async Task<KryptonPage> UCOutlookGridGroupAnalysisLoad()
         {
             //先加载一遍缓存
-            UIBizService.RequestCache<M>();
-            UIBizService.RequestCache<C>();
+            await UIBizService.RequestCache<M>();
+            await UIBizService.RequestCache<C>();
             //去检测产品视图的缓存并且转换为强类型
-            UIBizService.RequestCache(typeof(View_ProdDetail));
+            await UIBizService.RequestCache(typeof(View_ProdDetail));
 
             _UCOutlookGridGroupAnalysis = new UCBillOutlookGridAnalysis();
             _UCOutlookGridGroupAnalysis.entityType = typeof(M);

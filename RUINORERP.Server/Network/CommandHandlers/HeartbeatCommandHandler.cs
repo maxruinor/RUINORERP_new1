@@ -113,6 +113,12 @@ namespace RUINORERP.Server.Network.CommandHandlers
                         heartbeatRequest.UserInfo.SessionId = sessionInfo.SessionID;
                         sessionInfo.UserInfo = heartbeatRequest.UserInfo;
                     }
+
+                    // 保存客户端系统信息到会话中
+                    if (heartbeatRequest.SystemInfo != null)
+                    {
+                        sessionInfo.ClientSystemInfo = heartbeatRequest.SystemInfo;
+                    }
                 }
 
                 // 创建心跳响应数据

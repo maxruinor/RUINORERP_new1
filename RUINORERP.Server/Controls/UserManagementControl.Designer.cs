@@ -40,6 +40,11 @@ namespace RUINORERP.Server.Controls
             this.tsbtn推送更新 = new System.Windows.Forms.ToolStripButton();
             this.tsbtn推送系统配置 = new System.Windows.Forms.ToolStripButton();
             this.tsbtn推送缓存 = new System.Windows.Forms.ToolStripButton();
+            this.toolStripSeparator5 = new System.Windows.Forms.ToolStripSeparator();
+            this.lbl统计信息 = new System.Windows.Forms.ToolStripLabel();
+            this.lbl在线用户数 = new System.Windows.Forms.ToolStripLabel();
+            this.lbl总会话数 = new System.Windows.Forms.ToolStripLabel();
+            this.lbl已认证用户数 = new System.Windows.Forms.ToolStripLabel();
             this.listView1 = new System.Windows.Forms.ListView();
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.断开连接ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -70,6 +75,11 @@ namespace RUINORERP.Server.Controls
             this.超级用户列ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.在线状态列ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.授权状态列ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.操作系统列ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.机器名列ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.CPU信息列ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.内存大小列ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+
             this.toolStrip1.SuspendLayout();
             this.contextMenuStrip1.SuspendLayout();
             this.SuspendLayout();
@@ -85,7 +95,12 @@ namespace RUINORERP.Server.Controls
             this.tsbtn刷新,
             this.tsbtn推送更新,
             this.tsbtn推送系统配置,
-            this.tsbtn推送缓存});
+            this.tsbtn推送缓存,
+            this.toolStripSeparator5,
+            this.lbl统计信息,
+            this.lbl在线用户数,
+            this.lbl总会话数,
+            this.lbl已认证用户数});
             this.toolStrip1.Location = new System.Drawing.Point(0, 0);
             this.toolStrip1.Name = "toolStrip1";
             this.toolStrip1.Size = new System.Drawing.Size(800, 25);
@@ -222,6 +237,36 @@ namespace RUINORERP.Server.Controls
             this.toolStripSeparator4.Name = "toolStripSeparator4";
             this.toolStripSeparator4.Size = new System.Drawing.Size(157, 6);
             // 
+            // toolStripSeparator5
+            // 
+            this.toolStripSeparator5.Name = "toolStripSeparator5";
+            this.toolStripSeparator5.Size = new System.Drawing.Size(6, 25);
+            // 
+            // lbl统计信息
+            // 
+            this.lbl统计信息.Font = new System.Drawing.Font("Microsoft YaHei UI", 9F, System.Drawing.FontStyle.Bold);
+            this.lbl统计信息.Name = "lbl统计信息";
+            this.lbl统计信息.Size = new System.Drawing.Size(56, 22);
+            this.lbl统计信息.Text = "统计信息:";
+            // 
+            // lbl在线用户数
+            // 
+            this.lbl在线用户数.Name = "lbl在线用户数";
+            this.lbl在线用户数.Size = new System.Drawing.Size(68, 22);
+            this.lbl在线用户数.Text = "在线用户: 0";
+            // 
+            // lbl总会话数
+            // 
+            this.lbl总会话数.Name = "lbl总会话数";
+            this.lbl总会话数.Size = new System.Drawing.Size(68, 22);
+            this.lbl总会话数.Text = "总会话: 0";
+            // 
+            // lbl已认证用户数
+            // 
+            this.lbl已认证用户数.Name = "lbl已认证用户数";
+            this.lbl已认证用户数.Size = new System.Drawing.Size(92, 22);
+            this.lbl已认证用户数.Text = "已认证用户: 0";
+            // 
             // 列显示选项ToolStripMenuItem
             // 
             this.列显示选项ToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -345,6 +390,38 @@ namespace RUINORERP.Server.Controls
             this.授权状态列ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.授权状态列ToolStripMenuItem.Text = "授权状态";
             this.授权状态列ToolStripMenuItem.CheckedChanged += new System.EventHandler(this.列显示选项_CheckedChanged);
+            // 
+            // 操作系统列ToolStripMenuItem
+            // 
+            this.操作系统列ToolStripMenuItem.CheckOnClick = true;
+            this.操作系统列ToolStripMenuItem.Name = "操作系统列ToolStripMenuItem";
+            this.操作系统列ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.操作系统列ToolStripMenuItem.Text = "操作系统";
+            this.操作系统列ToolStripMenuItem.CheckedChanged += new System.EventHandler(this.列显示选项_CheckedChanged);
+            // 
+            // 机器名列ToolStripMenuItem
+            // 
+            this.机器名列ToolStripMenuItem.CheckOnClick = true;
+            this.机器名列ToolStripMenuItem.Name = "机器名列ToolStripMenuItem";
+            this.机器名列ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.机器名列ToolStripMenuItem.Text = "机器名";
+            this.机器名列ToolStripMenuItem.CheckedChanged += new System.EventHandler(this.列显示选项_CheckedChanged);
+            // 
+            // CPU信息列ToolStripMenuItem
+            // 
+            this.CPU信息列ToolStripMenuItem.CheckOnClick = true;
+            this.CPU信息列ToolStripMenuItem.Name = "CPU信息列ToolStripMenuItem";
+            this.CPU信息列ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.CPU信息列ToolStripMenuItem.Text = "CPU信息";
+            this.CPU信息列ToolStripMenuItem.CheckedChanged += new System.EventHandler(this.列显示选项_CheckedChanged);
+            // 
+            // 内存大小列ToolStripMenuItem
+            // 
+            this.内存大小列ToolStripMenuItem.CheckOnClick = true;
+            this.内存大小列ToolStripMenuItem.Name = "内存大小列ToolStripMenuItem";
+            this.内存大小列ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.内存大小列ToolStripMenuItem.Text = "内存大小";
+            this.内存大小列ToolStripMenuItem.CheckedChanged += new System.EventHandler(this.列显示选项_CheckedChanged);
             this.contextMenuStrip1.Name = "contextMenuStrip1";
             this.contextMenuStrip1.Size = new System.Drawing.Size(161, 224);
             // 
@@ -464,5 +541,16 @@ namespace RUINORERP.Server.Controls
         private System.Windows.Forms.ToolStripMenuItem 超级用户列ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 在线状态列ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 授权状态列ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 操作系统列ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 机器名列ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem CPU信息列ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 内存大小列ToolStripMenuItem;
+        
+        // 会话统计标签
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator5;
+        private System.Windows.Forms.ToolStripLabel lbl统计信息;
+        private System.Windows.Forms.ToolStripLabel lbl在线用户数;
+        private System.Windows.Forms.ToolStripLabel lbl总会话数;
+        private System.Windows.Forms.ToolStripLabel lbl已认证用户数;
     }
 }

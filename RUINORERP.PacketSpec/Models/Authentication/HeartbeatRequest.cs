@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using RUINORERP.Model.CommonModel;
 using RUINORERP.PacketSpec.Models.Common;
@@ -61,6 +61,11 @@ namespace RUINORERP.PacketSpec.Models.Requests
         /// 客户端IP地址
         /// </summary>
         public string ClientIp { get; set; }
+
+        /// <summary>
+        /// 客户端系统信息
+        /// </summary>
+        public ClientSystemInfo SystemInfo { get; set; }
 
 
         /// <summary>

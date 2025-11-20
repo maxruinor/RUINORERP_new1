@@ -1443,45 +1443,93 @@ namespace RUINORERP.UI.Common
         }
 
 
+
+        #region 缓存请求方法
+
         /// <summary>
-        /// 请求缓存数据 - 泛型版本
+        /// 后台缓存管理器实例
+        /// </summary>
+        private static BackgroundCacheManager _backgroundCacheManager;
+
+        /// <summary>
+        /// 获取后台缓存管理器实例
+        /// </summary>
+        public static BackgroundCacheManager BackgroundCacheManager
+        {
+            get
+            {
+                if (_backgroundCacheManager == null)
+                {
+                    var logger = Startup.GetFromFac<ILogger<BackgroundCacheManager>>();
+                    var cacheClient = Startup.GetFromFac<CacheClientService>();
+                    _backgroundCacheManager = new BackgroundCacheManager(logger, cacheClient);
+                }
+                return _backgroundCacheManager;
+            }
+        }
+
+
+
+        /// <summary>
+        /// 请求缓存数据 - 泛型版本（支持后台异步模式）
         /// </summary>
         /// <typeparam name="T">实体类型</typeparam>
         /// <param name="forceRefresh">是否强制刷新缓存，默认为false</param>
         /// <param name="timeoutMs">超时时间（毫秒），默认为1500ms（网络优化）</param>
         /// <param name="cancellationToken">取消令牌</param>
+        /// <param name="useBackground">是否使用后台异步模式，默认为false（保持兼容性）</param>
         /// <exception cref="OperationCanceledException">当操作被取消时抛出</exception>
         /// <exception cref="TimeoutException">当请求超时时抛出</exception>
-        public static async Task RequestCache<T>(bool forceRefresh = false, int timeoutMs = 1500, CancellationToken cancellationToken = default)
+        public static async Task RequestCache<T>(bool forceRefresh = false, int timeoutMs = 1500, CancellationToken cancellationToken = default, bool useBackground = false)
         {
+            if (useBackground)
+            {
+                // 使用后台异步模式，不阻塞UI线程
+                var task = BackgroundCacheManager.AddHighPriorityTaskAsync(typeof(T).Name, typeof(T), forceRefresh, timeoutMs);
+                return; // 立即返回，不等待结果
+            }
             await RequestCache(typeof(T).Name, typeof(T), forceRefresh, timeoutMs, cancellationToken);
         }
 
         /// <summary>
-        /// 请求缓存数据 - 类型版本
+        /// 请求缓存数据 - 类型版本（支持后台异步模式）
         /// </summary>
         /// <param name="type">实体类型</param>
         /// <param name="forceRefresh">是否强制刷新缓存，默认为false</param>
         /// <param name="timeoutMs">超时时间（毫秒），默认为1500ms（网络优化）</param>
         /// <param name="cancellationToken">取消令牌</param>
+        /// <param name="useBackground">是否使用后台异步模式，默认为false（保持兼容性）</param>
         /// <exception cref="OperationCanceledException">当操作被取消时抛出</exception>
         /// <exception cref="TimeoutException">当请求超时时抛出</exception>
-        public static async Task RequestCache(Type type, bool forceRefresh = false, int timeoutMs = 1500, CancellationToken cancellationToken = default)
+        public static async Task RequestCache(Type type, bool forceRefresh = false, int timeoutMs = 1500, CancellationToken cancellationToken = default, bool useBackground = false)
         {
+            if (useBackground)
+            {
+                // 使用后台异步模式，不阻塞UI线程
+                var task = BackgroundCacheManager.AddHighPriorityTaskAsync(type.Name, type, forceRefresh, timeoutMs);
+                return; // 立即返回，不等待结果
+            }
             await RequestCache(type.Name, type, forceRefresh, timeoutMs, cancellationToken);
         }
 
         /// <summary>
-        /// 请求缓存数据 - 实体版本
+        /// 请求缓存数据 - 实体版本（支持后台异步模式）
         /// </summary>
         /// <param name="entity">实体实例</param>
         /// <param name="forceRefresh">是否强制刷新缓存，默认为false</param>
         /// <param name="timeoutMs">超时时间（毫秒），默认为1500ms（网络优化）</param>
         /// <param name="cancellationToken">取消令牌</param>
+        /// <param name="useBackground">是否使用后台异步模式，默认为false（保持兼容性）</param>
         /// <exception cref="OperationCanceledException">当操作被取消时抛出</exception>
         /// <exception cref="TimeoutException">当请求超时时抛出</exception>
-        public static async Task RequestCache(BaseEntity entity, bool forceRefresh = false, int timeoutMs = 1500, CancellationToken cancellationToken = default)
+        public static async Task RequestCache(BaseEntity entity, bool forceRefresh = false, int timeoutMs = 1500, CancellationToken cancellationToken = default, bool useBackground = false)
         {
+            if (useBackground)
+            {
+                // 使用后台异步模式，不阻塞UI线程
+                var task = BackgroundCacheManager.AddHighPriorityTaskAsync(entity.GetType().Name, entity.GetType(), forceRefresh, timeoutMs);
+                return; // 立即返回，不等待结果
+            }
             await RequestCache(entity.GetType().Name, entity.GetType(), forceRefresh, timeoutMs, cancellationToken);
         }
 
@@ -1500,7 +1548,7 @@ namespace RUINORERP.UI.Common
 
 
         /// <summary>
-        /// 请求缓存数据 - 带降级处理
+        /// 请求缓存数据 - 带降级处理（支持后台异步模式）
         /// </summary>
         /// <param name="tableName">表名</param>
         /// <param name="type">实体类型，如果提供则使用实体的FKRelations属性获取外键关系</param>
@@ -1508,10 +1556,18 @@ namespace RUINORERP.UI.Common
         /// <param name="timeoutMs">超时时间（毫秒），默认为1500ms（网络优化）</param>
         /// <param name="cancellationToken">取消令牌</param>
         /// <param name="useFallback">是否使用降级处理，默认为true</param>
+        /// <param name="useBackground">是否使用后台异步模式，默认为false（保持兼容性）</param>
         /// <exception cref="OperationCanceledException">当操作被取消时抛出</exception>
         /// <exception cref="TimeoutException">当请求超时时抛出</exception>
-        public static async Task RequestCache(string tableName, Type type = null, bool forceRefresh = false, int timeoutMs = 1500, CancellationToken cancellationToken = default, bool useFallback = true)
+        public static async Task RequestCache(string tableName, Type type = null, bool forceRefresh = false, int timeoutMs = 1500, CancellationToken cancellationToken = default, bool useFallback = true, bool useBackground = false)
         {
+            // 如果启用后台异步模式，直接添加到后台任务队列并返回
+            if (useBackground)
+            {
+                var task = BackgroundCacheManager.AddHighPriorityTaskAsync(tableName, type, forceRefresh, timeoutMs);
+                return; // 立即返回，不等待结果
+            }
+
             // 创建带超时的取消令牌
             using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             timeoutCts.CancelAfter(timeoutMs);
@@ -1645,7 +1701,7 @@ namespace RUINORERP.UI.Common
 
 
 
-
+        #endregion
 
 
         #region  单据SourceGrid列的显示控制

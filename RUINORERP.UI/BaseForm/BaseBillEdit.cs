@@ -52,7 +52,9 @@ namespace RUINORERP.UI.BaseForm
         public BaseBillEdit()
         {
             InitializeComponent();
-            InitializeStateManagement();
+            // 状态管理初始化已由基类StateAwareControl处理，无需重复调用
+            // InitializeStateManagement(); // 移除重复初始化
+            
             bwRemoting.DoWork += bwRemoting_DoWork;
             bwRemoting.RunWorkerCompleted += bwRemoting_RunWorkerCompleted;
             bwRemoting.ProgressChanged += bwRemoting_progressChanged;
@@ -67,7 +69,8 @@ namespace RUINORERP.UI.BaseForm
         /// </summary>
         protected override void InitializeStateManagement()
         {
-            // 调用基类的InitializeStateManagement方法
+            // 基类StateAwareControl已处理基本初始化
+            // 此类作为中间层，不需要额外的状态管理初始化逻辑
             base.InitializeStateManagement();
         }
 
@@ -732,8 +735,27 @@ namespace RUINORERP.UI.BaseForm
 
             var dataStatus = _stateManager.GetDataStatus(entity);
 
-            // 更新控件编辑状态 - 使用基类的SetControlsState方法
-            bool isEditable = StatusHelper.IsEditableStatus(dataStatus);
+            // 更新控件编辑状态 - 使用V3状态管理系统
+            bool isEditable = false;
+            try
+            {
+                // 使用新的状态管理系统检查编辑权限
+                if (UIController != null && StatusContext != null)
+                {
+                    isEditable = UIController.CanExecuteAction(MenuItemEnums.修改, StatusContext);
+                }
+                else
+                {
+                    // 回退到旧系统
+                    isEditable = StatusHelper.IsEditableStatus(dataStatus);
+                }
+            }
+            catch (Exception ex)
+            {
+                // 如果状态管理系统出错，回退到原始逻辑
+                System.Diagnostics.Debug.WriteLine($"使用状态管理系统检查编辑权限失败: {ex.Message}");
+                isEditable = StatusHelper.IsEditableStatus(dataStatus);
+            }
             SetControlsState(Controls, isEditable);
 
             // 记录状态变更日志

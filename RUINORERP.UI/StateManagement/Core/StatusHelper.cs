@@ -24,6 +24,7 @@ namespace RUINORERP.UI.StateManagement.Core
     /// 状态辅助工具类 - V3状态管理系统
     /// 提供通用的状态处理方法，减少重复代码
     /// </summary>
+    [Obsolete("尽量使用V3新的状态管理体系下面的代码功能来实现")]
     public static class StatusHelper
     {
         #region 状态判断方法
@@ -104,7 +105,7 @@ namespace RUINORERP.UI.StateManagement.Core
             var description = field?.GetCustomAttributes(typeof(DescriptionAttribute), false)
                                  .Cast<DescriptionAttribute>()
                                  .FirstOrDefault();
-            
+
             return description?.Description ?? status.ToString();
         }
 
@@ -124,8 +125,8 @@ namespace RUINORERP.UI.StateManagement.Core
             var actions = new List<MenuItemEnums> { MenuItemEnums.查询, MenuItemEnums.刷新 };
 
             // 新架构替代方案
-           // var uiController = Startup.GetFromFac<IStatusUIController>();
-           // var actions = uiController.GetAvailableActions(currentStatus);
+            // var uiController = Startup.GetFromFac<IStatusUIController>();
+            // var actions = uiController.GetAvailableActions(currentStatus);
 
 
             // 根据不同状态添加特定操作
@@ -160,7 +161,7 @@ namespace RUINORERP.UI.StateManagement.Core
                 DataStatus.完结 => new[] { MenuItemEnums.反结案 },
                 _ => Array.Empty<MenuItemEnums>()
             });
-            
+
             // 所有非作废状态都可以作废
             if (status != DataStatus.作废)
                 actions.Add(MenuItemEnums.删除);

@@ -2163,7 +2163,7 @@ namespace RUINORERP.Business
                 if (details == null)
                     throw new ArgumentNullException(nameof(details), "付款明细列表不能为空");
 
-          
+
                 // 初始化所有明细的支付金额为0
                 foreach (var detail in details)
                 {
@@ -2178,30 +2178,30 @@ namespace RUINORERP.Business
                 {
                     var detailList = group.ToList();
                     decimal totalLocalPayableAmount = detailList.Sum(d => d.LocalPayableAmount);
-                    
+
                     _logger?.LogDebug($"处理业务类型: {group.Key}，明细数量: {detailList.Count}，应付总金额: {totalLocalPayableAmount}");
 
                     // 计算该业务类型应分配的金额比例
                     decimal groupAllocationRatio = 0;
                     decimal groupTotalPayable = details.Where(d => d.SourceBizType == group.Key).Sum(d => d.LocalPayableAmount);
                     decimal overallTotalPayable = details.Sum(d => d.LocalPayableAmount);
-                    
+
                     if (overallTotalPayable > 0)
                     {
                         groupAllocationRatio = groupTotalPayable / overallTotalPayable;
                     }
-                    
+
                     // 计算该业务类型的分配金额
                     decimal groupAllocatedAmount = Math.Round(paymentRecord.TotalLocalAmount * groupAllocationRatio, 2);
                     decimal remainingGroupAmount = groupAllocatedAmount;
-                    
+
                     _logger?.LogDebug($"业务类型 {group.Key} 的分配比例: {groupAllocationRatio:P2}，分配金额: {groupAllocatedAmount}");
 
                     // 按明细顺序进行分配
                     for (int i = 0; i < detailList.Count; i++)
-                    {   
+                    {
                         var detail = detailList[i];
-                        
+
                         // 边界情况检查
                         if (detail.LocalPayableAmount <= 0)
                         {
@@ -2221,12 +2221,12 @@ namespace RUINORERP.Business
                             // 部分支付该明细
                             allocableAmount = remainingGroupAmount;
                         }
-                        
+
                         // 更新明细支付金额
                         detail.LocalAmount = allocableAmount;
                         remainingGroupAmount -= allocableAmount;
                         totalDistributedAmount += allocableAmount;
-                        
+
                         _logger?.LogDebug($"明细 {i + 1} 分配金额: {allocableAmount}，剩余可分配金额: {remainingGroupAmount}");
 
                         // 如果没有剩余金额，结束分配
@@ -2235,7 +2235,7 @@ namespace RUINORERP.Business
                             break;
                         }
                     }
-                    
+
                     // 处理舍入误差，确保分配准确性
                     if (Math.Abs(remainingGroupAmount) > 0.01m)
                     {
@@ -2253,7 +2253,7 @@ namespace RUINORERP.Business
                         }
                     }
                 }
-                
+
                 // 最终验证：确保分配总额与支付总额一致
                 decimal difference = Math.Abs(totalDistributedAmount - paymentRecord.TotalLocalAmount);
                 if (difference > 0.01m)
@@ -2266,8 +2266,8 @@ namespace RUINORERP.Business
                         _logger?.LogDebug($"最终调整：修正分配差异 {paymentRecord.TotalLocalAmount - totalDistributedAmount}");
                     }
                 }
-                
-     
+
+
                 return true;
             }
             catch (Exception ex)
@@ -2724,7 +2724,9 @@ namespace RUINORERP.Business
                 tb_FM_PaymentRecordDetail paymentRecordDetail = details[i];
                 tb_FM_Statement statement = entities.FirstOrDefault(c => c.StatementId == paymentRecordDetail.SourceBilllId);
                 paymentRecordDetail.SourceBizType = (int)BizType.对账单;
-                paymentRecordDetail.Summary = $"由应{Enum.GetName(typeof(ReceivePaymentType), statement.ReceivePaymentType)}对账单转换自动生成。";
+
+                paymentRecordDetail.Summary = $"本次生成的{Enum.GetName(typeof(ReceivePaymentType), statement.ReceivePaymentType)}款金额：{Math.Abs(statement.ClosingBalanceLocalAmount):F2},由应{Enum.GetName(typeof(ReceivePaymentType), statement.ReceivePaymentType)}对账单的剩余未付金额自动生成。";
+
                 paymentRecordDetail.Currency_ID = paymentRecord.Currency_ID;
                 var entity = entities.FirstOrDefault(c => c.StatementId == details[i].SourceBilllId);
                 if (entity != null)

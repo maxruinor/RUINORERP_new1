@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -26,6 +26,10 @@ namespace RUINORERP.Model.CommonModel
         private string _客户端IP;
         private long _静止时间;
         private long _Employee_ID;
+        private string _操作系统;
+        private string _机器名;
+        private string _CPU信息;
+        private string _内存大小;
 
         #region  属性
         public long Employee_ID
@@ -273,6 +277,70 @@ namespace RUINORERP.Model.CommonModel
         }
 
         public string UserGroup { get; set; }
+
+        /// <summary>
+        /// 操作系统信息
+        /// </summary>
+        public string 操作系统
+        {
+            get { return _操作系统; }
+            set
+            {
+                if (_操作系统 != value)
+                {
+                    _操作系统 = value;
+                    OnPropertyChanged(nameof(操作系统));
+                }
+            }
+        }
+
+        /// <summary>
+        /// 机器名
+        /// </summary>
+        public string 机器名
+        {
+            get { return _机器名; }
+            set
+            {
+                if (_机器名 != value)
+                {
+                    _机器名 = value;
+                    OnPropertyChanged(nameof(机器名));
+                }
+            }
+        }
+
+        /// <summary>
+        /// CPU信息
+        /// </summary>
+        public string CPU信息
+        {
+            get { return _CPU信息; }
+            set
+            {
+                if (_CPU信息 != value)
+                {
+                    _CPU信息 = value;
+                    OnPropertyChanged(nameof(CPU信息));
+                }
+            }
+        }
+
+        /// <summary>
+        /// 内存大小
+        /// </summary>
+        public string 内存大小
+        {
+            get { return _内存大小; }
+            set
+            {
+                if (_内存大小 != value)
+                {
+                    _内存大小 = value;
+                    OnPropertyChanged(nameof(内存大小));
+                }
+            }
+        }
 
         public event PropertyChangedEventHandler PropertyChanged;
 

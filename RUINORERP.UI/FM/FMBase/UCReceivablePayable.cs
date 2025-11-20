@@ -959,11 +959,44 @@ namespace RUINORERP.UI.FM
             {
                 return;
             }
+
             if (!FMPaymentStatusHelper.CanWriteOffBadDebt((ARAPStatus)EditEntity.ARAPStatus))
             {
                 MessageBox.Show($"当前单据,状态为【{(ARAPStatus)EditEntity.ARAPStatus}】不允许标记为坏账。");
                 return;
             }
+            //    // 使用V3状态管理系统检查是否可以标记坏账
+            //    try
+            //{
+            //    if (UIController != null && StatusContext != null)
+            //    {
+            //        bool canWriteOffBadDebt = UIController.CanExecuteAction("坏账处理", StatusContext);
+            //        if (!canWriteOffBadDebt)
+            //        {
+            //            MessageBox.Show($"当前单据状态为【{(ARAPStatus)EditEntity.ARAPStatus}】不允许标记为坏账。");
+            //            return;
+            //        }
+            //    }
+            //    else
+            //    {
+            //        // 回退到旧逻辑
+            //        if (!FMPaymentStatusHelper.CanWriteOffBadDebt((ARAPStatus)EditEntity.ARAPStatus))
+            //        {
+            //            MessageBox.Show($"当前单据状态为【{(ARAPStatus)EditEntity.ARAPStatus}】不允许标记为坏账。");
+            //            return;
+            //        }
+            //    }
+            //}
+            //catch (Exception ex)
+            //{
+            //    // 出错时回退到旧逻辑
+            //    logger.LogError($"V3状态管理系统检查坏账处理权限失败: {ex.Message}");
+            //    if (!FMPaymentStatusHelper.CanWriteOffBadDebt((ARAPStatus)EditEntity.ARAPStatus))
+            //    {
+            //        MessageBox.Show($"当前单据状态为【{(ARAPStatus)EditEntity.ARAPStatus}】不允许标记为坏账。");
+            //        return;
+            //    }
+            //}
 
 
             CommonUI.frmGenericOpinion<tb_FM_ReceivablePayable> frm = new();
@@ -975,6 +1008,8 @@ namespace RUINORERP.UI.FM
                  e => e.ARAPNo,
                  e => e.Remark
             );
+
+
             if (frm.ShowDialog() == DialogResult.OK)//审核了。不管是同意还是不同意
             {
                 //已经审核的,未完结的才能标记坏账

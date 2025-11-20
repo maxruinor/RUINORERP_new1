@@ -178,10 +178,7 @@ namespace RUINORERP.UI.PSI.SAL
             QueryConditionFilter.SetFieldLimitCondition(lambda);
         }
 
-        // 状态管理相关方法已简化 - 基类 BaseBillEditGeneric 已处理所有通用状态管理逻辑
-
-        // HandleSaleOrderStateTransition 方法已移除 - 基类 BaseBillEditGeneric 现在处理状态转换逻辑
-
+       
         /// <summary>
         /// 销售订单确认时的处理 - 重写基类方法
         /// 销售订单特有的确认处理逻辑
@@ -1386,15 +1383,6 @@ namespace RUINORERP.UI.PSI.SAL
                 return false;
             }
 
-            // 使用新的状态管理系统验证是否可以保存
-            if (EditEntity is BaseEntity baseEntity)
-            {
-                if (!CanExecuteAction("Save"))
-                {
-                   // MainForm.Instance.uclog.AddLog($"当前状态【{GetDataStatus()}】不允许保存操作");
-                    return false;
-                }
-            }
 
             if (EditEntity.PlatformOrderNo != null)
             {
@@ -1798,15 +1786,6 @@ namespace RUINORERP.UI.PSI.SAL
                 return false;
             }
 
-            // 使用新的状态管理系统验证是否可以反结案
-            if (EditEntity is BaseEntity baseEntity)
-            {
-                if (!CanExecuteAction("AntiCloseCase"))
-                {
-                   // MainForm.Instance.uclog.AddLog($"当前状态【{GetDataStatus()}】不允许反结案操作");
-                    return false;
-                }
-            }
 
             CommonUI.frmOpinion frm = new CommonUI.frmOpinion();
             string PKCol = BaseUIHelper.GetEntityPrimaryKey<tb_SaleOrder>();
@@ -1984,14 +1963,6 @@ namespace RUINORERP.UI.PSI.SAL
                 return;
             }
 
-            // 基于新状态管理系统验证定制成本确认权限
-            BaseEntity baseEntity = EditEntity as BaseEntity;
-            if (baseEntity != null && !CanExecuteAction("UpdateCustomizedCost"))
-            {
-               // MainForm.Instance.uclog.AddLog($"当前状态[{baseEntity.GetCurrentStateName()}]不允许执行定制成本确认操作。");
-                return;
-            }
-
             //反审，要审核过，并且通过了，才能反审。
             if (EditEntity.ApprovalStatus.Value == (int)ApprovalStatus.已审核 && !EditEntity.ApprovalResults.HasValue)
             {
@@ -2107,14 +2078,6 @@ namespace RUINORERP.UI.PSI.SAL
             if (EditEntity == null)
             {
                 return new ReturnResults<tb_SaleOrder> { Succeeded = false, ErrorMsg = "没有要删除的数据" };
-            }
-
-            // 基于新状态管理系统验证删除权限
-            BaseEntity baseEntity = EditEntity as BaseEntity;
-            if (baseEntity != null && !CanExecuteAction("Delete"))
-            {
-               // MainForm.Instance.uclog.AddLog($"当前状态[{baseEntity.GetCurrentStateName()}]不允许执行删除操作。");
-                return new ReturnResults<tb_SaleOrder> { Succeeded = false, ErrorMsg = "当前状态不允许删除" };
             }
 
             // 调用基类的删除方法

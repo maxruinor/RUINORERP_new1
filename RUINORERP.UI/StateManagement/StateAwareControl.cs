@@ -150,6 +150,7 @@ namespace RUINORERP.UI.StateManagement
 
         /// <summary>
         /// 初始化状态管理
+        /// 统一处理所有状态管理相关的初始化工作，子类可以重写以添加特定逻辑
         /// </summary>
         protected virtual void InitializeStateManagement()
         {
@@ -171,6 +172,13 @@ namespace RUINORERP.UI.StateManagement
                 if (_uiController == null)
                 {
                     System.Diagnostics.Debug.WriteLine("无法从DI容器获取IStatusUIController服务，请确保在Startup.cs中调用了builder.AddStateManager()");
+                }
+
+                // 统一注册状态变更事件处理
+                if (_stateManager != null)
+                {
+                    // 注册通用的状态变更事件处理
+                    // 子类可以在重写时添加特定的事件处理逻辑
                 }
             }
             catch (Exception ex)

@@ -14,6 +14,8 @@ using RUINORERP.PacketSpec.Security;
 using Microsoft.Extensions.Logging;
 using System.Net.Sockets;
 using RUINORERP.PacketSpec.Models.Common;
+using RUINORERP.PacketSpec.Models.Requests;
+using RUINORERP.PacketSpec.Models;
 
 namespace RUINORERP.Server.Network.Models
 {
@@ -32,6 +34,11 @@ namespace RUINORERP.Server.Network.Models
         /// 用户信息
         /// </summary>
         public UserInfo UserInfo { get; set; } = new();
+
+        /// <summary>
+        /// 客户端系统信息
+        /// </summary>
+        public ClientSystemInfo ClientSystemInfo { get; set; }
 
         
         /// <summary>

@@ -18,7 +18,7 @@ namespace RUINORERP.Server.Network.Interfaces.Services
     public interface ISessionService : IDisposable
     {
         #region 会话管理
-        
+
         /// <summary>
         /// 活动会话数量
         /// </summary>

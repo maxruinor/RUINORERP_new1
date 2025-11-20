@@ -133,7 +133,7 @@ namespace RUINORERP.Server
         /// <summary>
         /// 全局日志级别控制器
         /// </summary>
-        private static LogLevel _currentLogLevel = LogLevel.Debug;
+        private static LogLevel _currentLogLevel = LogLevel.Error;
 
         /// <summary>
         /// 日志级别菜单项列表

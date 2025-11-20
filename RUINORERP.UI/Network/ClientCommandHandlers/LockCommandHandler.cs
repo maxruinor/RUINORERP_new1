@@ -27,22 +27,16 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-            // 注册支持的锁管理相关命令
+            // 注册支持的锁管理相关命令（使用已定义的 LockCommands）
             SetSupportedCommands(
-                LockCommands.LockRequest,
-                LockCommands.LockRelease,
-                LockCommands.LockStatus,
+                LockCommands.Lock,
+                LockCommands.Unlock,
+                LockCommands.CheckLockStatus,
                 LockCommands.ForceUnlock,
-                LockCommands.CheckLock,
-                LockCommands.Broadcast,
                 LockCommands.RequestUnlock,
                 LockCommands.RefuseUnlock,
-                LockCommands.RequestLock,
-                LockCommands.ReleaseLock,
-                LockCommands.ForceReleaseLock,
-                LockCommands.QueryLockStatus,
-                LockCommands.BroadcastLockStatus,
-                LockCommands.ForwardDocumentLock
+                LockCommands.AgreeUnlock,
+                LockCommands.BroadcastLockStatus
             );
         }
 
@@ -78,15 +72,15 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                 _logger.LogDebug($"收到锁管理命令: {packet.CommandId.FullCode}");
 
                 // 根据命令ID处理不同的锁管理命令
-                if (packet.CommandId == LockCommands.LockRequest)
+                if (packet.CommandId == LockCommands.Lock)
                 {
                     await HandleLockRequestAsync(packet);
                 }
-                else if (packet.CommandId == LockCommands.LockRelease)
+                else if (packet.CommandId == LockCommands.Unlock)
                 {
                     await HandleLockReleaseAsync(packet);
                 }
-                else if (packet.CommandId == LockCommands.LockStatus)
+                else if (packet.CommandId == LockCommands.CheckLockStatus)
                 {
                     await HandleLockStatusAsync(packet);
                 }
@@ -94,11 +88,11 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                 {
                     await HandleForceUnlockAsync(packet);
                 }
-                else if (packet.CommandId == LockCommands.CheckLock)
+                else if (packet.CommandId == LockCommands.CheckLockStatus) // 保留检查锁定的处理
                 {
                     await HandleCheckLockAsync(packet);
                 }
-                else if (packet.CommandId == LockCommands.Broadcast || packet.CommandId == LockCommands.BroadcastLockStatus)
+                else if (packet.CommandId == LockCommands.BroadcastLockStatus)
                 {
                     await HandleLockBroadcastAsync(packet);
                 }
@@ -110,12 +104,12 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                 {
                     await HandleRefuseUnlockAsync(packet);
                 }
-                else if (packet.CommandId == LockCommands.RequestLock || packet.CommandId == LockCommands.ReleaseLock || 
-                         packet.CommandId == LockCommands.ForceReleaseLock || packet.CommandId == LockCommands.QueryLockStatus)
+                else if (packet.CommandId == LockCommands.Lock || packet.CommandId == LockCommands.Unlock || 
+                         packet.CommandId == LockCommands.ForceUnlock || packet.CommandId == LockCommands.CheckLockStatus)
                 {
                     await HandleDocumentLockCommandAsync(packet);
                 }
-                else if (packet.CommandId == LockCommands.ForwardDocumentLock)
+                else if (packet.CommandId == LockCommands.BroadcastLockStatus) // 作为转发单据锁定的兼容处理
                 {
                     await HandleForwardDocumentLockAsync(packet);
                 }

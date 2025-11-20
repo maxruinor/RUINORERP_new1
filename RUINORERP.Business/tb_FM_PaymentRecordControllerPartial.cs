@@ -62,6 +62,153 @@ namespace RUINORERP.Business
         }
 
         /// <summary>
+        /// 来源单据金额信息
+        /// </summary>
+        private class SourceBillAmountInfo
+        {
+            /// <summary>
+            /// 来源单据总金额（本币）
+            /// </summary>
+            public decimal TotalAmount { get; set; }
+
+            /// <summary>
+            /// 历史已付款金额（本币）
+            /// </summary>
+            public decimal HistoricalPaidAmount { get; set; }
+
+            /// <summary>
+            /// 剩余可付款金额（本币）
+            /// </summary>
+            public decimal RemainingAmount => TotalAmount - HistoricalPaidAmount;
+        }
+
+        /// <summary>
+        /// 获取来源单据的金额信息和历史付款情况
+        /// </summary>
+        /// <param name="sourceBillId">来源单据ID</param>
+        /// <param name="sourceBizType">来源业务类型</param>
+        /// <returns>金额信息结果</returns>
+        private async Task<ReturnResults<SourceBillAmountInfo>> GetSourceBillAmountInfo(long sourceBillId, int sourceBizType)
+        {
+            var result = new ReturnResults<SourceBillAmountInfo>();
+
+            try
+            {
+                decimal totalAmount = 0;
+                decimal historicalPaidAmount = 0;
+
+                // 根据业务类型获取来源单据的总金额
+                switch ((BizType)sourceBizType)
+                {
+                    case BizType.对账单:
+                        var statement = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_Statement>()
+                            .Where(s => s.StatementId == sourceBillId)
+                            .FirstAsync();
+
+                        if (statement == null)
+                        {
+                            result.ErrorMsg = $"未找到对账单ID: {sourceBillId}";
+                            result.Succeeded = false;
+                            return result;
+                        }
+
+                        // 对账单的总应付金额（本币）
+                        totalAmount = statement.ReceivePaymentType == (int)ReceivePaymentType.收款 ?
+                            statement.TotalReceivableLocalAmount :
+                            statement.TotalPayableLocalAmount;
+                        break;
+
+                    case BizType.应收款单:
+                    case BizType.应付款单:
+                        var receivablePayable = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_ReceivablePayable>()
+                            .Where(rp => rp.ARAPId == sourceBillId)
+                            .FirstAsync();
+
+                        if (receivablePayable == null)
+                        {
+                            result.ErrorMsg = $"未找到应收/应付款单ID: {sourceBillId}";
+                            result.Succeeded = false;
+                            return result;
+                        }
+
+                        // 应收应付单的总金额（本币）
+                        totalAmount = receivablePayable.TotalLocalPayableAmount;
+                        break;
+
+                    case BizType.预收款单:
+                    case BizType.预付款单:
+                        var preReceivedPayment = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PreReceivedPayment>()
+                            .Where(prp => prp.PreRPID == sourceBillId)
+                            .FirstAsync();
+
+                        if (preReceivedPayment == null)
+                        {
+                            result.ErrorMsg = $"未找到预收/付款单ID: {sourceBillId}";
+                            result.Succeeded = false;
+                            return result;
+                        }
+
+                        // 预收付款单的总金额（本币）
+                        totalAmount = preReceivedPayment.LocalPaidAmount;
+                        break;
+
+                    default:
+                        // 对于其他业务类型，暂时无法获取总金额，返回错误
+                        result.ErrorMsg = $"不支持的来源业务类型: {(BizType)sourceBizType}";
+                        result.Succeeded = false;
+                        return result;
+                }
+
+                // 获取历史已付款金额（排除当前正在处理的付款单）
+                historicalPaidAmount = await GetHistoricalPaidAmount(sourceBillId, sourceBizType);
+
+                result.ReturnObject = new SourceBillAmountInfo
+                {
+                    TotalAmount = totalAmount,
+                    HistoricalPaidAmount = historicalPaidAmount
+                };
+
+                result.Succeeded = true;
+                return result;
+            }
+            catch (Exception ex)
+            {
+                result.ErrorMsg = $"获取来源单据金额信息时发生错误: {ex.Message}";
+                result.Succeeded = false;
+                return result;
+            }
+        }
+
+        /// <summary>
+        /// 获取来源单据的历史已付款金额
+        /// </summary>
+        /// <param name="sourceBillId">来源单据ID</param>
+        /// <param name="sourceBizType">来源业务类型</param>
+        /// <returns>历史已付款金额</returns>
+        private async Task<decimal> GetHistoricalPaidAmount(long sourceBillId, int sourceBizType)
+        {
+            try
+            {
+                // 查询已审核的付款记录明细，计算历史已付款金额
+                // 注意：这里只查询已审核通过的记录，当前正在审核的记录不应计入历史
+                var paidAmount = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PaymentRecordDetail>()
+                    .Where(prd => prd.SourceBilllId == sourceBillId
+                        && prd.SourceBizType == sourceBizType
+                        && prd.tb_fm_paymentrecord.ApprovalStatus == (int)ApprovalStatus.已审核
+                        && prd.tb_fm_paymentrecord.PaymentStatus == (int)PaymentStatus.已支付
+                        )
+                    .SumAsync(prd => prd.LocalAmount);
+
+                return paidAmount;  // SumAsync返回decimal类型，不会是null
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, $"获取历史已付款金额时发生错误，来源单据ID: {sourceBillId}, 业务类型: {(BizType)sourceBizType}");
+                return 0; // 发生错误时返回0，避免阻塞业务流程
+            }
+        }
+
+        /// <summary>
         /// 收付款单审核方法
         /// 功能说明：
         /// 1. 验证收付款单基本信息
@@ -128,14 +275,19 @@ namespace RUINORERP.Business
                 foreach (var PaymentRecordDetail in entity.tb_FM_PaymentRecordDetails)
                 {
                     //审核时 要检测明细中对应的相同业务类型下不能有相同来源单号。除非有正负总金额为0对冲情况。或是两行数据?
+                    // 查询逻辑：获取所有已支付状态的记录（包括已审核和待审核的），用于验证冲突
                     var PendingApprovalDetails = await _appContext.Db.Queryable<tb_FM_PaymentRecordDetail>()
                         .Includes(c => c.tb_fm_paymentrecord)
                         .Where(c => c.SourceBilllId == PaymentRecordDetail.SourceBilllId && c.SourceBizType == PaymentRecordDetail.SourceBizType)
-                        .Where(c => c.tb_fm_paymentrecord.PaymentStatus >= (int)PaymentStatus.已支付).ToListAsync();
+                        .Where(c => c.tb_fm_paymentrecord.ApprovalStatus == (int)ApprovalStatus.已审核)
+                        .Where(c => c.tb_fm_paymentrecord.PaymentStatus == (int)PaymentStatus.已支付)
+                        // 排除当前付款单的记录，避免重复计算
+                        .Where(c => c.PaymentId != entity.PaymentId)
+                        .ToListAsync();
 
-                    //要把自己也算上。不能大于1 
-                    PendingApprovalDetails.AddRange(PaymentRecordDetail);
-                    bool isValid = await ValidatePaymentDetails(PendingApprovalDetails, rmrs);
+                    // 将当前付款明细添加到待验证列表中，确保当前付款金额被纳入验证范围
+                    PendingApprovalDetails.Add(PaymentRecordDetail);
+                    bool isValid = await ValidatePaymentDetails(PendingApprovalDetails, entity, rmrs);
                     if (!isValid)
                     {
                         //rmrs.ErrorMsg = "相同业务类型下不能有相同的来源单号!审核失败。";
@@ -325,6 +477,12 @@ namespace RUINORERP.Business
                             // 遍历所有待核销的应收应付单，按预设顺序执行核销操作
                             foreach (var receivablePayable in receivablePayableList)
                             {
+                                //核销过的。不重复处理
+                                if (receivablePayable.LocalBalanceAmount == 0 && receivablePayable.ARAPStatus == (int)ARAPStatus.全部支付)
+                                {
+                                    continue;
+                                }
+
                                 #region  核销对账单
                                 var StatementDetail = statement.tb_FM_StatementDetails.FirstOrDefault(c => c.ARAPId == receivablePayable.ARAPId);
                                 if (StatementDetail == null)
@@ -1948,12 +2106,12 @@ namespace RUINORERP.Business
 
 
         /// <summary>
-        /// 验证付款明细。一个业务单不能生成重复的付款明细记录。特殊对冲除外
+        /// 验证付款明细。支持部分付款场景，确保累计付款金额不超过来源单据总金额
         /// </summary>
-        /// <param name="paymentDetails"></param>
-        /// <param name="returnResults"></param>
-        /// <returns></returns>
-        public async Task<bool> ValidatePaymentDetails(List<tb_FM_PaymentRecordDetail> paymentDetails, ReturnResults<T> returnResults = null)
+        /// <param name="paymentDetails">付款明细列表</param>
+        /// <param name="returnResults">返回结果</param>
+        /// <returns>验证是否通过</returns>
+        public async Task<bool> ValidatePaymentDetails(List<tb_FM_PaymentRecordDetail> paymentDetails, tb_FM_PaymentRecord currentSelfRecord, ReturnResults<T> returnResults = null)
         {
             // 按来源业务类型分组
             var groupedByBizType = paymentDetails
@@ -1971,24 +2129,52 @@ namespace RUINORERP.Business
                 {
                     var items = billNoGroup.ToList();
 
-                    // 如果只有一条记录，直接通过
+                    // 如果只有一条记录，检查历史累计付款金额
                     if (items.Count == 1)
-                        continue;
+                    {
+                        // 获取来源单据的总金额和历史已付款金额
+                        var sourceAmountResult = await GetSourceBillAmountInfo(billNoGroup.Key.SourceBilllId, bizTypeGroup.Key);
+                        if (!sourceAmountResult.Succeeded)
+                        {
+                            returnResults.ErrorMsg = sourceAmountResult.ErrorMsg;
+                            return false;
+                        }
 
-                    // 如果有两条记录，检查是否为对冲情况, 
-                    // 如果满足对冲条件，则通过,如一正一向，并且和是业务单预收的余额或核销金额之和？
+                        var currentPaymentAmount = currentSelfRecord.TotalLocalAmount;
+                        var totalPaidAfterPayment = sourceAmountResult.ReturnObject.HistoricalPaidAmount + currentPaymentAmount;
+
+                        // 检查累计付款金额是否超过来源单据总金额
+                        if (totalPaidAfterPayment > sourceAmountResult.ReturnObject.TotalAmount)
+                        {
+                            StringBuilder errorBuilder = new StringBuilder();
+                            errorBuilder.AppendLine($"来源单据 {(BizType)bizTypeGroup.Key}，单号：{billNoGroup.Key.SourceBillNo} 存在超额付款风险。");
+                            errorBuilder.AppendLine("付款详情：");
+                            errorBuilder.AppendLine($"  - 来源单据总金额: {sourceAmountResult.ReturnObject.TotalAmount}");
+                            errorBuilder.AppendLine($"  - 历史已付款金额: {sourceAmountResult.ReturnObject.HistoricalPaidAmount}");
+                            errorBuilder.AppendLine($"  - 当前付款金额: {currentPaymentAmount}");
+                            errorBuilder.AppendLine($"  - 付款后累计金额: {totalPaidAfterPayment}");
+                            errorBuilder.AppendLine($"  - 超额金额: {totalPaidAfterPayment - sourceAmountResult.ReturnObject.TotalAmount}");
+                            errorBuilder.AppendLine("请调整付款金额或检查历史付款记录。");
+                            returnResults.ErrorMsg = errorBuilder.ToString();
+                            return false;
+                        }
+
+                        continue;
+                    }
+
+                    // 如果有两条记录，检查是否为对冲情况
                     bool hasNegativeAmount = items.Any(detail => detail.LocalAmount < 0);
                     if (items.Count == 2 && hasNegativeAmount)
                     {
-                        // 计算本币金额总和
+                        // 计算本币金额总和  有对冲情况才计算总和
                         decimal totalLocalAmount = items.Sum(i => i.LocalAmount);
                         // 计算外币金额总和
                         decimal totalForeignAmount = items.Sum(i => i.ForeignAmount);
 
-
                         // 检查是否满足对冲条件（总和接近0，考虑浮点数精度问题）
                         if (Math.Abs(totalLocalAmount) < 0.001m && Math.Abs(totalForeignAmount) < 0.001m)
                             continue;
+
                         if (bizTypeGroup.Key == (int)BizType.预收款单 || bizTypeGroup.Key == (int)BizType.预付款单)
                         {
                             var PreReceivedPayment = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PreReceivedPayment>()
@@ -2015,29 +2201,44 @@ namespace RUINORERP.Business
                                     serrorBuilder.AppendLine($"  - 当前退款金额: {totalLocalAmount}");
                                     serrorBuilder.AppendLine("请检查退款金额是否正确。");
                                     returnResults.ErrorMsg = serrorBuilder.ToString();
-                                    // 其他情况均视为不合法
                                     return false;
                                 }
                             }
-
                         }
-                        // 检查 
-
                     }
-                    StringBuilder errorBuilder = new StringBuilder();
-                    errorBuilder.AppendLine($"{(ReceivePaymentType)paymentDetails[0].tb_fm_paymentrecord.ReceivePaymentType}单中不能存在相同业务来源的单据:{(BizType)groupedByBizType[0].Key}，单号：{billNoGroup.Key.SourceBillNo}");
-                    errorBuilder.AppendLine($"重复{((ReceivePaymentType)paymentDetails[0].tb_fm_paymentrecord.ReceivePaymentType).ToString()}单详情：");
 
-                    // 显示所有重复单据的详细信息
-                    foreach (var item in paymentDetails)
+                    // 多条记录的情况（非对冲），需要检查历史累计付款
+                    // 获取来源单据的总金额和历史已付款金额
+                    var multiSourceAmountResult = await GetSourceBillAmountInfo(billNoGroup.Key.SourceBilllId, bizTypeGroup.Key);
+                    if (!multiSourceAmountResult.Succeeded)
                     {
-                        errorBuilder.AppendLine($"  - 来源单据:{item.SourceBillNo}，金额:{item.LocalAmount}");
+                        returnResults.ErrorMsg = multiSourceAmountResult.ErrorMsg;
+                        return false;
                     }
 
-                    errorBuilder.AppendLine($"通常是生成了重复{(ReceivePaymentType)paymentDetails[0].tb_fm_paymentrecord.ReceivePaymentType}单。请仔细核对！");
-                    returnResults.ErrorMsg = errorBuilder.ToString();
-                    // 其他情况均视为不合法
-                    return false;
+                    var currentMultiPaymentAmount = currentSelfRecord.TotalLocalAmount;
+                    var totalMultiPaidAfterPayment = multiSourceAmountResult.ReturnObject.HistoricalPaidAmount + currentMultiPaymentAmount;
+
+                    // 检查累计付款金额是否超过来源单据总金额
+                    if (totalMultiPaidAfterPayment > multiSourceAmountResult.ReturnObject.TotalAmount)
+                    {
+                        StringBuilder errorBuilder = new StringBuilder();
+                        errorBuilder.AppendLine($"来源单据 {(BizType)bizTypeGroup.Key}，单号：{billNoGroup.Key.SourceBillNo} 存在超额付款风险。");
+                        errorBuilder.AppendLine("当前付款明细：");
+                        foreach (var item in items)
+                        {
+                            errorBuilder.AppendLine($"  - 付款金额: {item.LocalAmount}");
+                        }
+                        errorBuilder.AppendLine("累计付款详情：");
+                        errorBuilder.AppendLine($"  - 来源单据总金额: {multiSourceAmountResult.ReturnObject.TotalAmount}");
+                        errorBuilder.AppendLine($"  - 历史已付款金额: {multiSourceAmountResult.ReturnObject.HistoricalPaidAmount}");
+                        errorBuilder.AppendLine($"  - 当前付款总金额: {currentMultiPaymentAmount}");
+                        errorBuilder.AppendLine($"  - 付款后累计金额: {totalMultiPaidAfterPayment}");
+                        errorBuilder.AppendLine($"  - 超额金额: {totalMultiPaidAfterPayment - multiSourceAmountResult.ReturnObject.TotalAmount}");
+                        errorBuilder.AppendLine("请调整付款金额或检查历史付款记录。");
+                        returnResults.ErrorMsg = errorBuilder.ToString();
+                        return false;
+                    }
                 }
             }
 
@@ -2728,11 +2929,11 @@ namespace RUINORERP.Business
                 paymentRecordDetail.Summary = $"本次生成的{Enum.GetName(typeof(ReceivePaymentType), statement.ReceivePaymentType)}款金额：{Math.Abs(statement.ClosingBalanceLocalAmount):F2},由应{Enum.GetName(typeof(ReceivePaymentType), statement.ReceivePaymentType)}对账单的剩余未付金额自动生成。";
 
                 paymentRecordDetail.Currency_ID = paymentRecord.Currency_ID;
-                var entity = entities.FirstOrDefault(c => c.StatementId == details[i].SourceBilllId);
-                if (entity != null)
-                {
-                    paymentRecordDetail.Summary += entity.Summary;
-                }
+                //var entity = entities.FirstOrDefault(c => c.StatementId == details[i].SourceBilllId);
+                //if (entity != null)
+                //{
+                //    paymentRecordDetail.Summary += entity.Summary;
+                //}
 
                 // 处理对账单生成收付款单的金额逻辑
                 // 根据对账单类型和余额进行处理：

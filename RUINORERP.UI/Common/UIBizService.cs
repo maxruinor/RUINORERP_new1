@@ -365,6 +365,54 @@ namespace RUINORERP.UI.Common
             return cols;
 
         }
+
+        /// <summary>
+        /// 请求缓存数据 - UI友好的同步版本（快速检查，不阻塞UI）
+        /// </summary>
+        /// <param name="tableName">表名</param>
+        /// <param name="type">实体类型</param>
+        /// <param name="forceRefresh">是否强制刷新</param>
+        /// <param name="timeoutMs">超时时间，默认500ms</param>
+        /// <returns>是否成功获取数据</returns>
+        public static bool RequestCacheQuick(string tableName, Type type = null, bool forceRefresh = false, int timeoutMs = 500)
+        {
+            try
+            {
+                // 快速检查本地缓存
+                if (!forceRefresh && IsCacheableTable(tableName))
+                {
+                    var localCache = CacheManager.GetEntityList<object>(tableName);
+                    if (localCache != null && localCache.Count > 0)
+                    {
+                        return true; // 本地有数据，立即返回成功
+                    }
+                }
+
+                // 本地无数据，启动后台任务
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        await BackgroundCacheManager.AddHighPriorityTaskAsync(tableName, type, forceRefresh, timeoutMs * 2);
+                    }
+                    catch (Exception ex)
+                    {
+                        MainForm.Instance.logger.LogWarning(ex, $"后台缓存快速请求失败: {tableName}");
+                    }
+                });
+
+                // 立即返回，不等待结果
+                return false; // 表示数据将在后台加载
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger.LogWarning(ex, $"缓存快速请求异常: {tableName}");
+                return false;
+            }
+        }
+
+
+
         #endregion
 
 
@@ -1548,7 +1596,7 @@ namespace RUINORERP.UI.Common
 
 
         /// <summary>
-        /// 请求缓存数据 - 带降级处理（支持后台异步模式）
+        /// 请求缓存数据 - UI友好的异步缓存加载（默认后台模式）
         /// </summary>
         /// <param name="tableName">表名</param>
         /// <param name="type">实体类型，如果提供则使用实体的FKRelations属性获取外键关系</param>
@@ -1556,21 +1604,44 @@ namespace RUINORERP.UI.Common
         /// <param name="timeoutMs">超时时间（毫秒），默认为1500ms（网络优化）</param>
         /// <param name="cancellationToken">取消令牌</param>
         /// <param name="useFallback">是否使用降级处理，默认为true</param>
-        /// <param name="useBackground">是否使用后台异步模式，默认为false（保持兼容性）</param>
+        /// <param name="useBackground">是否使用后台异步模式，默认为true（避免UI卡顿）</param>
         /// <exception cref="OperationCanceledException">当操作被取消时抛出</exception>
         /// <exception cref="TimeoutException">当请求超时时抛出</exception>
-        public static async Task RequestCache(string tableName, Type type = null, bool forceRefresh = false, int timeoutMs = 1500, CancellationToken cancellationToken = default, bool useFallback = true, bool useBackground = false)
+        public static async Task RequestCache(string tableName, Type type = null, bool forceRefresh = false, int timeoutMs = 1500, CancellationToken cancellationToken = default, bool useFallback = true, bool useBackground = true)
         {
-            // 如果启用后台异步模式，直接添加到后台任务队列并返回
+            // UI调用默认使用后台异步模式，避免卡死界面
             if (useBackground)
             {
-                var task = BackgroundCacheManager.AddHighPriorityTaskAsync(tableName, type, forceRefresh, timeoutMs);
-                return; // 立即返回，不等待结果
+                try
+                {
+                    // 立即返回，不等待结果，避免UI线程阻塞
+                    _ = BackgroundCacheManager.AddHighPriorityTaskAsync(tableName, type, forceRefresh, timeoutMs);
+                    
+                    // 记录后台任务已启动
+                    MainForm.Instance.logger.LogDebug($"缓存请求已添加到后台任务队列: {tableName}");
+                    return;
+                }
+                catch (Exception ex)
+                {
+                    // 后台任务添加失败，记录日志但继续同步处理
+                    MainForm.Instance.logger.LogWarning(ex, $"后台缓存任务添加失败，切换到同步模式: {tableName}");
+                }
             }
 
-            // 创建带超时的取消令牌
+            // 快速检查本地缓存，如果已有数据且不需要强制刷新，直接返回
+            if (!forceRefresh && IsCacheableTable(tableName))
+            {
+                var localCache = CacheManager.GetEntityList<object>(tableName);
+                if (localCache != null && localCache.Count > 0)
+                {
+                    MainForm.Instance.logger.LogDebug($"本地缓存数据可用，跳过网络请求: {tableName}");
+                    return;
+                }
+            }
+
+            // 创建短时间超时，避免UI长时间等待
             using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            timeoutCts.CancelAfter(timeoutMs);
+            timeoutCts.CancelAfter(Math.Min(timeoutMs, 800)); // UI场景下最大800ms超时
             var combinedToken = timeoutCts.Token;
             
             CacheClientService cacheClient = Startup.GetFromFac<CacheClientService>();
@@ -1579,19 +1650,20 @@ namespace RUINORERP.UI.Common
 
             try
             {
-                // 处理主表
+                // 处理主表 - 快速模式，只处理关键数据
                 if (tableSchemaManager.ContainsTable(tableName) && IsCacheableTable(tableName))
                 {
-                    // 直接使用CacheManager的GetEntityList方法，内部已实现单例模式
+                    // 快速检查，避免重复请求
                     var entityList = CacheManager.GetEntityList<object>(tableName);
-
-                    // 判断逻辑：如果强制刷新缓存，或者本地没有缓存数据，则请求
                     if (forceRefresh || entityList == null || entityList.Count == 0)
                     {
                         await cacheClient.RequestCacheAsync(tableName, combinedToken);
                     }
                 }
 
+                // 关联表处理 - 限制处理数量，避免UI等待
+                var relatedTables = new List<string>();
+                
                 // 处理关联表 - 优先使用实体类型的FKRelations属性（如果提供了类型）
                 if (type != null && typeof(BaseEntity).IsAssignableFrom(type))
                 {
@@ -1599,102 +1671,120 @@ namespace RUINORERP.UI.Common
                     {
                         // 创建实体实例来获取FKRelations
                         BaseEntity entityInstance = (BaseEntity)Activator.CreateInstance(type);
-                        
-                        // 获取所有外键关系
                         var fkRelations = entityInstance.FKRelations;
                         
-                        foreach (var relation in fkRelations)
+                        // 限制关联表数量，避免UI卡顿
+                        foreach (var relation in fkRelations.Take(3))
                         {
-                            // 检查取消令牌
-                            combinedToken.ThrowIfCancellationRequested();
-                            
                             if (IsCacheableTable(relation.FKTableName))
                             {
-                                // 直接使用CacheManager的GetEntityList方法，内部已实现单例模式
-                                var rslist = CacheManager.GetEntityList<object>(relation.FKTableName);
-
-                                // 简化的判断逻辑：如果本地没有缓存数据，则请求
-                                if (rslist == null || rslist.Count == 0)
-                                {
-                                    await cacheClient.RequestCacheAsync(relation.FKTableName, combinedToken);
-                                }
+                                relatedTables.Add(relation.FKTableName);
                             }
                         }
                     }
                     catch (Exception ex) when (!(ex is OperationCanceledException))
                     {
-                        // 记录异常但继续执行
-                        MainForm.Instance.logger.LogError(ex, $"获取实体{type.Name}的外键关系失败");
+                        MainForm.Instance.logger.LogWarning(ex, $"获取实体{type.Name}的外键关系失败");
                     }
                 }
-                // 如果没有提供类型或类型处理失败，则使用表结构管理器
                 else
                 {
+                    // 使用表结构管理器 - 同样限制数量
                     var schemaInfo = tableSchemaManager.GetSchemaInfo(tableName);
                     if (schemaInfo != null && schemaInfo.ForeignKeys.Any())
                     {
-                        // 创建副本以避免枚举时修改集合的异常
-                        var foreignKeys = schemaInfo.ForeignKeys.ToList();
-                        foreach (var fk in foreignKeys)
+                        foreach (var fk in schemaInfo.ForeignKeys.Take(3))
                         {
-                            // 检查取消令牌
-                            combinedToken.ThrowIfCancellationRequested();
-                            
                             if (IsCacheableTable(fk.RelatedTableName))
                             {
-                                // 直接使用CacheManager的GetEntityList方法，内部已实现单例模式
-                                var rslist = CacheManager.GetEntityList<object>(fk.RelatedTableName);
-
-                                // 简化的判断逻辑：如果本地没有缓存数据，则请求
-                                if (rslist == null || rslist.Count == 0)
-                                {
-                                    await cacheClient.RequestCacheAsync(fk.RelatedTableName, combinedToken);
-                                }
+                                relatedTables.Add(fk.RelatedTableName);
                             }
                         }
+                    }
+                }
+
+                // 批量处理关联表，但限制并发数量
+                var relatedTasks = new List<Task>();
+                foreach (var relatedTable in relatedTables)
+                {
+                    // 快速检查本地缓存
+                    var relatedCache = CacheManager.GetEntityList<object>(relatedTable);
+                    if (relatedCache == null || relatedCache.Count == 0)
+                    {
+                        relatedTasks.Add(cacheClient.RequestCacheAsync(relatedTable, combinedToken));
+                    }
+                    
+                    // 限制并发请求数量
+                    if (relatedTasks.Count >= 2)
+                    {
+                        break;
+                    }
+                }
+
+                // 等待关联表请求完成，但设置更短超时
+                if (relatedTasks.Any())
+                {
+                    using var relatedCts = CancellationTokenSource.CreateLinkedTokenSource(combinedToken);
+                    relatedCts.CancelAfter(400); // 关联表最大400ms超时
+                    
+                    try
+                    {
+                        await Task.WhenAll(relatedTasks);
+                    }
+                    catch (Exception ex)
+                    {
+                        MainForm.Instance.logger.LogWarning(ex, $"关联表缓存请求部分失败: {tableName}");
+                        // 关联表失败不影响主流程
                     }
                 }
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
                 // 用户主动取消，记录日志但不抛出异常
-                MainForm.Instance.logger.LogWarning($"缓存请求被用户取消: {tableName}");
-                if (!useFallback)
-                {
-                    throw;
-                }
+                MainForm.Instance.logger.LogDebug($"缓存请求被用户取消: {tableName}");
             }
             catch (OperationCanceledException)
             {
-                // 超时取消，转换为TimeoutException或使用降级处理
-                if (useFallback)
+                // 超时 - 这是预期内的，UI场景下很常见
+                MainForm.Instance.logger.LogDebug($"缓存请求超时({timeoutMs}ms)，将在后台继续: {tableName}");
+                
+                // 确保后台任务继续处理
+                if (useBackground)
                 {
-                    MainForm.Instance.logger.LogWarning($"缓存请求超时({timeoutMs}ms)，使用降级处理: {tableName}");
-                    // 降级处理：使用本地缓存数据（如果存在）
-                    var localCache = CacheManager.GetEntityList<object>(tableName);
-                    if (localCache != null && localCache.Count > 0)
+                    _ = Task.Run(async () =>
                     {
-                        MainForm.Instance.logger.LogInformation($"降级处理成功，使用本地缓存数据: {tableName}");
-                        return;
-                    }
+                        try
+                        {
+                            await BackgroundCacheManager.AddHighPriorityTaskAsync(tableName, type, forceRefresh, timeoutMs * 2);
+                        }
+                        catch (Exception ex)
+                        {
+                            MainForm.Instance.logger.LogError(ex, $"后台缓存补偿任务失败: {tableName}");
+                        }
+                    });
                 }
-                throw new TimeoutException($"缓存请求超时({timeoutMs}ms): {tableName}");
             }
             catch (Exception ex) when (useFallback)
             {
-                // 其他异常时的降级处理
-                MainForm.Instance.logger.LogError(ex, $"缓存请求失败，使用降级处理: {tableName}");
+                // 其他异常 - 记录日志但不影响UI
+                MainForm.Instance.logger.LogWarning(ex, $"缓存请求失败，将在后台重试: {tableName}");
                 
-                // 尝试使用本地缓存数据
-                var localCache = CacheManager.GetEntityList<object>(tableName);
-                if (localCache != null && localCache.Count > 0)
+                // 后台重试
+                if (useBackground)
                 {
-                    MainForm.Instance.logger.LogInformation($"降级处理成功，使用本地缓存数据: {tableName}");
-                    return;
+                    _ = Task.Run(async () =>
+                    {
+                        try
+                        {
+                            await Task.Delay(1000); // 延迟1秒后重试
+                            await BackgroundCacheManager.AddHighPriorityTaskAsync(tableName, type, forceRefresh, timeoutMs * 2);
+                        }
+                        catch (Exception retryEx)
+                        {
+                            MainForm.Instance.logger.LogError(retryEx, $"后台缓存重试失败: {tableName}");
+                        }
+                    });
                 }
-                
-                // 如果本地也没有数据，记录警告但不抛出异常
-                MainForm.Instance.logger.LogWarning($"降级处理失败，本地无缓存数据: {tableName}");
             }
         }
 

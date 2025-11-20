@@ -2287,6 +2287,7 @@
     <Compile Include="Network\ClientCommandHandlers\ConfigCommandHandler.cs" />
     <Compile Include="Network\ClientCommandHandlers\IClientCommandDispatcher.cs" />
     <Compile Include="Network\ClientCommandHandlers\IClientCommandHandler.cs" />
+    <Compile Include="Network\ClientCommandHandlers\LockCommandHandler.cs" />
     <Compile Include="Network\ClientCommandHandlers\MessageCommandHandler.cs" />
     <!-- ClientCommandProcessor.cs 已整合到ClientCommunicationService.cs，不再单独编译 -->
     <!-- <Compile Include="Network\ClientCommandProcessor.cs" /> -->

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using RUINORERP.Business.Cache;
 using RUINORERP.Business.CommService;
+using Microsoft.Extensions.Logging;
 
 namespace RUINORERP.UI.Common
 {
@@ -29,8 +30,19 @@ namespace RUINORERP.UI.Common
                         {
                             // 从依赖注入容器获取缓存管理器实例
                             _instance = Startup.GetFromFac<IEntityCacheManager>();
+                            // 确保实例不为null，如果为null则延迟重试
+                            if (_instance == null)
+                            {
+                                System.Threading.Thread.Sleep(100); // 短暂等待容器初始化
+                                _instance = Startup.GetFromFac<IEntityCacheManager>();
+                            }
                         }
                     }
+                }
+                // 如果仍然为null，每次都重新尝试获取（防御性编程）
+                if (_instance == null)
+                {
+                    _instance = Startup.GetFromFac<IEntityCacheManager>();
                 }
                 return _instance;
             }
@@ -45,7 +57,13 @@ namespace RUINORERP.UI.Common
         /// <returns>实体列表</returns>
         public static List<T> GetEntityList<T>() where T : class
         {
-            return Instance.GetEntityList<T>();
+            var instance = Instance;
+            if (instance == null)
+            {
+                MainForm.Instance?.logger?.LogError($"缓存管理器实例为null，无法获取类型 {typeof(T).Name} 的缓存数据");
+                return new List<T>();
+            }
+            return instance.GetEntityList<T>();
         }
 
         /// <summary>
@@ -56,7 +74,14 @@ namespace RUINORERP.UI.Common
         /// <returns>实体列表</returns>
         public static List<T> GetEntityList<T>(string tableName) where T : class
         {
-            return Instance.GetEntityList<T>(tableName);
+            var instance = Instance;
+            if (instance == null)
+            {
+                // 记录错误日志
+                MainForm.Instance?.logger?.LogError($"缓存管理器实例为null，无法获取表 {tableName} 的缓存数据");
+                return new List<T>(); // 返回空列表而不是抛出异常
+            }
+            return instance.GetEntityList<T>(tableName);
         }
 
         /// <summary>
@@ -166,7 +191,13 @@ namespace RUINORERP.UI.Common
         /// <param name="tableName">表名</param>
         public static void DeleteEntityList(string tableName)
         {
-            Instance.DeleteEntityList(tableName);
+            var instance = Instance;
+            if (instance == null)
+            {
+                MainForm.Instance?.logger?.LogError($"缓存管理器实例为null，无法删除表 {tableName} 的缓存数据");
+                return;
+            }
+            instance.DeleteEntityList(tableName);
         }
 
         /// <summary>

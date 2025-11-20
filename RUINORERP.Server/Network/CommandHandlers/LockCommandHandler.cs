@@ -13,6 +13,8 @@ using RUINORERP.PacketSpec.Models.Responses;
 using RUINORERP.PacketSpec.Serialization;
 using RUINORERP.Server.Network.Interfaces.Services;
 using RUINORERP.Server.Network.Models;
+using RUINORERP.PacketSpec.Models.Common;
+using RUINORERP.PacketSpec.Models.Core;
 
 namespace RUINORERP.Server.Network.Commands
 {
@@ -34,17 +36,17 @@ namespace RUINORERP.Server.Network.Commands
             
             // 使用安全方法设置支持的命令
             SetSupportedCommands(
-                LockCommands.LockRequest.FullCode,
-                LockCommands.LockRelease.FullCode,
-                LockCommands.LockStatus.FullCode,
-                LockCommands.ForceUnlock.FullCode,
-                LockCommands.RequestUnlock.FullCode,
-                LockCommands.RefuseUnlock.FullCode,
-                LockCommands.RequestLock.FullCode,
-                LockCommands.ReleaseLock.FullCode,
-                LockCommands.ForceReleaseLock.FullCode,
-                LockCommands.QueryLockStatus.FullCode,
-                LockCommands.BroadcastLockStatus.FullCode
+                LockCommands.Lock,
+                LockCommands.Unlock,
+                LockCommands.CheckLockStatus,
+                LockCommands.ForceUnlock,
+                LockCommands.RequestUnlock,
+                LockCommands.RefuseUnlock,
+                LockCommands.RequestUnlock,
+                LockCommands.AgreeUnlock,
+                LockCommands.RefuseUnlock,
+                LockCommands.ForceUnlock,
+                LockCommands.BroadcastLockStatus
             );
         }
         

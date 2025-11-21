@@ -305,6 +305,11 @@ namespace RUINORERP.PacketSpec.Models.Lock
         /// 响应解锁请求
         /// 锁定者响应其他用户的解锁请求而执行的解锁操作
         /// </summary>
-        RequestResponse = 4
+        RequestResponse = 4,
+
+        /// <summary>
+        /// 意思是按业务类型将这个类型的批量全部解锁
+        /// </summary>
+        ByBizName = 5
     }
 }

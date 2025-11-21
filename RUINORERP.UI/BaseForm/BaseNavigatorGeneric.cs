@@ -776,7 +776,7 @@ namespace RUINORERP.UI.BaseForm
                         switch (navs[i])
                         {
                             //case NavParts.查询条件:
-                            //    Kpages.Add(QueryCondition());
+                            //    Kpages.Add(await QueryCondition());
                             //    break;
                             case NavParts.查询结果:
                                 Kpages.Add(MasterQuery());
@@ -788,7 +788,7 @@ namespace RUINORERP.UI.BaseForm
                                 Kpages.Add(Child_RelatedQuery());
                                 break;
                             case NavParts.分组显示:
-                                Kpages.Add(UCOutlookGridGroupAnalysisLoad());
+                                Kpages.Add(await UCOutlookGridGroupAnalysisLoad());
                                 break;
                             case NavParts.结果分析1:
                                 Kpages.Add(UCOutlookGridAnalysis1Load());
@@ -1175,7 +1175,12 @@ namespace RUINORERP.UI.BaseForm
 
             _UCOutlookGridGroupAnalysis = new UCBillOutlookGridAnalysis();
             _UCOutlookGridGroupAnalysis.entityType = typeof(M);
-            _UCOutlookGridGroupAnalysis.ColDisplayTypes = _UCMasterQuery.ColDisplayTypes;
+            
+            // 确保_UCMasterQuery已经初始化，避免空引用异常
+            if (_UCMasterQuery != null)
+            {
+                _UCOutlookGridGroupAnalysis.ColDisplayTypes = _UCMasterQuery.ColDisplayTypes;
+            }
 
 
             List<string> masterlist = RuinorExpressionHelper.ExpressionListToStringList(MasterSummaryCols);

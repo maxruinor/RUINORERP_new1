@@ -1425,22 +1425,52 @@ namespace RUINORERP.Server
         {
             try
             {
-                if (IsDisposed || !IsHandleCreated) return;
+                // 增加更严格的控件状态检查
+                if (IsDisposed || !IsHandleCreated || richTextBoxLog == null || richTextBoxLog.IsDisposed || !richTextBoxLog.IsHandleCreated)
+                {
+                    Console.WriteLine("控件不可用，跳过日志操作");
+                    return;
+                }
 
-                EnsureMaxLines(richTextBoxLog, 1000);
-                string formattedMsg = $"[{DateTime.Now:HH:mm:ss}] {msg}\r\n";
+                // 确保格式化消息有效
+                string formattedMsg = msg != null ? $"[{DateTime.Now:HH:mm:ss}] {msg}\r\n" : $"[{DateTime.Now:HH:mm:ss}] 空消息\r\n";
 
+                // 使用委托进行安全的UI操作
                 Action logAction = () =>
                 {
-                    richTextBoxLog.SelectionColor = color;
-                    richTextBoxLog.AppendText(formattedMsg);
-                    richTextBoxLog.SelectionColor = Color.Black;
-                    richTextBoxLog.ScrollToCaret();
+                    try
+                    {
+                        // 再次检查控件状态，防止在Invoke过程中控件状态变化
+                        if (richTextBoxLog == null || richTextBoxLog.IsDisposed || !richTextBoxLog.IsHandleCreated)
+                            return;
+
+                        // 安全地执行文本行限制检查
+                        EnsureMaxLines(richTextBoxLog, 1000);
+
+                        // 安全地执行文本追加操作
+                        richTextBoxLog.SelectionColor = color;
+                        richTextBoxLog.AppendText(formattedMsg);
+                        richTextBoxLog.SelectionColor = Color.Black;
+                        richTextBoxLog.ScrollToCaret();
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"日志操作执行错误: {ex.Message}");
+                    }
                 };
 
                 if (InvokeRequired)
                 {
-                    BeginInvoke(new System.Windows.Forms.MethodInvoker(logAction));
+                    try
+                    {
+                        // 使用BeginInvoke避免阻塞调用线程
+                        BeginInvoke(new System.Windows.Forms.MethodInvoker(logAction));
+                    }
+                    catch (InvalidOperationException ex)
+                    {
+                        // 处理Invoke可能出现的异常
+                        Console.WriteLine($"跨线程调用失败: {ex.Message}");
+                    }
                 }
                 else
                 {
@@ -1449,7 +1479,7 @@ namespace RUINORERP.Server
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"日志操作时发生错误: {ex.Message}");
+                Console.WriteLine($"SafeLogOperation错误: {ex.Message}");
             }
         }
 

@@ -290,7 +290,7 @@ namespace RUINORERP.UI.FM
         }
 
         public override void BindData(tb_FM_ReceivablePayable entity, ActionStatus actionStatus)
-        {
+            {
             if (entity == null)
             {
                 return;
@@ -343,8 +343,13 @@ namespace RUINORERP.UI.FM
                 entity.ARAPStatus = (int)ARAPStatus.草稿;
                 entity.ReceivePaymentType = (int)PaymentType;
                 entity.ActionStatus = ActionStatus.新增;
+                //如果转单过来的。业务日期已经有值了。就不能赋值为当前
+                if (!entity.BusinessDate.HasValue)
+                {
+                    entity.BusinessDate = System.DateTime.Now;
+                }
                 entity.DocumentDate = System.DateTime.Now;
-                entity.BusinessDate = System.DateTime.Now;
+            
 
                 //默认新建的都是费用，
                 //明细一开始就是大于0的，则是转单过来的。则不是费用
@@ -385,6 +390,20 @@ namespace RUINORERP.UI.FM
                 cmbPayeeInfoID.DataSource = null;
                 cmbPayeeInfoID.DataBindings.Clear();
                 cmbPayeeInfoID.Items.Clear();
+                
+                // 根据付款类型设置控件可见性
+                if (entity.ReceivePaymentType == (int)ReceivePaymentType.收款)
+                {
+                    cmbPayeeInfoID.Visible = false;
+                    lblPayeeInfoID.Visible = false;
+                    btnInfo.Visible = false;
+                }
+                else
+                {
+                    cmbPayeeInfoID.Visible = true;
+                    lblPayeeInfoID.Visible = true;
+                    btnInfo.Visible = true;
+                }
 
             }
             if (entity.TotalLocalPayableAmount < 0)
@@ -604,18 +623,20 @@ namespace RUINORERP.UI.FM
             }
             else
             {
+                // 付款单时明确设置所有收款信息控件为可见
+                btnInfo.Visible = true;
+                lblPayeeInfoID.Visible = true;
+                cmbPayeeInfoID.Visible = true;
+                
                 if (entity.tb_fm_payeeinfo != null)
                 {
-
                     if (!string.IsNullOrEmpty(entity.tb_fm_payeeinfo.PaymentCodeImagePath))
                     {
                         btnInfo.Tag = entity.tb_fm_payeeinfo;
-                        btnInfo.Visible = true;
                     }
                     else
                     {
                         btnInfo.Tag = string.Empty;
-                        btnInfo.Visible = false;
                     }
                 }
             }
@@ -829,7 +850,7 @@ namespace RUINORERP.UI.FM
         View_ProdDetailController<View_ProdDetail> dc = Startup.GetFromFac<View_ProdDetailController<View_ProdDetail>>();
         List<View_ProdDetail> list = new List<View_ProdDetail>();
 
-        private void UCStockIn_Load(object sender, EventArgs e)
+        private void UCReceivablePayable_Load(object sender, EventArgs e)
         {
             if (this.DesignMode)
             {
@@ -854,6 +875,10 @@ namespace RUINORERP.UI.FM
                     lblBillText.Text = "应付款单";
                     lblAccount_id.Text = "付款账号";
                     lblCustomerVendor_ID.Text = "应收单位";
+                    // 付款单时明确设置收款信息控件为可见
+                    btnInfo.Visible = true;
+                    lblPayeeInfoID.Visible = true;
+                    cmbPayeeInfoID.Visible = true;
                     break;
                 default:
                     break;

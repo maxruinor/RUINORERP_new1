@@ -547,7 +547,8 @@ namespace RUINORERP.UI
 
             var SearcherList = MenuList.Where(c => c.MenuType == "行为菜单").OrderBy(c => c.CaptionCN).ToList();
 
-            // 添加Top10菜单
+            //常用菜单搜索按钮 添加到20个
+            // 添加Top20菜单
             foreach (var menuId in _menuTracker.GetTopMenus())
             {
                 var menuInfo = SearcherList.FirstOrDefault(m => m.MenuID == menuId);

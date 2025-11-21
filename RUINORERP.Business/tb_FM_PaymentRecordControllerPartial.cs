@@ -149,7 +149,7 @@ namespace RUINORERP.Business
                         }
 
                         // 预收付款单的总金额（本币）
-                        totalAmount = preReceivedPayment.LocalPaidAmount;
+                        totalAmount = preReceivedPayment.LocalPrepaidAmount;
                         break;
 
                     default:

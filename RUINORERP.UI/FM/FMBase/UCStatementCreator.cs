@@ -439,6 +439,23 @@ namespace RUINORERP.UI.FM
             // 重写汇总逻辑，以支持余额对账模式下的正确汇总
             // 注意：这里只是定义需要汇总的列，实际汇总计算需要在基类中处理
             base.MasterSummaryCols.Add(c => c.TaxTotalAmount);
+            base.MasterSummaryCols.Add(c => c.ForeignBalanceAmount);
+            base.MasterSummaryCols.Add(c => c.ForeignPaidAmount);
+            base.MasterSummaryCols.Add(c => c.ForeignReconciledAmount);
+            base.MasterSummaryCols.Add(c => c.TotalForeignPayableAmount);
+
+            base.MasterSummaryCols.Add(c => c.LocalBalanceAmount);
+            base.MasterSummaryCols.Add(c => c.LocalPaidAmount);
+            base.MasterSummaryCols.Add(c => c.LocalReconciledAmount);
+            base.MasterSummaryCols.Add(c => c.TotalLocalPayableAmount);
+
+            base.MasterSummaryCols.Add(c => c.UntaxedTotalAmont);
+            base.MasterSummaryCols.Add(c => c.ShippingFee);
+
+            base.ChildSummaryCols.Add(c => c.Quantity);
+            base.ChildSummaryCols.Add(c => c.LocalPayableAmount);
+            base.ChildSummaryCols.Add(c => c.TaxLocalAmount);
+
             // 金额调整逻辑现在在重写的Query方法中实现，会在查询结果返回后直接处理数据
         }
 

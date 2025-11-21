@@ -791,7 +791,7 @@
             this.Controls.Add(this.kryptonSplitContainer1);
             this.Name = "UCReceivablePayable";
             this.Size = new System.Drawing.Size(1266, 792);
-            this.Load += new System.EventHandler(this.UCStockIn_Load);
+            this.Load += new System.EventHandler(this.UCReceivablePayable_Load);
             this.Controls.SetChildIndex(this.kryptonSplitContainer1, 0);
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).EndInit();

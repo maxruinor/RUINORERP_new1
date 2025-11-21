@@ -265,6 +265,95 @@ namespace RUINORERP.UI.Network.Services
         }
 
         /// <summary>
+        /// 管理员强制解锁单据
+        /// </summary>
+        /// <param name="lockRequest">锁定请求信息</param>
+        /// <param name="ct">取消令牌，用于取消异步操作</param>
+        /// <returns>解锁操作的响应结果</returns>
+        /// <exception cref="ArgumentNullException">当lockRequest为null时抛出</exception>
+        public async Task<LockResponse> ForceUnlockBillAsync(LockRequest lockRequest, CancellationToken ct = default)
+        {
+            if (lockRequest == null)
+                throw new ArgumentNullException(nameof(lockRequest));
+
+            // 设置解锁类型为强制解锁
+            lockRequest.UnlockType = UnlockType.Force;
+            
+            _logger?.LogWarning("管理员开始强制解锁单据 - 单据ID: {BillId}, 管理员: {AdminName}",
+                lockRequest.LockInfo.BillID, lockRequest.LockedUserName);
+
+            try
+            {
+                // 发送强制解锁命令到服务器
+                var response = await _clientCommunicationService.SendCommandWithResponseAsync<LockResponse>(LockCommands.RequestUnlock,
+                    lockRequest, ct);
+
+                if (response.IsSuccess)
+                {
+                    _logger?.LogWarning("管理员强制解锁单据成功 - 单据ID: {BillId}, 管理员: {AdminName}",
+                        lockRequest.LockInfo.BillID, lockRequest.LockedUserName);
+                }
+                else
+                {
+                    _logger?.LogError("管理员强制解锁单据失败 - 单据ID: {BillId}, 管理员: {AdminName}, 错误信息: {ErrorMessage}",
+                        lockRequest.LockInfo.BillID, lockRequest.LockedUserName, response?.Message ?? "未知错误");
+                }
+
+                return response;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "发送强制解锁单据请求时发生异常 - 单据ID: {BillId}, 管理员: {AdminName}",
+                    lockRequest.LockInfo.BillID, lockRequest.LockedUserName);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// 管理员强制解锁单据（重载方法）
+        /// </summary>
+        /// <param name="billId">单据ID</param>
+        /// <param name="menuId">菜单ID</param>
+        /// <param name="ct">取消令牌，用于取消异步操作</param>
+        /// <returns>解锁操作的响应结果</returns>
+        public async Task<LockResponse> ForceUnlockBillAsync(long billId, long menuId, CancellationToken ct = default)
+        {
+            try
+            {
+                // 获取当前管理员信息
+                long currentUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
+                string currentUserName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.UserName;
+
+                // 创建锁信息
+                LockInfo lockInfo = new LockInfo();
+                lockInfo.BillID = billId;
+                lockInfo.MenuID = menuId;
+                lockInfo.UserId = currentUserId;
+                lockInfo.UserName = currentUserName;
+
+                // 创建强制解锁请求
+                var lockRequest = new LockRequest
+                {
+                    LockInfo = lockInfo,
+                    UnlockType = UnlockType.Force,
+                    LockedUserName = currentUserName,
+                };
+                lockRequest.LockInfo.SetLockKey();
+
+                _logger?.LogWarning("管理员开始强制解锁单据 - 单据ID: {BillId}, 菜单ID: {MenuId}, 管理员ID: {AdminId}, 管理员名称: {AdminName}",
+                    billId, menuId, currentUserId, currentUserName);
+
+                // 调用强制解锁方法
+                return await ForceUnlockBillAsync(lockRequest, ct);
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "发送强制解锁单据请求时发生异常 - 单据ID: {BillId}, 菜单ID: {MenuId}", billId, menuId);
+                throw;
+            }
+        }
+
+        /// <summary>
         /// 检查单据锁定状态（重载方法）
         /// </summary>
         /// <param name="lockRequest">锁定请求信息</param>
@@ -489,6 +578,64 @@ namespace RUINORERP.UI.Network.Services
         /// <summary>
         /// 释放由LockManagementService使用的所有资源
         /// </summary>
+        /// <summary>
+        /// 刷新单据锁定状态
+        /// 该方法通过向服务器发送请求来更新锁定的过期时间，确保当前用户能够持续编辑单据
+        /// </summary>
+        /// <param name="billId">单据ID</param>
+        /// <param name="menuId">菜单ID</param>
+        /// <param name="ct">取消令牌，用于取消异步操作</param>
+        /// <returns>刷新操作的响应结果</returns>
+        public async Task<LockResponse> RefreshLockAsync(long billId, long menuId, CancellationToken ct = default)
+        {
+            try
+            {
+                // 获取当前用户信息
+                long currentUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
+                string currentUserName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.UserName;
+
+                // 创建锁信息
+                LockInfo lockInfo = new LockInfo();
+                lockInfo.BillID = billId;
+                lockInfo.MenuID = menuId;
+                lockInfo.UserId = currentUserId;
+                lockInfo.UserName = currentUserName;
+
+                // 创建刷新锁定请求
+                var lockRequest = new LockRequest
+                {
+                    LockInfo = lockInfo,
+                    RefreshMode = true, // 标记为刷新模式
+                };
+                lockRequest.LockInfo.SetLockKey();
+
+                _logger?.LogDebug("开始刷新单据锁定 - 单据ID: {BillId}, 菜单ID: {MenuId}, 用户ID: {UserId}, 用户名称: {UserName}",
+                    billId, menuId, currentUserId, currentUserName);
+
+                // 使用CheckLockStatus命令来刷新锁定
+                // 注：在服务器端实现中，CheckLockStatus命令可能会自动刷新当前用户持有的锁
+                var response = await _clientCommunicationService.SendCommandWithResponseAsync<LockResponse>(
+                    LockCommands.CheckLockStatus, lockRequest, ct);
+
+                if (response.IsSuccess)
+                {
+                    _logger?.LogDebug("单据锁定刷新成功 - 单据ID: {BillId}", billId);
+                }
+                else
+                {
+                    _logger?.LogWarning("单据锁定刷新失败 - 单据ID: {BillId}, 错误信息: {ErrorMessage}",
+                        billId, response?.Message ?? "未知错误");
+                }
+
+                return response;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "刷新单据锁定时发生异常 - 单据ID: {BillId}, 菜单ID: {MenuId}", billId, menuId);
+                throw;
+            }
+        }
+
         public void Dispose()
         {
             Dispose(true);

@@ -121,12 +121,12 @@ namespace RUINORERP.Server.Controls
                 {
                     // 检查是否已存在该会话的用户
                     var existingUser = UserInfos.FirstOrDefault(u => u.SessionId == session.SessionID);
-                    
+
                     // 如果通过SessionId找不到，尝试通过客户端IP查找未认证用户
                     if (existingUser == null && string.IsNullOrEmpty(session.UserName))
                     {
-                        existingUser = UserInfos.FirstOrDefault(u => 
-                            u.用户名.StartsWith("未认证用户_") && 
+                        existingUser = UserInfos.FirstOrDefault(u =>
+                            u.用户名.StartsWith("未认证用户_") &&
                             u.客户端IP == session.ClientIp);
                     }
 
@@ -145,13 +145,13 @@ namespace RUINORERP.Server.Controls
                         AddOrUpdateUser(userInfo);
                     }
                 }
-                
+
                 // 记录加载结果
                 if (newUsersCount > 0 || existingUsersCount > 0)
                 {
                     LogStatusChange(null, $"初始加载完成：新增 {newUsersCount} 人，更新 {existingUsersCount} 人，当前用户列表 {UserInfos.Count} 人");
                 }
-                
+
                 // 初始化统计信息
                 UpdateStatistics();
             }
@@ -668,11 +668,11 @@ namespace RUINORERP.Server.Controls
 
                 // 获取会话统计信息
                 var statistics = _sessionService.GetStatistics();
-                
+
                 // 获取所有用户会话
                 var allSessions = _sessionService.GetAllUserSessions().ToList();
                 var authenticatedSessions = allSessions.Where(s => s.IsAuthenticated).ToList();
-                
+
                 // 更新标签文本
                 lbl在线用户数.Text = $"在线用户: {allSessions.Count}";
                 lbl总会话数.Text = $"总会话: {statistics.TotalConnections}";
@@ -702,11 +702,11 @@ namespace RUINORERP.Server.Controls
                 foreach (var sessionInfo in currentSessions)
                 {
                     var userInfo = ConvertSessionInfoToUserInfo(sessionInfo, false); // 不记录添加日志
-                    
+
                     // 检查是否是新用户
                     bool isNewUser = !UserInfos.Any(u => u.SessionId == sessionInfo.SessionID);
                     AddOrUpdateUser(userInfo);
-                    
+
                     if (isNewUser)
                     {
                         newUsersCount++;
@@ -716,7 +716,7 @@ namespace RUINORERP.Server.Controls
                     {
                         updatedUsersCount++;
                     }
-                    
+
                     processedSessionIds.Add(sessionInfo.SessionID);
                 }
 
@@ -767,18 +767,18 @@ namespace RUINORERP.Server.Controls
                     {
                         // 会话仍然存在，更新状态（不记录添加日志）
                         var updatedUserInfo = ConvertSessionInfoToUserInfo(sessionInfo, false);
-                        
+
                         // 检查是否有实际的状态变化
                         bool onlineStatusChanged = userInfo.在线状态 != updatedUserInfo.在线状态;
                         bool authStatusChanged = userInfo.授权状态 != updatedUserInfo.授权状态;
                         bool anyModuleChanged = userInfo.当前模块 != updatedUserInfo.当前模块;
                         bool anyFormChanged = userInfo.当前窗体 != updatedUserInfo.当前窗体;
-                        
+
                         if (onlineStatusChanged || authStatusChanged || anyModuleChanged || anyFormChanged)
                         {
                             AddOrUpdateUser(updatedUserInfo);
                             statusChangesCount++;
-                            
+
                             // 只在有实际变化时记录状态变化
                             if (onlineStatusChanged)
                             {
@@ -806,7 +806,7 @@ namespace RUINORERP.Server.Controls
                         }
                     }
                 }
-                
+
                 // 只在有状态变化时记录总结
                 if (statusChangesCount > 0)
                 {
@@ -837,12 +837,12 @@ namespace RUINORERP.Server.Controls
             {
                 // 首先检查是否已存在该用户，避免重复添加
                 var existingUser = UserInfos.FirstOrDefault(u => u.SessionId == sessionInfo.SessionID);
-                
+
                 // 如果通过SessionId找不到，尝试通过客户端IP查找未认证用户
                 if (existingUser == null && string.IsNullOrEmpty(sessionInfo.UserName))
                 {
-                    existingUser = UserInfos.FirstOrDefault(u => 
-                        u.用户名.StartsWith("未认证用户_") && 
+                    existingUser = UserInfos.FirstOrDefault(u =>
+                        u.用户名.StartsWith("未认证用户_") &&
                         u.客户端IP == sessionInfo.ClientIp);
                 }
 
@@ -851,7 +851,7 @@ namespace RUINORERP.Server.Controls
                     // 用户已存在，更新状态而不是重新添加
                     existingUser.在线状态 = sessionInfo.IsConnected;
                     existingUser.最后心跳时间 = sessionInfo.LastActivityTime.ToString("yyyy-MM-dd HH:mm:ss");
-                    
+
                     // 记录连接状态更新
                     string statusDescription = sessionInfo.IsAuthenticated ? "已连接且已授权" : "已连接但未授权";
                     LogStatusChange(existingUser, $"会话重新连接 - {statusDescription}");
@@ -861,12 +861,12 @@ namespace RUINORERP.Server.Controls
                     // 新用户，添加到列表
                     var userInfo = ConvertSessionInfoToUserInfo(sessionInfo);
                     AddOrUpdateUser(userInfo);
-                    
+
                     // 记录连接状态
                     string statusDescription = sessionInfo.IsAuthenticated ? "已连接且已授权" : "已连接但未授权";
                     LogStatusChange(userInfo, $"会话连接 - {statusDescription}");
                 }
-                
+
                 // 立即更新统计信息，确保UI及时反映连接状态变化
                 UpdateStatistics();
             }
@@ -893,9 +893,9 @@ namespace RUINORERP.Server.Controls
                 {
                     userToUpdate.在线状态 = false;
                     userToUpdate.最后心跳时间 = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-                    LogStatusChange(userToUpdate, "会话断开事件触发");
+                    LogStatusChange(userToUpdate, $"会话断开事件触发");
                 }
-                
+
                 // 立即更新统计信息，确保UI及时反映断开状态变化
                 UpdateStatistics();
             }
@@ -917,12 +917,12 @@ namespace RUINORERP.Server.Controls
             {
                 // 使用多种方式查找现有用户，避免键值不匹配导致的重复添加
                 var existingUser = UserInfos.FirstOrDefault(u => u.SessionId == sessionInfo.SessionID);
-                
+
                 // 如果通过SessionId找不到，尝试通过客户端IP查找未认证用户
                 if (existingUser == null && string.IsNullOrEmpty(sessionInfo.UserName))
                 {
-                    existingUser = UserInfos.FirstOrDefault(u => 
-                        u.用户名.StartsWith("未认证用户_") && 
+                    existingUser = UserInfos.FirstOrDefault(u =>
+                        u.用户名.StartsWith("未认证用户_") &&
                         u.客户端IP == sessionInfo.ClientIp);
                 }
 
@@ -960,7 +960,7 @@ namespace RUINORERP.Server.Controls
                     var userInfo = ConvertSessionInfoToUserInfo(sessionInfo);
                     AddOrUpdateUser(userInfo);
                 }
-                
+
                 // 立即更新统计信息，确保UI及时反映状态变化
                 UpdateStatistics();
             }
@@ -1023,7 +1023,7 @@ namespace RUINORERP.Server.Controls
         {
             // 获取选中的用户
             var selectedUsers = new List<UserInfo>();
-            
+
             // 先检查是否有复选框选中的用户
             foreach (ListViewItem item in listView1.CheckedItems)
             {
@@ -1036,7 +1036,7 @@ namespace RUINORERP.Server.Controls
                     }
                 }
             }
-            
+
             // 如果没有复选框选中的用户，则使用单选的用户
             if (selectedUsers.Count == 0 && listView1.SelectedItems.Count > 0)
             {
@@ -1050,7 +1050,7 @@ namespace RUINORERP.Server.Controls
                     }
                 }
             }
-            
+
             return selectedUsers;
         }
 
@@ -1370,7 +1370,7 @@ namespace RUINORERP.Server.Controls
         {
             frmMessager frmMessager = new frmMessager();
             frmMessager.MustDisplay = true;
-            if(frmMessager.ShowDialog()!=DialogResult.OK)
+            if (frmMessager.ShowDialog() != DialogResult.OK)
             {
                 return;
             }
@@ -1666,7 +1666,7 @@ namespace RUINORERP.Server.Controls
                 {
                     userDisplayName = userInfo.用户名;
                 }
-                
+
                 string userRealName = !string.IsNullOrEmpty(userInfo.姓名) ? userInfo.姓名 : "未知姓名";
                 string logMessage = $"[用户状态变化] 用户: {userDisplayName} ({userRealName}), {changeDescription}, 时间: {DateTime.Now:yyyy-MM-dd HH:mm:ss}";
                 frmMainNew.Instance.PrintInfoLog(logMessage);
@@ -1724,7 +1724,7 @@ namespace RUINORERP.Server.Controls
                     user.PropertyChanged -= UserInfo_PropertyChanged;
                 }
                 listView1.EndUpdate();
-                
+
                 frmMainNew.Instance.PrintInfoLog($"清理了 {inactiveUsers.Count} 个离线超时用户");
             }
         }
@@ -1807,16 +1807,16 @@ namespace RUINORERP.Server.Controls
                 {
                     // 检查是否已存在相同会话ID的用户
                     var existingUser = UserInfos.FirstOrDefault(u => u.SessionId == session.SessionID);
-                    
+
                     // 如果用户名空，检查是否已存在相同客户端IP的未认证用户
                     if (existingUser == null && string.IsNullOrEmpty(session.UserName))
                     {
-                        existingUser = UserInfos.FirstOrDefault(u => 
+                        existingUser = UserInfos.FirstOrDefault(u =>
                             u.用户名.StartsWith("未认证用户_") && u.客户端IP == session.ClientIp);
                     }
 
                     var userInfo = ConvertSessionInfoToUserInfo(session);
-                    
+
                     if (existingUser != null)
                     {
                         // 更新现有用户
@@ -1827,7 +1827,7 @@ namespace RUINORERP.Server.Controls
                         existingUser.在线状态 = userInfo.在线状态;
                         existingUser.授权状态 = userInfo.授权状态;
                         existingUser.UserID = userInfo.UserID;
-                        
+
                         // 更新ListView显示 - 使用现有的AddOrUpdateUser方法
                         AddOrUpdateUser(existingUser);
                         updatedUsers++;
@@ -1843,7 +1843,7 @@ namespace RUINORERP.Server.Controls
 
                 // 更新统计信息
                 UpdateStatistics();
-                
+
                 frmMainNew.Instance.PrintInfoLog($"刷新完成：新增 {newUsers} 个用户，更新 {updatedUsers} 个用户");
             }
             catch (Exception ex)

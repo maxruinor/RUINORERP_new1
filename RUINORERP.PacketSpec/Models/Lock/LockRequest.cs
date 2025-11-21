@@ -64,6 +64,7 @@ namespace RUINORERP.PacketSpec.Models.Lock
         /// 默认5分钟
         /// </summary>
         public int TimeoutMs { get; set; } = 300000;
+        public bool RefreshMode { get; set; }
 
         /// <summary>
         /// 初始化锁定请求

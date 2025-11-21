@@ -44,27 +44,11 @@ namespace RUINORERP.Business
           var ReceivablePayable = context.InstanceToValidate as tb_FM_ReceivablePayable;
           if (ReceivablePayable != null)
           {
-              //根据配置判断预交日期是不是必须填写
+              //根据配置判断收款账户是否必须填写
               //实际情况是 保存时可能不清楚交期，保存后截图发给供应商后才知道。这时提交才要求
               if (ValidatorConfig.收付款账户必填)
               {
-
-                  if (ReceivablePayable.ReceivePaymentType == (int)ReceivePaymentType.收款)
-                  {
-                      if (ReceivablePayable.PayeeInfoID == null || !ReceivablePayable.PayeeInfoID.HasValue)
-                      {
-                          if (ReceivablePayable.TotalLocalPayableAmount > 0)
-                          {
-                              context.AddFailure("收款时账户信息必填：必须填写。");
-                          }
-                          else
-                          {
-                              context.AddFailure("收款红字时，账户信息必填：必须填写。");
-                          }
-
-                      }
-                  }
-
+                  // 只在付款单时验证收款信息，收款单时不验证（与UI显示逻辑一致）
                   if (ReceivablePayable.ReceivePaymentType == (int)ReceivePaymentType.付款)
                   {
                       if (ReceivablePayable.PayeeInfoID == null || !ReceivablePayable.PayeeInfoID.HasValue)

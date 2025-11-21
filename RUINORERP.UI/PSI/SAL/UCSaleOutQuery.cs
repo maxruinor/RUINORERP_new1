@@ -170,7 +170,7 @@ namespace RUINORERP.UI.PSI.SAL
             .FirstOrDefault();
             if (RelatedMenuInfo != null)
             {
-                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, ReceivablePayable);
+               await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, ReceivablePayable);
             }
 
         }

@@ -93,13 +93,13 @@ namespace RUINORERP.UI.BusinessService.SmartMenuService
             AutoSave();
         }
 
-        // 获取Top10菜单
+        // 获取Top20常用菜单
         public List<long> GetTopMenus()
         {
             return _menuUsage.Values
                 .OrderByDescending(x => x.Frequency)
                 .ThenByDescending(x => x.LastClickTime)
-                .Take(10)
+                .Take(20)
                 .Select(x => x.MenuId)
                 .ToList();
         }

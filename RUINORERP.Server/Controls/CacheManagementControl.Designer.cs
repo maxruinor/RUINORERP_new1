@@ -69,6 +69,8 @@ namespace RUINORERP.Server.Controls
             dataGridViewTableStats = new System.Windows.Forms.DataGridView();
             tabPageItemStats = new System.Windows.Forms.TabPage();
             dataGridViewItemStats = new System.Windows.Forms.DataGridView();
+            statusStrip1 = new System.Windows.Forms.StatusStrip();
+            toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
             toolStrip1.SuspendLayout();
             tabControl1.SuspendLayout();
             tabPageCacheManagement.SuspendLayout();
@@ -85,6 +87,7 @@ namespace RUINORERP.Server.Controls
             ((System.ComponentModel.ISupportInitialize)dataGridViewTableStats).BeginInit();
             tabPageItemStats.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)dataGridViewItemStats).BeginInit();
+            statusStrip1.SuspendLayout();
             SuspendLayout();
             // 
             // toolStrip1
@@ -503,10 +506,27 @@ namespace RUINORERP.Server.Controls
             dataGridViewItemStats.Size = new System.Drawing.Size(901, 445);
             dataGridViewItemStats.TabIndex = 0;
             // 
+            // statusStrip1
+            // 
+            statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            toolStripStatusLabel1});
+            statusStrip1.Location = new System.Drawing.Point(0, 686);
+            statusStrip1.Name = "statusStrip1";
+            statusStrip1.Size = new System.Drawing.Size(933, 22);
+            statusStrip1.TabIndex = 2;
+            statusStrip1.Text = "statusStrip1";
+            // 
+            // toolStripStatusLabel1
+            // 
+            toolStripStatusLabel1.Name = "toolStripStatusLabel1";
+            toolStripStatusLabel1.Size = new System.Drawing.Size(44, 17);
+            toolStripStatusLabel1.Text = "就绪";
+            // 
             // CacheManagementControl
             // 
             AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            Controls.Add(statusStrip1);
             Controls.Add(tabControl1);
             Controls.Add(toolStrip1);
             Margin = new System.Windows.Forms.Padding(4);
@@ -531,6 +551,8 @@ namespace RUINORERP.Server.Controls
             ((System.ComponentModel.ISupportInitialize)dataGridViewTableStats).EndInit();
             tabPageItemStats.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)dataGridViewItemStats).EndInit();
+            statusStrip1.ResumeLayout(false);
+            statusStrip1.PerformLayout();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -577,5 +599,7 @@ namespace RUINORERP.Server.Controls
         private System.Windows.Forms.DataGridView dataGridViewTableStats;
         private System.Windows.Forms.TabPage tabPageItemStats;
         private System.Windows.Forms.DataGridView dataGridViewItemStats;
+        private System.Windows.Forms.StatusStrip statusStrip1;
+        private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel1;
     }
 }

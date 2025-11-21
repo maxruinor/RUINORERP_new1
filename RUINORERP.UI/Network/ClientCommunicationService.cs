@@ -834,6 +834,11 @@ namespace RUINORERP.UI.Network
                     return;
                 }
 
+                if (packet.CommandId!=SystemCommands.Heartbeat)
+                {
+
+                }
+
                 // 1. 首先尝试作为响应处理（请求-响应模式）
                 if (IsResponsePacket(packet))
                 {

@@ -41,7 +41,8 @@ namespace RUINORERP.UI.Network
         /// <summary>
         /// 断开连接
         /// </summary>
-        void Disconnect();
+        /// <returns>断开连接是否成功</returns>
+        Task<bool> Disconnect();
 
         /// <summary>
         /// 发送命令并等待响应

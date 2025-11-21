@@ -368,37 +368,50 @@ namespace RUINORERP.UI.Network
         /// <summary>
         /// 断开与服务器的连接 - 增强状态同步验证
         /// </summary>
-        public void Disconnect()
+        /// <returns>断开连接是否成功</returns>
+        public async Task<bool> Disconnect()
         {
+            bool shouldDisconnect;
             lock (_syncLock)
             {
-                if (_isConnected && !_disposed)
+                shouldDisconnect = _isConnected && !_disposed;
+            }
+
+            if (shouldDisconnect)
+            {
+                try
                 {
-                    try
+                    // 验证Socket实际状态
+                    if (_socketClient.IsConnected)
                     {
-                        // 验证Socket实际状态
-                        if (_socketClient.IsConnected)
-                        {
-                            _socketClient.Disconnect();
-                            _logger.Debug("主动断开与服务器的连接");
-                        }
-                        else
-                        {
-                            _logger.LogWarning("尝试断开连接时发现Socket已处于断开状态");
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, "断开连接时发生错误");
-                        _eventManager.OnErrorOccurred(new Exception($"断开连接时发生错误: {ex.Message}", ex));
-                    }
-                    finally
-                    {
+                        var disconnectResult = await _socketClient.Disconnect();
+                        _logger.Debug($"主动断开与服务器的连接，结果: {disconnectResult}");
+                        
                         // 使用统一的连接状态更新方法
                         UpdateConnectionState(false);
+                        return disconnectResult;
+                    }
+                    else
+                    {
+                        _logger.LogWarning("尝试断开连接时发现Socket已处于断开状态");
+                        
+                        // 使用统一的连接状态更新方法
+                        UpdateConnectionState(false);
+                        return true;
                     }
                 }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "断开连接时发生错误");
+                    _eventManager.OnErrorOccurred(new Exception($"断开连接时发生错误: {ex.Message}", ex));
+                    
+                    // 使用统一的连接状态更新方法
+                    UpdateConnectionState(false);
+                    return false;
+                }
             }
+            
+            return true;
         }
 
         /// <summary>
@@ -1232,10 +1245,12 @@ namespace RUINORERP.UI.Network
 
 
         /// <summary>
-        /// 处理心跳包失败 - 增强状态同步检查
+        /// 处理心跳包失败 - 增强状态同步检查（异步版本）
         /// </summary>
-        private void HandleHeartbeatFailure(Exception exception)
+        private async Task HandleHeartbeatFailureAsync(Exception exception)
         {
+            bool shouldDisconnect = false;
+            
             lock (_syncLock)
             {
                 _heartbeatFailureCount++;
@@ -1251,7 +1266,7 @@ namespace RUINORERP.UI.Network
                         // 验证Socket实际状态
                         if (_socketClient.IsConnected)
                         {
-                            _socketClient.Disconnect();
+                            shouldDisconnect = true;
                         }
                         else
                         {
@@ -1261,24 +1276,34 @@ namespace RUINORERP.UI.Network
                         // 使用统一的连接状态更新方法
                         UpdateConnectionState(false);
                     }
+                }
+            }
 
-                    // 尝试重连
-                    if (_networkConfig.AutoReconnect && !_disposed)
-                    {
-                        Task.Run(() => TryReconnectAsync());
-                    }
+            // 在lock外部执行异步断开操作
+            if (shouldDisconnect)
+            {
+                var disconnectResult = await _socketClient.Disconnect();
+                _logger.LogError($"心跳包连续失败，断开连接结果: {disconnectResult}");
+            }
+
+            // 尝试重连（在lock外部）
+            lock (_syncLock)
+            {
+                if (_heartbeatFailureCount >= _networkConfig.MaxHeartbeatFailures && _networkConfig.AutoReconnect && !_disposed)
+                {
+                    Task.Run(() => TryReconnectAsync());
                 }
             }
         }
 
         /// <summary>
-        /// 处理心跳失败事件
+        /// 处理心跳失败事件（异步版本）
         /// </summary>
-        private void OnHeartbeatFailed(Exception exception)
+        private async void OnHeartbeatFailed(Exception exception)
         {
             try
             {
-                HandleHeartbeatFailure(exception);
+                await HandleHeartbeatFailureAsync(exception);
             }
             catch (Exception ex)
             {

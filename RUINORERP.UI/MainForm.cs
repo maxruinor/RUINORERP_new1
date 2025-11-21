@@ -217,7 +217,11 @@ namespace RUINORERP.UI
                     // 如果当前不是登录中状态且已连接，则断开连接
                     if (CurrentLoginStatus != LoginStatus.LoggingIn && communicationService != null && communicationService.IsConnected)
                     {
-                        Invoke(new Action(() => communicationService.Disconnect()));
+                        Invoke(new Action(async () => 
+                        {
+                            var disconnectResult = await communicationService.Disconnect();
+                            logger?.LogInformation($"重连失败处理中断开连接结果: {disconnectResult}");
+                        }));
                     }
                 }
             }
@@ -1836,7 +1840,8 @@ namespace RUINORERP.UI
                     // 检查是否与服务器连接，如果连接则断开
                     if (communicationService != null && communicationService.IsConnected)
                     {
-                        communicationService.Disconnect();
+                        var disconnectResult = await communicationService.Disconnect();
+                        logger?.LogInformation($"登录过程中断开连接结果: {disconnectResult}");
                     }
 
                     Application.Exit();
@@ -1856,7 +1861,8 @@ namespace RUINORERP.UI
                 // 异常情况下断开连接
                 if (communicationService != null && communicationService.IsConnected)
                 {
-                    communicationService.Disconnect();
+                    var disconnectResult = await communicationService.Disconnect();
+                    logger?.LogInformation($"异常处理中断开连接结果: {disconnectResult}");
                 }
                 return false;
             }
@@ -1885,7 +1891,8 @@ namespace RUINORERP.UI
                 // 登出完成，断开与服务器的连接
                 if (communicationService != null && communicationService.IsConnected)
                 {
-                    communicationService.Disconnect();
+                    var disconnectResult = await communicationService.Disconnect();
+                    logger?.LogInformation($"登出过程中断开连接结果: {disconnectResult}");
                 }
 
                 // 设置状态为未登录
@@ -1930,7 +1937,8 @@ namespace RUINORERP.UI
                     // 断开与服务器的连接，避免继续发送心跳
                     if (communicationService != null && communicationService.IsConnected)
                     {
-                        communicationService.Disconnect();
+                        var disconnectResult = await communicationService.Disconnect();
+                        logger?.LogInformation($"锁定过程中断开连接结果: {disconnectResult}");
                     }
 
                     ClearUI();
@@ -2744,7 +2752,8 @@ namespace RUINORERP.UI
                 System.GC.Collect();
                 await Logout();
 
-                communicationService.Disconnect();
+                var disconnectResult = await communicationService.Disconnect();
+                logger?.LogInformation($"程序关闭时断开连接结果: {disconnectResult}");
 
                 logManager.Dispose();
             }

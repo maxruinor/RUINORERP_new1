@@ -241,7 +241,8 @@ namespace RUINORERP.UI.Network
         /// <summary>
         /// 断开连接
         /// </summary>
-        public void Disconnect()
+        /// <returns>断开连接是否成功</returns>
+        public async Task<bool> Disconnect()
         {
             if (_isConnected)
             {
@@ -249,10 +250,14 @@ namespace RUINORERP.UI.Network
                 _healthCheckService?.Dispose();
                 _healthCheckService = null;
                 
-                _client.Close();
+                var closeResult = await _client.Close();
                 _isConnected = false;
                 _networkHealthWarningShown = false;
+                
+                return closeResult;
             }
+            
+            return true;
         }
 
         /// <summary>

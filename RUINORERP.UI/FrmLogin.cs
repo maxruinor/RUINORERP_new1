@@ -28,6 +28,21 @@ namespace RUINORERP.UI
 {
     public partial class FrmLogin : Krypton.Toolkit.KryptonForm
     {
+        /// <summary>
+        /// 标记IP地址是否发生变更
+        /// </summary>
+        private bool _ipAddressChanged = false;
+
+        /// <summary>
+        /// 保存原始服务器IP地址，用于变更检测
+        /// </summary>
+        private string _originalServerIP = string.Empty;
+
+        /// <summary>
+        /// 保存原始服务器端口，用于变更检测
+        /// </summary>
+        private string _originalServerPort = string.Empty;
+
         public FrmLogin()
         {
             InitializeComponent();
@@ -109,6 +124,9 @@ namespace RUINORERP.UI
 
             Console.WriteLine($"UI: {Thread.CurrentThread.ManagedThreadId}");
 
+            // 初始化原始服务器信息，用于IP地址变更检测
+            _originalServerIP = txtServerIP.Text.Trim();
+            _originalServerPort = txtPort.Text.Trim();
 
             txtUserName.Focus();
 
@@ -198,8 +216,32 @@ namespace RUINORERP.UI
                                         return;
                                     }
 
-                                    // 检查是否已经连接，如果没有则建立连接
-                                    if (!MainForm.Instance.communicationService.IsConnected)
+                                    // IP地址变更检测和连接管理
+                                    bool shouldConnect = false;
+                                    
+                                    // 检查IP地址是否发生变更
+                                    if (_ipAddressChanged)
+                                    {
+                                        // IP地址已变更，需要重新建立连接
+                                        shouldConnect = true;
+                                        MainForm.Instance.logger?.LogInformation($"检测到服务器IP地址变更，准备连接到新服务器 [{serverIp}:{serverPort}]");
+                                    }
+                                    else if (!MainForm.Instance.communicationService.IsConnected)
+                                    {
+                                        // IP地址未变更，但未连接，需要建立连接
+                                        shouldConnect = true;
+                                        MainForm.Instance.logger?.LogInformation($"服务器IP地址未变更，但当前未连接，准备建立连接 [{serverIp}:{serverPort}]");
+                                    }
+                                    else
+                                    {
+                                        // IP地址未变更且已连接，直接使用现有连接
+                                        var currentAddress = MainForm.Instance.communicationService.GetCurrentServerAddress();
+                                        var currentPort = MainForm.Instance.communicationService.GetCurrentServerPort();
+                                        MainForm.Instance.logger?.LogInformation($"服务器IP地址未变更且已连接，使用现有连接 [当前: {currentAddress}:{currentPort}]");
+                                    }
+
+                                    // 如果需要建立连接
+                                    if (shouldConnect)
                                     {
                                         var connected = await MainForm.Instance.communicationService.ConnectAsync(serverIp, serverPort);
                                         if (!connected)
@@ -213,6 +255,11 @@ namespace RUINORERP.UI
                                             MessageBox.Show("无法连接到服务器，请检查网络连接和服务器配置。", "连接失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
                                             return;
                                         }
+                                        
+                                        // 连接成功后更新原始IP地址
+                                        _originalServerIP = serverIp;
+                                        _originalServerPort = txtPort.Text.Trim();
+                                        _ipAddressChanged = false;
                                     }
 
                                     //////CancellationToken ct = default;
@@ -514,7 +561,37 @@ namespace RUINORERP.UI
 
         private void txtServerIP_TextChanged(object sender, EventArgs e)
         {
+            // 检测IP地址是否发生变更
+            string currentIP = txtServerIP.Text.Trim();
+            string currentPort = txtPort.Text.Trim();
+            
+            _ipAddressChanged = !string.Equals(currentIP, _originalServerIP, StringComparison.OrdinalIgnoreCase) ||
+                               !string.Equals(currentPort, _originalServerPort, StringComparison.OrdinalIgnoreCase);
+            
+            if (_ipAddressChanged)
+            {
+                // IP地址发生变更，需要断开当前连接
+                if (MainForm.Instance != null && MainForm.Instance.communicationService != null && 
+                    MainForm.Instance.communicationService.IsConnected)
+                {
+                    try
+                    {
+                        MainForm.Instance.communicationService.Disconnect();
+                        MainForm.Instance.CurrentLoginStatus = MainForm.LoginStatus.None;
+                        MainForm.Instance.logger?.LogInformation($"检测到服务器IP地址变更：从 [{_originalServerIP}:{_originalServerPort}] 到 [{currentIP}:{currentPort}]，已断开原连接");
+                    }
+                    catch (Exception ex)
+                    {
+                        MainForm.Instance.logger?.LogError(ex, "断开原服务器连接时发生错误");
+                    }
+                }
+            }
+        }
 
+        private void txtPort_TextChanged(object sender, EventArgs e)
+        {
+            // 端口变更检测逻辑与IP地址变更检测相同
+            txtServerIP_TextChanged(sender, e);
         }
 
         private void pictureBox1_Click(object sender, EventArgs e)

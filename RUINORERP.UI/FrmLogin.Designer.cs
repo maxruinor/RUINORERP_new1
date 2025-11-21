@@ -1,4 +1,4 @@
-﻿namespace RUINORERP.UI
+namespace RUINORERP.UI
 {
     partial class FrmLogin
     {
@@ -204,6 +204,7 @@
             this.txtPort.Size = new System.Drawing.Size(46, 21);
             this.txtPort.TabIndex = 20;
             this.txtPort.Text = "3001";
+            this.txtPort.TextChanged += new System.EventHandler(this.txtPort_TextChanged);
             // 
             // lblIP
             // 

@@ -297,6 +297,40 @@ namespace RUINORERP.UI.Common
 
         }
 
+        /// <summary>
+        /// 重写Equals方法，基于关键字段判断相等性
+        /// </summary>
+        /// <param name="obj">要比较的对象</param>
+        /// <returns>如果对象相等返回true，否则返回false</returns>
+        public override bool Equals(object obj)
+        {
+            if (obj == null || GetType() != obj.GetType())
+                return false;
+
+            ReferenceKeyMapping other = (ReferenceKeyMapping)obj;
+            return string.Equals(ReferenceTableName, other.ReferenceTableName, StringComparison.OrdinalIgnoreCase) &&
+                   string.Equals(ReferenceOriginalFieldName, other.ReferenceOriginalFieldName, StringComparison.OrdinalIgnoreCase) &&
+                   string.Equals(MappedTargetTableName, other.MappedTargetTableName, StringComparison.OrdinalIgnoreCase) &&
+                   string.Equals(MappedTargetFieldName, other.MappedTargetFieldName, StringComparison.OrdinalIgnoreCase);
+        }
+
+        /// <summary>
+        /// 重写GetHashCode方法，基于关键字段生成哈希码
+        /// </summary>
+        /// <returns>哈希码</returns>
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                int hash = 17;
+                hash = hash * 23 + (ReferenceTableName?.ToLowerInvariant().GetHashCode() ?? 0);
+                hash = hash * 23 + (ReferenceOriginalFieldName?.ToLowerInvariant().GetHashCode() ?? 0);
+                hash = hash * 23 + (MappedTargetTableName?.ToLowerInvariant().GetHashCode() ?? 0);
+                hash = hash * 23 + (MappedTargetFieldName?.ToLowerInvariant().GetHashCode() ?? 0);
+                return hash;
+            }
+        }
+
         //public ReferenceKeyMapping(string tableName, string keyFieldName, string valueFieldName = null, bool isSpecialField = false, string specialFieldName = null, bool isSelfReferencing = false)
         //{
         //    ReferenceTableName = tableName;

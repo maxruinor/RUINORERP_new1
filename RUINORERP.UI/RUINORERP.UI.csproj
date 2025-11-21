@@ -4010,6 +4010,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="CommonUI\frmGenericOpinion.resx">
       <DependentUpon>frmGenericOpinion.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="CommonUI\frmSelectObject.resx">
       <DependentUpon>frmSelectObject.cs</DependentUpon>

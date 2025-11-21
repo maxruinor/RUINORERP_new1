@@ -268,6 +268,30 @@ namespace RUINORERP.UI.Network
         public NetworkConfig NetworkConfig => _networkConfig;
 
         /// <summary>
+        /// 获取当前连接的服务器地址
+        /// </summary>
+        /// <returns>当前服务器地址，如果未连接则返回空字符串</returns>
+        public string GetCurrentServerAddress()
+        {
+            lock (_syncLock)
+            {
+                return _serverAddress ?? string.Empty;
+            }
+        }
+
+        /// <summary>
+        /// 获取当前连接的服务器端口
+        /// </summary>
+        /// <returns>当前服务器端口，如果未连接则返回0</returns>
+        public int GetCurrentServerPort()
+        {
+            lock (_syncLock)
+            {
+                return _serverPort;
+            }
+        }
+
+        /// <summary>
         /// 命令接收事件，当从服务器接收到命令时触发
         /// </summary>
         public event Action<PacketModel, object> CommandReceived

@@ -29,6 +29,16 @@ namespace RUINORERP.UI.Network
         Task<bool> ConnectAsync(string serverAddress, int port, CancellationToken cancellationToken = default);
 
         /// <summary>
+        /// 获取当前连接的服务器地址
+        /// </summary>
+        string GetCurrentServerAddress();
+
+        /// <summary>
+        /// 获取当前连接的服务器端口
+        /// </summary>
+        int GetCurrentServerPort();
+
+        /// <summary>
         /// 断开连接
         /// </summary>
         void Disconnect();

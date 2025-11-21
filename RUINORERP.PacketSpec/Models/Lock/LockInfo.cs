@@ -108,35 +108,48 @@ namespace RUINORERP.PacketSpec.Models.Lock
 
         /// <summary>
         /// 锁定状态
-        /// 基于IsLocked和时间状态计算得出
+        /// 统一管理锁定实体的状态，确保状态一致性
         /// </summary>
         public LockStatus Status
         {
             get
             {
+                // 首先检查IsLocked标志
                 if (!IsLocked)
                     return LockStatus.Unlocked;
 
+                // 检查是否已过期
                 if (IsExpired())
+                {
+                    // 自动将过期的锁定设置为未锁定状态
+                    IsLocked = false;
                     return LockStatus.Unlocked;
+                }
 
+                // 检查是否即将过期
                 if (IsAboutToExpire())
                     return LockStatus.AboutToExpire;
 
+                // 默认锁定状态
                 return LockStatus.Locked;
             }
             set
             {
-                // 只允许设置特定的业务状态
-                if (value == LockStatus.RequestingUnlock)
+                // 根据设置的值更新IsLocked状态，确保状态一致性
+                switch (value)
                 {
-                    IsLocked = true; // 请求解锁时保持锁定状态
+                    case LockStatus.Unlocked:
+                        IsLocked = false;
+                        break;
+                    case LockStatus.Locked:
+                    case LockStatus.AboutToExpire:
+                    case LockStatus.RequestingUnlock:
+                        IsLocked = true;
+                        break;
+                    default:
+                        // 对于未知状态，保持当前IsLocked值不变
+                        break;
                 }
-                else if (value == LockStatus.Unlocked)
-                {
-                    IsLocked = false;
-                }
-                // Locked和AboutToExpire状态由IsLocked和时间状态自动计算
             }
         }
 

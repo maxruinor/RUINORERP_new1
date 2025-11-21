@@ -44,7 +44,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
             ILockManagerService lockManagerService,
             ISessionService sessionService,
               ILogger<LockCommandHandler> logger = null)
-            :  base(logger)
+            : base(logger)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _lockManagerService = lockManagerService ?? throw new ArgumentNullException(nameof(lockManagerService));
@@ -375,13 +375,16 @@ namespace RUINORERP.Server.Network.CommandHandlers
 
                 // 查询锁状态
                 var lockInfo = _lockManagerService.GetLockInfo(lockRequest.LockInfo.BillID);
-
-                var response = ResponseFactory.CreateSpecificSuccessResponse(cmd.Packet.ExecutionContext, "锁状态查询成功") as LockResponse;
-                response.LockInfo = lockInfo;
-                response.Status = lockInfo?.Status ?? LockStatus.Unlocked;
-                response.RemainingLockTimeMs = lockInfo?.RemainingLockTimeMs ?? 0;
-
+                var response = new LockResponse
+                {
+                    IsSuccess = true,
+                    Message = "锁状态查询成功",
+                    LockInfo = lockInfo,
+                    Status = lockInfo?.Status ?? LockStatus.Unlocked,
+                    RemainingLockTimeMs = lockInfo?.RemainingLockTimeMs ?? 0,
+                };
                 return response;
+
             }
             catch (Exception ex)
             {

@@ -115,6 +115,23 @@ namespace RUINORERP.UI.BaseForm
         private Task _lockRefreshTask;
         private long _currentBillId;
         private long _currentMenuId;
+
+        /// <summary>
+        /// 获取或初始化LockManagementService实例
+        /// 确保只在需要时初始化，避免重复创建
+        /// </summary>
+        /// <returns>LockManagementService实例</returns>
+        protected LockManagementService GetLockManagementService()
+        {
+            // 检查lockManagementService是否已经初始化
+            if (lockManagementService == null)
+            {
+                // 从依赖注入容器中获取LockManagementService实例
+                lockManagementService = RUINORERP.Model.Context.ApplicationContext.Current?.GetRequiredService<LockManagementService>();
+            }
+            return lockManagementService;
+        }
+
         public virtual ToolStripItem[] AddExtendButton(tb_MenuInfo menuInfo)
         {
             System.Windows.Forms.ToolStripItem[] extendButtons = new System.Windows.Forms.ToolStripItem[] { };
@@ -212,8 +229,7 @@ namespace RUINORERP.UI.BaseForm
             }
             catch (Exception ex)
             {
-                logger?.LogError(ex, $"处理状态变更事件失败");
-                MessageBox.Show($"处理状态变更失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                logger?.LogError(ex, $"处理状态变更事件失败：{ex.Message}");
             }
         }
 
@@ -2980,26 +2996,22 @@ namespace RUINORERP.UI.BaseForm
                     {
                         long currentUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
 
-                        // 如果是自己锁定的，显示解锁选项
+                        // 如果是自己锁定的，直接解锁（无需确认）
                         if (lockResponse.LockInfo.UserId == currentUserId)
                         {
-                            if (MessageBox.Show("您已锁定当前单据，是否解锁？", "解锁确认", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
-                            {
-                                UNLock();
-                            }
+                            logger?.LogInformation($"用户[{currentUserId}]选择解锁自己锁定的单据");
+                            UNLock();
                         }
                         else
                         {
-                            // 如果是他人锁定的，显示请求解锁选项
-                            if (MessageBox.Show($"单据已被用户【{lockResponse.LockInfo.UserName}】锁定，是否请求解锁？", "请求解锁", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
-                            {
-                                RequestUnLock();
-                            }
+                            // 如果是他人锁定的，直接请求解锁（无需确认）
+                            logger?.LogInformation($"用户[{currentUserId}]请求解锁被用户[{lockResponse.LockInfo.UserName}]锁定的单据");
+                            RequestUnLock();
                         }
                     }
                     else
                     {
-                        MessageBox.Show("无法获取锁定信息，请刷新后重试。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        logger?.LogWarning("无法获取锁定信息，请刷新后重试");
                     }
                     break;
                 case MenuItemEnums.新增:
@@ -3819,7 +3831,7 @@ namespace RUINORERP.UI.BaseForm
             {
                 // 更新UI显示
                 this.tsBtnLocked.Image = global::RUINORERP.UI.Properties.Resources.unlockbill;
-                MessageBox.Show("单据已强制解锁", "操作成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                logger?.LogInformation("单据已强制解锁");
             }
         }
 
@@ -3975,20 +3987,42 @@ namespace RUINORERP.UI.BaseForm
 
 
 
+        /// <summary>
+        /// 锁定单据
+        /// </summary>
+        /// <param name="BillID">单据ID</param>
+        /// <param name="userid">用户ID</param>
+        /// <returns>异步任务</returns>
         private async Task LockBill(long BillID, long userid)
         {
-
-            CommBillData cbd = EntityMappingHelper.GetBillData(typeof(T), EditEntity);
-
-            if (lockManagementService != null)
+            if (BillID <= 0 || userid <= 0)
             {
-                var result = await lockManagementService.LockAsync(BillID, CurMenuInfo.MenuID);
+                logger?.LogWarning("锁定单据失败：单据ID或用户ID无效");
+                return;
+            }
+
+            try
+            {
+                // 使用统一的服务获取方法
+                var lockService = GetLockManagementService();
+                if (lockService == null)
+                {
+                    logger?.LogError("锁定单据失败：锁定管理服务未初始化");
+                    return;
+                }
+
+                var result = await lockService.LockAsync(BillID, CurMenuInfo.MenuID);
                 if (result.IsSuccess && result.LockInfo.IsLocked)
                 {
+                    logger?.LogInformation($"单据 {BillID} 锁定成功");
+                    
                     // 更新UI状态
-                    if (tsBtnLocked != null)
+                    if (tsBtnLocked != null && !IsDisposed)
                     {
-                        tsBtnLocked.Visible = true;
+                        Invoke((MethodInvoker)(() =>
+                        {
+                            tsBtnLocked.Visible = true;
+                        }));
                     }
 
                     if (AuthorizeController.GetShowDebugInfoAuthorization(MainForm.Instance.AppContext))
@@ -3998,8 +4032,15 @@ namespace RUINORERP.UI.BaseForm
                 }
                 else
                 {
-                    MainForm.Instance.uclog.AddLog($"单据 {BillID} 锁定失败", UILogType.错误);
+                    string errorMsg = result?.Message ?? "锁定失败";
+                    logger?.LogError($"单据 {BillID} 锁定失败：{errorMsg}");
+                    MainForm.Instance.uclog.AddLog($"单据 {BillID} 锁定失败：{errorMsg}", UILogType.错误);
                 }
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, $"单据 {BillID} 锁定异常");
+                MainForm.Instance.uclog.AddLog($"单据 {BillID} 锁定异常: {ex.Message}", UILogType.错误);
             }
         }
 
@@ -4092,13 +4133,8 @@ namespace RUINORERP.UI.BaseForm
                         }
                         catch (Exception ex)
                         {
+                            logger?.LogError(ex, $"检查锁定状态时发生异常");
                             MainForm.Instance.uclog.AddLog($"检查锁定状态时发生异常: {ex.Message}", UILogType.错误);
-
-                            // 网络异常等情况下，允许操作继续，但显示警告
-                            if (tsBtnLocked.Visible)
-                            {
-                                MessageBox.Show($"检查锁定状态时发生异常，请刷新后重试。异常信息：{ex.Message}", "锁定检查异常", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                            }
                         }
                     }
                     else
@@ -6518,13 +6554,13 @@ namespace RUINORERP.UI.BaseForm
                     try
                     {
                         await lockManagementService.RequestUnlockAsync(billId, CurMenuInfo.MenuID);
-                        MessageBox.Show($"已向锁定用户发送解锁请求，请等待回应。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        logger?.LogInformation($"已向锁定用户发送解锁请求，请等待回应");
                         MainForm.Instance.uclog.AddLog($"已向锁定用户发送单据 {billId} 的解锁请求", UILogType.普通消息);
                     }
                     catch (Exception ex)
                     {
+                        logger?.LogError(ex, "发送解锁请求失败");
                         MainForm.Instance.uclog.AddLog($"发送解锁请求失败: {ex.Message}", UILogType.错误);
-                        MessageBox.Show($"发送解锁请求失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
                 });
             }
@@ -6584,9 +6620,10 @@ namespace RUINORERP.UI.BaseForm
                                 string successMsg = $"单据【{billId}】解锁成功";
                                 MainForm.Instance.uclog.AddLog(successMsg, UILogType.普通消息);
 
+                                // 在调试模式下记录成功日志
                                 if (AuthorizeController.GetShowDebugInfoAuthorization(MainForm.Instance.AppContext))
                                 {
-                                    MessageBox.Show(successMsg, "解锁成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                                    logger?.LogDebug(successMsg);
                                 }
 
                                 // 更新UI状态
@@ -6600,100 +6637,55 @@ namespace RUINORERP.UI.BaseForm
                             else
                             {
                                 string errorMsg = unlockResult?.Message ?? "解锁失败";
+                                logger?.LogError($"单据【{billId}】解锁失败：{errorMsg}");
                                 MainForm.Instance.uclog.AddLog($"单据【{billId}】解锁失败：{errorMsg}", UILogType.错误);
-                                MessageBox.Show($"单据解锁失败：{errorMsg}", "解锁失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
                             }
                         }
                         catch (Exception ex)
                         {
+                            logger?.LogError(ex, "解锁操作异常");
                             MainForm.Instance.uclog.AddLog($"单据解锁失败: {ex.Message}", UILogType.错误);
-                            MessageBox.Show($"解锁操作异常: {ex.Message}", "解锁异常", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         }
                     });
                 }
                 else
                 {
+                    logger?.LogError("锁定管理服务未初始化");
                     MainForm.Instance.uclog.AddLog("锁定管理服务未初始化", UILogType.错误);
-                    MessageBox.Show("锁定服务未初始化，请联系系统管理员", "解锁失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
             catch (Exception ex)
             {
+                logger?.LogError(ex, $"解锁操作异常: {ex.Message}");
                 MainForm.Instance.uclog.AddLog($"解锁操作异常: {ex.Message}", UILogType.错误);
-                MessageBox.Show($"解锁操作异常: {ex.Message}", "解锁异常", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
 
+        /// <summary>
+        /// 按业务名称解锁单据（已废弃）
+        /// </summary>
+        /// <param name="userid">用户ID</param>
+        [Obsolete("此方法已废弃，请使用异步的UNLock()方法或UnlockBill()方法")]
         public void UNLockByBizName(long userid)
         {
-
-            CommBillData cbd = new CommBillData();
-            cbd = EntityMappingHelper.GetBillData(typeof(T), EditEntity);
-
-
-            /*
-            //得到了锁
-            ClientLockManagerCmd cmd = new ClientLockManagerCmd(CommandDirection.Send);
-            cmd.lockCmd = LockCmd.UnLockByBizName;
-            UnLockInfo lockRequest = new UnLockInfo();
-            lockRequest.BillData = cbd;
-            lockRequest.LockedUserID = userid;
-            lockRequest.LockedUserName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name;
-            lockRequest.MenuID = CurMenuInfo.MenuID;
-            lockRequest.PacketId = cmd.PacketId;
-            cmd.RequestInfo = lockRequest;
-            // 注册锁定单据的事件处理程序
-            ClientEventManager.Instance.AddCommandHandler(cmd.PacketId, cmd.HandleLockEvent);
-            MainForm.Instance.dispatcher.DispatchAsync(cmd, CancellationToken.None);
-            if (AuthorizeController.GetShowDebugInfoAuthorization(MainForm.Instance.AppContext))
-            {
-                MainForm.Instance.PrintInfoLog($"向服务器发送【业务类型】解锁{lockRequest.BillData.BizName}成功");
-            }
-            */
+            logger?.LogWarning($"UNLockByBizName方法已废弃，不应被调用。用户ID: {userid}");
+            // 直接调用现代的UNLock方法
+            UNLock();
         }
 
 
+        /// <summary>
+        /// 解锁指定单据（已废弃）
+        /// </summary>
+        /// <param name="billid">单据ID</param>
+        /// <param name="userid">用户ID</param>
+        [Obsolete("此方法已废弃，请使用异步的UNLock()方法或UnlockBill()方法")]
         public void UNLock(long billid, long userid)
         {
-
-            CommBillData cbd = new CommBillData();
-            cbd = EntityMappingHelper.GetBillData(typeof(T), EditEntity);
-
-            /*
-            //得到了锁
-            ClientLockManagerCmd cmd = new ClientLockManagerCmd(CommandDirection.Send);
-            cmd.lockCmd = LockCmd.UNLOCK;
-            UnLockInfo lockRequest = new UnLockInfo();
-            lockRequest.BillData = cbd;
-            lockRequest.BillID = billid;
-            lockRequest.LockedUserID = userid;
-            lockRequest.LockedUserName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name;
-            lockRequest.MenuID = CurMenuInfo.MenuID;
-            lockRequest.PacketId = cmd.PacketId;
-            cmd.RequestInfo = lockRequest;
-            // 注册锁定单据的事件处理程序
-            ClientEventManager.Instance.AddCommandHandler(cmd.PacketId, cmd.HandleLockEvent);
-
-            MainForm.Instance.dispatcher.DispatchAsync(cmd, CancellationToken.None);
-
-            if (AuthorizeController.GetShowDebugInfoAuthorization(MainForm.Instance.AppContext))
-            {
-                MainForm.Instance.PrintInfoLog($"向服务器发送锁{lockRequest.BillID}成功");
-            }
-            cmd.LockChanged += (sender, e) =>
-            {
-                if (e.requestBaseInfo.BillID != billid)
-                {
-                    return;
-                }
-                if (e.isSuccess)
-                {
-                    this.tsBtnLocked.Visible = false;
-                }
-
-            };
-            */
+            logger?.LogWarning($"UNLock(billid, userid)方法已废弃，不应被调用。单据ID: {billid}, 用户ID: {userid}");
+            // 直接调用现代的UNLock方法
+            UNLock();
         }
 
         internal override void CloseTheForm(object thisform)
@@ -7026,37 +7018,41 @@ namespace RUINORERP.UI.BaseForm
         private async Task<bool> RefreshLockStatusAsync()
         {
             if (_currentBillId <= 0 || _currentMenuId <= 0)
+            {
+                logger?.LogWarning("刷新锁定状态失败：单据ID或菜单ID无效");
                 return false;
+            }
 
             try
             {
-                if (lockManagementService == null)
+                // 使用统一的服务获取方法
+                var lockService = GetLockManagementService();
+                if (lockService == null)
                 {
-                    lockManagementService = Startup.GetFromFac<LockManagementService>();
-                }
-
-                if (lockManagementService != null)
-                {
-                    // 调用锁定管理服务刷新锁定状态
-                    var result = await lockManagementService.RefreshLockAsync(_currentBillId, _currentMenuId);
-
-                    if (result != null && result.IsSuccess)
-                    {
-                        MainForm.Instance?.uclog?.AddLog($"单据【{_currentBillId}】锁定状态已成功刷新，锁定有效期已延长", UILogType.普通消息);
-                        return true;
-                    }
-                    else
-                    {
-                        string errorMsg = result?.Message ?? "刷新锁定失败";
-                        MainForm.Instance?.uclog?.AddLog($"单据【{_currentBillId}】锁定刷新失败：{errorMsg}", UILogType.错误);
-
-                    }
+                    logger?.LogError("刷新锁定状态失败：锁定管理服务未初始化");
                     return false;
                 }
-                return false;
+
+                // 调用锁定管理服务刷新锁定状态
+                var result = await lockService.RefreshLockAsync(_currentBillId, _currentMenuId);
+
+                if (result != null && result.IsSuccess)
+                {
+                    logger?.LogInformation($"单据【{_currentBillId}】锁定状态已成功刷新，锁定有效期已延长");
+                    MainForm.Instance?.uclog?.AddLog($"单据【{_currentBillId}】锁定状态已成功刷新，锁定有效期已延长", UILogType.普通消息);
+                    return true;
+                }
+                else
+                {
+                    string errorMsg = result?.Message ?? "刷新锁定失败";
+                    logger?.LogError($"单据【{_currentBillId}】锁定刷新失败：{errorMsg}");
+                    MainForm.Instance?.uclog?.AddLog($"单据【{_currentBillId}】锁定刷新失败：{errorMsg}", UILogType.错误);
+                    return false;
+                }
             }
             catch (Exception ex)
             {
+                logger?.LogError(ex, $"单据【{_currentBillId}】锁定刷新异常");
                 MainForm.Instance?.uclog?.AddLog($"单据【{_currentBillId}】锁定刷新异常: {ex.Message}", UILogType.错误);
                 return false;
             }
@@ -7179,19 +7175,27 @@ namespace RUINORERP.UI.BaseForm
         /// <returns>是否被当前用户锁定</returns>
         private bool IsLockedByCurrentUser()
         {
-            // 这里需要根据实际的锁定状态判断逻辑实现
-            // 假设tsBtnLocked是锁定按钮，其显示状态可以反映锁定状态
-            return tsBtnLocked != null && tsBtnLocked.Visible;
-
-            // 如果刷新失败，说明锁定可能已被释放，需要更新UI状态
-            if (tsBtnLocked != null && !IsDisposed)
+            // 检查锁定按钮的显示状态来判断锁定状态
+            bool isLocked = tsBtnLocked != null && tsBtnLocked.Visible;
+            
+            // 如果锁定状态为false，可能表示锁定已被释放，更新UI状态
+            if (!isLocked && tsBtnLocked != null && !IsDisposed)
             {
-                Invoke((MethodInvoker)(() =>
+                try
                 {
-                    tsBtnLocked.Visible = false;
-                    tsBtnLocked.Tag = null;
-                }));
+                    Invoke((MethodInvoker)(() =>
+                    {
+                        tsBtnLocked.Visible = false;
+                        tsBtnLocked.Tag = null;
+                    }));
+                }
+                catch (Exception ex)
+                {
+                    logger?.LogWarning("更新锁定UI状态时发生异常: {ex.Message}", ex.Message);
+                }
             }
+            
+            return isLocked;
         }
     }
 

@@ -122,6 +122,7 @@ namespace RUINORERP.Server.Network.Services
                 lockInfo.LockTime = DateTime.Now;
                 lockInfo.ExpireTime = lockInfo.LockTime.AddSeconds(DefaultLockTimeoutSeconds);
                 lockInfo.LockId = Guid.NewGuid().ToString();
+                lockInfo.IsLocked = true; // 设置锁定状态为已锁定
 
                 // 添加锁定信息
                 var added = _lockInfoManager.AddLockInfo(lockInfo);
@@ -235,7 +236,10 @@ namespace RUINORERP.Server.Network.Services
                 {
                     _logger.LogWarning(ex, "取消锁续期时发生异常: BillID={BillID}", billId);
                 }
-
+                
+                // 设置锁定状态为未锁定
+                lockInfo.IsLocked = false; // 更新锁定实体状态
+                
                 // 移除内存中的锁定信息
                 var removed = _lockInfoManager.RemoveLockInfo(billId);
                 if (removed)
@@ -479,7 +483,15 @@ namespace RUINORERP.Server.Network.Services
                 {
                     _logger.LogWarning(ex, "取消锁续期时发生异常: BillID={BillID}", billId);
                 }
-
+                
+                // 获取并更新锁定实体状态为未锁定
+                var lockInfo = _lockInfoManager.GetLockInfoByBillId(billId);
+                if (lockInfo != null)
+                {
+                    lockInfo.IsLocked = false;
+                    _logger.LogDebug("更新锁定实体状态为未锁定: BillID={BillID}, LockId={LockId}", billId, lockId);
+                }
+                
                 // 移除内存中的锁定信息
                 var removed = _lockInfoManager.RemoveLockInfo(billId);
                 if (removed)

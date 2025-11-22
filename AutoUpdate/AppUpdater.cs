@@ -357,7 +357,7 @@ namespace AutoUpdate
                 };
 
                 // 使用EnhancedVersionManager处理压缩包
-                bool result = EnhancedVersionManager.ProcessCompressedUpdate(packagePath, version);
+                bool result = EnhancedVersionManager.ProcessCompressedUpdateStatic(packagePath, version);
 
                 if (result)
                 {

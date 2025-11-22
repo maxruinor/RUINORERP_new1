@@ -67,6 +67,30 @@ namespace AutoUpdate
         /// <returns>处理结果</returns>
         public bool ProcessCompressedUpdate(string packagePath, VersionEntry version)
         {
+            return ProcessCompressedUpdateInternal(packagePath, version);
+        }
+
+        /// <summary>
+        /// 静态方法：处理压缩更新包
+        /// </summary>
+        /// <param name="packagePath">压缩包路径</param>
+        /// <param name="version">版本信息</param>
+        /// <returns>处理结果</returns>
+        public static bool ProcessCompressedUpdateStatic(string packagePath, VersionEntry version)
+        {
+            // 创建临时实例来处理更新
+            EnhancedVersionManager manager = new EnhancedVersionManager();
+            return manager.ProcessCompressedUpdateInternal(packagePath, version);
+        }
+
+        /// <summary>
+        /// 内部方法：处理压缩更新包的核心逻辑
+        /// </summary>
+        /// <param name="packagePath">压缩包路径</param>
+        /// <param name="version">版本信息</param>
+        /// <returns>处理结果</returns>
+        private bool ProcessCompressedUpdateInternal(string packagePath, VersionEntry version)
+        {
             try
             {
                 // 解压更新包

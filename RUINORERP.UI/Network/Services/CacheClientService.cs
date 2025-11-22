@@ -118,7 +118,7 @@ namespace RUINORERP.UI.Network.Services
                 try
                 {
 
-                    if (packet.Request is CacheRequest  cacheRequest)
+                    if (packet.Request is CacheRequest cacheRequest)
                     {
                         // 处理缓存响应
                         _cacheResponseProcessor.ProcessCacheRequest(cacheRequest);
@@ -656,6 +656,10 @@ namespace RUINORERP.UI.Network.Services
 
                 // 只处理需要同步到服务器的变更
                 if (!e.SyncToServer)
+                    return;
+
+                //在基础列表中的才要同步到服务器
+                if (!TableSchemaManager.Instance.CacheableTableNames.Contains(e.Key))
                     return;
 
 

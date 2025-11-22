@@ -875,7 +875,7 @@ namespace RUINORERP.UI.Network
         {
             // 响应包通常包含请求ID，并且是服务器对客户端请求的响应
             return !string.IsNullOrEmpty(packet?.ExecutionContext?.RequestId) &&
-                   packet.Direction == PacketDirection.Response;
+                   packet.Direction == PacketDirection.ServerResponse;
         }
 
         /// <summary>
@@ -886,7 +886,7 @@ namespace RUINORERP.UI.Network
         private bool IsServerPushCommand(PacketModel packet)
         {
             // 服务器主动推送的命令通常没有请求ID，或者方向为推送
-            return packet.Direction == PacketDirection.ServerToClient ||
+            return packet.Direction == PacketDirection.ServerRequest ||
                    string.IsNullOrEmpty(packet?.ExecutionContext?.RequestId);
         }
 
@@ -1338,14 +1338,7 @@ namespace RUINORERP.UI.Network
             }
         }
 
-        /// <summary>
-        /// 同步版本的初始化客户端命令调度器方法
-        /// </summary>
-        private void InitializeClientCommandDispatcher()
-        {
-            // 直接调用异步版本并等待完成
-            InitializeClientCommandDispatcherAsync().Wait();
-        }
+ 
 
         /// <summary>
         /// 发送带响应的命令
@@ -1553,7 +1546,7 @@ namespace RUINORERP.UI.Network
             {
                 // 构建数据包
                 var packet = PacketBuilder.Create()
-                    .WithDirection(PacketDirection.Request) // 明确设置请求方向
+                    .WithDirection(PacketDirection.ClientRequest) // 明确设置请求方向
                     .WithTimeout(timeoutMs)
                     .WithRequest(request)
                     .Build();
@@ -1947,7 +1940,7 @@ namespace RUINORERP.UI.Network
             var responseTcs = new TaskCompletionSource<TResponse>();
 
             // 当packetTcs完成时，将结果转换为TResponse并设置到responseTcs
-            _ = packetTcs.Task.ContinueWith(task =>
+            _ = packetTcs.Task.ContinueWith(async task =>
             {
                 if (task.IsCanceled)
                     responseTcs.TrySetCanceled();
@@ -1957,6 +1950,8 @@ namespace RUINORERP.UI.Network
                     responseTcs.TrySetResult(task.Result.Response as TResponse);
                 else
                     responseTcs.TrySetResult(ResponseFactory.CreateSpecificErrorResponse<TResponse>("未收到有效响应数据") as TResponse);
+                
+                await Task.CompletedTask; // 避免异步转同步问题
             });
 
             // 将请求加入队列

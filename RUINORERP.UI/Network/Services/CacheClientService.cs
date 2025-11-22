@@ -34,7 +34,7 @@ namespace RUINORERP.UI.Network.Services
         // 客户端使用：管理订阅的表，每个表是否有订阅
         private ConcurrentDictionary<string, bool> _subscriptions = new ConcurrentDictionary<string, bool>();
 
-        private readonly CacheRequestManager _cacheRequestManager; // 新增：使用专门的请求管理器
+        private readonly CacheRequestManager _cacheRequestManager; // 缓存请求管理器
         private readonly EventDrivenCacheManager _eventDrivenCacheManager; // 事件驱动缓存管理器
         private readonly ClientCommunicationService _commService; // 通信服务
         private readonly CacheResponseProcessor _cacheResponseProcessor;
@@ -56,10 +56,10 @@ namespace RUINORERP.UI.Network.Services
             CacheRequestManager cacheRequestManager,
             EventDrivenCacheManager eventDrivenCacheManager,
             ClientCommunicationService commService,
-             CacheResponseProcessor cacheResponseProcessor
+            CacheResponseProcessor cacheResponseProcessor
             )
         {
-            _cacheResponseProcessor = cacheResponseProcessor;
+            _cacheResponseProcessor = cacheResponseProcessor ?? throw new ArgumentNullException(nameof(cacheResponseProcessor));
             _log = logger ?? throw new ArgumentNullException(nameof(logger));
             _cacheManager = cacheManager ?? throw new ArgumentNullException(nameof(cacheManager));
             _cacheRequestManager = cacheRequestManager ?? throw new ArgumentNullException(nameof(cacheRequestManager));
@@ -90,29 +90,180 @@ namespace RUINORERP.UI.Network.Services
 
 
         /// <summary>
-        /// 注册命令处理程序
+        /// 注册命令处理程序 - 增强版，添加详细日志和错误处理
         /// </summary>
         private void RegisterCommandHandlers()
         {
             // 使用简化的缓存命令系统
             // 只订阅CacheSync命令，避免与RequestCacheAsync方法中的显式调用重复
+            // 注册缓存同步命令处理器 - 处理服务器推送的缓存更新
+            RegisterCacheSyncHandler();
+
+            // 注册缓存订阅命令处理器 - 处理订阅响应
+            RegisterCacheSubscriptionHandler();
+
+            // 注册缓存批量同步命令处理器 - 处理批量缓存更新
+            RegisterCacheBatchSyncHandler();
+        }
+
+        /// <summary>
+        /// 注册缓存同步命令处理器
+        /// 处理服务器推送的缓存数据
+        /// </summary>
+        private void RegisterCacheSyncHandler()
+        {
             _commService.SubscribeCommand(CacheCommands.CacheSync, (packet, data) =>
             {
-                if (data is CacheResponse response)
+                try
                 {
-                    _cacheResponseProcessor.ProcessCacheResponse(response);
+
+                    if (data is CacheResponse response)
+                    {
+                        _log.LogDebug("缓存同步数据包解析成功，表名={0}, 操作={1}, 成功状态={2}",
+                            response.TableName, response.Operation, response.IsSuccess);
+
+                        // 处理缓存响应
+                        _cacheResponseProcessor.ProcessCacheResponse(response);
+
+                        _log.LogInformation("缓存同步处理完成，表名={0}, 操作={1}", response.TableName, response.Operation);
+
+                        _log.LogInformation("缓存同步处理完成，表名={0}, 操作={1}", response.TableName, response.Operation);
+                    }
+                    else
+                    {
+                        _log.LogWarning("缓存同步数据格式无效，期望CacheResponse，实际类型={0}", data?.GetType().Name ?? "null");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _log.LogError(ex, "处理缓存同步命令失败，命令ID={0}", packet.CommandId);
+                    // 不抛出异常，避免影响其他命令处理
                 }
             });
+        }
 
-            // 处理订阅命令 - 使用统一的处理方法，内部根据SubscribeAction区分
+        /// <summary>
+        /// 注册缓存订阅命令处理器
+        /// </summary>
+        private void RegisterCacheSubscriptionHandler()
+        {
             _commService.SubscribeCommand(CacheCommands.CacheSubscription, (packet, data) =>
             {
-                if (data is CacheResponse response)
+                try
                 {
-                    // 可以在这里添加额外的订阅响应处理逻辑
-                    _log.LogDebug($"收到订阅响应: 表名={response.TableName}, 操作={response.Operation}");
+                    _log.LogDebug("收到缓存订阅响应命令，命令ID={0}", packet.CommandId);
+
+                    if (data is CacheResponse response)
+                    {
+                        _log.LogInformation("缓存订阅响应处理成功，表名={0}, 操作={1}, 成功状态={2}",
+                            response.TableName, response.Operation, response.IsSuccess);
+
+                        // 更新订阅状态
+                        UpdateSubscriptionStatus(response);
+
+                        // 如果是订阅成功，可以触发缓存初始化
+                        if (response.IsSuccess && response.Operation == CacheOperation.Set)
+                        {
+                            _log.LogDebug("订阅成功，可以触发缓存初始化，表名={0}", response.TableName);
+                            // 可以在这里添加缓存初始化逻辑
+                        }
+                    }
+                    else
+                    {
+                        _log.LogWarning("缓存订阅响应数据格式无效，期望CacheResponse，实际类型={0}", data?.GetType().Name ?? "null");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _log.LogError(ex, "处理缓存订阅响应命令失败，命令ID={0}", packet.CommandId);
                 }
             });
+        }
+
+        /// <summary>
+        /// 注册缓存批量同步命令处理器
+        /// </summary>
+        private void RegisterCacheBatchSyncHandler()
+        {
+            _commService.SubscribeCommand(CacheCommands.CacheSync, async (packet, data) =>
+            {
+                try
+                {
+
+                    if (data is List<CacheResponse> responses)
+                    {
+                        _log.LogDebug("批量缓存同步数据包解析成功，响应数量={0}", responses.Count);
+
+                        // 直接处理每个缓存响应
+                        foreach (var response in responses)
+                        {
+                            _cacheResponseProcessor.ProcessCacheResponse(response);
+                        }
+
+                        _log.LogInformation("批量缓存同步处理成功，响应数量={0}", responses.Count);
+                    }
+                    else
+                    {
+                        _log.LogWarning("批量缓存同步数据格式无效，期望List<CacheResponse>，实际类型={0}", data?.GetType().Name ?? "null");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _log.LogError(ex, "处理批量缓存同步命令失败，命令ID={0}", packet.CommandId);
+                }
+            });
+        }
+
+
+
+        /// <summary>
+        /// 更新订阅状态
+        /// </summary>
+        private void UpdateSubscriptionStatus(CacheResponse response)
+        {
+            try
+            {
+                if (response.IsSuccess)
+                {
+                    if (response.Operation == CacheOperation.Set)
+                    {
+                        _subscriptions.TryAdd(response.TableName, true);
+                        _log.LogDebug("更新订阅状态成功，表名={0}，状态=已订阅", response.TableName);
+                    }
+                    else if (response.Operation == CacheOperation.Remove)
+                    {
+                        _subscriptions.TryRemove(response.TableName, out _);
+                        _log.LogDebug("更新订阅状态成功，表名={0}，状态=未订阅", response.TableName);
+                    }
+                }
+                else
+                {
+                    _log.LogWarning("订阅操作失败，表名={0}, 操作={1}, 消息={2}",
+                        response.TableName, response.Operation, response.Message ?? "无错误信息");
+                }
+            }
+            catch (Exception ex)
+            {
+                _log.LogWarning(ex, "更新订阅状态失败，表名={0}", response.TableName);
+            }
+        }
+
+
+        /// <summary>
+        /// 清除同步监控统计 - 简化版本，使用现有统计功能
+        /// </summary>
+        public void ClearSyncMonitorStatistics()
+        {
+            try
+            {
+                // 使用EntityCacheManager的统计重置功能
+                _cacheManager.ResetStatistics();
+                _log.LogInformation("缓存同步监控统计已清除");
+            }
+            catch (Exception ex)
+            {
+                _log.LogError(ex, "清除同步监控统计失败");
+            }
         }
 
 
@@ -371,7 +522,7 @@ namespace RUINORERP.UI.Network.Services
             {
                 // 检查取消令牌
                 cancellationToken.ThrowIfCancellationRequested();
-                
+
                 // 请求缓存数据
                 await _cacheRequestManager.RequestCacheAsync(tableName, cancellationToken);
             }
@@ -545,6 +696,130 @@ namespace RUINORERP.UI.Network.Services
                 _log.LogError(ex, "同步客户端缓存变更到服务器时发生异常: {0}", ex.Message);
 
                 // 发生异常时也记录到日志，后续可以考虑添加重试或队列机制
+            }
+        }
+
+        /// <summary>
+        /// 批量同步缓存更新到服务器 - 简化版本，使用现有缓存管理器
+        /// </summary>
+        public async Task BatchSyncCacheUpdatesAsync(List<(string tableName, object entity)> updates)
+        {
+            if (_disposed)
+            {
+                _log.LogWarning("{0}已释放，无法批量同步缓存更新", _componentName);
+                return;
+            }
+
+            if (updates == null || updates.Count == 0)
+            {
+                _log.LogWarning("批量同步缓存更新时更新列表为空");
+                return;
+            }
+
+            _log.LogInformation("开始批量同步缓存更新，数量={0}", updates.Count);
+
+            try
+            {
+                var successCount = 0;
+
+                // 逐个处理更新操作
+                foreach (var (tableName, entity) in updates)
+                {
+                    try
+                    {
+                        // 使用现有的缓存管理器更新实体
+                        _cacheManager.UpdateEntity(tableName, entity);
+                        successCount++;
+                    }
+                    catch (Exception ex)
+                    {
+                        _log.LogWarning(ex, "批量更新中单个实体更新失败，表名={0}", tableName);
+                    }
+                }
+
+                _log.LogInformation("批量同步缓存更新完成，总数={0}, 成功={1}", updates.Count, successCount);
+            }
+            catch (Exception ex)
+            {
+                _log.LogError(ex, "批量同步缓存更新失败，数量={0}", updates.Count);
+            }
+        }
+
+        /// <summary>
+        /// 批量同步缓存删除到服务器 - 简化版本，使用现有缓存管理器
+        /// </summary>
+        public async Task BatchSyncCacheDeletesAsync<T>(string tableName, List<object> entityIds)
+        {
+            if (_disposed)
+            {
+                _log.LogWarning("{0}已释放，无法批量同步缓存删除", _componentName);
+                return;
+            }
+
+            if (string.IsNullOrEmpty(tableName) || entityIds == null || entityIds.Count == 0)
+            {
+                _log.LogWarning("批量同步缓存删除时参数无效");
+                return;
+            }
+
+            try
+            {
+
+                // 使用现有的缓存管理器删除实体
+                _cacheManager.DeleteEntities(tableName, entityIds.ToArray());
+            }
+            catch (Exception ex)
+            {
+                _log.LogError(ex, "批量同步缓存删除失败，表名={0}, 数量={1}", tableName, entityIds.Count);
+            }
+        }
+
+
+
+
+        /// <summary>
+        /// 批量清空缓存 - 简化版本，使用现有缓存管理器
+        /// </summary>
+        public async Task BatchClearCacheAsync(List<string> tableNames)
+        {
+            if (_disposed)
+            {
+                _log.LogWarning("{0}已释放，无法批量清空缓存", _componentName);
+                return;
+            }
+
+            if (tableNames == null || tableNames.Count == 0)
+            {
+                _log.LogWarning("批量清空缓存时表名列表为空");
+                return;
+            }
+
+            _log.LogInformation("开始批量清空缓存，表数量={0}", tableNames.Count);
+
+            try
+            {
+                var successCount = 0;
+
+                // 逐个处理清空操作
+                foreach (var tableName in tableNames)
+                {
+                    try
+                    {
+                        // 使用现有的缓存管理器清空表缓存
+                        _cacheManager.DeleteEntities(tableName, null);
+                        successCount++;
+                    }
+                    catch (Exception ex)
+                    {
+                        _log.LogWarning(ex, "批量清空中单个表清空失败，表名={0}", tableName);
+                    }
+                }
+
+                _log.LogInformation("批量清空缓存完成，表数量={0}, 成功={1}", tableNames.Count, successCount);
+            }
+            catch (Exception ex)
+            {
+                _log.LogError(ex, "批量清空缓存失败，表数量={0}", tableNames.Count);
             }
         }
 

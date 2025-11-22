@@ -11,6 +11,7 @@ using RUINORERP.PacketSpec.Commands.Cache;
 using RUINORERP.PacketSpec.Validation;
 using FluentValidation.Results;
 using RUINORERP.PacketSpec.Models.Cache;
+using System.Linq;
 
 namespace RUINORERP.UI.Network.Services.Cache
 {
@@ -158,7 +159,7 @@ namespace RUINORERP.UI.Network.Services.Cache
         }
         
         /// <summary>
-        /// 处理删除操作
+        /// 处理删除操作 - 支持单个实体删除和批量删除
         /// </summary>
         private void HandleRemoveOperation(CacheResponse response)
         {
@@ -167,23 +168,14 @@ namespace RUINORERP.UI.Network.Services.Cache
                 // 如果有数据，尝试删除指定实体；否则删除整个表缓存
                 if (response.CacheData?.EntityByte != null)
                 {                    
-                    // 处理单个实体删除  具体要调度！ 是用请求给KEY 和表名呢？还是？
-                    try
-                    {
-                        var entityId = 0;// Convert.ToInt64(response.ke);
-                        _cacheManager.DeleteEntity(response.TableName, entityId);
-                    }
-                    catch (FormatException ex)
-                    {                
-                        _log?.LogWarning(ex, "实体ID格式无效，表名={0}, ID值={1}", response.TableName, response.CacheData.EntityByte);
-                        // 尝试删除整个表缓存作为降级方案
-                        CleanCacheSafely(response.TableName);
-                    }
+                    // 处理单个实体删除或批量删除
+                    ProcessDeleteData(response.TableName, response.CacheData.EntityByte);
                 }
                 else
                 {                    
                     // 删除整个表缓存
                     CleanCacheSafely(response.TableName);
+                    _log?.LogInformation("清理整个表缓存，表名={0}", response.TableName);
                 }
             }
             catch (Exception ex)
@@ -191,6 +183,205 @@ namespace RUINORERP.UI.Network.Services.Cache
                 _log?.LogError(ex, "处理缓存删除响应失败，表名={0}, 错误信息={1}", response.TableName, ex.Message);
                 throw;
             }
+        }
+
+        /// <summary>
+        /// 处理删除数据 - 支持多种ID格式和批量删除
+        /// </summary>
+        private void ProcessDeleteData(string tableName, object deleteData)
+        {
+            try
+            {
+                // 获取实体类型
+                var entityType = _cacheManager.GetEntityType(tableName);
+                if (entityType == null)
+                {
+                    _log?.LogWarning("未找到表{0}的实体类型，执行整表清理", tableName);
+                    CleanCacheSafely(tableName);
+                    return;
+                }
+
+                // 获取主键属性
+                var keyProperty = GetPrimaryKeyProperty(entityType);
+                if (keyProperty == null)
+                {
+                    _log?.LogWarning("未找到表{0}的主键属性，执行整表清理", tableName);
+                    CleanCacheSafely(tableName);
+                    return;
+                }
+
+                // 处理不同类型的删除数据
+                if (deleteData is JArray jArray)
+                {
+                    // 批量删除
+                    ProcessBatchDelete(tableName, jArray, keyProperty);
+                }
+                else if (deleteData is JObject jObject)
+                {
+                    // 单个实体删除
+                    ProcessSingleDelete(tableName, jObject, keyProperty);
+                }
+                else if (deleteData is string jsonString && !string.IsNullOrEmpty(jsonString))
+                {
+                    // JSON字符串格式
+                    ProcessJsonDelete(tableName, jsonString, keyProperty);
+                }
+                else if (IsNumericType(deleteData.GetType()))
+                {
+                    // 直接是ID值
+                    var entityId = Convert.ToInt64(deleteData);
+                    _cacheManager.DeleteEntity(tableName, entityId);
+                    _log?.LogDebug("删除单个实体成功，表名={0}，ID={1}", tableName, entityId);
+                }
+                else
+                {
+                    _log?.LogWarning("不支持的删除数据格式: {0}，执行整表清理", deleteData.GetType().Name);
+                    CleanCacheSafely(tableName);
+                }
+            }
+            catch (Exception ex)
+            {
+                _log?.LogError(ex, "处理删除数据失败，表名={0}，执行整表清理作为降级方案", tableName);
+                CleanCacheSafely(tableName);
+            }
+        }
+
+        /// <summary>
+        /// 处理批量删除
+        /// </summary>
+        private void ProcessBatchDelete(string tableName, JArray jArray, PropertyInfo keyProperty)
+        {
+            var successCount = 0;
+            var failCount = 0;
+
+            foreach (var item in jArray)
+            {
+                try
+                {
+                    var entityId = ExtractEntityId(item, keyProperty);
+                    if (entityId.HasValue)
+                    {
+                        _cacheManager.DeleteEntity(tableName, entityId.Value);
+                        successCount++;
+                    }
+                    else
+                    {
+                        failCount++;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    failCount++;
+                    _log?.LogWarning(ex, "批量删除中单个实体处理失败，表名={0}", tableName);
+                }
+            }
+
+            _log?.LogInformation("批量删除完成，表名={0}，成功={1}，失败={2}", tableName, successCount, failCount);
+        }
+
+        /// <summary>
+        /// 处理单个实体删除
+        /// </summary>
+        private void ProcessSingleDelete(string tableName, JObject jObject, PropertyInfo keyProperty)
+        {
+            var entityId = ExtractEntityId(jObject, keyProperty);
+            if (entityId.HasValue)
+            {
+                _cacheManager.DeleteEntity(tableName, entityId.Value);
+                _log?.LogDebug("删除单个实体成功，表名={0}，ID={1}", tableName, entityId.Value);
+            }
+            else
+            {
+                _log?.LogWarning("无法提取实体ID，表名={0}，执行整表清理", tableName);
+                CleanCacheSafely(tableName);
+            }
+        }
+
+        /// <summary>
+        /// 处理JSON字符串删除
+        /// </summary>
+        private void ProcessJsonDelete(string tableName, string jsonString, PropertyInfo keyProperty)
+        {
+            try
+            {
+                // 尝试解析为JArray（批量）
+                var jArray = JArray.Parse(jsonString);
+                ProcessBatchDelete(tableName, jArray, keyProperty);
+            }
+            catch
+            {
+                try
+                {
+                    // 尝试解析为JObject（单个）
+                    var jObject = JObject.Parse(jsonString);
+                    ProcessSingleDelete(tableName, jObject, keyProperty);
+                }
+                catch (Exception ex)
+                {
+                    _log?.LogWarning(ex, "JSON字符串解析失败，表名={0}，执行整表清理", tableName);
+                    CleanCacheSafely(tableName);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 提取实体ID - 支持多种ID字段名格式
+        /// </summary>
+        private long? ExtractEntityId(JToken token, PropertyInfo keyProperty)
+        {
+            try
+            {
+                // 优先使用主键属性名
+                var idValue = token[keyProperty.Name]?.ToString() ?? 
+                             token["Id"]?.ToString() ?? 
+                             token["ID"]?.ToString() ??
+                             token["id"]?.ToString();
+
+                if (!string.IsNullOrEmpty(idValue) && long.TryParse(idValue, out var entityId))
+                {
+                    return entityId;
+                }
+
+                return null;
+            }
+            catch (Exception ex)
+            {
+                _log?.LogWarning(ex, "提取实体ID失败");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 获取主键属性
+        /// </summary>
+        private PropertyInfo GetPrimaryKeyProperty(Type entityType)
+        {
+            // 支持多种主键属性名
+            var keyNames = new[] { "Id", "ID", "PrimaryKey", "Key" };
+            
+            foreach (var keyName in keyNames)
+            {
+                var property = entityType.GetProperty(keyName);
+                if (property != null && IsNumericType(property.PropertyType))
+                {
+                    return property;
+                }
+            }
+
+            // 如果没找到，返回第一个数值类型的属性
+            return entityType.GetProperties()
+                .FirstOrDefault(p => IsNumericType(p.PropertyType));
+        }
+
+        /// <summary>
+        /// 判断是否为数值类型
+        /// </summary>
+        private bool IsNumericType(Type type)
+        {
+            return type == typeof(long) || type == typeof(int) || type == typeof(short) || 
+                   type == typeof(byte) || type == typeof(ulong) || type == typeof(uint) || 
+                   type == typeof(ushort) || type == typeof(sbyte) || type == typeof(decimal) || 
+                   type == typeof(float) || type == typeof(double);
         }
         
        

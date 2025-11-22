@@ -85,6 +85,13 @@ namespace RUINORERP.UI.Network.Services
         /// <returns>包含指令信息的登录响应</returns>
         /// <exception cref="NetworkException">网络连接相关异常</exception>
         /// <exception cref="AuthenticationException">认证相关异常</exception>
+        /// <summary>
+        /// 异步登录方法，使用取消令牌支持超时取消
+        /// </summary>
+        /// <param name="username">用户名</param>
+        /// <param name="password">密码</param>
+        /// <param name="ct">取消令牌，用于支持超时取消</param>
+        /// <returns>登录响应结果</returns>
         public async Task<LoginResponse> LoginAsync(string username, string password, CancellationToken ct = default)
         {
             // 验证参数
@@ -92,11 +99,21 @@ namespace RUINORERP.UI.Network.Services
                 throw new ArgumentException("用户名不能为空", nameof(username));
             if (string.IsNullOrEmpty(password))
                 throw new ArgumentException("密码不能为空", nameof(password));
-
-            // 使用信号量确保同一时间只有一个登录请求
-            await _loginLock.WaitAsync(ct);
+            
             try
             {
+                // 立即检查取消令牌状态，如果已取消，避免尝试获取锁
+                ct.ThrowIfCancellationRequested();
+                
+                // 使用信号量确保同一时间只有一个登录请求
+                await _loginLock.WaitAsync(ct);
+                
+                // 锁获取成功后，再次检查取消令牌状态
+                if (ct.IsCancellationRequested)
+                {
+                    ct.ThrowIfCancellationRequested();
+                }
+                
                 // 检查连接状态
                 if (!_communicationService.IsConnected)
                 {
@@ -164,7 +181,7 @@ namespace RUINORERP.UI.Network.Services
                     try
                     {
                         // 使用Task.Run避免阻塞登录流程
-                        _ = Task.Run(async () => 
+                        _ = Task.Run(async () =>
                         {
                             try
                             {
@@ -187,8 +204,9 @@ namespace RUINORERP.UI.Network.Services
             }
             catch (OperationCanceledException ex)
             {
-                _logger?.LogDebug(ex, "登录操作已被用户取消 - 用户: {Username}", username);
-                return ResponseFactory.CreateSpecificErrorResponse<LoginResponse>("登录操作已取消");
+                // 记录取消异常
+                _logger?.LogDebug(ex, "登录操作已被取消（可能是超时）- 用户: {Username}", username);
+                throw; // 重新抛出异常，让调用者处理
             }
             catch (Exception ex)
             {
@@ -197,7 +215,16 @@ namespace RUINORERP.UI.Network.Services
             }
             finally
             {
-                _loginLock.Release();
+                // 确保锁总是被释放，不管是否发生异常
+                try
+                {
+                    _loginLock.Release();
+                }
+                catch (Exception ex)
+                {
+                    // 记录锁释放错误，但不要让它影响主流程
+                    _logger?.LogError(ex, "释放登录锁时发生异常");
+                }
             }
         }
 

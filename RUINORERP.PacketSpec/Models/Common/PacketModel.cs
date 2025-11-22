@@ -107,7 +107,6 @@ namespace RUINORERP.PacketSpec.Models.Common
         {
             var packet = Create(commandId, request);
             packet.Request = request;
-            packet.Direction = PacketDirection.ClientToServer;
             return packet;
         }
 

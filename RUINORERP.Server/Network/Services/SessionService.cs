@@ -39,7 +39,7 @@ namespace RUINORERP.Server.Network.Services
         // 只保留一个会话字典，SessionInfo继承自AppSession，本身就是IAppSession
         private readonly ConcurrentDictionary<string, SessionInfo> _sessions;
         private readonly Timer _cleanupTimer;
-        private  SessionStatistics _statistics;
+        private SessionStatistics _statistics;
         private readonly object _lockObject = new object();
         private bool _disposed = false;
         private readonly ILogger<SessionService> _logger;
@@ -330,7 +330,7 @@ namespace RUINORERP.Server.Network.Services
                         sessionInfo.DisconnectTime = DateTime.Now;
 
                         // 取消该会话的所有缓存订阅
-                         _subscriptionManager.RemoveAllSubscriptionsAsync(sessionId);
+                        _subscriptionManager.RemoveAllSubscriptionsAsync(sessionId);
 
                         // 触发会话断开事件
                         SessionDisconnected?.Invoke(sessionInfo);
@@ -818,6 +818,7 @@ namespace RUINORERP.Server.Network.Services
             TRequest request,
             int timeoutMs,
             CancellationToken ct,
+            PacketDirection packetDirection = PacketDirection.ServerRequest,
             string responseTypeName = null)
             where TRequest : class, IRequest
         {
@@ -827,7 +828,7 @@ namespace RUINORERP.Server.Network.Services
             {
                 // 构建数据包
                 var packet = PacketBuilder.Create()
-                    .WithDirection(PacketDirection.ServerToClient)
+                    .WithDirection(packetDirection)
                     .WithTimeout(timeoutMs)
                     .WithRequest(request)
                     .Build();
@@ -918,7 +919,7 @@ namespace RUINORERP.Server.Network.Services
                 try
                 {
                     // 发送命令
-                    await SendPacketCoreAsync(sessionInfo, commandId, request, timeoutMs, ct);
+                    await SendPacketCoreAsync(sessionInfo, commandId, request, timeoutMs, ct, PacketDirection.ServerRequest);
 
                     // 等待响应或超时
                     using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
@@ -1092,7 +1093,7 @@ namespace RUINORERP.Server.Network.Services
             {
                 // 清理过期的统计信息
                 CleanExpiredStatistics();
-                
+
                 return new SessionStatistics
                 {
                     TotalConnections = _statistics.TotalConnections,
@@ -1106,7 +1107,7 @@ namespace RUINORERP.Server.Network.Services
                 };
             }
         }
-        
+
         /// <summary>
         /// 清理过期的统计信息
         /// </summary>
@@ -1127,7 +1128,7 @@ namespace RUINORERP.Server.Network.Services
                 _logger.LogError(ex, "清理过期统计信息时发生错误");
             }
         }
-        
+
         /// <summary>
         /// 重置会话统计信息
         /// </summary>
@@ -1140,19 +1141,19 @@ namespace RUINORERP.Server.Network.Services
                     // 保存不应重置的信息
                     var currentConnections = ActiveSessionCount;
                     var serverStartTime = _statistics.ServerStartTime;
-                    
+
                     // 创建新的统计信息对象
                     _statistics = SessionStatistics.Create(MaxSessionCount);
-                    
+
                     // 恢复不应重置的信息
                     _statistics.CurrentConnections = currentConnections;
                     _statistics.ServerStartTime = serverStartTime;
-                    
+
                     // 更新当前时间戳
                     _statistics.LastCleanupTime = DateTime.Now;
                     _statistics.LastHeartbeatCheck = DateTime.Now;
                 }
-                
+
                 _logger.LogInformation("会话统计信息已成功重置");
             }
             catch (Exception ex)

@@ -258,7 +258,7 @@ namespace RUINORERP.Server.Network.SuperSocket
         {
             // 响应包通常包含请求ID，并且是客户端对服务器请求的响应
             return !string.IsNullOrEmpty(packet?.ExecutionContext?.RequestId) &&
-                   packet.Direction == PacketDirection.Response;
+                   packet.Direction == PacketDirection.ClientRequest;
         }
 
         /// <summary>
@@ -340,7 +340,7 @@ namespace RUINORERP.Server.Network.SuperSocket
             package.Request = null;
 
             package.PacketId = IdGenerator.GenerateResponseId(package.PacketId);
-            package.Direction = PacketDirection.Response; // 明确设置为响应方向
+            package.Direction = PacketDirection.ServerResponse; // 明确设置为响应方向
             package.SessionId = package.SessionId;
 
             // 设置请求ID 配对响应
@@ -380,7 +380,7 @@ namespace RUINORERP.Server.Network.SuperSocket
                     return;
                 }
                 package.SessionId = session.SessionID;
-                package.Direction = PacketDirection.Response;
+                package.Direction = PacketDirection.ServerResponse;
 
                 var serializedData = JsonCompressionSerializationService.Serialize<PacketModel>(package);
 
@@ -507,7 +507,7 @@ namespace RUINORERP.Server.Network.SuperSocket
             var errorResponse = new PacketModel
             {
                 PacketId = IdGenerator.GenerateResponseId(requestPackage.Packet?.PacketId ?? Guid.NewGuid().ToString()),
-                Direction = PacketDirection.Response,
+                Direction = PacketDirection.ServerResponse,
                 SessionId = requestPackage.Packet?.SessionId,
                 Status = PacketStatus.Error,
                 Extensions = new Dictionary<string, object>

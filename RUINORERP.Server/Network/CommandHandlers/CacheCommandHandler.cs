@@ -300,7 +300,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     var targetSessions = subscribedSessions.Where(s => s != excludeSessionId).ToList();
 
                     var package = PacketModel.CreateFromRequest(CacheCommands.CacheSync, request)
-                        .WithDirection(PacketSpec.Enums.Core.PacketDirection.ServerToClient);
+                        .WithDirection(PacketSpec.Enums.Core.PacketDirection.ServerRequest);
                     var serializedData = JsonCompressionSerializationService.Serialize(package).ToArray();
 
                     var sessions = _sessionService.GetAllUserSessions(excludeSessionId);

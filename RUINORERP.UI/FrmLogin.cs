@@ -215,6 +215,11 @@ namespace RUINORERP.UI
                                     if (!int.TryParse(txtPort.Text.Trim(), out var serverPort))
                                     {
                                         MessageBox.Show("端口号格式不正确，请检查服务器配置。", "配置错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                        // 重置登录状态
+                                        if (MainForm.Instance != null)
+                                        {
+                                            MainForm.Instance.CurrentLoginStatus = MainForm.LoginStatus.None;
+                                        }
                                         //base.Cursor = Cursors.Default;
                                         return;
                                     }
@@ -260,9 +265,22 @@ namespace RUINORERP.UI
                                     {
                                         var disconnectResult = await MainForm.Instance.communicationService.Disconnect();
 
-                                        Task.WaitAll(Task.Delay(100)); // 确保断开连接有足够时间完成
+                                        // 修复后的代码
+                                        await Task.Delay(100); // 使用异步等待，避免阻塞UI线程
 
-                                        var connected = await MainForm.Instance.communicationService.ConnectAsync(serverIp, serverPort);
+                                        // 添加连接超时控制，防止无限等待
+                                        var connectTask = MainForm.Instance.communicationService.ConnectAsync(serverIp, serverPort);
+                                        var timeoutTask = Task.Delay(TimeSpan.FromSeconds(10)); // 10秒连接超时
+                                        
+                                        var completedTask = await Task.WhenAny(connectTask, timeoutTask);
+                                        
+                                        if (completedTask == timeoutTask)
+                                        {
+                                            MessageBox.Show("连接服务器超时，请检查网络连接和服务器配置。", "连接超时", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                            return;
+                                        }
+                                        
+                                        var connected = await connectTask;
                                         if (!connected)
                                         {
                                             // 连接失败，断开连接（如果有部分连接）
@@ -282,18 +300,51 @@ namespace RUINORERP.UI
                                     }
 
                                  
-                                    // 8. 执行登录操作
-                                    var loginSuccess = await userLogin.LoginAsync(UserGlobalConfig.Instance.UseName, UserGlobalConfig.Instance.PassWord);
+                                    // 8. 执行登录操作，添加登录超时控制
+                                    using var cts = new CancellationTokenSource();
+                                    var loginTask = userLogin.LoginAsync(UserGlobalConfig.Instance.UseName, UserGlobalConfig.Instance.PassWord, cts.Token);
+                                    var loginTimeoutTask = Task.Delay(TimeSpan.FromSeconds(5), cts.Token); // 5秒登录超时
+                                    
+                                    var completedLoginTask = await Task.WhenAny(loginTask, loginTimeoutTask);
+                                    
+                                    if (completedLoginTask == loginTimeoutTask)
+                                    {
+                                        // 超时后取消登录任务
+                                        cts.Cancel();
+                                        // 不要直接return，而是等待任务完成或处理异常
+                                        try
+                                        {
+                                            // 使用Task.Run包装任务处理，避免阻塞UI
+                                            _ = Task.Run(async () => 
+                                            {
+                                                try
+                                                {
+                                                    // 尝试等待任务完成，让它有机会释放锁
+                                                    await loginTask.ConfigureAwait(false);
+                                                }
+                                                catch (OperationCanceledException)
+                                                {
+                                                    // 预期的取消异常，忽略
+                                                }
+                                                catch (Exception)
+                                                {
+                                                    // 忽略其他异常
+                                                }
+                                            });
+                                        }
+                                        finally
+                                        {
+                                            MessageBox.Show("登录超时，请检查网络连接或稍后重试。", "登录超时", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                        }
+                                        return;
+                                    }
+                                    
+                                    // 确保不会因为取消而抛出异常
+                                    var loginSuccess = await loginTask.ConfigureAwait(false);
 
                                     // 检查登录结果
                                     if (loginSuccess == null || !loginSuccess.IsSuccess)
                                     {
-                                        // 设置登录状态为未登录
-                                        if (MainForm.Instance != null)
-                                        {
-                                            MainForm.Instance.CurrentLoginStatus = MainForm.LoginStatus.None;
-                                        }
-
                                         string errorMsg = loginSuccess?.ErrorMessage ?? "登录失败，请检查用户名和密码";
                                         MessageBox.Show(errorMsg, "登录失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
                                         return;
@@ -306,16 +357,32 @@ namespace RUINORERP.UI
                                     //如果为初始密码则提示弹窗！
                                     IsInitPassword = isInitPwd;
                                 }
+                                catch (OperationCanceledException)
+                                {
+                                    // 处理操作被取消的情况，此时锁应该已经在UserLoginService中释放
+                                    MessageBox.Show("登录操作已取消，您可以重新尝试登录。", "操作取消", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                                    return;
+                                }
                                 catch (Exception ex)
                                 {
                                     // 异常情况下，断开连接
                                     if (MainForm.Instance != null && MainForm.Instance.communicationService != null && MainForm.Instance.communicationService.IsConnected)
                                     {
                                         var disconnectResult = await MainForm.Instance.communicationService.Disconnect();
-                                        MainForm.Instance.CurrentLoginStatus = MainForm.LoginStatus.None;
                                     }
 
-                                    MessageBox.Show("请检查你的用户名和密码是否正确。" + ex.Message, "登陆出错", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                    // 判断是否为超时异常，提供更友好的错误提示
+                                    string errorMessage;
+                                    if (ex is TimeoutException || ex.Message.Contains("超时") || ex.Message.Contains("Timeout"))
+                                    {
+                                        errorMessage = "网络连接超时，请检查服务器地址是否正确或网络连接是否正常。";
+                                    }
+                                    else
+                                    {
+                                        errorMessage = "请检查你的用户名和密码是否正确。" + ex.Message;
+                                    }
+
+                                    MessageBox.Show(errorMessage, "登陆出错", MessageBoxButtons.OK, MessageBoxIcon.Error);
                                     MainForm.Instance.logger.Error("登陆出错", ex);
                                     return;
                                 }
@@ -376,7 +443,18 @@ namespace RUINORERP.UI
                         MainForm.Instance.CurrentLoginStatus = MainForm.LoginStatus.None;
                     }
 
-                    MessageBox.Show("请检查你的用户名和密码是否正确。" + ex.Message, "登陆出错", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    // 判断是否为超时异常，提供更友好的错误提示
+                    string errorMessage;
+                    if (ex is TimeoutException || ex.Message.Contains("超时") || ex.Message.Contains("Timeout"))
+                    {
+                        errorMessage = "网络连接超时，请检查服务器地址是否正确或网络连接是否正常。";
+                    }
+                    else
+                    {
+                        errorMessage = "请检查你的用户名和密码是否正确。" + ex.Message;
+                    }
+
+                    MessageBox.Show(errorMessage, "登陆出错", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     MainForm.Instance.logger.Error("登陆出错", ex);
                     return;
                 }

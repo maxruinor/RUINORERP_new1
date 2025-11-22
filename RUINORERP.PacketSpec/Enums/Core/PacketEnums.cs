@@ -9,30 +9,34 @@ namespace RUINORERP.PacketSpec.Enums.Core
     public enum PacketDirection
     {
         /// <summary>
-        /// 未知方向
+        /// 未知方向 - 初始状态或未定义
         /// </summary>
-        [Description("未知方向")]
+        [Description("未知")]
         Unknown = 0,
 
         /// <summary>
-        /// 客户端到服务器
+        /// 客户端发起的请求 - 期待服务器响应
         /// </summary>
-        [Description("客户端到服务器")]
-        ClientToServer = 1,
+        [Description("客户端请求")]
+        ClientRequest = 1,
 
         /// <summary>
-        /// 服务器到客户端
+        /// 服务器对客户端请求的响应
         /// </summary>
-        [Description("服务器到客户端")]
-        ServerToClient = 2,
+        [Description("服务器响应")]
+        ServerResponse = 2,
 
         /// <summary>
-        /// 双向通信
+        /// 服务器主动推送 - 客户端是否响应可选
         /// </summary>
-        [Description("双向通信")]
-        Bidirectional = 3,
-        Response = 4,
-        Request = 5
+        [Description("服务器推送")]
+        ServerRequest = 3,
+
+        /// <summary>
+        /// 客户端响应 - 双向通信场景
+        /// </summary>
+        [Description("客户端响应")]
+        ClientResponse = 4,
     }
 
     /// <summary>

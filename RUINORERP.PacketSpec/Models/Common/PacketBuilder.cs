@@ -70,15 +70,6 @@ namespace RUINORERP.PacketSpec.Models.Common
             return this;
         }
 
-        /// <summary>
-        /// 设置为请求方向（快捷方法）
-        /// </summary>
-        /// <returns>当前构建器实例</returns>
-        public PacketBuilder AsRequest()
-        {
-            return WithDirection(PacketDirection.Request);
-        }
-
 
         /// <summary>
         /// 设置会话信息

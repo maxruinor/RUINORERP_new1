@@ -171,6 +171,9 @@ namespace RUINORERP.UI
                         bool isInitPwd = false;
                         //传入账号密码返回结果
 
+                        // 开始测量登录方法执行时间
+                        System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
+                        stopwatch.Start();
 
                         // 设置登录状态为登录中
                         if (MainForm.Instance != null)
@@ -198,6 +201,19 @@ namespace RUINORERP.UI
                         }
 
                         bool ok = PTPrincipal.Login(this.txtUserName.Text, this.txtPassWord.Text, Program.AppContextData, ref isInitPwd);
+                        
+                        // 停止计时并记录结果
+                        stopwatch.Stop();
+                        TimeSpan loginTimeSpan = stopwatch.Elapsed;
+                        string loginTimeInfo = $"登录方法执行时间: {loginTimeSpan.TotalMilliseconds:N2} 毫秒";
+                        
+                        // 记录登录时间信息到日志
+                        if (MainForm.Instance != null && MainForm.Instance.logger != null)
+                        {
+                            MainForm.Instance.logger.LogInformation(loginTimeInfo);
+                        }
+                        Console.WriteLine(loginTimeInfo);
+                        
                         if (ok)
                         {
                             if (!Program.AppContextData.IsSuperUser || txtUserName.Text != "admin")
@@ -271,15 +287,15 @@ namespace RUINORERP.UI
                                         // 添加连接超时控制，防止无限等待
                                         var connectTask = MainForm.Instance.communicationService.ConnectAsync(serverIp, serverPort);
                                         var timeoutTask = Task.Delay(TimeSpan.FromSeconds(10)); // 10秒连接超时
-                                        
+
                                         var completedTask = await Task.WhenAny(connectTask, timeoutTask);
-                                        
+
                                         if (completedTask == timeoutTask)
                                         {
                                             MessageBox.Show("连接服务器超时，请检查网络连接和服务器配置。", "连接超时", MessageBoxButtons.OK, MessageBoxIcon.Error);
                                             return;
                                         }
-                                        
+
                                         var connected = await connectTask;
                                         if (!connected)
                                         {
@@ -299,14 +315,14 @@ namespace RUINORERP.UI
                                         _ipAddressChanged = false;
                                     }
 
-                                 
+
                                     // 8. 执行登录操作，添加登录超时控制
                                     using var cts = new CancellationTokenSource();
                                     var loginTask = userLogin.LoginAsync(UserGlobalConfig.Instance.UseName, UserGlobalConfig.Instance.PassWord, cts.Token);
-                                    var loginTimeoutTask = Task.Delay(TimeSpan.FromSeconds(5), cts.Token); // 5秒登录超时
-                                    
+                                    var loginTimeoutTask = Task.Delay(TimeSpan.FromSeconds(10), cts.Token); // 10秒登录超时  请真正的请求一样
+
                                     var completedLoginTask = await Task.WhenAny(loginTask, loginTimeoutTask);
-                                    
+
                                     if (completedLoginTask == loginTimeoutTask)
                                     {
                                         // 超时后取消登录任务
@@ -315,7 +331,7 @@ namespace RUINORERP.UI
                                         try
                                         {
                                             // 使用Task.Run包装任务处理，避免阻塞UI
-                                            _ = Task.Run(async () => 
+                                            _ = Task.Run(async () =>
                                             {
                                                 try
                                                 {
@@ -338,7 +354,7 @@ namespace RUINORERP.UI
                                         }
                                         return;
                                     }
-                                    
+
                                     // 确保不会因为取消而抛出异常
                                     var loginSuccess = await loginTask.ConfigureAwait(false);
 
@@ -353,7 +369,7 @@ namespace RUINORERP.UI
                                     {
                                         MainForm.Instance.AppContext.CurrentUser.在线状态 = true;
                                     }
-                                    
+
                                     //如果为初始密码则提示弹窗！
                                     IsInitPassword = isInitPwd;
                                 }

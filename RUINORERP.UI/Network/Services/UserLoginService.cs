@@ -99,21 +99,21 @@ namespace RUINORERP.UI.Network.Services
                 throw new ArgumentException("用户名不能为空", nameof(username));
             if (string.IsNullOrEmpty(password))
                 throw new ArgumentException("密码不能为空", nameof(password));
-            
+
             try
             {
                 // 立即检查取消令牌状态，如果已取消，避免尝试获取锁
                 ct.ThrowIfCancellationRequested();
-                
+
                 // 使用信号量确保同一时间只有一个登录请求
                 await _loginLock.WaitAsync(ct);
-                
+
                 // 锁获取成功后，再次检查取消令牌状态
                 if (ct.IsCancellationRequested)
                 {
                     ct.ThrowIfCancellationRequested();
                 }
-                
+
                 // 检查连接状态
                 if (!_communicationService.IsConnected)
                 {
@@ -134,7 +134,7 @@ namespace RUINORERP.UI.Network.Services
                     {
                         // 发送登录命令并获取响应
                         response = await _communicationService.SendCommandWithResponseAsync<LoginResponse>(
-                            AuthenticationCommands.Login, loginRequest, ct);
+                            AuthenticationCommands.Login, loginRequest, ct, 1000);
                         break; // 成功则跳出重试循环
                     }
                     catch (Exception ex) when (IsRetryableException(ex) && retryCount < maxRetries)

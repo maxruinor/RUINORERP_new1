@@ -14,9 +14,12 @@ namespace AutoUpdateTools
     {
         public List<DiffBlock> CompareXml(XDocument leftDoc, XDocument rightDoc)
         {
+            if (leftDoc == null || rightDoc == null)
+                return new List<DiffBlock>();
+                
             // 1. 标准化XML格式
-            var leftLines = PrettyPrintXml(leftDoc).Split('\n');
-            var rightLines = PrettyPrintXml(rightDoc).Split('\n');
+            var leftLines = PrettyPrintXml(leftDoc).Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+            var rightLines = PrettyPrintXml(rightDoc).Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
 
             // 2. 使用Differ计算差异
             var differ = new Differ();
@@ -28,6 +31,8 @@ namespace AutoUpdateTools
 
             foreach (var change in changes)
             {
+                if (change == null) continue;
+                
                 if (currentBlock == null || currentBlock.Type != GetDiffType(change.Type))
                 {
                     currentBlock = new DiffBlock { Type = GetDiffType(change.Type) };
@@ -37,23 +42,23 @@ namespace AutoUpdateTools
                 switch (change.Type)
                 {
                     case DiffType.Unchanged:
-                        currentBlock.AddLeftLine(change.LeftText);
-                        currentBlock.AddRightLine(change.RightText);
+                        currentBlock.AddLeftLine(change.LeftText ?? string.Empty);
+                        currentBlock.AddRightLine(change.RightText ?? string.Empty);
                         break;
 
                     case DiffType.Added:
-                        currentBlock.AddRightLine(change.RightText);
+                        currentBlock.AddRightLine(change.RightText ?? string.Empty);
                         break;
 
                     case DiffType.Removed:
-                        currentBlock.AddLeftLine(change.LeftText);
+                        currentBlock.AddLeftLine(change.LeftText ?? string.Empty);
                         break;
 
                     case DiffType.Modified:
                         // 计算内联差异
-                        var inlineDiff = ComputeInlineDiff(change.LeftText, change.RightText);
-                        currentBlock.AddLeftLine(change.LeftText, inlineDiff);
-                        currentBlock.AddRightLine(change.RightText, inlineDiff);
+                        var inlineDiff = ComputeInlineDiff(change.LeftText ?? string.Empty, change.RightText ?? string.Empty);
+                        currentBlock.AddLeftLine(change.LeftText ?? string.Empty, inlineDiff);
+                        currentBlock.AddRightLine(change.RightText ?? string.Empty, inlineDiff);
                         break;
                 }
             }
@@ -64,11 +69,14 @@ namespace AutoUpdateTools
         private List<DiffSegment> ComputeInlineDiff(string left, string right)
         {
             if (left == right)
-                return new[] { new DiffSegment { Text = left, IsModified = false } }.ToList();
+                return new[] { new DiffSegment { Text = left ?? string.Empty, IsModified = false } }.ToList();
 
             // 使用简单的逐字符比较算法
             var segments = new List<DiffSegment>();
-            int minLen = Math.Min(left.Length, right.Length);
+            if (string.IsNullOrEmpty(left) && string.IsNullOrEmpty(right))
+                return segments;
+                
+            int minLen = Math.Min(left?.Length ?? 0, right?.Length ?? 0);
             int start = 0;
 
             // 查找前面相同的部分
@@ -77,8 +85,11 @@ namespace AutoUpdateTools
 
             // 查找后面相同的部分
             int end = 0;
+            int leftLen = left?.Length ?? 0;
+            int rightLen = right?.Length ?? 0;
+            
             while (end < minLen - start &&
-                   left[left.Length - 1 - end] == right[right.Length - 1 - end])
+                   left[leftLen - 1 - end] == right[rightLen - 1 - end])
                 end++;
 
             // 中间不同的部分
@@ -91,8 +102,8 @@ namespace AutoUpdateTools
                 });
             }
 
-            int leftDiffLen = left.Length - start - end;
-            int rightDiffLen = right.Length - start - end;
+            int leftDiffLen = leftLen - start - end;
+            int rightDiffLen = rightLen - start - end;
 
             if (leftDiffLen > 0 || rightDiffLen > 0)
             {
@@ -108,8 +119,7 @@ namespace AutoUpdateTools
             {
                 segments.Add(new DiffSegment
                 {
-                    Text = left.Substring(left.Length - end),
-                    IsModified = false
+                    Text = left.Substring(leftLen - end),IsModified = false
                 });
             }
 
@@ -134,6 +144,8 @@ namespace AutoUpdateTools
         /// <returns></returns>
         public static string PrettyPrintXml(XDocument doc)
         {
+            if (doc == null) return string.Empty;
+            
             var stringWriter = new StringWriter();
             var xmlWriter = XmlWriter.Create(stringWriter, new XmlWriterSettings
             {

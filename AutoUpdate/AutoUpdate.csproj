@@ -179,12 +179,17 @@
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CompressedUpdateTester.cs" />
+    <Compile Include="EnhancedVersionManager.cs" />
     <Compile Include="frmDebugInfo.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="frmDebugInfo.Designer.cs">
       <DependentUpon>frmDebugInfo.cs</DependentUpon>
     </Compile>
+    <Compile Include="SkipVersionManager.cs" />
+    <Compile Include="VersionHistoryManager.cs" />
+    <Compile Include="VersionRollbackManager.cs" />
     <Compile Include="ZipArchiveExtensions.cs" />
     <Content Include="App.ico" />
     <Content Include="AutoUpdaterList.xml">

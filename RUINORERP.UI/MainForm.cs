@@ -622,6 +622,12 @@ namespace RUINORERP.UI
         /// </summary>
         /// <param name="ShowMessageBox">是否显示消息框</param>
         /// <param name="forceUpdate">是否强制更新，忽略客户端自动更新配置</param>
+        /// <summary>
+        /// 检查和执行系统更新
+        /// 支持跳过版本功能
+        /// </summary>
+        /// <param name="ShowMessageBox">是否显示消息框</param>
+        /// <param name="forceUpdate">是否强制更新，忽略跳过版本设置</param>
         /// <returns>更新操作是否成功</returns>
         public async Task<bool> UpdateSys(bool ShowMessageBox, bool forceUpdate = false)
         {
@@ -633,7 +639,41 @@ namespace RUINORERP.UI
                 try
                 {
                     AutoUpdate.FrmUpdate Update = new AutoUpdate.FrmUpdate();
-                    if (Update.CheckHasUpdates())
+                    
+                    // 检查是否有更新
+                    bool hasUpdates = Update.CheckHasUpdates();
+                    
+                    // 检查是否需要跳过版本（仅在非强制更新且有更新的情况下）
+                    bool shouldSkipVersion = !forceUpdate && hasUpdates;
+                    
+                    // 检查跳过版本的标记文件
+                    if (shouldSkipVersion)
+                    {
+                        string appDataPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "RUINORERP");
+                        string skipVersionFilePath = Path.Combine(appDataPath, "SkippedVersions.xml");
+                        string skipCurrentVersionFilePath = Path.Combine(Application.StartupPath, "skipcurrentversion.txt");
+                        
+                        // 如果存在跳过版本的标记文件，询问用户是否仍要检查更新
+                        if (File.Exists(skipVersionFilePath) || File.Exists(skipCurrentVersionFilePath))
+                        {
+                            DialogResult result = MessageBox.Show(
+                                "检测到您已跳过当前版本的更新。\n是否仍要检查并安装最新版本？", 
+                                "更新提示", 
+                                MessageBoxButtons.YesNo, 
+                                MessageBoxIcon.Question);
+                            
+                            if (result == DialogResult.No)
+                            {
+                                if (ShowMessageBox)
+                                {
+                                    MessageBox.Show("更新已跳过，您可以稍后在系统设置中手动检查更新。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                                }
+                                return false;
+                            }
+                        }
+                    }
+                    
+                    if (hasUpdates)
                     {
                         MessageBox.Show("服务器有新版本，更新前请保存当前操作，关闭系统。", "温馨提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                         Process.Start(Update.currentexeName);

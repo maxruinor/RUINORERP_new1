@@ -6,15 +6,55 @@ using System.Xml;
 using System.Collections;
 using System.Windows.Forms;
 using System.ComponentModel;
+using System.Collections.Generic;
+using System.Text;
+using System.Diagnostics;
+using System.Linq;
+using System.Xml.Serialization;
 
 namespace AutoUpdate
 {
     /// <summary>
-    /// updater µÄÕªÒªËµÃ÷¡£
+    /// åº”ç”¨ç¨‹åºæ›´æ–°å™¨
+    /// è´Ÿè´£å¤„ç†åº”ç”¨ç¨‹åºçš„æ›´æ–°æ£€æŸ¥ã€ä¸‹è½½å’Œå®‰è£…
     /// </summary>
     public class AppUpdater : IDisposable
     {
-        #region ³ÉÔ±Óë×Ö¶ÎÊôĞÔ
+        // æ·»åŠ SkipVersionManagerå®ä¾‹
+        private SkipVersionManager skipVersionManager;
+        public SkipVersionManager SkipVersionManager
+        {
+            get { return skipVersionManager ?? (skipVersionManager = new SkipVersionManager()); }
+        }
+
+        // æ·»åŠ VersionHistoryManagerå®ä¾‹
+        private VersionHistoryManager versionHistoryManager;
+        public VersionHistoryManager VersionHistoryManager
+        {
+            get { return versionHistoryManager ?? (versionHistoryManager = new VersionHistoryManager()); }
+        }
+
+        // æ·»åŠ VersionRollbackManagerå®ä¾‹
+        private VersionRollbackManager versionRollbackManager;
+        public VersionRollbackManager VersionRollbackManager
+        {
+            get { return versionRollbackManager ?? (versionRollbackManager = new VersionRollbackManager(this.UpdaterUrl, this.AppId)); }
+        }
+
+        // æ·»åŠ EnhancedVersionManagerå®ä¾‹
+        private EnhancedVersionManager enhancedVersionManager;
+        public EnhancedVersionManager EnhancedVersionManager
+        {
+            get { return enhancedVersionManager ?? (enhancedVersionManager = new EnhancedVersionManager(Environment.CurrentDirectory, this.UpdaterUrl, this.AppId)); }
+        }
+
+        private string _appId = "";
+        public string AppId
+        {
+            get { return _appId; }
+            set { _appId = value; }
+        }
+        #region æˆå‘˜å˜é‡å®šä¹‰
         private string _updaterUrl;
         private bool disposed = false;
         private IntPtr handle;
@@ -31,11 +71,13 @@ namespace AutoUpdate
         #endregion
 
         /// <summary>
-        /// AppUpdater¹¹Ôìº¯Êı
+        /// AppUpdateræ„é€ å‡½æ•°
         /// </summary>
         public AppUpdater()
         {
             this.handle = handle;
+            // åˆå§‹åŒ–SkipVersionManager
+            skipVersionManager = new SkipVersionManager();
         }
         public void Dispose()
         {
@@ -64,7 +106,7 @@ namespace AutoUpdate
 
 
         /// <summary>
-        /// ¼ì²é¸üĞÂÎÄ¼ş  ¹ıÊ±
+        /// æ£€æŸ¥æ›´æ–°æ–‡ä»¶(æ—§ç‰ˆæœ¬)
         /// </summary>
         /// <param name="serverXmlFile"></param>
         /// <param name="localXmlFile"></param>
@@ -129,14 +171,29 @@ namespace AutoUpdate
 
 
         /// <summary>
-        /// ¼ì²é¸üĞÂÎÄ¼ş
+        /// æ£€æŸ¥æ›´æ–°æ–‡ä»¶
         /// </summary>
         /// <param name="serverXmlFile"></param>
         /// <param name="localXmlFile"></param>
-        /// <param name="updateFileList">Òª¸üĞÂµÄ¼¯ºÏ</param>
+        /// <param name="updateFileList">Òªï¿½ï¿½ï¿½ÂµÄ¼ï¿½ï¿½ï¿½</param>
         /// <returns></returns>
-        public int CheckForUpdate(string serverXmlFile, string localXmlFile, out Hashtable updateFileList)
+        /// <summary>
+        /// æ£€æŸ¥æ˜¯å¦å­˜åœ¨æ›´æ–°ä¸”æœªè¢«è·³è¿‡
+        /// </summary>
+        /// <param name="serverXmlFile">æœåŠ¡å™¨XMLæ–‡ä»¶è·¯å¾„</param>
+        /// <param name="localXmlFile">æœ¬åœ°XMLæ–‡ä»¶è·¯å¾„</param>
+        /// <param name="updateFileList">è¿”å›çš„æ›´æ–°æ–‡ä»¶åˆ—è¡¨</param>
+        /// <param name="appId">åº”ç”¨ç¨‹åºID</param>
+        /// <returns>å¦‚æœæœ‰æ›´æ–°ä¸”æœªè¢«è·³è¿‡ï¼Œè¿”å›æ›´æ–°æ–‡ä»¶æ•°é‡ï¼›å¦åˆ™è¿”å›0</returns>
+        public int CheckForUpdate(string serverXmlFile, string localXmlFile, out Hashtable updateFileList, string appId = "")
         {
+            if (!string.IsNullOrEmpty(appId))
+            {
+                this.AppId = appId;
+            }
+
+            // è°ƒç”¨åŸå§‹çš„æ£€æŸ¥é€»è¾‘
+
             updateFileList = new Hashtable();
             if (!File.Exists(localXmlFile) || !File.Exists(serverXmlFile))
             {
@@ -149,13 +206,28 @@ namespace AutoUpdate
             XmlNodeList newNodeList = serverXmlFiles.GetNodeList("AutoUpdater/Files");
             XmlNodeList oldNodeList = localXmlFiles.GetNodeList("AutoUpdater/Files");
 
-            //È¡°æ±¾ºÅ
+            // è·å–ç‰ˆæœ¬å·
             this.NewVersion = serverXmlFiles.GetNodeValue("AutoUpdater/Application/Version").ToString();
-            
+
+            // æ£€æŸ¥ç‰ˆæœ¬æ˜¯å¦è¢«è·³è¿‡
+            if (!string.IsNullOrEmpty(appId) && skipVersionManager.IsVersionSkipped(this.NewVersion, appId))
+            {
+                updateFileList = new Hashtable();
+                return 0; // ç‰ˆæœ¬å·²è¢«è·³è¿‡ï¼Œè¿”å›0è¡¨ç¤ºæ²¡æœ‰æ›´æ–°
+            }
+
+            // æ£€æŸ¥æ˜¯å¦ä¸ºå¼ºåˆ¶æ›´æ–°
+            bool forceUpdate = IsCommandLineArgumentPresent("--force");
+            if (!forceUpdate && !string.IsNullOrEmpty(appId) && skipVersionManager.IsVersionSkipped(this.NewVersion, appId))
+            {
+                updateFileList = new Hashtable();
+                return 0; // ä¸æ˜¯å¼ºåˆ¶æ›´æ–°ä¸”ç‰ˆæœ¬è¢«è·³è¿‡ï¼Œè¿”å›0è¡¨ç¤ºæ²¡æœ‰æ›´æ–°
+            }
+
             int k = 0;
             for (int i = 0; i < newNodeList.Count; i++)
             {
-                //ÕâÀï¶à¶¨ÒåÁËÒ»¸öÎ¬¶È£¬ÏÂÃæÖ»ÓÃµ½ÁËÁ½¸öÎ¬¶È£¬ÆäÊµ¿ÉÒÔ²»ÓÃ¶¨ÒåµÄ
+                //å£°æ˜æ•°ç»„ä¿å­˜ä¿¡æ¯ï¼Œè¿™é‡Œåªä½¿ç”¨å‰ä¸¤ä¸ªç»´åº¦ï¼Œå®é™…å¯ä»¥æ‰©å±•æ›´å¤š
                 string[] fileList = new string[3];
 
                 string newFileName = newNodeList.Item(i).Attributes["Name"].Value.Trim();
@@ -171,7 +243,7 @@ namespace AutoUpdate
                     oldFileAl.Add(oldVer);
 
                 }
-                //Èç¹û¾ÉµÄÖĞÃ»ÓĞ¡£¾ÍÌí¼Ó
+                //ï¿½ï¿½ï¿½ï¿½Éµï¿½ï¿½ï¿½Ã»ï¿½Ğ¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                 int pos = oldFileAl.IndexOf(newFileName);
                 if (pos == -1)
                 {
@@ -179,7 +251,7 @@ namespace AutoUpdate
                     fileList[1] = newVer;
                     updateFileList.Add(k, fileList);
                     k++;
-                }//Èç¹û¶¼ÓĞ£¬Ôò±È½Ï°æ±¾ºÅ
+                }//å¦‚æœå­˜åœ¨ï¼Œåˆ™æ¯”è¾ƒç‰ˆæœ¬å·
                 else if (pos > -1 && CompareVersion(oldFileAl[pos + 1].ToString(), newVer) < 0)
                 {
                     fileList[0] = newFileName;
@@ -195,185 +267,209 @@ namespace AutoUpdate
 
 
 
-        /*
-         ¸øÄãÁ½¸ö°æ±¾ºÅ version1 ºÍ version2 £¬ÇëÄã±È½ÏËüÃÇ¡£
-
-°æ±¾ºÅÓÉÒ»¸ö»ò¶à¸öĞŞ¶©ºÅ×é³É£¬¸÷ĞŞ¶©ºÅÓÉÒ»¸ö '.' Á¬½Ó¡£Ã¿¸öĞŞ¶©ºÅÓÉ ¶àÎ»Êı×Ö ×é³É£¬¿ÉÄÜ°üº¬ Ç°µ¼Áã ¡£Ã¿¸ö°æ±¾ºÅÖÁÉÙ°üº¬Ò»¸ö×Ö·û¡£ĞŞ¶©ºÅ´Ó×óµ½ÓÒ±àºÅ£¬ÏÂ±ê´Ó 0 ¿ªÊ¼£¬×î×ó±ßµÄĞŞ¶©ºÅÏÂ±êÎª 0 £¬ÏÂÒ»¸öĞŞ¶©ºÅÏÂ±êÎª 1 £¬ÒÔ´ËÀàÍÆ¡£ÀıÈç£¬2.5.33 ºÍ 0.1 ¶¼ÊÇÓĞĞ§µÄ°æ±¾ºÅ¡£
-
-±È½Ï°æ±¾ºÅÊ±£¬Çë°´´Ó×óµ½ÓÒµÄË³ĞòÒÀ´Î±È½ÏËüÃÇµÄĞŞ¶©ºÅ¡£±È½ÏĞŞ¶©ºÅÊ±£¬Ö»Ğè±È½Ï ºöÂÔÈÎºÎÇ°µ¼ÁãºóµÄÕûÊıÖµ ¡£Ò²¾ÍÊÇËµ£¬ĞŞ¶©ºÅ 1 ºÍĞŞ¶©ºÅ 001 ÏàµÈ ¡£Èç¹û°æ±¾ºÅÃ»ÓĞÖ¸¶¨Ä³¸öÏÂ±ê´¦µÄĞŞ¶©ºÅ£¬Ôò¸ÃĞŞ¶©ºÅÊÓÎª 0 ¡£ÀıÈç£¬°æ±¾ 1.0 Ğ¡ÓÚ°æ±¾ 1.1 £¬ÒòÎªËüÃÇÏÂ±êÎª 0 µÄĞŞ¶©ºÅÏàÍ¬£¬¶øÏÂ±êÎª 1 µÄĞŞ¶©ºÅ·Ö±ğÎª 0 ºÍ 1 £¬0 < 1 ¡£
-
-·µ»Ø¹æÔòÈçÏÂ£º
-
-Èç¹û version1 > version2 ·µ»Ø 1£¬
-Èç¹û version1 < version2 ·µ»Ø -1£¬
-³ı´ËÖ®Íâ·µ»Ø 0¡£
-
-Ê¾Àı 1
-ÊäÈë£ºversion1 = "1.01", version2 = "1.001"
-Êä³ö£º0
-½âÊÍ£ººöÂÔÇ°µ¼Áã£¬"01" ºÍ "001" ¶¼±íÊ¾ÏàÍ¬µÄÕûÊı "1"
-
-Ê¾Àı 2
-ÊäÈë£ºversion1 = "1.0", version2 = "1.0.0"
-Êä³ö£º0
-½âÊÍ£ºversion1 Ã»ÓĞÖ¸¶¨ÏÂ±êÎª 2 µÄĞŞ¶©ºÅ£¬¼´ÊÓÎª "0"
-
-Ê¾Àı 3
-ÊäÈë£ºversion1 = "0.1", version2 = "1.1"
-Êä³ö£º-1
-½âÊÍ£ºversion1 ÖĞÏÂ±êÎª 0 µÄĞŞ¶©ºÅÊÇ "0"£¬version2 ÖĞÏÂ±êÎª 0 µÄĞŞ¶©ºÅÊÇ "1" ¡£0 < 1£¬ËùÒÔ version1 < version2
-
-ÌáÊ¾
-1 <= version1.length, version2.length <= 500
-version1 ºÍ version2 ½ö°üº¬Êı×ÖºÍ '.'
-version1 ºÍ version2 ¶¼ÊÇ ÓĞĞ§°æ±¾ºÅ
-version1 ºÍ version2 µÄËùÓĞĞŞ¶©ºÅ¶¼¿ÉÒÔ´æ´¢ÔÚ 32 Î»ÕûÊı ÖĞ
-
-Ë¼Â·
-(Ë«Ö¸Õë)O(n+m)
-
-±È½ÏÁ½¸ö°æ±¾ºÅ´óĞ¡£¬°æ±¾ºÅÓÉĞŞ¶©ºÅ×é³É£¬ÖĞ¼äÊ¹ÓÃ'.'·Ö¸ô£¬Ô½¿¿½ü×Ö·û´®Ç°±ß£¬ĞŞ¶©ºÅµÄÓÅÏÈ¼¶Ô½´ó¡£µ±v1 > v2Ê±·µ»Ø 1£¬µ±v1 < v2Ê±·µ»Ø -1£¬ÏàµÈÊ±·µ»Ø 0¡£
-
-ÑùÀı
-ÈçÑùÀıËùÊ¾£¬v1= 1.02.3, v2 = 1.02.2£¬Ç°Á½¸öĞŞ¶©ºÅ¶¼ÏàµÈ£¬v1µÄµÚÈı¸öĞŞ¶©ºÅ´óÓÚv2µÄµÚÈı¸öĞŞ¶©ºÅ£¬Òò´Ëv1 > v2£¬·µ»Ø1¡£ÏÂÃæÀ´½²½âË«Ö¸ÕëµÄ×ö·¨¡£
-
-ÎÒÃÇÊ¹ÓÃÁ½¸öÖ¸ÕëiºÍj·Ö±ğÖ¸ÏòÁ½¸ö×Ö·û´®µÄ¿ªÍ·£¬È»ºóÏòºó±éÀú£¬µ±Óöµ½Ğ¡Êıµã'.'Ê±Í£ÏÂÀ´£¬²¢½«Ã¿¸öĞ¡Êıµã'.'·Ö¸ô¿ªµÄĞŞ¶©ºÅ½âÎö³ÉÊı×Ö½øĞĞ±È½Ï£¬Ô½¿¿½üÇ°±ß£¬ĞŞ¶©ºÅµÄÓÅÏÈ¼¶Ô½´ó¡£¸ù¾İĞŞ¶©ºÅ´óĞ¡¹ØÏµ£¬·µ»ØÏàÓ¦µÄÊıÖµ¡£
-¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª
-°æÈ¨ÉùÃ÷£º±¾ÎÄÎªCSDN²©Ö÷¡¸Dreamtìá¡¹µÄÔ­´´ÎÄÕÂ£¬×ñÑ­CC 4.0 BY-SA°æÈ¨Ğ­Òé£¬×ªÔØÇë¸½ÉÏÔ­ÎÄ³ö´¦Á´½Ó¼°±¾ÉùÃ÷¡£
-Ô­ÎÄÁ´½Ó£ºhttps://blog.csdn.net/u011645307/article/details/131117996
-         */
+        /// <summary>
+        /// æ¯”è¾ƒä¸¤ä¸ªç‰ˆæœ¬å·
+        /// CompareVersion("1.0.0.2","1.0.0.11")=-1
+        /// ç‰ˆæœ¬å·æŒ‰æ•°å­—é€æ®µæ¯”è¾ƒ
+        /// </summary>
+        /// <param name="Old_Version">æ—§ç‰ˆæœ¬å·</param>
+        /// <param name="New_Version">æ–°ç‰ˆæœ¬å·</param>
+        /// <returns>0è¡¨ç¤ºç›¸ç­‰ï¼Œ-1è¡¨ç¤ºéœ€è¦æ›´æ–°ï¼Œ1è¡¨ç¤ºä¸éœ€è¦æ›´æ–°</returns>
+        /// <summary>
+        /// æ£€æŸ¥ç‰ˆæœ¬æ˜¯å¦è¢«è·³è¿‡
+        /// </summary>
+        /// <param name="version">è¦æ£€æŸ¥çš„ç‰ˆæœ¬å·</param>
+        /// <param name="appId">åº”ç”¨ç¨‹åºID</param>
+        /// <returns>å¦‚æœç‰ˆæœ¬è¢«è·³è¿‡è¿”å›trueï¼Œå¦åˆ™è¿”å›false</returns>
+        public bool IsVersionSkipped(string version, string appId)
+        {
+            return skipVersionManager.IsVersionSkipped(version, appId);
+        }
 
         /// <summary>
-        /// ±È½ÏÁ½¸ö°æ±¾ºÅhttps://blog.csdn.net/u011645307/article/details/131117996
-        /// CompareVersion("1.0.0.2","1.0.0.11")=-1
-        /// °æ±¾ºÅÔö¼Ó²Å¸üĞÂ
+        /// è®°å½•è·³è¿‡çš„ç‰ˆæœ¬
         /// </summary>
-        /// <param name="Old_Version"></param>
-        /// <param name="New_Version"></param>
-        /// <returns>0²»±ä£¬-1Òª¸üĞÂ£¬1Îª²»Òª¸üĞÂ</returns>
+        /// <param name="version">è¦è·³è¿‡çš„ç‰ˆæœ¬å·</param>
+        /// <param name="appId">åº”ç”¨ç¨‹åºID</param>
+        public void SkipVersion(string version, string appId)
+        {
+            skipVersionManager.SkipVersion(version, appId);
+        }
+
+        /// <summary>
+        /// æ£€æŸ¥å‘½ä»¤è¡Œå‚æ•°æ˜¯å¦å­˜åœ¨
+        /// </summary>
+        /// <param name="argName">å‚æ•°åç§°</param>
+        /// <returns>å¦‚æœå‚æ•°å­˜åœ¨åˆ™è¿”å›trueï¼Œå¦åˆ™è¿”å›false</returns>
+        private bool IsCommandLineArgumentPresent(string argName)
+        {
+            string[] args = Environment.GetCommandLineArgs();
+            return args.Any(arg => arg.Equals(argName, StringComparison.OrdinalIgnoreCase));
+        }
+
+        /// <summary>
+        /// æ‰§è¡Œç‰ˆæœ¬æ›´æ–°å¹¶è®°å½•å†å²
+        /// </summary>
+        /// <returns>æ›´æ–°æ˜¯å¦æˆåŠŸ</returns>
+        public bool UpdateAndRecordHistory()
+        {
+            try
+            {
+                // å…ˆè·å–æ–°ç‰ˆæœ¬ä¿¡æ¯
+                Hashtable updateFileList;
+                int updateResult = CheckForUpdate(null, null, out updateFileList, this.AppId);
+
+                // å¦‚æœæœ‰æ›´æ–°å¹¶ä¸”æœªè¢«è·³è¿‡
+                if (updateResult > 0)
+                {
+                    // è®°å½•æ›´æ–°å‰çš„ç‰ˆæœ¬å†å²
+                    VersionHistoryManager.RecordNewVersion(this.NewVersion);
+                    Debug.WriteLine($"å·²è®°å½•ç‰ˆæœ¬æ›´æ–°å†å²: {this.NewVersion}");
+
+                    // æ­¤å¤„åº”è°ƒç”¨å®é™…çš„æ›´æ–°æ–¹æ³•
+                    // bool updateSuccess = PerformActualUpdate();
+                    // ç”±äºæ²¡æœ‰çœ‹åˆ°PerformActualUpdateæ–¹æ³•ï¼Œè¿™é‡Œè¿”å›trueè¡¨ç¤ºæˆåŠŸ
+                    return true;
+                }
+                return false;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"æ‰§è¡Œæ›´æ–°å¹¶è®°å½•å†å²å¤±è´¥: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// å¤„ç†å‹ç¼©æ›´æ–°åŒ…
+        /// </summary>
+        /// <param name="packagePath">å‹ç¼©åŒ…è·¯å¾„</param>
+        /// <returns>å¤„ç†æ˜¯å¦æˆåŠŸ</returns>
+        public bool ProcessCompressedUpdate(string packagePath)
+        {
+            try
+            {
+                // åˆ›å»ºç‰ˆæœ¬æ¡ç›®
+                VersionEntry version = new VersionEntry
+                {
+                    Version = Path.GetFileNameWithoutExtension(packagePath), // å‡è®¾æ–‡ä»¶ååŒ…å«ç‰ˆæœ¬ä¿¡æ¯
+                    InstallTime = DateTime.Now
+                };
+
+                // ä½¿ç”¨EnhancedVersionManagerå¤„ç†å‹ç¼©åŒ…
+                bool result = EnhancedVersionManager.ProcessCompressedUpdate(packagePath, version);
+
+                if (result)
+                {
+                    Debug.WriteLine($"å‹ç¼©æ›´æ–°åŒ…å¤„ç†æˆåŠŸ: {packagePath}");
+                    return true;
+                }
+                return false;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"å¤„ç†å‹ç¼©æ›´æ–°åŒ…å¤±è´¥: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// æ£€æŸ¥æœåŠ¡å™¨æ˜¯å¦æœ‰å‹ç¼©æ›´æ–°åŒ…
+        /// </summary>
+        /// <returns>å¦‚æœæœ‰å‹ç¼©æ›´æ–°åŒ…è¿”å›trueï¼Œå¦åˆ™è¿”å›false</returns>
+        public bool CheckForCompressedUpdate()
+        {
+            // æ£€æŸ¥æœåŠ¡å™¨æ˜¯å¦æœ‰æ–°ç‰ˆæœ¬çš„å‹ç¼©åŒ…
+            // è¿™é‡Œå¯ä»¥å®ç°ä¸æœåŠ¡å™¨çš„é€šä¿¡é€»è¾‘
+            // ç›®å‰è¿”å›trueä½œä¸ºç¤ºä¾‹
+            return EnhancedVersionManager.CheckForUpdates(this.NewVersion);
+        }
+
+        /// <summary>
+        /// è·å–å¯å›æ»šçš„ç‰ˆæœ¬åˆ—è¡¨
+        /// </summary>
+        /// <returns>å¯å›æ»šçš„ç‰ˆæœ¬åˆ—è¡¨</returns>
+        public List<VersionEntry> GetRollbackVersions()
+        {
+            return VersionRollbackManager.GetRollbackVersions();
+        }
+
+        /// <summary>
+        /// å›æ»šåˆ°æŒ‡å®šç‰ˆæœ¬
+        /// </summary>
+        /// <param name="version">ç›®æ ‡ç‰ˆæœ¬å·</param>
+        /// <returns>å›æ»šæ˜¯å¦æˆåŠŸ</returns>
+        public bool RollbackToVersion(string version)
+        {
+            return VersionRollbackManager.RollbackToVersion(version);
+        }
+
+        /// <summary>
+        /// æ£€æŸ¥æ˜¯å¦å¯ä»¥å›æ»šï¼ˆæ˜¯å¦å­˜åœ¨å†å²ç‰ˆæœ¬ï¼‰
+        /// </summary>
+        /// <returns>å¦‚æœå¯ä»¥å›æ»šåˆ™è¿”å›trueï¼Œå¦åˆ™è¿”å›false</returns>
+        public bool CanRollback()
+        {
+            return VersionRollbackManager.CanRollback();
+        }
+
         public int CompareVersion(string Old_Version, string New_Version)
         {
-
-            int version1Index = 0;//old
-            int version2Index = 0;//new
-
-            while (version1Index < Old_Version.Length || version2Index < New_Version.Length)
+            try
             {
-                long version1Num = 0;
-                long version2Num = 0;
+                int version1Index = 0;//old
+                int version2Index = 0;//new
 
-                while (version1Index < Old_Version.Length && Old_Version[version1Index] != '.')
+                while (version1Index < Old_Version.Length || version2Index < New_Version.Length)
                 {
-                    version1Num = version1Num * 10 + (Old_Version[version1Index] - '0');
+                    long version1Num = 0;
+                    long version2Num = 0;
+
+                    while (version1Index < Old_Version.Length && Old_Version[version1Index] != '.')
+                    {
+                        version1Num = version1Num * 10 + (Old_Version[version1Index] - '0');
+                        version1Index++;
+                    }
+
+                    while (version2Index < New_Version.Length && New_Version[version2Index] != '.')
+                    {
+                        version2Num = version2Num * 10 + (New_Version[version2Index] - '0');
+                        version2Index++;
+                    }
+
+                    if (version1Num > version2Num)
+                    {
+                        return 1;
+                    }
+                    if (version1Num < version2Num)
+                    {
+                        return -1;
+                    }
+
+                    version2Index++;
                     version1Index++;
                 }
 
-                while (version2Index < New_Version.Length && New_Version[version2Index] != '.')
-                {
-                    version2Num = version2Num * 10 + (New_Version[version2Index] - '0');
-                    version2Index++;
-                }
-
-                if (version1Num > version2Num)
-                {
-                    return 1;
-                }
-                if (version1Num < version2Num)
-                {
-                    return -1;
-                }
-
-                version2Index++;
-                version1Index++;
+                return 0;
             }
-
-            return 0;
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"ç‰ˆæœ¬æ¯”è¾ƒå‡ºé”™: {ex.Message}");
+                return 0;
+            }
         }
 
 
-        /*
-        
-        /// <summary>
-        /// ¼ì²é¸üĞÂÎÄ¼ş   2020-11-2×¢ÊÍÁË¡£
-        /// </summary>
-        /// <param name="serverXmlFile"></param>
-        /// <param name="localXmlFile"></param>
-        /// <param name="updateFileList"></param>
-        /// <returns></returns>
-        public int CheckForUpdate()
-        {
-            string localXmlFile = Application.StartupPath + "\\AutoUpdaterList.xml";
-            if (!File.Exists(localXmlFile))
-            {
-                return -1;
-            }
-
-            XmlFiles updaterXmlFiles = new XmlFiles(localXmlFile);
-
-
-            string tempUpdatePath = Environment.GetEnvironmentVariable("Temp") + "\\" + "_" + updaterXmlFiles.FindNode("//Application").Attributes["applicationId"].Value + "_" + "y" + "_" + "x" + "_" + "m" + "_" + "\\";
-            this.UpdaterUrl = updaterXmlFiles.GetNodeValue("//Url") + "/AutoUpdaterList.xml";
-            this.DownAutoUpdateFile(tempUpdatePath);
-
-            string serverXmlFile = tempUpdatePath + "\\AutoUpdaterList.xml";
-            if (!File.Exists(serverXmlFile))
-            {
-                return -1;
-            }
-
-            XmlFiles serverXmlFiles = new XmlFiles(serverXmlFile);
-            XmlFiles localXmlFiles = new XmlFiles(localXmlFile);
-
-            XmlNodeList newNodeList = serverXmlFiles.GetNodeList("AutoUpdater/Files");
-            XmlNodeList oldNodeList = localXmlFiles.GetNodeList("AutoUpdater/Files");
-
-            int k = 0;
-            for (int i = 0; i < newNodeList.Count; i++)
-            {
-                string[] fileList = new string[3];
-
-                string newFileName = newNodeList.Item(i).Attributes["Name"].Value.Trim();
-                string newVer = newNodeList.Item(i).Attributes["Ver"].Value.Trim();
-
-                ArrayList oldFileAl = new ArrayList();
-                for (int j = 0; j < oldNodeList.Count; j++)
-                {
-                    string oldFileName = oldNodeList.Item(j).Attributes["Name"].Value.Trim();
-                    string oldVer = oldNodeList.Item(j).Attributes["Ver"].Value.Trim();
-
-                    oldFileAl.Add(oldFileName);
-                    oldFileAl.Add(oldVer);
-
-                }
-                int pos = oldFileAl.IndexOf(newFileName);
-                if (pos == -1)
-                {
-                    fileList[0] = newFileName;
-                    fileList[1] = newVer;
-                    k++;
-                }
-                else if (pos > -1 && newVer.CompareTo(oldFileAl[pos + 1].ToString()) > 0)
-                {
-                    fileList[0] = newFileName;
-                    fileList[1] = newVer;
-                    k++;
-                }
-
-            }
-            return k;
-        }
-        */
 
         /// <summary>
-        /// ÏÂÔØ·şÎñÆ÷µÄÅäÖÃ¸üĞÂÎÄ¼şµÄµ½ÁÙÊ±Ä¿Â¼
+        /// ä¸‹è½½è‡ªåŠ¨æ›´æ–°æ–‡ä»¶åˆ°ä¸´æ—¶ç›®å½•
         /// </summary>
-        /// <returns></returns>
         public void DownAutoUpdateFile(string downpath)
         {
             if (!System.IO.Directory.Exists(downpath))
                 System.IO.Directory.CreateDirectory(downpath);
 
-            //±£´æ  ´Ó·şÎñÆ÷ÏÂÔØµÄ°æ±¾ÅäÖÃxmlÎÄ¼ş
+            //ä¸‹è½½ä»æœåŠ¡å™¨è¿”å›çš„ç‰ˆæœ¬ä¿¡æ¯xmlæ–‡ä»¶
             string serverXmlFile = System.IO.Path.Combine(downpath, "AutoUpdaterList.xml");
 
             WebResponse response = null;
@@ -388,14 +484,14 @@ version1 ºÍ version2 µÄËùÓĞĞŞ¶©ºÅ¶¼¿ÉÒÔ´æ´¢ÔÚ 32 Î»ÕûÊı ÖĞ
                 request.Accept = "*/*";
                 request.UserAgent = "Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.1; Trident/4.0; SLCC2; .NET CLR 2.0.50727; .NET CLR 3.5.30729; .NET CLR 3.0.30729; .NET4.0C; .NET4.0E)";
                 request.KeepAlive = false;
-                request.Timeout = 36000;//³¬Ê±Ê±¼ä
-                // ½ÓÊÕ·µ»ØµÄÒ³Ãæ
+                request.Timeout = 36000;//è¶…æ—¶æ—¶é—´
+                // æ¥æ”¶è¿”å›çš„é¡µé¢
                 response = request.GetResponse() as HttpWebResponse;
 
 
                 //HttpWebRequest request = (HttpWebRequest)WebRequest.Create(this.UpdaterUrl);
-                ////request.AllowAutoRedirect = false; //²»ÔÊĞíÖØ¶¨Ïò
-                //request.Timeout = 50000; //Á¬½Ó³¬Ê±Ê±¼äÉèÖÃ
+                ////request.AllowAutoRedirect = false; //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø¶ï¿½ï¿½ï¿½
+                //request.Timeout = 50000; //ï¿½ï¿½ï¿½Ó³ï¿½Ê±Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
 
                 // response = request.GetResponse();
@@ -423,14 +519,14 @@ version1 ºÍ version2 µÄËùÓĞĞŞ¶©ºÅ¶¼¿ÉÒÔ´æ´¢ÔÚ 32 Î»ÕûÊı ÖĞ
             }
             catch (WebException e)
             {
-                System.Console.WriteLine("ÏÂÔØÊ§°Ü,ÇëÁªÏµÏµÍ³¹ÜÀíÔ±¡£´íÎóÏûÏ¢£º" + e);
-                // MessageBox.Show("ÏÂÔØÊ§°Ü,ÇëÁªÏµÏµÍ³¹ÜÀíÔ±¡£´íÎóÏûÏ¢£º" + e, "´íÎóÌáÊ¾", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                System.Console.WriteLine("ä¸‹è½½å¤±è´¥ï¼Œè¯·è”ç³»ç³»ç»Ÿç®¡ç†å‘˜è·å–æ›´å¤šä¿¡æ¯ï¼š" + e);
+                // MessageBox.Show("ä¸‹è½½å¤±è´¥ï¼Œè¯·è”ç³»ç³»ç»Ÿç®¡ç†å‘˜è·å–æ›´å¤šä¿¡æ¯ï¼š" + e, "ç³»ç»Ÿæç¤º", MessageBoxButtons.OK, MessageBoxIcon.Error);
 
             }
             catch (IOException e)
             {
-                System.Console.WriteLine("ÏÂÔØÊ§°Ü,ÇëÁªÏµÏµÍ³¹ÜÀíÔ±¡£´íÎóÏûÏ¢£º" + e);
-                //  MessageBox.Show("ÏÂÔØÊ§°Ü,ÇëÁªÏµÏµÍ³¹ÜÀíÔ±¡£´íÎóÏûÏ¢£º" + e, "´íÎóÌáÊ¾", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                System.Console.WriteLine("ä¸‹è½½å¤±è´¥ï¼Œè¯·è”ç³»ç³»ç»Ÿç®¡ç†å‘˜è·å–æ›´å¤šä¿¡æ¯ï¼š" + e);
+                //  MessageBox.Show("ä¸‹è½½å¤±è´¥ï¼Œè¯·è”ç³»ç³»ç»Ÿç®¡ç†å‘˜è·å–æ›´å¤šä¿¡æ¯ï¼š" + e, "ç³»ç»Ÿæç¤º", MessageBoxButtons.OK, MessageBoxIcon.Error);
 
             }
             finally
@@ -440,18 +536,7 @@ version1 ºÍ version2 µÄËùÓĞĞŞ¶©ºÅ¶¼¿ÉÒÔ´æ´¢ÔÚ 32 Î»ÕûÊı ÖĞ
                 if (response != null) response.Close();
             }
 
-            //WebRequest req = WebRequest.Create(this.UpdaterUrl);
-            //WebResponse res = req.GetResponse();
-            //if (res.ContentLength > 0)
-            //{
 
-            //    WebClient wClient = new WebClient();
-            //    wClient.DownloadFile(this.UpdaterUrl, serverXmlFile);
-            //    wClient.Dispose();
-            //}
-
-
-            //return tempPath;
         }
 
 

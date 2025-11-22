@@ -57,6 +57,7 @@
     <Compile Include="DataConfig.cs" />
     <Compile Include="XmlCompare\BCompareXmlComparator.cs" />
     <Compile Include="XmlCompare\DiffBlock.cs" />
+    <Compile Include="XmlCompare\DiffTypes.cs" />
     <Compile Include="XmlCompare\Differ.cs" />
     <Compile Include="XmlCompare\EnhancedXmlDiff.cs" />
     <Compile Include="XmlCompare\XmlComparer.cs" />
@@ -67,12 +68,6 @@
     </Compile>
     <Compile Include="frmAULWriter.designer.cs">
       <DependentUpon>frmAULWriter.cs</DependentUpon>
-    </Compile>
-    <Compile Include="FrmMain.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="FrmMain.Designer.cs">
-      <DependentUpon>FrmMain.cs</DependentUpon>
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -90,10 +85,6 @@
     </Compile>
     <EmbeddedResource Include="frmAULWriter.resx">
       <DependentUpon>frmAULWriter.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="FrmMain.resx">
-      <DependentUpon>FrmMain.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">

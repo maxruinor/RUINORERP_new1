@@ -1,4 +1,4 @@
-using System;
+ï»¿using System;
 using System.IO;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -31,28 +31,28 @@ namespace AULWriter
 {
     public partial class frmAULWriter : Form
     {
-        // ³£Á¿¶¨Òå
-        private const int BufferSize = 1024 * 1024; // 1MB»º³åÇø´óĞ¡
+        // å¸¸é‡å®šä¹‰
+        private const int BufferSize = 1024 * 1024; // 1MBç¼“å†²åŒºå¤§å°
         private static readonly string[] TextSeparators = { "\r\n" };
 
-        // ÑÕÉ«ÅäÖÃ
+        // é¢œè‰²é…ç½®
         private readonly Color SameColor = Color.FromArgb(240, 240, 240);
         private readonly Color DiffColor = Color.FromArgb(255, 220, 220);
         private readonly Color AddedColor = Color.FromArgb(220, 255, 220);
         private readonly Color RemovedColor = Color.FromArgb(255, 200, 200);
         private readonly Color HeaderColor = Color.FromArgb(230, 230, 255);
-        // ºóÌ¨¹¤×÷×é¼ş
+        // åå°å·¥ä½œç»„ä»¶
         private readonly BackgroundWorker bgWorker = new BackgroundWorker
         {
             WorkerReportsProgress = true,
             WorkerSupportsCancellation = true
         };
-        // ÅäÖÃÎÄ¼şÂ·¾¶
+        // é…ç½®æ–‡ä»¶è·¯å¾„
         private readonly string configFilePath = Path.Combine(
             Application.StartupPath, "config", "config.xml");
 
 
-        #region [»ù±¾Èë¿Ú¹¹Ôìº¯Êı]
+        #region [åŸºæœ¬å…¥å£æ„é€ å‡½æ•°]
 
         public frmAULWriter()
         {
@@ -61,7 +61,7 @@ namespace AULWriter
             SetupRichTextBoxes();
             SetupSafeScrollSync();
         }
-        #region ³õÊ¼»¯·½·¨
+        #region åˆå§‹åŒ–æ–¹æ³•
         private void InitializeBackgroundWorker()
         {
             bgWorker.DoWork += BgWorker_DoWork;
@@ -71,7 +71,7 @@ namespace AULWriter
 
         private void SetupRichTextBoxes()
         {
-            // ÉèÖÃ×óÓÒÁ½¸öRichTextBoxµÄÑùÊ½
+            // è®¾ç½®å·¦å³ä¸¤ä¸ªRichTextBoxçš„æ ·å¼
             foreach (var rtb in new[] { rtbOld, rtbNew })
             {
                 rtb.Font = new Font("Consolas", 10);
@@ -87,14 +87,14 @@ namespace AULWriter
         private SafeScrollSynchronizer _syncNewToOld;
         private void SetupSafeScrollSync()
         {
-            // ¹Ø¼ü£ºÊ¹ÓÃµ¥ÏòÍ¬²½£¬²¢½»»»Ö÷´Ó¹ØÏµ
+            // å…³é”®ï¼šä½¿ç”¨å•å‘åŒæ­¥ï¼Œå¹¶äº¤æ¢ä¸»ä»å…³ç³»
             _syncOldToNew = new SafeScrollSynchronizer(rtbOld, rtbNew);
             _syncNewToOld = new SafeScrollSynchronizer(rtbNew, rtbOld);
         }
 
 
 
-        #endregion [»ù±¾Èë¿Ú¹¹Ôìº¯Êı]
+        #endregion [åŸºæœ¬å…¥å£æ„é€ å‡½æ•°]
 
         #region
 
@@ -139,7 +139,7 @@ namespace AULWriter
             DisplayDifferencesInRichTextBox(rtbNew, results, true);
         }
 
-        #region ±È½Ï2025-04-06
+        #region æ¯”è¾ƒ2025-04-06
         private void DisplayDifferencesInRichTextBox(RichTextBox rtb, List<DiffBlock> results, bool showNewVersion)
         {
             rtb.Clear();
@@ -250,7 +250,7 @@ namespace AULWriter
 
 
 
-        #region [Ñ¡ÔñÎÄ¼ş±£´æÂ·¾¶]
+        #region [é€‰æ‹©æ–‡ä»¶ä¿å­˜è·¯å¾„]
 
         private void btnSearDes_Click(object sender, EventArgs e)
         {
@@ -262,9 +262,9 @@ namespace AULWriter
             this.txtAutoUpdateXmlSavePath.Text = this.sfdDest.FileName.Substring(0, this.sfdDest.FileName.LastIndexOf(@"\")) + @"\AutoUpdaterList.xml";
         }
 
-        #endregion [Ñ¡ÔñÎÄ¼ş±£´æÂ·¾¶]
+        #endregion [é€‰æ‹©æ–‡ä»¶ä¿å­˜è·¯å¾„]
 
-        #region [Ñ¡ÔñÅÅ³ıÎÄ¼ş]
+        #region [é€‰æ‹©æ’é™¤æ–‡ä»¶]
 
         private void btnSearExpt_Click(object sender, EventArgs e)
         {
@@ -279,9 +279,9 @@ namespace AULWriter
             }
         }
 
-        #endregion [Ñ¡ÔñÅÅ³ıÎÄ¼ş]
+        #endregion [é€‰æ‹©æ’é™¤æ–‡ä»¶]
 
-        #region [Ñ¡ÔñÖ÷³ÌĞò]
+        #region [é€‰æ‹©ä¸»ç¨‹åº]
 
         private void btnSrc_Click(object sender, EventArgs e)
         {
@@ -293,13 +293,13 @@ namespace AULWriter
             this.txtMainExePath.Text = this.ofdSrc.FileName;
         }
 
-        #endregion [Ñ¡ÔñÖ÷³ÌĞò]
+        #endregion [é€‰æ‹©ä¸»ç¨‹åº]
 
-        #region [Ö÷´°Ìå¼ÓÔØ]
+        #region [ä¸»çª—ä½“åŠ è½½]
 
         private void frmAULWriter_Load(object sender, EventArgs e)
         {
-            //´ÓÅäÖÃÎÄ¼ş¶ÁÈ¡ÅäÖÃ
+            //ä»é…ç½®æ–‡ä»¶è¯»å–é…ç½®
             readConfigFromFile();
             btnDiff.Enabled = false;
             this.txtTargetDirectory.TextChanged += new System.EventHandler(this.txtTargetDirectory_TextChanged);
@@ -308,7 +308,7 @@ namespace AULWriter
 
 
         /// <summary>
-        /// ´ÓÅäÖÃÎÄ¼ş¶ÁÈ¡ÅäÖÃ
+        /// ä»é…ç½®æ–‡ä»¶è¯»å–é…ç½®
         /// </summary>
         private void readConfigFromFile()
         {
@@ -346,31 +346,31 @@ namespace AULWriter
             }
             catch (Exception ex)
             {
-                richTxtLog.AppendText(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + ":´ÓÅäÖÃÎÄ¼ş¶ÁÈ¡ÅäÖÃÊ§°Ü:" + ex.Message);
+                richTxtLog.AppendText(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + ":ä»é…ç½®æ–‡ä»¶è¯»å–é…ç½®å¤±è´¥:" + ex.Message);
                 richTxtLog.AppendText("\r\n");
             }
 
         }
-        #endregion [Ö÷´°Ìå¼ÓÔØ]
+        #endregion [ä¸»çª—ä½“åŠ è½½]
 
-        #region [Éú³ÉÎÄ¼ş]
-        // ÔÚ´°ÌåÀàÖĞ¶¨ÒåÒÔÏÂ³ÉÔ±±äÁ¿
+        #region [ç”Ÿæˆæ–‡ä»¶]
+        // åœ¨çª—ä½“ç±»ä¸­å®šä¹‰ä»¥ä¸‹æˆå‘˜å˜é‡
 
         private UpdateXmlParameters workerParams;
         private void btnProduce_Click(object sender, EventArgs e)
         {
-            // ½ûÓÃ°´Å¥·ÀÖ¹ÖØ¸´µã»÷
+            // ç¦ç”¨æŒ‰é’®é˜²æ­¢é‡å¤ç‚¹å‡»
             btnGenerateNewlist.Enabled = false;
             prbProd.Value = 0;
             txtDiff.Clear();
             DiffFileList.Clear();
-            // ×¼±¸²ÎÊı
+            // å‡†å¤‡å‚æ•°
             workerParams = new UpdateXmlParameters
             {
                 TargetXmlFilePath = txtAutoUpdateXmlSavePath.Text,
                 SourceFolder = txtCompareSource.Text,
                 TargetFolder = txtTargetDirectory.Text,
-                FileComparison = chkÎÄ¼ş±È½Ï.Checked,
+                FileComparison = chkæ–‡ä»¶æ¯”è¾ƒ.Checked,
                 UseBaseVersion = chkUseBaseVersion.Checked,
                 BaseExeVersion = txtBaseExeVersion.Text,
                 PreVerUpdatedFiles = txtPreVerUpdatedFiles.Text.Split(new[] { "\r\n" },
@@ -378,16 +378,16 @@ namespace AULWriter
                 ExcludeUnnecessaryFiles = ExcludeUnnecessaryFiles
             };
 
-            // ¿ªÊ¼ºóÌ¨¹¤×÷
+            // å¼€å§‹åå°å·¥ä½œ
             bgWorker.RunWorkerAsync(workerParams);
-            //UpdateXmlFile(txtAutoUpdateXmlSavePath.Text, txtCompareSource.Text, txtTargetDirectory.Text, chkÎÄ¼ş±È½Ï.Checked);
+            //UpdateXmlFile(txtAutoUpdateXmlSavePath.Text, txtCompareSource.Text, txtTargetDirectory.Text, chkæ–‡ä»¶æ¯”è¾ƒ.Checked);
             //tabControl1.SelectedTab = tbpLastXml;
             //btnDiff.Enabled = true;
             //return;
             LoadOldCurrentList(txtAutoUpdateXmlSavePath.Text);
         }
 
-        #region ºËĞÄÒµÎñÂß¼­
+        #region æ ¸å¿ƒä¸šåŠ¡é€»è¾‘
 
         private void BgWorker_DoWork(object sender, DoWorkEventArgs e)
         {
@@ -431,7 +431,7 @@ namespace AULWriter
                 var fileElement = fileElements[i];
                 var fileName = fileElement.Attribute("Name").Value;
 
-                //ÅÅ³ıÖ¸¶¨ÎÄ¼ş
+                //æ’é™¤æŒ‡å®šæ–‡ä»¶
                 if (ShouldExcludeFile(fileName, parameters)) continue;
 
                 string diffFileName = string.Empty;
@@ -447,22 +447,22 @@ namespace AULWriter
         }
 
 
-        // À©Õ¹µÄÅÅ³ıÌõ¼ş¼ì²é
+        // æ‰©å±•çš„æ’é™¤æ¡ä»¶æ£€æŸ¥
         private bool ShouldExcludeFile(string fileName, UpdateXmlParameters parameters)
         {
-            // »ù´¡ÅÅ³ı¹æÔò
+            // åŸºç¡€æ’é™¤è§„åˆ™
             if (parameters.ExcludeUnnecessaryFiles?.Invoke(fileName) == true)
                 return true;
 
-            // À©Õ¹¹æÔò
+            // æ‰©å±•è§„åˆ™
             var extension = Path.GetExtension(fileName).ToLower();
             var excludeExtensions = new[] { ".log", ".tmp", ".bak" };
 
             return
-                excludeExtensions.Contains(extension) ||    // ÅÅ³ıÌØ¶¨À©Õ¹Ãû
-                fileName.StartsWith("_") ||                 // ÅÅ³ıÏÂ»®Ïß¿ªÍ·µÄÎÄ¼ş
-                IsInHiddenDirectory(fileName) ||            // ÅÅ³ıÒş²ØÄ¿Â¼ÖĞµÄÎÄ¼ş
-                IsOverSizeLimit(fileName, 100);             // ÅÅ³ı³¬¹ı100MBµÄ´óÎÄ¼ş
+                excludeExtensions.Contains(extension) ||    // æ’é™¤ç‰¹å®šæ‰©å±•å
+                fileName.StartsWith("_") ||                 // æ’é™¤ä¸‹åˆ’çº¿å¼€å¤´çš„æ–‡ä»¶
+                IsInHiddenDirectory(fileName) ||            // æ’é™¤éšè—ç›®å½•ä¸­çš„æ–‡ä»¶
+                IsOverSizeLimit(fileName, 100);             // æ’é™¤è¶…è¿‡100MBçš„å¤§æ–‡ä»¶
         }
 
         private bool IsInHiddenDirectory(string filePath)
@@ -526,15 +526,15 @@ namespace AULWriter
             var sourcePath = Path.Combine(parameters.SourceFolder, fileName);
             var targetPath = Path.Combine(parameters.TargetFolder, fileName);
 
-            // Èç¹ûÔ´ÎÄ¼ş²»´æÔÚ£¬ÈÏÎªÎÄ¼şÎ´ĞŞ¸Ä£¨·µ»Øfalse£©
+            // å¦‚æœæºæ–‡ä»¶ä¸å­˜åœ¨ï¼Œè®¤ä¸ºæ–‡ä»¶æœªä¿®æ”¹ï¼ˆè¿”å›falseï¼‰
             if (!File.Exists(sourcePath))
                 return false;
 
-            // Èç¹ûÄ¿±êÎÄ¼ş²»´æÔÚµ«Ô´ÎÄ¼ş´æÔÚ£¬ÈÏÎªÎÄ¼şÒÑĞŞ¸Ä
+            // å¦‚æœç›®æ ‡æ–‡ä»¶ä¸å­˜åœ¨ä½†æºæ–‡ä»¶å­˜åœ¨ï¼Œè®¤ä¸ºæ–‡ä»¶å·²ä¿®æ”¹
             if (!File.Exists(targetPath))
                 return true;
 
-            // Á½¸öÎÄ¼ş¶¼´æÔÚÊ±£¬½øĞĞÄÚÈİ±È½Ï
+            // ä¸¤ä¸ªæ–‡ä»¶éƒ½å­˜åœ¨æ—¶ï¼Œè¿›è¡Œå†…å®¹æ¯”è¾ƒ
             return CompareFiles(sourcePath, targetPath);
         }
 
@@ -543,19 +543,19 @@ namespace AULWriter
             var sourceInfo = new FileInfo(sourcePath);
             var targetInfo = new FileInfo(targetPath);
 
-            // ¿ìËÙ±È½Ï£ºÎÄ¼ş´óĞ¡ºÍĞŞ¸ÄÊ±¼ä
+            // å¿«é€Ÿæ¯”è¾ƒï¼šæ–‡ä»¶å¤§å°å’Œä¿®æ”¹æ—¶é—´
             if (sourceInfo.Length != targetInfo.Length ||
                 sourceInfo.LastWriteTimeUtc != targetInfo.LastWriteTimeUtc)
             {
                 return true;
             }
 
-            // ¾«È·±È½Ï£º¹şÏ£ÖµĞ£Ñé
+            // ç²¾ç¡®æ¯”è¾ƒï¼šå“ˆå¸Œå€¼æ ¡éªŒ
             return CalculateFileHash(sourcePath) != CalculateFileHash(targetPath);
         }
 
 
-        //ĞÂÌí¼ÓµÄÎÄ¼ş ´Ó1.0.0.0¿ªÊ¼¼Óµ½¼¯ºÏÖĞ
+        //æ–°æ·»åŠ çš„æ–‡ä»¶ ä»1.0.0.0å¼€å§‹åŠ åˆ°é›†åˆä¸­
         private void ProcessNewFiles(XDocument doc,
                             List<string> newFiles,
                             List<string> diffList,
@@ -563,12 +563,12 @@ namespace AULWriter
         {
             try
             {
-                // »ñÈ¡ÏÖÓĞÎÄ¼şÃûµÄ¹şÏ£¼¯ºÏ£¨²»Çø·Ö´óĞ¡Ğ´£©
+                // è·å–ç°æœ‰æ–‡ä»¶åçš„å“ˆå¸Œé›†åˆï¼ˆä¸åŒºåˆ†å¤§å°å†™ï¼‰
                 var existingFiles = doc.Descendants("File")
                     .Select(f => f.Attribute("Name").Value)
                     .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-                // Ê¹ÓÃLINQ¹ıÂËĞèÒª´¦ÀíµÄĞÂÎÄ¼ş
+                // ä½¿ç”¨LINQè¿‡æ»¤éœ€è¦å¤„ç†çš„æ–°æ–‡ä»¶
                 var validNewFiles = newFiles
                     .Where(f => !existingFiles.Contains(f) &&
                                !ShouldExcludeFile(f, parameters))
@@ -576,7 +576,7 @@ namespace AULWriter
 
                 foreach (var newFile in validNewFiles)
                 {
-                    // Ìí¼ÓÎÄ¼ş½Úµãµ½XML
+                    // æ·»åŠ æ–‡ä»¶èŠ‚ç‚¹åˆ°XML
                     var newElement = new XElement("File",
                         new XAttribute("Ver", "1.0.0.0"),
                         new XAttribute("Name", newFile));
@@ -587,8 +587,8 @@ namespace AULWriter
             }
             catch (Exception ex)
             {
-                // ¼ÇÂ¼Òì³£ÈÕÖ¾
-                Debug.WriteLine($"´¦ÀíĞÂÎÄ¼şÊ±³ö´í: {ex.Message}");
+                // è®°å½•å¼‚å¸¸æ—¥å¿—
+                Debug.WriteLine($"å¤„ç†æ–°æ–‡ä»¶æ—¶å‡ºé”™: {ex.Message}");
                 throw;
             }
         }
@@ -605,11 +605,11 @@ namespace AULWriter
         }
         #endregion
 
-        #region ¸¨Öú·½·¨
+        #region è¾…åŠ©æ–¹æ³•
 
-        #region ¹¤¾ßĞÔ¾²Ì¬·½·¨
+        #region å·¥å…·æ€§é™æ€æ–¹æ³•
         /// <summary>
-        /// ¼ÆËã¹şÏ£Öµ
+        /// è®¡ç®—å“ˆå¸Œå€¼
         /// </summary>
         /// <param name="filePath"></param>
         /// <returns></returns>
@@ -634,7 +634,7 @@ namespace AULWriter
 
         }
         /// <summary>
-        /// Ô´ÎÄ¼ş¼ĞÊÇ×îĞÂµÄ¡£Ä¿±êÊÇÒª¸üĞÂµÄ¡£ 
+        /// æºæ–‡ä»¶å¤¹æ˜¯æœ€æ–°çš„ã€‚ç›®æ ‡æ˜¯è¦æ›´æ–°çš„ã€‚ 
         /// </summary>
         /// <param name="sourceFolder"></param>
         /// <param name="targetFolder"></param>
@@ -642,40 +642,40 @@ namespace AULWriter
         /// <returns></returns>
         public static string FindDifferentFileByHash(string sourceFolder, string targetFolder, string fileName)
         {
-            // ¹¹½¨Á½¸öÎÄ¼ş¼ĞÖĞÖ¸¶¨ÎÄ¼şµÄÍêÕûÂ·¾¶
+            // æ„å»ºä¸¤ä¸ªæ–‡ä»¶å¤¹ä¸­æŒ‡å®šæ–‡ä»¶çš„å®Œæ•´è·¯å¾„
             string sourceFilePath = Path.Combine(sourceFolder, fileName);
             string targetFilePath = Path.Combine(targetFolder, fileName);
 
-            //Èç¹û×îĞÂµÄÓĞ£¬Ä¿±êÃ»ÓĞÔòÒª·µ»ØÎÄ¼şÃûµ½Ê±Òª¸´ÖÆ¹ıÈ¥¡£
+            //å¦‚æœæœ€æ–°çš„æœ‰ï¼Œç›®æ ‡æ²¡æœ‰åˆ™è¦è¿”å›æ–‡ä»¶ååˆ°æ—¶è¦å¤åˆ¶è¿‡å»ã€‚
             if (File.Exists(sourceFilePath) && !File.Exists(targetFilePath))
             {
                 return fileName;
             }
 
-            // ¼ì²éÁ½¸öÎÄ¼ş¼ĞÖĞÊÇ·ñ´æÔÚÖ¸¶¨µÄÎÄ¼ş  ÕâÖÖÇé¿ö¾ÍÊÇ×îĞÂµÄÃ»ÓĞ¡£Ôò²»ĞèÒªÒª¸üĞÂÁĞ±íÖĞ¡£
+            // æ£€æŸ¥ä¸¤ä¸ªæ–‡ä»¶å¤¹ä¸­æ˜¯å¦å­˜åœ¨æŒ‡å®šçš„æ–‡ä»¶  è¿™ç§æƒ…å†µå°±æ˜¯æœ€æ–°çš„æ²¡æœ‰ã€‚åˆ™ä¸éœ€è¦è¦æ›´æ–°åˆ—è¡¨ä¸­ã€‚
             if (!File.Exists(sourceFilePath) || !File.Exists(targetFilePath))
             {
-                // Èç¹ûÈÎÒ»ÎÄ¼ş¼ĞÖĞ²»´æÔÚ¸ÃÎÄ¼ş£¬Ôò·µ»Ø´æÔÚµÄÎÄ¼şÂ·¾¶
+                // å¦‚æœä»»ä¸€æ–‡ä»¶å¤¹ä¸­ä¸å­˜åœ¨è¯¥æ–‡ä»¶ï¼Œåˆ™è¿”å›å­˜åœ¨çš„æ–‡ä»¶è·¯å¾„
                 return File.Exists(sourceFilePath) ? sourceFilePath : targetFilePath;
             }
 
-            // ¼ÆËãÁ½¸öÎÄ¼şµÄ¹şÏ£Öµ
+            // è®¡ç®—ä¸¤ä¸ªæ–‡ä»¶çš„å“ˆå¸Œå€¼
             string sourceHash = CalculateFileHash(sourceFilePath);
             string targetHash = CalculateFileHash(targetFilePath);
 
-            // ±È½Ï¹şÏ£Öµ
+            // æ¯”è¾ƒå“ˆå¸Œå€¼
             if (sourceHash != targetHash)
             {
-                // Èç¹û¹şÏ£Öµ²»ÏàÍ¬£¬Ôò·µ»ØÎÄ¼şÃû
+                // å¦‚æœå“ˆå¸Œå€¼ä¸ç›¸åŒï¼Œåˆ™è¿”å›æ–‡ä»¶å
                 return fileName;
             }
 
-            // Èç¹û¹şÏ£ÖµÏàÍ¬£¬Ôò·µ»Ønull
+            // å¦‚æœå“ˆå¸Œå€¼ç›¸åŒï¼Œåˆ™è¿”å›null
             return null;
         }
 
         /// <summary>
-        /// µ½µÃÏà¶ÔÂ·¾¶
+        /// åˆ°å¾—ç›¸å¯¹è·¯å¾„
         /// </summary>
         /// <param name="fromPath"></param>
         /// <param name="toPath"></param>
@@ -683,22 +683,22 @@ namespace AULWriter
         /// <exception cref="ArgumentException"></exception>
         public static string GetRelativePath(string fromPath, string toPath)
         {
-            // ½«Á½¸öÂ·¾¶×ª»»Îª¾ø¶ÔÂ·¾¶
+            // å°†ä¸¤ä¸ªè·¯å¾„è½¬æ¢ä¸ºç»å¯¹è·¯å¾„
             fromPath = Path.GetFullPath(fromPath);
             toPath = Path.GetFullPath(toPath);
 
-            // ½«Â·¾¶×ª»»Îª¹æ·¶»¯µÄĞÎÊ½£¬ÒÔÈ·±£±È½ÏÊ±²»»áÒòÂ·¾¶´óĞ¡Ğ´»òĞ±¸Ü·½Ïò²»Í¬¶ø³ö´í
+            // å°†è·¯å¾„è½¬æ¢ä¸ºè§„èŒƒåŒ–çš„å½¢å¼ï¼Œä»¥ç¡®ä¿æ¯”è¾ƒæ—¶ä¸ä¼šå› è·¯å¾„å¤§å°å†™æˆ–æ–œæ æ–¹å‘ä¸åŒè€Œå‡ºé”™
             fromPath = fromPath.Replace("\\", "/").ToLower();
             toPath = toPath.Replace("\\", "/").ToLower();
 
-            // ÕÒµ½¹²Í¬µÄ¸ùÂ·¾¶
+            // æ‰¾åˆ°å…±åŒçš„æ ¹è·¯å¾„
             int length = Math.Min(fromPath.Length, toPath.Length);
             int index = 0;
             while (index < length && fromPath[index] == toPath[index])
             {
                 index++;
             }
-            // ¼ÆËãĞèÒª»ØÍËµ½¸ùÄ¿Â¼µÄ´ÎÊı£¨¼´ÅÌ·û²»Í¬µÄÇé¿ö£©
+            // è®¡ç®—éœ€è¦å›é€€åˆ°æ ¹ç›®å½•çš„æ¬¡æ•°ï¼ˆå³ç›˜ç¬¦ä¸åŒçš„æƒ…å†µï¼‰
             int backSteps = 0;
             for (int i = index; i < fromPath.Length; i++)
             {
@@ -708,17 +708,17 @@ namespace AULWriter
                 }
             }
 
-            // ¹¹½¨»ØÍËµ½¸ùÄ¿Â¼µÄÂ·¾¶
+            // æ„å»ºå›é€€åˆ°æ ¹ç›®å½•çš„è·¯å¾„
             string relativePath = "";
             for (int i = 0; i < backSteps; i++)
             {
                 relativePath += "../";
             }
 
-            // ´Ó¹²Í¬¸ùÂ·¾¶Ö®ºóµÄ²¿·Ö¿ªÊ¼¹¹½¨Ïà¶ÔÂ·¾¶
+            // ä»å…±åŒæ ¹è·¯å¾„ä¹‹åçš„éƒ¨åˆ†å¼€å§‹æ„å»ºç›¸å¯¹è·¯å¾„
             relativePath += toPath.Substring(index);
 
-            // Ìæ»»Ğ±¸Ü·½Ïò²¢·µ»Ø½á¹û
+            // æ›¿æ¢æ–œæ æ–¹å‘å¹¶è¿”å›ç»“æœ
             return relativePath.Replace("/", "\\");
         }
 
@@ -728,7 +728,7 @@ namespace AULWriter
 
         #endregion
 
-        // ¸¨Öú·½·¨±£³ÖÔ­Ñù
+        // è¾…åŠ©æ–¹æ³•ä¿æŒåŸæ ·
         private void UpdateFileVersion(XElement fileElement)
         {
             //var version = fileElement.Attribute("Ver").Value;
@@ -754,7 +754,7 @@ namespace AULWriter
         }
         #endregion
 
-        #region UIÊÂ¼ş´¦Àí
+        #region UIäº‹ä»¶å¤„ç†
         private void BgWorker_ProgressChanged(object sender, ProgressChangedEventArgs e)
         {
             if (e.UserState is ProgressData data)
@@ -767,18 +767,18 @@ namespace AULWriter
         }
 
         private void UpdateProgressBar(ProgressData data)
-        {    // ¸üĞÂ½ø¶ÈÌõ
+        {    // æ›´æ–°è¿›åº¦æ¡
             //if (data.TotalFiles > 0)
             //    prbProd.Maximum = data.TotalFiles;
 
             //prbProd.Value = Math.Min(data.Processed, prbProd.Maximum);
-            // ³õÊ¼»¯½ø¶ÈÌõ
+            // åˆå§‹åŒ–è¿›åº¦æ¡
             if (data.TotalFiles > 0 && prbProd.Maximum != data.TotalFiles)
             {
                 prbProd.Maximum = data.TotalFiles;
             }
 
-            // ¸üĞÂ½ø¶ÈÖµ
+            // æ›´æ–°è¿›åº¦å€¼
             if (data.Processed > 0)
             {
                 prbProd.Value = Math.Min(data.Processed, prbProd.Maximum);
@@ -799,7 +799,7 @@ namespace AULWriter
         }
 
 
-        // ÊµÊ±¸üĞÂ²îÒìÁĞ±í
+        // å®æ—¶æ›´æ–°å·®å¼‚åˆ—è¡¨
         private void UpdateDiffList(ProgressData data)
         {
             if (data.DiffItems == null) return;
@@ -820,18 +820,18 @@ namespace AULWriter
 
             if (e.Error != null)
             {
-                ShowErrorMessage($"²Ù×÷Ê§°Ü: {e.Error.Message}");
+                ShowErrorMessage($"æ“ä½œå¤±è´¥: {e.Error.Message}");
             }
             else if (e.Cancelled)
             {
-                ShowInformationMessage("²Ù×÷ÒÑÈ¡Ïû");
+                ShowInformationMessage("æ“ä½œå·²å–æ¶ˆ");
             }
             else
             {
                 HandleSuccessfulCompletion(e.Result as UpdateXmlResult);
             }
 
-            AppendLog("¼ì²âµ½²îÒìÎÄ¼ş¸öÊıÎª: " + DiffFileList.Count);
+            AppendLog("æ£€æµ‹åˆ°å·®å¼‚æ–‡ä»¶ä¸ªæ•°ä¸º: " + DiffFileList.Count);
         }
 
 
@@ -841,11 +841,11 @@ namespace AULWriter
             XDocument document = result?.Document;
             if (document == null)
             {
-                MessageBox.Show("ÅäÖÃÎÄ¼ş¶ÁÈ¡Ê§°Ü£¬Çë¼ì²é¸üĞÂ·şÎñÆ÷ÊÇ·ñÄÜÕı³£·ÃÎÊ¡£");
+                MessageBox.Show("é…ç½®æ–‡ä»¶è¯»å–å¤±è´¥ï¼Œè¯·æ£€æŸ¥æ›´æ–°æœåŠ¡å™¨æ˜¯å¦èƒ½æ­£å¸¸è®¿é—®ã€‚");
                 return;
             }
 
-            // ÔÚ±£´æÎÄµµÇ°µ÷ÓÃ
+            // åœ¨ä¿å­˜æ–‡æ¡£å‰è°ƒç”¨
             UpdateLastUpdateTime(document);
 
             txtLastXml.Text = document.ToString();
@@ -853,18 +853,18 @@ namespace AULWriter
             rtbNew.Text = txtLastXml.Text;
             tabControl1.SelectedTab = tbpLastXml;
             btnDiff.Enabled = true;
-            AppendLog("XMLÎÄ¼şÉú³É³É¹¦£¡");
+            AppendLog("XMLæ–‡ä»¶ç”ŸæˆæˆåŠŸï¼");
         }
 
         private void ShowErrorMessage(string message)
         {
-            MessageBox.Show(message, "´íÎó", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            AppendLog($"´íÎó: {message}");
+            MessageBox.Show(message, "é”™è¯¯", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            AppendLog($"é”™è¯¯: {message}");
         }
 
         private void ShowInformationMessage(string message)
         {
-            MessageBox.Show(message, "ĞÅÏ¢", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show(message, "ä¿¡æ¯", MessageBoxButtons.OK, MessageBoxIcon.Information);
             AppendLog(message);
         }
 
@@ -874,7 +874,7 @@ namespace AULWriter
         }
         #endregion
 
-        #region ÎÄ¼ş²Ù×÷
+        #region æ–‡ä»¶æ“ä½œ
         private void SafeFileCopy(string source, string target)
         {
             try
@@ -885,7 +885,7 @@ namespace AULWriter
             }
             catch (Exception ex)
             {
-                AppendLog($"ÎÄ¼ş¸´ÖÆÊ§°Ü: {ex.Message}");
+                AppendLog($"æ–‡ä»¶å¤åˆ¶å¤±è´¥: {ex.Message}");
             }
         }
         #endregion
@@ -898,7 +898,7 @@ namespace AULWriter
 
 
         /// <summary>
-        /// °æ±¾ºÅ¼Ó1
+        /// ç‰ˆæœ¬å·åŠ 1
         /// </summary>
         /// <param name="version"></param>
         private void IncrementVersion(ref string version)
@@ -912,7 +912,7 @@ namespace AULWriter
             version = string.Join(".", parts);
         }
 
-        #region [Ğ´AutoUpdaterList]
+        #region [å†™AutoUpdaterList]
 
 
 
@@ -921,17 +921,17 @@ namespace AULWriter
 
         /*
         /// <summary>
-        /// ÊÇ·ñ½øĞĞ¹şÏ£Öµ±È½Ï£¬Èç¹ûÊÇ£¬Ôò¹şÏ£Öµ²»Ò»Ñù²ÅÔö¼Ó°æ±¾ºÅ¡£·ñÔò²»±ä
+        /// æ˜¯å¦è¿›è¡Œå“ˆå¸Œå€¼æ¯”è¾ƒï¼Œå¦‚æœæ˜¯ï¼Œåˆ™å“ˆå¸Œå€¼ä¸ä¸€æ ·æ‰å¢åŠ ç‰ˆæœ¬å·ã€‚å¦åˆ™ä¸å˜
         /// </summary>
         /// <param name="HashValueComparison"></param>
         void WriterAUList()
         {
 
-            #region [Ğ´AutoUpdaterlist]
+            #region [å†™AutoUpdaterlist]
 
             string strEntryPoint = this.txtMainExePath.Text.Trim().Substring(this.txtMainExePath.Text.Trim().LastIndexOf(@"\") + 1, this.txtMainExePath.Text.Trim().Length - this.txtMainExePath.Text.Trim().LastIndexOf(@"\") - 1);
             string strFilePath = this.txtAutoUpdateXmlSavePath.Text.Trim();
-            //Append  Ä¬ÈÏ¾Í»»ĞĞÁË
+            //Append  é»˜è®¤å°±æ¢è¡Œäº†
             StringBuilder sb = new StringBuilder();
             sb.Append("<?xml version=\"1.0\" encoding=\"gb2312\" ?>");
             sb.Append("\r\n<AutoUpdater>\r\n");
@@ -967,7 +967,7 @@ namespace AULWriter
             {
                 if (this.txtBaseExeVersion.Text.TrimEnd().Length == 0)
                 {
-                    MessageBox.Show("Ñ¡ÔñÖ¸¶¨°æ±¾£¬µ«ÊÇÃ»ÓĞÊäÈë°æ±¾¡£");
+                    MessageBox.Show("é€‰æ‹©æŒ‡å®šç‰ˆæœ¬ï¼Œä½†æ˜¯æ²¡æœ‰è¾“å…¥ç‰ˆæœ¬ã€‚");
                     return;
                 }
                 sb.Append(this.txtBaseExeVersion.Text);
@@ -987,12 +987,12 @@ namespace AULWriter
             List<string> strColl = strCollection.Cast<string>().ToList();
             strColl.Sort();
 
-            //Èç¹ûÖ¸¶¨ÁËÒª¸üĞÂµÄÎÄ¼ş,ÓÅÏÈÕâ¸ö¡£ ÒâË¼ÊÇ¸üĞÂµÄÁĞ±í£¬ÒªÔÚÕâ¸öÇåµ¥ÖĞ
+            //å¦‚æœæŒ‡å®šäº†è¦æ›´æ–°çš„æ–‡ä»¶,ä¼˜å…ˆè¿™ä¸ªã€‚ æ„æ€æ˜¯æ›´æ–°çš„åˆ—è¡¨ï¼Œè¦åœ¨è¿™ä¸ªæ¸…å•ä¸­
             if (txtPreVerUpdatedFiles.Text.Trim().Length > 0)
             {
                 string[] files = txtPreVerUpdatedFiles.Text.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
 
-                //ÅÅĞò
+                //æ’åº
                 Array.Sort(files);
 
                 string strVerNo = string.Empty;
@@ -1009,8 +1009,8 @@ namespace AULWriter
                 {
                     if (!ExcludeUnnecessaryFiles(files[i].Trim()))
                     {
-                        //ÔİÊ±Í³Ò»ÁË¡£Èç¹ûÖ¸¶¨°æ±¾ºÅ
-                        if (chk¸üĞÂÎÄ¼ş°æ±¾ºÅ.Checked)
+                        //æš‚æ—¶ç»Ÿä¸€äº†ã€‚å¦‚æœæŒ‡å®šç‰ˆæœ¬å·
+                        if (chkæ›´æ–°æ–‡ä»¶ç‰ˆæœ¬å·.Checked)
                         {
                             sb.Append("\t\t<File Ver=\""
                                 + strVerNo
@@ -1032,7 +1032,7 @@ namespace AULWriter
             }
             else
             {
-                #region Ä¬ÈÏ
+                #region é»˜è®¤
                 this.prbProd.Visible = true;
                 this.prbProd.Minimum = 0;
                 this.prbProd.Maximum = strColl.Count;
@@ -1044,7 +1044,7 @@ namespace AULWriter
                     {
                         if (this.txtBaseExeVersion.Text.TrimEnd().Length == 0)
                         {
-                            MessageBox.Show("Ñ¡ÔñÖ¸¶¨°æ±¾£¬µ«ÊÇÃ»ÓĞÊäÈë°æ±¾¡£");
+                            MessageBox.Show("é€‰æ‹©æŒ‡å®šç‰ˆæœ¬ï¼Œä½†æ˜¯æ²¡æœ‰è¾“å…¥ç‰ˆæœ¬ã€‚");
                             return;
                         }
 
@@ -1082,13 +1082,13 @@ namespace AULWriter
             this.prbProd.Value = 0;
             this.prbProd.Visible = false;
 
-            #endregion [Ğ´AutoUpdaterlist]
+            #endregion [å†™AutoUpdaterlist]
         }
         */
 
-        #endregion [Ğ´AutoUpdaterList]
+        #endregion [å†™AutoUpdaterList]
 
-        #region [±éÀú×ÓÄ¿Â¼]
+        #region [éå†å­ç›®å½•]
 
         private StringCollection GetAllFiles(string rootdir)
         {
@@ -1107,15 +1107,15 @@ namespace AULWriter
                 result.Add(file[i]);
         }
 
-        #endregion [±éÀú×ÓÄ¿Â¼]
+        #endregion [éå†å­ç›®å½•]
 
-        #region [ÅÅ³ı²»ĞèÒªµÄÎÄ¼ş]
+        #region [æ’é™¤ä¸éœ€è¦çš„æ–‡ä»¶]
 
         /// <summary>
-        /// ÅÅ³ı²»ĞèÒªµÄÎÄ¼ş
+        /// æ’é™¤ä¸éœ€è¦çš„æ–‡ä»¶
         /// </summary>
         /// <param name="filePath"></param>
-        /// <returns>ÎªÕæÔòÅÅ³ı</returns>
+        /// <returns>ä¸ºçœŸåˆ™æ’é™¤</returns>
         private bool ExcludeUnnecessaryFiles(string filePath)
         {
             bool isExist = false;
@@ -1143,22 +1143,22 @@ namespace AULWriter
         }
 
 
-        #endregion [ÅÅ³ı²»ĞèÒªµÄÎÄ¼ş]
+        #endregion [æ’é™¤ä¸éœ€è¦çš„æ–‡ä»¶]
 
-        #endregion [Éú³ÉÎÄ¼ş]
+        #endregion [ç”Ÿæˆæ–‡ä»¶]
 
         private void button_save_config_Click(object sender, EventArgs e)
         {
-            //±£´æÅäÖÃµ½ÎÄ¼ş
+            //ä¿å­˜é…ç½®åˆ°æ–‡ä»¶
             try
             {
                 saveConfigToFile();
-                richTxtLog.AppendText("ÅäÖÃ±£´æ³É¹¦£º" + configFilePath);
-                //MessageBox.Show("ÅäÖÃ±£´æ³É¹¦");
+                richTxtLog.AppendText("é…ç½®ä¿å­˜æˆåŠŸï¼š" + configFilePath);
+                //MessageBox.Show("é…ç½®ä¿å­˜æˆåŠŸ");
             }
             catch (Exception ex)
             {
-                MessageBox.Show("ÅäÖÃ±£´æÊ§°Ü:" + ex.Message);
+                MessageBox.Show("é…ç½®ä¿å­˜å¤±è´¥:" + ex.Message);
             }
         }
 
@@ -1183,7 +1183,7 @@ namespace AULWriter
             }
             catch (Exception ex)
             {
-                richTxtLog.AppendText(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + ":±£´æÅäÖÃµ½ÎÄ¼şÊ§°Ü:" + ex.Message);
+                richTxtLog.AppendText(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + ":ä¿å­˜é…ç½®åˆ°æ–‡ä»¶å¤±è´¥:" + ex.Message);
                 richTxtLog.AppendText("\r\n");
             }
         }
@@ -1191,7 +1191,7 @@ namespace AULWriter
         private void txtExpt_DragDrop(object sender, DragEventArgs e)
         {
             StringBuilder sb = new StringBuilder();
-            //ÔÚ´Ë´¦»ñÈ¡ÎÄ¼ş»òÕßÎÄ¼ş¼ĞµÄÂ·¾¶
+            //åœ¨æ­¤å¤„è·å–æ–‡ä»¶æˆ–è€…æ–‡ä»¶å¤¹çš„è·¯å¾„
             Array array = (Array)e.Data.GetData(DataFormats.FileDrop);
             foreach (var item in array)
             {
@@ -1204,7 +1204,7 @@ namespace AULWriter
 
         private void txtExpt_DragEnter(object sender, DragEventArgs e)
         {
-            e.Effect = DragDropEffects.Link; //ĞŞ¸ÄÊó±êÍÏ·ÅÊ±µÄÑùÊ½¡£
+            e.Effect = DragDropEffects.Link; //ä¿®æ”¹é¼ æ ‡æ‹–æ”¾æ—¶çš„æ ·å¼ã€‚
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
             {
                 e.Effect = DragDropEffects.Link;
@@ -1219,11 +1219,11 @@ namespace AULWriter
 
         private void txtSrc_DragDrop(object sender, DragEventArgs e)
         {
-            if (e.Data.GetDataPresent(DataFormats.FileDrop))//ÎÄ¼şÍÏ·Å²Ù×÷¡£
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))//æ–‡ä»¶æ‹–æ”¾æ“ä½œã€‚
             {
-                string[] filePaths = (string[])e.Data.GetData(DataFormats.FileDrop);//»ñµÃÍÏ·ÅÎÄ¼şµÄÂ·¾¶¡£
-                string filePath = filePaths[0];//È¡µÃµÚÒ»¸öÎÄ¼şµÄÂ·¾¶¡£
-                txtMainExePath.Text = filePath; //ÔÚTextBoxÖĞÏÔÊ¾µÚÒ»¸öÎÄ¼şÂ·¾¶¡£
+                string[] filePaths = (string[])e.Data.GetData(DataFormats.FileDrop);//è·å¾—æ‹–æ”¾æ–‡ä»¶çš„è·¯å¾„ã€‚
+                string filePath = filePaths[0];//å–å¾—ç¬¬ä¸€ä¸ªæ–‡ä»¶çš„è·¯å¾„ã€‚
+                txtMainExePath.Text = filePath; //åœ¨TextBoxä¸­æ˜¾ç¤ºç¬¬ä¸€ä¸ªæ–‡ä»¶è·¯å¾„ã€‚
             }
             // base.OnDragDrop(e);
 
@@ -1231,7 +1231,7 @@ namespace AULWriter
 
         private void txtSrc_DragEnter(object sender, DragEventArgs e)
         {
-            e.Effect = DragDropEffects.Link; //ĞŞ¸ÄÊó±êÍÏ·ÅÊ±µÄÑùÊ½¡£
+            e.Effect = DragDropEffects.Link; //ä¿®æ”¹é¼ æ ‡æ‹–æ”¾æ—¶çš„æ ·å¼ã€‚
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
             {
                 e.Effect = DragDropEffects.Link;
@@ -1246,33 +1246,33 @@ namespace AULWriter
         private void txtUpdatedFiles_DragDrop(object sender, DragEventArgs e)
         {
             StringBuilder sb = new StringBuilder();
-            //ÔÚ´Ë´¦»ñÈ¡ÎÄ¼ş»òÕßÎÄ¼ş¼ĞµÄÂ·¾¶
+            //åœ¨æ­¤å¤„è·å–æ–‡ä»¶æˆ–è€…æ–‡ä»¶å¤¹çš„è·¯å¾„
             Array array = (Array)e.Data.GetData(DataFormats.FileDrop);
 
-            //ÒÑ¾­´æÔÚµÄÎÄ¼ş ÕâÀïÓÃÕâ¸öÀ´ÅĞ¶Ï²»ÒªÖØ¸´
+            //å·²ç»å­˜åœ¨çš„æ–‡ä»¶ è¿™é‡Œç”¨è¿™ä¸ªæ¥åˆ¤æ–­ä¸è¦é‡å¤
             string[] files = txtPreVerUpdatedFiles.Text.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
 
-            //ÅÅĞò
+            //æ’åº
             Array.Sort(array);
             List<string> addFiles = new List<string>();
             foreach (string path in array)
             {
-                //Õâ¸öĞÂÍÏ½øÀ´µÄÎÄ¼ş ÊÇÈ«Â·¾¶£¬ÒªÈ¥Ç°ÃæÓëÀ´Ô´ÏàÍ¬µÄÄ¿Â¼È¥µô
+                //è¿™ä¸ªæ–°æ‹–è¿›æ¥çš„æ–‡ä»¶ æ˜¯å…¨è·¯å¾„ï¼Œè¦å»å‰é¢ä¸æ¥æºç›¸åŒçš„ç›®å½•å»æ‰
                 if (path.IndexOf(txtCompareSource.Text) == 0)
                 {
                     addFiles.Add(path.Substring(txtCompareSource.Text.Length).TrimStart('\\'));
                 }
             }
 
-            //ÅÅĞò
+            //æ’åº
             addFiles.Sort();
             foreach (string path in addFiles)
             {
 
                 if (files.Contains(path))
                 {
-                    richTxtLog.AppendText($"{path}Õâ¸öÂ·¾¶ÒÑ´æÔÚ½«»áºöÂÔ¡£\r\n");
-                    //ÒÑ¾­´æÔÚ
+                    richTxtLog.AppendText($"{path}è¿™ä¸ªè·¯å¾„å·²å­˜åœ¨å°†ä¼šå¿½ç•¥ã€‚\r\n");
+                    //å·²ç»å­˜åœ¨
                     continue;
                 }
                 if (File.Exists(System.IO.Path.Combine(txtCompareSource.Text, path)) || File.Exists(path))
@@ -1289,8 +1289,8 @@ namespace AULWriter
                 }
                 else
                 {
-                    richTxtLog.AppendText($"{path}ÎŞĞ§µÄÂ·¾¶¡£ÍÏÈëÎÄ¼şÊ§°Ü£¡\r\n");
-                    Console.WriteLine("ÎŞĞ§µÄÂ·¾¶");
+                    richTxtLog.AppendText($"{path}æ— æ•ˆçš„è·¯å¾„ã€‚æ‹–å…¥æ–‡ä»¶å¤±è´¥ï¼\r\n");
+                    Console.WriteLine("æ— æ•ˆçš„è·¯å¾„");
                 }
 
 
@@ -1309,7 +1309,7 @@ namespace AULWriter
 
         private void txtUpdatedFiles_DragEnter(object sender, DragEventArgs e)
         {
-            e.Effect = DragDropEffects.Link; //ĞŞ¸ÄÊó±êÍÏ·ÅÊ±µÄÑùÊ½¡£
+            e.Effect = DragDropEffects.Link; //ä¿®æ”¹é¼ æ ‡æ‹–æ”¾æ—¶çš„æ ·å¼ã€‚
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
             {
                 e.Effect = DragDropEffects.Link;
@@ -1331,7 +1331,7 @@ namespace AULWriter
             saveConfigToFile();
         }
 
-        #region ¶ÁÈ¡Ô­À´µÄxmlÅäÖÃÎÄ¼ş
+        #region è¯»å–åŸæ¥çš„xmlé…ç½®æ–‡ä»¶
 
         //private string ReadoldXml()
         //{
@@ -1340,15 +1340,15 @@ namespace AULWriter
 
         //    try
         //    {
-        //        // ¶ÁÈ¡ÎÄ¼şÄÚÈİ
+        //        // è¯»å–æ–‡ä»¶å†…å®¹
         //        content = File.ReadAllText(filePath);
 
-        //        // Êä³öÎÄ¼şÄÚÈİ
+        //        // è¾“å‡ºæ–‡ä»¶å†…å®¹
         //        //Console.WriteLine(content);
         //    }
         //    catch (Exception ex)
         //    {
-        //        // ´¦Àí¿ÉÄÜµÄÒì³££¬ÀıÈçÎÄ¼ş²»´æÔÚ»òÍøÂçÎÊÌâ
+        //        // å¤„ç†å¯èƒ½çš„å¼‚å¸¸ï¼Œä¾‹å¦‚æ–‡ä»¶ä¸å­˜åœ¨æˆ–ç½‘ç»œé—®é¢˜
         //        Console.WriteLine("Error reading file: " + ex.Message);
         //    }
         //    return content;
@@ -1357,7 +1357,7 @@ namespace AULWriter
         List<string> DiffFileList = new List<string>();
 
         /// <summary>
-        /// Õâ¸ö·½·¨±»AIÖØĞ´ÁË¡£ÕâÀïÊÇÕıÈ·µÄ¡£AIµÄÒª¼ì²éÑéÖ¤
+        /// è¿™ä¸ªæ–¹æ³•è¢«AIé‡å†™äº†ã€‚è¿™é‡Œæ˜¯æ­£ç¡®çš„ã€‚AIçš„è¦æ£€æŸ¥éªŒè¯
         /// </summary>
         /// <param name="targetXmlFilePath"></param>
         /// <param name="sourceFolder"></param>
@@ -1371,17 +1371,17 @@ namespace AULWriter
 
             if (chkUseBaseVersion.Checked)
             {
-                // ²éÕÒ <Version> ÔªËØ
+                // æŸ¥æ‰¾ <Version> å…ƒç´ 
                 var versionElement = doc.Descendants("Version").FirstOrDefault();
                 if (versionElement != null)
                 {
-                    versionElement.Value = txtBaseExeVersion.Text; // Ìæ»»ÎªÄúÏëÒªÉèÖÃµÄĞÂÖµ
+                    versionElement.Value = txtBaseExeVersion.Text; // æ›¿æ¢ä¸ºæ‚¨æƒ³è¦è®¾ç½®çš„æ–°å€¼
                 }
             }
-            //À´×ÔNASµÄ·¢²¼Ä¿±êÖĞÏÖÓĞµÄÎÄ¼şÖĞµÄÇåµ¥ÎÄ¼şÊıÁ¿
+            //æ¥è‡ªNASçš„å‘å¸ƒç›®æ ‡ä¸­ç°æœ‰çš„æ–‡ä»¶ä¸­çš„æ¸…å•æ–‡ä»¶æ•°é‡
             string[] files = txtPreVerUpdatedFiles.Text.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
 
-            //ÅÅĞò
+            //æ’åº
             Array.Sort(files);
             List<string> list = files.ToList();
             var XElementFiles = doc.Descendants("File");
@@ -1390,17 +1390,17 @@ namespace AULWriter
                 string fileName = fileElement.Attribute("Name").Value;
                 if (list.Count > 0 && !list.Contains(fileName))
                 {
-                    // Èç¹ûÎÄ¼ş²»ÔÚĞÂÎÄ¼şÁĞ±íÖĞ£¬É¾³ı¸ÃÎÄ¼ş
+                    // å¦‚æœæ–‡ä»¶ä¸åœ¨æ–°æ–‡ä»¶åˆ—è¡¨ä¸­ï¼Œåˆ é™¤è¯¥æ–‡ä»¶
                     // fileElement.Remove();
-                    //Õâ¸öÇé¿öÔİÊ±ÊÇ°æ±¾ºÅ²»±ä¡£Ò²¾ÍÊÇ²»¸üĞÂ¡£
+                    //è¿™ä¸ªæƒ…å†µæš‚æ—¶æ˜¯ç‰ˆæœ¬å·ä¸å˜ã€‚ä¹Ÿå°±æ˜¯ä¸æ›´æ–°ã€‚
                 }
-                //Èç¹ûÎÄ¼şÔÚÅÅ³ıÁĞ±íÖĞÒ²ÒÆ³ı
+                //å¦‚æœæ–‡ä»¶åœ¨æ’é™¤åˆ—è¡¨ä¸­ä¹Ÿç§»é™¤
                 if (ExcludeUnnecessaryFiles(fileName))
                 {
                     //fileElement.Remove();
                     continue;
-                    //Õâ¸öÇé¿öÔİÊ±ÊÇ°æ±¾ºÅ²»±ä¡£Ò²¾ÍÊÇ²»¸üĞÂ¡£  ÒÆ³ı»áµ¼ÖÂxmlÎÄ¼ş½á¹¹ÆÆ»µ
-                    //Èç¹ûÊÇµÚÒ»´ÎÔòÊÇ²»²ÎÓëÉú³É
+                    //è¿™ä¸ªæƒ…å†µæš‚æ—¶æ˜¯ç‰ˆæœ¬å·ä¸å˜ã€‚ä¹Ÿå°±æ˜¯ä¸æ›´æ–°ã€‚  ç§»é™¤ä¼šå¯¼è‡´xmlæ–‡ä»¶ç»“æ„ç ´å
+                    //å¦‚æœæ˜¯ç¬¬ä¸€æ¬¡åˆ™æ˜¯ä¸å‚ä¸ç”Ÿæˆ
 
                 }
 
@@ -1416,7 +1416,7 @@ namespace AULWriter
                     DateTime targetLastWriteTime = isTargetExist ? File.GetLastWriteTimeUtc(targetFilePath) : DateTime.MinValue;
                     if (sourceLastWriteTime != targetLastWriteTime || sourceSize != targetSize)
                     {
-                        // Èç¹ûÎÄ¼ş´óĞ¡»òĞŞ¸ÄÊ±¼ä²»Í¬£¬Ö±½Ó¸üĞÂ°æ±¾ºÅ
+                        // å¦‚æœæ–‡ä»¶å¤§å°æˆ–ä¿®æ”¹æ—¶é—´ä¸åŒï¼Œç›´æ¥æ›´æ–°ç‰ˆæœ¬å·
                         string version = fileElement.Attribute("Ver").Value;
                         IncrementVersion(ref version);
                         fileElement.SetAttributeValue("Ver", version);
@@ -1425,13 +1425,13 @@ namespace AULWriter
                     }
                     else if (isSourceExist && isTargetExist)
                     {
-                        // Èç¹ûÆôÓÃ¹şÏ£Öµ±È½Ï
+                        // å¦‚æœå¯ç”¨å“ˆå¸Œå€¼æ¯”è¾ƒ
                         string sourceHash = CalculateFileHash(sourceFilePath);
                         string targetHash = CalculateFileHash(targetFilePath);
 
                         if (sourceHash != targetHash)
                         {
-                            // Èç¹û¹şÏ£Öµ²»Í¬£¬Ôò¸üĞÂ°æ±¾ºÅ
+                            // å¦‚æœå“ˆå¸Œå€¼ä¸åŒï¼Œåˆ™æ›´æ–°ç‰ˆæœ¬å·
                             string version = fileElement.Attribute("Ver").Value;
                             IncrementVersion(ref version);
                             fileElement.SetAttributeValue("Ver", version);
@@ -1439,9 +1439,9 @@ namespace AULWriter
                             txtDiff.AppendText(fileName + "\r\n");
                         }
                     }
-                    else if (isSourceExist && sourceSize < 1048576) // ÎÄ¼şĞ¡ÓÚ1MB
+                    else if (isSourceExist && sourceSize < 1048576) // æ–‡ä»¶å°äº1MB
                     {
-                        // Èç¹ûÎÄ¼şĞ¡ÓÚ1MB£¬½øĞĞÖğ×Ö½Ú±È½Ï
+                        // å¦‚æœæ–‡ä»¶å°äº1MBï¼Œè¿›è¡Œé€å­—èŠ‚æ¯”è¾ƒ
                         bool isContentSame = CompareFilesByChunk(sourceFilePath, targetFilePath);
                         if (!isContentSame)
                         {
@@ -1456,25 +1456,25 @@ namespace AULWriter
                 }
                 else
                 {
-                    //²»ÓÃ±È½ÏÁË¡£Ö±½ÓÉı¼¶Ò»¸ö°æ±¾¡£
+                    //ä¸ç”¨æ¯”è¾ƒäº†ã€‚ç›´æ¥å‡çº§ä¸€ä¸ªç‰ˆæœ¬ã€‚
                     string version = fileElement.Attribute("Ver").Value;
                     IncrementVersion(ref version);
                     fileElement.SetAttributeValue("Ver", version);
 
                 }
-                //ÕâÀï²»±È½ÏÎÄ¼şÊ±£¬²îÒìÖ»ÔÚÓÚĞÂÔö¼ÓµÄÏîÄ¿ ÒÔ¡¾½«ÒªÉú³ÉµÄÇåµ¥¡¿Óë¾ÉµÄAutoUpdaterList ÖĞµÄÎÄ¼şÁĞ±íÏà±È½Ï
-                //¾ÉµÄ´æÔÚµÄ¡£²»¹ÜÊ²Ã´·½Ê½¡£Ôö¼ÓÁË¾ÍÈ¥µôÄ¿±êÇåµ¥¡£ÁôÏÂÀ´µÄ¾ÍÊÇĞÂÔö¼ÓµÄ
+                //è¿™é‡Œä¸æ¯”è¾ƒæ–‡ä»¶æ—¶ï¼Œå·®å¼‚åªåœ¨äºæ–°å¢åŠ çš„é¡¹ç›® ä»¥ã€å°†è¦ç”Ÿæˆçš„æ¸…å•ã€‘ä¸æ—§çš„AutoUpdaterList ä¸­çš„æ–‡ä»¶åˆ—è¡¨ç›¸æ¯”è¾ƒ
+                //æ—§çš„å­˜åœ¨çš„ã€‚ä¸ç®¡ä»€ä¹ˆæ–¹å¼ã€‚å¢åŠ äº†å°±å»æ‰ç›®æ ‡æ¸…å•ã€‚ç•™ä¸‹æ¥çš„å°±æ˜¯æ–°å¢åŠ çš„
                 list.Remove(fileName);
             }
 
             foreach (var item in list)
             {
-                //Èç¹ûÎÄ¼şÔÚÅÅ³ıÁĞ±íÖĞ,ºöÂÔ¡£²»Ìí¼Ó
+                //å¦‚æœæ–‡ä»¶åœ¨æ’é™¤åˆ—è¡¨ä¸­,å¿½ç•¥ã€‚ä¸æ·»åŠ 
                 if (ExcludeUnnecessaryFiles(item))
                 {
                     continue;
                 }
-                //Ìí¼ÓĞÂµÄÎÄ¼şµ½Õâ¸öxmlµÄFile½ÚµãÏÂÃæ
+                //æ·»åŠ æ–°çš„æ–‡ä»¶åˆ°è¿™ä¸ªxmlçš„FileèŠ‚ç‚¹ä¸‹é¢
                 XElement newFileElement = new XElement("File");
                 newFileElement.SetAttributeValue("Ver", "1.0.0.0");
                 newFileElement.SetAttributeValue("Name", item);
@@ -1486,19 +1486,19 @@ namespace AULWriter
 
 
             txtLastXml.Text = doc.ToString();
-            richTxtLog.AppendText("Éú³É×îĞÂµÄXMLÎÄ¼ş½á¹û³É¹¦¡£Çë¼ÌĞø·¢²¼²ÅÊÇÕæÕıÍê³É\r\n");
+            richTxtLog.AppendText("ç”Ÿæˆæœ€æ–°çš„XMLæ–‡ä»¶ç»“æœæˆåŠŸã€‚è¯·ç»§ç»­å‘å¸ƒæ‰æ˜¯çœŸæ­£å®Œæˆ\r\n");
 
             //}
             //else
             //{
             //    doc.Save(xmlFilePath);
-            //    richTxtLog.AppendText("±£´æ-Éú³É×îĞÂµÄXMLÎÄ¼ş³É¹¦¡£\r\n");
+            //    richTxtLog.AppendText("ä¿å­˜-ç”Ÿæˆæœ€æ–°çš„XMLæ–‡ä»¶æˆåŠŸã€‚\r\n");
             //}
         }
 
 
         /// <summary>
-        /// Öğ×Ö½Ú±È½Ï
+        /// é€å­—èŠ‚æ¯”è¾ƒ
         /// </summary>
         /// <param name="filePath1"></param>
         /// <param name="filePath2"></param>
@@ -1548,18 +1548,18 @@ namespace AULWriter
             }
         }
 
-        private void chk¹şÏ£Öµ±È½Ï_CheckedChanged(object sender, EventArgs e)
+        private void chkå“ˆå¸Œå€¼æ¯”è¾ƒ_CheckedChanged(object sender, EventArgs e)
         {
-            //¼ÓÔØÇ°Ò»¸öAutoUpdaterList.xmlÖĞµÄÎÄ¼şÁĞ±í
+            //åŠ è½½å‰ä¸€ä¸ªAutoUpdaterList.xmlä¸­çš„æ–‡ä»¶åˆ—è¡¨
         }
 
 
-        #region [¸´ÖÆ·¢²¼]
+        #region [å¤åˆ¶å‘å¸ƒ]
 
 
 
         /// <summary>
-        /// ¸´ÖÆÎÄ¼ş  ½«°æ±¾ºÅÏÂÃæµÄÎÄ¼ş È«²¿
+        /// å¤åˆ¶æ–‡ä»¶  å°†ç‰ˆæœ¬å·ä¸‹é¢çš„æ–‡ä»¶ å…¨éƒ¨
         /// </summary>
         /// <param name="sourceDir"></param>
         /// <param name="objPath"></param>
@@ -1575,7 +1575,7 @@ namespace AULWriter
             }
             try
             {
-                //´æÔÚ²Å¸´ÖÆ¹ıÈ¥
+                //å­˜åœ¨æ‰å¤åˆ¶è¿‡å»
                 if (File.Exists(sourcePath))
                 {
                     File.Copy(sourcePath, targetPath, true);
@@ -1588,17 +1588,17 @@ namespace AULWriter
             }
             return copySuccess;
         }
-        //½«²îÒìµÄÎÄ¼ş ¸´ÖÆIÅÌÁÙÊ±Ä¿Â¼£¬ÔÙµ½·şÎñÆ÷¡£²¢ÇÒÉú³ÉÊ±°æ±¾ºÅÖ»¶Ô²îÒìµÄ¸üĞÂ  ±£´æÅäÖÃµ½ÎÄ¼şÖĞ
-        //ÏÈ¸´ÖÆ ÔÙÉú³Éxml
+        //å°†å·®å¼‚çš„æ–‡ä»¶ å¤åˆ¶Iç›˜ä¸´æ—¶ç›®å½•ï¼Œå†åˆ°æœåŠ¡å™¨ã€‚å¹¶ä¸”ç”Ÿæˆæ—¶ç‰ˆæœ¬å·åªå¯¹å·®å¼‚çš„æ›´æ–°  ä¿å­˜é…ç½®åˆ°æ–‡ä»¶ä¸­
+        //å…ˆå¤åˆ¶ å†ç”Ÿæˆxml
 
-        #endregion [¸´ÖÆ·¢²¼]
+        #endregion [å¤åˆ¶å‘å¸ƒ]
 
 
         private void btnrelease_Click(object sender, EventArgs e)
         {
             if (DiffFileList.Count == 0)
             {
-                MessageBox.Show("Ã»ÓĞĞèÒª·¢²¼µÄÎÄ¼ş¡£ÇëÏÈÉú³É²îÒìÎÄ¼ş¡£");
+                MessageBox.Show("æ²¡æœ‰éœ€è¦å‘å¸ƒçš„æ–‡ä»¶ã€‚è¯·å…ˆç”Ÿæˆå·®å¼‚æ–‡ä»¶ã€‚");
                 return;
             }
 
@@ -1615,62 +1615,62 @@ namespace AULWriter
             }
             if (chkTest.Checked)
             {
-                richTxtLog.AppendText($"²âÊÔÄ£Ê½----±£´æµ½Ä¿±ê-{txtTargetDirectory.Text}  ³É¹¦{CopySuccessed}¸ö¡£");
+                richTxtLog.AppendText($"æµ‹è¯•æ¨¡å¼----ä¿å­˜åˆ°ç›®æ ‡-{txtTargetDirectory.Text}  æˆåŠŸ{CopySuccessed}ä¸ªã€‚");
                 richTxtLog.AppendText("\r\n");
                 return;
 
             }
             else
             {
-                richTxtLog.AppendText($"±£´æµ½Ä¿±ê-{txtTargetDirectory.Text}  ³É¹¦{CopySuccessed}¸ö¡£");
+                richTxtLog.AppendText($"ä¿å­˜åˆ°ç›®æ ‡-{txtTargetDirectory.Text}  æˆåŠŸ{CopySuccessed}ä¸ªã€‚");
                 richTxtLog.AppendText("\r\n");
             }
 
 
 
 
-            // ½«StringBuilderµÄÄÚÈİĞ´ÈëÎÄ¼ş
+            // å°†StringBuilderçš„å†…å®¹å†™å…¥æ–‡ä»¶
             //File.WriteAllText(this.txtAutoUpdateXmlSavePath.Text.Trim(), txtLastXml.Text.ToString(), System.Text.Encoding.GetEncoding("gb2312"));
             XDocument newDoc = XDocument.Parse(txtLastXml.Text);
             var tempPath = Path.Combine(Path.GetTempPath(), this.txtAutoUpdateXmlSavePath.Text.Trim());
 
-            // ´´½¨´øÓĞgb2312±àÂëµÄXMLĞ´ÈëÉèÖÃ
+            // åˆ›å»ºå¸¦æœ‰gb2312ç¼–ç çš„XMLå†™å…¥è®¾ç½®
             XmlWriterSettings settings = new XmlWriterSettings();
             settings.Encoding = System.Text.Encoding.GetEncoding("gb2312");
-            settings.Indent = true; // ±£³ÖËõ½ø¸ñÊ½
+            settings.Indent = true; // ä¿æŒç¼©è¿›æ ¼å¼
 
-            // Ê¹ÓÃXmlWriter±£´æÎÄµµ
+            // ä½¿ç”¨XmlWriterä¿å­˜æ–‡æ¡£
             using (XmlWriter writer = XmlWriter.Create(tempPath, settings))
             {
                 newDoc.Save(writer);
             }
 
-            MessageBox.Show(this, "×Ô¶¯¸üĞÂÎÄ¼şÉú³É³É¹¦:" + this.txtAutoUpdateXmlSavePath.Text.Trim(), "AutoUpdater", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show(this, "è‡ªåŠ¨æ›´æ–°æ–‡ä»¶ç”ŸæˆæˆåŠŸ:" + this.txtAutoUpdateXmlSavePath.Text.Trim(), "AutoUpdater", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
             try
             {
                 saveConfigToFile();
-                //MessageBox.Show("ÅäÖÃ±£´æ³É¹¦");
+                //MessageBox.Show("é…ç½®ä¿å­˜æˆåŠŸ");
             }
             catch (Exception ex)
             {
-                MessageBox.Show("ÅäÖÃ±£´æÊ§°Ü:" + ex.Message);
+                MessageBox.Show("é…ç½®ä¿å­˜å¤±è´¥:" + ex.Message);
             }
 
-            richTxtLog.AppendText($"·¢²¼µ½Ä¿±ê-{txtTargetDirectory.Text}³É¹¦¡£");
+            richTxtLog.AppendText($"å‘å¸ƒåˆ°ç›®æ ‡-{txtTargetDirectory.Text}æˆåŠŸã€‚");
             richTxtLog.AppendText("\r\n");
         }
 
 
 
 
-        #region ĞÂ¾É°æ±¾±È½Ï
+        #region æ–°æ—§ç‰ˆæœ¬æ¯”è¾ƒ
 
         private void CompareUpdateXml(string OldConfigPath)
         {
             if (string.IsNullOrWhiteSpace(OldConfigPath))
             {
-                MessageBox.Show("ÇëÏÈÑ¡ÔñÁ½¸öÒª±È½ÏµÄÅäÖÃÎÄ¼ş");
+                MessageBox.Show("è¯·å…ˆé€‰æ‹©ä¸¤ä¸ªè¦æ¯”è¾ƒçš„é…ç½®æ–‡ä»¶");
                 return;
             }
 
@@ -1683,12 +1683,12 @@ namespace AULWriter
 
                 XDocument newDoc = XDocument.Parse(txtLastXml.Text);
 
-                // ±È½ÏXMLÎÄµµ
+                // æ¯”è¾ƒXMLæ–‡æ¡£
                 var comparer = new EnhancedXmlDiff();
                 var diffBlocks = comparer.CompareXmlFiles(oldDoc, newDoc);
-                // ÏÔÊ¾²îÒì
+                // æ˜¾ç¤ºå·®å¼‚
                 var diffViewer = new XmlDiffViewer();
-                // ÏÔÊ¾²îÒì
+                // æ˜¾ç¤ºå·®å¼‚
                 //diffViewer.DisplayDifferences(diffBlocks);
                 try
                 {
@@ -1700,13 +1700,13 @@ namespace AULWriter
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"±È½ÏÊ§°Ü£º{ex.Message}");
+                    MessageBox.Show($"æ¯”è¾ƒå¤±è´¥ï¼š{ex.Message}");
                 }
 
 
-                // ÔÚ´°ÌåÖĞÏÔÊ¾
+                // åœ¨çª—ä½“ä¸­æ˜¾ç¤º
                 var form = new Form();
-                form.Text = "XML²îÒì±È½Ï¹¤¾ß";
+                form.Text = "XMLå·®å¼‚æ¯”è¾ƒå·¥å…·";
                 form.Size = new Size(1200, 800);
                 form.Controls.Add(diffViewer);
                 diffViewer.Dock = DockStyle.Fill;
@@ -1721,7 +1721,7 @@ namespace AULWriter
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"±È½ÏÅäÖÃÎÄ¼şÊ±³ö´í: {ex.Message}");
+                MessageBox.Show($"æ¯”è¾ƒé…ç½®æ–‡ä»¶æ—¶å‡ºé”™: {ex.Message}");
             }
         }
 
@@ -1742,7 +1742,7 @@ namespace AULWriter
         }
 
 
-        // ¸Ä½øµÄÄÚÁª²îÒì¼ì²âËã·¨
+        // æ”¹è¿›çš„å†…è”å·®å¼‚æ£€æµ‹ç®—æ³•
         private List<DiffSegment> ComputeEnhancedInlineDiff(string left, string right)
         {
             var segments = new List<DiffSegment>();
@@ -1753,7 +1753,7 @@ namespace AULWriter
                 return segments;
             }
 
-            // Ê¹ÓÃ¸ü¾«Ï¸µÄ²îÒìËã·¨£¨Èç»ùÓÚ´Ê»ò±ê¼ÇµÄ²îÒì£©
+            // ä½¿ç”¨æ›´ç²¾ç»†çš„å·®å¼‚ç®—æ³•ï¼ˆå¦‚åŸºäºè¯æˆ–æ ‡è®°çš„å·®å¼‚ï¼‰
             var diff = new Differ();
             var changes = diff.DiffText(left, right);
 
@@ -1792,10 +1792,10 @@ namespace AULWriter
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"´ò¿ªBeyond CompareÊ§°Ü£º{ex.Message}");
+                MessageBox.Show($"æ‰“å¼€Beyond Compareå¤±è´¥ï¼š{ex.Message}");
             }
             //return;
-            //±È½Ï
+            //æ¯”è¾ƒ
             //CompareUpdateXml(txtAutoUpdateXmlSavePath.Text);
         }
         private string SaveTempXml(string fileName, XDocument doc)
@@ -1812,7 +1812,7 @@ namespace AULWriter
 
 
         /// <summary>
-        /// ¼ÓÔØ¾ÉµÄ¸üĞÂÁĞ±í
+        /// åŠ è½½æ—§çš„æ›´æ–°åˆ—è¡¨
         /// </summary>
         /// <param name="xmlFilePath"></param>
         private void LoadOldCurrentList(string xmlFilePath)
@@ -1853,7 +1853,7 @@ namespace AULWriter
 
         private void txtTargetDirectory_TextChanged(object sender, EventArgs e)
         {
-            string mainProgramFileName = "ÆóÒµÊı×Ö»¯¼¯³ÉERP.exe";
+            string mainProgramFileName = "ä¼ä¸šæ•°å­—åŒ–é›†æˆERP.exe";
             string listFileName = "AutoUpdaterList.xml";
 
             FileInfo exeFileInfo = new FileInfo(txtMainExePath.Text);
@@ -1874,7 +1874,7 @@ namespace AULWriter
     }
 
 
-    #region ¸¨ÖúÀà
+    #region è¾…åŠ©ç±»
     public class UpdateXmlResult
     {
         public XDocument Document { get; set; }

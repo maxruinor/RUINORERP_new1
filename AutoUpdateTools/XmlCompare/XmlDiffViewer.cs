@@ -1,14 +1,8 @@
-﻿using AutoUpdateTools.XmlCompare;
-using AutoUpdateTools.XmlCompare.AutoUpdateTools.XmlCompare;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
+﻿using System;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Collections.Generic;
+using AutoUpdateTools.XmlCompare;
 
 namespace AutoUpdateTools
 {
@@ -16,36 +10,14 @@ namespace AutoUpdateTools
     {
         private SafeScrollSynchronizer _syncOldToNew;
         private SafeScrollSynchronizer _syncNewToOld;
-        private SplitContainer splitContainer;
-        private VScrollBar scrollBar;
-
-        private SafeScrollSynchronizer _scrollSync;
 
         public XmlDiffViewer()
         {
             InitializeComponent();
-            leftBox = CreateRichTextBox();
-            rightBox = CreateRichTextBox();
             SetupRichTextBoxes();
             SetupSafeScrollSync();
         }
 
-        private RichTextBox CreateRichTextBox()
-        {
-            return new RichTextBox
-            {
-                Dock = DockStyle.Fill,
-                Font = new Font("Consolas", 10),
-                WordWrap = false,
-                ScrollBars = RichTextBoxScrollBars.Both
-            };
-        }
-        private void SetupSafeScrollSync()
-        {
-            // 关键：使用单向同步，并交换主从关系
-            _syncOldToNew = new SafeScrollSynchronizer(leftBox, rightBox);
-            _syncNewToOld = new SafeScrollSynchronizer(rightBox, leftBox);
-        }
         private void SetupRichTextBoxes()
         {
             // 设置左右两个RichTextBox的样式
@@ -57,29 +29,25 @@ namespace AutoUpdateTools
                 rtb.DetectUrls = false;
                 rtb.ReadOnly = true;
             }
-
         }
 
-        #region
+        private void SetupSafeScrollSync()
+        {
+            // 关键：使用单向同步，并交换主从关系
+            _syncOldToNew = new SafeScrollSynchronizer(leftBox, rightBox);
+            _syncNewToOld = new SafeScrollSynchronizer(rightBox, leftBox);
+        }
+
         /// <summary>
         /// 显示XML差异结果
         /// </summary>
         public void DisplayDifferences(List<DiffBlock> diffBlocks)
         {
+            if (diffBlocks == null) return;
+
             leftBox.Clear();
             rightBox.Clear();
 
- 
-
-            foreach (var block in diffBlocks)
-            {
-                for (int i = 0; i < Math.Max(block.LeftLines.Count, block.RightLines.Count); i++)
-                {
-                    RenderLine(leftBox, block, i, false);
-                    RenderLine(rightBox, block, i, true);
-                }
-            }
-            return;
             foreach (var block in diffBlocks)
             {
                 Color backColor = GetBackColorForDiffType(block.Type);
@@ -97,6 +65,11 @@ namespace AutoUpdateTools
                                      block.InlineDiffs.Count > i ? block.InlineDiffs[i] : null,
                                      false);
                     }
+                    else
+                    {
+                        // 左侧没有对应行，添加空行
+                        AppendDiffLine(leftBox, "", textColor, backColor, fontStyle, null, false);
+                    }
 
                     // 处理右侧文本
                     if (i < block.RightLines.Count)
@@ -106,6 +79,11 @@ namespace AutoUpdateTools
                                      block.InlineDiffs.Count > i ? block.InlineDiffs[i] : null,
                                      true);
                     }
+                    else
+                    {
+                        // 右侧没有对应行，添加空行
+                        AppendDiffLine(rightBox, "", textColor, backColor, fontStyle, null, true);
+                    }
                 }
             }
         }
@@ -114,6 +92,8 @@ namespace AutoUpdateTools
                                   Color backColor, FontStyle fontStyle,
                                   List<DiffSegment> inlineDiffs, bool isRightSide)
         {
+            if (box == null || text == null) return;
+            
             box.SelectionBackColor = backColor;
             box.SelectionColor = textColor;
             box.SelectionFont = new Font(box.Font, fontStyle);
@@ -126,6 +106,8 @@ namespace AutoUpdateTools
 
             foreach (var segment in inlineDiffs)
             {
+                if (segment == null) continue;
+                
                 if (segment.IsModified)
                 {
                     box.SelectionColor = XmlDiffColorScheme.ModifiedTextColor;
@@ -135,7 +117,7 @@ namespace AutoUpdateTools
                 else
                 {
                     box.SelectionColor = textColor;
-                    box.AppendText(segment.Text);
+                    box.AppendText(segment.Text ?? string.Empty);
                 }
             }
             box.AppendText(Environment.NewLine);
@@ -169,78 +151,5 @@ namespace AutoUpdateTools
                 ? XmlDiffColorScheme.RemovedFontStyle
                 : FontStyle.Regular;
         }
-        #endregion
-
-   
-
-        private void RenderLine(RichTextBox box, DiffBlock block, int index, bool isRight)
-        {
-            var lines = isRight ? block.RightLines : block.LeftLines;
-            if (index >= lines.Count) return;
-
-            var text = lines[index];
-            var color = GetTextColor(block.Type);
-            var style = GetFontStyle(block.Type);
-
-            box.SelectionColor = color;
-            box.SelectionFont = new Font(box.Font, style);
-            box.AppendText(text + Environment.NewLine);
-        }
-
-        private Color GetTextColor(DiffType type)
-        {
-            switch (type)
-            {
-                case DiffType.Added:
-                    return Color.Green;
-                case DiffType.Removed:
-                    return Color.Red;
-                case DiffType.Modified:
-                    return Color.Blue;
-                default:
-                    return Color.Black;
-            }
-        }
-
-        private FontStyle GetFontStyle(DiffType type)
-        {
-            return type == DiffType.Removed ? FontStyle.Strikeout : FontStyle.Regular;
-        }
-
-        private void AppendLine(RichTextBox box, string text, Color foreColor, Color backColor,
-                              List<DiffSegment> inlineDiffs, bool isRightSide)
-        {
-            box.SelectionBackColor = backColor;
-
-            if (inlineDiffs == null || inlineDiffs.Count == 0)
-            {
-                box.SelectionColor = foreColor;
-                box.AppendText(text + Environment.NewLine);
-            }
-            else
-            {
-                foreach (var segment in inlineDiffs)
-                {
-                    if (segment.IsModified)
-                    {
-                        box.SelectionColor = Color.Blue;
-                        box.AppendText(isRightSide && !string.IsNullOrEmpty(segment.RightText)
-                            ? segment.RightText : segment.Text);
-                    }
-                    else
-                    {
-                        box.SelectionColor = foreColor;
-                        box.AppendText(segment.Text);
-                    }
-                }
-                box.AppendText(Environment.NewLine);
-            }
-        }
-
-        private void SynchronizeScroll()
-        {
-            // 实现两个RichTextBox的同步滚动
-        }
     }
-
 }

@@ -1,11 +1,8 @@
-﻿using AutoUpdateTools.XmlCompare;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace AutoUpdateTools
+namespace AutoUpdateTools.XmlCompare
 {
     public class DiffBlock
     {
@@ -17,19 +14,21 @@ namespace AutoUpdateTools
         // 添加辅助方法
         public void AddLeftLine(string line, List<DiffSegment> inlineDiff = null)
         {
+            if (line == null) line = string.Empty;
             LeftLines.Add(line);
             InlineDiffs.Add(inlineDiff ?? new List<DiffSegment>());
         }
 
         public void AddRightLine(string line, List<DiffSegment> inlineDiff = null)
         {
+            if (line == null) line = string.Empty;
             RightLines.Add(line);
             InlineDiffs.Add(inlineDiff ?? new List<DiffSegment>());
         }
 
         public bool HasInlineDiffs()
         {
-            return InlineDiffs.Any(d => d != null && d.Any(s => s.IsModified));
+            return InlineDiffs.Any(d => d != null && d.Any(s => s != null && s.IsModified));
         }
     }
 }

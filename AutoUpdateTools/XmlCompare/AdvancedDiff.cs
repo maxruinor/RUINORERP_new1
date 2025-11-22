@@ -29,18 +29,21 @@ namespace AutoUpdateTools.XmlCompare
 
         public void SetLineMatchFunction(Func<string, string, bool> matchFunc)
         {
-            _lineMatchFunc = matchFunc;
+            _lineMatchFunc = matchFunc ?? throw new ArgumentNullException(nameof(matchFunc));
         }
 
         public void SetInlineDiffFunction(Func<string, string, IEnumerable<DiffSegment>> diffFunc)
         {
-            _inlineDiffFunc = diffFunc;
+            _inlineDiffFunc = diffFunc ?? throw new ArgumentNullException(nameof(diffFunc));
         }
+        
         private string NormalizeXmlLine(string line)
         {
+            if (string.IsNullOrEmpty(line)) return line;
             // 移除空白和格式化差异，只比较内容
             return Regex.Replace(line, @"\s+", " ").Trim();
         }
+        
         /// <summary>
         /// 计算差异结果（安全优化版）
         /// </summary>
@@ -81,6 +84,8 @@ namespace AutoUpdateTools.XmlCompare
         /// </summary>
         private void ProcessMatchedSection(List<DiffBlock> results, Match match)
         {
+            if (results == null || match == null) return;
+            
             var matchedLines = _left.Skip(match.LeftStart).Take(match.Length).ToArray();
 
             var block = new DiffBlock
@@ -98,7 +103,7 @@ namespace AutoUpdateTools.XmlCompare
         /// </summary>
         private List<DiffBlock> GroupResults(List<DiffBlock> input)
         {
-            if (input.Count == 0) return input;
+            if (input == null || input.Count == 0) return input ?? new List<DiffBlock>();
 
             var output = new List<DiffBlock> { input[0] };
 
@@ -107,6 +112,8 @@ namespace AutoUpdateTools.XmlCompare
                 var last = output[output.Count - 1];
                 var current = input[i];
 
+                if (last == null || current == null) continue;
+                
                 if (last.Type == current.Type)
                 {
                     // 合并相同类型的块
@@ -128,6 +135,9 @@ namespace AutoUpdateTools.XmlCompare
         /// </summary>
         private DiffType DetermineDiffType(string[] leftChunk, string[] rightChunk)
         {
+            if (leftChunk == null) leftChunk = new string[0];
+            if (rightChunk == null) rightChunk = new string[0];
+            
             if (leftChunk.Length == 0 && rightChunk.Length > 0)
                 return DiffType.Added;
 
@@ -139,6 +149,8 @@ namespace AutoUpdateTools.XmlCompare
 
         private void ProcessUnmatchedSection(List<DiffBlock> results, int leftPos, int rightPos, Match match)
         {
+            if (results == null || match == null) return;
+            
             var leftChunk = _left.Skip(leftPos).Take(match.LeftStart - leftPos).ToArray();
             var rightChunk = _right.Skip(rightPos).Take(match.RightStart - rightPos).ToArray();
 
@@ -156,6 +168,9 @@ namespace AutoUpdateTools.XmlCompare
         private List<List<DiffSegment>> CalculateInlineDiffs(string[] left, string[] right)
         {
             var diffs = new List<List<DiffSegment>>();
+            if (left == null) left = new string[0];
+            if (right == null) right = new string[0];
+            
             int minLength = Math.Min(left.Length, right.Length);
 
             for (int i = 0; i < minLength; i++)
@@ -199,12 +214,11 @@ namespace AutoUpdateTools.XmlCompare
 
                 foreach (var j in rightIndices)
                 {
-                    if (j < rightStart) continue;
+                    if (j < rightStart) continue; // 只考虑右侧当前位置之后的匹配
 
-                    int length = 1;
-                    // 添加最大长度限制防止死循环
-                    int maxPossibleLength = Math.Min(leftLen - i, rightLen - j);
-                    while (length < maxPossibleLength &&
+                    int length = 0;
+                    // 计算连续匹配长度
+                    while (i + length < leftLen && j + length < rightLen &&
                            _lineMatchFunc(_left[i + length], _right[j + length]))
                     {
                         length++;
@@ -224,94 +238,54 @@ namespace AutoUpdateTools.XmlCompare
 
         private IEnumerable<DiffSegment> ComputeInlineDiff(string left, string right)
         {
-            if (left == right)
-                return new[] { new DiffSegment { Text = left, IsModified = false } };
+            // 如果使用自定义函数，则调用它
+            if (_inlineDiffFunc != null && _inlineDiffFunc != ComputeInlineDiff)
+            {
+                return _inlineDiffFunc(left, right);
+            }
 
-            // 使用简单的逐字符比较算法
+            // 默认的字符级差异计算
             var segments = new List<DiffSegment>();
-            int minLen = Math.Min(left.Length, right.Length);
-            int start = 0;
 
-            // 查找前面相同的部分
-            while (start < minLen && left[start] == right[start])
-                start++;
-
-            // 查找后面相同的部分
-            int end = 0;
-            while (end < minLen - start &&
-                   left[left.Length - 1 - end] == right[right.Length - 1 - end])
-                end++;
-
-            // 中间不同的部分
-            if (start > 0)
+            // 简单实现：如果字符串不同，则整个字符串标记为修改
+            if (left != right)
             {
                 segments.Add(new DiffSegment
                 {
-                    Text = left.Substring(0, start),
-                    IsModified = false
-                });
-            }
-
-            int leftDiffLen = left.Length - start - end;
-            int rightDiffLen = right.Length - start - end;
-
-            if (leftDiffLen > 0 || rightDiffLen > 0)
-            {
-                segments.Add(new DiffSegment
-                {
-                    Text = leftDiffLen > 0 ? left.Substring(start, leftDiffLen) : "",
+                    Text = left ?? string.Empty,
+                    RightText = right ?? string.Empty,
                     IsModified = true,
-                    RightText = rightDiffLen > 0 ? right.Substring(start, rightDiffLen) : ""
+                    DiffType = DiffType.Modified
                 });
             }
-
-            if (end > 0)
+            else
             {
                 segments.Add(new DiffSegment
                 {
-                    Text = left.Substring(left.Length - end),
-                    IsModified = false
+                    Text = left ?? string.Empty,
+                    IsModified = false,
+                    DiffType = DiffType.Unchanged
                 });
             }
 
             return segments;
         }
 
-
-       
-    }
-
-    public class Match
-    {
-        public int LeftStart { get; }
-        public int RightStart { get; }
-        public int Length { get; }
-
-        public Match(int left, int right, int length)
+        /// <summary>
+        /// 内部匹配结构
+        /// </summary>
+        private class Match
         {
-            LeftStart = left;
-            RightStart = right;
-            Length = length;
+            public int LeftStart { get; }
+            public int RightStart { get; }
+            public int Length { get; }
+
+            public Match(int leftStart, int rightStart, int length)
+            {
+                LeftStart = leftStart;
+                RightStart = rightStart;
+                Length = length;
+            }
         }
-    }
-
-   
-
-    public class DiffSegment
-    {
-        public string Text { get; set; }
-        public bool IsModified { get; set; }
-        public string RightText { get; set; } // 用于显示右侧不同的文本
-        public DiffType DiffType { get; internal set; }
-        public int StartPosition { get; internal set; }
-        public int Length { get; internal set; }
-    }
-
-    public enum DiffType
-    {
-        Unchanged,
-        Modified,
-        Added,
-        Removed
     }
 }

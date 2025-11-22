@@ -172,67 +172,6 @@ namespace RUINORERP.Server.Controls
         #region 事件处理
 
 
-        private JArray GetEntityListFromCache(IEntityCacheManager cacheManager, string tableName)
-        {
-            try
-            {
-                // 获取表对应的实体类型
-                var schemaManager = TableSchemaManager.Instance;
-                var entityType = schemaManager.GetEntityType(tableName);
-                if (entityType == null)
-                {
-                    return null;
-                }
-
-                // 使用反射调用GetEntityList<T>方法
-                var method = typeof(IEntityCacheManager).GetMethod("GetEntityList",
-                    BindingFlags.Public | BindingFlags.Instance,
-                    null,
-                    new[] { typeof(string) },
-                    null);
-
-                if (method == null)
-                {
-                    return null;
-                }
-
-                var genericMethod = method.MakeGenericMethod(entityType);
-                var entityList = genericMethod.Invoke(cacheManager, new object[] { tableName });
-
-                // 转换为JArray（使用异步方式处理大数据集）
-                if (entityList != null)
-                {
-                    // 限制处理的数据量，避免大数据集导致性能问题
-                    var list = entityList as System.Collections.IList;
-                    if (list != null && list.Count > 10000)
-                    {
-                        // 大数据集只返回前10000条记录，并添加提示
-                        var limitedList = new ArrayList();
-                        for (int i = 0; i < Math.Min(10000, list.Count); i++)
-                        {
-                            limitedList.Add(list[i]);
-                        }
-
-                        // 在UI线程上显示提示信息
-                        this.Invoke(new Action(() =>
-                        {
-                            toolStripStatusLabel1.Text = $"表 {tableName} 数据量过大({list.Count}条)，仅显示前10000条记录";
-                        }));
-
-                        return JArray.FromObject(limitedList);
-                    }
-
-                    return JArray.FromObject(entityList);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"从缓存获取实体列表时出错: {tableName}");
-            }
-
-            return null;
-        }
-
         private async void listBoxTableList_SelectedIndexChanged(object sender, EventArgs e)
         {
             try
@@ -250,22 +189,18 @@ namespace RUINORERP.Server.Controls
                         await Task.Run(() =>
                         {
                             var cacheManager = Startup.GetFromFac<IEntityCacheManager>();
-                            var jArray = GetEntityListFromCache(cacheManager, tableName);
-
-                            if (jArray != null)
+                            var datalist = cacheManager.GetEntityListByTableName(tableName);
+                            if (datalist != null)
                             {
-                                // 转换为DataTable
-                                var dataTable = ConvertJArrayToDataTable(jArray);
-
                                 // 在UI线程上更新DataGridView
                                 this.Invoke(new Action(() =>
                                 {
                                     // 绑定数据到dataGridView
                                     dataGridView1.DataSource = null;
-                                    dataGridView1.DataSource = dataTable;
+                                    dataGridView1.DataSource = datalist;
 
                                     // 更新状态栏
-                                    int count = dataTable.Rows.Count;
+                                    int count = datalist.Count;
                                     toolStripStatusLabel1.Text = $"表 {tableName} 缓存数据已加载，共 {count} 条记录";
                                 }));
                             }
@@ -284,80 +219,7 @@ namespace RUINORERP.Server.Controls
             }
         }
 
-        /// <summary>
-        /// 将JArray转换为DataTable
-        /// </summary>
-        /// <param name="jArray">要转换的JArray</param>
-        /// <returns>转换后的DataTable</returns>
-        private DataTable ConvertJArrayToDataTable(JArray jArray)
-        {
-            try
-            {
-                if (jArray == null || jArray.Count == 0)
-                {
-                    return null;
-                }
 
-                // 创建DataTable
-                DataTable dataTable = new DataTable();
-
-                // 获取第一个对象的结构
-                var firstObject = jArray[0] as JObject;
-                if (firstObject == null)
-                {
-                    return null;
-                }
-
-                // 添加列（限制列数，避免过多列导致性能问题）
-                int columnCount = 0;
-                foreach (var property in firstObject.Properties())
-                {
-                    if (columnCount >= 50) // 限制最多50列
-                    {
-                        break;
-                    }
-                    dataTable.Columns.Add(property.Name, typeof(string));
-                    columnCount++;
-                }
-
-                // 添加行（限制行数，避免大数据集导致性能问题）
-                int rowCount = 0;
-                int maxRows = 10000; // 最多显示10000行
-
-                foreach (var item in jArray)
-                {
-                    if (rowCount >= maxRows)
-                    {
-                        break;
-                    }
-
-                    var row = dataTable.NewRow();
-                    var obj = item as JObject;
-                    if (obj != null)
-                    {
-                        int colIndex = 0;
-                        foreach (var property in obj.Properties())
-                        {
-                            if (colIndex >= 50) // 与列限制保持一致
-                            {
-                                break;
-                            }
-                            row[property.Name] = property.Value?.ToString() ?? string.Empty;
-                            colIndex++;
-                        }
-                    }
-                    dataTable.Rows.Add(row);
-                    rowCount++;
-                }
-
-                return dataTable;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "转换JArray到DataTable时出错");
-                return null;
-            }
-        }
 
         private async void toolStripButton刷新缓存_Click(object sender, EventArgs e)
         {
@@ -548,8 +410,7 @@ namespace RUINORERP.Server.Controls
                     {
                         // 获取缓存数据
                         var cacheManager = Startup.GetFromFac<IEntityCacheManager>();
-                        var jArray = GetEntityListFromCache(cacheManager, tableName);
-
+                        var jArray = cacheManager.GetEntityListByTableName(tableName);
                         if (jArray == null || jArray.Count == 0)
                         {
                             this.Invoke(new Action(() =>
@@ -560,8 +421,6 @@ namespace RUINORERP.Server.Controls
                         }
 
 
-
-
                         CacheCommandHandler cacheCommandHandler = Startup.GetFromFac<CacheCommandHandler>();
                         // 发送缓存数据到指定用户
                         var cachedata = await cacheCommandHandler.GetTableDataList(tableName);
@@ -570,7 +429,6 @@ namespace RUINORERP.Server.Controls
                         cacheRequest.CacheData = cachedata;
                         cacheRequest.TableName = tableName;
                         cacheRequest.Operation = CacheOperation.Set;
-
 
 
                         // 使用异步方式发送命令，避免阻塞

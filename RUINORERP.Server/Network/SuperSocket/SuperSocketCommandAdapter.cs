@@ -250,7 +250,8 @@ namespace RUINORERP.Server.Network.SuperSocket
         }
 
         /// <summary>
-        /// 判断是否为响应数据包
+        /// 判断是否为响应数据包,这里意思是先优先处理：服务器请求，客户端响应服务器的数据。
+        /// 如果是客户端请求的，则通过调度器处理
         /// </summary>
         /// <param name="packet">数据包</param>
         /// <returns>是否为响应数据包</returns>
@@ -258,7 +259,7 @@ namespace RUINORERP.Server.Network.SuperSocket
         {
             // 响应包通常包含请求ID，并且是客户端对服务器请求的响应
             return !string.IsNullOrEmpty(packet?.ExecutionContext?.RequestId) &&
-                   packet.Direction == PacketDirection.ClientRequest;
+                   packet.Direction == PacketDirection.ClientResponse;
         }
 
         /// <summary>

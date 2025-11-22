@@ -91,6 +91,7 @@ namespace RUINORERP.UI.Network.Services
 
         /// <summary>
         /// 注册命令处理程序 - 增强版，添加详细日志和错误处理
+        /// 服务器推送的缓存用的这种方式。也可以写一个 LockCommandHandler 类似的处理类。只是这里事件优先
         /// </summary>
         private void RegisterCommandHandlers()
         {
@@ -117,17 +118,10 @@ namespace RUINORERP.UI.Network.Services
                 try
                 {
 
-                    if (data is CacheResponse response)
+                    if (packet.Request is CacheRequest  cacheRequest)
                     {
-                        _log.LogDebug("缓存同步数据包解析成功，表名={0}, 操作={1}, 成功状态={2}",
-                            response.TableName, response.Operation, response.IsSuccess);
-
                         // 处理缓存响应
-                        _cacheResponseProcessor.ProcessCacheResponse(response);
-
-                        _log.LogInformation("缓存同步处理完成，表名={0}, 操作={1}", response.TableName, response.Operation);
-
-                        _log.LogInformation("缓存同步处理完成，表名={0}, 操作={1}", response.TableName, response.Operation);
+                        _cacheResponseProcessor.ProcessCacheRequest(cacheRequest);
                     }
                     else
                     {

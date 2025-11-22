@@ -12,13 +12,16 @@ namespace RUINORERP.Model.ConfigModel
     /// 包含客户端业务操作相关的配置项以及服务器配置项
     /// </summary>
     [Serializable()]
-    [DisplayName("系统全局配置")]
+    [DisplayName("客户端系统全局配置")]
     public class SystemGlobalConfig : BaseConfig
     {
         [JsonProperty("客户端自动更新")]
         [Category("系统设置")]
         [Description("客户端自动更新")]
         public bool 客户端自动更新 { get; set; } = true;
+
+
+
 
         [JsonProperty("IsFromPlatform")]
         [Category("销售模块")]

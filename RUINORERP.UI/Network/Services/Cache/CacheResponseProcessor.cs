@@ -33,7 +33,7 @@ namespace RUINORERP.UI.Network.Services.Cache
             _log = log;
             _cacheManager = cacheManager;
         }
-        
+
         /// <summary>
         /// 释放资源
         /// </summary>
@@ -64,122 +64,200 @@ namespace RUINORERP.UI.Network.Services.Cache
         /// 处理缓存响应（使用完整的响应对象）
         /// </summary>
         public void ProcessCacheResponse(CacheResponse response)
-        {            
+        {
             // 使用基类进行验证
             var validationResult = base.ValidateCacheResponse(response);
             if (!validationResult.IsValid)
-            {                
+            {
                 _log?.LogError($"缓存响应验证失败: {validationResult.GetValidationErrors()}");
                 return;
             }
 
             try
-            {                
+            {
                 // 统一验证成功状态和表名（Manage操作允许失败状态）
                 if (!response.IsSuccess && response.Operation != CacheOperation.Manage)
-                {                    
+                {
                     _log?.LogWarning("缓存响应未成功，表名={0}, 操作类型={1}", response.TableName, response.Operation);
                 }
-                
+
                 switch (response.Operation)
-                {                    
+                {
                     case CacheOperation.Get:
                     case CacheOperation.Set:
                         // 合并相似操作的处理逻辑，减少重复判断
                         if (string.IsNullOrEmpty(response.TableName) || response.CacheData == null)
-                        {                            
+                        {
                             _log?.LogWarning("{0}操作响应数据无效，表名={1}", response.Operation, response.TableName);
                             break;
                         }
 
                         // 对于Set操作，先清理旧缓存
                         if (response.Operation == CacheOperation.Set)
-                        {                            
+                        {
                             CleanCacheSafely(response.TableName);
                         }
 
                         ProcessCacheData(response.TableName, response.CacheData.EntityByte);
                         break;
-                    
+
                     case CacheOperation.Remove:
                         // 统一处理删除操作
                         if (!string.IsNullOrEmpty(response.TableName))
-                        {                            
+                        {
                             HandleRemoveOperation(response);
                         }
                         else
-                        {                            
+                        {
                             _log?.LogWarning("删除操作响应无效，表名为空");
                         }
                         break;
-                    
+
                     case CacheOperation.Clear:
                         // 简化Clear操作的错误处理
                         if (!string.IsNullOrEmpty(response.TableName))
-                        {                            
+                        {
                             CleanCacheSafely(response.TableName);
                         }
                         else
-                        {                            
+                        {
                             _log?.LogWarning("Clear操作响应无效，表名为空");
                         }
                         break;
-                    
+
                     case CacheOperation.Manage:
-                      //  HandleManageOperation(response);
+                        //  HandleManageOperation(response);
                         break;
-                    
+
                     default:
                         _log?.LogWarning("未知的缓存操作类型: {0}", response.Operation);
                         break;
                 }
-            }            
+            }
             catch (Exception ex)
-            {                
-                _log?.LogError(ex, "处理缓存响应失败，表名={0}, 操作类型={1}, 错误信息={2}", 
+            {
+                _log?.LogError(ex, "处理缓存响应失败，表名={0}, 操作类型={1}, 错误信息={2}",
                     response.TableName, response.Operation, ex.Message);
                 throw;
             }
         }
-        
+
+
+
+        /// <summary>
+        /// 处理缓存请（使用完整的响应对象）
+        /// 服务器主动推送过来的缓存请求
+        /// </summary>
+        public void ProcessCacheRequest(CacheRequest request)
+        {
+            // 使用基类进行验证
+            var validationResult = base.ValidateCacheRequest(request);
+            if (!validationResult.IsValid)
+            {
+                return;
+            }
+
+            try
+            {
+                // 统一验证成功状态和表名（Manage操作允许失败状态）
+                if (request != null && request.CacheData != null)
+                {
+                    _log?.LogWarning("服务缓存推送数据异常，表名={0}, 操作类型={1}", request.TableName, request.Operation);
+                }
+
+                switch (request.Operation)
+                {
+                    case CacheOperation.Get:
+                    case CacheOperation.Set:
+                        // 对于Set操作，先清理旧缓存
+                        if (request.Operation == CacheOperation.Set)
+                        {
+                            CleanCacheSafely(request.TableName);
+                        }
+
+                        ProcessCacheData(request.TableName, request.CacheData.EntityByte);
+                        break;
+
+                    case CacheOperation.Remove:
+                        // 统一处理删除操作
+                        if (!string.IsNullOrEmpty(request.TableName))
+                        {
+                            CleanCacheSafely(request.TableName);
+                        }
+                        else
+                        {
+                            _log?.LogWarning("删除操作响应无效，表名为空");
+                        }
+                        break;
+
+                    case CacheOperation.Clear:
+                        // 简化Clear操作的错误处理
+                        if (!string.IsNullOrEmpty(request.TableName))
+                        {
+                            CleanCacheSafely(request.TableName);
+                        }
+                        else
+                        {
+                            _log?.LogWarning("Clear操作响应无效，表名为空");
+                        }
+                        break;
+
+                    case CacheOperation.Manage:
+                        //  HandleManageOperation(request);
+                        break;
+
+                    default:
+                        _log?.LogWarning("未知的缓存操作类型: {0}", request.Operation);
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                _log?.LogError(ex, "处理缓存响应失败，表名={0}, 操作类型={1}, 错误信息={2}",
+                    request.TableName, request.Operation, ex.Message);
+                throw;
+            }
+        }
+
+
         /// <summary>
         /// 安全地清理缓存，发生异常时记录日志但不中断流程
         /// </summary>
         private void CleanCacheSafely(string tableName)
         {
             try
-            {                
+            {
                 _cacheManager.DeleteEntityList(tableName);
-                
+
             }
             catch (Exception ex)
-            {                
+            {
                 _log?.LogWarning(ex, "清理旧缓存失败，但继续处理，表名={0}", tableName);
             }
         }
-        
+
         /// <summary>
         /// 处理删除操作 - 支持单个实体删除和批量删除
         /// </summary>
         private void HandleRemoveOperation(CacheResponse response)
         {
             try
-            {                
+            {
                 // 如果有数据，尝试删除指定实体；否则删除整个表缓存
                 if (response.CacheData?.EntityByte != null)
-                {                    
+                {
                     // 处理单个实体删除或批量删除
                     ProcessDeleteData(response.TableName, response.CacheData.EntityByte);
                 }
                 else
-                {                    
+                {
                     // 删除整个表缓存
                     CleanCacheSafely(response.TableName);
                     _log?.LogInformation("清理整个表缓存，表名={0}", response.TableName);
                 }
             }
             catch (Exception ex)
-            {                
+            {
                 _log?.LogError(ex, "处理缓存删除响应失败，表名={0}, 错误信息={1}", response.TableName, ex.Message);
                 throw;
             }
@@ -332,8 +410,8 @@ namespace RUINORERP.UI.Network.Services.Cache
             try
             {
                 // 优先使用主键属性名
-                var idValue = token[keyProperty.Name]?.ToString() ?? 
-                             token["Id"]?.ToString() ?? 
+                var idValue = token[keyProperty.Name]?.ToString() ??
+                             token["Id"]?.ToString() ??
                              token["ID"]?.ToString() ??
                              token["id"]?.ToString();
 
@@ -358,7 +436,7 @@ namespace RUINORERP.UI.Network.Services.Cache
         {
             // 支持多种主键属性名
             var keyNames = new[] { "Id", "ID", "PrimaryKey", "Key" };
-            
+
             foreach (var keyName in keyNames)
             {
                 var property = entityType.GetProperty(keyName);
@@ -378,32 +456,30 @@ namespace RUINORERP.UI.Network.Services.Cache
         /// </summary>
         private bool IsNumericType(Type type)
         {
-            return type == typeof(long) || type == typeof(int) || type == typeof(short) || 
-                   type == typeof(byte) || type == typeof(ulong) || type == typeof(uint) || 
-                   type == typeof(ushort) || type == typeof(sbyte) || type == typeof(decimal) || 
+            return type == typeof(long) || type == typeof(int) || type == typeof(short) ||
+                   type == typeof(byte) || type == typeof(ulong) || type == typeof(uint) ||
+                   type == typeof(ushort) || type == typeof(sbyte) || type == typeof(decimal) ||
                    type == typeof(float) || type == typeof(double);
         }
-        
-       
+
+
         /// <summary>
         /// 处理缓存数据并更新到缓存管理器
         /// </summary>
         private void ProcessCacheData(string tableName, object data)
-        {            
+        {
             try
-            {                
+            {
                 if (data == null)
-                {                    
+                {
                     _log?.LogWarning("缓存数据为空，表名={0}", tableName);
                     return;
                 }
 
-
-
                 // 获取实体类型
                 var entityType = _cacheManager.GetEntityType(tableName);
                 if (entityType == null)
-                {                    
+                {
                     _log?.LogWarning("未找到表{0}的实体类型", tableName);
                     return;
                 }
@@ -411,17 +487,17 @@ namespace RUINORERP.UI.Network.Services.Cache
                 // 转换数据为实体列表并更新缓存
                 var entityList = ConvertToEntityList(data, entityType);
                 if (entityList != null && entityList.Count > 0)
-                {                    
+                {
                     _cacheManager.UpdateEntityList(tableName, entityList);
                     _log?.LogDebug("更新缓存成功，表名={0}，记录数={1}", tableName, entityList.Count);
                 }
                 else
-                {                    
+                {
                     _log?.LogDebug("缓存数据为空列表或转换失败，表名={0}", tableName);
                 }
             }
             catch (Exception ex)
-            {                
+            {
                 _log?.LogError(ex, "处理缓存数据失败，表名={0}", tableName);
                 throw;
             }
@@ -431,51 +507,51 @@ namespace RUINORERP.UI.Network.Services.Cache
         /// 将数据转换为指定类型的实体列表
         /// </summary>
         private IList ConvertToEntityList(object data, Type entityType)
-        {            
+        {
             try
-            {                
+            {
                 if (data is JArray jArray)
-                {                    
+                {
                     return ConvertJArrayToList(jArray, entityType);
                 }
                 else if (data is JObject jObject)
-                {                    
+                {
                     // 单个实体对象
 
                     var entityList = (IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(entityType));
                     var entity = JsonConvert.DeserializeObject(jObject.ToString(), entityType);
                     if (entity != null)
-                    {                        
+                    {
                         entityList.Add(entity);
                     }
                     return entityList;
                 }
                 else if (data is string jsonString && !string.IsNullOrEmpty(jsonString))
-                {                    
+                {
 
                     try
-                    {                        
+                    {
                         // 尝试解析为JArray
                         var parsedJArray = JArray.Parse(jsonString);
                         return ConvertJArrayToList(parsedJArray, entityType);
                     }
                     catch (Exception)
-                    {                        
+                    {
                         // 尝试解析为JObject
 
                         try
-                        {                             
+                        {
                             var parsedJObject = JObject.Parse(jsonString);
                             var entityList = (IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(entityType));
                             var entity = JsonConvert.DeserializeObject(jsonString, entityType);
                             if (entity != null)
-                            {                                 
+                            {
                                 entityList.Add(entity);
                             }
                             return entityList;
                         }
                         catch (Exception ex)
-                        {                             
+                        {
                             _log?.LogWarning(ex, "JSON字符串解析失败");
                             return null;
                         }
@@ -486,7 +562,7 @@ namespace RUINORERP.UI.Network.Services.Cache
                 return null;
             }
             catch (Exception ex)
-            {                
+            {
                 _log?.LogError(ex, "转换数据为实体列表失败");
                 throw;
             }
@@ -496,14 +572,14 @@ namespace RUINORERP.UI.Network.Services.Cache
         /// 将JArray转换为实体列表
         /// </summary>
         private IList ConvertJArrayToList(JArray jArray, Type entityType)
-        {            
+        {
             try
-            {                
+            {
 
                 var entityList = (IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(entityType));
                 int successCount = 0;
                 int failCount = 0;
-                
+
                 foreach (var item in jArray)
                 {
                     try
@@ -527,12 +603,12 @@ namespace RUINORERP.UI.Network.Services.Cache
                         // 继续处理下一个实体
                     }
                 }
-                
+
 
                 return entityList;
             }
             catch (Exception ex)
-            {                
+            {
                 _log?.LogError(ex, "转换JArray失败");
                 throw;
             }

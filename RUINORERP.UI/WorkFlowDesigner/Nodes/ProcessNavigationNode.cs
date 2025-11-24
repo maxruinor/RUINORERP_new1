@@ -13,8 +13,9 @@ using Netron.GraphLib.Attributes;
 using System.Windows.Forms;
 using RUINORERP.UI.WorkFlowDesigner.Dialogs;
 using RUINORERP.UI.Common;
-using RUINORERP.UI.Common;
 using System.Linq;
+using System.IO;
+using System.Drawing.Imaging;
 
 namespace RUINORERP.UI.WorkFlowDesigner.Nodes
 {
@@ -40,6 +41,15 @@ namespace RUINORERP.UI.WorkFlowDesigner.Nodes
         private int mBusinessType = 0;
         private Color mNodeColor = Color.FromArgb(79, 129, 189);
         private Font mTextFont = new Font("Microsoft YaHei", 10, FontStyle.Regular);
+        private string mCustomText = "";
+        private bool mShowCustomText = false;
+        private float mFontSize = 10;
+        private FontStyle mFontStyle = FontStyle.Regular;
+        private float mOpacity = 1.0f;
+        private Image mBackgroundImage = null;
+        private string mBackgroundImagePath = "";
+        private bool mTextWrap = true;
+        private ContentAlignment mTextAlignment = ContentAlignment.MiddleCenter;
 
         #region the connectors
         private Connector TopNode;
@@ -57,7 +67,14 @@ namespace RUINORERP.UI.WorkFlowDesigner.Nodes
         public string NodeId
         {
             get { return mNodeId; }
-            set { mNodeId = value; }
+            set
+            { 
+                if (mNodeId != value)
+                {
+                    mNodeId = value;
+                    Invalidate();
+                }
+            }
         }
 
         [JsonProperty]
@@ -67,9 +84,12 @@ namespace RUINORERP.UI.WorkFlowDesigner.Nodes
             get { return mProcessName; }
             set
             {
-                mProcessName = value;
-                this.Text = value;
-                Invalidate();
+                if (mProcessName != value)
+                {
+                    mProcessName = value;
+                    this.Text = value;
+                    Invalidate();
+                }
             }
         }
 
@@ -80,8 +100,11 @@ namespace RUINORERP.UI.WorkFlowDesigner.Nodes
             get { return mDescription; }
             set
             {
-                mDescription = value;
-                Invalidate();
+                if (mDescription != value)
+                {
+                    mDescription = value;
+                    Invalidate();
+                }
             }
         }
 
@@ -90,7 +113,14 @@ namespace RUINORERP.UI.WorkFlowDesigner.Nodes
         public string MenuID
         {
             get { return mMenuID; }
-            set { mMenuID = value; }
+            set
+            {
+                if (mMenuID != value)
+                {
+                    mMenuID = value;
+                    Invalidate();
+                }
+            }
         }
 
         [JsonProperty]
@@ -98,7 +128,14 @@ namespace RUINORERP.UI.WorkFlowDesigner.Nodes
         public string FormName
         {
             get { return mFormName; }
-            set { mFormName = value; }
+            set
+            {
+                if (mFormName != value)
+                {
+                    mFormName = value;
+                    Invalidate();
+                }
+            }
         }
 
         [JsonProperty]
@@ -106,15 +143,29 @@ namespace RUINORERP.UI.WorkFlowDesigner.Nodes
         public string ClassPath
         {
             get { return mClassPath; }
-            set { mClassPath = value; }
+            set
+            {
+                if (mClassPath != value)
+                {
+                    mClassPath = value;
+                    Invalidate();
+                }
+            }
         }
 
         [JsonProperty]
         [Description("业务类型")]
-        public int BusinessType
+        public ProcessNavigationNodeBusinessType BusinessType
         {
-            get { return mBusinessType; }
-            set { mBusinessType = value; }
+            get { return (ProcessNavigationNodeBusinessType)mBusinessType; }
+            set
+            {
+                if (mBusinessType != (int)value)
+                {
+                    mBusinessType = (int)value;
+                    Invalidate();
+                }
+            }
         }
 
         [JsonProperty]
@@ -128,8 +179,11 @@ namespace RUINORERP.UI.WorkFlowDesigner.Nodes
             get { return mNodeColor; }
             set
             {
-                mNodeColor = value;
-                Invalidate();
+                if (mNodeColor != value)
+                {
+                    mNodeColor = value;
+                    Invalidate();
+                }
             }
         }
 
@@ -140,29 +194,36 @@ namespace RUINORERP.UI.WorkFlowDesigner.Nodes
             get { return mNodeColor; }
             set
             {
-                mNodeColor = value;
-                Invalidate();
+                if (mNodeColor != value)
+                {
+                    mNodeColor = value;
+                    Invalidate();
+                }
             }
         }
 
+        private Color _borderColor = Color.FromArgb(255, 255, 255);
         [JsonProperty]
         [Description("边框颜色")]
         public Color BorderColor
         {
-            get { return Color.FromArgb(255, 255, 255); }
+            get { return _borderColor; }
             set
-            {
+            { 
+                _borderColor = value;
                 Invalidate();
             }
         }
 
+        private Color _fontColor = Color.White;
         [JsonProperty]
         [Description("字体颜色")]
         public Color FontColor
         {
-            get { return Color.White; }
+            get { return _fontColor; }
             set
-            {
+            { 
+                _fontColor = value;
                 Invalidate();
             }
         }
@@ -174,6 +235,142 @@ namespace RUINORERP.UI.WorkFlowDesigner.Nodes
             set
             {
                 mTextFont = value;
+                if (value != null)
+                {
+                    mFontSize = value.Size;
+                    mFontStyle = value.Style;
+                }
+                Invalidate();
+            }
+        }
+
+        [JsonProperty]
+        [Description("自定义文本内容")]
+        public string CustomText
+        {
+            get { return mCustomText; }
+            set
+            { 
+                mCustomText = value;
+                Invalidate();
+            }
+        }
+
+        [JsonProperty]
+        [Description("是否显示自定义文本")]
+        public bool ShowCustomText
+        {
+            get { return mShowCustomText; }
+            set
+            { 
+                mShowCustomText = value;
+                Invalidate();
+            }
+        }
+
+        [JsonProperty]
+        [Description("字体大小")]
+        public float FontSize
+        {
+            get { return mFontSize; }
+            set
+            { 
+                mFontSize = value;
+                UpdateFont();
+                Invalidate();
+            }
+        }
+
+        [JsonProperty]
+        [Description("字体样式")]
+        public FontStyle TextStyle
+        {
+            get { return mFontStyle; }
+            set
+            { 
+                mFontStyle = value;
+                UpdateFont();
+                Invalidate();
+            }
+        }
+
+        [JsonProperty]
+        [Description("节点透明度")]
+        public float Opacity
+        {
+            get { return mOpacity; }
+            set
+            { 
+                mOpacity = Math.Max(0.1f, Math.Min(1.0f, value)); // 限制在0.1到1.0之间
+                Invalidate();
+            }
+        }
+
+        [JsonProperty]
+        [Description("背景图像路径")]
+        public string BackgroundImagePath
+        {
+            get { return mBackgroundImagePath; }
+            set
+            { 
+                mBackgroundImagePath = value;
+                // 尝试加载背景图像
+                if (!string.IsNullOrEmpty(value) && File.Exists(value))
+                {
+                    try
+                    {
+                        mBackgroundImage = Image.FromFile(value);
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine("加载背景图像失败: " + ex.Message);
+                        mBackgroundImage = null;
+                    }
+                }
+                else
+                {
+                    mBackgroundImage = null;
+                }
+                Invalidate();
+            }
+        }
+
+        [Description("背景图像")]
+        public Image BackgroundImage
+        {
+            get { return mBackgroundImage; }
+            set
+            {
+                mBackgroundImage = value;
+                // 如果设置了图像但没有路径，则重置路径
+                if (value != null && string.IsNullOrEmpty(mBackgroundImagePath))
+                {
+                    mBackgroundImagePath = "";
+                }
+                Invalidate();
+            }
+        }
+
+        [JsonProperty]
+        [Description("文字是否自动换行")]
+        public bool TextWrap
+        {
+            get { return mTextWrap; }
+            set
+            { 
+                mTextWrap = value;
+                Invalidate();
+            }
+        }
+
+        [JsonProperty]
+        [Description("文字对齐方式")]
+        public ContentAlignment TextAlignment
+        {
+            get { return mTextAlignment; }
+            set
+            { 
+                mTextAlignment = value;
                 Invalidate();
             }
         }
@@ -210,6 +407,41 @@ namespace RUINORERP.UI.WorkFlowDesigner.Nodes
                 mFormName = info.GetString("FormName");
                 mClassPath = info.GetString("ClassPath");
                 mNodeColor = (Color)info.GetValue("NodeColor", typeof(Color));
+                
+                // 加载颜色属性
+                try { _fontColor = (Color)info.GetValue("FontColor", typeof(Color)); } catch { }
+                
+                try { _borderColor = (Color)info.GetValue("BorderColor", typeof(Color)); } catch { }
+                
+                // 加载新的视觉属性
+                try { mCustomText = info.GetString("CustomText"); } catch { }
+                
+                try { mShowCustomText = info.GetBoolean("ShowCustomText"); } catch { }
+                
+                try { mFontSize = info.GetSingle("FontSize"); } catch { }
+                
+                try { mFontStyle = (FontStyle)info.GetInt32("FontStyle"); } catch { }
+                
+                try { mOpacity = info.GetSingle("Opacity"); } catch { }
+                
+                try { mBackgroundImagePath = info.GetString("BackgroundImagePath"); } catch { }
+                
+                try { mTextWrap = info.GetBoolean("TextWrap"); } catch { }
+                
+                try { mTextAlignment = (ContentAlignment)info.GetInt32("TextAlignment"); } catch { }
+                
+                // 尝试加载背景图像
+                if (!string.IsNullOrEmpty(mBackgroundImagePath) && File.Exists(mBackgroundImagePath))
+                {
+                    try
+                    {
+                        mBackgroundImage = Image.FromFile(mBackgroundImagePath);
+                    }
+                    catch { }
+                }
+                
+                // 更新字体设置
+                UpdateFont();
             }
             Initialize();
         }
@@ -233,9 +465,30 @@ namespace RUINORERP.UI.WorkFlowDesigner.Nodes
             // 添加连接器
             AddConnectors();
 
+            // 初始化NodeStepPropertyValue属性，避免双击节点或连接线时出现空引用错误
+            NodeStepPropertyValue = this;
+
             // 为事件添加处理程序
             OnMouseDown += ProcessNavigationNode_OnMouseDown;
             OnMouseUp += ProcessNavigationNode_OnMouseUp;
+        }
+
+        /// <summary>
+        /// 更新字体设置
+        /// </summary>
+        private void UpdateFont()
+        {
+            try
+            {
+                string fontFamilyName = mTextFont?.FontFamily.Name ?? "Microsoft YaHei";
+                mTextFont = new Font(fontFamilyName, mFontSize, mFontStyle);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("更新字体失败: " + ex.Message);
+                // 回退到默认字体
+                mTextFont = new Font("Microsoft YaHei", 10, FontStyle.Regular);
+            }
         }
 
         private void AddConnectors()
@@ -274,6 +527,18 @@ namespace RUINORERP.UI.WorkFlowDesigner.Nodes
             info.AddValue("FormName", mFormName);
             info.AddValue("ClassPath", mClassPath);
             info.AddValue("NodeColor", mNodeColor);
+            info.AddValue("FontColor", _fontColor);
+            info.AddValue("BorderColor", _borderColor);
+            
+            // 添加新的视觉属性
+            info.AddValue("CustomText", mCustomText);
+            info.AddValue("ShowCustomText", mShowCustomText);
+            info.AddValue("FontSize", mFontSize);
+            info.AddValue("FontStyle", (int)mFontStyle);
+            info.AddValue("Opacity", mOpacity);
+            info.AddValue("BackgroundImagePath", mBackgroundImagePath);
+            info.AddValue("TextWrap", mTextWrap);
+            info.AddValue("TextAlignment", (int)mTextAlignment);
         }
 
         #endregion
@@ -284,59 +549,163 @@ namespace RUINORERP.UI.WorkFlowDesigner.Nodes
         {
             if (g == null) return;
 
-            // 抗锯齿
+            // 设置高质量渲染
             g.SmoothingMode = SmoothingMode.AntiAlias;
-            g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
+            g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAliasGridFit;
 
-            // 绘制阴影
-            RectangleF shadowRect = Rectangle;
-            shadowRect.Offset(3, 3);
-            using (SolidBrush shadowBrush = new SolidBrush(Color.FromArgb(50, Color.Black)))
+            // 创建带有透明度的Graphics容器
+            GraphicsContainer container = g.BeginContainer();
+            
+            try
             {
-                g.FillRectangle(shadowBrush, shadowRect);
-            }
-
-            // 绘制圆角矩形背景
-            using (GraphicsPath path = CreateRoundedRectanglePath(Rectangle, 10))
-            {
-                using (SolidBrush brush = new SolidBrush(mNodeColor))
+                // 绘制阴影
+                RectangleF shadowRect = Rectangle;
+                shadowRect.Offset(3, 3);
+                using (SolidBrush shadowBrush = new SolidBrush(Color.FromArgb(50, Color.Black)))
                 {
-                    g.FillPath(brush, path);
+                    g.FillRectangle(shadowBrush, shadowRect);
                 }
 
-                using (Pen pen = new Pen(Color.FromArgb(255, 255, 255), 2))
+                // 绘制圆角矩形背景或背景图像
+                using (GraphicsPath path = CreateRoundedRectanglePath(Rectangle, 10))
                 {
-                    g.DrawPath(pen, path);
-                }
-            }
+                    // 先绘制背景图像（如果有）
+                    if (!string.IsNullOrEmpty(mBackgroundImagePath) && File.Exists(mBackgroundImagePath))
+                    {
+                        try
+                        {
+                            using (Image backgroundImage = Image.FromFile(mBackgroundImagePath))
+                            {
+                                // 创建透明度调整的图像
+                                using (Image transparentImage = new Bitmap(backgroundImage.Width, backgroundImage.Height))
+                                using (Graphics imageG = Graphics.FromImage(transparentImage))
+                                {
+                                    ColorMatrix colorMatrix = new ColorMatrix();
+                                    colorMatrix.Matrix33 = mOpacity; // 设置透明度
+                                    ImageAttributes imageAttributes = new ImageAttributes();
+                                    imageAttributes.SetColorMatrix(colorMatrix, ColorMatrixFlag.Default, ColorAdjustType.Bitmap);
+                                    
+                                    imageG.DrawImage(backgroundImage, 
+                                        new Rectangle(0, 0, transparentImage.Width, transparentImage.Height),
+                                        0, 0, backgroundImage.Width, backgroundImage.Height,
+                                        GraphicsUnit.Pixel, imageAttributes);
+                                    
+                                    // 拉伸绘制到节点区域
+                                    g.DrawImage(transparentImage, Rectangle);
+                                }
+                            }
+                        }
+                        catch
+                        {
+                            // 图像加载失败时，使用默认背景
+                            using (SolidBrush brush = new SolidBrush(Color.FromArgb((int)(mOpacity * 255), mNodeColor)))
+                            {
+                                g.FillPath(brush, path);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // 使用节点颜色作为背景
+                        using (SolidBrush brush = new SolidBrush(Color.FromArgb((int)(mOpacity * 255), mNodeColor)))
+                        {
+                            g.FillPath(brush, path);
+                        }
+                    }
 
-            // 绘制文本
-            if (!string.IsNullOrEmpty(mProcessName))
-            {
+                    // 绘制边框
+                    using (Pen pen = new Pen(_borderColor, 2))
+                    {
+                        g.DrawPath(pen, path);
+                    }
+                }
+
+                // 绘制文本
                 RectangleF textRect = Rectangle;
                 textRect.Inflate(-10, -10);
-
-                using (SolidBrush textBrush = new SolidBrush(Color.White))
+                
+                // 确定要显示的文本
+                string displayText = mShowCustomText && !string.IsNullOrEmpty(mCustomText) ? mCustomText : mProcessName;
+                
+                // 设置文本格式
+                StringFormat stringFormat = new StringFormat();
+                
+                // 根据TextAlignment设置对齐方式
+                switch (mTextAlignment)
                 {
-                    g.DrawString(mProcessName, mTextFont, textBrush, textRect,
-                        new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center });
+                    case ContentAlignment.TopLeft:
+                        stringFormat.Alignment = StringAlignment.Near;
+                        stringFormat.LineAlignment = StringAlignment.Near;
+                        break;
+                    case ContentAlignment.TopCenter:
+                        stringFormat.Alignment = StringAlignment.Center;
+                        stringFormat.LineAlignment = StringAlignment.Near;
+                        break;
+                    case ContentAlignment.TopRight:
+                        stringFormat.Alignment = StringAlignment.Far;
+                        stringFormat.LineAlignment = StringAlignment.Near;
+                        break;
+                    case ContentAlignment.MiddleLeft:
+                        stringFormat.Alignment = StringAlignment.Near;
+                        stringFormat.LineAlignment = StringAlignment.Center;
+                        break;
+                    case ContentAlignment.MiddleCenter:
+                        stringFormat.Alignment = StringAlignment.Center;
+                        stringFormat.LineAlignment = StringAlignment.Center;
+                        break;
+                    case ContentAlignment.MiddleRight:
+                        stringFormat.Alignment = StringAlignment.Far;
+                        stringFormat.LineAlignment = StringAlignment.Center;
+                        break;
+                    case ContentAlignment.BottomLeft:
+                        stringFormat.Alignment = StringAlignment.Near;
+                        stringFormat.LineAlignment = StringAlignment.Far;
+                        break;
+                    case ContentAlignment.BottomCenter:
+                        stringFormat.Alignment = StringAlignment.Center;
+                        stringFormat.LineAlignment = StringAlignment.Far;
+                        break;
+                    case ContentAlignment.BottomRight:
+                        stringFormat.Alignment = StringAlignment.Far;
+                        stringFormat.LineAlignment = StringAlignment.Far;
+                        break;
+                    default:
+                        stringFormat.Alignment = StringAlignment.Center;
+                        stringFormat.LineAlignment = StringAlignment.Center;
+                        break;
+                }
+                
+                // 设置换行
+                if (mTextWrap)
+                {
+                    stringFormat.FormatFlags = StringFormatFlags.LineLimit;
+                }
+
+                // 绘制主文本
+                using (SolidBrush textBrush = new SolidBrush(_fontColor))
+                {
+                    g.DrawString(displayText, mTextFont, textBrush, textRect, stringFormat);
+                }
+
+                // 如果不使用自定义文本且有描述，绘制描述
+                if (!mShowCustomText && !string.IsNullOrEmpty(mDescription))
+                {
+                    RectangleF descRect = Rectangle;
+                    descRect.Y += Rectangle.Height / 2;
+                    descRect.Height = Rectangle.Height / 2;
+                    descRect.Inflate(-10, -5);
+
+                    using (Font descFont = new Font("Microsoft YaHei", 8))
+                    using (SolidBrush descBrush = new SolidBrush(Color.FromArgb(200, _fontColor)))
+                    {
+                        g.DrawString(mDescription, descFont, descBrush, descRect,
+                            new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center });
+                    }
                 }
             }
-
-            // 绘制描述文本（如果有）
-            if (!string.IsNullOrEmpty(mDescription))
+            finally
             {
-                RectangleF descRect = Rectangle;
-                descRect.Y += Rectangle.Height / 2;
-                descRect.Height = Rectangle.Height / 2;
-                descRect.Inflate(-10, -5);
-
-                using (Font descFont = new Font("Microsoft YaHei", 8))
-                using (SolidBrush descBrush = new SolidBrush(Color.FromArgb(200, 255, 255, 255)))
-                {
-                    g.DrawString(mDescription, descFont, descBrush, descRect,
-                        new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center });
-                }
+                g.EndContainer(container);
             }
 
             // 绘制连接器
@@ -381,8 +750,9 @@ namespace RUINORERP.UI.WorkFlowDesigner.Nodes
         {
             if (e.Button == MouseButtons.Left && e.Clicks == 2)
             {
-                // 双击时打开关联的业务单据
-                OpenRelatedForm();
+                // 设计模式：显示属性对话框
+                // 在设计模式下，双击节点应该显示属性对话框
+                ShowPropertiesDialog();
             }
         }
 

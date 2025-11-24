@@ -3565,6 +3565,7 @@
     <Compile Include="WorkFlowDesigner\UI\ApprovalUserListEditorForm.Designer.cs">
       <DependentUpon>ApprovalUserListEditorForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="WorkFlowDesigner\UI\ConnectionLineStyle.cs" />
     <Compile Include="WorkFlowDesigner\UI\WorkflowConnection.cs" />
     <Compile Include="WorkFlowDesigner\UI\WorkflowConnectionPainter.cs" />
     <Compile Include="WorkFlowDesigner\WFEnum.cs" />

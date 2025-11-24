@@ -405,10 +405,52 @@ namespace RUINORERP.UI.WorkFlowDesigner
         /// </summary>
         private void GraphControl_OnShapeClick(object sender, Shape shape)
         {
+            // 在设计模式下，确保被点击的节点移到顶层以解决覆盖问题
+            if (CurrentMode == ProcessNavigationMode.设计模式)
+            {
+                // 将当前节点设置为最高Z-order
+                BringShapeToFront(shape);
+            }
+            
+            // 在预览模式下执行相应操作
             if (CurrentMode == ProcessNavigationMode.预览模式 && shape is ProcessNavigationNode node)
             {
-                // 在预览模式下，点击节点执行相应操作
                 ExecuteNodeAction(node);
+            }
+        }
+        
+        /// <summary>
+        /// 将图形移到最顶层
+        /// </summary>
+        /// <param name="shape">要移动的图形</param>
+        private void BringShapeToFront(Shape shape)
+        {
+            if (shape == null || _graphControl == null || _graphControl.Shapes == null)
+                return;
+            
+            try
+            {
+                // 找到当前最大的Z-order
+                int maxZOrder = 0;
+                foreach (Shape s in _graphControl.Shapes)
+                {
+                    if (s.ZOrder > maxZOrder)
+                        maxZOrder = s.ZOrder;
+                }
+                
+                // 将选中的图形设置为新的最高Z-order
+                shape.ZOrder = maxZOrder + 1;
+                
+                // 选中该图形
+                shape.IsSelected = true;
+                
+                // 刷新图形控件
+                _graphControl.Refresh();
+            }
+            catch (Exception ex)
+            {
+                // 记录错误但不中断操作
+                System.Diagnostics.Debug.WriteLine($"BringShapeToFront 错误: {ex.Message}");
             }
         }
 
@@ -611,8 +653,11 @@ namespace RUINORERP.UI.WorkFlowDesigner
         {
             try
             {
-                switch ((ProcessNavigationNodeBusinessType)node.BusinessType)
+                // 安全转换业务类型
+                if (Enum.IsDefined(typeof(ProcessNavigationNodeBusinessType), node.BusinessType))
                 {
+                    switch ((ProcessNavigationNodeBusinessType)node.BusinessType)
+                    {
                     case ProcessNavigationNodeBusinessType.菜单节点:
                         if (!string.IsNullOrEmpty(node.MenuID))
                         {
@@ -636,11 +681,16 @@ namespace RUINORERP.UI.WorkFlowDesigner
                         //    OpenChildNavigation(node.ChildNavigationID.Value);
                         //}
                         break;
-
                     default:
                         MessageBox.Show($"节点类型 {node.BusinessType} 暂不支持操作", "提示",
                             MessageBoxButtons.OK, MessageBoxIcon.Information);
                         break;
+                    }
+                }
+                else
+                {
+                    MessageBox.Show($"未知的节点类型值: {node.BusinessType}", "提示",
+                        MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
             }
             catch (Exception ex)

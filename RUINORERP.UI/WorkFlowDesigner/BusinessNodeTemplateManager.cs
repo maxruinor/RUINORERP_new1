@@ -340,7 +340,7 @@ namespace RUINORERP.UI.WorkFlowDesigner
             var node = new ProcessNavigationNode
             {
                 Text = template.Name,
-                BusinessType = (int)template.BusinessType,
+                BusinessType = (ProcessNavigationNodeBusinessType)template.BusinessType,
                 NodeType = (WFNodeType)template.NodeType,
                 NodeColor = template.DefaultColor,
                 Rectangle = new RectangleF(position.X, position.Y, 140, 80),

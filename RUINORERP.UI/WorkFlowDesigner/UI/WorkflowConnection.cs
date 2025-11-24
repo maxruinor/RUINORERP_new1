@@ -34,6 +34,87 @@ namespace RUINORERP.UI.WorkFlowDesigner.UI
             set { _DataType = value; }
         }
 
+        #region 连接线增强属性
+
+        private ConnectionLineStyle _lineStyleType = ConnectionLineStyle.Straight;
+        /// <summary>
+        /// 连接线样式类型
+        /// </summary>
+        [JsonProperty("LineStyleType", NullValueHandling = NullValueHandling.Ignore)]
+        public ConnectionLineStyle LineStyleType
+        {
+            get { return _lineStyleType; }
+            set { _lineStyleType = value; }
+        }
+
+        private float _curvature = 0.5f;
+        /// <summary>
+        /// 连接线弯曲度（用于曲线样式）
+        /// </summary>
+        [JsonProperty("Curvature", NullValueHandling = NullValueHandling.Ignore)]
+        public float Curvature
+        {
+            get { return _curvature; }
+            set { _curvature = value; }
+        }
+
+        private float _cornerRadius = 10f;
+        /// <summary>
+        /// 连接线圆角半径（用于圆角样式）
+        /// </summary>
+        [JsonProperty("CornerRadius", NullValueHandling = NullValueHandling.Ignore)]
+        public float CornerRadius
+        {
+            get { return _cornerRadius; }
+            set { _cornerRadius = value; }
+        }
+
+        private bool _useGradient = false;
+        private Color _gradientColor = Color.Gray;
+        /// <summary>
+        /// 是否使用渐变颜色
+        /// </summary>
+        [JsonProperty("UseGradient", NullValueHandling = NullValueHandling.Ignore)]
+        public bool UseGradient
+        {
+            get { return _useGradient; }
+            set { _useGradient = value; }
+        }
+
+        /// <summary>
+        /// 渐变颜色
+        /// </summary>
+        [JsonProperty("GradientColor", NullValueHandling = NullValueHandling.Ignore)]
+        public Color GradientColor
+        {
+            get { return _gradientColor; }
+            set { _gradientColor = value; }
+        }
+
+        private bool _animated = false;
+        private int _animationSpeed = 100;
+        /// <summary>
+        /// 是否启用动画效果
+        /// </summary>
+        [JsonProperty("Animated", NullValueHandling = NullValueHandling.Ignore)]
+        public bool Animated
+        {
+            get { return _animated; }
+            set { _animated = value; }
+        }
+
+        /// <summary>
+        /// 动画速度
+        /// </summary>
+        [JsonProperty("AnimationSpeed", NullValueHandling = NullValueHandling.Ignore)]
+        public int AnimationSpeed
+        {
+            get { return _animationSpeed; }
+            set { _animationSpeed = value; }
+        }
+
+        #endregion
+
         #region Fields
 
         private bool mBoxedLabel;
@@ -99,7 +180,7 @@ namespace RUINORERP.UI.WorkFlowDesigner.UI
         #endregion
 
         #region Properties
- 
+
         /// <summary>
         /// Gets the connection painter
         /// </summary>
@@ -449,7 +530,7 @@ namespace RUINORERP.UI.WorkFlowDesigner.UI
 
             mLinePath = info.GetString("mLinePath");
 
-             
+
 
             mInsertionPoints = (ArrayList)info.GetValue("mInsertionPoints", typeof(ArrayList));
 
@@ -464,6 +545,23 @@ namespace RUINORERP.UI.WorkFlowDesigner.UI
                 this.mZOrder = 0;
             }
 
+            #region 连接线增强属性反序列化
+            try
+            {
+                this.LineStyleType = (ConnectionLineStyle)info.GetValue("LineStyleType", typeof(ConnectionLineStyle));
+                this.Curvature = info.GetSingle("Curvature");
+                this.CornerRadius = info.GetSingle("CornerRadius");
+                this.UseGradient = info.GetBoolean("UseGradient");
+                this.GradientColor = (Color)info.GetValue("GradientColor", typeof(Color));
+                this.Animated = info.GetBoolean("Animated");
+                this.AnimationSpeed = info.GetInt32("AnimationSpeed");
+            }
+            catch
+            {
+                // 如果没有这些属性则使用默认值
+            }
+            #endregion
+
         }
         /// <summary>
         /// Additional actions after deserialization
@@ -475,8 +573,8 @@ namespace RUINORERP.UI.WorkFlowDesigner.UI
              *This is different than the other connections because the this connection depends on additional objects for its shape and drawing:
              * handles and tangent to manipulate the curvature. 
              */
-            
-                LinePath = mLinePath;//weird, but that's how to combine the ISerializable mechanism with custom conections
+
+            LinePath = mLinePath;//weird, but that's how to combine the ISerializable mechanism with custom conections
 
             if (Tag != null && typeof(string).IsInstanceOfType(Tag))
             {
@@ -603,7 +701,7 @@ namespace RUINORERP.UI.WorkFlowDesigner.UI
 
             return points;
         }
-  
+
 
         /// <summary>
         /// Paints the label
@@ -659,7 +757,7 @@ namespace RUINORERP.UI.WorkFlowDesigner.UI
                 Trace.WriteLine("Non-CLS exception caught.", "Connection.PantLabel");
             }
         }
-   
+
         /// <summary>
         /// Draws a line between the To and From connectors
         /// </summary>
@@ -711,7 +809,7 @@ namespace RUINORERP.UI.WorkFlowDesigner.UI
                             mPainter.Points = this.GetConnectionPoints(); //update points to reflect the user actions/motions
                             break;
                         }
-                    
+
                     case "Rectangular":
                         {
                             mPainter.Points = GetConnectionPoints(); //update points to reflect the user actions/motions						
@@ -809,13 +907,13 @@ namespace RUINORERP.UI.WorkFlowDesigner.UI
             #endregion
         }
 
-   
 
-  
+
+
 
         #endregion
 
- 
+
 
         #region PropertyGrid related
         /// <summary>
@@ -832,7 +930,17 @@ namespace RUINORERP.UI.WorkFlowDesigner.UI
             //the z-order
             Bag.Properties.Add(new PropertySpec("Z-order", typeof(int), "Layout", "The z-order of the shape", 0));
 
-            Bag.Properties.Add(new PropertySpec("DataType", typeof(string)));//�ҵ��޸�
+            Bag.Properties.Add(new PropertySpec("DataType", typeof(string)));//我的修改
+
+            #region 连接线增强属性
+            Bag.Properties.Add(new PropertySpec("LineStyleType", typeof(ConnectionLineStyle), "Appearance", "连接线样式类型"));
+            Bag.Properties.Add(new PropertySpec("Curvature", typeof(float), "Appearance", "连接线弯曲度（用于曲线样式）", 0.5f));
+            Bag.Properties.Add(new PropertySpec("CornerRadius", typeof(float), "Appearance", "连接线圆角半径（用于圆角样式）", 10f));
+            Bag.Properties.Add(new PropertySpec("UseGradient", typeof(bool), "Appearance", "是否使用渐变颜色", false));
+            Bag.Properties.Add(new PropertySpec("GradientColor", typeof(Color), "Appearance", "渐变颜色"));
+            Bag.Properties.Add(new PropertySpec("Animated", typeof(bool), "Appearance", "是否启用动画效果", false));
+            Bag.Properties.Add(new PropertySpec("AnimationSpeed", typeof(int), "Appearance", "动画速度", 100));
+            #endregion
 
 
             #region Variable linepath collection
@@ -889,6 +997,27 @@ namespace RUINORERP.UI.WorkFlowDesigner.UI
                 case "DataType":
                     e.Value = this.DataType;
                     break;
+                case "LineStyleType":
+                    e.Value = this.LineStyleType;
+                    break;
+                case "Curvature":
+                    e.Value = this.Curvature;
+                    break;
+                case "CornerRadius":
+                    e.Value = this.CornerRadius;
+                    break;
+                case "UseGradient":
+                    e.Value = this.UseGradient;
+                    break;
+                case "GradientColor":
+                    e.Value = this.GradientColor;
+                    break;
+                case "Animated":
+                    e.Value = this.Animated;
+                    break;
+                case "AnimationSpeed":
+                    e.Value = this.AnimationSpeed;
+                    break;
             }
         }
 
@@ -921,6 +1050,27 @@ namespace RUINORERP.UI.WorkFlowDesigner.UI
                     break;
                 case "DataType":
                     this.DataType = (string)e.Value;
+                    break;
+                case "LineStyleType":
+                    this.LineStyleType = (ConnectionLineStyle)e.Value;
+                    break;
+                case "Curvature":
+                    this.Curvature = (float)e.Value;
+                    break;
+                case "CornerRadius":
+                    this.CornerRadius = (float)e.Value;
+                    break;
+                case "UseGradient":
+                    this.UseGradient = (bool)e.Value;
+                    break;
+                case "GradientColor":
+                    this.GradientColor = (Color)e.Value;
+                    break;
+                case "Animated":
+                    this.Animated = (bool)e.Value;
+                    break;
+                case "AnimationSpeed":
+                    this.AnimationSpeed = (int)e.Value;
                     break;
             }
         }
@@ -962,9 +1112,19 @@ namespace RUINORERP.UI.WorkFlowDesigner.UI
                 info.AddValue("mPainter", this.mPainter, typeof(BezierPainter));
             }
 
- 
+            #region 连接线增强属性序列化
+            info.AddValue("LineStyleType", this.LineStyleType, typeof(ConnectionLineStyle));
+            info.AddValue("Curvature", this.Curvature);
+            info.AddValue("CornerRadius", this.CornerRadius);
+            info.AddValue("UseGradient", this.UseGradient);
+            info.AddValue("GradientColor", this.GradientColor, typeof(Color));
+            info.AddValue("Animated", this.Animated);
+            info.AddValue("AnimationSpeed", this.AnimationSpeed);
+            #endregion
 
-      
+
+
+
         }
 
         #endregion

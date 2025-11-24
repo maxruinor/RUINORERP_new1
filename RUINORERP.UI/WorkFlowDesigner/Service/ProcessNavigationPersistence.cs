@@ -118,9 +118,15 @@ namespace RUINORERP.UI.WorkFlowDesigner.Service
                     Connections = new List<ConnectionData>()
                 };
 
-                // 序列化节点
+                // 序列化节点 - 包含所有必要属性
                 foreach (var shape in graphControl.Shapes.OfType<ProcessNavigationNode>())
                 {
+                    // 确保NodeId唯一
+                    if (string.IsNullOrEmpty(shape.NodeId))
+                    {
+                        shape.NodeId = Guid.NewGuid().ToString();
+                    }
+                    
                     var nodeData = new NodeData
                     {
                         ID = shape.NodeId,
@@ -133,8 +139,22 @@ namespace RUINORERP.UI.WorkFlowDesigner.Service
                         Width = shape.Rectangle.Width,
                         Height = shape.Rectangle.Height,
                         FillColor = shape.NodeColor.ToArgb(),
-                        BorderColor = Color.Black.ToArgb(), // ProcessNavigationNode 没有 BorderColor 属性
-                        FontColor = Color.White.ToArgb()   // ProcessNavigationNode 没有 FontColor 属性
+                        // 业务属性
+                        BusinessType = (int)shape.BusinessType,
+                        FormName = shape.FormName,
+                        ClassPath = shape.ClassPath,
+                        ModuleID = shape.ModuleID.HasValue ? shape.ModuleID.Value : 0,
+                        // 视觉属性
+                        CustomText = shape.CustomText,
+                        ShowCustomText = shape.ShowCustomText,
+                        FontSize = shape.FontSize,
+                        FontStyle = shape.TextStyle.ToString(),
+                        FontColor = shape.FontColor.ToArgb(),
+                        TextAlignment = (int)shape.TextAlignment,
+                        TextWrap = shape.TextWrap,
+                        BackgroundImagePath = shape.BackgroundImagePath,
+                        Opacity = shape.Opacity,
+                        BorderColor = shape.BorderColor.ToArgb()
                     };
                     graphData.Nodes.Add(nodeData);
                 }
@@ -142,12 +162,13 @@ namespace RUINORERP.UI.WorkFlowDesigner.Service
                 // 序列化连接
                 foreach (var connection in graphControl.Connections)
                 {
-                    // TODO: 确认 Connection 对象的实际属性名称
-                    // 暂时使用反射尝试获取属性
-                    var sourceNode = GetConnectionProperty<ProcessNavigationNode>(connection, "StartShape") ?? 
-                                   GetConnectionProperty<ProcessNavigationNode>(connection, "Source");
-                    var targetNode = GetConnectionProperty<ProcessNavigationNode>(connection, "EndShape") ?? 
-                                   GetConnectionProperty<ProcessNavigationNode>(connection, "Target");
+                    // 使用反射获取连接的源和目标节点
+                    var sourceNode = GetConnectionProperty<ProcessNavigationNode>(connection, "StartShape");
+                    if (sourceNode == null) sourceNode = GetConnectionProperty<ProcessNavigationNode>(connection, "Source");
+                    if (sourceNode == null) sourceNode = GetConnectionProperty<ProcessNavigationNode>(connection, "FromNode");
+                    var targetNode = GetConnectionProperty<ProcessNavigationNode>(connection, "EndShape");
+                    if (targetNode == null) targetNode = GetConnectionProperty<ProcessNavigationNode>(connection, "Target");
+                    if (targetNode == null) targetNode = GetConnectionProperty<ProcessNavigationNode>(connection, "ToNode");
                     
                     if (sourceNode != null && targetNode != null)
                     {
@@ -161,6 +182,8 @@ namespace RUINORERP.UI.WorkFlowDesigner.Service
                     }
                 }
 
+                // 添加额外信息以便于调试
+                _logger?.LogInformation($"成功序列化图形数据: {graphData.Nodes.Count}个节点, {graphData.Connections.Count}个连接");
                 return JsonConvert.SerializeObject(graphData, Formatting.Indented);
             }
             catch (Exception ex)
@@ -181,7 +204,22 @@ namespace RUINORERP.UI.WorkFlowDesigner.Service
             {
                 if (string.IsNullOrWhiteSpace(jsonString))
                 {
-                   // graphControl.Clear();
+                    // 清空图形控件
+                    if (graphControl.Shapes != null)
+                    {
+                        graphControl.Shapes.Clear();
+                    }
+                    if (graphControl.Connections != null)
+                    {
+                        // 清空连接 - 使用不同方式尝试
+                        var connectionsCount = graphControl.Connections.Count;
+                        while (connectionsCount > 0)
+                        {
+                            try { graphControl.Connections.RemoveAt(0); }
+                            catch { break; }
+                            connectionsCount--;
+                        }
+                    }
                     return;
                 }
 
@@ -196,6 +234,19 @@ namespace RUINORERP.UI.WorkFlowDesigner.Service
                 {
                     graphControl.Shapes.Clear();
                 }
+                // 清空连接
+                if (graphControl.Connections != null)
+                {
+                    var connectionsCount = graphControl.Connections.Count;
+                    while (connectionsCount > 0)
+                    {
+                        try { graphControl.Connections.RemoveAt(0); }
+                        catch { break; }
+                        connectionsCount--;
+                    }
+                }
+
+                _logger?.LogInformation($"开始反序列化: {graphData.Nodes.Count}个节点, {graphData.Connections.Count}个连接");
 
                 // 创建节点字典用于快速查找
                 var nodeDict = new Dictionary<string, ProcessNavigationNode>();
@@ -207,34 +258,113 @@ namespace RUINORERP.UI.WorkFlowDesigner.Service
                     {
                         NodeId = nodeData.ID,
                         ProcessName = nodeData.NodeName,
-                        MenuID = nodeData.MenuID.ToString(),
+                        MenuID = nodeData.MenuID > 0 ? nodeData.MenuID.ToString() : string.Empty,
                         Description = nodeData.Description,
-                        NodeColor = Color.FromArgb(nodeData.FillColor)
-                        // ProcessNavigationNode 有 NodeType 属性（继承自 BaseNode）
-                        // 但没有 BorderColor、FontColor 属性
+                        NodeColor = Color.FromArgb(nodeData.FillColor),
+                        // 业务属性
+                        BusinessType = Enum.IsDefined(typeof(ProcessNavigationNodeBusinessType), nodeData.BusinessType) ? 
+                            (ProcessNavigationNodeBusinessType)nodeData.BusinessType : ProcessNavigationNodeBusinessType.通用节点,
+                        FormName = nodeData.FormName,
+                        ClassPath = nodeData.ClassPath,
+                        ModuleID = nodeData.ModuleID > 0 ? (long?)nodeData.ModuleID : null,
+                        // 视觉属性
+                        CustomText = nodeData.CustomText,
+                        ShowCustomText = nodeData.ShowCustomText,
+                        FontSize = nodeData.FontSize,
+                        FontColor = Color.FromArgb(nodeData.FontColor),
+                        TextAlignment = (ContentAlignment)nodeData.TextAlignment,
+                        TextWrap = nodeData.TextWrap,
+                        BackgroundImagePath = nodeData.BackgroundImagePath,
+                        Opacity = nodeData.Opacity > 0.1f ? (nodeData.Opacity < 1.0f ? nodeData.Opacity : 1.0f) : 0.1f,
+                        BorderColor = Color.FromArgb(nodeData.BorderColor)
                     };
+                    
+                    // 还原字体样式
+                    if (!string.IsNullOrEmpty(nodeData.FontStyle))
+                    {
+                        if (Enum.TryParse<FontStyle>(nodeData.FontStyle, out var fontStyle))
+                        {
+                            node.TextStyle = fontStyle;
+                        }
+                    }
+                    
+                    // 设置节点位置和大小
                     node.Rectangle = new RectangleF(nodeData.X, nodeData.Y, nodeData.Width, nodeData.Height);
-                    graphControl.AddShape(node);
-                    nodeDict[node.NodeId] = node;
+                    
+                    // 添加到图形控件
+                    try
+                    {
+                        graphControl.AddShape(node);
+                        nodeDict[node.NodeId] = node;
+                        _logger?.LogDebug($"成功添加节点: {node.NodeId}, {node.ProcessName}");
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger?.LogError(ex, "添加节点失败: {nodeId}", nodeData.ID);
+                    }
                 }
 
                 // 再创建所有连接
+                int successfulConnections = 0;
                 foreach (var connectionData in graphData.Connections)
                 {
-                    if (nodeDict.TryGetValue(connectionData.SourceNodeID, out var sourceNode) &&
-                        nodeDict.TryGetValue(connectionData.TargetNodeID, out var targetNode))
+                    ProcessNavigationNode sourceNode = null;
+                    ProcessNavigationNode targetNode = null;
+                    nodeDict.TryGetValue(connectionData.SourceNodeID, out sourceNode);
+                    nodeDict.TryGetValue(connectionData.TargetNodeID, out targetNode);
+                    if (sourceNode != null && targetNode != null)
                     {
-                        // TODO: GraphControl API 需要确认实际的连接创建方法
-                        _logger?.LogWarning("GraphControl.CreateConnection 方法未找到，暂时跳过连接创建");
-                        
-                        // 原代码暂时注释
-                        // var connection = graphControl.CreateConnection(sourceNode, targetNode);
-                        // if (connection != null)
-                        // {
-                        //     graphControl.AddConnection(connection);
-                        // }
+                        // 创建连接
+                        try
+                        {
+                            // 获取源节点和目标节点的连接器
+                            var sourceConnector = GetValidConnector(sourceNode);
+                            var targetConnector = GetValidConnector(targetNode);
+                            
+                            if (sourceConnector != null && targetConnector != null)
+                            {
+                                // 尝试通过不同方式创建连接
+                                var connection = CreateConnection(graphControl, sourceConnector, targetConnector);
+                                if (connection != null)
+                                {
+                                    try
+                                    {
+                                        graphControl.Connections.Add((Netron.GraphLib.Connection)connection);
+                                        successfulConnections++;
+                                        _logger?.LogDebug($"成功创建连接: {connectionData.SourceNodeID} -> {connectionData.TargetNodeID}");
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        _logger?.LogWarning(ex, "添加连接到集合失败");
+                                    }
+                                }
+                                else
+                                {
+                                    _logger?.LogWarning("创建连接对象失败: {source} -> {target}", 
+                                        connectionData.SourceNodeID, connectionData.TargetNodeID);
+                                }
+                            }
+                            else
+                            {
+                                _logger?.LogWarning("找不到有效连接器: SourceConnector={sourceConn}, TargetConnector={targetConn}", 
+                                    sourceConnector != null, targetConnector != null);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger?.LogError(ex, "创建连接失败: {source} -> {target}", 
+                                connectionData.SourceNodeID, connectionData.TargetNodeID);
+                        }
+                    }
+                    else
+                    {
+                        _logger?.LogWarning("找不到节点: Source={sourceExists}, Target={targetExists}",
+                            nodeDict.ContainsKey(connectionData.SourceNodeID), 
+                            nodeDict.ContainsKey(connectionData.TargetNodeID));
                     }
                 }
+                
+                _logger?.LogInformation($"反序列化完成: 成功创建 {successfulConnections}/{graphData.Connections.Count} 个连接");
             }
             catch (JsonException jsonEx)
             {
@@ -328,6 +458,9 @@ namespace RUINORERP.UI.WorkFlowDesigner.Service
                         graphControl.Shapes.Clear();
                     }
                 }
+                
+                // 从数据库加载节点，补充视觉属性
+                await LoadNodesFromDatabaseAsync(navigationId, graphControl);
 
                 return navigation;
             }
@@ -335,6 +468,86 @@ namespace RUINORERP.UI.WorkFlowDesigner.Service
             {
                 _logger?.LogError(ex, "加载流程导航图失败(ID:{navigationId})");
                 throw new Exception("加载流程导航图失败，请联系管理员", ex);
+            }
+        }
+        
+        /// <summary>
+        /// 从数据库加载节点并补充视觉属性
+        /// </summary>
+        /// <param name="navigationId">流程导航图ID</param>
+        /// <param name="graphControl">图形控件实例</param>
+        private async Task LoadNodesFromDatabaseAsync(long navigationId, GraphControl graphControl)
+        {
+            try
+            {
+                // 从数据库加载节点数据
+                var dbNodes = await _navigationNodeController.GetNavigationNodesAsync(navigationId);
+                if (dbNodes == null || !dbNodes.Any())
+                    return;
+                
+                // 创建节点代码到图形节点的映射
+                var graphNodesDict = graphControl.Shapes.OfType<ProcessNavigationNode>()
+                    .Where(n => !string.IsNullOrEmpty(n.NodeId))
+                    .ToDictionary(n => n.NodeId);
+                
+                foreach (var dbNode in dbNodes)
+                {
+                    // 如果在图形控件中找到匹配的节点
+                    if (graphNodesDict.TryGetValue(dbNode.NodeCode, out var graphNode))
+                    {
+                        // 确保位置和大小正确
+                        // 简化代码，根据说明这些属性不会为空
+                        graphNode.Rectangle = new RectangleF(
+                            dbNode.PositionX, 
+                            dbNode.PositionY, 
+                            dbNode.Width, 
+                            dbNode.Height);
+                        
+                        // 补充节点颜色
+                        if (!string.IsNullOrEmpty(dbNode.NodeColor) && int.TryParse(dbNode.NodeColor, out var colorArgb))
+                        {
+                            graphNode.NodeColor = Color.FromArgb(colorArgb);
+                        }
+                        
+                        // 如果数据库表有ExtendedProperties字段，可以从JSON中还原视觉属性
+                        // 这里假设dbNode有ExtendedProperties属性
+                        // if (!string.IsNullOrEmpty(dbNode.ExtendedProperties))
+                        // {
+                        //     try
+                        //     {
+                        //         var visualProperties = JsonConvert.DeserializeObject<Dictionary<string, object>>(dbNode.ExtendedProperties);
+                        //         if (visualProperties != null)
+                        //         {
+                        //             graphNode.CustomText = visualProperties.ContainsKey("CustomText") ? visualProperties["CustomText"]?.ToString() : string.Empty;
+                        //             graphNode.ShowCustomText = visualProperties.ContainsKey("ShowCustomText") && bool.TryParse(visualProperties["ShowCustomText"]?.ToString(), out var showText) && showText;
+                        //             graphNode.FontSize = visualProperties.ContainsKey("FontSize") && float.TryParse(visualProperties["FontSize"]?.ToString(), out var fontSize) ? fontSize : 12f;
+                        //              
+                        //             if (visualProperties.ContainsKey("FontStyle"))
+                        //             {
+                        //                 if (Enum.TryParse<FontStyle>(visualProperties["FontStyle"]?.ToString(), out var fontStyle))
+                        //                     graphNode.TextStyle = fontStyle;
+                        //             }
+                        //              
+                        //             graphNode.FontColor = visualProperties.ContainsKey("FontColor") && int.TryParse(visualProperties["FontColor"]?.ToString(), out var fontColorArgb) ? Color.FromArgb(fontColorArgb) : Color.Black;
+                        //             graphNode.TextAlignment = visualProperties.ContainsKey("TextAlignment") && int.TryParse(visualProperties["TextAlignment"]?.ToString(), out var align) ? (ContentAlignment)align : ContentAlignment.MiddleCenter;
+                        //             graphNode.TextWrap = visualProperties.ContainsKey("TextWrap") && bool.TryParse(visualProperties["TextWrap"]?.ToString(), out var wrap) && wrap;
+                        //             graphNode.BackgroundImagePath = visualProperties.ContainsKey("BackgroundImagePath") ? visualProperties["BackgroundImagePath"]?.ToString() : null;
+                        //             graphNode.Opacity = visualProperties.ContainsKey("Opacity") && float.TryParse(visualProperties["Opacity"]?.ToString(), out var opacity) ? opacity : 1f;
+                        //             graphNode.BorderColor = visualProperties.ContainsKey("BorderColor") && int.TryParse(visualProperties["BorderColor"]?.ToString(), out var borderColorArgb) ? Color.FromArgb(borderColorArgb) : Color.Black;
+                        //         }
+                        //     }
+                        //     catch (Exception ex)
+                        //     {
+                        //         _logger?.LogWarning(ex, "解析节点视觉属性失败: {nodeCode}", dbNode.NodeCode);
+                        //     }
+                        // }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // 记录错误但不阻止主流程
+                _logger?.LogWarning(ex, "从数据库加载节点补充视觉属性失败");
             }
         }
 
@@ -389,6 +602,25 @@ namespace RUINORERP.UI.WorkFlowDesigner.Service
                     node.Width = shape.Rectangle.Width;
                     node.Height = shape.Rectangle.Height;
                     node.NodeColor = shape.NodeColor.ToArgb().ToString();
+                    
+                    // 添加视觉属性的JSON序列化存储
+                    var visualProperties = new Dictionary<string, object>
+                    {
+                        { "CustomText", shape.CustomText },
+                        { "ShowCustomText", shape.ShowCustomText },
+                        { "FontSize", shape.FontSize },
+                        { "FontStyle", shape.TextStyle.ToString() },
+                        { "FontColor", shape.FontColor.ToArgb() },
+                        { "TextAlignment", (int)shape.TextAlignment },
+                        { "TextWrap", shape.TextWrap },
+                        { "BackgroundImagePath", shape.BackgroundImagePath },
+                        { "Opacity", shape.Opacity },
+                        { "BorderColor", shape.BorderColor.ToArgb() }
+                    };
+                    
+                    // 如果数据库表支持额外字段，可以存储视觉属性JSON
+                    // 这里假设表中有ExtendedProperties字段
+                    // node.ExtendedProperties = JsonConvert.SerializeObject(visualProperties);
                     // tb_ProcessNavigationNode 没有 FillColor、BorderColor、FontColor 属性
                     // 只有 NodeColor 属性
                     
@@ -575,6 +807,121 @@ namespace RUINORERP.UI.WorkFlowDesigner.Service
             }
             return default(T);
         }
+        
+        /// <summary>
+        /// 获取节点的有效连接器
+        /// </summary>
+        private Connector GetValidConnector(ProcessNavigationNode node)
+        {
+            if (node == null || node.Connectors == null || node.Connectors.Count == 0)
+            {
+                _logger?.LogWarning("节点没有连接器: {nodeId}", node?.NodeId);
+                return null;
+            }
+                
+            // 尝试多种方式查找连接器
+            // 1. 优先使用底部连接器
+            Connector connector = null;
+            foreach (Connector c in node.Connectors)
+            {
+                if (c.Name == "Bottom")
+                {
+                    connector = c;
+                    break;
+                }
+            }
+            
+            // 2. 尝试使用名称中包含"Out"或"Exit"的连接器
+            if (connector == null)
+            {
+                foreach (Connector c in node.Connectors)
+                {
+                    if ((c.Name.IndexOf("Out", StringComparison.OrdinalIgnoreCase) >= 0) ||
+                        (c.Name.IndexOf("Exit", StringComparison.OrdinalIgnoreCase) >= 0))
+                    {
+                        connector = c;
+                        break;
+                    }
+                }
+            }
+            
+            // 3. 使用任何可用的连接器
+            if (connector == null && node.Connectors.Count > 0)
+            {
+                connector = node.Connectors[0];
+            }
+            
+            // 如果找到连接器，确保它已正确初始化
+            if (connector != null)
+            {
+                // 确保连接器的位置正确
+                // if (connector.AttachedTo != null && connector.AttachedTo != node)
+                // {
+                //     _logger?.LogWarning("连接器已附加到其他节点，重新附加");
+                //     connector.AttachedTo = node;
+                // }
+                
+                _logger?.LogDebug("找到有效连接器: {connectorName}", connector.Name);
+            }
+            else
+            {
+                _logger?.LogWarning("无法为节点找到连接器: {nodeId}", node.NodeId);
+            }
+            
+            return connector;
+        }
+        
+        /// <summary>
+        /// 创建连接的通用方法
+        /// </summary>
+        private object CreateConnection(GraphControl graphControl, Connector sourceConnector, Connector targetConnector)
+        {
+            try
+            {
+                // 尝试使用不同的方法创建连接
+                object connection = null;
+                
+                // 方法1：尝试使用CreateConnection方法（如果存在）
+                var createConnMethod = graphControl.GetType().GetMethod("CreateConnection", 
+                    new Type[] { typeof(Connector), typeof(Connector) });
+                if (createConnMethod != null)
+                {
+                    connection = createConnMethod.Invoke(graphControl, new object[] { sourceConnector, targetConnector });
+                }
+                
+                // 方法2：如果方法1失败，尝试使用直接实例化
+                if (connection == null)
+                {
+                    // 获取Connection类型
+                    var connectionType = AppDomain.CurrentDomain.GetAssemblies()
+                        .SelectMany(a => a.GetTypes())
+                        .FirstOrDefault(t => t.Name == "Connection" && t.IsClass);
+                    
+                    if (connectionType != null)
+                    {
+                        connection = Activator.CreateInstance(connectionType);
+                        
+                        // 设置源和目标连接器
+                        var sourceProp = connectionType.GetProperty("Source") ?? 
+                                        connectionType.GetProperty("StartShape");
+                        var targetProp = connectionType.GetProperty("Target") ?? 
+                                        connectionType.GetProperty("EndShape");
+                        
+                        if (sourceProp != null)
+                            sourceProp.SetValue(connection, sourceConnector);
+                        if (targetProp != null)
+                            targetProp.SetValue(connection, targetConnector);
+                    }
+                }
+                
+                return connection;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogWarning(ex, "创建连接失败");
+                return null;
+            }
+        }
 
         #endregion
 
@@ -605,8 +952,22 @@ namespace RUINORERP.UI.WorkFlowDesigner.Service
             public float Width { get; set; }
             public float Height { get; set; }
             public int FillColor { get; set; }
-            public int BorderColor { get; set; }
+            // 业务属性
+            public int BusinessType { get; set; }
+            public string FormName { get; set; }
+            public string ClassPath { get; set; }
+            public long ModuleID { get; set; }
+            // 视觉属性
+            public string CustomText { get; set; }
+            public bool ShowCustomText { get; set; }
+            public float FontSize { get; set; }
+            public string FontStyle { get; set; }
             public int FontColor { get; set; }
+            public int TextAlignment { get; set; }
+            public bool TextWrap { get; set; }
+            public string BackgroundImagePath { get; set; }
+            public float Opacity { get; set; }
+            public int BorderColor { get; set; }
         }
 
         /// <summary>

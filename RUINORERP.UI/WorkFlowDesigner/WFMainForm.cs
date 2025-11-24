@@ -54,12 +54,14 @@ namespace RUINORERP.UI.WorkFlowDesigner
         /// </summary>
         public WFMainForm()
         {
+            //the root of the whole application connecting the different parts;
+            mediator = new Mediator(this);
+            
             //this gets the state of the docking as it was the last run
             deserializeDockContent = new DeserializeDockContent(GetContentFromPersistString);
             //part of the default Visual Studio setup
             InitializeComponent();
-            //the root of the whole application connecting the different parts;
-            mediator = new Mediator(this);
+            
             mediator.DockPanel = dockPanel;
 
             #region Docking extender
@@ -1641,18 +1643,27 @@ namespace RUINORERP.UI.WorkFlowDesigner
 
         private void WFMainForm_Load(object sender, EventArgs e)
         {
-            this.WFMenuStrip.Items.Add(this.mnuSaveDiagram);
-            //默认的开设计器
-            mediator.OpenGraphTab();
-            mediator.GraphControl.OnToJsonAction += GraphControl_OnToJsonAction;
-            mediator.GraphControl.OnTestWorkflowAction += GraphControl_OnTestWorkflow;
-            mediator.GraphControl.OnSetCondition += GraphControl_OnSetCondition;
-            mediator.GraphControl.OnSetNextStepByLine += GraphControl_OnSetNextStep;
-            mediator.GraphControl.OnDeleteConnectionLine += GraphControl_OnDeleteConnectionLine;
-            mediator.GraphControl.OnShapeRemoved += GraphControl_OnShapeRemoved;
-            mediator.GraphControl.OnShapeAdded += GraphControl_OnShapeAdded;
-            mediator.GraphControl.OnSetNodeProperties += GraphControl_OnSetNodeProperties;
-            mediator.OpenFlowNodesTab();
+            //确保mediator不为空
+            if (mediator != null)
+            {
+                //默认的开设计器
+                mediator.OpenGraphTab();
+                
+                //确保GraphControl不为空再绑定事件
+                if (mediator.GraphControl != null)
+                {
+                    mediator.GraphControl.OnToJsonAction += GraphControl_OnToJsonAction;
+                    mediator.GraphControl.OnTestWorkflowAction += GraphControl_OnTestWorkflow;
+                    mediator.GraphControl.OnSetCondition += GraphControl_OnSetCondition;
+                    mediator.GraphControl.OnSetNextStepByLine += GraphControl_OnSetNextStep;
+                    mediator.GraphControl.OnDeleteConnectionLine += GraphControl_OnDeleteConnectionLine;
+                    mediator.GraphControl.OnShapeRemoved += GraphControl_OnShapeRemoved;
+                    mediator.GraphControl.OnShapeAdded += GraphControl_OnShapeAdded;
+                    mediator.GraphControl.OnSetNodeProperties += GraphControl_OnSetNodeProperties;
+                }
+                
+                mediator.OpenFlowNodesTab();
+            }
         }
 
         private void GraphControl_OnShapeAdded(object sender, Shape shape)

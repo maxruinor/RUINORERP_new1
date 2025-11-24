@@ -885,18 +885,11 @@ namespace RUINORERP.UI.WorkFlowDesigner
             // 
             this.TabImages.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("TabImages.ImageStream")));
             this.TabImages.TransparentColor = System.Drawing.Color.Transparent;
-            this.TabImages.Images.SetKeyName(0, "");
-            this.TabImages.Images.SetKeyName(1, "");
-            this.TabImages.Images.SetKeyName(2, "");
-            this.TabImages.Images.SetKeyName(3, "");
             // 
             // ButtonImages
             // 
             this.ButtonImages.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("ButtonImages.ImageStream")));
             this.ButtonImages.TransparentColor = System.Drawing.Color.Transparent;
-            this.ButtonImages.Images.SetKeyName(0, "");
-            this.ButtonImages.Images.SetKeyName(1, "");
-            this.ButtonImages.Images.SetKeyName(2, "");
             // 
             // dockPanel
             // 
@@ -943,7 +936,8 @@ namespace RUINORERP.UI.WorkFlowDesigner
             this.mnuExamples,
             this.mnuZoom,
             this.mnuEditorMenu,
-            this.mnuWindows});
+            this.mnuWindows,
+            this.mnuProcessNavigation});
             this.WFMenuStrip.Location = new System.Drawing.Point(0, 0);
             this.WFMenuStrip.Name = "WFMenuStrip";
             this.WFMenuStrip.Size = new System.Drawing.Size(928, 24);
@@ -959,6 +953,12 @@ namespace RUINORERP.UI.WorkFlowDesigner
             // 
             // mnuProcessNavigation
             // 
+            this.mnuNewProcessNavigation = new System.Windows.Forms.ToolStripMenuItem();
+            this.mnuOpenProcessNavigation = new System.Windows.Forms.ToolStripMenuItem();
+            this.mnuSaveProcessNavigation = new System.Windows.Forms.ToolStripMenuItem();
+            this.mnuProcessNavigationMode = new System.Windows.Forms.ToolStripMenuItem();
+            this.mnuDesignMode = new System.Windows.Forms.ToolStripMenuItem();
+            this.mnuPreviewMode = new System.Windows.Forms.ToolStripMenuItem();
             this.mnuProcessNavigation.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.mnuNewProcessNavigation,
             this.mnuOpenProcessNavigation,

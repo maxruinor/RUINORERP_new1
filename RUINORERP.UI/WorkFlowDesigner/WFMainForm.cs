@@ -1711,6 +1711,35 @@ namespace RUINORERP.UI.WorkFlowDesigner
         {
             this.mediator.TestWorkFlowByJson(sender, e);
         }
+
+        #region 流程导航图相关事件处理
+
+        private void mnuNewProcessNavigation_Click(object sender, EventArgs e)
+        {
+            this.mediator.NewProcessNavigation();
+        }
+
+        private void mnuOpenProcessNavigation_Click(object sender, EventArgs e)
+        {
+            this.mediator.OpenProcessNavigation();
+        }
+
+        private void mnuSaveProcessNavigation_Click(object sender, EventArgs e)
+        {
+            this.mediator.SaveProcessNavigation();
+        }
+
+        private void mnuDesignMode_Click(object sender, EventArgs e)
+        {
+            this.mediator.SwitchProcessNavigationMode(ProcessNavigationMode.设计模式);
+        }
+
+        private void mnuPreviewMode_Click(object sender, EventArgs e)
+        {
+            this.mediator.SwitchProcessNavigationMode(ProcessNavigationMode.预览模式);
+        }
+
+        #endregion
     }
 }
 

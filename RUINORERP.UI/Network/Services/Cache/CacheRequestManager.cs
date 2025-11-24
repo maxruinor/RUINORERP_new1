@@ -84,6 +84,48 @@ namespace RUINORERP.UI.Network.Services.Cache
             }
         }
 
+
+        /// <summary>
+        /// 用户登陆成功时向服务器请求所有缓存数据的元数据信息，就是一个总表，保存了各个表的最后更新时间戳，数据行数等信息
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public async Task RequestAllCacheSyncMetadataAsync(CancellationToken cancellationToken = default)
+        {
+
+            // 检查取消令牌
+            cancellationToken.ThrowIfCancellationRequested();
+
+
+            // 创建Get操作的请求并执行，优化为单步处理
+            var cacheRequest = new CacheRequest
+            {
+                Operation = CacheOperation.Get
+            };
+
+            try
+            {
+                var cacheMetadata = await _communicationService.SendCommandWithResponseAsync<CacheResponse>(CacheCommands.CacheSync, cacheRequest, cancellationToken);
+            }
+            catch (OperationCanceledException oex)
+            {
+                _log.LogDebug("缓存请求被取消，ex={0}, 操作类型={1}", oex.Message, cacheRequest.Operation);
+                throw;
+            }
+            catch (Exception ex)
+            {
+                _log.LogError(ex, "请求缓存失败，ex={0}, 操作类型={1}", ex.Message, cacheRequest.Operation);
+            }
+
+            //按理要得到 cacheMetadata 中有元数据，然后更新本地缓存元数据，但目前业务层没有提供相关接口，先留空
+            // 利用业务层缓存管理器更新缓存（如果响应成功）
+            //if (response?.IsSuccess == true && response.CacheData != null)
+            //{
+            //    _cacheManager.(tableName, response.CacheData.GetData());
+            //}
+        }
+
+
         /// <summary>
         /// 向服务器发送缓存管理请求
         /// </summary>
@@ -101,7 +143,7 @@ namespace RUINORERP.UI.Network.Services.Cache
             {
                 TableName = tableName,
                 Operation = CacheOperation.Manage,
-                SubscribeAction= operationType,
+                SubscribeAction = operationType,
                 Parameters = new Dictionary<string, object>(parameters ?? new Dictionary<string, object>())
                 {
                     { "OperationType", operationType }

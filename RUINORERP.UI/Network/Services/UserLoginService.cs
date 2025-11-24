@@ -135,6 +135,9 @@ namespace RUINORERP.UI.Network.Services
                         // 发送登录命令并获取响应
                         response = await _communicationService.SendCommandWithResponseAsync<LoginResponse>(
                             AuthenticationCommands.Login, loginRequest, ct, 1000);
+
+
+                        await _cacheClientService.RequestAllCacheSyncMetadataAsync();
                         break; // 成功则跳出重试循环
                     }
                     catch (Exception ex) when (IsRetryableException(ex) && retryCount < maxRetries)

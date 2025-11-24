@@ -141,6 +141,7 @@ namespace RUINORERP.UI.WorkFlowDesigner
             this.toolStripContainer1 = new System.Windows.Forms.ToolStripContainer();
             this.WFMenuStrip = new System.Windows.Forms.MenuStrip();
             this.测试工作流ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.mnuProcessNavigation = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripContainer1.ContentPanel.SuspendLayout();
             this.toolStripContainer1.TopToolStripPanel.SuspendLayout();
             this.toolStripContainer1.SuspendLayout();
@@ -262,7 +263,8 @@ namespace RUINORERP.UI.WorkFlowDesigner
             this.mnuCreateImageShape,
             this.mnuCreateSVG,
             this.mnuSave2HTML,
-            this.测试工作流ToolStripMenuItem});
+            this.测试工作流ToolStripMenuItem,
+            this.mnuProcessNavigation});
             this.mnuDiagram.Name = "mnuDiagram";
             this.mnuDiagram.Size = new System.Drawing.Size(45, 20);
             this.mnuDiagram.Text = "图表";
@@ -955,6 +957,61 @@ namespace RUINORERP.UI.WorkFlowDesigner
             this.测试工作流ToolStripMenuItem.Text = "测试工作流";
             this.测试工作流ToolStripMenuItem.Click += new System.EventHandler(this.测试工作流ToolStripMenuItem_Click);
             // 
+            // mnuProcessNavigation
+            // 
+            this.mnuProcessNavigation.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.mnuNewProcessNavigation,
+            this.mnuOpenProcessNavigation,
+            this.mnuSaveProcessNavigation,
+            this.mnuProcessNavigationMode});
+            this.mnuProcessNavigation.Name = "mnuProcessNavigation";
+            this.mnuProcessNavigation.Size = new System.Drawing.Size(180, 22);
+            this.mnuProcessNavigation.Text = "流程导航图";
+            // 
+            // mnuNewProcessNavigation
+            // 
+            this.mnuNewProcessNavigation.Name = "mnuNewProcessNavigation";
+            this.mnuNewProcessNavigation.Size = new System.Drawing.Size(180, 22);
+            this.mnuNewProcessNavigation.Text = "新建流程导航图";
+            this.mnuNewProcessNavigation.Click += new System.EventHandler(this.mnuNewProcessNavigation_Click);
+            // 
+            // mnuOpenProcessNavigation
+            // 
+            this.mnuOpenProcessNavigation.Name = "mnuOpenProcessNavigation";
+            this.mnuOpenProcessNavigation.Size = new System.Drawing.Size(180, 22);
+            this.mnuOpenProcessNavigation.Text = "打开流程导航图";
+            this.mnuOpenProcessNavigation.Click += new System.EventHandler(this.mnuOpenProcessNavigation_Click);
+            // 
+            // mnuSaveProcessNavigation
+            // 
+            this.mnuSaveProcessNavigation.Name = "mnuSaveProcessNavigation";
+            this.mnuSaveProcessNavigation.Size = new System.Drawing.Size(180, 22);
+            this.mnuSaveProcessNavigation.Text = "保存流程导航图";
+            this.mnuSaveProcessNavigation.Click += new System.EventHandler(this.mnuSaveProcessNavigation_Click);
+            // 
+            // mnuProcessNavigationMode
+            // 
+            this.mnuProcessNavigationMode.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.mnuDesignMode,
+            this.mnuPreviewMode});
+            this.mnuProcessNavigationMode.Name = "mnuProcessNavigationMode";
+            this.mnuProcessNavigationMode.Size = new System.Drawing.Size(180, 22);
+            this.mnuProcessNavigationMode.Text = "模式切换";
+            // 
+            // mnuDesignMode
+            // 
+            this.mnuDesignMode.Name = "mnuDesignMode";
+            this.mnuDesignMode.Size = new System.Drawing.Size(150, 22);
+            this.mnuDesignMode.Text = "设计模式";
+            this.mnuDesignMode.Click += new System.EventHandler(this.mnuDesignMode_Click);
+            // 
+            // mnuPreviewMode
+            // 
+            this.mnuPreviewMode.Name = "mnuPreviewMode";
+            this.mnuPreviewMode.Size = new System.Drawing.Size(150, 22);
+            this.mnuPreviewMode.Text = "预览模式";
+            this.mnuPreviewMode.Click += new System.EventHandler(this.mnuPreviewMode_Click);
+            // 
             // WFMainForm
             // 
             this.Controls.Add(this.toolStripContainer1);
@@ -1099,6 +1156,13 @@ namespace RUINORERP.UI.WorkFlowDesigner
         private ToolStripMenuItem jsonTo编辑器ToolStripMenuItem;
         private ToolStripMenuItem 测试工作流ToolStripMenuItem;
         private Netron.Neon.DockPanel dockPanel;
+        private ToolStripMenuItem mnuProcessNavigation;
+        private ToolStripMenuItem mnuNewProcessNavigation;
+        private ToolStripMenuItem mnuOpenProcessNavigation;
+        private ToolStripMenuItem mnuSaveProcessNavigation;
+        private ToolStripMenuItem mnuProcessNavigationMode;
+        private ToolStripMenuItem mnuDesignMode;
+        private ToolStripMenuItem mnuPreviewMode;
 
         #endregion
     }

@@ -13,7 +13,6 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 using DbType = SqlSugar.DbType;
 using RUINORERP.Model;
 using System.Threading;
@@ -26,7 +25,6 @@ using RUINORERP.UI.UserCenter;
 using RUINORERP.Business;
 using RUINORERP.Business.Config;
 using RUINORERP.UI.IM;
-
 
 using System.Net;
 
@@ -49,10 +47,8 @@ using RUINORERP.Business.Security;
 using RUINORERP.Common.Extensions;
 using Castle.Core.Smtp;
 using System.IO;
-using RUINORERP.UI.IM;
 using Org.BouncyCastle.Crypto.Agreement.JPake;
 using System.Text.RegularExpressions;
-using RUINORERP.UI.IM;
 using System.Runtime.InteropServices;
 using RUINORERP.UI.ToolForm;
 using Krypton.Toolkit.Suite.Extended.TreeGridView;
@@ -89,7 +85,6 @@ using SourceGrid;
 using log4net;
 
 using RUINORERP.UI.Monitoring.Auditing;
-using System.Text.RegularExpressions;
 using Match = System.Text.RegularExpressions.Match;
 using LiveChartsCore.Geo;
 using Netron.GraphLib;
@@ -108,7 +103,7 @@ using RUINORERP.PacketSpec.Serialization;
 using RUINORERP.UI.Network.Services;
 using System.ComponentModel;
 using Padding = System.Windows.Forms.Padding;
-using RUINORERP.UI.Testing;
+using System.Windows.Forms;
 
 
 namespace RUINORERP.UI
@@ -633,9 +628,18 @@ namespace RUINORERP.UI
         {
             bool rs = false;
             var validatorMonitor = Startup.GetFromFac<SystemGlobalConfig>();
-            // 如果配置了自动更新或强制更新参数为true，则执行更新检查
-            if (validatorMonitor.客户端自动更新 || forceUpdate)
+            
+            // 如果未配置自动更新且非强制更新，则不执行更新检查
+            if (!validatorMonitor.客户端自动更新 && !forceUpdate)
             {
+                if (ShowMessageBox)
+                {
+                    MessageBox.Show("系统自动更新功能已关闭，请在系统全局设置中开启此功能。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                return false;
+            }
+            
+            // 配置为开启自动更新或强制更新的情况，继续执行更新检查
                 try
                 {
                     AutoUpdate.FrmUpdate Update = new AutoUpdate.FrmUpdate();
@@ -705,7 +709,7 @@ namespace RUINORERP.UI
                 {
                     return rs;
                 }
-            }
+            
             return rs;
         }
 
@@ -3452,7 +3456,7 @@ namespace RUINORERP.UI
             try
             {
                 // 创建服务缓存测试窗体实例
-                FrmServiceCacheTest cacheTestForm = new FrmServiceCacheTest();
+                RUINORERP.UI.Testing.FrmServiceCacheTest cacheTestForm = new RUINORERP.UI.Testing.FrmServiceCacheTest();
 
                 // 设置窗体标题
                 cacheTestForm.Text = "服务实例缓存性能测试工具";

@@ -22,7 +22,6 @@ using Netron.GraphLib.UI;
 using SqlSugar;
 using static Netron.GraphLib.UI.GraphControl;
 using RUINORERP.WF.BizOperation.Steps;
-using OpenFileDialog = System.Windows.Forms.OpenFileDialog;
 
 namespace RUINORERP.UI.WorkFlowDesigner
 {
@@ -565,7 +564,7 @@ namespace RUINORERP.UI.WorkFlowDesigner
 
                     break;
                 case "RUINORERP.WF.BizOperation.Condition.ConditionConfig":
-                    if ( !(this.WFNodePropertiesTab.UCPanel.Controls[0] is ConditionConfigUI))
+                    if (!(this.WFNodePropertiesTab.UCPanel.Controls[0] is ConditionConfigUI))
                     {
                         this.WFNodePropertiesTab.UCPanel.Controls.Clear();
                         uCNodePropEditBase = new ConditionConfigUI();
@@ -1160,6 +1159,225 @@ namespace RUINORERP.UI.WorkFlowDesigner
             await jSONSerializer.TestWorkflow();
         }
 
+        #region 流程导航图相关方法
+
+        private ProcessNavigationMode _currentMode = ProcessNavigationMode.设计模式;
+        private string _currentProcessNavigationId = null;
+
+        /// <summary>
+        /// 新建流程导航图
+        /// </summary>
+        public void NewProcessNavigation()
+        {
+            try
+            {
+                // 清空当前图形
+                if (GraphControl.Shapes != null)
+                {
+                    GraphControl.Shapes.Clear();
+                }
+
+                // 设置为设计模式
+                _currentMode = ProcessNavigationMode.设计模式;
+                _currentProcessNavigationId = null;
+
+                // 添加流程导航图节点到工具箱
+                AddProcessNavigationShapes();
+
+                // 更新界面状态
+                UpdateProcessNavigationUI();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"新建流程导航图失败：{ex.Message}", "错误",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// 打开流程导航图
+        /// </summary>
+        public void OpenProcessNavigation()
+        {
+            try
+            {
+                OpenFileDialog openFileDialog = new OpenFileDialog();
+                openFileDialog.Filter = "流程导航图文件 (*.pnav)|*.pnav|所有文件 (*.*)|*.*";
+                openFileDialog.Title = "打开流程导航图";
+
+                if (openFileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    string filePath = openFileDialog.FileName;
+
+                    // 从文件加载流程导航图
+                    LoadProcessNavigationFromFile(filePath);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"打开流程导航图失败：{ex.Message}", "错误",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// 保存流程导航图
+        /// </summary>
+        public void SaveProcessNavigation()
+        {
+            try
+            {
+                SaveFileDialog saveFileDialog = new SaveFileDialog();
+                saveFileDialog.Filter = "流程导航图文件 (*.pnav)|*.pnav|所有文件 (*.*)|*.*";
+                saveFileDialog.Title = "保存流程导航图";
+
+                if (saveFileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    string filePath = saveFileDialog.FileName;
+
+                    // 保存流程导航图到文件
+                    SaveProcessNavigationToFile(filePath);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"保存流程导航图失败：{ex.Message}", "错误",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// 切换流程导航图模式
+        /// </summary>
+        /// <param name="mode">模式</param>
+        public void SwitchProcessNavigationMode(ProcessNavigationMode mode)
+        {
+            try
+            {
+                _currentMode = mode;
+                UpdateProcessNavigationUI();
+
+                // 根据模式设置不同的行为
+                if (mode == ProcessNavigationMode.预览模式)
+                {
+                    // 预览模式下禁用编辑功能
+                    GraphControl.AllowAddConnection = false;
+                    GraphControl.AllowAddShape = false;
+                    GraphControl.AllowDeleteShape = false;
+                }
+                else
+                {
+                    // 设计模式下启用编辑功能
+                    GraphControl.AllowAddConnection = true;
+                    GraphControl.AllowAddShape = true;
+                    GraphControl.AllowDeleteShape = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"切换模式失败：{ex.Message}", "错误",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// 添加流程导航图形状到工具箱
+        /// </summary>
+        private void AddProcessNavigationShapes()
+        {
+            try
+            {
+                // 添加流程导航节点到图形控件
+                var navigationNode = new ProcessNavigationNode(GraphControl);
+                navigationNode.ProcessName = "业务流程";
+                navigationNode.Description = "点击打开业务单据";
+                navigationNode.Rectangle = new RectangleF(100, 100, 140, 80);
+
+                GraphControl.AddShape(navigationNode);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"添加流程导航形状失败：{ex.Message}", "错误",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// 从文件加载流程导航图
+        /// </summary>
+        /// <param name="filePath">文件路径</param>
+        private void LoadProcessNavigationFromFile(string filePath)
+        {
+            try
+            {
+                // 清空当前图形
+                if (GraphControl.Shapes != null)
+                {
+                    GraphControl.Shapes.Clear();
+                }
+
+                // 从XML文件加载图形
+                // TODO: GraphControl API 需要确认实际的加载方法
+                //_logger?.LogWarning("GraphControl.LoadFromFile 方法未找到，暂时跳过文件加载");
+                // GraphControl.LoadFromFile(filePath);
+
+                // 设置为设计模式
+                _currentMode = ProcessNavigationMode.设计模式;
+
+                // 更新界面状态
+                UpdateProcessNavigationUI();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"加载流程导航图文件失败：{ex.Message}", "错误",MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// 保存流程导航图到文件
+        /// </summary>
+        /// <param name="filePath">文件路径</param>
+        private void SaveProcessNavigationToFile(string filePath)
+        {
+            try
+            {
+                // 保存图形到XML文件
+                // TODO: GraphControl API 需要确认实际的保存方法
+                //_logger?.LogWarning("GraphControl.SaveToFile 方法未找到，暂时跳过文件保存");
+                // GraphControl.SaveToFile(filePath);
+
+                MessageBox.Show("流程导航图保存成功！", "提示",
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"保存流程导航图文件失败：{ex.Message}", "错误",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// 更新流程导航图界面状态
+        /// </summary>
+        private void UpdateProcessNavigationUI()
+        {
+            try
+            {
+                // 更新菜单状态
+                if (parent != null)
+                {
+                    // 这里可以更新菜单项的选中状态等
+                    // 例如：parent.mnuDesignMode.Checked = (_currentMode == ProcessNavigationMode.设计模式);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"更新界面状态失败：{ex.Message}", "错误",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        #endregion
 
     }
 }

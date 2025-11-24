@@ -3397,6 +3397,7 @@
     <Compile Include="UserPersonalized\UCQueryCondition.Designer.cs">
       <DependentUpon>UCQueryCondition.cs</DependentUpon>
     </Compile>
+    <Compile Include="WorkFlowDesigner\BusinessNodeTemplateManager.cs" />
     <Compile Include="WorkFlowDesigner\CodonBase.cs" />
     <Compile Include="WorkFlowDesigner\Dialogs\GaugeForm.cs">
       <SubType>Form</SubType>
@@ -3408,6 +3409,9 @@
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="WorkFlowDesigner\Dialogs\LayerDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="WorkFlowDesigner\Dialogs\ProcessNavigationNodePropertiesDialog.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="WorkFlowDesigner\Dialogs\SplashForm.cs">
@@ -3428,7 +3432,12 @@
     <Compile Include="WorkFlowDesigner\Entities\WorkflowDefinition.cs" />
     <Compile Include="WorkFlowDesigner\Entities\WorkflowStep.cs" />
     <Compile Include="WorkFlowDesigner\Enums\Enums.cs" />
+    <Compile Include="WorkFlowDesigner\MainFormIntegration.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="WorkFlowDesigner\MainFormIntegrationExtensions.cs" />
     <Compile Include="WorkFlowDesigner\Mediator.cs" />
+    <Compile Include="WorkFlowDesigner\MenuHelperExtensions.cs" />
     <Compile Include="WorkFlowDesigner\NCWFDesigner.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -3443,6 +3452,7 @@
     <Compile Include="WorkFlowDesigner\Nodes\DecisionShape.cs" />
     <Compile Include="WorkFlowDesigner\Nodes\End.cs" />
     <Compile Include="WorkFlowDesigner\Nodes\OrSignNode.cs" />
+    <Compile Include="WorkFlowDesigner\Nodes\ProcessNavigationNode.cs" />
     <Compile Include="WorkFlowDesigner\Nodes\Start.cs" />
     <Compile Include="WorkFlowDesigner\Nodes\ApprovalStep.cs" />
     <Compile Include="WorkFlowDesigner\Entities\User.cs" />
@@ -3451,6 +3461,15 @@
     <Compile Include="WorkFlowDesigner\Nodes\BaseNode.cs" />
     <Compile Include="WorkFlowDesigner\Nodes\SubmitStep.cs" />
     <Compile Include="WorkFlowDesigner\Nodes\WFStep.cs" />
+    <Compile Include="WorkFlowDesigner\ProcessNavigationDesigner.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="WorkFlowDesigner\ProcessNavigationExample.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="WorkFlowDesigner\ProcessNavigationManager.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
     <Compile Include="WorkFlowDesigner\SampleFactory.cs" />
     <Compile Include="WorkFlowDesigner\Samples\BackgroundSample.cs" />
     <Compile Include="WorkFlowDesigner\Samples\ClassInheritance.cs" />
@@ -3470,9 +3489,10 @@
     <Compile Include="WorkFlowDesigner\Samples\Snap.cs" />
     <Compile Include="WorkFlowDesigner\Samples\TreeAsCodeSample.cs" />
     <Compile Include="WorkFlowDesigner\Samples\ZOrderSample.cs" />
+    <Compile Include="WorkFlowDesigner\Service\ProcessNavigationHierarchyManager.cs" />
+    <Compile Include="WorkFlowDesigner\Service\ProcessNavigationPersistence.cs" />
     <Compile Include="WorkFlowDesigner\Service\WorkflowSerializer.cs" />
     <Compile Include="WorkFlowDesigner\Service\WorkflowDefinitionConverter.cs" />
-    <Compile Include="WorkFlowDesigner\Service\WorkflowDefinitionService.cs" />
     <Compile Include="WorkFlowDesigner\TabCodon.cs" />
     <Compile Include="WorkFlowDesigner\TabFactory.cs" />
     <Compile Include="WorkFlowDesigner\TabPages\BrowserTab.cs">

@@ -532,6 +532,42 @@ namespace RUINORERP.UI.Network.Services
             }
         }
 
+
+
+        /// <summary>
+        /// 用户登陆成功时向服务器请求所有缓存数据的元数据信息，就是一个总表，保存了各个表的最后更新时间戳，数据行数等信息
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public async Task RequestAllCacheSyncMetadataAsync(CancellationToken cancellationToken = default)
+        {
+            // 检查是否已释放
+            if (_disposed)
+            {
+                _log.LogWarning("{0}已释放，无法请求缓存数据", _componentName);
+                return;
+            }
+
+            try
+            {
+                // 检查取消令牌
+                cancellationToken.ThrowIfCancellationRequested();
+
+                // 请求缓存数据
+                await _cacheRequestManager.RequestAllCacheSyncMetadataAsync(cancellationToken);
+            }
+            catch (OperationCanceledException oex)
+            {
+                _log.LogDebug("缓存请求被用户取消，ex={0}", oex.Message);
+            }
+            catch (Exception ex)
+            {
+                _log.LogError(ex, "请求缓存数据失败，ex={0}", ex.Message);
+            }
+        }
+
+
+
         /// <summary>
         /// 同步缓存更新到服务器
         /// </summary>

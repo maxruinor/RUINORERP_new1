@@ -71,7 +71,6 @@ namespace RUINORERP.UI.WorkFlowDesigner
         Step,
         Connector,
         Shape,
-
     }
 
     public enum Samples

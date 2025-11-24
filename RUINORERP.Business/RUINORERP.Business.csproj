@@ -138,4 +138,8 @@
     <Folder Include="Services\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="Cache\缓存架构文档.md" />
+  </ItemGroup>
+
 </Project>

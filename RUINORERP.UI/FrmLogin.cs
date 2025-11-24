@@ -42,11 +42,11 @@ namespace RUINORERP.UI
         /// 保存原始服务器端口，用于变更检测
         /// </summary>
         private string _originalServerPort = string.Empty;
-
+        private readonly CacheClientService _cacheClientService; // 缓存客户端服务，用于订阅表
         public FrmLogin()
         {
             InitializeComponent();
-
+            _cacheClientService = Startup.GetFromFac<CacheClientService>();
         }
         private bool m_showing = true;
         private void fadeTimer_Tick(object sender, EventArgs e)
@@ -201,19 +201,19 @@ namespace RUINORERP.UI
                         }
 
                         bool ok = PTPrincipal.Login(this.txtUserName.Text, this.txtPassWord.Text, Program.AppContextData, ref isInitPwd);
-                        
+
                         // 停止计时并记录结果
                         stopwatch.Stop();
                         TimeSpan loginTimeSpan = stopwatch.Elapsed;
                         string loginTimeInfo = $"登录方法执行时间: {loginTimeSpan.TotalMilliseconds:N2} 毫秒";
-                        
+
                         // 记录登录时间信息到日志
                         if (MainForm.Instance != null && MainForm.Instance.logger != null)
                         {
                             MainForm.Instance.logger.LogInformation(loginTimeInfo);
                         }
                         Console.WriteLine(loginTimeInfo);
-                        
+
                         if (ok)
                         {
                             if (!Program.AppContextData.IsSuperUser || txtUserName.Text != "admin")
@@ -368,6 +368,8 @@ namespace RUINORERP.UI
                                     else
                                     {
                                         MainForm.Instance.AppContext.CurrentUser.在线状态 = true;
+                                        //登陆成功就请求元数据
+                                        await _cacheClientService.RequestAllCacheSyncMetadataAsync();
                                     }
 
                                     //如果为初始密码则提示弹窗！

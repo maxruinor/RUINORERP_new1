@@ -1,33 +1,32 @@
-using Netron.GraphLib;
-using Netron.GraphLib.Interfaces;
-using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
+using System.Collections;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.IO;
 using System.Runtime.Serialization;
+using System.Reflection;
+using System.Windows.Forms;
+using Netron.GraphLib.Attributes;
+using Netron.GraphLib.Interfaces;
+using Newtonsoft.Json;
+using System.Collections.Generic;
+using System.Linq;
+using Netron.GraphLib;
 using RUINORERP.WF;
 using RUINORERP.Model;
-using Netron.GraphLib.Attributes;
-using System.Windows.Forms;
-using RUINORERP.UI.WorkFlowDesigner.Dialogs;
-using RUINORERP.UI.Common;
-using System.Linq;
-using System.IO;
-using System.Drawing.Imaging;
 
 namespace RUINORERP.UI.WorkFlowDesigner.Nodes
 {
     /// <summary>
-    /// 流程导航图节点
-    /// 用于创建美观的业务流程示意图，支持点击打开对应业务单据窗体
+    /// 流程导航节点
     /// </summary>
     [Serializable]
-    [Description("流程导航节点")]
+    [Description("流程导航")]
     [JsonObject(MemberSerialization.OptIn)]
-    [NetronGraphShape("流程导航节点", "9ED1469D-90B2-43ab-B000-4FF5C682F503", "流程导航", "RUINORERP.UI.WorkFlowDesigner.Nodes.ProcessNavigationNode",
-         "用于业务流程导航的节点图形")]
+    [NetronGraphShape("流程导航", "8ED1469D-90B2-43ab-B000-4FF5C682F540", "工作流", "RUINORERP.UI.WorkFlowDesigner.Nodes.ProcessNavigationNode",
+         "流程导航的节点图形")]
     public class ProcessNavigationNode : BaseNode
     {
         #region Fields
@@ -50,6 +49,11 @@ namespace RUINORERP.UI.WorkFlowDesigner.Nodes
         private string mBackgroundImagePath = "";
         private bool mTextWrap = true;
         private ContentAlignment mTextAlignment = ContentAlignment.MiddleCenter;
+        
+        #region 特定属性
+        private string mProcessId = string.Empty;
+        private string mNavigationUrl = string.Empty;
+        #endregion
 
         #region the connectors
         private Connector TopNode;
@@ -375,6 +379,24 @@ namespace RUINORERP.UI.WorkFlowDesigner.Nodes
             }
         }
 
+        #region 流程导航特定属性
+        [JsonProperty]
+        [Description("流程ID"), Category("流程导航")]
+        public string ProcessId
+        {
+            get { return mProcessId; }
+            set { mProcessId = value; Invalidate(); }
+        }
+
+        [JsonProperty]
+        [Description("导航URL"), Category("流程导航")]
+        public string NavigationUrl
+        {
+            get { return mNavigationUrl; }
+            set { mNavigationUrl = value; Invalidate(); }
+        }
+        #endregion
+
         #endregion
 
         #region Constructor
@@ -403,6 +425,9 @@ namespace RUINORERP.UI.WorkFlowDesigner.Nodes
                 mNodeId = info.GetString("NodeId");
                 mProcessName = info.GetString("ProcessName");
                 mDescription = info.GetString("Description");
+                // 添加流程导航特定属性的反序列化
+                try { mProcessId = info.GetString("ProcessId"); } catch { }
+                try { mNavigationUrl = info.GetString("NavigationUrl"); } catch { }
                 mMenuID = info.GetString("MenuID");
                 mFormName = info.GetString("FormName");
                 mClassPath = info.GetString("ClassPath");
@@ -460,11 +485,35 @@ namespace RUINORERP.UI.WorkFlowDesigner.Nodes
             }
 
             // 设置节点大小
-            Rectangle = new RectangleF(0, 0, 140, 80);
+            Rectangle = new RectangleF(0, 0, 70, 40);
 
             // 添加连接器
-            AddConnectors();
+            TopNode = new Connector(this, "Top", true);
+            TopNode.ConnectorLocation = ConnectorLocation.North;
+            TopNode.AllowNewConnectionsFrom = true;
+            TopNode.AllowNewConnectionsTo = true;
+            Connectors.Add(TopNode);
 
+            BottomNode = new Connector(this, "Bottom", true);
+            BottomNode.ConnectorLocation = ConnectorLocation.South;
+            BottomNode.AllowNewConnectionsFrom = true;
+            BottomNode.AllowNewConnectionsTo = true;
+            Connectors.Add(BottomNode);
+
+            LeftNode = new Connector(this, "Left", true);
+            LeftNode.ConnectorLocation = ConnectorLocation.West;
+            LeftNode.AllowNewConnectionsFrom = true;
+            LeftNode.AllowNewConnectionsTo = true;
+            Connectors.Add(LeftNode);
+
+            RightNode = new Connector(this, "Right", true);
+            RightNode.ConnectorLocation = ConnectorLocation.East;
+            RightNode.AllowNewConnectionsFrom = true;
+            RightNode.AllowNewConnectionsTo = true;
+            Connectors.Add(RightNode);
+
+            IsResizable = true;
+            
             // 初始化NodeStepPropertyValue属性，避免双击节点或连接线时出现空引用错误
             NodeStepPropertyValue = this;
 
@@ -491,26 +540,47 @@ namespace RUINORERP.UI.WorkFlowDesigner.Nodes
             }
         }
 
-        private void AddConnectors()
+        // 连接器已在Initialize方法中直接添加，移除独立方法
+        
+        /// <summary>
+        /// 更新连接器位置
+        /// 确保连接器总是显示在节点的正确位置
+        /// </summary>
+        public override void Invalidate()
         {
-            // 创建连接器
-            TopNode = new Connector(this, "Top", true);
-            TopNode.ConnectorLocation = ConnectorLocation.North;
-
-            BottomNode = new Connector(this, "Bottom", true);
-            BottomNode.ConnectorLocation = ConnectorLocation.South;
-
-            LeftNode = new Connector(this, "Left", true);
-            LeftNode.ConnectorLocation = ConnectorLocation.West;
-
-            RightNode = new Connector(this, "Right", true);
-            RightNode.ConnectorLocation = ConnectorLocation.East;
-
-            // 添加连接器到集合
-            Connectors.Add(TopNode);
-            Connectors.Add(BottomNode);
-            Connectors.Add(LeftNode);
-            Connectors.Add(RightNode);
+            base.Invalidate();
+            UpdateConnectorsPosition();
+        }
+        
+        /// <summary>
+        /// 更新连接器的位置
+        /// </summary>
+        private void UpdateConnectorsPosition()
+        {
+            // Connector类没有Point属性，使用ConnectionPoint方法获取坐标
+            // 这里只更新节点自身的位置信息，连接器的实际位置由ConnectionPoint方法提供
+            // 不需要直接设置连接器的Point属性
+            Invalidate(); // 触发重绘，确保连接器位置正确显示
+        }
+        
+        /// <summary>
+        /// 确保在节点移动时更新连接器位置
+        /// </summary>
+        public void Move(float x, float y)
+        {
+            // 直接更新矩形位置而不是调用不存在的基类方法
+            Rectangle = new RectangleF(x, y, Rectangle.Width, Rectangle.Height);
+            UpdateConnectorsPosition();
+        }
+        
+        /// <summary>
+        /// 确保在调整节点大小时更新连接器位置
+        /// </summary>
+        public void Resize(float width, float height)
+        {
+            // 直接更新矩形大小而不是调用不存在的基类方法
+            Rectangle = new RectangleF(Rectangle.X, Rectangle.Y, width, height);
+            UpdateConnectorsPosition();
         }
 
         #endregion
@@ -539,6 +609,10 @@ namespace RUINORERP.UI.WorkFlowDesigner.Nodes
             info.AddValue("BackgroundImagePath", mBackgroundImagePath);
             info.AddValue("TextWrap", mTextWrap);
             info.AddValue("TextAlignment", (int)mTextAlignment);
+            
+            // 序列化流程导航特定属性
+            info.AddValue("ProcessId", mProcessId);
+            info.AddValue("NavigationUrl", mNavigationUrl);
         }
 
         #endregion
@@ -547,190 +621,115 @@ namespace RUINORERP.UI.WorkFlowDesigner.Nodes
 
         public override void Paint(Graphics g)
         {
-            if (g == null) return;
-
-            // 设置高质量渲染
-            g.SmoothingMode = SmoothingMode.AntiAlias;
-            g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAliasGridFit;
-
-            // 创建带有透明度的Graphics容器
-            GraphicsContainer container = g.BeginContainer();
-            
-            try
+            base.Paint(g);
+            if (RecalculateSize)
             {
-                // 绘制阴影
-                RectangleF shadowRect = Rectangle;
-                shadowRect.Offset(3, 3);
-                using (SolidBrush shadowBrush = new SolidBrush(Color.FromArgb(50, Color.Black)))
+                Rectangle = new RectangleF(new PointF(Rectangle.X, Rectangle.Y),
+                    g.MeasureString(this.Text, Font));
+                Rectangle = System.Drawing.RectangleF.Inflate(Rectangle, 10, 10);
+                RecalculateSize = false; //very important!
+            }
+            if (ShapeColor != Color.Transparent)
+            {
+                // Draw the node shape with rounded corners
+                using (GraphicsPath path = new GraphicsPath())
                 {
-                    g.FillRectangle(shadowBrush, shadowRect);
-                }
-
-                // 绘制圆角矩形背景或背景图像
-                using (GraphicsPath path = CreateRoundedRectanglePath(Rectangle, 10))
-                {
-                    // 先绘制背景图像（如果有）
-                    if (!string.IsNullOrEmpty(mBackgroundImagePath) && File.Exists(mBackgroundImagePath))
+                    path.AddLine(Rectangle.X, Rectangle.Y, Rectangle.Right - 10, Rectangle.Y);
+                    path.AddArc(Rectangle.X + Rectangle.Width - 20, Rectangle.Y, 20, 20, -90, 90);
+                    path.AddLine(Rectangle.Right, Rectangle.Y + 10, Rectangle.Right, Rectangle.Bottom);
+                    path.AddLine(Rectangle.Right, Rectangle.Bottom, Rectangle.Left + 10, Rectangle.Bottom);
+                    path.AddArc(Rectangle.X, Rectangle.Y + Rectangle.Height - 20, 20, 20, 90, 90);
+                    path.AddLine(Rectangle.X, Rectangle.Y + Rectangle.Height - 10, Rectangle.X, Rectangle.Y);
+                    
+                    //shadow
+                    using (Region darkRegion = new Region(path))
                     {
-                        try
-                        {
-                            using (Image backgroundImage = Image.FromFile(mBackgroundImagePath))
-                            {
-                                // 创建透明度调整的图像
-                                using (Image transparentImage = new Bitmap(backgroundImage.Width, backgroundImage.Height))
-                                using (Graphics imageG = Graphics.FromImage(transparentImage))
-                                {
-                                    ColorMatrix colorMatrix = new ColorMatrix();
-                                    colorMatrix.Matrix33 = mOpacity; // 设置透明度
-                                    ImageAttributes imageAttributes = new ImageAttributes();
-                                    imageAttributes.SetColorMatrix(colorMatrix, ColorMatrixFlag.Default, ColorAdjustType.Bitmap);
-                                    
-                                    imageG.DrawImage(backgroundImage, 
-                                        new Rectangle(0, 0, transparentImage.Width, transparentImage.Height),
-                                        0, 0, backgroundImage.Width, backgroundImage.Height,
-                                        GraphicsUnit.Pixel, imageAttributes);
-                                    
-                                    // 拉伸绘制到节点区域
-                                    g.DrawImage(transparentImage, Rectangle);
-                                }
-                            }
-                        }
-                        catch
-                        {
-                            // 图像加载失败时，使用默认背景
-                            using (SolidBrush brush = new SolidBrush(Color.FromArgb((int)(mOpacity * 255), mNodeColor)))
-                            {
-                                g.FillPath(brush, path);
-                            }
-                        }
-                    }
-                    else
-                    {
-                        // 使用节点颜色作为背景
-                        using (SolidBrush brush = new SolidBrush(Color.FromArgb((int)(mOpacity * 255), mNodeColor)))
-                        {
-                            g.FillPath(brush, path);
-                        }
+                        darkRegion.Translate(5, 5);
+                        g.FillRegion(new SolidBrush(Color.FromArgb(20, Color.Black)), darkRegion);
                     }
 
+                    // 填充节点
+                    g.FillPath(new SolidBrush(ShapeColor), path);
+                    
                     // 绘制边框
-                    using (Pen pen = new Pen(_borderColor, 2))
+                    using (Pen pen = new Pen(BorderColor, 1))
                     {
                         g.DrawPath(pen, path);
                     }
                 }
-
-                // 绘制文本
-                RectangleF textRect = Rectangle;
-                textRect.Inflate(-10, -10);
-                
-                // 确定要显示的文本
-                string displayText = mShowCustomText && !string.IsNullOrEmpty(mCustomText) ? mCustomText : mProcessName;
-                
-                // 设置文本格式
-                StringFormat stringFormat = new StringFormat();
-                
-                // 根据TextAlignment设置对齐方式
-                switch (mTextAlignment)
-                {
-                    case ContentAlignment.TopLeft:
-                        stringFormat.Alignment = StringAlignment.Near;
-                        stringFormat.LineAlignment = StringAlignment.Near;
-                        break;
-                    case ContentAlignment.TopCenter:
-                        stringFormat.Alignment = StringAlignment.Center;
-                        stringFormat.LineAlignment = StringAlignment.Near;
-                        break;
-                    case ContentAlignment.TopRight:
-                        stringFormat.Alignment = StringAlignment.Far;
-                        stringFormat.LineAlignment = StringAlignment.Near;
-                        break;
-                    case ContentAlignment.MiddleLeft:
-                        stringFormat.Alignment = StringAlignment.Near;
-                        stringFormat.LineAlignment = StringAlignment.Center;
-                        break;
-                    case ContentAlignment.MiddleCenter:
-                        stringFormat.Alignment = StringAlignment.Center;
-                        stringFormat.LineAlignment = StringAlignment.Center;
-                        break;
-                    case ContentAlignment.MiddleRight:
-                        stringFormat.Alignment = StringAlignment.Far;
-                        stringFormat.LineAlignment = StringAlignment.Center;
-                        break;
-                    case ContentAlignment.BottomLeft:
-                        stringFormat.Alignment = StringAlignment.Near;
-                        stringFormat.LineAlignment = StringAlignment.Far;
-                        break;
-                    case ContentAlignment.BottomCenter:
-                        stringFormat.Alignment = StringAlignment.Center;
-                        stringFormat.LineAlignment = StringAlignment.Far;
-                        break;
-                    case ContentAlignment.BottomRight:
-                        stringFormat.Alignment = StringAlignment.Far;
-                        stringFormat.LineAlignment = StringAlignment.Far;
-                        break;
-                    default:
-                        stringFormat.Alignment = StringAlignment.Center;
-                        stringFormat.LineAlignment = StringAlignment.Center;
-                        break;
-                }
-                
-                // 设置换行
-                if (mTextWrap)
-                {
-                    stringFormat.FormatFlags = StringFormatFlags.LineLimit;
-                }
-
-                // 绘制主文本
-                using (SolidBrush textBrush = new SolidBrush(_fontColor))
-                {
-                    g.DrawString(displayText, mTextFont, textBrush, textRect, stringFormat);
-                }
-
-                // 如果不使用自定义文本且有描述，绘制描述
-                if (!mShowCustomText && !string.IsNullOrEmpty(mDescription))
-                {
-                    RectangleF descRect = Rectangle;
-                    descRect.Y += Rectangle.Height / 2;
-                    descRect.Height = Rectangle.Height / 2;
-                    descRect.Inflate(-10, -5);
-
-                    using (Font descFont = new Font("Microsoft YaHei", 8))
-                    using (SolidBrush descBrush = new SolidBrush(Color.FromArgb(200, _fontColor)))
-                    {
-                        g.DrawString(mDescription, descFont, descBrush, descRect,
-                            new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center });
-                    }
-                }
             }
-            finally
+            if (ShowLabel)
             {
-                g.EndContainer(container);
-            }
-
-            // 绘制连接器
-            foreach (Connector connector in Connectors)
-            {
-                connector.Paint(g);
+                using (StringFormat sf = new StringFormat())
+                {
+                    sf.Alignment = StringAlignment.Center;
+                    sf.LineAlignment = StringAlignment.Center;
+                    g.DrawString(Text, Font, new SolidBrush(_fontColor), Rectangle, sf);
+                }
             }
         }
-
-        private GraphicsPath CreateRoundedRectanglePath(RectangleF rect, float radius)
+        
+        /// <summary>
+        /// Returns a floating-point point coordinates for a given connector
+        /// </summary>
+        /// <param name="c">A connector object</param>
+        /// <returns>A floating-point pointF</returns>
+        public override PointF ConnectionPoint(Connector c)
         {
-            GraphicsPath path = new GraphicsPath();
-            float diameter = radius * 2;
+            if (c == TopNode) return new PointF(Rectangle.Left + (Rectangle.Width / 2), Rectangle.Top);
+            if (c == BottomNode) return new PointF(Rectangle.Left + (Rectangle.Width / 2), Rectangle.Bottom);
+            if (c == LeftNode) return new PointF(Rectangle.Left, Rectangle.Top + (Rectangle.Height / 2));
+            if (c == RightNode) return new PointF(Rectangle.Right, Rectangle.Top + (Rectangle.Height / 2));
+            return new PointF(0, 0);
+        }
 
-            // 左上角
-            path.AddArc(rect.X, rect.Y, diameter, diameter, 180, 90);
-            // 右上角
-            path.AddArc(rect.Right - diameter, rect.Y, diameter, diameter, 270, 90);
-            // 右下角
-            path.AddArc(rect.Right - diameter, rect.Bottom - diameter, diameter, diameter, 0, 90);
-            // 左下角
-            path.AddArc(rect.X, rect.Bottom - diameter, diameter, diameter, 90, 90);
-
-            path.CloseFigure();
-            return path;
+        /// <summary>
+        /// Overrides the default bitmap used in the shape viewer
+        /// </summary>
+        /// <returns></returns>
+        public override Bitmap GetThumbnail()
+        {            
+            try
+            {
+                // 创建一个小的位图作为缩略图
+                Bitmap bmp = new Bitmap(32, 32);
+                using (Graphics g = Graphics.FromImage(bmp))
+                {
+                    // 设置高质量绘制
+                    g.SmoothingMode = SmoothingMode.AntiAlias;
+                    
+                    // 绘制节点形状
+                    Rectangle rect = new Rectangle(2, 2, 28, 28);
+                    using (GraphicsPath path = new GraphicsPath())
+                    {
+                        path.AddLine(rect.X, rect.Y, rect.Right - 5, rect.Y);
+                        path.AddArc(rect.X + rect.Width - 10, rect.Y, 10, 10, -90, 90);
+                        path.AddLine(rect.Right, rect.Y + 5, rect.Right, rect.Bottom);
+                        path.AddLine(rect.Right, rect.Bottom, rect.Left + 5, rect.Bottom);
+                        path.AddArc(rect.X, rect.Y + rect.Height - 10, 10, 10, 90, 90);
+                        path.AddLine(rect.X, rect.Y + rect.Height - 5, rect.X, rect.Y);
+                        
+                        // 填充和描边
+                        g.FillPath(new SolidBrush(mNodeColor), path);
+                        g.DrawPath(new Pen(Color.Black, 1), path);
+                    }
+                    
+                    // 绘制文本
+                    using (StringFormat sf = new StringFormat())
+                    {
+                        sf.Alignment = StringAlignment.Center;
+                        sf.LineAlignment = StringAlignment.Center;
+                        g.DrawString("导", new Font("Microsoft YaHei", 8), Brushes.White, rect, sf);
+                    }
+                }
+                return bmp;
+            }
+            catch (Exception exc)
+            {
+                Trace.WriteLine(exc.Message, "ProcessNavigationNode.GetThumbnail");
+                // 返回基本位图
+                return new Bitmap(32, 32);
+            }
         }
 
         #endregion

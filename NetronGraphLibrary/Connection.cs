@@ -22,7 +22,7 @@ using Netron.GraphLib.Attributes;
 namespace Netron.GraphLib
 {
 	/// <summary>
-	/// Connection£º´ú±íµÄÊÇÁ½¸öÁ¬½ÓµãÖ®¼äµÄÁ¬½ÓÏßThe connection class captures a connection between two connectors and is derived from an entity.
+	/// Connectionï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Óµï¿½Ö®ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½The connection class captures a connection between two connectors and is derived from an entity.
 	/// </summary>
 	[Netron.GraphLib.Attributes.NetronGraphConnection("Default","A0BDE8D6-A95C-45ec-8081-A28E487F38A6", "Netron.GraphLib.Connection")]
 	[Serializable] public class Connection : Entity, IConnection, ISerializable
@@ -55,12 +55,12 @@ namespace Netron.GraphLib
 		private PointF mToPoint;
 
 		/// <summary>
-		/// Æðµã The starting connector
+		/// ï¿½ï¿½ï¿½ The starting connector
 		/// </summary>
 		private Connector mFrom ;
 
 		/// <summary>
-		///Ä¿±êµã the destination connector
+		///Ä¿ï¿½ï¿½ï¿½ the destination connector
 		/// </summary>
 		private Connector mTo;
 
@@ -100,9 +100,14 @@ namespace Netron.GraphLib
 		private Tracker   mTracker;
 
 		/// <summary>
-		/// the z-order of the connection
+		/// The z-order of the connection
 		/// </summary>
 		private int mZOrder;
+
+		/// <summary>
+		/// Whether to show connection points
+		/// </summary>
+		private bool mShowPoints = false;
 		#endregion
 			
 		#region Properties
@@ -182,6 +187,15 @@ namespace Netron.GraphLib
 		protected internal ConnectionPainter Painter
 		{
 			get{return mPainter;}			
+		}
+
+		/// <summary>
+		/// Gets or sets whether to show connection points
+		/// </summary>
+		public bool ShowPoints
+		{
+			get { return mShowPoints; }
+			set { mShowPoints = value; this.Invalidate(); }
 		}
 
 		/// <summary>

@@ -819,12 +819,25 @@ namespace RUINORERP.UI.WorkFlowDesigner.Service
                 return null;
             }
                 
+            // 确保节点的连接器位置已更新
+            if (typeof(ProcessNavigationNode).GetMethod("UpdateConnectorsPosition") != null)
+            {
+                try
+                {
+                    typeof(ProcessNavigationNode).GetMethod("UpdateConnectorsPosition").Invoke(node, null);
+                }
+                catch (Exception ex)
+                {
+                    _logger?.LogWarning(ex, "更新连接器位置失败");
+                }
+            }
+                
             // 尝试多种方式查找连接器
-            // 1. 优先使用底部连接器
+            // 1. 优先使用底部连接器，匹配ProcessNavigationNode中的命名
             Connector connector = null;
             foreach (Connector c in node.Connectors)
             {
-                if (c.Name == "Bottom")
+                if (c.Name == "BottomNode" || c.Name == "Bottom")
                 {
                     connector = c;
                     break;
@@ -837,7 +850,8 @@ namespace RUINORERP.UI.WorkFlowDesigner.Service
                 foreach (Connector c in node.Connectors)
                 {
                     if ((c.Name.IndexOf("Out", StringComparison.OrdinalIgnoreCase) >= 0) ||
-                        (c.Name.IndexOf("Exit", StringComparison.OrdinalIgnoreCase) >= 0))
+                        (c.Name.IndexOf("Exit", StringComparison.OrdinalIgnoreCase) >= 0) ||
+                        (c.Name.IndexOf("Bottom", StringComparison.OrdinalIgnoreCase) >= 0))
                     {
                         connector = c;
                         break;
@@ -849,6 +863,12 @@ namespace RUINORERP.UI.WorkFlowDesigner.Service
             if (connector == null && node.Connectors.Count > 0)
             {
                 connector = node.Connectors[0];
+            }
+            
+            // 4. 如果有多个连接器，为源节点选择底部，为目标节点选择顶部
+            if (connector != null)
+            {
+                connector.AllowConnections = true;
             }
             
             // 如果找到连接器，确保它已正确初始化

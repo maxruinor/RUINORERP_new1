@@ -18,16 +18,16 @@ using System.Security.Permissions;
 namespace Netron.GraphLib
 {
 
-    ///Á¬½ÓÆ÷£¬Ò²³ÆÎª¡°Á¬½Óµã¡±£¬ÊÇĞÎ×´ÉÏµÄÒ»¸öµã£¬Ïß£¨Á¬½Ó£©½«¸½×ÅÔÚ¸ÃµãÉÏ¡£
-    ///µ±¹â±êÔÚ¸½½üÊ±ÁÁÆğ£¬²¢ÇÒ¿ÉÒÔ°üº¬¿ÉÒÔÍ¨¹ıÁ¬½Ó´«²¥µÄÊäÈë/Êä³öÊı¾İ¡£
+    ///ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò²ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½Óµã¡±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×´ï¿½Ïµï¿½Ò»ï¿½ï¿½ï¿½ã£¬ï¿½ß£ï¿½ï¿½ï¿½ï¿½Ó£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú¸Ãµï¿½ï¿½Ï¡ï¿½
+    ///ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú¸ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ğ£¬²ï¿½ï¿½Ò¿ï¿½ï¿½Ô°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¨ï¿½ï¿½ï¿½ï¿½ï¿½Ó´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½/ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½İ¡ï¿½
 
-    ///<±¸×¢>
-    ///Äã¿ÉÒÔ×öµÄÊÂÇé£º
-    ///<br>-Ê¹Á¬½ÓÆ÷ÔÚ±»»÷ÖĞÊ±ÉÁË¸</br>
-    ///<br>-ĞüÍ£Ê±ÏÔÊ¾Ò»¸ö¹ã·ºµÄĞÅÏ¢¿ò</br>
-    ///<br>-ĞüÍ£Ê±¸½¼Ó×´Ì¬ÏûÏ¢</br>
-    ///<br>-Çø·Ö²»Í¬Á¬½ÓÆ÷µÄ´«²¥ÀàĞÍ»òparnet/×Ó¹ØÏµ</br>
-    ///</±¸×¢>
+    ///<ï¿½ï¿½×¢>
+    ///ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½é£º
+    ///<br>-Ê¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú±ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½Ë¸</br>
+    ///<br>-ï¿½ï¿½Í£Ê±ï¿½ï¿½Ê¾Ò»ï¿½ï¿½ï¿½ã·ºï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½</br>
+    ///<br>-ï¿½ï¿½Í£Ê±ï¿½ï¿½ï¿½ï¿½×´Ì¬ï¿½ï¿½Ï¢</br>
+    ///<br>-ï¿½ï¿½ï¿½Ö²ï¿½Í¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í»ï¿½parnet/ï¿½Ó¹ï¿½Ïµ</br>
+    ///</ï¿½ï¿½×¢>
 
     [Serializable]
     public class Connector : Entity, ISerializable
@@ -99,6 +99,19 @@ namespace Netron.GraphLib
         {
             get { return mAllowNewConnectionsTo; }
             set { mAllowNewConnectionsTo = value; }
+        }
+        
+        /// <summary>
+        /// Gets or sets whether connections are allowed to this connector
+        /// </summary>
+        public bool AllowConnections
+        {
+            get { return mAllowNewConnectionsFrom || mAllowNewConnectionsTo; }
+            set 
+            { 
+                mAllowNewConnectionsFrom = value;
+                mAllowNewConnectionsTo = value; 
+            }
         }
         /// <summary>
         /// Gets or sets the name of the connector.
@@ -186,7 +199,7 @@ namespace Netron.GraphLib
         }
 
         /// <summary>
-        /// »ñÈ¡/ÉèÖÃ´ËÁ¬½ÓÆ÷ËùÁ¬½ÓµÄShapeObjects
+        /// ï¿½ï¿½È¡/ï¿½ï¿½ï¿½Ã´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Óµï¿½ShapeObjects
         /// </summary>
         public Shape BelongsTo
         {
@@ -198,6 +211,22 @@ namespace Netron.GraphLib
             set
             {
                 mBelongsTo = value;
+            }
+        }
+
+        /// <summary>
+        /// è·å–/è®¾ç½®è¿æ¥å™¨æ‰€å±çš„çˆ¶å¯¹è±¡ï¼ˆä¸BelongsToå±æ€§ç›¸åŒï¼‰
+        /// </summary>
+        public Shape Parent
+        {
+            get
+            {
+                return mBelongsTo; // å¤ç”¨å·²æœ‰çš„mBelongsToå­—æ®µ
+            }
+            [Browsable(false)]
+            set
+            {
+                mBelongsTo = value; // å¤ç”¨å·²æœ‰çš„mBelongsToå­—æ®µ
             }
         }
 
@@ -377,17 +406,38 @@ namespace Netron.GraphLib
 
         }
 
+        // ç”¨äºé˜²æ­¢é€’å½’è°ƒç”¨çš„æ ‡å¿—
+        private bool mIsInvalidating = false;
+
         /// <summary>
         /// Update/refresh the connector's appearance
         /// </summary>
         public override void Invalidate()
         {
-            if (mBelongsTo == null) return;
-            IGraphSite c = mBelongsTo.Site;//should return the underlying canvasobject
-            if (c == null) return;
-            RectangleF r = ConnectionGrip();//get the neighborhood of the connector
-            if (IsHovered) r.Inflate(+100, +100); // make sure a sufficient piece of the neighborhood will be refreshed.
-            c.Invalidate(Rectangle.Round(r)); //...and refresh it by calling the control's invalidate method.
+            // é˜²æ­¢é€’å½’è°ƒç”¨å¯¼è‡´æ ˆæº¢å‡º
+            if (mIsInvalidating || mBelongsTo == null || mBelongsTo.Site == null) return;
+            
+            try
+            {
+                mIsInvalidating = true;
+                
+                IGraphSite site = mBelongsTo.Site;
+                
+                // ç®€åŒ–ä½†ä¸åˆ·æ–°æ•´ä¸ªç”»å¸ƒï¼Œé¿å…å¾ªç¯è°ƒç”¨
+                // ä½¿ç”¨InvalidateRectangleæ–¹æ³•è€Œä¸æ˜¯Invalidateæ–¹æ³•
+                try
+                {
+                    // ä½¿ç”¨ä¸€ä¸ªåˆç†çš„é»˜è®¤åŒºåŸŸï¼Œä½†ä¸ç›´æ¥è°ƒç”¨å¯èƒ½è§¦å‘Shapeé‡æ–°Invalidateçš„æ–¹æ³•
+                    RectangleF rect = new RectangleF(0, 0, 20, 20);
+                    site.InvalidateRectangle(Rectangle.Round(rect));
+                }
+                catch { }
+            }
+            finally
+            {
+                // ç¡®ä¿åœ¨æ–¹æ³•ç»“æŸæ—¶é‡ç½®æ ‡å¿—
+                mIsInvalidating = false;
+            }
         }
         /// <summary>
         /// Returns the cursor for the current connector

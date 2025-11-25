@@ -2263,6 +2263,7 @@ namespace RUINORERP.Business
                 payable.ReceivePaymentType = (int)ReceivePaymentType.付款;
                 payable.ARAPNo = await bizCodeService.GenerateBizBillNoAsync(BizType.应付款单, CancellationToken.None);
                 payable.DueDate = null;
+
             }
             else
             {
@@ -2311,6 +2312,8 @@ namespace RUINORERP.Business
                     {
                         //佣金应付
                         details[i].TaxRate = olditem.TaxRate;
+                        //佣金一般不包含税
+                        olditem.SubtotalTaxAmount = 0;
                         details[i].TaxLocalAmount = olditem.SubtotalTaxAmount;
                         details[i].Quantity = olditem.Quantity;
                         details[i].UnitPrice = olditem.UnitCommissionAmount;

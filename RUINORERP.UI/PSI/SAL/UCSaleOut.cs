@@ -252,7 +252,15 @@ namespace RUINORERP.UI.PSI.SAL
                         ToolStripMenuItem RelatedMenuItem = new ToolStripMenuItem();
                         RelatedMenuItem.Name = $"{rqp.billId}";
                         RelatedMenuItem.Tag = rqp;
-                        RelatedMenuItem.Text = $"{rqp.bizType}:{item.ARAPNo}";
+                        if (item.IsForCommission)
+                        {
+                            RelatedMenuItem.Text = $"{rqp.bizType}[佣金]:{item.ARAPNo}";
+                        }
+                        else
+                        {
+                            RelatedMenuItem.Text = $"{rqp.bizType}:{item.ARAPNo}";
+                        }
+
                         RelatedMenuItem.Click += base.MenuItem_Click;
                         if (!toolStripbtnRelatedQuery.DropDownItems.ContainsKey(item.ARAPId.ToString()))
                         {
@@ -1147,7 +1155,7 @@ namespace RUINORERP.UI.PSI.SAL
             .SingleAsync();
             tb_SaleOrderController<tb_SaleOrder> ctr = Startup.GetFromFac<tb_SaleOrderController<tb_SaleOrder>>();
             //tb_SaleOut saleOut = SaleOrderToSaleOut(item);
-            tb_SaleOut saleOut =await ctr.SaleOrderToSaleOut(saleorder);
+            tb_SaleOut saleOut = await ctr.SaleOrderToSaleOut(saleorder);
             ActionStatus actionStatus = ActionStatus.无操作;
             BindData(saleOut, actionStatus);
             return saleOut;

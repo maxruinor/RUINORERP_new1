@@ -71,10 +71,56 @@ namespace RUINORERP.UI.FM
             DataBindingHelper.InitDataToCmb<tb_Employee>(k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
             DataBindingHelper.InitDataToCmb<tb_Currency>(k => k.Currency_ID, v => v.CurrencyName, cmbCurrency_ID);
         }
-        //internal override void LoadDataToUI(object Entity)
-        //{
-        //    BindData(Entity as tb_FM_ExpenseClaim);
-        //}
+
+
+        protected override async Task LoadRelatedDataToDropDownItemsAsync()
+        {
+            //加载关联的单据
+            if (base.EditEntity is tb_FM_ExpenseClaim expenseClaim)
+            {
+                //如果有出库，则查应收
+                if (expenseClaim.DataStatus >= (int)DataStatus.确认)
+                {
+                    var receivablePayables = await MainForm.Instance.AppContext.Db.Queryable<tb_FM_ReceivablePayable>()
+                                                                    .Where(c => c.ARAPStatus >= (int)ARAPStatus.待审核
+                                                                        && c.SourceBizType == (int)BizType.费用报销单
+                                                                    && c.SourceBillId == expenseClaim.ClaimMainID)
+                                                                    .ToListAsync();
+                    foreach (var item in receivablePayables)
+                    {
+                        var rqp = new Model.CommonModel.RelatedQueryParameter();
+                        if (item.ReceivePaymentType == (int)ReceivePaymentType.付款)
+                        {
+                            rqp.bizType = BizType.应付款单;
+                        }
+                        else
+                        {
+                            rqp.bizType = BizType.应收款单;
+                        }
+                        rqp.billId = item.ARAPId;
+                        ToolStripMenuItem RelatedMenuItem = new ToolStripMenuItem();
+                        RelatedMenuItem.Name = $"{rqp.billId}";
+                        RelatedMenuItem.Tag = rqp;
+                        if (item.IsForCommission)
+                        {
+                            RelatedMenuItem.Text = $"{rqp.bizType}[佣金]:{item.ARAPNo}";
+                        }
+                        else
+                        {
+                            RelatedMenuItem.Text = $"{rqp.bizType}:{item.ARAPNo}";
+                        }
+
+                        RelatedMenuItem.Click += base.MenuItem_Click;
+                        if (!toolStripbtnRelatedQuery.DropDownItems.ContainsKey(item.ARAPId.ToString()))
+                        {
+                            toolStripbtnRelatedQuery.DropDownItems.Add(RelatedMenuItem);
+                        }
+                    }
+                }
+            }
+            await base.LoadRelatedDataToDropDownItemsAsync();
+        }
+
         public override void BindData(tb_FM_ExpenseClaim entity, ActionStatus actionStatus)
         {
 
@@ -302,13 +348,13 @@ namespace RUINORERP.UI.FM
                 {
                     // 单图片模式
                     magicPictureBox1.MultiImageSupport = false;
-                    
+
                     //try
                     //{
                     //    var image = await DownloadImageAsync(
                     //        CloseCaseImagePath, 
                     //        MainForm.Instance.AppContext);
-                        
+
                     //    if (image != null)
                     //    {
                     //        magicPictureBox1.Image = image;
@@ -460,7 +506,7 @@ namespace RUINORERP.UI.FM
 
                 //计算总金额  这些逻辑是不是放到业务层？后面要优化
                 List<tb_FM_ExpenseClaimDetail> details = sgd.BindingSourceLines.DataSource as List<tb_FM_ExpenseClaimDetail>;
-                details = details.Where(c => c.SingleAmount !=0).ToList();
+                details = details.Where(c => c.SingleAmount != 0).ToList();
                 if (details.Count == 0)
                 {
                     MainForm.Instance.uclog.AddLog("单项金额必须大于0");
@@ -469,7 +515,7 @@ namespace RUINORERP.UI.FM
                 EditEntity.TaxAmount = details.Sum(c => c.TaxAmount);
                 EditEntity.ClaimAmount = details.Sum(c => c.SingleAmount);
                 EditEntity.UntaxedAmount = details.Sum(C => C.UntaxedAmount);
-                
+
                 //添加总计金额小于0的提示
                 if (EditEntity.ClaimAmount < 0)
                 {
@@ -645,7 +691,7 @@ namespace RUINORERP.UI.FM
                 {
                     return false;
                 }
-                
+
                 // 处理结案凭证图片上传
                 if (NeedValidated && magicPictureBox1.Image != null)
                 {
@@ -662,7 +708,7 @@ namespace RUINORERP.UI.FM
                         // return false;
                     }
                 }
-                
+
                 if (NeedValidated)
                 {//处理图片
                     bool uploadImg = await base.SaveFileToServer(sgd, EditEntity.tb_FM_ExpenseClaimDetails);
@@ -736,7 +782,7 @@ namespace RUINORERP.UI.FM
 
             #region 删除主图的结案图。一般没有结案是没有的。结案就不会有结案图了。也有特殊情况。
 
-            
+
             #endregion
 
             bool result = true;
@@ -909,7 +955,7 @@ namespace RUINORERP.UI.FM
             {
                 openFileDialog.Title = "选择结案凭证图片";
                 openFileDialog.Filter = "图片文件|*.bmp;*.jpg;*.jpeg;*.png;*.gif";
-                
+
                 if (openFileDialog.ShowDialog() == DialogResult.OK)
                 {
                     try
@@ -927,7 +973,7 @@ namespace RUINORERP.UI.FM
             }
         }
 
-      
+
     }
 }
 

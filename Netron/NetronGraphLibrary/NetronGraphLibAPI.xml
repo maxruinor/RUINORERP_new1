@@ -2333,17 +2333,7 @@
             <param name="p"></param>
             <returns></returns>
         </member>
-        <member name="T:Netron.GraphLib.Connector">
-            连接器，也称为“连接点”，是形状上的一个点，线（连接）将附着在该点上。
-            当光标在附近时亮起，并且可以包含可以通过连接传播的输入/输出数据。
-            <备注>
-            你可以做的事情：
-            <br>-使连接器在被击中时闪烁</br>
-            <br>-悬停时显示一个广泛的信息框</br>
-            <br>-悬停时附加状态消息</br>
-            <br>-区分不同连接器的传播类型或parnet/子关系</br>
-            </备注>
-        </member>
+        <!-- Badly formed XML comment ignored for member "T:Netron.GraphLib.Connector" -->
         <member name="F:Netron.GraphLib.Connector.mConnectionShift">
             <summary>
             gives a little displacement between the connection and the connector
@@ -2409,6 +2399,11 @@
             Gets or sets whether to allow new connections to be attached to this connector
             </summary>
         </member>
+        <member name="P:Netron.GraphLib.Connector.AllowConnections">
+            <summary>
+            Gets or sets whether connections are allowed to this connector
+            </summary>
+        </member>
         <member name="P:Netron.GraphLib.Connector.Name">
             <summary>
             Gets or sets the name of the connector.
@@ -2454,7 +2449,12 @@
         </member>
         <member name="P:Netron.GraphLib.Connector.BelongsTo">
             <summary>
-            获取/设置此连接器所连接的ShapeObjects
+            ��ȡ/���ô������������ӵ�ShapeObjects
+            </summary>
+        </member>
+        <member name="P:Netron.GraphLib.Connector.Parent">
+            <summary>
+            获取/设置连接器所属的父对象（与BelongsTo属性相同）
             </summary>
         </member>
         <member name="P:Netron.GraphLib.Connector.AdjacentPoint">
@@ -6199,10 +6199,10 @@
         </member>
         <member name="P:Netron.GraphLib.Shape.Rectangle">
             <summary>
-            返回此形状的关联mRectangle
+            ���ش���״�Ĺ���mRectangle
             </summary>
             <remarks>
-            如果开始使用非矩形形状，这一点的必要性将变得更加明显.
+            �����ʼʹ�÷Ǿ�����״����һ��ı�Ҫ�Խ���ø�������.
             </remarks>
         </member>
         <member name="P:Netron.GraphLib.Shape.Connectors">
@@ -6285,7 +6285,7 @@
         <member name="P:Netron.GraphLib.Shape.AdjacentNodes">
             <summary>
             Gets the collection of nodes attached to this node
-            获取附加到此节点的节点的集合
+            ��ȡ���ӵ��˽ڵ�Ľڵ�ļ���
             </summary>
         </member>
         <member name="P:Netron.GraphLib.Shape.IsVisible">
@@ -6335,7 +6335,7 @@
         </member>
         <member name="M:Netron.GraphLib.Shape.IsConnectedTo(Netron.GraphLib.Shape)">
             <summary>
-            返回形状是否连接到给定形状
+            ������״�Ƿ����ӵ�������״
             </summary>
             <param name="shape"></param>
             <returns></returns>
@@ -6843,60 +6843,60 @@
         </member>
         <member name="F:Netron.GraphLib.UI.GraphControl._WorkflowData">
             <summary>
-            定义一个属性来保存流程的数据，一个流程图对应一个流程数据WorkFlowConfigData
+            ����һ���������������̵����ݣ�һ������ͼ��Ӧһ����������WorkFlowConfigData
             </summary>
         </member>
         <member name="E:Netron.GraphLib.UI.GraphControl.OnToJsonAction">
             <summary>
-            将流程图转换为json
+            ������ͼת��Ϊjson
             </summary>
         </member>
         <member name="T:Netron.GraphLib.UI.GraphControl.SetCondition">
             <summary>
-            设置条件
+            ��������
             </summary>
             <param name="sender"></param>
             <param name="e"></param>
         </member>
         <member name="E:Netron.GraphLib.UI.GraphControl.OnSetCondition">
             <summary>
-            设置条件的值
+            ����������ֵ
             </summary>
         </member>
         <member name="T:Netron.GraphLib.UI.GraphControl.SetNextStepByLine">
             <summary>
-            设置下一个步骤
+            ������һ������
             </summary>
             <param name="sender"></param>
             <param name="e"></param>
         </member>
         <member name="E:Netron.GraphLib.UI.GraphControl.OnSetNextStepByLine">
             <summary>
-            设置下一个步骤
+            ������һ������
             </summary>
         </member>
         <member name="T:Netron.GraphLib.UI.GraphControl.DeleteConnectionLine">
             <summary>
-            删除连接线
+            ɾ��������
             </summary>
             <param name="sender"></param>
             <param name="e"></param>
         </member>
         <member name="E:Netron.GraphLib.UI.GraphControl.OnDeleteConnectionLine">
             <summary>
-            删除连接线
+            ɾ��������
             </summary>
         </member>
         <member name="T:Netron.GraphLib.UI.GraphControl.SetNodeProperties">
             <summary>
-            设置节点属性值
+            ���ýڵ�����ֵ
             </summary>
             <param name="sender"></param>
-            <param name="e">节点属性值</param>
+            <param name="e">�ڵ�����ֵ</param>
         </member>
         <member name="E:Netron.GraphLib.UI.GraphControl.OnSetNodeProperties">
             <summary>
-            设置节点图形的属性值，这个很重要
+            ���ýڵ�ͼ�ε�����ֵ���������Ҫ
             </summary>
         </member>
         <member name="E:Netron.GraphLib.UI.GraphControl.OnShowProperties">
@@ -7019,6 +7019,16 @@
         <member name="F:Netron.GraphLib.UI.GraphControl.mAllowAddConnection">
             <summary>
             allow add connection boolean
+            </summary>
+        </member>
+        <member name="F:Netron.GraphLib.UI.GraphControl.mAllowResizeShape">
+            <summary>
+            allow resize shape boolean
+            </summary>
+        </member>
+        <member name="F:Netron.GraphLib.UI.GraphControl.mShowConnectorPoints">
+            <summary>
+            show connector points boolean
             </summary>
         </member>
         <member name="F:Netron.GraphLib.UI.GraphControl.freeArrows">
@@ -7174,27 +7184,27 @@
         </member>
         <member name="F:Netron.GraphLib.UI.GraphControl.shapeObject">
             <summary>
-            未连接到提取结构的易失性对象，用于当前添加或选择的形状
+            δ���ӵ���ȡ�ṹ����ʧ�Զ������ڵ�ǰ���ӻ�ѡ�����״
             </summary>
         </member>
         <member name="F:Netron.GraphLib.UI.GraphControl.connection">
             <summary>
-            易失性连接，用于操作当前连接
+            ��ʧ�����ӣ����ڲ�����ǰ����
             </summary>
         </member>
         <member name="F:Netron.GraphLib.UI.GraphControl.Hover">
             <summary>
-            具有当前鼠标焦点的实体。由HitHover和HitEntity处理程序自动设置
+            ���е�ǰ��꽹���ʵ�塣��HitHover��HitEntity���������Զ�����
             </summary>
         </member>
         <member name="F:Netron.GraphLib.UI.GraphControl.selector">
             <summary>
-            用于跟踪选择状态的矩形表示虚线选择矩形。
+            ���ڸ���ѡ��״̬�ľ��α�ʾ����ѡ����Ρ�
             </summary>
         </member>
         <member name="F:Netron.GraphLib.UI.GraphControl.mDoTrack">
             <summary>
-            表示轨迹模式，即四处移动形状
+            ��ʾ�켣ģʽ�����Ĵ��ƶ���״
             </summary>
         </member>
         <member name="F:Netron.GraphLib.UI.GraphControl.transmissionTimer">
@@ -7260,6 +7270,16 @@
         <member name="P:Netron.GraphLib.UI.GraphControl.AllowAddConnection">
             <summary>
             Gets or sets whether connections can be added to the graph
+            </summary>
+        </member>
+        <member name="P:Netron.GraphLib.UI.GraphControl.AllowResizeShape">
+            <summary>
+            Gets or sets whether shapes can be resized in the graph
+            </summary>
+        </member>
+        <member name="P:Netron.GraphLib.UI.GraphControl.ShowConnectorPoints">
+            <summary>
+            Gets or sets whether connector points are visible in the graph
             </summary>
         </member>
         <member name="P:Netron.GraphLib.UI.GraphControl.DefaultConnectionEnd">
@@ -7469,7 +7489,7 @@
         </member>
         <member name="M:Netron.GraphLib.UI.GraphControl.RemoveEdge(System.Guid)">
              <summary>
-            从具有给定UID的关系图中删除边
+            �Ӿ��и���UID�Ĺ�ϵͼ��ɾ����
              </summary>
              <param name="uid"></param>
         </member>
@@ -7585,7 +7605,7 @@
         </member>
         <member name="M:Netron.GraphLib.UI.GraphControl.OnShowSetCondition(System.Object,System.EventArgs)">
             <summary>
-            设置条件事件传出到外部处理程序
+            ���������¼��������ⲿ��������
             </summary>
             <param name="sender"></param>
             <param name="e"></param>
@@ -7738,7 +7758,7 @@
         </member>
         <member name="M:Netron.GraphLib.UI.GraphControl.DeleteUIConnectionLine(Netron.GraphLib.Connection)">
             <summary>
-            添加失败时，提示后再删除
+            ����ʧ��ʱ����ʾ����ɾ��
             </summary>
             <param name="n"></param>
         </member>
@@ -7969,7 +7989,7 @@
         </member>
         <member name="M:Netron.GraphLib.UI.GraphControl.RaiseShowProperties(Netron.GraphLib.PropertyBag)">
             <summary>
-            引发ShowProps事件
+            ����ShowProps�¼�
             </summary>
             <param name="props"></param>
         </member>

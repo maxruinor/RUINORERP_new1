@@ -18,7 +18,7 @@ using System.Security.Permissions;
 namespace Netron.GraphLib
 {
 	/// <summary>
-	/// Connector：代表的是图形对象上的连接点，两个连接点之间可以产生一条连接线。连接点对象只能依附图形对象而存在。A Connector aka 'connection point' is the spot on a shape where a line (connection) will attach itself.
+	/// Connector锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷图锟轿讹拷锟斤拷锟较碉拷锟斤拷锟接点，锟斤拷锟斤拷锟斤拷锟接碉拷之锟斤拷锟斤拷圆锟斤拷锟揭伙拷锟斤拷锟斤拷锟斤拷摺锟斤拷锟斤拷拥锟斤拷锟斤拷只锟斤拷锟斤拷锟斤拷图锟轿讹拷锟斤拷锟斤拷锟斤拷凇锟紸 Connector aka 'connection point' is the spot on a shape where a line (connection) will attach itself.
 	/// Lits up when cursor is nearby and can contain in/outflow data that can propagate through the connections.
 	/// </summary>
 	/// <remarks>
@@ -50,17 +50,17 @@ namespace Netron.GraphLib
 		private PointF mAdjacentPoint = PointF.Empty;
 
 		/// <summary>
-		///确定本点是否允许新的线画出，  only 1 connection allowed if false
+		///确锟斤拷锟斤拷锟斤拷锟角凤拷锟斤拷锟斤拷锟铰碉拷锟竭伙拷锟斤拷锟斤拷  only 1 connection allowed if false
 		/// </summary>
 		private bool mAllowMultipleConnections;
 
 		/// <summary>
-		/// 保存本点所属于那个shape,object this connector belongs to.
+		/// 锟斤拷锟芥本锟斤拷锟斤拷锟斤拷锟斤拷锟角革拷shape,object this connector belongs to.
 		/// </summary>
 		private Shape mBelongsTo;
 
 		/// <summary>
-		/// 此字段作用是保存本点所连接的所以connection connections attached to this connector
+		/// 锟斤拷锟街讹拷锟斤拷锟斤拷锟角憋拷锟芥本锟斤拷锟斤拷锟斤拷锟接碉拷锟斤拷锟斤拷connection connections attached to this connector
 		/// </summary>
 		private ConnectionCollection mConnections; 
 
@@ -85,7 +85,7 @@ namespace Netron.GraphLib
 		private bool mAllowNewConnectionsFrom = true;
 
 		/// <summary>
-		///否允许新的线连入本点 allow new connection to be attached to this connector
+		///锟斤拷锟斤拷锟斤拷锟铰碉拷锟斤拷锟斤拷锟诫本锟斤拷 allow new connection to be attached to this connector
 		/// </summary>
 		private bool mAllowNewConnectionsTo = true;
 
@@ -193,6 +193,15 @@ namespace Netron.GraphLib
 //			{
 //				mReceiveList= value;
 //			}
+		}
+
+		/// <summary>
+		/// Gets or sets the parent shape this connector belongs to
+		/// </summary>
+		public Shape Parent
+		{
+			get { return mBelongsTo; }
+			set { mBelongsTo = value; }
 		}
 
 		/// <summary>

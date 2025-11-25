@@ -322,10 +322,10 @@ namespace Netron.GraphLib
 		}
 
         /// <summary>
-        /// ·µ»Ø´ËĞÎ×´µÄ¹ØÁªmRectangle
+        /// ï¿½ï¿½ï¿½Ø´ï¿½ï¿½ï¿½×´ï¿½Ä¹ï¿½ï¿½ï¿½mRectangle
         /// </summary>
         /// <remarks>
-        /// Èç¹û¿ªÊ¼Ê¹ÓÃ·Ç¾ØĞÎĞÎ×´£¬ÕâÒ»µãµÄ±ØÒªĞÔ½«±äµÃ¸ü¼ÓÃ÷ÏÔ.
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½Ê¼Ê¹ï¿½Ã·Ç¾ï¿½ï¿½ï¿½ï¿½ï¿½×´ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½Ä±ï¿½Òªï¿½Ô½ï¿½ï¿½ï¿½Ã¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½.
         /// </remarks>
         public virtual RectangleF Rectangle
 		{
@@ -495,7 +495,7 @@ namespace Netron.GraphLib
 				if(!Layer.UseColor)//only set the color if the layer it's on doesn't enforce a color
 					mShapeColor=value;
 				else
-					MessageBox.Show("¸ÃĞÎ×´ÊÇ²ãµÄÒ»²¿·Ö£¬²¢Ç¿ÖÆÊ¹ÓÃÑÕÉ«¡£\r\nÈç¹ûÒª¸ü¸ÄÑÕÉ«£¬ÇëÈ¡ÏûÉèÖÃÍ¼²ãµÄÑÕÉ«±êÖ¾»ò½«ĞÎ×´Ö¸¶¨¸øÄ¬ÈÏÍ¼²ã", "Cannot change the color",MessageBoxButtons.OK,MessageBoxIcon.Information);
+					MessageBox.Show("ï¿½ï¿½ï¿½ï¿½×´ï¿½Ç²ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Ö£ï¿½ï¿½ï¿½Ç¿ï¿½ï¿½Ê¹ï¿½ï¿½ï¿½ï¿½É«ï¿½ï¿½\r\nï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É«ï¿½ï¿½ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¼ï¿½ï¿½ï¿½ï¿½ï¿½É«ï¿½ï¿½Ö¾ï¿½ï¿½ï¿½ï¿½×´Ö¸ï¿½ï¿½ï¿½ï¿½Ä¬ï¿½ï¿½Í¼ï¿½ï¿½", "Cannot change the color",MessageBoxButtons.OK,MessageBoxIcon.Information);
 			}
 		}
 
@@ -556,7 +556,7 @@ namespace Netron.GraphLib
 		}
         /// <summary>
         /// Gets the collection of nodes attached to this node
-        /// »ñÈ¡¸½¼Óµ½´Ë½ÚµãµÄ½ÚµãµÄ¼¯ºÏ
+        /// ï¿½ï¿½È¡ï¿½ï¿½ï¿½Óµï¿½ï¿½Ë½Úµï¿½Ä½Úµï¿½Ä¼ï¿½ï¿½ï¿½
         /// </summary>
         public ShapeCollection AdjacentNodes
 		{
@@ -689,7 +689,7 @@ namespace Netron.GraphLib
 		#endregion
 
 		/// <summary>
-		/// ·µ»ØĞÎ×´ÊÇ·ñÁ¬½Óµ½¸ø¶¨ĞÎ×´
+		/// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×´ï¿½Ç·ï¿½ï¿½ï¿½ï¿½Óµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×´
 		/// </summary>
 		/// <param name="shape"></param>
 		/// <returns></returns>
@@ -838,47 +838,59 @@ namespace Netron.GraphLib
 			Rectangle = new RectangleF(new PointF(Rectangle.X,Rectangle.Y),newSize);	
 		}
 
+		private bool mIsInvalidating = false;
+
 		/// <summary>
 		/// Refreshes the shape
 		/// </summary>
 		public override void Invalidate()
 		{
-			if (Site == null) return;
-			if (Connectors == null) return;
+			// é˜²æ­¢é€’å½’è°ƒç”¨å¯¼è‡´æ­»å¾ªç¯
+			if (mIsInvalidating || Site == null || Connectors == null) return;
 
-			// Invalidate the shape mRectangle, pay attention on scroll position and zoom
-			RectangleF r = this.Rectangle;
-			r.Inflate(+3, +3); // padding for selection frame.
-
-			System.Drawing.Rectangle r2 = System.Drawing.Rectangle.Round(r);
-			r2.Offset( Site.AutoScrollPosition.X, Site.AutoScrollPosition.Y );
-
-			r2 = Site.ZoomRectangle(r2);
-			r2.Inflate(2,2);
-
-			Site.InvalidateRectangle(r2);
-
-			// Invalidate each connector
-			foreach (Connector c in Connectors)
+			try
 			{
-				c.Invalidate();
+				mIsInvalidating = true;
 
-				if (Tracker != null)
-					foreach (Connection n in c.Connections)
-						n.Invalidate();
-			}
+				// Invalidate the shape mRectangle, pay attention on scroll position and zoom
+				RectangleF r = this.Rectangle;
+				r.Inflate(+3, +3); // padding for selection frame.
 
-			// Invalidate tracker
-			if (Tracker != null)
-			{
-				RectangleF a = Tracker.Grip(new Point(-1, -1));
-				RectangleF b = Tracker.Grip(new Point(+1, +1));
-				r2 = System.Drawing.Rectangle.Round(RectangleF.Union(a, b));
+				System.Drawing.Rectangle r2 = System.Drawing.Rectangle.Round(r);
 				r2.Offset( Site.AutoScrollPosition.X, Site.AutoScrollPosition.Y );
+
 				r2 = Site.ZoomRectangle(r2);
 				r2.Inflate(2,2);
 
 				Site.InvalidateRectangle(r2);
+
+				// Invalidate each connector
+				foreach (Connector c in Connectors)
+				{
+					if (c != null) c.Invalidate();
+
+					if (Tracker != null && c != null)
+						foreach (Connection n in c.Connections)
+							if (n != null) n.Invalidate();
+				}
+
+				// Invalidate tracker
+				if (Tracker != null)
+				{
+					RectangleF a = Tracker.Grip(new Point(-1, -1));
+					RectangleF b = Tracker.Grip(new Point(+1, +1));
+					r2 = System.Drawing.Rectangle.Round(RectangleF.Union(a, b));
+					r2.Offset( Site.AutoScrollPosition.X, Site.AutoScrollPosition.Y );
+					r2 = Site.ZoomRectangle(r2);
+					r2.Inflate(2,2);
+
+					Site.InvalidateRectangle(r2);
+				}
+			}
+			finally
+			{
+				// ç¡®ä¿åœ¨æ–¹æ³•ç»“æŸæ—¶é‡ç½®æ ‡å¿—
+				mIsInvalidating = false;
 			}
 		}
 		/// <summary>

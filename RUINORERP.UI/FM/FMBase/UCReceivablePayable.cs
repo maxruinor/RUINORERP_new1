@@ -290,7 +290,7 @@ namespace RUINORERP.UI.FM
         }
 
         public override void BindData(tb_FM_ReceivablePayable entity, ActionStatus actionStatus)
-            {
+        {
             if (entity == null)
             {
                 return;
@@ -349,7 +349,7 @@ namespace RUINORERP.UI.FM
                     entity.BusinessDate = System.DateTime.Now;
                 }
                 entity.DocumentDate = System.DateTime.Now;
-            
+
 
                 //默认新建的都是费用，
                 //明细一开始就是大于0的，则是转单过来的。则不是费用
@@ -390,7 +390,7 @@ namespace RUINORERP.UI.FM
                 cmbPayeeInfoID.DataSource = null;
                 cmbPayeeInfoID.DataBindings.Clear();
                 cmbPayeeInfoID.Items.Clear();
-                
+
                 // 根据付款类型设置控件可见性
                 if (entity.ReceivePaymentType == (int)ReceivePaymentType.收款)
                 {
@@ -426,7 +426,7 @@ namespace RUINORERP.UI.FM
             DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.LocalPaidAmount.ToString(), txtLocalPaidAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.ForeignBalanceAmount.ToString(), txtForeignBalanceAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.LocalBalanceAmount.ToString(), txtLocalBalanceAmount, BindDataType4TextBox.Money, false);
-                DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.LocalReconciledAmount.ToString(), txtLocalReconciledAmount, BindDataType4TextBox.Money, false);
+            DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.LocalReconciledAmount.ToString(), txtLocalReconciledAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.ShippingFee.ToString(), txtShippingFee, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.PlatformOrderNo, txtPlatformOrderNo, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4CheckBox<tb_FM_ReceivablePayable>(entity, t => t.IsForCommission, chkIsForCommission, false);
@@ -570,7 +570,7 @@ namespace RUINORERP.UI.FM
                                 {
                                     entity.DueDate = System.DateTime.Now.AddDays(cv.SupplierCreditDays.Value);
                                 }
-                              
+
                             }
                         }
 
@@ -580,7 +580,7 @@ namespace RUINORERP.UI.FM
                         LoadPayeeInfo(entity);
                     }
                 }
-               
+
                 if (entity.Currency_ID > 0 && s2.PropertyName == entity.GetPropertyName<tb_FM_ReceivablePayable>(c => c.Currency_ID))
                 {
                     //如果币别是本位币则不显示汇率列
@@ -627,7 +627,7 @@ namespace RUINORERP.UI.FM
                 btnInfo.Visible = true;
                 lblPayeeInfoID.Visible = true;
                 cmbPayeeInfoID.Visible = true;
-                
+
                 if (entity.tb_fm_payeeinfo != null)
                 {
                     if (!string.IsNullOrEmpty(entity.tb_fm_payeeinfo.PaymentCodeImagePath))
@@ -794,7 +794,9 @@ namespace RUINORERP.UI.FM
             listCols.SetCol_Summary<tb_FM_ReceivablePayableDetail>(c => c.LocalPayableAmount);
             listCols.SetCol_Summary<tb_FM_ReceivablePayableDetail>(c => c.TaxLocalAmount);
             listCols.SetCol_Summary<tb_FM_ReceivablePayableDetail>(c => c.Quantity);
-            listCols.SetCol_Formula<tb_FM_ReceivablePayableDetail>((a, b, c) => a.TaxLocalAmount / (1 + b.TaxRate) * c.TaxRate, d => d.TaxLocalAmount);
+            listCols.SetCol_Formula<tb_FM_ReceivablePayableDetail>((a, b, c) => a.LocalPayableAmount / (1 + b.TaxRate) * c.TaxRate, d => d.TaxLocalAmount);
+
+
             //bool IsExpenseType = EditEntity.IsExpenseType.GetValueOrDefault();
             //公共到明细的映射 源 ，左边会隐藏
             sgh.SetPointToColumnPairs<ProductSharePart, tb_FM_ReceivablePayableDetail>(sgd, f => f.Standard_Price, t => t.UnitPrice);
@@ -1210,6 +1212,10 @@ namespace RUINORERP.UI.FM
         protected async override Task<bool> Save(bool NeedValidated)
         {
             if (EditEntity == null)
+            {
+                return false;
+            }
+            if (bindingSourceSub.DataSource == null)
             {
                 return false;
             }

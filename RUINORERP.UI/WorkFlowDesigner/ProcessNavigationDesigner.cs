@@ -150,11 +150,13 @@ namespace RUINORERP.UI.WorkFlowDesigner
             _graphControl.AllowAddShape = true;
             _graphControl.AllowDeleteShape = true;
             _graphControl.AllowMoveShape = true;
-            // Note: AllowResize property may not exist, check if needed
+            _graphControl.AllowResizeShape = true; // 允许调整形状大小
             _graphControl.ShowGrid = true;
             _graphControl.BackColor = Color.White;
+            _graphControl.ShowConnectorPoints = true; // 显示连接器点
             _graphControl.DragDrop += GraphControl_DragDrop;
             _graphControl.DragEnter += GraphControl_DragEnter;
+            _graphControl.OnConnectionAdded += GraphControl_OnConnectionAdded; // 添加连接创建事件处理
             // Note: OnShapeClick event may not exist, shapes handle their own mouse events
             // _graphControl.OnShapeClick += GraphControl_OnShapeClick;
 
@@ -380,7 +382,7 @@ namespace RUINORERP.UI.WorkFlowDesigner
                 if (e.Data.GetData(typeof(BusinessNodeTemplate)) is BusinessNodeTemplate template)
                 {
                     // 计算节点位置
-                    Point clientPoint = new Point(e.X, e.Y);
+                    Point clientPoint = _graphControl.PointToClient(new Point(e.X, e.Y));
                     PointF position = new PointF(clientPoint.X, clientPoint.Y);
 
                     // 创建节点
@@ -398,6 +400,38 @@ namespace RUINORERP.UI.WorkFlowDesigner
                 MessageBox.Show($"添加节点失败：{ex.Message}", "错误",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+        }
+        
+        /// <summary>
+        /// 处理连接添加事件
+        /// 确保连接正确创建并显示
+        /// </summary>
+        private bool GraphControl_OnConnectionAdded(object sender, ConnectionEventArgs e)
+        {
+            try
+            {
+                if (e.Connection != null)
+                {
+                    // 设置连接属性
+                    // 注意：ShowPoints属性可能不存在，需要检查
+                    // e.Connection.ShowPoints = true;
+                    e.Connection.IsSelected = true;
+                    
+                    // 刷新图形控件
+                    _graphControl.Invalidate();
+                    
+                    // 记录连接创建
+                    System.Diagnostics.Debug.WriteLine($"连接已创建: {e.Connection.From.Parent.Text} -> {e.Connection.To.Parent.Text}");
+                    
+                    return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"处理连接添加失败: {ex.Message}");
+            }
+            
+            return false; // 添加默认返回值
         }
 
         /// <summary>

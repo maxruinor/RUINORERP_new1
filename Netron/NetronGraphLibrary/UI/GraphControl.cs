@@ -43,7 +43,7 @@ namespace Netron.GraphLib.UI
     public class GraphControl : ScrollableControl, IGraphSite, IGraphLayout
     {
         /// <summary>
-        /// ¶¨ÒåÒ»¸öÊôÐÔÀ´±£´æÁ÷³ÌµÄÊý¾Ý£¬Ò»¸öÁ÷³ÌÍ¼¶ÔÓ¦Ò»¸öÁ÷³ÌÊý¾ÝWorkFlowConfigData
+        /// ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ìµï¿½ï¿½ï¿½ï¿½Ý£ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¼ï¿½ï¿½Ó¦Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½WorkFlowConfigData
         /// </summary>
         private object _WorkflowData;
         public object WorkflowData
@@ -59,50 +59,50 @@ namespace Netron.GraphLib.UI
         }
 
 
-        #region  ×Ô¶¨ÒåÊÂ¼þ
+        #region  ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½Â¼ï¿½
         public delegate void TestWorkflowAction(object sender, EventArgs e);
 
         public event TestWorkflowAction OnTestWorkflowAction;
 
         public delegate void ToJson(object sender, EventArgs e);
         /// <summary>
-        /// ½«Á÷³ÌÍ¼×ª»»Îªjson
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¼×ªï¿½ï¿½Îªjson
         /// </summary>
         public event ToJson OnToJsonAction;
 
 
         /// <summary>
-        /// ÉèÖÃÌõ¼þ
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
         public delegate void SetCondition(object sender, EventArgs e);
         /// <summary>
-        /// ÉèÖÃÌõ¼þµÄÖµ
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµ
         /// </summary>
         public event SetCondition OnSetCondition;
 
 
         /// <summary>
-        /// ÉèÖÃÏÂÒ»¸ö²½Öè
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
         public delegate void SetNextStepByLine(object sender, ConnectionEventArgs e);
         /// <summary>
-        /// ÉèÖÃÏÂÒ»¸ö²½Öè
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public event SetNextStepByLine OnSetNextStepByLine;
 
 
         /// <summary>
-        /// É¾³ýÁ¬½ÓÏß
+        /// É¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
         public delegate void DeleteConnectionLine(object sender, ConnectionEventArgs e);
         /// <summary>
-        /// É¾³ýÁ¬½ÓÏß
+        /// É¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public event DeleteConnectionLine OnDeleteConnectionLine;
 
@@ -110,13 +110,13 @@ namespace Netron.GraphLib.UI
 
 
         /// <summary>
-        /// ÉèÖÃ½ÚµãÊôÐÔÖµ
+        /// ï¿½ï¿½ï¿½Ã½Úµï¿½ï¿½ï¿½ï¿½ï¿½Öµ
         /// </summary>
         /// <param name="sender"></param>
-        /// <param name="e">½ÚµãÊôÐÔÖµ</param>
+        /// <param name="e">ï¿½Úµï¿½ï¿½ï¿½ï¿½ï¿½Öµ</param>
         public delegate void SetNodeProperties(object sender, object e);
         /// <summary>
-        /// ÉèÖÃ½ÚµãÍ¼ÐÎµÄÊôÐÔÖµ£¬Õâ¸öºÜÖØÒª
+        /// ï¿½ï¿½ï¿½Ã½Úµï¿½Í¼ï¿½Îµï¿½ï¿½ï¿½ï¿½ï¿½Öµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òª
         /// </summary>
         public event SetNodeProperties OnSetNodeProperties;
 
@@ -263,6 +263,16 @@ namespace Netron.GraphLib.UI
         /// allow add connection boolean
         /// </summary>
         protected bool mAllowAddConnection = true;
+
+        /// <summary>
+        /// allow resize shape boolean
+        /// </summary>
+        protected bool mAllowResizeShape = true;
+
+        /// <summary>
+        /// show connector points boolean
+        /// </summary>
+        protected bool mShowConnectorPoints = true;
 
         /// <summary>
         /// free, non graph dependen arrow, useful for debugging purposes
@@ -416,27 +426,27 @@ namespace Netron.GraphLib.UI
         internal GraphAbstract extract = null;
 
         /// <summary>
-        /// Î´Á¬½Óµ½ÌáÈ¡½á¹¹µÄÒ×Ê§ÐÔ¶ÔÏó£¬ÓÃÓÚµ±Ç°Ìí¼Ó»òÑ¡ÔñµÄÐÎ×´
+        /// Î´ï¿½ï¿½ï¿½Óµï¿½ï¿½ï¿½È¡ï¿½á¹¹ï¿½ï¿½ï¿½ï¿½Ê§ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Úµï¿½Ç°ï¿½ï¿½ï¿½Ó»ï¿½Ñ¡ï¿½ï¿½ï¿½ï¿½ï¿½×´
         /// </summary>
         protected Shape shapeObject = null;
 
         /// <summary>
-        /// Ò×Ê§ÐÔÁ¬½Ó£¬ÓÃÓÚ²Ù×÷µ±Ç°Á¬½Ó
+        /// ï¿½ï¿½Ê§ï¿½ï¿½ï¿½ï¿½ï¿½Ó£ï¿½ï¿½ï¿½ï¿½Ú²ï¿½ï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         protected Connection connection = null;
 
         /// <summary>
-        /// ¾ßÓÐµ±Ç°Êó±ê½¹µãµÄÊµÌå¡£ÓÉHitHoverºÍHitEntity´¦Àí³ÌÐò×Ô¶¯ÉèÖÃ
+        /// ï¿½ï¿½ï¿½Ðµï¿½Ç°ï¿½ï¿½ê½¹ï¿½ï¿½ï¿½Êµï¿½å¡£ï¿½ï¿½HitHoverï¿½ï¿½HitEntityï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         protected Entity Hover = null;
 
         /// <summary>
-        /// ÓÃÓÚ¸ú×ÙÑ¡Ôñ×´Ì¬µÄ¾ØÐÎ±íÊ¾ÐéÏßÑ¡Ôñ¾ØÐÎ¡£
+        /// ï¿½ï¿½ï¿½Ú¸ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½×´Ì¬ï¿½Ä¾ï¿½ï¿½Î±ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½ï¿½ï¿½Î¡ï¿½
         /// </summary>
         protected Selector selector = null;
 
         /// <summary>
-        /// ±íÊ¾¹ì¼£Ä£Ê½£¬¼´ËÄ´¦ÒÆ¶¯ÐÎ×´
+        /// ï¿½ï¿½Ê¾ï¿½ì¼£Ä£Ê½ï¿½ï¿½ï¿½ï¿½ï¿½Ä´ï¿½ï¿½Æ¶ï¿½ï¿½ï¿½×´
         /// </summary>
         protected bool mDoTrack = false;
 
@@ -549,6 +559,26 @@ namespace Netron.GraphLib.UI
         {
             get { return this.mAllowAddConnection; }
             set { this.mAllowAddConnection = value; }
+        }
+
+        /// <summary>
+        /// Gets or sets whether shapes can be resized in the graph
+        /// </summary>
+        [Category("Graph"), Browsable(true), Description("Gets or sets whether shapes can be resized in the graph.")]
+        public bool AllowResizeShape
+        {
+            get { return this.mAllowResizeShape; }
+            set { this.mAllowResizeShape = value; }
+        }
+
+        /// <summary>
+        /// Gets or sets whether connector points are visible in the graph
+        /// </summary>
+        [Category("Graph"), Browsable(true), Description("Gets or sets whether connector points are visible in the graph.")]
+        public bool ShowConnectorPoints
+        {
+            get { return this.mShowConnectorPoints; }
+            set { this.mShowConnectorPoints = value; this.Invalidate(); }
         }
 
         /// <summary>
@@ -1067,7 +1097,7 @@ namespace Netron.GraphLib.UI
         }
 
         /// <summary>
-        ///´Ó¾ßÓÐ¸ø¶¨UIDµÄ¹ØÏµÍ¼ÖÐÉ¾³ý±ß
+        ///ï¿½Ó¾ï¿½ï¿½Ð¸ï¿½ï¿½ï¿½UIDï¿½Ä¹ï¿½ÏµÍ¼ï¿½ï¿½É¾ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         /// <param name="uid"></param>
         public void RemoveEdge(System.Guid uid)
@@ -1502,15 +1532,15 @@ namespace Netron.GraphLib.UI
                 {
                     //do we hit something under the cursor?
                     HitHover(p);
-                    /*start by watson ÏÔÊ¾ÊôÐÔ¹¤×÷Á÷½ÚµãµÄÊôÐÔ*/
-                    //Ïß£¨Ìõ¼þ£©Ë«»÷ÏÔÊ¾ÊôÐÔ
+                    /*start by watson ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½Ô¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Úµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½*/
+                    //ï¿½ß£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë«ï¿½ï¿½ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½
                     if ((Hover != null) && (typeof(Entity).IsInstanceOfType(Hover)))
                     {
                         if (OnSetNodeProperties != null)
                         {
                             if (Hover.NodeStepPropertyValue == null)
                             {
-                                MessageBox.Show("ÇëÉèÖÃµ±Ç°Á¬½ÓÏßµÄNodeStepPropertyValueÊôÐÔ");
+                                MessageBox.Show("ï¿½ï¿½ï¿½ï¿½ï¿½Ãµï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ßµï¿½NodeStepPropertyValueï¿½ï¿½ï¿½ï¿½");
                             }
                             else
                             {
@@ -1521,19 +1551,19 @@ namespace Netron.GraphLib.UI
                     }
 
 
-                    //½ÚµãË«»÷ÏÔÊ¾ÊôÐÔ ½ÚµãºÍÏßÒ»ÑùµÄ´úÂë£¬ÕâÀï²»ÖØ¸´£¬ËùÒÔ×¢ÊÍµô
+                    //ï¿½Úµï¿½Ë«ï¿½ï¿½ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½ ï¿½Úµï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Ä´ï¿½ï¿½ë£¬ï¿½ï¿½ï¿½ï²»ï¿½Ø¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×¢ï¿½Íµï¿½
                     /*
                     if ((Hover != null) && Hover.GetType().BaseType.Name == "BaseNode")
                     {
                         //if (OnSetNodeProperties != null)
                         //    OnSetNodeProperties(this, obj);
 
-                        //ÉÏÃæÊÇ½«Ñ¡ÔñµÄÏß×ªÈë
+                        //ï¿½ï¿½ï¿½ï¿½ï¿½Ç½ï¿½Ñ¡ï¿½ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½
                         if (OnSetNodeProperties != null)
                         {
                             if (Hover.NodeStepPropertyValue == null)
                             {
-                                MessageBox.Show("ÇëÉèÖÃµ±Ç°½ÚµãµÄNodeStepPropertyValueÊôÐÔ");
+                                MessageBox.Show("ï¿½ï¿½ï¿½ï¿½ï¿½Ãµï¿½Ç°ï¿½Úµï¿½ï¿½NodeStepPropertyValueï¿½ï¿½ï¿½ï¿½");
                             }
                             else
                             {
@@ -1591,9 +1621,9 @@ namespace Netron.GraphLib.UI
                                 this.ContextMenu.MenuItems.AddRange(additionals);
                             }
 
-                            //Èç¹ûÑ¡ÖÐµÄÊÇ½ÚµãÔòÌí¼Ó½ÚµãÉèÖÃÊôÐÔ²Ëµ¥Ïî
+                            //ï¿½ï¿½ï¿½Ñ¡ï¿½Ðµï¿½ï¿½Ç½Úµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó½Úµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô²Ëµï¿½ï¿½ï¿½
                             // this.ContextMenu.MenuItems.Add("-");
-                            //this.ContextMenu.MenuItems.Add(new MenuItem("ÉèÖÃ½ÚµãÊôÐÔ", new EventHandler(OnShowNodesProperties)));
+                            //this.ContextMenu.MenuItems.Add(new MenuItem("ï¿½ï¿½ï¿½Ã½Úµï¿½ï¿½ï¿½ï¿½ï¿½", new EventHandler(OnShowNodesProperties)));
 
 
                         }
@@ -1604,17 +1634,17 @@ namespace Netron.GraphLib.UI
                             this.ContextMenu.MenuItems.Add("-");
 
                             MenuItem[] subconnection = new MenuItem[2]{
-                                                                          new MenuItem("Ìí¼Óµã",new EventHandler(AddConnectionPoint)),
-                                                                          new MenuItem("É¾³ýµã",new EventHandler(RemoveConnectionPoint))
+                                                                          new MenuItem("ï¿½ï¿½ï¿½Óµï¿½",new EventHandler(AddConnectionPoint)),
+                                                                          new MenuItem("É¾ï¿½ï¿½ï¿½ï¿½",new EventHandler(RemoveConnectionPoint))
                                                                       };
 
 
-                            this.ContextMenu.MenuItems.Add(new MenuItem("Á¬½ÓÏß", subconnection));
-                            //Èç¹ûÑ¡ÖÐµÄÏßÌõÓÐÒ»¸öµãÊÇÖ¸ÏòÅÐ¶Ï½Úµã£¬ÔòÏÔÊ¾Ìõ¼þÉèÖÃ²Ëµ¥Ïî
+                            this.ContextMenu.MenuItems.Add(new MenuItem("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½", subconnection));
+                            //ï¿½ï¿½ï¿½Ñ¡ï¿½Ðµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½ï¿½Ð¶Ï½Úµã£¬ï¿½ï¿½ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã²Ëµï¿½ï¿½ï¿½
                             if ((Hover as Connection).From.BelongsTo.GetType().Name == "DecisionShape")
                             {
                                 this.ContextMenu.MenuItems.Add("-");
-                                this.ContextMenu.MenuItems.Add(new MenuItem("ÉèÖÃÌõ¼þ", new EventHandler(OnShowSetCondition)));
+                                this.ContextMenu.MenuItems.Add(new MenuItem("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½", new EventHandler(OnShowSetCondition)));
                             }
 
 
@@ -1773,7 +1803,7 @@ namespace Netron.GraphLib.UI
 
 
         /// <summary>
-        /// ÉèÖÃÌõ¼þÊÂ¼þ´«³öµ½Íâ²¿´¦Àí³ÌÐò
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½â²¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -1788,7 +1818,7 @@ namespace Netron.GraphLib.UI
             Connection selectConn = connections.FirstOrDefault(c => c.IsSelected);
             sender = selectConn;
 
-            //ÉÏÃæÊÇ½«Ñ¡ÔñµÄÏß×ªÈë
+            //ï¿½ï¿½ï¿½ï¿½ï¿½Ç½ï¿½Ñ¡ï¿½ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½
             if (OnSetCondition != null) OnSetCondition(sender, e);
         }
 
@@ -1847,11 +1877,11 @@ namespace Netron.GraphLib.UI
                     HitHover(p);
 
                     connection.Invalidate();
-                    //ÓÃ»§È·ÈÏÐÅÏ¢Èç¹û¹â±êÎ»ÓÚÁ¬½ÓÆ÷ÉÏ£¬ÔòÁ¬½ÓÐÂµÄÁ¬½Ó
+                    //ï¿½Ã»ï¿½È·ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Âµï¿½ï¿½ï¿½ï¿½ï¿½
                     if ((Hover != null) && (typeof(Connector).IsInstanceOfType(Hover)))
                         if (!Hover.Equals(connection.From) && (Hover as Connector).AllowNewConnectionsTo)
                         {
-                            //¼ì²éÁ¬½ÓÆ÷ÊÇ·ñ¿ÉÒÔÓÐ¶îÍâµÄÁ¬½Ó				
+                            //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½Ð¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½				
                             if (((Connector)Hover).AllowMultipleConnections || ((Connector)Hover).Connections.Count == 0)
                             {
 
@@ -1863,11 +1893,11 @@ namespace Netron.GraphLib.UI
                                 {
                                     if (!OnConnectionAdded(this, new ConnectionEventArgs(connection, true)))
                                     {
-                                        connection.Delete(); //Èç¹û£¨Íâ²¿£©´¦Àí³ÌÐò¸æËß²»Õý³££¬ÎÒÃÇ½«ÔÙ´ÎÉ¾³ýÁ¬½Ó
+                                        connection.Delete(); //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½â²¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç½ï¿½ï¿½Ù´ï¿½É¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                                     }
                                 }
 
-                                //Ìí¼ÓÏÂ¼¶Ò»ÌõÏßÊ±£¬Ìí¼ÓÏÂ¼¶²½Öè
+                                //ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½Ò»ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½
                                 if (OnSetNextStepByLine != null)
                                 {
                                     OnSetNextStepByLine(this, new ConnectionEventArgs(connection, true));
@@ -2262,7 +2292,7 @@ namespace Netron.GraphLib.UI
             //AddToContextMenu(summ);
 
 
-            //summ = new ShapeSummary(libPath, "8ED1469D-90B2-43ab-B000-4FF5C682F531", "¿ªÊ¼", "Basic shapes", "Netron.GraphLib.BasicShapes.StartNode", "Á÷³Ì¿ªÊ¼µÄ½Úµã");
+            //summ = new ShapeSummary(libPath, "8ED1469D-90B2-43ab-B000-4FF5C682F531", "ï¿½ï¿½Ê¼", "Basic shapes", "Netron.GraphLib.BasicShapes.StartNode", "ï¿½ï¿½ï¿½Ì¿ï¿½Ê¼ï¿½Ä½Úµï¿½");
             //lib.ShapeSummaries.Add(summ);
             //AddToContextMenu(summ);
 
@@ -2364,16 +2394,16 @@ namespace Netron.GraphLib.UI
                         }
                     }
 
-                    //Ò»¸öÁ÷³ÌÖ»ÄÜÒ»¸ö¿ªÊ¼½Úµã
+                    //Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö»ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½Ê¼ï¿½Úµï¿½
                     if (ExistStart && summary.Key == "8ED1469D-90B2-43ab-B000-4FF5C682F502")
                     {
-                        MessageBox.Show("Ò»¸öÁ÷³ÌÖ»ÄÜÓÐÒ»¸ö¿ªÊ¼½Úµã.", "´íÎó", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        MessageBox.Show("Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö»ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½Ê¼ï¿½Úµï¿½.", "ï¿½ï¿½ï¿½ï¿½", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                         return;
                     }
                 }
                 catch
                 {
-                    MessageBox.Show("ÕÒ²»µ½Òª´´½¨µÄÓÐÐ§ÐÎ×´Êý¾Ý.", "ÎÞÊý¾Ý´íÎó", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    MessageBox.Show("ï¿½Ò²ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð§ï¿½ï¿½×´ï¿½ï¿½ï¿½ï¿½.", "ï¿½ï¿½ï¿½ï¿½ï¿½Ý´ï¿½ï¿½ï¿½", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
                 try
                 {
@@ -2382,7 +2412,7 @@ namespace Netron.GraphLib.UI
                 }
                 catch
                 {
-                    MessageBox.Show("ÕÒ²»µ½Í¼ÐÎÊý¾Ý. \n (ÄãÌí¼ÓÁË±ØÒªµÄÍ¼ÐÎÔªËØ¿âÂð?)", "ÎÞÊý¾Ý´íÎó", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    MessageBox.Show("ï¿½Ò²ï¿½ï¿½ï¿½Í¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½. \n (ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë±ï¿½Òªï¿½ï¿½Í¼ï¿½ï¿½Ôªï¿½Ø¿ï¿½ï¿½ï¿½?)", "ï¿½ï¿½ï¿½ï¿½ï¿½Ý´ï¿½ï¿½ï¿½", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
             }
             Point currentPt = this.PointToClient(new Point(drgevent.X, drgevent.Y));
@@ -2536,7 +2566,7 @@ namespace Netron.GraphLib.UI
                             {
                                 if (n.IsSelected)
                                 {
-                                   //´¦ÀíÊÂ¼þÒªÔÚÉ¾³ýÇ°´¦Àí£¬²»È»Âß¼­É¾³ý·½·¨ÖÐÎÞ·¨ÒýÓÃµ½ÆäËû
+                                   //ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½Òªï¿½ï¿½É¾ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È»ï¿½ß¼ï¿½É¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Þ·ï¿½ï¿½ï¿½ï¿½Ãµï¿½ï¿½ï¿½ï¿½ï¿½
                                     if (OnDeleteConnectionLine != null)
                                     {
                                         OnDeleteConnectionLine(this, new ConnectionEventArgs(n, true));
@@ -2558,7 +2588,7 @@ namespace Netron.GraphLib.UI
         }
 
         /// <summary>
-        /// Ìí¼ÓÊ§°ÜÊ±£¬ÌáÊ¾ºóÔÙÉ¾³ý
+        /// ï¿½ï¿½ï¿½ï¿½Ê§ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½É¾ï¿½ï¿½
         /// </summary>
         /// <param name="n"></param>
         public void DeleteUIConnectionLine(Connection n)
@@ -2668,7 +2698,7 @@ namespace Netron.GraphLib.UI
             //mContextMenu.MenuItems.Add("-");//add a separation
             MenuItem graphItem = new MenuItem("Graph");
             mContextMenu.MenuItems.Add(graphItem);
-            graphItem.MenuItems.Add("ÐÂ½¨", new EventHandler(OnNewGraph));
+            graphItem.MenuItems.Add("ï¿½Â½ï¿½", new EventHandler(OnNewGraph));
             graphItem.MenuItems.Add("È«Ñ¡", new EventHandler(OnSelectAll));
 
             mContextMenu.MenuItems.Add("-");//add a separation
@@ -2678,14 +2708,14 @@ namespace Netron.GraphLib.UI
 			mContextMenu.MenuItems.Add(new MenuItem("&Copy", new EventHandler(OnCopy)));
 			mContextMenu.MenuItems.Add(new MenuItem("&Paste", new EventHandler(OnPaste)));
 			*/
-            mContextMenu.MenuItems.Add(new MenuItem("&É¾³ý", new EventHandler(OnDelete)));
+            mContextMenu.MenuItems.Add(new MenuItem("&É¾ï¿½ï¿½", new EventHandler(OnDelete)));
             mContextMenu.MenuItems.Add("-");//add a separation
-            mContextMenu.MenuItems.Add(new MenuItem("×ª»»Îª&Json", new EventHandler(OnToJson)));
+            mContextMenu.MenuItems.Add(new MenuItem("×ªï¿½ï¿½Îª&Json", new EventHandler(OnToJson)));
             mContextMenu.MenuItems.Add("-");//add a separation
-            mContextMenu.MenuItems.Add(new MenuItem("²âÊÔ¹¤×÷Á÷", new EventHandler(OnTestWorkflow)));
+            mContextMenu.MenuItems.Add(new MenuItem("ï¿½ï¿½ï¿½Ô¹ï¿½ï¿½ï¿½ï¿½ï¿½", new EventHandler(OnTestWorkflow)));
             mContextMenu.MenuItems.Add("-");//add a separation
 
-            mContextMenu.MenuItems.Add(new MenuItem("ÊôÐÔ", new EventHandler(OnProperties)));
+            mContextMenu.MenuItems.Add(new MenuItem("ï¿½ï¿½ï¿½ï¿½", new EventHandler(OnProperties)));
         }
 
         /// <summary>
@@ -3176,7 +3206,7 @@ namespace Netron.GraphLib.UI
                             library.ShapeSummaries.Add(shapeSum);
                             if (!shapeSum.IsInternal)
                             {
-                                //TODO:by watson ÕâÀï×¢ÊÍ¾Í²»»áÏÔÊ¾ºÜ¶àµÄÓÒ¼ü²Ëµ¥ÁË
+                                //TODO:by watson ï¿½ï¿½ï¿½ï¿½×¢ï¿½Í¾Í²ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾ï¿½Ü¶ï¿½ï¿½ï¿½Ò¼ï¿½ï¿½Ëµï¿½ï¿½ï¿½
                                 // AddToContextMenu(shapeSum);
                             }
 
@@ -3380,7 +3410,7 @@ namespace Netron.GraphLib.UI
 
         #region Raisers
         /// <summary>
-        /// Òý·¢ShowPropsÊÂ¼þ
+        /// ï¿½ï¿½ï¿½ï¿½ShowPropsï¿½Â¼ï¿½
         /// </summary>
         /// <param name="props"></param>
         public void RaiseShowProperties(PropertyBag props)

@@ -117,6 +117,10 @@ namespace RUINORERP.UI.Network.Services
             {
                 try
                 {
+                    if (packet.Request != null)
+                    {
+
+                    }
 
                     if (packet.Request is CacheRequest cacheRequest)
                     {
@@ -181,8 +185,22 @@ namespace RUINORERP.UI.Network.Services
         {
             _commService.SubscribeCommand(CacheCommands.CacheSync, async (packet, data) =>
             {
+                //批处理实现还没有实现吧。这个同步上面也有执行。RegisterCacheSyncHandler
+                return;
+
                 try
                 {
+                    if (packet.Request!=null)
+                    {
+
+                    }
+                    if (packet.Request is CacheRequest  cacheRequest)
+                    {
+                        if(cacheRequest.Operation== CacheOperation.Manage)
+                        {
+
+                        }
+                    }
 
                     if (data is List<CacheResponse> responses)
                     {
@@ -198,7 +216,7 @@ namespace RUINORERP.UI.Network.Services
                     }
                     else
                     {
-                        _log.LogWarning("批量缓存同步数据格式无效，期望List<CacheResponse>，实际类型={0}", data?.GetType().Name ?? "null");
+                        _log.LogWarning($"批量缓存同步数据格式无效{packet.CommandId.ToString()}，期望List<CacheResponse>，实际类型={0}", data?.GetType().Name ?? "null");
                     }
                 }
                 catch (Exception ex)

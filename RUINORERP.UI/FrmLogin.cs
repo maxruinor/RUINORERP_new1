@@ -210,7 +210,7 @@ namespace RUINORERP.UI
                         // 停止计时并记录结果
                         stopwatch.Stop();
                         TimeSpan loginTimeSpan = stopwatch.Elapsed;
-                        string loginTimeInfo = $"登录方法执行时间: {loginTimeSpan.TotalMilliseconds:N2} 毫秒";
+                        string loginTimeInfo = $"登录方法执行时间: {loginTimeSpan.TotalSeconds:N2} 秒";
 
                         // 记录登录时间信息到日志
                         if (MainForm.Instance != null && MainForm.Instance.logger != null)

@@ -472,7 +472,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         private async Task<UserSessionInfo> ValidateUserCredentialsAsync(LoginRequest loginRequest, CancellationToken cancellationToken)
         {
             //防止暴力破解攻击,时间侧信道攻击防护,降低服务器负载 这是一个 安全最佳实践 ，在身份验证系统中很常见，目的是提高系统的安全性而不是处理超时情况。
-            await Task.Delay(100, cancellationToken);
+            await Task.Delay(500, cancellationToken);
             //password = EncryptionHelper.AesDecryptByHashKey(enPwd, username);
             string EnPassword = EncryptionHelper.AesEncryptByHashKey(loginRequest.Password, loginRequest.Username);
 

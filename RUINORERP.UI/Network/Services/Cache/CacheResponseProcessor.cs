@@ -160,7 +160,7 @@ namespace RUINORERP.UI.Network.Services.Cache
             try
             {
                 // 统一验证成功状态和表名（Manage操作允许失败状态）
-                if (request != null && request.CacheData != null)
+                if (request != null && request.CacheData == null)
                 {
                     _log?.LogWarning("服务缓存推送数据异常，表名={0}, 操作类型={1}", request.TableName, request.Operation);
                 }

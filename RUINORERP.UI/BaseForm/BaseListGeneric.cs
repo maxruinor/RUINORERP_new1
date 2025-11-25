@@ -1750,6 +1750,7 @@ namespace RUINORERP.UI.BaseForm
                             MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("保存", rr.ReturnObject);
                             //list.Add(rr.ReturnObject);
                             _eventDrivenCacheManager.UpdateEntity<T>(rr.ReturnObject);
+
                         }
                         //如果新增 保存后。还是新增加状态，因为增加另一条。所以保存不为灰色。所以会重复增加
                         break;
@@ -1762,6 +1763,7 @@ namespace RUINORERP.UI.BaseForm
                 entity.HasChanged = false;
                 Returnlist.Add(entity as T);
             }
+            MainForm.Instance.PrintInfoLog($"{Returnlist.Count}行数据，保存成功");
             return Returnlist;
         }
 

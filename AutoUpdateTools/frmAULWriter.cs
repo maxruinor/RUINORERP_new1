@@ -398,6 +398,14 @@ namespace AULWriter
             try
             {
                 var doc = XDocument.Load(parameters.TargetXmlFilePath);
+                
+                // 更新Url节点值，使其与UI上的txtUrl同步
+                var urlElement = doc.Descendants("Updater").Elements("Url").FirstOrDefault();
+                if (urlElement != null)
+                {
+                    urlElement.Value = txtUrl.Text.Trim();
+                }
+                
                 UpdateVersionInformation(doc, parameters);
 
                 var fileElements = doc.Descendants("File").ToList();
@@ -1368,6 +1376,13 @@ namespace AULWriter
         {
             XDocument doc = XDocument.Load(targetXmlFilePath);
             txtDiff.Clear();
+            
+            // 更新Url节点值，使其与UI上的txtUrl同步
+            var urlElement = doc.Descendants("Updater").Elements("Url").FirstOrDefault();
+            if (urlElement != null)
+            {
+                urlElement.Value = txtUrl.Text.Trim();
+            }
 
             if (chkUseBaseVersion.Checked)
             {

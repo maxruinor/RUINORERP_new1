@@ -212,7 +212,7 @@ namespace RUINORERP.UI
                     // 如果当前不是登录中状态且已连接，则断开连接
                     if (CurrentLoginStatus != LoginStatus.LoggingIn && communicationService != null && communicationService.IsConnected)
                     {
-                        Invoke(new Action(async () => 
+                        Invoke(new Action(async () =>
                         {
                             var disconnectResult = await communicationService.Disconnect();
                             logger?.LogInformation($"重连失败处理中断开连接结果: {disconnectResult}");
@@ -273,6 +273,7 @@ namespace RUINORERP.UI
         public ApplicationContext AppContext { set; get; }
         public ILogger<MainForm> logger { get; set; }
         public string Version { get => version; set => version = value; }
+
         public readonly AuditLogHelper auditLogHelper;
         public AuditLogHelper AuditLogHelper => auditLogHelper;
 
@@ -628,7 +629,7 @@ namespace RUINORERP.UI
         {
             bool rs = false;
             var validatorMonitor = Startup.GetFromFac<SystemGlobalConfig>();
-            
+
             // 如果未配置自动更新且非强制更新，则不执行更新检查
             if (!validatorMonitor.客户端自动更新 && !forceUpdate)
             {
@@ -638,48 +639,50 @@ namespace RUINORERP.UI
                 }
                 return false;
             }
-            
+
             // 配置为开启自动更新或强制更新的情况，继续执行更新检查
-                try
+            try
+            {
+                AutoUpdate.FrmUpdate Update = new AutoUpdate.FrmUpdate();
+
+                // 检查是否有更新
+                bool hasUpdates = Update.CheckHasUpdates();
+
+                // 检查是否需要跳过版本（仅在非强制更新且有更新的情况下）
+                bool shouldSkipVersion = !forceUpdate && hasUpdates;
+
+                // 检查跳过版本的标记文件
+                if (shouldSkipVersion)
                 {
-                    AutoUpdate.FrmUpdate Update = new AutoUpdate.FrmUpdate();
-                    
-                    // 检查是否有更新
-                    bool hasUpdates = Update.CheckHasUpdates();
-                    
-                    // 检查是否需要跳过版本（仅在非强制更新且有更新的情况下）
-                    bool shouldSkipVersion = !forceUpdate && hasUpdates;
-                    
-                    // 检查跳过版本的标记文件
-                    if (shouldSkipVersion)
+                    string appDataPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "RUINORERP");
+                    string skipVersionFilePath = Path.Combine(appDataPath, "SkippedVersions.xml");
+                    string skipCurrentVersionFilePath = Path.Combine(Application.StartupPath, "skipcurrentversion.txt");
+
+                    // 如果存在跳过版本的标记文件，询问用户是否仍要检查更新
+                    if (File.Exists(skipVersionFilePath) || File.Exists(skipCurrentVersionFilePath))
                     {
-                        string appDataPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "RUINORERP");
-                        string skipVersionFilePath = Path.Combine(appDataPath, "SkippedVersions.xml");
-                        string skipCurrentVersionFilePath = Path.Combine(Application.StartupPath, "skipcurrentversion.txt");
-                        
-                        // 如果存在跳过版本的标记文件，询问用户是否仍要检查更新
-                        if (File.Exists(skipVersionFilePath) || File.Exists(skipCurrentVersionFilePath))
+                        DialogResult result = MessageBox.Show(
+                            "检测到您已跳过当前版本的更新。\n是否仍要检查并安装最新版本？",
+                            "更新提示",
+                            MessageBoxButtons.YesNo,
+                            MessageBoxIcon.Question);
+
+                        if (result == DialogResult.No)
                         {
-                            DialogResult result = MessageBox.Show(
-                                "检测到您已跳过当前版本的更新。\n是否仍要检查并安装最新版本？", 
-                                "更新提示", 
-                                MessageBoxButtons.YesNo, 
-                                MessageBoxIcon.Question);
-                            
-                            if (result == DialogResult.No)
+                            if (ShowMessageBox)
                             {
-                                if (ShowMessageBox)
-                                {
-                                    MessageBox.Show("更新已跳过，您可以稍后在系统设置中手动检查更新。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                                }
-                                return false;
+                                MessageBox.Show("更新已跳过，您可以稍后在系统设置中手动检查更新。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                             }
+                            return false;
                         }
                     }
-                    
-                    if (hasUpdates)
+                }
+
+                if (hasUpdates)
+                {
+                    var dialogResult = MessageBox.Show("服务器有新版本，更新前请保存当前操作，关闭系统。\r\n确定更新吗？", "温馨提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Asterisk);
+                    if (dialogResult == DialogResult.OK)
                     {
-                        MessageBox.Show("服务器有新版本，更新前请保存当前操作，关闭系统。", "温馨提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                         Process.Start(Update.currentexeName);
                         // 登录成功，重置注销状态
                         IsLoggingOut = false;
@@ -687,29 +690,45 @@ namespace RUINORERP.UI
 
                         // 等待2秒，确保更新程序启动
                         await Task.Delay(1500);
-                        //启动另一个exe程序后等待2秒后来检测读取这个文件
-                        // string content = FileHelper.ReadFileContent(UpdatefilePath);
-
-                        // 确保当前程序退出
-                        rs = true;
-
                     }
                     else
                     {
-                        if (ShowMessageBox)
-                        {
-                            MessageBox.Show("已经是最新版本，不需要更新。", "温馨提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        }
                         rs = false;
                     }
-                    await Task.Delay(10); // 假设操作需要一段时间
-                    return rs;
                 }
-                catch
+                else
                 {
-                    return rs;
+                    if (ShowMessageBox)
+                    {
+    
+                        
+                        // 检查是否有可回滚的版本
+                        bool hasRollbackVersions = Update.CheckHasRollbackVersions();
+                        
+                        if (hasRollbackVersions)
+                        {
+                            // 设置为回滚模式，强制显示回滚界面
+                        Update.SetRollbackMode();
+                            
+                            // 如果有可回滚的版本，显示更新窗体（会自动进入回滚模式）
+                            Update.ShowDialog();
+                        }
+                        else
+                        {
+                            // 如果没有可回滚的版本，才显示提示信息
+                            MessageBox.Show("已经是最新版本，不需要更新。", "温馨提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        }
+                    }
+                    rs = false;
                 }
-            
+                await Task.Delay(10); // 假设操作需要一段时间
+                return rs;
+            }
+            catch
+            {
+                return rs;
+            }
+
             return rs;
         }
 
@@ -1012,7 +1031,7 @@ namespace RUINORERP.UI
             // 使用CacheInitializationService 只加载要缓存的表结构。缓存从服务器取
             var cacheInitializationService = Startup.GetFromFac<EntityCacheInitializationService>();
             cacheInitializationService.InitializeAllTableSchemas();
-            this.Text = "企业数字化集成ERP v3.0" + "-" + Program.ERPVersion;
+            this.Text = "企业数字化集成ERP v3.1" + "-" + Program.ERPVersion;
             //MessageBox.Show("登陆成功后，请要系统设置中添加公司基本资料。");
             using (StatusBusy busy = new StatusBusy("检测系统是否为最新版本 请稍候"))
             {
@@ -1046,7 +1065,7 @@ namespace RUINORERP.UI
             }
             else
             {
-              await  UIBizService.RequestCache(typeof(tb_RoleInfo), useBackground: true);
+                await UIBizService.RequestCache(typeof(tb_RoleInfo), useBackground: true);
                 await UIBizService.RequestCache(typeof(tb_ProductType), useBackground: true);
                 await UIBizService.RequestCache(typeof(View_ProdDetail), useBackground: true);
 
@@ -1191,7 +1210,7 @@ namespace RUINORERP.UI
 
                 // 使用Invoke确保UI操作在主线程中执行
                 this.Invoke(new Action(() => PrintInfoLog("正在查询项目组...")));
-                
+
                 //todo 后面再优化为缓存级吧
                 List<tb_ProjectGroup> projectGroups = new List<tb_ProjectGroup>();
                 List<tb_ProjectGroupEmployees> groupEmployees = new List<tb_ProjectGroupEmployees>();
@@ -1855,7 +1874,7 @@ namespace RUINORERP.UI
                     }
                     if (AppContext.CompanyInfo != null)
                     {
-                        this.Text = AppContext.CompanyInfo.ShortName + "企业数字化集成ERP v2.0" + "-" + Program.ERPVersion;
+                        this.Text = AppContext.CompanyInfo.ShortName + "企业数字化集成ERP v3.1" + "-" + Program.ERPVersion;
                     }
 
                     await UIBizService.RequestCache(nameof(tb_RoleInfo));

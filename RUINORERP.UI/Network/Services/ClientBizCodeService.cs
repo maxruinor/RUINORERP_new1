@@ -298,8 +298,17 @@ namespace RUINORERP.UI.Network.Services
         /// <returns>响应对象</returns>
         private async Task<BizCodeResponse> SendBizCodeCommandAsync(CommandId commandId, BizCodeRequest request, CancellationToken ct = default)
         {
+            // 创建带超时的取消令牌源
+            using var timeoutCts = new CancellationTokenSource();
+            // 设置默认超时时间为10秒
+            timeoutCts.CancelAfter(TimeSpan.FromSeconds(10));
+            
+            // 创建组合取消令牌，任一令牌取消都会导致操作取消
+            using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(ct, timeoutCts.Token);
+            var combinedCt = linkedCts.Token;
+            
             // 使用信号量确保同一时间只有一个请求
-            await _operationLock.WaitAsync(ct);
+            await _operationLock.WaitAsync(combinedCt);
             try
             {
                 // 检查连接状态
@@ -313,14 +322,25 @@ namespace RUINORERP.UI.Network.Services
                 BizCodeResponse response = null;
                 int maxRetries = 2;
                 int retryCount = 0;
+                // 记录开始时间，用于总超时控制
+                var startTime = DateTime.UtcNow;
+                // 最大允许的总重试时间为10秒
+                var maxTotalRetryTime = TimeSpan.FromSeconds(10);
 
                 while (retryCount <= maxRetries)
                 {
                     try
                     {
+                        // 检查总重试时间是否超过限制
+                        if (DateTime.UtcNow - startTime > maxTotalRetryTime)
+                        {
+                            _logger?.LogWarning("业务编码生成请求总重试时间超过限制 - 命令ID: {CommandId}", commandId.ToString());
+                            throw new TimeoutException("请求重试时间过长，请稍后重试");
+                        }
+                        
                         // 发送命令并获取响应
                         response = await _communicationService.SendCommandWithResponseAsync<BizCodeResponse>(
-                            commandId, request, ct);
+                            commandId, request, combinedCt);
                         break; // 成功则跳出重试循环
                     }
                     catch (Exception ex) when (IsRetryableException(ex) && retryCount < maxRetries)
@@ -328,8 +348,9 @@ namespace RUINORERP.UI.Network.Services
                         retryCount++;
                         _logger?.LogWarning(ex, "业务编码生成请求失败，正在重试 ({RetryCount}/{MaxRetries}) - 命令ID: {CommandId}",
                             retryCount, maxRetries, commandId.ToString());
-                        // 指数退避策略
-                        await Task.Delay(100 * (int)Math.Pow(2, retryCount), ct);
+                        // 指数退避策略，增加随机因子避免重试风暴
+                        int delayMs = (int)(100 * Math.Pow(2, retryCount)) + new Random().Next(0, 100);
+                        await Task.Delay(delayMs, combinedCt);
                     }
                 }
 
@@ -342,14 +363,34 @@ namespace RUINORERP.UI.Network.Services
 
                 return response;
             }
-            catch (OperationCanceledException ex)
+            catch (OperationCanceledException ex) when (ct.IsCancellationRequested)
             {
-                _logger?.LogDebug(ex, "业务编码生成操作已被取消");
+                _logger?.LogDebug(ex, "业务编码生成操作已被用户取消");
+                throw new OperationCanceledException("操作已被用户取消", ex);
+            }
+            catch (OperationCanceledException ex) when (timeoutCts.Token.IsCancellationRequested)
+            {
+                _logger?.LogWarning(ex, "业务编码生成操作超时");
+                throw new TimeoutException("业务编码生成请求超时，请检查网络连接后重试", ex);
+            }
+            catch (TimeoutException ex)
+            {
+                _logger?.LogError(ex, "业务编码生成过程中发生超时异常");
                 throw;
+            }
+            catch (System.Net.Sockets.SocketException ex)
+            {
+                _logger?.LogError(ex, "业务编码生成过程中发生网络连接异常 (SocketError: {SocketError})");
+                throw new Exception("网络连接错误，请检查网络后重试", ex);
+            }
+            catch (System.IO.IOException ex)
+            {
+                _logger?.LogError(ex, "业务编码生成过程中发生IO异常");
+                throw new Exception("网络传输错误，请稍后重试", ex);
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "业务编码生成过程中发生未预期的异常");
+                _logger?.LogError(ex, "业务编码生成过程中发生未预期的异常 - 命令ID: {CommandId}", commandId.ToString());
                 throw new Exception("生成业务编码时发生错误，请稍后重试", ex);
             }
             finally

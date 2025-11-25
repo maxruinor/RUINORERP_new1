@@ -11,6 +11,7 @@ using Microsoft.Extensions.Options;
 using System.Reflection;
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 using RUINORERP.Business.CommService;
 using RUINORERP.Business.Cache;
 using RUINORERP.UI.Network.Services.Cache;
@@ -133,17 +134,19 @@ namespace RUINORERP.UI.Network.DI
                 // 这避免了在构造过程中触发依赖解析导致的循环引用
                 try
                 {
-                    // 注意：这里需要确保ClientCommunicationService有一个公共的InitializeCommandDispatcher方法
-                    // 如果没有，需要添加一个
-                    var initializeMethod = e.Instance.GetType().GetMethod("InitializeClientCommandDispatcher", BindingFlags.NonPublic | BindingFlags.Instance);
+                    // 注意：这里需要确保ClientCommunicationService有一个InitializeClientCommandDispatcherAsync方法
+                    var initializeMethod = e.Instance.GetType().GetMethod("InitializeClientCommandDispatcherAsync", BindingFlags.NonPublic | BindingFlags.Instance);
                     if (initializeMethod != null)
                     {
-                        initializeMethod.Invoke(e.Instance, null);
+                        // 异步方法调用需要使用Task.Run等待完成
+                        Task.Run(async () => {
+                            await (Task)initializeMethod.Invoke(e.Instance, null);
+                        }).Wait();
                     }
                     else
                     {
                         e.Context.Resolve<ILogger<ClientCommunicationService>>()?
-                            .LogWarning("未找到InitializeClientCommandDispatcher方法");
+                            .LogWarning("未找到InitializeClientCommandDispatcherAsync方法，请修改代码正确设置反射调用的方法名");
                     }
                 }
                 catch (Exception ex)

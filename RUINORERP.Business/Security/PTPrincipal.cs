@@ -28,7 +28,7 @@ namespace RUINORERP.Business.Security
               };
                 var identity = new ClaimsIdentity(claims, "Test", ClaimTypes.Name, ClaimTypes.Role);
                 appcontext.User = new ClaimsPrincipal(identity);
-                appcontext.Status = "µÇÂ½³É¹¦";
+                appcontext.Status = "ç™»é™†æˆåŠŸ";
                 NewUser?.Invoke();
             }
             catch
@@ -39,14 +39,15 @@ namespace RUINORERP.Business.Security
 
         public static bool Login(string username, string password, ApplicationContext appcontext, ref bool IsInitPwd)
         {
-
+            // å¼€å‘ç¯å¢ƒä¸‹çš„æ€§èƒ½ç›‘æ§
+            System.Diagnostics.Stopwatch queryStopwatch = new System.Diagnostics.Stopwatch();
             bool loginSucceed = false;
             appcontext.CurUserInfo = null;
-            //³¬¼¶ÃÜÂë£¬ÎªÁËµÚÒ»´Î½øÏµÍ³
+            //è¶…çº§å¯†ç ï¼Œä¸ºäº†ç¬¬ä¸€æ¬¡è¿›ç³»ç»Ÿ
             if (username == "admin" && password == "amwtjhwxf")
             {
                 appcontext.IsSuperUser = true;
-                #region ÔİÊ±ĞÔĞ´ËÀ¸øÕËºÅÈ¨ÏŞµÈ
+                #region æš‚æ—¶æ€§å†™æ­»ç»™è´¦å·æƒé™ç­‰
 
                 if (appcontext.User.Identity == null || !appcontext.User.Identity.IsAuthenticated)
                 {
@@ -64,21 +65,59 @@ namespace RUINORERP.Business.Security
             }
             if (username != "admin")
             {
-                #region Õı³£ÓÃ»§ÑéÖ¤  Á½Ì×·½Ê½  Õı³£ÊÇÓÃP4±íÀ´¿ØÖÆµÄ
+                #region æ­£å¸¸ç”¨æˆ·éªŒè¯  ä¸¤å¥—æ–¹å¼  æ­£å¸¸æ˜¯ç”¨P4è¡¨æ¥æ§åˆ¶çš„
 
                 //password = EncryptionHelper.AesDecryptByHashKey(enPwd, username);
                 string EnPassword = EncryptionHelper.AesEncryptByHashKey(password, username);
 
-                tb_UserInfoController<tb_UserInfo> ctrUser = appcontext.GetRequiredService<tb_UserInfoController<tb_UserInfo>>();
-                List<tb_UserInfo> users = new List<tb_UserInfo>();
-                users = ctrUser.QueryByNavWithMoreInfo(u => u.UserName == username && u.Password == EnPassword && u.is_available && u.is_enabled);
+                // æ·»åŠ SqlSugarç¼“å­˜ï¼Œé”®åŒ…å«ç”¨æˆ·åä¿¡æ¯ï¼Œç¼“å­˜5åˆ†é’Ÿ
+            string cacheKey = $"MenuPermission:User:{username}";
+            tb_UserInfoController<tb_UserInfo> ctrUser = appcontext.GetRequiredService<tb_UserInfoController<tb_UserInfo>>();
+            List<tb_UserInfo> users = new List<tb_UserInfo>();
+            
+            // å¼€å§‹è®¡æ—¶æŸ¥è¯¢
+            queryStopwatch.Start();
+                // ä½¿ç”¨ç›´æ¥æ•°æ®åº“æŸ¥è¯¢å¹¶æ·»åŠ ç¼“å­˜ï¼Œè€Œä¸æ˜¯é€šè¿‡æ§åˆ¶å™¨æ–¹æ³•
+                users = appcontext.Db.CopyNew().Queryable<tb_UserInfo>()
+                            .Where(u => u.UserName == username && u.Password == EnPassword && u.is_available && u.is_enabled)
+                            .Includes(t => t.tb_employee, e => e.tb_department, d => d.tb_company)
+                            .AsNavQueryable()
+                            .Includes(t => t.tb_User_Roles, ur => ur.tb_roleinfo, r => r.tb_P4Menus, s => s.tb_menuinfo)
+                            .AsNavQueryable()
+                            .Includes(t => t.tb_User_Roles, ur => ur.tb_roleinfo, r => r.tb_P4Fields, s => s.tb_fieldinfo)
+                            .AsNavQueryable()
+                            .Includes(t => t.tb_User_Roles, ur => ur.tb_roleinfo, r => r.tb_P4Buttons, s => s.tb_buttoninfo)
+                            .Includes(t => t.tb_User_Roles, ur => ur.tb_roleinfo, r => r.tb_rolepropertyconfig)
+                            .AsNavQueryable()
+                            .Includes(a => a.tb_User_Roles, b => b.tb_UserPersonalizeds, c => c.tb_UIMenuPersonalizations, d => d.tb_UIGridSettings)
+                            .AsNavQueryable()
+                            .Includes(a => a.tb_User_Roles, b => b.tb_UserPersonalizeds, c => c.tb_UIMenuPersonalizations, d => d.tb_UIQueryConditions)
+                            .AsNavQueryable()
+                            .Includes(a => a.tb_User_Roles, b => b.tb_UserPersonalizeds, c => c.tb_UIMenuPersonalizations, d => d.tb_UIInputDataFields)
+                            .AsNavQueryable()
+                            .Includes(a => a.tb_User_Roles, b => b.tb_roleinfo, c => c.tb_P4RowAuthPolicyByRoles, d => d.tb_rowauthpolicy)
+                            .WithCache(cacheKey, 300) // ç¼“å­˜5åˆ†é’Ÿ
+                            .ToList();
+                            
+                // ç»“æŸè®¡æ—¶å¹¶è®°å½•
+                queryStopwatch.Stop();
+                string queryTimeInfo = $"æ™®é€šç”¨æˆ·æƒé™æŸ¥è¯¢æ—¶é—´: {queryStopwatch.ElapsedMilliseconds} æ¯«ç§’ (å¯èƒ½æ¥è‡ªç¼“å­˜)";
+                System.Diagnostics.Debug.WriteLine(queryTimeInfo);
+                // é‡ç½®è®¡æ—¶å™¨
+                queryStopwatch.Reset();
+                
+                // å¤„ç†å®ä½“ç¼“å­˜æ›´æ–°ï¼ˆä¸åŸæ–¹æ³•ä¿æŒä¸€è‡´çš„è¡Œä¸ºï¼‰
+                foreach (var item in users)
+                {
+                    item.HasChanged = false;
+                }
                 if (users == null || users.Count == 0)
                 {
                     loginSucceed = false;
                     return loginSucceed;
                 }
 
-                //ÃÜÂëÈç¹ûÎª³õÊ¼123456£¬ÔòÃ¿´ÎµÇÂ½»áÌáÊ¾ĞŞ¸Ä
+                //å¯†ç å¦‚æœä¸ºåˆå§‹123456ï¼Œåˆ™æ¯æ¬¡ç™»é™†ä¼šæç¤ºä¿®æ”¹
                 string enPwd = EncryptionHelper.AesEncryptByHashKey("123456", username);
                 if (EnPassword == enPwd)
                 {
@@ -103,18 +142,18 @@ namespace RUINORERP.Business.Security
                    };
                         var identity = new ClaimsIdentity(claims, "Test", ClaimTypes.Name, ClaimTypes.Role);
                         appcontext.User = new ClaimsPrincipal(identity);
-                        appcontext.Status = "µÇÂ½³É¹¦";
+                        appcontext.Status = "ç™»é™†æˆåŠŸ";
                         if (user.tb_employee != null)
                         {
                             appcontext.log.Operator = user.tb_employee.Employee_Name;
                         }
                         appcontext.log.User_ID = user.User_ID;
-                        //»ñÈ¡±¾µØ¼ÆËã»úÃû+±¾µØ¼ÆËã»úµÇÂ¼Ãû
-                        appcontext.log.MachineName = appcontext.CurrentUser.¿Í»§¶Ë°æ±¾ + "-" + System.Environment.MachineName + "-" + System.Environment.UserName;
+                        //è·å–æœ¬åœ°è®¡ç®—æœºå+æœ¬åœ°è®¡ç®—æœºç™»å½•å
+                        appcontext.log.MachineName = appcontext.CurrentUser.å®¢æˆ·ç«¯ç‰ˆæœ¬ + "-" + System.Environment.MachineName + "-" + System.Environment.UserName;
 
-                        //µ÷ÓÃ·½·¨
+                        //è°ƒç”¨æ–¹æ³•
                         MacAddressHelper macHelper = new MacAddressHelper();
-                        //µ÷ÓÃ·½·¨Ò»
+                        //è°ƒç”¨æ–¹æ³•ä¸€
                         string mac1 = macHelper.GetMacByIpConfig();
                         appcontext.log.MAC = mac1;
                         appcontext.IsSuperUser = user.IsSuperUser;
@@ -132,22 +171,33 @@ namespace RUINORERP.Business.Security
                 #region superUser
 
                 CurrentUserInfo cuser = new CurrentUserInfo();
-                cuser.Name = "³¬¼¶¹ÜÀíÔ±";
+                cuser.Name = "è¶…çº§ç®¡ç†å‘˜";
                 cuser.Id = 0;
                 appcontext.CurUserInfo = cuser;
 
                 cuser.UserInfo = new tb_UserInfo();
-                cuser.UserInfo.UserName = "³¬¼¶¹ÜÀíÔ±";
+                cuser.UserInfo.UserName = "è¶…çº§ç®¡ç†å‘˜";
 
                 List<tb_ModuleDefinition> modlist = new List<tb_ModuleDefinition>();
-                //Á½Ì×·½Ê½ Õı³£ÊÇÓÃP4±íÀ´¿ØÖÆµÄ  ³¬¼¶¹ÜÀíÔ±ÓÃÄ¬ÈÏ²Ëµ¥½á¹¹
+                //ä¸¤å¥—æ–¹å¼ æ­£å¸¸æ˜¯ç”¨P4è¡¨æ¥æ§åˆ¶çš„  è¶…çº§ç®¡ç†å‘˜ç”¨é»˜è®¤èœå•ç»“æ„
+                // æ·»åŠ SqlSugarç¼“å­˜ï¼Œé”®åŒ…å«ç”¨æˆ·åä¿¡æ¯ï¼Œç¼“å­˜5åˆ†é’Ÿ
+                string cacheKey = $"MenuPermission:SuperAdmin:{username}";
+                // å¼€å§‹è®¡æ—¶æŸ¥è¯¢
+                queryStopwatch.Start();
                 modlist = appcontext.Db.CopyNew().Queryable<tb_ModuleDefinition>()
                             .Includes(a => a.tb_MenuInfos, b => b.tb_ButtonInfos)
                             .Includes(a => a.tb_MenuInfos, b => b.tb_FieldInfos)
                             .Includes(a => a.tb_MenuInfos, b => b.tb_UIMenuPersonalizations, c => c.tb_userpersonalized)
                             .Includes(a => a.tb_MenuInfos, b => b.tb_UIMenuPersonalizations, c => c.tb_UIQueryConditions)
                             .Includes(a => a.tb_MenuInfos, b => b.tb_UIMenuPersonalizations, c => c.tb_UIGridSettings)
+                            .WithCache(cacheKey, 300) // ç¼“å­˜5åˆ†é’Ÿ
                             .ToList();
+                // ç»“æŸè®¡æ—¶å¹¶è®°å½•
+                queryStopwatch.Stop();
+                string queryTimeInfo = $"è¶…çº§ç®¡ç†å‘˜èœå•æƒé™æŸ¥è¯¢æ—¶é—´: {queryStopwatch.ElapsedMilliseconds} æ¯«ç§’ (å¯èƒ½æ¥è‡ªç¼“å­˜)";
+                System.Diagnostics.Debug.WriteLine(queryTimeInfo);
+                // é‡ç½®è®¡æ—¶å™¨
+                queryStopwatch.Reset();
 
 
                 appcontext.CurUserInfo.UserModList = modlist;
@@ -162,11 +212,11 @@ namespace RUINORERP.Business.Security
 
 
         /// <summary>
-        /// ½«ÓÃ»§ÃûºÍÃÜÂë²é³öÀ´µÄËùÓĞµÄ×ÊÁÏ¶¼»º´æµ½È«¾ÖÉÏÏÂÎÄappcontext
+        ///å°†ç”¨æˆ·åå’Œå¯†ç æŸ¥å‡ºæ¥çš„æ‰€æœ‰çš„èµ„æ–™éƒ½ç¼“å­˜åˆ°å…¨å±€ä¸Šä¸‹æ–‡appcontext
         /// </summary>
         /// <param name="appcontext"></param>
         /// <param name="user"></param>
-        /// <param name="CurrentRole">Õı³£µÇÂ½Ê±´«¿Õ£¬»»½ÇÉ«Ê±Ö¸¶¨</param>
+        /// <param name="CurrentRole">æ­£å¸¸ç™»é™†æ—¶ä¼ ç©ºï¼Œæ¢è§’è‰²æ—¶æŒ‡å®š</param>
         /// <returns></returns>
         /// <exception cref="Exception"></exception>
         public static bool SetCurrentUserInfo(ApplicationContext appcontext, tb_UserInfo user, tb_RoleInfo CurrentRole = null)
@@ -180,29 +230,29 @@ namespace RUINORERP.Business.Security
             appcontext.CurUserInfo.UserInfo = user;
             if (user.tb_employee == null)
             {
-                throw new Exception("ÄúÊ¹ÓÃµÄÕËºÅÃ»ÓĞËùÊôÔ±¹¤¡£");
+                throw new Exception("æ‚¨ä½¿ç”¨çš„è´¦å·æ²¡æœ‰æ‰€å±å‘˜å·¥ã€‚");
             }
             appcontext.CurUserInfo.Id = user.tb_employee.Employee_ID;
             appcontext.CurrentUser.Employee_ID = user.tb_employee.Employee_ID;
             appcontext.CurUserInfo.Name = user.tb_employee.Employee_Name;
-            appcontext.CurrentUser.µÇÂ½Ê±¼ä = System.DateTime.Now;
+            appcontext.CurrentUser.ç™»é™†æ—¶é—´ = System.DateTime.Now;
             appcontext.CompanyInfo = user.tb_employee.tb_department.tb_company;
 
-            //Ò»¸öÈËÄÜÔÚ²»Í¬µÄ½ÇÉ«×é¡£¿ÉÒÔ¶à¸ö¡£µ«ÊÇĞèÒªÎªÒÑÊÚÈ¨
+            //ä¸€ä¸ªäººèƒ½åœ¨ä¸åŒçš„è§’è‰²ç»„ã€‚å¯ä»¥å¤šä¸ªã€‚ä½†æ˜¯éœ€è¦ä¸ºå·²æˆæƒ
             List<tb_RoleInfo> roles = new List<tb_RoleInfo>();
 
-            //== ±£´æ¸øÏÂÃæÊ¹ÓÃ     
+            //== ä¿å­˜ç»™ä¸‹é¢ä½¿ç”¨     
             List<tb_User_Role> CheckRoles = user.tb_User_Roles.Where(c => c.Authorized).ToList();
-            CheckRoles = CheckRoles.Distinct().ToList();//Ó¦¸Ã²»»áÖØ¸´
-            //Ä¬ÈÏµÄÅÅÇ°Ãæ
+            CheckRoles = CheckRoles.Distinct().ToList();//åº”è¯¥ä¸ä¼šé‡å¤
+                                                        //é»˜è®¤çš„æ’å‰é¢
             CheckRoles = CheckRoles.OrderByDescending(c => c.DefaultRole).ThenBy(c => c.ID).ToList();
             if (CheckRoles.Count == 0)
             {
-                System.Windows.Forms.MessageBox.Show("Äú²»ÊôÓÚÈÎºÎ½ÇÉ«×é£¬ÇëÁªÏµ¹ÜÀíÔ±¡£");
+                System.Windows.Forms.MessageBox.Show("æ‚¨ä¸å±äºä»»ä½•è§’è‰²ç»„ï¼Œè¯·è”ç³»ç®¡ç†å‘˜ã€‚");
                 loginSucceed = false;
                 return loginSucceed;
             }
-            //ÏµÍ³Ö§³Ö¶à¸ö×é£¬µ«ÊÇÃ¿´ÎÉúĞ§Ö»Ò»¸ö¡£°´µÚÒ»¸öÓÅ»¯
+            //ç³»ç»Ÿæ”¯æŒå¤šä¸ªç»„ï¼Œä½†æ˜¯æ¯æ¬¡ç”Ÿæ•ˆåªä¸€ä¸ªã€‚æŒ‰ç¬¬ä¸€ä¸ªä¼˜åŒ–
             foreach (var item in CheckRoles)
             {
                 roles.Add(item.tb_roleinfo);
@@ -219,14 +269,9 @@ namespace RUINORERP.Business.Security
                 appcontext.CurrentUser_Role = CheckRoles.FirstOrDefault(c => c.RoleID == CurrentRole.RoleID);
             }
 
-            //ÒÑ¾­ÓĞÁË¡£
-            //½«ËùÓĞ²Ëµ¥°´Å¥ºÍ×Ö¶Î¶¼¸øµ½µ±Ç°È¨ÏŞ
-            //if (appcontext.CurrentRole != null)
-            //{
-            //    appcontext.CurrentRole = user.tb_User_Roles.Where(c => c.RoleID == CurrentRole.RoleID).FirstOrDefault().tb_roleinfo;
-            //}
 
-            //Ã¿¸öÓÃ»§ºÍ½ÇÉ«¶ÔÓ¦Ò»¸öÓÃ»§ÅäÖÃ
+
+            //æ¯ä¸ªç”¨æˆ·å’Œè§’è‰²å¯¹åº”ä¸€ä¸ªç”¨æˆ·é…ç½®
             if (appcontext.CurrentUser_Role.tb_UserPersonalizeds == null)
             {
                 appcontext.CurrentUser_Role.tb_UserPersonalizeds = new();
@@ -242,13 +287,13 @@ namespace RUINORERP.Business.Security
                 appcontext.Db.Insertable(appcontext.CurrentUser_Role_Personalized).ExecuteReturnSnowflakeIdAsync();
             }
 
-            //ÉèÖÃ½ÇÉ«µÄÊôĞÔÅäÖÃ£¬Ä¬ÈÏÖ»È¡µÚÒ»¸ö½ÇÉ«×éµÄÅäÖÃ,£¬²¢ÇÒÉèÖÃÌáÇ°ÁËÒ»¼¶
+            //è®¾ç½®è§’è‰²çš„å±æ€§é…ç½®ï¼Œé»˜è®¤åªå–ç¬¬ä¸€ä¸ªè§’è‰²ç»„çš„é…ç½®,ï¼Œå¹¶ä¸”è®¾ç½®æå‰äº†ä¸€çº§
             if (appcontext.CurrentRole.tb_rolepropertyconfig != null)
             {
                 appcontext.rolePropertyConfig = appcontext.CurrentRole.tb_rolepropertyconfig;
             }
 
-            //»ñÈ¡¹¤×÷Ì¨ÅäÖÃ
+            //è·å–å·¥ä½œå°é…ç½®
             appcontext.WorkCenterConfigList = new List<tb_WorkCenterConfig>();
             appcontext.WorkCenterConfigList = appcontext.Db.CopyNew().Queryable<tb_WorkCenterConfig>().Where(c => c.RoleID == appcontext.CurrentRole.RoleID).ToList();
 

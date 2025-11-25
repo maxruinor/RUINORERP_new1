@@ -191,6 +191,7 @@ namespace RUINORERP.Global.EnumExt
     /// 预收款抵扣应收款
     /// 收款单直接核销应收款
     /// 预付冲应付
+    /// 如果在需要编辑。值不能0开始。这里是使用了。不好修改了。
     /// </summary>
     public enum SettlementType
     {
@@ -255,24 +256,24 @@ namespace RUINORERP.Global.EnumExt
         /// <summary>
         /// 发票未正式开具	编辑、删除
         /// </summary>
-        草稿,
+        草稿=1,
 
 
         /// <summary>
         /// 发票已提交税局	红冲、核销
         /// </summary>
-        已开票,
+        已开票=2,
 
 
         /// <summary>
         /// 发票已作废	不可修改
         /// </summary>
-        已红冲,
+        已红冲=3,
 
         /// <summary>
         /// 发票金额已关联应收/应付	不可修改
         /// </summary>
-        已核销,
+        已核销=4,
     }
 
 
@@ -310,7 +311,7 @@ namespace RUINORERP.Global.EnumExt
     /// </summary>
     public enum AccountType
     {
-        银行账户对公普票 = 0,
+        银行账户对公普票 = 8,
         银行账户对公专票 = 1,
         银行账户对私 = 2,
         现金账户 = 3,

@@ -463,11 +463,11 @@ namespace RUINORERP.Business.Cache
                             if (list != null)
                             {
                                 // 将获取到的数据（包括空列表）更新到缓存
-                PutToCache(cacheKey, list, "List", tableName);
+                                PutToCache(cacheKey, list, "List", tableName);
 
-                // 直接更新缓存同步元数据
-                // 对于列表缓存，我们明确指定数据计数，确保空列表也能被正确记录
-                UpdateCacheSyncMetadataAfterEntityChange(tableName, list.Count); // 这里list不为null，已在上一行检查过
+                                // 直接更新缓存同步元数据
+                                // 对于列表缓存，我们明确指定数据计数，确保空列表也能被正确记录
+                                UpdateCacheSyncMetadataAfterEntityChange(tableName, list.Count); // 这里list不为null，已在上一行检查过
 
                                 return list;
                             }
@@ -711,7 +711,7 @@ namespace RUINORERP.Business.Cache
                 return null;
             }
         }
-        
+
         /// <summary>
         /// 根据表名获取实体列表，返回强类型集合
         /// </summary>
@@ -728,14 +728,14 @@ namespace RUINORERP.Business.Cache
                     _logger?.LogWarning($"无法获取表 {tableName} 对应的实体类型");
                     return null;
                 }
-                
+
                 _logger?.LogDebug($"检测到表 {tableName} 对应的实体类型: {entityType.Name}");
-                
+
                 // 使用反射调用泛型的GetEntityList方法
                 var getListMethod = typeof(EntityCacheManager)
                     .GetMethod(nameof(GetEntityList), new[] { typeof(string) })
                     .MakeGenericMethod(entityType);
-                
+
                 // 调用方法并返回结果
                 return getListMethod.Invoke(this, new object[] { tableName });
             }
@@ -975,7 +975,7 @@ namespace RUINORERP.Business.Cache
             _logger?.LogDebug($"已更新表 {tableName} 列表缓存中的单个实体");
 
             // 更新缓存同步元数据，指定数据计数
-                UpdateCacheSyncMetadataAfterEntityChange(tableName, 1); // 单个实体更新
+            UpdateCacheSyncMetadataAfterEntityChange(tableName, 1); // 单个实体更新
         }
 
         /// <summary>
@@ -1089,7 +1089,7 @@ namespace RUINORERP.Business.Cache
             RemoveFromCache(cacheKey);
 
             // 更新缓存同步元数据，指定数据计数
-                UpdateCacheSyncMetadataAfterEntityChange(tableName, 1); // 单个实体更新
+            UpdateCacheSyncMetadataAfterEntityChange(tableName, 1); // 单个实体更新
             _logger?.Debug($"已删除表 {tableName} 的整个列表缓存");
         }
 
@@ -1177,6 +1177,10 @@ namespace RUINORERP.Business.Cache
 
         private void RemoveEntityFromList(string tableName, object primaryKeyValue)
         {
+            if (primaryKeyValue == null)
+            {
+                return;
+            }
             try
             {
                 var cacheKey = GenerateCacheKey(CacheKeyType.List, tableName);
@@ -1204,7 +1208,7 @@ namespace RUINORERP.Business.Cache
                             PutToCache(cacheKey, list, "List", tableName);
 
                             // 更新缓存同步元数据，指定数据计数
-                UpdateCacheSyncMetadataAfterEntityChange(tableName, 1); // 单个实体更新
+                            UpdateCacheSyncMetadataAfterEntityChange(tableName, 1); // 单个实体更新
                         }
                     }
                 }

@@ -200,6 +200,11 @@ namespace RUINORERP.UI
                             }
                         }
 
+                        // 记录登录开始，包括缓存信息
+                        if (MainForm.Instance != null && MainForm.Instance.logger != null)
+                        {
+                            MainForm.Instance.logger.LogInformation($"开始登录用户: {this.txtUserName.Text}，将尝试使用SqlSugar缓存加载权限数据");
+                        }
                         bool ok = PTPrincipal.Login(this.txtUserName.Text, this.txtPassWord.Text, Program.AppContextData, ref isInitPwd);
 
                         // 停止计时并记录结果
@@ -216,6 +221,11 @@ namespace RUINORERP.UI
 
                         if (ok)
                         {
+                            // 登录成功，记录缓存使用情况
+                            if (MainForm.Instance != null && MainForm.Instance.logger != null)
+                            {
+                                MainForm.Instance.logger.LogInformation($"用户 {this.txtUserName.Text} 登录成功，权限数据已通过SqlSugar缓存机制加载");
+                            }
                             if (!Program.AppContextData.IsSuperUser || txtUserName.Text != "admin")
                             {
 

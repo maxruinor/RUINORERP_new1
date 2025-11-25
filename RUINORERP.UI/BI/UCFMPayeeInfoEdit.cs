@@ -52,7 +52,8 @@ namespace RUINORERP.UI.BI
 
             DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID, c => c.Is_enabled == true);
             DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID, c => c.IsVendor == true);
-            DataBindingHelper.BindData4CmbByEnum<tb_FM_PayeeInfo>(entity, k => k.Account_type, typeof(AccountType), cmbAccount_type, false);
+            //DataBindingHelper.BindData4CmbByEnum<tb_FM_PayeeInfo>(entity, k => k.Account_type, typeof(AccountType), cmbAccount_type, false);
+            DataBindingHelper.BindData4CmbByEnum<tb_FM_PayeeInfo>(entity, k => k.Account_type, typeof(AccountType), cmbAccount_type, true);
             DataBindingHelper.BindData4TextBox<tb_FM_PayeeInfo>(entity, t => t.Account_name, txtAccount_name, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_FM_PayeeInfo>(entity, t => t.Account_No, txtAccount_No, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_FM_PayeeInfo>(entity, t => t.BelongingBank, txtBelongingBank, BindDataType4TextBox.Text, false);

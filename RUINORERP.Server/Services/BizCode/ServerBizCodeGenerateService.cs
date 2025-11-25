@@ -30,23 +30,25 @@ namespace RUINORERP.Server.Services.BizCode
         private readonly BNRFactory _bnrFactory;
         private readonly tb_sys_BillNoRuleController<tb_sys_BillNoRule> _ruleConfigService;
         private readonly ILogger<ServerBizCodeGenerateService> logger;
-        private readonly ProductSKUCodeGenerator _productSKUCodeGenerator; // 添加ProductSKUCodeGenerator字段
+        private readonly ProductSKUCodeGenerator _productSKUCodeGenerator;
 
         /// <summary>
         /// 构造函数
         /// </summary>
+        /// <param name="logger">日志记录器</param>
         /// <param name="bnrFactory">编号生成工厂实例</param>
         /// <param name="ruleConfigService">规则配置服务</param>
+        /// <param name="productSKUCodeGenerator">产品SKU编码生成器</param>
         public ServerBizCodeGenerateService(ILogger<ServerBizCodeGenerateService> logger,
             BNRFactory bnrFactory,
             tb_sys_BillNoRuleController<tb_sys_BillNoRule> ruleConfigService,
-            ProductSKUCodeGenerator productSKUCodeGenerator // 添加ProductSKUCodeGenerator参数
+            ProductSKUCodeGenerator productSKUCodeGenerator
             )
         {
             this.logger = logger;
             _bnrFactory = bnrFactory;
             _ruleConfigService = ruleConfigService;
-            _productSKUCodeGenerator = productSKUCodeGenerator; // 初始化ProductSKUCodeGenerator
+            _productSKUCodeGenerator = productSKUCodeGenerator;
         }
 
         #region 混淆/加密相关方法

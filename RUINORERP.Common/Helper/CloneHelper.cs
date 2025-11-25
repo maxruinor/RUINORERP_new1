@@ -360,17 +360,34 @@ namespace RUINORERP.Common.Helper
 
         #region 深度复制克隆
 
+        /// <summary>
+        /// 对象深度克隆方法（最新版本）
+        /// 支持循环引用检测、最大递归深度限制和线程安全
+        /// </summary>
+        /// <typeparam name="T">对象类型</typeparam>
+        /// <param name="source">源对象</param>
+        /// <param name="maxDepth">最大递归深度，默认3层</param>
+        /// <returns>克隆后的对象</returns>
         public static T DeepCloneObject_maxnew<T>(this T source, int maxDepth = 3)
         {
             if (source == null)
                 return default;
 
-            // 处理循环引用的字典
-            var clonedObjects = new Dictionary<object, object>(new ReferenceEqualityComparer());
+            // 处理循环引用的字典，使用ConcurrentDictionary提高线程安全性
+            var clonedObjects = new System.Collections.Concurrent.ConcurrentDictionary<object, object>(new ReferenceEqualityComparer());
             return (T)DeepCloneInternal(source, clonedObjects, 0, maxDepth);
         }
 
-        private static object DeepCloneInternal(object source, Dictionary<object, object> clonedObjects, int currentDepth, int maxDepth)
+        /// <summary>
+        /// 内部深克隆实现方法
+        /// 处理对象的深度克隆，支持循环引用检测和最大递归深度限制
+        /// </summary>
+        /// <param name="source">源对象</param>
+        /// <param name="clonedObjects">用于跟踪已克隆对象的字典，防止循环引用和重复克隆</param>
+        /// <param name="currentDepth">当前递归深度</param>
+        /// <param name="maxDepth">最大递归深度</param>
+        /// <returns>克隆后的对象</returns>
+        private static object DeepCloneInternal(object source, System.Collections.Concurrent.ConcurrentDictionary<object, object> clonedObjects, int currentDepth, int maxDepth=5)
         {
             if (source == null)
                 return null;
@@ -380,7 +397,7 @@ namespace RUINORERP.Common.Helper
                 return source;
 
             // 检查是否已克隆过该对象
-            if (clonedObjects.TryGetValue(source, out var cloned))
+            if (source != null && clonedObjects.TryGetValue(source, out var cloned))
                 return cloned;
 
             Type type = source.GetType();
@@ -395,7 +412,12 @@ namespace RUINORERP.Common.Helper
                 var sourceArray = (Array)source;
                 var elementType = type.GetElementType();
                 var targetArray = Array.CreateInstance(elementType, sourceArray.Length);
-                clonedObjects.Add(source, targetArray);
+                // 添加到字典以处理循环引用，遵循原值复制原则
+                // 确保source不为null，避免ArgumentNullException: key不能为null
+                if (sourceArray != null)
+                {
+                    clonedObjects.TryAdd(sourceArray, targetArray);
+                }
 
                 for (int i = 0; i < sourceArray.Length; i++)
                 {
@@ -427,7 +449,12 @@ namespace RUINORERP.Common.Helper
                 if (targetCollection == null)
                     return source; // 无法创建则返回原对象
 
-                clonedObjects.Add(source, targetCollection);
+                // 添加到字典以处理循环引用，遵循原值复制原则
+                // 确保source不为null，避免ArgumentNullException: key不能为null
+                if (enumerable != null)
+                {
+                    clonedObjects.TryAdd(enumerable, targetCollection);
+                }
 
                 // 获取Add方法
                 MethodInfo addMethod = GetAddMethod(targetCollection.GetType(), elementType);
@@ -439,8 +466,16 @@ namespace RUINORERP.Common.Helper
                 {
                     try
                     {
-                        object clonedItem = DeepCloneInternal(item, clonedObjects, currentDepth + 1, maxDepth);
-                        addMethod.Invoke(targetCollection, new[] { clonedItem });
+                        // 确保item不为null再进行克隆，避免null key问题
+                        if (item != null)
+                        {
+                            object clonedItem = DeepCloneInternal(item, clonedObjects, currentDepth + 1, maxDepth);
+                            // 确保clonedItem不为null再添加到集合中
+                            if (clonedItem != null)
+                            {
+                                addMethod.Invoke(targetCollection, new[] { clonedItem });
+                            }
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -455,7 +490,12 @@ namespace RUINORERP.Common.Helper
 
             // 处理实体对象
             object target = Activator.CreateInstance(type);
-            clonedObjects.Add(source, target);
+            // 添加到字典以处理循环引用，遵循原值复制原则
+            // 确保source不为null，避免ArgumentNullException: key不能为null
+            if (source != null)
+            {
+                clonedObjects.TryAdd(source, target);
+            }
 
             // 克隆属性
             foreach (var property in type.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
@@ -485,11 +525,11 @@ namespace RUINORERP.Common.Helper
         }
 
 
-        // 辅助类：解决字典比较引用相等性问题
+        // 辅助类：解决字典比较引用相等性问题，支持null值处理
         private class ReferenceEqualityComparer : IEqualityComparer<object>
         {
             public new bool Equals(object x, object y) => ReferenceEquals(x, y);
-            public int GetHashCode(object obj) => RuntimeHelpers.GetHashCode(obj);
+            public int GetHashCode(object obj) => obj == null ? 0 : RuntimeHelpers.GetHashCode(obj);
         }
 
         // 获取集合元素类型

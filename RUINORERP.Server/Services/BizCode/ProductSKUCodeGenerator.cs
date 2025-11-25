@@ -1,10 +1,12 @@
 using Microsoft.Extensions.Logging;
+using RUINORERP.Business.BNR;
 using RUINORERP.Global;
 using RUINORERP.IServices;
 using RUINORERP.Model;
 using RUINORERP.Model.Context;
 using RUINORERP.Model.Dto;
 using RUINORERP.Server.Workflow.WFReminder;
+using SqlSugar;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,13 +21,29 @@ namespace RUINORERP.Server.Services.BizCode
     /// </summary>
     public class ProductSKUCodeGenerator
     {
-        private readonly ApplicationContext _context;
+        #region Fields
+
+        private readonly BNRFactory _bnrFactory;
         private readonly ILogger<ProductSKUCodeGenerator> _logger;
-        public ProductSKUCodeGenerator(ILogger<ProductSKUCodeGenerator> logger, ApplicationContext context)
+        private readonly ISqlSugarClient _db;
+
+        #endregion
+
+        #region Constructor
+
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="logger">日志记录器</param>
+        /// <param name="bnrFactory">编号生成工厂，用于直接生成序号，避免循环依赖</param>
+        /// <param name="db">数据库客户端，用于查询产品信息</param>
+        public ProductSKUCodeGenerator(ILogger<ProductSKUCodeGenerator> logger, BNRFactory bnrFactory, ISqlSugarClient db)
         {
             _logger = logger;
-            _context = context;
+            _bnrFactory = bnrFactory;
+            _db = db;
         }
+        #endregion
 
         /// <summary>
         /// 生成产品SKU编码
@@ -106,15 +124,14 @@ namespace RUINORERP.Server.Services.BizCode
             try
             {
                 // 查询产品基本信息及其相关数据
-                return await _context.Db.Queryable<tb_Prod>()
+                return await _db.Queryable<tb_Prod>()
                     .Where(p => p.ProdBaseID == productId)
                     .FirstAsync();
             }
             catch (Exception ex)
             {
                 // 记录错误并返回null
-                // TODO: 添加日志记录
-                // _logger.LogError(ex, "获取产品基础信息时发生错误");
+                _logger.LogError(ex, "获取产品基础信息时发生错误");
                 return null;
             }
         }
@@ -134,7 +151,7 @@ namespace RUINORERP.Server.Services.BizCode
             try
             {
                 // 查询产品基本信息及其分类
-                var product = await _context.Db.Queryable<tb_Prod>()
+                var product = await _db.Queryable<tb_Prod>()
                     .Includes(p => p.tb_prodcategories)
                     .Where(p => p.ProdBaseID == productId)
                     .FirstAsync();
@@ -177,7 +194,7 @@ namespace RUINORERP.Server.Services.BizCode
             try
             {
                 // 使用批量查询提高性能
-                var attributeValues = await _context.Db.Queryable<tb_ProdPropertyValue>()
+                var attributeValues = await _db.Queryable<tb_ProdPropertyValue>()
                     .Includes(v => v.tb_prodproperty)
                     .Where(v => attributeValueIds.Contains(v.PropertyValueID))
                     .ToListAsync();
@@ -415,12 +432,10 @@ namespace RUINORERP.Server.Services.BizCode
         {
             try
             {
-                // 使用ServerBizCodeGenerateService生成序号
-                // 否则使用系统默认的SKU编号生成规则
-                var bizCodeService = _context.GetRequiredService<IBizCodeGenerateService>();
-                // 生成基于前缀的序号
-                // 这里我们使用SKU_No类型的编号生成规则，但添加前缀作为区分
-                string sequenceNo = await bizCodeService.GenerateBaseInfoNoAsync(BaseInfoType.SKU_No);
+                // 直接使用BNRFactory生成序号，避免通过IBizCodeGenerateService导致的循环依赖
+                // 使用SKU_No类型的编号生成规则，生成序号
+                // 使用Create方法替代GenerateNoAsync
+                string sequenceNo = _bnrFactory.Create("{S:SK}{Hex:yyMM}{DB:SKU_No/0000}");
 
                 // 提取序号部分（去除前缀和日期部分）
                 // 假设格式为 SKyyMM0001，我们提取后四位
@@ -434,6 +449,8 @@ namespace RUINORERP.Server.Services.BizCode
             }
             catch (Exception ex)
             {
+                // 记录错误日志
+                _logger.LogError(ex, "生成SKU序号失败");
                 // 如果数据库序号生成失败，使用备用方案生成随机序号
                 // 确保序号格式统一（4位数字）
                 return new Random().Next(1, 9999).ToString("0000");
@@ -464,12 +481,13 @@ namespace RUINORERP.Server.Services.BizCode
                     return skuBuilder.ToString();
                 }
 
-                // 否则使用系统默认的SKU编号生成规则
-                var bizCodeService = _context.GetRequiredService<IBizCodeGenerateService>();
-                return await bizCodeService.GenerateBaseInfoNoAsync(BaseInfoType.SKU_No);
+                // 否则直接使用BNRFactory生成SKU编号，避免通过IBizCodeGenerateService导致的循环依赖
+                return _bnrFactory.Create("{S:SK}{Hex:yyMM}{DB:SKU_No/0000}");
             }
             catch (Exception ex)
             {
+                // 记录错误日志
+                _logger.LogError(ex, "生成默认SKU编码失败");
                 // 如果发生异常，返回基于当前时间的唯一编码
                 // 生成格式：SKU-年月日时分秒-随机数
                 return $"SKU-{DateTime.Now:yyyyMMddHHmmss}-{new Random().Next(100, 999)}";

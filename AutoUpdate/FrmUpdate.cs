@@ -1314,7 +1314,19 @@ namespace AutoUpdate
             for (int i = 0; i < dirs.Length; i++)
             {
                 string[] childdir = dirs[i].Split('\\');
-                CopyFile(dirs[i], objPath + @"\" + childdir[childdir.Length - 1]);
+                string childDirName = childdir[childdir.Length - 1];
+                // 使用Path.Combine安全构建路径，避免双反斜杠问题
+                string destSubDir = Path.Combine(objPath, childDirName);
+                
+                // 确保目标子目录存在
+                if (!Directory.Exists(destSubDir))
+                {
+                    Directory.CreateDirectory(destSubDir);
+                    AppendAllText($"创建子目录: {destSubDir}");
+                }
+                
+                // 递归复制子目录
+                CopyFile(dirs[i], destSubDir);
                 //PrintInfoLog(System.DateTime.Now.ToString() + "复制目录从" + files[i]);
                 //contents.Add(System.DateTime.Now.ToString() + "复制目录成功:" + dirs[i]);
             }
@@ -1457,7 +1469,19 @@ namespace AutoUpdate
             for (int i = 0; i < dirs.Length; i++)
             {
                 string[] childdir = dirs[i].Split('\\');
-                CopyFile(dirs[i], objPath + @"\" + childdir[childdir.Length - 1]);
+                string childDirName = childdir[childdir.Length - 1];
+                // 使用Path.Combine安全构建路径，避免双反斜杠问题
+                string destSubDir = Path.Combine(objPath, childDirName);
+                
+                // 确保目标子目录存在
+                if (!Directory.Exists(destSubDir))
+                {
+                    Directory.CreateDirectory(destSubDir);
+                    AppendAllText($"创建子目录: {destSubDir}");
+                }
+                
+                // 递归复制子目录
+                CopyFile(dirs[i], destSubDir);
                 //PrintInfoLog(System.DateTime.Now.ToString() + "复制目录从" + files[i]);
                 //contents.Add(System.DateTime.Now.ToString() + "复制目录成功:" + dirs[i]);
             }
@@ -1579,14 +1603,32 @@ namespace AutoUpdate
             try
             {
                 AppendAllText("更新完成");
-                //������ɺ�copy�ļ� ,�����ص���ʱ�ļ����е����µ��ļ����Ƶ�Ӧ�ó���Ŀ¼����Ч������
-                //CopyFile(tempUpdatePath, Directory.GetCurrentDirectory());
-                //System.IO.Directory.Delete(tempUpdatePath, true);
-                //���ݲ�ͬ�İ汾�š����ص���Ӧ���ļ��������ˡ�����ע�⣺����ʱҲ���ʼ���ص��ļ��б�Ϊ���������������С���Ϊ���а����ɰ汾���Ḳ��ԭ����
+                //更新完成后copy文件，将下载的临时文件夹中的新文件复制到对应目标目录使其生效
+                
+                string targetDir = Directory.GetCurrentDirectory();
+                
+                // 确保目标目录存在
+                if (!Directory.Exists(targetDir))
+                {
+                    Directory.CreateDirectory(targetDir);
+                    AppendAllText($"创建目标目录: {targetDir}");
+                }
 
                 for (int i = 0; i < versionDirList.Count; i++)
                 {
-                    CopyFile((tempUpdatePath + versionDirList[i]), Directory.GetCurrentDirectory(), versionDirList[i]);
+                    // 使用Path.Combine安全构建路径，避免双反斜杠问题
+                    string sourcePath = Path.Combine(tempUpdatePath, versionDirList[i]);
+                    
+                    // 确保源路径存在
+                    if (Directory.Exists(sourcePath))
+                    {
+                        CopyFile(sourcePath, targetDir, versionDirList[i]);
+                        AppendAllText($"复制版本目录: {sourcePath} 到 {targetDir}");
+                    }
+                    else
+                    {
+                        AppendAllText($"警告: 源目录不存在: {sourcePath}");
+                    }
                 }
                 AppendAllText("更新完成");
 
@@ -1594,27 +1636,38 @@ namespace AutoUpdate
                 {
                     #region 为了实现版本管理只保留5个版本
                     List<string> versions = new List<string>();
-                    // 获取所有版本文件夹的路径
-                    string[] subDirectories = Directory.GetDirectories(tempUpdatePath);
-                    foreach (var subdir in subDirectories)
+                    
+                    // 确保tempUpdatePath目录存在
+                    if (Directory.Exists(tempUpdatePath))
                     {
-                        string verDir = Path.GetFileName(subdir);
-                        versions.Add(verDir);
-                    }
-
-                    if (versions.Count > 0)
-                    {
-                        // 删除较老的版本
-                        // 对版本号进行排序
-                        versions.Sort();
-                        int deleteCount = versions.Count - MaxVersionCount;
-                        // 取最小的 保留最新的5个
-                        versions = versions.Take(deleteCount).ToList();
-
-                        // 遍历要删除的较老的版本号列表
-                        foreach (var version in versions)
+                        // 获取所有版本文件夹的路径
+                        string[] subDirectories = Directory.GetDirectories(tempUpdatePath);
+                        foreach (var subdir in subDirectories)
                         {
-                            System.IO.Directory.Delete(tempUpdatePath + version, true);
+                            string verDir = Path.GetFileName(subdir);
+                            versions.Add(verDir);
+                        }
+
+                        if (versions.Count > 0)
+                        {
+                            // 删除较老的版本
+                            // 对版本号进行排序
+                            versions.Sort();
+                            int deleteCount = versions.Count - MaxVersionCount;
+                            // 取最小的 保留最新的5个
+                            versions = versions.Take(deleteCount).ToList();
+
+                            // 遍历要删除的较老的版本号列表
+                            foreach (var version in versions)
+                            {
+                                // 使用Path.Combine安全构建路径
+                                string versionPath = Path.Combine(tempUpdatePath, version);
+                                if (Directory.Exists(versionPath))
+                                {
+                                    System.IO.Directory.Delete(versionPath, true);
+                                    AppendAllText($"删除旧版本目录: {versionPath}");
+                                }
+                            }
                         }
                     }
                     #endregion

@@ -547,68 +547,6 @@ namespace RUINORERP.UI.UserCenter.DataParts
         }
 
 
-        /// <summary>
-        /// 按查询条件  给 Dto对象给到查询条件的值
-        /// </summary>
-        /// <param name="QueryDto"></param>
-        /// <param name="nodeParameter"></param>
-        private void MenuPowerHelper_OnSetQueryConditionsDelegate1(object QueryDto, QueryParameter nodeParameter)
-        {
-            if (QueryDto == null)
-            {
-                return;
-            }
-            //查询条件给值前先将条件清空
-            foreach (var item in nodeParameter.queryFilter.QueryFields)
-            {
-                if (item.FKTableName.IsNotEmptyOrNull() && item.IsRelated)
-                {
-                    QueryDto.SetPropertyValue(item.FieldName, -1L);
-                    continue;
-                }
-                if (item.FieldPropertyInfo.PropertyType.IsGenericType && item.FieldPropertyInfo.PropertyType.GetBaseType().Name == "DateTime")
-                {
-                    QueryDto.SetPropertyValue(item.FieldName, null);
-                    if (QueryDto.ContainsProperty(item.FieldName + "_Start"))
-                    {
-                        QueryDto.SetPropertyValue(item.FieldName + "_Start", null);
-                    }
-                    if (QueryDto.ContainsProperty(item.FieldName + "_End"))
-                    {
-                        QueryDto.SetPropertyValue(item.FieldName + "_End", null);
-                    }
-                    continue;
-                }
-
-            }
-
-
-
-            //传入查询对象的实例，
-            foreach (ConditionalModel item in nodeParameter.conditionals)
-            {
-                if (item.ConditionalType == ConditionalType.Equal)
-                {
-                    switch (item.CSharpTypeName)
-                    {
-                        case "int":
-                            QueryDto.SetPropertyValue(item.FieldName, item.FieldValue.ToInt());
-                            break;
-                        case "long":
-                            QueryDto.SetPropertyValue(item.FieldName, item.FieldValue.ToLong());
-                            break;
-                        case "bool":
-                            QueryDto.SetPropertyValue(item.FieldName, item.FieldValue.ToBool());
-                            break;
-                        default:
-                            QueryDto.SetPropertyValue(item.FieldName, item.FieldValue);
-                            break;
-                    }
-                }
-            }
-        }
-
-
 
         private async Task BuilderToDoListTreeView()
         {
@@ -1308,59 +1246,8 @@ namespace RUINORERP.UI.UserCenter.DataParts
             return queryList.Rows.Count;
         }
 
+   
         /*
-        private async Task<int> AddSpecialStatusNodes(TreeNode node, Type tableType, BizType bizType)
-        {
-            int Counter = 0;
-            switch (bizType)
-            {
-                case BizType.采购订单:
-                    Counter += await AddNode(node, tableType, bizType, GetNotEndConditions(), "待入库");
-                    break;
-
-                case BizType.借出单:
-                    Counter += await AddNode(node, tableType, bizType, GetNotEndConditions(), "待归还");
-                    break;
-
-                case BizType.销售订单:
-                    Counter += await AddNode(node, tableType, bizType, GetNotEndConditions(), "待出库");
-                    break;
-
-                case BizType.销售出库单:
-                    Counter += await AddNode(node, tableType, bizType, GetWaitingPaymentConditions(), "待收款");
-                    break;
-
-                case BizType.采购退货单:
-                case BizType.返工退库单:
-                    Counter += await AddNode(node, tableType, bizType, GetNotCompletedConditions(), "待返回");
-                    break;
-
-                case BizType.预收款单:
-                    Counter += await AddNode(node, tableType, bizType, GetPrePaymentToBeVerifiedConditions(ReceivePaymentType.收款), "待核销", SharedFlag.Flag1.ToString());
-                    break;
-                case BizType.预付款单:
-                    Counter += await AddNode(node, tableType, bizType, GetPrePaymentToBeVerifiedConditions(ReceivePaymentType.付款), "待核销", SharedFlag.Flag2.ToString());
-                    break;
-
-                case BizType.应收款单:
-                    Counter += await AddNode(node, tableType, bizType, GetARAPToBePaidConditions(ReceivePaymentType.收款), "待回款", SharedFlag.Flag1.ToString());
-                    break;
-
-                case BizType.应付款单:
-                    Counter += await AddNode(node, tableType, bizType, GetARAPToBePaidConditions(ReceivePaymentType.付款), "待付款", SharedFlag.Flag2.ToString());
-                    break;
-
-                case BizType.收款单:
-                    Counter += await AddNode(node, tableType, bizType, GetPaymentToBeConfirmedConditions(ReceivePaymentType.收款), "待支付", SharedFlag.Flag1.ToString());
-                    break;
-                case BizType.付款单:
-                    Counter += await AddNode(node, tableType, bizType, GetPaymentToBeConfirmedConditions(ReceivePaymentType.付款), "待支付", SharedFlag.Flag2.ToString());
-                    break;
-            }
-            return Counter;
-        }
-        */
-
 
         private List<IConditionalModel> GetNotEndConditions()
         {
@@ -1439,7 +1326,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
             };
         }
 
-
+        */
 
     }
 

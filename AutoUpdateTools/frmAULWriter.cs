@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -941,7 +941,7 @@ namespace AULWriter
             string strFilePath = this.txtAutoUpdateXmlSavePath.Text.Trim();
             //Append  默认就换行了
             StringBuilder sb = new StringBuilder();
-            sb.Append("<?xml version=\"1.0\" encoding=\"gb2312\" ?>");
+            sb.Append("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>");
             sb.Append("\r\n<AutoUpdater>\r\n");
             #region[description]
             sb.Append("<Description>");
@@ -1641,17 +1641,13 @@ namespace AULWriter
                 richTxtLog.AppendText("\r\n");
             }
 
-
-
-
             // 将StringBuilder的内容写入文件
-            //File.WriteAllText(this.txtAutoUpdateXmlSavePath.Text.Trim(), txtLastXml.Text.ToString(), System.Text.Encoding.GetEncoding("gb2312"));
             XDocument newDoc = XDocument.Parse(txtLastXml.Text);
             var tempPath = Path.Combine(Path.GetTempPath(), this.txtAutoUpdateXmlSavePath.Text.Trim());
 
-            // 创建带有gb2312编码的XML写入设置
+            // 创建带有UTF-8编码的XML写入设置
             XmlWriterSettings settings = new XmlWriterSettings();
-            settings.Encoding = System.Text.Encoding.GetEncoding("gb2312");
+            settings.Encoding = System.Text.Encoding.UTF8;
             settings.Indent = true; // 保持缩进格式
 
             // 使用XmlWriter保存文档

@@ -42,7 +42,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// 退出系统
         /// </summary>
         public const ushort System_ExitSystem = 0x0006;
-        
+
         /// <summary>
         /// 推送版本更新 - 服务器主动推送最新版本信息，要求客户端更新
         /// </summary>
@@ -297,7 +297,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// 文件权限检查 - 检查文件访问权限
         /// </summary>
         public const ushort File_FilePermissionCheck = 0x0606;
-        
+
         /// <summary>
         /// 文件存储信息 - 获取文件存储使用情况
         /// </summary>
@@ -484,30 +484,25 @@ namespace RUINORERP.PacketSpec.Commands
         public const ushort BizCode_GenerateBaseInfoNo = 0x0F02;
 
         /// <summary>
-        /// 生成产品编码 - 生成产品编号
+        /// 生成产品相关的  产品编码。短码  SKU码等
         /// </summary>
-        public const ushort BizCode_GenerateProductNo = 0x0F03;
-
-        /// <summary>
-        /// 生成产品SKU编码 - 生成产品SKU编号
-        /// </summary>
-        public const ushort BizCode_GenerateProductSKUNo = 0x0F04;
+        public const ushort BizCode_ProductRelatedCode = 0x0F03;
 
         /// <summary>
         /// 生成条码 - 根据原始编码生成条形码
         /// </summary>
         public const ushort BizCode_GenerateBarCode = 0x0F05;
-        
+
         /// <summary>
         /// 获取所有规则配置 - 获取所有编号规则配置
         /// </summary>
         public const ushort BizCode_GetAllRuleConfigs = 0x0F06;
-        
+
         /// <summary>
         /// 保存规则配置 - 保存编号规则配置
         /// </summary>
         public const ushort BizCode_SaveRuleConfig = 0x0F07;
-        
+
         /// <summary>
         /// 删除规则配置 - 删除编号规则配置
         /// </summary>

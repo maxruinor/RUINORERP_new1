@@ -511,20 +511,86 @@ namespace RUINORERP.Server.Controls
                         }
                     }
                 }
-                else // 低频属性立即更新
+                else // 低频属性使用增量更新
                 {
                     if (_itemMap.TryGetValue(user.SessionId, out var item))
                     {
                         if (this.InvokeRequired)
                         {
-                            this.Invoke(new Action(() => UpdateListViewItem(item, user)));
+                            this.Invoke(new Action(() => UpdateSpecificColumn(item, user, e.PropertyName)));
                         }
                         else
                         {
-                            UpdateListViewItem(item, user);
+                            UpdateSpecificColumn(item, user, e.PropertyName);
+                        }
+
+                        // 如果是状态类属性变化，立即更新统计信息
+                        if (e.PropertyName == nameof(UserInfo.在线状态) ||
+                            e.PropertyName == nameof(UserInfo.授权状态))
+                        {
+                            UpdateStatistics();
                         }
                     }
                 }
+            }
+        }
+
+        /// <summary>
+        /// 增量更新特定列
+        /// </summary>
+        /// <param name="item">ListView项</param>
+        /// <param name="userInfo">用户信息</param>
+        /// <param name="propertyName">变更的属性名</param>
+        private void UpdateSpecificColumn(ListViewItem item, UserInfo userInfo, string propertyName)
+        {
+            try
+            {
+                // 根据属性名映射到对应的列索引并只更新该列
+                switch (propertyName)
+                {
+                    case nameof(UserInfo.在线状态):
+                        if (item.SubItems.Count > 0)
+                            item.Text = userInfo.在线状态 ? "在线" : "离线";
+                        // 更新行颜色 - 传入正确的在线状态参数
+                        SetItemColorByStatus(item, userInfo.在线状态);
+                        break;
+                    case nameof(UserInfo.授权状态):
+                        if (item.SubItems.Count > 1)
+                            item.SubItems[1].Text = userInfo.授权状态 ? "已授权" : "未授权";
+                        // 更新行颜色 - 传入正确的在线状态参数
+                        SetItemColorByStatus(item, userInfo.在线状态);
+                        break;
+                    case nameof(UserInfo.用户名):
+                        if (item.SubItems.Count > 2)
+                            item.SubItems[2].Text = userInfo.用户名;
+                        break;
+                    case nameof(UserInfo.姓名):
+                        if (item.SubItems.Count > 3)
+                            item.SubItems[3].Text = userInfo.姓名;
+                        break;
+                    case nameof(UserInfo.最后心跳时间):
+                        if (item.SubItems.Count > 7)
+                            item.SubItems[7].Text = userInfo.最后心跳时间;
+                        break;
+                    case nameof(UserInfo.当前模块):
+                        if (item.SubItems.Count > 8)
+                            item.SubItems[8].Text = userInfo.当前模块;
+                        break;
+                    case nameof(UserInfo.超级用户):
+                        if (item.SubItems.Count > 9)
+                            item.SubItems[9].Text = userInfo.超级用户 ? "是" : "否";
+                        break;
+                    // 对于其他属性或未知属性，仍然使用完整更新作为后备
+                    default:
+                        UpdateListViewItem(item, userInfo);
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                LogError($"更新特定列时出错: {ex.Message}");
+                // 出错时回退到完整更新
+                UpdateListViewItem(item, userInfo);
             }
         }
 
@@ -532,50 +598,109 @@ namespace RUINORERP.Server.Controls
         {
             try
             {
-                if (listView1.InvokeRequired)
+                // 确保在UI线程中更新
+                if (InvokeRequired)
                 {
-                    listView1.Invoke(() => listView1.VirtualListSize = UserInfos.Count);
+                    Invoke(new Action<object, System.Collections.Specialized.NotifyCollectionChangedEventArgs>(UserInfos_CollectionChanged), sender, e);
+                    return;
                 }
-                else
+
+                // 更新虚拟列表大小
+                if (listView1.VirtualMode)
                 {
                     listView1.VirtualListSize = UserInfos.Count;
                 }
 
-                // 在这里处理集合变化的逻辑
+                // 优化集合变化处理，增强线程安全性
                 switch (e.Action)
                 {
                     case System.Collections.Specialized.NotifyCollectionChangedAction.Add:
-                        if (e.NewItems.Count == 1)
+                        if (e.NewItems != null)
                         {
-                            UserInfo newItem = e.NewItems[0] as UserInfo;
-                            if (!UserInfos.Contains(newItem))
+                            foreach (var newItem in e.NewItems)
                             {
-                                UserInfos.Add(newItem);                 // 处理删除元素的逻辑
+                                if (newItem is UserInfo userInfo)
+                                {
+                                    // 避免重复添加和线程安全问题
+                                    if (!UserInfos.Contains(userInfo))
+                                    {
+                                        // 这里应该通过AddOrUpdateUser来添加，而不是直接添加到集合
+                                        // UserInfos.Add(userInfo); // 这行代码可能导致无限递归
+                                        // 正确的做法是在AddOrUpdateUser中添加到集合
+                                        AddOrUpdateUser(userInfo);
+                                    }
+                                    // 确保事件订阅
+                                    userInfo.PropertyChanged += UserInfo_PropertyChanged;
+                                }
                             }
                         }
-                        listView1.VirtualListSize = UserInfos.Count;
                         break;
                     case System.Collections.Specialized.NotifyCollectionChangedAction.Remove:
-                        foreach (UserInfo oldUser in e.OldItems)
+                        if (e.OldItems != null)
                         {
-                            RemoveUser(oldUser);
-                            oldUser.PropertyChanged -= UserInfo_PropertyChanged;
+                            foreach (var oldItem in e.OldItems)
+                            {
+                                if (oldItem is UserInfo userInfo)
+                                {
+                                    // 移除用户并取消事件订阅
+                                    RemoveUser(userInfo);
+                                    userInfo.PropertyChanged -= UserInfo_PropertyChanged;
+                                }
+                            }
                         }
-                        listView1.VirtualListSize = UserInfos.Count;
                         break;
-                    default:
-                        // return;
+                    case System.Collections.Specialized.NotifyCollectionChangedAction.Reset:
+                        // 集合重置时需要清理UI并重新加载
+                        ClearUserInterface();
+                        // 重新添加所有用户
+                        foreach (var userInfo in UserInfos)
+                        {
+                            AddOrUpdateUser(userInfo);
+                            userInfo.PropertyChanged += UserInfo_PropertyChanged;
+                        }
+                        MarkForFullRefresh(); // 重置时标记需要完整刷新
                         break;
-                        // 可以根据需要处理其他事件类型
                 }
 
-                //如果listview中的数据不存在于UserInfos中。UI上也要移除
+                // 更新虚拟列表大小（确保正确反映）
+                if (listView1.VirtualMode)
+                {
+                    listView1.VirtualListSize = UserInfos.Count;
+                }
+
+                // 集合变化时更新统计信息
+                UpdateStatistics();
 
             }
             catch (Exception ex)
             {
-                Console.WriteLine("UserInfos_CollectionChanged时出错" + ex.Message);
+                LogError("UserInfos_CollectionChanged时出错: " + ex.Message, ex);
             }
+        }
+
+        /// <summary>
+        /// 清理用户界面，移除所有项
+        /// </summary>
+        private void ClearUserInterface()
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new Action(ClearUserInterface));
+                return;
+            }
+
+            // 清理列表视图
+            if (listView1.VirtualMode)
+            {
+                listView1.VirtualListSize = 0;
+            }
+            else
+            {
+                listView1.Items.Clear();
+            }
+
+            // 清理映射字典
+            _itemMap.Clear();
         }
 
         #endregion
@@ -584,24 +709,37 @@ namespace RUINORERP.Server.Controls
         {
             try
             {
-                // 每秒更新统计信息
-                UpdateStatistics();
+                // 优化更新策略: 减少不必要的轮询，增加事件驱动更新
 
-                // 每30秒执行一次完整刷新和清理（离线超时清理）
+                // 非关键统计信息降低到每2秒更新一次
+                if (DateTime.Now.Second % 2 == 0)
+                {
+                    UpdateStatistics();
+                }
+
+                // 完整刷新和清理保持30秒，但减少全量刷新频率，更多依赖事件驱动
                 if (DateTime.Now.Second % 30 == 0)
                 {
                     CleanupInactiveUsers();
-                    FullRefreshFromSessions();
+                    // 仅在需要时执行完整刷新，例如当检测到可能的数据不一致时
+                    if (_needsFullRefresh)
+                    {
+                        FullRefreshFromSessions();
+                        _needsFullRefresh = false; // 重置标志
+                    }
                 }
 
-                // 每10秒检查一次用户状态更新（降低频率，避免过度刷新）
+                // 用户状态检查保持10秒间隔
                 if (DateTime.Now.Second % 10 == 0)
                 {
                     UpdateUserStatuses();
                 }
 
-                // 每秒更新一次心跳时间和静止时间显示
-                UpdateHeartbeatAndIdleTime();
+                // 心跳和空闲时间更新优化：只更新可见项，降低更新频率
+                if (DateTime.Now.Second % 3 == 0) // 从每秒改为每3秒
+                {
+                    UpdateVisibleItemsHeartbeatAndIdleTime();
+                }
             }
             catch (Exception ex)
             {
@@ -609,8 +747,17 @@ namespace RUINORERP.Server.Controls
             }
         }
 
+        // 标记是否需要完整刷新的标志
+        private bool _needsFullRefresh = false;
+
+        // 当检测到数据不一致或需要强制刷新时调用
+        private void MarkForFullRefresh()
+        {
+            _needsFullRefresh = true;
+        }
+
         /// <summary>
-        /// 更新心跳时间和静止时间显示
+        /// 更新心跳时间和静止时间显示 - 优化版，只更新可见项
         /// </summary>
         private void UpdateHeartbeatAndIdleTime()
         {
@@ -633,6 +780,79 @@ namespace RUINORERP.Server.Controls
             catch (Exception ex)
             {
                 LogError("更新心跳时间显示时出错", ex);
+            }
+        }
+
+        /// <summary>
+        /// 仅更新可见项的心跳和空闲时间 - 性能优化版
+        /// </summary>
+        private void UpdateVisibleItemsHeartbeatAndIdleTime()
+        {
+            try
+            {
+                if (listView1.Items.Count == 0) return;
+
+                // 检查是否支持虚拟模式，如果支持则更新可见项
+                if (listView1.VirtualMode)
+                {
+                    // 在虚拟模式下，只更新当前可见的项目范围
+                    int firstVisible = listView1.TopItem?.Index ?? 0;
+                    // 估算可见项数量，避免使用不存在的ItemHeight属性
+                    int estimatedItemHeight = 24; // 假设每项高度为24像素
+                    int visibleCount = Math.Min(listView1.DisplayRectangle.Height / estimatedItemHeight, listView1.VirtualListSize);
+                    int lastVisible = Math.Min(firstVisible + visibleCount + 5, listView1.VirtualListSize - 1); // 多更新一些作为缓冲区
+
+                    // 遍历可见范围内的项目
+                    for (int i = firstVisible; i <= lastVisible; i++)
+                    {
+                        // 查找对应的用户信息并更新 - 优化查找逻辑
+                        var userInfo = UserInfos.FirstOrDefault(u => u.SessionId != null && _itemMap.TryGetValue(u.SessionId, out var item) && listView1.Items.IndexOf(item) == i);
+                        if (userInfo != null)
+                        {
+                            UpdateIdleTimeForUser(userInfo);
+                        }
+                    }
+                }
+                else
+                {
+                    // 非虚拟模式下，使用GetItemAt来获取可见项
+                    foreach (ListViewItem item in listView1.Items)
+                    {
+                        // 检查项目是否可见
+                        if (listView1.ClientRectangle.IntersectsWith(item.Bounds))
+                        {
+                            if (item.Tag is UserInfo userInfo && !string.IsNullOrEmpty(userInfo.最后心跳时间))
+                            {
+                                var lastHeartbeat = userInfo.最后心跳时间.ObjToDate();
+                                var idleTime = DateTime.Now - lastHeartbeat;
+                                item.SubItems[10].Text = FormatIdleTime(idleTime);
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                LogError("更新可见项心跳时间显示时出错", ex);
+            }
+        }
+
+        /// <summary>
+        /// 为指定用户更新空闲时间 - 辅助方法
+        /// </summary>
+        private void UpdateIdleTimeForUser(UserInfo userInfo)
+        {
+            if (userInfo == null || string.IsNullOrEmpty(userInfo.最后心跳时间)) return;
+
+            // 查找对应的ListViewItem
+            if (userInfo.SessionId != null && _itemMap.TryGetValue(userInfo.SessionId, out var item))
+            {
+                if (item != null && item.SubItems.Count > 10)
+                {
+                    var lastHeartbeat = userInfo.最后心跳时间.ObjToDate();
+                    var idleTime = DateTime.Now - lastHeartbeat;
+                    item.SubItems[10].Text = FormatIdleTime(idleTime);
+                }
             }
         }
 
@@ -851,6 +1071,7 @@ namespace RUINORERP.Server.Controls
                     // 用户已存在，更新状态而不是重新添加
                     existingUser.在线状态 = sessionInfo.IsConnected;
                     existingUser.最后心跳时间 = sessionInfo.LastActivityTime.ToString("yyyy-MM-dd HH:mm:ss");
+                    existingUser.授权状态 = sessionInfo.IsAuthenticated; // 确保授权状态同步更新
 
                     // 记录连接状态更新
                     string statusDescription = sessionInfo.IsAuthenticated ? "已连接且已授权" : "已连接但未授权";
@@ -869,6 +1090,12 @@ namespace RUINORERP.Server.Controls
 
                 // 立即更新统计信息，确保UI及时反映连接状态变化
                 UpdateStatistics();
+
+                // 在特定情况下标记需要完整刷新
+                if (sessionInfo.IsConnected && sessionInfo.IsAuthenticated) // 重要状态变化时
+                {
+                    MarkForFullRefresh();
+                }
             }
         }
 
@@ -943,6 +1170,8 @@ namespace RUINORERP.Server.Controls
                     if (existingUser.SessionId != sessionInfo.SessionID)
                     {
                         existingUser.SessionId = sessionInfo.SessionID;
+                        // SessionId变更可能导致数据不一致，标记需要完整刷新
+                        MarkForFullRefresh();
                     }
 
                     // 记录状态变化日志
@@ -952,6 +1181,9 @@ namespace RUINORERP.Server.Controls
                         if (onlineStatusChanged) changeType += $"在线状态: {existingUser.在线状态} -> {sessionInfo.IsConnected}";
                         if (authStatusChanged) changeType += (changeType.Length > 0 ? ", " : "") + $"授权状态: {existingUser.授权状态} -> {sessionInfo.IsAuthenticated}";
                         LogStatusChange(existingUser, $"会话更新 - {changeType}");
+
+                        // 重要状态变化时标记需要完整刷新
+                        MarkForFullRefresh();
                     }
                 }
                 else
@@ -959,6 +1191,9 @@ namespace RUINORERP.Server.Controls
                     // 新用户，无论是否认证都添加到列表（正确处理未授权状态）
                     var userInfo = ConvertSessionInfoToUserInfo(sessionInfo);
                     AddOrUpdateUser(userInfo);
+
+                    // 新用户加入可能导致数据不一致，标记需要检查
+                    MarkForFullRefresh();
                 }
 
                 // 立即更新统计信息，确保UI及时反映状态变化

@@ -471,7 +471,7 @@ namespace RUINORERP.UI.Common
                     .WhereIF(billno.GetType() == typeof(long), c => c.ExpenseMainID == billno.ToLong())
                     .WhereIF(billno.GetType() == typeof(string), c => c.ExpenseNo == billno.ToString())
                     .Single();
-                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
+               await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
             }
 
             if (tableName == typeof(tb_ProductionPlan).Name)
@@ -568,7 +568,7 @@ namespace RUINORERP.UI.Common
                     .WhereIF(billno.GetType() == typeof(long), c => c.SaleOut_MainID == billno.ToLong())
                     .WhereIF(billno.GetType() == typeof(string), c => c.SaleOutNo == billno.ToString())
                     .Single();
-                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
+                await  menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
             }
 
             if (tableName == typeof(tb_PurOrder).Name)
@@ -578,7 +578,7 @@ namespace RUINORERP.UI.Common
                     .WhereIF(billno.GetType() == typeof(long), c => c.PurOrder_ID == billno.ToLong())
                     .WhereIF(billno.GetType() == typeof(string), c => c.PurOrderNo == billno.ToString())
                     .Single();
-                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
+                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
             }
             if (tableName == typeof(tb_PurEntry).Name)
             {
@@ -587,7 +587,7 @@ namespace RUINORERP.UI.Common
                     .WhereIF(billno.GetType() == typeof(long), c => c.PurEntryID == billno.ToLong())
                     .WhereIF(billno.GetType() == typeof(string), c => c.PurEntryNo == billno.ToString())
                     .Single();
-                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
+                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
             }
             if (tableName == typeof(tb_Stocktake).Name)
             {
@@ -596,7 +596,7 @@ namespace RUINORERP.UI.Common
                     .WhereIF(billno.GetType() == typeof(long), c => c.MainID == billno.ToLong())
                     .WhereIF(billno.GetType() == typeof(string), c => c.CheckNo == billno.ToString())
                     .Single();
-                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
+                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
             }
 
             if (tableName == typeof(tb_ProdBorrowing).Name)
@@ -606,7 +606,7 @@ namespace RUINORERP.UI.Common
                     .WhereIF(billno.GetType() == typeof(long), c => c.BorrowID == billno.ToLong())
                     .WhereIF(billno.GetType() == typeof(string), c => c.BorrowNo == billno.ToString())
                     .Single();
-                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
+                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
             }
 
 
@@ -617,7 +617,7 @@ namespace RUINORERP.UI.Common
                     .WhereIF(billno.GetType() == typeof(long), c => c.ReturnID == billno.ToLong())
                     .WhereIF(billno.GetType() == typeof(string), c => c.ReturnNo == billno.ToString())
                     .Single();
-                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
+                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
             }
 
             if (tableName == typeof(tb_ProdMerge).Name)
@@ -627,7 +627,7 @@ namespace RUINORERP.UI.Common
                     .WhereIF(billno.GetType() == typeof(long), c => c.MergeID == billno.ToLong())
                     .WhereIF(billno.GetType() == typeof(string), c => c.MergeNo == billno.ToString())
                     .Single();
-                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
+                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
             }
 
             if (tableName == typeof(tb_ProdSplit).Name)
@@ -637,7 +637,7 @@ namespace RUINORERP.UI.Common
                     .WhereIF(billno.GetType() == typeof(long), c => c.SplitID == billno.ToLong())
                     .WhereIF(billno.GetType() == typeof(string), c => c.SplitNo == billno.ToString())
                     .Single();
-                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
+                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
             }
             if (tableName == typeof(tb_StockTransfer).Name)
             {
@@ -646,7 +646,7 @@ namespace RUINORERP.UI.Common
                     .WhereIF(billno.GetType() == typeof(long), c => c.StockTransferID == billno.ToLong())
                     .WhereIF(billno.GetType() == typeof(string), c => c.StockTransferNo == billno.ToString())
                     .Single();
-                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
+                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
             }
 
             if (tableName == typeof(tb_ProdConversion).Name)
@@ -656,7 +656,7 @@ namespace RUINORERP.UI.Common
                     .WhereIF(billno.GetType() == typeof(long), c => c.ConversionID == billno.ToLong())
                     .WhereIF(billno.GetType() == typeof(string), c => c.ConversionNo == billno.ToString())
                     .Single();
-                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
+                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
             }
 
             if (tableName == typeof(tb_PurReturnEntry).Name)
@@ -666,7 +666,7 @@ namespace RUINORERP.UI.Common
                     .WhereIF(billno.GetType() == typeof(long), c => c.PurReEntry_ID == billno.ToLong())
                     .WhereIF(billno.GetType() == typeof(string), c => c.PurReEntryNo == billno.ToString())
                     .Single();
-                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
+                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
             }
 
             if (tableName == typeof(tb_PurEntryRe).Name)
@@ -676,7 +676,7 @@ namespace RUINORERP.UI.Common
                     .WhereIF(billno.GetType() == typeof(long), c => c.PurEntryRe_ID == billno.ToLong())
                     .WhereIF(billno.GetType() == typeof(string), c => c.PurEntryReNo == billno.ToString())
                     .Single();
-                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
+                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
             }
             if (tableName == typeof(tb_StockOut).Name)
             {
@@ -685,7 +685,7 @@ namespace RUINORERP.UI.Common
                     .WhereIF(billno.GetType() == typeof(long), c => c.MainID == billno.ToLong())
                     .WhereIF(billno.GetType() == typeof(string), c => c.BillNo == billno.ToString())
                     .Single();
-                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
+                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
             }
             if (tableName == typeof(tb_StockIn).Name)
             {
@@ -694,7 +694,7 @@ namespace RUINORERP.UI.Common
                     .WhereIF(billno.GetType() == typeof(long), c => c.MainID == billno.ToLong())
                     .WhereIF(billno.GetType() == typeof(string), c => c.BillNo == billno.ToString())
                     .Single();
-                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
+                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
             }
 
             if (tableName == typeof(tb_MRP_ReworkEntry).Name)
@@ -704,7 +704,7 @@ namespace RUINORERP.UI.Common
                     .WhereIF(billno.GetType() == typeof(long), c => c.ReworkEntryID == billno.ToLong())
                     .WhereIF(billno.GetType() == typeof(string), c => c.ReworkEntryNo == billno.ToString())
                     .Single();
-                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
+                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
             }
             if (tableName == typeof(tb_FM_PreReceivedPayment).Name)
             {
@@ -712,7 +712,7 @@ namespace RUINORERP.UI.Common
                     .WhereIF(billno.GetType() == typeof(long), c => c.PreRPID == billno.ToLong())
                     .WhereIF(billno.GetType() == typeof(string), c => c.PreRPNO == billno.ToString())
                     .Single();
-                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
+                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
             }
 
             if (tableName == typeof(tb_FM_ReceivablePayable).Name)
@@ -722,7 +722,7 @@ namespace RUINORERP.UI.Common
                     .WhereIF(billno.GetType() == typeof(long), c => c.ARAPId == billno.ToLong())
                     .WhereIF(billno.GetType() == typeof(string), c => c.ARAPNo == billno.ToString())
                     .Single();
-                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
+                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
             }
             if (tableName == typeof(tb_FM_PriceAdjustment).Name)
             {
@@ -731,7 +731,16 @@ namespace RUINORERP.UI.Common
                     .WhereIF(billno.GetType() == typeof(long), c => c.AdjustId == billno.ToLong())
                     .WhereIF(billno.GetType() == typeof(string), c => c.AdjustNo == billno.ToString())
                     .Single();
-                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
+                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
+            }
+            if (tableName == typeof(tb_FM_ProfitLoss).Name)
+            {
+                var obj = MainForm.Instance.AppContext.Db.Queryable<tb_FM_ProfitLoss>()
+                    .Includes(c => c.tb_FM_ProfitLossDetails)
+                    .WhereIF(billno.GetType() == typeof(long), c => c.ProfitLossId == billno.ToLong())
+                    .WhereIF(billno.GetType() == typeof(string), c => c.ProfitLossNo == billno.ToString())
+                    .Single();
+                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
             }
 
             if (tableName == typeof(tb_FM_PaymentRecord).Name)
@@ -741,7 +750,7 @@ namespace RUINORERP.UI.Common
                     .WhereIF(billno.GetType() == typeof(long), c => c.PaymentId == billno.ToLong())
                     .WhereIF(billno.GetType() == typeof(string), c => c.PaymentNo == billno.ToString())
                     .Single();
-                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
+                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
             }
             if (tableName == typeof(tb_AS_RepairMaterialPickup).Name)
             {
@@ -750,7 +759,7 @@ namespace RUINORERP.UI.Common
                     .WhereIF(billno.GetType() == typeof(long), c => c.RMRID == billno.ToLong())
                     .WhereIF(billno.GetType() == typeof(string), c => c.MaterialPickupNO == billno.ToString())
                     .Single();
-                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
+                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
             }
 
             if (tableName == typeof(tb_AS_RepairOrder).Name)
@@ -761,7 +770,7 @@ namespace RUINORERP.UI.Common
                     .WhereIF(billno.GetType() == typeof(long), c => c.RepairOrderID == billno.ToLong())
                     .WhereIF(billno.GetType() == typeof(string), c => c.RepairOrderNo == billno.ToString())
                     .Single();
-                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
+                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
             }
             if (tableName == typeof(tb_FM_Statement).Name)
             {
@@ -770,7 +779,7 @@ namespace RUINORERP.UI.Common
                     .WhereIF(billno.GetType() == typeof(long), c => c.StatementId == billno.ToLong())
                     .WhereIF(billno.GetType() == typeof(string), c => c.StatementNo == billno.ToString())
                     .Single();
-                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
+                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
             }
 
             if (tableName == typeof(tb_MRP_ReworkReturn).Name)
@@ -780,7 +789,7 @@ namespace RUINORERP.UI.Common
                     .WhereIF(billno.GetType() == typeof(long), c => c.ReworkReturnID == billno.ToLong())
                     .WhereIF(billno.GetType() == typeof(string), c => c.ReworkReturnNo == billno.ToString())
                     .Single();
-                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
+                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
             }
         }
 

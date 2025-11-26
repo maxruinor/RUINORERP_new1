@@ -82,7 +82,7 @@ namespace RUINORERP.Server.SmartReminder
                     await SendSystemNotificationAsync(messageData);
                 }
 
-                _logger.Debug("智能提醒发送完成");
+                //_logger.Debug("智能提醒发送完成");
             }
             catch (Exception ex)
             {   

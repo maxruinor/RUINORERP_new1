@@ -52,7 +52,7 @@ namespace RUINORERP.Server.Services.BizCode
         }
 
         #region 混淆/加密相关方法
-        
+
         /// <summary>
         /// 根据加密方法对编号进行混淆处理
         /// 支持三种可逆加密方案：16进制转换、字符串混淆和Base62编码
@@ -319,10 +319,10 @@ namespace RUINORERP.Server.Services.BizCode
             return input;
         }
 
-        
+
 
         #endregion
-        
+
         /// <summary>
         /// 生成业务单据编号（支持BizType枚举）
         /// 支持显示模式配置：可选择清晰可读或混淆/加密模式
@@ -343,11 +343,11 @@ namespace RUINORERP.Server.Services.BizCode
             {
                 // 获取完整的规则配置对象，包含显示模式和加密方法
                 var ruleConfig = await GetBillNoRuleConfigFromDatabaseAsync((int)bizType, (int)RuleType.业务单据编号, ct);
-                
+
                 string rule;
                 int displayMode = 0; // 默认清晰可读模式
                 int encryptionMethod = 0; // 默认16进制转换
-                
+
                 if (ruleConfig != null && !string.IsNullOrEmpty(ruleConfig.RulePattern))
                 {
                     rule = ruleConfig.RulePattern;
@@ -358,35 +358,35 @@ namespace RUINORERP.Server.Services.BizCode
                     // 如果数据库中没有配置，则使用默认规则
                     rule = GetDefaultBillNoRule(bizType);
                 }
-                
+
                 // 生成原始编号
                 string generatedNumber = _bnrFactory.Create(rule);
-                
+
                 // 根据显示模式处理编号
-              //  string finalNumber = ProcessNumberByDisplayMode(generatedNumber, displayMode, encryptionMethod);
-                
+                //  string finalNumber = ProcessNumberByDisplayMode(generatedNumber, displayMode, encryptionMethod);
+
                 return generatedNumber;
             }
             catch (Exception ex)
             {
                 // 记录错误日志
-                 logger?.LogError(ex, "生成业务单据编号失败: {BizType}", bizType);
+                logger?.LogError(ex, "生成业务单据编号失败: {BizType}", bizType);
                 // 出错时使用默认规则，确保系统可用性
                 string fallbackRule = GetDefaultBillNoRule(bizType);
                 string fallbackNumber = _bnrFactory.Create(fallbackRule);
-                
+
                 return fallbackNumber;
             }
         }
 
-        
+
         /// <summary>
         /// 从数据库获取业务单据编号规则
         /// </summary>
         /// <param name="bizType">业务类型枚举</param>
         /// <param name="ct">取消令牌</param>
         /// <returns>编码规则</returns>
-        private async Task<string> GetBillNoRuleFromDatabaseAsync(BizType bizType,  CancellationToken ct = default)
+        private async Task<string> GetBillNoRuleFromDatabaseAsync(BizType bizType, CancellationToken ct = default)
         {
             try
             {
@@ -398,10 +398,10 @@ namespace RUINORERP.Server.Services.BizCode
                 // 查询数据库中的规则配置，增加按规则类型过滤
                 var rules = await _ruleConfigService.QueryAsync();
                 var rule = rules?.FirstOrDefault(r => r.BizType == (int)bizType && r.RuleType == ruleType && r.IsActive);
-                
+
                 // 缓存规则（如果有缓存机制）
                 // if (rule?.RulePattern != null) CacheRule(bizType, ruleType, rule.RulePattern);
-                
+
                 return rule?.RulePattern;
             }
             catch
@@ -410,7 +410,7 @@ namespace RUINORERP.Server.Services.BizCode
                 return null;
             }
         }
-        
+
         /// <summary>
         /// 获取完整的规则配置对象（包含显示模式和加密方法等信息）
         /// 用于获取编号生成所需的全部配置参数
@@ -440,7 +440,7 @@ namespace RUINORERP.Server.Services.BizCode
                 return null;
             }
         }
-        
+
         /// <summary>
         /// 获取默认的业务单据编号规则
         /// </summary>
@@ -560,7 +560,7 @@ namespace RUINORERP.Server.Services.BizCode
                     return "{S:{bizType}:upper}{D:yyMMdd}{DB:{bizType}{D:yyMM}/000}";
             }
         }
-        
+
         /// <summary>
         /// 生成基础信息编号
         /// 支持显示模式配置：可选择清晰可读或混淆/加密模式
@@ -579,22 +579,15 @@ namespace RUINORERP.Server.Services.BizCode
         /// </remarks>
         public async Task<string> GenerateBaseInfoNoAsync(BaseInfoType infoType, string paraConst = null, CancellationToken ct = default)
         {
-            // 特殊处理SKU编号，使用ProductSKUCodeGenerator生成
-            if (infoType == BaseInfoType.SKU_No)
-            {
-                // 对于SKU编号，我们使用ProductSKUCodeGenerator来生成更专业的SKU编码
-                // 这里使用默认的产品ID 0 和空的产品编码，实际使用时应该传入具体的产品信息
-                return await _productSKUCodeGenerator.GenerateProductSKUNoAsync(0, "DEFAULT", 4);
-            }
-            
+
             string rule;
-            int encryptionMethod = 0;  
-            
+            int encryptionMethod = 0;
+
             try
             {
                 // 获取完整的规则配置对象
                 var ruleConfig = await GetBillNoRuleConfigFromDatabaseAsync((int)infoType, (int)RuleType.基础信息编号, ct);
-                
+
                 if (ruleConfig != null && !string.IsNullOrEmpty(ruleConfig.RulePattern))
                 {
                     rule = ruleConfig.RulePattern;
@@ -605,19 +598,19 @@ namespace RUINORERP.Server.Services.BizCode
                     // 如果数据库中没有配置，则使用默认规则
                     rule = GetDefaultBaseInfoNoRule(infoType, paraConst);
                 }
-                
+
                 // 如果有自定义常量，则替换规则中的相关参数
                 if (!string.IsNullOrEmpty(paraConst))
                 {
                     rule = rule.Replace("{S:Const}", $"{{S:{paraConst}}}");
                 }
-                
-                // 生成原始编号
+
+                // 生成原始编号1
                 string generatedNumber = _bnrFactory.Create(rule);
-                
+
                 // 根据显示模式处理编号
-              //  string finalNumber = ProcessNumberByDisplayMode(generatedNumber, encryptionMethod);
-                
+                //  string finalNumber = ProcessNumberByDisplayMode(generatedNumber, encryptionMethod);
+
                 return generatedNumber;
             }
             catch (Exception ex)
@@ -630,13 +623,13 @@ namespace RUINORERP.Server.Services.BizCode
                 {
                     rule = rule.Replace("{S:Const}", $"{{S:{paraConst}}}");
                 }
-                
+
                 string fallbackNumber = _bnrFactory.Create(rule);
-                
+
                 return fallbackNumber;
             }
         }
-        
+
         /// <summary>
         /// 从数据库获取基础信息编号规则
         /// </summary>
@@ -657,7 +650,7 @@ namespace RUINORERP.Server.Services.BizCode
                 return null;
             }
         }
-        
+
         /// <summary>
         /// 获取默认的基础信息编号规则
         /// </summary>
@@ -712,10 +705,10 @@ namespace RUINORERP.Server.Services.BizCode
                     return "{S:{infoType}}{DB:{infoType}/000}";
             }
         }
-        
-        
-        
-        
+
+
+
+
         /// <summary>
         /// 生成产品SKU编码
         /// </summary>
@@ -725,68 +718,87 @@ namespace RUINORERP.Server.Services.BizCode
         /// <param name="seqLength">序号长度</param>
         /// <param name="ct">取消令牌</param>
         /// <returns>生成的产品SKU编码</returns>
-        public async Task<string> GenerateProductSKUNoAsync(long productId, string productCode, string attributes = null, int seqLength = 3, CancellationToken ct = default)
+        public async Task<string> GenerateProductRelatedCodeAsync(BaseInfoType baseInfoType, tb_Prod prod, string PrefixParaConst = null, int seqLength = 3, bool includeDate = false, CancellationToken ct = default)
         {
-            // 使用ProductSKUCodeGenerator生成SKU编码
-            // 如果有属性信息，则使用属性生成SKU编码
-            if (!string.IsNullOrEmpty(attributes))
+
+            switch (baseInfoType)
             {
-                // 解析属性信息（这里假设attributes是以逗号分隔的属性值ID列表）
-                var attributeValueIds = new List<long>();
-                if (!string.IsNullOrEmpty(attributes))
-                {
-                    var ids = attributes.Split(',');
-                    foreach (var id in ids)
+                case BaseInfoType.ProductNo:
+                    return  _productSKUCodeGenerator.GenerateProdNoAsync(prod);
+                    
+                case BaseInfoType.ShortCode:
+                    return  _productSKUCodeGenerator.GenerateShortCodeAsync(prod);
+                case BaseInfoType.SKU_No:
+                    #region SKU
+                    // 使用ProductSKUCodeGenerator生成SKU编码
+                    // 如果有属性信息，则使用属性生成SKU编码
+                    if (prod.tb_Prod_Attr_Relations != null)
                     {
-                        if (long.TryParse(id.Trim(), out long attributeId))
-                        {
-                            attributeValueIds.Add(attributeId);
-                        }
+                        // 解析属性信息（这里假设attributes是以逗号分隔的属性值ID列表）
+                        //var attributeValueIds = new List<long>();
+                        //if (!string.IsNullOrEmpty(attributes))
+                        //{
+                        //    var ids = attributes.Split(',');
+                        //    foreach (var id in ids)
+                        //    {
+                        //        if (long.TryParse(id.Trim(), out long attributeId))
+                        //        {
+                        //            attributeValueIds.Add(attributeId);
+                        //        }
+                        //    }
+                        //}
+
+                        // 使用ProductSKUCodeGenerator生成基于属性的SKU编码
+                        return  _productSKUCodeGenerator.GenerateSKUCodeAsync(prod);
                     }
-                }
-                
-                // 使用ProductSKUCodeGenerator生成基于属性的SKU编码
-                return await _productSKUCodeGenerator.GenerateSKUCodeAsync(productId, attributeValueIds);
+                    else
+                    {
+                        // 如果没有属性信息，则使用默认的SKU编码生成方式
+                        string rule;
+
+                        // 优先从数据库获取规则配置
+                        rule = await GetRuleFromDatabaseAsync(baseInfoType, ct);
+
+                        // 如果数据库中没有配置，则使用默认规则
+                        if (string.IsNullOrEmpty(rule))
+                        {
+                            rule = "{S:SK}{Hex:yyMM}{DB:SKU_No/0000}";
+                        }
+
+                        return _bnrFactory.Create(rule);
+                    }
+                    #endregion
+                    break;
+                default:
+                    break;
             }
-            else
-            {
-                // 如果没有属性信息，则使用默认的SKU编码生成方式
-                string rule;
-                
-                // 优先从数据库获取规则配置
-                rule = await GetProductSKUNoRuleFromDatabaseAsync(productId, ct);
-                
-                // 如果数据库中没有配置，则使用默认规则
-                if (string.IsNullOrEmpty(rule))
-                {
-                    rule = "{S:SK}{Hex:yyMM}{DB:SKU_No/0000}";
-                }
-                
-                return _bnrFactory.Create(rule);
-            }
+
+
+            return "";
+
         }
-        
+
         /// <summary>
         /// 从数据库获取产品SKU编码规则
         /// </summary>
         /// <param name="productId">产品ID</param>
         /// <param name="ct">取消令牌</param>
         /// <returns>编码规则</returns>
-        private async Task<string> GetProductSKUNoRuleFromDatabaseAsync(long productId, CancellationToken ct = default)
+        private async Task<string> GetRuleFromDatabaseAsync(BaseInfoType infoType, CancellationToken ct = default)
         {
             try
             {
                 // 首先尝试从缓存获取规则（如果有缓存机制）
                 // string cachedRule = GetRuleFromCache(productId, "SKU");
                 // if (!string.IsNullOrEmpty(cachedRule)) return cachedRule;
-                
+
                 // 查询数据库中的规则配置，指定规则类型为基础类规则
                 var rules = await _ruleConfigService.QueryAsync();
-                var rule = rules?.FirstOrDefault(r => r.BizType == (int)BaseInfoType.SKU_No && r.RuleType == (int)RuleType.基础信息编号 && r.IsActive);
-                
+                var rule = rules?.FirstOrDefault(r => r.BizType == (int)infoType && r.RuleType == (int)RuleType.基础信息编号 && r.IsActive);
+
                 // 缓存规则（如果有缓存机制）
                 // if (rule?.RulePattern != null) CacheRule(productId, "SKU", rule.RulePattern);
-                
+
                 return rule?.RulePattern;
             }
             catch
@@ -795,7 +807,7 @@ namespace RUINORERP.Server.Services.BizCode
                 return null;
             }
         }
-        
+
         /// <summary>
         /// 生成条码
         /// </summary>
@@ -804,42 +816,42 @@ namespace RUINORERP.Server.Services.BizCode
         /// <param name="ct">取消令牌</param>
         /// <returns>生成的条码</returns>
         public async Task<string> GenerateBarCodeAsync(string originalCode, char paddingChar = '0', CancellationToken ct = default)
-        {   
+        {
             if (string.IsNullOrEmpty(originalCode))
-            {   
+            {
                 throw new ArgumentNullException(nameof(originalCode), "原始编码不能为空");
             }
-            
+
             // 为了确保唯一性，我们生成一个基于原始编码但添加了时间戳和随机数的组合编码
             string uniqueBaseCode = GenerateUniqueBaseCode(originalCode);
-            
+
             //条码校验
             string ENA_13str = "131313131313";
             //定义输出条码
             string barcode = "";
             //临时生成条码
             string tmpbarcode = uniqueBaseCode;
-            
+
             //判断条码长度不足12位用补位码补足
             if (tmpbarcode.Length < 12)
-            {   
+            {
                 tmpbarcode = tmpbarcode.PadLeft(12, paddingChar);
             }
             // 如果超过12位，只取后12位
             else if (tmpbarcode.Length > 12)
-            {   
+            {
                 tmpbarcode = tmpbarcode.Substring(tmpbarcode.Length - 12);
             }
-            
+
             //计算校验位
             string checkstr = "";
             int sum = 0, j = 0;
             for (int i = 0; i < 12; i++)
-            {   
+            {
                 sum = sum + int.Parse(tmpbarcode[i].ToString())
                       * int.Parse(ENA_13str[i].ToString());
             }
-            
+
             //取余数，如果余数大于0则校验位为10-J，否则为0
             j = sum % 10;
             if (j > 0) checkstr = (10 - j).ToString();
@@ -850,7 +862,7 @@ namespace RUINORERP.Server.Services.BizCode
 
             return barcode;
         }
-        
+
         /// <summary>
         /// 生成唯一的基础编码
         /// 结合原始编码、时间戳和随机数，确保生成的编码具有高度唯一性
@@ -858,36 +870,36 @@ namespace RUINORERP.Server.Services.BizCode
         /// <param name="originalCode">原始编码</param>
         /// <returns>唯一的基础编码</returns>
         private string GenerateUniqueBaseCode(string originalCode)
-        {   
+        {
             // 使用当前时间戳（精确到毫秒）和一个随机数来增强唯一性
             string timestamp = DateTime.Now.ToString("HHmmssfff");
             string random = new Random().Next(100, 999).ToString();
-            
+
             // 将原始编码、时间戳和随机数组合起来
             // 为了避免过长，只取原始编码的前几位（如果原始编码很长）
             string shortOriginalCode = originalCode.Length > 5 ? originalCode.Substring(0, 5) : originalCode;
-            
+
             // 移除可能的非数字字符，只保留数字
             string numericCode = new string(shortOriginalCode.Where(char.IsDigit).ToArray());
-            
+
             // 如果原始编码中没有数字，则使用ASCII码值
             if (string.IsNullOrEmpty(numericCode))
-            {   
+            {
                 numericCode = string.Join("", shortOriginalCode.Take(5).Select(c => ((int)c % 10).ToString()));
             }
-            
+
             // 组合最终的唯一编码
             string uniqueCode = numericCode + timestamp + random;
-            
+
             // 确保编码不会太长（最多20位）
             if (uniqueCode.Length > 20)
-            {   
+            {
                 uniqueCode = uniqueCode.Substring(uniqueCode.Length - 20);
             }
-            
+
             return uniqueCode;
         }
-        
+
         /// <summary>
         /// 获取所有规则配置
         /// </summary>
@@ -897,7 +909,7 @@ namespace RUINORERP.Server.Services.BizCode
         {
             return await _ruleConfigService.QueryAsync();
         }
-        
+
         /// <summary>
         /// 保存规则配置
         /// </summary>
@@ -909,7 +921,7 @@ namespace RUINORERP.Server.Services.BizCode
             // 已经在模型中设置了默认值，这里不需要额外处理
             await _ruleConfigService.SaveOrUpdate(config);
         }
-        
+
         /// <summary>
         /// 删除规则配置
         /// </summary>

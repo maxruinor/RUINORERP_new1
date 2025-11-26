@@ -38,7 +38,7 @@ namespace RUINORERP.UI.BI
             _EditEntity = entity as tb_ProdCategories;
             if (_EditEntity.Category_ID == 0)
             {
-                _EditEntity.CategoryCode = ClientBizCodeService.GetBaseInfoNo(BaseInfoType.ProductNo.ToString());
+                _EditEntity.CategoryCode = ClientBizCodeService.GetBaseInfoNo(BaseInfoType.ProductNo);
             }
             DataBindingHelper.BindData4TextBox<tb_ProdCategories>(entity, t => t.Category_name, txtcategory_name, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_ProdCategories>(entity, t => t.CategoryCode, txtcategoryCode, BindDataType4TextBox.Text, false);

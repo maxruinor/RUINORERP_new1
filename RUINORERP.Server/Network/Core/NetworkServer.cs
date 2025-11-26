@@ -144,6 +144,17 @@ namespace RUINORERP.Server.Network.Core
         {
             try
             {
+                // 在启动前检查所有配置的端口是否被占用
+                var configuredPorts = GetConfiguredPorts();
+                foreach (var port in configuredPorts)
+                {
+                    if (IsPortInUse(port))
+                    {
+                        HandlePortAlreadyInUse(port);
+                        return null;
+                    }
+                }
+                
                 // 扫描RUINORERP.PacketSpec程序集以及其他相关程序集
                 var packetSpecAssembly = Assembly.GetAssembly(typeof(PacketSpec.Commands.ICommandDispatcher));
                 var serverAssembly = Assembly.GetExecutingAssembly();
@@ -488,7 +499,16 @@ namespace RUINORERP.Server.Network.Core
             }
             catch (Exception ex)
             {
-                LogError($"启动服务器失败: {ex.Message}", ex);
+                // 检查是否是端口占用异常
+                if (IsPortOccupiedException(ex))
+                {
+                    HandlePortOccupiedException(ex);
+                }
+                else
+                {
+                    LogError($"启动服务器失败: {ex.Message}", ex);
+                }
+                
                 // 确保在启动失败时清理资源
                 if (_host != null)
                 {
@@ -626,6 +646,205 @@ namespace RUINORERP.Server.Network.Core
             {
                 _logger.LogError(ex, "从全局服务提供者复制服务时出错");
             }
+        }
+
+        /// <summary>
+        /// 获取所有配置的端口，包括主端口、配置文件中的其他端口和SuperSocket配置的端口
+        /// </summary>
+        /// <returns>所有配置的端口号列表</returns>
+        private List<int> GetConfiguredPorts()
+        {
+            var ports = new List<int>();
+            
+            // 添加主端口
+            ports.Add(Serverport);
+            
+            // 从配置文件中读取其他端口
+            try
+            {
+                var config = new ConfigurationBuilder()
+                    .SetBasePath(Directory.GetCurrentDirectory())
+                    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                    .Build();
+                
+                // 添加serverOptions.listeners中的端口
+                var serverOptionsSection = config.GetSection("serverOptions");
+                if (serverOptionsSection != null)
+                {
+                    var listenersSection = serverOptionsSection.GetSection("listeners");
+                    if (listenersSection != null)
+                    {
+                        foreach (var listenerSection in listenersSection.GetChildren())
+                        {
+                            var portStr = listenerSection["port"] ?? listenerSection["Port"];
+                            if (int.TryParse(portStr, out int port) && port > 0 && !ports.Contains(port))
+                            {
+                                ports.Add(port);
+                            }
+                        }
+                    }
+                }
+                
+                // 添加SuperSocket配置的端口
+                var superSocketSection = config.GetSection("SuperSocket");
+                if (superSocketSection != null)
+                {
+                    var portStr = superSocketSection["Port"];
+                    if (int.TryParse(portStr, out int port) && port > 0 && !ports.Contains(port))
+                    {
+                        ports.Add(port);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogWarning(ex, "读取配置文件中的端口信息时发生异常");
+            }
+            
+            return ports;
+        }
+
+        /// <summary>
+        /// 检查指定端口是否已被占用
+        /// </summary>
+        /// <param name="port">要检查的端口号</param>
+        /// <returns>端口是否已被占用</returns>
+        private bool IsPortInUse(int port)
+        {
+            try
+            {
+                // 使用TcpClient尝试连接端口，如果连接成功说明端口被占用
+                using (var tcpClient = new System.Net.Sockets.TcpClient())
+                {
+                    // 尝试连接本地端口，设置超时时间
+                    var connectTask = tcpClient.ConnectAsync(System.Net.IPAddress.Loopback, port);
+                    var completed = connectTask.Wait(TimeSpan.FromMilliseconds(500));
+                    
+                    if (completed && tcpClient.Connected)
+                    {
+                        return true; // 端口已被占用
+                    }
+                }
+                
+                // 如果本地连接失败，再检查所有网络接口
+                var ipGlobalProperties = System.Net.NetworkInformation.IPGlobalProperties.GetIPGlobalProperties();
+                var tcpConnections = ipGlobalProperties.GetActiveTcpConnections();
+                
+                foreach (var connection in tcpConnections)
+                {
+                    if (connection.LocalEndPoint.Port == port)
+                    {
+                        return true; // 端口已被占用
+                    }
+                }
+                
+                return false; // 端口未被占用
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogWarning(ex, $"检查端口 {port} 时发生异常");
+                return false; // 发生异常时假设端口未被占用
+            }
+        }
+
+        /// <summary>
+        /// 处理端口已被占用的情况，提供友好的错误信息和解决方案
+        /// </summary>
+        /// <param name="port">被占用的端口号</param>
+        private void HandlePortAlreadyInUse(int port)
+        {
+            var errorMessage = $"=========================================\n";
+            errorMessage += "端口已被占用！\n\n";
+            errorMessage += $"当前尝试使用的端口: {port}\n\n";
+            
+            errorMessage += "解决方案:\n";
+            errorMessage += "1. 检查端口占用情况:\n";
+            errorMessage += $"   netstat -ano | findstr :{port}\n\n";
+            
+            errorMessage += "2. 查看占用端口的进程:\n";
+            errorMessage += $"   for /f \"tokens=5\" %a in ('netstat -ano ^| findstr :{port}') do tasklist | findstr %a\n\n";
+            
+            errorMessage += "3. 终止占用端口的进程(可选):\n";
+            errorMessage += $"   taskkill /PID [进程ID] /F\n\n";
+            
+            errorMessage += "4. 或者修改配置文件中的端口设置:\n";
+            errorMessage += "   配置文件路径: RUINORERP.Server/appsettings.json\n";
+            errorMessage += $"   当前使用端口: {port}\n\n";
+            
+            errorMessage += "5. 重启应用程序\n";
+            errorMessage += "=========================================";
+            
+            LogError(errorMessage);
+            
+            // 同时在控制台显示彩色错误信息
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine(errorMessage);
+            Console.ResetColor();
+        }
+
+        /// <summary>
+        /// 检查异常是否为端口占用异常
+        /// </summary>
+        /// <param name="ex">异常对象</param>
+        /// <returns>是否为端口占用异常</returns>
+        private bool IsPortOccupiedException(Exception ex)
+        {
+            if (ex == null) return false;
+            
+            // 检查异常类型和消息
+            if (ex is SocketException socketEx && socketEx.ErrorCode == 10048)
+            {
+                return true;
+            }
+            
+            // 检查内部异常
+            if (ex.InnerException != null)
+            {
+                return IsPortOccupiedException(ex.InnerException);
+            }
+            
+            // 检查异常消息中是否包含端口占用的关键字
+            var message = ex.Message?.ToLower() ?? "";
+            return message.Contains("only one usage of each socket address") || 
+                   message.Contains("address already in use") ||
+                   message.Contains("端口") && message.Contains("占用") ||
+                   message.Contains("failed to start any listener");
+        }
+
+        /// <summary>
+        /// 处理端口占用异常，提供友好的错误信息和解决方案
+        /// </summary>
+        /// <param name="ex">异常对象</param>
+        private void HandlePortOccupiedException(Exception ex)
+        {
+            var errorMessage = $"=========================================\n";
+            errorMessage += "服务器启动失败：端口已被占用！\n\n";
+            errorMessage += $"错误信息: {ex.Message}\n";
+            errorMessage += $"当前尝试使用的端口: {Serverport}\n\n";
+            
+            errorMessage += "解决方案:\n";
+            errorMessage += "1. 检查端口占用情况:\n";
+            errorMessage += $"   netstat -ano | findstr :{Serverport}\n\n";
+            
+            errorMessage += "2. 查看占用端口的进程:\n";
+            errorMessage += $"   for /f \"tokens=5\" %a in ('netstat -ano ^| findstr :{Serverport}') do tasklist | findstr %a\n\n";
+            
+            errorMessage += "3. 终止占用端口的进程(可选):\n";
+            errorMessage += $"   taskkill /PID [进程ID] /F\n\n";
+            
+            errorMessage += "4. 或者修改配置文件中的端口设置:\n";
+            errorMessage += "   配置文件路径: RUINORERP.Server/appsettings.json\n";
+            errorMessage += $"   当前使用端口: {Serverport}\n\n";
+            
+            errorMessage += "5. 重启应用程序\n";
+            errorMessage += "=========================================";
+            
+            LogError(errorMessage);
+            
+            // 同时在控制台显示彩色错误信息
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine(errorMessage);
+            Console.ResetColor();
         }
 
         private void LogError(string message, Exception ex = null)

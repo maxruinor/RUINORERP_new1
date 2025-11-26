@@ -6997,7 +6997,7 @@ namespace RUINORERP.UI.BaseForm
         /// <summary>
         /// 停止锁定刷新任务
         /// </summary>
-        protected void StopLockRefreshTask()
+        protected async Task StopLockRefreshTask()
         {
             if (_lockRefreshTokenSource != null)
             {
@@ -7008,7 +7008,8 @@ namespace RUINORERP.UI.BaseForm
 
                     if (_lockRefreshTask != null && !_lockRefreshTask.IsCompleted)
                     {
-                        Task.WaitAny(_lockRefreshTask, Task.Delay(1000)); // 等待任务完成，最多等待1秒
+                        await Task.WhenAny(_lockRefreshTask, Task.Delay(1000));// 等待任务完成，最多等待1秒
+
                     }
 
                     MainForm.Instance?.uclog?.AddLog($"单据【{_currentBillId}】锁定刷新任务已停止", UILogType.普通消息);

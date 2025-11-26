@@ -35,7 +35,7 @@ namespace RUINORERP.UI.BI
             _EditEntity = entity as tb_OnlineStoreInfo;
             if (_EditEntity.Store_ID == 0)
             {
-                _EditEntity.StoreCode = ClientBizCodeService.GetBaseInfoNo(BaseInfoType.StoreCode.ToString());
+                _EditEntity.StoreCode = ClientBizCodeService.GetBaseInfoNo(BaseInfoType.StoreCode);
             }
             DataBindingHelper.BindData4TextBox<tb_OnlineStoreInfo>(entity, t => t.StoreCode, txtStoreCode, BindDataType4TextBox.Text, false);
 
@@ -55,11 +55,11 @@ namespace RUINORERP.UI.BI
 
             DataBindingHelper.BindData4TextBox<tb_OnlineStoreInfo>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text, false);
 
- 
+
             //后面这些依赖于控件绑定的数据源和字段。所以要在绑定后执行。
             if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
             {
-                base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService<tb_OnlineStoreInfoValidator>  (), kryptonPanel1.Controls);
+                base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService<tb_OnlineStoreInfoValidator>(), kryptonPanel1.Controls);
                 base.InitEditItemToControl(entity, kryptonPanel1.Controls);
             }
             base.BindData(entity);
@@ -72,7 +72,7 @@ namespace RUINORERP.UI.BI
             this.Close();
         }
 
-       
+
         private void btnOk_Click(object sender, EventArgs e)
         {
             if (base.Validator())

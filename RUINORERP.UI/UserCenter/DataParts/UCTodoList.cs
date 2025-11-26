@@ -131,7 +131,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
 
             // 初始化同步订阅者
             InitializeSyncSubscriber();
-            
+
             // 构建待办事项树
             await BuilderToDoListTreeView();
 
@@ -208,20 +208,27 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 case TaskStatusUpdateType.Deleted:
                 case TaskStatusUpdateType.StatusChanged:
                     // 对于任何状态变化，重新加载业务类型节点
-                    Task.Run(async () => {
-                        try {
+                    Task.Run(async () =>
+                    {
+                        try
+                        {
                             var newNode = await ProcessBizTypeNodeAsync(update.BusinessType);
-                            if (newNode != null) {
-                                this.Invoke((Action)(() => {
+                            if (newNode != null)
+                            {
+                                this.Invoke((Action)(() =>
+                                {
                                     // 替换现有节点
                                     var index = kryptonTreeViewJobList.Nodes.IndexOf(bizTypeNode);
-                                    if (index >= 0) {
+                                    if (index >= 0)
+                                    {
                                         kryptonTreeViewJobList.Nodes[index] = newNode;
                                         kryptonTreeViewJobList.ExpandAll();
                                     }
                                 }));
                             }
-                        } catch (Exception ex) {
+                        }
+                        catch (Exception ex)
+                        {
                             _logger.Error("更新业务类型节点失败", ex);
                         }
                     });
@@ -246,7 +253,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
             return null;
         }
 
-        
+
 
         private tb_WorkCenterConfig GetWorkCenterConfig(tb_RoleInfo currentRole, tb_UserInfo currentUser)
         {
@@ -277,7 +284,9 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 {
 
                     var RelatedBillMenuInfos = MainForm.Instance.MenuList
-                        .Where(m => m.IsVisble && m.EntityName == nodeParameter.tableType.Name && m.ClassPath.Contains("Query")).ToList();
+                        .Where(m => m.IsVisble && m.EntityName == nodeParameter.tableType.Name
+                        && m.BizType == (int)nodeParameter.bizType
+                        && m.ClassPath.Contains("Query")).ToList();
                     if (RelatedBillMenuInfos != null)
                     {
                         if (RelatedBillMenuInfos.Count > 1)
@@ -300,7 +309,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                             await _menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, instance, nodeParameter);
                             #endregion
                         }
-                        else
+                        else if (RelatedBillMenuInfos.Count == 1)
                         {
                             #region 指向单一的菜单
                             var RelatedBillMenuInfo = RelatedBillMenuInfos.FirstOrDefault();
@@ -318,6 +327,10 @@ namespace RUINORERP.UI.UserCenter.DataParts
                             await _menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, instance, nodeParameter);
 
                             #endregion
+                        }
+                        else if (RelatedBillMenuInfos.Count == 0)
+                        {
+                            MessageBox.Show("请确定你拥有打开当前菜单的权限！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                         }
 
 
@@ -1018,6 +1031,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 {
                     var parameter = new QueryParameter
                     {
+                        bizType = bizType,
                         conditionals = group.Conditions,
                         tableType = tableType,
                         UIPropertyIdentifier = group.Identifier
@@ -1246,7 +1260,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
             return queryList.Rows.Count;
         }
 
-   
+
         /*
 
         private List<IConditionalModel> GetNotEndConditions()

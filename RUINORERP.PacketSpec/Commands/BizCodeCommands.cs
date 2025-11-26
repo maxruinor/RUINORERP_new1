@@ -23,12 +23,8 @@ namespace RUINORERP.PacketSpec.Commands
         /// <summary>
         /// 生成产品编码命令 - 生成产品编号
         /// </summary>
-        public static readonly CommandId GenerateProductNo = new CommandId(CommandCategory.BizCode, (byte)(CommandCatalog.BizCode_GenerateProductNo & 0xFF));
+        public static readonly CommandId GenerateProductRelatedCode = new CommandId(CommandCategory.BizCode, (byte)(CommandCatalog.BizCode_ProductRelatedCode & 0xFF));
 
-        /// <summary>
-        /// 生成产品SKU编码命令 - 生成产品SKU编号
-        /// </summary>
-        public static readonly CommandId GenerateProductSKUNo = new CommandId(CommandCategory.BizCode, (byte)(CommandCatalog.BizCode_GenerateProductSKUNo & 0xFF));
 
         /// <summary>
         /// 生成条码命令 - 根据原始编码生成条形码

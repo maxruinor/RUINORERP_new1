@@ -22,7 +22,7 @@ namespace RUINORERP.IServices
         /// <param name="ct">取消令牌</param>
         /// <returns>生成的单据编号</returns>
         Task<string> GenerateBizBillNoAsync(BizType bizType, CancellationToken ct = default);
-        
+
 
         /// <summary>
         /// 生成基础信息编号
@@ -42,8 +42,8 @@ namespace RUINORERP.IServices
         /// <param name="seqLength">序号长度</param>
         /// <param name="ct">取消令牌</param>
         /// <returns>生成的产品SKU编码</returns>
-        Task<string> GenerateProductSKUNoAsync(long productId, string productCode, string attributes = null, int seqLength = 3, CancellationToken ct = default);
-      
+        Task<string> GenerateProductRelatedCodeAsync(BaseInfoType baseInfoType, tb_Prod prod,string PrefixParaConst = null, int seqLength = 3, bool includeDate = false, CancellationToken ct = default);
+
         /// <summary>
         /// 生成条码
         /// </summary>
@@ -59,7 +59,7 @@ namespace RUINORERP.IServices
         /// <param name="ct">取消令牌</param>
         /// <returns>规则配置列表</returns>
         Task<List<tb_sys_BillNoRule>> GetAllRuleConfigsAsync(CancellationToken ct = default);
-        
+
         /// <summary>
         /// 保存规则配置
         /// </summary>
@@ -67,7 +67,7 @@ namespace RUINORERP.IServices
         /// <param name="ct">取消令牌</param>
         /// <returns>任务</returns>
         Task SaveRuleConfigAsync(tb_sys_BillNoRule config, CancellationToken ct = default);
-        
+
         /// <summary>
         /// 删除规则配置
         /// </summary>

@@ -67,6 +67,7 @@ namespace RUINORERP.UI.Network.Services
             throw new Exception(response.ErrorMessage ?? "生成业务单据编号失败,请重试。");
         }
 
+
         /// <summary>
         /// 生成基础信息编号（枚举版本）
         /// </summary>
@@ -79,36 +80,6 @@ namespace RUINORERP.UI.Network.Services
         public async Task<string> GenerateBaseInfoNoAsync(BaseInfoType baseInfoType, string paraConst = null, CancellationToken ct = default)
         {
             // 将枚举转换为字符串发送到服务器
-            string baseInfoTypeStr = baseInfoType.ToString();
-            var request = new BizCodeRequest { BaseInfoType = baseInfoTypeStr, ParaConst = paraConst };
-            var response = await SendBizCodeCommandAsync(
-                BizCodeCommands.GenerateBaseInfoNo, request, ct);
-
-            if (response.IsSuccess && !string.IsNullOrEmpty(response.GeneratedCode))
-            {
-                return response.GeneratedCode;
-            }
-
-            throw new Exception(response.ErrorMessage ?? "生成基础信息编号失败");
-        }
-        
-        /// <summary>
-        /// 生成基础信息编号（字符串版本，保持向后兼容）
-        /// </summary>
-        /// <param name="baseInfoType">基础信息类型</param>
-        /// <param name="paraConst">参数常量（可选）</param>
-        /// <param name="ct">取消令牌</param>
-        /// <returns>生成的基础信息编号</returns>
-        /// <exception cref="Exception">网络连接相关异常</exception>
-        /// <exception cref="Exception">业务逻辑相关异常</exception>
-        public async Task<string> GenerateBaseInfoNoAsync(string baseInfoType, string paraConst = null, CancellationToken ct = default)
-        {
-            // 尝试将字符串转换为枚举以确保类型安全
-            if (!Enum.TryParse<BaseInfoType>(baseInfoType, true, out var _))
-            {
-                _logger?.LogWarning("使用了非枚举类型的基础信息类型字符串: {BaseInfoType}", baseInfoType);
-            }
-            
             var request = new BizCodeRequest { BaseInfoType = baseInfoType, ParaConst = paraConst };
             var response = await SendBizCodeCommandAsync(
                 BizCodeCommands.GenerateBaseInfoNo, request, ct);
@@ -121,73 +92,44 @@ namespace RUINORERP.UI.Network.Services
             throw new Exception(response.ErrorMessage ?? "生成基础信息编号失败");
         }
 
+
         /// <summary>
-        /// 生成产品编码
+        /// 生成基础信息编号（枚举版本）
         /// </summary>
-        /// <param name="categoryId">产品类别ID</param>
-        /// <param name="customPrefix">自定义前缀（可选）</param>
-        /// <param name="includeDate">是否包含日期</param>
+        /// <param name="baseInfoType">基础信息类型枚举</param>
+        /// <param name="PrefixParaConst">参数常量（可选）</param>
         /// <param name="ct">取消令牌</param>
-        /// <returns>生成的产品编码</returns>
+        /// <returns>生成的基础信息编号</returns>
         /// <exception cref="Exception">网络连接相关异常</exception>
         /// <exception cref="Exception">业务逻辑相关异常</exception>
-        public async Task<string> GenerateProductNoAsync(long categoryId, string customPrefix = null, bool includeDate = false, CancellationToken ct = default)
+        public async Task<string> GenerateProductRelatedCodeAsync(BaseInfoType baseInfoType, tb_Prod prod, string PrefixParaConst = null, int seqLength = 3, bool includeDate = false, CancellationToken ct = default)
         {
-            var request = new BizCodeRequest
+            // 将枚举转换为字符串发送到服务器
+            var request = new BizCodeRequest { BaseInfoType = baseInfoType, ParaConst = PrefixParaConst };
+
+            var ProductParameter = new ProdParameter
             {
-                ProductParameter = new ProductCodeParameter
-                {
-                    CategoryId = categoryId,
-                    CustomPrefix = customPrefix,
-                    IncludeDate = includeDate
-                }
+                prod = prod,
+                PrefixParaConst = PrefixParaConst,
+                SeqLength = seqLength,
+                IncludeDate = includeDate
             };
 
+            request.ProductParameter = ProductParameter;
+
             var response = await SendBizCodeCommandAsync(
-                BizCodeCommands.GenerateProductNo, request, ct);
+                BizCodeCommands.GenerateProductRelatedCode, request, ct);
 
             if (response.IsSuccess && !string.IsNullOrEmpty(response.GeneratedCode))
             {
                 return response.GeneratedCode;
             }
 
-            throw new Exception(response.ErrorMessage ?? "生成产品编码失败");
+            throw new Exception(response.ErrorMessage ?? "生成基础信息编号失败");
         }
 
-        /// <summary>
-        /// 生成产品SKU编码
-        /// </summary>
-        /// <param name="productId">产品ID</param>
-        /// <param name="productCode">产品编码</param>
-        /// <param name="attributes">属性组合信息</param>
-        /// <param name="seqLength">序号长度</param>
-        /// <param name="ct">取消令牌</param>
-        /// <returns>生成的产品SKU编码</returns>
-        /// <exception cref="Exception">网络连接相关异常</exception>
-        /// <exception cref="Exception">业务逻辑相关异常</exception>
-        public async Task<string> GenerateProductSKUNoAsync(long productId, string productCode, string attributes = null, int seqLength = 3, CancellationToken ct = default)
-        {
-            var request = new BizCodeRequest
-            {
-                SKUParameter = new SKUCodeParameter
-                {
-                    ProductId = productId,
-                    ProductCode = productCode,
-                    Attributes = attributes,
-                    SeqLength = seqLength
-                }
-            };
 
-            var response = await SendBizCodeCommandAsync(
-                BizCodeCommands.GenerateProductSKUNo, request, ct);
 
-            if (response.IsSuccess && !string.IsNullOrEmpty(response.GeneratedCode))
-            {
-                return response.GeneratedCode;
-            }
-
-            throw new Exception(response.ErrorMessage ?? "生成产品SKU编码失败");
-        }
 
         /// <summary>
         /// 生成条码
@@ -224,7 +166,7 @@ namespace RUINORERP.UI.Network.Services
 
             throw new Exception(response.ErrorMessage ?? "生成条码失败");
         }
-        
+
         /// <summary>
         /// 获取所有规则配置
         /// </summary>
@@ -243,7 +185,7 @@ namespace RUINORERP.UI.Network.Services
 
             throw new Exception(response.ErrorMessage ?? "获取规则配置失败");
         }
-        
+
         /// <summary>
         /// 保存规则配置
         /// </summary>
@@ -256,7 +198,7 @@ namespace RUINORERP.UI.Network.Services
             {
                 RuleConfig = config
             };
-            
+
             var response = await SendBizCodeCommandAsync(
                 BizCodeCommands.SaveRuleConfig, request, ct);
 
@@ -265,7 +207,7 @@ namespace RUINORERP.UI.Network.Services
                 throw new Exception(response.ErrorMessage ?? "保存规则配置失败");
             }
         }
-        
+
         /// <summary>
         /// 删除规则配置
         /// </summary>
@@ -278,7 +220,7 @@ namespace RUINORERP.UI.Network.Services
             {
                 RuleConfigId = id
             };
-            
+
             var response = await SendBizCodeCommandAsync(
                 BizCodeCommands.DeleteRuleConfig, request, ct);
 
@@ -302,11 +244,11 @@ namespace RUINORERP.UI.Network.Services
             using var timeoutCts = new CancellationTokenSource();
             // 设置默认超时时间为10秒
             timeoutCts.CancelAfter(TimeSpan.FromSeconds(10));
-            
+
             // 创建组合取消令牌，任一令牌取消都会导致操作取消
             using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(ct, timeoutCts.Token);
             var combinedCt = linkedCts.Token;
-            
+
             // 使用信号量确保同一时间只有一个请求
             await _operationLock.WaitAsync(combinedCt);
             try
@@ -337,7 +279,7 @@ namespace RUINORERP.UI.Network.Services
                             _logger?.LogWarning("业务编码生成请求总重试时间超过限制 - 命令ID: {CommandId}", commandId.ToString());
                             throw new TimeoutException("请求重试时间过长，请稍后重试");
                         }
-                        
+
                         // 发送命令并获取响应
                         response = await _communicationService.SendCommandWithResponseAsync<BizCodeResponse>(
                             commandId, request, combinedCt);
@@ -537,42 +479,10 @@ namespace RUINORERP.UI.Network.Services
             }
         }
 
-        /// <summary>
-        /// 获取基础信息编号（静态方法，兼容旧的调用模式，使用字符串参数）
-        /// 内部使用同步方式调用异步方法
-        /// </summary>
-        /// <param name="baseInfoType">基础信息类型</param>
-        /// <param name="paraConst">参数常量（可选）</param>
-        /// <returns>生成的基础信息编号</returns>
-        /// <exception cref="Exception">生成失败时抛出异常</exception>
-        public static string GetBaseInfoNo(string baseInfoType, string paraConst = null)
-        {
-            try
-            {
-                // 从依赖注入容器中获取服务实例
-                var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
-                if (bizCodeService == null)
-                {
-                    throw new Exception("无法从容器中获取BizCodeService实例");
-                }
 
-                // 同步调用异步方法
-                return Task.Run(async () => await bizCodeService.GenerateBaseInfoNoAsync(baseInfoType, paraConst)).Result;
-            }
-            catch (AggregateException ex)
-            {
-                // 解包AggregateException，获取内部异常
-                if (ex.InnerException != null)
-                {
-                    throw ex.InnerException;
-                }
-                throw;
-            }
-        }
 
-        
-        
-        
+
+
         #endregion
     }
 }

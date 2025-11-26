@@ -122,11 +122,13 @@ namespace RUINORERP.Business
                     entity.GetPropertyValue(statusProperty)
                 );
 
-                if (!FMPaymentStatusHelper.CanApprove(currentStatus, false))
-                {
-                    rmrs.ErrorMsg = $"状态为【{currentStatus.ToString()}】的{((ProfitLossDirection)entity.ProfitLossDirection).ToString()}确认单不能审核";
-                    return rmrs;
-                }
+              
+
+                //if (!FMPaymentStatusHelper.CanApprove(currentStatus, false))
+                //{
+                //    rmrs.ErrorMsg = $"状态为【{currentStatus.ToString()}】的{((ProfitLossDirection)entity.ProfitLossDirection).ToString()}确认单不能审核";
+                //    return rmrs;
+                //}
 
 
                 //得到当前实体对应的业务类型

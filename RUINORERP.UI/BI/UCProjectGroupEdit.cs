@@ -37,7 +37,7 @@ namespace RUINORERP.UI.BI
             _EditEntity = entity as tb_ProjectGroup;
             if (_EditEntity.ProjectGroup_ID == 0)
             {
-                _EditEntity.ProjectGroupCode = ClientBizCodeService.GetBaseInfoNo(BaseInfoType.ProjectGroupCode.ToString());
+                _EditEntity.ProjectGroupCode = ClientBizCodeService.GetBaseInfoNo(BaseInfoType.ProjectGroupCode);
                 btnAssigneeEmployee.Visible = false;
             }
             DataBindingHelper.BindData4TextBox<tb_ProjectGroup>(entity, t => t.ProjectGroupCode, txtProjectGroupCode, BindDataType4TextBox.Text, false);

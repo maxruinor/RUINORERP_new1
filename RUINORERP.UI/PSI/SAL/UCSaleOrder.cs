@@ -723,7 +723,6 @@ namespace RUINORERP.UI.PSI.SAL
                     else
                     {
                         toolStripbtnPrint.Enabled = false;
-                        lblPrintStatus.Text = "草稿状态不可打印";
                     }
                 }
                 else if ((DataStatus)EditEntity.DataStatus != DataStatus.草稿)
@@ -741,7 +740,6 @@ namespace RUINORERP.UI.PSI.SAL
                 else
                 {
                     toolStripbtnPrint.Enabled = false;
-                    lblPrintStatus.Text = "草稿状态不可打印";
                 }
             };
 

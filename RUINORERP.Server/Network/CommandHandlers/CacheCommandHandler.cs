@@ -454,7 +454,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 // 验证请求数据
                 if (string.IsNullOrEmpty(updateRequest.TableName))
                 {
-                    LogError("缓存更新表名为空");
+                    LogInfo("缓存更新表名为空");
                     return Task.FromResult<CacheResponse>(ResponseFactory.CreateSpecificErrorResponse<CacheResponse>("表名不能为空"
                          ));
                 }

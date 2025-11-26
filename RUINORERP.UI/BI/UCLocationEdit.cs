@@ -37,7 +37,7 @@ namespace RUINORERP.UI.BI
             _EditEntity = entity as tb_Location;
             if (_EditEntity.Location_ID == 0)
             {
-                _EditEntity.LocationCode = ClientBizCodeService.GetBaseInfoNo(BaseInfoType.Location.ToString());
+                _EditEntity.LocationCode = ClientBizCodeService.GetBaseInfoNo(BaseInfoType.Location);
             }
             DataBindingHelper.BindData4Cmb<tb_LocationType>(entity, k => k.LocationType_ID, v=>v.TypeName, txtLocationType_ID);
             DataBindingHelper.BindData4TextBox<tb_Location>(entity, t => t.Name, txtName, BindDataType4TextBox.Text, false);

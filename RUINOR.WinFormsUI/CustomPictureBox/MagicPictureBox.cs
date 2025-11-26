@@ -2136,11 +2136,19 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
             {
                 using (MemoryStream ms = new MemoryStream())
                 {
-                    image.Save(ms, image.RawFormat);
+                    // 检查RawFormat是否有效，如果无效则使用默认格式PNG
+                    if (image.RawFormat.Guid == ImageFormat.MemoryBmp.Guid)
+                    {
+                        image.Save(ms, ImageFormat.Png);
+                    }
+                    else
+                    {
+                        image.Save(ms, image.RawFormat);
+                    }
                     return (int)ms.Length;
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 return 0;
             }

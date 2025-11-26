@@ -265,6 +265,7 @@ namespace RUINORERP.PacketSpec.Models.Core
                         // 添加错误相关的元数据
                         newResponse.Metadata["ErrorSource"] = "服务器没有处理对应的指令";
                         newResponse.Metadata["ErrorTime"] = DateTime.Now;
+                        newResponse.ErrorMessage = $"服务器没有处理对应的指令";
 
                         // 添加额外的元数据
                         if (additionalMetadata != null)

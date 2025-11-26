@@ -444,7 +444,7 @@ namespace RUINORERP.Server.Network.Services
             {
                 // 可以在这里添加额外的连接后处理逻辑
                 // 例如记录连接信息、初始化会话状态等
-                _logger.LogDebug($"执行会话连接后的自定义处理逻辑: {sessionInfo.SessionID}");
+                _logger.LogTrace($"执行会话连接后的自定义处理逻辑: {sessionInfo.SessionID}");
             }
             catch (Exception ex)
             {

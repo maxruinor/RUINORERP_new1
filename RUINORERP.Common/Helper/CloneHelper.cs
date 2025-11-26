@@ -11,6 +11,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
+using SqlSugar;
 
 namespace RUINORERP.Common.Helper
 {
@@ -387,7 +388,7 @@ namespace RUINORERP.Common.Helper
         /// <param name="currentDepth">当前递归深度</param>
         /// <param name="maxDepth">最大递归深度</param>
         /// <returns>克隆后的对象</returns>
-        private static object DeepCloneInternal(object source, System.Collections.Concurrent.ConcurrentDictionary<object, object> clonedObjects, int currentDepth, int maxDepth=5)
+        private static object DeepCloneInternal(object source, System.Collections.Concurrent.ConcurrentDictionary<object, object> clonedObjects, int currentDepth, int maxDepth = 4)
         {
             if (source == null)
                 return null;
@@ -429,7 +430,7 @@ namespace RUINORERP.Common.Helper
                     catch (Exception ex)
                     {
                         // 记录异常并继续克隆其他元素
-                       // .Instance.logger.LogError($"克隆数组元素时发生异常: {ex.Message}");
+                        // .Instance.logger.LogError($"克隆数组元素时发生异常: {ex.Message}");
                         continue;
                     }
                 }
@@ -471,7 +472,7 @@ namespace RUINORERP.Common.Helper
                         {
                             object clonedItem = DeepCloneInternal(item, clonedObjects, currentDepth + 1, maxDepth);
                             // 确保clonedItem不为null再添加到集合中
-                            if (clonedItem != null)
+                            if (clonedItem != null && targetCollection != null)
                             {
                                 addMethod.Invoke(targetCollection, new[] { clonedItem });
                             }
@@ -488,38 +489,48 @@ namespace RUINORERP.Common.Helper
                 return targetCollection;
             }
 
-            // 处理实体对象
-            object target = Activator.CreateInstance(type);
-            // 添加到字典以处理循环引用，遵循原值复制原则
-            // 确保source不为null，避免ArgumentNullException: key不能为null
-            if (source != null)
+            // 处理实体对象（包括循环引用检测）
+    object target = Activator.CreateInstance(type);
+    // 添加到字典以处理循环引用，遵循原值复制原则
+    // 确保source不为null，避免ArgumentNullException: key不能为null
+    if (source != null)
+    {
+        clonedObjects.TryAdd(source, target);
+    }
+
+    // 克隆属性
+    foreach (var property in type.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
+    {
+        if (!property.CanRead || !property.CanWrite)
+            continue;
+
+        // 跳过导航属性（避免循环）
+        if (property.Name.StartsWith("tb_") || 
+            (property.PropertyType.Namespace != null && property.PropertyType.Namespace == type.Namespace) ||
+            (property.PropertyType.IsClass && property.PropertyType != typeof(string) && !property.PropertyType.IsPrimitive && !property.PropertyType.IsEnum))
+            continue;
+
+        try
+        {
+            object value = property.GetValue(source);
+            // 确保value不为null再进行克隆，避免null key问题
+            if (value != null)
             {
-                clonedObjects.TryAdd(source, target);
+                object clonedValue = DeepCloneInternal(value, clonedObjects, currentDepth + 1, maxDepth);
+                property.SetValue(target, clonedValue);
             }
-
-            // 克隆属性
-            foreach (var property in type.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
+            else
             {
-                if (!property.CanRead || !property.CanWrite)
-                    continue;
-
-                //// 跳过导航属性（避免循环）
-                //if (property.Name.StartsWith("tb_") || property.PropertyType.Namespace == type.Namespace)
-                //    continue;
-
-                try
-                {
-                    object value = property.GetValue(source);
-                    object clonedValue = DeepCloneInternal(value, clonedObjects, currentDepth + 1, maxDepth);
-                    property.SetValue(target, clonedValue);
-                }
-                catch (Exception ex)
-                {
-                    // 记录异常并继续克隆其他属性
-                    //logger.LogError($"克隆属性 {property.Name} 时发生异常: {ex.Message}");
-                    continue;
-                }
+                property.SetValue(target, null);
             }
+        }
+        catch (Exception ex)
+        {
+            // 记录异常并继续克隆其他属性
+            //logger.LogError($"克隆属性 {property.Name} 时发生异常: {ex.Message}");
+            continue;
+        }
+    }
 
             return target;
         }
@@ -577,7 +588,7 @@ namespace RUINORERP.Common.Helper
             return Activator.CreateInstance(typeof(List<>).MakeGenericType(elementType));
         }
 
-      
+
         // 获取Add方法
         private static MethodInfo GetAddMethod(Type collectionType, Type elementType)
         {

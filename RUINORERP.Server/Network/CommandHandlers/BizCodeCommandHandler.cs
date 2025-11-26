@@ -37,8 +37,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
             SetSupportedCommands(
                 BizCodeCommands.GenerateBizBillNo,
                 BizCodeCommands.GenerateBaseInfoNo,
-                BizCodeCommands.GenerateProductNo,
-                BizCodeCommands.GenerateProductSKUNo,
+                BizCodeCommands.GenerateProductRelatedCode,
                 BizCodeCommands.GenerateBarCode
             );
         }
@@ -63,6 +62,10 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     else if (commandId == BizCodeCommands.GenerateBaseInfoNo)
                     {
                         return await HandleGenerateBaseInfoNoAsync(request, cmd.Packet.ExecutionContext, cancellationToken);
+                    }
+                    else if (commandId == BizCodeCommands.GenerateProductRelatedCode)
+                    {
+                        return await HandleGenerateProductRelatedAsync(request, cmd.Packet.ExecutionContext, cancellationToken);
                     }
                     else if (commandId == BizCodeCommands.GenerateBarCode)
                     {
@@ -120,34 +123,17 @@ namespace RUINORERP.Server.Network.CommandHandlers
             try
             {
                 // 尝试将字符串转换为枚举类型
-                if (Enum.TryParse<BaseInfoType>(request.BaseInfoType, true, out var baseInfoType))
+
+                string baseInfoNo;
+                baseInfoNo = await _bizCodeService.GenerateBaseInfoNoAsync(request.BaseInfoType, request.ParaConst);
+                // 返回成功响应
+                return new BizCodeResponse
                 {
-                    string baseInfoNo;
+                    IsSuccess = true,
+                    GeneratedCode = baseInfoNo,
+                    Message = "基础信息编号生成成功"
+                };
 
-                    // 使用常量参数生成编号
-                    baseInfoNo = await _bizCodeService.GenerateBaseInfoNoAsync(baseInfoType, request.ParaConst);
-
-                    logger?.LogInformation($"成功生成基础信息编号: {baseInfoNo}, 信息类型: {baseInfoType}");
-
-                    // 返回成功响应
-                    return new BizCodeResponse
-                    {
-                        IsSuccess = true,
-                        GeneratedCode = baseInfoNo,
-                        Message = "基础信息编号生成成功"
-                    };
-                }
-                else
-                {
-                    // 枚举转换失败，记录错误
-                    logger?.LogError($"无效的基础信息类型: {request.BaseInfoType}");
-                    return new BizCodeResponse
-                    {
-                        IsSuccess = false,
-                        ErrorMessage = $"无效的基础信息类型: {request.BaseInfoType}",
-                        Message = "生成基础信息编号失败"
-                    };
-                }
             }
             catch (Exception ex)
             {
@@ -157,6 +143,42 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     IsSuccess = false,
                     ErrorMessage = ex.Message,
                     Message = "生成基础信息编号失败"
+                };
+            }
+        }
+
+
+        /// <summary>
+        /// 处理生成基础信息编号请求
+        /// </summary>
+        private async Task<IResponse> HandleGenerateProductRelatedAsync(BizCodeRequest request, CommandContext executionContext, CancellationToken cancellationToken)
+        {
+            try
+            {
+                // 尝试将字符串转换为枚举类型
+
+                string baseInfoNo = string.Empty;
+                // 使用常量参数生成编号
+                if (request.ProductParameter != null)
+                {
+                    baseInfoNo = await _bizCodeService.GenerateProductRelatedCodeAsync(request.BaseInfoType, request.ProductParameter.prod);
+                }
+                // 返回成功响应
+                return new BizCodeResponse
+                {
+                    IsSuccess = true,
+                    GeneratedCode = baseInfoNo,
+                    Message = "产品相关信息编号生成成功"
+                };
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "产品相关信息编号生成失败");
+                return new BizCodeResponse
+                {
+                    IsSuccess = false,
+                    ErrorMessage = ex.Message,
+                    Message = "产品相关信息编号生成失败"
                 };
             }
         }

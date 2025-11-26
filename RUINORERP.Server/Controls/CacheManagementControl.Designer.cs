@@ -46,6 +46,11 @@ namespace RUINORERP.Server.Controls
             推送缓存数据ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             dataGridView1 = new System.Windows.Forms.DataGridView();
             tabPageCacheStatistics = new System.Windows.Forms.TabPage();
+            tabControl2 = new System.Windows.Forms.TabControl();
+            tabPageTableStats = new System.Windows.Forms.TabPage();
+            dataGridViewTableStats = new System.Windows.Forms.DataGridView();
+            tabPageItemStats = new System.Windows.Forms.TabPage();
+            dataGridViewItemStats = new System.Windows.Forms.DataGridView();
             panel1 = new System.Windows.Forms.Panel();
             btnResetStatistics = new System.Windows.Forms.Button();
             btnRefreshStatistics = new System.Windows.Forms.Button();
@@ -64,11 +69,6 @@ namespace RUINORERP.Server.Controls
             txtHitRatio = new System.Windows.Forms.TextBox();
             txtMisses = new System.Windows.Forms.TextBox();
             txtHits = new System.Windows.Forms.TextBox();
-            tabControl2 = new System.Windows.Forms.TabControl();
-            tabPageTableStats = new System.Windows.Forms.TabPage();
-            dataGridViewTableStats = new System.Windows.Forms.DataGridView();
-            tabPageItemStats = new System.Windows.Forms.TabPage();
-            dataGridViewItemStats = new System.Windows.Forms.DataGridView();
             statusStrip1 = new System.Windows.Forms.StatusStrip();
             toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
             toolStrip1.SuspendLayout();
@@ -81,12 +81,12 @@ namespace RUINORERP.Server.Controls
             contextMenuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)dataGridView1).BeginInit();
             tabPageCacheStatistics.SuspendLayout();
-            panel1.SuspendLayout();
             tabControl2.SuspendLayout();
             tabPageTableStats.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)dataGridViewTableStats).BeginInit();
             tabPageItemStats.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)dataGridViewItemStats).BeginInit();
+            panel1.SuspendLayout();
             statusStrip1.SuspendLayout();
             SuspendLayout();
             // 
@@ -156,7 +156,7 @@ namespace RUINORERP.Server.Controls
             tabControl1.Margin = new System.Windows.Forms.Padding(4);
             tabControl1.Name = "tabControl1";
             tabControl1.SelectedIndex = 0;
-            tabControl1.Size = new System.Drawing.Size(933, 683);
+            tabControl1.Size = new System.Drawing.Size(933, 661);
             tabControl1.TabIndex = 1;
             // 
             // tabPageCacheManagement
@@ -166,7 +166,7 @@ namespace RUINORERP.Server.Controls
             tabPageCacheManagement.Margin = new System.Windows.Forms.Padding(4);
             tabPageCacheManagement.Name = "tabPageCacheManagement";
             tabPageCacheManagement.Padding = new System.Windows.Forms.Padding(4);
-            tabPageCacheManagement.Size = new System.Drawing.Size(925, 653);
+            tabPageCacheManagement.Size = new System.Drawing.Size(925, 631);
             tabPageCacheManagement.TabIndex = 0;
             tabPageCacheManagement.Text = "缓存管理";
             tabPageCacheManagement.UseVisualStyleBackColor = true;
@@ -185,7 +185,7 @@ namespace RUINORERP.Server.Controls
             // splitContainer1.Panel2
             // 
             splitContainer1.Panel2.Controls.Add(dataGridView1);
-            splitContainer1.Size = new System.Drawing.Size(917, 645);
+            splitContainer1.Size = new System.Drawing.Size(917, 623);
             splitContainer1.SplitterDistance = 310;
             splitContainer1.SplitterWidth = 5;
             splitContainer1.TabIndex = 0;
@@ -199,7 +199,7 @@ namespace RUINORERP.Server.Controls
             listBoxTableList.Location = new System.Drawing.Point(0, 0);
             listBoxTableList.Margin = new System.Windows.Forms.Padding(4);
             listBoxTableList.Name = "listBoxTableList";
-            listBoxTableList.Size = new System.Drawing.Size(310, 645);
+            listBoxTableList.Size = new System.Drawing.Size(310, 623);
             listBoxTableList.TabIndex = 0;
             listBoxTableList.SelectedIndexChanged += listBoxTableList_SelectedIndexChanged;
             // 
@@ -234,7 +234,7 @@ namespace RUINORERP.Server.Controls
             dataGridView1.Name = "dataGridView1";
             dataGridView1.ReadOnly = true;
             dataGridView1.RowTemplate.Height = 23;
-            dataGridView1.Size = new System.Drawing.Size(602, 645);
+            dataGridView1.Size = new System.Drawing.Size(602, 623);
             dataGridView1.TabIndex = 0;
             dataGridView1.CellPainting += dataGridView1_CellPainting;
             // 
@@ -250,6 +250,70 @@ namespace RUINORERP.Server.Controls
             tabPageCacheStatistics.TabIndex = 1;
             tabPageCacheStatistics.Text = "缓存统计";
             tabPageCacheStatistics.UseVisualStyleBackColor = true;
+            // 
+            // tabControl2
+            // 
+            tabControl2.Controls.Add(tabPageTableStats);
+            tabControl2.Controls.Add(tabPageItemStats);
+            tabControl2.Dock = System.Windows.Forms.DockStyle.Fill;
+            tabControl2.Location = new System.Drawing.Point(4, 166);
+            tabControl2.Margin = new System.Windows.Forms.Padding(4);
+            tabControl2.Name = "tabControl2";
+            tabControl2.SelectedIndex = 0;
+            tabControl2.Size = new System.Drawing.Size(917, 483);
+            tabControl2.TabIndex = 2;
+            // 
+            // tabPageTableStats
+            // 
+            tabPageTableStats.Controls.Add(dataGridViewTableStats);
+            tabPageTableStats.Location = new System.Drawing.Point(4, 26);
+            tabPageTableStats.Margin = new System.Windows.Forms.Padding(4);
+            tabPageTableStats.Name = "tabPageTableStats";
+            tabPageTableStats.Padding = new System.Windows.Forms.Padding(4);
+            tabPageTableStats.Size = new System.Drawing.Size(909, 453);
+            tabPageTableStats.TabIndex = 0;
+            tabPageTableStats.Text = "按表统计";
+            tabPageTableStats.UseVisualStyleBackColor = true;
+            // 
+            // dataGridViewTableStats
+            // 
+            dataGridViewTableStats.AllowUserToAddRows = false;
+            dataGridViewTableStats.AllowUserToDeleteRows = false;
+            dataGridViewTableStats.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            dataGridViewTableStats.Dock = System.Windows.Forms.DockStyle.Fill;
+            dataGridViewTableStats.Location = new System.Drawing.Point(4, 4);
+            dataGridViewTableStats.Margin = new System.Windows.Forms.Padding(4);
+            dataGridViewTableStats.Name = "dataGridViewTableStats";
+            dataGridViewTableStats.ReadOnly = true;
+            dataGridViewTableStats.RowTemplate.Height = 23;
+            dataGridViewTableStats.Size = new System.Drawing.Size(901, 445);
+            dataGridViewTableStats.TabIndex = 0;
+            // 
+            // tabPageItemStats
+            // 
+            tabPageItemStats.Controls.Add(dataGridViewItemStats);
+            tabPageItemStats.Location = new System.Drawing.Point(4, 26);
+            tabPageItemStats.Margin = new System.Windows.Forms.Padding(4);
+            tabPageItemStats.Name = "tabPageItemStats";
+            tabPageItemStats.Padding = new System.Windows.Forms.Padding(4);
+            tabPageItemStats.Size = new System.Drawing.Size(909, 453);
+            tabPageItemStats.TabIndex = 1;
+            tabPageItemStats.Text = "缓存项统计";
+            tabPageItemStats.UseVisualStyleBackColor = true;
+            // 
+            // dataGridViewItemStats
+            // 
+            dataGridViewItemStats.AllowUserToAddRows = false;
+            dataGridViewItemStats.AllowUserToDeleteRows = false;
+            dataGridViewItemStats.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            dataGridViewItemStats.Dock = System.Windows.Forms.DockStyle.Fill;
+            dataGridViewItemStats.Location = new System.Drawing.Point(4, 4);
+            dataGridViewItemStats.Margin = new System.Windows.Forms.Padding(4);
+            dataGridViewItemStats.Name = "dataGridViewItemStats";
+            dataGridViewItemStats.ReadOnly = true;
+            dataGridViewItemStats.RowTemplate.Height = 23;
+            dataGridViewItemStats.Size = new System.Drawing.Size(901, 445);
+            dataGridViewItemStats.TabIndex = 0;
             // 
             // panel1
             // 
@@ -442,74 +506,9 @@ namespace RUINORERP.Server.Controls
             txtHits.Size = new System.Drawing.Size(139, 23);
             txtHits.TabIndex = 0;
             // 
-            // tabControl2
-            // 
-            tabControl2.Controls.Add(tabPageTableStats);
-            tabControl2.Controls.Add(tabPageItemStats);
-            tabControl2.Dock = System.Windows.Forms.DockStyle.Fill;
-            tabControl2.Location = new System.Drawing.Point(4, 166);
-            tabControl2.Margin = new System.Windows.Forms.Padding(4);
-            tabControl2.Name = "tabControl2";
-            tabControl2.SelectedIndex = 0;
-            tabControl2.Size = new System.Drawing.Size(917, 483);
-            tabControl2.TabIndex = 2;
-            // 
-            // tabPageTableStats
-            // 
-            tabPageTableStats.Controls.Add(dataGridViewTableStats);
-            tabPageTableStats.Location = new System.Drawing.Point(4, 26);
-            tabPageTableStats.Margin = new System.Windows.Forms.Padding(4);
-            tabPageTableStats.Name = "tabPageTableStats";
-            tabPageTableStats.Padding = new System.Windows.Forms.Padding(4);
-            tabPageTableStats.Size = new System.Drawing.Size(909, 445);
-            tabPageTableStats.TabIndex = 0;
-            tabPageTableStats.Text = "按表统计";
-            tabPageTableStats.UseVisualStyleBackColor = true;
-            // 
-            // dataGridViewTableStats
-            // 
-            dataGridViewTableStats.AllowUserToAddRows = false;
-            dataGridViewTableStats.AllowUserToDeleteRows = false;
-            dataGridViewTableStats.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dataGridViewTableStats.Dock = System.Windows.Forms.DockStyle.Fill;
-            dataGridViewTableStats.Location = new System.Drawing.Point(4, 4);
-            dataGridViewTableStats.Margin = new System.Windows.Forms.Padding(4);
-            dataGridViewTableStats.Name = "dataGridViewTableStats";
-            dataGridViewTableStats.ReadOnly = true;
-            dataGridViewTableStats.RowTemplate.Height = 23;
-            dataGridViewTableStats.Size = new System.Drawing.Size(901, 437);
-            dataGridViewTableStats.TabIndex = 0;
-            // 
-            // tabPageItemStats
-            // 
-            tabPageItemStats.Controls.Add(dataGridViewItemStats);
-            tabPageItemStats.Location = new System.Drawing.Point(4, 26);
-            tabPageItemStats.Margin = new System.Windows.Forms.Padding(4);
-            tabPageItemStats.Name = "tabPageItemStats";
-            tabPageItemStats.Padding = new System.Windows.Forms.Padding(4);
-            tabPageItemStats.Size = new System.Drawing.Size(909, 453);
-            tabPageItemStats.TabIndex = 1;
-            tabPageItemStats.Text = "缓存项统计";
-            tabPageItemStats.UseVisualStyleBackColor = true;
-            // 
-            // dataGridViewItemStats
-            // 
-            dataGridViewItemStats.AllowUserToAddRows = false;
-            dataGridViewItemStats.AllowUserToDeleteRows = false;
-            dataGridViewItemStats.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dataGridViewItemStats.Dock = System.Windows.Forms.DockStyle.Fill;
-            dataGridViewItemStats.Location = new System.Drawing.Point(4, 4);
-            dataGridViewItemStats.Margin = new System.Windows.Forms.Padding(4);
-            dataGridViewItemStats.Name = "dataGridViewItemStats";
-            dataGridViewItemStats.ReadOnly = true;
-            dataGridViewItemStats.RowTemplate.Height = 23;
-            dataGridViewItemStats.Size = new System.Drawing.Size(901, 445);
-            dataGridViewItemStats.TabIndex = 0;
-            // 
             // statusStrip1
             // 
-            statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            toolStripStatusLabel1});
+            statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { toolStripStatusLabel1 });
             statusStrip1.Location = new System.Drawing.Point(0, 686);
             statusStrip1.Name = "statusStrip1";
             statusStrip1.Size = new System.Drawing.Size(933, 22);
@@ -519,16 +518,16 @@ namespace RUINORERP.Server.Controls
             // toolStripStatusLabel1
             // 
             toolStripStatusLabel1.Name = "toolStripStatusLabel1";
-            toolStripStatusLabel1.Size = new System.Drawing.Size(44, 17);
+            toolStripStatusLabel1.Size = new System.Drawing.Size(32, 17);
             toolStripStatusLabel1.Text = "就绪";
             // 
             // CacheManagementControl
             // 
             AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            Controls.Add(statusStrip1);
             Controls.Add(tabControl1);
             Controls.Add(toolStrip1);
+            Controls.Add(statusStrip1);
             Margin = new System.Windows.Forms.Padding(4);
             Name = "CacheManagementControl";
             Size = new System.Drawing.Size(933, 708);
@@ -544,13 +543,13 @@ namespace RUINORERP.Server.Controls
             contextMenuStrip1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)dataGridView1).EndInit();
             tabPageCacheStatistics.ResumeLayout(false);
-            panel1.ResumeLayout(false);
-            panel1.PerformLayout();
             tabControl2.ResumeLayout(false);
             tabPageTableStats.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)dataGridViewTableStats).EndInit();
             tabPageItemStats.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)dataGridViewItemStats).EndInit();
+            panel1.ResumeLayout(false);
+            panel1.PerformLayout();
             statusStrip1.ResumeLayout(false);
             statusStrip1.PerformLayout();
             ResumeLayout(false);

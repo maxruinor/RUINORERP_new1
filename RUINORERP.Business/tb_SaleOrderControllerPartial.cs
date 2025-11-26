@@ -70,6 +70,17 @@ namespace RUINORERP.Business
                 //var inventoryGroups = new Dictionary<(long ProdDetailID, long LocationID), (tb_Inventory Inventory, decimal SaleQtySum, decimal QtySum)>();
                 var inventoryGroups = new Dictionary<(long ProdDetailID, long LocationID), (tb_Inventory Inventory, decimal SaleQtySum)>();
 
+
+
+                long[] childProdDetailIds = entity.tb_SaleOrderDetails.Select(c => c.ProdDetailID).ToList().ToArray();
+
+                List<tb_Inventory> invExistEntityList = new List<tb_Inventory>();
+                invExistEntityList = await _unitOfWorkManage.GetDbClient().Queryable<tb_Inventory>()
+                    .Where(c => childProdDetailIds.Contains(c.ProdDetailID))
+                    .ToListAsync();
+
+
+
                 //更新拟销售量
                 foreach (var child in entity.tb_SaleOrderDetails)
                 {
@@ -81,7 +92,7 @@ namespace RUINORERP.Business
                     if (!inventoryGroups.TryGetValue(key, out var group))
                     {
                         #region 库存表的更新 ，
-                        tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
+                        tb_Inventory inv = invExistEntityList.Find(i => i.Location_ID == child.Location_ID);
                         if (inv == null)
                         {
                             //采购和销售都会提前处理。所以这里默认提供一行数据。成本和数量都可能为0
@@ -240,7 +251,7 @@ namespace RUINORERP.Business
                                         _unitOfWorkManage.RollbackTran();
                                         rmrs.ErrorMsg = $"预收款单自动审核失败：{autoApproval.ErrorMsg ?? "未知错误"}";
                                         FMAuditLogHelper fMAuditLog = _appContext.GetRequiredService<FMAuditLogHelper>();
-                                        fMAuditLog.CreateAuditLog<tb_FM_PreReceivedPayment>("预收款单自动审核失败", autoApproval.ReturnObject as tb_FM_PreReceivedPayment, rmrs.ErrorMsg);
+                                      await  fMAuditLog.CreateAuditLog<tb_FM_PreReceivedPayment>("预收款单自动审核失败", autoApproval.ReturnObject as tb_FM_PreReceivedPayment, rmrs.ErrorMsg);
                                         if (_appContext.SysConfig.ShowDebugInfo)
                                         {
                                             _logger.Debug(rmrs.ErrorMsg);
@@ -249,7 +260,7 @@ namespace RUINORERP.Business
                                     else
                                     {
                                         FMAuditLogHelper fMAuditLog = _appContext.GetRequiredService<FMAuditLogHelper>();
-                                        fMAuditLog.CreateAuditLog<tb_FM_PreReceivedPayment>("预收款单自动审核成功", autoApproval.ReturnObject as tb_FM_PreReceivedPayment);
+                                     fMAuditLog.CreateAuditLog<tb_FM_PreReceivedPayment>("预收款单自动审核成功", autoApproval.ReturnObject as tb_FM_PreReceivedPayment);
                                     }
                                     #endregion
                                 }
@@ -991,7 +1002,7 @@ namespace RUINORERP.Business
                 else
                 {
                     _unitOfWorkManage.RollbackTran();
-                   
+
                     rmrs.ErrorMsg = BizMapperService.EntityMappingHelper.GetBizType(typeof(tb_SaleOrder)).ToString() + "事务回滚=> 保存出错";
                     rmrs.Succeeded = false;
                 }
@@ -1000,7 +1011,7 @@ namespace RUINORERP.Business
             {
                 _unitOfWorkManage.RollbackTran();
                 _logger.Error(ex);
-               
+
                 rmrs.ErrorMsg = BizMapperService.EntityMappingHelper.GetBizType(typeof(tb_SaleOrder)).ToString() + "事务回滚=>" + ex.Message;
                 rmrs.Succeeded = false;
             }
@@ -1055,7 +1066,7 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
                 _unitOfWorkManage.RollbackTran();
-               
+
                 rmrs.ErrorMsg = BizMapperService.EntityMappingHelper.GetBizType(typeof(tb_SaleOrder)).ToString() + "事务回滚=>" + ex.Message;
                 _logger.Error(ex);
                 rmrs.Succeeded = false;
@@ -1109,7 +1120,7 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
                 _unitOfWorkManage.RollbackTran();
-               
+
                 rmrs.ErrorMsg = BizMapperService.EntityMappingHelper.GetBizType(typeof(tb_SaleOrder)).ToString() + "事务回滚=>" + ex.Message;
                 _logger.Error(ex);
                 rmrs.Succeeded = false;
@@ -1524,7 +1535,7 @@ namespace RUINORERP.Business
                                     rmrs.Succeeded = false;
                                     return rmrs;
                                 }
-                          
+
                             }
                         }
 
@@ -1594,7 +1605,7 @@ namespace RUINORERP.Business
                 else
                 {
                     _unitOfWorkManage.RollbackTran();
-                   
+
                     rmrs.ErrorMsg = BizMapperService.EntityMappingHelper.GetBizType(typeof(tb_SaleOrder)).ToString() + "事务回滚=> 订单取消失败";
                     rmrs.Succeeded = false;
                 }
@@ -1603,7 +1614,7 @@ namespace RUINORERP.Business
             {
                 _unitOfWorkManage.RollbackTran();
                 _logger.Error(ex);
-               
+
                 rmrs.ErrorMsg = BizMapperService.EntityMappingHelper.GetBizType(typeof(tb_SaleOrder)).ToString() + "事务回滚=>" + ex.Message;
                 rmrs.Succeeded = false;
             }

@@ -195,7 +195,6 @@
     <Content Include="AutoUpdaterList.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="副本 AutoUpdaterList.xml" />
     <Content Include="组件使用说明.txt" />
     <Compile Include="AppUpdater.cs">
       <SubType>Code</SubType>

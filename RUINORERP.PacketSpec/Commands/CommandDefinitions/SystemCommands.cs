@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 
 namespace RUINORERP.PacketSpec.Commands
 {
@@ -42,11 +42,42 @@ namespace RUINORERP.PacketSpec.Commands
         /// 退出系统
         /// </summary>
         public static readonly CommandId ExitSystem = new CommandId(CommandCategory.System, (byte)(CommandCatalog.System_ExitSystem & 0xFF));
-        
+
         /// <summary>
-        /// 推送版本更新 - 服务器主动推送最新版本信息，要求客户端更新
+        /// 系统管理：服务器推送版本更新
         /// </summary>
-        public static readonly CommandId PushVersionUpdate = new CommandId(CommandCategory.System, (byte)(CommandCatalog.System_PushVersionUpdate & 0xFF));
+        public static readonly CommandId SystemManagement = new CommandId(CommandCategory.System, (byte)(CommandCatalog.System_SystemManagement & 0xFF));
         #endregion
+
+        /// <summary>
+        /// 系统指令类型枚举
+        /// </summary>
     }
+
+    /// <summary>
+    /// 系统管理的子命令类型
+    /// </summary>
+    public enum SystemManagementType
+    {
+        /// <summary>
+        /// 电脑状态查询
+        /// </summary>
+        ComputerStatus = 1,
+
+        /// <summary>
+        /// 关闭电脑
+        /// </summary>
+        ShutdownComputer = 2,
+
+        /// <summary>
+        /// 退出系统
+        /// </summary>
+        ExitSystem = 3,
+
+        /// <summary>
+        /// 版本更新
+        /// </summary>
+        VersionUpdate = 4
+    }
+
 }

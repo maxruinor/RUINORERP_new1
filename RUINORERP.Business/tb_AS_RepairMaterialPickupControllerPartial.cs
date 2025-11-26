@@ -455,7 +455,7 @@ namespace RUINORERP.Business
         {
 
             List<tb_AS_RepairMaterialPickup> list = await _appContext.Db.CopyNew().Queryable<tb_AS_RepairMaterialPickup>().Where(m => m.RMRID == Pickup_MainID)
-                             .Includes(a => a.tb_as_repairorder)
+                             .Includes(a => a.tb_as_repairorder, b => b.tb_customervendor)
                             .Includes(a => a.tb_employee)
                             .Includes(a => a.tb_AS_RepairMaterialPickupDetails, b => b.tb_location)
                             .AsNavQueryable()//加这个前面,超过三级在前面加这一行，并且第四级无VS智能提示，但是可以用

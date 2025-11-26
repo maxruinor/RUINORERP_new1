@@ -127,7 +127,7 @@ namespace RUINORERP.UI.Network
                 if (_healthCheckService != null && !_healthCheckService.IsNetworkHealthy)
                 {
                     _logger?.LogWarning("网络健康检查失败，延迟连接尝试，目标：{ServerIp}:{Port}", serverUrl, port);
-                    
+
                     // 尝试进行一次即时网络检查
                     var immediateCheck = await _healthCheckService.CheckOnceAsync();
                     if (!immediateCheck)
@@ -161,9 +161,9 @@ namespace RUINORERP.UI.Network
                         throw new InvalidOperationException($"域名解析失败 '{serverUrl}': {dnsEx.Message}", dnsEx);
                     }
                 }
-                
+
                 var connected = await _client.ConnectAsync(new IPEndPoint(ipAddress, port));
-                
+
                 if (connected)
                 {
                     // 等待连接状态更新（最多等待500ms）
@@ -171,23 +171,23 @@ namespace RUINORERP.UI.Network
                     {
                         await Task.Delay(50, cancellationToken);
                     }
-                    
+
                     // 确保状态同步
                     _isConnected = connected && _client.Socket?.Connected == true;
-                    
+
                     // 启动网络健康检查服务
                     if (_isConnected && _healthCheckService == null)
                     {
                         InitializeHealthCheckService(serverUrl, port);
                     }
-                   
+
                 }
                 else
                 {
                     _isConnected = false;
                     _logger?.LogWarning("连接服务器 {ServerIp}:{Port} 失败", serverUrl, port);
                 }
-                
+
                 return _isConnected;
             }
             catch (Exception ex)
@@ -244,19 +244,21 @@ namespace RUINORERP.UI.Network
         /// <returns>断开连接是否成功</returns>
         public async Task<bool> Disconnect()
         {
-            if (_isConnected)
+            try
             {
+                _isConnected = false;
                 _healthCheckService?.Stop();
                 _healthCheckService?.Dispose();
                 _healthCheckService = null;
-                
                 var closeResult = await _client.Close();
-                _isConnected = false;
                 _networkHealthWarningShown = false;
-                
                 return closeResult;
             }
-            
+            catch (Exception ex)
+            {
+
+
+            }
             return true;
         }
 
@@ -273,7 +275,7 @@ namespace RUINORERP.UI.Network
             if (_healthCheckService != null && !_healthCheckService.IsNetworkHealthy)
             {
                 _logger?.LogWarning("网络健康检查失败，延迟发送数据尝试");
-                
+
                 // 尝试进行一次即时网络检查
                 var immediateCheck = await _healthCheckService.CheckOnceAsync();
                 if (!immediateCheck)
@@ -315,14 +317,14 @@ namespace RUINORERP.UI.Network
                     }
                     _client.Send(data);
                 }, cancellationToken).ConfigureAwait(false);
-                
+
                 // 发送完成后再次检查连接状态
                 if (_client.Socket == null || !_client.Socket.Connected)
                 {
                     _isConnected = false;
                     _logger?.LogWarning("发送数据完成后发现Socket连接已断开");
                 }
-                
+
                 _logger?.LogDebug("成功发送数据到服务器，数据长度: {DataLength}", data?.Length ?? 0);
             }
             catch (OperationCanceledException)
@@ -401,11 +403,11 @@ namespace RUINORERP.UI.Network
                 _healthCheckService?.Stop();
                 _healthCheckService?.Dispose();
                 _healthCheckService = null;
-                
+
                 _client.Close();
                 _client = null;
             }
-            
+
             if (_isConnected)
             {
                 _isConnected = false;

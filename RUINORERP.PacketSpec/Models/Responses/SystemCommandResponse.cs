@@ -5,6 +5,7 @@ using RUINORERP.PacketSpec.Models.Common;
 using RUINORERP.PacketSpec.Models.Requests;
 using RUINORERP.PacketSpec.Models.Responses;
 using RUINORERP.PacketSpec.Models.Core;
+using RUINORERP.PacketSpec.Commands;
 namespace RUINORERP.PacketSpec.Models.Responses
 {
     /// <summary>
@@ -16,7 +17,7 @@ namespace RUINORERP.PacketSpec.Models.Responses
         /// <summary>
         /// 系统指令类型
         /// </summary>
-        public SystemCommandType CommandType { get; set; }
+        public SystemManagementType CommandType { get; set; }
 
         /// <summary>
         /// 用户ID
@@ -115,7 +116,7 @@ namespace RUINORERP.PacketSpec.Models.Responses
         {
             return new SystemCommandResponse
             {
-                CommandType = SystemCommandType.ComputerStatus,
+                CommandType = SystemManagementType.ComputerStatus,
                 IsSuccess = true,
                 Message = "电脑状态查询成功",
                 UserId = userId,
@@ -138,7 +139,7 @@ namespace RUINORERP.PacketSpec.Models.Responses
         {
             return new SystemCommandResponse
             {
-                CommandType = SystemCommandType.ComputerStatus,
+                CommandType = SystemManagementType.ComputerStatus,
                 IsSuccess = false,
                 Message = errorMessage,
                 Metadata = new Dictionary<string, object>
@@ -160,7 +161,7 @@ namespace RUINORERP.PacketSpec.Models.Responses
         {
             return new SystemCommandResponse
             {
-                CommandType = shutdownType == "Logoff" ? SystemCommandType.ExitSystem : SystemCommandType.ShutdownComputer,
+                CommandType = shutdownType == "Logoff" ? SystemManagementType.ExitSystem : SystemManagementType.ShutdownComputer,
                 IsSuccess = true,
                 Message = $"电脑{shutdownType}指令已发送",
                 UserId = userId,
@@ -199,7 +200,7 @@ namespace RUINORERP.PacketSpec.Models.Responses
         {
             return new SystemCommandResponse
             {
-                CommandType = SystemCommandType.ForceLogout,
+               // CommandType = SystemManagementType.ForceLogout,
                 IsSuccess = true,
                 Message = "用户已成功强制下线",
                 TargetUserId = targetUserId,
@@ -217,7 +218,7 @@ namespace RUINORERP.PacketSpec.Models.Responses
         {
             return new SystemCommandResponse
             {
-                CommandType = SystemCommandType.ForceLogout,
+                //CommandType = SystemManagementType.ForceLogout,
                 IsSuccess = false,
                 Message = errorMessage,
                 Metadata = new Dictionary<string, object>

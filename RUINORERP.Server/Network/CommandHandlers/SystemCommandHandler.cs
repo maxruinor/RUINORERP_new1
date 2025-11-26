@@ -47,6 +47,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
             SetSupportedCommands(
                 SystemCommands.ComputerStatus,
                 SystemCommands.ShutdownComputer,
+                 SystemCommands.SystemManagement,
                 SystemCommands.ExitSystem
             );
         }

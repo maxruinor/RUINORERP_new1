@@ -8,31 +8,7 @@ using RUINORERP.PacketSpec.Models.Requests;
 
 namespace RUINORERP.PacketSpec.Models.Requests
 {
-    /// <summary>
-    /// 系统指令类型枚举
-    /// </summary>
-    public enum SystemCommandType
-    {
-        /// <summary>
-        /// 电脑状态查询
-        /// </summary>
-        ComputerStatus = 1,
-        
-        /// <summary>
-        /// 关闭电脑
-        /// </summary>
-        ShutdownComputer = 2,
-        
-        /// <summary>
-        /// 退出系统
-        /// </summary>
-        ExitSystem = 3,
-        
-        /// <summary>
-        /// 强制用户下线
-        /// </summary>
-        ForceLogout = 4
-    }
+
 
     /// <summary>
     /// 统一系统指令请求
@@ -43,7 +19,7 @@ namespace RUINORERP.PacketSpec.Models.Requests
         /// <summary>
         /// 系统指令类型
         /// </summary>
-        public SystemCommandType CommandType { get; set; }
+        public SystemManagementType CommandType { get; set; }
 
         /// <summary>
         /// 目标用户ID
@@ -87,7 +63,7 @@ namespace RUINORERP.PacketSpec.Models.Requests
         {
             return new SystemCommandRequest
             {
-                CommandType = SystemCommandType.ComputerStatus,
+                CommandType = SystemManagementType.ComputerStatus,
                 TargetUserId = targetUserId,
                 RequestType = requestType,
                 RequestId = IdGenerator.GenerateRequestId(SystemCommands.ComputerStatus)
@@ -101,7 +77,7 @@ namespace RUINORERP.PacketSpec.Models.Requests
         {
             return new SystemCommandRequest
             {
-                CommandType = SystemCommandType.ShutdownComputer,
+                CommandType = SystemManagementType.ShutdownComputer,
                 TargetUserId = targetUserId,
                 ShutdownType = shutdownType,
                 DelaySeconds = delaySeconds,
@@ -117,7 +93,7 @@ namespace RUINORERP.PacketSpec.Models.Requests
         {
             return new SystemCommandRequest
             {
-                CommandType = SystemCommandType.ExitSystem,
+                CommandType = SystemManagementType.ExitSystem,
                 TargetUserId = targetUserId,
                 ShutdownType = "Logoff",
                 DelaySeconds = delaySeconds,
@@ -126,6 +102,8 @@ namespace RUINORERP.PacketSpec.Models.Requests
             };
         }
 
+
+
         /// <summary>
         /// 创建强制用户下线请求
         /// </summary>
@@ -133,7 +111,7 @@ namespace RUINORERP.PacketSpec.Models.Requests
         {
             return new SystemCommandRequest
             {
-                CommandType = SystemCommandType.ForceLogout,
+                //CommandType = SystemManagementType.ForceLogout,
                 TargetUserId = targetUserId,
                 AdminUserId = adminUserId,
                 Reason = reason,
@@ -152,15 +130,15 @@ namespace RUINORERP.PacketSpec.Models.Requests
 
             switch (CommandType)
             {
-                case SystemCommandType.ComputerStatus:
+                case SystemManagementType.ComputerStatus:
                     return true;
                     
-                case SystemCommandType.ShutdownComputer:
-                case SystemCommandType.ExitSystem:
+                case SystemManagementType.ShutdownComputer:
+                case SystemManagementType.ExitSystem:
                     return ShutdownType == "Shutdown" || ShutdownType == "Restart" || ShutdownType == "Logoff";
                     
-                case SystemCommandType.ForceLogout:
-                    return !string.IsNullOrEmpty(AdminUserId);
+                //case SystemManagementType.ForceLogout:
+                //    return !string.IsNullOrEmpty(AdminUserId);
                     
                 default:
                     return false;

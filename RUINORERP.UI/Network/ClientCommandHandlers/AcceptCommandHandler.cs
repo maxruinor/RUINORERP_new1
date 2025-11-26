@@ -37,7 +37,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
             _logger = logger ?? throw new System.ArgumentNullException(nameof(logger));
 
             // 注册支持的命令
-            SetSupportedCommands(SystemCommands.PushVersionUpdate);
+            SetSupportedCommands(SystemCommands.SystemManagement);
             SetSupportedCommands(SystemCommands.ExitSystem);
             SetSupportedCommands(SystemCommands.ComputerStatus);
         }
@@ -72,9 +72,9 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
             _logger.LogDebug($"收到命令: {packet.CommandId.FullCode}");
 
             // 根据命令ID处理不同的命令
-            if (packet.CommandId == SystemCommands.PushVersionUpdate)
+            if (packet.CommandId == SystemCommands.SystemManagement)
             {
-                await HandlePushVersionUpdateCommandAsync(packet);
+                await HandleSystemManagementCommandAsync(packet);
             }
             else if (packet.CommandId == SystemCommands.ExitSystem)
             {
@@ -95,36 +95,39 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
         /// </summary>
         /// <param name="packet">数据包</param>
         /// <returns>处理结果</returns>
-        private async Task HandlePushVersionUpdateCommandAsync(PacketModel packet)
+        private async Task HandleSystemManagementCommandAsync(PacketModel packet)
         {
             try
             {
-                _logger.LogInformation("收到服务器推送的版本更新命令");
-                
-                // 提取版本更新信息
-                VersionUpdateInfo updateInfo = ExtractVersionUpdateInfo(packet);
-                
-                if (updateInfo != null)
+                if (packet.Request is SystemCommandRequest commandRequest)
                 {
-                    _logger.LogInformation($"新版本信息: 版本号={updateInfo.Version}, 下载地址={updateInfo.DownloadUrl}");
-                    
-                    // 在UI线程显示更新提示
-                    DialogResult result = MessageBox.Show(
-                        $"发现新版本: {updateInfo.Version}\n{updateInfo.Description}\n是否立即更新？",
-                        "版本更新",
-                        MessageBoxButtons.YesNo,
-                        MessageBoxIcon.Information);
-
-                    if (result == DialogResult.Yes)
+                    if (commandRequest.CommandType==SystemManagementType.VersionUpdate)
                     {
-                        // 启动更新程序
-                        StartUpdateProcess(updateInfo);
+                        // 提取版本更新信息
+                        VersionUpdateInfo updateInfo = ExtractVersionUpdateInfo(packet);
+
+                        if (updateInfo != null)
+                        {
+                            // 在UI线程显示更新提示
+                            DialogResult result = MessageBox.Show(
+                                $"发现新版本: {updateInfo.Version}\n{updateInfo.Description}\n是否立即更新？",
+                                "版本更新",
+                                MessageBoxButtons.YesNo,
+                                MessageBoxIcon.Information);
+
+                            if (result == DialogResult.Yes)
+                            {
+                                // 启动更新程序
+                                StartUpdateProcess(updateInfo);
+                            }
+                        }
+                        else
+                        {
+                            _logger.LogWarning("版本更新命令缺少必要信息");
+                        }
                     }
                 }
-                else
-                {
-                    _logger.LogWarning("版本更新命令缺少必要信息");
-                }
+             
             }
             catch (Exception ex)
             {

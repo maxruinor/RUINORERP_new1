@@ -817,7 +817,7 @@ namespace RUINORERP.Server.Network.Services
             CommandId commandId,
             TRequest request,
             int timeoutMs,
-            CancellationToken ct,
+            CancellationToken ct = default,
             PacketDirection packetDirection = PacketDirection.ServerRequest,
             string responseTypeName = null)
             where TRequest : class, IRequest
@@ -962,6 +962,7 @@ namespace RUINORERP.Server.Network.Services
         /// <param name="request">请求数据</param>
         /// <param name="ct">取消令牌</param>
         /// <returns>发送是否成功</returns>
+        [Obsolete("直接SendPacketCoreAsync更灵活")]
         public async Task<bool> SendCommandAsync<TRequest>(
             string sessionID,
             CommandId commandId,

@@ -2324,7 +2324,6 @@
     <Compile Include="Network\Services\IMessageSender.cs" />
     <Compile Include="Network\Services\LockManagementService.cs" />
     <Compile Include="Network\Services\MessageService.cs" />
-    <Compile Include="Network\Services\MessageServiceUsageExample.cs" />
     <Compile Include="Network\Services\SimplifiedMessageService.cs" />
     <Compile Include="Network\Services\SystemManagementService.cs" />
     <Compile Include="Network\Services\UserLoginService.cs" />

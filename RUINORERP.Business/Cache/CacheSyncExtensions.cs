@@ -2,7 +2,10 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json.Linq;
+using RUINORERP.PacketSpec.Models.Cache;
 
 namespace RUINORERP.Business.Cache
 {
@@ -16,6 +19,13 @@ namespace RUINORERP.Business.Cache
     {
         private static ICacheSyncMetadata _defaultSyncMetadata;
 
+        private static IServiceProvider _serviceProvider;
+
+        public static void AddCacheSyncMetaSetup(this IServiceCollection services)
+        {
+            if (services == null) throw new ArgumentNullException(nameof(services));
+            _serviceProvider = services.BuildServiceProvider();
+        }
         /// <summary>
         /// 默认缓存同步元数据管理器
         /// 在没有显式提供的情况下使用
@@ -26,7 +36,16 @@ namespace RUINORERP.Business.Cache
             {
                 if (_defaultSyncMetadata == null)
                 {
-                    _defaultSyncMetadata = new CacheSyncMetadataManager();
+                    // 尝试从依赖注入容器获取实例
+                    try
+                    {
+                        _defaultSyncMetadata = _serviceProvider.GetRequiredService<CacheSyncMetadataManager>();
+                    }
+                    catch (Exception)
+                    {
+                        // 发生异常时创建新实例
+                        _defaultSyncMetadata = new CacheSyncMetadataManager();
+                    }
                 }
                 return _defaultSyncMetadata;
             }
@@ -48,18 +67,18 @@ namespace RUINORERP.Business.Cache
 
             // 使用提供的同步元数据管理器或默认的
             syncMetadata = syncMetadata ?? DefaultSyncMetadata;
-            
+
             var tableName = typeof(T).Name;
-            
+
             // 更新缓存
             cacheManager.UpdateEntityList(list);
-            
+
             try
             {
                 // 计算数据数量和估计大小
                 int dataCount = list?.Count ?? 0;
                 long estimatedSize = EstimateObjectSize(list);
-                
+
                 // 创建并更新同步信息
                 var syncInfo = new CacheSyncInfo
                 {
@@ -70,7 +89,7 @@ namespace RUINORERP.Business.Cache
                     // 使用默认的过期时间（可根据配置调整）
                     ExpirationTime = DateTime.Now.AddHours(2)
                 };
-                
+
                 syncMetadata.UpdateTableSyncInfo(tableName, dataCount, estimatedSize);
             }
             catch (Exception ex)
@@ -96,16 +115,16 @@ namespace RUINORERP.Business.Cache
 
             // 使用提供的同步元数据管理器或默认的
             syncMetadata = syncMetadata ?? DefaultSyncMetadata;
-            
+
             // 更新缓存
             cacheManager.UpdateEntityList(tableName, list);
-            
+
             try
             {
                 // 计算数据数量和估计大小
                 int dataCount = GetCollectionCount(list);
                 long estimatedSize = EstimateObjectSize(list);
-                
+
                 // 创建并更新同步信息
                 var syncInfo = new CacheSyncInfo
                 {
@@ -116,7 +135,7 @@ namespace RUINORERP.Business.Cache
                     // 使用默认的过期时间（可根据配置调整）
                     ExpirationTime = DateTime.Now.AddHours(2)
                 };
-                
+
                 syncMetadata.UpdateTableSyncInfo(tableName, dataCount, estimatedSize);
             }
             catch (Exception ex)
@@ -144,7 +163,7 @@ namespace RUINORERP.Business.Cache
 
             // 使用提供的同步元数据管理器或默认的
             syncMetadata = syncMetadata ?? DefaultSyncMetadata;
-            
+
             try
             {
                 // 检查缓存同步元数据是否存在
@@ -154,19 +173,19 @@ namespace RUINORERP.Business.Cache
                     // 没有同步元数据，需要同步
                     return true;
                 }
-                
+
                 // 检查是否已过期
                 if (syncInfo.NeedsSync())
                 {
                     // 已过期，需要同步
                     return true;
                 }
-                
+
                 // 检查本地缓存中的数据数量是否与同步元数据一致
                 // 注意：这可能会触发缓存加载，在高频调用场景中需要优化
                 var entityList = cacheManager.GetEntityList<object>(tableName);
                 int localCount = GetCollectionCount(entityList);
-                
+
                 // 如果本地缓存数量与同步元数据记录的数量不同，则需要同步
                 return localCount != syncInfo.DataCount;
             }
@@ -244,7 +263,7 @@ namespace RUINORERP.Business.Cache
 
             // 使用提供的同步元数据管理器或默认的
             syncMetadata = syncMetadata ?? DefaultSyncMetadata;
-            
+
             try
             {
                 // 先尝试从同步元数据管理器获取
@@ -253,7 +272,7 @@ namespace RUINORERP.Business.Cache
                 {
                     return syncInfo;
                 }
-                
+
                 // 如果没有找到，尝试从缓存中获取实体列表并计算信息
                 var entityList = cacheManager.GetEntityList<object>(tableName);
                 if (entityList != null)
@@ -267,12 +286,12 @@ namespace RUINORERP.Business.Cache
                         LastUpdateTime = DateTime.Now,
                         ExpirationTime = DateTime.Now.AddHours(2) // 默认过期时间
                     };
-                    
+
                     // 更新到同步元数据管理器
                     syncMetadata.UpdateTableSyncInfo(tableName, syncInfo.DataCount, syncInfo.EstimatedSize);
                     // 设置过期时间
                     syncMetadata.SetTableExpiration(tableName, syncInfo.ExpirationTime);
-                    
+
                     return syncInfo;
                 }
             }
@@ -281,7 +300,7 @@ namespace RUINORERP.Business.Cache
                 // 记录异常但不中断流程
                 System.Diagnostics.Debug.WriteLine($"获取表 {tableName} 的缓存同步信息时发生错误: {ex.Message}");
             }
-            
+
             return null;
         }
 
@@ -302,7 +321,7 @@ namespace RUINORERP.Business.Cache
 
             // 使用提供的同步元数据管理器或默认的
             syncMetadata = syncMetadata ?? DefaultSyncMetadata;
-            
+
             try
             {
                 // 设置过期时间
@@ -314,7 +333,7 @@ namespace RUINORERP.Business.Cache
                 System.Diagnostics.Debug.WriteLine($"设置表 {tableName} 的缓存过期时间时发生错误: {ex.Message}");
             }
         }
-        
+
         /// <summary>
         /// 创建带过期时间的缓存同步信息
         /// 类似旧版CacheInfo.CreateWithExpiration方法
@@ -475,14 +494,14 @@ namespace RUINORERP.Business.Cache
         public static string GetStatusDescription(this CacheSyncInfo syncInfo)
         {
             if (syncInfo == null)
-                return "不存在"; 
-                
+                return "不存在";
+
             if (syncInfo.DataCount <= 0)
                 return "空缓存";
-                
+
             if (syncInfo.HasExpiration && syncInfo.ExpirationTime < DateTime.Now)
                 return "已过期";
-                
+
             return "正常";
         }
 

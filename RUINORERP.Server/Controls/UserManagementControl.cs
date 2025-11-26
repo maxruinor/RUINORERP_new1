@@ -37,7 +37,6 @@ namespace RUINORERP.Server.Controls
         private readonly Random _random = new Random();
 
         private readonly ServerMessageService _serverMessageService;
-        private readonly ILogger<MessageServiceUsageExample> _logger;
 
         public ObservableCollection<UserInfo> UserInfos { get; } = new ObservableCollection<UserInfo>();
         private readonly Dictionary<string, ListViewItem> _itemMap = new Dictionary<string, ListViewItem>();

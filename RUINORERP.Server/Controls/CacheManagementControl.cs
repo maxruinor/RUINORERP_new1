@@ -37,6 +37,12 @@ namespace RUINORERP.Server.Controls
     {
         private readonly ISessionService _sessionService;
         private readonly ILogger<CacheManagementControl> _logger;
+        private readonly IEntityCacheManager _entityCacheManager;
+        private readonly EntityCacheInitializationService _initializationService;
+        private System.Windows.Forms.Timer _autoRefreshTimer;
+        private DateTime _lastTableStatsRefresh = DateTime.MinValue;
+        private DateTime _lastItemStatsRefresh = DateTime.MinValue;
+        private DateTime _lastMetadataRefresh = DateTime.MinValue;
 
         public CacheManagementControl()
         {
@@ -44,6 +50,10 @@ namespace RUINORERP.Server.Controls
             _sessionService = Program.ServiceProvider.GetRequiredService<ISessionService>();
             _logger = Program.ServiceProvider.GetRequiredService<ILogger<CacheManagementControl>>();
             _entityCacheManager = Program.ServiceProvider.GetRequiredService<IEntityCacheManager>();
+            _initializationService = Program.ServiceProvider.GetRequiredService<EntityCacheInitializationService>();
+            
+            // 初始化定时刷新器
+            InitializeAutoRefreshTimer();
         }
 
         private void CacheManagementControl_Load(object sender, EventArgs e)
@@ -53,6 +63,15 @@ namespace RUINORERP.Server.Controls
             InitStatisticsGrids();
             // 加载缓存统计数据
             LoadCacheStatistics();
+            LoadTableStatistics();
+            LoadItemStatistics();
+            LoadCacheMetadata();
+            
+            // 初始化刷新时间戳
+            DateTime now = DateTime.Now;
+            _lastTableStatsRefresh = now;
+            _lastItemStatsRefresh = now;
+            _lastMetadataRefresh = now;
         }
 
         /// <summary>
@@ -64,17 +83,19 @@ namespace RUINORERP.Server.Controls
             {
                 // 初始化按表统计表格
                 dataGridViewTableStats.AutoGenerateColumns = false;
+                dataGridViewTableStats.ColumnHeadersDefaultCellStyle.WrapMode = DataGridViewTriState.False;
+
                 dataGridViewTableStats.Columns.Clear();
                 dataGridViewTableStats.Columns.Add(new DataGridViewTextBoxColumn { Name = "TableName", HeaderText = "表名", DataPropertyName = "TableName", Width = 150 });
                 dataGridViewTableStats.Columns.Add(new DataGridViewTextBoxColumn { Name = "ItemCount", HeaderText = "缓存项数", DataPropertyName = "ItemCount", Width = 80 });
                 dataGridViewTableStats.Columns.Add(new DataGridViewTextBoxColumn { Name = "EstimatedSize", HeaderText = "估计大小(MB)", DataPropertyName = "EstimatedSize", Width = 100 });
-                dataGridViewTableStats.Columns.Add(new DataGridViewTextBoxColumn { Name = "Hits", HeaderText = "命中次数", DataPropertyName = "Hits", Width = 80 });
-                dataGridViewTableStats.Columns.Add(new DataGridViewTextBoxColumn { Name = "Misses", HeaderText = "未命中次数", DataPropertyName = "Misses", Width = 100 });
                 dataGridViewTableStats.Columns.Add(new DataGridViewTextBoxColumn { Name = "HitRatio", HeaderText = "命中率", DataPropertyName = "HitRatio", Width = 80 });
                 dataGridViewTableStats.Columns.Add(new DataGridViewTextBoxColumn { Name = "LastUpdated", HeaderText = "最后更新时间", DataPropertyName = "LastUpdated", Width = 150 });
 
                 // 初始化缓存项统计表格
                 dataGridViewItemStats.AutoGenerateColumns = false;
+                dataGridViewItemStats.ColumnHeadersDefaultCellStyle.WrapMode = DataGridViewTriState.False;
+                
                 dataGridViewItemStats.Columns.Clear();
                 dataGridViewItemStats.Columns.Add(new DataGridViewTextBoxColumn { Name = "CacheKey", HeaderText = "缓存键", DataPropertyName = "CacheKey", Width = 200 });
                 dataGridViewItemStats.Columns.Add(new DataGridViewTextBoxColumn { Name = "TypeName", HeaderText = "类型", DataPropertyName = "TypeName", Width = 120 });
@@ -82,6 +103,20 @@ namespace RUINORERP.Server.Controls
                 dataGridViewItemStats.Columns.Add(new DataGridViewTextBoxColumn { Name = "CreatedTime", HeaderText = "创建时间", DataPropertyName = "CreatedTime", Width = 150 });
                 dataGridViewItemStats.Columns.Add(new DataGridViewTextBoxColumn { Name = "LastAccessed", HeaderText = "最后访问时间", DataPropertyName = "LastAccessed", Width = 150 });
                 dataGridViewItemStats.Columns.Add(new DataGridViewTextBoxColumn { Name = "AccessCount", HeaderText = "访问次数", DataPropertyName = "AccessCount", Width = 80 });
+                dataGridViewItemStats.Columns.Add(new DataGridViewTextBoxColumn { Name = "Size", HeaderText = "大小", DataPropertyName = "Size", Width = 80 });
+
+                // 初始化缓存元数据表格
+                dataGridViewCacheMetadata.AutoGenerateColumns = false;
+                dataGridViewCacheMetadata.ColumnHeadersDefaultCellStyle.WrapMode = DataGridViewTriState.False;
+                
+                dataGridViewCacheMetadata.Columns.Clear();
+                dataGridViewCacheMetadata.Columns.Add(new DataGridViewTextBoxColumn { Name = "TableName", HeaderText = "表名", DataPropertyName = "TableName", Width = 150 });
+                dataGridViewCacheMetadata.Columns.Add(new DataGridViewTextBoxColumn { Name = "DataCount", HeaderText = "数据数量", DataPropertyName = "DataCount", Width = 80 });
+                dataGridViewCacheMetadata.Columns.Add(new DataGridViewTextBoxColumn { Name = "EstimatedSizeMB", HeaderText = "估计大小(MB)", DataPropertyName = "EstimatedSizeMB", Width = 100 });
+                dataGridViewCacheMetadata.Columns.Add(new DataGridViewTextBoxColumn { Name = "LastUpdateTime", HeaderText = "最后更新时间", DataPropertyName = "LastUpdateTime", Width = 150 });
+                dataGridViewCacheMetadata.Columns.Add(new DataGridViewTextBoxColumn { Name = "ExpirationTime", HeaderText = "过期时间", DataPropertyName = "ExpirationTime", Width = 150 });
+                dataGridViewCacheMetadata.Columns.Add(new DataGridViewTextBoxColumn { Name = "HasExpiration", HeaderText = "是否有过期设置", DataPropertyName = "HasExpiration", Width = 100 });
+                dataGridViewCacheMetadata.Columns.Add(new DataGridViewTextBoxColumn { Name = "SourceInfo", HeaderText = "源信息", DataPropertyName = "SourceInfo", Width = 200 });
             }
             catch (Exception ex)
             {
@@ -90,18 +125,13 @@ namespace RUINORERP.Server.Controls
         }
 
         /// <summary>
-        /// 所有实体表都在这个命名空间下，不需要每次都反射
-        /// </summary>
-        //Assembly assembly = System.Reflection.Assembly.LoadFrom("RUINORERP.Model.dll");
-        private readonly IEntityCacheManager _entityCacheManager;
-
-        /// <summary>
         /// 加载缓存统计数据
         /// </summary>
         private async void LoadCacheStatistics()
         {
             try
             {
+                // 使用构造函数中注入的缓存管理器实例，确保与初始化服务使用的是同一个实例
                 // 显示加载状态
                 toolStripStatusLabel1.Text = "正在加载缓存统计...";
 
@@ -131,25 +161,6 @@ namespace RUINORERP.Server.Controls
                             {
                                 txtHitRatio.Text = "0.00%";
                             }
-
-                            // 加载按表统计数据
-                            var tableStats = cacheStats.GetTableCacheStatistics();
-                            // 创建视图模型列表，将字节转换为MB
-                            var viewModelList = tableStats.Values.Select(ts => new
-                            {
-                                ts.TableName,
-                                ItemCount = ts.TotalItemCount,
-                                EstimatedSize = Math.Round(ts.EstimatedTotalSize / (1024.0 * 1024.0), 2),
-                                ts.HitRatio
-                            }).ToList();
-                            dataGridViewTableStats.DataSource = viewModelList;
-
-                            // 加载缓存项统计数据
-                            var itemStats = cacheStats.GetCacheItemStatistics();
-                            dataGridViewItemStats.DataSource = itemStats;
-
-                            // 更新状态栏
-                            toolStripStatusLabel1.Text = $"缓存统计已更新 - 命中率: {txtHitRatio.Text}, 总命中: {cacheStats.CacheHits:N0}";
                         }));
                     }
                     else
@@ -166,6 +177,90 @@ namespace RUINORERP.Server.Controls
             {
                 _logger.LogError(ex, "加载缓存统计数据时发生错误");
                 MessageBox.Show($"加载缓存统计数据失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// 加载按表统计数据
+        /// </summary>
+        private async void LoadTableStatistics()
+        {
+            try
+            {
+                // 使用异步方式加载统计信息，避免UI线程阻塞
+                await Task.Run(() =>
+                {
+                    // 检查是否实现了ICacheStatistics接口
+                    if (_entityCacheManager is ICacheStatistics cacheStats)
+                    {
+                        // 在UI线程上更新控件
+                        this.Invoke(new Action(() =>
+                        {
+                            // 加载按表统计数据，直接使用TableCacheStatistics类
+                            var tableStats = cacheStats.GetTableCacheStatistics();
+                            // 创建显示用的匿名对象，将字节转换为MB并格式化显示
+                            var viewModelList = tableStats.Values.Select(ts => new
+                            {
+                                ts.TableName,
+                                ItemCount = ts.TotalItemCount,
+                                EstimatedSize = Math.Round(ts.EstimatedTotalSize / (1024.0 * 1024.0), 2),
+                                HitRatio = ts.HitRatio.ToString("P2"), // 格式化为百分比
+                                LastUpdated = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
+                            }).ToList();
+                            dataGridViewTableStats.DataSource = viewModelList;
+
+                            // 更新状态栏
+                            toolStripStatusLabel1.Text = $"按表统计已更新 - 共 {viewModelList.Count} 个表";
+                        }));
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "加载按表统计数据时发生错误");
+            }
+        }
+
+        /// <summary>
+        /// 加载缓存项统计数据
+        /// </summary>
+        private async void LoadItemStatistics()
+        {
+            try
+            {
+                // 使用异步方式加载统计信息，避免UI线程阻塞
+                await Task.Run(() =>
+                {
+                    // 检查是否实现了ICacheStatistics接口
+                    if (_entityCacheManager is ICacheStatistics cacheStats)
+                    {
+                        // 在UI线程上更新控件
+                        this.Invoke(new Action(() =>
+                        {
+                            // 加载缓存项统计数据，直接使用CacheItemStatistics类
+                            var itemStats = cacheStats.GetCacheItemStatistics();
+                            // 创建显示用的匿名对象，格式化时间和大小
+                            var displayList = itemStats.Values.Select(item => new
+                            {
+                                CacheKey = item.Key,
+                                TypeName = item.ValueType,
+                                item.TableName,
+                                CreatedTime = item.CreatedTime.ToString("yyyy-MM-dd HH:mm:ss"),
+                                LastAccessed = item.LastAccessedTime.ToString("yyyy-MM-dd HH:mm:ss"),
+                                AccessCount = item.AccessCount,
+                                Size = item.EstimatedSize > 0 ? $"{Math.Round(item.EstimatedSize / 1024.0, 2)} KB" : "N/A"
+                            }).ToList();
+                            dataGridViewItemStats.DataSource = displayList;
+
+                            // 更新状态栏
+                            toolStripStatusLabel1.Text = $"缓存项统计已更新 - 共 {itemStats?.Count ?? 0} 个缓存项";
+                        }));
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "加载缓存项统计数据时发生错误");
             }
         }
 
@@ -188,7 +283,8 @@ namespace RUINORERP.Server.Controls
                         // 使用异步方式加载数据，避免UI线程阻塞
                         await Task.Run(() =>
                         {
-                            var cacheManager = Startup.GetFromFac<IEntityCacheManager>();
+                            // 使用构造函数中注入的缓存管理器实例，确保与初始化服务使用的是同一个实例
+                            var cacheManager = _entityCacheManager;
                             var datalist = cacheManager.GetEntityListByTableName(tableName);
                             if (datalist != null)
                             {
@@ -238,6 +334,9 @@ namespace RUINORERP.Server.Controls
 
                     // 刷新缓存统计数据
                     this.Invoke(new Action(() => LoadCacheStatistics()));
+                    this.Invoke(new Action(() => LoadTableStatistics()));
+                    this.Invoke(new Action(() => LoadItemStatistics()));
+                    this.Invoke(new Action(() => LoadCacheMetadata()));
 
                     // 如果有选中的表，刷新该表的数据
                     this.Invoke(new Action(() =>
@@ -277,8 +376,8 @@ namespace RUINORERP.Server.Controls
                 //加载所有缓存的表
                 listBoxTableList.Items.Clear();
 
-                // 获取新的缓存管理器实例
-                var cacheManager = Startup.GetFromFac<IEntityCacheManager>();
+                // 使用构造函数中注入的缓存管理器实例，确保与初始化服务使用的是同一个实例
+                var cacheManager = _entityCacheManager;
 
                 // 获取所有可缓存的表名
                 List<string> tableNameList = RUINORERP.Server.Comm.CacheUIHelper.GetCacheableTableNames();
@@ -366,9 +465,11 @@ namespace RUINORERP.Server.Controls
                 {
                     this.Invoke(new Action(() => LoadCacheToUI()));
                     this.Invoke(new Action(() => LoadCacheStatistics()));
+                    this.Invoke(new Action(() => LoadTableStatistics()));
+                    this.Invoke(new Action(() => LoadItemStatistics()));
+                    this.Invoke(new Action(() => LoadCacheMetadata()));
                 });
 
-                MessageBox.Show("缓存加载完成", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {
@@ -409,8 +510,9 @@ namespace RUINORERP.Server.Controls
                     await Task.Run(async () =>
                     {
                         // 获取缓存数据
-                        var cacheManager = Startup.GetFromFac<IEntityCacheManager>();
-                        var jArray = cacheManager.GetEntityListByTableName(tableName);
+                        // 使用构造函数中注入的缓存管理器实例，确保与初始化服务使用的是同一个实例
+                        var cacheManager = _entityCacheManager;
+                            var jArray = cacheManager.GetEntityListByTableName(tableName);
                         if (jArray == null || jArray.Count == 0)
                         {
                             this.Invoke(new Action(() =>
@@ -553,10 +655,9 @@ namespace RUINORERP.Server.Controls
                     // 从数据库加载指定表的数据到缓存
                     try
                     {
-                        // 获取EntityCacheInitializationService实例
-                        var initializationService = Startup.GetFromFac<EntityCacheInitializationService>();
-                        // 调用新方法初始化单个表的缓存
-                        await initializationService.InitializeSingleTableCacheAsync(tableName);
+                        // 使用构造函数中注入的初始化服务实例，确保与当前缓存管理器使用的是同一个实例
+                        // 调用方法初始化单个表的缓存
+                        await _initializationService.InitializeSingleTableCacheAsync(tableName);
                     }
                     catch (Exception ex)
                     {
@@ -650,6 +751,9 @@ namespace RUINORERP.Server.Controls
         public void btnRefreshStatistics_Click(object sender, EventArgs e)
         {
             LoadCacheStatistics();
+            LoadTableStatistics();
+            LoadItemStatistics();
+            LoadCacheMetadata();
         }
 
         // 重置缓存统计数据
@@ -668,6 +772,223 @@ namespace RUINORERP.Server.Controls
                 _logger.LogError(ex, "重置缓存统计数据时发生错误");
                 MessageBox.Show($"重置缓存统计数据失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+        }
+
+        /// <summary>
+        /// 加载缓存元数据
+        /// </summary>
+        private void LoadCacheMetadata()
+        {
+            try
+            {
+                // 获取缓存同步元数据管理器
+                var cacheSyncMetadataManager = Startup.GetFromFac<CacheSyncMetadataManager>();
+                if (cacheSyncMetadataManager != null)
+                {
+                    // 获取所有表的缓存同步元数据
+                    var allSyncInfo = cacheSyncMetadataManager.GetAllTableSyncInfo();
+                    
+                    // 直接使用现有的CacheSyncInfo模型，添加格式化属性用于显示
+                    var viewModelList = allSyncInfo.Values.Select(info => new
+                    {
+                        info.TableName,
+                        info.DataCount,
+                        EstimatedSizeMB = Math.Round(info.EstimatedSize / (1024.0 * 1024.0), 2),
+                        LastUpdateTime = info.LastUpdateTime.ToString("yyyy-MM-dd HH:mm:ss"),
+                        ExpirationTime = info.HasExpiration ? info.ExpirationTime.ToString("yyyy-MM-dd HH:mm:ss") : "永不过期",
+                        info.HasExpiration,
+                        info.SourceInfo
+                    }).ToList();
+
+                    // 绑定数据到DataGridView
+                    dataGridViewCacheMetadata.DataSource = viewModelList;
+                    
+                    // 更新状态栏显示记录数
+                    toolStripStatusLabel1.Text = $"缓存元数据已更新 - 共 {viewModelList.Count} 个表";
+                }
+                else
+                {
+                    dataGridViewCacheMetadata.DataSource = null;
+                    _logger?.LogWarning("无法获取CacheSyncMetadataManager实例");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "加载缓存元数据时发生错误");
+                dataGridViewCacheMetadata.DataSource = null;
+            }
+        }
+
+        /// <summary>
+        /// 刷新缓存元数据按钮点击事件
+        /// </summary>
+        private async void btnRefreshMetadata_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                // 显示刷新状态
+                btnRefreshMetadata.Enabled = false;
+                btnRefreshMetadata.Text = "刷新中...";
+                toolStripStatusLabel1.Text = "正在刷新缓存元数据...";
+                this.Cursor = Cursors.WaitCursor;
+
+                // 使用异步方式刷新，避免UI阻塞
+                await Task.Run(() =>
+                {
+                    this.Invoke(new Action(() => LoadCacheMetadata()));
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "刷新缓存元数据时发生错误");
+                MessageBox.Show($"刷新缓存元数据失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                // 恢复UI状态
+                btnRefreshMetadata.Enabled = true;
+                btnRefreshMetadata.Text = "刷新元数据";
+                this.Cursor = Cursors.Default;
+            }
+        }
+
+        /// <summary>
+        /// 初始化自动刷新定时器
+        /// </summary>
+        private void InitializeAutoRefreshTimer()
+        {
+            _autoRefreshTimer = new System.Windows.Forms.Timer();
+            _autoRefreshTimer.Interval = 10000; // 10秒检查一次是否需要刷新
+            _autoRefreshTimer.Tick += AutoRefreshTimer_Tick;
+            _autoRefreshTimer.Start(); // 启动定时器
+        }
+
+        /// <summary>
+        /// 定时刷新事件处理
+        /// </summary>
+        private void AutoRefreshTimer_Tick(object sender, EventArgs e)
+        {
+            try
+            {
+                // 只在缓存统计页面且处于前台时自动刷新
+                if (tabControl1.SelectedTab == tabPageCacheStatistics)
+                {
+                    DateTime now = DateTime.Now;
+                    
+                    // 按表统计：每60秒刷新一次
+                    if (tabControl2.SelectedTab == tabPageTableStats && 
+                        (now - _lastTableStatsRefresh).TotalSeconds >= 60)
+                    {
+                        LoadTableStatistics();
+                        _lastTableStatsRefresh = now;
+                    }
+                    
+                    // 缓存项统计：不自动刷新（数据量大，手动刷新更合适）
+                    // 这里保持不自动刷新，避免性能影响
+                    
+                    // 缓存元数据：每30秒刷新一次
+                    if (tabControl2.SelectedTab == tabPageCacheMetadata && 
+                        (now - _lastMetadataRefresh).TotalSeconds >= 30)
+                    {
+                        LoadCacheMetadata();
+                        _lastMetadataRefresh = now;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "自动刷新缓存统计时发生错误");
+            }
+        }
+
+        /// <summary>
+        /// 刷新按表统计按钮点击事件
+        /// </summary>
+        private async void btnRefreshTableStats_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                // 显示刷新状态
+                btnRefreshTableStats.Enabled = false;
+                btnRefreshTableStats.Text = "刷新中...";
+                toolStripStatusLabel1.Text = "正在刷新按表统计...";
+                this.Cursor = Cursors.WaitCursor;
+
+                // 使用异步方式刷新，避免UI阻塞
+                await Task.Run(() =>
+                {
+                    this.Invoke(new Action(() => LoadTableStatistics()));
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "刷新按表统计时发生错误");
+                MessageBox.Show($"刷新按表统计失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                // 恢复UI状态
+                btnRefreshTableStats.Enabled = true;
+                btnRefreshTableStats.Text = "刷新统计";
+                this.Cursor = Cursors.Default;
+            }
+        }
+
+        /// <summary>
+        /// 刷新缓存项统计按钮点击事件
+        /// </summary>
+        private async void btnRefreshItemStats_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                // 显示刷新状态
+                btnRefreshItemStats.Enabled = false;
+                btnRefreshItemStats.Text = "刷新中...";
+                toolStripStatusLabel1.Text = "正在刷新缓存项统计...";
+                this.Cursor = Cursors.WaitCursor;
+
+                // 使用异步方式刷新，避免UI阻塞
+                await Task.Run(() =>
+                {
+                    this.Invoke(new Action(() => LoadItemStatistics()));
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "刷新缓存项统计时发生错误");
+                MessageBox.Show($"刷新缓存项统计失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                // 恢复UI状态
+                btnRefreshItemStats.Enabled = true;
+                btnRefreshItemStats.Text = "刷新项统计";
+                this.Cursor = Cursors.Default;
+            }
+        }
+
+        /// <summary>
+        /// 重写Dispose方法以释放定时器资源
+        /// </summary>
+        /// <param name="disposing"></param>
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                // 停止并释放定时器
+                if (_autoRefreshTimer != null)
+                {
+                    _autoRefreshTimer.Stop();
+                    _autoRefreshTimer.Dispose();
+                    _autoRefreshTimer = null;
+                }
+                
+                if (components != null)
+                {
+                    components.Dispose();
+                }
+            }
+            base.Dispose(disposing);
         }
 
         #endregion

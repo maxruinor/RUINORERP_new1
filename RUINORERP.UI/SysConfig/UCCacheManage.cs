@@ -33,6 +33,11 @@ namespace RUINORERP.UI.SysConfig
     {
         private readonly IEntityCacheManager _cacheManager;
         private readonly TableSchemaManager _tableSchemaManager;
+        private readonly CacheSyncMetadataManager _cacheSyncMetadataManager;
+        private System.Windows.Forms.Timer _autoRefreshTimer;
+        private DateTime _lastTableStatsRefresh = DateTime.MinValue;
+        private DateTime _lastItemStatsRefresh = DateTime.MinValue;
+        private DateTime _lastMetadataRefresh = DateTime.MinValue;
         
 
 
@@ -42,6 +47,10 @@ namespace RUINORERP.UI.SysConfig
             // 使用静态缓存管理器
             _cacheManager = Startup.GetFromFac<IEntityCacheManager>();
             _tableSchemaManager = TableSchemaManager.Instance;
+            _cacheSyncMetadataManager = Startup.GetFromFac<CacheSyncMetadataManager>();
+            
+            // 初始化定时刷新器
+            InitializeAutoRefreshTimer();
         }
 
         private async void 请求缓存ToolStripMenuItem_Click(object sender, EventArgs e)
@@ -61,6 +70,16 @@ namespace RUINORERP.UI.SysConfig
             LoadCacheToUI();
             //加载缓存统计数据
             LoadCacheStatistics();
+            // 初始化缓存元数据
+            InitCacheMetadataGrid();
+            // 加载缓存元数据
+            LoadCacheMetadata();
+            
+            // 初始化刷新时间戳
+            DateTime now = DateTime.Now;
+            _lastTableStatsRefresh = now;
+            _lastItemStatsRefresh = now;
+            _lastMetadataRefresh = now;
         }
 
         private void InitStatisticsGrid()
@@ -148,60 +167,192 @@ namespace RUINORERP.UI.SysConfig
             dgvItemStatistics.Columns.Add(colItemSize);
         }
 
-        private void LoadCacheStatistics()
+        /// <summary>
+        /// 初始化缓存元数据表格
+        /// </summary>
+        private void InitCacheMetadataGrid()
+        {
+            dgvCacheMetadata.AutoGenerateColumns = false;
+            dgvCacheMetadata.Columns.Clear();
+
+            DataGridViewTextBoxColumn colTableName = new DataGridViewTextBoxColumn();
+            colTableName.Name = "TableName";
+            colTableName.HeaderText = "表名";
+            colTableName.DataPropertyName = "TableName";
+            colTableName.Width = 150;
+            dgvCacheMetadata.Columns.Add(colTableName);
+
+            DataGridViewTextBoxColumn colDataCount = new DataGridViewTextBoxColumn();
+            colDataCount.Name = "DataCount";
+            colDataCount.HeaderText = "数据数量";
+            colDataCount.DataPropertyName = "DataCount";
+            colDataCount.Width = 80;
+            colDataCount.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
+            dgvCacheMetadata.Columns.Add(colDataCount);
+
+            DataGridViewTextBoxColumn colEstimatedSize = new DataGridViewTextBoxColumn();
+            colEstimatedSize.Name = "EstimatedSizeMB";
+            colEstimatedSize.HeaderText = "估计大小(MB)";
+            colEstimatedSize.DataPropertyName = "EstimatedSizeMB";
+            colEstimatedSize.Width = 100;
+            colEstimatedSize.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
+            dgvCacheMetadata.Columns.Add(colEstimatedSize);
+
+            DataGridViewTextBoxColumn colLastUpdateTime = new DataGridViewTextBoxColumn();
+            colLastUpdateTime.Name = "LastUpdateTime";
+            colLastUpdateTime.HeaderText = "最后更新时间";
+            colLastUpdateTime.DataPropertyName = "LastUpdateTime";
+            colLastUpdateTime.Width = 150;
+            dgvCacheMetadata.Columns.Add(colLastUpdateTime);
+
+            DataGridViewTextBoxColumn colExpirationTime = new DataGridViewTextBoxColumn();
+            colExpirationTime.Name = "ExpirationTime";
+            colExpirationTime.HeaderText = "过期时间";
+            colExpirationTime.DataPropertyName = "ExpirationTime";
+            colExpirationTime.Width = 150;
+            dgvCacheMetadata.Columns.Add(colExpirationTime);
+
+            DataGridViewTextBoxColumn colHasExpiration = new DataGridViewTextBoxColumn();
+            colHasExpiration.Name = "HasExpiration";
+            colHasExpiration.HeaderText = "是否有过期设置";
+            colHasExpiration.DataPropertyName = "HasExpiration";
+            colHasExpiration.Width = 100;
+            dgvCacheMetadata.Columns.Add(colHasExpiration);
+
+            DataGridViewTextBoxColumn colSourceInfo = new DataGridViewTextBoxColumn();
+            colSourceInfo.Name = "SourceInfo";
+            colSourceInfo.HeaderText = "源信息";
+            colSourceInfo.DataPropertyName = "SourceInfo";
+            colSourceInfo.Width = 200;
+            dgvCacheMetadata.Columns.Add(colSourceInfo);
+        }
+
+        /// <summary>
+        /// 加载缓存统计数据
+        /// </summary>
+        private async void LoadCacheStatistics()
         {
             try
             {
-                // 更新总体统计指标
-                txtHitRatio.Text = $"{_cacheManager.HitRatio:P2}";
-                txtTotalItems.Text = _cacheManager.CacheItemCount.ToString();
-                // 改为MB单位
-                txtCacheSize.Text = $"{(_cacheManager.EstimatedCacheSize / (1024.0 * 1024.0)):F2} MB";
-
-                // 更新按表统计数据
-                var tableStats = _cacheManager.GetTableCacheStatistics();
-                var tableStatsList = new List<TableStatisticsDisplay>();
-                
-                foreach (var stats in tableStats)
+                // 使用异步方式加载统计信息，避免UI阻塞
+                await Task.Run(() =>
                 {
-                    tableStatsList.Add(new TableStatisticsDisplay
+                    // 在UI线程上更新控件
+                    this.Invoke(new Action(() =>
                     {
-                        TableName = stats.Value.TableName,
-                        ItemCount = stats.Value.TotalItemCount,
+                        // 更新总体统计指标
+                        txtHitRatio.Text = $"{_cacheManager.HitRatio:P2}";
+                        txtTotalItems.Text = _cacheManager.CacheItemCount.ToString();
                         // 改为MB单位
-                        TotalSize = (stats.Value.EstimatedTotalSize / (1024.0 * 1024.0)).ToString("F2"),
-                        HitRatio = stats.Value.HitRatio.ToString("P2"),
-                        LastUpdateTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") // 使用当前时间替代，因为TableCacheStatistics没有LastAccessedTime属性
-                    });
-                }
+                        txtCacheSize.Text = $"{(_cacheManager.EstimatedCacheSize / (1024.0 * 1024.0)):F2} MB";
+
+                        LoadTableStatistics();
+                        LoadItemStatistics();
+                    }));
+                });
+            }
+            catch (Exception ex)
+            {
+                KryptonMessageBox.Show($"加载缓存统计失败: {ex.Message}", "错误", Krypton.Toolkit.KryptonMessageBoxButtons.OK, Krypton.Toolkit.KryptonMessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// 加载按表统计数据
+        /// </summary>
+        private void LoadTableStatistics()
+        {
+            try
+            {
+                // 更新按表统计数据，直接使用TableCacheStatistics类
+                var tableStats = _cacheManager.GetTableCacheStatistics();
+                
+                // 创建显示用的匿名对象列表
+                var tableStatsList = tableStats.Values.Select(stats => new
+                {
+                    TableName = stats.TableName,
+                    ItemCount = stats.TotalItemCount,
+                    // 改为MB单位
+                    TotalSize = (stats.EstimatedTotalSize / (1024.0 * 1024.0)).ToString("F2"),
+                    HitRatio = stats.HitRatio.ToString("P2"),
+                    LastUpdateTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
+                }).ToList();
                 
                 // 更新表个数统计信息
                 txtTableCount.Text = tableStats.Count.ToString();
                 
                 dgvTableStatistics.DataSource = tableStatsList;
+            }
+            catch (Exception ex)
+            {
+                KryptonMessageBox.Show($"加载按表统计失败: {ex.Message}", "错误", Krypton.Toolkit.KryptonMessageBoxButtons.OK, Krypton.Toolkit.KryptonMessageBoxIcon.Error);
+            }
+        }
 
-                // 更新缓存项统计数据
+        /// <summary>
+        /// 加载缓存项统计数据
+        /// </summary>
+        private void LoadItemStatistics()
+        {
+            try
+            {
+                // 更新缓存项统计数据，直接使用CacheItemStatistics类
                 var itemStats = _cacheManager.GetCacheItemStatistics();
-                var itemStatsList = new List<ItemStatisticsDisplay>();
                 
-                foreach (var stats in itemStats)
+                // 创建显示用的匿名对象列表
+                var itemStatsList = itemStats.Values.Select(stats => new
                 {
-                    itemStatsList.Add(new ItemStatisticsDisplay
-                    {
-                        CacheKey = stats.Value.Key,
-                        EntityType = stats.Value.ValueType ?? "Unknown",
-                        TableName = stats.Value.TableName,
-                        CreationTime = stats.Value.CreatedTime.ToString("yyyy-MM-dd HH:mm:ss"),
-                        // 改为MB单位
-                        Size = (stats.Value.EstimatedSize / (1024.0 * 1024.0)).ToString("F3")
-                    });
-                }
+                    CacheKey = stats.Key,
+                    EntityType = stats.ValueType ?? "Unknown",
+                    TableName = stats.TableName,
+                    CreationTime = stats.CreatedTime.ToString("yyyy-MM-dd HH:mm:ss"),
+                    // 改为MB单位
+                    Size = (stats.EstimatedSize / (1024.0 * 1024.0)).ToString("F3")
+                }).ToList();
                 
                 dgvItemStatistics.DataSource = itemStatsList;
             }
             catch (Exception ex)
             {
-                KryptonMessageBox.Show($"加载缓存统计失败: {ex.Message}", "错误", Krypton.Toolkit.KryptonMessageBoxButtons.OK, Krypton.Toolkit.KryptonMessageBoxIcon.Error);
+                KryptonMessageBox.Show($"加载缓存项统计失败: {ex.Message}", "错误", Krypton.Toolkit.KryptonMessageBoxButtons.OK, Krypton.Toolkit.KryptonMessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// 加载缓存元数据
+        /// </summary>
+        private void LoadCacheMetadata()
+        {
+            try
+            {
+                if (_cacheSyncMetadataManager != null)
+                {
+                    // 获取所有表的缓存同步元数据
+                    var allSyncInfo = _cacheSyncMetadataManager.GetAllTableSyncInfo();
+                    
+                    // 创建显示用的匿名对象列表，将字节转换为MB并格式化时间
+                    var viewModelList = allSyncInfo.Values.Select(info => new
+                    {
+                        info.TableName,
+                        info.DataCount,
+                        EstimatedSizeMB = Math.Round(info.EstimatedSize / (1024.0 * 1024.0), 2),
+                        LastUpdateTime = info.LastUpdateTime.ToString("yyyy-MM-dd HH:mm:ss"),
+                        ExpirationTime = info.HasExpiration ? info.ExpirationTime.ToString("yyyy-MM-dd HH:mm:ss") : "永不过期",
+                        info.HasExpiration,
+                        info.SourceInfo
+                    }).ToList();
+
+                    // 绑定数据到DataGridView
+                    dgvCacheMetadata.DataSource = viewModelList;
+                }
+                else
+                {
+                    dgvCacheMetadata.DataSource = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                KryptonMessageBox.Show($"加载缓存元数据失败: {ex.Message}", "错误", Krypton.Toolkit.KryptonMessageBoxButtons.OK, Krypton.Toolkit.KryptonMessageBoxIcon.Error);
             }
         }
 
@@ -250,11 +401,36 @@ namespace RUINORERP.UI.SysConfig
             }
         }
 
-        private void btnRefreshCache_Click(object sender, EventArgs e)
+        private async void btnRefreshCache_Click(object sender, EventArgs e)
         {
-            LoadCacheToUI();
-            // 同时刷新统计数据
-            LoadCacheStatistics();
+            try
+            {
+                // 显示加载状态
+                btnRefreshCache.Enabled = false;
+                btnRefreshCache.Values.Text = "刷新中...";
+
+                // 使用异步方式刷新，避免UI阻塞
+                await Task.Run(() =>
+                {
+                    this.Invoke(new Action(() =>
+                    {
+                        LoadCacheToUI();
+                        LoadTableStatistics();
+                        LoadItemStatistics();
+                        LoadCacheMetadata();
+                    }));
+                });
+            }
+            catch (Exception ex)
+            {
+                KryptonMessageBox.Show($"刷新缓存失败: {ex.Message}", "错误", Krypton.Toolkit.KryptonMessageBoxButtons.OK, Krypton.Toolkit.KryptonMessageBoxIcon.Error);
+            }
+            finally
+            {
+                // 恢复UI状态
+                btnRefreshCache.Enabled = true;
+                btnRefreshCache.Values.Text = "刷新缓存";
+            }
         }
 
         /// <summary>
@@ -350,10 +526,35 @@ namespace RUINORERP.UI.SysConfig
             }
         }
 
-        private void btnRefreshStats_Click(object sender, EventArgs e)
+        private async void btnRefreshStats_Click(object sender, EventArgs e)
         {   
-            // 刷新统计数据
-            LoadCacheStatistics();
+            try
+            {
+                // 显示加载状态
+                btnRefreshStats.Enabled = false;
+                btnRefreshStats.Values.Text = "刷新中...";
+
+                // 使用异步方式刷新，避免UI阻塞
+                await Task.Run(() =>
+                {
+                    this.Invoke(new Action(() =>
+                    {
+                        LoadTableStatistics();
+                        LoadItemStatistics();
+                        LoadCacheMetadata();
+                    }));
+                });
+            }
+            catch (Exception ex)
+            {
+                KryptonMessageBox.Show($"刷新统计数据失败: {ex.Message}", "错误", Krypton.Toolkit.KryptonMessageBoxButtons.OK, Krypton.Toolkit.KryptonMessageBoxIcon.Error);
+            }
+            finally
+            {
+                // 恢复UI状态
+                btnRefreshStats.Enabled = true;
+                btnRefreshStats.Values.Text = "刷新统计数据";
+            }
         }
 
         private void btnResetStats_Click(object sender, EventArgs e)
@@ -372,27 +573,111 @@ namespace RUINORERP.UI.SysConfig
             }
         }
 
+        /// <summary>
+        /// 刷新缓存元数据按钮点击事件
+        /// </summary>
+        private async void btnRefreshMetadata_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                // 显示刷新状态
+                btnRefreshMetadata.Enabled = false;
+                btnRefreshMetadata.Values.Text = "刷新中...";
+
+                // 使用异步方式刷新，避免UI阻塞
+                await Task.Run(() =>
+                {
+                    this.Invoke(new Action(() => LoadCacheMetadata()));
+                });
+            }
+            catch (Exception ex)
+            {
+                KryptonMessageBox.Show($"刷新缓存元数据失败: {ex.Message}", "错误", Krypton.Toolkit.KryptonMessageBoxButtons.OK, Krypton.Toolkit.KryptonMessageBoxIcon.Error);
+            }
+            finally
+            {
+                // 恢复UI状态
+                btnRefreshMetadata.Enabled = true;
+                btnRefreshMetadata.Values.Text = "刷新元数据";
+            }
+        }
+
+        /// <summary>
+        /// 初始化自动刷新定时器
+        /// </summary>
+        private void InitializeAutoRefreshTimer()
+        {
+            _autoRefreshTimer = new System.Windows.Forms.Timer();
+            _autoRefreshTimer.Interval = 10000; // 10秒检查一次是否需要刷新
+            _autoRefreshTimer.Tick += AutoRefreshTimer_Tick;
+            _autoRefreshTimer.Start(); // 启动定时器
+        }
+
+        /// <summary>
+        /// 定时刷新事件处理
+        /// </summary>
+        private void AutoRefreshTimer_Tick(object sender, EventArgs e)
+        {
+            try
+            {
+                // 只在缓存统计页面且处于前台时自动刷新
+                if (statisticsNavigator.SelectedPage != null)
+                {
+                    DateTime now = DateTime.Now;
+                    
+                    // 按表统计：每60秒刷新一次
+                    if (statisticsNavigator.SelectedPage.Name == tabPageTableStats.Name && 
+                        (now - _lastTableStatsRefresh).TotalSeconds >= 60)
+                    {
+                        LoadTableStatistics();
+                        _lastTableStatsRefresh = now;
+                    }
+                    
+                    // 缓存项统计：不自动刷新（数据量大，手动刷新更合适）
+                    
+                    // 缓存元数据：每30秒刷新一次
+                    if (statisticsNavigator.SelectedPage.Name == tabPageCacheMetadata.Name && 
+                        (now - _lastMetadataRefresh).TotalSeconds >= 30)
+                    {
+                        LoadCacheMetadata();
+                        _lastMetadataRefresh = now;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // 静默处理错误，避免频繁弹窗
+                System.Diagnostics.Debug.WriteLine($"自动刷新缓存统计时发生错误: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 重写Dispose方法以释放定时器资源
+        /// </summary>
+        /// <param name="disposing"></param>
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                // 停止并释放定时器
+                if (_autoRefreshTimer != null)
+                {
+                    _autoRefreshTimer.Stop();
+                    _autoRefreshTimer.Dispose();
+                    _autoRefreshTimer = null;
+                }
+                
+                if (components != null)
+                {
+                    components.Dispose();
+                }
+            }
+            base.Dispose(disposing);
+        }
+
         public List<UControls.ContextMenuController> AddContextMenu()
         {
             return new List<UControls.ContextMenuController>();
         }
     }
-
-    public class TableStatisticsDisplay
-        {   
-            public string TableName { get; set; }
-            public int ItemCount { get; set; }
-            public string TotalSize { get; set; }
-            public string HitRatio { get; set; }
-            public string LastUpdateTime { get; set; }
-        }
-
-        public class ItemStatisticsDisplay
-        {   
-            public string CacheKey { get; set; }
-            public string EntityType { get; set; }
-            public string TableName { get; set; }
-            public string CreationTime { get; set; }
-            public string Size { get; set; }
-        }
 }

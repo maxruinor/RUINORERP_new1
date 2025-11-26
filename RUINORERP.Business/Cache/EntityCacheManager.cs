@@ -16,6 +16,7 @@ using RUINORERP.Business.CommService;
 using static RUINORERP.Business.Cache.IEntityCacheManager;
 using Newtonsoft.Json.Linq;
 using System.Dynamic;
+using RUINORERP.PacketSpec.Models.Cache;
 
 namespace RUINORERP.Business.Cache
 {

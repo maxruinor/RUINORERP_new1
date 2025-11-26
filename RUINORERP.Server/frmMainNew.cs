@@ -1786,7 +1786,6 @@ namespace RUINORERP.Server
                     var executionTime = endTime - startTime;
 
                     PrintInfoLog($"缓存初始化完成, 执行时间: {executionTime.TotalSeconds:F2} 秒");
-                    _logger?.LogInformation($"缓存初始化完成, 执行时间: {executionTime.TotalSeconds:F2} 秒");
                 }
             }
             catch (Exception ex)

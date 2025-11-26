@@ -151,6 +151,11 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         public const ushort Cache_CacheSubscription = 0x0203;
 
+        /// <summary>
+        /// 缓存元数据同步 - 同步缓存的元数据信息
+        /// </summary>
+        public const ushort Cache_CacheMetadataSync = 0x0204;
+
         #endregion
 
         #region 消息命令 (0x03xx)

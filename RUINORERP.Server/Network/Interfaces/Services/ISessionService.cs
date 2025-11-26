@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using RUINORERP.PacketSpec.Commands;
+using RUINORERP.PacketSpec.Enums.Core;
 using RUINORERP.PacketSpec.Models.Common;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.Server.Network.Models;
@@ -108,7 +109,7 @@ namespace RUINORERP.Server.Network.Interfaces.Services
         /// </summary>
         /// <returns>统计信息</returns>
         SessionStatistics GetStatistics();
-        
+
         /// <summary>
         /// 重置会话统计信息
         /// </summary>
@@ -197,10 +198,10 @@ namespace RUINORERP.Server.Network.Interfaces.Services
         /// <param name="ct">取消令牌</param>
         /// <returns>响应数据包</returns>
         Task<PacketModel> SendCommandAndWaitForResponseAsync<TRequest>(
-            string sessionID, 
-            CommandId commandId, 
-            TRequest request, 
-            int timeoutMs = 30000, 
+            string sessionID,
+            CommandId commandId,
+            TRequest request,
+            int timeoutMs = 30000,
             CancellationToken ct = default)
             where TRequest : class, IRequest;
 
@@ -213,10 +214,31 @@ namespace RUINORERP.Server.Network.Interfaces.Services
         /// <param name="ct">取消令牌</param>
         /// <returns>发送是否成功</returns>
         Task<bool> SendCommandAsync<TRequest>(
-            string sessionID, 
-            CommandId commandId, 
-            TRequest request, 
+            string sessionID,
+            CommandId commandId,
+            TRequest request,
             CancellationToken ct = default)
+            where TRequest : class, IRequest;
+
+        /// <summary>
+        /// 核心数据包发送方法
+        /// </summary>
+        /// <typeparam name="TRequest">请求类型</typeparam>
+        /// <param name="sessionInfo">会话信息</param>
+        /// <param name="commandId">命令ID</param>
+        /// <param name="request">请求数据</param>
+        /// <param name="timeoutMs">超时时间（毫秒）</param>
+        /// <param name="ct">取消令牌</param>
+        /// <param name="packetDirection">数据包方向</param>
+        /// <param name="responseTypeName">响应类型名称</param>
+        Task SendPacketCoreAsync<TRequest>(
+            SessionInfo sessionInfo,
+            CommandId commandId,
+            TRequest request,
+            int timeoutMs,
+            CancellationToken ct = default,
+            PacketDirection packetDirection = PacketDirection.ServerRequest,
+            string responseTypeName = null)
             where TRequest : class, IRequest;
 
         #endregion

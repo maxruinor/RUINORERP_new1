@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using RUINORERP.PacketSpec.Models.Cache;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -7,14 +8,52 @@ using System.Linq;
 namespace RUINORERP.Business.Cache
 {
     /// <summary>
+    /// 批量同步完成事件参数
+    /// </summary>
+    public class BatchSyncCompletedEventArgs : EventArgs
+    {
+        /// <summary>
+        /// 成功更新的表数量
+        /// </summary>
+        public int UpdatedCount { get; }
+
+        /// <summary>
+        /// 跳过的表数量
+        /// </summary>
+        public int SkippedCount { get; }
+
+        /// <summary>
+        /// 总表数量
+        /// </summary>
+        public int TotalCount => UpdatedCount + SkippedCount;
+
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="updatedCount">成功更新的表数量</param>
+        /// <param name="skippedCount">跳过的表数量</param>
+        public BatchSyncCompletedEventArgs(int updatedCount, int skippedCount)
+        {
+            UpdatedCount = updatedCount;
+            SkippedCount = skippedCount;
+        }
+    }
+
+    /// <summary>
     /// 缓存同步元数据管理器
     /// 实现ICacheSyncMetadata接口，管理缓存同步所需的元数据
+    /// 支持批量同步操作和事件通知
     /// </summary>
     public class CacheSyncMetadataManager : ICacheSyncMetadata
     {
         private readonly ConcurrentDictionary<string, CacheSyncInfo> _syncMetadata;
         private readonly ILogger<CacheSyncMetadataManager> _logger;
         private readonly object _lock = new object();
+
+        /// <summary>
+        /// 批量同步完成事件
+        /// </summary>
+        public event EventHandler<BatchSyncCompletedEventArgs> OnBatchSyncCompleted;
 
         /// <summary>
         /// 构造函数
@@ -316,6 +355,81 @@ namespace RUINORERP.Business.Cache
             {
                 _logger?.LogError(ex, "获取缓存不完整的表时发生错误");
                 return new List<string>();
+            }
+        }
+
+        /// <summary>
+        /// 批量更新所有表的缓存同步元数据
+        /// 用于客户端和服务器之间的批量同步
+        /// </summary>
+        /// <param name="syncData">要同步的缓存元数据字典</param>
+        /// <param name="overwriteExisting">是否覆盖已存在的元数据，默认false（只更新不存在的）</param>
+        public void BatchUpdateSyncMetadata(Dictionary<string, CacheSyncInfo> syncData, bool overwriteExisting = false)
+        {
+            if (syncData == null)
+                throw new ArgumentNullException(nameof(syncData), "同步数据不能为空");
+
+            try
+            {
+                int updatedCount = 0;
+                int skippedCount = 0;
+
+                foreach (var kvp in syncData)
+                {
+                    string tableName = kvp.Key;
+                    CacheSyncInfo newSyncInfo = kvp.Value;
+
+                    if (string.IsNullOrEmpty(tableName) || newSyncInfo == null)
+                    {
+                        _logger?.LogWarning("跳过无效的同步数据项: 表名={TableName}, 同步信息={SyncInfo}", 
+                            tableName, newSyncInfo != null ? "有效" : "无效");
+                        skippedCount++;
+                        continue;
+                    }
+
+                    try
+                    {
+                        // 确保表名一致
+                        if (string.IsNullOrEmpty(newSyncInfo.TableName))
+                        {
+                            newSyncInfo.TableName = tableName;
+                        }
+
+                        // 根据参数决定是否覆盖现有数据
+                        bool shouldUpdate = overwriteExisting || !_syncMetadata.ContainsKey(tableName);
+                        
+                        if (shouldUpdate)
+                        {
+                            // 使用克隆对象确保数据安全
+                            _syncMetadata[tableName] = newSyncInfo.Clone();
+                            updatedCount++;
+                            
+                            _logger?.LogDebug("已更新表 {TableName} 的同步元数据: 数据数量={DataCount}, 大小={Size} 字节, 更新时间={UpdateTime}",
+                                tableName, newSyncInfo.DataCount, newSyncInfo.EstimatedSize, newSyncInfo.LastUpdateTime);
+                        }
+                        else
+                        {
+                            skippedCount++;
+                            _logger?.LogDebug("跳过表 {TableName} 的同步更新（已存在且不允许覆盖）", tableName);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger?.LogError(ex, "更新表 {TableName} 的同步元数据时发生错误", tableName);
+                        skippedCount++;
+                    }
+                }
+
+                _logger?.LogInformation("批量更新缓存同步元数据完成: 成功更新 {UpdatedCount} 个表，跳过 {SkippedCount} 个表", 
+                    updatedCount, skippedCount);
+
+                // 触发同步完成事件（如果需要的话）
+                OnBatchSyncCompleted?.Invoke(this, new BatchSyncCompletedEventArgs(updatedCount, skippedCount));
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "批量更新缓存同步元数据时发生错误");
+                throw;
             }
         }
 

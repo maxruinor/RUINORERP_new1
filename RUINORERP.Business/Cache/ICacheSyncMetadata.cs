@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using Newtonsoft.Json;
+using RUINORERP.PacketSpec.Models.Cache;
 
 namespace RUINORERP.Business.Cache
 {
@@ -76,112 +78,15 @@ namespace RUINORERP.Business.Cache
         /// <param name="refreshAction">刷新操作，接收表名作为参数</param>
         /// <returns>成功执行刷新操作的表数量</returns>
         int RefreshIncompleteTables(Action<string> refreshAction);
+
+        /// <summary>
+        /// 批量更新所有表的缓存同步元数据
+        /// 用于客户端和服务器之间的批量同步
+        /// </summary>
+        /// <param name="syncData">要同步的缓存元数据字典</param>
+        /// <param name="overwriteExisting">是否覆盖已存在的元数据，默认false（只更新不存在的）</param>
+        void BatchUpdateSyncMetadata(Dictionary<string, CacheSyncInfo> syncData, bool overwriteExisting = false);
     }
 
-    /// <summary>
-    /// 缓存同步信息类
-    /// 存储单个表的缓存同步元数据
-    /// </summary>
-    public class CacheSyncInfo
-    {
-        /// <summary>
-        /// 表名
-        /// </summary>
-        public string TableName { get; set; }
 
-        /// <summary>
-        /// 数据数量
-        /// </summary>
-        public int DataCount { get; set; }
-
-        /// <summary>
-        /// 估计内存大小（字节）
-        /// </summary>
-        public long EstimatedSize { get; set; }
-
-        /// <summary>
-        /// 最后更新时间
-        /// </summary>
-        public DateTime LastUpdateTime { get; set; }
-
-        /// <summary>
-        /// 过期时间
-        /// </summary>
-        public DateTime ExpirationTime { get; set; }
-
-        /// <summary>
-        /// 是否有过期设置
-        /// </summary>
-        public bool HasExpiration => ExpirationTime > DateTime.MaxValue.AddDays(-1);
-
-        /// <summary>
-        /// 源信息
-        /// 用于存储额外的源数据信息
-        /// </summary>
-        public string SourceInfo { get; set; }
-
-        /// <summary>
-        /// 无参数构造函数
-        /// 用于JSON序列化和反序列化
-        /// </summary>
-        public CacheSyncInfo()
-        {
-            LastUpdateTime = DateTime.Now;
-            ExpirationTime = DateTime.MaxValue; // 默认永不过期
-        }
-
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="tableName">表名</param>
-        public CacheSyncInfo(string tableName) : this()
-        {
-            TableName = tableName;
-        }
-
-        /// <summary>
-        /// 检查是否需要同步
-        /// 当数据数量不同或缓存已过期时需要同步
-        /// </summary>
-        /// <param name="other">其他缓存同步信息</param>
-        /// <returns>如果需要同步返回true</returns>
-        public bool NeedsSync(CacheSyncInfo other)
-        {
-            if (other == null)
-                return true;
-
-            // 检查是否过期
-            if (HasExpiration && ExpirationTime < DateTime.Now)
-                return true;
-
-            // 检查数据数量是否不同
-            return DataCount != other.DataCount;
-        }
-
-        /// <summary>
-        /// 检查是否需要同步（无参数版本）
-        /// 当缓存已过期时需要同步
-        /// </summary>
-        /// <returns>如果需要同步返回true</returns>
-        public bool NeedsSync()
-        {
-            // 检查是否过期
-            return HasExpiration && ExpirationTime < DateTime.Now;
-        }
-
-        /// <summary>
-        /// 创建缓存同步信息的副本
-        /// </summary>
-        /// <returns>缓存同步信息副本</returns>
-        public CacheSyncInfo Clone()
-        {
-            return new CacheSyncInfo(TableName)
-            {
-                DataCount = DataCount,
-                EstimatedSize = EstimatedSize,
-                LastUpdateTime = LastUpdateTime,
-                ExpirationTime = ExpirationTime
-            };
-        }
-    }
 }

@@ -11,14 +11,14 @@ namespace RUINORERP.UI.SysConfig
         /// 清理所有正在使用的资源。
         /// </summary>
         /// <param name="disposing">如果应释放托管资源，为 true；否则为 false。</param>
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing && (components != null))
-            {
-                components.Dispose();
-            }
-            base.Dispose(disposing);
-        }
+        //protected override void Dispose(bool disposing)
+        //{
+        //    if (disposing && (components != null))
+        //    {
+        //        components.Dispose();
+        //    }
+        //    base.Dispose(disposing);
+        //}
 
         #region 组件设计器生成的代码
 
@@ -36,6 +36,7 @@ namespace RUINORERP.UI.SysConfig
             this.tabCacheManage = new Krypton.Navigator.KryptonPage();
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
             this.kryptonListBox1 = new Krypton.Toolkit.KryptonListBox();
+            this.listBoxTableList = new System.Windows.Forms.ListBox();
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.请求缓存ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.清空选中缓存ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -63,6 +64,10 @@ namespace RUINORERP.UI.SysConfig
             this.dgvTableStatistics = new Krypton.Toolkit.KryptonDataGridView();
             this.tabPageItemStats = new Krypton.Navigator.KryptonPage();
             this.dgvItemStatistics = new Krypton.Toolkit.KryptonDataGridView();
+            this.tabPageCacheMetadata = new Krypton.Navigator.KryptonPage();
+            this.kryptonPanel4 = new Krypton.Toolkit.KryptonPanel();
+            this.btnRefreshMetadata = new Krypton.Toolkit.KryptonButton();
+            this.dgvCacheMetadata = new Krypton.Toolkit.KryptonDataGridView();
             this.bindingSourceList = new System.Windows.Forms.BindingSource(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
@@ -104,6 +109,11 @@ namespace RUINORERP.UI.SysConfig
             ((System.ComponentModel.ISupportInitialize)(this.tabPageItemStats)).BeginInit();
             this.tabPageItemStats.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgvItemStatistics)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.tabPageCacheMetadata)).BeginInit();
+            this.tabPageCacheMetadata.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvCacheMetadata)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel4)).BeginInit();
+            this.kryptonPanel4.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceList)).BeginInit();
             this.SuspendLayout();
             // 
@@ -431,7 +441,8 @@ namespace RUINORERP.UI.SysConfig
             this.statisticsNavigator.PageBackStyle = Krypton.Toolkit.PaletteBackStyle.ControlClient;
             this.statisticsNavigator.Pages.AddRange(new Krypton.Navigator.KryptonPage[] {
             this.tabPageTableStats,
-            this.tabPageItemStats});
+            this.tabPageItemStats,
+            this.tabPageCacheMetadata});
             this.statisticsNavigator.SelectedIndex = 1;
             this.statisticsNavigator.Size = new System.Drawing.Size(798, 468);
             this.statisticsNavigator.TabIndex = 0;
@@ -474,6 +485,19 @@ namespace RUINORERP.UI.SysConfig
             this.tabPageItemStats.ToolTipTitle = "Page ToolTip";
             this.tabPageItemStats.UniqueName = "5f091cb828ba48a49c13006659c65802";
             // 
+            // tabPageCacheMetadata
+            // 
+            this.tabPageCacheMetadata.AutoHiddenSlideSize = new System.Drawing.Size(200, 200);
+            this.tabPageCacheMetadata.Controls.Add(this.kryptonPanel4);
+            this.tabPageCacheMetadata.Flags = 65534;
+            this.tabPageCacheMetadata.LastVisibleSet = true;
+            this.tabPageCacheMetadata.MinimumSize = new System.Drawing.Size(150, 50);
+            this.tabPageCacheMetadata.Name = "tabPageCacheMetadata";
+            this.tabPageCacheMetadata.Size = new System.Drawing.Size(796, 441);
+            this.tabPageCacheMetadata.Text = "缓存元数据";
+            this.tabPageCacheMetadata.ToolTipTitle = "Page ToolTip";
+            this.tabPageCacheMetadata.UniqueName = "a1b2c3d4e5f6789012345678901234567890";
+            // 
             // dgvItemStatistics
             // 
             this.dgvItemStatistics.AllowUserToAddRows = false;
@@ -485,6 +509,38 @@ namespace RUINORERP.UI.SysConfig
             this.dgvItemStatistics.ReadOnly = true;
             this.dgvItemStatistics.Size = new System.Drawing.Size(796, 441);
             this.dgvItemStatistics.TabIndex = 0;
+            // 
+            // kryptonPanel4
+            // 
+            this.kryptonPanel4.Controls.Add(this.btnRefreshMetadata);
+            this.kryptonPanel4.Controls.Add(this.dgvCacheMetadata);
+            this.kryptonPanel4.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.kryptonPanel4.Location = new System.Drawing.Point(0, 0);
+            this.kryptonPanel4.Name = "kryptonPanel4";
+            this.kryptonPanel4.Size = new System.Drawing.Size(796, 441);
+            this.kryptonPanel4.StateCommon.Color1 = System.Drawing.Color.LightSteelBlue;
+            this.kryptonPanel4.StateCommon.ColorStyle = Krypton.Toolkit.PaletteColorStyle.Solid;
+            this.kryptonPanel4.TabIndex = 0;
+            // 
+            // btnRefreshMetadata
+            // 
+            this.btnRefreshMetadata.Location = new System.Drawing.Point(680, 10);
+            this.btnRefreshMetadata.Name = "btnRefreshMetadata";
+            this.btnRefreshMetadata.Size = new System.Drawing.Size(100, 35);
+            this.btnRefreshMetadata.TabIndex = 1;
+            this.btnRefreshMetadata.Values.Text = "刷新元数据";
+            this.btnRefreshMetadata.Click += new System.EventHandler(this.btnRefreshMetadata_Click);
+            // 
+            // dgvCacheMetadata
+            // 
+            this.dgvCacheMetadata.AllowUserToAddRows = false;
+            this.dgvCacheMetadata.AllowUserToDeleteRows = false;
+            this.dgvCacheMetadata.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.dgvCacheMetadata.Location = new System.Drawing.Point(10, 55);
+            this.dgvCacheMetadata.Name = "dgvCacheMetadata";
+            this.dgvCacheMetadata.ReadOnly = true;
+            this.dgvCacheMetadata.Size = new System.Drawing.Size(776, 376);
+            this.dgvCacheMetadata.TabIndex = 0;
             // 
             // UCCacheManage
             // 
@@ -536,6 +592,12 @@ namespace RUINORERP.UI.SysConfig
             ((System.ComponentModel.ISupportInitialize)(this.tabPageItemStats)).EndInit();
             this.tabPageItemStats.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.dgvItemStatistics)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.tabPageCacheMetadata)).EndInit();
+            this.tabPageCacheMetadata.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.dgvCacheMetadata)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel4)).EndInit();
+            this.kryptonPanel4.ResumeLayout(false);
+            this.kryptonPanel4.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceList)).EndInit();
             this.ResumeLayout(false);
 
@@ -575,6 +637,10 @@ namespace RUINORERP.UI.SysConfig
         private Krypton.Toolkit.KryptonTextBox txtTableCount;
         private Krypton.Toolkit.KryptonDataGridView dgvTableStatistics;
         private Krypton.Toolkit.KryptonDataGridView dgvItemStatistics;
+        private Krypton.Navigator.KryptonPage tabPageCacheMetadata;
+        private Krypton.Toolkit.KryptonPanel kryptonPanel4;
+        private Krypton.Toolkit.KryptonButton btnRefreshMetadata;
+        private Krypton.Toolkit.KryptonDataGridView dgvCacheMetadata;
         private Krypton.Toolkit.KryptonListBox kryptonListBox1;
         
     }

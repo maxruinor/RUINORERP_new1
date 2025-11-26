@@ -33,7 +33,10 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         public static readonly CommandId CacheSubscription = new CommandId(CommandCategory.Cache, (byte)(CommandCatalog.Cache_CacheSubscription & 0xFF), "CacheSubscription");
 
-       
+        /// <summary>
+        /// 缓存元数据同步 - 用于同步缓存的元数据信息
+        /// </summary>
+        public static readonly CommandId CacheMetadataSync = new CommandId(CommandCategory.Cache, (byte)(CommandCatalog.Cache_CacheMetadataSync & 0xFF), "CacheMetadataSync");
 
         #endregion
     }

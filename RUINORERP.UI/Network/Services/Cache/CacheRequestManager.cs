@@ -96,16 +96,15 @@ namespace RUINORERP.UI.Network.Services.Cache
             // 检查取消令牌
             cancellationToken.ThrowIfCancellationRequested();
 
-
             // 创建Get操作的请求并执行，优化为单步处理
-            var cacheRequest = new CacheRequest
+            var cacheRequest = new CacheMetadataSyncRequest
             {
-                Operation = CacheOperation.Get
+                Operation = CacheSyncOperation.FullSync
             };
 
             try
             {
-                var cacheMetadata = await _communicationService.SendCommandWithResponseAsync<CacheResponse>(CacheCommands.CacheSync, cacheRequest, cancellationToken);
+                var cacheMetadata = await _communicationService.SendCommandWithResponseAsync<CacheMetadataSyncResponse>(CacheCommands.CacheSync, cacheRequest, cancellationToken);
             }
             catch (OperationCanceledException oex)
             {

@@ -45,9 +45,6 @@ namespace RUINORERP.Server.Network.DI
             // 注册服务器消息服务
             services.AddSingleton<ServerMessageService>();
 
-            // 注册服务器消息服务使用示例
-            services.AddSingleton<ServerMessageServiceUsageExample>();
-            services.AddSingleton<MessageServiceUsageExample>();
 
             // 注册缓存订阅管理器
             services.AddSingleton<CacheSubscriptionManager>(provider =>
@@ -85,6 +82,8 @@ namespace RUINORERP.Server.Network.DI
             // 注册通用广播服务
             services.AddSingleton<IGeneralBroadcastService, GeneralBroadcastService>();
             
+            // 注册缓存元数据同步服务
+            services.AddSingleton<CacheMetadataSyncService>();
 
         }
 
@@ -132,8 +131,6 @@ namespace RUINORERP.Server.Network.DI
             // 使用链式注册确保SessionService和ISessionService指向同一个实例
             builder.RegisterType<SessionService>().AsSelf().As<ISessionService>().SingleInstance();
             builder.RegisterType<ServerMessageService>().AsSelf().SingleInstance();
-            builder.RegisterType<ServerMessageServiceUsageExample>().AsSelf().SingleInstance();
-            builder.RegisterType<MessageServiceUsageExample>().AsSelf().SingleInstance();
             //    builder.RegisterType<UserService>().As<IUserService>().AsSelf().SingleInstance();
             //builder.RegisterType<SuperSocketAdapter>().AsSelf().SingleInstance();
             //  builder.RegisterType<FileStorageManager>().AsSelf().SingleInstance();
@@ -162,6 +159,9 @@ namespace RUINORERP.Server.Network.DI
 
             // 注册系统命令处理器
             builder.RegisterType<SystemCommandHandler>().AsSelf().InstancePerDependency();
+            
+            // 注册缓存元数据同步服务
+            builder.RegisterType<CacheMetadataSyncService>().AsSelf().SingleInstance();
         }
 
         /// <summary>

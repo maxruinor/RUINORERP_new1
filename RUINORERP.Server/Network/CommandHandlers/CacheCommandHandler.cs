@@ -1,39 +1,41 @@
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Threading;
-using RUINORERP.PacketSpec.Commands;
-using RUINORERP.PacketSpec.Commands.Cache;
-using RUINORERP.Server.Network.Interfaces.Services;
-using RUINORERP.Server.Network.Models;
+using Azure.Core;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Logging;
+using NetTaste;
 using Newtonsoft.Json;
-using RUINORERP.Business.CommService;
-using RUINORERP.PacketSpec.Models;
-using RUINORERP.Server.Comm;
-using RUINORERP.Server.BizService;
-using RUINORERP.Common;
-using RUINORERP.PacketSpec.Models.Responses;
-using RUINORERP.PacketSpec.Models.Core;
-using System;
 using Newtonsoft.Json.Linq;
+using RUINORERP.Business.Cache;
+using RUINORERP.Business.CommService;
+using RUINORERP.Common;
 using RUINORERP.Common.Helper;
 using RUINORERP.Model;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using NetTaste;
 using RUINORERP.Model.CommonModel;
+using RUINORERP.PacketSpec.Commands;
+using RUINORERP.PacketSpec.Commands.Cache;
 using RUINORERP.PacketSpec.Errors;
-using SuperSocket.Server.Abstractions.Session;
-using RUINORERP.Business.Cache;
-using System.Reflection;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
-using System.Windows.Forms;
-using System.IO.Packaging;
-using RUINORERP.PacketSpec.Serialization;
-using SqlSugar;
-using RUINORERP.PacketSpec.Models.Common;
+using RUINORERP.PacketSpec.Models;
 using RUINORERP.PacketSpec.Models.Cache;
+using RUINORERP.PacketSpec.Models.Common;
+using RUINORERP.PacketSpec.Models.Core;
+using RUINORERP.PacketSpec.Models.Responses;
+using RUINORERP.PacketSpec.Serialization;
+using RUINORERP.Server.BizService;
+using RUINORERP.Server.Comm;
+using RUINORERP.Server.Network.Interfaces.Services;
+using RUINORERP.Server.Network.Models;
+using RUINORERP.Server.Network.Services;
+using SqlSugar;
+using SuperSocket.Server.Abstractions.Session;
+using System;
+using System.Collections.Generic;
+using System.IO.Packaging;
+using System.Linq;
+using System.Reflection;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 
 namespace RUINORERP.Server.Network.CommandHandlers
@@ -47,6 +49,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
     {
         private readonly ISessionService _sessionService;
         private readonly CacheSubscriptionManager _subscriptionManager; // 使用统一的订阅管理器
+        private readonly CacheSyncMetadataManager _cacheSyncMetadataManager;
         protected ILogger<CacheCommandHandler> logger { get; set; }
         // 添加新的缓存管理器字段
         private readonly IEntityCacheManager _cacheManager;
@@ -61,12 +64,14 @@ namespace RUINORERP.Server.Network.CommandHandlers
             ISessionService sessionService,
             CacheSubscriptionManager subscriptionManager, // 通过DI注入
             IEntityCacheManager cacheManager, // 通过DI注入
+                 CacheSyncMetadataManager cacheSyncMetadataManager,
             ICacheSyncMetadata syncMetadata) // 通过DI注入
             : base(logger)
         {
             this.logger = logger;
             _sessionService = sessionService;
             _subscriptionManager = subscriptionManager;
+            _cacheSyncMetadataManager = cacheSyncMetadataManager ?? throw new ArgumentNullException(nameof(cacheSyncMetadataManager));
             _cacheManager = cacheManager;
             _syncMetadata = syncMetadata;
 
@@ -74,6 +79,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
             SetSupportedCommands(
                 CacheCommands.CacheOperation,
                 CacheCommands.CacheSync,
+                CacheCommands.CacheMetadataSync,
                 CacheCommands.CacheSubscription
             );
         }
@@ -99,6 +105,9 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     { CacheCommands.CacheOperation, HandleCacheOperationAsync },
                     // 处理缓存同步命令
                     { CacheCommands.CacheSync, HandleCacheSyncAsync },
+
+                    { CacheCommands.CacheMetadataSync, HandleCacheMetadataSync },
+
                     // 处理缓存订阅命令，内部根据SubscribeAction区分订阅和取消订阅
                     { CacheCommands.CacheSubscription, HandleCacheSubscriptionAsync }
                 };
@@ -178,6 +187,43 @@ namespace RUINORERP.Server.Network.CommandHandlers
             }
         }
 
+
+        /// <summary>
+        /// 处理缓存同步命令 - 负责服务器与客户端之间的缓存数据同步
+        /// </summary>
+        /// <param name="cmd">缓存同步命令</param>
+        /// <param name="cancellationToken">取消令牌</param>
+        /// <returns>处理结果</returns>
+        private async Task<IResponse> HandleCacheMetadataSync(QueuedCommand cmd, CancellationToken cancellationToken)
+        {
+            try
+            {
+                // 缓存同步命令处理逻辑 - 可以复用现有逻辑或实现新的同步机制
+                if (cmd.Packet.Request is CacheMetadataSyncRequest cacheRequest)
+                {
+
+                    // 获取当前服务器的所有缓存元数据
+                    var serverSyncData = _cacheSyncMetadataManager.GetAllTableSyncInfo();
+
+                    // 创建同步请求
+                    var cacheMetadataResponse = new CacheMetadataSyncResponse(serverSyncData.Count, 0, serverSyncData);
+
+                    // 返回成功响应
+                    return cacheMetadataResponse;
+                }
+                else
+                {
+                    return ResponseFactory.CreateSpecificErrorResponse(cmd.Packet, "不支持的缓存同步命令格式", UnifiedErrorCodes.Command_ValidationFailed);
+                }
+            }
+            catch (Exception ex)
+            {
+                LogError($"处理缓存同步异常: {ex.Message}", ex);
+                return ResponseFactory.CreateSpecificErrorResponse(cmd.Packet, $"处理缓存同步异常: {ex.Message}", UnifiedErrorCodes.System_InternalError);
+            }
+        }
+
+
         /// <summary>
         /// 处理缓存订阅命令 - 处理缓存订阅和取消订阅操作
         /// 支持单个表订阅、单个表取消订阅和批量取消所有表订阅
@@ -251,7 +297,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                         else
                         {
                             // 单个表取消订阅
-                             _subscriptionManager.RemoveSubscriptionAsync(tableName, sessionId);
+                            _subscriptionManager.RemoveSubscriptionAsync(tableName, sessionId);
                             success = true;
                             message = $"客户端取消订阅缓存: 会话={sessionId}, 表名={tableName}";
                             LogInfo(message);

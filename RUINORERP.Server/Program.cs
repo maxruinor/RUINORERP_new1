@@ -39,6 +39,7 @@ using RUINORERP.Server.SmartReminder.Strategies.SafetyStockStrategies;
 using Microsoft.Extensions.Options;
 using RUINORERP.Model.ConfigModel;
 using RUINORERP.Business.BizMapperService;
+using RUINORERP.Common.SnowflakeIdHelper;
 
 namespace RUINORERP.Server
 {
@@ -85,6 +86,9 @@ namespace RUINORERP.Server
         [STAThread]
         static async Task Main()
         {
+            // 初始化雪花ID生成器
+            new IdHelperBootstrapper().SetWorkderId(1).Boot();
+
 #if DEBUG
             // 在DEBUG模式下，检查是否有特殊命令行参数来允许多实例运行
             bool allowMultipleInstances = Environment.GetCommandLineArgs().Contains("--allow-multiple-instances");

@@ -405,7 +405,7 @@ namespace RUINORERP.Business.BizMapperService
 
             if (entityInfo == null)
             {
-                _logger.LogDebug("未找到实体类型 {0} 对应的实体信息", entityType.FullName);
+                //_logger.LogDebug("未找到实体类型 {0} 对应的实体信息", entityType.FullName);
                 return (0, null);
             }
 

@@ -1617,8 +1617,6 @@ namespace RUINORERP.Server.Controls
                     // 使用新的SessionService获取会话信息
 
                     #region
-                    var request = new MessageRequest(MessageType.Prompt, "");
-
                     var response = await _serverMessageService.SendPopupMessageAsync(
                         user.用户名,
                         message,
@@ -2002,16 +2000,9 @@ namespace RUINORERP.Server.Controls
                         MessageBox.Show($"用户 {userInfo.用户名} 的会话不存在或已断开连接", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         return;
                     }
-
-                    // 显示发送消息对话框
-                    //using (var form = new frmMessager(userInfo, _sessionService))
-                    //{
-                    //    if (form.ShowDialog() == DialogResult.OK)
-                    //    {
-                    //        frmMainNew.Instance.PrintInfoLog($"已向用户 {userInfo.用户名} 发送消息: {form.Message}");
-                    //        MessageBox.Show("消息发送成功", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    //    }
-                    //}
+                    var userList = new List<UserInfo>();
+                    userList.Add(userInfo);
+                    HandleSendMessage(userList);
                 }
             }
             catch (Exception ex)
@@ -2200,6 +2191,11 @@ namespace RUINORERP.Server.Controls
             {
                 MessageBox.Show($"推送系统配置时出错: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+        }
+
+        private void 发消息给客户端ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+
         }
     }
 

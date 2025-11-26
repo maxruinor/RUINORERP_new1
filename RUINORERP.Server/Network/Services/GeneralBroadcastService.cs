@@ -257,10 +257,10 @@ namespace RUINORERP.Server.Network.Services
                     if (session != null)
                     {
                         // 使用SessionService中的SendCommandAndWaitForResponseAsync方法发送请求并等待响应
-                        var response = await _sessionManager.SendCommandAndWaitForResponseAsync(session.SessionID, CommandId.FromUInt16(commandId), request);
+                        var response = await _sessionManager.SendCommandAndWaitForResponseAsync(session.SessionID, commandId, request);
                         if (response?.Response is GeneralResponse generalResponse)
                         {
-                            _logger.LogInformation($"向会话 {session.SessionID} 发送请求并接收响应成功");
+                            _logger.Debug($"向会话 {session.SessionID} 发送请求并接收响应成功");
                             GeneralResponseList.Add(generalResponse);
                         }
                         else

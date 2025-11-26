@@ -51,6 +51,8 @@ namespace RUINORERP.Server.Controls
             dataGridViewTableStats = new System.Windows.Forms.DataGridView();
             tabPageItemStats = new System.Windows.Forms.TabPage();
             dataGridViewItemStats = new System.Windows.Forms.DataGridView();
+            tabPageCacheMetadata = new System.Windows.Forms.TabPage();
+            dataGridViewCacheMetadata = new System.Windows.Forms.DataGridView();
             panel1 = new System.Windows.Forms.Panel();
             btnResetStatistics = new System.Windows.Forms.Button();
             btnRefreshStatistics = new System.Windows.Forms.Button();
@@ -246,7 +248,7 @@ namespace RUINORERP.Server.Controls
             tabPageCacheStatistics.Margin = new System.Windows.Forms.Padding(4);
             tabPageCacheStatistics.Name = "tabPageCacheStatistics";
             tabPageCacheStatistics.Padding = new System.Windows.Forms.Padding(4);
-            tabPageCacheStatistics.Size = new System.Drawing.Size(925, 653);
+            tabPageCacheStatistics.Size = new System.Drawing.Size(925, 631);
             tabPageCacheStatistics.TabIndex = 1;
             tabPageCacheStatistics.Text = "缓存统计";
             tabPageCacheStatistics.UseVisualStyleBackColor = true;
@@ -260,7 +262,7 @@ namespace RUINORERP.Server.Controls
             tabControl2.Margin = new System.Windows.Forms.Padding(4);
             tabControl2.Name = "tabControl2";
             tabControl2.SelectedIndex = 0;
-            tabControl2.Size = new System.Drawing.Size(917, 483);
+            tabControl2.Size = new System.Drawing.Size(917, 461);
             tabControl2.TabIndex = 2;
             // 
             // tabPageTableStats
@@ -270,7 +272,7 @@ namespace RUINORERP.Server.Controls
             tabPageTableStats.Margin = new System.Windows.Forms.Padding(4);
             tabPageTableStats.Name = "tabPageTableStats";
             tabPageTableStats.Padding = new System.Windows.Forms.Padding(4);
-            tabPageTableStats.Size = new System.Drawing.Size(909, 453);
+            tabPageTableStats.Size = new System.Drawing.Size(909, 431);
             tabPageTableStats.TabIndex = 0;
             tabPageTableStats.Text = "按表统计";
             tabPageTableStats.UseVisualStyleBackColor = true;
@@ -286,7 +288,7 @@ namespace RUINORERP.Server.Controls
             dataGridViewTableStats.Name = "dataGridViewTableStats";
             dataGridViewTableStats.ReadOnly = true;
             dataGridViewTableStats.RowTemplate.Height = 23;
-            dataGridViewTableStats.Size = new System.Drawing.Size(901, 445);
+            dataGridViewTableStats.Size = new System.Drawing.Size(901, 423);
             dataGridViewTableStats.TabIndex = 0;
             // 
             // tabPageItemStats
@@ -296,7 +298,7 @@ namespace RUINORERP.Server.Controls
             tabPageItemStats.Margin = new System.Windows.Forms.Padding(4);
             tabPageItemStats.Name = "tabPageItemStats";
             tabPageItemStats.Padding = new System.Windows.Forms.Padding(4);
-            tabPageItemStats.Size = new System.Drawing.Size(909, 453);
+            tabPageItemStats.Size = new System.Drawing.Size(909, 431);
             tabPageItemStats.TabIndex = 1;
             tabPageItemStats.Text = "缓存项统计";
             tabPageItemStats.UseVisualStyleBackColor = true;
@@ -312,7 +314,7 @@ namespace RUINORERP.Server.Controls
             dataGridViewItemStats.Name = "dataGridViewItemStats";
             dataGridViewItemStats.ReadOnly = true;
             dataGridViewItemStats.RowTemplate.Height = 23;
-            dataGridViewItemStats.Size = new System.Drawing.Size(901, 445);
+            dataGridViewItemStats.Size = new System.Drawing.Size(901, 423);
             dataGridViewItemStats.TabIndex = 0;
             // 
             // panel1

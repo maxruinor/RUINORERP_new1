@@ -6,38 +6,39 @@
 // 作者：Watson
 // 时间：01/11/2024 00:33:16
 // **************************************
-using System;
-using System.Collections.Generic;
-using System.Linq.Expressions;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
-using RUINORERP.IServices;
-using RUINORERP.Repository.UnitOfWorks;
-using RUINORERP.Model;
+using AutoMapper;
+using Castle.DynamicProxy.Generators.Emitters.SimpleAST;
 using FluentValidation.Results;
-using RUINORERP.Services;
-
-using RUINORERP.Model.Base;
-using RUINORERP.Common.Extensions;
-using RUINORERP.IServices.BASE;
-using RUINORERP.Model.Context;
-using System.Linq;
+using Microsoft.Extensions.Logging;
 using RUINOR.Core;
+using RUINORERP.Business.BizMapperService;
+using RUINORERP.Business.CommService;
+using RUINORERP.Business.Config;
+using RUINORERP.Business.Security;
+using RUINORERP.Business.StatusManagerService;
+using RUINORERP.Common.Extensions;
 using RUINORERP.Common.Helper;
 using RUINORERP.Global;
-using RUINORERP.Business.Security;
 using RUINORERP.Global.EnumExt;
-using AutoMapper;
-using RUINORERP.Business.StatusManagerService;
-using IMapper = AutoMapper.IMapper;
+using RUINORERP.IServices;
+using RUINORERP.IServices.BASE;
+using RUINORERP.Model;
+using RUINORERP.Model.Base;
+using RUINORERP.Model.ConfigModel;
+using RUINORERP.Model.Context;
+using RUINORERP.Repository.UnitOfWorks;
+using RUINORERP.Services;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
-using System.Windows.Forms;
-using RUINORERP.Business.CommService;
-using RUINORERP.Business.BizMapperService;
-using Castle.DynamicProxy.Generators.Emitters.SimpleAST;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
+using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
+using IMapper = AutoMapper.IMapper;
 
 namespace RUINORERP.Business
 {
@@ -239,10 +240,15 @@ namespace RUINORERP.Business
                     // 非平台来源且没有收款信息时，返回错误
                     if (!entity.PayeeInfoID.HasValue && !entity.IsFromPlatform.Value)
                     {
-                        rmrs.ErrorMsg = $"{entity.PaymentNo}付款时，对方的收款信息必填!";
-                        rmrs.Succeeded = false;
-                        rmrs.ReturnObject = entity as T;
-                        return rmrs;
+                        var configManagerService = _appContext.GetRequiredService<IConfigManagerService>();
+                       var _validatorConfig = configManagerService.GetConfig<GlobalValidatorConfig>();
+                        if(_validatorConfig.收付款账户必填)
+                        {
+                            rmrs.ErrorMsg = $"{entity.PaymentNo}付款时，对方的收款信息必填!";
+                            rmrs.Succeeded = false;
+                            rmrs.ReturnObject = entity as T;
+                            return rmrs;
+                        }
                     }
                 }
 

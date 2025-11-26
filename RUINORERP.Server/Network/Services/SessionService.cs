@@ -890,7 +890,7 @@ namespace RUINORERP.Server.Network.Services
             string sessionID,
             CommandId commandId,
             TRequest request,
-            int timeoutMs = 30000,
+            int timeoutMs = 10000,
             CancellationToken ct = default)
             where TRequest : class, IRequest
         {
@@ -940,7 +940,7 @@ namespace RUINORERP.Server.Network.Services
 
                     return await tcs.Task;
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
                     // 从待处理请求中移除
                     _pendingRequests.TryRemove(requestId, out _);

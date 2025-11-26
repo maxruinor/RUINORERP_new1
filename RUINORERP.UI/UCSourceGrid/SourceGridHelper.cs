@@ -3159,7 +3159,7 @@ namespace RUINORERP.UI.UCSourceGrid
                 var schemaInfo = _tableSchemaManager.GetSchemaInfo(tableName);
                 if (schemaInfo != null)
                 {
-
+                    //从这里取缓存用于加载下拉值的选项
                     var cachelist = _cacheManager.GetEntityList<object>(tableName);
                     if (cachelist != null)
                     {

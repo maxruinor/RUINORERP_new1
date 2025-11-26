@@ -120,29 +120,30 @@ namespace RUINORERP.UI.IM
             {
 
                 if (MessageData == null) return;
-
+                Content = MessageData.Content;
+                Title = MessageData.Title;
                 // 设置基本信息
                 if (txtSender != null) txtSender.Text = MessageData.Sender ?? "系统";
                 if (txtSubject != null) txtSubject.Text = MessageData.Title ?? "消息";
                 if (txtContent != null) txtContent.Text = MessageData.Content;
 
                 // 根据消息类型设置不同的显示样式
-                //switch (MessageData.MessageType)
-                //{                    
-                //    case MessageType.Prompt:
-                //        this.Icon = Properties.Resources.info;
-                //        break;
-                //    case MessageType.BusinessData:
-                //        this.Icon = Properties.Resources.Business;
-                //        break;
-                //    case MessageType.System:
-                //        this.Icon = Properties.Resources.System;
-                //        break;
-                //    default:
-                //        this.Icon = Properties.Resources.Message;
-                //        break;
-                //}
-
+                switch (MessageData.MessageType)
+                {                    
+                    //case MessageType.Prompt:
+                    //    this.Icon = Properties.Resources.info;
+                    //    break;
+                    //case MessageType.BusinessData:
+                    //    this.Icon = Properties.Resources.Business;
+                    //    break;
+                    //case MessageType.System:
+                    //    this.Icon = Properties.Resources.System;
+                    //    break;
+                    //default:
+                    //    this.Icon = Properties.Resources.Message;
+                    //    break;
+                }
+                
                 // 设置确认相关控件的可见性
                 if (MessageData.NeedConfirmation)
                 {
@@ -155,7 +156,7 @@ namespace RUINORERP.UI.IM
                 if (MessageData.BizId >= 0)
                 {
                     // 可以在这里显示业务数据相关信息
-                    Logger.LogDebug($"显示业务消息: 类型={MessageData.BizType}, ID={MessageData.BizId}");
+                    
                 }
             }
             catch (Exception ex)

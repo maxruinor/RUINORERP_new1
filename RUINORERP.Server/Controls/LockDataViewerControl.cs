@@ -11,16 +11,15 @@ using RUINORERP.Server.Comm;
 using RUINORERP.Business.CommService;
 using Microsoft.Extensions.DependencyInjection;
 using RUINORERP.Server.Network.Services;
-using System.Text;
 using RUINORERP.Server.Network.Interfaces.Services;
 
 namespace RUINORERP.Server.Controls
 {
-    public partial class DataViewerControl : UserControl
+    public partial class LockDataViewerControl : UserControl
     {
         private System.Windows.Forms.Timer refreshTimer;
 
-        public DataViewerControl()
+        public LockDataViewerControl()
         {
             InitializeComponent();
             InitializeTimer();

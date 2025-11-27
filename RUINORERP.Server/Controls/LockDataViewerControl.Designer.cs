@@ -1,6 +1,6 @@
 namespace RUINORERP.Server.Controls
 {
-    partial class DataViewerControl
+    partial class LockDataViewerControl
     {
         /// <summary> 
         /// Required designer variable.

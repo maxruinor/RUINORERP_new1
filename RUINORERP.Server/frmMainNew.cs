@@ -1279,9 +1279,9 @@ namespace RUINORERP.Server
                     var globalConfigControl = new GlobalConfigControl();
                     globalConfigControl.Dock = DockStyle.Fill;
                     return globalConfigControl;
-                case "数据查看":
-                    // 创建数据查看控件实例
-                    var dataViewerControl = new DataViewerControl();
+                case "锁定数据管理":
+                    // 创建锁定数据管理控件实例
+                    var dataViewerControl = new LockDataViewerControl();
                     dataViewerControl.Dock = DockStyle.Fill;
                     return dataViewerControl;
                 case "注册信息":
@@ -1936,13 +1936,13 @@ namespace RUINORERP.Server
         }
 
         /// <summary>
-        /// 数据查看按钮点击事件
+        /// 锁定数据管理按钮点击事件
         /// </summary>
         /// <param name="sender">事件源</param>
         /// <param name="e">事件参数</param>
         private void buttonDataViewer_Click(object sender, EventArgs e)
         {
-            ShowTabPage("数据查看");
+            ShowTabPage("锁定数据管理");
         }
 
         /// <summary>
@@ -2016,16 +2016,16 @@ namespace RUINORERP.Server
         }
 
         /// <summary>
-        /// 创建数据查看控件
+        /// 创建锁定数据管理控件
         /// </summary>
-        /// <returns>数据查看控件</returns>
+        /// <returns>锁定数据管理控件</returns>
         private Control CreateDataViewerControl()
         {
             var panel = new Panel();
             panel.Dock = DockStyle.Fill;
 
             var label = new Label();
-            label.Text = "数据查看功能开发中...";
+            label.Text = "锁定数据管理功能开发中...";
             label.AutoSize = true;
             label.Font = new Font("微软雅黑", 12f);
             label.ForeColor = Color.Gray;
@@ -2211,13 +2211,13 @@ namespace RUINORERP.Server
         }
 
         /// <summary>
-        /// 数据查看菜单项点击事件
+        /// 锁定数据管理菜单项点击事件
         /// </summary>
         /// <param name="sender">事件源</param>
         /// <param name="e">事件参数</param>
         private void dataViewerToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            ShowTabPage("数据查看");
+            ShowTabPage("锁定数据管理");
         }
 
         /// <summary>

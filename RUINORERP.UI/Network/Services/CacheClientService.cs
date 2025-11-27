@@ -190,13 +190,13 @@ namespace RUINORERP.UI.Network.Services
 
                 try
                 {
-                    if (packet.Request!=null)
+                    if (packet.Request != null)
                     {
 
                     }
-                    if (packet.Request is CacheRequest  cacheRequest)
+                    if (packet.Request is CacheRequest cacheRequest)
                     {
-                        if(cacheRequest.Operation== CacheOperation.Manage)
+                        if (cacheRequest.Operation == CacheOperation.Manage)
                         {
 
                         }
@@ -725,7 +725,10 @@ namespace RUINORERP.UI.Network.Services
                     Timestamp = DateTime.UtcNow
                 };
 
-
+                if (request.Operation == CacheOperation.Remove)
+                {
+                    request.PrimaryKeyValue = e.Value;
+                }
 
                 // 根据操作类型设置请求数据
                 if (e.Value != null)

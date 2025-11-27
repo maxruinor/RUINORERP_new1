@@ -39,10 +39,12 @@ namespace RUINORERP.Business.Cache
                     // 尝试从依赖注入容器获取实例
                     try
                     {
-                        _defaultSyncMetadata = _serviceProvider.GetRequiredService<CacheSyncMetadataManager>();
+                        _defaultSyncMetadata = _serviceProvider.GetRequiredService<ICacheSyncMetadata>();
                     }
                     catch (Exception)
                     {
+                        // 记录异常并使用后备策略
+                      //  _logger?.LogWarning(ex, "无法从依赖注入容器获取ICacheSyncMetadata实例");
                         // 发生异常时创建新实例
                         _defaultSyncMetadata = new CacheSyncMetadataManager();
                     }

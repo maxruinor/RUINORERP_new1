@@ -66,7 +66,14 @@ namespace RUINORERP.Business.DI
                 .PropertiesAutowired();
             // 实体业务映射服务已通过AddEntityInfoServicesWithMappings方法注册
             // 此处不再重复注册，以避免冲突
-         
+
+            // 注册缓存同步元数据管理器，用于管理缓存同步状态信息
+            // 直接使用Autofac的单例机制，确保整个应用生命周期中只有一个实例
+            builder.RegisterType<CacheSyncMetadataManager>()
+                .As<ICacheSyncMetadata>()
+                .AsSelf()
+                .SingleInstance()
+                .PropertiesAutowired();
 
 
             // 注册新的优化缓存管理器
@@ -89,12 +96,7 @@ namespace RUINORERP.Business.DI
                 .As<ICacheDataProvider>()
                 .InstancePerLifetimeScope()
                 .PropertiesAutowired();
-                
-            // 注册缓存同步元数据管理器，用于管理缓存同步状态信息
-            builder.RegisterType<CacheSyncMetadataManager>()
-                .As<ICacheSyncMetadata>()
-                .SingleInstance()
-                .PropertiesAutowired();
+
                 
             // 注册缓存订阅管理器
             builder.RegisterType<CacheSubscriptionManager>()

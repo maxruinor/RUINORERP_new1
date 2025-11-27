@@ -519,11 +519,35 @@ namespace RUINORERP.Business.Cache
                     return result;
                 }
 
+                // 处理缓存中的列表类型与请求类型完全匹配的情况
                 if (cachedList is List<T> typedList)
                 {
                     return typedList;
                 }
 
+                // 处理缓存中的列表类型与请求类型不完全匹配的情况
+                // 检查cachedList是否是任何List<>类型（但不是List<T>）
+                if (cachedList != null && cachedList.GetType().IsGenericType && 
+                    cachedList.GetType().GetGenericTypeDefinition() == typeof(List<>))
+                {
+                    try
+                    {
+                        // 尝试使用JSON序列化/反序列化进行类型转换
+                        // 这是一个简单且可靠的方式来处理不同类型间的转换
+                        var json = Newtonsoft.Json.JsonConvert.SerializeObject(cachedList);
+                        var convertedList = Newtonsoft.Json.JsonConvert.DeserializeObject<List<T>>(json);
+                        
+                        _logger?.LogDebug($"成功将缓存中的列表类型 {cachedList.GetType().FullName} 转换为 {typeof(List<T>).FullName}");
+                        return convertedList ?? new List<T>();
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger?.LogWarning(ex, $"尝试将缓存中的列表类型 {cachedList.GetType().FullName} 转换为 {typeof(List<T>).FullName} 时发生错误");
+                        // 转换失败时继续尝试其他处理方式
+                    }
+                }
+
+                // 处理List<object>类型
                 if (cachedList is List<object> objectList)
                 {
                     return objectList.OfType<T>().ToList();
@@ -1597,8 +1621,7 @@ namespace RUINORERP.Business.Cache
                                 isReplacingDataWithLessOrEmpty = true;
                                 // 这里可以添加断点或日志记录，帮助调试
                                 System.Diagnostics.Debug.WriteLine($"[缓存覆盖警告] 表 {tableName} - 缓存键: {cacheKey} 原数据行数: {existingList.Count}, 新数据行数: {newList.Count}");
-                                // 可以在这里设置条件断点
-                                // System.Diagnostics.Debugger.Break(); // 如果需要强制中断调试，可以取消注释这行
+                             
                             }
                         }
                     }

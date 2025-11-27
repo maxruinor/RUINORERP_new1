@@ -296,7 +296,7 @@ namespace RUINORERP.UI
 
                                         // 添加连接超时控制，防止无限等待
                                         var connectTask = MainForm.Instance.communicationService.ConnectAsync(serverIp, serverPort);
-                                        var timeoutTask = Task.Delay(TimeSpan.FromSeconds(10)); // 10秒连接超时
+                                        var timeoutTask = Task.Delay(TimeSpan.FromSeconds(15)); // 10秒连接超时
 
                                         var completedTask = await Task.WhenAny(connectTask, timeoutTask);
 

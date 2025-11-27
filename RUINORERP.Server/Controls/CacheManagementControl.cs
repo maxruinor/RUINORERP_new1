@@ -2,6 +2,7 @@ using HLH.Lib.Helper;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using static Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using RUINORERP.Business.Cache;
@@ -33,6 +34,25 @@ using System.Windows.Forms;
 
 namespace RUINORERP.Server.Controls
 {
+    /// <summary>
+    /// 缓存管理控制类
+    /// 
+    /// <remarks>
+    /// 缓存管理最佳实践说明：
+    /// 1. 避免直接依赖于ICacheSyncMetadata接口，应通过IEntityCacheManager间接访问缓存同步元数据功能
+    ///    这是因为两个服务实例在初始化顺序上可能存在差异，导致不一致的问题
+    /// 
+    /// 2. 依赖注入注意事项：
+    ///    - 依赖注入容器（Autofac）的初始化是按顺序进行的，某些服务可能在应用生命周期早期无法获取
+    ///    - 总是使用GetFromFac方法获取服务实例，并添加适当的null检查
+    ///    - 避免在构造函数中执行复杂的初始化逻辑，特别是依赖于其他尚未初始化的服务时
+    /// 
+    /// 3. 缓存同步机制：
+    ///    - EntityCacheManager内部包含ICacheSyncMetadata的引用，通过反射可以安全访问
+    ///    - 当需要访问缓存同步元数据时，优先使用EntityCacheManager内部的实例
+    ///    - 作为备选方案，才直接从容器中获取ICacheSyncMetadata服务
+    /// </remarks>
+    /// </summary>
     public partial class CacheManagementControl : UserControl
     {
         private readonly ISessionService _sessionService;
@@ -43,15 +63,17 @@ namespace RUINORERP.Server.Controls
         private DateTime _lastTableStatsRefresh = DateTime.MinValue;
         private DateTime _lastItemStatsRefresh = DateTime.MinValue;
         private DateTime _lastMetadataRefresh = DateTime.MinValue;
-        private readonly ICacheSyncMetadata _cacheSyncMetadataManager;
+        // 注意：不再直接依赖ICacheSyncMetadata接口，而是通过_entityCacheManager间接访问
+
         public CacheManagementControl()
         {
             InitializeComponent();
-            _sessionService = Program.ServiceProvider.GetRequiredService<ISessionService>();
-            _logger = Program.ServiceProvider.GetRequiredService<ILogger<CacheManagementControl>>();
-            _entityCacheManager = Program.ServiceProvider.GetRequiredService<IEntityCacheManager>();
-            _initializationService = Program.ServiceProvider.GetRequiredService<EntityCacheInitializationService>();
-            _cacheSyncMetadataManager = Program.ServiceProvider.GetRequiredService<CacheSyncMetadataManager>();
+            // 统一使用Startup.GetFromFac方法，确保与其他地方获取相同的实例
+            _sessionService = Startup.GetFromFac<ISessionService>();
+            _logger = Startup.GetFromFac<ILogger<CacheManagementControl>>();
+            _entityCacheManager = Startup.GetFromFac<IEntityCacheManager>();
+            _initializationService = Startup.GetFromFac<EntityCacheInitializationService>();
+            // 移除对ICacheSyncMetadata的直接依赖，改为通过_entityCacheManager间接访问
 
             // 初始化定时刷新器
             InitializeAutoRefreshTimer();
@@ -67,7 +89,7 @@ namespace RUINORERP.Server.Controls
             LoadTableStatistics();
             LoadItemStatistics();
             LoadCacheMetadata();
-            
+
             // 初始化刷新时间戳
             DateTime now = DateTime.Now;
             _lastTableStatsRefresh = now;
@@ -96,7 +118,7 @@ namespace RUINORERP.Server.Controls
                 // 初始化缓存项统计表格
                 dataGridViewItemStats.AutoGenerateColumns = false;
                 dataGridViewItemStats.ColumnHeadersDefaultCellStyle.WrapMode = DataGridViewTriState.False;
-                
+
                 dataGridViewItemStats.Columns.Clear();
                 dataGridViewItemStats.Columns.Add(new DataGridViewTextBoxColumn { Name = "CacheKey", HeaderText = "缓存键", DataPropertyName = "CacheKey", Width = 200 });
                 dataGridViewItemStats.Columns.Add(new DataGridViewTextBoxColumn { Name = "TypeName", HeaderText = "类型", DataPropertyName = "TypeName", Width = 120 });
@@ -109,7 +131,7 @@ namespace RUINORERP.Server.Controls
                 // 初始化缓存元数据表格
                 dataGridViewCacheMetadata.AutoGenerateColumns = false;
                 dataGridViewCacheMetadata.ColumnHeadersDefaultCellStyle.WrapMode = DataGridViewTriState.False;
-                
+
                 dataGridViewCacheMetadata.Columns.Clear();
                 dataGridViewCacheMetadata.Columns.Add(new DataGridViewTextBoxColumn { Name = "TableName", HeaderText = "表名", DataPropertyName = "TableName", Width = 150 });
                 dataGridViewCacheMetadata.Columns.Add(new DataGridViewTextBoxColumn { Name = "DataCount", HeaderText = "数据数量", DataPropertyName = "DataCount", Width = 80 });
@@ -513,7 +535,7 @@ namespace RUINORERP.Server.Controls
                         // 获取缓存数据
                         // 使用构造函数中注入的缓存管理器实例，确保与初始化服务使用的是同一个实例
                         var cacheManager = _entityCacheManager;
-                            var jArray = cacheManager.GetEntityListByTableName(tableName);
+                        var jArray = cacheManager.GetEntityListByTableName(tableName);
                         if (jArray == null || jArray.Count == 0)
                         {
                             this.Invoke(new Action(() =>
@@ -658,7 +680,7 @@ namespace RUINORERP.Server.Controls
                     {
                         // 使用构造函数中注入的初始化服务实例，确保与当前缓存管理器使用的是同一个实例
                         // 调用方法初始化单个表的缓存
-                         _initializationService.InitializeCacheForTable(tableName);
+                        _initializationService.InitializeCacheForTable(tableName);
                     }
                     catch (Exception ex)
                     {
@@ -776,19 +798,92 @@ namespace RUINORERP.Server.Controls
         }
 
         /// <summary>
+        /// 获取所有表的缓存同步信息
+        /// 通过_entityCacheManager间接访问ICacheSyncMetadata功能
+        /// </summary>
+        /// <remarks>
+        /// 【根本原因说明】为什么通过_entityCacheManager可以获取正确的元数据字典值：
+        /// 
+        /// 1. EntityCacheManager在构造函数中接收ICacheSyncMetadata作为可选依赖
+        ///    (private readonly ICacheSyncMetadata _cacheSyncMetadata)
+        /// 
+        /// 2. 当通过依赖注入容器解析EntityCacheManager时，容器会正确地将同一个ICacheSyncMetadata实例
+        ///    注入到EntityCacheManager中，而EntityCacheManager内部会使用这个实例进行所有缓存同步操作
+        /// 
+        /// 3. 直接注入ICacheSyncMetadata可能会因为服务注册顺序或容器初始化问题导致获取到不同的实例
+        ///    或者在某些场景下该服务尚未完全初始化
+        /// 
+        /// 4. 通过反射访问EntityCacheManager内部的_cacheSyncMetadata字段，确保我们使用的是
+        ///    与EntityCacheManager实际工作时完全相同的ICacheSyncMetadata实例
+        /// 
+        /// 5. 这解释了为什么直接使用ICacheSyncMetadata可能会导致元数据不一致，而通过_entityCacheManager
+        ///    间接访问却能获取到正确的值
+        /// </remarks>
+        /// <returns>所有表的缓存同步信息字典</returns>
+        private Dictionary<string, CacheSyncInfo> GetAllTableSyncInfo()
+        {
+            try
+            {
+                // 尝试从_entityCacheManager中获取ICacheSyncMetadata实例
+                Type entityCacheManagerType = _entityCacheManager.GetType();
+                var fieldInfo = entityCacheManagerType.GetField("_cacheSyncMetadata", BindingFlags.NonPublic | BindingFlags.Instance);
+                if (fieldInfo != null)
+                {
+                    var cacheSyncMetadata = fieldInfo.GetValue(_entityCacheManager) as ICacheSyncMetadata;
+                    if (cacheSyncMetadata != null)
+                    {
+                        return cacheSyncMetadata.GetAllTableSyncInfo();
+                    }
+                    else
+                    {
+                        _logger?.LogWarning("EntityCacheManager中的_cacheSyncMetadata字段存在但为空");
+                    }
+                }
+                else
+                {
+                    _logger?.LogWarning("无法通过反射获取EntityCacheManager中的_cacheSyncMetadata字段");
+                }
+
+                // 备选方案：尝试直接获取ICacheSyncMetadata服务
+                try
+                {
+                    var cacheSyncMetadata = Startup.GetFromFac<ICacheSyncMetadata>();
+                    if (cacheSyncMetadata != null)
+                    {
+                        return cacheSyncMetadata.GetAllTableSyncInfo();
+                    }
+                    else
+                    {
+                        _logger?.LogWarning("从依赖注入容器获取到的ICacheSyncMetadata实例为空");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // 如果获取失败，记录详细日志但不抛出异常
+                    _logger?.LogWarning(ex, "无法从依赖注入容器获取ICacheSyncMetadata实例");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "获取缓存同步元数据失败");
+            }
+
+            // 返回空字典作为后备方案
+            return new Dictionary<string, CacheSyncInfo>();
+        }
+
+        /// <summary>
         /// 加载缓存元数据
         /// </summary>
         private void LoadCacheMetadata()
         {
             try
             {
-                // 获取缓存同步元数据管理器
-               
-                if (_cacheSyncMetadataManager != null)
+                // 获取所有表的缓存同步元数据
+                var allSyncInfo = GetAllTableSyncInfo();
+
+                if (allSyncInfo.Any())
                 {
-                    // 获取所有表的缓存同步元数据
-                    var allSyncInfo = _cacheSyncMetadataManager.GetAllTableSyncInfo();
-                    
                     // 直接使用现有的CacheSyncInfo模型，添加格式化属性用于显示
                     var viewModelList = allSyncInfo.Values.Select(info => new
                     {
@@ -803,14 +898,15 @@ namespace RUINORERP.Server.Controls
 
                     // 绑定数据到DataGridView
                     dataGridViewCacheMetadata.DataSource = viewModelList;
-                    
+
                     // 更新状态栏显示记录数
                     toolStripStatusLabel1.Text = $"缓存元数据已更新 - 共 {viewModelList.Count} 个表";
+
                 }
                 else
                 {
                     dataGridViewCacheMetadata.DataSource = null;
-                    _logger?.LogWarning("无法获取CacheSyncMetadataManager实例");
+                    _logger?.LogWarning("无法获取缓存同步元数据信息");
                 }
             }
             catch (Exception ex)
@@ -875,20 +971,20 @@ namespace RUINORERP.Server.Controls
                 if (tabControl1.SelectedTab == tabPageCacheStatistics)
                 {
                     DateTime now = DateTime.Now;
-                    
+
                     // 按表统计：每60秒刷新一次
-                    if (tabControl2.SelectedTab == tabPageTableStats && 
+                    if (tabControl2.SelectedTab == tabPageTableStats &&
                         (now - _lastTableStatsRefresh).TotalSeconds >= 60)
                     {
                         LoadTableStatistics();
                         _lastTableStatsRefresh = now;
                     }
-                    
+
                     // 缓存项统计：不自动刷新（数据量大，手动刷新更合适）
                     // 这里保持不自动刷新，避免性能影响
-                    
+
                     // 缓存元数据：每30秒刷新一次
-                    if (tabControl2.SelectedTab == tabPageCacheMetadata && 
+                    if (tabControl2.SelectedTab == tabPageCacheMetadata &&
                         (now - _lastMetadataRefresh).TotalSeconds >= 30)
                     {
                         LoadCacheMetadata();
@@ -983,7 +1079,7 @@ namespace RUINORERP.Server.Controls
                     _autoRefreshTimer.Dispose();
                     _autoRefreshTimer = null;
                 }
-                
+
                 if (components != null)
                 {
                     components.Dispose();
@@ -994,5 +1090,18 @@ namespace RUINORERP.Server.Controls
 
         #endregion
 
+
+
+       
+
+        // 查找并替换原有对_cacheSyncMetadataManager的调用
+        private void RefreshMetadataOnTimerTick()
+        {
+            // 确保只在必要时刷新元数据，避免过于频繁的更新
+            if ((DateTime.Now - _lastMetadataRefresh).TotalSeconds >= 5)
+            {
+                BeginInvoke((Action)(() => LoadCacheMetadata()));
+            }
+        }
     }
 }

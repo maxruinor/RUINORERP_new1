@@ -922,12 +922,58 @@ namespace RUINORERP.Server
 
         /// <summary>
         /// 从Autofac容器获取服务实例
+        /// 优化版本：添加初始化检查、错误处理和回退机制
         /// </summary>
         /// <typeparam name="T">服务类型</typeparam>
-        /// <returns>服务实例</returns>
+        /// <returns>服务实例或null（如果解析失败）</returns>
         public static T GetFromFac<T>()
         {
-            return AutofacContainerScope.Resolve<T>();
+            try
+            {
+                // 检查Autofac容器是否已初始化
+                if (AutofacContainerScope == null)
+                {
+                    // 记录警告日志
+                    Console.WriteLine($"警告: 尝试解析服务 {typeof(T).Name} 时，Autofac容器尚未初始化");
+                    
+                    // 尝试使用ServiceProvider作为备选方案
+                    if (ServiceProvider != null)
+                    {
+                        try
+                        {
+                            return ServiceProvider.GetService<T>();
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"尝试从ServiceProvider解析服务 {typeof(T).Name} 失败: {ex.Message}");
+                        }
+                    }
+                    return default;
+                }
+                
+                // 正常解析服务
+                return AutofacContainerScope.Resolve<T>();
+            }
+            catch (Exception ex)
+            {
+                // 记录解析异常
+                Console.WriteLine($"从Autofac容器解析服务 {typeof(T).Name} 失败: {ex.Message}");
+                
+                // 尝试使用ServiceProvider作为备选方案
+                if (ServiceProvider != null)
+                {
+                    try
+                    {
+                        return ServiceProvider.GetService<T>();
+                    }
+                    catch (Exception)
+                    {
+                        // 如果所有尝试都失败，返回默认值
+                        return default;
+                    }
+                }
+                return default;
+            }
         }
 
         /// <summary>

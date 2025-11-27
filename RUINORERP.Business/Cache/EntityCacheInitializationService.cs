@@ -259,10 +259,12 @@ namespace RUINORERP.Business.Cache
 
 
                 // 简单直接地加载数据
+                // 注意：LoadDataAndUpdateCache方法内部通过_cacheManager.UpdateEntityList已经更新了缓存同步元数据
+                // UpdateEntityList方法会通过UpdateCacheSyncMetadataAfterEntityChange间接调用UpdateTableSyncInfo
                 LoadDataAndUpdateCache(entityType, tableName, _queryHelper);
-
-                // 初始化后，更新基础表缓存信息
-                UpdateBaseTableCacheInfo(tableName);
+     
+                
+                
             }
             catch (Exception ex)
             {
@@ -378,6 +380,8 @@ namespace RUINORERP.Business.Cache
             var tables = TableSchemaManager.Instance.GetBaseBusinessTableNames();
             await InitializeTablesAsync(tables, "初始化基础业务表缓存");
         }
+
+
         /// <summary>
         /// 更新基础表缓存信息,即更新元数据信息
         /// 完善的元数据更新机制，添加重试和验证恢复能力
@@ -403,8 +407,7 @@ namespace RUINORERP.Business.Cache
                 // 显式传递数据数量，确保元数据正确更新
                 _cacheSyncMetadata.UpdateTableSyncInfo(tableName, dataCount);
 
-                _logger.LogDebug("已更新表 {TableName} 的缓存元数据: 数据行数={DataCount}",
-                    tableName, dataCount);
+          
 
                 // 验证元数据完整性
                 bool isValid = _cacheSyncMetadata.ValidateTableCacheIntegrity(tableName);

@@ -76,7 +76,6 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
-using System.Linq;
 using System.Net.Mail;
 using System.Reflection;
 using System.Text.RegularExpressions;
@@ -1882,37 +1881,13 @@ DuplicateCheckService 这个 具体类 并不会被注册为可解析的 key。
                     return default(T);
                 }
 
-                // 尝试从缓存中获取服务实例
-                lock (_cacheLock)
-                {
-                    if (_serviceInstanceCache.TryGetValue(serviceType, out object cachedInstance))
-                    {
-                        _cacheHits++;
-                        _logger.Debug($"从缓存中获取服务: {serviceType.FullName}");
-                        return (T)cachedInstance;
-                    }
-                    
-                    _cacheMisses++;
-                }
-
-                // 缓存中未找到，从容器中解析
+                // 直接从Autofac容器解析，让Autofac管理生命周期
+                // SingleInstance服务：Autofac确保整个应用生命周期只创建一次
+                // InstancePerDependency服务：每次都创建新实例
+                // InstancePerLifetimeScope服务：在每个作用域内创建一次
                 T service = AutofacContainerScope.Resolve<T>();
                 
-                // 将解析的服务实例添加到缓存中
-                lock (_cacheLock)
-                {
-                    // 如果缓存已满，移除最旧的条目（简单的LRU实现）
-                    if (_serviceInstanceCache.Count >= MaxCacheSize)
-                    {
-                        var firstKey = _serviceInstanceCache.Keys.First();
-                        _serviceInstanceCache.Remove(firstKey);
-                        _logger.Debug($"缓存已满，移除最旧的服务实例: {firstKey.FullName}");
-                    }
-                    
-                    _serviceInstanceCache[serviceType] = service;
-                    _logger.Debug($"成功解析并缓存服务: {serviceType.FullName}");
-                }
-                
+                _logger.Debug($"成功解析服务: {serviceType.FullName}");
                 return service;
             }
             catch (Exception ex)

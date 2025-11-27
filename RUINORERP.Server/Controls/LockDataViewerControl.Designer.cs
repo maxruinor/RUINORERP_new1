@@ -28,150 +28,135 @@ namespace RUINORERP.Server.Controls
         /// </summary>
         private void InitializeComponent()
         {
-            this.splitContainerMain = new System.Windows.Forms.SplitContainer();
-            this.groupBoxTableList = new System.Windows.Forms.GroupBox();
-            this.listBoxTableList = new System.Windows.Forms.ListBox();
-            this.groupBoxDataView = new System.Windows.Forms.GroupBox();
-            this.dataGridViewData = new System.Windows.Forms.DataGridView();
-            this.panelButtons = new System.Windows.Forms.Panel();
-            this.btnReloadCache = new System.Windows.Forms.Button();
-            this.btnExport = new System.Windows.Forms.Button();
-            this.btnRefresh = new System.Windows.Forms.Button();
-            ((System.ComponentModel.ISupportInitialize)(this.splitContainerMain)).BeginInit();
-            this.splitContainerMain.Panel1.SuspendLayout();
-            this.splitContainerMain.Panel2.SuspendLayout();
-            this.splitContainerMain.SuspendLayout();
-            this.groupBoxTableList.SuspendLayout();
-            this.groupBoxDataView.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewData)).BeginInit();
-            this.panelButtons.SuspendLayout();
-            this.SuspendLayout();
+            splitContainerMain = new System.Windows.Forms.SplitContainer();
+            groupBoxTableList = new System.Windows.Forms.GroupBox();
+            listBoxTableList = new System.Windows.Forms.ListBox();
+            groupBoxDataView = new System.Windows.Forms.GroupBox();
+            dataGridViewData = new System.Windows.Forms.DataGridView();
+            panelButtons = new System.Windows.Forms.Panel();
+            btnRefresh = new System.Windows.Forms.Button();
+            ((System.ComponentModel.ISupportInitialize)splitContainerMain).BeginInit();
+            splitContainerMain.Panel1.SuspendLayout();
+            splitContainerMain.Panel2.SuspendLayout();
+            splitContainerMain.SuspendLayout();
+            groupBoxTableList.SuspendLayout();
+            groupBoxDataView.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)dataGridViewData).BeginInit();
+            panelButtons.SuspendLayout();
+            SuspendLayout();
             // 
             // splitContainerMain
             // 
-            this.splitContainerMain.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.splitContainerMain.Location = new System.Drawing.Point(0, 0);
-            this.splitContainerMain.Name = "splitContainerMain";
+            splitContainerMain.Dock = System.Windows.Forms.DockStyle.Fill;
+            splitContainerMain.Location = new System.Drawing.Point(0, 0);
+            splitContainerMain.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            splitContainerMain.Name = "splitContainerMain";
             // 
             // splitContainerMain.Panel1
             // 
-            this.splitContainerMain.Panel1.Controls.Add(this.groupBoxTableList);
+            splitContainerMain.Panel1.Controls.Add(groupBoxTableList);
             // 
             // splitContainerMain.Panel2
             // 
-            this.splitContainerMain.Panel2.Controls.Add(this.groupBoxDataView);
-            this.splitContainerMain.Size = new System.Drawing.Size(800, 600);
-            this.splitContainerMain.SplitterDistance = 200;
-            this.splitContainerMain.TabIndex = 0;
+            splitContainerMain.Panel2.Controls.Add(groupBoxDataView);
+            splitContainerMain.Size = new System.Drawing.Size(933, 850);
+            splitContainerMain.SplitterDistance = 233;
+            splitContainerMain.SplitterWidth = 5;
+            splitContainerMain.TabIndex = 0;
             // 
             // groupBoxTableList
             // 
-            this.groupBoxTableList.Controls.Add(this.listBoxTableList);
-            this.groupBoxTableList.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.groupBoxTableList.Location = new System.Drawing.Point(0, 0);
-            this.groupBoxTableList.Name = "groupBoxTableList";
-            this.groupBoxTableList.Size = new System.Drawing.Size(200, 600);
-            this.groupBoxTableList.TabIndex = 0;
-            this.groupBoxTableList.TabStop = false;
-            this.groupBoxTableList.Text = "数据表列表";
+            groupBoxTableList.Controls.Add(listBoxTableList);
+            groupBoxTableList.Dock = System.Windows.Forms.DockStyle.Fill;
+            groupBoxTableList.Location = new System.Drawing.Point(0, 0);
+            groupBoxTableList.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            groupBoxTableList.Name = "groupBoxTableList";
+            groupBoxTableList.Padding = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            groupBoxTableList.Size = new System.Drawing.Size(233, 850);
+            groupBoxTableList.TabIndex = 0;
+            groupBoxTableList.TabStop = false;
+            groupBoxTableList.Text = "数据表列表";
             // 
             // listBoxTableList
             // 
-            this.listBoxTableList.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.listBoxTableList.FormattingEnabled = true;
-            this.listBoxTableList.ItemHeight = 12;
-            this.listBoxTableList.Location = new System.Drawing.Point(3, 19);
-            this.listBoxTableList.Name = "listBoxTableList";
-            this.listBoxTableList.Size = new System.Drawing.Size(194, 578);
-            this.listBoxTableList.TabIndex = 0;
-            this.listBoxTableList.SelectedIndexChanged += new System.EventHandler(this.listBoxTableList_SelectedIndexChanged);
+            listBoxTableList.Dock = System.Windows.Forms.DockStyle.Fill;
+            listBoxTableList.FormattingEnabled = true;
+            listBoxTableList.ItemHeight = 17;
+            listBoxTableList.Location = new System.Drawing.Point(4, 20);
+            listBoxTableList.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            listBoxTableList.Name = "listBoxTableList";
+            listBoxTableList.Size = new System.Drawing.Size(225, 826);
+            listBoxTableList.TabIndex = 0;
+            listBoxTableList.SelectedIndexChanged += listBoxTableList_SelectedIndexChanged;
             // 
             // groupBoxDataView
             // 
-            this.groupBoxDataView.Controls.Add(this.dataGridViewData);
-            this.groupBoxDataView.Controls.Add(this.panelButtons);
-            this.groupBoxDataView.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.groupBoxDataView.Location = new System.Drawing.Point(0, 0);
-            this.groupBoxDataView.Name = "groupBoxDataView";
-            this.groupBoxDataView.Size = new System.Drawing.Size(596, 600);
-            this.groupBoxDataView.TabIndex = 0;
-            this.groupBoxDataView.TabStop = false;
-            this.groupBoxDataView.Text = "数据视图";
+            groupBoxDataView.Controls.Add(dataGridViewData);
+            groupBoxDataView.Controls.Add(panelButtons);
+            groupBoxDataView.Dock = System.Windows.Forms.DockStyle.Fill;
+            groupBoxDataView.Location = new System.Drawing.Point(0, 0);
+            groupBoxDataView.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            groupBoxDataView.Name = "groupBoxDataView";
+            groupBoxDataView.Padding = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            groupBoxDataView.Size = new System.Drawing.Size(695, 850);
+            groupBoxDataView.TabIndex = 0;
+            groupBoxDataView.TabStop = false;
+            groupBoxDataView.Text = "数据视图";
             // 
             // dataGridViewData
             // 
-            this.dataGridViewData.AllowUserToAddRows = false;
-            this.dataGridViewData.AllowUserToDeleteRows = false;
-            this.dataGridViewData.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
-            this.dataGridViewData.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dataGridViewData.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dataGridViewData.Location = new System.Drawing.Point(3, 19);
-            this.dataGridViewData.Name = "dataGridViewData";
-            this.dataGridViewData.ReadOnly = true;
-            this.dataGridViewData.Size = new System.Drawing.Size(590, 531);
-            this.dataGridViewData.TabIndex = 1;
-            this.dataGridViewData.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridViewData_CellDoubleClick);
+            dataGridViewData.AllowUserToAddRows = false;
+            dataGridViewData.AllowUserToDeleteRows = false;
+            dataGridViewData.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
+            dataGridViewData.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            dataGridViewData.Dock = System.Windows.Forms.DockStyle.Fill;
+            dataGridViewData.Location = new System.Drawing.Point(4, 20);
+            dataGridViewData.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            dataGridViewData.Name = "dataGridViewData";
+            dataGridViewData.ReadOnly = true;
+            dataGridViewData.Size = new System.Drawing.Size(687, 759);
+            dataGridViewData.TabIndex = 1;
+            dataGridViewData.CellDoubleClick += dataGridViewData_CellDoubleClick;
             // 
             // panelButtons
             // 
-            this.panelButtons.Controls.Add(this.btnLockStatistics);
-            this.panelButtons.Controls.Add(this.btnReloadCache);
-            this.panelButtons.Controls.Add(this.btnExport);
-            this.panelButtons.Controls.Add(this.btnRefresh);
-            this.panelButtons.Controls.Add(this.lblLockStats);
-            this.panelButtons.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.panelButtons.Location = new System.Drawing.Point(3, 550);
-            this.panelButtons.Name = "panelButtons";
-            this.panelButtons.Size = new System.Drawing.Size(590, 47);
-            this.panelButtons.TabIndex = 0;
-            // 
-            // btnReloadCache
-            // 
-            this.btnReloadCache.Location = new System.Drawing.Point(300, 12);
-            this.btnReloadCache.Name = "btnReloadCache";
-            this.btnReloadCache.Size = new System.Drawing.Size(85, 23);
-            this.btnReloadCache.TabIndex = 2;
-            this.btnReloadCache.Text = "重新加载缓存";
-            this.btnReloadCache.UseVisualStyleBackColor = true;
-            this.btnReloadCache.Click += new System.EventHandler(this.btnReloadCache_Click);
-            // 
-            // btnExport
-            // 
-            this.btnExport.Location = new System.Drawing.Point(205, 12);
-            this.btnExport.Name = "btnExport";
-            this.btnExport.Size = new System.Drawing.Size(75, 23);
-            this.btnExport.TabIndex = 1;
-            this.btnExport.Text = "导出";
-            this.btnExport.UseVisualStyleBackColor = true;
-            this.btnExport.Click += new System.EventHandler(this.btnExport_Click);
+            panelButtons.Controls.Add(btnRefresh);
+            panelButtons.Dock = System.Windows.Forms.DockStyle.Bottom;
+            panelButtons.Location = new System.Drawing.Point(4, 779);
+            panelButtons.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            panelButtons.Name = "panelButtons";
+            panelButtons.Size = new System.Drawing.Size(687, 67);
+            panelButtons.TabIndex = 0;
             // 
             // btnRefresh
             // 
-            this.btnRefresh.Location = new System.Drawing.Point(115, 12);
-            this.btnRefresh.Name = "btnRefresh";
-            this.btnRefresh.Size = new System.Drawing.Size(75, 23);
-            this.btnRefresh.TabIndex = 0;
-            this.btnRefresh.Text = "刷新";
-            this.btnRefresh.UseVisualStyleBackColor = true;
-            this.btnRefresh.Click += new System.EventHandler(this.btnRefresh_Click);
+            btnRefresh.Location = new System.Drawing.Point(134, 17);
+            btnRefresh.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            btnRefresh.Name = "btnRefresh";
+            btnRefresh.Size = new System.Drawing.Size(88, 33);
+            btnRefresh.TabIndex = 0;
+            btnRefresh.Text = "刷新";
+            btnRefresh.UseVisualStyleBackColor = true;
+            btnRefresh.Click += btnRefresh_Click;
             // 
-            // DataViewerControl
+            // LockDataViewerControl
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.Controls.Add(this.splitContainerMain);
-            this.Name = "DataViewerControl";
-            this.Size = new System.Drawing.Size(800, 600);
-            this.Load += new System.EventHandler(this.DataViewerControl_Load);
-            this.splitContainerMain.Panel1.ResumeLayout(false);
-            this.splitContainerMain.Panel2.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.splitContainerMain)).EndInit();
-            this.splitContainerMain.ResumeLayout(false);
-            this.groupBoxTableList.ResumeLayout(false);
-            this.groupBoxDataView.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewData)).EndInit();
-            this.panelButtons.ResumeLayout(false);
-            this.ResumeLayout(false);
+            AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
+            AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            Controls.Add(splitContainerMain);
+            Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            Name = "LockDataViewerControl";
+            Size = new System.Drawing.Size(933, 850);
+            Load += DataViewerControl_Load;
+            splitContainerMain.Panel1.ResumeLayout(false);
+            splitContainerMain.Panel2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)splitContainerMain).EndInit();
+            splitContainerMain.ResumeLayout(false);
+            groupBoxTableList.ResumeLayout(false);
+            groupBoxDataView.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)dataGridViewData).EndInit();
+            panelButtons.ResumeLayout(false);
+            ResumeLayout(false);
 
         }
 
@@ -183,8 +168,6 @@ namespace RUINORERP.Server.Controls
         private System.Windows.Forms.GroupBox groupBoxDataView;
         private System.Windows.Forms.DataGridView dataGridViewData;
         private System.Windows.Forms.Panel panelButtons;
-        private System.Windows.Forms.Button btnReloadCache;
-        private System.Windows.Forms.Button btnExport;
         private System.Windows.Forms.Button btnRefresh;
         private System.Windows.Forms.Button btnLockStatistics;
         private System.Windows.Forms.Label lblLockStats;

@@ -153,6 +153,8 @@ namespace RUINORERP.PacketSpec.Models.Lock
             }
         }
 
+        public DateTime LastUpdateTime { get; set; }
+
         /// <summary>
         /// 是否即将过期（剩余时间小于总时间的20%）
         /// </summary>

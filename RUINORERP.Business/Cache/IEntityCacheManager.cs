@@ -83,7 +83,8 @@ namespace RUINORERP.Business.Cache
         void UpdateEntityList<T>(List<T> list) where T : class;
 
         /// <summary>
-        /// 更新单个实体缓存
+        /// 更新单个实体缓存，支持新增式更新
+        /// 如果实体不存在于缓存列表中，则自动添加到列表末尾
         /// </summary>
         void UpdateEntity<T>(T entity) where T : class;
 
@@ -93,7 +94,8 @@ namespace RUINORERP.Business.Cache
         void UpdateEntityList(string tableName, object list);
 
         /// <summary>
-        /// 根据表名更新单个实体缓存
+        /// 根据表名更新单个实体缓存，支持新增式更新
+        /// 如果实体不存在于缓存列表中，则自动添加到列表末尾
         /// </summary>
         void UpdateEntity(string tableName, object entity);
         #endregion

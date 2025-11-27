@@ -108,10 +108,11 @@ namespace RUINORERP.Business.Cache
         /// <summary>
         /// 更新列表缓存中的单个实体
         /// 当从数据源获取到单个实体时，同步更新到列表缓存中
+        /// 支持新增式更新：如果实体不存在于列表中，则自动添加到列表末尾
         /// </summary>
         /// <typeparam name="T">实体类型</typeparam>
         /// <param name="tableName">表名</param>
-        /// <param name="entity">要更新的实体</param>
+        /// <param name="entity">要更新或添加的实体</param>
         private void UpdateEntityInList<T>(string tableName, T entity) where T : class
         {
             try
@@ -132,22 +133,93 @@ namespace RUINORERP.Business.Cache
                 // 根据缓存对象类型选择适当的更新方法
                 if (cachedListObj is JArray jArray)
                 {
+                    // 先尝试更新现有实体
                     updated = UpdateJArrayEntity(jArray, schemaInfo.PrimaryKeyField, entityId, entity);
+                    
+                    // 如果没有找到匹配的实体，则添加新实体到列表末尾
+                    if (!updated)
+                    {
+                        jArray.Add(JObject.FromObject(entity));
+                        updated = true;
+                        _logger?.LogDebug($"已将ID为 {entityId} 的新实体添加到表 {tableName} 的列表缓存中");
+                    }
                 }
                 else if (cachedListObj is List<ExpandoObject> expandoList)
                 {
+                    // 先尝试更新现有实体
                     updated = UpdateExpandoListEntity(expandoList, schemaInfo.PrimaryKeyField, entityId, entity);
+                    
+                    // 如果没有找到匹配的实体，则添加新实体到列表末尾
+                    if (!updated)
+                    {
+                        // 创建新的ExpandoObject并复制属性
+                        var newExpando = new ExpandoObject();
+                        var expandoDict = (IDictionary<string, object>)newExpando;
+
+                        foreach (var prop in entity.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance))
+                        {
+                            expandoDict[prop.Name] = prop.GetValue(entity);
+                        }
+
+                        expandoList.Add(newExpando);
+                        updated = true;
+                        _logger?.LogDebug($"已将ID为 {entityId} 的新实体添加到表 {tableName} 的列表缓存中");
+                    }
                 }
                 else if (cachedListObj is IList && cachedListObj.GetType().IsGenericType)
                 {
+                    // 先尝试更新现有实体
                     updated = UpdateGenericListEntity(cachedListObj, schemaInfo.PrimaryKeyField, entityId, entity, tableName);
+                    
+                    // 如果没有找到匹配的实体，则添加新实体到列表末尾
+                    if (!updated)
+                    {
+                        try
+                        {
+                            var listType = cachedListObj.GetType();
+                            var itemType = listType.GenericTypeArguments[0];
+                            
+                            // 确保实体类型与列表项类型兼容
+                            if (itemType.IsAssignableFrom(entity.GetType()))
+                            {
+                                ((IList)cachedListObj).Add(entity);
+                                updated = true;
+                                _logger?.LogDebug($"已将ID为 {entityId} 的新实体添加到表 {tableName} 的列表缓存中");
+                            }
+                            else
+                            {
+                                // 如果类型不完全匹配，尝试转换
+                                try
+                                {
+                                    var convertedEntity = Convert.ChangeType(entity, itemType);
+                                    ((IList)cachedListObj).Add(convertedEntity);
+                                    updated = true;
+                                    _logger?.LogDebug($"已将ID为 {entityId} 的新实体（已转换类型）添加到表 {tableName} 的列表缓存中");
+                                }
+                                catch (Exception ex)
+                                {
+                                    _logger?.LogWarning(ex, $"无法将实体转换为目标类型 {itemType.Name}，跳过添加操作");
+                                    return;
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger?.LogError(ex, $"向表 {tableName} 的列表缓存添加新实体时发生错误");
+                        }
+                    }
                 }
 
-                // 如果已更新，则将列表放回缓存
+                // 如果已更新或已添加，则将列表放回缓存
                 if (updated)
                 {
                     _cacheManager.Put(listCacheKey, cachedListObj);
-                    _logger?.LogDebug($"已成功更新表 {tableName} 中ID为 {entityId} 的实体缓存");
+                    
+                    if (cachedListObj is JArray || cachedListObj is List<ExpandoObject> || 
+                        (cachedListObj is IList && cachedListObj.GetType().IsGenericType))
+                    {
+                        _logger?.LogDebug($"已成功更新或添加表 {tableName} 中ID为 {entityId} 的实体到列表缓存");
+                    }
                 }
             }
             catch (Exception ex)

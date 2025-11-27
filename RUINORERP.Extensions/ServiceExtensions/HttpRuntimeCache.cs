@@ -30,18 +30,20 @@ namespace RUINORERP.Extensions
             var fullKey = CachePrefix + key;
             using var entry = _memoryCache.CreateEntry(fullKey);
             entry.Value = value;
+            // 注册回调确保键跟踪一致性
+            entry.RegisterPostEvictionCallback(RemoveCallback);
             _cacheKeys[fullKey] = 0; // 跟踪键
         }
 
         public void Add<V>(string key, V value, int cacheDurationInSeconds)
         {
             var fullKey = CachePrefix + key;
-            _memoryCache.Set(fullKey, value, DateTimeOffset.Now.AddSeconds(cacheDurationInSeconds));
-
-            // 注册过期回调自动清理
+            
+            // 修复：只调用一次Set方法，同时设置过期时间和回调
             var options = new MemoryCacheEntryOptions()
+                .SetAbsoluteExpiration(TimeSpan.FromSeconds(cacheDurationInSeconds))
                 .RegisterPostEvictionCallback(RemoveCallback);
-
+            
             _memoryCache.Set(fullKey, value, options);
             _cacheKeys[fullKey] = 0;
         }
@@ -64,24 +66,14 @@ namespace RUINORERP.Extensions
             return _memoryCache.Get<V>(CachePrefix + key);
         }
 
-        
+        // 实现ICacheService接口要求的无参数版本
         public IEnumerable<string> GetAllKey<V>()
         {
-            // 直接返回主动跟踪的键集合（移除分区前缀）
-            return _cacheKeys.Keys
-                .Where(k => k.StartsWith(CachePrefix))
-                .Select(k => k.Substring(CachePrefix.Length))
-                .ToList();
+            return GetAllKeyWithBatchSize<V>(int.MaxValue);
         }
 
-
-        /// <summary>
-        ///如果键数量巨大（>10,000） 在GetAllKey中分页返回
-        /// </summary>
-        /// <typeparam name="V"></typeparam>
-        /// <param name="batchSize"></param>
-        /// <returns></returns>
-        public IEnumerable<string> GetAllKey<V>(int batchSize = 1000)
+        // 扩展版本，支持批量获取键
+        public IEnumerable<string> GetAllKeyWithBatchSize<V>(int batchSize)
         {
             // 直接返回主动跟踪的键集合（移除分区前缀）
             return _cacheKeys.Keys
@@ -101,10 +93,9 @@ namespace RUINORERP.Extensions
 
                 if (cacheDurationInSeconds < int.MaxValue)
                 {
-                    entry.AbsoluteExpirationRelativeToNow =
-                        TimeSpan.FromSeconds(cacheDurationInSeconds);
-                    entry.RegisterPostEvictionCallback(RemoveCallback);
+                    entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(cacheDurationInSeconds);
                 }
+                entry.RegisterPostEvictionCallback(RemoveCallback);
 
                 return create();
             });
@@ -116,8 +107,6 @@ namespace RUINORERP.Extensions
             _memoryCache.Remove(fullKey);
             _cacheKeys.TryRemove(fullKey, out _);
         }
-
-
 
         //添加缓存统计接口
         public int CachedItemsCount => _cacheKeys.Count;

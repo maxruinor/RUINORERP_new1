@@ -184,8 +184,9 @@ namespace RUINORERP.Business.DI
 
             // 注册行级权限服务
             RegisterRowLevelAuthServices(builder);
-            
- 
+
+            // 3. 注册动态查询帮助类
+            builder.RegisterType<DynamicQueryHelper>().SingleInstance();
 
             // 注册泛型配置服务
             builder.RegisterGeneric(typeof(GenericConfigService<>))

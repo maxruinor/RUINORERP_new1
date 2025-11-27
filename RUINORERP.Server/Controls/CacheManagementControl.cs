@@ -43,7 +43,7 @@ namespace RUINORERP.Server.Controls
         private DateTime _lastTableStatsRefresh = DateTime.MinValue;
         private DateTime _lastItemStatsRefresh = DateTime.MinValue;
         private DateTime _lastMetadataRefresh = DateTime.MinValue;
-
+        private readonly ICacheSyncMetadata _cacheSyncMetadataManager;
         public CacheManagementControl()
         {
             InitializeComponent();
@@ -51,7 +51,8 @@ namespace RUINORERP.Server.Controls
             _logger = Program.ServiceProvider.GetRequiredService<ILogger<CacheManagementControl>>();
             _entityCacheManager = Program.ServiceProvider.GetRequiredService<IEntityCacheManager>();
             _initializationService = Program.ServiceProvider.GetRequiredService<EntityCacheInitializationService>();
-            
+            _cacheSyncMetadataManager = Program.ServiceProvider.GetRequiredService<CacheSyncMetadataManager>();
+
             // 初始化定时刷新器
             InitializeAutoRefreshTimer();
         }
@@ -657,7 +658,7 @@ namespace RUINORERP.Server.Controls
                     {
                         // 使用构造函数中注入的初始化服务实例，确保与当前缓存管理器使用的是同一个实例
                         // 调用方法初始化单个表的缓存
-                        await _initializationService.InitializeSingleTableCacheAsync(tableName);
+                         _initializationService.InitializeCacheForTable(tableName);
                     }
                     catch (Exception ex)
                     {
@@ -782,11 +783,11 @@ namespace RUINORERP.Server.Controls
             try
             {
                 // 获取缓存同步元数据管理器
-                var cacheSyncMetadataManager = Startup.GetFromFac<CacheSyncMetadataManager>();
-                if (cacheSyncMetadataManager != null)
+               
+                if (_cacheSyncMetadataManager != null)
                 {
                     // 获取所有表的缓存同步元数据
-                    var allSyncInfo = cacheSyncMetadataManager.GetAllTableSyncInfo();
+                    var allSyncInfo = _cacheSyncMetadataManager.GetAllTableSyncInfo();
                     
                     // 直接使用现有的CacheSyncInfo模型，添加格式化属性用于显示
                     var viewModelList = allSyncInfo.Values.Select(info => new

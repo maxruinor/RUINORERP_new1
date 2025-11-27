@@ -651,7 +651,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                         // 获取EntityCacheInitializationService实例
                         var initializationService = Startup.GetFromFac<EntityCacheInitializationService>();
                         // 调用新方法初始化单个表的缓存
-                        await initializationService.InitializeSingleTableCacheAsync(tableName);
+                        initializationService.InitializeCacheForTable(tableName);
                     }
                     catch (Exception ex)
                     {

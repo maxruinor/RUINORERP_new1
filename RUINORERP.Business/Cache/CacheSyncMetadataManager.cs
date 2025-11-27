@@ -95,16 +95,24 @@ namespace RUINORERP.Business.Cache
 
             try
             {
-                // 获取或创建缓存同步信息
-                var syncInfo = _syncMetadata.AddOrUpdate(
+                // 创建新的CacheSyncInfo对象来避免修改现有对象的引用
+                // 这确保字典中的对象完全更新
+                var newSyncInfo = new CacheSyncInfo(tableName);
+                newSyncInfo.DataCount = dataCount;
+                newSyncInfo.EstimatedSize = estimatedSize;
+                newSyncInfo.LastUpdateTime = DateTime.Now;
+                
+                // 使用AddOrUpdate确保原子性操作
+                _syncMetadata.AddOrUpdate(
                     tableName,
-                    _ => new CacheSyncInfo(tableName),
-                    (_, existingInfo) => existingInfo);
-
-                // 更新属性
-                syncInfo.DataCount = dataCount;
-                syncInfo.EstimatedSize = estimatedSize;
-                syncInfo.LastUpdateTime = DateTime.Now;
+                    _ => newSyncInfo,
+                    (_, existingInfo) => 
+                    {
+                        // 复制现有信息中的其他属性
+                        newSyncInfo.ExpirationTime = existingInfo.ExpirationTime;
+                        newSyncInfo.SourceInfo = existingInfo.SourceInfo;
+                        return newSyncInfo;
+                    });
                 
                 // 特殊处理空表情况，确保空表缓存也能被正确记录和管理
                 if (dataCount == 0)

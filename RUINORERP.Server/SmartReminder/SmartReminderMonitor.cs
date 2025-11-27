@@ -77,7 +77,7 @@ namespace RUINORERP.Server.SmartReminder
                 period: interval);
             IsRunning = true;
         }
-        
+
         // 使用void返回类型的Timer回调，内部处理异步任务
         private void TimerCallback(object state)
         {
@@ -98,7 +98,7 @@ namespace RUINORERP.Server.SmartReminder
             _logger.LogDebug("开始执行检测任务 - {Time}", System.DateTime.Now);
             bool lockAcquired = false;
             IReminderContext reminderContext = null;
-            
+
             try
             {
                 if (!await _checkLock.WaitAsync(TimeSpan.Zero))
@@ -114,7 +114,7 @@ namespace RUINORERP.Server.SmartReminder
                 foreach (var rule in activeRules)
                 {
                     reminderContext = null; // 重置上下文引用，确保不会引用到前一个规则的上下文
-                    
+
                     try
                     {
                         var irule = rule as IReminderRule;
@@ -123,7 +123,7 @@ namespace RUINORERP.Server.SmartReminder
                             _logger.LogWarning("规则类型转换失败: {RuleType}", rule?.GetType().Name);
                             continue;
                         }
-                        
+
                         // 使用try-catch块确保即使在创建上下文过程中出现异常也能正确处理
                         IDisposable disposableContext = null;
                         try
@@ -231,7 +231,7 @@ namespace RUINORERP.Server.SmartReminder
         {
             // 确保始终返回一个有效的上下文，即使出错
             IReminderContext resultContext = new InventoryContext(new List<tb_Inventory>());
-            
+
             try
             {
                 var productIds = (rule.GetConfig<SafetyStockConfig>() as SafetyStockConfig)?.ProductIds;
@@ -240,13 +240,13 @@ namespace RUINORERP.Server.SmartReminder
                     _logger.LogWarning("产品ID列表为空，无法创建库存上下文");
                     return resultContext; // 返回空上下文
                 }
-                
+
                 // 移除using块，让SqlSugar自己管理连接生命周期
                 var db = _unitOfWorkManage.GetDbClient();
                 var stocks = await db.Queryable<tb_Inventory>()
                     .Where(s => productIds.Contains(s.ProdDetailID))
                     .ToListAsync();
-                
+
                 resultContext = new InventoryContext(stocks);
                 return resultContext;
             }
@@ -263,12 +263,12 @@ namespace RUINORERP.Server.SmartReminder
         {
             // 使用注入的缓存而非静态缓存，确保依赖注入一致性
             const string cacheKey = "ActivePolicies";
-            
+
             // 尝试从缓存获取数据
             if (_cache.TryGetValue(cacheKey, out List<tb_ReminderRule> policies))
             {
                 _logger.LogDebug("从缓存获取活跃规则，数量: {Count}", policies.Count);
-                
+
                 // 显式转换为接口列表
                 return policies.Select(p => p as IReminderRule).ToList();
             }
@@ -280,6 +280,7 @@ namespace RUINORERP.Server.SmartReminder
                 var db = _unitOfWorkManage.GetDbClient();
                 policies = await db.Queryable<tb_ReminderRule>()
                     .Where(p => p.IsEnabled)
+                    .WithCache(300)
                     .ToListAsync();
 
                 // 添加短暂等待，减轻数据库连接压力，特别是在快速循环调用时
@@ -287,7 +288,7 @@ namespace RUINORERP.Server.SmartReminder
                 await Task.Delay(20);
 
                 _logger.LogDebug("从数据库获取活跃规则，数量: {Count}", policies.Count);
-                
+
                 // 将结果存入缓存，设置5分钟过期和滑动过期
                 var cacheOptions = new MemoryCacheEntryOptions()
                     .SetAbsoluteExpiration(TimeSpan.FromMinutes(5))
@@ -296,9 +297,9 @@ namespace RUINORERP.Server.SmartReminder
                     {
                         _logger.LogDebug("规则缓存已过期或被移除，原因: {Reason}", reason);
                     });
-                
+
                 _cache.Set(cacheKey, policies, cacheOptions);
-                
+
                 // 显式转换为接口列表
                 return policies.Select(p => p as IReminderRule).ToList();
             }
@@ -317,7 +318,7 @@ namespace RUINORERP.Server.SmartReminder
             Dispose(true);
             GC.SuppressFinalize(this);
         }
-        
+
         protected virtual void Dispose(bool disposing)
         {
             if (disposing)
@@ -330,21 +331,21 @@ namespace RUINORERP.Server.SmartReminder
                         _timer.Change(Timeout.Infinite, 0); // 立即停止触发
                     }
                     catch (ObjectDisposedException) { }
-                    
+
                     _timer.Dispose();
                     _timer = null;
                 }
-                
+
                 if (_checkLock != null)
                 {
                     _checkLock.Dispose();
                     // 注意：不要将_checkLock设置为null，因为它在析构函数中可能仍会被访问
                 }
-                
+
                 _logger.LogInformation("SmartReminderMonitor已释放资源");
             }
         }
-        
+
         // 析构函数
         ~SmartReminderMonitor()
         {

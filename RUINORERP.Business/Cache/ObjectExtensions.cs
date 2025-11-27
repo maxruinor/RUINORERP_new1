@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
 using System.Reflection;
+using System.Diagnostics;
 
 namespace RUINORERP.Business.Cache
 {
@@ -46,20 +47,21 @@ namespace RUINORERP.Business.Cache
                 }
 
                 // 处理Newtonsoft.Json.Linq.JObject类型
-                if (obj.GetType().FullName == "Newtonsoft.Json.Linq.JObject")
+                if (obj is JObject jObject)
                 {
-                    dynamic jObj = obj;
-                    JToken token = jObj[propertyName];
+                    // 首先尝试精确匹配
+                    JToken token = jObject[propertyName];
                     if (token != null)
                     {
                         // 返回强类型值而不是JToken
                         return token.ToObject<object>();
                     }
+                    
                     // 尝试大小写不敏感匹配
-                    dynamic jObjLower = obj;
-                    foreach (var prop in (IDictionary<string, JToken>)jObj)
+                    var lowerPropertyName = propertyName.ToLower();
+                    foreach (var prop in (IDictionary<string, JToken>)jObject)
                     {
-                        if (prop.Key.ToLower() == propertyName.ToLower())
+                        if (prop.Key.ToLower() == lowerPropertyName)
                             return prop.Value.ToObject<object>();
                     }
                     return null;
@@ -104,8 +106,8 @@ namespace RUINORERP.Business.Cache
             }
             catch (Exception ex)
             {
-                // 记录异常信息到日志（如果有日志服务）
-                // System.Diagnostics.Debug.WriteLine($"获取属性值失败: {ex.Message}");
+                // 记录异常信息到调试输出
+                Debug.WriteLine($"获取属性值失败 [属性名: {propertyName}]: {ex.Message}");
                 return null;
             }
         }
@@ -129,14 +131,51 @@ namespace RUINORERP.Business.Cache
             if (value1.GetType() == value2.GetType())
                 return value1.Equals(value2);
             
-            // 对于字符串比较，转换为字符串后比较
-            string str1 = value1.ToString();
-            string str2 = value2.ToString();
-            return string.Equals(str1, str2, StringComparison.OrdinalIgnoreCase);
+            // 特殊处理字符串：如果任一对象已经是字符串，进行类型转换后比较
+            if (value1 is string || value2 is string)
+            {
+                // 避免重复转换
+                string str1 = value1 is string ? (string)value1 : value1.ToString();
+                string str2 = value2 is string ? (string)value2 : value2.ToString();
+                return string.Equals(str1, str2, StringComparison.OrdinalIgnoreCase);
+            }
+            
+            // 对于其他不同类型，尝试值转换比较（例如int和long）
+            try
+            {
+                // 对于数值类型，尝试转换为双精度浮点数进行比较
+                if (IsNumericType(value1.GetType()) && IsNumericType(value2.GetType()))
+                {
+                    double num1 = Convert.ToDouble(value1);
+                    double num2 = Convert.ToDouble(value2);
+                    return Math.Abs(num1 - num2) < double.Epsilon;
+                }
+            }
+            catch (InvalidCastException)
+            {
+                // 类型转换失败时，回到基本的ToString比较
+            }
+            
+            // 最后的回退方案：转换为字符串后比较
+            return string.Equals(value1.ToString(), value2.ToString(), StringComparison.OrdinalIgnoreCase);
+        }
+        
+        /// <summary>
+        /// 检查指定类型是否为数值类型
+        /// </summary>
+        private static bool IsNumericType(Type type)
+        {
+            return type == typeof(byte) || type == typeof(sbyte) ||
+                   type == typeof(short) || type == typeof(ushort) ||
+                   type == typeof(int) || type == typeof(uint) ||
+                   type == typeof(long) || type == typeof(ulong) ||
+                   type == typeof(float) || type == typeof(double) ||
+                   type == typeof(decimal);
         }
 
         /// <summary>
         /// 将对象转换为ExpandoObject
+        /// 安全地处理各种对象类型，包括null值、ExpandoObject、字典和普通对象
         /// </summary>
         /// <param name="obj">要转换的对象</param>
         /// <returns>转换后的ExpandoObject</returns>
@@ -156,22 +195,52 @@ namespace RUINORERP.Business.Cache
                 var resultDict = (IDictionary<string, object>)result;
                 
                 foreach (var kvp in dictionary)
-                    resultDict[kvp.Key] = kvp.Value;
+                {
+                    // 递归转换嵌套对象
+                    if (kvp.Value != null && !(kvp.Value is string) && !(kvp.Value is ValueType) && kvp.Value.GetType().IsClass)
+                        resultDict[kvp.Key] = ToExpandoObject(kvp.Value);
+                    else
+                        resultDict[kvp.Key] = kvp.Value;
+                }
                 
                 return result;
             }
 
             // 对于普通对象，使用反射获取属性并创建ExpandoObject
-            var resultExpando = new ExpandoObject();
-            var resultExpandoDict = (IDictionary<string, object>)resultExpando;
-            
-            foreach (var prop in obj.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance))
+            try
             {
-                if (prop.CanRead)
-                    resultExpandoDict[prop.Name] = prop.GetValue(obj);
-            }
+                var resultExpando = new ExpandoObject();
+                var resultExpandoDict = (IDictionary<string, object>)resultExpando;
+                
+                foreach (var prop in obj.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance))
+                {
+                    if (prop.CanRead)
+                    {
+                        try
+                        {
+                            var value = prop.GetValue(obj);
+                            // 递归转换嵌套对象
+                            if (value != null && !(value is string) && !(value is ValueType) && value.GetType().IsClass)
+                                resultExpandoDict[prop.Name] = ToExpandoObject(value);
+                            else
+                                resultExpandoDict[prop.Name] = value;
+                        }
+                        catch (Exception ex)
+                        {
+                            // 忽略单个属性获取失败的情况，记录错误但继续处理其他属性
+                            Debug.WriteLine($"获取属性值失败 [属性名: {prop.Name}]: {ex.Message}");
+                        }
+                    }
+                }
 
-            return resultExpando;
+                return resultExpando;
+            }
+            catch (Exception ex)
+            {
+                // 如果整个对象转换失败，记录错误并返回空的ExpandoObject
+                Debug.WriteLine($"对象转换为ExpandoObject失败: {ex.Message}");
+                return new ExpandoObject();
+            }
         }
     }
 }

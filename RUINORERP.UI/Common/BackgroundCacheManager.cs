@@ -414,7 +414,7 @@ namespace RUINORERP.UI.Common
                     if (tableSchemaManager.ContainsTable(tableName) && IsCacheableTable(tableName))
                     {
                         // 快速检查，避免重复请求
-                        var entityList = CacheManager.GetEntityList<object>(tableName);
+                        var entityList = EntityCacheHelper.GetEntityListByTableName(tableName);
                         if (task.ForceRefresh || entityList == null || entityList.Count == 0)
                         {
                             // 使用BackgroundCacheManager自己的缓存客户端服务

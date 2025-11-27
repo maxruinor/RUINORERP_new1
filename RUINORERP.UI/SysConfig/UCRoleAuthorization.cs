@@ -1,51 +1,50 @@
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Drawing;
-using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-using RUINORERP.Common;
-using RUINORERP.Model;
+using Castle.Components.DictionaryAdapter.Xml;
+using FastReport.DevComponents.DotNetBar.Controls;
+using FastReport.Forms;
+using Krypton.Navigator;
+using Krypton.Workspace;
+using log4net.Repository.Hierarchy;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Mysqlx.Crud;
+using Netron.GraphLib;
+using OpenTK.Input;
+using RUINOR.WinFormsUI.TreeViewThreeState;
 using RUINORERP.Business;
-using System.Linq.Expressions;
-using SqlSugar;
-using RUINORERP.Common.Helper;
+using RUINORERP.Business.Cache;
+using RUINORERP.Business.CommService;
+using RUINORERP.Business.RowLevelAuthService;
+using RUINORERP.Common;
 using RUINORERP.Common.CollectionExtension;
 using RUINORERP.Common.Extensions;
-using System.Reflection;
-using RUINORERP.UI.Common;
-using System.Collections.Concurrent;
-using RUINORERP.Model.Dto;
-using Krypton.Workspace;
-using Krypton.Navigator;
-using RUINOR.WinFormsUI.TreeViewThreeState;
-using RUINORERP.UI.UControls;
-using FastReport.DevComponents.DotNetBar.Controls;
-using StackExchange.Redis;
-using System.Threading;
-using Microsoft.Extensions.Logging;
-using RUINORERP.UI.AdvancedUIModule;
-
-
-using RUINORERP.Business.CommService;
-using System.Windows.Documents;
-using FastReport.Forms;
-using System.Diagnostics;
-using OpenTK.Input;
-using Castle.Components.DictionaryAdapter.Xml;
-using log4net.Repository.Hierarchy;
-using RUINORERP.UI.SS;
-using RUINORERP.UI.Monitoring.Auditing;
-using Mysqlx.Crud;
-using RUINORERP.Business.RowLevelAuthService;
+using RUINORERP.Common.Helper;
 using RUINORERP.Global;
-using Netron.GraphLib;
-using Microsoft.Extensions.DependencyInjection;
-using System.Management;
+using RUINORERP.Model;
+using RUINORERP.Model.Dto;
 using RUINORERP.PacketSpec.Models.Core;
+using RUINORERP.UI.AdvancedUIModule;
+using RUINORERP.UI.Common;
+using RUINORERP.UI.Monitoring.Auditing;
+using RUINORERP.UI.SS;
+using RUINORERP.UI.UControls;
+using SqlSugar;
+using StackExchange.Redis;
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Diagnostics;
+using System.Drawing;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Management;
+using System.Reflection;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows.Documents;
+using System.Windows.Forms;
 
 
 
@@ -2713,7 +2712,7 @@ namespace RUINORERP.UI.SysConfig
                     //提示服务器开启推送工作流
                     //OriginalData beatDataDel = ClientDataBuilder.BaseInfoChangeBuilder(typeof(T).Name);
                     //MainForm.Instance.ecs.AddSendData(beatDataDel);
-                    RUINORERP.UI.Common.CacheManager.DeleteEntity(typeof(T).Name, PKValue.ToLong());
+                    EntityCacheHelper.DeleteEntity(typeof(T).Name, PKValue.ToLong());
 
                 }
 

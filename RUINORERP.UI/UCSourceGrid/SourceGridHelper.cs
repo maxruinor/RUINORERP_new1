@@ -3160,11 +3160,13 @@ namespace RUINORERP.UI.UCSourceGrid
                 if (schemaInfo != null)
                 {
                     //从这里取缓存用于加载下拉值的选项
-                    var cachelist = _cacheManager.GetEntityList<object>(tableName);
+                    //var cachelist = _cacheManager.GetEntityList<object>(tableName);
+                    var cachelist = _cacheManager.GetEntityListByTableName(tableName);
+
                     if (cachelist != null)
                     {
-                        if (dci.DataSourceFilter != null)
-                            cachelist = cachelist.Where(dci.DataSourceFilter.Match).ToList();
+                        //if (dci.DataSourceFilter != null)
+                        //    cachelist = cachelist.Where(dci.DataSourceFilter.Match).ToList();
 
                         List<string> ids = new List<string>();
                         ConcurrentDictionary<string, string> OutNames = new ConcurrentDictionary<string, string>();
@@ -3174,11 +3176,42 @@ namespace RUINORERP.UI.UCSourceGrid
                             {
                                 //假如是库位选择  有一个没有启用。但是又要显示原来选择过的数据用于显示。编辑时不能选择没有启用的库位。如何处理实际是如何呢？
                                 //这里要不要利用process中设置的条件来判断呢？
+
+                                //string id = item.GetPropertyValue(schemaInfo.PrimaryKeyField).ToString();
+                                //ids.Add(id.ToString());//设置一个主键集合 
+                                //OutNames.TryAdd(id, item.GetPropertyValue(schemaInfo.DisplayField).ToString());//设置一个显示名称的集合
+
                                 try
                                 {
-                                    string id = item.GetPropertyValue(schemaInfo.PrimaryKeyField).ToString();
-                                    ids.Add(id.ToString());//设置一个主键集合 
-                                    OutNames.TryAdd(id, item.GetPropertyValue(schemaInfo.DisplayField).ToString());//设置一个显示名称的集合
+                                    JObject jObject = (JObject)item;
+                                    string id = null;
+                                    string displayName = null;
+                                    
+                                    // 尝试获取ID值，优先使用schemaInfo.PrimaryKeyField，其次使用PrimaryKeyID
+                                    if (jObject.ContainsKey(schemaInfo.PrimaryKeyField))
+                                    {
+                                        id = jObject[schemaInfo.PrimaryKeyField]?.ToString();
+                                    }
+                                    else if (jObject.ContainsKey("PrimaryKeyID"))
+                                    {
+                                        id = jObject["PrimaryKeyID"]?.ToString();
+                                    }
+                                    
+                                    // 获取显示名称
+                                    if (jObject.ContainsKey(schemaInfo.DisplayField))
+                                    {
+                                        displayName = jObject[schemaInfo.DisplayField]?.ToString();
+                                    }
+                                    
+                                    // 只有当ID有效时才添加到集合
+                                    if (!string.IsNullOrEmpty(id))
+                                    {
+                                        ids.Add(id);//设置一个主键集合 
+                                        if (!string.IsNullOrEmpty(displayName))
+                                        {
+                                            OutNames.TryAdd(id, displayName);//设置一个显示名称的集合
+                                        }
+                                    }
                                 }
                                 catch (Exception ex)
                                 {

@@ -406,7 +406,8 @@ namespace RUINORERP.UI.Common
                     }
                     string SourceTableName = typeof(tb_Employee).Name;
                     // 使用静态缓存管理器方法获取显示值
-                    object objText = CacheManager.GetDisplayValue(SourceTableName, IdValue);
+                    object objText = EntityCacheHelper.GetDisplayValue(SourceTableName, IdValue);
+               
                     if (objText != null && objText.ToString() != "System.Object")
                     {
                         return objText.ToString();
@@ -420,7 +421,7 @@ namespace RUINORERP.UI.Common
                     if (mapping.MappedTargetFieldName == idColName)
                     {
                         // 使用静态缓存管理器方法获取显示值
-                        object displayValue = CacheManager.GetDisplayValue(mapping.ReferenceTableName, IdValue);
+                        object displayValue = EntityCacheHelper.GetDisplayValue(mapping.ReferenceTableName, IdValue);
                         if (displayValue != null)
                         {
                             return displayValue.ToString();
@@ -433,7 +434,7 @@ namespace RUINORERP.UI.Common
                     // 使用静态缓存管理器方法获取显示值
                     var schemaInfo = TableSchemaManager.Instance.GetSchemaInfo(TargetTableName);
                     // 先尝试直接从目标表获取
-                    object nameValue = CacheManager.GetDisplayValue(TargetTableName, IdValue);
+                    object nameValue = EntityCacheHelper.GetDisplayValue(TargetTableName, IdValue);
                     if (nameValue != null && !string.IsNullOrWhiteSpace(nameValue.ToString()))
                     {
                         return nameValue.ToString();

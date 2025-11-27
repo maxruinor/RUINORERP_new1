@@ -195,7 +195,7 @@ namespace RUINORERP.UI
             // 配置数据库
             ConfigureDatabase(services);
 
-            CacheSyncExtensions.AddCacheSyncMetaSetup(services);
+      
 
             // 配置AutoMapper
             ConfigureAutoMapper(services);
@@ -1230,8 +1230,7 @@ namespace RUINORERP.UI
             services.AddSingleton<IMapper>(mapper);
             services.AddAutoMapperSetup();
 
-
-            CacheSyncExtensions.AddCacheSyncMetaSetup(services);
+ 
 
             //services.AddCorsSetup();
             //services.AddMiniProfilerSetup();

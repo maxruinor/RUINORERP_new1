@@ -381,7 +381,7 @@ namespace RUINORERP.UI.Common
                 // 快速检查本地缓存
                 if (!forceRefresh && IsCacheableTable(tableName))
                 {
-                    var localCache = CacheManager.GetEntityList<object>(tableName);
+                    var localCache = EntityCacheHelper.GetEntityList<object>(tableName);
                     if (localCache != null && localCache.Count > 0)
                     {
                         return true; // 本地有数据，立即返回成功
@@ -1191,7 +1191,7 @@ namespace RUINORERP.UI.Common
                 if (schemaInfo != null)
                 {
                     // 直接使用CacheManager的GetEntity方法，内部已实现单例模式
-                    object obj = CacheManager.GetEntity<T>(ProdDetailID);
+                    object obj = EntityCacheHelper.GetEntity<T>(ProdDetailID);
                     if (obj != null && obj.GetType().Name != "Object" && obj is T)
                     {
                         prodDetail = obj as T;
@@ -1246,7 +1246,7 @@ namespace RUINORERP.UI.Common
             List<View_ProdDetail> list = new List<View_ProdDetail>();
 
             // 直接使用CacheManager的GetEntityList方法，内部已实现单例模式
-            list = CacheManager.GetEntityList<View_ProdDetail>();
+            list = EntityCacheHelper.GetEntityList<View_ProdDetail>();
 
             foreach (var item in list)
             {
@@ -1631,7 +1631,7 @@ namespace RUINORERP.UI.Common
             // 快速检查本地缓存，如果已有数据且不需要强制刷新，直接返回
             if (!forceRefresh && IsCacheableTable(tableName))
             {
-                var localCache = CacheManager.GetEntityList<object>(tableName);
+                var localCache = EntityCacheHelper.GetEntityListByTableName(tableName);
                 if (localCache != null && localCache.Count > 0)
                 {
                     MainForm.Instance.logger.LogDebug($"本地缓存数据可用，跳过网络请求: {tableName}");
@@ -1654,7 +1654,7 @@ namespace RUINORERP.UI.Common
                 if (tableSchemaManager.ContainsTable(tableName) && IsCacheableTable(tableName))
                 {
                     // 快速检查，避免重复请求
-                    var entityList = CacheManager.GetEntityList<object>(tableName);
+                    var entityList = EntityCacheHelper.GetEntityList<object>(tableName);
                     if (forceRefresh || entityList == null || entityList.Count == 0)
                     {
                         await cacheClient.RequestCacheAsync(tableName, combinedToken);
@@ -1708,7 +1708,7 @@ namespace RUINORERP.UI.Common
                 foreach (var relatedTable in relatedTables)
                 {
                     // 快速检查本地缓存
-                    var relatedCache = CacheManager.GetEntityList<object>(relatedTable);
+                    var relatedCache = EntityCacheHelper.GetEntityListByTableName(relatedTable);
                     if (relatedCache == null || relatedCache.Count == 0)
                     {
                         relatedTasks.Add(cacheClient.RequestCacheAsync(relatedTable, combinedToken));

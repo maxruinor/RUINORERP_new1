@@ -1,92 +1,80 @@
+using AutoMapper;
 using AutoUpdateTools;
 using CacheManager.Core;
+using FastReport.Barcode;
 using FastReport.DevComponents.DotNetBar.Controls;
 using FastReport.Table;
-using HLH.Lib.Helper;
-using RUINORERP.Business;
-using RUINORERP.Business.CommService;
-using RUINORERP.Business.Processor;
-
-using RUINORERP.Model;
-using RUINORERP.UI.AdvancedUIModule;
-using RUINORERP.UI.BaseForm;
-using RUINORERP.UI.Common;
-using RUINORERP.UI.Report;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
-using System.Web.WebSockets;
-using System.Windows.Forms;
-using System.Windows.Media;
-using AutoMapper;
-using FastReport.Barcode;
-
 using FastReport.Utils;
+using FluentValidation;
+using FluentValidation.Results;
+using HLH.Lib.Helper;
+using ICSharpCode.SharpZipLib.Zip;
 using Krypton.Docking;
 using Krypton.Navigator;
 using Krypton.Toolkit;
 using Krypton.Workspace;
+using MathNet.Numerics.LinearAlgebra.Factorization;
 using Microsoft.Extensions.Logging;
 using Netron.GraphLib;
-
+using NPOI.Util;
 using OfficeOpenXml;
 using Org.BouncyCastle.Asn1.X509.Qualified;
+using Org.BouncyCastle.Utilities;
 using RUINOR.Core;
 using RUINORERP.AutoMapper;
-
+using RUINORERP.Business;
+using RUINORERP.Business.Cache;
+using RUINORERP.Business.CommService;
+using RUINORERP.Business.Processor;
 using RUINORERP.Business.Security;
 using RUINORERP.Common.CollectionExtension;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Common.Helper;
 using RUINORERP.Global;
 using RUINORERP.Global.CustomAttribute;
-
+using RUINORERP.Global.EnumExt;
+using RUINORERP.Model;
 using RUINORERP.Model.Base;
 using RUINORERP.Model.CommonModel;
 using RUINORERP.Model.Models;
-
+using RUINORERP.UI.AdvancedUIModule;
+using RUINORERP.UI.BaseForm;
+using RUINORERP.UI.BI;
+using RUINORERP.UI.Common;
 using RUINORERP.UI.FormProperty;
-
+using RUINORERP.UI.Report;
 using RUINORERP.UI.UControls;
 using RUINORERP.UI.UCSourceGrid;
 using RUINORERP.UI.UserCenter;
 using RUINORERP.UI.UserPersonalized;
+using SixLabors.ImageSharp.Processing;
 using SqlSugar;
-
+using System;
 using System.Collections;
 using System.Collections.Concurrent;
-
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
 using System.IO;
-
+using System.Linq;
 using System.Linq.Dynamic.Core;
-
+using System.Linq.Expressions;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security.Policy;
-
+using System.Text;
+using System.Threading.Tasks;
 using System.Web.UI.WebControls;
-
-using System.Xml;
-using CommonHelper = RUINORERP.UI.Common.CommonHelper;
-using XmlDocument = System.Xml.XmlDocument;
-using Image = System.Drawing.Image;
-using ICSharpCode.SharpZipLib.Zip;
-using MathNet.Numerics.LinearAlgebra.Factorization;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
-using FluentValidation;
-using FluentValidation.Results;
+using System.Web.WebSockets;
 using System.Windows.Documents;
-using Org.BouncyCastle.Utilities;
-using SixLabors.ImageSharp.Processing;
-using RUINORERP.UI.BI;
-using NPOI.Util;
-using RUINORERP.Global.EnumExt;
+using System.Windows.Forms;
+using System.Windows.Media;
+using System.Xml;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
+using CommonHelper = RUINORERP.UI.Common.CommonHelper;
+using Image = System.Drawing.Image;
+using XmlDocument = System.Xml.XmlDocument;
 
 
 
@@ -315,7 +303,7 @@ namespace RUINORERP.UI.SysConfig
             if (listBoxTableList.SelectedItem is SuperValue kv)
             {
                 string tableName = kv.superDataTypeName;
-                RUINORERP.UI.Common.CacheManager.DeleteEntityList(tableName);
+                EntityCacheHelper.DeleteEntityList(tableName);
             }
         }
 

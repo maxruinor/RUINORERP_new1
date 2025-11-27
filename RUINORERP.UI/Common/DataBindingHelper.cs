@@ -529,7 +529,7 @@ namespace RUINORERP.UI.Common
                 if (queryFilter.FilterLimitExpressions.Count == 0)
                 {
                     // 使用静态缓存管理器方法获取实体列表
-                    var cacheList = CacheManager.GetEntityList<object>(entityType.Name);
+                    var cacheList = EntityCacheHelper.GetEntityListByTableName(entityType.Name);
                     if (cacheList != null && cacheList.Count > 0)
                     {
                         entityList = cacheList;
@@ -888,7 +888,8 @@ namespace RUINORERP.UI.Common
                                             // 重新加载数据
                                             BindingSource NewBsList = new BindingSource();
                                             // 使用静态缓存管理器方法获取实体列表
-                                            var rslist = CacheManager.GetEntityList<object>(targetEntity.Name);
+                                            var rslist = EntityCacheHelper.GetEntityListByTableName(targetEntity.Name); 
+                                            
                                             if (rslist != null && queryFilter.FilterLimitExpressions.Count == 0)
                                             {
                                                 Type listType = rslist.GetType();
@@ -1275,7 +1276,7 @@ namespace RUINORERP.UI.Common
                                             //var lastlist = ((IEnumerable<dynamic>)rslist).Select(item => Activator.CreateInstance(mytype)).ToList();
                                             //有缓存的情况
                                             // 使用静态缓存管理器方法获取实体列表
-                                            var rslist = CacheManager.GetEntityList<object>(targetEntity.Name);
+                                            var rslist = EntityCacheHelper.GetEntityListByTableName(targetEntity.Name);
                                             //条件如果有限制了。就不能全部加载
                                             if (rslist != null && queryFilter.FilterLimitExpressions.Count == 0)
                                             {

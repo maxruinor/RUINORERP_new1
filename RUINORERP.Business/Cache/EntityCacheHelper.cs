@@ -7,40 +7,235 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
+using System.Threading;
 
 namespace RUINORERP.Business.Cache
 {
     /// <summary>
     /// 实体缓存静态帮助类
     /// 提供静态方法直接访问实体缓存服务，避免在每个类中都需要注入服务实例
+    /// 合并了UI层和Server层CacheManager的优点，提供统一的缓存访问入口
     /// </summary>
     public static class EntityCacheHelper
     {
-        private static IEntityCacheManager _currentService;
+        // 静态锁对象，用于线程安全操作
+        private static readonly object _lock = new object();
+        // 手动设置的服务实例
+        private static IEntityCacheManager _manuallySetService;
+        // 延迟加载的服务实例
+        private static readonly Lazy<IEntityCacheManager> _lazyService = 
+            new Lazy<IEntityCacheManager>(() => GetServiceFromContainer(), LazyThreadSafetyMode.ExecutionAndPublication);
 
         /// <summary>
         /// 设置当前使用的实体缓存服务实例
         /// 此方法应在应用程序启动时调用，通常在依赖注入容器配置完成后
+        /// 手动设置的服务实例优先级高于从容器获取的实例
         /// </summary>
         /// <param name="service">实体缓存服务实例</param>
         public static void SetCurrent(IEntityCacheManager service)
         {
-            _currentService = service;
+            lock (_lock)
+            {
+                _manuallySetService = service;
+            }
+        }
+
+        /// <summary>
+        /// 从依赖注入容器获取服务实例
+        /// 尝试从不同项目的容器中获取服务
+        /// </summary>
+        /// <returns>实体缓存服务实例，如果无法获取则返回null</returns>
+        private static IEntityCacheManager GetServiceFromContainer()
+        {
+            try
+            {
+                // 尝试从不同项目的容器中获取服务
+                // 使用反射避免直接引用其他项目
+                Type startupType = null;
+                object startupInstance = null;
+                
+                // 尝试获取UI层的Startup
+                try
+                {
+                    startupType = Type.GetType("RUINORERP.UI.Common.Startup");
+                    if (startupType != null)
+                    {
+                        // 如果是静态类，直接调用静态方法
+                        var method = startupType.GetMethod("GetFromFac", new[] { typeof(Type) });
+                        if (method != null)
+                        {
+                            return method.Invoke(null, new[] { typeof(IEntityCacheManager) }) as IEntityCacheManager;
+                        }
+                    }
+                }
+                catch { }
+                
+                // 尝试获取Server层的Startup
+                try
+                {
+                    startupType = Type.GetType("RUINORERP.Server.Startup");
+                    if (startupType != null)
+                    {
+                        var method = startupType.GetMethod("GetFromFac", new[] { typeof(Type) });
+                        if (method != null)
+                        {
+                            return method.Invoke(null, new[] { typeof(IEntityCacheManager) }) as IEntityCacheManager;
+                        }
+                    }
+                }
+                catch { }
+                
+                // 尝试获取Business层的Startup
+                try
+                {
+                    startupType = Type.GetType("RUINORERP.Business.Startup");
+                    if (startupType != null)
+                    {
+                        var method = startupType.GetMethod("GetFromFac", new[] { typeof(Type) });
+                        if (method != null)
+                        {
+                            return method.Invoke(null, new[] { typeof(IEntityCacheManager) }) as IEntityCacheManager;
+                        }
+                    }
+                }
+                catch { }
+            }
+            catch (Exception ex)
+            {
+                // 记录异常但不抛出，避免影响应用程序启动
+                Console.WriteLine($"获取实体缓存服务实例时发生异常: {ex.Message}");
+            }
+            
+            return null;
         }
 
         /// <summary>
         /// 获取当前实体缓存服务实例
-        /// 如果尚未设置，则会抛出异常
+        /// 优先级: 手动设置的实例 > 从容器获取的实例
+        /// 如果都不可用，记录警告并返回null（增强的防御性编程）
         /// </summary>
         public static IEntityCacheManager Current
         {
             get
             {
-                if (_currentService == null)
+                // 优先使用手动设置的实例
+                if (_manuallySetService != null)
                 {
-                    throw new InvalidOperationException("实体缓存服务未初始化，请先调用SetCurrent方法设置服务实例");
+                    return _manuallySetService;
                 }
-                return _currentService;
+                
+                // 尝试从容器获取实例
+                var service = _lazyService.Value;
+                if (service != null)
+                {
+                    return service;
+                }
+                
+                // 记录警告日志
+                LogWarning("实体缓存服务未初始化，无法获取缓存服务实例。请确保在应用启动时调用SetCurrent方法或配置正确的依赖注入");
+                return null;
+            }
+        }
+        
+        /// <summary>
+        /// 记录警告日志
+        /// 尝试通过不同方式记录日志，避免依赖特定日志系统
+        /// </summary>
+        /// <param name="message">警告信息</param>
+        private static void LogWarning(string message)
+        {
+            try
+            {
+                // 尝试获取MainForm实例记录日志
+                var mainFormType = Type.GetType("RUINORERP.UI.Common.MainForm");
+                if (mainFormType != null)
+                {
+                    var instanceProperty = mainFormType.GetProperty("Instance");
+                    if (instanceProperty != null)
+                    {
+                        var instance = instanceProperty.GetValue(null);
+                        if (instance != null)
+                        {
+                            var loggerProperty = instance.GetType().GetProperty("logger");
+                            if (loggerProperty != null)
+                            {
+                                var logger = loggerProperty.GetValue(instance);
+                                if (logger != null)
+                                {
+                                    var logErrorMethod = logger.GetType().GetMethod("LogError", new[] { typeof(string) });
+                                    if (logErrorMethod != null)
+                                    {
+                                        logErrorMethod.Invoke(logger, new object[] { message });
+                                        return;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                // 降级到控制台输出
+                Console.WriteLine($"警告: {message}");
+            }
+            catch { }
+        }
+        
+        /// <summary>
+        /// 安全地执行缓存操作
+        /// 如果服务实例为null，返回默认值而不是抛出异常
+        /// </summary>
+        /// <typeparam name="T">返回类型</typeparam>
+        /// <param name="action">要执行的操作</param>
+        /// <param name="defaultValue">默认返回值</param>
+        /// <param name="errorMessage">错误信息</param>
+        /// <returns>操作结果或默认值</returns>
+        private static T SafeExecute<T>(Func<IEntityCacheManager, T> action, T defaultValue = default, string errorMessage = null)
+        {
+            var service = Current;
+            if (service == null)
+            {
+                if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    LogWarning(errorMessage);
+                }
+                return defaultValue;
+            }
+            
+            try
+            {
+                return action(service);
+            }
+            catch (Exception ex)
+            {
+                LogWarning($"执行缓存操作时发生异常: {ex.Message}\n{errorMessage}");
+                return defaultValue;
+            }
+        }
+        
+        /// <summary>
+        /// 安全地执行无返回值的缓存操作
+        /// </summary>
+        /// <param name="action">要执行的操作</param>
+        /// <param name="errorMessage">错误信息</param>
+        private static void SafeExecute(Action<IEntityCacheManager> action, string errorMessage = null)
+        {
+            var service = Current;
+            if (service == null)
+            {
+                if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    LogWarning(errorMessage);
+                }
+                return;
+            }
+            
+            try
+            {
+                action(service);
+            }
+            catch (Exception ex)
+            {
+                LogWarning($"执行缓存操作时发生异常: {ex.Message}\n{errorMessage}");
             }
         }
 
@@ -54,7 +249,7 @@ namespace RUINORERP.Business.Cache
         /// <returns>格式化的缓存键</returns>
         public static string GenerateCacheKey(IEntityCacheManager.CacheKeyType type, string tableName, object primaryKeyValue = null)
         {
-            return Current.GenerateCacheKey(type, tableName, primaryKeyValue);
+            return SafeExecute(service => service.GenerateCacheKey(type, tableName, primaryKeyValue), $"{type}_{tableName}_{primaryKeyValue}", "无法生成缓存键");
         }
         #endregion
 
@@ -64,7 +259,7 @@ namespace RUINORERP.Business.Cache
         /// </summary>
         public static List<T> GetEntityList<T>() where T : class
         {
-            return Current.GetEntityList<T>();
+            return SafeExecute(service => service.GetEntityList<T>(), new List<T>(), $"无法获取类型 {typeof(T).Name} 的缓存数据");
         }
 
         /// <summary>
@@ -72,7 +267,7 @@ namespace RUINORERP.Business.Cache
         /// </summary>
         public static List<T> GetEntityList<T>(string tableName) where T : class
         {
-            return Current.GetEntityList<T>(tableName);
+            return SafeExecute(service => service.GetEntityList<T>(tableName), new List<T>(), $"无法获取表 {tableName} 的缓存数据");
         }
 
         /// <summary>
@@ -80,7 +275,7 @@ namespace RUINORERP.Business.Cache
         /// </summary>
         public static T GetEntity<T>(object idValue) where T : class
         {
-            return Current.GetEntity<T>(idValue);
+            return SafeExecute(service => service.GetEntity<T>(idValue), null, $"无法获取类型 {typeof(T).Name} 中ID为 {idValue} 的实体");
         }
 
         /// <summary>
@@ -88,7 +283,7 @@ namespace RUINORERP.Business.Cache
         /// </summary>
         public static object GetEntity(string tableName, object primaryKeyValue)
         {
-            return Current.GetEntity(tableName, primaryKeyValue);
+            return SafeExecute(service => service.GetEntity(tableName, primaryKeyValue), null, $"无法获取表 {tableName} 中主键值为 {primaryKeyValue} 的实体");
         }
 
         /// <summary>
@@ -96,7 +291,7 @@ namespace RUINORERP.Business.Cache
         /// </summary>
         public static object GetDisplayValue(string tableName, object idValue)
         {
-            return Current.GetDisplayValue(tableName, idValue);
+            return SafeExecute(service => service.GetDisplayValue(tableName, idValue), null, $"无法获取表 {tableName} 中ID为 {idValue} 的显示值");
         }
         
         /// <summary>
@@ -107,7 +302,7 @@ namespace RUINORERP.Business.Cache
         /// <returns>实体列表，类型为表对应的强类型集合</returns>
         public static dynamic GetEntityListByTableName(string tableName)
         {
-            return Current.GetEntityListByTableName(tableName);
+            return SafeExecute(service => service.GetEntityListByTableName(tableName), null, $"无法根据表名 {tableName} 获取实体列表");
         }
         #endregion
 
@@ -117,7 +312,7 @@ namespace RUINORERP.Business.Cache
         /// </summary>
         public static void UpdateEntityList<T>(List<T> list) where T : class
         {
-            Current.UpdateEntityList(list);
+            SafeExecute(service => service.UpdateEntityList(list), $"无法更新类型 {typeof(T).Name} 的实体列表缓存");
         }
 
         /// <summary>
@@ -125,7 +320,7 @@ namespace RUINORERP.Business.Cache
         /// </summary>
         public static void UpdateEntity<T>(T entity) where T : class
         {
-            Current.UpdateEntity(entity);
+            SafeExecute(service => service.UpdateEntity(entity), $"无法更新类型 {typeof(T).Name} 的实体缓存");
         }
 
         /// <summary>
@@ -133,7 +328,7 @@ namespace RUINORERP.Business.Cache
         /// </summary>
         public static void UpdateEntityList(string tableName, object list)
         {
-            Current.UpdateEntityList(tableName, list);
+            SafeExecute(service => service.UpdateEntityList(tableName, list), $"无法更新表 {tableName} 的实体列表缓存");
         }
 
         /// <summary>
@@ -141,7 +336,7 @@ namespace RUINORERP.Business.Cache
         /// </summary>
         public static void UpdateEntity(string tableName, object entity)
         {
-            Current.UpdateEntity(tableName, entity);
+            SafeExecute(service => service.UpdateEntity(tableName, entity), $"无法更新表 {tableName} 的实体缓存");
         }
         #endregion
 
@@ -151,7 +346,7 @@ namespace RUINORERP.Business.Cache
         /// </summary>
         public static void DeleteEntity<T>(object idValue) where T : class
         {
-            Current.DeleteEntity<T>(idValue);
+            SafeExecute(service => service.DeleteEntity<T>(idValue), $"无法删除类型 {typeof(T).Name} 中ID为 {idValue} 的实体缓存");
         }
 
         /// <summary>
@@ -159,7 +354,7 @@ namespace RUINORERP.Business.Cache
         /// </summary>
         public static void DeleteEntityList<T>(List<T> entities) where T : class
         {
-            Current.DeleteEntityList(entities);
+            SafeExecute(service => service.DeleteEntityList(entities), $"无法删除类型 {typeof(T).Name} 的实体列表缓存");
         }
 
         /// <summary>
@@ -168,7 +363,7 @@ namespace RUINORERP.Business.Cache
         /// <param name="tableName">表名</param>
         public static void DeleteEntityList(string tableName)
         {
-            Current.DeleteEntityList(tableName);
+            SafeExecute(service => service.DeleteEntityList(tableName), $"无法删除表 {tableName} 的实体列表缓存");
         }
 
         /// <summary>
@@ -176,7 +371,7 @@ namespace RUINORERP.Business.Cache
         /// </summary>
         public static void DeleteEntity(string tableName, object primaryKeyValue)
         {
-            Current.DeleteEntity(tableName, primaryKeyValue);
+            SafeExecute(service => service.DeleteEntity(tableName, primaryKeyValue), $"无法删除表 {tableName} 中主键值为 {primaryKeyValue} 的实体缓存");
         }
 
         /// <summary>
@@ -186,7 +381,7 @@ namespace RUINORERP.Business.Cache
         /// <param name="idValues">主键值数组</param>
         public static void DeleteEntities<T>(object[] idValues) where T : class
         {
-            Current.DeleteEntities<T>(idValues);
+            SafeExecute(service => service.DeleteEntities<T>(idValues), $"无法批量删除类型 {typeof(T).Name} 的实体缓存");
         }
 
         /// <summary>
@@ -196,7 +391,7 @@ namespace RUINORERP.Business.Cache
         /// <param name="primaryKeyValues">主键值数组</param>
         public static void DeleteEntities(string tableName, object[] primaryKeyValues)
         {
-            Current.DeleteEntities(tableName, primaryKeyValues);
+            SafeExecute(service => service.DeleteEntities(tableName, primaryKeyValues), $"无法批量删除表 {tableName} 的实体缓存");
         }
         #endregion
 
@@ -221,14 +416,16 @@ namespace RUINORERP.Business.Cache
             bool cacheWholeRow = true,
             params Expression<Func<T, object>>[] otherDisplayFieldExpressions) where T : class
         {
-            Current.InitializeTableSchema(
-                primaryKeyExpression,
-                displayFieldExpression,
-                isView,
-                isCacheable,
-                description,
-                cacheWholeRow,
-                otherDisplayFieldExpressions);
+            SafeExecute(service => 
+                service.InitializeTableSchema(
+                    primaryKeyExpression,
+                    displayFieldExpression,
+                    isView,
+                    isCacheable,
+                    description,
+                    cacheWholeRow,
+                    otherDisplayFieldExpressions), 
+                $"无法初始化类型 {typeof(T).Name} 的表结构信息");
         }
 
         /// <summary>
@@ -236,74 +433,54 @@ namespace RUINORERP.Business.Cache
         /// </summary>
         public static Type GetEntityType(string tableName)
         {
-            return Current.GetEntityType(tableName);
+            return SafeExecute(service => service.GetEntityType(tableName), null, $"无法获取表 {tableName} 对应的实体类型");
         }
         #endregion
 
-        #region 缓存同步元数据方法
-        /// <summary>
-        /// 获取指定表的缓存同步元数据
-        /// </summary>
-        /// <param name="tableName">表名</param>
-        /// <returns>缓存同步元数据</returns>
-        public static CacheSyncInfo GetTableSyncInfo(string tableName)
-        {
-            return Current.GetTableSyncInfo(tableName);
-        }
-
-        /// <summary>
-        /// 设置表缓存的过期时间
-        /// </summary>
-        /// <param name="tableName">表名</param>
-        /// <param name="expirationTime">过期时间</param>
-        public static void SetTableCacheExpiration(string tableName, DateTime expirationTime)
-        {
-            Current.SetTableCacheExpiration(tableName, expirationTime);
-        }
-        #endregion
+     
 
         #region 缓存统计方法
         /// <summary>
         /// 缓存命中次数
         /// </summary>
-        public static long CacheHits => Current.CacheHits;
+        public static long CacheHits => SafeExecute(service => service.CacheHits, 0L);
 
         /// <summary>
         /// 缓存未命中次数
         /// </summary>
-        public static long CacheMisses => Current.CacheMisses;
+        public static long CacheMisses => SafeExecute(service => service.CacheMisses, 0L);
 
         /// <summary>
         /// 缓存命中率
         /// </summary>
-        public static double HitRatio => Current.HitRatio;
+        public static double HitRatio => SafeExecute(service => service.HitRatio, 0.0);
 
         /// <summary>
         /// 缓存写入次数
         /// </summary>
-        public static long CachePuts => Current.CachePuts;
+        public static long CachePuts => SafeExecute(service => service.CachePuts, 0L);
 
         /// <summary>
         /// 缓存删除次数
         /// </summary>
-        public static long CacheRemoves => Current.CacheRemoves;
+        public static long CacheRemoves => SafeExecute(service => service.CacheRemoves, 0L);
 
         /// <summary>
         /// 缓存项总数
         /// </summary>
-        public static int CacheItemCount => Current.CacheItemCount;
+        public static int CacheItemCount => SafeExecute(service => service.CacheItemCount, 0);
 
         /// <summary>
         /// 缓存大小（估计值，单位：字节）
         /// </summary>
-        public static long EstimatedCacheSize => Current.EstimatedCacheSize;
+        public static long EstimatedCacheSize => SafeExecute(service => service.EstimatedCacheSize, 0L);
 
         /// <summary>
         /// 重置统计信息
         /// </summary>
         public static void ResetStatistics()
         {
-            Current.ResetStatistics();
+            SafeExecute(service => service.ResetStatistics(), "无法重置缓存统计信息");
         }
 
         /// <summary>
@@ -311,7 +488,7 @@ namespace RUINORERP.Business.Cache
         /// </summary>
         public static Dictionary<string, CacheItemStatistics> GetCacheItemStatistics()
         {
-            return Current.GetCacheItemStatistics();
+            return SafeExecute(service => service.GetCacheItemStatistics(), new Dictionary<string, CacheItemStatistics>(), "无法获取缓存项统计详情");
         }
 
         /// <summary>
@@ -319,7 +496,7 @@ namespace RUINORERP.Business.Cache
         /// </summary>
         public static Dictionary<string, TableCacheStatistics> GetTableCacheStatistics()
         {
-            return Current.GetTableCacheStatistics();
+            return SafeExecute(service => service.GetTableCacheStatistics(), new Dictionary<string, TableCacheStatistics>(), "无法获取按表名分组的缓存统计");
         }
         #endregion
     }

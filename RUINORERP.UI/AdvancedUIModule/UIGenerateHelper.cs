@@ -443,7 +443,7 @@ namespace RUINORERP.UI.AdvancedUIModule
                         if (queryField.HasSubFilter)
                         {
                             var cacheManager = Startup.GetFromFac<IEntityCacheManager>();
-                            var tableSchema = cacheManager.GetTableSchema(queryField.SubQueryTargetType.Name);
+                            var tableSchema = TableSchemaManager.Instance.GetSchemaInfo(queryField.SubQueryTargetType.Name);
                             if (tableSchema != null)
                             {
                                     pair = new KeyValuePair<string, string>(tableSchema.PrimaryKeyField, tableSchema.DisplayField);
@@ -510,7 +510,7 @@ namespace RUINORERP.UI.AdvancedUIModule
                         if (queryField.FKTableName.IsNotEmptyOrNull())
                         {
                             var cacheManager = Startup.GetFromFac<IEntityCacheManager>();
-                            var tableSchema = cacheManager.GetTableSchema(queryField.SubQueryTargetType.Name);
+                            var tableSchema = TableSchemaManager.Instance.GetSchemaInfo(queryField.SubQueryTargetType.Name);
                             if (tableSchema != null)
                             {
                                 pair = new KeyValuePair<string, string>(tableSchema.PrimaryKeyField, tableSchema.DisplayField);
@@ -573,7 +573,7 @@ namespace RUINORERP.UI.AdvancedUIModule
                         if (queryField.FKTableName.IsNotEmptyOrNull())
                         {
                             var cacheManager = Startup.GetFromFac<IEntityCacheManager>();
-                            var tableSchema = cacheManager.GetTableSchema(queryField.SubQueryTargetType.Name);
+                            var tableSchema = TableSchemaManager.Instance.GetSchemaInfo(queryField.SubQueryTargetType.Name);
                             if (tableSchema != null)
                             {
                                 pair = new KeyValuePair<string, string>(tableSchema.PrimaryKeyField, tableSchema.DisplayField);

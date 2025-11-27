@@ -1,3 +1,13 @@
+using Castle.Core.Logging;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using RUINORERP.Business.Cache;
+using RUINORERP.PacketSpec.Commands;
+using RUINORERP.Server.Network.Core;
+using RUINORERP.Server.Network.Interfaces.Services;
+using RUINORERP.Server.Network.Monitoring;
+using RUINORERP.Server.Network.Services;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -5,18 +15,9 @@ using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using RUINORERP.Server.Network.Core;
-using RUINORERP.Server.Network.Interfaces.Services;
-using RUINORERP.PacketSpec.Commands;
-using RUINORERP.Server.Network.Monitoring;
-using System.Threading;
-using RUINORERP.Server.Network.Services;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Castle.Core.Logging;
-using Microsoft.Extensions.Logging;
 
 namespace RUINORERP.Server.Controls
 {
@@ -634,9 +635,9 @@ namespace RUINORERP.Server.Controls
                 {
                     _sessionService.ResetStatistics();
                 }
-                
+
                 // 重置缓存统计信息
-                CacheManager.ResetStatistics();
+                EntityCacheHelper.ResetStatistics();
                 
                 // 刷新数据显示
                 RefreshData();

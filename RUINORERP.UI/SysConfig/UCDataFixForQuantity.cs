@@ -1,63 +1,61 @@
-﻿using System;
+﻿using AutoMapper;
+using FastReport.DevComponents.DotNetBar.Controls;
+using FluentValidation.Results;
+using HLH.Lib.Security;
+using Microsoft.Extensions.Logging;
+using Netron.GraphLib;
+using NPOI.POIFS.Properties;
+using Org.BouncyCastle.Crypto;
+using Org.BouncyCastle.Math.Field;
+using RUINORERP.Business;
+using RUINORERP.Business.AutoMapper;
+using RUINORERP.Business.Cache;
+using RUINORERP.Business.CommService;
+using RUINORERP.Common;
+using RUINORERP.Common.CollectionExtension;
+using RUINORERP.Common.Extensions;
+using RUINORERP.Common.Helper;
+using RUINORERP.Global;
+using RUINORERP.Global.EnumExt.CRM;
+using RUINORERP.IRepository.Base;
+using RUINORERP.IServices;
+using RUINORERP.IServices.BASE;
+using RUINORERP.Model;
+using RUINORERP.Model.Base;
+using RUINORERP.Model.CommonModel;
+using RUINORERP.Model.Context;
+using RUINORERP.Repository.Base;
+using RUINORERP.Repository.UnitOfWorks;
+using RUINORERP.Services;
+using RUINORERP.UI.ATechnologyStack;
+using RUINORERP.UI.Common;
+using RUINORERP.UI.Common;
+using RUINORERP.UI.CommonUI;
+using RUINORERP.UI.PSI.PUR;
+using RUINORERP.UI.PSI.SAL;
+using RUINORERP.UI.Report;
+using RUINORERP.UI.SS;
+using RUINORERP.UI.UControls;
+using RUINORERP.UI.UserCenter.DataParts;
+using RUINORERP.UI.WorkFlowTester;
+using SqlSugar;
+using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Drawing;
 using System.Data;
+using System.Diagnostics;
+using System.Drawing;
 using System.Linq;
+using System.Linq.Expressions;
+using System.Management.Instrumentation;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using RUINORERP.Common;
-using WorkflowCore.Interface;
-using RUINORERP.UI.WorkFlowTester;
-using RUINORERP.Model;
-using RUINORERP.UI.Common;
-using FluentValidation.Results;
-using Microsoft.Extensions.Logging;
-using RUINORERP.IServices.BASE;
-using RUINORERP.Model.Base;
-using RUINORERP.Repository.UnitOfWorks;
-using RUINORERP.Common.Extensions;
-using RUINORERP.IServices;
-using RUINORERP.Services;
-using RUINORERP.Repository.Base;
-using RUINORERP.IRepository.Base;
-using RUINORERP.Global;
-using RUINORERP.Model.Context;
-using System.Linq.Expressions;
-
-using SqlSugar;
-using RUINORERP.UI.Report;
-using RUINORERP.Common.Helper;
-using System.Reflection;
-using RUINORERP.Business;
-using System.Collections.Concurrent;
-using Org.BouncyCastle.Math.Field;
-using RUINORERP.UI.PSI.PUR;
-using FastReport.DevComponents.DotNetBar.Controls;
-using RUINORERP.UI.SS;
-using System.Management.Instrumentation;
-using RUINORERP.Business.CommService;
-using RUINORERP.Model.CommonModel;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
-using Netron.GraphLib;
-using AutoMapper;
-using RUINORERP.Business.AutoMapper;
-using RUINORERP.Global.EnumExt.CRM;
-using HLH.Lib.Security;
-
-using RUINORERP.UI.PSI.SAL;
-using RUINORERP.UI.UserCenter.DataParts;
-
-using RUINORERP.UI.UControls;
-using RUINORERP.Common.CollectionExtension;
-using System.Diagnostics;
-using RUINORERP.UI.CommonUI;
-using RUINORERP.UI.ATechnologyStack;
 using Winista.Text.HtmlParser.Tags;
-using Org.BouncyCastle.Crypto;
-using NPOI.POIFS.Properties;
-using RUINORERP.UI.Common;
+using WorkflowCore.Interface;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
 
 namespace RUINORERP.UI.SysConfig
 {
@@ -338,7 +336,7 @@ namespace RUINORERP.UI.SysConfig
 
             // 获取列名
             string columnName = dataGridView.Columns[e.ColumnIndex].Name;
-            object obj = UI.Common.CacheManager.GetEntity<View_ProdDetail>(e.Value);
+            object obj = EntityCacheHelper.GetEntity<View_ProdDetail>(e.Value);
             if (obj != null && obj.GetType().Name != "Object" && obj is View_ProdDetail prodDetail)
             {
                 e.Value = prodDetail.SKU + " " + prodDetail.CNName + prodDetail.prop + prodDetail.Specifications;
@@ -362,7 +360,7 @@ namespace RUINORERP.UI.SysConfig
                 ProdDetailID = inventory.ProdDetailID.Value;
                 child = inventory;
 
-                object obj = RUINORERP.UI.Common.CacheManager.GetEntity<View_ProdDetail>(ProdDetailID);
+                object obj = EntityCacheHelper.GetEntity<View_ProdDetail>(ProdDetailID);
                 if (obj != null && obj.GetType().Name != "Object" && obj is View_ProdDetail _prodDetail)
                 {
                     prodDetail = _prodDetail;

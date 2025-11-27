@@ -30,6 +30,7 @@
   <ItemGroup>
     <Compile Remove="AutoMapperConfig.cs" />
     <Compile Remove="BizService\LockManager.cs" />
+    <Compile Remove="CacheManager.cs" />
     <Compile Remove="CommandService\CommandProcessor.cs" />
     <Compile Remove="CommandService\CommandQueue.cs" />
     <Compile Remove="Comm\AutoMapperProfile.cs" />

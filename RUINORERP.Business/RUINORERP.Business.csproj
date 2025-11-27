@@ -85,7 +85,6 @@
 
   <ItemGroup>
     <Compile Include="Cache\CacheChangedEventArgs.cs" />
-    <Compile Include="Cache\CacheSyncExtensions.cs" />
     <Compile Include="Cache\CacheSyncMetadataManager.cs" />
     <Compile Include="Cache\EntityCacheHelper.cs" />
     <Compile Include="Cache\EventDrivenCacheManager.cs" />
@@ -96,7 +95,6 @@
     <Compile Include="Cache\ICacheStatistics.cs" />
     <Compile Include="Cache\ICacheSyncMetadata.cs" />
     <Compile Include="Cache\IEntityCacheManager.cs" />
-    <Compile Include="Cache\IEntityCacheManagerExtensions.cs" />
     <Compile Include="Cache\InventoryCacheManager.cs" />
     <Compile Include="Cache\ObjectExtensions.cs" />
     <Compile Include="Cache\SqlSugarCacheDataProvider.cs" />

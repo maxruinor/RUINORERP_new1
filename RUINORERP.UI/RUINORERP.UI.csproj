@@ -891,7 +891,6 @@
       <DependentUpon>frmGenericOpinion.cs</DependentUpon>
     </Compile>
     <Compile Include="Common\BackgroundCacheManager.cs" />
-    <Compile Include="Common\CacheManager.cs" />
     <Compile Include="Common\CheckedListBoxHelper.cs" />
     <Compile Include="Common\ColumnComparer.cs" />
     <Compile Include="Common\ControlExtensions.cs" />

@@ -122,7 +122,8 @@ namespace RUINORERP.UI.Common
 
             // 使用静态缓存管理器方法获取显示值
             string sourceTableName = typeof(tb_Employee).Name;
-            object displayValue = CacheManager.GetDisplayValue(sourceTableName, value);
+            object displayValue = EntityCacheHelper.GetDisplayValue(sourceTableName, value);
+            
             if (displayValue != null)
             {
                 e.Value = displayValue.ToString();
@@ -153,7 +154,7 @@ namespace RUINORERP.UI.Common
             if (mapping == null) return;
 
             // 使用静态缓存管理器方法获取实体
-            var displayValue = CacheManager.GetEntity(mapping.TargetTable, mapping.KeyColumn);
+            var displayValue = EntityCacheHelper.GetEntity(mapping.TargetTable, mapping.KeyColumn);
 
             if (displayValue != null)
             {

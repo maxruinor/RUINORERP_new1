@@ -239,12 +239,9 @@ namespace RUINORERP.Server.SmartReminder
         /// <returns>操作的任务结果</returns>
         private async Task RetryAsync(Func<Task> operation, string operationName, int maxRetries, CancellationToken cancellationToken)
         {
-            int attempt = 0;
-            Exception lastException = null;
-
-            while (true)
+            // 使用for循环替代while循环，结构更清晰
+            for (int attempt = 1; attempt <= maxRetries; attempt++)
             {
-                attempt++;
                 try
                 {
                     _logger.LogDebug("执行操作 '{OperationName}'，第 {Attempt}/{MaxRetries} 次尝试", 
@@ -257,8 +254,6 @@ namespace RUINORERP.Server.SmartReminder
                 }
                 catch (Exception ex)
                 {
-                    lastException = ex;
-
                     // 检查是否应该重试
                     if (attempt >= maxRetries || IsNonRetryableException(ex) || cancellationToken.IsCancellationRequested)
                     {
@@ -268,8 +263,8 @@ namespace RUINORERP.Server.SmartReminder
 
                     // 计算重试延迟（使用指数退避策略）
                     int delayMs = Math.Min(BaseDelayMs * (int)Math.Pow(2, attempt - 1), MaxDelayMs);
-                    // 添加随机抖动以避免多个服务同时重试
-                    int jitterMs = new Random().Next(0, 1000);
+                    // 使用线程安全的随机数生成，避免在多线程环境中创建多个Random实例
+                    int jitterMs = ThreadSafeRandom.Next(0, 1000);
                     int totalDelayMs = delayMs + jitterMs;
 
                     _logger.LogWarning(ex, "操作 '{OperationName}' 失败，将在 {DelayMs}ms 后重试（第 {Attempt}/{MaxRetries} 次）",
@@ -279,6 +274,9 @@ namespace RUINORERP.Server.SmartReminder
                 }
             }
         }
+
+        // 线程安全的随机数生成器
+        private static readonly Random ThreadSafeRandom = new();
 
         /// <summary>
         /// 确定异常是否可重试

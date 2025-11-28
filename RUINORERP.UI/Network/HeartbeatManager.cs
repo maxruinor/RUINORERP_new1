@@ -766,27 +766,110 @@ namespace RUINORERP.UI.Network
                         if (MainForm.Instance?.AppContext != null)
                         {
                             heartbeatRequest.UserInfo = MainForm.Instance.AppContext.CurrentUser ?? new Model.CommonModel.UserInfo();
-                            if (heartbeatRequest.UserInfo != null && !string.IsNullOrEmpty(MainForm.Instance.AppContext.SessionId))
-                            {
-                                heartbeatRequest.UserInfo.SessionId = MainForm.Instance.AppContext.SessionId;
-                            }
                             
-                            // 设置当前模块和当前窗体信息
-                            if (MainForm.Instance.kryptonDockableWorkspace1?.ActivePage != null)
+                            // 完善用户信息设置，确保数据完整性
+                            if (heartbeatRequest.UserInfo != null)
                             {
-                                heartbeatRequest.UserInfo.当前模块 = "主界面";
-                                heartbeatRequest.UserInfo.当前窗体 = MainForm.Instance.kryptonDockableWorkspace1.ActivePage.Text;
-                            }
-                            else
-                            {
-                                heartbeatRequest.UserInfo.当前模块 = "主界面";
-                                heartbeatRequest.UserInfo.当前窗体 = "工作台";
+                                // 设置SessionId
+                                if (!string.IsNullOrEmpty(MainForm.Instance.AppContext.SessionId))
+                                {
+                                    heartbeatRequest.UserInfo.SessionId = MainForm.Instance.AppContext.SessionId;
+                                }
+                                
+                                // 确保用户名不为空
+                                if (string.IsNullOrEmpty(heartbeatRequest.UserInfo.用户名))
+                                {
+                                    heartbeatRequest.UserInfo.用户名 = MainForm.Instance.AppContext.CurrentUser?.用户名 ?? "未知用户";
+                                }
+                                
+                                // 确保姓名不为空
+                                if (string.IsNullOrEmpty(heartbeatRequest.UserInfo.姓名))
+                                {
+                                    heartbeatRequest.UserInfo.姓名 = MainForm.Instance.AppContext.CurrentUser?.姓名 ?? "未填写姓名";
+                                }
+                                
+                                // 设置客户端版本信息
+                                if (string.IsNullOrEmpty(heartbeatRequest.UserInfo.客户端版本))
+                                {
+                                    heartbeatRequest.UserInfo.客户端版本 = GetClientVersion();
+                                }
+                                
+                                // 设置客户端IP
+                                if (string.IsNullOrEmpty(heartbeatRequest.UserInfo.客户端IP))
+                                {
+                                    heartbeatRequest.UserInfo.客户端IP = _socketClient.ClientIP ?? "未知IP";
+                                }
+                                
+                                // 设置当前模块和当前窗体信息
+                                if (MainForm.Instance.kryptonDockableWorkspace1?.ActivePage != null)
+                                {
+                                    heartbeatRequest.UserInfo.当前模块 = "主界面";
+                                    heartbeatRequest.UserInfo.当前窗体 = MainForm.Instance.kryptonDockableWorkspace1.ActivePage.Text ?? "工作台";
+                                }
+                                else
+                                {
+                                    heartbeatRequest.UserInfo.当前模块 = "主界面";
+                                    heartbeatRequest.UserInfo.当前窗体 = "工作台";
+                                }
                             }
                         }
                     }
                     catch (Exception ex)
                     {
                         _logger?.LogWarning(ex, "从MainForm获取用户信息失败");
+                        
+                        // 创建默认用户信息，确保不为null
+                        heartbeatRequest.UserInfo = new Model.CommonModel.UserInfo
+                        {
+                            用户名 = "未认证用户",
+                            姓名 = "未认证",
+                            当前模块 = "未知模块",
+                            当前窗体 = "未知窗体",
+                            客户端版本 = GetClientVersion(),
+                            客户端IP = _socketClient.ClientIP ?? "未知IP",
+                            SessionId = _socketClient.ClientID ?? "未知Session"
+                        };
+                    }
+                }
+                else
+                {
+                    // 如果UserInfo已存在，仍然需要确保关键字段的完整性
+                    try
+                    {
+                        // 确保SessionId设置
+                        if (string.IsNullOrEmpty(heartbeatRequest.UserInfo.SessionId) && 
+                            MainForm.Instance?.AppContext?.SessionId != null)
+                        {
+                            heartbeatRequest.UserInfo.SessionId = MainForm.Instance.AppContext.SessionId;
+                        }
+                        
+                        // 确保用户名不为空
+                        if (string.IsNullOrEmpty(heartbeatRequest.UserInfo.用户名))
+                        {
+                            heartbeatRequest.UserInfo.用户名 = MainForm.Instance.AppContext?.CurrentUser?.用户名 ?? "未知用户";
+                        }
+                        
+                        // 确保姓名不为空
+                        if (string.IsNullOrEmpty(heartbeatRequest.UserInfo.姓名))
+                        {
+                            heartbeatRequest.UserInfo.姓名 = MainForm.Instance.AppContext?.CurrentUser?.姓名 ?? "未填写姓名";
+                        }
+                        
+                        // 设置当前模块和窗体信息
+                        if (MainForm.Instance.kryptonDockableWorkspace1?.ActivePage != null)
+                        {
+                            heartbeatRequest.UserInfo.当前模块 = "主界面";
+                            heartbeatRequest.UserInfo.当前窗体 = MainForm.Instance.kryptonDockableWorkspace1.ActivePage.Text ?? "工作台";
+                        }
+                        else
+                        {
+                            heartbeatRequest.UserInfo.当前模块 = "主界面";
+                            heartbeatRequest.UserInfo.当前窗体 = "工作台";
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger?.LogWarning(ex, "完善用户信息时出错");
                     }
                 }
 

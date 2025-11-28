@@ -347,7 +347,7 @@ namespace RUINORERP.Server.Controls
             groupBox3.Margin = new System.Windows.Forms.Padding(4);
             groupBox3.Name = "groupBox3";
             groupBox3.Padding = new System.Windows.Forms.Padding(4);
-            groupBox3.Size = new System.Drawing.Size(461, 268);
+            groupBox3.Size = new System.Drawing.Size(604, 268);
             groupBox3.TabIndex = 2;
             groupBox3.TabStop = false;
             groupBox3.Text = "服务器运行信息";

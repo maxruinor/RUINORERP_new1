@@ -79,10 +79,11 @@ using TextBox = System.Windows.Forms.TextBox;
 using Button = System.Windows.Forms.Button;
 using RUINORERP.Business.BNR;
 using RUINORERP.Server.Network.Services;
+using RUINORERP.Server.Services;
 
 namespace RUINORERP.Server
 {
-    public partial class frmMainNew : Form
+    public partial class frmMainNew : Form, IDisposable
     {
         /// <summary>
         /// 注册时定义好了可以使用的功能模块
@@ -141,7 +142,7 @@ namespace RUINORERP.Server
         private static int _batchUpdateThreshold = 5;
 
         /// <summary>
-        /// Log4Net BufferSize값
+        /// Log4Net BufferSize值
         /// </summary>
         private static int _logBufferSize = 10;
 
@@ -159,6 +160,10 @@ namespace RUINORERP.Server
         /// BufferSize菜单项列表
         /// </summary>
         private List<ToolStripMenuItem> _bufferSizeMenuItems = new List<ToolStripMenuItem>();
+
+        // 添加内存监控服务字段
+        private MemoryMonitoringService _memoryMonitoringService;
+        private bool _disposed = false;
 
         public static frmMainNew Instance
         {
@@ -315,6 +320,11 @@ namespace RUINORERP.Server
             // 注入缓存初始化服务
             _entityCacheInitializationService = Program.ServiceProvider.GetRequiredService<EntityCacheInitializationService>();
 
+            // 初始化内存监控服务
+            _memoryMonitoringService = Program.ServiceProvider.GetRequiredService<MemoryMonitoringService>();
+            _memoryMonitoringService.MemoryUsageWarning += OnMemoryUsageWarning;
+            _memoryMonitoringService.MemoryUsageCritical += OnMemoryUsageCritical;
+
             // 初始化服务器信息更新定时器
             InitializeServerInfoTimer();
 
@@ -336,6 +346,19 @@ namespace RUINORERP.Server
 
             // 初始化服务器监控选项卡页面（默认显示）
             InitializeDefaultTab();
+        }
+
+        // 添加内存使用事件处理方法
+        private void OnMemoryUsageWarning(object sender, MemoryUsageEventArgs e)
+        {
+            PrintInfoLog($"内存使用警告: 当前使用 {e.MemoryInfo.WorkingSetMB} MB");
+        }
+
+        private void OnMemoryUsageCritical(object sender, MemoryUsageEventArgs e)
+        {
+            PrintErrorLog($"内存使用严重: 当前使用 {e.MemoryInfo.WorkingSetMB} MB，正在执行垃圾回收");
+            // 在后台线程执行垃圾回收，避免阻塞UI
+            Task.Run(() => _memoryMonitoringService.ForceGarbageCollection());
         }
 
         /// <summary>
@@ -1574,7 +1597,11 @@ namespace RUINORERP.Server
                     await Task.Run(async () => await reminderService.StartAsync(CancellationToken.None));
 
                     // 每5秒检查一次，减少系统负载
-                    _sessionCleanupTimer = new System.Threading.Timer(CheckAndRemoveExpiredSessions, null, 0, 5000);
+                    if (_sessionCleanupTimer != null)
+                    {
+                        _sessionCleanupTimer.Dispose();
+                    }
+                    _sessionCleanupTimer = new System.Threading.Timer(CheckAndRemoveExpiredSessions, null, TimeSpan.Zero, TimeSpan.FromSeconds(5));
 
                     // 加载提醒数据
                     DataServiceChannel loadService = Startup.GetFromFac<DataServiceChannel>();
@@ -1629,6 +1656,7 @@ namespace RUINORERP.Server
                 // 清理会话清理定时器资源
                 if (_sessionCleanupTimer != null)
                 {
+                    _sessionCleanupTimer.Change(Timeout.Infinite, Timeout.Infinite);
                     _sessionCleanupTimer.Dispose();
                     _sessionCleanupTimer = null;
                 }
@@ -1832,7 +1860,7 @@ namespace RUINORERP.Server
             string machineCode = regInfo.MachineCode; // 这可能是计算机的硬件信息或唯一标识符
             // 假设用户输入的注册码
             string userProvidedCode = regInfo.RegistrationCode;
-            bool isValid = SecurityService.ValidateRegistrationCode(userProvidedCode, key, machineCode);
+            bool isValid = HLH.Lib.Security.SecurityService.ValidateRegistrationCode(userProvidedCode, key, machineCode);
             Console.WriteLine($"提供的注册码是否有效? {isValid}");
             return isValid;
         }

@@ -483,6 +483,9 @@ namespace RUINORERP.Server
             // 注册NetworkServer类，使用依赖注入方式
             services.AddSingleton<NetworkServer>();
 
+            // 注册内存监控服务
+            services.AddSingleton<MemoryMonitoringService>();
+
         }
         #endregion
 

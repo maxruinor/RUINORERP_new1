@@ -436,23 +436,6 @@ namespace RUINORERP.Model
         }
 
 
-        /// <summary>
-        /// 重置变更追踪状态
-        /// </summary>
-        //public void ResetChanges()
-        //{
-        //    foreach (var propName in _changedProperties)
-        //    {
-        //        if (_originalValues.TryGetValue(propName, out var original))
-        //        {
-        //            var property = GetType().GetProperty(propName);
-        //            property?.SetValue(this, original);
-        //        }
-        //    }
-        //    //ResetChangeTracking();
-        //    _changedProperties.Clear();
-        //}
-
 
 
         // 新增：检查属性是否应跳过跟踪

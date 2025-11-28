@@ -466,8 +466,24 @@ namespace RUINORERP.Server.Controls
 
             // 更新内存使用情况
             var currentProcess = System.Diagnostics.Process.GetCurrentProcess();
-            var memoryUsage = currentProcess.WorkingSet64 / (1024 * 1024); // 转换为MB
-            lblMemoryUsageValue.Text = $"{memoryUsage} MB";
+            var workingSetMemory = currentProcess.WorkingSet64 / (1024 * 1024); // 转换为MB
+            var managedMemory = GC.GetTotalMemory(false) / (1024 * 1024); // 转换为MB
+            
+            lblMemoryUsageValue.Text = $"{workingSetMemory} MB (托管: {managedMemory} MB)";
+            
+            // 根据内存使用情况设置颜色
+            if (workingSetMemory > 2048) // 超过2GB
+            {
+                lblMemoryUsageValue.ForeColor = Color.Red;
+            }
+            else if (workingSetMemory > 1024) // 超过1GB
+            {
+                lblMemoryUsageValue.ForeColor = Color.Orange;
+            }
+            else
+            {
+                lblMemoryUsageValue.ForeColor = Color.Green;
+            }
         }
 
         private void UpdateCommandDispatcherInfo()

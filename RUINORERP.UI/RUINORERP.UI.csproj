@@ -2373,6 +2373,12 @@
     <Compile Include="StateManagement\UI\IStatusUIController.cs" />
     <Compile Include="StateManagement\UI\UIStatusEventHandler.cs" />
     <Compile Include="StateManagement\UI\UnifiedStatusUIControllerV3.cs" />
+    <Compile Include="SysConfig\UCClientLockManage.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="SysConfig\UCClientLockManage.Designer.cs">
+      <DependentUpon>UCClientLockManage.cs</DependentUpon>
+    </Compile>
     <Compile Include="Testing\ApplicationContextCacheTest.cs" />
     <Compile Include="Testing\FrmServiceCacheTest.cs">
       <SubType>Form</SubType>

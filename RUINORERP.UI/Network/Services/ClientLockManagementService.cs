@@ -334,6 +334,7 @@ namespace RUINORERP.UI.Network.Services
 
                 // 创建锁定请求
                 var lockInfo = CreateLockInfo(billId, menuId, timeoutMinutes);
+         
                 var lockRequest = new LockRequest { LockInfo = lockInfo };
 
                 // 使用传入的cancellationToken或默认值

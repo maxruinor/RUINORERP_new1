@@ -381,7 +381,7 @@ namespace RUINORERP.Server.Controls
         private void InitializeTimer()
         {
             refreshTimer = new Timer();
-            refreshTimer.Interval = 30000; // 30秒刷新一次
+            refreshTimer.Interval = 20000; // 20秒刷新一次
             refreshTimer.Tick += RefreshTimer_Tick;
             refreshTimer.Start();
         }

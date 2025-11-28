@@ -87,12 +87,6 @@ namespace RUINORERP.PacketSpec.Models.Lock
         public string SessionId { get; set; } = string.Empty;
 
         /// <summary>
-        /// 操作ID，标识锁定所属的操作
-        /// </summary>
-        [DataMember]
-        public long OperationId { get; set; }
-
-        /// <summary>
         /// 是否已锁定
         /// </summary>
         [DataMember]
@@ -202,7 +196,6 @@ namespace RUINORERP.PacketSpec.Models.Lock
                         break;
                     case LockStatus.Locked:
                     case LockStatus.AboutToExpire:
-                    case LockStatus.RequestingUnlock:
                         IsLocked = true;
                         break;
                     default:
@@ -387,7 +380,6 @@ namespace RUINORERP.PacketSpec.Models.Lock
                 MenuID = this.MenuID,
                 BillData = this.BillData,
                 SessionId = this.SessionId,
-                OperationId = this.OperationId,
                 IsLocked = this.IsLocked,
                 LastHeartbeat = this.LastHeartbeat,
                 HeartbeatCount = this.HeartbeatCount,
@@ -417,11 +409,6 @@ namespace RUINORERP.PacketSpec.Models.Lock
     public enum LockStatus
     {
         /// <summary>
-        /// 未知
-        /// </summary>
-        [EnumMember]
-        Unknown = 0,
-        /// <summary>
         /// 锁定
         /// </summary>
         [EnumMember]
@@ -436,11 +423,6 @@ namespace RUINORERP.PacketSpec.Models.Lock
         /// </summary>
         [EnumMember]
         AboutToExpire = 3,
-        /// <summary>
-        /// 请求解锁
-        /// </summary>
-        [EnumMember]
-        RequestingUnlock = 4
     }
 
     /// <summary>

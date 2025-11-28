@@ -322,7 +322,7 @@ namespace RUINORERP.UI.Network
                 _heartbeatCancellationTokenSource = new CancellationTokenSource();
 
                 _heartbeatTask = Task.Run(async () => await HeartbeatLoopAsync(_heartbeatCancellationTokenSource.Token));
-                _logger?.LogInformation("心跳检测已启动，间隔：{IntervalMs}ms", _heartbeatIntervalMs);
+                _logger?.LogDebug("心跳检测已启动，间隔：{IntervalMs}ms", _heartbeatIntervalMs);
             }
         }
 
@@ -357,7 +357,7 @@ namespace RUINORERP.UI.Network
                     _heartbeatCancellationTokenSource = null;
                 }
 
-                _logger?.LogInformation("心跳检测已停止");
+                _logger?.LogDebug("心跳检测已停止");
             }
         }
 
@@ -394,7 +394,7 @@ namespace RUINORERP.UI.Network
                             {
                                 _heartbeatFailedAttempts = 0;
                                 HeartbeatRecovered?.Invoke();
-                                _logger?.LogInformation("心跳恢复");
+                                _logger?.LogDebug("心跳恢复");
                             }
                         }
                         else
@@ -448,7 +448,7 @@ namespace RUINORERP.UI.Network
                 // 注意：获取系统信息可能耗时，谨慎使用
                 
                 heartbeatRequest.UserInfo = MainForm.Instance.AppContext.CurrentUser;
-             
+                
 
                 var response = await SendCommandWithResponseAsync<HeartbeatResponse>(
                     SystemCommands.Heartbeat, heartbeatRequest, cancellationToken);
@@ -480,7 +480,7 @@ namespace RUINORERP.UI.Network
         /// <returns>连接是否成功</returns>
         public async Task<bool> ConnectAsync(string serverAddress, int serverPort, CancellationToken cancellationToken = default)
         {
-            _logger?.LogInformation("尝试连接到服务器 {ServerAddress}:{ServerPort}", serverAddress, serverPort);
+            _logger?.LogDebug("尝试连接到服务器 {ServerAddress}:{ServerPort}", serverAddress, serverPort);
             return await _connectionManager.ConnectAsync(serverAddress, serverPort, cancellationToken);
         }
 
@@ -490,7 +490,7 @@ namespace RUINORERP.UI.Network
         /// <returns>断开连接是否成功</returns>
         public async Task<bool> Disconnect()
         {
-            _logger?.LogInformation("断开服务器连接");
+            _logger?.LogDebug("断开服务器连接");
 
 
             // 停止心跳
@@ -525,14 +525,14 @@ namespace RUINORERP.UI.Network
 
                 if (connected)
                 {
-                    _logger?.LogInformation("客户端已连接到服务器");
+                    _logger?.LogDebug("客户端已连接到服务器");
 
                     // 连接恢复时，开始处理队列中的命令
                     _ = Task.Run(ProcessCommandQueueAsync);
                 }
                 else
                 {
-                    _logger?.LogInformation("客户端与服务器断开连接");
+                    _logger?.LogDebug("客户端与服务器断开连接");
                     // 停止心跳
                     try
                     {
@@ -1780,7 +1780,7 @@ namespace RUINORERP.UI.Network
                 clearedCount++;
             }
 
-            _logger?.LogInformation("已清空命令队列，清空原因：{Reason}，清空数量：{Count}", reason, clearedCount);
+            _logger?.LogDebug("已清空命令队列，清空原因：{Reason}，清空数量：{Count}", reason, clearedCount);
         }
 
 

@@ -47,6 +47,7 @@ namespace RUINORERP.Business
                             .Includes(a => a.tb_User_Roles, b => b.tb_UserPersonalizeds, c => c.tb_UIMenuPersonalizations, d => d.tb_UIQueryConditions)
                               .AsNavQueryable()
                             .Includes(a => a.tb_User_Roles, b => b.tb_UserPersonalizeds, c => c.tb_UIMenuPersonalizations, d => d.tb_UIInputDataFields)
+                            .WithCache(300)
                             .ToListAsync();
 
             foreach (var item in list)
@@ -82,7 +83,7 @@ namespace RUINORERP.Business
                               .AsNavQueryable()
                             .Includes(a => a.tb_User_Roles, b => b.tb_UserPersonalizeds, c => c.tb_UIMenuPersonalizations, d => d.tb_UIInputDataFields)
                             .AsNavQueryable()
-                            .Includes(a => a.tb_User_Roles, b => b.tb_roleinfo, c => c.tb_P4RowAuthPolicyByRoles,d=>d.tb_rowauthpolicy)
+                            .Includes(a => a.tb_User_Roles, b => b.tb_roleinfo, c => c.tb_P4RowAuthPolicyByRoles, d => d.tb_rowauthpolicy)
                             .ToList();
 
             foreach (var item in list)
@@ -94,7 +95,7 @@ namespace RUINORERP.Business
             return list;
         }
 
-  
+
 
         /// <summary>
         /// 用事务？

@@ -113,7 +113,7 @@ namespace RUINORERP.UI.Network.Services
                     //接收来自服务器的Token并保存
                     await _tokenManager.TokenStorage.SetTokenAsync(response.Token);
                     MainForm.Instance.AppContext.SessionId = response.SessionId;
-                    //_logger?.LogInformation("登录成功，Token已保存 - 用户: {Username}", username);
+                    //_logger?.LogDebug("登录成功，Token已保存 - 用户: {Username}", username);
                 }
 
                 return response;

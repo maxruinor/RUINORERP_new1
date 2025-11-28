@@ -2047,9 +2047,6 @@ namespace RUINORERP.UI
                     // 禁用所有UI控件
                     DisableAllUIComponents();
 
-                    // 显示锁定提示
-                    ShowLockMessage();
-
                     System.GC.Collect();
 
                     // 尝试重新登录
@@ -3057,47 +3054,7 @@ namespace RUINORERP.UI
             }
         }
 
-        /// <summary>
-        /// 显示锁定提示信息
-        /// </summary>
-        private void ShowLockMessage()
-        {
-            try
-            {
-                // 在控制中心显示锁定信息
-                string lockMessage = "系统已锁定，请重新登录\n原因：与服务器通信断开，心跳检测失败\n请点击重新登录按钮或关闭程序后重新启动";
 
-                // 显示一个模态对话框通知用户系统已锁定
-                Invoke(new Action(() =>
-                {
-                    MainForm.Instance.PrintInfoLog("系统安全:" + lockMessage, System.Drawing.Color.Red);
-
-                    // 显示锁定提示对话框
-                    DialogResult result = MessageBox.Show(
-                        lockMessage,
-                        "系统安全锁定",
-                        MessageBoxButtons.OK,
-                        MessageBoxIcon.Warning
-                    );
-
-                    // 用户点击OK后尝试重新登录
-                    if (result == DialogResult.OK)
-                    {
-                        Invoke(new Action(async () =>
-                        {
-                            logger?.LogInformation("用户确认锁定提示，准备重新登录");
-                            await Login();
-                        }));
-                    }
-                }));
-
-                logger?.LogInformation("已显示系统锁定提示信息");
-            }
-            catch (Exception ex)
-            {
-                logger?.LogError(ex, "显示锁定提示信息时发生异常");
-            }
-        }
 
         /// <summary>
         /// 重新启用所有UI组件，用于登录成功后恢复正常操作
@@ -3376,16 +3333,6 @@ namespace RUINORERP.UI
                     }
                 }
 
-                //超过60 就去抓一下缓存  如果不好用。则用线程定时器
-                //if (GetLastInputTime() > 5 && MainForm.Instance.AppContext.IsOnline)
-                //{
-                //    var tableNames = TableSchemaManager.Instance.GetCacheableTableNamesList();
-                //    foreach (var item in tableNames)
-                //    {
-                //        UIBizService.RequestCache(item, TableSchemaManager.Instance.GetEntityType(item));
-                //    }
-                //}
-
             }
             catch (Exception ex)
             {
@@ -3406,6 +3353,8 @@ namespace RUINORERP.UI
                 // 显示结果
                 Console.WriteLine($"当前版本: {version}");
                 Console.WriteLine($"最后更新时间: {updateTime:yyyy-MM-dd}");
+                //重置一下
+                MainForm.Instance.AppContext.CurrentUser.客户端版本 = string.Empty;
                 if (!string.IsNullOrEmpty(version))
                 {
                     MainForm.Instance.AppContext.CurrentUser.客户端版本 += "-" + version;

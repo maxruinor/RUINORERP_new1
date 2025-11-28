@@ -236,7 +236,7 @@ namespace RUINORERP.UI.Network
                 _healthCheckService = new NetworkHealthCheckService(serverUrl, port, 30000, null);
                 _healthCheckService.NetworkHealthChanged += OnNetworkHealthChanged;
                 _healthCheckService.Start();
-                _logger?.LogInformation("网络健康检查服务已启动，目标：{ServerIp}:{Port}", serverUrl, port);
+                _logger?.LogDebug("网络健康检查服务已启动，目标：{ServerIp}:{Port}", serverUrl, port);
             }
             catch (Exception ex)
             {
@@ -259,7 +259,7 @@ namespace RUINORERP.UI.Network
             }
             else
             {
-                _logger?.LogInformation("网络健康状态已恢复：{Message}", message);
+                _logger?.LogDebug("网络健康状态已恢复：{Message}", message);
                 _networkHealthWarningShown = false;
             }
         }

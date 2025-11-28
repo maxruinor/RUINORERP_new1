@@ -31,7 +31,7 @@ namespace RUINORERP.UI.SysConfig
         {
             InitializeComponent();
             _lockCacheService = Startup.GetFromFac<ClientLocalLockCacheService>();
-            lockManagementService= Startup.GetFromFac<ClientLockManagementService>();
+            lockManagementService = Startup.GetFromFac<ClientLockManagementService>();
             InitializeRefreshTimer();
             InitializeLockDataGridView();
             LoadLockData();
@@ -135,7 +135,7 @@ namespace RUINORERP.UI.SysConfig
             try
             {
                 // 通过反射获取内部缓存
-                var cacheField = typeof(ClientLocalLockCacheService).GetField("_cache", 
+                var cacheField = typeof(ClientLocalLockCacheService).GetField("_cache",
                     System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
                 if (cacheField != null)
                 {
@@ -145,7 +145,7 @@ namespace RUINORERP.UI.SysConfig
                         return cache.Values.ToList();
                     }
                 }
-                
+
                 // 如果反射失败，返回空列表
                 return new List<LockInfo>();
             }
@@ -160,7 +160,7 @@ namespace RUINORERP.UI.SysConfig
             _totalCacheCount = lockInfos.Count;
             _lockedCount = lockInfos.Count(info => info.IsLocked);
             _expiredCount = lockInfos.Count(info => info.IsExpired);
-            _currentUserLockedCount = lockInfos.Count(info => info.IsLocked && info.UserName == Environment.UserName);
+            _currentUserLockedCount = lockInfos.Count(info => info.IsLocked && info.LockedUserName == Environment.UserName);
         }
 
         private void UpdateStatusLabels()
@@ -216,7 +216,8 @@ namespace RUINORERP.UI.SysConfig
         {
             try
             {
-                _lockCacheService.UnlockAsync(lockInfo.LockKey).Wait();
+                long userid = MainForm.Instance.AppContext.CurrentUser.UserID;
+                _lockCacheService.UnlockAsync(lockInfo.BillID, userid).Wait();
                 lockManagementService.UnlockBillAsync(lockInfo.BillID).Wait();
             }
             catch (Exception ex)

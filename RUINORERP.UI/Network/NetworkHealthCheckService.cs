@@ -74,7 +74,7 @@ namespace RUINORERP.UI.Network
             if (_isRunning) return;
 
             _isRunning = true;
-            _logger?.LogInformation("网络健康检查服务已启动，目标：{TargetHost}:{TargetPort}，检查间隔：{Interval}ms", 
+            _logger?.LogDebug("网络健康检查服务已启动，目标：{TargetHost}:{TargetPort}，检查间隔：{Interval}ms", 
                 _targetHost, _targetPort, _healthCheckInterval);
 
             // 立即执行一次检查
@@ -93,7 +93,7 @@ namespace RUINORERP.UI.Network
 
             _isRunning = false;
             _healthCheckTimer.Change(Timeout.Infinite, Timeout.Infinite);
-            _logger?.LogInformation("网络健康检查服务已停止");
+            _logger?.LogDebug("网络健康检查服务已停止");
         }
 
         /// <summary>
@@ -111,7 +111,7 @@ namespace RUINORERP.UI.Network
                 {
                     if (!_isNetworkHealthy)
                     {
-                        _logger?.LogInformation("网络连接已恢复，目标：{TargetHost}:{TargetPort}", _targetHost, _targetPort);
+                        _logger?.LogDebug("网络连接已恢复，目标：{TargetHost}:{TargetPort}", _targetHost, _targetPort);
                         NetworkHealthChanged?.Invoke(true, "网络连接已恢复");
                     }
                     

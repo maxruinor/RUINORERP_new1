@@ -387,7 +387,7 @@ namespace RUINORERP.UI.IM
         {
             try
             {
-                _logger?.LogInformation($"处理业务消息: {messageData.Title}");
+                _logger?.LogDebug($"处理业务消息: {messageData.Title}");
                 
                 bool isNewMessage = false;
                 
@@ -439,7 +439,7 @@ namespace RUINORERP.UI.IM
         {
             try
             {
-                _logger?.LogInformation($"显示系统通知: {messageData.Title}");
+                _logger?.LogDebug($"显示系统通知: {messageData.Title}");
                 
                 bool isNewMessage = false;
                 

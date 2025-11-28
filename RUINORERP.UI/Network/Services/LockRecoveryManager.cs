@@ -240,7 +240,7 @@ namespace RUINORERP.UI.Network.Services
                             _lockCache.ClearCache(orphanedLock.BillID);
                             _logger.LogInformation($"孤儿锁已自动清理: 单据 {orphanedLock.BillID}");
                         }
-                        else if (lockResponse.LockInfo?.UserId == currentUserId)
+                        else if (lockResponse.LockInfo?.LockedUserId == currentUserId)
                         {
                             // 锁仍然属于当前用户，重置心跳时间
                             lock (_heartbeatLock)
@@ -257,7 +257,7 @@ namespace RUINORERP.UI.Network.Services
                             // 锁被其他用户持有，清除本地缓存
                             UnregisterHeldLock(orphanedLock.BillID);
                             _lockCache.ClearCache(orphanedLock.BillID);
-                            _logger.LogWarning($"孤儿锁被其他用户持有: 单据 {orphanedLock.BillID}, 持有用户: {lockResponse.LockInfo?.UserName}");
+                            _logger.LogWarning($"孤儿锁被其他用户持有: 单据 {orphanedLock.BillID}, 持有用户: {lockResponse.LockInfo?.LockedUserName}");
                         }
                     }
                     catch (Exception ex)
@@ -395,7 +395,7 @@ namespace RUINORERP.UI.Network.Services
                         var lockResponse = await _lockService.CheckLockStatusAsync(heldLock.BillID);
                         
                         if (lockResponse?.IsSuccess == true && 
-                            lockResponse.LockInfo?.UserId == currentUserId &&
+                            lockResponse.LockInfo?.LockedUserId == currentUserId &&
                             lockResponse.LockInfo?.SessionId == heldLock.SessionId)
                         {
                             healthyLocks.Add(heldLock.BillID);

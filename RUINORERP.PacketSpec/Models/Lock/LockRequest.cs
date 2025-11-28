@@ -92,8 +92,8 @@ namespace RUINORERP.PacketSpec.Models.Lock
                 LockInfo = new LockInfo
                 {
                     BillID = billId,
-                    UserId = userId,
-                    UserName = userName,
+                    LockedUserId = userId,
+                    LockedUserName = userName,
                     MenuID = menuId,
                     BillData = billData,
                     SessionId = sessionId,
@@ -122,7 +122,7 @@ namespace RUINORERP.PacketSpec.Models.Lock
                 LockInfo = new LockInfo
                 {
                     BillID = billId,
-                    UserId = userId,
+                    LockedUserId = userId,
                     LockId = lockId,
                     SessionId = sessionId,
                     Remark = unlockReason
@@ -148,8 +148,8 @@ namespace RUINORERP.PacketSpec.Models.Lock
                 LockInfo = new LockInfo
                 {
                     BillID = billId,
-                    UserId = operatorUserId,
-                    UserName = operatorUserName,
+                    LockedUserId = operatorUserId,
+                    LockedUserName = operatorUserName,
                     LockId = lockId,
                     Remark = reason
                 },
@@ -206,7 +206,7 @@ namespace RUINORERP.PacketSpec.Models.Lock
                 LockInfo = new LockInfo
                 {
                     BillID = billId,
-                    UserId = userId,
+                    LockedUserId = userId,
                     LockId = lockId,
                     SessionId = sessionId,
                     ExpireTime = expireTime
@@ -246,7 +246,7 @@ namespace RUINORERP.PacketSpec.Models.Lock
                 LockInfo = new LockInfo
                 {
                     BillID = billId,
-                    UserId = refuseUserId,
+                    LockedUserId = refuseUserId,
                     Remark = refuseReason
                 },
                 RequesterUserId = requestUserId,

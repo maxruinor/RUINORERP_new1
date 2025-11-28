@@ -96,8 +96,8 @@ namespace RUINORERP.UI.Network.Services
                 {
                     BillID = billId,
                     IsLocked = false,
-                    UserId = currentUserId,
-                    UserName = currentUserName,
+                    LockedUserId = currentUserId,
+                    LockedUserName = currentUserName,
                     LastUpdateTime = DateTime.Now,
                     ExpireTime = DateTime.Now.AddMinutes(CACHE_EXPIRY_MINUTES)
                 };
@@ -145,11 +145,13 @@ namespace RUINORERP.UI.Network.Services
         {
             try
             {
-                // 解锁成功，更新缓存
-                UpdateCacheAfterUnlock(billId);
-
+                // 只从本地缓存查询
+                if (_localCache.TryGetValue(billId, out var cachedInfo))
+                {
+                    // 缓存已过期，移除
+                    _localCache.TryRemove(billId, out _);
+                }
                 return true;
-
             }
             catch (Exception ex)
             {
@@ -285,7 +287,7 @@ namespace RUINORERP.UI.Network.Services
             try
             {
                 _localCache.AddOrUpdate(lockInfo.BillID, lockInfo, (key, oldValue) => lockInfo);
-                _logger.LogDebug($"更新锁缓存: 文档 {lockInfo.BillID}, 锁定用户: {lockInfo.UserName}");
+                _logger.LogDebug($"更新锁缓存: 文档 {lockInfo.BillID}, 锁定用户: {lockInfo.LockedUserName}");
             }
             catch (Exception ex)
             {
@@ -293,33 +295,7 @@ namespace RUINORERP.UI.Network.Services
             }
         }
 
-        /// <summary>
-        /// 更新缓存（解锁后）
-        /// </summary>
-        /// <param name="billId">单据ID</param>
-        private void UpdateCacheAfterUnlock(long billId)
-        {
-            try
-            {
-                // 创建未锁定状态的缓存项
-                var unlockedInfo = new LockInfo
-                {
-                    BillID = billId,
-                    IsLocked = false,
-                    UserId = 0,
-                    UserName = string.Empty,
-                    LastUpdateTime = DateTime.Now,
-                    ExpireTime = DateTime.Now.AddMinutes(CACHE_EXPIRY_MINUTES)
-                };
-
-                UpdateCache(unlockedInfo);
-                _logger.LogDebug($"更新解锁后的缓存: 文档 {billId}");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"更新解锁缓存失败: 文档 {billId}");
-            }
-        }
+    
 
         /// <summary>
         /// 清理过期缓存

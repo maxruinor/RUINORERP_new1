@@ -40,6 +40,20 @@ namespace RUINORERP.UI.Network.Services
         private readonly ClientLocalLockCacheService _clientCache;
         private readonly LockRecoveryManager _recoveryManager;
 
+        /// <summary>
+        /// 活跃锁集合 - 核心数据结构
+        /// 用于存储当前客户端持有的所有活跃锁信息，是客户端锁状态管理的核心组件
+        /// key: BillID (单据ID)
+        /// value: LockInfo (锁信息对象)
+        /// 
+        /// _activeLocks在锁管理系统中扮演着至关重要的角色：
+        /// 1. 跟踪当前客户端成功持有的所有锁
+        /// 2. 为锁刷新机制提供数据源
+        /// 3. 在服务停止时确保正确释放所有锁
+        /// 4. 提供服务统计信息
+        /// 
+        /// 使用ConcurrentDictionary确保线程安全，避免多线程并发操作时的数据竞争
+        /// </summary>
         private readonly ConcurrentDictionary<long, LockInfo> _activeLocks;
         private readonly CancellationTokenSource _cancellationTokenSource;
         private readonly Timer _lockRefreshTimer;
@@ -272,8 +286,8 @@ namespace RUINORERP.UI.Network.Services
                     {
                         BillID = response.LockInfo.BillID,
                         IsLocked = response.LockInfo.IsLocked,
-                        UserId = response.LockInfo.UserId,
-                        UserName = response.LockInfo.UserName,
+                        LockedUserId = response.LockInfo.LockedUserId,
+                        LockedUserName = response.LockInfo.LockedUserName,
                         MenuID = response.LockInfo.MenuID,
                         LockTime = response.LockInfo.LockTime,
                         LastUpdateTime = DateTime.Now,
@@ -348,7 +362,9 @@ namespace RUINORERP.UI.Network.Services
 
                 if (response.IsSuccess)
                 {
-                    // 添加到活跃锁列表
+                    // 添加到活跃锁列表 - 锁定成功后的关键操作
+                    // 只有当锁成功获取后，才会将锁信息添加到_activeLocks集合中
+                    // 这样可以确保_activeLocks只包含当前客户端实际持有的有效锁
                     _activeLocks.TryAdd(billId, response.LockInfo);
 
                     _logger.LogInformation("单据 {BillId} 锁定成功，耗时 {ElapsedMs}ms",
@@ -399,7 +415,9 @@ namespace RUINORERP.UI.Network.Services
                 var token = cancellationToken != default ? cancellationToken : _cancellationTokenSource.Token;
                 await _operationSemaphore.WaitAsync(token);
 
-                // 从活跃锁列表中移除
+                // 从活跃锁列表中移除 - 解锁操作的第一步
+                // 在发送解锁请求前，先从_activeLocks中移除，这样可以确保即使网络请求失败
+                // 本地状态也能保持一致，不会留下孤儿锁引用
                 _activeLocks.TryRemove(billId, out _);
 
                 // 缓存清除
@@ -534,8 +552,8 @@ namespace RUINORERP.UI.Network.Services
             {
                 BillID = billId,
                 MenuID = menuId,
-                UserId = userInfo?.UserID ?? 0,
-                UserName = userInfo?.姓名 ?? "Unknown",
+                LockedUserId = userInfo?.UserID ?? 0,
+                LockedUserName = userInfo?.姓名 ?? "Unknown",
                 LockTime = DateTime.Now,
                 ExpireTime = DateTime.Now.AddMinutes(timeoutMinutes),
                 LockId = Guid.NewGuid().ToString("N").Substring(0, 8)
@@ -562,10 +580,17 @@ namespace RUINORERP.UI.Network.Services
         /// <summary>
         /// 获取服务统计信息
         /// </summary>
+        /// <summary>
+        /// 获取服务统计信息
+        /// 使用_activeLocks集合来提供活跃锁数量的实时统计数据
+        /// </summary>
         public LockInfoStatistics GetStatistics()
         {
             return new LockInfoStatistics
             {
+                // 直接从_activeLocks集合获取当前活跃锁数量，这是最准确的实时数据
+                // _activeLocks.Count提供了客户端锁管理系统的核心统计指标
+                // 这些数据用于监控系统状态、问题排查和性能分析
                 ActiveLocks = _activeLocks.Count,
                 TotalLocks = _activeLocks.Count,
                 HeartbeatEnabled = true,
@@ -625,6 +650,9 @@ namespace RUINORERP.UI.Network.Services
             if (_isDisposed || _activeLocks.IsEmpty)
                 return;
 
+            // 获取所有活跃锁的单据ID - 锁刷新机制的关键数据源
+            // _activeLocks提供了所有需要被刷新的锁信息，这是客户端锁维护的核心机制
+            // 通过遍历所有活跃锁并检查其状态，确保锁的有效性和一致性
             var activeLockIds = _activeLocks.Keys.ToArray();
             if (activeLockIds.Length == 0)
                 return;
@@ -642,12 +670,15 @@ namespace RUINORERP.UI.Network.Services
                         if (response.LockInfo.IsExpired)
                         {
                             _logger.LogWarning("检测到单据 {BillId} 锁已过期，将从活跃列表移除", billId);
+                            // 锁已过期，从_activeLocks中移除
+                            // 这是锁状态同步的关键机制，确保_activeLocks只包含有效的未过期锁
                             _activeLocks.TryRemove(billId, out _);
                             _clientCache.ClearCache(billId);
                         }
                         else
                         {
-                            // 更新刷新计数
+                            // 更新刷新时间戳
+                            // 即使锁没有过期，也需要更新最后更新时间，这对于监控锁的活跃度很重要
                             if (_activeLocks.TryGetValue(billId, out var clientLock))
                             {
                                 clientLock.LastUpdateTime = DateTime.Now;
@@ -717,8 +748,8 @@ namespace RUINORERP.UI.Network.Services
                 LockInfo lockInfo = new LockInfo();
                 lockInfo.BillID = billId;
                 lockInfo.MenuID = menuId;
-                lockInfo.UserId = currentUserId;
-                lockInfo.UserName = currentUserName;
+                lockInfo.LockedUserId = currentUserId;
+                lockInfo.LockedUserName = currentUserName;
 
                 // 创建刷新锁定请求
                 var lockRequest = new LockRequest
@@ -921,8 +952,8 @@ namespace RUINORERP.UI.Network.Services
                 LockInfo lockInfo = new LockInfo();
                 lockInfo.BillID = billId;
                 lockInfo.MenuID = menuId;
-                lockInfo.UserId = currentUserId;
-                lockInfo.UserName = currentUserName;
+                lockInfo.LockedUserId = currentUserId;
+                lockInfo.LockedUserName = currentUserName;
 
                 // 创建请求解锁请求
                 var lockRequest = new LockRequest
@@ -982,8 +1013,8 @@ namespace RUINORERP.UI.Network.Services
                 LockInfo lockInfo = new LockInfo();
                 lockInfo.BillID = billId;
                 lockInfo.MenuID = menuId;
-                lockInfo.UserId = currentUserId;
-                lockInfo.UserName = currentUserName;
+                lockInfo.LockedUserId = currentUserId;
+                lockInfo.LockedUserName = currentUserName;
 
                 // 创建拒绝解锁请求
                 var lockRequest = new LockRequest
@@ -1075,7 +1106,7 @@ namespace RUINORERP.UI.Network.Services
             try
             {
                 _logger?.LogDebug("开始解锁单据（LockRequest重载） - 单据ID: {BillId}, 解锁类型: {UnlockType}, 用户ID: {UserId}",
-                    lockRequest.LockInfo.BillID, lockRequest.UnlockType, lockRequest.LockInfo.UserId);
+                    lockRequest.LockInfo.BillID, lockRequest.UnlockType, lockRequest.LockInfo.LockedUserId);
 
                 // 根据解锁类型选择不同的解锁方法
                 switch (lockRequest.UnlockType)

@@ -97,7 +97,7 @@ namespace RUINORERP.UI.Network
                 // 如果已连接到其他服务器，先断开
                 if (IsConnected)
                 {
-                    _logger?.LogInformation("断开当前连接，准备连接到新服务器");
+                   //断开当前连接，准备连接到新服务器;
                     await DisconnectInternalAsync();
                 }
 
@@ -106,7 +106,6 @@ namespace RUINORERP.UI.Network
                 _serverPort = serverPort;
 
                 // 尝试连接
-                _logger?.LogInformation("正在连接到服务器 {ServerAddress}:{ServerPort}", serverAddress, serverPort);
 
                 bool connected = await _socketClient.ConnectAsync(serverAddress, serverPort, cancellationToken);
 
@@ -114,7 +113,7 @@ namespace RUINORERP.UI.Network
                 {
                     _isConnected = true;
                     OnConnectionStateChanged(true);
-                    _logger?.LogInformation("成功连接到服务器 {ServerAddress}:{ServerPort}", serverAddress, serverPort);
+                    _logger?.LogDebug("成功连接到服务器 {ServerAddress}:{ServerPort}", serverAddress, serverPort);
 
                     // 停止可能存在的重连任务
                     StopReconnectTask();
@@ -187,7 +186,7 @@ namespace RUINORERP.UI.Network
                 bool result = await _socketClient.Disconnect();
                 _isConnected = false;
                 OnConnectionStateChanged(false);
-                _logger?.LogInformation("已断开与服务器的连接");
+                _logger?.LogDebug("已断开与服务器的连接");
                 return result;
             }
             catch (Exception ex)
@@ -254,7 +253,7 @@ namespace RUINORERP.UI.Network
                     continue;
                 }
 
-                _logger?.LogInformation("尝试重新连接到服务器 {ServerAddress}:{ServerPort}", _serverAddress, _serverPort);
+                _logger?.LogDebug("尝试重新连接到服务器 {ServerAddress}:{ServerPort}", _serverAddress, _serverPort);
 
                 try
                 {
@@ -264,7 +263,7 @@ namespace RUINORERP.UI.Network
                     {
                         _isConnected = true;
                         OnConnectionStateChanged(true);
-                        _logger?.LogInformation("重连成功 {ServerAddress}:{ServerPort}", _serverAddress, _serverPort);
+                        _logger?.LogDebug("重连成功 {ServerAddress}:{ServerPort}", _serverAddress, _serverPort);
 
                         // 重连成功后，继续监控连接状态
                         continue;
@@ -295,7 +294,7 @@ namespace RUINORERP.UI.Network
             {
                 _isConnected = false;
                 OnConnectionStateChanged(false);
-                _logger?.LogInformation("检测到连接已断开");
+                _logger?.LogDebug("检测到连接已断开");
 
                 // 如果启用了自动重连，启动重连任务
                 if (_config.AutoReconnect && !_isReconnecting)

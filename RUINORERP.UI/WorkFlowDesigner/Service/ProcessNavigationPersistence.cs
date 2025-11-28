@@ -183,7 +183,7 @@ namespace RUINORERP.UI.WorkFlowDesigner.Service
                 }
 
                 // 添加额外信息以便于调试
-                _logger?.LogInformation($"成功序列化图形数据: {graphData.Nodes.Count}个节点, {graphData.Connections.Count}个连接");
+                _logger?.LogDebug($"成功序列化图形数据: {graphData.Nodes.Count}个节点, {graphData.Connections.Count}个连接");
                 return JsonConvert.SerializeObject(graphData, Formatting.Indented);
             }
             catch (Exception ex)
@@ -246,7 +246,7 @@ namespace RUINORERP.UI.WorkFlowDesigner.Service
                     }
                 }
 
-                _logger?.LogInformation($"开始反序列化: {graphData.Nodes.Count}个节点, {graphData.Connections.Count}个连接");
+                _logger?.LogDebug($"开始反序列化: {graphData.Nodes.Count}个节点, {graphData.Connections.Count}个连接");
 
                 // 创建节点字典用于快速查找
                 var nodeDict = new Dictionary<string, ProcessNavigationNode>();
@@ -364,7 +364,7 @@ namespace RUINORERP.UI.WorkFlowDesigner.Service
                     }
                 }
                 
-                _logger?.LogInformation($"反序列化完成: 成功创建 {successfulConnections}/{graphData.Connections.Count} 个连接");
+                _logger?.LogDebug($"反序列化完成: 成功创建 {successfulConnections}/{graphData.Connections.Count} 个连接");
             }
             catch (JsonException jsonEx)
             {

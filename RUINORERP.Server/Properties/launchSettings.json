@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "RUINORERP.Server": {
+      "commandName": "Project",
+      "nativeDebugging": false
+    }
+  }
+}

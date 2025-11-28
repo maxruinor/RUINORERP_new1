@@ -35,14 +35,14 @@ namespace RUINORERP.PacketSpec.Models.Lock
         /// 执行锁定操作的用户ID
         /// </summary>
         [DataMember]
-        public long UserId { get; set; }
+        public long LockedUserId { get; set; }
 
         /// <summary>
         /// 用户名称
         /// 执行锁定操作的用户名
         /// </summary>
         [DataMember]
-        public string UserName { get; set; } = string.Empty;
+        public string LockedUserName { get; set; } = string.Empty;
 
         /// <summary>
         /// 锁定时间
@@ -306,7 +306,7 @@ namespace RUINORERP.PacketSpec.Models.Lock
         public bool IsOwnedByCurrentUser(long currentUserId, string currentSessionId = null)
         {
             // 首先检查用户ID
-            if (UserId != currentUserId)
+            if (LockedUserId != currentUserId)
                 return false;
             
             // 如果提供了会话ID，同时检查会话匹配
@@ -335,8 +335,8 @@ namespace RUINORERP.PacketSpec.Models.Lock
             return new LockInfo
             {
                 BillID = billId,
-                UserId = userId,
-                UserName = userName,
+                LockedUserId = userId,
+                LockedUserName = userName,
                 MenuID = menuId,
                 SessionId = sessionId,
                 ExpireTime = expireTime ?? now.AddMinutes(5),
@@ -372,8 +372,8 @@ namespace RUINORERP.PacketSpec.Models.Lock
                 LockKey = this.LockKey,
                 LockId = this.LockId,
                 BillID = this.BillID,
-                UserId = this.UserId,
-                UserName = this.UserName,
+                LockedUserId = this.LockedUserId,
+                LockedUserName = this.LockedUserName,
                 LockTime = this.LockTime,
                 ExpireTime = this.ExpireTime,
                 Remark = this.Remark,
@@ -397,7 +397,7 @@ namespace RUINORERP.PacketSpec.Models.Lock
         /// <returns>锁定信息的字符串表示</returns>
         public override string ToString()
         {
-            return $"LockInfo[BillID={BillID}, UserName={UserName}, IsLocked={IsLocked}, " +
+            return $"LockInfo[BillID={BillID}, UserName={LockedUserName}, IsLocked={IsLocked}, " +
                    $"LockTime={LockTime}, ExpireTime={ExpireTime}, Type={Type}, HeartbeatCount={HeartbeatCount}]";
         }
     }

@@ -109,7 +109,7 @@ namespace RUINORERP.Server.Controls
                 lblClientIP.Text = _session.ClientIp;
                 lblClientPort.Text = _session.ClientPort.ToString();
                 lblConnectedTime.Text = _session.ConnectedTime.ToString("yyyy-MM-dd HH:mm:ss");
-                lblClientVersion.Text = _session.ClientVersion ?? "未知版本";
+                lblClientVersion.Text = _session.UserInfo.客户端版本 ?? "未知版本";
 
                 // 计算连接时长
                 TimeSpan duration = DateTime.Now - _session.ConnectedTime;
@@ -672,7 +672,7 @@ namespace RUINORERP.Server.Controls
                             UserName = _session.UserName,
                             ConnectedTime = _session.ConnectedTime,
                             ClientIP = _session.ClientIp,
-                            ClientVersion = _session.ClientVersion,
+                            ClientVersion = _session.UserInfo.客户端版本,
                             Status = _session.Status.ToString(),
                             PerformanceStats = _session.GetPerformanceStats(),
                             ClientSystemInfo = _session.ClientSystemInfo,

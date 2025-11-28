@@ -162,7 +162,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                         if (lockResponse.LockInfo != null)
                         {
                             string message = $"资源已被锁定\n" +
-                                            $"锁定用户: {lockResponse.LockInfo.UserName}\n" +
+                                            $"锁定用户: {lockResponse.LockInfo.LockedUserName}\n" +
                                             $"锁定时间: {lockResponse.LockInfo.LockTime}\n" +
                                             $"客户端ID: {lockResponse.LockInfo.SessionId}";
                             // 在UI线程显示提示
@@ -184,13 +184,13 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                 // 新增处理锁定请求冲突的逻辑
                 else if (packet.Request is LockRequest lockRequest)
                 {
-                    _logger.LogDebug($"收到锁定请求: BillID={lockRequest.LockInfo.BillID}, UserID={lockRequest.LockInfo.UserId}");
+                    _logger.LogDebug($"收到锁定请求: BillID={lockRequest.LockInfo.BillID}, UserID={lockRequest.LockInfo.LockedUserId}");
 
                     // 在UI线程显示锁定请求确认对话框
                     InvokeOnUiThread(() =>
                     {
                         DialogResult result = MessageBox.Show(
-                            $"用户 {lockRequest.LockInfo.UserName} 请求锁定您当前正在编辑的单据 {lockRequest.LockInfo.BillID}。\n\n是否允许锁定？",
+                            $"用户 {lockRequest.LockInfo.LockedUserName} 请求锁定您当前正在编辑的单据 {lockRequest.LockInfo.BillID}。\n\n是否允许锁定？",
                             "锁定请求",
                             MessageBoxButtons.YesNo,
                             MessageBoxIcon.Question);
@@ -274,7 +274,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
 
                         if (lockResponse.LockInfo != null)
                         {
-                            _logger.LogInformation($"锁信息: 用户={lockResponse.LockInfo.UserName}, 时间={lockResponse.LockInfo.LockTime}");
+                            _logger.LogInformation($"锁信息: 用户={lockResponse.LockInfo.LockedUserName}, 时间={lockResponse.LockInfo.LockTime}");
                         }
                     }
                     else

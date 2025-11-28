@@ -1967,7 +1967,7 @@ namespace RUINORERP.UI.BaseForm
                     UNLockByBizName(userid);
 
                     var lockinfo = await _integratedLockService.CheckLockStatusAsync(pkid, CurMenuInfo.MenuID);
-                    if (lockinfo.LockInfo.UserId == userid)
+                    if (lockinfo.LockInfo.LockedUserId == userid)
                     {
                         //得到了锁 就是自己。得不到就是
                         tsBtnLocked.AutoToolTip = false;
@@ -1985,7 +1985,7 @@ namespace RUINORERP.UI.BaseForm
                     else
                     {
                         //别人锁定了
-                        string tipMsg = $"单据已被用户【{lockinfo.LockInfo.UserName}】锁定，请刷新后再试,或点击【已锁定】联系锁定人员解锁。";
+                        string tipMsg = $"单据已被用户【{lockinfo.LockInfo.LockedUserName}】锁定，请刷新后再试,或点击【已锁定】联系锁定人员解锁。";
                         MainForm.Instance.uclog.AddLog(tipMsg);
                         tsBtnLocked.AutoToolTip = true;
                         tsBtnLocked.ToolTipText = tipMsg;
@@ -2447,7 +2447,7 @@ namespace RUINORERP.UI.BaseForm
 
                     // 获取当前用户ID
                     long currentUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
-                    bool isSelfLock = isLocked && lockStatus.LockInfo.UserId == currentUserId;
+                    bool isSelfLock = isLocked && lockStatus.LockInfo.LockedUserId == currentUserId;
 
                     // 更新锁定按钮状态
                     tsBtnLocked.Visible = isLocked;
@@ -2460,7 +2460,7 @@ namespace RUINORERP.UI.BaseForm
                     {
                         tsBtnLocked.ToolTipText = isSelfLock ?
                             "您已锁定当前单据" :
-                            $"单据已被【{lockStatus.LockInfo.UserName}】锁定";
+                            $"单据已被【{lockStatus.LockInfo.LockedUserName}】锁定";
                     }
                     else
                     {
@@ -3034,7 +3034,7 @@ namespace RUINORERP.UI.BaseForm
                         long currentUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
 
                         // 如果是自己锁定的，直接解锁（无需确认）
-                        if (lockResponse.LockInfo.UserId == currentUserId)
+                        if (lockResponse.LockInfo.LockedUserId == currentUserId)
                         {
                             logger?.LogInformation($"用户[{currentUserId}]选择解锁自己锁定的单据");
                             UNLock();
@@ -3042,7 +3042,7 @@ namespace RUINORERP.UI.BaseForm
                         else
                         {
                             // 如果是他人锁定的，直接请求解锁（无需确认）
-                            logger?.LogInformation($"用户[{currentUserId}]请求解锁被用户[{lockResponse.LockInfo.UserName}]锁定的单据");
+                            logger?.LogInformation($"用户[{currentUserId}]请求解锁被用户[{lockResponse.LockInfo.LockedUserName}]锁定的单据");
                             RequestUnLock();
                         }
                     }
@@ -3706,14 +3706,14 @@ namespace RUINORERP.UI.BaseForm
                 {
                     if (lockStatus.LockInfo != null && lockStatus.LockInfo.IsLocked)
                     {
-                        if (lockStatus.LockInfo.UserId != currentUserId)
+                        if (lockStatus.LockInfo.LockedUserId != currentUserId)
                         {
                             // 单据已被其他用户锁定
-                            string message = $"单据已被用户【{lockStatus.LockInfo.UserName}】锁定，无法编辑。\n" +
+                            string message = $"单据已被用户【{lockStatus.LockInfo.LockedUserName}】锁定，无法编辑。\n" +
                                            $"锁定时间：{lockStatus.LockInfo.LockTime:yyyy-MM-dd HH:mm:ss}\n" +
                                            $"如需编辑，请联系锁定用户或请求解锁。";
 
-                            MainForm.Instance.uclog.AddLog($"单据【{billId}】已被用户【{lockStatus.LockInfo.UserName}】锁定", UILogType.警告);
+                            MainForm.Instance.uclog.AddLog($"单据【{billId}】已被用户【{lockStatus.LockInfo.LockedUserName}】锁定", UILogType.警告);
                             // 仅在用户主动操作时显示MessageBox提示
                             // 此方法通常在用户点击编辑等按钮时调用，属于主动操作，保留提示
 
@@ -3722,7 +3722,7 @@ namespace RUINORERP.UI.BaseForm
                             {
                                 tsBtnLocked.Visible = true;
                                 tsBtnLocked.Tag = lockStatus;
-                                tsBtnLocked.ToolTipText = $"单据被【{lockStatus.LockInfo.UserName}】锁定";
+                                tsBtnLocked.ToolTipText = $"单据被【{lockStatus.LockInfo.LockedUserName}】锁定";
                                 this.tsBtnLocked.Image = global::RUINORERP.UI.Properties.Resources.Lockbill;
                             }
 
@@ -3889,9 +3889,9 @@ namespace RUINORERP.UI.BaseForm
                     if (checkResult != null && checkResult.IsSuccess && checkResult.LockInfo != null && checkResult.LockInfo.IsLocked)
                     {
                         // 如果已被他人锁定
-                        if (checkResult.LockInfo.UserId != userInfo.User_ID)
+                        if (checkResult.LockInfo.LockedUserId != userInfo.User_ID)
                         {
-                            string tipMsg = $"单据已被用户【{checkResult.LockInfo.UserName}】锁定，无法重复锁定";
+                            string tipMsg = $"单据已被用户【{checkResult.LockInfo.LockedUserName}】锁定，无法重复锁定";
                             MainForm.Instance.uclog.AddLog(tipMsg, UILogType.警告);
                             //  MessageBox.Show(tipMsg, "锁定失败", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                             return false;
@@ -4093,13 +4093,13 @@ namespace RUINORERP.UI.BaseForm
                                     tsBtnLocked.Tag = lockStatus;
 
                                     // 检查是否当前用户锁定
-                                    bool isSelfLock = lockStatus.LockInfo.UserId == currentUserId;
+                                    bool isSelfLock = lockStatus.LockInfo.LockedUserId == currentUserId;
 
                                     if (!isSelfLock)
                                     {
                                         isLocked = true;
                                         // 更新UI状态 - 他人锁定
-                                        string tipMsg = $"单据已被用户【{lockStatus.LockInfo.UserName}】锁定，请刷新后再试，或点击【已锁定】联系锁定人员解锁。";
+                                        string tipMsg = $"单据已被用户【{lockStatus.LockInfo.LockedUserName}】锁定，请刷新后再试，或点击【已锁定】联系锁定人员解锁。";
                                         MainForm.Instance.uclog.AddLog(tipMsg, UILogType.警告);
 
                                         tsBtnLocked.AutoToolTip = true;
@@ -6598,9 +6598,9 @@ namespace RUINORERP.UI.BaseForm
                             if (checkResult != null && checkResult.IsSuccess && checkResult.LockInfo != null && checkResult.LockInfo.IsLocked)
                             {
                                 // 检查是否是当前用户锁定
-                                if (checkResult.LockInfo.UserId != userInfo.User_ID)
+                                if (checkResult.LockInfo.LockedUserId != userInfo.User_ID)
                                 {
-                                    string tipMsg = $"单据已被用户【{checkResult.LockInfo.UserName}】锁定，您无权解锁";
+                                    string tipMsg = $"单据已被用户【{checkResult.LockInfo.LockedUserName}】锁定，您无权解锁";
                                     MainForm.Instance.uclog.AddLog(tipMsg, UILogType.警告);
                                     return;
                                 }
@@ -7134,8 +7134,8 @@ namespace RUINORERP.UI.BaseForm
                 LockInfo lockInfo = new LockInfo();
                 lockInfo.BillID = billId;
                 lockInfo.MenuID = _currentMenuId;
-                lockInfo.UserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
-                lockInfo.UserName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.UserName;
+                lockInfo.LockedUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
+                lockInfo.LockedUserName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.UserName;
 
                 // 创建解锁请求
                 var lockRequest = new LockRequest

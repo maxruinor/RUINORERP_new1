@@ -184,9 +184,9 @@ namespace RUINORERP.Business.Document
                         if (lockInfo != null)
                         {
                             // 使用统一的锁定信息结构，提供更详细的锁定状态信息
-                            string errorMsg = string.IsNullOrEmpty(lockInfo.UserName) 
-                                ? $"无法锁定文档 {baseEntity.GetType().Name} ID={baseEntity.PrimaryKeyID}，已被用户ID={lockInfo.UserId}锁定" 
-                                : $"无法锁定文档 {baseEntity.GetType().Name} ID={baseEntity.PrimaryKeyID}，已被用户{lockInfo.UserName}(ID={lockInfo.UserId})锁定";
+                            string errorMsg = string.IsNullOrEmpty(lockInfo.LockedUserName) 
+                                ? $"无法锁定文档 {baseEntity.GetType().Name} ID={baseEntity.PrimaryKeyID}，已被用户ID={lockInfo.LockedUserId}锁定" 
+                                : $"无法锁定文档 {baseEntity.GetType().Name} ID={baseEntity.PrimaryKeyID}，已被用户{lockInfo.LockedUserName}(ID={lockInfo.LockedUserId})锁定";
                             
                             if (lockInfo.IsExpired)
                             {

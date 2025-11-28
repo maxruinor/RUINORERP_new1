@@ -268,7 +268,7 @@ namespace RUINORERP.Server.Network.Models
                 LastActivity = LastActivityTime,
                 IsConnected = IsConnected,
                 ClientInfo = $"{ClientIp}:{ClientPort}",
-                ClientVersion = ClientVersion,
+                ClientVersion = UserInfo.客户端版本,
                 DeviceInfo = DeviceInfo
             };
         }
@@ -395,10 +395,6 @@ namespace RUINORERP.Server.Network.Models
         /// </summary>
         public string LastError { get; set; }
 
-        /// <summary>
-        /// 客户端版本
-        /// </summary>
-        public string ClientVersion { get; set; }
 
         /// <summary>
         /// 设备信息

@@ -140,11 +140,11 @@ namespace RUINORERP.Server.Network.Services
                             !_clientSessions[lockInfo.SessionId].IsActive)
                         {
                             // 释放孤儿锁
-                            await _lockManager.ForceUnlockAsync($"lock:document:{lockInfo.BillID}", lockInfo.UserId);
+                            await _lockManager.ForceUnlockAsync($"lock:document:{lockInfo.BillID}", lockInfo.LockedUserId);
                             orphanedCount++;
 
                             _logger.LogWarning("清理孤儿锁: BillId={BillId}, UserId={UserId}, SessionId={SessionId}",
-                                lockInfo.BillID, lockInfo.UserId, lockInfo.SessionId);
+                                lockInfo.BillID, lockInfo.LockedUserId, lockInfo.SessionId);
                         }
                     }
                 }
@@ -302,7 +302,7 @@ namespace RUINORERP.Server.Network.Services
 
                 foreach (var longLivedLock in longLivedLocks)
                 {
-                    _logger.LogWarning($"检测到长期有效锁: 单据 {longLivedLock.BillID}, 用户: {longLivedLock.UserName}, 锁定时长: {DateTime.Now - longLivedLock.LockTime}");
+                    _logger.LogWarning($"检测到长期有效锁: 单据 {longLivedLock.BillID}, 用户: {longLivedLock.LockedUserName}, 锁定时长: {DateTime.Now - longLivedLock.LockTime}");
 
                     // 检查对应会话是否活跃
                     var sessionActive = _clientSessions.Values
@@ -311,7 +311,7 @@ namespace RUINORERP.Server.Network.Services
                     if (!sessionActive)
                     {
                         // 会话不活跃，释放锁
-                        await _lockManager.ForceUnlockAsync($"lock:document:{longLivedLock.BillID}", longLivedLock.UserId);
+                        await _lockManager.ForceUnlockAsync($"lock:document:{longLivedLock.BillID}", longLivedLock.LockedUserId);
                         _logger.LogWarning($"释放孤儿锁: 单据 {longLivedLock.BillID}, 原因: 会话不活跃");
                     }
                 }

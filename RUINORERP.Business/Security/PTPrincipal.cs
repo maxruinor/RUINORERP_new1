@@ -220,7 +220,6 @@ namespace RUINORERP.Business.Security
         /// <returns></returns>
         /// <exception cref="Exception"></exception>
         public static bool SetCurrentUserInfo(ApplicationContext appcontext, tb_UserInfo user, tb_RoleInfo CurrentRole = null)
-
         {
             bool loginSucceed = false;
             if (appcontext.CurUserInfo == null)
@@ -232,10 +231,25 @@ namespace RUINORERP.Business.Security
             {
                 throw new Exception("您使用的账号没有所属员工。");
             }
+            
+            // 将tb_UserInfo相关属性赋值到ApplicationContext.CurrentUser
             appcontext.CurUserInfo.Id = user.tb_employee.Employee_ID;
             appcontext.CurrentUser.Employee_ID = user.tb_employee.Employee_ID;
-            appcontext.CurUserInfo.Name = user.tb_employee.Employee_Name;
+            appcontext.CurrentUser.UserID = user.User_ID;
+            appcontext.CurrentUser.用户名 = user.UserName;
+            appcontext.CurrentUser.姓名 = user.tb_employee.Employee_Name;
+            appcontext.CurrentUser.超级用户 = user.IsSuperUser;
             appcontext.CurrentUser.登陆时间 = System.DateTime.Now;
+            appcontext.CurrentUser.在线状态 = true;
+            appcontext.CurrentUser.授权状态 = true;
+            
+            // 设置超级用户标志
+            if (user.IsSuperUser)
+            {
+                ApplicationContext.Current.IsSuperUser = true;
+            }
+            
+            appcontext.CurUserInfo.Name = user.tb_employee.Employee_Name;
             appcontext.CompanyInfo = user.tb_employee.tb_department.tb_company;
 
             //一个人能在不同的角色组。可以多个。但是需要为已授权
@@ -313,3 +327,4 @@ namespace RUINORERP.Business.Security
         }
     }
 }
+

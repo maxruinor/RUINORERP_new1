@@ -266,7 +266,7 @@ namespace RUINORERP.UI
                         // 记录登录时间信息到日志
                         if (MainForm.Instance != null && MainForm.Instance.logger != null)
                         {
-                            MainForm.Instance.logger.LogInformation(loginTimeInfo);
+                            MainForm.Instance.logger.Debug(loginTimeInfo);
                         }
                         Console.WriteLine(loginTimeInfo);
 

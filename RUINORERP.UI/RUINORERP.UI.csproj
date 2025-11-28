@@ -893,6 +893,7 @@
     <Compile Include="Common\BackgroundCacheManager.cs" />
     <Compile Include="Common\CheckedListBoxHelper.cs" />
     <Compile Include="Common\ColumnComparer.cs" />
+    <Compile Include="Common\ControlBindingHelper.cs" />
     <Compile Include="Common\ControlExtensions.cs" />
     <Compile Include="Common\ExpressionSafeHelper.cs" />
     <Compile Include="Common\HardwareHelper.cs" />
@@ -2254,6 +2255,7 @@
     <Compile Include="IM\WidgetMessager.Designer.cs">
       <DependentUpon>WidgetMessager.cs</DependentUpon>
     </Compile>
+    <Compile Include="LoginResult.cs" />
     <Compile Include="LogInterceptor.cs" />
     <Compile Include="Log\UClog.cs">
       <SubType>UserControl</SubType>
@@ -2292,6 +2294,7 @@
     <!-- <Compile Include="Network\ClientCommandProcessor.cs" /> -->
     <Compile Include="Network\ClientEventManager.cs" />
     <Compile Include="Network\ClientQueuedCommand.cs" />
+    <Compile Include="Network\ConnectionManager.cs" />
     <!-- ClientNetworkManager.cs 已作废 - 功能整合到CommunicationManager.cs -->
     <!-- <Compile Include="Network\ClientNetworkManager.cs" /> -->
     <Compile Include="Network\DI\NetworkServicesDependencyInjection.cs" />
@@ -2301,7 +2304,6 @@
     <Compile Include="Network\ErrorHandling\IErrorHandlingStrategy.cs" />
     <Compile Include="Network\ErrorHandling\TimeoutErrorHandlingStrategy.cs" />
     <Compile Include="Network\Exceptions\NetworkCommunicationException.cs" />
-    <Compile Include="Network\HeartbeatManager.cs" />
     <Compile Include="Network\IClientCommunicationService.cs" />
     <Compile Include="Network\ISocketClient.cs" />
     <Compile Include="Network\ClientCommunicationService.cs" />

@@ -51,7 +51,6 @@ namespace RUINORERP.Business.Processor
             queryFilter.SetQueryField<tb_FM_ProfitLoss>(c => c.SourceBizType, QueryFieldType.CmbEnum, typeof(BizType));
             queryFilter.SetQueryField<tb_FM_ProfitLoss>(c => c.IsIncludeTax);
             queryFilter.SetQueryField<tb_FM_ProfitLoss>(c => c.PostDate, AdvQueryProcessType.datetimeRange, false);
-            queryFilter.SetQueryField<tb_FM_ProfitLoss>(c => c.Created_by);
             queryFilter.SetQueryField<tb_FM_ProfitLoss>(c => c.Created_at, AdvQueryProcessType.datetimeRange, true);
             queryFilter.SetQueryField<tb_FM_ProfitLoss>(c => c.ApprovalStatus, QueryFieldType.CmbEnum, typeof(ApprovalStatus));
             queryFilter.SetQueryField<tb_FM_ProfitLoss>(c => c.Remark);

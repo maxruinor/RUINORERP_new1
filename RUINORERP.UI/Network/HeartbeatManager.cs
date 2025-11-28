@@ -1,174 +1,121 @@
-using RUINORERP.PacketSpec.Models.Requests;
+using RUINORERP.PacketSpec.Models.Authentication;
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Management;
-using System.Net;
-using System.Net.NetworkInformation;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using RUINORERP.PacketSpec.Commands;
-using RUINORERP.UI.Network.Authentication;
-using RUINORERP.UI.Network.Services;
-using Microsoft.Extensions.Logging.Abstractions;
-using RUINORERP.PacketSpec.Commands.Authentication;
-using System.Linq;
-using AutoUpdateTools;
-using RUINORERP.Model.CommonModel;
 using RUINORERP.UI.Services;
+using RUINORERP.PacketSpec.Models.Requests;
+using RUINORERP.PacketSpec.Models.Responses;
 
 namespace RUINORERP.UI.Network
 {
-
+    /// <summary>
+    /// 心跳管理器 - 专注于核心的心跳检测功能
+    /// 负责定期检测与服务器的连接状态
+    /// </summary>
     public class HeartbeatManager : IDisposable
     {
+        #region 私有字段
+
         private readonly ISocketClient _socketClient;
-        private ClientCommunicationService _communicationService;
-        private readonly TokenManager _tokenManager;
-        private readonly IClientSystemInfoService _systemInfoService;
+        private ClientCommunicationService? _communicationService;
         private readonly int _heartbeatIntervalMs;
-        private readonly int _heartbeatTimeoutMs;
-        private readonly int _resourceCheckIntervalMs; // 资源检查间隔
-        private readonly int _maxFailedAttempts; // 最大连续失败次数
-        private readonly int _minHeartbeatIntervalMs; // 最小心跳间隔
-        private readonly int _maxHeartbeatIntervalMs; // 最大心跳间隔
         private CancellationTokenSource _cancellationTokenSource;
         private Task _heartbeatTask;
-        private Task _resourceCheckTask; // 资源检查任务
         private int _failedAttempts;
         private bool _isDisposed;
+        private bool _isRunning;
         private readonly object _lock = new object();
         private readonly ILogger<HeartbeatManager> _logger;
-        private int _totalHeartbeats;
-        private int _successfulHeartbeats;
-        private int _failedHeartbeats;
         private DateTime _lastHeartbeatTime;
-        private int _currentHeartbeatIntervalMs; // 当前心跳间隔（用于自适应调整）
-        private readonly Queue<int> _recentResponseTimes; // 最近的响应时间队列，用于自适应调整
-        private const int MaxResponseTimeHistory = 10; // 保留的响应时间历史记录数量
+        private readonly IClientSystemInfoService _systemInfoService;
 
-        // 资源使用情况缓存
-        private ClientResourceUsage _cachedResourceUsage;
-        private DateTime _lastResourceCheckTime;
+        #endregion
 
+        #region 公共属性
 
-        public HeartbeatStatistics Statistics
+        /// <summary>
+        /// 心跳失败事件
+        /// 当心跳失败时触发，参数为连续失败次数
+        /// </summary>
+        public event Action<int> HeartbeatFailed;
+
+        /// <summary>
+        /// 心跳恢复事件
+        /// 当心跳从失败状态恢复时触发
+        /// </summary>
+        public event Action HeartbeatRecovered;
+
+        /// <summary>
+        /// 是否正在运行
+        /// </summary>
+        public bool IsRunning
         {
             get
             {
                 lock (_lock)
                 {
-                    return new HeartbeatStatistics(
-                        _totalHeartbeats,
-                        _successfulHeartbeats,
-                        _failedHeartbeats,
-                        _lastHeartbeatTime,
-                        0, // averageResponseTime 暂时设为0
-                        _socketClient.IsConnected,
-                        _heartbeatTask != null && !_heartbeatTask.IsCompleted,
-                        _failedAttempts,
-                        _socketClient.IsConnected ? "Connected" : "Disconnected"
-                    );
+                    return _isRunning && _heartbeatTask != null && !_heartbeatTask.IsCompleted;
                 }
             }
         }
-
-
         /// <summary>
-        /// 设置客户端通信服务
-        /// 用于解决循环依赖问题，在服务激活后调用
+        /// 设置客户端通信服务引用
+        /// 在依赖注入配置中被调用，避免循环依赖
         /// </summary>
-        /// <param name="communicationService">客户端通信服务</param>
+        /// <param name="communicationService">客户端通信服务实例</param>
         public void SetCommunicationService(ClientCommunicationService communicationService)
         {
-            _communicationService = communicationService ?? throw new ArgumentNullException(nameof(communicationService));
+            _communicationService = communicationService;
         }
-        
+           
+
         /// <summary>
-        /// 心跳管理器构造函数 - 移除ClientCommunicationService的直接依赖以避免循环依赖
+        /// 最后一次心跳时间
         /// </summary>
-        /// <param name="socketClient">Socket客户端接口，用于直接发送心跳数据</param>
-        /// <param name="tokenManager">Token管理器，用于检查Token状态</param>
-        /// <param name="heartbeatIntervalMs">心跳间隔（毫秒）</param>
-        /// <param name="heartbeatTimeoutMs">心跳超时时间（毫秒）</param>
-        /// <param name="resourceCheckIntervalMs">资源检查间隔（毫秒），默认为5分钟</param>
-        /// <param name="maxFailedAttempts">最大连续失败次数，超过此值判定连接断开，默认为3次</param>
-        /// <param name="minHeartbeatIntervalMs">最小心跳间隔（毫秒），用于自适应调整，默认为10秒</param>
-        /// <param name="maxHeartbeatIntervalMs">最大心跳间隔（毫秒），用于自适应调整，默认为2分钟</param>
-        /// <param name="logger">日志记录器，可选参数，用于记录心跳过程中的信息和异常</param>
+        public DateTime LastHeartbeatTime => _lastHeartbeatTime;
+
+        /// <summary>
+        /// 当前失败次数
+        /// </summary>
+        public int CurrentFailedAttempts => _failedAttempts;
+
+        #endregion
+
+        #region 构造函数
+
+        /// <summary>
+        /// 心跳管理器构造函数
+        /// </summary>
+        /// <param name="socketClient">Socket客户端</param>
+        /// <param name="communicationService">客户端通信服务</param>
+        /// <param name="systemInfoService">系统信息服务（可选）</param>
+        /// <param name="heartbeatIntervalMs">心跳间隔，默认30秒</param>
+        /// <param name="logger">日志记录器（可选）</param>
         public HeartbeatManager(
             ISocketClient socketClient,
-            TokenManager tokenManager,
-            IClientSystemInfoService systemInfoService,
-            int heartbeatIntervalMs,
-            int heartbeatTimeoutMs = 5000,
-            int resourceCheckIntervalMs = 600000, // 默认10分钟检查一次资源使用情况
-            int maxFailedAttempts = 3, // 默认连续失败3次判定连接断开
-            int minHeartbeatIntervalMs = 5000, // 默认最小心跳间隔10秒
-            int maxHeartbeatIntervalMs = 300000, // 默认最大心跳间隔1分钟
+            ClientCommunicationService communicationService,
+            IClientSystemInfoService systemInfoService = null,
+            int heartbeatIntervalMs = 30000,
             ILogger<HeartbeatManager> logger = null)
         {
             _socketClient = socketClient ?? throw new ArgumentNullException(nameof(socketClient));
-            _tokenManager = tokenManager ?? throw new ArgumentNullException(nameof(tokenManager));
-            _systemInfoService = systemInfoService ?? throw new ArgumentNullException(nameof(systemInfoService));
-
-            // 参数验证
-            if (heartbeatIntervalMs <= 0)
-                throw new ArgumentOutOfRangeException(nameof(heartbeatIntervalMs), "心跳间隔必须大于0");
-
-            if (heartbeatTimeoutMs <= 0)
-                throw new ArgumentOutOfRangeException(nameof(heartbeatTimeoutMs), "心跳超时时间必须大于0");
-
-            if (maxFailedAttempts <= 0)
-                throw new ArgumentOutOfRangeException(nameof(maxFailedAttempts), "最大失败次数必须大于0");
-
-            if (minHeartbeatIntervalMs <= 0)
-                throw new ArgumentOutOfRangeException(nameof(minHeartbeatIntervalMs), "最小心跳间隔必须大于0");
-
-            if (maxHeartbeatIntervalMs <= 0)
-                throw new ArgumentOutOfRangeException(nameof(maxHeartbeatIntervalMs), "最大心跳间隔必须大于0");
-
-            if (minHeartbeatIntervalMs > maxHeartbeatIntervalMs)
-                throw new ArgumentException("最小心跳间隔不能大于最大心跳间隔");
-
+            _communicationService = communicationService ?? throw new ArgumentNullException(nameof(communicationService));
+            _systemInfoService = systemInfoService;
             _heartbeatIntervalMs = heartbeatIntervalMs;
-            _currentHeartbeatIntervalMs = heartbeatIntervalMs; // 初始化当前心跳间隔
-            _heartbeatTimeoutMs = heartbeatTimeoutMs;
-            _resourceCheckIntervalMs = resourceCheckIntervalMs;
-            _maxFailedAttempts = maxFailedAttempts;
-            _minHeartbeatIntervalMs = minHeartbeatIntervalMs;
-            _maxHeartbeatIntervalMs = maxHeartbeatIntervalMs;
-            _cancellationTokenSource = new CancellationTokenSource();
-            _logger = logger ?? NullLogger<HeartbeatManager>.Instance;
-            _failedAttempts = 0;
-            _isDisposed = false;
-            _totalHeartbeats = 0;
-            _successfulHeartbeats = 0;
-            _failedHeartbeats = 0;
-            _lastHeartbeatTime = DateTime.MinValue;
-
-            // 初始化资源缓存
-            _cachedResourceUsage = ClientResourceUsage.Create(); // 初始默认值
-            _lastResourceCheckTime = DateTime.MinValue;
-
-            // 初始化响应时间队列
-            _recentResponseTimes = new Queue<int>(MaxResponseTimeHistory);
+            _logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<HeartbeatManager>.Instance;
         }
 
+        #endregion
+
+        #region 核心方法
+
         /// <summary>
-        /// 开始发送心跳
-        /// 在单独的后台任务中定期执行心跳发送逻辑
+        /// 启动心跳检测
         /// </summary>
-        /// <exception cref="ObjectDisposedException">对象已被释放时抛出</exception>
         public void Start()
         {
-            // 系统启用前暂停心跳，待业务稳定后启用
-            //#warning 系统启用前暂停心跳，待业务稳定后启用
-            //           return;
-
             if (_isDisposed)
             {
                 throw new ObjectDisposedException(nameof(HeartbeatManager));
@@ -176,1232 +123,173 @@ namespace RUINORERP.UI.Network
 
             lock (_lock)
             {
-                if (_heartbeatTask != null && !_heartbeatTask.IsCompleted)
-                {
-                    return; // 已经在运行中
-                }
+                if (_isRunning || (_heartbeatTask != null && !_heartbeatTask.IsCompleted))
+                    return;
 
+                _isRunning = true;
+                _failedAttempts = 0;
                 _cancellationTokenSource = new CancellationTokenSource();
-                _heartbeatTask = Task.Run(SendHeartbeatsAsync, _cancellationTokenSource.Token);
-
-                // 启动资源检查任务
-                if (_resourceCheckTask == null || _resourceCheckTask.IsCompleted)
-                {
-                    _resourceCheckTask = Task.Run(ResourceCheckLoopAsync, _cancellationTokenSource.Token);
-                }
-
+                
+                _heartbeatTask = Task.Run(async () => await HeartbeatLoopAsync(_cancellationTokenSource.Token));
+                _logger?.LogInformation("心跳管理器已启动，间隔：{IntervalMs}ms", _heartbeatIntervalMs);
             }
         }
 
         /// <summary>
-        /// 停止发送心跳
-        /// 取消当前心跳任务和资源检查任务并释放相关资源
+        /// 停止心跳检测
         /// </summary>
         public void Stop()
         {
             lock (_lock)
             {
-                if (!_isDisposed && _cancellationTokenSource != null)
-                {
-                    try
-                    {
-                        _cancellationTokenSource.Cancel();
-                        _cancellationTokenSource.Dispose();
-                        _heartbeatTask = null;
-                        _resourceCheckTask = null;
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger?.LogError(ex, "停止心跳任务时发生异常");
-                    }
-                }
-            }
-        }
+                if (!_isRunning)
+                    return;
 
-
-        /// <summary>
-        /// 发送心跳的公共方法
-        /// 提取公共心跳发送逻辑，避免代码重复
-        /// </summary>
-        /// <param name="cancellationToken">取消令牌</param>
-        /// <param name="isManual">是否为手动触发的心跳</param>
-        /// <returns>心跳执行结果，包含成功状态、响应消息和执行时间</returns>
-        private async Task<(bool Success, string Message, TimeSpan Elapsed)> SendHeartbeatCoreAsync(CancellationToken cancellationToken = default, bool isManual = false)
-        {
-            if (_isDisposed)
-            {
-                return (false, "心跳管理器已释放", TimeSpan.Zero);
-            }
-            
-            var stopwatch = Stopwatch.StartNew();
-            try
-            {
-                // 创建心跳命令
-                var heartbeatRequest = CreateHeartbeatRequest();
-
-                // 使用ClientCommunicationService发送心跳请求
-                var response = await _communicationService.SendCommandAsync(
-                    SystemCommands.Heartbeat, heartbeatRequest,
-                    cancellationToken,
-                    _heartbeatTimeoutMs // 使用配置的心跳超时时间
-                );
-
-                // 处理心跳响应
-                if (response != null)
-                {
-                    //客户端要处理服务器的数据
-
-                    // 记录响应时间用于自适应调整
-                    lock (_lock)
-                    {
-                        _recentResponseTimes.Enqueue((int)stopwatch.ElapsedMilliseconds);
-                        // 保持队列大小不超过最大值
-                        while (_recentResponseTimes.Count > MaxResponseTimeHistory)
-                        {
-                            _recentResponseTimes.Dequeue();
-                        }
-                    }
-
-                    // 自适应调整心跳间隔
-                    // AdjustHeartbeatInterval(response.NextIntervalMs);
-                }
-
-                stopwatch.Stop();
-
-                // 更新统计信息
-                lock (_lock)
-                {
-                    _totalHeartbeats++;
-                    _successfulHeartbeats++;
-                    _lastHeartbeatTime = DateTime.UtcNow;
-                }
-
-                return (true, $"心跳成功", stopwatch.Elapsed);
-            }
-            catch (TimeoutException ex)
-            {
-                stopwatch.Stop();
-                _logger?.LogWarning(ex, "{HeartbeatType}心跳超时，耗时: {ElapsedMs}ms",
-                    isManual ? "手动" : "自动", stopwatch.ElapsedMilliseconds);
-
-                // 记录响应时间用于自适应调整
-                lock (_lock)
-                {
-                    _recentResponseTimes.Enqueue(_heartbeatTimeoutMs); // 超时情况下使用超时时间作为响应时间
-                    // 保持队列大小不超过最大值
-                    while (_recentResponseTimes.Count > MaxResponseTimeHistory)
-                    {
-                        _recentResponseTimes.Dequeue();
-                    }
-                }
-
-                // 自适应调整心跳间隔
-                AdjustHeartbeatInterval(0); // 0表示服务器没有建议间隔
-
-                // 更新统计信息
-                lock (_lock)
-                {
-                    _totalHeartbeats++;
-                    _failedHeartbeats++;
-                    _lastHeartbeatTime = DateTime.UtcNow;
-                }
-
-                return (false, $"心跳超时: {ex.Message}", stopwatch.Elapsed);
-            }
-            catch (OperationCanceledException)
-            {
-                stopwatch.Stop();
-                _logger?.LogWarning("{HeartbeatType}心跳被取消，耗时: {ElapsedMs}ms",
-                    isManual ? "手动" : "自动", stopwatch.ElapsedMilliseconds);
-                return (false, "心跳操作被取消", stopwatch.Elapsed);
-            }
-            catch (Exception ex)
-            {
-                stopwatch.Stop();
-                _logger?.LogError(ex, "{HeartbeatType}心跳异常，耗时: {ElapsedMs}ms",
-                    isManual ? "手动" : "自动", stopwatch.ElapsedMilliseconds);
-
-                // 记录响应时间用于自适应调整
-                lock (_lock)
-                {
-                    _recentResponseTimes.Enqueue(_heartbeatTimeoutMs); // 异常情况下使用超时时间作为响应时间
-                    // 保持队列大小不超过最大值
-                    while (_recentResponseTimes.Count > MaxResponseTimeHistory)
-                    {
-                        _recentResponseTimes.Dequeue();
-                    }
-                }
-
-                // 自适应调整心跳间隔
-                AdjustHeartbeatInterval(0); // 0表示服务器没有建议间隔
-
-                // 更新统计信息
-                lock (_lock)
-                {
-                    _totalHeartbeats++;
-                    _failedHeartbeats++;
-                    _lastHeartbeatTime = DateTime.UtcNow;
-                }
-
-                return (false, $"心跳异常: {ex.Message}", stopwatch.Elapsed);
-            }
-        }
-
-        /// <summary>
-        /// 自适应调整心跳间隔
-        /// 根据网络状况和服务器建议动态调整心跳频率
-        /// </summary>
-        /// <param name="serverSuggestedInterval">服务器建议的心跳间隔，0表示没有建议</param>
-        private void AdjustHeartbeatInterval(int serverSuggestedInterval)
-        {
-            lock (_lock)
-            {
-                int newInterval = _currentHeartbeatIntervalMs;
-
-                // 优先使用服务器建议的间隔
-                if (serverSuggestedInterval > 0)
-                {
-                    // 确保服务器建议的间隔在合理范围内
-                    newInterval = Math.Max(_minHeartbeatIntervalMs, Math.Min(serverSuggestedInterval, _maxHeartbeatIntervalMs));
-                }
-                else
-                {
-                    // 根据最近的响应时间自适应调整
-                    if (_recentResponseTimes.Count >= 3) // 至少需要3个样本才能进行自适应调整
-                    {
-                        var responseTimes = _recentResponseTimes.ToArray();
-                        Array.Sort(responseTimes);
-
-                        // 使用中位数作为平均响应时间的估计
-                        int medianResponseTime = responseTimes[responseTimes.Length / 2];
-
-                        // 计算响应时间的变化趋势
-                        double responseTimeVariation = CalculateResponseTimeVariation(responseTimes);
-
-                        // 根据响应时间和变化趋势调整心跳间隔
-                        if (medianResponseTime > _heartbeatTimeoutMs * 0.8 || responseTimeVariation > 0.5)
-                        {
-                            // 响应时间较长或变化较大，增加心跳间隔
-                            newInterval = Math.Min(_currentHeartbeatIntervalMs + 5000, _maxHeartbeatIntervalMs);
-                            _logger?.LogDebug("网络状况不佳，增加心跳间隔至: {NewIntervalMs}ms", newInterval);
-                        }
-                        else if (medianResponseTime < _heartbeatTimeoutMs * 0.3 && responseTimeVariation < 0.2)
-                        {
-                            // 响应时间较短且稳定，减少心跳间隔
-                            newInterval = Math.Max(_currentHeartbeatIntervalMs - 2000, _minHeartbeatIntervalMs);
-                            _logger?.LogDebug("网络状况良好，减少心跳间隔至: {NewIntervalMs}ms", newInterval);
-                        }
-                    }
-                }
-
-                // 应用新的心跳间隔
-                if (newInterval != _currentHeartbeatIntervalMs)
-                {
-                    _currentHeartbeatIntervalMs = newInterval;
-                }
-            }
-        }
-
-        /// <summary>
-        /// 计算响应时间的变化率
-        /// </summary>
-        /// <param name="responseTimes">响应时间数组</param>
-        /// <returns>响应时间的变化率（0-1之间，值越大表示变化越大）</returns>
-        private double CalculateResponseTimeVariation(int[] responseTimes)
-        {
-            if (responseTimes.Length < 2)
-                return 0;
-
-            // 计算平均响应时间
-            double average = responseTimes.Average();
-
-            // 计算标准差
-            double sumOfSquares = 0;
-            foreach (int time in responseTimes)
-            {
-                sumOfSquares += Math.Pow(time - average, 2);
-            }
-            double standardDeviation = Math.Sqrt(sumOfSquares / responseTimes.Length);
-
-            // 返回变异系数（标准差/平均值），作为变化率的度量
-            return average > 0 ? standardDeviation / average : 0;
-        }
-
-        /// <summary>
-        /// 手动发送心跳
-        /// 提供手动测试心跳连接的公共接口
-        /// </summary>
-        /// <param name="cancellationToken">取消令牌</param>
-        /// <returns>心跳执行结果，包含成功状态、响应消息和执行时间</returns>
-        public async Task<(bool Success, string Message, TimeSpan Elapsed)> SendHeartbeatAsync(CancellationToken cancellationToken = default)
-        {
-            return await SendHeartbeatCoreAsync(cancellationToken, true);
-        }
-
-
-        /// <summary>
-        /// 心跳发送循环
-        /// 定期发送心跳并处理响应
-        /// </summary>
-        /// <returns>异步任务，心跳循环任务</returns>
-        /// <summary>
-        /// Token过期事件
-        /// 当检测到Token已过期时触发，通知其他组件进行处理
-        /// </summary>
-        public event Action OnTokenExpired = delegate { };
-        
-        private async Task SendHeartbeatsAsync()
-        {
-            // 上次Token检查时间
-            DateTime lastTokenCheckTime = DateTime.MinValue;
-            // Token检查间隔（默认5分钟）
-            TimeSpan tokenCheckInterval = TimeSpan.FromMinutes(5);
-
-            while (!_cancellationTokenSource.Token.IsCancellationRequested)
-            {
+                _isRunning = false;
+                _cancellationTokenSource?.Cancel();
+                
                 try
                 {
-                    
-                    // 定期检查Token状态（不必每次心跳都检查）
-                    var now = DateTime.UtcNow;
-                    if (now - lastTokenCheckTime >= tokenCheckInterval)
+                    if (_heartbeatTask != null && !_heartbeatTask.IsCompleted)
                     {
-                        await CheckTokenValidityAsync();
-                        lastTokenCheckTime = now;
-                    }
-
-                    // 直接尝试发送心跳，连接状态由ClientCommunicationService处理
-                    var result = await SendHeartbeatCoreAsync(_cancellationTokenSource.Token, false);
-
-                    if (result.Success)
-                    {
-                        // 心跳发送成功
-                        lock (_lock)
-                        {
-                            _failedAttempts = 0;
-                        }
-                        OnHeartbeatSuccess();
-                    }
-                    else
-                    {
-                        // 心跳发送失败，仅记录失败次数，不再判定连接断开
-                        lock (_lock)
-                        {
-                            _failedAttempts++;
-                        }
-                        HandleHeartbeatFailure(result.Message);
-                    }
-                }
-                catch (TaskCanceledException)
-                {
-                    // 任务被取消，正常退出
-                    _logger?.LogDebug("心跳任务收到取消信号，准备退出");
-                    break;
-                }
-                catch (OperationCanceledException ex)
-                {
-                    // 操作被取消，正常退出
-                    _logger?.LogDebug(ex, "心跳操作被取消");
-                    break;
-                }
-                catch (Exception ex)
-                    {
-                        // 处理其他异常，增加失败计数器
-                        lock (_lock)
-                        {
-                            _failedAttempts++;
-                        }
-                        _logger?.LogError(ex, "心跳处理过程中发生未预期的异常，连续失败次数: {FailedAttempts}", _failedAttempts);
-                        HandleHeartbeatException(ex);
-                    }
-
-                // 等待下一次心跳间隔，使用自适应间隔
-                try
-                {
-                    int currentInterval;
-                    lock (_lock)
-                    {
-                        currentInterval = _currentHeartbeatIntervalMs;
-                    }
-
-                    _logger?.LogDebug("等待下一次心跳，间隔: {HeartbeatIntervalMs} 毫秒", currentInterval);
-                    await Task.Delay(currentInterval, _cancellationTokenSource.Token);
-                }
-                catch (TaskCanceledException)
-                {
-                    // 正常取消，退出循环
-                    break;
-                }
-            }
-
-        }
-
-        /// <summary>
-        /// 资源检查循环
-        /// 定期更新资源使用情况缓存
-        /// </summary>
-        /// <returns>异步任务</returns>
-        private async Task ResourceCheckLoopAsync()
-        {
-            while (!_cancellationTokenSource.Token.IsCancellationRequested)
-            {
-                try
-                {
-                    // 强制更新资源使用情况缓存
-                    var now = DateTime.UtcNow;
-
-                    // 检查是否需要更新缓存
-                    bool needsUpdate = _lastResourceCheckTime == DateTime.MinValue ||
-                                     (now - _lastResourceCheckTime).TotalMilliseconds >= _resourceCheckIntervalMs;
-
-                    if (needsUpdate)
-                    {
-                        _logger?.LogDebug("开始更新资源使用情况缓存");
-
-                        try
-                        {
-                            // 使用客户端系统信息服务获取资源使用情况
-                            var resourceUsage = _systemInfoService.GetResourceUsage();
-                            
-                            lock (_lock)
-                            {
-                                _cachedResourceUsage = resourceUsage;
-                                _lastResourceCheckTime = now;
-                            }
-
-                            _logger?.LogDebug("资源使用情况缓存更新完成 - CPU: {CpuUsage}%, 内存: {MemoryUsage}MB, 磁盘: {DiskFreeSpace}GB",
-                                resourceUsage.CpuUsage, resourceUsage.MemoryUsage, resourceUsage.DiskFreeSpace);
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger?.LogError(ex, "使用客户端系统信息服务获取资源使用情况失败，回退到原有逻辑");
-                            
-                            // 回退到原有逻辑
-                            await UpdateResourceUsageFallbackAsync();
-                        }
-                    }
-
-                    // 等待下一次检查
-                    await Task.Delay(1000, _cancellationTokenSource.Token); // 每秒检查一次是否需要更新
-                }
-                catch (TaskCanceledException)
-                {
-                    // 正常取消，退出循环
-                    break;
-                }
-                catch (Exception ex)
-                {
-                    _logger?.LogError(ex, "资源检查循环中发生异常");
-                    await Task.Delay(5000, _cancellationTokenSource.Token); // 异常后等待5秒再试
-                }
-            }
-        }
-
-        /// <summary>
-        /// 资源使用情况获取回退方法
-        /// 当客户端系统信息服务不可用时使用原有逻辑
-        /// </summary>
-        /// <returns>异步任务</returns>
-        private async Task UpdateResourceUsageFallbackAsync()
-        {
-            await Task.Run(() =>
-            {
-                try
-                {
-                    // 获取进程信息
-                    var process = Process.GetCurrentProcess();
-                    var now = DateTime.UtcNow;
-
-                    // 获取内存使用量（MB）
-                    long memoryUsage = process.WorkingSet64 / (1024 * 1024);
-
-                    // 获取进程运行时间（秒）
-                    long processUptime = (long)(now - process.StartTime.ToUniversalTime()).TotalSeconds;
-
-                    // 估算CPU使用率
-                    float cpuUsage = 0;
-                    try
-                    {
-                        using (var searcher = new ManagementObjectSearcher("SELECT LoadPercentage FROM Win32_Processor"))
-                        {
-                            foreach (var obj in searcher.Get())
-                            {
-                                cpuUsage += Convert.ToSingle(obj["LoadPercentage"]);
-                            }
-                            cpuUsage /= Environment.ProcessorCount;
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger?.LogWarning(ex, "获取CPU使用率失败，使用处理器数量作为默认值");
-                        cpuUsage = Environment.ProcessorCount;
-                    }
-
-                    // 估算磁盘可用空间（GB）
-                    float diskFreeSpace = 0;
-                    try
-                    {
-                        foreach (DriveInfo drive in DriveInfo.GetDrives())
-                        {
-                            if (drive.IsReady && drive.RootDirectory.FullName == Path.GetPathRoot(Environment.CurrentDirectory))
-                            {
-                                diskFreeSpace = drive.AvailableFreeSpace / (1024f * 1024f * 1024f);
-                                break;
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger?.LogWarning(ex, "获取磁盘可用空间失败");
-                    }
-
-                    // 创建资源使用情况对象
-                    var resourceUsage = ClientResourceUsage.Create(
-                        cpuUsage: cpuUsage,
-                        memoryUsage: memoryUsage,
-                        networkUsage: 0, // 暂时无法准确获取
-                        diskFreeSpace: diskFreeSpace,
-                        processUptime: processUptime
-                    );
-
-                    lock (_lock)
-                    {
-                        _cachedResourceUsage = resourceUsage;
-                        _lastResourceCheckTime = now;
+                        _heartbeatTask.Wait(TimeSpan.FromSeconds(3));
                     }
                 }
                 catch (Exception ex)
                 {
-                    _logger?.LogError(ex, "回退资源使用情况获取失败");
+                    _logger?.LogWarning(ex, "停止心跳任务时发生异常");
                 }
-            });
-        }
-
-        /// <summary>
-        /// 释放资源
-        /// 实现IDisposable接口，确保所有资源被正确释放
-        /// </summary>
-        public void Dispose()
-        {
-            lock (_lock)
-            {
-                if (!_isDisposed)
+                finally
                 {
-                    try
-                    {
-                        // 停止心跳任务
-                        Stop();
-
-                        // 清理事件处理器
-                        OnHeartbeatSuccess = null;
-                        OnHeartbeatFailed = null;
-                        OnHeartbeatException = null;
-                        OnReconnectionAttempt = null;
-                        OnReconnectionFailed = null;
-                        HeartbeatFailed = null;
-                        OnTokenExpired = null; // 清理新增的Token过期事件
-
-                        // 清理响应时间队列
-                        _recentResponseTimes.Clear();
-
-                        // 标记为已释放
-                        _isDisposed = true;
-
-                        GC.SuppressFinalize(this);
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger?.LogError(ex, "释放心跳管理器资源时发生异常");
-                    }
+                    _heartbeatTask = null;
+                    _cancellationTokenSource?.Dispose();
+                    _cancellationTokenSource = null;
                 }
+
+                _logger?.LogInformation("心跳管理器已停止");
             }
         }
 
-
-        /// </summary>
         /// <summary>
-        /// 创建心跳请求对象
-        /// 构建包含客户端状态、资源使用情况等信息的完整心跳请求
+        /// 心跳检测循环
+        /// 定期执行心跳检测
         /// </summary>
-        /// <returns>配置完整的心跳命令对象，用于发送给服务器</returns>
-        private HeartbeatRequest CreateHeartbeatRequest()
+        private async Task HeartbeatLoopAsync(CancellationToken cancellationToken)
         {
-            try
+            _logger?.LogDebug("进入心跳循环");
+
+            while (!cancellationToken.IsCancellationRequested && _isRunning)
             {
-                // 更新客户端版本信息
-                UpdateClientVersionInfo();
-                
-                // 创建心跳命令
-                HeartbeatRequest heartbeatRequest = new HeartbeatRequest();
-                // 设置客户端信息
-                heartbeatRequest.ClientVersion = GetClientVersion();
-                
-                // 设置客户端ID和IP地址
-                heartbeatRequest.ClientId = _socketClient.ClientID;
-                heartbeatRequest.ClientIp = _socketClient.ClientIP;
-                
-                // 避免直接依赖MainForm.Instance，使用更可靠的方式获取用户信息
-                if (_tokenManager != null)
+                try
                 {
-                    try
+                    // 检查连接状态
+                    if (!_socketClient.IsConnected)
                     {
-                        var tokenInfo = _tokenManager.TokenStorage.GetTokenAsync().GetAwaiter().GetResult();
-                        if (tokenInfo != null)
-                        {
-                            // TokenInfo不包含UserInfo属性，这里使用会话ID和用户信息从MainForm获取
-                            // 后续可以考虑通过Token验证结果获取用户信息
-                        }
+                        await Task.Delay(_heartbeatIntervalMs, cancellationToken);
+                        continue;
                     }
-                    catch (Exception tokenEx)
+
+                    // 发送心跳
+                    bool success = await SendHeartbeatAsync(cancellationToken);
+
+                    lock (_lock)
                     {
-                        _logger?.LogWarning(tokenEx, "从TokenManager获取Token信息失败");
-                    }
-                }
-                
-                // 如果通过TokenManager获取失败，再尝试使用MainForm
-                if (heartbeatRequest.UserInfo == null)
-                {
-                    try
-                    {
-                        if (MainForm.Instance?.AppContext != null)
+                        _lastHeartbeatTime = DateTime.Now;
+                        
+                        if (success)
                         {
-                            heartbeatRequest.UserInfo = MainForm.Instance.AppContext.CurrentUser ?? new Model.CommonModel.UserInfo();
-                            
-                            // 完善用户信息设置，确保数据完整性
-                            if (heartbeatRequest.UserInfo != null)
+                            // 如果之前有失败，触发恢复事件
+                            if (_failedAttempts > 0)
                             {
-                                // 设置SessionId
-                                if (!string.IsNullOrEmpty(MainForm.Instance.AppContext.SessionId))
-                                {
-                                    heartbeatRequest.UserInfo.SessionId = MainForm.Instance.AppContext.SessionId;
-                                }
-                                
-                                // 确保用户名不为空
-                                if (string.IsNullOrEmpty(heartbeatRequest.UserInfo.用户名))
-                                {
-                                    heartbeatRequest.UserInfo.用户名 = MainForm.Instance.AppContext.CurrentUser?.用户名 ?? "未知用户";
-                                }
-                                
-                                // 确保姓名不为空
-                                if (string.IsNullOrEmpty(heartbeatRequest.UserInfo.姓名))
-                                {
-                                    heartbeatRequest.UserInfo.姓名 = MainForm.Instance.AppContext.CurrentUser?.姓名 ?? "未填写姓名";
-                                }
-                                
-                                // 设置客户端版本信息
-                                if (string.IsNullOrEmpty(heartbeatRequest.UserInfo.客户端版本))
-                                {
-                                    heartbeatRequest.UserInfo.客户端版本 = GetClientVersion();
-                                }
-                                
-                                // 设置客户端IP
-                                if (string.IsNullOrEmpty(heartbeatRequest.UserInfo.客户端IP))
-                                {
-                                    heartbeatRequest.UserInfo.客户端IP = _socketClient.ClientIP ?? "未知IP";
-                                }
-                                
-                                // 设置当前模块和当前窗体信息
-                                if (MainForm.Instance.kryptonDockableWorkspace1?.ActivePage != null)
-                                {
-                                    heartbeatRequest.UserInfo.当前模块 = "主界面";
-                                    heartbeatRequest.UserInfo.当前窗体 = MainForm.Instance.kryptonDockableWorkspace1.ActivePage.Text ?? "工作台";
-                                }
-                                else
-                                {
-                                    heartbeatRequest.UserInfo.当前模块 = "主界面";
-                                    heartbeatRequest.UserInfo.当前窗体 = "工作台";
-                                }
+                                _failedAttempts = 0;
+                                HeartbeatRecovered?.Invoke();
+                                _logger?.LogInformation("心跳恢复");
                             }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger?.LogWarning(ex, "从MainForm获取用户信息失败");
-                        
-                        // 创建默认用户信息，确保不为null
-                        heartbeatRequest.UserInfo = new Model.CommonModel.UserInfo
-                        {
-                            用户名 = "未认证用户",
-                            姓名 = "未认证",
-                            当前模块 = "未知模块",
-                            当前窗体 = "未知窗体",
-                            客户端版本 = GetClientVersion(),
-                            客户端IP = _socketClient.ClientIP ?? "未知IP",
-                            SessionId = _socketClient.ClientID ?? "未知Session"
-                        };
-                    }
-                }
-                else
-                {
-                    // 如果UserInfo已存在，仍然需要确保关键字段的完整性
-                    try
-                    {
-                        // 确保SessionId设置
-                        if (string.IsNullOrEmpty(heartbeatRequest.UserInfo.SessionId) && 
-                            MainForm.Instance?.AppContext?.SessionId != null)
-                        {
-                            heartbeatRequest.UserInfo.SessionId = MainForm.Instance.AppContext.SessionId;
-                        }
-                        
-                        // 确保用户名不为空
-                        if (string.IsNullOrEmpty(heartbeatRequest.UserInfo.用户名))
-                        {
-                            heartbeatRequest.UserInfo.用户名 = MainForm.Instance.AppContext?.CurrentUser?.用户名 ?? "未知用户";
-                        }
-                        
-                        // 确保姓名不为空
-                        if (string.IsNullOrEmpty(heartbeatRequest.UserInfo.姓名))
-                        {
-                            heartbeatRequest.UserInfo.姓名 = MainForm.Instance.AppContext?.CurrentUser?.姓名 ?? "未填写姓名";
-                        }
-                        
-                        // 设置当前模块和窗体信息
-                        if (MainForm.Instance.kryptonDockableWorkspace1?.ActivePage != null)
-                        {
-                            heartbeatRequest.UserInfo.当前模块 = "主界面";
-                            heartbeatRequest.UserInfo.当前窗体 = MainForm.Instance.kryptonDockableWorkspace1.ActivePage.Text ?? "工作台";
                         }
                         else
                         {
-                            heartbeatRequest.UserInfo.当前模块 = "主界面";
-                            heartbeatRequest.UserInfo.当前窗体 = "工作台";
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger?.LogWarning(ex, "完善用户信息时出错");
-                    }
-                }
-
-                heartbeatRequest.ClientStatus = "Normal";
-
-                // 设置网络和资源使用信息
-                heartbeatRequest.NetworkLatency = EstimateNetworkLatency();
-                
-                // 获取资源使用情况 - 优先使用客户端系统信息服务
-                try
-                {
-                    var systemInfo = _systemInfoService.GetClientSystemInfo();
-                    heartbeatRequest.SystemInfo = systemInfo;
-                    heartbeatRequest.ResourceUsage = systemInfo.ResourceUsage;
-                }
-                catch (Exception ex)
-                {
-                    _logger?.LogWarning(ex, "使用客户端系统信息服务获取系统信息失败，回退到原有资源使用获取方式");
-                    heartbeatRequest.ResourceUsage = GetResourceUsage();
-                }
-
-                return heartbeatRequest;
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "创建心跳请求时发生异常");
-                throw;
-            }
-        }
-
-
-
-        /// <summary>
-        /// 获取客户端资源使用情况（带缓存）
-        /// 优先返回缓存的资源使用信息，避免频繁查询系统资源
-        /// </summary>
-        /// <returns>资源使用信息对象</returns>
-        private ClientResourceUsage GetResourceUsage()
-        {
-            try
-            {
-                // 检查缓存是否有效（5分钟内）
-                var now = DateTime.UtcNow;
-                if (_cachedResourceUsage != null &&
-                    _lastResourceCheckTime != DateTime.MinValue &&
-                    (now - _lastResourceCheckTime).TotalMinutes < 5)
-                {
-                    _logger?.LogDebug("使用缓存的资源使用情况");
-                    return _cachedResourceUsage;
-                }
-
-                // 获取进程信息
-                var process = Process.GetCurrentProcess();
-
-                // 获取内存使用量（MB）
-                long memoryUsage = process.WorkingSet64 / (1024 * 1024);
-
-                // 获取进程运行时间（秒）
-                long processUptime = (long)(now - process.StartTime.ToUniversalTime()).TotalSeconds;
-
-                // 估算CPU使用率
-                float cpuUsage = 0;
-                try
-                {
-                    using (var searcher = new ManagementObjectSearcher("SELECT LoadPercentage FROM Win32_Processor"))
-                    {
-                        foreach (var obj in searcher.Get())
-                        {
-                            cpuUsage += Convert.ToSingle(obj["LoadPercentage"]);
-                        }
-                        cpuUsage /= Environment.ProcessorCount;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger?.LogWarning(ex, "获取CPU使用率失败，使用处理器数量作为默认值");
-                    // 如果无法获取CPU使用率，使用处理器数量作为默认值
-                    cpuUsage = Environment.ProcessorCount;
-                }
-
-                // 估算磁盘可用空间（GB）
-                float diskFreeSpace = 0;
-                try
-                {
-                    foreach (DriveInfo drive in DriveInfo.GetDrives())
-                    {
-                        if (drive.IsReady && drive.RootDirectory.FullName == Path.GetPathRoot(Environment.CurrentDirectory))
-                        {
-                            diskFreeSpace = drive.AvailableFreeSpace / (1024f * 1024f * 1024f);
-                            break;
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger?.LogWarning(ex, "获取磁盘可用空间失败，使用默认值");
-                    diskFreeSpace = 100; // 默认值
-                }
-
-                // 网络带宽使用暂时设为0
-                float networkUsage = 0;
-
-                _logger?.LogDebug("资源使用情况 - CPU: {CpuUsage}%, 内存: {MemoryUsage}MB, 磁盘空间: {DiskFreeSpace}GB",
-                    cpuUsage, memoryUsage, diskFreeSpace);
-
-                var resourceUsage = ClientResourceUsage.Create(cpuUsage, memoryUsage, networkUsage, diskFreeSpace, processUptime);
-
-                // 更新缓存
-                lock (_lock)
-                {
-                    _cachedResourceUsage = resourceUsage;
-                    _lastResourceCheckTime = now;
-                }
-
-                return resourceUsage;
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "获取客户端资源使用情况失败");
-
-                // 返回缓存（如果存在）或默认值
-                return _cachedResourceUsage ?? ClientResourceUsage.Create();
-            }
-        }
-
-        /// <summary>
-        /// 估算网络延迟
-        /// 通过创建TCP连接测量从客户端到服务器的网络延迟
-        /// </summary>
-        /// <returns>网络延迟（毫秒），-1表示无法测量</returns>
-        private int EstimateNetworkLatency()
-        {
-            try
-            {
-                // 这里实现了简单的网络延迟测量逻辑
-                if (_socketClient.IsConnected)
-                {
-                    try
-                    {
-                        // 由于无法直接从ISocketClient获取服务器地址和端口
-                        // 这里简化实现，返回固定值或从配置中获取
-                        return 50; // 默认延迟值
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger?.LogWarning(ex, "测量网络延迟失败，使用默认值");
-                        return 1000; // 默认延迟值
-                    }
-                }
-                return 0;
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "估算网络延迟时发生异常");
-                return -1; // 表示无法测量
-            }
-        }
-
-        /// <summary>
-        /// 获取客户端版本号
-        /// 从应用程序集信息中获取版本号
-        /// </summary>
-        /// <returns>客户端版本号字符串</returns>
-        private string GetClientVersion()
-        {
-            try
-            {
-                var assembly = System.Reflection.Assembly.GetEntryAssembly();
-                if (assembly != null)
-                {
-                    var version = assembly.GetName().Version;
-                    string baseVersion = version?.ToString() ?? "1.0.0";
-                    
-                    // 添加从Program.ERPVersion获取的额外版本信息
-                    if (!string.IsNullOrEmpty(Program.ERPVersion))
-                    {
-                        baseVersion += "-" + Program.ERPVersion;
-                    }
-                    
-                    return baseVersion;
-                }
-                return "1.0.0";
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogWarning(ex, "获取客户端版本号失败，使用默认值");
-                return "1.0.0";
-            }
-        }
-        
-        /// <summary>
-        /// 更新客户端版本信息到当前用户信息中
-        /// </summary>
-        private void UpdateClientVersionInfo()
-        {
-            try
-            {
-                if (MainForm.Instance?.AppContext?.CurrentUser != null)
-                {
-                    string clientVersion = GetClientVersion();
-                    if (!string.IsNullOrEmpty(clientVersion))
-                    {
-                        MainForm.Instance.AppContext.CurrentUser.客户端版本 = clientVersion;
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogWarning(ex, "更新客户端版本信息到当前用户信息失败");
-            }
-        }
-
-
-
-
-
-        /// <summary>
-        /// 心跳发送成功事件
-        /// 当心跳包成功发送并收到响应时触发
-        /// </summary>
-        public event Action OnHeartbeatSuccess = delegate { };
-
-        /// <summary>
-        /// 心跳发送失败事件
-        /// 当心跳包发送失败时触发，提供失败消息
-        /// </summary>
-        public event Action<string> OnHeartbeatFailed = delegate { };
-
-        /// <summary>
-        /// 心跳异常事件
-        /// 当心跳处理过程中发生异常时触发，提供异常信息
-        /// </summary>
-        public event Action<Exception> OnHeartbeatException = delegate { };
-
-        /// <summary>
-        /// 重连尝试事件
-        /// 当开始尝试重新连接服务器时触发，提供当前尝试次数
-        /// </summary>
-        public event Action<int> OnReconnectionAttempt = delegate { };
-
-        /// <summary>
-        /// 重连失败事件
-        /// 当达到最大重连尝试次数后仍然无法连接时触发
-        /// </summary>
-        public event Action OnReconnectionFailed = delegate { };
-
-        /// <summary>
-        /// 心跳失败事件（带异常信息）
-        /// 当心跳包处理失败时触发，提供相关异常
-        /// </summary>
-        public event Action<Exception> HeartbeatFailed = delegate {};
-
-        /// <summary>
-        /// 处理心跳失败
-        /// 触发相关事件并记录日志
-        /// </summary>
-        /// <param name="message">失败消息</param>
-        private void HandleHeartbeatFailure(string message)
-        {
-            try
-            {
-                _logger?.LogWarning("心跳失败: {Message}", message);
-                
-                // 检查是否是Token相关错误
-                if (message.Contains("token") || message.Contains("Token") || message.Contains("过期") || message.Contains("invalid"))
-                {
-                    _logger?.LogWarning("心跳失败可能与Token相关，将触发Token过期检查");
-                    // 异步检查Token有效性，不阻塞当前流程
-                    _ = Task.Run(async () => 
-                    {
-                        try
-                        {
-                            await CheckTokenValidityAsync();
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger?.LogError(ex, "异步检查Token有效性时发生异常");
-                        }
-                    });
-                }
-                
-                // 获取事件处理程序的快照，避免在多线程环境下触发时可能发生的问题
-                Action<string> failedHandler;
-                Action<Exception> exceptionHandler;
-
-                lock (_lock)
-                {
-                    failedHandler = OnHeartbeatFailed;
-                    exceptionHandler = HeartbeatFailed;
-                }
-
-                // 触发带消息的失败事件
-                if (failedHandler != null)
-                {
-                    try
-                    {
-                        failedHandler.Invoke(message);
-                    }
-                    catch (Exception handlerEx)
-                    {
-                        _logger?.LogError(handlerEx, "执行OnHeartbeatFailed事件处理器时发生异常");
-                    }
-                }
-
-                // 触发带异常的失败事件
-                if (exceptionHandler != null)
-                {
-                    try
-                    {
-                        exceptionHandler.Invoke(new Exception(message));
-                    }
-                    catch (Exception handlerEx)
-                    {
-                        _logger?.LogError(handlerEx, "执行HeartbeatFailed事件处理器时发生异常");
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "处理心跳失败事件时发生异常");
-                // 忽略事件处理过程中的异常，避免影响主流程
-            }
-        }
-
-        /// <summary>
-        /// 处理心跳异常
-        /// 触发相关异常事件并记录日志
-        /// </summary>
-        /// <param name="ex">异常信息</param>
-        private void HandleHeartbeatException(Exception ex)
-        {
-            try
-            {
-                // 获取事件处理程序的快照
-                Action<Exception> exceptionHandler;
-                Action<Exception> failedHandler;
-
-                lock (_lock)
-                {
-                    exceptionHandler = OnHeartbeatException;
-                    failedHandler = HeartbeatFailed;
-                }
-
-                // 触发异常事件
-                if (exceptionHandler != null)
-                    exceptionHandler.Invoke(ex);
-
-                // 触发失败事件
-                if (failedHandler != null)
-                    failedHandler.Invoke(ex);
-            }
-            catch (Exception innerEx)
-            {
-                _logger?.LogError(innerEx, "处理心跳异常事件时发生异常");
-                // 忽略事件处理过程中的异常，避免影响主流程
-            }
-        }
-
-              
-        /// <summary>
-        /// 检查Token有效性
-        /// 验证存储的Token是否有效，如无效则触发Token过期事件
-        /// </summary>
-        /// <returns>异步任务</returns>
-        private async Task CheckTokenValidityAsync()
-        {
-            try
-            {
-                if (_tokenManager != null)
-                {
-                    var tokenInfo = await _tokenManager.TokenStorage.GetTokenAsync();
-                    if (tokenInfo != null)
-                    {
-                        var validationResult = await _tokenManager.ValidateStoredTokenAsync();
-                        if (!validationResult.IsValid)
-                        {
+                            _failedAttempts++;
                             
-                            // 触发Token过期事件
-                            Action tokenExpiredHandler;
-                            lock (_lock)
-                            {
-                                tokenExpiredHandler = OnTokenExpired;
-                            }
-                            
-                            if (tokenExpiredHandler != null)
-                            {
-                                try
-                                {
-                                    tokenExpiredHandler.Invoke();
-                                }
-                                catch (Exception ex)
-                                {
-                                    _logger?.LogError(ex, "处理Token过期事件时发生异常");
-                                }
-                            }
+                            // 触发失败事件
+                            HeartbeatFailed?.Invoke(_failedAttempts);
+                            _logger?.LogWarning("心跳失败，连续失败次数：{FailedAttempts}", _failedAttempts);
                         }
                     }
                 }
+                catch (OperationCanceledException)
+                {
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    _logger?.LogError(ex, "心跳循环中发生异常");
+                    lock (_lock)
+                    {
+                        _failedAttempts++;
+                        HeartbeatFailed?.Invoke(_failedAttempts);
+                    }
+                }
+
+                await Task.Delay(_heartbeatIntervalMs, cancellationToken);
+            }
+
+            _logger?.LogDebug("退出心跳循环");
+        }
+
+        /// <summary>
+        /// 发送单个心跳请求
+        /// </summary>
+        private async Task<bool> SendHeartbeatAsync(CancellationToken cancellationToken)
+        {
+            try
+            {
+                var heartbeatRequest = new HeartbeatRequest();
+                
+                // 如果有系统信息服务，添加系统信息
+                if (_systemInfoService != null)
+                {
+                    //太耗时，先注释掉
+                    //heartbeatRequest.ResourceUsage = _systemInfoService.GetResourceUsage();
+                }
+
+                var response = await _communicationService.SendCommandWithResponseAsync<HeartbeatResponse>(
+                    SystemCommands.Heartbeat, heartbeatRequest,  cancellationToken);
+
+                return response != null && response.IsSuccess;
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "检查Token有效性时发生异常");
+                _logger?.LogDebug(ex, "发送心跳时发生异常");
+                return false;
             }
         }
-    }
 
-    /// <summary>
-    /// 心跳统计信息类
-    /// 用于收集和报告心跳相关的监控指标
-    /// 🔄 新架构集成：提供标准化的监控数据格式
-    /// 📋 监控指标：成功率、响应时间、连接状态等
-    /// 💡 设计特点：不可变数据、线程安全、轻量级
-    /// 📊 使用场景：性能监控、故障诊断、健康报告
-    /// </summary>
-    public class HeartbeatStatistics
-    {
-        /// <summary>
-        /// 总心跳次数
-        /// </summary>
-        public long TotalHeartbeats { get; set; }
+        #endregion
+
+        #region 资源释放
 
         /// <summary>
-        /// 成功心跳次数
+        /// 释放资源
         /// </summary>
-        public long SuccessfulHeartbeats { get; set; }
-
-        /// <summary>
-        /// 失败心跳次数
-        /// </summary>
-        public long FailedHeartbeats { get; set; }
-
-        /// <summary>
-        /// 心跳成功率（0-100）
-        /// </summary>
-        public double SuccessRate { get; set; }
-
-        /// <summary>
-        /// 最后一次心跳时间
-        /// </summary>
-        public DateTime? LastHeartbeatTime { get; set; }
-
-        /// <summary>
-        /// 平均响应时间（毫秒）
-        /// </summary>
-        public double AverageResponseTime { get; set; }
-
-        /// <summary>
-        /// 当前连接状态
-        /// </summary>
-        public bool IsConnected { get; set; }
-
-        /// <summary>
-        /// 心跳任务是否正在运行
-        /// </summary>
-        public bool IsRunning { get; set; }
-
-        /// <summary>
-        /// 失败尝试次数
-        /// </summary>
-        public int FailedAttempts { get; set; }
-
-        /// <summary>
-        /// 连接状态描述
-        /// </summary>
-        public string ConnectionState { get; set; }
-
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="totalHeartbeats">总心跳次数</param>
-        /// <param name="successfulHeartbeats">成功心跳次数</param>
-        /// <param name="failedHeartbeats">失败心跳次数</param>
-        /// <param name="lastHeartbeatTime">最后一次心跳时间</param>
-        /// <param name="averageResponseTime">平均响应时间</param>
-        /// <param name="isConnected">当前连接状态</param>
-        /// <param name="isRunning">心跳任务是否正在运行</param>
-        /// <param name="failedAttempts">失败尝试次数</param>
-        /// <param name="connectionState">连接状态描述</param>
-        public HeartbeatStatistics(
-            long totalHeartbeats,
-            long successfulHeartbeats,
-            long failedHeartbeats,
-            DateTime? lastHeartbeatTime,
-            double averageResponseTime,
-            bool isConnected,
-            bool isRunning = false,
-            int failedAttempts = 0,
-            string connectionState = "Unknown")
+        public void Dispose()
         {
-            TotalHeartbeats = totalHeartbeats;
-            SuccessfulHeartbeats = successfulHeartbeats;
-            FailedHeartbeats = failedHeartbeats;
-            LastHeartbeatTime = lastHeartbeatTime;
-            AverageResponseTime = averageResponseTime;
-            IsConnected = isConnected;
-            IsRunning = isRunning;
-            FailedAttempts = failedAttempts;
-            ConnectionState = connectionState;
-
-            // 计算成功率
-            SuccessRate = totalHeartbeats > 0 ? (double)successfulHeartbeats / totalHeartbeats * 100 : 0;
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
 
         /// <summary>
-        /// 获取统计摘要
+        /// 释放资源的具体实现
         /// </summary>
-        /// <returns>格式化的统计摘要字符串</returns>
-        public string GetSummary()
+        /// <param name="disposing">是否正在释放托管资源</param>
+        protected virtual void Dispose(bool disposing)
         {
-            var status = IsConnected ? "已连接" : "未连接";
-            var lastTime = LastHeartbeatTime?.ToString("HH:mm:ss") ?? "从未";
-
-            return $"心跳统计: 总计{TotalHeartbeats}次, 成功率{SuccessRate:F1}%, " +
-                   $"状态:{status}, 最后:{lastTime}, 平均响应:{AverageResponseTime:F0}ms";
-        }
-
-        /// <summary>
-        /// 转换为字典格式（便于序列化）
-        /// </summary>
-        /// <returns>包含统计数据的字典</returns>
-        public Dictionary<string, object> ToDictionary()
-        {
-            return new Dictionary<string, object>
+            if (!_isDisposed && disposing)
             {
-                ["totalHeartbeats"] = TotalHeartbeats,
-                ["successfulHeartbeats"] = SuccessfulHeartbeats,
-                ["failedHeartbeats"] = FailedHeartbeats,
-                ["successRate"] = SuccessRate,
-                ["lastHeartbeatTime"] = LastHeartbeatTime?.ToString("yyyy-MM-dd HH:mm:ss"),
-                ["averageResponseTime"] = AverageResponseTime,
-                ["isConnected"] = IsConnected
-            };
+                Stop();
+                _isDisposed = true;
+            }
         }
+
+        #endregion
     }
 }

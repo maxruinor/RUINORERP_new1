@@ -35,8 +35,7 @@ namespace RUINORERP.UI.Network.Services
     {
         #region 私有字段
 
-        private readonly ClientCommunicationService _communicationService;
-        private readonly HeartbeatManager _heartbeatManager;
+        private readonly Lazy<ClientCommunicationService> _communicationService;
         private readonly ILogger<ClientLockManagementService> _logger;
         private readonly ClientLocalLockCacheService _clientCache;
         private readonly LockRecoveryManager _recoveryManager;
@@ -62,20 +61,17 @@ namespace RUINORERP.UI.Network.Services
         /// <summary>
         /// 集成式锁管理服务构造函数
         /// </summary>
-        /// <param name="communicationService">客户端通信服务</param>
-        /// <param name="heartbeatManager">心跳管理器（系统已有）</param>
+        /// <param name="communicationService">客户端通信服务的延迟加载实例</param>
         /// <param name="logger">日志记录器</param>
         /// <param name="clientCache">客户端锁缓存（可选，为null时内部创建）</param>
         /// <param name="recoveryManager">锁恢复管理器（可选，为null时内部创建）</param>
         public ClientLockManagementService(
-            ClientCommunicationService communicationService,
-            HeartbeatManager heartbeatManager,
+            Lazy<ClientCommunicationService> communicationService,
             ILogger<ClientLockManagementService> logger,
             ClientLocalLockCacheService clientCache = null,
             LockRecoveryManager recoveryManager = null)
         {
             _communicationService = communicationService ?? throw new ArgumentNullException(nameof(communicationService));
-            _heartbeatManager = heartbeatManager ?? throw new ArgumentNullException(nameof(heartbeatManager));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
             // 初始化组件
@@ -112,9 +108,6 @@ namespace RUINORERP.UI.Network.Services
             // 初始化定时器
             _lockRefreshTimer = new Timer(RefreshLocksCallback, null, Timeout.Infinite, Timeout.Infinite);
             _cacheCleanupTimer = new Timer(CleanupCacheCallback, null, Timeout.Infinite, Timeout.Infinite);
-
-            // 订阅心跳事件
-            SubscribeToHeartbeatEvents();
 
 
         }
@@ -200,7 +193,7 @@ namespace RUINORERP.UI.Network.Services
                 var lockInfo = CreateLockInfo(billId, 0, 0);
                 var unlockRequest = new LockRequest { LockInfo = lockInfo };
 
-                var response = await _communicationService.SendCommandWithResponseAsync<LockResponse>(
+                var response = await _communicationService.Value.SendCommandWithResponseAsync<LockResponse>(
                     LockCommands.Unlock, unlockRequest, _cancellationTokenSource.Token);
 
                 stopwatch.Stop();
@@ -268,7 +261,7 @@ namespace RUINORERP.UI.Network.Services
 
                 // 使用传入的cancellationToken或默认值
                 var token = cancellationToken != default ? cancellationToken : _cancellationTokenSource.Token;
-                var response = await _communicationService.SendCommandWithResponseAsync<LockResponse>(
+                var response = await _communicationService.Value.SendCommandWithResponseAsync<LockResponse>(
                     LockCommands.CheckLockStatus, lockRequest, token);
 
                 // 更新缓存
@@ -286,7 +279,7 @@ namespace RUINORERP.UI.Network.Services
                         LastUpdateTime = DateTime.Now,
                         ExpireTime = DateTime.Now.AddMinutes(5) // 本地缓存5分钟过期
                     };
-                    
+
                     // 使用公共方法更新缓存
                     _clientCache.UpdateCacheItem(localLockInfo);
                 }
@@ -347,7 +340,7 @@ namespace RUINORERP.UI.Network.Services
                 var token = cancellationToken != default ? cancellationToken : _cancellationTokenSource.Token;
 
                 // 发送锁定请求
-                var response = await _communicationService.SendCommandWithResponseAsync<LockResponse>(
+                var response = await _communicationService.Value.SendCommandWithResponseAsync<LockResponse>(
                     LockCommands.Lock, lockRequest, token);
 
                 stopwatch.Stop();
@@ -415,7 +408,7 @@ namespace RUINORERP.UI.Network.Services
                 var lockInfo = CreateLockInfo(billId, 0, 0);
                 var unlockRequest = new LockRequest { LockInfo = lockInfo };
 
-                var response = await _communicationService.SendCommandWithResponseAsync<LockResponse>(
+                var response = await _communicationService.Value.SendCommandWithResponseAsync<LockResponse>(
                     LockCommands.Unlock, unlockRequest, token);
 
                 stopwatch.Stop();
@@ -486,91 +479,6 @@ namespace RUINORERP.UI.Network.Services
 
         #endregion
 
-        #region 心跳集成
-
-        /// <summary>
-        /// 订阅心跳事件
-        /// </summary>
-        private void SubscribeToHeartbeatEvents()
-        {
-            try
-            {
-                // 订阅心跳成功事件，发送锁状态信息
-                _heartbeatManager.OnHeartbeatSuccess += async () =>
-                {
-                    try
-                    {
-                        await SendLockHeartbeatAsync();
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, "发送锁心跳信息时发生异常");
-                    }
-                };
-
-                // 订阅心跳失败事件，可能需要检查锁状态
-                _heartbeatManager.OnHeartbeatFailed += (message) =>
-                {
-                    _logger.LogWarning("心跳失败: {Message}，可能影响锁状态同步", message);
-                };
-
-                // 订阅Token过期事件，释放所有锁
-                _heartbeatManager.OnTokenExpired += async () =>
-                {
-                    _logger.LogWarning("Token过期，释放所有锁");
-                    await ReleaseAllLocksAsync();
-                };
-
-                _logger.LogDebug("心跳事件订阅完成");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "订阅心跳事件时发生异常");
-            }
-        }
-
-        /// <summary>
-        /// 发送锁心跳信息
-        /// 在正常心跳中附加锁状态信息
-        /// </summary>
-        private async Task SendLockHeartbeatAsync()
-        {
-            try
-            {
-                if (_activeLocks.IsEmpty)
-                    return;
-
-                var lockHeartbeatData = new
-                {
-                    ActiveLockCount = _activeLocks.Count,
-                    ActiveLocks = _activeLocks.Values.Select(l => new
-                    {
-                        BillID = l.BillID,
-                        LockId = l.LockId,
-                        UserId = l.UserId,
-                        UserName = l.UserName,
-                        LockTime = l.LockTime
-                    }).ToArray(),
-                    CacheStatus = new
-                    {
-                        CacheStatus = "Not Available"
-                    }
-                };
-
-                // 这里可以通过心跳管理器的扩展机制发送锁状态信息
-                // 或者使用专门的锁状态广播命令
-                _logger.LogDebug("发送锁心跳信息，活跃锁数: {LockCount}", _activeLocks.Count);
-
-                // TODO: 实现锁状态信息的实际发送逻辑
-                // await _communicationService.SendCommandAsync(LockCommands.LockHeartbeat, lockHeartbeatData);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "发送锁心跳信息时发生异常");
-            }
-        }
-
-        #endregion
 
         #region 定时器回调
 
@@ -823,7 +731,7 @@ namespace RUINORERP.UI.Network.Services
                     billId, menuId, currentUserId, currentUserName);
 
                 // 使用通信服务发送刷新请求
-                var response = await _communicationService.SendCommandWithResponseAsync<LockResponse>(
+                var response = await _communicationService.Value.SendCommandWithResponseAsync<LockResponse>(
                     LockCommands.CheckLockStatus, lockRequest, ct);
 
                 if (response.IsSuccess)
@@ -1025,7 +933,7 @@ namespace RUINORERP.UI.Network.Services
                 lockRequest.LockInfo.SetLockKey();
 
                 // 发送请求解锁命令
-                var response = await _communicationService.SendCommandWithResponseAsync<LockResponse>(
+                var response = await _communicationService.Value.SendCommandWithResponseAsync<LockResponse>(
                     LockCommands.RequestUnlock, lockRequest, _cancellationTokenSource.Token);
 
                 if (response.IsSuccess)
@@ -1086,7 +994,7 @@ namespace RUINORERP.UI.Network.Services
                 lockRequest.LockInfo.SetLockKey();
 
                 // 发送拒绝解锁命令
-                var response = await _communicationService.SendCommandWithResponseAsync<LockResponse>(
+                var response = await _communicationService.Value.SendCommandWithResponseAsync<LockResponse>(
                     LockCommands.RefuseUnlock, lockRequest, _cancellationTokenSource.Token);
 
                 if (response.IsSuccess)
@@ -1206,7 +1114,6 @@ namespace RUINORERP.UI.Network.Services
         public double CacheHitRate { get; set; }
         public bool IsRunning { get; set; }
         public DateTime StartTime { get; set; }
-        public HeartbeatStatistics HeartbeatStatus { get; set; }
 
         public string GetSummary()
         {

@@ -201,6 +201,15 @@ namespace RUINORERP.UI.Common
         /// <param name="DropStyle">下拉样式</param>
         /// <param name="auto">是否启用自动完成</param>
         /// <param name="add请选择">  如果数据源为键值对形式，则在数据源的最前面加入("请选择", "-1")</param>
+        /// <summary>
+        /// 初始化下拉列表控件
+        /// </summary>
+        /// <param name="bs">数据源绑定源</param>
+        /// <param name="cmb">Krypton下拉列表控件</param>
+        /// <param name="ValueMember">值成员名称</param>
+        /// <param name="DisplayMember">显示成员名称</param>
+        /// <param name="DropStyle">下拉样式</param>
+        /// <param name="auto">是否启用自动完成</param>
         public static void InitDropList(BindingSource bs, KryptonComboBox cmb, string ValueMember, string DisplayMember, ComboBoxStyle DropStyle, bool auto)
         {
             // 检查是否需要在UI线程上执行
@@ -210,66 +219,65 @@ namespace RUINORERP.UI.Common
                 return;
             }
 
-            if (DropStyle == ComboBoxStyle.DropDownList)
+            // 统一设置搜索功能为禁用（当前实现不需要搜索功能）
+            cmb.EnableSearch = false;
+            
+            // 仅在非DropDownList样式时设置搜索延迟
+            if (DropStyle != ComboBoxStyle.DropDownList)
             {
-                // 设置下拉列表样式
-                cmb.EnableSearch = false;
+                cmb.SearchDelay = 500; // 设置500ms延迟
             }
-            else
-            {
-                // 设置下拉文本框样式
-                cmb.EnableSearch = false;
-                cmb.SearchDelay = 500; // 设置400ms延迟
-            }
-            //cmb.DataSource = null;
-            //cmb.DataBindings.Clear();
+            
             cmb.BeginUpdate();
-            if (!cmb.EnableSearch)
+            
+            // 仅在启用自动完成且数据源不为空时构建自动完成集合
+            if (!cmb.EnableSearch && auto && DropStyle == ComboBoxStyle.DropDown && bs != null && bs.List != null)
             {
-                #region 自动完成
-
                 AutoCompleteStringCollection sc = new AutoCompleteStringCollection();
-                foreach (var dr in bs.List)
+                
+                // 缓存反射属性信息以提高性能
+                var type = bs.List.Count > 0 ? bs.List[0].GetType() : null;
+                System.Reflection.PropertyInfo propInfo = type?.GetProperty(DisplayMember);
+                
+                foreach (var item in bs.List)
                 {
-                    // sc.Add(dr[DisplayMember].ToString());
-                    var item = ReflectionHelper.GetPropertyValue(dr, DisplayMember);
-                    if (item != null)
+                    if (propInfo != null)
                     {
-                        sc.Add(item.ToString());
+                        // 使用缓存的PropertyInfo提高性能
+                        var displayValue = propInfo.GetValue(item, null);
+                        if (displayValue != null)
+                        {
+                            sc.Add(displayValue.ToString());
+                        }
                     }
-                    
-                }
-
-                if (auto)
-                {
-                    if (DropStyle == ComboBoxStyle.DropDown)
+                    else
                     {
-
-                        cmb.AutoCompleteCustomSource = sc;
-                        cmb.AutoCompleteSource = AutoCompleteSource.CustomSource;
-                        cmb.AutoCompleteMode = AutoCompleteMode.Suggest;
+                        // 回退到原始反射方法
+                        var displayValue = ReflectionHelper.GetPropertyValue(item, DisplayMember);
+                        if (displayValue != null)
+                        {
+                            sc.Add(displayValue.ToString());
+                        }
                     }
                 }
-                #endregion
+                
+                cmb.AutoCompleteCustomSource = sc;
+                cmb.AutoCompleteSource = AutoCompleteSource.CustomSource;
+                cmb.AutoCompleteMode = AutoCompleteMode.Suggest;
             }
 
             cmb.DataSource = bs;
             cmb.DropDownStyle = DropStyle;
             cmb.DisplayMember = DisplayMember;
+            
+            // 仅在值成员为空时设置
             if (string.IsNullOrEmpty(cmb.ValueMember))
             {
                 cmb.ValueMember = ValueMember;
             }
-            else
-            {
-
-            }
-
 
             cmb.EndUpdate();
             cmb.SelectedIndex = -1;
-
-
         }
 
 

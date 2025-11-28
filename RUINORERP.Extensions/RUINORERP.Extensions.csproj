@@ -17,11 +17,6 @@
   <ItemGroup>
     <Compile Remove="Authorizations\Behaviors\IUserBehaviorService.cs" />
     <Compile Remove="Authorizations\Behaviors\UserBehaviorService.cs" />
-    <Compile Remove="Authorizations\Policys\ApiResponseHandler.cs" />
-    <Compile Remove="Authorizations\Policys\JwtToken.cs" />
-    <Compile Remove="Authorizations\Policys\PermissionHandler.cs" />
-    <Compile Remove="Authorizations\Policys\PermissionItem.cs" />
-    <Compile Remove="Authorizations\Policys\PermissionRequirement.cs" />
     <Compile Remove="EventHandling\BlogQueryIntegrationEvent.cs" />
     <Compile Remove="EventHandling\BlogQueryIntegrationEventHandler.cs" />
     <Compile Remove="Middlewares\AllServicesMiddleware.cs" />
@@ -95,7 +90,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Authorizations\Behaviors\" />
-    <Folder Include="Authorizations\Policys\" />
     <Folder Include="EventHandling\" />
     <Folder Include="Middlewares\" />
     <Folder Include="NacosConfig\" />

@@ -19,7 +19,7 @@ namespace RUINORERP.UI.Network.Services
     /// </summary>
     public class MessageService
     {
-        private readonly ClientCommunicationService _messageSender;
+        private readonly Lazy<ClientCommunicationService> _messageSender;
         private readonly ILogger<MessageService> _logger;
         
         // 用于消息去重的集合，存储最近处理过的消息ID
@@ -55,10 +55,10 @@ namespace RUINORERP.UI.Network.Services
         /// <summary>
         /// 构造函数
         /// </summary>
-        /// <param name="messageSender">消息发送器</param>
+        /// <param name="messageSender">消息发送器（延迟加载）</param>
         /// <param name="logger">日志记录器</param>
         public MessageService(
-            ClientCommunicationService messageSender,
+            Lazy<ClientCommunicationService> messageSender,
             ILogger<MessageService> logger = null)
         {
             _messageSender = messageSender ?? throw new ArgumentNullException(nameof(messageSender));
@@ -387,7 +387,7 @@ namespace RUINORERP.UI.Network.Services
                     MessageType = MessageType.Prompt.ToString()
                 };
                 
-                var response = await _messageSender.SendCommandWithResponseAsync<MessageResponse>(
+                var response = await _messageSender.Value.SendCommandWithResponseAsync<MessageResponse>(
                     MessageCommands.SendPopupMessage, request, ct);
 
                 // 只记录关键信息和错误
@@ -434,7 +434,7 @@ namespace RUINORERP.UI.Network.Services
                     AdditionalMessage = additionalMessage,
                     MessageType = MessageType.Prompt.ToString()
                 };
-                var response = await _messageSender.SendCommandWithResponseAsync<MessageResponse>(
+                var response = await _messageSender.Value.SendCommandWithResponseAsync<MessageResponse>(
                     MessageCommands.ForwardPopupMessage, request, cancellationToken);
 
                 // 只记录关键信息和错误
@@ -480,7 +480,7 @@ namespace RUINORERP.UI.Network.Services
                     Message = message,
                     MessageType = messageType.ToString()
                 };
-                var response = await _messageSender.SendCommandWithResponseAsync<MessageResponse>(
+                var response = await _messageSender.Value.SendCommandWithResponseAsync<MessageResponse>(
                     MessageCommands.SendMessageToUser, request, ct);
 
                 // 只记录关键信息和错误
@@ -526,7 +526,7 @@ namespace RUINORERP.UI.Network.Services
                     Message = message,
                     MessageType = messageType.ToString()
                 };
-                var response = await _messageSender.SendCommandWithResponseAsync<MessageResponse>(
+                var response = await _messageSender.Value.SendCommandWithResponseAsync<MessageResponse>(
                     MessageCommands.SendMessageToDepartment, request, ct);
 
                 // 只记录关键信息和错误
@@ -569,7 +569,7 @@ namespace RUINORERP.UI.Network.Services
                     Message = message,
                     MessageType = messageType.ToString()
                 };
-                var response = await _messageSender.SendCommandWithResponseAsync<MessageResponse>(
+                var response = await _messageSender.Value.SendCommandWithResponseAsync<MessageResponse>(
                     MessageCommands.BroadcastMessage, request, ct);
 
                 // 只记录关键信息和错误
@@ -611,7 +611,7 @@ namespace RUINORERP.UI.Network.Services
                     Message = message,
                     NotificationType = notificationType.ToString()
                 };
-                var response = await _messageSender.SendCommandWithResponseAsync<MessageResponse>(
+                var response = await _messageSender.Value.SendCommandWithResponseAsync<MessageResponse>(
                     MessageCommands.SendSystemNotification, request, ct);
 
                 // 只记录关键信息和错误

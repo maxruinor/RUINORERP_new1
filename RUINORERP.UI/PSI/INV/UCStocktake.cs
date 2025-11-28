@@ -1,4 +1,4 @@
-﻿﻿using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -209,7 +209,7 @@ namespace RUINORERP.UI.PSI.INV
             DataBindingHelper.BindData4CmbByEnum<tb_Stocktake, CheckMode>(entity, k => k.CheckMode, cmbCheckMode, false);
             DataBindingHelper.BindData4CmbByEnum<tb_Stocktake, Adjust_Type>(entity, k => k.Adjust_Type, cmb调整类型, false);
 
-            DataBindingHelper.BindData4CmbByEntity<tb_Stocktake>(entity, k => k.Employee_ID, cmbEmployee_ID);
+            DataBindingHelper.BindData4CmbByEntity<tb_Employee>(entity, k => k.Employee_ID, cmbEmployee_ID);
             DataBindingHelper.BindData4CmbByEntity<tb_Location>(entity, k => k.Location_ID, cmbLocation_ID);
             DataBindingHelper.BindData4TextBox<tb_Stocktake>(entity, t => t.CheckNo, txtCheckNo, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_Stocktake>(entity, t => t.CarryingTotalQty.ToString(), txtCarryingTotalQty, BindDataType4TextBox.Qty, false);

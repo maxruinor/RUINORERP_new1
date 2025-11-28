@@ -26,10 +26,17 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
 
         /// <summary>
         /// 过期时间
-        /// 令牌的到期时间点
+        /// 访问令牌的到期时间点
         /// </summary>
         [JsonProperty("expiresAt")]
         public DateTime ExpiresAt { get; set; }
+
+        /// <summary>
+        /// 刷新令牌过期时间
+        /// 刷新令牌的到期时间点（通常比访问令牌更长）
+        /// </summary>
+        [JsonProperty("refreshTokenExpiresAt")]
+        public DateTime RefreshTokenExpiresAt { get; set; }
 
         /// <summary>
         /// 令牌类型 - 默认Bearer
@@ -38,9 +45,21 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
         public string TokenType { get; set; } = "Bearer";
 
         /// <summary>
-        /// 检查令牌是否已过期
-        /// 注：建议使用TokenManager.ValidateStoredTokenAsync()进行更全面的Token验证
+        /// 检查访问令牌是否已过期
         /// </summary>
-        public bool IsExpired() => DateTime.Now >= ExpiresAt;
+        public bool IsExpired()
+        {
+            // 添加1分钟的缓冲时间，避免临界情况
+            return ExpiresAt.AddMinutes(-1) < DateTime.Now;
+        }
+
+        /// <summary>
+        /// 检查刷新令牌是否已过期
+        /// </summary>
+        public bool IsRefreshTokenExpired()
+        {
+            // 添加1分钟的缓冲时间，避免临界情况
+            return RefreshTokenExpiresAt.AddMinutes(-1) < DateTime.Now;
+        }
     }
 }

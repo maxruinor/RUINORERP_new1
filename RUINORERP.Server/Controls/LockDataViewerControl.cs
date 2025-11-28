@@ -526,8 +526,6 @@ namespace RUINORERP.Server.Controls
                 {
                     string selectedTable = listBoxTableList.SelectedItem.ToString();
                     LoadTableData(selectedTable);
-
-                    MessageBox.Show("数据已刷新", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
             }
             catch (Exception ex)

@@ -6,6 +6,7 @@ namespace RUINORERP.PacketSpec.Commands
 {
     /// <summary>
     /// 排队命令类，用于在命令队列中传递和处理命令
+    /// 服务器使用
     /// </summary>
     public sealed class QueuedCommand
     {

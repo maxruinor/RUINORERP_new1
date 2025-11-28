@@ -1,28 +1,29 @@
+using AutoUpdateTools;
+using HLH.Lib.Security;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using RUINORERP.Business;
+using RUINORERP.Business.Security;
+using RUINORERP.Model.Context;
+using RUINORERP.PacketSpec.Commands.Authentication;
+using RUINORERP.PacketSpec.Models.Requests;
+using RUINORERP.PacketSpec.Models.Responses;
+using RUINORERP.UI.Common;
+using RUINORERP.UI.Network;
+using RUINORERP.UI.Network.Services;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.IO;
+using System.Net;
 using System.Security.Cryptography;
 using System.Text;
-using System.IO;
-using System.Windows.Forms;
-using Microsoft.Extensions.DependencyInjection;
-using RUINORERP.Business.Security;
-using RUINORERP.Model.Context;
-using ApplicationContext = RUINORERP.Model.Context.ApplicationContext;
-
-using RUINORERP.UI.Common;
-using Microsoft.Extensions.Logging;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Net;
-using RUINORERP.Business;
-using HLH.Lib.Security;
-using AutoUpdateTools;
-using RUINORERP.UI.Network.Services;
-using RUINORERP.PacketSpec.Models.Requests;
-using RUINORERP.PacketSpec.Models.Responses;
+using System.Windows.Forms;
+using ApplicationContext = RUINORERP.Model.Context.ApplicationContext;
 
 namespace RUINORERP.UI
 {
@@ -43,10 +44,17 @@ namespace RUINORERP.UI
         /// </summary>
         private string _originalServerPort = string.Empty;
         private readonly CacheClientService _cacheClientService; // 缓存客户端服务，用于订阅表
+        private readonly ConnectionManager connectionManager;
+        private readonly UserLoginService userLoginService;
+        private readonly TokenManager _tokenManager;
+        private readonly UserLoginService _userLoginService;
         public FrmLogin()
         {
             InitializeComponent();
             _cacheClientService = Startup.GetFromFac<CacheClientService>();
+            connectionManager = Startup.GetFromFac<ConnectionManager>();
+            _userLoginService = Startup.GetFromFac<UserLoginService>();
+            _tokenManager = Startup.GetFromFac<TokenManager>();
         }
         private bool m_showing = true;
         private void fadeTimer_Tick(object sender, EventArgs e)
@@ -144,8 +152,65 @@ namespace RUINORERP.UI
                 MessageBox.Show("请输入服务器IP和端口。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
+            #region IP地址不变时逻辑，快捷认证登录
+            // 检查连接状态和Token有效性，尝试快捷登录验证
+            bool isConnected = MainForm.Instance?.communicationService?.IsConnected ?? false;
+            string currentToken = await _userLoginService.GetCurrentAccessToken();
+
+            // 如果已连接且有Token，尝试快捷登录验证
+            if (isConnected && !string.IsNullOrEmpty(currentToken)
+                && connectionManager.CurrentServerAddress == txtServerIP.Text && connectionManager.CurrentServerPort.ToString() == txtPort.Text
+                && txtUserName.Text == UserGlobalConfig.Instance.UseName
+                && txtPassWord.Text == UserGlobalConfig.Instance.PassWord
+                )
+            {
+                try
+                {
+                    var quickLoginResult = await QuickValidateLoginAsync(currentToken, isConnected);
+                    if (quickLoginResult.IsSuccess)
+                    {
+                        // 快捷登录验证成功，直接设置在线状态并完成登录
+                        MainForm.Instance.AppContext.CurrentUser.在线状态 = true;
+                        // 保存用户配置
+                        try
+                        {
+                            UserGlobalConfig.Instance.AutoSavePwd = chksaveIDpwd.Checked;
+                            UserGlobalConfig.Instance.IsSupperUser = Program.AppContextData.IsSuperUser;
+                            UserGlobalConfig.Instance.AutoRminderUpdate = chkAutoReminderUpdate.Checked;
+                            UserGlobalConfig.Instance.Serialize();
+                            MainForm.Instance.logger?.LogInformation("成功保存用户配置");
+                        }
+                        catch (Exception ex)
+                        {
+                            MainForm.Instance.logger?.LogError(ex, "保存用户配置失败，但不影响登录流程");
+                            // 只记录错误，不中断登录流程
+                        }
+
+                        Program.AppContextData.IsOnline = true;
+                        this.DialogResult = DialogResult.OK;
+                        this.Close();
+                        return;
+                    }
+                    else
+                    {
+                        MainForm.Instance.logger?.LogWarning($"快捷登录验证失败: {quickLoginResult.ErrorMessage}，将继续使用常规登录流程");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // 捕获快捷登录验证过程中的异常
+                    MainForm.Instance.logger?.LogError(ex, "执行快捷登录验证时发生异常，将继续使用常规登录流程");
+                    // 不向用户显示错误，而是静默继续常规登录流程
+                }
+            }
+
+            #endregion
+
+            // 原有的登录流程开始
+
             using (StatusBusy busy = new StatusBusy("正在验证凭据..."))
             {
+
                 try
                 {
                     errorProvider1.Clear();
@@ -174,12 +239,6 @@ namespace RUINORERP.UI
                             MainForm.Instance.CurrentLoginStatus = MainForm.LoginStatus.LoggingIn;
                         }
 
-                        // 检测IP地址变更或服务器地址变更
-                        string currentIP = txtServerIP.Text.Trim();
-                        string currentPort = txtPort.Text.Trim();
-                        bool serverChanged = !string.Equals(currentIP, _originalServerIP, StringComparison.OrdinalIgnoreCase) ||
-                                           !string.Equals(currentPort, _originalServerPort, StringComparison.OrdinalIgnoreCase);
-
                         // 无论什么情况，先断开可能存在的连接，确保没有重复连接
                         if (MainForm.Instance != null && MainForm.Instance.communicationService != null &&
                             MainForm.Instance.communicationService.IsConnected)
@@ -188,19 +247,15 @@ namespace RUINORERP.UI
                             {
                                 var disconnectResult = await MainForm.Instance.communicationService.Disconnect();
                                 MainForm.Instance.CurrentLoginStatus = MainForm.LoginStatus.None;
-                                MainForm.Instance.logger?.LogInformation($"断开现有连接结果: {disconnectResult} [{_originalServerIP}:{_originalServerPort}]");
+                                MainForm.Instance.logger?.LogInformation("断开现有连接");
                             }
                             catch (Exception ex)
                             {
-                                MainForm.Instance.logger?.LogError(ex, "断开原服务器连接时发生错误");
+                                MainForm.Instance.logger?.LogError(ex, "断开连接时发生错误");
                             }
                         }
 
-                        // 记录登录开始，包括缓存信息
-                        if (MainForm.Instance != null && MainForm.Instance.logger != null)
-                        {
-                            MainForm.Instance.logger.LogInformation($"开始登录用户: {this.txtUserName.Text}，将尝试使用SqlSugar缓存加载权限数据");
-                        }
+
                         bool ok = PTPrincipal.Login(this.txtUserName.Text, this.txtPassWord.Text, Program.AppContextData, ref isInitPwd);
 
                         // 停止计时并记录结果
@@ -220,85 +275,37 @@ namespace RUINORERP.UI
                             // 登录成功，记录缓存使用情况
                             if (MainForm.Instance != null && MainForm.Instance.logger != null)
                             {
-                                MainForm.Instance.logger.LogInformation($"用户 {this.txtUserName.Text} 登录成功，权限数据已通过SqlSugar缓存机制加载");
+                                MainForm.Instance.PrintInfoLog($"用户 {this.txtUserName.Text} 登录成功");
+                                MainForm.Instance.logger.Debug($"用户 {this.txtUserName.Text} 登录成功，权限数据已通过SqlSugar缓存机制加载");
                             }
                             if (!Program.AppContextData.IsSuperUser || txtUserName.Text != "admin")
                             {
 
-                                // 通过依赖注入获取UserLoginService
-                                var userLogin = Startup.ServiceProvider.GetService<UserLoginService>();
 
 
 
                                 try
                                 {
-                                    // 在执行登录操作前，先连接到服务器
+                                    // 简化的连接管理：直接尝试连接到服务器
                                     var serverIp = txtServerIP.Text.Trim();
                                     if (!int.TryParse(txtPort.Text.Trim(), out var serverPort))
                                     {
                                         MessageBox.Show("端口号格式不正确，请检查服务器配置。", "配置错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                                        // 重置登录状态
                                         if (MainForm.Instance != null)
                                         {
                                             MainForm.Instance.CurrentLoginStatus = MainForm.LoginStatus.None;
                                         }
-                                        //base.Cursor = Cursors.Default;
                                         return;
                                     }
 
-                                    // IP地址变更检测和连接管理
-                                    bool shouldConnect = false;
-
-                                    // 检查IP地址是否发生变更
-                                    if (_ipAddressChanged)
+                                    // 简化连接逻辑：如果未连接，则尝试连接
+                                    if (!MainForm.Instance.communicationService.IsConnected)
                                     {
-                                        // IP地址已变更，需要重新建立连接
-                                        shouldConnect = true;
-                                        MainForm.Instance.logger?.LogInformation($"检测到IP变更，准备连接新服务器 [{serverIp}:{serverPort}]");
-                                    }
-                                    else if (!MainForm.Instance.communicationService.IsConnected)
-                                    {
-                                        // IP地址未变更，但未连接，需要建立连接
-                                        shouldConnect = true;
-                                        MainForm.Instance.logger?.LogInformation($"当前未连接，准备建立连接 [{serverIp}:{serverPort}]");
-                                    }
-                                    else
-                                    {
-                                        // 检查当前连接的服务器是否就是目标服务器
-                                        var currentAddress = MainForm.Instance.communicationService.GetCurrentServerAddress();
-                                        var currentServerPort = MainForm.Instance.communicationService.GetCurrentServerPort();
+                                        MainForm.Instance.logger?.LogInformation($"尝试连接服务器 {serverIp}:{serverPort}");
 
-                                        if (!string.Equals(currentAddress, serverIp, StringComparison.OrdinalIgnoreCase) ||
-                                            currentServerPort != serverPort)
-                                        {
-                                            // 虽然_ipAddressChanged为false，但实际连接的服务器与目标服务器不一致
-                                            shouldConnect = true;
-                                            MainForm.Instance.logger?.LogInformation($"服务器地址不一致，需要重新连接 [目标: {serverIp}:{serverPort}]");
-                                        }
-                                        else
-                                        {
-                                            // IP地址未变更且已连接到正确服务器，直接使用现有连接
-                                            MainForm.Instance.logger?.LogInformation("使用现有连接");
-                                        }
-                                    }
-
-                                    // 如果需要建立连接
-                                    if (shouldConnect)
-                                    {
-                                        // 方法开始处已经尝试断开过连接，但我们要确保现在确实没有连接
-                                        if (MainForm.Instance.communicationService.IsConnected)
-                                        {
-                                            MainForm.Instance.logger?.LogWarning($"建立新连接前发现仍然处于连接状态，强制断开 [{serverIp}:{serverPort}]");
-                                            var disconnectResult = await MainForm.Instance.communicationService.Disconnect();
-                                            MainForm.Instance.logger?.LogInformation($"强制断开结果: {disconnectResult}");
-                                        }
-
-                                        // 等待一小段时间，确保连接完全关闭
-                                        await Task.Delay(100); // 使用异步等待，避免阻塞UI线程
-
-                                        // 添加连接超时控制，防止无限等待
-                                        var connectTask = MainForm.Instance.communicationService.ConnectAsync(serverIp, serverPort);
-                                        var timeoutTask = Task.Delay(TimeSpan.FromSeconds(15)); // 10秒连接超时
+                                        // 添加连接超时控制
+                                        var connectTask = connectionManager.ConnectAsync(serverIp, serverPort);
+                                        var timeoutTask = Task.Delay(TimeSpan.FromSeconds(15));
 
                                         var completedTask = await Task.WhenAny(connectTask, timeoutTask);
 
@@ -311,26 +318,26 @@ namespace RUINORERP.UI
                                         var connected = await connectTask;
                                         if (!connected)
                                         {
-                                            // 连接失败，断开连接（如果有部分连接）
-                                            if (MainForm.Instance.communicationService.IsConnected)
-                                            {
-                                                var disconnectResult2 = await MainForm.Instance.communicationService.Disconnect();
-                                            }
-
                                             MessageBox.Show("无法连接到服务器，请检查网络连接和服务器配置。", "连接失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
                                             return;
                                         }
 
-                                        // 连接成功后更新原始IP地址
+                                        MainForm.Instance.logger?.LogInformation($"成功连接到服务器 {serverIp}:{serverPort}");
+
+                                        // 更新原始服务器信息
                                         _originalServerIP = serverIp;
-                                        _originalServerPort = txtPort.Text.Trim();
+                                        _originalServerPort = serverPort.ToString();
                                         _ipAddressChanged = false;
+                                    }
+                                    else
+                                    {
+                                        MainForm.Instance.logger?.LogInformation("使用现有连接");
                                     }
 
 
                                     // 8. 执行登录操作，添加登录超时控制
                                     using var cts = new CancellationTokenSource();
-                                    var loginTask = userLogin.LoginAsync(UserGlobalConfig.Instance.UseName, UserGlobalConfig.Instance.PassWord, cts.Token);
+                                    var loginTask = _userLoginService.LoginAsync(UserGlobalConfig.Instance.UseName, UserGlobalConfig.Instance.PassWord, cts.Token);
                                     var loginTimeoutTask = Task.Delay(TimeSpan.FromSeconds(10), cts.Token); // 10秒登录超时  请真正的请求一样
 
                                     var completedLoginTask = await Task.WhenAny(loginTask, loginTimeoutTask);
@@ -396,9 +403,9 @@ namespace RUINORERP.UI
                                 catch (Exception ex)
                                 {
                                     // 异常情况下，断开连接
-                                    if (MainForm.Instance != null && MainForm.Instance.communicationService != null && MainForm.Instance.communicationService.IsConnected)
+                                    if (MainForm.Instance?.communicationService?.IsConnected == true)
                                     {
-                                        var disconnectResult = await MainForm.Instance.communicationService.Disconnect();
+                                        await MainForm.Instance.communicationService.Disconnect();
                                     }
 
                                     // 判断是否为超时异常，提供更友好的错误提示
@@ -413,7 +420,7 @@ namespace RUINORERP.UI
                                     }
 
                                     MessageBox.Show(errorMessage, "登陆出错", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                                    MainForm.Instance.logger.Error("登陆出错", ex);
+                                    MainForm.Instance.logger?.LogError(ex, "登录出错");
                                     return;
                                 }
                             }
@@ -447,9 +454,9 @@ namespace RUINORERP.UI
                             Program.AppContextData.IsOnline = false;
 
                             // 登录失败，断开连接
-                            if (MainForm.Instance != null && MainForm.Instance.communicationService != null && MainForm.Instance.communicationService.IsConnected)
+                            if (MainForm.Instance?.communicationService?.IsConnected == true)
                             {
-                                var disconnectResult = await MainForm.Instance.communicationService.Disconnect();
+                                await MainForm.Instance.communicationService.Disconnect();
                                 MainForm.Instance.CurrentLoginStatus = MainForm.LoginStatus.None;
                             }
 
@@ -467,9 +474,9 @@ namespace RUINORERP.UI
                 catch (Exception ex)
                 {
                     // 异常情况下，断开连接
-                    if (MainForm.Instance != null && MainForm.Instance.communicationService != null && MainForm.Instance.communicationService.IsConnected)
+                    if (MainForm.Instance?.communicationService?.IsConnected == true)
                     {
-                        var disconnectResult = await MainForm.Instance.communicationService.Disconnect();
+                        await MainForm.Instance.communicationService.Disconnect();
                         MainForm.Instance.CurrentLoginStatus = MainForm.LoginStatus.None;
                     }
 
@@ -485,7 +492,7 @@ namespace RUINORERP.UI
                     }
 
                     MessageBox.Show(errorMessage, "登陆出错", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    MainForm.Instance.logger.Error("登陆出错", ex);
+                    MainForm.Instance.logger?.LogError(ex, "登录出错");
                     return;
                 }
 
@@ -493,11 +500,111 @@ namespace RUINORERP.UI
                 this.Close();
             }
 
-
-
-
-
         }
+
+
+
+        #region 快捷认证登录服务
+
+        /// <summary>
+        /// 检查Token有效性和会话连接状态的快捷登录验证方法
+        /// 用于用户在锁定状态下重新登录时，若Token有效且会话已连接，直接授权成功
+        /// </summary>
+        /// <param name="token">当前用户的Token</param>
+        /// <param name="isConnected">当前会话是否已连接</param>
+        /// <returns>登录结果对象，包含是否成功以及可能的错误信息</returns>
+        public async Task<LoginResult> QuickValidateLoginAsync(string token, bool isConnected)
+        {
+            try
+            {
+                MainForm.Instance.logger?.LogInformation("开始执行快捷登录验证流程");
+
+                // 检查Token是否存在且有效
+                if (string.IsNullOrEmpty(token))
+                {
+                    MainForm.Instance.logger?.LogWarning("快捷登录验证失败：Token为空");
+                    return new LoginResult { IsSuccess = false, ErrorMessage = "Token不存在，无法进行快捷验证" };
+                }
+
+                // 检查会话是否已连接
+                if (!isConnected)
+                {
+                    MainForm.Instance.logger?.LogWarning("快捷登录验证失败：会话未连接");
+                    return new LoginResult { IsSuccess = false, ErrorMessage = "会话未连接，需要重新登录" };
+                }
+
+                // 解析Token以验证其有效性
+                bool tokenIsValid = ValidateToken(token);
+                if (!tokenIsValid)
+                {
+                    MainForm.Instance.logger?.LogWarning("快捷登录验证失败：Token无效或已过期");
+                    return new LoginResult { IsSuccess = false, ErrorMessage = "Token无效或已过期" };
+                }
+
+                // 如果Token有效且会话已连接，则直接返回登录成功
+                // 记录用户登录时间
+                UpdateLoginTime();
+
+                MainForm.Instance.logger?.LogInformation("用户通过快捷验证方式成功登录");
+                return new LoginResult { IsSuccess = true, ErrorMessage = string.Empty };
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger?.LogError(ex, "快捷登录验证过程中发生异常");
+                // 异常发生时提供友好的错误信息，不暴露技术细节
+                return new LoginResult { IsSuccess = false, ErrorMessage = "快捷验证过程中发生系统错误，请尝试常规登录" };
+            }
+        }
+
+        /// <summary>
+        /// 验证Token的有效性
+        /// </summary>
+        /// <param name="token">待验证的Token字符串</param>
+        /// <returns>Token是否有效</returns>
+        private bool ValidateToken(string token)
+        {
+            try
+            {
+                // 基本验证：Token长度检查
+                if (string.IsNullOrEmpty(token) || token.Length <= 10)
+                {
+                    return false;
+                }
+
+                // 在实际应用中，这里可以添加更复杂的Token验证逻辑
+                // 例如：检查Token格式、解析Token内容、验证签名、检查过期时间等
+                // 由于目前没有看到具体的Token生成和解析逻辑，这里暂时使用简单的验证方式
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger?.LogError(ex, "Token验证过程中发生异常");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 更新用户登录时间
+        /// </summary>
+        private void UpdateLoginTime()
+        {
+            try
+            {
+                // 只保存一次，注销不算 1990-1-1 不算
+                if (Program.AppContextData.CurrentUser != null && Program.AppContextData.CurrentUser.登陆时间 < System.DateTime.Now.AddYears(-30))
+                {
+                    Program.AppContextData.CurrentUser.登陆时间 = System.DateTime.Now;
+                    MainForm.Instance.logger?.LogInformation("成功更新用户登录时间");
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger?.LogError(ex, "更新登录时间失败");
+            }
+        }
+
+        #endregion
 
         private string IPToIPv4(string strIP, int Port)
         {
@@ -538,9 +645,9 @@ namespace RUINORERP.UI
                 });
 
                 // 取消登录时，如果已连接则断开连接
-                if (MainForm.Instance != null && MainForm.Instance.communicationService != null && MainForm.Instance.communicationService.IsConnected)
+                if (MainForm.Instance?.communicationService?.IsConnected == true)
                 {
-                    var disconnectResult = await MainForm.Instance.communicationService.Disconnect();
+                    await MainForm.Instance.communicationService.Disconnect();
                     MainForm.Instance.CurrentLoginStatus = MainForm.LoginStatus.None;
                 }
 

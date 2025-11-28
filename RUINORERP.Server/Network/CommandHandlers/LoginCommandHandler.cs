@@ -709,7 +709,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 { "userId", userSessionInfo.UserInfo.User_ID }
             };
 
-            var tokenInfo = await tokenManager.GenerateAndStoreTokenAsync(
+            var tokenInfo = await tokenManager.GenerateTokenAsync(
                 userSessionInfo.UserInfo.User_ID.ToString(),
                 userSessionInfo.UserInfo.UserName,
                 additionalClaims

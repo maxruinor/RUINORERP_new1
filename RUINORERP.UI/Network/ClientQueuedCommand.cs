@@ -23,5 +23,6 @@ namespace RUINORERP.UI.Network
         public TaskCompletionSource<PacketModel> ResponseCompletionSource { get; set; } // 用于带响应命令
         public int TimeoutMs { get; set; } = 30000;
         public bool IsResponseCommand { get; set; } // 标识是否是带响应的命令
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow; // 创建时间，用于超时清理
     }
 }

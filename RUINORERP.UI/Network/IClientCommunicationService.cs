@@ -2,6 +2,7 @@ using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Models.Common;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Requests;
+using RUINORERP.PacketSpec.Models.Responses;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -44,17 +45,7 @@ namespace RUINORERP.UI.Network
         /// <returns>断开连接是否成功</returns>
         Task<bool> Disconnect();
 
-        /// <summary>
-        /// 发送命令并等待响应
-        /// </summary>
-        /// <param name="commandId">命令标识符</param>
-        /// <param name="request">请求数据</param>
-        /// <param name="cancellationToken">取消令牌</param>
-        /// <param name="timeoutMs">超时时间（毫秒）</param>
-        /// <returns>响应数据包</returns>
-        Task<PacketModel> SendCommandAsync(CommandId commandId, IRequest request, CancellationToken cancellationToken = default, int timeoutMs = 30000);
-
-        /// <summary>
+ 
         /// 发送单向命令（不需要响应）
         /// </summary>
         /// <typeparam name="TRequest">请求数据类型</typeparam>
@@ -64,7 +55,21 @@ namespace RUINORERP.UI.Network
         /// <returns>发送是否成功</returns>
         Task<bool> SendOneWayCommandAsync<TRequest>(CommandId commandId, TRequest request, CancellationToken cancellationToken = default) where TRequest : class, IRequest;
 
-
+        /// <summary>
+        /// 发送命令并获取指定类型的响应
+        /// </summary>
+        /// <typeparam name="TResponse">响应数据类型</typeparam>
+        /// <param name="commandId">命令标识符</param>
+        /// <param name="request">请求数据</param>
+        /// <param name="ct">取消令牌</param>
+        /// <param name="timeoutMs">超时时间（毫秒）</param>
+        /// <returns>指定类型的响应数据</returns>
+        Task<TResponse> SendCommandWithResponseAsync<TResponse>(
+            CommandId commandId,
+            IRequest request,
+            CancellationToken ct = default,
+            int timeoutMs = 30000)
+            where TResponse : class, IResponse;
 
         /// <summary>
         /// 订阅特定命令的处理

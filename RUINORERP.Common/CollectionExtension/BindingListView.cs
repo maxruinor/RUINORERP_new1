@@ -29,19 +29,7 @@ namespace RUINORERP.Common.CollectionExtension
         private bool _isApplyingFilter; // 防止递归调用
         private bool _isApplyingSort; // 防止递归调用
 
-        //public BindingListView(IEnumerable<T> source)
-        //{
-        //    if (source == null)
-        //        throw new ArgumentNullException(nameof(source));
-
-        //    _originalList = source.ToList();
-
-        //    // 初始化内部列表（不触发事件）
-        //    this.RaiseListChangedEvents = false;
-        //    foreach (var item in _originalList)
-        //        base.Add(item);
-        //    this.RaiseListChangedEvents = true;
-        //}
+ 
 
         public BindingListView(IEnumerable<T> source)
         {

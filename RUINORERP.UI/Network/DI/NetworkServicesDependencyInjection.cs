@@ -28,10 +28,6 @@ using RUINORERP.IServices;
 namespace RUINORERP.UI.Network.DI
 {
     /// <summary>
-    /// 简单的IOptionsMonitor包装器
-    /// 避免复杂的依赖关系导致的循环引用问题
-    /// </summary>
-    /// <summary>
     /// 简单的IOptions<T>实现，避免复杂依赖导致的循环引用
     /// </summary>
     /// <typeparam name="TOptions">选项类型</typeparam>
@@ -52,8 +48,6 @@ namespace RUINORERP.UI.Network.DI
         public TOptions Value { get; }
     }
 
-
-
     /// <summary>
     /// Network项目服务依赖注入配置类
     /// 负责注册所有Network项目中的服务和接口
@@ -69,6 +63,11 @@ namespace RUINORERP.UI.Network.DI
         {
             // 注册核心网络组件
             builder.RegisterType<SuperSocketClient>().As<ISocketClient>().SingleInstance();
+            
+            // 注册连接管理器
+            builder.RegisterType<ConnectionManager>().AsSelf().SingleInstance()
+                .WithParameter((pi, ctx) => pi.ParameterType == typeof(ConnectionManagerConfig),
+                               (pi, ctx) => ConnectionManagerConfig.Default);
 
             // 注册客户端命令调度器
             builder.RegisterType<ClientCommandDispatcher>()
@@ -77,84 +76,57 @@ namespace RUINORERP.UI.Network.DI
 
             builder.RegisterType<ClientEventManager>().AsSelf().SingleInstance();
 
-
             // 注册缓存相关服务
             builder.RegisterType<EntityCacheManager>().As<IEntityCacheManager>().SingleInstance();
             builder.RegisterType<EventDrivenCacheManager>().AsSelf().SingleInstance();
             builder.RegisterType<CacheRequestManager>().AsSelf().SingleInstance();
             builder.RegisterType<CacheResponseProcessor>().AsSelf().SingleInstance();
 
-            // 注册HeartbeatManager，移除对ClientCommunicationService的直接依赖
-            builder.RegisterType<HeartbeatManager>().AsSelf().SingleInstance()
-                .WithParameter((pi, ctx) => pi.ParameterType == typeof(int) && pi.Name == "heartbeatIntervalMs",
-                               (pi, ctx) => 5000) // 默认30秒心跳间隔
-                .WithParameter((pi, ctx) => pi.ParameterType == typeof(int) && pi.Name == "heartbeatTimeoutMs",
-                               (pi, ctx) => 5000); // 默认5秒超时
-
-
-
-            // 先注册一个 Lazy<ClientCommunicationService> 实例
-            builder.Register(c => new Lazy<ClientCommunicationService>(() => c.Resolve<ClientCommunicationService>(), true))
-                .As<Lazy<ClientCommunicationService>>()
-                .SingleInstance();
-
-            // 使用工厂方法注册ClientCommunicationService，避免循环依赖
-            builder.Register(c =>
-            {
-                // 手动解析所有依赖项，避免依赖注入容器自动解析时可能产生的循环引用
-                var socketClient = c.Resolve<ISocketClient>();
-                var logger = c.Resolve<ILogger<ClientCommunicationService>>();
-                var tokenManager = c.Resolve<TokenManager>();
-                var clientCommandDispatcher = c.Resolve<IClientCommandDispatcher>();
-                var heartbeatManager = c.Resolve<HeartbeatManager>();
-                var clientEventManager = c.Resolve<ClientEventManager>(); // 获取已注册的ClientEventManager单例
-                var commandHandlers = c.Resolve<IEnumerable<ICommandHandler>>();
-
-                // 创建ClientCommunicationService实例
-                var communicationService = new ClientCommunicationService(
-                    socketClient,
-                    logger,
-                    tokenManager,
-                    clientCommandDispatcher,
-                    heartbeatManager,
-                    clientEventManager,
-                    commandHandlers
-                );
-
-                // 设置HeartbeatManager的ClientCommunicationService引用
-                heartbeatManager.SetCommunicationService(communicationService);
-
-                return communicationService;
-            })
-            .AsSelf()
-            .SingleInstance()
-            .OnActivated(e =>
-            {
-                // 在激活后显式初始化命令调度器，而不是在构造函数中
-                // 这避免了在构造过程中触发依赖解析导致的循环引用
-                try
+            // 简化的ClientCommunicationService注册方式
+            // 移除了复杂的工厂方法和Lazy初始化，使用标准的注册方式
+            builder.RegisterType<ClientCommunicationService>()
+                .AsSelf()
+                .As<IClientCommunicationService>()
+                .SingleInstance()
+                .OnActivated(e =>
                 {
-                    // 注意：这里需要确保ClientCommunicationService有一个InitializeClientCommandDispatcherAsync方法
-                    var initializeMethod = e.Instance.GetType().GetMethod("InitializeClientCommandDispatcherAsync", BindingFlags.NonPublic | BindingFlags.Instance);
-                    if (initializeMethod != null)
+                    // 在激活阶段就解析出logger，避免在异步任务中使用可能已释放的Context
+                    var logger = e.Context.Resolve<ILogger<ClientCommunicationService>>();
+                    
+                    // 在激活后显式初始化命令调度器，但不使用同步等待来避免死锁
+                    try
                     {
-                        // 异步方法调用需要使用Task.Run等待完成
-                        Task.Run(async () => {
-                            await (Task)initializeMethod.Invoke(e.Instance, null);
-                        }).Wait();
+                        // 获取实例
+                        var service = e.Instance;
+                        
+                        // 使用反射调用InitializeClientCommandDispatcherAsync方法
+                        var initializeMethod = typeof(ClientCommunicationService).GetMethod("InitializeClientCommandDispatcherAsync", BindingFlags.NonPublic | BindingFlags.Instance);
+                        if (initializeMethod != null)
+                        {
+                            // 使用Task.Run避免在依赖注入过程中产生死锁
+                            Task.Run(() =>
+                            {
+                                try
+                                {
+                                    var task = (Task)initializeMethod.Invoke(service, null);
+                                    task.Wait();
+                                }
+                                catch (Exception ex)
+                                {
+                                    logger?.LogError(ex, "初始化命令调度器失败");
+                                }
+                            });
+                        }
+                        else
+                        {
+                            logger?.LogWarning("未找到InitializeClientCommandDispatcherAsync方法");
+                        }
                     }
-                    else
+                    catch (Exception ex)
                     {
-                        e.Context.Resolve<ILogger<ClientCommunicationService>>()?
-                            .LogWarning("未找到InitializeClientCommandDispatcherAsync方法，请修改代码正确设置反射调用的方法名");
+                        logger?.LogError(ex, "初始化命令调度器失败");
                     }
-                }
-                catch (Exception ex)
-                {
-                    e.Context.Resolve<ILogger<ClientCommunicationService>>()?
-                        .LogError(ex, "初始化命令调度器失败");
-                }
-            });
+                });
 
             // 配置TokenServiceOptions - 使用自定义IOptions实现，避免OptionsWrapper可能导致的循环依赖
             var tokenServiceOptions = new TokenServiceOptions
@@ -198,28 +170,24 @@ namespace RUINORERP.UI.Network.DI
             builder.RegisterType<UserLoginService>().AsSelf().SingleInstance();
 
             // 注册本地业务编码生成服务，作为服务器通信失败时的备用方案
-            // 由于服务器端的BizCodeGenerateService可能不在业务层的引用范围内
-            // 这里注册一个简单的本地实现，如果需要更复杂的功能，可以创建专门的实现类
-            //最后注册的优先，所以这里放在一起
-            // 注册LocalBizCodeGenerateService，仅作为自身类型注册，避免接口拦截问题
-            //builder.RegisterType<Business.Services.LocalBizCodeGenerateService>()
-            //    .AsSelf()
-            //    .InstancePerLifetimeScope()
-            //    .PropertiesAutowired()
-            //    .ExternallyOwned() // 标记为外部拥有，避免与拦截器冲突
-            //    .PreserveExistingDefaults(); // 保留现有的默认实现
-            
-            // 注册BizCodeService作为IBizCodeService接口的主要实现
             builder.RegisterType<ClientBizCodeService>()
                 .As<IBizCodeGenerateService>()
                 .AsSelf()
                 .SingleInstance()
                 .PropertiesAutowired()
-                .PreserveExistingDefaults(); // 保留现有的默认实现
-
+                .PreserveExistingDefaults();
 
             builder.RegisterType<CacheClientService>().AsSelf().SingleInstance();
-            builder.RegisterType<MessageService>().AsSelf().SingleInstance();
+            // 使用工厂方法注册MessageService，确保正确注入Lazy<ClientCommunicationService>
+            builder.Register(c =>
+            {
+                // 获取Lazy<ClientCommunicationService>实例
+                var lazyCommunicationService = c.Resolve<Lazy<ClientCommunicationService>>();
+                var logger = c.Resolve<ILogger<MessageService>>();
+                
+                // 创建MessageService实例，传入Lazy依赖以避免循环引用
+                return new MessageService(lazyCommunicationService, logger);
+            }).AsSelf().SingleInstance();
             builder.RegisterType<SimplifiedMessageService>().AsSelf().InstancePerDependency();
             builder.RegisterType<EnhancedMessageManager>().AsSelf().InstancePerLifetimeScope();
             builder.RegisterType<SystemManagementService>().AsSelf().InstancePerDependency();
@@ -255,7 +223,6 @@ namespace RUINORERP.UI.Network.DI
                 .As<IOptions<GlobalValidatorConfig>>()
                 .SingleInstance();
 
-
             // 扫描并注册所有命令处理器
             var commandHandlerTypes = Assembly.GetExecutingAssembly().GetTypes()
                 .Where(t => typeof(ICommandHandler).IsAssignableFrom(t) && !t.IsAbstract && !t.IsInterface);
@@ -286,29 +253,28 @@ namespace RUINORERP.UI.Network.DI
         /// <param name="builder">容器构建器</param>
         private static void RegisterLockManagementServices(ContainerBuilder builder)
         {
-            // 使用工厂模式先注册IntegratedLockManagementService，不传入ClientLockCache和LockRecoveryManager
+            // 使用工厂模式先注册ClientLockManagementService
+            // 使用Lazy模式解析ClientCommunicationService来避免循环依赖
             var lockServiceRegistration = builder.Register(c =>
             {
-                // 解析核心依赖
-                var communicationService = c.Resolve<ClientCommunicationService>();
-                var heartbeatManager = c.Resolve<HeartbeatManager>();
+                // 解析核心依赖 - 使用Lazy延迟解析ClientCommunicationService
+                var lazyCommunicationService = c.Resolve<Lazy<ClientCommunicationService>>();
                 var logger = c.Resolve<ILogger<ClientLockManagementService>>();
 
-                // 创建集成锁管理服务实例，内部会创建ClientLockCache和LockRecoveryManager
+                // 创建锁管理服务实例
+                // 注意：移除了对HeartbeatManager的依赖
                 return new ClientLockManagementService(
-                    communicationService,
-                    heartbeatManager,
+                    lazyCommunicationService,
                     logger);
             })
             .AsSelf()
             .SingleInstance()
             .OnActivated(e =>
             {
-                // 在IntegratedLockManagementService激活后，提取其内部的ClientLockCache实例并注册到容器
+                // 在ClientLockManagementService激活后，提取其内部的ClientLockCache实例并注册到容器
                 try
                 {
                     var lockService = e.Instance;
-                
                     
                     // 通过反射获取内部的ClientLockCache
                     var clientCacheField = typeof(ClientLockManagementService)
@@ -318,29 +284,29 @@ namespace RUINORERP.UI.Network.DI
                     {
                         // 手动注册ClientLockCache实例到容器
                         // 由于Autofac不支持动态注册，我们将使用另一种方法
-                       
                     }
                 }
                 catch (Exception ex)
                 {
-                    
-                    //logger?.LogError(ex, "处理IntegratedLockManagementService激活事件失败");
+                    //logger?.LogError(ex, "处理ClientLockManagementService激活事件失败");
                 }
             });
 
-            // 注册ClientLockCache作为IntegratedLockManagementService的属性访问
+            // 注册ClientLockCache作为ClientLockManagementService的属性访问
             builder.Register(c =>
             {
                 var lockService = c.Resolve<ClientLockManagementService>();
                 // 使用反射获取ClientLockCache字段
                 var clientCacheField = typeof(ClientLockManagementService)
                     .GetField("_clientCache", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                return clientCacheField?.GetValue(lockService) as ClientLocalLockCacheService;
+                if (clientCacheField != null)
+                {
+                    return clientCacheField.GetValue(lockService) as ClientLocalLockCacheService;
+                }
+                return null;
             })
             .As<ClientLocalLockCacheService>()
             .SingleInstance();
-
-            
         }
 
         /// <summary>
@@ -348,15 +314,14 @@ namespace RUINORERP.UI.Network.DI
         /// </summary>
         /// <returns>服务统计信息字符串</returns>
         public static string GetNetworkServicesStatistics()
-        {
+        {   
             return $"Network服务依赖注入配置完成。\n"
-                   + $"已注册服务: 16个核心服务（RequestResponseManager已合并到ClientCommunicationService，新增TokenRefreshService和SilentTokenRefresher）\n"
-                   + $"已注册命令处理器: ConfigCommandHandler和MessageCommandHandler（从ClientCommandHandlerModule移植）\n"
+                   + $"已注册服务: 15个核心服务（心跳功能已集成到ClientCommunicationService）\n"
+                   + $"已注册命令处理器: ConfigCommandHandler和MessageCommandHandler\n"
                    + $"已注册接口: 3个服务接口\n"
-                   + $"已注册锁管理服务: IntegratedLockManagementService, ClientLockCache, LockRecoveryManager\n"
+                   + $"已注册锁管理服务: ClientLockManagementService, ClientLockCache\n"
                    + $"生命周期: 单例模式、瞬态模式和InstancePerLifetimeScope\n"
-                   + $"AOP支持: 已启用接口拦截器\n"
-                   + $"架构版本: 重构后新架构";
+                   + $"架构版本: 重构后新架构，心跳功能已集成到通信服务中";      
         }
     }
 }

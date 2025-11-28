@@ -32,9 +32,7 @@ namespace RUINORERP.Server.Controls
                 
                 // 加载配置数据
                 LoadConfigData();
-                
-                // 加载系统信息
-                LoadSystemInformation();
+            
             }
             catch (Exception ex)
             {
@@ -42,27 +40,7 @@ namespace RUINORERP.Server.Controls
             }
         }
         
-        /// <summary>
-        /// 加载系统信息
-        /// </summary>
-        private void LoadSystemInformation()
-        {
-            try
-            {
-                // 从ClientSystemInfo获取系统信息
-                var clientSystemInfo = frmMainNew.Instance.ClientSystemInfo ?? new ClientSystemInfo();
-                
-                // 显示系统信息
-                textBoxOSName.Text = clientSystemInfo.OSName ?? "";
-                textBoxMachineName.Text = clientSystemInfo.MachineName ?? "";
-                textBoxCPUInfo.Text = clientSystemInfo.CPUInfo ?? "";
-                textBoxMemorySize.Text = FormatMemorySize(clientSystemInfo.TotalMemory);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"加载系统信息时出错: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
+    
         
         /// <summary>
         /// 格式化内存大小显示

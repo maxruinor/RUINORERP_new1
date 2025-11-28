@@ -105,15 +105,24 @@ namespace RUINORERP.Server.Controls
             {
                 var sessions = _sessionService.GetAllUserSessions().ToList();
                 int loadedCount = 0;
+                int skippedCount = 0;
 
                 foreach (var session in sessions)
                 {
+                    // 检查会话是否已授权，未授权的会话不添加到表格中
+                    var userInfo = session.UserInfo ?? new UserInfo();
+                    if (!userInfo.授权状态)
+                    {
+                        skippedCount++;
+                        continue;
+                    }
+                    
                     AddOrUpdateSessionItem(session);
                     loadedCount++;
                 }
 
                 // 记录加载结果
-                LogStatusChange(null, $"初始加载完成：加载 {loadedCount} 个会话");
+                LogStatusChange(null, $"初始加载完成：加载 {loadedCount} 个会话，跳过 {skippedCount} 个未授权会话");
                 
                 // 初始化统计信息
                 UpdateStatistics();
@@ -724,6 +733,14 @@ namespace RUINORERP.Server.Controls
 
             try
             {
+                // 检查会话是否已授权，未授权的新会话不添加到表格中
+                var userInfo = sessionInfo.UserInfo ?? new UserInfo();
+                if (!userInfo.授权状态 && !_sessionItemMap.ContainsKey(sessionInfo.SessionID))
+                {
+                    LogStatusChange(null, $"忽略未授权的新会话: {GetDisplayUserName(userInfo)} - {sessionInfo.ClientIp}");
+                    return;
+                }
+
                 // 添加或更新会话项
                 AddOrUpdateSessionItem(sessionInfo);
 
@@ -820,8 +837,27 @@ namespace RUINORERP.Server.Controls
                     bool statusChanged = oldSessionInfo?.IsConnected != sessionInfo.IsConnected || 
                                        oldSessionInfo?.IsAuthenticated != sessionInfo.IsAuthenticated;
                     bool heartbeatChanged = Math.Abs(((oldSessionInfo?.LastHeartbeat ?? DateTime.MinValue) - sessionInfo.LastHeartbeat).TotalSeconds) > 5;
-                    bool moduleChanged = oldSessionInfo?.UserInfo.当前模块 != sessionInfo.UserInfo.当前模块;
-                    bool formChanged = oldSessionInfo?.UserInfo.当前窗体 != sessionInfo.UserInfo.当前窗体;
+                    
+                    // 兼容不同版本的属性路径
+                    string oldModule = null;
+                    string newModule = null;
+                    string oldForm = null;
+                    string newForm = null;
+                    
+                    try
+                    {
+                        oldModule = oldSessionInfo?.UserInfo?.当前模块;
+                        newModule = sessionInfo?.UserInfo?.当前模块;
+                        oldForm = oldSessionInfo?.UserInfo?.当前窗体;
+                        newForm = sessionInfo?.UserInfo?.当前窗体;
+                    }
+                    catch (Exception)
+                    {
+                        // 忽略属性访问错误
+                    }
+                    
+                    bool moduleChanged = oldModule != newModule;
+                    bool formChanged = oldForm != newForm;
 
                     // 更新会话信息
                     UpdateSessionItem(existingItem, sessionInfo);
@@ -832,18 +868,15 @@ namespace RUINORERP.Server.Controls
                     {
                         LogStatusChange(sessionInfo, $"状态变化 - 连接:{sessionInfo.IsConnected}, 认证:{sessionInfo.IsAuthenticated}");
                     }
-                    else if (moduleChanged)
+                    else if (moduleChanged && !string.IsNullOrEmpty(newModule))
                     {
-                        LogStatusChange(sessionInfo, $"模块变化: {sessionInfo.UserInfo.当前模块}");
+                        LogStatusChange(sessionInfo, $"模块变化: {newModule}");
                     }
-                    else if (formChanged)
+                    else if (formChanged && !string.IsNullOrEmpty(newForm))
                     {
-                        LogStatusChange(sessionInfo, $"窗体变化: {sessionInfo.UserInfo.当前窗体}");
+                        LogStatusChange(sessionInfo, $"窗体变化: {newForm}");
                     }
-                    else if (heartbeatChanged)
-                    {
-                        // 心跳变化不记录详细日志，避免日志过多
-                    }
+                    // 心跳变化不记录详细日志，避免日志过多
                 }
                 else
                 {
@@ -1079,10 +1112,55 @@ namespace RUINORERP.Server.Controls
             // TODO: 实现推送缓存功能
             MessageBox.Show($"选择了 {selectedSessions.Count} 个会话推送缓存", "功能待实现", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
+        
+ 
+        
+        // FullRefreshFromSessions方法已在文件上方定义，此处移除重复实现
 
         private void contextMenuStrip1_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
         {
-            // 处理右键菜单项点击事件
+            try
+            {
+                // 获取选中的会话
+                var selectedSessions = SelectSessions();
+                
+                // 根据菜单项文本执行相应操作
+                switch (e.ClickedItem.Text)
+                {
+                    case "发消息给客户端":
+                        tsbtn发送消息_Click(sender, new EventArgs());
+                        break;
+                    case "推送更新":
+                        tsbtn推送更新_Click(sender, new EventArgs());
+                        break;
+                    case "推送系统配置":
+                        tsbtn推送系统配置_Click(sender, new EventArgs());
+                        break;
+                    case "推送缓存":
+                        tsbtn推送缓存_Click(sender, new EventArgs());
+                        break;
+                    case "刷新":
+                        tsbtn刷新_Click(sender, new EventArgs());
+                        break;
+                    case "全部选择":
+                        SelectAllItems();
+                        break;
+                    case "取消选择":
+                        DeselectAllItems();
+                        break;
+                    case "反选":
+                        InvertSelection();
+                        break;
+                    default:
+                        // 记录未知菜单项
+                        LogError($"未处理的右键菜单项: {e.ClickedItem.Text}");
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                LogError("处理右键菜单项点击事件时出错", ex);
+            }
         }
 
         private void 发消息给客户端ToolStripMenuItem_Click(object sender, EventArgs e)

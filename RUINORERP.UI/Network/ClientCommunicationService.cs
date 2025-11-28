@@ -25,7 +25,6 @@ using RUINORERP.UI.Network.TimeoutStatistics;
 using RUINORERP.UI.Network.RetryStrategy;
 using System.Collections.Concurrent;
 using RUINORERP.UI.Network.ErrorHandling;
-
 using RUINORERP.UI.Network.Exceptions;
 using FastReport.DevComponents.DotNetBar;
 using RUINORERP.Common.Extensions;
@@ -38,84 +37,82 @@ using System.Collections.Generic;
 using RUINORERP.UI.SysConfig;
 using RUINORERP.UI.Network.ClientCommandHandlers;
 using RUINORERP.Common.Helper;
-
 using RUINORERP.PacketSpec.Models.Common;
+using RUINORERP.PacketSpec.Models.Responses;
 
 namespace RUINORERP.UI.Network
 {
     /// <summary>
     /// 优化后的客户端通信与命令处理服务 - 统一网络通信核心组件
+    /// 简化版：专注于命令发送和接收，连接管理委托给ConnectionManager，集成心跳检测功能
     /// </summary>
-    public class ClientCommunicationService : IClientCommunicationService
+    public class ClientCommunicationService : IClientCommunicationService, IDisposable
     {
+        #region 私有字段
+
         /// <summary>
         /// 用户登录服务实例，用于重连后的认证恢复
         /// </summary>
         private UserLoginService _userLoginService;
 
         /// <summary>
-        /// 设置用户登录服务实例
+        /// Socket客户端，负责实际的网络通信
         /// </summary>
-        /// <param name="loginService">用户登录服务</param>
-        public void SetUserLoginService(UserLoginService loginService)
-        {
-            _userLoginService = loginService;
-        }
-        private readonly NetworkConfig _config;
-        // Socket客户端，负责底层网络通信
         private readonly ISocketClient _socketClient;
-        // 客户端事件管理器，管理连接状态和命令接收事件（通过依赖注入获取单例）
-        private readonly ClientEventManager _eventManager;
-        // 命令调度器，用于分发命令到对应的处理类
-        private readonly IClientCommandDispatcher _commandDispatcher;
-        // 心跳管理器
-        private readonly HeartbeatManager _heartbeatManager;
-        private readonly ILogger<ClientCommunicationService> _logger;
-
-        // 客户端命令调度器，用于分发命令到对应的客户端处理类
-
-
-        // 连接状态标志
-        private bool _isConnected;
-        // 用于线程同步的锁
-        private readonly object _syncLock = new object();
-        // 是否已释放资源
-        private bool _disposed = false;
-        // 服务器地址
-        private string _serverAddress;
-        // 服务器端口
-        private int _serverPort;
-
-        // 心跳相关配置
-        private int _heartbeatFailureCount = 0;
-        private bool _heartbeatIsRunning = false;
-
-        // 网络配置
-        private readonly NetworkConfig _networkConfig;
-
-        private readonly SemaphoreSlim _connectionLock = new SemaphoreSlim(1, 1);
-
-        // 请求队列，用于存储连接断开时的单向命令请求
-        private readonly ConcurrentQueue<ClientQueuedCommand> _queuedCommands = new ConcurrentQueue<ClientQueuedCommand>();
-        private bool _isProcessingQueue = false;
-        private readonly SemaphoreSlim _queueProcessingLock = new SemaphoreSlim(1, 1);
 
         /// <summary>
-        /// 命令队列处理延迟时间(毫秒)，用于避免大量请求同时发送
+        /// 连接管理器，负责统一的连接管理和重连逻辑
         /// </summary>
-        private const int QueueProcessingDelayMs = 10;
+        private readonly ConnectionManager _connectionManager;
+
+        /// <summary>
+        /// 客户端事件管理器，管理连接状态和命令接收事件
+        /// </summary>
+        private readonly ClientEventManager _clientEventManager;
+
+        /// <summary>
+        /// 命令处理器集合
+        /// </summary>
+        private readonly IEnumerable<ICommandHandler> _commandHandlers;
+
+        /// <summary>
+        /// 命令调度器，用于分发命令到对应的处理类
+        /// </summary>
+        private readonly IClientCommandDispatcher _commandDispatcher;
+
+        /// <summary>
+        /// 日志记录器
+        /// </summary>
+        private readonly ILogger<ClientCommunicationService> _logger;
+
+        /// <summary>
+        /// Token管理器
+        /// </summary>
+        private readonly TokenManager _tokenManager;
+
+        // 新增心跳相关字段
+        private readonly int _heartbeatIntervalMs = 30000; // 默认30秒心跳间隔
+        private CancellationTokenSource _heartbeatCancellationTokenSource;
+        private CancellationTokenSource _heartbeatCts; // 心跳取消令牌源
+        private Task _heartbeatTask;
+        private int _heartbeatFailedAttempts;
+        private bool _isHeartbeatRunning;
 
 
 
-        // 用于Token刷新的内部实现
-
-        // 请求响应管理相关字段（从RequestResponseManager迁移）
+        /// <summary>
+        /// 请求响应管理相关字段
+        /// </summary>
         private readonly ConcurrentDictionary<string, PendingRequest> _pendingRequests = new();
-        private readonly TimeoutStatisticsManager _timeoutStatistics;
-        private readonly ErrorHandlingStrategyFactory _errorHandlingStrategyFactory;
-        private Timer _cleanupTimer;
 
-        private readonly TokenManager tokenManager;
+        /// <summary>
+        /// 待发送命令队列，用于连接断开时的命令缓存
+        /// </summary>
+        private readonly ConcurrentQueue<ClientQueuedCommand> _queuedCommands = new();
+        private readonly SemaphoreSlim _queueLock = new SemaphoreSlim(1, 1);
+        private bool _isProcessingQueue = false;
+        private readonly object _heartbeatLock = new object();
+        private DateTime _lastHeartbeatTime;
 
         /// <summary>
         /// 待处理请求的内部类
@@ -127,177 +124,434 @@ namespace RUINORERP.UI.Network
             public string CommandId { get; set; }
         }
 
-        private readonly IEnumerable<ICommandHandler> _commandHandlers;
+
+        private Timer _cleanupTimer;
+        // 是否已释放资源
+        private bool _disposed = false;
+        #endregion
+
+        #region 公共属性
 
         /// <summary>
-        /// 构造函数
+        /// 获取当前连接状态 - 简化版，直接委托给ConnectionManager
         /// </summary>
-        /// <param name="socketClient">Socket客户端接口，提供底层网络通信能力</param>
+        public bool IsConnected => _connectionManager.IsConnected;
+
+        /// <summary>
+        /// 获取当前连接的服务器地址 - 简化版
+        /// </summary>
+        public string GetCurrentServerAddress() => _connectionManager.CurrentServerAddress;
+
+        /// <summary>
+        /// 获取当前连接的服务器端口 - 简化版
+        /// </summary>
+        public int GetCurrentServerPort() => _connectionManager.CurrentServerPort;
+
+        #endregion
+
+        #region 心跳相关公共属性和事件
+
+        /// <summary>
+        /// 心跳失败事件
+        /// 当心跳失败时触发，参数为连续失败次数
+        /// </summary>
+        public event Action<int> HeartbeatFailed;
+
+        /// <summary>
+        /// 心跳恢复事件
+        /// 当心跳从失败状态恢复时触发
+        /// </summary>
+        public event Action HeartbeatRecovered;
+
+        /// <summary>
+        /// 最后一次心跳时间
+        /// </summary>
+        public DateTime LastHeartbeatTime => _lastHeartbeatTime;
+
+        /// <summary>
+        /// 当前心跳失败次数
+        /// </summary>
+        public int CurrentHeartbeatFailedAttempts => _heartbeatFailedAttempts;
+
+        /// <summary>
+        /// 获取当前队列中的命令数量
+        /// </summary>
+        public int QueuedCommandCount => _queuedCommands.Count;
+
+        /// <summary>
+        /// 获取当前待处理响应的数量
+        /// </summary>
+        public int PendingResponseCount => _pendingRequests.Count;
+
+        #endregion
+
+
+
+        #region 构造函数
+
+        /// <summary>
+        /// 设置用户登录服务实例
+        /// </summary>
+        /// <param name="loginService">用户登录服务</param>
+        public void SetUserLoginService(UserLoginService loginService)
+        {
+            _userLoginService = loginService;
+        }
+
+        /// <summary>
+        /// 构造函数 - 集成心跳检测功能版本
+        /// </summary>
+        /// <param name="socketClient">Socket客户端</param>
+        /// <param name="connectionManager">连接管理器</param>
         /// <param name="logger">日志记录器</param>
         /// <param name="tokenManager">令牌管理器</param>
-        /// <param name="clientCommandDispatcher">客户端命令调度器</param>
-        /// <param name="heartbeatManager">心跳管理器</param>
+        /// <param name="commandDispatcher">命令调度器</param>
+        /// <param name="clientEventManager">客户端事件管理器</param>
         /// <param name="commandHandlers">命令处理器集合</param>
-        /// <param name="networkConfig">网络配置</param>
-        /// <exception cref="ArgumentNullException">当参数为null时抛出</exception>
         public ClientCommunicationService(
             ISocketClient socketClient,
+            ConnectionManager connectionManager,
             ILogger<ClientCommunicationService> logger,
             TokenManager tokenManager,
-            IClientCommandDispatcher clientCommandDispatcher,
-            HeartbeatManager heartbeatManager,
-            ClientEventManager eventManager,
-            IEnumerable<ICommandHandler> commandHandlers = null,
-            NetworkConfig networkConfig = null)
+            IClientCommandDispatcher commandDispatcher,
+            ClientEventManager clientEventManager,
+            IEnumerable<ICommandHandler> commandHandlers)
         {
+            // 参数验证
             _socketClient = socketClient ?? throw new ArgumentNullException(nameof(socketClient));
-            _commandDispatcher = clientCommandDispatcher ?? throw new ArgumentNullException(nameof(clientCommandDispatcher));
+            _connectionManager = connectionManager ?? throw new ArgumentNullException(nameof(connectionManager));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _networkConfig = networkConfig ?? NetworkConfig.Default;
-            _eventManager = eventManager ?? throw new ArgumentNullException(nameof(eventManager));
-            this.tokenManager = tokenManager;
-            _commandHandlers = commandHandlers ?? Enumerable.Empty<ICommandHandler>();
-            _heartbeatManager = heartbeatManager ?? throw new ArgumentNullException(nameof(heartbeatManager));
-            // 初始化请求响应管理相关组件
-            _timeoutStatistics = new TimeoutStatisticsManager();
-            _errorHandlingStrategyFactory = new ErrorHandlingStrategyFactory();
+            _tokenManager = tokenManager ?? throw new ArgumentNullException(nameof(tokenManager));
+            _commandDispatcher = commandDispatcher ?? throw new ArgumentNullException(nameof(commandDispatcher));
+            _clientEventManager = clientEventManager ?? throw new ArgumentNullException(nameof(clientEventManager));
+            _commandHandlers = commandHandlers ?? throw new ArgumentNullException(nameof(commandHandlers));
+
+            // 初始化心跳相关字段
+            _heartbeatFailedAttempts = 0;
+            _isHeartbeatRunning = false;
+            _lastHeartbeatTime = DateTime.MinValue;
 
             // 初始化定时清理任务
             _cleanupTimer = new Timer(CleanupTimeoutRequests, null, TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1));
 
-            // 注意：InitializeClientCommandDispatcher不再在构造函数中调用
-            // 已移至依赖注入容器的OnActivated回调中处理，以避免循环依赖
             UI.Common.HardwareInfo hardwareInfo = Startup.GetFromFac<HardwareInfo>();
-            // 生成客户端ID
             if (string.IsNullOrEmpty(_socketClient.ClientID))
             {
                 _socketClient.ClientID = hardwareInfo.GenerateClientId();
             }
 
-            // 注册事件处理程序 - 先取消订阅再订阅，避免重复订阅
+            // 订阅事件
             _socketClient.Received -= OnReceived;
             _socketClient.Received += OnReceived;
-            _socketClient.Closed -= OnClosed;
-            _socketClient.Closed += OnClosed;
 
-            // 订阅心跳失败事件 - 先取消订阅再订阅，避免重复订阅
-            _heartbeatManager.HeartbeatFailed -= OnHeartbeatFailed;
-            _heartbeatManager.HeartbeatFailed += OnHeartbeatFailed;
+            _connectionManager.ConnectionStateChanged -= OnConnectionStateChanged;
+            _connectionManager.ConnectionStateChanged += OnConnectionStateChanged;
 
-            // 订阅命令接收事件
-            SubscribeCommandEvents();
+            // 订阅连接状态变化事件以管理心跳
+            _connectionManager.ConnectionStateChanged -= OnConnectionStateChangedForHeartbeat;
+            _connectionManager.ConnectionStateChanged += OnConnectionStateChangedForHeartbeat;
+
+            // 注意：不再在构造函数中初始化命令调度器，以避免循环依赖
+            // 而是通过外部调用InitializeClientCommandDispatcherAsync方法进行初始化
+        }
+
+        #endregion
+
+
+
+        #region 命令调度器初始化方法
+
+        /// <summary>
+        /// 初始化客户端命令调度器
+        /// 此方法通过依赖注入容器调用，用于避免构造函数中的循环依赖问题
+        /// </summary>
+        /// <returns>初始化结果和注册的处理器数量</returns>
+        private async Task<(bool success, int registeredCount)> InitializeClientCommandDispatcherAsync()
+        {
+            try
+            {
+                _logger?.LogDebug("开始初始化客户端命令调度器");
+                
+                // 使用一键式初始化方法
+                var result = await _commandDispatcher.InitializeAndStartAsync();
+                
+                _logger?.LogDebug($"客户端命令调度器初始化完成，结果: {{result.success}}, 注册处理器数: {{result.registeredCount}}");
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "初始化客户端命令调度器时发生异常");
+                return (false, 0);
+            }
+        }
+
+        #endregion
+
+        #region 心跳检测相关方法
+
+        /// <summary>
+        /// 处理连接状态变化以管理心跳检测
+        /// </summary>
+        /// <param name="isConnected">是否已连接</param>
+        private void OnConnectionStateChangedForHeartbeat(bool isConnected)
+        {
+            if (isConnected)
+            {
+                // 连接成功，启动心跳
+                StartHeartbeat();
+            }
+            else
+            {
+                // 连接断开，停止心跳
+                StopHeartbeat();
+            }
+        }
+
+        /// <summary>
+        /// 启动心跳检测
+        /// </summary>
+        private void StartHeartbeat()
+        {
+            lock (_heartbeatLock)
+            {
+                if (_isHeartbeatRunning || (_heartbeatTask != null && !_heartbeatTask.IsCompleted))
+                    return;
+
+                _isHeartbeatRunning = true;
+                _heartbeatFailedAttempts = 0;
+                _heartbeatCancellationTokenSource = new CancellationTokenSource();
+
+                _heartbeatTask = Task.Run(async () => await HeartbeatLoopAsync(_heartbeatCancellationTokenSource.Token));
+                _logger?.LogInformation("心跳检测已启动，间隔：{IntervalMs}ms", _heartbeatIntervalMs);
+            }
+        }
+
+        /// <summary>
+        /// 停止心跳检测
+        /// </summary>
+        private void StopHeartbeat()
+        {
+            lock (_heartbeatLock)
+            {
+                if (!_isHeartbeatRunning)
+                    return;
+
+                _isHeartbeatRunning = false;
+                _heartbeatCancellationTokenSource?.Cancel();
+
+                try
+                {
+                    if (_heartbeatTask != null && !_heartbeatTask.IsCompleted)
+                    {
+                        _heartbeatTask.Wait(TimeSpan.FromSeconds(3));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger?.LogWarning(ex, "停止心跳任务时发生异常");
+                }
+                finally
+                {
+                    _heartbeatTask = null;
+                    _heartbeatCancellationTokenSource?.Dispose();
+                    _heartbeatCancellationTokenSource = null;
+                }
+
+                _logger?.LogInformation("心跳检测已停止");
+            }
+        }
+
+        /// <summary>
+        /// 心跳检测循环
+        /// 定期执行心跳检测
+        /// </summary>
+        private async Task HeartbeatLoopAsync(CancellationToken cancellationToken)
+        {
+            _logger?.LogDebug("进入心跳循环");
+
+            while (!cancellationToken.IsCancellationRequested && _isHeartbeatRunning)
+            {
+                try
+                {
+                    // 检查连接状态
+                    if (!_socketClient.IsConnected)
+                    {
+                        await Task.Delay(_heartbeatIntervalMs, cancellationToken);
+                        continue;
+                    }
+
+                    // 发送心跳
+                    bool success = await SendHeartbeatAsync(cancellationToken);
+
+                    lock (_heartbeatLock)
+                    {
+                        _lastHeartbeatTime = DateTime.Now;
+
+                        if (success)
+                        {
+                            // 如果之前有失败，触发恢复事件
+                            if (_heartbeatFailedAttempts > 0)
+                            {
+                                _heartbeatFailedAttempts = 0;
+                                HeartbeatRecovered?.Invoke();
+                                _logger?.LogInformation("心跳恢复");
+                            }
+                        }
+                        else
+                        {
+                            _heartbeatFailedAttempts++;
+
+                            // 触发失败事件
+                            HeartbeatFailed?.Invoke(_heartbeatFailedAttempts);
+                            _logger?.LogWarning("心跳失败，连续失败次数：{FailedAttempts}", _heartbeatFailedAttempts);
+                        }
+                    }
+                }
+                catch (OperationCanceledException)
+                {
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    _logger?.LogError(ex, "心跳循环中发生异常");
+                    lock (_heartbeatLock)
+                    {
+                        _heartbeatFailedAttempts++;
+                        HeartbeatFailed?.Invoke(_heartbeatFailedAttempts);
+                    }
+                }
+
+                await Task.Delay(_heartbeatIntervalMs, cancellationToken);
+            }
+
+            _logger?.LogDebug("退出心跳循环");
+        }
+
+        /// <summary>
+        /// 发送单个心跳请求
+        /// </summary>
+        private async Task<bool> SendHeartbeatAsync(CancellationToken cancellationToken)
+        {
+            try
+            {
+                var heartbeatRequest = new HeartbeatRequest();
+
+                // 可以根据需要添加系统信息
+                // 注意：获取系统信息可能耗时，谨慎使用
+
+                var response = await SendCommandWithResponseAsync<HeartbeatResponse>(
+                    SystemCommands.Heartbeat, heartbeatRequest, cancellationToken);
+
+                return response != null && response.IsSuccess;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogDebug(ex, "发送心跳时发生异常");
+                return false;
+            }
+        }
+
+        #endregion
+
+        #region 连接管理方法
+
+        /// <summary>
+        /// 连接到服务器 - 简化版，委托给ConnectionManager
+        /// </summary>
+        /// <param name="serverAddress">服务器地址</param>
+        /// <param name="serverPort">服务器端口</param>
+        /// <param name="cancellationToken">取消令牌</param>
+        /// <returns>连接是否成功</returns>
+        public async Task<bool> ConnectAsync(string serverAddress, int serverPort, CancellationToken cancellationToken = default)
+        {
+            _logger?.LogInformation("尝试连接到服务器 {ServerAddress}:{ServerPort}", serverAddress, serverPort);
+            return await _connectionManager.ConnectAsync(serverAddress, serverPort, cancellationToken);
+        }
+
+        /// <summary>
+        /// 断开连接 - 简化版，委托给ConnectionManager
+        /// </summary>
+        /// <returns>断开连接是否成功</returns>
+        public async Task<bool> Disconnect()
+        {
+            _logger?.LogInformation("断开服务器连接");
+
+
+            // 停止心跳
+            try
+            {
+                // 使用内部实现的StopHeartbeat方法
+                StopHeartbeat();
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogWarning(ex, "停止心跳时发生异常");
+            }
+
+            // 清除清理定时器
+            _cleanupTimer?.Dispose();
+            _cleanupTimer = null;
+
+            // 断开Socket连接
+            await _socketClient?.Disconnect();
+            return true;
 
         }
 
         /// <summary>
-        /// 更新连接状态
+        /// 连接状态变更事件处理
         /// </summary>
-        /// <param name="connected">是否已连接</param>
-        private void UpdateConnectionState(bool connected)
+        private void OnConnectionStateChanged(bool connected)
         {
-            var previousState = _isConnected;
-            _isConnected = connected;
-
-            // 如果连接状态发生变化，触发事件
-            if (previousState != connected)
+            try
             {
-                _eventManager.OnConnectionStatusChanged(connected);
+                _clientEventManager?.OnConnectionStatusChanged(connected);
 
                 if (connected)
                 {
-                    _logger.Debug("客户端已连接到服务器");
-                    // 注意：心跳将在用户登录成功后启动，而不是在连接建立时
+                    _logger?.LogInformation("客户端已连接到服务器");
 
-                    // 连接恢复后，处理队列中的请求
-                    if (_queuedCommands.Count > 0)
-                    {
-                        _logger.Debug($"连接恢复，开始处理队列中的{_queuedCommands.Count}个请求");
-                        Task.Run(() => ProcessCommandQueueAsync());
-                    }
+                    // 连接恢复时，开始处理队列中的命令
+                    _ = Task.Run(ProcessCommandQueueAsync);
                 }
                 else
                 {
-                    _logger.Debug("客户端与服务器断开连接");
-
+                    _logger?.LogInformation("客户端与服务器断开连接");
                     // 停止心跳
-                    if (_heartbeatIsRunning)
+                    try
                     {
-                        _heartbeatManager.Stop();
-                        _heartbeatIsRunning = false;
+                        // 使用内部实现的StopHeartbeat方法
+                        StopHeartbeat();
+
+                        // 释放心跳取消令牌源
+                        _heartbeatCts?.Dispose();
+                        _heartbeatCts = null;
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger?.LogWarning(ex, "停止心跳时发生异常");
                     }
                 }
             }
-        }
-
-        /// <summary>
-        /// 获取当前连接状态
-        /// </summary>
-        public bool IsConnected
-        {
-            get
+            catch (Exception ex)
             {
-                // 检查SocketClient的实际连接状态，确保与_isConnected字段同步
-                lock (_syncLock)
-                {
-                    if (_socketClient == null || _disposed)
-                        return false;
-
-                    // 检查SocketClient的实际连接状态
-                    var socketConnected = _socketClient.IsConnected;
-
-                    // 如果Socket实际已断开但_isConnected仍为true，则更新状态
-                    if (!socketConnected && _isConnected)
-                    {
-                        _logger.LogWarning("检测到Socket连接已断开，但连接状态未同步更新，正在修复...");
-                        UpdateConnectionState(false);
-                    }
-
-                    return _isConnected && socketConnected;
-                }
+                _logger?.LogError(ex, "处理连接状态变更时发生异常");
             }
         }
 
+        #endregion
 
 
 
 
-
-        /// <summary>
-        /// 获取网络配置
-        /// </summary>
-        public NetworkConfig NetworkConfig => _networkConfig;
-
-        /// <summary>
-        /// 获取当前连接的服务器地址
-        /// </summary>
-        /// <returns>当前服务器地址，如果未连接则返回空字符串</returns>
-        public string GetCurrentServerAddress()
-        {
-            lock (_syncLock)
-            {
-                return _serverAddress ?? string.Empty;
-            }
-        }
-
-        /// <summary>
-        /// 获取当前连接的服务器端口
-        /// </summary>
-        /// <returns>当前服务器端口，如果未连接则返回0</returns>
-        public int GetCurrentServerPort()
-        {
-            lock (_syncLock)
-            {
-                return _serverPort;
-            }
-        }
 
         /// <summary>
         /// 命令接收事件，当从服务器接收到命令时触发
         /// </summary>
         public event Action<PacketModel, object> CommandReceived
         {
-            add => _eventManager.CommandReceived += value;
-            remove => _eventManager.CommandReceived -= value;
+            add => _clientEventManager.CommandReceived += value;
+            remove => _clientEventManager.CommandReceived -= value;
         }
 
         /// <summary>
@@ -307,7 +561,7 @@ namespace RUINORERP.UI.Network
         /// <param name="handler">处理函数</param>
         public void SubscribeCommand(CommandId commandId, Action<PacketModel, object> handler)
         {
-            _eventManager.SubscribeCommand(commandId, handler);
+            _clientEventManager.SubscribeCommand(commandId, handler);
         }
 
         /// <summary>
@@ -317,7 +571,7 @@ namespace RUINORERP.UI.Network
         /// <param name="handler">处理函数</param>
         public void UnsubscribeCommand(CommandId commandId, Action<PacketModel, object> handler)
         {
-            _eventManager.UnsubscribeCommand(commandId, handler);
+            _clientEventManager.UnsubscribeCommand(commandId, handler);
         }
 
         /// <summary>
@@ -325,8 +579,8 @@ namespace RUINORERP.UI.Network
         /// </summary>
         public event Action ReconnectFailed
         {
-            add => _eventManager.ReconnectFailed += value;
-            remove => _eventManager.ReconnectFailed -= value;
+            add => _clientEventManager.ReconnectFailed += value;
+            remove => _clientEventManager.ReconnectFailed -= value;
         }
 
         /// <summary>
@@ -334,308 +588,13 @@ namespace RUINORERP.UI.Network
         /// </summary>
         public event Action<bool> ConnectionStateChanged
         {
-            add => _eventManager.ConnectionStatusChanged += value;
-            remove => _eventManager.ConnectionStatusChanged -= value;
-        }
-
-        /// <summary>
-        /// 异步连接到服务器
-        /// </summary>
-        /// <param name="serverUrl">服务器URL或IP地址</param>
-        /// <param name="port">服务器端口号</param>
-        /// <param name="ct">取消令牌</param>
-        /// <returns>连接成功返回true，失败返回false</returns>
-        public async Task<bool> ConnectAsync(string serverUrl, int port, CancellationToken ct = default)
-        {
-            // 使用信号量确保同一时间只有一个连接尝试
-            await _connectionLock.WaitAsync(ct);
-            try
-            {
-                if (string.IsNullOrEmpty(serverUrl))
-                    throw new ArgumentException("服务器URL不能为空", nameof(serverUrl));
-
-                if (port <= 0 || port > 65535)
-                    throw new ArgumentOutOfRangeException(nameof(port), "端口号必须在1-65535范围内");
-
-                return await SafeConnectAsync(serverUrl, port, ct);
-            }
-            finally
-            {
-                _connectionLock.Release();
-            }
-        }
-
-        /// <summary>
-        /// 断开与服务器的连接 - 增强状态同步验证
-        /// </summary>
-        /// <returns>断开连接是否成功</returns>
-        public async Task<bool> Disconnect()
-        {
-            bool shouldDisconnect;
-            lock (_syncLock)
-            {
-                shouldDisconnect = _isConnected && !_disposed;
-            }
-
-            if (shouldDisconnect)
-            {
-                try
-                {
-                    // 验证Socket实际状态
-                    if (_socketClient.IsConnected)
-                    {
-                        var disconnectResult = await _socketClient.Disconnect();
-                        _logger.Debug($"主动断开与服务器的连接，结果: {disconnectResult}");
-                        
-                        // 使用统一的连接状态更新方法
-                        UpdateConnectionState(false);
-                        return disconnectResult;
-                    }
-                    else
-                    {
-                        _logger.LogWarning("尝试断开连接时发现Socket已处于断开状态");
-                        
-                        // 使用统一的连接状态更新方法
-                        UpdateConnectionState(false);
-                        return true;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "断开连接时发生错误");
-                    _eventManager.OnErrorOccurred(new Exception($"断开连接时发生错误: {ex.Message}", ex));
-                    
-                    // 使用统一的连接状态更新方法
-                    UpdateConnectionState(false);
-                    return false;
-                }
-            }
-            
-            return true;
-        }
-
-        /// <summary>
-        /// 安全连接异步方法
-        /// </summary>
-        /// <param name="serverUrl">服务器URL</param>
-        /// <param name="port">服务器端口</param>
-        /// <param name="ct">取消令牌</param>
-        /// <returns>连接成功返回true，失败返回false</returns>
-        private async Task<bool> SafeConnectAsync(string serverUrl, int port, CancellationToken ct)
-        {
-            // 首先检查SocketClient的实际连接状态
-            bool socketClientConnected = _socketClient.IsConnected;
-            
-            lock (_syncLock)
-            {
-                // 更新服务器地址和端口信息
-                _serverAddress = serverUrl;
-                _serverPort = port;
-                
-                // 如果标志显示已连接，但实际连接状态不同步，进行调整
-                if (_isConnected != socketClientConnected)
-                {
-                    _logger?.LogWarning("连接状态不同步，标志: {IsConnected}, 实际: {SocketConnected}", 
-                        _isConnected, socketClientConnected);
-                    _isConnected = socketClientConnected;
-                }
-            }
-            
-            // 确保在尝试新连接前断开任何现有连接
-            if (socketClientConnected)
-            {
-                _logger?.LogWarning("检测到已存在的连接，在建立新连接前先断开");
-                await _socketClient.Disconnect();
-                
-                // 确保状态标志同步
-                lock (_syncLock)
-                {
-                    _isConnected = false;
-                }
-            }
-
-            try
-            {
-                // 调用SocketClient连接方法
-                bool connected = await _socketClient.ConnectAsync(serverUrl, port, ct).ConfigureAwait(false);
-                
-                if (connected)
-                {
-                    lock (_syncLock)
-                    {
-                        _heartbeatFailureCount = 0;
-                        _isConnected = true;
-                        // 使用统一的连接状态更新方法
-                        UpdateConnectionState(true);
-                    }
-                    _logger?.LogInformation("成功连接到服务器: {ServerUrl}:{Port}", serverUrl, port);
-                }
-                else
-                {
-                    _logger?.LogError("连接服务器失败: {ServerUrl}:{Port}", serverUrl, port);
-                }
-
-                return connected;
-            }
-            catch (Exception ex)
-            {
-                _eventManager.OnErrorOccurred(new Exception($"连接到服务器失败: {ex.Message}", ex));
-                _logger.LogError(ex, "连接服务器时发生错误: {ServerUrl}:{Port}", serverUrl, port);
-                
-                // 确保状态正确设置
-                lock (_syncLock)
-                {
-                    _isConnected = false;
-                }
-                
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// 在用户登录成功后启动心跳
-        /// </summary>
-        /// <param name="cancellationToken">取消令牌</param>
-        /// <returns>启动心跳的任务</returns>
-        public async Task StartHeartbeatAfterLoginAsync(CancellationToken cancellationToken = default)
-        {
-            try
-            {
-                // 确保连接已建立
-                if (!_isConnected)
-                {
-                    _logger?.LogWarning("尝试启动心跳，但连接未建立");
-                    return;
-                }
-
-                // 确保心跳未运行
-                if (_heartbeatIsRunning)
-                {
-                    _logger?.LogDebug("心跳已在运行，无需重复启动");
-                    return;
-                }
-
-                // 启动心跳
-
-                _heartbeatManager.Start();
-                _heartbeatIsRunning = true;
-
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "启动心跳时发生错误");
-                _eventManager.OnErrorOccurred(new Exception($"启动心跳失败: {ex.Message}", ex));
-                throw;
-            }
+            add => _clientEventManager.ConnectionStatusChanged += value;
+            remove => _clientEventManager.ConnectionStatusChanged -= value;
         }
 
 
 
 
-
-        /// <summary>
-        /// 处理命令队列中的请求
-        /// </summary>
-        private async Task ProcessCommandQueueAsync()
-        {
-            // 使用信号量确保同一时间只有一个处理队列的任务在运行
-            if (!await _queueProcessingLock.WaitAsync(0))
-                return;
-
-            try
-            {
-                _isProcessingQueue = true;
-                _logger.Debug("开始处理命令队列");
-
-                while (!_queuedCommands.IsEmpty && _isConnected)
-                {
-                    if (!_queuedCommands.TryDequeue(out var queuedCommand))
-                        continue;
-
-                    // 检查是否已取消
-                    if (queuedCommand.CancellationToken.IsCancellationRequested)
-                    {
-                        if (queuedCommand.IsResponseCommand)
-                        {
-                            queuedCommand.ResponseCompletionSource.TrySetCanceled();
-                        }
-                        else
-                        {
-                            queuedCommand.CompletionSource.TrySetResult(false);
-                        }
-                        continue;
-                    }
-
-                    try
-                    {
-                        if (queuedCommand.IsResponseCommand)
-                        {
-                            // 处理带响应的命令
-                            _logger.Debug("处理队列中的带响应命令: {CommandId}", queuedCommand.CommandId.Name);
-
-                            // 调用SendCommandAsync方法
-                            // 不管响应？
-                            var result = await SendCommandAsync(
-                                queuedCommand.CommandId,
-                                queuedCommand.Data as IRequest,
-                                queuedCommand.CancellationToken,
-                                queuedCommand.TimeoutMs);
-
-                            // 设置任务结果
-                            queuedCommand.ResponseCompletionSource.TrySetResult(result);
-                        }
-                        else
-                        {
-                            // 处理单向命令
-                            // 动态调用SendOneWayCommandAsync方法
-                            var method = GetType().GetMethod(
-                                nameof(SendOneWayCommandAsync),
-                                BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public,
-                                null,
-                                new[] { typeof(CommandId), queuedCommand.DataType, typeof(CancellationToken) },
-                                null);
-
-                            if (method != null)
-                            {
-                                var genericMethod = method.MakeGenericMethod(queuedCommand.DataType);
-                                var result = (Task<bool>)genericMethod.Invoke(this, new object[]
-                                { queuedCommand.CommandId, queuedCommand.Data, queuedCommand.CancellationToken });
-
-                                bool success = await result;
-                                queuedCommand.CompletionSource.TrySetResult(success);
-                            }
-                            else
-                            {
-                                _logger.LogError("找不到SendOneWayCommandAsync方法");
-                                queuedCommand.CompletionSource.TrySetResult(false);
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, "处理队列命令时发生错误: {CommandId}", queuedCommand.CommandId.Name);
-                        if (queuedCommand.IsResponseCommand)
-                        {
-                            queuedCommand.ResponseCompletionSource.TrySetException(ex);
-                        }
-                        else
-                        {
-                            queuedCommand.CompletionSource.TrySetResult(false);
-                        }
-                    }
-
-                    // 添加短暂延迟，避免大量请求同时发送
-                    await Task.Delay(QueueProcessingDelayMs);
-                }
-
-                _logger.Debug("命令队列处理完成");
-            }
-            finally
-            {
-                _isProcessingQueue = false;
-                _queueProcessingLock.Release();
-            }
-        }
 
         /// <summary>
         /// 判断异常是否支持重试
@@ -741,7 +700,6 @@ namespace RUINORERP.UI.Network
 
                 if (completedTask == timeoutTask)
                 {
-                    _timeoutStatistics.RecordTimeout(commandId.ToString(), timeoutMs);
                     throw new TimeoutException($"请求超时（{timeoutMs}ms），指令类型：{commandId.ToString()}，请求ID: {request.RequestId}");
                 }
 
@@ -752,7 +710,7 @@ namespace RUINORERP.UI.Network
                 if (responsePacket != null)
                 {
                     // 记录请求完成事件
-                    _eventManager.OnRequestCompleted(request.RequestId, DateTime.UtcNow - pendingRequest.CreatedAt);
+                    _clientEventManager.OnRequestCompleted(request.RequestId, DateTime.UtcNow - pendingRequest.CreatedAt);
                 }
 
                 // 直接进行类型检查并返回响应包
@@ -781,31 +739,31 @@ namespace RUINORERP.UI.Network
             {
                 return 5000; // 缓存请求5秒超时
             }
-            
+
             // 认证相关请求设置较短超时
             if (commandId.Name.Contains("Auth") || commandId.Name.Contains("Login"))
             {
                 return 8000; // 认证请求8秒超时
             }
-            
+
             // 查询相关请求
             if (commandId.Name.Contains("Query") || commandId.Name.Contains("Search"))
             {
                 return 10000; // 查询请求10秒超时
             }
-            
+
             // 数据保存相关请求
             if (commandId.Name.Contains("Save") || commandId.Name.Contains("Update") || commandId.Name.Contains("Delete"))
             {
                 return 15000; // 保存/更新/删除请求15秒超时
             }
-            
+
             // 报表相关请求
             if (commandId.Name.Contains("Report") || commandId.Name.Contains("Export"))
             {
                 return 30000; // 报表/导出请求30秒超时
             }
-            
+
             // 默认超时时间
             return 20000; // 默认20秒超时
         }
@@ -828,10 +786,10 @@ namespace RUINORERP.UI.Network
             try
             {
                 // 使用null条件运算符简化检查
-                if (tokenManager?.TokenStorage == null) return;
+                if (_tokenManager?.TokenStorage == null) return;
 
                 // 获取令牌并验证有效性
-                var tokenInfo = await tokenManager.TokenStorage.GetTokenAsync();
+                var tokenInfo = await _tokenManager.TokenStorage.GetTokenAsync();
 
                 // 简化条件判断并设置访问令牌
                 if (tokenInfo?.AccessToken != null)
@@ -869,7 +827,7 @@ namespace RUINORERP.UI.Network
                     return;
                 }
 
-                if (packet.CommandId!=SystemCommands.Heartbeat)
+                if (packet.CommandId != SystemCommands.Heartbeat)
                 {
 
                 }
@@ -897,7 +855,7 @@ namespace RUINORERP.UI.Network
             catch (Exception ex)
             {
                 _logger.LogError(ex, "处理接收到的数据时发生错误");
-                _eventManager.OnErrorOccurred(new Exception($"处理接收到的数据时发生错误: {ex.Message}", ex));
+                _clientEventManager.OnErrorOccurred(new Exception($"处理接收到的数据时发生错误: {ex.Message}", ex));
             }
         }
 
@@ -964,10 +922,10 @@ namespace RUINORERP.UI.Network
             try
             {
                 // 优先使用事件机制处理命令
-                _eventManager.OnServerPushCommandReceived(packet, packet.Response);
+                _clientEventManager.OnServerPushCommandReceived(packet, packet.Response);
 
                 // 只有在没有事件订阅者时才使用调度器处理
-                if (!_eventManager.HasCommandSubscribers(packet))
+                if (!_clientEventManager.HasCommandSubscribers(packet))
                 {
                     await ProcessCommandAsync(packet);
                 }
@@ -975,7 +933,7 @@ namespace RUINORERP.UI.Network
             catch (Exception ex)
             {
                 _logger.LogError(ex, "处理服务器主动推送命令时发生错误: {CommandId}", packet.CommandId);
-                _eventManager.OnErrorOccurred(new Exception($"处理推送命令 {packet.CommandId} 时发生错误: {ex.Message}", ex));
+                _clientEventManager.OnErrorOccurred(new Exception($"处理推送命令 {packet.CommandId} 时发生错误: {ex.Message}", ex));
             }
         }
 
@@ -995,7 +953,7 @@ namespace RUINORERP.UI.Network
             catch (Exception ex)
             {
                 _logger.LogError(ex, "处理通用命令 {CommandId} 时发生错误", packet.CommandId);
-                _eventManager.OnErrorOccurred(new Exception($"处理通用命令 {packet.CommandId} 时发生错误: {ex.Message}", ex));
+                _clientEventManager.OnErrorOccurred(new Exception($"处理通用命令 {packet.CommandId} 时发生错误: {ex.Message}", ex));
             }
         }
 
@@ -1006,12 +964,14 @@ namespace RUINORERP.UI.Network
         private void CleanupTimeoutRequests(object state)
         {
             var now = DateTime.UtcNow;
-            var cut = now.AddMinutes(-5);
             var removedCount = 0;
+            var queuedRemovedCount = 0;
 
+            // 清理超时的待处理响应
+            var responseCut = now.AddMinutes(-5);
             foreach (var kv in _pendingRequests)
             {
-                if (kv.Value.CreatedAt < cut && _pendingRequests.TryRemove(kv.Key, out var pr))
+                if (kv.Value.CreatedAt < responseCut && _pendingRequests.TryRemove(kv.Key, out var pr))
                 {
                     pr.Tcs.TrySetException(new TimeoutException($"请求 {kv.Key} 超时"));
                     removedCount++;
@@ -1019,412 +979,59 @@ namespace RUINORERP.UI.Network
                 }
             }
 
+            // 清理超时的队列命令（超过10分钟）
+            var queueCut = now.AddMinutes(-10);
+            var tempQueue = new List<ClientQueuedCommand>();
+
+            // 从队列中取出所有命令进行清理
+            while (_queuedCommands.TryDequeue(out var queuedCommand))
+            {
+                if (queuedCommand.CreatedAt < queueCut)
+                {
+                    // 超时命令，取消并记录
+                    queuedCommand.CompletionSource?.TrySetException(new TimeoutException($"队列命令 {queuedCommand.CommandId} 超时"));
+                    queuedCommand.ResponseCompletionSource?.TrySetException(new TimeoutException($"队列响应命令 {queuedCommand.CommandId} 超时"));
+                    queuedRemovedCount++;
+                    _logger?.LogDebug("清理超时队列命令: {CommandId}, 创建时间: {CreatedAt}, 超时时间: 10分钟",
+                        queuedCommand.CommandId, queuedCommand.CreatedAt);
+                }
+                else
+                {
+                    // 未超时命令，重新加入队列
+                    tempQueue.Add(queuedCommand);
+                }
+            }
+
+            // 将未超时的命令重新加入队列
+            foreach (var command in tempQueue)
+            {
+                _queuedCommands.Enqueue(command);
+            }
+
             if (removedCount > 0)
             {
                 _logger?.LogDebug("清理了 {RemovedCount} 个超时请求", removedCount);
             }
-        }
 
-        /// <summary>
-        /// 发送请求并等待响应，支持重试策略（合并自RequestResponseManager）
-        /// </summary>
-        /// <typeparam name="TRequest">请求数据类型</typeparam>
-        /// <typeparam name="TResponse">响应数据类型</typeparam>
-        /// <param name="request">命令对象</param>
-        /// <param name="retryStrategy">重试策略，如果为null则使用默认策略</param>
-        /// <param name="ct">取消令牌</param>
-        /// <param name="timeoutMs">单次请求超时时间（毫秒），默认30000毫秒</param>
-        /// <returns>包含响应数据的ApiResponse对象</returns>
-        /// <exception cref="ArgumentException">当命令类别无效时抛出</exception>
-        /// <exception cref="ArgumentOutOfRangeException">当超时时间小于等于0时抛出</exception>
-        public async Task<PacketModel> SendRequestWithRetryAsync<TRequest, TResponse>(
-            CommandId commandId,
-            TRequest request,
-            IRetryStrategy retryStrategy = null,
-            CancellationToken ct = default,
-            int timeoutMs = 30000)
-            where TRequest : class, IRequest
-            where TResponse : class, IResponse
-        {
-            if (!Enum.IsDefined(typeof(CommandCategory), commandId.Category))
-                throw new ArgumentException($"无效的命令类别: {commandId.Category}", commandId.Name);
-
-            if (timeoutMs <= 0)
-                throw new ArgumentOutOfRangeException(nameof(timeoutMs), "超时时间必须大于0");
-
-            //// 使用默认重试策略如果没有提供
-            //retryStrategy ??= _errorHandlingStrategyFactory.GetDefaultRetryStrategy();
-
-            // 如果没有提供重试策略，使用默认策略
-            if (retryStrategy == null)
+            if (queuedRemovedCount > 0)
             {
-                retryStrategy = new ExponentialBackoffRetryStrategy(100);
-            }
-
-
-            var attempt = 0;
-            Exception lastException = null;
-            while (attempt < _networkConfig.MaxRetryAttempts)
-            {
-                attempt++;
-
-                try
-                {
-                    _logger?.LogDebug("发送请求尝试 {Attempt}/{MaxRetries}", attempt, _networkConfig.MaxRetryAttempts);
-                    var response = await SendRequestAsync<TRequest, TResponse>(commandId, request, ct, timeoutMs);
-                    return response;
-                }
-                catch (Exception ex)
-                {
-                    lastException = ex;
-                    var errorType = IdentifyErrorType(ex);
-
-                    _logger?.LogWarning(ex, "请求失败（尝试 {Attempt}/{MaxRetries}），错误类型: {ErrorType}",
-                        attempt, _networkConfig.MaxRetryAttempts, errorType);
-
-                    // 检查是否应该重试
-                    if (!IsRetryableException(ex) || attempt >= _networkConfig.MaxRetryAttempts)
-                    {
-                        _logger?.LogError(ex, "请求最终失败，不再重试");
-                        throw new InvalidOperationException($"请求失败（尝试 {attempt} 次），错误: {ex.Message}", ex);
-                    }
-
-                    // 等待重试延迟
-                    if (attempt < _networkConfig.MaxRetryAttempts)
-                    {
-                        var delay = retryStrategy.GetNextDelay(attempt);
-                        _logger?.LogDebug("等待 {DelayMs}ms 后进行第 {NextAttempt} 次重试",
-                            delay, attempt + 1);
-                        await Task.Delay(delay, ct);
-                    }
-                }
-            }
-
-            throw new InvalidOperationException($"请求失败（尝试 {attempt} 次），错误: {lastException?.Message}", lastException);
-        }
-
-
-        /// 异步发送命令到服务器并等待响应
-        /// </summary>
-        /// <typeparam name="TRequest">请求数据类型</typeparam>
-        /// <typeparam name="TResponse">响应数据类型</typeparam>
-        /// <param name="command">命令对象</param>
-        /// <param name="ct">取消令牌</param>
-        /// <param name="timeoutMs">超时时间（毫秒），默认为30000毫秒</param>
-        /// <returns>TResponse</returns>
-        public async Task<PacketModel> SendCommandAsync(
-            CommandId commandId,
-             IRequest request,
-            CancellationToken ct = default,
-            int timeoutMs = 30000)
-        {
-            if (!Enum.IsDefined(typeof(CommandCategory), commandId.Category))
-                throw new ArgumentException($"无效的命令类别: {commandId.Category}", nameof(commandId.Name));
-
-            return await EnsureConnectedAsync<PacketModel>(async () =>
-            {
-                try
-                {
-                    // BaseCommand会自动处理Token管理，包括获取和刷新Token
-                    return await SendRequestAsync<IRequest, IResponse>(commandId, request, ct, timeoutMs);
-                }
-                catch (Exception ex) when (ex.Message.IndexOf("token expired", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                   ex.Message.IndexOf("unauthorized", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                   ex.Message.IndexOf("认证失败", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                   ex.Message.IndexOf("未授权", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                   ex.Message.IndexOf("权限不足", StringComparison.OrdinalIgnoreCase) >= 0)
-                {
-                    // Token过期情况，现在由BaseCommand统一处理
-                    _logger.LogWarning("检测到Token过期，BaseCommand会自动处理刷新");
-                    throw; // 抛出异常，让调用方处理或让BaseCommand的机制处理
-                }
-            });
-        }
-
-
-
-
-        /// <summary>
-        /// 确保连接状态正常并执行操作
-        /// </summary>
-        /// <typeparam name="TResult">操作结果类型</typeparam>
-        /// <param name="operation">要执行的操作</param>
-        /// <returns>操作结果</returns>
-        private async Task<TResult> EnsureConnectedAsync<TResult>(Func<Task<TResult>> operation)
-        {
-            // 检查连接状态，如果断开且启用了自动重连，则尝试重连
-            if (!_isConnected && _networkConfig.AutoReconnect)
-            {
-                _logger.Debug("检测到连接断开，尝试自动重连");
-                // 尝试重连并等待结果
-                bool reconnected = await TryReconnectAsync().ConfigureAwait(false);
-
-                // 如果重连失败，抛出异常
-                if (!reconnected)
-                {
-                    var errorMsg = "未连接到服务器，重连失败";
-                    _eventManager.OnErrorOccurred(new InvalidOperationException(errorMsg));
-                    _logger.LogError(errorMsg);
-                    throw new InvalidOperationException(errorMsg);
-                }
-            }
-            // 如果未启用自动重连但连接已断开，直接抛出异常
-            else if (!_isConnected)
-            {
-                var errorMsg = "未连接到服务器";
-                _eventManager.OnErrorOccurred(new InvalidOperationException(errorMsg));
-                _logger.LogError(errorMsg);
-                throw new InvalidOperationException(errorMsg);
-            }
-
-            try
-            {
-                return await operation().ConfigureAwait(false);
-            }
-            catch (Exception ex) when (!(ex is OperationCanceledException))
-            {
-                _eventManager.OnErrorOccurred(ex);
-                _logger.LogError(ex, $"操作执行失败: {ex.Message}", operation.Method.Name);
-
-                // 检查是否是网络异常，如果是则尝试重连
-                if (_networkConfig.AutoReconnect && !_isConnected)
-                {
-                    _logger.Debug("连接已断开，尝试自动重连");
-                    await TryReconnectAsync().ConfigureAwait(false);
-                }
-
-                throw;
-            }
-        }
-
-        /// <summary>
-        /// 确保连接状态正常并执行无返回值操作
-        /// </summary>
-        /// <param name="operation">要执行的操作</param>
-        private async Task EnsureConnectedAsync(Func<Task> operation) =>
-            await EnsureConnectedAsync(async () =>
-            {
-                await operation().ConfigureAwait(false);
-                return true;
-            }).ConfigureAwait(false);
-
-
-        /// <summary>
-        /// 尝试重连到服务器
-        /// </summary>
-        /// <returns>重连成功返回true，失败返回false</returns>
-        private async Task<bool> TryReconnectAsync()
-        {
-            if (!_networkConfig.AutoReconnect || _disposed || string.IsNullOrEmpty(_serverAddress))
-                return false;
-
-            _logger.Debug("开始尝试重连服务器...");
-
-            for (int attempt = 0; attempt < _networkConfig.MaxReconnectAttempts; attempt++)
-            {
-                if (_disposed)
-                    break;
-
-                _logger.Debug($"重连尝试 {attempt + 1}/{_networkConfig.MaxReconnectAttempts}");
-
-                try
-                {
-                    // 使用连接锁确保不会并发重连
-                    await _connectionLock.WaitAsync();
-                    try
-                    {
-                        // 检查连接状态和Socket实际状态，确保状态同步
-                        bool socketActuallyConnected = false;
-                        try
-                        {
-                            socketActuallyConnected = _socketClient.IsConnected;
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogWarning(ex, "检查Socket实际连接状态时发生异常，假设连接已断开");
-                        }
-
-                        // 如果Socket实际处于连接状态但本地标志显示未连接，或者本地标志显示已连接
-                        if (socketActuallyConnected || _isConnected)
-                        {
-                            // 如果Socket实际处于连接状态，先断开连接
-                            if (socketActuallyConnected)
-                            {
-                                _logger.Debug("检测到Socket实际处于连接状态，先断开连接再重连");
-                                try
-                                {
-                                    var disconnectResult = await _socketClient.Disconnect();
-                                    _logger.Debug($"重连前断开旧连接结果: {disconnectResult}");
-                                }
-                                catch (Exception ex)
-                                {
-                                    _logger.LogWarning(ex, "重连前断开旧连接失败，但将继续尝试重连");
-                                }
-                            }
-                            
-                            // 更新连接状态标志
-                            if (_isConnected)
-                            {
-                                UpdateConnectionState(false);
-                            }
-                        }
-
-                        if (await _socketClient.ConnectAsync(_serverAddress, _serverPort, CancellationToken.None).ConfigureAwait(false))
-                        {
-                            lock (_syncLock)
-                            {
-                                _heartbeatFailureCount = 0;
-                                // 使用统一的连接状态更新方法
-                                UpdateConnectionState(true);
-                            }
-
-                            _logger.Debug("服务器重连成功");
-                            // 通过UpdateConnectionState方法会触发连接状态变更事件
-                            // UserLoginService可以订阅此事件并自行处理认证恢复
-                            return true;
-                        }
-                    }
-                    finally
-                    {
-                        _connectionLock.Release();
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "重连失败");
-                    _eventManager.OnErrorOccurred(new Exception($"重连尝试 {attempt + 1} 失败: {ex.Message}", ex));
-                }
-
-                // 等待重连延迟
-                if (attempt < _networkConfig.MaxReconnectAttempts - 1)
-                {
-                    _logger.Debug($"等待 {_networkConfig.ReconnectDelay.TotalSeconds} 秒后进行下一次重连");
-                    await Task.Delay(_networkConfig.ReconnectDelay, CancellationToken.None).ConfigureAwait(false);
-                }
-            }
-
-            _logger.LogError("达到最大重连尝试次数，重连失败");
-            _eventManager.OnErrorOccurred(new Exception("重连服务器失败: 达到最大尝试次数"));
-
-            // 触发重连失败事件，通知UI层进行注销锁定处理
-            _eventManager.OnReconnectFailed();
-
-            return false;
-        }
-
-
-        /// <summary>
-        /// 处理心跳包失败 - 增强状态同步检查（异步版本）
-        /// </summary>
-        private async Task HandleHeartbeatFailureAsync(Exception exception)
-        {
-            bool shouldDisconnect = false;
-            
-            lock (_syncLock)
-            {
-                _heartbeatFailureCount++;
-                _logger.LogWarning($"心跳包失败次数: {_heartbeatFailureCount}/{_networkConfig.MaxHeartbeatFailures}");
-
-                if (_heartbeatFailureCount >= _networkConfig.MaxHeartbeatFailures)
-                {
-                    _logger.LogError("心跳包连续失败，断开连接并尝试重连");
-
-                    // 断开连接前检查实际Socket状态
-                    if (_isConnected)
-                    {
-                        // 验证Socket实际状态
-                        if (_socketClient.IsConnected)
-                        {
-                            shouldDisconnect = true;
-                        }
-                        else
-                        {
-                            _logger.LogWarning("检测到Socket已断开，但连接状态未同步，立即更新状态");
-                        }
-
-                        // 使用统一的连接状态更新方法
-                        UpdateConnectionState(false);
-                    }
-                }
-            }
-
-            // 在lock外部执行异步断开操作
-            if (shouldDisconnect)
-            {
-                var disconnectResult = await _socketClient.Disconnect();
-                _logger.LogError($"心跳包连续失败，断开连接结果: {disconnectResult}");
-            }
-
-            // 尝试重连（在lock外部）
-            lock (_syncLock)
-            {
-                if (_heartbeatFailureCount >= _networkConfig.MaxHeartbeatFailures)
-                {
-                    // 无论是否自动重连，都先触发锁定功能
-                    _logger.LogWarning("心跳连续失败次数达到阈值，触发客户端锁定");
-                    _eventManager.OnReconnectFailed();
-                    
-                    // 如果配置了自动重连，则尝试重连
-                    if (_networkConfig.AutoReconnect && !_disposed)
-                    {
-                        Task.Run(() => TryReconnectAsync());
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// 处理心跳失败事件（异步版本）
-        /// </summary>
-        private async void OnHeartbeatFailed(Exception exception)
-        {
-            try
-            {
-                await HandleHeartbeatFailureAsync(exception);
-            }
-            catch (Exception ex)
-            {
-                _eventManager.OnErrorOccurred(ex);
-                _logger.LogError(ex, "处理心跳失败事件时发生异常");
+                _logger?.LogDebug("清理了 {RemovedCount} 个超时队列命令", queuedRemovedCount);
             }
         }
 
 
 
 
-        /// <summary>
-        /// 初始化客户端命令调度器
-        /// </summary>
-        private async Task InitializeClientCommandDispatcherAsync()
-        {
-            try
-            {
-                // 使用一键式初始化方法，替代单独调用InitializeAsync和StartAsync
-                var result = await _commandDispatcher.InitializeAndStartAsync();
 
-                _logger.LogDebug("客户端命令调度器初始化并启动成功，共注册{HandlerCount}个处理器", result.success ? result.registeredCount : 0);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "初始化客户端命令调度器失败");
-            }
-        }
 
- 
 
-        /// <summary>
-        /// 发送带响应的命令
-        /// </summary>
-        /// <typeparam name="TResponse">响应类型</typeparam>
-        /// <param name="command">命令标识符</param>
-        /// <param name="request">请求对象</param>
-        /// <param name="cancellationToken">取消令牌</param>
-        /// <returns>响应对象</returns>
-        //public async Task<TResponse> SendCommandWithResponseAsync<TResponse>(CommandId command, MessageRequest request, CancellationToken cancellationToken = default) where TResponse : class, RUINORERP.PacketSpec.Models.Responses.IResponse
-        //{
-        //    // 委托给现有的SendCommandWithResponseAsync方法，使用正确的参数顺序
-        //    return await SendCommandWithResponseAsync<TResponse>(command, request, cancellationToken, 5000).ConfigureAwait(false);
-        //}
+
+
+
+
+
+
+
 
         /// <summary>
         /// 处理接收到的命令
@@ -1476,7 +1083,7 @@ namespace RUINORERP.UI.Network
             }
             catch (Exception ex)
             {
-                _eventManager.OnErrorOccurred(new Exception($"处理命令 {packet.CommandId} 时发生错误: {ex.Message}", ex));
+                _clientEventManager.OnErrorOccurred(new Exception($"处理命令 {packet.CommandId} 时发生错误: {ex.Message}", ex));
                 _logger.LogError(ex, "处理命令 {CommandId} 时发生错误", packet.CommandId);
             }
         }
@@ -1553,11 +1160,11 @@ namespace RUINORERP.UI.Network
             // 处理系统命令，如心跳响应等
             if (packet.CommandId.FullCode == SystemCommands.Heartbeat.FullCode)
             {
-                // 处理心跳响应，重置失败计数
-                lock (_syncLock)
-                {
-                    _heartbeatFailureCount = 0;
-                }
+                //// 处理心跳响应，重置失败计数
+                //lock (_syncLock)
+                //{
+                //    _heartbeatFailureCount = 0;
+                //}
                 _logger.LogDebug("收到心跳响应，重置心跳失败计数");
             }
             else
@@ -1710,53 +1317,8 @@ namespace RUINORERP.UI.Network
                     _logger.LogWarning("尝试发送单向命令但连接已断开，命令ID: {CommandId}", commandId);
 
                     // 如果启用了自动重连，将请求加入队列
-                    if (_networkConfig.AutoReconnect && !_disposed)
-                    {
-                        _logger.Debug($"连接已断开，将命令{commandId.Name}加入队列等待发送");
 
-                        // 创建任务完成源
-                        var tcs = new TaskCompletionSource<bool>();
-
-                        // 将请求加入队列
-                        _queuedCommands.Enqueue(new ClientQueuedCommand
-                        {
-                            CommandId = commandId,
-                            Data = request,
-                            CancellationToken = ct,
-                            DataType = typeof(TRequest),
-                            CompletionSource = tcs
-                        });
-
-                        // 在后台尝试重连
-                        _ = Task.Run(() => TryReconnectAsync());
-
-                        // 返回任务结果，让调用者等待连接恢复后发送
-                        return await tcs.Task;
-                    }
-                    return false;
-                }
-
-                if (_disposed)
-                    throw new ObjectDisposedException(nameof(ClientCommunicationService));
-
-                // 使用现有的SendPacketCoreAsync发送请求
-                await SendPacketCoreAsync<TRequest>(_socketClient, commandId, request, _networkConfig.DefaultRequestTimeoutMs, ct);
-
-                return true;
-            }
-            catch (OperationCanceledException)
-            {
-                _eventManager.OnErrorOccurred(new Exception("发送命令操作被取消"));
-                return false;
-            }
-            catch (Exception ex)
-            {
-                _eventManager.OnErrorOccurred(new Exception($"单向命令发送失败: {ex.Message}", ex));
-
-                // 检查是否因为连接断开导致的异常
-                if (_networkConfig.AutoReconnect && !_disposed && IsRetryableException(ex))
-                {
-                    _logger.Debug($"因网络异常，将命令{commandId.Name}加入队列等待发送");
+                    _logger.Debug($"连接已断开，将命令{commandId.Name}加入队列等待发送");
 
                     // 创建任务完成源
                     var tcs = new TaskCompletionSource<bool>();
@@ -1768,15 +1330,36 @@ namespace RUINORERP.UI.Network
                         Data = request,
                         CancellationToken = ct,
                         DataType = typeof(TRequest),
-                        CompletionSource = tcs
+                        CompletionSource = tcs,
+                        CreatedAt = DateTime.UtcNow,
+                        IsResponseCommand = false,
+                        TimeoutMs = 20000
                     });
 
-                    // 在后台尝试重连
-                    _ = Task.Run(() => TryReconnectAsync());
+                    // 启动队列处理（如果未启动）
+                    _ = Task.Run(ProcessCommandQueueAsync);
 
                     // 返回任务结果，让调用者等待连接恢复后发送
                     return await tcs.Task;
+
                 }
+
+                if (_disposed)
+                    throw new ObjectDisposedException(nameof(ClientCommunicationService));
+
+                // 使用现有的SendPacketCoreAsync发送请求
+                await SendPacketCoreAsync<TRequest>(_socketClient, commandId, request, 20000, ct);
+
+                return true;
+            }
+            catch (OperationCanceledException)
+            {
+                _clientEventManager.OnErrorOccurred(new Exception("发送命令操作被取消"));
+                return false;
+            }
+            catch (Exception ex)
+            {
+                _clientEventManager.OnErrorOccurred(new Exception($"单向命令发送失败: {ex.Message}", ex));
                 return false;
             }
         }
@@ -1786,22 +1369,10 @@ namespace RUINORERP.UI.Network
         /// </summary>
         private void OnClosed(EventArgs eventArgs)
         {
-            lock (_syncLock)
-            {
-                // 只有在当前状态为连接时才处理断开连接
-                if (_isConnected)
-                {
-                    // 使用统一的连接状态更新方法
-                    UpdateConnectionState(false);
 
-                    // 尝试重连
-                    if (_networkConfig.AutoReconnect && !_disposed)
-                    {
-                        _logger.Debug("自动重连已启用，尝试重连服务器");
-                        Task.Run(() => TryReconnectAsync());
-                    }
-                }
-            }
+
+
+
         }
 
 
@@ -1835,7 +1406,7 @@ namespace RUINORERP.UI.Network
             catch (Exception ex)
             {
                 _logger.LogError(ex, "处理服务器命令时发生错误: {CommandId}", packetModel.CommandId);
-                _eventManager.OnErrorOccurred(new Exception($"处理命令 {packetModel.CommandId} 时发生错误: {ex.Message}", ex));
+                _clientEventManager.OnErrorOccurred(new Exception($"处理命令 {packetModel.CommandId} 时发生错误: {ex.Message}", ex));
             }
         }
 
@@ -1844,65 +1415,50 @@ namespace RUINORERP.UI.Network
         /// </summary>
         public void Dispose()
         {
-            // 取消订阅命令接收事件
-            _eventManager.CommandReceived -= OnCommandReceived;
             Dispose(true);
             GC.SuppressFinalize(this);
         }
 
         /// <summary>
-        /// 释放资源的实际实现
+        /// 释放资源
         /// </summary>
-        /// <param name="disposing">是否正在释放托管资源</param>
+        /// <param name="disposing">是否手动调用</param>
         protected virtual void Dispose(bool disposing)
         {
-            if (_disposed) return;
             if (!_disposed)
             {
                 if (disposing)
                 {
-                    // 释放托管资源
-                    Disconnect();
-
-                    // 取消事件订阅
-                    if (_socketClient != null)
-                    {   // 取消事件订阅
-                        _socketClient.Received -= OnReceived;
-                        _socketClient.Closed -= OnClosed;
-                        //_eventManager.CommandReceived -= OnCommandReceived;
-
-                    }
-
-                    // 取消心跳失败事件订阅
-                    if (_heartbeatManager != null)
-                    {
-                        _heartbeatManager.HeartbeatFailed -= OnHeartbeatFailed;
-                    }
-
-
-                    // 停止心跳并释放资源
-                    if (_heartbeatManager != null)
-                    {
-                        _heartbeatManager.Stop();
-                        _heartbeatManager.Dispose();
-                    }
-
-                    // 清理定时器
-                    _cleanupTimer?.Dispose();
-
-                    // 清理超时统计
-                    // _timeoutStatistics.TryDispose();
-
-                    // 断开连接
-                    // 断开连接
+                    // 停止心跳
                     try
                     {
-                        Disconnect();
+                        // 使用内部实现的StopHeartbeat方法
+                        StopHeartbeat();
                     }
-                    catch { }
+                    catch (Exception ex)
+                    {
+                        _logger?.LogWarning(ex, "停止心跳时发生异常");
+                    }
+                    // 释放清理定时器
+                    _cleanupTimer?.Dispose();
+                    _cleanupTimer = null;
+
+
+
+                    // 断开Socket连接
+                    _socketClient?.Disconnect();
+
+                    // 清理待发送队列
+                    while (_queuedCommands.TryDequeue(out var queuedCommand))
+                    {
+                        queuedCommand.CompletionSource?.TrySetCanceled();
+                        queuedCommand.ResponseCompletionSource?.TrySetCanceled();
+                    }
+
+                    // 释放队列锁
+                    _queueLock?.Dispose();
                 }
 
-                // 释放非托管资源
                 _disposed = true;
             }
         }
@@ -1937,23 +1493,6 @@ namespace RUINORERP.UI.Network
         {
             try
             {
-                // 检查连接状态
-                if (!IsConnected)
-                {
-                    _logger.LogWarning("尝试发送带响应命令但连接已断开，命令ID: {CommandId}", commandId);
-
-                    // 如果启用了自动重连，将请求加入队列
-                    if (_networkConfig.AutoReconnect && !_disposed)
-                    {
-                        _logger.Debug($"连接已断开，将带响应命令{commandId.Name}加入队列等待发送");
-
-                        // 使用提取的私有方法处理队列逻辑
-                        return await EnqueueCommandWithResponseAsync<TResponse>(commandId, request, ct, timeoutMs);
-                    }
-
-                    // 如果未启用自动重连，返回错误响应
-                    return ResponseFactory.CreateSpecificErrorResponse<TResponse>("连接已断开，无法发送请求");
-                }
                 var packet = await SendRequestAsync<IRequest, TResponse>(commandId, request, ct, timeoutMs);
 
                 if (packet == null)
@@ -1973,17 +1512,7 @@ namespace RUINORERP.UI.Network
             }
             catch (Exception ex)
             {
-                _eventManager.OnErrorOccurred(new Exception($"带响应命令发送失败: {ex.Message}", ex));
-
-                // 检查是否因为连接断开导致的异常
-                if (_networkConfig.AutoReconnect && !_disposed && IsRetryableException(ex))
-                {
-                    _logger.Debug($"因网络异常，将带响应命令{commandId.Name}加入队列等待发送");
-
-                    // 使用提取的私有方法处理队列逻辑
-                    return await EnqueueCommandWithResponseAsync<TResponse>(commandId, request, ct, timeoutMs);
-                }
-
+                _clientEventManager.OnErrorOccurred(new Exception($"带响应命令发送失败: {ex.Message}", ex));
                 // 如果是操作取消异常，重新抛出
                 if (ex is OperationCanceledException)
                 {
@@ -2022,7 +1551,7 @@ namespace RUINORERP.UI.Network
                     responseTcs.TrySetResult(task.Result.Response as TResponse);
                 else
                     responseTcs.TrySetResult(ResponseFactory.CreateSpecificErrorResponse<TResponse>("未收到有效响应数据") as TResponse);
-                
+
                 await Task.CompletedTask; // 避免异步转同步问题
             });
 
@@ -2035,14 +1564,203 @@ namespace RUINORERP.UI.Network
                 DataType = request.GetType(),
                 ResponseCompletionSource = packetTcs,
                 IsResponseCommand = true,
-                TimeoutMs = timeoutMs
+                TimeoutMs = timeoutMs,
+                CreatedAt = DateTime.UtcNow,
+                CompletionSource = null // 响应命令不需要简单的bool完成源
             });
 
-            // 在后台尝试重连
-            _ = Task.Run(() => TryReconnectAsync());
+
 
             // 返回任务结果，让调用者等待连接恢复后发送
             return await responseTcs.Task;
+        }
+
+        /// <summary>
+        /// 处理命令队列，在连接恢复时发送排队的命令
+        /// </summary>
+        private async Task ProcessCommandQueueAsync()
+        {
+            // 使用信号量确保同时只有一个队列处理任务
+            if (!await _queueLock.WaitAsync(TimeSpan.Zero))
+                return;
+
+            try
+            {
+                if (_isProcessingQueue)
+                    return;
+
+                _isProcessingQueue = true;
+                _logger?.LogDebug("开始处理命令队列，当前队列大小：{QueueSize}", _queuedCommands.Count);
+
+                var processedCount = 0;
+                var failedCount = 0;
+
+                // 使用临时列表来避免长时间锁定队列
+                var commandsToProcess = new List<ClientQueuedCommand>();
+
+                // 批量取出队列中的命令
+                while (_queuedCommands.TryDequeue(out var command))
+                {
+                    commandsToProcess.Add(command);
+
+                    // 限制单次处理数量，避免长时间阻塞
+                    if (commandsToProcess.Count >= 50)
+                        break;
+                }
+
+                // 按照优先级处理命令（响应命令优先）
+                var responseCommands = commandsToProcess.Where(c => c.IsResponseCommand).ToList();
+                var oneWayCommands = commandsToProcess.Where(c => !c.IsResponseCommand).ToList();
+
+                // 处理响应命令
+                foreach (var command in responseCommands)
+                {
+                    try
+                    {
+                        if (command.CancellationToken.IsCancellationRequested)
+                        {
+                            command.ResponseCompletionSource?.TrySetCanceled();
+                            continue;
+                        }
+
+                        // 检查连接状态
+                        if (!IsConnected)
+                        {
+                            // 连接仍然断开，重新加入队列
+                            _queuedCommands.Enqueue(command);
+                            continue;
+                        }
+
+                        // 发送命令
+                        var response = await SendRequestAsync<IRequest, IResponse>(
+                            command.CommandId,
+                            (IRequest)command.Data,
+                            command.CancellationToken,
+                            command.TimeoutMs);
+
+                        if (response != null)
+                        {
+                            command.ResponseCompletionSource?.TrySetResult(response);
+                            processedCount++;
+                        }
+                        else
+                        {
+                            command.ResponseCompletionSource?.TrySetException(new Exception("发送命令失败：未收到响应"));
+                            failedCount++;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        command.ResponseCompletionSource?.TrySetException(ex);
+                        failedCount++;
+                        _logger?.LogError(ex, "处理响应命令时发生异常：{CommandId}", command.CommandId);
+                    }
+                }
+
+                // 处理单向命令
+                foreach (var command in oneWayCommands)
+                {
+                    try
+                    {
+                        if (command.CancellationToken.IsCancellationRequested)
+                        {
+                            command.CompletionSource?.TrySetCanceled();
+                            continue;
+                        }
+
+                        // 检查连接状态
+                        if (!IsConnected)
+                        {
+                            // 连接仍然断开，重新加入队列
+                            _queuedCommands.Enqueue(command);
+                            continue;
+                        }
+
+                        // 发送命令
+                        await SendPacketCoreAsync<IRequest>(_socketClient, command.CommandId, (IRequest)command.Data, command.TimeoutMs, command.CancellationToken);
+                        command.CompletionSource?.TrySetResult(true);
+                        processedCount++;
+                    }
+                    catch (Exception ex)
+                    {
+                        command.CompletionSource?.TrySetException(ex);
+                        failedCount++;
+                        _logger?.LogError(ex, "处理单向命令时发生异常：{CommandId}", command.CommandId);
+                    }
+                }
+
+                _logger?.LogDebug("命令队列处理完成，成功：{ProcessedCount}，失败：{FailedCount}，剩余队列大小：{QueueSize}",
+                    processedCount, failedCount, _queuedCommands.Count);
+
+                // 如果队列中还有命令，延迟后继续处理
+                if (!_queuedCommands.IsEmpty)
+                {
+                    await Task.Delay(1000); // 延迟1秒后继续处理
+                    _ = Task.Run(ProcessCommandQueueAsync);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "处理命令队列时发生异常");
+            }
+            finally
+            {
+                _isProcessingQueue = false;
+                _queueLock.Release();
+            }
+        }
+
+        /// <summary>
+        /// 获取队列统计信息
+        /// </summary>
+        /// <returns>队列统计信息</returns>
+        public (int TotalQueued, int ResponseCommands, int OneWayCommands, int PendingResponses, bool IsProcessing) GetQueueStatistics()
+        {
+            var responseCommands = 0;
+            var oneWayCommands = 0;
+
+            // 遍历队列获取统计信息（不影响性能的方式）
+            var tempCommands = new List<ClientQueuedCommand>();
+            while (_queuedCommands.TryDequeue(out var command))
+            {
+                if (command.IsResponseCommand)
+                    responseCommands++;
+                else
+                    oneWayCommands++;
+
+                tempCommands.Add(command);
+            }
+
+            // 重新加入队列
+            foreach (var command in tempCommands)
+            {
+                _queuedCommands.Enqueue(command);
+            }
+
+            return (
+                TotalQueued: _queuedCommands.Count,
+                ResponseCommands: responseCommands,
+                OneWayCommands: oneWayCommands,
+                PendingResponses: _pendingRequests.Count,
+                IsProcessing: _isProcessingQueue
+            );
+        }
+
+        /// <summary>
+        /// 清空队列（慎用）
+        /// </summary>
+        /// <param name="reason">清空原因</param>
+        public void ClearQueue(string reason = "手动清空")
+        {
+            var clearedCount = 0;
+            while (_queuedCommands.TryDequeue(out var command))
+            {
+                command.CompletionSource?.TrySetCanceled();
+                command.ResponseCompletionSource?.TrySetCanceled();
+                clearedCount++;
+            }
+
+            _logger?.LogInformation("已清空命令队列，清空原因：{Reason}，清空数量：{Count}", reason, clearedCount);
         }
 
 

@@ -146,10 +146,6 @@ namespace RUINORERP.UI
             }
             using (StatusBusy busy = new StatusBusy("正在验证凭据..."))
             {
-                //PTPrincipal.LoginAsync(this.txtUserName.Text, this.txtPassWord.Text, Program.AppContextData);
-                //PTPrincipal.Login(this.txtUserName.Text, this.txtPassWord.Text);
-                //MainForm.Instance.AppContext.test = "waton";
-                //MainForm.Instance.AppContext.User
                 try
                 {
                     errorProvider1.Clear();
@@ -161,16 +157,13 @@ namespace RUINORERP.UI
                     }
                     else
                     {
-                        //base.Cursor = Cursors.WaitCursor;
+                        // 保存用户配置
                         UserGlobalConfig.Instance.UseName = this.txtUserName.Text;
                         UserGlobalConfig.Instance.PassWord = this.txtPassWord.Text;
                         UserGlobalConfig.Instance.ServerIP = txtServerIP.Text;
                         UserGlobalConfig.Instance.ServerPort = txtPort.Text;
 
-
                         bool isInitPwd = false;
-                        //传入账号密码返回结果
-
                         // 开始测量登录方法执行时间
                         System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
                         stopwatch.Start();
@@ -181,22 +174,25 @@ namespace RUINORERP.UI
                             MainForm.Instance.CurrentLoginStatus = MainForm.LoginStatus.LoggingIn;
                         }
 
-                        // 如果检测到IP地址变更，先断开原有连接
-                        if (_ipAddressChanged)
+                        // 检测IP地址变更或服务器地址变更
+                        string currentIP = txtServerIP.Text.Trim();
+                        string currentPort = txtPort.Text.Trim();
+                        bool serverChanged = !string.Equals(currentIP, _originalServerIP, StringComparison.OrdinalIgnoreCase) ||
+                                           !string.Equals(currentPort, _originalServerPort, StringComparison.OrdinalIgnoreCase);
+
+                        // 无论什么情况，先断开可能存在的连接，确保没有重复连接
+                        if (MainForm.Instance != null && MainForm.Instance.communicationService != null &&
+                            MainForm.Instance.communicationService.IsConnected)
                         {
-                            if (MainForm.Instance != null && MainForm.Instance.communicationService != null &&
-                                MainForm.Instance.communicationService.IsConnected)
+                            try
                             {
-                                try
-                                {
-                                    var disconnectResult = await MainForm.Instance.communicationService.Disconnect();
-                                    MainForm.Instance.CurrentLoginStatus = MainForm.LoginStatus.None;
-                                    MainForm.Instance.logger?.LogInformation($"IP地址变更，断开连接结果: {disconnectResult} [{_originalServerIP}:{_originalServerPort}]");
-                                }
-                                catch (Exception ex)
-                                {
-                                    MainForm.Instance.logger?.LogError(ex, "断开原服务器连接时发生错误");
-                                }
+                                var disconnectResult = await MainForm.Instance.communicationService.Disconnect();
+                                MainForm.Instance.CurrentLoginStatus = MainForm.LoginStatus.None;
+                                MainForm.Instance.logger?.LogInformation($"断开现有连接结果: {disconnectResult} [{_originalServerIP}:{_originalServerPort}]");
+                            }
+                            catch (Exception ex)
+                            {
+                                MainForm.Instance.logger?.LogError(ex, "断开原服务器连接时发生错误");
                             }
                         }
 
@@ -270,10 +266,10 @@ namespace RUINORERP.UI
                                     {
                                         // 检查当前连接的服务器是否就是目标服务器
                                         var currentAddress = MainForm.Instance.communicationService.GetCurrentServerAddress();
-                                        var currentPort = MainForm.Instance.communicationService.GetCurrentServerPort();
+                                        var currentServerPort = MainForm.Instance.communicationService.GetCurrentServerPort();
 
                                         if (!string.Equals(currentAddress, serverIp, StringComparison.OrdinalIgnoreCase) ||
-                                            currentPort != serverPort)
+                                            currentServerPort != serverPort)
                                         {
                                             // 虽然_ipAddressChanged为false，但实际连接的服务器与目标服务器不一致
                                             shouldConnect = true;
@@ -289,9 +285,15 @@ namespace RUINORERP.UI
                                     // 如果需要建立连接
                                     if (shouldConnect)
                                     {
-                                        var disconnectResult = await MainForm.Instance.communicationService.Disconnect();
+                                        // 方法开始处已经尝试断开过连接，但我们要确保现在确实没有连接
+                                        if (MainForm.Instance.communicationService.IsConnected)
+                                        {
+                                            MainForm.Instance.logger?.LogWarning($"建立新连接前发现仍然处于连接状态，强制断开 [{serverIp}:{serverPort}]");
+                                            var disconnectResult = await MainForm.Instance.communicationService.Disconnect();
+                                            MainForm.Instance.logger?.LogInformation($"强制断开结果: {disconnectResult}");
+                                        }
 
-                                        // 修复后的代码
+                                        // 等待一小段时间，确保连接完全关闭
                                         await Task.Delay(100); // 使用异步等待，避免阻塞UI线程
 
                                         // 添加连接超时控制，防止无限等待

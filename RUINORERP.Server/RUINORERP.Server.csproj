@@ -35,6 +35,8 @@
     <Compile Remove="CommandService\CommandQueue.cs" />
     <Compile Remove="Comm\AutoMapperProfile.cs" />
     <Compile Remove="Comm\CacheHelper.cs" />
+    <Compile Remove="Controls\UserManagementControl_old.cs" />
+    <Compile Remove="Controls\UserManagementControl_Original.cs" />
     <Compile Remove="frmBlacklist.cs" />
     <Compile Remove="frmBlacklist.Designer.cs" />
     <Compile Remove="frmCacheManage.cs" />

@@ -123,6 +123,22 @@ namespace RUINORERP.UI.Network
 
             try
             {
+                // 检查是否已连接，如果已连接则先断开
+                if (_isConnected || (_client?.Socket != null && _client.Socket.Connected))
+                {
+                    _logger?.LogDebug("检测到已存在连接，先断开旧连接再连接到新服务器");
+                    try
+                    {
+                        await Disconnect();
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger?.LogWarning(ex, "断开现有连接时发生异常，将继续尝试新连接");
+                        // 重置状态标志
+                        _isConnected = false;
+                    }
+                }
+                
                 // 连接前进行网络健康检查
                 if (_healthCheckService != null && !_healthCheckService.IsNetworkHealthy)
                 {
@@ -256,10 +272,11 @@ namespace RUINORERP.UI.Network
             }
             catch (Exception ex)
             {
-
-
+                _logger?.LogError(ex, "断开连接时发生异常");
+                // 即使发生异常，也确保状态正确设置
+                _isConnected = false;
+                return false;
             }
-            return true;
         }
 
         /// <summary>

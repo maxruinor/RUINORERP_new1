@@ -863,12 +863,13 @@ namespace RUINORERP.Server.Network.Services
                     {
                         _logger.LogInformation("{OperationType}完成: 单据ID={BillId}", operationType, billId);
                     }
-                    
+                    validation.LockInfo.IsLocked = false;
                     return new LockResponse
                     {
                         IsSuccess = true,
                         Message = message,
                         LockInfo = validation.LockInfo
+
                     };
                 }
 
@@ -954,6 +955,7 @@ namespace RUINORERP.Server.Network.Services
                     LockId = lockInfo.LockId,
                     LastHeartbeat = DateTime.Now,
                     HeartbeatCount = 1,
+                    IsLocked=true,
                     Type = LockType.Exclusive
                 };
 

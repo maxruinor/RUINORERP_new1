@@ -423,28 +423,56 @@ namespace RUINORERP.UI.Network
         /// <returns>连接成功返回true，失败返回false</returns>
         private async Task<bool> SafeConnectAsync(string serverUrl, int port, CancellationToken ct)
         {
+            // 首先检查SocketClient的实际连接状态
+            bool socketClientConnected = _socketClient.IsConnected;
+            
             lock (_syncLock)
             {
-                // 如果已经连接，直接返回true
-                if (_isConnected)
-                    return true;
-
+                // 更新服务器地址和端口信息
                 _serverAddress = serverUrl;
                 _serverPort = port;
+                
+                // 如果标志显示已连接，但实际连接状态不同步，进行调整
+                if (_isConnected != socketClientConnected)
+                {
+                    _logger?.LogWarning("连接状态不同步，标志: {IsConnected}, 实际: {SocketConnected}", 
+                        _isConnected, socketClientConnected);
+                    _isConnected = socketClientConnected;
+                }
+            }
+            
+            // 确保在尝试新连接前断开任何现有连接
+            if (socketClientConnected)
+            {
+                _logger?.LogWarning("检测到已存在的连接，在建立新连接前先断开");
+                await _socketClient.Disconnect();
+                
+                // 确保状态标志同步
+                lock (_syncLock)
+                {
+                    _isConnected = false;
+                }
             }
 
             try
             {
+                // 调用SocketClient连接方法
                 bool connected = await _socketClient.ConnectAsync(serverUrl, port, ct).ConfigureAwait(false);
-
+                
                 if (connected)
                 {
                     lock (_syncLock)
                     {
                         _heartbeatFailureCount = 0;
+                        _isConnected = true;
                         // 使用统一的连接状态更新方法
                         UpdateConnectionState(true);
                     }
+                    _logger?.LogInformation("成功连接到服务器: {ServerUrl}:{Port}", serverUrl, port);
+                }
+                else
+                {
+                    _logger?.LogError("连接服务器失败: {ServerUrl}:{Port}", serverUrl, port);
                 }
 
                 return connected;
@@ -452,7 +480,14 @@ namespace RUINORERP.UI.Network
             catch (Exception ex)
             {
                 _eventManager.OnErrorOccurred(new Exception($"连接到服务器失败: {ex.Message}", ex));
-                _logger.LogError(ex, "连接服务器时发生错误");
+                _logger.LogError(ex, "连接服务器时发生错误: {ServerUrl}:{Port}", serverUrl, port);
+                
+                // 确保状态正确设置
+                lock (_syncLock)
+                {
+                    _isConnected = false;
+                }
+                
                 return false;
             }
         }
@@ -1198,11 +1233,40 @@ namespace RUINORERP.UI.Network
                     await _connectionLock.WaitAsync();
                     try
                     {
-                        // 检查是否已经连接
-                        if (_isConnected)
+                        // 检查连接状态和Socket实际状态，确保状态同步
+                        bool socketActuallyConnected = false;
+                        try
                         {
-                            _logger.Debug("检测到已连接，取消重连尝试");
-                            return true;
+                            socketActuallyConnected = _socketClient.IsConnected;
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogWarning(ex, "检查Socket实际连接状态时发生异常，假设连接已断开");
+                        }
+
+                        // 如果Socket实际处于连接状态但本地标志显示未连接，或者本地标志显示已连接
+                        if (socketActuallyConnected || _isConnected)
+                        {
+                            // 如果Socket实际处于连接状态，先断开连接
+                            if (socketActuallyConnected)
+                            {
+                                _logger.Debug("检测到Socket实际处于连接状态，先断开连接再重连");
+                                try
+                                {
+                                    var disconnectResult = await _socketClient.Disconnect();
+                                    _logger.Debug($"重连前断开旧连接结果: {disconnectResult}");
+                                }
+                                catch (Exception ex)
+                                {
+                                    _logger.LogWarning(ex, "重连前断开旧连接失败，但将继续尝试重连");
+                                }
+                            }
+                            
+                            // 更新连接状态标志
+                            if (_isConnected)
+                            {
+                                UpdateConnectionState(false);
+                            }
                         }
 
                         if (await _socketClient.ConnectAsync(_serverAddress, _serverPort, CancellationToken.None).ConfigureAwait(false))
@@ -1294,9 +1358,17 @@ namespace RUINORERP.UI.Network
             // 尝试重连（在lock外部）
             lock (_syncLock)
             {
-                if (_heartbeatFailureCount >= _networkConfig.MaxHeartbeatFailures && _networkConfig.AutoReconnect && !_disposed)
+                if (_heartbeatFailureCount >= _networkConfig.MaxHeartbeatFailures)
                 {
-                    Task.Run(() => TryReconnectAsync());
+                    // 无论是否自动重连，都先触发锁定功能
+                    _logger.LogWarning("心跳连续失败次数达到阈值，触发客户端锁定");
+                    _eventManager.OnReconnectFailed();
+                    
+                    // 如果配置了自动重连，则尝试重连
+                    if (_networkConfig.AutoReconnect && !_disposed)
+                    {
+                        Task.Run(() => TryReconnectAsync());
+                    }
                 }
             }
         }

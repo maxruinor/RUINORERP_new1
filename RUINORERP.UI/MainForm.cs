@@ -170,6 +170,11 @@ namespace RUINORERP.UI
         private UIConfigManager _configManager;
         private readonly EnhancedMessageManager _messageManager;
 
+        /// <summary>
+        /// 系统锁定状态标志
+        /// </summary>
+        public bool IsLocked { get; private set; }
+
         #region 当前系统中所有用户信息
         private List<UserInfo> userInfos = new List<UserInfo>();
 
@@ -199,10 +204,17 @@ namespace RUINORERP.UI
                     // 在UI线程上执行注销操作
                     if (InvokeRequired)
                     {
-                        Invoke(new Action(LogLock));
+                        Invoke(new Action(() =>
+                        {
+                            // 更新锁定状态显示
+                            UpdateLockStatus(true);
+                            LogLock();
+                        }));
                     }
                     else
                     {
+                        // 更新锁定状态显示
+                        UpdateLockStatus(true);
                         LogLock();
                     }
                 }
@@ -700,16 +712,16 @@ namespace RUINORERP.UI
                 {
                     if (ShowMessageBox)
                     {
-    
-                        
+
+
                         // 检查是否有可回滚的版本
                         bool hasRollbackVersions = Update.CheckHasRollbackVersions();
-                        
+
                         if (hasRollbackVersions)
                         {
                             // 设置为回滚模式，强制显示回滚界面
-                        Update.SetRollbackMode();
-                            
+                            Update.SetRollbackMode();
+
                             // 如果有可回滚的版本，显示更新窗体（会自动进入回滚模式）
                             Update.ShowDialog();
                         }
@@ -1481,6 +1493,33 @@ namespace RUINORERP.UI
 
 
 
+        // 锁定状态标签
+        private ToolStripStatusLabel _lockStatusLabel;
+        // 当前锁定状态
+        private bool _isLocked = false;
+
+        /// <summary>
+        /// 更新锁定状态显示
+        /// </summary>
+        /// <param name="isLocked">是否锁定</param>
+        public void UpdateLockStatus(bool isLocked)
+        {
+            _isLocked = isLocked;
+            if (_lockStatusLabel != null && this.InvokeRequired)
+            {
+                this.Invoke(new Action(() =>
+                {
+                    _lockStatusLabel.Text = isLocked ? "状态: 锁定" : "状态: 正常";
+                    _lockStatusLabel.ForeColor = isLocked ? Color.Red : Color.Green;
+                }));
+            }
+            else if (_lockStatusLabel != null)
+            {
+                _lockStatusLabel.Text = isLocked ? "状态: 锁定" : "状态: 正常";
+                _lockStatusLabel.ForeColor = isLocked ? Color.Red : Color.Green;
+            }
+        }
+
         private void LoadStatus()
         {
             // 创建StatusStrip控件
@@ -1498,6 +1537,11 @@ namespace RUINORERP.UI
             ToolStripStatusLabel locationLabel = new ToolStripStatusLabel();
             locationLabel.Text = "操作位置: 主界面";
             statusStrip.Items.Add(locationLabel);
+            // 添加锁定状态信息
+            _lockStatusLabel = new ToolStripStatusLabel();
+            _lockStatusLabel.Text = "状态: 正常";
+            _lockStatusLabel.ForeColor = Color.Green;
+            statusStrip.Items.Add(_lockStatusLabel);
             // 添加进度条
             ToolStripProgressBar progressBar = new ToolStripProgressBar();
             progressBar.Value = 50;
@@ -1971,20 +2015,21 @@ namespace RUINORERP.UI
         }
 
         /// <summary>
-        /// 注销
+        /// 系统锁定，禁用所有用户操作，仅允许重新登录
         /// </summary>
         public void LogLock()
         {
             // 检查是否已经在注销过程中，防止重复执行
             if (IsLoggingOut || CurrentLoginStatus == LoginStatus.LoggingOut || CurrentLoginStatus == LoginStatus.LoggingIn)
             {
-                logger?.LogWarning("注销操作已在进行中或正在登录，忽略重复调用");
+                logger?.LogWarning("锁定操作已在进行中或正在登录，忽略重复调用");
                 return;
             }
 
             // 设置状态
             IsLoggingOut = true;
             CurrentLoginStatus = LoginStatus.Locked;
+            IsLocked = true; // 设置锁定状态标志
 
             MainForm.Instance.Invoke(new Action(async () =>
             {
@@ -2004,8 +2049,16 @@ namespace RUINORERP.UI
                         logger?.LogInformation($"锁定过程中断开连接结果: {disconnectResult}");
                     }
 
+                    // 清除UI元素
                     ClearUI();
                     ClearRoles();
+
+                    // 禁用所有UI控件
+                    DisableAllUIComponents();
+
+                    // 显示锁定提示
+                    ShowLockMessage();
+
                     System.GC.Collect();
 
                     // 尝试重新登录
@@ -2025,6 +2078,11 @@ namespace RUINORERP.UI
                     // 登录成功后重置状态
                     IsLoggingOut = false;
                     CurrentLoginStatus = LoginStatus.LoggedIn;
+                    IsLocked = false; // 重置锁定状态
+                    // 更新锁定状态为正常
+                    UpdateLockStatus(false);
+                    // 重新启用UI组件
+                    ReenableUIComponents();
                 }
                 catch (Exception ex)
                 {
@@ -2969,6 +3027,124 @@ namespace RUINORERP.UI
         }
 
 
+
+        /// <summary>
+        /// 禁用所有UI组件，确保在锁定状态下用户无法操作
+        /// </summary>
+        private void DisableAllUIComponents()
+        {
+            try
+            {
+                // 禁用主菜单
+                menuStripMain.Enabled = false;
+
+                // 禁用所有工具栏
+                foreach (ToolStrip toolStrip in this.Controls.OfType<ToolStrip>())
+                {
+                    toolStrip.Enabled = false;
+                }
+
+                // 禁用所有下拉菜单
+                foreach (ToolStripDropDownItem item in menuStripMain.Items.OfType<ToolStripDropDownItem>())
+                {
+                    item.Enabled = false;
+                }
+
+                // 禁用导航控件
+                kryptonNavigator1.Enabled = false;
+
+                // 禁用停靠管理器中的交互操作
+                kryptonDockableWorkspace1.AllowPageDrag = false;
+
+                // 禁用状态栏交互
+
+                logger?.LogInformation("已禁用所有UI组件，系统处于锁定状态");
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "禁用UI组件时发生异常");
+            }
+        }
+
+        /// <summary>
+        /// 显示锁定提示信息
+        /// </summary>
+        private void ShowLockMessage()
+        {
+            try
+            {
+                // 在控制中心显示锁定信息
+                string lockMessage = "系统已锁定，请重新登录\n原因：与服务器通信断开，心跳检测失败\n请点击重新登录按钮或关闭程序后重新启动";
+
+                // 显示一个模态对话框通知用户系统已锁定
+                Invoke(new Action(() =>
+                {
+                    MainForm.Instance.PrintInfoLog("系统安全:" + lockMessage, System.Drawing.Color.Red);
+
+                    // 显示锁定提示对话框
+                    DialogResult result = MessageBox.Show(
+                        lockMessage,
+                        "系统安全锁定",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning
+                    );
+
+                    // 用户点击OK后尝试重新登录
+                    if (result == DialogResult.OK)
+                    {
+                        Invoke(new Action(async () =>
+                        {
+                            logger?.LogInformation("用户确认锁定提示，准备重新登录");
+                            await Login();
+                        }));
+                    }
+                }));
+
+                logger?.LogInformation("已显示系统锁定提示信息");
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "显示锁定提示信息时发生异常");
+            }
+        }
+
+        /// <summary>
+        /// 重新启用所有UI组件，用于登录成功后恢复正常操作
+        /// </summary>
+        private void ReenableUIComponents()
+        {
+            try
+            {
+                // 重新启用主菜单
+                menuStripMain.Enabled = true;
+
+                // 重新启用所有工具栏
+                foreach (ToolStrip toolStrip in this.Controls.OfType<ToolStrip>())
+                {
+                    toolStrip.Enabled = true;
+                }
+
+                // 重新启用所有下拉菜单
+                foreach (ToolStripDropDownItem item in menuStripMain.Items.OfType<ToolStripDropDownItem>())
+                {
+                    item.Enabled = true;
+                }
+
+                // 重新启用导航控件
+                kryptonNavigator1.Enabled = true;
+
+                // 重新启用停靠管理器中的交互操作
+                kryptonDockableWorkspace1.AllowPageDrag = true;
+
+
+
+                logger?.LogInformation("已重新启用所有UI组件，系统恢复正常操作状态");
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "重新启用UI组件时发生异常");
+            }
+        }
 
         private void ClearRoles()
         {

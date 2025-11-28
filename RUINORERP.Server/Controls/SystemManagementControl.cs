@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using RUINORERP.Model.ConfigModel;
 using Microsoft.Extensions.Options;
+using RUINORERP.PacketSpec.Models;
 
 namespace RUINORERP.Server.Controls
 {
@@ -31,11 +32,53 @@ namespace RUINORERP.Server.Controls
                 
                 // 加载配置数据
                 LoadConfigData();
+                
+                // 加载系统信息
+                LoadSystemInformation();
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"初始化系统配置时出错: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+        }
+        
+        /// <summary>
+        /// 加载系统信息
+        /// </summary>
+        private void LoadSystemInformation()
+        {
+            try
+            {
+                // 从ClientSystemInfo获取系统信息
+                var clientSystemInfo = frmMainNew.Instance.ClientSystemInfo ?? new ClientSystemInfo();
+                
+                // 显示系统信息
+                textBoxOSName.Text = clientSystemInfo.OSName ?? "";
+                textBoxMachineName.Text = clientSystemInfo.MachineName ?? "";
+                textBoxCPUInfo.Text = clientSystemInfo.CPUInfo ?? "";
+                textBoxMemorySize.Text = FormatMemorySize(clientSystemInfo.TotalMemory);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"加载系统信息时出错: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+        
+        /// <summary>
+        /// 格式化内存大小显示
+        /// </summary>
+        /// <param name="bytes">字节数</param>
+        /// <returns>格式化后的内存大小字符串</returns>
+        private string FormatMemorySize(long bytes)
+        {
+            if (bytes < 1024)
+                return bytes + " B";
+            else if (bytes < 1048576)
+                return (bytes / 1024.0).ToString("F2") + " KB";
+            else if (bytes < 1073741824)
+                return (bytes / 1048576.0).ToString("F2") + " MB";
+            else
+                return (bytes / 1073741824.0).ToString("F2") + " GB";
         }
 
         private void SystemManagementControl_Load(object sender, EventArgs e)

@@ -11,7 +11,6 @@ using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using RUINORERP.Server.ToolsUI;
 using Microsoft.Extensions.Logging;
-using RUINORERP.Model.CommonModel;
 
 namespace RUINORERP.Server.Controls
 {
@@ -26,6 +25,7 @@ namespace RUINORERP.Server.Controls
 
         private readonly ISessionService _sessionService;
         private readonly System.Windows.Forms.Timer _updateTimer;
+        private readonly ServerMessageService _serverMessageService;
         
         // ListView项映射字典，以SessionID为键
         private readonly Dictionary<string, ListViewItem> _sessionItemMap = new Dictionary<string, ListViewItem>();
@@ -51,6 +51,7 @@ namespace RUINORERP.Server.Controls
 
             // 获取服务实例
             _sessionService = Program.ServiceProvider.GetRequiredService<ISessionService>();
+            _serverMessageService = Program.ServiceProvider.GetRequiredService<ServerMessageService>();
 
             // 订阅会话服务事件
             _sessionService.SessionConnected += OnSessionConnected;
@@ -74,7 +75,7 @@ namespace RUINORERP.Server.Controls
         private void InitializeListView()
         {
             // 启用双缓冲减少闪烁
-            SetListViewDoubleBuffer(listView1);
+            listView1.DoubleBuffered(true);
             listView1.VirtualMode = false;
             
             // 配置 ListView
@@ -83,20 +84,6 @@ namespace RUINORERP.Server.Controls
             listView1.FullRowSelect = true;
             listView1.MouseDoubleClick += listView1_MouseDoubleClick;
             AddCols();
-        }
-
-        /// <summary>
-        /// 设置ListView双缓冲以减少闪烁
-        /// </summary>
-        /// <param name="listView">ListView控件</param>
-        private void SetListViewDoubleBuffer(ListView listView)
-        {
-            typeof(ListView).InvokeMember(
-                "DoubleBuffered",
-                System.Reflection.BindingFlags.SetProperty | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic,
-                null,
-                listView,
-                new object[] { true });
         }
 
         private void LoadAllSessions()
@@ -301,31 +288,28 @@ namespace RUINORERP.Server.Controls
                 Text = "", // 第一列（复选框列）
             };
 
-            // 从UserInfo获取详细信息，从SessionInfo获取连接信息
-            var userInfo = sessionInfo.UserInfo ?? new UserInfo();
-            
-            item.ToolTipText = $"SessionID: {sessionInfo.SessionID}\n用户名: {GetDisplayUserName(userInfo)}\n客户端IP: {sessionInfo.ClientIp}";
+            item.ToolTipText = $"SessionID: {sessionInfo.SessionID}\n用户名: {sessionInfo.UserName}\n客户端IP: {sessionInfo.ClientIp}";
             
             // 添加各列数据
-            item.SubItems.Add(GetDisplayUserName(userInfo)); // 用户名
-            item.SubItems.Add(GetDisplayName(userInfo?.姓名)); // 姓名
-            item.SubItems.Add(GetDisplayName(userInfo?.当前模块)); // 当前模块
-            item.SubItems.Add(GetDisplayName(userInfo?.当前窗体)); // 当前窗体
-            item.SubItems.Add((sessionInfo.ConnectTime ?? DateTime.Now).ToString("yy-MM-dd HH:mm:ss")); // 连接时间
+            item.SubItems.Add(GetDisplayName(sessionInfo.UserName)); // 用户名
+            item.SubItems.Add(sessionInfo.DisplayName ?? ""); // 姓名
+            item.SubItems.Add(sessionInfo.CurrentModule ?? ""); // 当前模块
+            item.SubItems.Add(sessionInfo.CurrentForm ?? ""); // 当前窗体
+            item.SubItems.Add(sessionInfo.ConnectTime.ToString("yy-MM-dd HH:mm:ss")); // 连接时间
             item.SubItems.Add(sessionInfo.HeartbeatCount.ToString()); // 心跳数
-            item.SubItems.Add(sessionInfo.LastHeartbeat.ToString("yy-MM-dd HH:mm:ss")); // 最后心跳时间
-            item.SubItems.Add(GetDisplayName(sessionInfo.ClientVersion)); // 客户端版本
+            item.SubItems.Add(sessionInfo.LastHeartbeatTime.ToString("yy-MM-dd HH:mm:ss")); // 最后心跳时间
+            item.SubItems.Add(sessionInfo.ClientVersion ?? ""); // 客户端版本
             item.SubItems.Add(sessionInfo.ClientIp); // 客户端IP
-            item.SubItems.Add(FormatIdleTime(DateTime.Now - sessionInfo.LastHeartbeat)); // 静止时间
-            item.SubItems.Add(GetSuperUserStatus(userInfo)); // 超级用户
+            item.SubItems.Add(FormatIdleTime(DateTime.Now - sessionInfo.LastHeartbeatTime)); // 静止时间
+            item.SubItems.Add(sessionInfo.IsSuperUser ? "是" : "否"); // 超级用户
             item.SubItems.Add(sessionInfo.IsConnected ? "在线" : "离线"); // 在线状态
-            item.SubItems.Add(GetAuthorizationStatus(userInfo)); // 授权状态
-            item.SubItems.Add(GetDisplayName(userInfo?.操作系统)); // 操作系统
-            item.SubItems.Add(GetDisplayName(userInfo?.机器名)); // 机器名
-            item.SubItems.Add(GetDisplayName(userInfo?.CPU信息)); // CPU信息
-            item.SubItems.Add(GetDisplayName(userInfo?.内存大小)); // 内存大小
+            item.SubItems.Add(sessionInfo.IsAuthenticated ? "已授权" : "未授权"); // 授权状态
+            item.SubItems.Add(sessionInfo.OperatingSystem ?? ""); // 操作系统
+            item.SubItems.Add(sessionInfo.MachineName ?? ""); // 机器名
+            item.SubItems.Add(sessionInfo.CpuInfo ?? ""); // CPU信息
+            item.SubItems.Add(sessionInfo.MemoryInfo ?? ""); // 内存大小
 
-            SetSessionItemStyle(item, sessionInfo, userInfo);
+            SetSessionItemStyle(item, sessionInfo);
             return item;
         }
 
@@ -337,30 +321,27 @@ namespace RUINORERP.Server.Controls
         private void UpdateSessionItem(ListViewItem item, SessionInfo sessionInfo)
         {
             if (item.SubItems.Count < 18) return;
-            
-            // 从UserInfo获取详细信息
-            var userInfo = sessionInfo.UserInfo ?? new UserInfo();
-            
-            // 更新所有列的数据
-            item.SubItems[1].Text = GetDisplayUserName(userInfo);
-            item.SubItems[2].Text = GetDisplayName(sessionInfo.UserName);
-            item.SubItems[3].Text = GetDisplayName(userInfo?.当前模块);
-            item.SubItems[4].Text = GetDisplayName(userInfo?.当前窗体);
-            item.SubItems[5].Text = (sessionInfo.ConnectTime ?? DateTime.Now).ToString("yy-MM-dd HH:mm:ss");
-            item.SubItems[6].Text = sessionInfo.HeartbeatCount.ToString();
-            item.SubItems[7].Text = sessionInfo.LastHeartbeat.ToString("yy-MM-dd HH:mm:ss");
-            item.SubItems[8].Text = GetDisplayName(sessionInfo.ClientVersion);
-            item.SubItems[9].Text = sessionInfo.ClientIp??sessionInfo.RemoteEndPoint.ToString();
-            item.SubItems[10].Text = FormatIdleTime(DateTime.Now - sessionInfo.LastHeartbeat);
-            item.SubItems[11].Text = GetSuperUserStatus(userInfo);
-            item.SubItems[12].Text = sessionInfo.IsConnected ? "在线" : "离线";
-            item.SubItems[13].Text = GetAuthorizationStatus(userInfo);
-            item.SubItems[14].Text = GetDisplayName(userInfo?.操作系统);
-            item.SubItems[15].Text = GetDisplayName(userInfo?.机器名);
-            item.SubItems[16].Text = GetDisplayName(userInfo?.CPU信息);
-            item.SubItems[17].Text = GetDisplayName(userInfo?.内存大小);
 
-            SetSessionItemStyle(item, sessionInfo, userInfo);
+            // 更新所有列的数据
+            item.SubItems[1].Text = GetDisplayName(sessionInfo.UserName);
+            item.SubItems[2].Text = sessionInfo.DisplayName ?? "";
+            item.SubItems[3].Text = sessionInfo.CurrentModule ?? "";
+            item.SubItems[4].Text = sessionInfo.CurrentForm ?? "";
+            item.SubItems[5].Text = sessionInfo.ConnectTime.ToString("yy-MM-dd HH:mm:ss");
+            item.SubItems[6].Text = sessionInfo.HeartbeatCount.ToString();
+            item.SubItems[7].Text = sessionInfo.LastHeartbeatTime.ToString("yy-MM-dd HH:mm:ss");
+            item.SubItems[8].Text = sessionInfo.ClientVersion ?? "";
+            item.SubItems[9].Text = sessionInfo.ClientIp;
+            item.SubItems[10].Text = FormatIdleTime(DateTime.Now - sessionInfo.LastHeartbeatTime);
+            item.SubItems[11].Text = sessionInfo.IsSuperUser ? "是" : "否";
+            item.SubItems[12].Text = sessionInfo.IsConnected ? "在线" : "离线";
+            item.SubItems[13].Text = sessionInfo.IsAuthenticated ? "已授权" : "未授权";
+            item.SubItems[14].Text = sessionInfo.OperatingSystem ?? "";
+            item.SubItems[15].Text = sessionInfo.MachineName ?? "";
+            item.SubItems[16].Text = sessionInfo.CpuInfo ?? "";
+            item.SubItems[17].Text = sessionInfo.MemoryInfo ?? "";
+
+            SetSessionItemStyle(item, sessionInfo);
         }
 
         /// <summary>
@@ -368,8 +349,7 @@ namespace RUINORERP.Server.Controls
         /// </summary>
         /// <param name="item">ListView项</param>
         /// <param name="sessionInfo">会话信息</param>
-        /// <param name="userInfo">用户信息</param>
-        private void SetSessionItemStyle(ListViewItem item, SessionInfo sessionInfo, UserInfo userInfo)
+        private void SetSessionItemStyle(ListViewItem item, SessionInfo sessionInfo)
         {
             try
             {
@@ -381,14 +361,14 @@ namespace RUINORERP.Server.Controls
                     item.BackColor = Color.LightGray;
                     item.Font = new Font(item.Font, FontStyle.Regular);
                 }
-                else if (sessionInfo.IsConnected && !userInfo.授权状态)
+                else if (sessionInfo.IsConnected && !sessionInfo.IsAuthenticated)
                 {
                     // 在线但未授权：橙色文字，浅黄色背景，加粗显示
                     item.ForeColor = Color.DarkOrange;
                     item.BackColor = Color.LightYellow;
                     item.Font = new Font(item.Font, FontStyle.Bold);
                 }
-                else if (sessionInfo.IsConnected && userInfo.授权状态)
+                else if (sessionInfo.IsConnected && sessionInfo.IsAuthenticated)
                 {
                     // 在线且已授权：绿色文字，白色背景
                     item.ForeColor = Color.Green;
@@ -404,7 +384,7 @@ namespace RUINORERP.Server.Controls
                 }
 
                 // 超级用户特殊标识
-                if (userInfo.超级用户)
+                if (sessionInfo.IsSuperUser)
                 {
                     if (item.SubItems.Count > 0)
                     {
@@ -413,7 +393,7 @@ namespace RUINORERP.Server.Controls
                 }
 
                 // 心跳异常检测
-                var timeSinceHeartbeat = DateTime.Now - sessionInfo.LastHeartbeat;
+                var timeSinceHeartbeat = DateTime.Now - sessionInfo.LastHeartbeatTime;
                 if (timeSinceHeartbeat.TotalMinutes > 5 && sessionInfo.IsConnected)
                 {
                     item.ForeColor = Color.Red;
@@ -436,51 +416,9 @@ namespace RUINORERP.Server.Controls
         {
             if (string.IsNullOrEmpty(userName))
             {
-                return "未知";
+                return "未认证用户";
             }
             return userName;
-        }
-
-        /// <summary>
-        /// 获取显示用户名 - 优先使用UserInfo中的用户名
-        /// </summary>
-        /// <param name="userInfo">用户信息</param>
-        /// <returns>显示用户名</returns>
-        private string GetDisplayUserName(UserInfo userInfo)
-        {
-            if (userInfo != null && !string.IsNullOrEmpty(userInfo.用户名))
-            {
-                return userInfo.用户名;
-            }
-            return "未认证用户";
-        }
-
-        /// <summary>
-        /// 获取超级用户状态
-        /// </summary>
-        /// <param name="userInfo">用户信息</param>
-        /// <returns>超级用户状态</returns>
-        private string GetSuperUserStatus(UserInfo userInfo)
-        {
-            if (userInfo != null)
-            {
-                return userInfo.超级用户 ? "是" : "否";
-            }
-            return "否";
-        }
-
-        /// <summary>
-        /// 获取授权状态
-        /// </summary>
-        /// <param name="userInfo">用户信息</param>
-        /// <returns>授权状态</returns>
-        private string GetAuthorizationStatus(UserInfo userInfo)
-        {
-            if (userInfo != null)
-            {
-                return userInfo.授权状态 ? "已授权" : "未授权";
-            }
-            return "未授权";
         }
 
         #endregion
@@ -570,7 +508,7 @@ namespace RUINORERP.Server.Controls
             {
                 if (item.SubItems.Count > 10)
                 {
-                    var idleTime = DateTime.Now - sessionInfo.LastHeartbeat;
+                    var idleTime = DateTime.Now - sessionInfo.LastHeartbeatTime;
                     item.SubItems[10].Text = FormatIdleTime(idleTime);
                 }
             }
@@ -771,12 +709,13 @@ namespace RUINORERP.Server.Controls
                     // 如果找不到，创建一个断开的会话记录
                     var disconnectedSession = new SessionInfo
                     {
+                        SessionID = sessionInfo.SessionID,
                         UserName = $"已断开用户_{sessionInfo.SessionID.Substring(0, Math.Min(8, sessionInfo.SessionID.Length))}",
                         ClientIp = sessionInfo.ClientIp ?? "未知IP",
                         IsConnected = false,
                         IsAuthenticated = false,
-                        LastHeartbeat = DateTime.Now,
-                        ConnectedTime = sessionInfo.ConnectTime.Value
+                        LastHeartbeatTime = DateTime.Now,
+                        ConnectTime = sessionInfo.ConnectTime
                     };
                     
                     AddOrUpdateSessionItem(disconnectedSession);
@@ -819,9 +758,9 @@ namespace RUINORERP.Server.Controls
                     var oldSessionInfo = existingItem.Tag as SessionInfo;
                     bool statusChanged = oldSessionInfo?.IsConnected != sessionInfo.IsConnected || 
                                        oldSessionInfo?.IsAuthenticated != sessionInfo.IsAuthenticated;
-                    bool heartbeatChanged = Math.Abs(((oldSessionInfo?.LastHeartbeat ?? DateTime.MinValue) - sessionInfo.LastHeartbeat).TotalSeconds) > 5;
-                    bool moduleChanged = oldSessionInfo?.UserInfo.当前模块 != sessionInfo.UserInfo.当前模块;
-                    bool formChanged = oldSessionInfo?.UserInfo.当前窗体 != sessionInfo.UserInfo.当前窗体;
+                    bool heartbeatChanged = Math.Abs((oldSessionInfo?.LastHeartbeatTime ?? DateTime.MinValue - sessionInfo.LastHeartbeatTime).TotalSeconds) > 5;
+                    bool moduleChanged = oldSessionInfo?.CurrentModule != sessionInfo.CurrentModule;
+                    bool formChanged = oldSessionInfo?.CurrentForm != sessionInfo.CurrentForm;
 
                     // 更新会话信息
                     UpdateSessionItem(existingItem, sessionInfo);
@@ -834,11 +773,11 @@ namespace RUINORERP.Server.Controls
                     }
                     else if (moduleChanged)
                     {
-                        LogStatusChange(sessionInfo, $"模块变化: {sessionInfo.UserInfo.当前模块}");
+                        LogStatusChange(sessionInfo, $"模块变化: {sessionInfo.CurrentModule}");
                     }
                     else if (formChanged)
                     {
-                        LogStatusChange(sessionInfo, $"窗体变化: {sessionInfo.UserInfo.当前窗体}");
+                        LogStatusChange(sessionInfo, $"窗体变化: {sessionInfo.CurrentForm}");
                     }
                     else if (heartbeatChanged)
                     {
@@ -885,9 +824,8 @@ namespace RUINORERP.Server.Controls
                     return;
                 }
 
-                var userInfo = sessionInfo.UserInfo ?? new UserInfo();
-                string userDisplayName = GetDisplayUserName(userInfo);
-                string userRealName = GetDisplayName(userInfo?.姓名) ?? "未知姓名";
+                string userDisplayName = GetDisplayName(sessionInfo.UserName);
+                string userRealName = sessionInfo.DisplayName ?? "未知姓名";
                 string logMessage = $"[会话状态变化] 用户: {userDisplayName} ({userRealName}), {changeDescription}, 时间: {DateTime.Now:yyyy-MM-dd HH:mm:ss}";
                 frmMainNew.Instance.PrintInfoLog(logMessage);
             }

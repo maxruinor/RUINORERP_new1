@@ -33,6 +33,7 @@
     <Compile Remove="Base\StatusManager\UnifiedStateManagerFactoryV4.cs" />
     <Compile Remove="Base\StatusManager\UnifiedStateManagerV4.cs" />
     <Compile Remove="BillDetailDto\sales_order_detail.cs" />
+    <Compile Remove="CommonModel\UserActionInfo.cs" />
     <Compile Remove="Models\RoleModulePermission.cs" />
     <Compile Remove="ObjectExtensionUtils.cs" />
     <Compile Remove="product_PropertyComb.cs" />

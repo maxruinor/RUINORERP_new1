@@ -11,14 +11,14 @@ namespace RUINORERP.Server.Controls
         /// Clean up any resources being used.
         /// </summary>
         /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing && (components != null))
-            {
-                components.Dispose();
-            }
-            base.Dispose(disposing);
-        }
+        //protected override void Dispose(bool disposing)
+        //{
+        //    if (disposing && (components != null))
+        //    {
+        //        components.Dispose();
+        //    }
+        //    base.Dispose(disposing);
+        //}
 
         #region Component Designer generated code
 
@@ -444,7 +444,6 @@ namespace RUINORERP.Server.Controls
             Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             Name = "UserManagementControl";
             Size = new System.Drawing.Size(933, 708);
-            Disposed += UserManagementControl_Disposed;
             toolStrip1.ResumeLayout(false);
             toolStrip1.PerformLayout();
             contextMenuStrip1.ResumeLayout(false);
@@ -496,7 +495,9 @@ namespace RUINORERP.Server.Controls
         private System.Windows.Forms.ToolStripMenuItem 机器名列ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem CPU信息列ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 内存大小列ToolStripMenuItem;
-        
+        private System.Windows.Forms.ToolStripMenuItem 切换服务器ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 全部切换服务器ToolStripMenuItem;
+
         // 会话统计标签
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator5;
         private System.Windows.Forms.ToolStripLabel lbl统计信息;

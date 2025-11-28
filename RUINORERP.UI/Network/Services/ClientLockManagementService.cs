@@ -13,7 +13,6 @@ using System.Threading.Tasks;
 using RUINORERP.UI.Network.Authentication;
 using RUINORERP.Model.CommonModel;
 using RUINORERP.Global;
-using RUINORERP.UI.Network.Interfaces;
 
 namespace RUINORERP.UI.Network.Services
 {
@@ -32,7 +31,7 @@ namespace RUINORERP.UI.Network.Services
     /// - 统一版本控制
     /// - 完整的生命周期管理
     /// </summary>
-    public class ClientLockManagementService : IDisposable, ILockStatusProvider
+    public class ClientLockManagementService : IDisposable
     {
         #region 私有字段
 
@@ -91,10 +90,10 @@ namespace RUINORERP.UI.Network.Services
             }
             else
             {
-                // 内部创建时传入自身作为接口实现，避免循环依赖
+                // 内部创建时不再传入自身作为接口实现，避免循环依赖
                 var cacheLogger = _logger as ILogger<ClientLocalLockCacheService> ??
                     new Microsoft.Extensions.Logging.Logger<ClientLocalLockCacheService>(new Microsoft.Extensions.Logging.LoggerFactory());
-                _clientCache = new ClientLocalLockCacheService(this, null, cacheLogger);
+                _clientCache = new ClientLocalLockCacheService(null, cacheLogger);
             }
 
             // 设置锁恢复管理器 - 如果未提供则创建
@@ -249,10 +248,9 @@ namespace RUINORERP.UI.Network.Services
                 throw new ObjectDisposedException(nameof(ClientLockManagementService));
 
             try
-            {
-                // 优先检查本地缓存
+            {                // 优先检查本地缓存
                 var cachedStatus = await _clientCache.GetLockInfoAsync(billId);
-                if (!cachedStatus.IsExpired)
+                if (cachedStatus != null && !cachedStatus.IsExpired)
                 {
                     _logger.LogDebug("从缓存获取单据 {BillId} 锁状态", billId);
                     return new LockResponse
@@ -262,7 +260,7 @@ namespace RUINORERP.UI.Network.Services
                     };
                 }
 
-                // 缓存过期或不存在，查询服务器
+                // 缓存过期或不存在，直接查询服务器
                 var lockRequest = new LockRequest
                 {
                     LockInfo = new LockInfo { BillID = billId }
@@ -274,9 +272,23 @@ namespace RUINORERP.UI.Network.Services
                     LockCommands.CheckLockStatus, lockRequest, token);
 
                 // 更新缓存
-                if (response.IsSuccess)
+                if (response.IsSuccess && response.LockInfo != null)
                 {
-                    // 缓存清理已在ClientLockCache内部处理
+                    // 创建本地缓存项
+                    var localLockInfo = new LockInfo
+                    {
+                        BillID = response.LockInfo.BillID,
+                        IsLocked = response.LockInfo.IsLocked,
+                        UserId = response.LockInfo.UserId,
+                        UserName = response.LockInfo.UserName,
+                        MenuID = response.LockInfo.MenuID,
+                        LockTime = response.LockInfo.LockTime,
+                        LastUpdateTime = DateTime.Now,
+                        ExpireTime = DateTime.Now.AddMinutes(5) // 本地缓存5分钟过期
+                    };
+                    
+                    // 使用公共方法更新缓存
+                    _clientCache.UpdateCacheItem(localLockInfo);
                 }
 
                 return response;

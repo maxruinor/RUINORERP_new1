@@ -8,14 +8,12 @@ using Microsoft.Extensions.Logging;
 using RUINORERP.Common.Extensions;
 using RUINORERP.PacketSpec.Models.Lock;
 using RUINORERP.PacketSpec.Models.Responses;
-using RUINORERP.UI.Network.Interfaces;
 
 namespace RUINORERP.UI.Network.Services
 {
     /// <summary>
     /// 客户端锁缓存管理器
-    /// 提供本地缓存以减少网络请求，提升用户体验
-    /// 优化版本：使用接口解耦，避免循环依赖
+    /// 提供本地缓存功能，不再与服务器直接交互
     /// </summary>
     public class ClientLocalLockCacheService : IDisposable
     {
@@ -23,7 +21,6 @@ namespace RUINORERP.UI.Network.Services
         private readonly Timer _cleanupTimer;
         private readonly Timer _syncTimer;
         private readonly ILogger<ClientLocalLockCacheService> _logger;
-        private readonly ILockStatusProvider _lockStatusProvider;
         private readonly IUserInfoProvider _userInfoProvider;
         private readonly object _syncLock = new object();
 
@@ -41,22 +38,19 @@ namespace RUINORERP.UI.Network.Services
         private long currentUserId = 0;
         private string currentUserName = string.Empty;
         /// <summary>
-        /// 构造函数 - 优化版本，使用接口解耦避免循环依赖
+        /// 构造函数 - 移除对ILockStatusProvider的依赖
         /// </summary>
-        /// <param name="lockStatusProvider">锁状态提供者</param>
         /// <param name="userInfoProvider">用户信息提供者（可选）</param>
         /// <param name="logger">日志记录器</param>
         public ClientLocalLockCacheService(
-            ILockStatusProvider lockStatusProvider,
             IUserInfoProvider userInfoProvider = null,
             ILogger<ClientLocalLockCacheService> logger = null)
         {
-            _lockStatusProvider = lockStatusProvider ?? throw new ArgumentNullException(nameof(lockStatusProvider));
             _userInfoProvider = userInfoProvider ?? new DefaultUserInfoProvider();
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _localCache = new ConcurrentDictionary<long, LockInfo>();
 
-            // 获取当前用户信息 - 统一获取逻辑
+            // 获取当前用户信息
             var userInfo = _userInfoProvider.GetCurrentUserInfo();
             currentUserId = userInfo.userId;
             currentUserName = userInfo.userName;
@@ -75,7 +69,7 @@ namespace RUINORERP.UI.Network.Services
 
 
         /// <summary>
-        /// 统一的缓存获取方法 - 优化版本
+        /// 统一的缓存获取方法 - 只从本地缓存获取
         /// </summary>
         /// <param name="billId">单据ID</param>
         /// <param name="requireLockInfo">是否需要完整的锁定信息</param>
@@ -84,7 +78,7 @@ namespace RUINORERP.UI.Network.Services
         {
             try
             {
-                // 先从本地缓存查询
+                // 只从本地缓存查询
                 if (_localCache.TryGetValue(billId, out var cachedInfo))
                 {
                     if (!cachedInfo.IsExpired)
@@ -97,18 +91,7 @@ namespace RUINORERP.UI.Network.Services
                     _localCache.TryRemove(billId, out _);
                 }
 
-                // 缓存未命中或已过期，查询服务器
-                if (_lockStatusProvider != null)
-                {
-                    var lockResponse = await _lockStatusProvider.CheckLockStatusAsync(billId);
-                    if (lockResponse?.IsSuccess == true && lockResponse.LockInfo != null)
-                    {
-                        UpdateCache(lockResponse.LockInfo);
-                        return (lockResponse.LockInfo, false);
-                    }
-                }
-
-                // 如果无法从服务器获取，返回未锁定状态
+                // 如果缓存中没有，返回未锁定状态的信息
                 var unlockedInfo = new LockInfo
                 {
                     BillID = billId,
@@ -120,7 +103,7 @@ namespace RUINORERP.UI.Network.Services
                 };
 
                 UpdateCache(unlockedInfo);
-                return (unlockedInfo, false);
+                return (unlockedInfo, true);
             }
             catch (Exception ex)
             {
@@ -130,7 +113,7 @@ namespace RUINORERP.UI.Network.Services
         }
 
         /// <summary>
-        /// 检查文档是否被锁定（优化版本）
+        /// 检查文档是否被锁定
         /// </summary>
         /// <param name="billId">单据ID</param>
         /// <returns>是否被锁定</returns>
@@ -141,7 +124,7 @@ namespace RUINORERP.UI.Network.Services
         }
 
         /// <summary>
-        /// 获取锁定信息（优化版本）
+        /// 获取锁定信息
         /// </summary>
         /// <param name="billId">单据ID</param>
         /// <returns>锁定信息</returns>
@@ -162,7 +145,6 @@ namespace RUINORERP.UI.Network.Services
         {
             try
             {
-
                 // 解锁成功，更新缓存
                 UpdateCacheAfterUnlock(billId);
 
@@ -186,7 +168,6 @@ namespace RUINORERP.UI.Network.Services
         {
             try
             {
-
                 // 刷新成功，更新缓存的过期时间
                 if (_localCache.TryGetValue(billId, out var cachedInfo))
                 {
@@ -213,9 +194,8 @@ namespace RUINORERP.UI.Network.Services
             try
             {
                 var result = new Dictionary<long, bool>();
-                var needQueryFromServer = new List<long>();
-                //有问题
-                // 先从缓存中获取
+                
+                // 只从缓存中获取
                 foreach (var billId in billIds)
                 {
                     if (_localCache.TryGetValue(billId, out var cachedInfo))
@@ -226,12 +206,13 @@ namespace RUINORERP.UI.Network.Services
                         }
                         else
                         {
-                            needQueryFromServer.Add(billId);
+                            _localCache.TryRemove(billId, out _);
+                            result[billId] = false;
                         }
                     }
                     else
                     {
-                        needQueryFromServer.Add(billId);
+                        result[billId] = false;
                     }
                 }
                 
@@ -242,6 +223,19 @@ namespace RUINORERP.UI.Network.Services
                 _logger.LogError(ex, "批量检查锁定状态失败");
                 return billIds.ToDictionary(id => id, _ => false);
             }
+        }
+
+        /// <summary>
+        /// 更新缓存项（公共方法，用于外部调用）
+        /// </summary>
+        /// <param name="lockInfo">锁定信息</param>
+        public void UpdateCacheItem(LockInfo lockInfo)
+        {
+            if (lockInfo == null)
+                throw new ArgumentNullException(nameof(lockInfo));
+            
+            UpdateCache(lockInfo);
+            _logger.LogDebug($"通过外部调用更新锁缓存: 文档 {lockInfo.BillID}, 锁定状态: {lockInfo.IsLocked}");
         }
 
         /// <summary>
@@ -307,110 +301,75 @@ namespace RUINORERP.UI.Network.Services
         {
             try
             {
-                var cachedInfo = new LockInfo
+                // 创建未锁定状态的缓存项
+                var unlockedInfo = new LockInfo
                 {
                     BillID = billId,
                     IsLocked = false,
+                    UserId = 0,
+                    UserName = string.Empty,
                     LastUpdateTime = DateTime.Now,
-                    ExpireTime = DateTime.Now.AddMinutes(CACHE_EXPIRY_MINUTES),
-                    UserId = currentUserId,
+                    ExpireTime = DateTime.Now.AddMinutes(CACHE_EXPIRY_MINUTES)
                 };
 
-                _localCache.AddOrUpdate(billId, cachedInfo, (key, oldValue) => cachedInfo);
-                _logger.LogDebug($"更新锁缓存（解锁）: 文档 {billId}");
+                UpdateCache(unlockedInfo);
+                _logger.LogDebug($"更新解锁后的缓存: 文档 {billId}");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"更新锁缓存失败: 文档 {billId}");
+                _logger.LogError(ex, $"更新解锁缓存失败: 文档 {billId}");
             }
         }
 
         /// <summary>
-        /// 定时清理过期缓存
+        /// 清理过期缓存
         /// </summary>
         /// <param name="state">状态对象</param>
         private void CleanupExpiredCache(object state)
         {
             try
             {
-                var expiredKeys = _localCache
-                    .Where(kvp => kvp.Value.IsExpired)
-                    .Select(kvp => kvp.Key)
-                    .ToList();
+                int removedCount = 0;
+                var now = DateTime.Now;
 
-                foreach (var key in expiredKeys)
+                foreach (var key in _localCache.Keys.ToList())
                 {
-                    _localCache.TryRemove(key, out _);
+                    if (_localCache.TryGetValue(key, out var lockInfo) && lockInfo.IsExpired)
+                    {
+                        if (_localCache.TryRemove(key, out _))
+                        {
+                            removedCount++;
+                            _logger.LogDebug($"清理过期缓存: 文档 {key}");
+                        }
+                    }
                 }
 
-                if (expiredKeys.Count > 0)
+                if (removedCount > 0)
                 {
-                    _logger.LogDebug($"清理了 {expiredKeys.Count} 个过期锁缓存项");
+                    _logger.LogInformation($"清理了 {removedCount} 个过期的锁缓存项");
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "清理过期锁缓存时发生错误");
+                _logger.LogError(ex, "清理过期缓存时发生异常");
             }
         }
 
         /// <summary>
-        /// 定时同步活跃锁
+        /// 同步活跃锁
         /// </summary>
         /// <param name="state">状态对象</param>
         private void SyncActiveLocks(object state)
         {
             try
             {
-                var activeLocks = _localCache.Values
-                    .Where(c => c.IsLocked && !c.IsExpired)
-                    .Select(c => c.BillID)
-                    .ToList();
-                //在这里可以实现批量同步逻辑  向服务器同步
-                //if (activeLocks.Count > 0)
-                //{
-                //    _logger.LogDebug($"同步 {activeLocks.Count} 个活跃锁的状态");
-                //    这里可以批量查询服务器以更新缓存
-                //    为避免阻塞，使用Task.Run
-                //   _ = Task.Run(async () =>
-                //   {
-                //       try
-                //       {
-                //           foreach (var billId in activeLocks)
-                //           {
-                //               await QueryFromServerAsync(billId);
-                //           }
-                //       }
-                //       catch (Exception ex)
-                //       {
-                //           _logger.LogError(ex, "同步活跃锁时发生错误");
-                //       }
-                //   });
-                //}
+                // 这里只维护本地缓存，不再与服务器同步
+                var activeLocks = _localCache.Values.Count(l => l.IsLocked && !l.IsExpired);
+                _logger.LogInformation($"当前活跃锁数量: {activeLocks}");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "同步活跃锁时发生错误");
-            }
-        }
-
-        /// <summary>
-        /// 判断是否为当前用户
-        /// </summary>
-        /// <param name="userId">用户ID</param>
-        /// <returns>是否为当前用户</returns>
-        private bool IsCurrentUser(long userId)
-        {
-            // 这里应该从当前登录用户信息中获取
-            // 暂时使用简单判断
-            try
-            {
-                var currentUserId = RUINORERP.Model.Context.ApplicationContext.Current?.CurrentUser?.UserID ?? 0;
-                return currentUserId == userId;
-            }
-            catch
-            {
-                return false;
+                _logger.LogError(ex, "同步活跃锁时发生异常");
             }
         }
 
@@ -419,22 +378,59 @@ namespace RUINORERP.UI.Network.Services
         /// </summary>
         public void Dispose()
         {
-            _cleanupTimer?.Dispose();
-            _syncTimer?.Dispose();
-            _localCache.Clear();
-            _logger.LogInformation("客户端锁缓存管理器已释放资源");
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// 释放资源（内部方法）
+        /// </summary>
+        /// <param name="disposing">是否释放托管资源</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _cleanupTimer?.Dispose();
+                _syncTimer?.Dispose();
+                _localCache.Clear();
+            }
+        }
+
+        /// <summary>
+        /// 缓存统计信息类
+        /// </summary>
+        public class CacheStatistics
+        {
+            public int TotalCachedItems { get; set; }
+            public int ExpiredItems { get; set; }
+            public int LockedItems { get; set; }
+            public int OwnedByCurrentUserItems { get; set; }
+            public DateTime LastCleanup { get; set; }
+
+            public override string ToString()
+            {
+                return $"总缓存项: {TotalCachedItems}, 过期项: {ExpiredItems}, 锁定项: {LockedItems}, 当前用户锁定项: {OwnedByCurrentUserItems}";
+            }
         }
     }
-
+    
     /// <summary>
-    /// 缓存统计信息
+    /// 默认用户信息提供者
     /// </summary>
-    public class CacheStatistics
+    public class DefaultUserInfoProvider : IUserInfoProvider
     {
-        public int TotalCachedItems { get; set; }
-        public int ExpiredItems { get; set; }
-        public int LockedItems { get; set; }
-        public int OwnedByCurrentUserItems { get; set; }
-        public DateTime LastCleanup { get; set; }
+        public (long userId, string userName) GetCurrentUserInfo()
+        {
+            // 返回默认值，实际使用时应该被替换为真实的用户信息提供者
+            return (0, "DefaultUser");
+        }
+    }
+    
+    /// <summary>
+    /// 用户信息提供者接口
+    /// </summary>
+    public interface IUserInfoProvider
+    {
+        (long userId, string userName) GetCurrentUserInfo();
     }
 }

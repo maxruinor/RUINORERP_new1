@@ -1587,6 +1587,7 @@ namespace RUINORERP.Business
                         t.ApprovalOpinions,
                         t.DataStatus,
                         t.PayStatus,
+                        t.CloseCaseOpinions,
                         t.Paytype_ID,
                     }).ExecuteCommandAsync();
 

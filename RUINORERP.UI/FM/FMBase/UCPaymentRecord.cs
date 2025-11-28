@@ -182,7 +182,7 @@ namespace RUINORERP.UI.FM
                 return;
             }
             txtApprovalOpinions.ReadOnly = true;
-
+            lblMoneyUpper.Visible = true;
             if (entity.PaymentId > 0)
             {
                 entity.PrimaryKeyID = entity.PaymentId;
@@ -218,6 +218,8 @@ namespace RUINORERP.UI.FM
                 //清空
                 ControlCurrency(entity);
 
+                //转单时直接将实付金额大写
+                entity.LocalPamountInWords = entity.TotalLocalAmount.ToUpperAmount();
 
                 // 清空 DataSource（如果适用）
                 cmbPayeeInfoID.DataSource = null;
@@ -349,7 +351,7 @@ namespace RUINORERP.UI.FM
                 {
                     entity.ActionStatus = ActionStatus.修改;
                 }
-                
+
                 // 使用V3状态管理系统检查是否可以修改
                 try
                 {
@@ -619,7 +621,7 @@ namespace RUINORERP.UI.FM
                     decimal totalForeignAmount = EditEntity.TotalForeignAmount;
                     decimal sumDetailsForeignAmount = details.Sum(c => c.ForeignAmount);
                     decimal difference = totalForeignAmount - sumDetailsForeignAmount;
-                    string message = string.Format("总金额外币({0})和明细金额外币总计({1})不相等，差额为{2}，是否继续保存？", 
+                    string message = string.Format("总金额外币({0})和明细金额外币总计({1})不相等，差额为{2}，是否继续保存？",
                         totalForeignAmount, sumDetailsForeignAmount, difference);
                     if (MessageBox.Show(message, "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1) == DialogResult.No)
                     {
@@ -643,10 +645,10 @@ namespace RUINORERP.UI.FM
                     decimal totalLocalAmount = EditEntity.TotalLocalAmount;
                     decimal sumDetailsLocalAmount = details.Sum(c => c.LocalAmount);
                     decimal difference = totalLocalAmount - sumDetailsLocalAmount;
-                    
+
                     if (EditEntity.tb_FM_PaymentRecordDetails.Any(c => c.SourceBizType == (int)BizType.对账单))
                     {
-                        string message = string.Format("总金额本币({0})和明细金额本币总计({1})不相等，差额为{2}，你确定是部分支付吗？", 
+                        string message = string.Format("总金额本币({0})和明细金额本币总计({1})不相等，差额为{2}，你确定是部分支付吗？",
                             totalLocalAmount, sumDetailsLocalAmount, difference);
                         if (MessageBox.Show(message, "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1) == DialogResult.No)
                         {
@@ -655,7 +657,7 @@ namespace RUINORERP.UI.FM
                     }
                     else
                     {
-                        string message = string.Format("总金额本币({0})和明细金额本币总计({1})不相等，差额为{2}，请检查数据后再试!", 
+                        string message = string.Format("总金额本币({0})和明细金额本币总计({1})不相等，差额为{2}，请检查数据后再试!",
                             totalLocalAmount, sumDetailsLocalAmount, difference);
                         MessageBox.Show(message, "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1);
                         return false;
@@ -680,10 +682,10 @@ namespace RUINORERP.UI.FM
                     decimal totalLocalAmount = EditEntity.TotalLocalAmount;
                     decimal totalLocalPayableAmount = EditEntity.TotalLocalPayableAmount;
                     decimal difference = totalLocalAmount - totalLocalPayableAmount;
-                    
+
                     if (totalLocalAmount < totalLocalPayableAmount)
                     {
-                        string message = string.Format("实付金额({0})小于应付金额({1})，差额为{2}，确定部分支付吗？", 
+                        string message = string.Format("实付金额({0})小于应付金额({1})，差额为{2}，确定部分支付吗？",
                             totalLocalAmount, totalLocalPayableAmount, difference);
                         if (MessageBox.Show(message, "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1) == DialogResult.No)
                         {
@@ -692,7 +694,7 @@ namespace RUINORERP.UI.FM
                     }
                     if (totalLocalAmount > totalLocalPayableAmount)
                     {
-                        string message = string.Format("实付金额({0})大于应付金额({1})，差额为{2}，请检查数据后再试!", 
+                        string message = string.Format("实付金额({0})大于应付金额({1})，差额为{2}，请检查数据后再试!",
                             totalLocalAmount, totalLocalPayableAmount, difference);
                         MessageBox.Show(message, "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1);
                         return false;
@@ -762,7 +764,7 @@ namespace RUINORERP.UI.FM
                 return false;
             }
         }
-     
+
 
         public override async Task<bool> DeleteRemoteImages()
         {

@@ -2303,7 +2303,6 @@
     <Compile Include="Network\Exceptions\NetworkCommunicationException.cs" />
     <Compile Include="Network\HeartbeatManager.cs" />
     <Compile Include="Network\IClientCommunicationService.cs" />
-    <Compile Include="Network\Interfaces\ILockStatusProvider.cs" />
     <Compile Include="Network\ISocketClient.cs" />
     <Compile Include="Network\ClientCommunicationService.cs" />
     <Compile Include="Network\NetworkConfig.cs" />
@@ -5282,6 +5281,7 @@
     <Folder Include="Monitoring\Alerts\" />
     <Folder Include="MRP\RR\" />
     <Folder Include="Network\Cache\" />
+    <Folder Include="Network\Interfaces\" />
     <Folder Include="Network\Models\" />
     <Folder Include="Other\" />
     <Folder Include="PM\" />

@@ -1163,6 +1163,7 @@ namespace RUINORERP.UI.BaseForm
             // 通过依赖注入获取缓存管理器
             _cacheManager = Startup.GetFromFac<IEntityCacheManager>();
             _tableSchemaManager = TableSchemaManager.Instance;
+            _integratedLockService = Startup.GetFromFac<ClientLockManagementService>();
         }
 
         public readonly IEntityCacheManager _cacheManager;

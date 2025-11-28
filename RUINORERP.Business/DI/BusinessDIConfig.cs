@@ -129,12 +129,6 @@ namespace RUINORERP.Business.DI
                 .InstancePerLifetimeScope()
                 .PropertiesAutowired();
             
-            // 注册Redis分布式文档锁定管理器
-            builder.RegisterType<RUINORERP.Business.Lock.RedisDocumentLockManager>()
-                .As<RUINORERP.Business.Lock.IDocumentLockManager>()
-                .SingleInstance()
-                .PropertiesAutowired();
-            
 
 
             builder.RegisterType<DuplicateCheckService>()

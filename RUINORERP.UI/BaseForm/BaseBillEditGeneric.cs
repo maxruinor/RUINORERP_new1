@@ -110,27 +110,63 @@ namespace RUINORERP.UI.BaseForm
             return list;
         }
 
-        private LockManagementService lockManagementService;
+        /// <summary>
+        /// 集成式锁管理服务 v2.0.0
+        /// 推荐使用新的集成式服务，提供心跳集成、智能缓存和异常恢复功能
+        /// </summary>
+        private ClientLockManagementService _integratedLockService;
         private CancellationTokenSource _lockRefreshTokenSource;
         private Task _lockRefreshTask;
         private long _currentBillId;
         private long _currentMenuId;
 
+
         /// <summary>
-        /// 获取或初始化LockManagementService实例
-        /// 确保只在需要时初始化，避免重复创建
+        /// 获取或初始化集成式锁管理服务实例 v2.0.0
+        /// 推荐使用：集成心跳功能、智能缓存、异常恢复
+        /// 优化版本：使用统一创建逻辑，避免重复代码
         /// </summary>
-        /// <returns>LockManagementService实例</returns>
-        protected LockManagementService GetLockManagementService()
+        /// <returns>集成式锁管理服务实例</returns>
+        protected ClientLockManagementService GetIntegratedLockService()
         {
-            // 检查lockManagementService是否已经初始化
-            if (lockManagementService == null)
+            // 使用双重检查锁定模式确保线程安全
+            if (_integratedLockService == null)
             {
-                // 从依赖注入容器中获取LockManagementService实例
-                lockManagementService = RUINORERP.Model.Context.ApplicationContext.Current?.GetRequiredService<LockManagementService>();
+                lock (this)
+                {
+                    if (_integratedLockService == null)
+                    {
+                        try
+                        {
+                            // 使用工厂方法创建集成式服务
+                            _integratedLockService = Startup.GetFromFac<ClientLockManagementService>();
+
+                            // 异步启动服务，避免阻塞主线程
+                            _ = Task.Run(async () =>
+                            {
+                                try
+                                {
+                                    await _integratedLockService.StartAsync();
+                                    logger?.LogInformation("集成式锁管理服务启动成功");
+                                }
+                                catch (Exception ex)
+                                {
+                                    logger?.LogError(ex, "启动集成式锁管理服务失败");
+                                }
+                            });
+                        }
+                        catch (Exception ex)
+                        {
+                            logger?.LogError(ex, "创建集成式锁管理服务失败");
+                            throw;
+                        }
+                    }
+                }
             }
-            return lockManagementService;
+            return _integratedLockService;
         }
+
+
 
         public virtual ToolStripItem[] AddExtendButton(tb_MenuInfo menuInfo)
         {
@@ -1060,7 +1096,7 @@ namespace RUINORERP.UI.BaseForm
 
             if (System.ComponentModel.LicenseManager.UsageMode != System.ComponentModel.LicenseUsageMode.Designtime)
             {
-                lockManagementService = GetLockManagementService();
+
                 AddExcludeMenuList();
                 AddExtendButton(CurMenuInfo);
                 if (!this.DesignMode)
@@ -1929,7 +1965,7 @@ namespace RUINORERP.UI.BaseForm
                     //解锁这个业务的自己名下的其它单
                     UNLockByBizName(userid);
 
-                    var lockinfo = await lockManagementService.CheckLockStatusAsync(pkid, CurMenuInfo.MenuID);
+                    var lockinfo = await _integratedLockService.CheckLockStatusAsync(pkid, CurMenuInfo.MenuID);
                     if (lockinfo.LockInfo.UserId == userid)
                     {
                         //得到了锁 就是自己。得不到就是
@@ -2400,12 +2436,12 @@ namespace RUINORERP.UI.BaseForm
             if (pkid <= 0) return;
 
             // 获取LockManagementService实例
-            if (lockManagementService != null)
+            if (_integratedLockService != null)
             {
                 try
                 {
                     // 同步获取锁状态
-                    var lockStatus = await lockManagementService.CheckLockStatusAsync(pkid, CurMenuInfo.MenuID);
+                    var lockStatus = await _integratedLockService.CheckLockStatusAsync(pkid, CurMenuInfo.MenuID);
                     bool isLocked = lockStatus != null && lockStatus.LockInfo.IsLocked;
 
                     // 获取当前用户ID
@@ -3657,17 +3693,13 @@ namespace RUINORERP.UI.BaseForm
 
 
 
-                if (lockManagementService == null)
-                {
-                    lockManagementService = GetLockManagementService();
-                }
-
                 // 获取当前用户信息
                 var userInfo = MainForm.Instance.AppContext.CurUserInfo.UserInfo;
                 long currentUserId = userInfo.User_ID;
 
+
                 // 检查锁状态
-                var lockStatus = await lockManagementService.CheckLockStatusAsync(billId, CurMenuInfo.MenuID);
+                var lockStatus = await _integratedLockService.CheckLockStatusAsync(billId, CurMenuInfo.MenuID);
 
                 if (lockStatus != null && lockStatus.IsSuccess)
                 {
@@ -3726,7 +3758,7 @@ namespace RUINORERP.UI.BaseForm
                 }
 
                 // 尝试锁定单据
-                var lockResponse = await lockManagementService.LockAsync(billId, CurMenuInfo.MenuID);
+                var lockResponse = await _integratedLockService.LockBillAsync(billId, CurMenuInfo.MenuID);
 
                 if (lockResponse != null && lockResponse.IsSuccess)
                 {
@@ -3784,17 +3816,12 @@ namespace RUINORERP.UI.BaseForm
 
 
 
-                // 获取LockManagementService实例
-                var lockService = Startup.GetFromFac<LockManagementService>();
-                if (lockService == null)
-                {
-                    throw new Exception("无法获取锁定管理服务");
-                }
+
 
                 // 执行解锁操作
-                var unlockResponse = await lockService.UnlockBillAsync(billId, CurMenuInfo.MenuID);
+                var lockResponse = await _integratedLockService.UnlockBillAsync(billId, CurMenuInfo.MenuID);
 
-                if (unlockResponse.IsSuccess)
+                if (lockResponse.IsSuccess)
                 {
                     // 更新UI显示
                     this.tsBtnLocked.Image = global::RUINORERP.UI.Properties.Resources.unlockbill;
@@ -3803,7 +3830,7 @@ namespace RUINORERP.UI.BaseForm
                 {
                     // 仅在用户主动操作时显示MessageBox提示
                     // 解锁操作通常由用户主动触发，保留提示
-                    //   MessageBox.Show(unlockResponse.Message, "解锁失败",MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    //   MessageBox.Show(lockResponse.Message, "解锁失败",MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
             }
             catch (Exception ex)
@@ -3849,18 +3876,15 @@ namespace RUINORERP.UI.BaseForm
                 if (billId <= 0)
                     return false;
 
-                if (lockManagementService == null)
-                {
-                    lockManagementService = Startup.GetFromFac<LockManagementService>();
-                }
 
-                if (lockManagementService != null)
+
+                if (_integratedLockService != null)
                 {
                     // 获取当前用户信息
                     var userInfo = MainForm.Instance.AppContext.CurUserInfo.UserInfo;
 
                     // 先检查是否已锁定
-                    var checkResult = await lockManagementService.CheckLockStatusAsync(billId, CurMenuInfo.MenuID);
+                    var checkResult = await _integratedLockService.CheckLockStatusAsync(billId, CurMenuInfo.MenuID);
                     if (checkResult != null && checkResult.IsSuccess && checkResult.LockInfo != null && checkResult.LockInfo.IsLocked)
                     {
                         // 如果已被他人锁定
@@ -3908,7 +3932,7 @@ namespace RUINORERP.UI.BaseForm
                     {
                         try
                         {
-                            var result = await lockManagementService.LockAsync(billId, CurMenuInfo.MenuID);
+                            var result = await _integratedLockService.LockBillAsync(billId, CurMenuInfo.MenuID);
                             bool lockSuccess = result != null && result.IsSuccess;
 
                             if (lockSuccess)
@@ -3997,15 +4021,9 @@ namespace RUINORERP.UI.BaseForm
 
             try
             {
-                // 使用统一的服务获取方法
-                var lockService = GetLockManagementService();
-                if (lockService == null)
-                {
-                    logger?.LogError("锁定单据失败：锁定管理服务未初始化");
-                    return;
-                }
 
-                var result = await lockService.LockAsync(BillID, CurMenuInfo.MenuID);
+
+                var result = await _integratedLockService.LockBillAsync(BillID, CurMenuInfo.MenuID);
                 if (result.IsSuccess && result.LockInfo.IsLocked)
                 {
                     logger?.LogInformation($"单据 {BillID} 锁定成功");
@@ -4054,13 +4072,9 @@ namespace RUINORERP.UI.BaseForm
                 pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
                 if (pkid > 0)
                 {
-                    // 获取LockManagementService实例
-                    if (lockManagementService == null)
-                    {
-                        lockManagementService = Startup.GetFromFac<LockManagementService>();
-                    }
 
-                    if (lockManagementService != null)
+
+                    if (_integratedLockService != null)
                     {
                         try
                         {
@@ -4068,7 +4082,7 @@ namespace RUINORERP.UI.BaseForm
                             long currentUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
 
                             // 检查锁状态
-                            var lockStatus = await lockManagementService.CheckLockStatusAsync(pkid, CurMenuInfo.MenuID);
+                            var lockStatus = await _integratedLockService.CheckLockStatusAsync(pkid, CurMenuInfo.MenuID);
 
                             if (lockStatus != null && lockStatus.IsSuccess)
                             {
@@ -4173,10 +4187,6 @@ namespace RUINORERP.UI.BaseForm
             return isLocked;
         }
 
-        //泛型名称有一个尾巴，这里处理掉，但是总体要保持不能同时拥有同名的 泛型 和非泛型控制类
-        //否则就是调用解析时用加小尾巴
-        //注册时处理了所以用上面不加小尾巴
-        //BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller`1");
 
         /// <summary>
         /// 结案处理
@@ -6539,15 +6549,15 @@ namespace RUINORERP.UI.BaseForm
             if (billId <= 0)
                 return;
 
-            // 获取LockManagementService实例
-            if (lockManagementService != null)
+            // 获取_integratedLockService实例
+            if (_integratedLockService != null)
             {
                 // 异步发送解锁请求
                 Task.Run(async () =>
                 {
                     try
                     {
-                        await lockManagementService.RequestUnlockAsync(billId, CurMenuInfo.MenuID);
+                        await _integratedLockService.RequestUnlockAsync(billId, CurMenuInfo.MenuID);
                         logger?.LogInformation($"已向锁定用户发送解锁请求，请等待回应");
                         MainForm.Instance.uclog.AddLog($"已向锁定用户发送单据 {billId} 的解锁请求", UILogType.普通消息);
                     }
@@ -6573,9 +6583,9 @@ namespace RUINORERP.UI.BaseForm
                 // 获取当前用户信息
                 var userInfo = MainForm.Instance.AppContext.CurUserInfo.UserInfo;
 
-                lockManagementService = GetLockManagementService();
 
-                if (lockManagementService != null)
+
+                if (_integratedLockService != null)
                 {
                     // 异步解锁，使用Task.Run以避免阻塞UI线程
                     Task.Run(async () =>
@@ -6583,7 +6593,7 @@ namespace RUINORERP.UI.BaseForm
                         try
                         {
                             // 先检查锁定状态
-                            var checkResult = await lockManagementService.CheckLockStatusAsync(billId, CurMenuInfo.MenuID);
+                            var checkResult = await _integratedLockService.CheckLockStatusAsync(billId, CurMenuInfo.MenuID);
                             if (checkResult != null && checkResult.IsSuccess && checkResult.LockInfo != null && checkResult.LockInfo.IsLocked)
                             {
                                 // 检查是否是当前用户锁定
@@ -6596,8 +6606,8 @@ namespace RUINORERP.UI.BaseForm
                             }
 
                             // 执行解锁操作
-                            var unlockResult = await lockManagementService.UnlockBillAsync(billId, CurMenuInfo.MenuID);
-                            if (unlockResult != null && unlockResult.IsSuccess)
+                            var lockResponse = await _integratedLockService.UnlockBillAsync(billId, CurMenuInfo.MenuID);
+                            if (lockResponse != null && lockResponse.IsSuccess)
                             {
                                 string successMsg = $"单据【{billId}】解锁成功";
                                 MainForm.Instance.uclog.AddLog(successMsg, UILogType.普通消息);
@@ -6618,7 +6628,7 @@ namespace RUINORERP.UI.BaseForm
                             }
                             else
                             {
-                                string errorMsg = unlockResult?.Message ?? "解锁失败";
+                                string errorMsg = lockResponse?.Message ?? "解锁失败";
                                 logger?.LogError($"单据【{billId}】解锁失败：{errorMsg}");
                                 MainForm.Instance.uclog.AddLog($"单据【{billId}】解锁失败：{errorMsg}", UILogType.错误);
                             }
@@ -6656,8 +6666,8 @@ namespace RUINORERP.UI.BaseForm
             lockRequest.UnlockType = UnlockType.ByBizName;
             lockRequest.LockInfo.MenuID = CurMenuInfo.MenuID;
             // 执行解锁操作
-            var unlockResult = await lockManagementService.UnlockBillAsync(lockRequest);
-            if (unlockResult != null && unlockResult.IsSuccess)
+            var lockResponse = await _integratedLockService.UnlockBillAsync(lockRequest);
+            if (lockResponse != null && lockResponse.IsSuccess)
             {
                 string successMsg = $"单据【{cbd.BizName}】批量解锁成功";
                 MainForm.Instance.uclog.AddLog(successMsg, UILogType.普通消息);
@@ -6678,7 +6688,7 @@ namespace RUINORERP.UI.BaseForm
             }
             else
             {
-                string errorMsg = unlockResult?.Message ?? "解锁失败";
+                string errorMsg = lockResponse?.Message ?? "解锁失败";
                 logger?.LogError($"【{cbd.BizName}】批量解锁失败：{errorMsg}");
                 MainForm.Instance.uclog.AddLog($"【{cbd.BizName}】批量解锁失败：{errorMsg}", UILogType.错误);
             }
@@ -6963,17 +6973,22 @@ namespace RUINORERP.UI.BaseForm
             _currentMenuId = menuId;
             _lockRefreshTokenSource = new CancellationTokenSource();
 
-            // 创建并启动刷新任务
+            // 创建并启动刷新任务，确保token不为null
             _lockRefreshTask = Task.Run(async () =>
             {
                 try
                 {
+                    // 检查_lockRefreshTokenSource是否为null
+                    if (_lockRefreshTokenSource == null)
+                        return;
+
                     while (!_lockRefreshTokenSource.Token.IsCancellationRequested)
                     {
                         // 等待15分钟（900秒）再刷新一次
                         await Task.Delay(TimeSpan.FromMinutes(15), _lockRefreshTokenSource.Token);
 
-                        if (_lockRefreshTokenSource.Token.IsCancellationRequested)
+                        // 再次检查_lockRefreshTokenSource是否为null，防止在Delay期间被释放
+                        if (_lockRefreshTokenSource == null || _lockRefreshTokenSource.Token.IsCancellationRequested)
                             break;
 
                         // 执行锁定刷新
@@ -6989,7 +7004,7 @@ namespace RUINORERP.UI.BaseForm
                 {
                     MainForm.Instance?.uclog?.AddLog($"单据【{billId}】锁定刷新异常: {ex.Message}", UILogType.错误);
                 }
-            }, _lockRefreshTokenSource.Token);
+            }, _lockRefreshTokenSource != null ? _lockRefreshTokenSource.Token : CancellationToken.None);
 
             MainForm.Instance?.uclog?.AddLog($"单据【{billId}】锁定刷新任务已启动", UILogType.普通消息);
         }
@@ -7043,10 +7058,10 @@ namespace RUINORERP.UI.BaseForm
             try
             {
                 // 使用统一的服务获取方法
-                var lockService = GetLockManagementService();
+
 
                 // 调用锁定管理服务刷新锁定状态
-                var result = await lockService.RefreshLockAsync(_currentBillId, _currentMenuId);
+                var result = await _integratedLockService.RefreshLockAsync(_currentBillId, _currentMenuId);
 
                 if (result != null && result.IsSuccess)
                 {
@@ -7132,7 +7147,7 @@ namespace RUINORERP.UI.BaseForm
                 lockRequest.LockInfo.SetLockKey();
 
                 // 调用服务执行解锁
-                await lockManagementService.UnlockBillAsync(lockRequest);
+                await _integratedLockService.UnlockBillAsync(lockRequest);
 
                 // 显示成功提示
                 //    MessageBox.Show($"已同意用户 {requestUserName} 的解锁请求，单据【{billId}】将被解锁。", "操作成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -7162,7 +7177,7 @@ namespace RUINORERP.UI.BaseForm
             try
             {
                 // 调用服务拒绝解锁请求
-                await lockManagementService.RefuseUnlockAsync(billId, _currentMenuId, requestUserName);
+                await _integratedLockService.RefuseUnlockAsync(billId, _currentMenuId, requestUserName);
                 // 记录日志
                 MainForm.Instance?.uclog?.AddLog($"用户已拒绝解锁请求：用户 {requestUserName} 请求解锁单据【{billId}】", UILogType.普通消息);
             }

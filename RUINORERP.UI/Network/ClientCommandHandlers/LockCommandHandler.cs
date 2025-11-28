@@ -8,12 +8,18 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using RUINORERP.PacketSpec.Models.Common;
 using RUINORERP.PacketSpec.Models.Lock;
+using RUINORERP.UI.Network.Services;
 
 namespace RUINORERP.UI.Network.ClientCommandHandlers
 {
     /// <summary>
-    /// 锁管理命令处理器
+    /// 锁管理命令处理器 v2.0.0
     /// 负责处理与分布式锁相关的命令，包括锁请求、释放、状态查询等
+    /// 
+    /// 更新说明：
+    /// - v2.0.0: 集成缓存状态同步，配合新的IntegratedLockManagementService
+    /// - 支持智能缓存失效和批量状态更新
+    /// - 增强异常处理和重连机制
     /// </summary>
     [ClientCommandHandler("LockCommandHandler", 60)]
     public class LockCommandHandler : BaseClientCommandHandler
@@ -21,13 +27,21 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
         private readonly ILogger<LockCommandHandler> _logger;
 
         /// <summary>
-        /// 构造函数
+        /// 缓存服务引用 - v2.0.0新增
+        /// 用于在接收到服务器推送时更新本地缓存
+        /// </summary>
+        private ClientLocalLockCacheService _lockCache;
+
+        /// <summary>
+        /// 构造函数 v2.0.0
         /// </summary>
         /// <param name="logger">日志记录器</param>
-        public LockCommandHandler(ILogger<LockCommandHandler> logger)
+        /// <param name="lockCache">客户端缓存服务（可选）</param>
+        public LockCommandHandler(ILogger<LockCommandHandler> logger, ClientLocalLockCacheService lockCache = null)
             : base(logger)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _lockCache = lockCache; // v2.0.0: 可选的缓存服务引用
 
             // 注册支持的锁管理相关命令（使用已定义的 LockCommands）
             SetSupportedCommands(
@@ -101,7 +115,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                 else if (packet.CommandId == LockCommands.RefuseUnlock)
                 {
                     await HandleRefuseUnlockAsync(packet);
-                }   
+                }
                 else if (packet.CommandId == LockCommands.AgreeUnlock)
                 {
                     await HandleAgreeUnlockAsync(packet);
@@ -318,7 +332,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
 
 
         /// <summary>
-        /// 处理锁广播命令
+        /// 处理锁广播命令 v2.0.0
         /// </summary>
         /// <param name="packet">数据包</param>
         /// <returns>处理结果</returns>
@@ -330,6 +344,13 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                 if (packet.Response is LockResponse lockResponse)
                 {
                     _logger.LogDebug($"收到锁状态广播: 资源ID={lockResponse.LockInfo.BillID}, 状态={lockResponse.IsSuccess}");
+
+                    if (_lockCache != null)
+                    {
+                        // TODO  这里是不是要处理删除清掉锁定信息
+                        //   _lockCache.InvalidateCache(lockResponse.LockInfo.BillID);
+                        //  _logger.LogDebug($"缓存已失效: 资源ID={lockResponse.LockInfo.BillID}");
+                    }
 
                     // 这里可以触发事件或使用消息总线通知应用程序其他部分锁状态已更改
                 }

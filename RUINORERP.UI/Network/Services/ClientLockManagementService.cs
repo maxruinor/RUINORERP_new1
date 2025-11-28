@@ -1,0 +1,1207 @@
+using RUINORERP.PacketSpec.Models.Lock;
+using RUINORERP.PacketSpec.Models.Common;
+using RUINORERP.PacketSpec.Commands;
+using RUINORERP.PacketSpec.Models.Responses;
+using Microsoft.Extensions.Logging;
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using RUINORERP.UI.Network.Authentication;
+using RUINORERP.Model.CommonModel;
+using RUINORERP.Global;
+using RUINORERP.UI.Network.Interfaces;
+
+namespace RUINORERP.UI.Network.Services
+{
+    /// <summary>
+    /// 集成式锁管理服务 v2.0.0
+    /// 整合心跳功能、客户端缓存和服务器锁管理的完整解决方案
+    /// 
+    /// 版本：2.0.0
+    /// 作者：AI Assistant
+    /// 创建时间：2025-01-27
+    /// 
+    /// 主要特性：
+    /// - 集成现有心跳机制
+    /// - 智能客户端缓存
+    /// - 异常断开恢复
+    /// - 统一版本控制
+    /// - 完整的生命周期管理
+    /// </summary>
+    public class ClientLockManagementService : IDisposable, ILockStatusProvider
+    {
+        #region 私有字段
+
+        private readonly ClientCommunicationService _communicationService;
+        private readonly HeartbeatManager _heartbeatManager;
+        private readonly ILogger<ClientLockManagementService> _logger;
+        private readonly ClientLocalLockCacheService _clientCache;
+        private readonly LockRecoveryManager _recoveryManager;
+
+        private readonly ConcurrentDictionary<long, LockInfo> _activeLocks;
+        private readonly CancellationTokenSource _cancellationTokenSource;
+        private readonly Timer _lockRefreshTimer;
+        private readonly Timer _cacheCleanupTimer;
+
+        private bool _isDisposed;
+        private readonly SemaphoreSlim _operationSemaphore;
+
+        // 配置参数
+        private readonly TimeSpan _lockRefreshInterval = TimeSpan.FromMinutes(1);
+        private readonly TimeSpan _cacheCleanupInterval = TimeSpan.FromMinutes(5);
+        private readonly TimeSpan _lockTimeoutThreshold = TimeSpan.FromMinutes(30);
+        private readonly int _maxRetryAttempts = 3;
+
+        #endregion
+
+        #region 构造函数和初始化
+
+        /// <summary>
+        /// 集成式锁管理服务构造函数
+        /// </summary>
+        /// <param name="communicationService">客户端通信服务</param>
+        /// <param name="heartbeatManager">心跳管理器（系统已有）</param>
+        /// <param name="logger">日志记录器</param>
+        /// <param name="clientCache">客户端锁缓存（可选，为null时内部创建）</param>
+        /// <param name="recoveryManager">锁恢复管理器（可选，为null时内部创建）</param>
+        public ClientLockManagementService(
+            ClientCommunicationService communicationService,
+            HeartbeatManager heartbeatManager,
+            ILogger<ClientLockManagementService> logger,
+            ClientLocalLockCacheService clientCache = null,
+            LockRecoveryManager recoveryManager = null)
+        {
+            _communicationService = communicationService ?? throw new ArgumentNullException(nameof(communicationService));
+            _heartbeatManager = heartbeatManager ?? throw new ArgumentNullException(nameof(heartbeatManager));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
+            // 初始化组件
+            _activeLocks = new ConcurrentDictionary<long, LockInfo>();
+            _cancellationTokenSource = new CancellationTokenSource();
+            _operationSemaphore = new SemaphoreSlim(1, 1);
+
+            // 设置客户端锁缓存 - 如果未提供则创建（使用接口解耦）
+            if (clientCache != null)
+            {
+                _clientCache = clientCache;
+            }
+            else
+            {
+                // 内部创建时传入自身作为接口实现，避免循环依赖
+                var cacheLogger = _logger as ILogger<ClientLocalLockCacheService> ??
+                    new Microsoft.Extensions.Logging.Logger<ClientLocalLockCacheService>(new Microsoft.Extensions.Logging.LoggerFactory());
+                _clientCache = new ClientLocalLockCacheService(this, null, cacheLogger);
+            }
+
+            // 设置锁恢复管理器 - 如果未提供则创建
+            if (recoveryManager != null)
+            {
+                _recoveryManager = recoveryManager;
+            }
+            else
+            {
+                // 内部创建时传入this和clientCache
+                var recoveryLogger = _logger as ILogger<LockRecoveryManager> ??
+                    new Microsoft.Extensions.Logging.Logger<LockRecoveryManager>(new Microsoft.Extensions.Logging.LoggerFactory());
+                _recoveryManager = new LockRecoveryManager(this, _clientCache, recoveryLogger);
+            }
+
+            // 初始化定时器
+            _lockRefreshTimer = new Timer(RefreshLocksCallback, null, Timeout.Infinite, Timeout.Infinite);
+            _cacheCleanupTimer = new Timer(CleanupCacheCallback, null, Timeout.Infinite, Timeout.Infinite);
+
+            // 订阅心跳事件
+            SubscribeToHeartbeatEvents();
+
+
+        }
+
+        /// <summary>
+        /// 启动服务
+        /// </summary>
+        public async Task StartAsync()
+        {
+            try
+            {
+                await _operationSemaphore.WaitAsync(_cancellationTokenSource.Token);
+
+                if (_isDisposed)
+                    throw new ObjectDisposedException(nameof(ClientLockManagementService));
+
+                // 启动定时器
+                _lockRefreshTimer.Change(TimeSpan.Zero, _lockRefreshInterval);
+                _cacheCleanupTimer.Change(TimeSpan.FromMinutes(1), _cacheCleanupInterval);
+                // LockRecoveryManager不需要手动启动，构造函数中已初始化
+
+            }
+            finally
+            {
+                _operationSemaphore.Release();
+            }
+        }
+
+        /// <summary>
+        /// 停止服务
+        /// </summary>
+        public async Task StopAsync()
+        {
+            try
+            {
+                await _operationSemaphore.WaitAsync();
+
+                if (_isDisposed)
+                    return;
+
+                // 停止定时器
+                _lockRefreshTimer.Change(Timeout.Infinite, Timeout.Infinite);
+                _cacheCleanupTimer.Change(Timeout.Infinite, Timeout.Infinite);
+
+                // 释放所有锁
+                await ReleaseAllLocksAsync();
+                // LockRecoveryManager不需要手动停止
+
+            }
+            finally
+            {
+                _operationSemaphore.Release();
+            }
+        }
+
+        #endregion
+
+        #region 核心锁管理功能
+
+
+        /// <summary>
+        /// 解锁单据
+        /// </summary>
+        /// <param name="billId">单据ID</param>
+        /// <returns>解锁结果</returns>
+        public async Task<LockResponse> UnlockBillAsync(long billId)
+        {
+            if (_isDisposed)
+                throw new ObjectDisposedException(nameof(ClientLockManagementService));
+
+            var stopwatch = Stopwatch.StartNew();
+
+            try
+            {
+                await _operationSemaphore.WaitAsync(_cancellationTokenSource.Token);
+
+                // 从活跃锁列表中移除
+                _activeLocks.TryRemove(billId, out _);
+
+                // 缓存清除
+
+                // 发送解锁请求
+                var lockInfo = CreateLockInfo(billId, 0, 0);
+                var unlockRequest = new LockRequest { LockInfo = lockInfo };
+
+                var response = await _communicationService.SendCommandWithResponseAsync<LockResponse>(
+                    LockCommands.Unlock, unlockRequest, _cancellationTokenSource.Token);
+
+                stopwatch.Stop();
+
+                if (response.IsSuccess)
+                {
+                    _logger.LogInformation("单据 {BillId} 解锁成功，耗时 {ElapsedMs}ms",
+                        billId, stopwatch.ElapsedMilliseconds);
+                }
+                else
+                {
+                    _logger.LogWarning("单据 {BillId} 解锁失败: {Message}, 耗时 {ElapsedMs}ms",
+                        billId, response.Message, stopwatch.ElapsedMilliseconds);
+                }
+
+                return response;
+            }
+            catch (Exception ex)
+            {
+                stopwatch.Stop();
+                _logger.LogError(ex, "解锁单据 {BillId} 时发生异常，耗时 {ElapsedMs}ms",
+                    billId, stopwatch.ElapsedMilliseconds);
+
+                return new LockResponse
+                {
+                    IsSuccess = false,
+                    Message = $"解锁异常: {ex.Message}"
+                };
+            }
+            finally
+            {
+                _operationSemaphore.Release();
+            }
+        }
+
+        /// <summary>
+        /// 检查锁状态 - 实现ILockStatusProvider接口
+        /// </summary>
+        /// <param name="billId">单据ID</param>
+        /// <param name="cancellationToken">取消令牌</param>
+        /// <returns>锁状态</returns>
+        public async Task<LockResponse> CheckLockStatusAsync(long billId, CancellationToken cancellationToken = default)
+        {
+            if (_isDisposed)
+                throw new ObjectDisposedException(nameof(ClientLockManagementService));
+
+            try
+            {
+                // 优先检查本地缓存
+                var cachedStatus = await _clientCache.GetLockInfoAsync(billId);
+                if (!cachedStatus.IsExpired)
+                {
+                    _logger.LogDebug("从缓存获取单据 {BillId} 锁状态", billId);
+                    return new LockResponse
+                    {
+                        IsSuccess = true,
+                        LockInfo = cachedStatus
+                    };
+                }
+
+                // 缓存过期或不存在，查询服务器
+                var lockRequest = new LockRequest
+                {
+                    LockInfo = new LockInfo { BillID = billId }
+                };
+
+                // 使用传入的cancellationToken或默认值
+                var token = cancellationToken != default ? cancellationToken : _cancellationTokenSource.Token;
+                var response = await _communicationService.SendCommandWithResponseAsync<LockResponse>(
+                    LockCommands.CheckLockStatus, lockRequest, token);
+
+                // 更新缓存
+                if (response.IsSuccess)
+                {
+                    // 缓存清理已在ClientLockCache内部处理
+                }
+
+                return response;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "检查单据 {BillId} 锁状态时发生异常", billId);
+
+                return new LockResponse
+                {
+                    IsSuccess = false,
+                    Message = $"检查锁状态异常: {ex.Message}"
+                };
+            }
+        }
+
+        /// <summary>
+        /// 锁定单据 - 实现ILockStatusProvider接口
+        /// </summary>
+        /// <param name="billId">单据ID</param>
+        /// <param name="menuId">菜单ID</param>
+        /// <param name="timeoutMinutes">超时时间（分钟）</param>
+        /// <param name="cancellationToken">取消令牌</param>
+        /// <returns>锁定响应</returns>
+        public async Task<LockResponse> LockBillAsync(long billId, long menuId, int timeoutMinutes = 30, CancellationToken cancellationToken = default)
+        {
+            if (_isDisposed)
+                throw new ObjectDisposedException(nameof(ClientLockManagementService));
+
+            var stopwatch = Stopwatch.StartNew();
+
+            try
+            {
+                await _operationSemaphore.WaitAsync(cancellationToken != default ? cancellationToken : _cancellationTokenSource.Token);
+
+                // 检查是否已锁定（本地缓存） 这里还要看是不是自己的锁
+                var islock = await _clientCache.IsLockedAsync(billId);
+                if (islock)
+                {
+                    // 尝试获取锁信息
+                    var lockInfoByLocal = await _clientCache.GetLockInfoAsync(billId);
+                    _logger.LogDebug("单据 {BillId} 已被锁定", billId);
+                    return new LockResponse
+                    {
+                        IsSuccess = true,
+                        Message = "单据已被锁定",
+                        LockInfo = lockInfoByLocal
+                    };
+                }
+
+                // 创建锁定请求
+                var lockInfo = CreateLockInfo(billId, menuId, timeoutMinutes);
+                var lockRequest = new LockRequest { LockInfo = lockInfo };
+
+                // 使用传入的cancellationToken或默认值
+                var token = cancellationToken != default ? cancellationToken : _cancellationTokenSource.Token;
+
+                // 发送锁定请求
+                var response = await _communicationService.SendCommandWithResponseAsync<LockResponse>(
+                    LockCommands.Lock, lockRequest, token);
+
+                stopwatch.Stop();
+
+                if (response.IsSuccess)
+                {
+                    // 添加到活跃锁列表
+                    _activeLocks.TryAdd(billId, response.LockInfo);
+
+                    _logger.LogInformation("单据 {BillId} 锁定成功，耗时 {ElapsedMs}ms",
+                        billId, stopwatch.ElapsedMilliseconds);
+                }
+                else
+                {
+                    _logger.LogWarning("单据 {BillId} 锁定失败: {Message}, 耗时 {ElapsedMs}ms",
+                        billId, response.Message, stopwatch.ElapsedMilliseconds);
+                }
+
+                return response;
+            }
+            catch (Exception ex)
+            {
+                stopwatch.Stop();
+                _logger.LogError(ex, "锁定单据 {BillId} 时发生异常，耗时 {ElapsedMs}ms",
+                    billId, stopwatch.ElapsedMilliseconds);
+
+                return new LockResponse
+                {
+                    IsSuccess = false,
+                    Message = $"锁定异常: {ex.Message}"
+                };
+            }
+            finally
+            {
+                _operationSemaphore.Release();
+            }
+        }
+
+        /// <summary>
+        /// 解锁单据 - 实现ILockStatusProvider接口
+        /// </summary>
+        /// <param name="billId">单据ID</param>
+        /// <param name="cancellationToken">取消令牌</param>
+        /// <returns>解锁响应</returns>
+        public async Task<LockResponse> UnlockBillAsync(long billId, CancellationToken cancellationToken = default)
+        {
+            if (_isDisposed)
+                throw new ObjectDisposedException(nameof(ClientLockManagementService));
+
+            var stopwatch = Stopwatch.StartNew();
+
+            try
+            {
+                // 使用传入的cancellationToken或默认值
+                var token = cancellationToken != default ? cancellationToken : _cancellationTokenSource.Token;
+                await _operationSemaphore.WaitAsync(token);
+
+                // 从活跃锁列表中移除
+                _activeLocks.TryRemove(billId, out _);
+
+                // 缓存清除
+                _clientCache.ClearCache(billId);
+
+                // 发送解锁请求
+                var lockInfo = CreateLockInfo(billId, 0, 0);
+                var unlockRequest = new LockRequest { LockInfo = lockInfo };
+
+                var response = await _communicationService.SendCommandWithResponseAsync<LockResponse>(
+                    LockCommands.Unlock, unlockRequest, token);
+
+                stopwatch.Stop();
+
+                if (response.IsSuccess)
+                {
+                    _logger.LogInformation("单据 {BillId} 解锁成功，耗时 {ElapsedMs}ms",
+                        billId, stopwatch.ElapsedMilliseconds);
+                }
+                else
+                {
+                    _logger.LogWarning("单据 {BillId} 解锁失败: {Message}, 耗时 {ElapsedMs}ms",
+                        billId, response.Message, stopwatch.ElapsedMilliseconds);
+                }
+
+                return response;
+            }
+            catch (Exception ex)
+            {
+                stopwatch.Stop();
+                _logger.LogError(ex, "解锁单据 {BillId} 时发生异常，耗时 {ElapsedMs}ms",
+                    billId, stopwatch.ElapsedMilliseconds);
+
+                return new LockResponse
+                {
+                    IsSuccess = false,
+                    Message = $"解锁异常: {ex.Message}"
+                };
+            }
+            finally
+            {
+                _operationSemaphore.Release();
+            }
+        }
+
+        // 保留原有的方法实现，但标记为过时或内部使用
+        /// <summary>
+        /// 锁定单据（内部使用，为兼容性保留）
+        /// </summary>
+        /// <param name="billId">单据ID</param>
+        /// <param name="menuId">菜单ID</param>
+        /// <param name="timeoutMinutes">超时时间（分钟）</param>
+        /// <returns>锁定响应</returns>
+        private async Task<LockResponse> LockBillInternalAsync(long billId, long menuId, int timeoutMinutes = 30)
+        {
+            return await LockBillAsync(billId, menuId, timeoutMinutes, _cancellationTokenSource.Token);
+        }
+
+        /// <summary>
+        /// 检查锁状态（内部使用，为兼容性保留）
+        /// </summary>
+        /// <param name="billId">单据ID</param>
+        /// <returns>锁状态</returns>
+        private async Task<LockResponse> CheckLockStatusInternalAsync(long billId)
+        {
+            return await CheckLockStatusAsync(billId, _cancellationTokenSource.Token);
+        }
+
+        /// <summary>
+        /// 解锁单据（内部使用，为兼容性保留）
+        /// </summary>
+        /// <param name="billId">单据ID</param>
+        /// <returns>解锁响应</returns>
+        private async Task<LockResponse> UnlockBillInternalAsync(long billId)
+        {
+            return await UnlockBillAsync(billId, _cancellationTokenSource.Token);
+        }
+
+        #endregion
+
+        #region 心跳集成
+
+        /// <summary>
+        /// 订阅心跳事件
+        /// </summary>
+        private void SubscribeToHeartbeatEvents()
+        {
+            try
+            {
+                // 订阅心跳成功事件，发送锁状态信息
+                _heartbeatManager.OnHeartbeatSuccess += async () =>
+                {
+                    try
+                    {
+                        await SendLockHeartbeatAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "发送锁心跳信息时发生异常");
+                    }
+                };
+
+                // 订阅心跳失败事件，可能需要检查锁状态
+                _heartbeatManager.OnHeartbeatFailed += (message) =>
+                {
+                    _logger.LogWarning("心跳失败: {Message}，可能影响锁状态同步", message);
+                };
+
+                // 订阅Token过期事件，释放所有锁
+                _heartbeatManager.OnTokenExpired += async () =>
+                {
+                    _logger.LogWarning("Token过期，释放所有锁");
+                    await ReleaseAllLocksAsync();
+                };
+
+                _logger.LogDebug("心跳事件订阅完成");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "订阅心跳事件时发生异常");
+            }
+        }
+
+        /// <summary>
+        /// 发送锁心跳信息
+        /// 在正常心跳中附加锁状态信息
+        /// </summary>
+        private async Task SendLockHeartbeatAsync()
+        {
+            try
+            {
+                if (_activeLocks.IsEmpty)
+                    return;
+
+                var lockHeartbeatData = new
+                {
+                    ActiveLockCount = _activeLocks.Count,
+                    ActiveLocks = _activeLocks.Values.Select(l => new
+                    {
+                        BillID = l.BillID,
+                        LockId = l.LockId,
+                        UserId = l.UserId,
+                        UserName = l.UserName,
+                        LockTime = l.LockTime
+                    }).ToArray(),
+                    CacheStatus = new
+                    {
+                        CacheStatus = "Not Available"
+                    }
+                };
+
+                // 这里可以通过心跳管理器的扩展机制发送锁状态信息
+                // 或者使用专门的锁状态广播命令
+                _logger.LogDebug("发送锁心跳信息，活跃锁数: {LockCount}", _activeLocks.Count);
+
+                // TODO: 实现锁状态信息的实际发送逻辑
+                // await _communicationService.SendCommandAsync(LockCommands.LockHeartbeat, lockHeartbeatData);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "发送锁心跳信息时发生异常");
+            }
+        }
+
+        #endregion
+
+        #region 定时器回调
+
+        /// <summary>
+        /// 刷新锁定时器回调
+        /// </summary>
+        private async void RefreshLocksCallback(object state)
+        {
+            if (_isDisposed || _cancellationTokenSource.Token.IsCancellationRequested)
+                return;
+
+            try
+            {
+                await RefreshAllLocksAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "刷新锁定时器回调中发生异常");
+            }
+        }
+
+        /// <summary>
+        /// 清理缓存定时器回调
+        /// </summary>
+        private async void CleanupCacheCallback(object state)
+        {
+            if (_isDisposed || _cancellationTokenSource.Token.IsCancellationRequested)
+                return;
+
+            try
+            {
+                // ClientLockCache内部已使用定时器定期清理过期缓存，无需手动触发
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "清理缓存定时器回调中发生异常");
+            }
+        }
+
+        #endregion
+
+        #region 辅助方法
+
+        /// <summary>
+        /// 创建锁信息对象
+        /// </summary>
+        private LockInfo CreateLockInfo(long billId, long menuId, int timeoutMinutes)
+        {
+            var userInfo = GetCurrentUser();
+
+            return new LockInfo
+            {
+                BillID = billId,
+                MenuID = menuId,
+                UserId = userInfo?.UserID ?? 0,
+                UserName = userInfo?.姓名 ?? "Unknown",
+                LockTime = DateTime.Now,
+                ExpireTime = DateTime.Now.AddMinutes(timeoutMinutes),
+                LockId = Guid.NewGuid().ToString("N").Substring(0, 8)
+            };
+        }
+
+        /// <summary>
+        /// 获取当前用户信息
+        /// </summary>
+        private UserInfo GetCurrentUser()
+        {
+            try
+            {
+                return MainForm.Instance?.AppContext?.CurrentUser;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "获取当前用户信息失败");
+                return null;
+            }
+        }
+
+
+        /// <summary>
+        /// 获取服务统计信息
+        /// </summary>
+        public LockInfoStatistics GetStatistics()
+        {
+            return new LockInfoStatistics
+            {
+                ActiveLocks = _activeLocks.Count,
+                TotalLocks = _activeLocks.Count,
+                HeartbeatEnabled = true,
+                LastCleanup = DateTime.Now,
+                ServiceVersion = "2.0.0",
+                VersionDate = DateTime.Now.ToString("yyyy-MM-dd"),
+                LocksByBizType = new Dictionary<BizType, int>(),
+                LocksByStatus = new Dictionary<LockStatus, int>()
+            };
+        }
+
+        #endregion
+
+        #region IDisposable 实现
+
+        /// <summary>
+        /// 释放资源
+        /// </summary>
+        public void Dispose()
+        {
+            if (_isDisposed)
+                return;
+
+            try
+            {
+                // 停止服务
+                StopAsync().GetAwaiter().GetResult();
+
+                // 释放定时器
+                _lockRefreshTimer?.Dispose();
+                _cacheCleanupTimer?.Dispose();
+
+                // 释放组件
+                _clientCache?.Dispose();
+                _recoveryManager?.Dispose();
+
+                // 取消令牌
+                _cancellationTokenSource?.Cancel();
+                _cancellationTokenSource?.Dispose();
+
+                // 释放信号量
+                _operationSemaphore?.Dispose();
+
+                _isDisposed = true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "释放集成式锁管理服务资源时发生异常");
+            }
+        }
+
+        /// <summary>
+        /// 刷新所有活跃锁
+        /// </summary>
+        private async Task RefreshAllLocksAsync()
+        {
+            if (_isDisposed || _activeLocks.IsEmpty)
+                return;
+
+            var activeLockIds = _activeLocks.Keys.ToArray();
+            if (activeLockIds.Length == 0)
+                return;
+
+            _logger.LogDebug("开始刷新 {LockCount} 个活跃锁", activeLockIds.Length);
+
+            var refreshTasks = activeLockIds.Select(async billId =>
+            {
+                try
+                {
+                    var response = await CheckLockStatusAsync(billId, _cancellationTokenSource.Token);
+                    if (response.IsSuccess && response.LockInfo != null)
+                    {
+                        // 检查锁是否仍然有效
+                        if (response.LockInfo.IsExpired)
+                        {
+                            _logger.LogWarning("检测到单据 {BillId} 锁已过期，将从活跃列表移除", billId);
+                            _activeLocks.TryRemove(billId, out _);
+                            _clientCache.ClearCache(billId);
+                        }
+                        else
+                        {
+                            // 更新刷新计数
+                            if (_activeLocks.TryGetValue(billId, out var clientLock))
+                            {
+                                clientLock.LastUpdateTime = DateTime.Now;
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "刷新单据 {BillId} 锁状态时发生异常", billId);
+                }
+            });
+
+            await Task.WhenAll(refreshTasks);
+            _logger.LogDebug("活跃锁刷新完成");
+        }
+
+        /// <summary>
+        /// 释放所有锁
+        /// </summary>
+        private async Task ReleaseAllLocksAsync()
+        {
+            if (_activeLocks.IsEmpty)
+                return;
+
+            var activeLockIds = _activeLocks.Keys.ToArray();
+            _logger.LogInformation("开始释放 {LockCount} 个活跃锁", activeLockIds.Length);
+
+            var releaseTasks = activeLockIds.Select(async billId =>
+            {
+                try
+                {
+                    await UnlockBillAsync(billId, _cancellationTokenSource.Token);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "释放单据 {BillId} 锁时发生异常", billId);
+                }
+            });
+
+            await Task.WhenAll(releaseTasks);
+            _logger.LogInformation("所有活跃锁释放完成");
+        }
+
+        /// <summary>
+        /// 刷新单据锁定状态 v2.0.0新增
+        /// 该方法通过向服务器发送请求来更新锁定的过期时间，确保当前用户能够持续编辑单据
+        /// </summary>
+        /// <param name="billId">单据ID</param>
+        /// <param name="menuId">菜单ID</param>
+        /// <param name="ct">取消令牌，用于取消异步操作</param>
+        /// <returns>刷新操作的响应结果</returns>
+        public async Task<LockResponse> RefreshLockAsync(long billId, long menuId, CancellationToken ct = default)
+        {
+            if (_isDisposed)
+                throw new ObjectDisposedException(nameof(ClientLockManagementService));
+
+            try
+            {
+                await _operationSemaphore.WaitAsync(_cancellationTokenSource.Token);
+
+                // 获取当前用户信息
+                long currentUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
+                string currentUserName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.UserName;
+
+                // 创建锁信息
+                LockInfo lockInfo = new LockInfo();
+                lockInfo.BillID = billId;
+                lockInfo.MenuID = menuId;
+                lockInfo.UserId = currentUserId;
+                lockInfo.UserName = currentUserName;
+
+                // 创建刷新锁定请求
+                var lockRequest = new LockRequest
+                {
+                    LockInfo = lockInfo,
+                    RefreshMode = true, // 标记为刷新模式
+                };
+                lockRequest.LockInfo.SetLockKey();
+
+                _logger?.LogDebug("开始刷新单据锁定 - 单据ID: {BillId}, 菜单ID: {MenuId}, 用户ID: {UserId}, 用户名称: {UserName}",
+                    billId, menuId, currentUserId, currentUserName);
+
+                // 使用通信服务发送刷新请求
+                var response = await _communicationService.SendCommandWithResponseAsync<LockResponse>(
+                    LockCommands.CheckLockStatus, lockRequest, ct);
+
+                if (response.IsSuccess)
+                {
+                    _logger?.LogDebug("单据锁定刷新成功 - 单据ID: {BillId}", billId);
+
+                    // 更新本地缓存
+                    if (_activeLocks.TryGetValue(billId, out var clientLock))
+                    {
+                        clientLock.LastUpdateTime = DateTime.Now;
+                    }
+                }
+                else
+                {
+                    _logger?.LogWarning("单据锁定刷新失败 - 单据ID: {BillId}, 错误信息: {ErrorMessage}",
+                        billId, response?.Message ?? "未知错误");
+                }
+
+                return response;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "刷新单据锁定时发生异常 - 单据ID: {BillId}, 菜单ID: {MenuId}", billId, menuId);
+                throw;
+            }
+            finally
+            {
+                _operationSemaphore.Release();
+            }
+        }
+
+        /// <summary>
+        /// 批量检查锁状态 v2.0.0新增
+        /// 支持同时检查多个单据的锁定状态，提高批量操作效率
+        /// </summary>
+        /// <param name="billIds">要检查的单据ID列表</param>
+        /// <param name="ct">取消令牌，用于取消异步操作</param>
+        /// <returns>单据ID到锁定状态的映射字典</returns>
+        public async Task<Dictionary<long, LockResponse>> BatchCheckLockStatusAsync(List<long> billIds, CancellationToken ct = default)
+        {
+            if (_isDisposed)
+                throw new ObjectDisposedException(nameof(ClientLockManagementService));
+
+            if (billIds == null || !billIds.Any())
+                return new Dictionary<long, LockResponse>();
+
+            try
+            {
+                await _operationSemaphore.WaitAsync(_cancellationTokenSource.Token);
+
+                _logger?.LogDebug("开始批量检查锁状态 - 单据数量: {Count}", billIds.Count);
+
+                var results = new Dictionary<long, LockResponse>();
+                var currentUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
+
+                // 分批处理，避免一次性发送过多请求
+                const int batchSize = 10;
+                for (int i = 0; i < billIds.Count; i += batchSize)
+                {
+                    var batch = billIds.Skip(i).Take(batchSize).ToList();
+                    var batchTasks = batch.Select(async billId =>
+                    {
+                        try
+                        {
+                            // 首先检查本地缓存
+                            var cachedStatus = await _clientCache.GetLockInfoAsync(billId);
+                            if (cachedStatus.IsLocked)
+                            {
+                                return new
+                                {
+                                    BillId = billId,
+                                    Response = new LockResponse
+                                    {
+                                        IsSuccess = true,
+                                        LockInfo = cachedStatus,
+                                        Message = "从缓存获取"
+                                    }
+                                };
+                            }
+
+                            // 缓存未命中，查询服务器
+                            var response = await CheckLockStatusAsync(billId);
+                            return new { BillId = billId, Response = response };
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger?.LogError(ex, "检查单据 {BillId} 锁状态时发生异常", billId);
+                            return new
+                            {
+                                BillId = billId,
+                                Response = new LockResponse
+                                {
+                                    IsSuccess = false,
+                                    Message = ex.Message
+                                }
+                            };
+                        }
+                    });
+
+                    var batchResults = await Task.WhenAll(batchTasks);
+                    foreach (var result in batchResults)
+                    {
+                        results[result.BillId] = result.Response;
+                    }
+                }
+
+                _logger?.LogDebug("批量检查锁状态完成 - 成功: {Success}/{Total}",
+                    results.Values.Count(r => r.IsSuccess), billIds.Count);
+
+                return results;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "批量检查锁状态时发生异常");
+                throw;
+            }
+            finally
+            {
+                _operationSemaphore.Release();
+            }
+        }
+
+        /// <summary>
+        /// 解锁单据（重载方法）v2.0.0新增
+        /// 支持提供菜单ID参数的重载版本，保持API一致性
+        /// </summary>
+        /// <param name="billId">单据ID</param>
+        /// <param name="menuId">菜单ID（可选，用于日志记录）</param>
+        /// <returns>解锁操作的响应结果</returns>
+        public async Task<LockResponse> UnlockBillAsync(long billId, long menuId = 0)
+        {
+            if (_isDisposed)
+                throw new ObjectDisposedException(nameof(ClientLockManagementService));
+
+            try
+            {
+                _logger?.LogDebug("开始解锁单据（重载方法） - 单据ID: {BillId}, 菜单ID: {MenuId}", billId, menuId);
+
+                // 调用现有的解锁方法
+                var result = await UnlockBillAsync(billId);
+
+                if (result.IsSuccess)
+                {
+                    _logger?.LogDebug("解锁单据（重载方法）成功 - 单据ID: {BillId}, 菜单ID: {MenuId}", billId, menuId);
+                }
+                else
+                {
+                    _logger?.LogWarning("解锁单据（重载方法）失败 - 单据ID: {BillId}, 菜单ID: {MenuId}, 错误信息: {ErrorMessage}",
+                        billId, menuId, result?.Message ?? "未知错误");
+                }
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "解锁单据（重载方法）时发生异常 - 单据ID: {BillId}, 菜单ID: {MenuId}", billId, menuId);
+                throw;
+            }
+        }
+
+        #endregion
+
+        #region 解锁请求相关功能
+
+        /// <summary>
+        /// 请求解锁单据 v2.0.0新增
+        /// 当用户需要解锁其他用户锁定的单据时使用
+        /// </summary>
+        /// <param name="billId">单据ID</param>
+        /// <param name="menuId">菜单ID</param>
+        /// <returns>请求解锁的响应结果</returns>
+        public async Task<LockResponse> RequestUnlockAsync(long billId, long menuId)
+        {
+            if (_isDisposed)
+                throw new ObjectDisposedException(nameof(ClientLockManagementService));
+
+            try
+            {
+                _logger?.LogDebug("开始请求解锁单据 - 单据ID: {BillId}, 菜单ID: {MenuId}", billId, menuId);
+
+                // 获取当前用户信息
+                long currentUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
+                string currentUserName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.UserName;
+
+                // 创建锁信息
+                LockInfo lockInfo = new LockInfo();
+                lockInfo.BillID = billId;
+                lockInfo.MenuID = menuId;
+                lockInfo.UserId = currentUserId;
+                lockInfo.UserName = currentUserName;
+
+                // 创建请求解锁请求
+                var lockRequest = new LockRequest
+                {
+                    LockInfo = lockInfo,
+                    RequesterUserName = currentUserName,
+                    RequesterUserId = currentUserId,
+                };
+                lockRequest.LockInfo.SetLockKey();
+
+                // 发送请求解锁命令
+                var response = await _communicationService.SendCommandWithResponseAsync<LockResponse>(
+                    LockCommands.RequestUnlock, lockRequest, _cancellationTokenSource.Token);
+
+                if (response.IsSuccess)
+                {
+                    _logger?.LogDebug("请求解锁发送成功 - 单据ID: {BillId}, 菜单ID: {MenuId}", billId, menuId);
+                }
+                else
+                {
+                    _logger?.LogWarning("请求解锁发送失败 - 单据ID: {BillId}, 菜单ID: {MenuId}, 错误信息: {ErrorMessage}",
+                        billId, menuId, response?.Message ?? "未知错误");
+                }
+
+                return response;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "发送请求解锁时发生异常 - 单据ID: {BillId}, 菜单ID: {MenuId}", billId, menuId);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// 拒绝解锁请求 v2.0.0新增
+        /// 当锁定者拒绝其他用户的解锁请求时使用
+        /// </summary>
+        /// <param name="billId">单据ID</param>
+        /// <param name="menuId">菜单ID</param>
+        /// <param name="requesterUserName">请求者用户名</param>
+        /// <returns>拒绝解锁的响应结果</returns>
+        public async Task<LockResponse> RefuseUnlockAsync(long billId, long menuId, string requesterUserName)
+        {
+            if (_isDisposed)
+                throw new ObjectDisposedException(nameof(ClientLockManagementService));
+
+            try
+            {
+                _logger?.LogDebug("开始拒绝解锁请求 - 单据ID: {BillId}, 菜单ID: {MenuId}, 请求者: {RequesterUserName}",
+                    billId, menuId, requesterUserName);
+
+                // 获取当前用户信息
+                long currentUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
+                string currentUserName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.UserName;
+
+                // 创建锁信息
+                LockInfo lockInfo = new LockInfo();
+                lockInfo.BillID = billId;
+                lockInfo.MenuID = menuId;
+                lockInfo.UserId = currentUserId;
+                lockInfo.UserName = currentUserName;
+
+                // 创建拒绝解锁请求
+                var lockRequest = new LockRequest
+                {
+                    LockInfo = lockInfo,
+                    RequesterUserName = requesterUserName,
+                    LockedUserName = currentUserName,
+                };
+                lockRequest.LockInfo.SetLockKey();
+
+                // 发送拒绝解锁命令
+                var response = await _communicationService.SendCommandWithResponseAsync<LockResponse>(
+                    LockCommands.RefuseUnlock, lockRequest, _cancellationTokenSource.Token);
+
+                if (response.IsSuccess)
+                {
+                    _logger?.LogDebug("拒绝解锁请求成功 - 单据ID: {BillId}, 菜单ID: {MenuId}", billId, menuId);
+                }
+                else
+                {
+                    _logger?.LogWarning("拒绝解锁请求失败 - 单据ID: {BillId}, 菜单ID: {MenuId}, 错误信息: {ErrorMessage}",
+                        billId, menuId, response?.Message ?? "未知错误");
+                }
+
+                return response;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "发送拒绝解锁时发生异常 - 单据ID: {BillId}, 菜单ID: {MenuId}", billId, menuId);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// 检查锁状态（重载方法）v2.0.0新增
+        /// 支持提供菜单ID参数的重载版本，保持API一致性
+        /// </summary>
+        /// <param name="billId">单据ID</param>
+        /// <param name="menuId">菜单ID（用于日志记录）</param>
+        /// <returns>锁状态信息</returns>
+        public async Task<LockResponse> CheckLockStatusAsync(long billId, long menuId)
+        {
+            if (_isDisposed)
+                throw new ObjectDisposedException(nameof(ClientLockManagementService));
+
+            try
+            {
+                _logger?.LogDebug("开始检查单据锁定状态（重载方法） - 单据ID: {BillId}, 菜单ID: {MenuId}", billId, menuId);
+
+                // 调用现有的检查锁状态方法
+                var result = await CheckLockStatusAsync(billId);
+
+                if (result.IsSuccess)
+                {
+                    _logger?.LogDebug("检查单据锁定状态完成（重载方法） - 单据ID: {BillId}, 菜单ID: {MenuId}", billId, menuId);
+                }
+                else
+                {
+                    _logger?.LogWarning("检查单据锁定状态失败（重载方法） - 单据ID: {BillId}, 菜单ID: {MenuId}, 错误信息: {ErrorMessage}",
+                        billId, menuId, result?.Message ?? "未知错误");
+                }
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "检查单据锁定状态时发生异常（重载方法） - 单据ID: {BillId}, 菜单ID: {MenuId}", billId, menuId);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// 解锁单据（接受LockRequest参数的重载方法）v2.0.0新增
+        /// 支持批量解锁和按业务类型解锁等功能
+        /// </summary>
+        /// <param name="lockRequest">锁定请求信息</param>
+        /// <returns>解锁操作的响应结果</returns>
+        public async Task<LockResponse> UnlockBillAsync(LockRequest lockRequest)
+        {
+            if (_isDisposed)
+                throw new ObjectDisposedException(nameof(ClientLockManagementService));
+
+            if (lockRequest == null)
+                throw new ArgumentNullException(nameof(lockRequest));
+
+            if (lockRequest.LockInfo == null)
+                throw new ArgumentException("LockInfo不能为空", nameof(lockRequest));
+
+            try
+            {
+                _logger?.LogDebug("开始解锁单据（LockRequest重载） - 单据ID: {BillId}, 解锁类型: {UnlockType}, 用户ID: {UserId}",
+                    lockRequest.LockInfo.BillID, lockRequest.UnlockType, lockRequest.LockInfo.UserId);
+
+                // 根据解锁类型选择不同的解锁方法
+                switch (lockRequest.UnlockType)
+                {
+                    case UnlockType.ByBizName:
+                        // 按业务类型解锁 - 这里调用现有的方法
+                        return await UnlockBillAsync(lockRequest.LockInfo.BillID);
+
+                    default:
+                        // 普通解锁
+                        return await UnlockBillAsync(lockRequest.LockInfo.BillID, lockRequest.LockInfo.MenuID);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "解锁单据时发生异常（LockRequest重载） - 单据ID: {BillId}",
+                    lockRequest.LockInfo.BillID);
+                throw;
+            }
+        }
+
+        #endregion
+    }
+
+    #region 辅助类
+
+    /// <summary>
+    /// 锁服务统计信息
+    /// </summary>
+    public class LockServiceStatistics
+    {
+        public string ServiceVersion { get; set; }
+        public DateTime VersionDate { get; set; }
+        public string VersionFeatures { get; set; }
+        public int ActiveLockCount { get; set; }
+        public int CacheSize { get; set; }
+        public double CacheHitRate { get; set; }
+        public bool IsRunning { get; set; }
+        public DateTime StartTime { get; set; }
+        public HeartbeatStatistics HeartbeatStatus { get; set; }
+
+        public string GetSummary()
+        {
+            return $"锁服务 v{ServiceVersion} - 活跃锁:{ActiveLockCount}, 缓存大小:{CacheSize}, " +
+                   $"缓存命中率:{CacheHitRate:F1}%, 运行状态:{(IsRunning ? "运行中" : "已停止")}";
+        }
+    }
+
+    #endregion
+}

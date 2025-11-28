@@ -149,7 +149,7 @@ namespace RUINORERP.Server.Network.DI
 
             
             // 注册锁管理服务 - 使用新的优化架构
-            builder.RegisterType<LockManagerService>().As<ILockManagerService>().SingleInstance();
+            builder.RegisterType<IntegratedServerLockManager>().As<ILockManagerService>().SingleInstance();
 
             // 注册服务器端登录请求处理器
             // builder.RegisterType<ServerLoginRequestHandler>().AsSelf().InstancePerDependency();

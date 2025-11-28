@@ -1,94 +1,157 @@
 ﻿using RUINORERP.Model.CommonModel;
 using System;
+using System.Runtime.Serialization;
 
 namespace RUINORERP.PacketSpec.Models.Lock
 {
     /// <summary>
-    /// 锁定信息实体类
-    /// 作为锁定功能的核心数据结构，包含所有锁定相关的状态和元数据
+    /// 统一锁定信息类
+    /// 整合了ServerLockInfo、ClientLockInfo、HeldLockInfo和原有LockInfo的所有功能
     /// </summary>
+    [DataContract]
     public class LockInfo
     {
         /// <summary>
         /// 锁定键，用于唯一标识锁定（缓存键）
         /// </summary>
+        [DataMember]
         public string LockKey { get; set; } = string.Empty;
 
         /// <summary>
         /// 锁定ID，唯一标识本次锁定（UUID格式）
         /// </summary>
+        [DataMember]
         public string LockId { get; set; } = Guid.NewGuid().ToString();
 
         /// <summary>
         /// 单据ID
         /// 要锁定的单据唯一标识
         /// </summary>
+        [DataMember]
         public long BillID { get; set; }
 
         /// <summary>
         /// 用户ID
         /// 执行锁定操作的用户ID
         /// </summary>
+        [DataMember]
         public long UserId { get; set; }
 
         /// <summary>
         /// 用户名称
         /// 执行锁定操作的用户名
         /// </summary>
+        [DataMember]
         public string UserName { get; set; } = string.Empty;
 
         /// <summary>
         /// 锁定时间
         /// 锁定操作的执行时间
         /// </summary>
+        [DataMember]
         public DateTime LockTime { get; set; } = DateTime.Now;
 
         /// <summary>
         /// 过期时间
         /// 锁定的过期时间点
         /// </summary>
+        [DataMember]
         public DateTime? ExpireTime { get; set; }
 
         /// <summary>
         /// 锁定备注/原因
         /// 说明锁定的目的或原因
         /// </summary>
+        [DataMember]
         public string Remark { get; set; } = string.Empty;
 
         /// <summary>
         /// 菜单ID
         /// 相关的业务模块菜单ID
         /// </summary>
+        [DataMember]
         public long MenuID { get; set; }
 
         /// <summary>
         /// 单据信息
         /// 关联的单据数据
         /// </summary>
+        [DataMember]
         public CommBillData? BillData { get; set; }
 
-     
         /// <summary>
         /// 会话ID
         /// 用户会话的唯一标识
         /// </summary>
+        [DataMember]
         public string SessionId { get; set; } = string.Empty;
 
         /// <summary>
         /// 操作ID，标识锁定所属的操作
         /// </summary>
+        [DataMember]
         public long OperationId { get; set; }
+
+        /// <summary>
+        /// 是否已锁定
+        /// </summary>
+        [DataMember]
+        public bool IsLocked { get; set; }
+
+        /// <summary>
+        /// 最后心跳时间
+        /// </summary>
+        [DataMember]
+        public DateTime LastHeartbeat { get; set; } = DateTime.Now;
+
+        /// <summary>
+        /// 心跳次数
+        /// </summary>
+        [DataMember]
+        public int HeartbeatCount { get; set; }
+
+        /// <summary>
+        /// 锁定类型
+        /// </summary>
+        [DataMember]
+        public LockType Type { get; set; } = LockType.Exclusive;
+
+        /// <summary>
+        /// 锁定持续时间（毫秒）
+        /// </summary>
+        [DataMember]
+        public long Duration { get; set; }
+
+        /// <summary>
+        /// 锁定来源
+        /// </summary>
+        [DataMember]
+        public string Source { get; set; } = string.Empty;
+
+        /// <summary>
+        /// 是否为临时锁
+        /// </summary>
+        [DataMember]
+        public bool IsTemporary { get; set; }
+
+        /// <summary>
+        /// 客户端信息
+        /// </summary>
+        [DataMember]
+        public string ClientInfo { get; set; } = string.Empty;
 
         /// <summary>
         /// 过期时间戳（Unix毫秒）
         /// 用于分布式系统中的时间一致性判断
         /// </summary>
+        [DataMember]
         public long? ExpireTimestamp => ExpireTime.HasValue ? new DateTimeOffset(ExpireTime.Value).ToUnixTimeMilliseconds() : null;
 
         /// <summary>
         /// 锁定剩余时间（毫秒）
         /// 获取锁定剩余的有效期
         /// </summary>
+        [DataMember]
         public long? RemainingLockTimeMs
         {
             get
@@ -102,14 +165,10 @@ namespace RUINORERP.PacketSpec.Models.Lock
         }
 
         /// <summary>
-        /// 是否已锁定
-        /// </summary>
-        public bool IsLocked { get; set; }
-
-        /// <summary>
         /// 锁定状态
         /// 统一管理锁定实体的状态，确保状态一致性
         /// </summary>
+        [DataMember]
         public LockStatus Status
         {
             get
@@ -119,7 +178,7 @@ namespace RUINORERP.PacketSpec.Models.Lock
                     return LockStatus.Unlocked;
 
                 // 检查是否已过期
-                if (IsExpired())
+                if (IsExpired)
                 {
                     // 自动将过期的锁定设置为未锁定状态
                     IsLocked = false;
@@ -153,7 +212,14 @@ namespace RUINORERP.PacketSpec.Models.Lock
             }
         }
 
+        [DataMember]
         public DateTime LastUpdateTime { get; set; }
+
+        /// <summary>
+        /// 检查锁是否为孤儿锁（2分钟无心跳）
+        /// </summary>
+        [DataMember]
+        public bool IsOrphaned => DateTime.Now > LastHeartbeat.AddMinutes(2);
 
         /// <summary>
         /// 是否即将过期（剩余时间小于总时间的20%）
@@ -204,17 +270,18 @@ namespace RUINORERP.PacketSpec.Models.Lock
         public LockInfo SetExpireTimeFromNow(int milliseconds)
         {
             ExpireTime = DateTime.Now.AddMilliseconds(milliseconds);
+            Duration = milliseconds;
             return this;
         }
 
         /// <summary>
-        /// 检查锁定是否已过期
+        /// 检查锁定是否已过期（属性）
         /// </summary>
-        /// <returns>如果已过期则返回true</returns>
-        public bool IsExpired()
+        public bool IsExpired
         {
-            return !ExpireTime.HasValue || DateTime.Now > ExpireTime.Value;
+            get { return !ExpireTime.HasValue || DateTime.Now > ExpireTime.Value; }
         }
+
 
         /// <summary>
         /// 刷新锁定有效期
@@ -224,7 +291,37 @@ namespace RUINORERP.PacketSpec.Models.Lock
         public LockInfo RefreshExpireTime(int milliseconds)
         {
             ExpireTime = DateTime.Now.AddMilliseconds(milliseconds);
+            Duration = milliseconds;
             return this;
+        }
+
+        /// <summary>
+        /// 更新心跳
+        /// </summary>
+        public void UpdateHeartbeat()
+        {
+            LastHeartbeat = DateTime.Now;
+            HeartbeatCount++;
+        }
+
+        /// <summary>
+        /// 检查锁是否属于当前用户
+        /// </summary>
+        /// <param name="currentUserId">当前用户ID</param>
+        /// <param name="currentSessionId">当前会话ID（可选）</param>
+        /// <returns>如果锁属于当前用户则返回true</returns>
+        public bool IsOwnedByCurrentUser(long currentUserId, string currentSessionId = null)
+        {
+            // 首先检查用户ID
+            if (UserId != currentUserId)
+                return false;
+            
+            // 如果提供了会话ID，同时检查会话匹配
+            if (!string.IsNullOrEmpty(currentSessionId) && !string.IsNullOrEmpty(SessionId))
+                return SessionId == currentSessionId;
+            
+            // 如果没有提供会话ID，仅根据用户ID判断
+            return true;
         }
 
         /// <summary>
@@ -240,6 +337,8 @@ namespace RUINORERP.PacketSpec.Models.Lock
         public static LockInfo Create(long billId, long userId, string userName, long menuId, 
             string sessionId, DateTime? expireTime = null)
         {
+            var now = DateTime.Now;
+            var duration = expireTime.HasValue ? (long)(expireTime.Value - now).TotalMilliseconds : 300000; // 默认5分钟
             return new LockInfo
             {
                 BillID = billId,
@@ -247,7 +346,12 @@ namespace RUINORERP.PacketSpec.Models.Lock
                 UserName = userName,
                 MenuID = menuId,
                 SessionId = sessionId,
-                ExpireTime = expireTime ?? DateTime.Now.AddMinutes(5),
+                ExpireTime = expireTime ?? now.AddMinutes(5),
+                LockTime = now,
+                LastHeartbeat = now,
+                Duration = duration,
+                Type = LockType.Exclusive,
+                IsLocked = true
             };
         }
 
@@ -284,7 +388,14 @@ namespace RUINORERP.PacketSpec.Models.Lock
                 BillData = this.BillData,
                 SessionId = this.SessionId,
                 OperationId = this.OperationId,
-                IsLocked = this.IsLocked
+                IsLocked = this.IsLocked,
+                LastHeartbeat = this.LastHeartbeat,
+                HeartbeatCount = this.HeartbeatCount,
+                Type = this.Type,
+                Duration = this.Duration,
+                Source = this.Source,
+                IsTemporary = this.IsTemporary,
+                ClientInfo = this.ClientInfo
             };
         }
 
@@ -295,7 +406,68 @@ namespace RUINORERP.PacketSpec.Models.Lock
         public override string ToString()
         {
             return $"LockInfo[BillID={BillID}, UserName={UserName}, IsLocked={IsLocked}, " +
-                   $"LockTime={LockTime}, ExpireTime={ExpireTime}]";
+                   $"LockTime={LockTime}, ExpireTime={ExpireTime}, Type={Type}, HeartbeatCount={HeartbeatCount}]";
         }
+    }
+
+    /// <summary>
+    /// 锁定状态枚举
+    /// </summary>
+    [DataContract]
+    public enum LockStatus
+    {
+        /// <summary>
+        /// 未知
+        /// </summary>
+        [EnumMember]
+        Unknown = 0,
+        /// <summary>
+        /// 锁定
+        /// </summary>
+        [EnumMember]
+        Locked = 1,
+        /// <summary>
+        /// 未锁定
+        /// </summary>
+        [EnumMember]
+        Unlocked = 2,
+        /// <summary>
+        /// 即将过期
+        /// </summary>
+        [EnumMember]
+        AboutToExpire = 3,
+        /// <summary>
+        /// 请求解锁
+        /// </summary>
+        [EnumMember]
+        RequestingUnlock = 4
+    }
+
+    /// <summary>
+    /// 锁定类型枚举
+    /// </summary>
+    [DataContract]
+    public enum LockType
+    {
+        /// <summary>
+        /// 排他锁
+        /// </summary>
+        [EnumMember]
+        Exclusive = 0,
+        /// <summary>
+        /// 共享锁
+        /// </summary>
+        [EnumMember]
+        Shared = 1,
+        /// <summary>
+        /// 意向排他锁
+        /// </summary>
+        [EnumMember]
+        IntentExclusive = 2,
+        /// <summary>
+        /// 意向共享锁
+        /// </summary>
+        [EnumMember]
+        IntentShared = 3
     }
 }

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using RUINORERP.PacketSpec.Models.Core;
 
@@ -210,35 +210,5 @@ namespace RUINORERP.PacketSpec.Models.Lock
             };
         }
     }
-
-    /// <summary>
-    /// 锁定状态枚举
-    /// 定义了单据可能的锁定状态
-    /// </summary>
-    public enum LockStatus
-    {
-        /// <summary>
-        /// 未锁定
-        /// 单据处于自由状态，可以被任何人锁定
-        /// </summary>
-        Unlocked = 0,
-
-        /// <summary>
-        /// 已锁定
-        /// 单据已被某个用户锁定
-        /// </summary>
-        Locked = 1,
-
-        /// <summary>
-        /// 锁定请求中
-        /// 有用户请求解锁此单据
-        /// </summary>
-        RequestingUnlock = 2,
-
-        /// <summary>
-        /// 锁定即将过期
-        /// 锁定即将过期，可以提醒用户刷新锁定
-        /// </summary>
-        AboutToExpire = 3
-    }
+ 
 }

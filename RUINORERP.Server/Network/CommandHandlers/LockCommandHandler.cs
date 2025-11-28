@@ -63,6 +63,28 @@ namespace RUINORERP.Server.Network.CommandHandlers
         }
 
         /// <summary>
+        /// 统一的请求数据验证方法
+        /// </summary>
+        /// <param name="cmd">队列命令对象</param>
+        /// <param name="operationName">操作名称</param>
+        /// <returns>验证结果</returns>
+        private (LockRequest LockRequest, string ErrorMessage) ValidateLockRequest(QueuedCommand cmd, string operationName)
+        {
+            var lockRequest = cmd.Packet.Request as LockRequest;
+            if (lockRequest == null)
+            {
+                return (null, $"无效的{operationName}请求数据");
+            }
+
+            if (lockRequest.LockInfo?.BillID <= 0)
+            {
+                return (null, "单据ID无效");
+            }
+
+            return (lockRequest, null);
+        }
+
+        /// <summary>
         /// 核心处理方法，根据命令类型分发到对应的处理函数
         /// </summary>
         /// <param name="cmd">队列命令对象</param>
@@ -91,13 +113,29 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     return await handler(cmd, cancellationToken);
                 }
 
-                return ResponseFactory.CreateSpecificErrorResponse<LockResponse>($"不支持的锁定命令类型: {commandId.ToString()}");
+                return CreateErrorResponse($"不支持的锁定命令类型: {commandId.ToString()}");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"处理锁定命令异常: {ex.Message}");
-                return ResponseFactory.CreateSpecificErrorResponse<LockResponse>($"处理锁定命令异常: {ex.Message}");
+                return CreateErrorResponse($"处理锁定命令异常: {ex.Message}");
             }
+        }
+
+        /// <summary>
+        /// 统一的错误响应创建方法
+        /// </summary>
+        /// <param name="message">错误消息</param>
+        /// <param name="context">执行上下文（可选）</param>
+        /// <param name="exception">异常信息（可选）</param>
+        /// <returns>错误响应</returns>
+        private IResponse CreateErrorResponse(string message, CommandContext context = null, Exception exception = null)
+        {
+            if (exception != null && context != null)
+            {
+                return ResponseFactory.CreateSpecificErrorResponse<LockResponse>(message);
+            }
+            return ResponseFactory.CreateSpecificErrorResponse<LockResponse>(message);
         }
 
         /// <summary>
@@ -110,51 +148,19 @@ namespace RUINORERP.Server.Network.CommandHandlers
         {
             try
             {
-                // 反序列化请求数据
-                var lockRequest = cmd.Packet.Request as LockRequest;
-                if (lockRequest == null)
+                var validation = ValidateLockRequest(cmd, "锁定");
+                if (validation.ErrorMessage != null)
                 {
-                    return ResponseFactory.CreateSpecificErrorResponse<LockResponse>("无效的锁定请求数据");
-                }
-
-                // 验证请求数据
-                if (lockRequest.LockInfo.BillID <= 0)
-                {
-                    return ResponseFactory.CreateSpecificErrorResponse<LockResponse>("单据ID不能为空");
+                    return CreateErrorResponse(validation.ErrorMessage);
                 }
 
                 // 请求锁定
-                var lockSuccess = await _lockManagerService.TryLockDocumentAsync(lockRequest.LockInfo);
-
-                if (lockSuccess)
-                {
-                    // 广播锁定状态变化
-                    await BroadcastLockStatusAsync();
-
-                    var response = new LockResponse
-                    {
-                        IsSuccess = true,
-                        Message = "单据锁定成功",
-                        LockInfo = lockRequest.LockInfo
-                    };
-                    return response;
-                }
-                else
-                {
-                    var response = new LockResponse
-                    {
-                        IsSuccess = false,
-                        Message = "单据锁定失败",
-                        LockInfo = lockRequest.LockInfo
-                    };
-
-                    return response;
-                }
+                return await _lockManagerService.TryLockDocumentAsync(validation.LockRequest.LockInfo);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"处理锁定请求异常: {ex.Message}");
-                return ResponseFactory.CreateSpecificErrorResponse<LockResponse>($"处理锁定请求异常: {ex.Message}");
+                return CreateErrorResponse($"处理锁定请求异常: {ex.Message}", cmd.Packet.ExecutionContext, ex);
             }
         }
 
@@ -168,52 +174,19 @@ namespace RUINORERP.Server.Network.CommandHandlers
         {
             try
             {
-                // 反序列化请求数据
-                var lockRequest = cmd.Packet.Request as LockRequest;
-                if (lockRequest == null)
+                var validation = ValidateLockRequest(cmd, "解锁");
+                if (validation.ErrorMessage != null)
                 {
-                    return ResponseFactory.CreateSpecificErrorResponse<LockResponse>("无效的解锁请求数据");
+                    return CreateErrorResponse(validation.ErrorMessage);
                 }
-
-                // 验证请求数据
-                if (lockRequest.LockInfo.BillID <= 0)
-                {
-                    return ResponseFactory.CreateSpecificErrorResponse<LockResponse>("单据ID不能为空");
-                }
-
-
 
                 // 释放锁定
-                var unlockSuccess = await _lockManagerService.UnlockDocumentAsync(lockRequest.LockInfo.BillID, lockRequest.LockedUserId);
-
-                if (unlockSuccess)
-                {
-                    // 广播锁定状态变化
-                    await BroadcastLockStatusAsync();
-                    var response = new LockResponse
-                    {
-                        IsSuccess = true,
-                        Message = "单据解锁成功",
-                        LockInfo = lockRequest.LockInfo
-                    };
-                    return response;
-                }
-                else
-                {
-                    var response = new LockResponse
-                    {
-                        IsSuccess = false,
-                        Message = "单据解锁失败",
-                        LockInfo = lockRequest.LockInfo
-                    };
-
-                    return response;
-                }
+                return await _lockManagerService.UnlockDocumentAsync(validation.LockRequest.LockInfo.BillID, validation.LockRequest.LockedUserId);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"处理锁定释放异常: {ex.Message}");
-                return ResponseFactory.CreateSpecificErrorResponse<LockResponse>($"处理锁定释放异常: {ex.Message}");
+                return CreateErrorResponse($"处理锁定释放异常: {ex.Message}", cmd.Packet.ExecutionContext, ex);
             }
         }
 
@@ -227,39 +200,19 @@ namespace RUINORERP.Server.Network.CommandHandlers
         {
             try
             {
-                // 反序列化请求数据
-                var lockRequest = cmd.Packet.Request as LockRequest;
-                if (lockRequest == null)
+                var validation = ValidateLockRequest(cmd, "强制解锁");
+                if (validation.ErrorMessage != null)
                 {
-                    return ResponseFactory.CreateSpecificErrorResponse<LockResponse>("无效的强制解锁请求数据");
+                    return CreateErrorResponse(validation.ErrorMessage);
                 }
-
-                // 验证请求数据
-                if (lockRequest.LockInfo.BillID <= 0)
-                {
-                    return ResponseFactory.CreateSpecificErrorResponse<LockResponse>("单据ID不能为空");
-                }
-
 
                 // 强制解锁
-                var forceUnlockResult = await _lockManagerService.ForceUnlockDocumentAsync(lockRequest.LockInfo.BillID);
-                if (forceUnlockResult)
-                {
-                    // 广播锁定状态变化
-                    await BroadcastLockStatusAsync();
-
-                    var response = ResponseFactory.CreateSpecificSuccessResponse(cmd.Packet.ExecutionContext, "单据强制解锁成功");
-                    return response;
-                }
-                else
-                {
-                    return ResponseFactory.CreateSpecificErrorResponse<LockResponse>("单据强制解锁失败");
-                }
+                return await _lockManagerService.ForceUnlockDocumentAsync(validation.LockRequest.LockInfo.BillID);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"处理强制解锁异常: {ex.Message}");
-                return ResponseFactory.CreateSpecificErrorResponse(cmd.Packet.ExecutionContext, ex, $"处理强制解锁异常: {ex.Message}");
+                return CreateErrorResponse($"处理强制解锁异常: {ex.Message}", cmd.Packet.ExecutionContext, ex);
             }
         }
 
@@ -273,36 +226,19 @@ namespace RUINORERP.Server.Network.CommandHandlers
         {
             try
             {
-                // 反序列化请求数据
-                var lockRequest = cmd.Packet.Request as LockRequest;
-                if (lockRequest == null)
+                var validation = ValidateLockRequest(cmd, "请求解锁");
+                if (validation.ErrorMessage != null)
                 {
-                    return ResponseFactory.CreateSpecificErrorResponse<LockResponse>("无效的请求解锁数据");
+                    return CreateErrorResponse(validation.ErrorMessage);
                 }
-
-                // 验证请求数据
-                if (lockRequest.LockInfo.BillID <= 0)
-                {
-                    return ResponseFactory.CreateSpecificErrorResponse<LockResponse>("单据ID不能为空");
-                }
-
 
                 // 请求解锁
-                var requestSuccess = await _lockManagerService.RequestUnlockDocumentAsync(lockRequest);
-                if (requestSuccess)
-                {
-                    var response = ResponseFactory.CreateSpecificSuccessResponse(cmd.Packet.ExecutionContext, "请求解锁处理完成");
-                    return response;
-                }
-                else
-                {
-                    return ResponseFactory.CreateSpecificErrorResponse<LockResponse>("请求解锁失败");
-                }
+                return await _lockManagerService.RequestUnlockDocumentAsync(validation.LockRequest);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"处理请求解锁异常: {ex.Message}");
-                return ResponseFactory.CreateSpecificErrorResponse(cmd.Packet.ExecutionContext, ex, $"处理请求解锁异常: {ex.Message}");
+                return CreateErrorResponse($"处理请求解锁异常: {ex.Message}", cmd.Packet.ExecutionContext, ex);
             }
         }
 
@@ -316,37 +252,21 @@ namespace RUINORERP.Server.Network.CommandHandlers
         {
             try
             {
-                // 反序列化请求数据
-                var lockRequest = cmd.Packet.Request as LockRequest;
-                if (lockRequest == null)
+                var validation = ValidateLockRequest(cmd, "拒绝解锁");
+                if (validation.ErrorMessage != null)
                 {
-                    return ResponseFactory.CreateSpecificErrorResponse<LockResponse>("无效的拒绝解锁数据");
+                    return CreateErrorResponse(validation.ErrorMessage);
                 }
-
-                // 验证请求数据
-                if (lockRequest.LockInfo.BillID <= 0)
-                {
-                    return ResponseFactory.CreateSpecificErrorResponse<LockResponse>("单据ID不能为空");
-                }
-
 
                 // 拒绝解锁
-                var refuseSuccess = await _lockManagerService.RefuseUnlockRequestAsync(lockRequest);
+                return await _lockManagerService.RefuseUnlockRequestAsync(validation.LockRequest);
 
-                if (refuseSuccess)
-                {
-                    var response = ResponseFactory.CreateSpecificSuccessResponse(cmd.Packet.ExecutionContext, "拒绝解锁处理完成");
-                    return response;
-                }
-                else
-                {
-                    return ResponseFactory.CreateSpecificErrorResponse<LockResponse>("拒绝解锁失败");
-                }
+
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"处理拒绝解锁异常: {ex.Message}");
-                return ResponseFactory.CreateSpecificErrorResponse(cmd.Packet.ExecutionContext, ex, $"处理拒绝解锁异常: {ex.Message}");
+                return CreateErrorResponse($"处理拒绝解锁异常: {ex.Message}", cmd.Packet.ExecutionContext, ex);
             }
         }
 
@@ -360,21 +280,14 @@ namespace RUINORERP.Server.Network.CommandHandlers
         {
             try
             {
-                // 反序列化请求数据
-                var lockRequest = cmd.Packet.Request as LockRequest;
-                if (lockRequest == null)
+                var validation = ValidateLockRequest(cmd, "查询锁状态");
+                if (validation.ErrorMessage != null)
                 {
-                    return ResponseFactory.CreateSpecificErrorResponse<LockResponse>("无效的查询锁状态数据");
-                }
-
-                // 验证请求数据
-                if (lockRequest.LockInfo.BillID <= 0)
-                {
-                    return ResponseFactory.CreateSpecificErrorResponse<LockResponse>("单据ID不能为空");
+                    return CreateErrorResponse(validation.ErrorMessage);
                 }
 
                 // 查询锁状态
-                var lockInfo = _lockManagerService.GetLockInfo(lockRequest.LockInfo.BillID);
+                var lockInfo = _lockManagerService.GetLockInfo(validation.LockRequest.LockInfo.BillID);
                 var response = new LockResponse
                 {
                     IsSuccess = true,
@@ -389,7 +302,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"处理查询锁状态异常: {ex.Message}");
-                return ResponseFactory.CreateSpecificErrorResponse(cmd.Packet.ExecutionContext, ex, $"处理查询锁状态异常: {ex.Message}");
+                return CreateErrorResponse($"处理查询锁状态异常: {ex.Message}", cmd.Packet.ExecutionContext, ex);
             }
         }
 
@@ -403,15 +316,14 @@ namespace RUINORERP.Server.Network.CommandHandlers
         {
             try
             {
-                // 反序列化请求数据
-                var lockRequest = cmd.Packet.Request as LockRequest;
-                if (lockRequest == null)
+                var validation = ValidateLockRequest(cmd, "广播锁状态");
+                if (validation.ErrorMessage != null)
                 {
-                    return ResponseFactory.CreateSpecificErrorResponse<LockResponse>("无效的广播锁状态数据");
+                    return CreateErrorResponse(validation.ErrorMessage);
                 }
 
                 // 广播锁状态
-                await BroadcastLockStatusToAllClientsAsync(new List<LockInfo> { lockRequest.LockInfo });
+                await BroadcastLockStatusToAllClientsAsync(new List<LockInfo> { validation.LockRequest.LockInfo });
 
                 var response = ResponseFactory.CreateSpecificSuccessResponse(cmd.Packet.ExecutionContext, "锁状态广播成功");
 
@@ -420,7 +332,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"处理广播锁状态异常: {ex.Message}");
-                return ResponseFactory.CreateSpecificErrorResponse(cmd.Packet.ExecutionContext, ex, $"广播锁状态失败: {ex.Message}");
+                return CreateErrorResponse($"广播锁状态失败: {ex.Message}", cmd.Packet.ExecutionContext, ex);
             }
         }
 

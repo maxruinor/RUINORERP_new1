@@ -60,11 +60,14 @@
     <Compile Remove="log4netHelper.cs" />
     <Compile Remove="Network\CommandHandlers\ConfigurableBusinessProcessor.cs" />
     <Compile Remove="Network\CommandHandlers\SimpleBusinessHandler.cs" />
+    <Compile Remove="Network\Common\LockResponseFactory.cs" />
     <Compile Remove="Network\CoreServices\CacheService.cs" />
     <Compile Remove="Network\CoreServices\FileStorageService.cs" />
     <Compile Remove="Network\Core\NetworkCommandMiddleware.cs" />
     <Compile Remove="Network\Core\UnifiedCommunicationProcessor.cs" />
     <Compile Remove="Network\Interfaces\Services\ICacheSyncService.cs" />
+    <Compile Remove="Network\Services\LockInfoManager.cs" />
+    <Compile Remove="Network\Services\LockManagerService.cs" />
     <Compile Remove="Network\Services\UnifiedUserService.cs" />
     <Compile Remove="Services\Cache\CacheService.cs" />
     <Compile Remove="Services\Cache\ICacheService.cs" />
@@ -212,6 +215,7 @@
 
   <ItemGroup>
     <Folder Include="Helpers\" />
+    <Folder Include="Network\Common\" />
     <Folder Include="Network\CoreServices\" />
     <Folder Include="Network\Core\Cache\" />
     <Folder Include="Network\Documentation\" />

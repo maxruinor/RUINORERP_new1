@@ -188,7 +188,7 @@ namespace RUINORERP.Business.Document
                                 ? $"无法锁定文档 {baseEntity.GetType().Name} ID={baseEntity.PrimaryKeyID}，已被用户ID={lockInfo.UserId}锁定" 
                                 : $"无法锁定文档 {baseEntity.GetType().Name} ID={baseEntity.PrimaryKeyID}，已被用户{lockInfo.UserName}(ID={lockInfo.UserId})锁定";
                             
-                            if (lockInfo.IsExpired())
+                            if (lockInfo.IsExpired)
                             {
                                 errorMsg += $"（锁定已于{lockInfo.ExpireTime}过期）";
                             }

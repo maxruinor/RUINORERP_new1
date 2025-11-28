@@ -1,0 +1,1424 @@
+﻿using Azure.Core;
+using Microsoft.Extensions.Logging;
+using RUINORERP.Global;
+using RUINORERP.PacketSpec.Models.Lock;
+using RUINORERP.Server.Network.Interfaces.Services;
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace RUINORERP.Server.Network.Services
+{
+    /// 集成式服务器锁管理器 v2.0.0
+    /// 整合会话管理、心跳监控和分布式锁管理的完整服务器端解决方案
+    /// 
+    /// 版本：2.0.0
+    /// 作者：AI Assistant  
+    /// 创建时间：2025-01-27
+    /// 
+    /// 主要特性：
+    /// - 无Redis依赖的内存分布式锁
+    /// - 与心跳系统深度集成
+    /// - 自动孤儿锁检测和清理
+    /// - 简化的数据结构设计
+    /// - 统一的版本控制
+    /// </summary>
+    public class IntegratedServerLockManager : ILockManagerService, IDisposable
+    {
+
+        #region 私有字段
+
+        private readonly ISessionService _sessionService;
+        private readonly ILogger<IntegratedServerLockManager> _logger;
+        private readonly OrphanedLockDetector _orphanedLockDetector;
+
+        // 简化的单一数据结构 - 按单据ID索引
+        private readonly ConcurrentDictionary<long, LockInfo> _documentLocks;
+
+        // 定时器
+        private readonly Timer _cleanupTimer;
+        private readonly Timer _maintenanceTimer;
+
+        // 配置参数
+        private readonly TimeSpan _cleanupInterval = TimeSpan.FromMinutes(2);
+        private readonly TimeSpan _maintenanceInterval = TimeSpan.FromMinutes(10);
+        private readonly TimeSpan _defaultLockTimeout = TimeSpan.FromMinutes(30);
+        private readonly TimeSpan _maxLockTimeout = TimeSpan.FromHours(8);
+        private readonly TimeSpan _sessionTimeout = TimeSpan.FromMinutes(5);
+
+        // 用于存储解锁请求的字典，键为单据ID，值为锁定请求信息
+        private readonly ConcurrentDictionary<long, LockRequest> _unlockRequests = new ConcurrentDictionary<long, LockRequest>();
+
+        private bool _isDisposed;
+        private readonly object _lock = new object();
+
+        #endregion
+
+        #region 构造函数和初始化
+
+        /// <summary>
+        /// 集成式服务器锁管理器构造函数
+        /// </summary>
+        /// <param name="sessionService">会话管理服务（系统已有）</param>
+        /// <param name="logger">日志记录器</param>
+        public IntegratedServerLockManager(
+            ISessionService sessionService,
+            ILogger<IntegratedServerLockManager> logger)
+        {
+            _sessionService = sessionService ?? throw new ArgumentNullException(nameof(sessionService));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
+            // 初始化核心数据结构
+            _documentLocks = new ConcurrentDictionary<long, LockInfo>();
+
+            // 初始化孤儿锁检测器
+            var orphanedLogger = logger as ILogger<OrphanedLockDetector> ??
+                new Microsoft.Extensions.Logging.Logger<OrphanedLockDetector>(new Microsoft.Extensions.Logging.LoggerFactory());
+            _orphanedLockDetector = new OrphanedLockDetector(this, orphanedLogger);
+
+            // 初始化定时器
+            _cleanupTimer = new Timer(CleanupCallback, null, Timeout.Infinite, Timeout.Infinite);
+            _maintenanceTimer = new Timer(MaintenanceCallback, null, Timeout.Infinite, Timeout.Infinite);
+
+
+        }
+
+        /// <summary>
+        /// 启动服务
+        /// </summary>
+        public async Task StartAsync()
+        {
+            try
+            {
+                lock (_lock)
+                {
+                    if (_isDisposed)
+                        throw new ObjectDisposedException(nameof(IntegratedServerLockManager));
+
+                    // 启动定时器
+                    _cleanupTimer.Change(TimeSpan.FromMinutes(1), _cleanupInterval);
+                    _maintenanceTimer.Change(TimeSpan.FromMinutes(2), _maintenanceInterval);
+
+                    // 启动孤儿锁检测器
+                    _ = _orphanedLockDetector.StartAsync();
+                }
+
+                await Task.CompletedTask;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "启动集成式服务器锁管理器时发生异常");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// 停止服务
+        /// </summary>
+        public async Task StopAsync()
+        {
+            try
+            {
+                lock (_lock)
+                {
+                    if (_isDisposed)
+                        return;
+
+                    // 停止定时器
+                    _cleanupTimer.Change(Timeout.Infinite, Timeout.Infinite);
+                    _maintenanceTimer.Change(Timeout.Infinite, Timeout.Infinite);
+
+                    // 停止孤儿锁检测器
+                    _orphanedLockDetector.StopAsync().GetAwaiter().GetResult();
+
+                    // 清理所有锁
+                    var lockIds = _documentLocks.Keys.ToList();
+                    foreach (var lockId in lockIds)
+                    {
+                        _documentLocks.TryRemove(lockId, out _);
+                    }
+                }
+
+                await Task.CompletedTask;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "停止集成式服务器锁管理器时发生异常");
+            }
+        }
+
+        #endregion
+
+        #region 核心锁管理功能
+
+
+
+        /// <summary>
+        /// 释放锁
+        /// </summary>
+        /// <param name="request">解锁请求</param>
+        /// <returns>解锁响应</returns>
+        public async Task<LockResponse> ReleaseLockAsync(LockInfo lockInfo)
+        {
+            if (_isDisposed)
+                throw new ObjectDisposedException(nameof(IntegratedServerLockManager));
+
+            if (lockInfo == null || lockInfo.BillID <= 0)
+            {
+                return CreateErrorResponse(lockInfo, "无效的锁信息");
+            }
+
+            try
+            {
+                if (_documentLocks.TryGetValue(lockInfo.BillID, out var existingLock))
+                {
+                    // 验证锁的所有者
+                    if (existingLock.UserId == lockInfo.UserId &&
+                        existingLock.SessionId == lockInfo.SessionId)
+                    {
+                        // 移除锁
+                        if (_documentLocks.TryRemove(lockInfo.BillID, out _))
+                        {
+                            // _logger.LogInformation("单据 {BillId} 锁已释放，锁ID: {LockId}",lockInfo.BillID, existingLock.LockId);
+
+                            return new LockResponse
+                            {
+                                IsSuccess = true,
+                                Message = "解锁成功"
+                            };
+                        }
+                    }
+                    else
+                    {
+                        _logger.LogWarning("用户 {UserId} 尝试释放不属于自己的锁 {BillId}",
+                            lockInfo.UserId, lockInfo.BillID);
+                        return CreateErrorResponse(lockInfo, "无权限释放此锁");
+                    }
+                }
+                else
+                {
+                    _logger.LogDebug("尝试释放不存在的锁 {BillId}", lockInfo.BillID);
+                    return CreateErrorResponse(lockInfo, "锁不存在");
+                }
+
+                return CreateErrorResponse(lockInfo, "解锁失败");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "释放锁 {BillId} 时发生异常", lockInfo.BillID);
+                return CreateErrorResponse(lockInfo, $"解锁异常: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 检查锁状态
+        /// </summary>
+        /// <param name="request">锁状态查询请求</param>
+        /// <returns>锁状态响应</returns>
+        public async Task<LockResponse> CheckLockStatusAsync(LockRequest request)
+        {
+            if (_isDisposed)
+                throw new ObjectDisposedException(nameof(IntegratedServerLockManager));
+
+            var lockInfo = request.LockInfo;
+            if (lockInfo == null || lockInfo.BillID <= 0)
+            {
+                return CreateErrorResponse(lockInfo, "无效的锁信息");
+            }
+
+            try
+            {
+                if (_documentLocks.TryGetValue(lockInfo.BillID, out var existingLock))
+                {
+                    // 检查锁是否已过期
+                    if (existingLock.IsExpired)
+                    {
+                        // 清理过期锁
+                        _documentLocks.TryRemove(lockInfo.BillID, out _);
+                        _logger.LogDebug("清理过期的锁 {BillId}", lockInfo.BillID);
+
+                        return new LockResponse
+                        {
+                            IsSuccess = true,
+                            Message = "锁已过期"
+                        };
+                    }
+
+                    // 更新心跳信息
+                    existingLock.LastHeartbeat = DateTime.Now;
+                    existingLock.HeartbeatCount++;
+
+                    return new LockResponse
+                    {
+                        IsSuccess = true,
+                        Message = "锁状态查询成功",
+                        LockInfo = existingLock
+                    };
+                }
+                else
+                {
+                    return new LockResponse
+                    {
+                        IsSuccess = true,
+                        Message = "单据未被锁定"
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "检查锁状态 {BillId} 时发生异常", lockInfo.BillID);
+                return CreateErrorResponse(lockInfo, $"查询异常: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 强制解锁（管理员功能）
+        /// </summary>
+        /// <param name="request">强制解锁请求</param>
+        /// <returns>强制解锁响应</returns>
+        public async Task<LockResponse> ForceUnlockAsync(LockRequest request)
+        {
+            if (_isDisposed)
+                throw new ObjectDisposedException(nameof(IntegratedServerLockManager));
+
+            var lockInfo = request.LockInfo;
+            if (lockInfo == null || lockInfo.BillID <= 0)
+            {
+                return CreateErrorResponse(lockInfo, "无效的锁信息");
+            }
+
+            try
+            {
+                if (_documentLocks.TryGetValue(lockInfo.BillID, out var existingLock))
+                {
+                    // 强制移除锁
+                    if (_documentLocks.TryRemove(lockInfo.BillID, out _))
+                    {
+                        _logger.LogWarning("管理员强制释放单据 {BillId} 的锁，原锁主: {UserId}, 锁ID: {LockId}",
+                            lockInfo.BillID, existingLock.UserId, existingLock.LockId);
+
+                        return new LockResponse
+                        {
+                            IsSuccess = true,
+                            Message = "强制解锁成功"
+                        };
+                    }
+                }
+
+                return CreateErrorResponse(lockInfo, "锁不存在");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "强制解锁 {BillId} 时发生异常", lockInfo.BillID);
+                return CreateErrorResponse(lockInfo, $"强制解锁异常: {ex.Message}");
+            }
+        }
+
+
+
+        #endregion
+
+        #region 心跳集成
+
+        /// <summary>
+        /// 处理心跳中的锁信息
+        /// 当客户端发送心跳时，更新对应锁的心跳时间
+        /// </summary>
+        /// <param name="sessionId">会话ID</param>
+        /// <param name="activeLocks">活跃锁列表</param>
+        public async Task ProcessHeartbeatLocksAsync(string sessionId, long[] activeLocks)
+        {
+            if (_isDisposed || activeLocks == null || activeLocks.Length == 0)
+                return;
+
+            try
+            {
+                var now = DateTime.Now;
+                var updatedCount = 0;
+
+                foreach (var billId in activeLocks)
+                {
+                    if (_documentLocks.TryGetValue(billId, out var lockInfo))
+                    {
+                        // 验证会话匹配
+                        if (lockInfo.SessionId == sessionId)
+                        {
+                            lockInfo.LastHeartbeat = now;
+                            lockInfo.HeartbeatCount++;
+                            updatedCount++;
+                        }
+                    }
+                }
+
+                if (updatedCount > 0)
+                {
+                    _logger.LogDebug("通过心跳更新了 {Count} 个锁的时间戳", updatedCount);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "处理心跳锁信息时发生异常");
+            }
+
+            await Task.CompletedTask;
+        }
+
+        #endregion
+
+        #region 定时器回调
+
+        /// <summary>
+        /// 清理定时器回调
+        /// 清理过期锁和孤儿锁
+        /// </summary>
+        private async void CleanupCallback(object state)
+        {
+            if (_isDisposed)
+                return;
+
+            try
+            {
+                await CleanupExpiredLocksAsync();
+                await _orphanedLockDetector.DetectAndCleanupAsync(_documentLocks.Values.ToList());
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "清理定时器回调中发生异常");
+            }
+        }
+
+        /// <summary>
+        /// 维护定时器回调
+        /// 执行统计信息收集和性能监控
+        /// </summary>
+        private async void MaintenanceCallback(object state)
+        {
+            if (_isDisposed)
+                return;
+
+            try
+            {
+                await CleanupExpiredLocksAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "维护定时器回调中发生异常");
+            }
+        }
+
+        /// <summary>
+        /// 清理过期锁
+        /// </summary>
+        private async Task CleanupExpiredLocksAsync()
+        {
+            var now = DateTime.Now;
+            var expiredLocks = new List<(long billId, LockInfo lockInfo)>();
+
+            // 查找过期锁
+            foreach (var kvp in _documentLocks)
+            {
+                if (kvp.Value.IsExpired)
+                {
+                    expiredLocks.Add((kvp.Key, kvp.Value));
+                }
+            }
+
+            // 移除过期锁
+            foreach (var (billId, lockInfo) in expiredLocks)
+            {
+                if (_documentLocks.TryRemove(billId, out _))
+                {
+                    // _logger.LogInformation("清理过期锁 {BillId}, 锁主: {UserId}, 锁定时间: {LockTime}",billId, lockInfo.UserId, lockInfo.LockTime);
+                }
+            }
+
+            if (expiredLocks.Count > 0)
+            {
+                //  _logger.LogInformation("清理了 {Count} 个过期锁", expiredLocks.Count);
+            }
+
+            await Task.CompletedTask;
+        }
+
+      
+        #endregion
+
+        #region 辅助方法
+
+        /// <summary>
+        /// 获取锁定单据的用户ID
+        /// </summary>
+        /// <param name="billId">单据ID</param>
+        /// <returns>锁定该单据的用户ID，若单据未被锁定则返回0</returns>
+        public long GetLockedUserId(long billId)
+        {
+            try
+            {
+                if (_documentLocks.TryGetValue(billId, out var lockInfo))
+                {
+                    if (lockInfo.IsLocked)
+                    {
+                        _logger.LogDebug("获取锁定用户ID: 单据ID={BillId}, 锁定用户ID={UserId}", billId, lockInfo.UserId);
+                        return lockInfo.UserId;
+                    }
+                }
+                _logger.LogDebug("获取锁定用户ID: 单据ID={BillId} 未被锁定", billId);
+                return 0; // 返回0表示单据未被锁定或不存在
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "获取锁定用户ID时发生异常: 单据ID={BillId}", billId);
+                return 0;
+            }
+        }
+
+        /// <summary>
+        /// 根据业务类型解锁用户的所有单据 - 优化版本
+        /// </summary>
+        /// <param name="userId">用户ID</param>
+        /// <param name="bizType">业务类型</param>
+        /// <returns>异步任务，返回包含详细信息的LockResponse</returns>
+        public async Task<LockResponse> UnlockDocumentsByBizNameAsync(long userId, int bizType)
+        {
+            try
+            {
+                // 统一参数验证
+                if (userId <= 0)
+                {
+                    _logger.LogWarning("根据业务类型解锁单据参数无效: UserId={UserId}", userId);
+                    return CreateErrorResponse(new LockInfo(), "用户ID无效");
+                }
+
+                _logger.LogDebug("开始根据业务类型解锁单据: 用户ID={UserId}, 业务类型={BizType}", userId, bizType);
+
+                // 查找指定业务类型的所有单据（优化查询逻辑）
+                var locksToUnlock = _documentLocks
+                    .Where(kvp => kvp.Value.IsLocked && 
+                                   kvp.Value.UserId == userId && 
+                                   kvp.Value.BillData?.BizType == (BizType)bizType)
+                    .Select(kvp => kvp.Key)
+                    .ToList();
+
+                int unlockedCount = 0;
+                var unlockTasks = locksToUnlock.Select(async billId =>
+                {
+                    var result = await ExecuteUnlockAsync(billId, userId, false, "按业务类型解锁");
+                    if (result.IsSuccess)
+                        unlockedCount++;
+                    return result;
+                });
+
+                // 并行执行解锁操作
+                await Task.WhenAll(unlockTasks);
+
+                _logger.LogDebug("根据业务类型解锁单据完成: 用户ID={UserId}, 业务类型={BizType}, 成功解锁={UnlockedCount}个单据", 
+                    userId, bizType, unlockedCount);
+
+                return new LockResponse
+                {
+                    IsSuccess = true,
+                    Message = $"成功解锁{unlockedCount}个{(BizType)bizType}类型的单据",
+                    LockInfo = null // 批量操作不返回具体锁信息
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "根据业务类型解锁单据时发生异常: 用户ID={UserId}, 业务类型={BizType}", userId, bizType);
+                return CreateErrorResponse(new LockInfo(), $"按业务类型解锁异常: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 检查用户是否有权限修改指定单据
+        /// </summary>
+        /// <param name="billId">单据ID</param>
+        /// <param name="userId">用户ID</param>
+        /// <returns>如果用户有权限修改单据则返回true，否则返回false</returns>
+        public bool HasPermissionToModifyDocument(long billId, long userId)
+        {
+            try
+            {
+                // 如果单据未被锁定，任何人都可以修改
+                if (!_documentLocks.TryGetValue(billId, out var lockInfo) || !lockInfo.IsLocked)
+                {
+                    _logger.LogDebug("权限检查: 单据ID={BillId} 未被锁定，用户ID={UserId} 可以修改", billId, userId);
+                    return true;
+                }
+
+                // 如果单据被锁定，只有锁定该单据的用户可以修改
+                bool hasPermission = lockInfo.UserId == userId;
+                _logger.LogDebug("权限检查: 单据ID={BillId}, 用户ID={UserId}, 锁定用户ID={LockedUserId}, 权限结果={HasPermission}",
+                    billId, userId, lockInfo.UserId, hasPermission);
+                return hasPermission;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "权限检查时发生异常: 单据ID={BillId}, 用户ID={UserId}", billId, userId);
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 获取锁定项数量
+        /// </summary>
+        /// <returns>当前系统中的锁定项数量</returns>
+        public int GetLockItemCount()
+        {
+            try
+            {
+
+                // 统计当前锁定的单据数量
+                int lockCount = _documentLocks.Count(c => c.Value.IsLocked);
+                _logger.LogDebug("获取锁定项数量: 当前锁定项数={LockCount}", lockCount);
+                return lockCount;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "获取锁定项数量时发生异常");
+                return 0;
+            }
+        }
+
+        /// <summary>
+        /// 获取所有锁定单据
+        /// </summary>
+        /// <returns>所有锁定单据的锁定信息集合</returns>
+        public List<LockInfo> GetAllLockedDocuments()
+        {
+            try
+            {
+                // 创建锁定信息副本集合，避免直接引用
+                var lockedDocuments = new List<LockInfo>();
+
+                foreach (var kvp in _documentLocks)
+                {
+                    var lockInfo = kvp.Value;
+
+                    // 只返回锁定的单据信息
+                    if (lockInfo.IsLocked)
+                    {
+                        var infoCopy = new LockInfo
+                        {
+                            BillID = lockInfo.BillID,
+                            UserId = lockInfo.UserId,
+                            UserName = lockInfo.UserName,
+                            LockTime = lockInfo.LockTime,
+                            ExpireTime = lockInfo.ExpireTime,
+                            IsLocked = lockInfo.IsLocked,
+
+                            BillData = lockInfo.BillData,
+
+                            SessionId = lockInfo.SessionId
+                        };
+
+                        lockedDocuments.Add(infoCopy);
+                    }
+                }
+
+                _logger.LogDebug("成功获取锁定单据信息集合，有效锁定数={ValidLockCount}", lockedDocuments.Count);
+                return lockedDocuments;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "获取所有锁定单据信息时发生异常");
+                // 出错时返回空集合
+                return new List<LockInfo>();
+            }
+        }
+
+        /// <summary>
+        /// 获取指定单据的锁定信息
+        /// </summary>
+        /// <param name="billId">单据ID</param>
+        /// <returns>锁定信息对象，如果未锁定则返回null</returns>
+        public LockInfo GetLockInfo(long billId)
+        {
+            try
+            {
+
+                // 验证输入参数
+                if (billId <= 0)
+                {
+                    _logger.LogWarning("获取锁定信息请求参数无效: BillID={BillId}", billId);
+                    return null;
+                }
+
+                _logger.LogDebug("尝试获取单据锁定信息: BillID={BillId}", billId);
+
+                // 从字典中查找锁信息
+                if (_documentLocks.TryGetValue(billId, out var lockInfo))
+                {
+                    _logger.LogDebug("成功获取单据锁定信息: BillID={BillId}, UserId={UserId}, 锁定状态={IsLocked}, 过期状态={IsExpired}",
+                        billId, lockInfo.UserId, lockInfo.IsLocked, lockInfo.IsExpired);
+
+                    // 返回锁定信息的副本，避免直接引用
+                    return new LockInfo
+                    {
+                        BillID = lockInfo.BillID,
+                        UserId = lockInfo.UserId,
+                        UserName = lockInfo.UserName,
+                        LockTime = lockInfo.LockTime,
+                        ExpireTime = lockInfo.ExpireTime,
+                        IsLocked = lockInfo.IsLocked,
+
+                        BillData = lockInfo.BillData,
+
+                        SessionId = lockInfo.SessionId
+                    };
+                }
+                else
+                {
+                    _logger.LogDebug("单据未被锁定: BillID={BillId}", billId);
+                    return null;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "获取单据锁定信息时发生异常: BillID={BillId}", billId);
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 请求解锁单据
+        /// </summary>
+        /// <param name="request">解锁请求对象，包含请求者信息和单据信息</param>
+        /// <returns>异步任务，返回包含详细信息的LockResponse</returns>
+        public async Task<LockResponse> RequestUnlockDocumentAsync(LockRequest request)
+        {
+            try
+            {
+                if (request == null)
+                {
+                    _logger.LogWarning("解锁请求为空，请求失败");
+                    return CreateErrorResponse(new LockInfo { BillID = request?.LockInfo.BillID ?? 0 }, "解锁请求参数无效");
+                }
+
+                _logger.LogDebug("处理解锁请求: 单据ID={BillId}, 请求者ID={RequesterId}", request.LockInfo.BillID, request.LockedUserId);
+
+                // 检查单据是否存在并被锁定
+                if (!_documentLocks.TryGetValue(request.LockInfo.BillID, out var lockInfo) || !lockInfo.IsLocked)
+                {
+                    var msg = ("解锁请求失败: 单据ID={BillId} 未被锁定或不存在", request.LockInfo.BillID);
+                    return CreateErrorResponse(new LockInfo { BillID = request.LockInfo.BillID }, "该单据未被锁定或不存在");
+                }
+
+                // 检查是否为锁定者本人请求解锁（直接解锁即可，无需请求）
+                if (lockInfo.UserId == request.LockedUserId)
+                {
+                    var msg = ("解锁请求: 单据ID={BillId} 是请求者本人锁定的，直接解锁", request.LockInfo.BillID);
+                    var lockInfoToRelease = new LockInfo { BillID = request.LockInfo.BillID, UserId = request.LockedUserId };
+                    await ReleaseLockAsync(lockInfoToRelease);
+                    return new LockResponse
+                    {
+                        IsSuccess = true,
+                        Message = "该单据是您本人锁定的，已直接解锁",
+                        LockInfo = lockInfo
+                    };
+                }
+
+                // 保存解锁请求
+                request.LockedUserId = lockInfo.UserId;
+                request.Timestamp = DateTime.Now;
+
+                // 存储请求，覆盖之前的请求（如果存在）
+                _unlockRequests[request.LockInfo.BillID] = request;
+
+
+                return new LockResponse
+                {
+                    IsSuccess = true,
+                    Message = $"解锁请求已发送给锁定者 {lockInfo.UserName}（ID: {lockInfo.UserId}）",
+                    LockInfo = lockInfo
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "处理解锁请求时发生异常: 单据ID={BillId}", request?.LockInfo.BillID ?? 0);
+                return CreateErrorResponse(new LockInfo { BillID = request?.LockInfo.BillID ?? 0 }, $"处理解锁请求异常: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 拒绝解锁请求
+        /// </summary>
+        /// <param name="request">解锁请求对象</param>
+        /// <returns>异步任务，返回包含详细信息的LockResponse</returns>
+        public async Task<LockResponse> RefuseUnlockRequestAsync(LockRequest request)
+        {
+            try
+            {
+                if (request == null)
+                {
+                    _logger.LogWarning("拒绝解锁请求: 请求对象为空");
+                    return CreateErrorResponse(new LockInfo { BillID = request?.LockInfo.BillID ?? 0 }, "拒绝解锁请求参数无效");
+                }
+
+                _logger.LogDebug("处理拒绝解锁请求: 单据ID={BillId}, 拒绝者ID={LockedUserId}", request.LockInfo.BillID, request.LockedUserId);
+
+                // 检查是否存在解锁请求
+                if (!_unlockRequests.TryGetValue(request.LockInfo.BillID, out var storedRequest))
+                {
+                    //_logger.LogInformation("拒绝解锁请求失败: 单据ID={BillId} 没有待处理的解锁请求", request.BillId);
+                    return CreateErrorResponse(new LockInfo { BillID = request.LockInfo.BillID }, "该单据没有待处理的解锁请求");
+                }
+
+                // 检查是否是锁定者本人拒绝请求
+                if (storedRequest.LockedUserId != request.RequesterUserId)
+                {
+                    _logger.LogWarning("拒绝解锁请求失败: 用户ID={UserId} 不是单据ID={BillId} 的锁定者，无权拒绝请求", request.LockedUserId, request.LockInfo.BillID);
+                    return CreateErrorResponse(new LockInfo { BillID = request.LockInfo.BillID }, "只有锁定者本人可以拒绝解锁请求");
+                }
+
+                // 移除解锁请求
+                if (_unlockRequests.TryRemove(request.LockInfo.BillID, out _))
+                {
+                    var mes = ("拒绝解锁请求成功: 单据ID={BillId}, 请求者ID={RequesterId}, 锁定者ID={LockedUserId}", request.LockInfo.BillID, storedRequest.RequesterUserId, storedRequest.LockedUserId);
+                    return new LockResponse
+                    {
+                        IsSuccess = true,
+                        Message = "已拒绝解锁请求",
+                        LockInfo = new LockInfo { BillID = request.LockInfo.BillID }
+                    };
+                }
+
+                _logger.LogWarning("拒绝解锁请求失败: 无法移除解锁请求: 单据ID={BillId}", request.LockInfo.BillID);
+                return CreateErrorResponse(new LockInfo { BillID = request.LockInfo.BillID }, "拒绝解锁请求失败，请重试");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "拒绝解锁请求时发生异常: 单据ID={BillId}", request?.LockInfo.BillID ?? 0);
+                return CreateErrorResponse(new LockInfo { BillID = request?.LockInfo.BillID ?? 0 }, $"拒绝解锁请求异常: {ex.Message}");
+            }
+        }
+
+
+
+        /// <summary>
+        /// 通用解锁验证方法 - 统一解锁前的验证逻辑
+        /// </summary>
+        /// <param name="billId">单据ID</param>
+        /// <param name="userId">用户ID</param>
+        /// <param name="forceUnlock">是否强制解锁</param>
+        /// <returns>验证结果</returns>
+        private (bool IsValid, LockInfo LockInfo, string ErrorMessage) ValidateUnlockRequest(long billId, long userId, bool forceUnlock = false)
+        {
+            // 参数验证
+            if (billId <= 0)
+                return (false, null, "单据ID无效");
+            
+            if (userId <= 0 && !forceUnlock)
+                return (false, null, "用户ID无效");
+
+            // 检查单据是否存在并被锁定
+            if (!_documentLocks.TryGetValue(billId, out var lockInfo) || !lockInfo.IsLocked)
+                return (false, null, "单据未被锁定或不存在");
+
+            // 非强制模式下验证权限
+            if (!forceUnlock && lockInfo.UserId != userId)
+                return (false, lockInfo, "无权限释放此锁");
+
+            return (true, lockInfo, null);
+        }
+
+ 
+
+        /// <summary>
+        /// 通用解锁执行方法 - 统一解锁执行逻辑
+        /// </summary>
+        /// <param name="billId">单据ID</param>
+        /// <param name="userId">操作用户ID</param>
+        /// <param name="forceUnlock">是否强制解锁</param>
+        /// <param name="operationType">操作类型描述</param>
+        /// <returns>解锁响应</returns>
+        private async Task<LockResponse> ExecuteUnlockAsync(long billId, long userId, bool forceUnlock, string operationType)
+        {
+            try
+            {
+                var validation = ValidateUnlockRequest(billId, userId, forceUnlock);
+                if (!validation.IsValid)
+                {
+                    return CreateErrorResponse(new LockInfo { BillID = billId }, validation.ErrorMessage);
+                }
+
+                // 记录原锁定用户信息（用于强制解锁的审计）
+                long originalUserId = validation.LockInfo.UserId;
+                
+                if (forceUnlock)
+                {
+                    _logger.LogWarning("强制解锁: 单据ID={BillId}, 原锁定用户ID={OriginalUserId}, 操作用户ID={UserId}", 
+                        billId, originalUserId, userId);
+                }
+
+                // 执行解锁操作
+                if (_documentLocks.TryRemove(billId, out _))
+                {
+                    var message = forceUnlock ? "强制解锁成功" : "解锁成功";
+                    
+                    if (forceUnlock)
+                    {
+                        _logger.LogInformation("{OperationType}完成: 单据ID={BillId}", operationType, billId);
+                    }
+                    
+                    return new LockResponse
+                    {
+                        IsSuccess = true,
+                        Message = message,
+                        LockInfo = validation.LockInfo
+                    };
+                }
+
+                return CreateErrorResponse(validation.LockInfo, $"{operationType}失败，无法移除锁");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "{OperationType}时发生异常: 单据ID={BillId}", operationType, billId);
+                return LockResponseFactory.CreateExceptionError(ex, operationType, billId);
+            }
+        }
+
+        /// <summary>
+        /// 解锁指定单据 - 重构后使用通用解锁方法
+        /// </summary>
+        /// <param name="billId">单据ID</param>
+        /// <param name="userId">用户ID</param>
+        /// <returns>解锁响应结果</returns>
+        public async Task<LockResponse> UnlockDocumentAsync(long billId, long userId)
+        {
+            return await ExecuteUnlockAsync(billId, userId, false, "解锁");
+        }
+
+        /// <summary>
+        /// 强制解锁指定单据 - 重构后使用通用解锁方法
+        /// </summary>
+        /// <param name="billId">单据ID</param>
+        /// <returns>解锁响应结果</returns>
+        public async Task<LockResponse> ForceUnlockDocumentAsync(long billId)
+        {
+            // 强制解锁不需要用户ID验证，传入0作为占位符
+            return await ExecuteUnlockAsync(billId, 0, true, "强制解锁");
+        }
+
+        /// <summary>
+        /// 尝试锁定单据 (ILockManagerService接口方法)
+        /// </summary>
+        /// <param name="lockInfo">锁定信息</param>
+        /// <returns>锁定结果，包含成功状态和详细信息</returns>
+        async Task<LockResponse> ILockManagerService.TryLockDocumentAsync(LockInfo lockInfo)
+        {
+            if (lockInfo == null || lockInfo.BillID <= 0)
+            {
+                return CreateErrorResponse(lockInfo, "锁定信息无效或单据ID错误");
+            }
+
+            try
+            {
+                // 检查是否已被锁定
+                if (_documentLocks.TryGetValue(lockInfo.BillID, out var existingLock))
+                {
+                    // 检查锁是否已过期
+                    if (!existingLock.IsExpired)
+                    {
+                        // 锁仍然有效
+                        _logger.LogDebug("单据 {BillId} 已被用户 {UserId} 在时间 {LockTime} 锁定",
+                            lockInfo.BillID, existingLock.UserId, existingLock.LockTime);
+
+                        return new LockResponse
+                        {
+                            IsSuccess = false,
+                            Message = $"单据已被用户 {existingLock.UserName} (ID: {existingLock.UserId}) 锁定",
+                            LockInfo = existingLock
+                        };
+                    }
+                    else
+                    {
+                        // 锁已过期，清理
+                        _documentLocks.TryRemove(lockInfo.BillID, out _);
+                        _logger.LogDebug("清理过期的锁 {BillId}", lockInfo.BillID);
+                    }
+                }
+
+                // 创建新锁
+                var serverLockInfo = new LockInfo
+                {
+                    BillID = lockInfo.BillID,
+                    UserId = lockInfo.UserId,
+                    UserName = lockInfo.UserName,
+                    SessionId = lockInfo.SessionId,
+                    LockTime = DateTime.Now,
+                    ExpireTime = lockInfo.ExpireTime,
+                    LockId = lockInfo.LockId,
+                    LastHeartbeat = DateTime.Now,
+                    HeartbeatCount = 1,
+                    Type = LockType.Exclusive
+                };
+
+                // 添加到锁集合
+                if (_documentLocks.TryAdd(lockInfo.BillID, serverLockInfo))
+                {
+                    // _logger.LogInformation("单据 {BillId} 成功被用户 {UserId} 锁定，锁ID: {LockId}",lockInfo.BillID, lockInfo.UserId, lockInfo.LockId);
+
+                    return new LockResponse
+                    {
+                        IsSuccess = true,
+                        Message = "锁定成功",
+                        LockInfo = serverLockInfo
+                    };
+                }
+                else
+                {
+                    // 并发情况下可能被其他线程锁定
+                    return CreateErrorResponse(lockInfo, "锁定失败，请重试");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "获取锁 {BillId} 时发生异常", lockInfo.BillID);
+                return CreateErrorResponse(lockInfo, $"锁定异常: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 解锁单据 (ILockManagerService接口方法)
+        /// </summary>
+        /// <param name="billId">单据ID</param>
+        /// <param name="userId">用户ID</param>
+        /// <returns>解锁结果，包含成功状态和详细信息</returns>
+        Task<LockResponse> ILockManagerService.UnlockDocumentAsync(long billId, long userId)
+        {
+            return ExecuteUnlockAsync(billId, userId, false, "解锁");
+        }
+
+        /// <summary>
+        /// 获取指定单据的锁定信息 (ILockManagerService接口方法)
+        /// </summary>
+        /// <param name="billId">单据ID</param>
+        /// <returns>锁定信息，如果未锁定则返回null</returns>
+        LockInfo ILockManagerService.GetLockInfo(long billId) => GetLockInfo(billId);
+
+        /// <summary>
+        /// 获取所有锁定的单据信息 (ILockManagerService接口方法)
+        /// </summary>
+        /// <returns>锁定信息列表</returns>
+        List<LockInfo> ILockManagerService.GetAllLockedDocuments() => GetAllLockedDocuments();
+
+        /// <summary>
+        /// 根据业务类型解锁单据 (ILockManagerService接口方法)
+        /// </summary>
+        /// <param name="userId">用户ID</param>
+        /// <param name="billType">单据类型</param>
+        /// <returns>解锁结果，包含成功状态和详细信息</returns>
+        async Task<LockResponse> ILockManagerService.UnlockDocumentsByBizNameAsync(long userId, int billType)
+            => await UnlockDocumentsByBizNameAsync(userId, billType);
+
+        /// <summary>
+        /// 强制解锁单据（管理员操作）(ILockManagerService接口方法)
+        /// </summary>
+        /// <param name="billId">单据ID</param>
+        /// <returns>解锁结果，包含成功状态和详细信息</returns>
+        async Task<LockResponse> ILockManagerService.ForceUnlockDocumentAsync(long billId)
+        {
+            // 强制解锁不需要用户ID验证，传入0作为占位符
+            return await ExecuteUnlockAsync(billId, 0, true, "强制解锁");
+        }
+
+
+
+        /// <summary>
+        /// 请求解锁单据 (ILockManagerService接口方法)
+        /// </summary>
+        /// <param name="request">锁定请求信息</param>
+        /// <returns>请求结果，包含成功状态和详细信息</returns>
+        async Task<LockResponse> ILockManagerService.RequestUnlockDocumentAsync(LockRequest request)
+        {
+            try
+            {
+                if (request == null || request.LockInfo?.BillID <= 0)
+                {
+                    _logger.LogWarning("请求解锁参数无效: BillID={BillId}", request?.LockInfo?.BillID ?? 0);
+                    return CreateErrorResponse(new LockInfo { BillID = request?.LockInfo?.BillID ?? 0 }, "请求解锁参数无效");
+                }
+
+                _logger.LogDebug("尝试请求解锁单据: BillID={BillId}, 请求者ID={UserId}",
+                    request.LockInfo.BillID, request.LockInfo.UserId);
+
+                // 检查单据是否被锁定
+                if (!_documentLocks.TryGetValue(request.LockInfo.BillID, out var lockInfo) || !lockInfo.IsLocked)
+                {
+                    return CreateErrorResponse(request.LockInfo, "单据未被锁定，无需解锁请求");
+                }
+
+                // 检查是否已存在解锁请求
+                if (_unlockRequests.ContainsKey(request.LockInfo.BillID))
+                {
+                    return CreateErrorResponse(request.LockInfo, "该单据已有待处理的解锁请求");
+                }
+               
+                // 存储解锁请求
+                if (_unlockRequests.TryAdd(request.LockInfo.BillID, request))
+                {
+                    //_logger.LogInformation("解锁请求成功: 单据ID={BillId}, 请求者ID={RequesterId}, 锁定者ID={LockedUserId}", request.LockInfo.BillID, request.LockInfo.UserId, lockInfo.UserId);
+                    return new LockResponse
+                    {
+                        IsSuccess = true,
+                        Message = "解锁请求已发送，请等待锁定者响应",
+                        LockInfo = request.LockInfo
+                    };
+                }
+
+                return CreateErrorResponse(request.LockInfo, "解锁请求失败，请重试");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "请求解锁时发生异常: BillID={BillId}", request?.LockInfo?.BillID ?? 0);
+                return CreateErrorResponse(new LockInfo { BillID = request?.LockInfo?.BillID ?? 0 },
+                    $"请求解锁异常: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 拒绝解锁请求 (ILockManagerService接口方法)
+        /// </summary>
+        /// <param name="refuseInfo">拒绝信息</param>
+        /// <returns>拒绝结果，包含成功状态和详细信息</returns>
+        async Task<LockResponse> ILockManagerService.RefuseUnlockRequestAsync(LockRequest refuseInfo)
+        {
+            try
+            {
+                if (refuseInfo == null || refuseInfo.LockInfo?.BillID <= 0)
+                {
+                    _logger.LogWarning("拒绝解锁请求参数无效: BillID={BillId}", refuseInfo?.LockInfo?.BillID ?? 0);
+                    return CreateErrorResponse(new LockInfo { BillID = refuseInfo?.LockInfo?.BillID ?? 0 }, "拒绝解锁请求参数无效");
+                }
+
+                _logger.LogDebug("处理拒绝解锁请求: 单据ID={BillId}, 拒绝者ID={LockedUserId}", refuseInfo.LockInfo.BillID, refuseInfo.LockInfo.UserId);
+
+                // 检查是否存在解锁请求
+                if (!_unlockRequests.TryGetValue(refuseInfo.LockInfo.BillID, out var storedRequest))
+                {
+                    // _logger.LogInformation("拒绝解锁请求失败: 单据ID={BillId} 没有待处理的解锁请求", refuseInfo.LockInfo.BillID);
+                    return CreateErrorResponse(refuseInfo.LockInfo, "该单据没有待处理的解锁请求");
+                }
+
+                // 检查是否是锁定者本人拒绝请求
+                if (storedRequest.LockedUserId != refuseInfo.LockInfo.UserId)
+                {
+                    _logger.LogWarning("拒绝解锁请求失败: 用户ID={UserId} 不是单据ID={BillId} 的锁定者，无权拒绝请求",
+                        refuseInfo.LockInfo.UserId, refuseInfo.LockInfo.BillID);
+                    return CreateErrorResponse(refuseInfo.LockInfo, "只有锁定者本人可以拒绝解锁请求");
+                }
+
+                // 移除解锁请求
+                if (_unlockRequests.TryRemove(refuseInfo.LockInfo.BillID, out _))
+                {
+                    // _logger.LogInformation("拒绝解锁请求成功: 单据ID={BillId}, 请求者ID={RequesterId}, 锁定者ID={LockedUserId}", refuseInfo.LockInfo.BillID, storedRequest.UserId, storedRequest.LockedUserId);
+                    return new LockResponse
+                    {
+                        IsSuccess = true,
+                        Message = "已拒绝解锁请求",
+                        LockInfo = refuseInfo.LockInfo
+                    };
+                }
+
+                _logger.LogWarning("拒绝解锁请求失败: 无法移除解锁请求: 单据ID={BillId}", refuseInfo.LockInfo.BillID);
+                return CreateErrorResponse(refuseInfo.LockInfo, "拒绝解锁请求失败，请重试");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "处理拒绝解锁请求时发生异常: BillID={BillId}", refuseInfo?.LockInfo?.BillID ?? 0);
+                return CreateErrorResponse(new LockInfo { BillID = refuseInfo?.LockInfo?.BillID ?? 0 },
+                    $"拒绝解锁请求异常: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 检查用户是否有权限修改单据 (ILockManagerService接口方法)
+        /// </summary>
+        /// <param name="billId">单据ID</param>
+        /// <param name="userId">用户ID</param>
+        /// <returns>是否有权限</returns>
+        bool ILockManagerService.HasPermissionToModifyDocument(long billId, long userId) 
+            => HasPermissionToModifyDocument(billId, userId);
+
+        /// <summary>
+        /// 获取锁定单据的用户ID (ILockManagerService接口方法)
+        /// </summary>
+        /// <param name="billId">单据ID</param>
+        /// <returns>锁定用户ID，如果未锁定则返回0</returns>
+        long ILockManagerService.GetLockedUserId(long billId) 
+            => GetLockedUserId(billId);
+
+        /// <summary>
+        /// 获取锁定项数量 (ILockManagerService接口方法)
+        /// </summary>
+        /// <returns>锁定项数量</returns>
+        int ILockManagerService.GetLockItemCount() 
+            => GetLockItemCount();
+
+        /// <summary>
+        /// 获取锁定统计信息 (ILockManagerService接口方法)
+        /// </summary>
+        /// <returns>锁定统计信息</returns>
+        LockInfoStatistics ILockManagerService.GetLockStatistics() 
+            => GetLockStatistics();
+
+
+
+        /// <summary>
+        /// 获取锁统计信息
+        /// </summary>
+        /// <returns>锁统计信息对象</returns>
+        public LockInfoStatistics GetLockStatistics()
+        {
+            try
+            {
+                var now = DateTime.Now;
+                var lockInfos = _documentLocks.Values.ToList();
+
+                // 计算总锁数
+                int totalLockCount = lockInfos.Count;
+
+                // 计算活跃锁数
+                int activeLockCount = lockInfos.Count(c => !c.IsExpired);
+
+                // 计算过期锁数
+                int expiredLockCount = lockInfos.Count(c => c.IsExpired);
+
+                // 计算锁定的用户数（去重）
+                int uniqueUsersCount = lockInfos.Select(c => c.UserId).Distinct().Count();
+
+                // 计算平均锁定年龄（分钟）
+                double avgLockAge = 0;
+                if (totalLockCount > 0)
+                {
+                    var totalMinutes = lockInfos.Sum(c => (now - c.LockTime).TotalMinutes);
+                    avgLockAge = Math.Round(totalMinutes / totalLockCount, 2);
+                }
+
+                // 创建统计对象
+                var stats = new LockInfoStatistics
+                {
+                    TotalLocks = totalLockCount,
+                    ActiveLocks = activeLockCount,
+                    ExpiredLocks = expiredLockCount,
+                    LocksByUser = uniqueUsersCount,
+                    RequestingUnlock = 0, // 当前实现不支持解锁请求统计
+
+                    AverageLockAge = avgLockAge,
+                    HeartbeatEnabled = true,
+                    LocksByBizType = new Dictionary<BizType, int>(),
+                    LocksByStatus = new Dictionary<LockStatus, int>()
+                };
+
+                // 统计按状态分布
+                foreach (var lockInfo in lockInfos)
+                {
+                    var status = lockInfo.IsExpired ? LockStatus.AboutToExpire :
+                                lockInfo.IsLocked ? LockStatus.Locked : LockStatus.AboutToExpire;
+
+                    if (stats.LocksByStatus.ContainsKey(status))
+                        stats.LocksByStatus[status]++;
+                    else
+                        stats.LocksByStatus[status] = 1;
+
+                    // 统计业务类型（如果有）
+                    if (lockInfo.BillData != null && lockInfo.BillData.BizType != 0)
+                    {
+                        if (stats.LocksByBizType.ContainsKey(lockInfo.BillData.BizType))
+                            stats.LocksByBizType[lockInfo.BillData.BizType]++;
+                        else
+                            stats.LocksByBizType[lockInfo.BillData.BizType] = 1;
+                    }
+                }
+
+                _logger.LogDebug("获取锁统计信息成功: 总锁数={Total}, 活跃={Active}, 过期={Expired}",
+                    totalLockCount, activeLockCount, expiredLockCount);
+
+                return stats;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "获取锁统计信息时发生异常");
+
+                // 返回基本统计信息
+                return new LockInfoStatistics
+                {
+                    TotalLocks = 0,
+                    ActiveLocks = 0,
+                    ExpiredLocks = 0,
+                    LocksByUser = 0,
+                    RequestingUnlock = 0,
+
+                    AverageLockAge = 0,
+                    HeartbeatEnabled = true,
+                    LocksByBizType = new Dictionary<BizType, int>(),
+                    LocksByStatus = new Dictionary<LockStatus, int>()
+                };
+            }
+        }
+
+        /// <summary>
+        /// 创建错误响应 - 使用统一工厂
+        /// </summary>
+        /// <param name="lockInfo">锁信息</param>
+        /// <param name="message">错误消息</param>
+        /// <returns>错误响应</returns>
+        private LockResponse CreateErrorResponse(LockInfo lockInfo, string message)
+        {
+            return LockResponseFactory.CreateError(message, lockInfo?.BillID ?? 0);
+        }
+
+
+        #endregion
+
+        #region 扩展方法
+
+        /// <summary>
+        /// 获取用户锁列表（供OrphanedLockDetector使用）
+        /// </summary>
+        /// <param name="userId">用户ID</param>
+        /// <returns>用户锁列表</returns>
+        public async Task<List<LockInfo>> GetUserLocksAsync(long userId)
+        {
+            try
+            {
+                var userLocks = _documentLocks.Values
+                    .Where(lockInfo => lockInfo.UserId == userId)
+                    .Select(lockInfo => lockInfo)
+                    .ToList();
+
+                await Task.CompletedTask;
+                return userLocks;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "获取用户锁列表时发生异常: UserId={UserId}", userId);
+                return new List<LockInfo>();
+            }
+        }
+
+        /// <summary>
+        /// 通用解锁方法（供OrphanedLockDetector使用）
+        /// </summary>
+        /// <param name="lockKey">锁键</param>
+        /// <param name="userId">用户ID</param>
+        /// <returns>异步任务，返回包含详细信息的LockResponse</returns>
+        public async Task<LockResponse> UnlockAsync(string lockKey, long userId)
+        {
+            try
+            {
+                // 参数验证
+                if (string.IsNullOrEmpty(lockKey))
+                    return LockResponseFactory.CreateParameterError("锁键");
+                
+                if (userId <= 0)
+                    return LockResponseFactory.CreateInvalidUserIdError();
+
+                // 从锁键中提取单据ID
+                if (!long.TryParse(lockKey.Replace("lock:document:", ""), out long billId))
+                    return LockResponseFactory.CreateError("锁键格式无效，无法解析单据ID");
+
+                // 使用统一解锁方法
+                return await ExecuteUnlockAsync(billId, userId, false, "孤儿锁清理解锁");
+            }
+            catch (Exception ex)
+            {
+                return LockResponseFactory.CreateExceptionError(ex, "孤儿锁清理解锁");
+            }
+        }
+
+        /// <summary>
+        /// 强制解锁方法（供OrphanedLockDetector使用）
+        /// </summary>
+        /// <param name="lockKey">锁键</param>
+        /// <param name="userId">用户ID</param>
+        /// <returns>异步任务，返回包含详细信息的LockResponse</returns>
+        public async Task<LockResponse> ForceUnlockAsync(string lockKey, long userId)
+        {
+            try
+            {
+                // 参数验证
+                if (string.IsNullOrEmpty(lockKey))
+                    return LockResponseFactory.CreateParameterError("锁键");
+                
+                if (userId <= 0)
+                    return LockResponseFactory.CreateInvalidUserIdError();
+
+                // 从锁键中提取单据ID
+                if (!long.TryParse(lockKey.Replace("lock:document:", ""), out long billId))
+                    return LockResponseFactory.CreateError("锁键格式无效，无法解析单据ID");
+
+                // 使用统一强制解锁方法
+                return await ExecuteUnlockAsync(billId, userId, true, "孤儿锁清理强制解锁");
+            }
+            catch (Exception ex)
+            {
+                return LockResponseFactory.CreateExceptionError(ex, "孤儿锁清理强制解锁");
+            }
+        }
+
+        /// <summary>
+        /// 获取孤儿锁数量（供OrphanedLockDetector使用）
+        /// </summary>
+        /// <returns>孤儿锁数量</returns>
+        public int GetOrphanedLockCount()
+        {
+            try
+            {
+                var now = DateTime.Now;
+                var orphanedCount = _documentLocks.Values
+                    .Count(lockInfo => lockInfo.ExpireTime < now);
+
+                return orphanedCount;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "获取孤儿锁数量时发生异常");
+                return 0;
+            }
+        }
+
+        #endregion
+
+        #region IDisposable 实现
+
+        /// <summary>
+        /// 释放资源
+        /// </summary>
+        public void Dispose()
+        {
+            if (_isDisposed)
+                return;
+
+            try
+            {
+                // 停止服务
+                StopAsync().GetAwaiter().GetResult();
+
+                // 释放定时器
+                _cleanupTimer?.Dispose();
+                _maintenanceTimer?.Dispose();
+
+                // 释放孤儿锁检测器
+                _orphanedLockDetector?.Dispose();
+
+                // 清理数据
+                _documentLocks.Clear();
+
+                _isDisposed = true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "释放集成式服务器锁管理器资源时发生异常");
+            }
+        }
+
+        #endregion
+    }
+
+
+}

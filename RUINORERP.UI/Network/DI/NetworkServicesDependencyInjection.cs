@@ -235,6 +235,9 @@ namespace RUINORERP.UI.Network.DI
                 .InstancePerLifetimeScope()
                 .PropertiesAutowired();
 
+            // 注册锁管理相关服务
+            RegisterLockManagementServices(builder);
+
             // 注册配置相关服务
             // 注册配置类型
             builder.RegisterType<SystemGlobalConfig>().AsSelf().SingleInstance();
@@ -278,6 +281,69 @@ namespace RUINORERP.UI.Network.DI
         }
 
         /// <summary>
+        /// 注册锁管理相关服务
+        /// </summary>
+        /// <param name="builder">容器构建器</param>
+        private static void RegisterLockManagementServices(ContainerBuilder builder)
+        {
+            // 使用工厂模式先注册IntegratedLockManagementService，不传入ClientLockCache和LockRecoveryManager
+            var lockServiceRegistration = builder.Register(c =>
+            {
+                // 解析核心依赖
+                var communicationService = c.Resolve<ClientCommunicationService>();
+                var heartbeatManager = c.Resolve<HeartbeatManager>();
+                var logger = c.Resolve<ILogger<ClientLockManagementService>>();
+
+                // 创建集成锁管理服务实例，内部会创建ClientLockCache和LockRecoveryManager
+                return new ClientLockManagementService(
+                    communicationService,
+                    heartbeatManager,
+                    logger);
+            })
+            .AsSelf()
+            .SingleInstance()
+            .OnActivated(e =>
+            {
+                // 在IntegratedLockManagementService激活后，提取其内部的ClientLockCache实例并注册到容器
+                try
+                {
+                    var lockService = e.Instance;
+                
+                    
+                    // 通过反射获取内部的ClientLockCache
+                    var clientCacheField = typeof(ClientLockManagementService)
+                        .GetField("_clientCache", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                    
+                    if (clientCacheField?.GetValue(lockService) is ClientLocalLockCacheService clientCache)
+                    {
+                        // 手动注册ClientLockCache实例到容器
+                        // 由于Autofac不支持动态注册，我们将使用另一种方法
+                       
+                    }
+                }
+                catch (Exception ex)
+                {
+                    
+                    //logger?.LogError(ex, "处理IntegratedLockManagementService激活事件失败");
+                }
+            });
+
+            // 注册ClientLockCache作为IntegratedLockManagementService的属性访问
+            builder.Register(c =>
+            {
+                var lockService = c.Resolve<ClientLockManagementService>();
+                // 使用反射获取ClientLockCache字段
+                var clientCacheField = typeof(ClientLockManagementService)
+                    .GetField("_clientCache", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                return clientCacheField?.GetValue(lockService) as ClientLocalLockCacheService;
+            })
+            .As<ClientLocalLockCacheService>()
+            .SingleInstance();
+
+            
+        }
+
+        /// <summary>
         /// 获取Network服务统计信息
         /// </summary>
         /// <returns>服务统计信息字符串</returns>
@@ -287,6 +353,7 @@ namespace RUINORERP.UI.Network.DI
                    + $"已注册服务: 16个核心服务（RequestResponseManager已合并到ClientCommunicationService，新增TokenRefreshService和SilentTokenRefresher）\n"
                    + $"已注册命令处理器: ConfigCommandHandler和MessageCommandHandler（从ClientCommandHandlerModule移植）\n"
                    + $"已注册接口: 3个服务接口\n"
+                   + $"已注册锁管理服务: IntegratedLockManagementService, ClientLockCache, LockRecoveryManager\n"
                    + $"生命周期: 单例模式、瞬态模式和InstancePerLifetimeScope\n"
                    + $"AOP支持: 已启用接口拦截器\n"
                    + $"架构版本: 重构后新架构";

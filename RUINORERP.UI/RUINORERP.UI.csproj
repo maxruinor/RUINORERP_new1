@@ -2303,6 +2303,7 @@
     <Compile Include="Network\Exceptions\NetworkCommunicationException.cs" />
     <Compile Include="Network\HeartbeatManager.cs" />
     <Compile Include="Network\IClientCommunicationService.cs" />
+    <Compile Include="Network\Interfaces\ILockStatusProvider.cs" />
     <Compile Include="Network\ISocketClient.cs" />
     <Compile Include="Network\ClientCommunicationService.cs" />
     <Compile Include="Network\NetworkConfig.cs" />
@@ -2316,12 +2317,13 @@
     <Compile Include="Network\Services\CacheClientService.cs" />
     <Compile Include="Network\Services\Cache\CacheRequestManager.cs" />
     <Compile Include="Network\Services\Cache\CacheResponseProcessor.cs" />
-    <Compile Include="Network\Services\Cache\CacheUtility.cs" />
+    <Compile Include="Network\Services\ClientLocalLockCacheService.cs" />
     <Compile Include="Network\Services\FileManagementController.cs" />
     <Compile Include="Network\Services\FileManagementService.cs" />
     <Compile Include="Network\Services\FileStorageInfoService.cs" />
     <Compile Include="Network\Services\IMessageSender.cs" />
-    <Compile Include="Network\Services\LockManagementService.cs" />
+    <Compile Include="Network\Services\ClientLockManagementService.cs" />
+    <Compile Include="Network\Services\LockRecoveryManager.cs" />
     <Compile Include="Network\Services\MessageService.cs" />
     <Compile Include="Network\Services\SimplifiedMessageService.cs" />
     <Compile Include="Network\Services\SystemManagementService.cs" />

@@ -46,6 +46,16 @@ namespace RUINORERP.UI.Network
             _networkHealthWarningShown = false;
         }
 
+        /// <summary>
+        /// 服务器IP地址
+        /// </summary>
+        public string ServerIP => _serverIp;
+
+        /// <summary>
+        /// 服务器端口号
+        /// </summary>
+        public int ServerPort => _port;
+
 
         /// <summary>
         /// 获取客户端IP地址

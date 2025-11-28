@@ -178,7 +178,7 @@ namespace RUINORERP.UI
                             UserGlobalConfig.Instance.IsSupperUser = Program.AppContextData.IsSuperUser;
                             UserGlobalConfig.Instance.AutoRminderUpdate = chkAutoReminderUpdate.Checked;
                             UserGlobalConfig.Instance.Serialize();
-                            MainForm.Instance.logger?.LogInformation("成功保存用户配置");
+                            MainForm.Instance.logger?.LogDebug("成功保存用户配置");
                         }
                         catch (Exception ex)
                         {
@@ -247,7 +247,7 @@ namespace RUINORERP.UI
                             {
                                 var disconnectResult = await MainForm.Instance.communicationService.Disconnect();
                                 MainForm.Instance.CurrentLoginStatus = MainForm.LoginStatus.None;
-                                MainForm.Instance.logger?.LogInformation("断开现有连接");
+                                MainForm.Instance.logger?.LogDebug("断开现有连接");
                             }
                             catch (Exception ex)
                             {
@@ -301,7 +301,7 @@ namespace RUINORERP.UI
                                     // 简化连接逻辑：如果未连接，则尝试连接
                                     if (!MainForm.Instance.communicationService.IsConnected)
                                     {
-                                        MainForm.Instance.logger?.LogInformation($"尝试连接服务器 {serverIp}:{serverPort}");
+                                        MainForm.Instance.logger?.LogDebug($"尝试连接服务器 {serverIp}:{serverPort}");
 
                                         // 添加连接超时控制
                                         var connectTask = connectionManager.ConnectAsync(serverIp, serverPort);
@@ -322,7 +322,7 @@ namespace RUINORERP.UI
                                             return;
                                         }
 
-                                        MainForm.Instance.logger?.LogInformation($"成功连接到服务器 {serverIp}:{serverPort}");
+                                        MainForm.Instance.logger?.LogDebug($"成功连接到服务器 {serverIp}:{serverPort}");
 
                                         // 更新原始服务器信息
                                         _originalServerIP = serverIp;
@@ -331,7 +331,7 @@ namespace RUINORERP.UI
                                     }
                                     else
                                     {
-                                        MainForm.Instance.logger?.LogInformation("使用现有连接");
+                                        MainForm.Instance.logger?.LogDebug("使用现有连接");
                                     }
 
 
@@ -517,7 +517,7 @@ namespace RUINORERP.UI
         {
             try
             {
-                MainForm.Instance.logger?.LogInformation("开始执行快捷登录验证流程");
+                MainForm.Instance.logger?.LogDebug("开始执行快捷登录验证流程");
 
                 // 检查Token是否存在且有效
                 if (string.IsNullOrEmpty(token))
@@ -545,7 +545,7 @@ namespace RUINORERP.UI
                 // 记录用户登录时间
                 UpdateLoginTime();
 
-                MainForm.Instance.logger?.LogInformation("用户通过快捷验证方式成功登录");
+                MainForm.Instance.logger?.LogDebug("用户通过快捷验证方式成功登录");
                 return new LoginResult { IsSuccess = true, ErrorMessage = string.Empty };
             }
             catch (Exception ex)
@@ -595,7 +595,7 @@ namespace RUINORERP.UI
                 if (Program.AppContextData.CurrentUser != null && Program.AppContextData.CurrentUser.登陆时间 < System.DateTime.Now.AddYears(-30))
                 {
                     Program.AppContextData.CurrentUser.登陆时间 = System.DateTime.Now;
-                    MainForm.Instance.logger?.LogInformation("成功更新用户登录时间");
+                    MainForm.Instance.logger?.LogDebug("成功更新用户登录时间");
                 }
             }
             catch (Exception ex)

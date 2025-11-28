@@ -244,7 +244,7 @@ namespace RUINORERP.UI.Common
                         // 检查是否可缓存
                         if (!IsCacheableTable(tableName))
                         {
-                            _logger.LogWarning("表 {TableName} 不支持缓存", tableName);
+                            _logger.LogDebug("表 {TableName} 不支持缓存", tableName);
                             completionSource.TrySetResult(false);
                             return;
                         }

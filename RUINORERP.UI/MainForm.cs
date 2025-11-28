@@ -2019,6 +2019,7 @@ namespace RUINORERP.UI
         /// </summary>
         public void LogLock()
         {
+
             // 检查是否已经在注销过程中，防止重复执行
             if (IsLoggingOut || CurrentLoginStatus == LoginStatus.LoggingOut || CurrentLoginStatus == LoginStatus.LoggingIn)
             {
@@ -2038,16 +2039,6 @@ namespace RUINORERP.UI
                     Program.AppContextData.IsOnline = false;
                     MainForm.Instance.AppContext.CurrentUser.授权状态 = false;
                     MainForm.Instance.AppContext.CurrentUser.在线状态 = false;
-
-                    // 记录锁定审计日志
-                    MainForm.Instance.AuditLogHelper.CreateAuditLog("锁定", "系统锁定并进入重新登录状态");
-
-                    // 断开与服务器的连接，避免继续发送心跳
-                    if (communicationService != null && communicationService.IsConnected)
-                    {
-                        var disconnectResult = await communicationService.Disconnect();
-                        logger?.LogInformation($"锁定过程中断开连接结果: {disconnectResult}");
-                    }
 
                     // 清除UI元素
                     ClearUI();

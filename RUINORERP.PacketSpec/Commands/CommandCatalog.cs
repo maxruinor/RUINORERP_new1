@@ -18,10 +18,6 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         public const ushort System_Heartbeat = 0x0001;
 
-        /// <summary>
-        /// 心跳回复
-        /// </summary>
-        public const ushort System_HeartbeatResponse = 0x0002;
 
         /// <summary>
         /// 电脑状态查询

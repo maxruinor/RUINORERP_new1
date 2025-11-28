@@ -120,7 +120,7 @@ namespace RUINORERP.UI.CRM
             //后面这些依赖于控件绑定的数据源和字段。所以要在绑定后执行。
             if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
             {
-                base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService <tb_CRM_CustomerValidator> (), kryptonPanel1.Controls);
+                base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService<tb_CRM_CustomerValidator>(), kryptonPanel1.Controls);
                 base.InitEditItemToControl(entity, kryptonPanel1.Controls);
             }
             if (customer.Customer_id > 0)
@@ -160,7 +160,7 @@ namespace RUINORERP.UI.CRM
                     //如果区域有变化，带出对应省  省带市
                     if (customer.Region_ID > 0 && s2.PropertyName == entity.GetPropertyName<tb_CRM_Customer>(c => c.Region_ID))
                     {
-                       
+
                         //创建表达式
                         var lambdaProvince = Expressionable.Create<tb_Provinces>()
                                         .And(t => t.Region_ID != null)
@@ -219,7 +219,7 @@ namespace RUINORERP.UI.CRM
                 {
                     foreach (var item in customer.tb_CRM_FollowUpRecordses)
                     {
-                        
+
                         UCFollowUpRecord ucrecord = new UCFollowUpRecord();
                         ucrecord.AutoSize = true;
                         ucrecord.AutoSizeMode = AutoSizeMode.GrowAndShrink;
@@ -368,9 +368,9 @@ namespace RUINORERP.UI.CRM
             .Where(c => c.LeadID == refId)
             .SingleAsync();
 
-           
+
             MainForm.Instance.mapper.Map(crmLeads, entity);  // 直接将 crmLeads 的值映射到传入的 entity 对象上，保持了引用
-                                           // entity = mapper.Map<tb_CRM_Customer>(crmLeads);//这个是直接重新生成了对象。
+                                                             // entity = mapper.Map<tb_CRM_Customer>(crmLeads);//这个是直接重新生成了对象。
             entity.ActionStatus = ActionStatus.新增;
 
             List<string> tipsMsg = new List<string>();
@@ -626,6 +626,12 @@ namespace RUINORERP.UI.CRM
 
         private async void btnFastFollowUp_Click(object sender, EventArgs e)
         {
+            if (!_EditEntity.Employee_ID.HasValue)
+            {
+                MessageBox.Show("请选择对接人!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
             object frm = Activator.CreateInstance(typeof(UCCRMFollowUpRecordsEdit));
             if (frm.GetType().BaseType.Name.Contains("BaseEditGeneric"))
             {
@@ -661,7 +667,7 @@ namespace RUINORERP.UI.CRM
 
                                 }
                             }
-                             
+
                         }
                     }
                 }
@@ -686,7 +692,7 @@ namespace RUINORERP.UI.CRM
                 tb_CRM_Collaborator ContactInfo = obj as tb_CRM_Collaborator;
                 ContactInfo.Customer_id = _EditEntity.Customer_id;
                 ContactInfo.Created_at = System.DateTime.Now;
-                ContactInfo.Created_by= MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
+                ContactInfo.Created_by = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
                 BaseEntity bty = ContactInfo as BaseEntity;
                 bty.ActionStatus = ActionStatus.加载;
                 BusinessHelper.Instance.EditEntity(bty);

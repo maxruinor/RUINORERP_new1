@@ -19,11 +19,6 @@ namespace RUINORERP.PacketSpec.Commands
         public static readonly CommandId Heartbeat = new CommandId(CommandCategory.System, (byte)(CommandCatalog.System_Heartbeat & 0xFF));
 
         /// <summary>
-        /// 心跳回复
-        /// </summary>
-        public static readonly CommandId HeartbeatResponse = new CommandId(CommandCategory.System, (byte)(CommandCatalog.System_HeartbeatResponse & 0xFF));
-
-        /// <summary>
         /// 电脑状态查询
         /// </summary>
         public static readonly CommandId ComputerStatus = new CommandId(CommandCategory.System, (byte)(CommandCatalog.System_ComputerStatus & 0xFF));

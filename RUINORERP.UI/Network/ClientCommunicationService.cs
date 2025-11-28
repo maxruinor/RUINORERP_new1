@@ -91,7 +91,7 @@ namespace RUINORERP.UI.Network
         private readonly TokenManager _tokenManager;
 
         // 新增心跳相关字段
-        private readonly int _heartbeatIntervalMs = 30000; // 默认30秒心跳间隔
+        private readonly int _heartbeatIntervalMs = 5000; // 默认5秒心跳间隔
         private CancellationTokenSource _heartbeatCancellationTokenSource;
         private CancellationTokenSource _heartbeatCts; // 心跳取消令牌源
         private Task _heartbeatTask;
@@ -271,10 +271,10 @@ namespace RUINORERP.UI.Network
             try
             {
                 _logger?.LogDebug("开始初始化客户端命令调度器");
-                
+
                 // 使用一键式初始化方法
                 var result = await _commandDispatcher.InitializeAndStartAsync();
-                
+
                 _logger?.LogDebug($"客户端命令调度器初始化完成，结果: {{result.success}}, 注册处理器数: {{result.registeredCount}}");
                 return result;
             }
@@ -403,7 +403,7 @@ namespace RUINORERP.UI.Network
 
                             // 触发失败事件
                             HeartbeatFailed?.Invoke(_heartbeatFailedAttempts);
-                            _logger?.LogWarning("心跳失败，连续失败次数：{FailedAttempts}", _heartbeatFailedAttempts);
+                            //_logger?.LogWarning("心跳失败，连续失败次数：{FailedAttempts}", _heartbeatFailedAttempts);
                         }
                     }
                 }
@@ -434,14 +434,30 @@ namespace RUINORERP.UI.Network
         {
             try
             {
+                // 检查是否有有效的Session ID
+                if (string.IsNullOrEmpty(MainForm.Instance.AppContext.SessionId))
+                {
+                    // 未登录状态，不发送心跳
+                    _logger?.LogDebug("未登录状态，跳过心跳发送");
+                    return true; // 返回true避免触发失败计数
+                }
+
                 var heartbeatRequest = new HeartbeatRequest();
 
                 // 可以根据需要添加系统信息
                 // 注意：获取系统信息可能耗时，谨慎使用
+                
+                heartbeatRequest.UserInfo = MainForm.Instance.AppContext.CurrentUser;
+             
 
                 var response = await SendCommandWithResponseAsync<HeartbeatResponse>(
                     SystemCommands.Heartbeat, heartbeatRequest, cancellationToken);
 
+                if (response != null && response.IsSuccess)
+                {
+                    //心跳响应
+                    MainForm.Instance.lblServerInfo.Text = $"服务器信息：{_socketClient.ServerIP}:{_socketClient.ServerPort}";
+                }
                 return response != null && response.IsSuccess;
             }
             catch (Exception ex)
@@ -828,6 +844,10 @@ namespace RUINORERP.UI.Network
                 }
 
                 if (packet.CommandId != SystemCommands.Heartbeat)
+                {
+
+                }
+                else
                 {
 
                 }

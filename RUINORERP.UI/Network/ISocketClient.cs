@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 namespace RUINORERP.UI.Network
 {
     /// <summary>
+    /// 套接字客户端接口
     /// </summary>
     public interface ISocketClient : IDisposable
     {
@@ -16,6 +17,16 @@ namespace RUINORERP.UI.Network
         string ClientID { get; set; }
 
         string ClientIP { get; set; }
+
+        /// <summary>
+        /// 服务器IP地址
+        /// </summary>
+        string ServerIP { get; }
+
+        /// <summary>
+        /// 服务器端口号
+        /// </summary>
+        int ServerPort { get; }
 
         /// <summary>
         /// 连接状态

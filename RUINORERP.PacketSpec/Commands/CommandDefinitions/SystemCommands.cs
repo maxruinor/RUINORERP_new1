@@ -72,7 +72,10 @@ namespace RUINORERP.PacketSpec.Commands
         /// <summary>
         /// 版本更新
         /// </summary>
-        VersionUpdate = 4
+        PushVersionUpdate = 4,
+
+        SwitchServer = 5,
+
     }
 
 }

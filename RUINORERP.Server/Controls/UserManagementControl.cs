@@ -1,6 +1,12 @@
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.VisualBasic;
+using RUINORERP.Model.CommonModel;
+using RUINORERP.PacketSpec.Commands;
+using RUINORERP.PacketSpec.Models.Requests;
 using RUINORERP.Server.Network.Interfaces.Services;
 using RUINORERP.Server.Network.Models;
-using Microsoft.Extensions.DependencyInjection;
+using RUINORERP.Server.ToolsUI;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -8,10 +14,9 @@ using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
-using RUINORERP.Server.ToolsUI;
-using Microsoft.Extensions.Logging;
-using RUINORERP.Model.CommonModel;
 
 namespace RUINORERP.Server.Controls
 {
@@ -35,6 +40,16 @@ namespace RUINORERP.Server.Controls
 
         // 是否需要完整刷新标志
         private bool _needsFullRefresh = false;
+        
+        /// <summary>
+        /// 断开连接的会话在UI中的保留时间（分钟）
+        /// </summary>
+        private int _disconnectedSessionRetentionMinutes = 2;
+        
+        /// <summary>
+        /// 上次立即刷新时间，用于避免过于频繁的刷新
+        /// </summary>
+        private DateTime _lastImmediateRefresh = DateTime.MinValue;
 
         [DllImport("user32.dll")]
         private static extern int GetScrollPos(IntPtr hWnd, int nBar);
@@ -69,6 +84,91 @@ namespace RUINORERP.Server.Controls
 
             // 初始化列显示选项为选中状态
             InitializeColumnDisplayOptions();
+
+            // 添加断开连接菜单项
+            AddDisconnectMenuItem();
+        }
+
+        /// <summary>
+        /// 向右键菜单添加断开连接菜单项
+        /// </summary>
+        private void AddDisconnectMenuItem()
+        {
+            try
+            {
+                // 检查菜单项是否已存在
+                if (contextMenuStrip1.Items.Cast<ToolStripItem>().Any(item => item.Text == "断开连接"))
+                {
+                    return; // 菜单项已存在，不需要再次添加
+                }
+
+                // 创建分隔线
+                ToolStripSeparator separator = new ToolStripSeparator();
+
+                // 创建断开连接菜单项
+                ToolStripMenuItem disconnectMenuItem = new ToolStripMenuItem
+                {
+                    Text = "断开连接",
+                    ToolTipText = "强制断开选中的用户会话连接",
+                    Image = null // 可以根据需要设置图标
+                };
+
+                // 添加菜单项到右键菜单
+                contextMenuStrip1.Items.Add(separator);
+                contextMenuStrip1.Items.Add(disconnectMenuItem);
+            }
+            catch (Exception ex)
+            {
+                LogError("添加断开连接菜单项时出错", ex);
+            }
+
+            // 添加切换服务器相关菜单项
+            AddSwitchServerMenuItems();
+        }
+
+        private void AddSwitchServerMenuItems()
+        {
+            try
+            {
+                // 检查是否已存在切换服务器菜单项
+                bool switchServerExists = contextMenuStrip1.Items.Cast<ToolStripItem>().Any(item => item.Text == "切换服务器");
+                bool switchAllServersExists = contextMenuStrip1.Items.Cast<ToolStripItem>().Any(item => item.Text == "全部切换服务器");
+
+                // 如果还没有服务器相关菜单项，添加分隔线和菜单项
+                if (!switchServerExists && !switchAllServersExists)
+                {
+                    // 添加分隔线
+                    contextMenuStrip1.Items.Add(new ToolStripSeparator());
+                }
+
+                // 添加切换服务器菜单项
+                if (!switchServerExists)
+                {
+                    ToolStripMenuItem switchServerMenuItem = new ToolStripMenuItem
+                    {
+                        Text = "切换服务器",
+                        ToolTipText = "为选中用户切换到指定服务器",
+                        Image = null
+                    };
+                    contextMenuStrip1.Items.Add(switchServerMenuItem);
+                }
+
+                // 添加全部切换服务器菜单项
+                if (!switchAllServersExists)
+                {
+                    ToolStripMenuItem switchAllServersMenuItem = new ToolStripMenuItem
+                    {
+                        Text = "全部切换服务器",
+                        ToolTipText = "为所有用户切换到指定服务器",
+                        Image = null
+                    };
+                    contextMenuStrip1.Items.Add(switchAllServersMenuItem);
+                }
+            }
+            catch (Exception ex)
+            {
+                LogError("添加切换服务器菜单项时出错", ex);
+            }
         }
 
         private void InitializeListView()
@@ -291,10 +391,40 @@ namespace RUINORERP.Server.Controls
                 return;
             }
 
-            if (_sessionItemMap.TryGetValue(sessionId, out var item))
+            try
             {
-                listView1.Items.Remove(item);
-                _sessionItemMap.Remove(sessionId);
+                if (string.IsNullOrEmpty(sessionId))
+                {
+                    LogError("尝试移除会话ID为空的会话项");
+                    return;
+                }
+
+                if (_sessionItemMap.TryGetValue(sessionId, out var item))
+                {
+                    // 记录将要移除的会话信息
+                    string sessionInfo = "未知会话";
+                    if (item.Tag is SessionInfo sessionData)
+                    {
+                        var userInfo = sessionData.UserInfo ?? new UserInfo();
+                        sessionInfo = $"用户: {GetDisplayUserName(userInfo)}, IP: {sessionData.ClientIp}";
+                    }
+
+                    // 移除会话项
+                    listView1.BeginUpdate();
+                    listView1.Items.Remove(item);
+                    _sessionItemMap.Remove(sessionId);
+                    listView1.EndUpdate();
+
+                    LogStatusChange(null, $"会话项已移除: {sessionInfo} (SessionID: {sessionId})");
+                }
+                else
+                {
+                    LogStatusChange(null, $"尝试移除不存在的会话项: {sessionId}");
+                }
+            }
+            catch (Exception ex)
+            {
+                LogError($"移除会话项时出错: {sessionId}", ex);
             }
         }
 
@@ -515,6 +645,8 @@ namespace RUINORERP.Server.Controls
                 // 2. 心跳和空闲时间更新：每5秒更新可见项
                 if (now.Second % 5 == 0)
                 {
+                    // 检查listView1是否已经被释放
+                    if (listView1.IsDisposed) return;
                     UpdateVisibleSessionsHeartbeatAndIdleTime();
                 }
 
@@ -522,27 +654,77 @@ namespace RUINORERP.Server.Controls
                 if (now.Second % 30 == 0)
                 {
                     SyncWithSessionService();
+                    // 同步后刷新UI确保实时显示
+                    if (!listView1.IsDisposed)
+                    {
+                        BeginInvoke((MethodInvoker)delegate
+                        {
+                            if (!listView1.IsDisposed)
+                                listView1.Refresh();
+                        });
+                    }
                 }
 
-                // 4. 完整刷新：每60秒执行一次（仅在需要时）
-                if (now.Second % 60 == 0 && _needsFullRefresh)
+                // 4. 完整刷新：每60秒执行一次
+                if (now.Second % 60 == 0 || _needsFullRefresh)
                 {
+                    // 优先处理需要完整刷新的情况，不等待60秒
+                    if (_needsFullRefresh)
+                    {
+                        _needsFullRefresh = false;
+                    }
                     FullRefreshFromSessions();
-                    _needsFullRefresh = false;
+                    
+                    // 确保UI完全刷新
+                    if (!listView1.IsDisposed)
+                    {
+                        BeginInvoke((MethodInvoker)delegate
+                        {
+                            if (!listView1.IsDisposed)
+                                listView1.Refresh();
+                        });
+                    }
                 }
             }
             catch (Exception ex)
             {
                 LogError("定时器更新时出错", ex);
+                // 发生错误时，确保下次会重新同步
+                _needsFullRefresh = true;
             }
         }
 
         /// <summary>
-        /// 标记需要完整刷新
+        /// 标记需要完整刷新并尝试立即触发刷新
         /// </summary>
         private void MarkForFullRefresh()
         {
             _needsFullRefresh = true;
+            
+            // 尝试立即触发刷新而不等待定时器周期
+            // 但避免过于频繁的刷新
+            if (DateTime.Now.Subtract(_lastImmediateRefresh).TotalSeconds > 5)
+            {
+                _lastImmediateRefresh = DateTime.Now;
+                
+                // 在UI线程上执行刷新
+                BeginInvoke((MethodInvoker)delegate
+                {
+                    try
+                    {
+                        if (!IsDisposed && !listView1.IsDisposed)
+                        {
+                            // 执行轻量级同步而不是完整刷新，以避免性能问题
+                            SyncWithSessionService();
+                            listView1.Refresh();
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        LogError("立即刷新失败", ex);
+                    }
+                });
+            }
         }
 
         /// <summary>
@@ -647,70 +829,291 @@ namespace RUINORERP.Server.Controls
         /// </summary>
         private void FullRefreshFromSessions()
         {
+            // 检查控件是否已经被释放
+            if (IsDisposed || listView1.IsDisposed)
+            {
+                LogError("FullRefreshFromSessions: 控件已被释放，无法执行刷新操作");
+                return;
+            }
+            
+            // 初始化状态计数器
+            int newCount = 0;
+            int updatedCount = 0;
+            int removedCount = 0;
+            int statusChangedCount = 0;
+            bool refreshSuccessful = false;
+            
             try
             {
-                // 获取所有当前会话
-                var currentSessions = _sessionService.GetAllUserSessions().ToList();
+                // 开始更新，避免UI闪烁
+                listView1.BeginUpdate();
+                
+                // 获取所有当前会话 - 添加超时保护
+                var currentSessions = new List<SessionInfo>();
+                try
+                {
+                    // 限制获取会话的时间，避免长时间阻塞
+                    using (var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(10)))
+                    {
+                        currentSessions = _sessionService.GetAllUserSessions().ToList();
+                    }
+                }
+                catch (Exception getSessionsEx)
+                {
+                    LogError($"获取会话列表时发生超时或错误: {getSessionsEx.Message}", getSessionsEx);
+                    currentSessions = new List<SessionInfo>();
+                }
+                
                 var currentSessionIds = new HashSet<string>(currentSessions.Select(s => s.SessionID));
-
-                int newCount = 0;
-                int removedCount = 0;
 
                 // 添加新会话或更新现有会话
                 foreach (var sessionInfo in currentSessions)
                 {
-                    AddOrUpdateSessionItem(sessionInfo);
+                    try
+                    {
+                        if (_sessionItemMap.TryGetValue(sessionInfo.SessionID, out var existingItem))
+                        {
+                            // 更新现有会话
+                            // 检查会话状态是否发生变化
+                            bool statusChanged = false;
+                            if (existingItem.Tag is SessionInfo existingSessionData)
+                            {
+                                // 检查连接状态是否变化
+                                if (existingSessionData.IsConnected != sessionInfo.IsConnected)
+                                {
+                                    statusChanged = true;
+                                    statusChangedCount++;
+                                    string statusDesc = sessionInfo.IsConnected ? "已连接" : "已断开";
+                                    LogStatusChange(sessionInfo, $"会话状态变更为{statusDesc}: {GetDisplayUserName(sessionInfo.UserInfo ?? new UserInfo())} - {sessionInfo.ClientIp}");
+                                }
+                            }
+
+                            UpdateSessionItem(existingItem, sessionInfo);
+                            updatedCount++;
+                        }
+                        else
+                        {
+                            // 添加新会话
+                            AddOrUpdateSessionItem(sessionInfo);
+                            newCount++;
+                        }
+                    }
+                    catch (Exception updateEx)
+                    {
+                        // 记录单个会话更新错误，但继续处理其他会话
+                        LogError($"更新会话 {sessionInfo.SessionID} 时出错: {updateEx.Message}", updateEx);
+                    }
                 }
 
-                // 移除不存在的会话
-                var sessionsToRemove = _sessionItemMap.Keys.Where(sessionId => !currentSessionIds.Contains(sessionId)).ToList();
+                // 移除不存在的会话或已断开且超过保留时间的会话
+                var sessionsToRemove = new List<string>();
+                var now = DateTime.Now;
+                
+                foreach (var sessionId in _sessionItemMap.Keys.ToList())
+                {
+                    try
+                    {
+                        if (!currentSessionIds.Contains(sessionId))
+                        {
+                            // 移除不存在于服务中的会话
+                            sessionsToRemove.Add(sessionId);
+                        }
+                        else if (_sessionItemMap.TryGetValue(sessionId, out var existingItem) && existingItem.Tag is SessionInfo sessionData)
+                        {
+                            // 检查是否需要移除已断开且超过保留时间的会话
+                            if (!sessionData.IsConnected && (now - sessionData.LastHeartbeat).TotalMinutes > _disconnectedSessionRetentionMinutes)
+                            {
+                                sessionsToRemove.Add(sessionId);
+                            }
+                        }
+                    }
+                    catch (Exception removeCheckEx)
+                    {
+                        // 记录检查移除条件时的错误，但继续处理其他会话
+                        LogError($"检查会话 {sessionId} 是否需要移除时出错: {removeCheckEx.Message}", removeCheckEx);
+                    }
+                }
+
+                // 批量移除会话项
                 foreach (var sessionId in sessionsToRemove)
                 {
-                    RemoveSessionItem(sessionId);
-                    removedCount++;
+                    try
+                    {
+                        RemoveSessionItem(sessionId);
+                        removedCount++;
+                    }
+                    catch (Exception removeEx)
+                    {
+                        // 记录单个会话移除错误，但继续处理其他会话
+                        LogError($"移除会话 {sessionId} 时出错: {removeEx.Message}", removeEx);
+                    }
                 }
+                
+                refreshSuccessful = true;
 
                 // 只在有变化时记录日志
-                if (newCount > 0 || removedCount > 0)
+                if (newCount > 0 || updatedCount > 0 || removedCount > 0)
                 {
-                    LogStatusChange(null, $"完整刷新完成：新增 {newCount} 个会话，移除 {removedCount} 个会话，当前显示 {currentSessions.Count} 个会话");
+                    LogStatusChange(null, $"完整刷新完成：新增 {newCount} 个会话，更新 {updatedCount} 个会话，状态变更 {statusChangedCount} 个会话，移除 {removedCount} 个会话，当前显示 {_sessionItemMap.Count} 个会话");
                 }
             }
             catch (Exception ex)
             {
                 LogError("完整刷新会话列表时出错", ex);
+                // 发生严重错误时，确保设置标记让下次能尝试重新同步
+                _needsFullRefresh = true;
+            }
+            finally
+            {
+                // 无论如何都要结束更新，避免UI卡死
+                try
+                {
+                    if (!listView1.IsDisposed)
+                    {
+                        listView1.EndUpdate();
+                        // 确保UI与数据同步
+                        listView1.Refresh();
+                    }
+                }
+                catch (Exception uiEx)
+                {
+                    LogError("刷新UI时发生错误", uiEx);
+                }
+                
+                // 更新统计信息
+                try
+                {
+                    UpdateStatistics();
+                }
+                catch (Exception statsEx)
+                {
+                    LogError("更新统计信息失败", statsEx);
+                }
+                
+                // 重置刷新状态
+                if (refreshSuccessful)
+                {
+                    _lastFullUpdate = DateTime.Now;
+                    _needsFullRefresh = false;
+                }
+                
+                // 记录刷新结果
+                LogStatusChange(null, $"刷新操作{(refreshSuccessful ? "成功" : "失败")}: 新增={newCount}, 更新={updatedCount}, 移除={removedCount}");
             }
         }
 
         /// <summary>
         /// 同步会话服务状态
         /// </summary>
-        private void SyncWithSessionService()
+        /// <summary>
+        /// 清除所有会话项
+        /// </summary>
+        private void ClearAllSessionItems()
         {
+            if (InvokeRequired)
+            {
+                Invoke(new Action(ClearAllSessionItems));
+                return;
+            }
+
             try
             {
-                // 获取当前所有会话
-                var currentSessions = _sessionService.GetAllUserSessions().ToList();
-                int updatedCount = 0;
+                listView1.BeginUpdate();
+                listView1.Items.Clear();
+                _sessionItemMap.Clear();
+                listView1.EndUpdate();
+                
+                LogStatusChange(null, "所有会话项已清除");
+            }
+            catch (Exception ex)
+            {
+                LogError("清除所有会话项时出错", ex);
+                try
+                {
+                    listView1.EndUpdate();
+                }
+                catch { }
+            }
+        }
+        
+        private void SyncWithSessionService()
+        {
+            // 检查控件是否已经被释放
+            if (IsDisposed || listView1.IsDisposed)
+            {
+                LogError("SyncWithSessionService: 控件已被释放，无法执行同步操作");
+                return;
+            }
+            
+            int updatedCount = 0;
+            bool syncSuccessful = false;
+            
+            try
+            {
+                // 获取当前所有会话 - 添加异常处理
+                var currentSessions = new List<SessionInfo>();
+                try
+                {
+                    // 设置获取会话的超时保护
+                    using (var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
+                    {
+                        currentSessions = _sessionService.GetAllUserSessions().ToList();
+                    }
+                }
+                catch (Exception getSessionsEx)
+                {
+                    LogError($"获取会话列表进行同步时出错: {getSessionsEx.Message}", getSessionsEx);
+                    currentSessions = new List<SessionInfo>();
+                }
 
                 foreach (var sessionInfo in currentSessions)
                 {
-                    if (_sessionItemMap.TryGetValue(sessionInfo.SessionID, out var existingItem))
+                    try
                     {
-                        // 检查是否需要更新
-                        UpdateSessionItem(existingItem, sessionInfo);
-                        updatedCount++;
+                        if (_sessionItemMap.TryGetValue(sessionInfo.SessionID, out var existingItem))
+                        {
+                            // 检查是否需要更新
+                            UpdateSessionItem(existingItem, sessionInfo);
+                            updatedCount++;
+                        }
+                    }
+                    catch (Exception updateEx)
+                    {
+                        // 记录单个会话更新错误，但继续处理其他会话
+                        LogError($"同步更新会话 {sessionInfo.SessionID} 时出错: {updateEx.Message}", updateEx);
                     }
                 }
-
+                
+                syncSuccessful = true;
+                
                 if (updatedCount > 0)
                 {
                     LogStatusChange(null, $"同步完成，更新 {updatedCount} 个会话状态");
+                    
+                    // 同步完成后立即刷新UI
+                    try
+                    {
+                        if (!listView1.IsDisposed)
+                        {
+                            listView1.Refresh();
+                        }
+                    }
+                    catch (Exception uiEx)
+                    {
+                        LogError("同步后刷新UI失败", uiEx);
+                    }
                 }
             }
             catch (Exception ex)
             {
-                LogError($"同步会话服务状态时出错: {ex.Message}");
+                LogError($"同步会话服务状态时发生未处理异常: {ex.Message}", ex);
+                // 发生错误时确保下次会重新同步
+                _needsFullRefresh = true;
+            }
+            finally
+            {
+                // 记录同步结果
+                LogStatusChange(null, $"同步操作{(syncSuccessful ? "成功" : "失败")}: 更新={updatedCount}");
             }
         }
 
@@ -773,39 +1176,49 @@ namespace RUINORERP.Server.Controls
                 return;
             }
 
-            if (sessionInfo == null) return;
+            if (sessionInfo == null)
+            {
+                LogError("接收到空的会话断开事件");
+                return;
+            }
 
             try
             {
-                // 更新会话状态或移除会话项
+                // 获取用户信息用于日志记录
+                var userInfo = sessionInfo.UserInfo ?? new UserInfo();
+                string userName = GetDisplayUserName(userInfo);
+                string clientIp = sessionInfo.ClientIp ?? "未知IP";
+
                 if (_sessionItemMap.TryGetValue(sessionInfo.SessionID, out var existingItem))
                 {
-                    // 更新会话信息并更新UI
-                    UpdateSessionItem(existingItem, sessionInfo);
-                    LogStatusChange(sessionInfo, "会话断开");
+                    // 判断是否需要移除会话项还是仅更新状态
+                    // 规则：已认证用户断开连接后，先更新状态显示为"离线"，等待下次完整刷新时移除
+                    // 未认证用户和无效会话可直接移除
+                    if (!userInfo.授权状态 && !sessionInfo.IsAuthenticated)
+                    {
+                        // 未认证会话直接移除
+                        RemoveSessionItem(sessionInfo.SessionID);
+                        LogStatusChange(sessionInfo, $"未认证会话已断开并移除: {userName} - {clientIp}");
+                    }
+                    else
+                    {
+                        // 已认证用户更新状态为离线
+                        UpdateSessionItem(existingItem, sessionInfo);
+                        LogStatusChange(sessionInfo, $"已认证会话断开: {userName} - {clientIp}");
+                    }
                 }
                 else
                 {
-                    // 如果找不到，创建一个断开的会话记录
-                    var disconnectedSession = new SessionInfo
-                    {
-                        UserName = $"已断开用户_{sessionInfo.SessionID.Substring(0, Math.Min(8, sessionInfo.SessionID.Length))}",
-                        ClientIp = sessionInfo.ClientIp ?? "未知IP",
-                        IsConnected = false,
-                        IsAuthenticated = false,
-                        LastHeartbeat = DateTime.Now,
-                        ConnectedTime = sessionInfo.ConnectTime.Value
-                    };
-
-                    AddOrUpdateSessionItem(disconnectedSession);
-                    LogStatusChange(disconnectedSession, "会话断开 - 创建断开记录");
+                    // 找不到的会话记录，记录日志但不创建断开记录
+                    // 避免UI中显示不必要的断开记录
+                    LogStatusChange(null, $"接收到未知会话断开事件: {sessionInfo.SessionID} - {userName} - {clientIp}");
                 }
 
                 // 立即更新统计信息
                 UpdateStatistics();
                 this.Refresh();
 
-                // 标记需要完整刷新
+                // 标记需要完整刷新，确保下一次刷新时清理所有断开的会话
                 MarkForFullRefresh();
             }
             catch (Exception ex)
@@ -827,9 +1240,18 @@ namespace RUINORERP.Server.Controls
             }
 
             if (sessionInfo == null) return;
+            
+            // 检查控件是否已经被释放
+            if (IsDisposed || listView1.IsDisposed)
+            {
+                LogError("OnSessionUpdated: 控件已被释放，无法处理会话更新事件");
+                return;
+            }
 
             try
             {
+                bool isSignificantChange = false;
+                
                 // 更新或创建会话项
                 if (_sessionItemMap.TryGetValue(sessionInfo.SessionID, out var existingItem))
                 {
@@ -864,6 +1286,9 @@ namespace RUINORERP.Server.Controls
                     UpdateSessionItem(existingItem, sessionInfo);
                     existingItem.Tag = sessionInfo; // 更新引用
 
+                    // 判断是否为重要变化
+                    isSignificantChange = statusChanged || moduleChanged || formChanged;
+                    
                     // 只在有关键变化时记录日志
                     if (statusChanged)
                     {
@@ -884,17 +1309,36 @@ namespace RUINORERP.Server.Controls
                     // 新会话，添加到列表
                     AddOrUpdateSessionItem(sessionInfo);
                     LogStatusChange(sessionInfo, "新会话更新");
+                    isSignificantChange = true;
                 }
 
                 // 在重要状态变化时更新统计信息
-                if (sessionInfo.IsAuthenticated || !sessionInfo.IsConnected)
+                if (sessionInfo.IsAuthenticated || !sessionInfo.IsConnected || isSignificantChange)
                 {
                     UpdateStatistics();
+                    
+                    // 标记需要完整刷新，确保UI能立即反映所有变化
+                    MarkForFullRefresh();
+                }
+                
+                // 立即刷新UI确保用户能看到最新状态
+                try
+                {
+                    if (!listView1.IsDisposed)
+                    {
+                        listView1.Refresh();
+                    }
+                }
+                catch (Exception refreshEx)
+                {
+                    LogError("刷新UI失败", refreshEx);
                 }
             }
             catch (Exception ex)
             {
                 LogError($"处理会话更新事件时出错: {ex.Message}", ex);
+                // 发生错误时确保下次会重新同步
+                MarkForFullRefresh();
             }
         }
 
@@ -1152,6 +1596,15 @@ namespace RUINORERP.Server.Controls
                     case "反选":
                         InvertSelection();
                         break;
+                    case "断开连接":
+                        DisconnectSelectedSessions();
+                        break;
+                    case "切换服务器":
+                        HandleSwitchServer();
+                        break;
+                    case "全部切换服务器":
+                        HandleSwitchAllServers();
+                        break;
                     default:
                         // 记录未知菜单项
                         LogError($"未处理的右键菜单项: {e.ClickedItem.Text}");
@@ -1161,6 +1614,269 @@ namespace RUINORERP.Server.Controls
             catch (Exception ex)
             {
                 LogError("处理右键菜单项点击事件时出错", ex);
+            }
+        }
+
+        /// <summary>
+        /// 处理切换服务器功能
+        /// </summary>
+        private void HandleSwitchServer()
+        {
+            try
+            {
+                // 获取选中的会话
+                var selectedSessions = SelectSessions();
+                if (selectedSessions.Count == 0)
+                {
+                    MessageBox.Show("请先选择要切换服务器的会话", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                // 获取目标服务器地址和端口
+                var (serverAddress, serverPort) = PromptServerAddressAndPort();
+                if (string.IsNullOrEmpty(serverAddress) || string.IsNullOrEmpty(serverPort))
+                {
+                    return; // 用户取消或未输入
+                }
+
+                // 执行切换服务器操作
+                SwitchServers(selectedSessions, serverAddress, serverPort);
+            }
+            catch (Exception ex)
+            {
+                LogError("处理切换服务器操作时出错", ex);
+                MessageBox.Show($"切换服务器失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// 处理全部切换服务器功能
+        /// </summary>
+        private void HandleSwitchAllServers()
+        {
+            try
+            {
+                if (listView1.Items.Count == 0)
+                {
+                    MessageBox.Show("当前没有在线会话", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                // 获取目标服务器地址和端口
+                var (serverAddress, serverPort) = PromptServerAddressAndPort();
+                if (string.IsNullOrEmpty(serverAddress) || string.IsNullOrEmpty(serverPort))
+                {
+                    return; // 用户取消或未输入
+                }
+
+                // 获取所有会话
+                var allSessions = new List<SessionInfo>();
+                foreach (ListViewItem item in listView1.Items)
+                {
+                    if (item.Tag is SessionInfo sessionInfo)
+                    {
+                        allSessions.Add(sessionInfo);
+                    }
+                }
+
+                // 执行切换服务器操作
+                SwitchServers(allSessions, serverAddress, serverPort);
+            }
+            catch (Exception ex)
+            {
+                LogError("处理全部切换服务器操作时出错", ex);
+                MessageBox.Show($"全部切换服务器失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// 提示用户输入服务器地址和端口
+        /// </summary>
+        private (string serverAddress, string serverPort) PromptServerAddressAndPort()
+        {
+            // 使用输入对话框获取服务器地址和端口
+            string serverInfo = Microsoft.VisualBasic.Interaction.InputBox(
+                "请输入目标服务器地址和端口 (格式: http://ip:port)",
+                "切换服务器",
+                string.Empty);
+
+            // 简单验证输入
+            if (string.IsNullOrEmpty(serverInfo))
+            {
+                return (null, null);
+            }
+
+            // 确保地址格式正确
+            if (!serverInfo.StartsWith("http://") && !serverInfo.StartsWith("https://"))
+            {
+                serverInfo = "http://" + serverInfo;
+            }
+
+            // 尝试解析URL以获取IP和端口
+            try
+            {
+                // 移除协议部分
+                string hostAndPort = serverInfo.Replace("http://", "").Replace("https://", "");
+                
+                // 查找端口分隔符
+                int portSeparatorIndex = hostAndPort.LastIndexOf(':');
+                
+                string serverAddress;
+                string serverPort;
+                
+                if (portSeparatorIndex > 0)
+                {
+                    // 分离IP和端口
+                    serverAddress = hostAndPort.Substring(0, portSeparatorIndex);
+                    serverPort = hostAndPort.Substring(portSeparatorIndex + 1);
+                }
+                else
+                {
+                    // 如果没有指定端口，使用默认端口80
+                    serverAddress = hostAndPort;
+                    serverPort = "80";
+                }
+                
+                return (serverAddress, serverPort);
+            }
+            catch (Exception ex)
+            {
+                LogError("解析服务器地址和端口失败", ex);
+                MessageBox.Show("无法解析服务器地址和端口，请检查输入格式", "格式错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return (null, null);
+            }
+        }
+
+        /// <summary>
+        /// 为指定会话切换服务器
+        /// </summary>
+        private void SwitchServers(List<SessionInfo> sessions, string serverAddress, string serverPort)
+        {
+            try
+            {
+                int successCount = 0;
+                int failedCount = 0;
+
+                foreach (var sessionInfo in sessions)
+                {
+                    try
+                    {
+                        // 构造切换服务器命令
+                        var command = new Dictionary<string, object>
+                        {
+                            { "CommandType", "SwitchServer" },
+                            { "ServerAddress", serverAddress },
+                               { "ServerPort", serverPort },
+                            { "SessionID", sessionInfo.SessionID }
+                        };
+
+                        SystemCommandRequest commandRequest = new SystemCommandRequest();
+                        commandRequest.CommandType = PacketSpec.Commands.SystemManagementType.SwitchServer;
+                        commandRequest.Parameters = command;
+
+                        // 发送命令到客户端
+                        bool success = _sessionService.SendCommandAsync<SystemCommandRequest>(sessionInfo.SessionID, SystemCommands.SystemManagement, commandRequest).Result;
+                        if (success)
+                        {
+                            successCount++;
+                            LogStatusChange(sessionInfo, $"管理员切换服务器到: {serverAddress}");
+                        }
+                        else
+                        {
+                            failedCount++;
+                            LogError($"切换服务器失败: {sessionInfo.SessionID} - {GetDisplayUserName(sessionInfo.UserInfo)}");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        failedCount++;
+                        LogError($"发送切换服务器命令时出错: {sessionInfo.SessionID} - {ex.Message}", ex);
+                    }
+                }
+
+                // 显示操作结果
+                if (successCount > 0)
+                {
+                    MessageBox.Show($"成功发送切换服务器命令到 {successCount} 个会话", "操作成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+
+                if (failedCount > 0)
+                {
+                    MessageBox.Show($"有 {failedCount} 个会话切换服务器失败，请查看日志获取详情", "操作结果", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+
+                // 刷新会话列表
+                FullRefreshFromSessions();
+            }
+            catch (Exception ex)
+            {
+                LogError("执行切换服务器操作时出错", ex);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// 断开选中的会话连接
+        /// </summary>
+        private async Task DisconnectSelectedSessions()
+        {
+            try
+            {
+                var selectedSessions = SelectSessions();
+                if (selectedSessions.Count == 0)
+                {
+                    MessageBox.Show("请先选择要断开连接的会话", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                // 确认断开连接
+                var result = MessageBox.Show(
+                    $"确定要断开选中的 {selectedSessions.Count} 个会话吗？\n此操作将强制断开用户连接，可能导致用户未保存的数据丢失。",
+                    "确认断开连接",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Warning);
+
+                if (result != DialogResult.Yes)
+                    return;
+
+                int disconnectedCount = 0;
+                int failedCount = 0;
+
+                foreach (var sessionInfo in selectedSessions)
+                {
+                    try
+                    {
+                        // 使用会话服务断开连接
+                        bool success = await _sessionService.DisconnectSessionAsync(sessionInfo.SessionID);
+                        if (success)
+                        {
+                            disconnectedCount++;
+                            LogStatusChange(sessionInfo, "管理员强制断开连接");
+                        }
+                        else
+                        {
+                            failedCount++;
+                            LogError($"断开会话连接失败: {sessionInfo.SessionID} - {GetDisplayUserName(sessionInfo.UserInfo)}");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        failedCount++;
+                        LogError($"断开会话连接时发生异常: {sessionInfo.SessionID} - {ex.Message}", ex);
+                    }
+                }
+
+                // 显示操作结果
+                string message = $"断开连接操作完成:\n成功: {disconnectedCount} 个会话\n失败: {failedCount} 个会话";
+                MessageBox.Show(message, "操作结果", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                // 刷新统计信息
+                UpdateStatistics();
+            }
+            catch (Exception ex)
+            {
+                LogError("执行断开连接操作时出错", ex);
+                MessageBox.Show("断开连接操作时发生错误: " + ex.Message, "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 

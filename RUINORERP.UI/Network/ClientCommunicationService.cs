@@ -111,6 +111,8 @@ namespace RUINORERP.UI.Network
         private readonly ConcurrentQueue<ClientQueuedCommand> _queuedCommands = new();
         private readonly SemaphoreSlim _queueLock = new SemaphoreSlim(1, 1);
         private bool _isProcessingQueue = false;
+        private bool _isReconnecting = false; // 重连状态标志
+        private bool _isDisposed = false; // 资源释放状态标志
         private readonly object _heartbeatLock = new object();
         private DateTime _lastHeartbeatTime;
 
@@ -1445,8 +1447,16 @@ namespace RUINORERP.UI.Network
         /// <param name="disposing">是否手动调用</param>
         protected virtual void Dispose(bool disposing)
         {
+            // 检查是否已经释放
             if (!_disposed)
             {
+                // 立即设置disposed标志，防止新任务启动
+                _disposed = true;
+                // 设置其他状态标志为false，停止相关操作
+                _isProcessingQueue = false;
+                _isReconnecting = false;
+                
+
                 if (disposing)
                 {
                     // 停止心跳
@@ -1459,27 +1469,42 @@ namespace RUINORERP.UI.Network
                     {
                         _logger?.LogWarning(ex, "停止心跳时发生异常");
                     }
+                    
                     // 释放清理定时器
                     _cleanupTimer?.Dispose();
                     _cleanupTimer = null;
 
-
-
                     // 断开Socket连接
-                    _socketClient?.Disconnect();
+                    try
+                    {
+                        _socketClient?.Disconnect();
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger?.LogWarning(ex, "断开Socket连接时发生异常");
+                    }
 
-                    // 清理待发送队列
+                    // 清理待发送队列并取消所有待处理命令
+                    _logger?.Debug($"清理命令队列，当前队列大小: {_queuedCommands.Count}");
                     while (_queuedCommands.TryDequeue(out var queuedCommand))
                     {
+                        // 取消所有待处理命令，避免任务无限等待
                         queuedCommand.CompletionSource?.TrySetCanceled();
                         queuedCommand.ResponseCompletionSource?.TrySetCanceled();
                     }
+
+                    // 清理待处理请求
+                    foreach (var pendingRequest in _pendingRequests.Values)
+                    {
+                        pendingRequest.Tcs?.TrySetCanceled();
+                    }
+                    _pendingRequests.Clear();
 
                     // 释放队列锁
                     _queueLock?.Dispose();
                 }
 
-                _disposed = true;
+                _logger?.Debug("ClientCommunicationService资源释放完成");
             }
         }
 
@@ -1598,6 +1623,49 @@ namespace RUINORERP.UI.Network
         /// <summary>
         /// 处理命令队列，在连接恢复时发送排队的命令
         /// </summary>
+        /// <summary>
+        /// 尝试在需要时进行重连，避免重复触发重连操作
+        /// </summary>
+        /// <returns>重连任务</returns>
+        private async Task TryReconnectIfNeededAsync()
+        {
+            // 检查是否需要重连并避免重复触发
+            if (!IsConnected && !_isReconnecting && !_isDisposed && !_disposed)
+            {
+                // 使用原子操作设置重连标志
+                bool previousValue = false;
+                try
+                {
+                    // 使用原子操作更新重连标志
+                    previousValue = _isReconnecting;
+                    _isReconnecting = true;
+                    
+                    if (!previousValue)
+                    {
+                        _logger?.Debug("命令处理时检测到连接断开，尝试重连");
+                        // 获取当前服务器地址和端口
+                        string serverAddress = GetCurrentServerAddress();
+                        int serverPort = GetCurrentServerPort();
+                        
+                        if (!string.IsNullOrEmpty(serverAddress) && serverPort > 0)
+                        {
+                            // 使用现有的ConnectAsync方法进行重连
+                            await _connectionManager.ConnectAsync(serverAddress, serverPort, CancellationToken.None);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger?.LogError(ex, "尝试重连时发生异常");
+                }
+                finally
+                {
+                    // 重置重连标志
+                    _isReconnecting = false;
+                }
+            }
+        }
+
         private async Task ProcessCommandQueueAsync()
         {
             // 使用信号量确保同时只有一个队列处理任务
@@ -1643,11 +1711,14 @@ namespace RUINORERP.UI.Network
                             continue;
                         }
 
-                        // 检查连接状态
-                        if (!IsConnected)
+                        // 检查连接状态（原子操作）
+                        bool isConnectedNow = IsConnected;
+                        if (!isConnectedNow)
                         {
                             // 连接仍然断开，重新加入队列
                             _queuedCommands.Enqueue(command);
+                            // 触发重连尝试
+                            _ = TryReconnectIfNeededAsync();
                             continue;
                         }
 
@@ -1688,11 +1759,14 @@ namespace RUINORERP.UI.Network
                             continue;
                         }
 
-                        // 检查连接状态
-                        if (!IsConnected)
+                        // 检查连接状态（原子操作）
+                        bool isConnectedNow = IsConnected;
+                        if (!isConnectedNow)
                         {
                             // 连接仍然断开，重新加入队列
                             _queuedCommands.Enqueue(command);
+                            // 触发重连尝试
+                            _ = TryReconnectIfNeededAsync();
                             continue;
                         }
 
@@ -1712,11 +1786,16 @@ namespace RUINORERP.UI.Network
                 _logger?.LogDebug("命令队列处理完成，成功：{ProcessedCount}，失败：{FailedCount}，剩余队列大小：{QueueSize}",
                     processedCount, failedCount, _queuedCommands.Count);
 
-                // 如果队列中还有命令，延迟后继续处理
-                if (!_queuedCommands.IsEmpty)
+                // 如果队列中还有命令，设置标志以便下次处理
+                if (!_queuedCommands.IsEmpty && !_isDisposed && !_disposed)
                 {
-                    await Task.Delay(1000); // 延迟1秒后继续处理
-                    _ = Task.Run(ProcessCommandQueueAsync);
+                    // 避免递归调用，改为使用Task.Run启动新的处理任务
+                    // 不使用递归调用避免可能的栈溢出和过多任务创建
+                    _ = Task.Run(async () => {
+                        // 小延迟避免CPU占用过高
+                        await Task.Delay(100);
+                        await ProcessCommandQueueAsync();
+                    });
                 }
             }
             catch (Exception ex)

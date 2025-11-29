@@ -101,7 +101,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
             {
                 if (packet.Request is SystemCommandRequest commandRequest)
                 {
-                    if (commandRequest.CommandType==SystemManagementType.VersionUpdate)
+                    if (commandRequest.CommandType==SystemManagementType.PushVersionUpdate)
                     {
                         // 提取版本更新信息
                         VersionUpdateInfo updateInfo = ExtractVersionUpdateInfo(packet);

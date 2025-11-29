@@ -236,12 +236,16 @@ namespace RUINORERP.UI.Network
         private async Task ReconnectLoopAsync()
         {
             _logger?.LogDebug("进入重连循环");
+            int reconnectAttempts = 0;
+            int currentBackoffInterval = _config.ReconnectInterval;
 
             while (!_disposed && _isReconnecting && !_cancellationTokenSource.Token.IsCancellationRequested)
             {
-                // 如果已经连接，等待一段时间再检查
+                // 如果已经连接，重置重连计数并等待一段时间再检查
                 if (IsConnected)
                 {
+                    reconnectAttempts = 0;
+                    currentBackoffInterval = _config.ReconnectInterval; // 重置退避间隔
                     await Task.Delay(_config.ReconnectCheckInterval, _cancellationTokenSource.Token);
                     continue;
                 }
@@ -253,7 +257,17 @@ namespace RUINORERP.UI.Network
                     continue;
                 }
 
-                _logger?.LogDebug("尝试重新连接到服务器 {ServerAddress}:{ServerPort}", _serverAddress, _serverPort);
+                // 检查是否达到最大重连次数
+                if (_config.MaxReconnectAttempts > 0 && reconnectAttempts >= _config.MaxReconnectAttempts)
+                {
+                    _logger?.LogWarning("已达到最大重连次数 {MaxAttempts}，停止重连", _config.MaxReconnectAttempts);
+                    _isReconnecting = false;
+                    break;
+                }
+
+                reconnectAttempts++;
+                _logger?.LogDebug("尝试重新连接到服务器 {ServerAddress}:{ServerPort}，第 {Attempt} 次尝试", 
+                    _serverAddress, _serverPort, reconnectAttempts);
 
                 try
                 {
@@ -264,22 +278,37 @@ namespace RUINORERP.UI.Network
                         _isConnected = true;
                         OnConnectionStateChanged(true);
                         _logger?.LogDebug("重连成功 {ServerAddress}:{ServerPort}", _serverAddress, _serverPort);
-
-                        // 重连成功后，继续监控连接状态
-                        continue;
+                        
+                        // 重连成功后重置计数器
+                        reconnectAttempts = 0;
+                        currentBackoffInterval = _config.ReconnectInterval;
                     }
                     else
                     {
-                        _logger?.LogWarning("重连失败 {ServerAddress}:{ServerPort}", _serverAddress, _serverPort);
+                        _logger?.LogWarning("重连失败 {ServerAddress}:{ServerPort}，第 {Attempt} 次尝试", 
+                            _serverAddress, _serverPort, reconnectAttempts);
                     }
                 }
                 catch (Exception ex)
                 {
-                    _logger?.LogError(ex, "重连过程中发生异常 {ServerAddress}:{ServerPort}", _serverAddress, _serverPort);
+                    _logger?.LogError(ex, "重连过程中发生异常 {ServerAddress}:{ServerPort}，第 {Attempt} 次尝试", 
+                        _serverAddress, _serverPort, reconnectAttempts);
                 }
 
-                // 等待重连间隔
-                await Task.Delay(_config.ReconnectInterval, _cancellationTokenSource.Token);
+                // 等待重连间隔，应用指数退避算法
+                if (!IsConnected)
+                {
+                    if (_config.EnableExponentialBackoff && reconnectAttempts > 0)
+                    {
+                        // 计算指数退避时间
+                        currentBackoffInterval = (int)Math.Min(
+                            currentBackoffInterval * _config.BackoffMultiplier,
+                            _config.MaxBackoffInterval);
+                        _logger?.LogDebug("应用指数退避，下次重连间隔 {Interval} 毫秒", currentBackoffInterval);
+                    }
+                    
+                    await Task.Delay(currentBackoffInterval, _cancellationTokenSource.Token);
+                }
             }
 
             _logger?.LogDebug("退出重连循环");
@@ -373,6 +402,26 @@ namespace RUINORERP.UI.Network
         /// 重连检查间隔（毫秒）
         /// </summary>
         public int ReconnectCheckInterval { get; set; } = 1000; // 1秒
+
+        /// <summary>
+        /// 最大重连次数（0表示无限重试）
+        /// </summary>
+        public int MaxReconnectAttempts { get; set; } = 10;
+
+        /// <summary>
+        /// 是否启用指数退避算法
+        /// </summary>
+        public bool EnableExponentialBackoff { get; set; } = true;
+
+        /// <summary>
+        /// 最大退避时间（毫秒）
+        /// </summary>
+        public int MaxBackoffInterval { get; set; } = 60000; // 1分钟
+
+        /// <summary>
+        /// 退避乘数
+        /// </summary>
+        public double BackoffMultiplier { get; set; } = 1.5;
 
         /// <summary>
         /// 默认配置

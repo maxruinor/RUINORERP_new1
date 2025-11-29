@@ -29,16 +29,6 @@ namespace RUINORERP.PacketSpec.Commands
         public static readonly CommandId ExceptionReport = new CommandId(CommandCategory.System, (byte)(CommandCatalog.System_ExceptionReport & 0xFF));
 
         /// <summary>
-        /// 关闭电脑
-        /// </summary>
-        public static readonly CommandId ShutdownComputer = new CommandId(CommandCategory.System, (byte)(CommandCatalog.System_ShutdownComputer & 0xFF));
-
-        /// <summary>
-        /// 退出系统
-        /// </summary>
-        public static readonly CommandId ExitSystem = new CommandId(CommandCategory.System, (byte)(CommandCatalog.System_ExitSystem & 0xFF));
-
-        /// <summary>
         /// 系统管理：服务器推送版本更新
         /// </summary>
         public static readonly CommandId SystemManagement = new CommandId(CommandCategory.System, (byte)(CommandCatalog.System_SystemManagement & 0xFF));
@@ -51,6 +41,7 @@ namespace RUINORERP.PacketSpec.Commands
 
     /// <summary>
     /// 系统管理的子命令类型
+    /// 通常是一个操作
     /// </summary>
     public enum SystemManagementType
     {
@@ -67,7 +58,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// <summary>
         /// 退出系统
         /// </summary>
-        ExitSystem = 3,
+        ExitERPSystem = 3,
 
         /// <summary>
         /// 版本更新

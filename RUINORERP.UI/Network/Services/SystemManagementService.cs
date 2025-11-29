@@ -36,7 +36,7 @@ namespace RUINORERP.UI.Network.Services
         /// <param name="ct">取消令牌</param>
         /// <returns>电脑状态响应</returns>
         public async Task<SystemCommandResponse> QueryComputerStatusAsync(
-            string targetUserId, 
+            string targetUserId,
             CancellationToken ct = default)
         {
             try
@@ -51,7 +51,7 @@ namespace RUINORERP.UI.Network.Services
                 }
                 else
                 {
-                    _logger?.LogWarning("电脑状态查询失败 - 目标用户: {TargetUserId}, 错误: {ErrorMessage}", 
+                    _logger?.LogWarning("电脑状态查询失败 - 目标用户: {TargetUserId}, 错误: {ErrorMessage}",
                         targetUserId, response?.Message ?? "未知错误");
                 }
 
@@ -64,86 +64,7 @@ namespace RUINORERP.UI.Network.Services
             }
         }
 
-        /// <summary>
-        /// 远程关闭电脑
-        /// </summary>
-        /// <param name="targetUserId">目标用户ID</param>
-        /// <param name="shutdownType">关闭类型（Shutdown/Restart/Logoff）</param>
-        /// <param name="delaySeconds">延迟时间（秒）</param>
-        /// <param name="adminRemark">管理员备注</param>
-        /// <param name="ct">取消令牌</param>
-        /// <returns>关闭响应</returns>
-        public async Task<SystemCommandResponse> ShutdownComputerAsync(
-            string targetUserId, 
-            string shutdownType = "Shutdown", 
-            int delaySeconds = 0, 
-            string adminRemark = "",
-            CancellationToken ct = default)
-        {
-            try
-            {
-                var request = SystemCommandRequest.CreateShutdownRequest(targetUserId, shutdownType, delaySeconds, adminRemark);
-                var response = await _communicationService.SendCommandWithResponseAsync<SystemCommandResponse>(
-                    SystemCommands.ShutdownComputer, request, ct);
 
-                if (response != null && response.IsSuccess)
-                {
-                    _logger?.LogDebug("关闭电脑指令发送成功 - 目标用户: {TargetUserId}, 类型: {ShutdownType}", 
-                        targetUserId, shutdownType);
-                }
-                else
-                {
-                    _logger?.LogWarning("关闭电脑指令发送失败 - 目标用户: {TargetUserId}, 错误: {ErrorMessage}", 
-                        targetUserId, response?.Message ?? "未知错误");
-                }
-
-                return response;
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "发送关闭电脑指令时发生异常 - 目标用户: {TargetUserId}", targetUserId);
-                return SystemCommandResponse.CreateShutdownFailure($"指令发送失败: {ex.Message}", "SHUTDOWN_EXCEPTION");
-            }
-        }
-
-        /// <summary>
-        /// 远程退出系统
-        /// </summary>
-        /// <param name="targetUserId">目标用户ID</param>
-        /// <param name="delaySeconds">延迟时间（秒）</param>
-        /// <param name="adminRemark">管理员备注</param>
-        /// <param name="ct">取消令牌</param>
-        /// <returns>退出响应</returns>
-        public async Task<SystemCommandResponse> ExitSystemAsync(
-            string targetUserId, 
-            int delaySeconds = 0, 
-            string adminRemark = "",
-            CancellationToken ct = default)
-        {
-            try
-            {
-                var request = SystemCommandRequest.CreateExitSystemRequest(targetUserId, delaySeconds, adminRemark);
-                var response = await _communicationService.SendCommandWithResponseAsync<SystemCommandResponse>(
-                    SystemCommands.ExitSystem, request, ct);
-
-                if (response != null && response.IsSuccess)
-                {
-                    _logger?.LogDebug("退出系统指令发送成功 - 目标用户: {TargetUserId}", targetUserId);
-                }
-                else
-                {
-                    _logger?.LogWarning("退出系统指令发送失败 - 目标用户: {TargetUserId}, 错误: {ErrorMessage}", 
-                        targetUserId, response?.Message ?? "未知错误");
-                }
-
-                return response;
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "发送退出系统指令时发生异常 - 目标用户: {TargetUserId}", targetUserId);
-                return SystemCommandResponse.CreateShutdownFailure($"指令发送失败: {ex.Message}", "EXIT_SYSTEM_EXCEPTION");
-            }
-        }
 
         /// <summary>
         /// 处理接收到的电脑状态查询请求
@@ -191,12 +112,9 @@ namespace RUINORERP.UI.Network.Services
                 var response = SystemCommandResponse.CreateShutdownSuccess(
                     MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID.ToString(),
                     MainForm.Instance.AppContext.CurUserInfo.UserInfo.UserName,
-                    Environment.MachineName,
-                    request.ShutdownType,
-                    true
+                    Environment.MachineName
                 );
 
-                _logger?.LogDebug("电脑关闭指令已执行 - 类型: {ShutdownType}", request.ShutdownType);
                 return response;
             }
             catch (Exception ex)
@@ -236,8 +154,6 @@ namespace RUINORERP.UI.Network.Services
             // 为了示例，我们只记录日志
             await Task.Delay(100); // 模拟异步操作
 
-            _logger?.LogDebug("准备执行关闭操作 - 类型: {ShutdownType}, 延迟: {DelaySeconds}秒", 
-                request.ShutdownType, request.DelaySeconds);
 
             // 实际实现中，这里会执行真正的关闭操作
             // 例如调用Windows API或其他系统命令

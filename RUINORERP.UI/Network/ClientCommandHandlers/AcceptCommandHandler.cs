@@ -38,7 +38,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
 
             // 注册支持的命令
             SetSupportedCommands(SystemCommands.SystemManagement);
-            SetSupportedCommands(SystemCommands.ExitSystem);
+            SetSupportedCommands(SystemCommands.ExceptionReport);
             SetSupportedCommands(SystemCommands.ComputerStatus);
         }
 
@@ -76,9 +76,9 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
             {
                 await HandleSystemManagementCommandAsync(packet);
             }
-            else if (packet.CommandId == SystemCommands.ExitSystem)
+            else if (packet.CommandId == SystemCommands.ExceptionReport)
             {
-                await HandleExitSystemCommandAsync(packet);
+                await HandleExceptionReportCommandAsync(packet);
             }
             else if (packet.CommandId == SystemCommands.ComputerStatus)
             {
@@ -101,6 +101,18 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
             {
                 if (packet.Request is SystemCommandRequest commandRequest)
                 {
+                    if (commandRequest.CommandType == SystemManagementType.ExitERPSystem)
+                    {
+                        // 在UI线程显示退出提示并执行退出
+                        await Task.Run(() =>
+                        {
+                            // 执行系统退出
+                            System.Windows.Forms.Application.Exit();
+
+                        });
+
+                    }
+
                     if (commandRequest.CommandType==SystemManagementType.PushVersionUpdate)
                     {
                         // 提取版本更新信息
@@ -140,7 +152,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
         /// </summary>
         /// <param name="packet">数据包</param>
         /// <returns>处理结果</returns>
-        private async Task HandleExitSystemCommandAsync(PacketModel packet)
+        private async Task HandleExceptionReportCommandAsync(PacketModel packet)
         {
             try
             {
@@ -156,14 +168,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                     }
                 }
                 
-                // 在UI线程显示退出提示并执行退出
-                await Task.Run(() =>
-                {
-               
-                        // 执行系统退出
-                        System.Windows.Forms.Application.Exit();
-                 
-                });
+            
             }
             catch (Exception ex)
             {

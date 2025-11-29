@@ -60,7 +60,7 @@ namespace RUINORERP.UI.Network.Services
                 }
                 else
                 {
-                    _logger?.LogWarning("强制用户下线指令发送失败 - 目标用户: {TargetUserId}, 错误: {ErrorMessage}", 
+                    _logger?.LogWarning("强制用户下线指令发送失败 - 目标用户: {TargetUserId}, 错误: {ErrorMessage}",
                         targetUserId, response?.Message ?? "未知错误");
                 }
 
@@ -81,8 +81,7 @@ namespace RUINORERP.UI.Network.Services
         {
             try
             {
-                _logger?.LogDebug("收到强制下线通知 - 管理员: {AdminUserId}, 原因: {Reason}", 
-                    request.AdminUserId, request.Reason);
+                _logger?.LogDebug("收到强制下线通知 - 管理员: {AdminUserId}}", request.AdminUserId);
 
                 // 这里应该执行实际的下线操作，例如：
                 // 1. 显示通知给用户

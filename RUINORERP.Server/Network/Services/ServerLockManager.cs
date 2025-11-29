@@ -1,10 +1,11 @@
-﻿using Azure.Core;
+using Azure.Core;
 using Microsoft.Extensions.Logging;
 using RUINORERP.Global;
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Models.Lock;
 using RUINORERP.PacketSpec.Models.Requests;
 using RUINORERP.Server.Network.Interfaces.Services;
+using RUINORERP.Server.Network.Models;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -29,13 +30,13 @@ namespace RUINORERP.Server.Network.Services
     /// - 简化的数据结构设计
     /// - 统一的版本控制
     /// </summary>
-    public class IntegratedServerLockManager : ILockManagerService, IDisposable
+    public class ServerLockManager : ILockManagerService, IDisposable
     {
 
         #region 私有字段
 
         private readonly ISessionService _sessionService;
-        private readonly ILogger<IntegratedServerLockManager> _logger;
+        private readonly ILogger<ServerLockManager> _logger;
         private readonly IGeneralBroadcastService _broadcastService;
         private readonly OrphanedLockDetector _orphanedLockDetector;
 
@@ -103,9 +104,9 @@ namespace RUINORERP.Server.Network.Services
         /// <param name="sessionService">会话管理服务（系统已有）</param>
         /// <param name="logger">日志记录器</param>
         /// <param name="broadcastService">广播服务</param>
-        public IntegratedServerLockManager(
+        public ServerLockManager(
             ISessionService sessionService,
-            ILogger<IntegratedServerLockManager> logger,
+            ILogger<ServerLockManager> logger,
             IGeneralBroadcastService broadcastService)
         {
             _sessionService = sessionService ?? throw new ArgumentNullException(nameof(sessionService));
@@ -137,11 +138,18 @@ namespace RUINORERP.Server.Network.Services
                 lock (_lock)
                 {
                     if (_isDisposed)
-                        throw new ObjectDisposedException(nameof(IntegratedServerLockManager));
+                        throw new ObjectDisposedException(nameof(ServerLockManager));
 
                     // 启动定时器
                     _cleanupTimer.Change(TimeSpan.FromMinutes(1), _cleanupInterval);
                     _maintenanceTimer.Change(TimeSpan.FromMinutes(2), _maintenanceInterval);
+
+                    // 订阅会话服务的断开事件，实现会话断开时自动释放锁定
+                    if (_sessionService != null)
+                    {
+                        _sessionService.SessionDisconnected += HandleSessionDisconnected;
+                        _logger.LogInformation("已订阅会话服务的断开事件，将在会话断开时自动释放锁定");
+                    }
 
                     // 启动孤儿锁检测器
                     _ = _orphanedLockDetector.StartAsync();
@@ -153,6 +161,30 @@ namespace RUINORERP.Server.Network.Services
             {
                 _logger.LogError(ex, "启动集成式服务器锁管理器时发生异常");
                 throw;
+            }
+        }
+
+        /// <summary>
+        /// 处理会话断开事件
+        /// 当会话断开时，自动释放该会话名下的所有锁定
+        /// </summary>
+        /// <param name="sessionInfo">断开的会话信息</param>
+        private void HandleSessionDisconnected(SessionInfo sessionInfo)
+        {
+            try
+            {
+                if (sessionInfo == null || string.IsNullOrEmpty(sessionInfo.SessionID))
+                {
+                    _logger.LogWarning("接收到无效的会话断开事件");
+                    return;
+                }
+                
+                // 异步调用解锁方法，不阻塞事件处理
+                _ = ReleaseAllLocksBySessionIdAsync(sessionInfo.SessionID);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "处理会话断开事件时发生异常");
             }
         }
 
@@ -171,6 +203,13 @@ namespace RUINORERP.Server.Network.Services
                     // 停止定时器
                     _cleanupTimer.Change(Timeout.Infinite, Timeout.Infinite);
                     _maintenanceTimer.Change(Timeout.Infinite, Timeout.Infinite);
+
+                    // 取消订阅会话服务的断开事件
+                    if (_sessionService != null)
+                    {
+                        _sessionService.SessionDisconnected -= HandleSessionDisconnected;
+                        _logger.LogInformation("已取消订阅会话服务的断开事件");
+                    }
 
                     // 停止孤儿锁检测器
                     _orphanedLockDetector.StopAsync().GetAwaiter().GetResult();
@@ -205,7 +244,7 @@ namespace RUINORERP.Server.Network.Services
         public async Task<LockResponse> ReleaseLockAsync(LockInfo lockInfo)
         {
             if (_isDisposed)
-                throw new ObjectDisposedException(nameof(IntegratedServerLockManager));
+                throw new ObjectDisposedException(nameof(ServerLockManager));
 
             if (lockInfo == null || lockInfo.BillID <= 0)
             {
@@ -269,7 +308,7 @@ namespace RUINORERP.Server.Network.Services
         public async Task<LockResponse> CheckLockStatusAsync(LockRequest request)
         {
             if (_isDisposed)
-                throw new ObjectDisposedException(nameof(IntegratedServerLockManager));
+                throw new ObjectDisposedException(nameof(ServerLockManager));
 
             var lockInfo = request.LockInfo;
             if (lockInfo == null || lockInfo.BillID <= 0)
@@ -330,7 +369,7 @@ namespace RUINORERP.Server.Network.Services
         public async Task<LockResponse> ForceUnlockAsync(LockRequest request)
         {
             if (_isDisposed)
-                throw new ObjectDisposedException(nameof(IntegratedServerLockManager));
+                throw new ObjectDisposedException(nameof(ServerLockManager));
 
             var lockInfo = request.LockInfo;
             if (lockInfo == null || lockInfo.BillID <= 0)
@@ -365,6 +404,64 @@ namespace RUINORERP.Server.Network.Services
         }
 
 
+
+        #endregion
+
+        #region 会话锁定管理
+
+        /// <summary>
+        /// 按会话ID释放该会话名下的所有锁定
+        /// 当客户端会话断开时调用此方法清理所有相关锁定
+        /// </summary>
+        /// <param name="sessionId">会话ID</param>
+        /// <returns>释放的锁定数量</returns>
+        public async Task<int> ReleaseAllLocksBySessionIdAsync(string sessionId)
+        {
+            if (_isDisposed)
+                throw new ObjectDisposedException(nameof(ServerLockManager));
+
+            if (string.IsNullOrEmpty(sessionId))
+            {
+                _logger.LogWarning("尝试使用空会话ID释放锁定");
+                return 0;
+            }
+
+            try
+            {
+                // 查找所有与会话ID关联的锁定
+                var locksToRelease = _documentLocks
+                    .Where(kvp => kvp.Value.SessionId == sessionId)
+                    .Select(kvp => kvp.Value)
+                    .ToList();
+
+                if (locksToRelease.Count == 0)
+                {
+                    _logger.LogDebug("会话 {SessionId} 没有关联的锁定", sessionId);
+                    return 0;
+                }
+
+                int releasedCount = 0;
+                foreach (var lockInfo in locksToRelease)
+                {
+                    // 移除锁定
+                    if (_documentLocks.TryRemove(lockInfo.BillID, out _))
+                    {
+                        releasedCount++;
+                        // 广播锁定状态更新
+                        lockInfo.IsLocked = false;
+                        await BroadcastLockStatusAsync(lockInfo, false);
+                    }
+                }
+
+                _logger.LogInformation("会话 {SessionId} 断开，已释放 {Count} 个锁定", sessionId, releasedCount);
+                return releasedCount;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "释放会话 {SessionId} 的锁定时发生异常", sessionId);
+                return 0;
+            }
+        }
 
         #endregion
 

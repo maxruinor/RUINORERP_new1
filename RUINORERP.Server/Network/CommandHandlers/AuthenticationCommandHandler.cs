@@ -81,11 +81,6 @@ namespace RUINORERP.Server.Network.CommandHandlers
             {
                 if (cmd.Packet.Request is SystemCommandRequest request)
                 {
-                    if (!request.IsValid())
-                    {
-                        return SystemCommandResponse.CreateForceLogoutFailure("请求参数无效", "INVALID_REQUEST");
-                    }
-
                     // 查找目标用户会话
                     var targetSessions = _sessionService.GetUserSessions(request.TargetUserId);
                     if (!targetSessions.Any())
@@ -165,7 +160,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
             try
             {
                 // 通知客户端强制下线
-                await _sessionService.DisconnectSessionAsync(sessionId, $"管理员[{request.AdminUserId}]强制下线: {request.Reason}");
+                await _sessionService.DisconnectSessionAsync(sessionId, $"管理员[{request.AdminUserId}]强制下线");
 
                 // 创建成功响应
                 var response = new ResponseBase

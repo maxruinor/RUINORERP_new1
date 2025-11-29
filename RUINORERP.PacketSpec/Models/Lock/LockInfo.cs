@@ -26,6 +26,13 @@ namespace RUINORERP.PacketSpec.Models.Lock
         public long BillID { get; set; }
 
         /// <summary>
+        /// 单据编号
+        /// 要锁定的单据业务编号
+        /// </summary>
+        [DataMember]
+        public string BillNo { get; set; } = string.Empty;
+
+        /// <summary>
         /// 用户ID
         /// 执行锁定操作的用户ID
         /// </summary>
@@ -272,13 +279,14 @@ namespace RUINORERP.PacketSpec.Models.Lock
         /// 创建新的锁定信息实例
         /// </summary>
         /// <param name="billId">单据ID</param>
+        /// <param name="billNo">单据编号</param>
         /// <param name="userId">用户ID</param>
         /// <param name="userName">用户名</param>
         /// <param name="menuId">菜单ID</param>
         /// <param name="sessionId">会话ID</param>
         /// <param name="expireTime">过期时间</param>
         /// <returns>锁定信息实例</returns>
-        public static LockInfo Create(long billId, long userId, string userName, long menuId,
+        public static LockInfo Create(long billId, string billNo, long userId, string userName, long menuId,
             string sessionId, DateTime? expireTime = null)
         {
             var now = DateTime.Now;
@@ -286,6 +294,7 @@ namespace RUINORERP.PacketSpec.Models.Lock
             return new LockInfo
             {
                 BillID = billId,
+                BillNo = billNo ?? string.Empty,
                 LockedUserId = userId,
                 LockedUserName = userName,
                 MenuID = menuId,
@@ -300,18 +309,6 @@ namespace RUINORERP.PacketSpec.Models.Lock
             };
         }
 
-        /// <summary>
-        /// 创建用于查询的锁定信息实例
-        /// </summary>
-        /// <param name="billId">单据ID</param>
-        /// <returns>锁定信息实例</returns>
-        public static LockInfo CreateForQuery(long billId)
-        {
-            return new LockInfo
-            {
-                BillID = billId,
-            };
-        }
 
         /// <summary>
         /// 克隆锁定信息
@@ -323,6 +320,7 @@ namespace RUINORERP.PacketSpec.Models.Lock
             {
                 LockKey = this.LockKey,
                 BillID = this.BillID,
+                BillNo = this.BillNo,
                 LockedUserId = this.LockedUserId,
                 LockedUserName = this.LockedUserName,
                 LockTime = this.LockTime,
@@ -346,7 +344,7 @@ namespace RUINORERP.PacketSpec.Models.Lock
         /// <returns>锁定信息的字符串表示</returns>
         public override string ToString()
         {
-            return $"LockInfo[BillID={BillID}, UserName={LockedUserName}, IsLocked={IsLocked}, " +
+            return $"LockInfo[BillID={BillID}, BillNo={BillNo}, UserName={LockedUserName}, IsLocked={IsLocked}, " +
                    $"LockTime={LockTime}, ExpireTime={ExpireTime}, Type={Type}, HeartbeatCount={HeartbeatCount}]";
         }
     }

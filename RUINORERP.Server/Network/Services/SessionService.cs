@@ -91,6 +91,7 @@ namespace RUINORERP.Server.Network.Services
         /// 构造函数
         /// </summary>
         /// <param name="logger">日志记录器</param>
+        /// <param name="subscriptionManager">订阅管理器</param>
         /// <param name="maxSessionCount">最大会话数量</param>
         public SessionService(ILogger<SessionService> logger, CacheSubscriptionManager subscriptionManager, int maxSessionCount = 1000)
         {
@@ -101,7 +102,6 @@ namespace RUINORERP.Server.Network.Services
             _subscriptionManager = subscriptionManager;
             // 启动清理定时器，每5分钟清理一次超时会话并检查心跳
             _cleanupTimer = new Timer(CleanupAndHeartbeatCallback, null, TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(5));
-
         }
 
         #endregion
@@ -331,6 +331,8 @@ namespace RUINORERP.Server.Network.Services
 
                         // 取消该会话的所有缓存订阅
                         _subscriptionManager.RemoveAllSubscriptionsAsync(sessionId);
+
+                        // 自动释放锁定的功能已移至IntegratedServerLockManager中，通过订阅SessionDisconnected事件实现
 
                         // 触发会话断开事件
                         SessionDisconnected?.Invoke(sessionInfo);

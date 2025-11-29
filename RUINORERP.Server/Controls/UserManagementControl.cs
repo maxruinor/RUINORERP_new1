@@ -2,10 +2,13 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualBasic;
 using RUINORERP.Model.CommonModel;
+using RUINORERP.Model.TransModel;
 using RUINORERP.PacketSpec.Commands;
+using RUINORERP.PacketSpec.Models.Messaging;
 using RUINORERP.PacketSpec.Models.Requests;
 using RUINORERP.Server.Network.Interfaces.Services;
 using RUINORERP.Server.Network.Models;
+using RUINORERP.Server.Network.Services;
 using RUINORERP.Server.ToolsUI;
 using System;
 using System.Collections.Generic;
@@ -31,7 +34,7 @@ namespace RUINORERP.Server.Controls
 
         private readonly ISessionService _sessionService;
         private readonly System.Windows.Forms.Timer _updateTimer;
-
+        private readonly ServerMessageService _serverMessageService;
         // ListView项映射字典，以SessionID为键
         private readonly Dictionary<string, ListViewItem> _sessionItemMap = new Dictionary<string, ListViewItem>();
 
@@ -66,7 +69,7 @@ namespace RUINORERP.Server.Controls
 
             // 获取服务实例
             _sessionService = Program.ServiceProvider.GetRequiredService<ISessionService>();
-
+            _serverMessageService = Program.ServiceProvider.GetRequiredService<ServerMessageService>();
             // 订阅会话服务事件
             _sessionService.SessionConnected += OnSessionConnected;
             _sessionService.SessionDisconnected += OnSessionDisconnected;
@@ -1520,9 +1523,181 @@ namespace RUINORERP.Server.Controls
                 MessageBox.Show("请先选择要发送消息的会话", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
-
+            foreach (var session in selectedSessions)
+            {
+                if (session == null)
+                {
+                    MessageBox.Show($"用户 {session.UserInfo.用户名} 的会话不存在或已断开连接", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+                var userList = new List<UserInfo>();
+                userList.Add(session.UserInfo);
+                HandleSendMessage(userList);
+            }
             // TODO: 实现发送消息功能
             MessageBox.Show($"选择了 {selectedSessions.Count} 个会话发送消息", "功能待实现", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+
+        private async void HandleSendMessage(List<UserInfo> users)
+        {
+            frmMessager frmMessager = new frmMessager();
+            frmMessager.MustDisplay = true;
+            if (frmMessager.ShowDialog() != DialogResult.OK)
+            {
+                return;
+            }
+            string message = frmMessager.Message;
+            foreach (var user in users)
+            {
+                try
+                {
+                    // 使用新的SessionService获取会话信息
+
+                    #region
+                    var response = await _serverMessageService.SendPopupMessageAsync(
+                        user.用户名,
+                        message,
+                        "系统通知",
+                        30000, // 30秒超时
+                        CancellationToken.None);
+                    #endregion
+
+                }
+                catch (Exception ex)
+                {
+                    frmMainNew.Instance.PrintErrorLog($"向用户 {user.用户名} 发送消息失败: {ex.Message}");
+                }
+            }
+        }
+
+        private void HandlePushCache(List<UserInfo> users)
+        {
+            foreach (var user in users)
+            {
+                try
+                {
+                    // 使用新的SessionService获取会话信息
+                    var session = _sessionService.GetSession(user.SessionId);
+                    if (session != null)
+                    {
+                        // 发送缓存推送命令 - 使用新的发送方法
+                        var messageData = new
+                        {
+                            Command = "PUSH_CACHE"
+                        };
+
+                        var request = new MessageRequest(MessageType.Unknown, messageData);
+                        var success = _sessionService.SendCommandAsync(
+                            session.SessionID,
+                            MessageCommands.SendMessageToUser,
+                            request).Result; // 注意：这里使用.Result是为了保持原有的同步行为
+
+                        if (success)
+                        {
+                            frmMainNew.Instance.PrintInfoLog($"已向用户 {user.用户名} 发送缓存推送命令");
+                        }
+                        else
+                        {
+                            frmMainNew.Instance.PrintErrorLog($"向用户 {user.用户名} 发送缓存推送命令失败");
+                        }
+                    }
+                    else
+                    {
+                        frmMainNew.Instance.PrintErrorLog($"用户 {user.用户名} 的会话不存在");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    frmMainNew.Instance.PrintErrorLog($"向用户 {user.用户名} 发送缓存推送命令失败: {ex.Message}");
+                }
+            }
+        }
+
+        private void HandlePushUpdate(List<UserInfo> users)
+        {
+            foreach (var user in users)
+            {
+                try
+                {
+                    // 使用新的SessionService获取会话信息
+                    var session = _sessionService.GetSession(user.SessionId);
+                    if (session != null)
+                    {
+                        // 发送更新推送命令 - 使用新的发送方法
+                        var messageData = new
+                        {
+                            Command = "PUSH_UPDATE"
+                        };
+
+                        var request = new MessageRequest(MessageType.Unknown, messageData);
+                        var success = _sessionService.SendCommandAsync(
+                            session.SessionID,
+                            MessageCommands.SendMessageToUser,
+                            request).Result; // 注意：这里使用.Result是为了保持原有的同步行为
+
+                        if (success)
+                        {
+                            frmMainNew.Instance.PrintInfoLog($"已向用户 {user.用户名} 发送更新推送命令");
+                        }
+                        else
+                        {
+                            frmMainNew.Instance.PrintErrorLog($"向用户 {user.用户名} 发送更新推送命令失败");
+                        }
+                    }
+                    else
+                    {
+                        frmMainNew.Instance.PrintErrorLog($"用户 {user.用户名} 的会话不存在");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    frmMainNew.Instance.PrintErrorLog($"向用户 {user.用户名} 发送更新推送命令失败: {ex.Message}");
+                }
+            }
+        }
+
+        private void HandlePushUpdateSysConfig(List<UserInfo> users)
+        {
+            foreach (var user in users)
+            {
+                try
+                {
+                    // 使用新的SessionService获取会话信息
+                    var session = _sessionService.GetSession(user.SessionId);
+                    if (session != null)
+                    {
+                        // 发送系统配置推送命令 - 使用新的发送方法
+                        var messageData = new
+                        {
+                            Command = "PUSH_SYS_CONFIG"
+                        };
+
+                        var request = new MessageRequest(MessageType.Unknown, messageData);
+                        var success = _sessionService.SendCommandAsync(
+                            session.SessionID,
+                            MessageCommands.SendMessageToUser,
+                            request).Result; // 注意：这里使用.Result是为了保持原有的同步行为
+
+                        if (success)
+                        {
+                            frmMainNew.Instance.PrintInfoLog($"已向用户 {user.用户名} 发送系统配置推送命令");
+                        }
+                        else
+                        {
+                            frmMainNew.Instance.PrintErrorLog($"向用户 {user.用户名} 发送系统配置推送命令失败");
+                        }
+                    }
+                    else
+                    {
+                        frmMainNew.Instance.PrintErrorLog($"用户 {user.用户名} 的会话不存在");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    frmMainNew.Instance.PrintErrorLog($"向用户 {user.用户名} 发送系统配置推送命令失败: {ex.Message}");
+                }
+            }
         }
 
         private void tsbtn推送更新_Click(object sender, EventArgs e)
@@ -1533,9 +1708,37 @@ namespace RUINORERP.Server.Controls
                 MessageBox.Show("请先选择要推送更新的会话", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
+            foreach (var session in selectedSessions)
+            {
+                if (session == null)
+                {
+                    MessageBox.Show($"用户 {session.UserInfo.用户名} 的会话不存在或已断开连接", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
 
-            // TODO: 实现推送更新功能
-            MessageBox.Show($"选择了 {selectedSessions.Count} 个会话推送更新", "功能待实现", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                // 确认推送更新
+                var result = MessageBox.Show($"确定要向用户 {session.UserInfo.用户名} 推送更新吗？", "确认", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                if (result == DialogResult.Yes)
+                {
+                    // 发送推送更新命令 - 使用新的发送方法
+                    SystemCommandRequest systemCommandRequest = new SystemCommandRequest();
+                    systemCommandRequest.CommandType = SystemManagementType.PushVersionUpdate;
+
+                    var success = _sessionService.SendCommandAsync(
+                        session.SessionID,
+                        SystemCommands.SystemManagement,
+                        systemCommandRequest).Result; // 注意：这里使用.Result是为了保持原有的同步行为
+
+                    if (success)
+                    {
+                        frmMainNew.Instance.PrintInfoLog($"已向用户 {session.UserInfo.用户名} 推送更新");
+                    }
+                    else
+                    {
+                        MessageBox.Show("更新推送失败，请检查用户连接状态", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
+            }
         }
 
         private void tsbtn推送系统配置_Click(object sender, EventArgs e)
@@ -1546,7 +1749,42 @@ namespace RUINORERP.Server.Controls
                 MessageBox.Show("请先选择要推送系统配置的会话", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
+            foreach (var session in selectedSessions)
+            {
+                if (session == null)
+                {
+                    MessageBox.Show($"用户 {session.UserInfo.用户名} 的会话不存在或已断开连接", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
 
+                // 确认推送系统配置
+                var result = MessageBox.Show($"确定要向用户 {session.UserInfo.用户名} 推送系统配置吗？", "确认", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                if (result == DialogResult.Yes)
+                {
+                    // 发送推送系统配置命令 - 使用新的发送方法
+                    var messageData = new
+                    {
+                        Command = "PUSH_SYS_CONFIG"
+                    };
+
+                    var request = new MessageRequest(MessageType.Unknown, messageData);
+                    var success = _sessionService.SendCommandAsync(
+                        session.SessionID,
+                        MessageCommands.SendMessageToUser,
+                        request).Result; // 注意：这里使用.Result是为了保持原有的同步行为
+
+                    if (success)
+                    {
+                        frmMainNew.Instance.PrintInfoLog($"已向用户 {session.UserInfo.用户名} 推送系统配置");
+                        MessageBox.Show("系统配置推送成功", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                    else
+                    {
+                        MessageBox.Show("系统配置推送失败，请检查用户连接状态", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
+
+            }
             // TODO: 实现推送系统配置功能
             MessageBox.Show($"选择了 {selectedSessions.Count} 个会话推送系统配置", "功能待实现", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }

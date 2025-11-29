@@ -161,7 +161,7 @@ namespace RUINORERP.PacketSpec.Models.Responses
         {
             return new SystemCommandResponse
             {
-                CommandType = shutdownType == "Logoff" ? SystemManagementType.ExitSystem : SystemManagementType.ShutdownComputer,
+                CommandType = shutdownType == "Logoff" ? SystemManagementType.ExitERPSystem : SystemManagementType.ShutdownComputer,
                 IsSuccess = true,
                 Message = $"电脑{shutdownType}指令已发送",
                 UserId = userId,

@@ -247,6 +247,25 @@ namespace RUINORERP.UI.Network.Services
         }
 
         /// <summary>
+        /// 获取所有缓存的锁定信息
+        /// 供管理界面使用，避免反射访问私有字段
+        /// </summary>
+        /// <returns>所有缓存的锁定信息列表</returns>
+        public List<LockInfo> GetAllLockInfos()
+        {
+            try
+            {
+                // 返回缓存中所有项目的副本
+                return _localCache.Values.ToList();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "获取所有锁定信息失败");
+                return new List<LockInfo>();
+            }
+        }
+
+        /// <summary>
         /// 更新缓存项（公共方法，用于外部调用）
         /// <para>优化说明：v2.0.0 - 增强了参数验证、添加了完整的过期时间管理、确保了操作的原子性和线程安全性</para>
         /// </summary>

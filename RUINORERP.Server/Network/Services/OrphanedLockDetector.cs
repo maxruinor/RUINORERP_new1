@@ -15,7 +15,7 @@ namespace RUINORERP.Server.Network.Services
     /// </summary>
     public class OrphanedLockDetector : IDisposable
     {
-        private readonly IntegratedServerLockManager _lockManager;
+        private readonly ServerLockManager _lockManager;
         private readonly ILogger<OrphanedLockDetector> _logger;
         private readonly Timer _detectionTimer;
         private readonly ConcurrentDictionary<string, ClientSessionInfo> _clientSessions;
@@ -63,7 +63,7 @@ namespace RUINORERP.Server.Network.Services
         /// </summary>
         /// <param name="lockManager">锁管理器</param>
         /// <param name="logger">日志记录器</param>
-        public OrphanedLockDetector(IntegratedServerLockManager lockManager, ILogger<OrphanedLockDetector> logger)
+        public OrphanedLockDetector(ServerLockManager lockManager, ILogger<OrphanedLockDetector> logger)
         {
             _lockManager = lockManager ?? throw new ArgumentNullException(nameof(lockManager));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));

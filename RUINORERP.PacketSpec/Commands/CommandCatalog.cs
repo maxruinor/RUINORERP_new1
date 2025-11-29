@@ -29,20 +29,12 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         public const ushort System_ExceptionReport = 0x0004;
 
-        /// <summary>
-        /// 关闭电脑
-        /// </summary>
-        public const ushort System_ShutdownComputer = 0x0005;
-
-        /// <summary>
-        /// 退出系统
-        /// </summary>
-        public const ushort System_ExitSystem = 0x0006;
+ 
 
         /// <summary>
         /// 系统管理：服务器推送版本更新
         /// </summary>
-        public const ushort System_SystemManagement = 0x0007;
+        public const ushort System_SystemManagement = 0x0005;
         #endregion
 
         #region 认证命令 (0x01xx)

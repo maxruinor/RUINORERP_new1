@@ -134,23 +134,13 @@ namespace RUINORERP.UI.SysConfig
         {
             try
             {
-                // 通过反射获取内部缓存
-                var cacheField = typeof(ClientLocalLockCacheService).GetField("_cache",
-                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                if (cacheField != null)
-                {
-                    var cache = cacheField.GetValue(_lockCacheService) as System.Collections.Concurrent.ConcurrentDictionary<long, LockInfo>;
-                    if (cache != null)
-                    {
-                        return cache.Values.ToList();
-                    }
-                }
-
-                // 如果反射失败，返回空列表
-                return new List<LockInfo>();
+                // 直接使用公共方法获取所有锁定信息，避免反射访问私有字段
+                return _lockCacheService.GetAllLockInfos();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                // 记录异常日志
+                System.Diagnostics.Debug.WriteLine($"获取锁定信息失败: {ex.Message}");
                 return new List<LockInfo>();
             }
         }

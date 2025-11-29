@@ -252,7 +252,7 @@ namespace RUINORERP.UI.Network
             // 订阅连接状态变化事件以管理心跳
             _connectionManager.ConnectionStateChanged -= OnConnectionStateChangedForHeartbeat;
             _connectionManager.ConnectionStateChanged += OnConnectionStateChangedForHeartbeat;
-            
+
             // 订阅重连失败事件
             _connectionManager.ReconnectFailed -= OnReconnectFailed;
             _connectionManager.ReconnectFailed += OnReconnectFailed;
@@ -312,7 +312,7 @@ namespace RUINORERP.UI.Network
                 StopHeartbeat();
             }
         }
-        
+
         /// <summary>
         /// 处理连接管理器重连失败事件
         /// </summary>
@@ -469,9 +469,9 @@ namespace RUINORERP.UI.Network
 
                 // 可以根据需要添加系统信息
                 // 注意：获取系统信息可能耗时，谨慎使用
-                
+
                 heartbeatRequest.UserInfo = MainForm.Instance.AppContext.CurrentUser;
-                
+
 
                 var response = await SendCommandWithResponseAsync<HeartbeatResponse>(
                     SystemCommands.Heartbeat, heartbeatRequest, cancellationToken);
@@ -1201,20 +1201,65 @@ namespace RUINORERP.UI.Network
         private async Task ProcessSystemCommandAsync(PacketModel packet)
         {
             // 处理系统命令，如心跳响应等
-            if (packet.CommandId.FullCode == SystemCommands.Heartbeat.FullCode)
+
+            if (packet.CommandId == SystemCommands.Heartbeat)
             {
-                //// 处理心跳响应，重置失败计数
-                //lock (_syncLock)
-                //{
-                //    _heartbeatFailureCount = 0;
-                //}
-                _logger.LogDebug("收到心跳响应，重置心跳失败计数");
+
             }
-            else
+
+            if (packet.CommandId == SystemCommands.SystemManagement)
             {
-                // 其他系统命令使用调度器处理
-                await _commandDispatcher.DispatchAsync(packet).ConfigureAwait(false);
+                if (packet.Request is SystemCommandRequest commandRequest)
+                {
+                    switch (commandRequest.CommandType)
+                    {
+                        case SystemManagementType.PushVersionUpdate:
+                            // 处理服务器推送的版本更新请求
+                            // 在UI线程中调用MainForm的UpdateSys方法
+                            if (MainForm.Instance != null)
+                            {
+                                try
+                                {
+                                    // 使用Invoke确保在UI线程执行
+                                    if (MainForm.Instance.InvokeRequired)
+                                    {
+                                        MainForm.Instance.Invoke(async () =>
+                                        {
+                                            // 调用UpdateSys方法，显示消息框并强制更新
+                                            await MainForm.Instance.UpdateSys(true, true);
+                                        });
+                                    }
+                                    else
+                                    {
+                                        await MainForm.Instance.UpdateSys(true, true);
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    _logger.LogError(ex, "执行版本更新操作时发生异常");
+                                }
+                            }
+                            else
+                            {
+                                _logger.LogWarning("MainForm实例不存在，无法执行版本更新操作");
+                            }
+                            break;
+
+                    }
+
+
+                }
             }
+            if (packet.CommandId == SystemCommands.ExceptionReport)
+            {
+
+            }
+            if (packet.CommandId == SystemCommands.ComputerStatus)
+            {
+
+            }
+           
+
         }
 
         /// <summary>
@@ -1476,7 +1521,7 @@ namespace RUINORERP.UI.Network
                 // 设置其他状态标志为false，停止相关操作
                 _isProcessingQueue = false;
                 _isReconnecting = false;
-                
+
 
                 if (disposing)
                 {
@@ -1495,7 +1540,7 @@ namespace RUINORERP.UI.Network
                     {
                         _logger?.LogWarning(ex, "停止心跳时发生异常");
                     }
-                    
+
                     // 释放清理定时器
                     _cleanupTimer?.Dispose();
                     _cleanupTimer = null;
@@ -1665,14 +1710,14 @@ namespace RUINORERP.UI.Network
                     // 使用原子操作更新重连标志
                     previousValue = _isReconnecting;
                     _isReconnecting = true;
-                    
+
                     if (!previousValue)
                     {
                         _logger?.Debug("命令处理时检测到连接断开，尝试重连");
                         // 获取当前服务器地址和端口
                         string serverAddress = GetCurrentServerAddress();
                         int serverPort = GetCurrentServerPort();
-                        
+
                         if (!string.IsNullOrEmpty(serverAddress) && serverPort > 0)
                         {
                             // 使用现有的ConnectAsync方法进行重连
@@ -1817,7 +1862,8 @@ namespace RUINORERP.UI.Network
                 {
                     // 避免递归调用，改为使用Task.Run启动新的处理任务
                     // 不使用递归调用避免可能的栈溢出和过多任务创建
-                    _ = Task.Run(async () => {
+                    _ = Task.Run(async () =>
+                    {
                         // 小延迟避免CPU占用过高
                         await Task.Delay(100);
                         await ProcessCommandQueueAsync();

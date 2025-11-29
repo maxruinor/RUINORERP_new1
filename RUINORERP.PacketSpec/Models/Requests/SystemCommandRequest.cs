@@ -26,10 +26,6 @@ namespace RUINORERP.PacketSpec.Models.Requests
         /// </summary>
         public string TargetUserId { get; set; }
 
-        /// <summary>
-        /// 关闭类型（关机、重启等）
-        /// </summary>
-        public string ShutdownType { get; set; } = "Shutdown";
 
         /// <summary>
         /// 延迟时间（秒）
@@ -42,21 +38,6 @@ namespace RUINORERP.PacketSpec.Models.Requests
         public string AdminUserId { get; set; }
 
         /// <summary>
-        /// 强制下线原因
-        /// </summary>
-        public string Reason { get; set; }
-
-        /// <summary>
-        /// 管理员备注
-        /// </summary>
-        public string AdminRemark { get; set; }
-
-        /// <summary>
-        /// 请求类型
-        /// </summary>
-        public string RequestType { get; set; }
-
-        /// <summary>
         /// 创建电脑状态查询请求
         /// </summary>
         public static SystemCommandRequest CreateComputerStatusRequest(string targetUserId, string requestType = "Status")
@@ -65,7 +46,6 @@ namespace RUINORERP.PacketSpec.Models.Requests
             {
                 CommandType = SystemManagementType.ComputerStatus,
                 TargetUserId = targetUserId,
-                RequestType = requestType,
                 RequestId = IdGenerator.GenerateRequestId(SystemCommands.ComputerStatus)
             };
         }
@@ -79,10 +59,8 @@ namespace RUINORERP.PacketSpec.Models.Requests
             {
                 CommandType = SystemManagementType.ShutdownComputer,
                 TargetUserId = targetUserId,
-                ShutdownType = shutdownType,
                 DelaySeconds = delaySeconds,
-                AdminRemark = adminRemark,
-                RequestId = IdGenerator.GenerateRequestId(SystemCommands.ShutdownComputer)
+                RequestId = IdGenerator.GenerateRequestId(SystemCommands.SystemManagement)
             };
         }
 
@@ -93,12 +71,10 @@ namespace RUINORERP.PacketSpec.Models.Requests
         {
             return new SystemCommandRequest
             {
-                CommandType = SystemManagementType.ExitSystem,
+                CommandType = SystemManagementType.ExitERPSystem,
                 TargetUserId = targetUserId,
-                ShutdownType = "Logoff",
                 DelaySeconds = delaySeconds,
-                AdminRemark = adminRemark,
-                RequestId = IdGenerator.GenerateRequestId(SystemCommands.ExitSystem)
+                RequestId = IdGenerator.GenerateRequestId(SystemCommands.SystemManagement)
             };
         }
 
@@ -114,35 +90,10 @@ namespace RUINORERP.PacketSpec.Models.Requests
                 //CommandType = SystemManagementType.ForceLogout,
                 TargetUserId = targetUserId,
                 AdminUserId = adminUserId,
-                Reason = reason,
-                AdminRemark = adminRemark,
                 RequestId = IdGenerator.GenerateRequestId(AuthenticationCommands.ForceLogout)
             };
         }
 
-        /// <summary>
-        /// 验证请求有效性
-        /// </summary>
-        public bool IsValid()
-        {
-            if (string.IsNullOrEmpty(TargetUserId))
-                return false;
-
-            switch (CommandType)
-            {
-                case SystemManagementType.ComputerStatus:
-                    return true;
-                    
-                case SystemManagementType.ShutdownComputer:
-                case SystemManagementType.ExitSystem:
-                    return ShutdownType == "Shutdown" || ShutdownType == "Restart" || ShutdownType == "Logoff";
-                    
-                //case SystemManagementType.ForceLogout:
-                //    return !string.IsNullOrEmpty(AdminUserId);
-                    
-                default:
-                    return false;
-            }
-        }
+      
     }
 }

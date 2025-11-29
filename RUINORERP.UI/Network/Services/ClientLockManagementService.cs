@@ -340,7 +340,7 @@ namespace RUINORERP.UI.Network.Services
                 stopwatch.Stop();
                 if (response == null)
                 {
-                    LockResponseFactory.CreateFailedResponse("响应为空");
+                    return LockResponseFactory.CreateFailedResponse("响应为空");
                 }
                 if (response.IsSuccess)
                 {

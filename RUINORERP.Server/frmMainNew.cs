@@ -80,6 +80,7 @@ using Button = System.Windows.Forms.Button;
 using RUINORERP.Business.BNR;
 using RUINORERP.Server.Network.Services;
 using RUINORERP.Server.Services;
+using EnumHelper = RUINORERP.Common.Helper.EnumHelper;
 
 namespace RUINORERP.Server
 {
@@ -130,6 +131,51 @@ namespace RUINORERP.Server
         /// 网络监控开关状态
         /// </summary>
         public bool IsNetworkMonitorEnabled { get; set; } = false;
+
+        /// <summary>
+        /// 表示一个命令过滤类别（一级菜单）
+        /// </summary>
+        public class CommandFilterCategory
+        {
+            public CommandCategory Category { get; set; }
+            public string Name { get; set; }
+            public List<CommandFilterType> CommandTypes { get; set; } = new List<CommandFilterType>();
+        }
+
+        /// <summary>
+        /// 表示一个命令类型（二级菜单）
+        /// </summary>
+        public class CommandFilterType
+        {
+            public string TypeName { get; set; }
+            public CommandCategory Category { get; set; }
+            public List<CommandFilterItem> CommandItems { get; set; } = new List<CommandFilterItem>();
+        }
+
+        /// <summary>
+        /// 表示一个具体命令（三级菜单）
+        /// </summary>
+        public class CommandFilterItem
+        {
+            public ushort CommandCode { get; set; }
+            public string Name { get; set; }
+            public CommandCategory Category { get; set; }
+        }
+
+        /// <summary>
+        /// 命令过滤菜单数据模型
+        /// </summary>
+        private List<CommandFilterCategory> _commandFilterCategories = new List<CommandFilterCategory>();
+
+        /// <summary>
+        /// 当前选中的命令过滤器列表
+        /// </summary>
+        private List<ushort> _selectedCommandFilters = new List<ushort>();
+
+        /// <summary>
+        /// 命令过滤菜单项字典
+        /// </summary>
+        private Dictionary<ushort, ToolStripMenuItem> _commandFilterMenuItems = new Dictionary<ushort, ToolStripMenuItem>();
 
         /// <summary>
         /// 全局日志级别控制器
@@ -224,13 +270,186 @@ namespace RUINORERP.Server
         }
 
         /// <summary>
+        /// 初始化网络监控菜单
+        /// </summary>
+        private void InitializeNetworkMonitorMenu()
+        {
+            try
+            {
+                // 清空现有菜单项
+                toolStripButtonNetworkMonitor.DropDownItems.Clear();
+                _commandFilterMenuItems.Clear();
+
+                // 创建全选菜单项
+                var selectAllItem = new ToolStripMenuItem("全选");
+                selectAllItem.Click += (s, e) => SelectAllCommands();
+                toolStripButtonNetworkMonitor.DropDownItems.Add(selectAllItem);
+
+                // 创建取消全选菜单项
+                var deselectAllItem = new ToolStripMenuItem("取消全选");
+                deselectAllItem.Click += (s, e) => DeselectAllCommands();
+                toolStripButtonNetworkMonitor.DropDownItems.Add(deselectAllItem);
+
+                // 添加分隔符
+                toolStripButtonNetworkMonitor.DropDownItems.Add(new ToolStripSeparator());
+
+                // 生成命令过滤数据模型
+                PopulateCommandFilterModel();
+
+                // 创建菜单层次结构
+                foreach (var category in _commandFilterCategories)
+                {
+                    var categoryMenuItem = new ToolStripMenuItem(category.Name);
+
+                    foreach (var type in category.CommandTypes)
+                    {
+                        var typeMenuItem = new ToolStripMenuItem(type.TypeName);
+
+                        foreach (var item in type.CommandItems)
+                        {
+                            var commandMenuItem = new ToolStripMenuItem($"{item.Name} (0x{item.CommandCode:X4})")
+                            {
+                                CheckOnClick = true,
+                                Tag = item.CommandCode
+                            };
+                            commandMenuItem.Click += CommandFilterMenuItem_Click;
+
+                            // 存储命令菜单项引用
+                            _commandFilterMenuItems[item.CommandCode] = commandMenuItem;
+
+                            typeMenuItem.DropDownItems.Add(commandMenuItem);
+                        }
+
+                        categoryMenuItem.DropDownItems.Add(typeMenuItem);
+                    }
+
+                    toolStripButtonNetworkMonitor.DropDownItems.Add(categoryMenuItem);
+                }
+
+                // 添加分隔符
+                toolStripButtonNetworkMonitor.DropDownItems.Add(new ToolStripSeparator());
+
+                // 添加监控状态切换菜单项
+                var toggleMonitoringItem = new ToolStripMenuItem("启用/禁用监控");
+                toggleMonitoringItem.Click += ToggleNetworkMonitoring;
+                toolStripButtonNetworkMonitor.DropDownItems.Add(toggleMonitoringItem);
+
+            }
+            catch (Exception ex)
+            {
+                PrintErrorLog($"初始化网络监控菜单时出错: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 填充命令过滤数据模型
+        /// </summary>
+        private void PopulateCommandFilterModel()
+        {
+            try
+            {
+                // 获取所有命令类别
+                var categories = Enum.GetValues(typeof(CommandCategory)).Cast<CommandCategory>();
+
+                foreach (var category in categories)
+                {
+                    // 创建类别对象
+                    var categoryInfo = EnumHelper.GetEnumDescription(category);
+                    var filterCategory = new CommandFilterCategory
+                    {
+                        Category = category,
+                        Name = categoryInfo
+                    };
+
+                    // 为每个类别创建一个类型（简化实现，未来可根据实际需求扩展）
+                    var filterType = new CommandFilterType
+                    {
+                        TypeName = $"{categoryInfo}命令",
+                        Category = category
+                    };
+
+                    // 反射获取CommandCatalog中该类别的命令
+                    var commandFields = typeof(CommandCatalog).GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+
+                    foreach (var field in commandFields)
+                    {
+                        // 检查字段是否为ushort类型
+                        if (field.FieldType == typeof(ushort))
+                        {
+                            var commandCode = (ushort)field.GetValue(null);
+                            var commandCategory = (CommandCategory)(commandCode >> 8);
+
+                            // 如果命令类别匹配
+                            if (commandCategory == category)
+                            {
+                                // 获取命令描述
+                                var description = field.Name;
+                                // 使用字段名称作为描述
+                                // 由于XmlDocumentation类不可用，我们直接使用字段名
+                                description = field.Name;
+
+                                // 创建命令项
+                                var commandItem = new CommandFilterItem
+                                {
+                                    CommandCode = commandCode,
+                                    Name = description,
+                                    Category = category
+                                };
+
+                                filterType.CommandItems.Add(commandItem);
+                            }
+                        }
+                    }
+
+                    // 只有在有命令项时才添加类型
+                    if (filterType.CommandItems.Count > 0)
+                    {
+                        filterCategory.CommandTypes.Add(filterType);
+                        _commandFilterCategories.Add(filterCategory);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                PrintErrorLog($"填充命令过滤模型时出错: {ex.Message}");
+            }
+        }
+
+        /// <summary>
         /// 网络监控按钮点击事件
         /// </summary>
         /// <param name="sender">事件源</param>
         /// <param name="e">事件参数</param>
         private void toolStripButtonNetworkMonitor_Click(object sender, EventArgs e)
         {
-            IsNetworkMonitorEnabled = toolStripButtonNetworkMonitor.Checked;
+            // 显示下拉菜单
+            if (toolStripButtonNetworkMonitor.HasDropDownItems)
+            {
+                toolStripButtonNetworkMonitor.ShowDropDown();
+            }
+            else
+            {
+                // 如果菜单尚未初始化，则初始化菜单
+                InitializeNetworkMonitorMenu();
+                toolStripButtonNetworkMonitor.ShowDropDown();
+            }
+        }
+
+        /// <summary>
+        /// 切换网络监控状态
+        /// </summary>
+        private void ToggleNetworkMonitoring(object sender, EventArgs e)
+        {
+            IsNetworkMonitorEnabled = !IsNetworkMonitorEnabled;
+            // ToolStripDropDownButton不支持Checked属性，使用颜色变化作为视觉反馈
+            if (IsNetworkMonitorEnabled)
+            {
+                toolStripButtonNetworkMonitor.ForeColor = System.Drawing.Color.Red;
+            }
+            else
+            {
+                toolStripButtonNetworkMonitor.ForeColor = System.Drawing.SystemColors.ControlText;
+            }
 
             if (IsNetworkMonitorEnabled)
             {
@@ -245,7 +464,75 @@ namespace RUINORERP.Server
 
             // 通知SuperSocketCommandAdapter网络监控状态变更
             RUINORERP.Server.Network.SuperSocket.SuperSocketCommandAdapter<IAppSession>.SetNetworkMonitorEnabled(IsNetworkMonitorEnabled);
+            // 设置过滤器
+            RUINORERP.Server.Network.SuperSocket.SuperSocketCommandAdapter<IAppSession>.SetCommandFilters(_selectedCommandFilters);
+        }
 
+        /// <summary>
+        /// 命令过滤菜单项点击事件
+        /// </summary>
+        private void CommandFilterMenuItem_Click(object sender, EventArgs e)
+        {
+            if (sender is ToolStripMenuItem menuItem && menuItem.Tag is ushort commandCode)
+            {
+                if (menuItem.Checked)
+                {
+                    // 添加到已选过滤器
+                    if (!_selectedCommandFilters.Contains(commandCode))
+                    {
+                        _selectedCommandFilters.Add(commandCode);
+                    }
+                }
+                else
+                {
+                    // 从已选过滤器移除
+                    _selectedCommandFilters.Remove(commandCode);
+                }
+
+                // 更新过滤器设置
+                RUINORERP.Server.Network.SuperSocket.SuperSocketCommandAdapter<IAppSession>.SetCommandFilters(_selectedCommandFilters);
+
+                // 记录过滤变更
+                PrintInfoLog($"网络监控过滤器已更新。当前选中{_selectedCommandFilters.Count}个命令。");
+            }
+        }
+
+        /// <summary>
+        /// 全选命令
+        /// </summary>
+        private void SelectAllCommands()
+        {
+            _selectedCommandFilters.Clear();
+
+            foreach (var menuItem in _commandFilterMenuItems.Values)
+            {
+                menuItem.Checked = true;
+                if (menuItem.Tag is ushort commandCode)
+                {
+                    _selectedCommandFilters.Add(commandCode);
+                }
+            }
+
+            // 更新过滤器设置
+            RUINORERP.Server.Network.SuperSocket.SuperSocketCommandAdapter<IAppSession>.SetCommandFilters(_selectedCommandFilters);
+            PrintInfoLog("已选择所有网络命令进行监控。");
+        }
+
+        /// <summary>
+        /// 取消全选命令
+        /// </summary>
+        private void DeselectAllCommands()
+        {
+            foreach (var menuItem in _commandFilterMenuItems.Values)
+            {
+                menuItem.Checked = false;
+            }
+
+            _selectedCommandFilters.Clear();
+
+            // 更新过滤器设置
+            RUINORERP.Server.Network.SuperSocket.SuperSocketCommandAdapter<IAppSession>.SetCommandFilters(_selectedCommandFilters);
+            PrintInfoLog("已取消所有网络命令选择。");
         }
         /// <summary>
         /// 初始化服务器信息更新定时器

@@ -406,7 +406,7 @@ namespace RUINORERP.UI.Network
         /// <summary>
         /// 最大重连次数（0表示无限重试）
         /// </summary>
-        public int MaxReconnectAttempts { get; set; } = 10;
+        public int MaxReconnectAttempts { get; set; } = 5;
 
         /// <summary>
         /// 是否启用指数退避算法

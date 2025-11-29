@@ -62,7 +62,7 @@ namespace RUINORERP.Server
             toolStripButtonSequenceManagement = new System.Windows.Forms.ToolStripButton();
             toolStripButtonSystemCheck = new System.Windows.Forms.ToolStripButton();
             toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
-            toolStripButtonNetworkMonitor = new System.Windows.Forms.ToolStripButton();
+            toolStripButtonNetworkMonitor = new System.Windows.Forms.ToolStripDropDownButton();
             statusStripMain = new System.Windows.Forms.StatusStrip();
             toolStripStatusLabelServerStatus = new System.Windows.Forms.ToolStripStatusLabel();
             toolStripStatusLabelConnectionCount = new System.Windows.Forms.ToolStripStatusLabel();
@@ -336,7 +336,6 @@ namespace RUINORERP.Server
             // 
             // toolStripButtonNetworkMonitor
             // 
-            toolStripButtonNetworkMonitor.CheckOnClick = true;
             toolStripButtonNetworkMonitor.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             toolStripButtonNetworkMonitor.ImageTransparentColor = System.Drawing.Color.Magenta;
             toolStripButtonNetworkMonitor.Name = "toolStripButtonNetworkMonitor";
@@ -620,7 +619,7 @@ namespace RUINORERP.Server
         private System.Windows.Forms.ToolStripButton toolStripButtonSystemCheck;
         private System.Windows.Forms.ToolStripButton toolStripButtonSequenceManagement;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
-        private System.Windows.Forms.ToolStripButton toolStripButtonNetworkMonitor;
+        private System.Windows.Forms.ToolStripDropDownButton toolStripButtonNetworkMonitor;
         private System.Windows.Forms.ToolStripDropDownButton toolStripButtonDebugMode;
     }
 }

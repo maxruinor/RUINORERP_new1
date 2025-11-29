@@ -1,4 +1,5 @@
-﻿using RUINORERP.Model.CommonModel;
+﻿using RUINORERP.Global;
+using RUINORERP.Model.CommonModel;
 using RUINORERP.PacketSpec.Models.Core;
 using System;
 using System.Collections.Generic;
@@ -84,7 +85,7 @@ namespace RUINORERP.PacketSpec.Models.Lock
         /// <param name="timeoutMs">超时时间(毫秒)</param>
         /// <returns>锁定请求实例</returns>
         public static LockRequest CreateLockRequest(long billId, long userId, string userName, long menuId,
-            CommBillData? billData, string sessionId, string lockReason = "", int timeoutMs = 300000)
+            BizType _bizType, string sessionId, string lockReason = "", int timeoutMs = 300000)
         {
             var expireTime = DateTime.Now.AddMilliseconds(timeoutMs);
             return new LockRequest
@@ -95,7 +96,7 @@ namespace RUINORERP.PacketSpec.Models.Lock
                     LockedUserId = userId,
                     LockedUserName = userName,
                     MenuID = menuId,
-                    BillData = billData,
+                    bizType = _bizType,
                     SessionId = sessionId,
                     ExpireTime = expireTime,
                     Remark = lockReason
@@ -123,7 +124,6 @@ namespace RUINORERP.PacketSpec.Models.Lock
                 {
                     BillID = billId,
                     LockedUserId = userId,
-                    LockId = lockId,
                     SessionId = sessionId,
                     Remark = unlockReason
                 },
@@ -150,7 +150,6 @@ namespace RUINORERP.PacketSpec.Models.Lock
                     BillID = billId,
                     LockedUserId = operatorUserId,
                     LockedUserName = operatorUserName,
-                    LockId = lockId,
                     Remark = reason
                 },
                 UnlockType = UnlockType.Force
@@ -170,7 +169,7 @@ namespace RUINORERP.PacketSpec.Models.Lock
         /// <param name="reason">请求原因</param>
         /// <returns>锁定请求实例</returns>
         public static LockRequest CreateRequestUnlockRequest(long billId, long requesterUserId, string requesterUserName,
-            long lockedUserId, string lockedUserName, long menuId, CommBillData? billData, string reason = "")
+            long lockedUserId, string lockedUserName, long menuId, BizType bizType, string reason = "")
         {
             return new LockRequest
             {
@@ -178,7 +177,7 @@ namespace RUINORERP.PacketSpec.Models.Lock
                 {
                     BillID = billId,
                     MenuID = menuId,
-                    BillData = billData,
+                    bizType = bizType,
                 },
                 RequesterUserId = requesterUserId,
                 RequesterUserName = requesterUserName,
@@ -207,7 +206,7 @@ namespace RUINORERP.PacketSpec.Models.Lock
                 {
                     BillID = billId,
                     LockedUserId = userId,
-                    LockId = lockId,
+                    LockedUserName="",
                     SessionId = sessionId,
                     ExpireTime = expireTime
                 },

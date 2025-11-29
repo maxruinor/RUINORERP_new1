@@ -5,7 +5,6 @@ using RUINORERP.Common;
 using RUINORERP.Model;
 using RUINORERP.Model.TransModel;
 using RUINORERP.PacketSpec.Commands;
-using RUINORERP.PacketSpec.Commands.Lock;
 using RUINORERP.PacketSpec.Enums.Core;
 using RUINORERP.PacketSpec.Errors;
 using RUINORERP.PacketSpec.Models;
@@ -75,12 +74,13 @@ namespace RUINORERP.Server.Network.CommandHandlers
             {
                 return (null, $"无效的{operationName}请求数据");
             }
-
-            if (lockRequest.LockInfo?.BillID <= 0)
+            if (lockRequest.UnlockType != UnlockType.ByBizName)
             {
-                return (null, "单据ID无效");
+                if (lockRequest.LockInfo?.BillID <= 0)
+                {
+                    return (null, "单据ID无效");
+                }
             }
-
             return (lockRequest, null);
         }
 
@@ -179,9 +179,22 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 {
                     return CreateErrorResponse(validation.ErrorMessage);
                 }
+                LockRequest lockRequest = new LockRequest();
+                if (cmd.Packet.Request is LockRequest request)
+                {
+                    lockRequest = request;
+                }
+                if (lockRequest.UnlockType == UnlockType.ByBizName)
+                {
+                    // 释放锁定
+                    return await _lockManagerService.UnlockDocumentsByBizNameAsync(validation.LockRequest.LockedUserId, (int)validation.LockRequest.LockInfo.bizType);
+                }
+                else
+                {
+                    // 释放锁定
+                    return await _lockManagerService.UnlockDocumentAsync(validation.LockRequest.LockInfo.BillID, validation.LockRequest.LockedUserId);
+                }
 
-                // 释放锁定
-                return await _lockManagerService.UnlockDocumentAsync(validation.LockRequest.LockInfo.BillID, validation.LockRequest.LockedUserId);
             }
             catch (Exception ex)
             {

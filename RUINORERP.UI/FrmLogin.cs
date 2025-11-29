@@ -171,6 +171,7 @@ namespace RUINORERP.UI
                     {
                         // 快捷登录验证成功，直接设置在线状态并完成登录
                         MainForm.Instance.AppContext.CurrentUser.在线状态 = true;
+                        
                         // 保存用户配置
                         try
                         {

@@ -1,4 +1,5 @@
-﻿using RUINORERP.Model.CommonModel;
+﻿using RUINORERP.Global;
+using RUINORERP.Model.CommonModel;
 using System;
 using System.Runtime.Serialization;
 
@@ -16,12 +17,6 @@ namespace RUINORERP.PacketSpec.Models.Lock
         /// </summary>
         [DataMember]
         public string LockKey { get; set; } = string.Empty;
-
-        /// <summary>
-        /// 锁定ID，唯一标识本次锁定（UUID格式）
-        /// </summary>
-        [DataMember]
-        public string LockId { get; set; } = Guid.NewGuid().ToString();
 
         /// <summary>
         /// 单据ID
@@ -77,7 +72,7 @@ namespace RUINORERP.PacketSpec.Models.Lock
         /// 关联的单据数据
         /// </summary>
         [DataMember]
-        public CommBillData? BillData { get; set; }
+        public BizType bizType { get; set; } = new BizType();
 
         /// <summary>
         /// 会话ID
@@ -99,6 +94,13 @@ namespace RUINORERP.PacketSpec.Models.Lock
         public DateTime LastHeartbeat { get; set; } = DateTime.Now;
 
         /// <summary>
+        /// 最后更新时间
+        /// 锁信息最后更新的时间，用于跟踪锁的状态变化
+        /// </summary>
+        [DataMember]
+        public DateTime LastUpdateTime { get; set; } = DateTime.Now;
+
+        /// <summary>
         /// 心跳次数
         /// </summary>
         [DataMember]
@@ -115,24 +117,6 @@ namespace RUINORERP.PacketSpec.Models.Lock
         /// </summary>
         [DataMember]
         public long Duration { get; set; }
-
-        /// <summary>
-        /// 锁定来源
-        /// </summary>
-        [DataMember]
-        public string Source { get; set; } = string.Empty;
-
-        /// <summary>
-        /// 是否为临时锁
-        /// </summary>
-        [DataMember]
-        public bool IsTemporary { get; set; }
-
-        /// <summary>
-        /// 客户端信息
-        /// </summary>
-        [DataMember]
-        public string ClientInfo { get; set; } = string.Empty;
 
         /// <summary>
         /// 过期时间戳（Unix毫秒）
@@ -152,10 +136,18 @@ namespace RUINORERP.PacketSpec.Models.Lock
             {
                 if (!ExpireTime.HasValue)
                     return null;
-                
+
                 long remaining = (long)(ExpireTime.Value - DateTime.Now).TotalMilliseconds;
                 return Math.Max(0, remaining);
             }
+        }
+
+        /// <summary>
+        /// 检查锁定是否已过期
+        /// </summary>
+        public bool IsExpired
+        {
+            get { return !ExpireTime.HasValue || DateTime.Now > ExpireTime.Value; }
         }
 
         /// <summary>
@@ -180,7 +172,7 @@ namespace RUINORERP.PacketSpec.Models.Lock
                 }
 
                 // 检查是否即将过期
-                if (IsAboutToExpire())
+                if (IsAboutToExpire)
                     return LockStatus.AboutToExpire;
 
                 // 默认锁定状态
@@ -205,9 +197,6 @@ namespace RUINORERP.PacketSpec.Models.Lock
             }
         }
 
-        [DataMember]
-        public DateTime LastUpdateTime { get; set; }
-
         /// <summary>
         /// 检查锁是否为孤儿锁（2分钟无心跳）
         /// </summary>
@@ -217,20 +206,21 @@ namespace RUINORERP.PacketSpec.Models.Lock
         /// <summary>
         /// 是否即将过期（剩余时间小于总时间的20%）
         /// </summary>
-        /// <returns>如果即将过期则返回true</returns>
-        public bool IsAboutToExpire()
+        public bool IsAboutToExpire
         {
-            if (!ExpireTime.HasValue || !IsLocked)
-                return false;
+            get
+            {
+                if (!ExpireTime.HasValue || !IsLocked)
+                    return false;
 
-            // 计算锁定总时长
-            var totalDuration = (ExpireTime.Value - LockTime).TotalMilliseconds;
-            if (totalDuration <= 0)
-                return false;
+                // 计算锁定总时长
+                var totalDuration = (ExpireTime.Value - LockTime).TotalMilliseconds;
+                if (totalDuration <= 0)
+                    return false;
 
-            // 计算剩余时间占比
-            var remainingRatio = RemainingLockTimeMs.Value / totalDuration;
-            return remainingRatio < 0.2; // 剩余时间小于20%则认为即将过期
+                // 计算剩余时间占比
+                return RemainingLockTimeMs.Value / totalDuration < 0.2; // 剩余时间小于20%则认为即将过期
+            }
         }
 
         /// <summary>
@@ -268,15 +258,6 @@ namespace RUINORERP.PacketSpec.Models.Lock
         }
 
         /// <summary>
-        /// 检查锁定是否已过期（属性）
-        /// </summary>
-        public bool IsExpired
-        {
-            get { return !ExpireTime.HasValue || DateTime.Now > ExpireTime.Value; }
-        }
-
-
-        /// <summary>
         /// 刷新锁定有效期
         /// </summary>
         /// <param name="milliseconds">新的有效期（毫秒）</param>
@@ -284,6 +265,7 @@ namespace RUINORERP.PacketSpec.Models.Lock
         public LockInfo RefreshExpireTime(int milliseconds)
         {
             ExpireTime = DateTime.Now.AddMilliseconds(milliseconds);
+            LastUpdateTime = DateTime.Now; // 刷新最后更新时间
             Duration = milliseconds;
             return this;
         }
@@ -294,6 +276,7 @@ namespace RUINORERP.PacketSpec.Models.Lock
         public void UpdateHeartbeat()
         {
             LastHeartbeat = DateTime.Now;
+            LastUpdateTime = DateTime.Now; // 心跳更新时同时更新最后更新时间
             HeartbeatCount++;
         }
 
@@ -308,11 +291,11 @@ namespace RUINORERP.PacketSpec.Models.Lock
             // 首先检查用户ID
             if (LockedUserId != currentUserId)
                 return false;
-            
+
             // 如果提供了会话ID，同时检查会话匹配
             if (!string.IsNullOrEmpty(currentSessionId) && !string.IsNullOrEmpty(SessionId))
                 return SessionId == currentSessionId;
-            
+
             // 如果没有提供会话ID，仅根据用户ID判断
             return true;
         }
@@ -327,7 +310,7 @@ namespace RUINORERP.PacketSpec.Models.Lock
         /// <param name="sessionId">会话ID</param>
         /// <param name="expireTime">过期时间</param>
         /// <returns>锁定信息实例</returns>
-        public static LockInfo Create(long billId, long userId, string userName, long menuId, 
+        public static LockInfo Create(long billId, long userId, string userName, long menuId,
             string sessionId, DateTime? expireTime = null)
         {
             var now = DateTime.Now;
@@ -342,6 +325,7 @@ namespace RUINORERP.PacketSpec.Models.Lock
                 ExpireTime = expireTime ?? now.AddMinutes(5),
                 LockTime = now,
                 LastHeartbeat = now,
+                LastUpdateTime = now,
                 Duration = duration,
                 Type = LockType.Exclusive,
                 IsLocked = true
@@ -370,7 +354,6 @@ namespace RUINORERP.PacketSpec.Models.Lock
             return new LockInfo
             {
                 LockKey = this.LockKey,
-                LockId = this.LockId,
                 BillID = this.BillID,
                 LockedUserId = this.LockedUserId,
                 LockedUserName = this.LockedUserName,
@@ -378,16 +361,14 @@ namespace RUINORERP.PacketSpec.Models.Lock
                 ExpireTime = this.ExpireTime,
                 Remark = this.Remark,
                 MenuID = this.MenuID,
-                BillData = this.BillData,
+                bizType = this.bizType,
                 SessionId = this.SessionId,
                 IsLocked = this.IsLocked,
                 LastHeartbeat = this.LastHeartbeat,
+                LastUpdateTime = this.LastUpdateTime,
                 HeartbeatCount = this.HeartbeatCount,
                 Type = this.Type,
                 Duration = this.Duration,
-                Source = this.Source,
-                IsTemporary = this.IsTemporary,
-                ClientInfo = this.ClientInfo
             };
         }
 

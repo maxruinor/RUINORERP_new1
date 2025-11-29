@@ -46,10 +46,15 @@
     <Compile Remove="Commands\Lock\DocumentLockApplyCommand.cs" />
     <Compile Remove="Commands\Lock\DocumentUnlockCommand.cs" />
     <Compile Remove="Commands\Lock\ForceUnlockCommand.cs" />
+    <Compile Remove="Commands\Lock\IDistributedLock.cs" />
+    <Compile Remove="Commands\Lock\ILocalDistributedLock.cs" />
+    <Compile Remove="Commands\Lock\LocalDistributedLock.cs" />
     <Compile Remove="Commands\Lock\LockApplyCommand.cs" />
     <Compile Remove="Commands\Lock\QueryLockStatusCommand.cs" />
+    <Compile Remove="Commands\Lock\RedisDistributedLock.cs" />
     <Compile Remove="Commands\Lock\RefuseUnlockCommand.cs" />
     <Compile Remove="Commands\Lock\RequestUnlockCommand.cs" />
+    <Compile Remove="Commands\Lock\SmartLockRenewer.cs" />
     <Compile Remove="Commands\Message\MessageCommand.cs" />
     <Compile Remove="Commands\Message\SendPopupMessageCommand.cs" />
     <Compile Remove="Commands\System\HeartbeatCommand.cs" />
@@ -119,6 +124,7 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="Commands\Lock\" />
     <Folder Include="Exceptions\" />
   </ItemGroup>
 

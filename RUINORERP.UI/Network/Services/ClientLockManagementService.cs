@@ -212,17 +212,21 @@ namespace RUINORERP.UI.Network.Services
 
                 stopwatch.Stop();
 
-                if (response.IsSuccess)
+                if (response != null)
                 {
-                    _logger.LogInformation("单据 {BillId} 解锁成功，耗时 {ElapsedMs}ms",
-                        billId, stopwatch.ElapsedMilliseconds);
+                    if (response.IsSuccess)
+                    {
+                        _logger.LogInformation("单据 {BillId} 解锁成功，耗时 {ElapsedMs}ms", billId, stopwatch.ElapsedMilliseconds);
+                    }
+                    else
+                    {
+                        _logger.LogWarning("单据 {BillId} 解锁失败: {Message}, 耗时 {ElapsedMs}ms", billId, response.Message, stopwatch.ElapsedMilliseconds);
+                    }
                 }
                 else
                 {
-                    _logger.LogWarning("单据 {BillId} 解锁失败: {Message}, 耗时 {ElapsedMs}ms",
-                        billId, response.Message, stopwatch.ElapsedMilliseconds);
+                    response = LockResponseFactory.CreateError("响应为空");
                 }
-
                 return response;
             }
             catch (Exception ex)
@@ -279,25 +283,31 @@ namespace RUINORERP.UI.Network.Services
                     LockCommands.CheckLockStatus, lockRequest, token);
 
                 // 更新缓存
-                if (response.IsSuccess && response.LockInfo != null)
+                if (response != null)
                 {
-                    // 创建本地缓存项
-                    var localLockInfo = new LockInfo
+
+                    if (response.IsSuccess && response.LockInfo != null)
                     {
-                        BillID = response.LockInfo.BillID,
-                        IsLocked = response.LockInfo.IsLocked,
-                        LockedUserId = response.LockInfo.LockedUserId,
-                        LockedUserName = response.LockInfo.LockedUserName,
-                        MenuID = response.LockInfo.MenuID,
-                        LockTime = response.LockInfo.LockTime,
-                        LastUpdateTime = DateTime.Now,
-                        ExpireTime = DateTime.Now.AddMinutes(5) // 本地缓存5分钟过期
-                    };
-
-                    // 使用公共方法更新缓存
-                    _clientCache.UpdateCacheItem(localLockInfo);
+                        // 创建本地缓存项
+                        var localLockInfo = new LockInfo
+                        {
+                            BillID = response.LockInfo.BillID,
+                            IsLocked = response.LockInfo.IsLocked,
+                            LockedUserId = response.LockInfo.LockedUserId,
+                            LockedUserName = response.LockInfo.LockedUserName,
+                            MenuID = response.LockInfo.MenuID,
+                            LockTime = response.LockInfo.LockTime,
+                            LastUpdateTime = DateTime.Now,
+                            ExpireTime = DateTime.Now.AddMinutes(5) // 本地缓存5分钟过期
+                        };
+                        // 使用公共方法更新缓存
+                        _clientCache.UpdateCacheItem(localLockInfo);
+                    }
                 }
-
+                else
+                {
+                    response = LockResponseFactory.CreateError("响应为空");
+                }
                 return response;
             }
             catch (Exception ex)
@@ -313,13 +323,22 @@ namespace RUINORERP.UI.Network.Services
         }
 
         /// <summary>
-        /// 锁定单据 - 实现ILockStatusProvider接口
+        /// 锁定单据（线程安全实现）- 实现ILockStatusProvider接口
+        /// <para>优化说明：v2.0.0 - 增强了缓存更新机制、添加了完整的错误处理、确保了锁定操作的原子性和线程安全性</para>
+        /// <para>工作流程：
+        /// 1. 首先检查本地缓存，判断单据是否已被锁定
+        /// 2. 如果缓存未命中或已过期，向服务器发送锁定请求
+        /// 3. 锁定成功后，同步更新本地缓存和活跃锁列表
+        /// 4. 整个过程使用信号量控制并发，确保操作原子性
+        /// </para>
         /// </summary>
         /// <param name="billId">单据ID</param>
         /// <param name="menuId">菜单ID</param>
         /// <param name="timeoutMinutes">超时时间（分钟）</param>
         /// <param name="cancellationToken">取消令牌</param>
-        /// <returns>锁定响应</returns>
+        /// <returns>锁定响应，包含是否成功和锁定信息</returns>
+        /// <exception cref="ObjectDisposedException">当服务已被释放时抛出</exception>
+        /// <exception cref="TaskCanceledException">当操作被取消时抛出</exception>
         public async Task<LockResponse> LockBillAsync(long billId, long menuId, int timeoutMinutes = 30, CancellationToken cancellationToken = default)
         {
             if (_isDisposed)
@@ -348,7 +367,7 @@ namespace RUINORERP.UI.Network.Services
 
                 // 创建锁定请求
                 var lockInfo = CreateLockInfo(billId, menuId, timeoutMinutes);
-         
+
                 var lockRequest = new LockRequest { LockInfo = lockInfo };
 
                 // 使用传入的cancellationToken或默认值
@@ -366,6 +385,12 @@ namespace RUINORERP.UI.Network.Services
                     // 只有当锁成功获取后，才会将锁信息添加到_activeLocks集合中
                     // 这样可以确保_activeLocks只包含当前客户端实际持有的有效锁
                     _activeLocks.TryAdd(billId, response.LockInfo);
+                    
+                    // 同步更新本地缓存，确保本地缓存与服务器状态一致
+                    if (_clientCache != null)
+                    {
+                        _clientCache.UpdateCacheItem(response.LockInfo);
+                    }
 
                     _logger.LogInformation("单据 {BillId} 锁定成功，耗时 {ElapsedMs}ms",
                         billId, stopwatch.ElapsedMilliseconds);
@@ -556,7 +581,6 @@ namespace RUINORERP.UI.Network.Services
                 LockedUserName = userInfo?.姓名 ?? "Unknown",
                 LockTime = DateTime.Now,
                 ExpireTime = DateTime.Now.AddMinutes(timeoutMinutes),
-                LockId = Guid.NewGuid().ToString("N").Substring(0, 8)
             };
         }
 
@@ -578,8 +602,34 @@ namespace RUINORERP.UI.Network.Services
 
 
         /// <summary>
-        /// 获取服务统计信息
+        /// 获取锁定信息
+        /// 直接从缓存服务获取锁定信息，避免直接调用缓存服务
         /// </summary>
+        /// <param name="billId">单据ID</param>
+        /// <param name="menuId">菜单ID</param>
+        /// <returns>锁定信息，如果没有有效的锁定信息则返回null</returns>
+        public async Task<LockInfo> GetLockInfoAsync(long billId, long menuId)
+        {
+            if (_isDisposed)
+                throw new ObjectDisposedException(nameof(ClientLockManagementService));
+            
+            // 直接从内部缓存服务获取锁定信息
+            return await _clientCache.GetLockInfoAsync(billId, (int)menuId);
+        }
+
+        /// <summary>
+        /// 获取锁缓存服务
+        /// 提供对内部缓存服务的访问，供需要直接操作缓存的场景使用
+        /// </summary>
+        /// <returns>客户端锁缓存服务实例</returns>
+        public ClientLocalLockCacheService GetLockCacheService()
+        {
+            if (_isDisposed)
+                throw new ObjectDisposedException(nameof(ClientLockManagementService));
+            
+            return _clientCache;
+        }
+
         /// <summary>
         /// 获取服务统计信息
         /// 使用_activeLocks集合来提供活跃锁数量的实时统计数据

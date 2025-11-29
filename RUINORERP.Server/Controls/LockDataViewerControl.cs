@@ -283,6 +283,11 @@ namespace RUINORERP.Server.Controls
             {
                 dataGridViewData.Columns.Clear();
 
+                // 设置列标题不换行
+                dataGridViewData.ColumnHeadersDefaultCellStyle.WrapMode = DataGridViewTriState.False;
+                // 设置列宽自动调整
+                dataGridViewData.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells;
+
                 // 添加LockInfo类的所有属性作为列
                 
                 // 基本标识属性
@@ -292,14 +297,6 @@ namespace RUINORERP.Server.Controls
                     HeaderText = "锁定键",
                     Name = "colLockKey",
                     FillWeight = 12
-                });
-
-                dataGridViewData.Columns.Add(new DataGridViewTextBoxColumn
-                {
-                    DataPropertyName = "LockId",
-                    HeaderText = "锁定ID",
-                    Name = "colLockId",
-                    FillWeight = 15
                 });
 
                 dataGridViewData.Columns.Add(new DataGridViewTextBoxColumn
@@ -355,6 +352,15 @@ namespace RUINORERP.Server.Controls
                     DefaultCellStyle = new DataGridViewCellStyle { Format = "yyyy-MM-dd HH:mm:ss" }
                 });
 
+                dataGridViewData.Columns.Add(new DataGridViewTextBoxColumn
+                {
+                    DataPropertyName = "LastUpdateTime",
+                    HeaderText = "最后更新时间",
+                    Name = "colLastUpdateTime",
+                    FillWeight = 15,
+                    DefaultCellStyle = new DataGridViewCellStyle { Format = "yyyy-MM-dd HH:mm:ss" }
+                });
+
                 // 状态相关属性
                 dataGridViewData.Columns.Add(new DataGridViewCheckBoxColumn
                 {
@@ -380,12 +386,13 @@ namespace RUINORERP.Server.Controls
                     FillWeight = 5
                 });
 
-                dataGridViewData.Columns.Add(new DataGridViewCheckBoxColumn
+                // 业务类型属性
+                dataGridViewData.Columns.Add(new DataGridViewTextBoxColumn
                 {
-                    DataPropertyName = "IsTemporary",
-                    HeaderText = "是否临时锁",
-                    Name = "colIsTemporary",
-                    FillWeight = 5
+                    DataPropertyName = "bizType",
+                    HeaderText = "业务类型",
+                    Name = "colBizType",
+                    FillWeight = 8
                 });
 
                 // 附加信息属性
@@ -410,22 +417,6 @@ namespace RUINORERP.Server.Controls
                     DataPropertyName = "SessionId",
                     HeaderText = "会话ID",
                     Name = "colSessionId",
-                    FillWeight = 12
-                });
-
-                dataGridViewData.Columns.Add(new DataGridViewTextBoxColumn
-                {
-                    DataPropertyName = "Source",
-                    HeaderText = "锁定来源",
-                    Name = "colSource",
-                    FillWeight = 10
-                });
-
-                dataGridViewData.Columns.Add(new DataGridViewTextBoxColumn
-                {
-                    DataPropertyName = "ClientInfo",
-                    HeaderText = "客户端信息",
-                    Name = "colClientInfo",
                     FillWeight = 12
                 });
 
@@ -482,7 +473,14 @@ namespace RUINORERP.Server.Controls
                     ReadOnly = true
                 });
 
-                // 注意：BillData属性是复杂对象，可能需要特殊处理或不显示
+                // 即将过期属性
+                dataGridViewData.Columns.Add(new DataGridViewCheckBoxColumn
+                {
+                    DataPropertyName = "IsAboutToExpire",
+                    HeaderText = "即将过期",
+                    Name = "colIsAboutToExpire",
+                    FillWeight = 5
+                });
             }
             catch (Exception ex)
             {
@@ -507,7 +505,7 @@ namespace RUINORERP.Server.Controls
                             row.DefaultCellStyle.BackColor = Color.LightPink;
                         }
                         // 为锁定但长时间未更新的项设置警示颜色（例如30分钟内）
-                        else if (DateTime.Now - lockInfo.LastUpdateTime > TimeSpan.FromMinutes(30))
+                        else if (DateTime.Now - lockInfo.LastHeartbeat > TimeSpan.FromMinutes(30))
                         {
                             row.DefaultCellStyle.BackColor = Color.LightYellow;
                         }

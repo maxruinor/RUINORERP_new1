@@ -18,12 +18,12 @@ namespace RUINORERP.UI.Network.Services
         private readonly ClientLockManagementService _lockService;
         private readonly ClientLocalLockCacheService _lockCache;
         private readonly ILogger<LockRecoveryManager> _logger;
-        
+
         // 客户端心跳检测
         private readonly Timer _heartbeatTimer;
         private readonly Timer _lockRecoveryTimer;
         private readonly object _heartbeatLock = new object();
-        
+
         // 客户端持有的锁信息
         private readonly Dictionary<long, LockInfo> _heldLocks;
         private DateTime _lastHeartbeat;
@@ -40,20 +40,20 @@ namespace RUINORERP.UI.Network.Services
             _lockService = lockService ?? throw new ArgumentNullException(nameof(lockService));
             _lockCache = lockCache ?? throw new ArgumentNullException(nameof(lockCache));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            
+
             _heldLocks = new Dictionary<long, LockInfo>();
             _lastHeartbeat = DateTime.Now;
-            
+
             // 启动心跳定时器 - 每30秒发送一次心跳
             _heartbeatTimer = new Timer(SendHeartbeat, null, TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(30));
-            
+
             // 启动锁恢复定时器 - 每1分钟检查一次孤儿锁
             _lockRecoveryTimer = new Timer(RecoverOrphanedLocks, null, TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1));
-            
+
             // 订阅应用程序退出事件
             AppDomain.CurrentDomain.ProcessExit += OnProcessExit;
             AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
-            
+
             _logger.LogInformation("锁恢复管理器已初始化");
         }
 
@@ -77,7 +77,7 @@ namespace RUINORERP.UI.Network.Services
                         Type = LockType.Exclusive
                     };
                 }
-                
+
                 _logger.LogDebug($"注册持有的锁: 单据 {BillID}, 会话 {sessionId}");
             }
             catch (Exception ex)
@@ -131,6 +131,13 @@ namespace RUINORERP.UI.Network.Services
 
             try
             {
+
+
+                if (MainForm.Instance.AppContext.CurrentUser == null || MainForm.Instance.AppContext.CurUserInfo.UserInfo == null)
+                {
+                    return;
+                }
+
                 var currentUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
                 if (currentUserId == 0)
                 {
@@ -153,8 +160,8 @@ namespace RUINORERP.UI.Network.Services
                 {
                     // 检查锁是否仍然有效
                     var lockResponse = await _lockService.CheckLockStatusAsync(heldLock.BillID);
-                    
-                    if (lockResponse == null || !lockResponse.IsSuccess || 
+
+                    if (lockResponse == null || !lockResponse.IsSuccess ||
                         lockResponse.LockInfo?.SessionId != heldLock.SessionId)
                     {
                         allLocksValid = false;
@@ -185,7 +192,7 @@ namespace RUINORERP.UI.Network.Services
                 }
 
                 _lastHeartbeat = DateTime.Now;
-                
+
                 if (allLocksValid && heldLocks.Count > 0)
                 {
                     _logger.LogDebug($"心跳成功: {heldLocks.Count} 个锁仍然有效");
@@ -208,6 +215,12 @@ namespace RUINORERP.UI.Network.Services
 
             try
             {
+                if (MainForm.Instance.AppContext.CurrentUser == null || MainForm.Instance.AppContext.CurUserInfo.UserInfo == null)
+                {
+                    return;
+                }
+
+
                 var currentUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
                 if (currentUserId == 0)
                     return;
@@ -232,7 +245,7 @@ namespace RUINORERP.UI.Network.Services
                     {
                         // 尝试重新验证锁状态
                         var lockResponse = await _lockService.CheckLockStatusAsync(orphanedLock.BillID);
-                        
+
                         if (lockResponse == null || !lockResponse.IsSuccess)
                         {
                             // 锁已不存在，从本地移除
@@ -327,7 +340,7 @@ namespace RUINORERP.UI.Network.Services
                         {
                             // 尝试正常解锁
                             var response = await _lockService.UnlockBillAsync(heldLock.BillID, currentUserId);
-                            
+
                             if (response?.IsSuccess == true)
                             {
                                 _logger.LogInformation($"成功释放锁: 单据 {heldLock.BillID}, 原因: {reason}");
@@ -393,8 +406,8 @@ namespace RUINORERP.UI.Network.Services
                     try
                     {
                         var lockResponse = await _lockService.CheckLockStatusAsync(heldLock.BillID);
-                        
-                        if (lockResponse?.IsSuccess == true && 
+
+                        if (lockResponse?.IsSuccess == true &&
                             lockResponse.LockInfo?.LockedUserId == currentUserId &&
                             lockResponse.LockInfo?.SessionId == heldLock.SessionId)
                         {
@@ -436,7 +449,7 @@ namespace RUINORERP.UI.Network.Services
         public LockRecoveryStatistics GetRecoveryStatistics()
         {
             var heldLocks = GetHeldLocks();
-            
+
             return new LockRecoveryStatistics
             {
                 HeldLocksCount = heldLocks.Count,
@@ -455,15 +468,15 @@ namespace RUINORERP.UI.Network.Services
             try
             {
                 _isShuttingDown = true;
-                
+
                 // 清理定时器
                 _heartbeatTimer?.Dispose();
                 _lockRecoveryTimer?.Dispose();
-                
+
                 // 取消事件订阅
                 AppDomain.CurrentDomain.ProcessExit -= OnProcessExit;
                 AppDomain.CurrentDomain.UnhandledException -= OnUnhandledException;
-                
+
                 _logger.LogInformation("锁恢复管理器已释放资源");
             }
             catch (Exception ex)

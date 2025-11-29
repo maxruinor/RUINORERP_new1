@@ -1596,11 +1596,8 @@ namespace RUINORERP.UI.BaseForm
                 // 释放之前可能存在的锁定（单据切换时自动释放）
                 if (_currentBillId > 0 && _currentMenuId > 0)
                 {
-                    MainForm.Instance.uclog.AddLog($"切换单据时释放之前的锁定：单据ID={_currentBillId}, 菜单ID={_currentMenuId}", UILogType.普通消息);
-                    // 使用LockReleaseHelper异步释放锁定，避免阻塞UI
-                    //LockReleaseHelper.ReleaseLockAsync(lockManagementService, MainForm.Instance.uclog, _currentBillId, _currentMenuId.ToString()).ConfigureAwait(false);
+                    _ = Task.Run(async () => await ReleasePreviousLockAsync());
                 }
-
 
                 // 首先调用基类的实现，确保基础的状态管理集成
                 base.LoadDataToUI(Entity);
@@ -1618,13 +1615,103 @@ namespace RUINORERP.UI.BaseForm
 
                     // 增强的状态管理集成
                     EnhancedStateManagementIntegration(typedEntity);
+
+                    // 加载新单据后检查锁定状态
+                    _ = Task.Run(async () => await CheckLockAfterLoad(typedEntity));
                 }
             }
             catch (Exception ex)
             {
                 // 异常情况下清理锁定资源
-                // LockReleaseHelper.CleanupLockOnException(lockManagementService, MainForm.Instance.uclog, _currentBillId, _currentMenuId.ToString(), ex);
+                _ = Task.Run(async () => await CleanupLockOnExceptionAsync(ex));
                 throw; // 重新抛出异常，让上层处理
+            }
+        }
+
+        /// <summary>
+        /// 释放之前的锁定
+        /// </summary>
+        private async Task ReleasePreviousLockAsync()
+        {
+            try
+            {
+                if (_integratedLockService != null && _currentBillId > 0 && _currentMenuId > 0)
+                {
+                    MainForm.Instance.uclog.AddLog($"切换单据时释放之前的锁定：单据ID={_currentBillId}, 菜单ID={_currentMenuId}", UILogType.普通消息);
+
+                    // 检查是否为当前用户的锁定，只释放自己的锁定
+                    var lockStatus = await _integratedLockService.CheckLockStatusAsync(_currentBillId, _currentMenuId);
+                    if (lockStatus?.LockInfo?.IsLocked == true)
+                    {
+                        long currentUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
+                        if (lockStatus.LockInfo.LockedUserId == currentUserId)
+                        {
+                            await _integratedLockService.UnlockBillAsync(_currentBillId, _currentMenuId);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger.LogError(ex, $"释放之前的锁定失败：单据ID={_currentBillId}");
+            }
+        }
+
+        /// <summary>
+        /// 加载后检查锁定状态
+        /// </summary>
+        private async Task CheckLockAfterLoad(T typedEntity)
+        {
+            try
+            {
+                if (typedEntity == null || _integratedLockService == null) return;
+
+                string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
+                long pkid = (long)ReflectionHelper.GetPropertyValue(typedEntity, PKCol);
+
+                if (pkid > 0)
+                {
+                    // 更新当前单据信息
+                    _currentBillId = pkid;
+                    _currentMenuId = CurMenuInfo?.MenuID ?? 0;
+
+                    // 检查锁定状态
+                    await RefreshLockStatus(pkid);
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger.LogError(ex, "加载后检查锁定状态失败");
+            }
+        }
+
+        /// <summary>
+        /// 异常情况下清理锁定资源
+        /// </summary>
+        private async Task CleanupLockOnExceptionAsync(Exception ex)
+        {
+            try
+            {
+                if (_integratedLockService != null && _currentBillId > 0 && _currentMenuId > 0)
+                {
+                    MainForm.Instance.logger.LogError(ex, $"异常情况下清理锁定资源：单据ID={_currentBillId}, 菜单ID={_currentMenuId}");
+
+                    // 检查是否为当前用户的锁定，只清理自己的锁定
+                    var lockStatus = await _integratedLockService.CheckLockStatusAsync(_currentBillId, _currentMenuId);
+                    if (lockStatus?.LockInfo?.IsLocked == true)
+                    {
+                        long currentUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
+                        if (lockStatus.LockInfo.LockedUserId == currentUserId)
+                        {
+                            await _integratedLockService.UnlockBillAsync(_currentBillId, _currentMenuId);
+                            MainForm.Instance.uclog.AddLog($"异常情况下成功清理锁定资源：单据ID={_currentBillId}", UILogType.普通消息);
+                        }
+                    }
+                }
+            }
+            catch (Exception cleanupEx)
+            {
+                MainForm.Instance.logger.LogError(cleanupEx, "异常情况下清理锁定资源时发生异常");
             }
         }
 
@@ -1964,7 +2051,7 @@ namespace RUINORERP.UI.BaseForm
                     long userid = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
 
                     //解锁这个业务的自己名下的其它单
-                    UNLockByBizName(userid);
+                    await UNLockByBizName(userid);
 
                     var lockinfo = await _integratedLockService.CheckLockStatusAsync(pkid, CurMenuInfo.MenuID);
                     if (lockinfo.LockInfo.LockedUserId == userid)
@@ -2441,13 +2528,21 @@ namespace RUINORERP.UI.BaseForm
             {
                 try
                 {
-                    // 同步获取锁状态
-                    var lockStatus = await _integratedLockService.CheckLockStatusAsync(pkid, CurMenuInfo.MenuID);
-                    bool isLocked = lockStatus != null && lockStatus.LockInfo.IsLocked;
+                    // 优先从本地缓存检查锁定状态，减少网络请求
+                    var lockInfo = await _integratedLockService.GetLockInfoAsync(pkid, CurMenuInfo.MenuID);
+                    bool isLocked = lockInfo != null && lockInfo.IsLocked;
+                    
+                    // 如果本地缓存未命中或数据过期，才从服务器检查
+                    if (lockInfo == null || !lockInfo.IsLocked || lockInfo.IsExpired)
+                    {
+                        MainForm.Instance.uclog.AddLog($"本地缓存未命中，从服务器检查单据[{pkid}]锁定状态", UILogType.提示);
+                        var lockStatus = await _integratedLockService.CheckLockStatusAsync(pkid, CurMenuInfo.MenuID);
+                        isLocked = lockStatus != null && lockStatus.LockInfo.IsLocked;
+                    }
 
                     // 获取当前用户ID
                     long currentUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
-                    bool isSelfLock = isLocked && lockStatus.LockInfo.LockedUserId == currentUserId;
+                    bool isSelfLock = isLocked && (lockInfo != null ? lockInfo.LockedUserId : 0) == currentUserId;
 
                     // 更新锁定按钮状态
                     tsBtnLocked.Visible = isLocked;
@@ -2460,7 +2555,7 @@ namespace RUINORERP.UI.BaseForm
                     {
                         tsBtnLocked.ToolTipText = isSelfLock ?
                             "您已锁定当前单据" :
-                            $"单据已被【{lockStatus.LockInfo.LockedUserName}】锁定";
+                            $"单据已被【{lockInfo?.LockedUserName ?? "未知用户"}】锁定";
                     }
                     else
                     {
@@ -2489,7 +2584,7 @@ namespace RUINORERP.UI.BaseForm
                     }
 
                     // 存储锁定状态信息
-                    tsBtnLocked.Tag = lockStatus;
+                    tsBtnLocked.Tag = lockInfo;
                 }
                 catch (Exception ex)
                 {
@@ -3699,10 +3794,26 @@ namespace RUINORERP.UI.BaseForm
                 long currentUserId = userInfo.User_ID;
 
 
-                // 检查锁状态
-                var lockStatus = await _integratedLockService.CheckLockStatusAsync(billId, CurMenuInfo.MenuID);
-
-                if (lockStatus != null && lockStatus.IsSuccess)
+                // 优先从本地缓存检查锁定状态
+                var lockInfo = await _integratedLockService.GetLockCacheService().GetLockInfoAsync(billId, CurMenuInfo.MenuID);
+                var lockStatus = new LockResponse();
+                bool cacheHit = lockInfo != null && lockInfo.IsLocked && !lockInfo.IsExpired;
+                
+                // 如果缓存未命中或无效，才从服务器检查
+                if (!cacheHit)
+                {
+                    MainForm.Instance.uclog.AddLog($"本地缓存未命中，从服务器检查单据[{billId}]锁定状态", UILogType.提示);
+                    lockStatus = await _integratedLockService.CheckLockStatusAsync(billId, CurMenuInfo.MenuID);
+                }
+                else
+                {
+                    // 使用缓存数据构建响应
+                    lockStatus.IsSuccess = true;
+                    lockStatus.LockInfo = lockInfo;
+                    MainForm.Instance.uclog.AddLog($"从本地缓存获取单据[{billId}]锁定状态，避免网络请求", UILogType.提示);
+                }
+                
+                if (lockStatus.IsSuccess)
                 {
                     if (lockStatus.LockInfo != null && lockStatus.LockInfo.IsLocked)
                     {
@@ -3713,7 +3824,7 @@ namespace RUINORERP.UI.BaseForm
                                            $"锁定时间：{lockStatus.LockInfo.LockTime:yyyy-MM-dd HH:mm:ss}\n" +
                                            $"如需编辑，请联系锁定用户或请求解锁。";
 
-                            MainForm.Instance.uclog.AddLog($"单据【{billId}】已被用户【{lockStatus.LockInfo.LockedUserName}】锁定", UILogType.警告);
+                            MainForm.Instance.uclog.AddLog($"单据【{billId}】已被用户【{lockStatus.LockInfo.LockedUserName}】锁定{(cacheHit ? "(缓存数据)" : "")}", UILogType.警告);
                             // 仅在用户主动操作时显示MessageBox提示
                             // 此方法通常在用户点击编辑等按钮时调用，属于主动操作，保留提示
 
@@ -3814,9 +3925,6 @@ namespace RUINORERP.UI.BaseForm
                 // 获取单据ID
                 string pkCol = BaseUIHelper.GetEntityPrimaryKey<T>();
                 long billId = (long)ReflectionHelper.GetPropertyValue(EditEntity, pkCol);
-
-
-
 
 
                 // 执行解锁操作
@@ -4059,6 +4167,7 @@ namespace RUINORERP.UI.BaseForm
 
         /// <summary>
         /// 检查单据是否被锁定
+        /// 优先从本地缓存检查，缓存失效时从服务器查询
         /// </summary>
         /// <returns>如果单据被锁定且不是当前用户锁定，则返回true；否则返回false</returns>
         private async Task<bool> IsLock()
@@ -4073,8 +4182,6 @@ namespace RUINORERP.UI.BaseForm
                 pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
                 if (pkid > 0)
                 {
-
-
                     if (_integratedLockService != null)
                     {
                         try
@@ -4082,16 +4189,13 @@ namespace RUINORERP.UI.BaseForm
                             // 获取当前用户ID
                             long currentUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
 
-                            // 检查锁状态
+                            // 检查锁状态，内部会优先使用本地缓存
                             var lockStatus = await _integratedLockService.CheckLockStatusAsync(pkid, CurMenuInfo.MenuID);
 
                             if (lockStatus != null && lockStatus.IsSuccess)
                             {
                                 if (lockStatus.LockInfo != null && lockStatus.LockInfo.IsLocked)
                                 {
-                                    // 更新锁定按钮的Tag属性
-                                    tsBtnLocked.Tag = lockStatus;
-
                                     // 检查是否当前用户锁定
                                     bool isSelfLock = lockStatus.LockInfo.LockedUserId == currentUserId;
 
@@ -4100,44 +4204,31 @@ namespace RUINORERP.UI.BaseForm
                                         isLocked = true;
                                         // 更新UI状态 - 他人锁定
                                         string tipMsg = $"单据已被用户【{lockStatus.LockInfo.LockedUserName}】锁定，请刷新后再试，或点击【已锁定】联系锁定人员解锁。";
+
+                                        // 使用统一的UI更新方法
+                                        UpdateLockUI(true, lockStatus.LockInfo);
                                         MainForm.Instance.uclog.AddLog(tipMsg, UILogType.警告);
-
-                                        tsBtnLocked.AutoToolTip = true;
-                                        tsBtnLocked.ToolTipText = tipMsg;
-                                        tsBtnLocked.Visible = true;
-                                        this.tsBtnLocked.Image = global::RUINORERP.UI.Properties.Resources.Lockbill;
-
-                                        // 移除自动检查中的MessageBox提示，仅在用户主动操作时显示
                                     }
                                     else
                                     {
-                                        // 当前用户自己锁定
-                                        string tipMsg = "您已锁定当前单据。";
-                                        MainForm.Instance.uclog.AddLog(tipMsg, UILogType.普通消息);
-
-                                        tsBtnLocked.AutoToolTip = true;
-                                        tsBtnLocked.ToolTipText = tipMsg;
-                                        tsBtnLocked.Visible = true;
-                                        this.tsBtnLocked.Image = global::RUINORERP.UI.Properties.Resources.unlockbill;
+                                        // 当前用户已锁定，更新UI状态
+                                        UpdateLockUI(true, lockStatus.LockInfo);
                                     }
                                 }
                                 else
                                 {
-                                    // 未锁定状态
-                                    tsBtnLocked.Visible = false;
-                                    tsBtnLocked.Tag = null;
-                                    tsBtnLocked.ToolTipText = string.Empty;
+                                    // 单据未锁定，更新UI状态
+                                    UpdateLockUI(false);
                                 }
                             }
                             else
                             {
-                                // 检查锁状态失败，记录日志但不阻止操作
-                                string errorMsg = lockStatus?.Message ?? "未知错误";
-                                MainForm.Instance.uclog.AddLog($"检查锁定状态时出错: {errorMsg}", UILogType.警告);
-
-                                // 出于安全考虑，在无法确定锁定状态时允许操作继续
-                                tsBtnLocked.Visible = false;
-                                tsBtnLocked.Tag = null;
+                                // 查询失败，假设未锁定但要记录错误
+                                UpdateLockUI(false);
+                                if (lockStatus != null)
+                                {
+                                    MainForm.Instance.logger.LogWarning($"检查单据 {pkid} 锁状态失败：{lockStatus.Message}");
+                                }
                             }
                         }
                         catch (Exception ex)
@@ -5911,6 +6002,8 @@ namespace RUINORERP.UI.BaseForm
         {
             string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
             long pkid = (long)ReflectionHelper.GetPropertyValue(entity, PKCol);
+            long originalPkid = pkid; // 保存原始ID用于后续锁定操作
+
             if (pkid == 0)
             {
                 entity.SetPropertyValue(typeof(DataStatus).Name, (int)DataStatus.草稿);
@@ -5918,22 +6011,13 @@ namespace RUINORERP.UI.BaseForm
             }
             else
             {
-
+                // 保存前检查锁定状态 - 优先从本地缓存检查
                 if (await IsLock())
                 {
-
-                    //string tipmsg = string.Empty;
-                    ////如果已经有锁定标记了。即使已经释放了锁。也要刷新数据后才可以保存。不然数据不会统一。
-                    //if (tsBtnLocked.Visible && tsBtnLocked.Tag != null && tsBtnLocked.Tag is LockInfo lockInfo)
-                    //{
-                    //    //显示锁定认为锁定。要刷新数据
-                    //    tipmsg = $"单据已被【{lockInfo.LockedByName}】锁定，请刷新后再试";
-                    //}
-
                     return new ReturnMainSubResults<T>()
                     {
                         Succeeded = false,
-                        // ErrorMsg = tipmsg
+                        ErrorMsg = "单据已被其他用户锁定，请刷新后再试或联系锁定人员解锁"
                     };
                 }
             }
@@ -5966,6 +6050,10 @@ namespace RUINORERP.UI.BaseForm
                     //注意這里保存的是枚举
                     ReflectionHelper.SetPropertyValue(entity, typeof(ActionStatus).Name, (int)ActionStatus.加载);
                 }
+
+                // 保存成功后的锁定状态管理
+                await PostSaveLockManagement(entity, originalPkid);
+
                 ToolBarEnabledControl(MenuItemEnums.保存);
                 MainForm.Instance.uclog.AddLog("保存成功");
                 //var sw = new Stopwatch();
@@ -5986,6 +6074,144 @@ namespace RUINORERP.UI.BaseForm
         }
 
 
+
+        /// <summary>
+        /// 保存后的锁定状态管理
+        /// 确保保存成功后正确处理锁定状态，维护本地缓存与服务器状态的一致性
+        /// </summary>
+        /// <param name="entity">保存后的实体对象</param>
+        /// <param name="originalPkid">保存前的主键ID（用于新增单据）</param>
+        private async Task PostSaveLockManagement(T entity, long originalPkid)
+        {
+            try
+            {
+                string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
+                long currentPkid = (long)ReflectionHelper.GetPropertyValue(entity, PKCol);
+
+                if (currentPkid <= 0) return;
+
+                // 更新当前单据ID和菜单ID，用于锁定管理
+                _currentBillId = currentPkid;
+                _currentMenuId = CurMenuInfo?.MenuID ?? 0;
+
+                // 对于新增单据（originalPkid=0），保存后自动获取锁定
+                if (originalPkid == 0 && _integratedLockService != null)
+                {
+                    MainForm.Instance.uclog.AddLog($"新增单据保存成功，自动获取锁定：单据ID={currentPkid}", UILogType.普通消息);
+
+                    var lockResult = await _integratedLockService.LockBillAsync(currentPkid, _currentMenuId);
+                    if (lockResult?.IsSuccess == true)
+                    {
+                        // 更新UI显示锁定状态
+                        UpdateLockUI(true, lockResult.LockInfo);
+                        MainForm.Instance.uclog.AddLog($"新增单据自动锁定成功", UILogType.普通消息);
+                    }
+                    else
+                    {
+                        MainForm.Instance.uclog.AddLog($"新增单据自动锁定失败：{lockResult?.Message ?? "未知错误"}", UILogType.警告);
+                    }
+                }
+                // 对于已有单据，刷新锁定状态确保本地缓存与服务器同步
+                else if (originalPkid > 0 && _integratedLockService != null)
+                {
+                    await RefreshLockStatus(currentPkid);
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger.LogError(ex, "保存后锁定状态管理失败");
+                MainForm.Instance.uclog.AddLog($"锁定状态管理异常：{ex.Message}", UILogType.错误);
+            }
+        }
+
+        /// <summary>
+        /// 刷新锁定状态
+        /// 优先从本地缓存获取，如果缓存过期或不存在则从服务器查询
+        /// </summary>
+        /// <param name="billId">单据ID</param>
+        /// <returns>刷新结果</returns>
+        private async Task RefreshLockStatus(long billId)
+        {
+            if (_integratedLockService == null || billId <= 0) return;
+
+            try
+            {
+                // 检查锁状态，内部会优先使用本地缓存
+                var lockStatus = await _integratedLockService.CheckLockStatusAsync(billId, _currentMenuId);
+
+                if (lockStatus?.IsSuccess == true)
+                {
+                    // 获取当前用户ID
+                    long currentUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
+                    bool isLocked = lockStatus.LockInfo?.IsLocked == true;
+                    bool isSelfLock = isLocked && lockStatus.LockInfo.LockedUserId == currentUserId;
+
+                    // 更新UI状态
+                    UpdateLockUI(isLocked, lockStatus.LockInfo);
+
+                    if (isLocked)
+                    {
+                        string lockInfo = isSelfLock ?
+                            $"您已锁定当前单据" :
+                            $"单据已被【{lockStatus.LockInfo.LockedUserName}】锁定";
+                        MainForm.Instance.uclog.AddLog($"锁定状态刷新：{lockInfo}", UILogType.普通消息);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger.LogError(ex, $"刷新单据 {billId} 锁定状态失败");
+            }
+        }
+
+        /// <summary>
+        /// 更新锁定UI显示
+        /// 统一管理锁定按钮的显示状态和提示信息
+        /// </summary>
+        /// <param name="isLocked">是否被锁定</param>
+        /// <param name="lockInfo">锁定信息</param>
+        private void UpdateLockUI(bool isLocked, LockInfo lockInfo = null)
+        {
+            if (tsBtnLocked == null || IsDisposed) return;
+
+            try
+            {
+                if (InvokeRequired)
+                {
+                    Invoke((MethodInvoker)(() => UpdateLockUI(isLocked, lockInfo)));
+                    return;
+                }
+
+                tsBtnLocked.Visible = isLocked;
+                tsBtnLocked.Tag = lockInfo;
+
+                if (isLocked && lockInfo != null)
+                {
+                    long currentUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
+                    bool isSelfLock = lockInfo.LockedUserId == currentUserId;
+
+                    if (isSelfLock)
+                    {
+                        tsBtnLocked.Image = Properties.Resources.unlockbill;
+                        tsBtnLocked.ToolTipText = $"您已锁定当前单据\n锁定时间：{lockInfo.LockTime:yyyy-MM-dd HH:mm:ss}";
+                    }
+                    else
+                    {
+                        tsBtnLocked.Image = Properties.Resources.Lockbill;
+                        tsBtnLocked.ToolTipText = $"单据已被【{lockInfo.LockedUserName}】锁定\n锁定时间：{lockInfo.LockTime:yyyy-MM-dd HH:mm:ss}\n点击可请求解锁";
+                    }
+                }
+                else
+                {
+                    tsBtnLocked.Visible = false;
+                    tsBtnLocked.ToolTipText = string.Empty;
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger.LogError(ex, "更新锁定UI显示失败");
+            }
+        }
 
         /// <summary>
         /// 删除远程的图片
@@ -6526,6 +6752,46 @@ namespace RUINORERP.UI.BaseForm
             try
             {
                 // 单据都会有 录入表格 SourceGridHelper 在 Grid_HandleDestroyed 中执行了。这样就不管关闭还是x
+
+                #region  关闭时解锁
+                try
+                {
+                    // 停止锁定刷新任务
+                    StopLockRefreshTask();
+
+                    // 异步释放锁定，不阻塞UI线程
+                    if (EditEntity != null && _currentBillId > 0 && _currentMenuId > 0 && _integratedLockService != null)
+                    {
+                        _ = Task.Run(async () =>
+                        {
+                            try
+                            {
+                                // 检查是否为当前用户的锁定，只释放自己的锁定
+                                var lockStatus = await _integratedLockService.CheckLockStatusAsync(_currentBillId, _currentMenuId);
+                                if (lockStatus?.LockInfo?.IsLocked == true)
+                                {
+                                    long currentUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
+                                    if (lockStatus.LockInfo.LockedUserId == currentUserId)
+                                    {
+                                        await _integratedLockService.UnlockBillAsync(_currentBillId, _currentMenuId);
+                                        MainForm.Instance.uclog.AddLog($"表单关闭时自动释放锁定：单据ID={_currentBillId}", UILogType.普通消息);
+                                    }
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                MainForm.Instance.logger.LogError(ex, $"表单关闭时释放锁定失败：单据ID={_currentBillId}");
+                            }
+                        });
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MainForm.Instance.logger.LogError(ex, "表单关闭事件处理异常");
+                }
+
+
+                #endregion
             }
             catch
             {
@@ -6654,9 +6920,8 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
-        public async void UNLockByBizName(long userid)
+        public async Task<bool> UNLockByBizName(long userid)
         {
-
             CommBillData cbd = new CommBillData();
             cbd = EntityMappingHelper.GetBillData(typeof(T), EditEntity);
 
@@ -6693,7 +6958,7 @@ namespace RUINORERP.UI.BaseForm
                 logger?.LogError($"【{cbd.BizName}】批量解锁失败：{errorMsg}");
                 MainForm.Instance.uclog.AddLog($"【{cbd.BizName}】批量解锁失败：{errorMsg}", UILogType.错误);
             }
-
+            return true;
         }
 
 
@@ -6849,17 +7114,7 @@ namespace RUINORERP.UI.BaseForm
 
         #endregion
 
-        /// \u003csummary\u003e
-        /// 表单关闭时自动释放锁定并停止锁定刷新任务
-        /// \u003c/summary\u003e
-        /// \u003cparam name="e"\u003e表单关闭事件参数\u003c/param\u003e
-        //protected override void OnFormClosing(FormClosingEventArgs e)
-        //{       // 尝试自动释放锁定（异步操作，不阻塞UI）
-        //    if (EditEntity != null)
 
-        //        // 停止锁定刷新任务
-        //        StopLockRefreshTask();
-        //}
 
         private async void BaseBillEditGeneric_Load(object sender, EventArgs e)
         {
@@ -7058,8 +7313,6 @@ namespace RUINORERP.UI.BaseForm
 
             try
             {
-                // 使用统一的服务获取方法
-
 
                 // 调用锁定管理服务刷新锁定状态
                 var result = await _integratedLockService.RefreshLockAsync(_currentBillId, _currentMenuId);

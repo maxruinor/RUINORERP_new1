@@ -103,7 +103,7 @@ namespace RUINORERP.UI.Network
                 // 如果已连接到其他服务器，先断开
                 if (IsConnected)
                 {
-                   //断开当前连接，准备连接到新服务器;
+                    //断开当前连接，准备连接到新服务器;
                     await DisconnectInternalAsync();
                 }
 
@@ -274,8 +274,7 @@ namespace RUINORERP.UI.Network
                 }
 
                 reconnectAttempts++;
-                _logger?.LogDebug("尝试重新连接到服务器 {ServerAddress}:{ServerPort}，第 {Attempt} 次尝试", 
-                    _serverAddress, _serverPort, reconnectAttempts);
+                _logger?.LogDebug("尝试重新连接到服务器 {ServerAddress}:{ServerPort}，第 {Attempt} 次尝试", _serverAddress, _serverPort, reconnectAttempts);
 
                 try
                 {
@@ -286,21 +285,19 @@ namespace RUINORERP.UI.Network
                         _isConnected = true;
                         OnConnectionStateChanged(true);
                         _logger?.LogDebug("重连成功 {ServerAddress}:{ServerPort}", _serverAddress, _serverPort);
-                        
+
                         // 重连成功后重置计数器
                         reconnectAttempts = 0;
                         currentBackoffInterval = _config.ReconnectInterval;
                     }
                     else
                     {
-                        _logger?.LogWarning("重连失败 {ServerAddress}:{ServerPort}，第 {Attempt} 次尝试", 
-                            _serverAddress, _serverPort, reconnectAttempts);
+                        _logger?.LogDebug("重连失败 {ServerAddress}:{ServerPort}，第 {Attempt} 次尝试", _serverAddress, _serverPort, reconnectAttempts);
                     }
                 }
                 catch (Exception ex)
                 {
-                    _logger?.LogError(ex, "重连过程中发生异常 {ServerAddress}:{ServerPort}，第 {Attempt} 次尝试", 
-                        _serverAddress, _serverPort, reconnectAttempts);
+                    _logger?.LogError(ex, "重连过程中发生异常 {ServerAddress}:{ServerPort}，第 {Attempt} 次尝试", _serverAddress, _serverPort, reconnectAttempts);
                 }
 
                 // 等待重连间隔，应用指数退避算法
@@ -314,7 +311,7 @@ namespace RUINORERP.UI.Network
                             _config.MaxBackoffInterval);
                         _logger?.LogDebug("应用指数退避，下次重连间隔 {Interval} 毫秒", currentBackoffInterval);
                     }
-                    
+
                     await Task.Delay(currentBackoffInterval, _cancellationTokenSource.Token);
                 }
             }
@@ -393,13 +390,24 @@ namespace RUINORERP.UI.Network
                 {
                     _socketClient.Closed -= OnSocketClosed;
                 }
-                
+
                 // 清空所有事件处理器
                 ConnectionStateChanged = null;
                 ReconnectFailed = null;
 
-                // 断开连接
-                _ = DisconnectAsync();
+                // 断开连接 - 使用同步方式断开连接，避免异步调用被丢弃
+                try
+                {
+                    // 同步方式停止重连任务
+                    StopReconnectTask();
+                    // 同步断开连接
+                    bool disconnectResult = DisconnectInternalAsync().GetAwaiter().GetResult();
+                    _logger?.LogDebug("连接断开{Result}", disconnectResult ? "成功" : "失败");
+                }
+                catch (Exception ex)
+                {
+                    _logger?.LogWarning(ex, "同步断开连接时发生异常");
+                }
 
                 _connectionLock?.Dispose();
                 _cancellationTokenSource?.Dispose();

@@ -148,8 +148,12 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                     if (lockResponse.IsSuccess)
                     {
                         // 锁获取成功，可以更新UI状态
-                        _logger.LogInformation($"成功获取资源 '{lockResponse.LockInfo.BillID}' 的锁，锁ID: {lockResponse.LockInfo.LockId}");
-
+                        // 更新本地缓存，确保缓存与服务器状态一致
+                        if (_lockCache != null && lockResponse.LockInfo != null)
+                        {
+                            _lockCache.UpdateCacheItem(lockResponse.LockInfo);
+                            _logger.LogDebug("锁获取成功，更新本地缓存: 资源ID={BillId}", lockResponse.LockInfo.BillID);
+                        }
                         // 触发锁获取成功事件或更新UI组件状态
                         // 例如：通知正在编辑的表单可以开始编辑
                     }
@@ -199,7 +203,14 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                         if (result == DialogResult.Yes)
                         {
                             _logger.LogInformation("用户允许其他用户锁定单据: BillID={BillID}", lockRequest.LockInfo.BillID);
-                            // 这里可以实现解锁当前单据的逻辑
+                            // 实现解锁当前单据的逻辑并更新本地缓存
+                            if (_lockCache != null && lockRequest.LockInfo != null)
+                            {
+                                // 清除当前单据的锁定缓存，确保本地状态与服务器状态一致
+                                _lockCache.ClearCache(lockRequest.LockInfo.BillID);
+                                _logger.LogDebug("用户允许锁定，清除本地缓存: BillID={BillId}", lockRequest.LockInfo.BillID);
+                            }
+                            // 可以触发其他解锁操作，如通知编辑中的表单关闭或只读模式
                         }
                         else
                         {
@@ -235,6 +246,12 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                     if (lockResponse.IsSuccess)
                     {
                         _logger.LogInformation($"成功释放资源 '{lockResponse.LockInfo.BillID}' 的锁");
+                        // 更新本地缓存，清除锁定信息
+                        if (_lockCache != null && lockResponse.LockInfo != null)
+                        {
+                            _lockCache.ClearCache(lockResponse.LockInfo.BillID);
+                            _logger.LogDebug("锁释放成功，清除本地缓存: 资源ID={BillId}", lockResponse.LockInfo.BillID);
+                        }
                         // 触发锁释放成功事件或更新UI组件状态
                     }
                     else
@@ -275,6 +292,12 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                         if (lockResponse.LockInfo != null)
                         {
                             _logger.LogInformation($"锁信息: 用户={lockResponse.LockInfo.LockedUserName}, 时间={lockResponse.LockInfo.LockTime}");
+                            // 更新本地缓存，确保缓存与服务器状态一致
+                            if (_lockCache != null)
+                            {
+                                _lockCache.UpdateCacheItem(lockResponse.LockInfo);
+                                _logger.LogDebug("锁状态查询成功，更新本地缓存: 资源ID={BillId}", lockResponse.LockInfo.BillID);
+                            }
                         }
                     }
                     else
@@ -310,6 +333,12 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                     if (lockResponse.IsSuccess)
                     {
                         _logger.LogInformation($"成功强制释放资源 '{lockResponse.LockInfo.BillID}' 的锁");
+                        // 更新本地缓存，清除锁定信息
+                        if (_lockCache != null && lockResponse.LockInfo != null)
+                        {
+                            _lockCache.ClearCache(lockResponse.LockInfo.BillID);
+                            _logger.LogDebug("强制解锁成功，清除本地缓存: 资源ID={BillId}", lockResponse.LockInfo.BillID);
+                        }
                         // 触发强制解锁成功事件或更新UI组件状态
                     }
                     else
@@ -345,14 +374,48 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                 {
                     _logger.LogDebug($"收到锁状态广播: 资源ID={lockResponse.LockInfo.BillID}, 状态={lockResponse.IsSuccess}");
 
-                    if (_lockCache != null)
+                    if (_lockCache != null && lockResponse.LockInfo != null)
                     {
-                        // TODO  这里是不是要处理删除清掉锁定信息
-                        //   _lockCache.InvalidateCache(lockResponse.LockInfo.BillID);
-                        //  _logger.LogDebug($"缓存已失效: 资源ID={lockResponse.LockInfo.BillID}");
-                    }
+                        long billId = lockResponse.LockInfo.BillID;
+                        
+                        // 根据广播类型处理缓存
+                        if (lockResponse.IsSuccess)
+                        {
+                            if (lockResponse.LockInfo.IsLocked)
+                            {
+                                // 锁定广播：更新缓存中的锁定信息
+                                _lockCache.UpdateCacheItem(lockResponse.LockInfo);
+                                _logger.LogDebug($"缓存已更新: 资源ID={billId}, 锁定用户={lockResponse.LockInfo.LockedUserName}");
+                            }
+                            else
+                            {
+                                // 解锁广播：清除缓存中的锁定信息
+                                _lockCache.ClearCache(billId);
+                                _logger.LogDebug($"缓存已清除: 资源ID={billId}");
+                            }
+                        }
+                        else
+                        {
+                            // 操作失败：清除缓存，强制下次从服务器获取最新状态
+                            _lockCache.ClearCache(billId);
+                            _logger.LogDebug($"操作失败，清除缓存: 资源ID={billId}, 错误={lockResponse.Message}");
+                        }
 
-                    // 这里可以触发事件或使用消息总线通知应用程序其他部分锁状态已更改
+                        // 触发UI更新事件（如果需要）
+                        await Task.Run(() =>
+                        {
+                            try
+                            {
+                                // 通知UI更新锁定状态
+                                // 这里可以通过事件或消息总线通知相关的编辑窗体更新锁定状态显示
+                                NotifyLockStatusChanged(billId, lockResponse.LockInfo);
+                            }
+                            catch (Exception uiEx)
+                            {
+                                _logger.LogWarning(uiEx, $"通知UI更新锁状态失败: 资源ID={billId}");
+                            }
+                        });
+                    }
                 }
             }
             catch (Exception ex)
@@ -360,6 +423,50 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                 _logger.LogError(ex, "处理锁广播命令时发生错误");
             }
             await Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// 通知锁定状态变更
+        /// </summary>
+        /// <param name="billId">单据ID</param>
+        /// <param name="lockInfo">锁定信息</param>
+        private void NotifyLockStatusChanged(long billId, LockInfo lockInfo)
+        {
+            // 这里可以通过事件、消息总线或其他机制通知相关的编辑窗体更新锁定状态
+            // 例如：
+            // - 发送自定义消息到主窗体
+            // - 触发静态事件
+            // - 使用观察者模式通知所有订阅者
+            
+            try
+            {
+                // 获取当前用户信息以判断锁定状态变更的影响
+                long currentUserId = 0;
+                try
+                {
+                    currentUserId = MainForm.Instance?.AppContext?.CurUserInfo?.UserInfo?.User_ID ?? 0;
+                }
+                catch
+                {
+                    // 如果无法获取当前用户ID，则跳过用户相关的处理
+                }
+
+                if (lockInfo != null)
+                {
+                    bool isSelfLock = lockInfo.LockedUserId == currentUserId;
+                    
+                    // 如果是当前用户的锁定状态变更，记录详细日志
+                    if (isSelfLock)
+                    {
+                        string status = lockInfo.IsLocked ? "获得锁定" : "释放锁定";
+                        _logger.LogInformation($"当前用户{status}: 资源ID={billId}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, $"处理锁定状态通知时发生异常: 资源ID={billId}");
+            }
         }
 
         /// <summary>

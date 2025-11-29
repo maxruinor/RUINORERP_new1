@@ -113,25 +113,44 @@ namespace RUINORERP.UI.Network.Services
         }
 
         /// <summary>
-        /// 检查文档是否被锁定
+        /// 检查文档是否被锁定（支持MenuID参数）
         /// </summary>
         /// <param name="billId">单据ID</param>
+        /// <param name="menuId">菜单ID</param>
         /// <returns>是否被锁定</returns>
-        public async Task<bool> IsLockedAsync(long billId)
+        public async Task<bool> IsLockedAsync(long billId, int menuId = 0)
         {
-            var result = await GetFromCacheOrServerAsync(billId, false);
-            return result.LockInfo?.IsLocked ?? false;
+            var lockInfo = await GetLockInfoAsync(billId, menuId);
+            
+            // 线程安全检查：确保只有有效的锁定信息才返回true
+            return lockInfo != null && lockInfo.IsLocked && !lockInfo.IsExpired;
         }
 
         /// <summary>
-        /// 获取锁定信息
+        /// 获取锁定信息（支持MenuID参数）
+        /// <para>优化说明：线程安全实现，确保只返回有效的锁定信息，防止返回过期或无效的锁定状态</para>
         /// </summary>
         /// <param name="billId">单据ID</param>
-        /// <returns>锁定信息</returns>
-        public async Task<LockInfo> GetLockInfoAsync(long billId)
+        /// <param name="menuId">菜单ID（可选，用于额外的权限验证）</param>
+        /// <returns>锁定信息，如果没有有效的锁定信息则返回null</returns>
+        public async Task<LockInfo> GetLockInfoAsync(long billId, long menuId = 0)
         {
+            // 调用内部方法获取缓存或默认值
             var result = await GetFromCacheOrServerAsync(billId, true);
-            return result.LockInfo?.IsLocked == true ? result.LockInfo : null;
+            
+            // 线程安全检查：确保返回的锁定信息是有效的
+            // 三重验证：确保锁定信息存在、已锁定状态、未过期
+            if (result.LockInfo != null && result.LockInfo.IsLocked && !result.LockInfo.IsExpired)
+            {
+                // 验证MenuID匹配（如果提供）
+                if (menuId > 0 && result.LockInfo.MenuID > 0 && result.LockInfo.MenuID != menuId)
+                {
+                    _logger.LogWarning($"MenuID不匹配，单据[{billId}]缓存的MenuID:[{result.LockInfo.MenuID}]，请求的MenuID:[{menuId}]");
+                }
+                return result.LockInfo;
+            }
+            // 如果没有有效的锁定信息，返回null
+            return null;
         }
 
 
@@ -229,25 +248,65 @@ namespace RUINORERP.UI.Network.Services
 
         /// <summary>
         /// 更新缓存项（公共方法，用于外部调用）
+        /// <para>优化说明：v2.0.0 - 增强了参数验证、添加了完整的过期时间管理、确保了操作的原子性和线程安全性</para>
         /// </summary>
-        /// <param name="lockInfo">锁定信息</param>
+        /// <param name="lockInfo">锁定信息对象</param>
+        /// <exception cref="ArgumentNullException">当锁定信息为空时抛出</exception>
+        /// <exception cref="ArgumentException">当单据ID无效时抛出</exception>
         public void UpdateCacheItem(LockInfo lockInfo)
         {
+            // 参数验证：确保锁定信息不为空
             if (lockInfo == null)
                 throw new ArgumentNullException(nameof(lockInfo));
             
-            UpdateCache(lockInfo);
-            _logger.LogDebug($"通过外部调用更新锁缓存: 文档 {lockInfo.BillID}, 锁定状态: {lockInfo.IsLocked}");
+            // 添加线程安全的验证：确保锁定信息有效
+            if (lockInfo.BillID <= 0)
+                throw new ArgumentException("单据ID必须大于0", nameof(lockInfo));
+            
+            // 确保设置过期时间：防止缓存项无限期保留
+            if (lockInfo.ExpireTime == DateTime.MinValue)
+            {
+                lockInfo.ExpireTime = DateTime.Now.AddMinutes(CACHE_EXPIRY_MINUTES);
+            }
+            
+            // 确保设置更新时间：用于冲突检测和版本控制
+            if (lockInfo.LastUpdateTime == DateTime.MinValue)
+            {
+                lockInfo.LastUpdateTime = DateTime.Now;
+            }
+            
+            // 线程安全的更新操作：使用显式锁确保缓存更新的原子性
+            // 防止并发更新导致的数据不一致或锁状态冲突
+            lock (_syncLock)
+            {
+                UpdateCache(lockInfo);
+            }
+            
+            // 记录详细的操作日志，便于问题排查和性能监控
+            _logger.LogDebug($"通过外部调用更新锁缓存: 文档 {lockInfo.BillID}, 锁定状态: {lockInfo.IsLocked}, 锁定用户: {lockInfo.LockedUserName}");
         }
 
         /// <summary>
         /// 清除指定单据的缓存
+        /// 确保线程安全的清除操作
         /// </summary>
         /// <param name="billId">单据ID</param>
         public void ClearCache(long billId)
         {
-            _localCache.TryRemove(billId, out _);
-            _logger.LogDebug($"清除文档 {billId} 的锁缓存");
+            if (billId <= 0)
+                throw new ArgumentException("单据ID必须大于0", nameof(billId));
+            
+            // 线程安全的移除操作
+            bool removed = _localCache.TryRemove(billId, out var removedInfo);
+            
+            if (removed && removedInfo != null)
+            {
+                _logger.LogDebug($"清除文档 {billId} 的锁缓存, 之前状态: {(removedInfo.IsLocked ? "已锁定" : "未锁定")}");
+            }
+            else
+            {
+                _logger.LogDebug($"文档 {billId} 的锁缓存不存在，无需清除");
+            }
         }
 
         /// <summary>
@@ -280,14 +339,27 @@ namespace RUINORERP.UI.Network.Services
 
         /// <summary>
         /// 更新缓存（基于锁定信息）
+        /// 确保操作的原子性和线程安全性
         /// </summary>
         /// <param name="lockInfo">锁定信息</param>
         private void UpdateCache(LockInfo lockInfo)
         {
             try
             {
-                _localCache.AddOrUpdate(lockInfo.BillID, lockInfo, (key, oldValue) => lockInfo);
-                _logger.LogDebug($"更新锁缓存: 文档 {lockInfo.BillID}, 锁定用户: {lockInfo.LockedUserName}");
+                // 深拷贝锁定信息，确保缓存中存储的是独立的副本
+                var cacheEntry = lockInfo.Clone() as LockInfo;
+                
+                // 原子操作：确保缓存更新的原子性
+                _localCache.AddOrUpdate(lockInfo.BillID, cacheEntry, (key, oldValue) => 
+                {
+                    // 只有当新值的更新时间晚于旧值，或者旧值已过期时才更新
+                    if (cacheEntry.LastUpdateTime > oldValue.LastUpdateTime || oldValue.IsExpired)
+                    {
+                        _logger.LogDebug($"更新锁缓存: 文档 {lockInfo.BillID}, 锁定用户: {lockInfo.LockedUserName}");
+                        return cacheEntry;
+                    }
+                    return oldValue; // 保留较新的缓存项
+                });
             }
             catch (Exception ex)
             {

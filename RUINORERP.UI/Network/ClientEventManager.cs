@@ -137,30 +137,47 @@ namespace RUINORERP.UI.Network
         /// <summary>
         /// 触发命令接收事件
         /// </summary>
-        /// <param name="commandId">命令ID，标识接收到的命令类型</param>
+        /// <param name="packetModel">数据包模型，包含命令ID和其他相关信息</param>
         /// <param name="data">命令数据，包含命令的具体内容</param>
         public void OnCommandReceived(PacketModel packetModel, object data)
-        {
+        {   
+            if (packetModel == null)
+            {   
+                LogException(new ArgumentNullException(nameof(packetModel)), "尝试触发命令接收事件但数据包为空");
+                return;
+            }
+            
             // 获取事件处理程序的快照，避免在多线程环境下触发时可能发生的问题
             Action<PacketModel, object> handler;
             lock (_lock)
-            {
+            {   
                 handler = CommandReceived;
             }
 
             if (handler == null)
+            {
+                LogException(null, $"命令{packetModel.CommandId}的接收事件没有订阅者");
                 return;
+            }
 
             try
-            {
+            {   
                 // 触发事件
                 handler.Invoke(packetModel, data);
+                _logger?.LogDebug("成功触发命令接收事件: {CommandId}", packetModel.CommandId);
             }
             catch (Exception ex)
-            {
+            {   
                 // 记录异常并触发错误事件
-                LogException(ex, "处理命令接收事件时出错");
-                OnErrorOccurred(new Exception($"处理命令接收事件时出错: {ex.Message}", ex));
+                string errorMessage = $"处理命令接收事件时出错，命令ID: {packetModel.CommandId}";
+                LogException(ex, errorMessage);
+                
+                // 避免在错误处理中又触发异常导致无限循环
+                try
+                {   
+                    OnErrorOccurred(new Exception($"{errorMessage}: {ex.Message}", ex));
+                }
+                catch { }
             }
         }
 
@@ -170,6 +187,9 @@ namespace RUINORERP.UI.Network
         /// <param name="isConnected">连接状态，true表示已连接，false表示未连接</param>
         public void OnConnectionStatusChanged(bool isConnected)
         {
+            // 记录连接状态改变
+            _logger?.LogInformation("连接状态改变为: {Status}", isConnected ? "已连接" : "已断开");
+            
             // 获取事件处理程序的快照
             Action<bool> handler;
             lock (_lock)
@@ -178,18 +198,29 @@ namespace RUINORERP.UI.Network
             }
 
             if (handler == null)
+            {
+                _logger?.LogDebug("连接状态改变事件没有订阅者");
                 return;
+            }
 
             try
             {
                 // 触发事件
                 handler.Invoke(isConnected);
+                _logger?.LogDebug("成功触发连接状态改变事件: {Status}", isConnected ? "已连接" : "已断开");
             }
             catch (Exception ex)
             {
                 // 记录异常并触发错误事件
-                LogException(ex, "处理连接状态改变事件时出错");
-                OnErrorOccurred(new Exception($"处理连接状态改变事件时出错: {ex.Message}", ex));
+                string errorMessage = $"处理连接状态改变事件时出错，状态: {isConnected}";
+                LogException(ex, errorMessage);
+                
+                // 避免在错误处理中又触发异常导致无限循环
+                try
+                {
+                    OnErrorOccurred(new Exception($"{errorMessage}: {ex.Message}", ex));
+                }
+                catch { }
             }
         }
 
@@ -262,6 +293,9 @@ namespace RUINORERP.UI.Network
         /// </summary>
         public void OnReconnectFailed()
         {
+            // 记录重连失败
+            _logger?.LogWarning("触发重连失败事件");
+            
             // 获取事件处理程序的快照
             Action handler;
             lock (_lock)
@@ -270,18 +304,29 @@ namespace RUINORERP.UI.Network
             }
 
             if (handler == null)
+            {
+                _logger?.LogDebug("重连失败事件没有订阅者");
                 return;
+            }
 
             try
             {
                 // 触发事件
                 handler.Invoke();
+                _logger?.LogDebug("成功触发重连失败事件");
             }
             catch (Exception ex)
             {
                 // 记录异常并触发错误事件
-                LogException(ex, "处理重连失败事件时出错");
-                OnErrorOccurred(new Exception($"处理重连失败事件时出错: {ex.Message}", ex));
+                string errorMessage = "处理重连失败事件时出错";
+                LogException(ex, errorMessage);
+                
+                // 避免在错误处理中又触发异常导致无限循环
+                try
+                {
+                    OnErrorOccurred(new Exception($"{errorMessage}: {ex.Message}", ex));
+                }
+                catch { }
             }
         }
 

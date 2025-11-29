@@ -17,6 +17,7 @@ namespace RUINORERP.Server.Network.Services
     /// 提供锁定信息的存储、查询、统计和监控功能
     /// 扩展功能：处理器状态和会话状态管理
     /// </summary>
+    [Obsolete("此类已废弃，请使用  IntegratedServerLockManager 代替")]
     public class LockInfoManager
     {
         // 锁定信息存储 - 按单据ID索引

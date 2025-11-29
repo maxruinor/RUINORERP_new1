@@ -40,12 +40,12 @@ namespace RUINORERP.Server.Controls
 
         // 是否需要完整刷新标志
         private bool _needsFullRefresh = false;
-        
+
         /// <summary>
         /// 断开连接的会话在UI中的保留时间（分钟）
         /// </summary>
         private int _disconnectedSessionRetentionMinutes = 2;
-        
+
         /// <summary>
         /// 上次立即刷新时间，用于避免过于频繁的刷新
         /// </summary>
@@ -674,7 +674,7 @@ namespace RUINORERP.Server.Controls
                         _needsFullRefresh = false;
                     }
                     FullRefreshFromSessions();
-                    
+
                     // 确保UI完全刷新
                     if (!listView1.IsDisposed)
                     {
@@ -700,30 +700,36 @@ namespace RUINORERP.Server.Controls
         private void MarkForFullRefresh()
         {
             _needsFullRefresh = true;
-            
+
             // 尝试立即触发刷新而不等待定时器周期
             // 但避免过于频繁的刷新
             if (DateTime.Now.Subtract(_lastImmediateRefresh).TotalSeconds > 5)
             {
                 _lastImmediateRefresh = DateTime.Now;
-                
-                // 在UI线程上执行刷新
-                BeginInvoke((MethodInvoker)delegate
-                {
-                    try
+
+                // 检查控件句柄是否已创建，避免在句柄创建前调用BeginInvoke导致异常
+                if (IsHandleCreated && !IsDisposed)
+                {                    // 在UI线程上执行刷新
+                    BeginInvoke((MethodInvoker)delegate
                     {
-                        if (!IsDisposed && !listView1.IsDisposed)
+                        try
                         {
-                            // 执行轻量级同步而不是完整刷新，以避免性能问题
-                            SyncWithSessionService();
-                            listView1.Refresh();
+                            if (!IsDisposed && !listView1.IsDisposed)
+                            {                                // 执行轻量级同步而不是完整刷新，以避免性能问题
+                                SyncWithSessionService();
+                                listView1.Refresh();
+                            }
                         }
-                    }
-                    catch (Exception ex)
-                    {
-                        LogError("立即刷新失败", ex);
-                    }
-                });
+                        catch (Exception ex)
+                        {
+                            LogError("立即刷新失败", ex);
+                        }
+                    });
+                }
+                else
+                {                    // 控件句柄尚未创建，记录日志并依赖定时器刷新
+                    LogStatusChange(null, "控件句柄尚未创建，延迟刷新操作，将由定时器处理");
+                }
             }
         }
 
@@ -835,19 +841,19 @@ namespace RUINORERP.Server.Controls
                 LogError("FullRefreshFromSessions: 控件已被释放，无法执行刷新操作");
                 return;
             }
-            
+
             // 初始化状态计数器
             int newCount = 0;
             int updatedCount = 0;
             int removedCount = 0;
             int statusChangedCount = 0;
             bool refreshSuccessful = false;
-            
+
             try
             {
                 // 开始更新，避免UI闪烁
                 listView1.BeginUpdate();
-                
+
                 // 获取所有当前会话 - 添加超时保护
                 var currentSessions = new List<SessionInfo>();
                 try
@@ -863,7 +869,7 @@ namespace RUINORERP.Server.Controls
                     LogError($"获取会话列表时发生超时或错误: {getSessionsEx.Message}", getSessionsEx);
                     currentSessions = new List<SessionInfo>();
                 }
-                
+
                 var currentSessionIds = new HashSet<string>(currentSessions.Select(s => s.SessionID));
 
                 // 添加新会话或更新现有会话
@@ -908,7 +914,7 @@ namespace RUINORERP.Server.Controls
                 // 移除不存在的会话或已断开且超过保留时间的会话
                 var sessionsToRemove = new List<string>();
                 var now = DateTime.Now;
-                
+
                 foreach (var sessionId in _sessionItemMap.Keys.ToList())
                 {
                     try
@@ -948,7 +954,7 @@ namespace RUINORERP.Server.Controls
                         LogError($"移除会话 {sessionId} 时出错: {removeEx.Message}", removeEx);
                     }
                 }
-                
+
                 refreshSuccessful = true;
 
                 // 只在有变化时记录日志
@@ -979,7 +985,7 @@ namespace RUINORERP.Server.Controls
                 {
                     LogError("刷新UI时发生错误", uiEx);
                 }
-                
+
                 // 更新统计信息
                 try
                 {
@@ -989,14 +995,14 @@ namespace RUINORERP.Server.Controls
                 {
                     LogError("更新统计信息失败", statsEx);
                 }
-                
+
                 // 重置刷新状态
                 if (refreshSuccessful)
                 {
                     _lastFullUpdate = DateTime.Now;
                     _needsFullRefresh = false;
                 }
-                
+
                 // 记录刷新结果
                 LogStatusChange(null, $"刷新操作{(refreshSuccessful ? "成功" : "失败")}: 新增={newCount}, 更新={updatedCount}, 移除={removedCount}");
             }
@@ -1022,7 +1028,7 @@ namespace RUINORERP.Server.Controls
                 listView1.Items.Clear();
                 _sessionItemMap.Clear();
                 listView1.EndUpdate();
-                
+
                 LogStatusChange(null, "所有会话项已清除");
             }
             catch (Exception ex)
@@ -1035,7 +1041,7 @@ namespace RUINORERP.Server.Controls
                 catch { }
             }
         }
-        
+
         private void SyncWithSessionService()
         {
             // 检查控件是否已经被释放
@@ -1044,10 +1050,10 @@ namespace RUINORERP.Server.Controls
                 LogError("SyncWithSessionService: 控件已被释放，无法执行同步操作");
                 return;
             }
-            
+
             int updatedCount = 0;
             bool syncSuccessful = false;
-            
+
             try
             {
                 // 获取当前所有会话 - 添加异常处理
@@ -1083,13 +1089,13 @@ namespace RUINORERP.Server.Controls
                         LogError($"同步更新会话 {sessionInfo.SessionID} 时出错: {updateEx.Message}", updateEx);
                     }
                 }
-                
+
                 syncSuccessful = true;
-                
+
                 if (updatedCount > 0)
                 {
                     LogStatusChange(null, $"同步完成，更新 {updatedCount} 个会话状态");
-                    
+
                     // 同步完成后立即刷新UI
                     try
                     {
@@ -1240,7 +1246,7 @@ namespace RUINORERP.Server.Controls
             }
 
             if (sessionInfo == null) return;
-            
+
             // 检查控件是否已经被释放
             if (IsDisposed || listView1.IsDisposed)
             {
@@ -1251,7 +1257,7 @@ namespace RUINORERP.Server.Controls
             try
             {
                 bool isSignificantChange = false;
-                
+
                 // 更新或创建会话项
                 if (_sessionItemMap.TryGetValue(sessionInfo.SessionID, out var existingItem))
                 {
@@ -1288,7 +1294,7 @@ namespace RUINORERP.Server.Controls
 
                     // 判断是否为重要变化
                     isSignificantChange = statusChanged || moduleChanged || formChanged;
-                    
+
                     // 只在有关键变化时记录日志
                     if (statusChanged)
                     {
@@ -1316,11 +1322,11 @@ namespace RUINORERP.Server.Controls
                 if (sessionInfo.IsAuthenticated || !sessionInfo.IsConnected || isSignificantChange)
                 {
                     UpdateStatistics();
-                    
+
                     // 标记需要完整刷新，确保UI能立即反映所有变化
                     MarkForFullRefresh();
                 }
-                
+
                 // 立即刷新UI确保用户能看到最新状态
                 try
                 {
@@ -1717,13 +1723,13 @@ namespace RUINORERP.Server.Controls
             {
                 // 移除协议部分
                 string hostAndPort = serverInfo.Replace("http://", "").Replace("https://", "");
-                
+
                 // 查找端口分隔符
                 int portSeparatorIndex = hostAndPort.LastIndexOf(':');
-                
+
                 string serverAddress;
                 string serverPort;
-                
+
                 if (portSeparatorIndex > 0)
                 {
                     // 分离IP和端口
@@ -1736,7 +1742,7 @@ namespace RUINORERP.Server.Controls
                     serverAddress = hostAndPort;
                     serverPort = "80";
                 }
-                
+
                 return (serverAddress, serverPort);
             }
             catch (Exception ex)

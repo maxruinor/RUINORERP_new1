@@ -1,10 +1,9 @@
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Autofac;
 using RUINORERP.PacketSpec.Serialization;
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Models.Common;
 using RUINORERP.PacketSpec.Commands.Authentication;
-using RUINORERP.PacketSpec.Commands.Lock;
 
 using Microsoft.Extensions.Configuration;
 using RUINORERP.Model.ConfigModel;
@@ -118,16 +117,11 @@ namespace RUINORERP.PacketSpec.DI
             // 注册命令类型分类器
             services.AddSingleton<CommandTypeClassifier>();
 
-            // 注册分布式锁相关服务
-            services.AddSingleton<ILocalDistributedLock, LocalDistributedLock>();
-            services.AddSingleton<SmartLockRenewer>();
+            //// 注册分布式锁相关服务
+            //services.AddSingleton<ILocalDistributedLock, LocalDistributedLock>();
+            //services.AddSingleton<SmartLockRenewer>();
 
-            // 注意：CommandPacketAdapter已由ICommandCreationService替代，不再需要注册
-
-
-
-            // 注意：不注册抽象的RequestHandlerBase<TRequest, TResponse>类
-            // 具体的请求处理器应该在各自的服务项目中注册
+          
         }
 
         /// <summary>
@@ -227,14 +221,14 @@ namespace RUINORERP.PacketSpec.DI
                 .As<TokenManager>()
                 .SingleInstance();
 
-            // 注册分布式锁相关服务
-            builder.RegisterType<LocalDistributedLock>()
-                .As<ILocalDistributedLock>()
-                .SingleInstance();
+            //// 注册分布式锁相关服务
+            //builder.RegisterType<LocalDistributedLock>()
+            //    .As<ILocalDistributedLock>()
+            //    .SingleInstance();
 
-            builder.RegisterType<SmartLockRenewer>()
-                .AsSelf()
-                .SingleInstance();
+            //builder.RegisterType<SmartLockRenewer>()
+            //    .AsSelf()
+            //    .SingleInstance();
 
             // 注意：不注册抽象的RequestHandlerBase<TRequest, TResponse>类
             // 具体的请求处理器应该在各自的服务项目中注册

@@ -345,8 +345,7 @@ namespace RUINORERP.Server.Network.Services
                     // 强制移除锁
                     if (_documentLocks.TryRemove(lockInfo.BillID, out _))
                     {
-                        _logger.LogWarning("管理员强制释放单据 {BillId} 的锁，原锁主: {UserId}, 锁ID: {LockId}",
-                            lockInfo.BillID, existingLock.LockedUserId, existingLock.LockId);
+                        _logger.LogWarning("管理员强制释放单据 {BillId} 的锁，原锁主: {UserId}", lockInfo.BillID, existingLock.LockedUserId);
 
                         return new LockResponse
                         {
@@ -546,7 +545,7 @@ namespace RUINORERP.Server.Network.Services
                 var locksToUnlock = _documentLocks
                     .Where(kvp => kvp.Value.IsLocked &&
                                    kvp.Value.LockedUserId == userId &&
-                                   kvp.Value.BillData?.BizType == (BizType)bizType)
+                                   kvp.Value.bizType == (BizType)bizType)
                     .Select(kvp => kvp.Key)
                     .ToList();
 
@@ -657,7 +656,7 @@ namespace RUINORERP.Server.Network.Services
                             ExpireTime = lockInfo.ExpireTime,
                             IsLocked = lockInfo.IsLocked,
 
-                            BillData = lockInfo.BillData,
+                            bizType = lockInfo.bizType,
 
                             SessionId = lockInfo.SessionId
                         };
@@ -712,7 +711,7 @@ namespace RUINORERP.Server.Network.Services
                         ExpireTime = lockInfo.ExpireTime,
                         IsLocked = lockInfo.IsLocked,
 
-                        BillData = lockInfo.BillData,
+                        bizType = lockInfo.bizType,
 
                         SessionId = lockInfo.SessionId
                     };
@@ -1002,7 +1001,6 @@ namespace RUINORERP.Server.Network.Services
                     SessionId = lockInfo.SessionId,
                     LockTime = DateTime.Now,
                     ExpireTime = lockInfo.ExpireTime,
-                    LockId = lockInfo.LockId,
                     LastHeartbeat = DateTime.Now,
                     HeartbeatCount = 1,
                     IsLocked = true,
@@ -1281,12 +1279,12 @@ namespace RUINORERP.Server.Network.Services
                         stats.LocksByStatus[status] = 1;
 
                     // 统计业务类型（如果有）
-                    if (lockInfo.BillData != null && lockInfo.BillData.BizType != 0)
+                    if (lockInfo.bizType != null && lockInfo.bizType != 0)
                     {
-                        if (stats.LocksByBizType.ContainsKey(lockInfo.BillData.BizType))
-                            stats.LocksByBizType[lockInfo.BillData.BizType]++;
+                        if (stats.LocksByBizType.ContainsKey(lockInfo.bizType))
+                            stats.LocksByBizType[lockInfo.bizType]++;
                         else
-                            stats.LocksByBizType[lockInfo.BillData.BizType] = 1;
+                            stats.LocksByBizType[lockInfo.bizType] = 1;
                     }
                 }
 

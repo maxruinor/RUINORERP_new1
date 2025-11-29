@@ -1480,8 +1480,11 @@ namespace RUINORERP.UI.Network
 
                 if (disposing)
                 {
-                    // 取消重连失败事件订阅
+                    // 取消所有事件订阅，防止内存泄漏
                     _connectionManager.ReconnectFailed -= OnReconnectFailed;
+                    _connectionManager.ConnectionStateChanged -= OnConnectionStateChanged;
+                    _connectionManager.ConnectionStateChanged -= OnConnectionStateChangedForHeartbeat;
+                    _socketClient.Received -= OnReceived;
                     // 停止心跳
                     try
                     {

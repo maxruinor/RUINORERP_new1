@@ -13,6 +13,7 @@ namespace RUINORERP.UI.Network
     /// <summary>
     /// 心跳管理器 - 专注于核心的心跳检测功能
     /// 负责定期检测与服务器的连接状态
+    [obs]过时
     /// </summary>
     public class HeartbeatManager : IDisposable
     {

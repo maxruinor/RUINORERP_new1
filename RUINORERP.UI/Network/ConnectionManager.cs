@@ -36,6 +36,12 @@ namespace RUINORERP.UI.Network
         public event Action<bool> ConnectionStateChanged;
 
         /// <summary>
+        /// 重连失败事件
+        /// 当达到最大重连次数时触发
+        /// </summary>
+        public event Action ReconnectFailed;
+
+        /// <summary>
         /// 当前连接状态
         /// </summary>
         public bool IsConnected => _isConnected && _socketClient.IsConnected;
@@ -262,6 +268,8 @@ namespace RUINORERP.UI.Network
                 {
                     _logger?.LogWarning("已达到最大重连次数 {MaxAttempts}，停止重连", _config.MaxReconnectAttempts);
                     _isReconnecting = false;
+                    // 触发重连失败事件
+                    OnReconnectFailed();
                     break;
                 }
 
@@ -350,6 +358,22 @@ namespace RUINORERP.UI.Network
         }
 
         /// <summary>
+        /// 触发重连失败事件
+        /// </summary>
+        private void OnReconnectFailed()
+        {
+            try
+            {
+                ReconnectFailed?.Invoke();
+                _logger?.LogDebug("触发重连失败事件");
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogWarning(ex, "触发重连失败事件时发生异常");
+            }
+        }
+
+        /// <summary>
         /// 释放资源
         /// </summary>
         public void Dispose()
@@ -369,6 +393,10 @@ namespace RUINORERP.UI.Network
                 {
                     _socketClient.Closed -= OnSocketClosed;
                 }
+                
+                // 清空所有事件处理器
+                ConnectionStateChanged = null;
+                ReconnectFailed = null;
 
                 // 断开连接
                 _ = DisconnectAsync();

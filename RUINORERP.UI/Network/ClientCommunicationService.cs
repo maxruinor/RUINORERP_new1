@@ -252,6 +252,10 @@ namespace RUINORERP.UI.Network
             // 订阅连接状态变化事件以管理心跳
             _connectionManager.ConnectionStateChanged -= OnConnectionStateChangedForHeartbeat;
             _connectionManager.ConnectionStateChanged += OnConnectionStateChangedForHeartbeat;
+            
+            // 订阅重连失败事件
+            _connectionManager.ReconnectFailed -= OnReconnectFailed;
+            _connectionManager.ReconnectFailed += OnReconnectFailed;
 
             // 注意：不再在构造函数中初始化命令调度器，以避免循环依赖
             // 而是通过外部调用InitializeClientCommandDispatcherAsync方法进行初始化
@@ -306,6 +310,23 @@ namespace RUINORERP.UI.Network
             {
                 // 连接断开，停止心跳
                 StopHeartbeat();
+            }
+        }
+        
+        /// <summary>
+        /// 处理连接管理器重连失败事件
+        /// </summary>
+        private void OnReconnectFailed()
+        {
+            try
+            {
+                _logger?.LogWarning("连接管理器报告重连失败，触发客户端事件管理器的重连失败事件");
+                // 触发客户端事件管理器的重连失败事件
+                _clientEventManager.OnReconnectFailed();
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "处理重连失败事件时发生异常");
             }
         }
 
@@ -1459,6 +1480,8 @@ namespace RUINORERP.UI.Network
 
                 if (disposing)
                 {
+                    // 取消重连失败事件订阅
+                    _connectionManager.ReconnectFailed -= OnReconnectFailed;
                     // 停止心跳
                     try
                     {

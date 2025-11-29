@@ -17,21 +17,6 @@ namespace RUINORERP.PacketSpec.Models.BizCodeGenerate
         /// </summary>
         public string GeneratedCode { get; set; }
 
-        /// <summary>
-        /// 是否生成成功
-        /// </summary>
-        public bool IsSuccess { get; set; }
-
-        /// <summary>
-        /// 响应消息
-        /// </summary>
-        public string Message { get; set; }
-
-        /// <summary>
-        /// 错误消息
-        /// 仅在生成失败时包含错误详情
-        /// </summary>
-        public string ErrorMessage { get; set; }
 
         /// <summary>
         /// 命令类型
@@ -39,10 +24,6 @@ namespace RUINORERP.PacketSpec.Models.BizCodeGenerate
         /// </summary>
         public string CommandType { get; set; }
 
-        /// <summary>
-        /// 编码生成时间戳
-        /// </summary>
-        public long Timestamp { get; set; }
 
         /// <summary>
         /// 规则配置列表

@@ -926,8 +926,9 @@ namespace RUINORERP.Server.Network.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "{OperationType}时发生异常: 单据ID={BillId}", operationType, billId);
-                return LockResponseFactory.CreateExceptionError(ex, operationType, billId);
+                string msg = $"{operationType}时发生异常: 单据ID={billId}";
+                _logger.LogError(ex, msg);
+                return LockResponseFactory.CreateFailedResponse(ex.Message + msg);
             }
         }
 
@@ -1264,19 +1265,11 @@ namespace RUINORERP.Server.Network.Services
                     AverageLockAge = avgLockAge,
                     HeartbeatEnabled = true,
                     LocksByBizType = new Dictionary<BizType, int>(),
-                    LocksByStatus = new Dictionary<LockStatus, int>()
                 };
 
                 // 统计按状态分布
                 foreach (var lockInfo in lockInfos)
                 {
-                    var status = lockInfo.IsExpired ? LockStatus.AboutToExpire :
-                                lockInfo.IsLocked ? LockStatus.Locked : LockStatus.AboutToExpire;
-
-                    if (stats.LocksByStatus.ContainsKey(status))
-                        stats.LocksByStatus[status]++;
-                    else
-                        stats.LocksByStatus[status] = 1;
 
                     // 统计业务类型（如果有）
                     if (lockInfo.bizType != null && lockInfo.bizType != 0)
@@ -1309,7 +1302,6 @@ namespace RUINORERP.Server.Network.Services
                     AverageLockAge = 0,
                     HeartbeatEnabled = true,
                     LocksByBizType = new Dictionary<BizType, int>(),
-                    LocksByStatus = new Dictionary<LockStatus, int>()
                 };
             }
         }
@@ -1322,7 +1314,7 @@ namespace RUINORERP.Server.Network.Services
         /// <returns>错误响应</returns>
         private LockResponse CreateErrorResponse(LockInfo lockInfo, string message)
         {
-            return LockResponseFactory.CreateError(message, lockInfo?.BillID ?? 0);
+            return LockResponseFactory.CreateFailedResponse(message, lockInfo);
         }
 
 
@@ -1366,21 +1358,21 @@ namespace RUINORERP.Server.Network.Services
             {
                 // 参数验证
                 if (string.IsNullOrEmpty(lockKey))
-                    return LockResponseFactory.CreateParameterError("锁键");
+                    return LockResponseFactory.CreateFailedResponse("锁键为空");
 
                 if (userId <= 0)
-                    return LockResponseFactory.CreateInvalidUserIdError();
+                    return LockResponseFactory.CreateFailedResponse("用户ID小于0");
 
                 // 从锁键中提取单据ID
                 if (!long.TryParse(lockKey.Replace("lock:document:", ""), out long billId))
-                    return LockResponseFactory.CreateError("锁键格式无效，无法解析单据ID");
+                    return LockResponseFactory.CreateFailedResponse("锁键格式无效，无法解析单据ID");
 
                 // 使用统一解锁方法
                 return await ExecuteUnlockAsync(billId, userId, false, "孤儿锁清理解锁");
             }
             catch (Exception ex)
             {
-                return LockResponseFactory.CreateExceptionError(ex, "孤儿锁清理解锁");
+                return LockResponseFactory.CreateFailedResponse("孤儿锁清理解锁："+ex.Message);
             }
         }
 
@@ -1396,21 +1388,21 @@ namespace RUINORERP.Server.Network.Services
             {
                 // 参数验证
                 if (string.IsNullOrEmpty(lockKey))
-                    return LockResponseFactory.CreateParameterError("锁键");
+                    return LockResponseFactory.CreateFailedResponse("锁键为空");
 
                 if (userId <= 0)
-                    return LockResponseFactory.CreateInvalidUserIdError();
+                    return LockResponseFactory.CreateFailedResponse("用户ID小于0");
 
                 // 从锁键中提取单据ID
                 if (!long.TryParse(lockKey.Replace("lock:document:", ""), out long billId))
-                    return LockResponseFactory.CreateError("锁键格式无效，无法解析单据ID");
+                    return LockResponseFactory.CreateFailedResponse("锁键格式无效，无法解析单据ID");
 
                 // 使用统一强制解锁方法
                 return await ExecuteUnlockAsync(billId, userId, true, "孤儿锁清理强制解锁");
             }
             catch (Exception ex)
             {
-                return LockResponseFactory.CreateExceptionError(ex, "孤儿锁清理强制解锁");
+                return LockResponseFactory.CreateFailedResponse("孤儿锁清理解锁：" + ex.Message);
             }
         }
 

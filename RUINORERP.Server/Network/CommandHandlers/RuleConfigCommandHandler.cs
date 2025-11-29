@@ -94,7 +94,6 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 {
                     IsSuccess = true,
                     RuleConfigs = configs,
-                    Timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
                 };
             }
             catch (Exception ex)
@@ -124,7 +123,6 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 {
                     IsSuccess = true,
                     Message = "规则配置保存成功",
-                    Timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
                 };
             }
             catch (Exception ex)
@@ -154,7 +152,6 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 {
                     IsSuccess = true,
                     Message = "规则配置删除成功",
-                    Timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
                 };
             }
             catch (Exception ex)
@@ -175,7 +172,6 @@ namespace RUINORERP.Server.Network.CommandHandlers
             {
                 IsSuccess = false,
                 ErrorMessage = errorMessage,
-                Timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
             };
         }
     }

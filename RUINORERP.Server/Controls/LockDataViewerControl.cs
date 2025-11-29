@@ -826,16 +826,7 @@ namespace RUINORERP.Server.Controls
                             }
                         }
 
-                        // 添加状态统计
-                        if (stats.LocksByStatus != null && stats.LocksByStatus.Count > 0)
-                        {
-                            message.AppendLine();
-                            message.AppendLine("=== 状态统计 ===");
-                            foreach (var status in stats.LocksByStatus)
-                            {
-                                message.AppendLine($"{status.Key}: {status.Value}");
-                            }
-                        }
+                       
 
                         // 添加时间戳
                         message.AppendLine();

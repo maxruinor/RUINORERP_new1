@@ -1,5 +1,6 @@
 using Azure.Core;
 using Microsoft.Extensions.Logging;
+using Microsoft.VisualBasic;
 using RUINORERP.Business.CommService;
 using RUINORERP.Common;
 using RUINORERP.Model;
@@ -301,14 +302,20 @@ namespace RUINORERP.Server.Network.CommandHandlers
 
                 // 查询锁状态
                 var lockInfo = _lockManagerService.GetLockInfo(validation.LockRequest.LockInfo.BillID);
+                if (lockInfo == null)
+                {
+                    lockInfo = new LockInfo();
+                    lockInfo.BillID = validation.LockRequest.LockInfo.BillID;
+                    lockInfo.IsLocked = false;
+                }
                 var response = new LockResponse
                 {
                     IsSuccess = true,
                     Message = "锁状态查询成功",
                     LockInfo = lockInfo,
-                    Status = lockInfo?.Status ?? LockStatus.Unlocked,
-                    RemainingLockTimeMs = lockInfo?.RemainingLockTimeMs ?? 0,
                 };
+                // 模拟异步操作 要Task方法签名一致
+                await Task.CompletedTask;
                 return response;
 
             }

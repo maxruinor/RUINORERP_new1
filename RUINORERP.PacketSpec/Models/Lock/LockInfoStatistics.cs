@@ -48,12 +48,6 @@ namespace RUINORERP.PacketSpec.Models.Lock
         public Dictionary<BizType, int> LocksByBizType { get; set; }
 
         /// <summary>
-        /// 按状态统计的锁定数
-        /// </summary>
-        [DataMember]
-        public Dictionary<LockStatus, int> LocksByStatus { get; set; }
-
-        /// <summary>
         /// 历史记录数
         /// </summary>
         [DataMember]
@@ -113,7 +107,6 @@ namespace RUINORERP.PacketSpec.Models.Lock
         public LockInfoStatistics()
         {
             LocksByBizType = new Dictionary<BizType, int>();
-            LocksByStatus = new Dictionary<LockStatus, int>();
         }
     }
 

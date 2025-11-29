@@ -66,7 +66,21 @@ namespace RUINORERP.PacketSpec.Models.Lock
         /// </summary>
         [DataMember]
         public long MenuID { get; set; }
-
+        
+        /// <summary>
+        /// 业务名称
+        /// 锁定的业务模块名称
+        /// </summary>
+        [DataMember]
+        public string BizName { get; set; } = string.Empty;
+        
+        /// <summary>
+        /// 菜单名称
+        /// 锁定的菜单名称
+        /// </summary>
+        [DataMember]
+        public string MenuName { get; set; } = string.Empty;
+        
         /// <summary>
         /// 单据信息
         /// 关联的单据数据
@@ -150,53 +164,7 @@ namespace RUINORERP.PacketSpec.Models.Lock
             get { return !ExpireTime.HasValue || DateTime.Now > ExpireTime.Value; }
         }
 
-        /// <summary>
-        /// 锁定状态
-        /// 统一管理锁定实体的状态，确保状态一致性
-        /// </summary>
-        [DataMember]
-        public LockStatus Status
-        {
-            get
-            {
-                // 首先检查IsLocked标志
-                if (!IsLocked)
-                    return LockStatus.Unlocked;
-
-                // 检查是否已过期
-                if (IsExpired)
-                {
-                    // 自动将过期的锁定设置为未锁定状态
-                    IsLocked = false;
-                    return LockStatus.Unlocked;
-                }
-
-                // 检查是否即将过期
-                if (IsAboutToExpire)
-                    return LockStatus.AboutToExpire;
-
-                // 默认锁定状态
-                return LockStatus.Locked;
-            }
-            set
-            {
-                // 根据设置的值更新IsLocked状态，确保状态一致性
-                switch (value)
-                {
-                    case LockStatus.Unlocked:
-                        IsLocked = false;
-                        break;
-                    case LockStatus.Locked:
-                    case LockStatus.AboutToExpire:
-                        IsLocked = true;
-                        break;
-                    default:
-                        // 对于未知状态，保持当前IsLocked值不变
-                        break;
-                }
-            }
-        }
-
+     
         /// <summary>
         /// 检查锁是否为孤儿锁（2分钟无心跳）
         /// </summary>
@@ -384,29 +352,6 @@ namespace RUINORERP.PacketSpec.Models.Lock
     }
 
     /// <summary>
-    /// 锁定状态枚举
-    /// </summary>
-    [DataContract]
-    public enum LockStatus
-    {
-        /// <summary>
-        /// 锁定
-        /// </summary>
-        [EnumMember]
-        Locked = 1,
-        /// <summary>
-        /// 未锁定
-        /// </summary>
-        [EnumMember]
-        Unlocked = 2,
-        /// <summary>
-        /// 即将过期
-        /// </summary>
-        [EnumMember]
-        AboutToExpire = 3,
-    }
-
-    /// <summary>
     /// 锁定类型枚举
     /// </summary>
     [DataContract]
@@ -434,3 +379,4 @@ namespace RUINORERP.PacketSpec.Models.Lock
         IntentShared = 3
     }
 }
+

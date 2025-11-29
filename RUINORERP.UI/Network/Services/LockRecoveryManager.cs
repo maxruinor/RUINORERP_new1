@@ -131,8 +131,6 @@ namespace RUINORERP.UI.Network.Services
 
             try
             {
-
-
                 if (MainForm.Instance.AppContext.CurrentUser == null || MainForm.Instance.AppContext.CurUserInfo.UserInfo == null)
                 {
                     return;
@@ -339,7 +337,7 @@ namespace RUINORERP.UI.Network.Services
                         try
                         {
                             // 尝试正常解锁
-                            var response = await _lockService.UnlockBillAsync(heldLock.BillID, currentUserId);
+                            var response = await _lockService.UnlockBillAsync(heldLock.BillID);
 
                             if (response?.IsSuccess == true)
                             {
@@ -348,7 +346,7 @@ namespace RUINORERP.UI.Network.Services
                             else
                             {
                                 // 如果正常解锁失败，尝试强制解锁
-                                var forceResponse = await _lockService.UnlockBillAsync(heldLock.BillID, currentUserId);
+                                var forceResponse = await _lockService.UnlockBillAsync(heldLock.BillID);
                                 if (forceResponse?.IsSuccess == true)
                                 {
                                     _logger.LogWarning($"强制释放锁: 单据 {heldLock.BillID}, 原因: {reason}");

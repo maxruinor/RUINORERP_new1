@@ -346,7 +346,7 @@ namespace RUINORERP.Server.Network.Services
                     {
                         var unlocked = await _lockManager.UnlockAsync($"lock:document:{userLock.BillID}", sessionInfo.UserId);
 
-                        if (unlocked.IsSuccess && unlocked.LockInfo.Status==LockStatus.Unlocked)
+                        if (unlocked.IsSuccess && unlocked.LockInfo.IsLocked==false)
                         {
                             _logger.LogInformation($"释放会话锁成功: 单据 {userLock.BillID}, 会话 {sessionInfo.SessionId}, 用户: {sessionInfo.UserName}");
                         }

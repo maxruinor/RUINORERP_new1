@@ -15,7 +15,7 @@ namespace RUINORERP.PacketSpec.Validation
     /// </summary>
     public class ValidationService
     {
-        private readonly ILogger<ValidationService> _logger;
+ 
 
         private static readonly ConcurrentDictionary<Type, IValidator> _validators = new ConcurrentDictionary<Type, IValidator>();
         private static ValidationService _instance;

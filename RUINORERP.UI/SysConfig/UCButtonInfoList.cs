@@ -38,7 +38,10 @@ namespace RUINORERP.UI.BI
         {
             InitializeComponent();
             base.EditForm = typeof(UCButtonInfoEdit);
-
+            if (!this.DesignMode)
+            {
+                MenuAssemblylist = UIHelper.RegisterForm();
+            }
         }
         private void button提取重复数据_Click(object sender, EventArgs e)
         {
@@ -195,7 +198,8 @@ namespace RUINORERP.UI.BI
 
 
         }
-        List<MenuAttrAssemblyInfo> MenuAssemblylist = UIHelper.RegisterForm();
+        List<MenuAttrAssemblyInfo> MenuAssemblylist = new List<MenuAttrAssemblyInfo>();
+       
         private async void NewSumDataGridView_检测按钮是否存在(object sender, EventArgs e)
         {
             dataGridView1.UseSelectedColumn = true;

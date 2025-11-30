@@ -126,6 +126,7 @@
   <ItemGroup>
     <Folder Include="Commands\Lock\" />
     <Folder Include="Exceptions\" />
+    <Folder Include="Forms\" />
   </ItemGroup>
 
 </Project>

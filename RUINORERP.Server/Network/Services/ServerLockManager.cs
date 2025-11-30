@@ -1094,6 +1094,7 @@ namespace RUINORERP.Server.Network.Services
                 var serverLockInfo = new LockInfo
                 {
                     BillID = lockInfo.BillID,
+                    BillNo=lockInfo.BillNo,
                     LockedUserId = lockInfo.LockedUserId,
                     LockedUserName = lockInfo.LockedUserName,
                     SessionId = lockInfo.SessionId,

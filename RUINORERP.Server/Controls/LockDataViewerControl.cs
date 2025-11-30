@@ -25,6 +25,8 @@ namespace RUINORERP.Server.Controls
             InitializeComponent();
             InitializeTimer();
             InitializeData();
+            // 移除重复的事件订阅，避免双击时显示两次详细信息
+            // dataGridViewData.CellDoubleClick += dataGridViewData_CellDoubleClick;
         }
 
         private ContextMenuStrip contextMenuStrip;
@@ -288,43 +290,27 @@ namespace RUINORERP.Server.Controls
                 // 设置列宽自动调整
                 dataGridViewData.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells;
 
-                // 添加LockInfo类的所有属性作为列
+                // 添加最重要的锁定信息列
                 
-                // 基本标识属性
-                dataGridViewData.Columns.Add(new DataGridViewTextBoxColumn
-                {
-                    DataPropertyName = "LockKey",
-                    HeaderText = "锁定键",
-                    Name = "colLockKey",
-                    FillWeight = 12
-                });
-
+                // 单据标识
                 dataGridViewData.Columns.Add(new DataGridViewTextBoxColumn
                 {
                     DataPropertyName = "BillID",
                     HeaderText = "单据ID",
                     Name = "colBillID",
-                    FillWeight = 8
+                    FillWeight = 10
                 });
 
-                // 用户相关属性
-                dataGridViewData.Columns.Add(new DataGridViewTextBoxColumn
-                {
-                    DataPropertyName = "LockedUserId",
-                    HeaderText = "锁定用户ID",
-                    Name = "colLockedUserId",
-                    FillWeight = 8
-                });
-
+                // 用户信息
                 dataGridViewData.Columns.Add(new DataGridViewTextBoxColumn
                 {
                     DataPropertyName = "LockedUserName",
                     HeaderText = "锁定用户名",
                     Name = "colLockedUserName",
-                    FillWeight = 10
+                    FillWeight = 12
                 });
 
-                // 时间相关属性
+                // 时间信息
                 dataGridViewData.Columns.Add(new DataGridViewTextBoxColumn
                 {
                     DataPropertyName = "LockTime",
@@ -343,31 +329,13 @@ namespace RUINORERP.Server.Controls
                     DefaultCellStyle = new DataGridViewCellStyle { Format = "yyyy-MM-dd HH:mm:ss" }
                 });
 
-                dataGridViewData.Columns.Add(new DataGridViewTextBoxColumn
-                {
-                    DataPropertyName = "LastHeartbeat",
-                    HeaderText = "最后心跳时间",
-                    Name = "colLastHeartbeat",
-                    FillWeight = 15,
-                    DefaultCellStyle = new DataGridViewCellStyle { Format = "yyyy-MM-dd HH:mm:ss" }
-                });
-
-                dataGridViewData.Columns.Add(new DataGridViewTextBoxColumn
-                {
-                    DataPropertyName = "LastUpdateTime",
-                    HeaderText = "最后更新时间",
-                    Name = "colLastUpdateTime",
-                    FillWeight = 15,
-                    DefaultCellStyle = new DataGridViewCellStyle { Format = "yyyy-MM-dd HH:mm:ss" }
-                });
-
-                // 状态相关属性
+                // 状态信息
                 dataGridViewData.Columns.Add(new DataGridViewCheckBoxColumn
                 {
                     DataPropertyName = "IsLocked",
                     HeaderText = "是否锁定",
                     Name = "colIsLocked",
-                    FillWeight = 5
+                    FillWeight = 8
                 });
 
                 dataGridViewData.Columns.Add(new DataGridViewCheckBoxColumn
@@ -375,111 +343,25 @@ namespace RUINORERP.Server.Controls
                     DataPropertyName = "IsExpired",
                     HeaderText = "是否过期",
                     Name = "colIsExpired",
-                    FillWeight = 5
+                    FillWeight = 8
                 });
 
-                dataGridViewData.Columns.Add(new DataGridViewCheckBoxColumn
-                {
-                    DataPropertyName = "IsOrphaned",
-                    HeaderText = "是否孤儿锁",
-                    Name = "colIsOrphaned",
-                    FillWeight = 5
-                });
-
-                // 业务类型属性
+                // 业务信息
                 dataGridViewData.Columns.Add(new DataGridViewTextBoxColumn
                 {
                     DataPropertyName = "bizType",
                     HeaderText = "业务类型",
                     Name = "colBizType",
-                    FillWeight = 8
+                    FillWeight = 10
                 });
 
-                // 附加信息属性
-                dataGridViewData.Columns.Add(new DataGridViewTextBoxColumn
-                {
-                    DataPropertyName = "Remark",
-                    HeaderText = "备注",
-                    Name = "colRemark",
-                    FillWeight = 12
-                });
-
-                dataGridViewData.Columns.Add(new DataGridViewTextBoxColumn
-                {
-                    DataPropertyName = "MenuID",
-                    HeaderText = "菜单ID",
-                    Name = "colMenuID",
-                    FillWeight = 8
-                });
-
+                // 会话信息
                 dataGridViewData.Columns.Add(new DataGridViewTextBoxColumn
                 {
                     DataPropertyName = "SessionId",
                     HeaderText = "会话ID",
                     Name = "colSessionId",
-                    FillWeight = 12
-                });
-
-                // 统计相关属性
-                dataGridViewData.Columns.Add(new DataGridViewTextBoxColumn
-                {
-                    DataPropertyName = "HeartbeatCount",
-                    HeaderText = "心跳次数",
-                    Name = "colHeartbeatCount",
-                    FillWeight = 6
-                });
-
-                dataGridViewData.Columns.Add(new DataGridViewTextBoxColumn
-                {
-                    DataPropertyName = "Duration",
-                    HeaderText = "锁定持续时间(毫秒)",
-                    Name = "colDuration",
-                    FillWeight = 8
-                });
-
-                // 枚举相关属性
-                dataGridViewData.Columns.Add(new DataGridViewTextBoxColumn
-                {
-                    DataPropertyName = "Type",
-                    HeaderText = "锁定类型",
-                    Name = "colType",
-                    FillWeight = 8
-                });
-
-                dataGridViewData.Columns.Add(new DataGridViewTextBoxColumn
-                {
-                    DataPropertyName = "Status",
-                    HeaderText = "锁定状态",
-                    Name = "colStatus",
-                    FillWeight = 8
-                });
-
-                // 只读计算属性
-                dataGridViewData.Columns.Add(new DataGridViewTextBoxColumn
-                {
-                    DataPropertyName = "ExpireTimestamp",
-                    HeaderText = "过期时间戳",
-                    Name = "colExpireTimestamp",
-                    FillWeight = 10,
-                    ReadOnly = true
-                });
-
-                dataGridViewData.Columns.Add(new DataGridViewTextBoxColumn
-                {
-                    DataPropertyName = "RemainingLockTimeMs",
-                    HeaderText = "剩余锁定时间(毫秒)",
-                    Name = "colRemainingLockTimeMs",
-                    FillWeight = 10,
-                    ReadOnly = true
-                });
-
-                // 即将过期属性
-                dataGridViewData.Columns.Add(new DataGridViewCheckBoxColumn
-                {
-                    DataPropertyName = "IsAboutToExpire",
-                    HeaderText = "即将过期",
-                    Name = "colIsAboutToExpire",
-                    FillWeight = 5
+                    FillWeight = 15
                 });
             }
             catch (Exception ex)
@@ -858,7 +740,18 @@ namespace RUINORERP.Server.Controls
 
         private void dataGridViewData_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
         {
-
+            if (e.RowIndex >= 0 && e.RowIndex < dataGridViewData.Rows.Count)
+            {
+                var row = dataGridViewData.Rows[e.RowIndex];
+                var lockInfo = row.DataBoundItem as LockInfo;
+                
+                if (lockInfo != null)
+                {
+                    // 显示基本锁定信息，避免使用跨框架引用
+                    string details = GetObjectDetails(lockInfo);
+                    MessageBox.Show(details, "锁定信息详情", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            }
         }
 
         /// <summary>

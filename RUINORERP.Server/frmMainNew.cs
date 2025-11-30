@@ -1885,7 +1885,7 @@ namespace RUINORERP.Server
                     
                     // 启动服务器锁管理器服务
                     var lockManager = Startup.GetFromFac<RUINORERP.Server.Network.Services.ServerLockManager>();
-                    await Task.Run(async () => await lockManager.StartAsync(CancellationToken.None));
+                    await Task.Run(async () => await lockManager.StartAsync());
 
                     // 每5秒检查一次，减少系统负载
                     if (_sessionCleanupTimer != null)

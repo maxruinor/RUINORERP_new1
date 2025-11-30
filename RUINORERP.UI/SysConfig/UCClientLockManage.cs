@@ -13,6 +13,8 @@ using Microsoft.Extensions.DependencyInjection;
 using RUINORERP.UI.AdvancedUIModule;
 using static RUINORERP.Model.ModuleMenuDefine;
 using RUINORERP.UI.Network.Services;
+using RUINORERP.UI.Forms; // 添加缺少的命名空间引用
+
 
 namespace RUINORERP.UI.SysConfig
 {
@@ -35,6 +37,31 @@ namespace RUINORERP.UI.SysConfig
             InitializeRefreshTimer();
             InitializeLockDataGridView();
             LoadLockData();
+            
+            // 订阅行双击事件
+            dgvLockInfo.CellDoubleClick += dgvLockInfo_CellDoubleClick;
+        }
+        
+        /// <summary>
+        /// 处理表格行双击事件，弹出锁定信息详情窗口
+        /// </summary>
+        private void dgvLockInfo_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex >= 0 && e.RowIndex < dgvLockInfo.Rows.Count)
+            {
+                var row = dgvLockInfo.Rows[e.RowIndex];
+                var lockInfo = row.DataBoundItem as LockInfo;
+                
+                if (lockInfo != null)
+                {
+                    // 显示锁定信息详情
+                    using (var detailForm = new LockInfoDetailForm(lockInfo))
+                    {
+                        detailForm.StartPosition = FormStartPosition.CenterParent;
+                        detailForm.ShowDialog(this);
+                    }
+                }
+            }
         }
 
         private void InitializeLockDataGridView()
@@ -44,20 +71,8 @@ namespace RUINORERP.UI.SysConfig
             dgvLockInfo.AllowUserToDeleteRows = false;
             dgvLockInfo.ReadOnly = true;
 
-            // 添加列
-            dgvLockInfo.Columns.Add(new DataGridViewTextBoxColumn
-            {
-                DataPropertyName = "LockKey",
-                HeaderText = "锁定键",
-                Width = 150
-            });
-
-            dgvLockInfo.Columns.Add(new DataGridViewTextBoxColumn
-            {
-                DataPropertyName = "LockId",
-                HeaderText = "锁定ID",
-                Width = 100
-            });
+            // 添加最重要的锁定信息列
+            // 单据标识
 
             dgvLockInfo.Columns.Add(new DataGridViewTextBoxColumn
             {
@@ -89,9 +104,9 @@ namespace RUINORERP.UI.SysConfig
 
             dgvLockInfo.Columns.Add(new DataGridViewTextBoxColumn
             {
-                DataPropertyName = "Remark",
-                HeaderText = "备注",
-                Width = 150
+                DataPropertyName = "bizType",
+                HeaderText = "业务类型",
+                Width = 120
             });
 
             dgvLockInfo.Columns.Add(new DataGridViewTextBoxColumn

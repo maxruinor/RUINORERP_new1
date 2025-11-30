@@ -746,16 +746,26 @@ namespace RUINORERP.Server.Network.Services
                     {
                         var infoCopy = new LockInfo
                         {
+                            // 复制所有可写属性
+                            LockKey = lockInfo.LockKey,
                             BillID = lockInfo.BillID,
+                            BillNo = lockInfo.BillNo,
                             LockedUserId = lockInfo.LockedUserId,
                             LockedUserName = lockInfo.LockedUserName,
                             LockTime = lockInfo.LockTime,
                             ExpireTime = lockInfo.ExpireTime,
-                            IsLocked = lockInfo.IsLocked,
-
+                            Remark = lockInfo.Remark,
+                            MenuID = lockInfo.MenuID,
+                            BizName = lockInfo.BizName,
+                            MenuName = lockInfo.MenuName,
                             bizType = lockInfo.bizType,
-
-                            SessionId = lockInfo.SessionId
+                            SessionId = lockInfo.SessionId,
+                            IsLocked = lockInfo.IsLocked,
+                            LastHeartbeat = lockInfo.LastHeartbeat,
+                            LastUpdateTime = lockInfo.LastUpdateTime,
+                            HeartbeatCount = lockInfo.HeartbeatCount,
+                            Type = lockInfo.Type,
+                            Duration = lockInfo.Duration
                         };
 
                         lockedDocuments.Add(infoCopy);
@@ -801,16 +811,26 @@ namespace RUINORERP.Server.Network.Services
                     // 返回锁定信息的副本，避免直接引用
                     return new LockInfo
                     {
+                        // 复制所有可写属性
+                        LockKey = lockInfo.LockKey,
                         BillID = lockInfo.BillID,
+                        BillNo = lockInfo.BillNo,
                         LockedUserId = lockInfo.LockedUserId,
                         LockedUserName = lockInfo.LockedUserName,
                         LockTime = lockInfo.LockTime,
                         ExpireTime = lockInfo.ExpireTime,
-                        IsLocked = lockInfo.IsLocked,
-
+                        Remark = lockInfo.Remark,
+                        MenuID = lockInfo.MenuID,
+                        BizName = lockInfo.BizName,
+                        MenuName = lockInfo.MenuName,
                         bizType = lockInfo.bizType,
-
-                        SessionId = lockInfo.SessionId
+                        SessionId = lockInfo.SessionId,
+                        IsLocked = lockInfo.IsLocked,
+                        LastHeartbeat = lockInfo.LastHeartbeat,
+                        LastUpdateTime = lockInfo.LastUpdateTime,
+                        HeartbeatCount = lockInfo.HeartbeatCount,
+                        Type = lockInfo.Type,
+                        Duration = lockInfo.Duration
                     };
                 }
                 else
@@ -1093,17 +1113,25 @@ namespace RUINORERP.Server.Network.Services
                 // 创建新锁
                 var serverLockInfo = new LockInfo
                 {
+                    LockKey = lockInfo.LockKey,
                     BillID = lockInfo.BillID,
-                    BillNo=lockInfo.BillNo,
+                    BillNo = lockInfo.BillNo,
                     LockedUserId = lockInfo.LockedUserId,
                     LockedUserName = lockInfo.LockedUserName,
-                    SessionId = lockInfo.SessionId,
-                    LockTime = DateTime.Now,
+                    LockTime = DateTime.Now, // 使用当前时间作为锁定时间
                     ExpireTime = lockInfo.ExpireTime,
-                    LastHeartbeat = DateTime.Now,
-                    HeartbeatCount = 1,
+                    Remark = lockInfo.Remark,
+                    MenuID = lockInfo.MenuID,
+                    BizName = lockInfo.BizName,
+                    MenuName = lockInfo.MenuName,
+                    bizType = lockInfo.bizType,
+                    SessionId = lockInfo.SessionId,
                     IsLocked = true,
-                    Type = LockType.Exclusive
+                    LastHeartbeat = DateTime.Now, // 使用当前时间作为最后心跳时间
+                    LastUpdateTime = DateTime.Now, // 使用当前时间作为最后更新时间
+                    HeartbeatCount = 1, // 重置心跳次数为1
+                    Type = lockInfo.Type, // 使用传入的锁定类型
+                    Duration = lockInfo.Duration
                 };
 
                 // 添加到锁集合

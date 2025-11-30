@@ -296,7 +296,7 @@ namespace RUINORERP.UI.Network.Services
         /// <returns>锁定响应，包含是否成功和锁定信息</returns>
         /// <exception cref="ObjectDisposedException">当服务已被释放时抛出</exception>
         /// <exception cref="TaskCanceledException">当操作被取消时抛出</exception>
-        public async Task<LockResponse> LockBillAsync(long billId, BizType bizType, long menuId, int timeoutMinutes = 30, CancellationToken cancellationToken = default)
+        public async Task<LockResponse> LockBillAsync(long billId,string BillNo, BizType bizType, long menuId, int timeoutMinutes = 30, CancellationToken cancellationToken = default)
         {
             if (_isDisposed)
                 throw new ObjectDisposedException(nameof(ClientLockManagementService));
@@ -328,6 +328,7 @@ namespace RUINORERP.UI.Network.Services
                 lockInfo.LockedUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
                 lockInfo.LockedUserName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.UserName;
                 lockInfo.bizType = bizType;
+                lockInfo.BillNo = BillNo;
                 var lockRequest = new LockRequest { LockInfo = lockInfo };
 
                 // 使用传入的cancellationToken或默认值

@@ -3873,7 +3873,7 @@ namespace RUINORERP.UI.BaseForm
                 }
 
                 // 尝试锁定单据
-                var lockResponse = await _integratedLockService.LockBillAsync(billId, EntityMappingHelper.GetEntityInfo<T>().BizType, CurMenuInfo.MenuID);
+                var lockResponse = await _integratedLockService.LockBillAsync(billId, billData.BillNo, EntityMappingHelper.GetEntityInfo<T>().BizType, CurMenuInfo.MenuID);
 
                 if (lockResponse != null && lockResponse.IsSuccess)
                 {
@@ -3992,6 +3992,8 @@ namespace RUINORERP.UI.BaseForm
                 // 获取当前用户信息
                 var userInfo = MainForm.Instance.AppContext.CurUserInfo.UserInfo;
 
+                string BillNo = ReflectionHelper.GetPropertyValue(EditEntity, EntityMappingHelper.GetEntityInfo<T>().NoField).ToString();
+
                 // 先检查是否已锁定
                 var checkResult = await _integratedLockService.CheckLockStatusAsync(billId, CurMenuInfo.MenuID);
                 if (checkResult != null && checkResult.IsSuccess && checkResult.LockInfo != null && checkResult.LockInfo.IsLocked)
@@ -4039,7 +4041,7 @@ namespace RUINORERP.UI.BaseForm
                 {
                     try
                     {
-                        var result = await _integratedLockService.LockBillAsync(billId, EntityMappingHelper.GetEntityInfo<T>().BizType, CurMenuInfo.MenuID);
+                        var result = await _integratedLockService.LockBillAsync(billId, BillNo, EntityMappingHelper.GetEntityInfo<T>().BizType, CurMenuInfo.MenuID);
                         bool lockSuccess = result != null && result.IsSuccess;
 
                         if (lockSuccess)
@@ -4112,7 +4114,7 @@ namespace RUINORERP.UI.BaseForm
         /// <param name="BillID">单据ID</param>
         /// <param name="userid">用户ID</param>
         /// <returns>异步任务</returns>
-        private async Task LockBill(long BillID, long userid)
+        private async Task LockBill(long BillID, string BillNo, long userid)
         {
             if (BillID <= 0 || userid <= 0)
             {
@@ -4122,7 +4124,8 @@ namespace RUINORERP.UI.BaseForm
 
             try
             {
-                var result = await _integratedLockService.LockBillAsync(BillID, EntityMappingHelper.GetEntityInfo<T>().BizType, CurMenuInfo.MenuID);
+
+                var result = await _integratedLockService.LockBillAsync(BillID, BillNo, EntityMappingHelper.GetEntityInfo<T>().BizType, CurMenuInfo.MenuID);
                 if (result.IsSuccess && result.LockInfo.IsLocked)
                 {
                     // 更新UI状态
@@ -4565,7 +4568,7 @@ namespace RUINORERP.UI.BaseForm
                         {
                             if (saleOut.tb_saleorder != null)
                             {
-                                LockBill(saleOut.tb_saleorder.SOrder_ID, MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID);
+                                await LockBill(saleOut.tb_saleorder.SOrder_ID, saleOut.tb_saleorder.SOrderNo, MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID);
 
                                 //OriginalData od = ActionForClient.单据锁定(saleOut.tb_saleorder.SOrder_ID,
                                 //    MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID,
@@ -4722,7 +4725,7 @@ namespace RUINORERP.UI.BaseForm
                         {
                             if (PurEntry.tb_purorder != null)
                             {
-                                LockBill(PurEntry.tb_purorder.PurOrder_ID, MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID);
+                                await LockBill(PurEntry.tb_purorder.PurOrder_ID, PurEntry.tb_purorder.PurOrderNo, MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID);
 
                                 //OriginalData od = ActionForClient.单据锁定(saleOut.tb_saleorder.SOrder_ID,
                                 //    MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID,
@@ -4735,7 +4738,7 @@ namespace RUINORERP.UI.BaseForm
                         {
                             if (PurReturnEntry.tb_purentryre != null)
                             {
-                                LockBill(PurReturnEntry.tb_purentryre.PurEntryRe_ID, MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID);
+                                await LockBill(PurReturnEntry.tb_purentryre.PurEntryRe_ID, PurReturnEntry.tb_purentryre.PurEntryReNo, MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID);
                             }
                         }
 
@@ -6078,8 +6081,8 @@ namespace RUINORERP.UI.BaseForm
                 if (originalPkid == 0 && _integratedLockService != null)
                 {
                     MainForm.Instance.uclog.AddLog($"新增单据保存成功，自动获取锁定：单据ID={currentPkid}", UILogType.普通消息);
-
-                    var lockResult = await _integratedLockService.LockBillAsync(currentPkid, EntityMappingHelper.GetEntityInfo<T>().BizType, _currentMenuId);
+                    string BillNo = ReflectionHelper.GetPropertyValue(EditEntity, EntityMappingHelper.GetEntityInfo<T>().NoField).ToString();
+                    var lockResult = await _integratedLockService.LockBillAsync(currentPkid, BillNo, EntityMappingHelper.GetEntityInfo<T>().BizType, _currentMenuId);
                     if (lockResult?.IsSuccess == true)
                     {
                         // 更新UI显示锁定状态
@@ -6956,10 +6959,55 @@ namespace RUINORERP.UI.BaseForm
 
         internal override void CloseTheForm(object thisform)
         {
-            //        // 停止锁定刷新任务
-            StopLockRefreshTask();
-            UNLock();
+      
             base.CloseTheForm(thisform);
+            try
+            {
+                // 单据都会有 录入表格 SourceGridHelper 在 Grid_HandleDestroyed 中执行了。这样就不管关闭还是x
+
+                #region  关闭时解锁
+                try
+                {
+                    // 停止锁定刷新任务
+                    StopLockRefreshTask();
+
+                    // 异步释放锁定，不阻塞UI线程
+                    if (EditEntity != null && _currentBillId > 0 && _currentMenuId > 0 && _integratedLockService != null)
+                    {
+                        _ = Task.Run(async () =>
+                        {
+                            try
+                            {
+                                // 检查是否为当前用户的锁定，只释放自己的锁定
+                                var lockStatus = await _integratedLockService.CheckLockStatusAsync(_currentBillId, _currentMenuId);
+                                if (lockStatus?.LockInfo?.IsLocked == true)
+                                {
+                                    long currentUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
+                                    if (lockStatus.LockInfo.LockedUserId == currentUserId)
+                                    {
+                                        await _integratedLockService.UnlockBillAsync(_currentBillId);
+                                    }
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                MainForm.Instance.logger.LogError(ex, $"表单关闭时释放锁定失败：单据ID={_currentBillId}");
+                            }
+                        });
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MainForm.Instance.logger.LogError(ex, "表单关闭事件处理异常");
+                }
+
+
+                #endregion
+            }
+            catch
+            {
+
+            }
         }
 
         #region 打印相关
@@ -7357,8 +7405,6 @@ namespace RUINORERP.UI.BaseForm
         {
             try
             {
-
-
                 // 创建锁信息并设置解锁类型为同意解锁
                 LockInfo lockInfo = new LockInfo();
                 lockInfo.BillID = billId;

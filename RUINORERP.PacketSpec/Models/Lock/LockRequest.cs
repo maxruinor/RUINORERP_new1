@@ -62,15 +62,15 @@ namespace RUINORERP.PacketSpec.Models.Lock
         [DataMember]
         public List<LockInfo> LockedDocuments { get; set; }
 
-        /// <summary>
-        /// 锁定用户ID
-        /// 便捷属性，从LockInfo中获取
-        /// </summary>
-        public long LockedUserId
-        {
-            get { return LockInfo?.LockedUserId ?? 0; }
-            set { if (LockInfo != null) LockInfo.LockedUserId = value; }
-        }
+        ///// <summary>
+        ///// 锁定用户ID
+        ///// 便捷属性，从LockInfo中获取
+        ///// </summary>
+        //public long LockedUserId
+        //{
+        //    get { return LockInfo?.LockedUserId ?? 0; }
+        //    set { if (LockInfo != null) LockInfo.LockedUserId = value; }
+        //}
 
         /// <summary>
         /// 请求者用户ID
@@ -88,17 +88,17 @@ namespace RUINORERP.PacketSpec.Models.Lock
         [DataMember]
         public string RequesterUserName { get; set; } = string.Empty;
 
-        /// <summary>
-        /// 锁定用户名
-        /// 锁定单据的用户名
-        /// 便捷属性，从LockInfo中获取或设置
-        /// </summary>
-        [DataMember]
-        public string LockedUserName
-        {
-            get { return LockInfo?.LockedUserName ?? string.Empty; }
-            set { if (LockInfo != null) LockInfo.LockedUserName = value; }
-        }
+        ///// <summary>
+        ///// 锁定用户名
+        ///// 锁定单据的用户名
+        ///// 便捷属性，从LockInfo中获取或设置
+        ///// </summary>
+        //[DataMember]
+        //public string LockedUserName
+        //{
+        //    get { return LockInfo?.LockedUserName ?? string.Empty; }
+        //    set { if (LockInfo != null) LockInfo.LockedUserName = value; }
+        //}
 
         /// <summary>
         /// 初始化锁定请求

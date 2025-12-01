@@ -848,6 +848,7 @@ namespace RUINORERP.Server.Network.Services
 
         /// <summary>
         /// 请求解锁单据
+        /// 服务器调用这里处理解锁请求逻辑
         /// </summary>
         /// <param name="request">解锁请求对象，包含请求者信息和单据信息</param>
         /// <returns>异步任务，返回包含详细信息的LockResponse</returns>
@@ -861,7 +862,6 @@ namespace RUINORERP.Server.Network.Services
                     return CreateErrorResponse(new LockInfo { BillID = request?.LockInfo.BillID ?? 0 }, "解锁请求参数无效");
                 }
 
-                _logger.LogDebug("处理解锁请求: 单据ID={BillId}, 请求者ID={RequesterId}", request.LockInfo.BillID, request.LockedUserId);
 
                 // 检查单据是否存在并被锁定
                 if (!_documentLocks.TryGetValue(request.LockInfo.BillID, out var lockInfo) || !lockInfo.IsLocked)
@@ -870,11 +870,12 @@ namespace RUINORERP.Server.Network.Services
                     return CreateErrorResponse(new LockInfo { BillID = request.LockInfo.BillID }, "该单据未被锁定或不存在");
                 }
 
+                //通常是自己则不能请求解锁自己锁定的单据
                 // 检查是否为锁定者本人请求解锁（直接解锁即可，无需请求）
-                if (lockInfo.LockedUserId == request.LockedUserId)
+                if (lockInfo.LockedUserId == request.RequesterUserId)
                 {
                     var msg = ("解锁请求: 单据ID={BillId} 是请求者本人锁定的，直接解锁", request.LockInfo.BillID);
-                    var lockInfoToRelease = new LockInfo { BillID = request.LockInfo.BillID, LockedUserId = request.LockedUserId };
+                    var lockInfoToRelease = new LockInfo { BillID = request.LockInfo.BillID, LockedUserId = request.RequesterUserId };
                     await ReleaseLockAsync(lockInfoToRelease);
                     return new LockResponse
                     {
@@ -885,7 +886,6 @@ namespace RUINORERP.Server.Network.Services
                 }
 
                 // 保存解锁请求
-                request.LockedUserId = lockInfo.LockedUserId;
                 request.Timestamp = DateTime.Now;
 
                 // 存储请求，覆盖之前的请求（如果存在）
@@ -921,8 +921,6 @@ namespace RUINORERP.Server.Network.Services
                     return CreateErrorResponse(new LockInfo { BillID = request?.LockInfo.BillID ?? 0 }, "拒绝解锁请求参数无效");
                 }
 
-                _logger.LogDebug("处理拒绝解锁请求: 单据ID={BillId}, 拒绝者ID={LockedUserId}", request.LockInfo.BillID, request.LockedUserId);
-
                 // 检查是否存在解锁请求
                 if (!_unlockRequests.TryGetValue(request.LockInfo.BillID, out var storedRequest))
                 {
@@ -930,17 +928,16 @@ namespace RUINORERP.Server.Network.Services
                     return CreateErrorResponse(new LockInfo { BillID = request.LockInfo.BillID }, "该单据没有待处理的解锁请求");
                 }
 
-                // 检查是否是锁定者本人拒绝请求
-                if (storedRequest.LockedUserId != request.RequesterUserId)
+                // 检查是否是锁定者本人拒绝请求 ???要调试
+                if (storedRequest.RequesterUserId != request.LockInfo.LockedUserId)
                 {
-                    _logger.LogWarning("拒绝解锁请求失败: 用户ID={UserId} 不是单据ID={BillId} 的锁定者，无权拒绝请求", request.LockedUserId, request.LockInfo.BillID);
                     return CreateErrorResponse(new LockInfo { BillID = request.LockInfo.BillID }, "只有锁定者本人可以拒绝解锁请求");
                 }
 
                 // 移除解锁请求
                 if (_unlockRequests.TryRemove(request.LockInfo.BillID, out _))
                 {
-                    var mes = ("拒绝解锁请求成功: 单据ID={BillId}, 请求者ID={RequesterId}, 锁定者ID={LockedUserId}", request.LockInfo.BillID, storedRequest.RequesterUserId, storedRequest.LockedUserId);
+                    var mes = ("拒绝解锁请求成功: 单据ID={BillNo}, 请求者ID={RequesterId}, 锁定者ID={LockedUserId}", request.LockInfo.BillNo, storedRequest.RequesterUserId, storedRequest.LockInfo.LockedUserId);
                     return new LockResponse
                     {
                         IsSuccess = true,
@@ -1285,7 +1282,7 @@ namespace RUINORERP.Server.Network.Services
                 }
 
                 // 检查是否是锁定者本人拒绝请求
-                if (storedRequest.LockedUserId != refuseInfo.LockInfo.LockedUserId)
+                if (storedRequest.RequesterUserId != refuseInfo.LockInfo.LockedUserId)
                 {
                     _logger.LogWarning("拒绝解锁请求失败: 用户ID={UserId} 不是单据ID={BillId} 的锁定者，无权拒绝请求",
                         refuseInfo.LockInfo.LockedUserId, refuseInfo.LockInfo.BillID);

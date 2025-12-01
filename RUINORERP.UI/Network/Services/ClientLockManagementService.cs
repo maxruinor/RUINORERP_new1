@@ -945,7 +945,7 @@ namespace RUINORERP.UI.Network.Services
         /// <param name="menuId">菜单ID</param>
         /// <param name="requesterUserName">请求者用户名</param>
         /// <returns>拒绝解锁的响应结果</returns>
-        public async Task<LockResponse> RefuseUnlockAsync(long billId, long menuId, string requesterUserName)
+        public async Task<LockResponse> RefuseUnlockAsync(long billId, long menuId,long RequesterUserId, string requesterUserName)
         {
             if (_isDisposed)
                 throw new ObjectDisposedException(nameof(ClientLockManagementService));
@@ -970,8 +970,8 @@ namespace RUINORERP.UI.Network.Services
                 var lockRequest = new LockRequest
                 {
                     LockInfo = lockInfo,
+                    RequesterUserId= RequesterUserId,
                     RequesterUserName = requesterUserName,
-                    LockedUserName = currentUserName,
                 };
                 lockRequest.LockInfo.SetLockKey();
 

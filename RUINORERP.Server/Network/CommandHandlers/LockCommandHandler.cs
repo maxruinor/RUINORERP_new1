@@ -188,12 +188,12 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 if (lockRequest.UnlockType == UnlockType.ByBizName)
                 {
                     // 释放锁定
-                    return await _lockManagerService.UnlockDocumentsByBizNameAsync(validation.LockRequest.LockedUserId, (int)validation.LockRequest.LockInfo.bizType);
+                    return await _lockManagerService.UnlockDocumentsByBizNameAsync(validation.LockRequest.LockInfo.LockedUserId, (int)validation.LockRequest.LockInfo.bizType);
                 }
                 else
                 {
                     // 释放锁定
-                    return await _lockManagerService.UnlockDocumentAsync(validation.LockRequest.LockInfo.BillID, validation.LockRequest.LockedUserId);
+                    return await _lockManagerService.UnlockDocumentAsync(validation.LockRequest.LockInfo.BillID, validation.LockRequest.LockInfo.LockedUserId);
                 }
 
             }

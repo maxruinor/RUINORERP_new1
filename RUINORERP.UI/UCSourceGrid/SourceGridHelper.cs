@@ -3102,9 +3102,31 @@ namespace RUINORERP.UI.UCSourceGrid
                 //cmb.ValueMember = ValueMember;
                 //cmb.DataSource = OutNames;
                 cmb.DropDownStyle = ComboBoxStyle.DropDown;
-                cmb.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.SuggestAppend;
-                cmb.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.CustomSource;
-                cmb.AutoCompleteCustomSource = autoscList;
+                
+                // 检查是否在STA线程中设置AutoCompleteMode
+                try
+                {   
+                    cmb.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.SuggestAppend;
+                    cmb.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.CustomSource;
+                    cmb.AutoCompleteCustomSource = autoscList;
+                }
+                catch (System.Threading.ThreadStateException)
+                {
+                    // 如果当前线程不是STA线程，在UI线程中执行
+                    if (cmb.InvokeRequired)
+                    {
+                        cmb.Invoke(new Action(() => {
+                            cmb.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.SuggestAppend;
+                            cmb.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.CustomSource;
+                            cmb.AutoCompleteCustomSource = autoscList;
+                        }));
+                    }
+                    else
+                    {
+                        // 记录错误但不中断执行
+                        System.Diagnostics.Debug.WriteLine("警告：当前线程不是STA线程，无法设置自动完成功能");
+                    }
+                }
                 //cmb.EndUpdate();
                 #endregion
 

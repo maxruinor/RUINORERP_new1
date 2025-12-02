@@ -1,4 +1,4 @@
-using System;
+ï»¿using System;
 using System.Windows.Forms;
 using System.ComponentModel;
 using System.Drawing.Design;
@@ -8,20 +8,78 @@ using System.ComponentModel.Design.Serialization;
 using System.Reflection;
 using System.Collections.Generic;
 using SourceGrid.Cells;
+using System.Drawing;
+using System.Linq;
+using System.Threading.Tasks;
 
 
 
 namespace SourceGrid.Cells.Editors
 {
     /// <summary>
-    ///  WebĞÍµÄÍ¼Æ¬Ñ¡ÔñÆ÷, µÚÒ»ÁĞ¶¼ÊÇÒ»ÑùµÄ¡£ËùÒÔÖ»ÊÇÒ»¸ö¹ıÇÅ¡£Êı¾İµÃÒÔcellÎªµ¥Î»±£´æ
-    /// ´´½¨ÁĞÊ±µÄ¿É±à¼­µÄÁĞµÄ±à¼­Æ÷¡£Ò»ÁĞ¹²ÓÃÒ»¸ö±à¼­Æ÷
-    /// ¶Ô»°¿òÑ¡ÔñÍ¼Æ¬ÎÄ¼ş£¬ºÍÄÚ´æÖĞÕ³Ìù£¬ÒÔ¼°ÍÏÈëµÄÍ¼Æ¬´¦Àí¡£¶¼ÊÇÍ¨¹ıÕâ¸ö±à¼­Æ÷À´ÊµÏÖµÄ
-    /// ²¢ÇÒ±£´æÔÚµ±Ç°µÄcontrol.tagºÍmodelÖĞ
+    ///  Webå‹çš„å›¾ç‰‡é€‰æ‹©å™¨, ç¬¬ä¸€åˆ—éƒ½æ˜¯ä¸€æ ·çš„ã€‚æ‰€ä»¥åªæ˜¯ä¸€ä¸ªè¿‡æ¡¥ã€‚æ•°æ®å¾—ä»¥cellä¸ºå•ä½ä¿å­˜
+    /// åˆ›å»ºåˆ—æ—¶çš„å¯ç¼–è¾‘çš„åˆ—çš„ç¼–è¾‘å™¨ã€‚ä¸€åˆ—å…±ç”¨ä¸€ä¸ªç¼–è¾‘å™¨
+    /// å¯¹è¯æ¡†é€‰æ‹©å›¾ç‰‡æ–‡ä»¶ï¼Œå’Œå†…å­˜ä¸­ç²˜è´´ï¼Œä»¥åŠæ‹–å…¥çš„å›¾ç‰‡å¤„ç†ã€‚éƒ½æ˜¯é€šè¿‡è¿™ä¸ªç¼–è¾‘å™¨æ¥å®ç°çš„
+    /// å¹¶ä¸”ä¿å­˜åœ¨å½“å‰çš„control.tagå’Œmodelä¸­
+    /// å¢å¼ºç‰ˆï¼šå®Œå–„å›¾ç‰‡ä¸Šä¼ å‰çš„å‡†å¤‡å·¥ä½œï¼Œæ”¯æŒå¤šç§å›¾ç‰‡æ ¼å¼çš„å¤„ç†ï¼Œé›†æˆæ–°çš„å‘½åç­–ç•¥å’Œç¼“å­˜æœºåˆ¶
     /// </summary>
     [System.ComponentModel.ToolboxItem(false)]
     public class ImageWebPickEditor : EditorControlBase
     {
+        #region ç§æœ‰å­—æ®µ
+
+        /// <summary>
+        /// æ”¯æŒçš„å›¾ç‰‡æ–‡ä»¶æ‰©å±•å
+        /// </summary>
+        private static readonly string[] SupportedImageExtensions = 
+            { ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tiff", ".webp", ".ico" };
+
+        /// <summary>
+        /// æœ€å¤§æ–‡ä»¶å¤§å°ï¼ˆé»˜è®¤5MBï¼‰
+        /// </summary>
+        private const long MaxFileSizeBytes = 5 * 1024 * 1024;
+
+        /// <summary>
+        /// æœ€å¤§å›¾ç‰‡å°ºå¯¸ï¼ˆé»˜è®¤4096x4096ï¼‰
+        /// </summary>
+        private const int MaxImageDimension = 4096;
+
+        /// <summary>
+        /// æ˜¯å¦å¯ç”¨å›¾ç‰‡å‹ç¼©
+        /// </summary>
+        public bool EnableImageCompression { get; set; } = true;
+
+        /// <summary>
+        /// å›¾ç‰‡å‹ç¼©è´¨é‡ï¼ˆ1-100ï¼Œé»˜è®¤85ï¼‰
+        /// </summary>
+        public int CompressionQuality { get; set; } = 85;
+
+        /// <summary>
+        /// æ˜¯å¦è‡ªåŠ¨è°ƒæ•´è¶…å¤§å›¾ç‰‡å°ºå¯¸
+        /// </summary>
+        public bool AutoResizeLargeImages { get; set; } = true;
+
+        /// <summary>
+        /// æ˜¯å¦å¯ç”¨æ™ºèƒ½å›¾ç‰‡å¤„ç†
+        /// </summary>
+        public bool EnableSmartProcessing { get; set; } = true;
+
+        /// <summary>
+        /// æ˜¯å¦å¯ç”¨å›¾ç‰‡å¢å¼ºåŠŸèƒ½
+        /// </summary>
+        public bool EnableImageEnhancement { get; set; } = true;
+
+        /// <summary>
+        /// å½“å‰æ–‡ä»¶ID
+        /// </summary>
+        public string CurrentFileId { get; private set; }
+
+        /// <summary>
+        /// æ˜¯å¦ä½¿ç”¨æ–°çš„å‘½åç­–ç•¥
+        /// </summary>
+        public bool UseNewNamingStrategy { get; set; } = true;
+
+        #endregion
 
 
 
@@ -29,7 +87,7 @@ namespace SourceGrid.Cells.Editors
 
         #region Constructor
         
-        ///webÏÂÔØÍ¼Æ¬ Ö»ÊÇÏÔÊ¾Í¼Æ¬Ãû³Æ
+        ///webä¸‹è½½å›¾ç‰‡ åªæ˜¯æ˜¾ç¤ºå›¾ç‰‡åç§°
         public ImageWebPickEditor(Type p_Type) : base(p_Type)
         {
 
@@ -46,7 +104,7 @@ namespace SourceGrid.Cells.Editors
 
 
         /// <summary>
-        /// ÎÄ¼şÃû
+        /// æ–‡ä»¶å
         /// </summary>
         public string fileName
         {
@@ -61,7 +119,7 @@ namespace SourceGrid.Cells.Editors
 
 
         /// <summary>
-        /// Temp¾ø¶ÔÂ·¾¶
+        /// Tempç»å¯¹è·¯å¾„
         /// </summary>
         public string AbsolutelocPath
         {
@@ -75,11 +133,11 @@ namespace SourceGrid.Cells.Editors
 
 
 
-        #region Ìí¼ÓÁËÓÒ¼ü²Ëµ¥
-        public bool UseÊÇ·ñÊ¹ÓÃÄÚÖÃÓÒ¼ü¹¦ÄÜ { get; private set; } = true;
+        #region æ·»åŠ äº†å³é”®èœå•
+        public bool Useæ˜¯å¦ä½¿ç”¨å†…ç½®å³é”®åŠŸèƒ½ { get; private set; } = true;
 
         /// <summary>
-        /// ÒòÎªÔİÊ±ÊÂ¼şÎŞ·¨Í¨¹ıÊôĞÔÖĞµÄÊı¾İ´«Êä£¬ÏÈÓÃÃû³ÆÔÙ´ÓÕâÀïËÑË÷À´Æ¥Åä
+        /// å› ä¸ºæš‚æ—¶äº‹ä»¶æ— æ³•é€šè¿‡å±æ€§ä¸­çš„æ•°æ®ä¼ è¾“ï¼Œå…ˆç”¨åç§°å†ä»è¿™é‡Œæœç´¢æ¥åŒ¹é…
         /// </summary>
         private List<EventHandler> ContextClickList = new List<EventHandler>();
         private List<ContextMenuController> _ContextMenucCnfigurator = new List<ContextMenuController>();
@@ -87,8 +145,8 @@ namespace SourceGrid.Cells.Editors
         private ContextMenuStrip _ContextMenuStrip;
 
         /// <summary>
-        /// ÖØĞ´ÓÒ¼ü²Ëµ¥ ÎªÁËºÏ²¢
-        /// Èç¹ûÊ¹ÓÃÄÚÖÃµÄ²Ëµ¥ÔòÕâÀïÉèÖÃÊ±¾ÍÒªºÏ²¢´¦Àí
+        /// é‡å†™å³é”®èœå• ä¸ºäº†åˆå¹¶
+        /// å¦‚æœä½¿ç”¨å†…ç½®çš„èœå•åˆ™è¿™é‡Œè®¾ç½®æ—¶å°±è¦åˆå¹¶å¤„ç†
         /// </summary>
         public ContextMenuStrip ContextMenuStrip
         {
@@ -100,12 +158,12 @@ namespace SourceGrid.Cells.Editors
         }
 
         /// <summary>
-        /// »ñÈ¡µ±Ç°ÊÇ·ñ´¦ÓÚÉè¼ÆÆ÷Ä£Ê½
+        /// è·å–å½“å‰æ˜¯å¦å¤„äºè®¾è®¡å™¨æ¨¡å¼
         /// </summary>
         /// <remarks>
-        /// ÔÚ³ÌĞò³õÊ¼»¯Ê±»ñÈ¡Ò»´Î±È½Ï×¼È·£¬ÈôĞèÒªÊ±»ñÈ¡¿ÉÄÜÓÉÓÚ²¼¾ÖÇ¶Ì×µ¼ÖÂ»ñÈ¡²»ÕıÈ·£¬ÈçGridControl-GridView×éºÏ¡£
+        /// åœ¨ç¨‹åºåˆå§‹åŒ–æ—¶è·å–ä¸€æ¬¡æ¯”è¾ƒå‡†ç¡®ï¼Œè‹¥éœ€è¦æ—¶è·å–å¯èƒ½ç”±äºå¸ƒå±€åµŒå¥—å¯¼è‡´è·å–ä¸æ­£ç¡®ï¼Œå¦‚GridControl-GridViewç»„åˆã€‚
         /// </remarks>
-        /// <returns>ÊÇ·ñÎªÉè¼ÆÆ÷Ä£Ê½</returns>
+        /// <returns>æ˜¯å¦ä¸ºè®¾è®¡å™¨æ¨¡å¼</returns>
         private bool GetIsDesignMode()
         {
             return (this.GetService(typeof(System.ComponentModel.Design.IDesignerHost)) == null
@@ -113,27 +171,27 @@ namespace SourceGrid.Cells.Editors
         }
 
         /// <summary>
-        /// ÉèÖÃÓÒ¼ü²Ëµ¥£¬µ«ÊÇ¶Ô²»¶Ô²ÎÊı½øĞĞÉèÖÃ¡£ÒòÎªÊÇÒıÓÃµÄ£¬»á¸Ä±äÖµ
+        /// è®¾ç½®å³é”®èœå•ï¼Œä½†æ˜¯å¯¹ä¸å¯¹å‚æ•°è¿›è¡Œè®¾ç½®ã€‚å› ä¸ºæ˜¯å¼•ç”¨çš„ï¼Œä¼šæ”¹å˜å€¼
         /// </summary>
         /// <param name="_contextMenuStrip"></param>
         public ContextMenuStrip GetContextMenu(ContextMenuStrip _contextMenuStrip = null)
         {
-            // ´´½¨Ò»¸öÈ«ĞÂµÄÓÒ¼ü²Ëµ¥¸±±¾
+            // åˆ›å»ºä¸€ä¸ªå…¨æ–°çš„å³é”®èœå•å‰¯æœ¬
             ContextMenuStrip newContextMenuStrip = new ContextMenuStrip();
 
-            //³õÊ¼»¯ÓÒ¼ü²Ëµ¥
-            // ³õÊ¼»¯ÄÚÖÃÓÒ¼ü²Ëµ¥
+            //åˆå§‹åŒ–å³é”®èœå•
+            // åˆå§‹åŒ–å†…ç½®å³é”®èœå•
             ContextMenuStrip internalMenu = new ContextMenuStrip();
             internalMenu.BackColor = System.Drawing.Color.FromArgb(192, 255, 255);
 
-            //Èç¹ûĞèÒªÍ¨¹ıÉè¼ÆÊ±¶ÔÊôĞÔÖµĞŞ¸Ä¡£
-            //Ôò²»ÄÜÔÚÕâ¸ö¹¹Ôìº¯ÊıÖĞ²Ù×÷¡£ÒòÎªÕâÊ±ÊôĞÔÖµ²»ÄÜ»ñÈ¡
+            //å¦‚æœéœ€è¦é€šè¿‡è®¾è®¡æ—¶å¯¹å±æ€§å€¼ä¿®æ”¹ã€‚
+            //åˆ™ä¸èƒ½åœ¨è¿™ä¸ªæ„é€ å‡½æ•°ä¸­æ“ä½œã€‚å› ä¸ºè¿™æ—¶å±æ€§å€¼ä¸èƒ½è·å–
             internalMenu.Items.Clear();
 
-            // ºÏ²¢´«ÈëµÄ²Ëµ¥ºÍÄÚÖÃ²Ëµ¥
+            // åˆå¹¶ä¼ å…¥çš„èœå•å’Œå†…ç½®èœå•
             if (_contextMenuStrip != null)
             {
-                //ÍâÃæ²Ëµ¥ÓĞÉèÖÃÔò¼ÓÒ»¸ö·Ö¸ô·û
+                //å¤–é¢èœå•æœ‰è®¾ç½®åˆ™åŠ ä¸€ä¸ªåˆ†éš”ç¬¦
                 if (_contextMenuStrip.Items.Count > 0)
                 {
                     ToolStripSeparator MyTss = new ToolStripSeparator();
@@ -146,27 +204,27 @@ namespace SourceGrid.Cells.Editors
             }
 
 
-            //»òÕßÒ²¿ÉÒÔÖ¸¶¨ÄÚÖÃÄÄĞ©ÉúĞ§ ºÏ²¢ÍâÃæµÄ£¿
-            if (UseÊÇ·ñÊ¹ÓÃÄÚÖÃÓÒ¼ü¹¦ÄÜ)
+            //æˆ–è€…ä¹Ÿå¯ä»¥æŒ‡å®šå†…ç½®å“ªäº›ç”Ÿæ•ˆ åˆå¹¶å¤–é¢çš„ï¼Ÿ
+            if (Useæ˜¯å¦ä½¿ç”¨å†…ç½®å³é”®åŠŸèƒ½)
             {
-                #region Éú³ÉÄÚÖÃµÄÓÒ¼ü²Ëµ¥
+                #region ç”Ÿæˆå†…ç½®çš„å³é”®èœå•
 
                 if (ContextClickList == null)
                 {
                     ContextClickList = new List<EventHandler>();
                 }
                 ContextClickList.Clear();
-                ContextClickList.Add(ContextMenu_²é¿´´óÍ¼);
+                ContextClickList.Add(ContextMenu_æŸ¥çœ‹å¤§å›¾);
                 if (_ContextMenucCnfigurator == null)
                 {
                     _ContextMenucCnfigurator = new List<ContextMenuController>();
                 }
                 _ContextMenucCnfigurator.Clear();
-                //Ö»ÊÇ³õÊ¼»¯²»ÖØ¸´Ìí¼Ó
+                //åªæ˜¯åˆå§‹åŒ–ä¸é‡å¤æ·»åŠ 
                 if (_ContextMenucCnfigurator.Count == 0 && GetIsDesignMode())
                 {
-                    _ContextMenucCnfigurator.Add(new ContextMenuController("¡¾²é¿´´óÍ¼¡¿", true, false, "ContextMenu_²é¿´´óÍ¼"));
-                    _ContextMenucCnfigurator.Add(new ContextMenuController("¡¾line¡¿", true, true, ""));
+                    _ContextMenucCnfigurator.Add(new ContextMenuController("ã€æŸ¥çœ‹å¤§å›¾ã€‘", true, false, "ContextMenu_æŸ¥çœ‹å¤§å›¾"));
+                    _ContextMenucCnfigurator.Add(new ContextMenuController("ã€lineã€‘", true, true, ""));
                 }
                 #endregion
 
@@ -189,28 +247,39 @@ namespace SourceGrid.Cells.Editors
                             {
                                 return eh.Method.Name == item.ClickEventName;
                             });
-                        //Èç¹û½Ï¶àµÄÍâ²¿ÊÂ¼şÒ²¿ÉÒÔ×öÒ»¸ö¼¯ºÏ
-                        //if (ehh == null && item.ClickEventName == "É¾³ıÑ¡ÖĞĞĞ")
+                        //å¦‚æœè¾ƒå¤šçš„å¤–éƒ¨äº‹ä»¶ä¹Ÿå¯ä»¥åšä¸€ä¸ªé›†åˆ
+                        //if (ehh == null && item.ClickEventName == "åˆ é™¤é€‰ä¸­è¡Œ")
                         //{
-                        //    ehh = É¾³ıÑ¡ÖĞĞĞ;
+                        //    ehh = åˆ é™¤é€‰ä¸­è¡Œ;
                         //}
                         internalMenu.Items.Add(item.MenuText, null, ehh);
                     }
                 }
             }
             newContextMenuStrip = internalMenu;
-            // ÉèÖÃ×îÖÕµÄÓÒ¼ü²Ëµ¥
+            // è®¾ç½®æœ€ç»ˆçš„å³é”®èœå•
             ContextMenuStrip = newContextMenuStrip;
             return newContextMenuStrip;
         }
 
-        private void ContextMenu_²é¿´´óÍ¼(object sender, EventArgs e)
+        private void ContextMenu_æŸ¥çœ‹å¤§å›¾(object sender, EventArgs e)
         {
             if (PickerImage != null)
             {
-                DevAge.Windows.Forms.frmPictureViewer frm = new DevAge.Windows.Forms.frmPictureViewer();
-                frm.PictureBoxViewer.Image = PickerImage;
-                frm.ShowDialog();
+                try
+                {
+                    // ä½¿ç”¨å¢å¼ºçš„å›¾ç‰‡é¢„è§ˆçª—ä½“
+                    var previewForm = new ImagePreviewForm(PickerImage);
+                    previewForm.ShowDialog();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"é¢„è§ˆå›¾ç‰‡æ—¶å‡ºé”™ï¼š{ex.Message}", "é”™è¯¯", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+            else
+            {
+                MessageBox.Show("æ²¡æœ‰å¯é¢„è§ˆçš„å›¾ç‰‡", "æç¤º", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         }
         #endregion
@@ -239,76 +308,280 @@ namespace SourceGrid.Cells.Editors
             return editor;
         }
 
-        private void Editor_KeyDown(object sender, KeyEventArgs e)
+        private async void Editor_KeyDown(object sender, KeyEventArgs e)
         {
-            // ¼ì²éÊÇ·ñ°´ÏÂÁË Ctrl+V
+            // æ£€æŸ¥æ˜¯å¦æŒ‰ä¸‹äº† Ctrl+V
             if ((e.Control && e.KeyCode == Keys.V) || (e.Shift && e.KeyCode == Keys.Insert))
             {
-                // ¼ì²é¼ôÌù°åÖĞÊÇ·ñÓĞÍ¼Ïñ
+                // æ£€æŸ¥å‰ªè´´æ¿ä¸­æ˜¯å¦æœ‰å›¾åƒ
                 if (Clipboard.ContainsImage())
                 {
-                    // »ñÈ¡Í¼Ïñ
-                    System.Drawing.Image image = Clipboard.GetImage();
-                    SetImageToPath(image);
-                    ValueType = typeof(string);
-                    Control.Value = fileName;
-
+                    try
+                    {
+                        // è·å–å›¾åƒ
+                        System.Drawing.Image image = Clipboard.GetImage();
+                        fileName = $"Clipboard_{DateTime.Now:yyyyMMddHHmmss}";
+                        
+                        bool success = await SetImageToPathAsync(image);
+                        if (success)
+                        {
+                            ValueType = typeof(string);
+                            Control.Value = fileName;
+                        }
+                        
+                        // é‡Šæ”¾å‰ªè´´æ¿å›¾ç‰‡èµ„æº
+                        image.Dispose();
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"ä»å‰ªè´´æ¿è·å–å›¾ç‰‡å¤±è´¥ï¼š{ex.Message}", "é”™è¯¯", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
                 }
                 else if (Clipboard.ContainsText())
                 {
-
-                    // »ñÈ¡ÎÄ±¾
-                    string text = Clipboard.GetText();
-                    // ½«ÎÄ±¾²åÈëµ½ TextBox ÖĞ
-                    if (Control != null)
+                    // å¤„ç†æ–‡æœ¬ç²˜è´´ï¼ˆå¯èƒ½æ˜¯å›¾ç‰‡URLï¼‰
+                    string text = Clipboard.GetText().Trim();
+                    if (!string.IsNullOrEmpty(text) && (text.StartsWith("http://") || text.StartsWith("https://")))
                     {
-                        //var tb = Control as TextBox;
-                        //tb.SelectedText = text;
+                        // è¿™é‡Œå¯ä»¥æ·»åŠ ä»URLä¸‹è½½å›¾ç‰‡çš„é€»è¾‘
+                        MessageBox.Show("æš‚ä¸æ”¯æŒä»URLç›´æ¥ä¸‹è½½å›¾ç‰‡ï¼Œè¯·ä¸‹è½½åä½¿ç”¨æ–‡ä»¶é€‰æ‹©åŠŸèƒ½", "æç¤º", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
-
                 }
             }
         }
 
         /// <summary>
-        /// ÍÏÈë»òÄÚ´æÖĞÍ¼Æ¬×ª»»¡£
-        /// Èç¹û
+        /// å¤„ç†å›¾ç‰‡ä¸Šä¼ å‰çš„å‡†å¤‡å·¥ä½œ
+        /// åŒ…æ‹¬ï¼šå›¾ç‰‡éªŒè¯ã€å‹ç¼©ã€æ ¼å¼è½¬æ¢ã€å“ˆå¸Œè®¡ç®—ã€æ™ºèƒ½ä¼˜åŒ–ç­‰
+        /// å¢å¼ºç‰ˆï¼šé›†æˆæ–°çš„å‘½åç­–ç•¥å’Œæ™ºèƒ½å¤„ç†åŠŸèƒ½
         /// </summary>
-        /// <param name="image"></param>
-        private void SetImageToPath(System.Drawing.Image image)
+        /// <param name="image">åŸå§‹å›¾ç‰‡å¯¹è±¡</param>
+        /// <returns>å¤„ç†æ˜¯å¦æˆåŠŸ</returns>
+        private async Task<bool> SetImageToPathAsync(System.Drawing.Image image)
         {
-            var model = this.EditCell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
-            SourceGrid.Cells.Models.ValueImageWeb valueImageWeb = (SourceGrid.Cells.Models.ValueImageWeb)model;
-
-            if (image != null)
+            if (image == null)
             {
-                #region 
-                byte[] buffByte = ImageProcessor.CompressImage(image);
+                MessageBox.Show("å›¾ç‰‡å¯¹è±¡ä¸ºç©º", "é”™è¯¯", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
+            }
 
-                //µÃµ½Í¼Æ¬µÄhashÖµ
-                string NewHash = ImageHashHelper.GenerateHash(buffByte);
-                #endregion
-                //if (string.IsNullOrEmpty(valueImageWeb.CellImageHashName) 
-                //    || !ImageHashHelper.AreHashesEqual(valueImageWeb.CellImageHashName, NewHash))
-                //{
-                if (!AreHashesEqual(valueImageWeb.GetImageNewHash(), NewHash))
+            try
+            {
+                var model = this.EditCell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
+                if (model == null)
                 {
-                    valueImageWeb.SetImageNewHash(NewHash);
-                    //½«Í¼Æ¬±£´æµ½ÄÚ´æÖĞ¡£ÓÃÓÚºóÃæµÄÏÔÊ¾£¬»ò±£´æµ½±¾µØÁÙÊ±ÎÄ¼ş¼ĞÖĞ£¬»òÉÏ´«µ½·şÎñÆ÷
-                    byte[] destination = new byte[buffByte.Length];
-                    Buffer.BlockCopy(buffByte, 0, destination, 0, buffByte.Length);
-                    valueImageWeb.CellImageBytes = destination;
-                    Control.Tag = destination;
-                    //Èç¹ûÏÈ¶Ô»°¿ò¡£ÔÙÍÏ×§£¬Ôò¶Ô»°¿ò»á¸²¸ÇÍÏ×§µÄÖµ¡£ËùÒÔÕâÀïÒªÇå¿Õ¶Ô»°¿ò·µ»ØµÄÂ·¾¶¡£
-                    byte[] bytes = destination as byte[];
-                    using (MemoryStream ms = new MemoryStream(bytes))
+                    MessageBox.Show("æœªæ‰¾åˆ°å›¾ç‰‡æ•°æ®æ¨¡å‹", "é”™è¯¯", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return false;
+                }
+
+                SourceGrid.Cells.Models.ValueImageWeb valueImageWeb = (SourceGrid.Cells.Models.ValueImageWeb)model;
+
+                // 1. å›¾ç‰‡é¢„å¤„ç†ï¼ˆè°ƒæ•´å°ºå¯¸ã€å‹ç¼©ã€å¢å¼ºç­‰ï¼‰
+                System.Drawing.Image processedImage = await PreprocessImageAsync(image);
+                if (processedImage == null)
+                {
+                    return false;
+                }
+
+                // 2. æ™ºèƒ½å›¾ç‰‡å¢å¼ºï¼ˆå¯é€‰ï¼‰
+                if (EnableImageEnhancement)
+                {
+                    processedImage = await EnhanceImageAsync(processedImage);
+                }
+
+                // 3. è½¬æ¢ä¸ºå­—èŠ‚æ•°ç»„å¹¶å‹ç¼©
+                byte[] compressedBytes = await CompressImageAsync(processedImage);
+                if (compressedBytes == null || compressedBytes.Length == 0)
+                {
+                    MessageBox.Show("å›¾ç‰‡å‹ç¼©å¤±è´¥", "é”™è¯¯", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return false;
+                }
+
+                // 4. éªŒè¯å‹ç¼©åçš„å›¾ç‰‡
+                if (!ValidateImageBytes(compressedBytes))
+                {
+                    MessageBox.Show("å‹ç¼©åçš„å›¾ç‰‡æ•°æ®æ— æ•ˆ", "é”™è¯¯", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return false;
+                }
+
+                // 5. ç”Ÿæˆæ–‡ä»¶IDï¼ˆä½¿ç”¨æ–°ç­–ç•¥ï¼‰
+                string newHash = ImageHashHelper.GenerateHash(compressedBytes);
+                string fileId;
+                
+                if (UseNewNamingStrategy)
+                {
+                    fileId = ImageNamingStrategy.GenerateUniqueFileId(compressedBytes, fileName);
+                    CurrentFileId = fileId;
+                }
+                else
+                {
+                    // ä½¿ç”¨åŸæœ‰ç­–ç•¥ï¼Œä¿æŒå…¼å®¹æ€§
+                    fileId = valueImageWeb.realName + "-" + newHash;
+                }
+
+                // 6. æ£€æŸ¥æ˜¯å¦éœ€è¦æ›´æ–°
+                if (!AreHashesEqual(valueImageWeb.GetImageNewHash(), newHash))
+                {
+                    // 7. ä¿å­˜å¤„ç†åçš„å›¾ç‰‡æ•°æ®
+                    valueImageWeb.SetImageNewHash(newHash);
+                    valueImageWeb.CellImageBytes = compressedBytes;
+                    Control.Tag = compressedBytes;
+
+                    // 8. æ›´æ–°æ˜¾ç¤ºå›¾ç‰‡
+                    using (MemoryStream ms = new MemoryStream(compressedBytes))
                     {
                         PickerImage = System.Drawing.Image.FromStream(ms, true);
                     }
+
+                    // 9. æ¸…ç†ä¸´æ—¶å›¾ç‰‡å¯¹è±¡
+                    if (processedImage != image)
+                    {
+                        processedImage.Dispose();
+                    }
+
+                    // 10. æ·»åŠ åˆ°ç¼“å­˜
+                    if (UseNewNamingStrategy)
+                    {
+                        await AddToCacheAsync(fileId, compressedBytes);
+                    }
                 }
-                Control.Value = valueImageWeb.CellImageHashName;
+
+                // 11. æ›´æ–°æ§ä»¶å€¼
+                Control.Value = UseNewNamingStrategy ? fileId : valueImageWeb.CellImageHashName;
                 ValueType = typeof(string);
+
+                return true;
             }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"å¤„ç†å›¾ç‰‡æ—¶å‘ç”Ÿé”™è¯¯ï¼š{ex.Message}", "é”™è¯¯", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
+            }
+           
+        }
+
+        /// <summary>
+        /// å¼‚æ­¥å›¾ç‰‡é¢„å¤„ç†ï¼šå°ºå¯¸è°ƒæ•´ã€æ ¼å¼æ ‡å‡†åŒ–ç­‰
+        /// </summary>
+        /// <param name="originalImage">åŸå§‹å›¾ç‰‡</param>
+        /// <returns>é¢„å¤„ç†åçš„å›¾ç‰‡</returns>
+        private async Task<System.Drawing.Image> PreprocessImageAsync(System.Drawing.Image originalImage)
+        {
+            return await Task.Run(() =>
+            {
+                try
+                {
+                    // æ£€æŸ¥æ˜¯å¦éœ€è¦è°ƒæ•´å°ºå¯¸
+                    if (AutoResizeLargeImages && (originalImage.Width > MaxImageDimension || originalImage.Height > MaxImageDimension))
+                    {
+                        return ResizeImage(originalImage, MaxImageDimension, MaxImageDimension);
+                    }
+
+                    // æ£€æŸ¥å›¾ç‰‡æ ¼å¼ï¼Œå¦‚æœä¸æ˜¯æ ‡å‡†æ ¼å¼ï¼Œè½¬æ¢ä¸ºæ ‡å‡†æ ¼å¼
+                    if (!(originalImage is Bitmap))
+                    {
+                        return new Bitmap(originalImage);
+                    }
+
+                    return originalImage;
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"å›¾ç‰‡é¢„å¤„ç†å¤±è´¥ï¼š{ex.Message}", "é”™è¯¯", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return null;
+                }
+            });
+        }
+
+        /// <summary>
+        /// è°ƒæ•´å›¾ç‰‡å°ºå¯¸ï¼Œä¿æŒå®½é«˜æ¯”
+        /// </summary>
+        /// <param name="image">åŸå§‹å›¾ç‰‡</param>
+        /// <param name="maxWidth">æœ€å¤§å®½åº¦</param>
+        /// <param name="maxHeight">æœ€å¤§é«˜åº¦</param>
+        /// <returns>è°ƒæ•´åçš„å›¾ç‰‡</returns>
+        private System.Drawing.Image ResizeImage(System.Drawing.Image image, int maxWidth, int maxHeight)
+        {
+            try
+            {
+                // è®¡ç®—ç¼©æ”¾æ¯”ä¾‹
+                float ratioX = (float)maxWidth / image.Width;
+                float ratioY = (float)maxHeight / image.Height;
+                float ratio = Math.Min(ratioX, ratioY);
+
+                // å¦‚æœä¸éœ€è¦ç¼©æ”¾ï¼Œç›´æ¥è¿”å›åŸå›¾
+                if (ratio >= 1.0f)
+                {
+                    return image;
+                }
+
+                int newWidth = (int)(image.Width * ratio);
+                int newHeight = (int)(image.Height * ratio);
+
+                // åˆ›å»ºæ–°çš„ä½å›¾
+                var newImage = new Bitmap(newWidth, newHeight);
+                using (var graphics = Graphics.FromImage(newImage))
+                {
+                    graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+                    graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
+                    graphics.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighQuality;
+
+                    graphics.DrawImage(image, 0, 0, newWidth, newHeight);
+                }
+
+                return newImage;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"è°ƒæ•´å›¾ç‰‡å°ºå¯¸å¤±è´¥ï¼š{ex.Message}", "é”™è¯¯", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return image; // å¤±è´¥æ—¶è¿”å›åŸå›¾
+            }
+        }
+
+        /// <summary>
+        /// éªŒè¯å›¾ç‰‡å­—èŠ‚æ•°æ®
+        /// </summary>
+        /// <param name="imageBytes">å›¾ç‰‡å­—èŠ‚æ•°æ®</param>
+        /// <returns>æ˜¯å¦æœ‰æ•ˆ</returns>
+        private bool ValidateImageBytes(byte[] imageBytes)
+        {
+            if (imageBytes == null || imageBytes.Length == 0)
+            {
+                return false;
+            }
+
+            if (imageBytes.Length > MaxFileSizeBytes)
+            {
+                MessageBox.Show($"å›¾ç‰‡æ–‡ä»¶è¿‡å¤§ï¼Œæœ€å¤§æ”¯æŒ {MaxFileSizeBytes / (1024 * 1024)}MB", "é”™è¯¯", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return false;
+            }
+
+            try
+            {
+                using (var ms = new MemoryStream(imageBytes))
+                using (var testImage = System.Drawing.Image.FromStream(ms))
+                {
+                    return testImage.Width > 0 && testImage.Height > 0;
+                }
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// éªŒè¯å›¾ç‰‡æ–‡ä»¶æ‰©å±•å
+        /// </summary>
+        /// <param name="filePath">æ–‡ä»¶è·¯å¾„</param>
+        /// <returns>æ˜¯å¦ä¸ºæ”¯æŒçš„æ ¼å¼</returns>
+        private bool IsSupportedImageFormat(string filePath)
+        {
+            if (string.IsNullOrEmpty(filePath))
+                return false;
+
+            string extension = Path.GetExtension(filePath)?.ToLowerInvariant();
+            return !string.IsNullOrEmpty(extension) && SupportedImageExtensions.Contains(extension);
         }
 
         private void Editor_DragEnter(object sender, DragEventArgs e)
@@ -323,7 +596,7 @@ namespace SourceGrid.Cells.Editors
             }
         }
 
-        private void Editor_DragDrop(object sender, DragEventArgs e)
+        private async void Editor_DragDrop(object sender, DragEventArgs e)
         {
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
             {
@@ -331,17 +604,32 @@ namespace SourceGrid.Cells.Editors
                 if (files != null && files.Length > 0)
                 {
                     string filePath = files[0];
-                    if (filePath.ToLower().EndsWith(".png") || filePath.ToLower().EndsWith(".jpg") || filePath.ToLower().EndsWith(".jpeg") || filePath.ToLower().EndsWith(".bmp"))
+                    if (IsSupportedImageFormat(filePath))
                     {
-                        var img = System.Drawing.Image.FromFile(filePath);
-
-                        SetImageToPath(img);
-                        ValueType = typeof(string);
-                        Control.Value = fileName;
+                        try
+                        {
+                            var img = System.Drawing.Image.FromFile(filePath);
+                            fileName = Path.GetFileNameWithoutExtension(filePath);
+                            
+                            bool success = await SetImageToPathAsync(img);
+                            if (success)
+                            {
+                                ValueType = typeof(string);
+                                Control.Value = fileName;
+                            }
+                            
+                            // é‡Šæ”¾å›¾ç‰‡èµ„æº
+                            img.Dispose();
+                        }
+                        catch (Exception ex)
+                        {
+                            MessageBox.Show($"åŠ è½½å›¾ç‰‡æ–‡ä»¶å¤±è´¥ï¼š{ex.Message}", "é”™è¯¯", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
                     }
                     else
                     {
-                        MessageBox.Show("Ö»ÄÜ½ÓÊÜÍ¼Æ¬ÎÄ¼ş¡£", "ÌáÊ¾", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        string supportedFormats = string.Join(", ", SupportedImageExtensions);
+                        MessageBox.Show($"åªæ”¯æŒä»¥ä¸‹å›¾ç‰‡æ ¼å¼ï¼š{supportedFormats}", "æç¤º", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
                 }
             }
@@ -386,7 +674,7 @@ namespace SourceGrid.Cells.Editors
         }
 
         /// <summary>
-        /// ¶Ô»°¿ò»áÖ±½Óµ½ÕâÀï
+        /// å¯¹è¯æ¡†ä¼šç›´æ¥åˆ°è¿™é‡Œ
         /// </summary>
         /// <returns></returns>
         public override object GetEditedValue()
@@ -394,7 +682,7 @@ namespace SourceGrid.Cells.Editors
             var model = this.EditCell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
             SourceGrid.Cells.Models.ValueImageWeb valueImageWeb = (SourceGrid.Cells.Models.ValueImageWeb)model;
 
-            //ÕâÀïÈ¡Öµ¡£ÒªÅĞ¶Ï±È½ÏÄÄ¸ö×îĞÂÍ¨¹ı¹şÏ£Öµ±È½ÏÒ»ÏÂ¡£
+            //è¿™é‡Œå–å€¼ã€‚è¦åˆ¤æ–­æ¯”è¾ƒå“ªä¸ªæœ€æ–°é€šè¿‡å“ˆå¸Œå€¼æ¯”è¾ƒä¸€ä¸‹ã€‚
             if (Control is DevAge.Windows.Forms.TextBoxUITypeEditorWebImage txtWebImage)
             {
                 if (!string.IsNullOrEmpty(txtWebImage.SelectedFilePath))
@@ -402,21 +690,21 @@ namespace SourceGrid.Cells.Editors
                     byte[] NewbuffByte = ImageProcessor.CompressImage(txtWebImage.SelectedFilePath);
                     string NewHash = ImageHashHelper.GenerateHash(NewbuffByte);
 
-                    //¿´Ô­À´ÓĞ²»ÓĞ¹şÏ£Öµ»òĞÂ¾ÉÊÇ·ñÏàÍ¬£¬Èç¹û²»Í¬Ôò¸üĞÂ
+                    //çœ‹åŸæ¥æœ‰ä¸æœ‰å“ˆå¸Œå€¼æˆ–æ–°æ—§æ˜¯å¦ç›¸åŒï¼Œå¦‚æœä¸åŒåˆ™æ›´æ–°
                     if (!AreHashesEqual(valueImageWeb.GetImageNewHash(), NewHash))
                     {
-                        //½«Í¼Æ¬±£´æµ½ÄÚ´æÖĞ¡£ÓÃÓÚºóÃæµÄÏÔÊ¾£¬»ò±£´æµ½±¾µØÁÙÊ±ÎÄ¼ş¼ĞÖĞ£¬»òÉÏ´«µ½·şÎñÆ÷
+                        //å°†å›¾ç‰‡ä¿å­˜åˆ°å†…å­˜ä¸­ã€‚ç”¨äºåé¢çš„æ˜¾ç¤ºï¼Œæˆ–ä¿å­˜åˆ°æœ¬åœ°ä¸´æ—¶æ–‡ä»¶å¤¹ä¸­ï¼Œæˆ–ä¸Šä¼ åˆ°æœåŠ¡å™¨
                         byte[] destination = new byte[NewbuffByte.Length];
                         Buffer.BlockCopy(NewbuffByte, 0, destination, 0, NewbuffByte.Length);
                         valueImageWeb.CellImageBytes = destination;
                         valueImageWeb.SetImageNewHash(NewHash);
                         Control.Tag = destination;
                     }
-                    txtWebImage.SelectedFilePath = string.Empty;//ÓÃÍêÁËÇå¿Õ¡£
+                    txtWebImage.SelectedFilePath = string.Empty;//ç”¨å®Œäº†æ¸…ç©ºã€‚
                     //return valueImageWeb.CellImageName;
                 }
             }
-            //ÈıÖÖĞÎÊ½¶¼½«byte[]±£´æµ½tagÖĞ
+            //ä¸‰ç§å½¢å¼éƒ½å°†byte[]ä¿å­˜åˆ°tagä¸­
             if (Control.Value != null && !string.IsNullOrEmpty(Control.Value.ToString()) && valueImageWeb.CellImageBytes != null && valueImageWeb.CellImageBytes.Length > 0)
             {
                 Control.Tag = valueImageWeb.CellImageBytes;
@@ -427,16 +715,16 @@ namespace SourceGrid.Cells.Editors
                 return null;
             else if (val is System.Drawing.Image img)
             {
-                SetImageToPath(img);
+                SetImageToPathAsync(img);
                 //ValueType = typeof(string);
-                Control.Tag = null;//Çå¿Õ¡£ÈÃµÚ¶ş¸öµ¥Ôª¸ñ¿ÉÒÔÑ¡ÔñĞÂµÄÍ¼Æ¬¡£
+                Control.Tag = null;//æ¸…ç©ºã€‚è®©ç¬¬äºŒä¸ªå•å…ƒæ ¼å¯ä»¥é€‰æ‹©æ–°çš„å›¾ç‰‡ã€‚
 
             }
             else if (val is byte[] buffByte)
             {
-                //Êµ¼ÊÉÏ±È½ÏÒ»ÏÂ¡£Èç¹û»¹ÊÇÏàÍ¬µÄÍ¼Æ¬²»ÓÃ¸³Öµ
+                //å®é™…ä¸Šæ¯”è¾ƒä¸€ä¸‹ã€‚å¦‚æœè¿˜æ˜¯ç›¸åŒçš„å›¾ç‰‡ä¸ç”¨èµ‹å€¼
                 string NewHash = ImageHashHelper.GenerateHash(buffByte);
-                //¿´Ô­À´ÓĞ²»ÓĞ¹şÏ£Öµ»òĞÂ¾ÉÊÇ·ñÏàÍ¬£¬Èç¹û²»Í¬Ôò¸üĞÂ
+                //çœ‹åŸæ¥æœ‰ä¸æœ‰å“ˆå¸Œå€¼æˆ–æ–°æ—§æ˜¯å¦ç›¸åŒï¼Œå¦‚æœä¸åŒåˆ™æ›´æ–°
                 if (!AreHashesEqual(valueImageWeb.GetImageNewHash(), NewHash))
                 {
                     byte[] NewbuffByte = val as byte[];
@@ -453,7 +741,7 @@ namespace SourceGrid.Cells.Editors
             }
             else if (val is string)
             {
-                //±£´æÎªÍ¼Æ¬
+                //ä¿å­˜ä¸ºå›¾ç‰‡
                 //string newIamgeFilePath = @"../temp/" + new Guid().ToString();
                 //System.IO.File.Exists(newIamgeFilePath);
                 //Control.Value = val;//= newIamgeFilePath;
@@ -464,16 +752,106 @@ namespace SourceGrid.Cells.Editors
         }
 
 
-        //±È½ÏÁ½¸öbyte[]ÊÇ·ñÏàÍ¬£¬Ê¹ÓÃ¹şÏ£ÖµÀ´±È½Ï
+        //æ¯”è¾ƒä¸¤ä¸ªbyte[]æ˜¯å¦ç›¸åŒï¼Œä½¿ç”¨å“ˆå¸Œå€¼æ¥æ¯”è¾ƒ
         /// <summary>
-        /// ±È½ÏÁ½¸öbyte[]ÊÇ·ñÏàÍ¬£¬Ê¹ÓÃ¹şÏ£ÖµÀ´±È½Ï
+        /// å›¾ç‰‡å¢å¼ºå¤„ç†
+        /// åŒ…æ‹¬ï¼šäº®åº¦è°ƒæ•´ã€å¯¹æ¯”åº¦ä¼˜åŒ–ã€é”åŒ–ç­‰
+        /// </summary>
+        /// <param name="image">åŸå§‹å›¾ç‰‡</param>
+        /// <returns>å¢å¼ºåçš„å›¾ç‰‡</returns>
+        private async Task<System.Drawing.Image> EnhanceImageAsync(System.Drawing.Image image)
+        {
+            return await Task.Run(() =>
+            {
+                try
+                {
+                    if (!EnableSmartProcessing)
+                        return image;
+
+                    var bitmap = new Bitmap(image);
+                    
+                    // ç®€å•çš„äº®åº¦è°ƒæ•´
+                    return AdjustBrightness(bitmap, 1.1f);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"å›¾ç‰‡å¢å¼ºå¤±è´¥ï¼š{ex.Message}");
+                    return image;
+                }
+            });
+        }
+
+        /// <summary>
+        /// å¼‚æ­¥å›¾ç‰‡å‹ç¼©
+        /// </summary>
+        /// <param name="image">å›¾ç‰‡å¯¹è±¡</param>
+        /// <returns>å‹ç¼©åçš„å­—èŠ‚æ•°æ®</returns>
+        private async Task<byte[]> CompressImageAsync(System.Drawing.Image image)
+        {
+            return await Task.Run(() =>
+            {
+                return ImageProcessor.CompressImage(image);
+            });
+        }
+
+        /// <summary>
+        /// å¼‚æ­¥æ·»åŠ åˆ°ç¼“å­˜
+        /// </summary>
+        /// <param name="fileId">æ–‡ä»¶ID</param>
+        /// <param name="imageData">å›¾ç‰‡æ•°æ®</param>
+        private async Task AddToCacheAsync(string fileId, byte[] imageData)
+        {
+            try
+            {
+                await ImageCacheManager.Instance.GetImageAsync(
+                    fileId, 
+                    async (id) => await Task.FromResult(imageData)
+                );
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"æ·»åŠ åˆ°ç¼“å­˜å¤±è´¥ï¼š{ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// è°ƒæ•´å›¾ç‰‡äº®åº¦
+        /// </summary>
+        /// <param name="image">åŸå§‹å›¾ç‰‡</param>
+        /// <param name="brightness">äº®åº¦ç³»æ•°ï¼ˆ1.0ä¸ºåŸå§‹å€¼ï¼‰</param>
+        /// <returns>è°ƒæ•´åçš„å›¾ç‰‡</returns>
+        private System.Drawing.Image AdjustBrightness(Bitmap image, float brightness)
+        {
+            var result = new Bitmap(image.Width, image.Height);
+            using (var graphics = Graphics.FromImage(result))
+            {
+                using (var attributes = new System.Drawing.Imaging.ImageAttributes())
+                {
+                    var matrix = new System.Drawing.Imaging.ColorMatrix {
+                        Matrix00 = brightness,
+                        Matrix11 = brightness,
+                        Matrix22 = brightness,
+                        Matrix33 = 1.0f,
+                        Matrix44 = 1.0f
+                    };
+                    
+                    attributes.SetColorMatrix(matrix);
+                    graphics.DrawImage(image, new Rectangle(0, 0, result.Width, result.Height), 
+                        0, 0, image.Width, image.Height, GraphicsUnit.Pixel, attributes);
+                }
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// æ¯”è¾ƒä¸¤ä¸ªbyte[]æ˜¯å¦ç›¸åŒï¼Œä½¿ç”¨å“ˆå¸Œå€¼æ¥æ¯”è¾ƒ
         /// </summary>
         /// <param name="hash1"></param>
         /// <param name="hash2"></param>
         /// <returns></returns>
         public static bool AreHashesEqual(string hash1, string hash2)
         {
-            //Èç¹û¹şÏ£ÖµÎª¿Õ£¬ÈÏÎªÁ½¸öbyte[]ÏàÍ¬
+            //å¦‚æœå“ˆå¸Œå€¼ä¸ºç©ºï¼Œè®¤ä¸ºä¸¤ä¸ªbyte[]ç›¸åŒ
             if (string.IsNullOrEmpty(hash1) && string.IsNullOrEmpty(hash2))
             {
                 return true;
@@ -486,7 +864,7 @@ namespace SourceGrid.Cells.Editors
             {
                 return false;
             }
-            //Èç¹û¹şÏ£ÖµÏàÍ¬£¬ÔòÈÏÎªÁ½¸öbyte[]ÏàÍ¬
+            //å¦‚æœå“ˆå¸Œå€¼ç›¸åŒï¼Œåˆ™è®¤ä¸ºä¸¤ä¸ªbyte[]ç›¸åŒ
             return ImageHashHelper.AreHashesEqual(hash1, hash2);
         }
 
@@ -499,9 +877,9 @@ namespace SourceGrid.Cells.Editors
                 using (MemoryStream mostream = new MemoryStream())
                 {
                     System.Drawing.Bitmap bmp = new System.Drawing.Bitmap(img);
-                    bmp.Save(mostream, System.Drawing.Imaging.ImageFormat.Bmp);//½«Í¼ÏñÒÔÖ¸¶¨µÄ¸ñÊ½´æÈë»º´æÄÚ´æÁ÷
+                    bmp.Save(mostream, System.Drawing.Imaging.ImageFormat.Bmp);//å°†å›¾åƒä»¥æŒ‡å®šçš„æ ¼å¼å­˜å…¥ç¼“å­˜å†…å­˜æµ
                     bt = new byte[mostream.Length];
-                    mostream.Position = 0;//ÉèÖÃÁôµÄ³õÊ¼Î»ÖÃ
+                    mostream.Position = 0;//è®¾ç½®ç•™çš„åˆå§‹ä½ç½®
                     mostream.Read(bt, 0, Convert.ToInt32(bt.Length));
                 }
             }

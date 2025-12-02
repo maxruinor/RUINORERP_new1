@@ -7,7 +7,7 @@ using System.Runtime.Serialization;
 using RUINORERP.PacketSpec.Models.Responses;
 using RUINORERP.PacketSpec.Models.Core;
 
-namespace RUINORERP.PacketSpec.Models
+namespace RUINORERP.PacketSpec.Models.FileManagement
 {
     /// <summary>
     /// 存储使用信息数据类
@@ -109,10 +109,10 @@ namespace RUINORERP.PacketSpec.Models
         /// </summary>
         public StorageUsageInfo(bool success, string message, StorageUsageInfoData data = null, int code = 200) 
         {
-            this.IsSuccess = success;
-            this.Message = message;
-            this.Data = data;
-            this.Timestamp = DateTime.Now;
+            IsSuccess = success;
+            Message = message;
+            Data = data;
+            Timestamp = DateTime.Now;
         }
 
         /// <summary>

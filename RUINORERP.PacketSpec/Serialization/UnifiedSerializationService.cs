@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
@@ -11,8 +11,9 @@ using System.Reflection;
 namespace RUINORERP.PacketSpec.Serialization
 {
     /// <summary>
-    /// 统一序列化服务 - 简化版本，专注于核心功能
+    /// 统一序列化服务 - 简化版本，专注于无属性标记类的序列化
     /// 支持JSON、MessagePack序列化，自动忽略null值
+    /// 不再需要DataContract和DataMember特性标记
     /// </summary>
     public static class UnifiedSerializationService
     {
@@ -24,19 +25,12 @@ namespace RUINORERP.PacketSpec.Serialization
         {
             try
             {
-                // 增强的解析器配置，支持[Key]属性和接口序列化
+                // 简化的解析器配置，专注于无属性标记类的序列化
                 var resolver = CompositeResolver.Create(
-
-                    
-
-                                                           // 原生解析器，支持[Key]特性
+                    // 原生解析器，处理基本类型
                     NativeDateTimeResolver.Instance,
-                    // 优先使用基于属性的解析器，支持[Key]属性
-                    AttributeFormatterResolver.Instance, // 支持[MessagePack.Key]和[DataMember]属性
-                                                         // 支持接口类型的序列化
-                                                         //TypelessObjectResolver.Instance, // 保留完整类型信息，支持接口和抽象类
-                     ContractlessStandardResolver.Instance, // 支持无属性标记的类
-
+                    // 支持无属性标记的类，无需DataMember特性
+                    ContractlessStandardResolver.Instance,
                     // 标准解析器作为后备
                     StandardResolver.Instance
                                         // 动态泛型解析器，支持接口和抽象类

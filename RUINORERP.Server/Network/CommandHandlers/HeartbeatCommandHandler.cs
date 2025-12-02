@@ -11,6 +11,7 @@ using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Errors;
 using RUINORERP.PacketSpec.Models.Authentication;
 using RUINORERP.PacketSpec.Models.Requests;
+using RUINORERP.Server.Network.Models;
 
 namespace RUINORERP.Server.Network.CommandHandlers
 {
@@ -23,7 +24,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
     {
         private readonly ISessionService _sessionService;
 
-      
+
 
         /// <summary>
         /// 构造函数 - 通过依赖注入获取服务
@@ -75,35 +76,35 @@ namespace RUINORERP.Server.Network.CommandHandlers
         {
             try
             {
-                // 获取或创建会话信息
-                var sessionInfo = SessionService.GetSession(queuedCommand.Packet.ExecutionContext.SessionId);
 
-                // 检查会话是否存在
-                if (sessionInfo == null)
-                {
-                    LogWarning($"未找到会话信息: SessionId={queuedCommand.Packet.ExecutionContext.SessionId}");
-                    var errorResponse = new HeartbeatResponse
-                    {
-                        IsSuccess = false,
-                        Status = "ERROR",
-                        ServerTimestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
-                        NextIntervalMs = 5000, // 错误情况下缩短间隔
-                        ServerInfo = new Dictionary<string, object>
-                        {
-                            ["Error"] = "会话不存在或已过期",
-                            ["ErrorCode"] = "SESSION_NOT_FOUND",
-                            ["SessionId"] = queuedCommand.Packet.ExecutionContext.SessionId
-                        }
-                    };
-                    return ResponseFactory.CreateSpecificErrorResponse(queuedCommand.Packet, "会话不存在或已过期");
-                }
+                SessionInfo sessionInfo = new SessionInfo();
 
                 if (queuedCommand.Packet.Request is HeartbeatRequest heartbeatRequest)
                 {
                     // 确保 UserInfo 不为空
                     if (heartbeatRequest.UserInfo != null)
                     {
-                        heartbeatRequest.UserInfo.SessionId = sessionInfo.SessionID;
+                        sessionInfo = SessionService.GetSession(heartbeatRequest.UserInfo.UserID);
+                        if (heartbeatRequest.UserInfo.UserID == 0 || sessionInfo == null)
+                        {
+                            // 创建心跳响应数据
+                            var responseNotLogin = new HeartbeatResponse
+                            {
+                                IsSuccess = true,
+                                ErrorMessage = "用户不存在",
+                                Status = "OK",
+                                ServerTimestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+                                NextIntervalMs = 30000, // 默认30秒间隔
+                                ServerInfo = new Dictionary<string, object>
+                                {
+                                    ["ServerTime"] = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+                                    ["ServerVersion"] = "1.0.0",
+                                }
+                            };
+
+                            return responseNotLogin;
+                        }
+
                         sessionInfo.UserInfo = heartbeatRequest.UserInfo;
                     }
 

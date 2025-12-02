@@ -1,7 +1,7 @@
-﻿using RUINORERP.PacketSpec.Models.Core;
+using RUINORERP.PacketSpec.Models.Core;
 using System;
 using System.Collections.Generic;
-using System.Runtime.Serialization;
+using System.Text;
 
 namespace RUINORERP.PacketSpec.Models.Lock
 {
@@ -24,42 +24,36 @@ namespace RUINORERP.PacketSpec.Models.Lock
     /// 封装锁定操作的请求参数
     /// 简化为请求控制和操作参数，引用LockInfo而非复制字段
     /// </summary>
-    [DataContract]
     public class LockRequest : RequestBase
     {
         /// <summary>
         /// 锁定信息
         /// 包含所有核心锁定数据
         /// </summary>
-        [DataMember]
         public LockInfo LockInfo { get; set; } = new LockInfo();
 
         /// <summary>
         /// 解锁类型
         /// 定义不同的解锁方式
         /// </summary>
-        [DataMember]
         public UnlockType UnlockType { get; set; }
 
         /// <summary>
         /// 是否为强制解锁
         /// 便捷属性，判断是否为强制解锁
         /// </summary>
-        [DataMember]
         public bool IsForceUnlock => UnlockType == UnlockType.Force;
 
         /// <summary>
         /// 刷新模式
         /// 是否在刷新时更新锁定时间
         /// </summary>
-        [DataMember]
         public bool RefreshMode { get; set; }
 
         /// <summary>
         /// 锁定的文档列表
         /// 用于广播操作
         /// </summary>
-        [DataMember]
         public List<LockInfo> LockedDocuments { get; set; }
 
         ///// <summary>
@@ -77,7 +71,6 @@ namespace RUINORERP.PacketSpec.Models.Lock
         /// 发送解锁请求的用户ID
         /// 当RequestType为RequestUnlock时有效
         /// </summary>
-        [DataMember]
         public long RequesterUserId { get; set; }
 
         /// <summary>
@@ -85,7 +78,6 @@ namespace RUINORERP.PacketSpec.Models.Lock
         /// 发送解锁请求的用户名
         /// 当RequestType为RequestUnlock时有效
         /// </summary>
-        [DataMember]
         public string RequesterUserName { get; set; } = string.Empty;
 
         ///// <summary>

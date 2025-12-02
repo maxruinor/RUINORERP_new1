@@ -25,7 +25,10 @@ namespace RUINORERP.UI.Network.Services
         private readonly TokenRefreshService _tokenRefreshService;
         private readonly CacheClientService _cacheClientService;
         private bool _isLoggedIn = false; // 登录状态标志
-        private readonly SemaphoreSlim _loginLock = new SemaphoreSlim(1, 1); // 登录操作信号量防止并发登录请求
+        //private readonly SemaphoreSlim _loginLock = new SemaphoreSlim(1, 1); // 登录操作信号量防止并发登录请求
+       // 可以增加并发数，比如允许5个并发登录请求
+        private readonly SemaphoreSlim _loginLock = new SemaphoreSlim(5, 5);
+
         private readonly ILogger<UserLoginService> _logger;
         private bool _isDisposed = false;
         private readonly ClientEventManager _eventManager;
@@ -73,7 +76,7 @@ namespace RUINORERP.UI.Network.Services
                 ct.ThrowIfCancellationRequested();
 
                 // 使用信号量确保同一时间只有一个登录请求
-                await _loginLock.WaitAsync(ct);
+                await _loginLock.WaitAsync(TimeSpan.FromSeconds(30), ct);
 
                 // 锁获取成功后，再次检查取消令牌状态
                 if (ct.IsCancellationRequested)

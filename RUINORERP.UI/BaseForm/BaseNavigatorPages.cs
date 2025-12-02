@@ -413,7 +413,7 @@ namespace RUINORERP.UI.BaseForm
         }
 
 
-        public virtual async void Print(RptMode rptMode)
+        public virtual async Task Print(RptMode rptMode)
         {
             List<M> selectlist = GetSelectResult();
             if (_PrintConfig == null || _PrintConfig.tb_PrintTemplates == null)

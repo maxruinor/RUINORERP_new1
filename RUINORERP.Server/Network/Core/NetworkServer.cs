@@ -148,7 +148,7 @@ namespace RUINORERP.Server.Network.Core
                 var configuredPorts = GetConfiguredPorts();
                 foreach (var port in configuredPorts)
                 {
-                    if (IsPortInUse(port))
+                    if (await IsPortInUseAsync(port))
                     {
                         HandlePortAlreadyInUse(port);
                         return null;
@@ -160,7 +160,7 @@ namespace RUINORERP.Server.Network.Core
                 var serverAssembly = Assembly.GetExecutingAssembly();
 
                 // 初始化命令调度器,里面会扫描并注册所有命令类型到命令调度器
-                await _commandDispatcher.InitializeAsync(CancellationToken.None, packetSpecAssembly, serverAssembly);
+                await _commandDispatcher.InitializeAsync(CancellationToken.None, packetSpecAssembly, serverAssembly).ConfigureAwait(false);
 
                 // 添加日志记录，检查注册的处理器数量
                 var handlerCount = _commandDispatcher.HandlerCount;  // 直接使用具体类型属性
@@ -709,7 +709,7 @@ namespace RUINORERP.Server.Network.Core
         /// </summary>
         /// <param name="port">要检查的端口号</param>
         /// <returns>端口是否已被占用</returns>
-        private bool IsPortInUse(int port)
+        private async Task<bool> IsPortInUseAsync(int port)
         {
             try
             {
@@ -718,10 +718,20 @@ namespace RUINORERP.Server.Network.Core
                 {
                     // 尝试连接本地端口，设置超时时间
                     var connectTask = tcpClient.ConnectAsync(System.Net.IPAddress.Loopback, port);
-                    var completed = connectTask.Wait(TimeSpan.FromMilliseconds(500));
+                    var completedTask = await Task.WhenAny(connectTask, Task.Delay(TimeSpan.FromMilliseconds(500)));
+                    var completed = completedTask == connectTask;
                     
                     if (completed && tcpClient.Connected)
                     {
+                        // 确保任务完成，避免资源泄漏
+                        try 
+                        {
+                            await connectTask;
+                        }
+                        catch
+                        {
+                            // 忽略连接异常
+                        }
                         return true; // 端口已被占用
                     }
                 }

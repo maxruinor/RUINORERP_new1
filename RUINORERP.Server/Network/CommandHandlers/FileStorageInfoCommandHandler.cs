@@ -3,7 +3,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using RUINORERP.PacketSpec.Commands;
-using RUINORERP.PacketSpec.Models;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Requests;
 using RUINORERP.PacketSpec.Models.Responses;
@@ -14,6 +13,7 @@ using System.Collections.Generic;
 using RUINORERP.Model;
 using System.Linq;
 using RUINORERP.PacketSpec.Models.Common;
+using RUINORERP.PacketSpec.Models.FileManagement;
 
 namespace RUINORERP.Server.Network.CommandHandlers
 {

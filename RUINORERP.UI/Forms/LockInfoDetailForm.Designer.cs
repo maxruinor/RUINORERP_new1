@@ -18,7 +18,6 @@ namespace RUINORERP.UI.Forms
         private void InitializeComponent()
         {
             this.tableLayoutPanelMain = new System.Windows.Forms.TableLayoutPanel();
-            this.btnClose = new System.Windows.Forms.Button();
             this.tabControl = new System.Windows.Forms.TabControl();
             this.tabPageBasicInfo = new System.Windows.Forms.TabPage();
             this.tableLayoutPanelBasicInfo = new System.Windows.Forms.TableLayoutPanel();
@@ -76,15 +75,15 @@ namespace RUINORERP.UI.Forms
             this.label22 = new System.Windows.Forms.Label();
             this.label23 = new System.Windows.Forms.Label();
             this.label24 = new System.Windows.Forms.Label();
+            this.label25 = new System.Windows.Forms.Label();
+            this.label26 = new System.Windows.Forms.Label();
+            this.label27 = new System.Windows.Forms.Label();
+            this.label28 = new System.Windows.Forms.Label();
             this.lblRemark = new System.Windows.Forms.Label();
             this.lblHeartbeatCount = new System.Windows.Forms.Label();
             this.lblDuration = new System.Windows.Forms.Label();
             this.lblExpireTimestamp = new System.Windows.Forms.Label();
             this.lblRemainingLockTimeMs = new System.Windows.Forms.Label();
-            this.label25 = new System.Windows.Forms.Label();
-            this.label26 = new System.Windows.Forms.Label();
-            this.label27 = new System.Windows.Forms.Label();
-            this.label28 = new System.Windows.Forms.Label();
             this.tableLayoutPanelMain.SuspendLayout();
             this.tabControl.SuspendLayout();
             this.tabPageBasicInfo.SuspendLayout();
@@ -105,7 +104,6 @@ namespace RUINORERP.UI.Forms
             // 
             this.tableLayoutPanelMain.ColumnCount = 1;
             this.tableLayoutPanelMain.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanelMain.Controls.Add(this.btnClose, 0, 1);
             this.tableLayoutPanelMain.Controls.Add(this.tabControl, 0, 0);
             this.tableLayoutPanelMain.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanelMain.Location = new System.Drawing.Point(0, 0);
@@ -115,17 +113,6 @@ namespace RUINORERP.UI.Forms
             this.tableLayoutPanelMain.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 50F));
             this.tableLayoutPanelMain.Size = new System.Drawing.Size(571, 418);
             this.tableLayoutPanelMain.TabIndex = 0;
-            // 
-            // btnClose
-            // 
-            this.btnClose.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.btnClose.Location = new System.Drawing.Point(236, 378);
-            this.btnClose.Name = "btnClose";
-            this.btnClose.Size = new System.Drawing.Size(100, 28);
-            this.btnClose.TabIndex = 0;
-            this.btnClose.Text = "关闭";
-            this.btnClose.UseVisualStyleBackColor = true;
-            this.btnClose.Click += new System.EventHandler(this.btnClose_Click);
             // 
             // tabControl
             // 
@@ -216,7 +203,7 @@ namespace RUINORERP.UI.Forms
             this.label4.Dock = System.Windows.Forms.DockStyle.Fill;
             this.label4.Location = new System.Drawing.Point(3, 90);
             this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(94, 30);
+            this.label4.Size = new System.Drawing.Size(94, 240);
             this.label4.TabIndex = 3;
             this.label4.Text = "单据编号:";
             this.label4.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -257,7 +244,7 @@ namespace RUINORERP.UI.Forms
             this.lblBillNo.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblBillNo.Location = new System.Drawing.Point(103, 90);
             this.lblBillNo.Name = "lblBillNo";
-            this.lblBillNo.Size = new System.Drawing.Size(445, 30);
+            this.lblBillNo.Size = new System.Drawing.Size(445, 240);
             this.lblBillNo.TabIndex = 7;
             this.lblBillNo.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
@@ -307,7 +294,7 @@ namespace RUINORERP.UI.Forms
             this.label6.Dock = System.Windows.Forms.DockStyle.Fill;
             this.label6.Location = new System.Drawing.Point(3, 30);
             this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(94, 30);
+            this.label6.Size = new System.Drawing.Size(94, 300);
             this.label6.TabIndex = 1;
             this.label6.Text = "锁定用户名:";
             this.label6.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -328,7 +315,7 @@ namespace RUINORERP.UI.Forms
             this.lblLockedUserName.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblLockedUserName.Location = new System.Drawing.Point(103, 30);
             this.lblLockedUserName.Name = "lblLockedUserName";
-            this.lblLockedUserName.Size = new System.Drawing.Size(445, 30);
+            this.lblLockedUserName.Size = new System.Drawing.Size(445, 300);
             this.lblLockedUserName.TabIndex = 3;
             this.lblLockedUserName.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
@@ -420,7 +407,7 @@ namespace RUINORERP.UI.Forms
             this.label11.Dock = System.Windows.Forms.DockStyle.Fill;
             this.label11.Location = new System.Drawing.Point(3, 120);
             this.label11.Name = "label11";
-            this.label11.Size = new System.Drawing.Size(94, 30);
+            this.label11.Size = new System.Drawing.Size(94, 210);
             this.label11.TabIndex = 4;
             this.label11.Text = "锁定时长:";
             this.label11.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -471,7 +458,7 @@ namespace RUINORERP.UI.Forms
             this.lblDurationText.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblDurationText.Location = new System.Drawing.Point(103, 120);
             this.lblDurationText.Name = "lblDurationText";
-            this.lblDurationText.Size = new System.Drawing.Size(445, 30);
+            this.lblDurationText.Size = new System.Drawing.Size(445, 210);
             this.lblDurationText.TabIndex = 9;
             this.lblDurationText.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
@@ -577,7 +564,7 @@ namespace RUINORERP.UI.Forms
             this.label17.Dock = System.Windows.Forms.DockStyle.Fill;
             this.label17.Location = new System.Drawing.Point(3, 150);
             this.label17.Name = "label17";
-            this.label17.Size = new System.Drawing.Size(94, 30);
+            this.label17.Size = new System.Drawing.Size(94, 180);
             this.label17.TabIndex = 5;
             this.label17.Text = "综合状态:";
             this.label17.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -638,7 +625,7 @@ namespace RUINORERP.UI.Forms
             this.lblStatus.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblStatus.Location = new System.Drawing.Point(103, 150);
             this.lblStatus.Name = "lblStatus";
-            this.lblStatus.Size = new System.Drawing.Size(445, 30);
+            this.lblStatus.Size = new System.Drawing.Size(445, 180);
             this.lblStatus.TabIndex = 11;
             this.lblStatus.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
@@ -702,7 +689,7 @@ namespace RUINORERP.UI.Forms
             this.label20.Dock = System.Windows.Forms.DockStyle.Fill;
             this.label20.Location = new System.Drawing.Point(3, 60);
             this.label20.Name = "label20";
-            this.label20.Size = new System.Drawing.Size(94, 30);
+            this.label20.Size = new System.Drawing.Size(94, 270);
             this.label20.TabIndex = 2;
             this.label20.Text = "会话ID:";
             this.label20.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -733,7 +720,7 @@ namespace RUINORERP.UI.Forms
             this.lblSessionId.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblSessionId.Location = new System.Drawing.Point(103, 60);
             this.lblSessionId.Name = "lblSessionId";
-            this.lblSessionId.Size = new System.Drawing.Size(445, 30);
+            this.lblSessionId.Size = new System.Drawing.Size(445, 270);
             this.lblSessionId.TabIndex = 5;
             this.lblSessionId.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
@@ -844,7 +831,6 @@ namespace RUINORERP.UI.Forms
             this.label26.Name = "label26";
             this.label26.Size = new System.Drawing.Size(94, 30);
             this.label26.TabIndex = 5;
-            this.label26.Text = "";
             // 
             // label27
             // 
@@ -854,7 +840,6 @@ namespace RUINORERP.UI.Forms
             this.label27.Name = "label27";
             this.label27.Size = new System.Drawing.Size(94, 30);
             this.label27.TabIndex = 6;
-            this.label27.Text = "";
             // 
             // label28
             // 
@@ -862,9 +847,8 @@ namespace RUINORERP.UI.Forms
             this.label28.Dock = System.Windows.Forms.DockStyle.Fill;
             this.label28.Location = new System.Drawing.Point(3, 210);
             this.label28.Name = "label28";
-            this.label28.Size = new System.Drawing.Size(94, 30);
+            this.label28.Size = new System.Drawing.Size(94, 120);
             this.label28.TabIndex = 7;
-            this.label28.Text = "";
             // 
             // lblRemark
             // 
@@ -951,7 +935,6 @@ namespace RUINORERP.UI.Forms
         #endregion
 
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanelMain;
-        private System.Windows.Forms.Button btnClose;
         private System.Windows.Forms.TabControl tabControl;
         private System.Windows.Forms.TabPage tabPageBasicInfo;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanelBasicInfo;

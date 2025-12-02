@@ -11,6 +11,7 @@ namespace RUINORERP.PacketSpec.Models.Responses
     
     public class HeartbeatResponse : ResponseBase
     {
+
         /// <summary>
         /// 响应状态
         /// </summary>

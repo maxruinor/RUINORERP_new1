@@ -492,9 +492,7 @@ namespace RUINORERP.UI.PUR
         {
             if (frm.ShowDialog() == DialogResult.OK)
             {
-                //保存属性
-                // ToolBarEnabledControl(MenuItemEnums.属性);
-                //MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("属性", EditEntity);
+                 
             }
         }
 

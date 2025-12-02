@@ -128,7 +128,8 @@ namespace RUINORERP.Business.BNR
                 // 等待后台任务完成
                 if (_backgroundTask != null && !_backgroundTask.IsCompleted)
                 {
-                    _backgroundTask.Wait(2000); // 等待最多2秒
+                    // 使用Task.Wait替代_task.Wait()以避免潜在的死锁
+                    Task.WaitAny(_backgroundTask, Task.Delay(2000)); // 等待最多2秒
                 }
                 
                 // 最后一次刷新缓存到数据库

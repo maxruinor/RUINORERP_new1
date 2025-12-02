@@ -17,7 +17,6 @@ namespace RUINORERP.PacketSpec.Models.Core
     public class ResponseBase : IResponse
     {
 
-
         /// <summary>
         /// 业务级错误码；0 表示成功
         /// </summary>

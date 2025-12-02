@@ -119,33 +119,33 @@ namespace RUINORERP.UI.FM
                 #region 应收应付
                 //if (statement.StatementStatus == (int)StatementStatus.部分结算 || statement.StatementStatus == (int)StatementStatus.已结清)
                 //{
-                    var receivablePayables = await MainForm.Instance.AppContext.Db.Queryable<tb_FM_ReceivablePayable>()
-                                                                    .Where(c => c.ARAPStatus >= (int)ARAPStatus.待审核
-                                                                    && c.CustomerVendor_ID == statement.CustomerVendor_ID
-                                                                    && statement.tb_FM_StatementDetails.Any(d => d.ARAPId == c.ARAPId))
-                                                                    .ToListAsync();
-                    foreach (var item in receivablePayables)
+                var receivablePayables = await MainForm.Instance.AppContext.Db.Queryable<tb_FM_ReceivablePayable>()
+                                                                .Where(c => c.ARAPStatus >= (int)ARAPStatus.待审核
+                                                                && c.CustomerVendor_ID == statement.CustomerVendor_ID
+                                                                && statement.tb_FM_StatementDetails.Any(d => d.ARAPId == c.ARAPId))
+                                                                .ToListAsync();
+                foreach (var item in receivablePayables)
+                {
+                    var rqpara = new Model.CommonModel.RelatedQueryParameter();
+                    if (item.ReceivePaymentType == (int)ReceivePaymentType.收款)
                     {
-                        var rqpara = new Model.CommonModel.RelatedQueryParameter();
-                        if (item.ReceivePaymentType == (int)ReceivePaymentType.收款)
-                        {
-                            rqpara.bizType = BizType.应收款单;
-                        }
-                        else
-                        {
-                            rqpara.bizType = BizType.应付款单;
-                        }
+                        rqpara.bizType = BizType.应收款单;
+                    }
+                    else
+                    {
+                        rqpara.bizType = BizType.应付款单;
+                    }
 
-                        rqpara.billId = item.ARAPId;
-                        ToolStripMenuItem RelatedMenuItemPara = new ToolStripMenuItem();
-                        RelatedMenuItemPara.Name = $"{rqpara.billId}";
-                        RelatedMenuItemPara.Tag = rqpara;
-                        RelatedMenuItemPara.Text = $"{rqpara.bizType}:{item.ARAPNo}";
-                        RelatedMenuItemPara.Click += base.MenuItem_Click;
-                        if (!toolStripbtnRelatedQuery.DropDownItems.ContainsKey(item.ARAPId.ToString()))
-                        {
-                            toolStripbtnRelatedQuery.DropDownItems.Add(RelatedMenuItemPara);
-                        }
+                    rqpara.billId = item.ARAPId;
+                    ToolStripMenuItem RelatedMenuItemPara = new ToolStripMenuItem();
+                    RelatedMenuItemPara.Name = $"{rqpara.billId}";
+                    RelatedMenuItemPara.Tag = rqpara;
+                    RelatedMenuItemPara.Text = $"{rqpara.bizType}:{item.ARAPNo}";
+                    RelatedMenuItemPara.Click += base.MenuItem_Click;
+                    if (!toolStripbtnRelatedQuery.DropDownItems.ContainsKey(item.ARAPId.ToString()))
+                    {
+                        toolStripbtnRelatedQuery.DropDownItems.Add(RelatedMenuItemPara);
+                    }
                     //}
                 }
                 #endregion
@@ -386,10 +386,9 @@ namespace RUINORERP.UI.FM
                                 }
                             }
                         }
-
                     }
 
-                    if (s2.PropertyName == entity.GetPropertyName<tb_FM_Statement>(c => c.TotalPayableLocalAmount))
+                    if (s2.PropertyName == entity.GetPropertyName<tb_FM_Statement>(c => c.TotalPayableLocalAmount) || s2.PropertyName == entity.GetPropertyName<tb_FM_Statement>(c => c.ActionStatus))
                     {
                         entity.PamountInWords = entity.tb_FM_StatementDetails.Sum(c => c.IncludedLocalAmount).ToUpperAmount();
                     }
@@ -593,7 +592,7 @@ namespace RUINORERP.UI.FM
             var lambda = Expressionable.Create<tb_FM_Statement>()
                               //.AndIF(CurMenuInfo.CaptionCN.Contains("客户"), t => t.IsCustomer == true)
                               // .AndIF(CurMenuInfo.CaptionCN.Contains("供应商"), t => t.IsVendor == true)
-                              .And(t => t.ReceivePaymentType == (int)PaymentType)
+                              //.And(t => t.ReceivePaymentType == (int)PaymentType)
                              .And(t => t.isdeleted == false)
                             //报销人员限制，财务不限制 自己的只能查自己的
                             .AndIF(AuthorizeController.GetSaleLimitedAuth(MainForm.Instance.AppContext), t => t.Created_by == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户,采购不限制

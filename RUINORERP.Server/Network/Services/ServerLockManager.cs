@@ -117,8 +117,10 @@ namespace RUINORERP.Server.Network.Services
             _documentLocks = new ConcurrentDictionary<long, LockInfo>();
 
             // 初始化孤儿锁检测器
-            var orphanedLogger = logger as ILogger<OrphanedLockDetector> ??
-                new Microsoft.Extensions.Logging.Logger<OrphanedLockDetector>(new Microsoft.Extensions.Logging.LoggerFactory());
+            // 注意：这里通过LoggerFactory创建特定于OrphanedLockDetector的日志记录器
+            // 由于OrphanedLockDetector是ServerLockManager的内部依赖，直接实例化是合理的
+            var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
+            var orphanedLogger = loggerFactory.CreateLogger<OrphanedLockDetector>();
             _orphanedLockDetector = new OrphanedLockDetector(this, orphanedLogger);
 
             // 初始化定时器
@@ -173,14 +175,12 @@ namespace RUINORERP.Server.Network.Services
         {
             try
             {
-                if (sessionInfo == null || string.IsNullOrEmpty(sessionInfo.SessionID))
+                if (sessionInfo == null)
                 {
-                    _logger.LogWarning("接收到无效的会话断开事件");
                     return;
                 }
-                
                 // 异步调用解锁方法，不阻塞事件处理
-                _ = ReleaseAllLocksBySessionIdAsync(sessionInfo.SessionID);
+                _ = ReleaseAllLocksBySessionIdAsync(sessionInfo.UserId);
             }
             catch (Exception ex)
             {
@@ -208,7 +208,6 @@ namespace RUINORERP.Server.Network.Services
                     if (_sessionService != null)
                     {
                         _sessionService.SessionDisconnected -= HandleSessionDisconnected;
-                        _logger.LogInformation("已取消订阅会话服务的断开事件");
                     }
 
                     // 停止孤儿锁检测器
@@ -415,14 +414,14 @@ namespace RUINORERP.Server.Network.Services
         /// </summary>
         /// <param name="sessionId">会话ID</param>
         /// <returns>释放的锁定数量</returns>
-        public async Task<int> ReleaseAllLocksBySessionIdAsync(string sessionId)
+        public async Task<int> ReleaseAllLocksBySessionIdAsync(long? userID)
         {
             if (_isDisposed)
                 throw new ObjectDisposedException(nameof(ServerLockManager));
 
-            if (string.IsNullOrEmpty(sessionId))
+            if (!userID.HasValue || userID <= 0)
             {
-                _logger.LogWarning("尝试使用空会话ID释放锁定");
+                //尝试使用空会话ID释放锁定
                 return 0;
             }
 
@@ -430,13 +429,12 @@ namespace RUINORERP.Server.Network.Services
             {
                 // 查找所有与会话ID关联的锁定
                 var locksToRelease = _documentLocks
-                    .Where(kvp => kvp.Value.SessionId == sessionId)
+                    .Where(kvp => kvp.Value.LockedUserId == userID)
                     .Select(kvp => kvp.Value)
                     .ToList();
 
                 if (locksToRelease.Count == 0)
                 {
-                    _logger.LogDebug("会话 {SessionId} 没有关联的锁定", sessionId);
                     return 0;
                 }
 
@@ -453,12 +451,11 @@ namespace RUINORERP.Server.Network.Services
                     }
                 }
 
-                _logger.LogInformation("会话 {SessionId} 断开，已释放 {Count} 个锁定", sessionId, releasedCount);
                 return releasedCount;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "释放会话 {SessionId} 的锁定时发生异常", sessionId);
+                _logger.LogError(ex, "释放会话 {userID} 的锁定时发生异常", userID);
                 return 0;
             }
         }
@@ -1134,17 +1131,15 @@ namespace RUINORERP.Server.Network.Services
                 // 添加到锁集合
                 if (_documentLocks.TryAdd(lockInfo.BillID, serverLockInfo))
                 {
-                    // _logger.LogInformation("单据 {BillId} 成功被用户 {UserId} 锁定，锁ID: {LockId}",lockInfo.BillID, lockInfo.UserId, lockInfo.LockId);
-
                     // 广播锁定状态更新
                     await BroadcastLockStatusAsync(serverLockInfo, true);
 
-                    return new LockResponse
-                    {
-                        IsSuccess = true,
-                        Message = "锁定成功",
-                        LockInfo = serverLockInfo
-                    };
+                    LockResponse lockResponse = new LockResponse();
+                    lockResponse.IsSuccess = true;
+                    lockResponse.Message = "锁定成功";
+                    lockResponse.LockInfo = serverLockInfo;
+
+                    return lockResponse;
                 }
                 else
                 {
@@ -1495,7 +1490,7 @@ namespace RUINORERP.Server.Network.Services
             }
             catch (Exception ex)
             {
-                return LockResponseFactory.CreateFailedResponse("孤儿锁清理解锁："+ex.Message);
+                return LockResponseFactory.CreateFailedResponse("孤儿锁清理解锁：" + ex.Message);
             }
         }
 

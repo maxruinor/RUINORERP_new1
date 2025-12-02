@@ -210,12 +210,6 @@
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="DevAge.Windows.Forms\Windows\Forms\FormSingleton.cs" />
-    <Compile Include="DevAge.Windows.Forms\Windows\Forms\frmPictureViewer.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="DevAge.Windows.Forms\Windows\Forms\frmPictureViewer.Designer.cs">
-      <DependentUpon>frmPictureViewer.cs</DependentUpon>
-    </Compile>
     <Compile Include="DevAge.Windows.Forms\Windows\Forms\HeaderGroupBox.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -360,8 +354,13 @@
     <Compile Include="SourceGrid\Cells\Editors\EditorBase.cs" />
     <Compile Include="SourceGrid\Cells\Editors\EditorControlBase.cs" />
     <Compile Include="SourceGrid\Cells\Editors\Factory.cs" />
+    <Compile Include="SourceGrid\Cells\Editors\ImageCacheManager.cs" />
+    <Compile Include="SourceGrid\Cells\Editors\ImageNamingStrategy.cs" />
     <Compile Include="SourceGrid\Cells\Editors\ImagePicker.cs" />
     <Compile Include="SourceGrid\Cells\Editors\ImagePickerHelper.cs" />
+    <Compile Include="SourceGrid\Cells\Editors\ImagePreviewForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="SourceGrid\Cells\Editors\ImageProcessor.cs" />
     <Compile Include="SourceGrid\Cells\Editors\ImageWebPicker.cs" />
     <Compile Include="SourceGrid\Cells\Editors\NumericUpDown.cs" />
@@ -482,9 +481,6 @@
     <None Include="DevAge.Windows.Forms\Res\right.cur" />
     <None Include="DevAge.Windows.Forms\Res\SortDown.ico" />
     <None Include="DevAge.Windows.Forms\Res\SortUp.ico" />
-    <EmbeddedResource Include="DevAge.Windows.Forms\Windows\Forms\frmPictureViewer.resx">
-      <DependentUpon>frmPictureViewer.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="DevAge.Windows.Forms\Windows\Forms\TextBoxUITypeEditorWebImage.resx">
       <DependentUpon>TextBoxUITypeEditorWebImage.cs</DependentUpon>
     </EmbeddedResource>

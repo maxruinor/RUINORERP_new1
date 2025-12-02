@@ -44,6 +44,7 @@ namespace RUINORERP.UI.SysConfig
         
         /// <summary>
         /// 处理表格行双击事件，弹出锁定信息详情窗口
+        /// 优化版本：使用单一大型窗体显示详细信息
         /// </summary>
         private void dgvLockInfo_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
         {
@@ -54,12 +55,13 @@ namespace RUINORERP.UI.SysConfig
                 
                 if (lockInfo != null)
                 {
-                    // 显示锁定信息详情
-                    using (var detailForm = new LockInfoDetailForm(lockInfo))
-                    {
-                        detailForm.StartPosition = FormStartPosition.CenterParent;
-                        detailForm.ShowDialog(this);
-                    }
+                    // 显示锁定信息详情，使用单独的大型窗体展示
+                    LockInfoDetailForm detailForm = new LockInfoDetailForm(lockInfo);
+                    detailForm.StartPosition = FormStartPosition.CenterParent;
+                    detailForm.ShowDialog(this);
+                    
+                    // 关闭详情窗体后刷新锁定列表，确保显示最新状态
+                    LoadLockData();
                 }
             }
         }
@@ -72,12 +74,12 @@ namespace RUINORERP.UI.SysConfig
             dgvLockInfo.ReadOnly = true;
 
             // 添加最重要的锁定信息列
-            // 单据标识
+            // 单据编号
 
             dgvLockInfo.Columns.Add(new DataGridViewTextBoxColumn
             {
-                DataPropertyName = "BillID",
-                HeaderText = "单据ID",
+                DataPropertyName = "BillNo",
+                HeaderText = "单据编号",
                 Width = 100
             });
 
@@ -181,18 +183,41 @@ namespace RUINORERP.UI.SysConfig
             LoadLockData();
         }
 
-        private void btnUnlockSelected_Click(object sender, EventArgs e)
+        private async void btnUnlockSelected_Click(object sender, EventArgs e)
         {
             if (dgvLockInfo.SelectedRows.Count > 0)
             {
-                foreach (DataGridViewRow row in dgvLockInfo.SelectedRows)
+                // 禁用按钮防止重复点击
+                btnUnlockSelected.Enabled = false;
+                
+                try
                 {
-                    if (row.DataBoundItem is LockInfo lockInfo)
+                    // 使用异步方式逐个解锁
+                    int successCount = 0;
+                    foreach (DataGridViewRow row in dgvLockInfo.SelectedRows)
                     {
-                        UnlockItem(lockInfo);
+                        if (row.DataBoundItem is LockInfo lockInfo)
+                        {
+                            if (await UnlockItemAsync(lockInfo))
+                            {
+                                successCount++;
+                            }
+                        }
+                    }
+                    
+                    // 刷新数据
+                    LoadLockData();
+                    
+                    if (successCount > 0)
+                    {
+                        MessageBox.Show($"成功解锁 {successCount} 个项目", "操作成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
                 }
-                LoadLockData();
+                finally
+                {
+                    // 确保按钮恢复可用状态
+                    btnUnlockSelected.Enabled = true;
+                }
             }
             else
             {
@@ -208,7 +233,6 @@ namespace RUINORERP.UI.SysConfig
                 {
                     _lockCacheService.ClearAllCache();
                     LoadLockData();
-                    MessageBox.Show("所有锁定缓存已清空", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
                 catch (Exception ex)
                 {
@@ -217,17 +241,21 @@ namespace RUINORERP.UI.SysConfig
             }
         }
 
-        private void UnlockItem(LockInfo lockInfo)
+        private async Task<bool> UnlockItemAsync(LockInfo lockInfo)
         {
             try
             {
                 long userid = MainForm.Instance.AppContext.CurrentUser.UserID;
-                _lockCacheService.UnlockAsync(lockInfo.BillID, userid).Wait();
-                lockManagementService.UnlockBillAsync(lockInfo.BillID).Wait();
+                // 使用正确的异步调用方式，避免死锁
+                await _lockCacheService.UnlockAsync(lockInfo.BillID, userid);
+                await lockManagementService.UnlockBillAsync(lockInfo.BillID);
+                return true;
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"解锁项 {lockInfo.LockKey} 失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                string lockKey = lockInfo?.LockKey ?? "未知";
+                MessageBox.Show($"解锁项 {lockKey} 失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
             }
         }
 

@@ -93,5 +93,15 @@ namespace RUINORERP.Server.Network.Interfaces.Services
         /// </summary>
         /// <returns>锁定统计信息</returns>
         LockInfoStatistics GetLockStatistics();
+        
+        /// <summary>
+        /// 启动锁管理服务
+        /// </summary>
+        Task StartAsync();
+        
+        /// <summary>
+        /// 停止锁管理服务
+        /// </summary>
+        Task StopAsync();
     }
 }

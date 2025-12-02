@@ -47,6 +47,13 @@ namespace RUINORERP.Server.Network.Interfaces.Services
         SessionInfo GetSession(string sessionId);
 
         /// <summary>
+        /// 获取会话信息
+        /// </summary>
+        /// <param name="sessionId">会话ID</param>
+        /// <returns>会话信息</returns>
+        SessionInfo GetSession(long userId);
+
+        /// <summary>
         /// 获取指定用户名的所有会话
         /// </summary>
         /// <param name="username">用户名</param>

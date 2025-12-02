@@ -1,3 +1,10 @@
+using log4net;
+using Microsoft.Extensions.DependencyInjection;
+using RUINORERP.Business.CommService;
+using RUINORERP.PacketSpec.Models.Lock;
+using RUINORERP.Server.Comm;
+using RUINORERP.Server.Network.Interfaces.Services;
+using RUINORERP.Server.Network.Services;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -6,28 +13,25 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using RUINORERP.Server.Comm;
-using RUINORERP.Business.CommService;
-using Microsoft.Extensions.DependencyInjection;
-using RUINORERP.Server.Network.Services;
-using RUINORERP.Server.Network.Interfaces.Services;
-using RUINORERP.PacketSpec.Models.Lock;
 using System.Windows.Forms;
 
 namespace RUINORERP.Server.Controls
 {
     public partial class LockDataViewerControl : UserControl
     {
+        private ILockManagerService _lockManagerService;
         private System.Windows.Forms.Timer refreshTimer;
 
         public LockDataViewerControl()
         {
             InitializeComponent();
+            _lockManagerService = Startup.GetFromFac<ILockManagerService>();
             InitializeTimer();
             InitializeData();
             // 移除重复的事件订阅，避免双击时显示两次详细信息
             // dataGridViewData.CellDoubleClick += dataGridViewData_CellDoubleClick;
         }
+ 
 
         private ContextMenuStrip contextMenuStrip;
 
@@ -103,16 +107,15 @@ namespace RUINORERP.Server.Controls
                 if (result != DialogResult.Yes)
                     return;
 
-                var lockManager = Program.ServiceProvider.GetRequiredService<ILockManagerService>();
                 // 获取所有锁定单据并筛选过期项
-                var lockInfos = lockManager.GetAllLockedDocuments();
+                var lockInfos = _lockManagerService.GetAllLockedDocuments();
                 int unlockedCount = 0;
                 foreach (var lockInfo in lockInfos)
                 {
                     // 检查是否锁定状态为false（已过期）
                     if (!lockInfo.IsLocked)
                     {
-                        await lockManager.ForceUnlockDocumentAsync(lockInfo.BillID);
+                        await _lockManagerService.ForceUnlockDocumentAsync(lockInfo.BillID);
                         {
                             unlockedCount++;
                         }
@@ -226,7 +229,7 @@ namespace RUINORERP.Server.Controls
                 if (result != DialogResult.Yes)
                     return;
 
-                var lockManager = Program.ServiceProvider.GetRequiredService<ILockManagerService>();
+
                 int successCount = 0;
                 int failCount = 0;
 
@@ -236,7 +239,7 @@ namespace RUINORERP.Server.Controls
                     {
                         try
                         {
-                            var unlockResult = await lockManager.ForceUnlockDocumentAsync(lockInfo.BillID);
+                            var unlockResult = await _lockManagerService.ForceUnlockDocumentAsync(lockInfo.BillID);
                             if (unlockResult.IsSuccess)
                                 successCount++;
                             else
@@ -291,14 +294,14 @@ namespace RUINORERP.Server.Controls
                 dataGridViewData.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells;
 
                 // 添加最重要的锁定信息列
-                
-                // 单据标识
+
+                // 单据编号
                 dataGridViewData.Columns.Add(new DataGridViewTextBoxColumn
                 {
-                    DataPropertyName = "BillID",
-                    HeaderText = "单据ID",
-                    Name = "colBillID",
-                    FillWeight = 10
+                    DataPropertyName = "BillNo",
+                    HeaderText = "单据编号",
+                    Name = "colBillNo",
+                    FillWeight = 15
                 });
 
                 // 用户信息
@@ -471,7 +474,7 @@ namespace RUINORERP.Server.Controls
             {
                 // 清空当前数据
                 dataGridViewData.DataSource = null;
-                
+
                 // 确保列配置正确
                 ConfigureDataGridViewColumns();
 
@@ -492,16 +495,11 @@ namespace RUINORERP.Server.Controls
 
                     try
                     {
-                        // 获取锁定信息管理器
-                        var lockManager = Program.ServiceProvider.GetRequiredService<ILockManagerService>();
-                        if (lockManager == null)
-                        {
-                            MessageBox.Show("锁定管理器服务未找到，请检查依赖注入配置", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                            return;
-                        }
+
+
 
                         // 获取锁定信息
-                        var lockInfos = lockManager.GetAllLockedDocuments();
+                        var lockInfos = _lockManagerService.GetAllLockedDocuments();
 
                         // 处理锁定信息列表
                         if (lockInfos != null && lockInfos.Any())
@@ -510,7 +508,7 @@ namespace RUINORERP.Server.Controls
                             dataGridViewData.DataSource = new BindingList<LockInfo>(lockInfos);
                             // 记录状态信息到控制台
                             Console.WriteLine($"共 {lockInfos.Count} 条锁定记录");
-                            
+
                             // 自动调整列宽以适应内容
                             AutoAdjustColumnWidths();
                         }
@@ -541,7 +539,7 @@ namespace RUINORERP.Server.Controls
                 MessageBox.Show($"加载锁定数据失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-        
+
         /// <summary>
         /// 自动调整列宽以适应内容
         /// </summary>
@@ -634,30 +632,27 @@ namespace RUINORERP.Server.Controls
         {
             try
             {
-                var lockManager = Program.ServiceProvider.GetRequiredService<ILockManagerService>();
-                if (lockManager != null)
+                var stats = _lockManagerService.GetLockStatistics();
+                if (stats != null)
                 {
-                    var stats = lockManager.GetLockStatistics();
-                    if (stats != null)
+                    string statsText = $"锁定统计 - 总数: {stats.TotalLocks}, 活跃: {stats.ActiveLocks}, 等待: {stats.RequestingUnlock}, 峰值: {stats.MonitorData?.PeakConcurrentLocks ?? 0}";
+
+                    // 如果存在历史记录数，也显示出来
+                    if (stats is LockInfoStatistics enhancedStats)
                     {
-                        string statsText = $"锁定统计 - 总数: {stats.TotalLocks}, 活跃: {stats.ActiveLocks}, 等待: {stats.RequestingUnlock}, 峰值: {stats.MonitorData?.PeakConcurrentLocks ?? 0}";
+                        statsText += $", 历史: {enhancedStats.HistoryRecordCount}";
+                    }
 
-                        // 如果存在历史记录数，也显示出来
-                        if (stats is LockInfoStatistics enhancedStats)
-                        {
-                            statsText += $", 历史: {enhancedStats.HistoryRecordCount}";
-                        }
-
-                        if (lblLockStats.InvokeRequired)
-                        {
-                            lblLockStats.Invoke(new Action(() => lblLockStats.Text = statsText));
-                        }
-                        else
-                        {
-                            lblLockStats.Text = statsText;
-                        }
+                    if (lblLockStats.InvokeRequired)
+                    {
+                        lblLockStats.Invoke(new Action(() => lblLockStats.Text = statsText));
+                    }
+                    else
+                    {
+                        lblLockStats.Text = statsText;
                     }
                 }
+
             }
             catch (Exception ex)
             {
@@ -708,7 +703,7 @@ namespace RUINORERP.Server.Controls
                             }
                         }
 
-                       
+
 
                         // 添加时间戳
                         message.AppendLine();
@@ -744,7 +739,7 @@ namespace RUINORERP.Server.Controls
             {
                 var row = dataGridViewData.Rows[e.RowIndex];
                 var lockInfo = row.DataBoundItem as LockInfo;
-                
+
                 if (lockInfo != null)
                 {
                     // 显示基本锁定信息，避免使用跨框架引用

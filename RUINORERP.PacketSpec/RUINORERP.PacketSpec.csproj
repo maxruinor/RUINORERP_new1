@@ -19,10 +19,13 @@
 
   <ItemGroup>
     <Compile Remove="Examples\**" />
+    <Compile Remove="Forms\**" />
     <Compile Remove="Legacy\**" />
     <EmbeddedResource Remove="Examples\**" />
+    <EmbeddedResource Remove="Forms\**" />
     <EmbeddedResource Remove="Legacy\**" />
     <None Remove="Examples\**" />
+    <None Remove="Forms\**" />
     <None Remove="Legacy\**" />
   </ItemGroup>
 
@@ -126,7 +129,6 @@
   <ItemGroup>
     <Folder Include="Commands\Lock\" />
     <Folder Include="Exceptions\" />
-    <Folder Include="Forms\" />
   </ItemGroup>
 
 </Project>

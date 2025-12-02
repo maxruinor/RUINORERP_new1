@@ -254,9 +254,9 @@ namespace RUINORERP.Business
 
                     // 根据单据类型更新已对账金额
                     // 根据对账类型来添加负号
-                    if (entity.ReceivePaymentType==(int)ReceivePaymentType.付款)
+                    if (entity.ReceivePaymentType == (int)ReceivePaymentType.付款)
                     {
-                        if (detail.ReceivePaymentType==(int)ReceivePaymentType.收款)
+                        if (detail.ReceivePaymentType == (int)ReceivePaymentType.收款)
                         {
                             arap.LocalReconciledAmount += -detail.IncludedLocalAmount;
                             arap.ForeignReconciledAmount += -detail.IncludedForeignAmount;
@@ -614,7 +614,7 @@ namespace RUINORERP.Business
 
             if (Math.Abs(ClosingBalance - ClosingBalanceLocalAmount) > 0.0001m) // 考虑小数精度问题
             {
-                throw new Exception($"结存金额不一致！请检查数据。计算值:{ClosingBalance},验证值:{ClosingBalanceLocalAmount}");
+                throw new Exception($"数据一致性校验失败：对账单余额与应收应付核销余额不一致。\n可能原因：往来单位已有对账单余额（大于0），但后续付款/收款直接通过应收应付单进行了核销，而未通过对账单中间环节进行结算。\n计算值：{ClosingBalance}，记录值：{ClosingBalanceLocalAmount}\n建议：检查该往来单位近期的核销记录，确认是否存在直接核销应收应付单的情况。");
             }
 
             return ClosingBalance;

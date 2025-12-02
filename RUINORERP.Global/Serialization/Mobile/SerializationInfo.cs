@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------
+//-----------------------------------------------------------------------
 // <copyright file="SerializationInfo.cs" company="Marimer LLC">
 //     Copyright (c) Marimer LLC. All rights reserved.
 //     Website: https://cslanet.com
@@ -22,7 +22,6 @@ namespace RUINORERP.Global.Serialization.Mobile
   [System.Diagnostics.DebuggerNonUserCode]
 #endif
   [Serializable]
-  [DataContract]
   public class SerializationInfo : IMobileObject
   {
     /// <summary>
@@ -30,13 +29,11 @@ namespace RUINORERP.Global.Serialization.Mobile
     /// a single field.
     /// </summary>
     [Serializable]
-    [DataContract]
     public class FieldData : IMobileObject
     {
       /// <summary>
       /// Field value.
       /// </summary>
-      [DataMember]
       public object Value { get; set; }
 
       /// <summary>
@@ -44,13 +41,11 @@ namespace RUINORERP.Global.Serialization.Mobile
       /// specified enum type. Upon deserialization, the integer will be converted back
       /// to the enum type.
       /// </summary>
-      [DataMember]
       public string EnumTypeName { get; set; }
 
       /// <summary>
       /// Indicates whether the field is dirty.
       /// </summary>
-      [DataMember]
       public bool IsDirty { get; set; }
 
       #region IMobileObject Members
@@ -108,18 +103,15 @@ namespace RUINORERP.Global.Serialization.Mobile
     /// a single child reference.
     /// </summary>
     [Serializable]
-    [DataContract]
     public class ChildData : IMobileObject
     {
       /// <summary>
       /// Reference number for the child.
       /// </summary>
-      [DataMember]
       public int ReferenceId { get; set; }
       /// <summary>
       /// Indicates whether the child is dirty.
       /// </summary>
-      [DataMember]
       public bool IsDirty { get; set; }
 
       #region IMobileObject Members
@@ -194,7 +186,6 @@ namespace RUINORERP.Global.Serialization.Mobile
     /// <summary>
     /// Dictionary containing child reference data.
     /// </summary>
-    [DataMember()]
     public Dictionary<string, ChildData> Children
     {
       get { return _children; }
@@ -220,13 +211,11 @@ namespace RUINORERP.Global.Serialization.Mobile
     /// <summary>
     /// Reference number for this object.
     /// </summary>
-    [DataMember]
     public int ReferenceId { get; set; }
     /// <summary>
     /// Assembly-qualified type name of the
     /// object being serialized.
     /// </summary>
-    [DataMember]
     public string TypeName { get; set; }
 
     /// <summary>

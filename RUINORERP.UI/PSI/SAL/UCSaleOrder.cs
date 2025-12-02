@@ -370,7 +370,7 @@ namespace RUINORERP.UI.PSI.SAL
         /// </summary>
         /// <param name="entityPara">实体参数</param>
         /// <param name="actionStatus">操作状态</param>
-        public override async void BindData(tb_SaleOrder entityPara, ActionStatus actionStatus)
+        public override void BindData(tb_SaleOrder entityPara, ActionStatus actionStatus)
         {
             tb_SaleOrder entity = entityPara as tb_SaleOrder;
 
@@ -772,7 +772,7 @@ namespace RUINORERP.UI.PSI.SAL
             }
             base.BindData(entity);
 
-            await DownloadVoucherImageAsync(entity, magicPictureBox订金付款凭证);
+             DownloadVoucherImageAsync(entity, magicPictureBox订金付款凭证);
         }
 
         #region 图片相关

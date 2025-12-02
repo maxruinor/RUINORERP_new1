@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using RUINORERP.Model.ConfigModel;
 using System.Collections.Generic;
-using RUINORERP.PacketSpec.Models;
+using RUINORERP.PacketSpec.Models.FileManagement;
 
 namespace RUINORERP.Server.Helpers
 {

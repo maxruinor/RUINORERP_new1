@@ -28,6 +28,7 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 using System.Net.Sockets;
 using RUINORERP.Server.Network.Services;
 using RUINORERP.PacketSpec.Models.Common;
+using RUINORERP.PacketSpec.Models.Lock;
 
 namespace RUINORERP.Server.Network.SuperSocket
 {
@@ -84,7 +85,7 @@ namespace RUINORERP.Server.Network.SuperSocket
         {
             // 清空现有过滤器
             _commandFilters.Clear();
-            
+
             // 添加新的过滤器
             if (commandCodes != null)
             {
@@ -94,7 +95,7 @@ namespace RUINORERP.Server.Network.SuperSocket
                 }
             }
         }
-        
+
         /// <summary>
         /// 检查命令是否应该被监控
         /// </summary>
@@ -107,7 +108,7 @@ namespace RUINORERP.Server.Network.SuperSocket
             {
                 return true;
             }
-            
+
             // 检查命令代码是否在过滤器中
             return _commandFilters.Contains((ushort)commandId);
         }
@@ -160,7 +161,7 @@ namespace RUINORERP.Server.Network.SuperSocket
                 {
                     frmMainNew.Instance.PrintInfoLog($"[网络监控] 接收数据包: SessionId={session.SessionID}, CommandId={package.Packet.CommandId.ToString()},RequestID={package.Packet.Request.RequestId} PacketId={package.Packet.PacketId}");
                 }
-                    
+
             }
 
             if (package == null)
@@ -193,6 +194,17 @@ namespace RUINORERP.Server.Network.SuperSocket
                     // 如果命令ID为登录命令，设置会话ID
                     package.Packet.SessionId = session.SessionID;
                     package.Packet.ExecutionContext.SessionId = session.SessionID;
+                }
+                if (package.Packet.CommandId == SystemCommands.Heartbeat)
+                {
+                    // 如果命令ID为登录命令，设置会话ID
+                    package.Packet.SessionId = session.SessionID;
+                    package.Packet.ExecutionContext.SessionId = session.SessionID;
+
+                }
+                if (package.Packet.CommandId==LockCommands.Lock)
+                {
+
                 }
 
                 // 检查命令调度器初始化状态
@@ -258,8 +270,12 @@ namespace RUINORERP.Server.Network.SuperSocket
                         //package.Packet.ExecutionContext.ServiceProvider = _serviceProvider;
                     }
 
-                    result = await _commandDispatcher.DispatchAsync(package.Packet, linkedCts.Token);
+                    result = await _commandDispatcher.DispatchAsync(package.Packet, linkedCts.Token).ConfigureAwait(false);
 
+                    if (result is LockResponse)
+                    {
+
+                    }
                     // 释放令牌源资源
                     linkedCts.Dispose();
                 }
@@ -283,7 +299,7 @@ namespace RUINORERP.Server.Network.SuperSocket
                 {
                     _logger?.LogDebug("[网络监控] 命令处理完成: SessionId={SessionId}, CommandId={CommandId}, Success={Success}",
                         session.SessionID, package.Packet.CommandId.ToString(), result.IsSuccess);
-                    
+
                     // 打印到主界面
                     frmMainNew.Instance.PrintInfoLog($"[网络监控] 命令处理完成: SessionId={session.SessionID}, CommandId={package.Packet.CommandId.ToString()}, Success={result.IsSuccess}");
                 }
@@ -353,6 +369,10 @@ namespace RUINORERP.Server.Network.SuperSocket
                 await SendErrorResponseAsync(session, requestPackage, UnifiedErrorCodes.System_InternalError, CancellationToken.None);
                 return;
             }
+            if (response is LockResponse)
+            {
+
+            }
 
             if (response != null && response.IsSuccess)
             {
@@ -364,7 +384,6 @@ namespace RUINORERP.Server.Network.SuperSocket
             {
                 // 命令执行失败，发送增强的错误响应
                 // 从结果中提取所有错误信息，包括元数据中的详细信息
-                // var errorCode = ExtractErrorCodeFromResponse(response);
                 await SendEnhancedErrorResponseAsync(session, requestPackage, response, UnifiedErrorCodes.Biz_DataNotFound, CancellationToken.None);
             }
         }
@@ -432,7 +451,6 @@ namespace RUINORERP.Server.Network.SuperSocket
                 }
                 package.SessionId = session.SessionID;
                 package.Direction = PacketDirection.ServerResponse;
-
                 var serializedData = JsonCompressionSerializationService.Serialize<PacketModel>(package);
 
                 // 加密数据
@@ -449,7 +467,7 @@ namespace RUINORERP.Server.Network.SuperSocket
                     {
                         _logger?.LogDebug("[网络监控] 发送响应: SessionId={SessionId}, CommandId={CommandId}, PacketId={PacketId}",
                             package.SessionId, package.CommandId.ToString(), package.PacketId);
-                        
+
                         // 打印到主界面
                         frmMainNew.Instance.PrintInfoLog($"[网络监控] 发送响应: SessionId={package.SessionId}, CommandId={package.CommandId.ToString()}, PacketId={package.PacketId}");
                     }

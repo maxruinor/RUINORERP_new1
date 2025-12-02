@@ -1,44 +1,44 @@
+using FastReport.DevComponents.DotNetBar;
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using NPOI.POIFS.Crypt.Dsig;
+using Org.BouncyCastle.Bcpg;
+using Org.BouncyCastle.Ocsp;
+using RUINORERP.Common.Extensions;
+using RUINORERP.Common.Helper;
+using RUINORERP.Model.Context;
 using RUINORERP.PacketSpec.Commands;
+using RUINORERP.PacketSpec.Commands.Authentication;
+using RUINORERP.PacketSpec.Core;
+using RUINORERP.PacketSpec.Core.DataProcessing;
 using RUINORERP.PacketSpec.Enums.Core;
+using RUINORERP.PacketSpec.Models.Common;
 using RUINORERP.PacketSpec.Models.Core;
-
+using RUINORERP.PacketSpec.Models.Requests;
+using RUINORERP.PacketSpec.Models.Responses;
 using RUINORERP.PacketSpec.Security;
 using RUINORERP.PacketSpec.Serialization;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using RUINORERP.UI.Common;
-using Newtonsoft.Json;
-using System.ComponentModel.Design;
-using Org.BouncyCastle.Ocsp;
-using System.Diagnostics;
-using RUINORERP.PacketSpec.Core.DataProcessing;
-using Org.BouncyCastle.Bcpg;
-using NPOI.POIFS.Crypt.Dsig;
-using RUINORERP.UI.Network.Services;
 using RUINORERP.UI.Network.Authentication;
-using RUINORERP.PacketSpec.Commands.Authentication;
-using RUINORERP.PacketSpec.Models.Requests;
-using RUINORERP.PacketSpec.Core;
-using RUINORERP.UI.Network.TimeoutStatistics;
-using RUINORERP.UI.Network.RetryStrategy;
-using System.Collections.Concurrent;
+using RUINORERP.UI.Network.ClientCommandHandlers;
 using RUINORERP.UI.Network.ErrorHandling;
 using RUINORERP.UI.Network.Exceptions;
-using FastReport.DevComponents.DotNetBar;
-using RUINORERP.Common.Extensions;
+using RUINORERP.UI.Network.RetryStrategy;
+using RUINORERP.UI.Network.Services;
+using RUINORERP.UI.Network.TimeoutStatistics;
+using RUINORERP.UI.SysConfig;
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.ComponentModel.Design;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using Timer = System.Threading.Timer;
-using System.Collections.Generic;
-using RUINORERP.UI.SysConfig;
-using RUINORERP.UI.Network.ClientCommandHandlers;
-using RUINORERP.Common.Helper;
-using RUINORERP.PacketSpec.Models.Common;
-using RUINORERP.PacketSpec.Models.Responses;
 
 namespace RUINORERP.UI.Network
 {
@@ -94,6 +94,7 @@ namespace RUINORERP.UI.Network
         private readonly int _heartbeatIntervalMs = 5000; // 默认5秒心跳间隔
         private CancellationTokenSource _heartbeatCancellationTokenSource;
         private CancellationTokenSource _heartbeatCts; // 心跳取消令牌源
+        private Model.Context.ApplicationContext _applicationContext;
         private Task _heartbeatTask;
         private int _heartbeatFailedAttempts;
         private bool _isHeartbeatRunning;
@@ -227,7 +228,7 @@ namespace RUINORERP.UI.Network
             _commandDispatcher = commandDispatcher ?? throw new ArgumentNullException(nameof(commandDispatcher));
             _clientEventManager = clientEventManager ?? throw new ArgumentNullException(nameof(clientEventManager));
             _commandHandlers = commandHandlers ?? throw new ArgumentNullException(nameof(commandHandlers));
-
+            _applicationContext = Startup.GetFromFac<Model.Context.ApplicationContext>();
             // 初始化心跳相关字段
             _heartbeatFailedAttempts = 0;
             _isHeartbeatRunning = false;
@@ -478,6 +479,7 @@ namespace RUINORERP.UI.Network
 
                 if (response != null && response.IsSuccess)
                 {
+
                     //心跳响应
                     MainForm.Instance.lblServerInfo.Text = $"服务器信息：{_socketClient.ServerIP}:{_socketClient.ServerPort}";
                 }
@@ -733,6 +735,8 @@ namespace RUINORERP.UI.Network
                 // 使用现有的SendPacketCoreAsync发送请求，并传递带有响应类型信息的上下文
                 await SendPacketCoreAsync<TRequest>(_socketClient, commandId, request, timeoutMs, ct, ResponseTypeName);
 
+
+
                 // 等待响应或超时
                 var timeoutTask = Task.Delay(timeoutMs, cts.Token);
                 var completedTask = await Task.WhenAny(tcs.Task, timeoutTask);
@@ -858,6 +862,15 @@ namespace RUINORERP.UI.Network
                     _logger.LogWarning("接收到空数据包");
                     return;
                 }
+                if (_applicationContext != null)
+                {
+                    _applicationContext.SessionId = packet.SessionId;
+                    if (_applicationContext.CurrentUser != null)
+                    {
+                        _applicationContext.CurrentUser.SessionId = packet.SessionId;
+                    }
+                }
+
 
                 // 验证数据包有效性
                 if (!packet.IsValid())
@@ -870,7 +883,7 @@ namespace RUINORERP.UI.Network
                 {
 
                 }
-                else
+                else if (packet.CommandId == LockCommands.Lock)
                 {
 
                 }
@@ -1258,7 +1271,7 @@ namespace RUINORERP.UI.Network
             {
 
             }
-           
+
 
         }
 

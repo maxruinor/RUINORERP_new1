@@ -146,8 +146,8 @@ namespace RUINORERP.Business.BizMapperService
 
         public object LoadEntityInternal(Type entityType, object billNo)
         {
-            var cfg = _mappingService.GetEntityInfo(entityType);
-            if (cfg == null)
+            var bizEntityInfo = _mappingService.GetEntityInfo(entityType);
+            if (bizEntityInfo == null)
             {
                 _logger.LogError($"找不到实体类型的字段配置: {entityType.Name}");
                 return null;
@@ -155,13 +155,21 @@ namespace RUINORERP.Business.BizMapperService
 
             try
             {
+                // 创建EntityFieldConfigBuilder实例并从BizEntityInfo复制所需字段
+                var fieldConfig = EntityFieldConfigBuilder.Create()
+                    .WithIdField(bizEntityInfo.IdField)
+                    .WithNoField(bizEntityInfo.NoField)
+                    .WithDetailProperty(bizEntityInfo.DetailProperty)
+                    .WithDescriptionField(bizEntityInfo.DescriptionField)
+                    .WithDiscriminatorField(bizEntityInfo.DiscriminatorField);
+
                 // 1) 拿到 CreateQueryable<T>
                 var createMethod = GetType()
                     .GetMethod(nameof(CreateQueryable), BindingFlags.NonPublic | BindingFlags.Instance)
                     .MakeGenericMethod(entityType);
 
                 // 2) 调 CreateQueryable<T>() 得到 ISugarQueryable<T>
-                var queryable = createMethod.Invoke(this, new object[] { cfg });
+                var queryable = createMethod.Invoke(this, new object[] { fieldConfig });
 
                 // 3) 给 ISugarQueryable<T>.Where(...) 拼接动态条件
                 var sugarType = queryable.GetType();          // 运行时 T 已确定
@@ -176,12 +184,12 @@ namespace RUINORERP.Business.BizMapperService
                 object param;
                 if (billNo is long id)
                 {
-                    fieldName = cfg.IdField;
+                    fieldName = bizEntityInfo.IdField;
                     param = new { id };
                 }
                 else if (billNo is string no)
                 {
-                    fieldName = cfg.NoField;
+                    fieldName = bizEntityInfo.NoField;
                     param = new { no };
                 }
                 else

@@ -210,6 +210,42 @@ namespace RUINORERP.Server.Network.Services
             }
         }
 
+
+        /// <summary>
+        /// 获取会话信息
+        /// 根据用户ID，因为断开后系统重连会话ID会变化。通过登陆人ID获取会话更可靠。
+        /// </summary>
+        /// <param name="userId">用户ID</param>
+        /// <returns>会话信息</returns>
+        public SessionInfo GetSession(long userId)
+        {
+            try
+            {
+                if (userId <= 0)
+                {
+                    return null;
+                }
+
+                // 查找匹配用户ID的会话
+                var sessionInfo = _sessions.Values.FirstOrDefault(s => s.UserId.HasValue && s.UserId.Value == userId);
+                
+                if (sessionInfo != null)
+                {
+                    // 更新最后访问时间
+                    sessionInfo.UpdateActivity();
+                    return sessionInfo;
+                }
+
+                return null;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"获取用户ID {userId} 的会话信息失败");
+                return null;
+            }
+        }
+
+
         /// <summary>
         /// 获取指定用户名的所有会话
         /// </summary>
@@ -1312,6 +1348,8 @@ namespace RUINORERP.Server.Network.Services
         #endregion
     }
 }
+
+
 
 
 

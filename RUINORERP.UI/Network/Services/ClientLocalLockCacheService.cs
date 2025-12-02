@@ -313,7 +313,7 @@ namespace RUINORERP.UI.Network.Services
         public void ClearCache(long billId)
         {
             if (billId <= 0)
-                throw new ArgumentException("单据ID必须大于0", nameof(billId));
+                return;
             
             // 线程安全的移除操作
             bool removed = _localCache.TryRemove(billId, out var removedInfo);
@@ -358,23 +358,30 @@ namespace RUINORERP.UI.Network.Services
 
         /// <summary>
         /// 更新缓存（基于锁定信息）
-        /// 确保操作的原子性和线程安全性
+        /// 确保操作的原子性和线程安全性，正确处理所有LockInfo属性
         /// </summary>
         /// <param name="lockInfo">锁定信息</param>
         private void UpdateCache(LockInfo lockInfo)
         {
             try
             {
-                // 深拷贝锁定信息，确保缓存中存储的是独立的副本
-                var cacheEntry = lockInfo.Clone() as LockInfo;
+                // 参数验证
+                if (lockInfo == null || lockInfo.BillID <= 0)
+                {
+                    _logger.LogWarning("无效的锁定信息: {BillID}", lockInfo?.BillID);
+                    return;
+                }
+
+                // 准备缓存条目，确保所有必要属性都被正确设置
+                var cacheEntry = PrepareCacheEntry(lockInfo);
                 
                 // 原子操作：确保缓存更新的原子性
                 _localCache.AddOrUpdate(lockInfo.BillID, cacheEntry, (key, oldValue) => 
                 {
-                    // 只有当新值的更新时间晚于旧值，或者旧值已过期时才更新
-                    if (cacheEntry.LastUpdateTime > oldValue.LastUpdateTime || oldValue.IsExpired)
+                    // 更复杂的更新策略，考虑更多属性和场景
+                    if (ShouldUpdateCache(oldValue, cacheEntry))
                     {
-                        _logger.LogDebug($"更新锁缓存: 文档 {lockInfo.BillID}, 锁定用户: {lockInfo.LockedUserName}");
+                        _logger.LogDebug($"更新锁缓存: 文档 {lockInfo.BillID}, 单据编号: {lockInfo.BillNo}, 锁定用户: {lockInfo.LockedUserName}, 菜单ID: {lockInfo.MenuID}");
                         return cacheEntry;
                     }
                     return oldValue; // 保留较新的缓存项
@@ -382,8 +389,153 @@ namespace RUINORERP.UI.Network.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"更新锁缓存失败: 文档 {lockInfo?.BillID}");
+                _logger.LogError(ex, $"更新锁缓存失败: 文档 {lockInfo?.BillID}, 单据编号: {lockInfo?.BillNo}");
             }
+        }
+
+        /// <summary>
+        /// 准备缓存条目，确保所有必要属性都被正确设置
+        /// </summary>
+        /// <param name="lockInfo">原始锁定信息</param>
+        /// <returns>准备好的缓存条目</returns>
+        private LockInfo PrepareCacheEntry(LockInfo lockInfo)
+        {
+            // 深拷贝锁定信息，确保缓存中存储的是独立的副本
+            var cacheEntry = lockInfo.Clone() as LockInfo;
+            
+            // 确保所有必要属性都被正确设置
+            if (cacheEntry == null)
+            {
+                cacheEntry = new LockInfo();
+                // 复制所有重要属性
+                CopyLockInfoProperties(lockInfo, cacheEntry);
+            }
+            else
+            {
+                // 确保关键属性不为空或默认值
+                EnsureCriticalProperties(cacheEntry);
+            }
+            
+            return cacheEntry;
+        }
+
+        /// <summary>
+        /// 复制LockInfo的所有属性
+        /// </summary>
+        /// <param name="source">源对象</param>
+        /// <param name="target">目标对象</param>
+        private void CopyLockInfoProperties(LockInfo source, LockInfo target)
+        {
+            // 复制所有基本属性
+            target.BillID = source.BillID;
+            target.BillNo = source.BillNo ?? string.Empty;
+            target.LockedUserId = source.LockedUserId;
+            target.LockedUserName = source.LockedUserName ?? string.Empty;
+            target.MenuID = source.MenuID;
+            target.MenuName = source.MenuName ?? string.Empty;
+            target.BizName = source.BizName ?? string.Empty;
+            target.Remark = source.Remark ?? string.Empty;
+            target.SessionId = source.SessionId ?? string.Empty;
+            target.IsLocked = source.IsLocked;
+            target.Type = source.Type;
+            target.LockTime = source.LockTime;
+            target.LastUpdateTime = source.LastUpdateTime;
+            target.LastHeartbeat = source.LastHeartbeat;
+            target.HeartbeatCount = source.HeartbeatCount;
+            target.Duration = source.Duration;
+            
+            // 确保过期时间被正确设置
+            if (source.ExpireTime.HasValue)
+            {
+                target.ExpireTime = source.ExpireTime;
+            }
+            else
+            {
+                target.ExpireTime = DateTime.Now.AddMinutes(CACHE_EXPIRY_MINUTES);
+            }
+        }
+
+        /// <summary>
+        /// 确保关键属性不为空或默认值
+        /// </summary>
+        /// <param name="lockInfo">锁定信息</param>
+        private void EnsureCriticalProperties(LockInfo lockInfo)
+        {
+            // 确保字符串属性不为null
+            lockInfo.BillNo = lockInfo.BillNo ?? string.Empty;
+            lockInfo.LockedUserName = lockInfo.LockedUserName ?? string.Empty;
+            lockInfo.MenuName = lockInfo.MenuName ?? string.Empty;
+            lockInfo.BizName = lockInfo.BizName ?? string.Empty;
+            lockInfo.Remark = lockInfo.Remark ?? string.Empty;
+            lockInfo.SessionId = lockInfo.SessionId ?? string.Empty;
+            
+            // 确保时间戳被正确设置
+            if (lockInfo.LastUpdateTime == DateTime.MinValue)
+            {
+                lockInfo.LastUpdateTime = DateTime.Now;
+            }
+            
+            if (lockInfo.LastHeartbeat == DateTime.MinValue)
+            {
+                lockInfo.LastHeartbeat = DateTime.Now;
+            }
+            
+            if (lockInfo.LockTime == DateTime.MinValue && lockInfo.IsLocked)
+            {
+                lockInfo.LockTime = DateTime.Now;
+            }
+            
+            // 确保过期时间被设置
+            if (!lockInfo.ExpireTime.HasValue || lockInfo.ExpireTime.Value <= DateTime.Now)
+            {
+                lockInfo.ExpireTime = DateTime.Now.AddMinutes(CACHE_EXPIRY_MINUTES);
+            }
+        }
+
+        /// <summary>
+        /// 决定是否应该更新缓存
+        /// 考虑多种因素，包括更新时间、过期状态、锁定状态等
+        /// </summary>
+        /// <param name="oldValue">旧缓存值</param>
+        /// <param name="newValue">新缓存值</param>
+        /// <returns>是否应该更新</returns>
+        private bool ShouldUpdateCache(LockInfo oldValue, LockInfo newValue)
+        {
+            // 1. 如果旧值已过期，总是更新
+            if (oldValue.IsExpired)
+            {
+                return true;
+            }
+            
+            // 2. 如果新值的更新时间晚于旧值，更新
+            if (newValue.LastUpdateTime > oldValue.LastUpdateTime)
+            {
+                return true;
+            }
+            
+            // 3. 如果锁定状态发生变化，更新
+            if (newValue.IsLocked != oldValue.IsLocked)
+            {
+                return true;
+            }
+            
+            // 4. 如果锁定人发生变化，更新
+            if (newValue.IsLocked && 
+                (newValue.LockedUserId != oldValue.LockedUserId || 
+                 !string.Equals(newValue.LockedUserName, oldValue.LockedUserName, StringComparison.OrdinalIgnoreCase)))
+            {
+                return true;
+            }
+            
+            // 5. 如果关键业务信息发生变化，更新
+            if (!string.Equals(newValue.BillNo, oldValue.BillNo, StringComparison.OrdinalIgnoreCase) ||
+                newValue.MenuID != oldValue.MenuID ||
+                !string.Equals(newValue.BizName, oldValue.BizName, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+            
+            return false;
         }
 
     

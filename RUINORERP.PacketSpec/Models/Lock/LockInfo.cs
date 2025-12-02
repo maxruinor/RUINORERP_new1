@@ -7,150 +7,127 @@ namespace RUINORERP.PacketSpec.Models.Lock
 {
     /// <summary>
     /// 统一锁定信息类
-    /// 整合了ServerLockInfo、ClientLockInfo、HeldLockInfo和原有LockInfo的所有功能
     /// </summary>
-    [DataContract]
     public class LockInfo
     {
         /// <summary>
         /// 锁定键，用于唯一标识锁定（缓存键）
         /// </summary>
-        [DataMember]
         public string LockKey { get; set; } = string.Empty;
 
         /// <summary>
         /// 单据ID
         /// 要锁定的单据唯一标识
         /// </summary>
-        [DataMember]
         public long BillID { get; set; }
 
         /// <summary>
         /// 单据编号
         /// 要锁定的单据业务编号
         /// </summary>
-        [DataMember]
         public string BillNo { get; set; } = string.Empty;
 
         /// <summary>
         /// 用户ID
         /// 执行锁定操作的用户ID
         /// </summary>
-        [DataMember]
         public long LockedUserId { get; set; }
 
         /// <summary>
         /// 用户名称
         /// 执行锁定操作的用户名
         /// </summary>
-        [DataMember]
         public string LockedUserName { get; set; } = string.Empty;
 
         /// <summary>
         /// 锁定时间
         /// 锁定操作的执行时间
         /// </summary>
-        [DataMember]
         public DateTime LockTime { get; set; } = DateTime.Now;
 
         /// <summary>
         /// 过期时间
         /// 锁定的过期时间点
         /// </summary>
-        [DataMember]
         public DateTime? ExpireTime { get; set; }
 
         /// <summary>
         /// 锁定备注/原因
         /// 说明锁定的目的或原因
         /// </summary>
-        [DataMember]
         public string Remark { get; set; } = string.Empty;
 
         /// <summary>
         /// 菜单ID
         /// 相关的业务模块菜单ID
         /// </summary>
-        [DataMember]
         public long MenuID { get; set; }
         
         /// <summary>
         /// 业务名称
         /// 锁定的业务模块名称
         /// </summary>
-        [DataMember]
         public string BizName { get; set; } = string.Empty;
         
         /// <summary>
         /// 菜单名称
         /// 锁定的菜单名称
         /// </summary>
-        [DataMember]
         public string MenuName { get; set; } = string.Empty;
         
         /// <summary>
         /// 单据信息
         /// 关联的单据数据
         /// </summary>
-        [DataMember]
         public BizType bizType { get; set; } = new BizType();
 
         /// <summary>
         /// 会话ID
         /// 用户会话的唯一标识
         /// </summary>
-        [DataMember]
         public string SessionId { get; set; } = string.Empty;
 
         /// <summary>
         /// 是否已锁定
         /// </summary>
-        [DataMember]
         public bool IsLocked { get; set; }
 
         /// <summary>
         /// 最后心跳时间
         /// </summary>
-        [DataMember]
         public DateTime LastHeartbeat { get; set; } = DateTime.Now;
 
         /// <summary>
         /// 最后更新时间
         /// 锁信息最后更新的时间，用于跟踪锁的状态变化
         /// </summary>
-        [DataMember]
         public DateTime LastUpdateTime { get; set; } = DateTime.Now;
 
         /// <summary>
         /// 心跳次数
         /// </summary>
-        [DataMember]
         public int HeartbeatCount { get; set; }
 
         /// <summary>
         /// 锁定类型
         /// </summary>
-        [DataMember]
         public LockType Type { get; set; } = LockType.Exclusive;
 
         /// <summary>
         /// 锁定持续时间（毫秒）
         /// </summary>
-        [DataMember]
         public long Duration { get; set; }
 
         /// <summary>
         /// 过期时间戳（Unix毫秒）
         /// 用于分布式系统中的时间一致性判断
         /// </summary>
-        [DataMember]
         public long? ExpireTimestamp => ExpireTime.HasValue ? new DateTimeOffset(ExpireTime.Value).ToUnixTimeMilliseconds() : null;
 
         /// <summary>
         /// 锁定剩余时间（毫秒）
         /// 获取锁定剩余的有效期
         /// </summary>
-        [DataMember]
         public long? RemainingLockTimeMs
         {
             get
@@ -175,7 +152,6 @@ namespace RUINORERP.PacketSpec.Models.Lock
         /// <summary>
         /// 检查锁是否为孤儿锁（2分钟无心跳）
         /// </summary>
-        [DataMember]
         public bool IsOrphaned => DateTime.Now > LastHeartbeat.AddMinutes(2);
 
         /// <summary>
@@ -352,28 +328,23 @@ namespace RUINORERP.PacketSpec.Models.Lock
     /// <summary>
     /// 锁定类型枚举
     /// </summary>
-    [DataContract]
     public enum LockType
     {
         /// <summary>
         /// 排他锁
         /// </summary>
-        [EnumMember]
         Exclusive = 0,
         /// <summary>
         /// 共享锁
         /// </summary>
-        [EnumMember]
         Shared = 1,
         /// <summary>
         /// 意向排他锁
         /// </summary>
-        [EnumMember]
         IntentExclusive = 2,
         /// <summary>
         /// 意向共享锁
         /// </summary>
-        [EnumMember]
         IntentShared = 3
     }
 }

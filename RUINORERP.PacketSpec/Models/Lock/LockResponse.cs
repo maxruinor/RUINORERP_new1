@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using RUINORERP.PacketSpec.Models.Core;
@@ -10,28 +10,24 @@ namespace RUINORERP.PacketSpec.Models.Lock
     /// 锁定响应类
     /// 封装锁定操作的响应结果
     /// </summary>
-    [DataContract]
     public class LockResponse : ResponseBase
     {
         /// <summary>
         /// 锁定信息
         /// 包含锁定的详细数据
         /// </summary>
-        [DataMember]
         public LockInfo LockInfo { get; set; } = new LockInfo();
         
         /// <summary>
         /// 锁定信息列表
         /// 用于批量操作返回
         /// </summary>
-        [DataMember]
         public List<LockInfo> LockInfoList { get; set; } = new List<LockInfo>();
         
         
         /// <summary>
         /// 响应时间
         /// </summary>
-        [DataMember]
         public DateTime ResponseTime { get; set; } = DateTime.Now;
         
         

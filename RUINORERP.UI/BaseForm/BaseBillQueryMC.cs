@@ -2502,8 +2502,8 @@ namespace RUINORERP.UI.BaseForm
                 switch (keyData)
                 {
                     case Keys.Escape:
-                        // 使用同步方式调用异步的Exit方法
-                        Task.Run(async () => await Exit(this)).Wait();
+                        // 使用异步方式调用Exit方法，避免阻塞UI线程
+                        _ = Task.Run(async () => await Exit(this));
                         break;
                     case Keys.F1:
                         // 显示帮助 - 优先显示当前焦点控件的帮助

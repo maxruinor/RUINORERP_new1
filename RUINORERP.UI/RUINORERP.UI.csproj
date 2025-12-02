@@ -4265,6 +4265,9 @@
     <EmbeddedResource Include="FormProperty\frmQuicklyInputGeneric.resx">
       <DependentUpon>frmQuicklyInputGeneric.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Forms\LockInfoDetailForm.resx">
+      <DependentUpon>LockInfoDetailForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FrmLogin.resx">
       <DependentUpon>FrmLogin.cs</DependentUpon>
     </EmbeddedResource>

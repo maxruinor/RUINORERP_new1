@@ -32,11 +32,11 @@ namespace SourceGrid.Cells.Editors
 
         public System.Drawing.Image PickerImage { get; set; }
 
-        #region Ìí¼ÓÁËÓÒ¼ü²Ëµ¥
-        public bool UseÊÇ·ñÊ¹ÓÃÄÚÖÃÓÒ¼ü¹¦ÄÜ { get; private set; } = true;
+        #region æ·»åŠ äº†å³é”®èœå•
+        public bool Useæ˜¯å¦ä½¿ç”¨å†…ç½®å³é”®åŠŸèƒ½ { get; private set; } = true;
 
         /// <summary>
-        /// ÒòÎªÔİÊ±ÊÂ¼şÎŞ·¨Í¨¹ıÊôĞÔÖĞµÄÊı¾İ´«Êä£¬ÏÈÓÃÃû³ÆÔÙ´ÓÕâÀïËÑË÷À´Æ¥Åä
+        /// å› ä¸ºæš‚æ—¶äº‹ä»¶æ— æ³•é€šè¿‡å±æ€§ä¸­çš„æ•°æ®ä¼ è¾“ï¼Œå…ˆç”¨åç§°å†ä»è¿™é‡Œæœç´¢æ¥åŒ¹é…
         /// </summary>
         private List<EventHandler> ContextClickList = new List<EventHandler>();
         private List<ContextMenuController> _ContextMenucCnfigurator = new List<ContextMenuController>();
@@ -44,8 +44,8 @@ namespace SourceGrid.Cells.Editors
         private ContextMenuStrip _ContextMenuStrip;
 
         /// <summary>
-        /// ÖØĞ´ÓÒ¼ü²Ëµ¥ ÎªÁËºÏ²¢
-        /// Èç¹ûÊ¹ÓÃÄÚÖÃµÄ²Ëµ¥ÔòÕâÀïÉèÖÃÊ±¾ÍÒªºÏ²¢´¦Àí
+        /// é‡å†™å³é”®èœå• ä¸ºäº†åˆå¹¶
+        /// å¦‚æœä½¿ç”¨å†…ç½®çš„èœå•åˆ™è¿™é‡Œè®¾ç½®æ—¶å°±è¦åˆå¹¶å¤„ç†
         /// </summary>
         public ContextMenuStrip ContextMenuStrip
         {
@@ -57,12 +57,12 @@ namespace SourceGrid.Cells.Editors
         }
 
         /// <summary>
-        /// »ñÈ¡µ±Ç°ÊÇ·ñ´¦ÓÚÉè¼ÆÆ÷Ä£Ê½
+        /// è·å–å½“å‰æ˜¯å¦å¤„äºè®¾è®¡å™¨æ¨¡å¼
         /// </summary>
         /// <remarks>
-        /// ÔÚ³ÌĞò³õÊ¼»¯Ê±»ñÈ¡Ò»´Î±È½Ï×¼È·£¬ÈôĞèÒªÊ±»ñÈ¡¿ÉÄÜÓÉÓÚ²¼¾ÖÇ¶Ì×µ¼ÖÂ»ñÈ¡²»ÕıÈ·£¬ÈçGridControl-GridView×éºÏ¡£
+        /// åœ¨ç¨‹åºåˆå§‹åŒ–æ—¶è·å–ä¸€æ¬¡æ¯”è¾ƒå‡†ç¡®ï¼Œè‹¥éœ€è¦æ—¶è·å–å¯èƒ½ç”±äºå¸ƒå±€åµŒå¥—å¯¼è‡´è·å–ä¸æ­£ç¡®ï¼Œå¦‚GridControl-GridViewç»„åˆã€‚
         /// </remarks>
-        /// <returns>ÊÇ·ñÎªÉè¼ÆÆ÷Ä£Ê½</returns>
+        /// <returns>æ˜¯å¦ä¸ºè®¾è®¡å™¨æ¨¡å¼</returns>
         private bool GetIsDesignMode()
         {
             return (this.GetService(typeof(System.ComponentModel.Design.IDesignerHost)) == null
@@ -70,27 +70,27 @@ namespace SourceGrid.Cells.Editors
         }
 
         /// <summary>
-        /// ÉèÖÃÓÒ¼ü²Ëµ¥£¬µ«ÊÇ¶Ô²»¶Ô²ÎÊı½øĞĞÉèÖÃ¡£ÒòÎªÊÇÒıÓÃµÄ£¬»á¸Ä±äÖµ
+        /// è®¾ç½®å³é”®èœå•ï¼Œä½†æ˜¯å¯¹ä¸å¯¹å‚æ•°è¿›è¡Œè®¾ç½®ã€‚å› ä¸ºæ˜¯å¼•ç”¨çš„ï¼Œä¼šæ”¹å˜å€¼
         /// </summary>
         /// <param name="_contextMenuStrip"></param>
         public ContextMenuStrip GetContextMenu(ContextMenuStrip _contextMenuStrip = null)
         {
-            // ´´½¨Ò»¸öÈ«ĞÂµÄÓÒ¼ü²Ëµ¥¸±±¾
+            // åˆ›å»ºä¸€ä¸ªå…¨æ–°çš„å³é”®èœå•å‰¯æœ¬
             ContextMenuStrip newContextMenuStrip = new ContextMenuStrip();
 
-            //³õÊ¼»¯ÓÒ¼ü²Ëµ¥
-            // ³õÊ¼»¯ÄÚÖÃÓÒ¼ü²Ëµ¥
+            //åˆå§‹åŒ–å³é”®èœå•
+            // åˆå§‹åŒ–å†…ç½®å³é”®èœå•
             ContextMenuStrip internalMenu = new ContextMenuStrip();
             internalMenu.BackColor = System.Drawing.Color.FromArgb(192, 255, 255);
 
-            //Èç¹ûĞèÒªÍ¨¹ıÉè¼ÆÊ±¶ÔÊôĞÔÖµĞŞ¸Ä¡£
-            //Ôò²»ÄÜÔÚÕâ¸ö¹¹Ôìº¯ÊıÖĞ²Ù×÷¡£ÒòÎªÕâÊ±ÊôĞÔÖµ²»ÄÜ»ñÈ¡
+            //å¦‚æœéœ€è¦é€šè¿‡è®¾è®¡æ—¶å¯¹å±æ€§å€¼ä¿®æ”¹ã€‚
+            //åˆ™ä¸èƒ½åœ¨è¿™ä¸ªæ„é€ å‡½æ•°ä¸­æ“ä½œã€‚å› ä¸ºè¿™æ—¶å±æ€§å€¼ä¸èƒ½è·å–
             internalMenu.Items.Clear();
 
-            // ºÏ²¢´«ÈëµÄ²Ëµ¥ºÍÄÚÖÃ²Ëµ¥
+            // åˆå¹¶ä¼ å…¥çš„èœå•å’Œå†…ç½®èœå•
             if (_contextMenuStrip != null)
             {
-                //ÍâÃæ²Ëµ¥ÓĞÉèÖÃÔò¼ÓÒ»¸ö·Ö¸ô·û
+                //å¤–é¢èœå•æœ‰è®¾ç½®åˆ™åŠ ä¸€ä¸ªåˆ†éš”ç¬¦
                 if (_contextMenuStrip.Items.Count > 0)
                 {
                     ToolStripSeparator MyTss = new ToolStripSeparator();
@@ -106,27 +106,27 @@ namespace SourceGrid.Cells.Editors
             }
 
 
-            //»òÕßÒ²¿ÉÒÔÖ¸¶¨ÄÚÖÃÄÄĞ©ÉúĞ§ ºÏ²¢ÍâÃæµÄ£¿
-            if (UseÊÇ·ñÊ¹ÓÃÄÚÖÃÓÒ¼ü¹¦ÄÜ)
+            //æˆ–è€…ä¹Ÿå¯ä»¥æŒ‡å®šå†…ç½®å“ªäº›ç”Ÿæ•ˆ åˆå¹¶å¤–é¢çš„ï¼Ÿ
+            if (Useæ˜¯å¦ä½¿ç”¨å†…ç½®å³é”®åŠŸèƒ½)
             {
-                #region Éú³ÉÄÚÖÃµÄÓÒ¼ü²Ëµ¥
+                #region ç”Ÿæˆå†…ç½®çš„å³é”®èœå•
 
                 if (ContextClickList == null)
                 {
                     ContextClickList = new List<EventHandler>();
                 }
                 ContextClickList.Clear();
-                ContextClickList.Add(ContextMenu_²é¿´´óÍ¼);
+                ContextClickList.Add(ContextMenu_æŸ¥çœ‹å¤§å›¾);
                 if (_ContextMenucCnfigurator == null)
                 {
                     _ContextMenucCnfigurator = new List<ContextMenuController>();
                 }
                 _ContextMenucCnfigurator.Clear();
-                //Ö»ÊÇ³õÊ¼»¯²»ÖØ¸´Ìí¼Ó
+                //åªæ˜¯åˆå§‹åŒ–ä¸é‡å¤æ·»åŠ 
                 if (_ContextMenucCnfigurator.Count == 0 && GetIsDesignMode())
                 {
-                    _ContextMenucCnfigurator.Add(new ContextMenuController("¡¾²é¿´´óÍ¼¡¿", true, false, "ContextMenu_²é¿´´óÍ¼"));
-                    _ContextMenucCnfigurator.Add(new ContextMenuController("¡¾line¡¿", true, true, ""));
+                    _ContextMenucCnfigurator.Add(new ContextMenuController("ã€æŸ¥çœ‹å¤§å›¾ã€‘", true, false, "ContextMenu_æŸ¥çœ‹å¤§å›¾"));
+                    _ContextMenucCnfigurator.Add(new ContextMenuController("ã€lineã€‘", true, true, ""));
                 }
                 #endregion
 
@@ -149,28 +149,28 @@ namespace SourceGrid.Cells.Editors
                             {
                                 return eh.Method.Name == item.ClickEventName;
                             });
-                        //Èç¹û½Ï¶àµÄÍâ²¿ÊÂ¼şÒ²¿ÉÒÔ×öÒ»¸ö¼¯ºÏ
-                        //if (ehh == null && item.ClickEventName == "É¾³ıÑ¡ÖĞĞĞ")
+                        //å¦‚æœè¾ƒå¤šçš„å¤–éƒ¨äº‹ä»¶ä¹Ÿå¯ä»¥åšä¸€ä¸ªé›†åˆ
+                        //if (ehh == null && item.ClickEventName == "åˆ é™¤é€‰ä¸­è¡Œ")
                         //{
-                        //    ehh = É¾³ıÑ¡ÖĞĞĞ;
+                        //    ehh = åˆ é™¤é€‰ä¸­è¡Œ;
                         //}
                         internalMenu.Items.Add(item.MenuText, null, ehh);
                     }
                 }
             }
             newContextMenuStrip = internalMenu;
-            // ÉèÖÃ×îÖÕµÄÓÒ¼ü²Ëµ¥
+            // è®¾ç½®æœ€ç»ˆçš„å³é”®èœå•
             ContextMenuStrip = newContextMenuStrip;
             return newContextMenuStrip;
         }
 
-        private void ContextMenu_²é¿´´óÍ¼(object sender, EventArgs e)
+        private void ContextMenu_æŸ¥çœ‹å¤§å›¾(object sender, EventArgs e)
         {
             if (PickerImage != null)
             {
-                DevAge.Windows.Forms.frmPictureViewer frm = new DevAge.Windows.Forms.frmPictureViewer();
-                frm.PictureBoxViewer.Image = PickerImage;
-                frm.ShowDialog();
+                var previewForm = new ImagePreviewForm(PickerImage);
+                previewForm.Text = "å›¾ç‰‡æŸ¥çœ‹";
+                previewForm.ShowDialog();
             }
         }
         #endregion
@@ -197,33 +197,33 @@ namespace SourceGrid.Cells.Editors
 
         private void Editor_KeyDown(object sender, KeyEventArgs e)
         {
-            // ¼ì²éÊÇ·ñ°´ÏÂÁË Ctrl+V
+            // æ£€æŸ¥æ˜¯å¦æŒ‰ä¸‹äº† Ctrl+V
             if ((e.Control && e.KeyCode == Keys.V) || (e.Shift && e.KeyCode == Keys.Insert))
             {
-                // ¼ì²é¼ôÌù°åÖĞÊÇ·ñÓĞÍ¼Ïñ
+                // æ£€æŸ¥å‰ªè´´æ¿ä¸­æ˜¯å¦æœ‰å›¾åƒ
                 if (Clipboard.ContainsImage())
                 {
-                    // »ñÈ¡Í¼Ïñ
+                    // è·å–å›¾åƒ
                     System.Drawing.Image image = Clipboard.GetImage();
                     if (image != null)
                     {
-                        // ´¦ÀíÍ¼Ïñ£¬ÀıÈç±£´æµ½ÎÄ¼ş
+                        // å¤„ç†å›¾åƒï¼Œä¾‹å¦‚ä¿å­˜åˆ°æ–‡ä»¶
                         byte[] buffByte = GetByteImage(image);
                         Control.Value = GetByteImage(image);// GetImage(image);
-                        // ÅĞ¶ÏÍ¼Æ¬´óĞ¡ÊÇ·ñ³¬¹ı 500KB
+                        // åˆ¤æ–­å›¾ç‰‡å¤§å°æ˜¯å¦è¶…è¿‡ 500KB
                         if (buffByte.Length > 800 * 1024)
                         {
-                            // Ñ¹ËõÍ¼Æ¬
+                            // å‹ç¼©å›¾ç‰‡
                             ImageCodecInfo jpegCodec = GetEncoderInfo(ImageFormat.Jpeg);
                             EncoderParameters encoderParams = new EncoderParameters(1);
                             encoderParams.Param[0] = new EncoderParameter(System.Drawing.Imaging.Encoder.Quality, 50L);
                             image = (System.Drawing.Image)new System.Drawing.Bitmap(image, new System.Drawing.Size(800, 600));
                             image.Save("compressed.jpg", jpegCodec, encoderParams);
 
-                            // ÖØĞÂ¶ÁÈ¡Ñ¹ËõºóµÄÍ¼Æ¬
+                            // é‡æ–°è¯»å–å‹ç¼©åçš„å›¾ç‰‡
                             image = System.Drawing.Image.FromFile("compressed.jpg");
-                            MessageBox.Show("Í¼Æ¬´óĞ¡³¬¹ı 800KB£¬ÒÑ×Ô¶¯Ñ¹Ëõ¡£", "ÌáÊ¾", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                            // ½«Ñ¹ËõºóµÄÍ¼Æ¬×ª»»Îª byte[] Êı×é
+                            MessageBox.Show("å›¾ç‰‡å¤§å°è¶…è¿‡ 800KBï¼Œå·²è‡ªåŠ¨å‹ç¼©ã€‚", "æç¤º", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            // å°†å‹ç¼©åçš„å›¾ç‰‡è½¬æ¢ä¸º byte[] æ•°ç»„
                             byte[] compressedImageBytes = File.ReadAllBytes("compressed.jpg");
                             Control.Value = compressedImageBytes;
                         }
@@ -237,9 +237,9 @@ namespace SourceGrid.Cells.Editors
                 //else if (Clipboard.ContainsText())
                 //{
 
-                //    // »ñÈ¡ÎÄ±¾
+                //    // è·å–æ–‡æœ¬
                 //    string text = Clipboard.GetText();
-                //    // ½«ÎÄ±¾²åÈëµ½ TextBox ÖĞ
+                //    // å°†æ–‡æœ¬æ’å…¥åˆ° TextBox ä¸­
                 //    textBox1.SelectedText = text;
                 //}
             }
@@ -274,7 +274,7 @@ namespace SourceGrid.Cells.Editors
                     }
                     else
                     {
-                        MessageBox.Show("Ö»ÄÜ½ÓÊÜÍ¼Æ¬ÎÄ¼ş¡£", "ÌáÊ¾", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        MessageBox.Show("åªèƒ½æ¥å—å›¾ç‰‡æ–‡ä»¶ã€‚", "æç¤º", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
                 }
             }
@@ -287,67 +287,67 @@ namespace SourceGrid.Cells.Editors
         private System.Drawing.Image GetImage(System.Drawing.Image img)
         {
             System.Drawing.Image NewImg = null;
-            // ´´½¨Ò»¸öÄÚ´æÁ÷
+            // åˆ›å»ºä¸€ä¸ªå†…å­˜æµ
             using (MemoryStream memoryStream = new MemoryStream())
             {
-                // ½«Í¼Ïñ±£´æµ½ÄÚ´æÁ÷ÖĞ£¬Ö¸¶¨Í¼Ïñ¸ñÊ½
+                // å°†å›¾åƒä¿å­˜åˆ°å†…å­˜æµä¸­ï¼ŒæŒ‡å®šå›¾åƒæ ¼å¼
                 img.Save(memoryStream, System.Drawing.Imaging.ImageFormat.Jpeg);
 
-                // ½«ÄÚ´æÁ÷ÖĞµÄ×Ö½ÚÊı×é×ª»»Îªbyte[]
+                // å°†å†…å­˜æµä¸­çš„å­—èŠ‚æ•°ç»„è½¬æ¢ä¸ºbyte[]
                 byte[] buffByte = memoryStream.ToArray();
-                // ÅĞ¶ÏÍ¼Æ¬´óĞ¡ÊÇ·ñ³¬¹ı 500KB
+                // åˆ¤æ–­å›¾ç‰‡å¤§å°æ˜¯å¦è¶…è¿‡ 500KB
                 if (buffByte.Length > 500 * 1024)
                 {
-                    // Ñ¹ËõÍ¼Æ¬
+                    // å‹ç¼©å›¾ç‰‡
                     ImageCodecInfo jpegCodec = GetEncoderInfo(ImageFormat.Jpeg);
                     EncoderParameters encoderParams = new EncoderParameters(1);
                     encoderParams.Param[0] = new EncoderParameter(System.Drawing.Imaging.Encoder.Quality, 50L);
                     img = (System.Drawing.Image)new System.Drawing.Bitmap(img, new System.Drawing.Size(800, 600));
                     img.Save("compressed.jpg", jpegCodec, encoderParams);
 
-                    // ÖØĞÂ¶ÁÈ¡Ñ¹ËõºóµÄÍ¼Æ¬
+                    // é‡æ–°è¯»å–å‹ç¼©åçš„å›¾ç‰‡
                     NewImg = System.Drawing.Image.FromFile("compressed.jpg");
-                    MessageBox.Show("Í¼Æ¬´óĞ¡³¬¹ı 500KB£¬ÒÑ×Ô¶¯Ñ¹Ëõ¡£", "ÌáÊ¾", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    // ½«Ñ¹ËõºóµÄÍ¼Æ¬×ª»»Îª byte[] Êı×é
+                    MessageBox.Show("å›¾ç‰‡å¤§å°è¶…è¿‡ 500KBï¼Œå·²è‡ªåŠ¨å‹ç¼©ã€‚", "æç¤º", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    // å°†å‹ç¼©åçš„å›¾ç‰‡è½¬æ¢ä¸º byte[] æ•°ç»„
                     // byte[] compressedImageBytes = File.ReadAllBytes("compressed.jpg");
 
-                    // ÔÚÕâÀï½« compressedImageBytes ±£´æµ½Êı¾İ¿âÖĞ
+                    // åœ¨è¿™é‡Œå°† compressedImageBytes ä¿å­˜åˆ°æ•°æ®åº“ä¸­
                     //_EditEntity.Images = compressedImageBytes;
                 }
                 else
                 {
                     NewImg = img;
                 }
-                // ´ËÊ±buffByte°üº¬ÁËÍ¼ÏñµÄ×Ö½ÚÊı¾İ
-                // Äã¿ÉÒÔ¶ÔbuffByte½øĞĞ½øÒ»²½µÄ²Ù×÷£¬±ÈÈç±£´æµ½ÎÄ¼ş»ò·¢ËÍµ½ÍøÂç
+                // æ­¤æ—¶buffByteåŒ…å«äº†å›¾åƒçš„å­—èŠ‚æ•°æ®
+                // ä½ å¯ä»¥å¯¹buffByteè¿›è¡Œè¿›ä¸€æ­¥çš„æ“ä½œï¼Œæ¯”å¦‚ä¿å­˜åˆ°æ–‡ä»¶æˆ–å‘é€åˆ°ç½‘ç»œ
 
-                // ÊÍ·ÅImage×ÊÔ´
+                // é‡Šæ”¾Imageèµ„æº
                 img.Dispose();
             }
             /*
-            //½«Í¼Ïñ¶ÁÈëµ½×Ö½ÚÊı×é
+            //å°†å›¾åƒè¯»å…¥åˆ°å­—èŠ‚æ•°ç»„
             System.IO.FileStream fs = new System.IO.FileStream(pathName, System.IO.FileMode.Open, System.IO.FileAccess.Read);
             byte[] buffByte = new byte[fs.Length];
             fs.Read(buffByte, 0, (int)fs.Length);
             fs.Close();
             fs = null;
-            // ÅĞ¶ÏÍ¼Æ¬´óĞ¡ÊÇ·ñ³¬¹ı 500KB
+            // åˆ¤æ–­å›¾ç‰‡å¤§å°æ˜¯å¦è¶…è¿‡ 500KB
             if (buffByte.Length > 500 * 1024)
             {
-                // Ñ¹ËõÍ¼Æ¬
+                // å‹ç¼©å›¾ç‰‡
                 ImageCodecInfo jpegCodec = GetEncoderInfo(ImageFormat.Jpeg);
                 EncoderParameters encoderParams = new EncoderParameters(1);
                 encoderParams.Param[0] = new EncoderParameter(System.Drawing.Imaging.Encoder.Quality, 50L);
                 img = (System.Drawing.Image)new System.Drawing.Bitmap(img, new System.Drawing.Size(800, 600));
                 img.Save("compressed.jpg", jpegCodec, encoderParams);
 
-                // ÖØĞÂ¶ÁÈ¡Ñ¹ËõºóµÄÍ¼Æ¬
+                // é‡æ–°è¯»å–å‹ç¼©åçš„å›¾ç‰‡
                 img = System.Drawing.Image.FromFile("compressed.jpg");
-                MessageBox.Show("Í¼Æ¬´óĞ¡³¬¹ı 500KB£¬ÒÑ×Ô¶¯Ñ¹Ëõ¡£", "ÌáÊ¾", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                // ½«Ñ¹ËõºóµÄÍ¼Æ¬×ª»»Îª byte[] Êı×é
+                MessageBox.Show("å›¾ç‰‡å¤§å°è¶…è¿‡ 500KBï¼Œå·²è‡ªåŠ¨å‹ç¼©ã€‚", "æç¤º", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                // å°†å‹ç¼©åçš„å›¾ç‰‡è½¬æ¢ä¸º byte[] æ•°ç»„
                 // byte[] compressedImageBytes = File.ReadAllBytes("compressed.jpg");
 
-                // ÔÚÕâÀï½« compressedImageBytes ±£´æµ½Êı¾İ¿âÖĞ
+                // åœ¨è¿™é‡Œå°† compressedImageBytes ä¿å­˜åˆ°æ•°æ®åº“ä¸­
                 //_EditEntity.Images = compressedImageBytes;
             }
             else
@@ -379,13 +379,13 @@ namespace SourceGrid.Cells.Editors
             {
                 System.Drawing.Image img = val as System.Drawing.Image;
 
-                // ½«Í¼Ïñ×ª»»Îª×Ö½ÚÊı×é
+                // å°†å›¾åƒè½¬æ¢ä¸ºå­—èŠ‚æ•°ç»„
                 byte[] buffByte = GetByteImage(img);
 
-                // ÅĞ¶ÏÍ¼Æ¬´óĞ¡ÊÇ·ñ³¬¹ı 500KB
+                // åˆ¤æ–­å›¾ç‰‡å¤§å°æ˜¯å¦è¶…è¿‡ 500KB
                 if (buffByte.Length > 500 * 1024)
                 {
-                    // Ñ¹ËõÍ¼Æ¬
+                    // å‹ç¼©å›¾ç‰‡
                     ImageCodecInfo jpegCodec = GetEncoderInfo(ImageFormat.Jpeg);
                     EncoderParameters encoderParams = new EncoderParameters(1);
                     encoderParams.Param[0] = new EncoderParameter(Encoder.Quality, 50L);
@@ -395,10 +395,10 @@ namespace SourceGrid.Cells.Editors
                         img.Save(ms, jpegCodec, encoderParams);
                         byte[] compressedImageBytes = ms.ToArray();
 
-                        // ÏÔÊ¾Ñ¹ËõÌáÊ¾
-                        MessageBox.Show("Í¼Æ¬´óĞ¡³¬¹ı 500KB£¬ÒÑ×Ô¶¯Ñ¹Ëõ¡£", "ÌáÊ¾", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        // æ˜¾ç¤ºå‹ç¼©æç¤º
+                        MessageBox.Show("å›¾ç‰‡å¤§å°è¶…è¿‡ 500KBï¼Œå·²è‡ªåŠ¨å‹ç¼©ã€‚", "æç¤º", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
-                        // ·µ»ØÑ¹ËõºóµÄ×Ö½ÚÊı×é
+                        // è¿”å›å‹ç¼©åçš„å­—èŠ‚æ•°ç»„
                         return compressedImageBytes;
                     }
                 }
@@ -421,7 +421,7 @@ namespace SourceGrid.Cells.Editors
                 return val;
             }
             else
-                throw new InvalidOperationException("±à¼­ÖµÎŞĞ§£¬Ó¦Îª×Ö½Ú[]»òÍ¼Ïñ");
+                throw new InvalidOperationException("ç¼–è¾‘å€¼æ— æ•ˆï¼Œåº”ä¸ºå­—èŠ‚[]æˆ–å›¾åƒ");
         }
 
         //private byte[] GetByteImage(System.Drawing.Image image)
@@ -444,9 +444,9 @@ namespace SourceGrid.Cells.Editors
                 using (MemoryStream mostream = new MemoryStream())
                 {
                     System.Drawing.Bitmap bmp = new System.Drawing.Bitmap(img);
-                    bmp.Save(mostream, System.Drawing.Imaging.ImageFormat.Bmp);//½«Í¼ÏñÒÔÖ¸¶¨µÄ¸ñÊ½´æÈë»º´æÄÚ´æÁ÷
+                    bmp.Save(mostream, System.Drawing.Imaging.ImageFormat.Bmp);//å°†å›¾åƒä»¥æŒ‡å®šçš„æ ¼å¼å­˜å…¥ç¼“å­˜å†…å­˜æµ
                     bt = new byte[mostream.Length];
-                    mostream.Position = 0;//ÉèÖÃÁôµÄ³õÊ¼Î»ÖÃ
+                    mostream.Position = 0;//è®¾ç½®ç•™çš„åˆå§‹ä½ç½®
                     mostream.Read(bt, 0, Convert.ToInt32(bt.Length));
                 }
             }
@@ -473,28 +473,28 @@ namespace SourceGrid.Cells.Editors
             else if (val is System.Drawing.Image)
             {
                 System.Drawing.Image img = val as System.Drawing.Image;
-                #region ÅĞ¶ÏÍ¼Æ¬´óĞ¡ÊÇ·ñ³¬¹ı 500KB
-                //½«Í¼Ïñ¶ÁÈëµ½×Ö½ÚÊı×é
+                #region åˆ¤æ–­å›¾ç‰‡å¤§å°æ˜¯å¦è¶…è¿‡ 500KB
+                //å°†å›¾åƒè¯»å…¥åˆ°å­—èŠ‚æ•°ç»„
 
                 byte[] buffByte = GetByteImage(val as System.Drawing.Image);
-                // ÅĞ¶ÏÍ¼Æ¬´óĞ¡ÊÇ·ñ³¬¹ı 500KB
+                // åˆ¤æ–­å›¾ç‰‡å¤§å°æ˜¯å¦è¶…è¿‡ 500KB
                 if (buffByte.Length > 500 * 1024)
                 {
-                    // Ñ¹ËõÍ¼Æ¬
+                    // å‹ç¼©å›¾ç‰‡
                     ImageCodecInfo jpegCodec = GetEncoderInfo(ImageFormat.Jpeg);
                     EncoderParameters encoderParams = new EncoderParameters(1);
                     encoderParams.Param[0] = new EncoderParameter(System.Drawing.Imaging.Encoder.Quality, 50L);
                     img = (System.Drawing.Image)new System.Drawing.Bitmap(img, new System.Drawing.Size(800, 600));
                     img.Save("compressed.jpg", jpegCodec, encoderParams);
 
-                    // ÖØĞÂ¶ÁÈ¡Ñ¹ËõºóµÄÍ¼Æ¬
+                    // é‡æ–°è¯»å–å‹ç¼©åçš„å›¾ç‰‡
                     img = System.Drawing.Image.FromFile("compressed.jpg");
 
-                    MessageBox.Show("Í¼Æ¬´óĞ¡³¬¹ı 500KB£¬ÒÑ×Ô¶¯Ñ¹Ëõ¡£", "ÌáÊ¾", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    // ½«Ñ¹ËõºóµÄÍ¼Æ¬×ª»»Îª byte[] Êı×é
+                    MessageBox.Show("å›¾ç‰‡å¤§å°è¶…è¿‡ 500KBï¼Œå·²è‡ªåŠ¨å‹ç¼©ã€‚", "æç¤º", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    // å°†å‹ç¼©åçš„å›¾ç‰‡è½¬æ¢ä¸º byte[] æ•°ç»„
                     byte[] compressedImageBytes = File.ReadAllBytes("compressed.jpg");
                     PickerImage = img;
-                    // ÔÚÕâÀï½« compressedImageBytes ±£´æµ½Êı¾İ¿âÖĞ
+                    // åœ¨è¿™é‡Œå°† compressedImageBytes ä¿å­˜åˆ°æ•°æ®åº“ä¸­
                     return compressedImageBytes;
                     // DevAge.ComponentModel.Validator.ValidatorTypeConverter imageValidator = new DevAge.ComponentModel.Validator.ValidatorTypeConverter(typeof(System.Drawing.Image));
                     //  return imageValidator.ValueToObject(val, typeof(byte[]));
@@ -600,7 +600,7 @@ namespace SourceGrid.Cells.Editors
         public bool IsShow { get => isShow; set => isShow = value; }
         public string ClickEventName { get => _clickEventName; set => _clickEventName = value; }
         /// <summary>
-        /// ÊÇ·ñÎª·Ö¸îÏß
+        /// æ˜¯å¦ä¸ºåˆ†å‰²çº¿
         /// </summary>
         public bool IsSeparator { get => isSeparator; set => isSeparator = value; }
 
@@ -619,9 +619,9 @@ namespace SourceGrid.Cells.Editors
 
     }
 
-    #region Converter Àà
+    #region Converter ç±»
     /// <summary>
-    /// Èı¸ö·½·¨CanConvertFrom£¬CanConvertTo£¬ConvertTo£¬ConvertFrom
+    /// ä¸‰ä¸ªæ–¹æ³•CanConvertFromï¼ŒCanConvertToï¼ŒConvertToï¼ŒConvertFrom
     /// </summary>
     [Serializable]
     public class MenuControllerConverter : TypeConverter
@@ -643,17 +643,17 @@ namespace SourceGrid.Cells.Editors
         }
 
         /*
-        * ConvertToµÄÊµÏÖ£¬Èç¹û×ª»»µÄÄ¿±êÀàĞÍÊÇstring£¬
-        * ÎÒ½«ScopeµÄÁ½¸öÊôĞÔ×ª»»³ÉstringÀàĞÍ£¬²¢ÇÒÓÃÒ»¸ö¡°£¬¡±Á¬½ÓÆğÀ´£¬
-        * Õâ¾ÍÊÇÎÒÃÇÔÚÊôĞÔä¯ÀÀÆ÷Àï¿´µ½µÄ±íÏÖĞÎÊ½£¬
+        * ConvertToçš„å®ç°ï¼Œå¦‚æœè½¬æ¢çš„ç›®æ ‡ç±»å‹æ˜¯stringï¼Œ
+        * æˆ‘å°†Scopeçš„ä¸¤ä¸ªå±æ€§è½¬æ¢æˆstringç±»å‹ï¼Œå¹¶ä¸”ç”¨ä¸€ä¸ªâ€œï¼Œâ€è¿æ¥èµ·æ¥ï¼Œ
+        * è¿™å°±æ˜¯æˆ‘ä»¬åœ¨å±æ€§æµè§ˆå™¨é‡Œçœ‹åˆ°çš„è¡¨ç°å½¢å¼ï¼Œ
         * 
-        * Èç¹û×ª»»µÄÄ¿±êÀàĞÍÊÇÊµÀıÃèÊöÆ÷£¨InstanceDescriptor£¬
-        * Ëü¸ºÔğÉú³ÉÊµÀı»¯µÄ´úÂë£©£¬ÎÒÃÇĞèÒª¹¹ÔìÒ»¸öÊµÀıÃèÊöÆ÷£¬
-        * ¹¹ÔìÊµÀıÃèÊöÆ÷µÄÊ±ºò£¬ÎÒÃÇÒªÀûÓÃ·´Éä»úÖÆ»ñµÃScopeÀàµÄ¹¹ÔìÆ÷ĞÅÏ¢£¬
-        * ²¢ÔÚnewµÄÊ±ºò´«ÈëScopeÊµÀıµÄÁ½¸öÊôĞÔÖµ¡£ÊµÀıÃèÊöÆ÷»áÎªÎÒÃÇÉú³ÉÕâÑùµÄ´úÂë£º
-        * this.myListControl1.Scope = new CustomControlSample.Scope(10, 200)£»
-        * ÔÚ×îºó²»ÒªÍü¼Çµ÷ÓÃ base.ConvertTo(context, culture, value, destinationType)£¬
-        * Äã²»ĞèÒª´¦ÀíµÄ×ª»»ÀàĞÍ£¬½»¸ø»ùÀàÈ¥×öºÃÁË¡£
+        * å¦‚æœè½¬æ¢çš„ç›®æ ‡ç±»å‹æ˜¯å®ä¾‹æè¿°å™¨ï¼ˆInstanceDescriptorï¼Œ
+        * å®ƒè´Ÿè´£ç”Ÿæˆå®ä¾‹åŒ–çš„ä»£ç ï¼‰ï¼Œæˆ‘ä»¬éœ€è¦æ„é€ ä¸€ä¸ªå®ä¾‹æè¿°å™¨ï¼Œ
+        * æ„é€ å®ä¾‹æè¿°å™¨çš„æ—¶å€™ï¼Œæˆ‘ä»¬è¦åˆ©ç”¨åå°„æœºåˆ¶è·å¾—Scopeç±»çš„æ„é€ å™¨ä¿¡æ¯ï¼Œ
+        * å¹¶åœ¨newçš„æ—¶å€™ä¼ å…¥Scopeå®ä¾‹çš„ä¸¤ä¸ªå±æ€§å€¼ã€‚å®ä¾‹æè¿°å™¨ä¼šä¸ºæˆ‘ä»¬ç”Ÿæˆè¿™æ ·çš„ä»£ç ï¼š
+        * this.myListControl1.Scope = new CustomControlSample.Scope(10, 200)ï¼›
+        * åœ¨æœ€åä¸è¦å¿˜è®°è°ƒç”¨ base.ConvertTo(context, culture, value, destinationType)ï¼Œ
+        * ä½ ä¸éœ€è¦å¤„ç†çš„è½¬æ¢ç±»å‹ï¼Œäº¤ç»™åŸºç±»å»åšå¥½äº†ã€‚
         */
         public override object ConvertTo(ITypeDescriptorContext context, System.Globalization.CultureInfo culture, object value, Type destinationType)
         {
@@ -677,14 +677,14 @@ namespace SourceGrid.Cells.Editors
 
 
         /*
-        * ConvertFromµÄ´úÂë£¬ÓÉÓÚÏµÍ³ÄÜ¹»Ö±½Ó½«ÊµÀıÃèÊöÆ÷×ª»»Îª Ä¿±ê ÀàĞÍ£¬
-        * ËùÒÔÎÒÃÇ¾ÍÃ»ÓĞ±ØÒªÔÙĞ´´úÂë£¬ÎÒÃÇÖ»ĞèÒª¹Ø×¢ÈçºÎ½«String£¨ÔÚÊôĞÔä¯ÀÀ³öÏÖµÄÊôĞÔÖµµÄ±í´ï£©
-        * ÀàĞÍµÄÖµ×ª»»Îª Ä¿±ê ÀàĞÍ¡£Ã»ÓĞºÜ¸´ÔÓµÄ×ª»»£¬Ö»ÊÇ½«Õâ¸ö×Ö·û´®ÒÔ¡°£¬¡±·Ö²ğ¿ª£¬²¢´®»»ÎªInt32ÀàĞÍ
-        * £¬È»ºónewÒ»¸öÄ¿±ê ÀàµÄÊµÀı£¬½«·Ö²ğºó×ª»»µÄÁ½¸öÕûĞÍÖµ¸³¸ø Ä¿±ê µÄÊµÀı£¬
-        * È»ºó·µ»ØÊµÀı¡£ÔÚÕâ¶Î´úÂëÀï£¬ÎÒÃÇÒªÅĞ¶ÏÒ»ÏÂÓÃ»§Éè¶¨µÄÊôĞÔÖµÊÇ·ñÓĞĞ§¡£
-        * ±ÈÈç£¬Èç¹ûÓÃ»§ÔÚScopeÊôĞÔÄÇÀïÊäÈëÁË¡°10200¡±£¬
-        * ÓÉÓÚÃ»ÓĞÊäÈë¡°£¬¡±£¬ÎÒÃÇÎŞ·¨½«ÊôĞÔµÄÖµ·Ö²ğÎªÁ½¸ö×Ö·û´®£¬
-        * Ò²¾ÍÎŞ·¨½øĞĞÏÂÃæµÄ×ª»»£¬ËùÒÔ£¬ÎÒÃÇÒªÅ×³öÒ»¸öÒì³££¬Í¨ÖªÓÃ»§ÖØĞÂÊäÈë¡£
+        * ConvertFromçš„ä»£ç ï¼Œç”±äºç³»ç»Ÿèƒ½å¤Ÿç›´æ¥å°†å®ä¾‹æè¿°å™¨è½¬æ¢ä¸º ç›®æ ‡ ç±»å‹ï¼Œ
+        * æ‰€ä»¥æˆ‘ä»¬å°±æ²¡æœ‰å¿…è¦å†å†™ä»£ç ï¼Œæˆ‘ä»¬åªéœ€è¦å…³æ³¨å¦‚ä½•å°†Stringï¼ˆåœ¨å±æ€§æµè§ˆå‡ºç°çš„å±æ€§å€¼çš„è¡¨è¾¾ï¼‰
+        * ç±»å‹çš„å€¼è½¬æ¢ä¸º ç›®æ ‡ ç±»å‹ã€‚æ²¡æœ‰å¾ˆå¤æ‚çš„è½¬æ¢ï¼Œåªæ˜¯å°†è¿™ä¸ªå­—ç¬¦ä¸²ä»¥â€œï¼Œâ€åˆ†æ‹†å¼€ï¼Œå¹¶ä¸²æ¢ä¸ºInt32ç±»å‹
+        * ï¼Œç„¶ånewä¸€ä¸ªç›®æ ‡ ç±»çš„å®ä¾‹ï¼Œå°†åˆ†æ‹†åè½¬æ¢çš„ä¸¤ä¸ªæ•´å‹å€¼èµ‹ç»™ ç›®æ ‡ çš„å®ä¾‹ï¼Œ
+        * ç„¶åè¿”å›å®ä¾‹ã€‚åœ¨è¿™æ®µä»£ç é‡Œï¼Œæˆ‘ä»¬è¦åˆ¤æ–­ä¸€ä¸‹ç”¨æˆ·è®¾å®šçš„å±æ€§å€¼æ˜¯å¦æœ‰æ•ˆã€‚
+        * æ¯”å¦‚ï¼Œå¦‚æœç”¨æˆ·åœ¨Scopeå±æ€§é‚£é‡Œè¾“å…¥äº†â€œ10200â€ï¼Œ
+        * ç”±äºæ²¡æœ‰è¾“å…¥â€œï¼Œâ€ï¼Œæˆ‘ä»¬æ— æ³•å°†å±æ€§çš„å€¼åˆ†æ‹†ä¸ºä¸¤ä¸ªå­—ç¬¦ä¸²ï¼Œ
+        * ä¹Ÿå°±æ— æ³•è¿›è¡Œä¸‹é¢çš„è½¬æ¢ï¼Œæ‰€ä»¥ï¼Œæˆ‘ä»¬è¦æŠ›å‡ºä¸€ä¸ªå¼‚å¸¸ï¼Œé€šçŸ¥ç”¨æˆ·é‡æ–°è¾“å…¥ã€‚
         */
         public override object ConvertFrom(ITypeDescriptorContext context, System.Globalization.CultureInfo culture, object value)
         {
@@ -693,7 +693,7 @@ namespace SourceGrid.Cells.Editors
                 String[] v = ((String)value).Split(',');
                 if (v.GetLength(0) != 4)
                 {
-                    throw new ArgumentException("Invalid parameter format ĞèÒªÓĞËÄ¸öÊı¾İ");
+                    throw new ArgumentException("Invalid parameter format éœ€è¦æœ‰å››ä¸ªæ•°æ®");
                 }
 
 
@@ -702,21 +702,21 @@ namespace SourceGrid.Cells.Editors
                 controller.IsShow = Convert.ToBoolean(v[1]);
                 controller.IsSeparator = Convert.ToBoolean(v[2]);
                 controller.ClickEventName = Convert.ToString(v[3]);
-                //throw new ArgumentException("112121t ĞèÒªÓĞËÄ¸öÊı¾İ");
+                //throw new ArgumentException("112121t éœ€è¦æœ‰å››ä¸ªæ•°æ®");
                 return controller;
             }
             return base.ConvertFrom(context, culture, value);
         }
         /*
-        * ÎªÁËÔÚÊôĞÔä¯ÀÀÆ÷ÀïÄÜ¹»¶ÀÁ¢µÄ±à¼­×ÓÊôĞÔ
-        * £¬ÎÒÃÇ»¹ÒªÖØĞ´Á½¸ö·½·¨£ºGetPropertiesSupported£¨£©ºÍGetProperties£¨£©£»
-        * ÏÂÃæÊÇScopeConverterµÄÍêÕû´úÂë£º
-        * ÔÚGetProperties·½·¨Àï£¬ÎÒÓÃTypeDescriptor»ñµÃÁËScopeÀàµÄËùÓĞµÄÊôĞÔÃèÊöÆ÷²¢·µ»Ø¡£
-        * Èç¹ûÄã¶ÔTypeDescriptor»¹²»ÊìÏ¤µÄ»°£¬¿ÉÒÔ²Î¿¼MSDN¡£
-        * ÖØĞ´ÕâÁ½¸ö·½·¨²¢±àÒëÒÔºó£¬ÔÚ²âÊÔ¹¤³ÌÀï²é¿´¿Ø¼şµÄÊôĞÔ£¬Äã¿ÉÒÔ¿´µ½ScopeÊÇÈçÏÂµÄĞÎÊ½
+        * ä¸ºäº†åœ¨å±æ€§æµè§ˆå™¨é‡Œèƒ½å¤Ÿç‹¬ç«‹çš„ç¼–è¾‘å­å±æ€§
+        * ï¼Œæˆ‘ä»¬è¿˜è¦é‡å†™ä¸¤ä¸ªæ–¹æ³•ï¼šGetPropertiesSupportedï¼ˆï¼‰å’ŒGetPropertiesï¼ˆï¼‰ï¼›
+        * ä¸‹é¢æ˜¯ScopeConverterçš„å®Œæ•´ä»£ç ï¼š
+        * åœ¨GetPropertiesæ–¹æ³•é‡Œï¼Œæˆ‘ç”¨TypeDescriptorè·å¾—äº†Scopeç±»çš„æ‰€æœ‰çš„å±æ€§æè¿°å™¨å¹¶è¿”å›ã€‚
+        * å¦‚æœä½ å¯¹TypeDescriptorè¿˜ä¸ç†Ÿæ‚‰çš„è¯ï¼Œå¯ä»¥å‚è€ƒMSDNã€‚
+        * é‡å†™è¿™ä¸¤ä¸ªæ–¹æ³•å¹¶ç¼–è¯‘ä»¥åï¼Œåœ¨æµ‹è¯•å·¥ç¨‹é‡ŒæŸ¥çœ‹æ§ä»¶çš„å±æ€§ï¼Œä½ å¯ä»¥çœ‹åˆ°Scopeæ˜¯å¦‚ä¸‹çš„å½¢å¼
         */
 
-        //ÏÂÃæ·½·¨ÊµÏÖ¶ÔÊôĞÔµÄ×ÓÊôĞÔ¿É½øĞĞ±à¼­
+        //ä¸‹é¢æ–¹æ³•å®ç°å¯¹å±æ€§çš„å­å±æ€§å¯è¿›è¡Œç¼–è¾‘
         public override bool GetPropertiesSupported(ITypeDescriptorContext context)
         {
             return true;

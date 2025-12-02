@@ -1332,7 +1332,8 @@ namespace RUINORERP.Server
                 {
                     // 服务器启动后异步加载缓存，不阻塞UI
                     PrintInfoLog("开始异步加载缓存数据...");
-                    await Task.Run(async () =>
+                    // 使用ConfigureAwait(false)避免死锁风险
+                    _ = Task.Run(async () =>
                     {
                         try
                         {
@@ -1340,7 +1341,7 @@ namespace RUINORERP.Server
                             var startTime = DateTime.Now;
 
                             // 执行缓存初始化
-                            await _entityCacheInitializationService.InitializeAllCacheAsync();
+                            await _entityCacheInitializationService.InitializeAllCacheAsync().ConfigureAwait(false);
 
                             // 计算耗时并记录完成信息
                             var elapsedTime = DateTime.Now - startTime;
@@ -1883,9 +1884,12 @@ namespace RUINORERP.Server
                     var reminderService = Startup.GetFromFac<SmartReminderService>();
                     await Task.Run(async () => await reminderService.StartAsync(CancellationToken.None));
                     
-                    // 启动服务器锁管理器服务
-                    var lockManager = Startup.GetFromFac<RUINORERP.Server.Network.Services.ServerLockManager>();
-                    await Task.Run(async () => await lockManager.StartAsync());
+                    // 启动服务器锁管理器服务 - 直接通过接口调用，无需类型转换
+                    var lockManager = Startup.GetFromFac<ILockManagerService>();
+                    if (lockManager != null)
+                    {
+                        await Task.Run(async () => await lockManager.StartAsync());
+                    }
 
                     // 每5秒检查一次，减少系统负载
                     if (_sessionCleanupTimer != null)

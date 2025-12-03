@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using RUINORERP.Business;
 using RUINORERP.Model;
+using RUINORERP.Repository.UnitOfWorks;
 using SqlSugar;
 using System;
 using System.Collections.Generic;
@@ -15,24 +16,7 @@ using System.Windows.Forms;
 
 namespace RUINORERP.Server.Services
 {
-    /// <summary>
-    /// 选择性序列化解析器
-    /// </summary>
-    public class SelectiveContractResolver : DefaultContractResolver
-    {
-        private readonly List<string> _propertyNamesToSerialize;
 
-        public SelectiveContractResolver(List<string> propertyNamesToSerialize)
-        {
-            _propertyNamesToSerialize = propertyNamesToSerialize;
-        }
-
-        protected override IList<JsonProperty> CreateProperties(Type type, MemberSerialization memberSerialization)
-        {
-            var properties = base.CreateProperties(type, memberSerialization);
-            return properties.Where(p => _propertyNamesToSerialize.Contains(p.PropertyName)).ToList();
-        }
-    }
     /// <summary>
     /// 注册服务实现
     /// 提供系统注册相关的业务逻辑实现
@@ -43,17 +27,19 @@ namespace RUINORERP.Server.Services
         private readonly IHardwareInfoService _hardwareInfoService;
         private readonly ISecurityService _securityService;
         private readonly IServiceProvider _serviceProvider;
-
+        public readonly IUnitOfWorkManage _unitOfWorkManage;
+    
         public RegistrationService(
             ILogger<RegistrationService> logger,
             IHardwareInfoService hardwareInfoService,
             ISecurityService securityService,
-            IServiceProvider serviceProvider)
+            IServiceProvider serviceProvider, IUnitOfWorkManage unitOfWorkManage)
         {
             _logger = logger;
             _hardwareInfoService = hardwareInfoService;
             _securityService = securityService;
             _serviceProvider = serviceProvider;
+            _unitOfWorkManage = unitOfWorkManage;
         }
 
         /// <summary>
@@ -64,10 +50,7 @@ namespace RUINORERP.Server.Services
         {
             try
             {
-                using (var scope = _serviceProvider.CreateScope())
-                {
-                    var db = scope.ServiceProvider.GetRequiredService<ISqlSugarClient>();
-                    var registrationInfo = await db.Queryable<tb_sys_RegistrationInfo>().FirstAsync();
+                    var registrationInfo = await _unitOfWorkManage.GetDbClient().Queryable<tb_sys_RegistrationInfo>().FirstAsync();
 
                     if (registrationInfo == null)
                     {
@@ -92,7 +75,7 @@ namespace RUINORERP.Server.Services
                     }
 
                     return registrationInfo;
-                }
+                
             }
             catch (Exception ex)
             {
@@ -110,11 +93,9 @@ namespace RUINORERP.Server.Services
         {
             try
             {
-                using (var scope = _serviceProvider.CreateScope())
-                {
-                    var db = scope.ServiceProvider.GetRequiredService<ISqlSugarClient>();
-
-                    var existingInfo = await db.Queryable<tb_sys_RegistrationInfo>().FirstAsync();
+            
+                  
+                    var existingInfo = await _unitOfWorkManage.GetDbClient().Queryable<tb_sys_RegistrationInfo>().FirstAsync();
                     if (existingInfo != null)
                     {
                         // 更新现有记录
@@ -122,7 +103,7 @@ namespace RUINORERP.Server.Services
                         // registrationInfo.Modified_by = "System";
                         registrationInfo.Modified_at = DateTime.Now;
 
-                        return await db.Updateable(registrationInfo).ExecuteCommandAsync() > 0;
+                        return await _unitOfWorkManage.GetDbClient().Updateable(registrationInfo).ExecuteCommandAsync() > 0;
                     }
                     else
                     {
@@ -130,9 +111,9 @@ namespace RUINORERP.Server.Services
                         // registrationInfo.Created_by = "System";
                         registrationInfo.Created_at = DateTime.Now;
 
-                        return await db.Insertable(registrationInfo).ExecuteCommandAsync() > 0;
+                        return await _unitOfWorkManage.GetDbClient().Insertable(registrationInfo).ExecuteCommandAsync() > 0;
                     }
-                }
+              
             }
             catch (Exception ex)
             {
@@ -337,4 +318,25 @@ namespace RUINORERP.Server.Services
             }
         }
     }
+
+    /// <summary>
+    /// 选择性序列化解析器
+    /// </summary>
+    public class SelectiveContractResolver : DefaultContractResolver
+    {
+        private readonly List<string> _propertyNamesToSerialize;
+
+        public SelectiveContractResolver(List<string> propertyNamesToSerialize)
+        {
+            _propertyNamesToSerialize = propertyNamesToSerialize;
+
+        }
+
+        protected override IList<JsonProperty> CreateProperties(Type type, MemberSerialization memberSerialization)
+        {
+            var properties = base.CreateProperties(type, memberSerialization);
+            return properties.Where(p => _propertyNamesToSerialize.Contains(p.PropertyName)).ToList();
+        }
+    }
+
 }

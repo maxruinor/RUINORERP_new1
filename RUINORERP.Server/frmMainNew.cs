@@ -1319,7 +1319,15 @@ namespace RUINORERP.Server
                 // 立即禁用启动按钮，防止重复点击
                 SetServerButtonsEnabled(false);
 
+                // 检查系统注册状态
+                if (!await ValidateSystemRegistrationAsync())
+                {
+                    PrintErrorLog("系统注册验证失败，服务器启动被终止");
+                    throw new Exception("系统注册验证失败，无法启动服务器");
+                }
+
                 PrintInfoLog("服务器启动中...");
+     
 
                 // 启动核心服务
                 await StartServerCore();
@@ -1925,12 +1933,6 @@ namespace RUINORERP.Server
 
             try
             {
-                // 检查系统注册状态
-                if (!await ValidateSystemRegistrationAsync())
-                {
-                    PrintErrorLog("系统注册验证失败，服务器启动被终止");
-                    throw new Exception("系统注册验证失败，无法启动服务器");
-                }
 
                 var _logger = Startup.GetFromFac<ILogger<frmMainNew>>();
 
@@ -1999,7 +2001,7 @@ namespace RUINORERP.Server
             {
                 _logger?.LogError($"NetworkServer启动异常: {hostex.Message}", hostex);
                 PrintErrorLog($"NetworkServer启动异常: {hostex.Message}");
-                throw; // 重新抛出异常以便上层处理
+                throw ; // 重新抛出异常以便上层处理
             }
         }
 

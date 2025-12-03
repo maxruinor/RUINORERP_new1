@@ -347,7 +347,7 @@ namespace RUINORERP.Server.Controls
         /// </summary>
         private async void tsbtnSaveRegInfo_Click(object sender, EventArgs e)
         {
-            if (!ValidateRegistrationInfo())
+            if (!ValidateRegistrationInfo(_currentRegistrationInfo))
             {
                 return;
             }
@@ -387,7 +387,7 @@ namespace RUINORERP.Server.Controls
         /// </summary>
         private void btnCreateRegInfo_Click(object sender, EventArgs e)
         {
-            if (!ValidateRegistrationInfo())
+            if (!ValidateRegistrationInfo(_currentRegistrationInfo))
             {
                 return;
             }
@@ -418,7 +418,7 @@ namespace RUINORERP.Server.Controls
         /// </summary>
         private async void btnRegister_Click(object sender, EventArgs e)
         {
-            if (!ValidateRegistrationInfo())
+            if (!ValidateRegistrationInfo(_currentRegistrationInfo))
             {
                 return;
             }
@@ -480,7 +480,7 @@ namespace RUINORERP.Server.Controls
         /// 验证注册信息
         /// </summary>
         /// <returns>验证是否通过</returns>
-        private bool ValidateRegistrationInfo()
+        private bool ValidateRegistrationInfo(tb_sys_RegistrationInfo registrationInfo)
         {
             if (_currentRegistrationInfo == null)
             {
@@ -515,7 +515,6 @@ namespace RUINORERP.Server.Controls
 
             try
             {
-                var registrationInfo = frmMainNew.Instance.registrationInfo;
                 if (registrationInfo != null)
                 {
                     bool isValid = _registrationService.CheckRegistered(registrationInfo);
@@ -596,7 +595,7 @@ namespace RUINORERP.Server.Controls
 
             #region 保存续期的注册信息
 
-            if (!ValidateRegistrationInfo())
+            if (!ValidateRegistrationInfo(_currentRegistrationInfo))
             {
                 return;
             }

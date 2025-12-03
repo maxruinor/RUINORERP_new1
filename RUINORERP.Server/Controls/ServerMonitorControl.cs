@@ -286,7 +286,7 @@ namespace RUINORERP.Server.Controls
                     try
                     {
                         var config = Program.ServiceProvider.GetRequiredService<IConfiguration>();
-                        string portStr = config.GetSection("serverOptions:Listeners:0:Port").Value;
+                        string portStr = config.GetSection("serverOptions:listeners:0:port").Value;
                         if (!string.IsNullOrEmpty(portStr) && int.TryParse(portStr, out int port))
                         {
                             defaultPort = port;

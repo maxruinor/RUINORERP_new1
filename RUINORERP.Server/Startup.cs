@@ -389,12 +389,13 @@ namespace RUINORERP.Server
             });
             #endregion
 
-            // 读取自定义的 JSON 配置文件
+            // 读取配置文件，包括根目录的appsettings.json和SysConfigFiles目录下的配置文件
             var builder = new ConfigurationBuilder()
-                .SetBasePath(System.IO.Path.Combine(Directory.GetCurrentDirectory(), "SysConfigFiles"))
-                .AddJsonFile(nameof(SystemGlobalConfig) + ".json", optional: false, reloadOnChange: true)
-                .AddJsonFile(nameof(GlobalValidatorConfig) + ".json", optional: false, reloadOnChange: true)
-                .AddJsonFile(nameof(ServerConfig) + ".json", optional: false, reloadOnChange: true)
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                .AddJsonFile(Path.Combine("SysConfigFiles", nameof(SystemGlobalConfig) + ".json"), optional: false, reloadOnChange: true)
+                .AddJsonFile(Path.Combine("SysConfigFiles", nameof(GlobalValidatorConfig) + ".json"), optional: false, reloadOnChange: true)
+                .AddJsonFile(Path.Combine("SysConfigFiles", nameof(ServerConfig) + ".json"), optional: false, reloadOnChange: true)
                 // 添加环境变量支持，提高配置灵活性
                 .AddEnvironmentVariables(prefix: "RUINOR_")
                 .Build();
@@ -432,11 +433,6 @@ namespace RUINORERP.Server
             
             // 注册临时图片清理工作流
             TempImageCleanupWorkflowConfig.RegisterWorkflow(services);
-
-            // 添加新的SuperSocket服务
-            IConfigurationBuilder configurationBuilder2 = new ConfigurationBuilder();
-            var cfgBuilder2 = configurationBuilder2.AddJsonFile("appsettings.json");
-            IConfiguration configuration2 = cfgBuilder2.Build();
             #endregion
 
             services.AddScoped(typeof(IBaseRepository<>), typeof(BaseRepository<>)); // 注入仓储

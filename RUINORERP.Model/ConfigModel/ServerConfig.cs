@@ -18,10 +18,6 @@ namespace RUINORERP.Model.ConfigModel
         [Description("服务器名称")]
         public string ServerName { get; set; } = "RUINORERP-Server";
 
-        [JsonProperty("ServerPort")]
-        [Category("服务器基础设置")]
-        [Description("服务器监听端口")]
-        public int ServerPort { get; set; } = 8080;
 
         [JsonProperty("MaxConnections")]
         [Category("服务器基础设置")]

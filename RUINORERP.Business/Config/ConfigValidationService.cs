@@ -466,14 +466,14 @@ namespace RUINORERP.Business.Config
         {
             // 保留自定义规则注册功能，但主要验证逻辑已迁移到FluentValidation验证器
             // 这里主要是为了兼容可能使用自定义规则的现有代码
-            RegisterCustomRule<ServerConfig>(new ConfigValidationRule
-            {
-                RuleName = "ServerPortRule",
-                PropertyName = nameof(ServerConfig.ServerPort),
-                MinValue = 1,
-                MaxValue = 65535,
-                ErrorMessage = "服务器端口必须在1-65535范围内"
-            });
+            //RegisterCustomRule<ServerConfig>(new ConfigValidationRule
+            //{
+            //    RuleName = "ServerPortRule",
+            //    PropertyName = nameof(ServerConfig.ServerPort),
+            //    MinValue = 1,
+            //    MaxValue = 65535,
+            //    ErrorMessage = "服务器端口必须在1-65535范围内"
+            //});
             
             RegisterCustomRule<ServerConfig>(new ConfigValidationRule
             {
@@ -571,10 +571,7 @@ namespace RUINORERP.Business.Config
         /// </summary>
         private void ValidateServerConfig(ServerConfig config, ConfigValidationResult result)
         {
-            if (config.ServerPort < 1 || config.ServerPort > 65535)
-            {
-                result.AddError(nameof(config.ServerPort), "服务器端口必须在1-65535范围内");
-            }
+           
             
             // 验证数据库连接字符串格式（简单验证）
             //if (!string.IsNullOrEmpty(config.DbConnectionString) && 

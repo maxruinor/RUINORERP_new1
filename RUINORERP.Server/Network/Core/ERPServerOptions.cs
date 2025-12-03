@@ -11,14 +11,17 @@
 using System.Collections.Generic;
 using System.Configuration;
 using Newtonsoft.Json;
+using SuperSocket.Server.Abstractions;
 
 namespace RUINORERP.Server.Network.Core
 {
+
+    /*
     /// <summary>
     /// 监听器选项类，对应appsettings.json中的serverOptions.listeners配置
     /// 定义SuperSocket服务器监听器的基本配置参数
     /// </summary>
-    public class ListenerOptions
+    public class ListenOptions
     {
         /// <summary>
         /// 监听IP地址，Any表示所有IPv4地址
@@ -58,6 +61,8 @@ namespace RUINORERP.Server.Network.Core
         }
     }
 
+    */
+
     /// <summary>
     /// ERP服务器配置选项类
     /// 用于从appsettings.json配置文件中读取SuperSocket服务器的完整配置
@@ -70,9 +75,9 @@ namespace RUINORERP.Server.Network.Core
         /// 包含服务器需要监听的所有端点配置
         /// 默认包含一个监听所有IPv4地址的监听器
         /// </summary>
-        public List<ListenerOptions> Listeners { get; set; } = new List<ListenerOptions>
+        public List<ListenOptions> Listeners { get; set; } = new List<ListenOptions>
         {
-            new ListenerOptions() // 确保至少有一个默认监听器
+            new ListenOptions() // 确保至少有一个默认监听器
         };
 
         /// <summary>
@@ -82,7 +87,7 @@ namespace RUINORERP.Server.Network.Core
         public void Validate()
         {
             if (Listeners.Count == 0)
-                Listeners.Add(new ListenerOptions());
+                Listeners.Add(new ListenOptions());
 
             if (MaxConnectionCount <= 0)
                 MaxConnectionCount = 1000;
@@ -143,5 +148,7 @@ namespace RUINORERP.Server.Network.Core
         /// 默认值为"Tls12"
         /// </summary>
         public string SecurityMode { get; set; } = "Tls12";
+    
+       
     }
 }

@@ -1994,7 +1994,7 @@ namespace RUINORERP.Server
                 else
                 {
                     // 启动失败
-                    throw new Exception("网络服务器返回null，启动失败");
+                    throw new Exception("网络服务器返回null，启动失败。");
                 }
             }
             catch (Exception hostex)

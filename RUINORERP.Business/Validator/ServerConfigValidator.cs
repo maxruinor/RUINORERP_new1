@@ -24,8 +24,7 @@ namespace RUINORERP.Business
             RuleFor(x => x.ServerName).NotEmpty().WithMessage("服务器名称不能为空");
             RuleFor(x => x.ServerName).MaximumLength(50).WithMessage("服务器名称长度不能超过50个字符");
 
-            RuleFor(x => x.ServerPort).InclusiveBetween(1024, 65535).WithMessage("服务器端口必须在1024-65535之间");
-
+          
             RuleFor(x => x.MaxConnections).GreaterThan(0).WithMessage("最大连接数必须大于0");
             RuleFor(x => x.MaxConnections).LessThanOrEqualTo(10000).WithMessage("最大连接数不能超过10000");
 

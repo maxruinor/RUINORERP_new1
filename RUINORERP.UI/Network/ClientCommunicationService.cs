@@ -157,6 +157,12 @@ namespace RUINORERP.UI.Network
         #region 心跳相关公共属性和事件
 
         /// <summary>
+        /// 心跳失败阈值
+        /// 连续心跳失败达到此阈值时触发客户端锁定
+        /// </summary>
+        public const int HEARTBEAT_FAILURE_THRESHOLD = 5;
+
+        /// <summary>
         /// 心跳失败事件
         /// 当心跳失败时触发，参数为连续失败次数
         /// </summary>
@@ -167,6 +173,12 @@ namespace RUINORERP.UI.Network
         /// 当心跳从失败状态恢复时触发
         /// </summary>
         public event Action HeartbeatRecovered;
+
+        /// <summary>
+        /// 心跳失败达到阈值事件
+        /// 当连续心跳失败次数达到阈值时触发
+        /// </summary>
+        public event Action HeartbeatFailureThresholdReached;
 
         /// <summary>
         /// 最后一次心跳时间
@@ -490,7 +502,14 @@ namespace RUINORERP.UI.Network
 
                             // 触发失败事件
                             HeartbeatFailed?.Invoke(_heartbeatFailedAttempts);
-                            //_logger?.LogWarning("心跳失败，连续失败次数：{FailedAttempts}", _heartbeatFailedAttempts);
+                            _logger?.LogWarning("心跳失败，连续失败次数：{FailedAttempts}", _heartbeatFailedAttempts);
+
+                            // 检查是否达到心跳失败阈值
+                            if (_heartbeatFailedAttempts >= HEARTBEAT_FAILURE_THRESHOLD)
+                            {
+                                _logger?.LogError("心跳失败达到阈值({Threshold})，触发锁定事件", HEARTBEAT_FAILURE_THRESHOLD);
+                                HeartbeatFailureThresholdReached?.Invoke();
+                            }
                         }
                     }
                 }

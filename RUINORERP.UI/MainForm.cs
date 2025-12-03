@@ -238,6 +238,49 @@ namespace RUINORERP.UI
             }
         }
 
+        /// <summary>
+        /// 处理心跳失败达到阈值事件
+        /// 当连续心跳失败次数达到阈值且客户端尚未锁定时，触发客户端锁定
+        /// </summary>
+        private void OnHeartbeatFailureThresholdReached()
+        {
+            try
+            {
+                logger?.LogWarning("心跳失败达到阈值，检查当前登录和锁定状态");
+
+                // 只有在已登录且未锁定状态下才进入锁定状态
+                if (CurrentLoginStatus == LoginStatus.LoggedIn && !IsLocked)
+                {
+                    logger?.LogWarning("当前为已登录且未锁定状态，自动进入注销锁定状态");
+
+                    // 在UI线程上执行注销操作
+                    if (InvokeRequired)
+                    {
+                        Invoke(new Action(() =>
+                        {
+                            // 更新锁定状态显示
+                            UpdateLockStatus(true);
+                            LogLock();
+                        }));
+                    }
+                    else
+                    {
+                        // 更新锁定状态显示
+                        UpdateLockStatus(true);
+                        LogLock();
+                    }
+                }
+                else
+                {
+                    logger?.LogInformation($"当前状态不符合心跳锁定条件，登录状态: {CurrentLoginStatus}, 锁定状态: {IsLocked}");
+                }
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "处理心跳失败阈值事件时发生异常");
+            }
+        }
+
         #endregion
 
         // 在表单关闭时取消订阅事件，避免内存泄漏
@@ -437,7 +480,8 @@ namespace RUINORERP.UI
             if (communicationService != null)
             {
                 communicationService.ReconnectFailed += OnReconnectFailed;
-
+                // 订阅心跳失败阈值事件，当连续心跳失败达到阈值时触发锁定
+                communicationService.HeartbeatFailureThresholdReached += OnHeartbeatFailureThresholdReached;
             }
             #endregion
 

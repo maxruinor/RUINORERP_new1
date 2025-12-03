@@ -1072,8 +1072,6 @@ namespace RUINORERP.Server.Controls
             {
                 case nameof(ServerConfig.ServerName):
                     return "RUINORERP Server";
-                case nameof(ServerConfig.ServerPort):
-                    return 8080;
                 case nameof(ServerConfig.MaxConnections):
                     return 100;
                 case nameof(ServerConfig.HeartbeatInterval):

@@ -2227,7 +2227,7 @@ namespace RUINORERP.Server
         /// <summary>
         /// 检查系统注册状态并加载注册信息
         /// </summary>
-        private async void CheckSystemRegistration()
+        private async Task CheckSystemRegistration()
         {
             try
             {

@@ -50,7 +50,9 @@ namespace RUINORERP.Server.Services
         {
             try
             {
-                    var registrationInfo = await _unitOfWorkManage.GetDbClient().Queryable<tb_sys_RegistrationInfo>().FirstAsync();
+                    // 使用CopyNew()创建独立的数据库连接上下文，避免IsAutoCloseConnection=true导致的连接提前关闭问题
+                    var db = _unitOfWorkManage.GetDbClient().CopyNew();
+                    var registrationInfo = await db.Queryable<tb_sys_RegistrationInfo>().FirstAsync();
 
                     if (registrationInfo == null)
                     {
@@ -94,8 +96,10 @@ namespace RUINORERP.Server.Services
             try
             {
             
+                  // 使用CopyNew()创建独立的数据库连接上下文，避免IsAutoCloseConnection=true导致的连接提前关闭问题
+                  var db = _unitOfWorkManage.GetDbClient().CopyNew();
                   
-                    var existingInfo = await _unitOfWorkManage.GetDbClient().Queryable<tb_sys_RegistrationInfo>().FirstAsync();
+                    var existingInfo = await db.Queryable<tb_sys_RegistrationInfo>().FirstAsync();
                     if (existingInfo != null)
                     {
                         // 更新现有记录
@@ -103,7 +107,7 @@ namespace RUINORERP.Server.Services
                         // registrationInfo.Modified_by = "System";
                         registrationInfo.Modified_at = DateTime.Now;
 
-                        return await _unitOfWorkManage.GetDbClient().Updateable(registrationInfo).ExecuteCommandAsync() > 0;
+                        return await db.Updateable(registrationInfo).ExecuteCommandAsync() > 0;
                     }
                     else
                     {
@@ -111,7 +115,7 @@ namespace RUINORERP.Server.Services
                         // registrationInfo.Created_by = "System";
                         registrationInfo.Created_at = DateTime.Now;
 
-                        return await _unitOfWorkManage.GetDbClient().Insertable(registrationInfo).ExecuteCommandAsync() > 0;
+                        return await db.Insertable(registrationInfo).ExecuteCommandAsync() > 0;
                     }
               
             }
@@ -285,38 +289,7 @@ namespace RUINORERP.Server.Services
             return false;
         }
 
-        /// <summary>
-        /// 续期授权
-        /// </summary>
-        /// <param name="daysToAdd">要增加的天数</param>
-        /// <returns>是否成功续期</returns>
-        public async Task<bool> RenewRegistrationAsync(int daysToAdd)
-        {
-            try
-            {
-                // 获取当前注册信息
-                var regInfo = await GetRegistrationInfoAsync();
-                if (regInfo == null || !regInfo.IsRegistered)
-                {
-                    _logger.LogWarning("当前没有有效的注册信息，无法续期");
-                    return false;
-                }
-
-                // 在当前过期日期基础上增加指定天数
-                DateTime currentExpirationDate = regInfo.ExpirationDate;
-                regInfo.ExpirationDate = currentExpirationDate.AddDays(daysToAdd);
-
-                // 保存更新后的注册信息
-                await SaveRegistrationInfoAsync(regInfo);
-                _logger.LogInformation($"授权成功续期{daysToAdd}天，新的过期日期为：{regInfo.ExpirationDate}");
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "续期授权时发生错误");
-                return false;
-            }
-        }
+ 
     }
 
     /// <summary>

@@ -50,11 +50,6 @@ namespace RUINORERP.Server.Services
         /// <returns>是否过期</returns>
         bool IsRegistrationExpired(tb_sys_RegistrationInfo registrationInfo);
 
-        /// <summary>
-        /// 续期注册
-        /// </summary>
-        /// <param name="daysToAdd">要增加的天数</param>
-        /// <returns>是否成功续期</returns>
-        Task<bool> RenewRegistrationAsync(int daysToAdd);
+ 
     }
 }

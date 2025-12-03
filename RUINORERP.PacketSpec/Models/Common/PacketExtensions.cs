@@ -2,10 +2,12 @@
 using System.Collections.Generic;
 using System.Text;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using RUINORERP.PacketSpec.Serialization;
 using RUINORERP.PacketSpec.Enums.Core;
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Models.Responses;
+using Newtonsoft.Json.Linq;
 
 namespace RUINORERP.PacketSpec.Models.Common
 {
@@ -71,7 +73,7 @@ namespace RUINORERP.PacketSpec.Models.Common
         /// <returns>当前数据包实例</returns>
         public static PacketModel WithExtension(this PacketModel packet, string key, object value)
         {
-            packet.Extensions[key] = value;
+            packet.Extensions[key] = JToken.FromObject(value);
             return packet;
         }
 

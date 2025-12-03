@@ -1,34 +1,36 @@
-using System;
+using Azure;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json.Linq;
+using RUINORERP.PacketSpec;
+using RUINORERP.PacketSpec.Commands;
+using RUINORERP.PacketSpec.Commands.Authentication;
+using RUINORERP.PacketSpec.Core;
+using RUINORERP.PacketSpec.Enums.Core;
+using RUINORERP.PacketSpec.Errors;
+using RUINORERP.PacketSpec.Models.Common;
+using RUINORERP.PacketSpec.Models.Core;
+using RUINORERP.PacketSpec.Models.Lock;
+using RUINORERP.PacketSpec.Models.Responses;
+using RUINORERP.PacketSpec.Serialization;
 using RUINORERP.Server; // 添加对Program类所在命名空间的引用
+using RUINORERP.Server.Network.Interfaces.Services;
+using RUINORERP.Server.Network.Models;
+using RUINORERP.Server.Network.Services;
+using SuperSocket.Command;
+using SuperSocket.Server.Abstractions.Session;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO.Packaging;
 using System.Linq;
+using System.Net.Sockets;
 using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using RUINORERP.PacketSpec.Commands;
-using RUINORERP.PacketSpec.Models.Responses;
-using RUINORERP.PacketSpec.Serialization;
-using RUINORERP.Server.Network.Models;
-using RUINORERP.Server.Network.Interfaces.Services;
-using SuperSocket.Server.Abstractions.Session;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.DependencyInjection;
-using RUINORERP.PacketSpec;
-using RUINORERP.PacketSpec.Enums.Core;
-using SuperSocket.Command;
-using Azure;
-using RUINORERP.PacketSpec.Models.Core;
-using RUINORERP.PacketSpec.Commands.Authentication;
-using RUINORERP.PacketSpec.Errors;
-using RUINORERP.PacketSpec.Core;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using static System.Runtime.InteropServices.JavaScript.JSType;
-using System.Net.Sockets;
-using RUINORERP.Server.Network.Services;
-using RUINORERP.PacketSpec.Models.Common;
-using RUINORERP.PacketSpec.Models.Lock;
 
 namespace RUINORERP.Server.Network.SuperSocket
 {
@@ -373,7 +375,10 @@ namespace RUINORERP.Server.Network.SuperSocket
             {
 
             }
+            if (response is LoginResponse)
+            {
 
+            }
             if (response != null && response.IsSuccess)
             {
                 // 命令执行成功，发送成功响应
@@ -421,10 +426,10 @@ namespace RUINORERP.Server.Network.SuperSocket
             // 添加元数据
             if (result.Metadata != null && result.Metadata.Count > 0)
             {
-                package.Extensions = new Dictionary<string, object>();
+                package.Extensions = new JObject();
                 foreach (var metadata in result.Metadata)
                 {
-                    package.Extensions[metadata.Key] = metadata.Value;
+                    package.Extensions[metadata.Key] = JToken.FromObject(metadata.Value);
                 }
             }
 
@@ -582,13 +587,20 @@ namespace RUINORERP.Server.Network.SuperSocket
                 Direction = PacketDirection.ServerResponse,
                 SessionId = requestPackage.Packet?.SessionId,
                 Status = PacketStatus.Error,
-                Extensions = new Dictionary<string, object>
+                Extensions = new JObject
                 {
                     ["ErrorCode"] = errorCode.Code,
                     ["ErrorMessage"] = errorCode.Message,
                     ["Success"] = false
                 }
             };
+
+            // 设置请求ID 配对响应
+            if (requestPackage.Packet.Request != null)
+            {
+                requestPackage.Packet.ExecutionContext.RequestId = requestPackage.Packet.Request.RequestId;
+            }
+
 
             // 如果提供了result参数，则添加增强的错误信息
             if (result != null)
@@ -605,39 +617,42 @@ namespace RUINORERP.Server.Network.SuperSocket
 
                 // 设置响应对象 - 使用CreateCommandSpecificResponse确保返回正确类型的响应
                 // 这样客户端在使用as TResponse转换时才能成功
-                if (result is ResponseBase responseBase)
-                {
-                    errorResponse.Response = responseBase;
-                }
-                else
-                {
-                    errorResponse.Response = result;
-                }
+                //if (result is ResponseBase responseBase)
+                //{
+                //    errorResponse.Response = responseBase;
+                //}
+                //else
+                //{
+                errorResponse.Response = result;
+                //}
 
                 // 添加元数据中的所有错误信息
                 if (result.Metadata != null && result.Metadata.Count > 0)
+            {
+                foreach (var metadata in result.Metadata)
                 {
-                    foreach (var metadata in result.Metadata)
+                    // 避免重复添加已经存在的键
+                    if (!errorResponse.Extensions.ContainsKey(metadata.Key))
                     {
-                        // 避免重复添加已经存在的键
-                        if (!errorResponse.Extensions.ContainsKey(metadata.Key))
-                        {
-                            errorResponse.Extensions[metadata.Key] = metadata.Value;
-                        }
+                        errorResponse.Extensions[metadata.Key] = JToken.FromObject(metadata.Value);
                     }
                 }
+            }
             }
 
             // 如果请求包中包含RequestId，则在响应包中保留它，以便客户端匹配请求和响应
             if (requestPackage.Packet?.Extensions?.TryGetValue("RequestId", out var requestId) == true)
             {
-                errorResponse.Extensions["RequestId"] = requestId;
+                errorResponse.Extensions["RequestId"] = JToken.FromObject(requestId);
             }
 
             // 记录详细的错误信息用于调试
             _logger?.LogWarning("发送错误响应: ErrorCode={ErrorCode}, ErrorMessage={ErrorMessage}, MetadataKeys=[{MetadataKeys}]",
                 errorCode.Code, errorCode.Message,
                 result?.Metadata != null ? string.Join(", ", result.Metadata.Keys) : "none");
+
+
+ 
 
             // 发送响应
             await SendResponseAsync(session, errorResponse, cancellationToken);

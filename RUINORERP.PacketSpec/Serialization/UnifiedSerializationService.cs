@@ -66,7 +66,9 @@ namespace RUINORERP.PacketSpec.Serialization
             DefaultValueHandling = DefaultValueHandling.Include,
             TypeNameHandling = TypeNameHandling.None,
             DateFormatHandling = DateFormatHandling.IsoDateFormat,
-            DateTimeZoneHandling = DateTimeZoneHandling.Utc
+            DateTimeZoneHandling = DateTimeZoneHandling.Utc,
+            // 启用自定义序列化绑定器，解决跨平台程序集名称差异问题
+            SerializationBinder = new CrossPlatformSerializationBinder()
         };
 
         #endregion

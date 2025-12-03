@@ -116,6 +116,8 @@ namespace RUINORERP.UI.Network
         private bool _isDisposed = false; // 资源释放状态标志
         private readonly object _heartbeatLock = new object();
         private DateTime _lastHeartbeatTime;
+        private readonly object _reconnectCoordinationLock = new object(); // 新增：重连协调锁
+        private DateTime _lastManualReconnectAttempt = DateTime.MinValue; // 新增：最后一次手动重连尝试时间
 
         /// <summary>
         /// 待处理请求的内部类
@@ -254,9 +256,15 @@ namespace RUINORERP.UI.Network
             _connectionManager.ConnectionStateChanged -= OnConnectionStateChangedForHeartbeat;
             _connectionManager.ConnectionStateChanged += OnConnectionStateChangedForHeartbeat;
 
-            // 订阅重连失败事件
+            // 订阅重连相关事件
             _connectionManager.ReconnectFailed -= OnReconnectFailed;
             _connectionManager.ReconnectFailed += OnReconnectFailed;
+            
+            _connectionManager.ReconnectAttempt -= OnReconnectAttempt;
+            _connectionManager.ReconnectAttempt += OnReconnectAttempt;
+            
+            _connectionManager.ReconnectSucceeded -= OnReconnectSucceeded;
+            _connectionManager.ReconnectSucceeded += OnReconnectSucceeded;
 
             // 注意：不再在构造函数中初始化命令调度器，以避免循环依赖
             // 而是通过外部调用InitializeClientCommandDispatcherAsync方法进行初始化
@@ -322,12 +330,67 @@ namespace RUINORERP.UI.Network
             try
             {
                 _logger?.LogWarning("连接管理器报告重连失败，触发客户端事件管理器的重连失败事件");
+                
+                lock (_reconnectCoordinationLock)
+                {
+                    _isReconnecting = false;
+                }
+                
                 // 触发客户端事件管理器的重连失败事件
                 _clientEventManager.OnReconnectFailed();
+                
+                // 清空队列中的待处理命令，避免长时间等待
+                ClearQueue("重连失败");
             }
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "处理重连失败事件时发生异常");
+            }
+        }
+
+        /// <summary>
+        /// 处理连接管理器重连尝试事件
+        /// </summary>
+        /// <param name="currentAttempt">当前尝试次数</param>
+        /// <param name="maxAttempts">最大尝试次数</param>
+        private void OnReconnectAttempt(int currentAttempt, int maxAttempts)
+        {
+            try
+            {
+                _logger?.LogDebug("重连尝试：第 {CurrentAttempt}/{MaxAttempts} 次", currentAttempt, maxAttempts);
+                
+                // 可以在这里添加UI通知逻辑，比如显示重连进度
+                // 注意：这个方法在后台线程中执行，如果需要更新UI，需要使用Invoke
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "处理重连尝试事件时发生异常");
+            }
+        }
+
+        /// <summary>
+        /// 处理连接管理器重连成功事件
+        /// </summary>
+        private void OnReconnectSucceeded()
+        {
+            try
+            {
+                _logger?.LogDebug("重连成功，开始处理排队的命令");
+                
+                lock (_reconnectCoordinationLock)
+                {
+                    _isReconnecting = false;
+                }
+                
+                // 重连成功后，立即启动队列处理
+                _ = Task.Run(ProcessCommandQueueAsync);
+                
+                // 重新启动心跳
+                StartHeartbeat();
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "处理重连成功事件时发生异常");
             }
         }
 
@@ -883,7 +946,7 @@ namespace RUINORERP.UI.Network
                 {
 
                 }
-                else if (packet.CommandId == LockCommands.Lock)
+                if (packet.CommandId == AuthenticationCommands.Login)
                 {
 
                 }
@@ -1540,6 +1603,8 @@ namespace RUINORERP.UI.Network
                 {
                     // 取消所有事件订阅，防止内存泄漏
                     _connectionManager.ReconnectFailed -= OnReconnectFailed;
+                    _connectionManager.ReconnectAttempt -= OnReconnectAttempt;
+                    _connectionManager.ReconnectSucceeded -= OnReconnectSucceeded;
                     _connectionManager.ConnectionStateChanged -= OnConnectionStateChanged;
                     _connectionManager.ConnectionStateChanged -= OnConnectionStateChangedForHeartbeat;
                     _socketClient.Received -= OnReceived;
@@ -1713,38 +1778,118 @@ namespace RUINORERP.UI.Network
         /// <returns>重连任务</returns>
         private async Task TryReconnectIfNeededAsync()
         {
-            // 检查是否需要重连并避免重复触发
-            if (!IsConnected && !_isReconnecting && !_isDisposed && !_disposed)
+            lock (_reconnectCoordinationLock)
             {
-                // 使用原子操作设置重连标志
-                bool previousValue = false;
-                try
+                // 检查是否需要重连并避免重复触发
+                if (IsConnected || _isReconnecting || _isDisposed)
                 {
-                    // 使用原子操作更新重连标志
-                    previousValue = _isReconnecting;
-                    _isReconnecting = true;
+                    return;
+                }
 
-                    if (!previousValue)
+                // 防止频繁手动重连，至少间隔5秒
+                var timeSinceLastAttempt = DateTime.Now - _lastManualReconnectAttempt;
+                if (timeSinceLastAttempt.TotalSeconds < 5)
+                {
+                    _logger?.LogDebug("距离上次重连尝试时间过短，跳过此次重连");
+                    return;
+                }
+
+                _isReconnecting = true;
+                _lastManualReconnectAttempt = DateTime.Now;
+            }
+
+            try
+            {
+                _logger?.LogDebug("命令处理时检测到连接断开，尝试重连");
+                
+                // 获取当前服务器地址和端口
+                string serverAddress = GetCurrentServerAddress();
+                int serverPort = GetCurrentServerPort();
+
+                if (!string.IsNullOrEmpty(serverAddress) && serverPort > 0)
+                {
+                    // 使用ConnectionManager的连接方法，它会处理自动重连逻辑
+                    bool connected = await _connectionManager.ConnectAsync(serverAddress, serverPort, CancellationToken.None);
+                    
+                    if (!connected)
                     {
-                        _logger?.Debug("命令处理时检测到连接断开，尝试重连");
-                        // 获取当前服务器地址和端口
-                        string serverAddress = GetCurrentServerAddress();
-                        int serverPort = GetCurrentServerPort();
-
-                        if (!string.IsNullOrEmpty(serverAddress) && serverPort > 0)
-                        {
-                            // 使用现有的ConnectAsync方法进行重连
-                            await _connectionManager.ConnectAsync(serverAddress, serverPort, CancellationToken.None);
-                        }
+                        _logger?.LogWarning("连接失败，将由ConnectionManager的自动重连机制处理");
                     }
                 }
-                catch (Exception ex)
+                else
                 {
-                    _logger?.LogError(ex, "尝试重连时发生异常");
+                    _logger?.LogWarning("服务器地址或端口无效，无法重连");
                 }
-                finally
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "尝试重连时发生异常");
+            }
+            finally
+            {
+                lock (_reconnectCoordinationLock)
                 {
-                    // 重置重连标志
+                    _isReconnecting = false;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 手动触发重连
+        /// </summary>
+        /// <returns>重连是否成功</returns>
+        public async Task<bool> ManualReconnectAsync()
+        {
+            lock (_reconnectCoordinationLock)
+            {
+                if (_isDisposed)
+                {
+                    _logger?.LogWarning("服务已释放，无法进行手动重连");
+                    return false;
+                }
+
+                // 防止频繁手动重连
+                var timeSinceLastAttempt = DateTime.Now - _lastManualReconnectAttempt;
+                if (timeSinceLastAttempt.TotalSeconds < 3)
+                {
+                    _logger?.LogDebug("手动重连过于频繁，请稍后再试");
+                    return false;
+                }
+
+                _isReconnecting = true;
+                _lastManualReconnectAttempt = DateTime.Now;
+            }
+
+            try
+            {
+                _logger?.LogDebug("用户手动触发重连");
+                
+                // 使用ConnectionManager的手动重连方法
+                bool result = await _connectionManager.ManualReconnectAsync();
+                
+                if (result)
+                {
+                    _logger?.LogDebug("手动重连成功");
+                    
+                    // 重连成功后，立即启动队列处理
+                    _ = Task.Run(ProcessCommandQueueAsync);
+                }
+                else
+                {
+                    _logger?.LogWarning("手动重连失败");
+                }
+                
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "手动重连时发生异常");
+                return false;
+            }
+            finally
+            {
+                lock (_reconnectCoordinationLock)
+                {
                     _isReconnecting = false;
                 }
             }
@@ -1799,10 +1944,13 @@ namespace RUINORERP.UI.Network
                         bool isConnectedNow = IsConnected;
                         if (!isConnectedNow)
                         {
-                            // 连接仍然断开，重新加入队列
-                            _queuedCommands.Enqueue(command);
-                            // 触发重连尝试
+                        // 连接仍然断开，重新加入队列
+                        _queuedCommands.Enqueue(command);
+                        // 触发重连尝试（使用更智能的重连策略）
+                        if (!_isReconnecting)
+                        {
                             _ = TryReconnectIfNeededAsync();
+                        }
                             continue;
                         }
 
@@ -1847,10 +1995,13 @@ namespace RUINORERP.UI.Network
                         bool isConnectedNow = IsConnected;
                         if (!isConnectedNow)
                         {
-                            // 连接仍然断开，重新加入队列
-                            _queuedCommands.Enqueue(command);
-                            // 触发重连尝试
+                        // 连接仍然断开，重新加入队列
+                        _queuedCommands.Enqueue(command);
+                        // 触发重连尝试（使用更智能的重连策略）
+                        if (!_isReconnecting)
+                        {
                             _ = TryReconnectIfNeededAsync();
+                        }
                             continue;
                         }
 

@@ -76,7 +76,7 @@ namespace RUINORERP.UI.Network.Services
                 ct.ThrowIfCancellationRequested();
 
                 // 使用信号量确保同一时间只有一个登录请求
-                await _loginLock.WaitAsync(TimeSpan.FromSeconds(30), ct);
+                await _loginLock.WaitAsync(TimeSpan.FromSeconds(20), ct);
 
                 // 锁获取成功后，再次检查取消令牌状态
                 if (ct.IsCancellationRequested)
@@ -95,7 +95,7 @@ namespace RUINORERP.UI.Network.Services
 
                 // 发送登录命令并获取响应 - 移除复杂重试逻辑，依赖ClientCommunicationService的可靠性
                 var response = await _communicationService.SendCommandWithResponseAsync<LoginResponse>(
-                    AuthenticationCommands.Login, loginRequest, ct);
+                    AuthenticationCommands.Login, loginRequest, ct,20000);
 
                 // 检查响应数据
                 if (response == null)

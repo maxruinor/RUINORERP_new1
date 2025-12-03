@@ -168,6 +168,7 @@ namespace RUINORERP.UI.Network.DI
 
             // 注册业务服务
             builder.RegisterType<UserLoginService>().AsSelf().SingleInstance();
+            builder.RegisterType<LoginFlowService>().AsSelf().SingleInstance();
 
             // 注册本地业务编码生成服务，作为服务器通信失败时的备用方案
             builder.RegisterType<ClientBizCodeService>()

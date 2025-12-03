@@ -5962,7 +5962,7 @@ namespace RUINORERP.UI.BaseForm
                         tsBtnLocked.ToolTipText = $"🔒 锁定状态：您已锁定此单据\n" +
                                                 $"👤 锁定用户：{lockInfo.LockedUserName}\n" +
                                                 $"⏰ 锁定时间：{lockTimeStr}\n" +
-                                                $"💡 提示：点击可解锁";
+                                                $"💡 提示：关才单据自动解锁";
                         // 设置绿色背景表示自己锁定，提供直观视觉反馈
                         tsBtnLocked.BackColor = System.Drawing.Color.LightGreen;
                         tsBtnLocked.ForeColor = System.Drawing.Color.Black;

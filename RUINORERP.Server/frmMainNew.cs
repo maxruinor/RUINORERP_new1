@@ -1722,75 +1722,167 @@ namespace RUINORERP.Server
         }
 
         /// <summary>
-        /// 检查是否为IIS进程
+        /// 检查是否为IIS进程 - 安全轻量级实现
         /// </summary>
+        /// <returns>是否为IIS进程</returns>
         private bool IsIISProcess()
-        {
-            return System.Diagnostics.Process.GetCurrentProcess().MainModule.ToString().ToLower().Contains("iis");
-        }
-
-        /// <summary>
-        /// 执行安全的日志操作
-        /// </summary>
-        private void SafeLogOperation(string msg, Color color)
         {
             try
             {
-                // 增加更严格的控件状态检查
-                if (IsDisposed || !IsHandleCreated || richTextBoxLog == null || richTextBoxLog.IsDisposed || !richTextBoxLog.IsHandleCreated)
+                Process currentProcess = System.Diagnostics.Process.GetCurrentProcess();
+                if (currentProcess == null)
+                    return false;
+
+                ProcessModule mainModule = currentProcess.MainModule;
+                if (mainModule == null)
+                    return false;
+
+                string moduleName = mainModule.FileName.ToLower();
+                return moduleName.Contains("iis") || moduleName.Contains("w3wp") || moduleName.Contains("aspnet");
+            }
+            catch (Exception)
+            {
+                // 忽略所有异常，确保此检查不会影响主程序
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 执行安全的日志操作 - 确保作为次要功能不影响主程序运行
+        /// </summary>
+        private void SafeLogOperation(string msg, Color color)
+        {
+            // 最外层的安全检查 - 快速失败
+            if (msg == null) return;
+            if (IsDisposed || !IsHandleCreated) return;
+            if (IsIISProcess()) return;
+
+            try
+            {
+                // 确保格式化消息有效且安全
+                string formattedMsg = $"[{DateTime.Now:HH:mm:ss}] {msg}\r\n";
+                
+                // 严格限制消息长度，防止过大的消息导致问题
+                if (formattedMsg.Length > 500)
                 {
-                    Console.WriteLine("控件不可用，跳过日志操作");
-                    return;
+                    formattedMsg = formattedMsg.Substring(0, 497) + "...\r\n";
                 }
 
-                // 确保格式化消息有效
-                string formattedMsg = msg != null ? $"[{DateTime.Now:HH:mm:ss}] {msg}\r\n" : $"[{DateTime.Now:HH:mm:ss}] 空消息\r\n";
-
-                // 使用委托进行安全的UI操作
-                Action logAction = () =>
+                // 使用轻量级的线程池任务处理日志操作，避免阻塞调用线程
+                Task.Run(() =>
                 {
                     try
                     {
-                        // 再次检查控件状态，防止在Invoke过程中控件状态变化
-                        if (richTextBoxLog == null || richTextBoxLog.IsDisposed || !richTextBoxLog.IsHandleCreated)
-                            return;
-
-                        // 安全地执行文本行限制检查
-                        EnsureMaxLines(richTextBoxLog, 1000);
-
-                        // 安全地执行文本追加操作
-                        richTextBoxLog.SelectionColor = color;
-                        richTextBoxLog.AppendText(formattedMsg);
-                        richTextBoxLog.SelectionColor = Color.Black;
-                        richTextBoxLog.ScrollToCaret();
+                        // 尝试使用UI控件日志
+                        bool uiLogSuccess = TryUILogging(formattedMsg, color);
+                        
+                        // 如果UI日志失败，尝试文件日志
+                        if (!uiLogSuccess)
+                        {
+                            LogToFile(formattedMsg, color);
+                        }
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"日志操作执行错误: {ex.Message}");
+                        // 捕获所有异常，确保日志操作不会影响主程序
+                        Console.WriteLine($"日志后台处理错误: {ex.Message}");
                     }
-                };
-
-                if (InvokeRequired)
-                {
-                    try
-                    {
-                        // 使用BeginInvoke避免阻塞调用线程
-                        BeginInvoke(new System.Windows.Forms.MethodInvoker(logAction));
-                    }
-                    catch (InvalidOperationException ex)
-                    {
-                        // 处理Invoke可能出现的异常
-                        Console.WriteLine($"跨线程调用失败: {ex.Message}");
-                    }
-                }
-                else
-                {
-                    logAction();
-                }
+                });
             }
             catch (Exception ex)
             {
+                // 最外层异常处理 - 确保绝对不会影响主程序
                 Console.WriteLine($"SafeLogOperation错误: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 尝试使用UI控件进行日志记录
+        /// </summary>
+        /// <returns>是否成功记录日志</returns>
+        private bool TryUILogging(string logMessage, Color color)
+        {
+            bool success = false;
+            
+            try
+            {
+                // 检查控件状态
+                if (richTextBoxLog == null || richTextBoxLog.IsDisposed || !richTextBoxLog.IsHandleCreated)
+                    return false;
+
+                // 使用BeginInvoke避免阻塞线程池线程
+                richTextBoxLog.BeginInvoke(new Action(() =>
+                {
+                    try
+                    {
+                        // 再次检查控件状态
+                        if (richTextBoxLog == null || richTextBoxLog.IsDisposed || !richTextBoxLog.IsHandleCreated)
+                            return;
+
+                        // 安全地限制日志行数
+                        EnsureMaxLines(richTextBoxLog, 500); // 进一步减少最大行数，降低内存占用
+
+                        // 安全地追加文本
+                        richTextBoxLog.AppendText(logMessage);
+                        
+                        // 尝试滚动到末尾，但失败也不影响
+                        try { richTextBoxLog.ScrollToCaret(); } catch { }
+                        
+                        success = true;
+                    }
+                    catch (AccessViolationException)
+                    {
+                        // 严重的内存访问异常，直接返回失败
+                        success = false;
+                    }
+                    catch (Exception)
+                    {
+                        // 其他UI异常，返回失败
+                        success = false;
+                    }
+                }));
+            }
+            catch (Exception)
+            {
+                // 任何异常都返回失败
+                success = false;
+            }
+            
+            return success;
+        }
+
+        // TryAppendTextSafe方法已被TryUILogging替代，不再使用
+
+        /// <summary>
+        /// 当日志控件不可用时，将日志记录到文件 - 轻量级实现
+        /// </summary>
+        private void LogToFile(string logMessage, Color color)
+        {
+            try
+            {
+                // 简化日志目录和文件名，减少IO操作
+                string logDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs");
+                
+                // 仅在目录不存在时创建，减少系统调用
+                if (!Directory.Exists(logDir))
+                {
+                    try { Directory.CreateDirectory(logDir); }
+                    catch { return; } // 创建失败则直接返回
+                }
+                
+                string logFile = Path.Combine(logDir, $"ServerLog_{DateTime.Now:yyyyMMdd}.txt");
+                
+                // 简化日志格式，减少字符串操作
+                string level = color == Color.Red ? "[错误] " : "[信息] ";
+                string fullLogMessage = $"{level}{logMessage}";
+                
+                // 使用更轻量级的文件写入方式
+                File.AppendAllText(logFile, fullLogMessage, Encoding.UTF8);
+            }
+            catch (Exception)
+            {
+                // 忽略所有异常，确保文件日志不会影响主程序
+                // 不再向控制台输出错误，避免级联问题
             }
         }
 
@@ -1807,19 +1899,12 @@ namespace RUINORERP.Server
 
         private void EnsureMaxLines(RichTextBox rtb, int maxLines)
         {
-            // 确保所有RichTextBox操作在UI线程中执行
-            if (rtb.InvokeRequired)
-            {
-                rtb.BeginInvoke(new System.Windows.Forms.MethodInvoker(() => EnsureMaxLines(rtb, maxLines)));
-                return;
-            }
-
             try
             {
                 // 计算当前行数
                 int currentLines = rtb.GetLineFromCharIndex(rtb.Text.Length) + 1;
 
-                // 如果行数超过最大限制则删除旧行
+                // 如果行数超过最大限制则删除旧行 - 使用更安全的方式
                 if (currentLines > maxLines)
                 {
                     int linesToRemove = currentLines - maxLines;
@@ -1828,14 +1913,15 @@ namespace RUINORERP.Server
 
                     if (end > start && end <= rtb.Text.Length)
                     {
-                        rtb.Text = rtb.Text.Remove(start, end - start);
+                        // 使用更安全的方式更新文本
+                        rtb.Select(start, end - start);
+                        rtb.SelectedText = string.Empty;
                     }
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                // 记录错误但不抛出异常以避免影响程序
-                Console.WriteLine($"EnsureMaxLines错误: {ex.Message}");
+                // 忽略所有异常，确保此操作不会影响主程序
             }
         }
 

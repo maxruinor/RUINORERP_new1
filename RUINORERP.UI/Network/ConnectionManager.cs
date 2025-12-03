@@ -26,9 +26,12 @@ namespace RUINORERP.UI.Network
         private bool _isReconnecting = false;
         private bool _disposed = false;
         private Task _reconnectTask = null;
+        private bool _reconnectStopped = false; // 新增：重连是否已停止标志
 
         private string _serverAddress = string.Empty;
         private int _serverPort = 0;
+        private DateTime _lastReconnectAttempt = DateTime.MinValue; // 新增：最后一次重连尝试时间
+        private readonly object _reconnectStateLock = new object(); // 新增：重连状态同步锁
 
         /// <summary>
         /// 连接状态变更事件
@@ -40,6 +43,18 @@ namespace RUINORERP.UI.Network
         /// 当达到最大重连次数时触发
         /// </summary>
         public event Action ReconnectFailed;
+
+        /// <summary>
+        /// 重连尝试事件
+        /// 每次重连尝试时触发，参数为当前尝试次数和最大尝试次数
+        /// </summary>
+        public event Action<int, int> ReconnectAttempt;
+
+        /// <summary>
+        /// 重连成功事件
+        /// 重连成功时触发
+        /// </summary>
+        public event Action ReconnectSucceeded;
 
         /// <summary>
         /// 当前连接状态
@@ -160,12 +175,16 @@ namespace RUINORERP.UI.Network
         /// </summary>
         public void StartAutoReconnect()
         {
-            if (_isReconnecting || _disposed)
-                return;
+            lock (_reconnectStateLock)
+            {
+                if (_isReconnecting || _disposed)
+                    return;
 
-            _isReconnecting = true;
-            _reconnectTask = Task.Run(ReconnectLoopAsync, _cancellationTokenSource.Token);
-            _logger?.LogDebug("启动自动重连任务");
+                _isReconnecting = true;
+                _reconnectStopped = false;
+                _reconnectTask = Task.Run(ReconnectLoopAsync, _cancellationTokenSource.Token);
+                _logger?.LogDebug("启动自动重连任务");
+            }
         }
 
         /// <summary>
@@ -173,9 +192,13 @@ namespace RUINORERP.UI.Network
         /// </summary>
         public void StopAutoReconnect()
         {
-            _isReconnecting = false;
-            StopReconnectTask();
-            _logger?.LogDebug("停止自动重连任务");
+            lock (_reconnectStateLock)
+            {
+                _isReconnecting = false;
+                _reconnectStopped = true;
+                StopReconnectTask();
+                _logger?.LogDebug("停止自动重连任务");
+            }
         }
 
         /// <summary>
@@ -245,11 +268,16 @@ namespace RUINORERP.UI.Network
             int reconnectAttempts = 0;
             int currentBackoffInterval = _config.ReconnectInterval;
 
-            while (!_disposed && _isReconnecting && !_cancellationTokenSource.Token.IsCancellationRequested)
+            while (!_disposed && !_reconnectStopped && _isReconnecting && !_cancellationTokenSource.Token.IsCancellationRequested)
             {
                 // 如果已经连接，重置重连计数并等待一段时间再检查
                 if (IsConnected)
                 {
+                    if (reconnectAttempts > 0)
+                    {
+                        _logger?.LogDebug("重连成功，重置重连计数器");
+                        OnReconnectSucceeded();
+                    }
                     reconnectAttempts = 0;
                     currentBackoffInterval = _config.ReconnectInterval; // 重置退避间隔
                     await Task.Delay(_config.ReconnectCheckInterval, _cancellationTokenSource.Token);
@@ -259,6 +287,7 @@ namespace RUINORERP.UI.Network
                 // 如果没有服务器信息，等待重连
                 if (string.IsNullOrEmpty(_serverAddress) || _serverPort == 0)
                 {
+                    _logger?.LogDebug("服务器信息不完整，等待重连检查间隔");
                     await Task.Delay(_config.ReconnectCheckInterval, _cancellationTokenSource.Token);
                     continue;
                 }
@@ -267,24 +296,42 @@ namespace RUINORERP.UI.Network
                 if (_config.MaxReconnectAttempts > 0 && reconnectAttempts >= _config.MaxReconnectAttempts)
                 {
                     _logger?.LogWarning("已达到最大重连次数 {MaxAttempts}，停止重连", _config.MaxReconnectAttempts);
-                    _isReconnecting = false;
+                    lock (_reconnectStateLock)
+                    {
+                        _isReconnecting = false;
+                        _reconnectStopped = true;
+                    }
                     // 触发重连失败事件
                     OnReconnectFailed();
                     break;
                 }
 
                 reconnectAttempts++;
+                _lastReconnectAttempt = DateTime.Now;
+                
+                // 触发重连尝试事件
+                OnReconnectAttempt(reconnectAttempts, _config.MaxReconnectAttempts);
+                
                 _logger?.LogDebug("尝试重新连接到服务器 {ServerAddress}:{ServerPort}，第 {Attempt} 次尝试", _serverAddress, _serverPort, reconnectAttempts);
 
                 try
                 {
+                    // 检查网络状态（简单检测）
+                    if (!await CheckNetworkAvailabilityAsync())
+                    {
+                        _logger?.LogWarning("网络不可用，跳过此次重连尝试");
+                        await Task.Delay(_config.ReconnectCheckInterval, _cancellationTokenSource.Token);
+                        continue;
+                    }
+
                     bool connected = await _socketClient.ConnectAsync(_serverAddress, _serverPort, _cancellationTokenSource.Token);
 
                     if (connected)
                     {
                         _isConnected = true;
                         OnConnectionStateChanged(true);
-                        _logger?.LogDebug("重连成功 {ServerAddress}:{ServerPort}", _serverAddress, _serverPort);
+                        _logger?.LogDebug("重连成功 {ServerAddress}:{ServerPort}，共尝试 {Attempt} 次", _serverAddress, _serverPort, reconnectAttempts);
+                        OnReconnectSucceeded();
 
                         // 重连成功后重置计数器
                         reconnectAttempts = 0;
@@ -292,8 +339,13 @@ namespace RUINORERP.UI.Network
                     }
                     else
                     {
-                        _logger?.LogDebug("重连失败 {ServerAddress}:{ServerPort}，第 {Attempt} 次尝试", _serverAddress, _serverPort, reconnectAttempts);
+                        _logger?.LogWarning("重连失败 {ServerAddress}:{ServerPort}，第 {Attempt} 次尝试", _serverAddress, _serverPort, reconnectAttempts);
                     }
+                }
+                catch (OperationCanceledException)
+                {
+                    _logger?.LogDebug("重连操作被取消");
+                    break;
                 }
                 catch (Exception ex)
                 {
@@ -301,18 +353,31 @@ namespace RUINORERP.UI.Network
                 }
 
                 // 等待重连间隔，应用指数退避算法
-                if (!IsConnected)
+                if (!IsConnected && !_reconnectStopped)
                 {
                     if (_config.EnableExponentialBackoff && reconnectAttempts > 0)
                     {
-                        // 计算指数退避时间
-                        currentBackoffInterval = (int)Math.Min(
+                        // 计算指数退避时间，添加随机抖动避免雷群效应
+                        var baseInterval = (int)Math.Min(
                             currentBackoffInterval * _config.BackoffMultiplier,
                             _config.MaxBackoffInterval);
-                        _logger?.LogDebug("应用指数退避，下次重连间隔 {Interval} 毫秒", currentBackoffInterval);
+                        
+                        // 添加±20%的随机抖动
+                        var randomJitter = new Random().Next(-baseInterval / 5, baseInterval / 5);
+                        currentBackoffInterval = Math.Max(_config.ReconnectInterval, baseInterval + randomJitter);
+                        
+                        _logger?.LogDebug("应用指数退避，下次重连间隔 {Interval} 毫秒（含抖动）", currentBackoffInterval);
                     }
 
-                    await Task.Delay(currentBackoffInterval, _cancellationTokenSource.Token);
+                    try
+                    {
+                        await Task.Delay(currentBackoffInterval, _cancellationTokenSource.Token);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        _logger?.LogDebug("重连等待被取消");
+                        break;
+                    }
                 }
             }
 
@@ -324,16 +389,24 @@ namespace RUINORERP.UI.Network
         /// </summary>
         private void OnSocketClosed(EventArgs e)
         {
-            if (_isConnected)
+            lock (_reconnectStateLock)
             {
-                _isConnected = false;
-                OnConnectionStateChanged(false);
-                _logger?.LogDebug("检测到连接已断开");
-
-                // 如果启用了自动重连，启动重连任务
-                if (_config.AutoReconnect && !_isReconnecting)
+                if (_isConnected)
                 {
-                    StartAutoReconnect();
+                    _isConnected = false;
+                    OnConnectionStateChanged(false);
+                    _logger?.LogDebug("检测到连接已断开");
+
+                    // 如果启用了自动重连且重连未在进行中，启动重连任务
+                    if (_config.AutoReconnect && !_isReconnecting && !_disposed)
+                    {
+                        _logger?.LogDebug("启动自动重连机制");
+                        StartAutoReconnect();
+                    }
+                    else if (_isReconnecting)
+                    {
+                        _logger?.LogDebug("重连已在进行中，不重复启动");
+                    }
                 }
             }
         }
@@ -371,6 +444,123 @@ namespace RUINORERP.UI.Network
         }
 
         /// <summary>
+        /// 触发重连尝试事件
+        /// </summary>
+        /// <param name="currentAttempt">当前尝试次数</param>
+        /// <param name="maxAttempts">最大尝试次数</param>
+        private void OnReconnectAttempt(int currentAttempt, int maxAttempts)
+        {
+            try
+            {
+                ReconnectAttempt?.Invoke(currentAttempt, maxAttempts);
+                _logger?.LogDebug("触发重连尝试事件: {CurrentAttempt}/{MaxAttempts}", currentAttempt, maxAttempts);
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogWarning(ex, "触发重连尝试事件时发生异常");
+            }
+        }
+
+        /// <summary>
+        /// 触发重连成功事件
+        /// </summary>
+        private void OnReconnectSucceeded()
+        {
+            try
+            {
+                ReconnectSucceeded?.Invoke();
+                _logger?.LogDebug("触发重连成功事件");
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogWarning(ex, "触发重连成功事件时发生异常");
+            }
+        }
+
+        /// <summary>
+        /// 检查网络可用性
+        /// </summary>
+        /// <returns>网络是否可用</returns>
+        private async Task<bool> CheckNetworkAvailabilityAsync()
+        {
+            try
+            {
+                // 简单的网络可用性检查
+                // 可以根据需要扩展为更详细的网络检测
+                using (var ping = new System.Net.NetworkInformation.Ping())
+                {
+                    var reply = await ping.SendPingAsync("8.8.8.8", 3000); // 谷歌DNS，3秒超时
+                    bool isNetworkAvailable = reply.Status == System.Net.NetworkInformation.IPStatus.Success;
+                    
+                    if (!isNetworkAvailable)
+                    {
+                        _logger?.LogDebug("网络不可用：Ping失败，状态：{Status}", reply.Status);
+                    }
+                    
+                    return isNetworkAvailable;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogDebug(ex, "网络可用性检查失败，假设网络可用");
+                // 如果网络检查失败，假设网络可用，避免阻塞重连
+                return true;
+            }
+        }
+
+        /// <summary>
+        /// 获取重连状态信息
+        /// </summary>
+        /// <returns>重连状态信息</returns>
+        public (bool IsReconnecting, DateTime LastAttempt, int AttemptCount) GetReconnectStatus()
+        {
+            lock (_reconnectStateLock)
+            {
+                return (_isReconnecting, _lastReconnectAttempt, 0); // 简化版本，实际可以跟踪具体尝试次数
+            }
+        }
+
+        /// <summary>
+        /// 手动触发重连
+        /// </summary>
+        /// <returns>重连任务</returns>
+        public async Task<bool> ManualReconnectAsync()
+        {
+            _logger?.LogDebug("手动触发重连");
+            
+            if (IsConnected)
+            {
+                _logger?.LogDebug("已连接，无需重连");
+                return true;
+            }
+
+            lock (_reconnectStateLock)
+            {
+                // 重置重连状态
+                _reconnectStopped = false;
+                _lastReconnectAttempt = DateTime.Now;
+            }
+
+            try
+            {
+                bool connected = await _socketClient.ConnectAsync(_serverAddress, _serverPort, CancellationToken.None);
+                if (connected)
+                {
+                    _isConnected = true;
+                    OnConnectionStateChanged(true);
+                    _logger?.LogDebug("手动重连成功");
+                    OnReconnectSucceeded();
+                }
+                return connected;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "手动重连失败");
+                return false;
+            }
+        }
+
+        /// <summary>
         /// 释放资源
         /// </summary>
         public void Dispose()
@@ -382,6 +572,13 @@ namespace RUINORERP.UI.Network
 
             try
             {
+                // 设置重连停止标志
+                lock (_reconnectStateLock)
+                {
+                    _reconnectStopped = true;
+                    _isReconnecting = false;
+                }
+
                 StopAutoReconnect();
                 _cancellationTokenSource.Cancel();
 
@@ -394,6 +591,8 @@ namespace RUINORERP.UI.Network
                 // 清空所有事件处理器
                 ConnectionStateChanged = null;
                 ReconnectFailed = null;
+                ReconnectAttempt = null;
+                ReconnectSucceeded = null;
 
                 // 断开连接 - 使用同步方式断开连接，避免异步调用被丢弃
                 try
@@ -421,6 +620,7 @@ namespace RUINORERP.UI.Network
 
     /// <summary>
     /// 连接管理器配置
+    /// 提供灵活的重连配置选项，支持不同的网络环境和应用场景
     /// </summary>
     public class ConnectionManagerConfig
     {
@@ -460,8 +660,183 @@ namespace RUINORERP.UI.Network
         public double BackoffMultiplier { get; set; } = 1.5;
 
         /// <summary>
+        /// 启用随机抖动，避免雷群效应
+        /// </summary>
+        public bool EnableRandomJitter { get; set; } = true;
+
+        /// <summary>
+        /// 随机抖动的百分比范围（0-1），例如0.2表示±20%
+        /// </summary>
+        public double JitterRatio { get; set; } = 0.2;
+
+        /// <summary>
+        /// 网络可用性检查间隔（毫秒），0表示不检查
+        /// </summary>
+        public int NetworkCheckIntervalMs { get; set; } = 30000; // 30秒
+
+        /// <summary>
+        /// 网络检查超时时间（毫秒）
+        /// </summary>
+        public int NetworkCheckTimeoutMs { get; set; } = 3000; // 3秒
+
+        /// <summary>
+        /// 是否在网络恢复时立即尝试重连
+        /// </summary>
+        public bool ReconnectOnNetworkRecovery { get; set; } = true;
+
+        /// <summary>
+        /// 连接断开后延迟重连的时间（毫秒），避免频繁重连
+        /// </summary>
+        public int ReconnectDelayMs { get; set; } = 2000; // 2秒
+
+        /// <summary>
+        /// 手动重连的最小间隔（毫秒）
+        /// </summary>
+        public int ManualReconnectMinIntervalMs { get; set; } = 5000; // 5秒
+
+        /// <summary>
+        /// 重连失败后的冷却时间（毫秒），超过此时间才允许再次自动重连
+        /// </summary>
+        public int ReconnectFailureCooldownMs { get; set; } = 60000; // 1分钟
+
+        /// <summary>
+        /// 连接断开时是否显示通知
+        /// </summary>
+        public bool ShowConnectionNotifications { get; set; } = true;
+
+        /// <summary>
         /// 默认配置
         /// </summary>
         public static ConnectionManagerConfig Default => new ConnectionManagerConfig();
+
+        /// <summary>
+        /// 开发环境配置
+        /// 更积极的重连策略，适合开发测试
+        /// </summary>
+        public static ConnectionManagerConfig Development => new ConnectionManagerConfig
+        {
+            ReconnectInterval = 2000,           // 2秒
+            ReconnectCheckInterval = 500,       // 0.5秒
+            MaxReconnectAttempts = 10,           // 10次
+            EnableExponentialBackoff = true,
+            MaxBackoffInterval = 30000,         // 30秒
+            BackoffMultiplier = 1.2,
+            EnableRandomJitter = true,
+            JitterRatio = 0.1,                // 10%抖动
+            NetworkCheckIntervalMs = 15000,      // 15秒
+            ReconnectDelayMs = 1000,            // 1秒
+            ManualReconnectMinIntervalMs = 2000, // 2秒
+            ReconnectFailureCooldownMs = 30000    // 30秒
+        };
+
+        /// <summary>
+        /// 生产环境配置
+        /// 保守稳定的重连策略，适合生产环境
+        /// </summary>
+        public static ConnectionManagerConfig Production => new ConnectionManagerConfig
+        {
+            ReconnectInterval = 5000,           // 5秒
+            ReconnectCheckInterval = 1000,       // 1秒
+            MaxReconnectAttempts = 5,            // 5次
+            EnableExponentialBackoff = true,
+            MaxBackoffInterval = 120000,        // 2分钟
+            BackoffMultiplier = 1.5,
+            EnableRandomJitter = true,
+            JitterRatio = 0.2,                // 20%抖动
+            NetworkCheckIntervalMs = 30000,      // 30秒
+            ReconnectDelayMs = 3000,            // 3秒
+            ManualReconnectMinIntervalMs = 5000,  // 5秒
+            ReconnectFailureCooldownMs = 120000   // 2分钟
+        };
+
+        /// <summary>
+        /// 高可靠性配置
+        /// 专门针对不稳定网络环境，最大化连接可靠性
+        /// </summary>
+        public static ConnectionManagerConfig HighReliability => new ConnectionManagerConfig
+        {
+            ReconnectInterval = 3000,           // 3秒
+            ReconnectCheckInterval = 500,        // 0.5秒
+            MaxReconnectAttempts = 0,           // 无限重试
+            EnableExponentialBackoff = true,
+            MaxBackoffInterval = 300000,        // 5分钟
+            BackoffMultiplier = 2.0,
+            EnableRandomJitter = true,
+            JitterRatio = 0.3,                // 30%抖动
+            NetworkCheckIntervalMs = 10000,      // 10秒
+            ReconnectDelayMs = 1000,            // 1秒
+            ManualReconnectMinIntervalMs = 3000, // 3秒
+            ReconnectFailureCooldownMs = 180000   // 3分钟
+        };
+
+        /// <summary>
+        /// 验证配置参数的有效性
+        /// </summary>
+        /// <exception cref="ArgumentException">当配置参数无效时抛出</exception>
+        public void Validate()
+        {
+            if (ReconnectInterval <= 0)
+                throw new ArgumentException("重连间隔必须大于0", nameof(ReconnectInterval));
+
+            if (ReconnectCheckInterval <= 0)
+                throw new ArgumentException("重连检查间隔必须大于0", nameof(ReconnectCheckInterval));
+
+            if (MaxReconnectAttempts < 0)
+                throw new ArgumentException("最大重连次数不能为负数", nameof(MaxReconnectAttempts));
+
+            if (EnableExponentialBackoff)
+            {
+                if (MaxBackoffInterval <= 0)
+                    throw new ArgumentException("最大退避时间必须大于0", nameof(MaxBackoffInterval));
+
+                if (BackoffMultiplier <= 1.0)
+                    throw new ArgumentException("退避乘数必须大于1", nameof(BackoffMultiplier));
+            }
+
+            if (EnableRandomJitter && (JitterRatio < 0 || JitterRatio > 1))
+                throw new ArgumentException("抖动比例必须在0-1之间", nameof(JitterRatio));
+
+            if (NetworkCheckIntervalMs < 0)
+                throw new ArgumentException("网络检查间隔不能为负数", nameof(NetworkCheckIntervalMs));
+
+            if (NetworkCheckTimeoutMs <= 0)
+                throw new ArgumentException("网络检查超时时间必须大于0", nameof(NetworkCheckTimeoutMs));
+
+            if (ReconnectDelayMs < 0)
+                throw new ArgumentException("重连延迟时间不能为负数", nameof(ReconnectDelayMs));
+
+            if (ManualReconnectMinIntervalMs <= 0)
+                throw new ArgumentException("手动重连最小间隔必须大于0", nameof(ManualReconnectMinIntervalMs));
+
+            if (ReconnectFailureCooldownMs < 0)
+                throw new ArgumentException("重连失败冷却时间不能为负数", nameof(ReconnectFailureCooldownMs));
+        }
+
+        /// <summary>
+        /// 创建配置的深拷贝
+        /// </summary>
+        /// <returns>新的配置实例</returns>
+        public ConnectionManagerConfig Clone()
+        {
+            return new ConnectionManagerConfig
+            {
+                AutoReconnect = this.AutoReconnect,
+                ReconnectInterval = this.ReconnectInterval,
+                ReconnectCheckInterval = this.ReconnectCheckInterval,
+                MaxReconnectAttempts = this.MaxReconnectAttempts,
+                EnableExponentialBackoff = this.EnableExponentialBackoff,
+                MaxBackoffInterval = this.MaxBackoffInterval,
+                BackoffMultiplier = this.BackoffMultiplier,
+                EnableRandomJitter = this.EnableRandomJitter,
+                JitterRatio = this.JitterRatio,
+                NetworkCheckIntervalMs = this.NetworkCheckIntervalMs,
+                NetworkCheckTimeoutMs = this.NetworkCheckTimeoutMs,
+                ReconnectOnNetworkRecovery = this.ReconnectOnNetworkRecovery,
+                ReconnectDelayMs = this.ReconnectDelayMs,
+                ManualReconnectMinIntervalMs = this.ManualReconnectMinIntervalMs,
+                ReconnectFailureCooldownMs = this.ReconnectFailureCooldownMs,
+                ShowConnectionNotifications = this.ShowConnectionNotifications
+            };
+        }
     }
 }

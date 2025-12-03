@@ -79,7 +79,7 @@ namespace RUINORERP.UI.Network
                             }
                         }
                     }
-                    catch (Exception deserializationEx)
+                    catch (Exception deserializationEx)  //重复登陆时  服务器返回 增加错误信息的响应。这里捕获反序列化异常 ,  服务器断开。客户端要重连！！！
                     {   // 记录详细的反序列化错误信息
                         System.Diagnostics.Debug.WriteLine($"JSON反序列化失败: {deserializationEx.Message}");
                         

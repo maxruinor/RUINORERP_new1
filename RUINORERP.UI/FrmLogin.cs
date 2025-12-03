@@ -6,6 +6,7 @@ using RUINORERP.Business;
 using RUINORERP.Business.Security;
 using RUINORERP.Model.Context;
 using RUINORERP.PacketSpec.Commands.Authentication;
+using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Requests;
 using RUINORERP.PacketSpec.Models.Responses;
 using RUINORERP.UI.Common;
@@ -48,6 +49,7 @@ namespace RUINORERP.UI
         private readonly UserLoginService userLoginService;
         private readonly TokenManager _tokenManager;
         private readonly UserLoginService _userLoginService;
+        private readonly LoginFlowService _loginFlowService;
         public FrmLogin()
         {
             InitializeComponent();
@@ -55,6 +57,7 @@ namespace RUINORERP.UI
             connectionManager = Startup.GetFromFac<ConnectionManager>();
             _userLoginService = Startup.GetFromFac<UserLoginService>();
             _tokenManager = Startup.GetFromFac<TokenManager>();
+            _loginFlowService = Startup.GetFromFac<LoginFlowService>();
         }
         private bool m_showing = true;
         private void fadeTimer_Tick(object sender, EventArgs e)
@@ -152,8 +155,16 @@ namespace RUINORERP.UI
                 MessageBox.Show("请输入服务器IP和端口。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
-            #region IP地址不变时逻辑，快捷认证登录
-            // 检查连接状态和Token有效性，尝试快捷登录验证
+
+            // 验证基本输入
+            if (txtUserName.Text.Trim() == "")
+            {
+                errorProvider1.SetError(txtUserName, "用户名不能为空");
+                txtUserName.Focus();
+                return;
+            }
+
+            // 检查IP地址不变时逻辑，快捷认证登录
             bool isConnected = MainForm.Instance?.communicationService?.IsConnected ?? false;
             string currentToken = await _userLoginService.GetCurrentAccessToken();
 
@@ -167,11 +178,11 @@ namespace RUINORERP.UI
                 try
                 {
                     var quickLoginResult = await QuickValidateLoginAsync(currentToken, isConnected);
-                    if (quickLoginResult.IsSuccess)
+                    if (quickLoginResult != null && quickLoginResult.IsSuccess)
                     {
                         // 快捷登录验证成功，直接设置在线状态并完成登录
                         MainForm.Instance.AppContext.CurrentUser.在线状态 = true;
-                        
+
                         // 保存用户配置
                         try
                         {
@@ -194,7 +205,7 @@ namespace RUINORERP.UI
                     }
                     else
                     {
-                        MainForm.Instance.logger?.LogWarning($"快捷登录验证失败: {quickLoginResult.ErrorMessage}，将继续使用常规登录流程");
+                        MainForm.Instance.logger?.LogWarning($"快捷登录验证失败: {quickLoginResult?.ErrorMessage}，将继续使用常规登录流程");
                     }
                 }
                 catch (Exception ex)
@@ -205,407 +216,69 @@ namespace RUINORERP.UI
                 }
             }
 
-            #endregion
-
-            // 原有的登录流程开始
-
-            using (StatusBusy busy = new StatusBusy("正在验证凭据..."))
+            // 常规登录流程开始
+            try
             {
-
-                try
+                using (StatusBusy busy = new StatusBusy("正在登录..."))
                 {
-                    errorProvider1.Clear();
-                    if (this.txtUserName.Text.Trim() == "")
+                    // 保存用户配置
+                    UserGlobalConfig.Instance.UseName = txtUserName.Text;
+                    UserGlobalConfig.Instance.PassWord = txtPassWord.Text;
+                    UserGlobalConfig.Instance.ServerIP = txtServerIP.Text;
+                    UserGlobalConfig.Instance.ServerPort = txtPort.Text;
+
+                    // 验证服务器端口
+                    if (!int.TryParse(txtPort.Text.Trim(), out var serverPort))
                     {
-                        errorProvider1.SetError(this.txtUserName, "用户名不能为空");
-                        txtUserName.Focus();
+                        MessageBox.Show("端口号格式不正确，请检查服务器配置。", "配置错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         return;
                     }
-                    else
+
+                    // 执行本地权限验证
+                    bool isInitPwd = false;
+                    var localAuthSuccess = PTPrincipal.Login(txtUserName.Text, txtPassWord.Text, Program.AppContextData, ref isInitPwd);
+
+                    if (!localAuthSuccess)
                     {
-                        // 保存用户配置
-                        UserGlobalConfig.Instance.UseName = this.txtUserName.Text;
-                        UserGlobalConfig.Instance.PassWord = this.txtPassWord.Text;
-                        UserGlobalConfig.Instance.ServerIP = txtServerIP.Text;
-                        UserGlobalConfig.Instance.ServerPort = txtPort.Text;
-
-                        bool isInitPwd = false;
-                        // 开始测量登录方法执行时间
-                        System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
-                        stopwatch.Start();
-
-                        // 设置登录状态为登录中
-                        if (MainForm.Instance != null)
-                        {
-                            MainForm.Instance.CurrentLoginStatus = MainForm.LoginStatus.LoggingIn;
-                        }
-
-                        // 无论什么情况，先断开可能存在的连接，确保没有重复连接
-                        if (MainForm.Instance != null && MainForm.Instance.communicationService != null &&
-                            MainForm.Instance.communicationService.IsConnected)
-                        {
-                            try
-                            {
-                                var disconnectResult = await MainForm.Instance.communicationService.Disconnect();
-                                MainForm.Instance.CurrentLoginStatus = MainForm.LoginStatus.None;
-                                MainForm.Instance.logger?.LogDebug("断开现有连接");
-                            }
-                            catch (Exception ex)
-                            {
-                                MainForm.Instance.logger?.LogError(ex, "断开连接时发生错误");
-                            }
-                        }
-
-
-                        bool ok = PTPrincipal.Login(this.txtUserName.Text, this.txtPassWord.Text, Program.AppContextData, ref isInitPwd);
-
-                        // 停止计时并记录结果
-                        stopwatch.Stop();
-                        TimeSpan loginTimeSpan = stopwatch.Elapsed;
-                        string loginTimeInfo = $"登录方法执行时间: {loginTimeSpan.TotalSeconds:N2} 秒";
-
-                        // 记录登录时间信息到日志
-                        if (MainForm.Instance != null && MainForm.Instance.logger != null)
-                        {
-                            MainForm.Instance.logger.Debug(loginTimeInfo);
-                        }
-                        Console.WriteLine(loginTimeInfo);
-
-                        if (ok)
-                        {
-                            // 登录成功，记录缓存使用情况
-                            if (MainForm.Instance != null && MainForm.Instance.logger != null)
-                            {
-                                MainForm.Instance.PrintInfoLog($"用户 {this.txtUserName.Text} 登录成功");
-                                MainForm.Instance.logger.Debug($"用户 {this.txtUserName.Text} 登录成功，权限数据已通过SqlSugar缓存机制加载");
-                            }
-                            if (!Program.AppContextData.IsSuperUser || txtUserName.Text != "admin")
-                            {
-
-
-
-
-                                try
-                                {
-                                    // 简化的连接管理：直接尝试连接到服务器
-                                    var serverIp = txtServerIP.Text.Trim();
-                                    if (!int.TryParse(txtPort.Text.Trim(), out var serverPort))
-                                    {
-                                        MessageBox.Show("端口号格式不正确，请检查服务器配置。", "配置错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                                        if (MainForm.Instance != null)
-                                        {
-                                            MainForm.Instance.CurrentLoginStatus = MainForm.LoginStatus.None;
-                                        }
-                                        return;
-                                    }
-
-                                    // 简化连接逻辑：如果未连接，则尝试连接
-                                    if (!MainForm.Instance.communicationService.IsConnected)
-                                    {
-                                        MainForm.Instance.logger?.LogDebug($"尝试连接服务器 {serverIp}:{serverPort}");
-
-                                        // 添加连接超时控制
-                                        var connectTask = connectionManager.ConnectAsync(serverIp, serverPort);
-                                        var timeoutTask = Task.Delay(TimeSpan.FromSeconds(15));
-
-                                        var completedTask = await Task.WhenAny(connectTask, timeoutTask);
-
-                                        if (completedTask == timeoutTask)
-                                        {
-                                            MessageBox.Show("连接服务器超时，请检查网络连接和服务器配置。", "连接超时", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                                            return;
-                                        }
-
-                                        var connected = await connectTask;
-                                        if (!connected)
-                                        {
-                                            MessageBox.Show("无法连接到服务器，请检查网络连接和服务器配置。", "连接失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                                            return;
-                                        }
-
-                                        MainForm.Instance.logger?.LogDebug($"成功连接到服务器 {serverIp}:{serverPort}");
-
-                                        // 更新原始服务器信息
-                                        _originalServerIP = serverIp;
-                                        _originalServerPort = serverPort.ToString();
-                                        _ipAddressChanged = false;
-                                    }
-                                    else
-                                    {
-                                        MainForm.Instance.logger?.LogDebug("使用现有连接");
-                                    }
-
-
-                                    // 8. 执行登录操作，添加登录超时控制
-                                    using var cts = new CancellationTokenSource();
-                                    var loginTask = _userLoginService.LoginAsync(UserGlobalConfig.Instance.UseName, UserGlobalConfig.Instance.PassWord, cts.Token);
-                                    var loginTimeoutTask = Task.Delay(TimeSpan.FromSeconds(10), cts.Token); // 10秒登录超时  请真正的请求一样
-
-                                    var completedLoginTask = await Task.WhenAny(loginTask, loginTimeoutTask);
-
-                                    if (completedLoginTask == loginTimeoutTask)
-                                    {
-                                        // 超时后取消登录任务
-                                        cts.Cancel();
-                                        // 不要直接return，而是等待任务完成或处理异常
-                                        try
-                                        {
-                                            // 使用Task.Run包装任务处理，避免阻塞UI
-                                            _ = Task.Run(async () =>
-                                            {
-                                                try
-                                                {
-                                                    // 尝试等待任务完成，让它有机会释放锁
-                                                    await loginTask.ConfigureAwait(false);
-                                                }
-                                                catch (OperationCanceledException)
-                                                {
-                                                    // 预期的取消异常，忽略
-                                                }
-                                                catch (Exception)
-                                                {
-                                                    // 忽略其他异常
-                                                }
-                                            });
-                                        }
-                                        finally
-                                        {
-                                            MessageBox.Show("登录超时，请检查网络连接或稍后重试。", "登录超时", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                                        }
-                                        return;
-                                    }
-
-                                    // 确保不会因为取消而抛出异常
-                                    var loginSuccess = await loginTask.ConfigureAwait(false);
-
-                                    // 检查登录结果
-                                    if (loginSuccess == null || !loginSuccess.IsSuccess)
-                                    {
-                                        string errorMsg = loginSuccess?.ErrorMessage ?? "登录失败，请检查用户名和密码";
-                                        MessageBox.Show(errorMsg, "登录失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                                        return;
-                                    }
-                                    else
-                                    {
-                                        MainForm.Instance.AppContext.CurrentUser.在线状态 = true;
-                                        //登陆成功就请求元数据
-                                        await _cacheClientService.RequestAllCacheSyncMetadataAsync();
-                                    }
-
-                                    //如果为初始密码则提示弹窗！
-                                    IsInitPassword = isInitPwd;
-                                }
-                                catch (OperationCanceledException)
-                                {
-                                    // 处理操作被取消的情况，此时锁应该已经在UserLoginService中释放
-                                    MessageBox.Show("登录操作已取消，您可以重新尝试登录。", "操作取消", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                                    return;
-                                }
-                                catch (Exception ex)
-                                {
-                                    // 异常情况下，断开连接
-                                    if (MainForm.Instance?.communicationService?.IsConnected == true)
-                                    {
-                                        await MainForm.Instance.communicationService.Disconnect();
-                                    }
-
-                                    // 判断是否为超时异常，提供更友好的错误提示
-                                    string errorMessage;
-                                    if (ex is TimeoutException || ex.Message.Contains("超时") || ex.Message.Contains("Timeout"))
-                                    {
-                                        errorMessage = "网络连接超时，请检查服务器地址是否正确或网络连接是否正常。";
-                                    }
-                                    else
-                                    {
-                                        errorMessage = "请检查你的用户名和密码是否正确。" + ex.Message;
-                                    }
-
-                                    MessageBox.Show(errorMessage, "登陆出错", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                                    MainForm.Instance.logger?.LogError(ex, "登录出错");
-                                    return;
-                                }
-                            }
-                            else
-                            {
-                                MainForm.Instance.AppContext.CurrentRole = new Model.tb_RoleInfo();
-                                MainForm.Instance.AppContext.CurrentRole.RoleName = "超级管理员";
-                                MainForm.Instance.AppContext.Roles = new List<Model.tb_RoleInfo>();
-                                MainForm.Instance.AppContext.Roles.Add(MainForm.Instance.AppContext.CurrentRole);
-                            }
-
-                            //只保存一次，注销不算 1990-1-1 不算
-                            if (Program.AppContextData.CurrentUser.登陆时间 < System.DateTime.Now.AddYears(-30))
-                            {
-                                Program.AppContextData.CurrentUser.登陆时间 = System.DateTime.Now;
-                            }
-
-                            UserGlobalConfig.Instance.AutoSavePwd = chksaveIDpwd.Checked;
-                            UserGlobalConfig.Instance.IsSupperUser = Program.AppContextData.IsSuperUser;
-                            UserGlobalConfig.Instance.AutoRminderUpdate = chkAutoReminderUpdate.Checked;
-                            UserGlobalConfig.Instance.Serialize();
-                            //先指定一下服务器IP
-                            //BizCodeService.RedisServerIP = UserGlobalConfig.Instance.ServerIP;
-                            Program.AppContextData.IsOnline = true;
-                            this.DialogResult = DialogResult.OK;
-                            this.Close();
-                            return;
-                        }
-                        else
-                        {
-                            Program.AppContextData.IsOnline = false;
-
-                            // 登录失败，断开连接
-                            if (MainForm.Instance?.communicationService?.IsConnected == true)
-                            {
-                                await MainForm.Instance.communicationService.Disconnect();
-                                MainForm.Instance.CurrentLoginStatus = MainForm.LoginStatus.None;
-                            }
-
-                            this.txtUserName.Focus();
-                            this.txtUserName.SelectAll();
-                            this.errorProvider1.SetError(this.txtUserName, "账号密码有误");
-                            this.Refresh();
-                            return;
-                        }
-                        //  base.Cursor = Cursors.Arrow;
-                        //base.Cursor = Cursors.Default;
-
-                    }
-                }
-                catch (Exception ex)
-                {
-                    // 异常情况下，断开连接
-                    if (MainForm.Instance?.communicationService?.IsConnected == true)
-                    {
-                        await MainForm.Instance.communicationService.Disconnect();
-                        MainForm.Instance.CurrentLoginStatus = MainForm.LoginStatus.None;
+                        errorProvider1.SetError(txtUserName, "账号密码有误");
+                        txtUserName.Focus();
+                        txtUserName.SelectAll();
+                        return;
                     }
 
-                    // 判断是否为超时异常，提供更友好的错误提示
-                    string errorMessage;
-                    if (ex is TimeoutException || ex.Message.Contains("超时") || ex.Message.Contains("Timeout"))
+                    // 如果是超级管理员且为admin用户，直接完成登录
+                    if (Program.AppContextData.IsSuperUser && txtUserName.Text == "admin")
                     {
-                        errorMessage = "网络连接超时，请检查服务器地址是否正确或网络连接是否正常。";
-                    }
-                    else
-                    {
-                        errorMessage = "请检查你的用户名和密码是否正确。" + ex.Message;
+                        await CompleteAdminLogin(isInitPwd);
+                        return;
                     }
 
-                    MessageBox.Show(errorMessage, "登陆出错", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    MainForm.Instance.logger?.LogError(ex, "登录出错");
-                    return;
-                }
-
-                this.DialogResult = DialogResult.OK;
-                this.Close();
-            }
-
-        }
-
-
-
-        #region 快捷认证登录服务
-
-        /// <summary>
-        /// 检查Token有效性和会话连接状态的快捷登录验证方法
-        /// 用于用户在锁定状态下重新登录时，若Token有效且会话已连接，直接授权成功
-        /// </summary>
-        /// <param name="token">当前用户的Token</param>
-        /// <param name="isConnected">当前会话是否已连接</param>
-        /// <returns>登录结果对象，包含是否成功以及可能的错误信息</returns>
-        public async Task<LoginResult> QuickValidateLoginAsync(string token, bool isConnected)
-        {
-            try
-            {
-                MainForm.Instance.logger?.LogDebug("开始执行快捷登录验证流程");
-
-                // 检查Token是否存在且有效
-                if (string.IsNullOrEmpty(token))
-                {
-                    MainForm.Instance.logger?.LogWarning("快捷登录验证失败：Token为空");
-                    return new LoginResult { IsSuccess = false, ErrorMessage = "Token不存在，无法进行快捷验证" };
-                }
-
-                // 检查会话是否已连接
-                if (!isConnected)
-                {
-                    MainForm.Instance.logger?.LogWarning("快捷登录验证失败：会话未连接");
-                    return new LoginResult { IsSuccess = false, ErrorMessage = "会话未连接，需要重新登录" };
-                }
-
-                // 解析Token以验证其有效性
-                bool tokenIsValid = ValidateToken(token);
-                if (!tokenIsValid)
-                {
-                    MainForm.Instance.logger?.LogWarning("快捷登录验证失败：Token无效或已过期");
-                    return new LoginResult { IsSuccess = false, ErrorMessage = "Token无效或已过期" };
-                }
-
-                // 如果Token有效且会话已连接，则直接返回登录成功
-                // 记录用户登录时间
-                UpdateLoginTime();
-
-                MainForm.Instance.logger?.LogDebug("用户通过快捷验证方式成功登录");
-                return new LoginResult { IsSuccess = true, ErrorMessage = string.Empty };
-            }
-            catch (Exception ex)
-            {
-                MainForm.Instance.logger?.LogError(ex, "快捷登录验证过程中发生异常");
-                // 异常发生时提供友好的错误信息，不暴露技术细节
-                return new LoginResult { IsSuccess = false, ErrorMessage = "快捷验证过程中发生系统错误，请尝试常规登录" };
-            }
-        }
-
-        /// <summary>
-        /// 验证Token的有效性
-        /// </summary>
-        /// <param name="token">待验证的Token字符串</param>
-        /// <returns>Token是否有效</returns>
-        private bool ValidateToken(string token)
-        {
-            try
-            {
-                // 基本验证：Token长度检查
-                if (string.IsNullOrEmpty(token) || token.Length <= 10)
-                {
-                    return false;
-                }
-
-                // 在实际应用中，这里可以添加更复杂的Token验证逻辑
-                // 例如：检查Token格式、解析Token内容、验证签名、检查过期时间等
-                // 由于目前没有看到具体的Token生成和解析逻辑，这里暂时使用简单的验证方式
-
-                return true;
-            }
-            catch (Exception ex)
-            {
-                MainForm.Instance.logger?.LogError(ex, "Token验证过程中发生异常");
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// 更新用户登录时间
-        /// </summary>
-        private void UpdateLoginTime()
-        {
-            try
-            {
-                // 只保存一次，注销不算 1990-1-1 不算
-                if (Program.AppContextData.CurrentUser != null && Program.AppContextData.CurrentUser.登陆时间 < System.DateTime.Now.AddYears(-30))
-                {
-                    Program.AppContextData.CurrentUser.登陆时间 = System.DateTime.Now;
-                    MainForm.Instance.logger?.LogDebug("成功更新用户登录时间");
+                    // 使用新的登录流程服务处理登录
+                    await ExecuteNewLoginFlow(isInitPwd, serverPort);
                 }
             }
             catch (Exception ex)
             {
-                MainForm.Instance.logger?.LogError(ex, "更新登录时间失败");
+                MainForm.Instance.logger?.LogError(ex, "登录过程中发生异常");
+
+                // 异常情况下，断开连接
+                if (MainForm.Instance?.communicationService?.IsConnected == true)
+                {
+                    await MainForm.Instance.communicationService.Disconnect();
+                    MainForm.Instance.CurrentLoginStatus = MainForm.LoginStatus.None;
+                }
+
+                var errorMessage = ex is TimeoutException || ex.Message.Contains("超时") || ex.Message.Contains("Timeout")
+                    ? "网络连接超时，请检查服务器地址是否正确或网络连接是否正常。"
+                    : $"登录失败: {ex.Message}";
+
+                MessageBox.Show(errorMessage, "登录错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
-        #endregion
+
+
+
 
         private string IPToIPv4(string strIP, int Port)
         {
@@ -775,6 +448,184 @@ namespace RUINORERP.UI
         private void pictureBox1_Click(object sender, EventArgs e)
         {
 
+        }
+
+        /// <summary>
+        /// 快速验证登录（基于现有Token）
+        /// </summary>
+        private async Task<LoginResponse> QuickValidateLoginAsync(string token, bool isConnected)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(token) || !isConnected)
+                {
+                    return ResponseFactory.CreateSpecificErrorResponse<LoginResponse>("无效的连接状态或Token");
+                }
+
+                // 验证Token有效性
+                var tokenValid = await _userLoginService.ValidateTokenAsync(token);
+                if (!tokenValid)
+                {
+                    return ResponseFactory.CreateSpecificErrorResponse<LoginResponse>("Token已失效");
+                }
+
+                // Token有效，返回成功响应
+                return new LoginResponse
+                {
+                    IsSuccess = true,
+                    Message = "快捷登录验证成功",
+                    Username = UserGlobalConfig.Instance.UseName
+                };
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger?.LogError(ex, "快捷登录验证时发生异常");
+                return ResponseFactory.CreateSpecificErrorResponse<LoginResponse>($"快捷登录验证失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 完成超级管理员登录
+        /// </summary>
+        private async Task CompleteAdminLogin(bool isInitPwd)
+        {
+            try
+            {
+                MainForm.Instance.AppContext.CurrentRole = new Model.tb_RoleInfo
+                {
+                    RoleName = "超级管理员"
+                };
+                MainForm.Instance.AppContext.Roles = new List<Model.tb_RoleInfo>
+                {
+                    MainForm.Instance.AppContext.CurrentRole
+                };
+
+                // 保存用户配置
+                await SaveUserConfig(isInitPwd);
+
+                Program.AppContextData.IsOnline = true;
+                this.DialogResult = DialogResult.OK;
+                this.Close();
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger?.LogError(ex, "完成超级管理员登录时发生异常");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// 执行新的登录流程
+        /// </summary>
+        private async Task ExecuteNewLoginFlow(bool isInitPwd, int serverPort)
+        {
+            try
+            {
+                // 设置登录状态
+                if (MainForm.Instance != null)
+                {
+                    MainForm.Instance.CurrentLoginStatus = MainForm.LoginStatus.LoggingIn;
+                }
+
+                // 创建取消令牌，用于登录超时控制
+                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+
+                // 执行完整的登录流程
+                var loginResponse = await _loginFlowService.ExecuteLoginFlowAsync(
+                    txtUserName.Text,
+                    txtPassWord.Text,
+                    txtServerIP.Text.Trim(),
+                    serverPort,
+                    cts.Token);
+
+                // 处理登录结果
+                if (loginResponse != null && loginResponse.IsSuccess)
+                {
+                    await HandleLoginSuccess(loginResponse, isInitPwd);
+                }
+                else
+                {
+                    var errorMsg = loginResponse?.ErrorMessage ?? "登录失败，请检查用户名和密码";
+                    MessageBox.Show(errorMsg, "登录失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                MessageBox.Show("登录操作已超时或被取消，请重试。", "登录超时", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            finally
+            {
+                // 重置登录状态
+                if (MainForm.Instance != null)
+                {
+                    MainForm.Instance.CurrentLoginStatus = MainForm.LoginStatus.None;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 处理登录成功
+        /// </summary>
+        private async Task HandleLoginSuccess(LoginResponse loginResponse, bool isInitPwd)
+        {
+            try
+            {
+                MainForm.Instance.logger?.LogInformation($"用户 {txtUserName.Text} 登录成功");
+
+                // 设置在线状态
+                if (MainForm.Instance?.AppContext?.CurrentUser != null)
+                {
+                    MainForm.Instance.AppContext.CurrentUser.在线状态 = true;
+                }
+
+                // 请求元数据同步
+                await _cacheClientService.RequestAllCacheSyncMetadataAsync();
+
+                // 保存用户配置
+                await SaveUserConfig(isInitPwd);
+
+                // 记录登录时间
+                if (Program.AppContextData.CurrentUser.登陆时间 < DateTime.Now.AddYears(-30))
+                {
+                    Program.AppContextData.CurrentUser.登陆时间 = DateTime.Now;
+                }
+
+                // 完成登录
+                Program.AppContextData.IsOnline = true;
+                this.DialogResult = DialogResult.OK;
+                this.Close();
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger?.LogError(ex, "处理登录成功后的操作时发生异常");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// 保存用户配置
+        /// </summary>
+        private async Task SaveUserConfig(bool isInitPwd)
+        {
+            try
+            {
+                UserGlobalConfig.Instance.AutoSavePwd = chksaveIDpwd.Checked;
+                UserGlobalConfig.Instance.IsSupperUser = Program.AppContextData.IsSuperUser;
+                UserGlobalConfig.Instance.AutoRminderUpdate = chkAutoReminderUpdate.Checked;
+                UserGlobalConfig.Instance.Serialize();
+
+                MainForm.Instance.logger?.LogDebug("成功保存用户配置");
+
+                // 如果为初始密码则提示（这里可以根据需要添加提示逻辑）
+                IsInitPassword = isInitPwd;
+
+                await Task.CompletedTask;
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger?.LogError(ex, "保存用户配置失败");
+                // 不抛出异常，因为这不影响登录成功
+            }
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Text;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using RUINORERP.PacketSpec.Enums.Core;
 using RUINORERP.PacketSpec.Core;
 using RUINORERP.PacketSpec.Commands;
@@ -50,9 +51,10 @@ namespace RUINORERP.PacketSpec.Models.Common
         public PacketDirection Direction { get; set; }
 
         /// <summary>
-        /// 扩展属性字典（用于存储非核心但需要传输的元数据）
+        /// 扩展属性对象（用于存储非核心但需要传输的元数据）
+        /// 使用JObject可以更好地处理JSON数组和复杂类型
         /// </summary>
-        public Dictionary<string, object> Extensions { get; set; }
+        public JObject Extensions { get; set; }
 
         /// <summary>
         /// 命令执行上下文 - 网络传输层使用
@@ -169,7 +171,7 @@ namespace RUINORERP.PacketSpec.Models.Common
             PacketId = Guid.NewGuid().ToString();
             CreatedTime = DateTime.Now;
             TimestampUtc = DateTime.UtcNow;
-            Extensions = new Dictionary<string, object>();
+            Extensions = new JObject();
             // 初始化默认扩展属性
             SetExtension("Version", "2.0");
             // 移除CommandData的强制初始化，允许外部设置数据
@@ -186,18 +188,15 @@ namespace RUINORERP.PacketSpec.Models.Common
         /// </summary>
         public void ClearSensitiveData()
         {
-
-            // 清理ExecutionContext中的敏感数据
-            if (ExecutionContext != null)
-            {
-                ExecutionContext.SessionId = null;
-                if (ExecutionContext.Token != null)
-                {
-                    ExecutionContext.Token.AccessToken = null;
-                }
-            }
-
-            Extensions?.Clear();
+            // 清除会话信息
+            SessionId = null;
+            
+            // 清除扩展属性中的敏感信息
+            Extensions?.RemoveAll();
+            
+            // 重置状态为默认值
+            Status = PacketStatus.Created;
+            
             // 清理包体数据
             if (Response != null)
             {
@@ -223,7 +222,19 @@ namespace RUINORERP.PacketSpec.Models.Common
         /// <returns>属性值或默认值</returns>
         public T GetExtension<T>(string key, T defaultValue = default)
         {
-            return Extensions.TryGetValue(key, out var value) ? (T)value : defaultValue;
+            if (Extensions.TryGetValue(key, out JToken token))
+            {
+                try
+                {
+                    return token.ToObject<T>();
+                }
+                catch (JsonSerializationException)
+                {
+                    // 如果类型转换失败，返回默认值
+                    return defaultValue;
+                }
+            }
+            return defaultValue;
         }
 
         /// <summary>
@@ -233,7 +244,7 @@ namespace RUINORERP.PacketSpec.Models.Common
         /// <param name="value">属性值</param>
         public void SetExtension(string key, object value)
         {
-            Extensions[key] = value;
+            Extensions[key] = JToken.FromObject(value);
         }
 
         /// <summary>
@@ -280,16 +291,23 @@ namespace RUINORERP.PacketSpec.Models.Common
 
         public PacketModel Clone()
         {
-            return new PacketModel
+            var clonedPacket = new PacketModel
             {
                 PacketId = IdGenerator.GeneratePacketId(CommandId.Category.ToString()),
                 CommandId = CommandId,
                 Status = Status,
                 SessionId = SessionId,
                 CreatedTime = CreatedTime,
-                Extensions = new System.Collections.Generic.Dictionary<string, object>(Extensions),
                 TimestampUtc = TimestampUtc
             };
+            
+            // 复制Extensions对象
+            if (Extensions != null)
+            {
+                clonedPacket.Extensions = JObject.FromObject(Extensions);
+            }
+            
+            return clonedPacket;
         }
 
         /// <summary>

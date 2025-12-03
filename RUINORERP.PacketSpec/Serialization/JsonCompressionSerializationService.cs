@@ -46,6 +46,24 @@ namespace RUINORERP.PacketSpec.Serialization
                     return typeof(Dictionary<string, object>);
                 }
 
+                // 处理各种集合类型 - 解决.NET 8和.NET 4.8之间的序列化差异
+                var collectionTypeNames = new[]
+                {
+                    "List`1", "Array", "ICollection`1", "IList`1", "IEnumerable`1",
+                    "ReadOnlyCollection`1", "ObservableCollection`1", "HashSet`1",
+                    "LinkedList`1", "Queue`1", "Stack`1", "SortedSet`1"
+                };
+
+                foreach (var collectionTypeName in collectionTypeNames)
+                {
+                    if (typeName.Contains(collectionTypeName))
+                    {
+                        // 对于所有集合类型，统一返回List<object>作为安全的默认实现
+                        // 这样可以处理包含$values字段的.NET 8集合序列化格式
+                        return typeof(List<>).MakeGenericType(typeof(object));
+                    }
+                }
+
                 // 先尝试直接加载类型
                 var type = Type.GetType($"{typeName}, {assemblyName}");
                 if (type != null)
@@ -55,6 +73,8 @@ namespace RUINORERP.PacketSpec.Serialization
                 if (typeName.Contains("Dictionary`2"))
                 {
                     // 创建通用字典类型
+                    // 注意：不能使用typeof(dynamic)，因为dynamic是编译时概念而不是运行时类型
+                    // PacketModel.Extensions字段已定义为JObject类型，Newtonsoft.Json会自动处理类型转换
                     return typeof(Dictionary<,>).MakeGenericType(
                         typeof(string), typeof(object));
                 }
@@ -84,7 +104,7 @@ namespace RUINORERP.PacketSpec.Serialization
             // 类型名称处理：自动处理多态类型，在需要区分继承类时自动添加类型信息
             TypeNameHandling = TypeNameHandling.Auto, 
             
-            // 添加自定义序列化绑定器，解决跨平台程序集名称不匹配问题
+            // 启用自定义序列化绑定器，解决跨平台程序集名称差异问题
             SerializationBinder = new CrossPlatformSerializationBinder(),
             
             // 日期格式处理：使用ISO标准格式处理日期时间字符串，确保跨平台兼容性

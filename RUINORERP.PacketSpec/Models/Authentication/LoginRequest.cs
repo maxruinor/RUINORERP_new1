@@ -61,6 +61,7 @@ namespace RUINORERP.PacketSpec.Models.Requests
                 DeviceId= GetDeviceId(),
                 ClientVersion = ProtocolVersion.Current,
                 LoginTime = DateTime.Now,
+                ClientIp=GetClientIp(),
             };
         }
         
@@ -76,18 +77,6 @@ namespace RUINORERP.PacketSpec.Models.Requests
             };
         }
         
-        /// <summary>
-        /// 创建Token验证请求
-        /// </summary>
-        public static LoginRequest CreateValidateTokenRequest(TokenInfo token)
-        {
-            return new LoginRequest
-            {
-                Token = token,
-                LoginTime = DateTime.Now
-            };
-        }
-      
  
 
         ///// <summary>
@@ -140,6 +129,12 @@ namespace RUINORERP.PacketSpec.Models.Requests
                 return Guid.NewGuid().ToString();
             }
         }
+
+        /// <summary>
+        /// 客户端IP地址
+        /// </summary>
+        public string ClientIp { get; set; }
+
 
         /// <summary>
         /// 获取客户端IP地址

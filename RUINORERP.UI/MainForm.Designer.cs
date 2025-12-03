@@ -100,6 +100,7 @@ namespace RUINORERP.UI
             this.toolStripFunctionMenu = new System.Windows.Forms.ToolStrip();
             this.toolStripMenuSearcher = new System.Windows.Forms.ToolStripComboBox();
             this.toolStripContainerMenu = new System.Windows.Forms.ToolStripContainer();
+            this.lblVer = new System.Windows.Forms.ToolStripStatusLabel();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonNavigator1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPage5)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPage2)).BeginInit();
@@ -356,7 +357,8 @@ namespace RUINORERP.UI
             this.lblStatusGlobal,
             this.lblServerInfo,
             this.progressBar,
-            this.toolStripDropDownButton1});
+            this.toolStripDropDownButton1,
+            this.lblVer});
             this.statusStrip1.Location = new System.Drawing.Point(0, 0);
             this.statusStrip1.Name = "statusStrip1";
             this.statusStrip1.RenderMode = System.Windows.Forms.ToolStripRenderMode.ManagerRenderMode;
@@ -719,6 +721,13 @@ namespace RUINORERP.UI
             this.toolStripContainerMenu.TopToolStripPanel.Controls.Add(this.toolStrip1);
             this.toolStripContainerMenu.TopToolStripPanel.Controls.Add(this.toolStripFunctionMenu);
             // 
+            // lblVer
+            // 
+            this.lblVer.Name = "lblVer";
+            this.lblVer.Padding = new System.Windows.Forms.Padding(100, 0, 0, 0);
+            this.lblVer.Size = new System.Drawing.Size(119, 17);
+            this.lblVer.Text = "v3";
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -825,6 +834,7 @@ namespace RUINORERP.UI
         private System.Windows.Forms.ToolStripComboBox toolStripMenuSearcher;
         private System.Windows.Forms.ToolStripMenuItem 系统工具ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 服务缓存测试ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripStatusLabel lblVer;
     }
 }
 

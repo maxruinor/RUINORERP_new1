@@ -6,6 +6,7 @@ using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Commands.Authentication;
 using RUINORERP.PacketSpec.Models.Requests;
 using RUINORERP.PacketSpec.Models.Core;
+using Newtonsoft.Json.Linq;
 
 namespace RUINORERP.PacketSpec.Models.Common
 {
@@ -82,7 +83,7 @@ namespace RUINORERP.PacketSpec.Models.Common
             if (!string.IsNullOrEmpty(sessionId))
             {
                 _packet.SessionId = sessionId;
-                _packet.Extensions["SessionId"] = sessionId;
+                _packet.Extensions["SessionId"] = JToken.FromObject(sessionId);
             }
             return this;
         }
@@ -106,7 +107,7 @@ namespace RUINORERP.PacketSpec.Models.Common
         /// <returns>当前构建器实例</returns>
         public PacketBuilder WithExtension(string key, object value)
         {
-            _packet.Extensions[key] = value;
+            _packet.Extensions[key] = JToken.FromObject(value);
             return this;
         }
 

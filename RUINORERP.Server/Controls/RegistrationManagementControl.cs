@@ -617,13 +617,13 @@ namespace RUINORERP.Server.Controls
                 if (result)
                 {
                     MessageBox.Show("续期成功", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    
+
                     // 记录到日志
                     frmMainNew.Instance.SafeLogOperation("系统续期成功，已保存最新的注册信息", Color.Green);
-                    
+
                     // 更新主窗体的注册信息
                     await UpdateMainFormRegistrationInfo();
-                    
+
                     // 更新UI状态
                     await LoadRegistrationInfo();
                     UpdateUIState(false);
@@ -673,7 +673,7 @@ namespace RUINORERP.Server.Controls
         /// </summary>
         private void cmbDays_SelectedIndexChanged(object sender, EventArgs e)
         {
-            
+
             if (_currentRegistrationInfo == null || cmbDays.SelectedItem == null)
             {
                 return;
@@ -761,10 +761,24 @@ namespace RUINORERP.Server.Controls
             try
             {
                 // 生成机器码
-                var registrationInfo = frmMainNew.Instance.registrationInfo;
-                if (registrationInfo != null)
+                if (_currentRegistrationInfo != null)
                 {
-                    string machineCode = _registrationService.CreateMachineCode(registrationInfo);
+                    // 校验授权到期时间至少比当前时间大一个月
+                    if (_currentRegistrationInfo.ExpirationDate <= DateTime.Now.AddMonths(1))
+                    {
+                        MessageBox.Show("授权到期时间不足一个月，请先完成授权续期后再生成机器码。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
+                    }
+
+                    // 检查是否选择了功能模块
+                    var selectedModules = GetSelectedFunctionModules();
+                    if (selectedModules.Count == 0)
+                    {
+                        MessageBox.Show("请至少选择一个功能模块，否则无法生成机器码。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
+                    }
+                    
+                    string machineCode = _registrationService.CreateMachineCode(_currentRegistrationInfo);
                     txtMachineCode.Text = machineCode;
                     //// 将机器码复制到剪贴板 - 使用Invoke确保在UI线程上执行
                     //this.Invoke(new Action(() =>
@@ -823,12 +837,12 @@ namespace RUINORERP.Server.Controls
             {
                 // 显示续期操作流程提示
                 ShowRenewalProcessTips();
-                
+
                 // 启用续期相关的UI
                 EnableRenewalMode();
             }
         }
-        
+
         /// <summary>
         /// 显示续期操作流程提示
         /// </summary>
@@ -836,7 +850,7 @@ namespace RUINORERP.Server.Controls
         {
             // 使用重要的颜色（如红色）显示操作流程
             Color importantColor = Color.Red;
-            
+
             // 显示操作流程
             frmMainNew.Instance.SafeLogOperation("=== 系统续期操作流程 ===", importantColor);
             frmMainNew.Instance.SafeLogOperation("1. 选择授权到期时间", importantColor);

@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <RootNamespace>RUINORERP.UI.Tests</RootNamespace>
+    <AssemblyName>RUINORERP.UI.Tests</AssemblyName>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <GenerateTestAssemblyInfo>true</GenerateTestAssemblyInfo>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Moq" Version="4.20.70" />
+    <PackageReference Include="NUnit" Version="3.13.3" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.4.2" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RUINORERP.UI\RUINORERP.UI.csproj" />
+    <ProjectReference Include="..\RUINORERP.PacketSpec\RUINORERP.PacketSpec.csproj" />
+  </ItemGroup>
+
+</Project>

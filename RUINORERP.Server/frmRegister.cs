@@ -261,7 +261,7 @@ namespace RUINORERP.Server
                 EditEntity.FunctionModule = string.Join(",", selectedModules);
 
                 //生成机器码前 不加密。因为注册码生成时。提供商要审核时。要看到明码
-               EditEntity.MachineCode = frmMainNew.Instance.CreateMachineCode(EditEntity);
+             //  EditEntity.MachineCode = frmMainNew.Instance.CreateMachineCode(EditEntity);
 
                 //加密
                 EditEntity.FunctionModule = EncryptionHelper.AesEncryptByHashKey(EditEntity.FunctionModule, "FunctionModule");

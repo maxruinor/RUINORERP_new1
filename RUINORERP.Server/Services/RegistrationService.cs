@@ -187,6 +187,23 @@ namespace RUINORERP.Server.Services
         }
 
         /// <summary>
+        /// 检查注册信息
+        /// </summary>
+        /// <param name="regInfo">注册信息</param>
+        /// <returns>注册是否有效</returns>
+        public bool CheckRegistered(tb_sys_RegistrationInfo regInfo)
+        {
+            string key = "ruinor1234567890"; // 这应该是一个密钥
+            string machineCode = regInfo.MachineCode; // 这可能是计算机的硬件信息或唯一标识符
+            // 假设用户输入的注册码
+            string userProvidedCode = regInfo.RegistrationCode;
+            bool isValid = HLH.Lib.Security.SecurityService.ValidateRegistrationCode(userProvidedCode, key, machineCode);
+            Console.WriteLine($"提供的注册码是否有效? {isValid}");
+            return isValid;
+        }
+
+
+        /// <summary>
         /// 验证注册码
         /// </summary>
         /// <param name="registrationInfo">注册信息</param>
@@ -222,35 +239,7 @@ namespace RUINORERP.Server.Services
                 return false;
             }
         }
-
-        /// <summary>
-        /// 检查系统是否已注册
-        /// </summary>
-        /// <param name="registrationInfo">注册信息</param>
-        /// <returns>是否已注册</returns>
-        public bool CheckRegistered(tb_sys_RegistrationInfo registrationInfo)
-        {
-            if (registrationInfo == null)
-            {
-                return false;
-            }
-
-            // 检查是否已注册
-            if (!registrationInfo.IsRegistered)
-            {
-                _logger.LogWarning("系统未注册");
-                return false;
-            }
-
-            // 检查是否过期
-            if (IsRegistrationExpired(registrationInfo))
-            {
-                _logger.LogWarning("注册已过期");
-                return false;
-            }
-
-            return true;
-        }
+ 
 
         /// <summary>
         /// 检查注册是否过期

@@ -1543,8 +1543,6 @@ namespace RUINORERP.Server
                         newControl.Dock = DockStyle.Fill;
                         tabControlMain.SelectedTab.Controls.Add(newControl);
                     }
-
-                    MessageBox.Show($"{tabName}页面已刷新", "操作成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
             }
             catch (Exception ex)
@@ -1622,6 +1620,9 @@ namespace RUINORERP.Server
 
         private void frmMainNew_Load(object sender, EventArgs e)
         {
+            // 检查系统注册状态
+            CheckSystemRegistration();
+
             // 初始化界面
             InitializeUI();
 
@@ -1669,29 +1670,12 @@ namespace RUINORERP.Server
             this.MaximizeBox = true;
             this.MinimizeBox = true;
             this.FormBorderStyle = FormBorderStyle.Sizable;
-
+            UpdateServerStatus();
             // 刷新一次数据
-            RefreshData();
+            RefreshCurrentTab();
         }
 
-        /// <summary>
-        /// 数据刷新 - 已废弃，建议使用RefreshCurrentTab方法
-        /// </summary>
-        [Obsolete("请使用RefreshCurrentTab方法替代")]
-        private void RefreshData()
-        {
-            try
-            {
-                // 更新服务器状态信息
-                UpdateServerStatus();
-            }
-            catch (Exception ex)
-            {
-                // 记录错误但不中断程序
-                Console.WriteLine($"刷新监控数据时发生错误: {ex.Message}");
-            }
-        }
-
+ 
         /// <summary>
         /// 更新服务器状态信息
         /// </summary>
@@ -1941,6 +1925,13 @@ namespace RUINORERP.Server
 
             try
             {
+                // 检查系统注册状态
+                if (!await ValidateSystemRegistrationAsync())
+                {
+                    PrintErrorLog("系统注册验证失败，服务器启动被终止");
+                    throw new Exception("系统注册验证失败，无法启动服务器");
+                }
+
                 var _logger = Startup.GetFromFac<ILogger<frmMainNew>>();
 
                 // 从依赖注入容器获取NetworkServer实例
@@ -2230,20 +2221,194 @@ namespace RUINORERP.Server
             }
         }
 
+
         /// <summary>
-        /// 检查注册信息
+        /// 检查系统注册状态并加载注册信息
         /// </summary>
-        /// <param name="regInfo">注册信息</param>
-        /// <returns>注册是否有效</returns>
-        public bool CheckRegistered(tb_sys_RegistrationInfo regInfo)
+        private async void CheckSystemRegistration()
         {
-            string key = "ruinor1234567890"; // 这应该是一个密钥
-            string machineCode = regInfo.MachineCode; // 这可能是计算机的硬件信息或唯一标识符
-            // 假设用户输入的注册码
-            string userProvidedCode = regInfo.RegistrationCode;
-            bool isValid = HLH.Lib.Security.SecurityService.ValidateRegistrationCode(userProvidedCode, key, machineCode);
-            Console.WriteLine($"提供的注册码是否有效? {isValid}");
-            return isValid;
+            try
+            {
+                PrintInfoLog("正在检查系统注册状态...");
+                
+                // 从依赖注入容器获取注册服务
+                var registrationService = Startup.GetFromFac<IRegistrationService>();
+                if (registrationService == null)
+                {
+                    PrintErrorLog("无法获取注册服务，注册检查失败");
+                    return;
+                }
+
+                // 从数据库获取注册信息
+                var registrationInfo = await registrationService.GetRegistrationInfoAsync();
+                if (registrationInfo == null)
+                {
+                    PrintErrorLog("无法从数据库获取注册信息");
+                    return;
+                }
+
+                // 将注册信息赋值给实例变量
+                frmMainNew.Instance.registrationInfo = registrationInfo;
+
+                // 检查注册状态
+                bool isRegistered = registrationService.CheckRegistered(registrationInfo);
+                
+                if (isRegistered)
+                {
+                    PrintInfoLog($"系统注册验证成功，许可用户数: {registrationInfo.ConcurrentUsers}");
+                    PrintInfoLog($"注册到期时间: {registrationInfo.ExpirationDate:yyyy-MM-dd HH:mm:ss}");
+                    
+                    // 检查是否即将过期（7天内）
+                    var daysUntilExpiration = registrationInfo.ExpirationDate - DateTime.Now;
+                    if (daysUntilExpiration.TotalDays <= 7 && daysUntilExpiration.TotalDays > 0)
+                    {
+                        PrintInfoLog($"警告：注册许可将在 {daysUntilExpiration.TotalDays:F0} 天后到期");
+                    }
+                }
+                else
+                {
+                    PrintErrorLog("系统未注册或注册已过期，请及时进行系统注册");
+                    
+                    // 检查是否过期
+                    if (registrationService.IsRegistrationExpired(registrationInfo))
+                    {
+                        PrintErrorLog("注册许可已过期");
+                    }
+                    else if (!registrationInfo.IsRegistered)
+                    {
+                        PrintErrorLog("系统尚未注册");
+                    }
+                }
+
+                // 记录功能模块信息
+                if (!string.IsNullOrEmpty(registrationInfo.FunctionModule))
+                {
+                    try
+                    {
+                        string decryptedModules = EncryptionHelper.AesDecryptByHashKey(registrationInfo.FunctionModule, "FunctionModule");
+                        PrintInfoLog($"已授权功能模块: {decryptedModules}");
+                    }
+                    catch (Exception ex)
+                    {
+                        PrintErrorLog($"解析功能模块信息失败: {ex.Message}");
+                    }
+                }
+
+                PrintInfoLog("系统注册状态检查完成");
+            }
+            catch (Exception ex)
+            {
+                PrintErrorLog($"检查系统注册状态时发生错误: {ex.Message}");
+                _logger?.LogError(ex, "检查系统注册状态失败");
+            }
+        }
+
+        /// <summary>
+        /// 验证系统注册状态（用于服务器启动时的严格验证）
+        /// </summary>
+        /// <returns>注册验证是否通过</returns>
+        private async Task<bool> ValidateSystemRegistrationAsync()
+        {
+            try
+            {
+                PrintInfoLog("正在执行服务器启动时的注册验证...");
+                
+                // 从依赖注入容器获取注册服务
+                var registrationService = Startup.GetFromFac<IRegistrationService>();
+                if (registrationService == null)
+                {
+                    PrintErrorLog("无法获取注册服务，注册验证失败");
+                    return false;
+                }
+
+                // 从数据库获取注册信息
+                var registrationInfo = await registrationService.GetRegistrationInfoAsync();
+                if (registrationInfo == null)
+                {
+                    PrintErrorLog("无法从数据库获取注册信息，注册验证失败");
+                    return false;
+                }
+
+                // 将注册信息赋值给实例变量
+                frmMainNew.Instance.registrationInfo = registrationInfo;
+
+                // 执行严格的注册验证
+                bool isRegistered = registrationService.CheckRegistered(registrationInfo);
+                
+                if (!isRegistered)
+                {
+                    if (registrationService.IsRegistrationExpired(registrationInfo))
+                    {
+                        PrintErrorLog("注册许可已过期，服务器无法启动");
+                        MessageBox.Show("系统注册许可已过期，请联系软件提供商续期。", 
+                                      "注册过期", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                    else if (!registrationInfo.IsRegistered)
+                    {
+                        PrintErrorLog("系统未注册，服务器无法启动");
+                        MessageBox.Show("系统未注册，请先进行系统注册。", 
+                                      "未注册", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    }
+                    else
+                    {
+                        PrintErrorLog("注册信息验证失败，服务器无法启动");
+                        MessageBox.Show("注册信息验证失败，请检查注册码是否正确。", 
+                                      "注册验证失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                    return false;
+                }
+
+                // 验证用户数限制
+                if (registrationInfo.ConcurrentUsers <= 0)
+                {
+                    PrintErrorLog("注册许可的用户数配置无效，服务器无法启动");
+                    MessageBox.Show("注册许可的并发用户数配置无效。", 
+                                  "配置错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return false;
+                }
+
+                // 检查注册到期时间
+                var daysUntilExpiration = registrationInfo.ExpirationDate - DateTime.Now;
+                if (daysUntilExpiration.TotalDays <= 0)
+                {
+                    PrintErrorLog("注册许可已过期，服务器无法启动");
+                    MessageBox.Show("系统注册许可已过期，请联系软件提供商续期。", 
+                                  "注册过期", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return false;
+                }
+                else if (daysUntilExpiration.TotalDays <= 7)
+                {
+                    PrintInfoLog($"警告：注册许可将在 {daysUntilExpiration.TotalDays:F0} 天后到期");
+                }
+
+                PrintInfoLog($"系统注册验证成功，许可用户数: {registrationInfo.ConcurrentUsers}");
+                PrintInfoLog($"注册到期时间: {registrationInfo.ExpirationDate:yyyy-MM-dd HH:mm:ss}");
+                
+                // 记录功能模块信息
+                if (!string.IsNullOrEmpty(registrationInfo.FunctionModule))
+                {
+                    try
+                    {
+                        string decryptedModules = EncryptionHelper.AesDecryptByHashKey(registrationInfo.FunctionModule, "FunctionModule");
+                        PrintInfoLog($"已授权功能模块: {decryptedModules}");
+                    }
+                    catch (Exception ex)
+                    {
+                        PrintErrorLog($"解析功能模块信息失败: {ex.Message}");
+                    }
+                }
+
+                PrintInfoLog("服务器启动时的注册验证完成");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                PrintErrorLog($"执行注册验证时发生错误: {ex.Message}");
+                _logger?.LogError(ex, "服务器启动时注册验证失败");
+                MessageBox.Show($"执行注册验证时发生错误: {ex.Message}", 
+                              "验证错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
+            }
         }
 
         /// <summary>
@@ -2251,38 +2416,6 @@ namespace RUINORERP.Server
         /// </summary>
         public string UniqueHarewareInfo { get; set; }
 
-        /// <summary>
-        /// 生成机器码
-        /// </summary>
-        /// <param name="regInfo">注册信息</param>
-        /// <returns>机器码</returns>
-        public string CreateMachineCode(tb_sys_RegistrationInfo regInfo)
-        {
-            // 指定用于生成加密机器码的关键字段
-            List<string> cols = new List<string>();
-            cols.Add("CompanyName");
-            cols.Add("ContactName");
-            cols.Add("PhoneNumber");
-            cols.Add("ConcurrentUsers");
-            cols.Add("ExpirationDate");
-            cols.Add("ProductVersion");
-            cols.Add("LicenseType");
-            cols.Add("FunctionModule");
-
-            // 仅序列化指定列
-            JsonSerializerSettings settings = new JsonSerializerSettings
-            {
-                ContractResolver = new SelectiveContractResolver(cols),
-                Converters = new List<JsonConverter> { new Newtonsoft.Json.Converters.IsoDateTimeConverter { DateTimeFormat = "yyyy-MM-dd HH:mm:ss" } }
-            };
-
-            // 对象序列化
-            string jsonString = JsonConvert.SerializeObject(regInfo, settings);
-            string originalInfo = this.UniqueHarewareInfo + jsonString;
-            string key = "ruinor1234567890";
-            string reginfo = HLH.Lib.Security.EncryptionHelper.AesEncrypt(originalInfo, key);
-            return reginfo;
-        }
 
         /// <summary>
         /// 服务器监控按钮点击事件

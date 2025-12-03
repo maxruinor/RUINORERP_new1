@@ -32,6 +32,8 @@ namespace RUINORERP.Server.Controls
             tsbtnSaveRegInfo = new System.Windows.Forms.ToolStripButton();
             toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             tsbtnCreateRegInfo = new System.Windows.Forms.ToolStripButton();
+            toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
+            tsbtnRenewRegInfo = new System.Windows.Forms.ToolStripButton();
             groupBox1 = new System.Windows.Forms.GroupBox();
             tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             lblCompanyName = new System.Windows.Forms.Label();
@@ -42,26 +44,26 @@ namespace RUINORERP.Server.Controls
             txtPhoneNumber = new System.Windows.Forms.TextBox();
             lblLicenseType = new System.Windows.Forms.Label();
             cmbLicenseType = new System.Windows.Forms.ComboBox();
-            lblExpirationDate = new System.Windows.Forms.Label();
-            dtpExpirationDate = new System.Windows.Forms.DateTimePicker();
             lblConcurrentUsers = new System.Windows.Forms.Label();
             txtConcurrentUsers = new System.Windows.Forms.TextBox();
             lblProductVersion = new System.Windows.Forms.Label();
             txtProductVersion = new System.Windows.Forms.TextBox();
             lblMachineCode = new System.Windows.Forms.Label();
             txtMachineCode = new System.Windows.Forms.TextBox();
-            lblPurchaseDate = new System.Windows.Forms.Label();
-            dtpPurchaseDate = new System.Windows.Forms.DateTimePicker();
-            lblRegistrationDate = new System.Windows.Forms.Label();
-            dtpRegistrationDate = new System.Windows.Forms.DateTimePicker();
             chkIsRegistered = new System.Windows.Forms.CheckBox();
             lblRegistrationCode = new System.Windows.Forms.Label();
             txtRegistrationCode = new System.Windows.Forms.TextBox();
-            btnRegister = new System.Windows.Forms.Button();
+            btnGenerateMachineCode = new System.Windows.Forms.Button();
             lblRemarks = new System.Windows.Forms.Label();
             txtRemarks = new System.Windows.Forms.TextBox();
             lblDays = new System.Windows.Forms.Label();
             cmbDays = new System.Windows.Forms.ComboBox();
+            dtpRegistrationDate = new System.Windows.Forms.DateTimePicker();
+            dtpExpirationDate = new System.Windows.Forms.DateTimePicker();
+            dtpPurchaseDate = new System.Windows.Forms.DateTimePicker();
+            lblPurchaseDate = new System.Windows.Forms.Label();
+            lblRegistrationDate = new System.Windows.Forms.Label();
+            lblExpirationDate = new System.Windows.Forms.Label();
             groupBox2 = new System.Windows.Forms.GroupBox();
             checkedListBoxMod = new System.Windows.Forms.CheckedListBox();
             toolStrip1.SuspendLayout();
@@ -72,7 +74,7 @@ namespace RUINORERP.Server.Controls
             // 
             // toolStrip1
             // 
-            toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { tsbtnSaveRegInfo, toolStripSeparator1, tsbtnCreateRegInfo });
+            toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { tsbtnSaveRegInfo, toolStripSeparator1, tsbtnCreateRegInfo, toolStripSeparator2, tsbtnRenewRegInfo });
             toolStrip1.Location = new System.Drawing.Point(0, 0);
             toolStrip1.Name = "toolStrip1";
             toolStrip1.Size = new System.Drawing.Size(933, 25);
@@ -102,6 +104,20 @@ namespace RUINORERP.Server.Controls
             tsbtnCreateRegInfo.Text = "生成注册";
             tsbtnCreateRegInfo.Click += btnCreateRegInfo_Click;
             // 
+            // toolStripSeparator2
+            // 
+            toolStripSeparator2.Name = "toolStripSeparator2";
+            toolStripSeparator2.Size = new System.Drawing.Size(6, 25);
+            // 
+            // tsbtnRenewRegInfo
+            // 
+            tsbtnRenewRegInfo.Image = Properties.Resources.foward2;
+            tsbtnRenewRegInfo.ImageTransparentColor = System.Drawing.Color.Magenta;
+            tsbtnRenewRegInfo.Name = "tsbtnRenewRegInfo";
+            tsbtnRenewRegInfo.Size = new System.Drawing.Size(52, 22);
+            tsbtnRenewRegInfo.Text = "续期";
+            tsbtnRenewRegInfo.Click += btnRenewRegInfo_Click;
+            // 
             // groupBox1
             // 
             groupBox1.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
@@ -130,26 +146,26 @@ namespace RUINORERP.Server.Controls
             tableLayoutPanel1.Controls.Add(txtPhoneNumber, 1, 1);
             tableLayoutPanel1.Controls.Add(lblLicenseType, 2, 1);
             tableLayoutPanel1.Controls.Add(cmbLicenseType, 3, 1);
-            tableLayoutPanel1.Controls.Add(lblExpirationDate, 0, 2);
-            tableLayoutPanel1.Controls.Add(dtpExpirationDate, 1, 2);
             tableLayoutPanel1.Controls.Add(lblConcurrentUsers, 2, 2);
             tableLayoutPanel1.Controls.Add(txtConcurrentUsers, 3, 2);
             tableLayoutPanel1.Controls.Add(lblProductVersion, 0, 3);
             tableLayoutPanel1.Controls.Add(txtProductVersion, 1, 3);
             tableLayoutPanel1.Controls.Add(lblMachineCode, 2, 3);
             tableLayoutPanel1.Controls.Add(txtMachineCode, 3, 3);
-            tableLayoutPanel1.Controls.Add(lblPurchaseDate, 0, 4);
-            tableLayoutPanel1.Controls.Add(dtpPurchaseDate, 1, 4);
-            tableLayoutPanel1.Controls.Add(lblRegistrationDate, 2, 4);
-            tableLayoutPanel1.Controls.Add(dtpRegistrationDate, 3, 4);
             tableLayoutPanel1.Controls.Add(chkIsRegistered, 0, 5);
             tableLayoutPanel1.Controls.Add(lblRegistrationCode, 0, 6);
             tableLayoutPanel1.Controls.Add(txtRegistrationCode, 1, 6);
-            tableLayoutPanel1.Controls.Add(btnRegister, 3, 6);
+            tableLayoutPanel1.Controls.Add(btnGenerateMachineCode, 3, 6);
             tableLayoutPanel1.Controls.Add(lblRemarks, 0, 7);
             tableLayoutPanel1.Controls.Add(txtRemarks, 1, 7);
             tableLayoutPanel1.Controls.Add(lblDays, 2, 7);
             tableLayoutPanel1.Controls.Add(cmbDays, 3, 7);
+            tableLayoutPanel1.Controls.Add(dtpRegistrationDate, 1, 4);
+            tableLayoutPanel1.Controls.Add(dtpExpirationDate, 3, 4);
+            tableLayoutPanel1.Controls.Add(dtpPurchaseDate, 1, 2);
+            tableLayoutPanel1.Controls.Add(lblPurchaseDate, 0, 2);
+            tableLayoutPanel1.Controls.Add(lblRegistrationDate, 0, 4);
+            tableLayoutPanel1.Controls.Add(lblExpirationDate, 2, 4);
             tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             tableLayoutPanel1.Location = new System.Drawing.Point(4, 20);
             tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(4);
@@ -254,27 +270,6 @@ namespace RUINORERP.Server.Controls
             cmbLicenseType.TabIndex = 7;
             cmbLicenseType.SelectedIndexChanged += cmbLicenseType_SelectedIndexChanged;
             // 
-            // lblExpirationDate
-            // 
-            lblExpirationDate.AutoSize = true;
-            lblExpirationDate.Dock = System.Windows.Forms.DockStyle.Fill;
-            lblExpirationDate.Location = new System.Drawing.Point(4, 84);
-            lblExpirationDate.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            lblExpirationDate.Name = "lblExpirationDate";
-            lblExpirationDate.Size = new System.Drawing.Size(109, 42);
-            lblExpirationDate.TabIndex = 8;
-            lblExpirationDate.Text = "授权到期:";
-            lblExpirationDate.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            // 
-            // dtpExpirationDate
-            // 
-            dtpExpirationDate.Dock = System.Windows.Forms.DockStyle.Fill;
-            dtpExpirationDate.Location = new System.Drawing.Point(121, 88);
-            dtpExpirationDate.Margin = new System.Windows.Forms.Padding(4);
-            dtpExpirationDate.Name = "dtpExpirationDate";
-            dtpExpirationDate.Size = new System.Drawing.Size(334, 23);
-            dtpExpirationDate.TabIndex = 9;
-            // 
             // lblConcurrentUsers
             // 
             lblConcurrentUsers.AutoSize = true;
@@ -340,48 +335,6 @@ namespace RUINORERP.Server.Controls
             txtMachineCode.Size = new System.Drawing.Size(334, 23);
             txtMachineCode.TabIndex = 15;
             // 
-            // lblPurchaseDate
-            // 
-            lblPurchaseDate.AutoSize = true;
-            lblPurchaseDate.Dock = System.Windows.Forms.DockStyle.Fill;
-            lblPurchaseDate.Location = new System.Drawing.Point(4, 168);
-            lblPurchaseDate.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            lblPurchaseDate.Name = "lblPurchaseDate";
-            lblPurchaseDate.Size = new System.Drawing.Size(109, 42);
-            lblPurchaseDate.TabIndex = 16;
-            lblPurchaseDate.Text = "购买日期:";
-            lblPurchaseDate.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            // 
-            // dtpPurchaseDate
-            // 
-            dtpPurchaseDate.Dock = System.Windows.Forms.DockStyle.Fill;
-            dtpPurchaseDate.Location = new System.Drawing.Point(121, 172);
-            dtpPurchaseDate.Margin = new System.Windows.Forms.Padding(4);
-            dtpPurchaseDate.Name = "dtpPurchaseDate";
-            dtpPurchaseDate.Size = new System.Drawing.Size(334, 23);
-            dtpPurchaseDate.TabIndex = 17;
-            // 
-            // lblRegistrationDate
-            // 
-            lblRegistrationDate.AutoSize = true;
-            lblRegistrationDate.Dock = System.Windows.Forms.DockStyle.Fill;
-            lblRegistrationDate.Location = new System.Drawing.Point(463, 168);
-            lblRegistrationDate.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            lblRegistrationDate.Name = "lblRegistrationDate";
-            lblRegistrationDate.Size = new System.Drawing.Size(109, 42);
-            lblRegistrationDate.TabIndex = 18;
-            lblRegistrationDate.Text = "注册日期:";
-            lblRegistrationDate.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            // 
-            // dtpRegistrationDate
-            // 
-            dtpRegistrationDate.Dock = System.Windows.Forms.DockStyle.Fill;
-            dtpRegistrationDate.Location = new System.Drawing.Point(580, 172);
-            dtpRegistrationDate.Margin = new System.Windows.Forms.Padding(4);
-            dtpRegistrationDate.Name = "dtpRegistrationDate";
-            dtpRegistrationDate.Size = new System.Drawing.Size(334, 23);
-            dtpRegistrationDate.TabIndex = 19;
-            // 
             // chkIsRegistered
             // 
             chkIsRegistered.AutoSize = true;
@@ -416,17 +369,17 @@ namespace RUINORERP.Server.Controls
             txtRegistrationCode.Size = new System.Drawing.Size(334, 23);
             txtRegistrationCode.TabIndex = 22;
             // 
-            // btnRegister
+            // btnGenerateMachineCode
             // 
-            btnRegister.Dock = System.Windows.Forms.DockStyle.Fill;
-            btnRegister.Location = new System.Drawing.Point(580, 256);
-            btnRegister.Margin = new System.Windows.Forms.Padding(4);
-            btnRegister.Name = "btnRegister";
-            btnRegister.Size = new System.Drawing.Size(334, 34);
-            btnRegister.TabIndex = 23;
-            btnRegister.Text = "注册";
-            btnRegister.UseVisualStyleBackColor = true;
-            btnRegister.Click += btnRegister_Click;
+            btnGenerateMachineCode.Dock = System.Windows.Forms.DockStyle.Fill;
+            btnGenerateMachineCode.Location = new System.Drawing.Point(580, 256);
+            btnGenerateMachineCode.Margin = new System.Windows.Forms.Padding(4);
+            btnGenerateMachineCode.Name = "btnGenerateMachineCode";
+            btnGenerateMachineCode.Size = new System.Drawing.Size(334, 34);
+            btnGenerateMachineCode.TabIndex = 23;
+            btnGenerateMachineCode.Text = "生成机器码";
+            btnGenerateMachineCode.UseVisualStyleBackColor = true;
+            btnGenerateMachineCode.Click += btnGenerateMachineCode_Click;
             // 
             // lblRemarks
             // 
@@ -474,6 +427,68 @@ namespace RUINORERP.Server.Controls
             cmbDays.Size = new System.Drawing.Size(334, 25);
             cmbDays.TabIndex = 27;
             cmbDays.SelectedIndexChanged += cmbDays_SelectedIndexChanged;
+            // 
+            // dtpRegistrationDate
+            // 
+            dtpRegistrationDate.Dock = System.Windows.Forms.DockStyle.Fill;
+            dtpRegistrationDate.Location = new System.Drawing.Point(121, 172);
+            dtpRegistrationDate.Margin = new System.Windows.Forms.Padding(4);
+            dtpRegistrationDate.Name = "dtpRegistrationDate";
+            dtpRegistrationDate.Size = new System.Drawing.Size(334, 23);
+            dtpRegistrationDate.TabIndex = 19;
+            // 
+            // dtpExpirationDate
+            // 
+            dtpExpirationDate.Location = new System.Drawing.Point(580, 172);
+            dtpExpirationDate.Margin = new System.Windows.Forms.Padding(4);
+            dtpExpirationDate.Name = "dtpExpirationDate";
+            dtpExpirationDate.Size = new System.Drawing.Size(334, 23);
+            dtpExpirationDate.TabIndex = 9;
+            // 
+            // dtpPurchaseDate
+            // 
+            dtpPurchaseDate.Dock = System.Windows.Forms.DockStyle.Fill;
+            dtpPurchaseDate.Location = new System.Drawing.Point(121, 88);
+            dtpPurchaseDate.Margin = new System.Windows.Forms.Padding(4);
+            dtpPurchaseDate.Name = "dtpPurchaseDate";
+            dtpPurchaseDate.Size = new System.Drawing.Size(334, 23);
+            dtpPurchaseDate.TabIndex = 17;
+            // 
+            // lblPurchaseDate
+            // 
+            lblPurchaseDate.AutoSize = true;
+            lblPurchaseDate.Dock = System.Windows.Forms.DockStyle.Fill;
+            lblPurchaseDate.Location = new System.Drawing.Point(4, 84);
+            lblPurchaseDate.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            lblPurchaseDate.Name = "lblPurchaseDate";
+            lblPurchaseDate.Size = new System.Drawing.Size(109, 42);
+            lblPurchaseDate.TabIndex = 16;
+            lblPurchaseDate.Text = "购买日期:";
+            lblPurchaseDate.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
+            // lblRegistrationDate
+            // 
+            lblRegistrationDate.AutoSize = true;
+            lblRegistrationDate.Dock = System.Windows.Forms.DockStyle.Fill;
+            lblRegistrationDate.Location = new System.Drawing.Point(4, 168);
+            lblRegistrationDate.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            lblRegistrationDate.Name = "lblRegistrationDate";
+            lblRegistrationDate.Size = new System.Drawing.Size(109, 42);
+            lblRegistrationDate.TabIndex = 18;
+            lblRegistrationDate.Text = "注册日期:";
+            lblRegistrationDate.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
+            // lblExpirationDate
+            // 
+            lblExpirationDate.AutoSize = true;
+            lblExpirationDate.Dock = System.Windows.Forms.DockStyle.Fill;
+            lblExpirationDate.Location = new System.Drawing.Point(463, 168);
+            lblExpirationDate.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            lblExpirationDate.Name = "lblExpirationDate";
+            lblExpirationDate.Size = new System.Drawing.Size(109, 42);
+            lblExpirationDate.TabIndex = 8;
+            lblExpirationDate.Text = "授权到期:";
+            lblExpirationDate.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
             // groupBox2
             // 
@@ -525,6 +540,8 @@ namespace RUINORERP.Server.Controls
         private System.Windows.Forms.ToolStripButton tsbtnSaveRegInfo;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.ToolStripButton tsbtnCreateRegInfo;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
+        private System.Windows.Forms.ToolStripButton tsbtnRenewRegInfo;
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private System.Windows.Forms.Label lblCompanyName;
@@ -550,7 +567,7 @@ namespace RUINORERP.Server.Controls
         private System.Windows.Forms.CheckBox chkIsRegistered;
         private System.Windows.Forms.Label lblRegistrationCode;
         private System.Windows.Forms.TextBox txtRegistrationCode;
-        private System.Windows.Forms.Button btnRegister;
+        private System.Windows.Forms.Button btnGenerateMachineCode;
         private System.Windows.Forms.Label lblRemarks;
         private System.Windows.Forms.TextBox txtRemarks;
         private System.Windows.Forms.Label lblDays;

@@ -263,7 +263,8 @@ namespace RUINORERP.UI.Network.Services
             {
                 Message = response.Message,
                 HasDuplicateLogin = true,
-                CurrentSessionId = response.SessionId
+                CurrentSessionId = response.SessionId,
+                ExistingSessions = new List<ExistingSessionInfo>() // 初始化空列表，避免后续空引用异常
             };
 
             // 解析现有会话信息
@@ -292,7 +293,8 @@ namespace RUINORERP.UI.Network.Services
                 // 如果不需要用户确认，且所有会话都是本地的，则认为是本地重复登录
                 if (!requireUserConfirmation)
                 {
-                    duplicateInfo.IsLocalDuplicate = duplicateInfo.ExistingSessions.All(s => s.IsLocal);
+                    // 只有当存在会话且所有会话都是本地时，才认为是本地重复登录
+                    duplicateInfo.IsLocalDuplicate = duplicateInfo.ExistingSessions.Any() && duplicateInfo.ExistingSessions.All(s => s.IsLocal);
                 }
                 else
                 {
@@ -302,7 +304,8 @@ namespace RUINORERP.UI.Network.Services
             else
             {
                 // 兼容旧版本：根据会话信息判断
-                duplicateInfo.IsLocalDuplicate = duplicateInfo.ExistingSessions.All(s => s.IsLocal);
+                // 只有当存在会话且所有会话都是本地时，才认为是本地重复登录
+                duplicateInfo.IsLocalDuplicate = duplicateInfo.ExistingSessions.Any() && duplicateInfo.ExistingSessions.All(s => s.IsLocal);
             }
 
             return duplicateInfo;
@@ -317,9 +320,9 @@ namespace RUINORERP.UI.Network.Services
             bool requireUserConfirmation = false;
             if (duplicateInfo.HasDuplicateLogin)
             {
-                // 如果存在远程会话，需要用户确认
-                // 如果只有本地会话，则不需要确认，直接允许登录
-                requireUserConfirmation = duplicateInfo.ExistingSessions.Any(s => !s.IsLocal);
+                // 如果存在远程会话或者没有会话信息（但服务器返回了重复登录消息），需要用户确认
+                // 只有当明确有会话且所有会话都是本地时，才不需要确认
+                requireUserConfirmation = !duplicateInfo.ExistingSessions.Any() || duplicateInfo.ExistingSessions.Any(s => !s.IsLocal);
             }
 
             if (!requireUserConfirmation)

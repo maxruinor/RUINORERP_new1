@@ -125,6 +125,7 @@
     <None Remove="ConfigBySS\log4net.config" />
     <None Remove="ConfigFile\log4net.config" />
     <None Remove="configuration.json" />
+    <None Remove="Controls\RegistrationManagementControl.Designer.cs~RFb1d3700.TMP" />
     <None Remove="Log4net.config" />
     <None Remove="log4net_back.config" />
     <None Remove="Log4net_db.config" />

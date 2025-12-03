@@ -13,6 +13,7 @@ using RUINORERP.PacketSpec.Commands.Authentication;
 using RUINORERP.PacketSpec.Commands.Cache;
 using RUINORERP.PacketSpec.Errors;
 using RUINORERP.PacketSpec.Handlers;
+using RUINORERP.Server;
 using RUINORERP.PacketSpec.Models;
 using RUINORERP.PacketSpec.Models.Authentication;
 using RUINORERP.PacketSpec.Models.Common;
@@ -47,7 +48,8 @@ namespace RUINORERP.Server.Network.CommandHandlers
     public class LoginCommandHandler : BaseCommandHandler
     {
         private const int MaxLoginAttempts = 5;
-        private const int MaxConcurrentUsers = 1000;
+        // 最大并发用户数现在从注册信息中获取
+        private int MaxConcurrentUsers => frmMainNew.Instance?.registrationInfo?.ConcurrentUsers ?? 1000;
         private static readonly ConcurrentDictionary<string, int> _loginAttempts = new ConcurrentDictionary<string, int>();
         private static readonly object _lock = new object();
         /// <summary>

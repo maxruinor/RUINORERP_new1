@@ -109,20 +109,18 @@ namespace RUINORERP.UI.Forms
         /// </summary>
         private void SetupActionButtons()
         {
-            // 强制对方下线按钮
-            btnForceOffline.Text = "强制对方下线";
+            // 踢掉其他设备按钮
+            btnForceOffline.Text = "踢掉其他设备并继续登录";
             btnForceOffline.DialogResult = DialogResult.None;
             btnForceOffline.Click += BtnForceOffline_Click;
 
-            // 自己下线按钮
-            btnOfflineSelf.Text = "自己下线";
-            btnOfflineSelf.DialogResult = DialogResult.None;
-            btnOfflineSelf.Click += BtnOfflineSelf_Click;
-
-            // 取消登录按钮
-            btnCancelLogin.Text = "取消登录";
+            // 放弃登录按钮
+            btnCancelLogin.Text = "放弃登录";
             btnCancelLogin.DialogResult = DialogResult.None;
             btnCancelLogin.Click += BtnCancelLogin_Click;
+
+            // 隐藏自己下线按钮，因为用户要求只有两个明确选项
+            btnOfflineSelf.Visible = false;
 
             // 确认按钮
             btnConfirm.Text = "确认";
@@ -141,17 +139,17 @@ namespace RUINORERP.UI.Forms
         /// </summary>
         private void SetupButtonTooltips()
         {
-            btnForceOffline.ToolTipValues.Description = "将其他地方的登录踢下线，保持当前登录";
+            btnForceOffline.ToolTipValues.Description = "将其他设备上的登录踢下线，保持当前登录状态";
             btnForceOffline.ToolTipValues.EnableToolTips = true;
-            btnForceOffline.ToolTipValues.Heading = "强制对方下线";
+            btnForceOffline.ToolTipValues.Heading = "踢掉其他设备并继续登录";
 
             btnOfflineSelf.ToolTipValues.Description = "取消当前登录，保持其他地方的登录状态";
             btnOfflineSelf.ToolTipValues.EnableToolTips = true;
             btnOfflineSelf.ToolTipValues.Heading = "自己下线";
 
-            btnCancelLogin.ToolTipValues.Description = "取消本次登录操作";
+            btnCancelLogin.ToolTipValues.Description = "取消本次登录操作，返回登录界面";
             btnCancelLogin.ToolTipValues.EnableToolTips = true;
-            btnCancelLogin.ToolTipValues.Heading = "取消登录";
+            btnCancelLogin.ToolTipValues.Heading = "放弃登录";
 
             btnConfirm.ToolTipValues.Description = "执行选择的操作并继续";
             btnConfirm.ToolTipValues.EnableToolTips = true;
@@ -209,15 +207,19 @@ namespace RUINORERP.UI.Forms
         /// <param name="selectedButton">选中的按钮</param>
         private void UpdateButtonSelection(Krypton.Toolkit.KryptonButton selectedButton)
         {
-            // 重置所有按钮状态
+            // 重置所有可见按钮状态
             btnForceOffline.StateCommon.Back.Color1 = Color.FromArgb(240, 240, 240);
             btnForceOffline.StateCommon.Content.ShortText.Color1 = Color.FromArgb(51, 51, 51);
             
-            btnOfflineSelf.StateCommon.Back.Color1 = Color.FromArgb(240, 240, 240);
-            btnOfflineSelf.StateCommon.Content.ShortText.Color1 = Color.FromArgb(51, 51, 51);
-            
             btnCancelLogin.StateCommon.Back.Color1 = Color.FromArgb(240, 240, 240);
             btnCancelLogin.StateCommon.Content.ShortText.Color1 = Color.FromArgb(51, 51, 51);
+
+            // 只有在按钮可见时才处理自己下线按钮
+            if (btnOfflineSelf.Visible)
+            {
+                btnOfflineSelf.StateCommon.Back.Color1 = Color.FromArgb(240, 240, 240);
+                btnOfflineSelf.StateCommon.Content.ShortText.Color1 = Color.FromArgb(51, 51, 51);
+            }
 
             // 设置选中按钮状态
             if (selectedButton != null)
@@ -234,7 +236,7 @@ namespace RUINORERP.UI.Forms
         /// </summary>
         private void DuplicateLoginDialog_Load(object sender, EventArgs e)
         {
-            // 默认选择强制对方下线
+            // 默认选择踢掉其他设备并继续登录
             _selectedAction = DuplicateLoginAction.ForceOfflineOthers;
             UpdateButtonSelection(btnForceOffline);
         }

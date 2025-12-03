@@ -89,7 +89,7 @@ namespace RUINORERP.Server.Network.Core
 
         public int Serverport { get; set; } // 初始化为0，等待配置文件读取后设置
 
-        
+
         /// <summary>
         /// 启动服务器
         /// </summary>
@@ -198,153 +198,11 @@ namespace RUINORERP.Server.Network.Core
                            // 根据SuperSocket 2.0文档，配置应该从"serverOptions"节点读取
                            // 简化配置读取逻辑，统一从"serverOptions"节点读取配置
 
-                           // 已完全迁移到serverOptions配置节点，不再支持SuperSocket配置节
-
-                           try
-                           {
-                               // 尝试多种方式读取配置
-                               var serverOptionsSection = config.GetSection("serverOptions");
-
-                               // 使用serverOptions配置节
-                               if (serverOptionsSection != null && serverOptionsSection.GetChildren().Any())
-                               {
-                                   _logger.LogInformation("找到serverOptions配置节，开始读取配置");
-
-                                   // 方法1：直接绑定到ERPServerOptions
-                                   serverOptions = serverOptionsSection.Get<ERPServerOptions>();
-
-                                   // 如果方法1失败，尝试手动构建配置
-                                   if (serverOptions == null || serverOptions.Listeners == null || serverOptions.Listeners.Count == 0)
-                                   {
-                                       // 移除详细日志
-                                       // _logger.LogWarning("直接绑定配置失败，尝试手动读取监听器配置");
-                                       serverOptions = new ERPServerOptions();
-
-                                       // 手动读取监听器配置
-                                       var listenersSection = serverOptionsSection.GetSection("listeners");
-                                       if (listenersSection != null && listenersSection.GetChildren().Any())
-                                       {
-                                           var listeners = new List<ListenOptions>();
-                                           foreach (var listenerSection in listenersSection.GetChildren())
-                                           {
-                                               try
-                                               {
-                                                   var listener = new ListenOptions();
-
-                                                   // 尝试多种属性名变体
-                                                   var ip = listenerSection["ip"] ?? listenerSection["Ip"] ?? listenerSection["IP"] ?? "Any";
-                                                   var portStr = listenerSection["port"] ?? listenerSection["Port"] ?? "3009";
-                                                   listener.Ip = ip;
-                                                   if (int.TryParse(portStr, out int port))
-                                                   {
-                                                       listener.Port = port;
-                                                   }
-                                                   else
-                                                   {
-                                                       // 使用ListenerOptions类中的默认值
-                                                       listener.Port = new ListenOptions().Port;
-                                                       // 移除详细日志
-                                                       _logger.LogWarning($"无法解析端口值 '{portStr}'，使用默认值{listener.Port}");
-                                                   }
-
-                                                   listeners.Add(listener);
-                                                   // 移除详细日志
-                                                   _logger.LogInformation($"手动读取监听器: IP={listener.Ip}, Port={listener.Port}");
-                                               }
-                                               catch (Exception listenerEx)
-                                               {
-                                                   _logger.LogError(listenerEx, "读取单个监听器配置时发生错误");
-                                               }
-                                           }
-
-                                           if (listeners.Count > 0)
-                                           {
-                                               serverOptions.Listeners = listeners;
-                                               // 移除详细日志
-                                               // _logger.LogInformation($"手动构建配置成功，监听器数量: {listeners.Count}");
-                                           }
-                                       }
-                                   }
-
-                                   if (serverOptions == null)
-                                   {
-                                       _logger.LogWarning("无法从配置文件读取serverOptions配置，使用默认配置");
-                                       serverOptions = new ERPServerOptions();
-                                   }
-                                   else
-                                   {
-                                       // 移除详细日志
-                                       // _logger.LogInformation($"成功读取serverOptions配置，监听器数量: {serverOptions.Listeners?.Count ?? 0}");
-                                       if (serverOptions.Listeners?.Count > 0)
-                                       {
-                                           for (int i = 0; i < serverOptions.Listeners.Count; i++)
-                                           {
-                                               var listener = serverOptions.Listeners[i];
-                                               _logger.LogInformation($"监听器 {i + 1}: IP={listener.Ip}, Port={listener.Port}");
-                                           }
-                                       }
-                                   }
-                               }
-                               else
-                               {
-                                   _logger.LogWarning("未找到serverOptions配置节，使用默认配置");
-                                   serverOptions = new ERPServerOptions();
-                               }
-                           }
-                           catch (Exception ex)
-                           {
-                               _logger.LogError(ex, "读取serverOptions配置时发生错误，使用默认配置");
-                               serverOptions = new ERPServerOptions();
-                           }
-
                            // 确保至少有一个监听器配置
                            serverOptions.Validate();
+                         
 
-                           // 设置服务器端口和最大连接数
-                           if (serverOptions != null && serverOptions.Listeners?.Count > 0)
-                           {
-                               Serverport = serverOptions.Listeners[0].Port;
-                               // 移除详细日志
-                               // _logger.LogInformation($"设置主监听端口为: {Serverport}");
-
-                               // 验证所有监听器的配置
-                               for (int i = 0; i < serverOptions.Listeners.Count; i++)
-                               {
-                                   var listener = serverOptions.Listeners[i];
-
-                                   // 验证和修正IP地址
-                                   if (string.IsNullOrEmpty(listener.Ip))
-                                   {
-                                       listener.Ip = "Any";
-                                       _logger.LogWarning($"监听器 {i + 1} IP地址为空，设置为默认值: Any");
-                                   }
-                                   else
-                                   {
-                                       // 检查IP地址格式是否有效
-                                       if (listener.Ip != "Any" && !IPAddress.TryParse(listener.Ip, out _))
-                                       {
-                                           listener.Ip = "Any";
-                                           _logger.LogWarning($"监听器 {i + 1} IP地址格式无效，设置为默认值: Any");
-                                       }
-                                   }
-
-                                   // 验证和修正端口号
-                                   if (listener.Port <= 0 || listener.Port > 65535)
-                                   {
-                                       // 使用ListenerOptions类中的默认值
-                                       listener.Port = new ListenOptions().Port;
-                                       _logger.LogWarning($"监听器 {i + 1} 端口无效，设置为默认值: {listener.Port}");
-                                   }
-
-                               }
-                           }
-                           else
-                           {
-                               // 移除详细日志
-                               // _logger.LogWarning("配置中没有有效的监听器，使用默认端口: 7538");
-                           }
-
-                           (_sessionManager as SessionService)!.MaxSessionCount = serverOptions.MaxConnectionCount;
+                       (_sessionManager as SessionService)!.MaxSessionCount = serverOptions.MaxConnectionCount;
 
                            // 返回配置节点，以便SuperSocket可以使用
                            return config.GetSection("serverOptions");
@@ -360,14 +218,14 @@ namespace RUINORERP.Server.Network.Core
                     {
                         if (serverOptions != null)
                         {
-                                                     // 使用从配置中读取的serverOptions对象设置SuperSocket选项
+                            // 使用从配置中读取的serverOptions对象设置SuperSocket选项
                             options.Listeners = serverOptions.Listeners.Select(l => new ListenOptions
                             {
                                 Ip = l.Ip ?? "Any",  // 使用配置中的Ip，如果为空则使用默认值
                                 Port = l.Port
                             }).ToList();
 
-                           
+
                             options.MaxPackageLength = serverOptions.MaxPackageLength;
                             options.ReceiveBufferSize = serverOptions.ReceiveBufferSize;
                             options.SendBufferSize = serverOptions.SendBufferSize;
@@ -378,7 +236,7 @@ namespace RUINORERP.Server.Network.Core
                             // 如果设置了安全模式，则应用它
                             if (!string.IsNullOrEmpty(serverOptions.SecurityMode))
                             {
-                                
+
                                 foreach (var listener in options.Listeners)
                                 {
                                     listener.NoDelay = true; // 设置为true可以减少TCP延迟
@@ -389,7 +247,7 @@ namespace RUINORERP.Server.Network.Core
                         }
                         else
                         {
-                         
+
                             // 如果没有有效的配置，使用默认值
                             options.Listeners = new List<ListenOptions> { new ListenOptions { Ip = "Any", Port = Serverport } };
                         }
@@ -485,7 +343,7 @@ namespace RUINORERP.Server.Network.Core
             {
                 if (_host != null)
                 {
-    
+
                     await _host.StopAsync();
                     _host.Dispose();
                     _host = null;
@@ -505,7 +363,7 @@ namespace RUINORERP.Server.Network.Core
             }
         }
 
-        
+
         /// <summary>
         /// 获取服务器配置信息
         /// </summary>
@@ -560,7 +418,7 @@ namespace RUINORERP.Server.Network.Core
         }
 
 
- 
+
 
         /// <summary>
         /// 从全局服务提供者复制服务到当前服务集合
@@ -875,7 +733,7 @@ namespace RUINORERP.Server.Network.Core
             try
             {
                 var handlers = _commandDispatcher.GetAllHandlers();  // 直接调用具体类型方法
-                  foreach (var handler in handlers)
+                foreach (var handler in handlers)
                 {
 
                     // 记录支持的命令类型

@@ -19,83 +19,73 @@ namespace RUINORERP.UI.Forms
             this.lblTitle = new Krypton.Toolkit.KryptonLabel();
             this.lblMessage = new Krypton.Toolkit.KryptonLabel();
             this.lblInstruction = new Krypton.Toolkit.KryptonLabel();
-            this.lvExistingSessions = new Krypton.Toolkit.KryptonListView();
-            this.columnHeaderSessionId = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.columnHeaderLoginTime = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.columnHeaderClientIp = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.columnHeaderDeviceInfo = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.columnHeaderStatus = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.pnlSessionInfo = new Krypton.Toolkit.KryptonPanel();
+            this.lblSessionInfoLabel = new Krypton.Toolkit.KryptonLabel();
+            this.lblSessionInfo = new Krypton.Toolkit.KryptonLabel();
             this.pnlButtons = new Krypton.Toolkit.KryptonPanel();
             this.btnForceOffline = new Krypton.Toolkit.KryptonButton();
             this.btnOfflineSelf = new Krypton.Toolkit.KryptonButton();
             this.btnCancelLogin = new Krypton.Toolkit.KryptonButton();
             this.btnConfirm = new Krypton.Toolkit.KryptonButton();
-            this.pnlButtons.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pnlSessionInfo)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pnlButtons)).BeginInit();
             this.SuspendLayout();
             // 
             // lblTitle
             // 
-            this.lblTitle.Location = new System.Drawing.Point(20, 20);
+            // 
+            // lblTitle
+            // 
+            this.lblTitle.Location = new System.Drawing.Point(30, 25);
             this.lblTitle.Name = "lblTitle";
-            this.lblTitle.Size = new System.Drawing.Size(560, 30);
+            this.lblTitle.Size = new System.Drawing.Size(540, 35);
             this.lblTitle.TabIndex = 0;
-            this.lblTitle.Values.Text = "登录冲突";
+            this.lblTitle.Values.Text = "⚠️ 登录冲突";
+            this.lblTitle.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Bold);
+            this.lblTitle.StateCommon.ShortText.Color1 = System.Drawing.Color.FromArgb(220, 53, 69);
             // 
             // lblMessage
             // 
-            this.lblMessage.Location = new System.Drawing.Point(20, 60);
+            this.lblMessage.Location = new System.Drawing.Point(30, 70);
             this.lblMessage.Name = "lblMessage";
-            this.lblMessage.Size = new System.Drawing.Size(560, 40);
+            this.lblMessage.Size = new System.Drawing.Size(540, 50);
             this.lblMessage.TabIndex = 1;
-            this.lblMessage.Values.Text = "您的账号已在其他地方登录，请选择处理方式：";
+            this.lblMessage.Values.Text = "检测到您的账号已在其他设备或浏览器中登录，为了保护账号安全，请选择处理方式：";
+            this.lblMessage.Font = new System.Drawing.Font("微软雅黑", 9.5F);
+            this.lblMessage.StateCommon.ShortText.Color1 = System.Drawing.Color.FromArgb(52, 58, 64);
             // 
-            // lvExistingSessions
+            // pnlSessionInfo
             // 
-            this.lvExistingSessions.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
+            this.pnlSessionInfo.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.lvExistingSessions.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.columnHeaderSessionId,
-            this.columnHeaderLoginTime,
-            this.columnHeaderClientIp,
-            this.columnHeaderDeviceInfo,
-            this.columnHeaderStatus});
-            this.lvExistingSessions.FullRowSelect = true;
-            this.lvExistingSessions.GridLines = true;
-            this.lvExistingSessions.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Clickable;
-            this.lvExistingSessions.HideSelection = false;
-            this.lvExistingSessions.Location = new System.Drawing.Point(20, 110);
-            this.lvExistingSessions.MultiSelect = false;
-            this.lvExistingSessions.Name = "lvExistingSessions";
-            this.lvExistingSessions.Size = new System.Drawing.Size(560, 150);
-            this.lvExistingSessions.TabIndex = 2;
-            this.lvExistingSessions.UseCompatibleStateImageBehavior = false;
-            this.lvExistingSessions.View = System.Windows.Forms.View.Details;
+            this.pnlSessionInfo.Controls.Add(this.lblSessionInfoLabel);
+            this.pnlSessionInfo.Controls.Add(this.lblSessionInfo);
+            this.pnlSessionInfo.Location = new System.Drawing.Point(30, 130);
+            this.pnlSessionInfo.Name = "pnlSessionInfo";
+            this.pnlSessionInfo.Size = new System.Drawing.Size(540, 70);
+            this.pnlSessionInfo.TabIndex = 2;
+            // 移除边框设置，使用默认样式
             // 
-            // columnHeaderSessionId
+            // lblSessionInfoLabel
             // 
-            this.columnHeaderSessionId.Text = "会话ID";
-            this.columnHeaderSessionId.Width = 120;
+            this.lblSessionInfoLabel.Location = new System.Drawing.Point(15, 12);
+            this.lblSessionInfoLabel.Name = "lblSessionInfoLabel";
+            this.lblSessionInfoLabel.Size = new System.Drawing.Size(100, 25);
+            this.lblSessionInfoLabel.TabIndex = 0;
+            this.lblSessionInfoLabel.Values.Text = "📍 当前登录信息：";
+            this.lblSessionInfoLabel.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Bold);
+            this.lblSessionInfoLabel.StateCommon.ShortText.Color1 = System.Drawing.Color.FromArgb(52, 58, 64);
             // 
-            // columnHeaderLoginTime
+            // lblSessionInfo
             // 
-            this.columnHeaderLoginTime.Text = "登录时间";
-            this.columnHeaderLoginTime.Width = 140;
-            // 
-            // columnHeaderClientIp
-            // 
-            this.columnHeaderClientIp.Text = "客户端IP";
-            this.columnHeaderClientIp.Width = 100;
-            // 
-            // columnHeaderDeviceInfo
-            // 
-            this.columnHeaderDeviceInfo.Text = "设备信息";
-            this.columnHeaderDeviceInfo.Width = 120;
-            // 
-            // columnHeaderStatus
-            // 
-            this.columnHeaderStatus.Text = "状态";
-            this.columnHeaderStatus.Width = 80;
+            this.lblSessionInfo.Location = new System.Drawing.Point(15, 40);
+            this.lblSessionInfo.Name = "lblSessionInfo";
+            this.lblSessionInfo.Size = new System.Drawing.Size(510, 20);
+            this.lblSessionInfo.TabIndex = 1;
+            this.lblSessionInfo.Values.Text = "正在加载登录信息...";
+            this.lblSessionInfo.Font = new System.Drawing.Font("微软雅黑", 8.5F);
+            this.lblSessionInfo.StateCommon.ShortText.Color1 = System.Drawing.Color.FromArgb(73, 80, 87);
+
             // 
             // pnlButtons
             // 
@@ -105,61 +95,88 @@ namespace RUINORERP.UI.Forms
             this.pnlButtons.Controls.Add(this.btnOfflineSelf);
             this.pnlButtons.Controls.Add(this.btnCancelLogin);
             this.pnlButtons.Controls.Add(this.btnConfirm);
-            this.pnlButtons.Location = new System.Drawing.Point(20, 280);
+            this.pnlButtons.Location = new System.Drawing.Point(30, 215);
             this.pnlButtons.Name = "pnlButtons";
-            this.pnlButtons.Size = new System.Drawing.Size(560, 80);
+            this.pnlButtons.Size = new System.Drawing.Size(540, 85);
             this.pnlButtons.TabIndex = 3;
+            // 移除边框设置，使用默认样式
             // 
             // btnForceOffline
             // 
-            this.btnForceOffline.Location = new System.Drawing.Point(10, 10);
+            this.btnForceOffline.Location = new System.Drawing.Point(15, 20);
             this.btnForceOffline.Name = "btnForceOffline";
-            this.btnForceOffline.Size = new System.Drawing.Size(120, 35);
+            this.btnForceOffline.Size = new System.Drawing.Size(140, 40);
             this.btnForceOffline.TabIndex = 0;
-            this.btnForceOffline.Values.Text = "强制对方下线";
+            this.btnForceOffline.Values.Text = "🚫 强制对方下线";
+            this.btnForceOffline.Font = new System.Drawing.Font("微软雅黑", 9F);
+            this.btnForceOffline.ButtonStyle = Krypton.Toolkit.ButtonStyle.Standalone;
+            this.btnForceOffline.StateCommon.Back.Color1 = System.Drawing.Color.FromArgb(220, 53, 69);
+            this.btnForceOffline.StateCommon.Content.ShortText.Color1 = System.Drawing.Color.White;
+            this.btnForceOffline.StateCommon.Border.DrawBorders = Krypton.Toolkit.PaletteDrawBorders.None;
+            this.btnForceOffline.StateCommon.Border.Rounding = 6;
             // 
             // btnOfflineSelf
             // 
-            this.btnOfflineSelf.Location = new System.Drawing.Point(140, 10);
+            this.btnOfflineSelf.Location = new System.Drawing.Point(165, 20);
             this.btnOfflineSelf.Name = "btnOfflineSelf";
-            this.btnOfflineSelf.Size = new System.Drawing.Size(100, 35);
+            this.btnOfflineSelf.Size = new System.Drawing.Size(120, 40);
             this.btnOfflineSelf.TabIndex = 1;
-            this.btnOfflineSelf.Values.Text = "自己下线";
+            this.btnOfflineSelf.Values.Text = "👤 自己下线";
+            this.btnOfflineSelf.Font = new System.Drawing.Font("微软雅黑", 9F);
+            this.btnOfflineSelf.ButtonStyle = Krypton.Toolkit.ButtonStyle.Standalone;
+            this.btnOfflineSelf.StateCommon.Back.Color1 = System.Drawing.Color.FromArgb(255, 193, 7);
+            this.btnOfflineSelf.StateCommon.Content.ShortText.Color1 = System.Drawing.Color.White;
+            this.btnOfflineSelf.StateCommon.Border.DrawBorders = Krypton.Toolkit.PaletteDrawBorders.None;
+            this.btnOfflineSelf.StateCommon.Border.Rounding = 6;
             // 
             // btnCancelLogin
             // 
-            this.btnCancelLogin.Location = new System.Drawing.Point(250, 10);
+            this.btnCancelLogin.Location = new System.Drawing.Point(295, 20);
             this.btnCancelLogin.Name = "btnCancelLogin";
-            this.btnCancelLogin.Size = new System.Drawing.Size(100, 35);
+            this.btnCancelLogin.Size = new System.Drawing.Size(100, 40);
             this.btnCancelLogin.TabIndex = 2;
-            this.btnCancelLogin.Values.Text = "取消登录";
+            this.btnCancelLogin.Values.Text = "❌ 取消";
+            this.btnCancelLogin.Font = new System.Drawing.Font("微软雅黑", 9F);
+            this.btnCancelLogin.ButtonStyle = Krypton.Toolkit.ButtonStyle.Standalone;
+            this.btnCancelLogin.StateCommon.Back.Color1 = System.Drawing.Color.FromArgb(108, 117, 125);
+            this.btnCancelLogin.StateCommon.Content.ShortText.Color1 = System.Drawing.Color.White;
+            this.btnCancelLogin.StateCommon.Border.DrawBorders = Krypton.Toolkit.PaletteDrawBorders.None;
+            this.btnCancelLogin.StateCommon.Border.Rounding = 6;
             // 
             // btnConfirm
             // 
-            this.btnConfirm.Location = new System.Drawing.Point(470, 10);
+            this.btnConfirm.Location = new System.Drawing.Point(445, 20);
             this.btnConfirm.Name = "btnConfirm";
-            this.btnConfirm.Size = new System.Drawing.Size(80, 35);
+            this.btnConfirm.Size = new System.Drawing.Size(80, 40);
             this.btnConfirm.TabIndex = 3;
-            this.btnConfirm.Values.Text = "确认";
+            this.btnConfirm.Values.Text = "✓ 确认";
+            this.btnConfirm.Font = new System.Drawing.Font("微软雅黑", 9F);
+            this.btnConfirm.ButtonStyle = Krypton.Toolkit.ButtonStyle.Standalone;
+            this.btnConfirm.StateCommon.Back.Color1 = System.Drawing.Color.FromArgb(40, 167, 69);
+            this.btnConfirm.StateCommon.Content.ShortText.Color1 = System.Drawing.Color.White;
+            this.btnConfirm.StateCommon.Border.DrawBorders = Krypton.Toolkit.PaletteDrawBorders.None;
+            this.btnConfirm.StateCommon.Border.Rounding = 6;
             // 
             // lblInstruction
             // 
             this.lblInstruction.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.lblInstruction.Location = new System.Drawing.Point(20, 370);
+            this.lblInstruction.Location = new System.Drawing.Point(30, 310);
             this.lblInstruction.Name = "lblInstruction";
-            this.lblInstruction.Size = new System.Drawing.Size(400, 20);
+            this.lblInstruction.Size = new System.Drawing.Size(480, 25);
             this.lblInstruction.TabIndex = 4;
-            this.lblInstruction.Values.Text = "请选择处理方式后点击确认继续。";
+            this.lblInstruction.Values.Text = "💡 提示：选择处理方式后点击确认按钮继续操作";
+            this.lblInstruction.Font = new System.Drawing.Font("微软雅黑", 8.5F);
+            this.lblInstruction.StateCommon.ShortText.Color1 = System.Drawing.Color.FromArgb(108, 117, 125);
             // 
             // DuplicateLoginDialog
             // 
-            this.ClientSize = new System.Drawing.Size(600, 400);
+            this.ClientSize = new System.Drawing.Size(600, 350);
             this.Controls.Add(this.lblTitle);
             this.Controls.Add(this.lblMessage);
-            this.Controls.Add(this.lvExistingSessions);
+            this.Controls.Add(this.pnlSessionInfo);
             this.Controls.Add(this.pnlButtons);
             this.Controls.Add(this.lblInstruction);
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "DuplicateLoginDialog";
@@ -167,8 +184,10 @@ namespace RUINORERP.UI.Forms
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "重复登录确认";
+            this.BackColor = System.Drawing.Color.White;
             this.Load += new System.EventHandler(this.DuplicateLoginDialog_Load);
-            this.pnlButtons.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.pnlSessionInfo)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pnlButtons)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -178,12 +197,9 @@ namespace RUINORERP.UI.Forms
         private Krypton.Toolkit.KryptonLabel lblTitle;
         private Krypton.Toolkit.KryptonLabel lblMessage;
         private Krypton.Toolkit.KryptonLabel lblInstruction;
-        private Krypton.Toolkit.KryptonListView lvExistingSessions;
-        private System.Windows.Forms.ColumnHeader columnHeaderSessionId;
-        private System.Windows.Forms.ColumnHeader columnHeaderLoginTime;
-        private System.Windows.Forms.ColumnHeader columnHeaderClientIp;
-        private System.Windows.Forms.ColumnHeader columnHeaderDeviceInfo;
-        private System.Windows.Forms.ColumnHeader columnHeaderStatus;
+        private Krypton.Toolkit.KryptonPanel pnlSessionInfo;
+        private Krypton.Toolkit.KryptonLabel lblSessionInfoLabel;
+        private Krypton.Toolkit.KryptonLabel lblSessionInfo;
         private Krypton.Toolkit.KryptonPanel pnlButtons;
         private Krypton.Toolkit.KryptonButton btnForceOffline;
         private Krypton.Toolkit.KryptonButton btnOfflineSelf;

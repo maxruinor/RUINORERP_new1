@@ -39,21 +39,18 @@ namespace RUINORERP.UI.Forms
         {
             // 设置窗体属性
             this.Text = "重复登录确认";
-            this.Size = new Size(600, 400);
+            this.Size = new Size(600, 350);
             this.StartPosition = FormStartPosition.CenterParent;
-            this.FormBorderStyle = FormBorderStyle.FixedDialog;
+            this.FormBorderStyle = FormBorderStyle.None;
+            this.BackColor = Color.White;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
 
             // 设置标题
-            lblTitle.Text = "登录冲突";
-            lblTitle.Font = new Font("微软雅黑", 12f, FontStyle.Bold);
-            lblTitle.ForeColor = Color.FromArgb(51, 51, 51);
+            lblTitle.Values.Text = "⚠️ 登录冲突";
 
             // 设置消息内容
-            lblMessage.Text = _duplicateLoginResult.Message ?? "您的账号已在其他地方登录，请选择处理方式：";
-            lblMessage.Font = new Font("微软雅黑", 9f);
-            lblMessage.ForeColor = Color.FromArgb(85, 85, 85);
+            lblMessage.Values.Text = _duplicateLoginResult.Message ?? "检测到您的账号已在其他设备或浏览器中登录，为了保护账号安全，请选择处理方式：";
 
             // 设置现有会话信息
             DisplayExistingSessions();
@@ -62,9 +59,7 @@ namespace RUINORERP.UI.Forms
             SetupActionButtons();
 
             // 设置说明文本
-            lblInstruction.Text = "请选择处理方式后点击确认继续。";
-            lblInstruction.Font = new Font("微软雅黑", 8.5f);
-            lblInstruction.ForeColor = Color.FromArgb(128, 128, 128);
+            lblInstruction.Values.Text = "💡 提示：选择处理方式后点击确认按钮继续操作";
         }
 
         /// <summary>
@@ -74,33 +69,15 @@ namespace RUINORERP.UI.Forms
         {
             if (_duplicateLoginResult.ExistingSessions?.Count > 0)
             {
-                var sessions = _duplicateLoginResult.ExistingSessions;
-                lvExistingSessions.Items.Clear();
-
-                foreach (var session in sessions)
-                {
-                    var item = new ListViewItem(new string[]
-                    {
-                        session.SessionId ?? "未知",
-                        session.LoginTime.ToString("yyyy-MM-dd HH:mm:ss"),
-                        session.ClientIp ?? "未知",
-                        session.DeviceInfo ?? "未知设备",
-                        session.StatusDescription ?? "未知状态"
-                    })
-                    {
-                        Tag = session,
-                        BackColor = session.IsLocal ? Color.FromArgb(230, 255, 230) : Color.White
-                    };
-
-                    lvExistingSessions.Items.Add(item);
-                }
-
-                // 调整列宽
-                lvExistingSessions.Columns[0].Width = 120; // SessionId
-                lvExistingSessions.Columns[1].Width = 140; // LoginTime
-                lvExistingSessions.Columns[2].Width = 100; // ClientIp
-                lvExistingSessions.Columns[3].Width = 120; // DeviceInfo
-                lvExistingSessions.Columns[4].Width = 100; // StatusDescription
+                var session = _duplicateLoginResult.ExistingSessions[0]; // 获取第一个会话信息
+                
+                string sessionInfo = $"🕐 {session.LoginTime:yyyy-MM-dd HH:mm:ss} | 🌐 IP: {session.ClientIp} | 💻 {session.DeviceInfo} | 📊 {session.StatusDescription}";
+                
+                lblSessionInfo.Values.Text = sessionInfo;
+            }
+            else
+            {
+                lblSessionInfo.Values.Text = "❌ 未找到其他登录会话信息";
             }
         }
 
@@ -110,24 +87,28 @@ namespace RUINORERP.UI.Forms
         private void SetupActionButtons()
         {
             // 踢掉其他设备按钮
-            btnForceOffline.Text = "踢掉其他设备并继续登录";
+            btnForceOffline.Values.Text = "🚫 强制对方下线";
             btnForceOffline.DialogResult = DialogResult.None;
             btnForceOffline.Click += BtnForceOffline_Click;
 
+            // 自己下线按钮
+            btnOfflineSelf.Values.Text = "👤 自己下线";
+            btnOfflineSelf.DialogResult = DialogResult.None;
+            btnOfflineSelf.Click += BtnOfflineSelf_Click;
+            btnOfflineSelf.Visible = true; // 显示所有选项
+
             // 放弃登录按钮
-            btnCancelLogin.Text = "放弃登录";
+            btnCancelLogin.Values.Text = "❌ 取消";
             btnCancelLogin.DialogResult = DialogResult.None;
             btnCancelLogin.Click += BtnCancelLogin_Click;
 
-            // 隐藏自己下线按钮，因为用户要求只有两个明确选项
-            btnOfflineSelf.Visible = false;
-
             // 确认按钮
-            btnConfirm.Text = "确认";
+            btnConfirm.Values.Text = "✓ 确认";
             btnConfirm.DialogResult = DialogResult.OK;
             btnConfirm.ButtonStyle = Krypton.Toolkit.ButtonStyle.Standalone;
-            btnConfirm.StateCommon.Back.Color1 = Color.FromArgb(52, 168, 83);
+            btnConfirm.StateCommon.Back.Color1 = Color.FromArgb(40, 167, 69);
             btnConfirm.StateCommon.Content.ShortText.Color1 = Color.White;
+            btnConfirm.StateCommon.Border.Rounding = 6;
             btnConfirm.Click += BtnConfirm_Click;
 
             // 设置按钮工具提示
@@ -207,25 +188,32 @@ namespace RUINORERP.UI.Forms
         /// <param name="selectedButton">选中的按钮</param>
         private void UpdateButtonSelection(Krypton.Toolkit.KryptonButton selectedButton)
         {
-            // 重置所有可见按钮状态
-            btnForceOffline.StateCommon.Back.Color1 = Color.FromArgb(240, 240, 240);
-            btnForceOffline.StateCommon.Content.ShortText.Color1 = Color.FromArgb(51, 51, 51);
+            // 重置所有按钮到默认状态
+            btnForceOffline.StateCommon.Back.Color1 = Color.FromArgb(220, 53, 69);
+            btnForceOffline.StateCommon.Content.ShortText.Color1 = Color.White;
             
-            btnCancelLogin.StateCommon.Back.Color1 = Color.FromArgb(240, 240, 240);
-            btnCancelLogin.StateCommon.Content.ShortText.Color1 = Color.FromArgb(51, 51, 51);
+            btnOfflineSelf.StateCommon.Back.Color1 = Color.FromArgb(255, 193, 7);
+            btnOfflineSelf.StateCommon.Content.ShortText.Color1 = Color.White;
+            
+            btnCancelLogin.StateCommon.Back.Color1 = Color.FromArgb(108, 117, 125);
+            btnCancelLogin.StateCommon.Content.ShortText.Color1 = Color.White;
 
-            // 只有在按钮可见时才处理自己下线按钮
-            if (btnOfflineSelf.Visible)
-            {
-                btnOfflineSelf.StateCommon.Back.Color1 = Color.FromArgb(240, 240, 240);
-                btnOfflineSelf.StateCommon.Content.ShortText.Color1 = Color.FromArgb(51, 51, 51);
-            }
-
-            // 设置选中按钮状态
+            // 设置选中按钮状态（高亮显示）
             if (selectedButton != null)
             {
-                selectedButton.StateCommon.Back.Color1 = Color.FromArgb(52, 168, 83);
-                selectedButton.StateCommon.Content.ShortText.Color1 = Color.White;
+                // 临时改变选中按钮的颜色以示区别
+                if (selectedButton == btnForceOffline)
+                {
+                    btnForceOffline.StateCommon.Back.Color1 = Color.FromArgb(200, 35, 51); // 深红色
+                }
+                else if (selectedButton == btnOfflineSelf)
+                {
+                    btnOfflineSelf.StateCommon.Back.Color1 = Color.FromArgb(255, 170, 0); // 深黄色
+                }
+                else if (selectedButton == btnCancelLogin)
+                {
+                    btnCancelLogin.StateCommon.Back.Color1 = Color.FromArgb(88, 95, 102); // 深灰色
+                }
             }
         }
 

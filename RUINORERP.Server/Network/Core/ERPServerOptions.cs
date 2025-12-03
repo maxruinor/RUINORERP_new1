@@ -73,12 +73,9 @@ namespace RUINORERP.Server.Network.Core
         /// <summary>
         /// 服务器监听器列表
         /// 包含服务器需要监听的所有端点配置
-        /// 默认包含一个监听所有IPv4地址的监听器
+        /// 默认初始化为空列表，由配置系统填充实际的监听器配置
         /// </summary>
-        public List<ListenOptions> Listeners { get; set; } = new List<ListenOptions>
-        {
-            new ListenOptions() // 确保至少有一个默认监听器
-        };
+        public List<ListenOptions> Listeners { get; set; } = new List<ListenOptions>();
 
         /// <summary>
         /// 验证服务器配置的有效性

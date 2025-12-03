@@ -64,6 +64,7 @@ namespace RUINORERP.Server.Controls
             lblPurchaseDate = new System.Windows.Forms.Label();
             lblRegistrationDate = new System.Windows.Forms.Label();
             lblExpirationDate = new System.Windows.Forms.Label();
+            btnRenewRegInfo = new System.Windows.Forms.Button();
             groupBox2 = new System.Windows.Forms.GroupBox();
             checkedListBoxMod = new System.Windows.Forms.CheckedListBox();
             toolStrip1.SuspendLayout();
@@ -100,8 +101,8 @@ namespace RUINORERP.Server.Controls
             tsbtnCreateRegInfo.Image = Properties.Resources.add;
             tsbtnCreateRegInfo.ImageTransparentColor = System.Drawing.Color.Magenta;
             tsbtnCreateRegInfo.Name = "tsbtnCreateRegInfo";
-            tsbtnCreateRegInfo.Size = new System.Drawing.Size(76, 22);
-            tsbtnCreateRegInfo.Text = "生成注册";
+            tsbtnCreateRegInfo.Size = new System.Drawing.Size(52, 22);
+            tsbtnCreateRegInfo.Text = "注册";
             tsbtnCreateRegInfo.Click += btnCreateRegInfo_Click;
             // 
             // toolStripSeparator2
@@ -166,6 +167,7 @@ namespace RUINORERP.Server.Controls
             tableLayoutPanel1.Controls.Add(lblPurchaseDate, 0, 2);
             tableLayoutPanel1.Controls.Add(lblRegistrationDate, 0, 4);
             tableLayoutPanel1.Controls.Add(lblExpirationDate, 2, 4);
+            tableLayoutPanel1.Controls.Add(btnRenewRegInfo, 3, 5);
             tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             tableLayoutPanel1.Location = new System.Drawing.Point(4, 20);
             tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(4);
@@ -490,6 +492,18 @@ namespace RUINORERP.Server.Controls
             lblExpirationDate.Text = "授权到期:";
             lblExpirationDate.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
+            // btnRenewRegInfo
+            // 
+            btnRenewRegInfo.Dock = System.Windows.Forms.DockStyle.Fill;
+            btnRenewRegInfo.Location = new System.Drawing.Point(580, 214);
+            btnRenewRegInfo.Margin = new System.Windows.Forms.Padding(4);
+            btnRenewRegInfo.Name = "btnRenewRegInfo";
+            btnRenewRegInfo.Size = new System.Drawing.Size(334, 34);
+            btnRenewRegInfo.TabIndex = 28;
+            btnRenewRegInfo.Text = "我要续期";
+            btnRenewRegInfo.UseVisualStyleBackColor = true;
+            btnRenewRegInfo.Click += btnRenewRegInfo_Click_1;
+            // 
             // groupBox2
             // 
             groupBox2.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
@@ -574,5 +588,6 @@ namespace RUINORERP.Server.Controls
         private System.Windows.Forms.ComboBox cmbDays;
         private System.Windows.Forms.GroupBox groupBox2;
         private System.Windows.Forms.CheckedListBox checkedListBoxMod;
+        private System.Windows.Forms.Button btnRenewRegInfo;
     }
 }

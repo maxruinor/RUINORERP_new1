@@ -32,9 +32,9 @@ namespace RUINORERP.Server.Services
         /// <summary>
         /// 验证注册码
         /// </summary>
-        /// <param name="registrationInfo">注册信息</param>
+        /// <param name="registrationCode">注册码</param>
         /// <returns>验证是否通过</returns>
-        Task<bool> ValidateRegistrationAsync(tb_sys_RegistrationInfo registrationInfo);
+        Task<bool> ValidateRegistrationAsync(string registrationCode);
 
         /// <summary>
         /// 检查系统是否已注册
@@ -49,5 +49,12 @@ namespace RUINORERP.Server.Services
         /// <param name="registrationInfo">注册信息</param>
         /// <returns>是否过期</returns>
         bool IsRegistrationExpired(tb_sys_RegistrationInfo registrationInfo);
+
+        /// <summary>
+        /// 续期注册
+        /// </summary>
+        /// <param name="daysToAdd">要增加的天数</param>
+        /// <returns>是否成功续期</returns>
+        Task<bool> RenewRegistrationAsync(int daysToAdd);
     }
 }

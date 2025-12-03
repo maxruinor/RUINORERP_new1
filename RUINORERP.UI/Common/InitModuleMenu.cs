@@ -76,6 +76,14 @@ namespace RUINORERP.UI.Common
                 {
                     modules = modules.Where(m => m.Name != ModuleMenuDefine.模块定义.客户关系.ToString()).ToList();
                 }
+                if (!MainForm.Instance.AppContext.CanUsefunctionModules.Contains(Global.GlobalFunctionModule.财务模块))
+                {
+                    modules = modules.Where(m => m.Name != ModuleMenuDefine.模块定义.财务管理.ToString()).ToList();
+                }
+                if (!MainForm.Instance.AppContext.CanUsefunctionModules.Contains(Global.GlobalFunctionModule.生产模块))
+                {
+                    modules = modules.Where(m => m.Name != ModuleMenuDefine.模块定义.生产管理.ToString()).ToList();
+                }
 
                 // 从数据库加载现有模块数据（包含关联的菜单、按钮等信息）
                 var existModuleList = await MainForm.Instance.AppContext.Db.CopyNew()

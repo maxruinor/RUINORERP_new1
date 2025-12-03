@@ -1675,7 +1675,7 @@ namespace RUINORERP.Server
             RefreshCurrentTab();
         }
 
- 
+
         /// <summary>
         /// 更新服务器状态信息
         /// </summary>
@@ -1734,7 +1734,7 @@ namespace RUINORERP.Server
         /// <summary>
         /// 执行安全的日志操作 - 确保作为次要功能不影响主程序运行
         /// </summary>
-        private void SafeLogOperation(string msg, Color color)
+        public void SafeLogOperation(string msg, Color color)
         {
             // 最外层的安全检查 - 快速失败
             if (msg == null) return;
@@ -1745,7 +1745,7 @@ namespace RUINORERP.Server
             {
                 // 确保格式化消息有效且安全
                 string formattedMsg = $"[{DateTime.Now:HH:mm:ss}] {msg}\r\n";
-                
+
                 // 严格限制消息长度，防止过大的消息导致问题
                 if (formattedMsg.Length > 500)
                 {
@@ -1759,7 +1759,7 @@ namespace RUINORERP.Server
                     {
                         // 尝试使用UI控件日志
                         bool uiLogSuccess = TryUILogging(formattedMsg, color);
-                        
+
                         // 如果UI日志失败，尝试文件日志
                         if (!uiLogSuccess)
                         {
@@ -1787,7 +1787,7 @@ namespace RUINORERP.Server
         private bool TryUILogging(string logMessage, Color color)
         {
             bool success = false;
-            
+
             try
             {
                 // 检查控件状态
@@ -1808,10 +1808,10 @@ namespace RUINORERP.Server
 
                         // 安全地追加文本
                         richTextBoxLog.AppendText(logMessage);
-                        
+
                         // 尝试滚动到末尾，但失败也不影响
                         try { richTextBoxLog.ScrollToCaret(); } catch { }
-                        
+
                         success = true;
                     }
                     catch (AccessViolationException)
@@ -1831,7 +1831,7 @@ namespace RUINORERP.Server
                 // 任何异常都返回失败
                 success = false;
             }
-            
+
             return success;
         }
 
@@ -1846,20 +1846,20 @@ namespace RUINORERP.Server
             {
                 // 简化日志目录和文件名，减少IO操作
                 string logDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs");
-                
+
                 // 仅在目录不存在时创建，减少系统调用
                 if (!Directory.Exists(logDir))
                 {
                     try { Directory.CreateDirectory(logDir); }
                     catch { return; } // 创建失败则直接返回
                 }
-                
+
                 string logFile = Path.Combine(logDir, $"ServerLog_{DateTime.Now:yyyyMMdd}.txt");
-                
+
                 // 简化日志格式，减少字符串操作
                 string level = color == Color.Red ? "[错误] " : "[信息] ";
                 string fullLogMessage = $"{level}{logMessage}";
-                
+
                 // 使用更轻量级的文件写入方式
                 File.AppendAllText(logFile, fullLogMessage, Encoding.UTF8);
             }
@@ -1960,7 +1960,7 @@ namespace RUINORERP.Server
                     // 启动监控服务
                     var reminderService = Startup.GetFromFac<SmartReminderService>();
                     await Task.Run(async () => await reminderService.StartAsync(CancellationToken.None));
-                    
+
                     // 启动服务器锁管理器服务 - 直接通过接口调用，无需类型转换
                     var lockManager = Startup.GetFromFac<ILockManagerService>();
                     if (lockManager != null)
@@ -2230,7 +2230,7 @@ namespace RUINORERP.Server
             try
             {
                 PrintInfoLog("正在检查系统注册状态...");
-                
+
                 // 从依赖注入容器获取注册服务
                 var registrationService = Startup.GetFromFac<IRegistrationService>();
                 if (registrationService == null)
@@ -2252,12 +2252,12 @@ namespace RUINORERP.Server
 
                 // 检查注册状态
                 bool isRegistered = registrationService.CheckRegistered(registrationInfo);
-                
+
                 if (isRegistered)
                 {
                     PrintInfoLog($"系统注册验证成功，许可用户数: {registrationInfo.ConcurrentUsers}");
                     PrintInfoLog($"注册到期时间: {registrationInfo.ExpirationDate:yyyy-MM-dd HH:mm:ss}");
-                    
+
                     // 检查是否即将过期（7天内）
                     var daysUntilExpiration = registrationInfo.ExpirationDate - DateTime.Now;
                     if (daysUntilExpiration.TotalDays <= 7 && daysUntilExpiration.TotalDays > 0)
@@ -2268,7 +2268,7 @@ namespace RUINORERP.Server
                 else
                 {
                     PrintErrorLog("系统未注册或注册已过期，请及时进行系统注册");
-                    
+
                     // 检查是否过期
                     if (registrationService.IsRegistrationExpired(registrationInfo))
                     {
@@ -2312,7 +2312,7 @@ namespace RUINORERP.Server
             try
             {
                 PrintInfoLog("正在执行服务器启动时的注册验证...");
-                
+
                 // 从依赖注入容器获取注册服务
                 var registrationService = Startup.GetFromFac<IRegistrationService>();
                 if (registrationService == null)
@@ -2334,25 +2334,25 @@ namespace RUINORERP.Server
 
                 // 执行严格的注册验证
                 bool isRegistered = registrationService.CheckRegistered(registrationInfo);
-                
+
                 if (!isRegistered)
                 {
                     if (registrationService.IsRegistrationExpired(registrationInfo))
                     {
                         PrintErrorLog("注册许可已过期，服务器无法启动");
-                        MessageBox.Show("系统注册许可已过期，请联系软件提供商续期。", 
+                        MessageBox.Show("系统注册许可已过期，请联系软件提供商续期。",
                                       "注册过期", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
                     else if (!registrationInfo.IsRegistered)
                     {
                         PrintErrorLog("系统未注册，服务器无法启动");
-                        MessageBox.Show("系统未注册，请先进行系统注册。", 
+                        MessageBox.Show("系统未注册，请先进行系统注册。",
                                       "未注册", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     }
                     else
                     {
                         PrintErrorLog("注册信息验证失败，服务器无法启动");
-                        MessageBox.Show("注册信息验证失败，请检查注册码是否正确。", 
+                        MessageBox.Show("注册信息验证失败，请检查注册码是否正确。",
                                       "注册验证失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
                     return false;
@@ -2362,7 +2362,7 @@ namespace RUINORERP.Server
                 if (registrationInfo.ConcurrentUsers <= 0)
                 {
                     PrintErrorLog("注册许可的用户数配置无效，服务器无法启动");
-                    MessageBox.Show("注册许可的并发用户数配置无效。", 
+                    MessageBox.Show("注册许可的并发用户数配置无效。",
                                   "配置错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return false;
                 }
@@ -2372,7 +2372,7 @@ namespace RUINORERP.Server
                 if (daysUntilExpiration.TotalDays <= 0)
                 {
                     PrintErrorLog("注册许可已过期，服务器无法启动");
-                    MessageBox.Show("系统注册许可已过期，请联系软件提供商续期。", 
+                    MessageBox.Show("系统注册许可已过期，请联系软件提供商续期。",
                                   "注册过期", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return false;
                 }
@@ -2383,7 +2383,7 @@ namespace RUINORERP.Server
 
                 PrintInfoLog($"系统注册验证成功，许可用户数: {registrationInfo.ConcurrentUsers}");
                 PrintInfoLog($"注册到期时间: {registrationInfo.ExpirationDate:yyyy-MM-dd HH:mm:ss}");
-                
+
                 // 记录功能模块信息
                 if (!string.IsNullOrEmpty(registrationInfo.FunctionModule))
                 {
@@ -2405,7 +2405,7 @@ namespace RUINORERP.Server
             {
                 PrintErrorLog($"执行注册验证时发生错误: {ex.Message}");
                 _logger?.LogError(ex, "服务器启动时注册验证失败");
-                MessageBox.Show($"执行注册验证时发生错误: {ex.Message}", 
+                MessageBox.Show($"执行注册验证时发生错误: {ex.Message}",
                               "验证错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return false;
             }

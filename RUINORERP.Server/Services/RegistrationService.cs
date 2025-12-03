@@ -160,6 +160,8 @@ namespace RUINORERP.Server.Services
                 cols.Add("ProductVersion");
                 cols.Add("LicenseType");
                 cols.Add("FunctionModule");
+                // 确保机器码包含人数限制和时间等关键信息
+                cols.Add("PurchaseDate");
 
                 // 只序列化指定的列
                 JsonSerializerSettings settings = new JsonSerializerSettings
@@ -193,6 +195,11 @@ namespace RUINORERP.Server.Services
         /// <returns>注册是否有效</returns>
         public bool CheckRegistered(tb_sys_RegistrationInfo regInfo)
         {
+            if (regInfo == null)
+            {
+                return false;
+            }
+            
             string key = "ruinor1234567890"; // 这应该是一个密钥
             string machineCode = regInfo.MachineCode; // 这可能是计算机的硬件信息或唯一标识符
             // 假设用户输入的注册码
@@ -206,32 +213,67 @@ namespace RUINORERP.Server.Services
         /// <summary>
         /// 验证注册码
         /// </summary>
-        /// <param name="registrationInfo">注册信息</param>
+        /// <param name="registrationCode">注册码</param>
         /// <returns>验证是否通过</returns>
-        public async Task<bool> ValidateRegistrationAsync(tb_sys_RegistrationInfo registrationInfo)
+        public async Task<bool> ValidateRegistrationAsync(string registrationCode)
         {
             try
             {
-                if (registrationInfo == null)
+                // 获取当前注册信息
+                var regInfo = await GetRegistrationInfoAsync();
+                if (regInfo == null)
                 {
-                    _logger.LogWarning("注册信息为空");
+                    regInfo = new tb_sys_RegistrationInfo();
+                }
+
+                // 解密注册码
+                string key = "ruinor1234567890";
+                var decryptedData = HLH.Lib.Security.EncryptionHelper.AesDecrypt(registrationCode, key);
+                if (string.IsNullOrEmpty(decryptedData))
+                {
+                    _logger.LogWarning("注册码解密失败");
                     return false;
                 }
 
-                if (string.IsNullOrEmpty(registrationInfo.RegistrationCode))
+                // 解析注册信息
+                var parts = decryptedData.Split(new[] { "|" }, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length < 10)
                 {
-                    _logger.LogWarning("注册码为空");
+                    _logger.LogWarning("注册码格式不正确");
                     return false;
                 }
 
-                // 获取机器码
-                string machineCode = registrationInfo.MachineCode;
+                // 验证机器码是否匹配
+                if (parts[0] != regInfo.MachineCode)
+                {
+                    _logger.LogWarning("机器码不匹配");
+                    return false;
+                }
 
-                // 验证注册码，参数顺序：提供的注册码，密钥，机器码
-                bool isValid = _securityService.ValidateRegistrationCode(registrationInfo.RegistrationCode, "ruinor1234567890", machineCode);
+                // 验证产品版本是否匹配
+                if (parts[1] != Application.ProductVersion)
+                {
+                    _logger.LogWarning("产品版本不匹配");
+                    return false;
+                }
 
-                _logger.LogInformation($"注册码验证结果: {isValid}");
-                return isValid;
+                // 设置注册信息
+                regInfo.IsRegistered = true;
+                regInfo.RegistrationCode = registrationCode;
+                regInfo.CompanyName = parts[2];
+                regInfo.ContactName = parts[3];
+                regInfo.PhoneNumber = parts[4];
+                regInfo.LicenseType = parts[5];
+                regInfo.ConcurrentUsers = int.Parse(parts[6]);
+                regInfo.PurchaseDate = DateTime.Parse(parts[7]);
+                regInfo.RegistrationDate = regInfo.RegistrationDate == DateTime.MinValue ? DateTime.Now : regInfo.RegistrationDate;
+                regInfo.ExpirationDate = DateTime.Parse(parts[8]);
+                regInfo.FunctionModule = string.Join(",", parts[9].Split(','));
+
+                // 保存注册信息
+                await SaveRegistrationInfoAsync(regInfo);
+                _logger.LogInformation("注册信息验证并保存成功");
+                return true;
             }
             catch (Exception ex)
             {
@@ -252,14 +294,47 @@ namespace RUINORERP.Server.Services
             {
                 return true;
             }
-
+            
             // 检查授权到期日期
             if (registrationInfo.ExpirationDate < DateTime.Now)
             {
                 return true;
             }
-
+            
             return false;
+        }
+
+        /// <summary>
+        /// 续期授权
+        /// </summary>
+        /// <param name="daysToAdd">要增加的天数</param>
+        /// <returns>是否成功续期</returns>
+        public async Task<bool> RenewRegistrationAsync(int daysToAdd)
+        {
+            try
+            {
+                // 获取当前注册信息
+                var regInfo = await GetRegistrationInfoAsync();
+                if (regInfo == null || !regInfo.IsRegistered)
+                {
+                    _logger.LogWarning("当前没有有效的注册信息，无法续期");
+                    return false;
+                }
+
+                // 在当前过期日期基础上增加指定天数
+                DateTime currentExpirationDate = regInfo.ExpirationDate;
+                regInfo.ExpirationDate = currentExpirationDate.AddDays(daysToAdd);
+
+                // 保存更新后的注册信息
+                await SaveRegistrationInfoAsync(regInfo);
+                _logger.LogInformation($"授权成功续期{daysToAdd}天，新的过期日期为：{regInfo.ExpirationDate}");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "续期授权时发生错误");
+                return false;
+            }
         }
     }
 }

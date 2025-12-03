@@ -27,14 +27,20 @@ namespace RUINORERP.Global
         [Description("客户管理系统 (CRM)")]
         客户管理系统CRM = 1,
 
-        [Description("生产进销存 (ERP)")]
+        [Description("进销存 (ERP)")]
         生产进销存ERP = 2,
 
+        [Description("生产模块 (MRP)")]
+        生产模块 = 3,
+
+        [Description("财务模块 (FM)")]
+        财务模块 = 4,
+
         [Description("多公司经营功能")]
-        多公司经营功能 = 3,
+        多公司经营功能 = 5,
 
         [Description("伙伴数据分享功能")]
-        伙伴数据分享功能 = 4
+        伙伴数据分享功能 = 6
     }
 
 }

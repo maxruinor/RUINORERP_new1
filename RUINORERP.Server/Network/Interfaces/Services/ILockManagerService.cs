@@ -99,19 +99,19 @@ namespace RUINORERP.Server.Network.Interfaces.Services
         /// </summary>
         /// <param name="lockedDocument">锁定文档信息</param>
         Task BroadcastLockStatusAsync(LockInfo lockedDocument);
-        
+
         /// <summary>
         /// 广播锁定状态变化给所有客户端
         /// </summary>
         /// <param name="lockedDocuments">锁定文档信息列表</param>
-        Task BroadcastLockStatusAsync(IEnumerable<LockInfo> lockedDocuments);
-        
+        Task BroadcastLockStatusAsync(IEnumerable<LockInfo> lockedDocuments, bool NeedReponse = false);
+
         /// <summary>
         /// 广播锁定状态变化给所有客户端（与BroadcastLockStatusAsync相同功能）
         /// </summary>
         /// <param name="lockedDocuments">锁定文档信息列表</param>
         Task BroadcastLockStatusToAllClientsAsync(IEnumerable<LockInfo> lockedDocuments);
-        
+
         /// <summary>
         /// 启动锁管理服务
         /// </summary>

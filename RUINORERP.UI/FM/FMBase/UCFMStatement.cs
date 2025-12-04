@@ -278,34 +278,30 @@ namespace RUINORERP.UI.FM
             }
             InitLoadGrid();
 
-            if (entity.tb_FM_StatementDetails != null && entity.tb_FM_StatementDetails.Count > 0)
+            // 始终设置表格数据源，即使明细数据为空
+            details = entity.tb_FM_StatementDetails ?? new List<tb_FM_StatementDetail>();
+            bindingSourceSub.DataSource = details;
+
+            //新建和草稿时子表编辑也可以保存。
+            foreach (var item in details)
             {
-                details = entity.tb_FM_StatementDetails;
-                //新建和草稿时子表编辑也可以保存。
-                foreach (var item in entity.tb_FM_StatementDetails)
+                item.PropertyChanged += (sender, s1) =>
                 {
-                    item.PropertyChanged += (sender, s1) =>
+
+
+                    //权限允许
+                    if ((true && entity.StatementStatus == (int)StatementStatus.草稿) ||
+                    (true && entity.StatementStatus == (int)StatementStatus.已发送))
                     {
-
-
-                        //权限允许
-                        if ((true && entity.StatementStatus == (int)StatementStatus.草稿) ||
-                        (true && entity.StatementStatus == (int)StatementStatus.已发送))
-                        {
-                            EditEntity.ActionStatus = ActionStatus.修改;
-                        }
-
-
-                    };
-                }
-                sgh.LoadItemDataToGrid<tb_FM_StatementDetail>(grid1, sgd, entity.tb_FM_StatementDetails, c => c.ARAPId);
-                // 模拟按下 Tab 键
-                SendKeys.Send("{TAB}");//为了显示远程图片列
+                        EditEntity.ActionStatus = ActionStatus.修改;
+                    }
+                };
             }
-            else
-            {
-                sgh.LoadItemDataToGrid<tb_FM_StatementDetail>(grid1, sgd, new List<tb_FM_StatementDetail>(), c => c.ARAPId);
-            }
+
+            sgh.LoadItemDataToGrid<tb_FM_StatementDetail>(grid1, sgd, details, c => c.ARAPId);
+            // 模拟按下 Tab 键
+            SendKeys.Send("{TAB}");//为了显示远程图片列
+
             UIBizService.SynchronizeColumnOrder(sgd, listCols.Select(c => c.DisplayController).ToList());
             //如果属性变化 则状态为修改
             entity.PropertyChanged += async (sender, s2) =>
@@ -410,7 +406,7 @@ namespace RUINORERP.UI.FM
                     }
                 }
 
-                base.ToolBarEnabledControl(entity);
+              await  base.ToolBarEnabledControl(entity);
 
             };
 
@@ -593,9 +589,9 @@ namespace RUINORERP.UI.FM
             base.QueryConditionBuilder();
             //创建表达式
             var lambda = Expressionable.Create<tb_FM_Statement>()
-                              //.AndIF(CurMenuInfo.CaptionCN.Contains("客户"), t => t.IsCustomer == true)
-                              // .AndIF(CurMenuInfo.CaptionCN.Contains("供应商"), t => t.IsVendor == true)
-                              //.And(t => t.ReceivePaymentType == (int)PaymentType)
+                             //.AndIF(CurMenuInfo.CaptionCN.Contains("客户"), t => t.IsCustomer == true)
+                             // .AndIF(CurMenuInfo.CaptionCN.Contains("供应商"), t => t.IsVendor == true)
+                             //.And(t => t.ReceivePaymentType == (int)PaymentType)
                              .And(t => t.isdeleted == false)
                             //报销人员限制，财务不限制 自己的只能查自己的
                             .AndIF(AuthorizeController.GetSaleLimitedAuth(MainForm.Instance.AppContext), t => t.Created_by == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户,采购不限制

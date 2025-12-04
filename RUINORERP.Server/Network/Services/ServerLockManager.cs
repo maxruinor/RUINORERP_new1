@@ -73,7 +73,7 @@ namespace RUINORERP.Server.Network.Services
             var lockedDocuments = new List<LockInfo> { lockedDocument };
             await BroadcastLockStatusAsync(lockedDocuments);
         }
-        
+
         /// <summary>
         /// 广播锁定状态变化给所有客户端（与BroadcastLockStatusAsync相同功能）
         /// </summary>
@@ -87,7 +87,7 @@ namespace RUINORERP.Server.Network.Services
         /// 广播锁定状态变化到所有客户端
         /// </summary>
         /// <param name="lockedDocuments">锁定的单据信息列表</param>
-        public async Task BroadcastLockStatusAsync(IEnumerable<LockInfo> lockedDocuments)
+        public async Task BroadcastLockStatusAsync(IEnumerable<LockInfo> lockedDocuments, bool NeedReponse = false)
         {
             try
             {
@@ -107,16 +107,24 @@ namespace RUINORERP.Server.Network.Services
                 {
                     if (session is SessionInfo sessionInfo)
                     {
-                        var responsePacket = await _sessionService.SendCommandAndWaitForResponseAsync(
+                        if (NeedReponse)
+                        {
+                            var responsePacket = await _sessionService.SendCommandAndWaitForResponseAsync(
                             session.SessionID,
                          LockCommands.BroadcastLockStatus,
                             broadcastData
                              );
 
-                        if (responsePacket?.Response is MessageResponse response && response.IsSuccess)
-                        {
-                            successCount++;
+                            if (responsePacket?.Response is MessageResponse response && response.IsSuccess)
+                            {
+                                successCount++;
+                            }
                         }
+                        else
+                        {
+                            var responsePacket = await _sessionService.SendCommandAsync(session.SessionID, LockCommands.BroadcastLockStatus, broadcastData);
+                        }
+
                     }
                 }
             }

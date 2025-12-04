@@ -37,7 +37,6 @@ using RUINORERP.Global.EnumExt;
 using NPOI.SS.Formula.Functions;
 using System.Linq.Expressions;
 using RUINORERP.UI.StateManagement;
-using RUINORERP.UI.StateManagement.Core;
 using System.Web.UI;
 using Control = System.Windows.Forms.Control;
 using RUINORERP.Model.Base.StatusManager;
@@ -75,21 +74,6 @@ namespace RUINORERP.UI.BaseForm
         }
 
 
-        /// <summary>
-        /// 初始化按钮状态管理
-        /// </summary>
-        protected virtual void InitializeButtonStateManagement()
-        {
-            // 根据当前实体状态初始化按钮状态
-            if (this.ListDataSoure?.Current != null)
-            {
-                var entity = this.ListDataSoure.Current as BaseEntity;
-                if (entity != null)
-                {
-                    UpdateUIBasedOnEntityState(entity);
-                }
-            }
-        }
 
      
         /// <summary>
@@ -184,16 +168,6 @@ namespace RUINORERP.UI.BaseForm
             {
                 control.Enabled = enabled;
             }
-        }
-
-        /// <summary>
-        /// 更新工具栏按钮状态
-        /// </summary>
-        /// <param name="currentStatus">当前状态</param>
-        protected virtual void UpdateToolbarButtons(DataStatus currentStatus)
-        {
-            // 根据当前状态更新工具栏按钮的可见性和启用状态
-            // 子类可以重写此方法以实现特定的业务逻辑
         }
 
        
@@ -664,6 +638,11 @@ namespace RUINORERP.UI.BaseForm
 
         }
 
+        internal virtual void UpdateAllUIStates(BaseEntity entity)
+        {
+
+        }
+
         /// <summary>
         /// 传实体进去,具体在窗体那边判断    单据实体数据传入加载用
         /// </summary>
@@ -683,7 +662,7 @@ namespace RUINORERP.UI.BaseForm
                 }
 
                 // 根据实体状态更新UI
-                UpdateUIBasedOnEntityState(entity);
+                UpdateAllUIStates(entity);  
 
                 // 更新工具栏和操作按钮状态
                 UpdateToolBarState(entity);
@@ -693,75 +672,8 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
-
-
-        /// <summary>
-        /// 根据实体状态更新UI
-        /// </summary>
-        /// <param name="entity">实体对象</param>
-        /// <summary>
-        /// 根据实体状态更新UI - 使用V3状态管理系统优化版本
-        /// </summary>
-        /// <param name="entity">实体对象</param>
-        protected virtual void UpdateUIBasedOnEntityState(BaseEntity entity)
-        {
-            if (entity == null)
-                return;
-
-            // 检查是否使用新的状态管理系统
-            if (entity.IsStateManagerInitialized)
-            {
-                // 使用V3状态管理系统
-                UpdateUIWithV3StateManager(entity);
-            }
-            else
-            {
-                // 使用传统状态管理方式
-                //UpdateUIWithLegacyStatus(entity);
-            }
-        }
-
-        /// <summary>
-        /// 使用V3状态管理系统更新UI
-        /// </summary>
-        /// <param name="entity">实体对象</param>
-        private void UpdateUIWithV3StateManager(BaseEntity entity)
-        {
-            // 获取状态描述
-            //string statusDescription = entity.GetStatusDescription();
-
-            //// 更新状态显示
-            //UpdateStatusDisplay(statusDescription);
-
-            var dataStatus = _stateManager.GetDataStatus(entity);
-
-            // 更新控件编辑状态 - 使用V3状态管理系统
-            bool isEditable = false;
-            try
-            {
-                // 使用新的状态管理系统检查编辑权限
-                if (UIController != null && StatusContext != null)
-                {
-                    isEditable = UIController.CanExecuteAction(MenuItemEnums.修改, StatusContext);
-                }
-                else
-                {
-                    // 回退到旧系统
-                    isEditable = StatusHelper.IsEditableStatus(dataStatus);
-                }
-            }
-            catch (Exception ex)
-            {
-                // 如果状态管理系统出错，回退到原始逻辑
-                System.Diagnostics.Debug.WriteLine($"使用状态管理系统检查编辑权限失败: {ex.Message}");
-                isEditable = StatusHelper.IsEditableStatus(dataStatus);
-            }
-            SetControlsState(Controls, isEditable);
-
-            // 记录状态变更日志
-            LogStateChange(entity);
-        }
-
+ 
+ 
 
         /// <summary>
         /// 更新状态显示
@@ -821,16 +733,6 @@ namespace RUINORERP.UI.BaseForm
             // 子类重写此方法以具体实现子表操作的启用/禁用
         }
 
-
-
-        /// <summary>
-        /// 记录状态变更日志
-        /// </summary>
-        /// <param name="entity">实体对象</param>
-        protected virtual void LogStateChange(BaseEntity entity)
-        {
-            // 可以在这里添加状态变更日志记录
-        }
 
 
 
@@ -1337,7 +1239,7 @@ namespace RUINORERP.UI.BaseForm
             entity.StatusChanged += (sender, e) =>
             {
                 // 当实体状态变更时，更新UI
-                UpdateUIBasedOnEntityState(entity);
+                UpdateAllUIStates(entity); 
             };
         }
 

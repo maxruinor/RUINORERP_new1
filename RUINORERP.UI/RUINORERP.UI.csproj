@@ -2372,7 +2372,6 @@
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Startup.cs" />
-    <Compile Include="StateManagement\Core\StatusHelper.cs" />
     <!-- StatusTransitionContext.cs 已移至实体层，UI层不再包含此文件 -->
     <!-- <Compile Include="StateManagement\Core\StatusTransitionContext.cs" /> -->
     <Compile Include="StateManagement\StateAwareControl.cs">
@@ -5313,6 +5312,7 @@
     <Folder Include="Other\" />
     <Folder Include="PM\" />
     <Folder Include="RM\" />
+    <Folder Include="StateManagement\Core\" />
     <Folder Include="StateManagement\Documentation\" />
     <Folder Include="SysConfigFiles\" />
     <Folder Include="UCForm\" />

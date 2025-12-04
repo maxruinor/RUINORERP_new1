@@ -93,7 +93,6 @@ using RUINORERP.Business.CommService;
 using RUINOR.WinFormsUI.CustomPictureBox;
 using RUINORERP.PacketSpec.Models.Lock;
 using RUINORERP.UI.StateManagement.UI;
-using RUINORERP.UI.StateManagement.Core;
 using RUINORERP.Model.Base.StatusManager;
 
 namespace RUINORERP.UI.BaseForm
@@ -185,10 +184,25 @@ namespace RUINORERP.UI.BaseForm
             // 事件订阅将在OnStatusContextChanged方法中处理
 
             // 初始化泛型特定的按钮状态管理
-            InitializeGenericButtonStateManagement();
+            UpdateUIBasedOnGenericEntityState(EditEntity);
         }
 
 
+        /// <summary>
+        /// 初始化按钮状态管理
+        /// </summary>
+        protected virtual void InitializeButtonStateManagement()
+        {
+            // 根据当前实体状态初始化按钮状态
+            if (this.ListDataSoure?.Current != null)
+            {
+                var entity = this.ListDataSoure.Current as BaseEntity;
+                if (entity != null)
+                {
+                    UpdateAllUIStates(entity);
+                }
+            }
+        }
 
         /// <summary>
         /// 处理状态变更事件
@@ -203,9 +217,6 @@ namespace RUINORERP.UI.BaseForm
                 {
                     // 统一处理状态变更
                     OnEntityStateChanged(sender, e);
-
-                    // 记录状态变更日志
-                    logger?.Debug($"实体 {entity.GetType().Name} 状态从 {e.OldStatus} 变更为 {e.NewStatus}，原因：{e.Reason}");
                 }
             }
             catch (Exception ex)
@@ -296,30 +307,6 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
-
-        /// <summary>
-        /// 根据当前状态更新UI - 调用统一的UI状态更新方法
-        /// </summary>
-        protected virtual void UpdateUIByCurrentState()
-        {
-            if (EditEntity is BaseEntity baseEntity)
-            {
-                UpdateAllUIStates(baseEntity);
-            }
-        }
-
-
-        /// <summary>
-        /// 更新工具栏按钮状态 - 调用统一的按钮状态更新方法
-        /// </summary>
-        /// <param name="currentStatus">当前状态</param>
-        protected override void UpdateToolbarButtons(DataStatus currentStatus)
-        {
-            // 调用统一的按钮状态更新方法
-            UpdateAllButtonStates(currentStatus);
-            // 更新基于权限的按钮可见性
-            UpdatePermissionBasedButtonVisibility();
-        }
 
 
         /// <summary>
@@ -508,7 +495,7 @@ namespace RUINORERP.UI.BaseForm
         /// 统一更新所有UI状态 - 集中处理所有UI状态更新逻辑
         /// </summary>
         /// <param name="entity">实体对象</param>
-        protected virtual void UpdateAllUIStates(BaseEntity entity)
+        internal override void UpdateAllUIStates(BaseEntity entity)
         {
             if (entity == null) return;
 
@@ -564,20 +551,6 @@ namespace RUINORERP.UI.BaseForm
                     canDelete = UIController.CanExecuteAction(MenuItemEnums.删除, StatusContext);
                     canCancel = UIController.CanExecuteAction(MenuItemEnums.取消, StatusContext);
                 }
-                else if (StateManager != null && EditEntity is BaseEntity entity)
-                {
-                    // 如果UIController不可用，使用StateManager获取可执行的操作
-                    var availableActions = StatusHelper.GetAvailableActions(currentStatus);
-                    canModify = availableActions.Contains(MenuItemEnums.修改);
-                    canSave = availableActions.Contains(MenuItemEnums.保存);
-                    canSubmit = availableActions.Contains(MenuItemEnums.提交);
-                    canReview = availableActions.Contains(MenuItemEnums.审核);
-                    canReverseReview = availableActions.Contains(MenuItemEnums.反审);
-                    canCloseCase = availableActions.Contains(MenuItemEnums.结案);
-                    canAntiCloseCase = availableActions.Contains(MenuItemEnums.反结案);
-                    canDelete = availableActions.Contains(MenuItemEnums.删除);
-                    canCancel = availableActions.Contains(MenuItemEnums.取消);
-                }
 
                 // 统一更新按钮状态
                 toolStripbtnModify.Enabled = canModify;
@@ -631,18 +604,7 @@ namespace RUINORERP.UI.BaseForm
             // 这里可以添加子表特定的状态管理逻辑
         }
 
-        /// <summary>
-        /// 初始化泛型特定的按钮状态管理
-        /// </summary>
-        protected virtual void InitializeGenericButtonStateManagement()
-        {
-            // 根据当前实体状态初始化按钮状态
-            if (EditEntity != null)
-            {
-                UpdateUIBasedOnGenericEntityState(EditEntity);
-            }
-        }
-
+ 
 
 
 
@@ -695,14 +657,15 @@ namespace RUINORERP.UI.BaseForm
                     return true; // 新增操作总是允许
 
                 case MenuItemEnums.修改:
-                    return IsEditableStatus(currentStatus);
+                    // return IsEditableStatus(currentStatus);
+                    return UIController.CanExecuteAction(currentStatus as Enum, StatusContext);
 
                 case MenuItemEnums.保存:
-                    return IsEditableStatus(currentStatus);
-
+                    //return IsEditableStatus(currentStatus);
+                    return UIController.CanExecuteAction(currentStatus as Enum, StatusContext);
                 case MenuItemEnums.删除:
-                    return IsEditableStatus(currentStatus);
-
+                    //return IsEditableStatus(currentStatus);
+                    return UIController.CanExecuteAction(currentStatus as Enum, StatusContext);
                 case MenuItemEnums.提交:
                     return CanSubmitStatus(currentStatus);
 
@@ -723,42 +686,9 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
-        /// <summary>
-        /// 判断状态是否可编辑 - 使用新的状态管理系统
-        /// </summary>
-        /// <param name="status">状态对象</param>
-        /// <returns>是否可编辑</returns>
-        private bool IsEditableStatus(object status)
-        {
-            try
-            {
-                // 使用新的状态管理系统检查编辑权限
-                if (UIController != null && StatusContext != null)
-                {
-                    // 检查修改操作是否可用
-                    return UIController.CanExecuteAction(MenuItemEnums.修改, StatusContext);
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"使用状态管理系统检查编辑权限失败: {ex.Message}");
-            }
 
-            // 如果状态管理系统出错，回退到原始逻辑
-            return IsEditableStatusFallback(status);
-        }
 
-        /// <summary>
-        /// 回退的编辑状态检查方法（使用StatusHelper）- 已过时
-        /// </summary>
-        /// <param name="status">状态对象</param>
-        /// <returns>是否可编辑</returns>
-        [Obsolete("请使用V3状态管理系统的UIController.CanExecuteAction方法替代")]
-        private bool IsEditableStatusFallback(object status)
-        {
-            // 使用StatusHelper中的IsEditableStatus方法替换原始逻辑
-            return StatusHelper.IsEditableStatus(status);
-        }
+
 
         /// <summary>
         /// 判断状态是否可提交 - 使用新的状态管理系统
@@ -782,30 +712,9 @@ namespace RUINORERP.UI.BaseForm
             }
 
             // 如果状态管理系统出错，回退到原始逻辑
-            return CanSubmitStatusFallback(status);
-        }
-
-        /// <summary>
-        /// 回退的提交状态检查方法（使用StatusHelper）- 已过时
-        /// </summary>
-        /// <param name="status">状态对象</param>
-        /// <returns>是否可提交</returns>
-        [Obsolete("请使用V3状态管理系统的UIController.CanExecuteAction方法替代")]
-        private bool CanSubmitStatusFallback(object status)
-        {
-            // 使用StatusHelper中的IsApprovedStatus方法替换原始逻辑 - 已过时
-            // 提交状态通常对应于草稿状态
-            if (status is DataStatus dataStatus)
-                return !StatusHelper.IsApprovedStatus(dataStatus);
-            else if (status is PrePaymentStatus preStatus)
-                return !StatusHelper.IsApprovedStatus(preStatus);
-            else if (status is ARAPStatus arapStatus)
-                return !StatusHelper.IsApprovedStatus(arapStatus);
-            else if (status is PaymentStatus paymentStatus)
-                return !StatusHelper.IsApprovedStatus(paymentStatus);
-
             return false;
         }
+
 
         /// <summary>
         /// 判断状态是否可审核 - 使用新的状态管理系统
@@ -906,30 +815,9 @@ namespace RUINORERP.UI.BaseForm
             }
 
             // 如果状态管理系统出错，回退到原始逻辑
-            return CanReverseReviewStatusFallback(status);
-        }
-
-        /// <summary>
-        /// 回退的反审核状态检查方法（使用StatusHelper）- 已过时
-        /// </summary>
-        /// <param name="status">状态对象</param>
-        /// <returns>是否可反审核</returns>
-        [Obsolete("请使用V3状态管理系统的UIController.CanExecuteAction方法替代")]
-        private bool CanReverseReviewStatusFallback(object status)
-        {
-            // 使用StatusHelper中的IsApprovedStatus方法替换原始逻辑 - 已过时
-            // 反审核状态通常对应于已审核状态
-            if (status is DataStatus dataStatus)
-                return StatusHelper.IsApprovedStatus(dataStatus);
-            else if (status is PrePaymentStatus preStatus)
-                return preStatus == PrePaymentStatus.待核销 || preStatus == PrePaymentStatus.已生效;
-            else if (status is ARAPStatus arapStatus)
-                return arapStatus == ARAPStatus.待支付;
-            else if (status is PaymentStatus paymentStatus)
-                return false; // 付款状态不支持反审核
-
             return false;
         }
+
 
         /// <summary>
         /// 判断状态是否可结案 - 使用新的状态管理系统
@@ -953,30 +841,10 @@ namespace RUINORERP.UI.BaseForm
             }
 
             // 如果状态管理系统出错，回退到原始逻辑
-            return CanCloseCaseStatusFallback(status);
-        }
-
-        /// <summary>
-        /// 回退的结案状态检查方法（使用StatusHelper）- 已过时
-        /// </summary>
-        /// <param name="status">状态对象</param>
-        /// <returns>是否可结案</returns>
-        [Obsolete("请使用V3状态管理系统的UIController.CanExecuteAction方法替代")]
-        private bool CanCloseCaseStatusFallback(object status)
-        {
-            // 使用StatusHelper中的IsApprovedStatus方法替换原始逻辑 - 已过时
-            // 结案状态通常对应于已审核状态
-            if (status is DataStatus dataStatus)
-                return StatusHelper.IsApprovedStatus(dataStatus);
-            else if (status is PrePaymentStatus preStatus)
-                return preStatus == PrePaymentStatus.待核销;
-            else if (status is ARAPStatus arapStatus)
-                return arapStatus == ARAPStatus.待支付 || arapStatus == ARAPStatus.部分支付;
-            else if (status is PaymentStatus paymentStatus)
-                return paymentStatus == PaymentStatus.已支付;
-
             return false;
         }
+
+
 
         /// <summary>
         /// 判断状态是否可反结案 - 使用新的状态管理系统
@@ -1000,29 +868,10 @@ namespace RUINORERP.UI.BaseForm
             }
 
             // 如果状态管理系统出错，回退到原始逻辑
-            return CanAntiCloseCaseStatusFallback(status);
-        }
-
-        /// <summary>
-        /// 回退的反结案状态检查方法（使用StatusHelper）
-        /// </summary>
-        /// <param name="status">状态对象</param>
-        /// <returns>是否可反结案</returns>
-        private bool CanAntiCloseCaseStatusFallback(object status)
-        {
-            // 使用StatusHelper中的IsDisabledStatus方法替换原始逻辑
-            // 反结案状态通常对应于完结状态
-            if (status is DataStatus dataStatus)
-                return StatusHelper.IsDisabledStatus(dataStatus);
-            else if (status is PrePaymentStatus preStatus)
-                return preStatus == PrePaymentStatus.全额核销;
-            else if (status is ARAPStatus arapStatus)
-                return arapStatus == ARAPStatus.全部支付 || arapStatus == ARAPStatus.全部支付;
-            else if (status is PaymentStatus paymentStatus)
-                return paymentStatus == PaymentStatus.已支付;
-
             return false;
         }
+
+
 
         /// <summary>
         /// 根据状态更新子表操作 - 使用新的状态管理系统
@@ -1188,7 +1037,7 @@ namespace RUINORERP.UI.BaseForm
                 }
                 menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
                 _entityInfoService = Startup.GetFromFac<IEntityMappingService>();
-                
+
                 // 通过依赖注入获取缓存管理器
                 _cacheManager = Startup.GetFromFac<IEntityCacheManager>();
                 _tableSchemaManager = TableSchemaManager.Instance;
@@ -1973,8 +1822,6 @@ namespace RUINORERP.UI.BaseForm
                     toolStripButtonSave.Enabled = false;
                 }
 
-
-
                 #region 数据状态修改时也会影响到按钮
                 if (entity is BaseEntity currentEntity)
                 {
@@ -2107,8 +1954,8 @@ namespace RUINORERP.UI.BaseForm
                 {
                     // 获取业务状态
                     var businessStatusV3 = GetBusinessStatus(currentBaseEntity);
-                    // 锁定状态处理
-                    await HandleLockStatus(currentBaseEntity, businessStatusV3);
+                    //// 锁定状态处理
+                    //await HandleLockStatus(currentBaseEntity, businessStatusV3);
                 }
                 catch (Exception ex)
                 {
@@ -2116,7 +1963,7 @@ namespace RUINORERP.UI.BaseForm
                     // 回退到传统逻辑 - 直接获取业务状态
                     var businessStatus = GetBusinessStatus(entity as BaseEntity);
                     // 锁定状态处理
-                    await HandleLockStatus(entity as BaseEntity, businessStatus);
+                    //await HandleLockStatus(entity as BaseEntity, businessStatus);
                 }
             }
             else
@@ -2124,7 +1971,7 @@ namespace RUINORERP.UI.BaseForm
                 // 回退到传统逻辑 - 直接获取业务状态
                 var businessStatus = GetBusinessStatus(entity as BaseEntity);
                 // 锁定状态处理
-                await HandleLockStatus(entity as BaseEntity, businessStatus);
+                //await HandleLockStatus(entity as BaseEntity, businessStatus);
             }
 
 
@@ -2268,8 +2115,10 @@ namespace RUINORERP.UI.BaseForm
                 try
                 {
                     // 使用V3状态管理系统的按钮控制
-                    UpdateUIByCurrentState();
-
+                    if (EditEntity is BaseEntity baseEntity)
+                    {
+                        UpdateAllUIStates(baseEntity);
+                    }
 
                     return;
                 }
@@ -2391,6 +2240,7 @@ namespace RUINORERP.UI.BaseForm
 
         /// <summary>
         /// 处理单据锁定状态，更新UI显示
+        /// ToolBarEnabledControl引用了。暂时注释了
         /// </summary>
         /// <param name="entity">单据实体</param>
         /// <param name="businessStatus">业务状态</param>
@@ -3037,6 +2887,7 @@ namespace RUINORERP.UI.BaseForm
                     Add();
                     break;
                 case MenuItemEnums.取消:
+                    UNLock();
                     Cancel();
                     break;
                 case MenuItemEnums.复制性新增:
@@ -3062,7 +2913,14 @@ namespace RUINORERP.UI.BaseForm
                     {
                         return;
                     }
-                    await LockBill();
+                    if (lockStatusModify.LockInfo == null)
+                    {
+                        var locked = await LockBill();
+                        if (!locked)
+                        {
+                            MainForm.Instance.PrintInfoLog("锁定单据失败，无法操作");
+                        }
+                    }
                     Modify();
                     break;
                 case MenuItemEnums.查询:
@@ -3102,6 +2960,7 @@ namespace RUINORERP.UI.BaseForm
                         if (!rsSave)
                         {
                             toolStripButtonSave.Enabled = true;
+                            await LockBill();
                         }
                     }
                     else
@@ -3707,7 +3566,7 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
-        
+
 
         /// <summary>
         /// 锁定单据方法，支持直接传入参数或从EditEntity获取
@@ -4782,11 +4641,6 @@ namespace RUINORERP.UI.BaseForm
                 return;
             }
 
-            // 在修改前检查锁定状态
-            _ = Task.Run(async () =>
-            {
-                await CheckLockStatusAndUpdateUI(editEntity);
-            });
             // 获取状态类型和值
             var statusType = FMPaymentStatusHelper.GetStatusType(editEntity as BaseEntity);
             if (statusType != null)
@@ -6291,20 +6145,6 @@ namespace RUINORERP.UI.BaseForm
                             bindingSourceSub.Clear();
                             OnBindDataToUIEvent(EditEntity, ActionStatus.加载);
 
-                            //if (pkentity.PrimaryKeyID > 0)
-                            //{
-                            //    //可以修改
-                            //    if (pkentity.ContainsProperty(typeof(DataStatus).Name))
-                            //    {
-                            //        if (pkentity.GetPropertyValue(typeof(DataStatus).Name).ToString() == ((int)DataStatus.草稿).ToString() ||
-                            //               pkentity.GetPropertyValue(typeof(DataStatus).Name).ToString() == ((int)DataStatus.新建).ToString())
-                            //        {
-                            //            toolStripbtnModify.Enabled = true;
-                            //            toolStripbtnSubmit.Enabled = true;
-                            //            toolStripbtnReview.Enabled = true;
-                            //        }
-                            //    }
-                            //}
 
                             await ToolBarEnabledControl(pkentity);
                         }
@@ -6329,20 +6169,7 @@ namespace RUINORERP.UI.BaseForm
                                     editEntity = Activator.CreateInstance<T>();
                                 }
                                 OnBindDataToUIEvent(EditEntity, ActionStatus.加载);
-                                //if (pkentity.PrimaryKeyID > 0)
-                                //{
-                                //    //可以修改
-                                //    if (pkentity.ContainsProperty(typeof(DataStatus).Name))
-                                //    {
-                                //        if (pkentity.GetPropertyValue(typeof(DataStatus).Name).ToString() == ((int)DataStatus.草稿).ToString() ||
-                                //               pkentity.GetPropertyValue(typeof(DataStatus).Name).ToString() == ((int)DataStatus.新建).ToString())
-                                //        {
-                                //            toolStripbtnModify.Enabled = true;
-                                //            toolStripbtnSubmit.Enabled = true;
-                                //            toolStripbtnReview.Enabled = true;
-                                //        }
-                                //    }
-                                //}
+
                                 //刷新了。不再提示编辑状态了
                                 Edited = false;
                                 await ToolBarEnabledControl(pkentity);

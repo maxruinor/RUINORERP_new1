@@ -343,7 +343,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 }
 
                 // 广播锁状态
-                await BroadcastLockStatusToAllClientsAsync(new List<LockInfo> { validation.LockRequest.LockInfo });
+                await _lockManagerService.BroadcastLockStatusToAllClientsAsync(new List<LockInfo> { validation.LockRequest.LockInfo });
 
                 var response = ResponseFactory.CreateSpecificSuccessResponse(cmd.Packet.ExecutionContext, "锁状态广播成功");
 
@@ -356,71 +356,5 @@ namespace RUINORERP.Server.Network.CommandHandlers
             }
         }
 
-        /// <summary>
-        /// 广播锁定状态变化到所有客户端
-        /// </summary>
-        /// <param name="lockedDocuments">锁定的单据信息列表</param>
-        private async Task BroadcastLockStatusToAllClientsAsync(IEnumerable<LockInfo> lockedDocuments)
-        {
-            try
-            {
-                // 创建广播数据
-                var broadcastData = new LockRequest
-                {
-                    LockedDocuments = lockedDocuments?.ToList() ?? new List<LockInfo>(),
-                    Timestamp = DateTime.UtcNow
-                };
-
-
-                // 获取所有用户会话
-                var sessions = _sessionService.GetAllUserSessions();
-
-                // 向所有会话发送消息并等待响应
-                int successCount = 0;
-                foreach (var session in sessions)
-                {
-                    if (session is SessionInfo sessionInfo)
-                    {
-                        var responsePacket = await _sessionService.SendCommandAndWaitForResponseAsync(
-                            session.SessionID,
-                         LockCommands.BroadcastLockStatus,
-                            broadcastData
-                             );
-
-                        if (responsePacket?.Response is MessageResponse response && response.IsSuccess)
-                        {
-                            successCount++;
-                        }
-                    }
-                }
-
-                //await _sessionService.SendCommandAsync(LockCommands.BroadcastLockStatus, broadcastRequest);
-
-                _logger.LogInformation($"广播锁定状态变化，当前锁定单据数: {lockedDocuments?.Count() ?? 0}");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"广播锁定状态变化到所有客户端时发生异常: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// 广播锁定状态变化
-        /// </summary>
-        private async Task BroadcastLockStatusAsync()
-        {
-            try
-            {
-                // 获取所有锁定的单据信息
-                var lockedDocuments = _lockManagerService.GetAllLockedDocuments();
-
-                // 广播到所有客户端
-                await BroadcastLockStatusToAllClientsAsync(lockedDocuments);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"广播锁定状态变化时发生异常: {ex.Message}");
-            }
-        }
     }
 }

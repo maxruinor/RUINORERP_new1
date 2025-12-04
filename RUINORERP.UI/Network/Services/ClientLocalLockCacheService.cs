@@ -27,7 +27,7 @@ namespace RUINORERP.UI.Network.Services
         /// <summary>
         /// 缓存过期时间（分钟）
         /// </summary>
-        private const int CACHE_EXPIRY_MINUTES = 5;
+        private const int CACHE_EXPIRY_MINUTES = 15;
 
         /// <summary>
         /// 同步间隔（分钟）

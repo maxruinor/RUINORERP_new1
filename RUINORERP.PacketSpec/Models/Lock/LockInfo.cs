@@ -145,7 +145,7 @@ namespace RUINORERP.PacketSpec.Models.Lock
         /// </summary>
         public bool IsExpired
         {
-            get { return !ExpireTime.HasValue || DateTime.Now > ExpireTime.Value; }
+            get { return ExpireTime.HasValue && DateTime.Now > ExpireTime.Value; }
         }
 
      
@@ -252,6 +252,41 @@ namespace RUINORERP.PacketSpec.Models.Lock
         }
 
         /// <summary>
+        /// 统一状态检查方法，整合所有锁定状态相关的检查逻辑
+        /// 用于简化权限判断和状态管理，避免重复实现
+        /// </summary>
+        /// <param name="currentUserId">当前用户ID</param>
+        /// <param name="currentSessionId">当前会话ID（可选）</param>
+        /// <returns>包含检查结果的元组</returns>
+        public (bool IsValid, bool IsLockedByCurrentUser, bool IsExpired, string StatusMessage)
+            CheckLockStatus(long currentUserId, string currentSessionId = null)
+        {
+            // 检查锁是否存在且处于锁定状态
+            if (!IsLocked)
+            {
+                return (false, false, false, "单据未被锁定");
+            }
+
+            // 检查锁是否已过期
+            if (IsExpired)
+            {
+                return (false, false, true, "锁定已过期");
+            }
+
+            // 检查锁是否属于当前用户
+            bool isOwnedByCurrentUser = IsOwnedByCurrentUser(currentUserId, currentSessionId);
+
+            if (isOwnedByCurrentUser)
+            {
+                return (true, true, false, "当前用户拥有锁定");
+            }
+            else
+            {
+                return (true, false, false, "单据被其他用户锁定");
+            }
+        }
+
+        /// <summary>
         /// 创建新的锁定信息实例
         /// </summary>
         /// <param name="billId">单据ID</param>
@@ -260,13 +295,16 @@ namespace RUINORERP.PacketSpec.Models.Lock
         /// <param name="userName">用户名</param>
         /// <param name="menuId">菜单ID</param>
         /// <param name="sessionId">会话ID</param>
-        /// <param name="expireTime">过期时间</param>
+        /// <param name="expireTime">过期时间（默认30分钟）</param>
         /// <returns>锁定信息实例</returns>
         public static LockInfo Create(long billId, string billNo, long userId, string userName, long menuId,
             string sessionId, DateTime? expireTime = null)
         {
             var now = DateTime.Now;
-            var duration = expireTime.HasValue ? (long)(expireTime.Value - now).TotalMilliseconds : 300000; // 默认5分钟
+            // 确保所有锁都有默认的30分钟过期时间
+            var effectiveExpireTime = expireTime ?? now.AddMinutes(30);
+            var duration = (long)(effectiveExpireTime - now).TotalMilliseconds;
+            
             return new LockInfo
             {
                 BillID = billId,
@@ -275,7 +313,7 @@ namespace RUINORERP.PacketSpec.Models.Lock
                 LockedUserName = userName,
                 MenuID = menuId,
                 SessionId = sessionId,
-                ExpireTime = expireTime ?? now.AddMinutes(5),
+                ExpireTime = effectiveExpireTime,
                 LockTime = now,
                 LastHeartbeat = now,
                 LastUpdateTime = now,

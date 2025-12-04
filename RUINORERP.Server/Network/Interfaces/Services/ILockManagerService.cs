@@ -11,11 +11,11 @@ namespace RUINORERP.Server.Network.Interfaces.Services
     public interface ILockManagerService
     {
         /// <summary>
-    /// 尝试锁定单据
-    /// </summary>
-    /// <param name="lockInfo">锁定信息</param>
-    /// <returns>锁定结果，包含成功状态和详细信息</returns>
-    Task<LockResponse> TryLockDocumentAsync(LockInfo lockInfo);
+        /// 尝试锁定单据
+        /// </summary>
+        /// <param name="lockInfo">锁定信息</param>
+        /// <returns>锁定结果，包含成功状态和详细信息</returns>
+        Task<LockResponse> TryLockDocumentAsync(LockInfo lockInfo);
 
         /// <summary>
         /// 解锁单据
@@ -42,9 +42,9 @@ namespace RUINORERP.Server.Network.Interfaces.Services
         /// 根据业务类型解锁单据
         /// </summary>
         /// <param name="userId">用户ID</param>
-        /// <param name="billType">单据类型</param>
+        /// <param name="bizType">业务类型</param>
         /// <returns>解锁结果，包含成功状态和详细信息</returns>
-        Task<LockResponse> UnlockDocumentsByBizNameAsync(long userId, int billType);
+        Task<LockResponse> UnlockDocumentsByBizNameAsync(long userId, int bizType);
 
         /// <summary>
         /// 强制解锁单据（管理员操作）
@@ -65,7 +65,7 @@ namespace RUINORERP.Server.Network.Interfaces.Services
         /// </summary>
         /// <param name="refuseInfo">拒绝信息</param>
         /// <returns>拒绝结果，包含成功状态和详细信息</returns>
-        Task<LockResponse> RefuseUnlockRequestAsync(LockRequest refuseInfo);
+        Task<LockResponse> RefuseUnlockRequestAsync(LockRequest request);
         
         /// <summary>
         /// 检查用户是否有权限修改单据
@@ -95,6 +95,24 @@ namespace RUINORERP.Server.Network.Interfaces.Services
         LockInfoStatistics GetLockStatistics();
         
         /// <summary>
+        /// 广播锁定状态变化给所有客户端
+        /// </summary>
+        /// <param name="lockedDocument">锁定文档信息</param>
+        Task BroadcastLockStatusAsync(LockInfo lockedDocument);
+        
+        /// <summary>
+        /// 广播锁定状态变化给所有客户端
+        /// </summary>
+        /// <param name="lockedDocuments">锁定文档信息列表</param>
+        Task BroadcastLockStatusAsync(IEnumerable<LockInfo> lockedDocuments);
+        
+        /// <summary>
+        /// 广播锁定状态变化给所有客户端（与BroadcastLockStatusAsync相同功能）
+        /// </summary>
+        /// <param name="lockedDocuments">锁定文档信息列表</param>
+        Task BroadcastLockStatusToAllClientsAsync(IEnumerable<LockInfo> lockedDocuments);
+        
+        /// <summary>
         /// 启动锁管理服务
         /// </summary>
         Task StartAsync();
@@ -103,5 +121,62 @@ namespace RUINORERP.Server.Network.Interfaces.Services
         /// 停止锁管理服务
         /// </summary>
         Task StopAsync();
+        
+        /// <summary>
+        /// 释放所有锁
+        /// </summary>
+        /// <param name="userID">用户ID</param>
+        /// <returns>释放的锁数量</returns>
+        Task<int> ReleaseAllLocksBySessionIdAsync(long? userID);
+        
+        /// <summary>
+        /// 处理心跳锁信息
+        /// </summary>
+        /// <param name="sessionId">会话ID</param>
+        /// <param name="activeLocks">活跃锁列表</param>
+        Task ProcessHeartbeatLocksAsync(string sessionId, long[] activeLocks);
+        
+        /// <summary>
+        /// 检查锁状态
+        /// </summary>
+        /// <param name="request">锁请求信息</param>
+        /// <returns>锁状态检查结果</returns>
+        Task<LockResponse> CheckLockStatusAsync(LockRequest request);
+        
+        /// <summary>
+        /// 强制解锁
+        /// </summary>
+        /// <param name="request">解锁请求信息</param>
+        /// <returns>解锁结果</returns>
+        Task<LockResponse> ForceUnlockAsync(LockRequest request);
+        
+        /// <summary>
+        /// 获取用户锁定的单据
+        /// </summary>
+        /// <param name="userId">用户ID</param>
+        /// <returns>用户锁定的单据列表</returns>
+        Task<List<LockInfo>> GetUserLocksAsync(long userId);
+        
+        /// <summary>
+        /// 解锁
+        /// </summary>
+        /// <param name="lockKey">锁定键</param>
+        /// <param name="userId">用户ID</param>
+        /// <returns>解锁结果</returns>
+        Task<LockResponse> UnlockAsync(string lockKey, long userId);
+        
+        /// <summary>
+        /// 强制解锁
+        /// </summary>
+        /// <param name="lockKey">锁定键</param>
+        /// <param name="userId">用户ID</param>
+        /// <returns>解锁结果</returns>
+        Task<LockResponse> ForceUnlockAsync(string lockKey, long userId);
+        
+        /// <summary>
+        /// 获取孤儿锁数量
+        /// </summary>
+        /// <returns>孤儿锁数量</returns>
+        int GetOrphanedLockCount();
     }
 }

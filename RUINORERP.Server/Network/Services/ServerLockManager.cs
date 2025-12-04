@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using RUINORERP.Global;
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Models.Lock;
+using RUINORERP.PacketSpec.Models.Messaging;
 using RUINORERP.PacketSpec.Models.Requests;
 using RUINORERP.Server.Network.Interfaces.Services;
 using RUINORERP.Server.Network.Models;
@@ -37,7 +38,6 @@ namespace RUINORERP.Server.Network.Services
 
         private readonly ISessionService _sessionService;
         private readonly ILogger<ServerLockManager> _logger;
-        private readonly IGeneralBroadcastService _broadcastService;
         private readonly OrphanedLockDetector _orphanedLockDetector;
 
         // 简化的单一数据结构 - 按单据ID索引
@@ -65,38 +65,67 @@ namespace RUINORERP.Server.Network.Services
         #region 构造函数和初始化
 
         /// <summary>
-        /// 广播锁定状态更新到所有客户端
+        /// 广播锁定状态变化给所有客户端
         /// </summary>
-        /// <param name="lockInfo">锁定信息</param>
-        /// <param name="isLocked">是否已锁定</param>
-        /// <returns>异步任务</returns>
-        private async Task BroadcastLockStatusAsync(LockInfo lockInfo, bool isLocked)
+        /// <param name="lockedDocument">锁定文档信息</param>
+        public async Task BroadcastLockStatusAsync(LockInfo lockedDocument)
+        {
+            var lockedDocuments = new List<LockInfo> { lockedDocument };
+            await BroadcastLockStatusAsync(lockedDocuments);
+        }
+        
+        /// <summary>
+        /// 广播锁定状态变化给所有客户端（与BroadcastLockStatusAsync相同功能）
+        /// </summary>
+        /// <param name="lockedDocuments">锁定文档信息列表</param>
+        public async Task BroadcastLockStatusToAllClientsAsync(IEnumerable<LockInfo> lockedDocuments)
+        {
+            await BroadcastLockStatusAsync(lockedDocuments);
+        }
+
+        /// <summary>
+        /// 广播锁定状态变化到所有客户端
+        /// </summary>
+        /// <param name="lockedDocuments">锁定的单据信息列表</param>
+        public async Task BroadcastLockStatusAsync(IEnumerable<LockInfo> lockedDocuments)
         {
             try
             {
-                if (_broadcastService == null)
+                // 创建广播数据
+                var broadcastData = new LockRequest
                 {
-                    _logger.LogWarning("广播服务未初始化，无法广播锁定状态更新");
-                    return;
-                }
-                lockInfo.IsLocked = isLocked;
-                // 创建锁定状态广播请求
-                var lockRequest = new GeneralRequest
-                {
-                    Data = lockInfo
+                    LockedDocuments = lockedDocuments?.ToList() ?? new List<LockInfo>(),
+                    Timestamp = DateTime.UtcNow
                 };
 
-                // 使用指定的广播命令ID发送锁定状态更新
-                await _broadcastService.BroadcastToAllClients(LockCommands.BroadcastLockStatus, lockRequest);
+                // 获取所有用户会话
+                var sessions = _sessionService.GetAllUserSessions();
 
-                _logger.LogDebug("已广播锁定状态更新: 单据ID={BillId}, 用户ID={UserId}, 状态={Status}",
-                    lockInfo.BillID, lockInfo.LockedUserId, isLocked ? "锁定" : "解锁");
+                // 向所有会话发送消息并等待响应
+                int successCount = 0;
+                foreach (var session in sessions)
+                {
+                    if (session is SessionInfo sessionInfo)
+                    {
+                        var responsePacket = await _sessionService.SendCommandAndWaitForResponseAsync(
+                            session.SessionID,
+                         LockCommands.BroadcastLockStatus,
+                            broadcastData
+                             );
+
+                        if (responsePacket?.Response is MessageResponse response && response.IsSuccess)
+                        {
+                            successCount++;
+                        }
+                    }
+                }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "广播锁定状态更新时发生异常: 单据ID={BillId}", lockInfo.BillID);
+                _logger.LogError(ex, $"广播锁定状态变化到所有客户端时发生异常: {ex.Message}");
             }
         }
+
 
         /// <summary>
         /// 集成式服务器锁管理器构造函数
@@ -111,7 +140,6 @@ namespace RUINORERP.Server.Network.Services
         {
             _sessionService = sessionService ?? throw new ArgumentNullException(nameof(sessionService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _broadcastService = broadcastService ?? throw new ArgumentNullException(nameof(broadcastService));
 
             // 初始化核心数据结构
             _documentLocks = new ConcurrentDictionary<long, LockInfo>();
@@ -263,12 +291,8 @@ namespace RUINORERP.Server.Network.Services
                         {
                             // 广播锁定状态更新
                             existingLock.IsLocked = false;
-                            await BroadcastLockStatusAsync(existingLock, false);
-                            // _logger.LogInformation("单据 {BillId} 锁已释放，锁ID: {LockId}",lockInfo.BillID, existingLock.LockId);
+                            await BroadcastLockStatusAsync(existingLock);
 
-                            // 广播锁定状态更新
-                            existingLock.IsLocked = false;
-                            await BroadcastLockStatusAsync(existingLock, false);
 
                             return new LockResponse
                             {
@@ -447,7 +471,7 @@ namespace RUINORERP.Server.Network.Services
                         releasedCount++;
                         // 广播锁定状态更新
                         lockInfo.IsLocked = false;
-                        await BroadcastLockStatusAsync(lockInfo, false);
+                        await BroadcastLockStatusAsync(lockInfo);
                     }
                 }
 
@@ -1023,7 +1047,7 @@ namespace RUINORERP.Server.Network.Services
                     validation.LockInfo.IsLocked = false;
 
                     // 广播锁定状态更新
-                    await BroadcastLockStatusAsync(validation.LockInfo, false);
+                    await BroadcastLockStatusAsync(validation.LockInfo);
 
                     return new LockResponse
                     {
@@ -1043,16 +1067,7 @@ namespace RUINORERP.Server.Network.Services
             }
         }
 
-        /// <summary>
-        /// 解锁指定单据 - 重构后使用通用解锁方法
-        /// </summary>
-        /// <param name="billId">单据ID</param>
-        /// <param name="userId">用户ID</param>
-        /// <returns>解锁响应结果</returns>
-        public async Task<LockResponse> UnlockDocumentAsync(long billId, long userId)
-        {
-            return await ExecuteUnlockAsync(billId, userId, false, "解锁");
-        }
+
 
         /// <summary>
         /// 强制解锁指定单据 - 重构后使用通用解锁方法
@@ -1070,7 +1085,7 @@ namespace RUINORERP.Server.Network.Services
         /// </summary>
         /// <param name="lockInfo">锁定信息</param>
         /// <returns>锁定结果，包含成功状态和详细信息</returns>
-        async Task<LockResponse> ILockManagerService.TryLockDocumentAsync(LockInfo lockInfo)
+        public async Task<LockResponse> TryLockDocumentAsync(LockInfo lockInfo)
         {
             if (lockInfo == null || lockInfo.BillID <= 0)
             {
@@ -1132,7 +1147,7 @@ namespace RUINORERP.Server.Network.Services
                 if (_documentLocks.TryAdd(lockInfo.BillID, serverLockInfo))
                 {
                     // 广播锁定状态更新
-                    await BroadcastLockStatusAsync(serverLockInfo, true);
+                    await BroadcastLockStatusAsync(serverLockInfo);
 
                     LockResponse lockResponse = new LockResponse();
                     lockResponse.IsSuccess = true;
@@ -1155,14 +1170,14 @@ namespace RUINORERP.Server.Network.Services
         }
 
         /// <summary>
-        /// 解锁单据 (ILockManagerService接口方法)
+        /// 解锁指定单据 - 重构后使用通用解锁方法
         /// </summary>
         /// <param name="billId">单据ID</param>
         /// <param name="userId">用户ID</param>
-        /// <returns>解锁结果，包含成功状态和详细信息</returns>
-        Task<LockResponse> ILockManagerService.UnlockDocumentAsync(long billId, long userId)
+        /// <returns>解锁响应结果</returns>
+        public async Task<LockResponse> UnlockDocumentAsync(long billId, long userId)
         {
-            return ExecuteUnlockAsync(billId, userId, false, "解锁");
+            return await ExecuteUnlockAsync(billId, userId, false, "解锁");
         }
 
         /// <summary>

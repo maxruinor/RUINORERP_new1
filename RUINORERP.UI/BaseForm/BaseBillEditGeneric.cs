@@ -2313,8 +2313,7 @@ namespace RUINORERP.UI.BaseForm
                     // 使用V3状态管理系统的按钮控制
                     UpdateUIByCurrentState();
 
-                    // 直接检查锁定状态并更新UI
-                    //await CheckLockStatusAndUpdateUI(entity);
+
                     return;
                 }
                 catch (Exception ex)
@@ -2544,6 +2543,8 @@ namespace RUINORERP.UI.BaseForm
                     // 禁用所有编辑控件，但保留锁定按钮和关闭按钮的可用性
                     foreach (Control control in Controls)
                     {
+                        if (control.Name == tsBtnLocked.Name || control.Name == toolStripbtnClose.Name)
+                            continue;
                         control.Enabled = false;
                     }
                     tsBtnLocked.Enabled = true;
@@ -3744,13 +3745,7 @@ namespace RUINORERP.UI.BaseForm
                             // 此方法通常在用户点击编辑等按钮时调用，属于主动操作，保留提示
 
                             // 更新UI状态
-                            if (tsBtnLocked != null)
-                            {
-                                tsBtnLocked.Visible = true;
-                                tsBtnLocked.Tag = lockStatus;
-                                tsBtnLocked.ToolTipText = $"单据被【{lockStatus.LockInfo.LockedUserName}】锁定";
-                                this.tsBtnLocked.Image = global::RUINORERP.UI.Properties.Resources.Lockbill;
-                            }
+                            UpdateLockUI(true, lockStatus.LockInfo);
 
                             return false;
                         }
@@ -3760,13 +3755,7 @@ namespace RUINORERP.UI.BaseForm
                             MainForm.Instance.uclog.AddLog($"单据【{billId}】已由您锁定", UILogType.普通消息);
 
                             // 更新UI状态
-                            if (tsBtnLocked != null)
-                            {
-                                tsBtnLocked.Visible = true;
-                                tsBtnLocked.Tag = lockStatus;
-                                tsBtnLocked.ToolTipText = "您已锁定当前单据";
-                                this.tsBtnLocked.Image = global::RUINORERP.UI.Properties.Resources.unlockbill;
-                            }
+                            UpdateLockUI(true, lockStatus.LockInfo);
 
                             return true;
                         }
@@ -3792,13 +3781,7 @@ namespace RUINORERP.UI.BaseForm
                     MainForm.Instance.uclog.AddLog($"单据【{billId}】锁定成功", UILogType.普通消息);
 
                     // 更新UI状态
-                    if (tsBtnLocked != null)
-                    {
-                        tsBtnLocked.Visible = true;
-                        tsBtnLocked.Tag = lockResponse;
-                        tsBtnLocked.ToolTipText = "您已锁定当前单据";
-                        this.tsBtnLocked.Image = global::RUINORERP.UI.Properties.Resources.unlockbill;
-                    }
+                    UpdateLockUI(true, lockResponse.LockInfo);
 
                     return true;
                 }
@@ -3847,8 +3830,8 @@ namespace RUINORERP.UI.BaseForm
 
                 if (lockResponse.IsSuccess)
                 {
-                    // 更新UI显示
-                    this.tsBtnLocked.Image = global::RUINORERP.UI.Properties.Resources.unlockbill;
+                    // 使用UpdateLockUI方法更新解锁后的UI状态
+                    UpdateLockUI(false);
                 }
                 else
                 {
@@ -3874,8 +3857,8 @@ namespace RUINORERP.UI.BaseForm
 
             if (true)
             {
-                // 更新UI显示
-                this.tsBtnLocked.Image = global::RUINORERP.UI.Properties.Resources.unlockbill;
+                // 使用UpdateLockUI方法更新解锁后的UI状态
+                UpdateLockUI(false);
                 logger?.Debug("单据已强制解锁");
             }
         }
@@ -3962,7 +3945,8 @@ namespace RUINORERP.UI.BaseForm
                     {
                         Invoke((MethodInvoker)(() =>
                         {
-                            tsBtnLocked.Visible = true;
+                            // 使用UpdateLockUI方法更新UI状态
+                            UpdateLockUI(true, result.LockInfo);
                         }));
                     }
 
@@ -5962,7 +5946,7 @@ namespace RUINORERP.UI.BaseForm
                         tsBtnLocked.ToolTipText = $"🔒 锁定状态：您已锁定此单据\n" +
                                                 $"👤 锁定用户：{lockInfo.LockedUserName}\n" +
                                                 $"⏰ 锁定时间：{lockTimeStr}\n" +
-                                                $"💡 提示：关才单据自动解锁";
+                                                $"💡 提示：关闭单据自动解锁";
                         // 设置绿色背景表示自己锁定，提供直观视觉反馈
                         tsBtnLocked.BackColor = System.Drawing.Color.LightGreen;
                         tsBtnLocked.ForeColor = System.Drawing.Color.Black;
@@ -6704,7 +6688,6 @@ namespace RUINORERP.UI.BaseForm
             {
                 string successMsg = $"单据【{cbd.BizName}】批量解锁成功";
                 MainForm.Instance.uclog.AddLog(successMsg, UILogType.普通消息);
-
                 // 在调试模式下记录成功日志
                 if (AuthorizeController.GetShowDebugInfoAuthorization(MainForm.Instance.AppContext))
                 {
@@ -6712,12 +6695,7 @@ namespace RUINORERP.UI.BaseForm
                 }
 
                 // 更新UI状态
-                if (tsBtnLocked != null)
-                {
-                    tsBtnLocked.Visible = false;
-                    tsBtnLocked.Tag = null;
-                    tsBtnLocked.ToolTipText = string.Empty;
-                }
+                UpdateLockUI(false);
             }
             else
             {

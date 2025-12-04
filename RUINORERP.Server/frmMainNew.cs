@@ -1788,19 +1788,29 @@ namespace RUINORERP.Server
             }
         }
 
+        // 标记UI日志是否可用的标志
+        private volatile bool _uiLoggingEnabled = true;
+
         /// <summary>
         /// 尝试使用UI控件进行日志记录
         /// </summary>
         /// <returns>是否成功记录日志</returns>
         private bool TryUILogging(string logMessage, Color color)
         {
+            // 首先检查UI日志是否已被禁用
+            if (!_uiLoggingEnabled)
+                return false;
+
             bool success = false;
 
             try
             {
                 // 检查控件状态
                 if (richTextBoxLog == null || richTextBoxLog.IsDisposed || !richTextBoxLog.IsHandleCreated)
+                {
+                    _uiLoggingEnabled = false; // 控件不可用，禁用UI日志
                     return false;
+                }
 
                 // 使用BeginInvoke避免阻塞线程池线程
                 richTextBoxLog.BeginInvoke(new Action(() =>
@@ -1809,13 +1819,24 @@ namespace RUINORERP.Server
                     {
                         // 再次检查控件状态
                         if (richTextBoxLog == null || richTextBoxLog.IsDisposed || !richTextBoxLog.IsHandleCreated)
+                        {
+                            _uiLoggingEnabled = false;
                             return;
+                        }
 
                         // 安全地限制日志行数
-                        EnsureMaxLines(richTextBoxLog, 500); // 进一步减少最大行数，降低内存占用
+                        EnsureMaxLines(richTextBoxLog, 500);
 
-                        // 安全地追加文本
-                        richTextBoxLog.AppendText(logMessage);
+                        // 安全地追加文本 - 这是最可能引发AccessViolation的操作之一
+                        try
+                        {
+                            richTextBoxLog.AppendText(logMessage);
+                        }
+                        catch (AccessViolationException)
+                        {
+                            _uiLoggingEnabled = false;
+                            return;
+                        }
 
                         // 尝试滚动到末尾，但失败也不影响
                         try { richTextBoxLog.ScrollToCaret(); } catch { }
@@ -1824,7 +1845,8 @@ namespace RUINORERP.Server
                     }
                     catch (AccessViolationException)
                     {
-                        // 严重的内存访问异常，直接返回失败
+                        // 严重的内存访问异常，禁用UI日志
+                        _uiLoggingEnabled = false;
                         success = false;
                     }
                     catch (Exception)
@@ -1891,29 +1913,36 @@ namespace RUINORERP.Server
 
         private void EnsureMaxLines(RichTextBox rtb, int maxLines)
         {
+            // 最安全的实现 - 完全避免可能导致AccessViolation的复杂操作
             try
             {
-                // 计算当前行数
-                int currentLines = rtb.GetLineFromCharIndex(rtb.Text.Length) + 1;
+                // 检查控件状态
+                if (rtb == null || rtb.IsDisposed || !rtb.IsHandleCreated)
+                    return;
 
-                // 如果行数超过最大限制则删除旧行 - 使用更安全的方式
-                if (currentLines > maxLines)
+                // 简化的行数控制：如果文本过长，直接清空大部分内容，只保留最新的部分
+                // 这种方式避免了GetLineFromCharIndex和GetFirstCharIndexFromLine等可能导致问题的方法
+                if (rtb.Text.Length > 10000) // 大约100-200行
                 {
-                    int linesToRemove = currentLines - maxLines;
-                    int start = rtb.GetFirstCharIndexFromLine(0);
-                    int end = rtb.GetFirstCharIndexFromLine(linesToRemove);
-
-                    if (end > start && end <= rtb.Text.Length)
+                    // 只保留最后约50行（假设每行平均100个字符）
+                    int charsToKeep = 5000;
+                    if (rtb.Text.Length > charsToKeep)
                     {
-                        // 使用更安全的方式更新文本
-                        rtb.Select(start, end - start);
-                        rtb.SelectedText = string.Empty;
+                        rtb.Clear();
+                        // 注意：这里不再尝试保留部分内容，因为任何对Text的复杂操作都可能引发AccessViolation
+                        // 如果需要保留内容，可以考虑使用更简单的字符串操作后再设置
                     }
                 }
             }
+            catch (AccessViolationException)
+            {
+                // 特别捕获AccessViolationException，这是最危险的异常
+                // 在这种情况下，我们应该完全放弃UI日志
+                _uiLoggingEnabled = false;
+            }
             catch (Exception)
             {
-                // 忽略所有异常，确保此操作不会影响主程序
+                // 忽略所有其他异常，确保此操作不会影响主程序
             }
         }
 

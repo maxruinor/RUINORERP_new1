@@ -370,51 +370,43 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
             try
             {
                 // 解析广播消息，通知相关组件更新锁状态
-                if (packet.Response is LockResponse lockResponse)
+                if (packet.Request is LockRequest lockRequest)
                 {
-                    _logger.LogDebug($"收到锁状态广播: 资源ID={lockResponse.LockInfo.BillID}, 状态={lockResponse.IsSuccess}");
 
-                    if (_lockCache != null && lockResponse.LockInfo != null)
+                    if (_lockCache != null && lockRequest.LockedDocuments != null)
                     {
-                        long billId = lockResponse.LockInfo.BillID;
-                        
-                        // 根据广播类型处理缓存
-                        if (lockResponse.IsSuccess)
+                        for (int i = 0; i < lockRequest.LockedDocuments.Count; i++)
                         {
-                            if (lockResponse.LockInfo.IsLocked)
+                            var lockInfo = lockRequest.LockedDocuments[i];
+
+                            if (lockInfo.IsLocked)
                             {
                                 // 锁定广播：更新缓存中的锁定信息
-                                _lockCache.UpdateCacheItem(lockResponse.LockInfo);
-                                _logger.LogDebug($"缓存已更新: 资源ID={billId}, 锁定用户={lockResponse.LockInfo.LockedUserName}");
+                                _lockCache.UpdateCacheItem(lockInfo);
                             }
                             else
                             {
                                 // 解锁广播：清除缓存中的锁定信息
-                                _lockCache.ClearCache(billId);
-                                _logger.LogDebug($"缓存已清除: 资源ID={billId}");
+                                _lockCache.ClearCache(lockInfo.BillID);
                             }
-                        }
-                        else
-                        {
-                            // 操作失败：清除缓存，强制下次从服务器获取最新状态
-                            _lockCache.ClearCache(billId);
-                            _logger.LogDebug($"操作失败，清除缓存: 资源ID={billId}, 错误={lockResponse.Message}");
+
+                            // 触发UI更新事件（如果需要）
+                            await Task.Run(() =>
+                            {
+                                try
+                                {
+                                    // 通知UI更新锁定状态
+                                    // 这里可以通过事件或消息总线通知相关的编辑窗体更新锁定状态显示
+                                    NotifyLockStatusChanged(lockInfo.BillID, lockInfo);
+                                }
+                                catch (Exception uiEx)
+                                {
+                                    _logger.LogWarning(uiEx, $"通知UI更新锁状态失败: 资源ID={lockInfo.BillID}");
+                                }
+                            });
                         }
 
-                        // 触发UI更新事件（如果需要）
-                        await Task.Run(() =>
-                        {
-                            try
-                            {
-                                // 通知UI更新锁定状态
-                                // 这里可以通过事件或消息总线通知相关的编辑窗体更新锁定状态显示
-                                NotifyLockStatusChanged(billId, lockResponse.LockInfo);
-                            }
-                            catch (Exception uiEx)
-                            {
-                                _logger.LogWarning(uiEx, $"通知UI更新锁状态失败: 资源ID={billId}");
-                            }
-                        });
+
                     }
                 }
             }
@@ -437,7 +429,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
             // - 发送自定义消息到主窗体
             // - 触发静态事件
             // - 使用观察者模式通知所有订阅者
-            
+
             try
             {
                 // 获取当前用户信息以判断锁定状态变更的影响
@@ -454,7 +446,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                 if (lockInfo != null)
                 {
                     bool isSelfLock = lockInfo.LockedUserId == currentUserId;
-                    
+
                     // 如果是当前用户的锁定状态变更，记录详细日志
                     if (isSelfLock)
                     {

@@ -526,7 +526,7 @@ namespace RUINORERP.UI.BaseForm
                         {
                             case PrePaymentStatus pre:
                                 canModify = pre == PrePaymentStatus.草稿;
-                                canSave = pre == PrePaymentStatus.草稿 || (entity is BaseEntity baseEntity && baseEntity.ActionStatus == ActionStatus.修改);
+                                canSave = pre == PrePaymentStatus.草稿 || (entity is BaseEntity PrebaseEntity && PrebaseEntity.ActionStatus == ActionStatus.修改);
                                 canSubmit = pre == PrePaymentStatus.草稿;
                                 canReview = pre == PrePaymentStatus.待审核;
                                 canReverseReview = pre == PrePaymentStatus.待核销 || pre == PrePaymentStatus.已生效;
@@ -563,16 +563,31 @@ namespace RUINORERP.UI.BaseForm
                             case DataStatus dataStatus:
                                 canModify = dataStatus == DataStatus.草稿 || dataStatus == DataStatus.新建;
                                 canSave = dataStatus == DataStatus.草稿 || dataStatus == DataStatus.新建 || (entity is BaseEntity baseEntity5 && baseEntity5.ActionStatus == ActionStatus.修改);
-                                canSubmit = dataStatus == DataStatus.草稿 || dataStatus == DataStatus.新建;
+                                canSubmit = dataStatus == DataStatus.草稿;
                                 canReview = dataStatus == DataStatus.新建;
                                 canReverseReview = dataStatus == DataStatus.确认;
                                 canCloseCase = dataStatus == DataStatus.完结;
                                 closeCaseVisible = dataStatus == DataStatus.完结;
+                                // 根据状态流转控制确认/审核按钮
+                                if (dataStatus == DataStatus.新建)
+                                {
+                                    // 新增状态下，确认/审核按钮不可用
+                                    canReview = false;
+                                }
+                                else if (dataStatus == DataStatus.草稿)
+                                {
+                                    // 草稿状态下，确认/审核按钮不可用，可修改/保存/提交
+                                    canReview = false;
+                                }
                                 break;
                         }
 
                         // 检查是否有相关记录，用于取消操作
-                        canCancel = !HasRelatedRecords(entity);
+                        // 修改：根据当前状态和操作类型确定是否显示取消按钮
+                        canCancel = (entity is BaseEntity baseEntity &&
+                                   (baseEntity.ActionStatus == ActionStatus.新增 ||
+                                    baseEntity.ActionStatus == ActionStatus.修改 ||
+                                    baseEntity.GetCurrentDataStatus() == DataStatus.新建));
                     }
                 }
 
@@ -586,6 +601,7 @@ namespace RUINORERP.UI.BaseForm
                 toolStripButton结案.Visible = closeCaseVisible;
                 toolStripbtnDelete.Enabled = canDelete;
                 toolStripBtnCancel.Visible = canCancel;
+                toolStripBtnCancel.Enabled = canCancel;
 
                 UpdateStateDisplay();
             }
@@ -1827,6 +1843,8 @@ namespace RUINORERP.UI.BaseForm
             if (hasEditPermission && isDraftOrNew)
             {
                 entity.ActionStatus = ActionStatus.修改;
+                // 数据修改后保存按钮立即变为可用
+                toolStripButtonSave.Enabled = true;
                 ToolBarEnabledControl(MenuItemEnums.修改);
             }
 
@@ -2478,6 +2496,18 @@ namespace RUINORERP.UI.BaseForm
             long pkid = 0;
             //操作前将数据收集
             this.ValidateChildren(System.Windows.Forms.ValidationConstraints.None);
+
+            // 为所有非查询按钮添加点击后立即禁用的逻辑，防止重复点击
+            if (menuItem != MenuItemEnums.查询)
+            {
+                toolStripbtnAdd.Enabled = false;
+                toolStripbtnModify.Enabled = false;
+                toolStripButtonSave.Enabled = false;
+                toolStripbtnSubmit.Enabled = false;
+                toolStripbtnReview.Enabled = false;
+                toolStripBtnCancel.Enabled = false;
+            }
+
             switch (menuItem)
             {
                 case MenuItemEnums.联查:
@@ -2548,7 +2578,18 @@ namespace RUINORERP.UI.BaseForm
                     Modify();
                     break;
                 case MenuItemEnums.查询:
+
+                    // 查询按钮点击后禁用3秒
+                    toolStripbtnQuery.Enabled = false;
                     Query();
+                    // 3秒后恢复查询按钮可用
+                    Task.Delay(3000).ContinueWith(_ =>
+                    {
+                        this.Invoke((MethodInvoker)delegate
+                        {
+                            toolStripbtnQuery.Enabled = true;
+                        });
+                    });
                     break;
                 case MenuItemEnums.保存:
                     var lockStatusSave = await CheckLockStatusAndUpdateUI(EditEntity);
@@ -4197,7 +4238,7 @@ namespace RUINORERP.UI.BaseForm
 
         protected override void Add()
         {
-      
+
             List<T> list = new List<T>();
             EditEntity = Activator.CreateInstance(typeof(T)) as T;
 
@@ -6007,7 +6048,7 @@ namespace RUINORERP.UI.BaseForm
 
         public override void UNLock(bool NeedUpdateUI = false)
         {
-            
+
             // 停止锁定刷新任务
             StopLockRefreshTask();
 

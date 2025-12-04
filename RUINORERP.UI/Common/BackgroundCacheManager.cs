@@ -47,7 +47,7 @@ namespace RUINORERP.UI.Common
             // 启动后台工作线程
             _backgroundWorker = Task.Run(() => BackgroundWorkerAsync(_cancellationTokenSource.Token));
             
-            _logger.LogInformation("后台缓存管理器已初始化");
+            _logger.LogDebug("后台缓存管理器已初始化");
         }
 
         /// <summary>
@@ -192,7 +192,7 @@ namespace RUINORERP.UI.Common
         /// </summary>
         private async Task BackgroundWorkerAsync(CancellationToken cancellationToken)
         {
-            _logger.LogInformation("后台缓存管理器工作线程已启动");
+            _logger.LogDebug("后台缓存管理器工作线程已启动");
 
             try
             {
@@ -206,14 +206,14 @@ namespace RUINORERP.UI.Common
             }
             catch (OperationCanceledException)
             {
-                _logger.LogInformation("后台缓存管理器工作线程被取消");
+                _logger.LogDebug("后台缓存管理器工作线程被取消");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "后台缓存管理器工作线程发生异常");
             }
 
-            _logger.LogInformation("后台缓存管理器工作线程已停止");
+            _logger.LogDebug("后台缓存管理器工作线程已停止");
         }
 
         /// <summary>
@@ -266,7 +266,7 @@ namespace RUINORERP.UI.Common
                             _ = Task.Run(() => LoadRelatedTablesAsync(entityType, forceRefresh), _cancellationTokenSource.Token);
                         }
 
-                        _logger.LogInformation("缓存 {TableName} 加载成功", tableName);
+                        _logger.LogDebug("缓存 {TableName} 加载成功", tableName);
                         completionSource.TrySetResult(true);
                         return;
                     }
@@ -404,7 +404,7 @@ namespace RUINORERP.UI.Common
 
             try
             {
-                _logger.LogInformation("开始释放后台缓存管理器资源");
+                _logger.LogDebug("开始释放后台缓存管理器资源");
 
                 // 取消所有操作
                 _cancellationTokenSource.Cancel();
@@ -443,7 +443,7 @@ namespace RUINORERP.UI.Common
                 _semaphore?.Dispose();
                 _cancellationTokenSource?.Dispose();
 
-                _logger.LogInformation("后台缓存管理器资源释放完成");
+                _logger.LogDebug("后台缓存管理器资源释放完成");
             }
             catch (Exception ex)
             {

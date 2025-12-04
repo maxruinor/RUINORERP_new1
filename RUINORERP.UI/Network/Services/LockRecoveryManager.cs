@@ -54,7 +54,7 @@ namespace RUINORERP.UI.Network.Services
             AppDomain.CurrentDomain.ProcessExit += OnProcessExit;
             AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
 
-            _logger.LogInformation("锁恢复管理器已初始化");
+            _logger.LogDebug("锁恢复管理器已初始化");
         }
 
         /// <summary>
@@ -251,7 +251,7 @@ namespace RUINORERP.UI.Network.Services
                             // 锁已不存在，从本地移除
                             UnregisterHeldLock(orphanedLock.BillID);
                             _lockCache.ClearCache(orphanedLock.BillID);
-                            _logger.LogInformation($"孤儿锁已自动清理: 单据 {orphanedLock.BillID}");
+                            _logger.LogDebug($"孤儿锁已自动清理: 单据 {orphanedLock.BillID}");
                         }
                         else if (lockResponse.LockInfo?.LockedUserId == currentUserId)
                         {
@@ -263,7 +263,7 @@ namespace RUINORERP.UI.Network.Services
                                     lockInfo.LastHeartbeat = DateTime.Now;
                                 }
                             }
-                            _logger.LogInformation($"孤儿锁验证通过，重置心跳: 单据 {orphanedLock.BillID}");
+                            _logger.LogDebug($"孤儿锁验证通过，重置心跳: 单据 {orphanedLock.BillID}");
                         }
                         else
                         {
@@ -292,7 +292,7 @@ namespace RUINORERP.UI.Network.Services
         /// <param name="e">事件参数</param>
         private async void OnProcessExit(object sender, EventArgs e)
         {
-            _logger.LogInformation("应用程序正在退出，开始清理所有锁");
+            _logger.LogDebug("应用程序正在退出，开始清理所有锁");
             await ReleaseAllLocksAsync("应用程序退出");
         }
 
@@ -323,11 +323,11 @@ namespace RUINORERP.UI.Network.Services
                 var heldLocks = GetHeldLocks();
                 if (heldLocks.Count == 0)
                 {
-                    _logger.LogInformation("没有需要释放的锁");
+                    _logger.LogDebug("没有需要释放的锁");
                     return;
                 }
 
-                _logger.LogInformation($"开始释放所有锁: {heldLocks.Count} 个, 原因: {reason}");
+                _logger.LogDebug($"开始释放所有锁: {heldLocks.Count} 个, 原因: {reason}");
 
                 var currentUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
                 var releaseTasks = new List<Task>();
@@ -343,7 +343,7 @@ namespace RUINORERP.UI.Network.Services
 
                             if (response?.IsSuccess == true)
                             {
-                                _logger.LogInformation($"成功释放锁: 单据 {heldLock.BillID}, 原因: {reason}");
+                                _logger.LogDebug($"成功释放锁: 单据 {heldLock.BillID}, 原因: {reason}");
                             }
                             else
                             {
@@ -377,7 +377,7 @@ namespace RUINORERP.UI.Network.Services
                     _heldLocks.Clear();
                 }
 
-                _logger.LogInformation($"所有锁释放完成: 原因: {reason}");
+                _logger.LogDebug($"所有锁释放完成: 原因: {reason}");
             }
             catch (Exception ex)
             {
@@ -477,7 +477,7 @@ namespace RUINORERP.UI.Network.Services
                 AppDomain.CurrentDomain.ProcessExit -= OnProcessExit;
                 AppDomain.CurrentDomain.UnhandledException -= OnUnhandledException;
 
-                _logger.LogInformation("锁恢复管理器已释放资源");
+                _logger.LogDebug("锁恢复管理器已释放资源");
             }
             catch (Exception ex)
             {

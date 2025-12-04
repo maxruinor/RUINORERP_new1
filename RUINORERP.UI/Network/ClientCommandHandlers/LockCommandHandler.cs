@@ -202,7 +202,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                         // 根据用户选择处理
                         if (result == DialogResult.Yes)
                         {
-                            _logger.LogInformation("用户允许其他用户锁定单据: BillID={BillID}", lockRequest.LockInfo.BillID);
+                            _logger.LogDebug("用户允许其他用户锁定单据: BillID={BillID}", lockRequest.LockInfo.BillID);
                             // 实现解锁当前单据的逻辑并更新本地缓存
                             if (_lockCache != null && lockRequest.LockInfo != null)
                             {
@@ -214,7 +214,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                         }
                         else
                         {
-                            _logger.LogInformation("用户拒绝其他用户锁定单据: BillID={BillID}", lockRequest.LockInfo.BillID);
+                            _logger.LogDebug("用户拒绝其他用户锁定单据: BillID={BillID}", lockRequest.LockInfo.BillID);
                         }
                     });
                 }
@@ -245,7 +245,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
 
                     if (lockResponse.IsSuccess)
                     {
-                        _logger.LogInformation($"成功释放资源 '{lockResponse.LockInfo.BillID}' 的锁");
+                        _logger.LogDebug($"成功释放资源 '{lockResponse.LockInfo.BillID}' 的锁");
                         // 更新本地缓存，清除锁定信息
                         if (_lockCache != null && lockResponse.LockInfo != null)
                         {
@@ -287,11 +287,11 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
 
                     if (lockResponse.IsSuccess)
                     {
-                        _logger.LogInformation($"资源 '{lockResponse.LockInfo.BillID}' 的锁状态查询成功");
+                        _logger.LogDebug($"资源 '{lockResponse.LockInfo.BillID}' 的锁状态查询成功");
 
                         if (lockResponse.LockInfo != null)
                         {
-                            _logger.LogInformation($"锁信息: 用户={lockResponse.LockInfo.LockedUserName}, 时间={lockResponse.LockInfo.LockTime}");
+                            _logger.LogDebug($"锁信息: 用户={lockResponse.LockInfo.LockedUserName}, 时间={lockResponse.LockInfo.LockTime}");
                             // 更新本地缓存，确保缓存与服务器状态一致
                             if (_lockCache != null)
                             {
@@ -332,7 +332,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
 
                     if (lockResponse.IsSuccess)
                     {
-                        _logger.LogInformation($"成功强制释放资源 '{lockResponse.LockInfo.BillID}' 的锁");
+                        _logger.LogDebug($"成功强制释放资源 '{lockResponse.LockInfo.BillID}' 的锁");
                         // 更新本地缓存，清除锁定信息
                         if (_lockCache != null && lockResponse.LockInfo != null)
                         {
@@ -451,7 +451,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                     if (isSelfLock)
                     {
                         string status = lockInfo.IsLocked ? "获得锁定" : "释放锁定";
-                        _logger.LogInformation($"当前用户{status}: 资源ID={billId}");
+                        _logger.LogDebug($"当前用户{status}: 资源ID={billId}");
                     }
                 }
             }

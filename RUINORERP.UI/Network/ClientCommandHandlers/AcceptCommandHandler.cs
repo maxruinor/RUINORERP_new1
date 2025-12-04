@@ -156,7 +156,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
         {
             try
             {
-                _logger.LogInformation("收到服务器发送的退出系统命令");
+                _logger.LogDebug("收到服务器发送的退出系统命令");
                 
                 // 获取退出原因
                 string exitReason = "服务器要求退出系统";
@@ -185,7 +185,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
         {
             try
             {
-                _logger.LogInformation("收到服务器发送的计算机状态查询命令");
+                _logger.LogDebug("收到服务器发送的计算机状态查询命令");
                 
                 // 收集计算机状态信息
                 Dictionary<string, object> statusInfo = CollectComputerStatus();
@@ -270,7 +270,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
         {
             try
             {
-                _logger.LogInformation("启动更新程序");
+                _logger.LogDebug("启动更新程序");
                 
                 // 假设更新程序路径
                 string updateExePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "AutoUpdate\\AutoUpdate.exe");

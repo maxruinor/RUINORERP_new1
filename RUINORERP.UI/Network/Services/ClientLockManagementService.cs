@@ -811,7 +811,7 @@ namespace RUINORERP.UI.Network.Services
                 return;
 
             var activeLockIds = _activeLocks.Keys.ToArray();
-            _logger.LogInformation("开始释放 {LockCount} 个活跃锁", activeLockIds.Length);
+            _logger.LogDebug("开始释放 {LockCount} 个活跃锁", activeLockIds.Length);
 
             // 分批次释放，避免创建过多并发任务
             const int batchSize = 15;
@@ -833,7 +833,7 @@ namespace RUINORERP.UI.Network.Services
                 await Task.WhenAll(releaseTasks);
             }
 
-            _logger.LogInformation("所有活跃锁释放完成");
+            _logger.LogDebug("所有活跃锁释放完成");
         }
 
         /// <summary>
@@ -1197,12 +1197,12 @@ namespace RUINORERP.UI.Network.Services
         {
             try
             {
-                _logger.LogInformation("开始缓存预热...");
+                _logger.LogDebug("开始缓存预热...");
                 // 这里可以根据实际业务场景实现缓存预热逻辑
                 // 例如：加载最近访问的单据、常用单据等
 
                 // 预热完成
-                _logger.LogInformation("缓存预热完成");
+                _logger.LogDebug("缓存预热完成");
             }
             catch (Exception ex)
             {

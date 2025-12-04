@@ -63,7 +63,7 @@ namespace RUINORERP.UI.Network.Services
             _syncTimer = new Timer(SyncActiveLocks, null,
                 TimeSpan.FromMinutes(SYNC_INTERVAL_MINUTES), TimeSpan.FromMinutes(SYNC_INTERVAL_MINUTES));
 
-            _logger.LogInformation("客户端锁缓存管理器已初始化");
+            _logger.LogDebug("客户端锁缓存管理器已初始化");
         }
 
 
@@ -334,7 +334,7 @@ namespace RUINORERP.UI.Network.Services
         public void ClearAllCache()
         {
             _localCache.Clear();
-            _logger.LogInformation("清除所有锁缓存");
+            _logger.LogDebug("清除所有锁缓存");
         }
 
         /// <summary>
@@ -565,7 +565,7 @@ namespace RUINORERP.UI.Network.Services
 
                 if (removedCount > 0)
                 {
-                    _logger.LogInformation($"清理了 {removedCount} 个过期的锁缓存项");
+                    _logger.LogDebug($"清理了 {removedCount} 个过期的锁缓存项");
                 }
             }
             catch (Exception ex)
@@ -584,7 +584,7 @@ namespace RUINORERP.UI.Network.Services
             {
                 // 这里只维护本地缓存，不再与服务器同步
                 var activeLocks = _localCache.Values.Count(l => l.IsLocked && !l.IsExpired);
-                _logger.LogInformation($"当前活跃锁数量: {activeLocks}");
+                _logger.LogDebug($"当前活跃锁数量: {activeLocks}");
             }
             catch (Exception ex)
             {

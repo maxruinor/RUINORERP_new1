@@ -340,14 +340,64 @@ namespace RUINORERP.Common.Helper
                         foreach (var item in sourceEnumerable)
                         {
                             object clonedItem = item?.DeepCloneObject();
-                            addMethod.Invoke(targetCollection, new[] { clonedItem });
+                            if (clonedItem != null)
+                            {
+                                // 检查克隆后的元素是否可以直接添加到集合中
+                                if (elementType.IsAssignableFrom(clonedItem.GetType()))
+                                {
+                                    addMethod.Invoke(targetCollection, new[] { clonedItem });
+                                }
+                                else
+                                {
+                                    // 尝试将克隆元素转换为集合元素类型
+                                    try
+                                    {
+                                        // 使用元素类型而不是集合类型进行转换
+                                        var convertedItem = Convert.ChangeType(clonedItem, elementType);
+                                        addMethod.Invoke(targetCollection, new[] { convertedItem });
+                                    }
+                                    catch (InvalidCastException)
+                                    {
+                                        // 如果无法转换，记录错误但不中断克隆过程
+                                        Console.WriteLine($"无法将类型 {clonedItem.GetType().FullName} 转换为集合元素类型 {elementType.FullName}");
+                                    }
+                                }
+                            }
                         }
 
                         property.SetValue(target, targetCollection, null);
                     }
                     else
                     {
-                        property.SetValue(target, value?.DeepCloneObject(), null);
+                        // 安全克隆对象并转换为目标属性类型
+                        var clonedValue = value?.DeepCloneObject();
+                        if (clonedValue != null)
+                        {
+                            // 检查克隆后的值是否可以转换为目标属性类型
+                            if (property.PropertyType.IsAssignableFrom(clonedValue.GetType()))
+                            {
+                                property.SetValue(target, clonedValue, null);
+                            }
+                            else
+                            {
+                                // 尝试显式转换为目标属性类型
+                                try
+                                {
+                                    var convertedValue = Convert.ChangeType(clonedValue, property.PropertyType);
+                                    property.SetValue(target, convertedValue, null);
+                                }
+                                catch (InvalidCastException)
+                                {
+                                    // 如果无法转换，记录错误信息但不中断克隆过程
+                                    Console.WriteLine($"无法将类型 {clonedValue.GetType().FullName} 转换为 {property.PropertyType.FullName}，属性：{property.Name}");
+                                }
+                            }
+                        }
+                        else
+                        {
+                            // 如果原始值为null，直接设置为null
+                            property.SetValue(target, null, null);
+                        }
                     }
                 }
             }

@@ -53,7 +53,7 @@ namespace RUINORERP.UI.BaseForm
             InitializeComponent();
             // 状态管理初始化已由基类StateAwareControl处理，无需重复调用
             // InitializeStateManagement(); // 移除重复初始化
-            
+
             bwRemoting.DoWork += bwRemoting_DoWork;
             bwRemoting.RunWorkerCompleted += bwRemoting_RunWorkerCompleted;
             bwRemoting.ProgressChanged += bwRemoting_progressChanged;
@@ -75,7 +75,7 @@ namespace RUINORERP.UI.BaseForm
 
 
 
-     
+
         /// <summary>
         /// 处理特定的状态变更逻辑（子类可重写）
         /// </summary>
@@ -88,7 +88,7 @@ namespace RUINORERP.UI.BaseForm
             // 例如：销售订单在确认状态时检查库存，在完结状态时生成出库单等
         }
 
-      
+
 
         /// <summary>
         /// 根据状态获取颜色
@@ -118,7 +118,7 @@ namespace RUINORERP.UI.BaseForm
             // 更新所有按钮状态
             UpdateAllButtonStates(currentStatus);
         }
-        
+
         /// <summary>
         /// 统一更新所有按钮状态 - 集中管理所有工具栏按钮的状态
         /// </summary>
@@ -148,7 +148,7 @@ namespace RUINORERP.UI.BaseForm
         {
             // 子类可以重写此方法以根据状态更新特定UI控件
             // 例如：禁用/启用某些输入框，显示/隐藏某些控件等
-            
+
             // 默认实现：根据状态更新基本控件状态
             switch (currentStatus)
             {
@@ -172,17 +172,17 @@ namespace RUINORERP.UI.BaseForm
         {
             // 子类可以重写此方法以启用/禁用特定的编辑控件
             // 默认实现：查找常见的编辑控件并设置状态
-            
+
             var editControls = new[] { "txt", "cmb", "dtp", "chk", "rdo" };
             var controls = GetAllControls().Where(c => editControls.Any(prefix => c.Name.StartsWith(prefix)));
-            
+
             foreach (var control in controls)
             {
                 control.Enabled = enabled;
             }
         }
 
-       
+
         // TransitionToAsync方法已在StateAwareControl中实现，此处不再重复
 
 
@@ -267,7 +267,7 @@ namespace RUINORERP.UI.BaseForm
             return Task.FromResult(false);
         }
 
-        public virtual void UNLock()
+        public virtual void UNLock(bool NeedUpdateUI = false)
         {
 
         }
@@ -625,7 +625,7 @@ namespace RUINORERP.UI.BaseForm
                 }
 
                 // 根据实体状态更新UI
-                UpdateAllUIStates(entity);  
+                UpdateAllUIStates(entity);
 
                 // 更新工具栏和操作按钮状态
                 UpdateToolBarState(entity);
@@ -635,8 +635,8 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
- 
- 
+
+
 
         /// <summary>
         /// 更新状态显示
@@ -1202,7 +1202,7 @@ namespace RUINORERP.UI.BaseForm
             entity.StatusChanged += (sender, e) =>
             {
                 // 当实体状态变更时，更新UI
-                UpdateAllUIStates(entity); 
+                UpdateAllUIStates(entity);
             };
         }
 
@@ -1292,7 +1292,7 @@ namespace RUINORERP.UI.BaseForm
                 // 创建状态上下文
                 //var factory = StateManagerFactoryV3.Instance;
                 //this.StatusContext = factory.CreateTransitionContext<DataStatus>(this.BoundEntity);
-                
+
                 //// 订阅状态变更事件
                 //this.StatusContext.StatusChanged += (sender, e) =>
                 //{

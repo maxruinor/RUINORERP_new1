@@ -54,7 +54,7 @@ namespace RUINORERP.UI.Common
             {
                  
                 var baseBillEdit = (BaseBillEdit)control;
-                baseBillEdit.UNLock();
+                baseBillEdit.UNLock(false);
        
             }
             else if (IsBaseBillQueryMC(controlType))

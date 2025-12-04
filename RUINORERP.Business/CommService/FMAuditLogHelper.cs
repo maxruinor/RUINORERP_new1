@@ -46,7 +46,7 @@ namespace RUINORERP.Business.CommService
             _appContext = appContext;
             _options = options.Value;
             _logger = logger;
-           
+
 
             _mapper = new Lazy<IEntityMappingService>(
                 () => _appContext.GetRequiredService<IEntityMappingService>());// 缓存工厂
@@ -60,7 +60,10 @@ namespace RUINORERP.Business.CommService
         public async Task LogAsync<T>(string action, T entity, string description = "") where T : class
         {
             if (!_options.EnableAudit) return;
-
+            if (entity == null)
+            {
+                return;
+            }
             try
             {
                 tb_AuditLogs auditLog = CreateAuditLog(action, entity, description);
@@ -115,7 +118,7 @@ namespace RUINORERP.Business.CommService
 
             try
             {
-           
+
                 var BizType = BizMapperService.EntityMappingHelper.GetBizType(typeof(T).Name);
                 if (BizType == Global.BizType.默认数据)
                 {
@@ -397,7 +400,7 @@ namespace RUINORERP.Business.CommService
     {
         private readonly ConcurrentQueue<tb_FM_AuditLogs> _auditLogQueue = new ConcurrentQueue<tb_FM_AuditLogs>();
 
-      
+
         private readonly Lazy<tb_FM_AuditLogsController<tb_FM_AuditLogs>> _AuditLogsController; // 缓存工厂
         private readonly Timer _flushTimer;
         private readonly AuditLogOptions _options;
@@ -414,7 +417,7 @@ namespace RUINORERP.Business.CommService
             _appContext = appContext;
             _options = options.Value;
             _logger = logger;
-           
+
 
             _mapper = new Lazy<IEntityMappingService>(
               () => _appContext.GetRequiredService<IEntityMappingService>());// 缓存工厂

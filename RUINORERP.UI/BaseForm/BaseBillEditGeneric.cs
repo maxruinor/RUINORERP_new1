@@ -1547,9 +1547,6 @@ namespace RUINORERP.UI.BaseForm
 
                 //解锁这个业务的自己名下的其它单
                 _ = Task.Run(async () => await UNLockByBizName(userid));
-
-                // 使用统一的锁定状态检查和UI更新方法
-                _ = Task.Run(async () => await CheckLockStatusAndUpdateUI(entity));
             }
             else
             {
@@ -1651,8 +1648,8 @@ namespace RUINORERP.UI.BaseForm
                     _currentBillId = pkid;
                     _currentMenuId = CurMenuInfo?.MenuID ?? 0;
 
-                    // 检查锁定状态
-                    await RefreshLockStatus(pkid);
+                    // 直接检查锁定状态，减少中间调用层级
+                    await CheckLockStatusAndUpdateUI(pkid);
                 }
             }
             catch (Exception ex)
@@ -2519,6 +2516,38 @@ namespace RUINORERP.UI.BaseForm
 
 
         /// <summary>
+        /// 集中管理UI控件的启用/禁用状态
+        /// </summary>
+        /// <param name="enabled">是否启用</param>
+        /// <param name="excludeControls">需要排除的控件列表</param>
+        private void SetControlsEnabled(bool enabled, params string[] excludeControlsName)
+        {
+            try
+            {
+                foreach (Control control in Controls)
+                {
+                    bool shouldExclude = false;
+                    foreach (var excludeControl in excludeControlsName)
+                    {
+                        if (control.Name == excludeControl)
+                        {
+                            shouldExclude = true;
+                            break;
+                        }
+                    }
+                    if (!shouldExclude)
+                    {
+                        control.Enabled = enabled;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger.LogError(ex, "设置控件启用状态时发生异常");
+            }
+        }
+
+        /// <summary>
         /// 检查锁定状态并更新UI（基于实体）
         /// 统一处理锁定状态相关的所有UI和按钮状态
         /// </summary>
@@ -2538,23 +2567,10 @@ namespace RUINORERP.UI.BaseForm
             // 如果是被他人锁定，需要禁用所有编辑控件（UI加载时的特殊处理）
             if (result.IsLocked && !result.CanPerformCriticalOperations)
             {
-                try
-                {
-                    // 禁用所有编辑控件，但保留锁定按钮和关闭按钮的可用性
-                    foreach (Control control in Controls)
-                    {
-                        if (control.Name == tsBtnLocked.Name || control.Name == toolStripbtnClose.Name)
-                            continue;
-                        control.Enabled = false;
-                    }
-                    tsBtnLocked.Enabled = true;
-                    toolStripbtnClose.Enabled = true;
-                    toolStripBtnCancel.Visible = true;
-                }
-                catch (Exception ex)
-                {
-                    MainForm.Instance.logger.LogError(ex, "禁用编辑控件时发生异常");
-                }
+                SetControlsEnabled(false, tsBtnLocked.Name, toolStripbtnClose.Name);
+                tsBtnLocked.Enabled = true;
+                toolStripbtnClose.Enabled = true;
+                toolStripBtnCancel.Visible = true;
             }
 
             return result;
@@ -5872,7 +5888,7 @@ namespace RUINORERP.UI.BaseForm
 
         /// <summary>
         /// 检查锁定状态并更新UI
-        /// 简化实现：只执行三个核心步骤 - 查询锁定状态、判断是否可操作、更新UI
+        /// 作为核心入口点，处理所有锁定状态检测和UI更新逻辑
         /// </summary>
         /// <param name="billId">单据ID</param>
         /// <returns>锁定状态信息和操作权限状态</returns>

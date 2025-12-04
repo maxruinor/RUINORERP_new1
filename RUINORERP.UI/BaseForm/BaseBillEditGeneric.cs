@@ -1188,12 +1188,13 @@ namespace RUINORERP.UI.BaseForm
                 }
                 menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
                 _entityInfoService = Startup.GetFromFac<IEntityMappingService>();
+                
+                // 通过依赖注入获取缓存管理器
+                _cacheManager = Startup.GetFromFac<IEntityCacheManager>();
+                _tableSchemaManager = TableSchemaManager.Instance;
+                _integratedLockService = Startup.GetFromFac<ClientLockManagementService>();
+                _clientCommunicationService = Startup.GetFromFac<ClientCommunicationService>();
             }
-            // 通过依赖注入获取缓存管理器
-            _cacheManager = Startup.GetFromFac<IEntityCacheManager>();
-            _tableSchemaManager = TableSchemaManager.Instance;
-            _integratedLockService = Startup.GetFromFac<ClientLockManagementService>();
-            _clientCommunicationService = Startup.GetFromFac<ClientCommunicationService>();
         }
 
         public readonly IEntityCacheManager _cacheManager;

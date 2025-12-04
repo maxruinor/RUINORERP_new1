@@ -179,7 +179,7 @@
             // 
             // lblClosingBalanceForeignAmount
             // 
-            this.lblClosingBalanceForeignAmount.Location = new System.Drawing.Point(945, 55);
+            this.lblClosingBalanceForeignAmount.Location = new System.Drawing.Point(945, 139);
             this.lblClosingBalanceForeignAmount.Name = "lblClosingBalanceForeignAmount";
             this.lblClosingBalanceForeignAmount.Size = new System.Drawing.Size(88, 20);
             this.lblClosingBalanceForeignAmount.TabIndex = 259;
@@ -187,14 +187,14 @@
             // 
             // txtClosingBalanceForeignAmount
             // 
-            this.txtClosingBalanceForeignAmount.Location = new System.Drawing.Point(1039, 55);
+            this.txtClosingBalanceForeignAmount.Location = new System.Drawing.Point(1039, 138);
             this.txtClosingBalanceForeignAmount.Name = "txtClosingBalanceForeignAmount";
             this.txtClosingBalanceForeignAmount.Size = new System.Drawing.Size(82, 23);
             this.txtClosingBalanceForeignAmount.TabIndex = 260;
             // 
             // lblClosingBalanceLocalAmount
             // 
-            this.lblClosingBalanceLocalAmount.Location = new System.Drawing.Point(945, 80);
+            this.lblClosingBalanceLocalAmount.Location = new System.Drawing.Point(945, 50);
             this.lblClosingBalanceLocalAmount.Name = "lblClosingBalanceLocalAmount";
             this.lblClosingBalanceLocalAmount.Size = new System.Drawing.Size(88, 20);
             this.lblClosingBalanceLocalAmount.TabIndex = 261;
@@ -202,14 +202,14 @@
             // 
             // txtClosingBalanceLocalAmount
             // 
-            this.txtClosingBalanceLocalAmount.Location = new System.Drawing.Point(1039, 80);
+            this.txtClosingBalanceLocalAmount.Location = new System.Drawing.Point(1039, 49);
             this.txtClosingBalanceLocalAmount.Name = "txtClosingBalanceLocalAmount";
             this.txtClosingBalanceLocalAmount.Size = new System.Drawing.Size(82, 23);
             this.txtClosingBalanceLocalAmount.TabIndex = 262;
             // 
             // lblTotalPaidForeignAmount
             // 
-            this.lblTotalPaidForeignAmount.Location = new System.Drawing.Point(945, 191);
+            this.lblTotalPaidForeignAmount.Location = new System.Drawing.Point(945, 195);
             this.lblTotalPaidForeignAmount.Name = "lblTotalPaidForeignAmount";
             this.lblTotalPaidForeignAmount.Size = new System.Drawing.Size(88, 20);
             this.lblTotalPaidForeignAmount.TabIndex = 255;
@@ -217,14 +217,14 @@
             // 
             // txtTotalPaidForeignAmount
             // 
-            this.txtTotalPaidForeignAmount.Location = new System.Drawing.Point(1039, 191);
+            this.txtTotalPaidForeignAmount.Location = new System.Drawing.Point(1039, 194);
             this.txtTotalPaidForeignAmount.Name = "txtTotalPaidForeignAmount";
             this.txtTotalPaidForeignAmount.Size = new System.Drawing.Size(82, 23);
             this.txtTotalPaidForeignAmount.TabIndex = 256;
             // 
             // lblTotalPaidLocalAmount
             // 
-            this.lblTotalPaidLocalAmount.Location = new System.Drawing.Point(945, 216);
+            this.lblTotalPaidLocalAmount.Location = new System.Drawing.Point(945, 109);
             this.lblTotalPaidLocalAmount.Name = "lblTotalPaidLocalAmount";
             this.lblTotalPaidLocalAmount.Size = new System.Drawing.Size(88, 20);
             this.lblTotalPaidLocalAmount.StateNormal.ShortText.Color1 = System.Drawing.Color.DarkGreen;
@@ -233,14 +233,14 @@
             // 
             // txtTotalPaidLocalAmount
             // 
-            this.txtTotalPaidLocalAmount.Location = new System.Drawing.Point(1039, 216);
+            this.txtTotalPaidLocalAmount.Location = new System.Drawing.Point(1039, 108);
             this.txtTotalPaidLocalAmount.Name = "txtTotalPaidLocalAmount";
             this.txtTotalPaidLocalAmount.Size = new System.Drawing.Size(82, 23);
             this.txtTotalPaidLocalAmount.TabIndex = 258;
             // 
             // lblTotalReceivedForeignAmount
             // 
-            this.lblTotalReceivedForeignAmount.Location = new System.Drawing.Point(945, 120);
+            this.lblTotalReceivedForeignAmount.Location = new System.Drawing.Point(945, 166);
             this.lblTotalReceivedForeignAmount.Name = "lblTotalReceivedForeignAmount";
             this.lblTotalReceivedForeignAmount.Size = new System.Drawing.Size(88, 20);
             this.lblTotalReceivedForeignAmount.TabIndex = 251;
@@ -248,14 +248,14 @@
             // 
             // txtTotalReceivedForeignAmount
             // 
-            this.txtTotalReceivedForeignAmount.Location = new System.Drawing.Point(1039, 120);
+            this.txtTotalReceivedForeignAmount.Location = new System.Drawing.Point(1039, 165);
             this.txtTotalReceivedForeignAmount.Name = "txtTotalReceivedForeignAmount";
             this.txtTotalReceivedForeignAmount.Size = new System.Drawing.Size(82, 23);
             this.txtTotalReceivedForeignAmount.TabIndex = 252;
             // 
             // lblTotalReceivedLocalAmount
             // 
-            this.lblTotalReceivedLocalAmount.Location = new System.Drawing.Point(945, 145);
+            this.lblTotalReceivedLocalAmount.Location = new System.Drawing.Point(945, 80);
             this.lblTotalReceivedLocalAmount.Name = "lblTotalReceivedLocalAmount";
             this.lblTotalReceivedLocalAmount.Size = new System.Drawing.Size(88, 20);
             this.lblTotalReceivedLocalAmount.StateNormal.ShortText.Color1 = System.Drawing.Color.DarkGreen;
@@ -264,14 +264,14 @@
             // 
             // txtTotalReceivedLocalAmount
             // 
-            this.txtTotalReceivedLocalAmount.Location = new System.Drawing.Point(1039, 145);
+            this.txtTotalReceivedLocalAmount.Location = new System.Drawing.Point(1039, 79);
             this.txtTotalReceivedLocalAmount.Name = "txtTotalReceivedLocalAmount";
             this.txtTotalReceivedLocalAmount.Size = new System.Drawing.Size(82, 23);
             this.txtTotalReceivedLocalAmount.TabIndex = 254;
             // 
             // lblTotalPayableForeignAmount
             // 
-            this.lblTotalPayableForeignAmount.Location = new System.Drawing.Point(756, 191);
+            this.lblTotalPayableForeignAmount.Location = new System.Drawing.Point(756, 195);
             this.lblTotalPayableForeignAmount.Name = "lblTotalPayableForeignAmount";
             this.lblTotalPayableForeignAmount.Size = new System.Drawing.Size(88, 20);
             this.lblTotalPayableForeignAmount.TabIndex = 247;
@@ -279,14 +279,14 @@
             // 
             // txtTotalPayableForeignAmount
             // 
-            this.txtTotalPayableForeignAmount.Location = new System.Drawing.Point(850, 191);
+            this.txtTotalPayableForeignAmount.Location = new System.Drawing.Point(850, 194);
             this.txtTotalPayableForeignAmount.Name = "txtTotalPayableForeignAmount";
             this.txtTotalPayableForeignAmount.Size = new System.Drawing.Size(82, 23);
             this.txtTotalPayableForeignAmount.TabIndex = 248;
             // 
             // lblTotalPayableLocalAmount
             // 
-            this.lblTotalPayableLocalAmount.Location = new System.Drawing.Point(756, 216);
+            this.lblTotalPayableLocalAmount.Location = new System.Drawing.Point(756, 109);
             this.lblTotalPayableLocalAmount.Name = "lblTotalPayableLocalAmount";
             this.lblTotalPayableLocalAmount.Size = new System.Drawing.Size(88, 20);
             this.lblTotalPayableLocalAmount.StateNormal.ShortText.Color1 = System.Drawing.Color.Red;
@@ -295,14 +295,14 @@
             // 
             // txtTotalPayableLocalAmount
             // 
-            this.txtTotalPayableLocalAmount.Location = new System.Drawing.Point(850, 216);
+            this.txtTotalPayableLocalAmount.Location = new System.Drawing.Point(850, 108);
             this.txtTotalPayableLocalAmount.Name = "txtTotalPayableLocalAmount";
             this.txtTotalPayableLocalAmount.Size = new System.Drawing.Size(82, 23);
             this.txtTotalPayableLocalAmount.TabIndex = 250;
             // 
             // lblTotalReceivableForeignAmount
             // 
-            this.lblTotalReceivableForeignAmount.Location = new System.Drawing.Point(756, 123);
+            this.lblTotalReceivableForeignAmount.Location = new System.Drawing.Point(756, 166);
             this.lblTotalReceivableForeignAmount.Name = "lblTotalReceivableForeignAmount";
             this.lblTotalReceivableForeignAmount.Size = new System.Drawing.Size(88, 20);
             this.lblTotalReceivableForeignAmount.TabIndex = 243;
@@ -310,14 +310,14 @@
             // 
             // txtTotalReceivableForeignAmount
             // 
-            this.txtTotalReceivableForeignAmount.Location = new System.Drawing.Point(850, 123);
+            this.txtTotalReceivableForeignAmount.Location = new System.Drawing.Point(850, 165);
             this.txtTotalReceivableForeignAmount.Name = "txtTotalReceivableForeignAmount";
             this.txtTotalReceivableForeignAmount.Size = new System.Drawing.Size(82, 23);
             this.txtTotalReceivableForeignAmount.TabIndex = 244;
             // 
             // lblTotalReceivableLocalAmount
             // 
-            this.lblTotalReceivableLocalAmount.Location = new System.Drawing.Point(756, 148);
+            this.lblTotalReceivableLocalAmount.Location = new System.Drawing.Point(756, 80);
             this.lblTotalReceivableLocalAmount.Name = "lblTotalReceivableLocalAmount";
             this.lblTotalReceivableLocalAmount.Size = new System.Drawing.Size(88, 20);
             this.lblTotalReceivableLocalAmount.StateNormal.ShortText.Color1 = System.Drawing.Color.Red;
@@ -326,14 +326,14 @@
             // 
             // txtTotalReceivableLocalAmount
             // 
-            this.txtTotalReceivableLocalAmount.Location = new System.Drawing.Point(850, 148);
+            this.txtTotalReceivableLocalAmount.Location = new System.Drawing.Point(850, 79);
             this.txtTotalReceivableLocalAmount.Name = "txtTotalReceivableLocalAmount";
             this.txtTotalReceivableLocalAmount.Size = new System.Drawing.Size(82, 23);
             this.txtTotalReceivableLocalAmount.TabIndex = 246;
             // 
             // lblOpeningBalanceForeignAmount
             // 
-            this.lblOpeningBalanceForeignAmount.Location = new System.Drawing.Point(756, 52);
+            this.lblOpeningBalanceForeignAmount.Location = new System.Drawing.Point(756, 139);
             this.lblOpeningBalanceForeignAmount.Name = "lblOpeningBalanceForeignAmount";
             this.lblOpeningBalanceForeignAmount.Size = new System.Drawing.Size(88, 20);
             this.lblOpeningBalanceForeignAmount.TabIndex = 239;
@@ -341,14 +341,14 @@
             // 
             // txtOpeningBalanceForeignAmount
             // 
-            this.txtOpeningBalanceForeignAmount.Location = new System.Drawing.Point(850, 52);
+            this.txtOpeningBalanceForeignAmount.Location = new System.Drawing.Point(850, 138);
             this.txtOpeningBalanceForeignAmount.Name = "txtOpeningBalanceForeignAmount";
             this.txtOpeningBalanceForeignAmount.Size = new System.Drawing.Size(82, 23);
             this.txtOpeningBalanceForeignAmount.TabIndex = 240;
             // 
             // lblOpeningBalanceLocalAmount
             // 
-            this.lblOpeningBalanceLocalAmount.Location = new System.Drawing.Point(756, 81);
+            this.lblOpeningBalanceLocalAmount.Location = new System.Drawing.Point(756, 50);
             this.lblOpeningBalanceLocalAmount.Name = "lblOpeningBalanceLocalAmount";
             this.lblOpeningBalanceLocalAmount.Size = new System.Drawing.Size(88, 20);
             this.lblOpeningBalanceLocalAmount.TabIndex = 241;
@@ -356,7 +356,7 @@
             // 
             // txtOpeningBalanceLocalAmount
             // 
-            this.txtOpeningBalanceLocalAmount.Location = new System.Drawing.Point(850, 81);
+            this.txtOpeningBalanceLocalAmount.Location = new System.Drawing.Point(850, 49);
             this.txtOpeningBalanceLocalAmount.Name = "txtOpeningBalanceLocalAmount";
             this.txtOpeningBalanceLocalAmount.Size = new System.Drawing.Size(82, 23);
             this.txtOpeningBalanceLocalAmount.TabIndex = 242;

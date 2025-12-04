@@ -69,7 +69,10 @@ namespace RUINORERP.UI.FM
         public UCFMStatement()
         {
             InitializeComponent();
-            AddPublicEntityObject(typeof(ProductSharePart));
+            if (!this.DesignMode)
+            {
+                AddPublicEntityObject(typeof(ProductSharePart));
+            }
         }
 
         public override void AddExcludeMenuList()

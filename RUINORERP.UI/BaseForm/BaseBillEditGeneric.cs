@@ -395,66 +395,23 @@ namespace RUINORERP.UI.BaseForm
         }
 
         /// <summary>
-        /// 执行状态转换 - 使用状态管理器（异步版本）
+        /// 执行状态转换 - 使用统一的状态上下文进行状态转换
         /// </summary>
         /// <param name="targetStatus">目标状态</param>
         /// <param name="reason">转换原因</param>
         /// <returns>转换结果</returns>
-        protected virtual async Task<StateTransitionResult> TransitionToAsync(DataStatus targetStatus, string reason = "")
+        protected override async Task<StateTransitionResult> TransitionToAsync(DataStatus targetStatus, string reason = "")
         {
-            if (EditEntity is BaseEntity baseEntity && StateManager != null)
+            // 调用基类的实现，确保状态转换通过统一入口点进行
+            var result = await base.TransitionToAsync(targetStatus, reason);
+            
+            // 如果状态转换成功，更新UI状态
+            if (result.IsSuccess && EditEntity is BaseEntity baseEntity)
             {
-                try
-                {
-                    // 验证状态转换
-                    var validationResult = await StateManager.ValidateDataStatusTransitionAsync(baseEntity, targetStatus);
-                    if (!validationResult.IsSuccess)
-                    {
-                        return validationResult;
-                    }
-
-                    // 执行状态转换
-                    StateManager.SetEntityDataStatus(baseEntity, targetStatus);
-
-                    // 更新UI状态
-                    UpdateAllUIStates(baseEntity);
-
-                    return StateTransitionResult.Success($"状态转换成功: {targetStatus}");
-                }
-                catch (Exception ex)
-                {
-                    return StateTransitionResult.Failure($"状态转换失败: {ex.Message}");
-                }
+                UpdateAllUIStates(baseEntity);
             }
-            return StateTransitionResult.Failure("实体或状态管理器不可用");
-        }
-
-        /// <summary>
-        /// 执行状态转换 - 使用状态管理器（同步版本）
-        /// </summary>
-        /// <param name="targetStatus">目标状态</param>
-        /// <param name="reason">转换原因</param>
-        /// <returns>转换结果</returns>
-        protected virtual StateTransitionResult TransitionTo(DataStatus targetStatus, string reason = "")
-        {
-            if (EditEntity is BaseEntity baseEntity && StateManager != null)
-            {
-                try
-                {
-                    // 执行状态转换（跳过异步验证以保持同步）
-                    StateManager.SetEntityDataStatus(baseEntity, targetStatus);
-
-                    // 更新UI状态
-                    UpdateAllUIStates(baseEntity);
-
-                    return StateTransitionResult.Success($"状态转换成功: {targetStatus}");
-                }
-                catch (Exception ex)
-                {
-                    return StateTransitionResult.Failure($"状态转换失败: {ex.Message}");
-                }
-            }
-            return StateTransitionResult.Failure("实体或状态管理器不可用");
+            
+            return result;
         }
 
 
@@ -1770,11 +1727,10 @@ namespace RUINORERP.UI.BaseForm
         /// </summary>
         internal void ToolBarEnabledControl(MenuItemEnums menu)
         {
-            // 使用统一的UI状态更新方法，根据当前实体状态更新所有按钮
+            // 使用统一的UI状态更新方法，根据当前实体状态更新所有按钮和控件
             if (EditEntity is BaseEntity baseEntity)
             {
-                var currentStatus = baseEntity.GetDataStatus();
-                UpdateAllButtonStates(currentStatus);
+                UpdateAllUIStates(baseEntity);
 
                 // 针对特殊操作进行额外处理
                 switch (menu)
@@ -1809,7 +1765,10 @@ namespace RUINORERP.UI.BaseForm
                 ActionStatus actionStatus = (ActionStatus)(Enum.Parse(typeof(ActionStatus), entity.GetPropertyValue(typeof(ActionStatus).Name).ToString()));
 
                 // 使用统一的UI状态更新方法
-                UpdateAllButtonStates(dataStatus);
+                if (entity is BaseEntity baseEntity)
+                {
+                    UpdateAllUIStates(baseEntity);
+                }
 
                 // 根据ActionStatus处理保存按钮状态
                 if (actionStatus == ActionStatus.新增)
@@ -1955,7 +1914,7 @@ namespace RUINORERP.UI.BaseForm
                     // 获取业务状态
                     var businessStatusV3 = GetBusinessStatus(currentBaseEntity);
                     //// 锁定状态处理
-                    //await HandleLockStatus(currentBaseEntity, businessStatusV3);
+
                 }
                 catch (Exception ex)
                 {
@@ -1963,7 +1922,7 @@ namespace RUINORERP.UI.BaseForm
                     // 回退到传统逻辑 - 直接获取业务状态
                     var businessStatus = GetBusinessStatus(entity as BaseEntity);
                     // 锁定状态处理
-                    //await HandleLockStatus(entity as BaseEntity, businessStatus);
+
                 }
             }
             else
@@ -1971,7 +1930,7 @@ namespace RUINORERP.UI.BaseForm
                 // 回退到传统逻辑 - 直接获取业务状态
                 var businessStatus = GetBusinessStatus(entity as BaseEntity);
                 // 锁定状态处理
-                //await HandleLockStatus(entity as BaseEntity, businessStatus);
+                
             }
 
 
@@ -2179,8 +2138,8 @@ namespace RUINORERP.UI.BaseForm
                         break;
                 }
 
-                // 使用统一的按钮状态更新方法
-                UpdateAllButtonStates(StateManager.GetDataStatus(entity));
+                // 使用统一的UI状态更新方法
+                UpdateAllUIStates(entity);
 
                 // 保存状态特殊处理
                 toolStripButtonSave.Enabled = entity.HasChanged;
@@ -2243,50 +2202,7 @@ namespace RUINORERP.UI.BaseForm
         /// ToolBarEnabledControl引用了。暂时注释了
         /// </summary>
         /// <param name="entity">单据实体</param>
-        /// <param name="businessStatus">业务状态</param>
-        /// <remarks>
-        /// 整合版本：调用统一的CheckLockStatusAndUpdateUI方法处理锁定状态检查和UI更新
-        /// 避免重复代码，保持功能一致
-        /// </remarks>
-        private async Task HandleLockStatus(BaseEntity entity, Enum businessStatus)
-        {
-            if (entity == null) return;
 
-            // 调用统一的锁定状态检查和UI更新方法
-            await CheckLockStatusAndUpdateUI(entity);
-
-            // 对于被他人锁定的情况，CheckLockStatusAndUpdateUI已禁用控件
-            // 这里只需要在未被锁定或自己锁定的情况下恢复控件可用性
-            string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
-            long pkid = (long)ReflectionHelper.GetPropertyValue(entity, PKCol);
-
-            if (pkid > 0 && _integratedLockService != null)
-            {
-                try
-                {
-                    var lockInfo = await _integratedLockService.GetLockInfoAsync(pkid, CurMenuInfo.MenuID);
-                    long currentUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
-                    bool isSelfLock = lockInfo != null && lockInfo.IsLocked && lockInfo.LockedUserId == currentUserId;
-
-                    // 未被锁定或自己锁定时恢复控件可用性
-                    if (!lockInfo?.IsLocked ?? true || isSelfLock)
-                    {
-                        foreach (Control control in Controls)
-                        {
-                            control.Enabled = true;
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    MainForm.Instance.logger.LogError(ex, "处理锁定状态时发生异常");
-                    MainForm.Instance.uclog.AddLog($"处理锁定状态时发生异常: {ex.Message}", UILogType.错误);
-                }
-            }
-
-            // 根据业务状态启用适当的操作按钮
-            EnableOperationsBasedOnStatus(businessStatus);
-        }
 
 
 
@@ -2372,8 +2288,13 @@ namespace RUINORERP.UI.BaseForm
             // 调用基于billId的版本，避免代码重复
             var result = await CheckLockStatusAndUpdateUI(pkid);
 
+            // 未被锁定或自己锁定时恢复控件可用性
+            if (!result.IsLocked || result.CanPerformCriticalOperations)
+            {
+                SetControlsEnabled(true);
+            }
             // 如果是被他人锁定，需要禁用所有编辑控件（UI加载时的特殊处理）
-            if (result.IsLocked && !result.CanPerformCriticalOperations)
+            else
             {
                 SetControlsEnabled(false, tsBtnLocked.Name, toolStripbtnClose.Name);
                 tsBtnLocked.Enabled = true;
@@ -5107,8 +5028,7 @@ namespace RUINORERP.UI.BaseForm
             }
             if (ReflectionHelper.ExistPropertyName(entity.GetType(), typeof(DataStatus).Name))
             {
-                TransitionTo(DataStatus.草稿, "保存为草稿");
-                //ReflectionHelper.SetPropertyValue(entity, typeof(DataStatus).Name, (int)DataStatus.草稿);
+                ReflectionHelper.SetPropertyValue(entity, typeof(DataStatus).Name, (int)DataStatus.草稿);
             }
 
             if (ReflectionHelper.ExistPropertyName(entity.GetType(), "ApprovalResults"))

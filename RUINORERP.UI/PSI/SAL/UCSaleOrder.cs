@@ -57,7 +57,6 @@ using static RUINOR.WinFormsUI.CustomPictureBox.MagicPictureBox;
 using RUINORERP.Business.Cache;
 using MathNet.Numerics;
 using RUINORERP.Business.BizMapperService;
-using RUINORERP.UI.StateManagement.Core;
 using RUINORERP.Model.Base;
 
 namespace RUINORERP.UI.PSI.SAL

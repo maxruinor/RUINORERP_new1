@@ -400,7 +400,7 @@ namespace RUINORERP.UI.BaseForm
         /// <param name="targetStatus">目标状态</param>
         /// <param name="reason">转换原因</param>
         /// <returns>转换结果</returns>
-        protected override async Task<StateTransitionResult> TransitionToAsync(DataStatus targetStatus, string reason = "")
+        public override async Task<StateTransitionResult> TransitionToAsync(DataStatus targetStatus, string reason = "")
         {
             // 调用基类的实现，确保状态转换通过统一入口点进行
             var result = await base.TransitionToAsync(targetStatus, reason);
@@ -487,7 +487,7 @@ namespace RUINORERP.UI.BaseForm
         /// 统一更新所有按钮状态 - 集中管理所有工具栏按钮的状态
         /// </summary>
         /// <param name="currentStatus">当前状态</param>
-        protected virtual void UpdateAllButtonStates(DataStatus currentStatus)
+        protected override void UpdateAllButtonStates(DataStatus currentStatus)
         {
             try
             {

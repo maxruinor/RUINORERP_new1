@@ -113,7 +113,19 @@ namespace RUINORERP.UI.BaseForm
         /// </summary>
         protected virtual void UpdateButtonStates()
         {
-            
+            // 获取当前数据状态
+            DataStatus currentStatus = CurrentDataStatus;
+            // 更新所有按钮状态
+            UpdateAllButtonStates(currentStatus);
+        }
+        
+        /// <summary>
+        /// 统一更新所有按钮状态 - 集中管理所有工具栏按钮的状态
+        /// </summary>
+        /// <param name="currentStatus">当前状态</param>
+        protected override void UpdateAllButtonStates(DataStatus currentStatus)
+        {
+            // 默认实现为空，子类可以重写以提供具体实现
         }
 
         /// <summary>
@@ -132,7 +144,7 @@ namespace RUINORERP.UI.BaseForm
         /// 根据状态更新UI控件（子类可重写）
         /// </summary>
         /// <param name="currentStatus">当前状态</param>
-        protected virtual void UpdateUIControlsByState(DataStatus currentStatus)
+        protected override void UpdateUIControlsByState(DataStatus currentStatus)
         {
             // 子类可以重写此方法以根据状态更新特定UI控件
             // 例如：禁用/启用某些输入框，显示/隐藏某些控件等
@@ -171,61 +183,12 @@ namespace RUINORERP.UI.BaseForm
         }
 
        
-        /// <summary>
-        /// 执行状态转换
-        /// </summary>
-        /// <param name="targetStatus">目标状态</param>
-        /// <param name="reason">转换原因</param>
-        /// <returns>转换结果</returns>
-        protected virtual async Task<StateTransitionResult> TransitionToAsync(DataStatus targetStatus, string reason = "")
-        {
-            if (StatusContext != null)
-            {
-                return await StatusContext.TransitionTo(targetStatus, reason);
-            }
-            return StateTransitionResult.Failure("状态上下文未初始化");
-        }
+        // TransitionToAsync方法已在StateAwareControl中实现，此处不再重复
 
 
 
-        /// <summary>
-        /// 获取所有控件
-        /// </summary>
-        /// <returns>控件集合</returns>
-        protected virtual IEnumerable<Control> GetAllControls()
-        {
-            var controls = new List<Control>();
-
-            // 添加当前窗体的控件
-            foreach (Control control in this.Controls)
-            {
-                controls.Add(control);
-
-                // 递归添加子控件
-                AddChildControls(control, controls);
-            }
-
-            return controls;
-        }
-
-        /// <summary>
-        /// 递归添加子控件
-        /// </summary>
-        /// <param name="parent">父控件</param>
-        /// <param name="controls">控件集合</param>
-        private void AddChildControls(Control parent, List<Control> controls)
-        {
-            foreach (Control child in parent.Controls)
-            {
-                controls.Add(child);
-
-                // 递归添加子控件的子控件
-                if (child.HasChildren)
-                {
-                    AddChildControls(child, controls);
-                }
-            }
-        }
+        // GetAllControls方法已在StateAwareControl中实现，此处不再重复
+        // AddChildControls方法已在StateAwareControl中实现，此处不再重复
 
 
 

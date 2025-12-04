@@ -253,6 +253,48 @@ namespace RUINORERP.UI.StateManagement
                 System.Diagnostics.Debug.WriteLine($"应用状态到UI失败: {ex.Message}");
             }
         }
+        
+        /// <summary>
+        /// 统一更新所有UI状态
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        protected virtual void UpdateAllUIStates(BaseEntity entity)
+        {
+            if (entity == null) return;
+            
+            // 应用当前状态到UI
+            ApplyCurrentStatusToUI();
+            // 获取当前状态
+            var currentStatus = StateManager.GetDataStatus(entity);
+            // 获取当前状态
+          //  var currentStatus = StatusContext?.CurrentStatus;
+            if (currentStatus != null)
+            {
+                // 更新所有按钮状态
+                UpdateAllButtonStates(currentStatus);
+                
+                // 更新UI控件状态
+                UpdateUIControlsByState(currentStatus);
+            }
+        }
+        
+        /// <summary>
+        /// 更新所有按钮状态
+        /// </summary>
+        /// <param name="currentStatus">当前状态</param>
+        protected virtual void UpdateAllButtonStates(DataStatus currentStatus)
+        {
+            // 默认实现为空，子类可以重写以提供具体实现
+        }
+        
+        /// <summary>
+        /// 根据状态更新UI控件
+        /// </summary>
+        /// <param name="currentStatus">当前状态</param>
+        protected virtual void UpdateUIControlsByState(DataStatus currentStatus)
+        {
+            // 默认实现为空，子类可以重写以提供具体实现
+        }
 
         /// <summary>
         /// 获取控件及其所有子控件
@@ -262,6 +304,13 @@ namespace RUINORERP.UI.StateManagement
         protected virtual IEnumerable<Control> GetAllControls(Control parent) =>
             parent.Controls.Cast<Control>()
                 .SelectMany(control => new[] { control }.Concat(GetAllControls(control)));
+        
+        /// <summary>
+        /// 获取当前控件及其所有子控件
+        /// </summary>
+        /// <returns>控件列表</returns>
+        protected virtual IEnumerable<Control> GetAllControls() =>
+            GetAllControls(this);
 
         /// <summary>
         /// 刷新状态
@@ -312,12 +361,12 @@ namespace RUINORERP.UI.StateManagement
         #region 状态转换
 
         /// <summary>
-        /// 转换到新的数据状态
+        /// 执行状态转换
         /// </summary>
         /// <param name="targetStatus">目标状态</param>
         /// <param name="reason">转换原因</param>
         /// <returns>转换结果</returns>
-        public virtual async Task<StateTransitionResult> TransitionToDataStatusAsync(DataStatus targetStatus, string reason = "")
+        public virtual async Task<StateTransitionResult> TransitionToAsync(DataStatus targetStatus, string reason = "")
         {
             if (StatusContext == null)
                 return StateTransitionResult.Failure("状态上下文未初始化");

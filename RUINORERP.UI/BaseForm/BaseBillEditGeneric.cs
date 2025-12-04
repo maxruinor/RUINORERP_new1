@@ -201,16 +201,7 @@ namespace RUINORERP.UI.BaseForm
             {
                 if (e.Entity is BaseEntity entity && this.EditEntity == entity)
                 {
-                    // 更新状态显示
-                    UpdateStateDisplay();
-
-                    // 更新按钮状态
-                    UpdateButtonStates();
-
-                    // 更新UI控件状态
-                    UpdateUIByCurrentState();
-
-                    // 触发子类的状态变更处理
+                    // 统一处理状态变更
                     OnEntityStateChanged(sender, e);
 
                     // 记录状态变更日志
@@ -225,39 +216,19 @@ namespace RUINORERP.UI.BaseForm
 
 
         /// <summary>
-        /// 实体状态变更事件处理程序
+        /// 实体状态变更事件处理程序 - 统一处理所有状态变更事件
         /// </summary>
         /// <param name="sender">事件发送者</param>
         /// <param name="e">事件参数</param>
         protected virtual void OnEntityStateChanged(object sender, StateTransitionEventArgs e)
         {
-            if (this.StateManager != null)
+            if (e.Entity is BaseEntity entity)
             {
-                // 根据状态变更更新UI
-                if (e.Entity is BaseEntity entity)
-                {
-                    UpdateUIBasedOnEntityState(entity);
+                // 统一更新所有UI状态
+                UpdateAllUIStates(entity);
 
-                    // 使用新的状态管理器更新UI状态
-                    var entityStatus = this.StateManager.GetEntityStatus(entity);
-                    if (UIController != null)
-                    {
-                        // 使用工厂方法创建状态上下文
-                        var statusContext = StatusTransitionContextFactory.CreateDataStatusContext(
-                            entity,
-                            entityStatus.dataStatus ?? RUINORERP.Global.DataStatus.草稿,
-                            $"UI状态更新_{e.Reason}");
-
-                        // 获取当前控件集合
-                        var controls = GetAllControls();
-
-                        // 更新UI状态
-                        UIController.UpdateUIStatus(statusContext, controls);
-                    }
-
-                    // 触发子类的特定状态变更处理
-                    HandleSpecificStateChange(e.OldStatus, e.NewStatus, e.Reason);
-                }
+                // 触发子类的特定状态变更处理
+                HandleSpecificStateChange(e.OldStatus, e.NewStatus, e.Reason);
             }
         }
 
@@ -314,12 +285,11 @@ namespace RUINORERP.UI.BaseForm
                         }
                         catch (Exception ex)
                         {
-                            MainForm.Instance.logger.LogError(ex, "解锁单据时发生异常");
+                            logger?.LogError(ex, "更新审核状态显示失败: {ex.Message}", ex);
                         }
                     }
                 }
             }
-
             catch (Exception ex)
             {
                 logger?.LogError(ex, "更新状态显示失败");
@@ -328,43 +298,27 @@ namespace RUINORERP.UI.BaseForm
 
 
         /// <summary>
-        /// 根据当前状态更新UI
+        /// 根据当前状态更新UI - 调用统一的UI状态更新方法
         /// </summary>
         protected virtual void UpdateUIByCurrentState()
         {
-            if (EditEntity == null) return;
-
-            try
+            if (EditEntity is BaseEntity baseEntity)
             {
-                if (EditEntity is BaseEntity baseEntity)
-                {
-                    var currentStatus = baseEntity.GetDataStatus();
-
-                    // 根据状态更新UI控件
-                    UpdateUIControlsByState(currentStatus);
-
-                    // 更新工具栏按钮
-                    UpdateToolbarButtons(currentStatus);
-                }
-            }
-            catch (Exception ex)
-            {
-                logger?.LogError(ex, "根据状态更新UI失败");
+                UpdateAllUIStates(baseEntity);
             }
         }
 
 
         /// <summary>
-        /// 更新工具栏按钮状态
+        /// 更新工具栏按钮状态 - 调用统一的按钮状态更新方法
         /// </summary>
         /// <param name="currentStatus">当前状态</param>
         protected override void UpdateToolbarButtons(DataStatus currentStatus)
         {
-            // 根据当前状态更新工具栏按钮的可见性和启用状态
-            // 子类可以重写此方法以实现特定的业务逻辑
-            // 默认实现：更新基于权限的按钮可见性
+            // 调用统一的按钮状态更新方法
+            UpdateAllButtonStates(currentStatus);
+            // 更新基于权限的按钮可见性
             UpdatePermissionBasedButtonVisibility();
-
         }
 
 
@@ -453,6 +407,69 @@ namespace RUINORERP.UI.BaseForm
             return StateTransitionCheckResult.Denied("实体或状态管理器不可用");
         }
 
+        /// <summary>
+        /// 执行状态转换 - 使用状态管理器（异步版本）
+        /// </summary>
+        /// <param name="targetStatus">目标状态</param>
+        /// <param name="reason">转换原因</param>
+        /// <returns>转换结果</returns>
+        protected virtual async Task<StateTransitionResult> TransitionToAsync(DataStatus targetStatus, string reason = "")
+        {
+            if (EditEntity is BaseEntity baseEntity && StateManager != null)
+            {
+                try
+                {
+                    // 验证状态转换
+                    var validationResult = await StateManager.ValidateDataStatusTransitionAsync(baseEntity, targetStatus);
+                    if (!validationResult.IsSuccess)
+                    {
+                        return validationResult;
+                    }
+
+                    // 执行状态转换
+                    StateManager.SetEntityDataStatus(baseEntity, targetStatus);
+
+                    // 更新UI状态
+                    UpdateAllUIStates(baseEntity);
+
+                    return StateTransitionResult.Success($"状态转换成功: {targetStatus}");
+                }
+                catch (Exception ex)
+                {
+                    return StateTransitionResult.Failure($"状态转换失败: {ex.Message}");
+                }
+            }
+            return StateTransitionResult.Failure("实体或状态管理器不可用");
+        }
+
+        /// <summary>
+        /// 执行状态转换 - 使用状态管理器（同步版本）
+        /// </summary>
+        /// <param name="targetStatus">目标状态</param>
+        /// <param name="reason">转换原因</param>
+        /// <returns>转换结果</returns>
+        protected virtual StateTransitionResult TransitionTo(DataStatus targetStatus, string reason = "")
+        {
+            if (EditEntity is BaseEntity baseEntity && StateManager != null)
+            {
+                try
+                {
+                    // 执行状态转换（跳过异步验证以保持同步）
+                    StateManager.SetEntityDataStatus(baseEntity, targetStatus);
+
+                    // 更新UI状态
+                    UpdateAllUIStates(baseEntity);
+
+                    return StateTransitionResult.Success($"状态转换成功: {targetStatus}");
+                }
+                catch (Exception ex)
+                {
+                    return StateTransitionResult.Failure($"状态转换失败: {ex.Message}");
+                }
+            }
+            return StateTransitionResult.Failure("实体或状态管理器不可用");
+        }
+
 
         /// <summary>
         /// 状态上下文变更事件处理程序
@@ -482,10 +499,104 @@ namespace RUINORERP.UI.BaseForm
             var entity = e.Entity as BaseEntity;
             if (entity != null)
             {
-                // 更新UI状态
-                UpdateUIBasedOnGenericEntityState(entity);
+                // 使用统一方法更新所有UI状态
+                UpdateAllUIStates(entity);
             }
         }
+
+        /// <summary>
+        /// 统一更新所有UI状态 - 集中处理所有UI状态更新逻辑
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        protected virtual void UpdateAllUIStates(BaseEntity entity)
+        {
+            if (entity == null) return;
+
+            try
+            {
+                // 使用新的状态管理系统更新UI
+                if (StateManager != null)
+                {
+                    // 获取当前状态
+                    var currentStatus = StateManager.GetDataStatus(entity);
+
+                    // 统一更新所有按钮状态
+                    UpdateAllButtonStates(currentStatus);
+
+                    // 更新UI控件状态
+                    UpdateUIControlsByState(currentStatus);
+
+                    // 更新状态显示
+                    UpdateStateDisplay();
+
+                    // 更新基于权限的按钮可见性
+                    UpdatePermissionBasedButtonVisibility();
+                }
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "统一更新UI状态失败: {ex.Message}", ex);
+            }
+        }
+
+        /// <summary>
+        /// 统一更新所有按钮状态 - 集中管理所有工具栏按钮的状态
+        /// </summary>
+        /// <param name="currentStatus">当前状态</param>
+        protected virtual void UpdateAllButtonStates(DataStatus currentStatus)
+        {
+            try
+            {
+                bool canModify = false, canSave = false, canSubmit = false, canReview = false, canReverseReview = false;
+                bool canCloseCase = false, canAntiCloseCase = false, canDelete = false, canCancel = false;
+
+                // 优先使用UIController和StatusContext获取按钮状态
+                if (UIController != null && StatusContext != null)
+                {
+                    // 检查各种操作的可执行性
+                    canModify = UIController.CanExecuteAction(MenuItemEnums.修改, StatusContext);
+                    canSave = UIController.CanExecuteAction(MenuItemEnums.保存, StatusContext);
+                    canSubmit = UIController.CanExecuteAction(MenuItemEnums.提交, StatusContext);
+                    canReview = UIController.CanExecuteAction(MenuItemEnums.审核, StatusContext);
+                    canReverseReview = UIController.CanExecuteAction(MenuItemEnums.反审, StatusContext);
+                    canCloseCase = UIController.CanExecuteAction(MenuItemEnums.结案, StatusContext);
+                    canAntiCloseCase = UIController.CanExecuteAction(MenuItemEnums.反结案, StatusContext);
+                    canDelete = UIController.CanExecuteAction(MenuItemEnums.删除, StatusContext);
+                    canCancel = UIController.CanExecuteAction(MenuItemEnums.取消, StatusContext);
+                }
+                else if (StateManager != null && EditEntity is BaseEntity entity)
+                {
+                    // 如果UIController不可用，使用StateManager获取可执行的操作
+                    var availableActions = StatusHelper.GetAvailableActions(currentStatus);
+                    canModify = availableActions.Contains(MenuItemEnums.修改);
+                    canSave = availableActions.Contains(MenuItemEnums.保存);
+                    canSubmit = availableActions.Contains(MenuItemEnums.提交);
+                    canReview = availableActions.Contains(MenuItemEnums.审核);
+                    canReverseReview = availableActions.Contains(MenuItemEnums.反审);
+                    canCloseCase = availableActions.Contains(MenuItemEnums.结案);
+                    canAntiCloseCase = availableActions.Contains(MenuItemEnums.反结案);
+                    canDelete = availableActions.Contains(MenuItemEnums.删除);
+                    canCancel = availableActions.Contains(MenuItemEnums.取消);
+                }
+
+                // 统一更新按钮状态
+                toolStripbtnModify.Enabled = canModify;
+                toolStripButtonSave.Enabled = canSave;
+                toolStripbtnSubmit.Enabled = canSubmit;
+                toolStripbtnReview.Enabled = canReview;
+                toolStripBtnReverseReview.Enabled = canReverseReview;
+                toolStripButton结案.Enabled = canCloseCase;
+                toolStripbtnDelete.Enabled = canDelete;
+                toolStripBtnCancel.Visible = canCancel;
+                UpdateStateDisplay();
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "更新按钮状态失败: {ex.Message}", ex);
+            }
+
+        }
+           
 
         /// <summary>
         /// 根据通用实体状态更新UI
@@ -493,41 +604,11 @@ namespace RUINORERP.UI.BaseForm
         /// <param name="entity">实体对象</param>
         protected virtual void UpdateUIBasedOnGenericEntityState(BaseEntity entity)
         {
-            if (entity == null) return;
-
-            try
-            {
-                // 使用新的状态管理系统检查各种操作权限
-                if (UIController != null && StatusContext != null)
-                {
-                    // 检查各种操作的可执行性
-                    bool canModify = UIController.CanExecuteAction(MenuItemEnums.修改, StatusContext);
-                    bool canSubmit = UIController.CanExecuteAction(MenuItemEnums.提交, StatusContext);
-                    bool canReview = UIController.CanExecuteAction(MenuItemEnums.审核, StatusContext);
-                    bool canReverseReview = UIController.CanExecuteAction(MenuItemEnums.反审, StatusContext);
-                    bool canCloseCase = UIController.CanExecuteAction(MenuItemEnums.结案, StatusContext);
-                    bool canAntiCloseCase = UIController.CanExecuteAction(MenuItemEnums.反结案, StatusContext);
-                    bool canDelete = UIController.CanExecuteAction(MenuItemEnums.删除, StatusContext);
-
-                    // 更新按钮状态
-                    toolStripbtnModify.Enabled = canModify;
-                    toolStripButtonSave.Enabled = canModify;
-                    toolStripbtnSubmit.Enabled = canSubmit;
-                    toolStripbtnReview.Enabled = canReview;
-                    toolStripBtnReverseReview.Enabled = canReverseReview;
-                    toolStripButton结案.Enabled = canCloseCase;
-                    toolStripbtnDelete.Enabled = canDelete;
-
-                    // 根据状态更新UI显示
-                    UpdateStateDisplay();
-                }
-            }
-            catch (Exception ex)
-            {
-                // 如果状态管理系统出错
-                System.Diagnostics.Debug.WriteLine($"使用状态管理系统更新UI失败: {ex.Message}");
-            }
+            // 调用统一的UI状态更新方法
+            UpdateAllUIStates(entity);
         }
+
+
 
         /// <summary>
         /// 配置泛型状态管理器
@@ -1839,99 +1920,25 @@ namespace RUINORERP.UI.BaseForm
         /// </summary>
         internal void ToolBarEnabledControl(MenuItemEnums menu)
         {
-            switch (menu)
+            // 使用统一的UI状态更新方法，根据当前实体状态更新所有按钮
+            if (EditEntity is BaseEntity baseEntity)
             {
-                case MenuItemEnums.反审:
-                    toolStripbtnReview.Enabled = true;
-                    toolStripBtnReverseReview.Enabled = false;//先不支持反审
-                    toolStripButtonRefresh.Enabled = true;
-                    toolStripbtnModify.Enabled = true;
-                    toolStripbtnDelete.Enabled = true;
-                    break;
+                var currentStatus = baseEntity.GetDataStatus();
+                UpdateAllButtonStates(currentStatus);
 
-                case MenuItemEnums.审核:
-                    toolStripbtnReview.Enabled = false;
-                    toolStripBtnReverseReview.Enabled = true;//先不支持反审
-                    toolStripbtnSubmit.Enabled = false;
-                    toolStripButtonSave.Enabled = false;
-                    toolStripbtnDelete.Enabled = false;
-                    toolStripbtnModify.Enabled = false;
-                    toolStripButtonRefresh.Enabled = true;
-
-                    break;
-                case MenuItemEnums.新增:
-                    toolStripbtnAdd.Enabled = false;
-                    toolStripButtonSave.Enabled = true;
-                    toolStripbtnReview.Enabled = false;
-                    toolStripBtnCancel.Visible = true;
-                    toolStripbtnModify.Enabled = false;
-                    toolStripBtnCancel.Enabled = true;
-                    toolStripbtnDelete.Enabled = false;
-                    break;
-
-                case MenuItemEnums.取消:
-                    toolStripbtnAdd.Enabled = true;
-                    toolStripBtnCancel.Visible = false;
-                    break;
-                case MenuItemEnums.删除://可新增
-                    toolStripbtnAdd.Enabled = true;
-                    toolStripbtnDelete.Enabled = false;
-                    break;
-
-                case MenuItemEnums.修改:
-                    toolStripbtnModify.Enabled = false;
-                    toolStripButtonSave.Enabled = true;
-                    break;
-                case MenuItemEnums.查询:
-                    toolStripbtnAdd.Enabled = true;
-                    toolStripButtonSave.Enabled = false;
-                    toolStripbtnPrint.Enabled = true;
-                    toolStripbtnModify.Enabled = true;
-                    break;
-                case MenuItemEnums.保存:
-                    toolStripbtnAdd.Enabled = true;
-                    toolStripButtonSave.Enabled = false;
-                    toolStripbtnSubmit.Enabled = true;
-                    toolStripbtnPrint.Enabled = true;
-                    toolStripbtnAdd.Enabled = true;
-                    toolStripbtnDelete.Enabled = true;
-                    toolStripButtonRefresh.Enabled = true;
-                    break;
-                //case MenuItemEnums.高级查询:
-                //    break;
-                case MenuItemEnums.关闭:
-                    break;
-                case MenuItemEnums.刷新:
-                    toolStripbtnAdd.Enabled = true;
-                    toolStripButtonSave.Enabled = false;
-                    break;
-                case MenuItemEnums.打印:
-                    toolStripbtnPrint.Enabled = false;
-                    break;
-                case MenuItemEnums.提交:
-                    toolStripbtnSubmit.Enabled = false;
-                    toolStripButtonSave.Enabled = false;
-                    toolStripbtnReview.Enabled = true;
-                    toolStripButtonRefresh.Enabled = true;
-                    break;
-                case MenuItemEnums.结案:
-                    toolStripbtnSubmit.Enabled = false;
-                    toolStripButtonSave.Enabled = false;
-                    toolStripbtnReview.Enabled = false;
-                    toolStripbtnAdd.Enabled = true;
-                    toolStripbtnDelete.Enabled = false;
-                    toolStripBtnCancel.Visible = true;
-                    toolStripbtnModify.Enabled = false;
-                    toolStripBtnCancel.Enabled = true;
-                    toolStripbtnPrint.Enabled = true;
-                    toolStripButtonRefresh.Enabled = true;
-                    break;
-                case MenuItemEnums.导出:
-
-                    break;
-
-                default:
-                    break;
+                // 针对特殊操作进行额外处理
+                switch (menu)
+                {
+                    case MenuItemEnums.新增:
+                    case MenuItemEnums.取消:
+                    case MenuItemEnums.修改:
+                        // 确保取消按钮的可见性正确
+                        if (menu == MenuItemEnums.取消)
+                        {
+                            toolStripBtnCancel.Visible = false;
+                        }
+                        break;
+                }
             }
             Edited = toolStripButtonSave.Enabled;
         }
@@ -1950,67 +1957,19 @@ namespace RUINORERP.UI.BaseForm
             {
                 DataStatus dataStatus = (DataStatus)int.Parse(entity.GetPropertyValue(typeof(DataStatus).Name).ToString());
                 ActionStatus actionStatus = (ActionStatus)(Enum.Parse(typeof(ActionStatus), entity.GetPropertyValue(typeof(ActionStatus).Name).ToString()));
-                switch (dataStatus)
+
+                // 使用统一的UI状态更新方法
+                UpdateAllButtonStates(dataStatus);
+
+                // 根据ActionStatus处理保存按钮状态
+                if (actionStatus == ActionStatus.新增)
                 {
-                    //点新增
-                    case DataStatus.草稿:
-                        toolStripbtnAdd.Enabled = false;
-                        toolStripBtnCancel.Visible = true;
-                        toolStripbtnModify.Enabled = true;
-                        toolStripbtnSubmit.Enabled = true;
-                        toolStripbtnReview.Enabled = false;
-
-                        if (actionStatus == ActionStatus.新增)
-                        {
-                            toolStripButtonSave.Enabled = true;
-                            toolStripbtnModify.Enabled = false;
-                        }
-                        else
-                        {
-                            toolStripButtonSave.Enabled = false;
-                        }
-
-                        toolStripBtnReverseReview.Enabled = false;
-                        toolStripbtnPrint.Enabled = false;
-                        toolStripbtnDelete.Enabled = true;
-                        toolStripButton结案.Enabled = false;
-                        break;
-                    case DataStatus.新建:
-                        toolStripbtnAdd.Enabled = false;
-                        toolStripBtnCancel.Visible = true;
-                        toolStripbtnModify.Enabled = true;
-                        toolStripbtnSubmit.Enabled = false;
-                        toolStripBtnReverseReview.Enabled = false;
-                        toolStripbtnReview.Enabled = true;
-                        toolStripButtonSave.Enabled = true;
-                        toolStripbtnDelete.Enabled = true;
-                        toolStripbtnPrint.Enabled = true;
-                        toolStripButton结案.Enabled = false;
-                        break;
-                    case DataStatus.确认:
-                        toolStripbtnModify.Enabled = false;
-                        toolStripbtnSubmit.Enabled = false;
-                        toolStripBtnReverseReview.Enabled = true;
-                        toolStripbtnReview.Enabled = false;
-                        toolStripButtonSave.Enabled = false;
-                        toolStripbtnPrint.Enabled = true;
-                        toolStripButton结案.Enabled = true;
-                        toolStripbtnDelete.Enabled = false;
-                        break;
-                    case Global.DataStatus.完结:
-                        //
-                        toolStripbtnModify.Enabled = false;
-                        toolStripbtnSubmit.Enabled = false;
-                        toolStripbtnReview.Enabled = false;
-                        toolStripButtonSave.Enabled = false;
-                        toolStripBtnReverseReview.Enabled = false;
-                        toolStripbtnPrint.Enabled = true;
-                        toolStripButton结案.Enabled = false;
-                        toolStripBtnCancel.Enabled = false;
-                        toolStripbtnDelete.Enabled = false;
-                        break;
-                    default:
-                        break;
+                    toolStripButtonSave.Enabled = true;
+                    toolStripbtnModify.Enabled = false;
+                }
+                else
+                {
+                    toolStripButtonSave.Enabled = false;
                 }
 
 
@@ -2370,16 +2329,14 @@ namespace RUINORERP.UI.BaseForm
                         break;
                 }
 
-                // 设置按钮状态
-                toolStripbtnAdd.Enabled = isEditable;
-                toolStripbtnModify.Enabled = isEditable;
-                toolStripbtnDelete.Enabled = isEditable;
+                // 使用统一的按钮状态更新方法
+                UpdateAllButtonStates(StateManager.GetDataStatus(entity));
+
+                // 保存状态特殊处理
                 toolStripButtonSave.Enabled = entity.HasChanged;
-                toolStripbtnSubmit.Enabled = canSubmit;
-                toolStripbtnReview.Enabled = canReview;
-                toolStripBtnReverseReview.Enabled = canReverseReview;
+
+                // 反审按钮特殊处理
                 toolStripBtnReverseReview.Visible = canReverseReview;
-                toolStripButton结案.Enabled = canClose;
             }
 
 
@@ -3009,1144 +2966,1144 @@ namespace RUINORERP.UI.BaseForm
 
         public delegate void BindDataToUIHander(T entity, ActionStatus actionStatus);
 
-        [Browsable(true), Description("绑定数据对象到UI")]
-        public event BindDataToUIHander OnBindDataToUIEvent;
+    [Browsable(true), Description("绑定数据对象到UI")]
+    public event BindDataToUIHander OnBindDataToUIEvent;
 
 
 
-        string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
-        /// <summary>
-        /// 控制功能按钮
-        /// </summary>
-        /// <param name="p_Text"></param>
-        protected async override void DoButtonClick(MenuItemEnums menuItem)
+    string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
+    /// <summary>
+    /// 控制功能按钮
+    /// </summary>
+    /// <param name="p_Text"></param>
+    protected async override void DoButtonClick(MenuItemEnums menuItem)
+    {
+        //操作前将数据收集  保存单据时间出错，这个方法开始是 将查询条件生效
+        // this.ValidateChildren(System.Windows.Forms.ValidationConstraints.None);
+
+        MainForm.Instance.AppContext.log.ActionName = menuItem.ToString();
+        if (!MainForm.Instance.AppContext.IsSuperUser)
         {
-            //操作前将数据收集  保存单据时间出错，这个方法开始是 将查询条件生效
-            // this.ValidateChildren(System.Windows.Forms.ValidationConstraints.None);
-
-            MainForm.Instance.AppContext.log.ActionName = menuItem.ToString();
-            if (!MainForm.Instance.AppContext.IsSuperUser)
+            /*
+            tb_MenuInfo menuInfo = MainForm.Instance.AppContext.CurUserInfo.UserMenuList.Where(c => c.MenuType == "行为菜单").Where(c => c.FormName == this.Name).FirstOrDefault();
+            if (menuInfo == null)
             {
-                /*
-                tb_MenuInfo menuInfo = MainForm.Instance.AppContext.CurUserInfo.UserMenuList.Where(c => c.MenuType == "行为菜单").Where(c => c.FormName == this.Name).FirstOrDefault();
-                if (menuInfo == null)
-                {
-                    MessageBox.Show($"没有使用【{menuInfo.MenuName}】的权限。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
-                }
-                List<tb_ButtonInfo> btnList = MainForm.Instance.AppContext.CurUserInfo.UserButtonList.Where(c => c.MenuID == menuInfo.MenuID).ToList();
-                if (!btnList.Where(b => b.BtnText == menuItem.ToString()).Any())
-                {
-                    MessageBox.Show($"没有使用【{menuItem.ToString()}】的权限。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
-                }*/
-            }
-
-
-            //操作前是不是锁定。自己排除
-            long pkid = 0;
-            //操作前将数据收集
-            this.ValidateChildren(System.Windows.Forms.ValidationConstraints.None);
-            switch (menuItem)
-            {
-                case MenuItemEnums.联查:
-                    break;
-                case MenuItemEnums.已锁定:
-                    // 处理锁定按钮点击事件
-                    if (tsBtnLocked.Tag is LockResponse lockResponse && lockResponse.LockInfo != null)
-                    {
-                        long currentUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
-
-                        // 如果是自己锁定的，直接解锁（无需确认）
-                        if (lockResponse.LockInfo.LockedUserId == currentUserId)
-                        {
-                            logger?.Debug($"用户[{currentUserId}]选择解锁自己锁定的单据");
-                            UNLock();
-                        }
-                        else
-                        {
-                            // 如果是他人锁定的，直接请求解锁（无需确认）
-                            logger?.Debug($"用户[{currentUserId}]请求解锁被用户[{lockResponse.LockInfo.LockedUserName}]锁定的单据");
-                            RequestUnLock();
-                        }
-                    }
-                    else
-                    {
-                        logger?.LogWarning("无法获取锁定信息，请刷新后重试");
-                    }
-                    break;
-                case MenuItemEnums.新增:
-                    Add();
-                    break;
-                case MenuItemEnums.取消:
-                    Cancel();
-                    break;
-                case MenuItemEnums.复制性新增:
-                    AddByCopy();
-                    break;
-
-                case MenuItemEnums.数据特殊修正:
-                    SpecialDataFix();
-                    break;
-
-                case MenuItemEnums.删除:
-                    if (await IsLock())
-                    {
-                        return;
-                    }
-                    await Delete();
-
-                    break;
-                case MenuItemEnums.修改:
-                    if (await IsLock())
-                    {
-                        return;
-                    }
-                    await LockBill();
-                    Modify();
-                    break;
-                case MenuItemEnums.查询:
-                    Query();
-                    break;
-                case MenuItemEnums.保存:
-                    if (await IsLock())
-                    {
-                        return;
-                    }
-                    //操作前将数据收集
-                    this.ValidateChildren(System.Windows.Forms.ValidationConstraints.None);
-                    if (EditEntity != null)
-                    {
-                        pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
-                        if (pkid > 0)
-                        {
-                            //如果有审核状态才去判断
-                            if (editEntity.ContainsProperty(typeof(DataStatus).Name))
-                            {
-                                var dataStatus = (DataStatus)(editEntity.GetPropertyValue(typeof(DataStatus).Name).ToInt());
-                                if (dataStatus == DataStatus.完结 || dataStatus == DataStatus.确认)
-                                {
-                                    toolStripbtnSubmit.Enabled = false;
-                                    if (AuthorizeController.GetShowDebugInfoAuthorization(MainForm.Instance.AppContext))
-                                    {
-                                        MainForm.Instance.uclog.AddLog("已经是【完结】或【确认】状态，保存失败。");
-                                    }
-                                    return;
-                                }
-                            }
-
-                        }
-                        toolStripButtonSave.Enabled = false;
-                        bool rsSave = await Save(true);
-                        if (!rsSave)
-                        {
-                            toolStripButtonSave.Enabled = true;
-                        }
-                    }
-                    else
-                    {
-                        MainForm.Instance.uclog.AddLog("单据不能为空，保存失败。");
-                    }
-
-
-                    break;
-                case MenuItemEnums.提交:
-                    if (await IsLock())
-                    {
-                        return;
-                    }
-                    //操作前将数据收集
-                    this.ValidateChildren(System.Windows.Forms.ValidationConstraints.None);
-
-                    toolStripbtnSubmit.Enabled = false;
-                    bool rs = await Submit();
-                    if (!rs)
-                    {
-                        toolStripbtnSubmit.Enabled = true;
-                    }
-                    else
-                    {
-                        //提交后别人可以审核 
-                        UNLock();
-                    }
-                    break;
-                case MenuItemEnums.关闭:
-                    Exit(this);
-                    break;
-                case MenuItemEnums.刷新:
-                    Refreshs();
-                    break;
-                case MenuItemEnums.属性:
-                    Property();
-                    break;
-                case MenuItemEnums.审核:
-                    if (await IsLock())
-                    {
-                        return;
-                    }
-                    await LockBill();
-                    toolStripbtnReview.Enabled = false;
-                    ReviewResult reviewResult = await Review();
-                    if (!reviewResult.Succeeded)
-                    {
-                        UNLock();
-                        toolStripbtnReview.Enabled = true;
-                    }
-
-                    break;
-                case MenuItemEnums.反审:
-                    if (await IsLock())
-                    {
-                        return;
-                    }
-                    await LockBill();
-                    toolStripBtnReverseReview.Enabled = false;
-                    bool rs反审 = await ReReview();
-                    if (!rs反审)
-                    {
-                        UNLock();
-                        toolStripBtnReverseReview.Enabled = true;
-                    }
-
-                    break;
-                case MenuItemEnums.结案:
-                    if (await IsLock())
-                    {
-                        return;
-                    }
-                    await CloseCaseAsync();
-                    break;
-                case MenuItemEnums.反结案:
-                    if (await IsLock())
-                    {
-                        return;
-                    }
-                    await AntiCloseCaseAsync();
-                    break;
-                case MenuItemEnums.打印:
-
-                    if (PrintConfig != null && PrintConfig.tb_PrintTemplates != null)
-                    {
-                        //如果当前单据只有一个模块，就直接打印
-                        if (PrintConfig.tb_PrintTemplates.Count == 1)
-                        {
-                            await Print();
-                            return;
-                        }
-                    }
-
-                    //个性化设置了打印要选择模板打印时，就进入设计介面
-                    if (MainForm.Instance.AppContext.CurrentUser_Role_Personalized.SelectTemplatePrint.HasValue
-                           && MainForm.Instance.AppContext.CurrentUser_Role_Personalized.SelectTemplatePrint.Value)
-                    {
-                        await PrintDesigned();
-                    }
-                    else
-                    {
-                        await Print();
-                    }
-
-                    toolStripbtnPrint.Enabled = false;
-                    break;
-                case MenuItemEnums.预览:
-                    await Preview();
-                    break;
-                case MenuItemEnums.设计:
-                    await PrintDesigned();
-                    break;
-                case MenuItemEnums.导出:
-                    break;
-
-                default:
-                    break;
-            }
-
-
-        }
-
-        MenuPowerHelper menuPowerHelper = null;
-        public async void MenuItem_Click(object sender, EventArgs e)
-        {
-            if (sender is ToolStripMenuItem menuItem)
-            {
-                if (menuItem.Tag is RelatedQueryParameter parameter)
-                {
-                    #region mrp生产模块
-                    if (parameter.bizType == BizType.需求分析)
-                    {
-                        var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
-                        && m.EntityName == typeof(tb_ProductionDemand).Name
-                        && m.FormName == nameof(UCProduceRequirement)
-                        && m.BIBaseForm.Contains("BaseBillEditGeneric")
-                        && m.MenuName.Contains(parameter.bizType.ToString())
-                        ).FirstOrDefault();
-                        if (RelatedBillMenuInfo != null)
-                        {
-                            var controller = Startup.GetFromFacByName<BaseController<tb_ProductionDemand>>(typeof(tb_ProductionDemand).Name + "Controller");
-                            tb_ProductionDemand entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
-                            //要把单据信息传过去
-                            menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
-                        }
-
-                    }
-
-                    if (parameter.bizType == BizType.生产计划单)
-                    {
-                        var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
-                        && m.EntityName == typeof(tb_ProductionPlan).Name
-                        && m.BIBaseForm.Contains("BaseBillEditGeneric")
-                        && m.MenuName.Contains(parameter.bizType.ToString())
-                        ).FirstOrDefault();
-                        if (RelatedBillMenuInfo != null)
-                        {
-                            var controller = Startup.GetFromFacByName<BaseController<tb_ProductionPlan>>(typeof(tb_ProductionPlan).Name + "Controller");
-                            var entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
-                            //要把单据信息传过去
-                            menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
-                        }
-                    }
-
-
-                    if (parameter.bizType == BizType.生产领料单)
-                    {
-                        var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
-                        && m.EntityName == typeof(tb_MaterialRequisition).Name
-                        && m.BIBaseForm.Contains("BaseBillEditGeneric")
-                        && m.MenuName.Contains(parameter.bizType.ToString())
-                        ).FirstOrDefault();
-                        if (RelatedBillMenuInfo != null)
-                        {
-                            var controller = Startup.GetFromFacByName<BaseController<tb_MaterialRequisition>>(typeof(tb_MaterialRequisition).Name + "Controller");
-                            var entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
-                            //要把单据信息传过去
-                            menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
-                        }
-                    }
-                    if (parameter.bizType == BizType.生产退料单)
-                    {
-                        var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
-                        && m.EntityName == typeof(tb_MaterialReturn).Name
-                        && m.BIBaseForm.Contains("BaseBillEditGeneric")
-                        && m.MenuName.Contains(parameter.bizType.ToString())
-                        ).FirstOrDefault();
-                        if (RelatedBillMenuInfo != null)
-                        {
-                            var controller = Startup.GetFromFacByName<BaseController<tb_MaterialReturn>>(typeof(tb_MaterialReturn).Name + "Controller");
-                            var entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
-                            //要把单据信息传过去
-                            menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
-                        }
-                    }
-                    if (parameter.bizType == BizType.制令单)
-                    {
-                        var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
-                        && m.EntityName == typeof(tb_ManufacturingOrder).Name
-                        && m.BIBaseForm.Contains("BaseBillEditGeneric")
-                        && m.MenuName.Contains(parameter.bizType.ToString())
-                        ).FirstOrDefault();
-                        if (RelatedBillMenuInfo != null)
-                        {
-                            var controller = Startup.GetFromFacByName<BaseController<tb_ManufacturingOrder>>(typeof(tb_ManufacturingOrder).Name + "Controller");
-                            var entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
-                            //要把单据信息传过去
-                            menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
-                        }
-                    }
-                    if (parameter.bizType == BizType.返工入库单)
-                    {
-                        var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
-                        && m.EntityName == typeof(tb_MRP_ReworkEntry).Name
-                        && m.BIBaseForm.Contains("BaseBillEditGeneric")
-                        && m.MenuName.Contains(parameter.bizType.ToString())
-                        ).FirstOrDefault();
-                        if (RelatedBillMenuInfo != null)
-                        {
-                            var controller = Startup.GetFromFacByName<BaseController<tb_MRP_ReworkEntry>>(typeof(tb_MRP_ReworkEntry).Name + "Controller");
-                            var entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
-                            //要把单据信息传过去
-                            menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
-                        }
-                    }
-
-                    if (parameter.bizType == BizType.返工退库单)
-                    {
-                        var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
-                        && m.EntityName == typeof(tb_MRP_ReworkReturn).Name
-                        && m.BIBaseForm.Contains("BaseBillEditGeneric")
-                        && m.MenuName.Contains(parameter.bizType.ToString())
-                        ).FirstOrDefault();
-                        if (RelatedBillMenuInfo != null)
-                        {
-                            var controller = Startup.GetFromFacByName<BaseController<tb_MRP_ReworkReturn>>(typeof(tb_MRP_ReworkReturn).Name + "Controller");
-                            var entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
-                            //要把单据信息传过去
-                            menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
-                        }
-                    }
-
-                    if (parameter.bizType == BizType.缴库单)
-                    {
-                        var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
-                        && m.EntityName == typeof(tb_FinishedGoodsInv).Name
-                        && m.BIBaseForm.Contains("BaseBillEditGeneric")
-                        && m.MenuName.Contains(parameter.bizType.ToString())
-                        ).FirstOrDefault();
-                        if (RelatedBillMenuInfo != null)
-                        {
-                            var controller = Startup.GetFromFacByName<BaseController<tb_FinishedGoodsInv>>(typeof(tb_FinishedGoodsInv).Name + "Controller");
-                            var entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
-                            //要把单据信息传过去
-                            menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
-                        }
-                    }
-
-                    #endregion
-
-                    if (parameter.bizType == BizType.对账单)
-                    {
-                        var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
-                        && m.EntityName == typeof(tb_FM_Statement).Name
-                        && m.BizType == (int)parameter.bizType
-                        && m.BIBaseForm == "BaseBillEditGeneric`2"
-                        //&& m.BIBizBaseForm == nameof(UCFMStatement)
-                        && m.MenuName.Contains(parameter.bizType.ToString())
-                        ).FirstOrDefault();
-                        if (RelatedBillMenuInfo != null)
-                        {
-                            var controller = Startup.GetFromFacByName<BaseController<tb_FM_Statement>>(typeof(tb_FM_Statement).Name + "Controller");
-                            tb_FM_Statement entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
-                            //要把单据信息传过去
-                            await menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
-                        }
-                    }
-
-
-                    if (parameter.bizType == BizType.付款单 || parameter.bizType == BizType.收款单)
-                    {
-                        var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
-                        && m.EntityName == typeof(tb_FM_PaymentRecord).Name
-                        && m.BIBizBaseForm == nameof(UCPaymentRecord)
-                        && m.MenuName.Contains(parameter.bizType.ToString())
-                        ).FirstOrDefault();
-                        if (RelatedBillMenuInfo != null)
-                        {
-                            var controller = Startup.GetFromFacByName<BaseController<tb_FM_PaymentRecord>>(typeof(tb_FM_PaymentRecord).Name + "Controller");
-                            tb_FM_PaymentRecord entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
-                            //要把单据信息传过去
-                            await menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
-                        }
-                    }
-
-
-                    if (parameter.bizType == BizType.应付款单 || parameter.bizType == BizType.应收款单)
-                    {
-                        var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
-                        && m.EntityName == typeof(tb_FM_ReceivablePayable).Name
-                        && m.BIBizBaseForm == nameof(UCReceivablePayable)
-                        && m.MenuName.Contains(parameter.bizType.ToString())
-                        ).FirstOrDefault();
-                        if (RelatedBillMenuInfo != null)
-                        {
-                            var controller = Startup.GetFromFacByName<BaseController<tb_FM_ReceivablePayable>>(typeof(tb_FM_ReceivablePayable).Name + "Controller");
-                            tb_FM_ReceivablePayable entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
-                            //要把单据信息传过去
-                            await menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
-                        }
-                    }
-
-                    if (parameter.bizType == BizType.预付款单 || parameter.bizType == BizType.预收款单)
-                    {
-                        var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
-                        && m.EntityName == typeof(tb_FM_PreReceivedPayment).Name
-                        && m.BIBizBaseForm == nameof(UCPreReceivedPayment)
-                        && m.MenuName.Contains(parameter.bizType.ToString())
-                        ).FirstOrDefault();
-                        if (RelatedBillMenuInfo != null)
-                        {
-                            var controller = Startup.GetFromFacByName<BaseController<tb_FM_PreReceivedPayment>>(typeof(tb_FM_PreReceivedPayment).Name + "Controller");
-                            tb_FM_PreReceivedPayment entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
-                            //要把单据信息传过去
-                            await menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
-                        }
-                    }
-
-
-                    if (parameter.bizType == BizType.其他费用收入 || parameter.bizType == BizType.其他费用支出)
-                    {
-                        var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
-                        && m.EntityName == typeof(tb_FM_OtherExpense).Name
-                        && m.BIBizBaseForm == nameof(UCOtherExpense)
-                        && m.MenuName.Contains(parameter.bizType.ToString())
-                        ).FirstOrDefault();
-                        if (RelatedBillMenuInfo != null)
-                        {
-                            var controller = Startup.GetFromFacByName<BaseController<tb_FM_OtherExpense>>(typeof(tb_FM_OtherExpense).Name + "Controller");
-                            tb_FM_OtherExpense entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
-                            //要把单据信息传过去
-                            await menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
-                        }
-                    }
-                    if (parameter.bizType == BizType.采购价格调整单 || parameter.bizType == BizType.销售价格调整单)
-                    {
-                        var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
-                        && m.EntityName == typeof(tb_FM_PriceAdjustment).Name
-                        && m.BIBizBaseForm == nameof(UCPriceAdjustment)
-                        && m.MenuName.Contains(parameter.bizType.ToString())
-                        ).FirstOrDefault();
-                        if (RelatedBillMenuInfo != null)
-                        {
-                            var controller = Startup.GetFromFacByName<BaseController<tb_FM_PriceAdjustment>>(typeof(tb_FM_PriceAdjustment).Name + "Controller");
-                            tb_FM_PriceAdjustment entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
-                            //要把单据信息传过去
-                            await menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
-                        }
-                    }
-
-                    if (parameter.bizType == BizType.采购订单)
-                    {
-                        var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
-                        && m.EntityName == typeof(tb_PurOrder).Name
-                        && m.MenuName.Contains(parameter.bizType.ToString())
-                        ).FirstOrDefault();
-                        if (RelatedBillMenuInfo != null)
-                        {
-                            var controller = Startup.GetFromFacByName<BaseController<tb_PurOrder>>(typeof(tb_PurOrder).Name + "Controller");
-                            tb_PurOrder entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
-                            //要把单据信息传过去
-                            menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
-                        }
-                    }
-
-                    if (parameter.bizType == BizType.采购入库单)
-                    {
-                        var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
-                        && m.EntityName == typeof(tb_PurEntry).Name
-                        && m.MenuName.Contains(parameter.bizType.ToString())
-                        ).FirstOrDefault();
-                        if (RelatedBillMenuInfo != null)
-                        {
-                            var controller = Startup.GetFromFacByName<BaseController<tb_PurEntry>>(typeof(tb_PurEntry).Name + "Controller");
-                            tb_PurEntry entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
-                            //要把单据信息传过去
-                            menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
-                        }
-                    }
-                    if (parameter.bizType == BizType.采购退货单)
-                    {
-                        var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
-                        && m.EntityName == typeof(tb_PurEntryRe).Name
-                        && m.MenuName.Contains(parameter.bizType.ToString())
-                        ).FirstOrDefault();
-                        if (RelatedBillMenuInfo != null)
-                        {
-                            var controller = Startup.GetFromFacByName<BaseController<tb_PurEntryRe>>(typeof(tb_PurEntryRe).Name + "Controller");
-                            tb_PurEntryRe entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
-                            //要把单据信息传过去
-                            menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
-                        }
-                    }
-                    if (parameter.bizType == BizType.采购退货入库)
-                    {
-                        var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
-                        && m.EntityName == typeof(tb_PurReturnEntry).Name
-                        && m.MenuName.Contains(parameter.bizType.ToString())
-                        ).FirstOrDefault();
-                        if (RelatedBillMenuInfo != null)
-                        {
-                            var controller = Startup.GetFromFacByName<BaseController<tb_PurReturnEntry>>(typeof(tb_PurReturnEntry).Name + "Controller");
-                            tb_PurReturnEntry entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
-                            //要把单据信息传过去
-                            menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
-                        }
-                    }
-
-                    if (parameter.bizType == BizType.归还单)
-                    {
-                        var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
-                        && m.EntityName == typeof(tb_ProdReturning).Name
-                        && m.MenuName.Contains(parameter.bizType.ToString())
-                        ).FirstOrDefault();
-                        if (RelatedBillMenuInfo != null)
-                        {
-                            var controller = Startup.GetFromFacByName<BaseController<tb_ProdReturning>>(typeof(tb_ProdReturning).Name + "Controller");
-                            tb_ProdReturning entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
-                            //要把单据信息传过去
-                            menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
-                        }
-                    }
-                    if (parameter.bizType == BizType.销售订单)
-                    {
-                        var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
-                        && m.EntityName == typeof(tb_SaleOrder).Name
-                        && m.MenuName.Contains(parameter.bizType.ToString())
-                        ).FirstOrDefault();
-                        if (RelatedBillMenuInfo != null)
-                        {
-                            var controller = Startup.GetFromFacByName<BaseController<tb_SaleOrder>>(typeof(tb_SaleOrder).Name + "Controller");
-                            tb_SaleOrder entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
-                            //要把单据信息传过去
-                            menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
-                        }
-                    }
-                    if (parameter.bizType == BizType.销售出库单)
-                    {
-                        var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
-                        && m.EntityName == typeof(tb_SaleOut).Name
-                        && m.MenuName.Contains(parameter.bizType.ToString())
-                        ).FirstOrDefault();
-                        if (RelatedBillMenuInfo != null)
-                        {
-                            var controller = Startup.GetFromFacByName<BaseController<tb_SaleOut>>(typeof(tb_SaleOut).Name + "Controller");
-                            tb_SaleOut entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
-                            //要把单据信息传过去
-                            menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
-                        }
-                    }
-                    if (parameter.bizType == BizType.销售退回单)
-                    {
-                        var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
-                        && m.EntityName == typeof(tb_SaleOutRe).Name
-                        && m.MenuName.Contains(parameter.bizType.ToString())
-                        ).FirstOrDefault();
-                        if (RelatedBillMenuInfo != null)
-                        {
-                            var controller = Startup.GetFromFacByName<BaseController<tb_SaleOutRe>>(typeof(tb_SaleOutRe).Name + "Controller");
-                            tb_SaleOutRe entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
-                            //要把单据信息传过去
-                            menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
-                        }
-                    }
-
-                    if (parameter.bizType == BizType.费用报销单)
-                    {
-                        var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
-                        && m.EntityName == typeof(tb_FM_ExpenseClaim).Name
-                        && m.MenuName.Contains(parameter.bizType.ToString())
-                        ).FirstOrDefault();
-                        if (RelatedBillMenuInfo != null)
-                        {
-                            var controller = Startup.GetFromFacByName<BaseController<tb_FM_ExpenseClaim>>(typeof(tb_FM_ExpenseClaim).Name + "Controller");
-                            tb_FM_ExpenseClaim entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
-                            //要把单据信息传过去
-                            menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
-                        }
-                    }
-
-
-                    if (parameter.bizType == BizType.售后申请单)
-                    {
-                        var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
-                        && m.EntityName == typeof(tb_AS_AfterSaleApply).Name
-                        && m.MenuName.Contains(parameter.bizType.ToString())
-                        ).FirstOrDefault();
-                        if (RelatedBillMenuInfo != null)
-                        {
-                            var controller = Startup.GetFromFacByName<BaseController<tb_AS_AfterSaleApply>>(typeof(tb_AS_AfterSaleApply).Name + "Controller");
-                            tb_AS_AfterSaleApply entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
-                            //要把单据信息传过去
-                            menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
-                        }
-                    }
-                    if (parameter.bizType == BizType.售后交付单)
-                    {
-                        var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
-                        && m.EntityName == typeof(tb_AS_AfterSaleDelivery).Name
-                        && m.MenuName.Contains(parameter.bizType.ToString())
-                        ).FirstOrDefault();
-                        if (RelatedBillMenuInfo != null)
-                        {
-                            var controller = Startup.GetFromFacByName<BaseController<tb_AS_AfterSaleDelivery>>(typeof(tb_AS_AfterSaleDelivery).Name + "Controller");
-                            tb_AS_AfterSaleDelivery entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
-                            //要把单据信息传过去
-                            menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
-                        }
-                    }
-                    if (parameter.bizType == BizType.维修工单)
-                    {
-                        var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
-                        && m.EntityName == typeof(tb_AS_RepairOrder).Name
-                        && m.MenuName.Contains(parameter.bizType.ToString())
-                        ).FirstOrDefault();
-                        if (RelatedBillMenuInfo != null)
-                        {
-                            var controller = Startup.GetFromFacByName<BaseController<tb_AS_RepairOrder>>(typeof(tb_AS_RepairOrder).Name + "Controller");
-                            tb_AS_RepairOrder entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
-                            //要把单据信息传过去
-                            menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
-                        }
-                    }
-                    if (parameter.bizType == BizType.维修入库单)
-                    {
-                        var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
-                        && m.EntityName == typeof(tb_AS_RepairInStock).Name
-                        && m.MenuName.Contains(parameter.bizType.ToString())
-                        ).FirstOrDefault();
-                        if (RelatedBillMenuInfo != null)
-                        {
-                            var controller = Startup.GetFromFacByName<BaseController<tb_AS_RepairInStock>>(typeof(tb_AS_RepairInStock).Name + "Controller");
-                            tb_AS_RepairInStock entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
-                            //要把单据信息传过去
-                            menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
-                        }
-                    }
-
-                }
-            }
-
-        }
-
-        /// <summary>
-        /// 检查并锁定单据
-        /// </summary>
-        /// <returns>锁定是否成功</returns>
-        protected virtual async Task<bool> CheckAndLockBill()
-        {
-            if (EditEntity == null)
-                return false;
-
-            try
-            {
-                // 获取单据ID
-                string pkCol = BaseUIHelper.GetEntityPrimaryKey<T>();
-                long billId = (long)ReflectionHelper.GetPropertyValue(EditEntity, pkCol);
-
-                if (billId <= 0)
-                {
-                    MainForm.Instance.uclog.AddLog("单据ID无效，无法执行锁定检查", UILogType.警告);
-                    return false;
-                }
-
-                // 获取业务数据
-                CommBillData billData = EntityMappingHelper.GetBillData(typeof(T), EditEntity);
-
-
-
-                // 获取当前用户信息
-                var userInfo = MainForm.Instance.AppContext.CurUserInfo.UserInfo;
-                long currentUserId = userInfo.User_ID;
-
-
-                // 优先从本地缓存检查锁定状态
-                var lockInfo = await _integratedLockService.GetLockCacheService().GetLockInfoAsync(billId, CurMenuInfo.MenuID);
-                var lockStatus = new LockResponse();
-                bool cacheHit = lockInfo != null && lockInfo.IsLocked && !lockInfo.IsExpired;
-
-                // 如果缓存未命中或无效，才从服务器检查
-                if (!cacheHit)
-                {
-                    MainForm.Instance.uclog.AddLog($"本地缓存未命中，从服务器检查单据[{billId}]锁定状态", UILogType.提示);
-                    lockStatus = await _integratedLockService.CheckLockStatusAsync(billId, CurMenuInfo.MenuID);
-                }
-                else
-                {
-                    // 使用缓存数据构建响应
-                    lockStatus.IsSuccess = true;
-                    lockStatus.LockInfo = lockInfo;
-                    MainForm.Instance.uclog.AddLog($"从本地缓存获取单据[{billId}]锁定状态，避免网络请求", UILogType.提示);
-                }
-
-                if (lockStatus.IsSuccess)
-                {
-                    if (lockStatus.LockInfo != null && lockStatus.LockInfo.IsLocked)
-                    {
-                        if (lockStatus.LockInfo.LockedUserId != currentUserId)
-                        {
-                            // 单据已被其他用户锁定
-                            string message = $"单据已被用户【{lockStatus.LockInfo.LockedUserName}】锁定，无法编辑。\n" +
-                                           $"锁定时间：{lockStatus.LockInfo.LockTime:yyyy-MM-dd HH:mm:ss}\n" +
-                                           $"如需编辑，请联系锁定用户或请求解锁。";
-
-                            MainForm.Instance.uclog.AddLog($"单据【{billId}】已被用户【{lockStatus.LockInfo.LockedUserName}】锁定{(cacheHit ? "(缓存数据)" : "")}", UILogType.警告);
-                            // 仅在用户主动操作时显示MessageBox提示
-                            // 此方法通常在用户点击编辑等按钮时调用，属于主动操作，保留提示
-
-                            // 更新UI状态
-                            UpdateLockUI(true, lockStatus.LockInfo);
-
-                            return false;
-                        }
-                        else
-                        {
-                            // 当前用户已锁定，无需重复锁定
-                            MainForm.Instance.uclog.AddLog($"单据【{billId}】已由您锁定", UILogType.普通消息);
-
-                            // 更新UI状态
-                            UpdateLockUI(true, lockStatus.LockInfo);
-
-                            return true;
-                        }
-                    }
-                    else
-                    {
-                        // 未锁定，尝试锁定
-                        MainForm.Instance.uclog.AddLog($"单据【{billId}】未锁定，准备执行锁定操作", UILogType.普通消息);
-                    }
-                }
-                else
-                {
-                    // 检查锁状态失败，记录日志但继续尝试锁定
-                    string errorMsg = lockStatus?.Message ?? "未知错误";
-                    MainForm.Instance.uclog.AddLog($"检查锁定状态时出错: {errorMsg}", UILogType.警告);
-                }
-
-                // 尝试锁定单据
-                var lockResponse = await _integratedLockService.LockBillAsync(billId, billData.BillNo, EntityMappingHelper.GetEntityInfo<T>().BizType, CurMenuInfo.MenuID);
-
-                if (lockResponse != null && lockResponse.IsSuccess)
-                {
-                    MainForm.Instance.uclog.AddLog($"单据【{billId}】锁定成功", UILogType.普通消息);
-
-                    // 更新UI状态
-                    UpdateLockUI(true, lockResponse.LockInfo);
-
-                    return true;
-                }
-                else
-                {
-                    // 锁定失败
-                    string errorMsg = lockResponse?.Message ?? "锁定失败";
-                    MainForm.Instance.uclog.AddLog($"单据【{billId}】锁定失败：{errorMsg}", UILogType.错误);
-                    // 仅在用户主动操作时显示MessageBox提示
-                    // 此方法通常在用户点击编辑等按钮时调用，属于主动操作，保留提示
-                    //  MessageBox.Show($"单据锁定失败：{errorMsg}", "锁定失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
-
-                    return false;
-                }
-            }
-            catch (Exception ex)
-            {
-                MainForm.Instance.uclog.AddLog($"锁定单据失败: {ex.Message}", UILogType.错误);
-                // 仅在用户主动操作时显示MessageBox提示
-                // 此方法通常在用户点击编辑等按钮时调用，属于主动操作，保留提示
-                // MessageBox.Show($"锁定单据失败: {ex.Message}", "锁定异常", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// 解锁单据
-        /// </summary>
-        protected virtual async void UnlockBill()
-        {
-
-            try
-            {
-                // 获取当前用户信息
-                long currentUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
-                string currentUserName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.UserName;
-
-
-                // 获取单据ID
-                string pkCol = BaseUIHelper.GetEntityPrimaryKey<T>();
-                long billId = (long)ReflectionHelper.GetPropertyValue(EditEntity, pkCol);
-
-
-                // 执行解锁操作
-                var lockResponse = await _integratedLockService.UnlockBillAsync(billId);
-
-                if (lockResponse.IsSuccess)
-                {
-                    // 使用UpdateLockUI方法更新解锁后的UI状态
-                    UpdateLockUI(false);
-                }
-                else
-                {
-                    // 仅在用户主动操作时显示MessageBox提示
-                    // 解锁操作通常由用户主动触发，保留提示
-                    //   MessageBox.Show(lockResponse.Message, "解锁失败",MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                }
-            }
-            catch (Exception ex)
-            {
-                MainForm.Instance.PrintInfoLog("解锁单据失败: " + ex.Message);
-                // 仅在用户主动操作时显示MessageBox提示
-                // 解锁操作通常由用户主动触发，保留提示
-                //   MessageBox.Show("解锁单据失败: " + ex.Message, "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-
-        /// <summary>
-        /// 管理员强制解锁单据
-        /// </summary>
-        protected virtual void ForceUnlockBill()
-        {
-
-            if (true)
-            {
-                // 使用UpdateLockUI方法更新解锁后的UI状态
-                UpdateLockUI(false);
-                logger?.Debug("单据已强制解锁");
-            }
-        }
-
-        /// <summary>
-        /// <summary>
-        /// 简化版锁定单据方法，遵循三个核心步骤：查询锁定状态、如果可用则锁定、更新UI
-        /// </summary>
-        /// <returns>锁定是否成功</returns>
-        public override async Task<bool> LockBill()
-        {
-            if (EditEntity == null)
-                return false;
-
-            try
-            {
-                string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
-                long billId = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
-                if (billId <= 0)
-                    return false;
-
-                // 获取当前用户信息和单据编号
-                var userInfo = MainForm.Instance.AppContext.CurUserInfo.UserInfo;
-                string BillNo = ReflectionHelper.GetPropertyValue(EditEntity, EntityMappingHelper.GetEntityInfo<T>().NoField).ToString();
-
-                // 核心步骤1: 查询锁定状态
-                var (isLocked, lockInfo) = await CheckLockStatusAsync(billId, CurMenuInfo.MenuID);
-
-                // 如果已锁定
-                if (isLocked && lockInfo != null)
-                {
-                    // 被当前用户锁定，直接返回成功
-                    if (lockInfo.LockedUserId == userInfo.User_ID)
-                    {
-                        // 更新UI状态
-                        UpdateLockUI(true, lockInfo);
-                        return true;
-                    }
-                    // 被其他用户锁定，返回失败
-                    return false;
-                }
-
-                // 核心步骤2: 尝试锁定单据
-                var result = await _integratedLockService.LockBillAsync(billId, BillNo, EntityMappingHelper.GetEntityInfo<T>().BizType, CurMenuInfo.MenuID);
-                bool lockSuccess = result != null && result.IsSuccess;
-
-                // 核心步骤3: 更新UI状态
-                UpdateLockUI(lockSuccess, result?.LockInfo);
-
-                return lockSuccess;
-            }
-            catch (Exception ex)
-            {
-                MainForm.Instance.logger.LogError(ex, "锁定单据失败");
-                return false;
-            }
-        }
-
-
-
-
-        /// <summary>
-        /// 锁定单据
-        /// </summary>
-        /// <param name="BillID">单据ID</param>
-        /// <param name="userid">用户ID</param>
-        /// <returns>异步任务</returns>
-        private async Task LockBill(long BillID, string BillNo, long userid)
-        {
-            if (BillID <= 0 || userid <= 0)
-            {
-                logger?.LogWarning("锁定单据失败：单据ID或用户ID无效");
+                MessageBox.Show($"没有使用【{menuInfo.MenuName}】的权限。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
-
-            try
+            List<tb_ButtonInfo> btnList = MainForm.Instance.AppContext.CurUserInfo.UserButtonList.Where(c => c.MenuID == menuInfo.MenuID).ToList();
+            if (!btnList.Where(b => b.BtnText == menuItem.ToString()).Any())
             {
-
-                var result = await _integratedLockService.LockBillAsync(BillID, BillNo, EntityMappingHelper.GetEntityInfo<T>().BizType, CurMenuInfo.MenuID);
-                if (result.IsSuccess && result.LockInfo.IsLocked)
-                {
-                    // 更新UI状态
-                    if (tsBtnLocked != null && !IsDisposed)
-                    {
-                        Invoke((MethodInvoker)(() =>
-                        {
-                            // 使用UpdateLockUI方法更新UI状态
-                            UpdateLockUI(true, result.LockInfo);
-                        }));
-                    }
-
-                    if (AuthorizeController.GetShowDebugInfoAuthorization(MainForm.Instance.AppContext))
-                    {
-                        MainForm.Instance.uclog.AddLog($"单据 {BillID} 锁定成功", UILogType.普通消息);
-                    }
-                }
-                else
-                {
-                    string errorMsg = result?.Message ?? "锁定失败";
-                    logger?.LogError($"单据 {BillID} 锁定失败：{errorMsg}");
-                    MainForm.Instance.uclog.AddLog($"单据 {BillID} 锁定失败：{errorMsg}", UILogType.错误);
-                }
-            }
-            catch (Exception ex)
-            {
-                logger?.LogError(ex, $"单据 {BillID} 锁定异常");
-                MainForm.Instance.uclog.AddLog($"单据 {BillID} 锁定异常: {ex.Message}", UILogType.错误);
-            }
+                MessageBox.Show($"没有使用【{menuItem.ToString()}】的权限。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }*/
         }
 
-        /// <summary>
-        /// 简化版检查单据是否被锁定
-        /// </summary>
-        /// <returns>如果单据被锁定且不是当前用户锁定，则返回true；否则返回false</returns>
-        private async Task<bool> IsLock()
+
+        //操作前是不是锁定。自己排除
+        long pkid = 0;
+        //操作前将数据收集
+        this.ValidateChildren(System.Windows.Forms.ValidationConstraints.None);
+        switch (menuItem)
         {
-            if (EditEntity == null || _integratedLockService == null)
-                return false;
-
-            try
-            {
-                string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
-                long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
-                if (pkid <= 0)
-                    return false;
-
-                // 使用现有的检查锁定状态方法
-                var (isLocked, lockInfo) = await CheckLockStatusAsync(pkid, CurMenuInfo.MenuID);
-
-                // 更新UI状态
-                UpdateLockUI(isLocked, lockInfo);
-
-                // 只在被其他用户锁定时返回true
-                if (isLocked && lockInfo != null)
+            case MenuItemEnums.联查:
+                break;
+            case MenuItemEnums.已锁定:
+                // 处理锁定按钮点击事件
+                if (tsBtnLocked.Tag is LockResponse lockResponse && lockResponse.LockInfo != null)
                 {
                     long currentUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
-                    return lockInfo.LockedUserId != currentUserId;
-                }
 
-                return false;
-            }
-            catch (Exception ex)
-            {
-                MainForm.Instance.logger.LogError(ex, "检查锁定状态失败");
-                return false;
-            }
-        }
-
-
-        /// <summary>
-        /// 结案处理
-        /// 一般会自动结案，但是有些需要人工结案
-        /// </summary>
-        /// <returns></returns>
-        protected override async Task<bool> CloseCaseAsync()
-        {
-            if (EditEntity == null)
-            {
-                return false;
-            }
-
-            CommonUI.frmOpinion frm = new CommonUI.frmOpinion();
-            frm.ShowCloseCaseImage = ReflectionHelper.ExistPropertyName<T>("CloseCaseImagePath");
-            string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
-            long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
-            ApprovalEntity ae = new ApprovalEntity();
-            ae.BillID = pkid;
-            CommBillData cbd = EntityMappingHelper.GetBillData<T>(EditEntity);
-            ae.BillNo = cbd.BillNo;
-            ae.bizType = cbd.BizType;
-            ae.bizName = cbd.BizName;
-            ae.CloseCaseOpinions = "完成结案";
-            ae.Approver_by = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
-            frm.BindData(ae);
-            if (frm.ShowDialog() == DialogResult.OK)//审核了。不管是同意还是不同意
-            {
-                List<T> needCloseCases = new List<T>();
-                if (ReflectionHelper.ExistPropertyName<T>("CloseCaseOpinions"))
-                {
-                    EditEntity.SetPropertyValue("CloseCaseOpinions", frm.txtOpinion.Text);
-                }
-                //已经审核的并且通过的情况才能结案
-                if (ReflectionHelper.ExistPropertyName<T>("DataStatus") && ReflectionHelper.ExistPropertyName<T>("ApprovalStatus") && ReflectionHelper.ExistPropertyName<T>("ApprovalResults"))
-                {
-                    // 确认状态下 已经审核并且通过
-                    if (EditEntity.GetPropertyValue("DataStatus").ToInt() == (int)DataStatus.确认
-                        && EditEntity.GetPropertyValue("ApprovalStatus").ToInt() == (int)ApprovalStatus.已审核
-                        && EditEntity.GetPropertyValue("ApprovalResults") != null
-                        && EditEntity.GetPropertyValue("ApprovalResults").ToBool() == true
-                        )
+                    // 如果是自己锁定的，直接解锁（无需确认）
+                    if (lockResponse.LockInfo.LockedUserId == currentUserId)
                     {
-                        needCloseCases.Add(EditEntity);
+                        logger?.Debug($"用户[{currentUserId}]选择解锁自己锁定的单据");
+                        UNLock();
                     }
-                }
-
-                if (needCloseCases.Count == 0)
-                {
-                    MainForm.Instance.PrintInfoLog($"要结案的数据为：{needCloseCases.Count}:请检查数据！");
-                    return false;
-                }
-
-                BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
-                ReturnResults<bool> rs = await ctr.BatchCloseCaseAsync(needCloseCases);
-                if (rs.Succeeded)
-                {
-                    if (frm.CloseCaseImage != null && ReflectionHelper.ExistPropertyName<T>("CloseCaseImagePath"))
+                    else
                     {
-                        string strCloseCaseImagePath = System.DateTime.Now.ToString("yy") + "/" + System.DateTime.Now.ToString("MM") + "/" + Ulid.NewUlid().ToString();
-                        byte[] bytes = UI.Common.ImageHelper.ImageToByteArray(frm.CloseCaseImage);
-                        HttpWebService httpWebService = Startup.GetFromFac<HttpWebService>();
-                        ////上传新文件时要加后缀名
-                        string uploadRsult = await httpWebService.UploadImageAsyncOK("", strCloseCaseImagePath + ".jpg", bytes, "upload");
-                        if (uploadRsult.Contains("UploadSuccessful"))
-                        {
-                            EditEntity.SetPropertyValue("CloseCaseImagePath", strCloseCaseImagePath);
-                            //这里更新数据库
-                            await ctr.BaseSaveOrUpdate(EditEntity);
-                        }
-                        else
-                        {
-                            MainForm.Instance.LoginWebServer();
-                        }
+                        // 如果是他人锁定的，直接请求解锁（无需确认）
+                        logger?.Debug($"用户[{currentUserId}]请求解锁被用户[{lockResponse.LockInfo.LockedUserName}]锁定的单据");
+                        RequestUnLock();
                     }
-
-
-                    //这里审核完了的话，如果这个单存在于工作流的集合队列中，则向服务器说明审核完成。
-                    //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
-                    //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
-                    //MainForm.Instance.ecs.AddSendData(od);
-                    MainForm.Instance.auditLogHelper.CreateAuditLog<T>("结案", EditEntity, $"结案意见:{ae.CloseCaseOpinions}");
-                    Refreshs();
                 }
                 else
                 {
-                    MainForm.Instance.PrintInfoLog($"{ae.BillNo}结案操作失败,原因是{rs.ErrorMsg},如果无法解决，请联系管理员！", Color.Red);
+                    logger?.LogWarning("无法获取锁定信息，请刷新后重试");
                 }
+                break;
+            case MenuItemEnums.新增:
+                Add();
+                break;
+            case MenuItemEnums.取消:
+                Cancel();
+                break;
+            case MenuItemEnums.复制性新增:
+                AddByCopy();
+                break;
+
+            case MenuItemEnums.数据特殊修正:
+                SpecialDataFix();
+                break;
+
+            case MenuItemEnums.删除:
+                if (await IsLock())
+                {
+                    return;
+                }
+                await Delete();
+
+                break;
+            case MenuItemEnums.修改:
+                if (await IsLock())
+                {
+                    return;
+                }
+                await LockBill();
+                Modify();
+                break;
+            case MenuItemEnums.查询:
+                Query();
+                break;
+            case MenuItemEnums.保存:
+                if (await IsLock())
+                {
+                    return;
+                }
+                //操作前将数据收集
+                this.ValidateChildren(System.Windows.Forms.ValidationConstraints.None);
+                if (EditEntity != null)
+                {
+                    pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
+                    if (pkid > 0)
+                    {
+                        //如果有审核状态才去判断
+                        if (editEntity.ContainsProperty(typeof(DataStatus).Name))
+                        {
+                            var dataStatus = (DataStatus)(editEntity.GetPropertyValue(typeof(DataStatus).Name).ToInt());
+                            if (dataStatus == DataStatus.完结 || dataStatus == DataStatus.确认)
+                            {
+                                toolStripbtnSubmit.Enabled = false;
+                                if (AuthorizeController.GetShowDebugInfoAuthorization(MainForm.Instance.AppContext))
+                                {
+                                    MainForm.Instance.uclog.AddLog("已经是【完结】或【确认】状态，保存失败。");
+                                }
+                                return;
+                            }
+                        }
+
+                    }
+                    toolStripButtonSave.Enabled = false;
+                    bool rsSave = await Save(true);
+                    if (!rsSave)
+                    {
+                        toolStripButtonSave.Enabled = true;
+                    }
+                }
+                else
+                {
+                    MainForm.Instance.uclog.AddLog("单据不能为空，保存失败。");
+                }
+
+
+                break;
+            case MenuItemEnums.提交:
+                if (await IsLock())
+                {
+                    return;
+                }
+                //操作前将数据收集
+                this.ValidateChildren(System.Windows.Forms.ValidationConstraints.None);
+
+                toolStripbtnSubmit.Enabled = false;
+                bool rs = await Submit();
+                if (!rs)
+                {
+                    toolStripbtnSubmit.Enabled = true;
+                }
+                else
+                {
+                    //提交后别人可以审核 
+                    UNLock();
+                }
+                break;
+            case MenuItemEnums.关闭:
+                Exit(this);
+                break;
+            case MenuItemEnums.刷新:
+                Refreshs();
+                break;
+            case MenuItemEnums.属性:
+                Property();
+                break;
+            case MenuItemEnums.审核:
+                if (await IsLock())
+                {
+                    return;
+                }
+                await LockBill();
+                toolStripbtnReview.Enabled = false;
+                ReviewResult reviewResult = await Review();
+                if (!reviewResult.Succeeded)
+                {
+                    UNLock();
+                    toolStripbtnReview.Enabled = true;
+                }
+
+                break;
+            case MenuItemEnums.反审:
+                if (await IsLock())
+                {
+                    return;
+                }
+                await LockBill();
+                toolStripBtnReverseReview.Enabled = false;
+                bool rs反审 = await ReReview();
+                if (!rs反审)
+                {
+                    UNLock();
+                    toolStripBtnReverseReview.Enabled = true;
+                }
+
+                break;
+            case MenuItemEnums.结案:
+                if (await IsLock())
+                {
+                    return;
+                }
+                await CloseCaseAsync();
+                break;
+            case MenuItemEnums.反结案:
+                if (await IsLock())
+                {
+                    return;
+                }
+                await AntiCloseCaseAsync();
+                break;
+            case MenuItemEnums.打印:
+
+                if (PrintConfig != null && PrintConfig.tb_PrintTemplates != null)
+                {
+                    //如果当前单据只有一个模块，就直接打印
+                    if (PrintConfig.tb_PrintTemplates.Count == 1)
+                    {
+                        await Print();
+                        return;
+                    }
+                }
+
+                //个性化设置了打印要选择模板打印时，就进入设计介面
+                if (MainForm.Instance.AppContext.CurrentUser_Role_Personalized.SelectTemplatePrint.HasValue
+                       && MainForm.Instance.AppContext.CurrentUser_Role_Personalized.SelectTemplatePrint.Value)
+                {
+                    await PrintDesigned();
+                }
+                else
+                {
+                    await Print();
+                }
+
+                toolStripbtnPrint.Enabled = false;
+                break;
+            case MenuItemEnums.预览:
+                await Preview();
+                break;
+            case MenuItemEnums.设计:
+                await PrintDesigned();
+                break;
+            case MenuItemEnums.导出:
+                break;
+
+            default:
+                break;
+        }
+
+
+    }
+
+    MenuPowerHelper menuPowerHelper = null;
+    public async void MenuItem_Click(object sender, EventArgs e)
+    {
+        if (sender is ToolStripMenuItem menuItem)
+        {
+            if (menuItem.Tag is RelatedQueryParameter parameter)
+            {
+                #region mrp生产模块
+                if (parameter.bizType == BizType.需求分析)
+                {
+                    var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
+                    && m.EntityName == typeof(tb_ProductionDemand).Name
+                    && m.FormName == nameof(UCProduceRequirement)
+                    && m.BIBaseForm.Contains("BaseBillEditGeneric")
+                    && m.MenuName.Contains(parameter.bizType.ToString())
+                    ).FirstOrDefault();
+                    if (RelatedBillMenuInfo != null)
+                    {
+                        var controller = Startup.GetFromFacByName<BaseController<tb_ProductionDemand>>(typeof(tb_ProductionDemand).Name + "Controller");
+                        tb_ProductionDemand entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
+                        //要把单据信息传过去
+                        menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
+                    }
+
+                }
+
+                if (parameter.bizType == BizType.生产计划单)
+                {
+                    var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
+                    && m.EntityName == typeof(tb_ProductionPlan).Name
+                    && m.BIBaseForm.Contains("BaseBillEditGeneric")
+                    && m.MenuName.Contains(parameter.bizType.ToString())
+                    ).FirstOrDefault();
+                    if (RelatedBillMenuInfo != null)
+                    {
+                        var controller = Startup.GetFromFacByName<BaseController<tb_ProductionPlan>>(typeof(tb_ProductionPlan).Name + "Controller");
+                        var entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
+                        //要把单据信息传过去
+                        menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
+                    }
+                }
+
+
+                if (parameter.bizType == BizType.生产领料单)
+                {
+                    var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
+                    && m.EntityName == typeof(tb_MaterialRequisition).Name
+                    && m.BIBaseForm.Contains("BaseBillEditGeneric")
+                    && m.MenuName.Contains(parameter.bizType.ToString())
+                    ).FirstOrDefault();
+                    if (RelatedBillMenuInfo != null)
+                    {
+                        var controller = Startup.GetFromFacByName<BaseController<tb_MaterialRequisition>>(typeof(tb_MaterialRequisition).Name + "Controller");
+                        var entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
+                        //要把单据信息传过去
+                        menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
+                    }
+                }
+                if (parameter.bizType == BizType.生产退料单)
+                {
+                    var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
+                    && m.EntityName == typeof(tb_MaterialReturn).Name
+                    && m.BIBaseForm.Contains("BaseBillEditGeneric")
+                    && m.MenuName.Contains(parameter.bizType.ToString())
+                    ).FirstOrDefault();
+                    if (RelatedBillMenuInfo != null)
+                    {
+                        var controller = Startup.GetFromFacByName<BaseController<tb_MaterialReturn>>(typeof(tb_MaterialReturn).Name + "Controller");
+                        var entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
+                        //要把单据信息传过去
+                        menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
+                    }
+                }
+                if (parameter.bizType == BizType.制令单)
+                {
+                    var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
+                    && m.EntityName == typeof(tb_ManufacturingOrder).Name
+                    && m.BIBaseForm.Contains("BaseBillEditGeneric")
+                    && m.MenuName.Contains(parameter.bizType.ToString())
+                    ).FirstOrDefault();
+                    if (RelatedBillMenuInfo != null)
+                    {
+                        var controller = Startup.GetFromFacByName<BaseController<tb_ManufacturingOrder>>(typeof(tb_ManufacturingOrder).Name + "Controller");
+                        var entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
+                        //要把单据信息传过去
+                        menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
+                    }
+                }
+                if (parameter.bizType == BizType.返工入库单)
+                {
+                    var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
+                    && m.EntityName == typeof(tb_MRP_ReworkEntry).Name
+                    && m.BIBaseForm.Contains("BaseBillEditGeneric")
+                    && m.MenuName.Contains(parameter.bizType.ToString())
+                    ).FirstOrDefault();
+                    if (RelatedBillMenuInfo != null)
+                    {
+                        var controller = Startup.GetFromFacByName<BaseController<tb_MRP_ReworkEntry>>(typeof(tb_MRP_ReworkEntry).Name + "Controller");
+                        var entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
+                        //要把单据信息传过去
+                        menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
+                    }
+                }
+
+                if (parameter.bizType == BizType.返工退库单)
+                {
+                    var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
+                    && m.EntityName == typeof(tb_MRP_ReworkReturn).Name
+                    && m.BIBaseForm.Contains("BaseBillEditGeneric")
+                    && m.MenuName.Contains(parameter.bizType.ToString())
+                    ).FirstOrDefault();
+                    if (RelatedBillMenuInfo != null)
+                    {
+                        var controller = Startup.GetFromFacByName<BaseController<tb_MRP_ReworkReturn>>(typeof(tb_MRP_ReworkReturn).Name + "Controller");
+                        var entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
+                        //要把单据信息传过去
+                        menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
+                    }
+                }
+
+                if (parameter.bizType == BizType.缴库单)
+                {
+                    var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
+                    && m.EntityName == typeof(tb_FinishedGoodsInv).Name
+                    && m.BIBaseForm.Contains("BaseBillEditGeneric")
+                    && m.MenuName.Contains(parameter.bizType.ToString())
+                    ).FirstOrDefault();
+                    if (RelatedBillMenuInfo != null)
+                    {
+                        var controller = Startup.GetFromFacByName<BaseController<tb_FinishedGoodsInv>>(typeof(tb_FinishedGoodsInv).Name + "Controller");
+                        var entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
+                        //要把单据信息传过去
+                        menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
+                    }
+                }
+
+                #endregion
+
+                if (parameter.bizType == BizType.对账单)
+                {
+                    var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
+                    && m.EntityName == typeof(tb_FM_Statement).Name
+                    && m.BizType == (int)parameter.bizType
+                    && m.BIBaseForm == "BaseBillEditGeneric`2"
+                    //&& m.BIBizBaseForm == nameof(UCFMStatement)
+                    && m.MenuName.Contains(parameter.bizType.ToString())
+                    ).FirstOrDefault();
+                    if (RelatedBillMenuInfo != null)
+                    {
+                        var controller = Startup.GetFromFacByName<BaseController<tb_FM_Statement>>(typeof(tb_FM_Statement).Name + "Controller");
+                        tb_FM_Statement entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
+                        //要把单据信息传过去
+                        await menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
+                    }
+                }
+
+
+                if (parameter.bizType == BizType.付款单 || parameter.bizType == BizType.收款单)
+                {
+                    var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
+                    && m.EntityName == typeof(tb_FM_PaymentRecord).Name
+                    && m.BIBizBaseForm == nameof(UCPaymentRecord)
+                    && m.MenuName.Contains(parameter.bizType.ToString())
+                    ).FirstOrDefault();
+                    if (RelatedBillMenuInfo != null)
+                    {
+                        var controller = Startup.GetFromFacByName<BaseController<tb_FM_PaymentRecord>>(typeof(tb_FM_PaymentRecord).Name + "Controller");
+                        tb_FM_PaymentRecord entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
+                        //要把单据信息传过去
+                        await menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
+                    }
+                }
+
+
+                if (parameter.bizType == BizType.应付款单 || parameter.bizType == BizType.应收款单)
+                {
+                    var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
+                    && m.EntityName == typeof(tb_FM_ReceivablePayable).Name
+                    && m.BIBizBaseForm == nameof(UCReceivablePayable)
+                    && m.MenuName.Contains(parameter.bizType.ToString())
+                    ).FirstOrDefault();
+                    if (RelatedBillMenuInfo != null)
+                    {
+                        var controller = Startup.GetFromFacByName<BaseController<tb_FM_ReceivablePayable>>(typeof(tb_FM_ReceivablePayable).Name + "Controller");
+                        tb_FM_ReceivablePayable entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
+                        //要把单据信息传过去
+                        await menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
+                    }
+                }
+
+                if (parameter.bizType == BizType.预付款单 || parameter.bizType == BizType.预收款单)
+                {
+                    var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
+                    && m.EntityName == typeof(tb_FM_PreReceivedPayment).Name
+                    && m.BIBizBaseForm == nameof(UCPreReceivedPayment)
+                    && m.MenuName.Contains(parameter.bizType.ToString())
+                    ).FirstOrDefault();
+                    if (RelatedBillMenuInfo != null)
+                    {
+                        var controller = Startup.GetFromFacByName<BaseController<tb_FM_PreReceivedPayment>>(typeof(tb_FM_PreReceivedPayment).Name + "Controller");
+                        tb_FM_PreReceivedPayment entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
+                        //要把单据信息传过去
+                        await menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
+                    }
+                }
+
+
+                if (parameter.bizType == BizType.其他费用收入 || parameter.bizType == BizType.其他费用支出)
+                {
+                    var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
+                    && m.EntityName == typeof(tb_FM_OtherExpense).Name
+                    && m.BIBizBaseForm == nameof(UCOtherExpense)
+                    && m.MenuName.Contains(parameter.bizType.ToString())
+                    ).FirstOrDefault();
+                    if (RelatedBillMenuInfo != null)
+                    {
+                        var controller = Startup.GetFromFacByName<BaseController<tb_FM_OtherExpense>>(typeof(tb_FM_OtherExpense).Name + "Controller");
+                        tb_FM_OtherExpense entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
+                        //要把单据信息传过去
+                        await menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
+                    }
+                }
+                if (parameter.bizType == BizType.采购价格调整单 || parameter.bizType == BizType.销售价格调整单)
+                {
+                    var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
+                    && m.EntityName == typeof(tb_FM_PriceAdjustment).Name
+                    && m.BIBizBaseForm == nameof(UCPriceAdjustment)
+                    && m.MenuName.Contains(parameter.bizType.ToString())
+                    ).FirstOrDefault();
+                    if (RelatedBillMenuInfo != null)
+                    {
+                        var controller = Startup.GetFromFacByName<BaseController<tb_FM_PriceAdjustment>>(typeof(tb_FM_PriceAdjustment).Name + "Controller");
+                        tb_FM_PriceAdjustment entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
+                        //要把单据信息传过去
+                        await menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
+                    }
+                }
+
+                if (parameter.bizType == BizType.采购订单)
+                {
+                    var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
+                    && m.EntityName == typeof(tb_PurOrder).Name
+                    && m.MenuName.Contains(parameter.bizType.ToString())
+                    ).FirstOrDefault();
+                    if (RelatedBillMenuInfo != null)
+                    {
+                        var controller = Startup.GetFromFacByName<BaseController<tb_PurOrder>>(typeof(tb_PurOrder).Name + "Controller");
+                        tb_PurOrder entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
+                        //要把单据信息传过去
+                        menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
+                    }
+                }
+
+                if (parameter.bizType == BizType.采购入库单)
+                {
+                    var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
+                    && m.EntityName == typeof(tb_PurEntry).Name
+                    && m.MenuName.Contains(parameter.bizType.ToString())
+                    ).FirstOrDefault();
+                    if (RelatedBillMenuInfo != null)
+                    {
+                        var controller = Startup.GetFromFacByName<BaseController<tb_PurEntry>>(typeof(tb_PurEntry).Name + "Controller");
+                        tb_PurEntry entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
+                        //要把单据信息传过去
+                        menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
+                    }
+                }
+                if (parameter.bizType == BizType.采购退货单)
+                {
+                    var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
+                    && m.EntityName == typeof(tb_PurEntryRe).Name
+                    && m.MenuName.Contains(parameter.bizType.ToString())
+                    ).FirstOrDefault();
+                    if (RelatedBillMenuInfo != null)
+                    {
+                        var controller = Startup.GetFromFacByName<BaseController<tb_PurEntryRe>>(typeof(tb_PurEntryRe).Name + "Controller");
+                        tb_PurEntryRe entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
+                        //要把单据信息传过去
+                        menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
+                    }
+                }
+                if (parameter.bizType == BizType.采购退货入库)
+                {
+                    var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
+                    && m.EntityName == typeof(tb_PurReturnEntry).Name
+                    && m.MenuName.Contains(parameter.bizType.ToString())
+                    ).FirstOrDefault();
+                    if (RelatedBillMenuInfo != null)
+                    {
+                        var controller = Startup.GetFromFacByName<BaseController<tb_PurReturnEntry>>(typeof(tb_PurReturnEntry).Name + "Controller");
+                        tb_PurReturnEntry entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
+                        //要把单据信息传过去
+                        menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
+                    }
+                }
+
+                if (parameter.bizType == BizType.归还单)
+                {
+                    var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
+                    && m.EntityName == typeof(tb_ProdReturning).Name
+                    && m.MenuName.Contains(parameter.bizType.ToString())
+                    ).FirstOrDefault();
+                    if (RelatedBillMenuInfo != null)
+                    {
+                        var controller = Startup.GetFromFacByName<BaseController<tb_ProdReturning>>(typeof(tb_ProdReturning).Name + "Controller");
+                        tb_ProdReturning entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
+                        //要把单据信息传过去
+                        menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
+                    }
+                }
+                if (parameter.bizType == BizType.销售订单)
+                {
+                    var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
+                    && m.EntityName == typeof(tb_SaleOrder).Name
+                    && m.MenuName.Contains(parameter.bizType.ToString())
+                    ).FirstOrDefault();
+                    if (RelatedBillMenuInfo != null)
+                    {
+                        var controller = Startup.GetFromFacByName<BaseController<tb_SaleOrder>>(typeof(tb_SaleOrder).Name + "Controller");
+                        tb_SaleOrder entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
+                        //要把单据信息传过去
+                        menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
+                    }
+                }
+                if (parameter.bizType == BizType.销售出库单)
+                {
+                    var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
+                    && m.EntityName == typeof(tb_SaleOut).Name
+                    && m.MenuName.Contains(parameter.bizType.ToString())
+                    ).FirstOrDefault();
+                    if (RelatedBillMenuInfo != null)
+                    {
+                        var controller = Startup.GetFromFacByName<BaseController<tb_SaleOut>>(typeof(tb_SaleOut).Name + "Controller");
+                        tb_SaleOut entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
+                        //要把单据信息传过去
+                        menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
+                    }
+                }
+                if (parameter.bizType == BizType.销售退回单)
+                {
+                    var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
+                    && m.EntityName == typeof(tb_SaleOutRe).Name
+                    && m.MenuName.Contains(parameter.bizType.ToString())
+                    ).FirstOrDefault();
+                    if (RelatedBillMenuInfo != null)
+                    {
+                        var controller = Startup.GetFromFacByName<BaseController<tb_SaleOutRe>>(typeof(tb_SaleOutRe).Name + "Controller");
+                        tb_SaleOutRe entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
+                        //要把单据信息传过去
+                        menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
+                    }
+                }
+
+                if (parameter.bizType == BizType.费用报销单)
+                {
+                    var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
+                    && m.EntityName == typeof(tb_FM_ExpenseClaim).Name
+                    && m.MenuName.Contains(parameter.bizType.ToString())
+                    ).FirstOrDefault();
+                    if (RelatedBillMenuInfo != null)
+                    {
+                        var controller = Startup.GetFromFacByName<BaseController<tb_FM_ExpenseClaim>>(typeof(tb_FM_ExpenseClaim).Name + "Controller");
+                        tb_FM_ExpenseClaim entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
+                        //要把单据信息传过去
+                        menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
+                    }
+                }
+
+
+                if (parameter.bizType == BizType.售后申请单)
+                {
+                    var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
+                    && m.EntityName == typeof(tb_AS_AfterSaleApply).Name
+                    && m.MenuName.Contains(parameter.bizType.ToString())
+                    ).FirstOrDefault();
+                    if (RelatedBillMenuInfo != null)
+                    {
+                        var controller = Startup.GetFromFacByName<BaseController<tb_AS_AfterSaleApply>>(typeof(tb_AS_AfterSaleApply).Name + "Controller");
+                        tb_AS_AfterSaleApply entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
+                        //要把单据信息传过去
+                        menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
+                    }
+                }
+                if (parameter.bizType == BizType.售后交付单)
+                {
+                    var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
+                    && m.EntityName == typeof(tb_AS_AfterSaleDelivery).Name
+                    && m.MenuName.Contains(parameter.bizType.ToString())
+                    ).FirstOrDefault();
+                    if (RelatedBillMenuInfo != null)
+                    {
+                        var controller = Startup.GetFromFacByName<BaseController<tb_AS_AfterSaleDelivery>>(typeof(tb_AS_AfterSaleDelivery).Name + "Controller");
+                        tb_AS_AfterSaleDelivery entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
+                        //要把单据信息传过去
+                        menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
+                    }
+                }
+                if (parameter.bizType == BizType.维修工单)
+                {
+                    var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
+                    && m.EntityName == typeof(tb_AS_RepairOrder).Name
+                    && m.MenuName.Contains(parameter.bizType.ToString())
+                    ).FirstOrDefault();
+                    if (RelatedBillMenuInfo != null)
+                    {
+                        var controller = Startup.GetFromFacByName<BaseController<tb_AS_RepairOrder>>(typeof(tb_AS_RepairOrder).Name + "Controller");
+                        tb_AS_RepairOrder entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
+                        //要把单据信息传过去
+                        menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
+                    }
+                }
+                if (parameter.bizType == BizType.维修入库单)
+                {
+                    var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
+                    && m.EntityName == typeof(tb_AS_RepairInStock).Name
+                    && m.MenuName.Contains(parameter.bizType.ToString())
+                    ).FirstOrDefault();
+                    if (RelatedBillMenuInfo != null)
+                    {
+                        var controller = Startup.GetFromFacByName<BaseController<tb_AS_RepairInStock>>(typeof(tb_AS_RepairInStock).Name + "Controller");
+                        tb_AS_RepairInStock entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
+                        //要把单据信息传过去
+                        menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
+                    }
+                }
+
+            }
+        }
+
+    }
+
+    /// <summary>
+    /// 检查并锁定单据
+    /// </summary>
+    /// <returns>锁定是否成功</returns>
+    protected virtual async Task<bool> CheckAndLockBill()
+    {
+        if (EditEntity == null)
+            return false;
+
+        try
+        {
+            // 获取单据ID
+            string pkCol = BaseUIHelper.GetEntityPrimaryKey<T>();
+            long billId = (long)ReflectionHelper.GetPropertyValue(EditEntity, pkCol);
+
+            if (billId <= 0)
+            {
+                MainForm.Instance.uclog.AddLog("单据ID无效，无法执行锁定检查", UILogType.警告);
+                return false;
+            }
+
+            // 获取业务数据
+            CommBillData billData = EntityMappingHelper.GetBillData(typeof(T), EditEntity);
+
+
+
+            // 获取当前用户信息
+            var userInfo = MainForm.Instance.AppContext.CurUserInfo.UserInfo;
+            long currentUserId = userInfo.User_ID;
+
+
+            // 优先从本地缓存检查锁定状态
+            var lockInfo = await _integratedLockService.GetLockCacheService().GetLockInfoAsync(billId, CurMenuInfo.MenuID);
+            var lockStatus = new LockResponse();
+            bool cacheHit = lockInfo != null && lockInfo.IsLocked && !lockInfo.IsExpired;
+
+            // 如果缓存未命中或无效，才从服务器检查
+            if (!cacheHit)
+            {
+                MainForm.Instance.uclog.AddLog($"本地缓存未命中，从服务器检查单据[{billId}]锁定状态", UILogType.提示);
+                lockStatus = await _integratedLockService.CheckLockStatusAsync(billId, CurMenuInfo.MenuID);
+            }
+            else
+            {
+                // 使用缓存数据构建响应
+                lockStatus.IsSuccess = true;
+                lockStatus.LockInfo = lockInfo;
+                MainForm.Instance.uclog.AddLog($"从本地缓存获取单据[{billId}]锁定状态，避免网络请求", UILogType.提示);
+            }
+
+            if (lockStatus.IsSuccess)
+            {
+                if (lockStatus.LockInfo != null && lockStatus.LockInfo.IsLocked)
+                {
+                    if (lockStatus.LockInfo.LockedUserId != currentUserId)
+                    {
+                        // 单据已被其他用户锁定
+                        string message = $"单据已被用户【{lockStatus.LockInfo.LockedUserName}】锁定，无法编辑。\n" +
+                                       $"锁定时间：{lockStatus.LockInfo.LockTime:yyyy-MM-dd HH:mm:ss}\n" +
+                                       $"如需编辑，请联系锁定用户或请求解锁。";
+
+                        MainForm.Instance.uclog.AddLog($"单据【{billId}】已被用户【{lockStatus.LockInfo.LockedUserName}】锁定{(cacheHit ? "(缓存数据)" : "")}", UILogType.警告);
+                        // 仅在用户主动操作时显示MessageBox提示
+                        // 此方法通常在用户点击编辑等按钮时调用，属于主动操作，保留提示
+
+                        // 更新UI状态
+                        UpdateLockUI(true, lockStatus.LockInfo);
+
+                        return false;
+                    }
+                    else
+                    {
+                        // 当前用户已锁定，无需重复锁定
+                        MainForm.Instance.uclog.AddLog($"单据【{billId}】已由您锁定", UILogType.普通消息);
+
+                        // 更新UI状态
+                        UpdateLockUI(true, lockStatus.LockInfo);
+
+                        return true;
+                    }
+                }
+                else
+                {
+                    // 未锁定，尝试锁定
+                    MainForm.Instance.uclog.AddLog($"单据【{billId}】未锁定，准备执行锁定操作", UILogType.普通消息);
+                }
+            }
+            else
+            {
+                // 检查锁状态失败，记录日志但继续尝试锁定
+                string errorMsg = lockStatus?.Message ?? "未知错误";
+                MainForm.Instance.uclog.AddLog($"检查锁定状态时出错: {errorMsg}", UILogType.警告);
+            }
+
+            // 尝试锁定单据
+            var lockResponse = await _integratedLockService.LockBillAsync(billId, billData.BillNo, EntityMappingHelper.GetEntityInfo<T>().BizType, CurMenuInfo.MenuID);
+
+            if (lockResponse != null && lockResponse.IsSuccess)
+            {
+                MainForm.Instance.uclog.AddLog($"单据【{billId}】锁定成功", UILogType.普通消息);
+
+                // 更新UI状态
+                UpdateLockUI(true, lockResponse.LockInfo);
+
                 return true;
             }
             else
             {
+                // 锁定失败
+                string errorMsg = lockResponse?.Message ?? "锁定失败";
+                MainForm.Instance.uclog.AddLog($"单据【{billId}】锁定失败：{errorMsg}", UILogType.错误);
+                // 仅在用户主动操作时显示MessageBox提示
+                // 此方法通常在用户点击编辑等按钮时调用，属于主动操作，保留提示
+                //  MessageBox.Show($"单据锁定失败：{errorMsg}", "锁定失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
+
                 return false;
             }
         }
-
-        private Business.BizMapperService.IEntityMappingService _entityInfoService;
-
-
-        /// <summary>
-        /// 审核 注意后面还需要加很多业务逻辑。
-        /// 比方出库单，审核就会减少库存修改成本
-        /// （如果有月结动作，则在月结时统计修改成本，更科学，因为如果退单等会影响成本）b
-        /// </summary>
-        protected async override Task<ReviewResult> Review()
+        catch (Exception ex)
         {
-            ReviewResult reviewResult = new ReviewResult();
-            if (EditEntity == null)
+            MainForm.Instance.uclog.AddLog($"锁定单据失败: {ex.Message}", UILogType.错误);
+            // 仅在用户主动操作时显示MessageBox提示
+            // 此方法通常在用户点击编辑等按钮时调用，属于主动操作，保留提示
+            // MessageBox.Show($"锁定单据失败: {ex.Message}", "锁定异常", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// 解锁单据
+    /// </summary>
+    protected virtual async void UnlockBill()
+    {
+
+        try
+        {
+            // 获取当前用户信息
+            long currentUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
+            string currentUserName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.UserName;
+
+
+            // 获取单据ID
+            string pkCol = BaseUIHelper.GetEntityPrimaryKey<T>();
+            long billId = (long)ReflectionHelper.GetPropertyValue(EditEntity, pkCol);
+
+
+            // 执行解锁操作
+            var lockResponse = await _integratedLockService.UnlockBillAsync(billId);
+
+            if (lockResponse.IsSuccess)
             {
-                return reviewResult;
+                // 使用UpdateLockUI方法更新解锁后的UI状态
+                UpdateLockUI(false);
+            }
+            else
+            {
+                // 仅在用户主动操作时显示MessageBox提示
+                // 解锁操作通常由用户主动触发，保留提示
+                //   MessageBox.Show(lockResponse.Message, "解锁失败",MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+        }
+        catch (Exception ex)
+        {
+            MainForm.Instance.PrintInfoLog("解锁单据失败: " + ex.Message);
+            // 仅在用户主动操作时显示MessageBox提示
+            // 解锁操作通常由用户主动触发，保留提示
+            //   MessageBox.Show("解锁单据失败: " + ex.Message, "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+    }
+
+    /// <summary>
+    /// 管理员强制解锁单据
+    /// </summary>
+    protected virtual void ForceUnlockBill()
+    {
+
+        if (true)
+        {
+            // 使用UpdateLockUI方法更新解锁后的UI状态
+            UpdateLockUI(false);
+            logger?.Debug("单据已强制解锁");
+        }
+    }
+
+    /// <summary>
+    /// <summary>
+    /// 简化版锁定单据方法，遵循三个核心步骤：查询锁定状态、如果可用则锁定、更新UI
+    /// </summary>
+    /// <returns>锁定是否成功</returns>
+    public override async Task<bool> LockBill()
+    {
+        if (EditEntity == null)
+            return false;
+
+        try
+        {
+            string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
+            long billId = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
+            if (billId <= 0)
+                return false;
+
+            // 获取当前用户信息和单据编号
+            var userInfo = MainForm.Instance.AppContext.CurUserInfo.UserInfo;
+            string BillNo = ReflectionHelper.GetPropertyValue(EditEntity, EntityMappingHelper.GetEntityInfo<T>().NoField).ToString();
+
+            // 核心步骤1: 查询锁定状态
+            var (isLocked, lockInfo) = await CheckLockStatusAsync(billId, CurMenuInfo.MenuID);
+
+            // 如果已锁定
+            if (isLocked && lockInfo != null)
+            {
+                // 被当前用户锁定，直接返回成功
+                if (lockInfo.LockedUserId == userInfo.User_ID)
+                {
+                    // 更新UI状态
+                    UpdateLockUI(true, lockInfo);
+                    return true;
+                }
+                // 被其他用户锁定，返回失败
+                return false;
             }
 
-            if (EditEntity is BaseEntity baseEntity)
+            // 核心步骤2: 尝试锁定单据
+            var result = await _integratedLockService.LockBillAsync(billId, BillNo, EntityMappingHelper.GetEntityInfo<T>().BizType, CurMenuInfo.MenuID);
+            bool lockSuccess = result != null && result.IsSuccess;
+
+            // 核心步骤3: 更新UI状态
+            UpdateLockUI(lockSuccess, result?.LockInfo);
+
+            return lockSuccess;
+        }
+        catch (Exception ex)
+        {
+            MainForm.Instance.logger.LogError(ex, "锁定单据失败");
+            return false;
+        }
+    }
+
+
+
+
+    /// <summary>
+    /// 锁定单据
+    /// </summary>
+    /// <param name="BillID">单据ID</param>
+    /// <param name="userid">用户ID</param>
+    /// <returns>异步任务</returns>
+    private async Task LockBill(long BillID, string BillNo, long userid)
+    {
+        if (BillID <= 0 || userid <= 0)
+        {
+            logger?.LogWarning("锁定单据失败：单据ID或用户ID无效");
+            return;
+        }
+
+        try
+        {
+
+            var result = await _integratedLockService.LockBillAsync(BillID, BillNo, EntityMappingHelper.GetEntityInfo<T>().BizType, CurMenuInfo.MenuID);
+            if (result.IsSuccess && result.LockInfo.IsLocked)
             {
-                if (baseEntity.HasChanged == true && baseEntity.GetEffectiveChanges().Count > 0)
+                // 更新UI状态
+                if (tsBtnLocked != null && !IsDisposed)
                 {
-                    MessageBox.Show("数据已经被修改，不能再次审核。\r\n 请【保存】或【刷新】后重试！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return reviewResult;
+                    Invoke((MethodInvoker)(() =>
+                    {
+                        // 使用UpdateLockUI方法更新UI状态
+                        UpdateLockUI(true, result.LockInfo);
+                    }));
+                }
+
+                if (AuthorizeController.GetShowDebugInfoAuthorization(MainForm.Instance.AppContext))
+                {
+                    MainForm.Instance.uclog.AddLog($"单据 {BillID} 锁定成功", UILogType.普通消息);
+                }
+            }
+            else
+            {
+                string errorMsg = result?.Message ?? "锁定失败";
+                logger?.LogError($"单据 {BillID} 锁定失败：{errorMsg}");
+                MainForm.Instance.uclog.AddLog($"单据 {BillID} 锁定失败：{errorMsg}", UILogType.错误);
+            }
+        }
+        catch (Exception ex)
+        {
+            logger?.LogError(ex, $"单据 {BillID} 锁定异常");
+            MainForm.Instance.uclog.AddLog($"单据 {BillID} 锁定异常: {ex.Message}", UILogType.错误);
+        }
+    }
+
+    /// <summary>
+    /// 简化版检查单据是否被锁定
+    /// </summary>
+    /// <returns>如果单据被锁定且不是当前用户锁定，则返回true；否则返回false</returns>
+    private async Task<bool> IsLock()
+    {
+        if (EditEntity == null || _integratedLockService == null)
+            return false;
+
+        try
+        {
+            string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
+            long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
+            if (pkid <= 0)
+                return false;
+
+            // 使用现有的检查锁定状态方法
+            var (isLocked, lockInfo) = await CheckLockStatusAsync(pkid, CurMenuInfo.MenuID);
+
+            // 更新UI状态
+            UpdateLockUI(isLocked, lockInfo);
+
+            // 只在被其他用户锁定时返回true
+            if (isLocked && lockInfo != null)
+            {
+                long currentUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
+                return lockInfo.LockedUserId != currentUserId;
+            }
+
+            return false;
+        }
+        catch (Exception ex)
+        {
+            MainForm.Instance.logger.LogError(ex, "检查锁定状态失败");
+            return false;
+        }
+    }
+
+
+    /// <summary>
+    /// 结案处理
+    /// 一般会自动结案，但是有些需要人工结案
+    /// </summary>
+    /// <returns></returns>
+    protected override async Task<bool> CloseCaseAsync()
+    {
+        if (EditEntity == null)
+        {
+            return false;
+        }
+
+        CommonUI.frmOpinion frm = new CommonUI.frmOpinion();
+        frm.ShowCloseCaseImage = ReflectionHelper.ExistPropertyName<T>("CloseCaseImagePath");
+        string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
+        long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
+        ApprovalEntity ae = new ApprovalEntity();
+        ae.BillID = pkid;
+        CommBillData cbd = EntityMappingHelper.GetBillData<T>(EditEntity);
+        ae.BillNo = cbd.BillNo;
+        ae.bizType = cbd.BizType;
+        ae.bizName = cbd.BizName;
+        ae.CloseCaseOpinions = "完成结案";
+        ae.Approver_by = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
+        frm.BindData(ae);
+        if (frm.ShowDialog() == DialogResult.OK)//审核了。不管是同意还是不同意
+        {
+            List<T> needCloseCases = new List<T>();
+            if (ReflectionHelper.ExistPropertyName<T>("CloseCaseOpinions"))
+            {
+                EditEntity.SetPropertyValue("CloseCaseOpinions", frm.txtOpinion.Text);
+            }
+            //已经审核的并且通过的情况才能结案
+            if (ReflectionHelper.ExistPropertyName<T>("DataStatus") && ReflectionHelper.ExistPropertyName<T>("ApprovalStatus") && ReflectionHelper.ExistPropertyName<T>("ApprovalResults"))
+            {
+                // 确认状态下 已经审核并且通过
+                if (EditEntity.GetPropertyValue("DataStatus").ToInt() == (int)DataStatus.确认
+                    && EditEntity.GetPropertyValue("ApprovalStatus").ToInt() == (int)ApprovalStatus.已审核
+                    && EditEntity.GetPropertyValue("ApprovalResults") != null
+                    && EditEntity.GetPropertyValue("ApprovalResults").ToBool() == true
+                    )
+                {
+                    needCloseCases.Add(EditEntity);
                 }
             }
 
-            // 需要恢复的字段列表
-            string[] fieldsToRestore = new string[]
+            if (needCloseCases.Count == 0)
             {
+                MainForm.Instance.PrintInfoLog($"要结案的数据为：{needCloseCases.Count}:请检查数据！");
+                return false;
+            }
+
+            BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
+            ReturnResults<bool> rs = await ctr.BatchCloseCaseAsync(needCloseCases);
+            if (rs.Succeeded)
+            {
+                if (frm.CloseCaseImage != null && ReflectionHelper.ExistPropertyName<T>("CloseCaseImagePath"))
+                {
+                    string strCloseCaseImagePath = System.DateTime.Now.ToString("yy") + "/" + System.DateTime.Now.ToString("MM") + "/" + Ulid.NewUlid().ToString();
+                    byte[] bytes = UI.Common.ImageHelper.ImageToByteArray(frm.CloseCaseImage);
+                    HttpWebService httpWebService = Startup.GetFromFac<HttpWebService>();
+                    ////上传新文件时要加后缀名
+                    string uploadRsult = await httpWebService.UploadImageAsyncOK("", strCloseCaseImagePath + ".jpg", bytes, "upload");
+                    if (uploadRsult.Contains("UploadSuccessful"))
+                    {
+                        EditEntity.SetPropertyValue("CloseCaseImagePath", strCloseCaseImagePath);
+                        //这里更新数据库
+                        await ctr.BaseSaveOrUpdate(EditEntity);
+                    }
+                    else
+                    {
+                        MainForm.Instance.LoginWebServer();
+                    }
+                }
+
+
+                //这里审核完了的话，如果这个单存在于工作流的集合队列中，则向服务器说明审核完成。
+                //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
+                //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
+                //MainForm.Instance.ecs.AddSendData(od);
+                MainForm.Instance.auditLogHelper.CreateAuditLog<T>("结案", EditEntity, $"结案意见:{ae.CloseCaseOpinions}");
+                Refreshs();
+            }
+            else
+            {
+                MainForm.Instance.PrintInfoLog($"{ae.BillNo}结案操作失败,原因是{rs.ErrorMsg},如果无法解决，请联系管理员！", Color.Red);
+            }
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    private Business.BizMapperService.IEntityMappingService _entityInfoService;
+
+
+    /// <summary>
+    /// 审核 注意后面还需要加很多业务逻辑。
+    /// 比方出库单，审核就会减少库存修改成本
+    /// （如果有月结动作，则在月结时统计修改成本，更科学，因为如果退单等会影响成本）b
+    /// </summary>
+    protected async override Task<ReviewResult> Review()
+    {
+        ReviewResult reviewResult = new ReviewResult();
+        if (EditEntity == null)
+        {
+            return reviewResult;
+        }
+
+        if (EditEntity is BaseEntity baseEntity)
+        {
+            if (baseEntity.HasChanged == true && baseEntity.GetEffectiveChanges().Count > 0)
+            {
+                MessageBox.Show("数据已经被修改，不能再次审核。\r\n 请【保存】或【刷新】后重试！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return reviewResult;
+            }
+        }
+
+        // 需要恢复的字段列表
+        string[] fieldsToRestore = new string[]
+        {
                 nameof(PaymentStatus),
                 nameof(ARAPStatus),
                 nameof(PrePaymentStatus),
@@ -4154,102 +4111,511 @@ namespace RUINORERP.UI.BaseForm
                 nameof(DataStatus),
                 "ApprovalOpinions",
                 "ApprovalResults"
+        };
+
+
+
+        ApprovalEntity ae = new ApprovalEntity();
+        if (ReflectionHelper.ExistPropertyName<T>("ApprovalStatus") && ReflectionHelper.ExistPropertyName<T>("ApprovalResults"))
+        {
+            //审核过，并且通过了，不能再次审核
+            if ((EditEntity.GetPropertyValue("ApprovalStatus").ToInt() == (int)ApprovalStatus.已审核)
+                && EditEntity.GetPropertyValue("ApprovalResults") != null
+                && EditEntity.GetPropertyValue("ApprovalResults").ToBool() == true
+                )
+            {
+                MainForm.Instance.uclog.AddLog("【未审核】或【驳回】的单据才能再次审核。");
+                return reviewResult;
+            }
+        }
+        //如果已经审核并且审核通过，则不能再次审核
+
+        //
+        //CommBillData cbd = EntityMappingHelper.GetBillData<T>(EditEntity);
+        CommonUI.frmApproval frm = new CommonUI.frmApproval();
+        string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
+        long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
+        ae.BillID = pkid;
+
+        var statusType = FMPaymentStatusHelper.GetStatusType(EditEntity as BaseEntity);
+        if (statusType == typeof(DataStatus))
+        {
+            Business.BizMapperService.BizEntityInfo entityInfo = _entityInfoService.GetEntityInfo<T>();
+            if (entityInfo != null)
+            {
+                ae.BillNo = EditEntity.GetPropertyValue(entityInfo.NoField).ToString();
+                ae.bizType = entityInfo.BizType;
+                ae.bizName = entityInfo.BizType.ToString();
+            }
+        }
+        else
+        {
+            int flag = (int)ReflectionHelper.GetPropertyValue(EditEntity, nameof(ReceivePaymentType)); ;
+            Business.BizMapperService.BizEntityInfo entityInfo = _entityInfoService.GetEntityInfo<T>(flag);
+            if (entityInfo != null)
+            {
+                ae.BillNo = EditEntity.GetPropertyValue(entityInfo.NoField).ToString();
+                ae.bizType = entityInfo.BizType;
+                ae.bizName = entityInfo.BizType.ToString();
+            }
+        }
+
+        ae.Approver_by = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
+        frm.BindData(ae);
+        await Task.Delay(1);
+        if (frm.ShowDialog() == DialogResult.OK)//审核了。不管是同意还是不同意
+        {
+            RevertCommand command = new RevertCommand();
+            //缓存当前编辑的对象。如果撤销就回原来的值
+            //审核只是修改的审核状态。不用缓存全部
+            T oldobj = CloneHelper.DeepCloneObject_maxnew<T>(EditEntity);
+
+            // 克隆指定字段的值
+            var originalFieldValues = CloneSpecificFields(EditEntity, fieldsToRestore);
+            command.UndoOperation = delegate ()
+            {
+                //Undo操作会执行到的代码 意思是如果退审核，内存中审核的数据要变为空白（之前的样子）
+                //CloneHelper.SetValues<T>(EditEntity, oldobj);
+                // 只恢复指定的字段
+                RestoreSpecificFields(EditEntity, originalFieldValues);
             };
 
-
-
-            ApprovalEntity ae = new ApprovalEntity();
-            if (ReflectionHelper.ExistPropertyName<T>("ApprovalStatus") && ReflectionHelper.ExistPropertyName<T>("ApprovalResults"))
+            if (ae.ApprovalResults == true)
             {
-                //审核过，并且通过了，不能再次审核
-                if ((EditEntity.GetPropertyValue("ApprovalStatus").ToInt() == (int)ApprovalStatus.已审核)
-                    && EditEntity.GetPropertyValue("ApprovalResults") != null
-                    && EditEntity.GetPropertyValue("ApprovalResults").ToBool() == true
-                    )
-                {
-                    MainForm.Instance.uclog.AddLog("【未审核】或【驳回】的单据才能再次审核。");
-                    return reviewResult;
-                }
-            }
-            //如果已经审核并且审核通过，则不能再次审核
-
-            //
-            //CommBillData cbd = EntityMappingHelper.GetBillData<T>(EditEntity);
-            CommonUI.frmApproval frm = new CommonUI.frmApproval();
-            string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
-            long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
-            ae.BillID = pkid;
-
-            var statusType = FMPaymentStatusHelper.GetStatusType(EditEntity as BaseEntity);
-            if (statusType == typeof(DataStatus))
-            {
-                Business.BizMapperService.BizEntityInfo entityInfo = _entityInfoService.GetEntityInfo<T>();
-                if (entityInfo != null)
-                {
-                    ae.BillNo = EditEntity.GetPropertyValue(entityInfo.NoField).ToString();
-                    ae.bizType = entityInfo.BizType;
-                    ae.bizName = entityInfo.BizType.ToString();
-                }
+                ////审核通过，使用v3状态管理系统转换状态
+                //if (EditEntity.StatusContext != null)
+                //{
+                //    try
+                //    {
+                //        await EditEntity.TransitionToAsync(DataStatus.确认);
+                //    }
+                //    catch (InvalidOperationException ex)
+                //    {
+                //        MainForm.Instance.uclog.AddLog($"状态转换失败: {ex.Message}");
+                //        reviewResult.Succeeded = false;
+                //        return reviewResult;
+                //    }
+                //}
+                //else
+                //{
+                //    // 回退到旧的状态管理系统
+                await TransitionToAsync(DataStatus.确认, "审核通过");
+                //EditEntity.SetPropertyValue(typeof(DataStatus).Name, (int)DataStatus.确认);
+                //}
             }
             else
             {
-                int flag = (int)ReflectionHelper.GetPropertyValue(EditEntity, nameof(ReceivePaymentType)); ;
-                Business.BizMapperService.BizEntityInfo entityInfo = _entityInfoService.GetEntityInfo<T>(flag);
-                if (entityInfo != null)
+                //审核了。驳回 时数据状态要更新为新建。要再次修改后提交
+                #region UI驳回直接保存返回。不用进入审核流程了。
+
+
+                if (ReflectionHelper.ExistPropertyName<T>("ApprovalOpinions"))
                 {
-                    ae.BillNo = EditEntity.GetPropertyValue(entityInfo.NoField).ToString();
-                    ae.bizType = entityInfo.BizType;
-                    ae.bizName = entityInfo.BizType.ToString();
+                    EditEntity.SetPropertyValue("ApprovalOpinions", ae.ApprovalOpinions);
                 }
+                if (ReflectionHelper.ExistPropertyName<T>("ApprovalStatus"))
+                {
+                    EditEntity.SetPropertyValue("ApprovalStatus", (int)ApprovalStatus.驳回);
+                }
+                if (ReflectionHelper.ExistPropertyName<T>("ApprovalResults"))
+                {
+                    EditEntity.SetPropertyValue("ApprovalResults", false);
+                }
+                BusinessHelper.Instance.ApproverEntity(EditEntity);
+                BaseController<T> ctrBase = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
+                //因为只需要更新主表
+                ReturnResults<T> rr = await ctrBase.BaseSaveOrUpdate(EditEntity);
+                reviewResult.approval = ae;
+                reviewResult.Succeeded = rr.Succeeded;
+                return reviewResult;
+                #endregion
             }
 
-            ae.Approver_by = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
-            frm.BindData(ae);
-            await Task.Delay(1);
-            if (frm.ShowDialog() == DialogResult.OK)//审核了。不管是同意还是不同意
+
+            //中间中的所有字段，都给值到单据主表中，后面需要处理审核历史这种再完善
+            PropertyInfo[] array_property = ae.GetType().GetProperties();
             {
-                RevertCommand command = new RevertCommand();
-                //缓存当前编辑的对象。如果撤销就回原来的值
-                //审核只是修改的审核状态。不用缓存全部
-                T oldobj = CloneHelper.DeepCloneObject_maxnew<T>(EditEntity);
-
-                // 克隆指定字段的值
-                var originalFieldValues = CloneSpecificFields(EditEntity, fieldsToRestore);
-                command.UndoOperation = delegate ()
+                foreach (var property in array_property)
                 {
-                    //Undo操作会执行到的代码 意思是如果退审核，内存中审核的数据要变为空白（之前的样子）
-                    //CloneHelper.SetValues<T>(EditEntity, oldobj);
-                    // 只恢复指定的字段
-                    RestoreSpecificFields(EditEntity, originalFieldValues);
-                };
+                    //保存审核结果 将审核中间值给到单据中，是否做循环处理？
+                    if (ReflectionHelper.ExistPropertyName<T>(property.Name))
+                    {
+                        object aeValue = ReflectionHelper.GetPropertyValue(ae, property.Name);
+                        ReflectionHelper.SetPropertyValue(EditEntity, property.Name, aeValue);
+                    }
+                }
+            }
+            //审核通过赋值
+            if (ReflectionHelper.ExistPropertyName<T>("ApprovalOpinions"))
+            {
+                EditEntity.SetPropertyValue("ApprovalOpinions", ae.ApprovalOpinions);
+            }
+            if (ReflectionHelper.ExistPropertyName<T>("ApprovalStatus"))
+            {
+                EditEntity.SetPropertyValue("ApprovalStatus", (int)ApprovalStatus.已审核);
+            }
+            if (ReflectionHelper.ExistPropertyName<T>("ApprovalResults"))
+            {
+                EditEntity.SetPropertyValue("ApprovalResults", true);
+            }
 
-                if (ae.ApprovalResults == true)
+            ReturnResults<T> rmr = new ReturnResults<T>();
+            BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
+            // AdjustingInventoryAsync
+            //因为只需要更新主表
+            rmr = await ctr.ApprovalAsync(EditEntity);
+            if (rmr.Succeeded)
+            {
+                reviewResult.Succeeded = rmr.Succeeded;
+
+                //如果是出库单审核，则上传到服务器 锁定订单无法修改
+                if (ae.bizType == BizType.销售出库单)
                 {
-                    ////审核通过，使用v3状态管理系统转换状态
-                    //if (EditEntity.StatusContext != null)
-                    //{
-                    //    try
-                    //    {
-                    //        await EditEntity.TransitionToAsync(DataStatus.确认);
-                    //    }
-                    //    catch (InvalidOperationException ex)
-                    //    {
-                    //        MainForm.Instance.uclog.AddLog($"状态转换失败: {ex.Message}");
-                    //        reviewResult.Succeeded = false;
-                    //        return reviewResult;
-                    //    }
-                    //}
-                    //else
-                    //{
-                    //    // 回退到旧的状态管理系统
-                    EditEntity.SetPropertyValue(typeof(DataStatus).Name, (int)DataStatus.确认);
-                    //}
+                    //锁定对应的订单
+                    if (EditEntity is tb_SaleOut saleOut)
+                    {
+                        if (saleOut.tb_saleorder != null)
+                        {
+                            await LockBill(saleOut.tb_saleorder.SOrder_ID, saleOut.tb_saleorder.SOrderNo, MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID);
+                        }
+                    }
+
+                    #region 销售出库单如果启用了财务模块，则会生成应收款单
+
+                    AuthorizeController authorizeController = MainForm.Instance.AppContext.GetRequiredService<AuthorizeController>();
+                    if (authorizeController.EnableFinancialModule())
+                    {
+                        if (MainForm.Instance.AppContext.FMConfig.AutoAuditReceiveable)
+                        {
+                            #region 自动审核应收款单
+                            //销售订单审核时自动将预付款单设为"已生效"状态
+                            var ctrpayable = MainForm.Instance.AppContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
+                            if (rmr.ReturnObjectAsOtherEntity is tb_FM_ReceivablePayable payable)
+                            {
+                                payable.ApprovalOpinions = "系统自动审核";
+                                payable.ApprovalStatus = (int)ApprovalStatus.已审核;
+                                payable.ApprovalResults = true;
+                                ReturnResults<tb_FM_ReceivablePayable> autoApproval = await ctrpayable.ApprovalAsync(payable, true);
+                                if (!autoApproval.Succeeded)
+                                {
+                                    autoApproval.Succeeded = false;
+                                    autoApproval.ErrorMsg = $"应收款单自动审核失败：{autoApproval.ErrorMsg ?? "未知错误"}";
+                                }
+                                else
+                                {
+                                    MainForm.Instance.FMAuditLogHelper.CreateAuditLog<tb_FM_ReceivablePayable>("应收款单自动审核成功", autoApproval.ReturnObject as tb_FM_ReceivablePayable);
+                                }
+                            }
+                            #endregion
+                        }
+                    }
+
+                    #endregion
+                }
+
+                //这里审核完了的话，如果这个单存在于工作流的集合队列中，则向服务器说明审核完成。
+                //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
+                //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
+                //MainForm.Instance.ecs.AddSendData(od);
+
+                #region 销售退货
+
+                //如果是出库单审核，则上传到服务器 锁定订单无法修改
+                if (ae.bizType == BizType.销售退回单)
+                {
+                    #region 销售退回单 如果启用了财务模块
+
+                    AuthorizeController authorizeController = MainForm.Instance.AppContext.GetRequiredService<AuthorizeController>();
+                    if (authorizeController.EnableFinancialModule())
+                    {
+                        if (MainForm.Instance.AppContext.FMConfig.AutoAuditReceiveable)
+                        {
+                            #region 自动审核应收款单
+                            //销售订单审核时自动将预付款单设为"已生效"状态
+                            var ctrpayable = MainForm.Instance.AppContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
+                            if (rmr.ReturnObjectAsOtherEntity is tb_FM_ReceivablePayable payable)
+                            {
+                                //只有有应收记录。挂账都可以手工进行后面的步骤。
+                                //所以这里应收审核过了。说明平台退款了，认为销售退回单中的平台退款已经处理了。
+
+                                if ((payable.ApprovalStatus.GetValueOrDefault() == (int)ApprovalStatus.未审核) || !payable.ApprovalResults.GetValueOrDefault())
+                                {
+                                    payable.ApprovalOpinions = "【销售退回单】审核时，系统自动审核";
+                                    payable.ApprovalStatus = (int)ApprovalStatus.已审核;
+                                    payable.ApprovalResults = true;
+                                    ReturnResults<tb_FM_ReceivablePayable> autoApproval = await ctrpayable.ApprovalAsync(payable, true);
+                                    if (!autoApproval.Succeeded)
+                                    {
+                                        autoApproval.Succeeded = false;
+                                        autoApproval.ErrorMsg = $"【销售退回单】审核时,应收款单自动审核失败：{autoApproval.ErrorMsg ?? "未知错误"}";
+                                    }
+                                    else
+                                    {
+                                        MainForm.Instance.FMAuditLogHelper.CreateAuditLog<tb_FM_ReceivablePayable>("【销售退回单】审核时，应收款单自动审核成功", autoApproval.ReturnObject as tb_FM_ReceivablePayable);
+                                    }
+
+                                    //自动退款？
+                                    //平台订单 经过运费在 平台退款操作后，退回单状态中已经是 退款状态了。
+                                    if (MainForm.Instance.AppContext.FMConfig.AutoAuditReceivePaymentRecordByPlatform)
+                                    {
+                                        if (rmr.ReturnObject is tb_SaleOutRe saleOutRe)
+                                        {
+                                            if (saleOutRe.IsFromPlatform)
+                                            {
+
+                                                #region 生成应收款红字单，退款
+                                                //自动生成销售退回单的对应的应该收款单（红字的）对应的收款记录
+                                                var paymentController = MainForm.Instance.AppContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
+                                                List<tb_FM_ReceivablePayable> receivablePayables = new List<tb_FM_ReceivablePayable>();
+                                                receivablePayables.Add(payable);
+
+                                                tb_FM_PaymentRecord newPaymentRecord = await paymentController.BuildPaymentRecord(receivablePayables);
+                                                newPaymentRecord.Remark = "平台单，已退款，货回仓审核时自动生成的收款单（负数）红字";
+                                                newPaymentRecord.PaymentStatus = (int)PaymentStatus.待审核;
+                                                if (!newPaymentRecord.Paytype_ID.HasValue && saleOutRe.Paytype_ID.HasValue)
+                                                {
+                                                    newPaymentRecord.Paytype_ID = saleOutRe.Paytype_ID;
+                                                }
+                                                var rrs = await paymentController.BaseSaveOrUpdateWithChild<tb_FM_PaymentRecord>(newPaymentRecord, false);
+                                                if (rrs.Succeeded)
+                                                {
+                                                    if (saleOutRe.RefundStatus == (int)RefundStatus.已退款已退货)
+                                                    {
+                                                        //自动审核收款单
+                                                        newPaymentRecord.ApprovalOpinions = "【平台单】已退款，销售退回单审核时，自动审核";
+                                                        newPaymentRecord.ApprovalStatus = (int)ApprovalStatus.已审核;
+                                                        newPaymentRecord.ApprovalResults = true;
+
+                                                        ReturnResults<tb_FM_PaymentRecord> rrRecord = await paymentController.ApprovalAsync(newPaymentRecord);
+                                                        if (!rrRecord.Succeeded)
+                                                        {
+                                                            MainForm.Instance.FMAuditLogHelper.CreateAuditLog<tb_FM_PaymentRecord>("【平台单】销售退回时，自动审核失败：" + rrRecord.ErrorMsg, rrRecord.ReturnObject as tb_FM_PaymentRecord);
+                                                        }
+                                                        else
+                                                        {
+
+                                                            MainForm.Instance.FMAuditLogHelper.CreateAuditLog<tb_FM_PaymentRecord>("【平台单】销售退回时，自动审核成功", rrRecord.ReturnObject as tb_FM_PaymentRecord);
+                                                        }
+                                                    }
+                                                }
+                                                #endregion
+
+                                            }
+                                        }
+                                    }
+
+
+                                }
+
+
+
+                            }
+                            #endregion
+                        }
+                    }
+
+                    #endregion
+                }
+
+                #endregion
+
+                //如果是出库单审核，则上传到服务器 锁定订单无法修改
+                if (ae.bizType == BizType.采购入库单 || ae.bizType == BizType.采购退货入库)
+                {
+                    //锁定对应的订单
+                    if (EditEntity is tb_PurEntry PurEntry)
+                    {
+                        if (PurEntry.tb_purorder != null)
+                        {
+                            await LockBill(PurEntry.tb_purorder.PurOrder_ID, PurEntry.tb_purorder.PurOrderNo, MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID);
+                        }
+                    }
+                    if (EditEntity is tb_PurReturnEntry PurReturnEntry)
+                    {
+                        if (PurReturnEntry.tb_purentryre != null)
+                        {
+                            await LockBill(PurReturnEntry.tb_purentryre.PurEntryRe_ID, PurReturnEntry.tb_purentryre.PurEntryReNo, MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID);
+                        }
+                    }
+
+                    #region 采购入库单如果启用了财务模块，则会生成应付款单
+
+                    AuthorizeController authorizeController = MainForm.Instance.AppContext.GetRequiredService<AuthorizeController>();
+                    if (authorizeController.EnableFinancialModule())
+                    {
+                        if (MainForm.Instance.AppContext.FMConfig.AutoAuditPaymentable)
+                        {
+                            #region 自动审核应付款单
+                            //销售订单审核时自动将预付款单设为"已生效"状态
+                            var ctrpayable = MainForm.Instance.AppContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
+                            if (rmr.ReturnObjectAsOtherEntity is tb_FM_ReceivablePayable payable)
+                            {
+                                if (payable.ARAPStatus == (int)ARAPStatus.待审核)
+                                {
+                                    payable.ApprovalOpinions = $"由采购入库单确认{payable.SourceBillNo},系统自动审核";
+                                    payable.ApprovalStatus = (int)ApprovalStatus.已审核;
+                                    payable.ApprovalResults = true;
+
+                                    //if (PurEntry.tb_purorder != null && !payable.PayeeInfoID.HasValue)
+                                    //{
+                                    //    //通过订单添加付款信息
+                                    //    payable.PayeeInfoID = PurEntry.tb_purorder.PayeeInfoID;
+                                    //}
+
+                                    ReturnResults<tb_FM_ReceivablePayable> autoApproval = await ctrpayable.ApprovalAsync(payable, true);
+                                    if (!autoApproval.Succeeded)
+                                    {
+                                        autoApproval.Succeeded = false;
+                                        autoApproval.ErrorMsg = $"应付款单自动审核失败：{autoApproval.ErrorMsg ?? "未知错误"}";
+                                        if (MainForm.Instance.AppContext.SysConfig.ShowDebugInfo)
+                                        {
+                                            MainForm.Instance.logger.LogDebug(autoApproval.ErrorMsg);
+                                        }
+                                        await MainForm.Instance.FMAuditLogHelper.CreateAuditLog<tb_FM_ReceivablePayable>("应付款单自动审核失败", autoApproval.ReturnObject as tb_FM_ReceivablePayable, autoApproval.ErrorMsg);
+                                    }
+                                    else
+                                    {
+                                        MainForm.Instance.FMAuditLogHelper.CreateAuditLog<tb_FM_ReceivablePayable>("应付款单自动审核成功", autoApproval.ReturnObject as tb_FM_ReceivablePayable);
+                                    }
+                                }
+                            }
+                            #endregion
+                        }
+                    }
+
+                    #endregion
+
+
+                }
+
+
+                //审核成功
+                ToolBarEnabledControl(MenuItemEnums.审核);
+                //如果审核结果为不通过时，审核不是灰色。
+                if (!ae.ApprovalResults)
+                {
+                    toolStripbtnReview.Enabled = true;
+                }
+                await ToolBarEnabledControl(EditEntity);
+                ae.ApprovalResults = true;
+                reviewResult.approval = ae;
+                if (ae.bizType.ToString().Contains("款"))
+                {
+                    await MainForm.Instance.FMAuditLogHelper.CreateAuditLog<T>("审核", EditEntity, $"审核结果：{(ae.ApprovalResults ? "通过" : "拒绝")}-{ae.ApprovalOpinions}");
                 }
                 else
                 {
-                    //审核了。驳回 时数据状态要更新为新建。要再次修改后提交
-                    #region UI驳回直接保存返回。不用进入审核流程了。
+                    await MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("审核", EditEntity, $"审核结果：{(ae.ApprovalResults ? "通过" : "拒绝")}-{ae.ApprovalOpinions}");
+                }
 
+
+
+                MainForm.Instance.PrintInfoLog($"{ae.bizName}:{ae.BillNo}审核成功。", Color.Red);
+            }
+            else
+            {
+                //审核失败 要恢复之前的值
+                command.Undo();
+                ae.ApprovalResults = false;
+                ae.ApprovalStatus = (int)ApprovalStatus.未审核;
+                await ToolBarEnabledControl(EditEntity);
+                reviewResult.approval = ae;
+                // 记录审计日志
+                await MainForm.Instance.AuditLogHelper.CreateAuditLog("审核失败", EditEntity, $"审核结果:{(ae.ApprovalResults ? "通过" : "拒绝")},{rmr.ErrorMsg}");
+                MainForm.Instance.logger.LogError($"{ae.bizName}:{ae.BillNo}审核失败{rmr.ErrorMsg}");
+                MainForm.Instance.PrintInfoLog($"{ae.bizName}:{ae.BillNo}审核失败{rmr.ErrorMsg},请联系管理员！", Color.Red);
+                MessageBox.Show($"{ae.bizName}:{ae.BillNo}审核失败。\r\n {rmr.ErrorMsg}", "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+
+            toolStripbtnReview.Enabled = false;
+        }
+        else
+        {
+            toolStripbtnReview.Enabled = true;
+        }
+        return reviewResult;
+    }
+
+    /// <summary>
+    /// 反审核 与审核相反
+    /// </summary>
+    protected async override Task<bool> ReReview()
+    {
+        bool rs = false;
+        ApprovalEntity ae = new ApprovalEntity();
+        if (EditEntity == null)
+        {
+            return rs;
+        }
+        string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
+        long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
+        if (pkid > 0)
+        {
+            //判断是否锁定
+            if (await IsLock())
+            {
+                MainForm.Instance.uclog.AddLog($"单据已被锁定，请刷新后再试");
+                return rs;
+                //分读写锁  保存后就只有读。释放 写？
+            }
+        }
+
+
+
+        if (ReflectionHelper.ExistPropertyName<T>("ApprovalStatus") && ReflectionHelper.ExistPropertyName<T>("ApprovalResults"))
+        {
+            //反审，要审核过，并且通过了，才能反审。
+            if (EditEntity.GetPropertyValue("ApprovalStatus").ToInt() == (int)ApprovalStatus.已审核
+                && EditEntity.GetPropertyValue("ApprovalResults") != null
+                && EditEntity.GetPropertyValue("ApprovalResults").ToBool() == true
+                )
+            {
+                ae.ApprovalResults = true;
+            }
+            else
+            {
+                MainForm.Instance.uclog.AddLog("已经审核,且【同意】的单据才能反审。");
+                return rs;
+            }
+        }
+
+
+        CommonUI.frmReApproval frm = new CommonUI.frmReApproval();
+
+
+        ae.BillID = pkid;
+        CommBillData cbd = EntityMappingHelper.GetBillData<T>(EditEntity);
+        ae.BillNo = cbd.BillNo;
+        ae.bizType = cbd.BizType;
+        ae.bizName = cbd.BizName;
+        ae.Approver_by = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
+        frm.BindData(ae);
+        if (frm.ShowDialog() == DialogResult.OK)
+        {
+            RevertCommand command = new RevertCommand();
+            //缓存当前编辑的对象。如果撤销就回原来的值
+            T oldobj = CloneHelper.DeepCloneObject_maxnew<T>(EditEntity);
+            command.UndoOperation = delegate ()
+            {
+                //Undo操作会执行到的代码 意思是如果取消反审，内存中反审核的数据要变为空白（之前的样子）
+                CloneHelper.SetValues<T>(EditEntity, oldobj);
+            };
+            //保存旧值要在下面更新值前
+
+            //中间中的所有字段，都给值到单据主表中，后面需要处理审核历史这种再完善
+            PropertyInfo[] array_property = ae.GetType().GetProperties();
+            {
+                foreach (var property in array_property)
+                {
+                    //保存审核结果 将审核中间值给到单据中，是否做循环处理？
+                    //Expression<Func<ApprovalEntity, object>> PNameExp = t => t.ApprovalStatus;
+                    //MemberInfo minfo = PNameExp.GetMemberInfo();
+                    //string propertyName = minfo.Name;
+
+
+                    // 回退到旧的状态管理系统
+                    await TransitionToAsync(DataStatus.新建, "新建单据");
+                    //EditEntity.SetPropertyValue(typeof(DataStatus).Name, (int)DataStatus.新建);
 
                     if (ReflectionHelper.ExistPropertyName<T>("ApprovalOpinions"))
                     {
@@ -4257,2225 +4623,1861 @@ namespace RUINORERP.UI.BaseForm
                     }
                     if (ReflectionHelper.ExistPropertyName<T>("ApprovalStatus"))
                     {
-                        EditEntity.SetPropertyValue("ApprovalStatus", (int)ApprovalStatus.驳回);
+                        EditEntity.SetPropertyValue("ApprovalStatus", (int)ApprovalStatus.未审核);
                     }
                     if (ReflectionHelper.ExistPropertyName<T>("ApprovalResults"))
                     {
                         EditEntity.SetPropertyValue("ApprovalResults", false);
                     }
                     BusinessHelper.Instance.ApproverEntity(EditEntity);
-                    BaseController<T> ctrBase = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
-                    //因为只需要更新主表
-                    ReturnResults<T> rr = await ctrBase.BaseSaveOrUpdate(EditEntity);
-                    reviewResult.approval = ae;
-                    reviewResult.Succeeded = rr.Succeeded;
-                    return reviewResult;
-                    #endregion
+
+
+                    if (ReflectionHelper.ExistPropertyName<T>(property.Name))
+                    {
+                        object aeValue = ReflectionHelper.GetPropertyValue(ae, property.Name);
+                        ReflectionHelper.SetPropertyValue(EditEntity, property.Name, aeValue);
+                    }
                 }
+            }
 
 
-                //中间中的所有字段，都给值到单据主表中，后面需要处理审核历史这种再完善
-                PropertyInfo[] array_property = ae.GetType().GetProperties();
+
+            ReturnResults<T> rmr = new ReturnResults<T>();
+            BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
+
+            //反审前 刷新最新数据才能判断 比方销售订单 没有关掉当前UI时。已经出库。再反审。后面再优化为缓存处理锁单来不用查数据库刷新。
+            BaseEntity pkentity = (editEntity as T) as BaseEntity;
+            EditEntity = await ctr.BaseQueryByIdNavAsync(pkentity.PrimaryKeyID) as T;
+
+            rmr = await ctr.AntiApprovalAsync(EditEntity);
+            if (rmr.Succeeded)
+            {
+                rs = true;
+                //如果是出库单审核，则上传到服务器 锁定订单无法修改
+                if (ae.bizType == BizType.销售出库单)
                 {
-                    foreach (var property in array_property)
+                    //锁定对应的订单
+                    if (EditEntity is tb_SaleOut saleOut)
                     {
-                        //保存审核结果 将审核中间值给到单据中，是否做循环处理？
-                        if (ReflectionHelper.ExistPropertyName<T>(property.Name))
+                        if (saleOut.tb_saleorder != null)
                         {
-                            object aeValue = ReflectionHelper.GetPropertyValue(ae, property.Name);
-                            ReflectionHelper.SetPropertyValue(EditEntity, property.Name, aeValue);
+                            UNLock(saleOut.tb_saleorder.SOrder_ID);
                         }
                     }
-                }
-                //审核通过赋值
-                if (ReflectionHelper.ExistPropertyName<T>("ApprovalOpinions"))
-                {
-                    EditEntity.SetPropertyValue("ApprovalOpinions", ae.ApprovalOpinions);
-                }
-                if (ReflectionHelper.ExistPropertyName<T>("ApprovalStatus"))
-                {
-                    EditEntity.SetPropertyValue("ApprovalStatus", (int)ApprovalStatus.已审核);
-                }
-                if (ReflectionHelper.ExistPropertyName<T>("ApprovalResults"))
-                {
-                    EditEntity.SetPropertyValue("ApprovalResults", true);
+
                 }
 
-                ReturnResults<T> rmr = new ReturnResults<T>();
-                BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
-                // AdjustingInventoryAsync
-                //因为只需要更新主表
-                rmr = await ctr.ApprovalAsync(EditEntity);
-                if (rmr.Succeeded)
-                {
-                    reviewResult.Succeeded = rmr.Succeeded;
-
-                    //如果是出库单审核，则上传到服务器 锁定订单无法修改
-                    if (ae.bizType == BizType.销售出库单)
-                    {
-                        //锁定对应的订单
-                        if (EditEntity is tb_SaleOut saleOut)
-                        {
-                            if (saleOut.tb_saleorder != null)
-                            {
-                                await LockBill(saleOut.tb_saleorder.SOrder_ID, saleOut.tb_saleorder.SOrderNo, MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID);
-                            }
-                        }
-
-                        #region 销售出库单如果启用了财务模块，则会生成应收款单
-
-                        AuthorizeController authorizeController = MainForm.Instance.AppContext.GetRequiredService<AuthorizeController>();
-                        if (authorizeController.EnableFinancialModule())
-                        {
-                            if (MainForm.Instance.AppContext.FMConfig.AutoAuditReceiveable)
-                            {
-                                #region 自动审核应收款单
-                                //销售订单审核时自动将预付款单设为"已生效"状态
-                                var ctrpayable = MainForm.Instance.AppContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
-                                if (rmr.ReturnObjectAsOtherEntity is tb_FM_ReceivablePayable payable)
-                                {
-                                    payable.ApprovalOpinions = "系统自动审核";
-                                    payable.ApprovalStatus = (int)ApprovalStatus.已审核;
-                                    payable.ApprovalResults = true;
-                                    ReturnResults<tb_FM_ReceivablePayable> autoApproval = await ctrpayable.ApprovalAsync(payable, true);
-                                    if (!autoApproval.Succeeded)
-                                    {
-                                        autoApproval.Succeeded = false;
-                                        autoApproval.ErrorMsg = $"应收款单自动审核失败：{autoApproval.ErrorMsg ?? "未知错误"}";
-                                    }
-                                    else
-                                    {
-                                        MainForm.Instance.FMAuditLogHelper.CreateAuditLog<tb_FM_ReceivablePayable>("应收款单自动审核成功", autoApproval.ReturnObject as tb_FM_ReceivablePayable);
-                                    }
-                                }
-                                #endregion
-                            }
-                        }
-
-                        #endregion
-                    }
-
-                    //这里审核完了的话，如果这个单存在于工作流的集合队列中，则向服务器说明审核完成。
-                    //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
-                    //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
-                    //MainForm.Instance.ecs.AddSendData(od);
-
-                    #region 销售退货
-
-                    //如果是出库单审核，则上传到服务器 锁定订单无法修改
-                    if (ae.bizType == BizType.销售退回单)
-                    {
-                        #region 销售退回单 如果启用了财务模块
-
-                        AuthorizeController authorizeController = MainForm.Instance.AppContext.GetRequiredService<AuthorizeController>();
-                        if (authorizeController.EnableFinancialModule())
-                        {
-                            if (MainForm.Instance.AppContext.FMConfig.AutoAuditReceiveable)
-                            {
-                                #region 自动审核应收款单
-                                //销售订单审核时自动将预付款单设为"已生效"状态
-                                var ctrpayable = MainForm.Instance.AppContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
-                                if (rmr.ReturnObjectAsOtherEntity is tb_FM_ReceivablePayable payable)
-                                {
-                                    //只有有应收记录。挂账都可以手工进行后面的步骤。
-                                    //所以这里应收审核过了。说明平台退款了，认为销售退回单中的平台退款已经处理了。
-
-                                    if ((payable.ApprovalStatus.GetValueOrDefault() == (int)ApprovalStatus.未审核) || !payable.ApprovalResults.GetValueOrDefault())
-                                    {
-                                        payable.ApprovalOpinions = "【销售退回单】审核时，系统自动审核";
-                                        payable.ApprovalStatus = (int)ApprovalStatus.已审核;
-                                        payable.ApprovalResults = true;
-                                        ReturnResults<tb_FM_ReceivablePayable> autoApproval = await ctrpayable.ApprovalAsync(payable, true);
-                                        if (!autoApproval.Succeeded)
-                                        {
-                                            autoApproval.Succeeded = false;
-                                            autoApproval.ErrorMsg = $"【销售退回单】审核时,应收款单自动审核失败：{autoApproval.ErrorMsg ?? "未知错误"}";
-                                        }
-                                        else
-                                        {
-                                            MainForm.Instance.FMAuditLogHelper.CreateAuditLog<tb_FM_ReceivablePayable>("【销售退回单】审核时，应收款单自动审核成功", autoApproval.ReturnObject as tb_FM_ReceivablePayable);
-                                        }
-
-                                        //自动退款？
-                                        //平台订单 经过运费在 平台退款操作后，退回单状态中已经是 退款状态了。
-                                        if (MainForm.Instance.AppContext.FMConfig.AutoAuditReceivePaymentRecordByPlatform)
-                                        {
-                                            if (rmr.ReturnObject is tb_SaleOutRe saleOutRe)
-                                            {
-                                                if (saleOutRe.IsFromPlatform)
-                                                {
-
-                                                    #region 生成应收款红字单，退款
-                                                    //自动生成销售退回单的对应的应该收款单（红字的）对应的收款记录
-                                                    var paymentController = MainForm.Instance.AppContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
-                                                    List<tb_FM_ReceivablePayable> receivablePayables = new List<tb_FM_ReceivablePayable>();
-                                                    receivablePayables.Add(payable);
-
-                                                    tb_FM_PaymentRecord newPaymentRecord = await paymentController.BuildPaymentRecord(receivablePayables);
-                                                    newPaymentRecord.Remark = "平台单，已退款，货回仓审核时自动生成的收款单（负数）红字";
-                                                    newPaymentRecord.PaymentStatus = (int)PaymentStatus.待审核;
-                                                    if (!newPaymentRecord.Paytype_ID.HasValue && saleOutRe.Paytype_ID.HasValue)
-                                                    {
-                                                        newPaymentRecord.Paytype_ID = saleOutRe.Paytype_ID;
-                                                    }
-                                                    var rrs = await paymentController.BaseSaveOrUpdateWithChild<tb_FM_PaymentRecord>(newPaymentRecord, false);
-                                                    if (rrs.Succeeded)
-                                                    {
-                                                        if (saleOutRe.RefundStatus == (int)RefundStatus.已退款已退货)
-                                                        {
-                                                            //自动审核收款单
-                                                            newPaymentRecord.ApprovalOpinions = "【平台单】已退款，销售退回单审核时，自动审核";
-                                                            newPaymentRecord.ApprovalStatus = (int)ApprovalStatus.已审核;
-                                                            newPaymentRecord.ApprovalResults = true;
-
-                                                            ReturnResults<tb_FM_PaymentRecord> rrRecord = await paymentController.ApprovalAsync(newPaymentRecord);
-                                                            if (!rrRecord.Succeeded)
-                                                            {
-                                                                MainForm.Instance.FMAuditLogHelper.CreateAuditLog<tb_FM_PaymentRecord>("【平台单】销售退回时，自动审核失败：" + rrRecord.ErrorMsg, rrRecord.ReturnObject as tb_FM_PaymentRecord);
-                                                            }
-                                                            else
-                                                            {
-
-                                                                MainForm.Instance.FMAuditLogHelper.CreateAuditLog<tb_FM_PaymentRecord>("【平台单】销售退回时，自动审核成功", rrRecord.ReturnObject as tb_FM_PaymentRecord);
-                                                            }
-                                                        }
-                                                    }
-                                                    #endregion
-
-                                                }
-                                            }
-                                        }
-
-
-                                    }
-
-
-
-                                }
-                                #endregion
-                            }
-                        }
-
-                        #endregion
-                    }
-
-                    #endregion
-
-                    //如果是出库单审核，则上传到服务器 锁定订单无法修改
-                    if (ae.bizType == BizType.采购入库单 || ae.bizType == BizType.采购退货入库)
-                    {
-                        //锁定对应的订单
-                        if (EditEntity is tb_PurEntry PurEntry)
-                        {
-                            if (PurEntry.tb_purorder != null)
-                            {
-                                await LockBill(PurEntry.tb_purorder.PurOrder_ID, PurEntry.tb_purorder.PurOrderNo, MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID);
-                            }
-                        }
-                        if (EditEntity is tb_PurReturnEntry PurReturnEntry)
-                        {
-                            if (PurReturnEntry.tb_purentryre != null)
-                            {
-                                await LockBill(PurReturnEntry.tb_purentryre.PurEntryRe_ID, PurReturnEntry.tb_purentryre.PurEntryReNo, MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID);
-                            }
-                        }
-
-                        #region 采购入库单如果启用了财务模块，则会生成应付款单
-
-                        AuthorizeController authorizeController = MainForm.Instance.AppContext.GetRequiredService<AuthorizeController>();
-                        if (authorizeController.EnableFinancialModule())
-                        {
-                            if (MainForm.Instance.AppContext.FMConfig.AutoAuditPaymentable)
-                            {
-                                #region 自动审核应付款单
-                                //销售订单审核时自动将预付款单设为"已生效"状态
-                                var ctrpayable = MainForm.Instance.AppContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
-                                if (rmr.ReturnObjectAsOtherEntity is tb_FM_ReceivablePayable payable)
-                                {
-                                    if (payable.ARAPStatus == (int)ARAPStatus.待审核)
-                                    {
-                                        payable.ApprovalOpinions = $"由采购入库单确认{payable.SourceBillNo},系统自动审核";
-                                        payable.ApprovalStatus = (int)ApprovalStatus.已审核;
-                                        payable.ApprovalResults = true;
-
-                                        //if (PurEntry.tb_purorder != null && !payable.PayeeInfoID.HasValue)
-                                        //{
-                                        //    //通过订单添加付款信息
-                                        //    payable.PayeeInfoID = PurEntry.tb_purorder.PayeeInfoID;
-                                        //}
-
-                                        ReturnResults<tb_FM_ReceivablePayable> autoApproval = await ctrpayable.ApprovalAsync(payable, true);
-                                        if (!autoApproval.Succeeded)
-                                        {
-                                            autoApproval.Succeeded = false;
-                                            autoApproval.ErrorMsg = $"应付款单自动审核失败：{autoApproval.ErrorMsg ?? "未知错误"}";
-                                            if (MainForm.Instance.AppContext.SysConfig.ShowDebugInfo)
-                                            {
-                                                MainForm.Instance.logger.LogDebug(autoApproval.ErrorMsg);
-                                            }
-                                            await MainForm.Instance.FMAuditLogHelper.CreateAuditLog<tb_FM_ReceivablePayable>("应付款单自动审核失败", autoApproval.ReturnObject as tb_FM_ReceivablePayable, autoApproval.ErrorMsg);
-                                        }
-                                        else
-                                        {
-                                            MainForm.Instance.FMAuditLogHelper.CreateAuditLog<tb_FM_ReceivablePayable>("应付款单自动审核成功", autoApproval.ReturnObject as tb_FM_ReceivablePayable);
-                                        }
-                                    }
-                                }
-                                #endregion
-                            }
-                        }
-
-                        #endregion
-
-
-                    }
-
-
-                    //审核成功
-                    ToolBarEnabledControl(MenuItemEnums.审核);
-                    //如果审核结果为不通过时，审核不是灰色。
-                    if (!ae.ApprovalResults)
-                    {
-                        toolStripbtnReview.Enabled = true;
-                    }
-                    await ToolBarEnabledControl(EditEntity);
-                    ae.ApprovalResults = true;
-                    reviewResult.approval = ae;
-                    if (ae.bizType.ToString().Contains("款"))
-                    {
-                        await MainForm.Instance.FMAuditLogHelper.CreateAuditLog<T>("审核", EditEntity, $"审核结果：{(ae.ApprovalResults ? "通过" : "拒绝")}-{ae.ApprovalOpinions}");
-                    }
-                    else
-                    {
-                        await MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("审核", EditEntity, $"审核结果：{(ae.ApprovalResults ? "通过" : "拒绝")}-{ae.ApprovalOpinions}");
-                    }
-
-
-
-                    MainForm.Instance.PrintInfoLog($"{ae.bizName}:{ae.BillNo}审核成功。", Color.Red);
-                }
-                else
-                {
-                    //审核失败 要恢复之前的值
-                    command.Undo();
-                    ae.ApprovalResults = false;
-                    ae.ApprovalStatus = (int)ApprovalStatus.未审核;
-                    await ToolBarEnabledControl(EditEntity);
-                    reviewResult.approval = ae;
-                    // 记录审计日志
-                    await MainForm.Instance.AuditLogHelper.CreateAuditLog("审核失败", EditEntity, $"审核结果:{(ae.ApprovalResults ? "通过" : "拒绝")},{rmr.ErrorMsg}");
-                    MainForm.Instance.logger.LogError($"{ae.bizName}:{ae.BillNo}审核失败{rmr.ErrorMsg}");
-                    MainForm.Instance.PrintInfoLog($"{ae.bizName}:{ae.BillNo}审核失败{rmr.ErrorMsg},请联系管理员！", Color.Red);
-                    MessageBox.Show($"{ae.bizName}:{ae.BillNo}审核失败。\r\n {rmr.ErrorMsg}", "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-
-                toolStripbtnReview.Enabled = false;
+                ToolBarEnabledControl(MenuItemEnums.反审);
+                //这里推送到审核，启动工作流
+                await MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("反审", EditEntity, $"反审原因{ae.ApprovalOpinions}");
             }
             else
             {
-                toolStripbtnReview.Enabled = true;
+                //审核失败 要恢复之前的值
+                command.Undo();
+                rs = false;
+                await ToolBarEnabledControl(EditEntity);
+                await MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("反审失败", EditEntity, $"反审原因{ae.ApprovalOpinions},{rmr.ErrorMsg}");
+                MainForm.Instance.logger.LogError($"{cbd.BillNo}反审失败{rmr.ErrorMsg}");
+                MainForm.Instance.PrintInfoLog($"{cbd.BillNo}反审失败{rmr.ErrorMsg},请联系管理员！", Color.Red);
+                MessageBox.Show($"{ae.bizName}:{ae.BillNo}反审失败。\r\n {rmr.ErrorMsg}", "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-            return reviewResult;
+        }
+        return rs;
+    }
+
+
+    #region
+    // 添加辅助方法
+    private Dictionary<string, object> CloneSpecificFields(T entity, params string[] fieldNames)
+    {
+        var fieldValues = new Dictionary<string, object>();
+        foreach (var fieldName in fieldNames)
+        {
+            if (ReflectionHelper.ExistPropertyName<T>(fieldName))
+            {
+                fieldValues[fieldName] = ReflectionHelper.GetPropertyValue(entity, fieldName);
+            }
+        }
+        return fieldValues;
+    }
+
+    private void RestoreSpecificFields(T entity, Dictionary<string, object> fieldValues)
+    {
+        foreach (var kvp in fieldValues)
+        {
+            if (ReflectionHelper.ExistPropertyName<T>(kvp.Key))
+            {
+                ReflectionHelper.SetPropertyValue(entity, kvp.Key, kvp.Value);
+            }
+        }
+    }
+    #endregion
+
+    private T editEntity;
+    public T EditEntity { get => editEntity; set => editEntity = value; }
+
+    public List<T> PrintData { get; set; }
+
+    /// <summary>
+    /// 取消添加 取消修改
+    /// </summary>
+    protected virtual void Cancel()
+    {
+        if (OnBindDataToUIEvent != null)
+        {
+            bindingSourceSub.Clear();
+            //OnBindDataToUIEvent(EditEntity, ActionStatus.加载);
         }
 
-        /// <summary>
-        /// 反审核 与审核相反
-        /// </summary>
-        protected async override Task<bool> ReReview()
+        ToolBarEnabledControl(MenuItemEnums.取消);
+        bindingSourceSub.CancelEdit();
+
+    }
+
+    frmFormProperty frm = null;
+    protected override void Property()
+    {
+        if (frm.ShowDialog() == DialogResult.OK)
         {
-            bool rs = false;
-            ApprovalEntity ae = new ApprovalEntity();
-            if (EditEntity == null)
+            //保存属性
+            ToolBarEnabledControl(MenuItemEnums.属性);
+            //MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("属性", EditEntity);
+        }
+        base.Property();
+    }
+
+
+
+    /// <summary>
+    /// 保存图片到服务器。所有图片都保存到服务器。即使草稿换电脑还可以看到
+    /// </summary>
+    /// <param name="RemoteSave"></param>
+    /// <returns></returns>
+    public async Task<bool> SaveFileToServer(SourceGridDefine sgd, List<C> Details)
+    {
+        bool result = true;
+        List<SGDefineColumnItem> ImgCols = new List<SGDefineColumnItem>();
+        foreach (C detail in Details)
+        {
+            PropertyInfo[] props = typeof(C).GetProperties();
+            foreach (PropertyInfo prop in props)
             {
-                return rs;
-            }
-            string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
-            long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
-            if (pkid > 0)
-            {
-                //判断是否锁定
-                if (await IsLock())
+                var col = sgd[prop.Name];
+                if (col != null)
                 {
-                    MainForm.Instance.uclog.AddLog($"单据已被锁定，请刷新后再试");
-                    return rs;
-                    //分读写锁  保存后就只有读。释放 写？
-                }
-            }
-
-
-
-            if (ReflectionHelper.ExistPropertyName<T>("ApprovalStatus") && ReflectionHelper.ExistPropertyName<T>("ApprovalResults"))
-            {
-                //反审，要审核过，并且通过了，才能反审。
-                if (EditEntity.GetPropertyValue("ApprovalStatus").ToInt() == (int)ApprovalStatus.已审核
-                    && EditEntity.GetPropertyValue("ApprovalResults") != null
-                    && EditEntity.GetPropertyValue("ApprovalResults").ToBool() == true
-                    )
-                {
-                    ae.ApprovalResults = true;
-                }
-                else
-                {
-                    MainForm.Instance.uclog.AddLog("已经审核,且【同意】的单据才能反审。");
-                    return rs;
-                }
-            }
-
-
-            CommonUI.frmReApproval frm = new CommonUI.frmReApproval();
-
-
-            ae.BillID = pkid;
-            CommBillData cbd = EntityMappingHelper.GetBillData<T>(EditEntity);
-            ae.BillNo = cbd.BillNo;
-            ae.bizType = cbd.BizType;
-            ae.bizName = cbd.BizName;
-            ae.Approver_by = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
-            frm.BindData(ae);
-            if (frm.ShowDialog() == DialogResult.OK)
-            {
-                RevertCommand command = new RevertCommand();
-                //缓存当前编辑的对象。如果撤销就回原来的值
-                T oldobj = CloneHelper.DeepCloneObject_maxnew<T>(EditEntity);
-                command.UndoOperation = delegate ()
-                {
-                    //Undo操作会执行到的代码 意思是如果取消反审，内存中反审核的数据要变为空白（之前的样子）
-                    CloneHelper.SetValues<T>(EditEntity, oldobj);
-                };
-                //保存旧值要在下面更新值前
-
-                //中间中的所有字段，都给值到单据主表中，后面需要处理审核历史这种再完善
-                PropertyInfo[] array_property = ae.GetType().GetProperties();
-                {
-                    foreach (var property in array_property)
+                    if (col.CustomFormat == CustomFormatType.WebPathImage && !ImgCols.Contains(col))
                     {
-                        //保存审核结果 将审核中间值给到单据中，是否做循环处理？
-                        //Expression<Func<ApprovalEntity, object>> PNameExp = t => t.ApprovalStatus;
-                        //MemberInfo minfo = PNameExp.GetMemberInfo();
-                        //string propertyName = minfo.Name;
-
-
-                        // 回退到旧的状态管理系统
-                        EditEntity.SetPropertyValue(typeof(DataStatus).Name, (int)DataStatus.新建);
-
-                        if (ReflectionHelper.ExistPropertyName<T>("ApprovalOpinions"))
-                        {
-                            EditEntity.SetPropertyValue("ApprovalOpinions", ae.ApprovalOpinions);
-                        }
-                        if (ReflectionHelper.ExistPropertyName<T>("ApprovalStatus"))
-                        {
-                            EditEntity.SetPropertyValue("ApprovalStatus", (int)ApprovalStatus.未审核);
-                        }
-                        if (ReflectionHelper.ExistPropertyName<T>("ApprovalResults"))
-                        {
-                            EditEntity.SetPropertyValue("ApprovalResults", false);
-                        }
-                        BusinessHelper.Instance.ApproverEntity(EditEntity);
-
-
-                        if (ReflectionHelper.ExistPropertyName<T>(property.Name))
-                        {
-                            object aeValue = ReflectionHelper.GetPropertyValue(ae, property.Name);
-                            ReflectionHelper.SetPropertyValue(EditEntity, property.Name, aeValue);
-                        }
+                        ImgCols.Add(col);
                     }
                 }
+            }
+        }
+        try
+        {
+            result = await UploadImageAsync(ImgCols, sgd.grid, Details);
+        }
+        catch (Exception ex)
+        {
+            MainForm.Instance.uclog.AddLog(ex.Message, Global.UILogType.错误);
+        }
+        return result;
+    }
 
-
-
-                ReturnResults<T> rmr = new ReturnResults<T>();
-                BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
-
-                //反审前 刷新最新数据才能判断 比方销售订单 没有关掉当前UI时。已经出库。再反审。后面再优化为缓存处理锁单来不用查数据库刷新。
-                BaseEntity pkentity = (editEntity as T) as BaseEntity;
-                EditEntity = await ctr.BaseQueryByIdNavAsync(pkentity.PrimaryKeyID) as T;
-
-                rmr = await ctr.AntiApprovalAsync(EditEntity);
-                if (rmr.Succeeded)
+    private async Task<bool> UploadImageAsync(List<SGDefineColumnItem> ImgCols, Grid grid, List<C> Details)
+    {
+        bool rs = true;
+        //保存图片到本地临时目录，图片数据保存在grid1控件中，所以要循环控件的行，控件真实数据行以1为起始
+        int totalRowsFlag = grid.RowsCount;
+        if (grid.HasSummary)
+        {
+            totalRowsFlag--;//减去一行总计行
+        }
+        for (int i = 1; i < totalRowsFlag; i++)
+        {
+            foreach (var col in ImgCols)
+            {
+                int realIndex = grid.Columns.GetColumnInfo(col.UniqueId).Index;
+                if (grid[i, realIndex].Value == null)
                 {
-                    rs = true;
-                    //如果是出库单审核，则上传到服务器 锁定订单无法修改
-                    if (ae.bizType == BizType.销售出库单)
+                    continue;
+                }
+                var model = grid[i, realIndex].Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
+                SourceGrid.Cells.Models.ValueImageWeb valueImageWeb = (SourceGrid.Cells.Models.ValueImageWeb)model;
+                //比较是否更新了图片数据
+                string newhash = valueImageWeb.GetImageNewHash();
+                if (valueImageWeb.CellImageBytes != null)
+                {
+                    #region 需要上传
+
+                    if (!valueImageWeb.GetImageoldHash().Equals(newhash, StringComparison.OrdinalIgnoreCase)
+                    && grid[i, realIndex].Value.ToString() == valueImageWeb.CellImageHashName)
                     {
-                        //锁定对应的订单
-                        if (EditEntity is tb_SaleOut saleOut)
+                        string oldfileName = valueImageWeb.GetOldRealfileName();
+                        string newfileName = valueImageWeb.GetNewRealfileName();
+                        HttpWebService httpWebService = Startup.GetFromFac<HttpWebService>();
+                        //如果服务器有旧文件 。可以先删除
+                        if (!string.IsNullOrEmpty(valueImageWeb.GetImageoldHash()))
                         {
-                            if (saleOut.tb_saleorder != null)
+                            string deleteRsult = await httpWebService.DeleteImageAsync(oldfileName, "delete123");
+                            MainForm.Instance.PrintInfoLog("DeleteImage:" + deleteRsult);
+                        }
+                        ////上传新文件时要加后缀名
+                        string uploadRsult = await httpWebService.UploadImageAsync(CurMenuInfo.MenuID.ToString(), (EditEntity as BaseEntity).PrimaryKeyID.ToString(), newfileName + ".jpg", valueImageWeb.CellImageBytes, "upload");
+                        if (uploadRsult.Contains("UploadSuccessful") || uploadRsult.Contains("ImageExists"))
+                        {
+                            // 提取文件名（无论是新上传还是已存在）
+                            string resultFileName = uploadRsult.Contains("UploadSuccessful") ?
+                                uploadRsult.Replace("UploadSuccessful: ", "").Trim() :
+                                uploadRsult.Replace("ImageExists: ", "").Trim();
+
+                            valueImageWeb.UpdateImageName(newhash);
+                            grid[i, realIndex].Value = resultFileName;
+
+                            string detailPKName = UIHelper.GetPrimaryKeyColName(typeof(C));
+                            object PKValue = grid[i, realIndex].Row.RowData.GetPropertyValue(detailPKName);
+                            var detail = Details.Where(x => x.GetPropertyValue(detailPKName).ToString().Equals(PKValue.ToString())).FirstOrDefault();
+                            detail.SetPropertyValue(col.ColName, resultFileName);
+                            rs = true;
+
+                            if (uploadRsult.Contains("UploadSuccessful"))
                             {
-                                UNLock(saleOut.tb_saleorder.SOrder_ID);
-                            }
-                        }
-
-                    }
-
-                    ToolBarEnabledControl(MenuItemEnums.反审);
-                    //这里推送到审核，启动工作流
-                    await MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("反审", EditEntity, $"反审原因{ae.ApprovalOpinions}");
-                }
-                else
-                {
-                    //审核失败 要恢复之前的值
-                    command.Undo();
-                    rs = false;
-                    await ToolBarEnabledControl(EditEntity);
-                    await MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("反审失败", EditEntity, $"反审原因{ae.ApprovalOpinions},{rmr.ErrorMsg}");
-                    MainForm.Instance.logger.LogError($"{cbd.BillNo}反审失败{rmr.ErrorMsg}");
-                    MainForm.Instance.PrintInfoLog($"{cbd.BillNo}反审失败{rmr.ErrorMsg},请联系管理员！", Color.Red);
-                    MessageBox.Show($"{ae.bizName}:{ae.BillNo}反审失败。\r\n {rmr.ErrorMsg}", "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-            }
-            return rs;
-        }
-
-
-        #region
-        // 添加辅助方法
-        private Dictionary<string, object> CloneSpecificFields(T entity, params string[] fieldNames)
-        {
-            var fieldValues = new Dictionary<string, object>();
-            foreach (var fieldName in fieldNames)
-            {
-                if (ReflectionHelper.ExistPropertyName<T>(fieldName))
-                {
-                    fieldValues[fieldName] = ReflectionHelper.GetPropertyValue(entity, fieldName);
-                }
-            }
-            return fieldValues;
-        }
-
-        private void RestoreSpecificFields(T entity, Dictionary<string, object> fieldValues)
-        {
-            foreach (var kvp in fieldValues)
-            {
-                if (ReflectionHelper.ExistPropertyName<T>(kvp.Key))
-                {
-                    ReflectionHelper.SetPropertyValue(entity, kvp.Key, kvp.Value);
-                }
-            }
-        }
-        #endregion
-
-        private T editEntity;
-        public T EditEntity { get => editEntity; set => editEntity = value; }
-
-        public List<T> PrintData { get; set; }
-
-        /// <summary>
-        /// 取消添加 取消修改
-        /// </summary>
-        protected virtual void Cancel()
-        {
-            if (OnBindDataToUIEvent != null)
-            {
-                bindingSourceSub.Clear();
-                //OnBindDataToUIEvent(EditEntity, ActionStatus.加载);
-            }
-
-            ToolBarEnabledControl(MenuItemEnums.取消);
-            bindingSourceSub.CancelEdit();
-
-        }
-
-        frmFormProperty frm = null;
-        protected override void Property()
-        {
-            if (frm.ShowDialog() == DialogResult.OK)
-            {
-                //保存属性
-                ToolBarEnabledControl(MenuItemEnums.属性);
-                //MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("属性", EditEntity);
-            }
-            base.Property();
-        }
-
-
-
-        /// <summary>
-        /// 保存图片到服务器。所有图片都保存到服务器。即使草稿换电脑还可以看到
-        /// </summary>
-        /// <param name="RemoteSave"></param>
-        /// <returns></returns>
-        public async Task<bool> SaveFileToServer(SourceGridDefine sgd, List<C> Details)
-        {
-            bool result = true;
-            List<SGDefineColumnItem> ImgCols = new List<SGDefineColumnItem>();
-            foreach (C detail in Details)
-            {
-                PropertyInfo[] props = typeof(C).GetProperties();
-                foreach (PropertyInfo prop in props)
-                {
-                    var col = sgd[prop.Name];
-                    if (col != null)
-                    {
-                        if (col.CustomFormat == CustomFormatType.WebPathImage && !ImgCols.Contains(col))
-                        {
-                            ImgCols.Add(col);
-                        }
-                    }
-                }
-            }
-            try
-            {
-                result = await UploadImageAsync(ImgCols, sgd.grid, Details);
-            }
-            catch (Exception ex)
-            {
-                MainForm.Instance.uclog.AddLog(ex.Message, Global.UILogType.错误);
-            }
-            return result;
-        }
-
-        private async Task<bool> UploadImageAsync(List<SGDefineColumnItem> ImgCols, Grid grid, List<C> Details)
-        {
-            bool rs = true;
-            //保存图片到本地临时目录，图片数据保存在grid1控件中，所以要循环控件的行，控件真实数据行以1为起始
-            int totalRowsFlag = grid.RowsCount;
-            if (grid.HasSummary)
-            {
-                totalRowsFlag--;//减去一行总计行
-            }
-            for (int i = 1; i < totalRowsFlag; i++)
-            {
-                foreach (var col in ImgCols)
-                {
-                    int realIndex = grid.Columns.GetColumnInfo(col.UniqueId).Index;
-                    if (grid[i, realIndex].Value == null)
-                    {
-                        continue;
-                    }
-                    var model = grid[i, realIndex].Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
-                    SourceGrid.Cells.Models.ValueImageWeb valueImageWeb = (SourceGrid.Cells.Models.ValueImageWeb)model;
-                    //比较是否更新了图片数据
-                    string newhash = valueImageWeb.GetImageNewHash();
-                    if (valueImageWeb.CellImageBytes != null)
-                    {
-                        #region 需要上传
-
-                        if (!valueImageWeb.GetImageoldHash().Equals(newhash, StringComparison.OrdinalIgnoreCase)
-                        && grid[i, realIndex].Value.ToString() == valueImageWeb.CellImageHashName)
-                        {
-                            string oldfileName = valueImageWeb.GetOldRealfileName();
-                            string newfileName = valueImageWeb.GetNewRealfileName();
-                            HttpWebService httpWebService = Startup.GetFromFac<HttpWebService>();
-                            //如果服务器有旧文件 。可以先删除
-                            if (!string.IsNullOrEmpty(valueImageWeb.GetImageoldHash()))
-                            {
-                                string deleteRsult = await httpWebService.DeleteImageAsync(oldfileName, "delete123");
-                                MainForm.Instance.PrintInfoLog("DeleteImage:" + deleteRsult);
-                            }
-                            ////上传新文件时要加后缀名
-                            string uploadRsult = await httpWebService.UploadImageAsync(CurMenuInfo.MenuID.ToString(), (EditEntity as BaseEntity).PrimaryKeyID.ToString(), newfileName + ".jpg", valueImageWeb.CellImageBytes, "upload");
-                            if (uploadRsult.Contains("UploadSuccessful") || uploadRsult.Contains("ImageExists"))
-                            {
-                                // 提取文件名（无论是新上传还是已存在）
-                                string resultFileName = uploadRsult.Contains("UploadSuccessful") ?
-                                    uploadRsult.Replace("UploadSuccessful: ", "").Trim() :
-                                    uploadRsult.Replace("ImageExists: ", "").Trim();
-
-                                valueImageWeb.UpdateImageName(newhash);
-                                grid[i, realIndex].Value = resultFileName;
-
-                                string detailPKName = UIHelper.GetPrimaryKeyColName(typeof(C));
-                                object PKValue = grid[i, realIndex].Row.RowData.GetPropertyValue(detailPKName);
-                                var detail = Details.Where(x => x.GetPropertyValue(detailPKName).ToString().Equals(PKValue.ToString())).FirstOrDefault();
-                                detail.SetPropertyValue(col.ColName, resultFileName);
-                                rs = true;
-
-                                if (uploadRsult.Contains("UploadSuccessful"))
-                                {
-                                    MainForm.Instance.PrintInfoLog("UploadSuccessful:" + resultFileName);
-                                }
-                                else
-                                {
-                                    MainForm.Instance.PrintInfoLog("ImageExists - 使用现有图片:" + resultFileName);
-                                }
+                                MainForm.Instance.PrintInfoLog("UploadSuccessful:" + resultFileName);
                             }
                             else
                             {
-                                MainForm.Instance.LoginWebServer();
-                                rs = false;
+                                MainForm.Instance.PrintInfoLog("ImageExists - 使用现有图片:" + resultFileName);
                             }
                         }
-                        #endregion
+                        else
+                        {
+                            MainForm.Instance.LoginWebServer();
+                            rs = false;
+                        }
+                    }
+                    #endregion
+                }
+            }
+        }
+        return rs;
+    }
+
+    protected override void Add()
+    {
+
+        List<T> list = new List<T>();
+        EditEntity = Activator.CreateInstance(typeof(T)) as T;
+
+        //StatusMachine.Create();
+        try
+        {
+            //将预设值写入到新增的实体中
+            if (MainForm.Instance.AppContext.CurrentUser_Role_Personalized.tb_UIMenuPersonalizations == null)
+            {
+                MainForm.Instance.AppContext.CurrentUser_Role_Personalized.tb_UIMenuPersonalizations = new List<tb_UIMenuPersonalization>();
+            }
+            tb_UIMenuPersonalization menuSetting = MainForm.Instance.AppContext.CurrentUser_Role_Personalized.tb_UIMenuPersonalizations.FirstOrDefault(c => c.MenuID == CurMenuInfo.MenuID);
+            if (menuSetting != null && menuSetting.tb_UIInputDataFields != null)
+            {
+                List<QueryField> fields = new List<QueryField>();
+                UIBizService.GetInputDataField(typeof(T), fields);
+                foreach (var item in menuSetting.tb_UIInputDataFields)
+                {
+                    if (item.EnableDefault1.HasValue && item.EnableDefault1.Value)
+                    {
+                        // 进行类型转换 后设置为默认值
+                        var queryField = fields.FirstOrDefault(c => c.FieldName == item.FieldName);
+                        if (queryField != null && item.Default1 != null)
+                        {
+                            object convertedValue = Convert.ChangeType(item.Default1, queryField.ColDataType);
+                            EditEntity.SetPropertyValue(item.FieldName, convertedValue);
+                        }
                     }
                 }
             }
-            return rs;
-        }
 
-        protected override void Add()
+        }
+        catch (Exception)
         {
 
-            List<T> list = new List<T>();
-            EditEntity = Activator.CreateInstance(typeof(T)) as T;
 
-            //StatusMachine.Create();
-            try
+        }
+
+        BusinessHelper.Instance.InitEntity(EditEntity);
+        BusinessHelper.Instance.InitStatusEntity(EditEntity);
+
+        if (OnBindDataToUIEvent != null)
+        {
+            bindingSourceSub.Clear();
+            OnBindDataToUIEvent(EditEntity, ActionStatus.新增);
+        }
+
+        if (ReflectionHelper.ExistPropertyName<T>(typeof(ActionStatus).Name))
+        {
+            ReflectionHelper.SetPropertyValue(EditEntity, typeof(ActionStatus).Name, (int)ActionStatus.新增);
+        }
+        if (EditEntity is BaseEntity baseEntity)
+        {
+            baseEntity.FileStorageInfoList = new List<tb_FS_FileStorageInfo>();
+        }
+        ToolBarEnabledControl(MenuItemEnums.新增);
+        //bindingSourceEdit.CancelEdit();
+        UIHelper.ControlMasterColumnsInvisible(CurMenuInfo, this);
+    }
+
+    protected override void Modify()
+    {
+        if (editEntity == null)
+        {
+            return;
+        }
+
+        // 在修改前检查锁定状态
+        _ = Task.Run(async () =>
+        {
+            await CheckLockStatusAndUpdateUI(editEntity);
+        });
+        // 获取状态类型和值
+        var statusType = FMPaymentStatusHelper.GetStatusType(editEntity as BaseEntity);
+        if (statusType != null)
+        {
+            // 动态获取状态值
+            dynamic status = editEntity.GetPropertyValue(statusType.Name);
+            int statusValue = (int)status;
+            dynamic statusEnum = Enum.ToObject(statusType, statusValue);
+
+            if (!FMPaymentStatusHelper.CanModify(statusEnum))
             {
-                //将预设值写入到新增的实体中
-                if (MainForm.Instance.AppContext.CurrentUser_Role_Personalized.tb_UIMenuPersonalizations == null)
+                toolStripbtnModify.Enabled = false;
+                toolStripButtonSave.Enabled = false;
+                MainForm.Instance.PrintInfoLog($"当前单据状态为{statusEnum}不允许修改!");
+                return;
+            }
+
+            var dataStatus = (DataStatus)(editEntity.GetPropertyValue(typeof(DataStatus).Name).ToInt());
+            if (dataStatus == DataStatus.新建 || dataStatus == DataStatus.草稿)
+            {
+                base.Modify();
+                MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("修改", EditEntity);
+            }
+            else
+            {
+                toolStripbtnModify.Enabled = false;
+            }
+        }
+
+        BusinessHelper.Instance.EditEntity(EditEntity);
+        EditEntity.SetPropertyValue(typeof(ActionStatus).Name, ActionStatus.修改);
+        ToolBarEnabledControl(MenuItemEnums.修改);
+    }
+
+    protected async override void SpecialDataFix()
+    {
+        if (EditEntity == null)
+        {
+            return;
+        }
+
+        // 保存前检查锁定状态
+        var lockStatus = await CheckLockStatusAndUpdateUI(EditEntity);
+        if (!lockStatus.CanPerformCriticalOperations)
+        {
+            MainForm.Instance.uclog.AddLog("单据已被锁定，无法保存修改", UILogType.警告);
+            return;
+        }
+        //没有经验通过下面先不计算
+        if (!Validator(EditEntity))
+        {
+            return;
+        }
+
+        List<C> details = new List<C>();
+        bindingSourceSub.EndEdit();
+        string detailPKName = UIHelper.GetPrimaryKeyColName(typeof(C));
+        List<C> detailentity = bindingSourceSub.DataSource as List<C>;
+        if (typeof(C).Name.Contains("Detail") && detailentity != null)
+        {
+            //产品ID有值才算有效值
+            details = detailentity.Where(t => t.GetPropertyValue(detailPKName).ToLong() > 0).ToList();
+            EditEntity.SetPropertyValue(typeof(C).Name.ToLower() + "s", details);
+            if (!Validator<C>(details))
+            {
+                return;
+            }
+        }
+
+
+        var result = await MainForm.Instance.AppContext.Db.UpdateableByObject(details).ExecuteCommandAsync();
+        BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
+        ReturnResults<T> SaveResult = new ReturnResults<T>();
+        SaveResult = await ctr.BaseSaveOrUpdate(EditEntity);
+        if (SaveResult.Succeeded)
+        {
+            // MainForm.Instance.auditLogHelper.CreateAuditLog<T>("数据特殊修正", EditEntity);
+            MainForm.Instance.PrintInfoLog($"修正成功。");
+        }
+        else
+        {
+            MainForm.Instance.PrintInfoLog($"修正失败。", Color.Red);
+        }
+
+        await MainForm.Instance.AuditLogHelper.CreateAuditLog("数据修正", EditEntity, $"结果:{(SaveResult.Succeeded ? "成功" : "失败")},{SaveResult.ErrorMsg}");
+    }
+
+    private string GetPrimaryKeyProperty(Type type)
+    {
+        foreach (PropertyInfo property in type.GetProperties())
+        {
+            if (property.GetCustomAttributes(typeof(SugarColumn), true).Length > 0)
+            {
+                if (((SugarColumn)property.GetCustomAttributes(typeof(SugarColumn), true)[0]).IsPrimaryKey)
                 {
-                    MainForm.Instance.AppContext.CurrentUser_Role_Personalized.tb_UIMenuPersonalizations = new List<tb_UIMenuPersonalization>();
+                    return property.Name;
                 }
-                tb_UIMenuPersonalization menuSetting = MainForm.Instance.AppContext.CurrentUser_Role_Personalized.tb_UIMenuPersonalizations.FirstOrDefault(c => c.MenuID == CurMenuInfo.MenuID);
-                if (menuSetting != null && menuSetting.tb_UIInputDataFields != null)
+            }
+        }
+        return string.Empty;
+    }
+
+    /// <summary>
+    /// 加载相关数据的
+    /// 联查数据
+    /// </summary>
+    protected virtual Task LoadRelatedDataToDropDownItemsAsync()
+    {
+        if (toolStripbtnRelatedQuery.DropDownItems.Count > 0)
+        {
+            toolStripbtnRelatedQuery.Visible = true;
+        }
+        else
+        {
+            toolStripbtnRelatedQuery.Visible = false;
+        }
+        return Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// 加载单据联动选项到下拉菜单
+    /// </summary>
+    protected virtual void LoadConvertDocToDropDownItemsAsync()
+    {
+        // 清空现有菜单项
+        toolStripbtnConvertDocuments.DropDownItems.Clear();
+
+        try
+        {
+            // 获取当前单据类型
+            var sourceDocType = typeof(T);
+
+            // 获取所有可转换的目标单据类型
+            var converterFactory = Startup.GetFromFac<RUINORERP.Business.Document.DocumentConverterFactory>();
+            var availableConversions = converterFactory.GetAvailableConversions<T>();
+
+            // 为每种可转换类型创建菜单项
+            foreach (var conversionOption in availableConversions)
+            {
+                var menuItem = new ToolStripMenuItem(conversionOption.DisplayName);
+                // 保存转换选项的引用，避免闭包问题
+                var targetType = converterFactory.GetTargetType(conversionOption.TargetDocumentType);
+                menuItem.Click += async (sender, e) =>
                 {
-                    List<QueryField> fields = new List<QueryField>();
-                    UIBizService.GetInputDataField(typeof(T), fields);
-                    foreach (var item in menuSetting.tb_UIInputDataFields)
+                    try
                     {
-                        if (item.EnableDefault1.HasValue && item.EnableDefault1.Value)
-                        {
-                            // 进行类型转换 后设置为默认值
-                            var queryField = fields.FirstOrDefault(c => c.FieldName == item.FieldName);
-                            if (queryField != null && item.Default1 != null)
-                            {
-                                object convertedValue = Convert.ChangeType(item.Default1, queryField.ColDataType);
-                                EditEntity.SetPropertyValue(item.FieldName, convertedValue);
-                            }
-                        }
+                        // 在后台线程执行转换，避免UI卡顿
+                        await PerformDocumentConversionAsync(targetType);
+                    }
+                    catch (Exception ex)
+                    {
+                        MainForm.Instance.uclog.AddLog("执行单据联动时发生错误: " + ex.Message, Global.UILogType.错误);
+                        MessageBox.Show("执行单据联动时发生错误: " + ex.Message, "操作错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                };
+                toolStripbtnConvertDocuments.DropDownItems.Add(menuItem);
+            }
+
+            // 根据是否有可转换选项设置按钮可见性
+            toolStripbtnConvertDocuments.Visible = toolStripbtnConvertDocuments.DropDownItems.Count > 0;
+            toolStripbtnConvertDocuments.Text = "联动";
+        }
+        catch (Exception ex)
+        {
+            MainForm.Instance.uclog.AddLog("加载单据联动选项失败: " + ex.Message, Global.UILogType.错误);
+            toolStripbtnConvertDocuments.Visible = false;
+        }
+    }
+
+    /// <summary>
+    /// 执行单据转换操作
+    /// </summary>
+    /// <param name="targetType">目标单据类型</param>
+    private async Task PerformDocumentConversionAsync(Type targetType)
+    {
+        if (EditEntity == null)
+        {
+            // 使用Invoke确保在UI线程显示消息框
+            this.Invoke((MethodInvoker)delegate
+            {
+                MessageBox.Show("请先加载或保存单据后再执行联动操作！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            });
+            return;
+        }
+
+        try
+        {
+            // 使用ActionManager执行单据联动
+            var actionManager = Startup.GetFromFac<RUINORERP.Business.Document.ActionManager>();
+
+            // 准备转换选项
+            var options = new RUINORERP.Business.Document.ActionOptions
+            {
+                UseTransaction = true,
+                SaveTarget = true
+            };
+
+            // 执行联动操作
+            dynamic result = null;
+            string targetTypeName = targetType?.Name ?? "Unknown";
+
+            // 使用反射调用正确的泛型方法
+            var method = typeof(RUINORERP.Business.Document.ActionManager)
+                .GetMethod("ExecuteActionAsync")
+                .MakeGenericMethod(typeof(T), targetType);
+
+            var task = (Task)method.Invoke(actionManager, new object[] { EditEntity, options });
+            await task;
+
+            // 获取结果属性
+            var resultProperty = task.GetType().GetProperty("Result");
+            result = resultProperty?.GetValue(task);
+
+            // 在UI线程处理结果
+            this.Invoke((MethodInvoker)delegate
+            {
+                if (result != null && result.Success)
+                {
+                    // 显示成功消息，并提供打开新单据的选项
+                    var dialogResult = MessageBox.Show($"单据联动成功！已生成{targetTypeName}。是否打开新生成的单据？",
+                        "操作成功", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
+
+                    if (dialogResult == DialogResult.Yes && result.Data != null)
+                    {
+                        // 这里可以根据实际情况打开新单据
+                        // 由于没有具体的打开单据方法，暂时只显示消息
+                        MessageBox.Show("新单据已生成", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
                 }
+                else if (result != null)
+                {
+                    // 显示失败消息
+                    string errorMsg = result.ErrorMessage ?? "未知错误";
+                    MessageBox.Show("单据联动失败: " + errorMsg, "操作失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                else
+                {
+                    MessageBox.Show("不支持的目标单据类型，请联系管理员配置相应的转换器", "操作失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            // 记录错误并显示消息
+            MainForm.Instance.uclog.AddLog("执行单据联动时发生错误: " + ex.Message, Global.UILogType.错误);
 
-            }
-            catch (Exception)
+            this.Invoke((MethodInvoker)delegate
             {
+                MessageBox.Show("执行单据联动时发生错误: " + ex.Message, "操作错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            });
+        }
+    }
+
+    protected virtual void RelatedQuery()
+    {
+        MessageBox.Show("功能开发中。。。。");
+        if (EditEntity == null)
+        {
+            return;
+        }
+
+        T NewEditEntity = default(T);
+        if (OnBindDataToUIEvent != null)
+        {
+            bindingSourceSub.Clear();
+
+            // NewEditEntity = Activator.CreateInstance(typeof(T)) as T;
+
+            NewEditEntity = EditEntity.DeepCloneByjson();
+
+            // 获取需要忽略的属性配置
+            var ignoreProperties = ConfigureIgnoreProperties();
+            //复制性新增 时  PK要清空，单据编号类的,还有他的关联性子集
+            // 获取主键列名
+            string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
+
+            //这里只是取打印配置信息
+            CommBillData cbd = new CommBillData();
+            cbd = EntityMappingHelper.GetBillData(typeof(T), NewEditEntity);
+
+            string billNoColName = cbd.BillNoColName;
+
+            ReflectionHelper.SetPropertyValue(NewEditEntity, billNoColName, string.Empty);
+
+            // 重置主实体的主键
+            ResetPrimaryKey(NewEditEntity, PKCol);
+
+            // 重置审批状态
+            ResetApprovalStatus(NewEditEntity);
+
+            // 递归处理所有导航属性（明细集合）
+            ProcessNavigationProperties(NewEditEntity, PKCol, ignoreProperties);
+
+            OnBindDataToUIEvent(NewEditEntity, ActionStatus.复制);
+
+        }
+        ToolBarEnabledControl(MenuItemEnums.新增);
+        return;
+    }
+    protected virtual T AddByCopy()
+    {
+        if (EditEntity == null)
+        {
+            MessageBox.Show("请先选择一个单据作为复制的基准。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            return null;
+        }
+
+        T NewEditEntity = default(T);
+        if (OnBindDataToUIEvent != null)
+        {
+
+            bindingSourceSub.Clear();
+
+            NewEditEntity = EditEntity.DeepCloneByjson();
+            //复制性新增 时  PK要清空，单据编号类的,还有他的关联性子集
 
 
+            // 获取忽略属性配置
+            var ignoreConfig = ConfigureIgnoreProperties();
+
+
+
+            // 重置需要忽略的属性
+            ResetIgnoredProperties(NewEditEntity, ignoreConfig);
+
+            // 获取主键列名
+            string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
+
+            //这里只是取打印配置信息
+            CommBillData cbd = new CommBillData();
+            cbd = EntityMappingHelper.GetBillData(typeof(T), NewEditEntity);
+
+            string billNoColName = cbd.BillNoColName;
+
+            ReflectionHelper.SetPropertyValue(NewEditEntity, billNoColName, string.Empty);
+
+
+            // 重置主实体的主键
+            ResetPrimaryKey(NewEditEntity, PKCol);
+
+            // 重置审批状态
+            ResetApprovalStatus(NewEditEntity);
+
+            // 递归处理所有导航属性（明细集合）
+            ProcessNavigationProperties(NewEditEntity, PKCol, ignoreConfig);
+
+            OnBindDataToUIEvent(NewEditEntity, ActionStatus.复制);
+
+        }
+        ToolBarEnabledControl(MenuItemEnums.新增);
+        return NewEditEntity;
+    }
+
+    #region 复制性新增
+    // 忽略属性配置
+    // 基类中的配置方法，使用字符串方式配置通用属性
+    protected virtual IgnorePropertyConfiguration ConfigureIgnoreProperties()
+    {
+        var config = new IgnorePropertyConfiguration();
+
+        // 使用字符串方式配置通用属性（这些属性可能存在于各种实体中）
+        config.IgnoreIfExists<T>("DataStatus")
+              .IgnoreIfExists<T>("PrimaryKeyID")
+              .IgnoreIfExists<T>("Created_at")
+              .IgnoreIfExists<T>("Created_by")
+              .IgnoreIfExists<T>("Modified_at")
+              .IgnoreIfExists<T>("Modified_by")
+              .IgnoreIfExists<T>("ApprovalStatus")
+              .IgnoreIfExists<T>("ApprovalResults")
+              .IgnoreIfExists<T>("Approver_by")
+              .IgnoreIfExists<T>("Approver_at")
+              .IgnoreIfExists<T>("PrintStatus");
+
+        return config;
+    }
+
+
+
+    // 重置需要忽略的属性
+    private void ResetIgnoredProperties(object entity, IgnorePropertyConfiguration ignoreConfig)
+    {
+        if (entity == null) return;
+
+        var entityType = entity.GetType();
+        // 检查是否有为该类型定义的忽略属性
+        var ignoredProperties = ignoreConfig.GetIgnoredProperties(entityType);
+
+        // 检查是否有为该类型定义的忽略属性
+        foreach (var propName in ignoredProperties)
+        {
+            if (ReflectionHelper.ExistPropertyName(entityType, propName))
+            {
+                var prop = entityType.GetProperty(propName);
+                if (prop != null && prop.CanWrite)
+                {
+                    // 根据属性类型设置默认值
+                    if (prop.PropertyType == typeof(string))
+                        prop.SetValue(entity, null);
+                    else if (prop.PropertyType == typeof(int))
+                        prop.SetValue(entity, 0);
+                    else if (prop.PropertyType == typeof(long))
+                        prop.SetValue(entity, 0L);
+                    else if (prop.PropertyType == typeof(decimal))
+                        prop.SetValue(entity, 0m);
+                    else if (prop.PropertyType == typeof(DateTime))
+                        prop.SetValue(entity, DateTime.MinValue);
+                    else if (prop.PropertyType == typeof(DateTime?))
+                        prop.SetValue(entity, null);
+                    else if (prop.PropertyType == typeof(bool))
+                        prop.SetValue(entity, false);
+                    // 可以根据需要添加更多类型的处理
+                }
+            }
+        }
+
+        // 递归处理导航属性
+        var navigationProperties = entityType.GetProperties()
+            .Where(p => p.PropertyType.IsClass &&
+                       p.PropertyType != typeof(string) &&
+                       !p.PropertyType.IsValueType);
+
+        foreach (var navProp in navigationProperties)
+        {
+            var navValue = navProp.GetValue(entity);
+            if (navValue != null)
+            {
+                if (navValue is System.Collections.IEnumerable &&
+                    !(navValue is string))
+                {
+                    // 处理集合类型的导航属性
+                    foreach (var item in (System.Collections.IEnumerable)navValue)
+                    {
+                        ResetIgnoredProperties(item, ignoreConfig);
+                    }
+                }
+                else
+                {
+                    // 处理单个对象的导航属性
+                    ResetIgnoredProperties(navValue, ignoreConfig);
+                }
+            }
+        }
+    }
+    // 重置实体的主键
+    private void ResetPrimaryKey(object entity, string pkCol)
+    {
+        if (entity == null) return;
+
+        long pkid = (long)ReflectionHelper.GetPropertyValue(entity, pkCol);
+        if (pkid > 0)
+        {
+            ReflectionHelper.SetPropertyValue(entity, pkCol, 0);
+        }
+    }
+
+    // 重置审批状态相关属性
+    private void ResetApprovalStatus(object entity)
+    {
+        if (entity == null) return;
+
+        if (ReflectionHelper.ExistPropertyName(entity.GetType(), typeof(ApprovalStatus).Name))
+        {
+            ReflectionHelper.SetPropertyValue(entity, typeof(ApprovalStatus).Name, (int)ApprovalStatus.未审核);
+        }
+        if (ReflectionHelper.ExistPropertyName(entity.GetType(), typeof(DataStatus).Name))
+        {
+            TransitionTo(DataStatus.草稿, "保存为草稿");
+            //ReflectionHelper.SetPropertyValue(entity, typeof(DataStatus).Name, (int)DataStatus.草稿);
+        }
+
+        if (ReflectionHelper.ExistPropertyName(entity.GetType(), "ApprovalResults"))
+        {
+            ReflectionHelper.SetPropertyValue(entity, "ApprovalResults", false);
+        }
+
+        BusinessHelper.Instance.InitEntity(entity);
+        BusinessHelper.Instance.ClearEntityApproverInfo(entity);
+        BusinessHelper.Instance.ClearEntityEditInfo(entity);
+        BusinessHelper.Instance.InitStatusEntity(entity);
+    }
+
+    // 递归处理所有导航属性（明细集合）
+
+    // 获取引用主实体的外键属性
+    private PropertyInfo GetForeignKeyProperty(Type entityType, string parentPKCol)
+    {
+        // 尝试查找与主实体主键同名的属性
+        var fkProperty = entityType.GetProperty(parentPKCol);
+        if (fkProperty != null && fkProperty.PropertyType == typeof(long) || fkProperty.PropertyType == typeof(long?))
+        {
+            return fkProperty;
+        }
+
+        // 如果找不到同名属性，可以尝试其他约定，例如添加"_ID"后缀
+        fkProperty = entityType.GetProperty($"{entityType.Name}_{parentPKCol}");
+        if (fkProperty != null && fkProperty.PropertyType == typeof(long) || fkProperty.PropertyType == typeof(long?))
+        {
+            return fkProperty;
+        }
+
+        // 可以添加更多的外键检测逻辑...
+
+        return null;
+    }
+
+    // 处理主实体及其一级明细集合
+    private void ProcessNavigationProperties(object entity, string parentPKCol, IgnorePropertyConfiguration ignoreConfig)
+    {
+        if (entity == null) return;
+
+        if (entity.ContainsProperty("PrimaryKeyID"))
+            entity.SetPropertyValue("PrimaryKeyID", 0);
+
+        var type = entity.GetType();
+        var entityName = type.Name;
+
+        // 清空特定的关联查询结果（导航属性）
+        // 清空销售订单的销售出库记录
+        if (entity is RUINORERP.Model.tb_SaleOrder saleOrder && saleOrder.tb_SaleOuts != null)
+        {
+            saleOrder.tb_SaleOuts.Clear();
+        }
+        // 清空采购订单的采购入库记录
+        else if (entity is RUINORERP.Model.tb_PurOrder purOrder && purOrder.tb_PurEntries != null)
+        {
+            purOrder.tb_PurEntries.Clear();
+        }
+
+        // 获取主实体的主键值，用于更新明细的外键
+        long parentPKValue = (long)ReflectionHelper.GetPropertyValue(entity, parentPKCol);
+
+        // 查找所有以主实体名+Detail结尾的导航属性
+        var detailProperties = type.GetProperties()
+            .Where(p => p.PropertyType.IsGenericType &&
+                       p.PropertyType.GetGenericTypeDefinition() == typeof(List<>) &&
+                       p.PropertyType.GetGenericArguments()[0].Name.EndsWith($"{entityName}Detail"))
+            .ToList();
+
+        foreach (var detailProperty in detailProperties)
+        {
+            // 获取明细集合类型
+            var detailType = detailProperty.PropertyType.GetGenericArguments()[0];
+
+            // 获取明细的主键和外键属性名
+            string detailPKCol = BaseUIHelper.GetEntityPrimaryKey(detailType);
+            string detailFKCol = $"{entityName}_ID"; // 假设外键名为"主表名_ID"
+
+            // 检查外键属性是否存在
+            var fkProperty = detailType.GetProperty(detailFKCol);
+            if (fkProperty == null)
+            {
+                // 尝试查找外键属性（多种可能的命名约定）
+                fkProperty = detailType.GetProperty($"{entityName}_ID") ??
+                                detailType.GetProperty(parentPKCol) ??
+                                detailType.GetProperties().FirstOrDefault(p =>
+                                    p.Name.EndsWith("_ID") && p.PropertyType == typeof(long));
             }
 
-            BusinessHelper.Instance.InitEntity(EditEntity);
-            BusinessHelper.Instance.InitStatusEntity(EditEntity);
-
-            if (OnBindDataToUIEvent != null)
+            if (fkProperty != null)
             {
-                bindingSourceSub.Clear();
-                OnBindDataToUIEvent(EditEntity, ActionStatus.新增);
+                var collection = detailProperty.GetValue(entity) as System.Collections.IEnumerable;
+                if (collection != null)
+                {
+                    foreach (var item in collection)
+                    {
+                        if (item.ContainsProperty("PrimaryKeyID"))
+                            item.SetPropertyValue("PrimaryKeyID", 0);
+
+                        // 重置明细的主键
+                        ReflectionHelper.SetPropertyValue(item, detailPKCol, 0);
+
+                        // 重置明细的外键（指向主实体）
+                        ReflectionHelper.SetPropertyValue(item, fkProperty.Name, 0);
+                        // 重置需要忽略的属性
+                        ResetIgnoredProperties(item, ignoreConfig);
+
+                        // 重置明细的状态性字段
+                        // 重置销售订单明细的出库数量
+                        if (item is RUINORERP.Model.tb_SaleOrderDetail saleDetail)
+                        {
+                            saleDetail.TotalDeliveredQty = 0;
+                        }
+                        // 重置采购订单明细的已交数量、退回数量和未交数量
+                        else if (item is RUINORERP.Model.tb_PurOrderDetail purDetail)
+                        {
+                            purDetail.DeliveredQuantity = 0;
+                            purDetail.TotalReturnedQty = 0;
+                            // 根据数量重新计算未交数量
+                            purDetail.UndeliveredQty = purDetail.Quantity - purDetail.DeliveredQuantity;
+                        }
+
+                        // 处理明细的子明细（第二级）
+                        ProcessSecondLevelDetails(item, detailPKCol, detailType.Name, ignoreConfig);
+                    }
+                }
+            }
+        }
+    }
+
+    // 处理第二级明细集合（明细的明细）
+    private void ProcessSecondLevelDetails(object entity, string parentPKCol, string parentEntityName,
+        IgnorePropertyConfiguration ignoreConfig)
+    {
+        if (entity == null) return;
+
+        var type = entity.GetType();
+
+        // 查找所有以当前实体名+Detail结尾的导航属性
+        var subDetailProperties = type.GetProperties()
+            .Where(p => p.PropertyType.IsGenericType &&
+                       p.PropertyType.GetGenericTypeDefinition() == typeof(List<>) &&
+                       p.PropertyType.GetGenericArguments()[0].Name.EndsWith($"{parentEntityName}Detail"))
+            .ToList();
+
+        // 查找所有集合类型的导航属性（假设它们是子明细）
+        //var subDetailProperties = type.GetProperties()
+        //    .Where(p => p.PropertyType.IsGenericType &&
+        //               p.PropertyType.GetGenericTypeDefinition() == typeof(List<>))
+        //    .ToList();
+
+
+
+
+        foreach (var subDetailProperty in subDetailProperties)
+        {
+            // 获取子明细集合类型
+            var subDetailType = subDetailProperty.PropertyType.GetGenericArguments()[0];
+
+            // 获取子明细的主键和外键属性名
+            string subDetailPKCol = BaseUIHelper.GetEntityPrimaryKey(subDetailType);
+            string subDetailFKCol = $"{parentEntityName}_ID"; // 假设外键名为"父表名_ID"
+
+            // 检查外键属性是否存在
+            var fkProperty = subDetailType.GetProperty(subDetailFKCol);
+            if (fkProperty == null)
+            {
+                // 尝试其他可能的外键命名方式
+                fkProperty = subDetailType.GetProperty($"{parentEntityName}_ID") ??
+                     subDetailType.GetProperty(parentPKCol) ??
+                     subDetailType.GetProperties().FirstOrDefault(p =>
+                         p.Name.EndsWith("_ID") && p.PropertyType == typeof(long));
+            }
+
+            if (fkProperty != null)
+            {
+                var collection = subDetailProperty.GetValue(entity) as System.Collections.IEnumerable;
+                if (collection != null)
+                {
+                    foreach (var item in collection)
+                    {
+                        // 重置子明细的主键
+                        ReflectionHelper.SetPropertyValue(item, subDetailPKCol, 0);
+
+                        // 重置子明细的外键（指向父明细）
+                        ReflectionHelper.SetPropertyValue(item, fkProperty.Name, 0);
+
+
+                        // 重置需要忽略的属性
+                        ResetIgnoredProperties(item, ignoreConfig);
+                    }
+                }
+            }
+        }
+    }
+
+    #endregion
+
+
+
+    protected override void Clear(SourceGridDefine sgd)
+    {
+        SourceGrid.Grid grid1 = sgd.grid;
+        EditEntity = Activator.CreateInstance(typeof(T)) as T;
+        BusinessHelper.Instance.InitEntity(EditEntity);
+        BusinessHelper.Instance.InitStatusEntity(EditEntity);
+        bindingSourceSub.Clear();
+        //清空明细表格
+        #region
+        //先清空 不包含 列头和总计
+        SourceGrid.RangeRegion rr = new SourceGrid.RangeRegion(new SourceGrid.Position(grid1.Rows.Count, grid1.Columns.Count));
+        for (int ii = 0; ii < grid1.Rows.Count; ii++)
+        {
+            grid1.Rows[ii].RowData = null;
+        }
+        grid1.ClearValues(rr);
+
+
+        #endregion
+    }
+    protected bool Validator(T EditEntity)
+    {
+        BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
+        bool vd = base.ShowInvalidMessage(ctr.BaseValidator(EditEntity));
+        return vd;
+    }
+
+    /// <summary>
+    /// 验证明细
+    /// </summary>
+    /// <typeparam name="Child"></typeparam>
+    /// <param name="details"></param>
+    /// <returns></returns>
+    protected bool Validator<Child>(List<Child> details) where Child : class
+    {
+        List<bool> subrs = new List<bool>();
+        var lastlist = ((IEnumerable<dynamic>)details).ToList();
+        foreach (var item in lastlist)
+        {
+            BaseController<Child> ctr = Startup.GetFromFacByName<BaseController<Child>>(typeof(Child).Name + "Controller");
+            bool sub_bool = base.ShowInvalidMessage(ctr.BaseValidator(item as Child));
+            subrs.Add(sub_bool);
+        }
+        if (subrs.Where(c => c.Equals(false)).Any())
+        {
+            return false;
+        }
+        else
+        {
+            return true;
+        }
+
+    }
+
+    /// <summary>
+    /// 更新式保存，有一些单据，实在要修改，并且明细没有删除和添加时候执行
+    /// </summary>
+    /// <param name="entity"></param>
+    /// <returns></returns>
+    protected async Task<ReturnMainSubResults<T>> UpdateSave(T entity)
+    {
+        string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
+        long pkid = (long)ReflectionHelper.GetPropertyValue(entity, PKCol);
+        if (pkid == 0)
+        {
+            await TransitionToAsync(DataStatus.草稿, "保存为草稿");
+            //entity.SetPropertyValue(typeof(DataStatus).Name, (int)DataStatus.草稿);
+        }
+        ReturnMainSubResults<T> rmr = new ReturnMainSubResults<T>();
+        BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
+        rmr = await ctr.BaseUpdateWithChild(entity);
+        if (rmr.Succeeded)
+        {
+            if (ReflectionHelper.ExistPropertyName<T>(typeof(ActionStatus).Name))
+            {
+                //注意這里保存的是枚举
+                ReflectionHelper.SetPropertyValue(entity, typeof(ActionStatus).Name, (int)ActionStatus.加载);
+            }
+
+            ToolBarEnabledControl(MenuItemEnums.保存);
+            MainForm.Instance.uclog.AddLog("更新式保存成功");
+            MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("更新式保存成功", rmr.ReturnObject);
+        }
+        else
+        {
+            MainForm.Instance.uclog.AddLog("更新式保存成功失败，请重试;或联系管理员。" + rmr.ErrorMsg, UILogType.错误);
+        }
+        return rmr;
+    }
+
+    protected async Task<ReturnMainSubResults<T>> Save(T entity)
+    {
+        string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
+        long pkid = (long)ReflectionHelper.GetPropertyValue(entity, PKCol);
+        long originalPkid = pkid; // 保存原始ID用于后续锁定操作
+
+        if (pkid == 0)
+        {
+            await TransitionToAsync(DataStatus.草稿, "保存为草稿");
+            //entity.SetPropertyValue(typeof(DataStatus).Name, (int)DataStatus.草稿);
+            BusinessHelper.Instance.InitEntity(entity);
+        }
+        else
+        {
+            // 保存前检查锁定状态 - 优先从本地缓存检查
+            if (await IsLock())
+            {
+                return new ReturnMainSubResults<T>()
+                {
+                    Succeeded = false,
+                    ErrorMsg = "单据已被其他用户锁定，请刷新后再试或联系锁定人员解锁"
+                };
+            }
+        }
+
+        if (editEntity.ContainsProperty(typeof(DataStatus).Name))
+        {
+            //如果修改前的状态是新建，则修改后的状态是草稿。要重新提交才进入下一步审核
+            var dataStatus = (DataStatus)(editEntity.GetPropertyValue(typeof(DataStatus).Name).ToInt());
+            if (dataStatus == DataStatus.新建)
+            {
+                if (ReflectionHelper.ExistPropertyName<T>(typeof(DataStatus).Name))
+                {
+                    await TransitionToAsync(DataStatus.草稿, "保存为草稿");
+                    //ReflectionHelper.SetPropertyValue(EditEntity, typeof(DataStatus).Name, (int)DataStatus.草稿);
+                }
+            }
+        }
+
+        ReturnMainSubResults<T> rmr = new ReturnMainSubResults<T>();
+        BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
+        rmr = await ctr.BaseSaveOrUpdateWithChild<T>(entity);
+        if (rmr.Succeeded)
+        {
+            if (entity is BaseEntity baseEntity)
+            {
+                baseEntity.AcceptChanges();
             }
 
             if (ReflectionHelper.ExistPropertyName<T>(typeof(ActionStatus).Name))
             {
-                ReflectionHelper.SetPropertyValue(EditEntity, typeof(ActionStatus).Name, (int)ActionStatus.新增);
+                //注意這里保存的是枚举
+                ReflectionHelper.SetPropertyValue(entity, typeof(ActionStatus).Name, (int)ActionStatus.加载);
             }
-            if (EditEntity is BaseEntity baseEntity)
-            {
-                baseEntity.FileStorageInfoList = new List<tb_FS_FileStorageInfo>();
-            }
-            ToolBarEnabledControl(MenuItemEnums.新增);
-            //bindingSourceEdit.CancelEdit();
-            UIHelper.ControlMasterColumnsInvisible(CurMenuInfo, this);
+
+            // 保存成功后的锁定状态管理
+            await PostSaveLockManagement(entity, originalPkid);
+
+            ToolBarEnabledControl(MenuItemEnums.保存);
+            MainForm.Instance.uclog.AddLog("保存成功");
         }
-
-        protected override void Modify()
+        else
         {
-            if (editEntity == null)
-            {
-                return;
-            }
+            MainForm.Instance.uclog.AddLog("保存失败，请重试;或联系管理员。" + rmr.ErrorMsg, UILogType.错误);
+        }
+        await MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("保存", rmr.ReturnObject, $"结果:{(rmr.Succeeded ? "成功" : "失败")},{rmr.ErrorMsg}");
+        return rmr;
+    }
 
-            // 在修改前检查锁定状态
-            _ = Task.Run(async () =>
-            {
-                await CheckLockStatusAndUpdateUI(editEntity);
-            });
-            // 获取状态类型和值
-            var statusType = FMPaymentStatusHelper.GetStatusType(editEntity as BaseEntity);
-            if (statusType != null)
-            {
-                // 动态获取状态值
-                dynamic status = editEntity.GetPropertyValue(statusType.Name);
-                int statusValue = (int)status;
-                dynamic statusEnum = Enum.ToObject(statusType, statusValue);
 
-                if (!FMPaymentStatusHelper.CanModify(statusEnum))
+
+    /// <summary>
+    /// 保存后的锁定状态管理
+    /// 确保保存成功后正确处理锁定状态，维护本地缓存与服务器状态的一致性
+    /// </summary>
+    /// <param name="entity">保存后的实体对象</param>
+    /// <param name="originalPkid">保存前的主键ID（用于新增单据）</param>
+    private async Task PostSaveLockManagement(T entity, long originalPkid)
+    {
+        try
+        {
+            string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
+            long currentPkid = (long)ReflectionHelper.GetPropertyValue(entity, PKCol);
+
+            if (currentPkid <= 0) return;
+
+            // 更新当前单据ID和菜单ID，用于锁定管理
+            _currentBillId = currentPkid;
+            _currentMenuId = CurMenuInfo?.MenuID ?? 0;
+
+            // 对于新增单据（originalPkid=0），保存后自动获取锁定
+            if (originalPkid == 0 && _integratedLockService != null)
+            {
+                MainForm.Instance.uclog.AddLog($"新增单据保存成功，自动获取锁定：单据ID={currentPkid}", UILogType.普通消息);
+                string BillNo = ReflectionHelper.GetPropertyValue(EditEntity, EntityMappingHelper.GetEntityInfo<T>().NoField).ToString();
+                var lockResult = await _integratedLockService.LockBillAsync(currentPkid, BillNo, EntityMappingHelper.GetEntityInfo<T>().BizType, _currentMenuId);
+                if (lockResult?.IsSuccess == true)
                 {
-                    toolStripbtnModify.Enabled = false;
-                    toolStripButtonSave.Enabled = false;
-                    MainForm.Instance.PrintInfoLog($"当前单据状态为{statusEnum}不允许修改!");
-                    return;
-                }
-
-                var dataStatus = (DataStatus)(editEntity.GetPropertyValue(typeof(DataStatus).Name).ToInt());
-                if (dataStatus == DataStatus.新建 || dataStatus == DataStatus.草稿)
-                {
-                    base.Modify();
-                    MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("修改", EditEntity);
+                    // 更新UI显示锁定状态
+                    UpdateLockUI(true, lockResult.LockInfo);
+                    MainForm.Instance.uclog.AddLog($"新增单据自动锁定成功", UILogType.普通消息);
                 }
                 else
                 {
-                    toolStripbtnModify.Enabled = false;
+                    MainForm.Instance.uclog.AddLog($"新增单据自动锁定失败：{lockResult?.Message ?? "未知错误"}", UILogType.警告);
                 }
             }
-
-            BusinessHelper.Instance.EditEntity(EditEntity);
-            EditEntity.SetPropertyValue(typeof(ActionStatus).Name, ActionStatus.修改);
-            ToolBarEnabledControl(MenuItemEnums.修改);
+            // 对于已有单据，刷新锁定状态确保本地缓存与服务器同步
+            else if (originalPkid > 0 && _integratedLockService != null)
+            {
+                await RefreshLockStatus(currentPkid);
+            }
         }
-
-        protected async override void SpecialDataFix()
+        catch (Exception ex)
         {
-            if (EditEntity == null)
+            MainForm.Instance.logger.LogError(ex, "保存后锁定状态管理失败");
+            MainForm.Instance.uclog.AddLog($"锁定状态管理异常：{ex.Message}", UILogType.错误);
+        }
+    }
+
+    /// <summary>
+    /// 刷新锁定状态
+    /// 优先从本地缓存获取，如果缓存过期或不存在则从服务器查询
+    /// </summary>
+    /// <param name="billId">单据ID</param>
+    /// <returns>刷新结果</returns>
+    private async Task RefreshLockStatus(long billId)
+    {
+        if (_integratedLockService == null || billId <= 0) return;
+
+        try
+        {
+            // 调用CheckLockStatusAndUpdateUI方法，它已经包含了完整的状态检查、缓存管理和UI更新逻辑
+            var (isLocked, canOperate, lockInfo) = await CheckLockStatusAndUpdateUI(billId);
+
+            // 记录锁定状态刷新日志
+            if (isLocked && lockInfo != null)
             {
+                long currentUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
+                bool isSelfLock = lockInfo.LockedUserId == currentUserId;
+                string lockInfoMsg = isSelfLock ?
+                    $"您已锁定当前单据" :
+                    $"单据已被【{lockInfo.LockedUserName}】锁定";
+                MainForm.Instance?.uclog?.AddLog($"锁定状态刷新：{lockInfoMsg}", UILogType.普通消息);
+            }
+        }
+        catch (Exception ex)
+        {
+            MainForm.Instance?.logger?.LogError(ex, $"刷新单据 {billId} 锁定状态失败");
+            MainForm.Instance?.uclog?.AddLog($"刷新锁定状态失败: {ex.Message}", UILogType.错误);
+        }
+    }
+
+    /// <summary>
+    /// 检查锁定状态并更新UI
+    /// 作为核心入口点，处理所有锁定状态检测和UI更新逻辑
+    /// </summary>
+    /// <param name="billId">单据ID</param>
+    /// <returns>锁定状态信息和操作权限状态</returns>
+    public async Task<(bool IsLocked, bool CanPerformCriticalOperations, LockInfo LockInfo)> CheckLockStatusAndUpdateUI(long billId)
+    {
+        if (_integratedLockService == null || billId <= 0)
+            return (false, true, null);
+
+        try
+        {
+            // 核心步骤1: 查询锁定状态
+            var (isLocked, lockInfo) = await CheckLockStatusAsync(billId, _currentMenuId);
+            long currentUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
+            bool isSelfLock = isLocked && (lockInfo?.LockedUserId == currentUserId);
+            bool canPerformCriticalOperations = !isLocked || isSelfLock;
+
+            // 核心步骤3: 更新UI状态
+            UpdateLockUI(isLocked, lockInfo);
+
+            return (isLocked, canPerformCriticalOperations, lockInfo);
+        }
+        catch (Exception ex)
+        {
+            // 简化错误处理，避免过度日志
+            MainForm.Instance?.logger?.LogError(ex, $"检查锁定状态失败：单据ID={billId}");
+            return (false, true, null);
+        }
+    }
+
+    /// <summary>
+    /// 禁用重要操作按钮
+    /// 当单据被其他用户锁定时，限制用户执行重要操作
+
+
+    /// <summary>
+    /// 更新锁定UI显示
+    /// 统一管理锁定按钮的显示状态和提示信息，使用统一的锁状态图片标识
+    /// </summary>
+    /// <param name="isLocked">是否被锁定</param>
+    /// <param name="lockInfo">锁定信息</param>
+    private void UpdateLockUI(bool isLocked, LockInfo lockInfo = null)
+    {
+        if (tsBtnLocked == null || IsDisposed) return;
+
+        try
+        {
+            if (InvokeRequired)
+            {
+                Invoke((MethodInvoker)(() => UpdateLockUI(isLocked, lockInfo)));
                 return;
             }
 
-            // 保存前检查锁定状态
-            var lockStatus = await CheckLockStatusAndUpdateUI(EditEntity);
-            if (!lockStatus.CanPerformCriticalOperations)
-            {
-                MainForm.Instance.uclog.AddLog("单据已被锁定，无法保存修改", UILogType.警告);
-                return;
-            }
-            //没有经验通过下面先不计算
-            if (!Validator(EditEntity))
-            {
-                return;
-            }
+            // 始终显示锁状态按钮，无论是否锁定
+            tsBtnLocked.Visible = true;
+            tsBtnLocked.Tag = lockInfo;
 
-            List<C> details = new List<C>();
-            bindingSourceSub.EndEdit();
-            string detailPKName = UIHelper.GetPrimaryKeyColName(typeof(C));
-            List<C> detailentity = bindingSourceSub.DataSource as List<C>;
-            if (typeof(C).Name.Contains("Detail") && detailentity != null)
+            if (isLocked && lockInfo != null)
             {
-                //产品ID有值才算有效值
-                details = detailentity.Where(t => t.GetPropertyValue(detailPKName).ToLong() > 0).ToList();
-                EditEntity.SetPropertyValue(typeof(C).Name.ToLower() + "s", details);
-                if (!Validator<C>(details))
+                long currentUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
+                bool isSelfLock = lockInfo.LockedUserId == currentUserId;
+
+                // 统一使用锁状态图片标识锁定状态，根据锁定者身份使用不同图片
+                tsBtnLocked.Image = isSelfLock ?
+                    Properties.Resources.unlockbill :  // 当前用户锁定：显示解锁图标
+                    Properties.Resources.Lockbill;     // 其他用户锁定：显示锁定图标
+
+                // 优化提示信息，确保包含完整的锁定详情
+                string lockTimeStr = lockInfo.LockTime.ToString("yyyy-MM-dd HH:mm:ss");
+                if (isSelfLock)
                 {
-                    return;
+                    tsBtnLocked.ToolTipText = $"🔒 锁定状态：您已锁定此单据\n" +
+                                            $"👤 锁定用户：{lockInfo.LockedUserName}\n" +
+                                            $"⏰ 锁定时间：{lockTimeStr}\n" +
+                                            $"💡 提示：关闭单据自动解锁";
+                    // 设置绿色背景表示自己锁定，提供直观视觉反馈
+                    tsBtnLocked.BackColor = System.Drawing.Color.LightGreen;
+                    tsBtnLocked.ForeColor = System.Drawing.Color.Black;
+                    tsBtnLocked.Text = "已锁定(自己)";
                 }
-            }
-
-
-            var result = await MainForm.Instance.AppContext.Db.UpdateableByObject(details).ExecuteCommandAsync();
-            BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
-            ReturnResults<T> SaveResult = new ReturnResults<T>();
-            SaveResult = await ctr.BaseSaveOrUpdate(EditEntity);
-            if (SaveResult.Succeeded)
-            {
-                // MainForm.Instance.auditLogHelper.CreateAuditLog<T>("数据特殊修正", EditEntity);
-                MainForm.Instance.PrintInfoLog($"修正成功。");
+                else
+                {
+                    tsBtnLocked.ToolTipText = $"🔒 锁定状态：单据已被锁定\n" +
+                                            $"👤 锁定用户：{lockInfo.LockedUserName}\n" +
+                                            $"⏰ 锁定时间：{lockTimeStr}\n" +
+                                            $"💡 提示：点击可请求解锁";
+                    // 设置红色背景表示他人锁定，提供直观视觉反馈
+                    tsBtnLocked.BackColor = System.Drawing.Color.LightCoral;
+                    tsBtnLocked.ForeColor = System.Drawing.Color.White;
+                    tsBtnLocked.Text = $"已锁定({lockInfo.LockedUserName})";
+                }
+                // 启用按钮，允许点击操作
+                tsBtnLocked.Enabled = true;
             }
             else
             {
-                MainForm.Instance.PrintInfoLog($"修正失败。", Color.Red);
+                // 未锁定状态：显示未锁定图标和状态
+                tsBtnLocked.Image = Properties.Resources.unlockbill;  // 使用解锁图标表示未锁定
+                tsBtnLocked.ToolTipText = "🔓 锁定状态：单据未被锁定\n💡 提示：您可以编辑此单据";
+                tsBtnLocked.Text = "未锁定";
+                tsBtnLocked.BackColor = System.Drawing.Color.LightBlue;
+                tsBtnLocked.ForeColor = System.Drawing.Color.Black;
+                tsBtnLocked.Enabled = false;  // 未锁定时禁用按钮，避免误操作
             }
 
-            await MainForm.Instance.AuditLogHelper.CreateAuditLog("数据修正", EditEntity, $"结果:{(SaveResult.Succeeded ? "成功" : "失败")},{SaveResult.ErrorMsg}");
+            // 确保按钮在工具栏中正确显示
+            tsBtnLocked.TextImageRelation = TextImageRelation.ImageBeforeText;
+            tsBtnLocked.DisplayStyle = ToolStripItemDisplayStyle.ImageAndText;
+            tsBtnLocked.AutoSize = true;
         }
-
-        private string GetPrimaryKeyProperty(Type type)
+        catch (Exception ex)
         {
-            foreach (PropertyInfo property in type.GetProperties())
-            {
-                if (property.GetCustomAttributes(typeof(SugarColumn), true).Length > 0)
-                {
-                    if (((SugarColumn)property.GetCustomAttributes(typeof(SugarColumn), true)[0]).IsPrimaryKey)
-                    {
-                        return property.Name;
-                    }
-                }
-            }
-            return string.Empty;
+            MainForm.Instance.logger.LogError(ex, "更新锁定UI显示失败");
         }
+    }
 
-        /// <summary>
-        /// 加载相关数据的
-        /// 联查数据
-        /// </summary>
-        protected virtual Task LoadRelatedDataToDropDownItemsAsync()
+    /// <summary>
+    /// 删除远程的图片
+    /// </summary>
+    /// <param name="entity"></param>
+    /// <returns></returns>
+    public async virtual Task<bool> DeleteRemoteImages()
+    {
+        await Task.Delay(0);
+        var ctrpay = Startup.GetFromFac<FileManagementController>();
+        try
         {
-            if (toolStripbtnRelatedQuery.DropDownItems.Count > 0)
-            {
-                toolStripbtnRelatedQuery.Visible = true;
-            }
-            else
-            {
-                toolStripbtnRelatedQuery.Visible = false;
-            }
-            return Task.CompletedTask;
-        }
-
-        /// <summary>
-        /// 加载单据联动选项到下拉菜单
-        /// </summary>
-        protected virtual void LoadConvertDocToDropDownItemsAsync()
-        {
-            // 清空现有菜单项
-            toolStripbtnConvertDocuments.DropDownItems.Clear();
-
-            try
-            {
-                // 获取当前单据类型
-                var sourceDocType = typeof(T);
-
-                // 获取所有可转换的目标单据类型
-                var converterFactory = Startup.GetFromFac<RUINORERP.Business.Document.DocumentConverterFactory>();
-                var availableConversions = converterFactory.GetAvailableConversions<T>();
-
-                // 为每种可转换类型创建菜单项
-                foreach (var conversionOption in availableConversions)
-                {
-                    var menuItem = new ToolStripMenuItem(conversionOption.DisplayName);
-                    // 保存转换选项的引用，避免闭包问题
-                    var targetType = converterFactory.GetTargetType(conversionOption.TargetDocumentType);
-                    menuItem.Click += async (sender, e) =>
-                    {
-                        try
-                        {
-                            // 在后台线程执行转换，避免UI卡顿
-                            await PerformDocumentConversionAsync(targetType);
-                        }
-                        catch (Exception ex)
-                        {
-                            MainForm.Instance.uclog.AddLog("执行单据联动时发生错误: " + ex.Message, Global.UILogType.错误);
-                            MessageBox.Show("执行单据联动时发生错误: " + ex.Message, "操作错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        }
-                    };
-                    toolStripbtnConvertDocuments.DropDownItems.Add(menuItem);
-                }
-
-                // 根据是否有可转换选项设置按钮可见性
-                toolStripbtnConvertDocuments.Visible = toolStripbtnConvertDocuments.DropDownItems.Count > 0;
-                toolStripbtnConvertDocuments.Text = "联动";
-            }
-            catch (Exception ex)
-            {
-                MainForm.Instance.uclog.AddLog("加载单据联动选项失败: " + ex.Message, Global.UILogType.错误);
-                toolStripbtnConvertDocuments.Visible = false;
-            }
-        }
-
-        /// <summary>
-        /// 执行单据转换操作
-        /// </summary>
-        /// <param name="targetType">目标单据类型</param>
-        private async Task PerformDocumentConversionAsync(Type targetType)
-        {
-            if (EditEntity == null)
-            {
-                // 使用Invoke确保在UI线程显示消息框
-                this.Invoke((MethodInvoker)delegate
-                {
-                    MessageBox.Show("请先加载或保存单据后再执行联动操作！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                });
-                return;
-            }
-
-            try
-            {
-                // 使用ActionManager执行单据联动
-                var actionManager = Startup.GetFromFac<RUINORERP.Business.Document.ActionManager>();
-
-                // 准备转换选项
-                var options = new RUINORERP.Business.Document.ActionOptions
-                {
-                    UseTransaction = true,
-                    SaveTarget = true
-                };
-
-                // 执行联动操作
-                dynamic result = null;
-                string targetTypeName = targetType?.Name ?? "Unknown";
-
-                // 使用反射调用正确的泛型方法
-                var method = typeof(RUINORERP.Business.Document.ActionManager)
-                    .GetMethod("ExecuteActionAsync")
-                    .MakeGenericMethod(typeof(T), targetType);
-
-                var task = (Task)method.Invoke(actionManager, new object[] { EditEntity, options });
-                await task;
-
-                // 获取结果属性
-                var resultProperty = task.GetType().GetProperty("Result");
-                result = resultProperty?.GetValue(task);
-
-                // 在UI线程处理结果
-                this.Invoke((MethodInvoker)delegate
-                {
-                    if (result != null && result.Success)
-                    {
-                        // 显示成功消息，并提供打开新单据的选项
-                        var dialogResult = MessageBox.Show($"单据联动成功！已生成{targetTypeName}。是否打开新生成的单据？",
-                            "操作成功", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
-
-                        if (dialogResult == DialogResult.Yes && result.Data != null)
-                        {
-                            // 这里可以根据实际情况打开新单据
-                            // 由于没有具体的打开单据方法，暂时只显示消息
-                            MessageBox.Show("新单据已生成", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        }
-                    }
-                    else if (result != null)
-                    {
-                        // 显示失败消息
-                        string errorMsg = result.ErrorMessage ?? "未知错误";
-                        MessageBox.Show("单据联动失败: " + errorMsg, "操作失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
-                    else
-                    {
-                        MessageBox.Show("不支持的目标单据类型，请联系管理员配置相应的转换器", "操作失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
-                });
-            }
-            catch (Exception ex)
-            {
-                // 记录错误并显示消息
-                MainForm.Instance.uclog.AddLog("执行单据联动时发生错误: " + ex.Message, Global.UILogType.错误);
-
-                this.Invoke((MethodInvoker)delegate
-                {
-                    MessageBox.Show("执行单据联动时发生错误: " + ex.Message, "操作错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                });
-            }
-        }
-
-        protected virtual void RelatedQuery()
-        {
-            MessageBox.Show("功能开发中。。。。");
-            if (EditEntity == null)
-            {
-                return;
-            }
-
-            T NewEditEntity = default(T);
-            if (OnBindDataToUIEvent != null)
-            {
-                bindingSourceSub.Clear();
-
-                // NewEditEntity = Activator.CreateInstance(typeof(T)) as T;
-
-                NewEditEntity = EditEntity.DeepCloneByjson();
-
-                // 获取需要忽略的属性配置
-                var ignoreProperties = ConfigureIgnoreProperties();
-                //复制性新增 时  PK要清空，单据编号类的,还有他的关联性子集
-                // 获取主键列名
-                string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
-
-                //这里只是取打印配置信息
-                CommBillData cbd = new CommBillData();
-                cbd = EntityMappingHelper.GetBillData(typeof(T), NewEditEntity);
-
-                string billNoColName = cbd.BillNoColName;
-
-                ReflectionHelper.SetPropertyValue(NewEditEntity, billNoColName, string.Empty);
-
-                // 重置主实体的主键
-                ResetPrimaryKey(NewEditEntity, PKCol);
-
-                // 重置审批状态
-                ResetApprovalStatus(NewEditEntity);
-
-                // 递归处理所有导航属性（明细集合）
-                ProcessNavigationProperties(NewEditEntity, PKCol, ignoreProperties);
-
-                OnBindDataToUIEvent(NewEditEntity, ActionStatus.复制);
-
-            }
-            ToolBarEnabledControl(MenuItemEnums.新增);
-            return;
-        }
-        protected virtual T AddByCopy()
-        {
-            if (EditEntity == null)
-            {
-                MessageBox.Show("请先选择一个单据作为复制的基准。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return null;
-            }
-
-            T NewEditEntity = default(T);
-            if (OnBindDataToUIEvent != null)
-            {
-
-                bindingSourceSub.Clear();
-
-                NewEditEntity = EditEntity.DeepCloneByjson();
-                //复制性新增 时  PK要清空，单据编号类的,还有他的关联性子集
-
-
-                // 获取忽略属性配置
-                var ignoreConfig = ConfigureIgnoreProperties();
-
-
-
-                // 重置需要忽略的属性
-                ResetIgnoredProperties(NewEditEntity, ignoreConfig);
-
-                // 获取主键列名
-                string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
-
-                //这里只是取打印配置信息
-                CommBillData cbd = new CommBillData();
-                cbd = EntityMappingHelper.GetBillData(typeof(T), NewEditEntity);
-
-                string billNoColName = cbd.BillNoColName;
-
-                ReflectionHelper.SetPropertyValue(NewEditEntity, billNoColName, string.Empty);
-
-
-                // 重置主实体的主键
-                ResetPrimaryKey(NewEditEntity, PKCol);
-
-                // 重置审批状态
-                ResetApprovalStatus(NewEditEntity);
-
-                // 递归处理所有导航属性（明细集合）
-                ProcessNavigationProperties(NewEditEntity, PKCol, ignoreConfig);
-
-                OnBindDataToUIEvent(NewEditEntity, ActionStatus.复制);
-
-            }
-            ToolBarEnabledControl(MenuItemEnums.新增);
-            return NewEditEntity;
-        }
-
-        #region 复制性新增
-        // 忽略属性配置
-        // 基类中的配置方法，使用字符串方式配置通用属性
-        protected virtual IgnorePropertyConfiguration ConfigureIgnoreProperties()
-        {
-            var config = new IgnorePropertyConfiguration();
-
-            // 使用字符串方式配置通用属性（这些属性可能存在于各种实体中）
-            config.IgnoreIfExists<T>("DataStatus")
-                  .IgnoreIfExists<T>("PrimaryKeyID")
-                  .IgnoreIfExists<T>("Created_at")
-                  .IgnoreIfExists<T>("Created_by")
-                  .IgnoreIfExists<T>("Modified_at")
-                  .IgnoreIfExists<T>("Modified_by")
-                  .IgnoreIfExists<T>("ApprovalStatus")
-                  .IgnoreIfExists<T>("ApprovalResults")
-                  .IgnoreIfExists<T>("Approver_by")
-                  .IgnoreIfExists<T>("Approver_at")
-                  .IgnoreIfExists<T>("PrintStatus");
-
-            return config;
-        }
-
-
-
-        // 重置需要忽略的属性
-        private void ResetIgnoredProperties(object entity, IgnorePropertyConfiguration ignoreConfig)
-        {
-            if (entity == null) return;
-
-            var entityType = entity.GetType();
-            // 检查是否有为该类型定义的忽略属性
-            var ignoredProperties = ignoreConfig.GetIgnoredProperties(entityType);
-
-            // 检查是否有为该类型定义的忽略属性
-            foreach (var propName in ignoredProperties)
-            {
-                if (ReflectionHelper.ExistPropertyName(entityType, propName))
-                {
-                    var prop = entityType.GetProperty(propName);
-                    if (prop != null && prop.CanWrite)
-                    {
-                        // 根据属性类型设置默认值
-                        if (prop.PropertyType == typeof(string))
-                            prop.SetValue(entity, null);
-                        else if (prop.PropertyType == typeof(int))
-                            prop.SetValue(entity, 0);
-                        else if (prop.PropertyType == typeof(long))
-                            prop.SetValue(entity, 0L);
-                        else if (prop.PropertyType == typeof(decimal))
-                            prop.SetValue(entity, 0m);
-                        else if (prop.PropertyType == typeof(DateTime))
-                            prop.SetValue(entity, DateTime.MinValue);
-                        else if (prop.PropertyType == typeof(DateTime?))
-                            prop.SetValue(entity, null);
-                        else if (prop.PropertyType == typeof(bool))
-                            prop.SetValue(entity, false);
-                        // 可以根据需要添加更多类型的处理
-                    }
-                }
-            }
-
-            // 递归处理导航属性
-            var navigationProperties = entityType.GetProperties()
-                .Where(p => p.PropertyType.IsClass &&
-                           p.PropertyType != typeof(string) &&
-                           !p.PropertyType.IsValueType);
-
-            foreach (var navProp in navigationProperties)
-            {
-                var navValue = navProp.GetValue(entity);
-                if (navValue != null)
-                {
-                    if (navValue is System.Collections.IEnumerable &&
-                        !(navValue is string))
-                    {
-                        // 处理集合类型的导航属性
-                        foreach (var item in (System.Collections.IEnumerable)navValue)
-                        {
-                            ResetIgnoredProperties(item, ignoreConfig);
-                        }
-                    }
-                    else
-                    {
-                        // 处理单个对象的导航属性
-                        ResetIgnoredProperties(navValue, ignoreConfig);
-                    }
-                }
-            }
-        }
-        // 重置实体的主键
-        private void ResetPrimaryKey(object entity, string pkCol)
-        {
-            if (entity == null) return;
-
-            long pkid = (long)ReflectionHelper.GetPropertyValue(entity, pkCol);
-            if (pkid > 0)
-            {
-                ReflectionHelper.SetPropertyValue(entity, pkCol, 0);
-            }
-        }
-
-        // 重置审批状态相关属性
-        private void ResetApprovalStatus(object entity)
-        {
-            if (entity == null) return;
-
-            if (ReflectionHelper.ExistPropertyName(entity.GetType(), typeof(ApprovalStatus).Name))
-            {
-                ReflectionHelper.SetPropertyValue(entity, typeof(ApprovalStatus).Name, (int)ApprovalStatus.未审核);
-            }
-            if (ReflectionHelper.ExistPropertyName(entity.GetType(), typeof(DataStatus).Name))
-            {
-                ReflectionHelper.SetPropertyValue(entity, typeof(DataStatus).Name, (int)DataStatus.草稿);
-            }
-
-            if (ReflectionHelper.ExistPropertyName(entity.GetType(), "ApprovalResults"))
-            {
-                ReflectionHelper.SetPropertyValue(entity, "ApprovalResults", false);
-            }
-
-            BusinessHelper.Instance.InitEntity(entity);
-            BusinessHelper.Instance.ClearEntityApproverInfo(entity);
-            BusinessHelper.Instance.ClearEntityEditInfo(entity);
-            BusinessHelper.Instance.InitStatusEntity(entity);
-        }
-
-        // 递归处理所有导航属性（明细集合）
-
-        // 获取引用主实体的外键属性
-        private PropertyInfo GetForeignKeyProperty(Type entityType, string parentPKCol)
-        {
-            // 尝试查找与主实体主键同名的属性
-            var fkProperty = entityType.GetProperty(parentPKCol);
-            if (fkProperty != null && fkProperty.PropertyType == typeof(long) || fkProperty.PropertyType == typeof(long?))
-            {
-                return fkProperty;
-            }
-
-            // 如果找不到同名属性，可以尝试其他约定，例如添加"_ID"后缀
-            fkProperty = entityType.GetProperty($"{entityType.Name}_{parentPKCol}");
-            if (fkProperty != null && fkProperty.PropertyType == typeof(long) || fkProperty.PropertyType == typeof(long?))
-            {
-                return fkProperty;
-            }
-
-            // 可以添加更多的外键检测逻辑...
-
-            return null;
-        }
-
-        // 处理主实体及其一级明细集合
-        private void ProcessNavigationProperties(object entity, string parentPKCol, IgnorePropertyConfiguration ignoreConfig)
-        {
-            if (entity == null) return;
-
-            if (entity.ContainsProperty("PrimaryKeyID"))
-                entity.SetPropertyValue("PrimaryKeyID", 0);
-
-            var type = entity.GetType();
-            var entityName = type.Name;
-
-            // 清空特定的关联查询结果（导航属性）
-            // 清空销售订单的销售出库记录
-            if (entity is RUINORERP.Model.tb_SaleOrder saleOrder && saleOrder.tb_SaleOuts != null)
-            {
-                saleOrder.tb_SaleOuts.Clear();
-            }
-            // 清空采购订单的采购入库记录
-            else if (entity is RUINORERP.Model.tb_PurOrder purOrder && purOrder.tb_PurEntries != null)
-            {
-                purOrder.tb_PurEntries.Clear();
-            }
-
-            // 获取主实体的主键值，用于更新明细的外键
-            long parentPKValue = (long)ReflectionHelper.GetPropertyValue(entity, parentPKCol);
-
-            // 查找所有以主实体名+Detail结尾的导航属性
-            var detailProperties = type.GetProperties()
-                .Where(p => p.PropertyType.IsGenericType &&
-                           p.PropertyType.GetGenericTypeDefinition() == typeof(List<>) &&
-                           p.PropertyType.GetGenericArguments()[0].Name.EndsWith($"{entityName}Detail"))
-                .ToList();
-
-            foreach (var detailProperty in detailProperties)
-            {
-                // 获取明细集合类型
-                var detailType = detailProperty.PropertyType.GetGenericArguments()[0];
-
-                // 获取明细的主键和外键属性名
-                string detailPKCol = BaseUIHelper.GetEntityPrimaryKey(detailType);
-                string detailFKCol = $"{entityName}_ID"; // 假设外键名为"主表名_ID"
-
-                // 检查外键属性是否存在
-                var fkProperty = detailType.GetProperty(detailFKCol);
-                if (fkProperty == null)
-                {
-                    // 尝试查找外键属性（多种可能的命名约定）
-                    fkProperty = detailType.GetProperty($"{entityName}_ID") ??
-                                    detailType.GetProperty(parentPKCol) ??
-                                    detailType.GetProperties().FirstOrDefault(p =>
-                                        p.Name.EndsWith("_ID") && p.PropertyType == typeof(long));
-                }
-
-                if (fkProperty != null)
-                {
-                    var collection = detailProperty.GetValue(entity) as System.Collections.IEnumerable;
-                    if (collection != null)
-                    {
-                        foreach (var item in collection)
-                        {
-                            if (item.ContainsProperty("PrimaryKeyID"))
-                                item.SetPropertyValue("PrimaryKeyID", 0);
-
-                            // 重置明细的主键
-                            ReflectionHelper.SetPropertyValue(item, detailPKCol, 0);
-
-                            // 重置明细的外键（指向主实体）
-                            ReflectionHelper.SetPropertyValue(item, fkProperty.Name, 0);
-                            // 重置需要忽略的属性
-                            ResetIgnoredProperties(item, ignoreConfig);
-
-                            // 重置明细的状态性字段
-                            // 重置销售订单明细的出库数量
-                            if (item is RUINORERP.Model.tb_SaleOrderDetail saleDetail)
-                            {
-                                saleDetail.TotalDeliveredQty = 0;
-                            }
-                            // 重置采购订单明细的已交数量、退回数量和未交数量
-                            else if (item is RUINORERP.Model.tb_PurOrderDetail purDetail)
-                            {
-                                purDetail.DeliveredQuantity = 0;
-                                purDetail.TotalReturnedQty = 0;
-                                // 根据数量重新计算未交数量
-                                purDetail.UndeliveredQty = purDetail.Quantity - purDetail.DeliveredQuantity;
-                            }
-
-                            // 处理明细的子明细（第二级）
-                            ProcessSecondLevelDetails(item, detailPKCol, detailType.Name, ignoreConfig);
-                        }
-                    }
-                }
-            }
-        }
-
-        // 处理第二级明细集合（明细的明细）
-        private void ProcessSecondLevelDetails(object entity, string parentPKCol, string parentEntityName,
-            IgnorePropertyConfiguration ignoreConfig)
-        {
-            if (entity == null) return;
-
-            var type = entity.GetType();
-
-            // 查找所有以当前实体名+Detail结尾的导航属性
-            var subDetailProperties = type.GetProperties()
-                .Where(p => p.PropertyType.IsGenericType &&
-                           p.PropertyType.GetGenericTypeDefinition() == typeof(List<>) &&
-                           p.PropertyType.GetGenericArguments()[0].Name.EndsWith($"{parentEntityName}Detail"))
-                .ToList();
-
-            // 查找所有集合类型的导航属性（假设它们是子明细）
-            //var subDetailProperties = type.GetProperties()
-            //    .Where(p => p.PropertyType.IsGenericType &&
-            //               p.PropertyType.GetGenericTypeDefinition() == typeof(List<>))
-            //    .ToList();
-
-
-
-
-            foreach (var subDetailProperty in subDetailProperties)
-            {
-                // 获取子明细集合类型
-                var subDetailType = subDetailProperty.PropertyType.GetGenericArguments()[0];
-
-                // 获取子明细的主键和外键属性名
-                string subDetailPKCol = BaseUIHelper.GetEntityPrimaryKey(subDetailType);
-                string subDetailFKCol = $"{parentEntityName}_ID"; // 假设外键名为"父表名_ID"
-
-                // 检查外键属性是否存在
-                var fkProperty = subDetailType.GetProperty(subDetailFKCol);
-                if (fkProperty == null)
-                {
-                    // 尝试其他可能的外键命名方式
-                    fkProperty = subDetailType.GetProperty($"{parentEntityName}_ID") ??
-                         subDetailType.GetProperty(parentPKCol) ??
-                         subDetailType.GetProperties().FirstOrDefault(p =>
-                             p.Name.EndsWith("_ID") && p.PropertyType == typeof(long));
-                }
-
-                if (fkProperty != null)
-                {
-                    var collection = subDetailProperty.GetValue(entity) as System.Collections.IEnumerable;
-                    if (collection != null)
-                    {
-                        foreach (var item in collection)
-                        {
-                            // 重置子明细的主键
-                            ReflectionHelper.SetPropertyValue(item, subDetailPKCol, 0);
-
-                            // 重置子明细的外键（指向父明细）
-                            ReflectionHelper.SetPropertyValue(item, fkProperty.Name, 0);
-
-
-                            // 重置需要忽略的属性
-                            ResetIgnoredProperties(item, ignoreConfig);
-                        }
-                    }
-                }
-            }
-        }
-
-        #endregion
-
-
-
-        protected override void Clear(SourceGridDefine sgd)
-        {
-            SourceGrid.Grid grid1 = sgd.grid;
-            EditEntity = Activator.CreateInstance(typeof(T)) as T;
-            BusinessHelper.Instance.InitEntity(EditEntity);
-            BusinessHelper.Instance.InitStatusEntity(EditEntity);
-            bindingSourceSub.Clear();
-            //清空明细表格
-            #region
-            //先清空 不包含 列头和总计
-            SourceGrid.RangeRegion rr = new SourceGrid.RangeRegion(new SourceGrid.Position(grid1.Rows.Count, grid1.Columns.Count));
-            for (int ii = 0; ii < grid1.Rows.Count; ii++)
-            {
-                grid1.Rows[ii].RowData = null;
-            }
-            grid1.ClearValues(rr);
-
-
-            #endregion
-        }
-        protected bool Validator(T EditEntity)
-        {
-            BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
-            bool vd = base.ShowInvalidMessage(ctr.BaseValidator(EditEntity));
-            return vd;
-        }
-
-        /// <summary>
-        /// 验证明细
-        /// </summary>
-        /// <typeparam name="Child"></typeparam>
-        /// <param name="details"></param>
-        /// <returns></returns>
-        protected bool Validator<Child>(List<Child> details) where Child : class
-        {
-            List<bool> subrs = new List<bool>();
-            var lastlist = ((IEnumerable<dynamic>)details).ToList();
-            foreach (var item in lastlist)
-            {
-                BaseController<Child> ctr = Startup.GetFromFacByName<BaseController<Child>>(typeof(Child).Name + "Controller");
-                bool sub_bool = base.ShowInvalidMessage(ctr.BaseValidator(item as Child));
-                subrs.Add(sub_bool);
-            }
-            if (subrs.Where(c => c.Equals(false)).Any())
-            {
-                return false;
-            }
-            else
+            var fileDeleteResponse = await ctrpay.DeleteImagesAsync(EditEntity as BaseEntity, true);
+            if (fileDeleteResponse.IsSuccess && fileDeleteResponse.DeletedFileIds != null && fileDeleteResponse.DeletedFileIds.Count > 0)
             {
                 return true;
             }
-
+            else { return false; }
+        }
+        catch (Exception ex)
+        {
+            return false;
         }
 
-        /// <summary>
-        /// 更新式保存，有一些单据，实在要修改，并且明细没有删除和添加时候执行
-        /// </summary>
-        /// <param name="entity"></param>
-        /// <returns></returns>
-        protected async Task<ReturnMainSubResults<T>> UpdateSave(T entity)
+    }
+
+
+
+    protected async virtual Task<ReturnResults<T>> Delete()
+    {
+        ReturnResults<T> rss = new ReturnResults<T>();
+        if (editEntity == null)
         {
-            string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
-            long pkid = (long)ReflectionHelper.GetPropertyValue(entity, PKCol);
-            if (pkid == 0)
-            {
-                entity.SetPropertyValue(typeof(DataStatus).Name, (int)DataStatus.草稿);
-            }
-            ReturnMainSubResults<T> rmr = new ReturnMainSubResults<T>();
-            BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
-            rmr = await ctr.BaseUpdateWithChild(entity);
-            if (rmr.Succeeded)
-            {
-                if (ReflectionHelper.ExistPropertyName<T>(typeof(ActionStatus).Name))
-                {
-                    //注意這里保存的是枚举
-                    ReflectionHelper.SetPropertyValue(entity, typeof(ActionStatus).Name, (int)ActionStatus.加载);
-                }
-
-                ToolBarEnabledControl(MenuItemEnums.保存);
-                MainForm.Instance.uclog.AddLog("更新式保存成功");
-                MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("更新式保存成功", rmr.ReturnObject);
-            }
-            else
-            {
-                MainForm.Instance.uclog.AddLog("更新式保存成功失败，请重试;或联系管理员。" + rmr.ErrorMsg, UILogType.错误);
-            }
-            return rmr;
-        }
-
-        protected async Task<ReturnMainSubResults<T>> Save(T entity)
-        {
-            string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
-            long pkid = (long)ReflectionHelper.GetPropertyValue(entity, PKCol);
-            long originalPkid = pkid; // 保存原始ID用于后续锁定操作
-
-            if (pkid == 0)
-            {
-                entity.SetPropertyValue(typeof(DataStatus).Name, (int)DataStatus.草稿);
-                BusinessHelper.Instance.InitEntity(entity);
-            }
-            else
-            {
-                // 保存前检查锁定状态 - 优先从本地缓存检查
-                if (await IsLock())
-                {
-                    return new ReturnMainSubResults<T>()
-                    {
-                        Succeeded = false,
-                        ErrorMsg = "单据已被其他用户锁定，请刷新后再试或联系锁定人员解锁"
-                    };
-                }
-            }
-
-            if (editEntity.ContainsProperty(typeof(DataStatus).Name))
-            {
-                //如果修改前的状态是新建，则修改后的状态是草稿。要重新提交才进入下一步审核
-                var dataStatus = (DataStatus)(editEntity.GetPropertyValue(typeof(DataStatus).Name).ToInt());
-                if (dataStatus == DataStatus.新建)
-                {
-                    if (ReflectionHelper.ExistPropertyName<T>(typeof(DataStatus).Name))
-                    {
-                        ReflectionHelper.SetPropertyValue(EditEntity, typeof(DataStatus).Name, (int)DataStatus.草稿);
-                    }
-                }
-            }
-
-            ReturnMainSubResults<T> rmr = new ReturnMainSubResults<T>();
-            BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
-            rmr = await ctr.BaseSaveOrUpdateWithChild<T>(entity);
-            if (rmr.Succeeded)
-            {
-                if (entity is BaseEntity baseEntity)
-                {
-                    baseEntity.AcceptChanges();
-                }
-
-                if (ReflectionHelper.ExistPropertyName<T>(typeof(ActionStatus).Name))
-                {
-                    //注意這里保存的是枚举
-                    ReflectionHelper.SetPropertyValue(entity, typeof(ActionStatus).Name, (int)ActionStatus.加载);
-                }
-
-                // 保存成功后的锁定状态管理
-                await PostSaveLockManagement(entity, originalPkid);
-
-                ToolBarEnabledControl(MenuItemEnums.保存);
-                MainForm.Instance.uclog.AddLog("保存成功");
-            }
-            else
-            {
-                MainForm.Instance.uclog.AddLog("保存失败，请重试;或联系管理员。" + rmr.ErrorMsg, UILogType.错误);
-            }
-            await MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("保存", rmr.ReturnObject, $"结果:{(rmr.Succeeded ? "成功" : "失败")},{rmr.ErrorMsg}");
-            return rmr;
-        }
-
-
-
-        /// <summary>
-        /// 保存后的锁定状态管理
-        /// 确保保存成功后正确处理锁定状态，维护本地缓存与服务器状态的一致性
-        /// </summary>
-        /// <param name="entity">保存后的实体对象</param>
-        /// <param name="originalPkid">保存前的主键ID（用于新增单据）</param>
-        private async Task PostSaveLockManagement(T entity, long originalPkid)
-        {
-            try
-            {
-                string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
-                long currentPkid = (long)ReflectionHelper.GetPropertyValue(entity, PKCol);
-
-                if (currentPkid <= 0) return;
-
-                // 更新当前单据ID和菜单ID，用于锁定管理
-                _currentBillId = currentPkid;
-                _currentMenuId = CurMenuInfo?.MenuID ?? 0;
-
-                // 对于新增单据（originalPkid=0），保存后自动获取锁定
-                if (originalPkid == 0 && _integratedLockService != null)
-                {
-                    MainForm.Instance.uclog.AddLog($"新增单据保存成功，自动获取锁定：单据ID={currentPkid}", UILogType.普通消息);
-                    string BillNo = ReflectionHelper.GetPropertyValue(EditEntity, EntityMappingHelper.GetEntityInfo<T>().NoField).ToString();
-                    var lockResult = await _integratedLockService.LockBillAsync(currentPkid, BillNo, EntityMappingHelper.GetEntityInfo<T>().BizType, _currentMenuId);
-                    if (lockResult?.IsSuccess == true)
-                    {
-                        // 更新UI显示锁定状态
-                        UpdateLockUI(true, lockResult.LockInfo);
-                        MainForm.Instance.uclog.AddLog($"新增单据自动锁定成功", UILogType.普通消息);
-                    }
-                    else
-                    {
-                        MainForm.Instance.uclog.AddLog($"新增单据自动锁定失败：{lockResult?.Message ?? "未知错误"}", UILogType.警告);
-                    }
-                }
-                // 对于已有单据，刷新锁定状态确保本地缓存与服务器同步
-                else if (originalPkid > 0 && _integratedLockService != null)
-                {
-                    await RefreshLockStatus(currentPkid);
-                }
-            }
-            catch (Exception ex)
-            {
-                MainForm.Instance.logger.LogError(ex, "保存后锁定状态管理失败");
-                MainForm.Instance.uclog.AddLog($"锁定状态管理异常：{ex.Message}", UILogType.错误);
-            }
-        }
-
-        /// <summary>
-        /// 刷新锁定状态
-        /// 优先从本地缓存获取，如果缓存过期或不存在则从服务器查询
-        /// </summary>
-        /// <param name="billId">单据ID</param>
-        /// <returns>刷新结果</returns>
-        private async Task RefreshLockStatus(long billId)
-        {
-            if (_integratedLockService == null || billId <= 0) return;
-
-            try
-            {
-                // 调用CheckLockStatusAndUpdateUI方法，它已经包含了完整的状态检查、缓存管理和UI更新逻辑
-                var (isLocked, canOperate, lockInfo) = await CheckLockStatusAndUpdateUI(billId);
-
-                // 记录锁定状态刷新日志
-                if (isLocked && lockInfo != null)
-                {
-                    long currentUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
-                    bool isSelfLock = lockInfo.LockedUserId == currentUserId;
-                    string lockInfoMsg = isSelfLock ?
-                        $"您已锁定当前单据" :
-                        $"单据已被【{lockInfo.LockedUserName}】锁定";
-                    MainForm.Instance?.uclog?.AddLog($"锁定状态刷新：{lockInfoMsg}", UILogType.普通消息);
-                }
-            }
-            catch (Exception ex)
-            {
-                MainForm.Instance?.logger?.LogError(ex, $"刷新单据 {billId} 锁定状态失败");
-                MainForm.Instance?.uclog?.AddLog($"刷新锁定状态失败: {ex.Message}", UILogType.错误);
-            }
-        }
-
-        /// <summary>
-        /// 检查锁定状态并更新UI
-        /// 作为核心入口点，处理所有锁定状态检测和UI更新逻辑
-        /// </summary>
-        /// <param name="billId">单据ID</param>
-        /// <returns>锁定状态信息和操作权限状态</returns>
-        public async Task<(bool IsLocked, bool CanPerformCriticalOperations, LockInfo LockInfo)> CheckLockStatusAndUpdateUI(long billId)
-        {
-            if (_integratedLockService == null || billId <= 0)
-                return (false, true, null);
-
-            try
-            {
-                // 核心步骤1: 查询锁定状态
-                var (isLocked, lockInfo) = await CheckLockStatusAsync(billId, _currentMenuId);
-                long currentUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
-                bool isSelfLock = isLocked && (lockInfo?.LockedUserId == currentUserId);
-                bool canPerformCriticalOperations = !isLocked || isSelfLock;
-
-                // 核心步骤3: 更新UI状态
-                UpdateLockUI(isLocked, lockInfo);
-
-                return (isLocked, canPerformCriticalOperations, lockInfo);
-            }
-            catch (Exception ex)
-            {
-                // 简化错误处理，避免过度日志
-                MainForm.Instance?.logger?.LogError(ex, $"检查锁定状态失败：单据ID={billId}");
-                return (false, true, null);
-            }
-        }
-
-        /// <summary>
-        /// 禁用重要操作按钮
-        /// 当单据被其他用户锁定时，限制用户执行重要操作
-
-
-        /// <summary>
-        /// 更新锁定UI显示
-        /// 统一管理锁定按钮的显示状态和提示信息，使用统一的锁状态图片标识
-        /// </summary>
-        /// <param name="isLocked">是否被锁定</param>
-        /// <param name="lockInfo">锁定信息</param>
-        private void UpdateLockUI(bool isLocked, LockInfo lockInfo = null)
-        {
-            if (tsBtnLocked == null || IsDisposed) return;
-
-            try
-            {
-                if (InvokeRequired)
-                {
-                    Invoke((MethodInvoker)(() => UpdateLockUI(isLocked, lockInfo)));
-                    return;
-                }
-
-                // 始终显示锁状态按钮，无论是否锁定
-                tsBtnLocked.Visible = true;
-                tsBtnLocked.Tag = lockInfo;
-
-                if (isLocked && lockInfo != null)
-                {
-                    long currentUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
-                    bool isSelfLock = lockInfo.LockedUserId == currentUserId;
-
-                    // 统一使用锁状态图片标识锁定状态，根据锁定者身份使用不同图片
-                    tsBtnLocked.Image = isSelfLock ?
-                        Properties.Resources.unlockbill :  // 当前用户锁定：显示解锁图标
-                        Properties.Resources.Lockbill;     // 其他用户锁定：显示锁定图标
-
-                    // 优化提示信息，确保包含完整的锁定详情
-                    string lockTimeStr = lockInfo.LockTime.ToString("yyyy-MM-dd HH:mm:ss");
-                    if (isSelfLock)
-                    {
-                        tsBtnLocked.ToolTipText = $"🔒 锁定状态：您已锁定此单据\n" +
-                                                $"👤 锁定用户：{lockInfo.LockedUserName}\n" +
-                                                $"⏰ 锁定时间：{lockTimeStr}\n" +
-                                                $"💡 提示：关闭单据自动解锁";
-                        // 设置绿色背景表示自己锁定，提供直观视觉反馈
-                        tsBtnLocked.BackColor = System.Drawing.Color.LightGreen;
-                        tsBtnLocked.ForeColor = System.Drawing.Color.Black;
-                        tsBtnLocked.Text = "已锁定(自己)";
-                    }
-                    else
-                    {
-                        tsBtnLocked.ToolTipText = $"🔒 锁定状态：单据已被锁定\n" +
-                                                $"👤 锁定用户：{lockInfo.LockedUserName}\n" +
-                                                $"⏰ 锁定时间：{lockTimeStr}\n" +
-                                                $"💡 提示：点击可请求解锁";
-                        // 设置红色背景表示他人锁定，提供直观视觉反馈
-                        tsBtnLocked.BackColor = System.Drawing.Color.LightCoral;
-                        tsBtnLocked.ForeColor = System.Drawing.Color.White;
-                        tsBtnLocked.Text = $"已锁定({lockInfo.LockedUserName})";
-                    }
-                    // 启用按钮，允许点击操作
-                    tsBtnLocked.Enabled = true;
-                }
-                else
-                {
-                    // 未锁定状态：显示未锁定图标和状态
-                    tsBtnLocked.Image = Properties.Resources.unlockbill;  // 使用解锁图标表示未锁定
-                    tsBtnLocked.ToolTipText = "🔓 锁定状态：单据未被锁定\n💡 提示：您可以编辑此单据";
-                    tsBtnLocked.Text = "未锁定";
-                    tsBtnLocked.BackColor = System.Drawing.Color.LightBlue;
-                    tsBtnLocked.ForeColor = System.Drawing.Color.Black;
-                    tsBtnLocked.Enabled = false;  // 未锁定时禁用按钮，避免误操作
-                }
-
-                // 确保按钮在工具栏中正确显示
-                tsBtnLocked.TextImageRelation = TextImageRelation.ImageBeforeText;
-                tsBtnLocked.DisplayStyle = ToolStripItemDisplayStyle.ImageAndText;
-                tsBtnLocked.AutoSize = true;
-            }
-            catch (Exception ex)
-            {
-                MainForm.Instance.logger.LogError(ex, "更新锁定UI显示失败");
-            }
-        }
-
-        /// <summary>
-        /// 删除远程的图片
-        /// </summary>
-        /// <param name="entity"></param>
-        /// <returns></returns>
-        public async virtual Task<bool> DeleteRemoteImages()
-        {
-            await Task.Delay(0);
-            var ctrpay = Startup.GetFromFac<FileManagementController>();
-            try
-            {
-                var fileDeleteResponse = await ctrpay.DeleteImagesAsync(EditEntity as BaseEntity, true);
-                if (fileDeleteResponse.IsSuccess && fileDeleteResponse.DeletedFileIds != null && fileDeleteResponse.DeletedFileIds.Count > 0)
-                {
-                    return true;
-                }
-                else { return false; }
-            }
-            catch (Exception ex)
-            {
-                return false;
-            }
-
-        }
-
-
-
-        protected async virtual Task<ReturnResults<T>> Delete()
-        {
-            ReturnResults<T> rss = new ReturnResults<T>();
-            if (editEntity == null)
-            {
-                //提示一下删除成功
-                MainForm.Instance.uclog.AddLog("提示", "没有要删除的数据");
-                return rss;
-            }
-
-            if (MessageBox.Show("系统不建议删除单据资料\r\n确定删除吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
-            {
-                //https://www.runoob.com/w3cnote/csharp-enum.html
-                var dataStatus = (DataStatus)(editEntity.GetPropertyValue(typeof(DataStatus).Name).ToInt());
-                if (dataStatus == DataStatus.新建 || dataStatus == DataStatus.草稿)
-                {
-                    //如果草稿。都可以删除。如果是新建，则提交过了。要创建人或超级管理员才能删除
-                    if (dataStatus == DataStatus.新建 && !AppContext.IsSuperUser)
-                    {
-                        if (ReflectionHelper.ExistPropertyName<T>("Created_by") && ReflectionHelper.GetPropertyValue(editEntity, "Created_by").ToString() != AppContext.CurUserInfo.Id.ToString())
-                        {
-                            MessageBox.Show("只有创建人才能删除提交的单据。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                            rss.ErrorMsg = "只有创建人才能删除提交的单据。";
-                            rss.Succeeded = false;
-                            return rss;
-                        }
-                    }
-                    bool rs = false;
-                    BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
-                    //这个表特殊当时没有命名好
-                    if (typeof(C).Name.Contains("Detail") || typeof(C).Name.Contains("tb_ProductionDemand"))
-                    {
-                        rs = await ctr.BaseDeleteByNavAsync(editEntity as T);
-                    }
-                    else
-                    {
-                        rs = await ctr.BaseDeleteAsync(editEntity as T);
-                    }
-                    object PKValue = editEntity.GetPropertyValue(UIHelper.GetPrimaryKeyColName(typeof(T)));
-                    rss.Succeeded = rs;
-                    rss.ReturnObject = editEntity;
-                    if (rs)
-                    {
-                        MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("删除", editEntity);
-                        if (MainForm.Instance.AppContext.SysConfig.IsDebug)
-                        {
-                            //MainForm.Instance.logger.Debug($"单据显示中删除:{typeof(T).Name}，主键值：{PKValue.ToString()} "); //如果要生效 要将配置文件中 <add key="log4net.Internal.Debug" value="true " /> 也许是：logn4net.config <log4net debug="false"> 改为true
-                        }
-
-                        bindingSourceSub.Clear();
-
-                        //删除远程图片及本地图片
-                        await DeleteRemoteImages();
-                        //提示一下删除成功
-                        MainForm.Instance.uclog.AddLog("提示", "删除成功");
-
-                        //加载一个空的显示的UI
-                        bindingSourceSub.Clear();
-                        OnBindDataToUIEvent(Activator.CreateInstance(typeof(T)) as T, ActionStatus.删除);
-                    }
-                    else
-                    {
-                        MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("删除失败", editEntity);
-                    }
-                }
-                else
-                {
-                    //
-                    MainForm.Instance.uclog.AddLog("提示", "已【确认】【审核】的生效单据无法删除");
-                }
-            }
+            //提示一下删除成功
+            MainForm.Instance.uclog.AddLog("提示", "没有要删除的数据");
             return rss;
         }
 
-
-
-
-        /// <summary>
-        /// 提交
-        /// </summary>
-        protected async override Task<bool> Submit()
+        if (MessageBox.Show("系统不建议删除单据资料\r\n确定删除吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
         {
-            if (EditEntity == null)
+            //https://www.runoob.com/w3cnote/csharp-enum.html
+            var dataStatus = (DataStatus)(editEntity.GetPropertyValue(typeof(DataStatus).Name).ToInt());
+            if (dataStatus == DataStatus.新建 || dataStatus == DataStatus.草稿)
             {
-                return false;
-            }
-
-            //if (StatusMachine.CanSubmit())
-            //{
-            //    StatusMachine.Submit();
-            //    // 自动触发状态更新
-            //}
-            BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
-            bool submitrs = false;
-            string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
-            long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
-            if (pkid > 0)
-            {
-                var dataStatus = (DataStatus)(editEntity.GetPropertyValue(typeof(DataStatus).Name).ToInt());
-                if (dataStatus == DataStatus.完结 || dataStatus == DataStatus.确认)
+                //如果草稿。都可以删除。如果是新建，则提交过了。要创建人或超级管理员才能删除
+                if (dataStatus == DataStatus.新建 && !AppContext.IsSuperUser)
                 {
-
-                    if (AuthorizeController.GetShowDebugInfoAuthorization(MainForm.Instance.AppContext))
+                    if (ReflectionHelper.ExistPropertyName<T>("Created_by") && ReflectionHelper.GetPropertyValue(editEntity, "Created_by").ToString() != AppContext.CurUserInfo.Id.ToString())
                     {
-                        MainForm.Instance.uclog.AddLog("单据已经是【完结】或【确认】状态，提交失败。");
+                        MessageBox.Show("只有创建人才能删除提交的单据。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        rss.ErrorMsg = "只有创建人才能删除提交的单据。";
+                        rss.Succeeded = false;
+                        return rss;
                     }
-                    return false;
+                }
+                bool rs = false;
+                BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
+                //这个表特殊当时没有命名好
+                if (typeof(C).Name.Contains("Detail") || typeof(C).Name.Contains("tb_ProductionDemand"))
+                {
+                    rs = await ctr.BaseDeleteByNavAsync(editEntity as T);
                 }
                 else
                 {
-
-                    ReturnResults<T> rmr = await ctr.SubmitAsync(EditEntity, false);
-                    //rmr = await ctr.BaseSaveOrUpdate(EditEntity);
-                    if (rmr.Succeeded)
-                    {
-                        if (EditEntity is BaseEntity baseEntity)
-                        {
-                            baseEntity.AcceptChanges();
-                        }
-                        ToolBarEnabledControl(MenuItemEnums.提交);
-                        //这里推送到审核，启动工作流 后面优化
-                        // OriginalData od = ActionForClient.工作流提交(pkid, (int)BizType.盘点单);
-                        // MainForm.Instance.ecs.AddSendData(od);]
-
-                        //如果是销售订单或采购订单可以自动审核，有条件地执行？
-                        CommBillData cbd = new CommBillData();
-
-                        cbd = EntityMappingHelper.GetBillData<T>(EditEntity as T);
-                        ApprovalEntity ae = new ApprovalEntity();
-                        ae.ApprovalOpinions = "自动审核";
-                        ae.ApprovalResults = true;
-                        ae.ApprovalStatus = (int)ApprovalStatus.已审核;
-                        if (cbd.BizType == BizType.销售订单 && AppContext.SysConfig.AutoApprovedSaleOrderAmount > 0)
-                        {
-                            if (EditEntity is tb_SaleOrder saleOrder)
-                            {
-                                if (saleOrder.TotalAmount <= AppContext.SysConfig.AutoApprovedSaleOrderAmount)
-                                {
-                                    RevertCommand command = new RevertCommand();
-                                    //缓存当前编辑的对象。如果撤销就回原来的值
-                                    tb_SaleOrder oldobj = CloneHelper.DeepCloneObject<tb_SaleOrder>(EditEntity);
-                                    command.UndoOperation = delegate ()
-                                    {
-                                        //Undo操作会执行到的代码 意思是如果退审核，内存中审核的数据要变为空白（之前的样子）
-                                        CloneHelper.SetValues<tb_SaleOrder>(EditEntity, oldobj);
-                                    };
-                                    BusinessHelper.Instance.ApproverEntity(EditEntity);
-                                    saleOrder.ApprovalResults = true;
-                                    saleOrder.ApprovalStatus = (int)ApprovalStatus.已审核;
-                                    saleOrder.ApprovalOpinions = "自动审核";
-                                    saleOrder.DataStatus = (int)DataStatus.确认;
-                                    tb_SaleOrderController<tb_SaleOrder> ctrSO = Startup.GetFromFac<tb_SaleOrderController<tb_SaleOrder>>();
-                                    ReturnResults<tb_SaleOrder> rmrs = await ctrSO.ApprovalAsync(saleOrder);
-                                    if (rmrs.Succeeded)
-                                    {
-                                        //这里审核完了的话，如果这个单存在于工作流的集合队列中，则向服务器说明审核完成。
-                                        //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
-                                        //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
-                                        //MainForm.Instance.ecs.AddSendData(od);
-                                        //审核成功
-                                        ToolBarEnabledControl(MenuItemEnums.审核);
-                                        await MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("审核", rmr.ReturnObject, "满足金额设置条件，自动审核通过");
-                                        //如果审核结果为不通过时，审核不是灰色。
-                                        if (!ae.ApprovalResults)
-                                        {
-                                            toolStripbtnReview.Enabled = true;
-                                        }
-                                    }
-                                    else
-                                    {
-                                        command.Undo();
-                                        //审核失败 要恢复之前的值
-                                        MainForm.Instance.PrintInfoLog($"{ae.bizName}:{ae.BillNo}审核失败,{rmrs.ErrorMsg}请联系管理员！", Color.Red);
-                                    }
-                                }
-                            }
-                        }
-
-                        if (cbd.BizType == BizType.采购订单 && AppContext.SysConfig.AutoApprovedPurOrderAmount > 0)
-                        {
-                            if (EditEntity is tb_PurOrder purOrder)
-                            {
-                                if (purOrder.TotalAmount <= AppContext.SysConfig.AutoApprovedPurOrderAmount)
-                                {
-                                    RevertCommand command = new RevertCommand();
-                                    //缓存当前编辑的对象。如果撤销就回原来的值
-                                    tb_PurOrder oldobj = CloneHelper.DeepCloneObject<tb_PurOrder>(EditEntity);
-                                    command.UndoOperation = delegate ()
-                                    {
-                                        //Undo操作会执行到的代码 意思是如果退审核，内存中审核的数据要变为空白（之前的样子）
-                                        CloneHelper.SetValues<tb_PurOrder>(EditEntity, oldobj);
-                                    };
-                                    purOrder.ApprovalResults = true;
-                                    purOrder.ApprovalStatus = (int)ApprovalStatus.已审核;
-                                    purOrder.ApprovalOpinions = "自动审核";
-                                    purOrder.DataStatus = (int)DataStatus.确认;
-                                    BusinessHelper.Instance.ApproverEntity(EditEntity);
-                                    tb_PurOrderController<tb_PurOrder> ctrSO = Startup.GetFromFac<tb_PurOrderController<tb_PurOrder>>();
-                                    ReturnResults<tb_PurOrder> rmrs = await ctrSO.ApprovalAsync(purOrder);
-                                    if (rmrs.Succeeded)
-                                    {
-                                        //这里审核完了的话，如果这个单存在于工作流的集合队列中，则向服务器说明审核完成。
-                                        //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
-                                        //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
-                                        //MainForm.Instance.ecs.AddSendData(od);
-
-                                        //审核成功
-                                        ToolBarEnabledControl(MenuItemEnums.审核);
-                                        await MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("审核", rmr.ReturnObject, "满足金额设置条件，自动审核通过");
-                                        //如果审核结果为不通过时，审核不是灰色。
-                                        if (!ae.ApprovalResults)
-                                        {
-                                            toolStripbtnReview.Enabled = true;
-                                        }
-                                    }
-                                    else
-                                    {
-                                        command.Undo();
-                                        //审核失败 要恢复之前的值
-                                        MainForm.Instance.PrintInfoLog($"{ae.bizName}:{ae.BillNo}审核失败,{rmrs.ErrorMsg},请联系管理员！", Color.Red);
-
-                                    }
-                                }
-                            }
-                        }
-                        submitrs = true;
-                    }
-                    else
-                    {
-                        MainForm.Instance.uclog.AddLog($"提交失败，请重试;或联系管理员。\r\n 错误信息：{rmr.ErrorMsg}", UILogType.错误);
-                        submitrs = false;
-                    }
-                    await MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("更新式提交", rmr.ReturnObject, $"结果:{(rmr.Succeeded ? "成功" : "失败")},{rmr.ErrorMsg}");
+                    rs = await ctr.BaseDeleteAsync(editEntity as T);
                 }
-            }
-            else
-            {
-                if (ReflectionHelper.ExistPropertyName<T>(typeof(DataStatus).Name))
-                {
-                    ReflectionHelper.SetPropertyValue(EditEntity, typeof(DataStatus).Name, (int)DataStatus.新建);
-                }
-                if (ReflectionHelper.ExistPropertyName<T>(typeof(ApprovalStatus).Name))
-                {
-                    ReflectionHelper.SetPropertyValue(EditEntity, typeof(ApprovalStatus).Name, (int)ApprovalStatus.未审核);
-                }
-                bool rs = await this.Save(true);
+                object PKValue = editEntity.GetPropertyValue(UIHelper.GetPrimaryKeyColName(typeof(T)));
+                rss.Succeeded = rs;
+                rss.ReturnObject = editEntity;
                 if (rs)
                 {
-                    ToolBarEnabledControl(MenuItemEnums.提交);
-                    submitrs = true;
+                    MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("删除", editEntity);
+                    if (MainForm.Instance.AppContext.SysConfig.IsDebug)
+                    {
+                        //MainForm.Instance.logger.Debug($"单据显示中删除:{typeof(T).Name}，主键值：{PKValue.ToString()} "); //如果要生效 要将配置文件中 <add key="log4net.Internal.Debug" value="true " /> 也许是：logn4net.config <log4net debug="false"> 改为true
+                    }
+
+                    bindingSourceSub.Clear();
+
+                    //删除远程图片及本地图片
+                    await DeleteRemoteImages();
+                    //提示一下删除成功
+                    MainForm.Instance.uclog.AddLog("提示", "删除成功");
+
+                    //加载一个空的显示的UI
+                    bindingSourceSub.Clear();
+                    OnBindDataToUIEvent(Activator.CreateInstance(typeof(T)) as T, ActionStatus.删除);
                 }
-                await MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("保存式提交", EditEntity, $"结果:{(rs ? "成功" : "失败")}");
-            }
-            return submitrs;
-        }
-
-
-
-
-        /// <summary>提交单据</summary>
-        protected async Task<bool> Submit<TStatus>(TStatus targetStatus)
-            where TStatus : Enum
-        {
-            if (EditEntity == null) return false;
-
-
-            // 回退到旧的状态管理系统
-            // 获取当前状态
-            var statusProperty = typeof(TStatus).Name;
-            var currentStatus = (TStatus)Enum.ToObject(
-                typeof(TStatus),
-                EditEntity.GetPropertyValue(statusProperty)
-            );
-
-            // 验证状态转换
-            try
-            {
-                FMPaymentStatusHelper.ValidateTransition(currentStatus, targetStatus);
-            }
-            catch (InvalidOperationException ex)
-            {
-                MainForm.Instance.uclog.AddLog($"提交失败: {ex.Message}");
-                return false;
-            }
-
-            if (!FMPaymentStatusHelper.CanSubmit(currentStatus))
-            {
-                MainForm.Instance.uclog.AddLog("单据非草稿状态，提交失败");
-                toolStripbtnSubmit.Enabled = false;
-                return false;
-            }
-
-
-            // 保存实体
-            var ctr = Startup.GetFromFacByName<BaseController<T>>($"{typeof(T).Name}Controller");
-            ReturnResults<T> result = await ctr.SubmitAsync(EditEntity, true);
-            if (result.Succeeded)
-            {
-                if (EditEntity is BaseEntity baseEntity)
+                else
                 {
-                    baseEntity.AcceptChanges();
+                    MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("删除失败", editEntity);
                 }
-                MainForm.Instance.uclog.AddLog("提交成功");
-                await ToolBarEnabledControl(EditEntity);
-
-                //// 记录审计日志
-                //MainForm.Instance.AuditLogHelper.CreateAuditLog<T>(
-                //    "提交",
-                //    result.ReturnObject,
-                //    $"状态变更: {EditEntity.StatusContext?.CurrentStatus} → {targetStatus}"
-                //);
-
-                return true;
             }
             else
             {
-                //单据保存后再提交
-                MessageBox.Show("提交失败，请重试;或联系管理员。\r\n 错误信息：" + result.ErrorMsg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                //
+                MainForm.Instance.uclog.AddLog("提示", "已【确认】【审核】的生效单据无法删除");
+            }
+        }
+        return rss;
+    }
+
+
+
+
+    /// <summary>
+    /// 提交
+    /// </summary>
+    protected async override Task<bool> Submit()
+    {
+        if (EditEntity == null)
+        {
+            return false;
+        }
+
+        //if (StatusMachine.CanSubmit())
+        //{
+        //    StatusMachine.Submit();
+        //    // 自动触发状态更新
+        //}
+        BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
+        bool submitrs = false;
+        string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
+        long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
+        if (pkid > 0)
+        {
+            var dataStatus = (DataStatus)(editEntity.GetPropertyValue(typeof(DataStatus).Name).ToInt());
+            if (dataStatus == DataStatus.完结 || dataStatus == DataStatus.确认)
+            {
+
+                if (AuthorizeController.GetShowDebugInfoAuthorization(MainForm.Instance.AppContext))
+                {
+                    MainForm.Instance.uclog.AddLog("单据已经是【完结】或【确认】状态，提交失败。");
+                }
                 return false;
             }
+            else
+            {
 
-            MainForm.Instance.uclog.AddLog($"提交失败: {result.ErrorMsg}", UILogType.错误);
+                ReturnResults<T> rmr = await ctr.SubmitAsync(EditEntity, false);
+                //rmr = await ctr.BaseSaveOrUpdate(EditEntity);
+                if (rmr.Succeeded)
+                {
+                    if (EditEntity is BaseEntity baseEntity)
+                    {
+                        baseEntity.AcceptChanges();
+                    }
+                    ToolBarEnabledControl(MenuItemEnums.提交);
+                    //这里推送到审核，启动工作流 后面优化
+                    // OriginalData od = ActionForClient.工作流提交(pkid, (int)BizType.盘点单);
+                    // MainForm.Instance.ecs.AddSendData(od);]
+
+                    //如果是销售订单或采购订单可以自动审核，有条件地执行？
+                    CommBillData cbd = new CommBillData();
+
+                    cbd = EntityMappingHelper.GetBillData<T>(EditEntity as T);
+                    ApprovalEntity ae = new ApprovalEntity();
+                    ae.ApprovalOpinions = "自动审核";
+                    ae.ApprovalResults = true;
+                    ae.ApprovalStatus = (int)ApprovalStatus.已审核;
+                    if (cbd.BizType == BizType.销售订单 && AppContext.SysConfig.AutoApprovedSaleOrderAmount > 0)
+                    {
+                        if (EditEntity is tb_SaleOrder saleOrder)
+                        {
+                            if (saleOrder.TotalAmount <= AppContext.SysConfig.AutoApprovedSaleOrderAmount)
+                            {
+                                RevertCommand command = new RevertCommand();
+                                //缓存当前编辑的对象。如果撤销就回原来的值
+                                tb_SaleOrder oldobj = CloneHelper.DeepCloneObject<tb_SaleOrder>(EditEntity);
+                                command.UndoOperation = delegate ()
+                                {
+                                    //Undo操作会执行到的代码 意思是如果退审核，内存中审核的数据要变为空白（之前的样子）
+                                    CloneHelper.SetValues<tb_SaleOrder>(EditEntity, oldobj);
+                                };
+                                BusinessHelper.Instance.ApproverEntity(EditEntity);
+                                saleOrder.ApprovalResults = true;
+                                saleOrder.ApprovalStatus = (int)ApprovalStatus.已审核;
+                                saleOrder.ApprovalOpinions = "自动审核";
+                                saleOrder.DataStatus = (int)DataStatus.确认;
+                                tb_SaleOrderController<tb_SaleOrder> ctrSO = Startup.GetFromFac<tb_SaleOrderController<tb_SaleOrder>>();
+                                ReturnResults<tb_SaleOrder> rmrs = await ctrSO.ApprovalAsync(saleOrder);
+                                if (rmrs.Succeeded)
+                                {
+                                    //这里审核完了的话，如果这个单存在于工作流的集合队列中，则向服务器说明审核完成。
+                                    //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
+                                    //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
+                                    //MainForm.Instance.ecs.AddSendData(od);
+                                    //审核成功
+                                    ToolBarEnabledControl(MenuItemEnums.审核);
+                                    await MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("审核", rmr.ReturnObject, "满足金额设置条件，自动审核通过");
+                                    //如果审核结果为不通过时，审核不是灰色。
+                                    if (!ae.ApprovalResults)
+                                    {
+                                        toolStripbtnReview.Enabled = true;
+                                    }
+                                }
+                                else
+                                {
+                                    command.Undo();
+                                    //审核失败 要恢复之前的值
+                                    MainForm.Instance.PrintInfoLog($"{ae.bizName}:{ae.BillNo}审核失败,{rmrs.ErrorMsg}请联系管理员！", Color.Red);
+                                }
+                            }
+                        }
+                    }
+
+                    if (cbd.BizType == BizType.采购订单 && AppContext.SysConfig.AutoApprovedPurOrderAmount > 0)
+                    {
+                        if (EditEntity is tb_PurOrder purOrder)
+                        {
+                            if (purOrder.TotalAmount <= AppContext.SysConfig.AutoApprovedPurOrderAmount)
+                            {
+                                RevertCommand command = new RevertCommand();
+                                //缓存当前编辑的对象。如果撤销就回原来的值
+                                tb_PurOrder oldobj = CloneHelper.DeepCloneObject<tb_PurOrder>(EditEntity);
+                                command.UndoOperation = delegate ()
+                                {
+                                    //Undo操作会执行到的代码 意思是如果退审核，内存中审核的数据要变为空白（之前的样子）
+                                    CloneHelper.SetValues<tb_PurOrder>(EditEntity, oldobj);
+                                };
+                                purOrder.ApprovalResults = true;
+                                purOrder.ApprovalStatus = (int)ApprovalStatus.已审核;
+                                purOrder.ApprovalOpinions = "自动审核";
+                                purOrder.DataStatus = (int)DataStatus.确认;
+                                BusinessHelper.Instance.ApproverEntity(EditEntity);
+                                tb_PurOrderController<tb_PurOrder> ctrSO = Startup.GetFromFac<tb_PurOrderController<tb_PurOrder>>();
+                                ReturnResults<tb_PurOrder> rmrs = await ctrSO.ApprovalAsync(purOrder);
+                                if (rmrs.Succeeded)
+                                {
+                                    //这里审核完了的话，如果这个单存在于工作流的集合队列中，则向服务器说明审核完成。
+                                    //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
+                                    //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
+                                    //MainForm.Instance.ecs.AddSendData(od);
+
+                                    //审核成功
+                                    ToolBarEnabledControl(MenuItemEnums.审核);
+                                    await MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("审核", rmr.ReturnObject, "满足金额设置条件，自动审核通过");
+                                    //如果审核结果为不通过时，审核不是灰色。
+                                    if (!ae.ApprovalResults)
+                                    {
+                                        toolStripbtnReview.Enabled = true;
+                                    }
+                                }
+                                else
+                                {
+                                    command.Undo();
+                                    //审核失败 要恢复之前的值
+                                    MainForm.Instance.PrintInfoLog($"{ae.bizName}:{ae.BillNo}审核失败,{rmrs.ErrorMsg},请联系管理员！", Color.Red);
+
+                                }
+                            }
+                        }
+                    }
+                    submitrs = true;
+                }
+                else
+                {
+                    MainForm.Instance.uclog.AddLog($"提交失败，请重试;或联系管理员。\r\n 错误信息：{rmr.ErrorMsg}", UILogType.错误);
+                    submitrs = false;
+                }
+                await MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("更新式提交", rmr.ReturnObject, $"结果:{(rmr.Succeeded ? "成功" : "失败")},{rmr.ErrorMsg}");
+            }
+        }
+        else
+        {
+            if (ReflectionHelper.ExistPropertyName<T>(typeof(DataStatus).Name))
+            {
+                await TransitionToAsync(DataStatus.新建, "新建单据");
+                //ReflectionHelper.SetPropertyValue(EditEntity, typeof(DataStatus).Name, (int)DataStatus.新建);
+            }
+            if (ReflectionHelper.ExistPropertyName<T>(typeof(ApprovalStatus).Name))
+            {
+                ReflectionHelper.SetPropertyValue(EditEntity, typeof(ApprovalStatus).Name, (int)ApprovalStatus.未审核);
+            }
+            bool rs = await this.Save(true);
+            if (rs)
+            {
+                ToolBarEnabledControl(MenuItemEnums.提交);
+                submitrs = true;
+            }
+            await MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("保存式提交", EditEntity, $"结果:{(rs ? "成功" : "失败")}");
+        }
+        return submitrs;
+    }
+
+
+
+
+    /// <summary>提交单据</summary>
+    protected async Task<bool> Submit<TStatus>(TStatus targetStatus)
+        where TStatus : Enum
+    {
+        if (EditEntity == null) return false;
+
+
+        // 回退到旧的状态管理系统
+        // 获取当前状态
+        var statusProperty = typeof(TStatus).Name;
+        var currentStatus = (TStatus)Enum.ToObject(
+            typeof(TStatus),
+            EditEntity.GetPropertyValue(statusProperty)
+        );
+
+        // 验证状态转换
+        try
+        {
+            FMPaymentStatusHelper.ValidateTransition(currentStatus, targetStatus);
+        }
+        catch (InvalidOperationException ex)
+        {
+            MainForm.Instance.uclog.AddLog($"提交失败: {ex.Message}");
+            return false;
+        }
+
+        if (!FMPaymentStatusHelper.CanSubmit(currentStatus))
+        {
+            MainForm.Instance.uclog.AddLog("单据非草稿状态，提交失败");
+            toolStripbtnSubmit.Enabled = false;
             return false;
         }
 
 
-        /// <summary>
-        /// 优化后的查询条件
-        /// </summary>
-        public QueryFilter QueryConditionFilter { get; set; } = new QueryFilter();
-
-        /// <summary>
-        /// 如果需要查询条件查询，就要在子类中重写这个方法
-        /// </summary>
-        public virtual void QueryConditionBuilder()
+        // 保存实体
+        var ctr = Startup.GetFromFacByName<BaseController<T>>($"{typeof(T).Name}Controller");
+        ReturnResults<T> result = await ctr.SubmitAsync(EditEntity, true);
+        if (result.Succeeded)
         {
-            //添加默认全局的
-            BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(T).Name + "Processor");
-            QueryConditionFilter = baseProcessor.GetQueryFilter();
+            if (EditEntity is BaseEntity baseEntity)
+            {
+                baseEntity.AcceptChanges();
+            }
+            MainForm.Instance.uclog.AddLog("提交成功");
+            await ToolBarEnabledControl(EditEntity);
+
+            //// 记录审计日志
+            //MainForm.Instance.AuditLogHelper.CreateAuditLog<T>(
+            //    "提交",
+            //    result.ReturnObject,
+            //    $"状态变更: {EditEntity.StatusContext?.CurrentStatus} → {targetStatus}"
+            //);
+
+            return true;
+        }
+        else
+        {
+            //单据保存后再提交
+            MessageBox.Show("提交失败，请重试;或联系管理员。\r\n 错误信息：" + result.ErrorMsg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            return false;
         }
 
+        MainForm.Instance.uclog.AddLog($"提交失败: {result.ErrorMsg}", UILogType.错误);
+        return false;
+    }
 
 
-        protected override void Query()
+    /// <summary>
+    /// 优化后的查询条件
+    /// </summary>
+    public QueryFilter QueryConditionFilter { get; set; } = new QueryFilter();
+
+    /// <summary>
+    /// 如果需要查询条件查询，就要在子类中重写这个方法
+    /// </summary>
+    public virtual void QueryConditionBuilder()
+    {
+        //添加默认全局的
+        BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(T).Name + "Processor");
+        QueryConditionFilter = baseProcessor.GetQueryFilter();
+    }
+
+
+
+    protected override void Query()
+    {
+        if (base.Edited)
         {
-            if (base.Edited)
+            if (MessageBox.Show("你有数据没有保存，当前操作会丢失数据\r\n你确定不保存吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.No)
             {
-                if (MessageBox.Show("你有数据没有保存，当前操作会丢失数据\r\n你确定不保存吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.No)
+                return;
+            }
+        }
+
+        // 如果没有条件列表 直接查全部。
+        // CommonUI.frmQuery<T> frm = new CommonUI.frmQuery<T>();
+        //frm.QueryConditions = QueryConditions;
+        //frm.LoadQueryConditionToUI(false);
+        //frm.OnSelectDataRow += UcAdv_OnSelectDataRow;
+        if (QueryConditionFilter.QueryFields.Count == 0)
+        {
+            QueryConditionBuilder();
+        }
+
+        //暂时认为基础数据都是这个基类出来的 否则可以根据菜单中的基类类型来判断生成
+        UCAdvFilterGeneric<T> ucBaseList = new UCAdvFilterGeneric<T>(); // Startup.GetFromFacByName<BaseUControl>(menuinfo.FormName);
+
+        ucBaseList.QueryConditionFilter = QueryConditionFilter;
+        ucBaseList.CurMenuInfo = CurMenuInfo;
+        ucBaseList.KeyValueTypeForDgv = typeof(T);
+        ucBaseList.Runway = BaseListRunWay.选中模式;
+        //从这里调用 就是来自于关联窗体，下面这个公共基类用于这个情况。暂时在那个里面来控制.Runway = BaseListRunWay.窗体;
+        frmBaseEditList frm = new frmBaseEditList();
+        frm.StartPosition = FormStartPosition.CenterScreen;
+        ucBaseList.Dock = DockStyle.Fill;
+        ucBaseList.Tag = frm;
+        frm.kryptonPanel1.Controls.Add(ucBaseList);
+        ucBaseList.OnSelectDataRow += UcBaseList_OnSelectDataRow;
+        // 使用EntityMappingHelper代替BizTypeMapper
+        var BizTypeText = EntityMappingHelper.GetBizType(typeof(T).Name).ToString();
+        frm.Text = "关联查询" + "-" + BizTypeText;
+        frm.Show();
+
+    }
+
+
+
+    private void UcBaseList_OnSelectDataRow(object entity)
+    {
+        if (entity == null)
+        {
+            return;
+        }
+        if (OnBindDataToUIEvent != null)
+        {
+            bindingSourceSub.Clear();
+            OnBindDataToUIEvent(entity as T, ActionStatus.加载);
+
+            // 在同步方法中使用Task.Run包装异步操作
+            _ = Task.Run(async () => await ToolBarEnabledControl(entity));
+
+            ToolBarEnabledControl(MenuItemEnums.查询);
+            //thisform
+        }
+        //使用了导航查询 entity包括了明细
+        //details = (entity as tb_Stocktake).tb_StocktakeDetails;
+        //LoadDataToGrid(details);
+    }
+
+
+
+    protected async override void Refreshs()
+    {
+        if (editEntity == null)
+        {
+            MainForm.Instance.PrintInfoLog("当前数据不存在，无法刷新。");
+            return;
+        }
+
+        //MainForm.Instance.PrintInfoLog(evaluator.CurrentStatus.ToString());
+
+        if (true)//CanRefresh()
+        {
+            using (StatusBusy busy = new StatusBusy("刷新中..."))
+            {
+                //这里应该是重新加载单据内容 而不是查询
+                //但是，查询才是对的，因为数据会修改变化缓存。
+                if (!Edited)
                 {
-                    return;
+                    if (OnBindDataToUIEvent != null)
+                    {
+                        BaseEntity pkentity = (editEntity as T) as BaseEntity;
+                        if (pkentity.PrimaryKeyID > 0)
+                        {
+                            BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
+                            editEntity = await ctr.BaseQueryByIdNavAsync(pkentity.PrimaryKeyID) as T;
+                        }
+                        else
+                        {
+                            MessageBox.Show("数据不存在。系统自动转换为新增模式。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                            toolStripButtonRefresh.Enabled = false;
+                            editEntity = Activator.CreateInstance<T>();
+                        }
+                        bindingSourceSub.Clear();
+                        OnBindDataToUIEvent(EditEntity, ActionStatus.加载);
+
+                        //if (pkentity.PrimaryKeyID > 0)
+                        //{
+                        //    //可以修改
+                        //    if (pkentity.ContainsProperty(typeof(DataStatus).Name))
+                        //    {
+                        //        if (pkentity.GetPropertyValue(typeof(DataStatus).Name).ToString() == ((int)DataStatus.草稿).ToString() ||
+                        //               pkentity.GetPropertyValue(typeof(DataStatus).Name).ToString() == ((int)DataStatus.新建).ToString())
+                        //        {
+                        //            toolStripbtnModify.Enabled = true;
+                        //            toolStripbtnSubmit.Enabled = true;
+                        //            toolStripbtnReview.Enabled = true;
+                        //        }
+                        //    }
+                        //}
+
+                        await ToolBarEnabledControl(pkentity);
+                    }
+                    else
+                    {
+                        //
+                        MessageBox.Show("请实现数据绑定的事件。用于显示数据详情。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
                 }
-            }
-
-            // 如果没有条件列表 直接查全部。
-            // CommonUI.frmQuery<T> frm = new CommonUI.frmQuery<T>();
-            //frm.QueryConditions = QueryConditions;
-            //frm.LoadQueryConditionToUI(false);
-            //frm.OnSelectDataRow += UcAdv_OnSelectDataRow;
-            if (QueryConditionFilter.QueryFields.Count == 0)
-            {
-                QueryConditionBuilder();
-            }
-
-            //暂时认为基础数据都是这个基类出来的 否则可以根据菜单中的基类类型来判断生成
-            UCAdvFilterGeneric<T> ucBaseList = new UCAdvFilterGeneric<T>(); // Startup.GetFromFacByName<BaseUControl>(menuinfo.FormName);
-
-            ucBaseList.QueryConditionFilter = QueryConditionFilter;
-            ucBaseList.CurMenuInfo = CurMenuInfo;
-            ucBaseList.KeyValueTypeForDgv = typeof(T);
-            ucBaseList.Runway = BaseListRunWay.选中模式;
-            //从这里调用 就是来自于关联窗体，下面这个公共基类用于这个情况。暂时在那个里面来控制.Runway = BaseListRunWay.窗体;
-            frmBaseEditList frm = new frmBaseEditList();
-            frm.StartPosition = FormStartPosition.CenterScreen;
-            ucBaseList.Dock = DockStyle.Fill;
-            ucBaseList.Tag = frm;
-            frm.kryptonPanel1.Controls.Add(ucBaseList);
-            ucBaseList.OnSelectDataRow += UcBaseList_OnSelectDataRow;
-            // 使用EntityMappingHelper代替BizTypeMapper
-            var BizTypeText = EntityMappingHelper.GetBizType(typeof(T).Name).ToString();
-            frm.Text = "关联查询" + "-" + BizTypeText;
-            frm.Show();
-
-        }
-
-
-
-        private void UcBaseList_OnSelectDataRow(object entity)
-        {
-            if (entity == null)
-            {
-                return;
-            }
-            if (OnBindDataToUIEvent != null)
-            {
-                bindingSourceSub.Clear();
-                OnBindDataToUIEvent(entity as T, ActionStatus.加载);
-
-                // 在同步方法中使用Task.Run包装异步操作
-                _ = Task.Run(async () => await ToolBarEnabledControl(entity));
-
-                ToolBarEnabledControl(MenuItemEnums.查询);
-                //thisform
-            }
-            //使用了导航查询 entity包括了明细
-            //details = (entity as tb_Stocktake).tb_StocktakeDetails;
-            //LoadDataToGrid(details);
-        }
-
-
-
-        protected async override void Refreshs()
-        {
-            if (editEntity == null)
-            {
-                MainForm.Instance.PrintInfoLog("当前数据不存在，无法刷新。");
-                return;
-            }
-
-            //MainForm.Instance.PrintInfoLog(evaluator.CurrentStatus.ToString());
-
-            if (true)//CanRefresh()
-            {
-                using (StatusBusy busy = new StatusBusy("刷新中..."))
+                else
                 {
-                    //这里应该是重新加载单据内容 而不是查询
-                    //但是，查询才是对的，因为数据会修改变化缓存。
-                    if (!Edited)
+                    if (MessageBox.Show(this, "有数据没有保存\r\n你确定要重新加载吗", "询问", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2) == DialogResult.Yes)
                     {
                         if (OnBindDataToUIEvent != null)
                         {
                             BaseEntity pkentity = (editEntity as T) as BaseEntity;
-                            if (pkentity.PrimaryKeyID > 0)
+                            BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
+                            editEntity = await ctr.BaseQueryByIdNavAsync(pkentity.PrimaryKeyID) as T;
+                            bindingSourceSub.Clear();
+                            if (editEntity == null)
                             {
-                                BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
-                                editEntity = await ctr.BaseQueryByIdNavAsync(pkentity.PrimaryKeyID) as T;
-                            }
-                            else
-                            {
-                                MessageBox.Show("数据不存在。系统自动转换为新增模式。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                                toolStripButtonRefresh.Enabled = false;
                                 editEntity = Activator.CreateInstance<T>();
                             }
-                            bindingSourceSub.Clear();
                             OnBindDataToUIEvent(EditEntity, ActionStatus.加载);
-
                             //if (pkentity.PrimaryKeyID > 0)
                             //{
                             //    //可以修改
@@ -6490,353 +6492,290 @@ namespace RUINORERP.UI.BaseForm
                             //        }
                             //    }
                             //}
-
+                            //刷新了。不再提示编辑状态了
+                            Edited = false;
                             await ToolBarEnabledControl(pkentity);
-                        }
-                        else
-                        {
-                            //
-                            MessageBox.Show("请实现数据绑定的事件。用于显示数据详情。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        }
-                    }
-                    else
-                    {
-                        if (MessageBox.Show(this, "有数据没有保存\r\n你确定要重新加载吗", "询问", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2) == DialogResult.Yes)
-                        {
-                            if (OnBindDataToUIEvent != null)
-                            {
-                                BaseEntity pkentity = (editEntity as T) as BaseEntity;
-                                BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
-                                editEntity = await ctr.BaseQueryByIdNavAsync(pkentity.PrimaryKeyID) as T;
-                                bindingSourceSub.Clear();
-                                if (editEntity == null)
-                                {
-                                    editEntity = Activator.CreateInstance<T>();
-                                }
-                                OnBindDataToUIEvent(EditEntity, ActionStatus.加载);
-                                //if (pkentity.PrimaryKeyID > 0)
-                                //{
-                                //    //可以修改
-                                //    if (pkentity.ContainsProperty(typeof(DataStatus).Name))
-                                //    {
-                                //        if (pkentity.GetPropertyValue(typeof(DataStatus).Name).ToString() == ((int)DataStatus.草稿).ToString() ||
-                                //               pkentity.GetPropertyValue(typeof(DataStatus).Name).ToString() == ((int)DataStatus.新建).ToString())
-                                //        {
-                                //            toolStripbtnModify.Enabled = true;
-                                //            toolStripbtnSubmit.Enabled = true;
-                                //            toolStripbtnReview.Enabled = true;
-                                //        }
-                                //    }
-                                //}
-                                //刷新了。不再提示编辑状态了
-                                Edited = false;
-                                await ToolBarEnabledControl(pkentity);
-                            }
                         }
                     }
                 }
             }
         }
+    }
 
-        protected override void Exit(object thisform)
+    protected override void Exit(object thisform)
+    {
+        try
         {
-            try
-            {
-                // 单据都会有 录入表格 SourceGridHelper 在 Grid_HandleDestroyed 中执行了。这样就不管关闭还是x
-                //后面还会有一个CloseTheForm 的方法 才是最后的关闭方法
-            }
-            catch
-            {
+            // 单据都会有 录入表格 SourceGridHelper 在 Grid_HandleDestroyed 中执行了。这样就不管关闭还是x
+            //后面还会有一个CloseTheForm 的方法 才是最后的关闭方法
+        }
+        catch
+        {
 
-            }
-
-            base.Exit(this);
         }
 
-        /// <summary>
-        /// 使用新的锁定模型请求解锁单据
-        /// 向锁定当前单据的用户发送解锁请求，并处理响应
-        /// </summary>
-        public override void RequestUnLock()
+        base.Exit(this);
+    }
+
+    /// <summary>
+    /// 使用新的锁定模型请求解锁单据
+    /// 向锁定当前单据的用户发送解锁请求，并处理响应
+    /// </summary>
+    public override void RequestUnLock()
+    {
+        if (EditEntity == null)
         {
-            if (EditEntity == null)
-            {
-                MainForm.Instance.uclog.AddLog("编辑实体为空，无法发送解锁请求", UILogType.警告);
-                return;
-            }
-
-            string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
-            long billId = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
-            if (billId <= 0)
-            {
-                MainForm.Instance.uclog.AddLog("单据ID无效，无法发送解锁请求", UILogType.警告);
-                return;
-            }
-
-            if (_integratedLockService != null)
-            {
-                // 异步发送解锁请求
-                Task.Run(async () =>
-                {
-                    try
-                    {
-                        // 先检查锁定状态，确保单据仍然被锁定
-                        var lockStatus = await _integratedLockService.CheckLockStatusAsync(billId, CurMenuInfo.MenuID);
-                        if (lockStatus == null || !lockStatus.IsSuccess || !lockStatus.LockInfo.IsLocked)
-                        {
-                            logger?.LogWarning($"单据 {billId} 未被锁定，无需发送解锁请求");
-                            this.Invoke((MethodInvoker)(() =>
-                            {
-                                MessageBox.Show("单据未被锁定或锁定状态已变更，无需发送解锁请求", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                            }));
-                            return;
-                        }
-
-                        // 显示确认对话框
-                        bool confirmed = false;
-                        this.Invoke((MethodInvoker)(() =>
-                        {
-                            string message = $"该单据当前被用户 {lockStatus.LockInfo.LockedUserName} 锁定\n" +
-                                           $"锁定时间：{lockStatus.LockInfo.LockTime:yyyy-MM-dd HH:mm:ss}\n" +
-                                           "是否向其发送解锁请求？";
-                            DialogResult result = MessageBox.Show(message, "请求解锁", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-                            confirmed = result == DialogResult.Yes;
-                        }));
-
-                        if (!confirmed)
-                            return;
-
-                        // 发送解锁请求
-                        var result = await _integratedLockService.RequestUnlockAsync(billId, CurMenuInfo.MenuID);
-
-                        // 记录请求日志
-                        MainForm.Instance.uclog.AddLog($"已向锁定用户 {lockStatus.LockInfo.LockedUserName} 发送单据 {billId} 的解锁请求", UILogType.普通消息);
-
-                        // 在UI线程上显示友好提示
-                        this.Invoke((MethodInvoker)(() =>
-                        {
-                            // 移除对IsLockUserOnline属性的依赖
-                            // 简化消息提示，不区分用户在线状态
-                            MessageBox.Show($"解锁请求已成功发送给用户 {lockStatus.LockInfo.LockedUserName}，系统将在用户响应后通知您",
-                                "请求已发送", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        }));
-                    }
-                    catch (Exception ex)
-                    {
-                        logger?.LogError(ex, $"发送单据 {billId} 解锁请求失败");
-                        MainForm.Instance.uclog.AddLog($"发送解锁请求失败: {ex.Message}", UILogType.错误);
-
-                        // 在UI线程上显示错误提示
-                        this.Invoke((MethodInvoker)(() =>
-                        {
-                            MessageBox.Show($"发送解锁请求失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        }));
-                    }
-                });
-            }
-            else
-            {
-                logger?.LogError("集成锁定服务未初始化，无法发送解锁请求");
-                MainForm.Instance.uclog.AddLog("集成锁定服务未初始化，无法发送解锁请求", UILogType.错误);
-
-                // 在UI线程上显示错误提示
-                this.Invoke((MethodInvoker)(() =>
-                {
-                    MessageBox.Show("锁定服务未初始化，无法发送解锁请求", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }));
-            }
+            MainForm.Instance.uclog.AddLog("编辑实体为空，无法发送解锁请求", UILogType.警告);
+            return;
         }
 
-
-
-        /// <summary>
-        /// 当前单据解锁相关的单据
-        /// </summary>
-        /// <param name="billId">单据ID</param>
-        public void UNLock(long billId)
+        string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
+        long billId = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
+        if (billId <= 0)
         {
-            if (_integratedLockService == null || billId <= 0)
-                return;
+            MainForm.Instance.uclog.AddLog("单据ID无效，无法发送解锁请求", UILogType.警告);
+            return;
+        }
 
-            // 异步解锁，不阻塞UI线程
+        if (_integratedLockService != null)
+        {
+            // 异步发送解锁请求
             Task.Run(async () =>
             {
                 try
                 {
-                    // 执行解锁操作
-                    var lockResponse = await _integratedLockService.UnlockBillAsync(billId);
-
-                    // 更新UI状态 - 解锁后显示为未锁定状态
-                    UpdateLockUI(false);
-
-                    // 简化的错误记录
-                    if (lockResponse == null || !lockResponse.IsSuccess)
+                    // 先检查锁定状态，确保单据仍然被锁定
+                    var lockStatus = await _integratedLockService.CheckLockStatusAsync(billId, CurMenuInfo.MenuID);
+                    if (lockStatus == null || !lockStatus.IsSuccess || !lockStatus.LockInfo.IsLocked)
                     {
-                        MainForm.Instance.logger.LogError($"单据【{billId}】解锁失败");
+                        logger?.LogWarning($"单据 {billId} 未被锁定，无需发送解锁请求");
+                        this.Invoke((MethodInvoker)(() =>
+                        {
+                            MessageBox.Show("单据未被锁定或锁定状态已变更，无需发送解锁请求", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        }));
+                        return;
                     }
+
+                    // 显示确认对话框
+                    bool confirmed = false;
+                    this.Invoke((MethodInvoker)(() =>
+                    {
+                        string message = $"该单据当前被用户 {lockStatus.LockInfo.LockedUserName} 锁定\n" +
+                                       $"锁定时间：{lockStatus.LockInfo.LockTime:yyyy-MM-dd HH:mm:ss}\n" +
+                                       "是否向其发送解锁请求？";
+                        DialogResult result = MessageBox.Show(message, "请求解锁", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                        confirmed = result == DialogResult.Yes;
+                    }));
+
+                    if (!confirmed)
+                        return;
+
+                    // 发送解锁请求
+                    var result = await _integratedLockService.RequestUnlockAsync(billId, CurMenuInfo.MenuID);
+
+                    // 记录请求日志
+                    MainForm.Instance.uclog.AddLog($"已向锁定用户 {lockStatus.LockInfo.LockedUserName} 发送单据 {billId} 的解锁请求", UILogType.普通消息);
+
+                    // 在UI线程上显示友好提示
+                    this.Invoke((MethodInvoker)(() =>
+                    {
+                        // 移除对IsLockUserOnline属性的依赖
+                        // 简化消息提示，不区分用户在线状态
+                        MessageBox.Show($"解锁请求已成功发送给用户 {lockStatus.LockInfo.LockedUserName}，系统将在用户响应后通知您",
+                            "请求已发送", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }));
                 }
                 catch (Exception ex)
                 {
-                    MainForm.Instance.logger.LogError(ex, "解锁单据时发生异常");
+                    logger?.LogError(ex, $"发送单据 {billId} 解锁请求失败");
+                    MainForm.Instance.uclog.AddLog($"发送解锁请求失败: {ex.Message}", UILogType.错误);
+
+                    // 在UI线程上显示错误提示
+                    this.Invoke((MethodInvoker)(() =>
+                    {
+                        MessageBox.Show($"发送解锁请求失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }));
                 }
             });
         }
-
-        /// <summary>
-        /// 重新加载前要清空前面的锁
-        /// </summary>
-        /// <param name="userid"></param>
-        /// <returns></returns>
-        public async Task<bool> UNLockByBizName(long userid)
+        else
         {
-            CommBillData cbd = new CommBillData();
-            cbd = EntityMappingHelper.GetBillData(typeof(T), EditEntity);
+            logger?.LogError("集成锁定服务未初始化，无法发送解锁请求");
+            MainForm.Instance.uclog.AddLog("集成锁定服务未初始化，无法发送解锁请求", UILogType.错误);
 
-            LockRequest lockRequest = new LockRequest();
-            lockRequest.RequesterUserId = userid;
-            lockRequest.RequesterUserName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name;
-            lockRequest.LockInfo = new LockInfo();
-            lockRequest.UnlockType = UnlockType.ByBizName;
-            lockRequest.LockInfo.MenuID = CurMenuInfo.MenuID;
-            // 执行解锁操作
-            var lockResponse = await _integratedLockService.UnlockBillAsync(lockRequest);
-            if (lockResponse != null && lockResponse.IsSuccess)
+            // 在UI线程上显示错误提示
+            this.Invoke((MethodInvoker)(() =>
             {
-                string successMsg = $"单据【{cbd.BizName}】批量解锁成功";
-                MainForm.Instance.uclog.AddLog(successMsg, UILogType.普通消息);
-                // 在调试模式下记录成功日志
-                if (AuthorizeController.GetShowDebugInfoAuthorization(MainForm.Instance.AppContext))
-                {
-                    logger?.LogDebug(successMsg);
-                }
+                MessageBox.Show("锁定服务未初始化，无法发送解锁请求", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }));
+        }
+    }
 
-                // 更新UI状态
+
+
+    /// <summary>
+    /// 当前单据解锁相关的单据
+    /// </summary>
+    /// <param name="billId">单据ID</param>
+    public void UNLock(long billId)
+    {
+        if (_integratedLockService == null || billId <= 0)
+            return;
+
+        // 异步解锁，不阻塞UI线程
+        Task.Run(async () =>
+        {
+            try
+            {
+                // 执行解锁操作
+                var lockResponse = await _integratedLockService.UnlockBillAsync(billId);
+
+                // 更新UI状态 - 解锁后显示为未锁定状态
                 UpdateLockUI(false);
-            }
-            else
-            {
-                string errorMsg = lockResponse?.Message ?? "解锁失败";
-                logger?.LogError($"【{cbd.BizName}】批量解锁失败：{errorMsg}");
-                MainForm.Instance.uclog.AddLog($"【{cbd.BizName}】批量解锁失败：{errorMsg}", UILogType.错误);
-            }
-            return true;
-        }
 
-
-
-        public override void UNLock()
-        {
-            // 停止锁定刷新任务
-            StopLockRefreshTask();
-
-            if (EditEntity == null)
-                return;
-            string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
-            long billId = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
-            if (billId <= 0)
-                return;
-            UNLock(billId);
-        }
-
-
-        internal override void CloseTheForm(object thisform)
-        {
-
-            base.CloseTheForm(thisform);
-            try
-            {
-                // 单据都会有 录入表格 SourceGridHelper 在 Grid_HandleDestroyed 中执行了。这样就不管关闭还是x
-
-                #region  关闭时解锁
-                try
+                // 简化的错误记录
+                if (lockResponse == null || !lockResponse.IsSuccess)
                 {
-                    // 停止锁定刷新任务
-                    StopLockRefreshTask();
-
-                    // 异步释放锁定，不阻塞UI线程
-                    if (EditEntity != null && _currentBillId > 0 && _currentMenuId > 0 && _integratedLockService != null)
-                    {
-                        _ = Task.Run(async () =>
-                        {
-                            try
-                            {
-                                // 检查是否为当前用户的锁定，只释放自己的锁定
-                                var lockStatus = await _integratedLockService.CheckLockStatusAsync(_currentBillId, _currentMenuId);
-                                if (lockStatus?.LockInfo?.IsLocked == true)
-                                {
-                                    long currentUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
-                                    if (lockStatus.LockInfo.LockedUserId == currentUserId)
-                                    {
-                                        await _integratedLockService.UnlockBillAsync(_currentBillId);
-                                    }
-                                }
-                            }
-                            catch (Exception ex)
-                            {
-                                MainForm.Instance.logger.LogError(ex, $"表单关闭时释放锁定失败：单据ID={_currentBillId}");
-                            }
-                        });
-                    }
+                    MainForm.Instance.logger.LogError($"单据【{billId}】解锁失败");
                 }
-                catch (Exception ex)
-                {
-                    MainForm.Instance.logger.LogError(ex, "表单关闭事件处理异常");
-                }
-
-
-                #endregion
-            }
-            catch
-            {
-
-            }
-        }
-
-        #region 打印相关
-        #region 为了性能 打印认为打印时 检测过的打印机相关配置在一个窗体下成功后。即可不每次检测
-        private tb_PrintConfig printConfig = null;
-        public tb_PrintConfig PrintConfig
-        {
-            get
-            {
-                return printConfig;
-            }
-            set
-            {
-                printConfig = value;
-
-            }
-        }
-
-        #endregion
-        public async Task PrintDesigned()
-        {
-            try
-            {
-                if (EditEntity == null)
-                {
-                    MessageBox.Show("请提供正确的打印数据！");
-                    return;
-                }
-                List<T> list = new List<T>();
-                list.Add(EditEntity);
-                if (PrintConfig == null || PrintConfig.tb_PrintTemplates == null)
-                {
-                    PrintConfig = PrintHelper<T>.GetPrintConfig(list);
-                }
-                bool rs = await PrintHelper<T>.Print(list, RptMode.DESIGN, PrintConfig);
             }
             catch (Exception ex)
             {
-                MainForm.Instance.logger.Error(ex);
-
+                MainForm.Instance.logger.LogError(ex, "解锁单据时发生异常");
             }
-        }
+        });
+    }
 
-        /// <summary>
-        /// 单个单据打印
-        /// </summary>
-        public async Task Print()
+    /// <summary>
+    /// 重新加载前要清空前面的锁
+    /// </summary>
+    /// <param name="userid"></param>
+    /// <returns></returns>
+    public async Task<bool> UNLockByBizName(long userid)
+    {
+        CommBillData cbd = new CommBillData();
+        cbd = EntityMappingHelper.GetBillData(typeof(T), EditEntity);
+
+        LockRequest lockRequest = new LockRequest();
+        lockRequest.RequesterUserId = userid;
+        lockRequest.RequesterUserName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name;
+        lockRequest.LockInfo = new LockInfo();
+        lockRequest.UnlockType = UnlockType.ByBizName;
+        lockRequest.LockInfo.MenuID = CurMenuInfo.MenuID;
+        // 执行解锁操作
+        var lockResponse = await _integratedLockService.UnlockBillAsync(lockRequest);
+        if (lockResponse != null && lockResponse.IsSuccess)
+        {
+            string successMsg = $"单据【{cbd.BizName}】批量解锁成功";
+            MainForm.Instance.uclog.AddLog(successMsg, UILogType.普通消息);
+            // 在调试模式下记录成功日志
+            if (AuthorizeController.GetShowDebugInfoAuthorization(MainForm.Instance.AppContext))
+            {
+                logger?.LogDebug(successMsg);
+            }
+
+            // 更新UI状态
+            UpdateLockUI(false);
+        }
+        else
+        {
+            string errorMsg = lockResponse?.Message ?? "解锁失败";
+            logger?.LogError($"【{cbd.BizName}】批量解锁失败：{errorMsg}");
+            MainForm.Instance.uclog.AddLog($"【{cbd.BizName}】批量解锁失败：{errorMsg}", UILogType.错误);
+        }
+        return true;
+    }
+
+
+
+    public override void UNLock()
+    {
+        // 停止锁定刷新任务
+        StopLockRefreshTask();
+
+        if (EditEntity == null)
+            return;
+        string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
+        long billId = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
+        if (billId <= 0)
+            return;
+        UNLock(billId);
+    }
+
+
+    internal override void CloseTheForm(object thisform)
+    {
+
+        base.CloseTheForm(thisform);
+        try
+        {
+            // 单据都会有 录入表格 SourceGridHelper 在 Grid_HandleDestroyed 中执行了。这样就不管关闭还是x
+
+            #region  关闭时解锁
+            try
+            {
+                // 停止锁定刷新任务
+                StopLockRefreshTask();
+
+                // 异步释放锁定，不阻塞UI线程
+                if (EditEntity != null && _currentBillId > 0 && _currentMenuId > 0 && _integratedLockService != null)
+                {
+                    _ = Task.Run(async () =>
+                    {
+                        try
+                        {
+                            // 检查是否为当前用户的锁定，只释放自己的锁定
+                            var lockStatus = await _integratedLockService.CheckLockStatusAsync(_currentBillId, _currentMenuId);
+                            if (lockStatus?.LockInfo?.IsLocked == true)
+                            {
+                                long currentUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
+                                if (lockStatus.LockInfo.LockedUserId == currentUserId)
+                                {
+                                    await _integratedLockService.UnlockBillAsync(_currentBillId);
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            MainForm.Instance.logger.LogError(ex, $"表单关闭时释放锁定失败：单据ID={_currentBillId}");
+                        }
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger.LogError(ex, "表单关闭事件处理异常");
+            }
+
+
+            #endregion
+        }
+        catch
+        {
+
+        }
+    }
+
+    #region 打印相关
+    #region 为了性能 打印认为打印时 检测过的打印机相关配置在一个窗体下成功后。即可不每次检测
+    private tb_PrintConfig printConfig = null;
+    public tb_PrintConfig PrintConfig
+    {
+        get
+        {
+            return printConfig;
+        }
+        set
+        {
+            printConfig = value;
+
+        }
+    }
+
+    #endregion
+    public async Task PrintDesigned()
+    {
+        try
         {
             if (EditEntity == null)
             {
@@ -6845,435 +6784,460 @@ namespace RUINORERP.UI.BaseForm
             }
             List<T> list = new List<T>();
             list.Add(EditEntity);
-            foreach (var item in list)
-            {
-                if (item == null)
-                {
-                    continue;
-                }
-                if (item.ContainsProperty("DataStatus"))
-                {
-                    if (item.GetPropertyValue("DataStatus").ToString() == ((int)DataStatus.草稿).ToString().ToString())
-                    {
-                        MessageBox.Show("没有提交的数据不能打印！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        return;
-                    }
-
-                    if (item.GetPropertyValue("DataStatus").ToString() == ((int)DataStatus.新建).ToString())
-                    {
-                        if (MessageBox.Show("没有审核的数据无法打印,你确定要打印吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2) == DialogResult.No)
-                        {
-                            return;
-                        }
-                    }
-                }
-                //打印次数提醒
-                if (item.ContainsProperty("PrintStatus"))
-                {
-                    BizType bizType = EntityMappingHelper.GetBizType(typeof(T).Name);
-                    int printCounter = item.GetPropertyValue("PrintStatus").ToString().ToInt();
-                    if (printCounter > 0)
-                    {
-                        if (MessageBox.Show($"当前【{bizType.ToString()}】已经打印过【{printCounter}】次,你确定要重新打印吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2) == DialogResult.No)
-                        {
-                            return;
-                        }
-                    }
-                }
-            }
             if (PrintConfig == null || PrintConfig.tb_PrintTemplates == null)
             {
                 PrintConfig = PrintHelper<T>.GetPrintConfig(list);
             }
-            bool rs = await PrintHelper<T>.Print(list, RptMode.PRINT, PrintConfig);
-            if (rs)
-            {
-                MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("打印", EditEntity);
-            }
+            bool rs = await PrintHelper<T>.Print(list, RptMode.DESIGN, PrintConfig);
+        }
+        catch (Exception ex)
+        {
+            MainForm.Instance.logger.Error(ex);
 
         }
+    }
 
-        public async Task Preview()
+    /// <summary>
+    /// 单个单据打印
+    /// </summary>
+    public async Task Print()
+    {
+        if (EditEntity == null)
         {
-            bool rs = false;
-            try
+            MessageBox.Show("请提供正确的打印数据！");
+            return;
+        }
+        List<T> list = new List<T>();
+        list.Add(EditEntity);
+        foreach (var item in list)
+        {
+            if (item == null)
             {
-                if (EditEntity == null)
+                continue;
+            }
+            if (item.ContainsProperty("DataStatus"))
+            {
+                if (item.GetPropertyValue("DataStatus").ToString() == ((int)DataStatus.草稿).ToString().ToString())
                 {
-                    MessageBox.Show("请提供正确的打印预览数据！");
+                    MessageBox.Show("没有提交的数据不能打印！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
-                List<T> list = new List<T>();
-                list.Add(EditEntity);
-                if (PrintConfig == null || PrintConfig.tb_PrintTemplates == null)
+
+                if (item.GetPropertyValue("DataStatus").ToString() == ((int)DataStatus.新建).ToString())
                 {
-                    PrintConfig = PrintHelper<T>.GetPrintConfig(list);
-                }
-                rs = await PrintHelper<T>.Print(list, RptMode.PREVIEW, PrintConfig);
-            }
-
-            catch (Exception ex)
-            {
-                MainForm.Instance.logger.Error("打印配置加载异常", ex);
-            }
-        }
-
-        #endregion
-
-
-
-        private async void BaseBillEditGeneric_Load(object sender, EventArgs e)
-        {
-            timerAutoSave.Start();
-            if (System.ComponentModel.LicenseManager.UsageMode != System.ComponentModel.LicenseUsageMode.Designtime)
-            {
-                if (!this.DesignMode)
-                {
-                    QueryConditionBuilder();
-                    #region 请求缓存
-                    //通过表名获取需要缓存的关系表再判断是否存在。没有就从服务器请求。这种是全新的请求。后面还要设计更新式请求。
-                    await UIBizService.RequestCache<T>();
-                    await UIBizService.RequestCache<C>();
-                    //去检测产品视图的缓存并且转换为强类型
-                    await UIBizService.RequestCache(typeof(View_ProdDetail));
-
-
-                    #region 产品公共显示数据
-                    var cacheManager = Startup.GetFromFac<IEntityCacheManager>();
-                    var cachelist = cacheManager.GetEntityList<View_ProdDetail>();
-                    if (cachelist != null)
+                    if (MessageBox.Show("没有审核的数据无法打印,你确定要打印吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2) == DialogResult.No)
                     {
-                        MainForm.Instance.View_ProdDetailList = cachelist;
-                    }
-
-                    #endregion
-
-                    #endregion
-                }
-            }
-        }
-
-        private async void timerAutoSave_Tick(object sender, EventArgs e)
-        {
-            if (System.ComponentModel.LicenseManager.UsageMode != System.ComponentModel.LicenseUsageMode.Designtime)
-            {
-                if (!this.DesignMode)
-                {
-                    //自动保存的时间秒数  30秒
-                    if (MainForm.Instance.AppContext.CurrentUser.静止时间 > 30 && MainForm.Instance.AppContext.IsOnline)
-                    {
-                        bool result = await AutoSaveDataAsync();
-                        if (!result)
-                        {
-                            //如果保存失败，则停止自动保存？
-                            timerAutoSave.Stop();
-                        }
+                        return;
                     }
                 }
             }
-
+            //打印次数提醒
+            if (item.ContainsProperty("PrintStatus"))
+            {
+                BizType bizType = EntityMappingHelper.GetBizType(typeof(T).Name);
+                int printCounter = item.GetPropertyValue("PrintStatus").ToString().ToInt();
+                if (printCounter > 0)
+                {
+                    if (MessageBox.Show($"当前【{bizType.ToString()}】已经打印过【{printCounter}】次,你确定要重新打印吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2) == DialogResult.No)
+                    {
+                        return;
+                    }
+                }
+            }
+        }
+        if (PrintConfig == null || PrintConfig.tb_PrintTemplates == null)
+        {
+            PrintConfig = PrintHelper<T>.GetPrintConfig(list);
+        }
+        bool rs = await PrintHelper<T>.Print(list, RptMode.PRINT, PrintConfig);
+        if (rs)
+        {
+            MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("打印", EditEntity);
         }
 
-        private async Task<bool> AutoSaveDataAsync()
+    }
+
+    public async Task Preview()
+    {
+        bool rs = false;
+        try
         {
-            bool result = false;
+            if (EditEntity == null)
+            {
+                MessageBox.Show("请提供正确的打印预览数据！");
+                return;
+            }
+            List<T> list = new List<T>();
+            list.Add(EditEntity);
+            if (PrintConfig == null || PrintConfig.tb_PrintTemplates == null)
+            {
+                PrintConfig = PrintHelper<T>.GetPrintConfig(list);
+            }
+            rs = await PrintHelper<T>.Print(list, RptMode.PREVIEW, PrintConfig);
+        }
+
+        catch (Exception ex)
+        {
+            MainForm.Instance.logger.Error("打印配置加载异常", ex);
+        }
+    }
+
+    #endregion
+
+
+
+    private async void BaseBillEditGeneric_Load(object sender, EventArgs e)
+    {
+        timerAutoSave.Start();
+        if (System.ComponentModel.LicenseManager.UsageMode != System.ComponentModel.LicenseUsageMode.Designtime)
+        {
+            if (!this.DesignMode)
+            {
+                QueryConditionBuilder();
+                #region 请求缓存
+                //通过表名获取需要缓存的关系表再判断是否存在。没有就从服务器请求。这种是全新的请求。后面还要设计更新式请求。
+                await UIBizService.RequestCache<T>();
+                await UIBizService.RequestCache<C>();
+                //去检测产品视图的缓存并且转换为强类型
+                await UIBizService.RequestCache(typeof(View_ProdDetail));
+
+
+                #region 产品公共显示数据
+                var cacheManager = Startup.GetFromFac<IEntityCacheManager>();
+                var cachelist = cacheManager.GetEntityList<View_ProdDetail>();
+                if (cachelist != null)
+                {
+                    MainForm.Instance.View_ProdDetailList = cachelist;
+                }
+
+                #endregion
+
+                #endregion
+            }
+        }
+    }
+
+    private async void timerAutoSave_Tick(object sender, EventArgs e)
+    {
+        if (System.ComponentModel.LicenseManager.UsageMode != System.ComponentModel.LicenseUsageMode.Designtime)
+        {
+            if (!this.DesignMode)
+            {
+                //自动保存的时间秒数  30秒
+                if (MainForm.Instance.AppContext.CurrentUser.静止时间 > 30 && MainForm.Instance.AppContext.IsOnline)
+                {
+                    bool result = await AutoSaveDataAsync();
+                    if (!result)
+                    {
+                        //如果保存失败，则停止自动保存？
+                        timerAutoSave.Stop();
+                    }
+                }
+            }
+        }
+
+    }
+
+    private async Task<bool> AutoSaveDataAsync()
+    {
+        bool result = false;
+        try
+        {
+            if (EditEntity != null)
+            {
+                #region 自动保存单据数据  后面优化可以多个单?限制5个？Cache
+                await Save(false);
+                string PathwithFileName = System.IO.Path.Combine(Application.StartupPath + "\\FormProperty\\Data", CurMenuInfo.CaptionCN + ".cache");
+                System.IO.FileInfo fi = new System.IO.FileInfo(PathwithFileName);
+                //判断目录是否存在
+                if (!System.IO.Directory.Exists(fi.Directory.FullName))
+                {
+                    System.IO.Directory.CreateDirectory(fi.Directory.FullName);
+                }
+                string json = JsonConvert.SerializeObject(EditEntity,
+                    new JsonSerializerSettings
+                    {
+                        ReferenceLoopHandling = ReferenceLoopHandling.Ignore // 或 ReferenceLoopHandling.Serialize
+                    });
+
+                File.WriteAllText(PathwithFileName, json);
+                MainForm.Instance.uclog.AddLog("缓存数据保存成功。");
+                #endregion
+            }
+        }
+        catch (Exception ex)
+        {
+            MainForm.Instance.logger.LogError(ex, "缓存数据保存时出错");
+        }
+        return result;
+    }
+
+    #region 锁定刷新机制
+    /// <summary>
+    /// 启动锁定刷新任务，每15分钟刷新一次锁定状态，防止锁定超时被自动释放
+    /// </summary>
+    /// <param name="billId">单据ID</param>
+    /// <param name="menuId">菜单ID</param>
+    protected void StartLockRefreshTask(long billId, long menuId)
+    {
+        // 停止之前可能存在的刷新任务
+        StopLockRefreshTask();
+
+        _currentBillId = billId;
+        _currentMenuId = menuId;
+        _lockRefreshTokenSource = new CancellationTokenSource();
+
+        // 创建并启动刷新任务，确保token不为null
+        _lockRefreshTask = Task.Run(async () =>
+        {
             try
             {
-                if (EditEntity != null)
-                {
-                    #region 自动保存单据数据  后面优化可以多个单?限制5个？Cache
-                    await Save(false);
-                    string PathwithFileName = System.IO.Path.Combine(Application.StartupPath + "\\FormProperty\\Data", CurMenuInfo.CaptionCN + ".cache");
-                    System.IO.FileInfo fi = new System.IO.FileInfo(PathwithFileName);
-                    //判断目录是否存在
-                    if (!System.IO.Directory.Exists(fi.Directory.FullName))
-                    {
-                        System.IO.Directory.CreateDirectory(fi.Directory.FullName);
-                    }
-                    string json = JsonConvert.SerializeObject(EditEntity,
-                        new JsonSerializerSettings
-                        {
-                            ReferenceLoopHandling = ReferenceLoopHandling.Ignore // 或 ReferenceLoopHandling.Serialize
-                        });
+                // 检查_lockRefreshTokenSource是否为null
+                if (_lockRefreshTokenSource == null)
+                    return;
 
-                    File.WriteAllText(PathwithFileName, json);
-                    MainForm.Instance.uclog.AddLog("缓存数据保存成功。");
-                    #endregion
+                while (!_lockRefreshTokenSource.Token.IsCancellationRequested)
+                {
+                    // 等待15分钟（900秒）再刷新一次
+                    await Task.Delay(TimeSpan.FromMinutes(15), _lockRefreshTokenSource.Token);
+
+                    // 再次检查_lockRefreshTokenSource是否为null，防止在Delay期间被释放
+                    if (_lockRefreshTokenSource == null || _lockRefreshTokenSource.Token.IsCancellationRequested)
+                        break;
+
+                    // 执行锁定刷新
+                    // 调用锁定管理服务刷新锁定状态
+                    var result = await _integratedLockService.RefreshLockAsync(_currentBillId, _currentMenuId);
                 }
+            }
+            catch (TaskCanceledException)
+            {
+                // 任务被取消，正常退出
+                MainForm.Instance?.uclog?.AddLog($"单据【{billId}】锁定刷新任务已取消", UILogType.普通消息);
             }
             catch (Exception ex)
             {
-                MainForm.Instance.logger.LogError(ex, "缓存数据保存时出错");
+                MainForm.Instance?.uclog?.AddLog($"单据【{billId}】锁定刷新异常: {ex.Message}", UILogType.错误);
             }
-            return result;
-        }
+        }, _lockRefreshTokenSource != null ? _lockRefreshTokenSource.Token : CancellationToken.None);
 
-        #region 锁定刷新机制
-        /// <summary>
-        /// 启动锁定刷新任务，每15分钟刷新一次锁定状态，防止锁定超时被自动释放
-        /// </summary>
-        /// <param name="billId">单据ID</param>
-        /// <param name="menuId">菜单ID</param>
-        protected void StartLockRefreshTask(long billId, long menuId)
+        MainForm.Instance?.uclog?.AddLog($"单据【{billId}】锁定刷新任务已启动", UILogType.普通消息);
+    }
+
+    /// <summary>
+    /// 停止锁定刷新任务
+    /// </summary>
+    protected async Task StopLockRefreshTask()
+    {
+        if (_lockRefreshTokenSource != null)
         {
-            // 停止之前可能存在的刷新任务
-            StopLockRefreshTask();
-
-            _currentBillId = billId;
-            _currentMenuId = menuId;
-            _lockRefreshTokenSource = new CancellationTokenSource();
-
-            // 创建并启动刷新任务，确保token不为null
-            _lockRefreshTask = Task.Run(async () =>
+            try
             {
-                try
+                _lockRefreshTokenSource.Cancel();
+                _lockRefreshTokenSource.Dispose();
+
+                if (_lockRefreshTask != null && !_lockRefreshTask.IsCompleted)
                 {
-                    // 检查_lockRefreshTokenSource是否为null
-                    if (_lockRefreshTokenSource == null)
-                        return;
+                    await Task.WhenAny(_lockRefreshTask, Task.Delay(1000));// 等待任务完成，最多等待1秒
 
-                    while (!_lockRefreshTokenSource.Token.IsCancellationRequested)
-                    {
-                        // 等待15分钟（900秒）再刷新一次
-                        await Task.Delay(TimeSpan.FromMinutes(15), _lockRefreshTokenSource.Token);
-
-                        // 再次检查_lockRefreshTokenSource是否为null，防止在Delay期间被释放
-                        if (_lockRefreshTokenSource == null || _lockRefreshTokenSource.Token.IsCancellationRequested)
-                            break;
-
-                        // 执行锁定刷新
-                        // 调用锁定管理服务刷新锁定状态
-                        var result = await _integratedLockService.RefreshLockAsync(_currentBillId, _currentMenuId);
-                    }
                 }
-                catch (TaskCanceledException)
-                {
-                    // 任务被取消，正常退出
-                    MainForm.Instance?.uclog?.AddLog($"单据【{billId}】锁定刷新任务已取消", UILogType.普通消息);
-                }
-                catch (Exception ex)
-                {
-                    MainForm.Instance?.uclog?.AddLog($"单据【{billId}】锁定刷新异常: {ex.Message}", UILogType.错误);
-                }
-            }, _lockRefreshTokenSource != null ? _lockRefreshTokenSource.Token : CancellationToken.None);
 
-            MainForm.Instance?.uclog?.AddLog($"单据【{billId}】锁定刷新任务已启动", UILogType.普通消息);
-        }
-
-        /// <summary>
-        /// 停止锁定刷新任务
-        /// </summary>
-        protected async Task StopLockRefreshTask()
-        {
-            if (_lockRefreshTokenSource != null)
+                MainForm.Instance?.uclog?.AddLog($"单据【{_currentBillId}】锁定刷新任务已停止", UILogType.普通消息);
+            }
+            catch (Exception ex)
             {
-                try
-                {
-                    _lockRefreshTokenSource.Cancel();
-                    _lockRefreshTokenSource.Dispose();
-
-                    if (_lockRefreshTask != null && !_lockRefreshTask.IsCompleted)
-                    {
-                        await Task.WhenAny(_lockRefreshTask, Task.Delay(1000));// 等待任务完成，最多等待1秒
-
-                    }
-
-                    MainForm.Instance?.uclog?.AddLog($"单据【{_currentBillId}】锁定刷新任务已停止", UILogType.普通消息);
-                }
-                catch (Exception ex)
-                {
-                    MainForm.Instance?.uclog?.AddLog($"停止锁定刷新任务异常: {ex.Message}", UILogType.错误);
-                }
-                finally
-                {
-                    _lockRefreshTokenSource = null;
-                    _lockRefreshTask = null;
-                    _currentBillId = 0;
-                    _currentMenuId = 0;
-                }
+                MainForm.Instance?.uclog?.AddLog($"停止锁定刷新任务异常: {ex.Message}", UILogType.错误);
+            }
+            finally
+            {
+                _lockRefreshTokenSource = null;
+                _lockRefreshTask = null;
+                _currentBillId = 0;
+                _currentMenuId = 0;
             }
         }
+    }
 
 
-        /// <summary>
-        /// 处理收到的解锁请求
-        /// </summary>
-        /// <param name="requestUserId">请求解锁的用户ID</param>
-        /// <param name="requestUserName">请求解锁的用户名</param>
-        /// <param name="billId">单据ID</param>
-        /// <returns>异步任务</returns>
-        public async Task HandleUnlockRequestAsync(int requestUserId, string requestUserName, long billId)
+    /// <summary>
+    /// 处理收到的解锁请求
+    /// </summary>
+    /// <param name="requestUserId">请求解锁的用户ID</param>
+    /// <param name="requestUserName">请求解锁的用户名</param>
+    /// <param name="billId">单据ID</param>
+    /// <returns>异步任务</returns>
+    public async Task HandleUnlockRequestAsync(int requestUserId, string requestUserName, long billId)
+    {
+        if (billId != _currentBillId)
+            return;
+
+        // 显示解锁请求确认对话框
+        var result = MessageBox.Show(
+            $"用户 {requestUserName} 请求解锁当前单据【{billId}】。是否同意解锁？",
+            "解锁请求确认",
+            MessageBoxButtons.YesNo,
+            MessageBoxIcon.Question);
+
+        if (result == DialogResult.Yes)
         {
-            if (billId != _currentBillId)
-                return;
+            // 同意解锁
+            await AgreeUnlockAsync(requestUserId, requestUserName, billId);
+        }
+        else
+        {
+            // 拒绝解锁
+            await RefuseUnlockAsync(requestUserId, requestUserName, billId);
+        }
+    }
 
-            // 显示解锁请求确认对话框
-            var result = MessageBox.Show(
-                $"用户 {requestUserName} 请求解锁当前单据【{billId}】。是否同意解锁？",
-                "解锁请求确认",
-                MessageBoxButtons.YesNo,
-                MessageBoxIcon.Question);
+    /// <summary>
+    /// 同意解锁请求
+    /// </summary>
+    /// <param name="requestUserId">请求解锁的用户ID</param>
+    /// <param name="requestUserName">请求解锁的用户名</param>
+    /// <param name="billId">单据ID</param>
+    /// <returns>异步任务</returns>
+    private async Task AgreeUnlockAsync(int requestUserId, string requestUserName, long billId)
+    {
+        // 检查_integratedLockService是否已初始化
+        if (_integratedLockService == null)
+        {
+            string errorMsg = "同意解锁请求失败：锁定管理服务未初始化";
+            logger?.LogError(errorMsg + " - 单据ID: {BillId}", billId);
+            MainForm.Instance?.uclog?.AddLog(errorMsg, UILogType.错误);
 
-            if (result == DialogResult.Yes)
+            this.Invoke((MethodInvoker)delegate
             {
-                // 同意解锁
-                await AgreeUnlockAsync(requestUserId, requestUserName, billId);
+                MessageBox.Show(errorMsg, "操作失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            });
+            return;
+        }
+
+        try
+        {
+
+            // 获取当前用户信息
+            long currentUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
+            string currentUserName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.UserName;
+
+            // 创建锁信息
+            LockInfo lockInfo = new LockInfo();
+            lockInfo.BillID = billId;
+            lockInfo.MenuID = _currentMenuId;
+            lockInfo.LockedUserId = currentUserId;
+            lockInfo.LockedUserName = currentUserName;
+            lockInfo.SessionId = MainForm.Instance.AppContext.SessionId;
+
+            // 创建锁定请求
+            LockRequest lockRequest = new LockRequest
+            {
+                LockInfo = lockInfo,
+                RequesterUserId = requestUserId,      // 请求解锁的用户ID
+                RequesterUserName = requestUserName,  // 请求解锁的用户
+                UnlockType = UnlockType.RequestResponse
+            };
+            lockRequest.LockInfo.SetLockKey();
+
+            // 使用通信服务发送同意解锁命令
+
+            var response = await _clientCommunicationService.SendCommandWithResponseAsync<LockResponse>(
+                LockCommands.AgreeUnlock, lockRequest, CancellationToken.None);
+
+            // 记录日志
+            string logMessage = $"用户已同意解锁请求：用户 {requestUserName} 请求解锁单据【{billId}】";
+            MainForm.Instance?.uclog?.AddLog(logMessage, UILogType.普通消息);
+
+            // 在UI线程中更新锁定状态
+            this.Invoke((MethodInvoker)delegate
+            {
+                // 更新UI
+                UpdateLockUI(false);
+
+                // 恢复工具栏按钮状态
+                ToolBarEnabledControl(true);
+
+                // 启用所有控件
+                foreach (Control control in this.Controls)
+                {
+                    control.Enabled = true;
+                }
+            });
+
+            if (response != null && response.IsSuccess)
+            {
+                logger?.LogDebug("同意解锁请求成功 - 单据ID: {BillId}, 菜单ID: {MenuId}", billId, _currentMenuId);
             }
             else
             {
-                // 拒绝解锁
-                await RefuseUnlockAsync(requestUserId, requestUserName, billId);
-            }
-        }
-
-        /// <summary>
-        /// 同意解锁请求
-        /// </summary>
-        /// <param name="requestUserId">请求解锁的用户ID</param>
-        /// <param name="requestUserName">请求解锁的用户名</param>
-        /// <param name="billId">单据ID</param>
-        /// <returns>异步任务</returns>
-        private async Task AgreeUnlockAsync(int requestUserId, string requestUserName, long billId)
-        {
-            // 检查_integratedLockService是否已初始化
-            if (_integratedLockService == null)
-            {
-                string errorMsg = "同意解锁请求失败：锁定管理服务未初始化";
-                logger?.LogError(errorMsg + " - 单据ID: {BillId}", billId);
-                MainForm.Instance?.uclog?.AddLog(errorMsg, UILogType.错误);
-
-                this.Invoke((MethodInvoker)delegate
-                {
-                    MessageBox.Show(errorMsg, "操作失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                });
-                return;
-            }
-
-            try
-            {
-
-                // 获取当前用户信息
-                long currentUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
-                string currentUserName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.UserName;
-
-                // 创建锁信息
-                LockInfo lockInfo = new LockInfo();
-                lockInfo.BillID = billId;
-                lockInfo.MenuID = _currentMenuId;
-                lockInfo.LockedUserId = currentUserId;
-                lockInfo.LockedUserName = currentUserName;
-                lockInfo.SessionId = MainForm.Instance.AppContext.SessionId;
-
-                // 创建锁定请求
-                LockRequest lockRequest = new LockRequest
-                {
-                    LockInfo = lockInfo,
-                    RequesterUserId = requestUserId,      // 请求解锁的用户ID
-                    RequesterUserName = requestUserName,  // 请求解锁的用户
-                    UnlockType = UnlockType.RequestResponse
-                };
-                lockRequest.LockInfo.SetLockKey();
-
-                // 使用通信服务发送同意解锁命令
-
-                var response = await _clientCommunicationService.SendCommandWithResponseAsync<LockResponse>(
-                    LockCommands.AgreeUnlock, lockRequest, CancellationToken.None);
-
-                // 记录日志
-                string logMessage = $"用户已同意解锁请求：用户 {requestUserName} 请求解锁单据【{billId}】";
-                MainForm.Instance?.uclog?.AddLog(logMessage, UILogType.普通消息);
-
-                // 在UI线程中更新锁定状态
-                this.Invoke((MethodInvoker)delegate
-                {
-                    // 更新UI
-                    UpdateLockUI(false);
-
-                    // 恢复工具栏按钮状态
-                    ToolBarEnabledControl(true);
-
-                    // 启用所有控件
-                    foreach (Control control in this.Controls)
-                    {
-                        control.Enabled = true;
-                    }
-                });
-
-                if (response != null && response.IsSuccess)
-                {
-                    logger?.LogDebug("同意解锁请求成功 - 单据ID: {BillId}, 菜单ID: {MenuId}", billId, _currentMenuId);
-                }
-                else
-                {
-                    string warnMsg = $"同意解锁请求失败 - 单据ID: {billId}, 菜单ID: {_currentMenuId}, 错误信息: {(response?.Message ?? "未知错误")}";
-                    logger?.LogWarning(warnMsg);
-                    MainForm.Instance?.uclog?.AddLog(warnMsg, UILogType.警告);
-
-                    // 在UI线程中显示错误消息
-                    this.Invoke((MethodInvoker)delegate
-                    {
-                        MessageBox.Show($"同意解锁请求失败: {response?.Message}", "操作失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    });
-                }
-            }
-            catch (Exception ex)
-            {
-                string errorMsg = $"同意解锁请求时发生异常: {ex.Message}";
-                logger?.LogError(ex, errorMsg + " - 单据ID: {BillId}, 菜单ID: {MenuId}", billId, _currentMenuId);
-                MainForm.Instance?.uclog?.AddLog(errorMsg, UILogType.错误);
+                string warnMsg = $"同意解锁请求失败 - 单据ID: {billId}, 菜单ID: {_currentMenuId}, 错误信息: {(response?.Message ?? "未知错误")}";
+                logger?.LogWarning(warnMsg);
+                MainForm.Instance?.uclog?.AddLog(warnMsg, UILogType.警告);
 
                 // 在UI线程中显示错误消息
                 this.Invoke((MethodInvoker)delegate
                 {
-                    MessageBox.Show(errorMsg, "操作失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show($"同意解锁请求失败: {response?.Message}", "操作失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 });
             }
         }
-
-        /// <summary>
-        /// 拒绝解锁请求
-        /// </summary>
-        /// <param name="requestUserId">请求解锁的用户ID</param>
-        /// <param name="requestUserName">请求解锁的用户名</param>
-        /// <param name="billId">单据ID</param>
-        /// <returns>异步任务</returns>
-        private async Task RefuseUnlockAsync(int requestUserId, string requestUserName, long billId)
+        catch (Exception ex)
         {
-            try
+            string errorMsg = $"同意解锁请求时发生异常: {ex.Message}";
+            logger?.LogError(ex, errorMsg + " - 单据ID: {BillId}, 菜单ID: {MenuId}", billId, _currentMenuId);
+            MainForm.Instance?.uclog?.AddLog(errorMsg, UILogType.错误);
+
+            // 在UI线程中显示错误消息
+            this.Invoke((MethodInvoker)delegate
             {
-                // 检查_integratedLockService是否初始化
-                if (_integratedLockService == null)
-                {
-                    throw new InvalidOperationException("锁定管理服务未初始化");
-                }
-
-                // 调用服务拒绝解锁请求
-                await _integratedLockService.RefuseUnlockAsync(billId, requestUserId, _currentMenuId, requestUserName);
-
-                // 记录日志
-                MainForm.Instance?.uclog?.AddLog($"用户已拒绝解锁请求：用户 {requestUserName} 请求解锁单据【{billId}】", UILogType.普通消息);
-
-                // 在UI线程可能需要的处理
-                this.Invoke((MethodInvoker)delegate
-                {
-                    // 可以添加必要的UI更新操作
-                });
-            }
-            catch (Exception ex)
-            {
-                string errorMsg = $"拒绝解锁请求异常: {ex.Message}";
-                MainForm.Instance?.uclog?.AddLog(errorMsg, UILogType.错误);
-
-                // 在UI线程显示错误提示
-                this.Invoke((MethodInvoker)delegate
-                {
-                    MessageBox.Show(errorMsg, "操作失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                });
-            }
+                MessageBox.Show(errorMsg, "操作失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            });
         }
-
-        #endregion
     }
+
+    /// <summary>
+    /// 拒绝解锁请求
+    /// </summary>
+    /// <param name="requestUserId">请求解锁的用户ID</param>
+    /// <param name="requestUserName">请求解锁的用户名</param>
+    /// <param name="billId">单据ID</param>
+    /// <returns>异步任务</returns>
+    private async Task RefuseUnlockAsync(int requestUserId, string requestUserName, long billId)
+    {
+        try
+        {
+            // 检查_integratedLockService是否初始化
+            if (_integratedLockService == null)
+            {
+                throw new InvalidOperationException("锁定管理服务未初始化");
+            }
+
+            // 调用服务拒绝解锁请求
+            await _integratedLockService.RefuseUnlockAsync(billId, requestUserId, _currentMenuId, requestUserName);
+
+            // 记录日志
+            MainForm.Instance?.uclog?.AddLog($"用户已拒绝解锁请求：用户 {requestUserName} 请求解锁单据【{billId}】", UILogType.普通消息);
+
+            // 在UI线程可能需要的处理
+            this.Invoke((MethodInvoker)delegate
+            {
+                // 可以添加必要的UI更新操作
+            });
+        }
+        catch (Exception ex)
+        {
+            string errorMsg = $"拒绝解锁请求异常: {ex.Message}";
+            MainForm.Instance?.uclog?.AddLog(errorMsg, UILogType.错误);
+
+            // 在UI线程显示错误提示
+            this.Invoke((MethodInvoker)delegate
+            {
+                MessageBox.Show(errorMsg, "操作失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            });
+        }
+    }
+
+    #endregion
+}
 
 
 

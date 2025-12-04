@@ -17,6 +17,7 @@ using RUINORERP.Global;
 using RUINORERP.Global.CustomAttribute;
 using RUINORERP.Model;
 using RUINORERP.Model.Base;
+using RUINORERP.Model.Base.StatusManager;
 using RUINORERP.Model.CommonModel;
 using RUINORERP.UI.AdvancedUIModule;
 using RUINORERP.UI.Common;
@@ -57,6 +58,11 @@ namespace RUINORERP.UI.BaseForm
     /// <typeparam name="C"></typeparam>
     public partial class BaseBillQueryMC<M, C> : BaseQuery, IContextMenuInfoAuth, IToolStripMenuInfoAuth where M : class, new() where C : class, new()
     {
+        /// <summary>
+        /// 统一状态管理器
+        /// </summary>
+        protected IUnifiedStateManager StateManager { get; set; }
+    
         public virtual List<ContextMenuController> AddContextMenu()
         {
             List<ContextMenuController> list = new List<ContextMenuController>();
@@ -122,6 +128,12 @@ namespace RUINORERP.UI.BaseForm
         public BaseBillQueryMC()
         {
             InitializeComponent();
+            // 初始化状态管理器
+            if (RUINORERP.Model.Context.ApplicationContext.Current != null)
+            {
+                this.StateManager = RUINORERP.Model.Context.ApplicationContext.Current.GetRequiredService<IUnifiedStateManager>();
+            }
+        
             if (System.ComponentModel.LicenseManager.UsageMode != System.ComponentModel.LicenseUsageMode.Designtime)
             {
                 if (!this.DesignMode)
@@ -869,12 +881,26 @@ namespace RUINORERP.UI.BaseForm
             if (ae.ApprovalResults == true)
             {
                 //审核了。数据状态要更新为
-                EditEntity.SetPropertyValue(typeof(DataStatus).Name, (int)DataStatus.确认);
+                if (StateManager != null && EditEntity is BaseEntity baseEntity)
+                {
+                  await  StateManager.SetDataStatusAsync(baseEntity, DataStatus.确认);
+                }
+                else
+                {
+                    EditEntity.SetPropertyValue(typeof(DataStatus).Name, (int)DataStatus.确认);
+                }
             }
             else
             {
                 //审核了。驳回 时数据状态要更新为新建。要再次修改后提交
-                EditEntity.SetPropertyValue(typeof(DataStatus).Name, (int)DataStatus.新建);
+                if (StateManager != null && EditEntity is BaseEntity baseEntity)
+                {
+                  await  StateManager.SetDataStatusAsync(baseEntity, DataStatus.新建);
+                }
+                else
+                {
+                    EditEntity.SetPropertyValue(typeof(DataStatus).Name, (int)DataStatus.新建);
+                }
                 if (ReflectionHelper.ExistPropertyName<M>("ApprovalOpinions"))
                 {
                     EditEntity.SetPropertyValue("ApprovalOpinions", ae.ApprovalOpinions);

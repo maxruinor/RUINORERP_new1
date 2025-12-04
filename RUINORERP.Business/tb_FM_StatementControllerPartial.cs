@@ -424,7 +424,7 @@ namespace RUINORERP.Business
                 statement.StatementNo = await bizCodeService.GenerateBizBillNoAsync(BizType.对账单);
                 statement.StartDate = startDate;
                 statement.EndDate = entities.Max(c => c.BusinessDate).Value;
-
+                
                 // 设置收款信息（如果有）
                 if (entities.Count > 0 && entities[0].PayeeInfoID.HasValue)
                 {
@@ -451,7 +451,7 @@ namespace RUINORERP.Business
                 statement.ARAPNos = string.Join(",", entities.Select(c => c.ARAPNo).ToArray());
                 BusinessHelper.Instance.InitEntity(statement);
                 statement.StatementStatus = (int)StatementStatus.草稿;
-
+                statement.PamountInWords = statement.tb_FM_StatementDetails.Sum(c => c.IncludedLocalAmount).ToUpperAmount();
                 rmrs.Succeeded = true;
                 rmrs.ReturnObject = statement;
                 return rmrs;
@@ -610,13 +610,16 @@ namespace RUINORERP.Business
             var ClosingBalanceLocalAmount = list.Sum(c => c.ClosingBalanceLocalAmount);
 
             //二次验证
-            var ClosingBalance = OpeningBalanceLocalAmount + TotalReceivableLocalAmount - TotalPayableLocalAmount + TotalReceivedLocalAmount - TotalPaidLocalAmount;
+            var ClosingBalance = OpeningBalanceLocalAmount + TotalReceivableLocalAmount - Math.Abs(TotalPayableLocalAmount) + TotalReceivedLocalAmount - Math.Abs(TotalPaidLocalAmount);
 
-            if (Math.Abs(ClosingBalance - ClosingBalanceLocalAmount) > 0.0001m) // 考虑小数精度问题
+            //因为在对账单来讲没有负数余额的说法，所以这里取绝对值进行比较
+            ClosingBalance = Math.Abs(ClosingBalance);
+            ClosingBalanceLocalAmount = Math.Abs(ClosingBalanceLocalAmount);
+
+            if (ClosingBalance - ClosingBalanceLocalAmount > 0.0001m) // 考虑小数精度问题
             {
-                throw new Exception($"数据一致性校验失败：对账单余额与应收应付核销余额不一致。\n可能原因：往来单位已有对账单余额（大于0），但后续付款/收款直接通过应收应付单进行了核销，而未通过对账单中间环节进行结算。\n计算值：{ClosingBalance}，记录值：{ClosingBalanceLocalAmount}\n建议：检查该往来单位近期的核销记录，确认是否存在直接核销应收应付单的情况。");
+                throw new Exception($"数据一致性校验失败：对账单余额与应收应付核销余额不一致。\n可能原因：往来单位已有对账单余额（大于0），但后续付款/收款直接通过应收应付单进行了核销，而未通过对账单中间环节进行结算。\n检查计算余额：{ClosingBalance}，对账单余额：{ClosingBalanceLocalAmount}\n建议：检查该往来单位近期的核销记录，确认是否存在直接核销应收应付单的情况。");
             }
-
             return ClosingBalance;
         }
 

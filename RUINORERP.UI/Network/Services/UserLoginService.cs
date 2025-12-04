@@ -25,8 +25,8 @@ namespace RUINORERP.UI.Network.Services
         private readonly TokenRefreshService _tokenRefreshService;
         private readonly CacheClientService _cacheClientService;
         private bool _isLoggedIn = false; // 登录状态标志
-        //private readonly SemaphoreSlim _loginLock = new SemaphoreSlim(1, 1); // 登录操作信号量防止并发登录请求
-       // 可以增加并发数，比如允许5个并发登录请求
+                                          //private readonly SemaphoreSlim _loginLock = new SemaphoreSlim(1, 1); // 登录操作信号量防止并发登录请求
+                                          // 可以增加并发数，比如允许5个并发登录请求
         private readonly SemaphoreSlim _loginLock = new SemaphoreSlim(5, 5);
 
         private readonly ILogger<UserLoginService> _logger;
@@ -95,7 +95,7 @@ namespace RUINORERP.UI.Network.Services
 
                 // 发送登录命令并获取响应 - 移除复杂重试逻辑，依赖ClientCommunicationService的可靠性
                 var response = await _communicationService.SendCommandWithResponseAsync<LoginResponse>(
-                    AuthenticationCommands.Login, loginRequest, ct,20000);
+                    AuthenticationCommands.Login, loginRequest, ct, 20000);
 
                 // 检查响应数据
                 if (response == null)
@@ -294,7 +294,84 @@ namespace RUINORERP.UI.Network.Services
             }
         }
 
-        // 移除不必要的事件处理方法
+        /// <summary>
+        /// 取消登录操作
+        /// </summary>
+        /// <param name="sessionId">当前会话ID</param>
+        /// <returns>操作是否成功</returns>
+        public async Task<bool> CancelLoginAsync(string sessionId)
+        {
+            try
+            {
+                if (!_communicationService.IsConnected || string.IsNullOrEmpty(sessionId))
+                {
+                    _logger?.LogWarning("取消登录失败：未连接到服务器或会话ID为空");
+                    return false;
+                }
+
+                var request = new LoginRequest
+                {
+                    Username = "",
+                    Password = "",
+                    AdditionalData = new System.Collections.Generic.Dictionary<string, object>
+                    {
+                        ["Action"] = "CancelLogin"
+                    }
+                };
+
+                var response = await _communicationService.SendCommandWithResponseAsync<ResponseBase>(
+                    AuthenticationCommands.Logout, request, CancellationToken.None);
+
+                // 清理本地登录状态
+                await CleanupLoginStateAsync();
+
+                return response?.IsSuccess ?? false;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "取消登录操作失败");
+                // 即使发送失败，也清理本地状态
+                await CleanupLoginStateAsync();
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 处理重复登录操作
+        /// </summary>
+        /// <param name="sessionId">当前会话ID</param>
+        /// <param name="username">用户名</param>
+        /// <param name="action">用户选择的操作</param>
+        /// <param name="ct">取消令牌</param>
+        /// <returns>操作是否成功</returns>
+        public async Task<bool> HandleDuplicateLoginAsync(string sessionId, string username, DuplicateLoginAction action, CancellationToken ct = default)
+        {
+            try
+            {
+                if (!_communicationService.IsConnected || string.IsNullOrEmpty(sessionId) || string.IsNullOrEmpty(username))
+                {
+                    _logger?.LogWarning("处理重复登录失败：未连接到服务器或参数不完整");
+                    return false;
+                }
+
+                var request = new GeneralRequest
+                {
+                    Data = "你的账号在其它地方登陆。当前连接即将断开。请保存数据。",
+                };
+
+                var response = await _communicationService.SendCommandWithResponseAsync<GeneralResponse>(
+                    AuthenticationCommands.DuplicateLogin, request, ct);
+
+                return response?.IsSuccess ?? false;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "处理重复登录操作失败");
+                return false;
+            }
+        }
+
+
 
 
 

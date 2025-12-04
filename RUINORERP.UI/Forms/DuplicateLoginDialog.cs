@@ -47,7 +47,7 @@ namespace RUINORERP.UI.Forms
             this.MinimizeBox = false;
 
             // 设置标题
-            lblTitle.Values.Text = "⚠️ 登录冲突";
+            lblTitle.Values.Text = "⚠登录冲突";
 
             // 设置消息内容
             lblMessage.Values.Text = _duplicateLoginResult.Message ?? "检测到您的账号已在其他设备或浏览器中登录，为了保护账号安全，请选择处理方式：";
@@ -59,7 +59,7 @@ namespace RUINORERP.UI.Forms
             SetupActionButtons();
 
             // 设置说明文本
-            lblInstruction.Values.Text = "💡 提示：选择处理方式后点击确认按钮继续操作";
+            lblInstruction.Values.Text = "提示：选择处理方式后点击确认按钮继续操作";
         }
 
         /// <summary>
@@ -71,13 +71,13 @@ namespace RUINORERP.UI.Forms
             {
                 var session = _duplicateLoginResult.ExistingSessions[0]; // 获取第一个会话信息
                 
-                string sessionInfo = $"🕐 {session.LoginTime:yyyy-MM-dd HH:mm:ss} | 🌐 IP: {session.ClientIp} | 💻 {session.DeviceInfo} | 📊 {session.StatusDescription}";
+                string sessionInfo = $"{session.LoginTime:yyyy-MM-dd HH:mm:ss} | IP: {session.ClientIp} | {session.DeviceInfo} | {session.StatusDescription}";
                 
                 lblSessionInfo.Values.Text = sessionInfo;
             }
             else
             {
-                lblSessionInfo.Values.Text = "❌ 未找到其他登录会话信息";
+                lblSessionInfo.Values.Text = "未找到其他登录会话信息";
             }
         }
 
@@ -87,29 +87,17 @@ namespace RUINORERP.UI.Forms
         private void SetupActionButtons()
         {
             // 踢掉其他设备按钮
-            btnForceOffline.Values.Text = "🚫 强制对方下线";
+            btnForceOffline.Values.Text = "强制对方下线";
             btnForceOffline.DialogResult = DialogResult.None;
             btnForceOffline.Click += BtnForceOffline_Click;
 
-            // 自己下线按钮
-            btnOfflineSelf.Values.Text = "👤 自己下线";
-            btnOfflineSelf.DialogResult = DialogResult.None;
-            btnOfflineSelf.Click += BtnOfflineSelf_Click;
-            btnOfflineSelf.Visible = true; // 显示所有选项
 
             // 放弃登录按钮
-            btnCancelLogin.Values.Text = "❌ 取消";
+            btnCancelLogin.Values.Text = "取消当前登陆";
             btnCancelLogin.DialogResult = DialogResult.None;
             btnCancelLogin.Click += BtnCancelLogin_Click;
 
-            // 确认按钮
-            btnConfirm.Values.Text = "✓ 确认";
-            btnConfirm.DialogResult = DialogResult.OK;
-            btnConfirm.ButtonStyle = Krypton.Toolkit.ButtonStyle.Standalone;
-            btnConfirm.StateCommon.Back.Color1 = Color.FromArgb(40, 167, 69);
-            btnConfirm.StateCommon.Content.ShortText.Color1 = Color.White;
-            btnConfirm.StateCommon.Border.Rounding = 6;
-            btnConfirm.Click += BtnConfirm_Click;
+        
 
             // 设置按钮工具提示
             SetupButtonTooltips();
@@ -124,17 +112,13 @@ namespace RUINORERP.UI.Forms
             btnForceOffline.ToolTipValues.EnableToolTips = true;
             btnForceOffline.ToolTipValues.Heading = "踢掉其他设备并继续登录";
 
-            btnOfflineSelf.ToolTipValues.Description = "取消当前登录，保持其他地方的登录状态";
-            btnOfflineSelf.ToolTipValues.EnableToolTips = true;
-            btnOfflineSelf.ToolTipValues.Heading = "自己下线";
+            
 
             btnCancelLogin.ToolTipValues.Description = "取消本次登录操作，返回登录界面";
             btnCancelLogin.ToolTipValues.EnableToolTips = true;
             btnCancelLogin.ToolTipValues.Heading = "放弃登录";
 
-            btnConfirm.ToolTipValues.Description = "执行选择的操作并继续";
-            btnConfirm.ToolTipValues.EnableToolTips = true;
-            btnConfirm.ToolTipValues.Heading = "确认";
+   
         }
 
         #region 事件处理
@@ -148,14 +132,6 @@ namespace RUINORERP.UI.Forms
             UpdateButtonSelection(btnForceOffline);
         }
 
-        /// <summary>
-        /// 自己下线按钮点击事件
-        /// </summary>
-        private void BtnOfflineSelf_Click(object sender, EventArgs e)
-        {
-            _selectedAction = DuplicateLoginAction.OfflineSelf;
-            UpdateButtonSelection(btnOfflineSelf);
-        }
 
         /// <summary>
         /// 取消登录按钮点击事件
@@ -164,6 +140,7 @@ namespace RUINORERP.UI.Forms
         {
             _selectedAction = DuplicateLoginAction.Cancel;
             UpdateButtonSelection(btnCancelLogin);
+            this.Close();
         }
 
         /// <summary>
@@ -192,8 +169,7 @@ namespace RUINORERP.UI.Forms
             btnForceOffline.StateCommon.Back.Color1 = Color.FromArgb(220, 53, 69);
             btnForceOffline.StateCommon.Content.ShortText.Color1 = Color.White;
             
-            btnOfflineSelf.StateCommon.Back.Color1 = Color.FromArgb(255, 193, 7);
-            btnOfflineSelf.StateCommon.Content.ShortText.Color1 = Color.White;
+         
             
             btnCancelLogin.StateCommon.Back.Color1 = Color.FromArgb(108, 117, 125);
             btnCancelLogin.StateCommon.Content.ShortText.Color1 = Color.White;
@@ -205,10 +181,6 @@ namespace RUINORERP.UI.Forms
                 if (selectedButton == btnForceOffline)
                 {
                     btnForceOffline.StateCommon.Back.Color1 = Color.FromArgb(200, 35, 51); // 深红色
-                }
-                else if (selectedButton == btnOfflineSelf)
-                {
-                    btnOfflineSelf.StateCommon.Back.Color1 = Color.FromArgb(255, 170, 0); // 深黄色
                 }
                 else if (selectedButton == btnCancelLogin)
                 {

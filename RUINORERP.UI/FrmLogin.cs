@@ -6,6 +6,7 @@ using RUINORERP.Business;
 using RUINORERP.Business.Security;
 using RUINORERP.Model.Context;
 using RUINORERP.PacketSpec.Commands.Authentication;
+using RUINORERP.PacketSpec.Models.Authentication;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Requests;
 using RUINORERP.PacketSpec.Models.Responses;
@@ -527,18 +528,18 @@ namespace RUINORERP.UI
                     MainForm.Instance.CurrentLoginStatus = MainForm.LoginStatus.LoggingIn;
                 }
 
-                // 创建取消令牌，用于登录超时控制
-                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+                // 创建取消令牌，仅用于网络请求阶段的超时控制
+                using var networkCts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
 
-                // 执行完整的登录流程
+                // 执行网络请求阶段的登录流程（带超时控制）
                 var loginResponse = await _loginFlowService.ExecuteLoginFlowAsync(
                     txtUserName.Text,
                     txtPassWord.Text,
                     txtServerIP.Text.Trim(),
                     serverPort,
-                    cts.Token);
+                    networkCts.Token);
 
-                // 处理登录结果
+                // 网络请求阶段完成后，处理登录结果和用户交互（无超时限制）
                 if (loginResponse != null && loginResponse.IsSuccess)
                 {
                     await HandleLoginSuccess(loginResponse, isInitPwd);
@@ -570,7 +571,44 @@ namespace RUINORERP.UI
         {
             try
             {
-                MainForm.Instance.logger?.LogInformation($"用户 {txtUserName.Text} 登录成功");
+
+                // 检查是否存在重复登录情况
+                if (loginResponse.HasDuplicateLogin && loginResponse.DuplicateLoginResult != null)
+                {
+                    MainForm.Instance.logger?.LogWarning($"检测到用户 {txtUserName.Text} 存在重复登录");
+                    
+                    // 检查是否需要用户确认
+                    if (loginResponse.DuplicateLoginResult.RequireUserConfirmation)
+                    {
+                        // 显示重复登录对话框让用户选择操作
+                        var userAction = await ShowDuplicateLoginDialog(loginResponse.DuplicateLoginResult);
+                        
+                        // 根据用户选择处理
+                        switch (userAction)
+                        {
+                            case DuplicateLoginAction.ForceOfflineOthers:
+                                // 强制其他会话下线
+                                var forceResult = await _userLoginService.HandleDuplicateLoginAsync(
+                                    loginResponse.SessionId, 
+                                    txtUserName.Text, 
+                                    DuplicateLoginAction.ForceOfflineOthers);
+                                
+                                if (!forceResult)
+                                {
+                                    MessageBox.Show("处理重复登录失败，请重试", "操作失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                    // 清理本地登录状态
+                                    await _userLoginService.CancelLoginAsync(loginResponse.SessionId);
+                                    return;
+                                }
+                                break;
+                                
+                            case DuplicateLoginAction.Cancel:
+                                // 取消登录
+                                MessageBox.Show("您已取消登录操作", "登录取消", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                                return;
+                        }
+                    }
+                }
 
                 // 设置在线状态
                 if (MainForm.Instance?.AppContext?.CurrentUser != null)
@@ -600,6 +638,31 @@ namespace RUINORERP.UI
                 MainForm.Instance.logger?.LogError(ex, "处理登录成功后的操作时发生异常");
                 throw;
             }
+        }
+
+        /// <summary>
+        /// 显示重复登录对话框
+        /// </summary>
+        private Task<DuplicateLoginAction> ShowDuplicateLoginDialog(DuplicateLoginResult duplicateResult)
+        {
+            return Task.Run(() =>
+            {
+                if (this.InvokeRequired)
+                {
+                    return (DuplicateLoginAction)this.Invoke(new Func<DuplicateLoginAction>(() =>
+                    {
+                        using var dialog = new Forms.DuplicateLoginDialog(duplicateResult);
+                        var result = dialog.ShowDialog(this);
+                        return result == DialogResult.OK ? dialog.SelectedAction : DuplicateLoginAction.Cancel;
+                    }));
+                }
+                else
+                {
+                    using var dialog = new Forms.DuplicateLoginDialog(duplicateResult);
+                    var result = dialog.ShowDialog(this);
+                    return result == DialogResult.OK ? dialog.SelectedAction : DuplicateLoginAction.Cancel;
+                }
+            });
         }
 
         /// <summary>

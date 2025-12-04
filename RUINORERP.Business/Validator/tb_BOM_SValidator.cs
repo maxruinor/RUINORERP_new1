@@ -126,7 +126,10 @@ namespace RUINORERP.Business
                 //RuleFor(c => c.tb_BOM_SDetails).NotNull();
                 //RuleForEach(x => x.tb_BOM_SDetails).NotNull();
                 //RuleFor(x => x.tb_BOM_SDetails).Must(DetailedRecordsNotEmpty).WithMessage("明细不能为空");
-                    Initialize();
+                    // 验证明细中的数据不能包含主表中母件
+              
+                
+                Initialize();
      }
 
 

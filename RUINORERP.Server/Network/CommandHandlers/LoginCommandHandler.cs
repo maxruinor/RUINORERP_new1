@@ -247,31 +247,12 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 // 处理重复登录情况
                 if (duplicateResult.HasDuplicateLogin)
                 {
-                    // 检查是否为重复登录确认请求
-                    if (IsDuplicateLoginConfirmed(loginRequest))
+                    // 优化：无论是否有重复登录，都继续登录流程
+                    // 服务器直接返回登录成功，重复登录信息由客户端后续处理
+                    // 对于本地重复登录且允许多会话的情况，自动处理
+                    if (duplicateResult.Type == DuplicateLoginType.LocalOnly && duplicateResult.AllowMultipleLocalSessions)
                     {
-                        // 获取用户选择的处理方式
-                        var userAction = GetUserSelectedAction(loginRequest);
-                        
-                        // 根据用户选择处理现有会话
-                        await HandleDuplicateLoginAction(authorizedSessions, loginRequest.Username, userAction);
-                        
-                        // 记录处理操作
-                        logger?.LogInformation($"用户 {loginRequest.Username} 选择 {userAction} 处理重复登录");
-                    }
-                    else
-                    {
-                        // 根据重复登录类型决定处理策略
-                        if (duplicateResult.Type == DuplicateLoginType.LocalOnly && duplicateResult.AllowMultipleLocalSessions)
-                        {
-                            // 本地重复登录且允许多会话：自动处理，继续登录
-                            logger?.LogDebug($"用户 {loginRequest.Username} 本地重复登录，允许多会话，继续登录流程");
-                        }
-                        else
-                        {
-                            // 需要用户确认的重复登录：返回详细信息让客户端处理
-                            return CreateDuplicateLoginResponse(duplicateResult);
-                        }
+                        logger?.LogDebug($"用户 {loginRequest.Username} 本地重复登录，允许多会话，继续登录流程");
                     }
                 }
 
@@ -290,7 +271,10 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     UserId = userInfo.User_ID,
                     Username = userInfo.UserName,
                     SessionId = sessionInfo.SessionID,
-                    Token = tokenInfo
+                    Token = tokenInfo,
+                    // 新增：添加重复登录信息，让客户端决定后续处理
+                    HasDuplicateLogin = duplicateResult.HasDuplicateLogin,
+                    DuplicateLoginResult = duplicateResult
                 };
 
 
@@ -359,12 +343,6 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 case DuplicateLoginAction.ForceOfflineOthers:
                     await KickExistingSessions(existingSessions, username);
                     break;
-                    
-                case DuplicateLoginAction.OfflineSelf:
-                    // 自己下线的逻辑在客户端处理，服务器端不需要特殊处理
-                    logger?.LogInformation($"用户 {username} 选择自己下线");
-                    break;
-                    
                 case DuplicateLoginAction.Cancel:
                     // 取消登录的逻辑在客户端处理
                     logger?.LogInformation($"用户 {username} 取消了登录");

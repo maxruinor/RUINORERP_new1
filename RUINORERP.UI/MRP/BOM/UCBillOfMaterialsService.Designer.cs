@@ -82,6 +82,7 @@ namespace RUINORERP.UI.MRP.BOM
             this.kryptonLabel8 = new Krypton.Toolkit.KryptonLabel();
             this.chkMultiBOMProd = new Krypton.Toolkit.KryptonCheckBox();
             this.btnQueryForGoods = new Krypton.Toolkit.KryptonButton();
+            this.btnCheckInvalidBOM = new Krypton.Toolkit.KryptonButton();
             this.kryptonLabel2 = new Krypton.Toolkit.KryptonLabel();
             this.kryptonLabel7 = new Krypton.Toolkit.KryptonLabel();
             this.txtMaxRows = new Krypton.Toolkit.KryptonNumericUpDown();
@@ -205,6 +206,7 @@ namespace RUINORERP.UI.MRP.BOM
             // 
             this.kryptonSplitContainerQuery.Panel2.Controls.Add(this.chkMultiBOMProd);
             this.kryptonSplitContainerQuery.Panel2.Controls.Add(this.btnQueryForGoods);
+            this.kryptonSplitContainerQuery.Panel2.Controls.Add(this.btnCheckInvalidBOM);
             this.kryptonSplitContainerQuery.Panel2.Controls.Add(this.kryptonLabel2);
             this.kryptonSplitContainerQuery.Panel2.Controls.Add(this.kryptonLabel7);
             this.kryptonSplitContainerQuery.Panel2.Controls.Add(this.txtMaxRows);
@@ -256,7 +258,7 @@ namespace RUINORERP.UI.MRP.BOM
             this.kryptonPanelBOM.Controls.Add(this.kryptonLabel16);
             this.kryptonPanelBOM.Controls.Add(this.kryptonLabel18);
             this.kryptonPanelBOM.Controls.Add(this.txtBOM_NO);
-            this.kryptonPanelBOM.Location = new System.Drawing.Point(195, 23);
+            this.kryptonPanelBOM.Location = new System.Drawing.Point(4, 16);
             this.kryptonPanelBOM.Name = "kryptonPanelBOM";
             this.kryptonPanelBOM.Size = new System.Drawing.Size(625, 103);
             this.kryptonPanelBOM.TabIndex = 161;
@@ -571,12 +573,21 @@ namespace RUINORERP.UI.MRP.BOM
             // 
             // btnQueryForGoods
             // 
-            this.btnQueryForGoods.Location = new System.Drawing.Point(60, 23);
+            this.btnQueryForGoods.Location = new System.Drawing.Point(66, 16);
             this.btnQueryForGoods.Name = "btnQueryForGoods";
             this.btnQueryForGoods.Size = new System.Drawing.Size(92, 36);
             this.btnQueryForGoods.TabIndex = 145;
             this.btnQueryForGoods.Values.Text = "查询";
             this.btnQueryForGoods.Click += new System.EventHandler(this.btnQueryForGoods_Click);
+            // 
+            // btnCheckInvalidBOM
+            // 
+            this.btnCheckInvalidBOM.Location = new System.Drawing.Point(66, 94);
+            this.btnCheckInvalidBOM.Name = "btnCheckInvalidBOM";
+            this.btnCheckInvalidBOM.Size = new System.Drawing.Size(92, 36);
+            this.btnCheckInvalidBOM.TabIndex = 144;
+            this.btnCheckInvalidBOM.Values.Text = "配方检测";
+            this.btnCheckInvalidBOM.Click += new System.EventHandler(this.btnCheckInvalidBOM_Click);
             // 
             // kryptonLabel2
             // 
@@ -850,12 +861,12 @@ namespace RUINORERP.UI.MRP.BOM
             this.contextMenuStrip2.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripMenuItem1});
             this.contextMenuStrip2.Name = "contextMenuStrip1";
-            this.contextMenuStrip2.Size = new System.Drawing.Size(181, 48);
+            this.contextMenuStrip2.Size = new System.Drawing.Size(166, 26);
             // 
             // toolStripMenuItem1
             // 
             this.toolStripMenuItem1.Name = "toolStripMenuItem1";
-            this.toolStripMenuItem1.Size = new System.Drawing.Size(180, 22);
+            this.toolStripMenuItem1.Size = new System.Drawing.Size(165, 22);
             this.toolStripMenuItem1.Text = "指定为默认配方";
             this.toolStripMenuItem1.Click += new System.EventHandler(this.toolStripMenuItem1_Click);
             // 
@@ -946,6 +957,7 @@ namespace RUINORERP.UI.MRP.BOM
         private Krypton.Toolkit.KryptonLabel lblSpecifications;
         private Krypton.Toolkit.KryptonTextBox txtSpecifications;
         private Krypton.Toolkit.KryptonButton btnQueryForGoods;
+        private Krypton.Toolkit.KryptonButton btnCheckInvalidBOM;
         private Krypton.Toolkit.KryptonLabel kryptonLabel2;
         private Krypton.Toolkit.KryptonNumericUpDown txtMaxRows;
         private System.Windows.Forms.BindingSource bindingSourceProdDetail;

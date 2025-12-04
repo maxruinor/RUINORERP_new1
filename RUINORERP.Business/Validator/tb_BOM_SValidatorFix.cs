@@ -13,6 +13,7 @@ using RUINORERP.Model;
 using FluentValidation;
 using RUINORERP.Model.ConfigModel;
 using Microsoft.Extensions.Options;
+using System.Linq;
 
 //https://github.com/FluentValidation/FluentValidation 使用实例
 //https://blog.csdn.net/WuLex/article/details/127985756 中文教程
@@ -61,9 +62,19 @@ namespace RUINORERP.Business
                     {
                         context.AddFailure("委托外发费用、自行制造费用、至少填写一个。");
                     }
-                   
+
                 }
             });
+
+            RuleFor(x => x.tb_BOM_SDetails)
+                    .Must((model, details) =>
+                    {
+                        if (details == null || details.Count == 0)
+                            return true;
+                        // 检查明细中是否有任何项的ProdDetailID等于主表的ProdDetailID
+                        return !details.Any(c => c.ProdDetailID == model.ProdDetailID);
+                    })
+                    .WithMessage("BOM明细中不能包含主表中的母件。");
 
 
             RuleFor(x => x.TotalSelfManuCost).

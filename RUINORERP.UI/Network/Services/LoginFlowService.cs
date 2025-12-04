@@ -187,42 +187,44 @@ namespace RUINORERP.UI.Network.Services
             }
 
             // 3. 处理重复登录情况
-            if (!loginResponse.IsSuccess && IsDuplicateLoginResponse(loginResponse))
+            if (loginResponse.IsSuccess && loginResponse.HasDuplicateLogin && loginResponse.DuplicateLoginResult != null)
             {
-                _currentContext.Status = LoginStatus.DuplicateLoginConfirming;
-                NotifyStatusChanged(LoginStatus.Validating);
-
-                var duplicateLoginInfo = ExtractDuplicateLoginInfo(loginResponse);
-                
-                // 检查是否为本地重复登录（同一台机器）
-                if (duplicateLoginInfo.IsLocalDuplicate && !duplicateLoginInfo.ExistingSessions.Any(s => !s.IsLocal))
+                // 检查是否需要用户确认
+                if (loginResponse.DuplicateLoginResult.RequireUserConfirmation)
                 {
-                    // 纯本地重复登录：同一台机器，直接允许登录，不需要用户确认和重新登录
-                    _logger?.LogDebug($"用户 {_currentContext.Username} 本地重复登录，同一台机器允许多会话，直接继续登录流程");
-                    
-                    // 创建成功的登录响应
-                    var successResponse = new LoginResponse
+                    _currentContext.Status = LoginStatus.DuplicateLoginConfirming;
+                    NotifyStatusChanged(LoginStatus.Validating);
+
+                    // 存在远程重复登录，需要用户确认
+                    // 用户交互不受网络请求超时影响
+                    var userAction = await HandleDuplicateLoginAsync(loginResponse.DuplicateLoginResult);
+
+                    if (userAction == DuplicateLoginAction.Cancel)
                     {
-                        IsSuccess = true,
-                        Message = "本地重复登录成功",
-                        Username = _currentContext.Username
-                    };
-                    
-                    return successResponse;
+                        _currentContext.Status = LoginStatus.Cancelled;
+                        NotifyStatusChanged(LoginStatus.DuplicateLoginConfirming);
+                        return CreateCancelledResponse("用户取消了登录操作");
+                    }
+                    else if (userAction == DuplicateLoginAction.ForceOfflineOthers)
+                    {
+                        // 用户选择强制其他登录下线，通知服务器处理
+                        // 强制下线操作使用新的短超时令牌，避免用户长时间等待
+                        using var forceOfflineCts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+                        await _userLoginService.HandleDuplicateLoginAsync(
+                        loginResponse.SessionId, 
+                        _currentContext.Username, 
+                        DuplicateLoginAction.ForceOfflineOthers,
+                        forceOfflineCts.Token
+                    );
+                        _logger?.LogInformation($"用户 {_currentContext.Username} 选择强制其他登录下线");
+                    }
+                    // 如果用户选择"取消当前登录"，则已经在上一步处理了
                 }
-
-                // 存在远程重复登录，需要用户确认
-                var userAction = await HandleDuplicateLoginAsync(duplicateLoginInfo);
-
-                if (userAction == DuplicateLoginAction.Cancel)
+                else
                 {
-                    _currentContext.Status = LoginStatus.Cancelled;
-                    NotifyStatusChanged(LoginStatus.DuplicateLoginConfirming);
-                    return CreateCancelledResponse("用户取消了登录操作");
+                    // 不需要用户确认的重复登录（如本地重复登录），直接继续
+                    _logger?.LogDebug($"用户 {_currentContext.Username} 本地重复登录，同一台机器允许多会话，直接继续登录流程");
                 }
-
-                // 4. 重新执行登录（包含用户选择）
-                loginResponse = await ExecuteLoginWithUserActionAsync(userAction);
             }
 
             // 5. 登录成功处理
@@ -230,8 +232,6 @@ namespace RUINORERP.UI.Network.Services
             {
                 _currentContext.Status = LoginStatus.Success;
                 NotifyStatusChanged(LoginStatus.Failed);
-
-                await PostLoginSuccessAsync(loginResponse);
             }
             else
             {
@@ -243,95 +243,13 @@ namespace RUINORERP.UI.Network.Services
             return loginResponse;
         }
 
-        /// <summary>
-        /// 检查是否为重复登录响应
-        /// </summary>
-        private bool IsDuplicateLoginResponse(LoginResponse response)
-        {
-            return !response.IsSuccess &&
-                   (response.Message?.Contains("其他地方登录") == true ||
-                    response.Message?.Contains("重复登录") == true) &&
-                   response.Metadata?.ContainsKey("ExistingSessions") == true;
-        }
 
-        /// <summary>
-        /// 从登录响应中提取重复登录信息
-        /// </summary>
-        private DuplicateLoginInfo ExtractDuplicateLoginInfo(LoginResponse response)
-        {
-            var duplicateInfo = new DuplicateLoginInfo
-            {
-                Message = response.Message,
-                HasDuplicateLogin = true,
-                CurrentSessionId = response.SessionId,
-                ExistingSessions = new List<ExistingSessionInfo>() // 初始化空列表，避免后续空引用异常
-            };
-
-            // 解析现有会话信息
-            if (response.Metadata?.TryGetValue("ExistingSessions", out var sessionsObj) == true &&
-                sessionsObj is List<object> sessionsList)
-            {
-                duplicateInfo.ExistingSessions = sessionsList
-                    .OfType<Dictionary<string, object>>()
-                    .Select(sessionDict => new ExistingSessionInfo
-                    {
-                        SessionId = sessionDict.ContainsKey("SessionId") ? sessionDict["SessionId"]?.ToString() : null,
-                        ClientIp = sessionDict.ContainsKey("ClientIp") ? sessionDict["ClientIp"]?.ToString() : null,
-                        DeviceInfo = sessionDict.ContainsKey("DeviceInfo") ? sessionDict["DeviceInfo"]?.ToString() : null,
-                        LoginTime = sessionDict.ContainsKey("LoginTime") && sessionDict["LoginTime"] != null ? Convert.ToDateTime(sessionDict["LoginTime"]) : DateTime.Now,
-                        IsLocal = IsLocalSession(sessionDict.ContainsKey("ClientIp") ? sessionDict["ClientIp"]?.ToString() : null, 
-                                sessionDict.ContainsKey("IsLocal") ? Convert.ToBoolean(sessionDict["IsLocal"]) : false)
-                    })
-                    .ToList();
-            }
-
-            // 检查是否需要用户确认
-            if (response.Metadata?.TryGetValue("RequireUserConfirmation", out var requireConfirmObj) == true)
-            {
-                bool requireUserConfirmation = Convert.ToBoolean(requireConfirmObj);
-                
-                // 如果不需要用户确认，且所有会话都是本地的，则认为是本地重复登录
-                if (!requireUserConfirmation)
-                {
-                    // 只有当存在会话且所有会话都是本地时，才认为是本地重复登录
-                    duplicateInfo.IsLocalDuplicate = duplicateInfo.ExistingSessions.Any() && duplicateInfo.ExistingSessions.All(s => s.IsLocal);
-                }
-                else
-                {
-                    duplicateInfo.IsLocalDuplicate = false;
-                }
-            }
-            else
-            {
-                // 兼容旧版本：根据会话信息判断
-                // 只有当存在会话且所有会话都是本地时，才认为是本地重复登录
-                duplicateInfo.IsLocalDuplicate = duplicateInfo.ExistingSessions.Any() && duplicateInfo.ExistingSessions.All(s => s.IsLocal);
-            }
-
-            return duplicateInfo;
-        }
 
         /// <summary>
         /// 处理重复登录用户交互
         /// </summary>
-        private async Task<DuplicateLoginAction> HandleDuplicateLoginAsync(DuplicateLoginInfo duplicateInfo)
+        private async Task<DuplicateLoginAction> HandleDuplicateLoginAsync(DuplicateLoginResult duplicateResult)
         {
-            // 检查是否需要用户确认
-            bool requireUserConfirmation = false;
-            if (duplicateInfo.HasDuplicateLogin)
-            {
-                // 如果存在远程会话或者没有会话信息（但服务器返回了重复登录消息），需要用户确认
-                // 只有当明确有会话且所有会话都是本地时，才不需要确认
-                requireUserConfirmation = !duplicateInfo.ExistingSessions.Any() || duplicateInfo.ExistingSessions.Any(s => !s.IsLocal);
-            }
-
-            if (!requireUserConfirmation)
-            {
-                // 本地重复登录，直接允许
-                _logger?.LogDebug("本地重复登录，同一台机器允许多会话，直接继续登录");
-                return DuplicateLoginAction.ForceOfflineOthers; // 或者直接返回成功
-            }
-
             return await Task.Run(() =>
             {
                 // 在UI线程上显示对话框
@@ -340,16 +258,6 @@ namespace RUINORERP.UI.Network.Services
                     var mainForm = Application.OpenForms[0];
                     return (DuplicateLoginAction)mainForm.Invoke(new Func<DuplicateLoginAction>(() =>
                     {
-                        // 将DuplicateLoginInfo转换为DuplicateLoginResult
-                        var duplicateResult = new DuplicateLoginResult
-                        {
-                            HasDuplicateLogin = duplicateInfo.HasDuplicateLogin,
-                            ExistingSessions = duplicateInfo.ExistingSessions,
-                            Message = duplicateInfo.Message,
-                            // 根据IsLocalDuplicate设置适当的RequireUserConfirmation值
-                            RequireUserConfirmation = !duplicateInfo.IsLocalDuplicate
-                        };
-                        
                         using var dialog = new DuplicateLoginDialog(duplicateResult);
                         var result = dialog.ShowDialog();
                         return result == DialogResult.OK ? dialog.SelectedAction : DuplicateLoginAction.Cancel;
@@ -361,46 +269,7 @@ namespace RUINORERP.UI.Network.Services
             });
         }
 
-        /// <summary>
-        /// 根据用户选择重新执行登录
-        /// </summary>
-        private async Task<LoginResponse> ExecuteLoginWithUserActionAsync(DuplicateLoginAction userAction)
-        {
-            // 创建包含用户选择的登录请求
-            var loginRequest = LoginRequest.Create(_currentContext.Username, _currentContext.Password);
-            loginRequest.AdditionalData = new Dictionary<string, object>
-            {
-                ["DuplicateLoginConfirmed"] = true,
-                ["DuplicateLoginAction"] = userAction.ToString()
-            };
 
-            // 重新发送登录请求
-            var response = await _userLoginService.LoginAsync(
-                _currentContext.Username,
-                _currentContext.Password,
-                _currentContext.CancellationToken);
-
-            return response;
-        }
-
-        /// <summary>
-        /// 登录成功后的后续处理
-        /// </summary>
-        private async Task PostLoginSuccessAsync(LoginResponse response)
-        {
-            try
-            {
-                // 这里可以添加登录成功后的处理逻辑
-                // 例如：缓存同步、权限加载等
-                _logger?.LogInformation($"用户 {_currentContext.Username} 登录成功");
-
-                await Task.CompletedTask;
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogWarning(ex, "登录成功后处理过程中发生异常，但不影响登录结果");
-            }
-        }
 
         /// <summary>
         /// 创建取消登录的响应
@@ -414,24 +283,7 @@ namespace RUINORERP.UI.Network.Services
             };
         }
 
-        /// <summary>
-        /// 判断是否为本地会话
-        /// </summary>
-        private bool IsLocalSession(string clientIp, object isLocalFlag = null)
-        {
-            // 优先使用服务器提供的IsLocal标志
-            if (isLocalFlag != null && isLocalFlag is bool isLocal)
-            {
-                return isLocal;
-            }
 
-            if (string.IsNullOrEmpty(clientIp))
-                return false;
-
-            // 检查是否为本地IP地址
-            var localIps = new[] { "127.0.0.1", "localhost", "::1" };
-            return localIps.Contains(clientIp.ToLower()) || clientIp.StartsWith("192.168.") || clientIp.StartsWith("10.");
-        }
 
         /// <summary>
         /// 通知状态变更
@@ -441,30 +293,6 @@ namespace RUINORERP.UI.Network.Services
             StatusChanged?.Invoke(this, new LoginFlowEventArgs(_currentContext, previousStatus));
         }
 
-        /// <summary>
-        /// 获取当前登录上下文
-        /// </summary>
-        public LoginFlowContext GetCurrentContext() => _currentContext;
-
-        /// <summary>
-        /// 取消当前登录流程
-        /// </summary>
-        public void CancelLogin()
-        {
-            try
-            {
-                if (_currentContext?.CancellationToken.CanBeCanceled == true)
-                {
-                    // 这里需要配合外部的CancellationTokenSource
-                    _currentContext.Status = LoginStatus.Cancelled;
-                    NotifyStatusChanged(_currentContext.Status);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogWarning(ex, "取消登录流程时发生异常");
-            }
-        }
 
         /// <summary>
         /// 释放资源

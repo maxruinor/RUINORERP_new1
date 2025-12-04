@@ -1,4 +1,4 @@
-using RUINORERP.PacketSpec.Models.Authentication;
+﻿using RUINORERP.PacketSpec.Models.Authentication;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Responses;
 using System;
@@ -54,10 +54,6 @@ namespace RUINORERP.PacketSpec.Models.Authentication
         /// 强制对方下线
         /// </summary>
         ForceOfflineOthers,
-        /// <summary>
-        /// 自己下线
-        /// </summary>
-        OfflineSelf
     }
 
     /// <summary>

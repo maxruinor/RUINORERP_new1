@@ -263,56 +263,81 @@ namespace RUINORERP.Business
         /// </summary>
         /// <param name="prodDetailId">当前BOM对应的产品详情ID</param>
         /// <param name="selfProductionCost">当前BOM的自产总成本</param>
-        public async Task UpdateParentBOMsAsync(long prodDetailId, decimal selfProductionCost)
+        /// <param name="processedProdDetailIds">已处理的产品详情ID集合，用于检测循环引用</param>
+        public async Task UpdateParentBOMsAsync(long prodDetailId, decimal selfProductionCost, HashSet<long> processedProdDetailIds = null)
         {
-            // 查询所有直接引用当前产品作为子件的上级BOM
-            var parentBomList = await _appContext.Db.Queryable<tb_BOM_S>()
-                                  .Includes(x => x.tb_BOM_SDetails)
-                                  .Where(x => x.tb_BOM_SDetails.Any(z => z.ProdDetailID == prodDetailId))
-                                  .ToListAsync();
-
-            if (parentBomList == null || parentBomList.Count == 0)
+            // 初始化已处理集合
+            if (processedProdDetailIds == null)
             {
-                return; // 没有上级BOM，递归终止
+                processedProdDetailIds = new HashSet<long>();
             }
 
-            // 处理当前层级的所有BOM
-            foreach (var parentBom in parentBomList)
+            // 检查是否存在循环引用
+            if (processedProdDetailIds.Contains(prodDetailId))
             {
-                bool hasChanges = false;
+                _logger.LogWarning("检测到BOM循环引用: ProdDetailID = {0}", prodDetailId);
+                return; // 存在循环引用，终止递归
+            }
 
-                // 更新子件成本
-                foreach (var detail in parentBom.tb_BOM_SDetails)
+            // 将当前产品详情ID添加到已处理集合
+            processedProdDetailIds.Add(prodDetailId);
+
+            try
+            {
+                // 查询所有直接引用当前产品作为子件的上级BOM
+                var parentBomList = await _appContext.Db.Queryable<tb_BOM_S>()
+                                      .Includes(x => x.tb_BOM_SDetails)
+                                      .Where(x => x.tb_BOM_SDetails.Any(z => z.ProdDetailID == prodDetailId))
+                                      .ToListAsync();
+
+                if (parentBomList == null || parentBomList.Count == 0)
                 {
-                    if (detail.ProdDetailID == prodDetailId)
+                    return; // 没有上级BOM，递归终止
+                }
+
+                // 处理当前层级的所有BOM
+                foreach (var parentBom in parentBomList)
+                {
+                    bool hasChanges = false;
+
+                    // 更新子件成本
+                    foreach (var detail in parentBom.tb_BOM_SDetails)
                     {
-                        // 更新单位成本和小计
-                        detail.UnitCost = selfProductionCost;
-                        detail.SubtotalUnitCost = detail.UnitCost * detail.UsedQty;
-                        hasChanges = true;
+                        if (detail.ProdDetailID == prodDetailId)
+                        {
+                            // 更新单位成本和小计
+                            detail.UnitCost = selfProductionCost;
+                            detail.SubtotalUnitCost = detail.UnitCost * detail.UsedQty;
+                            hasChanges = true;
+                        }
+                    }
+
+                    if (hasChanges)
+                    {
+                        // 重新计算BOM总成本
+                        parentBom.TotalMaterialCost = parentBom.tb_BOM_SDetails.Sum(c => c.SubtotalUnitCost);
+                        parentBom.OutProductionAllCosts = parentBom.TotalMaterialCost + parentBom.TotalOutManuCost + parentBom.OutApportionedCost;
+                        parentBom.SelfProductionAllCosts = parentBom.TotalMaterialCost + parentBom.TotalSelfManuCost + parentBom.SelfApportionedCost;
+
+                        // 保存明细更新
+                        await _unitOfWorkManage.GetDbClient().Updateable<tb_BOM_SDetail>(parentBom.tb_BOM_SDetails)
+                              .UpdateColumns(it => new { it.UnitCost, it.SubtotalUnitCost })
+                              .ExecuteCommandHasChangeAsync();
+
+                        // 保存主表更新
+                        await _unitOfWorkManage.GetDbClient().Updateable(parentBom)
+                              .UpdateColumns(it => new { it.TotalMaterialCost, it.OutProductionAllCosts, it.SelfProductionAllCosts })
+                              .ExecuteCommandHasChangeAsync();
+
+                        // 递归处理上一级BOM
+                        await UpdateParentBOMsAsync(parentBom.ProdDetailID, parentBom.SelfProductionAllCosts, processedProdDetailIds);
                     }
                 }
-
-                if (hasChanges)
-                {
-                    // 重新计算BOM总成本
-                    parentBom.TotalMaterialCost = parentBom.tb_BOM_SDetails.Sum(c => c.SubtotalUnitCost);
-                    parentBom.OutProductionAllCosts = parentBom.TotalMaterialCost + parentBom.TotalOutManuCost + parentBom.OutApportionedCost;
-                    parentBom.SelfProductionAllCosts = parentBom.TotalMaterialCost + parentBom.TotalSelfManuCost + parentBom.SelfApportionedCost;
-
-                    // 保存明细更新
-                    await _unitOfWorkManage.GetDbClient().Updateable<tb_BOM_SDetail>(parentBom.tb_BOM_SDetails)
-                          .UpdateColumns(it => new { it.UnitCost, it.SubtotalUnitCost })
-                          .ExecuteCommandHasChangeAsync();
-
-                    // 保存主表更新
-                    await _unitOfWorkManage.GetDbClient().Updateable(parentBom)
-                          .UpdateColumns(it => new { it.TotalMaterialCost, it.OutProductionAllCosts, it.SelfProductionAllCosts })
-                          .ExecuteCommandHasChangeAsync();
-
-                    // 递归处理上一级BOM
-                    await UpdateParentBOMsAsync(parentBom.ProdDetailID, parentBom.SelfProductionAllCosts);
-                }
+            }
+            finally
+            {
+                // 从已处理集合中移除当前产品详情ID，允许在其他分支中再次处理
+                processedProdDetailIds.Remove(prodDetailId);
             }
         }
 

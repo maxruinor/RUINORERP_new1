@@ -33,6 +33,12 @@ namespace RUINORERP.PacketSpec.Commands
         /// 强制用户下线 - 管理员强制用户退出系统
         /// </summary>
         public static readonly CommandId ForceLogout = new CommandId(CommandCategory.Authentication, (byte)(CommandCatalog.Authentication_ForceLogout & 0xFF));
+
+        /// <summary>
+        /// T掉重复登陆的人员 - 当检测到重复登录时，强制下线先前的会话
+        /// </summary>
+        public static readonly CommandId DuplicateLogin = new CommandId(CommandCategory.Authentication, (byte)(CommandCatalog.Authentication_DuplicateLogin & 0xFF));
+
         #endregion
     }
 }

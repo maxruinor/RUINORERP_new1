@@ -37,7 +37,9 @@ namespace RUINORERP.Server.Network.CommandHandlers
 
             // 设置支持的命令
             SetSupportedCommands(
-                AuthenticationCommands.ForceLogout
+                AuthenticationCommands.ForceLogout,
+                AuthenticationCommands.DuplicateLogin
+
             );
         }
 
@@ -60,6 +62,10 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 {
                     return await HandleForceLogoutAsync(cmd, cancellationToken);
                 }
+                else if (commandId == AuthenticationCommands.DuplicateLogin)
+                {
+                    return await HandleDuplicateLoginAsync(cmd, cancellationToken);
+                }
                 else
                 {
                     return SystemCommandResponse.CreateForceLogoutFailure($"不支持的认证命令: {commandId.Name}", "UNSUPPORTED_AUTH_COMMAND");
@@ -69,6 +75,59 @@ namespace RUINORERP.Server.Network.CommandHandlers
             {
                 _logger?.LogError(ex, "处理认证命令时出错: {Message}", ex.Message);
                 return CreateExceptionResponse(ex, "AUTH_HANDLER_ERROR");
+            }
+        }
+
+        /// <summary>
+        /// 处理重复用户下线命令
+        /// </summary>
+        private async Task<IResponse> HandleDuplicateLoginAsync(QueuedCommand cmd, CancellationToken cancellationToken)
+        {
+            try
+            {
+                if (cmd.Packet.Request is SystemCommandRequest request)
+                {
+                    // 查找目标用户会话
+                    var targetSessions = _sessionService.GetUserSessions(request.TargetUserId);
+                    if (!targetSessions.Any())
+                    {
+                        return SystemCommandResponse.CreateForceLogoutFailure("目标用户不在线", "USER_OFFLINE");
+                    }
+
+                    // 向目标用户发送强制下线通知
+                    var targetSession = targetSessions.First();
+                    var response = await SendForceLogoutNotificationAsync(
+                        targetSession.SessionID,
+                        request,
+                        cancellationToken);
+
+                    if (response != null && response.IsSuccess)
+                    {
+                        _logger?.LogInformation("强制用户下线指令发送成功 - 目标用户: {TargetUserId}", request.TargetUserId);
+
+                        // 返回成功响应
+                        return SystemCommandResponse.CreateForceLogoutSuccess(
+                            request.TargetUserId,
+                            targetSession.UserName ?? "未知用户",
+                            request.AdminUserId);
+                    }
+                    else
+                    {
+                        return SystemCommandResponse.CreateForceLogoutFailure(
+                            response?.Message ?? "无法发送强制下线指令",
+                            response?.Metadata?.ContainsKey("ErrorCode") == true ?
+                                response.Metadata["ErrorCode"].ToString() : "FORCE_LOGOUT_FAILED");
+                    }
+                }
+                else
+                {
+                    return SystemCommandResponse.CreateForceLogoutFailure("请求格式错误", "INVALID_REQUEST_FORMAT");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "处理强制用户下线命令时出错");
+                return SystemCommandResponse.CreateForceLogoutFailure($"处理失败: {ex.Message}", "FORCE_LOGOUT_ERROR");
             }
         }
 

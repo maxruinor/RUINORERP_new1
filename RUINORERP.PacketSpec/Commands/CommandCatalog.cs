@@ -120,6 +120,10 @@ namespace RUINORERP.PacketSpec.Commands
 
         public const ushort Authentication_Connected = 0x0110;
 
+        /// <summary>
+        /// 重复登陆时的处理方式 - 处理用户重复登录的命令T掉
+        /// </summary>
+        public const ushort Authentication_DuplicateLogin = 0x0111;
         #endregion
 
         #region 缓存命令 (0x02xx)

@@ -1,4 +1,4 @@
-﻿using FastReport.DevComponents.DotNetBar;
+using FastReport.DevComponents.DotNetBar;
 using FastReport.DevComponents.DotNetBar.Controls;
 using FastReport.Table;
 using Krypton.Navigator;
@@ -302,6 +302,50 @@ namespace RUINORERP.UI.MRP.BOM
         private void btnQueryForGoods_Click(object sender, EventArgs e)
         {
             Query();
+        }
+
+        private void btnCheckInvalidBOM_Click(object sender, EventArgs e)
+        {
+            CheckInvalidBOM();
+        }
+
+        private void CheckInvalidBOM()
+        {
+            try
+            {
+                // 查询所有BOM记录并包含明细
+                var querySqlQueryable = MainForm.Instance.AppContext.Db.Queryable<tb_BOM_S>()
+                    .Includes(c => c.tb_BOM_SDetails);
+                
+                var allBoms = querySqlQueryable.ToList();
+                
+                // 筛选出明细包含主表母件的错误配方
+                var invalidBoms = new List<tb_BOM_S>();
+                
+                foreach (var bom in allBoms)
+                {
+                    if (bom.tb_BOM_SDetails != null && bom.tb_BOM_SDetails.Any(detail => detail.ProdDetailID == bom.ProdDetailID))
+                    {
+                        invalidBoms.Add(bom);
+                    }
+                }
+                
+                if (invalidBoms.Any())
+                {
+                    // 将错误配方显示在BOM页面的表格中
+                    bindingSourceBomMain.DataSource = invalidBoms.ToBindingSortCollection();
+                    kryptonNavigator1.SelectedPage = kryptonBOM; // 切换到BOM页面
+                    MessageBox.Show($"共发现 {invalidBoms.Count} 个错误配方（明细包含母件）");
+                }
+                else
+                {
+                    MessageBox.Show("未发现错误配方");
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"检查错误配方时发生错误：{ex.Message}");
+            }
         }
 
 

@@ -491,7 +491,7 @@ namespace RUINORERP.UI.BaseForm
             try
             {
                 bool canModify = false, canSave = false, canSubmit = false, canReview = false, canReverseReview = false;
-                bool canCloseCase = false, canAntiCloseCase = false, canDelete = false, canCancel = false;
+                bool canCloseCase = false, canAntiCloseCase = false, canDelete = false;
 
                 // 获取当前编辑实体
                 var entity = EditEntity;
@@ -513,7 +513,6 @@ namespace RUINORERP.UI.BaseForm
                     canCloseCase = UIController.CanExecuteAction(MenuItemEnums.结案, StatusContext);
                     canAntiCloseCase = UIController.CanExecuteAction(MenuItemEnums.反结案, StatusContext);
                     canDelete = UIController.CanExecuteAction(MenuItemEnums.删除, StatusContext);
-                    canCancel = UIController.CanExecuteAction(MenuItemEnums.取消, StatusContext);
                     closeCaseVisible = canCloseCase;
                 }
                 else
@@ -582,12 +581,7 @@ namespace RUINORERP.UI.BaseForm
                                 break;
                         }
 
-                        // 检查是否有相关记录，用于取消操作
-                        // 修改：根据当前状态和操作类型确定是否显示取消按钮
-                        canCancel = (entity is BaseEntity baseEntity &&
-                                   (baseEntity.ActionStatus == ActionStatus.新增 ||
-                                    baseEntity.ActionStatus == ActionStatus.修改 ||
-                                    baseEntity.GetCurrentDataStatus() == DataStatus.新建));
+
                     }
                 }
 
@@ -600,8 +594,6 @@ namespace RUINORERP.UI.BaseForm
                 toolStripButton结案.Enabled = canCloseCase;
                 toolStripButton结案.Visible = closeCaseVisible;
                 toolStripbtnDelete.Enabled = canDelete;
-                toolStripBtnCancel.Visible = canCancel;
-                toolStripBtnCancel.Enabled = canCancel;
 
                 UpdateStateDisplay();
             }
@@ -1675,13 +1667,8 @@ namespace RUINORERP.UI.BaseForm
                 switch (menu)
                 {
                     case MenuItemEnums.新增:
-                    case MenuItemEnums.取消:
                     case MenuItemEnums.修改:
-                        // 确保取消按钮的可见性正确
-                        if (menu == MenuItemEnums.取消)
-                        {
-                            toolStripBtnCancel.Visible = false;
-                        }
+
                         break;
                 }
             }
@@ -2019,7 +2006,6 @@ namespace RUINORERP.UI.BaseForm
                 SetControlsEnabled(false, tsBtnLocked.Name, toolStripbtnClose.Name);
                 tsBtnLocked.Enabled = true;
                 toolStripbtnClose.Enabled = true;
-                toolStripBtnCancel.Visible = true;
             }
 
             return result;
@@ -2505,7 +2491,6 @@ namespace RUINORERP.UI.BaseForm
                 toolStripButtonSave.Enabled = false;
                 toolStripbtnSubmit.Enabled = false;
                 toolStripbtnReview.Enabled = false;
-                toolStripBtnCancel.Enabled = false;
             }
 
             switch (menuItem)
@@ -2537,12 +2522,45 @@ namespace RUINORERP.UI.BaseForm
                     }
                     break;
                 case MenuItemEnums.新增:
+                    // 检查是否有未保存的数据更改
+                    bool hasUnsavedChanges = false;
+
+                    // 检查主实体是否有更改
+                    if (EditEntity != null)
+                    {
+                        pkid = GetPrimaryKeyValue(EditEntity);
+                        // 如果不是新创建的实体（pkid > 0）或者处于编辑状态，则认为可能有更改
+                        hasUnsavedChanges = pkid > 0 || Edited;
+                    }
+
+                    // 检查子实体是否有更改
+                    if (bindingSourceSub != null && bindingSourceSub.DataSource != null)
+                    {
+                        List<C> detailEntities = bindingSourceSub.DataSource as List<C>;
+                        if (detailEntities != null && detailEntities.Count > 0)
+                        {
+                            hasUnsavedChanges = true;
+                        }
+                    }
+
+                    // 如果有未保存的更改，显示确认提示
+                    if (hasUnsavedChanges)
+                    {
+                        DialogResult result = MessageBox.Show("当前数据尚未保存，是否放弃所有未保存数据并创建新单据？", "确认放弃未保存数据", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                        if (result != DialogResult.Yes)
+                        {
+                            toolStripbtnAdd.Enabled = true;
+                            return;
+                        }
+                        else
+                        {
+                            Cancel();
+                        }
+                    }
+
                     toolStripbtnAdd.Enabled = false;
+                    UNLock(); // 解锁当前单据
                     Add();
-                    break;
-                case MenuItemEnums.取消:
-                    UNLock();
-                    Cancel();
                     break;
                 case MenuItemEnums.复制性新增:
                     AddByCopy();
@@ -2576,6 +2594,7 @@ namespace RUINORERP.UI.BaseForm
                         }
                     }
                     Modify();
+                    toolStripbtnModify.Enabled = false;
                     break;
                 case MenuItemEnums.查询:
 
@@ -4098,13 +4117,43 @@ namespace RUINORERP.UI.BaseForm
         /// </summary>
         protected virtual void Cancel()
         {
+            // 检查是否有未保存的数据更改
+            bool hasUnsavedChanges = false;
+
+            // 检查主实体是否有更改
+            if (EditEntity != null)
+            {
+                long pkid = GetPrimaryKeyValue(EditEntity);
+                // 如果不是新创建的实体（pkid > 0）或者处于编辑状态，则认为可能有更改
+                hasUnsavedChanges = pkid > 0 || Edited;
+            }
+
+            // 检查子实体是否有更改
+            if (bindingSourceSub != null && bindingSourceSub.DataSource != null)
+            {
+                List<C> detailEntities = bindingSourceSub.DataSource as List<C>;
+                if (detailEntities != null && detailEntities.Count > 0)
+                {
+                    hasUnsavedChanges = true;
+                }
+            }
+
+            // 如果有未保存的更改，显示确认提示
+            if (hasUnsavedChanges)
+            {
+                DialogResult result = MessageBox.Show("当前数据尚未保存，是否放弃所有未保存数据？", "确认放弃未保存数据", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                if (result != DialogResult.Yes)
+                {
+                    return;
+                }
+            }
+
             if (OnBindDataToUIEvent != null)
             {
                 bindingSourceSub.Clear();
                 //OnBindDataToUIEvent(EditEntity, ActionStatus.加载);
             }
 
-            ToolBarEnabledControl(MenuItemEnums.取消);
             bindingSourceSub.CancelEdit();
 
         }
@@ -4305,6 +4354,18 @@ namespace RUINORERP.UI.BaseForm
             {
                 return;
             }
+            var EntityStatus = StateManager.GetEntityStatus(editEntity as BaseEntity);
+            if (EntityStatus.dataStatus.HasValue)
+            {
+                bool canModify = UIController.CanExecuteAction(EntityStatus.dataStatus.Value, StatusContext);
+                if (!canModify)
+                {
+                    return;
+                }
+            }
+
+
+          
 
             // 获取状态类型和值
             var statusType = FMPaymentStatusHelper.GetStatusType(editEntity as BaseEntity);

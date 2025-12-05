@@ -78,7 +78,6 @@ namespace RUINORERP.UI.FM
         public override void AddExcludeMenuList()
         {
             base.AddExcludeMenuList(MenuItemEnums.新增);
-            base.AddExcludeMenuList(MenuItemEnums.取消);
             base.AddExcludeMenuList(MenuItemEnums.反结案);
             base.AddExcludeMenuList(MenuItemEnums.结案);
         }

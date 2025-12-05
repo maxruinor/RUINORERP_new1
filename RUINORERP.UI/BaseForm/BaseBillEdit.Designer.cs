@@ -34,7 +34,6 @@
             this.timerForToolTip = new System.Windows.Forms.Timer(this.components);
             this.BaseToolStrip = new System.Windows.Forms.ToolStrip();
             this.toolStripbtnAdd = new System.Windows.Forms.ToolStripButton();
-            this.toolStripBtnCancel = new System.Windows.Forms.ToolStripButton();
             this.toolStripbtnModify = new System.Windows.Forms.ToolStripButton();
             this.toolStripbtnDelete = new System.Windows.Forms.ToolStripButton();
             this.toolStripbtnQuery = new System.Windows.Forms.ToolStripButton();
@@ -52,13 +51,13 @@
             this.toolStripMenuItem3 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem4 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripbtnRelatedQuery = new System.Windows.Forms.ToolStripDropDownButton();
+            this.toolStripbtnConvertDocuments = new System.Windows.Forms.ToolStripDropDownButton();
             this.toolStripbtnProperty = new System.Windows.Forms.ToolStripButton();
             this.toolStripbtnClose = new System.Windows.Forms.ToolStripButton();
             this.tsBtnLocked = new System.Windows.Forms.ToolStripButton();
             this.bwRemoting = new System.ComponentModel.BackgroundWorker();
             this.errorProviderForAllInput = new System.Windows.Forms.ErrorProvider(this.components);
             this.bindingSourceSub = new System.Windows.Forms.BindingSource(this.components);
-            this.toolStripbtnConvertDocuments = new System.Windows.Forms.ToolStripDropDownButton();
             this.BaseToolStrip.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
@@ -73,7 +72,6 @@
             this.BaseToolStrip.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.BaseToolStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripbtnAdd,
-            this.toolStripBtnCancel,
             this.toolStripbtnModify,
             this.toolStripbtnDelete,
             this.toolStripbtnQuery,
@@ -104,14 +102,6 @@
             this.toolStripbtnAdd.Name = "toolStripbtnAdd";
             this.toolStripbtnAdd.Size = new System.Drawing.Size(53, 22);
             this.toolStripbtnAdd.Text = "新增";
-            // 
-            // toolStripBtnCancel
-            // 
-            this.toolStripBtnCancel.Image = global::RUINORERP.UI.Properties.Resources.cancel;
-            this.toolStripBtnCancel.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripBtnCancel.Name = "toolStripBtnCancel";
-            this.toolStripBtnCancel.Size = new System.Drawing.Size(53, 22);
-            this.toolStripBtnCancel.Text = "取消";
             // 
             // toolStripbtnModify
             // 
@@ -244,6 +234,14 @@
             this.toolStripbtnRelatedQuery.Size = new System.Drawing.Size(62, 22);
             this.toolStripbtnRelatedQuery.Text = "联查";
             // 
+            // toolStripbtnConvertDocuments
+            // 
+            this.toolStripbtnConvertDocuments.Image = global::RUINORERP.UI.Properties.Resources.transferbill;
+            this.toolStripbtnConvertDocuments.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripbtnConvertDocuments.Name = "toolStripbtnConvertDocuments";
+            this.toolStripbtnConvertDocuments.Size = new System.Drawing.Size(62, 22);
+            this.toolStripbtnConvertDocuments.Text = "转单";
+            // 
             // toolStripbtnProperty
             // 
             this.toolStripbtnProperty.Image = ((System.Drawing.Image)(resources.GetObject("toolStripbtnProperty.Image")));
@@ -276,14 +274,6 @@
             // errorProviderForAllInput
             // 
             this.errorProviderForAllInput.ContainerControl = this;
-            // 
-            // toolStripbtnConvertDocuments
-            // 
-            this.toolStripbtnConvertDocuments.Image = global::RUINORERP.UI.Properties.Resources.transferbill;
-            this.toolStripbtnConvertDocuments.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripbtnConvertDocuments.Name = "toolStripbtnConvertDocuments";
-            this.toolStripbtnConvertDocuments.Size = new System.Drawing.Size(62, 22);
-            this.toolStripbtnConvertDocuments.Text = "转单";
             // 
             // BaseBillEdit
             // 
@@ -322,7 +312,6 @@
         public System.Windows.Forms.ToolStripDropDownButton toolStripbtnRelatedQuery;
         public System.Windows.Forms.ToolStripButton toolStripbtnSubmit;
         public System.Windows.Forms.ToolStripButton toolStripbtnAdd;
-        internal System.Windows.Forms.ToolStripButton toolStripBtnCancel;
         public System.Windows.Forms.ToolStripButton toolStripButton结案;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem1;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem2;

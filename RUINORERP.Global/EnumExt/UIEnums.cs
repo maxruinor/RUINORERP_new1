@@ -10,7 +10,6 @@ namespace RUINORERP.Global
     public enum MenuItemEnums
     {
         新增,
-        取消,
         复制性新增,
         数据特殊修正,
         删除,

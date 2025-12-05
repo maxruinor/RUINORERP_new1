@@ -448,12 +448,50 @@ namespace RUINORERP.UI.BaseForm
         }
 
         /// <summary>
+        /// 确保状态上下文被正确初始化
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        protected void EnsureStatusContext(BaseEntity entity)
+        {
+            if (entity == null) return;
+
+            // 如果StatusContext为null，尝试从实体中获取
+            if (StatusContext == null)
+            {
+                if (base.BoundEntity == null)
+                {
+                    base.BoundEntity = entity;
+                }
+                StatusContext = entity.StatusContext;
+            }
+
+            // 如果仍然为null，尝试重新初始化
+            if (StatusContext == null && StateManager != null)
+            {
+                try
+                {
+                    // 获取实体当前的数据状态
+                    var currentDataStatus = StateManager.GetDataStatus(entity);
+                    // 使用状态转换上下文工厂重新创建状态上下文
+                    StatusContext = StatusTransitionContextFactory.CreateDataStatusContext(entity, currentDataStatus, null, null);
+                }
+                catch (Exception ex)
+                {
+                    logger?.LogError(ex, "重新初始化状态上下文失败: {ex.Message}", ex);
+                }
+            }
+        }
+
+        /// <summary>
         /// 统一更新所有UI状态 - 集中处理所有UI状态更新逻辑
         /// </summary>
         /// <param name="entity">实体对象</param>
-        internal override void UpdateAllUIStates(BaseEntity entity)
+        protected override void UpdateAllUIStates(BaseEntity entity)
         {
             if (entity == null) return;
+
+            // 确保状态上下文被正确初始化
+            EnsureStatusContext(entity);
 
             try
             {
@@ -638,11 +676,17 @@ namespace RUINORERP.UI.BaseForm
         /// <returns>是否可执行</returns>
         protected virtual bool CanExecuteAction(MenuItemEnums action, T entity)
         {
-            if (entity == null || StatusContext == null)
+            if (entity == null)
                 return false;
 
             try
             {
+                // 确保状态上下文被正确初始化
+                EnsureStatusContext(entity);
+
+                if (StatusContext == null)
+                    return false;
+
                 // 使用新的状态管理系统检查操作权限
                 if (UIController != null)
                 {
@@ -1339,6 +1383,7 @@ namespace RUINORERP.UI.BaseForm
         /// <param name="entity"></param>
         public virtual void BindData(T entity, ActionStatus actionStatus = ActionStatus.无操作)
         {
+            base.BindEntity(entity);
             if (entity is BaseEntity baseEntity)
             {
                 baseEntity.AcceptChanges();
@@ -1417,11 +1462,12 @@ namespace RUINORERP.UI.BaseForm
                     if (Entity == null) return;
                     UIHelper.ControlMasterColumnsInvisible(CurMenuInfo, this);
 
-                    // 将object转换为BaseEntity并调用对应的方法
-                    if (Entity is BaseEntity baseEntity)
-                    {
-                        ToolBarEnabledControl(baseEntity);
-                    }
+                    // 注意：ToolBarEnabledControl 已在基类 LoadDataToUI 中通过 UpdateAllUIStates 统一调用
+                    // 移除重复调用以避免多次状态更新
+                    // if (Entity is BaseEntity baseEntity)
+                    // {
+                    //     ToolBarEnabledControl(baseEntity);
+                    // }
 
                     // 增强的状态管理集成
                     EnhancedStateManagementIntegration(typedEntity);
@@ -4354,16 +4400,16 @@ namespace RUINORERP.UI.BaseForm
             {
                 return;
             }
-            var EntityStatus = StateManager.GetEntityStatus(editEntity as BaseEntity);
-            if (EntityStatus.dataStatus.HasValue)
-            {
-                var canModify = UIController.CanExecuteActionWithMessage(EntityStatus.dataStatus.Value, StatusContext);
-                if (!canModify.IsSuccess)
-                {
-                    MainForm.Instance.PrintInfoLog($"当前单据状态为{canModify.ErrorMessage}不允许修改!");
-                    return;
-                }
-            }
+            //var EntityStatus = StateManager.GetEntityStatus(editEntity as BaseEntity);
+            //if (EntityStatus.dataStatus.HasValue)
+            //{
+            //    var canModify = UIController.CanExecuteActionWithMessage(EntityStatus.dataStatus.Value, StatusContext);
+            //    if (!canModify.IsSuccess)
+            //    {
+            //        MainForm.Instance.PrintInfoLog($"当前单据状态为{canModify.ErrorMessage}不允许修改!");
+            //        return;
+            //    }
+            //}
 
 
             // 获取状态类型和值

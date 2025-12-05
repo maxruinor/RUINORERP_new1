@@ -265,8 +265,8 @@ namespace RUINORERP.UI.FM
             DataBindingHelper.BindData4DataTime<tb_FM_PaymentRecord>(entity, t => t.PaymentDate, dtpPaymentDate, false);
             DataBindingHelper.BindData4CheckBox<tb_FM_PaymentRecord>(entity, t => t.ApprovalResults, chkApprovalResults, false);
 
-            //显示 打印状态 如果是草稿状态 不显示打印
-            ShowPrintStatus(lblPrintStatus, entity);
+            // 注意：ShowPrintStatus 已在基类 LoadDataToUI -> UpdateAllUIStates 中统一处理
+            // 移除重复的打印状态更新逻辑
             //this.ValidateChildren();
             this.AutoValidate = AutoValidate.EnableAllowFocusChange;
 

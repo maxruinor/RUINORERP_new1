@@ -13,6 +13,7 @@ using System.Windows.Forms;
 using RUINORERP.Model.Base.StatusManager;
 using RUINORERP.Global;
 using RUINORERP.Model;
+using RUINORERP.UI.BaseForm;
 
 namespace RUINORERP.UI.StateManagement.UI
 {
@@ -275,7 +276,7 @@ namespace RUINORERP.UI.StateManagement.UI
                 }
 
                 // 如果发送者是状态感知控件，获取其管理的控件
-                if (sender is StateAwareControl stateAwareControl)
+                if (sender is BaseBillEdit stateAwareControl)
                 {
                     controls.AddRange(GetAllControls(stateAwareControl));
                 }
@@ -426,7 +427,7 @@ namespace RUINORERP.UI.StateManagement.UI
         /// </summary>
         /// <param name="eventHandler">事件处理器</param>
         /// <param name="stateAwareControl">状态感知控件</param>
-        public static void SubscribeToStateAwareControl(this UIStatusEventHandler eventHandler, StateAwareControl stateAwareControl)
+        public static void SubscribeToStateAwareControl(this UIStatusEventHandler eventHandler, BaseBillEdit stateAwareControl)
         {
             if (eventHandler == null || stateAwareControl == null)
                 return;

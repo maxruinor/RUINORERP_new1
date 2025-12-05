@@ -460,8 +460,8 @@ namespace RUINORERP.UI.FM
             DataBindingHelper.BindData4Cmb<tb_FM_PayeeInfo>(entity, k => k.PayeeInfoID, v => v.DisplayText, cmbPayeeInfoID, c => c.CustomerVendor_ID.HasValue && c.CustomerVendor_ID.Value == entity.CustomerVendor_ID);
             DataBindingHelper.BindData4ControlByEnum<tb_FM_ReceivablePayable>(entity, t => t.ARAPStatus, lblDataStatus, BindDataType4Enum.EnumName, typeof(ARAPStatus));
             DataBindingHelper.BindData4ControlByEnum<tb_FM_ReceivablePayable>(entity, t => t.ApprovalStatus, lblReview, BindDataType4Enum.EnumName, typeof(Global.ApprovalStatus));
-            //显示 打印状态 如果是草稿状态 不显示打印
-            ShowPrintStatus(lblPrintStatus, entity);
+            // 注意：ShowPrintStatus 已在基类 LoadDataToUI -> UpdateAllUIStates 中统一处理
+            // 移除重复的打印状态更新逻辑
 
             LoadCustomerVendor(entity);
 
@@ -607,7 +607,8 @@ namespace RUINORERP.UI.FM
 
                 }
 
-                base.ToolBarEnabledControl(entity);
+                // 注意：ToolBarEnabledControl 已在基类 LoadDataToUI 中统一调用，移除重复调用
+                // base.ToolBarEnabledControl(entity);
 
             };
 

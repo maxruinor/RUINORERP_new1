@@ -408,6 +408,10 @@ namespace AutoUpdate
         private List<KeyValuePair<string, string>> filesList = new List<KeyValuePair<string, string>>();
 
         private List<string> versionDirList = new List<string>();
+        /// <summary>
+        /// 更新文件哈希表，用于存储需要更新的文件信息
+        /// </summary>
+        private Hashtable htUpdateFile = new Hashtable();
 
         string localXmlFile = Application.StartupPath + "\\AutoUpdaterList.xml";
         string serverXmlFile = string.Empty;
@@ -507,8 +511,8 @@ namespace AutoUpdate
                     System.IO.Directory.CreateDirectory(updateDataPath);
                 }
 
-                tempUpdatePath = updateDataPath + "\\" + "_" + updaterXmlFiles.FindNode("//Application").Attributes["applicationId"].Value + "_" + "y" + "_" + "x" + "_" + "m" + "_" + "\\";
-                //tempUpdatePath = Environment.GetEnvironmentVariable("Temp") + "\\" + "_" + updaterXmlFiles.FindNode("//Application").Attributes["applicationId"].Value + "_" + "y" + "_" + "x" + "_" + "m" + "_" + "\\";
+                tempUpdatePath = Path.Combine(updateDataPath, "_" + updaterXmlFiles.FindNode("//Application").Attributes["applicationId"].Value + "_" + "y" + "_" + "x" + "_" + "m" + "\\");
+                //tempUpdatePath = Path.Combine(Environment.GetEnvironmentVariable("Temp"), "_" + updaterXmlFiles.FindNode("//Application").Attributes["applicationId"].Value + "_" + "y" + "_" + "x" + "_" + "m" + "\\");
                 appUpdater.DownAutoUpdateFile(tempUpdatePath);
 
                 // 下载完成后检查是否有更新
@@ -552,7 +556,8 @@ namespace AutoUpdate
         /// </summary>
         private void CheckForUpdatesAndShowUI()
         {
-            Hashtable htUpdateFile = new Hashtable();
+            // 使用类级别的htUpdateFile变量
+            htUpdateFile.Clear();
             serverXmlFile = Path.Combine(tempUpdatePath, "AutoUpdaterList.xml");
 
             // 检查服务器配置文件是否存在
@@ -1074,11 +1079,10 @@ namespace AutoUpdate
                             }
                         }
 
-                        string tempPath = tempUpdatePath + "\\" + VerNo + "\\" + UpdateFile;
+                        string tempPath = Path.Combine(tempUpdatePath, VerNo, UpdateFile);
 
                         filesList.Add(new KeyValuePair<string, string>(AppDomain.CurrentDomain.BaseDirectory + UpdateFile, tempPath));
 
-                        //����ʱ�����Ӷ�Ӧ�İ汾Ŀ¼���ݰ汾�ŷ��� ����������������
                         if (!versionDirList.Contains(VerNo))
                         {
                             versionDirList.Add(VerNo);
@@ -1281,6 +1285,13 @@ namespace AutoUpdate
             AppendAllText($"[CopyFile] 源路径: {sourcePath}");
             AppendAllText($"[CopyFile] 目标路径: {objPath}");
 
+            // 验证源路径是否存在
+            if (!Directory.Exists(sourcePath))
+            {
+                AppendAllText($"[CopyFile] 错误：源路径不存在: {sourcePath}");
+                return;
+            }
+
             //			char[] split = @"\".ToCharArray();
             if (!Directory.Exists(objPath))
             {
@@ -1296,6 +1307,7 @@ namespace AutoUpdate
 
             string[] allfiles = Directory.GetFiles(sourcePath);
             AppendAllText($"[CopyFile] 源目录包含 {allfiles.Length} 个文件");
+            AppendAllText($"[CopyFile] htUpdateFile 包含 {htUpdateFile.Count} 个条目");
             
             // 遍历所有文件并找出需要备份的文件
             foreach (string file in allfiles)
@@ -1351,7 +1363,7 @@ namespace AutoUpdate
                     
                     #region 复制文件
                     //如果正在更新自身 避免自身运行时被覆盖
-                    if (files[i] == sourcePath + @"\" + currentexeName)
+                    if (files[i] == Path.Combine(sourcePath, currentexeName))
                     {
                         //MessageBox.Show("正在更新自身");
                         AppendAllText($"[CopyFile] 跳过自身更新文件: {files[i]}");
@@ -1607,7 +1619,7 @@ namespace AutoUpdate
                     
                     #region 复制文件
                     //如果正在更新自身 避免自身运行时被覆盖
-                    if (files[i] == sourcePath + @"\" + currentexeName)
+                    if (files[i] == Path.Combine(sourcePath, currentexeName))
                     {
                         //MessageBox.Show("正在更新自身");
                         AppendAllText($"[CopyFile] 跳过自身更新文件: {files[i]}");
@@ -1916,11 +1928,12 @@ namespace AutoUpdate
         {
             try
             {
-                AppendAllText("更新完成");
+                AppendAllText("===== 开始执行 LastCopy 文件复制 =====");
                 //更新完成后copy文件，将下载的临时文件夹中的新文件复制到对应目标目录使其生效
 
-                string targetDir = Directory.GetCurrentDirectory();
+                string targetDir = AppDomain.CurrentDomain.BaseDirectory;
                 AppendAllText($"[LastCopy] 目标目录: {targetDir}");
+                AppendAllText($"[LastCopy] 临时更新路径: {tempUpdatePath}");
 
                 // 确保目标目录存在
                 if (!Directory.Exists(targetDir))
@@ -1933,7 +1946,15 @@ namespace AutoUpdate
                     AppendAllText($"[LastCopy] 目标目录已存在: {targetDir}");
                 }
 
-                AppendAllText($"[LastCopy] 准备复制 {versionDirList.Count} 个版本目录");
+                // 验证临时更新路径是否存在
+                if (!Directory.Exists(tempUpdatePath))
+                {
+                    AppendAllText($"[LastCopy] 错误：临时更新路径不存在: {tempUpdatePath}");
+                    return;
+                }
+
+                AppendAllText($"[LastCopy] htUpdateFile 包含 {htUpdateFile.Count} 个文件记录");
+                AppendAllText($"[LastCopy] versionDirList 包含 {versionDirList.Count} 个版本目录");
                 
                 for (int i = 0; i < versionDirList.Count; i++)
                 {
@@ -2450,8 +2471,8 @@ namespace AutoUpdate
 
                 //
 
-                tempUpdatePath = updateDataPath + "\\" + "_" + updaterXmlFiles.FindNode("//Application").Attributes["applicationId"].Value + "_" + "y" + "_" + "x" + "_" + "m" + "_" + "\\";
-                //tempUpdatePath = Environment.GetEnvironmentVariable("Temp") + "\\" + "_" + updaterXmlFiles.FindNode("//Application").Attributes["applicationId"].Value + "_" + "y" + "_" + "x" + "_" + "m" + "_" + "\\";
+                tempUpdatePath = Path.Combine(updateDataPath, "_" + updaterXmlFiles.FindNode("//Application").Attributes["applicationId"].Value + "_" + "y" + "_" + "x" + "_" + "m" + "\\");
+                //tempUpdatePath = Path.Combine(Environment.GetEnvironmentVariable("Temp"), "_" + updaterXmlFiles.FindNode("//Application").Attributes["applicationId"].Value + "_" + "y" + "_" + "x" + "_" + "m" + "\\");
                 appUpdater.DownAutoUpdateFile(tempUpdatePath);
             }
             catch (Exception ex)
@@ -2558,8 +2579,8 @@ namespace AutoUpdate
 
                 //
 
-                tempUpdatePath = updateDataPath + "\\" + "_" + updaterXmlFiles.FindNode("//Application").Attributes["applicationId"].Value + "_" + "y" + "_" + "x" + "_" + "m" + "_" + "\\";
-                //tempUpdatePath = Environment.GetEnvironmentVariable("Temp") + "\\" + "_" + updaterXmlFiles.FindNode("//Application").Attributes["applicationId"].Value + "_" + "y" + "_" + "x" + "_" + "m" + "_" + "\\";
+                tempUpdatePath = Path.Combine(updateDataPath, "_" + updaterXmlFiles.FindNode("//Application").Attributes["applicationId"].Value + "_" + "y" + "_" + "x" + "_" + "m" + "\\");
+                //tempUpdatePath = Path.Combine(Environment.GetEnvironmentVariable("Temp"), "_" + updaterXmlFiles.FindNode("//Application").Attributes["applicationId"].Value + "_" + "y" + "_" + "x" + "_" + "m" + "\\");
                 appUpdater.DownAutoUpdateFile(tempUpdatePath);
             }
             catch (Exception ex)
@@ -2630,14 +2651,13 @@ namespace AutoUpdate
         /// 更新文件列表
         /// 包括核心文件也要加入到列表
         /// </summary>
-        Hashtable htUpdateFile = new Hashtable();
-
         public void UpdateAndDownLoadFile()
         {
+            
+                // 使用类级别的htUpdateFile变量
+                htUpdateFile.Clear();
             try
             {
-
-
                 mainAppExe = updaterXmlFiles.GetNodeValue("//EntryPoint");
                 Process[] allProcess = Process.GetProcesses();
                 foreach (Process p in allProcess)
@@ -2718,8 +2738,6 @@ namespace AutoUpdate
                 // MessageBox.Show("�����ļ�����ʧ�ܣ�" + exx.Message.ToString(), "����", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
 
-
-
             InvalidateControl();
             this.Cursor = Cursors.Default;
 
@@ -2730,7 +2748,6 @@ namespace AutoUpdate
         /// </summary>
         public void ApplyApp()
         {
-            //��������������ļ����Լ�����������
             if (System.IO.File.Exists(System.IO.Path.Combine(tempUpdatePath, currentexeName)))
             {
                 string filename = Assembly.GetExecutingAssembly().Location;

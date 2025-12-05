@@ -633,6 +633,9 @@ namespace RUINORERP.Server
 
             // 初始化服务器监控选项卡页面（默认显示）
             InitializeDefaultTab();
+            
+            // 启动UI日志处理泵
+            StartUiLogPump();
         }
 
         // 添加内存使用事件处理方法
@@ -1745,8 +1748,7 @@ namespace RUINORERP.Server
         public void SafeLogOperation(string msg, Color color)
         {
             // 最外层的安全检查 - 快速失败
-            if (msg == null) return;
-            if (IsDisposed || !IsHandleCreated) return;
+            if (string.IsNullOrWhiteSpace(msg)) return;
             if (IsIISProcess()) return;
 
             try
@@ -1765,31 +1767,196 @@ namespace RUINORERP.Server
                 {
                     try
                     {
-                        // 尝试使用UI控件日志
-                        bool uiLogSuccess = TryUILogging(formattedMsg, color);
-
-                        // 如果UI日志失败，尝试文件日志
-                        if (!uiLogSuccess)
+                        // 将Color转换为LogLevel
+                        LogLevel logLevel;
+                        if (color == Color.Red)
                         {
-                            LogToFile(formattedMsg, color);
+                            logLevel = LogLevel.Error;
+                        }
+                        else if (color == Color.Yellow)
+                        {
+                            logLevel = LogLevel.Warning;
+                        }
+                        else // Color.Green, Color.Blue或其他颜色
+                        {
+                            logLevel = LogLevel.Information;
+                        }
+
+                        // 优先记录到文件日志 - 更可靠
+                        LogToFile(formattedMsg, logLevel);
+
+                        // 仅当UI日志启用时，才尝试记录到UI控件
+                        if (_uiLoggingEnabled)
+                        {
+                            TryUILogging(formattedMsg, color);
                         }
                     }
                     catch (Exception ex)
                     {
                         // 捕获所有异常，确保日志操作不会影响主程序
-                        Console.WriteLine($"日志后台处理错误: {ex.Message}");
+                        try
+                        {
+                            Console.WriteLine($"日志后台处理错误: {ex.Message}");
+                        }
+                        catch { }
                     }
                 });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // 最外层异常处理 - 确保绝对不会影响主程序
-                Console.WriteLine($"SafeLogOperation错误: {ex.Message}");
+                // 不记录任何错误，避免级联问题
             }
         }
 
         // 标记UI日志是否可用的标志
         private volatile bool _uiLoggingEnabled = true;
+        
+        // 日志生产者-消费者队列相关
+        private readonly BlockingCollection<string> _uiLogQueue = new BlockingCollection<string>(new ConcurrentQueue<string>(), 1000);
+        private CancellationTokenSource _uiLogCts;
+        private const int UI_LOG_BATCH_INTERVAL = 200; // 日志批次处理间隔（毫秒）
+        private const int UI_LOG_MAX_BATCH_SIZE = 4096; // 最大日志批次大小
+
+        /// <summary>
+        /// 启动UI日志处理泵
+        /// </summary>
+        private void StartUiLogPump()
+        {
+            if (_uiLogCts != null)
+                return;
+            
+            _uiLogCts = new CancellationTokenSource();
+            var ct = _uiLogCts.Token;
+            
+            Task.Factory.StartNew(async () =>
+            {
+                var sb = new StringBuilder();
+                while (!ct.IsCancellationRequested)
+                {
+                    try
+                    {
+                        string msg;
+                        // 等待新消息，超时后批量刷新
+                        if (!_uiLogQueue.TryTake(out msg, UI_LOG_BATCH_INTERVAL, ct))
+                        {
+                            if (sb.Length > 0)
+                            {
+                                var batch = sb.ToString();
+                                sb.Clear();
+                                AppendLogToUi(batch);
+                            }
+                            continue;
+                        }
+                        
+                        sb.Append(msg);
+                        // 继续尝试拉取以批量合并（短时间窗口）
+                        while (_uiLogQueue.TryTake(out msg))
+                        {
+                            sb.Append(msg);
+                            if (sb.Length > UI_LOG_MAX_BATCH_SIZE)
+                                break;
+                        }
+                        
+                        var batch2 = sb.ToString();
+                        sb.Clear();
+                        AppendLogToUi(batch2);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        break;
+                    }
+                    catch
+                    {
+                        // 忽略异常，确保日志处理泵不会崩溃
+                    }
+                }
+            }, TaskCreationOptions.LongRunning);
+        }
+
+        /// <summary>
+        /// 停止UI日志处理泵
+        /// </summary>
+        private void StopUiLogPump()
+        {
+            try
+            {
+                _uiLogCts?.Cancel();
+                _uiLogCts?.Dispose();
+                _uiLogCts = null;
+            }
+            catch
+            {
+                // 忽略异常
+            }
+        }
+
+        /// <summary>
+        /// 将日志批量追加到UI控件
+        /// </summary>
+        private void AppendLogToUi(string batch)
+        {
+            if (IsDisposed)
+                return;
+                
+            if (InvokeRequired)
+            {
+                try
+                {
+                    BeginInvoke(new Action(() => AppendLogToUi(batch)));
+                }
+                catch
+                {
+                    // 窗体已关闭，忽略异常
+                }
+                return;
+            }
+
+            if (richTextBoxLog == null || richTextBoxLog.IsDisposed || !richTextBoxLog.IsHandleCreated)
+                return;
+
+            try
+            {
+                // 最小化本机richedit操作，提高性能
+                richTextBoxLog.SuspendLayout();
+                richTextBoxLog.AppendText(batch);
+                richTextBoxLog.ScrollToCaret();
+                
+                // 确保日志行数不超过限制
+                EnsureMaxLinesSafe(richTextBoxLog, 500);
+            }
+            catch (Exception)
+            {
+                // 如果出现严重错误，禁用UI日志
+                _uiLoggingEnabled = false;
+            }
+            finally
+            {
+                try
+                {
+                    richTextBoxLog.ResumeLayout();
+                }
+                catch
+                {
+                    // 忽略异常
+                }
+            }
+        }
+
+        /// <summary>
+        /// 安全地将日志消息加入UI日志队列
+        /// </summary>
+        private void SafeLogEnqueue(string formattedMsg)
+        {
+            if (!_uiLoggingEnabled)
+                return;
+                
+            if (!_uiLogQueue.TryAdd(formattedMsg))
+            {
+                // 队列满时回退到文件记录
+                LogToFile(formattedMsg, LogLevel.Information);
+            }
+        }
 
         /// <summary>
         /// 尝试使用UI控件进行日志记录
@@ -1800,69 +1967,81 @@ namespace RUINORERP.Server
             // 首先检查UI日志是否已被禁用
             if (!_uiLoggingEnabled)
                 return false;
-
-            bool success = false;
-
             try
             {
-                // 检查控件状态
-                if (richTextBoxLog == null || richTextBoxLog.IsDisposed || !richTextBoxLog.IsHandleCreated)
+                // 将日志消息加入UI日志队列
+                SafeLogEnqueue(logMessage);
+                return true;
+            }
+            catch (ObjectDisposedException)
+            {
+                // 控件已被释放，禁用UI日志
+                _uiLoggingEnabled = false;
+                return false;
+            }
+            catch (InvalidOperationException)
+            {
+                // 操作无效，禁用UI日志
+                _uiLoggingEnabled = false;
+                return false;
+            }
+            catch (Exception)
+            {
+                // 任何其他异常都返回失败
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 在UI线程上执行实际的日志记录操作
+        /// </summary>
+        /// <param name="logMessage">日志消息</param>
+        /// <returns>是否成功记录日志</returns>
+        private bool PerformUILogging(string logMessage)
+        {
+            try
+            {
+                // 再次检查控件状态 - 双重保险
+                if (richTextBoxLog == null || richTextBoxLog.IsDisposed || !richTextBoxLog.IsHandleCreated || IsDisposed)
                 {
-                    _uiLoggingEnabled = false; // 控件不可用，禁用UI日志
+                    _uiLoggingEnabled = false;
                     return false;
                 }
 
-                // 使用BeginInvoke避免阻塞线程池线程
-                richTextBoxLog.BeginInvoke(new Action(() =>
+                // 安全地限制日志行数
+                EnsureMaxLinesSafe(richTextBoxLog, 500);
+
+                // 安全地追加文本 - 使用更安全的方式
+                lock (richTextBoxLog) // 防止多线程同时访问
                 {
                     try
                     {
-                        // 再次检查控件状态
-                        if (richTextBoxLog == null || richTextBoxLog.IsDisposed || !richTextBoxLog.IsHandleCreated)
-                        {
-                            _uiLoggingEnabled = false;
-                            return;
-                        }
-
-                        // 安全地限制日志行数
-                        EnsureMaxLines(richTextBoxLog, 500);
-
-                        // 安全地追加文本 - 这是最可能引发AccessViolation的操作之一
-                        try
-                        {
-                            richTextBoxLog.AppendText(logMessage);
-                        }
-                        catch (AccessViolationException)
-                        {
-                            _uiLoggingEnabled = false;
-                            return;
-                        }
-
-                        // 尝试滚动到末尾，但失败也不影响
-                        try { richTextBoxLog.ScrollToCaret(); } catch { }
-
-                        success = true;
+                        richTextBoxLog.AppendText(logMessage);
                     }
                     catch (AccessViolationException)
                     {
                         // 严重的内存访问异常，禁用UI日志
                         _uiLoggingEnabled = false;
-                        success = false;
+                        return false;
                     }
-                    catch (Exception)
-                    {
-                        // 其他UI异常，返回失败
-                        success = false;
-                    }
-                }));
+                }
+
+                // 尝试滚动到末尾，但失败也不影响
+                try { richTextBoxLog.ScrollToCaret(); } catch { }
+
+                return true;
+            }
+            catch (AccessViolationException)
+            {
+                // 严重的内存访问异常，禁用UI日志
+                _uiLoggingEnabled = false;
+                return false;
             }
             catch (Exception)
             {
-                // 任何异常都返回失败
-                success = false;
+                // 其他UI异常，返回失败
+                return false;
             }
-
-            return success;
         }
 
         // TryAppendTextSafe方法已被TryUILogging替代，不再使用
@@ -1870,7 +2049,7 @@ namespace RUINORERP.Server
         /// <summary>
         /// 当日志控件不可用时，将日志记录到文件 - 轻量级实现
         /// </summary>
-        private void LogToFile(string logMessage, Color color)
+        private void LogToFile(string logMessage, LogLevel logLevel)
         {
             try
             {
@@ -1880,18 +2059,33 @@ namespace RUINORERP.Server
                 // 仅在目录不存在时创建，减少系统调用
                 if (!Directory.Exists(logDir))
                 {
-                    try { Directory.CreateDirectory(logDir); }
-                    catch { return; } // 创建失败则直接返回
+                    try { Directory.CreateDirectory(logDir); } catch { return; } // 创建失败则直接返回
                 }
 
                 string logFile = Path.Combine(logDir, $"ServerLog_{DateTime.Now:yyyyMMdd}.txt");
 
-                // 简化日志格式，减少字符串操作
-                string level = color == Color.Red ? "[错误] " : "[信息] ";
-                string fullLogMessage = $"{level}{logMessage}";
+                // 根据日志级别确定显示文本
+                string level = logLevel switch
+                {
+                    LogLevel.Error => "[错误] ",
+                    LogLevel.Warning => "[警告] ",
+                    LogLevel.Information => "[信息] ",
+                    LogLevel.Debug => "[调试] ",
+                    LogLevel.Trace => "[跟踪] ",
+                    _ => "[日志] "
+                };
 
-                // 使用更轻量级的文件写入方式
-                File.AppendAllText(logFile, fullLogMessage, Encoding.UTF8);
+                // 添加进程和线程信息，便于诊断
+                string processInfo = $"[PID:{Process.GetCurrentProcess().Id}] [TID:{Thread.CurrentThread.ManagedThreadId}] ";
+                string fullLogMessage = $"{level}{processInfo}{logMessage}";
+
+                // 使用更安全的文件写入方式
+                // 使用FileStream和StreamWriter，设置FileShare选项以允许其他进程读取日志文件
+                using (FileStream fs = new FileStream(logFile, FileMode.Append, FileAccess.Write, FileShare.Read))
+                using (StreamWriter sw = new StreamWriter(fs, Encoding.UTF8))
+                {
+                    sw.Write(fullLogMessage);
+                }
             }
             catch (Exception)
             {
@@ -1911,26 +2105,37 @@ namespace RUINORERP.Server
             SafeLogOperation($"[错误] {msg}", Color.Red);
         }
 
-        private void EnsureMaxLines(RichTextBox rtb, int maxLines)
+        /// <summary>
+        /// 安全地限制RichTextBox的行数 - 避免使用可能导致AccessViolation的操作
+        /// </summary>
+        private void EnsureMaxLinesSafe(RichTextBox rtb, int maxLines)
         {
             // 最安全的实现 - 完全避免可能导致AccessViolation的复杂操作
             try
             {
-                // 检查控件状态
-                if (rtb == null || rtb.IsDisposed || !rtb.IsHandleCreated)
+                // 检查控件状态 - 更严格的检查
+                if (rtb == null || rtb.IsDisposed || !rtb.IsHandleCreated || IsDisposed)
                     return;
 
-                // 简化的行数控制：如果文本过长，直接清空大部分内容，只保留最新的部分
-                // 这种方式避免了GetLineFromCharIndex和GetFirstCharIndexFromLine等可能导致问题的方法
-                if (rtb.Text.Length > 10000) // 大约100-200行
+                // 使用文本长度作为判断依据，避免使用GetLineFromCharIndex等可能导致问题的方法
+                const int estimatedCharsPerLine = 100;
+                const int maxChars = 5000; // 大约50行，保守估计
+
+                // 只在文本长度超过阈值时进行处理
+                if (rtb.TextLength > maxChars)
                 {
-                    // 只保留最后约50行（假设每行平均100个字符）
-                    int charsToKeep = 5000;
-                    if (rtb.Text.Length > charsToKeep)
+                    try
                     {
+                        // 使用更安全的方式：清空整个控件
+                        // 这种方式避免了任何可能引发AccessViolation的字符串操作
                         rtb.Clear();
-                        // 注意：这里不再尝试保留部分内容，因为任何对Text的复杂操作都可能引发AccessViolation
-                        // 如果需要保留内容，可以考虑使用更简单的字符串操作后再设置
+                        // 可以选择添加一条提示信息
+                        rtb.AppendText("[日志已自动清空，只显示最新内容]\r\n");
+                    }
+                    catch (AccessViolationException)
+                    {
+                        // 如果清空操作也引发AccessViolation，禁用UI日志
+                        _uiLoggingEnabled = false;
                     }
                 }
             }
@@ -1938,6 +2143,11 @@ namespace RUINORERP.Server
             {
                 // 特别捕获AccessViolationException，这是最危险的异常
                 // 在这种情况下，我们应该完全放弃UI日志
+                _uiLoggingEnabled = false;
+            }
+            catch (ObjectDisposedException)
+            {
+                // 控件已被释放，禁用UI日志
                 _uiLoggingEnabled = false;
             }
             catch (Exception)
@@ -1948,6 +2158,10 @@ namespace RUINORERP.Server
 
         private async void frmMainNew_FormClosing(object sender, FormClosingEventArgs e)
         {
+            // 禁止新的UI日志，停止泵
+            _uiLoggingEnabled = false;
+            StopUiLogPump();
+            
             await ShutdownAsync();
         }
 
@@ -2041,14 +2255,19 @@ namespace RUINORERP.Server
         {
             try
             {
-                // 关闭NetworkServer
+                // 1. 立即禁用UI日志，防止后续操作触发AccessViolationException
+                _uiLoggingEnabled = false;
+                StopUiLogPump();  // 确保日志泵被停止
+                PrintInfoLog("UI日志已禁用");
+
+                // 2. 关闭NetworkServer
                 if (_networkServer != null)
                 {
                     await _networkServer.StopAsync();
                     _networkServer = null;
                 }
 
-                // 清理定时器资源
+                // 3. 清理定时器资源
                 if (_serverInfoTimer != null)
                 {
                     _serverInfoTimer.Stop();
@@ -2056,17 +2275,29 @@ namespace RUINORERP.Server
                     _serverInfoTimer = null;
                 }
 
-                // 清理会话清理定时器资源
+                // 4. 清理会话清理定时器资源
                 if (_sessionCleanupTimer != null)
                 {
                     _sessionCleanupTimer.Change(Timeout.Infinite, Timeout.Infinite);
                     _sessionCleanupTimer.Dispose();
                     _sessionCleanupTimer = null;
                 }
+
+                // 5. 停止并清理内存监控服务
+                if (_memoryMonitoringService != null)
+                {
+                    // 移除事件订阅
+                    _memoryMonitoringService.MemoryUsageWarning -= OnMemoryUsageWarning;
+                    _memoryMonitoringService.MemoryUsageCritical -= OnMemoryUsageCritical;
+                    // 释放资源
+                    _memoryMonitoringService.Dispose();
+                    _memoryMonitoringService = null;
+                }
             }
             catch (Exception e)
             {
-                PrintErrorLog($"SocketServer关闭失败: {e.Message}");
+                // 使用文件日志记录错误，因为UI日志可能已禁用
+                LogToFile($"SocketServer关闭失败: {e.Message}", LogLevel.Error);
             }
             finally
             {

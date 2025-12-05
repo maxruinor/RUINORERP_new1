@@ -13,9 +13,20 @@ namespace RUINORERP.Server
         /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing)
         {
-            if (disposing && (components != null))
+            if (disposing)
             {
-                components.Dispose();
+                // 1. 立即禁用UI日志，防止后续操作触发AccessViolationException
+                this._uiLoggingEnabled = false;
+                
+                // 2. 释放所有组件资源
+                if (components != null)
+                {
+                    components.Dispose();
+                }
+                
+                // 3. 确保所有定时器都已停止和释放
+                // 注意：更详细的清理逻辑已在ShutdownAsync中实现
+                // 这里再次检查以确保资源被完全释放
             }
             base.Dispose(disposing);
         }

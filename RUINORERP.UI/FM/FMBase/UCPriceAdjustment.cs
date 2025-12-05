@@ -266,8 +266,8 @@ namespace RUINORERP.UI.FM
             DataBindingHelper.BindData4CheckBox<tb_FM_PriceAdjustment>(entity, t => t.ApprovalResults, chkApprovalResults, false);
             DataBindingHelper.BindData4ControlByEnum<tb_FM_PriceAdjustment>(entity, t => t.DataStatus, lblDataStatus, BindDataType4Enum.EnumName, typeof(DataStatus));
             DataBindingHelper.BindData4ControlByEnum<tb_FM_PriceAdjustment>(entity, t => t.ApprovalStatus, lblReview, BindDataType4Enum.EnumName, typeof(Global.ApprovalStatus));
-            //显示 打印状态 如果是草稿状态 不显示打印
-            ShowPrintStatus(lblPrintStatus, entity);
+            // 注意：ShowPrintStatus 已在基类 LoadDataToUI -> UpdateAllUIStates 中统一处理
+            // 移除重复的打印状态更新逻辑
 
             if (PaymentType == ReceivePaymentType.收款)
             {
@@ -388,7 +388,8 @@ namespace RUINORERP.UI.FM
                 }
 
 
-                base.ToolBarEnabledControl(entity);
+                // 注意：ToolBarEnabledControl 已在基类 LoadDataToUI 中统一调用，移除重复调用
+                // base.ToolBarEnabledControl(entity);
 
             };
 

@@ -40,10 +40,12 @@ using RUINORERP.UI.StateManagement;
 using System.Web.UI;
 using Control = System.Windows.Forms.Control;
 using RUINORERP.Model.Base.StatusManager;
+using RUINORERP.UI.StateManagement.UI;
+using UserControl = System.Windows.Forms.UserControl;
 
 namespace RUINORERP.UI.BaseForm
 {
-    public partial class BaseBillEdit : StateAwareControl
+    public partial class BaseBillEdit : UserControl
     {
 
         public ApplicationContext AppContext { set; get; }
@@ -51,9 +53,7 @@ namespace RUINORERP.UI.BaseForm
         public BaseBillEdit()
         {
             InitializeComponent();
-            // 状态管理初始化已由基类StateAwareControl处理，无需重复调用
-            // InitializeStateManagement(); // 移除重复初始化
-
+            InitializeStateManagement();
             bwRemoting.DoWork += bwRemoting_DoWork;
             bwRemoting.RunWorkerCompleted += bwRemoting_RunWorkerCompleted;
             bwRemoting.ProgressChanged += bwRemoting_progressChanged;
@@ -62,16 +62,375 @@ namespace RUINORERP.UI.BaseForm
 
         }
 
+
+
+        #region 状态控件的所有代码移植自 StateAwareControl 中
+
+        #region 字段
+
         /// <summary>
-        /// 初始化状态管理系统 - 使用V3状态管理系统优化版本
-        /// 子类可以重写此方法以添加自定义的状态管理初始化逻辑
+        /// v3统一状态管理器
         /// </summary>
-        protected override void InitializeStateManagement()
+        public IUnifiedStateManager _stateManager;
+
+        /// <summary>
+        /// v3状态上下文
+        /// </summary>
+        private IStatusTransitionContext _statusContext;
+
+        /// <summary>
+        /// UI状态控制器
+        /// </summary>
+        private IStatusUIController _uiController;
+
+        #endregion
+
+        #region 事件
+
+        /// <summary>
+        /// 状态变更事件
+        /// </summary>
+        public event EventHandler<StateTransitionEventArgs> StatusChanged;
+
+        #endregion
+
+
+
+        #region 属性
+
+        /// <summary>
+        /// v3统一状态管理器
+        /// </summary>
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public IUnifiedStateManager StateManager
         {
-            // 基类StateAwareControl已处理基本初始化
-            // 此类作为中间层，不需要额外的状态管理初始化逻辑
-            base.InitializeStateManagement();
+            get => _stateManager;
+            set
+            {
+                if (_stateManager != value)
+                {
+                    _stateManager = value;
+                    _statusContext = null;
+                    _uiController = null;
+                }
+            }
         }
+
+        /// <summary>
+        /// v3状态上下文
+        /// </summary>
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public IStatusTransitionContext StatusContext
+        {
+            get => _statusContext;
+            set
+            {
+                if (_statusContext != value)
+                {
+                    _statusContext = value;
+                    OnStatusContextChanged();
+                }
+            }
+        }
+
+        /// <summary>
+        /// UI状态控制器
+        /// </summary>
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public IStatusUIController UIController
+        {
+            get => _uiController;
+            set
+            {
+                _uiController = value;
+                OnUIControllerChanged();
+            }
+        }
+
+        /// <summary>
+        /// 当前数据状态
+        /// </summary>
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public DataStatus CurrentDataStatus =>
+            StatusContext?.CurrentStatus switch
+            {
+                DataStatus dataStatus => dataStatus,
+                _ when StatusContext != null => StatusContext.GetCurrentStatus<DataStatus>(),
+                _ => DataStatus.草稿
+            };
+
+        /// <summary>
+        /// 绑定的实体对象
+        /// </summary>
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public BaseEntity BoundEntity { get; set; }
+
+        #endregion
+
+        #region 初始化
+
+        /// <summary>
+        /// 初始化状态管理
+        /// 统一处理所有状态管理相关的初始化工作，子类可以重写以添加特定逻辑
+        /// </summary>
+        protected virtual void InitializeStateManagement()
+        {
+            try
+            {
+                // 从服务容器获取状态管理器（现在服务已注册）
+                if (Startup.ServiceProvider != null)
+                {
+                    _stateManager = Startup.GetFromFac<IUnifiedStateManager>();
+                    _uiController = Startup.GetFromFac<IStatusUIController>();
+                }
+
+                // 如果仍然获取失败，记录错误信息
+                if (_stateManager == null)
+                {
+                    System.Diagnostics.Debug.WriteLine("无法从DI容器获取IUnifiedStateManager服务，请确保在Startup.cs中调用了builder.AddStateManager()");
+                }
+
+                if (_uiController == null)
+                {
+                    System.Diagnostics.Debug.WriteLine("无法从DI容器获取IStatusUIController服务，请确保在Startup.cs中调用了builder.AddStateManager()");
+                }
+
+                // 统一注册状态变更事件处理
+                if (_stateManager != null)
+                {
+                    // 注册通用的状态变更事件处理
+                    // 子类可以在重写时添加特定的事件处理逻辑
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"初始化状态管理失败: {ex.Message}");
+            }
+        }
+
+        #endregion
+
+        #region 状态管理
+
+        /// <summary>
+        /// 绑定实体对象
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        public virtual void BindEntity(BaseEntity entity)
+        {
+            if (entity == null)
+            {
+                UnbindEntity();
+                return;
+            }
+
+            BoundEntity = entity;
+            InitializeStatusContext(entity);
+            ApplyCurrentStatusToUI();
+        }
+
+        /// <summary>
+        /// 初始化状态上下文
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        private void InitializeStatusContext(BaseEntity entity)
+        {
+            try
+            {
+                // 直接使用状态转换上下文工厂创建数据状态上下文
+                StatusContext = StatusTransitionContextFactory.CreateDataStatusContext(entity, DataStatus.草稿, null, Startup.ServiceProvider);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"获取实体状态上下文失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 解绑实体对象
+        /// </summary>
+        public virtual void UnbindEntity()
+        {
+            BoundEntity = null;
+            StatusContext = null;
+        }
+
+        /// <summary>
+        /// 应用当前状态到UI
+        /// </summary>
+        protected virtual void ApplyCurrentStatusToUI()
+        {
+            if (_uiController == null || StatusContext == null)
+                return;
+
+            try
+            {
+                var controls = GetAllControls(this);
+                _uiController.UpdateUIStatus(StatusContext, controls);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"应用状态到UI失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 统一更新所有UI状态
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        protected virtual void UpdateAllUIStates(BaseEntity entity)
+        {
+            if (entity == null) return;
+
+            // 应用当前状态到UI
+            ApplyCurrentStatusToUI();
+            
+            // 获取当前状态
+            var currentStatus = StateManager.GetDataStatus(entity);
+            
+            if (currentStatus != null)
+            {
+                // 更新UI控件状态
+                UpdateUIControlsByState(currentStatus);
+            }
+
+            // 统一更新打印状态显示（如果有对应的Label控件）
+            UpdatePrintStatusDisplay(entity);
+        }
+
+        /// <summary>
+        /// 统一更新打印状态显示
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        protected virtual void UpdatePrintStatusDisplay(BaseEntity entity)
+        {
+            // 尝试查找打印状态标签控件
+            var printStatusLabel = this.Controls.Find("lblPrintStatus", true).FirstOrDefault() as KryptonLabel;
+            if (printStatusLabel != null)
+            {
+                ShowPrintStatus(printStatusLabel, entity);
+            }
+        }
+
+        /// <summary>
+        /// 获取控件及其所有子控件
+        /// </summary>
+        /// <param name="parent">父控件</param>
+        /// <returns>控件列表</returns>
+        protected virtual IEnumerable<Control> GetAllControls(Control parent) =>
+            parent.Controls.Cast<Control>()
+                .SelectMany(control => new[] { control }.Concat(GetAllControls(control)));
+
+        /// <summary>
+        /// 获取当前控件及其所有子控件
+        /// </summary>
+        /// <returns>控件列表</returns>
+        protected virtual IEnumerable<Control> GetAllControls() =>
+            GetAllControls(this);
+
+        /// <summary>
+        /// 刷新状态
+        /// </summary>
+        public virtual void RefreshStatus()
+        {
+            try
+            {
+                if (StatusContext != null)
+                {
+                    ApplyCurrentStatusToUI();
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"刷新状态失败: {ex.Message}");
+            }
+        }
+
+        #endregion
+
+        #region 事件处理
+
+        /// <summary>
+        /// 状态上下文变更事件
+        /// </summary>
+        protected virtual void OnStatusContextChanged()
+        {
+            // 触发StatusChanged事件
+            StatusChanged?.Invoke(this, new StateTransitionEventArgs(
+                BoundEntity,
+                StatusContext?.CurrentStatus?.GetType() ?? typeof(object),
+                null, // 旧状态
+                StatusContext?.CurrentStatus, // 新状态
+                "状态上下文变更"));
+        }
+
+        /// <summary>
+        /// UI控制器变更事件
+        /// </summary>
+        protected virtual void OnUIControllerChanged()
+        {
+            // 子类可以重写此方法来处理UI控制器变更
+        }
+
+        #endregion
+
+        #region 状态转换
+
+        /// <summary>
+        /// 执行状态转换
+        /// </summary>
+        /// <param name="targetStatus">目标状态</param>
+        /// <param name="reason">转换原因</param>
+        /// <returns>转换结果</returns>
+        public virtual async Task<StateTransitionResult> TransitionToAsync(DataStatus targetStatus, string reason = "")
+        {
+            if (StatusContext == null)
+                return StateTransitionResult.Failure("状态上下文未初始化");
+
+            try
+            {
+                var result = await StatusContext.TransitionTo(targetStatus, reason);
+
+                if (result.IsSuccess)
+                {
+                    ApplyCurrentStatusToUI();
+                    return StateTransitionResult.Success();
+                }
+
+                return StateTransitionResult.Failure($"转换到数据状态失败: {targetStatus}");
+            }
+            catch (Exception ex)
+            {
+                return StateTransitionResult.Failure($"状态转换失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 检查是否可以转换到指定的数据状态
+        /// </summary>
+        /// <param name="targetStatus">目标状态</param>
+        /// <returns>是否可转换</returns>
+        public virtual async Task<bool> CanTransitionToDataStatusAsync(DataStatus targetStatus) =>
+            StatusContext != null && await StatusContext.CanTransitionTo(targetStatus);
+
+        /// <summary>
+        /// 获取可用的数据状态转换列表
+        /// </summary>
+        /// <returns>可转换的状态列表</returns>
+        public virtual IEnumerable<DataStatus> GetAvailableDataStatusTransitions() =>
+            StatusContext?.GetAvailableTransitions()
+                .OfType<DataStatus>() ?? Enumerable.Empty<DataStatus>();
+
+        #endregion
+
+        #endregion
+
+
 
 
 
@@ -108,43 +467,14 @@ namespace RUINORERP.UI.BaseForm
             };
         }
 
-        /// <summary>
-        /// 更新按钮状态
-        /// </summary>
-        protected virtual void UpdateButtonStates()
-        {
-            // 获取当前数据状态
-            DataStatus currentStatus = CurrentDataStatus;
-            // 更新所有按钮状态
-            UpdateAllButtonStates(currentStatus);
-        }
 
-        /// <summary>
-        /// 统一更新所有按钮状态 - 集中管理所有工具栏按钮的状态
-        /// </summary>
-        /// <param name="currentStatus">当前状态</param>
-        protected override void UpdateAllButtonStates(DataStatus currentStatus)
-        {
-            // 默认实现为空，子类可以重写以提供具体实现
-        }
-
-        /// <summary>
-        /// 更新按钮启用状态（子类可重写）
-        /// </summary>
-        /// <param name="currentStatus">当前状态</param>
-        /// <param name="availableTransitions">可用转换</param>
-        protected virtual void UpdateButtonEnabledStates(DataStatus currentStatus, List<DataStatus> availableTransitions)
-        {
-            // 子类可以重写此方法以根据业务逻辑更新按钮状态
-            // 默认实现：根据当前状态设置基本按钮状态
-        }
 
 
         /// <summary>
         /// 根据状态更新UI控件（子类可重写）
         /// </summary>
         /// <param name="currentStatus">当前状态</param>
-        protected override void UpdateUIControlsByState(DataStatus currentStatus)
+        protected virtual void UpdateUIControlsByState(DataStatus currentStatus)
         {
             // 子类可以重写此方法以根据状态更新特定UI控件
             // 例如：禁用/启用某些输入框，显示/隐藏某些控件等
@@ -184,9 +514,6 @@ namespace RUINORERP.UI.BaseForm
 
 
         // TransitionToAsync方法已在StateAwareControl中实现，此处不再重复
-
-
-
         // GetAllControls方法已在StateAwareControl中实现，此处不再重复
         // AddChildControls方法已在StateAwareControl中实现，此处不再重复
 
@@ -296,6 +623,10 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
+        protected virtual void UpdateAllButtonStates(DataStatus currentStatus)
+        {
+
+        }
 
         private void bwRemoting_progressChanged(object sender, ProgressChangedEventArgs e)
         {
@@ -372,12 +703,12 @@ namespace RUINORERP.UI.BaseForm
         protected virtual void DoButtonClick(MenuItemEnums menuItem)
         {
 
-          
-          //if (!CanTransitionToDataStatusAsync(menuItem))
-          //{
-          //    MessageBox.Show($"当前状态下不允许执行 {menuItem} 操作", "操作受限", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-          //    return;
-          //}
+
+            //if (!CanTransitionToDataStatusAsync(menuItem))
+            //{
+            //    MessageBox.Show($"当前状态下不允许执行 {menuItem} 操作", "操作受限", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            //    return;
+            //}
 
             // 根据菜单项执行相应操作
             switch (menuItem)
@@ -601,10 +932,7 @@ namespace RUINORERP.UI.BaseForm
 
         }
 
-        internal virtual void UpdateAllUIStates(BaseEntity entity)
-        {
 
-        }
 
         /// <summary>
         /// 传实体进去,具体在窗体那边判断    单据实体数据传入加载用
@@ -615,6 +943,10 @@ namespace RUINORERP.UI.BaseForm
             // 如果加载的是BaseEntity类型的对象，则根据其状态更新UI
             if (LoadItem is BaseEntity entity)
             {
+                // 设置加载状态和主键ID（统一在这里处理）
+                entity.ActionStatus = ActionStatus.加载;
+                
+
                 // 确保实体已初始化状态管理器
                 if (!entity.IsStateManagerInitialized)
                 {
@@ -626,9 +958,6 @@ namespace RUINORERP.UI.BaseForm
 
                 // 根据实体状态更新UI
                 UpdateAllUIStates(entity);
-
-                // 更新工具栏和操作按钮状态
-                UpdateToolBarState(entity);
 
                 // 更新子表操作权限
                 UpdateChildTableOperations(entity);
@@ -647,30 +976,8 @@ namespace RUINORERP.UI.BaseForm
             // 子类重写此方法以更新特定的状态显示控件
         }
 
-        /// <summary>
-        /// 更新工具栏状态
-        /// </summary>
-        /// <param name="entity">实体对象</param>
-        protected virtual void UpdateToolBarState(BaseEntity entity)
-        {
-            if (entity == null || !entity.IsStateManagerInitialized)
-                return;
 
-            //// 获取可用操作列表
-            //var availableActions = entity.GetAvailableActions();
 
-            //// 更新工具栏按钮状态
-            //UpdateActionButtons(availableActions);
-        }
-
-        /// <summary>
-        /// 更新操作按钮状态
-        /// </summary>
-        /// <param name="availableActions">可用操作列表</param>
-        protected virtual void UpdateActionButtons(List<string> availableActions)
-        {
-            // 子类重写此方法以更新特定的操作按钮
-        }
 
         /// <summary>
         /// 更新子表操作权限

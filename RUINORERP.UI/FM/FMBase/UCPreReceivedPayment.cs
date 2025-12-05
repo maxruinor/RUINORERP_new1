@@ -270,8 +270,8 @@ namespace RUINORERP.UI.FM
             DataBindingHelper.BindData4Label<tb_FM_PreReceivedPayment>(entity, k => k.LocalPrepaidAmountInWords, lblLocalPrepaidAmountInWords, BindDataType4TextBox.Text, true);
             //DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.PayeeAccountNo, txtPayeeAccountNo, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4ControlByEnum<tb_FM_PreReceivedPayment>(entity, t => t.PrePaymentStatus, lblDataStatus, BindDataType4Enum.EnumName, typeof(PrePaymentStatus));
-            //显示 打印状态 如果是草稿状态 不显示打印
-            ShowPrintStatus(lblPrintStatus, entity);
+            // 注意：ShowPrintStatus 已在基类 LoadDataToUI -> UpdateAllUIStates 中统一处理
+            // 移除重复的打印状态更新逻辑
 
 
             //创建表达式

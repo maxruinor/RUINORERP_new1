@@ -188,8 +188,10 @@ namespace RUINORERP.UI.FM
                     listCols.SetCol_DefaultHide<tb_FM_StatementDetail>(c => c.ExchangeRate);
                 }
 
-                entity.PrimaryKeyID = entity.StatementId;
-                entity.ActionStatus = ActionStatus.加载;
+                // 注意：不要覆盖基类已设置的状态值，BaseBillEdit.LoadDataToUI中已处理
+                // entity.PrimaryKeyID = entity.StatementId; // 移到基类处理
+                // entity.ActionStatus = ActionStatus.加载;   // 移到基类处理
+                
                 //如果审核了，审核要灰色
                 LoadPayeeInfo(entity, false);
             }
@@ -259,11 +261,6 @@ namespace RUINORERP.UI.FM
             DataBindingHelper.BindData4TextBox<tb_FM_Statement>(entity, t => t.ClosingBalanceLocalAmount.ToString(), txtClosingBalanceLocalAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_FM_Statement>(entity, t => t.ApprovalOpinions, txtApprovalOpinions, BindDataType4TextBox.Text, false);
 
-
-            //显示 打印状态 如果是草稿状态 不显示打印
-            ShowPrintStatus(lblPrintStatus, entity);
-
-
             //后面这些依赖于控件绑定的数据源和字段。所以要在绑定后执行。
             if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
             {
@@ -272,14 +269,11 @@ namespace RUINORERP.UI.FM
                 #region 收款信息 ，并且可以添加
                 LoadPayeeInfo(entity, true);
                 #endregion
-
-
             }
-            InitLoadGrid();
 
             // 始终设置表格数据源，即使明细数据为空
             details = entity.tb_FM_StatementDetails ?? new List<tb_FM_StatementDetail>();
-            bindingSourceSub.DataSource = details;
+          
 
             //新建和草稿时子表编辑也可以保存。
             foreach (var item in details)
@@ -298,8 +292,11 @@ namespace RUINORERP.UI.FM
             }
 
             sgh.LoadItemDataToGrid<tb_FM_StatementDetail>(grid1, sgd, details, c => c.ARAPId);
+
+            bindingSourceSub.DataSource = details;
+
             // 模拟按下 Tab 键
-            SendKeys.Send("{TAB}");//为了显示远程图片列
+            //SendKeys.Send("{TAB}");//为了显示远程图片列
 
             UIBizService.SynchronizeColumnOrder(sgd, listCols.Select(c => c.DisplayController).ToList());
             //如果属性变化 则状态为修改
@@ -405,7 +402,8 @@ namespace RUINORERP.UI.FM
                     }
                 }
 
-              await  base.ToolBarEnabledControl(entity);
+            // 注意：ToolBarEnabledControl 已在基类 LoadDataToUI 中统一调用，移除重复调用
+            // await base.ToolBarEnabledControl(entity);
 
             };
 
@@ -442,18 +440,11 @@ namespace RUINORERP.UI.FM
             #endregion
 
 
-            //显示 打印状态 如果是草稿状态 不显示打印
+            // 注意：打印状态显示已在基类 ShowPrintStatus 方法中统一处理
+            // 只保留按钮启用状态的逻辑
             if ((StatementStatus)EditEntity.StatementStatus != StatementStatus.草稿)
             {
                 toolStripbtnPrint.Enabled = true;
-                if (EditEntity.PrintStatus == 0)
-                {
-                    lblPrintStatus.Text = "未打印";
-                }
-                else
-                {
-                    lblPrintStatus.Text = $"打印{EditEntity.PrintStatus}次";
-                }
             }
             else
             {

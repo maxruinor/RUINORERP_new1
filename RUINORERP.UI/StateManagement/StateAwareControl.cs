@@ -375,7 +375,7 @@ namespace RUINORERP.UI.StateManagement
             {
                 var result = await StatusContext.TransitionTo(targetStatus, reason);
                 
-                if (result.IsValid)
+                if (result.IsSuccess)
                 {
                     ApplyCurrentStatusToUI();
                     return StateTransitionResult.Success();
@@ -394,7 +394,7 @@ namespace RUINORERP.UI.StateManagement
         /// </summary>
         /// <param name="targetStatus">目标状态</param>
         /// <returns>是否可转换</returns>
-        public virtual async Task<bool> CanTransitionToDataStatus(DataStatus targetStatus) =>
+        public virtual async Task<bool> CanTransitionToDataStatusAsync(DataStatus targetStatus) =>
             StatusContext != null && await StatusContext.CanTransitionTo(targetStatus);
 
         /// <summary>

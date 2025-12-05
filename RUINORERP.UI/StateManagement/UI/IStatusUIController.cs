@@ -56,6 +56,14 @@ namespace RUINORERP.UI.StateManagement.UI
         bool CanExecuteAction(Enum action, IStatusTransitionContext statusContext);
 
         /// <summary>
+        /// 检查指定操作在当前状态下是否可执行，并返回详细的提示消息
+        /// </summary>
+        /// <param name="action">操作类型</param>
+        /// <param name="statusContext">状态上下文</param>
+        /// <returns>包含是否可执行和提示消息的结果对象</returns>
+        RUINORERP.Model.Base.StatusManager.StateTransitionResult CanExecuteActionWithMessage(Enum action, IStatusTransitionContext statusContext);
+
+        /// <summary>
         /// 获取当前状态下可执行的操作列表
         /// </summary>
         /// <param name="statusContext">状态上下文</param>

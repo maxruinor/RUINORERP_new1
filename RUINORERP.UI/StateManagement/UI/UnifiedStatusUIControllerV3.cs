@@ -208,8 +208,20 @@ namespace RUINORERP.UI.StateManagement.UI
         /// <returns>是否可执行</returns>
         public bool CanExecuteAction(Enum action, IStatusTransitionContext statusContext)
         {
+            // 调用带有消息的版本，只返回布尔结果
+            return CanExecuteActionWithMessage(action, statusContext).IsSuccess;
+        }
+
+        /// <summary>
+        /// 检查操作是否可执行，并返回详细的提示消息
+        /// </summary>
+        /// <param name="action">操作类型</param>
+        /// <param name="statusContext">状态上下文</param>
+        /// <returns>包含是否可执行和提示消息的结果对象</returns>
+        public RUINORERP.Model.Base.StatusManager.StateTransitionResult CanExecuteActionWithMessage(Enum action, IStatusTransitionContext statusContext)
+        {
             if (action == null || statusContext == null)
-                return false;
+                return RUINORERP.Model.Base.StatusManager.StateTransitionResult.Failure("操作或状态上下文无效");
 
             try
             {
@@ -221,22 +233,26 @@ namespace RUINORERP.UI.StateManagement.UI
                 if (dataStatus != null)
                 {
                     if (_actionRuleConfiguration.IsActionAllowed(dataStatus, action.ToString()))
-                        return true;
+                        return RUINORERP.Model.Base.StatusManager.StateTransitionResult.Success($"数据状态为{dataStatus}时允许执行{action}操作");
+                    else
+                        return RUINORERP.Model.Base.StatusManager.StateTransitionResult.Failure($"数据状态为{dataStatus}时不允许执行{action}操作");
                 }
 
                 // 检查业务状态下的操作权限
                 if (businessStatus != null)
                 {
                     if (_actionRuleConfiguration.IsActionAllowed(businessStatus as Enum, action.ToString()))
-                        return true;
+                        return RUINORERP.Model.Base.StatusManager.StateTransitionResult.Success($"业务状态为{businessStatus}时允许执行{action}操作");
+                    else
+                        return RUINORERP.Model.Base.StatusManager.StateTransitionResult.Failure($"业务状态为{businessStatus}时不允许执行{action}操作");
                 }
 
-                return false;
+                return RUINORERP.Model.Base.StatusManager.StateTransitionResult.Failure("无法确定当前状态，不允许执行操作");
             }
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "检查操作可执行性失败: {Action}", action);
-                return false;
+                return RUINORERP.Model.Base.StatusManager.StateTransitionResult.Failure($"检查操作权限时发生错误: {ex.Message}");
             }
         }
 

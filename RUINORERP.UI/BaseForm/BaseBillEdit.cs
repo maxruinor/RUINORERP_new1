@@ -372,12 +372,12 @@ namespace RUINORERP.UI.BaseForm
         protected virtual void DoButtonClick(MenuItemEnums menuItem)
         {
 
-            // 检查是否可以执行该操作
-            //if (!CanTransitionToDataStatus(menuItem))
-            //{
-            //    MessageBox.Show($"当前状态下不允许执行 {menuItem} 操作", "操作受限", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            //    return;
-            //}
+          
+          //if (!CanTransitionToDataStatusAsync(menuItem))
+          //{
+          //    MessageBox.Show($"当前状态下不允许执行 {menuItem} 操作", "操作受限", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+          //    return;
+          //}
 
             // 根据菜单项执行相应操作
             switch (menuItem)

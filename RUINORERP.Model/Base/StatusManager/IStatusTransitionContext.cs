@@ -123,5 +123,12 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <param name="targetStatus">目标状态</param>
         /// <returns>是否可以转换</returns>
         Task<bool> CanTransitionTo(object targetStatus);
+
+        /// <summary>
+        /// 检查是否可以转换到指定状态，并返回详细的提示消息
+        /// </summary>
+        /// <param name="targetStatus">目标状态</param>
+        /// <returns>包含是否可以转换和提示消息的结果对象</returns>
+        Task<StateTransitionResult> CanTransitionToWithMessage(object targetStatus);
     }
 }

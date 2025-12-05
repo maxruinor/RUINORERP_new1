@@ -4357,15 +4357,14 @@ namespace RUINORERP.UI.BaseForm
             var EntityStatus = StateManager.GetEntityStatus(editEntity as BaseEntity);
             if (EntityStatus.dataStatus.HasValue)
             {
-                bool canModify = UIController.CanExecuteAction(EntityStatus.dataStatus.Value, StatusContext);
-                if (!canModify)
+                var canModify = UIController.CanExecuteActionWithMessage(EntityStatus.dataStatus.Value, StatusContext);
+                if (!canModify.IsSuccess)
                 {
+                    MainForm.Instance.PrintInfoLog($"当前单据状态为{canModify.ErrorMessage}不允许修改!");
                     return;
                 }
             }
 
-
-          
 
             // 获取状态类型和值
             var statusType = FMPaymentStatusHelper.GetStatusType(editEntity as BaseEntity);

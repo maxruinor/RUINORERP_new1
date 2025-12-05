@@ -256,7 +256,7 @@ namespace RUINORERP.Model.Base.StatusManager
                     return StateTransitionResult.Failure("不支持的状态类型");
                 }
 
-                if (result.IsValid)
+                if (result.IsSuccess)
                 {
                     var oldStatus = CurrentStatus;
                     CurrentStatus = targetStatus;
@@ -314,6 +314,45 @@ namespace RUINORERP.Model.Base.StatusManager
             // 获取可用的转换状态列表，检查目标状态是否在其中
             var availableTransitions = GetAvailableTransitions();
             return availableTransitions.Any(t => t.Equals(targetStatus));
+        }
+
+        /// <summary>
+        /// 检查是否可以转换到指定状态，并返回详细的提示消息
+        /// </summary>
+        /// <param name="targetStatus">目标状态</param>
+        /// <returns>包含是否可以转换和提示消息的结果对象</returns>
+        public async Task<StateTransitionResult> CanTransitionToWithMessage(object targetStatus)
+        {
+            try
+            {
+                // 检查目标状态是否为空
+                if (targetStatus == null)
+                    return StateTransitionResult.Failure("目标状态不能为空");
+
+                // 检查状态类型是否匹配
+                if (targetStatus.GetType() != StatusType)
+                    return StateTransitionResult.Failure($"目标状态类型 {targetStatus.GetType().Name} 与当前状态类型 {StatusType.Name} 不匹配");
+
+                // 获取可用的转换状态列表
+                var availableTransitions = GetAvailableTransitions();
+                var canTransition = availableTransitions.Any(t => t.Equals(targetStatus));
+
+                if (canTransition)
+                {
+                    return StateTransitionResult.Success($"可以从 {CurrentStatus} 转换到 {targetStatus}");
+                }
+                else
+                {
+                    var availableStatuses = string.Join(", ", availableTransitions);
+                    return StateTransitionResult.Failure($"从 {CurrentStatus} 无法转换到 {targetStatus}，可用的转换状态为：{availableStatuses}");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "检查状态转换可行性失败: {EntityId}, 从 {CurrentStatus} 到 {TargetStatus}", 
+                    Entity?.PrimaryKeyID, CurrentStatus, targetStatus);
+                return StateTransitionResult.Failure($"检查状态转换可行性时发生错误: {ex.Message}");
+            }
         }
 
         /// <summary>

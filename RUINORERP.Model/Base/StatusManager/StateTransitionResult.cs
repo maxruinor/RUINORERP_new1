@@ -30,12 +30,12 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <summary>
         /// 构造函数
         /// </summary>
-        /// <param name="isValid">转换是否有效</param>
-        /// <param name="message">消息</param>
-        public StateTransitionResult(bool isValid = false, string message = null)
+        /// <param name="isSuccess">转换是否有效</param>
+        /// <param name="errorMessage">消息</param>
+        public StateTransitionResult(bool isSuccess = false, string errorMessage = null)
         {
-            IsValid = isValid;
-            Message = message;
+            IsSuccess = isSuccess;
+            ErrorMessage = errorMessage;
         }
 
         /// <summary>
@@ -68,23 +68,7 @@ namespace RUINORERP.Model.Base.StatusManager
         /// </summary>
         public string TransitionReason { get; set; }
 
-        /// <summary>
-        /// 转换是否有效（兼容StatusManager.Core版本）
-        /// </summary>
-        public bool IsValid 
-        { 
-            get => IsSuccess; 
-            set => IsSuccess = value; 
-        }
 
-        /// <summary>
-        /// 消息（兼容StatusManager.Core版本）
-        /// </summary>
-        public string Message 
-        { 
-            get => ErrorMessage; 
-            set => ErrorMessage = value; 
-        }
 
         /// <summary>
         /// 异常信息（来自StatusManager.Core版本）

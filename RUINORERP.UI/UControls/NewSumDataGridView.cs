@@ -1250,8 +1250,8 @@ namespace RUINORERP.UI.UControls
             this.CellValueChanged += NewSumDataGridView_CellValueChanged;
             this.CurrentCellChanged += NewSumDataGridView_CurrentCellChanged;
             this.CurrentCellDirtyStateChanged += NewSumDataGridView_CurrentCellDirtyStateChanged;
-            
-            
+
+
             this.DataBindingComplete -= NewSumDataGridView_DataBindingComplete;
             this.DataBindingComplete += NewSumDataGridView_DataBindingComplete;
 
@@ -3363,7 +3363,7 @@ namespace RUINORERP.UI.UControls
                         //加总行 不显示 checkbox
                         var tempCol = new DataGridViewColumn(new DataGridViewTextBoxCell());
                         tempCol.Name = col.Name;
-                        tempCol.DataPropertyName=col.DataPropertyName;
+                        tempCol.DataPropertyName = col.DataPropertyName;
                         tempCol.DataPropertyName = string.Empty;
                         tempCol.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
                         tempCol.DefaultCellStyle.Format = _sumCellFormat;
@@ -3601,11 +3601,12 @@ namespace RUINORERP.UI.UControls
 
             //属性值 判断
 
-            if (string.IsNullOrEmpty(XmlFileName) && UseCustomColumnDisplay)
+            if (string.IsNullOrEmpty(XmlFileName) && UseCustomColumnDisplay && this.DataSource != null && this.Rows.Count > 0)
             {
+
                 MessageBox.Show("用于控制列显示的配置文件名XmlFileName不能为空。");
             }
-            if ((FieldNameList == null || FieldNameList.Count == 0) && UseCustomColumnDisplay)
+            if ((FieldNameList == null || FieldNameList.Count == 0) && UseCustomColumnDisplay && this.DataSource != null && this.Rows.Count > 0)
             {
                 MessageBox.Show("用于控制列显示的集合不能为空。");
             }

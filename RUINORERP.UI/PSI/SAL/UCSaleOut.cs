@@ -134,13 +134,15 @@ namespace RUINORERP.UI.PSI.SAL
 
                         if (MessageBox.Show($"系统检测到已存在【销售退回单】，是否打开存在的{msg}单据？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
                         {
+
+                            saleOut.tb_SaleOutRes[0].tb_SaleOutReDetails = await MainForm.Instance.AppContext.Db.Queryable<tb_SaleOutReDetail>().Where(c => c.SaleOutRe_ID == saleOut.tb_SaleOutRes[0].SaleOutRe_ID).ToListAsync();
                             // 打开销售退回单，确认
                             MenuPowerHelper menuPowerHelper;
                             menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
                             tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == nameof(tb_SaleOutRe) && m.BIBaseForm == "BaseBillEditGeneric`2").FirstOrDefault();
                             if (RelatedMenuInfo != null)
                             {
-                                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, saleOut.tb_SaleOutRes[0]);
+                                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, saleOut.tb_SaleOutRes[0]);
                                 return;
                             }
                         }

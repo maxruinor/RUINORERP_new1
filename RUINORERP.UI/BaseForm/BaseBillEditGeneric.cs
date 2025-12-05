@@ -2499,9 +2499,6 @@ namespace RUINORERP.UI.BaseForm
         /// <param name="p_Text"></param>
         protected async override void DoButtonClick(MenuItemEnums menuItem)
         {
-            //操作前将数据收集  保存单据时间出错，这个方法开始是 将查询条件生效
-            // this.ValidateChildren(System.Windows.Forms.ValidationConstraints.None);
-
             MainForm.Instance.AppContext.log.ActionName = menuItem.ToString();
             if (!MainForm.Instance.AppContext.IsSuperUser)
             {
@@ -2534,6 +2531,8 @@ namespace RUINORERP.UI.BaseForm
                 toolStripButtonSave.Enabled = false;
                 toolStripbtnSubmit.Enabled = false;
                 toolStripbtnReview.Enabled = false;
+                toolStripBtnReverseReview.Enabled = false;
+                toolStripbtnPrint.Enabled = false;
             }
 
             switch (menuItem)
@@ -2565,45 +2564,54 @@ namespace RUINORERP.UI.BaseForm
                     }
                     break;
                 case MenuItemEnums.新增:
-                    // 检查是否有未保存的数据更改
-                    bool hasUnsavedChanges = false;
-
-                    // 检查主实体是否有更改
-                    if (EditEntity != null)
+                    try
                     {
-                        pkid = GetPrimaryKeyValue(EditEntity);
-                        // 如果不是新创建的实体（pkid > 0）或者处于编辑状态，则认为可能有更改
-                        hasUnsavedChanges = pkid > 0 || Edited;
-                    }
+                        // 检查是否有未保存的数据更改
+                        bool hasUnsavedChanges = false;
 
-                    // 检查子实体是否有更改
-                    if (bindingSourceSub != null && bindingSourceSub.DataSource != null)
+                        // 检查主实体是否有更改
+                        if (EditEntity != null)
+                        {
+                            pkid = GetPrimaryKeyValue(EditEntity);
+                            // 如果不是新创建的实体（pkid > 0）或者处于编辑状态，则认为可能有更改
+                            hasUnsavedChanges = pkid > 0 || Edited;
+                        }
+
+                        // 检查子实体是否有更改
+                        if (bindingSourceSub != null && bindingSourceSub.DataSource != null)
+                        {
+                            List<C> detailEntities = bindingSourceSub.DataSource as List<C>;
+                            if (detailEntities != null && detailEntities.Count > 0)
+                            {
+                                hasUnsavedChanges = true;
+                            }
+                        }
+
+                        // 如果有未保存的更改，显示确认提示
+                        if (hasUnsavedChanges)
+                        {
+                            DialogResult result = MessageBox.Show("当前数据尚未保存，是否放弃所有未保存数据并创建新单据？", "确认放弃未保存数据", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                            if (result != DialogResult.Yes)
+                            {
+                                // 恢复所有非查询按钮的可用状态
+                                RestoreNonQueryButtons();
+                                return;
+                            }
+                            else
+                            {
+                                Cancel();
+                            }
+                        }
+
+                        UNLock(); // 解锁当前单据
+                        Add();
+                    }
+                    catch (Exception ex)
                     {
-                        List<C> detailEntities = bindingSourceSub.DataSource as List<C>;
-                        if (detailEntities != null && detailEntities.Count > 0)
-                        {
-                            hasUnsavedChanges = true;
-                        }
+                        MainForm.Instance.uclog.AddLog($"新增单据失败：{ex.Message}");
+                        // 恢复所有非查询按钮的可用状态
+                        RestoreNonQueryButtons();
                     }
-
-                    // 如果有未保存的更改，显示确认提示
-                    if (hasUnsavedChanges)
-                    {
-                        DialogResult result = MessageBox.Show("当前数据尚未保存，是否放弃所有未保存数据并创建新单据？", "确认放弃未保存数据", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
-                        if (result != DialogResult.Yes)
-                        {
-                            toolStripbtnAdd.Enabled = true;
-                            return;
-                        }
-                        else
-                        {
-                            Cancel();
-                        }
-                    }
-
-                    toolStripbtnAdd.Enabled = false;
-                    UNLock(); // 解锁当前单据
-                    Add();
                     break;
                 case MenuItemEnums.复制性新增:
                     AddByCopy();
@@ -2614,30 +2622,55 @@ namespace RUINORERP.UI.BaseForm
                     break;
 
                 case MenuItemEnums.删除:
-                    var lockStatusDelete = await CheckLockStatusAndUpdateUI(EditEntity);
-                    if (!lockStatusDelete.CanPerformCriticalOperations)
+                    try
                     {
-                        return;
+                        var lockStatusDelete = await CheckLockStatusAndUpdateUI(EditEntity);
+                        if (!lockStatusDelete.CanPerformCriticalOperations)
+                        {
+                            // 恢复所有非查询按钮的可用状态
+                            RestoreNonQueryButtons();
+                            return;
+                        }
+                        await Delete();
                     }
-                    await Delete();
-
+                    catch (Exception ex)
+                    {
+                        MainForm.Instance.uclog.AddLog($"删除单据失败：{ex.Message}");
+                        // 恢复所有非查询按钮的可用状态
+                        RestoreNonQueryButtons();
+                    }
                     break;
                 case MenuItemEnums.修改:
-                    var lockStatusModify = await CheckLockStatusAndUpdateUI(EditEntity);
-                    if (!lockStatusModify.CanPerformCriticalOperations)
+                    try
                     {
-                        return;
-                    }
-                    if (lockStatusModify.LockInfo == null)
-                    {
-                        var locked = await LockBill();
-                        if (!locked)
+                        var lockStatusModify = await CheckLockStatusAndUpdateUI(EditEntity);
+                        if (!lockStatusModify.CanPerformCriticalOperations)
                         {
-                            MainForm.Instance.PrintInfoLog("锁定单据失败，无法操作");
+                            // 恢复所有非查询按钮的可用状态
+                            RestoreNonQueryButtons();
+                            return;
                         }
+                        if (lockStatusModify.LockInfo == null)
+                        {
+                            var locked = await LockBill();
+                            if (!locked)
+                            {
+                                MainForm.Instance.PrintInfoLog("锁定单据失败，无法操作");
+                                // 恢复所有非查询按钮的可用状态
+                                RestoreNonQueryButtons();
+                                return;
+                            }
+                        }
+                        Modify();
+                        // 修改成功后保持修改按钮禁用
+                        toolStripbtnModify.Enabled = false;
                     }
-                    Modify();
-                    toolStripbtnModify.Enabled = false;
+                    catch (Exception ex)
+                    {
+                        MainForm.Instance.uclog.AddLog($"修改单据失败：{ex.Message}");
+                        // 恢复所有非查询按钮的可用状态
+                        RestoreNonQueryButtons();
+                    }
                     break;
                 case MenuItemEnums.查询:
 
@@ -2654,69 +2687,91 @@ namespace RUINORERP.UI.BaseForm
                     });
                     break;
                 case MenuItemEnums.保存:
-                    var lockStatusSave = await CheckLockStatusAndUpdateUI(EditEntity);
-                    if (!lockStatusSave.CanPerformCriticalOperations)
+                    try
                     {
-                        return;
-                    }
-                    //操作前将数据收集
-                    this.ValidateChildren(System.Windows.Forms.ValidationConstraints.None);
-                    if (EditEntity != null)
-                    {
-                        pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
-                        if (pkid > 0)
+                        var lockStatusSave = await CheckLockStatusAndUpdateUI(EditEntity);
+                        if (!lockStatusSave.CanPerformCriticalOperations)
                         {
-                            //如果有审核状态才去判断
-                            if (editEntity.ContainsProperty(typeof(DataStatus).Name))
+                            // 恢复所有非查询按钮的可用状态
+                            RestoreNonQueryButtons();
+                            return;
+                        }
+                        //操作前将数据收集
+                        this.ValidateChildren(System.Windows.Forms.ValidationConstraints.None);
+                        if (EditEntity != null)
+                        {
+                            pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
+                            if (pkid > 0)
                             {
-                                var dataStatus = (DataStatus)(editEntity.GetPropertyValue(typeof(DataStatus).Name).ToInt());
-                                if (dataStatus == DataStatus.完结 || dataStatus == DataStatus.确认)
+                                //如果有审核状态才去判断
+                                if (editEntity.ContainsProperty(typeof(DataStatus).Name))
                                 {
-                                    toolStripbtnSubmit.Enabled = false;
-                                    if (AuthorizeController.GetShowDebugInfoAuthorization(MainForm.Instance.AppContext))
+                                    var dataStatus = (DataStatus)(editEntity.GetPropertyValue(typeof(DataStatus).Name).ToInt());
+                                    if (dataStatus == DataStatus.完结 || dataStatus == DataStatus.确认)
                                     {
-                                        MainForm.Instance.uclog.AddLog("已经是【完结】或【确认】状态，保存失败。");
+                                        if (AuthorizeController.GetShowDebugInfoAuthorization(MainForm.Instance.AppContext))
+                                        {
+                                            MainForm.Instance.uclog.AddLog("已经是【完结】或【确认】状态，保存失败。");
+                                        }
+                                        // 恢复所有非查询按钮的可用状态
+                                        RestoreNonQueryButtons();
+                                        return;
                                     }
-                                    return;
                                 }
                             }
-
+                            bool rsSave = await Save(true);
+                            if (!rsSave)
+                            {
+                                // 恢复所有非查询按钮的可用状态
+                                RestoreNonQueryButtons();
+                                await LockBill();
+                            }
                         }
-                        toolStripButtonSave.Enabled = false;
-                        bool rsSave = await Save(true);
-                        if (!rsSave)
+                        else
                         {
-                            toolStripButtonSave.Enabled = true;
-                            await LockBill();
+                            MainForm.Instance.uclog.AddLog("单据不能为空，保存失败。");
+                            // 恢复所有非查询按钮的可用状态
+                            RestoreNonQueryButtons();
                         }
                     }
-                    else
+                    catch (Exception ex)
                     {
-                        MainForm.Instance.uclog.AddLog("单据不能为空，保存失败。");
+                        MainForm.Instance.uclog.AddLog($"保存单据失败：{ex.Message}");
+                        // 恢复所有非查询按钮的可用状态
+                        RestoreNonQueryButtons();
                     }
-
-
                     break;
                 case MenuItemEnums.提交:
-                    var lockStatusSubmit = await CheckLockStatusAndUpdateUI(EditEntity);
-                    if (!lockStatusSubmit.CanPerformCriticalOperations)
+                    try
                     {
-                        return;
-                    }
+                        var lockStatusSubmit = await CheckLockStatusAndUpdateUI(EditEntity);
+                        if (!lockStatusSubmit.CanPerformCriticalOperations)
+                        {
+                            // 恢复所有非查询按钮的可用状态
+                            RestoreNonQueryButtons();
+                            return;
+                        }
 
-                    //操作前将数据收集
-                    this.ValidateChildren(System.Windows.Forms.ValidationConstraints.None);
+                        //操作前将数据收集
+                        this.ValidateChildren(System.Windows.Forms.ValidationConstraints.None);
 
-                    toolStripbtnSubmit.Enabled = false;
-                    bool rs = await Submit();
-                    if (!rs)
-                    {
-                        toolStripbtnSubmit.Enabled = true;
+                        bool rs = await Submit();
+                        if (!rs)
+                        {
+                            // 恢复所有非查询按钮的可用状态
+                            RestoreNonQueryButtons();
+                        }
+                        else
+                        {
+                            //提交后别人可以审核 
+                            UNLock();
+                        }
                     }
-                    else
+                    catch (Exception ex)
                     {
-                        //提交后别人可以审核 
-                        UNLock();
+                        MainForm.Instance.uclog.AddLog($"提交单据失败：{ex.Message}");
+                        // 恢复所有非查询按钮的可用状态
+                        RestoreNonQueryButtons();
                     }
                     break;
                 case MenuItemEnums.关闭:
@@ -2729,77 +2784,130 @@ namespace RUINORERP.UI.BaseForm
                     Property();
                     break;
                 case MenuItemEnums.审核:
-                    var lockStatusReview = await CheckLockStatusAndUpdateUI(EditEntity);
-                    if (!lockStatusReview.CanPerformCriticalOperations)
+                    try
                     {
-                        return;
-                    }
-                    await LockBill();
-                    toolStripbtnReview.Enabled = false;
-                    ReviewResult reviewResult = await Review();
-                    if (!reviewResult.Succeeded)
-                    {
-                        UNLock();
-                        toolStripbtnReview.Enabled = true;
-                    }
-
-                    break;
-                case MenuItemEnums.反审:
-                    var lockStatusReverseReview = await CheckLockStatusAndUpdateUI(EditEntity);
-                    if (!lockStatusReverseReview.CanPerformCriticalOperations)
-                    {
-                        return;
-                    }
-                    await LockBill();
-                    toolStripBtnReverseReview.Enabled = false;
-                    bool rs反审 = await ReReview();
-                    if (!rs反审)
-                    {
-                        UNLock();
-                        toolStripBtnReverseReview.Enabled = true;
-                    }
-
-                    break;
-                case MenuItemEnums.结案:
-                    var lockStatusCloseCase = await CheckLockStatusAndUpdateUI(EditEntity);
-                    if (!lockStatusCloseCase.CanPerformCriticalOperations)
-                    {
-                        return;
-                    }
-                    await CloseCaseAsync();
-                    break;
-                case MenuItemEnums.反结案:
-                    var lockStatusAntiCloseCase = await CheckLockStatusAndUpdateUI(EditEntity);
-                    if (!lockStatusAntiCloseCase.CanPerformCriticalOperations)
-                    {
-                        return;
-                    }
-                    await AntiCloseCaseAsync();
-                    break;
-                case MenuItemEnums.打印:
-
-                    if (PrintConfig != null && PrintConfig.tb_PrintTemplates != null)
-                    {
-                        //如果当前单据只有一个模块，就直接打印
-                        if (PrintConfig.tb_PrintTemplates.Count == 1)
+                        var lockStatusReview = await CheckLockStatusAndUpdateUI(EditEntity);
+                        if (!lockStatusReview.CanPerformCriticalOperations)
                         {
-                            await Print();
+                            // 恢复所有非查询按钮的可用状态
+                            RestoreNonQueryButtons();
                             return;
                         }
+                        await LockBill();
+                        ReviewResult reviewResult = await Review();
+                        if (!reviewResult.Succeeded)
+                        {
+                            UNLock();
+                            // 恢复所有非查询按钮的可用状态
+                            RestoreNonQueryButtons();
+                        }
                     }
-
-                    //个性化设置了打印要选择模板打印时，就进入设计介面
-                    if (MainForm.Instance.AppContext.CurrentUser_Role_Personalized.SelectTemplatePrint.HasValue
-                           && MainForm.Instance.AppContext.CurrentUser_Role_Personalized.SelectTemplatePrint.Value)
+                    catch (Exception ex)
                     {
-                        await PrintDesigned();
+                        MainForm.Instance.uclog.AddLog($"审核单据失败：{ex.Message}");
+                        UNLock();
+                        // 恢复所有非查询按钮的可用状态
+                        RestoreNonQueryButtons();
                     }
-                    else
+                    break;
+                case MenuItemEnums.反审:
+                    try
                     {
-                        await Print();
+                        var lockStatusReverseReview = await CheckLockStatusAndUpdateUI(EditEntity);
+                        if (!lockStatusReverseReview.CanPerformCriticalOperations)
+                        {
+                            // 恢复所有非查询按钮的可用状态
+                            RestoreNonQueryButtons();
+                            return;
+                        }
+                        await LockBill();
+                        bool rs反审 = await ReReview();
+                        if (!rs反审)
+                        {
+                            UNLock();
+                            // 恢复所有非查询按钮的可用状态
+                            RestoreNonQueryButtons();
+                        }
                     }
+                    catch (Exception ex)
+                    {
+                        MainForm.Instance.uclog.AddLog($"反审单据失败：{ex.Message}");
+                        UNLock();
+                        // 恢复所有非查询按钮的可用状态
+                        RestoreNonQueryButtons();
+                    }
+                    break;
+                case MenuItemEnums.结案:
+                    try
+                    {
+                        var lockStatusCloseCase = await CheckLockStatusAndUpdateUI(EditEntity);
+                        if (!lockStatusCloseCase.CanPerformCriticalOperations)
+                        {
+                            // 恢复所有非查询按钮的可用状态
+                            RestoreNonQueryButtons();
+                            return;
+                        }
+                        await CloseCaseAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        MainForm.Instance.uclog.AddLog($"结案失败：{ex.Message}");
+                        // 恢复所有非查询按钮的可用状态
+                        RestoreNonQueryButtons();
+                    }
+                    break;
+                case MenuItemEnums.反结案:
+                    try
+                    {
+                        var lockStatusAntiCloseCase = await CheckLockStatusAndUpdateUI(EditEntity);
+                        if (!lockStatusAntiCloseCase.CanPerformCriticalOperations)
+                        {
+                            // 恢复所有非查询按钮的可用状态
+                            RestoreNonQueryButtons();
+                            return;
+                        }
+                        await AntiCloseCaseAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        MainForm.Instance.uclog.AddLog($"反结案失败：{ex.Message}");
+                        // 恢复所有非查询按钮的可用状态
+                        RestoreNonQueryButtons();
+                    }
+                    break;
+                case MenuItemEnums.打印:
+                    try
+                    {
+                        if (PrintConfig != null && PrintConfig.tb_PrintTemplates != null)
+                        {
+                            //如果当前单据只有一个模块，就直接打印
+                            if (PrintConfig.tb_PrintTemplates.Count == 1)
+                            {
+                                await Print();
+                                return;
+                            }
+                        }
 
-                    toolStripbtnPrint.Enabled = false;
+                        //个性化设置了打印要选择模板打印时，就进入设计介面
+                        if (MainForm.Instance.AppContext.CurrentUser_Role_Personalized.SelectTemplatePrint.HasValue
+                               && MainForm.Instance.AppContext.CurrentUser_Role_Personalized.SelectTemplatePrint.Value)
+                        {
+                            await PrintDesigned();
+                        }
+                        else
+                        {
+                            await Print();
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        MainForm.Instance.uclog.AddLog($"打印失败：{ex.Message}");
+                    }
+                    finally
+                    {
+                        // 无论打印成功与否，都恢复打印按钮的可用状态
+                        toolStripbtnPrint.Enabled = true;
+                    }
                     break;
                 case MenuItemEnums.预览:
                     await Preview();
@@ -2814,7 +2922,20 @@ namespace RUINORERP.UI.BaseForm
                     break;
             }
 
+        }
 
+        /// <summary>
+        /// 恢复所有非查询按钮的可用状态
+        /// </summary>
+        protected void RestoreNonQueryButtons()
+        {
+            toolStripbtnAdd.Enabled = true;
+            toolStripbtnModify.Enabled = true;
+            toolStripButtonSave.Enabled = true;
+            toolStripbtnSubmit.Enabled = true;
+            toolStripbtnReview.Enabled = true;
+            toolStripBtnReverseReview.Enabled = true;
+            toolStripbtnPrint.Enabled = true;
         }
 
         MenuPowerHelper menuPowerHelper = null;
@@ -4397,16 +4518,16 @@ namespace RUINORERP.UI.BaseForm
             {
                 return;
             }
-            //var EntityStatus = StateManager.GetEntityStatus(editEntity as BaseEntity);
-            //if (EntityStatus.dataStatus.HasValue)
-            //{
-            //    var canModify = UIController.CanExecuteActionWithMessage(EntityStatus.dataStatus.Value, StatusContext);
-            //    if (!canModify.IsSuccess)
-            //    {
-            //        MainForm.Instance.PrintInfoLog($"当前单据状态为{canModify.ErrorMessage}不允许修改!");
-            //        return;
-            //    }
-            //}
+          var EntityStatus = StateManager.GetEntityStatus(editEntity as BaseEntity);
+          if (EntityStatus.dataStatus.HasValue)
+          {
+              var canModify = UIController.CanExecuteActionWithMessage(EntityStatus.dataStatus.Value, StatusContext);
+              if (!canModify.IsSuccess)
+              {
+                  MainForm.Instance.PrintInfoLog($"当前单据状态为{canModify.ErrorMessage}不允许修改!");
+                  return;
+              }
+          }
 
 
             // 获取状态类型和值
@@ -6128,7 +6249,6 @@ namespace RUINORERP.UI.BaseForm
             if (lockResponse != null && lockResponse.IsSuccess)
             {
                 string successMsg = $"单据【{cbd.BizName}】批量解锁成功";
-                MainForm.Instance.uclog.AddLog(successMsg, UILogType.普通消息);
                 // 在调试模式下记录成功日志
                 if (AuthorizeController.GetShowDebugInfoAuthorization(MainForm.Instance.AppContext))
                 {

@@ -117,7 +117,30 @@ namespace RUINORERP.UI.PSI.SAL
                 }
                 if (saleOutRe.RefundStatus.Value >= (int)RefundStatus.未退款等待退货)
                 {
-                     
+                    //要判断当前退回货对应的出库单是否已经存在过退货。并且完全退完。不可能超过出库单数量
+                    if (saleOutRe.tb_saleout != null)
+                    {
+                        saleOutRe.tb_saleout.tb_SaleOutDetails = await MainForm.Instance.AppContext.Db.Queryable<tb_SaleOutDetail>().Where(c => c.SaleOut_MainID == saleOutRe.SaleOut_MainID).ToListAsync();
+
+                        for (int i = 0; i < saleOutRe.tb_SaleOutReDetails.Count; i++)
+                        {
+                            var redeatil = saleOutRe.tb_SaleOutReDetails[i];
+                            int ReturnQty = saleOutRe.tb_saleout.tb_SaleOutDetails.Where(c => c.ProdDetailID == redeatil.ProdDetailID && c.Location_ID == redeatil.Location_ID).Sum(c => c.TotalReturnedQty);
+
+                            var SaleOutItem = saleOutRe.tb_saleout.tb_SaleOutDetails.Where(c => c.ProdDetailID == redeatil.ProdDetailID && c.Location_ID == redeatil.Location_ID).FirstOrDefault();
+                            //如果现在的加上前面退的超过出库数量则不允许操作
+                            if (ReturnQty + redeatil.Quantity > SaleOutItem.Quantity)
+                            {
+                                System.Windows.Forms.MessageBox.Show("退货数量不能超过出库数量，请检查当前退货的出库单，是否已经全部退完！当前为重复退货。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                                return;
+                            }
+                        }
+
+                    }
+
+
+
+
                     #region 销售退回单 如果启用了财务模块    这里有一个情况是仓库退回时已经生成。这里确认退款只是审核
                     AuthorizeController authorizeController = MainForm.Instance.AppContext.GetRequiredService<AuthorizeController>();
                     if (authorizeController.EnableFinancialModule())
@@ -163,7 +186,7 @@ namespace RUINORERP.UI.PSI.SAL
                                         return;
                                     }
                                     //生成
-                                    var newPaymentRecord =await paymentController.BuildPaymentRecord(new List<tb_FM_ReceivablePayable> { receivablePayable });
+                                    var newPaymentRecord = await paymentController.BuildPaymentRecord(new List<tb_FM_ReceivablePayable> { receivablePayable });
                                     if (newPaymentRecord.TotalForeignAmount == 0 && newPaymentRecord.TotalLocalAmount == 0)
                                     {
                                         MessageBox.Show("平台订单，在【平台退款】时自动生成的【收款单】（负数）金额为零。请检查是否重复操作。实际已经【退款】。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);

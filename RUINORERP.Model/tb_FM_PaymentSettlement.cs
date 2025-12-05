@@ -198,6 +198,7 @@ namespace RUINORERP.Model
         /// </summary>
         [AdvQueryAttribute(ColName = "CustomerVendor_ID",ColDesc = "往来单位")] 
         [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "CustomerVendor_ID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "往来单位" )]
+        [FKRelationAttribute("tb_CustomerVendor", "CustomerVendor_ID")]
         public long CustomerVendor_ID
         { 
             get{return _CustomerVendor_ID;}

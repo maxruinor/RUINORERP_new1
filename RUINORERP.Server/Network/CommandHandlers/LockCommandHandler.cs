@@ -180,15 +180,15 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 {
                     return CreateErrorResponse(validation.ErrorMessage);
                 }
-                LockRequest lockRequest = new LockRequest();
+                
                 if (cmd.Packet.Request is LockRequest request)
                 {
-                    lockRequest = request;
+                    validation.LockRequest = request;
                 }
                 if (lockRequest.UnlockType == UnlockType.ByBizName)
                 {
                     // 释放锁定
-                    return await _lockManagerService.UnlockDocumentsByBizNameAsync(validation.LockRequest.LockInfo.LockedUserId, (int)validation.LockRequest.LockInfo.bizType);
+                    return await _lockManagerService.UnlockDocumentsByBizNameAsync(validation.LockRequest.RequesterUserId, (int)validation.LockRequest.LockInfo.bizType);
                 }
                 else
                 {

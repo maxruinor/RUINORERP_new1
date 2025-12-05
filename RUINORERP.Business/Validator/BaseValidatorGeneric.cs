@@ -1,4 +1,4 @@
-﻿using FluentValidation;
+using FluentValidation;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json.Linq;
 using RUINORERP.Business.CommService;
@@ -43,6 +43,9 @@ namespace RUINORERP.Business
             
             // 初始化时获取一次配置
             RefreshValidatorConfig();
+            
+            // 调用Initialize方法进行验证规则初始化（仅调用一次）
+            Initialize();
         }
         
         /// <summary>
@@ -63,15 +66,12 @@ namespace RUINORERP.Business
                     Console.WriteLine($"刷新全局验证器配置失败: {ex.Message}");
                 }
             }
-     
-            
-            // 调用Initialize方法进行验证规则初始化
-            Initialize();
         }
         //public abstract void Initialize();
 
         public virtual void Initialize()
         {
+
         }
 
 

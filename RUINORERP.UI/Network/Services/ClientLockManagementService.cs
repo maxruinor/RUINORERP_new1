@@ -203,17 +203,6 @@ namespace RUINORERP.UI.Network.Services
 
 
         /// <summary>
-        /// 解锁单据 - 无参数版本
-        /// 调用带取消令牌的版本
-        /// </summary>
-        /// <param name="billId">单据ID</param>
-        /// <returns>解锁响应</returns>
-        public async Task<LockResponse> UnlockBillAsync(long billId)
-        {
-            return await UnlockBillAsync(billId, default);
-        }
-
-        /// <summary>
         /// 检查锁状态 - 实现ILockStatusProvider接口
         /// 优化：使用细粒度锁，避免全局阻塞
         /// </summary>
@@ -1169,18 +1158,74 @@ namespace RUINORERP.UI.Network.Services
             if (lockRequest.LockInfo == null)
                 throw new ArgumentException("LockInfo不能为空", nameof(lockRequest));
 
+            if (_isDisposed)
+                throw new ObjectDisposedException(nameof(ClientLockManagementService));
+
+            var stopwatch = Stopwatch.StartNew();
+
             try
             {
-                _logger?.LogDebug("开始解锁单据（LockRequest重载） - 单据ID: {BillId}, 解锁类型: {UnlockType}, 用户ID: {UserId}", lockRequest.LockInfo.BillID, lockRequest.UnlockType, lockRequest.LockInfo.LockedUserId);
+                // 获取当前单据的锁
+                var billLock = _billLocks.GetOrAdd(lockRequest.LockInfo.BillID, _ => new SemaphoreSlim(1, 1));
 
-                // 统一调用带取消令牌的主要实现方法
-                return await UnlockBillAsync(lockRequest.LockInfo.BillID);
+                // 使用超时机制
+                if (!await billLock.WaitAsync(_operationTimeout))
+                {
+                    _logger.LogWarning("解锁操作超时 - 单据ID: {BillId}", lockRequest.LockInfo.BillID);
+                    return new LockResponse
+                    {
+                        IsSuccess = false,
+                        Message = "操作超时，请稍后重试"
+                    };
+                }
+
+                try
+                {
+                    // 从活跃锁列表中移除 - 解锁操作的第一步
+                    // 在发送解锁请求前，先从_activeLocks中移除，这样可以确保即使网络请求失败
+                    // 本地状态也能保持一致，不会留下孤儿锁引用
+                    _activeLocks.TryRemove(lockRequest.LockInfo.BillID, out _);
+
+                    // 缓存清除
+                    _clientCache.ClearCache(lockRequest.LockInfo.BillID);
+
+                    var response = await _communicationService.Value.SendCommandWithResponseAsync<LockResponse>(
+                        LockCommands.Unlock, lockRequest, CancellationToken.None, (int)_operationTimeout.TotalMilliseconds);
+
+                    stopwatch.Stop();
+
+                    // 检查响应是否为空
+                    if (response == null)
+                    {
+                        return LockResponseFactory.CreateFailedResponse("响应为空");
+                    }
+
+                    if (response.IsSuccess)
+                    {
+                        // 解锁成功后，从细粒度锁字典中移除
+                        _billLocks.TryRemove(lockRequest.LockInfo.BillID, out _);
+                    }
+                    else
+                    {
+                        _logger.LogWarning("单据 {BillId} 解锁失败: {Message}, 耗时 {ElapsedMs}ms", lockRequest.LockInfo.BillID, response.Message, stopwatch.ElapsedMilliseconds);
+                    }
+
+                    return response;
+                }
+                finally
+                {
+                    billLock.Release();
+                }
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "解锁单据时发生异常（LockRequest重载） - 单据ID: {BillId}",
-                    lockRequest.LockInfo.BillID);
-                throw;
+                stopwatch.Stop();
+                _logger.LogError(ex, "解锁单据 {BillId} 时发生异常，耗时 {ElapsedMs}ms", lockRequest.LockInfo.BillID, stopwatch.ElapsedMilliseconds);
+                return new LockResponse
+                {
+                    IsSuccess = false,
+                    Message = $"解锁异常: {ex.Message}"
+                };
             }
         }
 

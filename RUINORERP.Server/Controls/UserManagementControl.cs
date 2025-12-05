@@ -1368,7 +1368,11 @@ namespace RUINORERP.Server.Controls
                 if (sessionInfo == null)
                 {
                     string logMessagenull = $"[会话状态变化] 会话信息为空, {changeDescription}, 时间: {DateTime.Now:yyyy-MM-dd HH:mm:ss}";
-                    frmMainNew.Instance.PrintInfoLog(logMessagenull);
+                    if (frmMainNew.Instance.IsDebug)
+                    {
+                        frmMainNew.Instance.PrintInfoLog(logMessagenull);
+                    }
+             
                     return;
                 }
 
@@ -1376,7 +1380,10 @@ namespace RUINORERP.Server.Controls
                 string userDisplayName = GetDisplayUserName(userInfo);
                 string userRealName = GetDisplayName(userInfo?.姓名) ?? "未知姓名";
                 string logMessage = $"[会话状态变化] 用户: {userDisplayName} ({userRealName}), {changeDescription}, 时间: {DateTime.Now:yyyy-MM-dd HH:mm:ss}";
-                frmMainNew.Instance.PrintInfoLog(logMessage);
+                if (frmMainNew.Instance.IsDebug)
+                {
+                    frmMainNew.Instance.PrintInfoLog(logMessage);
+                }
             }
             catch (Exception ex)
             {

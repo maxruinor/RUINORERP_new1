@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -38,6 +38,9 @@ namespace RUINORERP.UI.BI
         public UCFMPayeeInfoEdit()
         {
             InitializeComponent();
+            // 添加下拉框选中事件处理程序
+            cmbEmployee_ID.SelectedIndexChanged += CmbEmployee_ID_SelectedIndexChanged;
+            cmbCustomerVendor_ID.SelectedIndexChanged += CmbCustomerVendor_ID_SelectedIndexChanged;
         }
 
         private tb_FM_PayeeInfo _EditEntity;
@@ -157,6 +160,47 @@ namespace RUINORERP.UI.BI
         /// <summary>
         /// 根据实体当前值更新UI控件的可见性
         /// </summary>
+        /// <summary>
+        /// 员工下拉框选中事件处理程序
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void CmbEmployee_ID_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (_EditEntity != null)
+            {
+                // 当选择员工时，清空往来单位
+                if (cmbEmployee_ID.SelectedValue != null && cmbEmployee_ID.SelectedValue != DBNull.Value)
+                {
+                    _EditEntity.CustomerVendor_ID = null;
+                    // 立即更新UI控件可见性
+                    UpdateUIControlVisibility();
+                }
+            }
+        }
+
+        /// <summary>
+        /// 往来单位下拉框选中事件处理程序
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void CmbCustomerVendor_ID_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (_EditEntity != null)
+            {
+                // 当选择往来单位时，清空员工
+                if (cmbCustomerVendor_ID.SelectedValue != null && cmbCustomerVendor_ID.SelectedValue != DBNull.Value)
+                {
+                    _EditEntity.Employee_ID = null;
+                    // 立即更新UI控件可见性
+                    UpdateUIControlVisibility();
+                }
+            }
+        }
+
+        /// <summary>
+        /// 根据实体当前值更新UI控件的可见性
+        /// </summary>
         private void UpdateUIControlVisibility()
         {
             if (_EditEntity == null)
@@ -168,11 +212,13 @@ namespace RUINORERP.UI.BI
             // 员工ID和客户供应商ID二选一显示
             cmbEmployee_ID.Visible = !hasCustomerVendorId;
             lblEmployee_ID.Visible = !hasCustomerVendorId;
-            cmbEmployee_ID.Enabled = !hasEmployeeId && !hasCustomerVendorId;
+            // 允许用户在员工和往来单位之间切换，不禁止控件
+            cmbEmployee_ID.Enabled = true;
             
             cmbCustomerVendor_ID.Visible = !hasEmployeeId;
             lblCustomerVendor_ID.Visible = !hasEmployeeId;
-            cmbCustomerVendor_ID.Enabled = !hasCustomerVendorId && !hasEmployeeId;
+            // 允许用户在员工和往来单位之间切换，不禁止控件
+            cmbCustomerVendor_ID.Enabled = true;
 
         }
         private void InitLoadSupplierData(tb_FM_PayeeInfo entity)

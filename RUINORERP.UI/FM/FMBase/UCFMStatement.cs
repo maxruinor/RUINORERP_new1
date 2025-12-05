@@ -293,7 +293,7 @@ namespace RUINORERP.UI.FM
 
             sgh.LoadItemDataToGrid<tb_FM_StatementDetail>(grid1, sgd, details, c => c.ARAPId);
 
-            bindingSourceSub.DataSource = details;
+
 
             // 模拟按下 Tab 键
             //SendKeys.Send("{TAB}");//为了显示远程图片列

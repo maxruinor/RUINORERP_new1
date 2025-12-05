@@ -1721,9 +1721,6 @@ namespace RUINORERP.UI.BaseForm
             Edited = toolStripButtonSave.Enabled;
         }
 
-
-
-
         #region 状态处理私有方法
 
 

@@ -607,7 +607,7 @@ namespace RUINORERP.UI.FM
         View_ProdDetailController<View_ProdDetail> dc = Startup.GetFromFac<View_ProdDetailController<View_ProdDetail>>();
         List<View_ProdDetail> list = new List<View_ProdDetail>();
 
-        private void UCStockIn_Load(object sender, EventArgs e)
+        private void UCFMStatement_Load(object sender, EventArgs e)
         {
             AddExtendButton(CurMenuInfo);
             #region
@@ -635,7 +635,7 @@ namespace RUINORERP.UI.FM
 
             #endregion
 
-            MainForm.Instance.LoginWebServer();
+        
             if (CurMenuInfo != null)
             {
                 lblBillText.Text = CurMenuInfo.CaptionCN;
@@ -660,7 +660,6 @@ namespace RUINORERP.UI.FM
             listCols.SetCol_ReadOnly<tb_FM_StatementDetail>(c => c.WrittenOffLocalAmount);
             listCols.SetCol_ReadOnly<tb_FM_StatementDetail>(c => c.RemainingLocalAmount);
 
-            UIHelper.ControlChildColumnsInvisible(CurMenuInfo, listCols);
             UIHelper.ControlChildColumnsInvisible(CurMenuInfo, listCols);
             if (!AppContext.SysConfig.UseBarCode)
             {

@@ -185,7 +185,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 {
                     validation.LockRequest = request;
                 }
-                if (lockRequest.UnlockType == UnlockType.ByBizName)
+                if (validation.LockRequest.UnlockType == UnlockType.ByBizName)
                 {
                     // 释放锁定
                     return await _lockManagerService.UnlockDocumentsByBizNameAsync(validation.LockRequest.RequesterUserId, (int)validation.LockRequest.LockInfo.bizType);

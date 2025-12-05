@@ -511,7 +511,7 @@ namespace RUINORERP.UI.Common
                             // 延迟后在 UI 线程上执行 BindData
                             if (LoadItem != null)
                             {
-                                await Task.Delay(300);
+                                await Task.Delay(600);
                                 billEdit.Invoke(new Action(() => billEdit.LoadDataToUI(LoadItem)));
                             }
 

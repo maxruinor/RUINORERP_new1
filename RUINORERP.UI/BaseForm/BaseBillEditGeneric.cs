@@ -124,6 +124,7 @@ namespace RUINORERP.UI.BaseForm
         private bool _isUpdatingStatusContext = false;
         private bool _isUpdatingUIStates = false;
         private bool _isStateManagementInitialized = false;
+        private bool _isHandlingStatusChanged = false; // 专门用于防止StatusChanged事件循环调用
 
         public virtual ToolStripItem[] AddExtendButton(tb_MenuInfo menuInfo)
         {
@@ -537,22 +538,28 @@ namespace RUINORERP.UI.BaseForm
         private void HandleStatusChangedEvent(object sender, StateTransitionEventArgs e)
         {
             // 防止循环调用和重复处理
-            if (_isUpdatingUIStates) return;
+            if (_isUpdatingUIStates || _isHandlingStatusChanged) return;
             
             try
             {
+                _isHandlingStatusChanged = true;
+                
                 if (e.Entity is BaseEntity entity && this.EditEntity == entity)
                 {
                     // 统一处理状态变更
                     OnEntityStateChanged(sender, e);
                     
-                    // 触发泛型特定的StatusChanged事件
-                    StatusChanged?.Invoke(sender, e);
+                    // 移除对StatusChanged事件的再次触发，避免循环调用
+                    // StatusChanged?.Invoke(sender, e);
                 }
             }
             catch (Exception ex)
             {
                 logger?.LogError(ex, $"处理状态变更事件失败：{ex.Message}");
+            }
+            finally
+            {
+                _isHandlingStatusChanged = false;
             }
         }
 

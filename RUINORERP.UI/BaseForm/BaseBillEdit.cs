@@ -233,8 +233,7 @@ namespace RUINORERP.UI.BaseForm
                 _stateManager.StatusChanged -= _stateChangedHandler;
                 _stateChangedHandler = null;
             }
-            // 保留原有赋值，防止空引用
-            _stateManager = null;
+            // 不再将_stateManager设置为null，以避免SubscribeToStateManagerEvents后续代码出错
         }
 
         /// <summary>
@@ -680,15 +679,6 @@ namespace RUINORERP.UI.BaseForm
         }
 
 
-        // TransitionToAsync方法已在StateAwareControl中实现，此处不再重复
-        // GetAllControls方法已在StateAwareControl中实现，此处不再重复
-        // AddChildControls方法已在StateAwareControl中实现，此处不再重复
-
-
-
-
-
-
         #region 如果窗体，有些按钮不用出现在这个业务窗体时。这里手动排除。集合有值才行
 
         List<MenuItemEnums> _excludeMenuList = new List<MenuItemEnums>();
@@ -928,9 +918,6 @@ namespace RUINORERP.UI.BaseForm
                     break;
                 case MenuItemEnums.数据特殊修正:
                     SpecialDataFix();
-                    break;
-                    //case MenuItemEnums.清除:
-                    //    Clear(null);
                     break;
                 default:
                     // 其他操作

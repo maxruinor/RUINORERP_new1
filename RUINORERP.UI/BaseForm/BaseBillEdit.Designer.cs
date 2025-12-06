@@ -1,4 +1,4 @@
-﻿namespace RUINORERP.UI.BaseForm
+namespace RUINORERP.UI.BaseForm
 {
     partial class BaseBillEdit
     {
@@ -23,8 +23,9 @@
 
                     // 清理其他资源
                     BoundEntity = null;
-             
-                    _stateManager = null;
+              
+                    // 注意：不要将_stateManager设置为null，以避免SubscribeToStateManagerEvents后续调用出错
+                    // _stateManager = null;
                     _uiController = null;
                 }
             }

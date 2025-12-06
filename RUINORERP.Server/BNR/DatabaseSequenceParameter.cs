@@ -43,6 +43,16 @@ namespace RUINORERP.Server.BNR
             {
                 throw new ArgumentNullException(nameof(value), "数据库序号参数不能为空");
             }
+            
+            // 检查value中是否包含嵌套表达式({和})
+            if (value.Contains('{') && value.Contains('}'))
+            {
+                // 递归处理嵌套表达式
+                if (Factory != null)
+                {
+                    value = Factory.Create(value);
+                }
+            }
 
             // 分割键、格式和重置类型
             string[] properties = value.Split('/');

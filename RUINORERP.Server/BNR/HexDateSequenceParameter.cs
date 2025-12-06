@@ -1,4 +1,4 @@
-﻿using StackExchange.Redis;
+using StackExchange.Redis;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -16,6 +16,16 @@ namespace RUINORERP.Server.BNR
 
         public void Execute(StringBuilder sb, string value)
         {
+            // 检查value中是否包含嵌套表达式({和})
+            if (!string.IsNullOrEmpty(value) && value.Contains('{') && value.Contains('}'))
+            {
+                // 递归处理嵌套表达式
+                if (Factory != null)
+                {
+                    value = Factory.Create(value);
+                }
+            }
+            
             int year = DateTime.Now.Year;
             int month = DateTime.Now.Month;
             int day = DateTime.Now.Day;

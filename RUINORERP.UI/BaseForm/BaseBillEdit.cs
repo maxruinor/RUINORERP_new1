@@ -243,7 +243,10 @@ namespace RUINORERP.UI.BaseForm
             try
             {
                 // 直接使用状态转换上下文工厂创建数据状态上下文
-                StatusContext = StatusTransitionContextFactory.CreateDataStatusContext(entity, DataStatus.草稿, null, Startup.ServiceProvider);
+                if (StatusContext==null)
+                {
+                    StatusContext = StatusTransitionContextFactory.CreateDataStatusContext(entity, DataStatus.草稿, null, Startup.ServiceProvider);
+                }
             }
             catch (Exception ex)
             {

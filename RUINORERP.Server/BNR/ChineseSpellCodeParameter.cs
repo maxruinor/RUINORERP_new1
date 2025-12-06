@@ -26,6 +26,17 @@ namespace RUINORERP.Server.BNR
                 return;
             }
 
+            // 检查值是否包含嵌套表达式（是否包含{和}字符）
+            if (value.Contains('{') && value.Contains('}'))
+            {
+                // 如果包含嵌套表达式，先递归处理嵌套表达式
+                // 构建完整的表达式格式
+                string nestedExpression = "{" + value + "}";
+                // 使用工厂递归处理嵌套表达式
+                string processedValue = Factory?.Create(nestedExpression) ?? value;
+                value = processedValue;
+            }
+
             // 提取中文首字母并追加到结果中
             foreach (char item in value)
             {

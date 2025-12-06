@@ -90,6 +90,12 @@ namespace RUINORERP.Business.DI
                 .AsSelf()
                 .SingleInstance()
                 .PropertiesAutowired();
+                
+            // 注册表结构管理器为注入式单例
+            builder.RegisterType<RUINORERP.Business.Cache.TableSchemaManager>()
+                .AsSelf()
+                .SingleInstance()
+                .PropertiesAutowired();
             
             // 注册缓存数据提供者，用于在缓存未命中时从数据库加载数据
             builder.RegisterType<SqlSugarCacheDataProvider>()

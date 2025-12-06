@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.MemoryMappedFiles;
@@ -145,6 +145,16 @@ namespace RUINORERP.Server.BNR
 
         public void Execute(StringBuilder sb, string value)
         {
+            // 检查value中是否包含嵌套表达式({和})
+            if (value.Contains('{') && value.Contains('}'))
+            {
+                // 递归处理嵌套表达式
+                if (Factory != null)
+                {
+                    value = Factory.Create(value);
+                }
+            }
+            
             string[] properties = value.Split('/');
             StringBuilder key = new StringBuilder();
             string[] items = RuleAnalysis.Execute(properties[0]);

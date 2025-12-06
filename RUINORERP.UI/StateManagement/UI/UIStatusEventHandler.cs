@@ -435,7 +435,7 @@ namespace RUINORERP.UI.StateManagement.UI
             // 订阅状态上下文变更事件
             eventHandler.SubscribeToStatusChange(
                 stateAwareControl,
-                nameof(stateAwareControl.StatusChanged),
+                nameof(stateAwareControl),
                 async (sender, e) => await eventHandler.HandleStatusChangeAsync(sender, e));
         }
 

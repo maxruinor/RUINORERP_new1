@@ -87,7 +87,6 @@ namespace RUINORERP.Model
         }
 
 
-
         /// <summary>
         /// 是否有真实的变化
         /// </summary>
@@ -124,14 +123,6 @@ namespace RUINORERP.Model
             return _changedProperties.TryGetValue(propertyName, out var record)
         ? record.OriginalValue
         : GetCurrentValue(propertyName);
-
-            //// 如果原始值字典中没有，尝试从当前属性获取
-            //PropertyInfo property = GetType().GetProperty(propertyName);
-            //if (property != null && property.CanRead)
-            //{
-            //    return property.GetValue(this);
-            //}
-            //return null;
         }
 
 
@@ -141,11 +132,6 @@ namespace RUINORERP.Model
         /// <returns></returns>
         public IReadOnlyDictionary<string, (object Original, object Current)> GetEffectiveChanges()
         {
-            //return _changedProperties.ToDictionary(
-            //    kvp => kvp.Key,
-            //    kvp => (kvp.Value.OriginalValue, kvp.Value.CurrentValue)
-            //);
-
             return _changedProperties
        .Where(kvp => !object.Equals(kvp.Value.OriginalValue, kvp.Value.CurrentValue))
        .ToDictionary(
@@ -183,16 +169,7 @@ namespace RUINORERP.Model
         #endregion
 
 
-        #region 状态字段事件通知
 
-
-
-
-
-
-
-
-        #endregion
 
         private readonly Stopwatch _performanceStopwatch = new Stopwatch();
 
@@ -305,7 +282,7 @@ namespace RUINORERP.Model
             return GetCurrentDataStatus() == DataStatus.完结;
         }
 
- 
+
 
         /// <summary>
         /// 初始化状态信息（如未初始化）
@@ -353,53 +330,6 @@ namespace RUINORERP.Model
             _changedProperties.Clear();
 
             HasChanged = false;
-            //// 获取需要跟踪的属性列表（使用缓存）
-            //var properties = GetCachedProperties();
-
-            //// 记录所有需要跟踪的属性的当前值
-            //foreach (var property in properties)
-            //{
-            //    try
-            //    {
-            //        var value = property.GetValue(this);
-
-            //        // 处理特殊类型：深拷贝可克隆对象
-            //        if (value is ICloneable cloneable)
-            //        {
-            //            _originalValues[property.Name] = cloneable.Clone();
-            //        }
-            //        // 处理集合类型：创建副本
-            //        else if (value is System.Collections.IEnumerable enumerable &&
-            //                 !(value is string))
-            //        {
-            //            // 特殊处理List类型
-            //            if (value is System.Collections.IList list)
-            //            {
-            //                var newList = (System.Collections.IList)Activator.CreateInstance(list.GetType());
-            //                foreach (var item in list)
-            //                {
-            //                    newList.Add(item);
-            //                }
-            //                _originalValues[property.Name] = newList;
-            //            }
-            //            else
-            //            {
-            //                _originalValues[property.Name] = enumerable.Cast<object>().ToList();
-            //            }
-            //        }
-            //        // 其他类型直接存储
-            //        else
-            //        {
-            //            _originalValues[property.Name] = value;
-            //        }
-            //    }
-            //    catch (Exception ex)
-            //    {
-            //        // 记录错误但继续执行
-            //        Debug.WriteLine($"记录属性 {property.Name} 原始值时出错: {ex.Message}");
-            //    }
-            //}
-
         }
 
         /// <summary>
@@ -802,17 +732,12 @@ namespace RUINORERP.Model
 
 
 
-        private List<object> childs = new List<object>();
-
-        //[SugarColumn(IsIgnore = true)]
-        //public List<object> Childs { get => childs; set => childs = value; }
-
         #region NotifyProperty
 
         public event PropertyChangedEventHandler PropertyChanged;
 
 
-  
+
 
         /// <summary>
         /// 触发状态变更事件
@@ -1340,9 +1265,9 @@ namespace RUINORERP.Model
         [SugarColumn(IsIgnore = true)]
         [Browsable(false)]
         [JsonIgnore]
-        public IUnifiedStateManager StateManager 
-        { 
-            get 
+        public IUnifiedStateManager StateManager
+        {
+            get
             {
                 if (_stateManager == null)
                 {
@@ -1369,19 +1294,20 @@ namespace RUINORERP.Model
         [SugarColumn(IsIgnore = true)]
         [Browsable(false)]
         [JsonIgnore]
-        public IStatusTransitionContext StatusContext 
-        { 
-            get 
+        public IStatusTransitionContext StatusContext
+        {
+            get
             {
                 if (_statusContext == null && StateManager != null)
                 {
                     try
                     {
                         var currentStatus = GetDataStatus();
+                        var ServiceProvider = ApplicationContext.Current.GetRequiredService<IServiceProvider>();
                         _statusContext = StatusTransitionContextFactory.CreateDataStatusContext(
-                            this, 
-                            currentStatus, 
-                            $"BaseEntity_{this.GetType().Name}");
+                            this,
+                            currentStatus, ServiceProvider
+                            );
                     }
                     catch (Exception ex)
                     {
@@ -1422,12 +1348,14 @@ namespace RUINORERP.Model
                 if (StateManager != null)
                 {
                     StateManager.SetEntityDataStatus(this, initialStatus);
-                    
+
+                    var ServiceProvider = ApplicationContext.Current.GetRequiredService<IServiceProvider>();
+
                     // 创建状态转换上下文
                     StatusContext = StatusTransitionContextFactory.CreateDataStatusContext(
-                        this, 
-                        initialStatus, 
-                        $"BaseEntity_Initialize_{this.GetType().Name}");
+                        this,
+                        initialStatus,
+                        ServiceProvider);
                 }
 
                 // 记录状态管理器初始化信息
@@ -1534,10 +1462,10 @@ namespace RUINORERP.Model
         [JsonIgnore]
         [XmlIgnore]
         public bool IsStateManagerInitialized => _stateManagerInitialized;
- 
- 
 
-      
+
+
+
         /// <summary>
         /// 获取当前状态的描述信息
         /// </summary>
@@ -1549,7 +1477,7 @@ namespace RUINORERP.Model
                 var currentStatus = GetDataStatus();
                 var statusType = typeof(DataStatus);
                 var memberInfo = statusType.GetMember(currentStatus.ToString()).FirstOrDefault();
-                
+
                 if (memberInfo != null)
                 {
                     var descAttr = memberInfo.GetCustomAttribute<System.ComponentModel.DescriptionAttribute>();
@@ -1565,7 +1493,7 @@ namespace RUINORERP.Model
             }
         }
 
-        
+
 
         /// <summary>
         /// 重置状态管理器
@@ -1577,7 +1505,7 @@ namespace RUINORERP.Model
                 _stateManager = null;
                 _statusContext = null;
                 _stateManagerInitialized = false;
-                
+
                 System.Diagnostics.Debug.WriteLine($"实体 {this.GetType().Name} 的状态管理器已重置");
             }
             catch (Exception ex)
@@ -1586,7 +1514,7 @@ namespace RUINORERP.Model
             }
         }
 
-        
+
 
         #endregion
 

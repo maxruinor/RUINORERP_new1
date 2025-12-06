@@ -23,7 +23,7 @@
 
                     // 清理其他资源
                     BoundEntity = null;
-                    StatusContext = null;
+             
                     _stateManager = null;
                     _uiController = null;
                 }

@@ -75,25 +75,18 @@ namespace RUINORERP.UI.BaseForm
         public IUnifiedStateManager _stateManager;
 
         /// <summary>
-        /// v3状态上下文
-        /// </summary>
-        private IStatusTransitionContext _statusContext;
-
-        /// <summary>
         /// UI状态控制器
         /// </summary>
         private IStatusUIController _uiController;
 
-        #endregion
-
-        #region 事件
-
         /// <summary>
-        /// 状态变更事件
+        /// v3状态上下文
         /// </summary>
-        public event EventHandler<StateTransitionEventArgs> StatusChanged;
+        private IStatusTransitionContext _statusContext;
 
         #endregion
+
+
 
 
 
@@ -112,11 +105,36 @@ namespace RUINORERP.UI.BaseForm
                 if (_stateManager != value)
                 {
                     _stateManager = value;
-                    _statusContext = null;
                     _uiController = null;
                 }
             }
         }
+
+
+
+        /// <summary>
+        /// UI状态控制器
+        /// </summary>
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public IStatusUIController UIController
+        {
+            get => _uiController;
+            set
+            {
+                _uiController = value;
+                OnUIControllerChanged();
+            }
+        }
+
+
+
+        /// <summary>
+        /// 绑定的实体对象
+        /// </summary>
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public BaseEntity BoundEntity { get; set; }
 
         /// <summary>
         /// v3状态上下文
@@ -135,41 +153,6 @@ namespace RUINORERP.UI.BaseForm
                 }
             }
         }
-
-        /// <summary>
-        /// UI状态控制器
-        /// </summary>
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public IStatusUIController UIController
-        {
-            get => _uiController;
-            set
-            {
-                _uiController = value;
-                OnUIControllerChanged();
-            }
-        }
-
-        /// <summary>
-        /// 当前数据状态
-        /// </summary>
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public DataStatus CurrentDataStatus =>
-            StatusContext?.CurrentStatus switch
-            {
-                DataStatus dataStatus => dataStatus,
-                _ when StatusContext != null => StatusContext.GetCurrentStatus<DataStatus>(),
-                _ => DataStatus.草稿
-            };
-
-        /// <summary>
-        /// 绑定的实体对象
-        /// </summary>
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public BaseEntity BoundEntity { get; set; }
 
         #endregion
 
@@ -212,7 +195,7 @@ namespace RUINORERP.UI.BaseForm
                 System.Diagnostics.Debug.WriteLine($"初始化状态管理失败: {ex.Message}");
             }
         }
-        
+
         /// <summary>
         /// 订阅状态管理器事件
         /// </summary>
@@ -224,7 +207,7 @@ namespace RUINORERP.UI.BaseForm
                 _stateManager.StatusChanged += async (sender, e) => await OnStateManagerStateChangedAsync(sender, e);
             }
         }
-        
+
         /// <summary>
         /// 取消订阅状态管理器事件
         /// </summary>
@@ -234,7 +217,7 @@ namespace RUINORERP.UI.BaseForm
             // 在Dispose中调用此方法确保正确清理
             _stateManager = null;
         }
-        
+
         /// <summary>
         /// 异步处理状态管理器中的状态变更事件
         /// </summary>
@@ -247,7 +230,7 @@ namespace RUINORERP.UI.BaseForm
             {
                 return;
             }
-            
+
             try
             {
                 // 如果变更的是当前绑定实体的状态，则更新UI
@@ -262,7 +245,7 @@ namespace RUINORERP.UI.BaseForm
                 logger?.LogError(ex, "处理状态变更事件失败");
             }
         }
-        
+
         /// <summary>
         /// 事件过滤器，判断是否应该处理状态变更事件
         /// </summary>
@@ -273,22 +256,22 @@ namespace RUINORERP.UI.BaseForm
             // 如果没有绑定实体，不处理
             if (BoundEntity == null)
                 return false;
-            
+
             // 如果事件实体与绑定实体不匹配，不处理
             if (e.Entity != BoundEntity)
                 return false;
-            
+
             // 如果没有UI控制器或状态上下文，不处理
             if (_uiController == null || StatusContext == null)
                 return false;
-            
+
             // 如果状态没有实际变化，不处理
             if (e.OldStatus == e.NewStatus)
                 return false;
-            
+
             return true;
         }
-        
+
         /// <summary>
         /// 异步处理特定的状态变更逻辑（子类可重写）
         /// </summary>
@@ -336,12 +319,12 @@ namespace RUINORERP.UI.BaseForm
                 {
                     // 使用StatusTransitionContextFactory创建状态上下文，因为IUnifiedStateManager没有GetOrCreateStatusContext方法
                     var dataStatus = _stateManager.GetDataStatus(entity);
-                    StatusContext = StatusTransitionContextFactory.CreateDataStatusContext(entity, dataStatus, null, Startup.ServiceProvider);
+                    StatusContext = StatusTransitionContextFactory.CreateDataStatusContext(entity, dataStatus, Startup.ServiceProvider);
                 }
                 else if (StatusContext == null)
                 {
                     // 备选方案：直接使用状态转换上下文工厂
-                    StatusContext = StatusTransitionContextFactory.CreateDataStatusContext(entity, DataStatus.草稿, null, Startup.ServiceProvider);
+                    StatusContext = StatusTransitionContextFactory.CreateDataStatusContext(entity, DataStatus.草稿, Startup.ServiceProvider);
                 }
             }
             catch (Exception ex)
@@ -372,7 +355,7 @@ namespace RUINORERP.UI.BaseForm
             {
                 var controls = GetAllControls(this);
                 _uiController.UpdateUIStatus(StatusContext, controls);
-                
+
                 // 同步更新状态栏显示（如果有）
                 UpdateStatusDisplay();
             }
@@ -382,7 +365,7 @@ namespace RUINORERP.UI.BaseForm
                 System.Diagnostics.Debug.WriteLine($"应用状态到UI失败: {ex.Message}");
             }
         }
-        
+
         /// <summary>
         /// 更新状态栏显示
         /// </summary>
@@ -401,7 +384,7 @@ namespace RUINORERP.UI.BaseForm
                     statusLabel.Text = $"状态: {displayName}";
                     statusLabel.ForeColor = GetStatusColor(currentStatus);
                 }
-                
+
                 // 更新打印状态显示
                 if (BoundEntity != null)
                 {
@@ -421,7 +404,7 @@ namespace RUINORERP.UI.BaseForm
         protected virtual void UpdateAllUIStates(BaseEntity entity)
         {
             if (entity == null) return;
-            
+
             // 确保状态上下文已初始化
             if (StatusContext == null)
             {
@@ -430,7 +413,7 @@ namespace RUINORERP.UI.BaseForm
 
             // 应用当前状态到UI
             ApplyCurrentStatusToUI();
-            
+
             // 获取当前状态并更新UI控件
             if (StatusContext?.CurrentStatus is DataStatus currentStatus)
             {
@@ -491,19 +474,7 @@ namespace RUINORERP.UI.BaseForm
 
         #region 事件处理
 
-        /// <summary>
-        /// 状态上下文变更事件
-        /// </summary>
-        protected virtual void OnStatusContextChanged()
-        {
-            // 触发StatusChanged事件
-            StatusChanged?.Invoke(this, new StateTransitionEventArgs(
-                BoundEntity,
-                StatusContext?.CurrentStatus?.GetType() ?? typeof(object),
-                null, // 旧状态
-                StatusContext?.CurrentStatus, // 新状态
-                "状态上下文变更"));
-        }
+
 
         /// <summary>
         /// UI控制器变更事件
@@ -511,6 +482,43 @@ namespace RUINORERP.UI.BaseForm
         protected virtual void OnUIControllerChanged()
         {
             // 子类可以重写此方法来处理UI控制器变更
+        }
+
+        /// <summary>
+        /// 状态上下文变更事件
+        /// </summary>
+        protected virtual void OnStatusContextChanged()
+        {
+            // 如果StatusContext不为null，订阅状态变更事件
+            if (StatusContext != null)
+            {
+                // 注册状态变更事件处理程序
+                StatusContext.StatusChanged += OnStatusContextStateChanged;
+            }
+        }
+
+        /// <summary>
+        /// 状态上下文状态变更事件处理程序
+        /// </summary>
+        /// <param name="sender">事件发送者</param>
+        /// <param name="e">事件参数</param>
+        protected virtual void OnStatusContextStateChanged(object sender, StateTransitionEventArgs e)
+        {
+            // 如果变更的是当前绑定实体的状态，则更新UI
+            if (e.Entity == BoundEntity && _uiController != null && StatusContext != null)
+            {
+                // 使用同步方式更新UI，避免跨线程问题
+                if (this.InvokeRequired)
+                {
+                    this.Invoke(new Action(() => ApplyCurrentStatusToUI()));
+                }
+                else
+                {
+                    ApplyCurrentStatusToUI();
+                }
+                
+                HandleSpecificStateChange(e.OldStatus, e.NewStatus, e.Reason);
+            }
         }
 
         #endregion
@@ -546,22 +554,7 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
-        /// <summary>
-        /// 检查是否可以转换到指定的数据状态
-        /// </summary>
-        /// <param name="targetStatus">目标状态</param>
-        /// <returns>是否可转换</returns>
-        public virtual async Task<bool> CanTransitionToDataStatusAsync(DataStatus targetStatus) =>
-            StatusContext != null && await StatusContext.CanTransitionTo(targetStatus);
-
-        /// <summary>
-        /// 获取可用的数据状态转换列表
-        /// </summary>
-        /// <returns>可转换的状态列表</returns>
-        public virtual IEnumerable<DataStatus> GetAvailableDataStatusTransitions() =>
-            StatusContext?.GetAvailableTransitions()
-                .OfType<DataStatus>() ?? Enumerable.Empty<DataStatus>();
-
+    
         #endregion
 
         #endregion
@@ -583,7 +576,7 @@ namespace RUINORERP.UI.BaseForm
             // 子类可以重写此方法以处理特定的状态变更逻辑
             // 例如：销售订单在确认状态时检查库存，在完结状态时生成出库单等
         }
-        
+
         /// <summary>
         /// 清理资源
         /// </summary>
@@ -591,8 +584,8 @@ namespace RUINORERP.UI.BaseForm
         {
             Dispose(true);
         }
-        
- 
+
+
 
         /// <summary>
         /// 根据状态获取颜色
@@ -1090,7 +1083,7 @@ namespace RUINORERP.UI.BaseForm
             {
                 // 设置加载状态和主键ID（统一在这里处理）
                 entity.ActionStatus = ActionStatus.加载;
-                
+
 
                 // 确保实体已初始化状态管理器
                 if (!entity.IsStateManagerInitialized)
@@ -1137,6 +1130,17 @@ namespace RUINORERP.UI.BaseForm
 
             //// 子类重写此方法以更新子表的操作权限
             //EnableChildTableOperations(isEditable);
+        }
+
+        /// <summary>
+        /// 订阅实体状态变更事件 - 虚方法，由子类重写
+        /// 注意：此方法在BaseBillEditGeneric中有具体实现
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        protected virtual void SubscribeToEntityStateChanges(BaseEntity entity)
+        {
+            // 基类中的默认实现，子类可以重写此方法提供具体实现
+            // BaseBillEditGeneric中提供了完整的实现
         }
 
         /// <summary>
@@ -1265,10 +1269,73 @@ namespace RUINORERP.UI.BaseForm
         {
             if (entity != null)
             {
-                // 使用基类的SubscribeToStatusContext方法订阅
-                SubscribeToStatusContext();
+                // 确保状态上下文已初始化
+                EnsureStatusContext(entity);
+                
+                // 订阅实体的状态变更事件
+                entity.StatusChanged += (sender, e) =>
+                {
+                    // 当实体状态变更时，更新UI
+                    if (this.InvokeRequired)
+                    {
+                        this.Invoke(new Action(() => UpdateAllUIStates(entity)));
+                    }
+                    else
+                    {
+                        UpdateAllUIStates(entity);
+                    }
+                };
             }
         }
+
+        /// <summary>
+        /// 确保状态上下文被正确初始化
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        protected void EnsureStatusContext(BaseEntity entity)
+        {
+            if (entity == null) return;
+
+            // 如果StatusContext为null，尝试从实体中获取
+            if (StatusContext == null)
+            {
+                if (BoundEntity == null)
+                {
+                    BoundEntity = entity;
+                }
+                StatusContext = entity.StatusContext;
+            }
+
+            // 如果仍然为null，尝试重新初始化
+            if (StatusContext == null && StateManager != null)
+            {
+                try
+                {
+                    // 获取实体当前的数据状态
+                    var currentDataStatus = StateManager.GetDataStatus(entity);
+                    var ServiceProvider = Startup.GetFromFac<IServiceProvider>();
+                    // 使用状态转换上下文工厂重新创建状态上下文
+                    StatusContext = StatusTransitionContextFactory.CreateDataStatusContext(entity, currentDataStatus, ServiceProvider);
+                }
+                catch (Exception ex)
+                {
+                    logger?.LogError(ex, "重新初始化状态上下文失败: {ex.Message}", ex);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 订阅状态上下文事件
+        /// </summary>
+        protected virtual void SubscribeToStatusContext()
+        {
+            if (StatusContext != null)
+            {
+                StatusContext.StatusChanged += OnStatusContextStateChanged;
+            }
+        }
+       
+
         private bool editflag;
 
         /// <summary>
@@ -1279,7 +1346,6 @@ namespace RUINORERP.UI.BaseForm
             get { return editflag; }
             set { editflag = value; }
         }
-
 
         protected Result ComPare<T>(T t, T s)
         {
@@ -1642,21 +1708,7 @@ namespace RUINORERP.UI.BaseForm
 
         }
 
-        /// <summary>
-        /// 订阅实体状态变更事件
-        /// </summary>
-        /// <param name="entity">实体</param>
-        protected virtual void SubscribeToEntityStateChanges(BaseEntity entity)
-        {
-            if (entity == null) return;
 
-            // 订阅实体的状态变更事件
-            entity.StatusChanged += (sender, e) =>
-            {
-                // 当实体状态变更时，更新UI
-                UpdateAllUIStates(entity);
-            };
-        }
 
         /// <summary>
         /// 设置控件状态
@@ -1733,25 +1785,6 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
-        /// <summary>
-        /// 订阅状态上下文
-        /// </summary>
-        protected void SubscribeToStatusContext()
-        {
-            // 使用状态管理器订阅状态变更
-            if (this.StateManager != null && this.BoundEntity != null)
-            {
-                // 创建状态上下文
-                //var factory = StateManagerFactoryV3.Instance;
-                //this.StatusContext = factory.CreateTransitionContext<DataStatus>(this.BoundEntity);
-
-                //// 订阅状态变更事件
-                //this.StatusContext.StatusChanged += (sender, e) =>
-                //{
-                //    // 当状态变更时，更新UI
-                //    UpdateUIBasedOnEntityState(this.BoundEntity);
-                //};
-            }
-        }
+      
     }
 }

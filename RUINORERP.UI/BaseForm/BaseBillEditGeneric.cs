@@ -196,24 +196,82 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
+
+
+        #region 事件
+
         /// <summary>
-        /// 处理状态变更事件
+        /// 状态变更事件
+        /// 注意：此事件是BaseBillEditGeneric的扩展功能，用于处理泛型特定的状态变更
         /// </summary>
-        /// <param name="sender">事件发送者</param>
-        /// <param name="e">事件参数</param>
-        private void HandleStatusChangedEvent(object sender, StateTransitionEventArgs e)
+        public event EventHandler<StateTransitionEventArgs> StatusChanged;
+
+        #endregion
+
+        /// <summary>
+        /// 状态上下文变更事件
+        /// </summary>
+        protected override void OnStatusContextChanged()
         {
-            try
+            // 首先调用基类的实现
+            base.OnStatusContextChanged();
+            
+            // 触发泛型特定的StatusChanged事件
+            StatusChanged?.Invoke(this, new StateTransitionEventArgs(
+                BoundEntity,
+                StatusContext?.CurrentStatus?.GetType() ?? typeof(object),
+                null, // 旧状态
+                StatusContext?.CurrentStatus, // 新状态
+                "状态上下文变更"));
+        }
+
+        /// <summary>
+        /// 订阅实体状态变更事件
+        /// </summary>
+        /// <param name="entity">实体</param>
+        protected override void SubscribeToEntityStateChanges(BaseEntity entity)
+        {
+            if (entity == null) return;
+
+            // 首先调用基类的实现，确保基础事件订阅
+            base.SubscribeToEntityStateChanges(entity);
+            
+            // 添加泛型特定的状态变更处理
+            entity.StatusChanged += (sender, e) =>
             {
-                if (e.Entity is BaseEntity entity && this.EditEntity == entity)
+                // 触发泛型特定的StatusChanged事件
+                StatusChanged?.Invoke(sender, e);
+            };
+        }
+
+        /// <summary>
+        /// 当前数据状态
+        /// </summary>
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public DataStatus CurrentDataStatus =>
+            StatusContext?.CurrentStatus switch
+            {
+                DataStatus dataStatus => dataStatus,
+                _ when StatusContext != null => StatusContext.GetCurrentStatus<DataStatus>(),
+                _ => DataStatus.草稿
+            };
+
+        /// <summary>
+        /// v3状态上下文 - 使用基类实现
+        /// </summary>
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public new IStatusTransitionContext StatusContext
+        {
+            get => base.StatusContext;
+            set
+            {
+                if (base.StatusContext != value)
                 {
-                    // 统一处理状态变更
-                    OnEntityStateChanged(sender, e);
+                    base.StatusContext = value;
+                    OnStatusContextChanged();
                 }
-            }
-            catch (Exception ex)
-            {
-                logger?.LogError(ex, $"处理状态变更事件失败：{ex.Message}");
             }
         }
 
@@ -406,37 +464,45 @@ namespace RUINORERP.UI.BaseForm
             return result;
         }
 
-
         /// <summary>
-        /// 状态上下文变更事件处理程序
-        /// 当StatusContext属性变更时调用
+        /// 检查是否可以转换到指定的数据状态
         /// </summary>
-        protected override void OnStatusContextChanged()
-        {
-            // 调用基类方法
-            base.OnStatusContextChanged();
-
-            // 如果StatusContext不为null，订阅状态变更事件
-            if (StatusContext != null)
-            {
-                // 注册泛型特定的状态变更事件处理程序
-                StatusContext.StatusChanged += OnGenericEntityStateChanged;
-            }
-        }
+        /// <param name="targetStatus">目标状态</param>
+        /// <returns>是否可转换</returns>
+        public virtual async Task<bool> CanTransitionToDataStatusAsync(DataStatus targetStatus) =>
+            StatusContext != null && await StatusContext.CanTransitionTo(targetStatus);
 
         /// <summary>
-        /// 当通用实体状态改变时调用
+        /// 获取可用的数据状态转换列表
+        /// </summary>
+        /// <returns>可转换的状态列表</returns>
+        public virtual IEnumerable<DataStatus> GetAvailableDataStatusTransitions() =>
+            StatusContext?.GetAvailableTransitions()
+                .OfType<DataStatus>() ?? Enumerable.Empty<DataStatus>();
+
+
+
+        /// <summary>
+        /// 处理状态变更事件 - 统一处理基类和泛型特定的状态变更
         /// </summary>
         /// <param name="sender">事件发送者</param>
         /// <param name="e">事件参数</param>
-        protected virtual void OnGenericEntityStateChanged(object sender, StateTransitionEventArgs e)
+        private void HandleStatusChangedEvent(object sender, StateTransitionEventArgs e)
         {
-            // 获取实体
-            var entity = e.Entity as BaseEntity;
-            if (entity != null)
+            try
             {
-                // 使用统一方法更新所有UI状态
-                UpdateAllUIStates(entity);
+                if (e.Entity is BaseEntity entity && this.EditEntity == entity)
+                {
+                    // 统一处理状态变更
+                    OnEntityStateChanged(sender, e);
+                    
+                    // 触发泛型特定的StatusChanged事件
+                    StatusChanged?.Invoke(sender, e);
+                }
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, $"处理状态变更事件失败：{ex.Message}");
             }
         }
 
@@ -444,29 +510,30 @@ namespace RUINORERP.UI.BaseForm
         /// 确保状态上下文被正确初始化
         /// </summary>
         /// <param name="entity">实体对象</param>
-        protected void EnsureStatusContext(BaseEntity entity)
+        protected new void EnsureStatusContext(BaseEntity entity)
         {
             if (entity == null) return;
 
             // 如果StatusContext为null，尝试从实体中获取
-            if (StatusContext == null)
+            if (base.StatusContext == null)
             {
                 if (base.BoundEntity == null)
                 {
                     base.BoundEntity = entity;
                 }
-                StatusContext = entity.StatusContext;
+                base.StatusContext = entity.StatusContext;
             }
 
             // 如果仍然为null，尝试重新初始化
-            if (StatusContext == null && StateManager != null)
+            if (base.StatusContext == null && StateManager != null)
             {
                 try
                 {
                     // 获取实体当前的数据状态
                     var currentDataStatus = StateManager.GetDataStatus(entity);
+                    var ServiceProvider = Startup.GetFromFac<IServiceProvider>();
                     // 使用状态转换上下文工厂重新创建状态上下文
-                    StatusContext = StatusTransitionContextFactory.CreateDataStatusContext(entity, currentDataStatus, null, null);
+                    base.StatusContext = StatusTransitionContextFactory.CreateDataStatusContext(entity, currentDataStatus, ServiceProvider);
                 }
                 catch (Exception ex)
                 {
@@ -1643,7 +1710,7 @@ namespace RUINORERP.UI.BaseForm
             if (entity == null) return;
 
             // 获取可用操作列表
-            var availableActions = base.GetAvailableDataStatusTransitions().ToList();
+            var availableActions = GetAvailableDataStatusTransitions().ToList();
 
         }
 
@@ -4511,16 +4578,16 @@ namespace RUINORERP.UI.BaseForm
             {
                 return;
             }
-          var EntityStatus = StateManager.GetEntityStatus(editEntity as BaseEntity);
-          if (EntityStatus.dataStatus.HasValue)
-          {
-              var canModify = UIController.CanExecuteActionWithMessage(EntityStatus.dataStatus.Value, StatusContext);
-              if (!canModify.IsSuccess)
-              {
-                  MainForm.Instance.PrintInfoLog($"当前单据状态为{canModify.ErrorMessage}不允许修改!");
-                  return;
-              }
-          }
+            var EntityStatus = StateManager.GetEntityStatus(editEntity as BaseEntity);
+            if (EntityStatus.dataStatus.HasValue)
+            {
+                var canModify = UIController.CanExecuteActionWithMessage(EntityStatus.dataStatus.Value, StatusContext);
+                if (!canModify.IsSuccess)
+                {
+                    MainForm.Instance.PrintInfoLog($"当前单据状态为{canModify.ErrorMessage}不允许修改!");
+                    return;
+                }
+            }
 
 
             // 获取状态类型和值

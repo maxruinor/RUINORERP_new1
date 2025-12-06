@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 
 namespace RUINORERP.PacketSpec.Commands
 {
@@ -82,16 +82,6 @@ namespace RUINORERP.PacketSpec.Commands
         /// 重复登录通知 - 通知用户账号在其他地方登录
         /// </summary>
         public const ushort Authentication_DuplicateLoginNotification = 0x0108;
-
-        /// <summary>
-        /// 强制用户下线 - 管理员强制用户退出系统
-        /// </summary>
-        public const ushort Authentication_ForceLogout = 0x0109;
-
-        /// <summary>
-        /// 强制登录上线 - 强制用户登录到系统
-        /// </summary>
-        public const ushort Authentication_ForceLogin = 0x010A;
 
         /// <summary>
         /// 用户状态同步 - 同步用户在线状态信息

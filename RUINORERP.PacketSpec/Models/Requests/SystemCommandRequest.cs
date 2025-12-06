@@ -20,7 +20,6 @@ namespace RUINORERP.PacketSpec.Models.Requests
         /// 系统指令类型
         /// </summary>
         public SystemManagementType CommandType { get; set; }
-
         /// <summary>
         /// 目标用户ID
         /// </summary>
@@ -80,20 +79,5 @@ namespace RUINORERP.PacketSpec.Models.Requests
 
 
 
-        /// <summary>
-        /// 创建强制用户下线请求
-        /// </summary>
-        public static SystemCommandRequest CreateForceLogoutRequest(string targetUserId, string adminUserId, string reason = "管理员强制下线", string adminRemark = "")
-        {
-            return new SystemCommandRequest
-            {
-                //CommandType = SystemManagementType.ForceLogout,
-                TargetUserId = targetUserId,
-                AdminUserId = adminUserId,
-                RequestId = IdGenerator.GenerateRequestId(AuthenticationCommands.ForceLogout)
-            };
-        }
-
-      
     }
 }

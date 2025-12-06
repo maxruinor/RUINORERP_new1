@@ -61,6 +61,9 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// </summary>
         protected ILogger<LoginCommandHandler> logger { get; set; }
         protected ServerMessageService MessageService { get; set; }
+
+
+        protected SystemManagementService managementService { get; set; }
         /// <summary>
         /// 会话管理服务
         /// </summary>
@@ -88,8 +91,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 AuthenticationCommands.Logout,
                 AuthenticationCommands.ValidateToken,
                 AuthenticationCommands.RefreshToken,
-                AuthenticationCommands.DuplicateLogin,
-                AuthenticationCommands.ForceLogout
+                AuthenticationCommands.DuplicateLogin
             );
         }
 
@@ -97,21 +99,24 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// 完整构造函数，通过依赖注入获取服务
         /// </summary>
         public LoginCommandHandler(ILogger<LoginCommandHandler> _Logger, ISessionService sessionService,
-                                  ITokenService tokenService, TokenManager tokenManager, ServerMessageService _MessageService) : base(_Logger)
+                                  ITokenService tokenService, TokenManager tokenManager,
+                                  ServerMessageService _MessageService,
+                                  SystemManagementService _managementService
+
+            ) : base(_Logger)
         {
             logger = _Logger;
             SessionService = sessionService ?? throw new ArgumentNullException(nameof(sessionService));
             TokenService = tokenService ?? throw new ArgumentNullException(nameof(tokenService));
             TokenManager = tokenManager ?? throw new ArgumentNullException(nameof(tokenManager));
             MessageService = _MessageService;
+            managementService = _managementService;
             // 使用安全方法设置支持的命令
             SetSupportedCommands(
                 AuthenticationCommands.Login,
                 AuthenticationCommands.Logout,
                 AuthenticationCommands.ValidateToken,
-                AuthenticationCommands.RefreshToken,
-                AuthenticationCommands.DuplicateLogin,
-                AuthenticationCommands.ForceLogout
+                AuthenticationCommands.RefreshToken
             );
         }
 
@@ -402,7 +407,12 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     return ResponseFactory.CreateSpecificErrorResponse(executionContext, "目标用户不在线");
                 }
 
-                await MessageService.SendMessageToUserAsync(targetSession, message: "您的账号在另一地点登录，您已被强制下线。如非本人操作，请及时修改密码。", MessageType.Notice, 1500);
+                //发送提示强制下线
+
+                await MessageService.SendMessageToUserAsync(targetSession, message: "您的账号在另一地点登录，您已被强制下线。如非本人操作，请及时修改密码。", MessageType.System, 1500);
+
+                //客户端通知强制下线 5 秒后断开连接
+                await managementService.ForceLogoutAsync(targetSession, 1000);
 
                 // 通知客户端强制下线
                 await SessionService.DisconnectSessionAsync(targetSession.SessionID, $"您的账号在另一地点登录，您已被强制下线。如非本人操作，请及时修改密码。");
@@ -697,38 +707,6 @@ namespace RUINORERP.Server.Network.CommandHandlers
             return result;
         }
 
-        /// <summary>
-        /// 发送重复登录通知
-        /// </summary>
-        [Obsolete("后面要优化通过消息模块发送")]
-        private void SendDuplicateLoginNotification(string sessionId, string username)
-        {
-            try
-            {
-                if (!string.IsNullOrEmpty(sessionId))
-                {
-                    var appSession = SessionService.GetAppSession(sessionId);
-                    if (appSession != null)
-                    {
-                        // 创建重复登录通知消息
-                        //var notificationMessage = new OriginalData(
-                        //    (byte)CommandCategory.Authentication,
-                        //    new byte[] { AuthenticationCommands.DuplicateLoginNotification.OperationCode },
-                        //    System.Text.Encoding.UTF8.GetBytes($"您的账号【{username}】在其他地方登录，您已被强制下线。")
-                        //);
-
-                        //  var encryptedData = PacketSpec.Security.EncryptedProtocol.EncryptionServerPackToClient(notificationMessage);
-
-                        // 发送通知消息
-                        //  appSession.SendAsync(encryptedData.ToByteArray());
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                LogError($"发送重复登录通知失败: {ex.Message}", ex);
-            }
-        }
 
         /// <summary>
         /// 检查用户或IP是否在黑名单中

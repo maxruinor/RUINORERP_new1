@@ -153,14 +153,10 @@ namespace RUINORERP.UI.BaseForm
             // 添加设计模式检测，避免在设计器中运行时出现空引用异常
             if (System.ComponentModel.LicenseManager.UsageMode == System.ComponentModel.LicenseUsageMode.Designtime)
             {
-                // 在设计模式下，只进行必要的初始化，避免访问ApplicationContext
-                // 设置基本组件状态以确保设计器正常工作
                 return;
             }
 
-
-            // 调用基类的InitializeStateManagement方法
-            // 基类StateAwareControl已经处理了基本的状态管理器初始化
+            // 调用基类的InitializeStateManagement方法，基类已使用StateManagementHelper简化了初始化
             base.InitializeStateManagement();
 
             // 只有在基类初始化失败且ApplicationContext不为null时，才尝试从应用上下文获取
@@ -176,14 +172,11 @@ namespace RUINORERP.UI.BaseForm
             // 初始化按钮状态管理
             InitializeButtonStateManagement();
 
-            // 为泛型类型配置状态管理
-            ConfigureGenericStateManager();
-
-            // 注意：StatusContext是在BindEntity方法中创建的，
-            // 所以在这里不能直接访问，需要延迟事件订阅
-            // 事件订阅将在OnStatusContextChanged方法中处理
-
-            UpdateAllUIStates(EditEntity);
+            // 更新UI状态
+            if (EditEntity != null)
+            {
+                UpdateAllUIStates(EditEntity);
+            }
         }
 
 

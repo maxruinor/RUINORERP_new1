@@ -65,6 +65,22 @@ namespace RUINORERP.Model.Base.StatusManager
         }
         
         /// <summary>
+        /// 创建新的状态转换上下文实例
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        /// <param name="statusType">状态类型</param>
+        /// <param name="status">状态值</param>
+        /// <returns>新创建的状态转换上下文</returns>
+        private static StatusTransitionContext CreateNewContext(
+            BaseEntity entity,
+            Type statusType,
+            object status)
+        {
+            // 简化创建方式，只传入必要的参数
+            return new StatusTransitionContext(entity, statusType, status);
+        }
+        
+        /// <summary>
         /// 创建数据状态转换上下文（支持缓存）
         /// </summary>
         /// <param name="entity">实体对象</param>
@@ -91,14 +107,13 @@ namespace RUINORERP.Model.Base.StatusManager
                 
                 if (_contextCache.TryGetValue(cacheKey, out StatusTransitionContext cachedContext))
                 {
-                    // 如果缓存中有，则返回缓存的上下文（但更新实体引用和状态以确保使用最新值）
-                    cachedContext.Entity = entity;
-                    cachedContext.CurrentStatus = dataStatus;
+                    // 创建新的上下文，而不是修改现有只读属性
+                    StatusTransitionContext newContext = CreateNewContext(entity, typeof(DataStatus), dataStatus);
                     if (!string.IsNullOrEmpty(reason))
                     {
-                        cachedContext.Reason = reason;
+                        newContext.Reason = reason;
                     }
-                    return cachedContext;
+                    return newContext;
                 }
             }
 
@@ -143,7 +158,7 @@ namespace RUINORERP.Model.Base.StatusManager
                 throw new ArgumentNullException(nameof(statusType));
                 
             // 获取实体ID
-            return $"{entity.GetType().FullName}:{entity.ID}:{statusType.FullName}";
+            return $"{entity.GetType().FullName}:{entity.PrimaryKeyID}:{statusType.FullName}";
         }
 
         /// <summary>
@@ -174,14 +189,13 @@ namespace RUINORERP.Model.Base.StatusManager
                 
                 if (_contextCache.TryGetValue(cacheKey, out StatusTransitionContext cachedContext))
                 {
-                    // 如果缓存中有，则返回缓存的上下文（但更新实体引用和状态以确保使用最新值）
-                    cachedContext.Entity = entity;
-                    cachedContext.CurrentStatus = businessStatus;
+                    // 创建新的上下文，而不是修改现有只读属性
+                    StatusTransitionContext newContext = CreateNewContext(entity, typeof(TBusinessStatus), businessStatus);
                     if (!string.IsNullOrEmpty(reason))
                     {
-                        cachedContext.Reason = reason;
+                        newContext.Reason = reason;
                     }
-                    return cachedContext;
+                    return newContext;
                 }
             }
 
@@ -239,14 +253,13 @@ namespace RUINORERP.Model.Base.StatusManager
                 
                 if (_contextCache.TryGetValue(cacheKey, out StatusTransitionContext cachedContext))
                 {
-                    // 如果缓存中有，则返回缓存的上下文（但更新实体引用和状态以确保使用最新值）
-                    cachedContext.Entity = entity;
-                    cachedContext.CurrentStatus = actionStatus;
+                    // 创建新的上下文，而不是修改现有只读属性
+                    StatusTransitionContext newContext = CreateNewContext(entity, typeof(ActionStatus), actionStatus);
                     if (!string.IsNullOrEmpty(reason))
                     {
-                        cachedContext.Reason = reason;
+                        newContext.Reason = reason;
                     }
-                    return cachedContext;
+                    return newContext;
                 }
             }
 
@@ -375,14 +388,13 @@ namespace RUINORERP.Model.Base.StatusManager
                 
                 if (_contextCache.TryGetValue(cacheKey, out StatusTransitionContext cachedContext))
                 {
-                    // 如果缓存中有，则返回缓存的上下文（但更新实体引用和状态以确保使用最新值）
-                    cachedContext.Entity = entity;
-                    cachedContext.CurrentStatus = currentStatus;
+                    // 创建新的上下文，而不是修改现有只读属性
+                    StatusTransitionContext newContext = CreateNewContext(entity, statusType, currentStatus);
                     if (!string.IsNullOrEmpty(reason))
                     {
-                        cachedContext.Reason = reason;
+                        newContext.Reason = reason;
                     }
-                    return cachedContext;
+                    return newContext;
                 }
             }
 
@@ -414,33 +426,6 @@ namespace RUINORERP.Model.Base.StatusManager
             return context;
         }
         
-        /// <summary>
-        /// 克隆状态转换上下文
-        /// </summary>
-        /// <param name="context">要克隆的状态转换上下文</param>
-        /// <returns>克隆后的新状态转换上下文实例</returns>
-        public static StatusTransitionContext CloneContext(StatusTransitionContext context)
-        {
-            if (context == null)
-                throw new ArgumentNullException(nameof(context));
-                
-            // 创建新的上下文实例，复制所有重要属性
-            var statusManager = context.StateManager;
-            var transitionEngine = context.TransitionEngine;
-            var logger = context.Logger;
-            
-            var clonedContext = new StatusTransitionContext(
-                context.Entity,
-                context.StatusType,
-                context.CurrentStatus,
-                statusManager,
-                transitionEngine,
-                logger);
-                
-            clonedContext.Reason = context.Reason;
-            
-            return clonedContext;
-        }
         
         /// <summary>
         /// 清除指定实体的所有缓存上下文
@@ -451,7 +436,7 @@ namespace RUINORERP.Model.Base.StatusManager
             if (entity == null)
                 throw new ArgumentNullException(nameof(entity));
                 
-            string entityKeyPart = $"{entity.GetType().FullName}:{entity.ID}";
+            string entityKeyPart = $"{entity.GetType().FullName}:{entity.PrimaryKeyID}";
             
             // 找出所有与该实体相关的缓存键并移除
             var keysToRemove = new System.Collections.Generic.List<string>();

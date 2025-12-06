@@ -398,18 +398,6 @@ namespace RUINORERP.Model.Base.StatusManager
             {
                 var currentStatus = GetDataStatus(entity);
                 
-                // V3增强版：使用规则配置中心验证状态转换 - 借鉴V4优点，保持简单
-                if (_ruleConfiguration != null )
-                {
-                    var isValidTransition = _ruleConfiguration.ValidateTransition(currentStatus, targetStatus, entity);
-                    if (!isValidTransition)
-                    {
-                        return StateTransitionResult.Failure($"状态转换规则不允许：{currentStatus} -> {targetStatus}");
-                    }
-                }
-
-        
-
                 // 创建状态转换上下文，不传递日志记录器参数，让StatusTransitionContext自己创建
                 var context = new StatusTransitionContext(entity, typeof(DataStatus), currentStatus, this, _transitionEngine);
                 return await _transitionEngine.ValidateTransitionAsync(currentStatus, targetStatus, context);
@@ -437,18 +425,6 @@ namespace RUINORERP.Model.Base.StatusManager
             {
                 var currentStatus = GetBusinessStatus<T>(entity);
                 
-                // V3增强版：使用规则配置中心验证状态转换 - 借鉴V4优点，保持简单
-                if (_ruleConfiguration != null)
-                {
-                    var isValidTransition = _ruleConfiguration.ValidateTransition(currentStatus, targetStatus, entity);
-                    if (!isValidTransition)
-                    {
-                        return StateTransitionResult.Failure($"状态转换规则不允许：{currentStatus} -> {targetStatus}");
-                    }
-                }
-
-               
-
                 // 创建状态转换上下文，不传递日志记录器参数，让StatusTransitionContext自己创建
                 var context = new StatusTransitionContext(entity, typeof(T), currentStatus, this, _transitionEngine);
                 return await _transitionEngine.ValidateTransitionAsync(currentStatus, targetStatus, context);

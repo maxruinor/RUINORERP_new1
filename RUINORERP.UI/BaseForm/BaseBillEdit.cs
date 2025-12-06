@@ -27,6 +27,7 @@ using FluentValidation;
 using RUINORERP.Model.CommonModel;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Global;
+using RUINORERP.Global.EnumExt;
 using RUINORERP.UI.Common;
 using Microsoft.Extensions.Caching.Memory;
 using RUINORERP.Model.TransModel;
@@ -182,35 +183,123 @@ namespace RUINORERP.UI.BaseForm
         {
             try
             {
-                // 从服务容器获取状态管理器（现在服务已注册）
+                // 从服务容器获取状态管理器和UI控制器
                 if (Startup.ServiceProvider != null)
                 {
                     _stateManager = Startup.GetFromFac<IUnifiedStateManager>();
                     _uiController = Startup.GetFromFac<IStatusUIController>();
                 }
 
-                // 如果仍然获取失败，记录错误信息
+                // 错误处理和日志记录
                 if (_stateManager == null)
                 {
-                    System.Diagnostics.Debug.WriteLine("无法从DI容器获取IUnifiedStateManager服务，请确保在Startup.cs中调用了builder.AddStateManager()");
+                    logger?.LogWarning("无法从DI容器获取IUnifiedStateManager服务，请确保在Startup.cs中调用了builder.AddStateManager()");
+                    System.Diagnostics.Debug.WriteLine("无法从DI容器获取IUnifiedStateManager服务");
                 }
 
                 if (_uiController == null)
                 {
-                    System.Diagnostics.Debug.WriteLine("无法从DI容器获取IStatusUIController服务，请确保在Startup.cs中调用了builder.AddStateManager()");
+                    logger?.LogWarning("无法从DI容器获取IStatusUIController服务，请确保在Startup.cs中调用了builder.AddStateManager()");
+                    System.Diagnostics.Debug.WriteLine("无法从DI容器获取IStatusUIController服务");
                 }
 
-                // 统一注册状态变更事件处理
-                if (_stateManager != null)
+                // 统一注册状态变更事件处理 - 使用异步事件处理器
+                SubscribeToStateManagerEvents();
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "初始化状态管理失败");
+                System.Diagnostics.Debug.WriteLine($"初始化状态管理失败: {ex.Message}");
+            }
+        }
+        
+        /// <summary>
+        /// 订阅状态管理器事件
+        /// </summary>
+        protected void SubscribeToStateManagerEvents()
+        {
+            if (_stateManager != null)
+            {
+                // 使用异步事件处理器
+                _stateManager.StatusChanged += async (sender, e) => await OnStateManagerStateChangedAsync(sender, e);
+            }
+        }
+        
+        /// <summary>
+        /// 取消订阅状态管理器事件
+        /// </summary>
+        protected void UnsubscribeFromStateManagerEvents()
+        {
+            // 由于使用lambda表达式订阅，这里需要重新获取状态管理器并取消订阅
+            // 在Dispose中调用此方法确保正确清理
+            _stateManager = null;
+        }
+        
+        /// <summary>
+        /// 异步处理状态管理器中的状态变更事件
+        /// </summary>
+        /// <param name="sender">事件发送者</param>
+        /// <param name="e">状态变更事件参数</param>
+        protected virtual async Task OnStateManagerStateChangedAsync(object sender, StateTransitionEventArgs e)
+        {
+            // 使用事件过滤器，避免不必要的处理逻辑执行
+            if (!ShouldHandleStateChange(e))
+            {
+                return;
+            }
+            
+            try
+            {
+                // 如果变更的是当前绑定实体的状态，则更新UI
+                if (e.Entity == BoundEntity && _uiController != null && StatusContext != null)
                 {
-                    // 注册通用的状态变更事件处理
-                    // 子类可以在重写时添加特定的事件处理逻辑
+                    await Task.Run(() => ApplyCurrentStatusToUI());
+                    await HandleSpecificStateChangeAsync(e.OldStatus, e.NewStatus, e.Reason);
                 }
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"初始化状态管理失败: {ex.Message}");
+                logger?.LogError(ex, "处理状态变更事件失败");
             }
+        }
+        
+        /// <summary>
+        /// 事件过滤器，判断是否应该处理状态变更事件
+        /// </summary>
+        /// <param name="e">状态变更事件参数</param>
+        /// <returns>是否应该处理</returns>
+        protected virtual bool ShouldHandleStateChange(StateTransitionEventArgs e)
+        {
+            // 如果没有绑定实体，不处理
+            if (BoundEntity == null)
+                return false;
+            
+            // 如果事件实体与绑定实体不匹配，不处理
+            if (e.Entity != BoundEntity)
+                return false;
+            
+            // 如果没有UI控制器或状态上下文，不处理
+            if (_uiController == null || StatusContext == null)
+                return false;
+            
+            // 如果状态没有实际变化，不处理
+            if (e.OldStatus == e.NewStatus)
+                return false;
+            
+            return true;
+        }
+        
+        /// <summary>
+        /// 异步处理特定的状态变更逻辑（子类可重写）
+        /// </summary>
+        /// <param name="originalState">原始状态</param>
+        /// <param name="newState">新状态</param>
+        /// <param name="reason">变更原因</param>
+        protected virtual async Task HandleSpecificStateChangeAsync(object originalState, object newState, string reason)
+        {
+            // 默认为同步处理，子类可以重写为异步处理
+            HandleSpecificStateChange(originalState, newState, reason);
+            await Task.CompletedTask;
         }
 
         #endregion
@@ -242,15 +331,23 @@ namespace RUINORERP.UI.BaseForm
         {
             try
             {
-                // 直接使用状态转换上下文工厂创建数据状态上下文
-                if (StatusContext==null)
+                // 优先使用状态管理器创建并初始化状态上下文
+                if (_stateManager != null)
                 {
+                    // 使用StatusTransitionContextFactory创建状态上下文，因为IUnifiedStateManager没有GetOrCreateStatusContext方法
+                    var dataStatus = _stateManager.GetDataStatus(entity);
+                    StatusContext = StatusTransitionContextFactory.CreateDataStatusContext(entity, dataStatus, null, Startup.ServiceProvider);
+                }
+                else if (StatusContext == null)
+                {
+                    // 备选方案：直接使用状态转换上下文工厂
                     StatusContext = StatusTransitionContextFactory.CreateDataStatusContext(entity, DataStatus.草稿, null, Startup.ServiceProvider);
                 }
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"获取实体状态上下文失败: {ex.Message}");
+                logger?.LogError(ex, "初始化实体状态上下文失败");
+                System.Diagnostics.Debug.WriteLine($"初始化实体状态上下文失败: {ex.Message}");
             }
         }
 
@@ -275,10 +372,45 @@ namespace RUINORERP.UI.BaseForm
             {
                 var controls = GetAllControls(this);
                 _uiController.UpdateUIStatus(StatusContext, controls);
+                
+                // 同步更新状态栏显示（如果有）
+                UpdateStatusDisplay();
             }
             catch (Exception ex)
             {
+                logger?.LogError(ex, "应用状态到UI失败");
                 System.Diagnostics.Debug.WriteLine($"应用状态到UI失败: {ex.Message}");
+            }
+        }
+        
+        /// <summary>
+        /// 更新状态栏显示
+        /// </summary>
+        protected virtual void UpdateStatusDisplay()
+        {
+            try
+            {
+                // 尝试查找并更新状态标签
+                var statusLabel = this.Controls.Find("lblStatus", true).FirstOrDefault() as KryptonLabel;
+                if (statusLabel != null && StatusContext?.CurrentStatus is DataStatus currentStatus)
+                {
+                    // 使用Description属性获取显示名称，因为DataStatus没有GetDisplayName方法
+                    var fieldInfo = typeof(DataStatus).GetField(currentStatus.ToString());
+                    var descriptionAttribute = Attribute.GetCustomAttribute(fieldInfo, typeof(DescriptionAttribute)) as DescriptionAttribute;
+                    string displayName = descriptionAttribute?.Description ?? currentStatus.ToString();
+                    statusLabel.Text = $"状态: {displayName}";
+                    statusLabel.ForeColor = GetStatusColor(currentStatus);
+                }
+                
+                // 更新打印状态显示
+                if (BoundEntity != null)
+                {
+                    UpdatePrintStatusDisplay(BoundEntity);
+                }
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "更新状态栏显示失败");
             }
         }
 
@@ -289,21 +421,22 @@ namespace RUINORERP.UI.BaseForm
         protected virtual void UpdateAllUIStates(BaseEntity entity)
         {
             if (entity == null) return;
+            
+            // 确保状态上下文已初始化
+            if (StatusContext == null)
+            {
+                InitializeStatusContext(entity);
+            }
 
             // 应用当前状态到UI
             ApplyCurrentStatusToUI();
             
-            // 获取当前状态
-            var currentStatus = StateManager.GetDataStatus(entity);
-            
-            if (currentStatus != null)
+            // 获取当前状态并更新UI控件
+            if (StatusContext?.CurrentStatus is DataStatus currentStatus)
             {
                 // 更新UI控件状态
                 UpdateUIControlsByState(currentStatus);
             }
-
-            // 统一更新打印状态显示（如果有对应的Label控件）
-            UpdatePrintStatusDisplay(entity);
         }
 
         /// <summary>
@@ -440,6 +573,7 @@ namespace RUINORERP.UI.BaseForm
 
         /// <summary>
         /// 处理特定的状态变更逻辑（子类可重写）
+        /// 注意：推荐子类重写异步版本HandleSpecificStateChangeAsync
         /// </summary>
         /// <param name="originalState">原始状态</param>
         /// <param name="newState">新状态</param>
@@ -449,8 +583,16 @@ namespace RUINORERP.UI.BaseForm
             // 子类可以重写此方法以处理特定的状态变更逻辑
             // 例如：销售订单在确认状态时检查库存，在完结状态时生成出库单等
         }
-
-
+        
+        /// <summary>
+        /// 清理资源
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+        }
+        
+ 
 
         /// <summary>
         /// 根据状态获取颜色

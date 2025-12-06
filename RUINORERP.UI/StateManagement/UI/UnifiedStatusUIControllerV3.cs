@@ -92,19 +92,19 @@ namespace RUINORERP.UI.StateManagement.UI
                 // 更新数据状态相关的UI
                 if (dataStatus != null)
                 {
-                    UpdateUIForDataStatus(dataStatus, controls);
+                    UpdateUIForStatus(dataStatus, controls);
                 }
 
                 // 更新业务状态相关的UI
                 if (businessStatus != null)
                 {
-                    UpdateUIForBusinessStatus((Enum)businessStatus, controls);
+                    UpdateUIForStatus((Enum)businessStatus, controls);
                 }
 
                 // 更新操作状态相关的UI
                 if (actionStatus != null)
                 {
-                    UpdateUIForActionStatus(actionStatus, controls);
+                    UpdateUIForStatus(actionStatus, controls);
                 }
             }
             catch (Exception ex)
@@ -301,33 +301,11 @@ namespace RUINORERP.UI.StateManagement.UI
         #region 私有方法
 
         /// <summary>
-        /// 根据数据状态更新UI
+        /// 根据状态更新UI（通用方法）
         /// </summary>
         /// <param name="status">状态</param>
         /// <param name="controls">控件集合</param>
-        private void UpdateUIForDataStatus(Enum status, IEnumerable<Control> controls)
-        {
-            // 应用状态规则
-            ApplyRules(status, controls);
-        }
-
-        /// <summary>
-        /// 根据业务状态更新UI
-        /// </summary>
-        /// <param name="status">状态</param>
-        /// <param name="controls">控件集合</param>
-        private void UpdateUIForBusinessStatus(Enum status, IEnumerable<Control> controls)
-        {
-            // 应用状态规则
-            ApplyRules(status, controls);
-        }
-
-        /// <summary>
-        /// 根据操作状态更新UI
-        /// </summary>
-        /// <param name="status">状态</param>
-        /// <param name="controls">控件集合</param>
-        private void UpdateUIForActionStatus(Enum status, IEnumerable<Control> controls)
+        private void UpdateUIForStatus(Enum status, IEnumerable<Control> controls)
         {
             // 应用状态规则
             ApplyRules(status, controls);

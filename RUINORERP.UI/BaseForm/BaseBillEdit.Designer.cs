@@ -16,6 +16,17 @@
             if (disposing && (components != null))
             {
                 components.Dispose();
+                if (disposing)
+                {
+                    // 确保正确取消事件订阅，避免内存泄漏
+                    UnsubscribeFromStateManagerEvents();
+
+                    // 清理其他资源
+                    BoundEntity = null;
+                    StatusContext = null;
+                    _stateManager = null;
+                    _uiController = null;
+                }
             }
             base.Dispose(disposing);
         }

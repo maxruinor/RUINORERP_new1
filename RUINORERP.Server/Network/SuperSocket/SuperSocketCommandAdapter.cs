@@ -204,6 +204,10 @@ namespace RUINORERP.Server.Network.SuperSocket
                     package.Packet.ExecutionContext.SessionId = session.SessionID;
 
                 }
+                else
+                {
+
+                }
                 if (package.Packet.CommandId==LockCommands.Lock)
                 {
 

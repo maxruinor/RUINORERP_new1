@@ -750,7 +750,6 @@ namespace RUINORERP.Server.Network.Services
                 {
                     // 主动关闭SuperSocket连接
                     await sessionInfo.CloseAsync(CloseReason.ServerShutdown);
-                    _logger.LogInformation($"已主动断开会话连接: SessionID={sessionId}, 用户={sessionInfo.UserName}, 原因={reason}");
                 }
                 catch (Exception ex)
                 {

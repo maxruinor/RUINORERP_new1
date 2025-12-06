@@ -319,13 +319,12 @@ namespace RUINORERP.UI.Network.Services
                     }
                 };
 
-                var response = await _communicationService.SendCommandWithResponseAsync<ResponseBase>(
-                    AuthenticationCommands.Logout, request, CancellationToken.None);
+                //var response = await _communicationService.SendCommandWithResponseAsync<ResponseBase>(AuthenticationCommands.Logout, request, CancellationToken.None);
 
                 // 清理本地登录状态
                 await CleanupLoginStateAsync();
 
-                return response?.IsSuccess ?? false;
+                return true;
             }
             catch (Exception ex)
             {
@@ -344,25 +343,41 @@ namespace RUINORERP.UI.Network.Services
         /// <param name="action">用户选择的操作</param>
         /// <param name="ct">取消令牌</param>
         /// <returns>操作是否成功</returns>
-        public async Task<bool> HandleDuplicateLoginAsync(string sessionId, string username, DuplicateLoginAction action, CancellationToken ct = default)
+        public async Task<bool> HandleDuplicateLoginAsync(DuplicateLoginResult _duplicateLoginResult, DuplicateLoginAction action, CancellationToken ct = default)
         {
             try
             {
-                if (!_communicationService.IsConnected || string.IsNullOrEmpty(sessionId) || string.IsNullOrEmpty(username))
+                if (!_communicationService.IsConnected || _duplicateLoginResult == null || _duplicateLoginResult.ExistingSessions == null || _duplicateLoginResult.ExistingSessions.Count == 0)
                 {
                     _logger?.LogWarning("处理重复登录失败：未连接到服务器或参数不完整");
                     return false;
                 }
 
-                var request = new GeneralRequest
+
+                var request = new LoginRequest()
                 {
-                    Data = "你的账号在其它地方登陆。当前连接即将断开。请保存数据。",
+                    Username = "",
+                    Password = "",
+
+                    AdditionalData = new System.Collections.Generic.Dictionary<string, object>
+                    {
+                        ["Action"] = "你的账号在其它地方登陆。当前连接即将断开。请保存数据。",
+                        ["TargetUserId"] = _duplicateLoginResult.ExistingSessions[0].SessionId.ToString()
+                    }
                 };
 
-                var response = await _communicationService.SendCommandWithResponseAsync<GeneralResponse>(
-                    AuthenticationCommands.DuplicateLogin, request, ct);
 
-                return response?.IsSuccess ?? false;
+                var response = await _communicationService.SendCommandWithResponseAsync<LoginResponse>(
+                    AuthenticationCommands.DuplicateLogin, request, ct, 20000);
+                if (response != null)
+                {
+                    return response.IsSuccess;
+                }
+                else
+                {
+                    return false;
+                }
+
             }
             catch (Exception ex)
             {

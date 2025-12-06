@@ -1,4 +1,6 @@
 using RUINORERP.PacketSpec.Models.Authentication;
+using RUINORERP.PacketSpec.Models.Responses;
+using RUINORERP.UI.Network.Services;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -13,8 +15,13 @@ namespace RUINORERP.UI.Forms
     /// </summary>
     public partial class DuplicateLoginDialog : Krypton.Toolkit.KryptonForm
     {
+        private readonly UserLoginService _userLoginService;
         private DuplicateLoginAction _selectedAction = DuplicateLoginAction.Cancel;
         private readonly DuplicateLoginResult _duplicateLoginResult;
+        private string _username;
+        private string _password;
+        private string _serverIP;
+        private int _serverPort;
 
         /// <summary>
         /// 获取用户选择的重复登录处理方式
@@ -24,10 +31,21 @@ namespace RUINORERP.UI.Forms
         /// <summary>
         /// 构造函数
         /// </summary>
+        /// <param name="loginFlowService">登录流程服务</param>
+        /// <param name="userLoginService">用户登录服务</param>
         /// <param name="duplicateLoginResult">重复登录结果信息</param>
-        public DuplicateLoginDialog(DuplicateLoginResult duplicateLoginResult)
+        /// <param name="username">用户名</param>
+        /// <param name="password">密码</param>
+        /// <param name="serverIP">服务器IP</param>
+        /// <param name="serverPort">服务器端口</param>
+        public DuplicateLoginDialog(UserLoginService userLoginService, DuplicateLoginResult duplicateLoginResult, string username, string password, string serverIP, int serverPort)
         {
+            _userLoginService = userLoginService;
             _duplicateLoginResult = duplicateLoginResult ?? throw new ArgumentNullException(nameof(duplicateLoginResult));
+            _username = username;
+            _password = password;
+            _serverIP = serverIP;
+            _serverPort = serverPort;
             InitializeComponent();
             InitializeDialogContent();
         }
@@ -70,9 +88,9 @@ namespace RUINORERP.UI.Forms
             if (_duplicateLoginResult.ExistingSessions?.Count > 0)
             {
                 var session = _duplicateLoginResult.ExistingSessions[0]; // 获取第一个会话信息
-                
+
                 string sessionInfo = $"{session.LoginTime:yyyy-MM-dd HH:mm:ss} | IP: {session.ClientIp} | {session.DeviceInfo} | {session.StatusDescription}";
-                
+
                 lblSessionInfo.Values.Text = sessionInfo;
             }
             else
@@ -97,7 +115,7 @@ namespace RUINORERP.UI.Forms
             btnCancelLogin.DialogResult = DialogResult.None;
             btnCancelLogin.Click += BtnCancelLogin_Click;
 
-        
+
 
             // 设置按钮工具提示
             SetupButtonTooltips();
@@ -112,13 +130,13 @@ namespace RUINORERP.UI.Forms
             btnForceOffline.ToolTipValues.EnableToolTips = true;
             btnForceOffline.ToolTipValues.Heading = "踢掉其他设备并继续登录";
 
-            
+
 
             btnCancelLogin.ToolTipValues.Description = "取消本次登录操作，返回登录界面";
             btnCancelLogin.ToolTipValues.EnableToolTips = true;
             btnCancelLogin.ToolTipValues.Heading = "放弃登录";
 
-   
+
         }
 
         #region 事件处理
@@ -126,10 +144,42 @@ namespace RUINORERP.UI.Forms
         /// <summary>
         /// 强制对方下线按钮点击事件
         /// </summary>
-        private void BtnForceOffline_Click(object sender, EventArgs e)
+        private async void BtnForceOffline_Click(object sender, EventArgs e)
         {
-            _selectedAction = DuplicateLoginAction.ForceOfflineOthers;
-            UpdateButtonSelection(btnForceOffline);
+            try
+            {
+                // 显示进度条
+                pnlButtons.Visible = false;
+                pnlProgress.Visible = true;
+                kryptonProgressBar1.Style = ProgressBarStyle.Marquee;
+                lblProgressStatus.Values.Text = "正在强制对方下线，请稍候...";
+                this.Refresh();
+
+                // 调用服务端强制下线
+                bool success = await _userLoginService.HandleDuplicateLoginAsync(_duplicateLoginResult,
+                    DuplicateLoginAction.ForceOfflineOthers);
+
+                if (success)
+                {
+                    _selectedAction = DuplicateLoginAction.ForceOfflineOthers;
+                    this.DialogResult = DialogResult.OK;
+                    this.Close();
+                }
+                else
+                {
+                    // 恢复按钮显示
+                    pnlProgress.Visible = false;
+                    pnlButtons.Visible = true;
+                    MessageBox.Show("强制对方下线失败，请稍后重试。", "操作失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                // 恢复按钮显示
+                pnlProgress.Visible = false;
+                pnlButtons.Visible = true;
+                MessageBox.Show($"操作失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
 
@@ -168,9 +218,9 @@ namespace RUINORERP.UI.Forms
             // 重置所有按钮到默认状态
             btnForceOffline.StateCommon.Back.Color1 = Color.FromArgb(220, 53, 69);
             btnForceOffline.StateCommon.Content.ShortText.Color1 = Color.White;
-            
-         
-            
+
+
+
             btnCancelLogin.StateCommon.Back.Color1 = Color.FromArgb(108, 117, 125);
             btnCancelLogin.StateCommon.Content.ShortText.Color1 = Color.White;
 

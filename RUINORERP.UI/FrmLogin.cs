@@ -50,7 +50,6 @@ namespace RUINORERP.UI
         private readonly UserLoginService userLoginService;
         private readonly TokenManager _tokenManager;
         private readonly UserLoginService _userLoginService;
-        private readonly LoginFlowService _loginFlowService;
         public FrmLogin()
         {
             InitializeComponent();
@@ -58,7 +57,6 @@ namespace RUINORERP.UI
             connectionManager = Startup.GetFromFac<ConnectionManager>();
             _userLoginService = Startup.GetFromFac<UserLoginService>();
             _tokenManager = Startup.GetFromFac<TokenManager>();
-            _loginFlowService = Startup.GetFromFac<LoginFlowService>();
         }
         private bool m_showing = true;
         private void fadeTimer_Tick(object sender, EventArgs e)
@@ -531,13 +529,25 @@ namespace RUINORERP.UI
                 // 创建取消令牌，仅用于网络请求阶段的超时控制
                 using var networkCts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
 
-                // 执行网络请求阶段的登录流程（带超时控制）
-                var loginResponse = await _loginFlowService.ExecuteLoginFlowAsync(
+
+                // 1. 连接服务器
+                if (!connectionManager.IsConnected)
+                {
+
+                    var connected = await connectionManager.ConnectAsync(txtServerIP.Text.Trim(), serverPort);
+                    if (!connected)
+                    {
+                        throw new Exception("无法连接到服务器");
+                    }
+                }
+
+                // 2. 执行登录验证
+
+
+                var loginResponse = await _userLoginService.LoginAsync(
                     txtUserName.Text,
                     txtPassWord.Text,
-                    txtServerIP.Text.Trim(),
-                    serverPort,
-                    networkCts.Token);
+                       networkCts.Token);
 
                 // 网络请求阶段完成后，处理登录结果和用户交互（无超时限制）
                 if (loginResponse != null && loginResponse.IsSuccess)
@@ -576,36 +586,21 @@ namespace RUINORERP.UI
                 if (loginResponse.HasDuplicateLogin && loginResponse.DuplicateLoginResult != null)
                 {
                     MainForm.Instance.logger?.LogWarning($"检测到用户 {txtUserName.Text} 存在重复登录");
-                    
+
                     // 检查是否需要用户确认
                     if (loginResponse.DuplicateLoginResult.RequireUserConfirmation)
                     {
                         // 显示重复登录对话框让用户选择操作
                         var userAction = await ShowDuplicateLoginDialog(loginResponse.DuplicateLoginResult);
-                        
-                        // 根据用户选择处理
-                        switch (userAction)
+
+                        // 如果用户取消登录，则清理状态并返回
+                        if (userAction == DuplicateLoginAction.Cancel)
                         {
-                            case DuplicateLoginAction.ForceOfflineOthers:
-                                // 强制其他会话下线
-                                var forceResult = await _userLoginService.HandleDuplicateLoginAsync(
-                                    loginResponse.SessionId, 
-                                    txtUserName.Text, 
-                                    DuplicateLoginAction.ForceOfflineOthers);
-                                
-                                if (!forceResult)
-                                {
-                                    MessageBox.Show("处理重复登录失败，请重试", "操作失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                                    // 清理本地登录状态
-                                    await _userLoginService.CancelLoginAsync(loginResponse.SessionId);
-                                    return;
-                                }
-                                break;
-                                
-                            case DuplicateLoginAction.Cancel:
-                                // 取消登录
-                                MessageBox.Show("您已取消登录操作", "登录取消", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                                return;
+                            // 取消登录
+                            MainForm.Instance.PrintInfoLog("您已取消登录操作");
+                            await _userLoginService.CancelLoginAsync(loginResponse.SessionId);
+                            await connectionManager.DisconnectAsync();
+                            return;
                         }
                     }
                 }
@@ -651,16 +646,18 @@ namespace RUINORERP.UI
                 {
                     return (DuplicateLoginAction)this.Invoke(new Func<DuplicateLoginAction>(() =>
                     {
-                        using var dialog = new Forms.DuplicateLoginDialog(duplicateResult);
+                        // 由于DuplicateLoginDialog现在处理了完整的强制下线逻辑，这里只需要返回用户选择
+                        using var dialog = new Forms.DuplicateLoginDialog(_userLoginService, duplicateResult, txtUserName.Text, txtPassWord.Text, txtServerIP.Text, int.Parse(txtPort.Text));
                         var result = dialog.ShowDialog(this);
-                        return result == DialogResult.OK ? dialog.SelectedAction : DuplicateLoginAction.Cancel;
+                        return result == DialogResult.OK ? DuplicateLoginAction.ForceOfflineOthers : DuplicateLoginAction.Cancel;
                     }));
                 }
                 else
                 {
-                    using var dialog = new Forms.DuplicateLoginDialog(duplicateResult);
+                    // 由于DuplicateLoginDialog现在处理了完整的强制下线逻辑，这里只需要返回用户选择
+                    using var dialog = new Forms.DuplicateLoginDialog(_userLoginService, duplicateResult, txtUserName.Text, txtPassWord.Text, txtServerIP.Text, int.Parse(txtPort.Text));
                     var result = dialog.ShowDialog(this);
-                    return result == DialogResult.OK ? dialog.SelectedAction : DuplicateLoginAction.Cancel;
+                    return result == DialogResult.OK ? DuplicateLoginAction.ForceOfflineOthers : DuplicateLoginAction.Cancel;
                 }
             });
         }

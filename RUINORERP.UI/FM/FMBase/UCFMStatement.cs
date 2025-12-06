@@ -271,6 +271,8 @@ namespace RUINORERP.UI.FM
                 #endregion
             }
 
+            InitLoadGrid();
+
             // 始终设置表格数据源，即使明细数据为空
             details = entity.tb_FM_StatementDetails ?? new List<tb_FM_StatementDetail>();
           
@@ -280,8 +282,6 @@ namespace RUINORERP.UI.FM
             {
                 item.PropertyChanged += (sender, s1) =>
                 {
-
-
                     //权限允许
                     if ((true && entity.StatementStatus == (int)StatementStatus.草稿) ||
                     (true && entity.StatementStatus == (int)StatementStatus.已发送))
@@ -681,12 +681,9 @@ namespace RUINORERP.UI.FM
 
             InitLoadGrid();
 
-
-
             sgh.OnCalculateColumnValue += Sgh_OnCalculateColumnValue;
             sgh.OnAddDataRow += Sgh_OnAddDataRow;
             UIHelper.ControlMasterColumnsInvisible(CurMenuInfo, this);
-
 
             //隐藏外币相关
             UIHelper.ControlForeignFieldInvisible<tb_FM_Statement>(this, false);

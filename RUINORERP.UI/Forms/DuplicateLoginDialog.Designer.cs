@@ -26,8 +26,13 @@ namespace RUINORERP.UI.Forms
             this.btnCancelLogin = new Krypton.Toolkit.KryptonButton();
             ((System.ComponentModel.ISupportInitialize)(this.pnlSessionInfo)).BeginInit();
             this.pnlSessionInfo.SuspendLayout();
+            this.pnlProgress = new Krypton.Toolkit.KryptonPanel();
+            this.kryptonProgressBar1 = new Krypton.Toolkit.KryptonProgressBar();
+            this.lblProgressStatus = new Krypton.Toolkit.KryptonLabel();
             ((System.ComponentModel.ISupportInitialize)(this.pnlButtons)).BeginInit();
             this.pnlButtons.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pnlProgress)).BeginInit();
+            this.pnlProgress.SuspendLayout();
             this.SuspendLayout();
             // 
             // lblTitle
@@ -129,6 +134,32 @@ namespace RUINORERP.UI.Forms
             this.btnCancelLogin.TabIndex = 2;
             this.btnCancelLogin.Values.Text = "❌ 取消登陆";
             // 
+            // pnlProgress
+            // 
+            this.pnlProgress.Controls.Add(this.kryptonProgressBar1);
+            this.pnlProgress.Controls.Add(this.lblProgressStatus);
+            this.pnlProgress.Location = new System.Drawing.Point(30, 215);
+            this.pnlProgress.Name = "pnlProgress";
+            this.pnlProgress.Size = new System.Drawing.Size(540, 85);
+            this.pnlProgress.TabIndex = 4;
+            this.pnlProgress.Visible = false;
+            // 
+            // kryptonProgressBar1
+            // 
+            this.kryptonProgressBar1.Location = new System.Drawing.Point(30, 20);
+            this.kryptonProgressBar1.Name = "kryptonProgressBar1";
+            this.kryptonProgressBar1.Size = new System.Drawing.Size(480, 25);
+            this.kryptonProgressBar1.TabIndex = 0;
+            this.kryptonProgressBar1.Value = 50;
+            // 
+            // lblProgressStatus
+            // 
+            this.lblProgressStatus.Location = new System.Drawing.Point(30, 55);
+            this.lblProgressStatus.Name = "lblProgressStatus";
+            this.lblProgressStatus.Size = new System.Drawing.Size(200, 20);
+            this.lblProgressStatus.TabIndex = 1;
+            this.lblProgressStatus.Values.Text = "正在强制对方下线，请稍候...";
+            // 
             // DuplicateLoginDialog
             // 
             this.BackColor = System.Drawing.Color.White;
@@ -137,6 +168,7 @@ namespace RUINORERP.UI.Forms
             this.Controls.Add(this.lblMessage);
             this.Controls.Add(this.pnlSessionInfo);
             this.Controls.Add(this.pnlButtons);
+            this.Controls.Add(this.pnlProgress);
             this.Controls.Add(this.lblInstruction);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
             this.MaximizeBox = false;
@@ -152,6 +184,8 @@ namespace RUINORERP.UI.Forms
             this.pnlSessionInfo.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pnlButtons)).EndInit();
             this.pnlButtons.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.pnlProgress)).EndInit();
+            this.pnlProgress.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -168,5 +202,8 @@ namespace RUINORERP.UI.Forms
         private Krypton.Toolkit.KryptonPanel pnlButtons;
         private Krypton.Toolkit.KryptonButton btnForceOffline;
         private Krypton.Toolkit.KryptonButton btnCancelLogin;
+        private Krypton.Toolkit.KryptonPanel pnlProgress;
+        private Krypton.Toolkit.KryptonProgressBar kryptonProgressBar1;
+        private Krypton.Toolkit.KryptonLabel lblProgressStatus;
     }
 }

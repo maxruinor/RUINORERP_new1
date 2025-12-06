@@ -86,7 +86,7 @@ namespace RUINORERP.Server.Network.Services
                 var response = await messageService.SendMessageToUserAsync(
                     "testUser456",
                     "测试文本消息内容",
-                    "Text");
+                    Model.TransModel.MessageType.Text);
                 
                 LogResponseResult("文本消息", response);
             }

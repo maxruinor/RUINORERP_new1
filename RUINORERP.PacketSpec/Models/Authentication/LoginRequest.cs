@@ -79,29 +79,6 @@ namespace RUINORERP.PacketSpec.Models.Requests
         
  
 
-        ///// <summary>
-        ///// 验证请求有效性
-        ///// </summary>
-        //public bool IsValid()
-        //{
-        //    switch (Action)
-        //        {
-        //            case AuthenticationCommands.LoginAction.Login:
-        //                return !string.IsNullOrEmpty(Username) && 
-        //                       !string.IsNullOrEmpty(Password) &&
-        //                       Username.Length >= 3 &&
-        //                       Password.Length >= 6;
-        //            case AuthenticationCommands.LoginAction.RefreshToken:
-        //            case AuthenticationCommands.LoginAction.ValidateToken:
-        //                return Token != null && !string.IsNullOrEmpty(Token.AccessToken);
-        //            case AuthenticationCommands.LoginAction.Logout:
-        //            case AuthenticationCommands.LoginAction.PrepareLogin:
-        //                return true; // 这些操作不需要额外验证
-        //            default:
-        //                return false;
-        //        }
-        //}
-
         /// <summary>
         /// 安全清理敏感信息
         /// </summary>

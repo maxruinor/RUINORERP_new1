@@ -73,8 +73,6 @@ namespace RUINORERP.Server.Network.DI
             // 注册系统命令处理器
             services.AddTransient<SystemCommandHandler>();
 
-            // 注册认证命令处理器
-            services.AddTransient<AuthenticationCommandHandler>();
 
             // 注册配置命令处理器
             services.AddTransient<GeneralCommandHandler>();

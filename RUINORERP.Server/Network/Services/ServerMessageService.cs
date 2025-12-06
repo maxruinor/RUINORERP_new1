@@ -59,7 +59,7 @@ namespace RUINORERP.Server.Network.Services
                     MessageType = MessageType.Prompt,
                     Title = title,
                     Content = message,
-                    Sender="服务器消息",
+                    Sender = "服务器消息",
                     ReceiverIds = new List<long> { long.TryParse(targetUserName, out long userId) ? userId : 0 },
                     SendTime = DateTime.Now
                 };
@@ -107,7 +107,7 @@ namespace RUINORERP.Server.Network.Services
         public async Task<MessageResponse> SendMessageToUserAsync(
             string targetUserId,
             string message,
-            string messageType = "Text",
+            MessageType messageType = MessageType.Text,
             int timeoutMs = 30000,
             CancellationToken ct = default)
         {
@@ -116,7 +116,7 @@ namespace RUINORERP.Server.Network.Services
                 // 使用MessageData类代替匿名对象，提高类型安全性和可维护性
                 var messageData = new MessageData
                 {
-                    MessageType = messageType == "Text" ? MessageType.Text : MessageType.Unknown,
+                    MessageType = messageType,
                     Content = message,
                     ReceiverIds = new List<long> { long.TryParse(targetUserId, out long userId) ? userId : 0 },
                     SendTime = DateTime.Now
@@ -145,6 +145,58 @@ namespace RUINORERP.Server.Network.Services
                 }
 
                 return MessageResponse.Fail(MessageType.Unknown, "目标用户不在线");
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "发送用户消息时发生异常");
+                return MessageResponse.Fail(MessageType.Unknown, $"发送消息失败: {ex.Message}");
+            }
+        }
+
+
+        /// <summary>
+        /// 发送消息给指定用户并等待响应
+        /// </summary>
+        /// <param name="targetUserId">目标用户ID</param>
+        /// <param name="message">消息内容</param>
+        /// <param name="messageType">消息类型</param>
+        /// <param name="timeoutMs">超时时间（毫秒）</param>
+        /// <param name="ct">取消令牌</param>
+        /// <returns>消息响应</returns>
+        public async Task<MessageResponse> SendMessageToUserAsync(
+            SessionInfo session,
+            string message,
+            MessageType messageType = MessageType.Text,
+            int timeoutMs = 30000,
+            CancellationToken ct = default)
+        {
+            try
+            {
+                if (session==null)
+                {
+                    return MessageResponse.Fail(MessageType.Unknown, "目标用户不在线");
+                }
+                // 使用MessageData类代替匿名对象，提高类型安全性和可维护性
+                var messageData = new MessageData
+                {
+                    MessageType = messageType,
+                    Content = message,
+                    // ReceiverIds = new List<long> { long.TryParse(targetUserId, out long userId) ? userId : 0 },
+                    SendTime = DateTime.Now
+                };
+
+                var request = new MessageRequest(messageData.MessageType, messageData);
+
+                var responsePacket = await _sessionService.SendCommandAndWaitForResponseAsync(
+                    session.SessionID,
+                    MessageCommands.SendMessageToUser,
+                    request,
+                    timeoutMs,
+                    ct);
+
+                return responsePacket?.Response as MessageResponse ??
+                       MessageResponse.Fail(MessageType.Unknown, "未收到有效响应");
+       
             }
             catch (Exception ex)
             {

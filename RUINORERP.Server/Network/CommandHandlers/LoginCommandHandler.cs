@@ -6,25 +6,29 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.VisualBasic.ApplicationServices;
+using RUINORERP.Common.Extensions;
 using RUINORERP.Model;
+using RUINORERP.Model.TransModel;
 using RUINORERP.PacketSpec;
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Commands.Authentication;
 using RUINORERP.PacketSpec.Commands.Cache;
 using RUINORERP.PacketSpec.Errors;
 using RUINORERP.PacketSpec.Handlers;
-using RUINORERP.Server;
 using RUINORERP.PacketSpec.Models;
 using RUINORERP.PacketSpec.Models.Authentication;
 using RUINORERP.PacketSpec.Models.Common;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Requests;
 using RUINORERP.PacketSpec.Models.Responses;
+using RUINORERP.Server;
 using RUINORERP.Server.Adapters;
 using RUINORERP.Server.Network.Interfaces.Services;
 using RUINORERP.Server.Network.Models;
+using RUINORERP.Server.Network.Services;
 using SuperSocket.Channel;
 using SuperSocket.Connection;
+using SuperSocket.Server.Abstractions.Session;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -56,7 +60,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// 日志记录器
         /// </summary>
         protected ILogger<LoginCommandHandler> logger { get; set; }
-
+        protected ServerMessageService MessageService { get; set; }
         /// <summary>
         /// 会话管理服务
         /// </summary>
@@ -83,7 +87,9 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 AuthenticationCommands.Login,
                 AuthenticationCommands.Logout,
                 AuthenticationCommands.ValidateToken,
-                AuthenticationCommands.RefreshToken
+                AuthenticationCommands.RefreshToken,
+                AuthenticationCommands.DuplicateLogin,
+                AuthenticationCommands.ForceLogout
             );
         }
 
@@ -91,19 +97,21 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// 完整构造函数，通过依赖注入获取服务
         /// </summary>
         public LoginCommandHandler(ILogger<LoginCommandHandler> _Logger, ISessionService sessionService,
-                                  ITokenService tokenService, TokenManager tokenManager) : base(_Logger)
+                                  ITokenService tokenService, TokenManager tokenManager, ServerMessageService _MessageService) : base(_Logger)
         {
             logger = _Logger;
             SessionService = sessionService ?? throw new ArgumentNullException(nameof(sessionService));
             TokenService = tokenService ?? throw new ArgumentNullException(nameof(tokenService));
             TokenManager = tokenManager ?? throw new ArgumentNullException(nameof(tokenManager));
-
+            MessageService = _MessageService;
             // 使用安全方法设置支持的命令
             SetSupportedCommands(
                 AuthenticationCommands.Login,
                 AuthenticationCommands.Logout,
                 AuthenticationCommands.ValidateToken,
-                AuthenticationCommands.RefreshToken
+                AuthenticationCommands.RefreshToken,
+                AuthenticationCommands.DuplicateLogin,
+                AuthenticationCommands.ForceLogout
             );
         }
 
@@ -144,6 +152,11 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     else if (commandId == AuthenticationCommands.RefreshToken)
                     {
                         return await ProcessTokenRefreshAsync(loginRequest, cmd.Packet.ExecutionContext, cancellationToken);
+                    }
+                    else if (commandId == AuthenticationCommands.DuplicateLogin)
+                    {
+                        return await HandleDuplicateLoginAsync(loginRequest, cmd.Packet.ExecutionContext, cancellationToken);
+
                     }
                     else
                     {
@@ -217,7 +230,10 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     }
                 }
                 sessionInfo.ClientIp = loginRequest.ClientIp;
-
+                if (string.IsNullOrEmpty(sessionInfo.ClientIp))
+                {
+                    sessionInfo.ClientIp = GetClientIp(sessionInfo);
+                }
                 // 检查黑名单
                 if (IsUserBlacklisted(loginRequest.Username, loginRequest.ClientIp))
                 {
@@ -243,7 +259,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
 
                 // 检查用户登录状态，分析重复登录情况
                 var (hasExistingSessions, authorizedSessions, duplicateResult) = CheckUserLoginStatus(loginRequest.Username, executionContext.SessionId);
-                
+
                 // 处理重复登录情况
                 if (duplicateResult.HasDuplicateLogin)
                 {
@@ -254,6 +270,8 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     {
                         logger?.LogDebug($"用户 {loginRequest.Username} 本地重复登录，允许多会话，继续登录流程");
                     }
+
+
                 }
 
                 // 更新会话信息
@@ -298,91 +316,8 @@ namespace RUINORERP.Server.Network.CommandHandlers
             }
         }
 
-        /// <summary>
-        /// 检查是否已确认重复登录（基于请求数据）
-        /// </summary>
-        private bool IsDuplicateLoginConfirmed(LoginRequest loginRequest)
-        {
-            if (loginRequest?.AdditionalData != null &&
-                loginRequest.AdditionalData.ContainsKey("DuplicateLoginConfirmed"))
-            {
-                return Convert.ToBoolean(loginRequest.AdditionalData["DuplicateLoginConfirmed"]);
-            }
-            return false;
-        }
 
-        /// <summary>
-        /// 获取用户选择的重复登录处理方式
-        /// </summary>
-        private DuplicateLoginAction GetUserSelectedAction(LoginRequest loginRequest)
-        {
-            if (loginRequest?.AdditionalData != null &&
-                loginRequest.AdditionalData.ContainsKey("DuplicateLoginAction"))
-            {
-                var actionStr = loginRequest.AdditionalData["DuplicateLoginAction"].ToString();
-                if (Enum.TryParse<DuplicateLoginAction>(actionStr, out var action))
-                {
-                    return action;
-                }
-            }
-            
-            // 默认为强制对方下线
-            return DuplicateLoginAction.ForceOfflineOthers;
-        }
 
-        /// <summary>
-        /// 处理重复登录操作
-        /// </summary>
-        private async Task HandleDuplicateLoginAction(
-            IEnumerable<SessionInfo> existingSessions, 
-            string username, 
-            DuplicateLoginAction action)
-        {
-            switch (action)
-            {
-                case DuplicateLoginAction.ForceOfflineOthers:
-                    await KickExistingSessions(existingSessions, username);
-                    break;
-                case DuplicateLoginAction.Cancel:
-                    // 取消登录的逻辑在客户端处理
-                    logger?.LogInformation($"用户 {username} 取消了登录");
-                    break;
-                    
-                default:
-                    // 默认踢掉其他会话
-                    await KickExistingSessions(existingSessions, username);
-                    break;
-            }
-        }
-
-        /// <summary>
-        /// 创建重复登录响应
-        /// </summary>      
-          private LoginResponse CreateDuplicateLoginResponse(DuplicateLoginResult duplicateResult)
-        {
-            var response = new LoginResponse
-            {
-                IsSuccess = false,
-                Message = duplicateResult.Message
-            };
-
-            // 添加现有会话信息到元数据
-            var sessionInfos = duplicateResult.ExistingSessions.Select(s => new Dictionary<string, object>
-            {
-                { "SessionId", s.SessionId },
-                { "LoginTime", s.LoginTime },
-                { "ClientIp", s.ClientIp },
-                { "DeviceInfo", s.DeviceInfo },
-                { "IsLocal", s.IsLocal },
-                { "StatusDescription", s.StatusDescription }
-            }).ToList();
-
-            response.WithMetadata("ExistingSessions", sessionInfos);
-            response.WithMetadata("RequireUserConfirmation", duplicateResult.RequireUserConfirmation);
-            response.WithMetadata("DuplicateLoginType", duplicateResult.Type.ToString());
-
-            return response;
-        }
 
         /// <summary>
         /// 处理Token刷新
@@ -445,6 +380,68 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 return ResponseFactory.CreateSpecificErrorResponse(executionContext, ex);
             }
         }
+
+
+
+        /// <summary>
+        /// 处理重复用户下线命令
+        /// </summary>
+        private async Task<IResponse> HandleDuplicateLoginAsync(LoginRequest request, CommandContext executionContext, CancellationToken cancellationToken)
+        {
+            try
+            {
+                string TargetUserId = string.Empty;
+                if (request.AdditionalData != null && request.AdditionalData.ContainsKey("TargetUserId"))
+                {
+                    TargetUserId = request.AdditionalData["TargetUserId"].ToString();
+                }
+                // 查找目标用户会话
+                var targetSession = SessionService.GetSession(TargetUserId);
+                if (targetSession == null)
+                {
+                    return ResponseFactory.CreateSpecificErrorResponse(executionContext, "目标用户不在线");
+                }
+
+                await MessageService.SendMessageToUserAsync(targetSession, message: "您的账号在另一地点登录，您已被强制下线。如非本人操作，请及时修改密码。", MessageType.Notice, 1500);
+
+                // 通知客户端强制下线
+                await SessionService.DisconnectSessionAsync(targetSession.SessionID, $"您的账号在另一地点登录，您已被强制下线。如非本人操作，请及时修改密码。");
+
+                return ResponseFactory.CreateSpecificSuccessResponse(executionContext, "用户已成功强制下线");
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "处理强制用户下线命令时出错");
+                return SystemCommandResponse.CreateForceLogoutFailure($"处理失败: {ex.Message}", "FORCE_LOGOUT_ERROR");
+            }
+        }
+
+
+        /// <summary>
+        /// 验证管理员权限
+        /// </summary>
+        private async Task<bool> ValidateAdminPermissionAsync(CommandContext context)
+        {
+            try
+            {
+                // 获取当前会话
+                var session = SessionService.GetSession(context.SessionId);
+                if (session == null)
+                {
+                    return false;
+                }
+
+                // 检查是否为管理员
+                return session.IsAdmin;
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "验证管理员权限时出错");
+                return false;
+            }
+        }
+
+
 
         /// <summary>
         /// 处理登出操作
@@ -633,29 +630,10 @@ namespace RUINORERP.Server.Network.CommandHandlers
 
 
         /// <summary>
-        /// 踢掉现有会话
-        /// </summary>
-        private async Task KickExistingSessions(IEnumerable<SessionInfo> existingSessions, string username)
-        {
-            // 主动踢掉之前的登录
-            foreach (var session in existingSessions)
-            {
-                // 发送重复登录通知
-                if (!string.IsNullOrEmpty(session.SessionID))
-                {
-                    SendDuplicateLoginNotification(session.SessionID, username);
-
-                    // 使用SessionService的断开连接方法
-                    await SessionService.DisconnectSessionAsync(session.SessionID, "重复登录，强制下线");
-                }
-            }
-        }
-
-        /// <summary>
         /// 检查用户是否已登录，并处理重复登录情况
         /// 支持多种重复登录处理策略，提供详细的会话信息
         /// </summary>
-        private (bool hasExistingSessions, IEnumerable<SessionInfo> authorizedSessions, DuplicateLoginResult duplicateResult) 
+        private (bool hasExistingSessions, IEnumerable<SessionInfo> authorizedSessions, DuplicateLoginResult duplicateResult)
             CheckUserLoginStatus(string username, string currentSessionId)
         {
             // 获取指定用户名的所有已认证会话
@@ -679,9 +657,9 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// 分析重复登录类型和处理策略
         /// </summary>
         private DuplicateLoginResult AnalyzeDuplicateLoginType(
-            List<SessionInfo> allSessions, 
-            List<SessionInfo> localSessions, 
-            List<SessionInfo> remoteSessions, 
+            List<SessionInfo> allSessions,
+            List<SessionInfo> localSessions,
+            List<SessionInfo> remoteSessions,
             string currentSessionId)
         {
             var result = new DuplicateLoginResult
@@ -900,10 +878,9 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// <param name="command">命令对象</param>
         /// <param name="loginRequest">登录请求对象</param>
         /// <returns>客户端IP地址</returns>
-        private string GetClientIp(string SessionID)
+        private string GetClientIp(IAppSession appSession)
         {
             // 4. 如果SessionInfo中没有IP，尝试从RemoteEndPoint获取
-            var appSession = SessionService.GetAppSession(SessionID);
             if (appSession != null && appSession.RemoteEndPoint != null)
             {
                 var ipEndpoint = appSession.RemoteEndPoint as System.Net.IPEndPoint;
@@ -917,11 +894,6 @@ namespace RUINORERP.Server.Network.CommandHandlers
             return "0.0.0.0"; // 使用0.0.0.0表示未知IP
         }
 
-        #region 响应辅助方法
-
-
-
-        #endregion
 
 
 

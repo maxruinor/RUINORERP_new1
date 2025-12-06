@@ -81,19 +81,19 @@ namespace RUINORERP.Server.Network.CommandHandlers
 
 
 
-        public LoginCommandHandler(ILogger<LoginCommandHandler> _Logger) : base(_Logger)
-        {
-            logger = _Logger;
+        //public LoginCommandHandler(ILogger<LoginCommandHandler> _Logger) : base(_Logger)
+        //{
+        //    logger = _Logger;
 
-            // 使用安全方法设置支持的命令
-            SetSupportedCommands(
-                AuthenticationCommands.Login,
-                AuthenticationCommands.Logout,
-                AuthenticationCommands.ValidateToken,
-                AuthenticationCommands.RefreshToken,
-                AuthenticationCommands.DuplicateLogin
-            );
-        }
+        //    // 使用安全方法设置支持的命令
+        //    SetSupportedCommands(
+        //        AuthenticationCommands.Login,
+        //        AuthenticationCommands.Logout,
+        //        AuthenticationCommands.ValidateToken,
+        //        AuthenticationCommands.RefreshToken,
+        //        AuthenticationCommands.DuplicateLogin
+        //    );
+        //}
 
         /// <summary>
         /// 完整构造函数，通过依赖注入获取服务
@@ -116,7 +116,8 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 AuthenticationCommands.Login,
                 AuthenticationCommands.Logout,
                 AuthenticationCommands.ValidateToken,
-                AuthenticationCommands.RefreshToken
+                AuthenticationCommands.RefreshToken,
+                AuthenticationCommands.DuplicateLogin
             );
         }
 
@@ -409,7 +410,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
 
                 //发送提示强制下线
 
-                await MessageService.SendMessageToUserAsync(targetSession, message: "您的账号在另一地点登录，您已被强制下线。如非本人操作，请及时修改密码。", MessageType.System, 1500);
+                await MessageService.SendMessageToUserAsync(targetSession, message: "您的账号在另一地点登录，您已被强制下线。如非本人操作，请及时修改密码。", MessageType.Notice, 1500);
 
                 //客户端通知强制下线 5 秒后断开连接
                 await managementService.ForceLogoutAsync(targetSession, 1000);
@@ -450,7 +451,6 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 return false;
             }
         }
-
 
 
         /// <summary>

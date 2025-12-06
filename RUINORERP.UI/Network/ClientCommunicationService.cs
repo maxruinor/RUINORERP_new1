@@ -1308,6 +1308,58 @@ namespace RUINORERP.UI.Network
                 {
                     switch (commandRequest.CommandType)
                     {
+                        case SystemManagementType.ExitERPSystem:
+                            if (commandRequest.CommandType == SystemManagementType.ExitERPSystem)
+                            {
+                                // 在UI线程显示退出提示并执行退出
+                                await Task.Run(() =>
+                                {
+                                    try
+                                    {
+                                        int delaySeconds = commandRequest.DelaySeconds;
+
+                                        if (delaySeconds > 0)
+                                        {
+                                            // 显示倒计时提示
+                                            string message = $"系统将在 {delaySeconds} 秒后退出，这是管理员要求的操作。";
+                                            string title = "系统即将退出";
+                                            _logger.LogInformation($"收到延时退出命令，将在{delaySeconds}秒后退出系统");
+
+                                            // 创建一个新的线程来执行延时退出
+                                            ThreadPool.QueueUserWorkItem((state) =>
+                                            {
+                                                try
+                                                {
+                                                    // 等待指定的延时时间
+                                                    Thread.Sleep(delaySeconds * 1000);
+
+                                                    // 延时后执行系统退出
+                                                    _logger.LogInformation("延时结束，执行系统退出");
+                                                    System.Windows.Forms.Application.Exit();
+                                                }
+                                                catch (Exception ex)
+                                                {
+                                                    _logger.LogError(ex, "执行延时退出时发生异常");
+                                                }
+                                            });
+
+                                            // 显示提示信息
+                                            MessageBox.Show(message, title, MessageBoxButtons.OK, MessageBoxIcon.Information);
+                                        }
+                                        else
+                                        {
+                                            // 立即执行系统退出
+                                            _logger.LogInformation("收到立即退出命令，执行系统退出");
+                                            System.Windows.Forms.Application.Exit();
+                                        }
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        _logger.LogError(ex, "处理退出系统命令时发生异常");
+                                    }
+                                });
+                            }
+                            break;
                         case SystemManagementType.PushVersionUpdate:
                             // 处理服务器推送的版本更新请求
                             // 在UI线程中调用MainForm的UpdateSys方法

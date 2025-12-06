@@ -1,13 +1,15 @@
 using Microsoft.Extensions.Logging;
+using RUINORERP.Common.SnowflakeIdHelper;
 using RUINORERP.Model.TransModel;
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Models.Core;
+using RUINORERP.PacketSpec.Models.Messaging;
 using RUINORERP.Server.Network.Models;
+using SqlSugar;
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Collections.Generic;
-using RUINORERP.PacketSpec.Models.Messaging;
 
 namespace RUINORERP.Server.Network.Services
 {
@@ -172,7 +174,7 @@ namespace RUINORERP.Server.Network.Services
         {
             try
             {
-                if (session==null)
+                if (session == null)
                 {
                     return MessageResponse.Fail(MessageType.Unknown, "目标用户不在线");
                 }
@@ -181,6 +183,7 @@ namespace RUINORERP.Server.Network.Services
                 {
                     MessageType = messageType,
                     Content = message,
+                    Id = IdHelper.GetLongId(),
                     // ReceiverIds = new List<long> { long.TryParse(targetUserId, out long userId) ? userId : 0 },
                     SendTime = DateTime.Now
                 };
@@ -196,7 +199,7 @@ namespace RUINORERP.Server.Network.Services
 
                 return responsePacket?.Response as MessageResponse ??
                        MessageResponse.Fail(MessageType.Unknown, "未收到有效响应");
-       
+
             }
             catch (Exception ex)
             {

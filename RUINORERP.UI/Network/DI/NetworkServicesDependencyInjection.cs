@@ -191,7 +191,6 @@ namespace RUINORERP.UI.Network.DI
             builder.RegisterType<SimplifiedMessageService>().AsSelf().InstancePerDependency();
             builder.RegisterType<EnhancedMessageManager>().AsSelf().InstancePerLifetimeScope();
             builder.RegisterType<SystemManagementService>().AsSelf().InstancePerDependency();
-            builder.RegisterType<AuthenticationManagementService>().AsSelf().InstancePerDependency();
 
             // 注册文件管理服务
             builder.RegisterType<FileManagementController>()

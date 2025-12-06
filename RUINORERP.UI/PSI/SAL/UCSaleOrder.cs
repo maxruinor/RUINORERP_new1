@@ -75,29 +75,7 @@ namespace RUINORERP.UI.PSI.SAL
             AddPublicEntityObject(typeof(ProductSharePart));
         }
 
-
-
  
-
-        /// <summary>
-        /// 更新状态显示 - 重写基类方法以使用基类功能
-        /// </summary>
-        protected override void UpdateStateDisplay()
-        {
-            // 调用基类的状态显示更新方法
-            base.UpdateStateDisplay();
-            
-            // 销售订单特定的额外处理
-            if (EditEntity != null && EditEntity is BaseEntity baseEntity)
-            {
-                // 更新审核状态显示
-                if (EditEntity.ApprovalStatus.HasValue)
-                {
-                    lblReview.Text = ((ApprovalStatus)EditEntity.ApprovalStatus).ToString();
-                }
-            }
-        }
-
         
 
         /// <summary>
@@ -434,19 +412,7 @@ namespace RUINORERP.UI.PSI.SAL
                 }
             }
             
-            // 使用新的状态管理系统处理状态显示
-            if (entity is BaseEntity baseEntity)
-            {
-                // 初始化状态管理
-              //  baseEntity.InitializeStateManagement();
-                
-                // 更新状态显示
-                UpdateStateDisplay();
-                
-                // 根据状态更新UI
-                UpdateSaleOrderSpecificUIByState();
-            }
-            
+          
             //StatusMachine.CurrentDataStatus = (DataStatus)entity.DataStatus;
             //StatusMachine.ApprovalStatus = (ApprovalStatus)entity.ApprovalStatus;
             if (entity.ApprovalStatus.HasValue)

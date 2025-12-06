@@ -119,6 +119,11 @@ namespace RUINORERP.UI.BaseForm
         private Task _lockRefreshTask;
         private long _currentBillId;
         private long _currentMenuId;
+        
+        // 防止循环调用的标志位
+        private bool _isUpdatingStatusContext = false;
+        private bool _isUpdatingUIStates = false;
+        private bool _isStateManagementInitialized = false;
 
         public virtual ToolStripItem[] AddExtendButton(tb_MenuInfo menuInfo)
         {
@@ -150,32 +155,44 @@ namespace RUINORERP.UI.BaseForm
         /// </summary>
         protected override void InitializeStateManagement()
         {
-            // 添加设计模式检测，避免在设计器中运行时出现空引用异常
-            if (System.ComponentModel.LicenseManager.UsageMode == System.ComponentModel.LicenseUsageMode.Designtime)
+            // 防止重复初始化
+            if (_isStateManagementInitialized) return;
+            
+            try
             {
-                return;
+                // 添加设计模式检测，避免在设计器中运行时出现空引用异常
+                if (System.ComponentModel.LicenseManager.UsageMode == System.ComponentModel.LicenseUsageMode.Designtime)
+                {
+                    return;
+                }
+
+                // 调用基类的InitializeStateManagement方法，基类已使用StateManagementHelper简化了初始化
+                base.InitializeStateManagement();
+
+                // 只有在基类初始化失败且ApplicationContext不为null时，才尝试从应用上下文获取
+                if (this.StateManager == null && RUINORERP.Model.Context.ApplicationContext.Current != null)
+                {
+                    this.StateManager = RUINORERP.Model.Context.ApplicationContext.Current.GetRequiredService<IUnifiedStateManager>();
+                }
+
+                // 注册状态变更事件处理程序，确保不重复订阅
+                this.StatusChanged -= HandleStatusChangedEvent;
+                this.StatusChanged += HandleStatusChangedEvent;
+
+                // 初始化按钮状态管理
+                InitializeButtonStateManagement();
+
+                // 更新UI状态
+                if (EditEntity != null)
+                {
+                    UpdateAllUIStates(EditEntity);
+                }
+                
+                _isStateManagementInitialized = true;
             }
-
-            // 调用基类的InitializeStateManagement方法，基类已使用StateManagementHelper简化了初始化
-            base.InitializeStateManagement();
-
-            // 只有在基类初始化失败且ApplicationContext不为null时，才尝试从应用上下文获取
-            if (this.StateManager == null && RUINORERP.Model.Context.ApplicationContext.Current != null)
+            catch (Exception ex)
             {
-                this.StateManager = RUINORERP.Model.Context.ApplicationContext.Current.GetRequiredService<IUnifiedStateManager>();
-            }
-
-            // 注册状态变更事件处理程序
-            this.StatusChanged -= HandleStatusChangedEvent;
-            this.StatusChanged += HandleStatusChangedEvent;
-
-            // 初始化按钮状态管理
-            InitializeButtonStateManagement();
-
-            // 更新UI状态
-            if (EditEntity != null)
-            {
-                UpdateAllUIStates(EditEntity);
+                logger?.LogError(ex, "初始化状态管理系统失败: {ex.Message}", ex);
             }
         }
 
@@ -213,16 +230,28 @@ namespace RUINORERP.UI.BaseForm
         /// </summary>
         protected override void OnStatusContextChanged()
         {
-            // 首先调用基类的实现
-            base.OnStatusContextChanged();
+            // 防止循环调用，使用标志位控制
+            if (_isUpdatingStatusContext) return;
             
-            // 触发泛型特定的StatusChanged事件
-            StatusChanged?.Invoke(this, new StateTransitionEventArgs(
-                BoundEntity,
-                StatusContext?.CurrentStatus?.GetType() ?? typeof(object),
-                null, // 旧状态
-                StatusContext?.CurrentStatus, // 新状态
-                "状态上下文变更"));
+            try
+            {
+                _isUpdatingStatusContext = true;
+                
+                // 首先调用基类的实现
+                base.OnStatusContextChanged();
+                
+                // 触发泛型特定的StatusChanged事件
+                StatusChanged?.Invoke(this, new StateTransitionEventArgs(
+                    BoundEntity,
+                    StatusContext?.CurrentStatus?.GetType() ?? typeof(object),
+                    null, // 旧状态
+                    StatusContext?.CurrentStatus, // 新状态
+                    "状态上下文变更"));
+            }
+            finally
+            {
+                _isUpdatingStatusContext = false;
+            }
         }
 
         /// <summary>
@@ -233,15 +262,33 @@ namespace RUINORERP.UI.BaseForm
         {
             if (entity == null) return;
 
-            // 首先调用基类的实现，确保基础事件订阅
-            base.SubscribeToEntityStateChanges(entity);
+            // 防止重复订阅，先取消再订阅
+            entity.StatusChanged -= OnEntityStatusChanged;
+            entity.StatusChanged += OnEntityStatusChanged;
             
-            // 添加泛型特定的状态变更处理
-            entity.StatusChanged += (sender, e) =>
+            // 调用基类的实现，确保基础事件订阅
+            base.SubscribeToEntityStateChanges(entity);
+        }
+        
+        /// <summary>
+        /// 实体状态变更事件处理程序
+        /// </summary>
+        /// <param name="sender">事件发送者</param>
+        /// <param name="e">事件参数</param>
+        private void OnEntityStatusChanged(object sender, StateTransitionEventArgs e)
+        {
+            // 防止循环调用
+            if (_isUpdatingUIStates) return;
+            
+            try
             {
                 // 触发泛型特定的StatusChanged事件
                 StatusChanged?.Invoke(sender, e);
-            };
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "处理实体状态变更事件失败: {ex.Message}", ex);
+            }
         }
 
         /// <summary>
@@ -489,6 +536,9 @@ namespace RUINORERP.UI.BaseForm
         /// <param name="e">事件参数</param>
         private void HandleStatusChangedEvent(object sender, StateTransitionEventArgs e)
         {
+            // 防止循环调用和重复处理
+            if (_isUpdatingUIStates) return;
+            
             try
             {
                 if (e.Entity is BaseEntity entity && this.EditEntity == entity)
@@ -548,13 +598,16 @@ namespace RUINORERP.UI.BaseForm
         /// <param name="entity">实体对象</param>
         protected override void UpdateAllUIStates(BaseEntity entity)
         {
-            if (entity == null) return;
-
-            // 确保状态上下文被正确初始化
-            EnsureStatusContext(entity);
+            // 防止重复更新，使用标志位控制
+            if (entity == null || _isUpdatingUIStates) return;
 
             try
             {
+                _isUpdatingUIStates = true;
+                
+                // 确保状态上下文被正确初始化
+                EnsureStatusContext(entity);
+
                 // 使用新的状态管理系统更新UI
                 if (StateManager != null)
                 {
@@ -577,6 +630,10 @@ namespace RUINORERP.UI.BaseForm
             catch (Exception ex)
             {
                 logger?.LogError(ex, "统一更新UI状态失败: {ex.Message}", ex);
+            }
+            finally
+            {
+                _isUpdatingUIStates = false;
             }
         }
 
@@ -693,7 +750,6 @@ namespace RUINORERP.UI.BaseForm
                 toolStripButton结案.Visible = closeCaseVisible;
                 toolStripbtnDelete.Enabled = canDelete;
 
-                UpdateStateDisplay();
             }
             catch (Exception ex)
             {
@@ -2228,15 +2284,7 @@ namespace RUINORERP.UI.BaseForm
         }
 
 
-        ///// <summary>刷新工具栏状态</summary>
-        public async Task RefreshToolbar()
-        {
-            if (EditEntity != null)
-            {
-                await ToolBarEnabledControl(EditEntity);
-            }
-        }
-
+ 
         #endregion
 
 
@@ -4106,13 +4154,13 @@ namespace RUINORERP.UI.BaseForm
 
 
                     //审核成功
-                    ToolBarEnabledControl(MenuItemEnums.审核);
+                 //   ToolBarEnabledControl(MenuItemEnums.审核);
                     //如果审核结果为不通过时，审核不是灰色。
-                    if (!ae.ApprovalResults)
-                    {
-                        toolStripbtnReview.Enabled = true;
-                    }
-                    await ToolBarEnabledControl(EditEntity);
+                    //if (!ae.ApprovalResults)
+                    //{
+                    //    toolStripbtnReview.Enabled = true;
+                    //}
+                    //await ToolBarEnabledControl(EditEntity);
                     ae.ApprovalResults = true;
                     reviewResult.approval = ae;
                     if (ae.bizType.ToString().Contains("款"))
@@ -4134,7 +4182,7 @@ namespace RUINORERP.UI.BaseForm
                     command.Undo();
                     ae.ApprovalResults = false;
                     ae.ApprovalStatus = (int)ApprovalStatus.未审核;
-                    await ToolBarEnabledControl(EditEntity);
+                  //  await ToolBarEnabledControl(EditEntity);
                     reviewResult.approval = ae;
                     // 记录审计日志
                     await MainForm.Instance.AuditLogHelper.CreateAuditLog("审核失败", EditEntity, $"审核结果:{(ae.ApprovalResults ? "通过" : "拒绝")},{rmr.ErrorMsg}");
@@ -4293,7 +4341,7 @@ namespace RUINORERP.UI.BaseForm
                     //审核失败 要恢复之前的值
                     command.Undo();
                     rs = false;
-                    await ToolBarEnabledControl(EditEntity);
+                    //await ToolBarEnabledControl(EditEntity);
                     await MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("反审失败", EditEntity, $"反审原因{ae.ApprovalOpinions},{rmr.ErrorMsg}");
                     MainForm.Instance.logger.LogError($"{cbd.BillNo}反审失败{rmr.ErrorMsg}");
                     MainForm.Instance.PrintInfoLog($"{cbd.BillNo}反审失败{rmr.ErrorMsg},请联系管理员！", Color.Red);
@@ -4621,7 +4669,7 @@ namespace RUINORERP.UI.BaseForm
 
             BusinessHelper.Instance.EditEntity(EditEntity);
             EditEntity.SetPropertyValue(typeof(ActionStatus).Name, ActionStatus.修改);
-            ToolBarEnabledControl(MenuItemEnums.修改);
+           // ToolBarEnabledControl(MenuItemEnums.修改);
         }
 
         protected async override void SpecialDataFix()
@@ -5951,7 +5999,7 @@ namespace RUINORERP.UI.BaseForm
                     baseEntity.AcceptChanges();
                 }
                 MainForm.Instance.uclog.AddLog("提交成功");
-                await ToolBarEnabledControl(EditEntity);
+               // await ToolBarEnabledControl(EditEntity);
 
                 //// 记录审计日志
                 //MainForm.Instance.AuditLogHelper.CreateAuditLog<T>(

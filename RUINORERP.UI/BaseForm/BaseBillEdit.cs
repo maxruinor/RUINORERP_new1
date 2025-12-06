@@ -83,6 +83,16 @@ namespace RUINORERP.UI.BaseForm
         /// v3状态上下文
         /// </summary>
         private IStatusTransitionContext _statusContext;
+        
+        /// <summary>
+        /// 防止重复更新UI标志位
+        /// </summary>
+        private bool _isUpdatingUI;
+        
+        /// <summary>
+        /// 状态变更事件处理程序引用
+        /// </summary>
+        private EventHandler<StateTransitionEventArgs> _stateChangedHandler;
 
         #endregion
 
@@ -203,8 +213,12 @@ namespace RUINORERP.UI.BaseForm
         {
             if (_stateManager != null)
             {
-                // 使用异步事件处理器
-                _stateManager.StatusChanged += async (sender, e) => await OnStateManagerStateChangedAsync(sender, e);
+                // 先取消订阅防止重复订阅
+                UnsubscribeFromStateManagerEvents();
+                
+                // 使用方法引用便于后续取消订阅
+                _stateChangedHandler = async (sender, e) => await OnStateManagerStateChangedAsync(sender, e);
+                _stateManager.StatusChanged += _stateChangedHandler;
             }
         }
 
@@ -213,8 +227,13 @@ namespace RUINORERP.UI.BaseForm
         /// </summary>
         protected void UnsubscribeFromStateManagerEvents()
         {
-            // 由于使用lambda表达式订阅，这里需要重新获取状态管理器并取消订阅
-            // 在Dispose中调用此方法确保正确清理
+            // 正确取消事件订阅
+            if (_stateManager != null && _stateChangedHandler != null)
+            {
+                _stateManager.StatusChanged -= _stateChangedHandler;
+                _stateChangedHandler = null;
+            }
+            // 保留原有赋值，防止空引用
             _stateManager = null;
         }
 
@@ -348,11 +367,14 @@ namespace RUINORERP.UI.BaseForm
         /// </summary>
         protected virtual void ApplyCurrentStatusToUI()
         {
-            if (_uiController == null || StatusContext == null)
+            // 防止重复更新UI导致的循环调用
+            if (_isUpdatingUI || _uiController == null || StatusContext == null)
                 return;
 
             try
             {
+                _isUpdatingUI = true;
+                
                 var controls = GetAllControls(this);
                 _uiController.UpdateUIStatus(StatusContext, controls);
 
@@ -363,6 +385,11 @@ namespace RUINORERP.UI.BaseForm
             {
                 logger?.LogError(ex, "应用状态到UI失败");
                 System.Diagnostics.Debug.WriteLine($"应用状态到UI失败: {ex.Message}");
+            }
+            finally
+            {
+                // 确保重置标志位
+                _isUpdatingUI = false;
             }
         }
 
@@ -489,10 +516,12 @@ namespace RUINORERP.UI.BaseForm
         /// </summary>
         protected virtual void OnStatusContextChanged()
         {
-            // 如果StatusContext不为null，订阅状态变更事件
+            // 防止重复订阅事件，先取消订阅再订阅
             if (StatusContext != null)
             {
-                // 注册状态变更事件处理程序
+                // 取消之前的事件订阅（如果有）
+                StatusContext.StatusChanged -= OnStatusContextStateChanged;
+                // 注册新的状态变更事件处理程序
                 StatusContext.StatusChanged += OnStatusContextStateChanged;
             }
         }
@@ -1267,24 +1296,38 @@ namespace RUINORERP.UI.BaseForm
         /// <param name="entity">实体对象</param>
         protected void SubscribeToEntityStatusChanged(BaseEntity entity)
         {
-            if (entity != null)
+            if (entity == null) return;
+            
+            // 防止重复订阅，先取消再订阅
+            entity.StatusChanged -= OnEntityStatusChanged;
+            entity.StatusChanged += OnEntityStatusChanged;
+            
+            // 确保状态上下文已初始化
+            EnsureStatusContext(entity);
+        }
+        
+        /// <summary>
+        /// 实体状态变更事件处理程序
+        /// </summary>
+        /// <param name="sender">事件发送者</param>
+        /// <param name="e">事件参数</param>
+        private void OnEntityStatusChanged(object sender, StateTransitionEventArgs e)
+        {
+            try
             {
-                // 确保状态上下文已初始化
-                EnsureStatusContext(entity);
-                
-                // 订阅实体的状态变更事件
-                entity.StatusChanged += (sender, e) =>
+                // 当实体状态变更时，更新UI
+                if (this.InvokeRequired)
                 {
-                    // 当实体状态变更时，更新UI
-                    if (this.InvokeRequired)
-                    {
-                        this.Invoke(new Action(() => UpdateAllUIStates(entity)));
-                    }
-                    else
-                    {
-                        UpdateAllUIStates(entity);
-                    }
-                };
+                    this.Invoke(new Action(() => UpdateAllUIStates(e.Entity as BaseEntity)));
+                }
+                else
+                {
+                    UpdateAllUIStates(e.Entity as BaseEntity);
+                }
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "处理实体状态变更事件失败: {ex.Message}", ex);
             }
         }
 
@@ -1326,11 +1369,17 @@ namespace RUINORERP.UI.BaseForm
 
         /// <summary>
         /// 订阅状态上下文事件
+        /// 注意：此方法已被OnStatusContextChanged替代，避免重复订阅
         /// </summary>
+        [Obsolete("此方法已被OnStatusContextChanged替代，避免重复订阅")]
         protected virtual void SubscribeToStatusContext()
         {
+            // 防止重复订阅事件，先取消订阅再订阅
             if (StatusContext != null)
             {
+                // 取消之前的事件订阅（如果有）
+                StatusContext.StatusChanged -= OnStatusContextStateChanged;
+                // 注册状态变更事件处理程序
                 StatusContext.StatusChanged += OnStatusContextStateChanged;
             }
         }

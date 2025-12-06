@@ -58,7 +58,7 @@ namespace RUINORERP.Server.Services.BizCode
         /// <returns>生成的SKU编码</returns>
         public string GenerateSKUCodeAsync(tb_Prod prod)
         {
-          
+
             string skuCode = string.Empty;
 
             return skuCode;
@@ -228,7 +228,10 @@ namespace RUINORERP.Server.Services.BizCode
                 //-格式： [产品编号] - [关键属性代码]
                 //- 示例： ELEC - PHON - 2305 - 0012 - 5G
                 //- 优点：将具有相同关键属性的产品变体归为一档，便于库存和销售管理
-
+                if (prod.tb_prodcategories == null && prod.Category_ID > 0)
+                {
+                    prod.tb_prodcategories = Business.Cache.EntityCacheHelper.GetEntity<tb_ProdCategories>(prod.Category_ID);
+                }
                 var Cate = prod.tb_prodcategories.Category_name.Substring(0, 3);
 
                 string shortcode = _bnrFactory.Create("{CN:{" + Cate + "}}{DB:SHortCode/000}");

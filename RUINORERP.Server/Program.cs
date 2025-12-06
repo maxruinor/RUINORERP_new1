@@ -40,6 +40,7 @@ using Microsoft.Extensions.Options;
 using RUINORERP.Model.ConfigModel;
 using RUINORERP.Business.BizMapperService;
 using RUINORERP.Common.SnowflakeIdHelper;
+using RUINORERP.Business.Cache;
 
 namespace RUINORERP.Server
 {
@@ -222,6 +223,14 @@ namespace RUINORERP.Server
 
                     /// 初始化实体映射服务
                     EntityMappingHelper.Initialize();
+                    
+                    // 初始化实体缓存服务
+                    IEntityCacheManager entityCacheManager = Startup.GetFromFac<IEntityCacheManager>();
+
+                    // 设置全局缓存服务实例
+                    RUINORERP.Business.Cache.EntityCacheHelper.SetCurrent(entityCacheManager);
+
+
                     var form1 = Startup.GetFromFac<frmMainNew>();
                     System.Windows.Forms.Application.Run(form1);
                     // var newMainForm = new frmMainNew(logger, workflowHost, config);

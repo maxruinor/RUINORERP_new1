@@ -23,8 +23,7 @@ namespace RUINORERP.Business.Cache
         // 手动设置的服务实例
         private static IEntityCacheManager _manuallySetService;
         // 延迟加载的服务实例
-        private static readonly Lazy<IEntityCacheManager> _lazyService = 
-            new Lazy<IEntityCacheManager>(() => GetServiceFromContainer(), LazyThreadSafetyMode.ExecutionAndPublication);
+        private static  Lazy<IEntityCacheManager> _lazyService = new Lazy<IEntityCacheManager>(() => GetServiceFromContainer(), LazyThreadSafetyMode.ExecutionAndPublication);
 
         /// <summary>
         /// 设置当前使用的实体缓存服务实例
@@ -53,7 +52,7 @@ namespace RUINORERP.Business.Cache
                 // 使用反射避免直接引用其他项目
                 Type startupType = null;
                 object startupInstance = null;
-                
+
                 // 尝试获取UI层的Startup
                 try
                 {
@@ -69,7 +68,7 @@ namespace RUINORERP.Business.Cache
                     }
                 }
                 catch { }
-                
+
                 // 尝试获取Server层的Startup
                 try
                 {
@@ -84,7 +83,7 @@ namespace RUINORERP.Business.Cache
                     }
                 }
                 catch { }
-                
+
                 // 尝试获取Business层的Startup
                 try
                 {
@@ -105,7 +104,7 @@ namespace RUINORERP.Business.Cache
                 // 记录异常但不抛出，避免影响应用程序启动
                 Console.WriteLine($"获取实体缓存服务实例时发生异常: {ex.Message}");
             }
-            
+
             return null;
         }
 
@@ -123,20 +122,24 @@ namespace RUINORERP.Business.Cache
                 {
                     return _manuallySetService;
                 }
-                
+                if (_lazyService.Value == null)
+                {
+                    _lazyService = new Lazy<IEntityCacheManager>(() => GetServiceFromContainer(), LazyThreadSafetyMode.ExecutionAndPublication);
+
+                }
                 // 尝试从容器获取实例
                 var service = _lazyService.Value;
                 if (service != null)
                 {
                     return service;
                 }
-                
+
                 // 记录警告日志
                 LogWarning("实体缓存服务未初始化，无法获取缓存服务实例。请确保在应用启动时调用SetCurrent方法或配置正确的依赖注入");
                 return null;
             }
         }
-        
+
         /// <summary>
         /// 记录警告日志
         /// 尝试通过不同方式记录日志，避免依赖特定日志系统
@@ -173,13 +176,13 @@ namespace RUINORERP.Business.Cache
                         }
                     }
                 }
-                
+
                 // 降级到控制台输出
                 Console.WriteLine($"警告: {message}");
             }
             catch { }
         }
-        
+
         /// <summary>
         /// 安全地执行缓存操作
         /// 如果服务实例为null，返回默认值而不是抛出异常
@@ -200,7 +203,7 @@ namespace RUINORERP.Business.Cache
                 }
                 return defaultValue;
             }
-            
+
             try
             {
                 return action(service);
@@ -211,7 +214,7 @@ namespace RUINORERP.Business.Cache
                 return defaultValue;
             }
         }
-        
+
         /// <summary>
         /// 安全地执行无返回值的缓存操作
         /// </summary>
@@ -228,7 +231,7 @@ namespace RUINORERP.Business.Cache
                 }
                 return;
             }
-            
+
             try
             {
                 action(service);
@@ -293,7 +296,7 @@ namespace RUINORERP.Business.Cache
         {
             return SafeExecute(service => service.GetDisplayValue(tableName, idValue), null, $"无法获取表 {tableName} 中ID为 {idValue} 的显示值");
         }
-        
+
         /// <summary>
         /// 根据表名获取实体列表，返回强类型集合
         /// 无需传入泛型类型T，系统会自动根据表名解析对应的实体类型
@@ -416,7 +419,7 @@ namespace RUINORERP.Business.Cache
             bool cacheWholeRow = true,
             params Expression<Func<T, object>>[] otherDisplayFieldExpressions) where T : class
         {
-            SafeExecute(service => 
+            SafeExecute(service =>
                 service.InitializeTableSchema(
                     primaryKeyExpression,
                     displayFieldExpression,
@@ -424,7 +427,7 @@ namespace RUINORERP.Business.Cache
                     isCacheable,
                     description,
                     cacheWholeRow,
-                    otherDisplayFieldExpressions), 
+                    otherDisplayFieldExpressions),
                 $"无法初始化类型 {typeof(T).Name} 的表结构信息");
         }
 
@@ -437,7 +440,7 @@ namespace RUINORERP.Business.Cache
         }
         #endregion
 
-     
+
 
         #region 缓存统计方法
         /// <summary>

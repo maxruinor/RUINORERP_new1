@@ -883,7 +883,7 @@ namespace RUINORERP.UI.BaseForm
                     var status = entity.GetCurrentStatus();
 
                     // action参数已经是MenuItemEnums类型，可以直接使用
-                    return _stateManager.CanExecuteAction(action,EditEntity, statusType, status);
+                    return _stateManager.CanExecuteAction(action, EditEntity, statusType, status);
                 }
 
                 // 如果UIController不可用，回退到原始逻辑
@@ -916,7 +916,7 @@ namespace RUINORERP.UI.BaseForm
 
                 case MenuItemEnums.修改:
                     return StateManager != null ?
-                        _stateManager.CanExecuteAction(action,EditEntity, entity.GetStatusType(), entity.GetCurrentStatus()) : false;
+                        _stateManager.CanExecuteAction(action, EditEntity, entity.GetStatusType(), entity.GetCurrentStatus()) : false;
 
                 case MenuItemEnums.保存:
                     return StateManager != null ?
@@ -1004,7 +1004,7 @@ namespace RUINORERP.UI.BaseForm
                     var currentStatus = entity.GetCurrentStatus();
 
                     // 检查反结案操作是否可用
-                    return _stateManager.CanExecuteAction(MenuItemEnums.反结案,EditEntity, statusType, currentStatus);
+                    return _stateManager.CanExecuteAction(MenuItemEnums.反结案, EditEntity, statusType, currentStatus);
                 }
             }
             catch (Exception ex)
@@ -3088,7 +3088,7 @@ namespace RUINORERP.UI.BaseForm
                         if (lockStatusModify.LockInfo == null)
                         {
                             var locked = await LockBill();
-                            if (!locked)
+                            if (!locked && EditEntity.PrimaryKeyID > 0)
                             {
                                 MainForm.Instance.PrintInfoLog("锁定单据失败，无法操作");
                                 // 恢复所有非查询按钮的可用状态
@@ -3133,34 +3133,40 @@ namespace RUINORERP.UI.BaseForm
                         }
                         //操作前将数据收集
                         this.ValidateChildren(System.Windows.Forms.ValidationConstraints.None);
+
                         if (EditEntity != null)
                         {
-                            pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
-                            if (pkid > 0)
+                            if (EditEntity.HasChanged)
                             {
-                                //如果有审核状态才去判断
-                                if (editEntity.ContainsProperty(typeof(DataStatus).Name))
+                                pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
+                                if (pkid > 0)
                                 {
-                                    var dataStatus = (DataStatus)(editEntity.GetPropertyValue(typeof(DataStatus).Name).ToInt());
-                                    if (dataStatus == DataStatus.完结 || dataStatus == DataStatus.确认)
+                                    //如果有审核状态才去判断
+                                    if (editEntity.ContainsProperty(typeof(DataStatus).Name))
                                     {
-                                        if (AuthorizeController.GetShowDebugInfoAuthorization(MainForm.Instance.AppContext))
+                                        var dataStatus = (DataStatus)(editEntity.GetPropertyValue(typeof(DataStatus).Name).ToInt());
+                                        if (dataStatus == DataStatus.完结 || dataStatus == DataStatus.确认)
                                         {
-                                            MainForm.Instance.uclog.AddLog("已经是【完结】或【确认】状态，保存失败。");
+                                            if (AuthorizeController.GetShowDebugInfoAuthorization(MainForm.Instance.AppContext))
+                                            {
+                                                MainForm.Instance.uclog.AddLog("已经是【完结】或【确认】状态，保存失败。");
+                                            }
+                                            // 恢复所有非查询按钮的可用状态
+                                            RestoreNonQueryButtons();
+                                            return;
                                         }
-                                        // 恢复所有非查询按钮的可用状态
-                                        RestoreNonQueryButtons();
-                                        return;
                                     }
                                 }
+                                bool rsSave = await Save(true);
+                                if (!rsSave)
+                                {
+                                    EditEntity.AcceptChanges();
+                                    // 恢复所有非查询按钮的可用状态
+                                    RestoreNonQueryButtons();
+                                    await LockBill();
+                                }
                             }
-                            bool rsSave = await Save(true);
-                            if (!rsSave)
-                            {
-                                // 恢复所有非查询按钮的可用状态
-                                RestoreNonQueryButtons();
-                                await LockBill();
-                            }
+
                         }
                         else
                         {
@@ -3177,6 +3183,12 @@ namespace RUINORERP.UI.BaseForm
                     }
                     break;
                 case MenuItemEnums.提交:
+
+                    if (!EditEntity.HasChanged)
+                    {
+                        return;
+                    }
+
                     try
                     {
                         var lockStatusSubmit = await CheckLockStatusAndUpdateUI(EditEntity);

@@ -495,22 +495,31 @@ namespace RUINORERP.Model.Base.StatusManager
 
             var currentStatus = GetDataStatus(entity);
             
-            // 基本状态转换规则
-            switch (currentStatus)
+            // 使用缓存获取状态转换规则
+            var cacheKey = $"DataStatus_Transitions_{currentStatus}";
+            var cachedTransitions = _cacheManager.GetTransitionRuleCache(cacheKey);
+            
+            if (cachedTransitions != null)
             {
-                case DataStatus.草稿:
-                    return new[] { DataStatus.新建, DataStatus.作废 };
-                case DataStatus.新建:
-                    return new[] { DataStatus.确认, DataStatus.草稿, DataStatus.作废 };
-                case DataStatus.确认:
-                    return new[] { DataStatus.完结, DataStatus.新建, DataStatus.作废 };
-                case DataStatus.完结:
-                    return new[] { DataStatus.新建, DataStatus.作废 };
-                case DataStatus.作废:
-                    return new[] { DataStatus.草稿 };
-                default:
-                    return Enumerable.Empty<DataStatus>();
+                return cachedTransitions.Cast<DataStatus>();
             }
+            
+            // 从状态转换规则中获取可转换的状态
+            var transitionRules = new Dictionary<Type, Dictionary<object, List<object>>>();
+            StateTransitionRules.InitializeDefaultRules(transitionRules);
+            
+            if (transitionRules.TryGetValue(typeof(DataStatus), out var dataStatusRules) &&
+                dataStatusRules.TryGetValue(currentStatus, out var availableTransitions))
+            {
+                var result = availableTransitions.Cast<DataStatus>().ToList();
+                
+                // 将结果存入缓存
+                _cacheManager.SetTransitionRuleCache(cacheKey, result.Cast<object>().ToList());
+                
+                return result;
+            }
+            
+            return Enumerable.Empty<DataStatus>();
         }
 
         /// <summary>
@@ -564,20 +573,31 @@ namespace RUINORERP.Model.Base.StatusManager
 
             var currentStatus = GetActionStatus(entity);
             
-            // 基本状态转换规则
-            switch (currentStatus)
+            // 使用缓存获取状态转换规则
+            var cacheKey = $"ActionStatus_Transitions_{currentStatus}";
+            var cachedTransitions = _cacheManager.GetTransitionRuleCache(cacheKey);
+            
+            if (cachedTransitions != null)
             {
-                case ActionStatus.无操作:
-                    return new[] { ActionStatus.新增, ActionStatus.修改, ActionStatus.删除 };
-                case ActionStatus.新增:
-                    return new[] { ActionStatus.修改, ActionStatus.删除 };
-                case ActionStatus.修改:
-                    return new[] { ActionStatus.删除 };
-                case ActionStatus.删除:
-                    return new[] { ActionStatus.无操作 };
-                default:
-                    return Enumerable.Empty<ActionStatus>();
+                return cachedTransitions.Cast<ActionStatus>();
             }
+            
+            // 从状态转换规则中获取可转换的状态
+            var transitionRules = new Dictionary<Type, Dictionary<object, List<object>>>();
+            StateTransitionRules.InitializeDefaultRules(transitionRules);
+            
+            if (transitionRules.TryGetValue(typeof(ActionStatus), out var actionStatusRules) &&
+                actionStatusRules.TryGetValue(currentStatus, out var availableTransitions))
+            {
+                var result = availableTransitions.Cast<ActionStatus>().ToList();
+                
+                // 将结果存入缓存
+                _cacheManager.SetTransitionRuleCache(cacheKey, result.Cast<object>().ToList());
+                
+                return result;
+            }
+            
+            return Enumerable.Empty<ActionStatus>();
         }
 
         #endregion
@@ -983,27 +1003,80 @@ namespace RUINORERP.Model.Base.StatusManager
         }
 
         /// <summary>
+        /// 获取操作权限规则
+        /// </summary>
+        /// <returns>操作权限规则字典</returns>
+        private Dictionary<DataStatus, List<MenuItemEnums>> GetActionPermissionRules()
+        {
+            // 使用缓存获取操作权限规则
+            var cacheKey = "ActionPermission_Rules";
+            var cachedRules = _cacheManager.GetTransitionRuleCache(cacheKey);
+            
+            if (cachedRules != null)
+            {
+                // 将缓存中的对象转换回字典
+                return cachedRules.Cast<object>().ToDictionary(
+                    item => (DataStatus)((dynamic)item).Key,
+                    item => ((List<MenuItemEnums>)((dynamic)item).Value)
+                );
+            }
+            
+            // 定义操作权限规则
+            var rules = new Dictionary<DataStatus, List<MenuItemEnums>>
+            {
+                [DataStatus.草稿] = new List<MenuItemEnums> 
+                { 
+                    MenuItemEnums.新增, 
+                    MenuItemEnums.修改, 
+                    MenuItemEnums.删除, 
+                    MenuItemEnums.保存, 
+                    MenuItemEnums.提交 
+                },
+                [DataStatus.新建] = new List<MenuItemEnums> 
+                { 
+                    MenuItemEnums.修改, 
+                    MenuItemEnums.删除, 
+                    MenuItemEnums.保存, 
+                    MenuItemEnums.提交, 
+                    MenuItemEnums.审核 
+                },
+                [DataStatus.确认] = new List<MenuItemEnums> 
+                { 
+                    MenuItemEnums.反审, 
+                    MenuItemEnums.结案
+                },
+                [DataStatus.完结] = new List<MenuItemEnums>(),
+                [DataStatus.作废] = new List<MenuItemEnums>()
+            };
+            
+            // 将规则存入缓存
+            var cacheData = rules.Select(kvp => (object)new { Key = kvp.Key, Value = kvp.Value }).ToList();
+            _cacheManager.SetTransitionRuleCache(cacheKey, cacheData);
+            
+            return rules;
+        }
+
+        /// <summary>
         /// 检查是否可以执行指定操作
         /// </summary>
         /// <param name="entity">实体对象</param>
         /// <param name="action">操作类型</param>
         /// <returns>是否可以执行</returns>
-        public bool CanExecuteAction<TEntity>(TEntity entity, MenuItemEnums action) where TEntity : class
+        public virtual bool CanExecuteAction<TEntity>(TEntity entity, MenuItemEnums action) where TEntity : class
         {
             if (entity == null)
                 return false;
 
             try
             {
-                // 如果实体是BaseEntity类型，使用现有的方法
+                // 如果是BaseEntity，使用现有的方法
                 if (entity is BaseEntity baseEntity)
                 {
-                    var statusType = typeof(DataStatus);
-                    var status = GetDataStatus(baseEntity);
-                    return CanExecuteAction(action, baseEntity, statusType, status);
+                    return CanExecuteAction(action, baseEntity, typeof(DataStatus), GetDataStatus(baseEntity));
                 }
                 
-                // 对于其他类型，默认允许
+                // 对于非BaseEntity类型，默认允许操作
+                // 在实际应用中，可能需要根据具体业务逻辑进行调整
                 return true;
             }
             catch (Exception ex)
@@ -1028,59 +1101,15 @@ namespace RUINORERP.Model.Base.StatusManager
 
             try
             {
-                // 首先检查缓存中是否有结果
-                var cachedResult = _cacheManager.GetActionPermissionCache(status as Enum, action.ToString(), statusType);
-                if (cachedResult.HasValue)
-                {
-                    return cachedResult.Value;
-                }
-
-                // 根据操作类型和当前状态判断是否可执行
-                bool canExecute = false;
-
                 // 获取当前数据状态
                 var dataStatus = GetDataStatus(entity);
-
-                // 根据操作类型进行判断
-                switch (action)
-                {
-                    case MenuItemEnums.新增:
-                        canExecute = dataStatus == DataStatus.草稿 || dataStatus == DataStatus.完结;
-                        break;
-
-                    case MenuItemEnums.修改:
-                        canExecute = dataStatus == DataStatus.草稿 || dataStatus == DataStatus.新建;
-                        break;
-
-                    case MenuItemEnums.删除:
-                        canExecute = dataStatus == DataStatus.草稿 || dataStatus == DataStatus.新建;
-                        break;
-
-                    case MenuItemEnums.保存:
-                        canExecute = dataStatus == DataStatus.草稿 || dataStatus == DataStatus.新建;
-                        break;
-
-                    case MenuItemEnums.提交:
-                        canExecute = dataStatus == DataStatus.草稿 ;
-                        break;
-
-                    case MenuItemEnums.审核:
-                        canExecute = dataStatus == DataStatus.新建;
-                        break;
-
-                    case MenuItemEnums.反审:
-                        canExecute = dataStatus == DataStatus.确认;
-                        break;
-
-                    case MenuItemEnums.结案:
-                        canExecute = dataStatus == DataStatus.确认;
-                        break;
-
-                    default:
-                        // 对于其他操作，默认允许
-                        canExecute = true;
-                        break;
-                }
+                
+                // 获取操作权限规则
+                var actionRules = GetActionPermissionRules();
+                
+                // 检查当前状态是否允许执行该操作
+                bool canExecute = actionRules.TryGetValue(dataStatus, out var allowedActions) && 
+                                 allowedActions.Contains(action);
 
                 // 将结果存入缓存
                 _cacheManager.SetActionPermissionCache(status as Enum, action.ToString(), statusType, canExecute);
@@ -1108,59 +1137,29 @@ namespace RUINORERP.Model.Base.StatusManager
 
             try
             {
-                var availableActions = new List<MenuItemEnums>();
-
                 // 获取当前数据状态
                 var dataStatus = GetDataStatus(entity);
-
-                // 根据当前状态确定可用的操作
-                switch (dataStatus)
+                
+                // 使用缓存获取可用操作列表
+                var cacheKey = $"AvailableActions_{dataStatus}";
+                var cachedActions = _cacheManager.GetTransitionRuleCache(cacheKey);
+                
+                if (cachedActions != null)
                 {
-                    case DataStatus.草稿:
-                        availableActions.AddRange(new[] {
-                            MenuItemEnums.修改,
-                            MenuItemEnums.删除,
-                            MenuItemEnums.保存,
-                            MenuItemEnums.提交
-                        });
-                        break;
-
-                    case DataStatus.新建:
-                        availableActions.AddRange(new[] {
-                            MenuItemEnums.修改,
-                            MenuItemEnums.删除,
-                            MenuItemEnums.保存,
-                            MenuItemEnums.提交,
-                            MenuItemEnums.审核
-                        });
-                        break;
-
-                    case DataStatus.确认:
-                        availableActions.AddRange(new[] {
-                            MenuItemEnums.反审,
-                            MenuItemEnums.结案,
-                            //MenuItemEnums.提交,
-                            //MenuItemEnums.删除
-                        });
-                        break;
-
-                    case DataStatus.完结:
-                        //availableActions.AddRange(new[] {
-                        //    MenuItemEnums.反审,
-                        //    MenuItemEnums.结案
-                        //});
-                        break;
-
-                    case DataStatus.作废:
-                       // availableActions.Add(MenuItemEnums.删除);
-                        break;
-
-                    default:
-                        // 默认情况下，提供基本操作
-                        availableActions.Add(MenuItemEnums.新增);
-                        break;
+                    // 将缓存中的对象转换回列表
+                    return cachedActions.Cast<MenuItemEnums>().ToList();
                 }
-
+                
+                // 获取操作权限规则
+                var actionRules = GetActionPermissionRules();
+                
+                // 获取当前状态下的可用操作
+                var availableActions = actionRules.TryGetValue(dataStatus, out var actions) ? actions : new List<MenuItemEnums>();
+                
+                // 将结果存入缓存
+                var cacheData = availableActions.Cast<object>().ToList();
+                _cacheManager.SetTransitionRuleCache(cacheKey, cacheData);
+                
                 return availableActions;
             }
             catch (Exception ex)

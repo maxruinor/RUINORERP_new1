@@ -36,6 +36,11 @@ namespace RUINORERP.Model.Base.StatusManager
         private readonly ConcurrentDictionary<string, bool> _actionPermissionCache;
 
         /// <summary>
+        /// 通用缓存字典，用于存储各种类型的数据
+        /// </summary>
+        private readonly ConcurrentDictionary<string, List<object>> _generalCache;
+
+        /// <summary>
         /// 日志记录器
         /// </summary>
         private readonly ILogger<SimpleCacheManager> _logger;
@@ -55,6 +60,7 @@ namespace RUINORERP.Model.Base.StatusManager
             _uiControlStateCache = new ConcurrentDictionary<string, (bool, bool)>();
             _actionPermissionCache = new ConcurrentDictionary<string, bool>();
             _statusTypeCache = new ConcurrentDictionary<string, string>();
+            _generalCache = new ConcurrentDictionary<string, List<object>>();
         }
 
         #endregion
@@ -93,6 +99,33 @@ namespace RUINORERP.Model.Base.StatusManager
             string cacheKey = $"{statusType.Name}_{fromStatus}_{toStatus}";
             _transitionRuleCache[cacheKey] = isAllowed;
             _logger?.LogDebug("设置状态转换规则缓存: {CacheKey} = {Value}", cacheKey, isAllowed);
+        }
+
+        /// <summary>
+        /// 获取状态转换规则缓存（通过缓存键）
+        /// </summary>
+        /// <param name="cacheKey">缓存键</param>
+        /// <returns>缓存的数据列表，如果缓存中不存在则返回null</returns>
+        public List<object> GetTransitionRuleCache(string cacheKey)
+        {
+            if (_generalCache.TryGetValue(cacheKey, out List<object> cachedValue))
+            {
+                _logger?.LogDebug("从缓存中获取状态转换规则: {CacheKey}", cacheKey);
+                return cachedValue;
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// 设置状态转换规则缓存（通过缓存键）
+        /// </summary>
+        /// <param name="cacheKey">缓存键</param>
+        /// <param name="data">要缓存的数据</param>
+        public void SetTransitionRuleCache(string cacheKey, List<object> data)
+        {
+            _generalCache[cacheKey] = data;
+            _logger?.LogDebug("设置状态转换规则缓存: {CacheKey}", cacheKey);
         }
 
         #endregion
@@ -228,6 +261,7 @@ namespace RUINORERP.Model.Base.StatusManager
             _uiControlStateCache.Clear();
             _actionPermissionCache.Clear();
             _statusTypeCache.Clear();
+            _generalCache.Clear();
             _logger?.LogDebug("已清除所有缓存");
         }
 
@@ -297,6 +331,21 @@ namespace RUINORERP.Model.Base.StatusManager
             foreach (var key in keysToRemove)
             {
                 _statusTypeCache.TryRemove(key, out _);
+            }
+            
+            // 清除通用缓存
+            keysToRemove.Clear();
+            foreach (var key in _generalCache.Keys)
+            {
+                if (key.StartsWith(prefix))
+                {
+                    keysToRemove.Add(key);
+                }
+            }
+            
+            foreach (var key in keysToRemove)
+            {
+                _generalCache.TryRemove(key, out _);
             }
             
             _logger?.LogDebug("已清除状态类型 {StatusType} 的所有缓存", statusType.Name);

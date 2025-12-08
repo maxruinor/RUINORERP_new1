@@ -3160,10 +3160,13 @@ namespace RUINORERP.UI.BaseForm
                                 bool rsSave = await Save(true);
                                 if (!rsSave)
                                 {
-                                    EditEntity.AcceptChanges();
                                     // 恢复所有非查询按钮的可用状态
                                     RestoreNonQueryButtons();
                                     await LockBill();
+                                }
+                                else
+                                {
+                                    EditEntity.AcceptChanges();
                                 }
                             }
 
@@ -3183,11 +3186,6 @@ namespace RUINORERP.UI.BaseForm
                     }
                     break;
                 case MenuItemEnums.提交:
-
-                    if (!EditEntity.HasChanged)
-                    {
-                        return;
-                    }
 
                     try
                     {

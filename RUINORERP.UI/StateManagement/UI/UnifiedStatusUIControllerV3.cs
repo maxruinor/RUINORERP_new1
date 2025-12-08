@@ -771,16 +771,7 @@ namespace RUINORERP.UI.StateManagement.UI
             }
         }
 
-        /// <summary>
-        /// 应用控件状态（兼容旧版本方法）
-        /// </summary>
-        /// <param name="control">控件</param>
-        /// <param name="enabled">是否启用</param>
-        /// <param name="visible">是否可见</param>
-        private void ApplyControlState(Control control, bool enabled, bool visible = true)
-        {
-            ApplyControlState(control, new ControlStateInfo(enabled, visible));
-        }
+     
 
         /// <summary>
         /// 检查控件是否为Krypton控件
@@ -890,16 +881,7 @@ namespace RUINORERP.UI.StateManagement.UI
             }
         }
 
-        /// <summary>
-        /// 应用Krypton控件状态（兼容旧版本方法）
-        /// </summary>
-        /// <param name="control">Krypton控件</param>
-        /// <param name="isEditable">是否可编辑</param>
-        /// <param name="isVisible">是否可见</param>
-        private void ApplyKryptonControlState(Control control, bool isEditable, bool isVisible)
-        {
-            ApplyKryptonControlState(control, new ControlStateInfo(isEditable, isVisible));
-        }
+     
 
         /// <summary>
         /// 获取状态类型名称

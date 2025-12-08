@@ -172,7 +172,6 @@ namespace RUINORERP.UI.BaseForm
                     return;
                 }
 
-                // 调用基类的InitializeStateManagement方法，基类已使用StateManagementHelper简化了初始化
                 base.InitializeStateManagement();
 
                 // 只有在基类初始化失败且ApplicationContext不为null时，才尝试从应用上下文获取
@@ -185,14 +184,14 @@ namespace RUINORERP.UI.BaseForm
                 this.StatusChanged -= HandleStatusChangedEvent;
                 this.StatusChanged += HandleStatusChangedEvent;
 
-                // 初始化按钮状态管理
+                // 初始化按钮状态管理 并且更新状态UI
                 InitializeButtonStateManagement();
 
                 // 更新UI状态
-                if (EditEntity != null)
-                {
-                    UpdateAllUIStates(EditEntity);
-                }
+                //if (EditEntity != null)
+                //{
+                //    UpdateAllUIStates(EditEntity);
+                //}
                 
                 _isStateManagementInitialized = true;
             }
@@ -1644,12 +1643,6 @@ namespace RUINORERP.UI.BaseForm
                     if (Entity == null) return;
                     UIHelper.ControlMasterColumnsInvisible(CurMenuInfo, this);
 
-                    // 注意：ToolBarEnabledControl 已在基类 LoadDataToUI 中通过 UpdateAllUIStates 统一调用
-                    // 移除重复调用以避免多次状态更新
-                    // if (Entity is BaseEntity baseEntity)
-                    // {
-                    //     ToolBarEnabledControl(baseEntity);
-                    // }
 
                     // 增强的状态管理集成
                     EnhancedStateManagementIntegration(typedEntity);

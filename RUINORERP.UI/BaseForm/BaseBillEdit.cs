@@ -233,7 +233,6 @@ namespace RUINORERP.UI.BaseForm
                 _stateManager.StatusChanged -= _stateChangedHandler;
                 _stateChangedHandler = null;
             }
-            // 不再将_stateManager设置为null，以避免SubscribeToStateManagerEvents后续代码出错
         }
 
         /// <summary>

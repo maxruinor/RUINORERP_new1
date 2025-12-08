@@ -93,6 +93,11 @@ namespace RUINORERP.UI.BaseForm
         /// 状态变更事件处理程序引用
         /// </summary>
         private EventHandler<StateTransitionEventArgs> _stateChangedHandler;
+        
+        /// <summary>
+        /// 状态管理初始化标志，防止重复初始化
+        /// </summary>
+        protected bool _isStateManagementInitialized = false;
 
         #endregion
 
@@ -174,8 +179,17 @@ namespace RUINORERP.UI.BaseForm
         /// </summary>
         protected virtual void InitializeStateManagement()
         {
+            // 防止重复初始化
+            if (_isStateManagementInitialized) return;
+            
             try
             {
+                // 添加设计模式检测，避免在设计器中运行时出现空引用异常
+                if (System.ComponentModel.LicenseManager.UsageMode == System.ComponentModel.LicenseUsageMode.Designtime)
+                {
+                    return;
+                }
+                
                 // 从服务容器获取状态管理器和UI控制器
                 if (Startup.ServiceProvider != null)
                 {
@@ -198,6 +212,9 @@ namespace RUINORERP.UI.BaseForm
 
                 // 统一注册状态变更事件处理 - 使用异步事件处理器
                 SubscribeToStateManagerEvents();
+                
+                // 标记已初始化
+                _isStateManagementInitialized = true;
             }
             catch (Exception ex)
             {

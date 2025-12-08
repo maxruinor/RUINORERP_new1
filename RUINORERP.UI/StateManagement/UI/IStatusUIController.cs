@@ -41,13 +41,6 @@ namespace RUINORERP.UI.StateManagement.UI
         void RegisterUIStatusRule(Enum status, IUIStatusRule rule);
 
         /// <summary>
-        /// 应用状态规则
-        /// </summary>
-        /// <param name="status">状态</param>
-        /// <param name="controls">控件集合</param>
-        void ApplyRules(Enum status, IEnumerable<Control> controls);
-
-        /// <summary>
         /// 检查指定操作在当前状态下是否可执行
         /// </summary>
         /// <param name="action">操作类型</param>

@@ -22,6 +22,7 @@ using Microsoft.Extensions.Logging;
 using static RUINORERP.UI.StateManagement.UI.UnifiedStatusUIControllerV3;
 using RUINORERP.Model;
 using RUINORERP.Global;
+using RUINORERP.UI.StateManagement.UI;
 
 namespace RUINORERP.UI.StateManagement.UI
 {
@@ -58,12 +59,12 @@ namespace RUINORERP.UI.StateManagement.UI
         /// <summary>
         /// 控件状态缓存 - 优化性能，避免重复计算
         /// </summary>
-        private readonly Dictionary<string, Dictionary<Control, ControlStateInfo>> _controlStatusCache;
+        private readonly Dictionary<string, Dictionary<Control, ControlState>> _controlStatusCache;
 
         /// <summary>
         /// 自定义控件状态处理委托字典
         /// </summary>
-        private readonly Dictionary<Type, Action<Control, ControlStateInfo>> _customControlHandlers;
+        private readonly Dictionary<Type, Action<Control, ControlState>> _customControlHandlers;
 
         /// <summary>
         /// 状态类型识别缓存
@@ -72,59 +73,12 @@ namespace RUINORERP.UI.StateManagement.UI
 
         #endregion
 
-        #region 内部类型定义
+        // 注：移除了重复的ControlStateInfo类，统一使用IStatusUIController.cs中定义的ControlState类
 
-        /// <summary>
-        /// 控件状态信息类，包含启用状态和可见性状态
-        /// </summary>
-        public class ControlStateInfo
-        {
-            /// <summary>
-            /// 控件是否启用
-            /// </summary>
-            public bool Enabled { get; set; }
-
-            /// <summary>
-            /// 控件是否可见
-            /// </summary>
-            public bool Visible { get; set; }
-
-            /// <summary>
-            /// 控件状态信息的默认构造函数
-            /// </summary>
-            public ControlStateInfo() : this(true, true) { }
-
-            /// <summary>
-            /// 控件状态信息的构造函数
-            /// </summary>
-            /// <param name="enabled">是否启用</param>
-            /// <param name="visible">是否可见</param>
-            public ControlStateInfo(bool enabled, bool visible)
-            {
-                Enabled = enabled;
-                Visible = visible;
-            }
-
-            /// <summary>
-            /// 转换为字符串表示
-            /// </summary>
-            /// <returns>状态信息字符串</returns>
-            public override string ToString()
-            {
-                return $"{{Enabled={Enabled}, Visible={Visible}}}";
-            }
-        }
-
-        #endregion
+ 
 
         #region 构造函数
 
-        /// <summary>
-        /// 初始化统一状态UI控制器
-        /// </summary>
-        /// <param name="stateManager">状态管理器</param>
-        /// <param name="actionRuleConfiguration">状态操作规则配置</param>
-        /// <param name="logger">日志记录器</param>
         /// <summary>
         /// 初始化统一状态UI控制器
         /// </summary>
@@ -139,8 +93,8 @@ namespace RUINORERP.UI.StateManagement.UI
             _actionRuleConfiguration = actionRuleConfiguration ?? throw new ArgumentNullException(nameof(actionRuleConfiguration));
             _logger = logger;
             _uiRules = new Dictionary<string, IUIStatusRule>();
-            _controlStatusCache = new Dictionary<string, Dictionary<Control, ControlStateInfo>>();
-            _customControlHandlers = new Dictionary<Type, Action<Control, ControlStateInfo>>();
+            _controlStatusCache = new Dictionary<string, Dictionary<Control, ControlState>>();
+            _customControlHandlers = new Dictionary<Type, Action<Control, ControlState>>();
 
             // 注册默认规则
             RegisterDefaultRules();
@@ -295,7 +249,7 @@ namespace RUINORERP.UI.StateManagement.UI
         /// </summary>
         /// <typeparam name="TControl">控件类型</typeparam>
         /// <param name="handler">控件状态处理委托</param>
-        public void RegisterCustomControlHandler<TControl>(Action<TControl, ControlStateInfo> handler) where TControl : Control
+        public void RegisterCustomControlHandler<TControl>(Action<TControl, ControlState> handler) where TControl : Control
         {
             if (handler == null)
                 throw new ArgumentNullException(nameof(handler));
@@ -312,7 +266,7 @@ namespace RUINORERP.UI.StateManagement.UI
         /// </summary>
         /// <param name="status">状态</param>
         /// <param name="controls">控件集合</param>
-        /// <param name="applyVisibility">是否应用可见性控制</param>
+        /// <param name="applyVisibility">是否应用可见性控制，默认为true</param>
         public void ApplyRules(Enum status, IEnumerable<Control> controls, bool applyVisibility = true)
         {
             if (status == null || controls == null)
@@ -345,16 +299,6 @@ namespace RUINORERP.UI.StateManagement.UI
         }
 
         /// <summary>
-        /// 应用状态规则（兼容旧版本）
-        /// </summary>
-        /// <param name="status">状态</param>
-        /// <param name="controls">控件集合</param>
-        public void ApplyRules(Enum status, IEnumerable<Control> controls)
-        {
-            ApplyRules(status, controls, true);
-        }
-
-        /// <summary>
         /// 检查操作是否可执行
         /// </summary>
         /// <param name="action">操作类型</param>
@@ -362,6 +306,10 @@ namespace RUINORERP.UI.StateManagement.UI
         /// <returns>是否可执行</returns>
         public bool CanExecuteAction(Enum action, IStatusTransitionContext statusContext)
         {
+            // 参数验证
+            if (action == null || statusContext == null)
+                return false;
+            
             // 调用带有消息的版本，只返回布尔结果
             return CanExecuteActionWithMessage(action, statusContext).IsSuccess;
         }
@@ -386,19 +334,13 @@ namespace RUINORERP.UI.StateManagement.UI
                 // 检查数据状态下的操作权限
                 if (dataStatus != null)
                 {
-                    if (_actionRuleConfiguration.IsActionAllowed(dataStatus, action.ToString()))
-                        return RUINORERP.Model.Base.StatusManager.StateTransitionResult.Success($"数据状态为{dataStatus}时允许执行{action}操作");
-                    else
-                        return RUINORERP.Model.Base.StatusManager.StateTransitionResult.Failure($"数据状态为{dataStatus}时不允许执行{action}操作");
+                    return CheckActionPermission(dataStatus, action, "数据状态");
                 }
 
                 // 检查业务状态下的操作权限
                 if (businessStatus != null)
                 {
-                    if (_actionRuleConfiguration.IsActionAllowed(businessStatus as Enum, action.ToString()))
-                        return RUINORERP.Model.Base.StatusManager.StateTransitionResult.Success($"业务状态为{businessStatus}时允许执行{action}操作");
-                    else
-                        return RUINORERP.Model.Base.StatusManager.StateTransitionResult.Failure($"业务状态为{businessStatus}时不允许执行{action}操作");
+                    return CheckActionPermission(businessStatus as Enum, action, "业务状态");
                 }
 
                 return RUINORERP.Model.Base.StatusManager.StateTransitionResult.Failure("无法确定当前状态，不允许执行操作");
@@ -408,6 +350,21 @@ namespace RUINORERP.UI.StateManagement.UI
                 _logger?.LogError(ex, "检查操作可执行性失败: {Action}", action);
                 return RUINORERP.Model.Base.StatusManager.StateTransitionResult.Failure($"检查操作权限时发生错误: {ex.Message}");
             }
+        }
+        
+        /// <summary>
+        /// 检查指定状态下操作权限的通用方法
+        /// </summary>
+        /// <param name="status">状态枚举</param>
+        /// <param name="action">操作枚举</param>
+        /// <param name="statusTypeName">状态类型名称</param>
+        /// <returns>操作权限检查结果</returns>
+        private RUINORERP.Model.Base.StatusManager.StateTransitionResult CheckActionPermission(Enum status, Enum action, string statusTypeName)
+        {
+            if (_actionRuleConfiguration.IsActionAllowed(status, action.ToString()))
+                return RUINORERP.Model.Base.StatusManager.StateTransitionResult.Success($"{statusTypeName}为{status}时允许执行{action}操作");
+            else
+                return RUINORERP.Model.Base.StatusManager.StateTransitionResult.Failure($"{statusTypeName}为{status}时不允许执行{action}操作");
         }
 
         /// <summary>
@@ -477,12 +434,15 @@ namespace RUINORERP.UI.StateManagement.UI
         {
             try
             {
-                // 先尝试从配置获取规则
-                ControlStateInfo stateInfo = ApplyConfiguredRule(control, status, statusType, applyVisibility);
+                // 尝试从配置中获取规则
+                ControlState stateInfo = ApplyConfiguredRule(control, status, statusType, applyVisibility);
 
-                // 如果配置中没有相应规则或规则返回null，则应用默认规则
                 if (stateInfo == null)
                 {
+                    // 没有配置规则，根据状态类型应用默认规则
+                    _logger?.LogDebug("应用默认控件规则: 控件={ControlName}, 状态={Status}, 状态类型={StatusType}",
+                        control?.Name, status?.ToString(), statusType);
+                        
                     // 根据状态类型应用不同的默认规则
                     switch (statusType)
                     {
@@ -508,7 +468,8 @@ namespace RUINORERP.UI.StateManagement.UI
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "应用默认控件规则时发生错误: {ControlName}, {Status}, {StatusType}", control.Name, status, statusType);
+                _logger?.LogError(ex, "应用默认控件规则时发生错误: {ControlName}, {Status}, {StatusType}", 
+                    control?.Name, status?.ToString(), statusType);
             }
         }
 
@@ -520,12 +481,62 @@ namespace RUINORERP.UI.StateManagement.UI
         /// <param name="statusType">状态类型</param>
         /// <param name="applyVisibility">是否应用可见性控制</param>
         /// <returns>控件状态信息，如果没有配置规则则返回null</returns>
-        private ControlStateInfo ApplyConfiguredRule(Control control, Enum status, string statusType, bool applyVisibility)
+        private ControlState ApplyConfiguredRule(Control control, Enum status, string statusType, bool applyVisibility)
         {
-            // 配置功能已移除，直接返回null
-            _logger?.LogDebug("配置规则功能已移除: 状态类型={StatusType}, 状态={Status}, 控件={Control}",
-                statusType, status?.ToString(), control?.Name);
-            return null;
+            try
+            {
+                // 使用实体模型层的规则配置中心获取规则
+                if (_actionRuleConfiguration != null)
+                {
+                    // 当前使用的是RegisterUIControlRule方法，没有直接的查询方法
+                    // 简化实现：暂时返回null，后续可以扩展IStateRuleConfiguration接口
+                    _logger?.LogDebug("应用默认规则: 控件={ControlName}, 状态={Status}",
+                        control.Name, status?.ToString());
+                }
+                
+                return null; // 没有配置规则
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "应用配置规则时发生错误: 控件={ControlName}, 状态={Status}",
+                    control?.Name, status?.ToString());
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 通用应用默认状态规则方法
+        /// </summary>
+        /// <param name="control">控件</param>
+        /// <param name="status">状态</param>
+        /// <param name="applyVisibility">是否应用可见性控制</param>
+        /// <param name="restrictedKeywords">限制状态关键词列表</param>
+        /// <param name="buttonsToHide">在限制状态下需要隐藏的按钮名称列表</param>
+        private void ApplyDefaultStatusRule(Control control, Enum status, bool applyVisibility, List<string> restrictedKeywords, List<string> buttonsToHide = null)
+        {
+            // 默认规则
+            bool isEditable = true;
+            bool isVisible = true;
+
+            string statusName = status.ToString();
+
+            // 根据状态确定控件是否可编辑
+            if (restrictedKeywords != null && restrictedKeywords.Any(keyword => statusName.Contains(keyword)))
+            {
+                isEditable = false;
+
+                // 特殊按钮在限制状态下隐藏
+                if (applyVisibility && control is Button button && buttonsToHide != null)
+                {
+                    if (buttonsToHide.Any(prefix => button.Name.Contains(prefix)))
+                    {
+                        isVisible = false;
+                    }
+                }
+            }
+
+            // 应用规则
+            ApplyControlState(control, new ControlState() { Enabled = isEditable, Visible = isVisible });
         }
 
         /// <summary>
@@ -536,35 +547,11 @@ namespace RUINORERP.UI.StateManagement.UI
         /// <param name="applyVisibility">是否应用可见性控制</param>
         private void ApplyDefaultDataStatusRule(Control control, Enum status, bool applyVisibility)
         {
-            // 根据控件名称和类型应用默认规则
-            bool isEditable = true;
-            bool isVisible = true;
-
             // 使用默认只读状态关键词
             List<string> readonlyStateKeywords = new List<string> { "确认", "完结", "审核" };
+            List<string> buttonsToHide = new List<string> { "btnAdd", "btnEdit", "btnDelete" };
 
-            string statusName = status.ToString();
-
-            // 根据状态确定控件是否可编辑
-            if (readonlyStateKeywords.Any(keyword => statusName.Contains(keyword)))
-            {
-                isEditable = false;
-
-                // 特殊按钮在已审核状态下隐藏
-                if (applyVisibility && control is Button button)
-                {
-                    // 默认的按钮隐藏规则
-                    List<string> buttonsToHide = new List<string> { "btnAdd", "btnEdit", "btnDelete" };
-
-                    if (buttonsToHide.Any(prefix => button.Name.Contains(prefix)))
-                    {
-                        isVisible = false;
-                    }
-                }
-            }
-
-            // 应用规则
-            ApplyControlState(control, new ControlStateInfo(isEditable, isVisible));
+            ApplyDefaultStatusRule(control, status, applyVisibility, readonlyStateKeywords, buttonsToHide);
         }
 
         /// <summary>
@@ -575,35 +562,11 @@ namespace RUINORERP.UI.StateManagement.UI
         /// <param name="applyVisibility">是否应用可见性控制</param>
         private void ApplyDefaultBusinessStatusRule(Control control, Enum status, bool applyVisibility)
         {
-            // 业务状态默认规则
-            bool isEditable = true;
-            bool isVisible = true;
-
             // 使用默认最终状态关键词
             List<string> finalStateKeywords = new List<string> { "已关闭", "已完成" };
+            List<string> buttonsToHide = new List<string> { "btnConfirm", "btnComplete", "btnSubmit" };
 
-            string statusName = status.ToString();
-
-            // 根据状态确定控件是否可编辑
-            if (finalStateKeywords.Any(keyword => statusName.Contains(keyword)))
-            {
-                isEditable = false;
-
-                // 特殊按钮在已完成状态下隐藏
-                if (applyVisibility && control is Button button)
-                {
-                    // 默认的按钮隐藏规则
-                    List<string> buttonsToHide = new List<string> { "btnConfirm", "btnComplete", "btnSubmit" };
-
-                    if (buttonsToHide.Any(prefix => button.Name.Contains(prefix)))
-                    {
-                        isVisible = false;
-                    }
-                }
-            }
-
-            // 应用规则
-            ApplyControlState(control, new ControlStateInfo(isEditable, isVisible));
+            ApplyDefaultStatusRule(control, status, applyVisibility, finalStateKeywords, buttonsToHide);
         }
 
         /// <summary>
@@ -630,7 +593,7 @@ namespace RUINORERP.UI.StateManagement.UI
             }
 
             // 应用规则
-            ApplyControlState(control, new ControlStateInfo(isEditable, isVisible));
+            ApplyControlState(control, new ControlState() { Enabled = isEditable, Visible = isVisible });
         }
 
         /// <summary>
@@ -639,7 +602,7 @@ namespace RUINORERP.UI.StateManagement.UI
         /// <param name="control">控件</param>
         /// <param name="stateInfo">控件状态信息</param>
         /// <exception cref="ArgumentNullException">当control或stateInfo为null时抛出</exception>
-        private void ApplyControlState(Control control, ControlStateInfo stateInfo)
+        private void ApplyControlState(Control control, ControlState stateInfo)
         {
             if (control == null)
                 throw new ArgumentNullException(nameof(control));
@@ -790,7 +753,7 @@ namespace RUINORERP.UI.StateManagement.UI
         /// </summary>
         /// <param name="control">Krypton控件</param>
         /// <param name="stateInfo">控件状态信息</param>
-        private void ApplyKryptonControlState(Control control, ControlStateInfo stateInfo)
+        private void ApplyKryptonControlState(Control control, ControlState stateInfo)
         {
             if (control == null || stateInfo == null)
                 return;
@@ -1017,7 +980,7 @@ namespace RUINORERP.UI.StateManagement.UI
         /// <param name="status">状态</param>
         /// <param name="control">控件</param>
         /// <returns>控件状态信息，如果缓存中不存在则返回null</returns>
-        public ControlStateInfo GetCachedControlState(Enum status, Control control)
+        public ControlState GetCachedControlState(Enum status, Control control)
         {
             if (status == null || control == null)
                 return null;
@@ -1041,7 +1004,7 @@ namespace RUINORERP.UI.StateManagement.UI
         /// <param name="status">状态</param>
         /// <param name="control">控件</param>
         /// <param name="stateInfo">控件状态信息</param>
-        public void SetCachedControlState(Enum status, Control control, ControlStateInfo stateInfo)
+        public void SetCachedControlState(Enum status, Control control, ControlState stateInfo)
         {
             if (status == null || control == null || stateInfo == null)
                 return;
@@ -1051,7 +1014,7 @@ namespace RUINORERP.UI.StateManagement.UI
 
             if (!_controlStatusCache.ContainsKey(statusKey))
             {
-                _controlStatusCache[statusKey] = new Dictionary<Control, ControlStateInfo>();
+                _controlStatusCache[statusKey] = new Dictionary<Control, ControlState>();
             }
             _controlStatusCache[statusKey][control] = stateInfo;
         }
@@ -1089,7 +1052,7 @@ namespace RUINORERP.UI.StateManagement.UI
         /// <summary>
         /// 控件状态缓存
         /// </summary>
-        private readonly Dictionary<Control, ControlStateInfo> _controlStates;
+        private readonly Dictionary<Control, ControlState> _controlStates;
 
         #endregion
 
@@ -1108,12 +1071,17 @@ namespace RUINORERP.UI.StateManagement.UI
             StatusType = statusType;
             Controls = controls;
             StateManager = stateManager;
-            _controlStates = new Dictionary<Control, ControlStateInfo>();
+            _controlStates = new Dictionary<Control, ControlState>();
         }
 
         #endregion
 
         #region 公共方法
+
+        /// <summary>
+        /// 控件状态字典，按控件名称存储
+        /// </summary>
+        private readonly Dictionary<string, ControlState> _namedControlStates = new Dictionary<string, ControlState>();
 
         /// <summary>
         /// 获取控件状态
@@ -1122,7 +1090,13 @@ namespace RUINORERP.UI.StateManagement.UI
         /// <returns>控件状态</returns>
         public ControlState GetControlState(string controlName)
         {
-            // 简化实现：返回默认状态
+            if (string.IsNullOrEmpty(controlName))
+                return new ControlState();
+                
+            if (_namedControlStates.TryGetValue(controlName, out var state))
+                return state;
+                
+            // 返回默认状态
             return new ControlState();
         }
 
@@ -1133,7 +1107,10 @@ namespace RUINORERP.UI.StateManagement.UI
         /// <param name="state">控件状态</param>
         public void SetControlState(string controlName, ControlState state)
         {
-            // 简化实现：不保存状态
+            if (string.IsNullOrEmpty(controlName) || state == null)
+                return;
+                
+            _namedControlStates[controlName] = state;
         }
 
         /// <summary>
@@ -1141,16 +1118,16 @@ namespace RUINORERP.UI.StateManagement.UI
         /// </summary>
         /// <param name="control">控件</param>
         /// <returns>控件状态信息</returns>
-        public ControlStateInfo GetControlStateInfo(Control control)
+        public ControlState GetControlStateInfo(Control control)
         {
             if (control == null)
                 throw new ArgumentNullException(nameof(control));
 
-            if (_controlStates.TryGetValue(control, out ControlStateInfo stateInfo))
+            if (_controlStates.TryGetValue(control, out ControlState stateInfo))
                 return stateInfo;
 
             // 默认状态为启用且可见
-            return new ControlStateInfo(true, true);
+            return new ControlState() { Enabled = true, Visible = true };
         }
 
         /// <summary>
@@ -1164,7 +1141,7 @@ namespace RUINORERP.UI.StateManagement.UI
             if (control == null)
                 throw new ArgumentNullException(nameof(control));
 
-            _controlStates[control] = new ControlStateInfo(enabled, visible);
+            _controlStates[control] = new ControlState() { Enabled = enabled, Visible = visible };
         }
 
         #endregion

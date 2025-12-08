@@ -166,12 +166,7 @@ namespace RUINORERP.UI.BaseForm
             
             try
             {
-                // 添加设计模式检测，避免在设计器中运行时出现空引用异常
-                if (System.ComponentModel.LicenseManager.UsageMode == System.ComponentModel.LicenseUsageMode.Designtime)
-                {
-                    return;
-                }
-
+                // 设计模式检测逻辑已在基类中实现，这里只需调用基类方法
                 base.InitializeStateManagement();
 
                 // 只有在基类初始化失败且ApplicationContext不为null时，才尝试从应用上下文获取
@@ -184,14 +179,8 @@ namespace RUINORERP.UI.BaseForm
                 this.StatusChanged -= HandleStatusChangedEvent;
                 this.StatusChanged += HandleStatusChangedEvent;
 
-                // 初始化按钮状态管理 并且更新状态UI
+                // 初始化按钮状态管理
                 InitializeButtonStateManagement();
-
-                // 更新UI状态
-                //if (EditEntity != null)
-                //{
-                //    UpdateAllUIStates(EditEntity);
-                //}
                 
                 _isStateManagementInitialized = true;
             }

@@ -40,6 +40,16 @@ namespace RUINORERP.UI.StateManagement.UI
         /// </summary>
         private readonly Dictionary<object, List<Delegate>> _eventSubscriptions;
 
+        /// <summary>
+        /// 事件处理锁对象
+        /// </summary>
+        private readonly object _eventProcessingLock = new object();
+
+        /// <summary>
+        /// 事件处理状态标志
+        /// </summary>
+        private bool _isProcessingEvent = false;
+
         #endregion
 
         #region 构造函数
@@ -156,6 +166,13 @@ namespace RUINORERP.UI.StateManagement.UI
             if (e == null)
                 return;
 
+            // 防循环调用机制：检查当前是否正在处理事件
+            if (!TryAcquireEventProcessingLock())
+            {
+                System.Diagnostics.Debug.WriteLine("检测到可能的循环调用，跳过当前事件处理");
+                return;
+            }
+
             try
             {
                 // 获取相关控件
@@ -191,6 +208,11 @@ namespace RUINORERP.UI.StateManagement.UI
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"处理状态变更事件失败: {ex.Message}");
+            }
+            finally
+            {
+                // 确保释放锁
+                ReleaseEventProcessingLock();
             }
         }
 
@@ -251,6 +273,34 @@ namespace RUINORERP.UI.StateManagement.UI
         #endregion
 
         #region 私有方法
+
+        /// <summary>
+        /// 尝试获取事件处理锁，防止循环调用
+        /// </summary>
+        /// <returns>如果成功获取锁返回true，否则返回false</returns>
+        private bool TryAcquireEventProcessingLock()
+        {
+            lock (_eventProcessingLock)
+            {
+                if (_isProcessingEvent)
+                {
+                    return false;
+                }
+                _isProcessingEvent = true;
+                return true;
+            }
+        }
+
+        /// <summary>
+        /// 释放事件处理锁
+        /// </summary>
+        private void ReleaseEventProcessingLock()
+        {
+            lock (_eventProcessingLock)
+            {
+                _isProcessingEvent = false;
+            }
+        }
 
         /// <summary>
         /// 获取相关控件

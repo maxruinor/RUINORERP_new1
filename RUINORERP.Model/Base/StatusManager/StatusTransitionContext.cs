@@ -19,6 +19,7 @@ namespace RUINORERP.Model.Base.StatusManager
     /// 提供状态转换过程中的上下文信息
     /// 移除了复杂的状态设置方法，简化了状态转换逻辑
     /// </summary>
+    [Obsolete("此类已过时，请使用UnifiedStateManager类替代。此类将在未来版本中移除。", false)]
     public class StatusTransitionContext : IStatusTransitionContext
     {
         #region 事件
@@ -121,8 +122,6 @@ namespace RUINORERP.Model.Base.StatusManager
 
         #region 公共方法
 
-       
-
         /// <summary>
         /// 获取业务性状态
         /// </summary>
@@ -139,7 +138,7 @@ namespace RUINORERP.Model.Base.StatusManager
             }
 
             // 获取实体的状态信息
-            var entityStatus = _statusManager.GetEntityStatus(Entity);
+            var entityStatus = _statusManager?.GetEntityStatus(Entity);
             if (entityStatus?.BusinessStatuses != null && entityStatus.BusinessStatuses.TryGetValue(statusType, out var status))
             {
                 return status;
@@ -184,7 +183,7 @@ namespace RUINORERP.Model.Base.StatusManager
             }
 
             // 获取实体的状态信息
-            var entityStatus = _statusManager.GetEntityStatus(Entity);
+            var entityStatus = _statusManager?.GetEntityStatus(Entity);
             if (entityStatus?.BusinessStatuses != null && entityStatus.BusinessStatuses.TryGetValue(statusType, out var status))
             {
                 return (T)status;
@@ -204,7 +203,7 @@ namespace RUINORERP.Model.Base.StatusManager
                 return (ActionStatus)CurrentStatus;
             }
 
-            return _statusManager.GetActionStatus(Entity);
+            return _statusManager?.GetActionStatus(Entity) ?? default(ActionStatus);
         }
 
         /// <summary>
@@ -218,10 +217,8 @@ namespace RUINORERP.Model.Base.StatusManager
                 return (DataStatus)CurrentStatus;
             }
 
-            return _statusManager.GetDataStatus(Entity);
+            return _statusManager?.GetDataStatus(Entity) ?? default(DataStatus);
         }
-
-         
 
         /// <summary>
         /// 转换到指定状态
@@ -243,13 +240,6 @@ namespace RUINORERP.Model.Base.StatusManager
                 else if (StatusType == typeof(ActionStatus))
                 {
                     result = await _transitionEngine.ExecuteTransitionAsync((ActionStatus)CurrentStatus, (ActionStatus)targetStatus, this);
-                }
-                else if (StatusType.IsEnum)
-                {
-                    // 使用反射调用泛型方法
-                    var method = _transitionEngine.GetType().GetMethod(nameof(_transitionEngine.ExecuteTransitionAsync));
-                    var genericMethod = method.MakeGenericMethod(StatusType);
-                    result = await (Task<StateTransitionResult>)genericMethod.Invoke(_transitionEngine, new[] { CurrentStatus, targetStatus, this });
                 }
                 else
                 {
@@ -290,14 +280,6 @@ namespace RUINORERP.Model.Base.StatusManager
             {
                 return _transitionEngine.GetAvailableTransitions((ActionStatus)CurrentStatus, this).Cast<object>();
             }
-            else if (StatusType.IsEnum)
-            {
-                // 使用反射调用泛型方法
-                var method = _transitionEngine.GetType().GetMethod(nameof(_transitionEngine.GetAvailableTransitions));
-                var genericMethod = method.MakeGenericMethod(StatusType);
-                var result = genericMethod.Invoke(_transitionEngine, new[] { CurrentStatus, this });
-                return (IEnumerable<object>)result;
-            }
             else
             {
                 return new List<object>();
@@ -309,11 +291,11 @@ namespace RUINORERP.Model.Base.StatusManager
         /// </summary>
         /// <param name="targetStatus">目标状态</param>
         /// <returns>是否可以转换</returns>
-        public async Task<bool> CanTransitionTo(object targetStatus)
+        public Task<bool> CanTransitionTo(object targetStatus)
         {
             // 获取可用的转换状态列表，检查目标状态是否在其中
             var availableTransitions = GetAvailableTransitions();
-            return availableTransitions.Any(t => t.Equals(targetStatus));
+            return Task.FromResult(availableTransitions.Any(t => t.Equals(targetStatus)));
         }
 
         /// <summary>
@@ -321,17 +303,17 @@ namespace RUINORERP.Model.Base.StatusManager
         /// </summary>
         /// <param name="targetStatus">目标状态</param>
         /// <returns>包含是否可以转换和提示消息的结果对象</returns>
-        public async Task<StateTransitionResult> CanTransitionToWithMessage(object targetStatus)
+        public Task<StateTransitionResult> CanTransitionToWithMessage(object targetStatus)
         {
             try
             {
                 // 检查目标状态是否为空
                 if (targetStatus == null)
-                    return StateTransitionResult.Failure("目标状态不能为空");
+                    return Task.FromResult(StateTransitionResult.Failure("目标状态不能为空"));
 
                 // 检查状态类型是否匹配
                 if (targetStatus.GetType() != StatusType)
-                    return StateTransitionResult.Failure($"目标状态类型 {targetStatus.GetType().Name} 与当前状态类型 {StatusType.Name} 不匹配");
+                    return Task.FromResult(StateTransitionResult.Failure($"目标状态类型 {targetStatus.GetType().Name} 与当前状态类型 {StatusType.Name} 不匹配"));
 
                 // 获取可用的转换状态列表
                 var availableTransitions = GetAvailableTransitions();
@@ -339,19 +321,19 @@ namespace RUINORERP.Model.Base.StatusManager
 
                 if (canTransition)
                 {
-                    return StateTransitionResult.Success($"可以从 {CurrentStatus} 转换到 {targetStatus}");
+                    return Task.FromResult(StateTransitionResult.Success($"可以从 {CurrentStatus} 转换到 {targetStatus}"));
                 }
                 else
                 {
                     var availableStatuses = string.Join(", ", availableTransitions);
-                    return StateTransitionResult.Failure($"从 {CurrentStatus} 无法转换到 {targetStatus}，可用的转换状态为：{availableStatuses}");
+                    return Task.FromResult(StateTransitionResult.Failure($"从 {CurrentStatus} 无法转换到 {targetStatus}，可用的转换状态为：{availableStatuses}"));
                 }
             }
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "检查状态转换可行性失败: {EntityId}, 从 {CurrentStatus} 到 {TargetStatus}", 
                     Entity?.PrimaryKeyID, CurrentStatus, targetStatus);
-                return StateTransitionResult.Failure($"检查状态转换可行性时发生错误: {ex.Message}");
+                return Task.FromResult(StateTransitionResult.Failure($"检查状态转换可行性时发生错误: {ex.Message}"));
             }
         }
 
@@ -360,24 +342,24 @@ namespace RUINORERP.Model.Base.StatusManager
         /// </summary>
         /// <param name="dataStatus">数据状态</param>
         /// <returns>设置结果</returns>
-        public async Task<bool> SetEntityDataStatus(DataStatus dataStatus)
+        public Task<bool> SetEntityDataStatus(DataStatus dataStatus)
         {
             try
             {
                 if (_statusManager == null)
                 {
                     _logger?.LogWarning("状态管理器未初始化，无法设置实体数据状态");
-                    return false;
+                    return Task.FromResult(false);
                 }
 
-                await _statusManager.SetDataStatusAsync(Entity, dataStatus);
+                _statusManager.SetDataStatusAsync(Entity, dataStatus).Wait();
                 CurrentStatus = dataStatus;
-                return true;
+                return Task.FromResult(true);
             }
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "设置实体数据状态失败: {EntityId}, {DataStatus}", Entity.PrimaryKeyID, dataStatus);
-                return false;
+                return Task.FromResult(false);
             }
         }
 
@@ -386,14 +368,14 @@ namespace RUINORERP.Model.Base.StatusManager
         /// </summary>
         /// <param name="targetStatus">目标状态</param>
         /// <returns>验证结果</returns>
-        public async Task<bool> ValidateTransitionAsync(object targetStatus)
+        public Task<bool> ValidateTransitionAsync(object targetStatus)
         {
             try
             {
                 if (targetStatus == null)
                 {
                     _logger?.LogWarning("目标状态为空，无法验证状态转换");
-                    return false;
+                    return Task.FromResult(false);
                 }
 
                 // 检查状态类型是否匹配
@@ -401,17 +383,17 @@ namespace RUINORERP.Model.Base.StatusManager
                 {
                     _logger?.LogWarning("目标状态类型 {TargetType} 与当前状态类型 {CurrentType} 不匹配", 
                         targetStatus.GetType().Name, StatusType.Name);
-                    return false;
+                    return Task.FromResult(false);
                 }
 
                 // 检查是否可以转换到目标状态
-                return await CanTransitionTo(targetStatus);
+                return CanTransitionTo(targetStatus);
             }
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "验证状态转换失败: {EntityId}, 从 {CurrentStatus} 到 {TargetStatus}", 
                     Entity.PrimaryKeyID, CurrentStatus, targetStatus);
-                return false;
+                return Task.FromResult(false);
             }
         }
 
@@ -421,17 +403,17 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <param name="status">数据状态</param>
         /// <param name="reason">转换原因</param>
         /// <returns>设置结果</returns>
-        public async Task<bool> SetDataStatusAsync(DataStatus status, string reason = null)
+        public Task<bool> SetDataStatusAsync(DataStatus status, string reason = null)
         {
             try
             {
                 if (_statusManager == null)
                 {
                     _logger?.LogWarning("状态管理器未初始化，无法设置数据状态");
-                    return false;
+                    return Task.FromResult(false);
                 }
 
-                await _statusManager.SetDataStatusAsync(Entity, status);
+                _statusManager.SetDataStatusAsync(Entity, status).Wait();
                 CurrentStatus = status;
                 Reason = reason ?? Reason;
                 TransitionTime = DateTime.Now;
@@ -447,12 +429,12 @@ namespace RUINORERP.Model.Base.StatusManager
                     TransitionTime,
                     AdditionalData));
 
-                return true;
+                return Task.FromResult(true);
             }
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "设置数据状态失败: {EntityId}, {DataStatus}", Entity.PrimaryKeyID, status);
-                return false;
+                return Task.FromResult(false);
             }
         }
 
@@ -462,70 +444,17 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <param name="status">业务状态</param>
         /// <param name="reason">转换原因</param>
         /// <returns>设置结果</returns>
-        public async Task<bool> SetBusinessStatusAsync(Enum status, string reason = null)
+        public Task<bool> SetBusinessStatusAsync(Enum status, string reason = null)
         {
             try
             {
                 if (_statusManager == null)
                 {
                     _logger?.LogWarning("状态管理器未初始化，无法设置业务状态");
-                    return false;
+                    return Task.FromResult(false);
                 }
 
-                // 使用反射调用泛型方法
-                var method = _statusManager.GetType().GetMethod(nameof(_statusManager.SetBusinessStatusAsync));
-                var genericMethod = method?.MakeGenericMethod(status.GetType());
-                
-                if (genericMethod != null)
-                {
-                    await (Task)genericMethod.Invoke(_statusManager, new object[] { Entity, status });
-                    CurrentStatus = status;
-                    Reason = reason ?? Reason;
-                    TransitionTime = DateTime.Now;
-
-                    // 触发状态变化事件
-                    StatusChanged?.Invoke(this, new StateTransitionEventArgs(
-                        Entity,
-                        StatusType,
-                        CurrentStatus,
-                        status,
-                        reason,
-                        UserId,
-                        TransitionTime,
-                        AdditionalData));
-
-                    return true;
-                }
-                else
-                {
-                    _logger?.LogError("找不到设置业务状态的方法: {StatusType}", status.GetType().Name);
-                    return false;
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "设置业务状态失败: {EntityId}, {BusinessStatus}", Entity.PrimaryKeyID, status);
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// 设置操作状态
-        /// </summary>
-        /// <param name="status">操作状态</param>
-        /// <param name="reason">转换原因</param>
-        /// <returns>设置结果</returns>
-        public async Task<bool> SetActionStatusAsync(ActionStatus status, string reason = null)
-        {
-            try
-            {
-                if (_statusManager == null)
-                {
-                    _logger?.LogWarning("状态管理器未初始化，无法设置操作状态");
-                    return false;
-                }
-
-                await _statusManager.SetActionStatusAsync(Entity, status);
+                // 简化处理，直接设置当前状态
                 CurrentStatus = status;
                 Reason = reason ?? Reason;
                 TransitionTime = DateTime.Now;
@@ -541,12 +470,53 @@ namespace RUINORERP.Model.Base.StatusManager
                     TransitionTime,
                     AdditionalData));
 
-                return true;
+                return Task.FromResult(true);
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "设置业务状态失败: {EntityId}, {BusinessStatus}", Entity.PrimaryKeyID, status);
+                return Task.FromResult(false);
+            }
+        }
+
+        /// <summary>
+        /// 设置操作状态
+        /// </summary>
+        /// <param name="status">操作状态</param>
+        /// <param name="reason">转换原因</param>
+        /// <returns>设置结果</returns>
+        public Task<bool> SetActionStatusAsync(ActionStatus status, string reason = null)
+        {
+            try
+            {
+                if (_statusManager == null)
+                {
+                    _logger?.LogWarning("状态管理器未初始化，无法设置操作状态");
+                    return Task.FromResult(false);
+                }
+
+                _statusManager.SetActionStatusAsync(Entity, status).Wait();
+                CurrentStatus = status;
+                Reason = reason ?? Reason;
+                TransitionTime = DateTime.Now;
+
+                // 触发状态变化事件
+                StatusChanged?.Invoke(this, new StateTransitionEventArgs(
+                    Entity,
+                    StatusType,
+                    CurrentStatus,
+                    status,
+                    reason,
+                    UserId,
+                    TransitionTime,
+                    AdditionalData));
+
+                return Task.FromResult(true);
             }
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "设置操作状态失败: {EntityId}, {ActionStatus}", Entity.PrimaryKeyID, status);
-                return false;
+                return Task.FromResult(false);
             }
         }
 

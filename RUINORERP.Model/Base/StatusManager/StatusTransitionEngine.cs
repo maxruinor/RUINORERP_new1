@@ -17,7 +17,8 @@ namespace RUINORERP.Model.Base.StatusManager
     /// 负责处理状态转换的核心逻辑 - V3增强版
     /// 借鉴V4验证器模式，集成轻量级规则配置中心，保持简洁高效
     /// </summary>
-    public class StatusTransitionEngine : IStatusTransitionEngine
+    [Obsolete("此类已过时，请使用UnifiedStateManager类替代。此类将在未来版本中移除。", false)]
+    internal class StatusTransitionEngine : IStatusTransitionEngine
     {
         #region 字段
 

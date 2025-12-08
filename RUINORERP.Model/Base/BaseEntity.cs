@@ -1304,7 +1304,7 @@ namespace RUINORERP.Model
                     {
                         var currentStatus = GetDataStatus();
                         var ServiceProvider = ApplicationContext.Current.GetRequiredService<IServiceProvider>();
-                        _statusContext = StatusTransitionContextFactory.CreateDataStatusContext(
+                        _statusContext = StateManager.CreateDataStatusContext(
                             this,
                             currentStatus, ServiceProvider
                             );
@@ -1352,7 +1352,7 @@ namespace RUINORERP.Model
                     var ServiceProvider = ApplicationContext.Current.GetRequiredService<IServiceProvider>();
 
                     // 创建状态转换上下文
-                    StatusContext = StatusTransitionContextFactory.CreateDataStatusContext(
+                    StatusContext = StateManager.CreateDataStatusContext(
                         this,
                         initialStatus,
                         ServiceProvider);
@@ -1469,6 +1469,104 @@ namespace RUINORERP.Model
                 System.Diagnostics.Debug.WriteLine($"获取状态描述失败: {ex.Message}");
                 return "未知状态";
             }
+        }
+
+        /// <summary>
+        /// 获取实体的状态类型
+        /// </summary>
+        /// <returns>状态类型</returns>
+        public virtual Type GetStatusType()
+        {
+            try
+            {
+                // 检查实体是否包含各种状态类型的属性
+                if (this.ContainsProperty(typeof(DataStatus).Name))
+                    return typeof(DataStatus);
+
+                if (this.ContainsProperty(typeof(PrePaymentStatus).Name))
+                    return typeof(PrePaymentStatus);
+
+                if (this.ContainsProperty(typeof(ARAPStatus).Name))
+                    return typeof(ARAPStatus);
+
+                if (this.ContainsProperty(typeof(PaymentStatus).Name))
+                    return typeof(PaymentStatus);
+
+                if (this.ContainsProperty(typeof(StatementStatus).Name))
+                    return typeof(StatementStatus);
+
+                // 默认返回DataStatus类型
+                return typeof(DataStatus);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"获取状态类型失败: {ex.Message}");
+                return typeof(DataStatus);
+            }
+        }
+
+        /// <summary>
+        /// 获取实体的当前状态值
+        /// </summary>
+        /// <returns>当前状态值</returns>
+        public virtual Enum GetCurrentStatus()
+        {
+            try
+            {
+                var statusType = GetStatusType();
+                var propertyName = statusType.Name;
+                
+                if (this.ContainsProperty(propertyName))
+                {
+                    var value = this.GetPropertyValue(propertyName);
+                    if (value != null)
+                    {
+                        // 将值转换为对应的枚举类型
+                        if (Enum.IsDefined(statusType, (int)value))
+                        {
+                            return (Enum)Enum.ToObject(statusType, (int)value);
+                        }
+                    }
+                }
+
+                // 如果获取失败，返回默认状态
+                if (statusType == typeof(DataStatus))
+                    return DataStatus.草稿;
+                
+                return default(Enum);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"获取当前状态失败: {ex.Message}");
+                return DataStatus.草稿;
+            }
+        }
+
+        /// <summary>
+        /// 检查实体是否包含指定的属性
+        /// </summary>
+        /// <param name="propertyName">属性名称</param>
+        /// <returns>是否包含该属性</returns>
+        public virtual bool ContainsProperty(string propertyName)
+        {
+            if (string.IsNullOrEmpty(propertyName))
+                return false;
+
+            return this.GetType().GetProperty(propertyName) != null;
+        }
+
+        /// <summary>
+        /// 获取实体指定属性的值
+        /// </summary>
+        /// <param name="propertyName">属性名称</param>
+        /// <returns>属性值</returns>
+        public virtual object GetPropertyValue(string propertyName)
+        {
+            if (string.IsNullOrEmpty(propertyName))
+                return null;
+
+            var property = this.GetType().GetProperty(propertyName);
+            return property?.GetValue(this);
         }
 
 

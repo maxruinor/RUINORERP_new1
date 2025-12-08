@@ -23,10 +23,7 @@ namespace RUINORERP.UI.BaseForm
 
                     // 清理其他资源
                     BoundEntity = null;
-              
-                    // 注意：不要将_stateManager设置为null，以避免SubscribeToStateManagerEvents后续调用出错
-                    // _stateManager = null;
-                    _uiController = null;
+         
                 }
             }
             base.Dispose(disposing);

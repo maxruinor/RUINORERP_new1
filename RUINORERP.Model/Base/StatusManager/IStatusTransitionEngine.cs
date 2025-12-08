@@ -20,6 +20,7 @@ namespace RUINORERP.Model.Base.StatusManager
     /// 状态转换引擎接口 - v3版本
     /// 负责处理状态转换的核心逻辑
     /// </summary>
+    [Obsolete("此接口已过时，请使用IUnifiedStateManager接口替代。此接口将在未来版本中移除。", false)]
     public interface IStatusTransitionEngine
     {
         /// <summary>

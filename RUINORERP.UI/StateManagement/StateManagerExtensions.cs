@@ -16,7 +16,6 @@ using Microsoft.Extensions.DependencyInjection;
 using RUINORERP.Model.Base.StatusManager;
 using RUINORERP.Global;
 using Autofac;
-using RUINORERP.UI.StateManagement.UI;
 
 namespace RUINORERP.UI
 {
@@ -32,11 +31,11 @@ namespace RUINORERP.UI
         /// <returns>服务集合</returns>
         public static IServiceCollection AddStateManager(this IServiceCollection services)
         {
-            // 注册状态管理核心服务
-            services.AddSingleton<IStateRuleConfiguration, StateRuleConfiguration>();
+            // 注册简化的缓存管理器
+            services.AddSingleton<SimpleCacheManager>();
+            
+            // 注册状态管理核心服务 - 使用内部实现
             services.AddSingleton<IUnifiedStateManager, UnifiedStateManager>();
-            services.AddSingleton<IStatusTransitionEngine, StatusTransitionEngine>();
-            services.AddSingleton<IStatusUIController, UnifiedStatusUIControllerV3>();
             
             return services;
         }
@@ -48,22 +47,15 @@ namespace RUINORERP.UI
         /// <returns>容器构建器</returns>
         public static Autofac.ContainerBuilder AddStateManager(this Autofac.ContainerBuilder builder)
         {
-            // 注册状态管理核心服务
-            builder.RegisterType<StateRuleConfiguration>()
-                   .As<IStateRuleConfiguration>()
-                   .SingleInstance();
-                   
+            // 注册简化的缓存管理器
+            builder.RegisterType<SimpleCacheManager>().SingleInstance();
+            
+            // 注册状态管理核心服务 - 使用内部实现
             builder.RegisterType<UnifiedStateManager>()
                    .As<IUnifiedStateManager>()
                    .SingleInstance();
                    
-            builder.RegisterType<StatusTransitionEngine>()
-                   .As<IStatusTransitionEngine>()
-                   .SingleInstance();
-                   
-            builder.RegisterType<UnifiedStatusUIControllerV3>()
-                   .As<IStatusUIController>()
-                   .SingleInstance();
+           
             
             return builder;
         }

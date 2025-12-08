@@ -25,6 +25,7 @@ namespace RUINORERP.Model.Base.StatusManager
         /// </summary>
         public StateTransitionResult()
         {
+            TransitionTime = DateTime.Now;
         }
 
         /// <summary>
@@ -36,6 +37,7 @@ namespace RUINORERP.Model.Base.StatusManager
         {
             IsSuccess = isSuccess;
             ErrorMessage = errorMessage;
+            TransitionTime = DateTime.Now;
         }
 
         /// <summary>
@@ -67,8 +69,6 @@ namespace RUINORERP.Model.Base.StatusManager
         /// 转换原因
         /// </summary>
         public string TransitionReason { get; set; }
-
-
 
         /// <summary>
         /// 异常信息（来自StatusManager.Core版本）
@@ -110,54 +110,12 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <summary>
         /// 转换前的状态（泛型类型）
         /// </summary>
-        public new T? OldStatus
-        {
-            get
-            {
-                if (base.OldStatus.HasValue)
-                {
-                    return (T)Enum.Parse(typeof(T), base.OldStatus.Value.ToString());
-                }
-                return null;
-            }
-            set
-            {
-                if (value.HasValue)
-                {
-                    base.OldStatus = (DataStatus)Enum.Parse(typeof(DataStatus), value.Value.ToString());
-                }
-                else
-                {
-                    base.OldStatus = null;
-                }
-            }
-        }
+        public T? OldTypedStatus { get; set; }
 
         /// <summary>
         /// 转换后的状态（泛型类型）
         /// </summary>
-        public new T? NewStatus
-        {
-            get
-            {
-                if (base.NewStatus.HasValue)
-                {
-                    return (T)Enum.Parse(typeof(T), base.NewStatus.Value.ToString());
-                }
-                return null;
-            }
-            set
-            {
-                if (value.HasValue)
-                {
-                    base.NewStatus = (DataStatus)Enum.Parse(typeof(DataStatus), value.Value.ToString());
-                }
-                else
-                {
-                    base.NewStatus = null;
-                }
-            }
-        }
+        public T? NewTypedStatus { get; set; }
 
         /// <summary>
         /// 创建泛型成功结果
@@ -171,8 +129,8 @@ namespace RUINORERP.Model.Base.StatusManager
             return new StateTransitionResult<T>
             {
                 IsSuccess = true,
-                OldStatus = oldStatus,
-                NewStatus = newStatus,
+                OldTypedStatus = oldStatus,
+                NewTypedStatus = newStatus,
                 ErrorMessage = message,
                 TransitionTime = DateTime.Now
             };
@@ -191,8 +149,8 @@ namespace RUINORERP.Model.Base.StatusManager
             return new StateTransitionResult<T>
             {
                 IsSuccess = false,
-                OldStatus = oldStatus,
-                NewStatus = newStatus,
+                OldTypedStatus = oldStatus,
+                NewTypedStatus = newStatus,
                 ErrorMessage = message,
                 Exception = exception,
                 TransitionTime = DateTime.Now

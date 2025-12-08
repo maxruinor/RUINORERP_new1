@@ -21,6 +21,7 @@ namespace RUINORERP.Model.Base.StatusManager
     /// 状态转换上下文接口 - v3版本
     /// 提供状态转换过程中的上下文信息
     /// </summary>
+    [Obsolete("此接口已过时，请使用IUnifiedStateManager接口替代。此接口将在未来版本中移除。", false)]
     public interface IStatusTransitionContext
     {
         /// <summary>

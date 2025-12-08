@@ -147,7 +147,7 @@ namespace RUINORERP.UI.FM
                 else
                 {
                     msg.Append(counter.ToString() + ") ");
-                    msg.Append($"应{PaymentType.ToString()}对账单 {item.StatementNo}状态为【 {((StatementStatus)item.StatementStatus.Value).ToString()}】 无法生成{PaymentType.ToString()}单。").Append("\r\n");
+                    msg.Append($"{PaymentType.ToString()}对账单 {item.StatementNo}状态为【 {((StatementStatus)item.StatementStatus.Value).ToString()}】 无法生成{PaymentType.ToString()}单。").Append("\r\n");
                     counter++;
                 }
             }

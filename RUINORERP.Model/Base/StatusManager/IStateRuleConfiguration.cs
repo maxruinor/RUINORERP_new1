@@ -20,6 +20,7 @@ namespace RUINORERP.Model.Base.StatusManager
     /// 轻量级状态规则配置接口 - 借鉴V4优点
     /// 提供统一的状态规则管理，保持V3架构简洁性
     /// </summary>
+    [Obsolete("此接口已过时，请使用IUnifiedStateManager接口替代。此接口将在未来版本中移除。", false)]
     public interface IStateRuleConfiguration
     {
         /// <summary>

@@ -355,9 +355,9 @@ namespace RUINORERP.UI.FM
                 // 使用V3状态管理系统检查是否可以修改
                 try
                 {
-                    if (UIController != null && StatusContext != null)
+                    if (_stateManager != null && StatusContext != null)
                     {
-                        bool canModify = UIController.CanExecuteAction(MenuItemEnums.修改, StatusContext);
+                        bool canModify = _stateManager.CanExecuteAction(MenuItemEnums.修改, EditEntity, typeof(PaymentStatus), currentStatus);
                         if (canModify)
                         {
                             entity.ActionStatus = ActionStatus.修改;

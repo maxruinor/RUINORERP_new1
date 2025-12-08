@@ -31,17 +31,12 @@ using RUINORERP.Global.EnumExt;
 using RUINORERP.UI.Common;
 using Microsoft.Extensions.Caching.Memory;
 using RUINORERP.Model.TransModel;
-
 using System.Threading;
-
-using RUINORERP.Global.EnumExt;
 using NPOI.SS.Formula.Functions;
 using System.Linq.Expressions;
-using RUINORERP.UI.StateManagement;
 using System.Web.UI;
 using Control = System.Windows.Forms.Control;
 using RUINORERP.Model.Base.StatusManager;
-using RUINORERP.UI.StateManagement.UI;
 using UserControl = System.Windows.Forms.UserControl;
 
 namespace RUINORERP.UI.BaseForm
@@ -74,10 +69,6 @@ namespace RUINORERP.UI.BaseForm
         /// </summary>
         public IUnifiedStateManager _stateManager;
 
-        /// <summary>
-        /// UI状态控制器
-        /// </summary>
-        private IStatusUIController _uiController;
 
         /// <summary>
         /// v3状态上下文
@@ -120,28 +111,14 @@ namespace RUINORERP.UI.BaseForm
                 if (_stateManager != value)
                 {
                     _stateManager = value;
-                    _uiController = null;
+                
                 }
             }
         }
 
 
 
-        /// <summary>
-        /// UI状态控制器
-        /// </summary>
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public IStatusUIController UIController
-        {
-            get => _uiController;
-            set
-            {
-                _uiController = value;
-                OnUIControllerChanged();
-            }
-        }
-
+     
 
 
         /// <summary>
@@ -194,7 +171,7 @@ namespace RUINORERP.UI.BaseForm
                 if (Startup.ServiceProvider != null)
                 {
                     _stateManager = Startup.GetFromFac<IUnifiedStateManager>();
-                    _uiController = Startup.GetFromFac<IStatusUIController>();
+                 
                 }
 
                 // 错误处理和日志记录
@@ -204,11 +181,7 @@ namespace RUINORERP.UI.BaseForm
                     System.Diagnostics.Debug.WriteLine("无法从DI容器获取IUnifiedStateManager服务");
                 }
 
-                if (_uiController == null)
-                {
-                    logger?.LogWarning("无法从DI容器获取IStatusUIController服务，请确保在Startup.cs中调用了builder.AddStateManager()");
-                    System.Diagnostics.Debug.WriteLine("无法从DI容器获取IStatusUIController服务");
-                }
+              
 
                 // 统一注册状态变更事件处理 - 使用异步事件处理器
                 SubscribeToStateManagerEvents();
@@ -268,7 +241,7 @@ namespace RUINORERP.UI.BaseForm
             try
             {
                 // 如果变更的是当前绑定实体的状态，则更新UI
-                if (e.Entity == BoundEntity && _uiController != null && StatusContext != null)
+                if (e.Entity == BoundEntity && _stateManager != null)
                 {
                     await Task.Run(() => ApplyCurrentStatusToUI());
                     await HandleSpecificStateChangeAsync(e.OldStatus, e.NewStatus, e.Reason);
@@ -295,9 +268,6 @@ namespace RUINORERP.UI.BaseForm
             if (e.Entity != BoundEntity)
                 return false;
 
-            // 如果没有UI控制器或状态上下文，不处理
-            if (_uiController == null || StatusContext == null)
-                return false;
 
             // 如果状态没有实际变化，不处理
             if (e.OldStatus == e.NewStatus)
@@ -351,14 +321,15 @@ namespace RUINORERP.UI.BaseForm
                 // 优先使用状态管理器创建并初始化状态上下文
                 if (_stateManager != null)
                 {
-                    // 使用StatusTransitionContextFactory创建状态上下文，因为IUnifiedStateManager没有GetOrCreateStatusContext方法
+                    // 使用状态管理器创建状态上下文
                     var dataStatus = _stateManager.GetDataStatus(entity);
-                    StatusContext = StatusTransitionContextFactory.CreateDataStatusContext(entity, dataStatus, Startup.ServiceProvider);
+                    StatusContext = _stateManager.CreateDataStatusContext(entity, dataStatus, Startup.ServiceProvider);
                 }
                 else if (StatusContext == null)
                 {
-                    // 备选方案：直接使用状态转换上下文工厂
-                    StatusContext = StatusTransitionContextFactory.CreateDataStatusContext(entity, DataStatus.草稿, Startup.ServiceProvider);
+                    // 备选方案：直接使用状态管理器创建默认状态上下文
+                    // 这种情况理论上不应该发生，因为_stateManager应该总是可用
+                    StatusContext = _stateManager.CreateDataStatusContext(entity, DataStatus.草稿, Startup.ServiceProvider);
                 }
             }
             catch (Exception ex)
@@ -383,7 +354,7 @@ namespace RUINORERP.UI.BaseForm
         protected virtual void ApplyCurrentStatusToUI()
         {
             // 防止重复更新UI导致的循环调用
-            if (_isUpdatingUI || _uiController == null || StatusContext == null)
+            if (_isUpdatingUI ||  _stateManager == null || BoundEntity == null)
                 return;
 
             try
@@ -391,8 +362,12 @@ namespace RUINORERP.UI.BaseForm
                 _isUpdatingUI = true;
                 
                 var controls = GetAllControls(this);
-                _uiController.UpdateUIStatus(StatusContext, controls);
-
+                
+                // 获取当前实体的状态类型和状态值
+                var statusType = BoundEntity.GetStatusType();
+                var status = BoundEntity.GetCurrentStatus();
+                
+          
                 // 同步更新状态栏显示（如果有）
                 UpdateStatusDisplay();
             }
@@ -549,7 +524,7 @@ namespace RUINORERP.UI.BaseForm
         protected virtual void OnStatusContextStateChanged(object sender, StateTransitionEventArgs e)
         {
             // 如果变更的是当前绑定实体的状态，则更新UI
-            if (e.Entity == BoundEntity && _uiController != null && StatusContext != null)
+            if (e.Entity == BoundEntity && StatusContext != null)
             {
                 // 使用同步方式更新UI，避免跨线程问题
                 if (this.InvokeRequired)
@@ -1360,8 +1335,8 @@ namespace RUINORERP.UI.BaseForm
                     // 获取实体当前的数据状态
                     var currentDataStatus = StateManager.GetDataStatus(entity);
                     var ServiceProvider = Startup.GetFromFac<IServiceProvider>();
-                    // 使用状态转换上下文工厂重新创建状态上下文
-                    StatusContext = StatusTransitionContextFactory.CreateDataStatusContext(entity, currentDataStatus, ServiceProvider);
+                    // 使用状态管理器重新创建状态上下文
+                    StatusContext = StateManager.CreateDataStatusContext(entity, currentDataStatus, ServiceProvider);
                 }
                 catch (Exception ex)
                 {

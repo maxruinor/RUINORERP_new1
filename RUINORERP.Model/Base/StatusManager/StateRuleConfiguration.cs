@@ -24,7 +24,8 @@ namespace RUINORERP.Model.Base.StatusManager
     /// 提供状态转换规则、操作规则和UI控件规则的管理
     /// 支持多种业务状态类型：DataStatus、PaymentStatus、PrePaymentStatus、ARAPStatus等
     /// </summary>
-    public class StateRuleConfiguration : IStateRuleConfiguration
+    [Obsolete("此类已过时，请使用UnifiedStateManager类替代。此类将在未来版本中移除。", false)]
+    internal class StateRuleConfiguration : IStateRuleConfiguration
     {
         #region 私有字段
 

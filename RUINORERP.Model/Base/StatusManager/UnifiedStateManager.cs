@@ -131,6 +131,52 @@ namespace RUINORERP.Model.Base.StatusManager
         }
 
         /// <summary>
+        /// 获取实体的业务状态（指定类型版本）
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        /// <param name="statusType">业务状态类型</param>
+        /// <returns>业务状态</returns>
+        public object GetBusinessStatus(BaseEntity entity, Type statusType)
+        {
+            if (entity == null)
+                return null;
+
+            if (statusType == null)
+                return null;
+
+            try
+            {
+                // 首先尝试从实体的Status属性获取
+                var property = entity.GetType().GetProperty("Status");
+                var status = property?.GetValue(entity);
+                
+                // 如果获取到的状态类型与请求的类型匹配，直接返回
+                if (status != null && status.GetType() == statusType)
+                {
+                    return status;
+                }
+                
+                // 如果不匹配，尝试从EntityStatus中获取
+                var entityStatusProperty = entity.GetType().GetProperty("EntityStatus");
+                if (entityStatusProperty != null)
+                {
+                    var entityStatus = entityStatusProperty.GetValue(entity) as EntityStatus;
+                    if (entityStatus != null && entityStatus.BusinessStatuses.TryGetValue(statusType, out var businessStatus))
+                    {
+                        return businessStatus;
+                    }
+                }
+                
+                return null;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "获取业务状态失败：实体类型 {EntityType}, 状态类型 {StatusType}", entity.GetType().Name, statusType.Name);
+                return null;
+            }
+        }
+
+        /// <summary>
         /// 获取实体的操作状态
         /// </summary>
         /// <param name="entity">实体对象</param>
@@ -534,9 +580,33 @@ namespace RUINORERP.Model.Base.StatusManager
                 return Enumerable.Empty<T>();
 
             var currentStatus = GetBusinessStatus<T>(entity);
+            var statusType = typeof(T);
             
-            // 这里应该根据具体的业务状态类型来处理
-            // 由于业务状态是泛型类型，需要根据实际业务逻辑来实现
+            // 使用缓存获取状态转换规则
+            var cacheKey = $"BusinessStatus_{statusType.Name}_Transitions_{currentStatus}";
+            var cachedTransitions = _cacheManager.GetTransitionRuleCache(cacheKey);
+            
+            if (cachedTransitions != null)
+            {
+                return cachedTransitions.Cast<T>();
+            }
+            
+            // 从状态转换规则中获取可转换的状态
+            var transitionRules = new Dictionary<Type, Dictionary<object, List<object>>>();
+            StateTransitionRules.InitializeDefaultRules(transitionRules);
+            
+            if (transitionRules.TryGetValue(statusType, out var businessStatusRules) &&
+                businessStatusRules.TryGetValue(currentStatus, out var availableTransitions))
+            {
+                var result = availableTransitions.Cast<T>().ToList();
+                
+                // 将结果存入缓存
+                _cacheManager.SetTransitionRuleCache(cacheKey, result.Cast<object>().ToList());
+                
+                return result;
+            }
+            
+            // 如果没有找到转换规则，返回空列表
             return Enumerable.Empty<T>();
         }
 
@@ -554,10 +624,33 @@ namespace RUINORERP.Model.Base.StatusManager
             if (statusType == null)
                 return Enumerable.Empty<object>();
 
-            var currentStatus = GetBusinessStatus(entity);
+            var currentStatus = GetBusinessStatus(entity, statusType);
             
-            // 这里应该根据具体的业务状态类型来处理
-            // 由于业务状态是object类型，需要根据实际业务逻辑来实现
+            // 使用缓存获取状态转换规则
+            var cacheKey = $"BusinessStatus_{statusType.Name}_Transitions_{currentStatus}";
+            var cachedTransitions = _cacheManager.GetTransitionRuleCache(cacheKey);
+            
+            if (cachedTransitions != null)
+            {
+                return cachedTransitions;
+            }
+            
+            // 从状态转换规则中获取可转换的状态
+            var transitionRules = new Dictionary<Type, Dictionary<object, List<object>>>();
+            StateTransitionRules.InitializeDefaultRules(transitionRules);
+            
+            if (transitionRules.TryGetValue(statusType, out var businessStatusRules) &&
+                businessStatusRules.TryGetValue(currentStatus, out var availableTransitions))
+            {
+                var result = availableTransitions.ToList();
+                
+                // 将结果存入缓存
+                _cacheManager.SetTransitionRuleCache(cacheKey, result);
+                
+                return result;
+            }
+            
+            // 如果没有找到转换规则，返回空列表
             return Enumerable.Empty<object>();
         }
 

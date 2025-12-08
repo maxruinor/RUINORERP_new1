@@ -30,6 +30,9 @@ namespace RUINORERP.Model.Base.StatusManager
 
             // 初始化ActionStatus转换规则
             InitializeActionStatusRules(transitionRules);
+            
+            // 初始化常见业务状态转换规则
+            InitializeCommonBusinessStatusRules(transitionRules);
         }
 
         /// <summary>
@@ -63,6 +66,53 @@ namespace RUINORERP.Model.Base.StatusManager
                 [ActionStatus.加载] = new List<object> { ActionStatus.修改, ActionStatus.删除, ActionStatus.复制 },
                 [ActionStatus.复制] = new List<object> { ActionStatus.新增, ActionStatus.修改, ActionStatus.删除 }
             };
+        }
+
+        /// <summary>
+        /// 初始化常见业务状态转换规则
+        /// </summary>
+        /// <param name="transitionRules">转换规则字典</param>
+        private static void InitializeCommonBusinessStatusRules(Dictionary<Type, Dictionary<object, List<object>>> transitionRules)
+        {
+            // 这里初始化一些常见的业务状态转换规则
+            // 实际使用时，可以根据具体的业务状态枚举类型来动态添加规则
+            
+            // 示例：审批状态转换规则
+            // 注意：这里使用字符串作为示例，实际使用时应该使用具体的枚举类型
+            var approvalStatusType = Type.GetType("RUINORERP.Global.EnumExt.ApprovalStatus");
+            if (approvalStatusType != null)
+            {
+                transitionRules[approvalStatusType] = new Dictionary<object, List<object>>
+                {
+                    ["待提交"] = new List<object> { "已提交", "作废" },
+                    ["已提交"] = new List<object> { "审批中", "已驳回" },
+                    ["审批中"] = new List<object> { "已通过", "已驳回" },
+                    ["已通过"] = new List<object> { "已完成", "已取消" },
+                    ["已驳回"] = new List<object> { "已提交", "作废" },
+                    ["已完成"] = new List<object> { },
+                    ["已取消"] = new List<object> { "待提交" },
+                    ["作废"] = new List<object> { "待提交" }
+                };
+            }
+            
+            // 示例：订单状态转换规则
+            var orderStatusType = Type.GetType("RUINORERP.Global.EnumExt.OrderStatus");
+            if (orderStatusType != null)
+            {
+                transitionRules[orderStatusType] = new Dictionary<object, List<object>>
+                {
+                    ["草稿"] = new List<object> { "待审核", "已取消" },
+                    ["待审核"] = new List<object> { "已审核", "已驳回" },
+                    ["已审核"] = new List<object> { "已确认", "已取消" },
+                    ["已确认"] = new List<object> { "部分发货", "全部发货", "已取消" },
+                    ["部分发货"] = new List<object> { "全部发货", "已取消" },
+                    ["全部发货"] = new List<object> { "已完成", "已关闭" },
+                    ["已完成"] = new List<object> { },
+                    ["已驳回"] = new List<object> { "草稿", "已取消" },
+                    ["已取消"] = new List<object> { "草稿" },
+                    ["已关闭"] = new List<object> { }
+                };
+            }
         }
 
         /// <summary>

@@ -125,6 +125,11 @@ namespace RUINORERP.UI.BaseForm
         private bool _isUpdatingUIStates = false;
         private bool _isStateManagementInitialized = false;
         private bool _isHandlingStatusChanged = false; // 专门用于防止StatusChanged事件循环调用
+        
+        // 状态管理相关字段
+        private bool _canPerformCriticalOperations = true; // 是否可以执行关键操作
+        private object _currentBusinessStatus = null; // 当前业务状态
+        private bool _isEntityLocked = false; // 实体是否被锁定
 
         public virtual ToolStripItem[] AddExtendButton(tb_MenuInfo menuInfo)
         {
@@ -652,116 +657,181 @@ namespace RUINORERP.UI.BaseForm
         {
             try
             {
-                bool canModify = false, canSave = false, canSubmit = false, canReview = false, canReverseReview = false;
-                bool canCloseCase = false, canAntiCloseCase = false, canDelete = false;
-
                 // 获取当前编辑实体
                 var entity = EditEntity;
                 if (entity == null) return;
 
-                // 初始化结案按钮可见性
-                bool closeCaseVisible = false;
-                object businessStatus = null;
-
-                // 优先使用UIController和StatusContext获取按钮状态
+                // 确保状态上下文被正确初始化
+                EnsureStatusContext(entity);
+                
+                // 使用V3状态管理系统获取按钮状态
+                // 通过状态管理系统统一控制UI状态，避免硬编码逻辑
                 if (UIController != null && StatusContext != null)
                 {
                     // 检查各种操作的可执行性
-                    canModify = UIController.CanExecuteAction(MenuItemEnums.修改, StatusContext);
-                    canSave = UIController.CanExecuteAction(MenuItemEnums.保存, StatusContext);
-                    canSubmit = UIController.CanExecuteAction(MenuItemEnums.提交, StatusContext);
-                    canReview = UIController.CanExecuteAction(MenuItemEnums.审核, StatusContext);
-                    canReverseReview = UIController.CanExecuteAction(MenuItemEnums.反审, StatusContext);
-                    canCloseCase = UIController.CanExecuteAction(MenuItemEnums.结案, StatusContext);
-                    canAntiCloseCase = UIController.CanExecuteAction(MenuItemEnums.反结案, StatusContext);
-                    canDelete = UIController.CanExecuteAction(MenuItemEnums.删除, StatusContext);
-                    closeCaseVisible = canCloseCase;
+                    bool canModify = UIController.CanExecuteAction(MenuItemEnums.修改, StatusContext);
+                    bool canSave = UIController.CanExecuteAction(MenuItemEnums.保存, StatusContext);
+                    bool canSubmit = UIController.CanExecuteAction(MenuItemEnums.提交, StatusContext);
+                    bool canReview = UIController.CanExecuteAction(MenuItemEnums.审核, StatusContext);
+                    bool canReverseReview = UIController.CanExecuteAction(MenuItemEnums.反审, StatusContext);
+                    bool canCloseCase = UIController.CanExecuteAction(MenuItemEnums.结案, StatusContext);
+                    bool canDelete = UIController.CanExecuteAction(MenuItemEnums.删除, StatusContext);
+
+                    // 统一更新按钮状态
+                    toolStripbtnModify.Enabled = canModify;
+                    toolStripButtonSave.Enabled = canSave;
+                    toolStripbtnSubmit.Enabled = canSubmit;
+                    toolStripbtnReview.Enabled = canReview;
+                    toolStripBtnReverseReview.Enabled = canReverseReview;
+                    toolStripButton结案.Enabled = canCloseCase;
+                    toolStripButton结案.Visible = canCloseCase; // 结案按钮的可见性与可用状态一致
+                    toolStripbtnDelete.Enabled = canDelete;
                 }
                 else
                 {
-                    // 回退到传统逻辑，处理业务特定状态
-                    businessStatus = GetBusinessStatus(entity);
-                    if (businessStatus != null)
-                    {
-                        switch (businessStatus)
-                        {
-                            case PrePaymentStatus pre:
-                                canModify = pre == PrePaymentStatus.草稿;
-                                canSave = pre == PrePaymentStatus.草稿 || (entity is BaseEntity PrebaseEntity && PrebaseEntity.ActionStatus == ActionStatus.修改);
-                                canSubmit = pre == PrePaymentStatus.草稿;
-                                canReview = pre == PrePaymentStatus.待审核;
-                                canReverseReview = pre == PrePaymentStatus.待核销 || pre == PrePaymentStatus.已生效;
-                                canCloseCase = pre == PrePaymentStatus.待核销;
-                                closeCaseVisible = pre == PrePaymentStatus.待核销;
-                                break;
-                            case ARAPStatus arap:
-                                canModify = arap == ARAPStatus.草稿;
-                                canSave = arap == ARAPStatus.草稿 || (entity is BaseEntity baseEntity2 && baseEntity2.ActionStatus == ActionStatus.修改);
-                                canSubmit = arap == ARAPStatus.草稿;
-                                canReview = arap == ARAPStatus.待审核;
-                                canReverseReview = arap == ARAPStatus.待支付;
-                                canCloseCase = arap == ARAPStatus.待支付 || arap == ARAPStatus.部分支付;
-                                closeCaseVisible = arap == ARAPStatus.待支付 || arap == ARAPStatus.部分支付;
-                                break;
-                            case PaymentStatus pay:
-                                canModify = pay == PaymentStatus.草稿;
-                                canSave = pay == PaymentStatus.草稿 || (entity is BaseEntity baseEntity3 && baseEntity3.ActionStatus == ActionStatus.修改);
-                                canSubmit = pay == PaymentStatus.草稿;
-                                canReview = pay == PaymentStatus.待审核;
-                                canReverseReview = false;
-                                canCloseCase = false;
-                                closeCaseVisible = false;
-                                break;
-                            case StatementStatus statement:
-                                canModify = statement == StatementStatus.草稿;
-                                canSave = statement == StatementStatus.草稿 || (entity is BaseEntity baseEntity4 && baseEntity4.ActionStatus == ActionStatus.修改);
-                                canSubmit = statement == StatementStatus.草稿;
-                                canReview = statement == StatementStatus.已发送;
-                                canReverseReview = statement == StatementStatus.已确认;
-                                canCloseCase = false;
-                                closeCaseVisible = false;
-                                break;
-                            case DataStatus dataStatus:
-                                canModify = dataStatus == DataStatus.草稿 || dataStatus == DataStatus.新建;
-                                canSave = dataStatus == DataStatus.草稿 || dataStatus == DataStatus.新建 || (entity is BaseEntity baseEntity5 && baseEntity5.ActionStatus == ActionStatus.修改);
-                                canSubmit = dataStatus == DataStatus.草稿;
-                                canReview = dataStatus == DataStatus.新建;
-                                canReverseReview = dataStatus == DataStatus.确认;
-                                canCloseCase = dataStatus == DataStatus.完结;
-                                closeCaseVisible = dataStatus == DataStatus.完结;
-                                // 根据状态流转控制确认/审核按钮
-                                if (dataStatus == DataStatus.新建)
-                                {
-                                    // 新增状态下，确认/审核按钮不可用
-                                    canReview = false;
-                                }
-                                else if (dataStatus == DataStatus.草稿)
-                                {
-                                    // 草稿状态下，确认/审核按钮不可用，可修改/保存/提交
-                                    canReview = false;
-                                }
-                                break;
-                        }
-
-
-                    }
+                    // 如果状态管理系统不可用，至少确保按钮状态一致
+                    logger?.LogWarning("状态管理系统不可用，无法正确更新按钮状态");
+                    // 禁用所有按钮，避免因状态判断不一致导致的错误操作
+                    toolStripbtnModify.Enabled = false;
+                    toolStripButtonSave.Enabled = false;
+                    toolStripbtnSubmit.Enabled = false;
+                    toolStripbtnReview.Enabled = false;
+                    toolStripBtnReverseReview.Enabled = false;
+                    toolStripButton结案.Enabled = false;
+                    toolStripButton结案.Visible = false;
+                    toolStripbtnDelete.Enabled = false;
                 }
-
-                // 统一更新按钮状态
-                toolStripbtnModify.Enabled = canModify;
-                toolStripButtonSave.Enabled = canSave;
-                toolStripbtnSubmit.Enabled = canSubmit;
-                toolStripbtnReview.Enabled = canReview;
-                toolStripBtnReverseReview.Enabled = canReverseReview;
-                toolStripButton结案.Enabled = canCloseCase;
-                toolStripButton结案.Visible = closeCaseVisible;
-                toolStripbtnDelete.Enabled = canDelete;
-
+                
+                // 统一控制反审核按钮的可见性
+                toolStripBtnReverseReview.Visible = toolStripBtnReverseReview.Enabled;
+                
+                // 通知子类可以进行额外的按钮状态调整
+                OnAfterUpdateButtonStates(currentStatus);
             }
             catch (Exception ex)
             {
-                logger?.LogError(ex, "更新按钮状态失败: {ex.Message}", ex);
+                logger?.LogError(ex, "更新按钮状态失败: {Message}", ex.Message);
             }
+        }
+        
+        /// <summary>
+        /// 在更新按钮状态后调用，允许子类进行额外的按钮状态调整
+        /// </summary>
+        /// <param name="currentStatus">当前数据状态</param>
+        protected virtual void OnAfterUpdateButtonStates(DataStatus currentStatus)
+        {
+            // 虚方法，子类可以重写以添加额外的按钮状态调整逻辑
+        }
+        
+        /// <summary>
+        /// 更新按钮状态（同步版本）- 已迁移到V3状态管理系统
+        /// </summary>
+        /// <param name="currentStatus">当前状态</param>
+        /// <remarks>此方法已迁移到使用V3状态管理系统，确保按钮状态与系统规则保持一致</remarks>
+        protected void UpdateButtonStates(DataStatus currentStatus)
+        {
+            try
+            {
+                // 直接调用更新后的统一方法
+                UpdateAllButtonStates(currentStatus);
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "更新按钮状态失败: {Message}", ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// 更新按钮状态（异步版本）
+        /// </summary>
+        /// <param name="currentStatus">当前状态</param>
+        /// <returns>任务对象</returns>
+        /// <remarks>异步版本的按钮状态更新，避免在UI线程上执行耗时操作</remarks>
+        protected async Task UpdateButtonStatesAsync(DataStatus currentStatus)
+        {
+            try
+            {
+                // 调用异步版本的统一更新方法
+                await UpdateAllButtonStatesAsync(currentStatus).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "异步更新按钮状态失败: {Message}", ex.Message);
+            }
+        }
+        
+        /// <summary>
+        /// 异步确保状态上下文已初始化
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        /// <returns>异步任务</returns>
+        protected async Task EnsureStatusContextAsync(BaseEntity entity)
+        {
+            if (_isUpdatingStatusContext) return;
+            
+            try
+            {
+                _isUpdatingStatusContext = true;
+                
+                // 同步版本的EnsureStatusContext已存在，这里只需调用它
+                EnsureStatusContext(entity);
+                
+                // 可以在这里添加额外的异步初始化逻辑
+                await Task.CompletedTask.ConfigureAwait(false);
+            }
+            finally
+            {
+                _isUpdatingStatusContext = false;
+            }
+        }
+        
+        /// <summary>
+        /// 异步更新所有按钮状态
+        /// </summary>
+        /// <returns>异步任务</returns>
+        protected async Task UpdateAllButtonStatesAsync()
+        {
+            if (_isUpdatingUIStates) return;
+            
+            try
+            {
+                _isUpdatingUIStates = true;
+                
+                // 获取当前状态
+                var currentStatus = CurrentDataStatus;
+                
+                // 调用带状态参数的异步方法
+                await UpdateAllButtonStatesAsync(currentStatus).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "UpdateAllButtonStatesAsync执行失败: {Message}", ex.Message);
+            }
+            finally
+            {
+                _isUpdatingUIStates = false;
+            }
+        }
+        
+        /// <summary>
+        /// 异步更新所有按钮状态
+        /// </summary>
+        /// <param name="currentStatus">当前状态</param>
+        /// <returns>异步任务</returns>
+        protected async Task UpdateAllButtonStatesAsync(DataStatus currentStatus)
+        {
+            // 切换到UI线程执行UI更新
+            await Task.Run(() =>
+            {
+                if (this.InvokeRequired)
+                {
+                    this.Invoke(new Action(() => UpdateAllButtonStates(currentStatus)));
+                }
+                else
+                {
+                    UpdateAllButtonStates(currentStatus);
+                }
+            }).ConfigureAwait(false);
         }
 
 
@@ -948,67 +1018,56 @@ namespace RUINORERP.UI.BaseForm
         {
             try
             {
-                // 使用新的状态管理系统获取可执行的操作
+                var entity = EditEntity;
+                if (entity == null) return;
+                
+                // 确保状态上下文被正确初始化
+                EnsureStatusContext(entity);
+                
+                bool canAdd = false, canEdit = false, canDelete = false;
+                
+                // 使用V3状态管理系统获取可执行的操作
                 if (UIController != null && StatusContext != null)
                 {
                     // 获取当前状态下可执行的操作
                     var availableActions = UIController.GetAvailableActions(StatusContext);
 
                     // 检查是否允许子表操作
-                    bool canAdd = availableActions.Any(a => a.ToString().Contains("新增") || a.ToString().Contains("Add"));
-                    bool canEdit = availableActions.Any(a => a.ToString().Contains("修改") || a.ToString().Contains("Edit"));
-                    bool canDelete = availableActions.Any(a => a.ToString().Contains("删除") || a.ToString().Contains("Delete"));
-
-                    // 启用/禁用子表操作
-                    EnableChildTableOperations(canAdd, canEdit, canDelete);
-                    return;
+                    canAdd = availableActions.Any(a => a.ToString().Contains("新增") || a.ToString().Contains("Add"));
+                    canEdit = availableActions.Any(a => a.ToString().Contains("修改") || a.ToString().Contains("Edit"));
+                    canDelete = availableActions.Any(a => a.ToString().Contains("删除") || a.ToString().Contains("Delete"));
                 }
+                else
+                {
+                    // 如果状态管理系统不可用，记录警告
+                    logger?.LogWarning("状态管理系统不可用，子表操作权限设置为默认值(不可用)");
+                }
+                
+                // 启用/禁用子表操作
+                EnableChildTableOperations(canAdd, canEdit, canDelete);
+                
+                // 通知子类可以进行额外的子表操作权限调整
+                OnAfterUpdateChildTableOperations(canAdd, canEdit, canDelete, status);
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"使用状态管理系统更新子表操作失败: {ex.Message}");
+                logger?.LogError(ex, "更新子表操作权限失败: {ex.Message}", ex);
             }
-
-            // 如果状态管理系统出错，回退到原始逻辑
-            UpdateChildTableOperationsFallback(status);
         }
-
+        
         /// <summary>
-        /// 回退的子表操作更新方法（原始逻辑）
+        /// 在更新子表操作权限后调用，允许子类进行额外的子表操作权限调整
         /// </summary>
-        /// <param name="status">当前数据状态</param>
-        private void UpdateChildTableOperationsFallback(DataStatus status)
+        /// <param name="canAdd">是否允许添加</param>
+        /// <param name="canEdit">是否允许修改</param>
+        /// <param name="canDelete">是否允许删除</param>
+        /// <param name="currentStatus">当前数据状态</param>
+        protected virtual void OnAfterUpdateChildTableOperations(bool canAdd, bool canEdit, bool canDelete, DataStatus currentStatus)
         {
-            // 根据状态控制子表的增删改操作
-            switch (status)
-            {
-                case DataStatus.草稿:
-                    // 草稿状态允许所有操作
-                    EnableChildTableOperations(true, true, true);
-                    break;
-                case DataStatus.新建:
-                    // 新建状态不允许修改
-                    EnableChildTableOperations(false, false, false);
-                    break;
-                case DataStatus.确认:
-                    // 确认状态不允许修改
-                    EnableChildTableOperations(false, false, false);
-                    break;
-                case DataStatus.完结:
-                    // 完结状态不允许修改
-                    EnableChildTableOperations(false, false, false);
-                    break;
-                case DataStatus.作废:
-                    // 作废状态不允许修改
-                    EnableChildTableOperations(false, false, false);
-                    break;
-                default:
-                    // 默认不允许修改
-                    EnableChildTableOperations(false, false, false);
-                    break;
-            }
+            // 虚方法，子类可以重写以添加额外的子表操作权限调整逻辑
         }
 
+         
         /// <summary>
         /// 启用或禁用子表操作
         /// </summary>
@@ -2117,36 +2176,64 @@ namespace RUINORERP.UI.BaseForm
         /// </summary>
         /// <param name="enabled">是否启用</param>
         /// <param name="excludeControls">需要排除的控件列表</param>
+        /// <summary>
+        /// 设置控件的启用状态
+        /// 注意：此方法仅用于锁定状态控制，不应用于业务状态控制
+        /// 业务状态控制应通过状态管理系统进行
+        /// </summary>
+        /// <param name="enabled">是否启用控件</param>
+        /// <param name="excludeControlsName">要排除的控件名称列表</param>
         private void SetControlsEnabled(bool enabled, params string[] excludeControlsName)
         {
             try
             {
+                // 创建一个排除控件名称的哈希集合，提高查找效率
+                var excludeSet = new HashSet<string>(excludeControlsName ?? Array.Empty<string>());
+                
+                // 创建排除的关键业务按钮列表
+                var businessButtonNames = new string[]
+                {
+                    nameof(toolStripbtnModify), nameof(toolStripButtonSave), nameof(toolStripbtnSubmit),
+                    nameof(toolStripbtnReview), nameof(toolStripBtnReverseReview), 
+                    nameof(toolStripButton结案), nameof(toolStripbtnDelete)
+                };
+                
+                // 添加业务按钮到排除列表，确保它们的状态只由状态管理系统控制
+                foreach (var buttonName in businessButtonNames)
+                {
+                    excludeSet.Add(buttonName);
+                }
+                
+                // 遍历表单中的控件
                 foreach (Control control in Controls)
                 {
-                    bool shouldExclude = false;
-                    foreach (var excludeControl in excludeControlsName)
-                    {
-                        if (control.Name == excludeControl)
-                        {
-                            shouldExclude = true;
-                            break;
-                        }
-                    }
-                    if (!shouldExclude)
+                    // 只处理非排除控件，并且只影响非按钮控件
+                    if (!excludeSet.Contains(control.Name) && !(control is ToolStripButton))
                     {
                         control.Enabled = enabled;
                     }
                 }
+                
+
+
+                // 特殊处理状态栏和非业务相关的按钮
+                if (tsBtnLocked != null) 
+                    tsBtnLocked.Enabled = true;
+                if (toolStripButtonRefresh != null) 
+                    toolStripButtonRefresh.Enabled = enabled;
+                if (toolStripbtnPrint != null) 
+                    toolStripbtnPrint.Enabled = enabled;
             }
             catch (Exception ex)
             {
-                MainForm.Instance.logger.LogError(ex, "设置控件启用状态时发生异常");
+                logger?.LogError(ex, "设置控件启用状态时发生异常: {ex.Message}", ex);
             }
         }
 
         /// <summary>
         /// 检查锁定状态并更新UI（基于实体）
-        /// 统一处理锁定状态相关的所有UI和按钮状态
+        /// 只处理锁定状态相关的UI，不直接控制业务按钮状态
+        /// 业务按钮状态应由状态管理系统控制
         /// </summary>
         /// <param name="entity">单据实体</param>
         /// <returns>锁定状态信息和操作权限状态</returns>
@@ -2154,95 +2241,186 @@ namespace RUINORERP.UI.BaseForm
         {
             if (entity == null) return (false, true, null);
 
-
             long pkid = GetPrimaryKeyValue(entity);
             if (pkid <= 0) return (false, true, null);
 
-            // 调用基于billId的版本，避免代码重复
-            var result = await CheckLockStatusAndUpdateUI(pkid);
-
-            // 未被锁定或自己锁定时恢复控件可用性
-            if (!result.IsLocked || result.CanPerformCriticalOperations)
+            try
             {
-                SetControlsEnabled(true);
-            }
-            // 如果是被他人锁定，需要禁用所有编辑控件（UI加载时的特殊处理）
-            else
-            {
-                SetControlsEnabled(false, tsBtnLocked.Name, toolStripbtnClose.Name);
-                tsBtnLocked.Enabled = true;
-                toolStripbtnClose.Enabled = true;
-            }
+                // 调用基于billId的版本，避免代码重复
+                var result = await CheckLockStatusAndUpdateUI(pkid);
 
-            return result;
+                // 记录锁定状态变化
+                logger?.LogDebug("实体锁定状态检查结果 - 是否锁定: {IsLocked}, 是否可执行关键操作: {CanPerformCriticalOperations}", 
+                    result.IsLocked, result.CanPerformCriticalOperations);
+                
+                // 更新锁定按钮状态
+                if (tsBtnLocked != null)
+                    tsBtnLocked.Enabled = result.IsLocked;
+                    
+                // 更新状态栏信息
+                if (tsBtnLocked != null)
+                {
+                    if (result.IsLocked && !result.CanPerformCriticalOperations)
+                    {
+                        string lockerName = result.LockInfo?.LockedUserName ?? "未知用户";
+                        string lockTime = result.LockInfo?.LockTime.ToString("yyyy-MM-dd HH:mm:ss") ?? "";
+                        tsBtnLocked.Text = $"单据已被{lockerName}锁定，锁定时间：{lockTime}";
+                        tsBtnLocked.ForeColor = Color.Red;
+                    }
+                    else
+                    {
+                        tsBtnLocked.Text = "";
+                        tsBtnLocked.ForeColor = Color.Black;
+                    }
+                }
+                
+                // 确保状态管理系统能够根据锁定状态正确更新按钮状态
+                // 不直接设置业务按钮状态，而是更新锁定状态标志
+                _isEntityLocked = result.IsLocked;
+                _canPerformCriticalOperations = result.CanPerformCriticalOperations;
+                
+                // 调用状态管理系统更新UI
+                await EnsureStatusContextAsync(EditEntity);
+                await UpdateAllButtonStatesAsync();
+                
+                return result;
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "检查锁定状态并更新UI时发生异常: {ex.Message}", ex);
+                return (false, false, null);
+            }
         }
 
 
 
-        /// <summary>根据业务状态启用或禁用操作按钮</summary>
+        /// <summary>根据业务状态启用或禁用操作按钮（已重构）</summary>
         /// <param name="status">业务状态枚举值</param>
-        private void EnableOperationsBasedOnStatus(Enum status)
+        /// <remarks>
+        /// 此方法已重构为使用V3状态管理系统而不是硬编码逻辑。
+        /// 不再直接设置按钮状态，而是更新当前状态并委托给状态管理系统处理。
+        /// </remarks>
+        private async Task EnableOperationsBasedOnStatusAsync(Enum status)
         {
             if (status == null) return;
-
-            // 初始化通用按钮状态
-            bool canEdit = false;
-            bool canSubmit = false;
-            bool canReview = false;
-            bool canReverseReview = false;
-            bool canClose = false;
-
-            // 根据不同类型的业务状态设置操作权限
-            if (status is PrePaymentStatus preStatus)
+            
+            try
             {
-                canEdit = preStatus == PrePaymentStatus.草稿;
-                canSubmit = FMPaymentStatusHelper.CanSubmit(preStatus);
-                canReview = preStatus == PrePaymentStatus.待审核;
-                canReverseReview = preStatus == PrePaymentStatus.待核销 || preStatus == PrePaymentStatus.已生效;
-                canClose = preStatus == PrePaymentStatus.待核销;
+                // 记录状态变化
+                logger?.LogDebug("状态变更：{StatusTypeName} = {StatusValue}", 
+                    status.GetType().Name, status.ToString());
+                
+                // 更新当前状态
+                _currentBusinessStatus = status;
+                
+                // 确保状态上下文已初始化
+                await EnsureStatusContextAsync(EditEntity);
+                
+                // 调用状态管理系统更新所有按钮状态
+                await UpdateAllButtonStatesAsync();
+                
+                // 让子类有机会进行额外处理
+                await OnAfterStatusChangedAsync(status);
             }
-            else if (status is ARAPStatus arapStatus)
+            catch (Exception ex)
             {
-                canEdit = arapStatus == ARAPStatus.草稿;
-                canSubmit = FMPaymentStatusHelper.CanSubmit(arapStatus);
-                canReview = arapStatus == ARAPStatus.待审核;
-                canReverseReview = arapStatus == ARAPStatus.待支付;
-                canClose = FMPaymentStatusHelper.CanReverse(arapStatus);
+                logger?.LogError(ex, "根据业务状态更新操作按钮时发生异常: {ex.Message}", ex);
+                // 出错时尝试禁用所有按钮以避免状态不一致
+                DisableAllBusinessButtons();
             }
-            else if (status is PaymentStatus payStatus)
-            {
-                canEdit = payStatus == PaymentStatus.草稿;
-                canSubmit = FMPaymentStatusHelper.CanSubmit(payStatus);
-                canReview = payStatus == PaymentStatus.待审核;
-                // 支付状态不支持反审核和结案
-            }
-            else if (status is StatementStatus statementStatus)
-            {
-                canEdit = statementStatus == StatementStatus.草稿;
-                canSubmit = statementStatus == StatementStatus.草稿;
-                canReview = statementStatus == StatementStatus.已发送;
-                canReverseReview = statementStatus == StatementStatus.已确认;
-                // 对账单不支持结案
-            }
-            else if (status is DataStatus dataStatus)
-            {
-                canEdit = dataStatus == DataStatus.草稿 || dataStatus == DataStatus.新建;
-                canSubmit = dataStatus == DataStatus.草稿 || dataStatus == DataStatus.新建;
-                canReview = dataStatus == DataStatus.新建;
-                canReverseReview = dataStatus == DataStatus.确认;
-                // 通用数据状态不支持结案
-            }
-
-            // 统一应用操作权限到按钮
-            toolStripbtnModify.Enabled = canEdit;
-            toolStripbtnSubmit.Enabled = canSubmit;
-            toolStripbtnReview.Enabled = canReview;
-            toolStripBtnReverseReview.Enabled = canReverseReview;
-            toolStripBtnReverseReview.Visible = canReverseReview;
-            toolStripButton结案.Enabled = canClose;
         }
+        
+        /// <summary>
+        /// 禁用所有业务相关按钮
+        /// 当状态管理系统出现异常时使用此方法作为安全机制
+        /// </summary>
+        private void DisableAllBusinessButtons()
+        {
+            try
+            {
+                var businessButtons = new ToolStripButton[]
+                {
+                    toolStripbtnModify, toolStripButtonSave, toolStripbtnSubmit,
+                    toolStripbtnReview, toolStripBtnReverseReview, 
+                    toolStripButton结案, toolStripbtnDelete
+                };
+                
+                foreach (var button in businessButtons)
+                {
+                    if (button != null)
+                        button.Enabled = false;
+                }
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "禁用业务按钮时发生异常", ex);
+            }
+        }
+        
+        /// <summary>
+        /// 当业务状态发生变化后调用的虚方法
+        /// 供子类重写以执行额外的状态变更处理逻辑
+        /// </summary>
+        /// <param name="newStatus">新的业务状态值</param>
+        /// <returns>异步任务结果</returns>
+        protected virtual Task OnAfterStatusChangedAsync(Enum newStatus)
+        {
+            // 基类实现为空，由子类重写以添加特定业务逻辑
+            return Task.CompletedTask;
+        }
+  
 
-        /// <summary>设置实体状态属性值</summary>
+        /// <summary>设置实体状态属性值（异步版本）</summary>
+        /// <typeparam name="TStatus">状态枚举类型</typeparam>
+        /// <param name="entity">单据实体对象</param>
+        /// <param name="status">状态枚举值</param>
+        /// <returns>异步任务</returns>
+        private async Task SetEntityStatusAsync<TStatus>(BaseEntity entity, TStatus status) where TStatus : Enum
+        {
+            try
+            {
+                if (entity == null)
+                {
+                    logger?.LogWarning("SetEntityStatusAsync: 实体对象为空，跳过状态设置");
+                    return;
+                }
+                
+                string propertyName = typeof(TStatus).Name;
+                if (entity.ContainsProperty(propertyName))
+                {
+                    // 记录状态变更前的日志
+                    object oldValue = entity.GetPropertyValue(propertyName);
+                    logger?.LogInformation("SetEntityStatusAsync: 实体[{EntityType}]的属性[{PropertyName}]状态从[{OldValue}]变更为[{NewValue}]", 
+                        entity.GetType().Name, propertyName, oldValue, status.ToString());
+                    
+                    // 设置新状态值
+                    ReflectionHelper.SetPropertyValue(entity, propertyName, (int)(object)status);
+                    
+                    // 清除状态缓存，确保下次获取最新状态
+                    ClearBusinessStatusCache(entity);
+                    
+                    // 触发状态变更后的回调
+                    await OnAfterStatusChangedAsync(status).ConfigureAwait(false);
+                    
+                    // 自动更新UI状态
+                    await EnsureStatusContextAsync(entity).ConfigureAwait(false);
+                    await UpdateAllButtonStatesAsync().ConfigureAwait(false);
+                }
+                else
+                {
+                    logger?.LogWarning("SetEntityStatusAsync: 实体[{EntityType}]不包含属性[{PropertyName}]", 
+                        entity.GetType().Name, propertyName);
+                }
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "设置实体状态失败: {Message}", ex.Message);
+                throw;
+            }
+        }
+        
+        /// <summary>【已废弃】设置实体状态属性值 - 同步版本</summary>
+        [Obsolete("请使用异步版本SetEntityStatusAsync替代", false)]
         private void SetEntityStatus<TStatus>(BaseEntity entity, TStatus status) where TStatus : Enum
         {
             string propertyName = typeof(TStatus).Name;
@@ -2252,42 +2430,178 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
-        /// <summary>获取业务状态</summary>
+        /// <summary>
+        /// 从实体中获取业务状态枚举值
+        /// 支持多种业务状态类型，会按优先级顺序进行检查
+        /// </summary>
+        /// <param name="entity">单据实体对象</param>
+        /// <returns>找到的业务状态枚举值，如果未找到则返回null</returns>
+        /// <summary>业务状态缓存字典，用于提升性能</summary>
+        private Dictionary<string, Enum> _businessStatusCache = new Dictionary<string, Enum>();
+
+        /// <summary>
+        /// 从实体中获取业务状态枚举值 - 同步版本（已优化，添加缓存）
+        /// 支持多种业务状态类型，会按优先级顺序进行检查
+        /// </summary>
+        /// <param name="entity">单据实体对象</param>
+        /// <returns>找到的业务状态枚举值，如果未找到则返回null</returns>
+        /// <remarks>此方法添加了缓存机制以提高性能，对于相同实体多次调用可避免重复反射操作</remarks>
         private Enum GetBusinessStatus(BaseEntity entity)
         {
-            if (entity == null) return null;
-
-            // 检测实体中的业务状态属性
-            var statusTypes = new[]
+            if (entity == null)
             {
-                typeof(PrePaymentStatus),
-                typeof(ARAPStatus),
-                typeof(PaymentStatus),
-                typeof(StatementStatus),
-                typeof(DataStatus) // 添加DataStatus支持
-            };
+                logger?.LogDebug("尝试从空实体获取业务状态，返回null");
+                return null;
+            }
 
-            foreach (var statusType in statusTypes)
+            // 生成缓存键：实体类型名_实体ID
+            string cacheKey = $"{entity.GetType().Name}_{entity.PrimaryKeyID}";
+            
+            // 检查缓存中是否已有结果
+            if (_businessStatusCache.TryGetValue(cacheKey, out Enum cachedStatus))
             {
-                if (entity.ContainsProperty(statusType.Name))
+                logger?.LogTrace("使用缓存的业务状态: {EntityType} = {CachedStatus}", 
+                    entity.GetType().Name, cachedStatus?.ToString() ?? "null");
+                return cachedStatus;
+            }
+
+            Enum result = null;
+            try
+            {
+                // 检测实体中的业务状态属性，按优先级顺序排列
+                // 注意：新增状态类型应在此添加
+                var statusTypes = new[]
                 {
-                    var statusValue = entity.GetPropertyValue(statusType.Name);
-                    if (statusValue != null)
+                    typeof(PrePaymentStatus),
+                    typeof(ARAPStatus),
+                    typeof(PaymentStatus),
+                    typeof(StatementStatus),
+                    typeof(DataStatus) // 通用数据状态
+                };
+
+                foreach (var statusType in statusTypes)
+                {
+                    string propertyName = statusType.Name;
+                    if (entity.ContainsProperty(propertyName))
                     {
-                        try
+                        var statusValue = entity.GetPropertyValue(propertyName);
+                        if (statusValue != null)
                         {
-                            // 尝试转换为对应的枚举类型
-                            return (Enum)Enum.Parse(statusType, statusValue.ToString());
-                        }
-                        catch (Exception ex)
-                        {
-                            logger?.LogWarning(ex, $"无法将实体属性 {statusType.Name} 的值 {statusValue} 转换为枚举类型");
+                            try
+                            {
+                                // 尝试转换为对应的枚举类型
+                                result = (Enum)Enum.Parse(statusType, statusValue.ToString());
+                                logger?.LogDebug("从实体中成功获取业务状态: {StatusTypeName} = {StatusValue}", 
+                                    statusType.Name, result.ToString());
+                                break; // 找到后立即跳出循环
+                            }
+                            catch (ArgumentException ex)
+                            {
+                                logger?.LogError(ex, "枚举值无效: {StatusTypeName} = {StatusValue}", 
+                                    statusType.Name, statusValue);
+                            }
+                            catch (Exception ex)
+                            {
+                                logger?.LogWarning(ex, "无法将实体属性 {StatusTypeName} 的值 {StatusValue} 转换为枚举类型",
+                                    statusType.Name, statusValue);
+                            }
                         }
                     }
                 }
+                
+                if (result == null)
+                {
+                    logger?.LogDebug("实体 {EntityType} 中未找到已知的业务状态属性", entity.GetType().Name);
+                }
             }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "获取业务状态时发生异常: {Message}", ex.Message);
+            }
+            finally
+            {
+                // 将结果存入缓存
+                _businessStatusCache[cacheKey] = result;
+                logger?.LogTrace("更新业务状态缓存: {CacheKey} = {Status}", 
+                    cacheKey, result?.ToString() ?? "null");
+            }
+            
+            return result;
+        }
 
-            return null;
+        /// <summary>
+        /// 从实体中异步获取业务状态枚举值
+        /// 内部调用优化后的同步版本，添加异步包装
+        /// </summary>
+        /// <param name="entity">单据实体对象</param>
+        /// <returns>找到的业务状态枚举值，如果未找到则返回null</returns>
+        /// <remarks>此方法为GetBusinessStatus的异步包装，复用了相同的缓存机制</remarks>
+        private async Task<Enum> GetBusinessStatusAsync(BaseEntity entity)
+        {
+            // 为了保持一致性和重用缓存，直接调用优化后的同步方法
+            // 在实际应用中，可以根据需要调整为真正的异步实现
+            return await Task.Run(() => GetBusinessStatus(entity)).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// 清除特定实体的业务状态缓存
+        /// 应在实体状态发生变更后调用此方法
+        /// </summary>
+        /// <param name="entity">需要清除缓存的实体对象</param>
+        private void ClearBusinessStatusCache(BaseEntity entity)
+        {
+            if (entity == null || _businessStatusCache == null)
+                return;
+
+            string cacheKey = $"{entity.GetType().Name}_{entity.PrimaryKeyID}";
+            if (_businessStatusCache.Remove(cacheKey))
+            {
+                logger?.LogTrace("清除业务状态缓存: {CacheKey}", cacheKey);
+            }
+        }
+
+        /// <summary>
+        /// 清除所有业务状态缓存
+        /// 适用于批量操作或实体大量变更的场景
+        /// </summary>
+        private void ClearAllBusinessStatusCache()
+        {
+            _businessStatusCache?.Clear();
+            logger?.LogDebug("清除所有业务状态缓存");
+        }
+        
+        /// <summary>
+        /// 获取业务状态并更新UI状态
+        /// 这是一个统一的入口点，完全基于V3状态管理系统工作
+        /// </summary>
+        /// <param name="entity">单据实体对象</param>
+        /// <returns>异步任务结果</returns>
+        protected async Task UpdateUIByBusinessStatusAsync(BaseEntity entity)
+        {
+            if (entity == null) return;
+            
+            try
+            {
+                // 获取业务状态
+                Enum status = GetBusinessStatus(entity);
+                
+                if (status != null)
+                {
+                    // 使用新的异步方法更新UI状态
+                    await EnableOperationsBasedOnStatusAsync(status);
+                }
+                else
+                {
+                    logger?.LogWarning("未找到有效的业务状态，无法更新UI状态");
+                    // 如果无法确定状态，禁用所有按钮以避免状态不一致
+                    DisableAllBusinessButtons();
+                }
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "根据业务状态更新UI时发生异常: {ex.Message}", ex);
+                DisableAllBusinessButtons();
+            }
         }
 
 
@@ -6100,8 +6414,6 @@ namespace RUINORERP.UI.BaseForm
                 bindingSourceSub.Clear();
                 OnBindDataToUIEvent(entity as T, ActionStatus.加载);
 
-
-
                 ToolBarEnabledControl(MenuItemEnums.查询);
                 // 在同步方法中使用Task.Run包装异步操作
                 _ = Task.Run(async () =>
@@ -6162,8 +6474,8 @@ namespace RUINORERP.UI.BaseForm
                             bindingSourceSub.Clear();
                             OnBindDataToUIEvent(EditEntity, ActionStatus.加载);
 
-
-                            await ToolBarEnabledControl(pkentity);
+                            //OnBindDataToUIEvent 会执行绑定。执行后也会执行ToolBarEnabledControl
+                            //await ToolBarEnabledControl(pkentity);
                         }
                         else
                         {
@@ -6189,7 +6501,6 @@ namespace RUINORERP.UI.BaseForm
 
                                 //刷新了。不再提示编辑状态了
                                 Edited = false;
-                                await ToolBarEnabledControl(pkentity);
                             }
                         }
                     }
@@ -6855,6 +7166,7 @@ namespace RUINORERP.UI.BaseForm
                     foreach (Control control in this.Controls)
                     {
                         control.Enabled = true;
+                        
                     }
                 });
 

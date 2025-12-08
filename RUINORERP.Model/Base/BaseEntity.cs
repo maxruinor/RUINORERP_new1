@@ -1333,7 +1333,7 @@ namespace RUINORERP.Model
                 // 如果没有指定初始状态，尝试从子类的DataStatus属性获取
                 if (initialStatus == DataStatus.新建)
                 {
-                    var dataStatusProperty = this.GetCachedProperties().FirstOrDefault(c => c.Name == "DataStatus");
+                    var dataStatusProperty = this.GetCachedProperties().FirstOrDefault(c => c.Name == nameof(DataStatus));
                     if (dataStatusProperty != null)
                     {
                         var value = (DataStatus?)dataStatusProperty.GetValue(this);
@@ -1383,13 +1383,6 @@ namespace RUINORERP.Model
                     return (DataStatus)dataStatusProperty.GetValue(this);
                 }
 
-                // 检查是否有Status属性
-                var statusProperty = this.GetType().GetProperty("Status");
-                if (statusProperty != null && statusProperty.PropertyType == typeof(DataStatus))
-                {
-                    return (DataStatus)statusProperty.GetValue(this);
-                }
-
                 // 默认返回草稿状态
                 return DataStatus.草稿;
             }
@@ -1415,21 +1408,6 @@ namespace RUINORERP.Model
                 if (dataStatusProperty != null && dataStatusProperty.PropertyType == typeof(DataStatus))
                 {
                     dataStatusProperty.SetValue(this, status);
-
-                    // 触发状态变更事件
-                    OnStatusChanged(new StateTransitionEventArgs(
-                        this,
-                        typeof(DataStatus),
-                        oldStatus,
-                        status));
-                    return;
-                }
-
-                // 尝试设置Status属性
-                var statusProperty = this.GetType().GetProperty("Status");
-                if (statusProperty != null && statusProperty.PropertyType == typeof(DataStatus))
-                {
-                    statusProperty.SetValue(this, status);
 
                     // 触发状态变更事件
                     OnStatusChanged(new StateTransitionEventArgs(

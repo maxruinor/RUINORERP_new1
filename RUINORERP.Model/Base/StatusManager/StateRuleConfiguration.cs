@@ -299,7 +299,7 @@ namespace RUINORERP.Model.Base.StatusManager
             }
 
             // 默认允许执行
-            return true;
+            return false;
         }
 
         /// <summary>

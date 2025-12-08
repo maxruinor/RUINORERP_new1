@@ -298,23 +298,23 @@ namespace RUINORERP.UI.StateManagement.UI
         {
             switch (control)
             {
-                case TextBox textBox:
-                    textBox.ReadOnly = readOnly;
+                case TextBox:
+                    ((TextBox)control).ReadOnly = readOnly;
                     break;
-                case ComboBox comboBox:
-                    comboBox.Enabled = !readOnly;
+                case ComboBox:
+                    ((ComboBox)control).Enabled = !readOnly;
                     break;
-                case NumericUpDown numericUpDown:
-                    numericUpDown.ReadOnly = readOnly;
+                case NumericUpDown:
+                    ((NumericUpDown)control).ReadOnly = readOnly;
                     break;
-                case DataGridView dataGridView:
-                    dataGridView.ReadOnly = readOnly;
+                case DataGridView:
+                    ((DataGridView)control).ReadOnly = readOnly;
                     break;
-                case CheckBox checkBox:
-                    checkBox.Enabled = !readOnly;
+                case CheckBox:
+                    ((CheckBox)control).Enabled = !readOnly;
                     break;
-                case RadioButton radioButton:
-                    radioButton.Enabled = !readOnly;
+                case RadioButton:
+                    ((RadioButton)control).Enabled = !readOnly;
                     break;
             }
         }

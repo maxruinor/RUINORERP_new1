@@ -822,7 +822,7 @@ namespace RUINORERP.Business.Cache
                 var entityType = _tableSchemaManager.GetEntityType(tableName);
                 if (entityType == null)
                 {
-                    _logger?.LogWarning($"无法获取表 {tableName} 对应的实体类型");
+                    //_logger?.LogWarning($"无法获取表 {tableName} 对应的实体类型");
                     return null;
                 }
 

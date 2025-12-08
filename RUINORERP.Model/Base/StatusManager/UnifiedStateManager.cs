@@ -74,7 +74,7 @@ namespace RUINORERP.Model.Base.StatusManager
         public DataStatus GetDataStatus(BaseEntity entity)
         {
             if (entity == null)
-                return DataStatus.草稿; // 修改默认值，使用实际存在的枚举值
+                return DataStatus.草稿;
 
             try
             {
@@ -184,7 +184,7 @@ namespace RUINORERP.Model.Base.StatusManager
         public ActionStatus GetActionStatus(BaseEntity entity)
         {
             if (entity == null)
-                return ActionStatus.无操作; // 修改默认值，使用实际存在的枚举值
+                return ActionStatus.无操作;
 
             try
             {

@@ -1008,10 +1008,6 @@ namespace RUINORERP.Model.Base.StatusManager
                     return StateTransitionResult.Failure("状态信息不能为空");
                 }
 
-                // 根据操作类型和当前状态判断是否可以执行
-                bool canExecute = false;
-                string message = string.Empty;
-
                 // 将状态转换为DataStatus枚举
                 DataStatus dataStatus;
                 if (status is DataStatus ds)
@@ -1035,55 +1031,15 @@ namespace RUINORERP.Model.Base.StatusManager
                     return StateTransitionResult.Failure($"不支持的状态类型: {status.GetType().Name}");
                 }
 
-                // 根据操作类型进行判断
-                switch (action)
-                {
-                    case MenuItemEnums.新增:
-                        canExecute = dataStatus == DataStatus.草稿 || dataStatus == DataStatus.完结;
-                        message = canExecute ? "可以新增当前单据" : "只有草稿状态或完结状态的单据才能新增";
-                        break;
+                // 获取操作权限规则
+                var actionRules = GetActionPermissionRules();
+                
+                // 检查当前状态是否允许执行该操作
+                bool canExecute = actionRules.TryGetValue(dataStatus, out var allowedActions) && 
+                                 allowedActions.Contains(action);
 
-                    case MenuItemEnums.修改:
-                        canExecute = dataStatus == DataStatus.草稿 || dataStatus == DataStatus.新建;
-                        message = canExecute ? "可以修改当前单据" : "只有草稿状态或新建状态的单据才能修改";
-                        break;
-
-                    case MenuItemEnums.删除:
-                        canExecute = dataStatus == DataStatus.草稿 || dataStatus == DataStatus.新建;
-                        message = canExecute ? "可以删除当前单据" : "只有草稿状态或新建状态的单据才能删除";
-                        break;
-
-                    case MenuItemEnums.保存:
-                        canExecute = dataStatus == DataStatus.草稿 || dataStatus == DataStatus.新建;
-                        message = canExecute ? "可以保存当前单据" : "只有草稿状态或新建状态的单据才能保存";
-                        break;
-
-                    case MenuItemEnums.提交:
-                        canExecute = dataStatus == DataStatus.草稿;
-                        message = canExecute ? "可以提交当前单据" : "只有草稿状态的单据才能提交";
-                        break;
-
-                    case MenuItemEnums.审核:
-                        canExecute = dataStatus == DataStatus.新建;
-                        message = canExecute ? "可以审核当前单据" : "只有新建状态的单据才能审核";
-                        break;
-
-                    case MenuItemEnums.反审:
-                        canExecute = dataStatus == DataStatus.确认;
-                        message = canExecute ? "可以反审核当前单据" : "只有确认状态的单据才能反审核";
-                        break;
-
-                    case MenuItemEnums.结案:
-                        canExecute = dataStatus == DataStatus.确认;
-                        message = canExecute ? "可以结案当前单据" : "只有确认状态的单据才能结案";
-                        break;
-
-                    default:
-                        // 对于其他操作，默认允许
-                        canExecute = true;
-                        message = "可以执行当前操作";
-                        break;
-                }
+                // 生成友好的提示消息
+                string message = canExecute ? GetSuccessMessage(action) : GetFailureMessage(action, dataStatus);
 
                 return canExecute 
                     ? StateTransitionResult.Success(message)
@@ -1101,19 +1057,6 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <returns>操作权限规则字典</returns>
         private Dictionary<DataStatus, List<MenuItemEnums>> GetActionPermissionRules()
         {
-            // 使用缓存获取操作权限规则
-            var cacheKey = "ActionPermission_Rules";
-            var cachedRules = _cacheManager.GetTransitionRuleCache(cacheKey);
-            
-            if (cachedRules != null)
-            {
-                // 将缓存中的对象转换回字典
-                return cachedRules.Cast<object>().ToDictionary(
-                    item => (DataStatus)((dynamic)item).Key,
-                    item => ((List<MenuItemEnums>)((dynamic)item).Value)
-                );
-            }
-            
             // 定义操作权限规则
             var rules = new Dictionary<DataStatus, List<MenuItemEnums>>
             {
@@ -1142,11 +1085,92 @@ namespace RUINORERP.Model.Base.StatusManager
                 [DataStatus.作废] = new List<MenuItemEnums>()
             };
             
-            // 将规则存入缓存
-            var cacheData = rules.Select(kvp => (object)new { Key = kvp.Key, Value = kvp.Value }).ToList();
-            _cacheManager.SetTransitionRuleCache(cacheKey, cacheData);
-            
             return rules;
+        }
+
+        /// <summary>
+        /// 获取操作成功的提示消息
+        /// </summary>
+        /// <param name="action">操作类型</param>
+        /// <returns>成功提示消息</returns>
+        private string GetSuccessMessage(MenuItemEnums action)
+        {
+            switch (action)
+            {
+                case MenuItemEnums.新增:
+                    return "可以新增当前单据";
+                case MenuItemEnums.修改:
+                    return "可以修改当前单据";
+                case MenuItemEnums.删除:
+                    return "可以删除当前单据";
+                case MenuItemEnums.保存:
+                    return "可以保存当前单据";
+                case MenuItemEnums.提交:
+                    return "可以提交当前单据";
+                case MenuItemEnums.审核:
+                    return "可以审核当前单据";
+                case MenuItemEnums.反审:
+                    return "可以反审核当前单据";
+                case MenuItemEnums.结案:
+                    return "可以结案当前单据";
+                default:
+                    return "可以执行当前操作";
+            }
+        }
+
+        /// <summary>
+        /// 获取操作失败的提示消息
+        /// </summary>
+        /// <param name="action">操作类型</param>
+        /// <param name="dataStatus">当前数据状态</param>
+        /// <returns>失败提示消息</returns>
+        private string GetFailureMessage(MenuItemEnums action, DataStatus dataStatus)
+        {
+            switch (action)
+            {
+                case MenuItemEnums.新增:
+                    return dataStatus == DataStatus.草稿 || dataStatus == DataStatus.完结 
+                        ? "可以新增当前单据" 
+                        : $"只有草稿状态或完结状态的单据才能新增，当前状态：{dataStatus}";
+                
+                case MenuItemEnums.修改:
+                    return dataStatus == DataStatus.草稿 || dataStatus == DataStatus.新建 
+                        ? "可以修改当前单据" 
+                        : $"只有草稿状态或新建状态的单据才能修改，当前状态：{dataStatus}";
+                
+                case MenuItemEnums.删除:
+                    return dataStatus == DataStatus.草稿 || dataStatus == DataStatus.新建 
+                        ? "可以删除当前单据" 
+                        : $"只有草稿状态或新建状态的单据才能删除，当前状态：{dataStatus}";
+                
+                case MenuItemEnums.保存:
+                    return dataStatus == DataStatus.草稿 || dataStatus == DataStatus.新建 
+                        ? "可以保存当前单据" 
+                        : $"只有草稿状态或新建状态的单据才能保存，当前状态：{dataStatus}";
+                
+                case MenuItemEnums.提交:
+                    return dataStatus == DataStatus.草稿 
+                        ? "可以提交当前单据" 
+                        : $"只有草稿状态的单据才能提交，当前状态：{dataStatus}";
+                
+                case MenuItemEnums.审核:
+                    return dataStatus == DataStatus.新建 
+                        ? "可以审核当前单据" 
+                        : $"只有新建状态的单据才能审核，当前状态：{dataStatus}";
+                
+                case MenuItemEnums.反审:
+                    return dataStatus == DataStatus.确认 
+                        ? "可以反审核当前单据" 
+                        : $"只有确认状态的单据才能反审核，当前状态：{dataStatus}";
+                
+                case MenuItemEnums.结案:
+                    return dataStatus == DataStatus.确认 
+                        ? "可以结案当前单据" 
+                        : $"只有确认状态的单据才能结案，当前状态：{dataStatus}";
+                
+                default:
+                    return "无法执行当前操作";
+            }
         }
 
         /// <summary>
@@ -1204,9 +1228,6 @@ namespace RUINORERP.Model.Base.StatusManager
                 bool canExecute = actionRules.TryGetValue(dataStatus, out var allowedActions) && 
                                  allowedActions.Contains(action);
 
-                // 将结果存入缓存
-                _cacheManager.SetActionPermissionCache(status as Enum, action.ToString(), statusType, canExecute);
-
                 return canExecute;
             }
             catch (Exception ex)
@@ -1233,25 +1254,11 @@ namespace RUINORERP.Model.Base.StatusManager
                 // 获取当前数据状态
                 var dataStatus = GetDataStatus(entity);
                 
-                // 使用缓存获取可用操作列表
-                var cacheKey = $"AvailableActions_{dataStatus}";
-                var cachedActions = _cacheManager.GetTransitionRuleCache(cacheKey);
-                
-                if (cachedActions != null)
-                {
-                    // 将缓存中的对象转换回列表
-                    return cachedActions.Cast<MenuItemEnums>().ToList();
-                }
-                
                 // 获取操作权限规则
                 var actionRules = GetActionPermissionRules();
                 
                 // 获取当前状态下的可用操作
                 var availableActions = actionRules.TryGetValue(dataStatus, out var actions) ? actions : new List<MenuItemEnums>();
-                
-                // 将结果存入缓存
-                var cacheData = availableActions.Cast<object>().ToList();
-                _cacheManager.SetTransitionRuleCache(cacheKey, cacheData);
                 
                 return availableActions;
             }

@@ -8,6 +8,24 @@
  * 版本标识：
  * V3: 原始复杂架构，8个接口之一，工厂模式管理
  * V3架构: 在V4中被合并到IStateManagerSimple接口中
+ * 
+ * 迁移指南：
+ * 此接口已过时，请使用IUnifiedStateManager接口替代。
+ * 
+ * 迁移步骤：
+ * 1. 将IStatusTransitionEngine的依赖注入替换为IUnifiedStateManager
+ * 2. 将ExecuteTransitionAsync调用替换为IUnifiedStateManager的相应方法
+ * 3. 将ValidateTransitionAsync调用替换为IUnifiedStateManager的相应方法
+ * 4. 将GetAvailableTransitions调用替换为IUnifiedStateManager的相应方法
+ * 
+ * 示例代码：
+ * // 旧代码
+ * services.AddSingleton<IStatusTransitionEngine, StatusTransitionEngine>();
+ * 
+ * // 新代码
+ * services.AddSingleton<IUnifiedStateManager, UnifiedStateManager>();
+ * 
+ * 注意：此接口计划在下个主要版本中移除，请尽快迁移到新的状态管理系统。
  */
 
 using System;
@@ -20,7 +38,7 @@ namespace RUINORERP.Model.Base.StatusManager
     /// 状态转换引擎接口 - v3版本
     /// 负责处理状态转换的核心逻辑
     /// </summary>
-    [Obsolete("此接口已过时，请使用IUnifiedStateManager接口替代。此接口将在未来版本中移除。", false)]
+    [Obsolete("此接口已过时，请使用IUnifiedStateManager接口替代。此接口计划在下个主要版本中移除。请参考文件头部的迁移指南进行代码迁移。", false)]
     public interface IStatusTransitionEngine
     {
         /// <summary>

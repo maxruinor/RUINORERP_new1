@@ -112,7 +112,20 @@ namespace RUINORERP.Model.Base.StatusManager
             StatusType = statusType ?? throw new ArgumentNullException(nameof(statusType));
             CurrentStatus = initialStatus;
             _statusManager = statusManager;
-            _transitionEngine = transitionEngine ?? new StatusTransitionEngine();
+            
+            // 如果未提供状态转换引擎，则使用默认实现
+            if (transitionEngine == null)
+            {
+#if !DEBUG
+                _logger?.LogWarning("正在使用已过时的StatusTransitionEngine作为默认实现。建议迁移到UnifiedStateManager。请参考StatusTransitionEngine.cs文件头部的迁移指南。");
+#endif
+                _transitionEngine = new StatusTransitionEngine();
+            }
+            else
+            {
+                _transitionEngine = transitionEngine;
+            }
+            
             _logger = logger;
             AdditionalData = new Dictionary<string, object>();
             TransitionTime = DateTime.Now;

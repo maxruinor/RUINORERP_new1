@@ -1,8 +1,35 @@
 /**
  * 文件: StatusTransitionEngine.cs
- * 说明: 简化版状态转换引擎 - v3版本
+ * 版本: V3 - 状态转换引擎实现（原始架构）
+ * 说明: V3原始架构的状态转换引擎实现，负责处理状态转换的核心逻辑
  * 创建日期: 2024年
  * 作者: RUINOR ERP开发团队
+ * 
+ * 版本标识：
+ * V3: 原始复杂架构，8个接口之一，工厂模式管理
+ * V3架构: 在V4中被合并到UnifiedStateManager类中
+ * 
+ * 迁移指南：
+ * 此类已过时，请使用UnifiedStateManager类替代。
+ * 
+ * 迁移步骤：
+ * 1. 将IStatusTransitionEngine的依赖注入替换为IUnifiedStateManager
+ * 2. 将ExecuteTransitionAsync调用替换为UnifiedStateManager的相应方法
+ * 3. 将ValidateTransitionAsync调用替换为UnifiedStateManager的相应方法
+ * 4. 将GetAvailableTransitions调用替换为UnifiedStateManager的相应方法
+ * 
+ * 示例代码：
+ * // 旧代码
+ * var result = await _transitionEngine.ExecuteTransitionAsync(fromStatus, toStatus, context);
+ * 
+ * // 新代码
+ * var result = await _statusManager.ValidateDataStatusTransitionAsync(entity, fromStatus, toStatus);
+ * if (result.Success)
+ * {
+ *     await _statusManager.SetDataStatusAsync(entity, toStatus);
+ * }
+ * 
+ * 注意：此类计划在下个主要版本中移除，请尽快迁移到新的状态管理系统。
  */
 
 using System;
@@ -17,7 +44,7 @@ namespace RUINORERP.Model.Base.StatusManager
     /// 负责处理状态转换的核心逻辑 - V3增强版
     /// 借鉴V4验证器模式，集成轻量级规则配置中心，保持简洁高效
     /// </summary>
-    [Obsolete("此类已过时，请使用UnifiedStateManager类替代。此类将在未来版本中移除。", false)]
+    [Obsolete("此类已过时，请使用UnifiedStateManager类替代。此类计划在下个主要版本中移除。请参考文件头部的迁移指南进行代码迁移。", false)]
     internal class StatusTransitionEngine : IStatusTransitionEngine
     {
         #region 字段

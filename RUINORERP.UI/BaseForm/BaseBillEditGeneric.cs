@@ -182,14 +182,14 @@ namespace RUINORERP.UI.BaseForm
 
 
 
- 
+
         /// <summary>
         /// 状态变更事件
         /// 注意：此事件是BaseBillEditGeneric的扩展功能，用于处理泛型特定的状态变更
         /// </summary>
         public event EventHandler<StateTransitionEventArgs> StatusChanged;
 
-  
+
 
 
 
@@ -569,6 +569,14 @@ namespace RUINORERP.UI.BaseForm
 
                 // 5. 更新子表操作权限 - 关联数据操作
                 UpdateChildTableOperations(currentStatus);
+
+
+                //6.权限放到最后生效
+                UIHelper.ControlMasterColumnsInvisible(CurMenuInfo, this);
+
+                //7.字段的显示按权限控制
+                UIHelper.ControlForeignFieldInvisible<T>(this, false);
+
             }
             catch (Exception ex)
             {
@@ -1622,21 +1630,7 @@ namespace RUINORERP.UI.BaseForm
             // 添加属性变化事件订阅
             EditEntity.PropertyChanged += Entity_PropertyChanged;
 
-            // 统一处理UI更新，先尝试使用V4状态管理系统
-            if (this.StateManager != null && entity is BaseEntity baseEntity)
-            {
-                try
-                {
-                    // 使用V4状态管理系统的按钮控制
-                    UpdateAllUIStates(entity);
-                    baseEntity.AcceptChanges();
-                    return;
-                }
-                catch (Exception ex)
-                {
-                    logger?.LogError(ex, "使用V4状态管理系统失败，回退到整合逻辑");
-                }
-            }
+
 
             base.BindEntity(entity);
 
@@ -1655,10 +1649,7 @@ namespace RUINORERP.UI.BaseForm
             #endregion
 
 
-
-
-            //暂时统一不显示外币
-            UIHelper.ControlForeignFieldInvisible<T>(this, false);
+ 
 
 
             #region 加载前，清空原来的锁定单据
@@ -1683,6 +1674,22 @@ namespace RUINORERP.UI.BaseForm
 
 
             #endregion
+
+
+            // 最后统一处理UI更新
+            if (this.StateManager != null && entity is BaseEntity baseEntity)
+            {
+                try
+                {
+                    // 使用V4状态管理系统的按钮控制
+                    UpdateAllUIStates(entity);
+                    baseEntity.AcceptChanges();
+                }
+                catch (Exception ex)
+                {
+                    logger?.LogError(ex, "使用V4状态管理系统失败，回退到整合逻辑");
+                }
+            }
         }
 
 
@@ -1904,6 +1911,33 @@ namespace RUINORERP.UI.BaseForm
             {
                 entity.ActionStatus = ActionStatus.修改;
             }
+
+
+
+            if (e.PropertyName == nameof(DataStatus))
+            {
+                if (entity.ContainsProperty("DataStatus"))
+                {
+                    //todo
+
+                    #region 
+
+                    // 整合逻辑 - 直接获取业务状态
+                    var businessStatus = GetBusinessStatus(entity);
+
+
+                    //UpdateButtonStatesUsingUIRules(entity.GetDataStatus());
+
+                    // 使用统一的UI状态更新方法
+                    UpdateAllUIStates(entity);
+
+                    // 保存状态特殊处理
+                    toolStripButtonSave.Enabled = entity.HasChanged;
+
+                }
+                #endregion
+            }
+
 
             // 数据状态变化会影响按钮变化
             if (e.PropertyName == "DataStatus")
@@ -2856,7 +2890,7 @@ namespace RUINORERP.UI.BaseForm
                 }*/
             }
 
-            
+
 
             //操作前是不是锁定。自己排除
             long pkid = 0;

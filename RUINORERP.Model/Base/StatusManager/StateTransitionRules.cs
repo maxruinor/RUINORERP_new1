@@ -441,36 +441,6 @@ namespace RUINORERP.Model.Base.StatusManager
             return result;
         }
 
-        /// <summary>
-        /// 获取业务状态规则
-        /// </summary>
-        /// <param name="statusType">业务状态类型</param>
-        /// <param name="status">状态值</param>
-        /// <returns>业务状态规则</returns>
-        public static BusinessStatusRule GetBusinessStatusRule(Type statusType, object status)
-        {
-            // 根据状态类型和状态值返回相应的业务规则
-            // 这里可以根据实际业务需求扩展
-            var key = $"{statusType?.Name}_{status}";
-            
-            // 返回默认规则，可以根据需要扩展
-            return new BusinessStatusRule
-            {
-                DisplayText = status?.ToString() ?? string.Empty,
-                Description = $"{statusType?.Name} - {status}",
-                IsEditable = IsEditableStatus(statusType, status),
-                IsDeletable = IsDeletableStatus(statusType, status),
-                AllowApproval = AllowApprovalStatus(statusType, status),
-                AllowPrint = true,
-                AllowSubmit = AllowSubmitStatus(statusType, status),
-                AllowCancel = AllowCancelStatus(statusType, status),
-                AllowModify = IsEditableStatus(statusType, status),
-                AllowDelete = IsDeletableStatus(statusType, status),
-                AllowView = true,
-                AllowExport = true,
-                ColorCode = GetStatusColorCode(statusType, status)
-            };
-        }
 
         /// <summary>
         /// 获取状态的颜色编码
@@ -622,78 +592,5 @@ namespace RUINORERP.Model.Base.StatusManager
         }
     }
 
-    #region 业务状态规则类
-
-    /// <summary>
-    /// 业务状态规则
-    /// </summary>
-    public class BusinessStatusRule
-    {
-        /// <summary>
-        /// 显示文本
-        /// </summary>
-        public string DisplayText { get; set; }
-
-        /// <summary>
-        /// 描述
-        /// </summary>
-        public string Description { get; set; }
-
-        /// <summary>
-        /// 是否可编辑
-        /// </summary>
-        public bool IsEditable { get; set; }
-
-        /// <summary>
-        /// 是否可删除
-        /// </summary>
-        public bool IsDeletable { get; set; }
-
-        /// <summary>
-        /// 允许审批
-        /// </summary>
-        public bool AllowApproval { get; set; }
-
-        /// <summary>
-        /// 允许打印
-        /// </summary>
-        public bool AllowPrint { get; set; }
-
-        /// <summary>
-        /// 允许提交
-        /// </summary>
-        public bool AllowSubmit { get; set; }
-
-        /// <summary>
-        /// 允许取消
-        /// </summary>
-        public bool AllowCancel { get; set; }
-
-        /// <summary>
-        /// 允许修改
-        /// </summary>
-        public bool AllowModify { get; set; }
-
-        /// <summary>
-        /// 允许删除
-        /// </summary>
-        public bool AllowDelete { get; set; }
-
-        /// <summary>
-        /// 允许查看
-        /// </summary>
-        public bool AllowView { get; set; }
-
-        /// <summary>
-        /// 允许导出
-        /// </summary>
-        public bool AllowExport { get; set; }
-
-        /// <summary>
-        /// 颜色编码
-        /// </summary>
-        public string ColorCode { get; set; }
-    }
-
-    #endregion
+    
 }

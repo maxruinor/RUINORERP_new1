@@ -145,7 +145,7 @@ namespace RUINORERP.Model.Base.StatusManager
             AddButtonRule(DataStatus.草稿, "toolStripBtnReverseReview", false, false);
             AddButtonRule(DataStatus.草稿, "toolStripButtonCaseClosed", false, false);
             AddButtonRule(DataStatus.草稿, "toolStripButtonAntiClosed", false, false);
-            AddButtonRule(DataStatus.草稿, "toolStripButtonPrint", true, true);
+            AddButtonRule(DataStatus.草稿, "toolStripButtonPrint", false, true);
             AddButtonRule(DataStatus.草稿, "toolStripButtonExport", true, true);
 
             // 新建状态：允许修改、保存、删除、审核
@@ -153,7 +153,7 @@ namespace RUINORERP.Model.Base.StatusManager
             AddButtonRule(DataStatus.新建, "toolStripbtnModify", true, true);
             AddButtonRule(DataStatus.新建, "toolStripButtonSave", true, true);
             AddButtonRule(DataStatus.新建, "toolStripbtnDelete", true, true);
-            AddButtonRule(DataStatus.新建, "toolStripbtnSubmit", false, false);
+            AddButtonRule(DataStatus.新建, "toolStripbtnSubmit", false, true);
             AddButtonRule(DataStatus.新建, "toolStripbtnReview", true, true);
             AddButtonRule(DataStatus.新建, "toolStripBtnReverseReview", false, false);
             AddButtonRule(DataStatus.新建, "toolStripButtonCaseClosed", false, false);
@@ -162,33 +162,33 @@ namespace RUINORERP.Model.Base.StatusManager
             AddButtonRule(DataStatus.新建, "toolStripButtonExport", true, true);
 
             // 确认状态：允许审核、结案、打印、导出
-            AddButtonRule(DataStatus.确认, "toolStripbtnAdd", false, false);
-            AddButtonRule(DataStatus.确认, "toolStripbtnModify", false, false);
-            AddButtonRule(DataStatus.确认, "toolStripButtonSave", false, false);
-            AddButtonRule(DataStatus.确认, "toolStripbtnDelete", false, false);
-            AddButtonRule(DataStatus.确认, "toolStripbtnSubmit", false, false);
-            AddButtonRule(DataStatus.确认, "toolStripbtnReview", false, false);
+            AddButtonRule(DataStatus.确认, "toolStripbtnAdd", true, true);
+            AddButtonRule(DataStatus.确认, "toolStripbtnModify", false, true);
+            AddButtonRule(DataStatus.确认, "toolStripButtonSave", false, true);
+            AddButtonRule(DataStatus.确认, "toolStripbtnDelete", false, true);
+            AddButtonRule(DataStatus.确认, "toolStripbtnSubmit", false, true);
+            AddButtonRule(DataStatus.确认, "toolStripbtnReview", false, true);
             AddButtonRule(DataStatus.确认, "toolStripBtnReverseReview", true, true);
             AddButtonRule(DataStatus.确认, "toolStripButtonCaseClosed", true, true);
-            AddButtonRule(DataStatus.确认, "toolStripButtonAntiClosed", false, false);
+            AddButtonRule(DataStatus.确认, "toolStripButtonAntiClosed", false, true);
             AddButtonRule(DataStatus.确认, "toolStripButtonPrint", true, true);
             AddButtonRule(DataStatus.确认, "toolStripButtonExport", true, true);
 
             // 完结状态：允许反结案、打印、导出
-            AddButtonRule(DataStatus.完结, "toolStripbtnAdd", false, false);
-            AddButtonRule(DataStatus.完结, "toolStripbtnModify", false, false);
-            AddButtonRule(DataStatus.完结, "toolStripButtonSave", false, false);
-            AddButtonRule(DataStatus.完结, "toolStripbtnDelete", false, false);
-            AddButtonRule(DataStatus.完结, "toolStripbtnSubmit", false, false);
-            AddButtonRule(DataStatus.完结, "toolStripbtnReview", false, false);
-            AddButtonRule(DataStatus.完结, "toolStripBtnReverseReview", false, false);
-            AddButtonRule(DataStatus.完结, "toolStripButtonCaseClosed", false, false);
+            AddButtonRule(DataStatus.完结, "toolStripbtnAdd", true, true);
+            AddButtonRule(DataStatus.完结, "toolStripbtnModify", false, true);
+            AddButtonRule(DataStatus.完结, "toolStripButtonSave", false, true);
+            AddButtonRule(DataStatus.完结, "toolStripbtnDelete", false, true);
+            AddButtonRule(DataStatus.完结, "toolStripbtnSubmit", false, true);
+            AddButtonRule(DataStatus.完结, "toolStripbtnReview", false, true);
+            AddButtonRule(DataStatus.完结, "toolStripBtnReverseReview", false, true);
+            AddButtonRule(DataStatus.完结, "toolStripButtonCaseClosed", false, true);
             AddButtonRule(DataStatus.完结, "toolStripButtonAntiClosed", true, true);
             AddButtonRule(DataStatus.完结, "toolStripButtonPrint", true, true);
             AddButtonRule(DataStatus.完结, "toolStripButtonExport", true, true);
 
             // 作废状态：允许打印、导出
-            AddButtonRule(DataStatus.作废, "toolStripbtnAdd", false, false);
+            AddButtonRule(DataStatus.作废, "toolStripbtnAdd", true, true);
             AddButtonRule(DataStatus.作废, "toolStripbtnModify", false, false);
             AddButtonRule(DataStatus.作废, "toolStripButtonSave", false, false);
             AddButtonRule(DataStatus.作废, "toolStripbtnDelete", false, false);

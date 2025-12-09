@@ -308,7 +308,7 @@ namespace RUINORERP.UI.MRP.MP
                 rdbis_available净需求.Enabled = false;
                 rdbis_available毛需求.Enabled = false;
             }
-            ToolBarEnabledControl(entity);
+             
 
             //如果属性变化 则状态为修改
             entity.PropertyChanged += async (sender, s2) =>
@@ -345,8 +345,6 @@ namespace RUINORERP.UI.MRP.MP
                 //数据状态变化会影响按钮变化
                 if (s2.PropertyName == entity.GetPropertyName<tb_ProductionDemand>(c => c.DataStatus))
                 {
-                    ToolBarEnabledControl(entity);
-
                     ControlBtnFuncation(entity, s2);
                 }
 
@@ -700,7 +698,7 @@ namespace RUINORERP.UI.MRP.MP
 
 
             //btnCreateProduction.ToolTipValues.Text = "创建生产单";//需求单据保存审核后才能生成制令单！并且确保不要重复生成。
-            base.ToolBarEnabledControl(MenuItemEnums.刷新);
+            
 
 
             System.Linq.Expressions.Expression<Func<tb_ProduceGoodsRecommendDetail, int?>> expRefBizType = (p) => p.RefBillType;

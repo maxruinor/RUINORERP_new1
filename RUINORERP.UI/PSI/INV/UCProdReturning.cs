@@ -249,7 +249,7 @@ namespace RUINORERP.UI.PSI.INV
             //DevAge.ComponentModel.IBoundList bd = list.ToBindingSortCollection<View_ProdDetail>()  ;//new DevAge.ComponentModel.BoundDataView(mView);
             // grid1.DataSource = list.ToBindingSortCollection<View_ProdDetail>() as DevAge.ComponentModel.IBoundList;// new DevAge.ComponentModel.BoundDataView(list.ToDataTable().DefaultView); 
             InitDataTocmbbox();
-            base.ToolBarEnabledControl(MenuItemEnums.刷新);
+            
 
             grid1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             grid1.Selection.EnableMultiSelection = false;

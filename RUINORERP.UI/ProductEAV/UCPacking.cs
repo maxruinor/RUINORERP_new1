@@ -343,7 +343,7 @@ namespace RUINORERP.UI.ProductEAV
         private void UcSaleOrderEdit_Load(object sender, EventArgs e)
         {
             //InitDataTocmbbox();
-            base.ToolBarEnabledControl(MenuItemEnums.刷新);
+            
             LoadGrid1();
             LoadGrid2();
             UIHelper.ControlMasterColumnsInvisible(CurMenuInfo, this);

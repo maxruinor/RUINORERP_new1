@@ -1479,11 +1479,7 @@ namespace RUINORERP.UI.MRP.BOM
                 EditEntity.OutProductionAllCosts = EditEntity.TotalMaterialCost + EditEntity.TotalOutManuCost + EditEntity.OutApportionedCost;
                 EditEntity.SelfProductionAllCosts = EditEntity.TotalMaterialCost + EditEntity.TotalSelfManuCost + EditEntity.SelfApportionedCost;
 
-                //数据状态变化会影响按钮变化
-                if (s2.PropertyName == entity.GetPropertyName<tb_BOM_S>(c => c.DataStatus))
-                {
-                    ToolBarEnabledControl(entity);
-                }
+      
             };
             if (EditEntity.tb_BOM_SDetails == null)
             {
@@ -1680,7 +1676,7 @@ namespace RUINORERP.UI.MRP.BOM
             //DevAge.ComponentModel.IBoundList bd = list.ToBindingSortCollection<View_ProdDetail>()  ;//new DevAge.ComponentModel.BoundDataView(mView);
             // grid1.DataSource = list.ToBindingSortCollection<View_ProdDetail>() as DevAge.ComponentModel.IBoundList;// new DevAge.ComponentModel.BoundDataView(list.ToDataTable().DefaultView); 
             InitDataTocmbbox();
-            base.ToolBarEnabledControl(MenuItemEnums.刷新);
+            
 
             grid1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             grid1.Selection.EnableMultiSelection = false;
@@ -1828,7 +1824,7 @@ namespace RUINORERP.UI.MRP.BOM
         private void LoadgridSubstituteMaterial()
         {
             InitDataTocmbbox();
-            base.ToolBarEnabledControl(MenuItemEnums.刷新);
+            
             gridSubstituteMaterial.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             gridSubstituteMaterial.Selection.EnableMultiSelection = false;
 
@@ -2117,8 +2113,7 @@ namespace RUINORERP.UI.MRP.BOM
                     SaveResult = await ctr.SaveOrUpdateWithChild<tb_BOM_S>(EditEntity); //await base.Save(EditEntity);
                     if (SaveResult.Succeeded)
                     {
-                        base.ToolBarEnabledControl(EditEntity);
-                        base.ToolBarEnabledControl(MenuItemEnums.保存);
+                         
                         MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.BOM_No}。");
                     }
                     else

@@ -469,16 +469,11 @@ namespace RUINORERP.UI.ASS
 
             ControlBindingHelper.ConfigureControlFilter<tb_AS_RepairOrder, tb_AS_AfterSaleApply>(entity, txtASApplyID, t => t.ASApplyNo,
               f => f.ASApplyNo, queryFilterSO, a => a.ASApplyID, b => b.ASApplyID, null, false);
-
-            ToolBarEnabledControl(entity);
-
+ 
             //如果属性变化 则状态为修改
             entity.PropertyChanged += (sender, s2) =>
             {                //数据状态变化会影响按钮变化
-                if (s2.PropertyName == entity.GetPropertyName<tb_AS_RepairOrder>(c => c.DataStatus))
-                {
-                    ToolBarEnabledControl(entity);
-                }
+            
                 //权限允许
                 if ((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建))
                 {
@@ -582,7 +577,6 @@ namespace RUINORERP.UI.ASS
         private void UcSaleOrderEdit_Load(object sender, EventArgs e)
         {
             InitDataTocmbbox();
-            base.ToolBarEnabledControl(MenuItemEnums.刷新);
             LoadGrid1();
             LoadGrid2();
             UIHelper.ControlMasterColumnsInvisible(CurMenuInfo, this);

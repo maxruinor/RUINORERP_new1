@@ -531,7 +531,7 @@ namespace RUINORERP.UI.PSI.SAL
             ControlBindingHelper.ConfigureControlFilter<tb_SaleOutRe, tb_SaleOut>(entity, txtSaleOutNo, t => t.SaleOut_NO,
               f => f.SaleOutNo, queryFilterSO, a => a.SaleOut_MainID, b => b.SaleOut_MainID, null, false);
 
-            ToolBarEnabledControl(entity);
+             
 
             //如果属性变化 则状态为修改
             entity.PropertyChanged += (sender, s2) =>
@@ -698,7 +698,6 @@ namespace RUINORERP.UI.PSI.SAL
         private void UcSaleOrderEdit_Load(object sender, EventArgs e)
         {
             InitDataTocmbbox();
-            base.ToolBarEnabledControl(MenuItemEnums.刷新);
             LoadGrid1();
             LoadGrid2();
             UIHelper.ControlMasterColumnsInvisible(CurMenuInfo, this);

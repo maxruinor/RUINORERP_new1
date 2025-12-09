@@ -219,7 +219,7 @@ namespace RUINORERP.UI.FM.FMBase
                 lbl盘点单.Text = CurMenuInfo.CaptionCN;
             }
             InitDataTocmbbox();
-            base.ToolBarEnabledControl(MenuItemEnums.刷新);
+            
 
 
             grid1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;

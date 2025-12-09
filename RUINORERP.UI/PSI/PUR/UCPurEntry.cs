@@ -399,7 +399,7 @@ namespace RUINORERP.UI.PSI.PUR
         {
 
             InitDataTocmbbox();
-            base.ToolBarEnabledControl(MenuItemEnums.刷新);
+            
 
 
             grid1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;

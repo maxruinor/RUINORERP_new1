@@ -894,7 +894,7 @@ namespace RUINORERP.UI.FM
                 }
             }
 
-            base.ToolBarEnabledControl(MenuItemEnums.刷新);
+            
 
             grid1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             grid1.Selection.EnableMultiSelection = false;

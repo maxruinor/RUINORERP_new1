@@ -69,21 +69,11 @@ namespace RUINORERP.UI.BaseForm
         /// </summary>
         public IUnifiedStateManager _stateManager;
 
-
         /// <summary>
         /// v3状态上下文
         /// </summary>
         private IStatusTransitionContext _statusContext;
-        
-        /// <summary>
-        /// 防止重复更新UI标志位
-        /// </summary>
-        private bool _isUpdatingUI;
-        
-        /// <summary>
-        /// 状态变更事件处理程序引用
-        /// </summary>
-        private EventHandler<StateTransitionEventArgs> _stateChangedHandler;
+      
         
         /// <summary>
         /// 状态管理初始化标志，防止重复初始化
@@ -181,10 +171,7 @@ namespace RUINORERP.UI.BaseForm
                     System.Diagnostics.Debug.WriteLine("无法从DI容器获取IUnifiedStateManager服务");
                 }
 
-              
-
-                // 状态变更事件已由UnifiedStateManager统一管理，无需手动订阅
-                
+      
                 // 标记已初始化
                 _isStateManagementInitialized = true;
             }
@@ -213,7 +200,8 @@ namespace RUINORERP.UI.BaseForm
 
             BoundEntity = entity;
             InitializeStatusContext(entity);
-            ApplyCurrentStatusToUI();
+         
+            UpdateAllUIStates(entity);
         }
 
         /// <summary>
@@ -254,41 +242,7 @@ namespace RUINORERP.UI.BaseForm
             BoundEntity = null;
             StatusContext = null;
         }
-
-        /// <summary>
-        /// 应用当前状态到UI
-        /// </summary>
-        protected virtual void ApplyCurrentStatusToUI()
-        {
-            // 防止重复更新UI导致的循环调用
-            if (_isUpdatingUI ||  _stateManager == null || BoundEntity == null)
-                return;
-
-            try
-            {
-                _isUpdatingUI = true;
-                
-                var controls = GetAllControls(this);
-                
-                // 获取当前实体的状态类型和状态值
-                var statusType = BoundEntity.GetStatusType();
-                var status = BoundEntity.GetCurrentStatus();
-                
-          
-                // 同步更新状态栏显示（如果有）
-                UpdateStatusDisplay();
-            }
-            catch (Exception ex)
-            {
-                logger?.LogError(ex, "应用状态到UI失败");
-                System.Diagnostics.Debug.WriteLine($"应用状态到UI失败: {ex.Message}");
-            }
-            finally
-            {
-                // 确保重置标志位
-                _isUpdatingUI = false;
-            }
-        }
+       
 
         /// <summary>
         /// 更新状态栏显示
@@ -307,12 +261,6 @@ namespace RUINORERP.UI.BaseForm
                     string displayName = descriptionAttribute?.Description ?? currentStatus.ToString();
                     statusLabel.Text = $"状态: {displayName}";
                     statusLabel.ForeColor = GetStatusColor(currentStatus);
-                }
-
-                // 更新打印状态显示
-                if (BoundEntity != null)
-                {
-                    UpdatePrintStatusDisplay(BoundEntity);
                 }
             }
             catch (Exception ex)
@@ -351,8 +299,7 @@ namespace RUINORERP.UI.BaseForm
                 currentStatus = entity.GetDataStatus();
             }
 
-            // 应用当前状态到UI
-            ApplyCurrentStatusToUI();
+      
 
             // 更新UI控件状态
             UpdateUIControlsByState(currentStatus);
@@ -394,23 +341,7 @@ namespace RUINORERP.UI.BaseForm
         protected virtual IEnumerable<Control> GetAllControls() =>
             GetAllControls(this);
 
-        /// <summary>
-        /// 刷新状态
-        /// </summary>
-        public virtual void RefreshStatus()
-        {
-            try
-            {
-                if (StatusContext != null)
-                {
-                    ApplyCurrentStatusToUI();
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"刷新状态失败: {ex.Message}");
-            }
-        }
+       
 
         #endregion
 
@@ -433,7 +364,6 @@ namespace RUINORERP.UI.BaseForm
 
                 if (result.IsSuccess)
                 {
-                    ApplyCurrentStatusToUI();
                     return StateTransitionResult.Success();
                 }
 
@@ -516,23 +446,9 @@ namespace RUINORERP.UI.BaseForm
                     var control = this.Controls.Find(rule.Key, true).FirstOrDefault();
                     if (control != null)
                     {
-                        control.Enabled = rule.Value.Enabled;
-                        control.Visible = rule.Value.Visible;
+                        //control.Enabled = rule.Value.Enabled;
+                        //control.Visible = rule.Value.Visible;
                     }
-                }
-                
-                // 默认实现：根据状态更新基本控件状态
-                switch (currentStatus)
-                {
-                    case DataStatus.草稿:
-                    case DataStatus.新建:
-                        EnableEditControls(true);
-                        break;
-                    case DataStatus.确认:
-                    case DataStatus.完结:
-                    case DataStatus.作废:
-                        EnableEditControls(false);
-                        break;
                 }
             }
             catch (Exception ex)
@@ -541,23 +457,7 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
-        /// <summary>
-        /// 启用/禁用编辑控件（子类可重写）
-        /// </summary>
-        /// <param name="enabled">是否启用</param>
-        protected virtual void EnableEditControls(bool enabled)
-        {
-            // 子类可以重写此方法以启用/禁用特定的编辑控件
-            // 默认实现：查找常见的编辑控件并设置状态
-
-            var editControls = new[] { "txt", "cmb", "dtp", "chk", "rdo" };
-            var controls = GetAllControls().Where(c => editControls.Any(prefix => c.Name.StartsWith(prefix)));
-
-            foreach (var control in controls)
-            {
-                control.Enabled = enabled;
-            }
-        }
+         
 
 
         #region 如果窗体，有些按钮不用出现在这个业务窗体时。这里手动排除。集合有值才行
@@ -986,70 +886,18 @@ namespace RUINORERP.UI.BaseForm
                 if (!entity.IsStateManagerInitialized)
                 {
                     entity.InitializeStateManager();
-
-                    // 注册状态变更事件
-                    SubscribeToEntityStateChanges(entity);
                 }
 
                 // 根据实体状态更新UI
                 UpdateAllUIStates(entity);
-
-                // 更新子表操作权限
-                UpdateChildTableOperations(entity);
             }
         }
 
 
 
+ 
 
-        /// <summary>
-        /// 更新状态显示
-        /// </summary>
-        /// <param name="statusDescription">状态描述</param>
-        protected virtual void UpdateStatusDisplay(string statusDescription)
-        {
-            // 子类重写此方法以更新特定的状态显示控件
-        }
-
-
-
-
-        /// <summary>
-        /// 更新子表操作权限
-        /// </summary>
-        /// <param name="entity">实体对象</param>
-        protected virtual void UpdateChildTableOperations(BaseEntity entity)
-        {
-            //if (entity == null || !entity.IsStateManagerInitialized)
-            //    return;
-
-            //bool isEditable = entity.IsEditable();
-
-            //// 子类重写此方法以更新子表的操作权限
-            //EnableChildTableOperations(isEditable);
-        }
-
-        /// <summary>
-        /// 订阅实体状态变更事件 - 虚方法，由子类重写
-        /// 注意：此方法在BaseBillEditGeneric中有具体实现
-        /// </summary>
-        /// <param name="entity">实体对象</param>
-        protected virtual void SubscribeToEntityStateChanges(BaseEntity entity)
-        {
-            // 基类中的默认实现，子类可以重写此方法提供具体实现
-            // BaseBillEditGeneric中提供了完整的实现
-        }
-
-        /// <summary>
-        /// 启用或禁用子表操作
-        /// </summary>
-        /// <param name="enabled">是否启用</param>
-        protected virtual void EnableChildTableOperations(bool enabled)
-        {
-            // 子类重写此方法以具体实现子表操作的启用/禁用
-        }
-
-
+ 
 
 
 

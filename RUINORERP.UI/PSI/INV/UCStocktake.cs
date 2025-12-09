@@ -188,7 +188,6 @@ namespace RUINORERP.UI.PSI.INV
             {
                 if (EditEntity.ApprovalResults.HasValue && EditEntity.ApprovalResults.Value)
                 {
-                    base.ToolBarEnabledControl(MenuItemEnums.审核);
                 }
             }
             else
@@ -295,7 +294,7 @@ namespace RUINORERP.UI.PSI.INV
         {
             grid1.Enter += Grid1_Enter;
             InitDataTocmbbox();
-            base.ToolBarEnabledControl(MenuItemEnums.刷新);
+            
 
 
             grid1.BorderStyle = BorderStyle.FixedSingle;

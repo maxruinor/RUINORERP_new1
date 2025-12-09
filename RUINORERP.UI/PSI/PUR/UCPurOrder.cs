@@ -652,7 +652,7 @@ namespace RUINORERP.UI.PSI.PUR
         private void UCStockIn_Load(object sender, EventArgs e)
         {
             InitDataTocmbbox();
-            base.ToolBarEnabledControl(MenuItemEnums.刷新);
+            
 
             grid1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             grid1.Selection.EnableMultiSelection = false;
@@ -1180,7 +1180,6 @@ namespace RUINORERP.UI.PSI.PUR
                     //MainForm.Instance.ecs.AddSendData(od);
 
                     //审核成功
-                    base.ToolBarEnabledControl(MenuItemEnums.结案);
                     toolStripbtnReview.Enabled = true;
 
                 }

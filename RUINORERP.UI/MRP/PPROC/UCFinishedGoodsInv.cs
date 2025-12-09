@@ -234,7 +234,6 @@ namespace RUINORERP.UI.PSI.PUR
                             cmbCustomerVendor_ID.Visible = false;
                         }
                     }
-                    ToolBarEnabledControl(entity);
                 }
                 ShowPrintStatus(lblPrintStatus, EditEntity);
 
@@ -282,7 +281,7 @@ namespace RUINORERP.UI.PSI.PUR
 
 
             //}
-            ToolBarEnabledControl(entity);
+          
         }
 
 
@@ -294,7 +293,7 @@ namespace RUINORERP.UI.PSI.PUR
         {
 
 
-            base.ToolBarEnabledControl(MenuItemEnums.刷新);
+            
 
 
             grid1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;

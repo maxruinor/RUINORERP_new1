@@ -252,15 +252,11 @@ namespace RUINORERP.UI.MRP.MP
                         }
                     }
 
-                    ToolBarEnabledControl(entity);
+                     
                 }
 
 
-                //数据状态变化会影响按钮变化
-                if (s2.PropertyName == entity.GetPropertyName<tb_MaterialRequisition>(c => c.DataStatus))
-                {
-                    ToolBarEnabledControl(entity);
-                }
+    
                 //预计产量是来自于制令单，如果修改则要同步修改明细的发料数量
                 //影响明细的数量
                 if ((entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改) && s2.PropertyName == entity.GetPropertyName<tb_MaterialRequisition>(c => c.ExpectedQuantity))
@@ -358,7 +354,7 @@ namespace RUINORERP.UI.MRP.MP
         private void UcSaleOrderEdit_Load(object sender, EventArgs e)
         {
             //InitDataTocmbbox();
-            base.ToolBarEnabledControl(MenuItemEnums.刷新);
+            
 
             ///显示列表对应的中文
             //base.FieldNameList = UIHelper.GetFieldNameList<tb_MaterialRequisitionsDetail>();

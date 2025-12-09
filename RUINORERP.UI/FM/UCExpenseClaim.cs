@@ -286,7 +286,7 @@ namespace RUINORERP.UI.FM
                     }
                 }
 
-                base.ToolBarEnabledControl(entity);
+             
 
             };
 
@@ -413,7 +413,7 @@ namespace RUINORERP.UI.FM
                 lbl盘点单.Text = CurMenuInfo.CaptionCN;
             }
             InitDataTocmbbox();
-            base.ToolBarEnabledControl(MenuItemEnums.刷新);
+            
 
             // 为结案凭证图片控件添加双击事件，支持上传图片
             magicPictureBox1.DoubleClick += MagicPictureBox1_DoubleClick;

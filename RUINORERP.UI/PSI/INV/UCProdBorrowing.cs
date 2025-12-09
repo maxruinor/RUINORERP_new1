@@ -236,12 +236,7 @@ namespace RUINORERP.UI.PSI.INV
             //如果属性变化 则状态为修改
             entity.PropertyChanged += (sender, s2) =>
             {
-                //权限允许
-                //数据状态变化会影响按钮变化
-                if (s2.PropertyName == entity.GetPropertyName<tb_ProdBorrowing>(c => c.DataStatus))
-                {
-                    ToolBarEnabledControl(entity);
-                }
+               
                 if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
                 {
                     base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService<tb_ProdBorrowingValidator>(), kryptonPanelMainInfo.Controls);
@@ -350,7 +345,7 @@ namespace RUINORERP.UI.PSI.INV
             var sw = new Stopwatch();
             sw.Start();
             InitDataTocmbbox();
-            base.ToolBarEnabledControl(MenuItemEnums.刷新);
+            
 
 
             grid1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;

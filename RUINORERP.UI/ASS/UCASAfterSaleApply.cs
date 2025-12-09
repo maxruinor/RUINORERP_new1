@@ -404,11 +404,7 @@ namespace RUINORERP.UI.ASS
                     }
                 }
 
-                //数据状态变化会影响按钮变化
-                if (s2.PropertyName == entity.GetPropertyName<tb_AS_AfterSaleApply>(c => c.DataStatus))
-                {
-                    ToolBarEnabledControl(entity);
-                }
+       
 
                 //如果客户有变化，带出对应有业务员
                 if (entity.CustomerVendor_ID > 0 && s2.PropertyName == entity.GetPropertyName<tb_AS_AfterSaleApply>(c => c.CustomerVendor_ID))

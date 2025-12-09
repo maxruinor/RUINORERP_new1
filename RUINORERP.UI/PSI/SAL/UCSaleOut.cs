@@ -644,7 +644,7 @@ namespace RUINORERP.UI.PSI.SAL
         private void UcSaleOrderEdit_Load(object sender, EventArgs e)
         {
             InitDataTocmbbox();
-            base.ToolBarEnabledControl(MenuItemEnums.刷新);
+            
             grid1.BorderStyle = BorderStyle.FixedSingle;
             grid1.Selection.EnableMultiSelection = false;
 

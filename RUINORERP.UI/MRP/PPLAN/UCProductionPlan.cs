@@ -217,32 +217,9 @@ namespace RUINORERP.UI.MRP.MP
                     }
                 }
 
-
-                //数据状态变化会影响按钮变化
-                if (s2.PropertyName == entity.GetPropertyName<tb_ProductionPlan>(c => c.DataStatus))
-                {
-                    ToolBarEnabledControl(entity);
-                }
+ 
                 //如果客户有变化，带出对应有业务员
-
-                //显示 打印状态 如果是草稿状态 不显示打印
-                if ((DataStatus)EditEntity.DataStatus != DataStatus.草稿)
-                {
-                    toolStripbtnPrint.Enabled = true;
-                    if (EditEntity.PrintStatus == 0)
-                    {
-                        lblPrintStatus.Text = "未打印";
-                    }
-                    else
-                    {
-                        lblPrintStatus.Text = $"打印{EditEntity.PrintStatus}次";
-                    }
-
-                }
-                else
-                {
-                    toolStripbtnPrint.Enabled = false;
-                }
+ 
             };
 
 
@@ -282,7 +259,7 @@ namespace RUINORERP.UI.MRP.MP
         private void UcSaleOrderEdit_Load(object sender, EventArgs e)
         {
             //InitDataTocmbbox();
-            base.ToolBarEnabledControl(MenuItemEnums.刷新);
+            
 
             ///显示列表对应的中文
             //base.FieldNameList = UIHelper.GetFieldNameList<tb_ProductionPlanDetail>();

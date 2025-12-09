@@ -1,7 +1,9 @@
 using Microsoft.Extensions.Logging;
 using RUINORERP.Global; // 添加此行以引用DataStatus枚举
+using RUINORERP.Global.EnumExt;
 using RUINORERP.Model.Base;
 using RUINORERP.Model.Base.StatusManager;
+using SqlSugar;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -122,6 +124,29 @@ namespace RUINORERP.Model.Base.StatusManager
             }
         }
 
+
+        /// <summary>获取实体的状态类型</summary>
+        public Type GetStatusType(BaseEntity entity)
+        {
+            if (entity.ContainsProperty(typeof(DataStatus).Name))
+                return typeof(DataStatus);
+
+            if (entity.ContainsProperty(typeof(PrePaymentStatus).Name))
+                return typeof(PrePaymentStatus);
+
+            if (entity.ContainsProperty(typeof(ARAPStatus).Name))
+                return typeof(ARAPStatus);
+
+            if (entity.ContainsProperty(typeof(PaymentStatus).Name))
+                return typeof(PaymentStatus);
+            if (entity.ContainsProperty(typeof(StatementStatus).Name))
+                return typeof(StatementStatus);
+
+            return null;
+        }
+
+
+
         /// <summary>
         /// 获取实体的业务状态
         /// </summary>
@@ -131,10 +156,10 @@ namespace RUINORERP.Model.Base.StatusManager
         {
             if (entity == null)
                 return null;
-
             try
             {
-                var property = entity.GetType().GetProperty("Status");
+                var statusType = GetStatusType(entity);
+                var property = entity.GetType().GetProperty(statusType.Name);
                 return property?.GetValue(entity);
             }
             catch (Exception ex)
@@ -173,7 +198,7 @@ namespace RUINORERP.Model.Base.StatusManager
             try
             {
                 // 首先尝试从实体的Status属性获取
-                var property = entity.GetType().GetProperty("Status");
+                var property = entity.GetType().GetProperty(statusType.Name);
                 var status = property?.GetValue(entity);
 
                 // 如果获取到的状态类型与请求的类型匹配，直接返回
@@ -285,7 +310,7 @@ namespace RUINORERP.Model.Base.StatusManager
                 var currentStatus = GetBusinessStatus<T>(entity);
 
                 // 直接使用StateTransitionRules验证转换
-                if (StateTransitionRules.IsTransitionAllowed(_transitionRules,typeof(T), currentStatus, targetStatus))
+                if (StateTransitionRules.IsTransitionAllowed(_transitionRules, typeof(T), currentStatus, targetStatus))
                 {
                     return StateTransitionResult.Success();
                 }
@@ -354,7 +379,7 @@ namespace RUINORERP.Model.Base.StatusManager
                 var currentStatus = GetActionStatus(entity);
 
                 // 直接使用StateTransitionRules验证转换
-                if (StateTransitionRules.IsTransitionAllowed(_transitionRules,typeof(ActionStatus), currentStatus, targetStatus))
+                if (StateTransitionRules.IsTransitionAllowed(_transitionRules, typeof(ActionStatus), currentStatus, targetStatus))
                 {
                     return StateTransitionResult.Success();
                 }
@@ -429,7 +454,7 @@ namespace RUINORERP.Model.Base.StatusManager
                 foreach (var status in allStatuses)
                 {
                     if (currentStatus is Enum currentEnumStatus && status is Enum enumStatus &&
-                        StateTransitionRules.IsTransitionAllowed(_transitionRules,typeof(DataStatus), currentEnumStatus, enumStatus))
+                        StateTransitionRules.IsTransitionAllowed(_transitionRules, typeof(DataStatus), currentEnumStatus, enumStatus))
                     {
                         availableStatuses.Add(status);
                     }
@@ -467,7 +492,7 @@ namespace RUINORERP.Model.Base.StatusManager
                 foreach (var status in allStatuses)
                 {
                     if (currentStatus is Enum currentEnumStatus && status is Enum enumStatus &&
-                        StateTransitionRules.IsTransitionAllowed(_transitionRules,typeof(T), currentEnumStatus, enumStatus))
+                        StateTransitionRules.IsTransitionAllowed(_transitionRules, typeof(T), currentEnumStatus, enumStatus))
                     {
                         availableStatuses.Add(status);
                     }
@@ -540,7 +565,7 @@ namespace RUINORERP.Model.Base.StatusManager
                 // 检查每个状态是否可以转换
                 foreach (var status in allStatuses)
                 {
-                    if (StateTransitionRules.IsTransitionAllowed(_transitionRules,typeof(ActionStatus), currentStatus, status))
+                    if (StateTransitionRules.IsTransitionAllowed(_transitionRules, typeof(ActionStatus), currentStatus, status))
                     {
                         availableStatuses.Add(status);
                     }
@@ -702,7 +727,7 @@ namespace RUINORERP.Model.Base.StatusManager
                 var context = new StatusTransitionContext(entity, typeof(DataStatus), currentStatus, this);
 
                 // 直接使用StateTransitionRules验证转换
-                if (StateTransitionRules.IsTransitionAllowed(_transitionRules,typeof(DataStatus), currentStatus, status))
+                if (StateTransitionRules.IsTransitionAllowed(_transitionRules, typeof(DataStatus), currentStatus, status))
                 {
                     // 更新实体状态
                     UpdateEntityStatus(entity, typeof(DataStatus), status);
@@ -858,7 +883,7 @@ namespace RUINORERP.Model.Base.StatusManager
                 var context = new StatusTransitionContext(entity, statusType, currentStatus, this);
 
                 // 直接使用StateTransitionRules验证转换
-                if (StateTransitionRules.IsTransitionAllowed(_transitionRules, statusType,currentStatus as Enum, status as Enum))
+                if (StateTransitionRules.IsTransitionAllowed(_transitionRules, statusType, currentStatus as Enum, status as Enum))
                 {
                     // 更新实体状态
                     UpdateEntityStatus(entity, statusType, status);

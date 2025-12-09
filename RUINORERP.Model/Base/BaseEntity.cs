@@ -1472,32 +1472,7 @@ namespace RUINORERP.Model
 
 
 
-        /// <summary>
-        /// 获取当前状态的描述信息
-        /// </summary>
-        /// <returns>状态描述</returns>
-        public virtual string GetCurrentStatusDescription()
-        {
-            try
-            {
-                var currentStatus = GetDataStatus();
-                var statusType = typeof(DataStatus);
-                var memberInfo = statusType.GetMember(currentStatus.ToString()).FirstOrDefault();
 
-                if (memberInfo != null)
-                {
-                    var descAttr = memberInfo.GetCustomAttribute<System.ComponentModel.DescriptionAttribute>();
-                    return descAttr?.Description ?? currentStatus.ToString();
-                }
-
-                return currentStatus.ToString();
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"获取状态描述失败: {ex.Message}");
-                return "未知状态";
-            }
-        }
 
         /// <summary>
         /// 获取实体的状态类型

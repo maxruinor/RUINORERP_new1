@@ -289,10 +289,12 @@ namespace RUINORERP.UI.BaseForm
                 if (EditEntity is BaseEntity baseEntity)
                 {
                     // 获取状态描述
-                    string statusDesc = baseEntity.GetCurrentStatusDescription();
-
+                    string statusDesc = string.Empty;
+                    // GetCurrentStatusDescription();
+                    var currentStatus = EditEntity.GetCurrentStatus();
+                    statusDesc = currentStatus.GetDescription();
                     // 更新状态标签（如果存在）
-                    var lblDataStatus = this.Controls.Find("lblDataStatus", true).FirstOrDefault() as Label;
+                    var lblDataStatus = this.Controls.Find("lblDataStatus", true).FirstOrDefault() as KryptonLabel;
                     if (lblDataStatus != null && !string.IsNullOrEmpty(statusDesc))
                     {
                         lblDataStatus.Text = statusDesc;
@@ -307,7 +309,7 @@ namespace RUINORERP.UI.BaseForm
                             var approvalStatus = EditEntity.GetPropertyValue(nameof(ApprovalStatus));
                             if (approvalStatus != null)
                             {
-                                var lblReview = this.Controls.Find("lblReview", true).FirstOrDefault() as Label;
+                                var lblReview = this.Controls.Find("lblReview", true).FirstOrDefault() as KryptonLabel;
                                 if (lblReview != null)
                                 {
                                     // 安全转换审核状态，如果转换失败则显示默认值
@@ -340,6 +342,32 @@ namespace RUINORERP.UI.BaseForm
         }
 
 
+        /// <summary>
+        /// 获取当前状态的描述信息
+        /// </summary>
+        /// <returns>状态描述</returns>
+        public virtual string GetCurrentStatusDescription()
+        {
+            try
+            {
+                var currentStatus = StateManager.GetDataStatus(EditEntity);
+                var statusType = typeof(DataStatus);
+                var memberInfo = statusType.GetMember(currentStatus.ToString()).FirstOrDefault();
+
+                if (memberInfo != null)
+                {
+                    var descAttr = memberInfo.GetCustomAttribute<System.ComponentModel.DescriptionAttribute>();
+                    return descAttr?.Description ?? currentStatus.ToString();
+                }
+
+                return currentStatus.ToString();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"获取状态描述失败: {ex.Message}");
+                return "未知状态";
+            }
+        }
 
         /// <summary>
         /// 更新基于权限的按钮可见性
@@ -1617,7 +1645,7 @@ namespace RUINORERP.UI.BaseForm
         public virtual void BindData(T entity, ActionStatus actionStatus = ActionStatus.无操作)
         {
             if (entity == null) return;
-
+            base.BindEntity(entity);
             // 移除旧的属性变化事件订阅
             if (EditEntity != null && EditEntity != entity)
             {
@@ -1630,16 +1658,11 @@ namespace RUINORERP.UI.BaseForm
             // 添加属性变化事件订阅
             EditEntity.PropertyChanged += Entity_PropertyChanged;
 
-
-
-            base.BindEntity(entity);
-
             #region 联查
 
             toolStripbtnRelatedQuery.DropDownItems.Clear();
             _ = Task.Run(async () => await LoadRelatedDataToDropDownItemsAsync());
             #endregion
-
 
             #region 单据联动
 
@@ -1647,10 +1670,6 @@ namespace RUINORERP.UI.BaseForm
             LoadConvertDocToDropDownItemsAsync();
 
             #endregion
-
-
- 
-
 
             #region 加载前，清空原来的锁定单据
             //单据被锁定时。显示锁定图标。并且提示无法操作？
@@ -1902,114 +1921,30 @@ namespace RUINORERP.UI.BaseForm
         {
             if (sender is not BaseEntity entity) return;
 
-            // 权限允许修改
-            bool hasEditPermission = true; // 这里可以根据实际权限逻辑修改
-            bool isDraftOrNew = entity.ContainsProperty("DataStatus") &&
-                              ((DataStatus)entity.GetPropertyValue("DataStatus") is DataStatus.草稿 or DataStatus.新建);
+            string dataStatusPropName = nameof(DataStatus);
+            bool HasDataStatus = entity.ContainsProperty(dataStatusPropName);
 
-            if (hasEditPermission && isDraftOrNew)
+            if (HasDataStatus && e.PropertyName == nameof(DataStatus))
             {
-                entity.ActionStatus = ActionStatus.修改;
-            }
-
-
-
-            if (e.PropertyName == nameof(DataStatus))
-            {
-                if (entity.ContainsProperty("DataStatus"))
-                {
-                    //todo
-
-                    #region 
-
-                    // 整合逻辑 - 直接获取业务状态
-                    var businessStatus = GetBusinessStatus(entity);
-
-
-                    //UpdateButtonStatesUsingUIRules(entity.GetDataStatus());
-
-                    // 使用统一的UI状态更新方法
-                    UpdateAllUIStates(entity);
-
-                    // 保存状态特殊处理
-                    toolStripButtonSave.Enabled = entity.HasChanged;
-
-                }
+                #region 
+                // 使用统一的UI状态更新方法
+                UpdateAllUIStates(entity);
+                // 保存状态特殊处理
+                toolStripButtonSave.Enabled = entity.HasChanged;
                 #endregion
             }
 
-
+            // 整合逻辑 - 直接获取业务状态
+            // var businessStatus = GetBusinessStatus(entity);
+            var businessStatus = StateManager.GetBusinessStatus(entity);
             // 数据状态变化会影响按钮变化
-            if (e.PropertyName == "DataStatus")
+            if (e.PropertyName == businessStatus.GetType().Name)
             {
-                if (entity.ContainsProperty("DataStatus"))
-                {
-                    //todo
+                #region 
 
-                    #region 
 
-                    // 整合逻辑 - 直接获取业务状态
-                    var businessStatus = GetBusinessStatus(entity);
 
-                    // 通用按钮状态 - 使用传统状态判断
-                    if (businessStatus != null)
-                    {
-                        bool isEditable = false;
-                        bool canSubmit = false;
-                        bool canReview = false;
-                        bool canReverseReview = false;
-                        bool canClose = false;
 
-                        switch (businessStatus)
-                        {
-                            case PrePaymentStatus pre:
-                                isEditable = pre == PrePaymentStatus.草稿;
-                                canSubmit = pre == PrePaymentStatus.草稿;
-                                canReview = pre == PrePaymentStatus.待审核;
-                                canReverseReview = pre == PrePaymentStatus.待核销 || pre == PrePaymentStatus.已生效;
-                                canClose = pre == PrePaymentStatus.待核销;
-                                break;
-                            case ARAPStatus arap:
-                                isEditable = arap == ARAPStatus.草稿;
-                                canSubmit = arap == ARAPStatus.草稿;
-                                canReview = arap == ARAPStatus.待审核;
-                                canReverseReview = arap == ARAPStatus.待支付;
-                                canClose = arap == ARAPStatus.待支付 || arap == ARAPStatus.部分支付;
-                                break;
-                            case PaymentStatus pay:
-                                isEditable = pay == PaymentStatus.草稿;
-                                canSubmit = pay == PaymentStatus.草稿;
-                                canReview = pay == PaymentStatus.待审核;
-                                canReverseReview = false;
-                                canClose = false;
-                                break;
-                            case StatementStatus statement:
-                                isEditable = statement == StatementStatus.草稿;
-                                canSubmit = statement == StatementStatus.草稿;
-                                canReview = statement == StatementStatus.已发送;
-                                canReverseReview = statement == StatementStatus.已确认;
-                                canClose = false;
-                                break;
-                            case DataStatus dataStatus:
-                                isEditable = dataStatus == DataStatus.草稿 || dataStatus == DataStatus.新建;
-                                canSubmit = dataStatus == DataStatus.草稿 || dataStatus == DataStatus.新建;
-                                canReview = dataStatus == DataStatus.新建;
-                                canReverseReview = dataStatus == DataStatus.确认;
-                                canClose = false;
-                                break;
-                        }
-
-                        // 使用统一的UI状态更新方法
-                        UpdateAllUIStates(entity);
-
-                        // 保存状态特殊处理
-                        toolStripButtonSave.Enabled = entity.HasChanged;
-
-                        // 反审按钮特殊处理
-                        toolStripBtnReverseReview.Visible = canReverseReview;
-
-                    }
-                }
                 #endregion
             }
         }

@@ -197,11 +197,8 @@ namespace RUINORERP.UI.BaseForm
                 UnbindEntity();
                 return;
             }
-
             BoundEntity = entity;
             InitializeStatusContext(entity);
-         
-            UpdateAllUIStates(entity);
         }
 
         /// <summary>

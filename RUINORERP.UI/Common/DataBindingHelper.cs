@@ -355,8 +355,8 @@ namespace RUINORERP.UI.Common
                                             // 重新加载数据
                                             BindingSource NewBsList = new BindingSource();
                                             // 使用静态缓存管理器方法获取实体列表
-                                            var rslist = EntityCacheHelper.GetEntityListByTableName(targetEntity.Name); 
-                                            
+                                            var rslist = EntityCacheHelper.GetEntityListByTableName(targetEntity.Name);
+
                                             if (rslist != null && queryFilter.FilterLimitExpressions.Count == 0)
                                             {
                                                 Type listType = rslist.GetType();
@@ -2261,7 +2261,8 @@ namespace RUINORERP.UI.Common
                         }
                         else
                         {
-                            args.Value = (int)args.Value;
+                            //枚举显示值不会通过控件来修改。所以这里不需要转换回去。
+                            //   args.Value = (int)args.Value;
                         }
                     };
 
@@ -2676,7 +2677,7 @@ namespace RUINORERP.UI.Common
             InitDataToCmb<T>(key, value, tableName, cmbBox);
         }
 
- 
+
 
         public static void InitDataToCmbByEnumDynamicGeneratedDataSource<T>(Type enumType, Expression<Func<T, int?>> expKey, KryptonComboBox cmbBox, bool addSelect)
         {

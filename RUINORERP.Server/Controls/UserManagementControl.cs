@@ -1621,48 +1621,6 @@ namespace RUINORERP.Server.Controls
             }
         }
 
-        private void HandlePushUpdate(List<UserInfo> users)
-        {
-            foreach (var user in users)
-            {
-                try
-                {
-                    // 使用新的SessionService获取会话信息
-                    var session = _sessionService.GetSession(user.SessionId);
-                    if (session != null)
-                    {
-                        // 发送更新推送命令 - 使用新的发送方法
-                        var messageData = new
-                        {
-                            Command = "PUSH_UPDATE"
-                        };
-
-                        var request = new MessageRequest(MessageType.Unknown, messageData);
-                        var success = _sessionService.SendCommandAsync(
-                            session.SessionID,
-                            MessageCommands.SendMessageToUser,
-                            request).Result; // 注意：这里使用.Result是为了保持原有的同步行为
-
-                        if (success)
-                        {
-                            frmMainNew.Instance.PrintInfoLog($"已向用户 {user.用户名} 发送更新推送命令");
-                        }
-                        else
-                        {
-                            frmMainNew.Instance.PrintErrorLog($"向用户 {user.用户名} 发送更新推送命令失败");
-                        }
-                    }
-                    else
-                    {
-                        frmMainNew.Instance.PrintErrorLog($"用户 {user.用户名} 的会话不存在");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    frmMainNew.Instance.PrintErrorLog($"向用户 {user.用户名} 发送更新推送命令失败: {ex.Message}");
-                }
-            }
-        }
 
         private void HandlePushUpdateSysConfig(List<UserInfo> users)
         {
@@ -1709,6 +1667,11 @@ namespace RUINORERP.Server.Controls
 
         private void tsbtn推送更新_Click(object sender, EventArgs e)
         {
+            PushVersionUpdate();
+        }
+
+        private void PushVersionUpdate()
+        {
             var selectedSessions = SelectSessions();
             if (selectedSessions.Count == 0)
             {
@@ -1747,7 +1710,6 @@ namespace RUINORERP.Server.Controls
                 }
             }
         }
-
         private void tsbtn推送系统配置_Click(object sender, EventArgs e)
         {
             var selectedSessions = SelectSessions();

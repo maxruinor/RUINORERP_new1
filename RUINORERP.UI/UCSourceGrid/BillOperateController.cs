@@ -210,35 +210,35 @@ namespace RUINORERP.UI.UCSourceGrid
 
                             break;
                         case CustomFormatType.WebPathImage:
-                            var model = sender.Cell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
+                                var model = sender.Cell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
                             SourceGrid.Cells.Models.ValueImageWeb valueImageWeb = (SourceGrid.Cells.Models.ValueImageWeb)model;
                             if (sender.Value != null && !string.IsNullOrEmpty(sender.Value.ToString()) && string.IsNullOrEmpty(valueImageWeb.CellImageHashName))
-                            {
-                                valueImageWeb.CellImageHashName = sender.Value.ToString();
-                                HttpWebService httpWebService = Startup.GetFromFac<HttpWebService>();
-                                try
                                 {
-                                    valueImageWeb.CellImageBytes = await httpWebService.DownloadImgFileAsync(valueImageWeb.GetNewRealfileName());
-                                }
-                                catch (Exception ex)
-                                {
-                                    MainForm.Instance.uclog.AddLog(ex.Message, Global.UILogType.错误);
-                                }
-                            }
-                            if (valueImageWeb.CellImageBytes != null && valueImageWeb.CellImageBytes.Length > 0)
-                            {
-                                CurrGridDefine.grid[sender.Position.Row, targetColumnIndex].Value = sender.Value;
-                                CurrGridDefine.grid[sender.Position.Row, targetColumnIndex].Tag = valueImageWeb.CellImageBytes;
-                                //刷新单元格图片显示外观
-                                CurrGridDefine.grid[sender.Position.Row, targetColumnIndex].View = new SourceGrid.Cells.Views.RemoteImageView(ImageProcessor.ByteArrayToImage(valueImageWeb.CellImageBytes));
-                                //if (CurrGridDefine.grid[sender.Position.Row, targetColumnIndex].View is SingleImageWeb imageWebview)
+                                //valueImageWeb.CellImageHashName = sender.Value.ToString();
+                                //HttpWebService httpWebService = Startup.GetFromFac<HttpWebService>();
+                                //try
                                 //{
-                                //    imageWebview.OnLoadImage -= ImageWebview_OnLoadImage;
-                                //    imageWebview.OnLoadImage += ImageWebview_OnLoadImage;
-                                //    CurrGridDefine.grid.GetCell(sender.Position).View.Refresh(sender);
+                                //    valueImageWeb.CellImageBytes = await httpWebService.DownloadImgFileAsync(valueImageWeb.GetNewRealfileName());
                                 //}
-                                ////CurrGridDefine.grid[sender.Position.Row, targetColumnIndex].View.Refresh(sender);
+                                //catch (Exception ex)
+                                //{
+                                //    MainForm.Instance.uclog.AddLog(ex.Message, Global.UILogType.错误);
+                                //}
                             }
+                            //if (valueImageWeb.CellImageBytes != null && valueImageWeb.CellImageBytes.Length > 0)
+                            //{
+                            //    CurrGridDefine.grid[sender.Position.Row, targetColumnIndex].Value = sender.Value;
+                            //    CurrGridDefine.grid[sender.Position.Row, targetColumnIndex].Tag = valueImageWeb.CellImageBytes;
+                            //    //刷新单元格图片显示外观
+                            //    CurrGridDefine.grid[sender.Position.Row, targetColumnIndex].View = new SourceGrid.Cells.Views.RemoteImageView(ImageProcessor.ByteArrayToImage(valueImageWeb.CellImageBytes));
+                            //    //if (CurrGridDefine.grid[sender.Position.Row, targetColumnIndex].View is SingleImageWeb imageWebview)
+                            //    //{
+                            //    //    imageWebview.OnLoadImage -= ImageWebview_OnLoadImage;
+                            //    //    imageWebview.OnLoadImage += ImageWebview_OnLoadImage;
+                            //    //    CurrGridDefine.grid.GetCell(sender.Position).View.Refresh(sender);
+                            //    //}
+                            //    ////CurrGridDefine.grid[sender.Position.Row, targetColumnIndex].View.Refresh(sender);
+                            //}
 
                             break;
                         case CustomFormatType.Image:

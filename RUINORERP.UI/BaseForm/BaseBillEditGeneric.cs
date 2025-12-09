@@ -2193,6 +2193,8 @@ namespace RUINORERP.UI.BaseForm
         {
             try
             {
+                // 暂停布局更新，减少闪烁
+                this.SuspendLayout();
                 // 创建一个排除控件名称的哈希集合，提高查找效率
                 var excludeSet = new HashSet<string>(excludeControlsName ?? Array.Empty<string>());
 
@@ -2229,12 +2231,85 @@ namespace RUINORERP.UI.BaseForm
                     toolStripButtonRefresh.Enabled = enabled;
                 if (toolStripbtnPrint != null)
                     toolStripbtnPrint.Enabled = enabled;
+
+                // 恢复布局更新
+                this.ResumeLayout();
             }
             catch (Exception ex)
             {
                 logger?.LogError(ex, "设置控件启用状态时发生异常: {ex.Message}", ex);
             }
         }
+
+
+        // 修改后的控件状态设置方法
+        private void SetControlsEnabled(bool enabled, List<string> excludeButtonNames = null)
+        {
+            try
+            {
+                // 暂停布局更新，减少闪烁
+                this.SuspendLayout();
+
+                // 获取当前实体状态
+                var isReadOnly = !enabled;
+
+                // 遍历所有控件
+                foreach (Control control in GetAllControls(this))
+                {
+                    // 跳过排除列表中的按钮
+                    if (excludeButtonNames != null && control is Button button && excludeButtonNames.Contains(button.Name))
+                        continue;
+
+                    // 根据控件类型设置状态
+                    SetControlStateByType(control, enabled, isReadOnly);
+                }
+
+                // 恢复布局更新
+                this.ResumeLayout();
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "设置控件状态时发生异常: {ex.Message}", ex);
+            }
+        }
+
+        // 根据控件类型设置状态
+        private void SetControlStateByType(Control control, bool enabled, bool isReadOnly)
+        {
+            switch (control)
+            {
+                case TextBox textBox:
+                    // 对于文本框，设置为只读而非禁用
+                    textBox.ReadOnly = isReadOnly;
+                    break;
+
+                case ComboBox comboBox:
+                    // 对于下拉框，设置为禁用
+                    comboBox.Enabled = enabled;
+                    break;
+
+                case DateTimePicker dateTimePicker:
+                    // 对于日期选择器，设置为禁用
+                    dateTimePicker.Enabled = enabled;
+                    break;
+
+                case System.Windows.Forms.CheckBox checkBox:
+                    // 对于复选框，设置为只读
+                    checkBox.Enabled = enabled;
+                    break;
+
+                case Button button:
+                    // 对于按钮，设置为启用/禁用
+                    button.Enabled = enabled;
+                    break;
+
+                default:
+                    // 其他控件，默认设置为启用/禁用
+                    control.Enabled = enabled;
+                    break;
+            }
+        }
+
 
         /// <summary>
         /// 检查锁定状态并更新UI（基于实体）
@@ -6545,7 +6620,7 @@ namespace RUINORERP.UI.BaseForm
 
         protected override void Exit(object thisform)
         {
-            if (EditEntity==null || !EditEntity.HasChanged)
+            if (EditEntity == null || !EditEntity.HasChanged)
             {
                 Edited = false;
             }

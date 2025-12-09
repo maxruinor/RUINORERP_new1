@@ -165,14 +165,8 @@ namespace RUINORERP.UI.BaseForm
 
             try
             {
-                // 设计模式检测逻辑已在基类中实现，这里只需调用基类方法
+                // 调用基类的初始化方法
                 base.InitializeStateManagement();
-
-                // 只有在基类初始化失败且ApplicationContext不为null时，才尝试从应用上下文获取
-                if (this.StateManager == null && RUINORERP.Model.Context.ApplicationContext.Current != null)
-                {
-                    this.StateManager = RUINORERP.Model.Context.ApplicationContext.Current.GetRequiredService<IUnifiedStateManager>();
-                }
 
                 // 注册状态变更事件处理程序，确保不重复订阅
                 this.StatusChanged -= HandleStatusChangedEvent;
@@ -581,39 +575,23 @@ namespace RUINORERP.UI.BaseForm
                 // 确保状态上下文被正确初始化
                 EnsureStatusContext(entity);
 
-                // 统一使用状态管理器获取当前状态
-                DataStatus currentStatus;
-                if (StateManager != null)
-                {
-                    currentStatus = StateManager.GetDataStatus(entity);
-                }
-                else if (StatusContext?.CurrentStatus is DataStatus status)
-                {
-                    currentStatus = status;
-                }
-                else
-                {
-                    // 回退方案：直接从实体获取状态
-                    currentStatus = entity.GetDataStatus();
-                }
+                // 使用状态管理器获取当前状态，优先使用StateManage
+                DataStatus currentStatus = GetEntityCurrentStatus(entity);
 
-                // 统一更新所有按钮状态
+                // 1. 统一更新所有按钮状态 - 这是最重要的，控制用户操作权限
                 UpdateAllButtonStates(currentStatus);
 
-                // 更新UI控件状态
+                // 2. 更新UI控件状态 - 控制界面元素的可用性
                 UpdateUIControlsByState(currentStatus);
 
-                // 更新状态显示
+                // 3. 更新状态显示 - 提供视觉反馈
                 UpdateStateDisplay();
 
-                // 更新打印状态显示
+                // 4. 更新打印状态显示 - 特殊业务逻辑
                 UpdatePrintStatusDisplay(entity);
 
-                // 如果有状态管理器，更新基于权限的按钮可见性
-                if (StateManager != null)
-                {
-                    UpdatePermissionBasedButtonVisibility();
-                }
+                // 5. 更新子表操作权限 - 关联数据操作
+                UpdateChildTableOperations(currentStatus);
             }
             catch (Exception ex)
             {
@@ -622,6 +600,37 @@ namespace RUINORERP.UI.BaseForm
             finally
             {
                 _isUpdatingUIStates = false;
+            }
+        }
+
+        /// <summary>
+        /// 获取实体当前状态
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        /// <returns>当前数据状态</returns>
+        private DataStatus GetEntityCurrentStatus(BaseEntity entity)
+        {
+            try
+            {
+                // 优先使用状态管理器
+                if (StateManager != null)
+                {
+                    return StateManager.GetDataStatus(entity);
+                }
+                
+                // 回退到状态上下文
+                if (StatusContext?.CurrentStatus is DataStatus status)
+                {
+                    return status;
+                }
+                
+                // 最后回退到实体自身
+                return entity.GetDataStatus();
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "获取实体当前状态失败，使用默认状态");
+                return DataStatus.草稿; // 默认状态
             }
         }
 
@@ -640,62 +649,9 @@ namespace RUINORERP.UI.BaseForm
                 // 确保状态上下文被正确初始化
                 EnsureStatusContext(entity);
 
-                // 优先使用UIControlRules获取按钮状态
-                try
-                {
-                    var buttonRules = UIControlRules.GetButtonRules(currentStatus);
-                    
-                    // 更新按钮状态
-                    UpdateButtonStatesFromRules(buttonRules);
-                }
-                catch (Exception ex)
-                {
-                    logger?.LogError(ex, "使用UIControlRules更新按钮状态失败，回退到状态管理系统");
-                    
-                    // 回退方案：使用V4状态管理系统获取按钮状态
-                    if (StateManager != null)
-                    {
-                        // 获取当前实体的状态类型和状态值
-                        var statusType = entity.GetStatusType();
-                        var status = entity.GetCurrentStatus();
-
-                        // 检查各种操作的可执行性
-                        bool canModify = _stateManager.CanExecuteAction(MenuItemEnums.修改, EditEntity, statusType, status);
-                        bool canSave = _stateManager.CanExecuteAction(MenuItemEnums.保存, EditEntity, statusType, status);
-                        bool canSubmit = _stateManager.CanExecuteAction(MenuItemEnums.提交, EditEntity, statusType, status);
-                        bool canReview = _stateManager.CanExecuteAction(MenuItemEnums.审核, EditEntity, statusType, status);
-                        bool canReverseReview = _stateManager.CanExecuteAction(MenuItemEnums.反审, EditEntity, statusType, status);
-                        bool canCloseCase = _stateManager.CanExecuteAction(MenuItemEnums.结案, EditEntity, statusType, status);
-                        bool canDelete = _stateManager.CanExecuteAction(MenuItemEnums.删除, EditEntity, statusType, status);
-
-                        // 统一更新按钮状态
-                        toolStripbtnModify.Enabled = canModify;
-                        toolStripButtonSave.Enabled = canSave;
-                        toolStripbtnSubmit.Enabled = canSubmit;
-                        toolStripbtnReview.Enabled = canReview;
-                        toolStripBtnReverseReview.Enabled = canReverseReview;
-                        toolStripButtonCaseClosed.Enabled = canCloseCase;
-                        toolStripButtonCaseClosed.Visible = canCloseCase; // 结案按钮的可见性与可用状态一致
-                        toolStripbtnDelete.Enabled = canDelete;
-                    }
-                    else
-                    {
-                        // 如果状态管理系统不可用，至少确保按钮状态一致
-                        logger?.LogWarning("状态管理系统不可用，无法正确更新按钮状态");
-                        // 禁用所有按钮，避免因状态判断不一致导致的错误操作
-                        toolStripbtnModify.Enabled = false;
-                        toolStripButtonSave.Enabled = false;
-                        toolStripbtnSubmit.Enabled = false;
-                        toolStripbtnReview.Enabled = false;
-                        toolStripBtnReverseReview.Enabled = false;
-                        toolStripButtonCaseClosed.Enabled = false;
-                        toolStripButtonCaseClosed.Visible = false;
-                        toolStripbtnDelete.Enabled = false;
-                    }
-                }
-
-                // 统一控制反审核按钮的可见性
-                toolStripBtnReverseReview.Visible = toolStripBtnReverseReview.Enabled;
+                // 直接使用UIControlRules获取按钮状态并更新
+                // 这样可以避免重复实现状态检查逻辑
+                UpdateButtonStatesUsingUIRules(currentStatus);
 
                 // 通知子类可以进行额外的按钮状态调整
                 OnAfterUpdateButtonStates(currentStatus);
@@ -703,6 +659,74 @@ namespace RUINORERP.UI.BaseForm
             catch (Exception ex)
             {
                 logger?.LogError(ex, "更新按钮状态失败: {Message}", ex.Message);
+                
+                // 发生异常时，记录日志并禁用所有按钮，避免错误操作
+                DisableAllButtons();
+            }
+        }
+
+        /// <summary>
+        /// 使用UIControlRules更新按钮状态
+        /// </summary>
+        /// <param name="currentStatus">当前数据状态</param>
+        private void UpdateButtonStatesUsingUIRules(DataStatus currentStatus)
+        {
+            // 获取按钮状态规则
+            var buttonRules = UIControlRules.GetButtonRules(currentStatus);
+            
+            // 更新按钮状态
+            UpdateButtonStatesFromRules(buttonRules);
+            
+            // 对于业务状态按钮，需要额外处理
+            UpdateBusinessStateButtons(EditEntity);
+        }
+
+        /// <summary>
+        /// 更新业务状态按钮
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        private void UpdateBusinessStateButtons(BaseEntity entity)
+        {
+            if (entity == null || StateManager == null) return;
+
+            try
+            {
+                // 获取实体的状态类型和当前状态
+                var statusType = entity.GetStatusType();
+                var status = entity.GetCurrentStatus();
+
+                // 如果不是DataStatus，则需要获取对应的业务状态按钮规则
+                if (statusType != typeof(DataStatus))
+                {
+                    var businessButtonRules = UIControlRules.GetButtonRules(statusType, status);
+                    UpdateButtonStatesFromRules(businessButtonRules);
+                }
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "更新业务状态按钮失败: {Message}", ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// 禁用所有按钮
+        /// </summary>
+        private void DisableAllButtons()
+        {
+            try
+            {
+                toolStripbtnModify.Enabled = false;
+                toolStripButtonSave.Enabled = false;
+                toolStripbtnSubmit.Enabled = false;
+                toolStripbtnReview.Enabled = false;
+                toolStripBtnReverseReview.Enabled = false;
+                toolStripButtonCaseClosed.Enabled = false;
+                toolStripButtonCaseClosed.Visible = false;
+                toolStripbtnDelete.Enabled = false;
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "禁用按钮失败: {Message}", ex.Message);
             }
         }
 
@@ -714,71 +738,55 @@ namespace RUINORERP.UI.BaseForm
         {
             if (buttonRules == null || buttonRules.Count == 0) return;
 
-            // 更新常见按钮状态
+            // 更新按钮状态
             foreach (var rule in buttonRules)
             {
                 var buttonName = rule.Key;
                 var enabled = rule.Value.Enabled;
                 var visible = rule.Value.Visible;
 
-                switch (buttonName)
+                UpdateButtonState(buttonName, enabled, visible);
+            }
+        }
+
+        /// <summary>
+        /// 更新单个按钮的状态
+        /// </summary>
+        /// <param name="buttonName">按钮名称</param>
+        /// <param name="enabled">是否启用</param>
+        /// <param name="visible">是否可见</param>
+        private void UpdateButtonState(string buttonName, bool enabled, bool visible)
+        {
+            try
+            {
+                // 使用反射获取按钮控件并更新状态
+                var buttonField = this.GetType().GetField(buttonName, 
+                    BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
+                
+                if (buttonField != null)
                 {
-                    case "toolStripbtnAdd":
-                        // 新增按钮通常不在编辑窗体中
-                        break;
-                    case "toolStripbtnModify":
-                        if (toolStripbtnModify != null)
+                    var button = buttonField.GetValue(this);
+                    if (button != null)
+                    {
+                        // 设置Enabled属性
+                        var enabledProperty = button.GetType().GetProperty("Enabled");
+                        enabledProperty?.SetValue(button, enabled);
+
+                        // 设置Visible属性
+                        var visibleProperty = button.GetType().GetProperty("Visible");
+                        visibleProperty?.SetValue(button, visible);
+
+                        // 特殊处理：反审核按钮的可见性与可用状态一致
+                        if (buttonName == "toolStripBtnReverseReview")
                         {
-                            toolStripbtnModify.Enabled = enabled;
-                            toolStripbtnModify.Visible = visible;
+                            visibleProperty?.SetValue(button, enabled);
                         }
-                        break;
-                    case "toolStripButtonSave":
-                        if (toolStripButtonSave != null)
-                        {
-                            toolStripButtonSave.Enabled = enabled;
-                            toolStripButtonSave.Visible = visible;
-                        }
-                        break;
-                    case "toolStripbtnDelete":
-                        if (toolStripbtnDelete != null)
-                        {
-                            toolStripbtnDelete.Enabled = enabled;
-                            toolStripbtnDelete.Visible = visible;
-                        }
-                        break;
-                    case "toolStripbtnSubmit":
-                        if (toolStripbtnSubmit != null)
-                        {
-                            toolStripbtnSubmit.Enabled = enabled;
-                            toolStripbtnSubmit.Visible = visible;
-                        }
-                        break;
-                    case "toolStripbtnReview":
-                        if (toolStripbtnReview != null)
-                        {
-                            toolStripbtnReview.Enabled = enabled;
-                            toolStripbtnReview.Visible = visible;
-                        }
-                        break;
-                    case "toolStripBtnReverseReview":
-                        if (toolStripBtnReverseReview != null)
-                        {
-                            toolStripBtnReverseReview.Enabled = enabled;
-                            toolStripBtnReverseReview.Visible = visible;
-                        }
-                        break;
-                    case "toolStripButtonCaseClosed":
-                        if (toolStripButtonCaseClosed != null)
-                        {
-                            toolStripButtonCaseClosed.Enabled = enabled;
-                            toolStripButtonCaseClosed.Visible = visible;
-                        }
-                        break;
-                    case "toolStripButtonPrint":
-                        // 打印按钮通常不在编辑窗体中
-                        break;
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "更新按钮状态失败: {ButtonName}", buttonName);
             }
         }
 
@@ -789,6 +797,34 @@ namespace RUINORERP.UI.BaseForm
         protected virtual void OnAfterUpdateButtonStates(DataStatus currentStatus)
         {
             // 虚方法，子类可以重写以添加额外的按钮状态调整逻辑
+        }
+
+        /// <summary>
+        /// 获取按钮控件
+        /// </summary>
+        /// <param name="buttonName">按钮名称</param>
+        /// <returns>按钮控件</returns>
+        protected virtual Control GetButtonControl(string buttonName)
+        {
+            try
+            {
+                // 首先尝试从字段获取
+                var buttonField = this.GetType().GetField(buttonName, 
+                    BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
+                
+                if (buttonField != null)
+                {
+                    return buttonField.GetValue(this) as Control;
+                }
+                
+                // 如果字段获取失败，尝试从Controls集合获取
+                return this.Controls.Find(buttonName, true).FirstOrDefault();
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "获取按钮控件失败: {ButtonName}", buttonName);
+                return null;
+            }
         }
 
         /// <summary>
@@ -930,7 +966,7 @@ namespace RUINORERP.UI.BaseForm
 
 
         /// <summary>
-        /// 检查操作可执行性 - 使用新的状态管理系统
+        /// 检查操作可执行性 - 使用UIControlRules统一管理
         /// </summary>
         /// <param name="action">操作类型</param>
         /// <param name="entity">实体对象</param>
@@ -942,82 +978,115 @@ namespace RUINORERP.UI.BaseForm
 
             try
             {
+                // 获取实体的当前状态
+                var currentStatus = GetEntityCurrentStatus(entity);
+                
+                // 将操作转换为按钮名称
+                var buttonName = ConvertActionToButtonName(action);
+                if (string.IsNullOrEmpty(buttonName))
+                {
+                    // 如果无法转换，使用状态管理器检查
+                    return CheckActionWithStateManager(action, entity);
+                }
+                
+                // 使用UIControlRules检查按钮状态
+                var buttonRules = UIControlRules.GetButtonRules(currentStatus);
+                if (buttonRules.TryGetValue(buttonName, out var buttonState))
+                {
+                    return buttonState.Enabled;
+                }
+                
+                // 如果UIControlRules中没有相关规则，回退到状态管理器
+                return CheckActionWithStateManager(action, entity);
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "检查操作可执行性失败: {Action}, {Error}", action, ex.Message);
+                return false; // 出错时默认不允许操作
+            }
+        }
+
+        /// <summary>
+        /// 将操作转换为按钮名称 - 统一的转换方法
+        /// </summary>
+        /// <param name="action">操作类型</param>
+        /// <returns>按钮名称</returns>
+        public static string ConvertActionToButtonName(MenuItemEnums action)
+        {
+            return action switch
+            {
+                MenuItemEnums.新增 => "toolStripbtnAdd",
+                MenuItemEnums.修改 => "toolStripbtnModify",
+                MenuItemEnums.保存 => "toolStripButtonSave",
+                MenuItemEnums.删除 => "toolStripbtnDelete",
+                MenuItemEnums.提交 => "toolStripbtnSubmit",
+                MenuItemEnums.审核 => "toolStripbtnReview",
+                MenuItemEnums.反审 => "toolStripBtnReverseReview",
+                MenuItemEnums.结案 => "toolStripButtonCaseClosed",
+                MenuItemEnums.反结案 => "toolStripButtonAntiClosed",
+                MenuItemEnums.打印 => "toolStripbtnPrint",
+                MenuItemEnums.导出 => "toolStripButtonExport",
+                _ => string.Empty
+            };
+        }
+
+        /// <summary>
+        /// 将按钮名称转换为操作类型
+        /// </summary>
+        /// <param name="buttonName">按钮名称</param>
+        /// <returns>操作类型</returns>
+        public static MenuItemEnums? ConvertButtonNameToAction(string buttonName)
+        {
+            return buttonName switch
+            {
+                "toolStripbtnAdd" => MenuItemEnums.新增,
+                "toolStripbtnModify" => MenuItemEnums.修改,
+                "toolStripButtonSave" => MenuItemEnums.保存,
+                "toolStripbtnDelete" => MenuItemEnums.删除,
+                "toolStripbtnSubmit" => MenuItemEnums.提交,
+                "toolStripbtnReview" => MenuItemEnums.审核,
+                "toolStripBtnReverseReview" => MenuItemEnums.反审,
+                "toolStripButtonCaseClosed" => MenuItemEnums.结案,
+                "toolStripButtonAntiClosed" => MenuItemEnums.反结案,
+                "toolStripbtnPrint" => MenuItemEnums.打印,
+                "toolStripButtonExport" => MenuItemEnums.导出,
+                _ => null
+            };
+        }
+
+        /// <summary>
+        /// 使用状态管理器检查操作权限
+        /// </summary>
+        /// <param name="action">操作类型</param>
+        /// <param name="entity">实体对象</param>
+        /// <returns>是否可执行</returns>
+        private bool CheckActionWithStateManager(MenuItemEnums action, T entity)
+        {
+            try
+            {
                 // 确保状态上下文被正确初始化
                 EnsureStatusContext(entity);
 
                 if (StatusContext == null)
                     return false;
 
-                // 使用新的状态管理系统检查操作权限
+                // 使用状态管理器检查操作权限
                 if (StateManager != null)
                 {
                     // 获取当前实体的状态类型和状态值
                     var statusType = entity.GetStatusType();
                     var status = entity.GetCurrentStatus();
 
-                    // action参数已经是MenuItemEnums类型，可以直接使用
+                    // 使用状态管理器检查操作权限
                     return _stateManager.CanExecuteAction(action, EditEntity, statusType, status);
                 }
 
-                // 如果UIController不可用，回退到原始逻辑
-                return CanExecuteActionFallback(action, entity);
+                return false;
             }
             catch (Exception ex)
             {
-                // 如果状态管理系统出错，回退到原始逻辑
-                System.Diagnostics.Debug.WriteLine($"使用状态管理系统检查操作权限失败: {ex.Message}");
-                return CanExecuteActionFallback(action, entity);
-            }
-        }
-
-        /// <summary>
-        /// 回退的操作可执行性检查方法（原始逻辑）
-        /// </summary>
-        /// <param name="action">操作类型</param>
-        /// <param name="entity">实体对象</param>
-        /// <returns>是否可执行</returns>
-        private bool CanExecuteActionFallback(MenuItemEnums action, T entity)
-        {
-            // 获取当前状态
-            var currentStatus = StatusContext?.CurrentStatus;
-
-            // 根据操作类型和状态判断是否可执行
-            switch (action)
-            {
-                case MenuItemEnums.新增:
-                    return true; // 新增操作总是允许
-
-                case MenuItemEnums.修改:
-                    return StateManager != null ?
-                        _stateManager.CanExecuteAction(action, EditEntity, entity.GetStatusType(), entity.GetCurrentStatus()) : false;
-
-                case MenuItemEnums.保存:
-                    return StateManager != null ?
-                       _stateManager.CanExecuteAction(action, EditEntity, entity.GetStatusType(), entity.GetCurrentStatus()) : false;
-                case MenuItemEnums.删除:
-                    return StateManager != null ?
-                        _stateManager.CanExecuteAction(action, EditEntity, entity.GetStatusType(), entity.GetCurrentStatus()) : false;
-                case MenuItemEnums.提交:
-                    return StateManager != null ?
-                        _stateManager.CanExecuteAction(action, EditEntity, entity.GetStatusType(), entity.GetCurrentStatus()) : false;
-
-                case MenuItemEnums.审核:
-                    return StateManager != null ?
-                       _stateManager.CanExecuteAction(action, EditEntity, entity.GetStatusType(), entity.GetCurrentStatus()) : false;
-
-                case MenuItemEnums.反审:
-                    return StateManager != null ?
-                      _stateManager.CanExecuteAction(action, EditEntity, entity.GetStatusType(), entity.GetCurrentStatus()) : false;
-                case MenuItemEnums.结案:
-                    // 检查结案操作是否可用
-                    return StateManager != null ?
-                      _stateManager.CanExecuteAction(action, EditEntity, entity.GetStatusType(), entity.GetCurrentStatus()) : false;
-
-                case MenuItemEnums.反结案:
-                    return CanAntiCloseCaseStatus(currentStatus);
-
-                default:
-                    return true; // 默认允许其他操作
+                logger?.LogError(ex, "使用状态管理器检查操作权限失败: {Action}, {Error}", action, ex.Message);
+                return false;
             }
         }
 
@@ -1092,7 +1161,7 @@ namespace RUINORERP.UI.BaseForm
 
 
         /// <summary>
-        /// 根据状态更新子表操作 - 使用V4状态管理系统
+        /// 根据状态更新子表操作 - 使用UIControlRules统一管理
         /// </summary>
         /// <param name="status">当前数据状态</param>
         protected virtual void UpdateChildTableOperations(DataStatus status)
@@ -1105,28 +1174,16 @@ namespace RUINORERP.UI.BaseForm
                 // 确保状态上下文被正确初始化
                 EnsureStatusContext(entity);
 
-                bool canAdd = false, canEdit = false, canDelete = false;
-
-                // 使用V4状态管理系统获取可执行的操作
-                if (StateManager != null && entity is BaseEntity baseEntity)
-                {
-                    // 获取当前实体的状态类型和状态值
-                    var statusType = baseEntity.GetStatusType();
-                    var currentStatus = baseEntity.GetCurrentStatus();
-
-                    // 获取当前状态下可执行的操作
-                    var availableActions = _stateManager.GetAvailableActions(EditEntity, statusType, currentStatus);
-
-                    // 检查是否允许子表操作
-                    canAdd = availableActions.Any(a => a.ToString().Contains("新增") || a.ToString().Contains("Add"));
-                    canEdit = availableActions.Any(a => a.ToString().Contains("修改") || a.ToString().Contains("Edit"));
-                    canDelete = availableActions.Any(a => a.ToString().Contains("删除") || a.ToString().Contains("Delete"));
-                }
-                else
-                {
-                    // 如果状态管理系统不可用，记录警告
-                    logger?.LogWarning("状态管理系统不可用，子表操作权限设置为默认值(不可用)");
-                }
+                // 使用UIControlRules获取子表操作权限
+                bool canAdd, canEdit, canDelete;
+                
+                // 从UIControlRules中获取按钮状态
+                var buttonRules = UIControlRules.GetButtonRules(status);
+                
+                // 检查是否允许子表操作
+                canAdd = buttonRules.TryGetValue("toolStripbtnAdd", out var addState) && addState.Enabled;
+                canEdit = buttonRules.TryGetValue("toolStripbtnModify", out var editState) && editState.Enabled;
+                canDelete = buttonRules.TryGetValue("toolStripbtnDelete", out var deleteState) && deleteState.Enabled;
 
                 // 启用/禁用子表操作
                 EnableChildTableOperations(canAdd, canEdit, canDelete);
@@ -1137,6 +1194,9 @@ namespace RUINORERP.UI.BaseForm
             catch (Exception ex)
             {
                 logger?.LogError(ex, "更新子表操作权限失败: {ex.Message}", ex);
+                
+                // 出错时默认禁用子表操作
+                EnableChildTableOperations(false, false, false);
             }
         }
 

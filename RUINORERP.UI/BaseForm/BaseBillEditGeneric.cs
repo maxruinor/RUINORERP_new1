@@ -1872,9 +1872,7 @@ namespace RUINORERP.UI.BaseForm
                 // 应用状态特定的UI规则
                 ApplyStateSpecificRules(baseEntity);
 
-                // 注册状态变更事件处理
-                RegisterStateChangeHandlers(baseEntity);
-
+              
                 // 记录加载状态日志
                 //    LogStateLoading(baseEntity);
             }
@@ -1943,16 +1941,6 @@ namespace RUINORERP.UI.BaseForm
             //    // 终态下的特殊处理
             //    // 例如：完全禁用编辑功能
             //}
-        }
-
-        /// <summary>
-        /// 注册状态变更事件处理
-        /// </summary>
-        /// <param name="entity">实体对象</param>
-        protected virtual void RegisterStateChangeHandlers(BaseEntity entity)
-        {
-            // 注意：需要确保实体支持状态变更事件通知
-            // 这里可以添加额外的事件注册逻辑
         }
 
 
@@ -2549,10 +2537,7 @@ namespace RUINORERP.UI.BaseForm
 
                     // 设置新状态值
                     ReflectionHelper.SetPropertyValue(entity, propertyName, (int)(object)status);
-
-                    // 清除状态缓存，确保下次获取最新状态
-                    ClearBusinessStatusCache(entity);
-
+ 
                     // 触发状态变更后的回调
                     await OnAfterStatusChangedAsync(status).ConfigureAwait(false);
 
@@ -2573,15 +2558,7 @@ namespace RUINORERP.UI.BaseForm
             }
         }
  
-
-        /// <summary>
-        /// 从实体中获取业务状态枚举值
-        /// 支持多种业务状态类型，会按优先级顺序进行检查
-        /// </summary>
-        /// <param name="entity">单据实体对象</param>
-        /// <returns>找到的业务状态枚举值，如果未找到则返回null</returns>
-        /// <summary>业务状态缓存字典，用于提升性能</summary>
-        private Dictionary<string, Enum> _businessStatusCache = new Dictionary<string, Enum>();
+ 
 
         /// <summary>
         /// 从实体中获取业务状态枚举值 - 同步版本（已优化，添加缓存）
@@ -2597,18 +2574,7 @@ namespace RUINORERP.UI.BaseForm
                 logger?.LogDebug("尝试从空实体获取业务状态，返回null");
                 return null;
             }
-
-            // 生成缓存键：实体类型名_实体ID
-            string cacheKey = $"{entity.GetType().Name}_{entity.PrimaryKeyID}";
-
-            // 检查缓存中是否已有结果
-            if (_businessStatusCache.TryGetValue(cacheKey, out Enum cachedStatus))
-            {
-                logger?.LogTrace("使用缓存的业务状态: {EntityType} = {CachedStatus}",
-                    entity.GetType().Name, cachedStatus?.ToString() ?? "null");
-                return cachedStatus;
-            }
-
+            
             Enum result = null;
             try
             {
@@ -2662,13 +2628,6 @@ namespace RUINORERP.UI.BaseForm
             {
                 logger?.LogError(ex, "获取业务状态时发生异常: {Message}", ex.Message);
             }
-            finally
-            {
-                // 将结果存入缓存
-                _businessStatusCache[cacheKey] = result;
-                logger?.LogTrace("更新业务状态缓存: {CacheKey} = {Status}",
-                    cacheKey, result?.ToString() ?? "null");
-            }
 
             return result;
         }
@@ -2687,32 +2646,9 @@ namespace RUINORERP.UI.BaseForm
             return await Task.Run(() => GetBusinessStatus(entity)).ConfigureAwait(false);
         }
 
-        /// <summary>
-        /// 清除特定实体的业务状态缓存
-        /// 应在实体状态发生变更后调用此方法
-        /// </summary>
-        /// <param name="entity">需要清除缓存的实体对象</param>
-        private void ClearBusinessStatusCache(BaseEntity entity)
-        {
-            if (entity == null || _businessStatusCache == null)
-                return;
+      
 
-            string cacheKey = $"{entity.GetType().Name}_{entity.PrimaryKeyID}";
-            if (_businessStatusCache.Remove(cacheKey))
-            {
-                logger?.LogTrace("清除业务状态缓存: {CacheKey}", cacheKey);
-            }
-        }
-
-        /// <summary>
-        /// 清除所有业务状态缓存
-        /// 适用于批量操作或实体大量变更的场景
-        /// </summary>
-        private void ClearAllBusinessStatusCache()
-        {
-            _businessStatusCache?.Clear();
-            logger?.LogDebug("清除所有业务状态缓存");
-        }
+ 
 
         /// <summary>
         /// 获取业务状态并更新UI状态

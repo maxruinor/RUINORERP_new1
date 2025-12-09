@@ -1369,27 +1369,27 @@ namespace RUINORERP.Model.Base.StatusManager
             switch (action)
             {
                 case MenuItemEnums.新增:
-                    return "btnAdd";
+                    return "toolStripbtnAdd";
                 case MenuItemEnums.修改:
-                    return "btnModify";
+                    return "toolStripbtnModify";
                 case MenuItemEnums.保存:
-                    return "btnSave";
+                    return "toolStripButtonSave";
                 case MenuItemEnums.删除:
-                    return "btnDelete";
+                    return "toolStripbtnDelete";
                 case MenuItemEnums.提交:
-                    return "btnSubmit";
+                    return "toolStripbtnSubmit";
                 case MenuItemEnums.审核:
-                    return "btnApprove";
+                    return "toolStripbtnReview";
                 case MenuItemEnums.反审:
-                    return "btnReverseApprove";
+                    return "toolStripBtnReverseReview";
                 case MenuItemEnums.结案:
-                    return "btnClose";
+                    return "toolStripButtonCaseClosed";
                 case MenuItemEnums.反结案:
-                    return "btnAntiClose";
+                    return "toolStripButtonAntiClosed";
                 case MenuItemEnums.打印:
-                    return "btnPrint";
+                    return "toolStripbtnPrint";
                 case MenuItemEnums.导出:
-                    return "btnExport";
+                    return "toolStripButtonExport";
                 default:
                     return string.Empty;
             }
@@ -1458,27 +1458,27 @@ namespace RUINORERP.Model.Base.StatusManager
         {
             switch (buttonName)
             {
-                case "btnAdd":
+                case "toolStripbtnAdd":
                     return MenuItemEnums.新增;
-                case "btnModify":
+                case "toolStripbtnModify":
                     return MenuItemEnums.修改;
-                case "btnSave":
+                case "toolStripButtonSave":
                     return MenuItemEnums.保存;
-                case "btnDelete":
+                case "toolStripbtnDelete":
                     return MenuItemEnums.删除;
-                case "btnSubmit":
+                case "toolStripbtnSubmit":
                     return MenuItemEnums.提交;
-                case "btnApprove":
+                case "toolStripbtnReview":
                     return MenuItemEnums.审核;
-                case "btnReverseApprove":
+                case "toolStripBtnReverseReview":
                     return MenuItemEnums.反审;
-                case "btnClose":
+                case "toolStripButtonCaseClosed":
                     return MenuItemEnums.结案;
-                case "btnAntiClose":
+                case "toolStripButtonAntiClosed":
                     return MenuItemEnums.反结案;
-                case "btnPrint":
+                case "toolStripbtnPrint":
                     return MenuItemEnums.打印;
-                case "btnExport":
+                case "toolStripButtonExport":
                     return MenuItemEnums.导出;
                 default:
                     return null;

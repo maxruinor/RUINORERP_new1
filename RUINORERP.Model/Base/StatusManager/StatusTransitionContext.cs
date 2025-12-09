@@ -218,7 +218,7 @@ namespace RUINORERP.Model.Base.StatusManager
         }
 
         /// <summary>
-        /// 转换到指定状态
+        /// 执行状态转换
         /// </summary>
         /// <param name="targetStatus">目标状态</param>
         /// <param name="reason">转换原因</param>
@@ -227,29 +227,31 @@ namespace RUINORERP.Model.Base.StatusManager
         {
             try
             {
-                // 验证状态转换是否允许
-                bool isAllowed = false;
+                if (targetStatus == null)
+                    return StateTransitionResult.Failure("目标状态不能为空");
+
+                if (StatusType == null)
+                    return StateTransitionResult.Failure("状态类型未设置");
+
+                // 检查状态类型是否匹配
+                if (targetStatus.GetType() != StatusType)
+                    return StateTransitionResult.Failure($"目标状态类型 {targetStatus.GetType().Name} 与当前状态类型 {StatusType.Name} 不匹配");
+
+                // 使用状态管理器验证状态转换是否允许
+                StateTransitionResult result = null;
+                
                 if (StatusType == typeof(DataStatus))
                 {
-                    isAllowed = StateTransitionRules.IsTransitionAllowed((DataStatus)CurrentStatus, (DataStatus)targetStatus);
+                    result = await _statusManager.ValidateDataStatusTransitionAsync(Entity, (DataStatus)targetStatus);
                 }
                 else if (StatusType == typeof(ActionStatus))
                 {
-                    isAllowed = StateTransitionRules.IsTransitionAllowed((ActionStatus)CurrentStatus, (ActionStatus)targetStatus);
+                    result = await _statusManager.ValidateActionStatusTransitionAsync(Entity, (ActionStatus)targetStatus);
                 }
                 else
                 {
-                    return StateTransitionResult.Failure("不支持的状态类型");
-                }
-
-                StateTransitionResult result;
-                if (isAllowed)
-                {
-                    result = StateTransitionResult.Success($"状态转换成功：从 {CurrentStatus} 转换到 {targetStatus}");
-                }
-                else
-                {
-                    result = StateTransitionResult.Failure($"状态转换失败：从 {CurrentStatus} 无法转换到 {targetStatus}");
+                    // 对于其他业务状态类型，使用非泛型方法
+                    result = await _statusManager.ValidateBusinessStatusTransitionAsync(Entity, StatusType, targetStatus);
                 }
 
                 if (result.IsSuccess)
@@ -277,18 +279,19 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <returns>可转换状态列表</returns>
         public IEnumerable<object> GetAvailableTransitions()
         {
-            // 根据状态类型调用适当的泛型方法
+            // 根据状态类型调用状态管理器提供的相应方法
             if (StatusType == typeof(DataStatus))
             {
-                return StateTransitionRules.GetAvailableTransitions((DataStatus)CurrentStatus).Cast<object>();
+                return _statusManager.GetAvailableDataStatusTransitions(Entity).Cast<object>();
             }
             else if (StatusType == typeof(ActionStatus))
             {
-                return StateTransitionRules.GetAvailableTransitions((ActionStatus)CurrentStatus).Cast<object>();
+                return _statusManager.GetAvailableActionStatusTransitions(Entity).Cast<object>();
             }
             else
             {
-                return new List<object>();
+                // 对于其他业务状态类型，使用非泛型方法
+                return _statusManager.GetAvailableBusinessStatusTransitions(Entity, StatusType);
             }
         }
 

@@ -1,5 +1,5 @@
 /**
- * 文件: SimpleCacheManager.cs
+ * 文件: StatusCacheManager.cs
  * 说明: 简化版缓存管理器 - 提供基本的缓存功能
  * 创建日期: 2024年
  * 作者: RUINOR ERP开发团队
@@ -16,7 +16,7 @@ namespace RUINORERP.Model.Base.StatusManager
     /// 简化版缓存管理器 - 提供基本的缓存功能
     /// 替代原来复杂的缓存机制，保留必要的性能优化
     /// </summary>
-    public class SimpleCacheManager
+    public class StatusCacheManager
     {
         #region 私有字段
 
@@ -43,7 +43,7 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <summary>
         /// 日志记录器
         /// </summary>
-        private readonly ILogger<SimpleCacheManager> _logger;
+        private readonly ILogger<StatusCacheManager> _logger;
 
         #endregion
 
@@ -53,7 +53,7 @@ namespace RUINORERP.Model.Base.StatusManager
         /// 初始化简化版缓存管理器
         /// </summary>
         /// <param name="logger">日志记录器</param>
-        public SimpleCacheManager(ILogger<SimpleCacheManager> logger = null)
+        public StatusCacheManager(ILogger<StatusCacheManager> logger = null)
         {
             _logger = logger;
             _transitionRuleCache = new ConcurrentDictionary<string, bool>();

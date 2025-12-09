@@ -32,7 +32,7 @@ namespace RUINORERP.UI
         public static IServiceCollection AddStateManager(this IServiceCollection services)
         {
             // 注册简化的缓存管理器
-            services.AddSingleton<SimpleCacheManager>();
+            services.AddSingleton<StatusCacheManager>();
             // 注册状态管理核心服务 - 使用内部实现
             services.AddSingleton<IUnifiedStateManager, UnifiedStateManager>();
             
@@ -47,7 +47,7 @@ namespace RUINORERP.UI
         public static Autofac.ContainerBuilder AddStateManager(this Autofac.ContainerBuilder builder)
         {
             // 注册简化的缓存管理器
-            builder.RegisterType<SimpleCacheManager>().SingleInstance();
+            builder.RegisterType<StatusCacheManager>().SingleInstance();
             // 注册状态管理核心服务 - 使用内部实现
             builder.RegisterType<UnifiedStateManager>()
                    .As<IUnifiedStateManager>()

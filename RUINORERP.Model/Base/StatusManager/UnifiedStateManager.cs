@@ -31,7 +31,7 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <summary>
         /// 缓存管理器
         /// </summary>
-        private readonly SimpleCacheManager _cacheManager;
+        private readonly StatusCacheManager _cacheManager;
     
         /// <summary>
         /// 状态变更锁
@@ -62,10 +62,10 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <param name="cacheManager">缓存管理器</param>
         public UnifiedStateManager(
             ILogger<UnifiedStateManager> logger,
-            SimpleCacheManager cacheManager = null)
+            StatusCacheManager cacheManager = null)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _cacheManager = cacheManager ?? new SimpleCacheManager();
+            _cacheManager = cacheManager ?? new StatusCacheManager();
             
             // 初始化状态转换规则
             _transitionRules = new Dictionary<Type, Dictionary<object, List<object>>>();
@@ -321,7 +321,8 @@ namespace RUINORERP.Model.Base.StatusManager
                 var currentStatus = GetBusinessStatus(entity, statusType);
                 
                 // 直接使用StateTransitionRules验证转换
-                if (StateTransitionRules.IsTransitionAllowed(_transitionRules, currentStatus, targetStatus))
+                if (currentStatus is Enum currentEnumStatus && targetStatus is Enum targetEnumStatus && 
+                    StateTransitionRules.IsTransitionAllowed(_transitionRules, currentEnumStatus, targetEnumStatus))
                 {
                     return StateTransitionResult.Success();
                 }
@@ -427,7 +428,8 @@ namespace RUINORERP.Model.Base.StatusManager
                 // 检查每个状态是否可以转换
                 foreach (var status in allStatuses)
                 {
-                    if (StateTransitionRules.IsTransitionAllowed(_transitionRules, currentStatus, status))
+                    if (currentStatus is Enum currentEnumStatus && status is Enum enumStatus &&
+                        StateTransitionRules.IsTransitionAllowed(_transitionRules, currentEnumStatus, enumStatus))
                     {
                         availableStatuses.Add(status);
                     }
@@ -464,7 +466,8 @@ namespace RUINORERP.Model.Base.StatusManager
                 // 检查每个状态是否可以转换
                 foreach (var status in allStatuses)
                 {
-                    if (StateTransitionRules.IsTransitionAllowed(_transitionRules, currentStatus, status))
+                    if (currentStatus is Enum currentEnumStatus && status is Enum enumStatus &&
+                        StateTransitionRules.IsTransitionAllowed(_transitionRules, currentEnumStatus, enumStatus))
                     {
                         availableStatuses.Add(status);
                     }
@@ -501,7 +504,7 @@ namespace RUINORERP.Model.Base.StatusManager
                 // 检查每个状态是否可以转换
                 foreach (var status in allStatuses)
                 {
-                    if (StateTransitionRules.IsTransitionAllowed(_transitionRules, currentStatus, status))
+                    if (StateTransitionRules.IsTransitionAllowed(_transitionRules, currentStatus as Enum, status as Enum))
                     {
                         availableStatuses.Add(status);
                     }
@@ -855,7 +858,7 @@ namespace RUINORERP.Model.Base.StatusManager
                 var context = new StatusTransitionContext(entity, statusType, currentStatus, this);
 
                 // 直接使用StateTransitionRules验证转换
-                if (StateTransitionRules.IsTransitionAllowed(_transitionRules, currentStatus, status))
+                if (StateTransitionRules.IsTransitionAllowed(_transitionRules, currentStatus as Enum, status as Enum))
                 {
                     // 更新实体状态
                     UpdateEntityStatus(entity, statusType, status);

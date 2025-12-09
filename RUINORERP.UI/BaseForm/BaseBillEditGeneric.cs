@@ -6545,16 +6545,10 @@ namespace RUINORERP.UI.BaseForm
 
         protected override void Exit(object thisform)
         {
-            try
+            if (EditEntity==null || !EditEntity.HasChanged)
             {
-                // 单据都会有 录入表格 SourceGridHelper 在 Grid_HandleDestroyed 中执行了。这样就不管关闭还是x
-                //后面还会有一个CloseTheForm 的方法 才是最后的关闭方法
+                Edited = false;
             }
-            catch
-            {
-
-            }
-
             base.Exit(this);
         }
 

@@ -52,7 +52,7 @@ namespace RUINORERP.UI.PSI.PUR
 
 
     [MenuAttrAssemblyInfo("请购单", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.进销存管理.采购管理, BizType.请购单)]
-    public partial class UCBuyingRequisition : BaseBillEditGeneric<tb_BuyingRequisition, tb_BuyingRequisition>
+    public partial class UCBuyingRequisition : BaseBillEditGeneric<tb_BuyingRequisition, tb_BuyingRequisitionDetail>
     {
         public UCBuyingRequisition()
         {

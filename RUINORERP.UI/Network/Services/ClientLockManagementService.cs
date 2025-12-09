@@ -406,6 +406,7 @@ namespace RUINORERP.UI.Network.Services
                             // 延长缓存时间，减少频繁更新
                             response.LockInfo.LastUpdateTime = DateTime.Now;
                             response.LockInfo.ExpireTime = DateTime.Now.AddMinutes(15);
+                           
                             _clientCache.UpdateCacheItem(response.LockInfo);
                         }
                     }

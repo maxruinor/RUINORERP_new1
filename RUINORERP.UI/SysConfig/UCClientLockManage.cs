@@ -85,8 +85,8 @@ namespace RUINORERP.UI.SysConfig
 
             dgvLockInfo.Columns.Add(new DataGridViewTextBoxColumn
             {
-                DataPropertyName = "UserName",
-                HeaderText = "用户名称",
+                DataPropertyName = "LockedUserName",
+                HeaderText = "锁定用户",
                 Width = 120
             });
 

@@ -167,8 +167,38 @@ namespace RUINORERP.UI
             bool isConnected = MainForm.Instance?.communicationService?.IsConnected ?? false;
             string currentToken = await _userLoginService.GetCurrentAccessToken();
 
-            // 如果已连接且有Token，尝试快捷登录验证
-            if (isConnected && !string.IsNullOrEmpty(currentToken)
+            // 检查IP和端口是否发生变化
+            bool ipOrPortChanged = false;
+            if (isConnected)
+            {
+                string currentServerIP = connectionManager.CurrentServerAddress ?? "";
+                string currentServerPort = connectionManager.CurrentServerPort.ToString();
+                string newServerIP = txtServerIP.Text.Trim();
+                string newServerPort = txtPort.Text.Trim();
+
+                ipOrPortChanged = !string.Equals(currentServerIP, newServerIP, StringComparison.OrdinalIgnoreCase) ||
+                                 !string.Equals(currentServerPort, newServerPort, StringComparison.OrdinalIgnoreCase);
+
+                // 如果IP或端口发生变化，先断开现有连接
+                if (ipOrPortChanged)
+                {
+                    try
+                    {
+                        MainForm.Instance.logger?.LogInformation($"检测到服务器地址变更，从 {currentServerIP}:{currentServerPort} 变更为 {newServerIP}:{newServerPort}，正在断开现有连接...");
+                        await connectionManager.DisconnectAsync();
+                        isConnected = false;
+                        MainForm.Instance.logger?.LogInformation("已成功断开现有连接");
+                    }
+                    catch (Exception ex)
+                    {
+                        MainForm.Instance.logger?.LogError(ex, "断开现有连接时发生异常");
+                        // 即使断开连接失败，也继续尝试新连接
+                    }
+                }
+            }
+
+            // 如果已连接且有Token，且IP和端口未发生变化，尝试快捷登录验证
+            if (isConnected && !string.IsNullOrEmpty(currentToken) && !ipOrPortChanged
                 && connectionManager.CurrentServerAddress == txtServerIP.Text && connectionManager.CurrentServerPort.ToString() == txtPort.Text
                 && txtUserName.Text == UserGlobalConfig.Instance.UseName
                 && txtPassWord.Text == UserGlobalConfig.Instance.PassWord
@@ -531,14 +561,21 @@ namespace RUINORERP.UI
 
 
                 // 1. 连接服务器
+                // 无论是否已连接，都尝试连接以确保使用最新的IP和端口
+                // 如果已连接但IP/端口已变更，上面的逻辑已经断开了连接
                 if (!connectionManager.IsConnected)
                 {
-
+                    MainForm.Instance.logger?.LogInformation($"正在连接到服务器 {txtServerIP.Text.Trim()}:{serverPort}...");
                     var connected = await connectionManager.ConnectAsync(txtServerIP.Text.Trim(), serverPort);
                     if (!connected)
                     {
-                        throw new Exception("无法连接到服务器");
+                        throw new Exception($"无法连接到服务器 {txtServerIP.Text.Trim()}:{serverPort}");
                     }
+                    MainForm.Instance.logger?.LogInformation("服务器连接成功");
+                }
+                else
+                {
+                    MainForm.Instance.logger?.LogDebug("已连接到服务器，跳过连接步骤");
                 }
 
                 // 2. 执行登录验证

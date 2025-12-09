@@ -2011,6 +2011,7 @@ namespace RUINORERP.UI.BaseForm
         /// </summary>
         private async Task<(bool IsLocked, LockInfo LockInfo)> CheckLockStatusAsync(long billId, long menuId)
         {
+            string BillNo = string.Empty;
             try
             {
                 // 直接使用集成锁定服务检查锁定状态
@@ -2019,17 +2020,17 @@ namespace RUINORERP.UI.BaseForm
                 // 客户端取锁定状态：先取本地，再取服务器
                 // 只要是锁定了，并且不是自己时就不能编辑等相关处理
                 bool isLocked = lockInfo != null && lockInfo.IsLocked;
-
+                BillNo = lockInfo.BillNo;
                 string lockStatusMsg = isLocked ? "已锁定" : "未锁定";
 
-                MainForm.Instance?.uclog?.AddLog($"检查单据[{billId}]锁定状态: {lockStatusMsg}", UILogType.普通消息);
+                MainForm.Instance?.uclog?.AddLog($"检查单据[{BillNo}]锁定状态: 【{lockStatusMsg}】", UILogType.普通消息);
 
 
                 return (isLocked, lockInfo);
             }
             catch (Exception ex)
             {
-                MainForm.Instance?.logger?.LogError(ex, $"检查单据[{billId}]锁定状态时发生错误");
+                MainForm.Instance?.logger?.LogError(ex, $"检查单据[{BillNo}]锁定状态时发生错误");
                 MainForm.Instance?.uclog?.AddLog($"检查锁定状态时发生错误: {ex.Message}", UILogType.错误);
                 return (false, null);
             }
@@ -2189,37 +2190,6 @@ namespace RUINORERP.UI.BaseForm
             {
                 // 调用基于billId的版本，避免代码重复
                 var result = await CheckLockStatusAndUpdateUI(pkid);
-
-                // 记录锁定状态变化
-                logger?.LogDebug("实体锁定状态检查结果 - 是否锁定: {IsLocked}, 是否可执行关键操作: {CanPerformCriticalOperations}",
-                    result.IsLocked, result.CanPerformCriticalOperations);
-
-                // 更新锁定按钮状态
-                if (tsBtnLocked != null)
-                    tsBtnLocked.Enabled = result.IsLocked;
-
-                // 更新状态栏信息
-                if (tsBtnLocked != null)
-                {
-                    if (result.IsLocked && !result.CanPerformCriticalOperations)
-                    {
-                        string lockerName = result.LockInfo?.LockedUserName ?? "未知用户";
-                        string lockTime = result.LockInfo?.LockTime.ToString("yyyy-MM-dd HH:mm:ss") ?? "";
-                        tsBtnLocked.Text = $"单据已被{lockerName}锁定，锁定时间：{lockTime}";
-                        tsBtnLocked.ForeColor = Color.Red;
-                    }
-                    else
-                    {
-                        tsBtnLocked.Text = "";
-                        tsBtnLocked.ForeColor = Color.Black;
-                    }
-                }
-
-                // 确保状态管理系统能够根据锁定状态正确更新按钮状态
-                // 不直接设置业务按钮状态，而是更新锁定状态标志
-                _isEntityLocked = result.IsLocked;
-                _canPerformCriticalOperations = result.CanPerformCriticalOperations;
-
                 // 调用状态管理系统更新UI
                 await EnsureStatusContextAsync(EditEntity);
                 await UpdateAllButtonStatesAsync();

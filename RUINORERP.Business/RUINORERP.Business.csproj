@@ -51,6 +51,7 @@
     <Compile Remove="Security\CredentialValidator.cs" />
     <Compile Remove="Services\IBizCodeService.cs" />
     <Compile Remove="Services\LocalBizCodeGenerateService.cs" />
+    <Compile Remove="StatusManagerService\StatusManagerService.cs" />
 
     <Compile Remove="tb_InventoryTransactionControllerPartial.cs" />
     <Compile Remove="tb_OpeningIinventoryController.cs" />

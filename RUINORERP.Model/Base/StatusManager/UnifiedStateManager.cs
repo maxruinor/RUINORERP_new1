@@ -17,44 +17,44 @@ namespace RUINORERP.Model.Base.StatusManager
     public class UnifiedStateManager : IUnifiedStateManager, IDisposable
     {
         #region 字段
-    
+
         /// <summary>
         /// 日志记录器
         /// </summary>
         private readonly ILogger<UnifiedStateManager> _logger;
-    
+
         /// <summary>
         /// 状态转换规则字典
         /// </summary>
         private readonly Dictionary<Type, Dictionary<object, List<object>>> _transitionRules;
-    
+
         /// <summary>
         /// 缓存管理器
         /// </summary>
         private readonly StatusCacheManager _cacheManager;
-    
+
         /// <summary>
         /// 状态变更锁
         /// </summary>
         private readonly object _statusChangeLock = new object();
-    
+
         /// <summary>
         /// 最近的状态变更记录（用于去重）
         /// </summary>
         private readonly Dictionary<string, DateTime> _recentStatusChanges = new Dictionary<string, DateTime>();
-    
+
         /// <summary>
         /// 是否已释放资源
         /// </summary>
         private bool _disposed = false;
-    
+
         #endregion
-    
+
         /// <summary>
         /// 状态变更事件
         /// </summary>
         public event EventHandler<StateTransitionEventArgs> StatusChanged;
-    
+
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -66,7 +66,7 @@ namespace RUINORERP.Model.Base.StatusManager
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _cacheManager = cacheManager ?? new StatusCacheManager();
-            
+
             // 初始化状态转换规则
             _transitionRules = new Dictionary<Type, Dictionary<object, List<object>>>();
             StateTransitionRules.InitializeDefaultRules(_transitionRules);
@@ -106,13 +106,13 @@ namespace RUINORERP.Model.Base.StatusManager
             {
                 var property = entity.GetType().GetProperty("DataStatus");
                 var value = property?.GetValue(entity);
-                
+
                 // 处理int类型到DataStatus枚举的转换
                 if (value is int intValue)
                 {
                     return (DataStatus)intValue;
                 }
-                
+
                 return value as DataStatus? ?? DataStatus.草稿;
             }
             catch (Exception ex)
@@ -175,13 +175,13 @@ namespace RUINORERP.Model.Base.StatusManager
                 // 首先尝试从实体的Status属性获取
                 var property = entity.GetType().GetProperty("Status");
                 var status = property?.GetValue(entity);
-                
+
                 // 如果获取到的状态类型与请求的类型匹配，直接返回
                 if (status != null && status.GetType() == statusType)
                 {
                     return status;
                 }
-                
+
                 // 如果不匹配，尝试从EntityStatus中获取
                 var entityStatusProperty = entity.GetType().GetProperty("EntityStatus");
                 if (entityStatusProperty != null)
@@ -192,7 +192,7 @@ namespace RUINORERP.Model.Base.StatusManager
                         return businessStatus;
                     }
                 }
-                
+
                 return null;
             }
             catch (Exception ex)
@@ -216,13 +216,13 @@ namespace RUINORERP.Model.Base.StatusManager
             {
                 var property = entity.GetType().GetProperty("ActionStatus");
                 var value = property?.GetValue(entity);
-                
+
                 // 处理int类型到ActionStatus枚举的转换
                 if (value is int intValue)
                 {
                     return (ActionStatus)intValue;
                 }
-                
+
                 return value as ActionStatus? ?? ActionStatus.无操作;
             }
             catch (Exception ex)
@@ -250,9 +250,9 @@ namespace RUINORERP.Model.Base.StatusManager
             try
             {
                 var currentStatus = GetDataStatus(entity);
-                
+
                 // 直接使用StateTransitionRules验证转换
-                if (StateTransitionRules.IsTransitionAllowed(_transitionRules, currentStatus, targetStatus))
+                if (StateTransitionRules.IsTransitionAllowed(_transitionRules, typeof(DataStatus), currentStatus, targetStatus))
                 {
                     return StateTransitionResult.Success();
                 }
@@ -283,9 +283,9 @@ namespace RUINORERP.Model.Base.StatusManager
             try
             {
                 var currentStatus = GetBusinessStatus<T>(entity);
-                
+
                 // 直接使用StateTransitionRules验证转换
-                if (StateTransitionRules.IsTransitionAllowed(_transitionRules, currentStatus, targetStatus))
+                if (StateTransitionRules.IsTransitionAllowed(_transitionRules,typeof(T), currentStatus, targetStatus))
                 {
                     return StateTransitionResult.Success();
                 }
@@ -319,10 +319,10 @@ namespace RUINORERP.Model.Base.StatusManager
             try
             {
                 var currentStatus = GetBusinessStatus(entity, statusType);
-                
+
                 // 直接使用StateTransitionRules验证转换
-                if (currentStatus is Enum currentEnumStatus && targetStatus is Enum targetEnumStatus && 
-                    StateTransitionRules.IsTransitionAllowed(_transitionRules, currentEnumStatus, targetEnumStatus))
+                if (currentStatus is Enum currentEnumStatus && targetStatus is Enum targetEnumStatus &&
+                    StateTransitionRules.IsTransitionAllowed(_transitionRules, statusType, currentEnumStatus, targetEnumStatus))
                 {
                     return StateTransitionResult.Success();
                 }
@@ -352,9 +352,9 @@ namespace RUINORERP.Model.Base.StatusManager
             try
             {
                 var currentStatus = GetActionStatus(entity);
-                
+
                 // 直接使用StateTransitionRules验证转换
-                if (StateTransitionRules.IsTransitionAllowed(_transitionRules, currentStatus, targetStatus))
+                if (StateTransitionRules.IsTransitionAllowed(_transitionRules,typeof(ActionStatus), currentStatus, targetStatus))
                 {
                     return StateTransitionResult.Success();
                 }
@@ -421,20 +421,20 @@ namespace RUINORERP.Model.Base.StatusManager
             {
                 var currentStatus = GetDataStatus(entity);
                 var availableStatuses = new List<DataStatus>();
-                
+
                 // 获取所有可能的状态
                 var allStatuses = Enum.GetValues(typeof(DataStatus)).Cast<DataStatus>();
-                
+
                 // 检查每个状态是否可以转换
                 foreach (var status in allStatuses)
                 {
                     if (currentStatus is Enum currentEnumStatus && status is Enum enumStatus &&
-                        StateTransitionRules.IsTransitionAllowed(_transitionRules, currentEnumStatus, enumStatus))
+                        StateTransitionRules.IsTransitionAllowed(_transitionRules,typeof(DataStatus), currentEnumStatus, enumStatus))
                     {
                         availableStatuses.Add(status);
                     }
                 }
-                
+
                 return availableStatuses;
             }
             catch (Exception ex)
@@ -459,20 +459,20 @@ namespace RUINORERP.Model.Base.StatusManager
             {
                 var currentStatus = GetBusinessStatus<T>(entity);
                 var availableStatuses = new List<T>();
-                
+
                 // 获取所有可能的状态
                 var allStatuses = Enum.GetValues(typeof(T)).Cast<T>();
-                
+
                 // 检查每个状态是否可以转换
                 foreach (var status in allStatuses)
                 {
                     if (currentStatus is Enum currentEnumStatus && status is Enum enumStatus &&
-                        StateTransitionRules.IsTransitionAllowed(_transitionRules, currentEnumStatus, enumStatus))
+                        StateTransitionRules.IsTransitionAllowed(_transitionRules,typeof(T), currentEnumStatus, enumStatus))
                     {
                         availableStatuses.Add(status);
                     }
                 }
-                
+
                 return availableStatuses;
             }
             catch (Exception ex)
@@ -497,19 +497,19 @@ namespace RUINORERP.Model.Base.StatusManager
             {
                 var currentStatus = GetBusinessStatus(entity, statusType);
                 var availableStatuses = new List<object>();
-                
+
                 // 获取所有可能的状态
                 var allStatuses = Enum.GetValues(statusType).Cast<object>();
-                
+
                 // 检查每个状态是否可以转换
                 foreach (var status in allStatuses)
                 {
-                    if (StateTransitionRules.IsTransitionAllowed(_transitionRules, currentStatus as Enum, status as Enum))
+                    if (StateTransitionRules.IsTransitionAllowed(_transitionRules, statusType, currentStatus as Enum, status as Enum))
                     {
                         availableStatuses.Add(status);
                     }
                 }
-                
+
                 return availableStatuses;
             }
             catch (Exception ex)
@@ -533,19 +533,19 @@ namespace RUINORERP.Model.Base.StatusManager
             {
                 var currentStatus = GetActionStatus(entity);
                 var availableStatuses = new List<ActionStatus>();
-                
+
                 // 获取所有可能的状态
                 var allStatuses = Enum.GetValues(typeof(ActionStatus)).Cast<ActionStatus>();
-                
+
                 // 检查每个状态是否可以转换
                 foreach (var status in allStatuses)
                 {
-                    if (StateTransitionRules.IsTransitionAllowed(_transitionRules, currentStatus, status))
+                    if (StateTransitionRules.IsTransitionAllowed(_transitionRules,typeof(ActionStatus), currentStatus, status))
                     {
                         availableStatuses.Add(status);
                     }
                 }
-                
+
                 return availableStatuses;
             }
             catch (Exception ex)
@@ -613,7 +613,7 @@ namespace RUINORERP.Model.Base.StatusManager
                     {
                         property.SetValue(entity, status);
                     }
-                    
+
                     // 同时更新EntityStatus中的业务状态
                     var entityStatusProperty = entity.GetType().GetProperty("EntityStatus");
                     if (entityStatusProperty != null)
@@ -702,14 +702,14 @@ namespace RUINORERP.Model.Base.StatusManager
                 var context = new StatusTransitionContext(entity, typeof(DataStatus), currentStatus, this);
 
                 // 直接使用StateTransitionRules验证转换
-                if (StateTransitionRules.IsTransitionAllowed(_transitionRules, currentStatus, status))
+                if (StateTransitionRules.IsTransitionAllowed(_transitionRules,typeof(DataStatus), currentStatus, status))
                 {
                     // 更新实体状态
                     UpdateEntityStatus(entity, typeof(DataStatus), status);
-                    
+
                     // 集中触发状态变更事件 - 仅在UnifiedStateManager中触发
                     TriggerStatusChangedEvent(entity, typeof(DataStatus), currentStatus, status, reason);
-                    
+
                     return true;
                 }
                 else
@@ -739,7 +739,7 @@ namespace RUINORERP.Model.Base.StatusManager
             {
                 // 获取当前状态
                 var currentStatus = GetDataStatus(entity);
-                
+
                 // 如果状态没有变化，直接返回
                 if (currentStatus == status)
                     return;
@@ -756,7 +756,7 @@ namespace RUINORERP.Model.Base.StatusManager
                     {
                         property.SetValue(entity, status);
                     }
-                    
+
                     // 集中触发状态变更事件 - 仅在UnifiedStateManager中触发
                     TriggerStatusChangedEvent(entity, typeof(DataStatus), currentStatus, status, "直接设置数据状态");
                 }
@@ -798,14 +798,14 @@ namespace RUINORERP.Model.Base.StatusManager
                 var context = new StatusTransitionContext(entity, typeof(T), currentStatus, this);
 
                 // 直接使用StateTransitionRules验证转换
-                if (StateTransitionRules.IsTransitionAllowed(_transitionRules, currentStatus, status))
+                if (StateTransitionRules.IsTransitionAllowed(_transitionRules, typeof(T), currentStatus, status))
                 {
                     // 更新实体状态
                     UpdateEntityStatus(entity, typeof(T), status);
-                    
+
                     // 集中触发状态变更事件 - 仅在UnifiedStateManager中触发
                     TriggerStatusChangedEvent(entity, typeof(T), currentStatus, status, reason);
-                    
+
                     return true;
                 }
                 else
@@ -858,14 +858,14 @@ namespace RUINORERP.Model.Base.StatusManager
                 var context = new StatusTransitionContext(entity, statusType, currentStatus, this);
 
                 // 直接使用StateTransitionRules验证转换
-                if (StateTransitionRules.IsTransitionAllowed(_transitionRules, currentStatus as Enum, status as Enum))
+                if (StateTransitionRules.IsTransitionAllowed(_transitionRules, statusType,currentStatus as Enum, status as Enum))
                 {
                     // 更新实体状态
                     UpdateEntityStatus(entity, statusType, status);
-                    
+
                     // 集中触发状态变更事件 - 仅在UnifiedStateManager中触发
                     TriggerStatusChangedEvent(entity, statusType, currentStatus, status, reason);
-                    
+
                     return true;
                 }
                 else
@@ -911,14 +911,14 @@ namespace RUINORERP.Model.Base.StatusManager
                 var context = new StatusTransitionContext(entity, typeof(ActionStatus), currentStatus, this);
 
                 // 直接使用StateTransitionRules验证转换
-                if (StateTransitionRules.IsTransitionAllowed(_transitionRules, currentStatus, status))
+                if (StateTransitionRules.IsTransitionAllowed(_transitionRules, typeof(ActionStatus), currentStatus, status))
                 {
                     // 更新实体状态
                     UpdateEntityStatus(entity, typeof(ActionStatus), status);
-                    
+
                     // 集中触发状态变更事件 - 仅在UnifiedStateManager中触发
                     TriggerStatusChangedEvent(entity, typeof(ActionStatus), currentStatus, status, reason);
-                    
+
                     return true;
                 }
                 else
@@ -1141,15 +1141,15 @@ namespace RUINORERP.Model.Base.StatusManager
 
                 // 获取操作权限规则
                 var actionRules = GetActionPermissionRules();
-                
+
                 // 检查当前状态是否允许执行该操作
-                bool canExecute = actionRules.TryGetValue(dataStatus, out var allowedActions) && 
+                bool canExecute = actionRules.TryGetValue(dataStatus, out var allowedActions) &&
                                  allowedActions.Contains(action);
 
                 // 生成友好的提示消息
                 string message = canExecute ? GetSuccessMessage(action) : GetFailureMessage(action, dataStatus);
 
-                return canExecute 
+                return canExecute
                     ? StateTransitionResult.Success(message)
                     : StateTransitionResult.Failure(message);
             }
@@ -1168,31 +1168,31 @@ namespace RUINORERP.Model.Base.StatusManager
             // 定义操作权限规则
             var rules = new Dictionary<DataStatus, List<MenuItemEnums>>
             {
-                [DataStatus.草稿] = new List<MenuItemEnums> 
-                { 
-                    MenuItemEnums.新增, 
-                    MenuItemEnums.修改, 
-                    MenuItemEnums.删除, 
-                    MenuItemEnums.保存, 
-                    MenuItemEnums.提交 
+                [DataStatus.草稿] = new List<MenuItemEnums>
+                {
+                    MenuItemEnums.新增,
+                    MenuItemEnums.修改,
+                    MenuItemEnums.删除,
+                    MenuItemEnums.保存,
+                    MenuItemEnums.提交
                 },
-                [DataStatus.新建] = new List<MenuItemEnums> 
-                { 
-                    MenuItemEnums.修改, 
-                    MenuItemEnums.删除, 
-                    MenuItemEnums.保存, 
-                    MenuItemEnums.提交, 
-                    MenuItemEnums.审核 
+                [DataStatus.新建] = new List<MenuItemEnums>
+                {
+                    MenuItemEnums.修改,
+                    MenuItemEnums.删除,
+                    MenuItemEnums.保存,
+                    MenuItemEnums.提交,
+                    MenuItemEnums.审核
                 },
-                [DataStatus.确认] = new List<MenuItemEnums> 
-                { 
-                    MenuItemEnums.反审, 
+                [DataStatus.确认] = new List<MenuItemEnums>
+                {
+                    MenuItemEnums.反审,
                     MenuItemEnums.结案
                 },
                 [DataStatus.完结] = new List<MenuItemEnums>(),
                 [DataStatus.作废] = new List<MenuItemEnums>()
             };
-            
+
             return rules;
         }
 
@@ -1237,45 +1237,45 @@ namespace RUINORERP.Model.Base.StatusManager
             switch (action)
             {
                 case MenuItemEnums.新增:
-                    return dataStatus == DataStatus.草稿 || dataStatus == DataStatus.完结 
-                        ? "可以新增当前单据" 
+                    return dataStatus == DataStatus.草稿 || dataStatus == DataStatus.完结
+                        ? "可以新增当前单据"
                         : $"只有草稿状态或完结状态的单据才能新增，当前状态：{dataStatus}";
-                
+
                 case MenuItemEnums.修改:
-                    return dataStatus == DataStatus.草稿 || dataStatus == DataStatus.新建 
-                        ? "可以修改当前单据" 
+                    return dataStatus == DataStatus.草稿 || dataStatus == DataStatus.新建
+                        ? "可以修改当前单据"
                         : $"只有草稿状态或新建状态的单据才能修改，当前状态：{dataStatus}";
-                
+
                 case MenuItemEnums.删除:
-                    return dataStatus == DataStatus.草稿 || dataStatus == DataStatus.新建 
-                        ? "可以删除当前单据" 
+                    return dataStatus == DataStatus.草稿 || dataStatus == DataStatus.新建
+                        ? "可以删除当前单据"
                         : $"只有草稿状态或新建状态的单据才能删除，当前状态：{dataStatus}";
-                
+
                 case MenuItemEnums.保存:
-                    return dataStatus == DataStatus.草稿 || dataStatus == DataStatus.新建 
-                        ? "可以保存当前单据" 
+                    return dataStatus == DataStatus.草稿 || dataStatus == DataStatus.新建
+                        ? "可以保存当前单据"
                         : $"只有草稿状态或新建状态的单据才能保存，当前状态：{dataStatus}";
-                
+
                 case MenuItemEnums.提交:
-                    return dataStatus == DataStatus.草稿 
-                        ? "可以提交当前单据" 
+                    return dataStatus == DataStatus.草稿
+                        ? "可以提交当前单据"
                         : $"只有草稿状态的单据才能提交，当前状态：{dataStatus}";
-                
+
                 case MenuItemEnums.审核:
-                    return dataStatus == DataStatus.新建 
-                        ? "可以审核当前单据" 
+                    return dataStatus == DataStatus.新建
+                        ? "可以审核当前单据"
                         : $"只有新建状态的单据才能审核，当前状态：{dataStatus}";
-                
+
                 case MenuItemEnums.反审:
-                    return dataStatus == DataStatus.确认 
-                        ? "可以反审核当前单据" 
+                    return dataStatus == DataStatus.确认
+                        ? "可以反审核当前单据"
                         : $"只有确认状态的单据才能反审核，当前状态：{dataStatus}";
-                
+
                 case MenuItemEnums.结案:
-                    return dataStatus == DataStatus.确认 
-                        ? "可以结案当前单据" 
+                    return dataStatus == DataStatus.确认
+                        ? "可以结案当前单据"
                         : $"只有确认状态的单据才能结案，当前状态：{dataStatus}";
-                
+
                 default:
                     return "无法执行当前操作";
             }
@@ -1299,7 +1299,7 @@ namespace RUINORERP.Model.Base.StatusManager
                 {
                     return CanExecuteAction(action, baseEntity, typeof(DataStatus), GetDataStatus(baseEntity));
                 }
-                
+
                 // 对于非BaseEntity类型，默认允许操作
                 // 在实际应用中，可能需要根据具体业务逻辑进行调整
                 return true;
@@ -1330,24 +1330,24 @@ namespace RUINORERP.Model.Base.StatusManager
                 if (statusType == typeof(DataStatus) && status is DataStatus dataStatus)
                 {
                     var buttonRules = UIControlRules.GetButtonRules(dataStatus);
-                    
+
                     // 将MenuItemEnums转换为按钮名称
                     var buttonName = ConvertActionToButtonName(action);
-                    if (!string.IsNullOrEmpty(buttonName) && 
+                    if (!string.IsNullOrEmpty(buttonName) &&
                         buttonRules.TryGetValue(buttonName, out var buttonState))
                     {
                         return buttonState.Enabled;
                     }
                 }
-                
+
                 // 如果UIControlRules没有相关规则，回退到原有的操作权限检查
                 var currentDataStatus = GetDataStatus(entity);
-                
+
                 // 获取操作权限规则
                 var actionRules = GetActionPermissionRules();
-                
+
                 // 检查当前状态是否允许执行该操作
-                bool canExecute = actionRules.TryGetValue(currentDataStatus, out var allowedActions) && 
+                bool canExecute = actionRules.TryGetValue(currentDataStatus, out var allowedActions) &&
                                  allowedActions.Contains(action);
 
                 return canExecute;
@@ -1414,7 +1414,7 @@ namespace RUINORERP.Model.Base.StatusManager
                 {
                     var buttonRules = UIControlRules.GetButtonRules(dataStatus);
                     var availableActions = new List<MenuItemEnums>();
-                    
+
                     // 将按钮规则转换为MenuItemEnums
                     foreach (var rule in buttonRules.Where(r => r.Value.Enabled))
                     {
@@ -1424,22 +1424,22 @@ namespace RUINORERP.Model.Base.StatusManager
                             availableActions.Add(action.Value);
                         }
                     }
-                    
+
                     if (availableActions.Any())
                     {
                         return availableActions;
                     }
                 }
-                
+
                 // 如果UIControlRules没有相关规则，回退到原有的操作权限检查
                 var currentDataStatus = GetDataStatus(entity);
-                
+
                 // 获取操作权限规则
                 var actionRules = GetActionPermissionRules();
-                
+
                 // 获取当前状态下的可用操作
                 var LastAvailableActions = actionRules.TryGetValue(currentDataStatus, out var actions) ? actions : new List<MenuItemEnums>();
-                
+
                 return LastAvailableActions;
             }
             catch (Exception ex)

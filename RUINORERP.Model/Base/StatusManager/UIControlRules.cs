@@ -136,69 +136,69 @@ namespace RUINORERP.Model.Base.StatusManager
             _uiButtonRules[statusType] = new Dictionary<object, Dictionary<string, (bool Enabled, bool Visible)>>();
 
             // 草稿状态：允许新增、修改、保存、删除、提交
-            AddButtonRule(DataStatus.草稿, "btnAdd", true, true);
-            AddButtonRule(DataStatus.草稿, "btnModify", true, true);
-            AddButtonRule(DataStatus.草稿, "btnSave", true, true);
-            AddButtonRule(DataStatus.草稿, "btnDelete", true, true);
-            AddButtonRule(DataStatus.草稿, "btnSubmit", true, true);
-            AddButtonRule(DataStatus.草稿, "btnApprove", false, false);
-            AddButtonRule(DataStatus.草稿, "btnReverseApprove", false, false);
-            AddButtonRule(DataStatus.草稿, "btnClose", false, false);
-            AddButtonRule(DataStatus.草稿, "btnAntiClose", false, false);
-            AddButtonRule(DataStatus.草稿, "btnPrint", true, true);
-            AddButtonRule(DataStatus.草稿, "btnExport", true, true);
+            AddButtonRule(DataStatus.草稿, "toolStripbtnAdd", true, true);
+            AddButtonRule(DataStatus.草稿, "toolStripbtnModify", true, true);
+            AddButtonRule(DataStatus.草稿, "toolStripButtonSave", true, true);
+            AddButtonRule(DataStatus.草稿, "toolStripbtnDelete", true, true);
+            AddButtonRule(DataStatus.草稿, "toolStripbtnSubmit", true, true);
+            AddButtonRule(DataStatus.草稿, "toolStripbtnReview", false, false);
+            AddButtonRule(DataStatus.草稿, "toolStripBtnReverseReview", false, false);
+            AddButtonRule(DataStatus.草稿, "toolStripButtonCaseClosed", false, false);
+            AddButtonRule(DataStatus.草稿, "toolStripButtonAntiClosed", false, false);
+            AddButtonRule(DataStatus.草稿, "toolStripButtonPrint", true, true);
+            AddButtonRule(DataStatus.草稿, "toolStripButtonExport", true, true);
 
             // 新建状态：允许修改、保存、删除、审核
-            AddButtonRule(DataStatus.新建, "btnAdd", true, true);
-            AddButtonRule(DataStatus.新建, "btnModify", true, true);
-            AddButtonRule(DataStatus.新建, "btnSave", true, true);
-            AddButtonRule(DataStatus.新建, "btnDelete", true, true);
-            AddButtonRule(DataStatus.新建, "btnSubmit", false, false);
-            AddButtonRule(DataStatus.新建, "btnApprove", true, true);
-            AddButtonRule(DataStatus.新建, "btnReverseApprove", false, false);
-            AddButtonRule(DataStatus.新建, "btnClose", false, false);
-            AddButtonRule(DataStatus.新建, "btnAntiClose", false, false);
-            AddButtonRule(DataStatus.新建, "btnPrint", true, true);
-            AddButtonRule(DataStatus.新建, "btnExport", true, true);
+            AddButtonRule(DataStatus.新建, "toolStripbtnAdd", true, true);
+            AddButtonRule(DataStatus.新建, "toolStripbtnModify", true, true);
+            AddButtonRule(DataStatus.新建, "toolStripButtonSave", true, true);
+            AddButtonRule(DataStatus.新建, "toolStripbtnDelete", true, true);
+            AddButtonRule(DataStatus.新建, "toolStripbtnSubmit", false, false);
+            AddButtonRule(DataStatus.新建, "toolStripbtnReview", true, true);
+            AddButtonRule(DataStatus.新建, "toolStripBtnReverseReview", false, false);
+            AddButtonRule(DataStatus.新建, "toolStripButtonCaseClosed", false, false);
+            AddButtonRule(DataStatus.新建, "toolStripButtonAntiClosed", false, false);
+            AddButtonRule(DataStatus.新建, "toolStripButtonPrint", true, true);
+            AddButtonRule(DataStatus.新建, "toolStripButtonExport", true, true);
 
             // 确认状态：允许审核、结案、打印、导出
-            AddButtonRule(DataStatus.确认, "btnAdd", false, false);
-            AddButtonRule(DataStatus.确认, "btnModify", false, false);
-            AddButtonRule(DataStatus.确认, "btnSave", false, false);
-            AddButtonRule(DataStatus.确认, "btnDelete", false, false);
-            AddButtonRule(DataStatus.确认, "btnSubmit", false, false);
-            AddButtonRule(DataStatus.确认, "btnApprove", false, false);
-            AddButtonRule(DataStatus.确认, "btnReverseApprove", true, true);
-            AddButtonRule(DataStatus.确认, "btnClose", true, true);
-            AddButtonRule(DataStatus.确认, "btnAntiClose", false, false);
-            AddButtonRule(DataStatus.确认, "btnPrint", true, true);
-            AddButtonRule(DataStatus.确认, "btnExport", true, true);
+            AddButtonRule(DataStatus.确认, "toolStripbtnAdd", false, false);
+            AddButtonRule(DataStatus.确认, "toolStripbtnModify", false, false);
+            AddButtonRule(DataStatus.确认, "toolStripButtonSave", false, false);
+            AddButtonRule(DataStatus.确认, "toolStripbtnDelete", false, false);
+            AddButtonRule(DataStatus.确认, "toolStripbtnSubmit", false, false);
+            AddButtonRule(DataStatus.确认, "toolStripbtnReview", false, false);
+            AddButtonRule(DataStatus.确认, "toolStripBtnReverseReview", true, true);
+            AddButtonRule(DataStatus.确认, "toolStripButtonCaseClosed", true, true);
+            AddButtonRule(DataStatus.确认, "toolStripButtonAntiClosed", false, false);
+            AddButtonRule(DataStatus.确认, "toolStripButtonPrint", true, true);
+            AddButtonRule(DataStatus.确认, "toolStripButtonExport", true, true);
 
             // 完结状态：允许反结案、打印、导出
-            AddButtonRule(DataStatus.完结, "btnAdd", false, false);
-            AddButtonRule(DataStatus.完结, "btnModify", false, false);
-            AddButtonRule(DataStatus.完结, "btnSave", false, false);
-            AddButtonRule(DataStatus.完结, "btnDelete", false, false);
-            AddButtonRule(DataStatus.完结, "btnSubmit", false, false);
-            AddButtonRule(DataStatus.完结, "btnApprove", false, false);
-            AddButtonRule(DataStatus.完结, "btnReverseApprove", false, false);
-            AddButtonRule(DataStatus.完结, "btnClose", false, false);
-            AddButtonRule(DataStatus.完结, "btnAntiClose", true, true);
-            AddButtonRule(DataStatus.完结, "btnPrint", true, true);
-            AddButtonRule(DataStatus.完结, "btnExport", true, true);
+            AddButtonRule(DataStatus.完结, "toolStripbtnAdd", false, false);
+            AddButtonRule(DataStatus.完结, "toolStripbtnModify", false, false);
+            AddButtonRule(DataStatus.完结, "toolStripButtonSave", false, false);
+            AddButtonRule(DataStatus.完结, "toolStripbtnDelete", false, false);
+            AddButtonRule(DataStatus.完结, "toolStripbtnSubmit", false, false);
+            AddButtonRule(DataStatus.完结, "toolStripbtnReview", false, false);
+            AddButtonRule(DataStatus.完结, "toolStripBtnReverseReview", false, false);
+            AddButtonRule(DataStatus.完结, "toolStripButtonCaseClosed", false, false);
+            AddButtonRule(DataStatus.完结, "toolStripButtonAntiClosed", true, true);
+            AddButtonRule(DataStatus.完结, "toolStripButtonPrint", true, true);
+            AddButtonRule(DataStatus.完结, "toolStripButtonExport", true, true);
 
             // 作废状态：允许打印、导出
-            AddButtonRule(DataStatus.作废, "btnAdd", false, false);
-            AddButtonRule(DataStatus.作废, "btnModify", false, false);
-            AddButtonRule(DataStatus.作废, "btnSave", false, false);
-            AddButtonRule(DataStatus.作废, "btnDelete", false, false);
-            AddButtonRule(DataStatus.作废, "btnSubmit", false, false);
-            AddButtonRule(DataStatus.作废, "btnApprove", false, false);
-            AddButtonRule(DataStatus.作废, "btnReverseApprove", false, false);
-            AddButtonRule(DataStatus.作废, "btnClose", false, false);
-            AddButtonRule(DataStatus.作废, "btnAntiClose", false, false);
-            AddButtonRule(DataStatus.作废, "btnPrint", false, false);
-            AddButtonRule(DataStatus.作废, "btnExport", false, false);
+            AddButtonRule(DataStatus.作废, "toolStripbtnAdd", false, false);
+            AddButtonRule(DataStatus.作废, "toolStripbtnModify", false, false);
+            AddButtonRule(DataStatus.作废, "toolStripButtonSave", false, false);
+            AddButtonRule(DataStatus.作废, "toolStripbtnDelete", false, false);
+            AddButtonRule(DataStatus.作废, "toolStripbtnSubmit", false, false);
+            AddButtonRule(DataStatus.作废, "toolStripbtnReview", false, false);
+            AddButtonRule(DataStatus.作废, "toolStripBtnReverseReview", false, false);
+            AddButtonRule(DataStatus.作废, "toolStripButtonCaseClosed", false, false);
+            AddButtonRule(DataStatus.作废, "toolStripButtonAntiClosed", false, false);
+            AddButtonRule(DataStatus.作废, "toolStripButtonPrint", false, false);
+            AddButtonRule(DataStatus.作废, "toolStripButtonExport", false, false);
         }
 
         /// <summary>
@@ -208,34 +208,34 @@ namespace RUINORERP.Model.Base.StatusManager
         {
             // 付款状态按钮规则
             // 草稿状态
-            AddButtonRule(PaymentStatus.草稿, "btnAdd", true, true);
-            AddButtonRule(PaymentStatus.草稿, "btnModify", true, true);
-            AddButtonRule(PaymentStatus.草稿, "btnSave", true, true);
-            AddButtonRule(PaymentStatus.草稿, "btnDelete", true, true);
-            AddButtonRule(PaymentStatus.草稿, "btnSubmit", true, true);
-            AddButtonRule(PaymentStatus.草稿, "btnApprove", false, false);
-            AddButtonRule(PaymentStatus.草稿, "btnReverseApprove", false, false);
-            AddButtonRule(PaymentStatus.草稿, "btnPrint", true, true);
+            AddButtonRule(PaymentStatus.草稿, "toolStripbtnAdd", true, true);
+            AddButtonRule(PaymentStatus.草稿, "toolStripbtnModify", true, true);
+            AddButtonRule(PaymentStatus.草稿, "toolStripButtonSave", true, true);
+            AddButtonRule(PaymentStatus.草稿, "toolStripbtnDelete", true, true);
+            AddButtonRule(PaymentStatus.草稿, "toolStripbtnSubmit", true, true);
+            AddButtonRule(PaymentStatus.草稿, "toolStripbtnReview", false, false);
+            AddButtonRule(PaymentStatus.草稿, "toolStripBtnReverseReview", false, false);
+            AddButtonRule(PaymentStatus.草稿, "toolStripButtonPrint", true, true);
             
             // 待审核状态
-            AddButtonRule(PaymentStatus.待审核, "btnAdd", true, true);
-            AddButtonRule(PaymentStatus.待审核, "btnModify", true, true);
-            AddButtonRule(PaymentStatus.待审核, "btnSave", true, true);
-            AddButtonRule(PaymentStatus.待审核, "btnDelete", true, true);
-            AddButtonRule(PaymentStatus.待审核, "btnSubmit", false, false);
-            AddButtonRule(PaymentStatus.待审核, "btnApprove", true, true);
-            AddButtonRule(PaymentStatus.待审核, "btnReverseApprove", false, false);
-            AddButtonRule(PaymentStatus.待审核, "btnPrint", true, true);
+            AddButtonRule(PaymentStatus.待审核, "toolStripbtnAdd", true, true);
+            AddButtonRule(PaymentStatus.待审核, "toolStripbtnModify", true, true);
+            AddButtonRule(PaymentStatus.待审核, "toolStripButtonSave", true, true);
+            AddButtonRule(PaymentStatus.待审核, "toolStripbtnDelete", true, true);
+            AddButtonRule(PaymentStatus.待审核, "toolStripbtnSubmit", false, false);
+            AddButtonRule(PaymentStatus.待审核, "toolStripbtnReview", true, true);
+            AddButtonRule(PaymentStatus.待审核, "toolStripBtnReverseReview", false, false);
+            AddButtonRule(PaymentStatus.待审核, "toolStripButtonPrint", true, true);
             
             // 已支付状态
-            AddButtonRule(PaymentStatus.已支付, "btnAdd", false, false);
-            AddButtonRule(PaymentStatus.已支付, "btnModify", false, false);
-            AddButtonRule(PaymentStatus.已支付, "btnSave", false, false);
-            AddButtonRule(PaymentStatus.已支付, "btnDelete", false, false);
-            AddButtonRule(PaymentStatus.已支付, "btnSubmit", false, false);
-            AddButtonRule(PaymentStatus.已支付, "btnApprove", false, false);
-            AddButtonRule(PaymentStatus.已支付, "btnReverseApprove", false, false);
-            AddButtonRule(PaymentStatus.已支付, "btnPrint", true, true);
+            AddButtonRule(PaymentStatus.已支付, "toolStripbtnAdd", false, false);
+            AddButtonRule(PaymentStatus.已支付, "toolStripbtnModify", false, false);
+            AddButtonRule(PaymentStatus.已支付, "toolStripButtonSave", false, false);
+            AddButtonRule(PaymentStatus.已支付, "toolStripbtnDelete", false, false);
+            AddButtonRule(PaymentStatus.已支付, "toolStripbtnSubmit", false, false);
+            AddButtonRule(PaymentStatus.已支付, "toolStripbtnReview", false, false);
+            AddButtonRule(PaymentStatus.已支付, "toolStripBtnReverseReview", false, false);
+            AddButtonRule(PaymentStatus.已支付, "toolStripButtonPrint", true, true);
         }
 
         /// <summary>
@@ -245,74 +245,74 @@ namespace RUINORERP.Model.Base.StatusManager
         {
             // 预付款状态按钮规则
             // 草稿状态
-            AddButtonRule(PrePaymentStatus.草稿, "btnAdd", true, true);
-            AddButtonRule(PrePaymentStatus.草稿, "btnModify", true, true);
-            AddButtonRule(PrePaymentStatus.草稿, "btnSave", true, true);
-            AddButtonRule(PrePaymentStatus.草稿, "btnDelete", true, true);
-            AddButtonRule(PrePaymentStatus.草稿, "btnSubmit", true, true);
-            AddButtonRule(PrePaymentStatus.草稿, "btnApprove", false, false);
-            AddButtonRule(PrePaymentStatus.草稿, "btnReverseApprove", false, false);
-            AddButtonRule(PrePaymentStatus.草稿, "btnPrint", true, true);
+            AddButtonRule(PrePaymentStatus.草稿, "toolStripbtnAdd", true, true);
+            AddButtonRule(PrePaymentStatus.草稿, "toolStripbtnModify", true, true);
+            AddButtonRule(PrePaymentStatus.草稿, "toolStripButtonSave", true, true);
+            AddButtonRule(PrePaymentStatus.草稿, "toolStripbtnDelete", true, true);
+            AddButtonRule(PrePaymentStatus.草稿, "toolStripbtnSubmit", true, true);
+            AddButtonRule(PrePaymentStatus.草稿, "toolStripbtnReview", false, false);
+            AddButtonRule(PrePaymentStatus.草稿, "toolStripBtnReverseReview", false, false);
+            AddButtonRule(PrePaymentStatus.草稿, "toolStripButtonPrint", true, true);
             
             // 待审核状态
-            AddButtonRule(PrePaymentStatus.待审核, "btnAdd", true, true);
-            AddButtonRule(PrePaymentStatus.待审核, "btnModify", true, true);
-            AddButtonRule(PrePaymentStatus.待审核, "btnSave", true, true);
-            AddButtonRule(PrePaymentStatus.待审核, "btnDelete", true, true);
-            AddButtonRule(PrePaymentStatus.待审核, "btnSubmit", false, false);
-            AddButtonRule(PrePaymentStatus.待审核, "btnApprove", true, true);
-            AddButtonRule(PrePaymentStatus.待审核, "btnReverseApprove", false, false);
-            AddButtonRule(PrePaymentStatus.待审核, "btnPrint", true, true);
+            AddButtonRule(PrePaymentStatus.待审核, "toolStripbtnAdd", true, true);
+            AddButtonRule(PrePaymentStatus.待审核, "toolStripbtnModify", true, true);
+            AddButtonRule(PrePaymentStatus.待审核, "toolStripButtonSave", true, true);
+            AddButtonRule(PrePaymentStatus.待审核, "toolStripbtnDelete", true, true);
+            AddButtonRule(PrePaymentStatus.待审核, "toolStripbtnSubmit", false, false);
+            AddButtonRule(PrePaymentStatus.待审核, "toolStripbtnReview", true, true);
+            AddButtonRule(PrePaymentStatus.待审核, "toolStripBtnReverseReview", false, false);
+            AddButtonRule(PrePaymentStatus.待审核, "toolStripButtonPrint", true, true);
             
             // 已生效状态
-            AddButtonRule(PrePaymentStatus.已生效, "btnAdd", false, false);
-            AddButtonRule(PrePaymentStatus.已生效, "btnModify", false, false);
-            AddButtonRule(PrePaymentStatus.已生效, "btnSave", false, false);
-            AddButtonRule(PrePaymentStatus.已生效, "btnDelete", false, false);
-            AddButtonRule(PrePaymentStatus.已生效, "btnSubmit", false, false);
-            AddButtonRule(PrePaymentStatus.已生效, "btnApprove", false, false);
-            AddButtonRule(PrePaymentStatus.已生效, "btnReverseApprove", true, true);
-            AddButtonRule(PrePaymentStatus.已生效, "btnPrint", true, true);
+            AddButtonRule(PrePaymentStatus.已生效, "toolStripbtnAdd", false, false);
+            AddButtonRule(PrePaymentStatus.已生效, "toolStripbtnModify", false, false);
+            AddButtonRule(PrePaymentStatus.已生效, "toolStripButtonSave", false, false);
+            AddButtonRule(PrePaymentStatus.已生效, "toolStripbtnDelete", false, false);
+            AddButtonRule(PrePaymentStatus.已生效, "toolStripbtnSubmit", false, false);
+            AddButtonRule(PrePaymentStatus.已生效, "toolStripbtnReview", false, false);
+            AddButtonRule(PrePaymentStatus.已生效, "toolStripBtnReverseReview", true, true);
+            AddButtonRule(PrePaymentStatus.已生效, "toolStripButtonPrint", true, true);
             
             // 待核销状态
-            AddButtonRule(PrePaymentStatus.待核销, "btnAdd", false, false);
-            AddButtonRule(PrePaymentStatus.待核销, "btnModify", true, true);
-            AddButtonRule(PrePaymentStatus.待核销, "btnSave", true, true);
-            AddButtonRule(PrePaymentStatus.待核销, "btnDelete", false, false);
-            AddButtonRule(PrePaymentStatus.待核销, "btnSubmit", false, false);
-            AddButtonRule(PrePaymentStatus.待核销, "btnApprove", false, false);
-            AddButtonRule(PrePaymentStatus.待核销, "btnReverseApprove", false, false);
-            AddButtonRule(PrePaymentStatus.待核销, "btnPrint", true, true);
+            AddButtonRule(PrePaymentStatus.待核销, "toolStripbtnAdd", false, false);
+            AddButtonRule(PrePaymentStatus.待核销, "toolStripbtnModify", true, true);
+            AddButtonRule(PrePaymentStatus.待核销, "toolStripButtonSave", true, true);
+            AddButtonRule(PrePaymentStatus.待核销, "toolStripbtnDelete", false, false);
+            AddButtonRule(PrePaymentStatus.待核销, "toolStripbtnSubmit", false, false);
+            AddButtonRule(PrePaymentStatus.待核销, "toolStripbtnReview", false, false);
+            AddButtonRule(PrePaymentStatus.待核销, "toolStripBtnReverseReview", false, false);
+            AddButtonRule(PrePaymentStatus.待核销, "toolStripButtonPrint", true, true);
             
             // 部分核销状态
-            AddButtonRule(PrePaymentStatus.部分核销, "btnAdd", false, false);
-            AddButtonRule(PrePaymentStatus.部分核销, "btnModify", true, true);
-            AddButtonRule(PrePaymentStatus.部分核销, "btnSave", true, true);
-            AddButtonRule(PrePaymentStatus.部分核销, "btnDelete", false, false);
-            AddButtonRule(PrePaymentStatus.部分核销, "btnSubmit", false, false);
-            AddButtonRule(PrePaymentStatus.部分核销, "btnApprove", false, false);
-            AddButtonRule(PrePaymentStatus.部分核销, "btnReverseApprove", false, false);
-            AddButtonRule(PrePaymentStatus.部分核销, "btnPrint", true, true);
+            AddButtonRule(PrePaymentStatus.部分核销, "toolStripbtnAdd", false, false);
+            AddButtonRule(PrePaymentStatus.部分核销, "toolStripbtnModify", true, true);
+            AddButtonRule(PrePaymentStatus.部分核销, "toolStripButtonSave", true, true);
+            AddButtonRule(PrePaymentStatus.部分核销, "toolStripbtnDelete", false, false);
+            AddButtonRule(PrePaymentStatus.部分核销, "toolStripbtnSubmit", false, false);
+            AddButtonRule(PrePaymentStatus.部分核销, "toolStripbtnReview", false, false);
+            AddButtonRule(PrePaymentStatus.部分核销, "toolStripBtnReverseReview", false, false);
+            AddButtonRule(PrePaymentStatus.部分核销, "toolStripButtonPrint", true, true);
             
             // 全额核销状态
-            AddButtonRule(PrePaymentStatus.全额核销, "btnAdd", false, false);
-            AddButtonRule(PrePaymentStatus.全额核销, "btnModify", false, false);
-            AddButtonRule(PrePaymentStatus.全额核销, "btnSave", false, false);
-            AddButtonRule(PrePaymentStatus.全额核销, "btnDelete", false, false);
-            AddButtonRule(PrePaymentStatus.全额核销, "btnSubmit", false, false);
-            AddButtonRule(PrePaymentStatus.全额核销, "btnApprove", false, false);
-            AddButtonRule(PrePaymentStatus.全额核销, "btnReverseApprove", true, true);
-            AddButtonRule(PrePaymentStatus.全额核销, "btnPrint", true, true);
+            AddButtonRule(PrePaymentStatus.全额核销, "toolStripbtnAdd", false, false);
+            AddButtonRule(PrePaymentStatus.全额核销, "toolStripbtnModify", false, false);
+            AddButtonRule(PrePaymentStatus.全额核销, "toolStripButtonSave", false, false);
+            AddButtonRule(PrePaymentStatus.全额核销, "toolStripbtnDelete", false, false);
+            AddButtonRule(PrePaymentStatus.全额核销, "toolStripbtnSubmit", false, false);
+            AddButtonRule(PrePaymentStatus.全额核销, "toolStripbtnReview", false, false);
+            AddButtonRule(PrePaymentStatus.全额核销, "toolStripBtnReverseReview", true, true);
+            AddButtonRule(PrePaymentStatus.全额核销, "toolStripButtonPrint", true, true);
             
             // 已结案状态
-            AddButtonRule(PrePaymentStatus.已结案, "btnAdd", false, false);
-            AddButtonRule(PrePaymentStatus.已结案, "btnModify", false, false);
-            AddButtonRule(PrePaymentStatus.已结案, "btnSave", false, false);
-            AddButtonRule(PrePaymentStatus.已结案, "btnDelete", false, false);
-            AddButtonRule(PrePaymentStatus.已结案, "btnSubmit", false, false);
-            AddButtonRule(PrePaymentStatus.已结案, "btnApprove", false, false);
-            AddButtonRule(PrePaymentStatus.已结案, "btnReverseApprove", false, false);
-            AddButtonRule(PrePaymentStatus.已结案, "btnPrint", true, true);
+            AddButtonRule(PrePaymentStatus.已结案, "toolStripbtnAdd", false, false);
+            AddButtonRule(PrePaymentStatus.已结案, "toolStripbtnModify", false, false);
+            AddButtonRule(PrePaymentStatus.已结案, "toolStripButtonSave", false, false);
+            AddButtonRule(PrePaymentStatus.已结案, "toolStripbtnDelete", false, false);
+            AddButtonRule(PrePaymentStatus.已结案, "toolStripbtnSubmit", false, false);
+            AddButtonRule(PrePaymentStatus.已结案, "toolStripbtnReview", false, false);
+            AddButtonRule(PrePaymentStatus.已结案, "toolStripBtnReverseReview", false, false);
+            AddButtonRule(PrePaymentStatus.已结案, "toolStripButtonPrint", true, true);
         }
 
         /// <summary>
@@ -322,74 +322,74 @@ namespace RUINORERP.Model.Base.StatusManager
         {
             // 应收应付状态按钮规则
             // 草稿状态
-            AddButtonRule(ARAPStatus.草稿, "btnAdd", true, true);
-            AddButtonRule(ARAPStatus.草稿, "btnModify", true, true);
-            AddButtonRule(ARAPStatus.草稿, "btnSave", true, true);
-            AddButtonRule(ARAPStatus.草稿, "btnDelete", true, true);
-            AddButtonRule(ARAPStatus.草稿, "btnSubmit", true, true);
-            AddButtonRule(ARAPStatus.草稿, "btnApprove", false, false);
-            AddButtonRule(ARAPStatus.草稿, "btnReverseApprove", false, false);
-            AddButtonRule(ARAPStatus.草稿, "btnPrint", true, true);
+            AddButtonRule(ARAPStatus.草稿, "toolStripbtnAdd", true, true);
+            AddButtonRule(ARAPStatus.草稿, "toolStripbtnModify", true, true);
+            AddButtonRule(ARAPStatus.草稿, "toolStripButtonSave", true, true);
+            AddButtonRule(ARAPStatus.草稿, "toolStripbtnDelete", true, true);
+            AddButtonRule(ARAPStatus.草稿, "toolStripbtnSubmit", true, true);
+            AddButtonRule(ARAPStatus.草稿, "toolStripbtnReview", false, false);
+            AddButtonRule(ARAPStatus.草稿, "toolStripBtnReverseReview", false, false);
+            AddButtonRule(ARAPStatus.草稿, "toolStripButtonPrint", true, true);
             
             // 待审核状态
-            AddButtonRule(ARAPStatus.待审核, "btnAdd", true, true);
-            AddButtonRule(ARAPStatus.待审核, "btnModify", true, true);
-            AddButtonRule(ARAPStatus.待审核, "btnSave", true, true);
-            AddButtonRule(ARAPStatus.待审核, "btnDelete", true, true);
-            AddButtonRule(ARAPStatus.待审核, "btnSubmit", false, false);
-            AddButtonRule(ARAPStatus.待审核, "btnApprove", true, true);
-            AddButtonRule(ARAPStatus.待审核, "btnReverseApprove", false, false);
-            AddButtonRule(ARAPStatus.待审核, "btnPrint", true, true);
+            AddButtonRule(ARAPStatus.待审核, "toolStripbtnAdd", true, true);
+            AddButtonRule(ARAPStatus.待审核, "toolStripbtnModify", true, true);
+            AddButtonRule(ARAPStatus.待审核, "toolStripButtonSave", true, true);
+            AddButtonRule(ARAPStatus.待审核, "toolStripbtnDelete", true, true);
+            AddButtonRule(ARAPStatus.待审核, "toolStripbtnSubmit", false, false);
+            AddButtonRule(ARAPStatus.待审核, "toolStripbtnReview", true, true);
+            AddButtonRule(ARAPStatus.待审核, "toolStripBtnReverseReview", false, false);
+            AddButtonRule(ARAPStatus.待审核, "toolStripButtonPrint", true, true);
             
             // 待支付状态
-            AddButtonRule(ARAPStatus.待支付, "btnAdd", false, false);
-            AddButtonRule(ARAPStatus.待支付, "btnModify", true, true);
-            AddButtonRule(ARAPStatus.待支付, "btnSave", true, true);
-            AddButtonRule(ARAPStatus.待支付, "btnDelete", false, false);
-            AddButtonRule(ARAPStatus.待支付, "btnSubmit", false, false);
-            AddButtonRule(ARAPStatus.待支付, "btnApprove", false, false);
-            AddButtonRule(ARAPStatus.待支付, "btnReverseApprove", false, false);
-            AddButtonRule(ARAPStatus.待支付, "btnPrint", true, true);
+            AddButtonRule(ARAPStatus.待支付, "toolStripbtnAdd", false, false);
+            AddButtonRule(ARAPStatus.待支付, "toolStripbtnModify", true, true);
+            AddButtonRule(ARAPStatus.待支付, "toolStripButtonSave", true, true);
+            AddButtonRule(ARAPStatus.待支付, "toolStripbtnDelete", false, false);
+            AddButtonRule(ARAPStatus.待支付, "toolStripbtnSubmit", false, false);
+            AddButtonRule(ARAPStatus.待支付, "toolStripbtnReview", false, false);
+            AddButtonRule(ARAPStatus.待支付, "toolStripBtnReverseReview", false, false);
+            AddButtonRule(ARAPStatus.待支付, "toolStripButtonPrint", true, true);
             
             // 部分支付状态
-            AddButtonRule(ARAPStatus.部分支付, "btnAdd", false, false);
-            AddButtonRule(ARAPStatus.部分支付, "btnModify", true, true);
-            AddButtonRule(ARAPStatus.部分支付, "btnSave", true, true);
-            AddButtonRule(ARAPStatus.部分支付, "btnDelete", false, false);
-            AddButtonRule(ARAPStatus.部分支付, "btnSubmit", false, false);
-            AddButtonRule(ARAPStatus.部分支付, "btnApprove", false, false);
-            AddButtonRule(ARAPStatus.部分支付, "btnReverseApprove", false, false);
-            AddButtonRule(ARAPStatus.部分支付, "btnPrint", true, true);
+            AddButtonRule(ARAPStatus.部分支付, "toolStripbtnAdd", false, false);
+            AddButtonRule(ARAPStatus.部分支付, "toolStripbtnModify", true, true);
+            AddButtonRule(ARAPStatus.部分支付, "toolStripButtonSave", true, true);
+            AddButtonRule(ARAPStatus.部分支付, "toolStripbtnDelete", false, false);
+            AddButtonRule(ARAPStatus.部分支付, "toolStripbtnSubmit", false, false);
+            AddButtonRule(ARAPStatus.部分支付, "toolStripbtnReview", false, false);
+            AddButtonRule(ARAPStatus.部分支付, "toolStripBtnReverseReview", false, false);
+            AddButtonRule(ARAPStatus.部分支付, "toolStripButtonPrint", true, true);
             
             // 全部支付状态
-            AddButtonRule(ARAPStatus.全部支付, "btnAdd", false, false);
-            AddButtonRule(ARAPStatus.全部支付, "btnModify", false, false);
-            AddButtonRule(ARAPStatus.全部支付, "btnSave", false, false);
-            AddButtonRule(ARAPStatus.全部支付, "btnDelete", false, false);
-            AddButtonRule(ARAPStatus.全部支付, "btnSubmit", false, false);
-            AddButtonRule(ARAPStatus.全部支付, "btnApprove", false, false);
-            AddButtonRule(ARAPStatus.全部支付, "btnReverseApprove", true, true);
-            AddButtonRule(ARAPStatus.全部支付, "btnPrint", true, true);
+            AddButtonRule(ARAPStatus.全部支付, "toolStripbtnAdd", false, false);
+            AddButtonRule(ARAPStatus.全部支付, "toolStripbtnModify", false, false);
+            AddButtonRule(ARAPStatus.全部支付, "toolStripButtonSave", false, false);
+            AddButtonRule(ARAPStatus.全部支付, "toolStripbtnDelete", false, false);
+            AddButtonRule(ARAPStatus.全部支付, "toolStripbtnSubmit", false, false);
+            AddButtonRule(ARAPStatus.全部支付, "toolStripbtnReview", false, false);
+            AddButtonRule(ARAPStatus.全部支付, "toolStripBtnReverseReview", true, true);
+            AddButtonRule(ARAPStatus.全部支付, "toolStripButtonPrint", true, true);
             
             // 坏账状态
-            AddButtonRule(ARAPStatus.坏账, "btnAdd", false, false);
-            AddButtonRule(ARAPStatus.坏账, "btnModify", false, false);
-            AddButtonRule(ARAPStatus.坏账, "btnSave", false, false);
-            AddButtonRule(ARAPStatus.坏账, "btnDelete", false, false);
-            AddButtonRule(ARAPStatus.坏账, "btnSubmit", false, false);
-            AddButtonRule(ARAPStatus.坏账, "btnApprove", false, false);
-            AddButtonRule(ARAPStatus.坏账, "btnReverseApprove", true, true);
-            AddButtonRule(ARAPStatus.坏账, "btnPrint", true, true);
+            AddButtonRule(ARAPStatus.坏账, "toolStripbtnAdd", false, false);
+            AddButtonRule(ARAPStatus.坏账, "toolStripbtnModify", false, false);
+            AddButtonRule(ARAPStatus.坏账, "toolStripButtonSave", false, false);
+            AddButtonRule(ARAPStatus.坏账, "toolStripbtnDelete", false, false);
+            AddButtonRule(ARAPStatus.坏账, "toolStripbtnSubmit", false, false);
+            AddButtonRule(ARAPStatus.坏账, "toolStripbtnReview", false, false);
+            AddButtonRule(ARAPStatus.坏账, "toolStripBtnReverseReview", true, true);
+            AddButtonRule(ARAPStatus.坏账, "toolStripButtonPrint", true, true);
             
             // 已冲销状态
-            AddButtonRule(ARAPStatus.已冲销, "btnAdd", false, false);
-            AddButtonRule(ARAPStatus.已冲销, "btnModify", false, false);
-            AddButtonRule(ARAPStatus.已冲销, "btnSave", false, false);
-            AddButtonRule(ARAPStatus.已冲销, "btnDelete", false, false);
-            AddButtonRule(ARAPStatus.已冲销, "btnSubmit", false, false);
-            AddButtonRule(ARAPStatus.已冲销, "btnApprove", false, false);
-            AddButtonRule(ARAPStatus.已冲销, "btnReverseApprove", false, false);
-            AddButtonRule(ARAPStatus.已冲销, "btnPrint", true, true);
+            AddButtonRule(ARAPStatus.已冲销, "toolStripbtnAdd", false, false);
+            AddButtonRule(ARAPStatus.已冲销, "toolStripbtnModify", false, false);
+            AddButtonRule(ARAPStatus.已冲销, "toolStripButtonSave", false, false);
+            AddButtonRule(ARAPStatus.已冲销, "toolStripbtnDelete", false, false);
+            AddButtonRule(ARAPStatus.已冲销, "toolStripbtnSubmit", false, false);
+            AddButtonRule(ARAPStatus.已冲销, "toolStripbtnReview", false, false);
+            AddButtonRule(ARAPStatus.已冲销, "toolStripBtnReverseReview", false, false);
+            AddButtonRule(ARAPStatus.已冲销, "toolStripButtonPrint", true, true);
         }
     }
 }

@@ -502,9 +502,6 @@ namespace RUINORERP.Model.Base.StatusManager
                 Reason = reason ?? Reason;
                 TransitionTime = DateTime.Now;
 
-                // 注意：状态变更事件由状态管理器统一管理，不再在此处直接触发
-                // 状态管理器会在设置状态时自动触发相应的事件
-
                 return Task.FromResult(true);
             }
             catch (Exception ex)

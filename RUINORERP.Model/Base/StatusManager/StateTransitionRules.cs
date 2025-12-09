@@ -383,26 +383,30 @@ namespace RUINORERP.Model.Base.StatusManager
         }
 
         /// <summary>
-        /// 检查状态转换是否允许
+        /// 验证状态转换是否合法
         /// </summary>
         /// <param name="transitionRules">转换规则字典</param>
+        /// <param name="statusType">状态类型</param>
         /// <param name="fromStatus">源状态</param>
         /// <param name="toStatus">目标状态</param>
         /// <returns>是否允许转换</returns>
-        public static bool IsTransitionAllowed(Dictionary<Type, Dictionary<object, List<object>>> transitionRules, Enum fromStatus, Enum toStatus)
+        public static bool IsTransitionAllowed(
+            Dictionary<Type, Dictionary<object, List<object>>> transitionRules,
+            Type statusType,
+            object fromStatus,
+            object toStatus)
         {
-            if (transitionRules == null || fromStatus == null || toStatus == null)
+            if (transitionRules == null || statusType == null || fromStatus == null || toStatus == null)
                 return false;
 
-            var statusType = fromStatus.GetType();
-            
             if (!transitionRules.ContainsKey(statusType))
                 return false;
 
-            if (!transitionRules[statusType].ContainsKey(fromStatus))
+            var statusRules = transitionRules[statusType];
+            if (!statusRules.ContainsKey(fromStatus))
                 return false;
 
-            return transitionRules[statusType][fromStatus].Contains(toStatus);
+            return statusRules[fromStatus].Contains(toStatus);
         }
 
         /// <summary>

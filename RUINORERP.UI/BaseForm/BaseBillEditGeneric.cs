@@ -723,10 +723,9 @@ namespace RUINORERP.UI.BaseForm
 
                 switch (buttonName)
                 {
-                    case "btnAdd":
+                    case "toolStripbtnAdd":
                         // 新增按钮通常不在编辑窗体中
                         break;
-                    case "btnModify":
                     case "toolStripbtnModify":
                         if (toolStripbtnModify != null)
                         {
@@ -734,7 +733,6 @@ namespace RUINORERP.UI.BaseForm
                             toolStripbtnModify.Visible = visible;
                         }
                         break;
-                    case "btnSave":
                     case "toolStripButtonSave":
                         if (toolStripButtonSave != null)
                         {
@@ -742,7 +740,6 @@ namespace RUINORERP.UI.BaseForm
                             toolStripButtonSave.Visible = visible;
                         }
                         break;
-                    case "btnDelete":
                     case "toolStripbtnDelete":
                         if (toolStripbtnDelete != null)
                         {
@@ -750,7 +747,6 @@ namespace RUINORERP.UI.BaseForm
                             toolStripbtnDelete.Visible = visible;
                         }
                         break;
-                    case "btnSubmit":
                     case "toolStripbtnSubmit":
                         if (toolStripbtnSubmit != null)
                         {
@@ -758,7 +754,6 @@ namespace RUINORERP.UI.BaseForm
                             toolStripbtnSubmit.Visible = visible;
                         }
                         break;
-                    case "btnApprove":
                     case "toolStripbtnReview":
                         if (toolStripbtnReview != null)
                         {
@@ -766,7 +761,6 @@ namespace RUINORERP.UI.BaseForm
                             toolStripbtnReview.Visible = visible;
                         }
                         break;
-                    case "btnReverseApprove":
                     case "toolStripBtnReverseReview":
                         if (toolStripBtnReverseReview != null)
                         {
@@ -774,7 +768,6 @@ namespace RUINORERP.UI.BaseForm
                             toolStripBtnReverseReview.Visible = visible;
                         }
                         break;
-                    case "btnClose":
                     case "toolStripButtonCaseClosed":
                         if (toolStripButtonCaseClosed != null)
                         {
@@ -782,10 +775,7 @@ namespace RUINORERP.UI.BaseForm
                             toolStripButtonCaseClosed.Visible = visible;
                         }
                         break;
-                    case "btnAntiClose":
-                        // 反结案按钮通常不在编辑窗体中
-                        break;
-                    case "btnPrint":
+                    case "toolStripButtonPrint":
                         // 打印按钮通常不在编辑窗体中
                         break;
                 }
@@ -2582,17 +2572,7 @@ namespace RUINORERP.UI.BaseForm
                 throw;
             }
         }
-
-        /// <summary>【已废弃】设置实体状态属性值 - 同步版本</summary>
-        [Obsolete("请使用异步版本SetEntityStatusAsync替代", false)]
-        private void SetEntityStatus<TStatus>(BaseEntity entity, TStatus status) where TStatus : Enum
-        {
-            string propertyName = typeof(TStatus).Name;
-            if (entity.ContainsProperty(propertyName))
-            {
-                ReflectionHelper.SetPropertyValue(entity, propertyName, (int)(object)status);
-            }
-        }
+ 
 
         /// <summary>
         /// 从实体中获取业务状态枚举值

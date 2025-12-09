@@ -8,12 +8,15 @@ using System.ComponentModel;
 using RUINORERP.Common.CustomAttribute;
 using RUINORERP.Model;
 using RUINORERP.Model.Base;
+using RUINORERP.Model.Base.StatusManager;
 using RUINORERP.Common.Extensions;
+
 namespace RUINORERP.Business.StatusManagerService
 {
     /// <summary>
     /// 业务单据状态管理帮助类
-    /// 处理数据状态、审批状态和操作权限的逻辑关系
+    /// 注意：此类已重构为使用统一的状态管理系统，避免重复定义
+    /// 主要提供便捷的静态方法，实际逻辑由UnifiedStateManager和StateTransitionRules处理
     /// </summary>
     public static class StatusManagerService
     {
@@ -110,6 +113,7 @@ namespace RUINORERP.Business.StatusManagerService
 
         /// <summary>
         /// 验证状态转换是否合法
+        /// 注意：此方法已重构为使用StateTransitionRules，避免重复定义
         /// </summary>
         /// <param name="currentDataStatus">当前数据状态</param>
         /// <param name="targetDataStatus">目标数据状态</param>
@@ -121,6 +125,16 @@ namespace RUINORERP.Business.StatusManagerService
             ApprovalStatus currentApprovalStatus,
             ApprovalStatus targetApprovalStatus)
         {
+            // 使用统一的状态转换规则验证
+            var transitionRules = new Dictionary<Type, Dictionary<object, List<object>>>();
+            StateTransitionRules.InitializeDefaultRules(transitionRules);
+            
+            // 验证数据状态转换
+            if (!StateTransitionRules.IsTransitionAllowed(transitionRules, typeof(DataStatus), currentDataStatus, targetDataStatus))
+            {
+                throw new InvalidOperationException($"不允许的状态转换: {currentDataStatus} -> {targetDataStatus}");
+            }
+            
             // 终态不能修改
             if (IsFinalStatus(currentDataStatus))
             {
@@ -223,47 +237,5 @@ namespace RUINORERP.Business.StatusManagerService
         }
 
         #endregion
-
     }
-
-
-  
-    public class StatusTransitionRules
-    {
-        private static readonly Dictionary<DataStatus, HashSet<DataStatus>> _allowedTransitions =
-            new Dictionary<DataStatus, HashSet<DataStatus>>
-            {
-            { DataStatus.草稿, new HashSet<DataStatus> { DataStatus.新建 } },
-            { DataStatus.新建, new HashSet<DataStatus> { DataStatus.确认, DataStatus.作废 } },
-            { DataStatus.确认, new HashSet<DataStatus> { DataStatus.完结, DataStatus.作废 } },
-            { DataStatus.完结, new HashSet<DataStatus>() },
-            { DataStatus.作废, new HashSet<DataStatus>() }
-            };
-
-        public static bool IsTransitionAllowed(DataStatus from, DataStatus to)
-        {
-            return _allowedTransitions.TryGetValue(from, out var allowed) &&
-                   allowed.Contains(to);
-        }
-    }
-
-
-
-
-
-    // 配置化的通知规则
-    //public interface INotificationRuleRepository
-    //{
-    //   // IEnumerable<NotificationRule> GetRules(WorkflowEvent workflowEvent);
-    //}
-
-    public class NotificationRule
-    {
-        // public WorkflowEvent TriggerEvent { get; set; }
-        public string TemplateId { get; set; }
-        public string RecipientType { get; set; } // User/Group/Role
-        public string RecipientValue { get; set; }
-    }
-
-
 }

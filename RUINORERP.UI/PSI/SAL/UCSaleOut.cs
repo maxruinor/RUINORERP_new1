@@ -59,7 +59,7 @@ namespace RUINORERP.UI.PSI.SAL
         public UCSaleOut()
         {
             InitializeComponent();
-            base.toolStripButton结案.Visible = true;
+            base.toolStripButtonCaseClosed.Visible = true;
             AddPublicEntityObject(typeof(ProductSharePart));
         }
 

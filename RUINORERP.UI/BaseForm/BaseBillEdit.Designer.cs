@@ -18,9 +18,6 @@ namespace RUINORERP.UI.BaseForm
                 components.Dispose();
                 if (disposing)
                 {
-                    // 确保正确取消事件订阅，避免内存泄漏
-                    UnsubscribeFromStateManagerEvents();
-
                     // 清理其他资源
                     BoundEntity = null;
          
@@ -55,7 +52,7 @@ namespace RUINORERP.UI.BaseForm
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripbtnReview = new System.Windows.Forms.ToolStripButton();
             this.toolStripBtnReverseReview = new System.Windows.Forms.ToolStripButton();
-            this.toolStripButton结案 = new System.Windows.Forms.ToolStripButton();
+            this.toolStripButtonCaseClosed = new System.Windows.Forms.ToolStripButton();
             this.toolStripDropDownbtnFuncation = new System.Windows.Forms.ToolStripDropDownButton();
             this.toolStripMenuItem3 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem4 = new System.Windows.Forms.ToolStripMenuItem();
@@ -91,7 +88,7 @@ namespace RUINORERP.UI.BaseForm
             this.toolStripSeparator1,
             this.toolStripbtnReview,
             this.toolStripBtnReverseReview,
-            this.toolStripButton结案,
+            this.toolStripButtonCaseClosed,
             this.toolStripDropDownbtnFuncation,
             this.toolStripbtnRelatedQuery,
             this.toolStripbtnConvertDocuments,
@@ -204,13 +201,13 @@ namespace RUINORERP.UI.BaseForm
             this.toolStripBtnReverseReview.Size = new System.Drawing.Size(53, 22);
             this.toolStripBtnReverseReview.Text = "反审";
             // 
-            // toolStripButton结案
+            // toolStripButtonCaseClosed
             // 
-            this.toolStripButton结案.Image = global::RUINORERP.UI.Properties.Resources.ok;
-            this.toolStripButton结案.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripButton结案.Name = "toolStripButton结案";
-            this.toolStripButton结案.Size = new System.Drawing.Size(53, 22);
-            this.toolStripButton结案.Text = "结案";
+            this.toolStripButtonCaseClosed.Image = global::RUINORERP.UI.Properties.Resources.ok;
+            this.toolStripButtonCaseClosed.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButtonCaseClosed.Name = "toolStripButtonCaseClosed";
+            this.toolStripButtonCaseClosed.Size = new System.Drawing.Size(53, 22);
+            this.toolStripButtonCaseClosed.Text = "结案";
             // 
             // toolStripDropDownbtnFuncation
             // 
@@ -321,7 +318,7 @@ namespace RUINORERP.UI.BaseForm
         public System.Windows.Forms.ToolStripDropDownButton toolStripbtnRelatedQuery;
         public System.Windows.Forms.ToolStripButton toolStripbtnSubmit;
         public System.Windows.Forms.ToolStripButton toolStripbtnAdd;
-        public System.Windows.Forms.ToolStripButton toolStripButton结案;
+        public System.Windows.Forms.ToolStripButton toolStripButtonCaseClosed;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem1;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem2;
         public System.Windows.Forms.ToolStripSplitButton toolStripbtnPrint;

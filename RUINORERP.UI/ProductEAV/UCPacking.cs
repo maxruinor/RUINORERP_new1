@@ -47,7 +47,7 @@ namespace RUINORERP.UI.ProductEAV
             InitializeComponent();
             //InitDataToCmbByEnumDynamicGeneratedDataSource<tb_Packing>(typeof(Priority), e => e.Priority, cmbOrderPriority, false);
 
-            toolStripButton结案.Visible = false;
+            toolStripButtonCaseClosed.Visible = false;
             toolStripBtnReverseReview.Visible = false;
             toolStripbtnReview.Visible = false;
             toolStripbtnSubmit.Visible = false;

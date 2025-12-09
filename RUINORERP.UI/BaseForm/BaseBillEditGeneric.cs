@@ -218,34 +218,7 @@ namespace RUINORERP.UI.BaseForm
 
         #endregion
 
-        /// <summary>
-        /// 状态上下文变更事件
-        /// </summary>
-        protected override void OnStatusContextChanged()
-        {
-            // 防止循环调用，使用标志位控制
-            if (_isUpdatingStatusContext) return;
-
-            try
-            {
-                _isUpdatingStatusContext = true;
-
-                // 首先调用基类的实现
-                base.OnStatusContextChanged();
-
-                // 触发泛型特定的StatusChanged事件
-                StatusChanged?.Invoke(this, new StateTransitionEventArgs(
-                    BoundEntity,
-                    StatusContext?.CurrentStatus?.GetType() ?? typeof(object),
-                    null, // 旧状态
-                    StatusContext?.CurrentStatus, // 新状态
-                    "状态上下文变更"));
-            }
-            finally
-            {
-                _isUpdatingStatusContext = false;
-            }
-        }
+       
 
         /// <summary>
         /// 订阅实体状态变更事件
@@ -310,7 +283,7 @@ namespace RUINORERP.UI.BaseForm
                 if (base.StatusContext != value)
                 {
                     base.StatusContext = value;
-                    OnStatusContextChanged();
+                    // 状态上下文变更时不再需要特殊处理，状态变更事件由UnifiedStateManager统一管理
                 }
             }
         }
@@ -544,9 +517,6 @@ namespace RUINORERP.UI.BaseForm
                 {
                     // 统一处理状态变更
                     OnEntityStateChanged(sender, e);
-
-                    // 移除对StatusChanged事件的再次触发，避免循环调用
-                    // StatusChanged?.Invoke(sender, e);
                 }
             }
             catch (Exception ex)
@@ -704,8 +674,8 @@ namespace RUINORERP.UI.BaseForm
                         toolStripbtnSubmit.Enabled = canSubmit;
                         toolStripbtnReview.Enabled = canReview;
                         toolStripBtnReverseReview.Enabled = canReverseReview;
-                        toolStripButton结案.Enabled = canCloseCase;
-                        toolStripButton结案.Visible = canCloseCase; // 结案按钮的可见性与可用状态一致
+                        toolStripButtonCaseClosed.Enabled = canCloseCase;
+                        toolStripButtonCaseClosed.Visible = canCloseCase; // 结案按钮的可见性与可用状态一致
                         toolStripbtnDelete.Enabled = canDelete;
                     }
                     else
@@ -718,8 +688,8 @@ namespace RUINORERP.UI.BaseForm
                         toolStripbtnSubmit.Enabled = false;
                         toolStripbtnReview.Enabled = false;
                         toolStripBtnReverseReview.Enabled = false;
-                        toolStripButton结案.Enabled = false;
-                        toolStripButton结案.Visible = false;
+                        toolStripButtonCaseClosed.Enabled = false;
+                        toolStripButtonCaseClosed.Visible = false;
                         toolStripbtnDelete.Enabled = false;
                     }
                 }
@@ -805,11 +775,11 @@ namespace RUINORERP.UI.BaseForm
                         }
                         break;
                     case "btnClose":
-                    case "toolStripButton结案":
-                        if (toolStripButton结案 != null)
+                    case "toolStripButtonCaseClosed":
+                        if (toolStripButtonCaseClosed != null)
                         {
-                            toolStripButton结案.Enabled = enabled;
-                            toolStripButton结案.Visible = visible;
+                            toolStripButtonCaseClosed.Enabled = enabled;
+                            toolStripButtonCaseClosed.Visible = visible;
                         }
                         break;
                     case "btnAntiClose":
@@ -2316,7 +2286,7 @@ namespace RUINORERP.UI.BaseForm
                 {
                     nameof(toolStripbtnModify), nameof(toolStripButtonSave), nameof(toolStripbtnSubmit),
                     nameof(toolStripbtnReview), nameof(toolStripBtnReverseReview),
-                    nameof(toolStripButton结案), nameof(toolStripbtnDelete)
+                    nameof(toolStripButtonCaseClosed), nameof(toolStripbtnDelete)
                 };
 
                 // 添加业务按钮到排除列表，确保它们的状态只由状态管理系统控制
@@ -2536,7 +2506,7 @@ namespace RUINORERP.UI.BaseForm
                 {
                     toolStripbtnModify, toolStripButtonSave, toolStripbtnSubmit,
                     toolStripbtnReview, toolStripBtnReverseReview,
-                    toolStripButton结案, toolStripbtnDelete
+                    toolStripButtonCaseClosed, toolStripbtnDelete
                 };
 
                 foreach (var button in businessButtons)

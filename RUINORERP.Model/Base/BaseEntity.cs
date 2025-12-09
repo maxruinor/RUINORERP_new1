@@ -753,11 +753,19 @@ namespace RUINORERP.Model
                     throw new ArgumentNullException(nameof(e), "StateTransitionEventArgs不能为null");
                 }
 
-                // 安全触发事件
-                var handler = StatusChanged;
-                if (handler != null)
+                // 通过状态管理器触发事件，实现集中管理
+                if (StateManager != null)
                 {
-                    handler(this, e);
+                    StateManager.TriggerStatusChangedEvent(e.Entity, e.StatusType, e.OldStatus, e.NewStatus);
+                }
+                else
+                {
+                    // 如果状态管理器不可用，则直接触发事件（降级处理）
+                    var handler = StatusChanged;
+                    if (handler != null)
+                    {
+                        handler(this, e);
+                    }
                 }
             }
             catch (Exception ex)
@@ -794,16 +802,8 @@ namespace RUINORERP.Model
                     this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
                     HasChanged = true;
 
-                    // 如果是ActionStatus属性变更，触发ActionStatusChanged事件
-                    if (propertyName == nameof(ActionStatus) && StatusChanged != null)
-                    {
-                        var eventArgs = new StateTransitionEventArgs(
-                            this,
-                            typeof(ActionStatus),
-                            oldValue,
-                            newValue);
-                        StatusChanged(this, eventArgs);
-                    }
+                    // 注意：状态变更事件由状态管理器统一管理，不再在此处直接触发
+                    // 状态变更事件将在状态属性的setter中通过状态管理器触发
                 }
                 catch (Exception ex)
                 {
@@ -972,7 +972,21 @@ namespace RUINORERP.Model
             get { return _ActionStatus; }
             set
             {
+                // 如果状态没有变化，则不执行任何操作
+                if (Equals(_ActionStatus, value))
+                {
+                    return;
+                }
+
                 _previousActionStatus = _ActionStatus;
+                
+                // 通过状态管理器触发状态变更事件，实现集中管理
+                if (StateManager != null)
+                {
+                    StateManager.TriggerStatusChangedEvent(this, typeof(ActionStatus), _previousActionStatus, value);
+                }
+                
+                // 设置属性值
                 SetProperty(ref _ActionStatus, value);
             }
         }
@@ -1403,18 +1417,32 @@ namespace RUINORERP.Model
             {
                 var oldStatus = GetDataStatus();
 
+                // 如果状态没有变化，则不执行任何操作
+                if (Equals(oldStatus, status))
+                {
+                    return;
+                }
+
                 // 首先尝试设置DataStatus属性
                 var dataStatusProperty = this.GetType().GetProperty("DataStatus");
                 if (dataStatusProperty != null && dataStatusProperty.PropertyType == typeof(DataStatus))
                 {
                     dataStatusProperty.SetValue(this, status);
 
-                    // 触发状态变更事件
-                    OnStatusChanged(new StateTransitionEventArgs(
-                        this,
-                        typeof(DataStatus),
-                        oldStatus,
-                        status));
+                    // 通过状态管理器触发状态变更事件，实现集中管理
+                    if (StateManager != null)
+                    {
+                        StateManager.TriggerStatusChangedEvent(this, typeof(DataStatus), oldStatus, status);
+                    }
+                    else
+                    {
+                        // 如果状态管理器不可用，则直接触发事件（降级处理）
+                        OnStatusChanged(new StateTransitionEventArgs(
+                            this,
+                            typeof(DataStatus),
+                            oldStatus,
+                            status));
+                    }
                     return;
                 }
 

@@ -19,7 +19,6 @@ namespace RUINORERP.Model.Base.StatusManager
     /// 提供状态转换过程中的上下文信息
     /// 移除了复杂的状态设置方法，简化了状态转换逻辑
     /// </summary>
-    [Obsolete("此类已过时，请使用UnifiedStateManager类替代。此类将在未来版本中移除。", false)]
     public class StatusTransitionContext : IStatusTransitionContext
     {
         #region 事件
@@ -38,10 +37,7 @@ namespace RUINORERP.Model.Base.StatusManager
         /// </summary>
         private readonly ILogger<StatusTransitionContext> _logger;
 
-        /// <summary>
-        /// 状态转换引擎
-        /// </summary>
-        private readonly IStatusTransitionEngine _transitionEngine;
+
 
         /// <summary>
         /// 状态管理器
@@ -98,14 +94,12 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <param name="statusType">状态类型</param>
         /// <param name="initialStatus">初始状态</param>
         /// <param name="statusManager">状态管理器</param>
-        /// <param name="transitionEngine">状态转换引擎</param>
         /// <param name="logger">日志记录器</param>
         public StatusTransitionContext(
             BaseEntity entity,
             Type statusType,
             object initialStatus,
             IUnifiedStateManager statusManager = null,
-            IStatusTransitionEngine transitionEngine = null,
             ILogger<StatusTransitionContext> logger = null)
         {
             Entity = entity ?? throw new ArgumentNullException(nameof(entity));
@@ -113,18 +107,8 @@ namespace RUINORERP.Model.Base.StatusManager
             CurrentStatus = initialStatus;
             _statusManager = statusManager;
             
-            // 如果未提供状态转换引擎，则使用默认实现
-            if (transitionEngine == null)
-            {
-#if !DEBUG
-                _logger?.LogWarning("正在使用已过时的StatusTransitionEngine作为默认实现。建议迁移到UnifiedStateManager。请参考StatusTransitionEngine.cs文件头部的迁移指南。");
-#endif
-                _transitionEngine = new StatusTransitionEngine();
-            }
-            else
-            {
-                _transitionEngine = transitionEngine;
-            }
+            // 不再使用状态转换引擎，直接使用StateTransitionRules
+            // 直接使用StateTransitionRules，不再依赖_transitionEngine
             
             _logger = logger;
             AdditionalData = new Dictionary<string, object>();
@@ -243,20 +227,29 @@ namespace RUINORERP.Model.Base.StatusManager
         {
             try
             {
-                // 执行转换
-                StateTransitionResult result;
-
+                // 验证状态转换是否允许
+                bool isAllowed = false;
                 if (StatusType == typeof(DataStatus))
                 {
-                    result = await _transitionEngine.ExecuteTransitionAsync((DataStatus)CurrentStatus, (DataStatus)targetStatus, this);
+                    isAllowed = StateTransitionRules.IsTransitionAllowed((DataStatus)CurrentStatus, (DataStatus)targetStatus);
                 }
                 else if (StatusType == typeof(ActionStatus))
                 {
-                    result = await _transitionEngine.ExecuteTransitionAsync((ActionStatus)CurrentStatus, (ActionStatus)targetStatus, this);
+                    isAllowed = StateTransitionRules.IsTransitionAllowed((ActionStatus)CurrentStatus, (ActionStatus)targetStatus);
                 }
                 else
                 {
                     return StateTransitionResult.Failure("不支持的状态类型");
+                }
+
+                StateTransitionResult result;
+                if (isAllowed)
+                {
+                    result = StateTransitionResult.Success($"状态转换成功：从 {CurrentStatus} 转换到 {targetStatus}");
+                }
+                else
+                {
+                    result = StateTransitionResult.Failure($"状态转换失败：从 {CurrentStatus} 无法转换到 {targetStatus}");
                 }
 
                 if (result.IsSuccess)
@@ -287,11 +280,11 @@ namespace RUINORERP.Model.Base.StatusManager
             // 根据状态类型调用适当的泛型方法
             if (StatusType == typeof(DataStatus))
             {
-                return _transitionEngine.GetAvailableTransitions((DataStatus)CurrentStatus, this).Cast<object>();
+                return StateTransitionRules.GetAvailableTransitions((DataStatus)CurrentStatus).Cast<object>();
             }
             else if (StatusType == typeof(ActionStatus))
             {
-                return _transitionEngine.GetAvailableTransitions((ActionStatus)CurrentStatus, this).Cast<object>();
+                return StateTransitionRules.GetAvailableTransitions((ActionStatus)CurrentStatus).Cast<object>();
             }
             else
             {
@@ -426,21 +419,16 @@ namespace RUINORERP.Model.Base.StatusManager
                     return Task.FromResult(false);
                 }
 
+                var oldStatus = CurrentStatus;
+                
+                // 通过状态管理器设置状态，状态管理器会负责触发事件
                 _statusManager.SetDataStatusAsync(Entity, status).Wait();
                 CurrentStatus = status;
                 Reason = reason ?? Reason;
                 TransitionTime = DateTime.Now;
 
-                // 触发状态变化事件
-                StatusChanged?.Invoke(this, new StateTransitionEventArgs(
-                    Entity,
-                    StatusType,
-                    CurrentStatus,
-                    status,
-                    reason,
-                    UserId,
-                    TransitionTime,
-                    AdditionalData));
+                // 注意：状态变更事件由状态管理器统一管理，不再在此处直接触发
+                // 状态管理器会在设置状态时自动触发相应的事件
 
                 return Task.FromResult(true);
             }
@@ -467,21 +455,16 @@ namespace RUINORERP.Model.Base.StatusManager
                     return Task.FromResult(false);
                 }
 
-                // 简化处理，直接设置当前状态
+                var oldStatus = CurrentStatus;
+                
+                // 通过状态管理器设置状态，状态管理器会负责触发事件
+                _statusManager.SetBusinessStatusAsync(Entity, status.GetType(), status).Wait();
                 CurrentStatus = status;
                 Reason = reason ?? Reason;
                 TransitionTime = DateTime.Now;
 
-                // 触发状态变化事件
-                StatusChanged?.Invoke(this, new StateTransitionEventArgs(
-                    Entity,
-                    StatusType,
-                    CurrentStatus,
-                    status,
-                    reason,
-                    UserId,
-                    TransitionTime,
-                    AdditionalData));
+                // 注意：状态变更事件由状态管理器统一管理，不再在此处直接触发
+                // 状态管理器会在设置状态时自动触发相应的事件
 
                 return Task.FromResult(true);
             }
@@ -508,21 +491,16 @@ namespace RUINORERP.Model.Base.StatusManager
                     return Task.FromResult(false);
                 }
 
+                var oldStatus = CurrentStatus;
+                
+                // 通过状态管理器设置状态，状态管理器会负责触发事件
                 _statusManager.SetActionStatusAsync(Entity, status).Wait();
                 CurrentStatus = status;
                 Reason = reason ?? Reason;
                 TransitionTime = DateTime.Now;
 
-                // 触发状态变化事件
-                StatusChanged?.Invoke(this, new StateTransitionEventArgs(
-                    Entity,
-                    StatusType,
-                    CurrentStatus,
-                    status,
-                    reason,
-                    UserId,
-                    TransitionTime,
-                    AdditionalData));
+                // 注意：状态变更事件由状态管理器统一管理，不再在此处直接触发
+                // 状态管理器会在设置状态时自动触发相应的事件
 
                 return Task.FromResult(true);
             }

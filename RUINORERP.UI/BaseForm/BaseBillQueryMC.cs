@@ -179,7 +179,7 @@ namespace RUINORERP.UI.BaseForm
                     }
                     MainForm.Instance.AppContext.log.ActionName = "BaseBillQueryMC()";
 
-                    toolStripButton结案.Visible = false;
+                    toolStripButtonCaseClosed.Visible = false;
                     AddExcludeMenuList();
 
                     //其它的排除

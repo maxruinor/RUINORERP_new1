@@ -33,7 +33,6 @@ namespace RUINORERP.UI
         {
             // 注册简化的缓存管理器
             services.AddSingleton<SimpleCacheManager>();
-            
             // 注册状态管理核心服务 - 使用内部实现
             services.AddSingleton<IUnifiedStateManager, UnifiedStateManager>();
             
@@ -49,14 +48,11 @@ namespace RUINORERP.UI
         {
             // 注册简化的缓存管理器
             builder.RegisterType<SimpleCacheManager>().SingleInstance();
-            
             // 注册状态管理核心服务 - 使用内部实现
             builder.RegisterType<UnifiedStateManager>()
                    .As<IUnifiedStateManager>()
                    .SingleInstance();
-                   
-           
-            
+                    
             return builder;
         }
 

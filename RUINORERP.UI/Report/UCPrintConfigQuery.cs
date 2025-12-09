@@ -106,7 +106,7 @@ namespace RUINORERP.UI.Report
 
         public override void AddExcludeMenuList()
         {
-            toolStripButton结案.Visible = false;
+            toolStripButtonCaseClosed.Visible = false;
             toolStripbtnSubmit.Visible = false;
             toolStripbtnApprove.Visible = false;
             tsbtnAntiApproval.Visible = false;

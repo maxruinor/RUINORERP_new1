@@ -36,7 +36,7 @@
             this.toolStripbtnApprove = new System.Windows.Forms.ToolStripButton();
             this.tsbtnAntiApproval = new System.Windows.Forms.ToolStripButton();
             this.toolStripButtonDelete = new System.Windows.Forms.ToolStripButton();
-            this.toolStripButton结案 = new System.Windows.Forms.ToolStripButton();
+            this.toolStripButtonCaseClosed = new System.Windows.Forms.ToolStripButton();
             this.toolStripSplitButtonPrint = new System.Windows.Forms.ToolStripSplitButton();
             this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
@@ -78,7 +78,7 @@
             this.toolStripbtnApprove,
             this.tsbtnAntiApproval,
             this.toolStripButtonDelete,
-            this.toolStripButton结案,
+            this.toolStripButtonCaseClosed,
             this.toolStripSplitButtonPrint,
             this.toolStripSeparator1,
             this.toolStripBtnExport,
@@ -139,13 +139,13 @@
             this.toolStripButtonDelete.Size = new System.Drawing.Size(53, 22);
             this.toolStripButtonDelete.Text = "删除";
             // 
-            // toolStripButton结案
+            // toolStripButtonCaseClosed
             // 
-            this.toolStripButton结案.Image = global::RUINORERP.UI.Properties.Resources.ok;
-            this.toolStripButton结案.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripButton结案.Name = "toolStripButton结案";
-            this.toolStripButton结案.Size = new System.Drawing.Size(53, 22);
-            this.toolStripButton结案.Text = "结案";
+            this.toolStripButtonCaseClosed.Image = global::RUINORERP.UI.Properties.Resources.ok;
+            this.toolStripButtonCaseClosed.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButtonCaseClosed.Name = "toolStripButtonCaseClosed";
+            this.toolStripButtonCaseClosed.Size = new System.Drawing.Size(53, 22);
+            this.toolStripButtonCaseClosed.Text = "结案";
             // 
             // toolStripSplitButtonPrint
             // 
@@ -358,7 +358,7 @@
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem1;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem2;
         public System.Windows.Forms.ToolStripButton toolStripButtonDelete;
-        public System.Windows.Forms.ToolStripButton toolStripButton结案;
+        public System.Windows.Forms.ToolStripButton toolStripButtonCaseClosed;
         public System.Windows.Forms.ToolStripTextBox txtMaxRow;
         public System.Windows.Forms.ToolStripButton toolStripbtnProperty;
         private Krypton.Toolkit.KryptonHeaderGroup kryptonHeaderGroupTop;

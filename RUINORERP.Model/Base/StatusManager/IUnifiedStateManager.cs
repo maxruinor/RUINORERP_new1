@@ -78,6 +78,16 @@ namespace RUINORERP.Model.Base.StatusManager
         Task<bool> SetBusinessStatusAsync<T>(BaseEntity entity, T status, string reason = null) where T : struct, Enum;
 
         /// <summary>
+        /// 设置实体的业务状态（非泛型版本）
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        /// <param name="statusType">业务状态枚举类型</param>
+        /// <param name="status">状态值</param>
+        /// <param name="reason">变更原因</param>
+        /// <returns>设置是否成功</returns>
+        Task<bool> SetBusinessStatusAsync(BaseEntity entity, Type statusType, object status, string reason = null);
+
+        /// <summary>
         /// 获取当前操作状态
         /// </summary>
         /// <param name="entity">实体对象</param>
@@ -280,5 +290,15 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <param name="status">当前状态</param>
         /// <returns>可执行的操作列表</returns>
         IEnumerable<MenuItemEnums> GetAvailableActions(BaseEntity entity, Type statusType, object status);
+
+        /// <summary>
+        /// 触发状态变更事件
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        /// <param name="statusType">状态类型</param>
+        /// <param name="oldStatus">旧状态</param>
+        /// <param name="newStatus">新状态</param>
+        /// <param name="reason">变更原因</param>
+        void TriggerStatusChangedEvent(BaseEntity entity, Type statusType, object oldStatus, object newStatus, string reason = null);
     }
 }

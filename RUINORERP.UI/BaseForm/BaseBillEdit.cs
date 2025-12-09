@@ -141,7 +141,7 @@ namespace RUINORERP.UI.BaseForm
                 if (_statusContext != value)
                 {
                     _statusContext = value;
-                    OnStatusContextChanged();
+                    // 状态上下文变更时不再需要特殊处理，状态变更事件由UnifiedStateManager统一管理
                 }
             }
         }
@@ -183,8 +183,7 @@ namespace RUINORERP.UI.BaseForm
 
               
 
-                // 统一注册状态变更事件处理 - 使用异步事件处理器
-                SubscribeToStateManagerEvents();
+                // 状态变更事件已由UnifiedStateManager统一管理，无需手动订阅
                 
                 // 标记已初始化
                 _isStateManagementInitialized = true;
@@ -194,99 +193,6 @@ namespace RUINORERP.UI.BaseForm
                 logger?.LogError(ex, "初始化状态管理失败");
                 System.Diagnostics.Debug.WriteLine($"初始化状态管理失败: {ex.Message}");
             }
-        }
-
-        /// <summary>
-        /// 订阅状态管理器事件
-        /// </summary>
-        protected void SubscribeToStateManagerEvents()
-        {
-            if (_stateManager != null)
-            {
-                // 先取消订阅防止重复订阅
-                UnsubscribeFromStateManagerEvents();
-                
-                // 使用方法引用便于后续取消订阅
-                _stateChangedHandler = async (sender, e) => await OnStateManagerStateChangedAsync(sender, e);
-                _stateManager.StatusChanged += _stateChangedHandler;
-            }
-        }
-
-        /// <summary>
-        /// 取消订阅状态管理器事件
-        /// </summary>
-        protected void UnsubscribeFromStateManagerEvents()
-        {
-            // 正确取消事件订阅
-            if (_stateManager != null && _stateChangedHandler != null)
-            {
-                _stateManager.StatusChanged -= _stateChangedHandler;
-                _stateChangedHandler = null;
-            }
-        }
-
-        /// <summary>
-        /// 异步处理状态管理器中的状态变更事件
-        /// </summary>
-        /// <param name="sender">事件发送者</param>
-        /// <param name="e">状态变更事件参数</param>
-        protected virtual async Task OnStateManagerStateChangedAsync(object sender, StateTransitionEventArgs e)
-        {
-            // 使用事件过滤器，避免不必要的处理逻辑执行
-            if (!ShouldHandleStateChange(e))
-            {
-                return;
-            }
-
-            try
-            {
-                // 如果变更的是当前绑定实体的状态，则更新UI
-                if (e.Entity == BoundEntity && _stateManager != null)
-                {
-                    await Task.Run(() => ApplyCurrentStatusToUI());
-                    await HandleSpecificStateChangeAsync(e.OldStatus, e.NewStatus, e.Reason);
-                }
-            }
-            catch (Exception ex)
-            {
-                logger?.LogError(ex, "处理状态变更事件失败");
-            }
-        }
-
-        /// <summary>
-        /// 事件过滤器，判断是否应该处理状态变更事件
-        /// </summary>
-        /// <param name="e">状态变更事件参数</param>
-        /// <returns>是否应该处理</returns>
-        protected virtual bool ShouldHandleStateChange(StateTransitionEventArgs e)
-        {
-            // 如果没有绑定实体，不处理
-            if (BoundEntity == null)
-                return false;
-
-            // 如果事件实体与绑定实体不匹配，不处理
-            if (e.Entity != BoundEntity)
-                return false;
-
-
-            // 如果状态没有实际变化，不处理
-            if (e.OldStatus == e.NewStatus)
-                return false;
-
-            return true;
-        }
-
-        /// <summary>
-        /// 异步处理特定的状态变更逻辑（子类可重写）
-        /// </summary>
-        /// <param name="originalState">原始状态</param>
-        /// <param name="newState">新状态</param>
-        /// <param name="reason">变更原因</param>
-        protected virtual async Task HandleSpecificStateChangeAsync(object originalState, object newState, string reason)
-        {
-            // 默认为同步处理，子类可以重写为异步处理
-            HandleSpecificStateChange(originalState, newState, reason);
-            await Task.CompletedTask;
         }
 
         #endregion
@@ -327,9 +233,10 @@ namespace RUINORERP.UI.BaseForm
                 }
                 else if (StatusContext == null)
                 {
-                    // 备选方案：直接使用状态管理器创建默认状态上下文
+                    // 备选方案：创建基本状态上下文
                     // 这种情况理论上不应该发生，因为_stateManager应该总是可用
-                    StatusContext = _stateManager.CreateDataStatusContext(entity, DataStatus.草稿, Startup.ServiceProvider);
+                    logger?.LogWarning("状态管理器不可用，无法创建状态上下文");
+                    StatusContext = null;
                 }
             }
             catch (Exception ex)
@@ -502,59 +409,6 @@ namespace RUINORERP.UI.BaseForm
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"刷新状态失败: {ex.Message}");
-            }
-        }
-
-        #endregion
-
-        #region 事件处理
-
-
-
-        /// <summary>
-        /// UI控制器变更事件
-        /// </summary>
-        protected virtual void OnUIControllerChanged()
-        {
-            // 子类可以重写此方法来处理UI控制器变更
-        }
-
-        /// <summary>
-        /// 状态上下文变更事件
-        /// </summary>
-        protected virtual void OnStatusContextChanged()
-        {
-            // 防止重复订阅事件，先取消订阅再订阅
-            if (StatusContext != null)
-            {
-                // 取消之前的事件订阅（如果有）
-                StatusContext.StatusChanged -= OnStatusContextStateChanged;
-                // 注册新的状态变更事件处理程序
-                StatusContext.StatusChanged += OnStatusContextStateChanged;
-            }
-        }
-
-        /// <summary>
-        /// 状态上下文状态变更事件处理程序
-        /// </summary>
-        /// <param name="sender">事件发送者</param>
-        /// <param name="e">事件参数</param>
-        protected virtual void OnStatusContextStateChanged(object sender, StateTransitionEventArgs e)
-        {
-            // 如果变更的是当前绑定实体的状态，则更新UI
-            if (e.Entity == BoundEntity && StatusContext != null)
-            {
-                // 使用同步方式更新UI，避免跨线程问题
-                if (this.InvokeRequired)
-                {
-                    this.Invoke(new Action(() => ApplyCurrentStatusToUI()));
-                }
-                else
-                {
-                    ApplyCurrentStatusToUI();
-                }
-                
-                HandleSpecificStateChange(e.OldStatus, e.NewStatus, e.Reason);
             }
         }
 
@@ -1380,24 +1234,6 @@ namespace RUINORERP.UI.BaseForm
                 }
             }
         }
-
-        /// <summary>
-        /// 订阅状态上下文事件
-        /// 注意：此方法已被OnStatusContextChanged替代，避免重复订阅
-        /// </summary>
-        [Obsolete("此方法已被OnStatusContextChanged替代，避免重复订阅")]
-        protected virtual void SubscribeToStatusContext()
-        {
-            // 防止重复订阅事件，先取消订阅再订阅
-            if (StatusContext != null)
-            {
-                // 取消之前的事件订阅（如果有）
-                StatusContext.StatusChanged -= OnStatusContextStateChanged;
-                // 注册状态变更事件处理程序
-                StatusContext.StatusChanged += OnStatusContextStateChanged;
-            }
-        }
-       
 
         private bool editflag;
 

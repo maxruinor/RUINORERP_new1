@@ -32,7 +32,7 @@ namespace RUINORERP.UI.MRP.BOM
             //base.RelatedBillEditCol = (c => c.BOM_No);
             this.Load += UCInventoryQuery_Load;
             //bom没有结案的情况
-            toolStripButton结案.Visible = false;
+            toolStripButtonCaseClosed.Visible = false;
             //TODO 后面优化 一个手动添加忽略的按钮方法。
 
         }

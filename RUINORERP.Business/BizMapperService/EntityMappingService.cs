@@ -288,38 +288,44 @@ namespace RUINORERP.Business.BizMapperService
             if (entityType == null)
                 throw new ArgumentNullException(nameof(entityType));
 
+            //假如传入 tb_FM_ReceivablePayable  则可能是两种类型 则要根据实体的内容是收款还是付款来确定
+            //优先处理共用表
+            if (_config.SharedTableConfigs.Keys.Contains(entityType))
+            {
+                if (_config.SharedTableConfigs.TryGetValue(entityType, out var sharedConfig))
+                {
+                    if (sharedConfig.TypeResolver != null && entity != null)
+                    {
+                        try
+                        {
+                            var discriminatorValue = entity.GetPropertyValue(sharedConfig.DiscriminatorField);
+                            var resolvedBizType = sharedConfig.TypeResolver(discriminatorValue);
+
+                            _logger.LogDebug("通过共用表鉴别器解析业务类型: EntityType={0}, DiscriminatorField={1}, DiscriminatorValue={2}, ResolvedBizType={3}",
+                                entityType.Name, sharedConfig.DiscriminatorField, discriminatorValue, resolvedBizType);
+
+                            return resolvedBizType;
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, "获取共用表业务类型失败: EntityType={0}, DiscriminatorField={1}",
+                                entityType.Name, sharedConfig.DiscriminatorField);
+                        }
+                    }
+
+                    _logger.LogDebug("使用共用表实体的默认业务类型: EntityType={0}, DefaultBizType={1}",
+                        entityType.Name, sharedConfig.BizType);
+
+                    return sharedConfig.BizType != BizType.无对应数据 ? sharedConfig.BizType : BizType.无对应数据;
+                }
+
+            }
             if (_config.EntityTypeToEntityInfo.TryGetValue(entityType, out var entityInfo))
             {
                 return entityInfo.BizType;
             }
 
-            if (_config.SharedTableConfigs.TryGetValue(entityType, out var sharedConfig))
-            {
-                if (sharedConfig.TypeResolver != null && entity != null)
-                {
-                    try
-                    {
-                        var discriminatorValue = entity.GetPropertyValue(sharedConfig.DiscriminatorField);
-                        var resolvedBizType = sharedConfig.TypeResolver(discriminatorValue);
-
-                        _logger.LogDebug("通过共用表鉴别器解析业务类型: EntityType={0}, DiscriminatorField={1}, DiscriminatorValue={2}, ResolvedBizType={3}",
-                            entityType.Name, sharedConfig.DiscriminatorField, discriminatorValue, resolvedBizType);
-
-                        return resolvedBizType;
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, "获取共用表业务类型失败: EntityType={0}, DiscriminatorField={1}",
-                            entityType.Name, sharedConfig.DiscriminatorField);
-                    }
-                }
-
-                _logger.LogDebug("使用共用表实体的默认业务类型: EntityType={0}, DefaultBizType={1}",
-                    entityType.Name, sharedConfig.BizType);
-
-                return sharedConfig.BizType != BizType.无对应数据 ? sharedConfig.BizType : BizType.无对应数据;
-            }
-
+        
             _logger.LogDebug("未找到实体类型 {0} 对应的实体信息或业务类型", entityType.FullName);
             return BizType.无对应数据;
         }

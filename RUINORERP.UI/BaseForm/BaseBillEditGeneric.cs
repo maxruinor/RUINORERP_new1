@@ -4062,26 +4062,7 @@ namespace RUINORERP.UI.BaseForm
 
                 if (ae.ApprovalResults == true)
                 {
-                    ////审核通过，使用v3状态管理系统转换状态
-                    //if (EditEntity.StatusContext != null)
-                    //{
-                    //    try
-                    //    {
-                    //        await EditEntity.TransitionToAsync(DataStatus.确认);
-                    //    }
-                    //    catch (InvalidOperationException ex)
-                    //    {
-                    //        MainForm.Instance.uclog.AddLog($"状态转换失败: {ex.Message}");
-                    //        reviewResult.Succeeded = false;
-                    //        return reviewResult;
-                    //    }
-                    //}
-                    //else
-                    //{
-                    //    // 回退到旧的状态管理系统
                     await TransitionToAsync(DataStatus.确认, "审核通过");
-                    //EditEntity.SetPropertyValue(typeof(DataStatus).Name, (int)DataStatus.确认);
-                    //}
                 }
                 else
                 {
@@ -4481,45 +4462,38 @@ namespace RUINORERP.UI.BaseForm
                     //Undo操作会执行到的代码 意思是如果取消反审，内存中反审核的数据要变为空白（之前的样子）
                     CloneHelper.SetValues<T>(EditEntity, oldobj);
                 };
-                //保存旧值要在下面更新值前
+
 
                 //中间中的所有字段，都给值到单据主表中，后面需要处理审核历史这种再完善
-                PropertyInfo[] array_property = ae.GetType().GetProperties();
-                {
-                    foreach (var property in array_property)
-                    {
-                        //保存审核结果 将审核中间值给到单据中，是否做循环处理？
-                        //Expression<Func<ApprovalEntity, object>> PNameExp = t => t.ApprovalStatus;
-                        //MemberInfo minfo = PNameExp.GetMemberInfo();
-                        //string propertyName = minfo.Name;
+                //PropertyInfo[] array_property = ae.GetType().GetProperties();
+                //{
+                //    foreach (var property in array_property)
+                //    {
 
+                //        // 回退到旧的状态管理系统
+                //        await TransitionToAsync(DataStatus.新建, "新建单据");
+                //        //EditEntity.SetPropertyValue(typeof(DataStatus).Name, (int)DataStatus.新建);
 
-                        // 回退到旧的状态管理系统
-                        await TransitionToAsync(DataStatus.新建, "新建单据");
-                        //EditEntity.SetPropertyValue(typeof(DataStatus).Name, (int)DataStatus.新建);
+                //        if (ReflectionHelper.ExistPropertyName<T>("ApprovalOpinions"))
+                //        {
+                //            EditEntity.SetPropertyValue("ApprovalOpinions", ae.ApprovalOpinions);
+                //        }
+                //        if (ReflectionHelper.ExistPropertyName<T>("ApprovalStatus"))
+                //        {
+                //            EditEntity.SetPropertyValue("ApprovalStatus", (int)ApprovalStatus.未审核);
+                //        }
+                //        if (ReflectionHelper.ExistPropertyName<T>("ApprovalResults"))
+                //        {
+                //            EditEntity.SetPropertyValue("ApprovalResults", false);
+                //        }
 
-                        if (ReflectionHelper.ExistPropertyName<T>("ApprovalOpinions"))
-                        {
-                            EditEntity.SetPropertyValue("ApprovalOpinions", ae.ApprovalOpinions);
-                        }
-                        if (ReflectionHelper.ExistPropertyName<T>("ApprovalStatus"))
-                        {
-                            EditEntity.SetPropertyValue("ApprovalStatus", (int)ApprovalStatus.未审核);
-                        }
-                        if (ReflectionHelper.ExistPropertyName<T>("ApprovalResults"))
-                        {
-                            EditEntity.SetPropertyValue("ApprovalResults", false);
-                        }
-                        BusinessHelper.Instance.ApproverEntity(EditEntity);
-
-
-                        if (ReflectionHelper.ExistPropertyName<T>(property.Name))
-                        {
-                            object aeValue = ReflectionHelper.GetPropertyValue(ae, property.Name);
-                            ReflectionHelper.SetPropertyValue(EditEntity, property.Name, aeValue);
-                        }
-                    }
-                }
+                //        if (ReflectionHelper.ExistPropertyName<T>(property.Name))
+                //        {
+                //            object aeValue = ReflectionHelper.GetPropertyValue(ae, property.Name);
+                //            ReflectionHelper.SetPropertyValue(EditEntity, property.Name, aeValue);
+                //        }
+                //    }
+                //}
 
 
 
@@ -4527,12 +4501,17 @@ namespace RUINORERP.UI.BaseForm
                 BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
 
                 //反审前 刷新最新数据才能判断 比方销售订单 没有关掉当前UI时。已经出库。再反审。后面再优化为缓存处理锁单来不用查数据库刷新。
+                //锁定功能全部好后是不是可以去掉？
                 BaseEntity pkentity = (editEntity as T) as BaseEntity;
                 EditEntity = await ctr.BaseQueryByIdNavAsync(pkentity.PrimaryKeyID) as T;
+                EditEntity.PropertyChanged -= Entity_PropertyChanged;
+                EditEntity.PropertyChanged += Entity_PropertyChanged;
+
 
                 rmr = await ctr.AntiApprovalAsync(EditEntity);
                 if (rmr.Succeeded)
                 {
+                    BusinessHelper.Instance.ApproverEntity(EditEntity);
                     rs = true;
                     //如果是出库单审核，则上传到服务器 锁定订单无法修改
                     if (ae.bizType == BizType.销售出库单)

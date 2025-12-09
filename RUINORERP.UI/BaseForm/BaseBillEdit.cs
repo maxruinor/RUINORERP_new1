@@ -428,15 +428,33 @@ namespace RUINORERP.UI.BaseForm
                 InitializeStatusContext(entity);
             }
 
+            // 获取当前状态，优先使用状态管理器，回退到状态上下文
+            DataStatus currentStatus;
+            if (_stateManager != null)
+            {
+                currentStatus = _stateManager.GetDataStatus(entity);
+            }
+            else if (StatusContext?.CurrentStatus is DataStatus status)
+            {
+                currentStatus = status;
+            }
+            else
+            {
+                // 回退方案：直接从实体获取状态
+                currentStatus = entity.GetDataStatus();
+            }
+
             // 应用当前状态到UI
             ApplyCurrentStatusToUI();
 
-            // 获取当前状态并更新UI控件
-            if (StatusContext?.CurrentStatus is DataStatus currentStatus)
-            {
-                // 更新UI控件状态
-                UpdateUIControlsByState(currentStatus);
-            }
+            // 更新UI控件状态
+            UpdateUIControlsByState(currentStatus);
+
+            // 更新状态显示
+            UpdateStatusDisplay();
+
+            // 更新打印状态显示
+            UpdatePrintStatusDisplay(entity);
         }
 
         /// <summary>
@@ -633,21 +651,39 @@ namespace RUINORERP.UI.BaseForm
         /// <param name="currentStatus">当前状态</param>
         protected virtual void UpdateUIControlsByState(DataStatus currentStatus)
         {
-            // 子类可以重写此方法以根据状态更新特定UI控件
-            // 例如：禁用/启用某些输入框，显示/隐藏某些控件等
-
-            // 默认实现：根据状态更新基本控件状态
-            switch (currentStatus)
+            try
             {
-                case DataStatus.草稿:
-                case DataStatus.新建:
-                    EnableEditControls(true);
-                    break;
-                case DataStatus.确认:
-                case DataStatus.完结:
-                case DataStatus.作废:
-                    EnableEditControls(false);
-                    break;
+                // 使用UIControlRules获取按钮状态规则
+                var buttonRules = RUINORERP.Model.Base.StatusManager.UIControlRules.GetButtonRules(currentStatus);
+                
+                // 根据规则更新按钮状态
+                foreach (var rule in buttonRules)
+                {
+                    var control = this.Controls.Find(rule.Key, true).FirstOrDefault();
+                    if (control != null)
+                    {
+                        control.Enabled = rule.Value.Enabled;
+                        control.Visible = rule.Value.Visible;
+                    }
+                }
+                
+                // 默认实现：根据状态更新基本控件状态
+                switch (currentStatus)
+                {
+                    case DataStatus.草稿:
+                    case DataStatus.新建:
+                        EnableEditControls(true);
+                        break;
+                    case DataStatus.确认:
+                    case DataStatus.完结:
+                    case DataStatus.作废:
+                        EnableEditControls(false);
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "更新UI控件状态失败: {Message}", ex.Message);
             }
         }
 

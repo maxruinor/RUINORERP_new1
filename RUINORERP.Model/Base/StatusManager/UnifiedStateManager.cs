@@ -1,12 +1,12 @@
+using Microsoft.Extensions.Logging;
+using RUINORERP.Global; // 添加此行以引用DataStatus枚举
+using RUINORERP.Model.Base;
+using RUINORERP.Model.Base.StatusManager;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
-using RUINORERP.Model.Base;
-using RUINORERP.Model.Base.StatusManager;
-using RUINORERP.Global; // 添加此行以引用DataStatus枚举
 
 namespace RUINORERP.Model.Base.StatusManager
 {
@@ -18,7 +18,6 @@ namespace RUINORERP.Model.Base.StatusManager
     {
         private readonly ILogger<UnifiedStateManager> _logger;
         private readonly IStatusTransitionEngine _transitionEngine;
-        private readonly IStateRuleConfiguration _ruleConfiguration;
         private readonly SimpleCacheManager _cacheManager;
         private bool _disposed = false;
 
@@ -32,17 +31,14 @@ namespace RUINORERP.Model.Base.StatusManager
         /// </summary>
         /// <param name="logger">日志记录器</param>
         /// <param name="transitionEngine">状态转换引擎</param>
-        /// <param name="ruleConfiguration">状态规则配置</param>
         /// <param name="cacheManager">缓存管理器</param>
         public UnifiedStateManager(
             ILogger<UnifiedStateManager> logger,
             IStatusTransitionEngine transitionEngine,
-            IStateRuleConfiguration ruleConfiguration,
             SimpleCacheManager cacheManager = null)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _transitionEngine = transitionEngine ?? throw new ArgumentNullException(nameof(transitionEngine));
-            _ruleConfiguration = ruleConfiguration ?? throw new ArgumentNullException(nameof(ruleConfiguration));
             _cacheManager = cacheManager ?? new SimpleCacheManager();
         }
 
@@ -541,73 +537,45 @@ namespace RUINORERP.Model.Base.StatusManager
 
             var currentStatus = GetDataStatus(entity);
             
-            // 使用缓存获取状态转换规则
-            var cacheKey = $"DataStatus_Transitions_{currentStatus}";
-            var cachedTransitions = _cacheManager.GetTransitionRuleCache(cacheKey);
-            
-            if (cachedTransitions != null)
-            {
-                return cachedTransitions.Cast<DataStatus>();
-            }
-            
-            // 从状态转换规则中获取可转换的状态
+            // 初始化状态转换规则
             var transitionRules = new Dictionary<Type, Dictionary<object, List<object>>>();
             StateTransitionRules.InitializeDefaultRules(transitionRules);
             
-            if (transitionRules.TryGetValue(typeof(DataStatus), out var dataStatusRules) &&
-                dataStatusRules.TryGetValue(currentStatus, out var availableTransitions))
+            // 使用StateTransitionRules获取可转换的状态
+            if (transitionRules.ContainsKey(typeof(DataStatus)) && 
+                transitionRules[typeof(DataStatus)].ContainsKey(currentStatus))
             {
-                var result = availableTransitions.Cast<DataStatus>().ToList();
-                
-                // 将结果存入缓存
-                _cacheManager.SetTransitionRuleCache(cacheKey, result.Cast<object>().ToList());
-                
-                return result;
+                return transitionRules[typeof(DataStatus)][currentStatus].Cast<DataStatus>();
             }
             
             return Enumerable.Empty<DataStatus>();
-        }
 
-        /// <summary>
-        /// 获取可转换的业务状态列表
-        /// </summary>
-        /// <typeparam name="T">业务状态枚举类型</typeparam>
-        /// <param name="entity">实体对象</param>
-        /// <returns>可转换的状态列表</returns>
-        public IEnumerable<T> GetAvailableBusinessStatusTransitions<T>(BaseEntity entity) where T : struct, Enum
-        {
-            if (entity == null)
-                return Enumerable.Empty<T>();
 
-            var currentStatus = GetBusinessStatus<T>(entity);
-            var statusType = typeof(T);
-            
-            // 使用缓存获取状态转换规则
-            var cacheKey = $"BusinessStatus_{statusType.Name}_Transitions_{currentStatus}";
-            var cachedTransitions = _cacheManager.GetTransitionRuleCache(cacheKey);
-            
-            if (cachedTransitions != null)
-            {
-                return cachedTransitions.Cast<T>();
-            }
-            
-            // 从状态转换规则中获取可转换的状态
-            var transitionRules = new Dictionary<Type, Dictionary<object, List<object>>>();
-            StateTransitionRules.InitializeDefaultRules(transitionRules);
-            
-            if (transitionRules.TryGetValue(statusType, out var businessStatusRules) &&
-                businessStatusRules.TryGetValue(currentStatus, out var availableTransitions))
-            {
-                var result = availableTransitions.Cast<T>().ToList();
-                
-                // 将结果存入缓存
-                _cacheManager.SetTransitionRuleCache(cacheKey, result.Cast<object>().ToList());
-                
-                return result;
-            }
-            
-            // 如果没有找到转换规则，返回空列表
-            return Enumerable.Empty<T>();
+
+            //{
+            //    return cachedTransitions.Cast<DataStatus>();
+            //}
+
+            //// 从状态转换规则中获取可转换的状态
+            //var transitionRules = new Dictionary<Type, Dictionary<object, List<object>>>();
+            //StateTransitionRules.InitializeDefaultRules(transitionRules);
+
+            //if (transitionRules.TryGetValue(typeof(DataStatus), out var dataStatusRules) &&
+            //    dataStatusRules.TryGetValue(currentStatus, out var availableTransitions))
+            //{
+            //    var result = availableTransitions.Cast<DataStatus>().ToList();
+
+            //    // 将结果存入缓存
+            //    _cacheManager.SetTransitionRuleCache(cacheKey, result.Cast<object>().ToList());
+
+            //    return result;
+            //}
+
+            //return Enumerable.Empty<DataStatus>();
+        
+
+
+
         }
 
         /// <summary>
@@ -692,6 +660,170 @@ namespace RUINORERP.Model.Base.StatusManager
             
             return Enumerable.Empty<ActionStatus>();
         }
+
+        /// <summary>
+        /// 获取业务状态规则
+        /// </summary>
+        /// <param name="statusType">状态类型</param>
+        /// <param name="status">状态值</param>
+        /// <returns>业务状态规则</returns>
+        public BusinessStatusRule GetBusinessStatusRule(Type statusType, object status)
+        {
+            return StateTransitionRules.GetBusinessStatusRule(statusType, status);
+        }
+
+        /// <summary>
+        /// 检查状态转换是否允许
+        /// </summary>
+        /// <param name="statusType">状态类型</param>
+        /// <param name="fromStatus">源状态</param>
+        /// <param name="toStatus">目标状态</param>
+        /// <param name="context">转换上下文</param>
+        /// <returns>是否允许转换</returns>
+        public bool IsTransitionAllowed(Type statusType, object fromStatus, object toStatus, IStatusTransitionContext context)
+        {
+            // 初始化状态转换规则
+            var transitionRules = new Dictionary<Type, Dictionary<object, List<object>>>();
+            StateTransitionRules.InitializeDefaultRules(transitionRules);
+            
+            // 使用StateTransitionRules检查转换是否允许
+            if (fromStatus is Enum fromEnum && toStatus is Enum toEnum)
+            {
+                return StateTransitionRules.IsTransitionAllowed(transitionRules, fromEnum, toEnum);
+            }
+            
+            return false;
+        }
+            
+
+        /// <summary>
+        /// 获取可转换的业务状态列表
+        /// </summary>
+        /// <typeparam name="T">业务状态枚举类型</typeparam>
+        /// <param name="entity">实体对象</param>
+        /// <returns>可转换的状态列表</returns>
+        public IEnumerable<T> GetAvailableBusinessStatusTransitions<T>(BaseEntity entity) where T : struct, Enum
+        {
+            if (entity == null)
+                return Enumerable.Empty<T>();
+
+            var currentStatus = GetBusinessStatus<T>(entity);
+            var statusType = typeof(T);
+            
+            // 使用缓存获取状态转换规则
+            var cacheKey = $"BusinessStatus_{statusType.Name}_Transitions_{currentStatus}";
+            var cachedTransitions = _cacheManager.GetTransitionRuleCache(cacheKey);
+            
+            if (cachedTransitions != null)
+            {
+                return cachedTransitions.Cast<T>();
+            }
+            
+            // 从状态转换规则中获取可转换的状态
+            var transitionRules = new Dictionary<Type, Dictionary<object, List<object>>>();
+            StateTransitionRules.InitializeDefaultRules(transitionRules);
+            
+            if (transitionRules.TryGetValue(statusType, out var businessStatusRules) &&
+                businessStatusRules.TryGetValue(currentStatus, out var availableTransitions))
+            {
+                var result = availableTransitions.Cast<T>().ToList();
+                
+                // 将结果存入缓存
+                _cacheManager.SetTransitionRuleCache(cacheKey, result.Cast<object>().ToList());
+                
+                return result;
+            }
+            
+            // 如果没有找到转换规则，返回空列表
+            return Enumerable.Empty<T>();
+        }
+
+
+
+        /// <summary>
+        /// 获取可转换的业务状态列表
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        /// <param name="statusType">状态类型</param>
+        /// <returns>可转换的状态列表</returns>
+        public IEnumerable<object> GetAvailableBusinessStatusTransitionsByObj(BaseEntity entity, Type statusType)
+        {
+            if (entity == null)
+                return Enumerable.Empty<object>();
+
+            if (statusType == null)
+                return Enumerable.Empty<object>();
+
+            var currentStatus = GetBusinessStatus(entity, statusType);
+
+            // 使用缓存获取状态转换规则
+            var cacheKey = $"BusinessStatus_{statusType.Name}_Transitions_{currentStatus}";
+            var cachedTransitions = _cacheManager.GetTransitionRuleCache(cacheKey);
+
+            if (cachedTransitions != null)
+            {
+                return cachedTransitions;
+            }
+
+            // 从状态转换规则中获取可转换的状态
+            var transitionRules = new Dictionary<Type, Dictionary<object, List<object>>>();
+            StateTransitionRules.InitializeDefaultRules(transitionRules);
+
+            if (transitionRules.TryGetValue(statusType, out var businessStatusRules) &&
+                businessStatusRules.TryGetValue(currentStatus, out var availableTransitions))
+            {
+                var result = availableTransitions.ToList();
+
+                // 将结果存入缓存
+                _cacheManager.SetTransitionRuleCache(cacheKey, result);
+
+                return result;
+            }
+
+            // 如果没有找到转换规则，返回空列表
+            return Enumerable.Empty<object>();
+        }
+
+        /// <summary>
+        /// 获取可转换的操作状态列表
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        /// <returns>可转换的状态列表</returns>
+        public IEnumerable<ActionStatus> GetAvailableActionStatusTransitionsByEnum(BaseEntity entity)
+        {
+            if (entity == null)
+                return Enumerable.Empty<ActionStatus>();
+
+            var currentStatus = GetActionStatus(entity);
+
+            // 使用缓存获取状态转换规则
+            var cacheKey = $"ActionStatus_Transitions_{currentStatus}";
+            var cachedTransitions = _cacheManager.GetTransitionRuleCache(cacheKey);
+
+            if (cachedTransitions != null)
+            {
+                return cachedTransitions.Cast<ActionStatus>();
+            }
+
+            // 从状态转换规则中获取可转换的状态
+            var transitionRules = new Dictionary<Type, Dictionary<object, List<object>>>();
+            StateTransitionRules.InitializeDefaultRules(transitionRules);
+
+            if (transitionRules.TryGetValue(typeof(ActionStatus), out var actionStatusRules) &&
+                actionStatusRules.TryGetValue(currentStatus, out var availableTransitions))
+            {
+                var result = availableTransitions.Cast<ActionStatus>().ToList();
+
+                // 将结果存入缓存
+                _cacheManager.SetTransitionRuleCache(cacheKey, result.Cast<object>().ToList());
+
+                return result;
+            }
+
+            return Enumerable.Empty<ActionStatus>();
+        }
+
+
 
         #endregion
 
@@ -1218,14 +1350,28 @@ namespace RUINORERP.Model.Base.StatusManager
 
             try
             {
-                // 获取当前数据状态
-                var dataStatus = GetDataStatus(entity);
+                // 优先使用UIControlRules检查按钮权限
+                if (statusType == typeof(DataStatus) && status is DataStatus dataStatus)
+                {
+                    var buttonRules = UIControlRules.GetButtonRules(dataStatus);
+                    
+                    // 将MenuItemEnums转换为按钮名称
+                    var buttonName = ConvertActionToButtonName(action);
+                    if (!string.IsNullOrEmpty(buttonName) && 
+                        buttonRules.TryGetValue(buttonName, out var buttonState))
+                    {
+                        return buttonState.Enabled;
+                    }
+                }
+                
+                // 如果UIControlRules没有相关规则，回退到原有的操作权限检查
+                var currentDataStatus = GetDataStatus(entity);
                 
                 // 获取操作权限规则
                 var actionRules = GetActionPermissionRules();
                 
                 // 检查当前状态是否允许执行该操作
-                bool canExecute = actionRules.TryGetValue(dataStatus, out var allowedActions) && 
+                bool canExecute = actionRules.TryGetValue(currentDataStatus, out var allowedActions) && 
                                  allowedActions.Contains(action);
 
                 return canExecute;
@@ -1234,6 +1380,42 @@ namespace RUINORERP.Model.Base.StatusManager
             {
                 _logger.LogError(ex, "检查操作权限失败：操作 {Action}，实体类型 {EntityType}", action, entity.GetType().Name);
                 return false;
+            }
+        }
+
+        /// <summary>
+        /// 将MenuItemEnums操作转换为按钮名称
+        /// </summary>
+        /// <param name="action">操作类型</param>
+        /// <returns>按钮名称</returns>
+        private string ConvertActionToButtonName(MenuItemEnums action)
+        {
+            switch (action)
+            {
+                case MenuItemEnums.新增:
+                    return "btnAdd";
+                case MenuItemEnums.修改:
+                    return "btnModify";
+                case MenuItemEnums.保存:
+                    return "btnSave";
+                case MenuItemEnums.删除:
+                    return "btnDelete";
+                case MenuItemEnums.提交:
+                    return "btnSubmit";
+                case MenuItemEnums.审核:
+                    return "btnApprove";
+                case MenuItemEnums.反审:
+                    return "btnReverseApprove";
+                case MenuItemEnums.结案:
+                    return "btnClose";
+                case MenuItemEnums.反结案:
+                    return "btnAntiClose";
+                case MenuItemEnums.打印:
+                    return "btnPrint";
+                case MenuItemEnums.导出:
+                    return "btnExport";
+                default:
+                    return string.Empty;
             }
         }
 
@@ -1251,21 +1433,79 @@ namespace RUINORERP.Model.Base.StatusManager
 
             try
             {
-                // 获取当前数据状态
-                var dataStatus = GetDataStatus(entity);
+                // 优先使用UIControlRules获取可用操作
+                if (statusType == typeof(DataStatus) && status is DataStatus dataStatus)
+                {
+                    var buttonRules = UIControlRules.GetButtonRules(dataStatus);
+                    var availableActions = new List<MenuItemEnums>();
+                    
+                    // 将按钮规则转换为MenuItemEnums
+                    foreach (var rule in buttonRules.Where(r => r.Value.Enabled))
+                    {
+                        var action = ConvertButtonNameToAction(rule.Key);
+                        if (action.HasValue)
+                        {
+                            availableActions.Add(action.Value);
+                        }
+                    }
+                    
+                    if (availableActions.Any())
+                    {
+                        return availableActions;
+                    }
+                }
+                
+                // 如果UIControlRules没有相关规则，回退到原有的操作权限检查
+                var currentDataStatus = GetDataStatus(entity);
                 
                 // 获取操作权限规则
                 var actionRules = GetActionPermissionRules();
                 
                 // 获取当前状态下的可用操作
-                var availableActions = actionRules.TryGetValue(dataStatus, out var actions) ? actions : new List<MenuItemEnums>();
+                var LastAvailableActions = actionRules.TryGetValue(currentDataStatus, out var actions) ? actions : new List<MenuItemEnums>();
                 
-                return availableActions;
+                return LastAvailableActions;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "获取可用操作列表失败：实体类型 {EntityType}", entity.GetType().Name);
                 return Enumerable.Empty<MenuItemEnums>();
+            }
+        }
+
+        /// <summary>
+        /// 将按钮名称转换为MenuItemEnums操作
+        /// </summary>
+        /// <param name="buttonName">按钮名称</param>
+        /// <returns>操作类型</returns>
+        private MenuItemEnums? ConvertButtonNameToAction(string buttonName)
+        {
+            switch (buttonName)
+            {
+                case "btnAdd":
+                    return MenuItemEnums.新增;
+                case "btnModify":
+                    return MenuItemEnums.修改;
+                case "btnSave":
+                    return MenuItemEnums.保存;
+                case "btnDelete":
+                    return MenuItemEnums.删除;
+                case "btnSubmit":
+                    return MenuItemEnums.提交;
+                case "btnApprove":
+                    return MenuItemEnums.审核;
+                case "btnReverseApprove":
+                    return MenuItemEnums.反审;
+                case "btnClose":
+                    return MenuItemEnums.结案;
+                case "btnAntiClose":
+                    return MenuItemEnums.反结案;
+                case "btnPrint":
+                    return MenuItemEnums.打印;
+                case "btnExport":
+                    return MenuItemEnums.导出;
+                default:
+                    return null;
             }
         }
 

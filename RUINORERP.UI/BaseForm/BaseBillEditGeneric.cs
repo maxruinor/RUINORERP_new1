@@ -611,22 +611,37 @@ namespace RUINORERP.UI.BaseForm
                 // 确保状态上下文被正确初始化
                 EnsureStatusContext(entity);
 
-                // 使用新的状态管理系统更新UI
+                // 统一使用状态管理器获取当前状态
+                DataStatus currentStatus;
                 if (StateManager != null)
                 {
-                    // 获取当前状态
-                    var currentStatus = StateManager.GetDataStatus(entity);
+                    currentStatus = StateManager.GetDataStatus(entity);
+                }
+                else if (StatusContext?.CurrentStatus is DataStatus status)
+                {
+                    currentStatus = status;
+                }
+                else
+                {
+                    // 回退方案：直接从实体获取状态
+                    currentStatus = entity.GetDataStatus();
+                }
 
-                    // 统一更新所有按钮状态
-                    UpdateAllButtonStates(currentStatus);
+                // 统一更新所有按钮状态
+                UpdateAllButtonStates(currentStatus);
 
-                    // 更新UI控件状态
-                    UpdateUIControlsByState(currentStatus);
+                // 更新UI控件状态
+                UpdateUIControlsByState(currentStatus);
 
-                    // 更新状态显示
-                    UpdateStateDisplay();
+                // 更新状态显示
+                UpdateStateDisplay();
 
-                    // 更新基于权限的按钮可见性
+                // 更新打印状态显示
+                UpdatePrintStatusDisplay(entity);
+
+                // 如果有状态管理器，更新基于权限的按钮可见性
+                if (StateManager != null)
+                {
                     UpdatePermissionBasedButtonVisibility();
                 }
             }
@@ -655,46 +670,58 @@ namespace RUINORERP.UI.BaseForm
                 // 确保状态上下文被正确初始化
                 EnsureStatusContext(entity);
 
-                // 使用V4状态管理系统获取按钮状态
-                // 通过状态管理系统统一控制UI状态，避免硬编码逻辑
-                if (StateManager != null)
+                // 优先使用UIControlRules获取按钮状态
+                try
                 {
-                    // 获取当前实体的状态类型和状态值
-                    var statusType = entity.GetStatusType();
-                    var status = entity.GetCurrentStatus();
-
-                    // 检查各种操作的可执行性
-                    bool canModify = _stateManager.CanExecuteAction(MenuItemEnums.修改, EditEntity, statusType, status);
-                    bool canSave = _stateManager.CanExecuteAction(MenuItemEnums.保存, EditEntity, statusType, status);
-                    bool canSubmit = _stateManager.CanExecuteAction(MenuItemEnums.提交, EditEntity, statusType, status);
-                    bool canReview = _stateManager.CanExecuteAction(MenuItemEnums.审核, EditEntity, statusType, status);
-                    bool canReverseReview = _stateManager.CanExecuteAction(MenuItemEnums.反审, EditEntity, statusType, status);
-                    bool canCloseCase = _stateManager.CanExecuteAction(MenuItemEnums.结案, EditEntity, statusType, status);
-                    bool canDelete = _stateManager.CanExecuteAction(MenuItemEnums.删除, EditEntity, statusType, status);
-
-                    // 统一更新按钮状态
-                    toolStripbtnModify.Enabled = canModify;
-                    toolStripButtonSave.Enabled = canSave;
-                    toolStripbtnSubmit.Enabled = canSubmit;
-                    toolStripbtnReview.Enabled = canReview;
-                    toolStripBtnReverseReview.Enabled = canReverseReview;
-                    toolStripButton结案.Enabled = canCloseCase;
-                    toolStripButton结案.Visible = canCloseCase; // 结案按钮的可见性与可用状态一致
-                    toolStripbtnDelete.Enabled = canDelete;
+                    var buttonRules = UIControlRules.GetButtonRules(currentStatus);
+                    
+                    // 更新按钮状态
+                    UpdateButtonStatesFromRules(buttonRules);
                 }
-                else
+                catch (Exception ex)
                 {
-                    // 如果状态管理系统不可用，至少确保按钮状态一致
-                    logger?.LogWarning("状态管理系统不可用，无法正确更新按钮状态");
-                    // 禁用所有按钮，避免因状态判断不一致导致的错误操作
-                    toolStripbtnModify.Enabled = false;
-                    toolStripButtonSave.Enabled = false;
-                    toolStripbtnSubmit.Enabled = false;
-                    toolStripbtnReview.Enabled = false;
-                    toolStripBtnReverseReview.Enabled = false;
-                    toolStripButton结案.Enabled = false;
-                    toolStripButton结案.Visible = false;
-                    toolStripbtnDelete.Enabled = false;
+                    logger?.LogError(ex, "使用UIControlRules更新按钮状态失败，回退到状态管理系统");
+                    
+                    // 回退方案：使用V4状态管理系统获取按钮状态
+                    if (StateManager != null)
+                    {
+                        // 获取当前实体的状态类型和状态值
+                        var statusType = entity.GetStatusType();
+                        var status = entity.GetCurrentStatus();
+
+                        // 检查各种操作的可执行性
+                        bool canModify = _stateManager.CanExecuteAction(MenuItemEnums.修改, EditEntity, statusType, status);
+                        bool canSave = _stateManager.CanExecuteAction(MenuItemEnums.保存, EditEntity, statusType, status);
+                        bool canSubmit = _stateManager.CanExecuteAction(MenuItemEnums.提交, EditEntity, statusType, status);
+                        bool canReview = _stateManager.CanExecuteAction(MenuItemEnums.审核, EditEntity, statusType, status);
+                        bool canReverseReview = _stateManager.CanExecuteAction(MenuItemEnums.反审, EditEntity, statusType, status);
+                        bool canCloseCase = _stateManager.CanExecuteAction(MenuItemEnums.结案, EditEntity, statusType, status);
+                        bool canDelete = _stateManager.CanExecuteAction(MenuItemEnums.删除, EditEntity, statusType, status);
+
+                        // 统一更新按钮状态
+                        toolStripbtnModify.Enabled = canModify;
+                        toolStripButtonSave.Enabled = canSave;
+                        toolStripbtnSubmit.Enabled = canSubmit;
+                        toolStripbtnReview.Enabled = canReview;
+                        toolStripBtnReverseReview.Enabled = canReverseReview;
+                        toolStripButton结案.Enabled = canCloseCase;
+                        toolStripButton结案.Visible = canCloseCase; // 结案按钮的可见性与可用状态一致
+                        toolStripbtnDelete.Enabled = canDelete;
+                    }
+                    else
+                    {
+                        // 如果状态管理系统不可用，至少确保按钮状态一致
+                        logger?.LogWarning("状态管理系统不可用，无法正确更新按钮状态");
+                        // 禁用所有按钮，避免因状态判断不一致导致的错误操作
+                        toolStripbtnModify.Enabled = false;
+                        toolStripButtonSave.Enabled = false;
+                        toolStripbtnSubmit.Enabled = false;
+                        toolStripbtnReview.Enabled = false;
+                        toolStripBtnReverseReview.Enabled = false;
+                        toolStripButton结案.Enabled = false;
+                        toolStripButton结案.Visible = false;
+                        toolStripbtnDelete.Enabled = false;
+                    }
                 }
 
                 // 统一控制反审核按钮的可见性
@@ -706,6 +733,92 @@ namespace RUINORERP.UI.BaseForm
             catch (Exception ex)
             {
                 logger?.LogError(ex, "更新按钮状态失败: {Message}", ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// 根据规则字典更新按钮状态
+        /// </summary>
+        /// <param name="buttonRules">按钮规则字典</param>
+        private void UpdateButtonStatesFromRules(Dictionary<string, (bool Enabled, bool Visible)> buttonRules)
+        {
+            if (buttonRules == null || buttonRules.Count == 0) return;
+
+            // 更新常见按钮状态
+            foreach (var rule in buttonRules)
+            {
+                var buttonName = rule.Key;
+                var enabled = rule.Value.Enabled;
+                var visible = rule.Value.Visible;
+
+                switch (buttonName)
+                {
+                    case "btnAdd":
+                        // 新增按钮通常不在编辑窗体中
+                        break;
+                    case "btnModify":
+                    case "toolStripbtnModify":
+                        if (toolStripbtnModify != null)
+                        {
+                            toolStripbtnModify.Enabled = enabled;
+                            toolStripbtnModify.Visible = visible;
+                        }
+                        break;
+                    case "btnSave":
+                    case "toolStripButtonSave":
+                        if (toolStripButtonSave != null)
+                        {
+                            toolStripButtonSave.Enabled = enabled;
+                            toolStripButtonSave.Visible = visible;
+                        }
+                        break;
+                    case "btnDelete":
+                    case "toolStripbtnDelete":
+                        if (toolStripbtnDelete != null)
+                        {
+                            toolStripbtnDelete.Enabled = enabled;
+                            toolStripbtnDelete.Visible = visible;
+                        }
+                        break;
+                    case "btnSubmit":
+                    case "toolStripbtnSubmit":
+                        if (toolStripbtnSubmit != null)
+                        {
+                            toolStripbtnSubmit.Enabled = enabled;
+                            toolStripbtnSubmit.Visible = visible;
+                        }
+                        break;
+                    case "btnApprove":
+                    case "toolStripbtnReview":
+                        if (toolStripbtnReview != null)
+                        {
+                            toolStripbtnReview.Enabled = enabled;
+                            toolStripbtnReview.Visible = visible;
+                        }
+                        break;
+                    case "btnReverseApprove":
+                    case "toolStripBtnReverseReview":
+                        if (toolStripBtnReverseReview != null)
+                        {
+                            toolStripBtnReverseReview.Enabled = enabled;
+                            toolStripBtnReverseReview.Visible = visible;
+                        }
+                        break;
+                    case "btnClose":
+                    case "toolStripButton结案":
+                        if (toolStripButton结案 != null)
+                        {
+                            toolStripButton结案.Enabled = enabled;
+                            toolStripButton结案.Visible = visible;
+                        }
+                        break;
+                    case "btnAntiClose":
+                        // 反结案按钮通常不在编辑窗体中
+                        break;
+                    case "btnPrint":
+                        // 打印按钮通常不在编辑窗体中
+                        break;
+                }
             }
         }
 

@@ -59,10 +59,7 @@ namespace RUINORERP.Model.Base.StatusManager
         /// </summary>
         private readonly Dictionary<Type, Dictionary<object, List<object>>> _transitionRules;
 
-        /// <summary>
-        /// 轻量级规则配置中心 - 借鉴V4优点
-        /// </summary>
-        private readonly IStateRuleConfiguration _ruleConfiguration;
+
 
         #endregion
 
@@ -72,11 +69,9 @@ namespace RUINORERP.Model.Base.StatusManager
         /// 初始化状态转换引擎 - V3增强版
         /// </summary>
         /// <param name="logger">日志记录器</param>
-        /// <param name="ruleConfiguration">规则配置中心</param>
-        public StatusTransitionEngine(ILogger<StatusTransitionEngine> logger = null, IStateRuleConfiguration ruleConfiguration = null)
+        public StatusTransitionEngine(ILogger<StatusTransitionEngine> logger = null)
         {
             _logger = logger;
-            _ruleConfiguration = ruleConfiguration ?? new StateRuleConfiguration();
             _transitionRules = new Dictionary<Type, Dictionary<object, List<object>>>();
 
             // 初始化默认规则
@@ -111,7 +106,7 @@ namespace RUINORERP.Model.Base.StatusManager
         }
 
         /// <summary>
-        /// 验证状态转换 - V3增强版：集成规则配置中心验证
+        /// 验证状态转换 - V3增强版：使用StateTransitionRules验证
         /// </summary>
         /// <typeparam name="T">状态枚举类型</typeparam>
         /// <param name="fromStatus">源状态</param>
@@ -122,20 +117,7 @@ namespace RUINORERP.Model.Base.StatusManager
         {
             try
             {
-                // V3增强版：优先使用规则配置中心验证 - 借鉴V4优点
-                if (_ruleConfiguration != null)
-                {
-                    var ruleValidationResult = _ruleConfiguration.ValidateTransition(fromStatus, toStatus, context);
-                    if (!ruleValidationResult)
-                    {
-                        _logger?.LogWarning("规则配置中心验证失败: 从 {FromStatus} 到 {ToStatus}", fromStatus, toStatus);
-                        return StateTransitionResult.Failure($"规则配置中心验证失败：不允许从 {fromStatus} 转换到 {toStatus}");
-                    }
-                    _logger?.LogInformation("规则配置中心验证通过: 从 {FromStatus} 到 {ToStatus}", fromStatus, toStatus);
-                    return StateTransitionResult.Success(message: $"验证通过：可以从 {fromStatus} 转换到 {toStatus}");
-                }
-
-                // 保持V3简洁性：基础转换规则验证（备用方案）
+                // 使用StateTransitionRules进行基础转换规则验证
                 var allowed = IsTransitionAllowed(fromStatus, toStatus);
                 if (allowed)
                 {

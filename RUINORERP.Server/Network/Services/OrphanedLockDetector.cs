@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,7 +21,7 @@ namespace RUINORERP.Server.Network.Services
         private readonly ConcurrentDictionary<string, ClientSessionInfo> _clientSessions;
 
         // 检测间隔和超时设置
-        private readonly TimeSpan _detectionInterval = TimeSpan.FromMinutes(2);  // 每2分钟检测一次
+        private readonly TimeSpan _detectionInterval = TimeSpan.FromSeconds(30);  // 每30秒检测一次，提高响应速度
         private readonly TimeSpan _sessionTimeout = TimeSpan.FromMinutes(5);      // 5分钟无心跳视为会话超时
         private readonly TimeSpan _lockMaxLifetime = TimeSpan.FromHours(8);       // 锁最大生命周期8小时
 

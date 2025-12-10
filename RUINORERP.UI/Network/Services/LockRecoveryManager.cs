@@ -47,8 +47,8 @@ namespace RUINORERP.UI.Network.Services
             // 启动心跳定时器 - 每30秒发送一次心跳
             _heartbeatTimer = new Timer(SendHeartbeat, null, TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(30));
 
-            // 启动锁恢复定时器 - 每1分钟检查一次孤儿锁
-            _lockRecoveryTimer = new Timer(RecoverOrphanedLocks, null, TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1));
+            // 启动锁恢复定时器 - 每30秒检查一次孤儿锁，提高检查频率
+            _lockRecoveryTimer = new Timer(RecoverOrphanedLocks, null, TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(30));
 
             // 订阅应用程序退出事件
             AppDomain.CurrentDomain.ProcessExit += OnProcessExit;
@@ -213,71 +213,77 @@ namespace RUINORERP.UI.Network.Services
 
             try
             {
- 
-
                 if (MainForm.Instance.AppContext.CurrentUser == null || MainForm.Instance.AppContext.CurUserInfo == null || MainForm.Instance.AppContext.CurUserInfo.UserInfo == null)
                 {
                     return;
                 }
 
-
                 var currentUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
                 if (currentUserId == 0)
                     return;
 
-                List<LockInfo> orphanedLocks;
+                // 获取所有本地持有的锁
+                List<LockInfo> allHeldLocks;
                 lock (_heartbeatLock)
                 {
-                    orphanedLocks = _heldLocks.Values.Where(l => l.IsOrphaned).ToList();
+                    allHeldLocks = _heldLocks.Values.ToList();
                 }
 
-                if (orphanedLocks.Count == 0)
+                if (allHeldLocks.Count == 0)
                 {
-                    _logger.LogDebug("没有发现孤儿锁");
+                    _logger.LogDebug("当前没有持有锁，跳过锁状态检查");
                     return;
                 }
 
-                _logger.LogWarning($"发现 {orphanedLocks.Count} 个孤儿锁，开始恢复");
+                _logger.LogDebug($"开始检查 {allHeldLocks.Count} 个锁的状态");
 
-                foreach (var orphanedLock in orphanedLocks)
+                // 对每个锁进行状态验证和同步
+                foreach (var heldLock in allHeldLocks)
                 {
                     try
                     {
-                        // 尝试重新验证锁状态
-                        var lockResponse = await _lockService.CheckLockStatusAsync(orphanedLock.BillID);
+                        // 检查锁是否仍然有效
+                        var lockResponse = await _lockService.CheckLockStatusAsync(heldLock.BillID);
 
                         if (lockResponse == null || !lockResponse.IsSuccess)
                         {
                             // 锁已不存在，从本地移除
-                            UnregisterHeldLock(orphanedLock.BillID);
-                            _lockCache.ClearCache(orphanedLock.BillID);
-                            _logger.LogDebug($"孤儿锁已自动清理: 单据 {orphanedLock.BillID}");
+                            UnregisterHeldLock(heldLock.BillID);
+                            _lockCache.ClearCache(heldLock.BillID);
+                            _logger.LogDebug($"锁已不存在，已从本地移除: 单据 {heldLock.BillID}");
                         }
                         else if (lockResponse.LockInfo?.LockedUserId == currentUserId)
                         {
-                            // 锁仍然属于当前用户，重置心跳时间
+                            // 锁仍然属于当前用户，更新本地缓存和心跳时间
+                            _lockCache.UpdateCache(lockResponse.LockInfo);
+                            
                             lock (_heartbeatLock)
                             {
-                                if (_heldLocks.TryGetValue(orphanedLock.BillID, out var lockInfo))
+                                if (_heldLocks.TryGetValue(heldLock.BillID, out var lockInfo))
                                 {
                                     lockInfo.LastHeartbeat = DateTime.Now;
+                                    // 同步服务器端的锁信息到本地
+                                    lockInfo.SessionId = lockResponse.LockInfo.SessionId;
+                                    lockInfo.ExpireTime = lockResponse.LockInfo.ExpireTime;
                                 }
                             }
-                            _logger.LogDebug($"孤儿锁验证通过，重置心跳: 单据 {orphanedLock.BillID}");
+                            _logger.LogDebug($"锁状态验证通过，已同步: 单据 {heldLock.BillID}");
                         }
                         else
                         {
                             // 锁被其他用户持有，清除本地缓存
-                            UnregisterHeldLock(orphanedLock.BillID);
-                            _lockCache.ClearCache(orphanedLock.BillID);
-                            _logger.LogWarning($"孤儿锁被其他用户持有: 单据 {orphanedLock.BillID}, 持有用户: {lockResponse.LockInfo?.LockedUserName}");
+                            UnregisterHeldLock(heldLock.BillID);
+                            _lockCache.ClearCache(heldLock.BillID);
+                            _logger.LogWarning($"锁已被其他用户持有，已清除本地缓存: 单据 {heldLock.BillID}, 持有用户: {lockResponse.LockInfo?.LockedUserName}");
                         }
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(ex, $"恢复孤儿锁失败: 单据 {orphanedLock.BillID}");
+                        _logger.LogError(ex, $"检查锁状态失败: 单据 {heldLock.BillID}");
                     }
                 }
+
+                _logger.LogDebug("锁状态检查和同步完成");
             }
             catch (Exception ex)
             {

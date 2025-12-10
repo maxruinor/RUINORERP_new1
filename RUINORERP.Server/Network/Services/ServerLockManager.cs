@@ -188,7 +188,6 @@ namespace RUINORERP.Server.Network.Services
                     if (_sessionService != null)
                     {
                         _sessionService.SessionDisconnected += HandleSessionDisconnected;
-                        _logger.LogInformation("已订阅会话服务的断开事件，将在会话断开时自动释放锁定");
                     }
 
                     // 启动孤儿锁检测器
@@ -875,8 +874,7 @@ namespace RUINORERP.Server.Network.Services
                     }
                 }
 
-                _logger.LogInformation("成功获取锁定单据信息集合: 总数={TotalCount}, 有效={ValidCount}, 过期={ExpiredCount}, 无效={InvalidCount}, 耗时={ElapsedMs}ms",
-                    _documentLocks.Count, lockedDocuments.Count, expiredCount, invalidCount, stopwatch.ElapsedMilliseconds);
+              
 
                 return lockedDocuments;
             }
@@ -1079,7 +1077,8 @@ namespace RUINORERP.Server.Network.Services
                 // 移除解锁请求
                 if (_unlockRequests.TryRemove(request.LockInfo.BillID, out _))
                 {
-                    // 通知请求者其解锁请求被拒绝
+                    // 通知请求者其解锁请求被拒绝，包含拒绝原因
+                   
                     await NotifyUnlockRequestRefusedAsync(storedRequest.RequesterUserId, request.LockInfo.BillID, request.LockInfo.LockedUserId);
 
                     return new LockResponse
@@ -1165,7 +1164,7 @@ namespace RUINORERP.Server.Network.Services
 
                     if (forceUnlock)
                     {
-                        _logger.LogInformation("{OperationType}完成: 单据ID={BillId}", operationType, billId);
+                     //   _logger.LogInformation("{OperationType}完成: 单据ID={BillId}", operationType, billId);
                     }
                     validation.LockInfo.IsLocked = false;
 
@@ -1389,7 +1388,7 @@ namespace RUINORERP.Server.Network.Services
         /// <param name="billId">单据ID</param>
         /// <param name="refusedByUserId">拒绝请求的用户ID（锁定者）</param>
         /// <returns>通知任务</returns>
-        private async Task NotifyUnlockRequestRefusedAsync(long requesterUserId, long billId, long refusedByUserId)
+        private async Task NotifyUnlockRequestRefusedAsync(long requesterUserId, long billId, long refusedByUserId )
         {
             try
             {
@@ -1409,7 +1408,7 @@ namespace RUINORERP.Server.Network.Services
                     refusedByUserName = lockInfo.LockedUserName;
                 }
 
-                // 创建拒绝通知
+                // 创建拒绝通知，包含拒绝原因
                 var refuseNotification = new LockRequest
                 {
                     LockInfo = new LockInfo
@@ -1423,16 +1422,14 @@ namespace RUINORERP.Server.Network.Services
                         IsLocked = true // 单据仍然被锁定
                     },
                     RequesterUserId = requesterUserId,
-                    Timestamp = DateTime.UtcNow
+                    Timestamp = DateTime.UtcNow,
                 };
 
                 // 向请求者的所有会话发送拒绝通知
-
                 await _sessionService.SendCommandAsync(
                     requesterSession.SessionID,
                     LockCommands.RefuseUnlock,
                     refuseNotification);
-
             }
             catch (Exception ex)
             {

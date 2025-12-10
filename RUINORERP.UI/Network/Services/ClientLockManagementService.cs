@@ -1027,8 +1027,8 @@ namespace RUINORERP.UI.Network.Services
         #region 获取锁状态列表功能
 
         /// <summary>
-        /// 获取所有锁状态列表
-        /// 用于登录后获取系统当前所有锁状态信息
+        /// 从服务器同步所有锁状态列表并更新到本地缓存
+        /// 用于登录后获取系统当前所有锁状态信息，并自动同步到本地缓存
         /// </summary>
         /// <returns>包含所有锁状态的响应结果</returns>
         public async Task<LockResponse> GetLockStatusListAsync()
@@ -1039,12 +1039,12 @@ namespace RUINORERP.UI.Network.Services
             // 验证通信服务是否可用
             if (_communicationService == null)
             {
-                _logger?.LogError("通信服务未初始化，无法获取锁状态列表");
+                _logger?.LogError("从服务器同步锁状态列表失败: 通信服务未初始化");
                 throw new InvalidOperationException("通信服务未初始化");
             }
 
             var stopwatch = Stopwatch.StartNew();
-            _logger?.LogDebug("开始获取锁状态列表");
+            _logger?.LogDebug("开始从服务器同步锁状态列表");
 
             try
             {
@@ -1054,11 +1054,11 @@ namespace RUINORERP.UI.Network.Services
                 // 验证请求对象
                 if (lockRequest == null)
                 {
-                    _logger?.LogError("创建锁请求对象失败");
+                    _logger?.LogError("从服务器同步锁状态列表失败: 创建锁请求对象失败");
                     return new LockResponse
                     {
                         IsSuccess = false,
-                        Message = "创建锁请求对象失败",
+                        Message = "从服务器同步锁状态列表失败: 创建锁请求对象失败",
                         LockInfoList = new List<LockInfo>()
                     };
                 }
@@ -1070,18 +1070,18 @@ namespace RUINORERP.UI.Network.Services
                 // 验证响应
                 if (response == null)
                 {
-                    _logger?.LogError("获取锁状态列表失败: 服务器响应为空");
+                    _logger?.LogError("从服务器同步锁状态列表失败: 服务器响应为空");
                     return new LockResponse
                     {
                         IsSuccess = false,
-                        Message = "服务器响应为空",
+                        Message = "从服务器同步锁状态列表失败: 服务器响应为空",
                         LockInfoList = new List<LockInfo>()
                     };
                 }
 
                 if (response.IsSuccess)
                 {
-                    _logger?.LogDebug("获取锁状态列表成功 - 锁数量: {LockCount}, 耗时: {ElapsedMs}ms", 
+                    _logger?.LogDebug("从服务器同步锁状态列表成功 - 锁数量: {LockCount}, 耗时: {ElapsedMs}ms", 
                         response.LockInfoList?.Count ?? 0, stopwatch.ElapsedMilliseconds);
                     
                     // 批量更新本地缓存
@@ -1131,8 +1131,6 @@ namespace RUINORERP.UI.Network.Services
                         {
                             // 使用批量更新方法提高性能
                             var updatedCount = _clientCache.BatchUpdateCache(validLockInfos);
-                            _logger?.LogInformation("批量更新本地缓存完成，接收 {TotalCount} 条，有效 {ValidCount} 条，更新 {UpdatedCount} 条，无效 {InvalidCount} 条", 
-                                response.LockInfoList.Count, validLockInfos.Count, updatedCount, invalidCount);
                         }
                         else
                         {
@@ -1146,7 +1144,7 @@ namespace RUINORERP.UI.Network.Services
                 }
                 else
                 {
-                    _logger?.LogWarning("获取锁状态列表失败 - 错误信息: {ErrorMessage}, 耗时: {ElapsedMs}ms",
+                    _logger?.LogWarning("从服务器同步锁状态列表失败 - 错误信息: {ErrorMessage}, 耗时: {ElapsedMs}ms",
                         response?.Message ?? "未知错误", stopwatch.ElapsedMilliseconds);
                 }
 
@@ -1154,26 +1152,26 @@ namespace RUINORERP.UI.Network.Services
             }
             catch (OperationCanceledException ex)
             {
-                _logger?.LogWarning(ex, "获取锁状态列表被取消");
+                _logger?.LogWarning(ex, "从服务器同步锁状态列表被取消");
                 throw;
             }
             catch (TimeoutException ex)
             {
-                _logger?.LogError(ex, "获取锁状态列表超时，耗时: {ElapsedMs}ms", stopwatch.ElapsedMilliseconds);
+                _logger?.LogError("从服务器同步锁状态列表超时，耗时: {ElapsedMs}ms", stopwatch.ElapsedMilliseconds);
                 return new LockResponse
                 {
                     IsSuccess = false,
-                    Message = "获取锁状态列表超时",
+                    Message = "从服务器同步锁状态列表超时",
                     LockInfoList = new List<LockInfo>()
                 };
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "获取锁状态列表时发生异常，耗时: {ElapsedMs}ms", stopwatch.ElapsedMilliseconds);
+                _logger?.LogError(ex, "从服务器同步锁状态列表时发生异常，耗时: {ElapsedMs}ms", stopwatch.ElapsedMilliseconds);
                 return new LockResponse
                 {
                     IsSuccess = false,
-                    Message = $"获取锁状态列表失败: {ex.Message}",
+                    Message = $"从服务器同步锁状态列表失败: {ex.Message}",
                     LockInfoList = new List<LockInfo>()
                 };
             }
@@ -1562,9 +1560,4 @@ namespace RUINORERP.UI.Network.Services
             // 当前实现为简单示例，实际使用时可以根据需要调整
 
             // 注意：由于锁对象可能被多个线程使用，需要谨慎清理
-        }
-
-        #endregion
-
-    }
-}
+  

@@ -475,7 +475,7 @@ namespace RUINORERP.UI.Network.Services
         /// 确保操作的原子性和线程安全性，正确处理所有LockInfo属性
         /// </summary>
         /// <param name="lockInfo">锁定信息</param>
-        private void UpdateCache(LockInfo lockInfo)
+        public void UpdateCache(LockInfo lockInfo)
         {
             try
             {

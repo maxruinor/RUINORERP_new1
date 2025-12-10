@@ -46,7 +46,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
         /// <param name="lockCache">客户端缓存服务（可选）</param>
         /// <param name="notificationService">锁状态通知服务（可选）</param>
         public LockCommandHandler(
-            ILogger<LockCommandHandler> logger, 
+            ILogger<LockCommandHandler> logger,
             ClientLocalLockCacheService lockCache = null,
             LockStatusNotificationService notificationService = null)
             : base(logger)
@@ -395,22 +395,22 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                             {
                                 // 锁定广播：更新缓存中的锁定信息
                                 _lockCache.UpdateCacheItem(lockInfo);
-                                
+
                                 // 通知订阅者锁状态变化
                                 _notificationService?.NotifyLockStatusChanged(
-                                    lockInfo.BillID, 
-                                    lockInfo, 
+                                    lockInfo.BillID,
+                                    lockInfo,
                                     LockStatusChangeType.Locked);
                             }
                             else
                             {
                                 // 解锁广播：清除缓存中的锁定信息
                                 _lockCache.ClearCache(lockInfo.BillID);
-                                
+
                                 // 通知订阅者锁状态变化
                                 _notificationService?.NotifyLockStatusChanged(
-                                    lockInfo.BillID, 
-                                    lockInfo, 
+                                    lockInfo.BillID,
+                                    lockInfo,
                                     LockStatusChangeType.Unlocked);
                             }
                         }
@@ -426,7 +426,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
             await Task.CompletedTask;
         }
 
-      
+
         /// <summary>
         /// 处理解锁请求命令
         /// 当其他用户请求解锁当前用户锁定的资源时
@@ -447,7 +447,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                         try
                         {
                             DialogResult result = MessageBox.Show(
-                                $"用户 {unlockRequest.RequesterUserName} 请求解锁您锁定的单据 {unlockRequest.LockInfo?.BillID ?? 0}，是否同意解锁？",
+                                $"用户 {unlockRequest.RequesterUserName} 请求解锁您锁定的单据 {unlockRequest.LockInfo?.BillNo ?? ""}，是否同意解锁？",
                                 "解锁请求",
                                 MessageBoxButtons.YesNo,
                                 MessageBoxIcon.Question);
@@ -458,7 +458,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                             if (result == DialogResult.Yes)
                             {
                                 // 用户同意解锁，调用AgreeUnlockAsync方法
-                                _logger.LogDebug($"用户同意解锁单据: {unlockRequest.LockInfo?.BillID ?? 0}");
+                                _logger.LogDebug($"用户同意解锁单据: {unlockRequest.LockInfo?.BillNo ?? ""}");
                                 await lockManagementService.AgreeUnlockAsync(
                                     unlockRequest.LockInfo?.BillID ?? 0,
                                     unlockRequest.LockInfo?.MenuID ?? 0,
@@ -468,7 +468,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                             else
                             {
                                 // 用户拒绝解锁，调用RefuseUnlockAsync方法
-                                _logger.LogDebug($"用户拒绝解锁单据: {unlockRequest.LockInfo?.BillID ?? 0}");
+                                _logger.LogDebug($"用户拒绝解锁单据: {unlockRequest.LockInfo?.BillNo ?? ""}");
                                 await lockManagementService.RefuseUnlockAsync(
                                     unlockRequest.LockInfo?.BillID ?? 0,
                                     unlockRequest.LockInfo?.MenuID ?? 0,
@@ -509,10 +509,10 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                     InvokeOnUiThread(() =>
                     {
                         MessageBox.Show(
-                            $"用户 {refuseInfo.RequesterUserName} 拒绝了您的解锁请求",
+                            $"用户 {refuseInfo.LockInfo.LockedUserName} 拒绝了您解锁{refuseInfo.LockInfo.BillNo}的请求",
                             "解锁请求被拒绝",
                             MessageBoxButtons.OK,
-                            MessageBoxIcon.Information);
+                            MessageBoxIcon.Warning);
                     });
                 }
             }

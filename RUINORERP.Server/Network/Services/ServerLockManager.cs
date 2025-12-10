@@ -1044,93 +1044,34 @@ namespace RUINORERP.Server.Network.Services
         }
 
 
-        ///// <summary>
-        ///// 请求解锁单据
-        ///// 服务器调用这里处理解锁请求逻辑
-        ///// </summary>
-        ///// <param name="request">解锁请求对象，包含请求者信息和单据信息</param>
-        ///// <returns>异步任务，返回包含详细信息的LockResponse</returns>
-        //public async Task<LockResponse> RequestUnlockDocumentAsync(LockRequest request)
-        //{
-        //    try
-        //    {
-        //        if (request == null)
-        //        {
-        //            _logger.LogWarning("解锁请求为空，请求失败");
-        //            return CreateErrorResponse(new LockInfo { BillID = request?.LockInfo.BillID ?? 0 }, "解锁请求参数无效");
-        //        }
-
-
-        //        // 检查单据是否存在并被锁定
-        //        if (!_documentLocks.TryGetValue(request.LockInfo.BillID, out var lockInfo) || !lockInfo.IsLocked)
-        //        {
-        //            var msg = ("解锁请求失败: 单据ID={BillId} 未被锁定或不存在", request.LockInfo.BillID);
-        //            return CreateErrorResponse(new LockInfo { BillID = request.LockInfo.BillID }, "该单据未被锁定或不存在");
-        //        }
-
-        //        //通常是自己则不能请求解锁自己锁定的单据
-        //        // 检查是否为锁定者本人请求解锁（直接解锁即可，无需请求）
-        //        if (lockInfo.LockedUserId == request.RequesterUserId)
-        //        {
-        //            var msg = ("解锁请求: 单据ID={BillId} 是请求者本人锁定的，直接解锁", request.LockInfo.BillID);
-        //            var lockInfoToRelease = new LockInfo { BillID = request.LockInfo.BillID, LockedUserId = request.RequesterUserId };
-        //            await ReleaseLockAsync(lockInfoToRelease);
-        //            return new LockResponse
-        //            {
-        //                IsSuccess = true,
-        //                Message = "该单据是您本人锁定的，已直接解锁",
-        //                LockInfo = lockInfo
-        //            };
-        //        }
-
-        //        // 保存解锁请求
-        //        request.Timestamp = DateTime.Now;
-
-        //        // 存储请求，覆盖之前的请求（如果存在）
-        //        _unlockRequests[request.LockInfo.BillID] = request;
-
-
-        //        return new LockResponse
-        //        {
-        //            IsSuccess = true,
-        //            Message = $"解锁请求已发送给锁定者 {lockInfo.LockedUserName}（ID: {lockInfo.LockedUserId}）",
-        //            LockInfo = lockInfo
-        //        };
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        _logger.LogError(ex, "处理解锁请求时发生异常: 单据ID={BillId}", request?.LockInfo.BillID ?? 0);
-        //        return CreateErrorResponse(new LockInfo { BillID = request?.LockInfo.BillID ?? 0 }, $"处理解锁请求异常: {ex.Message}");
-        //    }
-        //}
-
-        /// <summary>
-        /// 拒绝解锁请求
-        /// </summary>
-        /// <param name="request">解锁请求对象</param>
-        /// <returns>异步任务，返回包含详细信息的LockResponse</returns>
         public async Task<LockResponse> RefuseUnlockRequestAsync(LockRequest request)
         {
             try
             {
-                if (request == null)
+                if (request == null || request.LockInfo == null)
                 {
-                    _logger.LogWarning("拒绝解锁请求: 请求对象为空");
-                    return CreateErrorResponse(new LockInfo { BillID = request?.LockInfo.BillID ?? 0 }, "拒绝解锁请求参数无效");
+                    _logger.LogWarning("拒绝解锁请求: 请求对象或锁定信息为空");
+                    return CreateErrorResponse(new LockInfo { BillID = request?.LockInfo?.BillID ?? 0 }, "拒绝解锁请求参数无效");
                 }
 
                 // 检查是否存在解锁请求
                 if (!_unlockRequests.TryGetValue(request.LockInfo.BillID, out var storedRequestInfo))
                 {
-                    //_logger.LogInformation("拒绝解锁请求失败: 单据ID={BillId} 没有待处理的解锁请求", request.BillId);
                     return CreateErrorResponse(new LockInfo { BillID = request.LockInfo.BillID }, "该单据没有待处理的解锁请求");
                 }
 
                 // 获取存储的解锁请求
                 var storedRequest = storedRequestInfo.Request;
 
-                // 检查是否是锁定者本人拒绝请求 ???要调试
-                if (storedRequest.RequesterUserId != request.LockInfo.LockedUserId)
+                // 检查当前操作用户是否是锁定者本人
+                // 获取当前单据的锁定信息
+                if (!_documentLocks.TryGetValue(request.LockInfo.BillID, out var currentLock))
+                {
+                    return CreateErrorResponse(new LockInfo { BillID = request.LockInfo.BillID }, "单据未被锁定或不存在");
+                }
+
+                // 验证当前操作用户是否是锁定者本人
+                if (currentLock.LockedUserId != request.LockInfo.LockedUserId)
                 {
                     return CreateErrorResponse(new LockInfo { BillID = request.LockInfo.BillID }, "只有锁定者本人可以拒绝解锁请求");
                 }
@@ -1138,7 +1079,9 @@ namespace RUINORERP.Server.Network.Services
                 // 移除解锁请求
                 if (_unlockRequests.TryRemove(request.LockInfo.BillID, out _))
                 {
-                    var mes = ("拒绝解锁请求成功: 单据ID={BillNo}, 请求者ID={RequesterId}, 锁定者ID={LockedUserId}", request.LockInfo.BillNo, storedRequest.RequesterUserId, storedRequest.LockInfo.LockedUserId);
+                    // 通知请求者其解锁请求被拒绝
+                    await NotifyUnlockRequestRefusedAsync(storedRequest.RequesterUserId, request.LockInfo.BillID, request.LockInfo.LockedUserId);
+
                     return new LockResponse
                     {
                         IsSuccess = true,
@@ -1440,6 +1383,65 @@ namespace RUINORERP.Server.Network.Services
         }
 
         /// <summary>
+        /// 通知请求者其解锁请求被拒绝
+        /// </summary>
+        /// <param name="requesterUserId">请求解锁的用户ID</param>
+        /// <param name="billId">单据ID</param>
+        /// <param name="refusedByUserId">拒绝请求的用户ID（锁定者）</param>
+        /// <returns>通知任务</returns>
+        private async Task NotifyUnlockRequestRefusedAsync(long requesterUserId, long billId, long refusedByUserId)
+        {
+            try
+            {
+                // 获取请求者的所有会话
+                var requesterSession = _sessionService.GetSession(requesterUserId);
+                if (requesterSession == null)
+                {
+                    _logger.LogWarning("无法找到请求者的会话: RequesterUserId={RequesterUserId}, BillID={BillID}",
+                        requesterUserId, billId);
+                    return;
+                }
+
+                // 获取拒绝者的用户名（如果可能）
+                string refusedByUserName = "未知用户";
+                if (_documentLocks.TryGetValue(billId, out var lockInfo) && lockInfo.LockedUserId == refusedByUserId)
+                {
+                    refusedByUserName = lockInfo.LockedUserName;
+                }
+
+                // 创建拒绝通知
+                var refuseNotification = new LockRequest
+                {
+                    LockInfo = new LockInfo
+                    {
+                        BillID = billId,
+                        BillNo= lockInfo?.BillNo,
+                        BizName= lockInfo?.BizName,
+                        bizType= lockInfo.bizType,
+                        LockedUserId = refusedByUserId,
+                        LockedUserName = refusedByUserName,
+                        IsLocked = true // 单据仍然被锁定
+                    },
+                    RequesterUserId = requesterUserId,
+                    Timestamp = DateTime.UtcNow
+                };
+
+                // 向请求者的所有会话发送拒绝通知
+
+                await _sessionService.SendCommandAsync(
+                    requesterSession.SessionID,
+                    LockCommands.RefuseUnlock,
+                    refuseNotification);
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "通知请求者解锁请求被拒绝时发生异常: RequesterUserId={RequesterUserId}, BillID={BillID}",
+                    requesterUserId, billId);
+            }
+        }
+
+        /// <summary>
         /// 拒绝解锁请求 (ILockManagerService接口方法)
         /// </summary>
         /// <param name="refuseInfo">拒绝信息</param>
@@ -1455,6 +1457,10 @@ namespace RUINORERP.Server.Network.Services
         /// <returns>同意结果，包含成功状态和详细信息</returns>
         public async Task<LockResponse> AgreeUnlockRequestAsync(LockRequest agreeInfo)
         {
+            // 使用try-finally确保请求被移除
+            bool shouldRemoveRequest = false;
+            long billId = 0;
+
             try
             {
                 if (agreeInfo == null || agreeInfo.LockInfo?.BillID <= 0)
@@ -1463,38 +1469,48 @@ namespace RUINORERP.Server.Network.Services
                     return CreateErrorResponse(new LockInfo { BillID = agreeInfo?.LockInfo?.BillID ?? 0 }, "同意解锁请求参数无效");
                 }
 
-                _logger.LogDebug("处理同意解锁请求: 单据ID={BillId}, 同意者ID={LockedUserId}", agreeInfo.LockInfo.BillID, agreeInfo.LockInfo.LockedUserId);
+                billId = agreeInfo.LockInfo.BillID;
+                _logger.LogDebug("处理同意解锁请求: 单据ID={BillId}, 同意者ID={LockedUserId}", billId, agreeInfo.LockInfo.LockedUserId);
 
                 // 检查是否存在解锁请求
-                if (!_unlockRequests.TryGetValue(agreeInfo.LockInfo.BillID, out var storedRequestInfo))
+                if (!_unlockRequests.TryGetValue(billId, out var storedRequestInfo))
                 {
                     return CreateErrorResponse(agreeInfo.LockInfo, "该单据没有待处理的解锁请求");
                 }
 
+                // 标记需要移除请求
+                shouldRemoveRequest = true;
+
                 // 获取存储的解锁请求
                 var storedRequest = storedRequestInfo.Request;
+                var lockInfo = storedRequestInfo.Request.LockInfo;
 
-                // 检查是否是锁定者本人同意请求
-                if (storedRequest.RequesterUserId != agreeInfo.LockInfo.LockedUserId)
+                // 修正逻辑：检查同意者是否是锁定者本人
+                if (agreeInfo.LockInfo.LockedUserId != lockInfo.LockedUserId)
                 {
                     _logger.LogWarning("同意解锁请求失败: 用户ID={UserId} 不是单据ID={BillId} 的锁定者，无权同意请求",
-                        agreeInfo.LockInfo.LockedUserId, agreeInfo.LockInfo.BillID);
+                        agreeInfo.LockInfo.LockedUserId, billId);
                     return CreateErrorResponse(agreeInfo.LockInfo, "只有锁定者本人可以同意解锁请求");
                 }
 
-                var unlockResult = await UnlockDocumentAsync(agreeInfo.LockInfo.BillID, agreeInfo.LockInfo.LockedUserId);
                 // 解锁单据
-
-                // 移除解锁请求
-                _unlockRequests.TryRemove(agreeInfo.LockInfo.BillID, out _);
+                var unlockResult = await UnlockDocumentAsync(billId, agreeInfo.LockInfo.LockedUserId);
 
                 return unlockResult;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "处理同意解锁请求时发生异常: BillID={BillId}", agreeInfo?.LockInfo?.BillID ?? 0);
-                return CreateErrorResponse(new LockInfo { BillID = agreeInfo?.LockInfo?.BillID ?? 0 },
-                    $"同意解锁请求异常: {ex.Message}");
+                _logger.LogError(ex, "处理同意解锁请求时发生异常: BillID={BillId}", billId);
+                return CreateErrorResponse(new LockInfo { BillID = billId }, $"同意解锁请求异常: {ex.Message}");
+            }
+            finally
+            {
+                // 确保在所有情况下都移除请求
+                if (shouldRemoveRequest && billId > 0)
+                {
+                    _unlockRequests.TryRemove(billId, out _);
+                    _logger.LogDebug("已移除解锁请求: 单据ID={BillId}", billId);
+                }
             }
         }
 

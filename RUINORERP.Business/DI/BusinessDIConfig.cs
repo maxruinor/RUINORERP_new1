@@ -37,12 +37,23 @@ namespace RUINORERP.Business.DI
         {
             // Register business layer components
             builder.RegisterAssemblyTypes(System.Reflection.Assembly.Load("RUINORERP.Business"))
+                  .Where(t => !t.IsAssignableFrom(typeof(RUINORERP.Business.Document.DocumentConverterBase<,>)) && 
+                             !t.Name.EndsWith("Converter"))
                   .AsImplementedInterfaces()
                   .AsSelf()
                   .PropertiesAutowired()
                   .InstancePerDependency()
                   .EnableInterfaceInterceptors()
                   .InterceptedBy(typeof(BaseDataCacheAOP));
+
+            // 单独注册转换器类，不启用接口拦截
+            builder.RegisterAssemblyTypes(System.Reflection.Assembly.Load("RUINORERP.Business"))
+                  .Where(t => t.IsAssignableFrom(typeof(RUINORERP.Business.Document.DocumentConverterBase<,>)) || 
+                             t.Name.EndsWith("Converter"))
+                  .AsImplementedInterfaces()
+                  .AsSelf()
+                  .PropertiesAutowired()
+                  .InstancePerDependency();
 
             // 注册CommonController
             builder.RegisterType<CommonController>()

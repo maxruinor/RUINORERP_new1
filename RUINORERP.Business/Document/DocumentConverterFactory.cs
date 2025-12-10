@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using RUINORERP.Common.LogHelper;
 using RUINORERP.Model;
 using RUINORERP.Model.Base;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace RUINORERP.Business.Document
 {
@@ -61,10 +62,18 @@ namespace RUINORERP.Business.Document
         private readonly ILogger<DocumentConverterFactory> _logger;
         
         /// <summary>
+        /// 服务提供者，用于创建转换器实例
+        /// </summary>
+        private readonly IServiceProvider _serviceProvider;
+        
+        /// <summary>
         /// 构造函数
         /// </summary>
-        public DocumentConverterFactory(ILogger<DocumentConverterFactory> logger = null)
+        /// <param name="serviceProvider">服务提供者，用于创建转换器实例</param>
+        /// <param name="logger">日志记录器</param>
+        public DocumentConverterFactory(IServiceProvider serviceProvider, ILogger<DocumentConverterFactory> logger = null)
         {
+            _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
             _logger = logger;
             // 初始化缓存
             _convertersCache = new Dictionary<string, List<object>>();
@@ -116,8 +125,8 @@ namespace RUINORERP.Business.Document
                                     .GetMethod("RegisterConverterInternal", BindingFlags.NonPublic | BindingFlags.Instance)
                                     .MakeGenericMethod(sourceType, targetType);
                                 
-                                // 创建转换器实例
-                                var converter = Activator.CreateInstance(converterType);
+                                // 使用服务提供者创建转换器实例，而不是使用Activator.CreateInstance
+                                var converter = _serviceProvider.GetRequiredService(converterType);
                                 
                                 // 注册转换器
                                 registerMethod.Invoke(this, new[] { converter, priority });
@@ -274,17 +283,31 @@ namespace RUINORERP.Business.Document
             
             foreach (var info in matchingConverters)
             {
-                // 使用更安全的类型转换
-                if (info.Converter is IDocumentConverter<TSource, BaseEntity> converter)
+                // 使用反射获取转换器接口信息，避免类型转换问题
+                var converterType = info.Converter.GetType();
+                var interfaces = converterType.GetInterfaces()
+                    .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IDocumentConverter<,>))
+                    .FirstOrDefault();
+                
+                if (interfaces != null)
                 {
-                    result.Add(new ConversionOption
+                    var genericArgs = interfaces.GetGenericArguments();
+                    if (genericArgs.Length == 2 && genericArgs[0] == typeof(TSource))
                     {
-                        DisplayName = converter.DisplayName,
-                        SourceDocumentType = converter.SourceDocumentType,
-                        TargetDocumentType = converter.TargetDocumentType,
-                        ConverterType = info.Converter.GetType(),
-                        Priority = info.Priority
-                    });
+                        // 使用反射获取属性值，避免类型转换问题
+                        var displayNameProperty = interfaces.GetProperty("DisplayName");
+                        var sourceTypeProperty = interfaces.GetProperty("SourceDocumentType");
+                        var targetTypeProperty = interfaces.GetProperty("TargetDocumentType");
+                        
+                        result.Add(new ConversionOption
+                        {
+                            DisplayName = displayNameProperty?.GetValue(info.Converter)?.ToString() ?? converterType.Name,
+                            SourceDocumentType = sourceTypeProperty?.GetValue(info.Converter)?.ToString() ?? genericArgs[0].Name,
+                            TargetDocumentType = targetTypeProperty?.GetValue(info.Converter)?.ToString() ?? genericArgs[1].Name,
+                            ConverterType = converterType,
+                            Priority = info.Priority
+                        });
+                    }
                 }
             }
             

@@ -55,7 +55,7 @@ namespace RUINORERP.Business.Document.Converters
         /// <summary>
         /// 转换器显示名称
         /// </summary>
-        public override string DisplayName => "生成销售退回单";
+        public override string DisplayName => "转为销售退回单";
         
         /// <summary>
         /// 执行具体的转换逻辑 - 复用业务层核心逻辑

@@ -69,7 +69,7 @@ namespace RUINORERP.UI.UserCenter
 
             todoPage = UIForKryptonHelper.NewPage("待办事项", todoList);
             todoPage.AllowDrop = false;
-            todoPage.AutoHiddenSlideSize = new Size(200, 200);
+            todoPage.AutoHiddenSlideSize = new Size(215, 200); // 增加宽度15像素
             ButtonSpecAny buttonSpecRefresh = new ButtonSpecAny();
             buttonSpecRefresh.Text = "刷新";
             buttonSpecRefresh.Click += ButtonSpecAny_Click;

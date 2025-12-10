@@ -47,16 +47,7 @@ namespace RUINORERP.Business.Document.Converters
             _appContext = serviceProvider.GetRequiredService<ApplicationContext>();
         }
 
-        /// <summary>
-        /// 源单据类型名称
-        /// </summary>
-        public override string SourceDocumentType => "销售订单";
-
-        /// <summary>
-        /// 目标单据类型名称
-        /// </summary>
-        public override string TargetDocumentType => "销售出库单";
-
+     
         /// <summary>
         /// 转换器显示名称
         /// </summary>

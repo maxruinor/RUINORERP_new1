@@ -43,6 +43,7 @@
     <Compile Remove="CommService\DictServiceHelper.cs" />
     <Compile Remove="CommService\InitDBData.cs" />
     <Compile Remove="CommService\InventoryCacheManager.cs" />
+    <Compile Remove="Document\LockAwareActionManager.cs" />
     <Compile Remove="Ean13.cs" />
     <Compile Remove="LogicaService\LocTypeController.cs" />
     <Compile Remove="Processor\View_SaleOrderPerformanceAuto.cs" />

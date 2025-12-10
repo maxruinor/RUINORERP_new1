@@ -4906,10 +4906,20 @@ namespace RUINORERP.UI.BaseForm
 
                 // 使用反射调用正确的泛型方法
                 var method = typeof(RUINORERP.Business.Document.ActionManager)
-                    .GetMethod("ExecuteActionAsync")
-                    .MakeGenericMethod(typeof(T), targetType);
+                    .GetMethods()
+                    .FirstOrDefault(m => m.Name == "ExecuteActionAsync" && 
+                                       m.IsGenericMethod && 
+                                       m.GetParameters().Length == 2 &&
+                                       m.GetParameters()[0].ParameterType.IsGenericParameter &&
+                                       m.GetParameters()[1].ParameterType.Name == "ActionOptions");
 
-                var task = (Task)method.Invoke(actionManager, new object[] { EditEntity, options });
+                if (method == null)
+                {
+                    throw new InvalidOperationException("找不到合适的 ExecuteActionAsync 方法");
+                }
+
+                var genericMethod = method.MakeGenericMethod(typeof(T), targetType);
+                var task = (Task)genericMethod.Invoke(actionManager, new object[] { EditEntity, options });
                 await task;
 
                 // 获取结果属性

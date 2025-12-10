@@ -140,8 +140,10 @@ namespace RUINORERP.Business.DI
                 .SingleInstance()
                 .PropertiesAutowired();
             
-            // 注册锁定感知的联动操作管理器
-            builder.RegisterType<RUINORERP.Business.Document.LockAwareActionManager>()
+           
+                
+            // 注册联动操作管理器
+            builder.RegisterType<RUINORERP.Business.Document.ActionManager>()
                 .AsSelf()
                 .InstancePerLifetimeScope()
                 .PropertiesAutowired();

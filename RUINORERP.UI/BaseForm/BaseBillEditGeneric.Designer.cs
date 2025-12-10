@@ -1,4 +1,6 @@
-﻿namespace RUINORERP.UI.BaseForm
+﻿using System;
+
+namespace RUINORERP.UI.BaseForm
 {
     partial class BaseBillEditGeneric<T,C>
     {
@@ -17,6 +19,20 @@
             {
                 components.Dispose();
                 StatusContext = null;
+                
+                // 取消订阅锁状态变化
+                try
+                {
+                    // 通过反射调用UnsubscribeFromLockStatusChanges方法
+                    var method = typeof(BaseBillEditGeneric<T, C>).GetMethod("UnsubscribeFromLockStatusChanges", 
+                        System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                    method?.Invoke(this, null);
+                }
+                catch (Exception ex)
+                {
+                    // 忽略取消订阅时的异常，避免影响正常的Dispose流程
+                    System.Diagnostics.Debug.WriteLine($"取消订阅锁状态变化失败: {ex.Message}");
+                }
             }
             base.Dispose(disposing);
         }

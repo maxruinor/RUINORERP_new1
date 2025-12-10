@@ -50,6 +50,8 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         public static readonly CommandId AgreeUnlock = new CommandId(CommandCategory.Lock, (byte)(CommandCatalog.Lock_AgreeUnlock & 0xFF));
 
+
+
         #endregion
 
         #region 系统管理操作 (0x0806-0x0807)
@@ -67,5 +69,13 @@ namespace RUINORERP.PacketSpec.Commands
         public static readonly CommandId BroadcastLockStatus = new CommandId(CommandCategory.Lock, (byte)(CommandCatalog.Lock_BroadcastLockStatus & 0xFF));
 
         #endregion
+
+
+        /// <summary>
+        /// 同意解锁 - 当前锁定用户同意其他用户的解锁请求并释放锁定
+        /// 命令码: 0x0805
+        /// </summary>
+        public static readonly CommandId GetLockStatuList = new CommandId(CommandCategory.Lock, (byte)(CommandCatalog.Lock_GetLockStatuList & 0xFF));
+
     }
 }

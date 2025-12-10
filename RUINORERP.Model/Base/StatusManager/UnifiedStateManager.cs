@@ -1127,56 +1127,30 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <param name="status">当前状态</param>
         /// <param name="action">操作类型</param>
         /// <returns>包含操作权限和友好提示消息的结果</returns>
-        public StateTransitionResult CanExecuteActionWithMessage(IUnifiedStateManager stateManager, Type statusType, object status, MenuItemEnums action)
+        public StateTransitionResult CanExecuteActionWithMessage(IUnifiedStateManager stateManager, BaseEntity entity, MenuItemEnums action)
         {
             try
             {
-                if (stateManager == null)
+                // 获取当前实体的状态类型和状态值
+                var statusType = entity.GetStatusType();
+                var currentStatus = entity.GetCurrentStatus();
+                
+                if (currentStatus is Enum statusEnum)
                 {
-                    return StateTransitionResult.Failure("状态管理器不能为空");
-                }
+                    // 使用增强的规则检查
+                    bool canExecute = CanExecuteActionWithEnhancedRules(action, entity, statusType, statusEnum);
+                    
+                    // 生成友好的提示消息
+                    string message = canExecute ? GetSuccessMessage(action) : GetFailureMessage(action, GetDataStatus(entity));
 
-                if (status == null)
-                {
-                    return StateTransitionResult.Failure("状态信息不能为空");
-                }
-
-                // 将状态转换为DataStatus枚举
-                DataStatus dataStatus;
-                if (status is DataStatus ds)
-                {
-                    dataStatus = ds;
-                }
-                else if (status is Enum statusEnum)
-                {
-                    // 尝试将枚举转换为DataStatus
-                    if (Enum.TryParse<DataStatus>(status.ToString(), out var parsedStatus))
-                    {
-                        dataStatus = parsedStatus;
-                    }
-                    else
-                    {
-                        return StateTransitionResult.Failure($"无法识别的状态类型: {status}");
-                    }
+                    return canExecute
+                        ? StateTransitionResult.Success(message)
+                        : StateTransitionResult.Failure(message);
                 }
                 else
                 {
-                    return StateTransitionResult.Failure($"不支持的状态类型: {status.GetType().Name}");
+                    return StateTransitionResult.Failure($"不支持的状态类型: {statusType.Name}");
                 }
-
-                // 获取操作权限规则
-                var actionRules = GetActionPermissionRules();
-
-                // 检查当前状态是否允许执行该操作
-                bool canExecute = actionRules.TryGetValue(dataStatus, out var allowedActions) &&
-                                 allowedActions.Contains(action);
-
-                // 生成友好的提示消息
-                string message = canExecute ? GetSuccessMessage(action) : GetFailureMessage(action, dataStatus);
-
-                return canExecute
-                    ? StateTransitionResult.Success(message)
-                    : StateTransitionResult.Failure(message);
             }
             catch (Exception ex)
             {
@@ -1259,6 +1233,14 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <returns>失败提示消息</returns>
         private string GetFailureMessage(MenuItemEnums action, DataStatus dataStatus)
         {
+            // 基本状态检查失败消息
+            string basicStatusMessage = GetBasicStatusFailureMessage(action, dataStatus);
+            if (!string.IsNullOrEmpty(basicStatusMessage))
+            {
+                return basicStatusMessage;
+            }
+            
+            // 根据操作类型返回更具体的失败消息
             switch (action)
             {
                 case MenuItemEnums.新增:
@@ -1267,43 +1249,186 @@ namespace RUINORERP.Model.Base.StatusManager
                         : $"只有草稿状态或完结状态的单据才能新增，当前状态：{dataStatus}";
 
                 case MenuItemEnums.修改:
-                    return dataStatus == DataStatus.草稿 || dataStatus == DataStatus.新建
-                        ? "可以修改当前单据"
-                        : $"只有草稿状态或新建状态的单据才能修改，当前状态：{dataStatus}";
+                    return GetModifyFailureMessage(dataStatus);
 
                 case MenuItemEnums.删除:
-                    return dataStatus == DataStatus.草稿 || dataStatus == DataStatus.新建
-                        ? "可以删除当前单据"
-                        : $"只有草稿状态或新建状态的单据才能删除，当前状态：{dataStatus}";
+                    return GetDeleteFailureMessage(dataStatus);
 
                 case MenuItemEnums.保存:
-                    return dataStatus == DataStatus.草稿 || dataStatus == DataStatus.新建
-                        ? "可以保存当前单据"
-                        : $"只有草稿状态或新建状态的单据才能保存，当前状态：{dataStatus}";
+                    return GetSaveFailureMessage(dataStatus);
 
                 case MenuItemEnums.提交:
-                    return dataStatus == DataStatus.草稿
-                        ? "可以提交当前单据"
-                        : $"只有草稿状态的单据才能提交，当前状态：{dataStatus}";
+                    return GetSubmitFailureMessage(dataStatus);
 
                 case MenuItemEnums.审核:
-                    return dataStatus == DataStatus.新建
-                        ? "可以审核当前单据"
-                        : $"只有新建状态的单据才能审核，当前状态：{dataStatus}";
+                    return GetApproveFailureMessage(dataStatus);
 
                 case MenuItemEnums.反审:
-                    return dataStatus == DataStatus.确认
-                        ? "可以反审核当前单据"
-                        : $"只有确认状态的单据才能反审核，当前状态：{dataStatus}";
+                    return GetUnapproveFailureMessage(dataStatus);
 
                 case MenuItemEnums.结案:
-                    return dataStatus == DataStatus.确认
-                        ? "可以结案当前单据"
-                        : $"只有确认状态的单据才能结案，当前状态：{dataStatus}";
+                    return GetCloseFailureMessage(dataStatus);
 
                 default:
                     return "无法执行当前操作";
             }
+        }
+
+        /// <summary>
+        /// 获取基本状态检查失败的提示消息
+        /// </summary>
+        /// <param name="action">操作类型</param>
+        /// <param name="dataStatus">当前数据状态</param>
+        /// <returns>失败提示消息</returns>
+        private string GetBasicStatusFailureMessage(MenuItemEnums action, DataStatus dataStatus)
+        {
+            switch (action)
+            {
+                case MenuItemEnums.修改:
+                case MenuItemEnums.删除:
+                case MenuItemEnums.保存:
+                    if (dataStatus != DataStatus.草稿 && dataStatus != DataStatus.新建)
+                    {
+                        return $"只有草稿状态或新建状态的单据才能{action}，当前状态：{dataStatus}";
+                    }
+                    break;
+
+                case MenuItemEnums.提交:
+                    if (dataStatus != DataStatus.草稿)
+                    {
+                        return $"只有草稿状态的单据才能提交，当前状态：{dataStatus}";
+                    }
+                    break;
+
+                case MenuItemEnums.审核:
+                    if (dataStatus != DataStatus.新建)
+                    {
+                        return $"只有新建状态的单据才能审核，当前状态：{dataStatus}";
+                    }
+                    break;
+
+                case MenuItemEnums.反审:
+                case MenuItemEnums.结案:
+                    if (dataStatus != DataStatus.确认)
+                    {
+                        return $"只有确认状态的单据才能{action}，当前状态：{dataStatus}";
+                    }
+                    break;
+
+                case MenuItemEnums.反结案:
+                    if (dataStatus != DataStatus.完结)
+                    {
+                        return $"只有完结状态的单据才能反结案，当前状态：{dataStatus}";
+                    }
+                    break;
+            }
+
+            return string.Empty;
+        }
+
+        /// <summary>
+        /// 获取修改操作失败的提示消息
+        /// </summary>
+        /// <param name="dataStatus">当前数据状态</param>
+        /// <returns>失败提示消息</returns>
+        private string GetModifyFailureMessage(DataStatus dataStatus)
+        {
+            if (dataStatus != DataStatus.草稿 && dataStatus != DataStatus.新建)
+            {
+                return $"只有草稿状态或新建状态的单据才能修改，当前状态：{dataStatus}";
+            }
+
+            return "当前单据已被锁定，无法修改";
+        }
+
+        /// <summary>
+        /// 获取删除操作失败的提示消息
+        /// </summary>
+        /// <param name="dataStatus">当前数据状态</param>
+        /// <returns>失败提示消息</returns>
+        private string GetDeleteFailureMessage(DataStatus dataStatus)
+        {
+            if (dataStatus != DataStatus.草稿 && dataStatus != DataStatus.新建)
+            {
+                return $"只有草稿状态或新建状态的单据才能删除，当前状态：{dataStatus}";
+            }
+
+            return "当前单据已被关联或使用，无法删除";
+        }
+
+        /// <summary>
+        /// 获取保存操作失败的提示消息
+        /// </summary>
+        /// <param name="dataStatus">当前数据状态</param>
+        /// <returns>失败提示消息</returns>
+        private string GetSaveFailureMessage(DataStatus dataStatus)
+        {
+            if (dataStatus != DataStatus.草稿 && dataStatus != DataStatus.新建)
+            {
+                return $"只有草稿状态或新建状态的单据才能保存，当前状态：{dataStatus}";
+            }
+
+            return "当前单据没有变更，无需保存";
+        }
+
+        /// <summary>
+        /// 获取提交操作失败的提示消息
+        /// </summary>
+        /// <param name="dataStatus">当前数据状态</param>
+        /// <returns>失败提示消息</returns>
+        private string GetSubmitFailureMessage(DataStatus dataStatus)
+        {
+            if (dataStatus != DataStatus.草稿)
+            {
+                return $"只有草稿状态的单据才能提交，当前状态：{dataStatus}";
+            }
+
+            return "当前单据信息不完整，无法提交";
+        }
+
+        /// <summary>
+        /// 获取审核操作失败的提示消息
+        /// </summary>
+        /// <param name="dataStatus">当前数据状态</param>
+        /// <returns>失败提示消息</returns>
+        private string GetApproveFailureMessage(DataStatus dataStatus)
+        {
+            if (dataStatus != DataStatus.新建)
+            {
+                return $"只有新建状态的单据才能审核，当前状态：{dataStatus}";
+            }
+
+            return "当前单据不满足审核条件";
+        }
+
+        /// <summary>
+        /// 获取反审核操作失败的提示消息
+        /// </summary>
+        /// <param name="dataStatus">当前数据状态</param>
+        /// <returns>失败提示消息</returns>
+        private string GetUnapproveFailureMessage(DataStatus dataStatus)
+        {
+            if (dataStatus != DataStatus.确认)
+            {
+                return $"只有确认状态的单据才能反审核，当前状态：{dataStatus}";
+            }
+
+            return "当前单据已完成后续业务流程（如支付、发货等），无法反审核";
+        }
+
+        /// <summary>
+        /// 获取结案操作失败的提示消息
+        /// </summary>
+        /// <param name="dataStatus">当前数据状态</param>
+        /// <returns>失败提示消息</returns>
+        private string GetCloseFailureMessage(DataStatus dataStatus)
+        {
+            if (dataStatus != DataStatus.确认)
+            {
+                return $"只有确认状态的单据才能结案，当前状态：{dataStatus}";
+            }
+
+            return "当前单据尚有未完成的业务流程（如待支付、部分支付等），无法结案";
         }
 
         /// <summary>
@@ -1365,23 +1490,335 @@ namespace RUINORERP.Model.Base.StatusManager
                     }
                 }
 
-                // 如果UIControlRules没有相关规则，回退到原有的操作权限检查
-                var currentDataStatus = GetDataStatus(entity);
-
-                // 获取操作权限规则
-                var actionRules = GetActionPermissionRules();
-
-                // 检查当前状态是否允许执行该操作
-                bool canExecute = actionRules.TryGetValue(currentDataStatus, out var allowedActions) &&
-                                 allowedActions.Contains(action);
-
-                return canExecute;
+                // 如果UIControlRules没有相关规则，使用增强的规则检查
+                return CanExecuteActionWithEnhancedRules(action, entity, statusType, status);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "检查操作权限失败：操作 {Action}，实体类型 {EntityType}", action, entity.GetType().Name);
                 return false;
             }
+        }
+
+        /// <summary>
+        /// 使用增强的规则检查是否可以执行指定操作
+        /// </summary>
+        /// <param name="action">操作类型</param>
+        /// <param name="entity">实体对象</param>
+        /// <param name="statusType">状态类型</param>
+        /// <param name="status">当前状态</param>
+        /// <returns>是否可以执行操作</returns>
+        private bool CanExecuteActionWithEnhancedRules(MenuItemEnums action, BaseEntity entity, Type statusType, object status)
+        {
+            // 获取当前数据状态
+            var currentDataStatus = GetDataStatus(entity);
+            
+            // 获取操作权限规则
+            var actionRules = GetActionPermissionRules();
+
+            // 检查当前状态是否允许执行该操作
+            bool canExecute = actionRules.TryGetValue(currentDataStatus, out var allowedActions) &&
+                             allowedActions.Contains(action);
+
+            // 如果基本规则允许，进行更详细的业务规则检查
+            if (canExecute)
+            {
+                canExecute = CheckBusinessSpecificRules(action, entity, currentDataStatus);
+            }
+
+            return canExecute;
+        }
+
+        /// <summary>
+        /// 检查业务特定的规则
+        /// </summary>
+        /// <param name="action">操作类型</param>
+        /// <param name="entity">实体对象</param>
+        /// <param name="currentDataStatus">当前数据状态</param>
+        /// <returns>是否可以执行操作</returns>
+        private bool CheckBusinessSpecificRules(MenuItemEnums action, BaseEntity entity, DataStatus currentDataStatus)
+        {
+            // 根据操作类型进行特定的业务规则检查
+            switch (action)
+            {
+                case MenuItemEnums.修改:
+                    return CanModifyEntity(entity, currentDataStatus);
+                    
+                case MenuItemEnums.删除:
+                    return CanDeleteEntity(entity, currentDataStatus);
+                    
+                case MenuItemEnums.保存:
+                    return CanSaveEntity(entity, currentDataStatus);
+                    
+                case MenuItemEnums.提交:
+                    return CanSubmitEntity(entity, currentDataStatus);
+                    
+                case MenuItemEnums.审核:
+                    return CanApproveEntity(entity, currentDataStatus);
+                    
+                case MenuItemEnums.反审:
+                    return CanUnapproveEntity(entity, currentDataStatus);
+                    
+                case MenuItemEnums.结案:
+                    return CanCloseEntity(entity, currentDataStatus);
+                    
+                case MenuItemEnums.反结案:
+                    return CanUncloseEntity(entity, currentDataStatus);
+                    
+                default:
+                    // 对于其他操作，使用默认规则
+                    return true;
+            }
+        }
+
+        /// <summary>
+        /// 检查是否可以修改实体
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        /// <param name="currentDataStatus">当前数据状态</param>
+        /// <returns>是否可以修改</returns>
+        private bool CanModifyEntity(BaseEntity entity, DataStatus currentDataStatus)
+        {
+            // 基本状态检查
+            if (currentDataStatus != DataStatus.草稿 && currentDataStatus != DataStatus.新建)
+            {
+                return false;
+            }
+
+            // 检查是否有特殊业务状态限制修改
+            var businessStatuses = entity.StatusInfo?.BusinessStatuses;
+            if (businessStatuses != null)
+            {
+                // 检查是否有锁定状态
+                foreach (var businessStatus in businessStatuses)
+                {
+                    if (businessStatus.Value != null && businessStatus.Value.ToString().Contains("锁定"))
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// 检查是否可以删除实体
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        /// <param name="currentDataStatus">当前数据状态</param>
+        /// <returns>是否可以删除</returns>
+        private bool CanDeleteEntity(BaseEntity entity, DataStatus currentDataStatus)
+        {
+            // 基本状态检查
+            if (currentDataStatus != DataStatus.草稿 && currentDataStatus != DataStatus.新建)
+            {
+                return false;
+            }
+
+            // 检查是否有特殊业务状态限制删除
+            var businessStatuses = entity.StatusInfo?.BusinessStatuses;
+            if (businessStatuses != null)
+            {
+                // 检查是否有已关联状态，已关联的单据不能删除
+                foreach (var businessStatus in businessStatuses)
+                {
+                    if (businessStatus.Value != null && 
+                        (businessStatus.Value.ToString().Contains("已关联") || 
+                         businessStatus.Value.ToString().Contains("已使用")))
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// 检查是否可以保存实体
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        /// <param name="currentDataStatus">当前数据状态</param>
+        /// <returns>是否可以保存</returns>
+        private bool CanSaveEntity(BaseEntity entity, DataStatus currentDataStatus)
+        {
+            // 基本状态检查
+            if (currentDataStatus != DataStatus.草稿 && currentDataStatus != DataStatus.新建)
+            {
+                return false;
+            }
+
+            // 检查实体是否有变更
+            if (!entity.HasChanged)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// 检查是否可以提交实体
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        /// <param name="currentDataStatus">当前数据状态</param>
+        /// <returns>是否可以提交</returns>
+        private bool CanSubmitEntity(BaseEntity entity, DataStatus currentDataStatus)
+        {
+            // 基本状态检查
+            if (currentDataStatus != DataStatus.草稿)
+            {
+                return false;
+            }
+
+            // 检查必填字段是否完整
+            if (!IsEntityCompleteForSubmission(entity))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// 检查是否可以审核实体
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        /// <param name="currentDataStatus">当前数据状态</param>
+        /// <returns>是否可以审核</returns>
+        private bool CanApproveEntity(BaseEntity entity, DataStatus currentDataStatus)
+        {
+            // 基本状态检查
+            if (currentDataStatus != DataStatus.新建)
+            {
+                return false;
+            }
+
+            // 检查是否有待审核业务状态
+            var businessStatuses = entity.StatusInfo?.BusinessStatuses;
+            if (businessStatuses != null)
+            {
+                foreach (var businessStatus in businessStatuses)
+                {
+                    if (businessStatus.Value != null && businessStatus.Value.ToString().Contains("待审核"))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// 检查是否可以反审核实体
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        /// <param name="currentDataStatus">当前数据状态</param>
+        /// <returns>是否可以反审核</returns>
+        private bool CanUnapproveEntity(BaseEntity entity, DataStatus currentDataStatus)
+        {
+            // 基本状态检查
+            if (currentDataStatus != DataStatus.确认)
+            {
+                return false;
+            }
+
+            // 检查是否有后续业务流程限制反审核
+            var businessStatuses = entity.StatusInfo?.BusinessStatuses;
+            if (businessStatuses != null)
+            {
+                foreach (var businessStatus in businessStatuses)
+                {
+                    // 已支付、已发货、已入库等状态不能反审核
+                    if (businessStatus.Value != null && 
+                        (businessStatus.Value.ToString().Contains("已支付") || 
+                         businessStatus.Value.ToString().Contains("已发货") ||
+                         businessStatus.Value.ToString().Contains("已入库")))
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// 检查是否可以结案实体
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        /// <param name="currentDataStatus">当前数据状态</param>
+        /// <returns>是否可以结案</returns>
+        private bool CanCloseEntity(BaseEntity entity, DataStatus currentDataStatus)
+        {
+            // 基本状态检查
+            if (currentDataStatus != DataStatus.确认)
+            {
+                return false;
+            }
+
+            // 检查是否满足结案条件
+            var businessStatuses = entity.StatusInfo?.BusinessStatuses;
+            if (businessStatuses != null)
+            {
+                foreach (var businessStatus in businessStatuses)
+                {
+                    // 检查是否有未完成的业务流程
+                    if (businessStatus.Value != null && 
+                        (businessStatus.Value.ToString().Contains("待支付") || 
+                         businessStatus.Value.ToString().Contains("部分支付") ||
+                         businessStatus.Value.ToString().Contains("待发货")))
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// 检查是否可以反结案实体
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        /// <param name="currentDataStatus">当前数据状态</param>
+        /// <returns>是否可以反结案</returns>
+        private bool CanUncloseEntity(BaseEntity entity, DataStatus currentDataStatus)
+        {
+            // 基本状态检查
+            if (currentDataStatus != DataStatus.完结)
+            {
+                return false;
+            }
+
+            // 检查是否有权限反结案
+            // 这里可以添加更复杂的权限检查逻辑
+            return true;
+        }
+
+        /// <summary>
+        /// 检查实体是否满足提交条件（必填字段等）
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        /// <returns>是否满足提交条件</returns>
+        private bool IsEntityCompleteForSubmission(BaseEntity entity)
+        {
+            // 这里可以添加更复杂的业务逻辑检查
+            // 例如：检查必填字段是否完整、业务规则是否满足等
+            
+            // 基本检查：实体必须有变更
+            if (!entity.HasChanged)
+            {
+                return false;
+            }
+
+            // TODO: 添加更详细的业务逻辑检查
+            // 可以通过反射检查实体是否有[Required]标记的属性
+            // 或者根据特定业务类型进行不同的检查
+            
+            return true;
         }
 
         /// <summary>
@@ -1421,6 +1858,49 @@ namespace RUINORERP.Model.Base.StatusManager
         }
 
         /// <summary>
+        /// 获取可用的操作列表（带详细消息）
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        /// <returns>可执行的操作列表及其状态消息</returns>
+        public virtual Dictionary<MenuItemEnums, string> GetAvailableActionsWithMessages(BaseEntity entity)
+        {
+            var result = new Dictionary<MenuItemEnums, string>();
+            
+            if (entity == null)
+                return result;
+
+            try
+            {
+                // 获取当前实体的状态类型和状态值
+                var statusType = entity.GetStatusType();
+                var currentStatus = entity.GetCurrentStatus();
+                
+                if (currentStatus is Enum statusEnum)
+                {
+                    // 获取所有可能的操作
+                    var allActions = Enum.GetValues(typeof(MenuItemEnums)).Cast<MenuItemEnums>();
+                    
+                    foreach (var action in allActions)
+                    {
+                        // 使用增强的规则检查
+                        bool canExecute = CanExecuteActionWithEnhancedRules(action, entity, statusType, statusEnum);
+                        
+                        // 生成友好的提示消息
+                        string message = canExecute ? GetSuccessMessage(action) : GetFailureMessage(action, GetDataStatus(entity));
+                        
+                        result[action] = message;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "获取可用操作列表失败：实体类型 {EntityType}", entity.GetType().Name);
+            }
+
+            return result;
+        }
+
+        /// <summary>
         /// 获取可用的操作列表
         /// </summary>
         /// <param name="entity">实体对象</param>
@@ -1456,16 +1936,19 @@ namespace RUINORERP.Model.Base.StatusManager
                     }
                 }
 
-                // 如果UIControlRules没有相关规则，回退到原有的操作权限检查
-                var currentDataStatus = GetDataStatus(entity);
+                // 如果UIControlRules没有相关规则，使用增强的规则检查
+                var allActions = Enum.GetValues(typeof(MenuItemEnums)).Cast<MenuItemEnums>();
+                var lastAvailableActions = new List<MenuItemEnums>();
 
-                // 获取操作权限规则
-                var actionRules = GetActionPermissionRules();
+                foreach (var action in allActions)
+                {
+                    if (CanExecuteActionWithEnhancedRules(action, entity, statusType, status))
+                    {
+                        lastAvailableActions.Add(action);
+                    }
+                }
 
-                // 获取当前状态下的可用操作
-                var LastAvailableActions = actionRules.TryGetValue(currentDataStatus, out var actions) ? actions : new List<MenuItemEnums>();
-
-                return LastAvailableActions;
+                return lastAvailableActions;
             }
             catch (Exception ex)
             {
@@ -1507,6 +1990,78 @@ namespace RUINORERP.Model.Base.StatusManager
                     return MenuItemEnums.导出;
                 default:
                     return null;
+            }
+        }
+
+        ///// <summary>
+        ///// 获取实体在特定状态下的所有可用转换
+        ///// </summary>
+        ///// <param name="entity">实体对象</param>
+        ///// <param name="statusType">状态类型</param>
+        ///// <param name="status">当前状态</param>
+        ///// <returns>可转换到的状态列表</returns>
+        //public virtual IEnumerable<object> GetAvailableTransitions(BaseEntity entity, Type statusType, object status)
+        //{
+        //    if (entity == null || status == null)
+        //        return Enumerable.Empty<object>();
+
+        //    try
+        //    {
+        //        // 获取状态转换规则
+        //        var transitionRules = GetTransitionRules();
+                
+        //        // 根据状态类型获取转换规则
+        //        if (statusType == typeof(DataStatus) && status is DataStatus dataStatus)
+        //        {
+        //            return StateTransitionRules.GetAvailableTransitions(transitionRules, dataStatus);
+        //        }
+        //        else if (statusType == typeof(ActionStatus) && status is ActionStatus actionStatus)
+        //        {
+        //            return StateTransitionRules.GetAvailableTransitions(transitionRules, actionStatus);
+        //        }
+        //        else if (statusType.IsEnum && status is Enum enumStatus)
+        //        {
+        //            // 对于其他枚举类型，尝试使用通用方法
+        //            return StateTransitionRules.GetAvailableTransitions(transitionRules, enumStatus);
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        _logger.LogError(ex, "获取可用转换列表失败：实体类型 {EntityType}，状态类型 {StatusType}", 
+        //            entity.GetType().Name, statusType?.Name);
+        //    }
+
+        //    return Enumerable.Empty<object>();
+        //}
+
+        /// <summary>
+        /// 检查实体是否可以执行指定的UI操作
+        /// </summary>
+        /// <typeparam name="TEntity">实体类型</typeparam>
+        /// <param name="entity">实体对象</param>
+        /// <param name="action">要执行的操作</param>
+        /// <returns>是否可以执行操作</returns>
+        public virtual bool CanExecuteAction<TEntity>(BaseEntity entity, MenuItemEnums action) where TEntity : class
+        {
+            try
+            {
+                // 获取当前实体的状态类型和状态值
+                var statusType = entity.GetStatusType();
+                var currentStatus = entity.GetCurrentStatus();
+                
+                if (currentStatus is Enum statusEnum)
+                {
+                    // 使用增强的规则检查
+                    return CanExecuteActionWithEnhancedRules(action, entity, statusType, statusEnum);
+                }
+                
+                return false;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "检查操作权限失败：实体类型 {EntityType}，操作 {Action}", 
+                    typeof(TEntity).Name, action);
+                return false;
             }
         }
 

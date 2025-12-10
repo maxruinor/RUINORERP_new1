@@ -280,7 +280,7 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <param name="status">当前状态</param>
         /// <param name="action">操作类型</param>
         /// <returns>包含操作权限和友好提示消息的结果</returns>
-        StateTransitionResult CanExecuteActionWithMessage(IUnifiedStateManager stateManager, Type statusType, object status, MenuItemEnums action);
+        StateTransitionResult CanExecuteActionWithMessage(IUnifiedStateManager stateManager, BaseEntity entity,MenuItemEnums action);
 
         /// <summary>
         /// 获取可用的操作列表

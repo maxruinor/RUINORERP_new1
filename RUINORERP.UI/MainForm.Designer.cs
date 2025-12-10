@@ -72,6 +72,7 @@ namespace RUINORERP.UI
             this.lblServerInfo = new System.Windows.Forms.ToolStripStatusLabel();
             this.progressBar = new System.Windows.Forms.ToolStripProgressBar();
             this.toolStripDropDownButton1 = new System.Windows.Forms.ToolStripDropDownButton();
+            this.lblVer = new System.Windows.Forms.ToolStripStatusLabel();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.toolStripBtnUpdate = new System.Windows.Forms.ToolStripButton();
             this.toolBtnlogOff = new System.Windows.Forms.ToolStripButton();
@@ -100,7 +101,6 @@ namespace RUINORERP.UI
             this.toolStripFunctionMenu = new System.Windows.Forms.ToolStrip();
             this.toolStripMenuSearcher = new System.Windows.Forms.ToolStripComboBox();
             this.toolStripContainerMenu = new System.Windows.Forms.ToolStripContainer();
-            this.lblVer = new System.Windows.Forms.ToolStripStatusLabel();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonNavigator1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPage5)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPage2)).BeginInit();
@@ -459,6 +459,13 @@ namespace RUINORERP.UI
             this.toolStripDropDownButton1.Text = "toolStripDropDownButton1";
             this.toolStripDropDownButton1.Visible = false;
             // 
+            // lblVer
+            // 
+            this.lblVer.Name = "lblVer";
+            this.lblVer.Padding = new System.Windows.Forms.Padding(100, 0, 0, 0);
+            this.lblVer.Size = new System.Drawing.Size(128, 17);
+            this.lblVer.Text = "v3.1";
+            // 
             // toolStrip1
             // 
             this.toolStrip1.Dock = System.Windows.Forms.DockStyle.None;
@@ -720,13 +727,6 @@ namespace RUINORERP.UI
             this.toolStripContainerMenu.TopToolStripPanel.Controls.Add(this.menuStripMain);
             this.toolStripContainerMenu.TopToolStripPanel.Controls.Add(this.toolStrip1);
             this.toolStripContainerMenu.TopToolStripPanel.Controls.Add(this.toolStripFunctionMenu);
-            // 
-            // lblVer
-            // 
-            this.lblVer.Name = "lblVer";
-            this.lblVer.Padding = new System.Windows.Forms.Padding(100, 0, 0, 0);
-            this.lblVer.Size = new System.Drawing.Size(119, 17);
-            this.lblVer.Text = "v3";
             // 
             // MainForm
             // 

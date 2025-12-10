@@ -401,6 +401,14 @@ namespace RUINORERP.PacketSpec.Commands
         /// 命令码: 0x0807
         /// </summary>
         public const ushort Lock_BroadcastLockStatus = 0x0807;
+
+
+        /// <summary>
+        /// 同意解锁 - 当前锁定用户同意其他用户的解锁请求并释放锁定
+        /// 命令码: 0x0805
+        /// </summary>
+        public const ushort Lock_GetLockStatuList = 0x0808;
+
         #endregion
 
         #region 配置命令 (0x09xx)

@@ -40,6 +40,7 @@ namespace RUINORERP.UI.Network.Services
         private readonly ILogger<ClientLockManagementService> _logger;
         private readonly ClientLocalLockCacheService _clientCache;
         private readonly LockRecoveryManager _recoveryManager;
+        private readonly LockStatusNotificationService _notificationService;
 
         /// <summary>
         /// 活跃锁集合 - 核心数据结构
@@ -87,14 +88,17 @@ namespace RUINORERP.UI.Network.Services
         /// <param name="logger">日志记录器</param>
         /// <param name="clientCache">客户端锁缓存（可选，为null时内部创建）</param>
         /// <param name="recoveryManager">锁恢复管理器（可选，为null时内部创建）</param>
+        /// <param name="notificationService">锁状态通知服务（可选，为null时内部创建）</param>
         public ClientLockManagementService(
             Lazy<ClientCommunicationService> communicationService,
             ILogger<ClientLockManagementService> logger,
             ClientLocalLockCacheService clientCache = null,
-            LockRecoveryManager recoveryManager = null)
+            LockRecoveryManager recoveryManager = null,
+            LockStatusNotificationService notificationService = null)
         {
             _communicationService = communicationService ?? throw new ArgumentNullException(nameof(communicationService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _notificationService = notificationService;
 
             // 初始化组件
             _activeLocks = new ConcurrentDictionary<long, LockInfo>();
@@ -1020,6 +1024,167 @@ namespace RUINORERP.UI.Network.Services
 
         #endregion
 
+        #region 获取锁状态列表功能
+
+        /// <summary>
+        /// 获取所有锁状态列表
+        /// 用于登录后获取系统当前所有锁状态信息
+        /// </summary>
+        /// <returns>包含所有锁状态的响应结果</returns>
+        public async Task<LockResponse> GetLockStatusListAsync()
+        {
+            if (_isDisposed)
+                throw new ObjectDisposedException(nameof(ClientLockManagementService));
+
+            // 验证通信服务是否可用
+            if (_communicationService == null)
+            {
+                _logger?.LogError("通信服务未初始化，无法获取锁状态列表");
+                throw new InvalidOperationException("通信服务未初始化");
+            }
+
+            var stopwatch = Stopwatch.StartNew();
+            _logger?.LogDebug("开始获取锁状态列表");
+
+            try
+            {
+                // 创建空的锁请求（GetLockStatuList不需要特定参数）
+                var lockRequest = new LockRequest();
+
+                // 验证请求对象
+                if (lockRequest == null)
+                {
+                    _logger?.LogError("创建锁请求对象失败");
+                    return new LockResponse
+                    {
+                        IsSuccess = false,
+                        Message = "创建锁请求对象失败",
+                        LockInfoList = new List<LockInfo>()
+                    };
+                }
+
+                // 发送获取锁状态列表命令
+                var response = await _communicationService.Value.SendCommandWithResponseAsync<LockResponse>(
+                    LockCommands.GetLockStatuList, lockRequest, _cancellationTokenSource.Token);
+
+                // 验证响应
+                if (response == null)
+                {
+                    _logger?.LogError("获取锁状态列表失败: 服务器响应为空");
+                    return new LockResponse
+                    {
+                        IsSuccess = false,
+                        Message = "服务器响应为空",
+                        LockInfoList = new List<LockInfo>()
+                    };
+                }
+
+                if (response.IsSuccess)
+                {
+                    _logger?.LogDebug("获取锁状态列表成功 - 锁数量: {LockCount}, 耗时: {ElapsedMs}ms", 
+                        response.LockInfoList?.Count ?? 0, stopwatch.ElapsedMilliseconds);
+                    
+                    // 批量更新本地缓存
+                    if (response.LockInfoList != null && response.LockInfoList.Any())
+                    {
+                        // 数据验证和过滤
+                        var validLockInfos = new List<LockInfo>();
+                        var invalidCount = 0;
+                        
+                        foreach (var lockInfo in response.LockInfoList)
+                        {
+                            try
+                            {
+                                // 验证锁信息的基本有效性
+                                if (lockInfo == null)
+                                {
+                                    _logger?.LogWarning("发现空的锁信息对象");
+                                    invalidCount++;
+                                    continue;
+                                }
+
+                                if (lockInfo.BillID <= 0)
+                                {
+                                    _logger?.LogWarning("发现无效的锁信息BillID: {BillID}", lockInfo.BillID);
+                                    invalidCount++;
+                                    continue;
+                                }
+
+                                // 过滤掉过期的锁信息
+                                if (lockInfo.IsExpired)
+                                {
+                                    _logger?.LogDebug("跳过过期的锁信息: BillID={BillID}, BillNo={BillNo}", 
+                                        lockInfo.BillID, lockInfo.BillNo);
+                                    continue;
+                                }
+
+                                validLockInfos.Add(lockInfo);
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger?.LogError(ex, "验证锁信息时出错: BillID={BillID}", lockInfo?.BillID ?? 0);
+                                invalidCount++;
+                            }
+                        }
+                        
+                        if (validLockInfos.Any())
+                        {
+                            // 使用批量更新方法提高性能
+                            var updatedCount = _clientCache.BatchUpdateCache(validLockInfos);
+                            _logger?.LogInformation("批量更新本地缓存完成，接收 {TotalCount} 条，有效 {ValidCount} 条，更新 {UpdatedCount} 条，无效 {InvalidCount} 条", 
+                                response.LockInfoList.Count, validLockInfos.Count, updatedCount, invalidCount);
+                        }
+                        else
+                        {
+                            _logger?.LogWarning("没有有效的锁信息可以更新到缓存");
+                        }
+                    }
+                    else
+                    {
+                        _logger?.LogDebug("服务器返回的锁状态列表为空");
+                    }
+                }
+                else
+                {
+                    _logger?.LogWarning("获取锁状态列表失败 - 错误信息: {ErrorMessage}, 耗时: {ElapsedMs}ms",
+                        response?.Message ?? "未知错误", stopwatch.ElapsedMilliseconds);
+                }
+
+                return response;
+            }
+            catch (OperationCanceledException ex)
+            {
+                _logger?.LogWarning(ex, "获取锁状态列表被取消");
+                throw;
+            }
+            catch (TimeoutException ex)
+            {
+                _logger?.LogError(ex, "获取锁状态列表超时，耗时: {ElapsedMs}ms", stopwatch.ElapsedMilliseconds);
+                return new LockResponse
+                {
+                    IsSuccess = false,
+                    Message = "获取锁状态列表超时",
+                    LockInfoList = new List<LockInfo>()
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "获取锁状态列表时发生异常，耗时: {ElapsedMs}ms", stopwatch.ElapsedMilliseconds);
+                return new LockResponse
+                {
+                    IsSuccess = false,
+                    Message = $"获取锁状态列表失败: {ex.Message}",
+                    LockInfoList = new List<LockInfo>()
+                };
+            }
+            finally
+            {
+                stopwatch.Stop();
+            }
+        }
+
+        #endregion
+
         #region 解锁请求相关功能
 
         /// <summary>
@@ -1046,9 +1211,9 @@ namespace RUINORERP.UI.Network.Services
                 LockInfo lockInfo = new LockInfo();
                 lockInfo.BillID = billId;
                 lockInfo.MenuID = menuId;
-                lockInfo.LockedUserId = currentUserId;
-                lockInfo.LockedUserName = currentUserName;
-                lockInfo.SessionId = MainForm.Instance.AppContext.SessionId;
+                //lockInfo.LockedUserId = currentUserId;
+                //lockInfo.LockedUserName = currentUserName;
+                //lockInfo.SessionId = MainForm.Instance.AppContext.SessionId;
                 // 创建请求解锁请求
                 var lockRequest = new LockRequest
                 {

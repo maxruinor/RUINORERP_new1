@@ -55,19 +55,7 @@ namespace RUINORERP.Model.Context
         }
 
 
-        //      public ApplicationContextAccessor(
-        //    IContextManager localContextManager,
-        //IServiceProvider serviceProvider)
-        //      {
-        //          ServiceProvider = serviceProvider;
-        //          ContextManager = localContextManager;
-        //          if (ContextManager is null)
-        //          {
-        //              ContextManager = new ApplicationContextManagerAsyncLocal();
-        //          }
-        //      }
-
-        // internal IServiceProvider ServiceProvider { get; private set; }
+      
         private IContextManager ContextManager { get; set; }
 
 

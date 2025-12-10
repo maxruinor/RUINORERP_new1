@@ -202,6 +202,11 @@ namespace RUINORERP.UI.Network.DI
                 .InstancePerLifetimeScope()
                 .PropertiesAutowired();
 
+            // 注册锁状态通知服务
+            builder.RegisterType<LockStatusNotificationService>()
+                .AsSelf()
+                .SingleInstance();
+
             // 注册锁管理相关服务
             RegisterLockManagementServices(builder);
 
@@ -244,6 +249,19 @@ namespace RUINORERP.UI.Network.DI
                 .As<IClientCommandHandler>()
                 .AsSelf()
                 .InstancePerLifetimeScope();
+
+            // 注册LockCommandHandler，注入LockStatusNotificationService
+            builder.Register(c =>
+            {
+                var logger = c.Resolve<ILogger<LockCommandHandler>>();
+                var lockCache = c.Resolve<ClientLocalLockCacheService>();
+                var notificationService = c.Resolve<LockStatusNotificationService>();
+                
+                return new LockCommandHandler(logger, lockCache, notificationService);
+            })
+            .As<IClientCommandHandler>()
+            .AsSelf()
+            .InstancePerLifetimeScope();
         }
 
         /// <summary>
@@ -259,12 +277,16 @@ namespace RUINORERP.UI.Network.DI
                 // 解析核心依赖 - 使用Lazy延迟解析ClientCommunicationService
                 var lazyCommunicationService = c.Resolve<Lazy<ClientCommunicationService>>();
                 var logger = c.Resolve<ILogger<ClientLockManagementService>>();
+                var notificationService = c.Resolve<LockStatusNotificationService>();
 
                 // 创建锁管理服务实例
                 // 注意：移除了对HeartbeatManager的依赖
                 return new ClientLockManagementService(
                     lazyCommunicationService,
-                    logger);
+                    logger,
+                    null,
+                    null,
+                    notificationService);
             })
             .AsSelf()
             .SingleInstance()

@@ -20,6 +20,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
     /// - v2.0.0: 集成缓存状态同步，配合新的IntegratedLockManagementService
     /// - 支持智能缓存失效和批量状态更新
     /// - 增强异常处理和重连机制
+    /// - v2.1.0: 添加锁状态通知服务，支持实时UI更新
     /// </summary>
     [ClientCommandHandler("LockCommandHandler", 60)]
     public class LockCommandHandler : BaseClientCommandHandler
@@ -33,15 +34,26 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
         private ClientLocalLockCacheService _lockCache;
 
         /// <summary>
+        /// 锁状态通知服务 - v2.1.0新增
+        /// 用于通知UI窗体锁状态变化
+        /// </summary>
+        private LockStatusNotificationService _notificationService;
+
+        /// <summary>
         /// 构造函数 v2.0.0
         /// </summary>
         /// <param name="logger">日志记录器</param>
         /// <param name="lockCache">客户端缓存服务（可选）</param>
-        public LockCommandHandler(ILogger<LockCommandHandler> logger, ClientLocalLockCacheService lockCache = null)
+        /// <param name="notificationService">锁状态通知服务（可选）</param>
+        public LockCommandHandler(
+            ILogger<LockCommandHandler> logger, 
+            ClientLocalLockCacheService lockCache = null,
+            LockStatusNotificationService notificationService = null)
             : base(logger)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _lockCache = lockCache; // v2.0.0: 可选的缓存服务引用
+            _notificationService = notificationService; // v2.1.0: 可选的通知服务引用
 
             // 注册支持的锁管理相关命令（使用已定义的 LockCommands）
             SetSupportedCommands(
@@ -383,27 +395,24 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                             {
                                 // 锁定广播：更新缓存中的锁定信息
                                 _lockCache.UpdateCacheItem(lockInfo);
+                                
+                                // 通知订阅者锁状态变化
+                                _notificationService?.NotifyLockStatusChanged(
+                                    lockInfo.BillID, 
+                                    lockInfo, 
+                                    LockStatusChangeType.Locked);
                             }
                             else
                             {
                                 // 解锁广播：清除缓存中的锁定信息
                                 _lockCache.ClearCache(lockInfo.BillID);
+                                
+                                // 通知订阅者锁状态变化
+                                _notificationService?.NotifyLockStatusChanged(
+                                    lockInfo.BillID, 
+                                    lockInfo, 
+                                    LockStatusChangeType.Unlocked);
                             }
-
-                            // 触发UI更新事件（如果需要）
-                            await Task.Run(() =>
-                            {
-                                try
-                                {
-                                    // 通知UI更新锁定状态
-                                    // 这里可以通过事件或消息总线通知相关的编辑窗体更新锁定状态显示
-                                    NotifyLockStatusChanged(lockInfo.BillID, lockInfo);
-                                }
-                                catch (Exception uiEx)
-                                {
-                                    _logger.LogWarning(uiEx, $"通知UI更新锁状态失败: 资源ID={lockInfo.BillID}");
-                                }
-                            });
                         }
 
 
@@ -417,50 +426,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
             await Task.CompletedTask;
         }
 
-        /// <summary>
-        /// 通知锁定状态变更
-        /// </summary>
-        /// <param name="billId">单据ID</param>
-        /// <param name="lockInfo">锁定信息</param>
-        private void NotifyLockStatusChanged(long billId, LockInfo lockInfo)
-        {
-            // 这里可以通过事件、消息总线或其他机制通知相关的编辑窗体更新锁定状态
-            // 例如：
-            // - 发送自定义消息到主窗体
-            // - 触发静态事件
-            // - 使用观察者模式通知所有订阅者
-
-            try
-            {
-                // 获取当前用户信息以判断锁定状态变更的影响
-                long currentUserId = 0;
-                try
-                {
-                    currentUserId = MainForm.Instance?.AppContext?.CurUserInfo?.UserInfo?.User_ID ?? 0;
-                }
-                catch
-                {
-                    // 如果无法获取当前用户ID，则跳过用户相关的处理
-                }
-
-                if (lockInfo != null)
-                {
-                    bool isSelfLock = lockInfo.LockedUserId == currentUserId;
-
-                    // 如果是当前用户的锁定状态变更，记录详细日志
-                    if (isSelfLock)
-                    {
-                        string status = lockInfo.IsLocked ? "获得锁定" : "释放锁定";
-                        _logger.LogDebug($"当前用户{status}: 资源ID={billId}");
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, $"处理锁定状态通知时发生异常: 资源ID={billId}");
-            }
-        }
-
+      
         /// <summary>
         /// 处理解锁请求命令
         /// 当其他用户请求解锁当前用户锁定的资源时

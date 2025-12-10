@@ -55,6 +55,8 @@ namespace RUINORERP.UI.BaseForm
             bwRemoting.ProgressChanged += bwRemoting_progressChanged;
             //如果打开单时。被其它人锁定。才显示锁定图标
             tsBtnLocked.Visible = false;
+            //tsBtnLocked.Click -= Item_Click;
+            //tsBtnLocked.Click += Item_Click;
 
         }
 
@@ -73,8 +75,8 @@ namespace RUINORERP.UI.BaseForm
         /// v3状态上下文
         /// </summary>
         private IStatusTransitionContext _statusContext;
-      
-        
+
+
         /// <summary>
         /// 状态管理初始化标志，防止重复初始化
         /// </summary>
@@ -101,14 +103,14 @@ namespace RUINORERP.UI.BaseForm
                 if (_stateManager != value)
                 {
                     _stateManager = value;
-                
+
                 }
             }
         }
 
 
 
-     
+
 
 
         /// <summary>
@@ -148,7 +150,7 @@ namespace RUINORERP.UI.BaseForm
         {
             // 防止重复初始化
             if (_isStateManagementInitialized) return;
-            
+
             try
             {
                 // 添加设计模式检测，避免在设计器中运行时出现空引用异常
@@ -156,12 +158,12 @@ namespace RUINORERP.UI.BaseForm
                 {
                     return;
                 }
-                
+
                 // 从服务容器获取状态管理器和UI控制器
                 if (Startup.ServiceProvider != null)
                 {
                     _stateManager = Startup.GetFromFac<IUnifiedStateManager>();
-                 
+
                 }
 
                 // 错误处理和日志记录
@@ -171,7 +173,7 @@ namespace RUINORERP.UI.BaseForm
                     System.Diagnostics.Debug.WriteLine("无法从DI容器获取IUnifiedStateManager服务");
                 }
 
-      
+
                 // 标记已初始化
                 _isStateManagementInitialized = true;
             }
@@ -239,7 +241,7 @@ namespace RUINORERP.UI.BaseForm
             BoundEntity = null;
             StatusContext = null;
         }
-       
+
 
         /// <summary>
         /// 更新状态栏显示
@@ -296,7 +298,7 @@ namespace RUINORERP.UI.BaseForm
                 currentStatus = entity.GetDataStatus();
             }
 
-      
+
 
             // 更新UI控件状态
             UpdateUIControlsByState(currentStatus);
@@ -338,7 +340,7 @@ namespace RUINORERP.UI.BaseForm
         protected virtual IEnumerable<Control> GetAllControls() =>
             GetAllControls(this);
 
-       
+
 
         #endregion
 
@@ -372,7 +374,7 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
-    
+
         #endregion
 
         #endregion
@@ -436,7 +438,7 @@ namespace RUINORERP.UI.BaseForm
             {
                 // 使用UIControlRules获取按钮状态规则
                 var buttonRules = RUINORERP.Model.Base.StatusManager.UIControlRules.GetButtonRules(currentStatus);
-                
+
                 // 根据规则更新按钮状态
                 foreach (var rule in buttonRules)
                 {
@@ -454,7 +456,7 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
-         
+
 
 
         #region 如果窗体，有些按钮不用出现在这个业务窗体时。这里手动排除。集合有值才行
@@ -612,12 +614,18 @@ namespace RUINORERP.UI.BaseForm
         private void Item_Click(object sender, EventArgs e)
         {
             MainForm.Instance.AppContext.log.ActionName = sender.ToString();
-            if (sender.ToString().Length > 0)
+            string MenuKey = sender.ToString();
+            if (MenuKey.Length > 0)
             {
-                bool isInEnum = Enum.IsDefined(typeof(MenuItemEnums), sender.ToString());
+
+                if (MenuKey.Contains("已锁定"))
+                {
+                    MenuKey = "已锁定";
+                }
+                bool isInEnum = Enum.IsDefined(typeof(MenuItemEnums), MenuKey);
                 if (isInEnum)
                 {
-                    DoButtonClick(EnumHelper.GetEnumByString<MenuItemEnums>(sender.ToString()));
+                    DoButtonClick(EnumHelper.GetEnumByString<MenuItemEnums>(MenuKey));
                 }
             }
         }
@@ -892,9 +900,9 @@ namespace RUINORERP.UI.BaseForm
 
 
 
- 
 
- 
+
+
 
 
 
@@ -1010,15 +1018,15 @@ namespace RUINORERP.UI.BaseForm
         protected void SubscribeToEntityStatusChanged(BaseEntity entity)
         {
             if (entity == null) return;
-            
+
             // 防止重复订阅，先取消再订阅
             entity.StatusChanged -= OnEntityStatusChanged;
             entity.StatusChanged += OnEntityStatusChanged;
-            
+
             // 确保状态上下文已初始化
             EnsureStatusContext(entity);
         }
-        
+
         /// <summary>
         /// 实体状态变更事件处理程序
         /// </summary>
@@ -1529,6 +1537,6 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
-      
+
     }
 }

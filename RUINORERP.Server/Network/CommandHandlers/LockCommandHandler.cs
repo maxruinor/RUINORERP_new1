@@ -20,6 +20,7 @@ using RUINORERP.Server.Network.Interfaces.Services;
 using RUINORERP.Server.Network.Models;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -58,7 +59,8 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 LockCommands.RequestUnlock,
                 LockCommands.RefuseUnlock,
                 LockCommands.ForceUnlock,
-                LockCommands.BroadcastLockStatus
+                LockCommands.BroadcastLockStatus,
+                LockCommands.GetLockStatuList
             );
         }
 
@@ -106,7 +108,8 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     { LockCommands.RequestUnlock, HandleRequestUnlockAsync },
                     { LockCommands.RefuseUnlock, HandleRefuseUnlockAsync },
                     { LockCommands.ForceUnlock, HandleForceUnlockAsync },
-                    { LockCommands.BroadcastLockStatus, HandleBroadcastLockStatusAsync }
+                    { LockCommands.BroadcastLockStatus, HandleBroadcastLockStatusAsync },
+                    { LockCommands.GetLockStatuList, HandleGetLockStatusListAsync }
                 };
 
                 if (commandHandlers.TryGetValue(commandId, out var handler))
@@ -353,6 +356,111 @@ namespace RUINORERP.Server.Network.CommandHandlers
             {
                 _logger.LogError(ex, $"处理广播锁状态异常: {ex.Message}");
                 return CreateErrorResponse($"广播锁状态失败: {ex.Message}", cmd.Packet.ExecutionContext, ex);
+            }
+        }
+
+        /// <summary>
+        /// 处理获取锁状态列表命令
+        /// </summary>
+        /// <param name="cmd">获取锁状态列表命令</param>
+        /// <param name="cancellationToken">取消令牌</param>
+        /// <returns>处理结果</returns>
+        private async Task<IResponse> HandleGetLockStatusListAsync(QueuedCommand cmd, CancellationToken cancellationToken)
+        {
+            var stopwatch = Stopwatch.StartNew();
+            
+            try
+            {
+                _logger.LogDebug("开始处理获取锁状态列表请求");
+                
+                // 验证锁定管理服务是否可用
+                if (_lockManagerService == null)
+                {
+                    _logger.LogError("锁定管理服务未初始化");
+                    return CreateErrorResponse("锁定管理服务未初始化", cmd.Packet.ExecutionContext);
+                }
+
+                // 获取所有锁定的单据信息
+                var allLockedDocuments = _lockManagerService.GetAllLockedDocuments();
+                
+                // 验证返回的数据
+                if (allLockedDocuments == null)
+                {
+                    _logger.LogWarning("锁定管理服务返回了null值");
+                    allLockedDocuments = new List<LockInfo>();
+                }
+
+                // 数据验证和过滤
+                var validLockInfos = new List<LockInfo>();
+                var invalidCount = 0;
+                
+                foreach (var lockInfo in allLockedDocuments)
+                {
+                    try
+                    {
+                        // 验证锁信息的基本有效性
+                        if (lockInfo == null)
+                        {
+                            _logger.LogWarning("发现空的锁信息对象");
+                            invalidCount++;
+                            continue;
+                        }
+
+                        if (lockInfo.BillID <= 0)
+                        {
+                            _logger.LogWarning("发现无效的锁信息BillID: {BillID}", lockInfo.BillID);
+                            invalidCount++;
+                            continue;
+                        }
+
+                        // 确保关键属性不为空
+                        if (string.IsNullOrWhiteSpace(lockInfo.LockKey))
+                        {
+                            _logger.LogWarning("锁信息LockKey为空，尝试生成: BillID={BillID}", lockInfo.BillID);
+                            lockInfo.SetLockKey();
+                        }
+
+                        if (string.IsNullOrWhiteSpace(lockInfo.LockedUserName))
+                        {
+                            _logger.LogWarning("锁信息LockedUserName为空: BillID={BillID}, UserID={UserID}", 
+                                lockInfo.BillID, lockInfo.LockedUserId);
+                        }
+
+                        validLockInfos.Add(lockInfo);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "验证锁信息时出错: BillID={BillID}", lockInfo?.BillID ?? 0);
+                        invalidCount++;
+                    }
+                }
+                
+                // 创建响应对象
+                var response = new LockResponse
+                {
+                    IsSuccess = true,
+                    Message = $"获取锁状态列表成功，共 {validLockInfos.Count} 条有效记录",
+                    LockInfoList = validLockInfos
+                };
+
+                _logger.LogInformation("处理获取锁状态列表请求完成: 总数={TotalCount}, 有效={ValidCount}, 无效={InvalidCount}, 耗时={ElapsedMs}ms", 
+                    allLockedDocuments.Count, validLockInfos.Count, invalidCount, stopwatch.ElapsedMilliseconds);
+
+                return response;
+            }
+            catch (OperationCanceledException ex)
+            {
+                _logger.LogWarning(ex, "处理获取锁状态列表请求被取消");
+                return CreateErrorResponse("请求被取消", cmd.Packet.ExecutionContext, ex);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "处理获取锁状态列表异常，耗时: {ElapsedMs}ms", stopwatch.ElapsedMilliseconds);
+                return CreateErrorResponse($"获取锁状态列表失败: {ex.Message}", cmd.Packet.ExecutionContext, ex);
+            }
+            finally
+            {
+                stopwatch.Stop();
             }
         }
 

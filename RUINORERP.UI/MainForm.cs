@@ -1087,7 +1087,7 @@ namespace RUINORERP.UI
             // 使用CacheInitializationService 只加载要缓存的表结构。缓存从服务器取
             var cacheInitializationService = Startup.GetFromFac<EntityCacheInitializationService>();
             cacheInitializationService.InitializeAllTableSchemas();
-            this.Text = "企业数字化集成ERP v3.1" + "-" + Program.ERPVersion;
+            this.Text = "企业数字化集成ERP v3.2" + "-" + Program.ERPVersion;
             //MessageBox.Show("登陆成功后，请要系统设置中添加公司基本资料。");
             using (StatusBusy busy = new StatusBusy("检测系统是否为最新版本 请稍候"))
             {
@@ -1928,7 +1928,7 @@ namespace RUINORERP.UI
                     }
                     if (AppContext.CompanyInfo != null)
                     {
-                        this.Text = AppContext.CompanyInfo.ShortName + "企业数字化集成ERP v3.1" + "-" + Program.ERPVersion;
+                        this.Text = AppContext.CompanyInfo.ShortName + "企业数字化集成ERP v3.2" + "-" + Program.ERPVersion;
                     }
 
                     await UIBizService.RequestCache(nameof(tb_RoleInfo));
@@ -3325,7 +3325,9 @@ namespace RUINORERP.UI
         {
             try
             {
-                //!MainForm.Instance.AppContext.IsOnline  屏蔽了更新工作台。可能会卡列。需要优化
+                MainForm.Instance.AppContext.CurrentUser.静止时间 = GetLastInputTime();
+
+
                 if (GetLastInputTime() > 30 && !MainForm.Instance.AppContext.IsOnline)
                 {
                     GetAutoUpdateConfig();

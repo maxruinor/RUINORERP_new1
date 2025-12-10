@@ -306,6 +306,120 @@ namespace RUINORERP.UI.Network.Services
         }
 
         /// <summary>
+        /// 批量更新缓存
+        /// 用于GetLockStatusListAsync调用后更新本地缓存
+        /// </summary>
+        /// <param name="lockInfoList">锁信息列表</param>
+        /// <returns>更新的缓存项数量</returns>
+        public int BatchUpdateCache(IEnumerable<LockInfo> lockInfoList)
+        {
+            if (lockInfoList == null)
+            {
+                _logger?.LogWarning("批量更新缓存失败: 锁信息列表为空");
+                return 0;
+            }
+
+            try
+            {
+                if (!lockInfoList.Any())
+                {
+                    _logger?.LogDebug("批量更新缓存: 锁信息列表为空，无需更新");
+                    return 0;
+                }
+
+                var updatedCount = 0;
+                var errorCount = 0;
+                var validationErrors = new List<string>();
+
+                // 验证并预处理所有锁信息
+                var validLockInfos = new List<LockInfo>();
+                foreach (var lockInfo in lockInfoList)
+                {
+                    try
+                    {
+                        // 验证锁信息
+                        if (lockInfo == null)
+                        {
+                            validationErrors.Add("发现空的锁信息对象");
+                            errorCount++;
+                            continue;
+                        }
+
+                        if (lockInfo.BillID <= 0)
+                        {
+                            validationErrors.Add($"锁信息BillID无效: {lockInfo.BillID}");
+                            errorCount++;
+                            continue;
+                        }
+
+                        // 创建锁信息的副本以避免引用问题
+                        var lockInfoCopy = PrepareCacheEntry(lockInfo);
+                        validLockInfos.Add(lockInfoCopy);
+                    }
+                    catch (Exception ex)
+                    {
+                        validationErrors.Add($"处理锁信息(BillID: {lockInfo?.BillID ?? 0})时出错: {ex.Message}");
+                        errorCount++;
+                        _logger?.LogWarning(ex, "处理锁信息时出错: BillID={BillID}", lockInfo?.BillID ?? 0);
+                    }
+                }
+
+                // 线程安全的批量更新操作
+                lock (_syncLock)
+                {
+                    try
+                    {
+                        // 批量更新有效的锁信息
+                        foreach (var lockInfo in validLockInfos)
+                        {
+                            try
+                            {
+                                // 更新缓存
+                                _localCache.AddOrUpdate(lockInfo.BillID, lockInfo, (key, oldValue) => 
+                                {
+                                    if (ShouldUpdateCache(oldValue, lockInfo))
+                                    {
+                                        updatedCount++;
+                                        _logger?.LogDebug("更新缓存项: BillID={BillID}, BillNo={BillNo}, IsLocked={IsLocked}, LockedUser={LockedUser}", 
+                                            lockInfo.BillID, lockInfo.BillNo, lockInfo.IsLocked, lockInfo.LockedUserName);
+                                        return lockInfo;
+                                    }
+                                    return oldValue;
+                                });
+                            }
+                            catch (Exception ex)
+                            {
+                                errorCount++;
+                                _logger?.LogError(ex, "更新缓存项时出错: BillID={BillID}", lockInfo.BillID);
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger?.LogError(ex, "批量更新缓存时发生异常");
+                        throw;
+                    }
+                }
+
+                // 记录批量更新结果
+                if (validationErrors.Any())
+                {
+                    _logger?.LogWarning("批量更新缓存发现验证错误: {ErrorCount}个错误, 错误详情: {Errors}", 
+                        validationErrors.Count, string.Join("; ", validationErrors.Take(5)));
+                }
+
+             
+
+                return updatedCount;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "批量更新缓存时发生异常");
+                throw;
+            }
+        }
+
+        /// <summary>
         /// 清除指定单据的缓存
         /// 确保线程安全的清除操作
         /// </summary>

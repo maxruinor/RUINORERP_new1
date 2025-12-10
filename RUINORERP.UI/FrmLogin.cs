@@ -651,6 +651,32 @@ namespace RUINORERP.UI
                 // 请求元数据同步
                 await _cacheClientService.RequestAllCacheSyncMetadataAsync();
 
+                // 获取锁状态列表
+                try
+                {
+                    var lockManagementService = Startup.GetFromFac<ClientLockManagementService>();
+                    if (lockManagementService != null)
+                    {
+                        MainForm.Instance.logger?.LogDebug("正在获取锁状态列表...");
+                        var lockResponse = await lockManagementService.GetLockStatusListAsync();
+                        if (lockResponse != null && lockResponse.IsSuccess)
+                        {
+                            MainForm.Instance.logger?.LogInformation("成功获取锁状态列表，锁数量: {LockCount}", 
+                                lockResponse.LockInfoList?.Count ?? 0);
+                        }
+                        else
+                        {
+                            MainForm.Instance.logger?.LogWarning("获取锁状态列表失败: {ErrorMessage}", 
+                                lockResponse?.Message ?? "未知错误");
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MainForm.Instance.logger?.LogError(ex, "获取锁状态列表时发生异常");
+                    // 不抛出异常，因为这不影响登录成功
+                }
+
                 // 保存用户配置
                 await SaveUserConfig(isInitPwd);
 

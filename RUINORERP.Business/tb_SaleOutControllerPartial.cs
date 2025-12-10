@@ -486,8 +486,17 @@ namespace RUINORERP.Business
                             group.OutQtySum += currentSaleQty;
                             if (!_appContext.SysConfig.CheckNegativeInventory && (group.Inventory.Quantity - group.OutQtySum) < 0)
                             {
-                                // rrs.ErrorMsg = "系统设置不允许负库存，请检查物料出库数量与库存相关数据";
-                                rrs.ErrorMsg = $"sku:{group.Inventory.tb_proddetail.SKU}库存为：{group.Inventory.Quantity}，拟销售量为：{group.OutQtySum}\r\n 系统设置不允许负库存， 请检查出库数量与库存相关数据";
+
+                                string LocationName = group.Inventory.tb_location?.Name;
+                                if (group.Inventory.tb_location == null)
+                                {
+                                    var loc = Business.Cache.EntityCacheHelper.GetEntity<tb_Location>(group.Inventory.Location_ID);
+                                    if (loc != null)
+                                    {
+                                        LocationName = loc.Name;
+                                    }
+                                }
+                                rrs.ErrorMsg = $"SKU:{group.Inventory.tb_proddetail.SKU} {LocationName}库存为：{group.Inventory.Quantity}，拟销售量为：{group.OutQtySum}\r\n 系统设置不允许负库存， 请检查出库数量与库存相关数据";
                                 _unitOfWorkManage.RollbackTran();
                                 rrs.Succeeded = false;
                                 return rrs;
@@ -880,7 +889,7 @@ namespace RUINORERP.Business
         }
 
 
- 
+
 
 
         /// <summary>
@@ -1401,7 +1410,7 @@ namespace RUINORERP.Business
                     entity.SaleOut_NO = saleout.SaleOutNo;
                     entity.IsFromPlatform = saleout.IsFromPlatform;
                 }
-                
+
                 IBizCodeGenerateService bizCodeService = _appContext.GetRequiredService<IBizCodeGenerateService>();
                 entity.ReturnNo = await bizCodeService.GenerateBizBillNoAsync(BizType.销售退回单);
                 entity.tb_saleout = saleout;

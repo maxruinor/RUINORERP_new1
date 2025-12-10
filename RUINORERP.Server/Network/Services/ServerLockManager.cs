@@ -10,6 +10,7 @@ using RUINORERP.Server.Network.Models;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -761,54 +762,140 @@ namespace RUINORERP.Server.Network.Services
         /// <returns>所有锁定单据的锁定信息集合</returns>
         public List<LockInfo> GetAllLockedDocuments()
         {
+            var stopwatch = Stopwatch.StartNew();
+            
             try
             {
+                // 验证内部状态
+                if (_documentLocks == null)
+                {
+                    _logger.LogError("内部锁字典未初始化");
+                    return new List<LockInfo>();
+                }
+
                 // 创建锁定信息副本集合，避免直接引用
                 var lockedDocuments = new List<LockInfo>();
+                var expiredCount = 0;
+                var invalidCount = 0;
 
                 foreach (var kvp in _documentLocks)
                 {
-                    var lockInfo = kvp.Value;
-
-                    // 只返回锁定的单据信息
-                    if (lockInfo.IsLocked)
+                    try
                     {
-                        var infoCopy = new LockInfo
-                        {
-                            // 复制所有可写属性
-                            LockKey = lockInfo.LockKey,
-                            BillID = lockInfo.BillID,
-                            BillNo = lockInfo.BillNo,
-                            LockedUserId = lockInfo.LockedUserId,
-                            LockedUserName = lockInfo.LockedUserName,
-                            LockTime = lockInfo.LockTime,
-                            ExpireTime = lockInfo.ExpireTime,
-                            Remark = lockInfo.Remark,
-                            MenuID = lockInfo.MenuID,
-                            BizName = lockInfo.BizName,
-                            MenuName = lockInfo.MenuName,
-                            bizType = lockInfo.bizType,
-                            SessionId = lockInfo.SessionId,
-                            IsLocked = lockInfo.IsLocked,
-                            LastHeartbeat = lockInfo.LastHeartbeat,
-                            LastUpdateTime = lockInfo.LastUpdateTime,
-                            HeartbeatCount = lockInfo.HeartbeatCount,
-                            Type = lockInfo.Type,
-                            Duration = lockInfo.Duration
-                        };
+                        var lockInfo = kvp.Value;
 
+                        // 验证锁信息对象
+                        if (lockInfo == null)
+                        {
+                            _logger.LogWarning("发现空的锁信息对象: BillID={BillID}", kvp.Key);
+                            invalidCount++;
+                            continue;
+                        }
+
+                        // 验证关键属性
+                        if (lockInfo.BillID <= 0)
+                        {
+                            _logger.LogWarning("发现无效的锁信息BillID: {BillID}", lockInfo.BillID);
+                            invalidCount++;
+                            continue;
+                        }
+
+                        // 只返回锁定的单据信息
+                        if (!lockInfo.IsLocked)
+                        {
+                            continue;
+                        }
+
+                        // 检查是否过期
+                        if (lockInfo.IsExpired)
+                        {
+                            expiredCount++;
+                            _logger.LogDebug("跳过过期的锁信息: BillID={BillID}, BillNo={BillNo}, 过期时间={ExpireTime}", 
+                                lockInfo.BillID, lockInfo.BillNo, lockInfo.ExpireTime);
+                            continue;
+                        }
+
+                        // 确保关键属性不为空
+                        if (string.IsNullOrWhiteSpace(lockInfo.LockKey))
+                        {
+                            _logger.LogWarning("锁信息LockKey为空，尝试生成: BillID={BillID}", lockInfo.BillID);
+                            lockInfo.SetLockKey();
+                        }
+
+                        if (string.IsNullOrWhiteSpace(lockInfo.LockedUserName))
+                        {
+                            _logger.LogWarning("锁信息LockedUserName为空: BillID={BillID}, UserID={UserID}", 
+                                lockInfo.BillID, lockInfo.LockedUserId);
+                        }
+
+                        // 创建锁信息的深拷贝，避免直接引用
+                        var infoCopy = CreateLockInfoCopy(lockInfo);
                         lockedDocuments.Add(infoCopy);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "处理锁信息时出错: BillID={BillID}", kvp.Key);
+                        invalidCount++;
                     }
                 }
 
-                _logger.LogDebug("成功获取锁定单据信息集合，有效锁定数={ValidLockCount}", lockedDocuments.Count);
+                _logger.LogInformation("成功获取锁定单据信息集合: 总数={TotalCount}, 有效={ValidCount}, 过期={ExpiredCount}, 无效={InvalidCount}, 耗时={ElapsedMs}ms", 
+                    _documentLocks.Count, lockedDocuments.Count, expiredCount, invalidCount, stopwatch.ElapsedMilliseconds);
+
                 return lockedDocuments;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "获取所有锁定单据信息时发生异常");
+                _logger.LogError(ex, "获取所有锁定单据信息时发生异常，耗时: {ElapsedMs}ms", stopwatch.ElapsedMilliseconds);
                 // 出错时返回空集合
                 return new List<LockInfo>();
+            }
+            finally
+            {
+                stopwatch.Stop();
+            }
+        }
+
+        /// <summary>
+        /// 创建锁信息的深拷贝
+        /// </summary>
+        /// <param name="source">源锁信息</param>
+        /// <returns>锁信息的副本</returns>
+        private LockInfo CreateLockInfoCopy(LockInfo source)
+        {
+            if (source == null)
+                return null;
+
+            try
+            {
+                return new LockInfo
+                {
+                    // 复制所有可写属性
+                    LockKey = source.LockKey,
+                    BillID = source.BillID,
+                    BillNo = source.BillNo,
+                    LockedUserId = source.LockedUserId,
+                    LockedUserName = source.LockedUserName,
+                    LockTime = source.LockTime,
+                    ExpireTime = source.ExpireTime,
+                    Remark = source.Remark,
+                    MenuID = source.MenuID,
+                    BizName = source.BizName,
+                    MenuName = source.MenuName,
+                    bizType = source.bizType,
+                    SessionId = source.SessionId,
+                    IsLocked = source.IsLocked,
+                    LastHeartbeat = source.LastHeartbeat,
+                    LastUpdateTime = source.LastUpdateTime,
+                    HeartbeatCount = source.HeartbeatCount,
+                    Type = source.Type,
+                    Duration = source.Duration
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "创建锁信息副本时出错: BillID={BillID}", source?.BillID ?? 0);
+                throw;
             }
         }
 
@@ -1256,7 +1343,11 @@ namespace RUINORERP.Server.Network.Services
                 // 存储解锁请求
                 if (_unlockRequests.TryAdd(request.LockInfo.BillID, request))
                 {
-                    //_logger.LogInformation("解锁请求成功: 单据ID={BillId}, 请求者ID={RequesterId}, 锁定者ID={LockedUserId}", request.LockInfo.BillID, request.LockInfo.UserId, lockInfo.UserId);
+
+                    //TODO 根据LockInfo中的信息发送请求到锁定的客户端
+                    //
+
+                    
                     return new LockResponse
                     {
                         IsSuccess = true,
@@ -1310,7 +1401,6 @@ namespace RUINORERP.Server.Network.Services
                 // 移除解锁请求
                 if (_unlockRequests.TryRemove(refuseInfo.LockInfo.BillID, out _))
                 {
-                    // _logger.LogInformation("拒绝解锁请求成功: 单据ID={BillId}, 请求者ID={RequesterId}, 锁定者ID={LockedUserId}", refuseInfo.LockInfo.BillID, storedRequest.UserId, storedRequest.LockedUserId);
                     return new LockResponse
                     {
                         IsSuccess = true,

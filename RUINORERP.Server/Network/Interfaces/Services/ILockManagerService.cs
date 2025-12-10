@@ -68,6 +68,13 @@ namespace RUINORERP.Server.Network.Interfaces.Services
         Task<LockResponse> RefuseUnlockRequestAsync(LockRequest request);
         
         /// <summary>
+        /// 同意解锁请求
+        /// </summary>
+        /// <param name="agreeInfo">同意信息</param>
+        /// <returns>同意结果，包含成功状态和详细信息</returns>
+        Task<LockResponse> AgreeUnlockRequestAsync(LockRequest request);
+        
+        /// <summary>
         /// 检查用户是否有权限修改单据
         /// </summary>
         /// <param name="billId">单据ID</param>

@@ -442,16 +442,45 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                     _logger.LogDebug($"收到解锁请求: 单据ID={unlockRequest.LockInfo?.BillID ?? 0}, 请求用户={unlockRequest.RequesterUserName}");
 
                     // 在UI线程显示确认对话框
-                    InvokeOnUiThread(() =>
+                    InvokeOnUiThread(async () =>
                     {
-                        DialogResult result = MessageBox.Show(
-                            $"用户 {unlockRequest.RequesterUserName} 请求解锁您锁定的单据 {unlockRequest.LockInfo?.BillID ?? 0}，是否同意解锁？",
-                            "解锁请求",
-                            MessageBoxButtons.YesNo,
-                            MessageBoxIcon.Question);
+                        try
+                        {
+                            DialogResult result = MessageBox.Show(
+                                $"用户 {unlockRequest.RequesterUserName} 请求解锁您锁定的单据 {unlockRequest.LockInfo?.BillID ?? 0}，是否同意解锁？",
+                                "解锁请求",
+                                MessageBoxButtons.YesNo,
+                                MessageBoxIcon.Question);
 
-                        // 这里可以添加代码发送解锁响应
-                        // 实际实现中需要调用相应的服务向服务器发送响应
+                            // 获取ClientLockManagementService实例
+                            var lockManagementService = Startup.GetFromFac<ClientLockManagementService>();
+
+                            if (result == DialogResult.Yes)
+                            {
+                                // 用户同意解锁，调用AgreeUnlockAsync方法
+                                _logger.LogDebug($"用户同意解锁单据: {unlockRequest.LockInfo?.BillID ?? 0}");
+                                await lockManagementService.AgreeUnlockAsync(
+                                    unlockRequest.LockInfo?.BillID ?? 0,
+                                    unlockRequest.LockInfo?.MenuID ?? 0,
+                                    unlockRequest.RequesterUserId,
+                                    unlockRequest.RequesterUserName ?? string.Empty);
+                            }
+                            else
+                            {
+                                // 用户拒绝解锁，调用RefuseUnlockAsync方法
+                                _logger.LogDebug($"用户拒绝解锁单据: {unlockRequest.LockInfo?.BillID ?? 0}");
+                                await lockManagementService.RefuseUnlockAsync(
+                                    unlockRequest.LockInfo?.BillID ?? 0,
+                                    unlockRequest.LockInfo?.MenuID ?? 0,
+                                    unlockRequest.RequesterUserId,
+                                    unlockRequest.RequesterUserName ?? string.Empty);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, "处理解锁请求响应时发生错误");
+                            MessageBox.Show($"处理解锁请求时发生错误: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
                     });
                 }
             }

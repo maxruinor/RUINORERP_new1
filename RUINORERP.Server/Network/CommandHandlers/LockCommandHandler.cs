@@ -58,6 +58,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 LockCommands.CheckLockStatus,
                 LockCommands.RequestUnlock,
                 LockCommands.RefuseUnlock,
+                LockCommands.AgreeUnlock,
                 LockCommands.ForceUnlock,
                 LockCommands.BroadcastLockStatus,
                 LockCommands.GetLockStatuList
@@ -107,6 +108,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     { LockCommands.CheckLockStatus, HandleQueryLockStatusAsync },
                     { LockCommands.RequestUnlock, HandleRequestUnlockAsync },
                     { LockCommands.RefuseUnlock, HandleRefuseUnlockAsync },
+                    { LockCommands.AgreeUnlock, HandleAgreeUnlockAsync },
                     { LockCommands.ForceUnlock, HandleForceUnlockAsync },
                     { LockCommands.BroadcastLockStatus, HandleBroadcastLockStatusAsync },
                     { LockCommands.GetLockStatuList, HandleGetLockStatusListAsync }
@@ -256,6 +258,32 @@ namespace RUINORERP.Server.Network.CommandHandlers
             {
                 _logger.LogError(ex, $"处理请求解锁异常: {ex.Message}");
                 return CreateErrorResponse($"处理请求解锁异常: {ex.Message}", cmd.Packet.ExecutionContext, ex);
+            }
+        }
+
+        /// <summary>
+        /// 处理同意解锁命令
+        /// </summary>
+        /// <param name="cmd">同意解锁命令</param>
+        /// <param name="cancellationToken">取消令牌</param>
+        /// <returns>处理结果</returns>
+        private async Task<IResponse> HandleAgreeUnlockAsync(QueuedCommand cmd, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var validation = ValidateLockRequest(cmd, "同意解锁");
+                if (validation.ErrorMessage != null)
+                {
+                    return CreateErrorResponse(validation.ErrorMessage);
+                }
+
+                // 同意解锁
+                return await _lockManagerService.AgreeUnlockRequestAsync(validation.LockRequest);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"处理同意解锁异常: {ex.Message}");
+                return CreateErrorResponse($"处理同意解锁异常: {ex.Message}", cmd.Packet.ExecutionContext, ex);
             }
         }
 

@@ -1308,6 +1308,81 @@ namespace RUINORERP.UI.Network.Services
         }
 
         /// <summary>
+        /// 同意解锁请求 v2.0.0新增
+        /// 当锁定者同意其他用户的解锁请求时使用
+        /// </summary>
+        /// <param name="billId">单据ID</param>
+        /// <param name="menuId">菜单ID</param>
+        /// <param name="requesterUserId">请求者用户ID</param>
+        /// <param name="requesterUserName">请求者用户名</param>
+        /// <returns>同意解锁的响应结果</returns>
+        public async Task<LockResponse> AgreeUnlockAsync(long billId, long menuId, long requesterUserId, string requesterUserName)
+        {
+            if (_isDisposed)
+                throw new ObjectDisposedException(nameof(ClientLockManagementService));
+
+            try
+            {
+                _logger?.LogDebug("开始同意解锁请求 - 单据ID: {BillId}, 菜单ID: {MenuId}, 请求者: {RequesterUserName}",
+                    billId, menuId, requesterUserName);
+
+                // 获取当前用户信息
+                long currentUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
+                string currentUserName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.UserName;
+
+                // 创建锁信息
+                LockInfo lockInfo = new LockInfo();
+                lockInfo.BillID = billId;
+                lockInfo.MenuID = menuId;
+                lockInfo.LockedUserId = currentUserId;
+                lockInfo.LockedUserName = currentUserName;
+                lockInfo.SessionId = MainForm.Instance.AppContext.SessionId;
+                
+                // 创建同意解锁请求
+                var lockRequest = new LockRequest
+                {
+                    LockInfo = lockInfo,
+                    RequesterUserId = requesterUserId,
+                    RequesterUserName = requesterUserName,
+                };
+                lockRequest.LockInfo.SetLockKey();
+
+                // 从活跃锁列表中移除
+                _activeLocks.TryRemove(billId, out _);
+                
+                // 清除本地缓存
+                _clientCache.ClearCache(billId);
+
+                // 发送同意解锁命令
+                var response = await _communicationService.Value.SendCommandWithResponseAsync<LockResponse>(
+                    LockCommands.AgreeUnlock, lockRequest, _cancellationTokenSource.Token);
+
+                if (response.IsSuccess)
+                {
+                    _logger?.LogDebug("同意解锁请求成功 - 单据ID: {BillId}, 菜单ID: {MenuId}", billId, menuId);
+                    
+                    // 从细粒度锁字典中移除
+                    _billLocks.TryRemove(billId, out _);
+                }
+                else
+                {
+                    _logger?.LogWarning("同意解锁请求失败 - 单据ID: {BillId}, 菜单ID: {MenuId}, 错误信息: {ErrorMessage}",
+                        billId, menuId, response?.Message ?? "未知错误");
+                        
+                    // 如果失败，恢复锁状态
+                    _activeLocks.TryAdd(billId, lockInfo);
+                }
+
+                return response;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "发送同意解锁时发生异常 - 单据ID: {BillId}, 菜单ID: {MenuId}", billId, menuId);
+                throw;
+            }
+        }
+
+        /// <summary>
         /// 解锁单据（接受LockRequest参数的重载方法）v2.0.0新增
         /// 支持批量解锁和按业务类型解锁等功能
         /// </summary>

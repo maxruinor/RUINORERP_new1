@@ -222,19 +222,19 @@ namespace RUINORERP.Model
                         }
         }
 
-        private decimal _TransactionPrice= ((0));
-        /// <summary>
-        /// 成交单价
-        /// </summary>
-        [AdvQueryAttribute(ColName = "TransactionPrice",ColDesc = "成交单价")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TransactionPrice" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "成交单价" )]
-        public decimal TransactionPrice
-        { 
-            get{return _TransactionPrice;}
-            set{
-            SetProperty(ref _TransactionPrice, value);
-                        }
-        }
+        //private decimal _TransactionPrice= ((0));
+        ///// <summary>
+        ///// 成交单价
+        ///// </summary>
+        //[AdvQueryAttribute(ColName = "TransactionPrice",ColDesc = "成交单价")] 
+        //[SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TransactionPrice" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "成交单价" )]
+        //public decimal TransactionPrice
+        //{ 
+        //    get{return _TransactionPrice;}
+        //    set{
+        //    SetProperty(ref _TransactionPrice, value);
+        //                }
+        //}
 
         private decimal _SubtotalTrPriceAmount= ((0));
         /// <summary>

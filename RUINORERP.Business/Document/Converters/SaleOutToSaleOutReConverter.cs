@@ -44,6 +44,7 @@ namespace RUINORERP.Business.Document.Converters
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             _bizCodeService = bizCodeService ?? throw new ArgumentNullException(nameof(bizCodeService));
             _appContext = appContext ?? throw new ArgumentNullException(nameof(appContext));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
             
@@ -63,8 +64,6 @@ namespace RUINORERP.Business.Document.Converters
         {
             try
             {
-                _logger.LogInformation("开始执行销售出库单到销售退回单转换，出库单号：{SaleOutNo}", source.SaleOutNo);
-
                 // 使用AutoMapper进行基础映射
                 _mapper.Map(source, target);
 
@@ -115,7 +114,7 @@ namespace RUINORERP.Business.Document.Converters
                 // 初始化实体
                 BusinessHelper.Instance.InitEntity(target);
 
-                _logger.LogInformation("销售出库单到销售退回单转换完成，生成退货单号：{ReturnNo}", target.ReturnNo);
+                // 保留重要日志，移除简单信息记录
             }
             catch (Exception ex)
             {
@@ -141,12 +140,12 @@ namespace RUINORERP.Business.Document.Converters
             if (newDetails.Count == 0)
             {
                 tipsMsg.Add($"出库单:{source.SaleOutNo}已全部退库，请检查是否正在重复退库！");
-                _logger.LogWarning("销售出库单已全部退库，出库单号：{SaleOutNo}", source.SaleOutNo);
+                // 保留重要警告，移除简单日志记录
             }
 
             target.tb_SaleOutReDetails = newDetails;
 
-            // 记录提示信息
+            // 保留重要提示，移除简单日志记录
             if (tipsMsg.Any())
             {
                 _logger.LogInformation("转换过程中的提示信息：{Tips}", string.Join("; ", tipsMsg));

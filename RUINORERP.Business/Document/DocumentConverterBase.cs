@@ -61,7 +61,8 @@ namespace RUINORERP.Business.Document
 
             // 执行具体转换逻辑
             await PerformConversionAsync(source, target);
-
+            // 初始化实体的创建时间
+            BusinessHelper.Instance.InitEntity(target);
             return target;
         }
 

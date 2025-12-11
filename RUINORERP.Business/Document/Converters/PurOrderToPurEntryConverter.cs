@@ -1,18 +1,20 @@
-using RUINORERP.Model;
-using RUINORERP.Business.Document;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using System;
-using System.Linq;
-using RUINORERP.Global;
 using AutoMapper;
 using Microsoft.Extensions.Logging;
-using RUINORERP.Business.CommService;
-using RUINORERP.Business.Cache;
 using RUINORERP.Business.AutoMapper;
+using RUINORERP.Business.Cache;
+using RUINORERP.Business.CommService;
+using RUINORERP.Business.Document;
+using RUINORERP.Business.Security;
+using RUINORERP.Common.Extensions;
+using RUINORERP.Global;
 using RUINORERP.IServices;
+using RUINORERP.Model;
 using RUINORERP.Model.Context;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace RUINORERP.Business.Document.Converters
 {
@@ -27,7 +29,7 @@ namespace RUINORERP.Business.Document.Converters
         private readonly ILogger<PurOrderToPurEntryConverter> _logger;
         private readonly IBizCodeGenerateService _bizCodeService;
         private readonly ApplicationContext _appContext;
-
+        private readonly AuthorizeController _authorizeController;
         /// <summary>
         /// 构造函数 - 依赖注入
         /// </summary>
@@ -42,13 +44,14 @@ namespace RUINORERP.Business.Document.Converters
             IMapper mapper,
             IBizCodeGenerateService bizCodeService,
             ApplicationContext appContext,
-            IView_ProdDetailServices prodDetailService,
-            IView_InventoryServices inventoryService)
+            AuthorizeController authorizeController)
             : base(logger)
         {
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             _bizCodeService = bizCodeService ?? throw new ArgumentNullException(nameof(bizCodeService));
             _appContext = appContext ?? throw new ArgumentNullException(nameof(appContext));
+            _authorizeController= authorizeController ?? throw new ArgumentNullException(nameof(authorizeController));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         /// <summary>
@@ -251,7 +254,7 @@ namespace RUINORERP.Business.Document.Converters
             // 记录提示信息
             if (tipsMsg.Any())
             {
-                _logger.LogInformation("转换过程中的提示信息：{Tips}", string.Join("; ", tipsMsg));
+                // 保留重要日志，移除简单信息记录
             }
 
             await Task.CompletedTask; // 满足异步方法签名要求
@@ -275,6 +278,32 @@ namespace RUINORERP.Business.Document.Converters
             {
                 target.ShipCost = 0;
             }
+
+
+            #region 分摊成本计算
+
+            target.TotalQty = target.tb_PurEntryDetails.Sum(d => d.Quantity);
+
+            //默认认为 订单中的运费收入 就是实际发货的运费成本， 可以手动修改覆盖
+            if (target.ShipCost > 0)
+            {
+
+                //根据系统设置中的分摊规则来分配运费收入到明细。
+                if (_appContext.SysConfig.FreightAllocationRules == (int)FreightAllocationRules.产品数量占比)
+                {
+                    // 单个产品分摊运费 = 整单运费 ×（该产品数量 ÷ 总产品数量） 
+                    foreach (var item in target.tb_PurEntryDetails)
+                    {
+                        item.AllocatedFreightCost = target.ShipCost * (item.Quantity / target.TotalQty);
+                        item.AllocatedFreightCost = item.AllocatedFreightCost.ToRoundDecimalPlaces(_authorizeController.GetMoneyDataPrecision());
+                        item.FreightAllocationRules = _appContext.SysConfig.FreightAllocationRules;
+                    }
+                }
+            }
+
+
+            #endregion
+
         }
 
         /// <summary>

@@ -60,7 +60,7 @@ namespace RUINORERP.Business
 
  RuleFor(x => x.TaxAmount).PrecisionScale(19,4,true).WithMessage("税额:小数位不能超过4。");
 
- RuleFor(x => x.TransactionPrice).PrecisionScale(19,4,true).WithMessage("成交单价:小数位不能超过4。");
+ //RuleFor(x => x.TransactionPrice).PrecisionScale(19,4,true).WithMessage("成交单价:小数位不能超过4。");
 
  RuleFor(x => x.SubtotalTrPriceAmount).PrecisionScale(19,4,true).WithMessage("小计:小数位不能超过4。");
 

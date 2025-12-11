@@ -48,6 +48,7 @@ namespace RUINORERP.Business.Document.Converters
             _mapper = serviceProvider.GetRequiredService<IMapper>();
             _authorizeController = serviceProvider.GetRequiredService<AuthorizeController>();
             _appContext = serviceProvider.GetRequiredService<ApplicationContext>();
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
      
@@ -68,8 +69,6 @@ namespace RUINORERP.Business.Document.Converters
         {
             try
             {
-                _logger?.LogInformation($"开始销售订单到销售出库单转换，订单ID: {source.SOrder_ID}");
-
                 // 使用AutoMapper进行基础属性映射
                 _mapper.Map(source, target);
 
@@ -182,7 +181,7 @@ namespace RUINORERP.Business.Document.Converters
             if (newDetails.Count == 0)
             {
                 tipsMsg.Add($"订单:{source.SOrderNo}已全部出库，请检查是否正在重复出库！");
-                _logger?.LogWarning($"销售订单{source.SOrderNo}已全部出库，可能正在重复出库");
+                // 保留重要警告，移除简单日志记录
             }
 
             // 处理运费逻辑

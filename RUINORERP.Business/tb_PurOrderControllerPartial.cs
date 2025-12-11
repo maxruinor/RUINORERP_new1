@@ -749,6 +749,7 @@ namespace RUINORERP.Business
         /// <param name="order"></param>
         public async Task<tb_PurEntry> PurOrderTotb_PurEntry(tb_PurOrder order)
         {
+            AuthorizeController authorizeController = null;
             tb_PurEntry entity = new tb_PurEntry();
             //转单
             if (order != null)
@@ -836,8 +837,32 @@ namespace RUINORERP.Business
                         }
                         #endregion
                     }
-
                 }
+
+                #region 分摊成本计算
+
+                entity.TotalQty = NewDetails.Sum(c => c.Quantity);
+
+                //默认认为 订单中的运费收入 就是实际发货的运费成本， 可以手动修改覆盖
+                if (entity.ShipCost > 0)
+                {
+
+                    //根据系统设置中的分摊规则来分配运费收入到明细。
+
+                    if (_appContext.SysConfig.FreightAllocationRules == (int)FreightAllocationRules.产品数量占比)
+                    {
+                        // 单个产品分摊运费 = 整单运费 ×（该产品数量 ÷ 总产品数量） 
+                        foreach (var item in NewDetails)
+                        {
+                            item.AllocatedFreightCost = entity.ShipCost * (item.Quantity / entity.TotalQty);
+                            item.AllocatedFreightCost = item.AllocatedFreightCost.ToRoundDecimalPlaces(authorizeController.GetMoneyDataPrecision());
+                            item.FreightAllocationRules = _appContext.SysConfig.FreightAllocationRules;
+                        }
+                    }
+                }
+
+
+                #endregion
 
 
                 entity.tb_PurEntryDetails = NewDetails;

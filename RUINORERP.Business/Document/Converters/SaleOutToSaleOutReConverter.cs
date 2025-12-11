@@ -30,14 +30,18 @@ namespace RUINORERP.Business.Document.Converters
         /// <summary>
         /// 构造函数 - 依赖注入
         /// </summary>
+        /// <param name="logger">日志记录器</param>
+        /// <param name="mapper">AutoMapper映射器</param>
+        /// <param name="bizCodeService">业务编码生成服务</param>
+        /// <param name="appContext">应用程序上下文</param>
         public SaleOutToSaleOutReConverter(
-            IMapper mapper,
             ILogger<SaleOutToSaleOutReConverter> logger,
+            IMapper mapper,
             IBizCodeGenerateService bizCodeService,
             ApplicationContext appContext)
+            : base(logger)
         {
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _bizCodeService = bizCodeService ?? throw new ArgumentNullException(nameof(bizCodeService));
             _appContext = appContext ?? throw new ArgumentNullException(nameof(appContext));
         }
@@ -45,8 +49,9 @@ namespace RUINORERP.Business.Document.Converters
             
         /// <summary>
         /// 转换器显示名称
+        /// 使用基类实现，从Description特性获取
         /// </summary>
-        public override string DisplayName => "转为销售退回单";
+        public override string DisplayName => base.DisplayName;
         
         /// <summary>
         /// 执行具体的转换逻辑 - 复用业务层核心逻辑

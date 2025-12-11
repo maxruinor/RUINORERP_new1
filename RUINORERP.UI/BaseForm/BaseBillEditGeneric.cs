@@ -347,32 +347,7 @@ namespace RUINORERP.UI.BaseForm
         }
 
 
-        /// <summary>
-        /// 获取当前状态的描述信息
-        /// </summary>
-        /// <returns>状态描述</returns>
-        public virtual string GetCurrentStatusDescription()
-        {
-            try
-            {
-                var currentStatus = StateManager.GetDataStatus(EditEntity);
-                var statusType = typeof(DataStatus);
-                var memberInfo = statusType.GetMember(currentStatus.ToString()).FirstOrDefault();
-
-                if (memberInfo != null)
-                {
-                    var descAttr = memberInfo.GetCustomAttribute<System.ComponentModel.DescriptionAttribute>();
-                    return descAttr?.Description ?? currentStatus.ToString();
-                }
-
-                return currentStatus.ToString();
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"获取状态描述失败: {ex.Message}");
-                return "未知状态";
-            }
-        }
+        
 
         /// <summary>
         /// 更新基于权限的按钮可见性
@@ -4836,25 +4811,28 @@ namespace RUINORERP.UI.BaseForm
                 var sourceDocType = typeof(T);
 
                 // 获取所有可转换的目标单据类型
-                var converterFactory = Startup.GetFromFac<RUINORERP.Business.Document.DocumentConverterFactory>();
-                var availableConversions = converterFactory.GetAvailableConversions<T>();
+                var actionManager = Startup.GetFromFac<RUINORERP.Business.Document.ActionManager>();
+                var availableActions = actionManager.GetAvailableActions<T>(EditEntity);
 
                 // 为每种可转换类型创建菜单项
-                foreach (var conversionOption in availableConversions)
+                foreach (var actionOption in availableActions)
                 {
-                    // 显示文本已包含优先级标识（由DocumentConverterFactory添加）
-                    string displayName = conversionOption.DisplayName;
+                    // 使用ActionOption中的DisplayName，它已经包含了从Description特性获取的显示名称
+                    string displayName = actionOption.DisplayName;
                     
                     var menuItem = new ToolStripMenuItem(displayName);
                     
                     // 根据目标单据类型设置图标
-                    //menuItem.Image = GetDocumentTypeIcon(conversionOption.TargetDocumentType);
+                    //menuItem.Image = GetDocumentTypeIcon(actionOption.TargetType);
                     
-                    // 添加工具提示，提供更详细的转换信息
-                    menuItem.ToolTipText = $"将当前{typeof(T).Name.Replace("tb_", "")}转换为{conversionOption.TargetDocumentType.Replace("tb_", "")} (优先级: {conversionOption.Priority})";
+                    // 添加工具提示，使用实体元数据服务获取的显示名称
+                    menuItem.ToolTipText = $"★ 将当前【{actionOption.SourceDocumentDisplayName}】转换为【{actionOption.TargetDocumentDisplayName}】";
                     
                     // 保存转换选项的引用，避免闭包问题
-                    var targetType = converterFactory.GetTargetType(conversionOption.TargetDocumentType);
+                    var targetType = actionOption.ConverterType.GetInterfaces()
+                        .FirstOrDefault(i => i.IsGenericType && 
+                                           i.GetGenericTypeDefinition() == typeof(RUINORERP.Business.Document.IDocumentConverter<,>))
+                        ?.GetGenericArguments()[1];
                     menuItem.Click += async (sender, e) =>
                     {
                         try
@@ -4871,7 +4849,7 @@ namespace RUINORERP.UI.BaseForm
                     toolStripbtnConvertDocuments.DropDownItems.Add(menuItem);
                     
                     // 记录转换选项加载日志
-                    MainForm.Instance.uclog.AddLog($"已加载转换选项: {displayName} (优先级: {conversionOption.Priority})", Global.UILogType.普通消息);
+                    MainForm.Instance.uclog.AddLog($"已加载转换选项: {displayName}", Global.UILogType.普通消息);
                 }
 
                 // 根据是否有可转换选项设置按钮可见性
@@ -4905,27 +4883,13 @@ namespace RUINORERP.UI.BaseForm
             }
 
             // 记录转换开始
+            // 直接从实体的Description特性获取显示名称
+            string sourceDisplayName = GetEntityDisplayName(typeof(T));
+            string targetDisplayName = GetEntityDisplayName(targetType);
             string sourceTypeName = typeof(T).Name.Replace("tb_", "");
             string targetTypeName = targetType?.Name.Replace("tb_", "") ?? "Unknown";
             
-            // 添加用户确认环节
-            bool userConfirmed = false;
-            this.Invoke((MethodInvoker)delegate
-            {
-                userConfirmed = MessageBox.Show(
-                    $"确定要将当前{sourceTypeName}转换为{targetTypeName}吗？\n\n此操作将创建新的{targetTypeName}单据，原单据不受影响。",
-                    "确认转换",
-                    MessageBoxButtons.YesNo,
-                    MessageBoxIcon.Question) == DialogResult.Yes;
-            });
-
-            if (!userConfirmed)
-            {
-                MainForm.Instance.uclog.AddLog($"用户取消了单据转换：{sourceTypeName} -> {targetTypeName}", Global.UILogType.普通消息);
-                return;
-            }
-
-            MainForm.Instance.uclog.AddLog($"开始执行单据转换：{sourceTypeName} -> {targetTypeName}", Global.UILogType.普通消息);
+            MainForm.Instance.uclog.AddLog($"开始执行单据转换：{sourceDisplayName} -> {targetDisplayName}", Global.UILogType.普通消息);
 
             try
             {
@@ -4994,13 +4958,13 @@ namespace RUINORERP.UI.BaseForm
                     {
                         // 显示失败消息
                         string errorMsg = result.ErrorMessage ?? "未知错误";
-                        MainForm.Instance.uclog.AddLog($"单据转换失败：{sourceTypeName} -> {targetTypeName}，错误：{errorMsg}", Global.UILogType.错误);
+                        MainForm.Instance.uclog.AddLog($"单据转换失败：{sourceDisplayName} -> {targetDisplayName}，错误：{errorMsg}", Global.UILogType.错误);
                         MessageBox.Show($"单据联动失败: {errorMsg}", "操作失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
                     else
                     {
                         string errorMsg = "转换结果为空，可能是不支持的目标单据类型";
-                        MainForm.Instance.uclog.AddLog($"单据转换失败：{sourceTypeName} -> {targetTypeName}，错误：{errorMsg}", Global.UILogType.错误);
+                        MainForm.Instance.uclog.AddLog($"单据转换失败：{sourceDisplayName} -> {targetDisplayName}，错误：{errorMsg}", Global.UILogType.错误);
                         MessageBox.Show($"不支持的目标单据类型，请联系管理员配置相应的转换器", "操作失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
                 });
@@ -5009,7 +4973,7 @@ namespace RUINORERP.UI.BaseForm
             {
                 // 记录操作异常
                 string errorMsg = $"操作无效：{ex.Message}";
-                MainForm.Instance.uclog.AddLog($"单据转换操作异常：{sourceTypeName} -> {targetTypeName}，错误：{errorMsg}", Global.UILogType.错误);
+                MainForm.Instance.uclog.AddLog($"单据转换操作异常：{sourceDisplayName} -> {targetDisplayName}，错误：{errorMsg}", Global.UILogType.错误);
 
                 this.Invoke((MethodInvoker)delegate
                 {
@@ -5021,7 +4985,7 @@ namespace RUINORERP.UI.BaseForm
                 // 记录反射调用异常
                 string innerErrorMsg = ex.InnerException?.Message ?? ex.Message;
                 string errorMsg = $"系统内部错误：{innerErrorMsg}";
-                MainForm.Instance.uclog.AddLog($"单据转换系统异常：{sourceTypeName} -> {targetTypeName}，错误：{errorMsg}", Global.UILogType.错误);
+                MainForm.Instance.uclog.AddLog($"单据转换系统异常：{sourceDisplayName} -> {targetDisplayName}，错误：{errorMsg}", Global.UILogType.错误);
 
                 this.Invoke((MethodInvoker)delegate
                 {
@@ -5032,7 +4996,7 @@ namespace RUINORERP.UI.BaseForm
             {
                 // 记录通用异常
                 string errorMsg = $"执行单据转换时发生未知错误：{ex.Message}";
-                MainForm.Instance.uclog.AddLog($"单据转换未知异常：{sourceTypeName} -> {targetTypeName}，错误：{errorMsg}\n堆栈：{ex.StackTrace}", Global.UILogType.错误);
+                MainForm.Instance.uclog.AddLog($"单据转换未知异常：{sourceDisplayName} -> {targetDisplayName}，错误：{errorMsg}\n堆栈：{ex.StackTrace}", Global.UILogType.错误);
 
                 this.Invoke((MethodInvoker)delegate
                 {
@@ -5043,6 +5007,38 @@ namespace RUINORERP.UI.BaseForm
 
  
       
+        /// <summary>
+        /// 获取实体的显示名称（从Description特性获取）
+        /// </summary>
+        /// <param name="entityType">实体类型</param>
+        /// <returns>实体显示名称，如果未找到Description特性则返回类型名称</returns>
+        private string GetEntityDisplayName(Type entityType)
+        {
+            try
+            {
+                if (entityType == null)
+                {
+                    return "未知实体";
+                }
+
+                // 获取Description特性
+                var descriptionAttr = entityType.GetCustomAttribute<System.ComponentModel.DescriptionAttribute>();
+                if (descriptionAttr != null && !string.IsNullOrEmpty(descriptionAttr.Description))
+                {
+                    return descriptionAttr.Description;
+                }
+
+                // 如果没有Description特性或Description为空，返回类型名称
+                return entityType.Name;
+            }
+            catch (Exception ex)
+            {
+                // 记录错误但不中断流程
+                Console.WriteLine($"获取实体 {entityType?.Name} 显示名称失败: {ex.Message}");
+                return entityType?.Name ?? "未知实体";
+            }
+        }
+
         protected virtual T AddByCopy()
         {
             if (EditEntity == null)

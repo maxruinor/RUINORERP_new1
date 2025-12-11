@@ -1134,12 +1134,12 @@ namespace RUINORERP.Model.Base.StatusManager
                 // 获取当前实体的状态类型和状态值
                 var statusType = entity.GetStatusType();
                 var currentStatus = entity.GetCurrentStatus();
-                
+
                 if (currentStatus is Enum statusEnum)
                 {
                     // 使用增强的规则检查
                     bool canExecute = CanExecuteActionWithEnhancedRules(action, entity, statusType, statusEnum);
-                    
+
                     // 生成友好的提示消息
                     string message = canExecute ? GetSuccessMessage(action) : GetFailureMessage(action, GetDataStatus(entity));
 
@@ -1239,7 +1239,7 @@ namespace RUINORERP.Model.Base.StatusManager
             {
                 return basicStatusMessage;
             }
-            
+
             // 根据操作类型返回更具体的失败消息
             switch (action)
             {
@@ -1445,10 +1445,16 @@ namespace RUINORERP.Model.Base.StatusManager
             try
             {
                 // 如果是BaseEntity，使用现有的方法
-                if (entity is BaseEntity baseEntity)
+                if (entity is BaseEntity baseEntity && baseEntity.ContainsProperty(nameof(DataStatus)))
                 {
                     return CanExecuteAction(action, baseEntity, typeof(DataStatus), GetDataStatus(baseEntity));
                 }
+                else if (entity is BaseEntity BizBaseEntity)
+                {
+                    return CanExecuteAction<BaseEntity>(BizBaseEntity, action);
+                }
+                //按理还要处理业务性的，像财务模块很多单据没有DataStatus，但为了简化这里就不处理了，将来完善
+
 
                 // 对于非BaseEntity类型，默认允许操作
                 // 在实际应用中，可能需要根据具体业务逻辑进行调整
@@ -1512,7 +1518,7 @@ namespace RUINORERP.Model.Base.StatusManager
         {
             // 获取当前数据状态
             var currentDataStatus = GetDataStatus(entity);
-            
+
             // 获取操作权限规则
             var actionRules = GetActionPermissionRules();
 
@@ -1543,28 +1549,28 @@ namespace RUINORERP.Model.Base.StatusManager
             {
                 case MenuItemEnums.修改:
                     return CanModifyEntity(entity, currentDataStatus);
-                    
+
                 case MenuItemEnums.删除:
                     return CanDeleteEntity(entity, currentDataStatus);
-                    
+
                 case MenuItemEnums.保存:
                     return CanSaveEntity(entity, currentDataStatus);
-                    
+
                 case MenuItemEnums.提交:
                     return CanSubmitEntity(entity, currentDataStatus);
-                    
+
                 case MenuItemEnums.审核:
                     return CanApproveEntity(entity, currentDataStatus);
-                    
+
                 case MenuItemEnums.反审:
                     return CanUnapproveEntity(entity, currentDataStatus);
-                    
+
                 case MenuItemEnums.结案:
                     return CanCloseEntity(entity, currentDataStatus);
-                    
+
                 case MenuItemEnums.反结案:
                     return CanUncloseEntity(entity, currentDataStatus);
-                    
+
                 default:
                     // 对于其他操作，使用默认规则
                     return true;
@@ -1623,8 +1629,8 @@ namespace RUINORERP.Model.Base.StatusManager
                 // 检查是否有已关联状态，已关联的单据不能删除
                 foreach (var businessStatus in businessStatuses)
                 {
-                    if (businessStatus.Value != null && 
-                        (businessStatus.Value.ToString().Contains("已关联") || 
+                    if (businessStatus.Value != null &&
+                        (businessStatus.Value.ToString().Contains("已关联") ||
                          businessStatus.Value.ToString().Contains("已使用")))
                     {
                         return false;
@@ -1732,8 +1738,8 @@ namespace RUINORERP.Model.Base.StatusManager
                 foreach (var businessStatus in businessStatuses)
                 {
                     // 已支付、已发货、已入库等状态不能反审核
-                    if (businessStatus.Value != null && 
-                        (businessStatus.Value.ToString().Contains("已支付") || 
+                    if (businessStatus.Value != null &&
+                        (businessStatus.Value.ToString().Contains("已支付") ||
                          businessStatus.Value.ToString().Contains("已发货") ||
                          businessStatus.Value.ToString().Contains("已入库")))
                     {
@@ -1766,8 +1772,8 @@ namespace RUINORERP.Model.Base.StatusManager
                 foreach (var businessStatus in businessStatuses)
                 {
                     // 检查是否有未完成的业务流程
-                    if (businessStatus.Value != null && 
-                        (businessStatus.Value.ToString().Contains("待支付") || 
+                    if (businessStatus.Value != null &&
+                        (businessStatus.Value.ToString().Contains("待支付") ||
                          businessStatus.Value.ToString().Contains("部分支付") ||
                          businessStatus.Value.ToString().Contains("待发货")))
                     {
@@ -1807,7 +1813,7 @@ namespace RUINORERP.Model.Base.StatusManager
         {
             // 这里可以添加更复杂的业务逻辑检查
             // 例如：检查必填字段是否完整、业务规则是否满足等
-            
+
             // 基本检查：实体必须有变更
             if (!entity.HasChanged)
             {
@@ -1817,7 +1823,7 @@ namespace RUINORERP.Model.Base.StatusManager
             // TODO: 添加更详细的业务逻辑检查
             // 可以通过反射检查实体是否有[Required]标记的属性
             // 或者根据特定业务类型进行不同的检查
-            
+
             return true;
         }
 
@@ -1865,7 +1871,7 @@ namespace RUINORERP.Model.Base.StatusManager
         public virtual Dictionary<MenuItemEnums, string> GetAvailableActionsWithMessages(BaseEntity entity)
         {
             var result = new Dictionary<MenuItemEnums, string>();
-            
+
             if (entity == null)
                 return result;
 
@@ -1874,20 +1880,20 @@ namespace RUINORERP.Model.Base.StatusManager
                 // 获取当前实体的状态类型和状态值
                 var statusType = entity.GetStatusType();
                 var currentStatus = entity.GetCurrentStatus();
-                
+
                 if (currentStatus is Enum statusEnum)
                 {
                     // 获取所有可能的操作
                     var allActions = Enum.GetValues(typeof(MenuItemEnums)).Cast<MenuItemEnums>();
-                    
+
                     foreach (var action in allActions)
                     {
                         // 使用增强的规则检查
                         bool canExecute = CanExecuteActionWithEnhancedRules(action, entity, statusType, statusEnum);
-                        
+
                         // 生成友好的提示消息
                         string message = canExecute ? GetSuccessMessage(action) : GetFailureMessage(action, GetDataStatus(entity));
-                        
+
                         result[action] = message;
                     }
                 }
@@ -2009,7 +2015,7 @@ namespace RUINORERP.Model.Base.StatusManager
         //    {
         //        // 获取状态转换规则
         //        var transitionRules = GetTransitionRules();
-                
+
         //        // 根据状态类型获取转换规则
         //        if (statusType == typeof(DataStatus) && status is DataStatus dataStatus)
         //        {
@@ -2048,18 +2054,18 @@ namespace RUINORERP.Model.Base.StatusManager
                 // 获取当前实体的状态类型和状态值
                 var statusType = entity.GetStatusType();
                 var currentStatus = entity.GetCurrentStatus();
-                
+
                 if (currentStatus is Enum statusEnum)
                 {
                     // 使用增强的规则检查
                     return CanExecuteActionWithEnhancedRules(action, entity, statusType, statusEnum);
                 }
-                
+
                 return false;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "检查操作权限失败：实体类型 {EntityType}，操作 {Action}", 
+                _logger.LogError(ex, "检查操作权限失败：实体类型 {EntityType}，操作 {Action}",
                     typeof(TEntity).Name, action);
                 return false;
             }

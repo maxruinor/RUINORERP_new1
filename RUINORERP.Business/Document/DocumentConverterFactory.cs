@@ -12,28 +12,6 @@ using Microsoft.Extensions.DependencyInjection;
 namespace RUINORERP.Business.Document
 {
     /// <summary>
-    /// 转换器优先级特性
-    /// 用于为转换器指定优先级，优先级越高的转换器会被优先选择
-    /// </summary>
-    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
-    public class ConverterPriorityAttribute : Attribute
-    {
-        /// <summary>
-        /// 优先级值，默认为100
-        /// </summary>
-        public int Priority { get; }
-
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="priority">优先级值</param>
-        public ConverterPriorityAttribute(int priority = 100)
-        {
-            Priority = priority;
-        }
-    }
-
-    /// <summary>
     /// 单据转换器工厂
     /// 负责管理和创建各种单据转换器实例
     /// </summary>
@@ -42,19 +20,9 @@ namespace RUINORERP.Business.Document
         /// <summary>
         /// 转换器实例缓存
         /// Key: 转换器类型键
-        /// Value: 转换器实例列表（按优先级排序）
+        /// Value: 转换器实例
         /// </summary>
-        private readonly Dictionary<string, List<object>> _convertersCache = new Dictionary<string, List<object>>();
-        
-        /// <summary>
-        /// 所有注册的转换器信息
-        /// </summary>
-        private readonly List<ConverterInfo> _allConverters = new List<ConverterInfo>();
-        
-        /// <summary>
-        /// 是否已初始化
-        /// </summary>
-        private bool _initialized = false;
+        private readonly Dictionary<string, object> _convertersCache = new Dictionary<string, object>();
         
         /// <summary>
         /// 日志记录器
@@ -76,7 +44,7 @@ namespace RUINORERP.Business.Document
             _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
             _logger = logger;
             // 初始化缓存
-            _convertersCache = new Dictionary<string, List<object>>();
+            _convertersCache = new Dictionary<string, object>();
             // 自动发现并注册所有转换器
             AutoDiscoverAndRegister();
         }
@@ -116,10 +84,6 @@ namespace RUINORERP.Business.Document
                                 var sourceType = interfaceType.GetGenericArguments()[0];
                                 var targetType = interfaceType.GetGenericArguments()[1];
                                 
-                                // 获取优先级
-                                var priorityAttribute = converterType.GetCustomAttribute<ConverterPriorityAttribute>();
-                                int priority = priorityAttribute?.Priority ?? 100;
-                                
                                 // 创建注册方法的委托
                                 var registerMethod = typeof(DocumentConverterFactory)
                                     .GetMethod("RegisterConverterInternal", BindingFlags.NonPublic | BindingFlags.Instance)
@@ -129,9 +93,9 @@ namespace RUINORERP.Business.Document
                                 var converter = _serviceProvider.GetRequiredService(converterType);
                                 
                                 // 注册转换器
-                                registerMethod.Invoke(this, new[] { converter, priority });
+                                registerMethod.Invoke(this, new[] { converter });
                                 
-                                _logger?.LogInformation($"成功注册转换器: {converterType.FullName}, 优先级: {priority}");
+                                _logger?.LogInformation($"成功注册转换器: {converterType.FullName}");
                             }
                             catch (Exception ex)
                             {
@@ -145,8 +109,7 @@ namespace RUINORERP.Business.Document
                     }
                 }
                 
-                _initialized = true;
-                _logger?.LogInformation($"转换器自动发现完成，共注册 {_allConverters.Count} 个转换器");
+                _logger?.LogInformation($"转换器自动发现完成，共注册 {_convertersCache.Count} 个转换器");
             }
             catch (Exception ex)
             {
@@ -158,7 +121,7 @@ namespace RUINORERP.Business.Document
         /// <summary>
         /// 内部注册转换器方法
         /// </summary>
-        private void RegisterConverterInternal<TSource, TTarget>(IDocumentConverter<TSource, TTarget> converter, int priority)
+        private void RegisterConverterInternal<TSource, TTarget>(IDocumentConverter<TSource, TTarget> converter)
             where TSource : BaseEntity
             where TTarget : BaseEntity, new()
         {
@@ -170,78 +133,20 @@ namespace RUINORERP.Business.Document
             string key = GetConverterKey<TSource, TTarget>();
             
             // 添加到缓存
-            if (!_convertersCache.ContainsKey(key))
-            {
-                _convertersCache[key] = new List<object>();
-            }
-            
-            // 查找插入位置，保持按优先级排序（优先级高的在前）
-            int insertIndex = 0;
-            while (insertIndex < _convertersCache[key].Count)
-            {
-                var existingConverter = _convertersCache[key][insertIndex];
-                var existingPriority = GetConverterPriority(existingConverter.GetType());
-                
-                if (priority > existingPriority)
-                {
-                    break;
-                }
-                
-                insertIndex++;
-            }
-            
-            _convertersCache[key].Insert(insertIndex, converter);
-            
-            // 添加到所有转换器列表
-            _allConverters.Add(new ConverterInfo
-            {
-                SourceType = typeof(TSource),
-                TargetType = typeof(TTarget),
-                Converter = converter,
-                Priority = priority
-            });
+            _convertersCache[key] = converter;
         }
 
         /// <summary>
-        /// 获取转换器优先级
-        /// </summary>
-        private int GetConverterPriority(Type converterType)
-        {
-            var attribute = converterType.GetCustomAttribute<ConverterPriorityAttribute>();
-            return attribute?.Priority ?? 100;
-        }
-
-        /// <summary>
-        /// 注册转换器（手动注册）
+        /// 注册转换器
         /// </summary>
         /// <typeparam name="TSource">源单据类型</typeparam>
         /// <typeparam name="TTarget">目标单据类型</typeparam>
         /// <param name="converter">转换器实例</param>
-        /// <param name="priority">优先级</param>
-        public void Register<TSource, TTarget>(IDocumentConverter<TSource, TTarget> converter, int priority = 100)
+        public void Register<TSource, TTarget>(IDocumentConverter<TSource, TTarget> converter)
             where TSource : BaseEntity
             where TTarget : BaseEntity, new()
         {
-            RegisterConverterInternal(converter, priority);
-        }
-
-        /// <summary>
-        /// 泛型注册转换器方法
-        /// 根据指定的转换器类型创建实例并注册
-        /// </summary>
-        /// <typeparam name="TSource">源单据类型</typeparam>
-        /// <typeparam name="TTarget">目标单据类型</typeparam>
-        /// <typeparam name="TConverter">转换器类型</typeparam>
-        /// <param name="priority">优先级</param>
-        public void Register<TSource, TTarget, TConverter>(int priority = 100)
-            where TSource : BaseEntity
-            where TTarget : BaseEntity, new()
-            where TConverter : IDocumentConverter<TSource, TTarget>, new()
-        {
-            // 创建转换器实例
-            var converter = new TConverter();
-            // 调用已有的Register方法注册
-            Register(converter, priority);
+            RegisterConverterInternal(converter);
         }
 
         /// <summary>
@@ -249,192 +154,159 @@ namespace RUINORERP.Business.Document
         /// </summary>
         /// <typeparam name="TSource">源单据类型</typeparam>
         /// <typeparam name="TTarget">目标单据类型</typeparam>
-        /// <returns>转换器实例（优先级最高的）</returns>
+        /// <returns>转换器实例</returns>
         public IDocumentConverter<TSource, TTarget> GetConverter<TSource, TTarget>()
             where TSource : BaseEntity
             where TTarget : BaseEntity, new()
         {
             string key = GetConverterKey<TSource, TTarget>();
             
-            if (_convertersCache.TryGetValue(key, out var convertersList) && convertersList.Count > 0)
+            if (_convertersCache.TryGetValue(key, out var converter))
             {
-                // 返回优先级最高的转换器（列表第一个）
-                return (IDocumentConverter<TSource, TTarget>)convertersList[0];
+                return converter as IDocumentConverter<TSource, TTarget>;
             }
             
-            throw new KeyNotFoundException($"找不到从{typeof(TSource).Name}到{typeof(TTarget).Name}的转换器");
+            return null;
         }
 
         /// <summary>
-        /// 获取指定源单据可用的所有转换目标
+        /// 获取实体的显示名称（从Description特性获取）
         /// </summary>
-        /// <typeparam name="TSource">源单据类型</typeparam>
-        /// <returns>可用的转换选项列表（按优先级排序）</returns>
-        public List<ConversionOption> GetAvailableConversions<TSource>()
-            where TSource : BaseEntity
+        /// <param name="entityType">实体类型</param>
+        /// <returns>实体显示名称，如果未找到Description特性则返回类型名称</returns>
+        private string GetEntityDisplayName(Type entityType)
         {
-            var result = new List<ConversionOption>();
-            
-            // 从所有转换器列表中筛选出源类型匹配的转换器
-            var matchingConverters = _allConverters
-                .Where(info => info.SourceType == typeof(TSource))
-                .GroupBy(info => info.TargetType) // 按目标类型分组
-                .SelectMany(group => 
-                {
-                    // 每个目标类型只保留优先级最高的转换器
-                    var highestPriorityConverter = group.OrderByDescending(info => info.Priority).First();
-                    return new[] { highestPriorityConverter };
-                })
-                .OrderByDescending(info => info.Priority) // 按优先级排序
-                .ToList();
-            
-            foreach (var info in matchingConverters)
+            try
             {
-                // 使用反射获取转换器接口信息，避免类型转换问题
-                var converterType = info.Converter.GetType();
-                var interfaces = converterType.GetInterfaces()
-                    .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IDocumentConverter<,>))
-                    .FirstOrDefault();
-                
-                if (interfaces != null)
+                if (entityType == null)
                 {
-                    var genericArgs = interfaces.GetGenericArguments();
-                    if (genericArgs.Length == 2 && genericArgs[0] == typeof(TSource))
+                    _logger?.LogWarning("实体类型为空");
+                    return "未知实体";
+                }
+
+                // 获取Description特性
+                var descriptionAttr = entityType.GetCustomAttribute<System.ComponentModel.DescriptionAttribute>();
+                if (descriptionAttr != null && !string.IsNullOrEmpty(descriptionAttr.Description))
+                {
+                    return descriptionAttr.Description;
+                }
+
+                // 如果没有Description特性或Description为空，返回类型名称
+                _logger?.LogDebug("实体 {EntityType} 未找到Description特性或Description为空，使用类型名称", entityType.Name);
+                return entityType.Name;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogWarning(ex, "获取实体 {EntityType} 显示名称失败，使用类型名称", entityType.Name);
+                return entityType.Name;
+            }
+        }
+
+        /// <summary>
+        /// 获取可用的转换选项
+        /// </summary>
+        /// <param name="sourceEntity">源实体</param>
+        /// <returns>转换选项列表</returns>
+        public List<ConversionOption> GetAvailableConversions(BaseEntity sourceEntity)
+        {
+            if (sourceEntity == null)
+            {
+                throw new ArgumentNullException(nameof(sourceEntity));
+            }
+
+            var options = new List<ConversionOption>();
+            var sourceType = sourceEntity.GetType();
+
+            // 查找所有以该类型为源类型的转换器
+            foreach (var kvp in _convertersCache)
+            {
+                // 解析键值
+                var keyParts = kvp.Key.Split(':');
+                if (keyParts.Length == 2 && keyParts[0] == sourceType.FullName)
+                {
+                    var converter = kvp.Value;
+                    var converterType = converter.GetType();
+                    
+                    // 获取目标类型
+                    var targetType = GetTargetTypeFromConverter(converterType);
+                    
+                    if (targetType != null)
                     {
-                        // 使用反射获取属性值，避免类型转换问题
-                        var displayNameProperty = interfaces.GetProperty("DisplayName");
-                        var sourceTypeProperty = interfaces.GetProperty("SourceDocumentType");
-                        var targetTypeProperty = interfaces.GetProperty("TargetDocumentType");
+                        // 获取源和目标实体的显示名称
+                        var sourceDisplayName = GetEntityDisplayName(sourceType);
+                        var targetDisplayName = GetEntityDisplayName(targetType);
                         
-                        // 优化显示名称，添加优先级标识
-                        string displayName = displayNameProperty?.GetValue(info.Converter)?.ToString() ?? converterType.Name;
-                        if (info.Priority >= 200)
+                        options.Add(new ConversionOption
                         {
-                            displayName = "★ " + displayName; // 高优先级添加星号标识
-                        }
-                        else if (info.Priority >= 150)
-                        {
-                            displayName = "◎ " + displayName; // 中优先级添加圆圈标识
-                        }
-                        
-                        result.Add(new ConversionOption
-                        {
-                            DisplayName = displayName,
-                            SourceDocumentType = sourceTypeProperty?.GetValue(info.Converter)?.ToString() ?? genericArgs[0].Name,
-                            TargetDocumentType = targetTypeProperty?.GetValue(info.Converter)?.ToString() ?? genericArgs[1].Name,
+                            SourceDocumentType = sourceType.Name,
+                            TargetDocumentType = targetType.Name,
+                            SourceDocumentDisplayName = sourceDisplayName,
+                            TargetDocumentDisplayName = targetDisplayName,
                             ConverterType = converterType,
-                            Priority = info.Priority
+                            DisplayName = $"转换为{targetDisplayName}"
                         });
                     }
                 }
             }
-            
-            return result;
+
+            return options;
         }
 
         /// <summary>
-        /// 动态调整转换器优先级
+        /// 获取可用的转换选项（泛型版本）
         /// </summary>
-        /// <param name="converterType">转换器类型</param>
-        /// <param name="newPriority">新的优先级值</param>
-        public void AdjustConverterPriority(Type converterType, int newPriority)
+        /// <typeparam name="TSource">源单据类型</typeparam>
+        /// <returns>转换选项列表</returns>
+        public List<ConversionOption> GetAvailableConversions<TSource>() where TSource : BaseEntity
         {
-            try
+            var options = new List<ConversionOption>();
+            var sourceType = typeof(TSource);
+
+            // 查找所有以该类型为源类型的转换器
+            foreach (var kvp in _convertersCache)
             {
-                // 查找所有匹配的转换器信息
-                var converterInfos = _allConverters
-                    .Where(info => info.Converter.GetType() == converterType)
-                    .ToList();
-                
-                if (!converterInfos.Any())
+                // 解析键值
+                var keyParts = kvp.Key.Split(':');
+                if (keyParts.Length == 2 && keyParts[0] == sourceType.FullName)
                 {
-                    _logger?.LogWarning($"未找到转换器类型 {converterType.Name} 的实例");
-                    return;
-                }
-                
-                // 更新所有匹配转换器的优先级
-                foreach (var info in converterInfos)
-                {
-                    var oldPriority = info.Priority;
-                    info.Priority = newPriority;
+                    var converter = kvp.Value;
+                    var converterType = converter.GetType();
                     
-                    _logger?.LogInformation($"转换器 {converterType.Name} 优先级已从 {oldPriority} 调整为 {newPriority}");
-                }
-                
-                // 重新排序缓存
-                RefreshConverters();
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, $"调整转换器 {converterType.Name} 优先级失败");
-            }
-        }
-        
-        /// <summary>
-        /// 根据使用频率自动调整转换器优先级
-        /// </summary>
-        /// <param name="sourceType">源单据类型</param>
-        /// <param name="targetType">目标单据类型</param>
-        public void AdjustPriorityByUsage(Type sourceType, Type targetType)
-        {
-            try
-            {
-                // 查找匹配的转换器
-                var converterInfo = _allConverters
-                    .FirstOrDefault(info => info.SourceType == sourceType && info.TargetType == targetType);
-                
-                if (converterInfo == null)
-                {
-                    _logger?.LogWarning($"未找到从 {sourceType.Name} 到 {targetType.Name} 的转换器");
-                    return;
-                }
-                
-                // 如果优先级已经很高，则不再提升
-                if (converterInfo.Priority >= 200)
-                {
-                    return;
-                }
-                
-                // 提升优先级（每次提升10点，最高不超过200）
-                var newPriority = Math.Min(converterInfo.Priority + 10, 200);
-                AdjustConverterPriority(converterInfo.Converter.GetType(), newPriority);
-                
-                _logger?.LogInformation($"根据使用频率，转换器 {converterInfo.Converter.GetType().Name} 优先级已提升至 {newPriority}");
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "根据使用频率调整转换器优先级失败");
-            }
-        }
-        
-        /// <summary>
-        /// 获取转换器使用统计信息
-        /// </summary>
-        /// <returns>转换器使用统计</returns>
-        public List<ConverterUsageStatistics> GetConverterUsageStatistics()
-        {
-            try
-            {
-                return _allConverters
-                    .GroupBy(info => info.Converter.GetType())
-                    .Select(group => new ConverterUsageStatistics
+                    // 获取目标类型
+                    var targetType = GetTargetTypeFromConverter(converterType);
+                    
+                    if (targetType != null)
                     {
-                        ConverterType = group.Key,
-                        ConverterName = group.Key.Name,
-                        Priority = group.First().Priority,
-                        UsageCount = group.Count(),
-                        SourceTypes = group.Select(info => info.SourceType).Distinct().ToList(),
-                        TargetTypes = group.Select(info => info.TargetType).Distinct().ToList()
-                    })
-                    .OrderByDescending(stat => stat.Priority)
-                    .ThenByDescending(stat => stat.UsageCount)
-                    .ToList();
+                        // 获取源和目标实体的显示名称
+                        var sourceDisplayName = GetEntityDisplayName(sourceType);
+                        var targetDisplayName = GetEntityDisplayName(targetType);
+                        
+                        options.Add(new ConversionOption
+                        {
+                            SourceDocumentType = sourceType.Name,
+                            TargetDocumentType = targetType.Name,
+                            SourceDocumentDisplayName = sourceDisplayName,
+                            TargetDocumentDisplayName = targetDisplayName,
+                            ConverterType = converterType,
+                            DisplayName = $"转换为{targetDisplayName}"
+                        });
+                    }
+                }
             }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "获取转换器使用统计信息失败");
-                return new List<ConverterUsageStatistics>();
-            }
+
+            return options;
+        }
+
+        /// <summary>
+        /// 从转换器类型获取目标类型
+        /// </summary>
+        private Type GetTargetTypeFromConverter(Type converterType)
+        {
+            var interfaceType = converterType.GetInterfaces()
+                .FirstOrDefault(i => i.IsGenericType && 
+                                   i.GetGenericTypeDefinition() == typeof(IDocumentConverter<,>));
+            
+            return interfaceType?.GetGenericArguments()[1];
         }
         
         /// <summary>
@@ -443,59 +315,39 @@ namespace RUINORERP.Business.Document
         /// <typeparam name="TSource">源单据类型</typeparam>
         /// <typeparam name="TTarget">目标单据类型</typeparam>
         /// <param name="source">源单据对象</param>
-        /// <param name="conversionContext">转换上下文（可选）</param>
         /// <returns>转换后的目标单据对象</returns>
-        public async Task<TTarget> ConvertAsync<TSource, TTarget>(TSource source, object conversionContext = null)
+        public async Task<TTarget> ConvertAsync<TSource, TTarget>(TSource source)
             where TSource : BaseEntity
             where TTarget : BaseEntity, new()
         {
-            _logger?.LogDebug($"执行转换: {typeof(TSource).Name} -> {typeof(TTarget).Name}");
-            
-            // 检查是否有多个转换器可用
-            string key = GetConverterKey<TSource, TTarget>();
-            
-            if (_convertersCache.TryGetValue(key, out var convertersList))
+            if (source == null)
             {
-                foreach (var converterObj in convertersList)
-                {
-                    try
-                    {
-                        var converter = (IDocumentConverter<TSource, TTarget>)converterObj;
-                        
-                        // 先验证是否可以转换
-                        var validationResult = await converter.ValidateConversionAsync(source);
-                        if (validationResult.CanConvert)
-                        {
-                            // 执行转换
-                            var result = await converter.ConvertAsync(source);
-                            
-                            // 记录转换使用情况，用于优先级调整
-                            AdjustPriorityByUsage(typeof(TSource), typeof(TTarget));
-                            
-                            _logger?.LogInformation($"转换成功: {typeof(TSource).Name} -> {typeof(TTarget).Name}");
-                            return result;
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger?.LogWarning(ex, $"转换器 {converterObj.GetType().Name} 执行失败，尝试下一个转换器");
-                    }
-                }
+                throw new ArgumentNullException(nameof(source));
             }
-            
-            // 如果没有可用的转换器或所有转换器都失败了，使用默认转换器
-            var defaultConverter = GetConverter<TSource, TTarget>();
-            _logger?.LogDebug("使用默认转换器执行转换");
-            var finalResult = await defaultConverter.ConvertAsync(source);
-            
-            // 记录转换使用情况，用于优先级调整
-            AdjustPriorityByUsage(typeof(TSource), typeof(TTarget));
-            
-            return finalResult;
+
+            // 获取转换器
+            var converter = GetConverter<TSource, TTarget>();
+            if (converter == null)
+            {
+                throw new InvalidOperationException($"未找到从 {typeof(TSource).Name} 到 {typeof(TTarget).Name} 的转换器");
+            }
+
+            try
+            {
+                // 执行转换
+                var result = await converter.ConvertAsync(source);
+                _logger?.LogInformation($"转换成功: {typeof(TSource).Name} -> {typeof(TTarget).Name}");
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, $"转换过程中发生错误: {ex.Message}");
+                throw;
+            }
         }
 
         /// <summary>
-        /// 验证转换条件
+        /// 验证转换是否可行
         /// </summary>
         /// <typeparam name="TSource">源单据类型</typeparam>
         /// <typeparam name="TTarget">目标单据类型</typeparam>
@@ -505,24 +357,33 @@ namespace RUINORERP.Business.Document
             where TSource : BaseEntity
             where TTarget : BaseEntity, new()
         {
+            if (source == null)
+            {
+                return ValidationResult.Fail("源单据对象不能为空");
+            }
+
             var converter = GetConverter<TSource, TTarget>();
-            return await converter.ValidateConversionAsync(source);
+            if (converter == null)
+            {
+                return ValidationResult.Fail($"未找到从 {typeof(TSource).Name} 到 {typeof(TTarget).Name} 的转换器");
+            }
+
+            try
+            {
+                return await converter.ValidateConversionAsync(source);
+            }
+            catch (Exception ex)
+            {
+                return ValidationResult.Fail($"验证过程中发生错误: {ex.Message}");
+            }
         }
 
         /// <summary>
         /// 刷新转换器缓存
-        /// 重新扫描并注册所有转换器
         /// </summary>
         public void RefreshConverters()
         {
-            _logger?.LogInformation("刷新转换器缓存");
-            
-            // 清空缓存
             _convertersCache.Clear();
-            _allConverters.Clear();
-            _initialized = false;
-            
-            // 重新发现并注册
             AutoDiscoverAndRegister();
         }
 
@@ -558,17 +419,6 @@ namespace RUINORERP.Business.Document
         {
             return Type.GetType(targetTypeFullName);
         }
-        
-        /// <summary>
-        /// 转换器信息内部类
-        /// </summary>
-        private class ConverterInfo
-        {
-            public Type SourceType { get; set; }
-            public Type TargetType { get; set; }
-            public object Converter { get; set; }
-            public int Priority { get; set; }
-        }
     }
     
     /// <summary>
@@ -593,50 +443,19 @@ namespace RUINORERP.Business.Document
         public string TargetDocumentType { get; set; }
         
         /// <summary>
-        /// 转换器类型
+        /// 源单据显示名称（从Description特性获取）
         /// </summary>
-        public Type ConverterType { get; set; }
+        public string SourceDocumentDisplayName { get; set; }
         
         /// <summary>
-        /// 优先级
+        /// 目标单据显示名称（从Description特性获取）
         /// </summary>
-        public int Priority { get; set; }
-    }
-    
-    /// <summary>
-    /// 转换器使用统计信息
-    /// </summary>
-    public class ConverterUsageStatistics
-    {
+        public string TargetDocumentDisplayName { get; set; }
+        
         /// <summary>
         /// 转换器类型
         /// </summary>
         public Type ConverterType { get; set; }
-        
-        /// <summary>
-        /// 转换器名称
-        /// </summary>
-        public string ConverterName { get; set; }
-        
-        /// <summary>
-        /// 当前优先级
-        /// </summary>
-        public int Priority { get; set; }
-        
-        /// <summary>
-        /// 使用次数
-        /// </summary>
-        public int UsageCount { get; set; }
-        
-        /// <summary>
-        /// 支持的源类型列表
-        /// </summary>
-        public List<Type> SourceTypes { get; set; }
-        
-        /// <summary>
-        /// 支持的目标类型列表
-        /// </summary>
-        public List<Type> TargetTypes { get; set; }
     }
     
 }

@@ -40,6 +40,16 @@ namespace RUINORERP.Business.Document
         string TargetDocumentTypeName { get; }
 
         /// <summary>
+        /// 获取源单据显示名称（从Description特性获取）
+        /// </summary>
+        string SourceDocumentDisplayName { get; }
+
+        /// <summary>
+        /// 获取目标单据显示名称（从Description特性获取）
+        /// </summary>
+        string TargetDocumentDisplayName { get; }
+
+        /// <summary>
         /// 获取源单据类型
         /// </summary>
         Type SourceDocumentType { get; }

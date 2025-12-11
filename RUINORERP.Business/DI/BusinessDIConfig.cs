@@ -37,7 +37,7 @@ namespace RUINORERP.Business.DI
         {
             // Register business layer components
             builder.RegisterAssemblyTypes(System.Reflection.Assembly.Load("RUINORERP.Business"))
-                  .Where(t => !t.IsAssignableFrom(typeof(RUINORERP.Business.Document.DocumentConverterBase<,>)) && 
+                  .Where(t => !t.IsAssignableFrom(typeof(RUINORERP.Business.Document.DocumentConverterBase<,>)) &&
                              !t.Name.EndsWith("Converter"))
                   .AsImplementedInterfaces()
                   .AsSelf()
@@ -48,7 +48,7 @@ namespace RUINORERP.Business.DI
 
             // 单独注册转换器类，不启用接口拦截
             builder.RegisterAssemblyTypes(System.Reflection.Assembly.Load("RUINORERP.Business"))
-                  .Where(t => t.IsAssignableFrom(typeof(RUINORERP.Business.Document.DocumentConverterBase<,>)) || 
+                  .Where(t => t.IsAssignableFrom(typeof(RUINORERP.Business.Document.DocumentConverterBase<,>)) ||
                              t.Name.EndsWith("Converter"))
                   .AsImplementedInterfaces()
                   .AsSelf()
@@ -69,8 +69,8 @@ namespace RUINORERP.Business.DI
                 .AsSelf()
                 .PropertiesAutowired()
                 .SingleInstance();
- 
-        // 注册新的优化缓存初始化服务
+
+            // 注册新的优化缓存初始化服务
             builder.RegisterType<EntityCacheInitializationService>()
                 .AsSelf()
                 .SingleInstance()
@@ -93,65 +93,64 @@ namespace RUINORERP.Business.DI
                 .As<IEntityCacheManager>()
                 .SingleInstance()
                 .PropertiesAutowired();
-                
-    
-                
+
+
+
             // 注册事件驱动缓存管理器（单例模式）
             builder.RegisterType<EventDrivenCacheManager>()
                 .AsSelf()
                 .SingleInstance()
                 .PropertiesAutowired();
-                
+
             // 注册表结构管理器为注入式单例
             builder.RegisterType<RUINORERP.Business.Cache.TableSchemaManager>()
                 .AsSelf()
                 .SingleInstance()
                 .PropertiesAutowired();
-            
+
             // 注册缓存数据提供者，用于在缓存未命中时从数据库加载数据
             builder.RegisterType<SqlSugarCacheDataProvider>()
                 .As<ICacheDataProvider>()
                 .InstancePerLifetimeScope()
                 .PropertiesAutowired();
 
-                
+
             // 注册缓存订阅管理器
             builder.RegisterType<CacheSubscriptionManager>()
                 .AsSelf()
                 .InstancePerLifetimeScope()
                 .PropertiesAutowired();
-                
+
             // 注册库存缓存管理器
             builder.RegisterType<InventoryCacheManager>()
                 .AsSelf()
                 .InstancePerLifetimeScope()
                 .PropertiesAutowired();
-  
+
 
             // 注册实体加载服务
             builder.RegisterType<EntityLoader>()
                 .AsSelf()
                 .InstancePerLifetimeScope()
                 .PropertiesAutowired();
-                
+
             // 注册单据转换器工厂
             builder.RegisterType<RUINORERP.Business.Document.DocumentConverterFactory>()
                 .AsSelf()
                 .SingleInstance()
                 .PropertiesAutowired();
-            
-           
-                
+
+
+
             // 注册联动操作管理器
             builder.RegisterType<RUINORERP.Business.Document.ActionManager>()
                 .AsSelf()
                 .InstancePerLifetimeScope()
                 .PropertiesAutowired();
-            
 
-
+            // 注册DuplicateCheckService
             builder.RegisterType<DuplicateCheckService>()
-                .As<IDuplicateCheckService>()
+            .As<IDuplicateCheckService>()
                 .InstancePerLifetimeScope()
                 .PropertiesAutowired();
 
@@ -165,7 +164,7 @@ namespace RUINORERP.Business.DI
                 .AsSelf()
                 .InstancePerLifetimeScope()
                 .PropertiesAutowired();
- 
+
 
             // 注册审计日志服务
             builder.RegisterType<AuditLogService>()
@@ -215,7 +214,7 @@ namespace RUINORERP.Business.DI
                 .As(typeof(GenericConfigVersionService<>))
                 .InstancePerDependency()
                 .PropertiesAutowired();
-            
+
             // 为ConfigManagerService添加单独的注册，禁用接口拦截
             // 这是因为ConfigManagerService实现的接口可能不是公开可见的，或者有其他问题导致不能使用接口拦截
             builder.RegisterType<ConfigManagerService>()
@@ -224,7 +223,7 @@ namespace RUINORERP.Business.DI
                 .SingleInstance()
                 .PropertiesAutowired()
                 .InstancePerDependency();
-                
+
             // 为ConfigEncryptionService添加单独的注册，禁用接口拦截
             // 这是因为IConfigEncryptionService接口可能不是公开可见的，需要避免接口拦截
             builder.RegisterType<ConfigEncryptionService>()
@@ -232,21 +231,21 @@ namespace RUINORERP.Business.DI
                 .AsSelf()
                 .PropertiesAutowired()
                 .InstancePerDependency();
-                
+
             // 为ConfigValidationService添加单独的注册，禁用接口拦截
             builder.RegisterType<ConfigValidationService>()
                 .As<IConfigValidationService>()
                 .AsSelf()
                 .PropertiesAutowired()
                 .InstancePerDependency();
-                
+
             // 为ConfigVersionService添加单独的注册，禁用接口拦截
             builder.RegisterType<ConfigVersionService>()
                 .As<IConfigVersionService>()
                 .AsSelf()
                 .PropertiesAutowired()
                 .InstancePerDependency();
-             
+
             AddBizMapperService(builder);
         }
 
@@ -418,7 +417,7 @@ namespace RUINORERP.Business.DI
             }
         }
 
-        
+
 
         /// <summary>
         /// 配置Business项目的服务，初始化实体映射

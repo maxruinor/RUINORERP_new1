@@ -27,7 +27,6 @@ namespace RUINORERP.Business.Document.Converters
     /// 负责将销售订单及其明细转换为销售出库单及其明细
     /// 复用原有业务逻辑，确保转换过程的业务一致性
     /// </summary>
-    [ConverterPriority(200)] // 设置高优先级，这是最常用的转换
     public class SaleOrderToSaleOutConverter : DocumentConverterBase<tb_SaleOrder, tb_SaleOut>
     {
         private readonly IMapper _mapper;
@@ -39,11 +38,14 @@ namespace RUINORERP.Business.Document.Converters
         /// <summary>
         /// 构造函数，注入必要的依赖服务
         /// </summary>
-        public SaleOrderToSaleOutConverter(IServiceProvider serviceProvider)
+        /// <param name="logger">日志记录器</param>
+        /// <param name="serviceProvider">服务提供者</param>
+        public SaleOrderToSaleOutConverter(
+            ILogger<SaleOrderToSaleOutConverter> logger, IServiceProvider serviceProvider)
+            : base(logger)
         {
             _serviceProvider = serviceProvider;
             _mapper = serviceProvider.GetRequiredService<IMapper>();
-            _logger = serviceProvider.GetService<ILogger<SaleOrderToSaleOutConverter>>();
             _authorizeController = serviceProvider.GetRequiredService<AuthorizeController>();
             _appContext = serviceProvider.GetRequiredService<ApplicationContext>();
         }
@@ -51,8 +53,9 @@ namespace RUINORERP.Business.Document.Converters
      
         /// <summary>
         /// 转换器显示名称
+        /// 使用基类实现，从Description特性获取
         /// </summary>
-        public override string DisplayName => "转为销售出库单";
+        public override string DisplayName => base.DisplayName;
 
         /// <summary>
         /// 执行具体的转换逻辑

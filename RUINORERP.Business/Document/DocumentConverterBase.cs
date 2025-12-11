@@ -1,7 +1,10 @@
 using System;
+using System.Reflection;
 using System.Threading.Tasks;
 using RUINORERP.Model;
 using RUINORERP.Model.Base;
+using Microsoft.Extensions.Logging;
+using System.ComponentModel;
 
 namespace RUINORERP.Business.Document
 {
@@ -15,6 +18,19 @@ namespace RUINORERP.Business.Document
         where TSource : BaseEntity
         where TTarget : BaseEntity, new()
     {
+        /// <summary>
+        /// 日志记录器
+        /// </summary>
+        protected readonly ILogger _logger;
+
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="logger">日志记录器</param>
+        protected DocumentConverterBase(ILogger<DocumentConverterBase<TSource, TTarget>> logger)
+        {
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        }
         /// <summary>
         /// 默认验证通过
         /// </summary>
@@ -86,6 +102,49 @@ namespace RUINORERP.Business.Document
         /// </summary>
         public virtual string TargetDocumentTypeName => typeof(TTarget).Name;
 
+        /// <summary>
+        /// 获取实体的显示名称（从Description特性获取）
+        /// </summary>
+        /// <param name="entityType">实体类型</param>
+        /// <returns>实体显示名称，如果未找到Description特性则返回类型名称</returns>
+        protected virtual string GetEntityDisplayName(Type entityType)
+        {
+            try
+            {
+                if (entityType == null)
+                {
+                    _logger.LogWarning("实体类型为空");
+                    return "未知实体";
+                }
+
+                // 获取Description特性
+                var descriptionAttr = entityType.GetCustomAttribute<DescriptionAttribute>();
+                if (descriptionAttr != null && !string.IsNullOrEmpty(descriptionAttr.Description))
+                {
+                    return descriptionAttr.Description;
+                }
+
+                // 如果没有Description特性或Description为空，返回类型名称
+                _logger.LogDebug("实体 {EntityType} 未找到Description特性或Description为空，使用类型名称", entityType.Name);
+                return entityType.Name;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "获取实体 {EntityType} 显示名称失败，使用类型名称", entityType.Name);
+                return entityType.Name;
+            }
+        }
+
+        /// <summary>
+        /// 获取源单据显示名称（从Description特性获取）
+        /// </summary>
+        public virtual string SourceDocumentDisplayName => GetEntityDisplayName(typeof(TSource));
+
+        /// <summary>
+        /// 获取目标单据显示名称（从Description特性获取）
+        /// </summary>
+        public virtual string TargetDocumentDisplayName => GetEntityDisplayName(typeof(TTarget));
+
 
         /// <summary>
         /// 获取源单据类型
@@ -100,6 +159,20 @@ namespace RUINORERP.Business.Document
         /// <summary>
         /// 获取转换操作的显示名称
         /// </summary>
-        public virtual string DisplayName => $"{SourceDocumentType}转{TargetDocumentType}";
+        public virtual string DisplayName
+        {
+            get
+            {
+                try
+                {
+                    return $"{SourceDocumentDisplayName}转{TargetDocumentDisplayName}";
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "获取转换操作显示名称失败，使用默认格式");
+                    return $"{typeof(TSource).Name}转{typeof(TTarget).Name}";
+                }
+            }
+        }
     }
 }

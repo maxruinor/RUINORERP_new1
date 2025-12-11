@@ -278,6 +278,13 @@ namespace RUINORERP.Business.Document
             // 从所有转换器列表中筛选出源类型匹配的转换器
             var matchingConverters = _allConverters
                 .Where(info => info.SourceType == typeof(TSource))
+                .GroupBy(info => info.TargetType) // 按目标类型分组
+                .SelectMany(group => 
+                {
+                    // 每个目标类型只保留优先级最高的转换器
+                    var highestPriorityConverter = group.OrderByDescending(info => info.Priority).First();
+                    return new[] { highestPriorityConverter };
+                })
                 .OrderByDescending(info => info.Priority) // 按优先级排序
                 .ToList();
             
@@ -299,9 +306,20 @@ namespace RUINORERP.Business.Document
                         var sourceTypeProperty = interfaces.GetProperty("SourceDocumentType");
                         var targetTypeProperty = interfaces.GetProperty("TargetDocumentType");
                         
+                        // 优化显示名称，添加优先级标识
+                        string displayName = displayNameProperty?.GetValue(info.Converter)?.ToString() ?? converterType.Name;
+                        if (info.Priority >= 200)
+                        {
+                            displayName = "★ " + displayName; // 高优先级添加星号标识
+                        }
+                        else if (info.Priority >= 150)
+                        {
+                            displayName = "◎ " + displayName; // 中优先级添加圆圈标识
+                        }
+                        
                         result.Add(new ConversionOption
                         {
-                            DisplayName = displayNameProperty?.GetValue(info.Converter)?.ToString() ?? converterType.Name,
+                            DisplayName = displayName,
                             SourceDocumentType = sourceTypeProperty?.GetValue(info.Converter)?.ToString() ?? genericArgs[0].Name,
                             TargetDocumentType = targetTypeProperty?.GetValue(info.Converter)?.ToString() ?? genericArgs[1].Name,
                             ConverterType = converterType,
@@ -314,6 +332,111 @@ namespace RUINORERP.Business.Document
             return result;
         }
 
+        /// <summary>
+        /// 动态调整转换器优先级
+        /// </summary>
+        /// <param name="converterType">转换器类型</param>
+        /// <param name="newPriority">新的优先级值</param>
+        public void AdjustConverterPriority(Type converterType, int newPriority)
+        {
+            try
+            {
+                // 查找所有匹配的转换器信息
+                var converterInfos = _allConverters
+                    .Where(info => info.Converter.GetType() == converterType)
+                    .ToList();
+                
+                if (!converterInfos.Any())
+                {
+                    _logger?.LogWarning($"未找到转换器类型 {converterType.Name} 的实例");
+                    return;
+                }
+                
+                // 更新所有匹配转换器的优先级
+                foreach (var info in converterInfos)
+                {
+                    var oldPriority = info.Priority;
+                    info.Priority = newPriority;
+                    
+                    _logger?.LogInformation($"转换器 {converterType.Name} 优先级已从 {oldPriority} 调整为 {newPriority}");
+                }
+                
+                // 重新排序缓存
+                RefreshConverters();
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, $"调整转换器 {converterType.Name} 优先级失败");
+            }
+        }
+        
+        /// <summary>
+        /// 根据使用频率自动调整转换器优先级
+        /// </summary>
+        /// <param name="sourceType">源单据类型</param>
+        /// <param name="targetType">目标单据类型</param>
+        public void AdjustPriorityByUsage(Type sourceType, Type targetType)
+        {
+            try
+            {
+                // 查找匹配的转换器
+                var converterInfo = _allConverters
+                    .FirstOrDefault(info => info.SourceType == sourceType && info.TargetType == targetType);
+                
+                if (converterInfo == null)
+                {
+                    _logger?.LogWarning($"未找到从 {sourceType.Name} 到 {targetType.Name} 的转换器");
+                    return;
+                }
+                
+                // 如果优先级已经很高，则不再提升
+                if (converterInfo.Priority >= 200)
+                {
+                    return;
+                }
+                
+                // 提升优先级（每次提升10点，最高不超过200）
+                var newPriority = Math.Min(converterInfo.Priority + 10, 200);
+                AdjustConverterPriority(converterInfo.Converter.GetType(), newPriority);
+                
+                _logger?.LogInformation($"根据使用频率，转换器 {converterInfo.Converter.GetType().Name} 优先级已提升至 {newPriority}");
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "根据使用频率调整转换器优先级失败");
+            }
+        }
+        
+        /// <summary>
+        /// 获取转换器使用统计信息
+        /// </summary>
+        /// <returns>转换器使用统计</returns>
+        public List<ConverterUsageStatistics> GetConverterUsageStatistics()
+        {
+            try
+            {
+                return _allConverters
+                    .GroupBy(info => info.Converter.GetType())
+                    .Select(group => new ConverterUsageStatistics
+                    {
+                        ConverterType = group.Key,
+                        ConverterName = group.Key.Name,
+                        Priority = group.First().Priority,
+                        UsageCount = group.Count(),
+                        SourceTypes = group.Select(info => info.SourceType).Distinct().ToList(),
+                        TargetTypes = group.Select(info => info.TargetType).Distinct().ToList()
+                    })
+                    .OrderByDescending(stat => stat.Priority)
+                    .ThenByDescending(stat => stat.UsageCount)
+                    .ToList();
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "获取转换器使用统计信息失败");
+                return new List<ConverterUsageStatistics>();
+            }
+        }
+        
         /// <summary>
         /// 执行转换
         /// </summary>
@@ -345,6 +468,10 @@ namespace RUINORERP.Business.Document
                         {
                             // 执行转换
                             var result = await converter.ConvertAsync(source);
+                            
+                            // 记录转换使用情况，用于优先级调整
+                            AdjustPriorityByUsage(typeof(TSource), typeof(TTarget));
+                            
                             _logger?.LogInformation($"转换成功: {typeof(TSource).Name} -> {typeof(TTarget).Name}");
                             return result;
                         }
@@ -359,7 +486,12 @@ namespace RUINORERP.Business.Document
             // 如果没有可用的转换器或所有转换器都失败了，使用默认转换器
             var defaultConverter = GetConverter<TSource, TTarget>();
             _logger?.LogDebug("使用默认转换器执行转换");
-            return await defaultConverter.ConvertAsync(source);
+            var finalResult = await defaultConverter.ConvertAsync(source);
+            
+            // 记录转换使用情况，用于优先级调整
+            AdjustPriorityByUsage(typeof(TSource), typeof(TTarget));
+            
+            return finalResult;
         }
 
         /// <summary>
@@ -469,6 +601,42 @@ namespace RUINORERP.Business.Document
         /// 优先级
         /// </summary>
         public int Priority { get; set; }
+    }
+    
+    /// <summary>
+    /// 转换器使用统计信息
+    /// </summary>
+    public class ConverterUsageStatistics
+    {
+        /// <summary>
+        /// 转换器类型
+        /// </summary>
+        public Type ConverterType { get; set; }
+        
+        /// <summary>
+        /// 转换器名称
+        /// </summary>
+        public string ConverterName { get; set; }
+        
+        /// <summary>
+        /// 当前优先级
+        /// </summary>
+        public int Priority { get; set; }
+        
+        /// <summary>
+        /// 使用次数
+        /// </summary>
+        public int UsageCount { get; set; }
+        
+        /// <summary>
+        /// 支持的源类型列表
+        /// </summary>
+        public List<Type> SourceTypes { get; set; }
+        
+        /// <summary>
+        /// 支持的目标类型列表
+        /// </summary>
+        public List<Type> TargetTypes { get; set; }
     }
     
 }

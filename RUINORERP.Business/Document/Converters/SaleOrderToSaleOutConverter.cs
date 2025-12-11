@@ -27,6 +27,7 @@ namespace RUINORERP.Business.Document.Converters
     /// 负责将销售订单及其明细转换为销售出库单及其明细
     /// 复用原有业务逻辑，确保转换过程的业务一致性
     /// </summary>
+    [ConverterPriority(200)] // 设置高优先级，这是最常用的转换
     public class SaleOrderToSaleOutConverter : DocumentConverterBase<tb_SaleOrder, tb_SaleOut>
     {
         private readonly IMapper _mapper;

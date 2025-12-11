@@ -4842,7 +4842,17 @@ namespace RUINORERP.UI.BaseForm
                 // 为每种可转换类型创建菜单项
                 foreach (var conversionOption in availableConversions)
                 {
-                    var menuItem = new ToolStripMenuItem(conversionOption.DisplayName);
+                    // 显示文本已包含优先级标识（由DocumentConverterFactory添加）
+                    string displayName = conversionOption.DisplayName;
+                    
+                    var menuItem = new ToolStripMenuItem(displayName);
+                    
+                    // 根据目标单据类型设置图标
+                    //menuItem.Image = GetDocumentTypeIcon(conversionOption.TargetDocumentType);
+                    
+                    // 添加工具提示，提供更详细的转换信息
+                    menuItem.ToolTipText = $"将当前{typeof(T).Name.Replace("tb_", "")}转换为{conversionOption.TargetDocumentType.Replace("tb_", "")} (优先级: {conversionOption.Priority})";
+                    
                     // 保存转换选项的引用，避免闭包问题
                     var targetType = converterFactory.GetTargetType(conversionOption.TargetDocumentType);
                     menuItem.Click += async (sender, e) =>
@@ -4859,11 +4869,16 @@ namespace RUINORERP.UI.BaseForm
                         }
                     };
                     toolStripbtnConvertDocuments.DropDownItems.Add(menuItem);
+                    
+                    // 记录转换选项加载日志
+                    MainForm.Instance.uclog.AddLog($"已加载转换选项: {displayName} (优先级: {conversionOption.Priority})", Global.UILogType.普通消息);
                 }
 
                 // 根据是否有可转换选项设置按钮可见性
                 toolStripbtnConvertDocuments.Visible = toolStripbtnConvertDocuments.DropDownItems.Count > 0;
                 toolStripbtnConvertDocuments.Text = "联动";
+                
+                MainForm.Instance.uclog.AddLog($"共加载了 {toolStripbtnConvertDocuments.DropDownItems.Count} 个转换选项", Global.UILogType.普通消息);
             }
             catch (Exception ex)
             {
@@ -4872,6 +4887,7 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
+ 
         /// <summary>
         /// 执行单据转换操作
         /// </summary>
@@ -4888,10 +4904,37 @@ namespace RUINORERP.UI.BaseForm
                 return;
             }
 
+            // 记录转换开始
+            string sourceTypeName = typeof(T).Name.Replace("tb_", "");
+            string targetTypeName = targetType?.Name.Replace("tb_", "") ?? "Unknown";
+            
+            // 添加用户确认环节
+            bool userConfirmed = false;
+            this.Invoke((MethodInvoker)delegate
+            {
+                userConfirmed = MessageBox.Show(
+                    $"确定要将当前{sourceTypeName}转换为{targetTypeName}吗？\n\n此操作将创建新的{targetTypeName}单据，原单据不受影响。",
+                    "确认转换",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Question) == DialogResult.Yes;
+            });
+
+            if (!userConfirmed)
+            {
+                MainForm.Instance.uclog.AddLog($"用户取消了单据转换：{sourceTypeName} -> {targetTypeName}", Global.UILogType.普通消息);
+                return;
+            }
+
+            MainForm.Instance.uclog.AddLog($"开始执行单据转换：{sourceTypeName} -> {targetTypeName}", Global.UILogType.普通消息);
+
             try
             {
                 // 使用ActionManager执行单据联动
                 var actionManager = Startup.GetFromFac<RUINORERP.Business.Document.ActionManager>();
+                if (actionManager == null)
+                {
+                    throw new InvalidOperationException("无法获取ActionManager服务实例");
+                }
 
                 // 准备转换选项
                 var options = new RUINORERP.Business.Document.ActionOptions
@@ -4902,7 +4945,6 @@ namespace RUINORERP.UI.BaseForm
 
                 // 执行联动操作
                 dynamic result = null;
-                string targetTypeName = targetType?.Name ?? "Unknown";
 
                 // 使用反射调用正确的泛型方法
                 var method = typeof(RUINORERP.Business.Document.ActionManager)
@@ -4927,90 +4969,80 @@ namespace RUINORERP.UI.BaseForm
                 result = resultProperty?.GetValue(task);
 
                 // 在UI线程处理结果
-                this.Invoke((MethodInvoker)delegate
+                this.Invoke((MethodInvoker)async delegate
                 {
                     if (result != null && result.Success)
                     {
-                        // 显示成功消息，并提供打开新单据的选项
-                        var dialogResult = MessageBox.Show($"单据联动成功！已生成{targetTypeName}。是否打开新生成的单据？",
-                            "操作成功", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
+                       
+                        MenuPowerHelper menuPowerHelper;
+                        menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
+                        string Flag = string.Empty;
+                        //付款
+                      //  Flag = typeof(RUINORERP.UI.FM.UCPayable).FullName;
 
-                        if (dialogResult == DialogResult.Yes && result.Data != null)
+                        tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
+                                    && m.EntityName == targetType.Name
+                                    && m.BIBaseForm == "BaseBillEditGeneric`2")
+                        //&& m.BIBaseForm == "BaseBillEditGeneric`2" && m.ClassPath == Flag)
+                        .FirstOrDefault();
+                        if (RelatedMenuInfo != null)
                         {
-                            // 这里可以根据实际情况打开新单据
-                            // 由于没有具体的打开单据方法，暂时只显示消息
-                            MessageBox.Show("新单据已生成", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                           await  menuPowerHelper.ExecuteEvents(RelatedMenuInfo, result.Data);
                         }
                     }
                     else if (result != null)
                     {
                         // 显示失败消息
                         string errorMsg = result.ErrorMessage ?? "未知错误";
-                        MessageBox.Show("单据联动失败: " + errorMsg, "操作失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        MainForm.Instance.uclog.AddLog($"单据转换失败：{sourceTypeName} -> {targetTypeName}，错误：{errorMsg}", Global.UILogType.错误);
+                        MessageBox.Show($"单据联动失败: {errorMsg}", "操作失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
                     else
                     {
-                        MessageBox.Show("不支持的目标单据类型，请联系管理员配置相应的转换器", "操作失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        string errorMsg = "转换结果为空，可能是不支持的目标单据类型";
+                        MainForm.Instance.uclog.AddLog($"单据转换失败：{sourceTypeName} -> {targetTypeName}，错误：{errorMsg}", Global.UILogType.错误);
+                        MessageBox.Show($"不支持的目标单据类型，请联系管理员配置相应的转换器", "操作失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                // 记录操作异常
+                string errorMsg = $"操作无效：{ex.Message}";
+                MainForm.Instance.uclog.AddLog($"单据转换操作异常：{sourceTypeName} -> {targetTypeName}，错误：{errorMsg}", Global.UILogType.错误);
+
+                this.Invoke((MethodInvoker)delegate
+                {
+                    MessageBox.Show(errorMsg, "操作错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                });
+            }
+            catch (TargetInvocationException ex)
+            {
+                // 记录反射调用异常
+                string innerErrorMsg = ex.InnerException?.Message ?? ex.Message;
+                string errorMsg = $"系统内部错误：{innerErrorMsg}";
+                MainForm.Instance.uclog.AddLog($"单据转换系统异常：{sourceTypeName} -> {targetTypeName}，错误：{errorMsg}", Global.UILogType.错误);
+
+                this.Invoke((MethodInvoker)delegate
+                {
+                    MessageBox.Show(errorMsg, "系统错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 });
             }
             catch (Exception ex)
             {
-                // 记录错误并显示消息
-                MainForm.Instance.uclog.AddLog("执行单据联动时发生错误: " + ex.Message, Global.UILogType.错误);
+                // 记录通用异常
+                string errorMsg = $"执行单据转换时发生未知错误：{ex.Message}";
+                MainForm.Instance.uclog.AddLog($"单据转换未知异常：{sourceTypeName} -> {targetTypeName}，错误：{errorMsg}\n堆栈：{ex.StackTrace}", Global.UILogType.错误);
 
                 this.Invoke((MethodInvoker)delegate
                 {
-                    MessageBox.Show("执行单据联动时发生错误: " + ex.Message, "操作错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show(errorMsg, "未知错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 });
             }
         }
 
-        protected virtual void RelatedQuery()
-        {
-            MessageBox.Show("功能开发中。。。。");
-            if (EditEntity == null)
-            {
-                return;
-            }
-
-            T NewEditEntity = default(T);
-            if (OnBindDataToUIEvent != null)
-            {
-                bindingSourceSub.Clear();
-
-                // NewEditEntity = Activator.CreateInstance(typeof(T)) as T;
-
-                NewEditEntity = EditEntity.DeepCloneByjson();
-
-                // 获取需要忽略的属性配置
-                var ignoreProperties = ConfigureIgnoreProperties();
-                //复制性新增 时  PK要清空，单据编号类的,还有他的关联性子集
-                // 获取主键列名
-                string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
-
-                //这里只是取打印配置信息
-                CommBillData cbd = new CommBillData();
-                cbd = EntityMappingHelper.GetBillData(typeof(T), NewEditEntity);
-
-                string billNoColName = cbd.BillNoColName;
-
-                ReflectionHelper.SetPropertyValue(NewEditEntity, billNoColName, string.Empty);
-
-                // 重置主实体的主键
-                ResetPrimaryKey(NewEditEntity, PKCol);
-
-                // 重置审批状态
-                ResetApprovalStatus(NewEditEntity);
-
-                // 递归处理所有导航属性（明细集合）
-                ProcessNavigationProperties(NewEditEntity, PKCol, ignoreProperties);
-
-                OnBindDataToUIEvent(NewEditEntity, ActionStatus.复制);
-
-            }
-            return;
-        }
+ 
+      
         protected virtual T AddByCopy()
         {
             if (EditEntity == null)

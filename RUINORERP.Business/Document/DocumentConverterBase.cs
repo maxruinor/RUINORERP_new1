@@ -62,10 +62,10 @@ namespace RUINORERP.Business.Document
                 target.GetType().GetProperty("CreatedTime").SetValue(target, DateTime.Now);
             }
             // 设置审核状态为待审核（如果属性存在）
-            if (target.GetType().GetProperty("Status") != null)
-            {
-                target.GetType().GetProperty("Status").SetValue(target, "待审核");
-            }
+            //if (target.GetType().GetProperty("Status") != null)
+            //{
+            //    target.GetType().GetProperty("Status").SetValue(target, "待审核");
+            //}
         }
 
         /// <summary>
@@ -79,12 +79,23 @@ namespace RUINORERP.Business.Document
         /// <summary>
         /// 获取源单据类型名称
         /// </summary>
-        public virtual string SourceDocumentType => typeof(TSource).Name;
+        public virtual string SourceDocumentTypeName => typeof(TSource).Name;
 
         /// <summary>
         /// 获取目标单据类型名称
         /// </summary>
-        public virtual string TargetDocumentType => typeof(TTarget).Name;
+        public virtual string TargetDocumentTypeName => typeof(TTarget).Name;
+
+
+        /// <summary>
+        /// 获取源单据类型
+        /// </summary>
+        public virtual Type SourceDocumentType => typeof(TSource);
+
+        /// <summary>
+        /// 获取目标单据类型
+        /// </summary>
+        public virtual Type TargetDocumentType => typeof(TTarget);
 
         /// <summary>
         /// 获取转换操作的显示名称

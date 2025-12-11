@@ -79,6 +79,18 @@ namespace RUINORERP.Business.Document
         /// 验证错误信息
         /// </summary>
         public string ErrorMessage { get; set; }
+        
+        /// <summary>
+        /// 验证提示信息列表
+        /// 用于存储转换过程中的业务验证提示信息
+        /// </summary>
+        public List<string> WarningMessages { get; set; } = new List<string>();
+        
+        /// <summary>
+        /// 验证信息列表
+        /// 用于存储转换过程中的信息提示
+        /// </summary>
+        public List<string> InfoMessages { get; set; } = new List<string>();
 
         /// <summary>
         /// 构造函数
@@ -107,5 +119,61 @@ namespace RUINORERP.Business.Document
         /// <param name="errorMessage">错误信息</param>
         public static ValidationResult Fail(string errorMessage) =>
             new ValidationResult(false, errorMessage);
+            
+        /// <summary>
+        /// 添加警告信息
+        /// </summary>
+        /// <param name="message">警告信息</param>
+        public void AddWarning(string message)
+        {
+            if (!string.IsNullOrEmpty(message))
+            {
+                WarningMessages.Add(message);
+            }
+        }
+        
+        /// <summary>
+        /// 添加信息提示
+        /// </summary>
+        /// <param name="message">信息提示</param>
+        public void AddInfo(string message)
+        {
+            if (!string.IsNullOrEmpty(message))
+            {
+                InfoMessages.Add(message);
+            }
+        }
+        
+        /// <summary>
+        /// 获取所有提示信息（警告+信息）
+        /// </summary>
+        /// <returns>所有提示信息</returns>
+        public List<string> GetAllMessages()
+        {
+            var allMessages = new List<string>();
+            allMessages.AddRange(WarningMessages);
+            allMessages.AddRange(InfoMessages);
+            return allMessages;
+        }
+        
+        /// <summary>
+        /// 获取格式化的提示信息文本
+        /// </summary>
+        /// <returns>格式化的提示信息文本</returns>
+        public string GetFormattedMessages()
+        {
+            var allMessages = GetAllMessages();
+            if (allMessages.Count == 0)
+            {
+                return string.Empty;
+            }
+            
+            return string.Join(Environment.NewLine, allMessages);
+        }
+        
+        /// <summary>
+        /// 是否有提示信息
+        /// </summary>
+        public bool HasMessages => WarningMessages.Count > 0 || InfoMessages.Count > 0;
     }
 }

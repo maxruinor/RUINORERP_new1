@@ -329,9 +329,85 @@ namespace RUINORERP.Business.Document.Converters
                     result.ErrorMessage = "该销售出库单没有明细，无法生成销售退回单";
                     return result;
                 }
+                
+                // 添加明细数量业务验证
+                await ValidateDetailQuantitiesAsync(source, result);
             }
             
             return result;
+        }
+        
+        /// <summary>
+        /// 验证明细数量的业务逻辑
+        /// </summary>
+        /// <param name="source">销售出库单</param>
+        /// <param name="result">验证结果对象</param>
+        private async Task ValidateDetailQuantitiesAsync(tb_SaleOut source, ValidationResult result)
+        {
+            try
+            {
+                int totalDetails = source.tb_SaleOutDetails.Count;
+                int returnableDetails = 0;
+                int nonReturnableDetails = 0;
+                decimal totalReturnableQty = 0;
+                var cacheManager = _appContext?.GetRequiredService<IEntityCacheManager>();
+                
+                // 遍历所有出库明细，检查可退数量
+                foreach (var detail in source.tb_SaleOutDetails)
+                {
+                    // 计算可退数量 = 出库数量 - 已退回数量
+                    decimal returnableQty = detail.Quantity - detail.TotalReturnedQty;
+                    
+                    if (returnableQty > 0)
+                    {
+                        returnableDetails++;
+                        totalReturnableQty += returnableQty;
+                        
+                        // 如果可退数量小于原出库数量，添加部分退回提示
+                        if (returnableQty < detail.Quantity)
+                        {
+                            var prodInfo = cacheManager?.GetEntity<View_ProdInfo>(detail.ProdDetailID);
+                            string prodName = prodInfo?.CNName ?? $"产品ID:{detail.ProdDetailID}";
+                            
+                            result.AddWarning($"产品【{prodName}】已退回数量为{detail.TotalReturnedQty}，可退回数量为{returnableQty}，小于原出库数量{detail.Quantity}");
+                        }
+                    }
+                    else
+                    {
+                        nonReturnableDetails++;
+                        
+                        // 添加完全退回提示
+                        var prodInfo = cacheManager?.GetEntity<View_ProdInfo>(detail.ProdDetailID);
+                        string prodName = prodInfo?.CNName ?? $"产品ID:{detail.ProdDetailID}";
+                        
+                        result.AddWarning($"产品【{prodName}】已全部退回，可退回数量为0，将忽略此明细");
+                    }
+                }
+                
+                // 添加汇总提示信息
+                if (nonReturnableDetails > 0)
+                {
+                    result.AddInfo($"共有{nonReturnableDetails}项产品已全部退回，将在转换时忽略");
+                }
+                
+                if (returnableDetails > 0)
+                {
+                    result.AddInfo($"共有{returnableDetails}项产品可退回，总可退数量为{totalReturnableQty}");
+                }
+                
+                // 如果所有明细都已退回，添加警告但仍允许转换（让用户知道）
+                if (returnableDetails == 0)
+                {
+                    result.AddWarning("该出库单所有明细已全部退回，转换生成的退回单将没有明细数据");
+                }
+                
+                await Task.CompletedTask; // 满足异步方法签名要求
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "验证销售出库单明细数量时发生错误，出库单号：{SaleOutNo}", source?.SaleOutNo);
+                result.AddWarning("验证明细数量时发生错误，请检查数据完整性");
+            }
         }
     }
 }

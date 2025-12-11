@@ -362,34 +362,113 @@ namespace RUINORERP.Business.Document.Converters
         /// <returns>验证结果</returns>
         public override async Task<ValidationResult> ValidateConversionAsync(tb_SaleOrder source)
         {
-            // 验证销售订单是否存在
-            if (source == null || source.SOrder_ID <= 0)
+            // 调用基类默认验证
+            var result = await base.ValidateConversionAsync(source);
+            
+            if (result.CanConvert)
             {
-                return ValidationResult.Fail("销售订单不存在或无效");
-            }
+                // 验证销售订单是否存在
+                if (source == null || source.SOrder_ID <= 0)
+                {
+                    result.CanConvert = false;
+                    result.ErrorMessage = "销售订单不存在或无效";
+                    return result;
+                }
 
-            // 验证销售订单状态是否允许生成出库单
-            if (source.ApprovalStatus != (int)ApprovalStatus.已审核)
+                // 验证销售订单状态是否允许生成出库单
+                if (source.ApprovalStatus != (int)ApprovalStatus.已审核)
+                {
+                    result.CanConvert = false;
+                    result.ErrorMessage = "仅已审核的销售订单可以生成销售出库单";
+                    return result;
+                }
+
+                // 验证销售订单是否有明细
+                if (source.tb_SaleOrderDetails == null || !source.tb_SaleOrderDetails.Any())
+                {
+                    result.CanConvert = false;
+                    result.ErrorMessage = "销售订单没有明细，无法生成销售出库单";
+                    return result;
+                }
+
+                // 添加明细数量业务验证
+                await ValidateDetailQuantitiesAsync(source, result);
+            }
+            
+            return result;
+        }
+        
+        /// <summary>
+        /// 验证明细数量的业务逻辑
+        /// </summary>
+        /// <param name="source">销售订单</param>
+        /// <param name="result">验证结果对象</param>
+        private async Task ValidateDetailQuantitiesAsync(tb_SaleOrder source, ValidationResult result)
+        {
+            try
             {
-                return ValidationResult.Fail("仅已审核的销售订单可以生成销售出库单");
+                int totalDetails = source.tb_SaleOrderDetails.Count;
+                int deliverableDetails = 0;
+                int nonDeliverableDetails = 0;
+                decimal totalDeliverableQty = 0;
+                
+                // 遍历所有订单明细，检查可出库数量
+                foreach (var detail in source.tb_SaleOrderDetails)
+                {
+                    // 计算可出库数量 = 订单数量 - 已出库数量
+                    decimal deliverableQty = detail.Quantity - detail.TotalDeliveredQty;
+                    
+                    if (deliverableQty > 0)
+                    {
+                        deliverableDetails++;
+                        totalDeliverableQty += deliverableQty;
+                        
+                        // 如果可出库数量小于原订单数量，添加部分出库提示
+                        if (deliverableQty < detail.Quantity)
+                        {
+                            var prodInfo = Cache.EntityCacheHelper.GetEntity<View_ProdInfo>(detail.ProdDetailID);
+                            string prodName = prodInfo?.CNName ?? $"产品ID:{detail.ProdDetailID}";
+                            
+                            result.AddWarning($"产品【{prodName}】已出库数量为{detail.TotalDeliveredQty}，可出库数量为{deliverableQty}，小于原订单数量{detail.Quantity}");
+                        }
+                    }
+                    else
+                    {
+                        nonDeliverableDetails++;
+                        
+                        // 添加完全出库提示
+                        var prodInfo = Cache.EntityCacheHelper.GetEntity<View_ProdInfo>(detail.ProdDetailID);
+                        string prodName = prodInfo?.CNName ?? $"产品ID:{detail.ProdDetailID}";
+                        
+                        result.AddWarning($"产品【{prodName}】已全部出库，可出库数量为0，将忽略此明细");
+                    }
+                }
+                
+                // 添加汇总提示信息
+                if (nonDeliverableDetails > 0)
+                {
+                    result.AddInfo($"共有{nonDeliverableDetails}项产品已全部出库，将在转换时忽略");
+                }
+                
+                if (deliverableDetails > 0)
+                {
+                    result.AddInfo($"共有{deliverableDetails}项产品可出库，总可出库数量为{totalDeliverableQty}");
+                }
+                
+                // 如果所有明细都已出库，设置错误但仍允许转换（让用户知道）
+                if (deliverableDetails == 0)
+                {
+                    result.CanConvert = false;
+                    result.ErrorMessage = "销售订单所有明细已全部出库，无法再次生成出库单";
+                }
+                
+                await Task.CompletedTask; // 满足异步方法签名要求
             }
-
-            // 验证销售订单是否有明细
-            if (source.tb_SaleOrderDetails == null || !source.tb_SaleOrderDetails.Any())
+            catch (Exception ex)
             {
-                return ValidationResult.Fail("销售订单没有明细，无法生成销售出库单");
+                _logger?.LogError(ex, "验证销售订单明细数量时发生错误，订单号：{SOrderNo}", source?.SOrderNo);
+                result.AddWarning("验证明细数量时发生错误，请检查数据完整性");
             }
-
-            // 验证是否还有可出库数量
-            var hasAvailableQty = source.tb_SaleOrderDetails.Any(detail => 
-                detail.Quantity - detail.TotalDeliveredQty > 0);
-
-            if (!hasAvailableQty)
-            {
-                return ValidationResult.Fail("销售订单所有明细已全部出库，无法再次生成出库单");
-            }
-
-            return ValidationResult.Success;
         }
     }
 }

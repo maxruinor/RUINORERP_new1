@@ -4937,6 +4937,19 @@ namespace RUINORERP.UI.BaseForm
                 {
                     if (result != null && result.Success)
                     {
+                        // 如果有警告或信息提示，显示给用户
+                        if (result.HasMessages)
+                        {
+                            string message = result.GetFormattedMessages();
+                            MainForm.Instance.uclog.AddLog($"单据转换完成：{sourceDisplayName} -> {targetDisplayName}，提示：{message}", Global.UILogType.普通消息);
+                            
+                            // 显示提示信息对话框
+                            MessageBox.Show(message, "转换提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        }
+                        else
+                        {
+                            MainForm.Instance.uclog.AddLog($"单据转换成功：{sourceDisplayName} -> {targetDisplayName}", Global.UILogType.普通消息);
+                        }
                        
                         MenuPowerHelper menuPowerHelper;
                         menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
@@ -4956,10 +4969,15 @@ namespace RUINORERP.UI.BaseForm
                     }
                     else if (result != null)
                     {
-                        // 显示失败消息
-                        string errorMsg = result.ErrorMessage ?? "未知错误";
-                        MainForm.Instance.uclog.AddLog($"单据转换失败：{sourceDisplayName} -> {targetDisplayName}，错误：{errorMsg}", Global.UILogType.错误);
-                        MessageBox.Show($"单据联动失败: {errorMsg}", "操作失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        // 显示失败消息，包括所有验证信息
+                        string message = result.GetFormattedMessages();
+                        if (string.IsNullOrEmpty(message))
+                        {
+                            message = result.ErrorMessage ?? "未知错误";
+                        }
+                        
+                        MainForm.Instance.uclog.AddLog($"单据转换失败：{sourceDisplayName} -> {targetDisplayName}，错误：{message}", Global.UILogType.错误);
+                        MessageBox.Show($"单据联动失败: {message}", "操作失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
                     else
                     {

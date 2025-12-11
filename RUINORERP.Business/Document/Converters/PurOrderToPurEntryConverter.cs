@@ -345,6 +345,9 @@ namespace RUINORERP.Business.Document.Converters
                     return result;
                 }
 
+                // 添加明细数量业务验证
+                await ValidateDetailQuantitiesAsync(source, result);
+                
                 // 检查是否有可入库的明细
                 var hasEntryableDetails = source.tb_PurOrderDetails.Any(d => d.Quantity > d.DeliveredQuantity);
                 if (!hasEntryableDetails)
@@ -364,6 +367,79 @@ namespace RUINORERP.Business.Document.Converters
             }
 
             return result;
+        }
+        
+        /// <summary>
+        /// 验证明细数量的业务逻辑
+        /// </summary>
+        /// <param name="source">采购订单</param>
+        /// <param name="result">验证结果对象</param>
+        private async Task ValidateDetailQuantitiesAsync(tb_PurOrder source, ValidationResult result)
+        {
+            try
+            {
+                int totalDetails = source.tb_PurOrderDetails.Count;
+                int entryableDetails = 0;
+                int nonEntryableDetails = 0;
+                decimal totalEntryableQty = 0;
+                var cacheManager = _appContext?.GetRequiredService<IEntityCacheManager>();
+                
+                // 遍历所有订单明细，检查可入库数量
+                foreach (var detail in source.tb_PurOrderDetails)
+                {
+                    // 计算可入库数量 = 订单数量 - 已入库数量
+                    decimal entryableQty = detail.Quantity - detail.DeliveredQuantity;
+                    
+                    if (entryableQty > 0)
+                    {
+                        entryableDetails++;
+                        totalEntryableQty += entryableQty;
+                        
+                        // 如果可入库数量小于原订单数量，添加部分入库提示
+                        if (entryableQty < detail.Quantity)
+                        {
+                            var prodInfo = cacheManager?.GetEntity<View_ProdInfo>(detail.ProdDetailID);
+                            string prodName = prodInfo?.CNName ?? $"产品ID:{detail.ProdDetailID}";
+                            
+                            result.AddWarning($"产品【{prodName}】已入库数量为{detail.DeliveredQuantity}，可入库数量为{entryableQty}，小于原订单数量{detail.Quantity}");
+                        }
+                    }
+                    else
+                    {
+                        nonEntryableDetails++;
+                        
+                        // 添加完全入库提示
+                        var prodInfo = cacheManager?.GetEntity<View_ProdInfo>(detail.ProdDetailID);
+                        string prodName = prodInfo?.CNName ?? $"产品ID:{detail.ProdDetailID}";
+                        
+                        result.AddWarning($"产品【{prodName}】已全部入库，可入库数量为0，将忽略此明细");
+                    }
+                }
+                
+                // 添加汇总提示信息
+                if (nonEntryableDetails > 0)
+                {
+                    result.AddInfo($"共有{nonEntryableDetails}项产品已全部入库，将在转换时忽略");
+                }
+                
+                if (entryableDetails > 0)
+                {
+                    result.AddInfo($"共有{entryableDetails}项产品可入库，总可入库数量为{totalEntryableQty}");
+                }
+                
+                // 如果所有明细都已入库，添加警告但仍允许转换（让用户知道）
+                if (entryableDetails == 0)
+                {
+                    result.AddWarning("该采购订单所有明细已全部入库，转换生成的入库单将没有明细数据");
+                }
+                
+                await Task.CompletedTask; // 满足异步方法签名要求
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "验证采购订单明细数量时发生错误，采购订单号：{PurOrderNo}", source?.PurOrderNo);
+                result.AddWarning("验证明细数量时发生错误，请检查数据完整性");
+            }
         }
     }
 }

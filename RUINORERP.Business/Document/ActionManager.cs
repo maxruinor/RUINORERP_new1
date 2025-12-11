@@ -56,46 +56,57 @@ namespace RUINORERP.Business.Document
         }
 
         /// <summary>
-        /// 执行单据联动操作
+        /// 执行联动操作
         /// </summary>
         /// <typeparam name="TSource">源单据类型</typeparam>
         /// <typeparam name="TTarget">目标单据类型</typeparam>
-        /// <param name="source">源单据对象</param>
-        /// <param name="options">联动选项</param>
-        /// <returns>联动结果</returns>
+        /// <param name="source">源单据实例</param>
+        /// <param name="options">操作选项</param>
+        /// <returns>操作结果</returns>
         public async Task<ActionResult<TTarget>> ExecuteActionAsync<TSource, TTarget>(
-            TSource source,
-            ActionOptions options = null)
-            where TSource : BaseEntity
+            TSource source, 
+            ActionOptions options = null) 
+            where TSource : BaseEntity, new() 
             where TTarget : BaseEntity, new()
         {
-            options = options ?? new ActionOptions();
-
             try
             {
-                _logger.LogInformation($"开始执行单据联动操作: {typeof(TSource).Name} -> {typeof(TTarget).Name}");
-
-                // 验证转换条件
+                options = options ?? new ActionOptions();
+                
+                // 验证源单据
                 var validationResult = await _converterFactory.ValidateConversionAsync<TSource, TTarget>(source);
                 if (!validationResult.CanConvert)
                 {
-                    return ActionResult<TTarget>.Fail(validationResult.ErrorMessage);
+                    // 使用FromValidationResult方法创建失败结果，保留所有验证信息
+                    return ActionResult<TTarget>.FromValidationResult(validationResult);
+                }
+
+                // 获取转换器
+                var converter = _converterFactory.GetConverter<TSource, TTarget>();
+                if (converter == null)
+                {
+                    return ActionResult<TTarget>.Fail($"找不到从 {typeof(TSource).Name} 到 {typeof(TTarget).Name} 的转换器");
                 }
 
                 // 执行转换
-                var target = await _converterFactory.ConvertAsync<TSource, TTarget>(source);
+                var target = await converter.ConvertAsync(source);
+                if (target == null)
+                {
+                    return ActionResult<TTarget>.Fail("转换失败，目标单据为空");
+                }
 
-                // 保存目标单据
-                if (options.SaveTarget && target != null)
+                // 保存目标单据（如果需要）
+                if (options.SaveTarget)
                 {
                     await SaveDocumentAsync(target);
                 }
 
-                return ActionResult<TTarget>.SuccessResult(target);
+                // 使用FromValidationResult方法创建成功结果，保留所有验证信息
+                return ActionResult<TTarget>.FromValidationResult(validationResult, target);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"单据联动执行失败");
+                _logger.LogError(ex, $"执行联动操作失败: {typeof(TSource).Name} -> {typeof(TTarget).Name}");
                 return ActionResult<TTarget>.Fail($"执行失败: {ex.Message}");
             }
         }
@@ -285,6 +296,16 @@ namespace RUINORERP.Business.Document
         public T Data { get; set; }
 
         /// <summary>
+        /// 警告信息列表
+        /// </summary>
+        public List<string> WarningMessages { get; set; } = new List<string>();
+
+        /// <summary>
+        /// 信息提示列表
+        /// </summary>
+        public List<string> InfoMessages { get; set; } = new List<string>();
+
+        /// <summary>
         /// 创建成功结果
         /// </summary>
         public static ActionResult<T> SuccessResult(T data) => new ActionResult<T>
@@ -302,5 +323,62 @@ namespace RUINORERP.Business.Document
             Success = false,
             ErrorMessage = errorMessage
         };
+
+        /// <summary>
+        /// 从验证结果创建ActionResult
+        /// </summary>
+        /// <param name="validationResult">验证结果</param>
+        /// <param name="data">结果数据</param>
+        /// <returns>ActionResult实例</returns>
+        public static ActionResult<T> FromValidationResult(ValidationResult validationResult, T data = null)
+        {
+            return new ActionResult<T>
+            {
+                Success = validationResult.CanConvert,
+                ErrorMessage = validationResult.ErrorMessage,
+                Data = data,
+                WarningMessages = validationResult.WarningMessages?.ToList() ?? new List<string>(),
+                InfoMessages = validationResult.InfoMessages?.ToList() ?? new List<string>()
+            };
+        }
+
+        /// <summary>
+        /// 获取所有消息
+        /// </summary>
+        /// <returns>所有消息列表</returns>
+        public List<string> GetAllMessages()
+        {
+            var allMessages = new List<string>();
+            
+            if (!string.IsNullOrEmpty(ErrorMessage))
+                allMessages.Add(ErrorMessage);
+                
+            if (WarningMessages != null && WarningMessages.Any())
+                allMessages.AddRange(WarningMessages);
+                
+            if (InfoMessages != null && InfoMessages.Any())
+                allMessages.AddRange(InfoMessages);
+                
+            return allMessages;
+        }
+
+        /// <summary>
+        /// 获取格式化的消息字符串
+        /// </summary>
+        /// <returns>格式化的消息字符串</returns>
+        public string GetFormattedMessages()
+        {
+            var allMessages = GetAllMessages();
+            if (!allMessages.Any()) return string.Empty;
+            
+            return string.Join(Environment.NewLine, allMessages);
+        }
+
+        /// <summary>
+        /// 是否有任何消息
+        /// </summary>
+        public bool HasMessages => !string.IsNullOrEmpty(ErrorMessage) || 
+                                 (WarningMessages != null && WarningMessages.Any()) || 
+                                 (InfoMessages != null && InfoMessages.Any());
     }
 }

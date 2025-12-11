@@ -184,14 +184,14 @@ namespace RUINORERP.UI
                 {
                     try
                     {
-                        MainForm.Instance.logger?.LogInformation($"检测到服务器地址变更，从 {currentServerIP}:{currentServerPort} 变更为 {newServerIP}:{newServerPort}，正在断开现有连接...");
+                        MainForm.Instance.PrintInfoLog($"检测到服务器地址变更，从 {currentServerIP}:{currentServerPort} 变更为 {newServerIP}:{newServerPort}，正在断开现有连接...");
                         await connectionManager.DisconnectAsync();
                         isConnected = false;
-                        MainForm.Instance.logger?.LogInformation("已成功断开现有连接");
+                        
                     }
                     catch (Exception ex)
                     {
-                        MainForm.Instance.logger?.LogError(ex, "断开现有连接时发生异常");
+                       
                         // 即使断开连接失败，也继续尝试新连接
                     }
                 }
@@ -565,13 +565,13 @@ namespace RUINORERP.UI
                 // 如果已连接但IP/端口已变更，上面的逻辑已经断开了连接
                 if (!connectionManager.IsConnected)
                 {
-                    MainForm.Instance.logger?.LogInformation($"正在连接到服务器 {txtServerIP.Text.Trim()}:{serverPort}...");
+                    MainForm.Instance.PrintInfoLog($"正在连接到服务器 {txtServerIP.Text.Trim()}:{serverPort}...");
                     var connected = await connectionManager.ConnectAsync(txtServerIP.Text.Trim(), serverPort);
                     if (!connected)
                     {
                         throw new Exception($"无法连接到服务器 {txtServerIP.Text.Trim()}:{serverPort}");
                     }
-                    MainForm.Instance.logger?.LogInformation("服务器连接成功");
+                    MainForm.Instance.PrintInfoLog("服务器连接成功");
                 }
                 else
                 {
@@ -661,8 +661,8 @@ namespace RUINORERP.UI
                         var lockResponse = await lockManagementService.GetLockStatusListAsync();
                         if (lockResponse != null && lockResponse.IsSuccess)
                         {
-                            MainForm.Instance.logger?.LogInformation("成功获取锁状态列表，锁数量: {LockCount}", 
-                                lockResponse.LockInfoList?.Count ?? 0);
+                            //MainForm.Instance.PrintInfoLog("成功获取锁状态列表，锁数量: {LockCount}", 
+                            //    lockResponse.LockInfoList?.Count ?? 0);
                         }
                         else
                         {

@@ -95,13 +95,7 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <returns>操作状态</returns>
         ActionStatus GetActionStatus();
 
-        /// <summary>
-        /// 记录转换
-        /// </summary>
-        /// <param name="fromStatus">源状态</param>
-        /// <param name="toStatus">目标状态</param>
-        /// <param name="reason">转换原因</param>
-        void LogTransition(object fromStatus, object toStatus, string reason = null);
+       
 
         /// <summary>
         /// 转换到指定状态

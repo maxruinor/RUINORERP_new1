@@ -261,7 +261,7 @@ namespace RUINORERP.Model.Base.StatusManager
                     Reason = reason ?? Reason;
                     TransitionTime = DateTime.Now;
 
-                    LogTransition(oldStatus, targetStatus, reason);
+                    
                 }
 
                 return result;
@@ -512,21 +512,6 @@ namespace RUINORERP.Model.Base.StatusManager
         }
 
         #endregion
-
-        #region 私有方法
-
-        /// <summary>
-        /// 记录转换
-        /// </summary>
-        /// <param name="fromStatus">源状态</param>
-        /// <param name="toStatus">目标状态</param>
-        /// <param name="reason">转换原因</param>
-        public void LogTransition(object fromStatus, object toStatus, string reason = null)
-        {
-            _logger?.LogInformation("状态转换记录: {EntityType} {EntityId} 从 {FromStatus} 转换到 {ToStatus}, 原因: {Reason}",
-                Entity.GetType(), Entity.PrimaryKeyID, fromStatus, toStatus, reason ?? Reason);
-        }
-
-        #endregion
+ 
     }
 }

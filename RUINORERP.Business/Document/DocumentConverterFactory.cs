@@ -56,7 +56,7 @@ namespace RUINORERP.Business.Document
         {
             try
             {
-                _logger?.LogInformation("开始自动发现转换器...");
+    
                 
                 // 获取当前应用程序域中的所有程序集
                 var assemblies = AppDomain.CurrentDomain.GetAssemblies();
@@ -95,7 +95,6 @@ namespace RUINORERP.Business.Document
                                 // 注册转换器
                                 registerMethod.Invoke(this, new[] { converter });
                                 
-                                _logger?.LogInformation($"成功注册转换器: {converterType.FullName}");
                             }
                             catch (Exception ex)
                             {
@@ -108,8 +107,7 @@ namespace RUINORERP.Business.Document
                         _logger?.LogError(ex, $"扫描程序集 {assembly.FullName} 时出错");
                     }
                 }
-                
-                _logger?.LogInformation($"转换器自动发现完成，共注册 {_convertersCache.Count} 个转换器");
+         
             }
             catch (Exception ex)
             {
@@ -336,7 +334,7 @@ namespace RUINORERP.Business.Document
             {
                 // 执行转换
                 var result = await converter.ConvertAsync(source);
-                _logger?.LogInformation($"转换成功: {typeof(TSource).Name} -> {typeof(TTarget).Name}");
+             
                 return result;
             }
             catch (Exception ex)

@@ -188,7 +188,7 @@ namespace RUINORERP.UI.Network
         public void OnConnectionStatusChanged(bool isConnected)
         {
             // 记录连接状态改变
-            _logger?.LogInformation("连接状态改变为: {Status}", isConnected ? "已连接" : "已断开");
+
             
             // 获取事件处理程序的快照
             Action<bool> handler;

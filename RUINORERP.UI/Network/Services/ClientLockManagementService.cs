@@ -509,7 +509,7 @@ namespace RUINORERP.UI.Network.Services
                     }
                     else
                     {
-                        _logger.LogWarning("单据 {BillId} 解锁失败: {Message}, 耗时 {ElapsedMs}ms", billId, response.Message, stopwatch.ElapsedMilliseconds);
+                       // _logger.LogWarning("单据 {BillId} 解锁失败: {Message}, 耗时 {ElapsedMs}ms", billId, response.Message, stopwatch.ElapsedMilliseconds);
                     }
 
                     return response;

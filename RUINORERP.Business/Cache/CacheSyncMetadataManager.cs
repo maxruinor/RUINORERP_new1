@@ -428,8 +428,7 @@ namespace RUINORERP.Business.Cache
                     }
                 }
 
-                _logger?.LogInformation("批量更新缓存同步元数据完成: 成功更新 {UpdatedCount} 个表，跳过 {SkippedCount} 个表", 
-                    updatedCount, skippedCount);
+      
 
                 // 触发同步完成事件（如果需要的话）
                 OnBatchSyncCompleted?.Invoke(this, new BatchSyncCompletedEventArgs(updatedCount, skippedCount));
@@ -458,7 +457,7 @@ namespace RUINORERP.Business.Cache
 
                 foreach (var tableName in incompleteTables)
                 {
-                    _logger?.LogInformation("开始执行表 {TableName} 的刷新操作", tableName);
+                  
                     
                     try
                     {
@@ -469,7 +468,7 @@ namespace RUINORERP.Business.Cache
                         if (ValidateTableCacheIntegrity(tableName))
                         {
                             refreshedCount++;
-                            _logger?.LogInformation("表 {TableName} 的刷新操作成功且元数据有效", tableName);
+                           
                         }
                         else
                         {
@@ -482,8 +481,6 @@ namespace RUINORERP.Business.Cache
                     }
                 }
 
-                _logger?.LogInformation("刷新操作完成，成功执行 {RefreshedCount}/{TotalCount} 个表", 
-                    refreshedCount, incompleteTables.Count);
                 return refreshedCount;
             }
             catch (Exception ex)

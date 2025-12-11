@@ -101,7 +101,7 @@ namespace RUINORERP.Business.Document.Converters
                 // 初始化实体
                 BusinessHelper.Instance.InitEntity(target);
 
-                _logger?.LogInformation($"销售订单到销售出库单转换完成，生成出库单号: {target.SaleOutNo}");
+          
             }
             catch (Exception ex)
             {

@@ -2159,8 +2159,7 @@ namespace RUINORERP.UI.BaseForm
                 {
                     // 记录状态变更前的日志
                     object oldValue = entity.GetPropertyValue(propertyName);
-                    logger?.LogInformation("SetEntityStatusAsync: 实体[{EntityType}]的属性[{PropertyName}]状态从[{OldValue}]变更为[{NewValue}]",
-                        entity.GetType().Name, propertyName, oldValue, status.ToString());
+              
 
                     // 设置新状态值
                     ReflectionHelper.SetPropertyValue(entity, propertyName, (int)(object)status);

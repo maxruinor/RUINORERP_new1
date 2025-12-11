@@ -78,7 +78,7 @@ namespace RUINORERP.UI.Network.ErrorHandling
         /// </summary>
         private async Task HandleConnectionErrorAsync(string errorMessage, string commandId)
         {
-            _logger?.LogInformation("检测到连接错误：{ErrorMessage}", errorMessage);
+
 
             // 检查是否需要触发重连
             if (_connectionManager != null)
@@ -130,7 +130,7 @@ namespace RUINORERP.UI.Network.ErrorHandling
             // 比如调整超时时间、重试等
             if (_consecutiveConnectionErrors >= 3)
             {
-                _logger?.LogInformation("连续超时次数较多，检查连接状态");
+                //_logger?.LogInformation("连续超时次数较多，检查连接状态");
                 if (_connectionManager != null && !_connectionManager.IsConnected)
                 {
                     await _connectionManager.ManualReconnectAsync();
@@ -157,7 +157,7 @@ namespace RUINORERP.UI.Network.ErrorHandling
             }
             else
             {
-                _logger?.LogInformation("网络不可用，等待网络恢复");
+              //  _logger?.LogInformation("网络不可用，等待网络恢复");
             }
         }
 

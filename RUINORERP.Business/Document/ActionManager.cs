@@ -1,10 +1,12 @@
 using Microsoft.Extensions.Logging;
 using RUINORERP.Business.CommService;
 using RUINORERP.Common.LogHelper;
+using RUINORERP.Global;
 using RUINORERP.IServices;
 using RUINORERP.Model;
 using RUINORERP.Model.Base;
 using RUINORERP.Model.Base.StatusManager;
+using RUINORERP.Model.Context;
 using SqlSugar;
 using System;
 using System.Collections.Generic;
@@ -13,6 +15,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Web.UI;
+using System.Windows.Forms;
 
 namespace RUINORERP.Business.Document
 {
@@ -28,18 +31,21 @@ namespace RUINORERP.Business.Document
         private readonly ISqlSugarClient _db;
         private readonly ILogger<ActionManager> _logger;
         private readonly Model.Base.StatusManager.IUnifiedStateManager _stateManager;
+        private readonly Model.Context.ApplicationContext _applicationContext;
+
         /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="converterFactory">单据转换器工厂</param>
         /// <param name="db">数据库客户端</param>
         /// <param name="logger">日志记录器</param>
-        public ActionManager(DocumentConverterFactory converterFactory, ISqlSugarClient db, IUnifiedStateManager stateManager,
+        public ActionManager(DocumentConverterFactory converterFactory, ISqlSugarClient db, IUnifiedStateManager stateManager, Model.Context.ApplicationContext applicationContext,
             ILogger<ActionManager> logger)
         {
             _converterFactory = converterFactory ?? throw new ArgumentNullException(nameof(converterFactory));
             _stateManager = stateManager;
             _db = db ?? throw new ArgumentNullException(nameof(db));
+            _applicationContext = applicationContext;
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
@@ -64,15 +70,20 @@ namespace RUINORERP.Business.Document
         /// <param name="options">操作选项</param>
         /// <returns>操作结果</returns>
         public async Task<ActionResult<TTarget>> ExecuteActionAsync<TSource, TTarget>(
-            TSource source, 
-            ActionOptions options = null) 
-            where TSource : BaseEntity, new() 
+            TSource source,
+            ActionOptions options = null)
+            where TSource : BaseEntity, new()
             where TTarget : BaseEntity, new()
         {
             try
             {
-                options = options ?? new ActionOptions();
-                
+                // 创建默认选项，设置权限控制属性
+                options = options ?? new ActionOptions
+                {
+                    IsVisible = true, // 默认可见，可根据权限设置
+                    IsEnabled = true  // 默认可用，可根据权限设置
+                };
+
                 // 验证源单据
                 var validationResult = await _converterFactory.ValidateConversionAsync<TSource, TTarget>(source);
                 if (!validationResult.CanConvert)
@@ -153,7 +164,9 @@ namespace RUINORERP.Business.Document
                 SourceType = c.SourceDocumentType,
                 SourceDocumentDisplayName = c.SourceDocumentDisplayName,
                 TargetDocumentDisplayName = c.TargetDocumentDisplayName,
-                ConverterType = c.ConverterType
+                ConverterType = c.ConverterType,
+                IsVisible = true, // 默认可见，可根据权限设置
+                IsEnabled = true  // 默认可用，可根据权限设置
             });
 
             // 如果提供了源单据实例，可以根据单据状态过滤操作
@@ -167,6 +180,30 @@ namespace RUINORERP.Business.Document
                 // 只有已审核的单据才能进行转换操作
                 if (source is BaseEntity)
                 {
+                    //当一个用户有这个目标单据窗体及新建的权限才显示这个目标单据的联动菜单
+                    // 根据权限设置操作的可见性和可用性
+                    foreach (var action in result)
+                    {
+                        var MenuInfo = _applicationContext.CurrentRole.tb_P4Menus.Where(c => c.tb_menuinfo.EntityName == action.TargetType && c.tb_menuinfo.BIBaseForm.Contains("BaseBillEditGeneric")).FirstOrDefault();
+                        if (MenuInfo != null)
+                        {
+                            var btnInfo = _applicationContext.CurrentRole.tb_P4Buttons.Where(c => c.tb_buttoninfo.BtnText == MenuItemEnums.新增.ToString() && c.tb_buttoninfo.MenuID == MenuInfo.MenuID).FirstOrDefault();
+                            if (btnInfo != null)
+                            {
+                                action.IsVisible = btnInfo.IsVisble;
+                                action.IsEnabled = btnInfo.IsEnabled;
+                            }
+                            else
+                            {
+                                action.IsVisible = false;
+                            }
+                        }
+                        else
+                        {
+                            action.IsVisible = false;
+                        }
+                    }
+
                     // 假设Status属性表示单据状态，1表示已审核
                     bool canReview = _stateManager.CanExecuteAction<BaseEntity>(source, Global.MenuItemEnums.审核);
                     if (canReview)
@@ -176,6 +213,8 @@ namespace RUINORERP.Business.Document
                     }
                 }
             }
+
+
 
             return result.ToList();
         }
@@ -231,6 +270,16 @@ namespace RUINORERP.Business.Document
         /// 转换上下文对象
         /// </summary>
         public object ConversionContext { get; set; }
+
+        /// <summary>
+        /// 操作可见性，用于权限控制
+        /// </summary>
+        public bool IsVisible { get; set; } = true;
+
+        /// <summary>
+        /// 操作可用性，用于权限控制
+        /// </summary>
+        public bool IsEnabled { get; set; } = true;
     }
 
     /// <summary>
@@ -272,6 +321,16 @@ namespace RUINORERP.Business.Document
         /// 转换器类型
         /// </summary>
         public Type ConverterType { get; set; }
+
+        /// <summary>
+        /// 操作可见性，用于权限控制
+        /// </summary>
+        public bool IsVisible { get; set; } = true;
+
+        /// <summary>
+        /// 操作可用性，用于权限控制
+        /// </summary>
+        public bool IsEnabled { get; set; } = true;
     }
 
     /// <summary>
@@ -349,16 +408,16 @@ namespace RUINORERP.Business.Document
         public List<string> GetAllMessages()
         {
             var allMessages = new List<string>();
-            
+
             if (!string.IsNullOrEmpty(ErrorMessage))
                 allMessages.Add(ErrorMessage);
-                
+
             if (WarningMessages != null && WarningMessages.Any())
                 allMessages.AddRange(WarningMessages);
-                
+
             if (InfoMessages != null && InfoMessages.Any())
                 allMessages.AddRange(InfoMessages);
-                
+
             return allMessages;
         }
 
@@ -370,15 +429,15 @@ namespace RUINORERP.Business.Document
         {
             var allMessages = GetAllMessages();
             if (!allMessages.Any()) return string.Empty;
-            
+
             return string.Join(Environment.NewLine, allMessages);
         }
 
         /// <summary>
         /// 是否有任何消息
         /// </summary>
-        public bool HasMessages => !string.IsNullOrEmpty(ErrorMessage) || 
-                                 (WarningMessages != null && WarningMessages.Any()) || 
+        public bool HasMessages => !string.IsNullOrEmpty(ErrorMessage) ||
+                                 (WarningMessages != null && WarningMessages.Any()) ||
                                  (InfoMessages != null && InfoMessages.Any());
     }
 }

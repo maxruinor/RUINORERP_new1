@@ -44,8 +44,7 @@ using RUINORERP.UI.Network.Services;
 namespace RUINORERP.UI.MRP.MP
 {
     [MenuAttrAssemblyInfo("生产领料单", ModuleMenuDefine.模块定义.生产管理, ModuleMenuDefine.生产管理.制程生产, BizType.生产领料单)]
-    public partial class UCMaterialRequisition : BaseBillEditGeneric<tb_MaterialRequisition, tb_MaterialRequisitionDetail
-        >
+    public partial class UCMaterialRequisition : BaseBillEditGeneric<tb_MaterialRequisition, tb_MaterialRequisitionDetail>
     {
         public UCMaterialRequisition()
         {
@@ -252,11 +251,11 @@ namespace RUINORERP.UI.MRP.MP
                         }
                     }
 
-                     
+
                 }
 
 
-    
+
                 //预计产量是来自于制令单，如果修改则要同步修改明细的发料数量
                 //影响明细的数量
                 if ((entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改) && s2.PropertyName == entity.GetPropertyName<tb_MaterialRequisition>(c => c.ExpectedQuantity))
@@ -354,7 +353,7 @@ namespace RUINORERP.UI.MRP.MP
         private void UcSaleOrderEdit_Load(object sender, EventArgs e)
         {
             //InitDataTocmbbox();
-            
+
 
             ///显示列表对应的中文
             //base.FieldNameList = UIHelper.GetFieldNameList<tb_MaterialRequisitionsDetail>();
@@ -486,7 +485,7 @@ namespace RUINORERP.UI.MRP.MP
                 //}
                 //计算总金额  这些逻辑是不是放到业务层？后面要优化
                 List<tb_MaterialRequisitionDetail> details = sgd.BindingSourceLines.DataSource as List<tb_MaterialRequisitionDetail>;
-                if (details==null)
+                if (details == null)
                 {
                     return;
                 }
@@ -774,11 +773,11 @@ namespace RUINORERP.UI.MRP.MP
                 //传入计划单中订单等相关数据，但由于是弱引用。要用程序控制
                 //2024-6-26修改为强引用了。是不是可以优化？
                 if (SourceBill.PDID.HasValue)
-                  {
-                      // 使用EntityMappingHelper代替BizTypeMapper，此处直接查询实体，无需获取类型映射
-                      tb_ProductionDemand productionDemand = await MainForm.Instance.AppContext.Db.Queryable<tb_ProductionDemand>().Where(c => c.PDID == SourceBill.PDID)
-                                    .Includes(a => a.tb_productionplan)
-                                    .SingleAsync();
+                {
+                    // 使用EntityMappingHelper代替BizTypeMapper，此处直接查询实体，无需获取类型映射
+                    tb_ProductionDemand productionDemand = await MainForm.Instance.AppContext.Db.Queryable<tb_ProductionDemand>().Where(c => c.PDID == SourceBill.PDID)
+                                  .Includes(a => a.tb_productionplan)
+                                  .SingleAsync();
 
 
                     if (productionDemand.tb_productionplan != null)

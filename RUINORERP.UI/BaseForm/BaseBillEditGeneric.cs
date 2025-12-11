@@ -2659,17 +2659,7 @@ namespace RUINORERP.UI.BaseForm
             //操作前将数据收集
             this.ValidateChildren(System.Windows.Forms.ValidationConstraints.None);
 
-            // 为所有非查询按钮添加点击后立即禁用的逻辑，防止重复点击
-            if (menuItem != MenuItemEnums.查询)
-            {
-                toolStripbtnAdd.Enabled = false;
-                toolStripbtnModify.Enabled = false;
-                toolStripButtonSave.Enabled = false;
-                toolStripbtnSubmit.Enabled = false;
-                toolStripbtnReview.Enabled = false;
-                toolStripBtnReverseReview.Enabled = false;
-                toolStripbtnPrint.Enabled = false;
-            }
+     
 
             switch (menuItem)
             {
@@ -2729,8 +2719,7 @@ namespace RUINORERP.UI.BaseForm
                             DialogResult result = MessageBox.Show("当前数据尚未保存，是否放弃所有未保存数据并创建新单据？", "确认放弃未保存数据", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
                             if (result != DialogResult.Yes)
                             {
-                                // 恢复所有非查询按钮的可用状态
-                                RestoreNonQueryButtons();
+                                toolStripbtnAdd.Enabled = true;
                                 return;
                             }
                             else
@@ -2746,7 +2735,7 @@ namespace RUINORERP.UI.BaseForm
                     {
                         MainForm.Instance.uclog.AddLog($"新增单据失败：{ex.Message}");
                         // 恢复所有非查询按钮的可用状态
-                        RestoreNonQueryButtons();
+                        toolStripbtnAdd.Enabled = true;
                     }
                     break;
                 case MenuItemEnums.复制性新增:
@@ -2764,7 +2753,6 @@ namespace RUINORERP.UI.BaseForm
                         if (!lockStatusDelete.CanPerformCriticalOperations)
                         {
                             // 恢复所有非查询按钮的可用状态
-                            RestoreNonQueryButtons();
                             return;
                         }
                         await Delete();
@@ -2772,8 +2760,6 @@ namespace RUINORERP.UI.BaseForm
                     catch (Exception ex)
                     {
                         MainForm.Instance.uclog.AddLog($"删除单据失败：{ex.Message}");
-                        // 恢复所有非查询按钮的可用状态
-                        RestoreNonQueryButtons();
                     }
                     break;
                 case MenuItemEnums.修改:
@@ -2782,8 +2768,6 @@ namespace RUINORERP.UI.BaseForm
                         var lockStatusModify = await CheckLockStatusAndUpdateUI(EditEntity.PrimaryKeyID);
                         if (!lockStatusModify.CanPerformCriticalOperations)
                         {
-                            // 恢复所有非查询按钮的可用状态
-                            RestoreNonQueryButtons();
                             return;
                         }
                         if (lockStatusModify.LockInfo == null)
@@ -2792,8 +2776,6 @@ namespace RUINORERP.UI.BaseForm
                             if (!locked && EditEntity.PrimaryKeyID > 0)
                             {
                                 MainForm.Instance.PrintInfoLog("锁定单据失败，无法操作");
-                                // 恢复所有非查询按钮的可用状态
-                                RestoreNonQueryButtons();
                                 return;
                             }
                         }
@@ -2804,8 +2786,6 @@ namespace RUINORERP.UI.BaseForm
                     catch (Exception ex)
                     {
                         MainForm.Instance.uclog.AddLog($"修改单据失败：{ex.Message}");
-                        // 恢复所有非查询按钮的可用状态
-                        RestoreNonQueryButtons();
                     }
                     break;
                 case MenuItemEnums.查询:
@@ -2828,8 +2808,6 @@ namespace RUINORERP.UI.BaseForm
                         var lockStatusSave = await CheckLockStatusAndUpdateUI(EditEntity.PrimaryKeyID);
                         if (!lockStatusSave.CanPerformCriticalOperations)
                         {
-                            // 恢复所有非查询按钮的可用状态
-                            RestoreNonQueryButtons();
                             return;
                         }
                         //操作前将数据收集
@@ -2852,8 +2830,6 @@ namespace RUINORERP.UI.BaseForm
                                             {
                                                 MainForm.Instance.uclog.AddLog("已经是【完结】或【确认】状态，保存失败。");
                                             }
-                                            // 恢复所有非查询按钮的可用状态
-                                            RestoreNonQueryButtons();
                                             return;
                                         }
                                     }
@@ -2861,8 +2837,6 @@ namespace RUINORERP.UI.BaseForm
                                 bool rsSave = await Save(true);
                                 if (!rsSave)
                                 {
-                                    // 恢复所有非查询按钮的可用状态
-                                    RestoreNonQueryButtons();
                                     await LockBill();
                                 }
                                 else
@@ -2875,15 +2849,11 @@ namespace RUINORERP.UI.BaseForm
                         else
                         {
                             MainForm.Instance.uclog.AddLog("单据不能为空，保存失败。");
-                            // 恢复所有非查询按钮的可用状态
-                            RestoreNonQueryButtons();
                         }
                     }
                     catch (Exception ex)
                     {
                         MainForm.Instance.uclog.AddLog($"保存单据失败：{ex.Message}");
-                        // 恢复所有非查询按钮的可用状态
-                        RestoreNonQueryButtons();
                     }
                     break;
                 case MenuItemEnums.提交:
@@ -2898,8 +2868,6 @@ namespace RUINORERP.UI.BaseForm
                         var lockStatusSubmit = await CheckLockStatusAndUpdateUI(EditEntity.PrimaryKeyID);
                         if (!lockStatusSubmit.CanPerformCriticalOperations)
                         {
-                            // 恢复所有非查询按钮的可用状态
-                            RestoreNonQueryButtons();
                             return;
                         }
 
@@ -2909,8 +2877,6 @@ namespace RUINORERP.UI.BaseForm
                         bool rs = await Submit();
                         if (!rs)
                         {
-                            // 恢复所有非查询按钮的可用状态
-                            RestoreNonQueryButtons();
                         }
                         else
                         {
@@ -2921,8 +2887,6 @@ namespace RUINORERP.UI.BaseForm
                     catch (Exception ex)
                     {
                         MainForm.Instance.uclog.AddLog($"提交单据失败：{ex.Message}");
-                        // 恢复所有非查询按钮的可用状态
-                        RestoreNonQueryButtons();
                     }
                     break;
                 case MenuItemEnums.关闭:
@@ -2940,8 +2904,6 @@ namespace RUINORERP.UI.BaseForm
                         var lockStatusReview = await CheckLockStatusAndUpdateUI(EditEntity.PrimaryKeyID);
                         if (!lockStatusReview.CanPerformCriticalOperations)
                         {
-                            // 恢复所有非查询按钮的可用状态
-                            RestoreNonQueryButtons();
                             return;
                         }
                         await LockBill();
@@ -2949,16 +2911,12 @@ namespace RUINORERP.UI.BaseForm
                         if (!reviewResult.Succeeded)
                         {
                             UNLock();
-                            // 恢复所有非查询按钮的可用状态
-                            RestoreNonQueryButtons();
                         }
                     }
                     catch (Exception ex)
                     {
                         MainForm.Instance.uclog.AddLog($"审核单据失败：{ex.Message}");
                         UNLock();
-                        // 恢复所有非查询按钮的可用状态
-                        RestoreNonQueryButtons();
                     }
                     break;
                 case MenuItemEnums.反审:
@@ -2967,8 +2925,6 @@ namespace RUINORERP.UI.BaseForm
                         var lockStatusReverseReview = await CheckLockStatusAndUpdateUI(EditEntity.PrimaryKeyID);
                         if (!lockStatusReverseReview.CanPerformCriticalOperations)
                         {
-                            // 恢复所有非查询按钮的可用状态
-                            RestoreNonQueryButtons();
                             return;
                         }
                         await LockBill();
@@ -2976,16 +2932,12 @@ namespace RUINORERP.UI.BaseForm
                         if (!rs反审)
                         {
                             UNLock();
-                            // 恢复所有非查询按钮的可用状态
-                            RestoreNonQueryButtons();
                         }
                     }
                     catch (Exception ex)
                     {
                         MainForm.Instance.uclog.AddLog($"反审单据失败：{ex.Message}");
                         UNLock();
-                        // 恢复所有非查询按钮的可用状态
-                        RestoreNonQueryButtons();
                     }
                     break;
                 case MenuItemEnums.结案:
@@ -2994,8 +2946,6 @@ namespace RUINORERP.UI.BaseForm
                         var lockStatusCloseCase = await CheckLockStatusAndUpdateUI(EditEntity.PrimaryKeyID);
                         if (!lockStatusCloseCase.CanPerformCriticalOperations)
                         {
-                            // 恢复所有非查询按钮的可用状态
-                            RestoreNonQueryButtons();
                             return;
                         }
                         await CloseCaseAsync();
@@ -3003,8 +2953,6 @@ namespace RUINORERP.UI.BaseForm
                     catch (Exception ex)
                     {
                         MainForm.Instance.uclog.AddLog($"结案失败：{ex.Message}");
-                        // 恢复所有非查询按钮的可用状态
-                        RestoreNonQueryButtons();
                     }
                     break;
                 case MenuItemEnums.反结案:
@@ -3013,8 +2961,6 @@ namespace RUINORERP.UI.BaseForm
                         var lockStatusAntiCloseCase = await CheckLockStatusAndUpdateUI(EditEntity.PrimaryKeyID);
                         if (!lockStatusAntiCloseCase.CanPerformCriticalOperations)
                         {
-                            // 恢复所有非查询按钮的可用状态
-                            RestoreNonQueryButtons();
                             return;
                         }
                         await AntiCloseCaseAsync();
@@ -3022,8 +2968,6 @@ namespace RUINORERP.UI.BaseForm
                     catch (Exception ex)
                     {
                         MainForm.Instance.uclog.AddLog($"反结案失败：{ex.Message}");
-                        // 恢复所有非查询按钮的可用状态
-                        RestoreNonQueryButtons();
                     }
                     break;
                 case MenuItemEnums.打印:
@@ -3075,19 +3019,7 @@ namespace RUINORERP.UI.BaseForm
 
         }
 
-        /// <summary>
-        /// 恢复所有非查询按钮的可用状态
-        /// </summary>
-        protected void RestoreNonQueryButtons()
-        {
-            toolStripbtnAdd.Enabled = true;
-            toolStripbtnModify.Enabled = true;
-            toolStripButtonSave.Enabled = true;
-            toolStripbtnSubmit.Enabled = true;
-            toolStripbtnReview.Enabled = true;
-            toolStripBtnReverseReview.Enabled = true;
-            toolStripbtnPrint.Enabled = true;
-        }
+        
 
         MenuPowerHelper menuPowerHelper = null;
         public async void MenuItem_Click(object sender, EventArgs e)

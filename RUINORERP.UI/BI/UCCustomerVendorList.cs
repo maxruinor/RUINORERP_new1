@@ -74,6 +74,9 @@ namespace RUINORERP.UI.BI
 
         public override async Task<List<tb_CustomerVendor>> Save()
         {
+
+            List<tb_CustomerVendor> Returnlist = new List<tb_CustomerVendor>();
+
             List<tb_CustomerVendor> list = new List<tb_CustomerVendor>();
             var ctr = MainForm.Instance.AppContext.GetRequiredService<tb_CustomerVendorController<tb_CustomerVendor>>();
             foreach (var item in bindingSourceList.List)
@@ -105,14 +108,16 @@ namespace RUINORERP.UI.BI
                             entity.AcceptChanges();
                             if (entity.Customer_id.HasValue && entity.Customer_id.Value > 0)
                             {
+                                entity.tb_crm_customer = await MainForm.Instance.AppContext.Db.Queryable<tb_CRM_Customer>()
+                                    .Where(c => c.Customer_id == entity.Customer_id.Value).SingleAsync();
                                 //同步名称的修改
-                                //entity.tb_crm_customer.CustomerName = entity.CVName;
-                                //entity.tb_crm_customer.Converted = true;
-                                //var result = await MainForm.Instance.AppContext.Db.Updateable<tb_CRM_Customer>(entity.tb_crm_customer)
-                                //    .UpdateColumns(it => new { it.CustomerName,it.Converted })
-                                //// .SetColumns(it => it.CustomerName == entity.tb_crm_customer)//SetColumns是可以叠加的 写2个就2个字段赋值
-                                //.Where(it => it.Customer_id == entity.Customer_id.Value)
-                                //.ExecuteCommandAsync();
+                                entity.tb_crm_customer.CustomerName = entity.CVName;
+                                entity.tb_crm_customer.Converted = true;
+                                var result = await MainForm.Instance.AppContext.Db.Updateable<tb_CRM_Customer>(entity.tb_crm_customer)
+                                    .UpdateColumns(it => new { it.CustomerName, it.Converted })
+                                // .SetColumns(it => it.CustomerName == entity.tb_crm_customer)//SetColumns是可以叠加的 写2个就2个字段赋值
+                                .Where(it => it.Customer_id == entity.Customer_id.Value)
+                                .ExecuteCommandAsync();
                                 //long cid = entity.Customer_id.Value;
                                 //var result = await MainForm.Instance.AppContext.Db.Updateable<tb_CRM_Customer>()
                                 // .SetColumns(it => it.CustomerName == entity.CVName)//SetColumns是可以叠加的 写2个就2个字段赋值
@@ -120,9 +125,6 @@ namespace RUINORERP.UI.BI
                                 //   .Where(it => it.Customer_id == cid)
                                 //.ExecuteCommandAsync();
                             }
-
-
-                            list.Add(rr.ReturnObject);
                             ToolBarEnabledControl(MenuItemEnums.保存);
                             MainForm.Instance.AuditLogHelper.CreateAuditLog<tb_CustomerVendor>("保存", rr.ReturnObject);
                         }
@@ -133,9 +135,11 @@ namespace RUINORERP.UI.BI
                     default:
                         break;
                 }
-                entity.HasChanged = false;
+                entity.AcceptChanges();
+                Returnlist.Add(entity as tb_CustomerVendor);
             }
-            return list;
+            MainForm.Instance.PrintInfoLog($"{Returnlist.Count}行数据，保存成功");
+            return Returnlist;
         }
 
 

@@ -4817,11 +4817,16 @@ namespace RUINORERP.UI.BaseForm
                 // 为每种可转换类型创建菜单项
                 foreach (var actionOption in availableActions)
                 {
+                    if (!actionOption.IsVisible)
+                    {
+                        continue;
+                    }
                     // 使用ActionOption中的DisplayName，它已经包含了从Description特性获取的显示名称
                     string displayName = actionOption.DisplayName;
                     
                     var menuItem = new ToolStripMenuItem(displayName);
-                    
+                    menuItem.Enabled = actionOption.IsEnabled;
+
                     // 根据目标单据类型设置图标
                     //menuItem.Image = GetDocumentTypeIcon(actionOption.TargetType);
                     

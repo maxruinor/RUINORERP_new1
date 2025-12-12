@@ -217,7 +217,7 @@ namespace RUINORERP.Server.Network.Services
                     return;
                 }
                 // 异步调用解锁方法，不阻塞事件处理
-                _ = ReleaseAllLocksBySessionIdAsync(sessionInfo.UserId);
+                _ = ReleaseAllLocksBySessionIdAsync(sessionInfo.SessionID);
             }
             catch (Exception ex)
             {
@@ -447,14 +447,13 @@ namespace RUINORERP.Server.Network.Services
         /// </summary>
         /// <param name="sessionId">会话ID</param>
         /// <returns>释放的锁定数量</returns>
-        public async Task<int> ReleaseAllLocksBySessionIdAsync(long? userID)
+        public async Task<int> ReleaseAllLocksBySessionIdAsync(string sessionId)
         {
             if (_isDisposed)
                 throw new ObjectDisposedException(nameof(ServerLockManager));
 
-            if (!userID.HasValue || userID <= 0)
+            if (string.IsNullOrEmpty(sessionId))
             {
-                //尝试使用空会话ID释放锁定
                 return 0;
             }
 
@@ -462,7 +461,7 @@ namespace RUINORERP.Server.Network.Services
             {
                 // 查找所有与会话ID关联的锁定
                 var locksToRelease = _documentLocks
-                    .Where(kvp => kvp.Value.LockedUserId == userID)
+                    .Where(kvp => kvp.Value.SessionId == sessionId)
                     .Select(kvp => kvp.Value)
                     .ToList();
 
@@ -488,7 +487,7 @@ namespace RUINORERP.Server.Network.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "释放会话 {userID} 的锁定时发生异常", userID);
+                _logger.LogError(ex, "释放会话 {sessionId} 的锁定时发生异常", sessionId);
                 return 0;
             }
         }

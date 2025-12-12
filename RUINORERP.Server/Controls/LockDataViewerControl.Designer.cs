@@ -121,6 +121,7 @@ namespace RUINORERP.Server.Controls
             // panelButtons
             // 
             panelButtons.Controls.Add(btnRefresh);
+            panelButtons.Controls.Add(btnCleanupOrphanedLocks);
             panelButtons.Dock = System.Windows.Forms.DockStyle.Bottom;
             panelButtons.Location = new System.Drawing.Point(4, 779);
             panelButtons.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
@@ -138,6 +139,17 @@ namespace RUINORERP.Server.Controls
             btnRefresh.Text = "刷新";
             btnRefresh.UseVisualStyleBackColor = true;
             btnRefresh.Click += btnRefresh_Click;
+            // 
+            // btnCleanupOrphanedLocks
+            // 
+            btnCleanupOrphanedLocks.Location = new System.Drawing.Point(242, 17);
+            btnCleanupOrphanedLocks.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            btnCleanupOrphanedLocks.Name = "btnCleanupOrphanedLocks";
+            btnCleanupOrphanedLocks.Size = new System.Drawing.Size(120, 33);
+            btnCleanupOrphanedLocks.TabIndex = 1;
+            btnCleanupOrphanedLocks.Text = "清理孤儿锁";
+            btnCleanupOrphanedLocks.UseVisualStyleBackColor = true;
+            btnCleanupOrphanedLocks.Click += btnCleanupOrphanedLocks_Click;
             // 
             // LockDataViewerControl
             // 
@@ -169,6 +181,7 @@ namespace RUINORERP.Server.Controls
         private System.Windows.Forms.DataGridView dataGridViewData;
         private System.Windows.Forms.Panel panelButtons;
         private System.Windows.Forms.Button btnRefresh;
+        private System.Windows.Forms.Button btnCleanupOrphanedLocks;
         private System.Windows.Forms.Button btnLockStatistics;
         private System.Windows.Forms.Label lblLockStats;
         private System.Windows.Forms.Timer statsUpdateTimer;

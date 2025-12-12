@@ -149,6 +149,35 @@ namespace RUINORERP.Server.Network.Services
                     }
                 }
 
+                // 检测会话已断开但锁仍然存在的情况
+                foreach (var lockInfo in serverLockInfos)
+                {
+                    // 检查会话是否仍然存在
+                    if (!_clientSessions.ContainsKey(lockInfo.SessionId))
+                    {
+                        // 会话不存在，释放锁
+                        await _lockManager.ForceUnlockAsync($"lock:document:{lockInfo.BillID}", lockInfo.LockedUserId);
+                        orphanedCount++;
+
+                        _logger.LogWarning("清理不存在会话的锁: BillId={BillId}, UserId={UserId}, SessionId={SessionId}",
+                            lockInfo.BillID, lockInfo.LockedUserId, lockInfo.SessionId);
+                    }
+                    else
+                    {
+                        // 检查会话是否仍然活跃
+                        var sessionInfo = _clientSessions[lockInfo.SessionId];
+                        if (!sessionInfo.IsActive)
+                        {
+                            // 会话不活跃，释放锁
+                            await _lockManager.ForceUnlockAsync($"lock:document:{lockInfo.BillID}", lockInfo.LockedUserId);
+                            orphanedCount++;
+
+                            _logger.LogWarning("清理不活跃会话的锁: BillId={BillId}, UserId={UserId}, SessionId={SessionId}",
+                                lockInfo.BillID, lockInfo.LockedUserId, lockInfo.SessionId);
+                        }
+                    }
+                }
+
                 if (orphanedCount > 0)
                 {
                     _logger.LogInformation("清理了 {Count} 个孤儿锁", orphanedCount);

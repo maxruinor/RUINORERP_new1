@@ -4586,8 +4586,6 @@ namespace RUINORERP.UI.BaseForm
                 // 使用V4状态管理系统检查修改权限
                 if (StateManager != null && editEntity is BaseEntity entity)
                 {
-
-
                     var canModify = _stateManager.CanExecuteActionWithMessage(StateManager, entity, MenuItemEnums.修改);
                     if (!canModify.IsSuccess)
                     {
@@ -5596,12 +5594,7 @@ namespace RUINORERP.UI.BaseForm
                 string BillNo = lockInfo?.BillNo;
                 string lockStatusMsg = isLocked ? "已锁定" : "未锁定";
                 
-                // 记录基础锁定状态日志
-                if (!logRefresh)
-                {
-                    MainForm.Instance?.uclog?.AddLog($"检查单据[{BillNo}]锁定状态: 【{lockStatusMsg}】", UILogType.普通消息);
-                }
-                
+ 
                 // 核心步骤2: 判断操作权限
                 long currentUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
                 bool isSelfLock = isLocked && (lockInfo?.LockedUserId == currentUserId);

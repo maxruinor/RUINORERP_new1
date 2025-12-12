@@ -591,6 +591,48 @@ namespace RUINORERP.Server.Controls
             }
         }
 
+        /// <summary>
+        /// 清理孤儿锁按钮点击事件处理程序
+        /// </summary>
+        private async void btnCleanupOrphanedLocks_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                // 显示确认对话框
+                DialogResult result = MessageBox.Show(
+                    "确定要清理所有孤儿锁吗？\n此操作将释放所有因客户端异常断开而未正确释放的锁定。",
+                    "确认清理孤儿锁",
+                    MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+
+                if (result != DialogResult.Yes)
+                    return;
+
+                // 获取孤儿锁检测服务
+                var orphanedLockDetector = Program.ServiceProvider.GetService<OrphanedLockDetector>();
+                if (orphanedLockDetector == null)
+                {
+                    MessageBox.Show("无法获取孤儿锁检测服务", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                // 执行孤儿锁检测和清理
+                await orphanedLockDetector.DetectAndCleanupAsync();
+
+                // 刷新数据显示
+                if (listBoxTableList.SelectedItem != null)
+                {
+                    string selectedTable = listBoxTableList.SelectedItem.ToString();
+                    LoadTableData(selectedTable);
+                }
+
+                MessageBox.Show("孤儿锁清理完成", "操作结果", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"清理孤儿锁时出错: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
 
 
         private void StatsUpdateTimer_Tick(object sender, EventArgs e)

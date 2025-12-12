@@ -132,9 +132,9 @@ namespace RUINORERP.Server.Network.Interfaces.Services
         /// <summary>
         /// 释放所有锁
         /// </summary>
-        /// <param name="userID">用户ID</param>
+        /// <param name="sessionId">会话ID</param>
         /// <returns>释放的锁数量</returns>
-        Task<int> ReleaseAllLocksBySessionIdAsync(long? userID);
+        Task<int> ReleaseAllLocksBySessionIdAsync(string sessionId);
         
         /// <summary>
         /// 处理心跳锁信息

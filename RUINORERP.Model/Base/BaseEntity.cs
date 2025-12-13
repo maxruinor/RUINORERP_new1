@@ -203,15 +203,6 @@ namespace RUINORERP.Model
         #region 状态机管理
 
         /// <summary>
-        /// 状态信息 - V4版本状态管理系统核心
-        /// 统一管理DataStatus与业务状态，支持互斥关系
-        /// </summary>
-        [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
-        [JsonIgnore]
-        public EntityStatus StatusInfo { get; set; }
-
-        /// <summary>
         /// 状态变更事件 - V4版本
         /// 使用StateTransitionEventArgs和StateTransitionResult
         /// </summary>
@@ -219,100 +210,46 @@ namespace RUINORERP.Model
 
         /// <summary>
         /// 状态变更处理 - V4版本
-        /// 通过状态管理器统一处理状态变更
+        /// 通过状态管理器统一处理状态变更，移除冗余事件触发
         /// </summary>
         /// <param name="e">状态转换事件参数</param>
         protected virtual void OnStatusChanged(StateTransitionEventArgs e)
         {
+            // 类型安全检查
+            if (e == null)
+            {
+                throw new ArgumentNullException(nameof(e), "StateTransitionEventArgs不能为null");
+            }
+
             try
             {
-                // 类型安全检查
-                if (e == null)
+                // 强制使用状态管理器触发事件，实现集中管理
+                // 移除降级处理逻辑，确保状态变更经过统一管理
+                if (StateManager == null)
                 {
-                    throw new ArgumentNullException(nameof(e), "StateTransitionEventArgs不能为null");
+                    throw new InvalidOperationException("状态管理器未初始化，无法触发状态变更事件");
                 }
-
-                // 通过状态管理器触发事件，实现集中管理
-                if (StateManager != null)
-                {
-                    StateManager.TriggerStatusChangedEvent(e.Entity, e.StatusType, e.OldStatus, e.NewStatus);
-                }
-                else
-                {
-                    // 如果状态管理器不可用，则直接触发事件（降级处理）
-                    var handler = StatusChanged;
-                    if (handler != null)
-                    {
-                        handler(this, e);
-                    }
-                }
+                
+                // 统一通过状态管理器触发事件，避免重复触发
+                StateManager.TriggerStatusChangedEvent(e.Entity, e.StatusType, e.OldStatus, e.NewStatus, e.Reason, e.UserId);
             }
             catch (Exception ex)
             {
-                // 记录异常但不中断程序流程
-                Debug.WriteLine($"触发StatusChanged事件时发生错误: {ex.Message}");
+                // 记录异常并抛出，因为状态管理是核心功能
+                Debug.WriteLine($"触发状态变更事件时发生错误: {ex.Message}");
                 Debug.WriteLine(ex.StackTrace);
+                throw; // 抛出异常确保调用者知道状态管理失败
             }
         }
-
-
 
         /// <summary>
-        /// 获取业务状态 - V4版本
+        /// 基础实体构造函数
         /// </summary>
-        /// <typeparam name="TBusiness">业务状态枚举类型</typeparam>
-        /// <returns>业务状态</returns>
-        public TBusiness GetCurrentBusinessStatus<TBusiness>() where TBusiness : struct, Enum
-        {
-            // 使用EntityStatus获取业务状态
-            if (StatusInfo != null)
-            {
-                return StatusInfo.GetBusinessStatus<TBusiness>();
-            }
-
-            // 默认值
-            return default;
-        }
-
-
-
-
-
-        /// <summary>
-        /// 初始化状态信息 - V4版本
-        /// </summary>
-        private void InitializeStatusInfo()
-        {
-            if (StatusInfo == null)
-            {
-                StatusInfo = new EntityStatus();
-                var statusType = StatusInfo.GetStatusType(this);
-                if (statusType != null)
-                {
-                    // 如果实体已有DataStatus属性，则同步到EntityStatus
-                    var dataStatusProperty = this.GetType().GetProperty(nameof(DataStatus));
-                    if (dataStatusProperty != null && dataStatusProperty.PropertyType == typeof(DataStatus))
-                    {
-                        var currentStatus = (DataStatus)dataStatusProperty.GetValue(this);
-                        StatusInfo.SetBusinessStatus<DataStatus>(currentStatus);
-                    }
-                    else
-                    {
-                        StatusInfo.SetBusinessStatus(statusType, Activator.CreateInstance(statusType));
-                    }
-                }
-
-                // 初始化操作状态
-                StatusInfo.actionStatus = ActionStatus.无操作;
-            }
-        }
-
         public BaseEntity()
         {
-            // 初始化状态信息 - V4版本
-            InitializeStatusInfo();
             // 初始化属性变更追踪
             BeginOperation();
+
         }
 
 

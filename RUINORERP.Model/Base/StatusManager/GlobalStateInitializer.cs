@@ -29,7 +29,7 @@ namespace RUINORERP.Model.Base.StatusManager
     /// 全局规则初始化器
     /// 提供全局状态规则管理器的初始化扩展方法
     /// </summary>
-    public static class GlobalRulesInitializer
+    public static class GlobalStateInitializer
     {
         /// <summary>
         /// 初始化全局状态规则
@@ -98,7 +98,7 @@ namespace RUINORERP.Model.Base.StatusManager
             builder.Register(c => GlobalStateRulesManager.Instance).SingleInstance();
 
             // 确保规则已初始化
-            GlobalRulesInitializer.InitializeGlobalRules();
+            GlobalStateInitializer.InitializeGlobalRules();
 
             return builder;
         }

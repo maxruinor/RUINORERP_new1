@@ -216,8 +216,19 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <returns>状态转换结果</returns>
         public StateTransitionResult ValidateBusinessStatusTransitionAsync(Enum fromStatus, Enum toStatus)
         {
-            // 使用状态转换规则验证
-            bool isAllowed = GlobalStateRulesManager.Instance.IsTransitionAllowed(typeof(DataStatus), fromStatus, toStatus);
+            // 参数校验
+            if (fromStatus == null)
+                return StateTransitionResult.Allowed();
+                
+            if (toStatus == null)
+                return StateTransitionResult.Denied("目标状态不能为空");
+            
+            // 验证两个枚举类型是否一致
+            if (fromStatus.GetType() != toStatus.GetType())
+                return StateTransitionResult.Denied("源状态和目标状态类型必须一致");
+        
+            // 动态获取实际状态类型进行验证
+            bool isAllowed = GlobalStateRulesManager.Instance.IsTransitionAllowed(fromStatus.GetType(), fromStatus, toStatus);
 
             if (isAllowed)
             {

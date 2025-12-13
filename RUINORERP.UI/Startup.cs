@@ -45,6 +45,7 @@ using RUINORERP.IServices.DI;
 using RUINORERP.Model;
 using RUINORERP.Model.Base;
 using RUINORERP.Model.CommonModel;
+using RUINORERP.Model.Base.StatusManager;
 using RUINORERP.Model.ConfigModel;
 using RUINORERP.Model.Context;
 using RUINORERP.Model.TransModel;
@@ -476,7 +477,7 @@ namespace RUINORERP.UI
                 .SingleInstance();
 
             // 注册状态管理服务
-            builder.AddStateManager();
+            builder.AddStateManagerWithGlobalRules();
 
         }
 
@@ -607,36 +608,55 @@ namespace RUINORERP.UI
                         .PropertiesAutowired()
                         .PreserveExistingDefaults();
 
-                    //// 获取LocalBizCodeGenerateService类型
-                    //var localBizCodeType = assembly.GetType("RUINORERP.Business.Services.LocalBizCodeGenerateService");
-
-                    //if (localBizCodeType != null)
-                    //{
-                    //    // 对LocalBizCodeGenerateService特殊处理：只注册为自身类型，避免接口拦截问题
-                    //    builder.RegisterType(localBizCodeType)
-                    //        .AsSelf()
-                    //        .InstancePerDependency()
-                    //        .PropertiesAutowired()
-                    //        .ExternallyOwned() // 标记为外部拥有，避免与拦截器冲突
-                    //        .PreserveExistingDefaults();
-                    //}
+                    // 获取GlobalStateRulesManager类型（如果在当前程序集中）
+                    var globalStateRulesManagerType = assembly.GetType("RUINORERP.Model.Base.StatusManager.GlobalStateRulesManager");
 
                     // 注册其他类型（排除特殊处理的类型）
-                    builder.RegisterAssemblyTypes(assembly)
-                        .Where(t => t != bizTypeMapperType)
-                        .AsImplementedInterfaces()
-                        .AsSelf()
-                        .InstancePerDependency()
-                        .PropertiesAutowired();
+                    if (globalStateRulesManagerType != null)
+                    {
+                        // 如果包含GlobalStateRulesManager，排除它
+                        builder.RegisterAssemblyTypes(assembly)
+                            .Where(t => t != bizTypeMapperType && t != globalStateRulesManagerType)
+                            .AsImplementedInterfaces()
+                            .AsSelf()
+                            .InstancePerDependency()
+                            .PropertiesAutowired();
+                    }
+                    else
+                    {
+                        // 不包含GlobalStateRulesManager的情况
+                        builder.RegisterAssemblyTypes(assembly)
+                            .Where(t => t != bizTypeMapperType)
+                            .AsImplementedInterfaces()
+                            .AsSelf()
+                            .InstancePerDependency()
+                            .PropertiesAutowired();
+                    }
                 }
                 else
                 {
-                    // 常规注册（无BizTypeMapper的程序集）
-                    builder.RegisterAssemblyTypes(assembly)
-                        .AsImplementedInterfaces()
-                        .AsSelf()
-                        .InstancePerDependency()
-                        .PropertiesAutowired();
+                    // 获取GlobalStateRulesManager类型（如果在当前程序集中）
+                    var globalStateRulesManagerType = assembly.GetType("RUINORERP.Model.Base.StatusManager.GlobalStateRulesManager");
+                    
+                    if (globalStateRulesManagerType != null)
+                    {
+                        // 常规注册（排除GlobalStateRulesManager）
+                        builder.RegisterAssemblyTypes(assembly)
+                            .Where(t => t != globalStateRulesManagerType)
+                            .AsImplementedInterfaces()
+                            .AsSelf()
+                            .InstancePerDependency()
+                            .PropertiesAutowired();
+                    }
+                    else
+                    {
+                        // 常规注册（无GlobalStateRulesManager的程序集）
+                        builder.RegisterAssemblyTypes(assembly)
+                            .AsImplementedInterfaces()
+                            .AsSelf()
+                            .InstancePerDependency()
+                            .PropertiesAutowired();
+                    }
                 }
             }
             catch (Exception ex)

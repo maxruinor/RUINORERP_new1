@@ -337,8 +337,8 @@ namespace RUINORERP.UI.BaseForm
         {
             try
             {
-                // 使用UIControlRules获取按钮状态规则
-                var buttonRules = RUINORERP.Model.Base.StatusManager.UIControlRules.GetButtonRules(currentStatus);
+                // 使用GlobalStateRulesManager获取按钮状态规则
+                var buttonRules = GlobalStateRulesManager.Instance.GetButtonRules(currentStatus);
 
                 // 根据规则更新按钮状态
                 foreach (var rule in buttonRules)

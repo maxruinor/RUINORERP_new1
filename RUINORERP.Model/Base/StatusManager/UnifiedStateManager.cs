@@ -43,7 +43,7 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <summary>
         /// 状态转换规则字典
         /// </summary>
-        private readonly Dictionary<Type, Dictionary<object, List<object>>> _transitionRules;
+        private Dictionary<Type, Dictionary<object, List<object>>> _transitionRules;
 
 
         /// <summary>
@@ -64,7 +64,7 @@ namespace RUINORERP.Model.Base.StatusManager
         public UnifiedStateManager(ILogger<UnifiedStateManager> logger, IMemoryCache cache = null)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _transitionRules = StateTransitionRules.Instance; // 使用全局共享的规则实例
+            _transitionRules = new Dictionary<Type, Dictionary<object, List<object>>>(GlobalStateRulesManager.Instance.StateTransitionRules.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ToDictionary(innerKvp => innerKvp.Key, innerKvp => innerKvp.Value))); // 使用全局共享的规则实例
         }
 
         #endregion
@@ -217,7 +217,7 @@ namespace RUINORERP.Model.Base.StatusManager
         public StateTransitionResult ValidateBusinessStatusTransitionAsync(Enum fromStatus, Enum toStatus)
         {
             // 使用状态转换规则验证
-            bool isAllowed = StateTransitionRules.IsTransitionAllowed(_transitionRules, typeof(DataStatus), fromStatus, toStatus);
+            bool isAllowed = GlobalStateRulesManager.Instance.IsTransitionAllowed(typeof(DataStatus), fromStatus, toStatus);
 
             if (isAllowed)
             {
@@ -247,7 +247,7 @@ namespace RUINORERP.Model.Base.StatusManager
                 return StateTransitionResult.Denied("目标状态不能为空");
 
             // 使用状态转换规则验证
-            bool isAllowed = StateTransitionRules.IsTransitionAllowed(_transitionRules, typeof(T), fromStatus.Value, toStatus.Value);
+            bool isAllowed = GlobalStateRulesManager.Instance.IsTransitionAllowed(typeof(T), fromStatus.Value, toStatus.Value);
 
             if (isAllowed)
             {
@@ -276,7 +276,7 @@ namespace RUINORERP.Model.Base.StatusManager
                 return StateTransitionResult.Denied("目标状态不能为空");
 
             // 使用状态转换规则验证
-            bool isAllowed = StateTransitionRules.IsTransitionAllowed(_transitionRules, typeof(ActionStatus), fromStatus.Value, toStatus.Value);
+            bool isAllowed = GlobalStateRulesManager.Instance.IsTransitionAllowed(typeof(ActionStatus), fromStatus.Value, toStatus.Value);
 
             if (isAllowed)
             {
@@ -632,8 +632,8 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <returns>操作权限列表</returns>
         private List<MenuItemEnums> GetActionPermissionRules(Type statusType, object statusValue)
         {
-            // 使用UIControlRules中定义的规则
-            return UIControlRules.GetActionPermissionRules(statusType, statusValue);
+            // 使用GlobalStateRulesManager中定义的规则
+            return GlobalStateRulesManager.Instance.GetActionPermissionRules(statusType, statusValue);
         }
 
         /// <summary>
@@ -643,8 +643,8 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <returns>操作权限列表</returns>
         private List<MenuItemEnums> GetActionPermissionRules(DataStatus status)
         {
-            // 使用UIControlRules中定义的规则
-            return UIControlRules.GetActionPermissionRules(typeof(DataStatus), status);
+            // 使用GlobalStateRulesManager中定义的规则
+            return GlobalStateRulesManager.Instance.GetActionPermissionRules(typeof(DataStatus), status);
         }
 
         /// <summary>
@@ -706,22 +706,22 @@ namespace RUINORERP.Model.Base.StatusManager
             }
             else if (statusType == typeof(PaymentStatus))
             {
-                var paymentStatus = (PaymentStatus)entityStatus.CurrentStatus;
+                var paymentStatus = (PaymentStatus)Enum.ToObject(typeof(PaymentStatus), entityStatus.CurrentStatus);
                 return GetPaymentStatusFailureMessage(paymentStatus, action);
             }
             else if (statusType == typeof(PrePaymentStatus))
             {
-                var prePaymentStatus = (PrePaymentStatus)entityStatus.CurrentStatus;
+                var prePaymentStatus = (PrePaymentStatus)Enum.ToObject(typeof(PrePaymentStatus), entityStatus.CurrentStatus);
                 return GetPrePaymentStatusFailureMessage(prePaymentStatus, action);
             }
             else if (statusType == typeof(ARAPStatus))
             {
-                var arapStatus = (ARAPStatus)entityStatus.CurrentStatus;
+                var arapStatus = (ARAPStatus)Enum.ToObject(typeof(ARAPStatus), entityStatus.CurrentStatus);
                 return GetARAPStatusFailureMessage(arapStatus, action);
             }
             else if (statusType == typeof(StatementStatus))
             {
-                var statementStatus = (StatementStatus)entityStatus.CurrentStatus;
+                var statementStatus = (StatementStatus)Enum.ToObject(typeof(StatementStatus), entityStatus.CurrentStatus);
                 return GetStatementStatusFailureMessage(statementStatus, action);
             }
 
@@ -975,7 +975,7 @@ namespace RUINORERP.Model.Base.StatusManager
 
             tempEntityStatus.actionStatus = actionStatus;
 
-            return UIControlRules.GetButtonRules(tempEntityStatus);
+            return GlobalStateRulesManager.Instance.GetButtonRules(tempEntityStatus);
         }
 
         /// <summary>

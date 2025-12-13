@@ -16,7 +16,7 @@ namespace RUINORERP.Business.StatusManagerService
     /// <summary>
     /// 业务单据状态管理帮助类
     /// 注意：此类已重构为使用统一的状态管理系统，避免重复定义
-    /// 主要提供便捷的静态方法，实际逻辑由UnifiedStateManager和StateTransitionRules处理
+    /// 主要提供便捷的静态方法，实际逻辑由UnifiedStateManager和GlobalStateRulesManager处理
     /// </summary>
     public static class StatusManagerService
     {
@@ -113,7 +113,7 @@ namespace RUINORERP.Business.StatusManagerService
 
         /// <summary>
         /// 验证状态转换是否合法
-        /// 注意：此方法已重构为使用StateTransitionRules，避免重复定义
+        /// 注意：此方法已重构为使用GlobalStateRulesManager，避免重复定义
         /// </summary>
         /// <param name="currentDataStatus">当前数据状态</param>
         /// <param name="targetDataStatus">目标数据状态</param>
@@ -126,11 +126,10 @@ namespace RUINORERP.Business.StatusManagerService
             ApprovalStatus targetApprovalStatus)
         {
             // 使用统一的状态转换规则验证
-            var transitionRules = new Dictionary<Type, Dictionary<object, List<object>>>();
-            StateTransitionRules.InitializeDefaultRules(transitionRules);
+            var globalRulesManager = GlobalStateRulesManager.Instance;
             
             // 验证数据状态转换
-            if (!StateTransitionRules.IsTransitionAllowed(transitionRules, typeof(DataStatus), currentDataStatus, targetDataStatus))
+            if (!globalRulesManager.IsTransitionAllowed(typeof(DataStatus), currentDataStatus, targetDataStatus))
             {
                 throw new InvalidOperationException($"不允许的状态转换: {currentDataStatus} -> {targetDataStatus}");
             }

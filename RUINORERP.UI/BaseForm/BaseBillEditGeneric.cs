@@ -436,7 +436,7 @@ namespace RUINORERP.UI.BaseForm
                     // 如果不是DataStatus，则需要获取对应的业务状态按钮规则
                     if (statusType != typeof(DataStatus))
                     {
-                        var businessButtonRules = UIControlRules.GetButtonRules(statusType, status);
+                        var businessButtonRules = GlobalStateRulesManager.Instance.GetButtonRules(statusType, status);
                         UpdateButtonStatesFromRules(businessButtonRules);
                     }
                 }
@@ -462,7 +462,7 @@ namespace RUINORERP.UI.BaseForm
         {
             if (EditEntity == null || StateManager == null) return;
             // 获取按钮状态规则
-            var buttonRules = UIControlRules.GetButtonRules(currentStatus);
+            var buttonRules = GlobalStateRulesManager.Instance.GetButtonRules(currentStatus);
 
             // 更新按钮状态
             UpdateButtonStatesFromRules(buttonRules);
@@ -633,8 +633,8 @@ namespace RUINORERP.UI.BaseForm
                     return CheckActionWithStateManager(action, entity);
                 }
 
-                // 使用UIControlRules检查按钮状态
-                var buttonRules = UIControlRules.GetButtonRules(currentStatus);
+                // 使用GlobalStateRulesManager检查按钮状态
+                var buttonRules = GlobalStateRulesManager.Instance.GetButtonRules(currentStatus);
                 if (buttonRules.TryGetValue(buttonName, out var buttonState))
                 {
                     return buttonState.Enabled;
@@ -784,8 +784,8 @@ namespace RUINORERP.UI.BaseForm
                 // 使用UIControlRules获取子表操作权限
                 bool canAdd, canEdit, canDelete;
 
-                // 从UIControlRules中获取按钮状态
-                var buttonRules = UIControlRules.GetButtonRules(status);
+                // 从GlobalStateRulesManager中获取按钮状态
+                var buttonRules = GlobalStateRulesManager.Instance.GetButtonRules(status);
 
                 // 检查是否允许子表操作
                 canAdd = buttonRules.TryGetValue("toolStripbtnAdd", out var addState) && addState.Enabled;

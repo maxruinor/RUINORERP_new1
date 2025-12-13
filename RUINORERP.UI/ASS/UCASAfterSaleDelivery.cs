@@ -675,7 +675,7 @@ namespace RUINORERP.UI.ASS
                 EditEntity.Notes = frm.txtOpinion.Text;
                 EditEntitys.Add(EditEntity);
                 //已经审核的,结案了的才能反结案
-                List<tb_AS_AfterSaleDelivery> needCloseCases = EditEntitys.Where(c => c.DataStatus == (int)DataStatus.完结 && c.ApprovalStatus == (int)ApprovalStatus.已审核 && c.ApprovalResults.HasValue).ToList();
+                List<tb_AS_AfterSaleDelivery> needCloseCases = EditEntitys.Where(c => c.DataStatus == (int)DataStatus.完结 && c.ApprovalStatus == (int)ApprovalStatus.审核通过 && c.ApprovalResults.HasValue).ToList();
                 if (needCloseCases.Count == 0)
                 {
                     MainForm.Instance.PrintInfoLog($"要反结案的数据为：{needCloseCases.Count}:请检查数据！");
@@ -733,7 +733,7 @@ namespace RUINORERP.UI.ASS
                 EditEntity.Notes = frm.txtOpinion.Text;
                 EditEntitys.Add(EditEntity);
                 //已经审核的并且通过的情况才能结案
-                List<tb_AS_AfterSaleDelivery> needCloseCases = EditEntitys.Where(c => c.DataStatus == (int)DataStatus.确认 && c.ApprovalStatus == (int)ApprovalStatus.已审核 && c.ApprovalResults.HasValue && c.ApprovalResults.Value).ToList();
+                List<tb_AS_AfterSaleDelivery> needCloseCases = EditEntitys.Where(c => c.DataStatus == (int)DataStatus.确认 && c.ApprovalStatus == (int)ApprovalStatus.审核通过 && c.ApprovalResults.HasValue && c.ApprovalResults.Value).ToList();
                 if (needCloseCases.Count == 0)
                 {
                     MainForm.Instance.PrintInfoLog($"要结案的数据为：{needCloseCases.Count}:请检查数据！");

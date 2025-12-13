@@ -33,52 +33,83 @@ namespace RUINORERP.Model.Context
         {
             get
             {
-                // 使用依赖注入获取上下文管理器，避免每次创建新实例
-                if (_applicationContextAccessor != null)
+                // 防止递归调用
+                if (_isGettingContext)
                 {
-                    var serviceProvider = _applicationContextAccessor.ServiceProvider;
-                    if (serviceProvider != null)
-                    {
-                        var context = serviceProvider.GetService<ApplicationContext>();
-                        if (context != null)
-                        {
-                            return context;
-                        }
-                    }
+                    return _currentContext.Value;
                 }
 
-                // 降级方案：如果依赖注入不可用，使用线程本地存储
-                var currentContext = _currentContext.Value;
-                if (currentContext == null)
+                try
                 {
+                    _isGettingContext = true;
+
+                    // 使用依赖注入获取上下文管理器，避免每次创建新实例
                     if (_applicationContextAccessor != null)
                     {
-                        currentContext = new ApplicationContext(_applicationContextAccessor);
-                        _currentContext.Value = currentContext;
+                        var serviceProvider = _applicationContextAccessor.ServiceProvider;
+                        if (serviceProvider != null)
+                        {
+                            var context = serviceProvider.GetService<ApplicationContext>();
+                            if (context != null)
+                            {
+                                return context;
+                            }
+                        }
                     }
+
+                    // 降级方案：如果依赖注入不可用，使用线程本地存储
+                    var currentContext = _currentContext.Value;
+                    if (currentContext == null)
+                    {
+                        if (_applicationContextAccessor != null)
+                        {
+                            currentContext = new ApplicationContext(_applicationContextAccessor);
+                            _currentContext.Value = currentContext;
+                        }
+                    }
+                    return currentContext;
                 }
-                return currentContext;
+                finally
+                {
+                    _isGettingContext = false;
+                }
             }
             set
             {
-                // 使用依赖注入获取上下文管理器，避免每次创建新实例
-                var accessor = _applicationContextAccessor;
-                if (accessor != null)
+                // 防止递归调用
+                if (_isSettingContext)
                 {
-                    var serviceProvider = accessor.ServiceProvider;
-                    if (serviceProvider != null)
-                    {
-                        var contextManager = serviceProvider.GetService<IContextManager>();
-                        if (contextManager is ApplicationContextManagerAsyncLocal asyncLocalManager)
-                        {
-                            asyncLocalManager.ApplicationContext = value;
-                            return;
-                        }
-                    }
+                    _currentContext.Value = value;
+                    return;
                 }
 
-                // 降级方案：如果依赖注入不可用，使用线程本地存储
-                _currentContext.Value = value;
+                try
+                {
+                    _isSettingContext = true;
+
+                    // 使用依赖注入获取上下文管理器，避免每次创建新实例
+                    var accessor = _applicationContextAccessor;
+                    if (accessor != null)
+                    {
+                        var serviceProvider = accessor.ServiceProvider;
+                        if (serviceProvider != null)
+                        {
+                            var contextManager = serviceProvider.GetService<IContextManager>();
+                            if (contextManager is ApplicationContextManagerAsyncLocal asyncLocalManager)
+                            {
+                                asyncLocalManager.ApplicationContext = value;
+                                return;
+                            }
+                        }
+                    }
+
+                    // 降级方案：如果依赖注入不可用，使用线程本地存储
+                    _currentContext.Value = value;
+                }
+                finally
+                {
+                    _isSettingContext = false;
+                }
             }
         }
 
@@ -91,6 +122,18 @@ namespace RUINORERP.Model.Context
         /// 线程本地存储的当前上下文实例（降级方案）
         /// </summary>
         private static readonly ThreadLocal<ApplicationContext> _currentContext = new ThreadLocal<ApplicationContext>();
+
+        /// <summary>
+    /// 防止递归获取上下文的标志位
+    /// </summary>
+    [ThreadStatic]
+    private static bool _isGettingContext = false;
+
+    /// <summary>
+    /// 防止递归设置上下文的标志位
+    /// </summary>
+    [ThreadStatic]
+    private static bool _isSettingContext = false;
 
         #region 智能提醒配置字典
         public Dictionary<ReminderBizType, IRuleConfig> RuleConfigDictionary { get; set; }

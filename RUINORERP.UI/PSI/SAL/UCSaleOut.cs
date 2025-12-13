@@ -109,7 +109,7 @@ namespace RUINORERP.UI.PSI.SAL
             {
                 tb_SaleOut saleOut = EditEntity as tb_SaleOut;
                 //只有审核状态才可以转换
-                if (EditEntity.DataStatus >= (int)DataStatus.确认 && EditEntity.ApprovalStatus == (int)ApprovalStatus.已审核 && EditEntity.ApprovalResults.HasValue && EditEntity.ApprovalResults.Value)
+                if (EditEntity.DataStatus >= (int)DataStatus.确认 && EditEntity.ApprovalStatus == (int)ApprovalStatus.审核通过 && EditEntity.ApprovalResults.HasValue && EditEntity.ApprovalResults.Value)
                 {
                     //判断是否为平台订单
                     if (!saleOut.IsFromPlatform || saleOut.PlatformOrderNo.IsNullOrEmpty())
@@ -596,7 +596,7 @@ namespace RUINORERP.UI.PSI.SAL
 
             var lambdaOrder = Expressionable.Create<tb_SaleOrder>()
              .And(t => t.DataStatus == (int)DataStatus.确认)
-             .And(t => t.ApprovalStatus.HasValue && t.ApprovalStatus.Value == (int)ApprovalStatus.已审核)
+             .And(t => t.ApprovalStatus.HasValue && t.ApprovalStatus.Value == (int)ApprovalStatus.审核通过)
              .And(t => t.ApprovalResults.HasValue && t.ApprovalResults.Value == true)
               .And(t => t.isdeleted == false)
              .ToExpression();
@@ -1105,7 +1105,7 @@ namespace RUINORERP.UI.PSI.SAL
             // EditEntity.CloseCaseOpinions = frm.txtOpinion.Text;
             EditEntitys.Add(EditEntity);
             //已经审核的并且通过的情况才能结案
-            List<tb_SaleOut> needCloseCases = EditEntitys.Where(c => c.DataStatus == (int)DataStatus.确认 && c.ApprovalStatus == (int)ApprovalStatus.已审核 && c.ApprovalResults.HasValue && c.ApprovalResults.Value).ToList();
+            List<tb_SaleOut> needCloseCases = EditEntitys.Where(c => c.DataStatus == (int)DataStatus.确认 && c.ApprovalStatus == (int)ApprovalStatus.审核通过 && c.ApprovalResults.HasValue && c.ApprovalResults.Value).ToList();
             if (needCloseCases.Count == 0)
             {
                 MainForm.Instance.PrintInfoLog($"要结案的数据为：{needCloseCases.Count}:请检查数据！");

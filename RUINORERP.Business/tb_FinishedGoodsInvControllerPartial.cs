@@ -337,14 +337,14 @@ namespace RUINORERP.Business
 
                     //制令单已交数量和判断是否结案
                     if (entity.tb_manufacturingorder.QuantityDelivered == entity.tb_manufacturingorder.ManufacturingQty
-                        && entity.tb_manufacturingorder.DataStatus == (int)DataStatus.确认 && entity.ApprovalStatus.Value == (int)ApprovalStatus.已审核)
+                        && entity.tb_manufacturingorder.DataStatus == (int)DataStatus.确认 && entity.ApprovalStatus.Value == (int)ApprovalStatus.审核通过)
                     {
                         entity.tb_manufacturingorder.DataStatus = (int)DataStatus.完结;
                         entity.tb_manufacturingorder.CloseCaseOpinions = $"缴库单:{entity.DeliveryBillNo}->制令单:{entity.tb_manufacturingorder.MONO},缴库单审核时，生产数量等于交付数量，自动结案";
 
                         //修改领料单状态 系统认为制令单已完成时。领料单也会结案
                         //但是有个前提是实发数据大于等于（有超发情况） 应该发的数量。并且是审核通过时
-                        entity.tb_manufacturingorder.tb_MaterialRequisitions.Where(c => c.DataStatus == (int)DataStatus.确认 && entity.ApprovalStatus == (int)ApprovalStatus.已审核).ToList().ForEach(c => c.DataStatus = (int)DataStatus.完结);
+                        entity.tb_manufacturingorder.tb_MaterialRequisitions.Where(c => c.DataStatus == (int)DataStatus.确认 && entity.ApprovalStatus == (int)ApprovalStatus.审核通过).ToList().ForEach(c => c.DataStatus = (int)DataStatus.完结);
                         int pomrCounter = await _unitOfWorkManage.GetDbClient().Updateable<tb_MaterialRequisition>(entity.tb_manufacturingorder.tb_MaterialRequisitions).ExecuteCommandAsync();
                         if (pomrCounter > 0)
                         {
@@ -482,7 +482,7 @@ namespace RUINORERP.Business
 
 
                 entity.DataStatus = (int)DataStatus.确认;
-                entity.ApprovalStatus = (int)ApprovalStatus.已审核;
+                entity.ApprovalStatus = (int)ApprovalStatus.审核通过;
                 BusinessHelper.Instance.ApproverEntity(entity);
                 //只更新指定列
                 var result = await _unitOfWorkManage.GetDbClient().Updateable(entity)

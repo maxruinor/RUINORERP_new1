@@ -112,25 +112,7 @@ namespace RUINORERP.UI.PSI.SAL
         }
 
 
-
-        /// <summary>
-        /// 更新扩展按钮可见性（基于状态管理系统） - 重写基类方法
-        /// 销售订单特有的扩展按钮权限管理
-        /// </summary>
-        protected override void UpdatePermissionBasedButtonVisibility()
-        {
-            base.UpdatePermissionBasedButtonVisibility();
-            
-            // 销售订单特有的扩展按钮可见性处理
-            if (EditEntity is BaseEntity baseEntity)
-            {
-                // 基于状态管理系统检查按钮权限
-                if (toolStripButton定制成本确认 != null)
-                    toolStripButton定制成本确认.Visible = CanExecuteAction("UpdateCustomizedCost");
-                if (toolStripButton反结案 != null)
-                    toolStripButton反结案.Visible = CanExecuteAction("AntiCloseCase");
-            }
-        }
+ 
 
 
         IEntityCacheManager cacheManager = Startup.GetFromFac<IEntityCacheManager>();
@@ -200,81 +182,7 @@ namespace RUINORERP.UI.PSI.SAL
         }
 
 
-        /// <summary>
-        /// 更新付款状态
-        /// </summary>
-        /// <returns>异步任务</returns>
-        protected async Task UpdatePaymentStatus()
-        {
-            if (EditEntity == null)
-            {
-                return;
-            }
-            
-            // 使用新的状态管理系统进行状态验证
-            if (EditEntity is BaseEntity baseEntity)
-            {
-                // 检查是否可以更新付款状态
-                var canUpdatePayment = await CanTransitionToAsync("UpdatePaymentStatus");
-                if (!canUpdatePayment.IsAllowed)
-                {
-                    //MainForm.Instance.uclog.AddLog($"无法更新付款状态：{canUpdatePayment.Message}");
-                    return;
-                }
-            }
-            
-            //反审，要审核过，并且通过了，才能反审。
-            if (EditEntity.ApprovalStatus.Value == (int)ApprovalStatus.已审核 && !EditEntity.ApprovalResults.HasValue)
-            {
-                MainForm.Instance.uclog.AddLog("已经审核,且【同意】的单据才能更新付款状态。");
-                return;
-            }
-
-            RevertCommand command = new RevertCommand();
-            //缓存当前编辑的对象。如果撤销就回原来的值
-            tb_SaleOrder oldobj = CloneHelper.DeepCloneObject_maxnew<tb_SaleOrder>(EditEntity);
-            command.UndoOperation = delegate ()
-            {
-                //Undo操作会执行到的代码 意思是如果退审核，内存中审核的数据要变为空白（之前的样子）
-                CloneHelper.SetValues<tb_SaleOrder>(EditEntity, oldobj);
-            };
-
-            tb_SaleOrderController<tb_SaleOrder> ctr = Startup.GetFromFac<tb_SaleOrderController<tb_SaleOrder>>();
-
-            if (MessageBox.Show("你确定要调整当前订单的付款状态吗？", "确认", MessageBoxButtons.OKCancel, MessageBoxIcon.Question) == DialogResult.Cancel)
-            {
-                return;
-            }
-
-            if (AppContext.IsSuperUser)
-            {
-                await Save(true);
-                await ctr.BaseSaveOrUpdate(EditEntity);
-                return;
-            }
-
-            ReturnResults<bool> rr = await ctr.UpdatePaymentStatus(EditEntity);
-            if (rr.Succeeded)
-            {
-                MainForm.Instance.AuditLogHelper.CreateAuditLog<tb_SaleOrder>("付款调整", EditEntity);
-                //if (MainForm.Instance.WorkflowItemlist.ContainsKey(""))
-                //{
-
-                //}
-                //这里审核完了的话，如果这个单存在于工作流的集合队列中，则向服务器说明审核完成。
-                //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
-                //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
-                //MainForm.Instance.ecs.AddSendData(od);
-            }
-            else
-            {
-                //付款调整失败 要恢复之前的值
-                command.Undo();
-                MainForm.Instance.PrintInfoLog($"{EditEntity.SOrderNo}付款调整失败{rr.ErrorMsg},请联系管理员！", Color.Red);
-            }
-            MainForm.Instance.AuditLogHelper.CreateAuditLog<tb_SaleOrder>("付款调整", EditEntity, $"结果:{(rr.Succeeded ? "成功" : "失败")},{rr.ErrorMsg}");
-        }
-
+  
         protected override async Task LoadRelatedDataToDropDownItemsAsync()
         {
             if (base.EditEntity is tb_SaleOrder saleOrder)
@@ -670,7 +578,7 @@ namespace RUINORERP.UI.PSI.SAL
                 if (EditEntity is BaseEntity baseEntity)
                 {
                     // 使用新的状态管理系统检查是否可以打印
-                    bool canPrint = CanExecuteAction("Print");
+                    bool canPrint = true;
                     toolStripbtnPrint.Enabled = canPrint;
 
                     if (canPrint)
@@ -1766,7 +1674,7 @@ namespace RUINORERP.UI.PSI.SAL
                 EditEntity.CloseCaseOpinions = frm.txtOpinion.Text;
                 EditEntitys.Add(EditEntity);
                 //已经审核的,结案了的才能反结案
-                List<tb_SaleOrder> needCloseCases = EditEntitys.Where(c => c.DataStatus == (int)DataStatus.完结 && c.ApprovalStatus == (int)ApprovalStatus.已审核 && c.ApprovalResults.HasValue).ToList();
+                List<tb_SaleOrder> needCloseCases = EditEntitys.Where(c => c.DataStatus == (int)DataStatus.完结 && c.ApprovalStatus == (int)ApprovalStatus.审核通过 && c.ApprovalResults.HasValue).ToList();
                 if (needCloseCases.Count == 0)
                 {
                     MainForm.Instance.PrintInfoLog($"要反结案的数据为：{needCloseCases.Count}:请检查数据！");
@@ -1826,7 +1734,7 @@ namespace RUINORERP.UI.PSI.SAL
                 EditEntity.CloseCaseOpinions = frm.txtOpinion.Text;
                 EditEntitys.Add(EditEntity);
                 //已经审核的并且通过的情况才能结案
-                List<tb_SaleOrder> needCloseCases = EditEntitys.Where(c => c.DataStatus == (int)DataStatus.确认 && c.ApprovalStatus == (int)ApprovalStatus.已审核 && c.ApprovalResults.HasValue && c.ApprovalResults.Value).ToList();
+                List<tb_SaleOrder> needCloseCases = EditEntitys.Where(c => c.DataStatus == (int)DataStatus.确认 && c.ApprovalStatus == (int)ApprovalStatus.审核通过 && c.ApprovalResults.HasValue && c.ApprovalResults.Value).ToList();
                 if (needCloseCases.Count == 0)
                 {
                     MainForm.Instance.PrintInfoLog($"要结案的数据为：{needCloseCases.Count}:请检查数据！");
@@ -1926,7 +1834,7 @@ namespace RUINORERP.UI.PSI.SAL
             }
 
             //反审，要审核过，并且通过了，才能反审。
-            if (EditEntity.ApprovalStatus.Value == (int)ApprovalStatus.已审核 && !EditEntity.ApprovalResults.HasValue)
+            if (EditEntity.ApprovalStatus.Value == (int)ApprovalStatus.审核通过 && !EditEntity.ApprovalResults.HasValue)
             {
                 MainForm.Instance.uclog.AddLog("已经审核,且【同意】的单据才能更新付款状态。");
                 return;
@@ -1977,11 +1885,7 @@ namespace RUINORERP.UI.PSI.SAL
 
         }
 
-        private void toolStripButton付款调整_Click(object sender, EventArgs e)
-        {
-            UpdatePaymentStatus();
-        }
-
+ 
 
 
 

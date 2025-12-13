@@ -30,6 +30,8 @@
     <Compile Remove="Base\QueryParameter.cs" />
     <Compile Remove="Base\SerializationInfo.cs" />
     <Compile Remove="Base\StatusManager\BaseEntityExtensions.cs" />
+    <Compile Remove="Base\StatusManager\IStatusTransitionContext.cs" />
+    <Compile Remove="Base\StatusManager\StatusTransitionContext.cs" />
     <Compile Remove="Base\StatusManager\UnifiedStateManagerFactoryV4.cs" />
     <Compile Remove="Base\StatusManager\UnifiedStateManagerV4.cs" />
     <Compile Remove="BillDetailDto\sales_order_detail.cs" />

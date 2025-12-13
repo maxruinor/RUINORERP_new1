@@ -217,7 +217,7 @@ namespace RUINORERP.UI.FM
                 //出库了，审核过的才用价格调整单
                 var lambdaSaleOut = Expressionable.Create<tb_SaleOut>()
              .And(t => t.DataStatus == (int)DataStatus.确认)
-             .And(t => t.ApprovalStatus.HasValue && t.ApprovalStatus.Value == (int)ApprovalStatus.已审核)
+             .And(t => t.ApprovalStatus.HasValue && t.ApprovalStatus.Value == (int)ApprovalStatus.审核通过)
              .And(t => t.ApprovalResults.HasValue && t.ApprovalResults.Value == true)
               .And(t => t.isdeleted == false)
              .ToExpression();
@@ -234,7 +234,7 @@ namespace RUINORERP.UI.FM
                 //出库了，审核过的才用价格调整单
                 var lambdaPurEntry = Expressionable.Create<tb_PurEntry>()
              .And(t => t.DataStatus == (int)DataStatus.确认)
-             .And(t => t.ApprovalStatus.HasValue && t.ApprovalStatus.Value == (int)ApprovalStatus.已审核)
+             .And(t => t.ApprovalStatus.HasValue && t.ApprovalStatus.Value == (int)ApprovalStatus.审核通过)
              .And(t => t.ApprovalResults.HasValue && t.ApprovalResults.Value == true)
               .And(t => t.isdeleted == false)
              .ToExpression();

@@ -203,7 +203,7 @@ namespace RUINORERP.UI.ASS
             if (EditEntity != null)
             {
                 //只有审核状态才可以转换
-                if (EditEntity.DataStatus == (int)DataStatus.确认 && EditEntity.ApprovalStatus == (int)ApprovalStatus.已审核 && EditEntity.ApprovalResults.HasValue && EditEntity.ApprovalResults.Value)
+                if (EditEntity.DataStatus == (int)DataStatus.确认 && EditEntity.ApprovalStatus == (int)ApprovalStatus.审核通过 && EditEntity.ApprovalResults.HasValue && EditEntity.ApprovalResults.Value)
                 {
                     if (EditEntity.RepairStatus.HasValue && EditEntity.RepairStatus.Value != (int)RepairStatus.待维修)
                     {
@@ -255,7 +255,7 @@ namespace RUINORERP.UI.ASS
             if (EditEntity != null)
             {
                 //只有审核状态才可以转换
-                if (EditEntity.DataStatus == (int)DataStatus.确认 && EditEntity.ApprovalStatus == (int)ApprovalStatus.已审核 && EditEntity.ApprovalResults.HasValue && EditEntity.ApprovalResults.Value)
+                if (EditEntity.DataStatus == (int)DataStatus.确认 && EditEntity.ApprovalStatus == (int)ApprovalStatus.审核通过 && EditEntity.ApprovalResults.HasValue && EditEntity.ApprovalResults.Value)
                 {
                     if (EditEntity.RepairStatus.HasValue && EditEntity.RepairStatus.Value != (int)RepairStatus.维修中)
                     {

@@ -1,10 +1,24 @@
+/**
+ * 文件: UnifiedStateManager.cs
+ * 版本: V4 - 优化版统一状态管理器
+ * 说明: 统一状态管理器 - 基于V4版本架构优化，去掉重复冗余代码
+ * 创建日期: 2024年
+ * 作者: RUINOR ERP开发团队
+ * 更新日期: 2025-01-12 - V4版本优化，使用EntityStatus和StateTransitionResult
+ * 
+ * 版本标识：
+ * V4: 基于EntityStatus和StateTransitionResult的优化实现，去掉重复冗余代码
+ * V3: 支持数据状态、操作状态和业务状态的统一管理
+ * 公共代码: 状态管理核心逻辑，所有版本通用
+ */
+
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
-using RUINORERP.Global; // 添加此行以引用DataStatus枚举
+using RUINORERP.Global;
 using RUINORERP.Global.EnumExt;
-using RUINORERP.Model.Base;
-using RUINORERP.Model.Base.StatusManager;
-using SqlSugar;
+using SqlSugar.Extensions;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -13,12 +27,13 @@ using System.Threading.Tasks;
 namespace RUINORERP.Model.Base.StatusManager
 {
     /// <summary>
-    /// 统一状态管理器实现类 - 简化版
-    /// 负责管理实体的各种状态转换，包括数据状态、业务状态和操作状态
+    /// 统一状态管理器 - V4优化版
+    /// 基于V4版本架构优化，去掉重复冗余代码，使用EntityStatus和StateTransitionResult
+    /// 支持MenuItemEnums，实现操作权限检查和UI控件影响
     /// </summary>
     public class UnifiedStateManager : IUnifiedStateManager, IDisposable
     {
-        #region 字段
+        #region 私有字段
 
         /// <summary>
         /// 日志记录器
@@ -30,119 +45,80 @@ namespace RUINORERP.Model.Base.StatusManager
         /// </summary>
         private readonly Dictionary<Type, Dictionary<object, List<object>>> _transitionRules;
 
-        /// <summary>
-        /// 缓存管理器
-        /// </summary>
-        private readonly StatusCacheManager _cacheManager;
 
         /// <summary>
-        /// 状态变更锁
+        /// 状态转换事件
         /// </summary>
-        private readonly object _statusChangeLock = new object();
+        public event EventHandler<StateTransitionEventArgs> StatusChanged;
 
-        /// <summary>
-        /// 最近的状态变更记录（用于去重）
-        /// </summary>
-        private readonly Dictionary<string, DateTime> _recentStatusChanges = new Dictionary<string, DateTime>();
-
-        /// <summary>
-        /// 是否已释放资源
-        /// </summary>
-        private bool _disposed = false;
 
         #endregion
 
-        /// <summary>
-        /// 状态变更事件
-        /// </summary>
-        public event EventHandler<StateTransitionEventArgs> StatusChanged;
+        #region 构造函数
 
         /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="logger">日志记录器</param>
-        /// <param name="cacheManager">缓存管理器</param>
-        public UnifiedStateManager(
-            ILogger<UnifiedStateManager> logger,
-            StatusCacheManager cacheManager = null)
+        /// <param name="cache">缓存管理器</param>
+        public UnifiedStateManager(ILogger<UnifiedStateManager> logger, IMemoryCache cache = null)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _cacheManager = cacheManager ?? new StatusCacheManager();
-
-            // 初始化状态转换规则
-            _transitionRules = new Dictionary<Type, Dictionary<object, List<object>>>();
-            StateTransitionRules.InitializeDefaultRules(_transitionRules);
+            _transitionRules = StateTransitionRules.Instance; // 使用全局共享的规则实例
         }
 
-        #region 状态获取方法
+        #endregion
 
+        #region 状态获取方法
         /// <summary>
-        /// 获取实体的完整状态信息
+        /// 获取实体的统一状态（同步版本）
         /// </summary>
         /// <param name="entity">实体对象</param>
-        /// <returns>实体状态信息</returns>
-        public EntityStatus GetEntityStatus(BaseEntity entity)
+        /// <returns>统一状态</returns>
+        public EntityStatus GetUnifiedStatus(BaseEntity entity)
         {
             if (entity == null)
                 return null;
 
-            return new EntityStatus
+            // 通过中间值获取EntityStatus
+            var entityStatus = new EntityStatus();
+            var statusType = entityStatus.GetStatusType(entity);
+            if (statusType != null)
             {
-                dataStatus = GetDataStatus(entity),
-                BusinessStatuses = new Dictionary<Type, object>(),
-                actionStatus = GetActionStatus(entity)
-            };
+                // 优先返回DataStatus
+                //    if (statusType == typeof(DataStatus))
+                //{
+                //    var dataStatus = entity.GetPropertyValue(nameof(DataStatus));
+                //    entityStatus.SetBusinessStatus((DataStatus)dataStatus);
+                //}
+                entityStatus.SetBusinessStatus(statusType, entity.GetPropertyValue(statusType.Name));
+            }
+            entityStatus.actionStatus = entity.ActionStatus;
+            if (entity.ContainsProperty("ApprovalResults"))
+            {
+                entityStatus.ApprovalResults = entity.GetPropertyValue("ApprovalResults").ObjToBool();
+            }
+            //已经审核的并且通过的情况才能结案
+            if (entity.ContainsProperty("ApprovalStatus"))
+            {
+                entityStatus.ApprovalStatus= entity.GetPropertyValue("ApprovalStatus").ObjToInt();
+            }
+            return entityStatus; // 默认状态
         }
 
         /// <summary>
-        /// 获取实体的数据状态
+        /// 获取实体的状态类型
         /// </summary>
         /// <param name="entity">实体对象</param>
-        /// <returns>数据状态</returns>
-        public DataStatus GetDataStatus(BaseEntity entity)
-        {
-            if (entity == null)
-                return DataStatus.草稿;
-
-            try
-            {
-                var property = entity.GetType().GetProperty("DataStatus");
-                var value = property?.GetValue(entity);
-
-                // 处理int类型到DataStatus枚举的转换
-                if (value is int intValue)
-                {
-                    return (DataStatus)intValue;
-                }
-
-                return value as DataStatus? ?? DataStatus.草稿;
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "获取数据状态失败：实体类型 {EntityType}", entity.GetType().Name);
-                return DataStatus.草稿;
-            }
-        }
-
-
-        /// <summary>获取实体的状态类型</summary>
+        /// <returns>状态类型</returns>
         public Type GetStatusType(BaseEntity entity)
         {
-            if (entity.ContainsProperty(typeof(DataStatus).Name))
-                return typeof(DataStatus);
+            if (entity == null)
+                return null;
 
-            if (entity.ContainsProperty(typeof(PrePaymentStatus).Name))
-                return typeof(PrePaymentStatus);
-
-            if (entity.ContainsProperty(typeof(ARAPStatus).Name))
-                return typeof(ARAPStatus);
-
-            if (entity.ContainsProperty(typeof(PaymentStatus).Name))
-                return typeof(PaymentStatus);
-            if (entity.ContainsProperty(typeof(StatementStatus).Name))
-                return typeof(StatementStatus);
-
-            return null;
+            // 通过中间值获取EntityStatus
+            var entityStatus = new EntityStatus();
+            return entityStatus.GetStatusType(entity);
         }
 
 
@@ -150,111 +126,82 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <summary>
         /// 获取实体的业务状态
         /// </summary>
+        /// <typeparam name="T">业务状态枚举类型</typeparam>
         /// <param name="entity">实体对象</param>
-        /// <returns>业务状态</returns>
+        /// <returns>业务状态值</returns>
+        public object GetBusinessStatus<T>(BaseEntity entity) where T : struct, Enum
+        {
+            if (entity == null)
+                return default;
+
+            return GetBusinessStatus(entity, typeof(T));
+        }
+
+        /// <summary>
+        /// 获取实体的业务状态（非泛型版本）
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        /// <param name="statusType">业务状态类型</param>
+        /// <returns>业务状态值</returns>
+        public object GetBusinessStatus(BaseEntity entity, Type statusType)
+        {
+            if (entity == null || statusType == null)
+                return null;
+
+            // 通过中间值获取EntityStatus
+            var entityStatus = new EntityStatus();
+            var currentStatusType = entityStatus.GetStatusType(entity);
+
+            // 如果是请求的状态类型，直接返回
+            if (currentStatusType == statusType)
+            {
+                return entity.GetPropertyValue(statusType.Name);
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// 获取实体的业务状态（非泛型版本）
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        /// <param name="statusType">业务状态类型</param>
+        /// <returns>业务状态值</returns>
         public object GetBusinessStatus(BaseEntity entity)
         {
             if (entity == null)
                 return null;
-            try
+
+            // 通过中间值获取EntityStatus
+            var entityStatus = new EntityStatus();
+            var currentStatusType = GetBusinessStatusType(entity);
+
+            // 如果是请求的状态类型，直接返回
+            //if (currentStatusType == )
+            //{
+            //    return entity.GetPropertyValue(statusType.Name);
+            //}
+
+            // 获取状态类型和值
+
+            if (currentStatusType != null)
             {
-                var statusType = GetStatusType(entity);
-                var property = entity.GetType().GetProperty(statusType.Name);
-                return property?.GetValue(entity);
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "获取业务状态失败：实体类型 {EntityType}", entity.GetType().Name);
-                return null;
-            }
-        }
+                // 动态获取状态值
+                dynamic status = entity.GetPropertyValue(currentStatusType.Name);
+                int statusValue = (int)status;
+                dynamic statusEnum = Enum.ToObject(currentStatusType, statusValue);
+                //是一个类型
+                //statusEnum
 
-        /// <summary>
-        /// 获取实体的业务状态（泛型版本）
-        /// </summary>
-        /// <typeparam name="T">业务状态枚举类型</typeparam>
-        /// <param name="entity">实体对象</param>
-        /// <returns>业务状态</returns>
-        public T GetBusinessStatus<T>(BaseEntity entity) where T : struct, Enum
-        {
-            var status = GetBusinessStatus(entity);
-            return status is T ? (T)status : default;
-        }
-
-        /// <summary>
-        /// 获取实体的业务状态（指定类型版本）
-        /// </summary>
-        /// <param name="entity">实体对象</param>
-        /// <param name="statusType">业务状态类型</param>
-        /// <returns>业务状态</returns>
-        public object GetBusinessStatus(BaseEntity entity, Type statusType)
-        {
-            if (entity == null)
-                return null;
-
-            if (statusType == null)
-                return null;
-
-            try
-            {
-                // 首先尝试从实体的Status属性获取
-                var property = entity.GetType().GetProperty(statusType.Name);
-                var status = property?.GetValue(entity);
-
-                // 如果获取到的状态类型与请求的类型匹配，直接返回
-                if (status != null && status.GetType() == statusType)
+                var dataStatus = (DataStatus)(entity.GetPropertyValue(typeof(DataStatus).Name).ObjToInt());
+                if (dataStatus == DataStatus.新建 || dataStatus == DataStatus.草稿)
                 {
-                    return status;
+
                 }
-
-                // 如果不匹配，尝试从EntityStatus中获取
-                var entityStatusProperty = entity.GetType().GetProperty("EntityStatus");
-                if (entityStatusProperty != null)
-                {
-                    var entityStatus = entityStatusProperty.GetValue(entity) as EntityStatus;
-                    if (entityStatus != null && entityStatus.BusinessStatuses.TryGetValue(statusType, out var businessStatus))
-                    {
-                        return businessStatus;
-                    }
-                }
-
-                return null;
+                return statusValue;
             }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "获取业务状态失败：实体类型 {EntityType}, 状态类型 {StatusType}", entity.GetType().Name, statusType.Name);
-                return null;
-            }
-        }
 
-        /// <summary>
-        /// 获取实体的操作状态
-        /// </summary>
-        /// <param name="entity">实体对象</param>
-        /// <returns>操作状态</returns>
-        public ActionStatus GetActionStatus(BaseEntity entity)
-        {
-            if (entity == null)
-                return ActionStatus.无操作;
-
-            try
-            {
-                var property = entity.GetType().GetProperty("ActionStatus");
-                var value = property?.GetValue(entity);
-
-                // 处理int类型到ActionStatus枚举的转换
-                if (value is int intValue)
-                {
-                    return (ActionStatus)intValue;
-                }
-
-                return value as ActionStatus? ?? ActionStatus.无操作;
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "获取操作状态失败：实体类型 {EntityType}", entity.GetType().Name);
-                return ActionStatus.无操作;
-            }
+            return null;
         }
 
         #endregion
@@ -262,325 +209,145 @@ namespace RUINORERP.Model.Base.StatusManager
         #region 状态验证方法
 
         /// <summary>
-        /// 验证数据状态转换
+        /// 验证数据状态转换是否合法
         /// </summary>
-        /// <param name="entity">实体对象</param>
-        /// <param name="targetStatus">目标状态</param>
-        /// <returns>验证结果</returns>
-        public async Task<StateTransitionResult> ValidateDataStatusTransitionAsync(BaseEntity entity, DataStatus targetStatus)
+        /// <param name="fromStatus">源状态</param>
+        /// <param name="toStatus">目标状态</param>
+        /// <returns>状态转换结果</returns>
+        public StateTransitionResult ValidateBusinessStatusTransitionAsync(Enum fromStatus, Enum toStatus)
         {
-            if (entity == null)
-                return StateTransitionResult.Failure("实体对象不能为空");
+            // 使用状态转换规则验证
+            bool isAllowed = StateTransitionRules.IsTransitionAllowed(_transitionRules, typeof(DataStatus), fromStatus, toStatus);
 
-            try
+            if (isAllowed)
             {
-                var currentStatus = GetDataStatus(entity);
-
-                // 直接使用StateTransitionRules验证转换
-                if (StateTransitionRules.IsTransitionAllowed(_transitionRules, typeof(DataStatus), currentStatus, targetStatus))
-                {
-                    return StateTransitionResult.Success();
-                }
-                else
-                {
-                    return StateTransitionResult.Failure($"不允许从 {currentStatus} 转换到 {targetStatus}");
-                }
+                return StateTransitionResult.Allowed();
             }
-            catch (Exception ex)
+            else
             {
-                _logger?.LogError(ex, "验证数据状态转换失败：实体类型 {EntityType}, 目标状态 {TargetStatus}", entity.GetType().Name, targetStatus);
-                return StateTransitionResult.Failure($"验证数据状态转换时发生错误: {ex.Message}");
+                return StateTransitionResult.Denied($"不允许从{fromStatus}转换到{toStatus}");
             }
         }
 
         /// <summary>
-        /// 验证业务状态转换
+        /// 验证业务状态转换是否合法
         /// </summary>
         /// <typeparam name="T">业务状态枚举类型</typeparam>
-        /// <param name="entity">实体对象</param>
-        /// <param name="targetStatus">目标状态</param>
-        /// <returns>验证结果</returns>
-        public async Task<StateTransitionResult> ValidateBusinessStatusTransitionAsync<T>(BaseEntity entity, T targetStatus) where T : struct, Enum
+        /// <param name="fromStatus">源状态</param>
+        /// <param name="toStatus">目标状态</param>
+        /// <returns>状态转换结果</returns>
+        public StateTransitionResult ValidateBusinessStatusTransitionAsync<T>(T? fromStatus, T? toStatus) where T : struct, Enum
         {
-            if (entity == null)
-                return StateTransitionResult.Failure("实体对象不能为空");
+            // 如果源状态为空，允许设置任何状态
+            if (!fromStatus.HasValue)
+                return StateTransitionResult.Allowed();
 
-            try
+            // 如果目标状态为空，不允许转换
+            if (!toStatus.HasValue)
+                return StateTransitionResult.Denied("目标状态不能为空");
+
+            // 使用状态转换规则验证
+            bool isAllowed = StateTransitionRules.IsTransitionAllowed(_transitionRules, typeof(T), fromStatus.Value, toStatus.Value);
+
+            if (isAllowed)
             {
-                var currentStatus = GetBusinessStatus<T>(entity);
-
-                // 直接使用StateTransitionRules验证转换
-                if (StateTransitionRules.IsTransitionAllowed(_transitionRules, typeof(T), currentStatus, targetStatus))
-                {
-                    return StateTransitionResult.Success();
-                }
-                else
-                {
-                    return StateTransitionResult.Failure($"不允许从 {currentStatus} 转换到 {targetStatus}");
-                }
+                return StateTransitionResult.Allowed();
             }
-            catch (Exception ex)
+            else
             {
-                _logger?.LogError(ex, "验证业务状态转换失败：实体类型 {EntityType}, 目标状态 {TargetStatus}", entity.GetType().Name, targetStatus);
-                return StateTransitionResult.Failure($"验证业务状态转换时发生错误: {ex.Message}");
+                return StateTransitionResult.Denied($"不允许从{fromStatus.Value}转换到{toStatus.Value}");
             }
         }
 
         /// <summary>
-        /// 验证业务状态转换
+        /// 验证操作状态转换是否合法
         /// </summary>
-        /// <param name="entity">实体对象</param>
-        /// <param name="statusType">状态类型</param>
-        /// <param name="targetStatus">目标状态</param>
-        /// <returns>验证结果</returns>
-        public async Task<StateTransitionResult> ValidateBusinessStatusTransitionAsync(BaseEntity entity, Type statusType, object targetStatus)
+        /// <param name="fromStatus">源状态</param>
+        /// <param name="toStatus">目标状态</param>
+        /// <returns>状态转换结果</returns>
+        public StateTransitionResult ValidateActionStatusTransitionAsync(ActionStatus? fromStatus, ActionStatus? toStatus)
         {
-            if (entity == null)
-                return StateTransitionResult.Failure("实体对象不能为空");
+            // 如果源状态为空，允许设置任何状态
+            if (!fromStatus.HasValue)
+                return StateTransitionResult.Allowed();
 
-            if (statusType == null)
-                return StateTransitionResult.Failure("状态类型不能为空");
+            // 如果目标状态为空，不允许转换
+            if (!toStatus.HasValue)
+                return StateTransitionResult.Denied("目标状态不能为空");
 
-            try
+            // 使用状态转换规则验证
+            bool isAllowed = StateTransitionRules.IsTransitionAllowed(_transitionRules, typeof(ActionStatus), fromStatus.Value, toStatus.Value);
+
+            if (isAllowed)
             {
-                var currentStatus = GetBusinessStatus(entity, statusType);
-
-                // 直接使用StateTransitionRules验证转换
-                if (currentStatus is Enum currentEnumStatus && targetStatus is Enum targetEnumStatus &&
-                    StateTransitionRules.IsTransitionAllowed(_transitionRules, statusType, currentEnumStatus, targetEnumStatus))
-                {
-                    return StateTransitionResult.Success();
-                }
-                else
-                {
-                    return StateTransitionResult.Failure($"不允许从 {currentStatus} 转换到 {targetStatus}");
-                }
+                return StateTransitionResult.Allowed();
             }
-            catch (Exception ex)
+            else
             {
-                _logger?.LogError(ex, "验证业务状态转换失败：实体类型 {EntityType}, 目标状态 {TargetStatus}", entity.GetType().Name, targetStatus);
-                return StateTransitionResult.Failure($"验证业务状态转换时发生错误: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// 验证操作状态转换
-        /// </summary>
-        /// <param name="entity">实体对象</param>
-        /// <param name="targetStatus">目标状态</param>
-        /// <returns>验证结果</returns>
-        public async Task<StateTransitionResult> ValidateActionStatusTransitionAsync(BaseEntity entity, ActionStatus targetStatus)
-        {
-            if (entity == null)
-                return StateTransitionResult.Failure("实体对象不能为空");
-
-            try
-            {
-                var currentStatus = GetActionStatus(entity);
-
-                // 直接使用StateTransitionRules验证转换
-                if (StateTransitionRules.IsTransitionAllowed(_transitionRules, typeof(ActionStatus), currentStatus, targetStatus))
-                {
-                    return StateTransitionResult.Success();
-                }
-                else
-                {
-                    return StateTransitionResult.Failure($"不允许从 {currentStatus} 转换到 {targetStatus}");
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "验证操作状态转换失败：实体类型 {EntityType}, 目标状态 {TargetStatus}", entity.GetType().Name, targetStatus);
-                return StateTransitionResult.Failure($"验证操作状态转换时发生错误: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// 检查是否可以转换到目标数据状态
-        /// </summary>
-        /// <param name="entity">实体对象</param>
-        /// <param name="targetStatus">目标状态</param>
-        /// <returns>是否可以转换</returns>
-        public async Task<bool> CanTransitionToDataStatus(BaseEntity entity, DataStatus targetStatus)
-        {
-            var result = await ValidateDataStatusTransitionAsync(entity, targetStatus);
-            return result.IsSuccess;
-        }
-
-        /// <summary>
-        /// 检查是否可以转换到目标业务状态
-        /// </summary>
-        /// <typeparam name="T">业务状态枚举类型</typeparam>
-        /// <param name="entity">实体对象</param>
-        /// <param name="targetStatus">目标状态</param>
-        /// <returns>是否可以转换</returns>
-        public async Task<bool> CanTransitionToBusinessStatus<T>(BaseEntity entity, T targetStatus) where T : struct, Enum
-        {
-            var result = await ValidateBusinessStatusTransitionAsync<T>(entity, targetStatus);
-            return result.IsSuccess;
-        }
-
-        /// <summary>
-        /// 检查是否可以转换到目标操作状态
-        /// </summary>
-        /// <param name="entity">实体对象</param>
-        /// <param name="targetStatus">目标状态</param>
-        /// <returns>是否可以转换</returns>
-        public async Task<bool> CanTransitionToActionStatus(BaseEntity entity, ActionStatus targetStatus)
-        {
-            var result = await ValidateActionStatusTransitionAsync(entity, targetStatus);
-            return result.IsSuccess;
-        }
-
-        /// <summary>
-        /// 获取可转换的数据状态列表
-        /// </summary>
-        /// <param name="entity">实体对象</param>
-        /// <returns>可转换的状态列表</returns>
-        public IEnumerable<DataStatus> GetAvailableDataStatusTransitions(BaseEntity entity)
-        {
-            if (entity == null)
-                return Enumerable.Empty<DataStatus>();
-
-            try
-            {
-                var currentStatus = GetDataStatus(entity);
-                var availableStatuses = new List<DataStatus>();
-
-                // 获取所有可能的状态
-                var allStatuses = Enum.GetValues(typeof(DataStatus)).Cast<DataStatus>();
-
-                // 检查每个状态是否可以转换
-                foreach (var status in allStatuses)
-                {
-                    if (currentStatus is Enum currentEnumStatus && status is Enum enumStatus &&
-                        StateTransitionRules.IsTransitionAllowed(_transitionRules, typeof(DataStatus), currentEnumStatus, enumStatus))
-                    {
-                        availableStatuses.Add(status);
-                    }
-                }
-
-                return availableStatuses;
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "获取可转换的数据状态列表失败：实体类型 {EntityType}", entity.GetType().Name);
-                return Enumerable.Empty<DataStatus>();
-            }
-        }
-
-        /// <summary>
-        /// 获取可转换的业务状态列表
-        /// </summary>
-        /// <typeparam name="T">业务状态枚举类型</typeparam>
-        /// <param name="entity">实体对象</param>
-        /// <returns>可转换的状态列表</returns>
-        public IEnumerable<T> GetAvailableBusinessStatusTransitions<T>(BaseEntity entity) where T : struct, Enum
-        {
-            if (entity == null)
-                return Enumerable.Empty<T>();
-
-            try
-            {
-                var currentStatus = GetBusinessStatus<T>(entity);
-                var availableStatuses = new List<T>();
-
-                // 获取所有可能的状态
-                var allStatuses = Enum.GetValues(typeof(T)).Cast<T>();
-
-                // 检查每个状态是否可以转换
-                foreach (var status in allStatuses)
-                {
-                    if (currentStatus is Enum currentEnumStatus && status is Enum enumStatus &&
-                        StateTransitionRules.IsTransitionAllowed(_transitionRules, typeof(T), currentEnumStatus, enumStatus))
-                    {
-                        availableStatuses.Add(status);
-                    }
-                }
-
-                return availableStatuses;
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "获取可转换的业务状态列表失败：实体类型 {EntityType}", entity.GetType().Name);
-                return Enumerable.Empty<T>();
-            }
-        }
-
-        /// <summary>
-        /// 获取可转换的业务状态列表
-        /// </summary>
-        /// <param name="entity">实体对象</param>
-        /// <param name="statusType">状态类型</param>
-        /// <returns>可转换的状态列表</returns>
-        public IEnumerable<object> GetAvailableBusinessStatusTransitions(BaseEntity entity, Type statusType)
-        {
-            if (entity == null || statusType == null)
-                return Enumerable.Empty<object>();
-
-            try
-            {
-                var currentStatus = GetBusinessStatus(entity, statusType);
-                var availableStatuses = new List<object>();
-
-                // 获取所有可能的状态
-                var allStatuses = Enum.GetValues(statusType).Cast<object>();
-
-                // 检查每个状态是否可以转换
-                foreach (var status in allStatuses)
-                {
-                    if (StateTransitionRules.IsTransitionAllowed(_transitionRules, statusType, currentStatus as Enum, status as Enum))
-                    {
-                        availableStatuses.Add(status);
-                    }
-                }
-
-                return availableStatuses;
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "获取可转换的业务状态列表失败：实体类型 {EntityType}", entity.GetType().Name);
-                return Enumerable.Empty<object>();
-            }
-        }
-
-        /// <summary>
-        /// 获取可转换的操作状态列表
-        /// </summary>
-        /// <param name="entity">实体对象</param>
-        /// <returns>可转换的状态列表</returns>
-        public IEnumerable<ActionStatus> GetAvailableActionStatusTransitions(BaseEntity entity)
-        {
-            if (entity == null)
-                return Enumerable.Empty<ActionStatus>();
-
-            try
-            {
-                var currentStatus = GetActionStatus(entity);
-                var availableStatuses = new List<ActionStatus>();
-
-                // 获取所有可能的状态
-                var allStatuses = Enum.GetValues(typeof(ActionStatus)).Cast<ActionStatus>();
-
-                // 检查每个状态是否可以转换
-                foreach (var status in allStatuses)
-                {
-                    if (StateTransitionRules.IsTransitionAllowed(_transitionRules, typeof(ActionStatus), currentStatus, status))
-                    {
-                        availableStatuses.Add(status);
-                    }
-                }
-
-                return availableStatuses;
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "获取可转换的操作状态列表失败：实体类型 {EntityType}", entity.GetType().Name);
-                return Enumerable.Empty<ActionStatus>();
+                return StateTransitionResult.Denied($"不允许从{fromStatus.Value}转换到{toStatus.Value}");
             }
         }
 
         #endregion
+
+        #region 状态转换检查方法
+
+        /// <summary>
+        /// 检查是否可以转换到指定的数据状态
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        /// <param name="targetStatus">目标状态</param>
+        /// <returns>是否可以转换</returns>
+        public bool CanTransitionToBusinessStatus(BaseEntity entity, DataStatus targetStatus)
+        {
+            if (entity == null)
+                return false;
+            var currentStatus = GetBusinessStatus(entity);
+            var result = ValidateBusinessStatusTransitionAsync(currentStatus as Enum, targetStatus);
+
+
+            return result.IsSuccess;
+        }
+
+        /// <summary>
+        /// 检查是否可以转换到指定的业务状态
+        /// </summary>
+        /// <typeparam name="T">业务状态枚举类型</typeparam>
+        /// <param name="entity">实体对象</param>
+        /// <param name="targetStatus">目标状态</param>
+        /// <returns>是否可以转换</returns>
+        public bool CanTransitionToBusinessStatus<T>(BaseEntity entity, T targetStatus) where T : struct, Enum
+        {
+            if (entity == null)
+                return false;
+
+            var currentStatus = GetBusinessStatus<T>(entity);
+            var result = ValidateBusinessStatusTransitionAsync(currentStatus as Enum, targetStatus);
+
+
+            return result.IsSuccess;
+        }
+
+        /// <summary>
+        /// 检查是否可以转换到指定的操作状态
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        /// <param name="targetStatus">目标状态</param>
+        /// <returns>是否可以转换</returns>
+        public bool CanTransitionToActionStatus(BaseEntity entity, ActionStatus targetStatus)
+        {
+            if (entity == null)
+                return false;
+
+            var currentStatus = entity.ActionStatus;
+            var result = ValidateActionStatusTransitionAsync(currentStatus, targetStatus);
+
+            return result.IsSuccess;
+        }
+
+        #endregion
+
+
 
         #region 状态更新和事件方法
 
@@ -589,73 +356,93 @@ namespace RUINORERP.Model.Base.StatusManager
         /// </summary>
         /// <param name="entity">实体对象</param>
         /// <param name="statusType">状态类型</param>
-        /// <param name="status">状态值</param>
-        private void UpdateEntityStatus(BaseEntity entity, Type statusType, object status)
+        /// <param name="newStatus">新状态</param>
+        /// <param name="reason">变更原因</param>
+        /// <param name="userId">用户ID</param>
+        /// <returns>状态转换结果</returns>
+        private StateTransitionResult UpdateBusinessStatus(BaseEntity entity, Type statusType, object newStatus, string reason = null, string userId = null)
         {
-            if (entity == null || statusType == null || status == null)
-                return;
+            if (entity == null)
+                return StateTransitionResult.Failure(null, newStatus, statusType, "实体不能为空");
+
+            if (statusType == null)
+                return StateTransitionResult.Failure(null, newStatus, statusType, "状态类型不能为空");
+
+            // 获取旧状态
+            object oldStatus = null;
+
+            if (statusType == typeof(DataStatus))
+            {
+                oldStatus = GetBusinessStatus(entity);
+            }
+            else
+            {
+                // 业务状态
+                oldStatus = GetBusinessStatus(entity, statusType);
+            }
+
+            // 检查状态是否实际发生了变更
+            if (Equals(oldStatus, newStatus))
+            {
+                return StateTransitionResult.Success(oldStatus, newStatus, statusType, "状态未发生变更");
+            }
 
             try
             {
-                // 根据状态类型更新对应的属性
-                if (statusType == typeof(DataStatus))
-                {
-                    var property = entity.GetType().GetProperty("DataStatus");
-                    if (property != null && property.CanWrite)
-                    {
-                        // 如果属性是int类型，需要转换枚举为int
-                        if (property.PropertyType == typeof(int))
-                        {
-                            property.SetValue(entity, Convert.ToInt32(status));
-                        }
-                        else
-                        {
-                            property.SetValue(entity, status);
-                        }
-                    }
-                }
-                else if (statusType == typeof(ActionStatus))
-                {
-                    var property = entity.GetType().GetProperty("ActionStatus");
-                    if (property != null && property.CanWrite)
-                    {
-                        // 如果属性是int类型，需要转换枚举为int
-                        if (property.PropertyType == typeof(int))
-                        {
-                            property.SetValue(entity, Convert.ToInt32(status));
-                        }
-                        else
-                        {
-                            property.SetValue(entity, status);
-                        }
-                    }
-                }
-                else
-                {
-                    // 业务状态处理
-                    var property = entity.GetType().GetProperty("Status");
-                    if (property != null && property.CanWrite)
-                    {
-                        property.SetValue(entity, status);
-                    }
+                // 更新状态
+                SetBusinessStatusAsync(entity, statusType, newStatus);
 
-                    // 同时更新EntityStatus中的业务状态
-                    var entityStatusProperty = entity.GetType().GetProperty("EntityStatus");
-                    if (entityStatusProperty != null)
-                    {
-                        var entityStatus = entityStatusProperty.GetValue(entity) as EntityStatus;
-                        if (entityStatus != null)
-                        {
-                            entityStatus.BusinessStatuses[statusType] = status;
-                        }
-                    }
-                }
+                // 触发状态变更事件
+                TriggerStatusChangedEvent(entity, statusType, oldStatus, newStatus, reason, userId);
+
+                return StateTransitionResult.Success(oldStatus, newStatus, statusType);
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "更新实体状态失败：实体类型 {EntityType}, 状态类型 {StatusType}", entity.GetType().Name, statusType.Name);
+                _logger.LogError(ex, "更新实体状态时发生错误: {ErrorMessage}", ex.Message);
+                return StateTransitionResult.Failure(oldStatus, newStatus, statusType, ex.Message, ex);
             }
         }
+
+
+
+        /// <summary>
+        /// 更新实体状态
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        /// <param name="statusType">状态类型</param>
+        /// <param name="newStatus">新状态</param>
+        /// <param name="reason">变更原因</param>
+        /// <param name="userId">用户ID</param>
+        /// <returns>状态转换结果</returns>
+        private StateTransitionResult UpdateActionStatus(BaseEntity entity, ActionStatus newStatus, string reason = null, string userId = null)
+        {
+            // 获取旧状态
+            var oldStatus = entity.ActionStatus;
+
+            // 检查状态是否实际发生了变更
+            if (Equals(oldStatus, newStatus))
+            {
+                return StateTransitionResult.Success(oldStatus, newStatus, typeof(ActionStatus), "状态未发生变更");
+            }
+
+            try
+            {
+                // 更新状态
+                entity.ActionStatus = newStatus;
+                // 触发状态变更事件
+                TriggerStatusChangedEvent(entity, typeof(ActionStatus), oldStatus, newStatus, reason, userId);
+
+                return StateTransitionResult.Success(oldStatus, newStatus, typeof(ActionStatus));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "更新实体状态时发生错误: {ErrorMessage}", ex.Message);
+                return StateTransitionResult.Failure(oldStatus, newStatus, typeof(ActionStatus), ex.Message, ex);
+            }
+        }
+
+
 
         /// <summary>
         /// 触发状态变更事件
@@ -665,1412 +452,651 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <param name="oldStatus">旧状态</param>
         /// <param name="newStatus">新状态</param>
         /// <param name="reason">变更原因</param>
-        /// <summary>
-        /// 触发状态变更事件
-        /// </summary>
-        /// <param name="entity">实体对象</param>
-        /// <param name="statusType">状态类型</param>
-        /// <param name="oldStatus">旧状态</param>
-        /// <param name="newStatus">新状态</param>
-        /// <param name="reason">变更原因</param>
-        public void TriggerStatusChangedEvent(BaseEntity entity, Type statusType, object oldStatus, object newStatus, string reason)
+        /// <param name="userId">用户ID</param>
+        public void TriggerStatusChangedEvent(BaseEntity entity, Type statusType, object oldStatus, object newStatus, string reason = null, string userId = null)
         {
             try
             {
-                StatusChanged?.Invoke(this, new StateTransitionEventArgs(
+                var eventArgs = new StateTransitionEventArgs(
                     entity,
                     statusType,
                     oldStatus,
                     newStatus,
                     reason,
-                    userId: null,
-                    changeTime: DateTime.Now,
-                    additionalData: null));
+                    userId);
+
+                StatusChanged?.Invoke(this, eventArgs);
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "触发状态变更事件失败：实体类型 {EntityType}, 状态类型 {StatusType}", entity.GetType().Name, statusType.Name);
+                _logger.LogError(ex, "触发状态变更事件时发生错误: {ErrorMessage}", ex.Message);
             }
         }
+
 
         #endregion
 
         #region 状态设置方法
 
-        /// <summary>
-        /// 设置实体的数据状态
-        /// </summary>
-        /// <param name="entity">实体对象</param>
-        /// <param name="status">状态值</param>
-        /// <param name="reason">变更原因</param>
-        /// <returns>设置是否成功</returns>
-        public async Task<bool> SetDataStatusAsync(BaseEntity entity, DataStatus status, string reason = null)
-        {
-            if (entity == null)
-                return false;
 
-            try
-            {
-                var currentStatus = GetDataStatus(entity);
-                if (currentStatus == status)
-                    return true; // 状态未变化，直接返回成功
 
-                // 验证状态转换
-                var validationResult = await ValidateDataStatusTransitionAsync(entity, status);
-                if (!validationResult.IsSuccess)
-                {
-                    _logger?.LogWarning("数据状态转换验证失败：{ErrorMessage}", validationResult.ErrorMessage);
-                    return false;
-                }
 
-                // 创建状态转换上下文
-                var context = new StatusTransitionContext(entity, typeof(DataStatus), currentStatus, this);
-
-                // 直接使用StateTransitionRules验证转换
-                if (StateTransitionRules.IsTransitionAllowed(_transitionRules, typeof(DataStatus), currentStatus, status))
-                {
-                    // 更新实体状态
-                    UpdateEntityStatus(entity, typeof(DataStatus), status);
-
-                    // 集中触发状态变更事件 - 仅在UnifiedStateManager中触发
-                    TriggerStatusChangedEvent(entity, typeof(DataStatus), currentStatus, status, reason);
-
-                    return true;
-                }
-                else
-                {
-                    _logger?.LogWarning("数据状态转换失败：不允许从 {CurrentStatus} 转换到 {TargetStatus}", currentStatus, status);
-                    return false;
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "设置数据状态失败：实体类型 {EntityType}, 目标状态 {TargetStatus}", entity.GetType().Name, status);
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// 设置实体数据状态（同步版本）
-        /// </summary>
-        /// <param name="entity">实体对象</param>
-        /// <param name="status">状态值</param>
-        public void SetEntityDataStatus(BaseEntity entity, DataStatus status)
-        {
-            if (entity == null)
-                return;
-
-            try
-            {
-                // 获取当前状态
-                var currentStatus = GetDataStatus(entity);
-
-                // 如果状态没有变化，直接返回
-                if (currentStatus == status)
-                    return;
-
-                var property = entity.GetType().GetProperty("DataStatus");
-                if (property != null && property.CanWrite)
-                {
-                    // 如果属性是int类型，需要转换枚举为int
-                    if (property.PropertyType == typeof(int))
-                    {
-                        property.SetValue(entity, Convert.ToInt32(status));
-                    }
-                    else
-                    {
-                        property.SetValue(entity, status);
-                    }
-
-                    // 集中触发状态变更事件 - 仅在UnifiedStateManager中触发
-                    TriggerStatusChangedEvent(entity, typeof(DataStatus), currentStatus, status, "直接设置数据状态");
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "设置实体数据状态失败：实体类型 {EntityType}, 目标状态 {TargetStatus}", entity.GetType().Name, status);
-            }
-        }
 
         /// <summary>
         /// 设置实体的业务状态
         /// </summary>
         /// <typeparam name="T">业务状态枚举类型</typeparam>
         /// <param name="entity">实体对象</param>
-        /// <param name="status">状态值</param>
+        /// <param name="status">业务状态</param>
         /// <param name="reason">变更原因</param>
-        /// <returns>设置是否成功</returns>
-        public async Task<bool> SetBusinessStatusAsync<T>(BaseEntity entity, T status, string reason = null) where T : struct, Enum
+        /// <param name="userId">用户ID</param>
+        /// <returns>状态转换结果</returns>
+        public async Task<StateTransitionResult> SetBusinessStatusAsync<T>(BaseEntity entity, T? status, string reason = null, string userId = null) where T : struct, Enum
         {
             if (entity == null)
-                return false;
+                return StateTransitionResult.Failure(null, status, typeof(T), "实体不能为空");
 
-            try
+            // 验证状态转换
+            var currentStatus = GetBusinessStatus<T>(entity);
+            var validationResult = ValidateBusinessStatusTransitionAsync(currentStatus as Enum, status);
+            if (!validationResult.IsSuccess)
             {
-                var currentStatus = GetBusinessStatus<T>(entity);
-                if (EqualityComparer<T>.Default.Equals(currentStatus, status))
-                    return true; // 状态未变化，直接返回成功
-
-                // 验证状态转换
-                var validationResult = await ValidateBusinessStatusTransitionAsync(entity, status);
-                if (!validationResult.IsSuccess)
-                {
-                    _logger?.LogWarning("业务状态转换验证失败：{ErrorMessage}", validationResult.ErrorMessage);
-                    return false;
-                }
-
-                // 创建状态转换上下文
-                var context = new StatusTransitionContext(entity, typeof(T), currentStatus, this);
-
-                // 直接使用StateTransitionRules验证转换
-                if (StateTransitionRules.IsTransitionAllowed(_transitionRules, typeof(T), currentStatus, status))
-                {
-                    // 更新实体状态
-                    UpdateEntityStatus(entity, typeof(T), status);
-
-                    // 集中触发状态变更事件 - 仅在UnifiedStateManager中触发
-                    TriggerStatusChangedEvent(entity, typeof(T), currentStatus, status, reason);
-
-                    return true;
-                }
-                else
-                {
-                    _logger?.LogWarning("业务状态转换失败：不允许从 {CurrentStatus} 转换到 {TargetStatus}", currentStatus, status);
-                    return false;
-                }
+                // 触发状态检查事件
+                return validationResult;
             }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "设置业务状态失败：实体类型 {EntityType}, 目标状态 {TargetStatus}", entity.GetType().Name, status);
-                return false;
-            }
+
+            // 更新状态
+            var result = UpdateBusinessStatus(entity, typeof(T), status, reason, userId);
+
+            return await Task.FromResult(result);
         }
 
         /// <summary>
         /// 设置实体的业务状态（非泛型版本）
         /// </summary>
         /// <param name="entity">实体对象</param>
-        /// <param name="statusType">业务状态枚举类型</param>
-        /// <param name="status">状态值</param>
+        /// <param name="statusType">业务状态类型</param>
+        /// <param name="status">业务状态</param>
         /// <param name="reason">变更原因</param>
-        /// <returns>设置是否成功</returns>
-        public async Task<bool> SetBusinessStatusAsync(BaseEntity entity, Type statusType, object status, string reason = null)
+        /// <param name="userId">用户ID</param>
+        /// <returns>状态转换结果</returns>
+        public async Task<StateTransitionResult> SetBusinessStatusAsync(BaseEntity entity, Type statusType, object status, string reason = null, string userId = null)
         {
             if (entity == null)
-                return false;
+                return StateTransitionResult.Failure(null, status, statusType, "实体不能为空");
 
             if (statusType == null)
-                throw new ArgumentNullException(nameof(statusType));
+                return StateTransitionResult.Failure(null, status, statusType, "状态类型不能为空");
 
-            if (!statusType.IsEnum)
-                throw new ArgumentException("statusType必须是枚举类型", nameof(statusType));
-
-            try
+            // 验证状态转换
+            var currentStatus = GetBusinessStatus(entity, statusType);
+            var validationResult = ValidateBusinessStatusTransitionAsync(currentStatus as Enum, status as Enum);
+            if (!validationResult.IsSuccess)
             {
-                var currentStatus = GetBusinessStatus(entity, statusType);
-                if (Equals(currentStatus, status))
-                    return true; // 状态未变化，直接返回成功
-
-                // 验证状态转换
-                var validationResult = await ValidateBusinessStatusTransitionAsync(entity, statusType, status);
-                if (!validationResult.IsSuccess)
-                {
-                    _logger?.LogWarning("业务状态转换验证失败：{ErrorMessage}", validationResult.ErrorMessage);
-                    return false;
-                }
-
-                // 创建状态转换上下文
-                var context = new StatusTransitionContext(entity, statusType, currentStatus, this);
-
-                // 直接使用StateTransitionRules验证转换
-                if (StateTransitionRules.IsTransitionAllowed(_transitionRules, statusType, currentStatus as Enum, status as Enum))
-                {
-                    // 更新实体状态
-                    UpdateEntityStatus(entity, statusType, status);
-
-                    // 集中触发状态变更事件 - 仅在UnifiedStateManager中触发
-                    TriggerStatusChangedEvent(entity, statusType, currentStatus, status, reason);
-
-                    return true;
-                }
-                else
-                {
-                    _logger?.LogWarning("业务状态转换失败：不允许从 {CurrentStatus} 转换到 {TargetStatus}", currentStatus, status);
-                    return false;
-                }
+                return validationResult;
             }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "设置业务状态失败：实体类型 {EntityType}, 目标状态 {TargetStatus}", entity.GetType().Name, status);
-                return false;
-            }
+
+            // 更新状态
+            var result = UpdateBusinessStatus(entity, statusType, status, reason, userId);
+
+            return await Task.FromResult(result);
         }
 
         /// <summary>
         /// 设置实体的操作状态
         /// </summary>
         /// <param name="entity">实体对象</param>
-        /// <param name="status">状态值</param>
+        /// <param name="status">操作状态</param>
         /// <param name="reason">变更原因</param>
-        /// <returns>设置是否成功</returns>
-        public async Task<bool> SetActionStatusAsync(BaseEntity entity, ActionStatus status, string reason = null)
+        /// <param name="userId">用户ID</param>
+        /// <returns>状态转换结果</returns>
+        public async Task<StateTransitionResult> SetActionStatusAsync(BaseEntity entity, ActionStatus? status, string reason = null, string userId = null)
         {
             if (entity == null)
-                return false;
+                return StateTransitionResult.Failure(null, status, typeof(ActionStatus), "实体不能为空");
 
-            try
+            // 验证状态转换
+            var currentStatus = entity.ActionStatus;
+            var validationResult = ValidateActionStatusTransitionAsync(currentStatus, status);
+            if (!validationResult.IsSuccess)
             {
-                var currentStatus = GetActionStatus(entity);
-                if (currentStatus == status)
-                    return true; // 状态未变化，直接返回成功
-
-                // 验证状态转换
-                var validationResult = await ValidateActionStatusTransitionAsync(entity, status);
-                if (!validationResult.IsSuccess)
-                {
-                    _logger?.LogWarning("操作状态转换验证失败：{ErrorMessage}", validationResult.ErrorMessage);
-                    return false;
-                }
-
-                // 创建状态转换上下文
-                var context = new StatusTransitionContext(entity, typeof(ActionStatus), currentStatus, this);
-
-                // 直接使用StateTransitionRules验证转换
-                if (StateTransitionRules.IsTransitionAllowed(_transitionRules, typeof(ActionStatus), currentStatus, status))
-                {
-                    // 更新实体状态
-                    UpdateEntityStatus(entity, typeof(ActionStatus), status);
-
-                    // 集中触发状态变更事件 - 仅在UnifiedStateManager中触发
-                    TriggerStatusChangedEvent(entity, typeof(ActionStatus), currentStatus, status, reason);
-
-                    return true;
-                }
-                else
-                {
-                    _logger?.LogWarning("操作状态转换失败：不允许从 {CurrentStatus} 转换到 {TargetStatus}", currentStatus, status);
-                    return false;
-                }
+                return validationResult;
             }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "设置操作状态失败：实体类型 {EntityType}, 目标状态 {TargetStatus}", entity.GetType().Name, status);
-                return false;
-            }
+
+            // 更新状态
+            var result = UpdateBusinessStatus(entity, typeof(ActionStatus), status, reason, userId);
+
+            return await Task.FromResult(result);
         }
 
+        #endregion
+
+        #region 操作权限检查方法
+
         /// <summary>
-        /// 执行状态转换
+        /// 检查是否可以执行指定操作，并返回详细消息
         /// </summary>
         /// <param name="entity">实体对象</param>
-        /// <param name="currentStatus">当前状态</param>
-        /// <param name="serviceProvider">服务提供程序</param>
-        /// <param name="reason">转换原因</param>
-        /// <returns>状态转换上下文</returns>
-        public virtual IStatusTransitionContext CreateDataStatusContext(object entity, DataStatus currentStatus, IServiceProvider serviceProvider, string reason = null)
-        {
-            try
-            {
-                var context = new StatusTransitionContext(
-                    entity as BaseEntity,
-                    typeof(DataStatus),
-                    currentStatus,
-                    this,
-                    null); // 传递null，因为不再需要transitionEngine
-
-                return context;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "创建数据状态转换上下文失败");
-                throw;
-            }
-        }
-
-        /// <summary>
-        /// 创建业务状态转换上下文
-        /// </summary>
-        /// <typeparam name="TBusinessStatus">业务状态类型</typeparam>
-        /// <param name="entity">实体对象</param>
-        /// <param name="currentStatus">当前状态</param>
-        /// <param name="serviceProvider">服务提供程序</param>
-        /// <param name="reason">转换原因</param>
-        /// <returns>状态转换上下文</returns>
-        public virtual IStatusTransitionContext CreateBusinessStatusContext<TBusinessStatus>(object entity, TBusinessStatus currentStatus, IServiceProvider serviceProvider, string reason = null)
-        {
-            try
-            {
-                var context = new StatusTransitionContext(
-                    entity as BaseEntity,
-                    typeof(TBusinessStatus),
-                    currentStatus,
-                    this,
-                    null); // 传递null，因为不再需要transitionEngine
-
-                return context;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "创建业务状态转换上下文失败");
-                throw;
-            }
-        }
-
-        /// <summary>
-        /// 创建操作状态转换上下文
-        /// </summary>
-        /// <param name="entity">实体对象</param>
-        /// <param name="currentStatus">当前状态</param>
-        /// <param name="serviceProvider">服务提供程序</param>
-        /// <param name="reason">转换原因</param>
-        /// <returns>状态转换上下文</returns>
-        public virtual IStatusTransitionContext CreateActionStatusContext(object entity, ActionStatus currentStatus, IServiceProvider serviceProvider, string reason = null)
-        {
-            try
-            {
-                var context = new StatusTransitionContext(
-                    entity as BaseEntity,
-                    typeof(ActionStatus),
-                    currentStatus,
-                    this,
-                    null); // 传递null，因为不再需要transitionEngine
-
-                return context;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "创建操作状态转换上下文失败");
-                throw;
-            }
-        }
-
-        /// <summary>
-        /// 创建UI更新状态转换上下文
-        /// </summary>
-        /// <param name="entity">实体对象</param>
-        /// <param name="currentStatus">当前状态</param>
-        /// <param name="serviceProvider">服务提供程序</param>
-        /// <param name="reason">转换原因</param>
-        /// <returns>状态转换上下文</returns>
-        public virtual IStatusTransitionContext CreateUIUpdateContext(object entity, DataStatus currentStatus, IServiceProvider serviceProvider, string reason = null)
-        {
-            try
-            {
-                var context = new StatusTransitionContext(
-                    entity as BaseEntity,
-                    typeof(DataStatus),
-                    currentStatus,
-                    this,
-                    null); // 传递null，因为不再需要transitionEngine
-
-                return context;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "创建UI更新状态转换上下文失败");
-                throw;
-            }
-        }
-
-        /// <summary>
-        /// 创建通用状态转换上下文
-        /// </summary>
-        /// <param name="entity">实体对象</param>
-        /// <param name="statusType">状态类型</param>
-        /// <param name="currentStatus">当前状态</param>
-        /// <param name="serviceProvider">服务提供程序</param>
-        /// <param name="reason">转换原因</param>
-        /// <returns>状态转换上下文</returns>
-        public virtual IStatusTransitionContext CreateContext(object entity, Type statusType, object currentStatus, IServiceProvider serviceProvider, string reason = null)
-        {
-            try
-            {
-                var context = new StatusTransitionContext(
-                    entity as BaseEntity,
-                    statusType,
-                    currentStatus,
-                    this,
-                    null); // 传递null，因为不再需要transitionEngine
-
-                return context;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "创建通用状态转换上下文失败");
-                throw;
-            }
-        }
-
-        /// <summary>
-        /// 清理状态缓存
-        /// </summary>
-        public virtual void ClearCache()
-        {
-            try
-            {
-                // 直接使用缓存管理器清理缓存
-                _cacheManager.ClearAllCache();
-                _logger.LogInformation("状态缓存已清理");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "清理状态缓存失败");
-                throw;
-            }
-        }
-
-        /// <summary>
-        /// 检查是否可以执行指定操作（带详细消息）
-        /// </summary>
-        /// <param name="stateManager">状态管理器</param>
-        /// <param name="statusType">状态类型</param>
-        /// <param name="status">当前状态</param>
         /// <param name="action">操作类型</param>
-        /// <returns>包含操作权限和友好提示消息的结果</returns>
-        public StateTransitionResult CanExecuteActionWithMessage(IUnifiedStateManager stateManager, BaseEntity entity, MenuItemEnums action)
+        /// <returns>操作结果</returns>
+        public (bool CanExecute, string Message) CanExecuteActionWithMessage(BaseEntity entity, MenuItemEnums action)
         {
-            try
+            if (entity == null)
+                return (false, "实体不能为空");
+
+            // 使用增强规则检查操作权限
+            var canExecute = CanExecuteAction(entity, action);
+
+            // 根据操作类型和当前状态返回相应的消息
+            if (canExecute)
             {
-                // 获取当前实体的状态类型和状态值
-                var statusType = entity.GetStatusType();
-                var currentStatus = entity.GetCurrentStatus();
-
-                if (currentStatus is Enum statusEnum)
-                {
-                    // 使用增强的规则检查
-                    bool canExecute = CanExecuteActionWithEnhancedRules(action, entity, statusType, statusEnum);
-
-                    // 生成友好的提示消息
-                    string message = canExecute ? GetSuccessMessage(action) : GetFailureMessage(action, GetDataStatus(entity));
-
-                    return canExecute
-                        ? StateTransitionResult.Success(message)
-                        : StateTransitionResult.Failure(message);
-                }
-                else
-                {
-                    return StateTransitionResult.Failure($"不支持的状态类型: {statusType.Name}");
-                }
+                return (true, GetSuccessMessage(action));
             }
-            catch (Exception ex)
+            else
             {
-                return StateTransitionResult.Failure($"检查操作权限时发生错误: {ex.Message}", ex);
+                return (false, GetFailureMessage(entity, action));
             }
+        }
+
+        /// <summary>
+        /// 使用增强规则检查操作权限
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        /// <param name="action">操作类型</param>
+        /// <returns>是否可以执行</returns>
+        private bool CanExecuteAction(BaseEntity entity, MenuItemEnums action)
+        {
+            // 获取实体的统一状态
+            var entityStatus = GetUnifiedStatus(entity);
+
+            // 如果没有状态信息，默认允许
+            if (entityStatus == null)
+                return true;
+
+            // 获取当前状态类型和值
+            var statusType = GetStatusType(entity);
+            var statusValue = entityStatus;
+
+            // 获取操作权限规则
+            var allowedActions = GetActionPermissionRules(statusType, statusValue);
+
+            // 检查当前状态是否允许执行指定操作
+            return allowedActions.Contains(action);
         }
 
         /// <summary>
         /// 获取操作权限规则
         /// </summary>
-        /// <returns>操作权限规则字典</returns>
-        private Dictionary<DataStatus, List<MenuItemEnums>> GetActionPermissionRules()
+        /// <param name="statusType">状态类型</param>
+        /// <param name="statusValue">状态值</param>
+        /// <returns>操作权限列表</returns>
+        private List<MenuItemEnums> GetActionPermissionRules(Type statusType, object statusValue)
         {
-            // 定义操作权限规则
-            var rules = new Dictionary<DataStatus, List<MenuItemEnums>>
-            {
-                [DataStatus.草稿] = new List<MenuItemEnums>
-                {
-                    MenuItemEnums.新增,
-                    MenuItemEnums.修改,
-                    MenuItemEnums.删除,
-                    MenuItemEnums.保存,
-                    MenuItemEnums.提交
-                },
-                [DataStatus.新建] = new List<MenuItemEnums>
-                {
-                    MenuItemEnums.修改,
-                    MenuItemEnums.删除,
-                    MenuItemEnums.保存,
-                    MenuItemEnums.提交,
-                    MenuItemEnums.审核
-                },
-                [DataStatus.确认] = new List<MenuItemEnums>
-                {
-                    MenuItemEnums.反审,
-                    MenuItemEnums.结案
-                },
-                [DataStatus.完结] = new List<MenuItemEnums>(),
-                [DataStatus.作废] = new List<MenuItemEnums>()
-            };
-
-            return rules;
+            // 使用UIControlRules中定义的规则
+            return UIControlRules.GetActionPermissionRules(statusType, statusValue);
         }
 
         /// <summary>
-        /// 获取操作成功的提示消息
+        /// 获取操作权限规则（基于DataStatus）
+        /// </summary>
+        /// <param name="status">数据状态</param>
+        /// <returns>操作权限列表</returns>
+        private List<MenuItemEnums> GetActionPermissionRules(DataStatus status)
+        {
+            // 使用UIControlRules中定义的规则
+            return UIControlRules.GetActionPermissionRules(typeof(DataStatus), status);
+        }
+
+        /// <summary>
+        /// 获取操作成功消息
         /// </summary>
         /// <param name="action">操作类型</param>
-        /// <returns>成功提示消息</returns>
+        /// <returns>成功消息</returns>
         private string GetSuccessMessage(MenuItemEnums action)
         {
             switch (action)
             {
-                case MenuItemEnums.新增:
-                    return "可以新增当前单据";
                 case MenuItemEnums.修改:
-                    return "可以修改当前单据";
+                    return "可以修改当前记录";
                 case MenuItemEnums.删除:
-                    return "可以删除当前单据";
+                    return "可以删除当前记录";
                 case MenuItemEnums.保存:
-                    return "可以保存当前单据";
+                    return "可以保存当前记录";
                 case MenuItemEnums.提交:
-                    return "可以提交当前单据";
+                    return "可以提交当前记录";
                 case MenuItemEnums.审核:
-                    return "可以审核当前单据";
+                    return "可以审核当前记录";
                 case MenuItemEnums.反审:
-                    return "可以反审核当前单据";
-                case MenuItemEnums.结案:
-                    return "可以结案当前单据";
+                    return "可以取消审核当前记录";
+                case MenuItemEnums.查询:
+                    return "可以查看当前记录";
+                case MenuItemEnums.打印:
+                    return "可以打印当前记录";
+                case MenuItemEnums.导出:
+                    return "可以导出当前记录";
                 default:
                     return "可以执行当前操作";
             }
         }
 
         /// <summary>
-        /// 获取操作失败的提示消息
-        /// </summary>
-        /// <param name="action">操作类型</param>
-        /// <param name="dataStatus">当前数据状态</param>
-        /// <returns>失败提示消息</returns>
-        private string GetFailureMessage(MenuItemEnums action, DataStatus dataStatus)
-        {
-            // 基本状态检查失败消息
-            string basicStatusMessage = GetBasicStatusFailureMessage(action, dataStatus);
-            if (!string.IsNullOrEmpty(basicStatusMessage))
-            {
-                return basicStatusMessage;
-            }
-
-            // 根据操作类型返回更具体的失败消息
-            switch (action)
-            {
-                case MenuItemEnums.新增:
-                    return dataStatus == DataStatus.草稿 || dataStatus == DataStatus.完结
-                        ? "可以新增当前单据"
-                        : $"只有草稿状态或完结状态的单据才能新增，当前状态：{dataStatus}";
-
-                case MenuItemEnums.修改:
-                    return GetModifyFailureMessage(dataStatus);
-
-                case MenuItemEnums.删除:
-                    return GetDeleteFailureMessage(dataStatus);
-
-                case MenuItemEnums.保存:
-                    return GetSaveFailureMessage(dataStatus);
-
-                case MenuItemEnums.提交:
-                    return GetSubmitFailureMessage(dataStatus);
-
-                case MenuItemEnums.审核:
-                    return GetApproveFailureMessage(dataStatus);
-
-                case MenuItemEnums.反审:
-                    return GetUnapproveFailureMessage(dataStatus);
-
-                case MenuItemEnums.结案:
-                    return GetCloseFailureMessage(dataStatus);
-
-                default:
-                    return "无法执行当前操作";
-            }
-        }
-
-        /// <summary>
-        /// 获取基本状态检查失败的提示消息
-        /// </summary>
-        /// <param name="action">操作类型</param>
-        /// <param name="dataStatus">当前数据状态</param>
-        /// <returns>失败提示消息</returns>
-        private string GetBasicStatusFailureMessage(MenuItemEnums action, DataStatus dataStatus)
-        {
-            switch (action)
-            {
-                case MenuItemEnums.修改:
-                case MenuItemEnums.删除:
-                case MenuItemEnums.保存:
-                    if (dataStatus != DataStatus.草稿 && dataStatus != DataStatus.新建)
-                    {
-                        return $"只有草稿状态或新建状态的单据才能{action}，当前状态：{dataStatus}";
-                    }
-                    break;
-
-                case MenuItemEnums.提交:
-                    if (dataStatus != DataStatus.草稿)
-                    {
-                        return $"只有草稿状态的单据才能提交，当前状态：{dataStatus}";
-                    }
-                    break;
-
-                case MenuItemEnums.审核:
-                    if (dataStatus != DataStatus.新建)
-                    {
-                        return $"只有新建状态的单据才能审核，当前状态：{dataStatus}";
-                    }
-                    break;
-
-                case MenuItemEnums.反审:
-                case MenuItemEnums.结案:
-                    if (dataStatus != DataStatus.确认)
-                    {
-                        return $"只有确认状态的单据才能{action}，当前状态：{dataStatus}";
-                    }
-                    break;
-
-                case MenuItemEnums.反结案:
-                    if (dataStatus != DataStatus.完结)
-                    {
-                        return $"只有完结状态的单据才能反结案，当前状态：{dataStatus}";
-                    }
-                    break;
-            }
-
-            return string.Empty;
-        }
-
-        /// <summary>
-        /// 获取修改操作失败的提示消息
-        /// </summary>
-        /// <param name="dataStatus">当前数据状态</param>
-        /// <returns>失败提示消息</returns>
-        private string GetModifyFailureMessage(DataStatus dataStatus)
-        {
-            if (dataStatus != DataStatus.草稿 && dataStatus != DataStatus.新建)
-            {
-                return $"只有草稿状态或新建状态的单据才能修改，当前状态：{dataStatus}";
-            }
-
-            return "当前单据已被锁定，无法修改";
-        }
-
-        /// <summary>
-        /// 获取删除操作失败的提示消息
-        /// </summary>
-        /// <param name="dataStatus">当前数据状态</param>
-        /// <returns>失败提示消息</returns>
-        private string GetDeleteFailureMessage(DataStatus dataStatus)
-        {
-            if (dataStatus != DataStatus.草稿 && dataStatus != DataStatus.新建)
-            {
-                return $"只有草稿状态或新建状态的单据才能删除，当前状态：{dataStatus}";
-            }
-
-            return "当前单据已被关联或使用，无法删除";
-        }
-
-        /// <summary>
-        /// 获取保存操作失败的提示消息
-        /// </summary>
-        /// <param name="dataStatus">当前数据状态</param>
-        /// <returns>失败提示消息</returns>
-        private string GetSaveFailureMessage(DataStatus dataStatus)
-        {
-            if (dataStatus != DataStatus.草稿 && dataStatus != DataStatus.新建)
-            {
-                return $"只有草稿状态或新建状态的单据才能保存，当前状态：{dataStatus}";
-            }
-
-            return "当前单据没有变更，无需保存";
-        }
-
-        /// <summary>
-        /// 获取提交操作失败的提示消息
-        /// </summary>
-        /// <param name="dataStatus">当前数据状态</param>
-        /// <returns>失败提示消息</returns>
-        private string GetSubmitFailureMessage(DataStatus dataStatus)
-        {
-            if (dataStatus != DataStatus.草稿)
-            {
-                return $"只有草稿状态的单据才能提交，当前状态：{dataStatus}";
-            }
-
-            return "当前单据信息不完整，无法提交";
-        }
-
-        /// <summary>
-        /// 获取审核操作失败的提示消息
-        /// </summary>
-        /// <param name="dataStatus">当前数据状态</param>
-        /// <returns>失败提示消息</returns>
-        private string GetApproveFailureMessage(DataStatus dataStatus)
-        {
-            if (dataStatus != DataStatus.新建)
-            {
-                return $"只有新建状态的单据才能审核，当前状态：{dataStatus}";
-            }
-
-            return "当前单据不满足审核条件";
-        }
-
-        /// <summary>
-        /// 获取反审核操作失败的提示消息
-        /// </summary>
-        /// <param name="dataStatus">当前数据状态</param>
-        /// <returns>失败提示消息</returns>
-        private string GetUnapproveFailureMessage(DataStatus dataStatus)
-        {
-            if (dataStatus != DataStatus.确认)
-            {
-                return $"只有确认状态的单据才能反审核，当前状态：{dataStatus}";
-            }
-
-            return "当前单据已完成后续业务流程（如支付、发货等），无法反审核";
-        }
-
-        /// <summary>
-        /// 获取结案操作失败的提示消息
-        /// </summary>
-        /// <param name="dataStatus">当前数据状态</param>
-        /// <returns>失败提示消息</returns>
-        private string GetCloseFailureMessage(DataStatus dataStatus)
-        {
-            if (dataStatus != DataStatus.确认)
-            {
-                return $"只有确认状态的单据才能结案，当前状态：{dataStatus}";
-            }
-
-            return "当前单据尚有未完成的业务流程（如待支付、部分支付等），无法结案";
-        }
-
-        /// <summary>
-        /// 检查是否可以执行指定操作
+        /// 获取操作失败消息
         /// </summary>
         /// <param name="entity">实体对象</param>
         /// <param name="action">操作类型</param>
-        /// <returns>是否可以执行</returns>
-        public virtual bool CanExecuteAction<TEntity>(TEntity entity, MenuItemEnums action) where TEntity : class
+        /// <returns>失败消息</returns>
+        private string GetFailureMessage(BaseEntity entity, MenuItemEnums action)
+        {
+            // 获取实体的统一状态
+            var entityStatus = GetUnifiedStatus(entity);
+
+            // 如果没有状态信息，返回通用消息
+            if (entityStatus == null)
+                return $"当前状态下不允许执行{action}操作";
+
+            // 获取当前状态类型和值
+            var statusType = GetStatusType(entity);
+            var statusValue = entityStatus;
+
+            // 根据状态类型和操作类型返回相应的失败消息
+            if (statusType == typeof(DataStatus))
+            {
+                var dataStatus = entityStatus.dataStatus.Value;
+                return GetDataStatusFailureMessage(dataStatus, action);
+            }
+            else if (statusType == typeof(PaymentStatus))
+            {
+                var paymentStatus = (PaymentStatus)entityStatus.CurrentStatus;
+                return GetPaymentStatusFailureMessage(paymentStatus, action);
+            }
+            else if (statusType == typeof(PrePaymentStatus))
+            {
+                var prePaymentStatus = (PrePaymentStatus)entityStatus.CurrentStatus;
+                return GetPrePaymentStatusFailureMessage(prePaymentStatus, action);
+            }
+            else if (statusType == typeof(ARAPStatus))
+            {
+                var arapStatus = (ARAPStatus)entityStatus.CurrentStatus;
+                return GetARAPStatusFailureMessage(arapStatus, action);
+            }
+            else if (statusType == typeof(StatementStatus))
+            {
+                var statementStatus = (StatementStatus)entityStatus.CurrentStatus;
+                return GetStatementStatusFailureMessage(statementStatus, action);
+            }
+
+            // 默认返回通用消息
+            return $"当前状态下不允许执行{action}操作";
+        }
+
+        /// <summary>
+        /// 获取数据状态操作失败消息
+        /// </summary>
+        /// <param name="status">数据状态</param>
+        /// <param name="action">操作类型</param>
+        /// <returns>失败消息</returns>
+        private string GetDataStatusFailureMessage(DataStatus status, MenuItemEnums action)
+        {
+            switch (action)
+            {
+                case MenuItemEnums.修改:
+                    if (status == DataStatus.完结 || status == DataStatus.作废)
+                        return status == DataStatus.完结 ? "已完结的记录不能修改" : "已作废的记录不能修改";
+                    break;
+                case MenuItemEnums.删除:
+                    if (status == DataStatus.确认 || status == DataStatus.完结 || status == DataStatus.作废)
+                        return status == DataStatus.确认 ? "已确认的记录不能删除" :
+                               status == DataStatus.完结 ? "已完结的记录不能删除" : "已作废的记录不能删除";
+                    break;
+                case MenuItemEnums.保存:
+                    if (status == DataStatus.完结 || status == DataStatus.作废)
+                        return status == DataStatus.完结 ? "已完结的记录不能保存" : "已作废的记录不能保存";
+                    break;
+                case MenuItemEnums.提交:
+                    if (status == DataStatus.完结 || status == DataStatus.作废)
+                        return status == DataStatus.完结 ? "已完结的记录不能提交" : "已作废的记录不能提交";
+                    break;
+                case MenuItemEnums.审核:
+                    if (status == DataStatus.草稿 || status == DataStatus.新建)
+                        return "草稿或新建状态的记录不能审核";
+                    break;
+                case MenuItemEnums.反审:
+                    if (status == DataStatus.草稿 || status == DataStatus.新建)
+                        return "草稿或新建状态的记录不能取消审核";
+                    if (status == DataStatus.完结 || status == DataStatus.作废)
+                        return status == DataStatus.完结 ? "已完结的记录不能取消审核" : "已作废的记录不能取消审核";
+                    break;
+            }
+
+            return $"当前状态下不允许执行{action}操作";
+        }
+
+        /// <summary>
+        /// 获取付款状态操作失败消息
+        /// </summary>
+        /// <param name="status">付款状态</param>
+        /// <param name="action">操作类型</param>
+        /// <returns>失败消息</returns>
+        private string GetPaymentStatusFailureMessage(PaymentStatus status, MenuItemEnums action)
+        {
+            switch (action)
+            {
+                case MenuItemEnums.修改:
+                case MenuItemEnums.删除:
+                case MenuItemEnums.保存:
+                case MenuItemEnums.提交:
+                    if (status == PaymentStatus.已支付)
+                        return "已支付的记录不能执行此操作";
+                    break;
+                case MenuItemEnums.审核:
+                    if (status == PaymentStatus.草稿)
+                        return "草稿状态的记录不能审核";
+                    if (status == PaymentStatus.已支付)
+                        return "已支付的记录不能审核";
+                    break;
+            }
+
+            return $"当前状态下不允许执行{action}操作";
+        }
+
+        /// <summary>
+        /// 获取预付款状态操作失败消息
+        /// </summary>
+        /// <param name="status">预付款状态</param>
+        /// <param name="action">操作类型</param>
+        /// <returns>失败消息</returns>
+        private string GetPrePaymentStatusFailureMessage(PrePaymentStatus status, MenuItemEnums action)
+        {
+            switch (action)
+            {
+                case MenuItemEnums.修改:
+                case MenuItemEnums.删除:
+                case MenuItemEnums.保存:
+                case MenuItemEnums.提交:
+                    if (status == PrePaymentStatus.已生效 || status == PrePaymentStatus.全额核销 || status == PrePaymentStatus.已结案)
+                        return "已生效或已核销的记录不能执行此操作";
+                    break;
+                case MenuItemEnums.审核:
+                    if (status == PrePaymentStatus.草稿)
+                        return "草稿状态的记录不能审核";
+                    if (status == PrePaymentStatus.已生效 || status == PrePaymentStatus.全额核销 || status == PrePaymentStatus.已结案)
+                        return "已生效或已核销的记录不能审核";
+                    break;
+            }
+
+            return $"当前状态下不允许执行{action}操作";
+        }
+
+        /// <summary>
+        /// 获取应收应付状态操作失败消息
+        /// </summary>
+        /// <param name="status">应收应付状态</param>
+        /// <param name="action">操作类型</param>
+        /// <returns>失败消息</returns>
+        private string GetARAPStatusFailureMessage(ARAPStatus status, MenuItemEnums action)
+        {
+            switch (action)
+            {
+                case MenuItemEnums.修改:
+                case MenuItemEnums.删除:
+                case MenuItemEnums.保存:
+                case MenuItemEnums.提交:
+                    if (status == ARAPStatus.全部支付 || status == ARAPStatus.坏账 || status == ARAPStatus.已冲销)
+                        return "已支付或已冲销的记录不能执行此操作";
+                    break;
+                case MenuItemEnums.审核:
+                    if (status == ARAPStatus.草稿)
+                        return "草稿状态的记录不能审核";
+                    if (status == ARAPStatus.全部支付 || status == ARAPStatus.坏账 || status == ARAPStatus.已冲销)
+                        return "已支付或已冲销的记录不能审核";
+                    break;
+            }
+
+            return $"当前状态下不允许执行{action}操作";
+        }
+
+        /// <summary>
+        /// 获取对账单状态操作失败消息
+        /// </summary>
+        /// <param name="status">对账单状态</param>
+        /// <param name="action">操作类型</param>
+        /// <returns>失败消息</returns>
+        private string GetStatementStatusFailureMessage(StatementStatus status, MenuItemEnums action)
+        {
+            switch (action)
+            {
+                case MenuItemEnums.修改:
+                case MenuItemEnums.删除:
+                case MenuItemEnums.保存:
+                case MenuItemEnums.提交:
+                    if (status == StatementStatus.已确认 || status == StatementStatus.已作废 || status == StatementStatus.已结清
+                        || status == StatementStatus.部分结算)
+                        return "已确认或已结案的记录不能执行此操作";
+                    break;
+                case MenuItemEnums.审核:
+                    if (status == StatementStatus.已发送)
+                        return "未确认状态的记录不能审核";
+                    if (status == StatementStatus.已结清)
+                        return "已结案的记录不能审核";
+                    break;
+            }
+
+            return $"当前状态下不允许执行{action}操作";
+        }
+
+        /// <summary>
+        /// 获取修改操作失败消息
+        /// </summary>
+        /// <param name="currentStatus">当前状态</param>
+        /// <returns>失败消息</returns>
+        private string GetModifyFailureMessage(DataStatus? currentStatus)
+        {
+            return GetDataStatusFailureMessage(currentStatus.Value, MenuItemEnums.修改);
+        }
+
+        /// <summary>
+        /// 获取删除操作失败消息
+        /// </summary>
+        /// <param name="currentStatus">当前状态</param>
+        /// <returns>失败消息</returns>
+        private string GetDeleteFailureMessage(DataStatus? currentStatus)
+        {
+            return GetDataStatusFailureMessage(currentStatus.Value, MenuItemEnums.删除);
+        }
+
+        /// <summary>
+        /// 获取保存操作失败消息
+        /// </summary>
+        /// <param name="currentStatus">当前状态</param>
+        /// <returns>失败消息</returns>
+        private string GetSaveFailureMessage(DataStatus? currentStatus)
+        {
+            return GetDataStatusFailureMessage(currentStatus.Value, MenuItemEnums.保存);
+        }
+
+        /// <summary>
+        /// 获取提交操作失败消息
+        /// </summary>
+        /// <param name="currentStatus">当前状态</param>
+        /// <returns>失败消息</returns>
+        private string GetSubmitFailureMessage(DataStatus? currentStatus)
+        {
+            return GetDataStatusFailureMessage(currentStatus.Value, MenuItemEnums.提交);
+        }
+
+        /// <summary>
+        /// 获取审核操作失败消息
+        /// </summary>
+        /// <param name="currentStatus">当前状态</param>
+        /// <returns>失败消息</returns>
+        private string GetApproveFailureMessage(DataStatus? currentStatus)
+        {
+            return GetDataStatusFailureMessage(currentStatus.Value, MenuItemEnums.审核);
+        }
+
+
+
+        /// <summary>
+        /// 检查业务特定规则
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        /// <param name="action">操作类型</param>
+        /// <returns>是否满足业务规则</returns>
+        private bool CheckBusinessSpecificRules(BaseEntity entity, MenuItemEnums action)
+        {
+            // 这里可以根据不同的业务实体类型实现特定的业务规则
+            // 默认返回true，表示满足业务规则
+            return true;
+        }
+
+        #endregion
+
+        #region UI控件影响方法
+
+        /// <summary>
+        /// 获取实体当前状态对应的UI控件状态
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        /// <returns>UI控件状态字典</returns>
+        public Dictionary<string, (bool Enabled, bool Visible)> GetUIControlStates(BaseEntity entity)
         {
             if (entity == null)
-                return false;
+                return new Dictionary<string, (bool Enabled, bool Visible)>();
 
-            try
-            {
-                // 如果是BaseEntity，使用现有的方法
-                if (entity is BaseEntity baseEntity && baseEntity.ContainsProperty(nameof(DataStatus)))
-                {
-                    return CanExecuteAction(action, baseEntity, typeof(DataStatus), GetDataStatus(baseEntity));
-                }
-                else if (entity is BaseEntity BizBaseEntity)
-                {
-                    return CanExecuteAction<BaseEntity>(BizBaseEntity, action);
-                }
-                //按理还要处理业务性的，像财务模块很多单据没有DataStatus，但为了简化这里就不处理了，将来完善
+            // 获取实体的数据状态和操作状态
+            var dataStatus = GetBusinessStatus(entity);
+            var statusType = GetStatusType(entity);
+            var actionStatus = entity.ActionStatus;
 
+            // 创建临时EntityStatus对象用于UI控件规则判断
+            var tempEntityStatus = new EntityStatus();
 
-                // 对于非BaseEntity类型，默认允许操作
-                // 在实际应用中，可能需要根据具体业务逻辑进行调整
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "检查操作权限失败：操作 {Action}，实体类型 {EntityType}", action, entity.GetType().Name);
-                return false;
-            }
+            tempEntityStatus.SetBusinessStatus(statusType, dataStatus);
+
+            tempEntityStatus.actionStatus = actionStatus;
+
+            return UIControlRules.GetButtonRules(tempEntityStatus);
         }
 
         /// <summary>
-        /// 检查是否可以执行指定操作
-        /// </summary>
-        /// <param name="action">操作类型</param>
-        /// <param name="entity">实体对象</param>
-        /// <param name="statusType">状态类型</param>
-        /// <param name="status">当前状态</param>
-        /// <returns>是否可以执行操作</returns>
-        public virtual bool CanExecuteAction(MenuItemEnums action, BaseEntity entity, Type statusType, object status)
-        {
-            if (entity == null || status == null)
-                return false;
-
-            try
-            {
-                // 优先使用UIControlRules检查按钮权限
-                if (statusType == typeof(DataStatus) && status is DataStatus dataStatus)
-                {
-                    var buttonRules = UIControlRules.GetButtonRules(dataStatus);
-
-                    // 将MenuItemEnums转换为按钮名称
-                    var buttonName = ConvertActionToButtonName(action);
-                    if (!string.IsNullOrEmpty(buttonName) &&
-                        buttonRules.TryGetValue(buttonName, out var buttonState))
-                    {
-                        return buttonState.Enabled;
-                    }
-                }
-
-                // 如果UIControlRules没有相关规则，使用增强的规则检查
-                return CanExecuteActionWithEnhancedRules(action, entity, statusType, status);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "检查操作权限失败：操作 {Action}，实体类型 {EntityType}", action, entity.GetType().Name);
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// 使用增强的规则检查是否可以执行指定操作
-        /// </summary>
-        /// <param name="action">操作类型</param>
-        /// <param name="entity">实体对象</param>
-        /// <param name="statusType">状态类型</param>
-        /// <param name="status">当前状态</param>
-        /// <returns>是否可以执行操作</returns>
-        private bool CanExecuteActionWithEnhancedRules(MenuItemEnums action, BaseEntity entity, Type statusType, object status)
-        {
-            // 获取当前数据状态
-            var currentDataStatus = GetDataStatus(entity);
-
-            // 获取操作权限规则
-            var actionRules = GetActionPermissionRules();
-
-            // 检查当前状态是否允许执行该操作
-            bool canExecute = actionRules.TryGetValue(currentDataStatus, out var allowedActions) &&
-                             allowedActions.Contains(action);
-
-            // 如果基本规则允许，进行更详细的业务规则检查
-            if (canExecute)
-            {
-                canExecute = CheckBusinessSpecificRules(action, entity, currentDataStatus);
-            }
-
-            return canExecute;
-        }
-
-        /// <summary>
-        /// 检查业务特定的规则
-        /// </summary>
-        /// <param name="action">操作类型</param>
-        /// <param name="entity">实体对象</param>
-        /// <param name="currentDataStatus">当前数据状态</param>
-        /// <returns>是否可以执行操作</returns>
-        private bool CheckBusinessSpecificRules(MenuItemEnums action, BaseEntity entity, DataStatus currentDataStatus)
-        {
-            // 根据操作类型进行特定的业务规则检查
-            switch (action)
-            {
-                case MenuItemEnums.修改:
-                    return CanModifyEntity(entity, currentDataStatus);
-
-                case MenuItemEnums.删除:
-                    return CanDeleteEntity(entity, currentDataStatus);
-
-                case MenuItemEnums.保存:
-                    return CanSaveEntity(entity, currentDataStatus);
-
-                case MenuItemEnums.提交:
-                    return CanSubmitEntity(entity, currentDataStatus);
-
-                case MenuItemEnums.审核:
-                    return CanApproveEntity(entity, currentDataStatus);
-
-                case MenuItemEnums.反审:
-                    return CanUnapproveEntity(entity, currentDataStatus);
-
-                case MenuItemEnums.结案:
-                    return CanCloseEntity(entity, currentDataStatus);
-
-                case MenuItemEnums.反结案:
-                    return CanUncloseEntity(entity, currentDataStatus);
-
-                default:
-                    // 对于其他操作，使用默认规则
-                    return true;
-            }
-        }
-
-        /// <summary>
-        /// 检查是否可以修改实体
+        /// 获取特定操作按钮的状态
         /// </summary>
         /// <param name="entity">实体对象</param>
-        /// <param name="currentDataStatus">当前数据状态</param>
-        /// <returns>是否可以修改</returns>
-        private bool CanModifyEntity(BaseEntity entity, DataStatus currentDataStatus)
-        {
-            // 基本状态检查
-            if (currentDataStatus != DataStatus.草稿 && currentDataStatus != DataStatus.新建)
-            {
-                return false;
-            }
-
-            // 检查是否有特殊业务状态限制修改
-            var businessStatuses = entity.StatusInfo?.BusinessStatuses;
-            if (businessStatuses != null)
-            {
-                // 检查是否有锁定状态
-                foreach (var businessStatus in businessStatuses)
-                {
-                    if (businessStatus.Value != null && businessStatus.Value.ToString().Contains("锁定"))
-                    {
-                        return false;
-                    }
-                }
-            }
-
-            return true;
-        }
-
-        /// <summary>
-        /// 检查是否可以删除实体
-        /// </summary>
-        /// <param name="entity">实体对象</param>
-        /// <param name="currentDataStatus">当前数据状态</param>
-        /// <returns>是否可以删除</returns>
-        private bool CanDeleteEntity(BaseEntity entity, DataStatus currentDataStatus)
-        {
-            // 基本状态检查
-            if (currentDataStatus != DataStatus.草稿 && currentDataStatus != DataStatus.新建)
-            {
-                return false;
-            }
-
-            // 检查是否有特殊业务状态限制删除
-            var businessStatuses = entity.StatusInfo?.BusinessStatuses;
-            if (businessStatuses != null)
-            {
-                // 检查是否有已关联状态，已关联的单据不能删除
-                foreach (var businessStatus in businessStatuses)
-                {
-                    if (businessStatus.Value != null &&
-                        (businessStatus.Value.ToString().Contains("已关联") ||
-                         businessStatus.Value.ToString().Contains("已使用")))
-                    {
-                        return false;
-                    }
-                }
-            }
-
-            return true;
-        }
-
-        /// <summary>
-        /// 检查是否可以保存实体
-        /// </summary>
-        /// <param name="entity">实体对象</param>
-        /// <param name="currentDataStatus">当前数据状态</param>
-        /// <returns>是否可以保存</returns>
-        private bool CanSaveEntity(BaseEntity entity, DataStatus currentDataStatus)
-        {
-            // 基本状态检查
-            if (currentDataStatus != DataStatus.草稿 && currentDataStatus != DataStatus.新建)
-            {
-                return false;
-            }
-
-            // 检查实体是否有变更
-            if (!entity.HasChanged)
-            {
-                return false;
-            }
-
-            return true;
-        }
-
-        /// <summary>
-        /// 检查是否可以提交实体
-        /// </summary>
-        /// <param name="entity">实体对象</param>
-        /// <param name="currentDataStatus">当前数据状态</param>
-        /// <returns>是否可以提交</returns>
-        private bool CanSubmitEntity(BaseEntity entity, DataStatus currentDataStatus)
-        {
-            // 基本状态检查
-            if (currentDataStatus != DataStatus.草稿)
-            {
-                return false;
-            }
-
-            // 检查必填字段是否完整
-            if (!IsEntityCompleteForSubmission(entity))
-            {
-                return false;
-            }
-
-            return true;
-        }
-
-        /// <summary>
-        /// 检查是否可以审核实体
-        /// </summary>
-        /// <param name="entity">实体对象</param>
-        /// <param name="currentDataStatus">当前数据状态</param>
-        /// <returns>是否可以审核</returns>
-        private bool CanApproveEntity(BaseEntity entity, DataStatus currentDataStatus)
-        {
-            // 基本状态检查
-            if (currentDataStatus != DataStatus.新建)
-            {
-                return false;
-            }
-
-            // 检查是否有待审核业务状态
-            var businessStatuses = entity.StatusInfo?.BusinessStatuses;
-            if (businessStatuses != null)
-            {
-                foreach (var businessStatus in businessStatuses)
-                {
-                    if (businessStatus.Value != null && businessStatus.Value.ToString().Contains("待审核"))
-                    {
-                        return true;
-                    }
-                }
-            }
-
-            return true;
-        }
-
-        /// <summary>
-        /// 检查是否可以反审核实体
-        /// </summary>
-        /// <param name="entity">实体对象</param>
-        /// <param name="currentDataStatus">当前数据状态</param>
-        /// <returns>是否可以反审核</returns>
-        private bool CanUnapproveEntity(BaseEntity entity, DataStatus currentDataStatus)
-        {
-            // 基本状态检查
-            if (currentDataStatus != DataStatus.确认)
-            {
-                return false;
-            }
-
-            // 检查是否有后续业务流程限制反审核
-            var businessStatuses = entity.StatusInfo?.BusinessStatuses;
-            if (businessStatuses != null)
-            {
-                foreach (var businessStatus in businessStatuses)
-                {
-                    // 已支付、已发货、已入库等状态不能反审核
-                    if (businessStatus.Value != null &&
-                        (businessStatus.Value.ToString().Contains("已支付") ||
-                         businessStatus.Value.ToString().Contains("已发货") ||
-                         businessStatus.Value.ToString().Contains("已入库")))
-                    {
-                        return false;
-                    }
-                }
-            }
-
-            return true;
-        }
-
-        /// <summary>
-        /// 检查是否可以结案实体
-        /// </summary>
-        /// <param name="entity">实体对象</param>
-        /// <param name="currentDataStatus">当前数据状态</param>
-        /// <returns>是否可以结案</returns>
-        private bool CanCloseEntity(BaseEntity entity, DataStatus currentDataStatus)
-        {
-            // 基本状态检查
-            if (currentDataStatus != DataStatus.确认)
-            {
-                return false;
-            }
-
-            // 检查是否满足结案条件
-            var businessStatuses = entity.StatusInfo?.BusinessStatuses;
-            if (businessStatuses != null)
-            {
-                foreach (var businessStatus in businessStatuses)
-                {
-                    // 检查是否有未完成的业务流程
-                    if (businessStatus.Value != null &&
-                        (businessStatus.Value.ToString().Contains("待支付") ||
-                         businessStatus.Value.ToString().Contains("部分支付") ||
-                         businessStatus.Value.ToString().Contains("待发货")))
-                    {
-                        return false;
-                    }
-                }
-            }
-
-            return true;
-        }
-
-        /// <summary>
-        /// 检查是否可以反结案实体
-        /// </summary>
-        /// <param name="entity">实体对象</param>
-        /// <param name="currentDataStatus">当前数据状态</param>
-        /// <returns>是否可以反结案</returns>
-        private bool CanUncloseEntity(BaseEntity entity, DataStatus currentDataStatus)
-        {
-            // 基本状态检查
-            if (currentDataStatus != DataStatus.完结)
-            {
-                return false;
-            }
-
-            // 检查是否有权限反结案
-            // 这里可以添加更复杂的权限检查逻辑
-            return true;
-        }
-
-        /// <summary>
-        /// 检查实体是否满足提交条件（必填字段等）
-        /// </summary>
-        /// <param name="entity">实体对象</param>
-        /// <returns>是否满足提交条件</returns>
-        private bool IsEntityCompleteForSubmission(BaseEntity entity)
-        {
-            // 这里可以添加更复杂的业务逻辑检查
-            // 例如：检查必填字段是否完整、业务规则是否满足等
-
-            // 基本检查：实体必须有变更
-            if (!entity.HasChanged)
-            {
-                return false;
-            }
-
-            // TODO: 添加更详细的业务逻辑检查
-            // 可以通过反射检查实体是否有[Required]标记的属性
-            // 或者根据特定业务类型进行不同的检查
-
-            return true;
-        }
-
-        /// <summary>
-        /// 将MenuItemEnums操作转换为按钮名称
-        /// </summary>
-        /// <param name="action">操作类型</param>
-        /// <returns>按钮名称</returns>
-        private string ConvertActionToButtonName(MenuItemEnums action)
-        {
-            switch (action)
-            {
-                case MenuItemEnums.新增:
-                    return "toolStripbtnAdd";
-                case MenuItemEnums.修改:
-                    return "toolStripbtnModify";
-                case MenuItemEnums.保存:
-                    return "toolStripButtonSave";
-                case MenuItemEnums.删除:
-                    return "toolStripbtnDelete";
-                case MenuItemEnums.提交:
-                    return "toolStripbtnSubmit";
-                case MenuItemEnums.审核:
-                    return "toolStripbtnReview";
-                case MenuItemEnums.反审:
-                    return "toolStripBtnReverseReview";
-                case MenuItemEnums.结案:
-                    return "toolStripButtonCaseClosed";
-                case MenuItemEnums.反结案:
-                    return "toolStripButtonAntiClosed";
-                case MenuItemEnums.打印:
-                    return "toolStripbtnPrint";
-                case MenuItemEnums.导出:
-                    return "toolStripButtonExport";
-                default:
-                    return string.Empty;
-            }
-        }
-
-        /// <summary>
-        /// 获取可用的操作列表（带详细消息）
-        /// </summary>
-        /// <param name="entity">实体对象</param>
-        /// <returns>可执行的操作列表及其状态消息</returns>
-        public virtual Dictionary<MenuItemEnums, string> GetAvailableActionsWithMessages(BaseEntity entity)
-        {
-            var result = new Dictionary<MenuItemEnums, string>();
-
-            if (entity == null)
-                return result;
-
-            try
-            {
-                // 获取当前实体的状态类型和状态值
-                var statusType = entity.GetStatusType();
-                var currentStatus = entity.GetCurrentStatus();
-
-                if (currentStatus is Enum statusEnum)
-                {
-                    // 获取所有可能的操作
-                    var allActions = Enum.GetValues(typeof(MenuItemEnums)).Cast<MenuItemEnums>();
-
-                    foreach (var action in allActions)
-                    {
-                        // 使用增强的规则检查
-                        bool canExecute = CanExecuteActionWithEnhancedRules(action, entity, statusType, statusEnum);
-
-                        // 生成友好的提示消息
-                        string message = canExecute ? GetSuccessMessage(action) : GetFailureMessage(action, GetDataStatus(entity));
-
-                        result[action] = message;
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "获取可用操作列表失败：实体类型 {EntityType}", entity.GetType().Name);
-            }
-
-            return result;
-        }
-
-        /// <summary>
-        /// 获取可用的操作列表
-        /// </summary>
-        /// <param name="entity">实体对象</param>
-        /// <param name="statusType">状态类型</param>
-        /// <param name="status">当前状态</param>
-        /// <returns>可执行的操作列表</returns>
-        public virtual IEnumerable<MenuItemEnums> GetAvailableActions(BaseEntity entity, Type statusType, object status)
-        {
-            if (entity == null || status == null)
-                return Enumerable.Empty<MenuItemEnums>();
-
-            try
-            {
-                // 优先使用UIControlRules获取可用操作
-                if (statusType == typeof(DataStatus) && status is DataStatus dataStatus)
-                {
-                    var buttonRules = UIControlRules.GetButtonRules(dataStatus);
-                    var availableActions = new List<MenuItemEnums>();
-
-                    // 将按钮规则转换为MenuItemEnums
-                    foreach (var rule in buttonRules.Where(r => r.Value.Enabled))
-                    {
-                        var action = ConvertButtonNameToAction(rule.Key);
-                        if (action.HasValue)
-                        {
-                            availableActions.Add(action.Value);
-                        }
-                    }
-
-                    if (availableActions.Any())
-                    {
-                        return availableActions;
-                    }
-                }
-
-                // 如果UIControlRules没有相关规则，使用增强的规则检查
-                var allActions = Enum.GetValues(typeof(MenuItemEnums)).Cast<MenuItemEnums>();
-                var lastAvailableActions = new List<MenuItemEnums>();
-
-                foreach (var action in allActions)
-                {
-                    if (CanExecuteActionWithEnhancedRules(action, entity, statusType, status))
-                    {
-                        lastAvailableActions.Add(action);
-                    }
-                }
-
-                return lastAvailableActions;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "获取可用操作列表失败：实体类型 {EntityType}", entity.GetType().Name);
-                return Enumerable.Empty<MenuItemEnums>();
-            }
-        }
-
-        /// <summary>
-        /// 将按钮名称转换为MenuItemEnums操作
-        /// </summary>
         /// <param name="buttonName">按钮名称</param>
-        /// <returns>操作类型</returns>
-        private MenuItemEnums? ConvertButtonNameToAction(string buttonName)
+        /// <returns>按钮状态</returns>
+        public (bool Enabled, bool Visible) GetButtonState(BaseEntity entity, string buttonName)
         {
-            switch (buttonName)
+            var uiStates = GetUIControlStates(entity);
+
+            if (uiStates.TryGetValue(buttonName, out var state))
             {
-                case "toolStripbtnAdd":
-                    return MenuItemEnums.新增;
-                case "toolStripbtnModify":
-                    return MenuItemEnums.修改;
-                case "toolStripButtonSave":
-                    return MenuItemEnums.保存;
-                case "toolStripbtnDelete":
-                    return MenuItemEnums.删除;
-                case "toolStripbtnSubmit":
-                    return MenuItemEnums.提交;
-                case "toolStripbtnReview":
-                    return MenuItemEnums.审核;
-                case "toolStripBtnReverseReview":
-                    return MenuItemEnums.反审;
-                case "toolStripButtonCaseClosed":
-                    return MenuItemEnums.结案;
-                case "toolStripButtonAntiClosed":
-                    return MenuItemEnums.反结案;
-                case "toolStripbtnPrint":
-                    return MenuItemEnums.打印;
-                case "toolStripButtonExport":
-                    return MenuItemEnums.导出;
-                default:
-                    return null;
+                return state;
             }
+
+            // 默认状态：启用且可见
+            return (true, true);
         }
 
-        ///// <summary>
-        ///// 获取实体在特定状态下的所有可用转换
-        ///// </summary>
-        ///// <param name="entity">实体对象</param>
-        ///// <param name="statusType">状态类型</param>
-        ///// <param name="status">当前状态</param>
-        ///// <returns>可转换到的状态列表</returns>
-        //public virtual IEnumerable<object> GetAvailableTransitions(BaseEntity entity, Type statusType, object status)
-        //{
-        //    if (entity == null || status == null)
-        //        return Enumerable.Empty<object>();
 
-        //    try
-        //    {
-        //        // 获取状态转换规则
-        //        var transitionRules = GetTransitionRules();
 
-        //        // 根据状态类型获取转换规则
-        //        if (statusType == typeof(DataStatus) && status is DataStatus dataStatus)
-        //        {
-        //            return StateTransitionRules.GetAvailableTransitions(transitionRules, dataStatus);
-        //        }
-        //        else if (statusType == typeof(ActionStatus) && status is ActionStatus actionStatus)
-        //        {
-        //            return StateTransitionRules.GetAvailableTransitions(transitionRules, actionStatus);
-        //        }
-        //        else if (statusType.IsEnum && status is Enum enumStatus)
-        //        {
-        //            // 对于其他枚举类型，尝试使用通用方法
-        //            return StateTransitionRules.GetAvailableTransitions(transitionRules, enumStatus);
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        _logger.LogError(ex, "获取可用转换列表失败：实体类型 {EntityType}，状态类型 {StatusType}", 
-        //            entity.GetType().Name, statusType?.Name);
-        //    }
 
-        //    return Enumerable.Empty<object>();
-        //}
 
         /// <summary>
-        /// 检查实体是否可以执行指定的UI操作
+        /// 检查操作是否会影响UI控件状态
         /// </summary>
-        /// <typeparam name="TEntity">实体类型</typeparam>
         /// <param name="entity">实体对象</param>
-        /// <param name="action">要执行的操作</param>
-        /// <returns>是否可以执行操作</returns>
-        public virtual bool CanExecuteAction<TEntity>(BaseEntity entity, MenuItemEnums action) where TEntity : class
+        /// <param name="action">操作类型</param>
+        /// <param name="targetStatus">目标状态</param>
+        /// <returns>UI控件变化信息</returns>
+        public (bool WillChange, Dictionary<string, (bool OldEnabled, bool OldVisible, bool NewEnabled, bool NewVisible)> Changes)
+            GetUIControlChanges(BaseEntity entity, MenuItemEnums action, object targetStatus = null)
         {
-            try
-            {
-                // 获取当前实体的状态类型和状态值
-                var statusType = entity.GetStatusType();
-                var currentStatus = entity.GetCurrentStatus();
+            if (entity == null)
+                return (false, new Dictionary<string, (bool, bool, bool, bool)>());
 
-                if (currentStatus is Enum statusEnum)
+            // 获取当前UI控件状态
+            var currentStates = GetUIControlStates(entity);
+
+            BaseEntity tempEntity = entity.Clone() as BaseEntity;
+            // 如果有额外的目标状态，也应用它
+            if (targetStatus != null)
+            {
+                // 处理其他枚举类型状态
+                SetBusinessStatusAsync(tempEntity, targetStatus.GetType(), targetStatus).Wait();
+            }
+
+            // 获取变化后的UI控件状态
+            var newStates = GetUIControlStates(tempEntity);
+
+            // 比较变化
+            var changes = new Dictionary<string, (bool OldEnabled, bool OldVisible, bool NewEnabled, bool NewVisible)>();
+            var hasChanges = false;
+
+            // 检查所有当前状态的按钮
+            foreach (var kvp in currentStates)
+            {
+                var buttonName = kvp.Key;
+                var oldState = kvp.Value;
+
+                if (newStates.TryGetValue(buttonName, out var newState))
                 {
-                    // 使用增强的规则检查
-                    return CanExecuteActionWithEnhancedRules(action, entity, statusType, statusEnum);
+                    if (oldState.Enabled != newState.Enabled || oldState.Visible != newState.Visible)
+                    {
+                        changes[buttonName] = (oldState.Enabled, oldState.Visible, newState.Enabled, newState.Visible);
+                        hasChanges = true;
+                    }
                 }
+            }
 
-                return false;
-            }
-            catch (Exception ex)
+            // 检查新增的按钮
+            foreach (var kvp in newStates)
             {
-                _logger.LogError(ex, "检查操作权限失败：实体类型 {EntityType}，操作 {Action}",
-                    typeof(TEntity).Name, action);
-                return false;
+                if (!currentStates.ContainsKey(kvp.Key))
+                {
+                    changes[kvp.Key] = (true, true, kvp.Value.Enabled, kvp.Value.Visible);
+                    hasChanges = true;
+                }
             }
+
+            return (hasChanges, changes);
         }
 
+        #endregion
+
+        #region 辅助方法
+
+
+
+        /// <summary>
+        /// 获取实体状态类型
+        /// 根据实体包含的属性判断使用哪种状态类型
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        /// <returns>状态类型</returns>
+        public Type GetBusinessStatusType(BaseEntity entity)
+        {
+            // 检查实体是否包含DataStatus属性
+            if (entity.ContainsProperty(typeof(DataStatus).Name))
+                return typeof(DataStatus);
+
+            // 检查实体是否包含PrePaymentStatus属性
+            if (entity.ContainsProperty(typeof(PrePaymentStatus).Name))
+                return typeof(PrePaymentStatus);
+
+            // 检查实体是否包含ARAPStatus属性
+            if (entity.ContainsProperty(typeof(ARAPStatus).Name))
+                return typeof(ARAPStatus);
+
+            // 检查实体是否包含PaymentStatus属性
+            if (entity.ContainsProperty(typeof(PaymentStatus).Name))
+                return typeof(PaymentStatus);
+
+            // 检查实体是否包含StatementStatus属性
+            if (entity.ContainsProperty(typeof(StatementStatus).Name))
+                return typeof(StatementStatus);
+
+            return null;
+        }
         #endregion
 
         #region IDisposable实现
@@ -2080,27 +1106,10 @@ namespace RUINORERP.Model.Base.StatusManager
         /// </summary>
         public void Dispose()
         {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
+            // 清除事件订阅
+            StatusChanged = null;
 
-        /// <summary>
-        /// 释放资源的具体实现
-        /// </summary>
-        /// <param name="disposing">是否正在释放托管资源</param>
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!_disposed)
-            {
-                if (disposing)
-                {
-                    // 释放托管资源 - 不调用接口的Dispose方法，因为它们可能没有实现
-                    // 不再需要释放_transitionEngine资源
-                    // _ruleConfiguration?.Dispose();
-                }
-
-                _disposed = true;
-            }
+            // 清除缓存
         }
 
         #endregion

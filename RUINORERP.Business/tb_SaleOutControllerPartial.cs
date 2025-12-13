@@ -248,7 +248,7 @@ namespace RUINORERP.Business
                 foreach (var entity in entitys)
                 {
                     //结案的出库单。先要是审核成功通过的
-                    if (entity.DataStatus == (int)DataStatus.确认 && (entity.ApprovalStatus.HasValue && entity.ApprovalStatus.Value == (int)ApprovalStatus.已审核 && entity.ApprovalResults.Value))
+                    if (entity.DataStatus == (int)DataStatus.确认 && (entity.ApprovalStatus.HasValue && entity.ApprovalStatus.Value == (int)ApprovalStatus.审核通过 && entity.ApprovalResults.Value))
                     {
                         //只修改订单的付款状态
                         if (entity.tb_saleorder.TotalQty == entity.tb_SaleOutDetails.Sum(c => c.Quantity))
@@ -843,7 +843,7 @@ namespace RUINORERP.Business
                     }
 
                     entity.DataStatus = (int)DataStatus.确认;
-                    entity.ApprovalStatus = (int)ApprovalStatus.已审核;
+                    entity.ApprovalStatus = (int)ApprovalStatus.审核通过;
                     entity.ApprovalResults = true;
                     BusinessHelper.Instance.ApproverEntity(entity);
                     //只更新指定列
@@ -851,7 +851,7 @@ namespace RUINORERP.Business
                 else
                 {
                     entity.DataStatus = (int)DataStatus.新建;
-                    entity.ApprovalStatus = (int)ApprovalStatus.驳回;
+                    entity.ApprovalStatus = (int)ApprovalStatus.审核驳回;
                     entity.ApprovalResults = false;
                 }
 
@@ -911,7 +911,7 @@ namespace RUINORERP.Business
 
                 //判断是否能反审?
                 if (entity.tb_SaleOutRes != null
-                    && (entity.tb_SaleOutRes.Any(c => c.DataStatus == (int)DataStatus.确认 || c.DataStatus == (int)DataStatus.完结) && entity.tb_SaleOutRes.Any(c => c.ApprovalStatus == (int)ApprovalStatus.已审核)))
+                    && (entity.tb_SaleOutRes.Any(c => c.DataStatus == (int)DataStatus.确认 || c.DataStatus == (int)DataStatus.完结) && entity.tb_SaleOutRes.Any(c => c.ApprovalStatus == (int)ApprovalStatus.审核通过)))
                 {
 
                     rs.ErrorMsg = "存在已确认或已完结，或已审核的销售退回单，不能反审核  ";

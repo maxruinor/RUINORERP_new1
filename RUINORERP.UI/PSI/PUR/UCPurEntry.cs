@@ -380,7 +380,7 @@ namespace RUINORERP.UI.PSI.PUR
 
             var lambdaSaleOut = Expressionable.Create<tb_PurOrder>()
          .And(t => t.DataStatus == (int)DataStatus.确认)
-         .And(t => t.ApprovalStatus.HasValue && t.ApprovalStatus.Value == (int)ApprovalStatus.已审核)
+         .And(t => t.ApprovalStatus.HasValue && t.ApprovalStatus.Value == (int)ApprovalStatus.审核通过)
          .And(t => t.ApprovalResults.HasValue && t.ApprovalResults.Value == true)
           .And(t => t.isdeleted == false)
          .ToExpression();

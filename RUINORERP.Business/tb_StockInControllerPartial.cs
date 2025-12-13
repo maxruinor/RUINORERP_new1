@@ -135,7 +135,7 @@ namespace RUINORERP.Business
                 //entity.ApprovalOpinions = approvalEntity.ApprovalComments;
                 //后面已经修改为
                 // entity.ApprovalResults = approvalEntity.ApprovalResults;
-                entity.ApprovalStatus = (int)ApprovalStatus.已审核;
+                entity.ApprovalStatus = (int)ApprovalStatus.审核通过;
                 BusinessHelper.Instance.ApproverEntity(entity);
                 var result = await _unitOfWorkManage.GetDbClient().Updateable(entity)
                                               .UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions, it.ApprovalResults, it.ApprovalStatus, it.Approver_at, it.Approver_by })

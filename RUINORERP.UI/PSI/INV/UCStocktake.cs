@@ -184,7 +184,7 @@ namespace RUINORERP.UI.PSI.INV
             }
 
             EditEntity = entity;
-            if (EditEntity.ApprovalStatus.Value == (int)ApprovalStatus.已审核)
+            if (EditEntity.ApprovalStatus.Value == (int)ApprovalStatus.审核通过)
             {
                 if (EditEntity.ApprovalResults.HasValue && EditEntity.ApprovalResults.Value)
                 {

@@ -209,7 +209,7 @@ namespace RUINORERP.Business.Document.Converters
             if (result.CanConvert)
             {
                 // 检查入库单状态是否为已审核
-                if (source.ApprovalStatus != (int)ApprovalStatus.已审核 || !source.ApprovalResults.GetValueOrDefault())
+                if (source.ApprovalStatus != (int)ApprovalStatus.审核通过 || !source.ApprovalResults.GetValueOrDefault())
                 {
                     result.CanConvert = false;
                     result.ErrorMessage = "只有已审核通过的采购入库单才能生成采购退货单";

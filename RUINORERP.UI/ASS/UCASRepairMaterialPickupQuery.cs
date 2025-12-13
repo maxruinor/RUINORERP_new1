@@ -243,7 +243,7 @@ namespace RUINORERP.UI.MRP.MP
                 return false;
             }
             //已经审核的并且通过的情况才能结案
-            List<tb_AS_RepairMaterialPickup> needCloseCases = EditEntitys.Where(c => c.DataStatus == (int)DataStatus.确认 && c.ApprovalStatus == (int)ApprovalStatus.已审核 && c.ApprovalResults.HasValue && c.ApprovalResults.Value).ToList();
+            List<tb_AS_RepairMaterialPickup> needCloseCases = EditEntitys.Where(c => c.DataStatus == (int)DataStatus.确认 && c.ApprovalStatus == (int)ApprovalStatus.审核通过 && c.ApprovalResults.HasValue && c.ApprovalResults.Value).ToList();
             if (needCloseCases.Count == 0)
             {
                 MainForm.Instance.PrintInfoLog($"要结案的数据为：{needCloseCases.Count}:请检查数据！");

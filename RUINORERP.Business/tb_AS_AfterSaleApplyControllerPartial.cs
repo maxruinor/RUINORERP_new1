@@ -295,7 +295,7 @@ namespace RUINORERP.Business
 
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.确认;
-                entity.ApprovalStatus = (int)ApprovalStatus.已审核;
+                entity.ApprovalStatus = (int)ApprovalStatus.审核通过;
                 entity.ApprovalResults = true;
                 BusinessHelper.Instance.ApproverEntity(entity);
                 //只更新指定列
@@ -359,7 +359,7 @@ namespace RUINORERP.Business
                 //判断是否能反审? 如果出库是草稿，订单反审 修改后。出库再提交 审核。所以 出库审核要核对订单数据。
                 if (entity.tb_AS_AfterSaleDeliveries != null
                     && (entity.tb_AS_AfterSaleDeliveries.Any(c => c.DataStatus == (int)DataStatus.确认 || c.DataStatus == (int)DataStatus.完结)
-                    && entity.tb_AS_AfterSaleDeliveries.Any(c => c.ApprovalStatus == (int)ApprovalStatus.已审核)))
+                    && entity.tb_AS_AfterSaleDeliveries.Any(c => c.ApprovalStatus == (int)ApprovalStatus.审核通过)))
                 {
                     rmrs.ErrorMsg = "存在已确认或已完结，或已审核的【售后交付单】，不能反审核,请联系管理员，或作退回处理。";
                     rmrs.Succeeded = false;

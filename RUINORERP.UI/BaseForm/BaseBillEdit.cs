@@ -38,6 +38,7 @@ using System.Web.UI;
 using Control = System.Windows.Forms.Control;
 using RUINORERP.Model.Base.StatusManager;
 using UserControl = System.Windows.Forms.UserControl;
+using Org.BouncyCastle.Asn1.X509.Qualified;
 
 namespace RUINORERP.UI.BaseForm
 {
@@ -70,11 +71,6 @@ namespace RUINORERP.UI.BaseForm
         /// v3统一状态管理器
         /// </summary>
         public IUnifiedStateManager _stateManager;
-
-        /// <summary>
-        /// v3状态上下文
-        /// </summary>
-        private IStatusTransitionContext _statusContext;
 
 
         /// <summary>
@@ -120,23 +116,7 @@ namespace RUINORERP.UI.BaseForm
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public BaseEntity BoundEntity { get; set; }
 
-        /// <summary>
-        /// v3状态上下文
-        /// </summary>
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public IStatusTransitionContext StatusContext
-        {
-            get => _statusContext;
-            set
-            {
-                if (_statusContext != value)
-                {
-                    _statusContext = value;
-                    // 状态上下文变更时不再需要特殊处理，状态变更事件由UnifiedStateManager统一管理
-                }
-            }
-        }
+
 
         #endregion
 
@@ -200,38 +180,9 @@ namespace RUINORERP.UI.BaseForm
                 return;
             }
             BoundEntity = entity;
-            InitializeStatusContext(entity);
         }
 
-        /// <summary>
-        /// 初始化状态上下文
-        /// </summary>
-        /// <param name="entity">实体对象</param>
-        private void InitializeStatusContext(BaseEntity entity)
-        {
-            try
-            {
-                // 优先使用状态管理器创建并初始化状态上下文
-                if (_stateManager != null)
-                {
-                    // 使用状态管理器创建状态上下文
-                    var dataStatus = _stateManager.GetDataStatus(entity);
-                    StatusContext = _stateManager.CreateDataStatusContext(entity, dataStatus, Startup.ServiceProvider);
-                }
-                else if (StatusContext == null)
-                {
-                    // 备选方案：创建基本状态上下文
-                    // 这种情况理论上不应该发生，因为_stateManager应该总是可用
-                    logger?.LogWarning("状态管理器不可用，无法创建状态上下文");
-                    StatusContext = null;
-                }
-            }
-            catch (Exception ex)
-            {
-                logger?.LogError(ex, "初始化实体状态上下文失败");
-                System.Diagnostics.Debug.WriteLine($"初始化实体状态上下文失败: {ex.Message}");
-            }
-        }
+
 
         /// <summary>
         /// 解绑实体对象
@@ -239,27 +190,28 @@ namespace RUINORERP.UI.BaseForm
         public virtual void UnbindEntity()
         {
             BoundEntity = null;
-            StatusContext = null;
         }
 
 
         /// <summary>
         /// 更新状态栏显示
         /// </summary>
-        protected virtual void UpdateStatusDisplay()
+        protected virtual void UpdateStatusDisplay(BaseEntity entity)
         {
             try
             {
                 // 尝试查找并更新状态标签
                 var statusLabel = this.Controls.Find("lblStatus", true).FirstOrDefault() as KryptonLabel;
-                if (statusLabel != null && StatusContext?.CurrentStatus is DataStatus currentStatus)
+                var currentStatus = StateManager.GetBusinessStatus(entity);
+                var statusType = StateManager.GetStatusType(entity);
+                if (statusLabel != null && statusType.Name == nameof(DataStatus))
                 {
                     // 使用Description属性获取显示名称，因为DataStatus没有GetDisplayName方法
                     var fieldInfo = typeof(DataStatus).GetField(currentStatus.ToString());
                     var descriptionAttribute = Attribute.GetCustomAttribute(fieldInfo, typeof(DescriptionAttribute)) as DescriptionAttribute;
                     string displayName = descriptionAttribute?.Description ?? currentStatus.ToString();
                     statusLabel.Text = $"状态: {displayName}";
-                    statusLabel.ForeColor = GetStatusColor(currentStatus);
+                    //statusLabel.ForeColor = GetStatusColor(currentStatus);
                 }
             }
             catch (Exception ex)
@@ -274,40 +226,20 @@ namespace RUINORERP.UI.BaseForm
         /// <param name="entity">实体对象</param>
         protected virtual void UpdateAllUIStates(BaseEntity entity)
         {
-            if (entity == null) return;
+           
+            //if (entity == null) return;
 
-            // 确保状态上下文已初始化
-            if (StatusContext == null)
-            {
-                InitializeStatusContext(entity);
-            }
+            //var currentStatus = StateManager.GetBusinessStatus(entity);
+            //var currentStatusType = StateManager.GetStatusType(entity);
 
-            // 获取当前状态，优先使用状态管理器，回退到状态上下文
-            DataStatus currentStatus;
-            if (_stateManager != null)
-            {
-                currentStatus = _stateManager.GetDataStatus(entity);
-            }
-            else if (StatusContext?.CurrentStatus is DataStatus status)
-            {
-                currentStatus = status;
-            }
-            else
-            {
-                // 回退方案：直接从实体获取状态
-                currentStatus = entity.GetDataStatus();
-            }
+            //// 更新UI控件状态
+            ////UpdateUIControlsByState(currentStatus);
 
+            //// 更新状态显示
+            //UpdateStatusDisplay(entity);
 
-
-            // 更新UI控件状态
-            UpdateUIControlsByState(currentStatus);
-
-            // 更新状态显示
-            UpdateStatusDisplay();
-
-            // 更新打印状态显示
-            UpdatePrintStatusDisplay(entity);
+            //// 更新打印状态显示
+            //UpdatePrintStatusDisplay(entity);
         }
 
         /// <summary>
@@ -344,38 +276,7 @@ namespace RUINORERP.UI.BaseForm
 
         #endregion
 
-        #region 状态转换
-
-        /// <summary>
-        /// 执行状态转换
-        /// </summary>
-        /// <param name="targetStatus">目标状态</param>
-        /// <param name="reason">转换原因</param>
-        /// <returns>转换结果</returns>
-        public virtual async Task<StateTransitionResult> TransitionToAsync(DataStatus targetStatus, string reason = "")
-        {
-            if (StatusContext == null)
-                return StateTransitionResult.Failure("状态上下文未初始化");
-
-            try
-            {
-                var result = await StatusContext.TransitionTo(targetStatus, reason);
-
-                if (result.IsSuccess)
-                {
-                    return StateTransitionResult.Success();
-                }
-
-                return StateTransitionResult.Failure($"转换到数据状态失败: {targetStatus}");
-            }
-            catch (Exception ex)
-            {
-                return StateTransitionResult.Failure($"状态转换失败: {ex.Message}");
-            }
-        }
-
-
-        #endregion
+       
 
         #endregion
 
@@ -432,7 +333,7 @@ namespace RUINORERP.UI.BaseForm
         /// 根据状态更新UI控件（子类可重写）
         /// </summary>
         /// <param name="currentStatus">当前状态</param>
-        protected virtual void UpdateUIControlsByState(DataStatus currentStatus)
+        protected virtual void UpdateUIControlsByState(EntityStatus currentStatus)
         {
             try
             {
@@ -560,10 +461,7 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
-        protected virtual void UpdateAllButtonStates(DataStatus currentStatus)
-        {
-
-        }
+ 
 
         private void bwRemoting_progressChanged(object sender, ProgressChangedEventArgs e)
         {
@@ -885,16 +783,6 @@ namespace RUINORERP.UI.BaseForm
             {
                 // 设置加载状态和主键ID（统一在这里处理）
                 entity.ActionStatus = ActionStatus.加载;
-
-
-                // 确保实体已初始化状态管理器
-                if (!entity.IsStateManagerInitialized)
-                {
-                    entity.InitializeStateManager();
-                }
-
-                // 根据实体状态更新UI
-                UpdateAllUIStates(entity);
             }
         }
 
@@ -1022,9 +910,6 @@ namespace RUINORERP.UI.BaseForm
             // 防止重复订阅，先取消再订阅
             entity.StatusChanged -= OnEntityStatusChanged;
             entity.StatusChanged += OnEntityStatusChanged;
-
-            // 确保状态上下文已初始化
-            EnsureStatusContext(entity);
         }
 
         /// <summary>
@@ -1052,41 +937,6 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
-        /// <summary>
-        /// 确保状态上下文被正确初始化
-        /// </summary>
-        /// <param name="entity">实体对象</param>
-        protected void EnsureStatusContext(BaseEntity entity)
-        {
-            if (entity == null) return;
-
-            // 如果StatusContext为null，尝试从实体中获取
-            if (StatusContext == null)
-            {
-                if (BoundEntity == null)
-                {
-                    BoundEntity = entity;
-                }
-                StatusContext = entity.StatusContext;
-            }
-
-            // 如果仍然为null，尝试重新初始化
-            if (StatusContext == null && StateManager != null)
-            {
-                try
-                {
-                    // 获取实体当前的数据状态
-                    var currentDataStatus = StateManager.GetDataStatus(entity);
-                    var ServiceProvider = Startup.GetFromFac<IServiceProvider>();
-                    // 使用状态管理器重新创建状态上下文
-                    StatusContext = StateManager.CreateDataStatusContext(entity, currentDataStatus, ServiceProvider);
-                }
-                catch (Exception ex)
-                {
-                    logger?.LogError(ex, "重新初始化状态上下文失败: {ex.Message}", ex);
-                }
-            }
-        }
 
         private bool editflag;
 

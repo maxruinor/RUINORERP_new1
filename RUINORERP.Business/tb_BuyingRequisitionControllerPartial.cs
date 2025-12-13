@@ -52,7 +52,7 @@ namespace RUINORERP.Business
                 foreach (var entity in entitys)
                 {
                     //结案的出库单。先要是审核成功通过的
-                    if (entity.DataStatus == (int)DataStatus.确认 && (entity.ApprovalStatus.HasValue && entity.ApprovalStatus.Value == (int)ApprovalStatus.已审核 && entity.ApprovalResults.Value))
+                    if (entity.DataStatus == (int)DataStatus.确认 && (entity.ApprovalStatus.HasValue && entity.ApprovalStatus.Value == (int)ApprovalStatus.审核通过 && entity.ApprovalResults.Value))
                     {
                         foreach (var child in entity.tb_BuyingRequisitionDetails)
                         {
@@ -116,7 +116,7 @@ namespace RUINORERP.Business
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.确认;
 
-                entity.ApprovalStatus = (int)ApprovalStatus.已审核;
+                entity.ApprovalStatus = (int)ApprovalStatus.审核通过;
                 BusinessHelper.Instance.ApproverEntity(entity);
                 //只更新指定列
                 //只更新指定列

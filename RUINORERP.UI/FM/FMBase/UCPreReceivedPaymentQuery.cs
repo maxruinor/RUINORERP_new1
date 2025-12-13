@@ -122,7 +122,7 @@ namespace RUINORERP.UI.FM
             foreach (var item in selectlist)
             {
                 //只有审核状态才可以转换为收款单  或部分核销，一张预付款  核销了一部分。还有一部分要收取时用部分核销。
-                bool canConvert = item.ApprovalStatus == (int)ApprovalStatus.已审核 && item.ApprovalResults.HasValue && item.ApprovalResults.Value;
+                bool canConvert = item.ApprovalStatus == (int)ApprovalStatus.审核通过 && item.ApprovalResults.HasValue && item.ApprovalResults.Value;
                 if (canConvert && item.PrePaymentStatus >= (int)PrePaymentStatus.部分核销)
                 {
                     RealList.Add(item);
@@ -314,7 +314,7 @@ namespace RUINORERP.UI.FM
             foreach (var item in selectlist)
             {
                 //预收付时，没有真正付前可以合并一起收付
-                bool canConvert = item.PrePaymentStatus == (int)PrePaymentStatus.已生效 && item.ApprovalStatus == (int)ApprovalStatus.已审核 && item.ApprovalResults.HasValue && item.ApprovalResults.Value;
+                bool canConvert = item.PrePaymentStatus == (int)PrePaymentStatus.已生效 && item.ApprovalStatus == (int)ApprovalStatus.审核通过 && item.ApprovalResults.HasValue && item.ApprovalResults.Value;
                 if (canConvert)
                 {
                     RealList.Add(item);
@@ -421,7 +421,7 @@ namespace RUINORERP.UI.FM
             {
                 //预收付时，没有真正付前可以合并一起收付
                 bool canConvert = item.PrePaymentStatus == (int)PrePaymentStatus.待核销
-                    && item.ApprovalStatus == (int)ApprovalStatus.已审核
+                    && item.ApprovalStatus == (int)ApprovalStatus.审核通过
                     && item.ApprovalResults.HasValue && item.ApprovalResults.Value;
 
                 if (canConvert || item.PrePaymentStatus == (int)PrePaymentStatus.部分核销)

@@ -60,7 +60,7 @@ namespace RUINORERP.Business
                 foreach (var entity in entitys)
                 {
                     //结案的出库单。先要是审核成功通过的
-                    if (entity.DataStatus == (int)DataStatus.确认 && (entity.ApprovalStatus.HasValue && entity.ApprovalStatus.Value == (int)ApprovalStatus.已审核 && entity.ApprovalResults.Value))
+                    if (entity.DataStatus == (int)DataStatus.确认 && (entity.ApprovalStatus.HasValue && entity.ApprovalStatus.Value == (int)ApprovalStatus.审核通过 && entity.ApprovalResults.Value))
                     {
                         ////只修改订单的付款状态
                         //if (entity.tb_MaterialReturnDetails.TotalQty == entity.tb_SaleOutDetails.Sum(c => c.Quantity))
@@ -224,7 +224,7 @@ namespace RUINORERP.Business
                 //entity.tb_materialrequisition.TotalSendQty = entity.tb_materialrequisition.tb_MaterialRequisitionDetails.Sum(s => s.ActualSentQty);
                 await _unitOfWorkManage.GetDbClient().Updateable(entity.tb_materialrequisition).UpdateColumns(t => new { t.TotalReQty }).ExecuteCommandAsync();
 
-                entity.ApprovalStatus = (int)ApprovalStatus.已审核;
+                entity.ApprovalStatus = (int)ApprovalStatus.审核通过;
                 BusinessHelper.Instance.ApproverEntity(entity);
                 //只更新指定列
                 int last = await _unitOfWorkManage.GetDbClient().Updateable<tb_MaterialReturn>(entity).ExecuteCommandAsync();

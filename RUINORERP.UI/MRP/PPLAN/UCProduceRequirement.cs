@@ -381,7 +381,7 @@ namespace RUINORERP.UI.MRP.MP
             //如果审核过的，不允许修改
             if (demand.ApprovalStatus.HasValue)
             {
-                if (demand.ApprovalStatus.Value == (int)ApprovalStatus.已审核)
+                if (demand.ApprovalStatus.Value == (int)ApprovalStatus.审核通过)
                 {
                     btnCreatePurRequisition.Enabled = false;
                     btnCreateProduction.Enabled = false;
@@ -1297,7 +1297,7 @@ protected async override Task<ApprovalEntity> ReReview()
             List<tb_ProductionDemand> EditEntitys = new List<tb_ProductionDemand>();
             EditEntitys.Add(EditEntity);
             //已经审核的并且通过的情况才能结案
-            List<tb_ProductionDemand> needCloseCases = EditEntitys.Where(c => c.DataStatus == (int)DataStatus.确认 && c.ApprovalStatus == (int)ApprovalStatus.已审核 && c.ApprovalResults.HasValue && c.ApprovalResults.Value).ToList();
+            List<tb_ProductionDemand> needCloseCases = EditEntitys.Where(c => c.DataStatus == (int)DataStatus.确认 && c.ApprovalStatus == (int)ApprovalStatus.审核通过 && c.ApprovalResults.HasValue && c.ApprovalResults.Value).ToList();
             if (needCloseCases.Count == 0)
             {
                 MainForm.Instance.PrintInfoLog($"要结案的数据为：{needCloseCases.Count}:请检查数据！");

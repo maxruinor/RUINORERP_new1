@@ -18,7 +18,6 @@ namespace RUINORERP.UI.BaseForm
             if (disposing && (components != null))
             {
                 components.Dispose();
-                StatusContext = null;
                 
                 // 取消订阅锁状态变化
                 try

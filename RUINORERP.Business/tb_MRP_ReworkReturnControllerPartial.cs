@@ -173,7 +173,7 @@ namespace RUINORERP.Business
                 //  entity.ApprovalOpinions = approvalEntity.ApprovalComments;
                 //后面已经修改为
                 //  entity.ApprovalResults = approvalEntity.ApprovalResults;
-                entity.ApprovalStatus = (int)ApprovalStatus.已审核;
+                entity.ApprovalStatus = (int)ApprovalStatus.审核通过;
                 BusinessHelper.Instance.ApproverEntity(entity);
                 var result = await _unitOfWorkManage.GetDbClient().Updateable(entity)
                                                 .UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions, it.ApprovalResults, it.ApprovalStatus, it.Approver_at, it.Approver_by })
@@ -210,7 +210,7 @@ namespace RUINORERP.Business
             rs.Succeeded = false;
             try
             {
-                if (entity.tb_MRP_ReworkEntries != null && (entity.tb_MRP_ReworkEntries.Any(c => c.DataStatus == (int)DataStatus.确认 || c.DataStatus == (int)DataStatus.完结) && entity.tb_MRP_ReworkEntries.Any(c => c.ApprovalStatus == (int)ApprovalStatus.已审核)))
+                if (entity.tb_MRP_ReworkEntries != null && (entity.tb_MRP_ReworkEntries.Any(c => c.DataStatus == (int)DataStatus.确认 || c.DataStatus == (int)DataStatus.完结) && entity.tb_MRP_ReworkEntries.Any(c => c.ApprovalStatus == (int)ApprovalStatus.审核通过)))
                 {
                     rs.ErrorMsg = "对应的返工退货单下存在已确认或已完结，或已审核的返工入库单，不能反审核  ";
                     rs.Succeeded = false;

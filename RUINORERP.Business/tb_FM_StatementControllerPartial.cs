@@ -79,7 +79,7 @@ namespace RUINORERP.Business
                 // 检查是否存在已支付的收付款单，如有则不允许反审
                 if (paymentRecordList != null && paymentRecordList.Count > 0)
                 {
-                    if (paymentRecordList.Any(c => c.PaymentStatus == (int)PaymentStatus.已支付 && c.ApprovalStatus == (int)ApprovalStatus.已审核))
+                    if (paymentRecordList.Any(c => c.PaymentStatus == (int)PaymentStatus.已支付 && c.ApprovalStatus == (int)ApprovalStatus.审核通过))
                     {
                         _unitOfWorkManage.RollbackTran();
                         rmrs.ErrorMsg = $"存在【已支付】的{((ReceivePaymentType)entity.ReceivePaymentType).ToString()}单，反审失败。";
@@ -294,7 +294,7 @@ namespace RUINORERP.Business
                 }
 
                 // 更新对账单状态为已确认
-                entity.ApprovalStatus = (int)ApprovalStatus.已审核;
+                entity.ApprovalStatus = (int)ApprovalStatus.审核通过;
                 entity.ApprovalResults = true;
                 entity.StatementStatus = (int)StatementStatus.已确认;
 

@@ -268,7 +268,7 @@ namespace RUINORERP.UI.PUR
                        .WhereIF(AuthorizeController.GetPurBizLimitedAuth(MainForm.Instance.AppContext) && !MainForm.Instance.AppContext.IsSuperUser, t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了采购只看到自己的
                       .Where(expPO)
                       .Where(t => t.DataStatus == (int)DataStatus.确认)
-                      .Where(t => t.ApprovalStatus.HasValue && t.ApprovalStatus.Value == (int)ApprovalStatus.已审核)
+                      .Where(t => t.ApprovalStatus.HasValue && t.ApprovalStatus.Value == (int)ApprovalStatus.审核通过)
                       .Where(t => t.ApprovalResults.HasValue && t.ApprovalResults.Value == true)
                       .OrderBy(c => c.PurDate)
                       // .WithCache(60) // 缓存60秒

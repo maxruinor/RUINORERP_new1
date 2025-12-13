@@ -456,7 +456,7 @@ namespace RUINORERP.Business
                 }
 
                 entity.ApprovalResults = true;
-                entity.ApprovalStatus = (int)ApprovalStatus.已审核;
+                entity.ApprovalStatus = (int)ApprovalStatus.审核通过;
                 entity.DataStatus = (int)DataStatus.确认;
                 BusinessHelper.Instance.ApproverEntity(entity);
                 //只更新指定列
@@ -723,7 +723,7 @@ namespace RUINORERP.Business
                             if (PaymentRecordlist != null && PaymentRecordlist.Count > 0)
                             {
                                 if ((PaymentRecordlist.Any(c => c.PaymentStatus == (int)PaymentStatus.已支付)
-                                    && PaymentRecordlist.Any(c => c.ApprovalStatus == (int)ApprovalStatus.已审核)))
+                                    && PaymentRecordlist.Any(c => c.ApprovalStatus == (int)ApprovalStatus.审核通过)))
                                 {
                                     _unitOfWorkManage.RollbackTran();
                                     rrs.ErrorMsg = $"存在【已支付】的{((ReceivePaymentType)returnpayable.ReceivePaymentType).ToString()}单，反审失败,请联系上级财务，或作退回处理。";

@@ -25,6 +25,22 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 using RUINORERP.Global.Extensions;
+
+/*
+ * V4版本 - 2025-01-12
+ * 
+ * 适配V4版本状态管理系统
+ * 1. 移除与EntityStatus重复的状态管理代码
+ * 2. 更新状态转换事件处理以适配V4版本的StateTransitionEventArgs
+ * 3. 确保正确使用V4版本的StateTransitionResult
+ * 4. 更新状态管理器初始化代码以适配V4版本
+ * 
+ * V4版本特性：
+ * - 支持DataStatus与业务状态互斥关系
+ * - 使用EntityStatus统一管理所有状态
+ * - 状态转换规则由StateTransitionRules统一管理
+ * - 状态转换事件使用StateTransitionEventArgs和StateTransitionResult
+ */
 namespace RUINORERP.Model
 {
     /// </summary>
@@ -187,7 +203,8 @@ namespace RUINORERP.Model
         #region 状态机管理
 
         /// <summary>
-        /// 状态信息 - 新的简化状态管理系统
+        /// 状态信息 - V4版本状态管理系统核心
+        /// 统一管理DataStatus与业务状态，支持互斥关系
         /// </summary>
         [SugarColumn(IsIgnore = true)]
         [Browsable(false)]
@@ -195,113 +212,104 @@ namespace RUINORERP.Model
         public EntityStatus StatusInfo { get; set; }
 
         /// <summary>
-        /// 状态变更事件
+        /// 状态变更事件 - V4版本
+        /// 使用StateTransitionEventArgs和StateTransitionResult
         /// </summary>
         public event EventHandler<StateTransitionEventArgs> StatusChanged;
 
         /// <summary>
-        /// 状态变更处理
+        /// 状态变更处理 - V4版本
+        /// 通过状态管理器统一处理状态变更
         /// </summary>
-        /// <param name="statusType">状态类型</param>
-        /// <param name="newStatus">新状态</param>
-        /// <param name="reason">变更原因</param>
-        protected internal virtual void OnStatusChanged(StatusType statusType, object newStatus, string reason)
+        /// <param name="e">状态转换事件参数</param>
+        protected virtual void OnStatusChanged(StateTransitionEventArgs e)
         {
-            StatusChanged?.Invoke(this, new StateTransitionEventArgs(
-                entity: this,
-                statusType: statusType.GetType(),
-                oldStatus: null,
-                newStatus: newStatus,
-                reason: reason,
-                userId: null,
-                changeTime: DateTime.Now
-            ));
+            try
+            {
+                // 类型安全检查
+                if (e == null)
+                {
+                    throw new ArgumentNullException(nameof(e), "StateTransitionEventArgs不能为null");
+                }
+
+                // 通过状态管理器触发事件，实现集中管理
+                if (StateManager != null)
+                {
+                    StateManager.TriggerStatusChangedEvent(e.Entity, e.StatusType, e.OldStatus, e.NewStatus);
+                }
+                else
+                {
+                    // 如果状态管理器不可用，则直接触发事件（降级处理）
+                    var handler = StatusChanged;
+                    if (handler != null)
+                    {
+                        handler(this, e);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // 记录异常但不中断程序流程
+                Debug.WriteLine($"触发StatusChanged事件时发生错误: {ex.Message}");
+                Debug.WriteLine(ex.StackTrace);
+            }
         }
 
-        /// <summary>
-        /// 获取当前数据状态
-        /// </summary>
-        /// <returns>数据状态</returns>
-        public DataStatus GetCurrentDataStatus()
-        {
-            return StatusInfo?.dataStatus ?? DataStatus.草稿;
-        }
+
 
         /// <summary>
-        /// 获取当前操作状态
-        /// </summary>
-        /// <returns>操作状态</returns>
-        public ActionStatus GetCurrentActionStatus()
-        {
-            return StatusInfo?.actionStatus ?? ActionStatus.无操作;
-        }
-
-        /// <summary>
-        /// 获取业务状态
+        /// 获取业务状态 - V4版本
         /// </summary>
         /// <typeparam name="TBusiness">业务状态枚举类型</typeparam>
         /// <returns>业务状态</returns>
         public TBusiness GetCurrentBusinessStatus<TBusiness>() where TBusiness : struct, Enum
         {
-            return StatusInfo?.GetBusinessStatus<TBusiness>() ?? default;
-        }
+            // 使用EntityStatus获取业务状态
+            if (StatusInfo != null)
+            {
+                return StatusInfo.GetBusinessStatus<TBusiness>();
+            }
 
-        /// <summary>
-        /// 检查是否处于草稿状态
-        /// </summary>
-        /// <returns>是否草稿</returns>
-        public bool IsDraft()
-        {
-            return GetCurrentDataStatus() == DataStatus.草稿;
-        }
-
-        /// <summary>
-        /// 检查是否已审核
-        /// </summary>
-        /// <returns>是否已审核</returns>
-        public bool IsApproved()
-        {
-            return GetCurrentDataStatus() == DataStatus.确认;
-        }
-
-        /// <summary>
-        /// 检查是否已作废
-        /// </summary>
-        /// <returns>是否已作废</returns>
-        public bool IsVoid()
-        {
-            return GetCurrentDataStatus() == DataStatus.作废;
-        }
-
-        /// <summary>
-        /// 检查是否已完成
-        /// </summary>
-        /// <returns>是否已完成</returns>
-        public bool IsCompleted()
-        {
-            return GetCurrentDataStatus() == DataStatus.完结;
+            // 默认值
+            return default;
         }
 
 
 
+
+
         /// <summary>
-        /// 初始化状态信息（如未初始化）
+        /// 初始化状态信息 - V4版本
         /// </summary>
         private void InitializeStatusInfo()
         {
             if (StatusInfo == null)
             {
-                StatusInfo = new EntityStatus
+                StatusInfo = new EntityStatus();
+                var statusType = StatusInfo.GetStatusType(this);
+                if (statusType != null)
                 {
-                    dataStatus = DataStatus.草稿,
-                    actionStatus = ActionStatus.无操作
-                };
+                    // 如果实体已有DataStatus属性，则同步到EntityStatus
+                    var dataStatusProperty = this.GetType().GetProperty(nameof(DataStatus));
+                    if (dataStatusProperty != null && dataStatusProperty.PropertyType == typeof(DataStatus))
+                    {
+                        var currentStatus = (DataStatus)dataStatusProperty.GetValue(this);
+                        StatusInfo.SetBusinessStatus<DataStatus>(currentStatus);
+                    }
+                    else
+                    {
+                        StatusInfo.SetBusinessStatus(statusType, Activator.CreateInstance(statusType));
+                    }
+                }
+
+                // 初始化操作状态
+                StatusInfo.actionStatus = ActionStatus.无操作;
             }
         }
 
         public BaseEntity()
         {
-            // 初始化状态信息
+            // 初始化状态信息 - V4版本
             InitializeStatusInfo();
             // 初始化属性变更追踪
             BeginOperation();
@@ -739,45 +747,7 @@ namespace RUINORERP.Model
 
 
 
-        /// <summary>
-        /// 触发状态变更事件
-        /// </summary>
-        /// <param name="e">状态转换事件参数</param>
-        protected virtual void OnStatusChanged(StateTransitionEventArgs e)
-        {
-            try
-            {
-                // 类型安全检查
-                if (e == null)
-                {
-                    throw new ArgumentNullException(nameof(e), "StateTransitionEventArgs不能为null");
-                }
 
-                // 通过状态管理器触发事件，实现集中管理
-                if (StateManager != null)
-                {
-                    StateManager.TriggerStatusChangedEvent(e.Entity, e.StatusType, e.OldStatus, e.NewStatus);
-                }
-                else
-                {
-                    // 如果状态管理器不可用，则直接触发事件（降级处理）
-                    var handler = StatusChanged;
-                    if (handler != null)
-                    {
-                        handler(this, e);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                // 记录异常但不中断程序流程
-                Debug.WriteLine($"触发StatusChanged事件时发生错误: {ex.Message}");
-                Debug.WriteLine(ex.StackTrace);
-
-                // 可以选择重新抛出异常或者仅记录
-                // throw;
-            }
-        }
 
         /// <summary>
         /// Suppress禁止的意思。 
@@ -979,13 +949,13 @@ namespace RUINORERP.Model
                 }
 
                 _previousActionStatus = _ActionStatus;
-                
+
                 // 通过状态管理器触发状态变更事件，实现集中管理
                 if (StateManager != null)
                 {
                     StateManager.TriggerStatusChangedEvent(this, typeof(ActionStatus), _previousActionStatus, value);
                 }
-                
+
                 // 设置属性值
                 SetProperty(ref _ActionStatus, value);
             }
@@ -1268,10 +1238,7 @@ namespace RUINORERP.Model
         /// </summary>
         private IUnifiedStateManager _stateManager;
 
-        /// <summary>
-        /// 状态转换上下文
-        /// </summary>
-        private IStatusTransitionContext _statusContext;
+
 
         /// <summary>
         /// 状态管理器实例（延迟初始化）
@@ -1287,7 +1254,10 @@ namespace RUINORERP.Model
                 {
                     try
                     {
-                        _stateManager = ApplicationContext.Current.GetRequiredService<IUnifiedStateManager>();
+                        if (ApplicationContext.Current != null)
+                        {
+                            _stateManager = ApplicationContext.Current.GetRequiredService<IUnifiedStateManager>();
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -1302,86 +1272,8 @@ namespace RUINORERP.Model
             }
         }
 
-        /// <summary>
-        /// 状态转换上下文
-        /// </summary>
-        [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
-        [JsonIgnore]
-        public IStatusTransitionContext StatusContext
-        {
-            get
-            {
-                if (_statusContext == null && StateManager != null)
-                {
-                    try
-                    {
-                        var currentStatus = GetDataStatus();
-                        var ServiceProvider = ApplicationContext.Current.GetRequiredService<IServiceProvider>();
-                        _statusContext = StateManager.CreateDataStatusContext(
-                            this,
-                            currentStatus, ServiceProvider
-                            );
-                    }
-                    catch (Exception ex)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"创建状态上下文失败: {ex.Message}");
-                    }
-                }
-                return _statusContext;
-            }
-            protected set
-            {
-                _statusContext = value;
-            }
-        }
 
-        /// <summary>
-        /// 初始化状态管理器
-        /// </summary>
-        /// <param name="initialStatus">初始状态</param>
-        public virtual void InitializeStateManager(DataStatus initialStatus = DataStatus.新建)
-        {
-            try
-            {
-                // 如果没有指定初始状态，尝试从子类的DataStatus属性获取
-                if (initialStatus == DataStatus.新建)
-                {
-                    var dataStatusProperty = this.GetCachedProperties().FirstOrDefault(c => c.Name == nameof(DataStatus));
-                    if (dataStatusProperty != null)
-                    {
-                        var value = (DataStatus?)dataStatusProperty.GetValue(this);
-                        if (value.HasValue)
-                        {
-                            initialStatus = value.Value;
-                        }
-                    }
-                }
-
-                // 使用状态管理器设置初始状态
-                if (StateManager != null)
-                {
-                    StateManager.SetEntityDataStatus(this, initialStatus);
-
-                    var ServiceProvider = ApplicationContext.Current.GetRequiredService<IServiceProvider>();
-
-                    // 创建状态转换上下文
-                    StatusContext = StateManager.CreateDataStatusContext(
-                        this,
-                        initialStatus,
-                        ServiceProvider);
-                }
-
-                // 记录状态管理器初始化信息
-                _stateManagerInitialized = true;
-            }
-            catch (Exception ex)
-            {
-                // 记录错误但不中断程序流程
-                System.Diagnostics.Debug.WriteLine($"初始化状态管理器失败: {ex.Message}");
-            }
-        }
-
+ 
         /// <summary>
         /// 获取实体的数据状态
         /// </summary>
@@ -1407,68 +1299,9 @@ namespace RUINORERP.Model
             }
         }
 
-        /// <summary>
-        /// 设置实体的数据状态
-        /// </summary>
-        /// <param name="status">数据状态</param>
-        public virtual void SetDataStatus(DataStatus status)
-        {
-            try
-            {
-                var oldStatus = GetDataStatus();
 
-                // 如果状态没有变化，则不执行任何操作
-                if (Equals(oldStatus, status))
-                {
-                    return;
-                }
 
-                // 首先尝试设置DataStatus属性
-                var dataStatusProperty = this.GetType().GetProperty("DataStatus");
-                if (dataStatusProperty != null && dataStatusProperty.PropertyType == typeof(DataStatus))
-                {
-                    dataStatusProperty.SetValue(this, status);
-
-                    // 通过状态管理器触发状态变更事件，实现集中管理
-                    if (StateManager != null)
-                    {
-                        StateManager.TriggerStatusChangedEvent(this, typeof(DataStatus), oldStatus, status);
-                    }
-                    else
-                    {
-                        // 如果状态管理器不可用，则直接触发事件（降级处理）
-                        OnStatusChanged(new StateTransitionEventArgs(
-                            this,
-                            typeof(DataStatus),
-                            oldStatus,
-                            status));
-                    }
-                    return;
-                }
-
-                System.Diagnostics.Debug.WriteLine($"无法设置实体数据状态：实体类型 {this.GetType().Name} 没有有效的状态属性");
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"设置实体数据状态失败: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// 状态管理器是否已初始化
-        /// </summary>
-        private bool _stateManagerInitialized = false;
-
-        /// <summary>
-        /// 获取状态管理器是否已初始化
-        /// </summary>
-        [Description("列名中文描述"), Category("自定属性")]
-        [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
-        [JsonIgnore]
-        [XmlIgnore]
-        public bool IsStateManagerInitialized => _stateManagerInitialized;
-
+ 
 
 
 
@@ -1518,7 +1351,7 @@ namespace RUINORERP.Model
             {
                 var statusType = GetStatusType();
                 var propertyName = statusType.Name;
-                
+
                 if (this.ContainsProperty(propertyName))
                 {
                     var value = this.GetPropertyValue(propertyName);
@@ -1535,7 +1368,7 @@ namespace RUINORERP.Model
                 // 如果获取失败，返回默认状态
                 if (statusType == typeof(DataStatus))
                     return DataStatus.草稿;
-                
+
                 return default(Enum);
             }
             catch (Exception ex)
@@ -1582,9 +1415,6 @@ namespace RUINORERP.Model
             try
             {
                 _stateManager = null;
-                _statusContext = null;
-                _stateManagerInitialized = false;
-
                 System.Diagnostics.Debug.WriteLine($"实体 {this.GetType().Name} 的状态管理器已重置");
             }
             catch (Exception ex)

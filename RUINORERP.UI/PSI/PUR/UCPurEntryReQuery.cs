@@ -78,7 +78,7 @@ namespace RUINORERP.UI.PSI.PUR
             foreach (var item in selectlist)
             {
                 //只有审核状态才可以转换为应收 红字
-                bool canConvert = item.DataStatus == (long)DataStatus.确认 && item.ApprovalStatus == (int)ApprovalStatus.已审核 && item.ApprovalResults.HasValue && item.ApprovalResults.Value;
+                bool canConvert = item.DataStatus == (long)DataStatus.确认 && item.ApprovalStatus == (int)ApprovalStatus.审核通过 && item.ApprovalResults.HasValue && item.ApprovalResults.Value;
                 if (canConvert)
                 {
                     RealList.Add(item);

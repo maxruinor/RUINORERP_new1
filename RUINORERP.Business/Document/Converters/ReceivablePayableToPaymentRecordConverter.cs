@@ -277,7 +277,7 @@ namespace RUINORERP.Business.Document.Converters
                 // 检查应收应付款单状态
                 if (source.ARAPStatus != (int)ARAPStatus.待支付 && 
                     source.ARAPStatus != (int)ARAPStatus.部分支付 ||
-                    source.ApprovalStatus != (int)ApprovalStatus.已审核 ||
+                    source.ApprovalStatus != (int)ApprovalStatus.审核通过 ||
                     !source.ApprovalResults.HasValue || 
                     !source.ApprovalResults.Value)
                 {

@@ -187,7 +187,7 @@ namespace RUINORERP.Business
                 //  entity.ApprovalOpinions = approvalEntity.ApprovalComments;
                 //后面已经修改为
                 //  entity.ApprovalResults = approvalEntity.ApprovalResults;
-                entity.ApprovalStatus = (int)ApprovalStatus.已审核;
+                entity.ApprovalStatus = (int)ApprovalStatus.审核通过;
                 BusinessHelper.Instance.ApproverEntity(entity);
                 var result = await _unitOfWorkManage.GetDbClient().Updateable(entity)
                                              .UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions, it.ApprovalResults, it.ApprovalStatus, it.Approver_at, it.Approver_by })
@@ -199,7 +199,7 @@ namespace RUINORERP.Business
                 if (entity.tb_mrp_reworkreturn != null && entity.tb_mrp_reworkreturn.DataStatus == (int)DataStatus.确认 &&
                     (entity.TotalQty == entity.tb_mrp_reworkreturn.TotalQty ||
                     entity.tb_mrp_reworkreturn.tb_MRP_ReworkReturnDetails.Sum(c => c.DeliveredQuantity) == entity.tb_mrp_reworkreturn.TotalQty)
-                    && entity.ApprovalStatus == (int)ApprovalStatus.已审核
+                    && entity.ApprovalStatus == (int)ApprovalStatus.审核通过
                     )
                 {
                     entity.tb_mrp_reworkreturn.DataStatus = (int)DataStatus.完结;

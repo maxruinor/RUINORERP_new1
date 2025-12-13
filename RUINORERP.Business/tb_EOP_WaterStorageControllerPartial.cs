@@ -60,7 +60,7 @@ namespace RUINORERP.Business
                 entity.DataStatus = (int)DataStatus.确认;
                 entity.ApprovalResults = true;
                 //后面已经修改为
-                entity.ApprovalStatus = (int)ApprovalStatus.已审核;
+                entity.ApprovalStatus = (int)ApprovalStatus.审核通过;
                 BusinessHelper.Instance.ApproverEntity(entity);
                 //只更新指定列
                 //只更新指定列

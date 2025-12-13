@@ -270,7 +270,7 @@ namespace RUINORERP.Business
                     }
 
                     entity.DataStatus = (int)DataStatus.确认;
-                    entity.ApprovalStatus = (int)ApprovalStatus.已审核;
+                    entity.ApprovalStatus = (int)ApprovalStatus.审核通过;
                     entity.ApprovalResults = true;
                     BusinessHelper.Instance.ApproverEntity(entity);
                     //只更新指定列

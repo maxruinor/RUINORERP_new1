@@ -86,7 +86,7 @@ namespace RUINORERP.UI.PSI.PUR
                 foreach (var item in selectlist)
                 {
                     //只有审核状态才可以转换为收款单
-                    if (item.DataStatus == (int)DataStatus.确认 && item.ApprovalStatus == (int)ApprovalStatus.已审核 && item.ApprovalResults.HasValue && item.ApprovalResults.Value)
+                    if (item.DataStatus == (int)DataStatus.确认 && item.ApprovalStatus == (int)ApprovalStatus.审核通过 && item.ApprovalResults.HasValue && item.ApprovalResults.Value)
                     {
                         RealList.Add(item);
                     }
@@ -173,7 +173,7 @@ namespace RUINORERP.UI.PSI.PUR
             foreach (var item in selectlist)
             {
                 //只有审核状态才可以转换为出库单
-                if (item.DataStatus == (int)DataStatus.确认 && item.ApprovalStatus == (int)ApprovalStatus.已审核 && item.ApprovalResults.HasValue && item.ApprovalResults.Value)
+                if (item.DataStatus == (int)DataStatus.确认 && item.ApprovalStatus == (int)ApprovalStatus.审核通过 && item.ApprovalResults.HasValue && item.ApprovalResults.Value)
                 {
                     if (item.tb_PurEntries != null && item.tb_PurEntries.Count > 0)
                     {
@@ -261,7 +261,7 @@ namespace RUINORERP.UI.PSI.PUR
             foreach (var item in selectlist)
             {
                 //只有审核状态才可以转换为出库单
-                if (item.DataStatus == (int)DataStatus.确认 && item.ApprovalStatus == (int)ApprovalStatus.已审核 && item.ApprovalResults.HasValue && item.ApprovalResults.Value)
+                if (item.DataStatus == (int)DataStatus.确认 && item.ApprovalStatus == (int)ApprovalStatus.审核通过 && item.ApprovalResults.HasValue && item.ApprovalResults.Value)
                 {
                     if (item.tb_PurEntries != null && item.tb_PurEntries.Count > 0)
                     {

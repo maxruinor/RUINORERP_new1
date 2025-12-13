@@ -359,7 +359,7 @@ namespace RUINORERP.Business.Document.Converters
                 }
 
                 // 检查采购订单状态
-                if (source.DataStatus != (int)DataStatus.确认 || source.ApprovalStatus != (int)ApprovalStatus.已审核)
+                if (source.DataStatus != (int)DataStatus.确认 || source.ApprovalStatus != (int)ApprovalStatus.审核通过)
                 {
                     result.CanConvert = false;
                     result.ErrorMessage = "只能转换已确认且已审核的采购订单";

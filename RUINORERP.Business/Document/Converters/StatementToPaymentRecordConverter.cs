@@ -282,7 +282,7 @@ namespace RUINORERP.Business.Document.Converters
                 // 检查对账单状态
                 if (source.StatementStatus != (int)StatementStatus.已确认 && 
                     source.StatementStatus != (int)StatementStatus.部分结算 ||
-                    source.ApprovalStatus != (int)ApprovalStatus.已审核 ||
+                    source.ApprovalStatus != (int)ApprovalStatus.审核通过 ||
                     !source.ApprovalResults.HasValue || 
                     !source.ApprovalResults.Value)
                 {

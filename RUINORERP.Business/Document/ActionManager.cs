@@ -205,7 +205,7 @@ namespace RUINORERP.Business.Document
                     }
 
                     // 假设Status属性表示单据状态，1表示已审核
-                    bool canReview = _stateManager.CanExecuteAction<BaseEntity>(source, Global.MenuItemEnums.审核);
+                    bool canReview = _stateManager.CanExecuteActionWithMessage(source, Global.MenuItemEnums.审核).CanExecute;
                     if (canReview)
                     {
                         // 如果单据未审核，清空可转换操作列表

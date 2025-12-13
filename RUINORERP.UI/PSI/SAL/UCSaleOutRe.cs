@@ -165,7 +165,7 @@ namespace RUINORERP.UI.PSI.SAL
                                 if (rmr.Succeeded)
                                 {
                                     receivablePayable.ApprovalOpinions = "【平台退款】时，系统自动审核";
-                                    receivablePayable.ApprovalStatus = (int)ApprovalStatus.已审核;
+                                    receivablePayable.ApprovalStatus = (int)ApprovalStatus.审核通过;
                                     receivablePayable.ApprovalResults = true;
                                     ReturnResults<tb_FM_ReceivablePayable> autoApproval = await ctrpayable.ApprovalAsync(receivablePayable, true);
                                     if (!autoApproval.Succeeded)
@@ -201,7 +201,7 @@ namespace RUINORERP.UI.PSI.SAL
                                     {
                                         //自动审核收款单
                                         newPaymentRecord.ApprovalOpinions = "销售退回单【平台退款】时，系统自动审核";
-                                        newPaymentRecord.ApprovalStatus = (int)ApprovalStatus.已审核;
+                                        newPaymentRecord.ApprovalStatus = (int)ApprovalStatus.审核通过;
                                         newPaymentRecord.ApprovalResults = true;
                                         ReturnResults<tb_FM_PaymentRecord> rrRecord = await paymentController.ApprovalAsync(newPaymentRecord);
                                         if (!rrRecord.Succeeded)
@@ -240,7 +240,7 @@ namespace RUINORERP.UI.PSI.SAL
                                         {
                                             //自动审核收款单
                                             newPaymentRecord.ApprovalOpinions = "销售退回单【平台退款】时，系统自动审核";
-                                            newPaymentRecord.ApprovalStatus = (int)ApprovalStatus.已审核;
+                                            newPaymentRecord.ApprovalStatus = (int)ApprovalStatus.审核通过;
                                             newPaymentRecord.ApprovalResults = true;
                                             ReturnResults<tb_FM_PaymentRecord> rrRecord = await paymentController.ApprovalAsync(newPaymentRecord, true);
                                             if (!rrRecord.Succeeded)
@@ -267,11 +267,11 @@ namespace RUINORERP.UI.PSI.SAL
                     //}
 
                     //如果销售退回单都审核过了，则为  退货退款，否则是已退款等待退货。后面审核时根据这个状态。判断是否已退货， 已退货
-                    if (saleOutRe.DataStatus == (int)DataStatus.确认 && saleOutRe.ApprovalStatus == (int)ApprovalStatus.已审核)
+                    if (saleOutRe.DataStatus == (int)DataStatus.确认 && saleOutRe.ApprovalStatus == (int)ApprovalStatus.审核通过)
                     {
                         saleOutRe.RefundStatus = (int)RefundStatus.已退款已退货;
                     }
-                    if (saleOutRe.DataStatus == (int)DataStatus.完结 && saleOutRe.ApprovalStatus == (int)ApprovalStatus.已审核)
+                    if (saleOutRe.DataStatus == (int)DataStatus.完结 && saleOutRe.ApprovalStatus == (int)ApprovalStatus.审核通过)
                     {
                         saleOutRe.RefundStatus = (int)RefundStatus.已退款已退货;
                     }

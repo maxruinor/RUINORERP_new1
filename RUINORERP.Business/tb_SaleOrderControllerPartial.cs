@@ -242,7 +242,7 @@ namespace RUINORERP.Business
                                     #region 自动审核预收款
                                     //销售订单审核时自动将预付款单设为"已生效"状态
                                     PreReceivedPayment.ApprovalOpinions = "系统自动审核";
-                                    PreReceivedPayment.ApprovalStatus = (int)ApprovalStatus.已审核;
+                                    PreReceivedPayment.ApprovalStatus = (int)ApprovalStatus.审核通过;
                                     PreReceivedPayment.ApprovalResults = true;
                                     ReturnResults<tb_FM_PreReceivedPayment> autoApproval = await ctrpay.ApprovalAsync(PreReceivedPayment);
                                     if (!autoApproval.Succeeded)
@@ -272,7 +272,7 @@ namespace RUINORERP.Business
 
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.确认;
-                entity.ApprovalStatus = (int)ApprovalStatus.已审核;
+                entity.ApprovalStatus = (int)ApprovalStatus.审核通过;
                 entity.ApprovalResults = true;
                 BusinessHelper.Instance.ApproverEntity(entity);
                 //只更新指定列
@@ -508,7 +508,7 @@ namespace RUINORERP.Business
                         entity.ApprovalOpinions = approvalEntity.ApprovalOpinions;
                         //后面已经修改为
                         entity.ApprovalResults = approvalEntity.ApprovalResults;
-                        entity.ApprovalStatus = (int)ApprovalStatus.已审核;
+                        entity.ApprovalStatus = (int)ApprovalStatus.审核通过;
                         BusinessHelper.Instance.ApproverEntity(entity);
                         var result = await _unitOfWorkManage.GetDbClient().Updateable(entity)
                                             .UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions, it.ApprovalResults, it.ApprovalStatus, it.Approver_at, it.Approver_by })
@@ -826,7 +826,7 @@ namespace RUINORERP.Business
                 //判断是否能反审? 如果出库是草稿，订单反审 修改后。出库再提交 审核。所以 出库审核要核对订单数据。
                 if (entity.tb_SaleOuts != null
                     && (entity.tb_SaleOuts.Any(c => c.DataStatus == (int)DataStatus.确认 || c.DataStatus == (int)DataStatus.完结)
-                    && entity.tb_SaleOuts.Any(c => c.ApprovalStatus == (int)ApprovalStatus.已审核)))
+                    && entity.tb_SaleOuts.Any(c => c.ApprovalStatus == (int)ApprovalStatus.审核通过)))
                 {
                     rmrs.ErrorMsg = "存在已确认或已完结，或已审核的销售出库单，不能反审核,请联系管理员，或作退回处理。";
                     rmrs.Succeeded = false;
@@ -1549,7 +1549,7 @@ namespace RUINORERP.Business
 
                 //判断是否能反审?
                 if (entity.tb_SaleOuts != null
-                    && (entity.tb_SaleOuts.Any(c => c.DataStatus == (int)DataStatus.确认 || c.DataStatus == (int)DataStatus.完结) && entity.tb_SaleOuts.Any(c => c.ApprovalStatus == (int)ApprovalStatus.已审核)))
+                    && (entity.tb_SaleOuts.Any(c => c.DataStatus == (int)DataStatus.确认 || c.DataStatus == (int)DataStatus.完结) && entity.tb_SaleOuts.Any(c => c.ApprovalStatus == (int)ApprovalStatus.审核通过)))
                 {
                     rmrs.ErrorMsg = "存在已确认或已完结，或已审核的销售出库单，不能直接取消订单,请进行退货退款处理。";
                     _unitOfWorkManage.RollbackTran();

@@ -106,7 +106,7 @@ namespace RUINORERP.Business
 
                     //判断是否能反审? 如果出库是草稿，订单反审 修改后。出库再提交 审核。所以 出库审核要核对订单数据。
                     if ((PaymentRecordlist.Any(c => c.PaymentStatus == (int)PaymentStatus.已支付)
-                        && PaymentRecordlist.Any(c => c.ApprovalStatus == (int)ApprovalStatus.已审核)))
+                        && PaymentRecordlist.Any(c => c.ApprovalStatus == (int)ApprovalStatus.审核通过)))
                     {
                         _unitOfWorkManage.RollbackTran();
                         rmrs.ErrorMsg = $"存在【已支付】的{((ReceivePaymentType)entity.ReceivePaymentType).ToString()}单，不能反审预款单,请联系上级财务，或作退回处理。";
@@ -206,7 +206,7 @@ namespace RUINORERP.Business
                 var records = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PaymentRecordDetail>()
                     .Includes(c => c.tb_fm_paymentrecord)
                     .Where(c => c.SourceBizType == (int)BizType.预收款单 && c.SourceBilllId == entity.PreRPID)
-                    .Where(c => c.tb_fm_paymentrecord.ApprovalStatus == (int)ApprovalStatus.已审核
+                    .Where(c => c.tb_fm_paymentrecord.ApprovalStatus == (int)ApprovalStatus.审核通过
                     && c.tb_fm_paymentrecord.ApprovalResults == true
                     && c.tb_fm_paymentrecord.PaymentStatus == (int)PaymentStatus.已支付)
                     .ToListAsync();
@@ -271,7 +271,7 @@ namespace RUINORERP.Business
 
 
                 entity.PrePaymentStatus = (int)PrePaymentStatus.已生效;
-                entity.ApprovalStatus = (int)ApprovalStatus.已审核;
+                entity.ApprovalStatus = (int)ApprovalStatus.审核通过;
                 entity.ApprovalResults = true;
 
                 //下面的自动审核会修改PrePaymentStatus状态。所以已经生效生赋值。后面 可能是审核后变为等待核销
@@ -310,7 +310,7 @@ namespace RUINORERP.Business
                         {
                             //自动审核收款单
                             paymentRecord.ApprovalOpinions = "系统自动审核";
-                            paymentRecord.ApprovalStatus = (int)ApprovalStatus.已审核;
+                            paymentRecord.ApprovalStatus = (int)ApprovalStatus.审核通过;
                             paymentRecord.ApprovalResults = true;
                             var ctrPaymentRecord = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
                             ReturnResults<tb_FM_PaymentRecord> rr = await ctrPaymentRecord.ApprovalAsync(paymentRecord);

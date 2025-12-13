@@ -73,7 +73,7 @@ namespace RUINORERP.UI.PSI.INV
             foreach (var item in selectlist)
             {
                 //只有审核状态才可以转换为出库单
-                if (item.DataStatus == (int)DataStatus.确认 && item.ApprovalStatus == (int)ApprovalStatus.已审核 && item.ApprovalResults.HasValue && item.ApprovalResults.Value)
+                if (item.DataStatus == (int)DataStatus.确认 && item.ApprovalStatus == (int)ApprovalStatus.审核通过 && item.ApprovalResults.HasValue && item.ApprovalResults.Value)
                 {
                     if (item.tb_ProdReturnings != null && item.tb_ProdReturnings.Count > 0)
                     {
@@ -111,7 +111,7 @@ namespace RUINORERP.UI.PSI.INV
             foreach (var item in selectlist)
             {
                 //只有审核状态才可以转换为出库单
-                if (item.DataStatus == (int)DataStatus.确认 && item.ApprovalStatus == (int)ApprovalStatus.已审核 && item.ApprovalResults.HasValue && item.ApprovalResults.Value)
+                if (item.DataStatus == (int)DataStatus.确认 && item.ApprovalStatus == (int)ApprovalStatus.审核通过 && item.ApprovalResults.HasValue && item.ApprovalResults.Value)
                 {
                     var ctr = Startup.GetFromFac<tb_FM_ProfitLossController<tb_FM_ProfitLoss>>();
                     tb_FM_ProfitLoss profitLoss =await ctr.BuildProfitLoss(item);

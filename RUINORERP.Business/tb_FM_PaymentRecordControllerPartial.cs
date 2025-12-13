@@ -195,7 +195,7 @@ namespace RUINORERP.Business
                 var paidAmount = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PaymentRecordDetail>()
                     .Where(prd => prd.SourceBilllId == sourceBillId
                         && prd.SourceBizType == sourceBizType
-                        && prd.tb_fm_paymentrecord.ApprovalStatus == (int)ApprovalStatus.已审核
+                        && prd.tb_fm_paymentrecord.ApprovalStatus == (int)ApprovalStatus.审核通过
                         && prd.tb_fm_paymentrecord.PaymentStatus == (int)PaymentStatus.已支付
                         )
                     .SumAsync(prd => prd.LocalAmount);
@@ -285,7 +285,7 @@ namespace RUINORERP.Business
                     var PendingApprovalDetails = await _appContext.Db.Queryable<tb_FM_PaymentRecordDetail>()
                         .Includes(c => c.tb_fm_paymentrecord)
                         .Where(c => c.SourceBilllId == PaymentRecordDetail.SourceBilllId && c.SourceBizType == PaymentRecordDetail.SourceBizType)
-                        .Where(c => c.tb_fm_paymentrecord.ApprovalStatus == (int)ApprovalStatus.已审核)
+                        .Where(c => c.tb_fm_paymentrecord.ApprovalStatus == (int)ApprovalStatus.审核通过)
                         .Where(c => c.tb_fm_paymentrecord.PaymentStatus == (int)PaymentStatus.已支付)
                         // 排除当前付款单的记录，避免重复计算
                         .Where(c => c.PaymentId != entity.PaymentId)
@@ -1664,7 +1664,7 @@ namespace RUINORERP.Business
 
                 #endregion
 
-                entity.ApprovalStatus = (int)ApprovalStatus.已审核;
+                entity.ApprovalStatus = (int)ApprovalStatus.审核通过;
                 entity.ApprovalResults = true;
                 //等待真正支付
                 entity.PaymentStatus = (int)PaymentStatus.已支付;
@@ -3163,7 +3163,7 @@ namespace RUINORERP.Business
                         entity.ApprovalOpinions = approvalEntity.ApprovalOpinions;
                         //后面已经修改为
                         entity.ApprovalResults = approvalEntity.ApprovalResults;
-                        entity.ApprovalStatus = (int)ApprovalStatus.已审核;
+                        entity.ApprovalStatus = (int)ApprovalStatus.审核通过;
                         BusinessHelper.Instance.ApproverEntity(entity);
                     }
 

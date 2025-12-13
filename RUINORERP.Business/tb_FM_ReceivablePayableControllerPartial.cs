@@ -106,7 +106,7 @@ namespace RUINORERP.Business
                 {
                     //判断是否能反审? 如果出库是草稿，订单反审 修改后。出库再提交 审核。所以 出库审核要核对订单数据。
                     if ((PaymentRecordlist.Any(c => c.PaymentStatus == (int)PaymentStatus.已支付)
-                        && PaymentRecordlist.Any(c => c.ApprovalStatus == (int)ApprovalStatus.已审核)))
+                        && PaymentRecordlist.Any(c => c.ApprovalStatus == (int)ApprovalStatus.审核通过)))
                     {
                         _unitOfWorkManage.RollbackTran();
                         rmrs.ErrorMsg = $"存在【已支付】的{((ReceivePaymentType)entity.ReceivePaymentType).ToString()}单，反审失败,请联系上级财务，或作退回处理。";
@@ -331,7 +331,7 @@ namespace RUINORERP.Business
                 }
 
 
-                entity.ApprovalStatus = (int)ApprovalStatus.已审核;
+                entity.ApprovalStatus = (int)ApprovalStatus.审核通过;
                 entity.ApprovalResults = true;
 
                 entity.AllowAddToStatement = true;
@@ -522,7 +522,7 @@ namespace RUINORERP.Business
                     .Where(p => p.CustomerVendor_ID == receivablePayable.CustomerVendor_ID) // 相同客户/供应商
                     .Where(p => p.Currency_ID == receivablePayable.Currency_ID) // 相同币种
                     .Where(p => p.ReceivePaymentType == receivablePayable.ReceivePaymentType) // 相同收付类型
-                    .Where(p => p.ApprovalStatus != (int)ApprovalStatus.已审核) // 未审核状态
+                    .Where(p => p.ApprovalStatus != (int)ApprovalStatus.审核通过) // 未审核状态
                     .Where(p => p.IsAvailable == true) // 可用状态
                     .OrderBy(p => p.PrePayDate) // 按时间排序
                     .ToListAsync();

@@ -36,7 +36,7 @@ namespace RUINORERP.UI.CommonUI
             this.ValidateChildren(System.Windows.Forms.ValidationConstraints.None);
             if (ValidationHelper.hasValidationErrors(this.Controls))
                 return;
-            _entity.ApprovalStatus = (int)ApprovalStatus.已审核;
+            _entity.ApprovalStatus = (int)ApprovalStatus.审核通过;
             this.DialogResult = DialogResult.OK;
             this.Close();
         }

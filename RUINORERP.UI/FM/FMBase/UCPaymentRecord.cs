@@ -355,21 +355,10 @@ namespace RUINORERP.UI.FM
                 // 使用V3状态管理系统检查是否可以修改
                 try
                 {
-                    if (_stateManager != null && StatusContext != null)
+                    // 回退到旧逻辑
+                    if (FMPaymentStatusHelper.CanModify<PaymentStatus>(currentStatus))
                     {
-                        bool canModify = _stateManager.CanExecuteAction(MenuItemEnums.修改, EditEntity, typeof(PaymentStatus), currentStatus);
-                        if (canModify)
-                        {
-                            entity.ActionStatus = ActionStatus.修改;
-                        }
-                    }
-                    else
-                    {
-                        // 回退到旧逻辑
-                        if (FMPaymentStatusHelper.CanModify<PaymentStatus>(currentStatus))
-                        {
-                            entity.ActionStatus = ActionStatus.修改;
-                        }
+                        entity.ActionStatus = ActionStatus.修改;
                     }
                 }
                 catch (Exception ex)
@@ -894,7 +883,7 @@ namespace RUINORERP.UI.FM
                 }
             }
 
-            
+
 
             grid1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             grid1.Selection.EnableMultiSelection = false;

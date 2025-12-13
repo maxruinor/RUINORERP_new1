@@ -38,7 +38,7 @@ namespace RUINORERP.UI.CommonUI
             }
             else
             {
-                _entity.ApprovalStatus = (int)ApprovalStatus.已审核;
+                _entity.ApprovalStatus = (int)ApprovalStatus.审核通过;
 
                 this.DialogResult = DialogResult.OK;
                 this.Close();

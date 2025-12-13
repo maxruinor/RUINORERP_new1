@@ -819,7 +819,7 @@ namespace RUINORERP.UI.MRP.MP
                 }
                 EditEntitys.Add(EditEntity);
                 //已经审核的并且通过的情况才能结案
-                List<tb_ProductionPlan> needCloseCases = EditEntitys.Where(c => c.DataStatus == (int)DataStatus.确认 && c.ApprovalStatus == (int)ApprovalStatus.已审核 && c.ApprovalResults.HasValue && c.ApprovalResults.Value).ToList();
+                List<tb_ProductionPlan> needCloseCases = EditEntitys.Where(c => c.DataStatus == (int)DataStatus.确认 && c.ApprovalStatus == (int)ApprovalStatus.审核通过 && c.ApprovalResults.HasValue && c.ApprovalResults.Value).ToList();
                 if (needCloseCases.Count == 0)
                 {
                     MessageBox.Show($"要结案的数据行数为：{needCloseCases.Count}:请检查数据！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);

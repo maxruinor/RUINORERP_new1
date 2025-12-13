@@ -831,7 +831,7 @@ namespace RUINORERP.UI.BaseForm
             if (ReflectionHelper.ExistPropertyName<M>("ApprovalStatus") && ReflectionHelper.ExistPropertyName<M>("ApprovalResults"))
             {
                 //反审，要审核过，并且通过了，才能反审。
-                if (EditEntity.GetPropertyValue("ApprovalStatus").ToInt() == (int)ApprovalStatus.已审核
+                if (EditEntity.GetPropertyValue("ApprovalStatus").ToInt() == (int)ApprovalStatus.审核通过
                     && EditEntity.GetPropertyValue("ApprovalResults") != null
                     && EditEntity.GetPropertyValue("ApprovalResults").ToBool() == true
                     )
@@ -883,7 +883,7 @@ namespace RUINORERP.UI.BaseForm
                 //审核了。数据状态要更新为
                 if (StateManager != null && EditEntity is BaseEntity baseEntity)
                 {
-                  await  StateManager.SetDataStatusAsync(baseEntity, DataStatus.确认);
+                  await  StateManager.SetBusinessStatusAsync<DataStatus>(baseEntity, DataStatus.确认);
                 }
                 else
                 {
@@ -895,7 +895,7 @@ namespace RUINORERP.UI.BaseForm
                 //审核了。驳回 时数据状态要更新为新建。要再次修改后提交
                 if (StateManager != null && EditEntity is BaseEntity baseEntity)
                 {
-                  await  StateManager.SetDataStatusAsync(baseEntity, DataStatus.新建);
+                    await StateManager.SetBusinessStatusAsync<DataStatus>(baseEntity, DataStatus.新建);
                 }
                 else
                 {
@@ -907,7 +907,7 @@ namespace RUINORERP.UI.BaseForm
                 }
                 if (ReflectionHelper.ExistPropertyName<M>("ApprovalStatus"))
                 {
-                    EditEntity.SetPropertyValue("ApprovalStatus", (int)ApprovalStatus.驳回);
+                    EditEntity.SetPropertyValue("ApprovalStatus", (int)ApprovalStatus.审核驳回);
                 }
                 if (ReflectionHelper.ExistPropertyName<M>("ApprovalResults"))
                 {
@@ -996,7 +996,7 @@ namespace RUINORERP.UI.BaseForm
             if (ReflectionHelper.ExistPropertyName<M>("ApprovalStatus") && ReflectionHelper.ExistPropertyName<M>("ApprovalResults"))
             {
                 //反审，要审核过，并且通过了，才能反审。
-                if (EditEntity.GetPropertyValue("ApprovalStatus").ToInt() == (int)ApprovalStatus.已审核
+                if (EditEntity.GetPropertyValue("ApprovalStatus").ToInt() == (int)ApprovalStatus.审核通过
                     && EditEntity.GetPropertyValue("ApprovalResults") != null
                     && EditEntity.GetPropertyValue("ApprovalResults").ToBool() == true
                     )

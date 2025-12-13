@@ -60,7 +60,7 @@ namespace RUINORERP.Business
                 foreach (var entity in entitys)
                 {
                     //结案的出库单。先要是审核成功通过的
-                    if (entity.DataStatus == (int)DataStatus.确认 && (entity.ApprovalStatus.HasValue && entity.ApprovalStatus.Value == (int)ApprovalStatus.已审核 && entity.ApprovalResults.Value))
+                    if (entity.DataStatus == (int)DataStatus.确认 && (entity.ApprovalStatus.HasValue && entity.ApprovalStatus.Value == (int)ApprovalStatus.审核通过 && entity.ApprovalResults.Value))
                     {
 
 
@@ -115,7 +115,7 @@ namespace RUINORERP.Business
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
 
 
-                entity.ApprovalStatus = (int)ApprovalStatus.已审核;
+                entity.ApprovalStatus = (int)ApprovalStatus.审核通过;
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.确认;
                 //  entity.ApprovalOpinions = approvalEntity.ApprovalComments;
@@ -312,7 +312,7 @@ namespace RUINORERP.Business
                             {
                                 //所有对应的领料明细减少去制令单中的应该发的差。
                                 decimal totalActualSentQty = entity.tb_manufacturingorder.tb_MaterialRequisitions
-                                    .Where(c => c.ApprovalStatus.HasValue && c.ApprovalStatus.Value == (int)ApprovalStatus.已审核 && (c.DataStatus == (int)DataStatus.确认 || c.DataStatus == (int)DataStatus.完结))
+                                    .Where(c => c.ApprovalStatus.HasValue && c.ApprovalStatus.Value == (int)ApprovalStatus.审核通过 && (c.DataStatus == (int)DataStatus.确认 || c.DataStatus == (int)DataStatus.完结))
                                     .Where(c => c.ApprovalResults.HasValue && c.ApprovalResults.Value == true)
                                     .Sum(c => c.tb_MaterialRequisitionDetails.Where(c => c.ProdDetailID == inv.ProdDetailID && c.Location_ID == inv.Location_ID).Sum(d => d.ActualSentQty));
 
@@ -427,7 +427,7 @@ namespace RUINORERP.Business
             {
                 //判断是否能反审?
                 if (entity.tb_manufacturingorder != null && entity.tb_manufacturingorder.tb_FinishedGoodsInvs != null
-                    && (entity.tb_manufacturingorder.tb_FinishedGoodsInvs.Any(c => c.DataStatus == (int)DataStatus.确认 || c.DataStatus == (int)DataStatus.完结) && entity.tb_manufacturingorder.tb_FinishedGoodsInvs.Any(c => c.ApprovalStatus == (int)ApprovalStatus.已审核)))
+                    && (entity.tb_manufacturingorder.tb_FinishedGoodsInvs.Any(c => c.DataStatus == (int)DataStatus.确认 || c.DataStatus == (int)DataStatus.完结) && entity.tb_manufacturingorder.tb_FinishedGoodsInvs.Any(c => c.ApprovalStatus == (int)ApprovalStatus.审核通过)))
                 {
 
                     rs.ErrorMsg = "对应的制令单下存在已确认或已完结，或已审核的缴库单，不能反审核  ";
@@ -435,7 +435,7 @@ namespace RUINORERP.Business
                     rs.Succeeded = false;
                     return rs;
                 }
-                if (entity.tb_MaterialReturns != null && (entity.tb_MaterialReturns.Any(c => c.DataStatus == (int)DataStatus.确认 || c.DataStatus == (int)DataStatus.完结) && entity.tb_MaterialReturns.Any(c => c.ApprovalStatus == (int)ApprovalStatus.已审核)))
+                if (entity.tb_MaterialReturns != null && (entity.tb_MaterialReturns.Any(c => c.DataStatus == (int)DataStatus.确认 || c.DataStatus == (int)DataStatus.完结) && entity.tb_MaterialReturns.Any(c => c.ApprovalStatus == (int)ApprovalStatus.审核通过)))
                 {
                     rs.ErrorMsg = "对应的领料单下存在已确认或已完结，或已审核的退料单，不能反审核  ";
                     //_unitOfWorkManage.RollbackTran();

@@ -97,7 +97,7 @@ namespace RUINORERP.Business
                 //entity.ApprovalOpinions = approvalEntity.ApprovalComments;
                 //后面已经修改为
                 //entity.ApprovalResults = approvalEntity.ApprovalResults;
-                entity.ApprovalStatus = (int)ApprovalStatus.已审核;
+                entity.ApprovalStatus = (int)ApprovalStatus.审核通过;
                 BusinessHelper.Instance.ApproverEntity(entity);
                 //只更新指定列
                 var result = await _unitOfWorkManage.GetDbClient().Updateable<tb_ProductionDemand>(entity).UpdateColumns(it => new
@@ -239,7 +239,7 @@ namespace RUINORERP.Business
 
                 //判断是否能反审?
                 if (entity.tb_ManufacturingOrders != null
-                    && (entity.tb_ManufacturingOrders.Any(c => c.DataStatus == (int)DataStatus.确认 || c.DataStatus == (int)DataStatus.完结) && entity.tb_ManufacturingOrders.Any(c => c.ApprovalStatus == (int)ApprovalStatus.已审核)))
+                    && (entity.tb_ManufacturingOrders.Any(c => c.DataStatus == (int)DataStatus.确认 || c.DataStatus == (int)DataStatus.完结) && entity.tb_ManufacturingOrders.Any(c => c.ApprovalStatus == (int)ApprovalStatus.审核通过)))
                 {
 
                     rmrs.ErrorMsg = "存在已确认或已完结，或已审核的制令单，不能反审核  ";

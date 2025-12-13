@@ -104,7 +104,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                   .Where(c => (c.DataStatus == 2 || c.DataStatus == 4)
                   && c.isdeleted == false
                   && c.ApprovalResults.HasValue && c.ApprovalResults == true
-                  && c.ApprovalStatus.HasValue && c.ApprovalStatus == (int)ApprovalStatus.已审核)
+                  && c.ApprovalStatus.HasValue && c.ApprovalStatus == (int)ApprovalStatus.审核通过)
                   .OrderBy(c => c.SaleDate)
                   .WhereIF(AuthorizeController.GetSaleLimitedAuth(MainForm.Instance.AppContext), t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户,采购不限制
                                                                                                                                                                                      //.WithCache(60) // 缓存60秒

@@ -1,27 +1,10 @@
 /**
  * 文件: StateTransitionRules.cs
- * 说明: 统一状态转换规则管理类
+ * 版本: V4 - 统一状态转换规则管理类
+ * 说明: 统一状态转换规则管理类 - 适配V4版本的EntityStatus和StateTransitionResult
  * 创建日期: 2024年
  * 作者: RUINOR ERP开发团队
- * 
- * 迁移指南：
- * 此类现在是状态转换规则的统一管理类，替代了StateRuleConfiguration中的重复规则定义。
- * 
- * 迁移步骤：
- * 1. 使用StateTransitionRules.InitializeDefaultRules初始化所有状态转换规则
- * 2. 使用StateTransitionRules.AddTransitionRule添加自定义规则
- * 3. 使用StateTransitionRules.IsTransitionAllowed验证状态转换
- * 
- * 示例代码：
- * // 初始化状态转换规则
- * var transitionRules = new Dictionary<Type, Dictionary<object, List<object>>>();
- * StateTransitionRules.InitializeDefaultRules(transitionRules);
- * 
- * // 添加自定义规则
- * StateTransitionRules.AddTransitionRule(transitionRules, CustomStatus.草稿, CustomStatus.新建);
- * 
- * // 验证状态转换
- * bool canTransition = StateTransitionRules.IsTransitionAllowed(transitionRules, fromStatus, toStatus);
+ * 更新日期: 2025-01-12 - V4版本适配EntityStatus和StateTransitionResult
  */
 
 using RUINORERP.Global;
@@ -30,6 +13,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Microsoft.Extensions.Logging;
+using RUINORERP.Global.EnumExt;
 
 namespace RUINORERP.Model.Base.StatusManager
 {
@@ -39,13 +23,41 @@ namespace RUINORERP.Model.Base.StatusManager
     public static class StateTransitionRules
     {
         /// <summary>
-        /// 初始化默认状态转换规则
+        /// 线程安全的延迟加载状态转换规则实例
+        /// </summary>
+        private static readonly Lazy<Dictionary<Type, Dictionary<object, List<object>>>> _lazyTransitionRules =
+            new Lazy<Dictionary<Type, Dictionary<object, List<object>>>>(InitializeDefaultRules, true);
+
+        /// <summary>
+        /// 获取全局唯一的状态转换规则实例
+        /// </summary>
+        public static Dictionary<Type, Dictionary<object, List<object>>> Instance => _lazyTransitionRules.Value;
+
+        /// <summary>
+        /// 初始化默认状态转换规则（保持向后兼容）
         /// </summary>
         /// <param name="transitionRules">转换规则字典</param>
+        [Obsolete("此方法已过时，请使用Instance属性获取规则实例")]
         public static void InitializeDefaultRules(Dictionary<Type, Dictionary<object, List<object>>> transitionRules)
         {
             if (transitionRules == null)
                 throw new ArgumentNullException(nameof(transitionRules));
+
+            // 从全局实例复制规则到传入的字典
+            var globalRules = Instance;
+            foreach (var kvp in globalRules)
+            {
+                transitionRules[kvp.Key] = new Dictionary<object, List<object>>(kvp.Value);
+            }
+        }
+
+        /// <summary>
+        /// 初始化默认状态转换规则（内部使用）
+        /// </summary>
+        /// <returns>转换规则字典</returns>
+        private static Dictionary<Type, Dictionary<object, List<object>>> InitializeDefaultRules()
+        {
+            var transitionRules = new Dictionary<Type, Dictionary<object, List<object>>>();
 
             // 初始化DataStatus转换规则
             InitializeDataStatusRules(transitionRules);
@@ -55,6 +67,8 @@ namespace RUINORERP.Model.Base.StatusManager
 
             // 初始化业务状态转换规则
             InitializeBusinessStatusRules(transitionRules);
+
+            return transitionRules;
         }
 
         /// <summary>
@@ -74,6 +88,231 @@ namespace RUINORERP.Model.Base.StatusManager
 
             // 初始化对账状态转换规则
             InitializeStatementStatusRules(transitionRules);
+        }
+
+
+
+
+        /*
+                /// <summary>
+                /// 获取实体状态的转换规则（V4版本完整实现）
+                /// </summary>
+                /// <param name="transitionRules">转换规则字典</param>
+                /// <param name="entityStatus">实体状态</param>
+                /// <returns>可转换的状态列表</returns>
+                public static List<(StatusType statusType, Enum status)> GetAvailableTransitionsForEntityStatusV4(
+                    Dictionary<Type, Dictionary<object, List<object>>> transitionRules,
+                    EntityStatus entityStatus)
+                {
+                    var result = new List<(StatusType, Enum)>();
+
+                    if (transitionRules == null || entityStatus == null)
+                        return result;
+
+                    // 获取当前状态类型和值
+                    var currentStatusType = entityStatus.CurrentStatusType;
+                    var currentStatus = entityStatus.CurrentStatus;
+
+                    // 如果当前没有状态，可以设置任何状态
+                    if (currentStatusType == null || currentStatus == null)
+                    {
+                        // 添加所有DataStatus状态
+                        foreach (DataStatus status in Enum.GetValues(typeof(DataStatus)))
+                        {
+                            result.Add((StatusType.Primary, status));
+                        }
+
+                        // 添加所有业务状态
+                        AddAllBusinessStatuses(result);
+
+                        // 添加所有ActionStatus状态
+                        foreach (ActionStatus status in Enum.GetValues(typeof(ActionStatus)))
+                        {
+                            result.Add((StatusType.Action, status));
+                        }
+
+                        return result;
+                    }
+
+                    // 根据当前状态类型获取可转换的状态
+                    switch (currentStatusType)
+                    {
+                        case StatusType.Primary:
+                            // Primary状态（DataStatus或业务状态）
+                            if (currentStatus is DataStatus dataStatus)
+                            {
+                                // 获取DataStatus的可用转换
+                                var availableDataStatuses = GetAvailableTransitions(transitionRules, dataStatus);
+                                foreach (var status in availableDataStatuses)
+                                {
+                                    result.Add((StatusType.Primary, status));
+                                }
+                            }
+                            else if (IsBusinessStatus(currentStatus))
+                            {
+                                // 获取业务状态的可用转换
+                                var availableBusinessStatuses = GetAvailableTransitions(transitionRules, currentStatus);
+                                foreach (var status in availableBusinessStatuses)
+                                {
+                                    result.Add((StatusType.Primary, status));
+                                }
+                            }
+                            break;
+
+                        case StatusType.Action:
+                            // Action状态的可用转换
+                            if (currentStatus is ActionStatus actionStatus)
+                            {
+                                var availableActionStatuses = GetAvailableTransitions(transitionRules, actionStatus);
+                                foreach (var status in availableActionStatuses)
+                                {
+                                    result.Add((StatusType.Action, status));
+                                }
+                            }
+                            break;
+
+                        case StatusType.Approval:
+                            // Approval状态的可用转换
+                            // 这里可以根据需要实现Approval状态的转换规则
+                            break;
+
+                        case StatusType.ApprovalResult:
+                            // ApprovalResult状态的可用转换
+                            // 这里可以根据需要实现ApprovalResult状态的转换规则
+                            break;
+                    }
+
+                    return result;
+                }
+        */
+
+
+        /// <summary>
+        /// 添加所有业务状态到结果列表
+        /// </summary>
+        /// <param name="result">结果列表</param>
+        private static void AddAllBusinessStatuses(List<(StatusType, Enum)> result)
+        {
+            // 添加所有PaymentStatus状态
+            foreach (PaymentStatus status in Enum.GetValues(typeof(PaymentStatus)))
+            {
+                result.Add((StatusType.Primary, status));
+            }
+
+            // 添加所有PrePaymentStatus状态
+            foreach (PrePaymentStatus status in Enum.GetValues(typeof(PrePaymentStatus)))
+            {
+                result.Add((StatusType.Primary, status));
+            }
+
+            // 添加所有ARAPStatus状态
+            foreach (ARAPStatus status in Enum.GetValues(typeof(ARAPStatus)))
+            {
+                result.Add((StatusType.Primary, status));
+            }
+
+            // 添加所有StatementStatus状态
+            foreach (StatementStatus status in Enum.GetValues(typeof(StatementStatus)))
+            {
+                result.Add((StatusType.Primary, status));
+            }
+        }
+
+
+
+        /// <summary>
+        /// 判断状态是否为业务状态
+        /// </summary>
+        /// <param name="status">状态</param>
+        /// <returns>是否为业务状态</returns>
+        private static bool IsBusinessStatus(Enum status)
+        {
+            // 检查是否为已知的业务状态类型
+            Type statusType = status.GetType();
+            return statusType == typeof(PaymentStatus) ||
+                   statusType == typeof(PrePaymentStatus) ||
+                   statusType == typeof(ARAPStatus) ||
+                   statusType == typeof(StatementStatus);
+        }
+
+        /// <summary>
+        /// 验证状态类型转换是否合法
+        /// </summary>
+        /// <param name="fromType">源状态类型</param>
+        /// <param name="toType">目标状态类型</param>
+        /// <returns>是否允许转换</returns>
+        private static bool IsStatusTypeTransitionAllowed(StatusType fromType, StatusType toType)
+        {
+            // 相同状态类型总是允许转换
+            if (fromType == toType)
+                return true;
+
+            // 从空状态可以转换到任何状态
+            if (fromType == null)
+                return true;
+
+            // Primary类型状态之间不能直接转换（需要通过清除当前状态）
+            if (fromType == StatusType.Primary && toType == StatusType.Primary)
+                return false;
+
+            // 其他状态类型转换规则
+            switch (fromType)
+            {
+                case StatusType.Action:
+                    // Action状态可以转换到任何状态
+                    return true;
+
+                case StatusType.Approval:
+                    // Approval状态可以转换到任何状态
+                    return true;
+
+                case StatusType.ApprovalResult:
+                    // ApprovalResult状态可以转换到任何状态
+                    return true;
+
+                default:
+                    // 默认情况下，不同状态类型之间不允许直接转换
+                    return false;
+            }
+        }
+
+        /// <summary>
+        /// 验证实体状态转换是否合法
+        /// </summary>
+        /// <param name="transitionRules">转换规则字典</param>
+        /// <param name="entityStatus">实体状态</param>
+        /// <param name="targetStatus">目标状态</param>
+        /// <returns>状态转换结果</returns>
+        public static StateTransitionResult IsEntityStatusTransitionAllowed(
+            Dictionary<Type, Dictionary<object, List<object>>> transitionRules,
+            EntityStatus entityStatus,
+            Enum targetStatus)
+        {
+            if (transitionRules == null || entityStatus == null || targetStatus == null)
+                return StateTransitionResult.Denied("参数不能为空");
+
+            // 获取当前状态类型和值
+            var statusType = entityStatus.CurrentStatusType;
+            var currentStatus = entityStatus.CurrentStatus;
+
+            if (statusType == null || currentStatus == null)
+                return StateTransitionResult.Denied("当前状态无效");
+
+            // 检查目标状态类型是否与当前状态类型一致
+            if (statusType != targetStatus.GetType())
+                return StateTransitionResult.Denied($"状态类型不匹配，当前状态类型为{statusType.Name}，目标状态类型为{targetStatus.GetType().Name}");
+
+            // 验证状态转换
+            bool isAllowed = IsTransitionAllowed(transitionRules, statusType, currentStatus, targetStatus);
+
+            if (isAllowed)
+            {
+                return StateTransitionResult.Allowed();
+            }
+            else
+            {
+                return StateTransitionResult.Denied($"不允许从{currentStatus}转换到{targetStatus}");
+            }
         }
 
         /// <summary>
@@ -365,7 +604,7 @@ namespace RUINORERP.Model.Base.StatusManager
                 return;
 
             var statusType = fromStatus.GetType();
-            
+
             if (!transitionRules.ContainsKey(statusType))
             {
                 transitionRules[statusType] = new Dictionary<object, List<object>>();
@@ -418,12 +657,12 @@ namespace RUINORERP.Model.Base.StatusManager
         public static List<Enum> GetAvailableTransitions(Dictionary<Type, Dictionary<object, List<object>>> transitionRules, Enum fromStatus)
         {
             var result = new List<Enum>();
-            
+
             if (transitionRules == null || fromStatus == null)
                 return result;
 
             var statusType = fromStatus.GetType();
-            
+
             if (!transitionRules.ContainsKey(statusType))
                 return result;
 
@@ -453,7 +692,7 @@ namespace RUINORERP.Model.Base.StatusManager
             if (status == null) return "#000000";
 
             var statusName = status.ToString();
-            
+
             // 根据状态名称返回相应的颜色
             if (statusName.Contains("草稿"))
                 return "#808080"; // 灰色
@@ -469,7 +708,7 @@ namespace RUINORERP.Model.Base.StatusManager
                 return "#FF0000"; // 红色
             if (statusName.Contains("已冲销") || statusName.Contains("已结案"))
                 return "#800000"; // 深红色
-                
+
             return "#000000"; // 默认黑色
         }
 
@@ -484,25 +723,25 @@ namespace RUINORERP.Model.Base.StatusManager
             if (status == null) return false;
 
             var statusName = status.ToString();
-            
+
             // 草稿、待审核、待支付等状态可以编辑
-            if (statusName.Contains("草稿") || 
-                statusName.Contains("待审核") || 
+            if (statusName.Contains("草稿") ||
+                statusName.Contains("待审核") ||
                 statusName.Contains("待支付") ||
                 statusName.Contains("待核销") ||
                 statusName.Contains("部分"))
                 return true;
-                
+
             // 已支付、已结清、已结案、已作废、已冲销等状态不可编辑
-            if (statusName.Contains("已支付") || 
-                statusName.Contains("已结清") || 
+            if (statusName.Contains("已支付") ||
+                statusName.Contains("已结清") ||
                 statusName.Contains("已结案") ||
-                statusName.Contains("已作废") || 
+                statusName.Contains("已作废") ||
                 statusName.Contains("已冲销") ||
                 statusName.Contains("坏账") ||
                 statusName.Contains("全额"))
                 return false;
-                
+
             // 默认可编辑
             return true;
         }
@@ -518,15 +757,15 @@ namespace RUINORERP.Model.Base.StatusManager
             if (status == null) return false;
 
             var statusName = status.ToString();
-            
+
             // 草稿状态可以删除
             if (statusName.Contains("草稿"))
                 return true;
-                
+
             // 待审核状态可以删除
             if (statusName.Contains("待审核"))
                 return true;
-                
+
             // 其他状态默认不可删除
             return false;
         }
@@ -542,11 +781,11 @@ namespace RUINORERP.Model.Base.StatusManager
             if (status == null) return false;
 
             var statusName = status.ToString();
-            
+
             // 待审核状态允许审批
             if (statusName.Contains("待审核"))
                 return true;
-                
+
             // 其他状态默认不允许审批
             return false;
         }
@@ -562,11 +801,11 @@ namespace RUINORERP.Model.Base.StatusManager
             if (status == null) return false;
 
             var statusName = status.ToString();
-            
+
             // 草稿状态允许提交
             if (statusName.Contains("草稿"))
                 return true;
-                
+
             // 其他状态默认不允许提交
             return false;
         }
@@ -582,15 +821,15 @@ namespace RUINORERP.Model.Base.StatusManager
             if (status == null) return false;
 
             var statusName = status.ToString();
-            
+
             // 待审核、待支付、待核销等状态允许取消
             if (statusName.Contains("待"))
                 return true;
-                
+
             // 其他状态默认不允许取消
             return false;
         }
     }
 
-    
+
 }

@@ -424,7 +424,7 @@ namespace RUINORERP.UI.SysConfig
                                         saleOut.DataStatus = (int)DataStatus.确认;
                                         saleOut.Approver_at = DateTime.Now;
                                         saleOut.Approver_by = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
-                                        saleOut.ApprovalStatus = (int)ApprovalStatus.已审核;
+                                        saleOut.ApprovalStatus = (int)ApprovalStatus.审核通过;
                                         saleOut.ApprovalResults = true;
                                         saleOut.ApprovalOpinions = "数量修复：单已完结，如果对应的订单中已交数量等于出库明细中数量 ，则出库为审核通过";
                                         if (MessageBox.Show($"销售订单{saleOut.tb_saleorder.SOrderNo}，明细数量和总数量不对，是否修复？", "询问", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)

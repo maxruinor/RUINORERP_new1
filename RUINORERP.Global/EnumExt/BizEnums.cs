@@ -700,11 +700,11 @@ var description = typeof(BoxRuleBasis)
     public enum ApprovalStatus
     {
         未审核 = 0,
-        已审核 = 1,
-        驳回 = 2,
+        审核通过 = 1,
+        审核驳回 = 2,
         //待审核 = 2,
         //审核中 = 3,
-        //结案 = 4,
+        //结案 = 4,   
     }
 
 

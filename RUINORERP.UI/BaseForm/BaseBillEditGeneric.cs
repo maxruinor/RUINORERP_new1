@@ -125,7 +125,6 @@ namespace RUINORERP.UI.BaseForm
         private string _lockSubscriptionId; // 当前窗体的锁状态订阅ID
 
         // 防止循环调用的标志位
-        private bool _isUpdatingStatusContext = false;
         private bool _isUpdatingUIStates = false;
         private bool _isHandlingStatusChanged = false; // 专门用于防止StatusChanged事件循环调用
 
@@ -232,35 +231,7 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
-        /// <summary>
-        /// 当前数据状态
-        /// </summary>
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public DataStatus CurrentDataStatus =>
-            StatusContext?.CurrentStatus switch
-            {
-                DataStatus dataStatus => dataStatus,
-                _ when StatusContext != null => StatusContext.GetCurrentStatus<DataStatus>(),
-                _ => DataStatus.草稿
-            };
 
-        /// <summary>
-        /// v3状态上下文 - 使用基类实现
-        /// </summary>
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public new IStatusTransitionContext StatusContext
-        {
-            get => base.StatusContext;
-            set
-            {
-                if (base.StatusContext != value)
-                {
-                    base.StatusContext = value;
-                }
-            }
-        }
 
 
         /// <summary>
@@ -347,132 +318,9 @@ namespace RUINORERP.UI.BaseForm
         }
 
 
-        
 
-        /// <summary>
-        /// 更新基于权限的按钮可见性
-        /// </summary>
-        protected virtual void UpdatePermissionBasedButtonVisibility()
-        {
-            if (EditEntity is BaseEntity baseEntity)
-            {
-                // 使用状态管理系统检查操作权限并更新按钮可见性
-                var actionPermissions = new[] { "UpdateCustomizedCost", "AntiCloseCase", "SpecialOperations" };
 
-                foreach (var action in actionPermissions)
-                {
-                    var buttonName = $"toolStripButton{action}";
-                    var button = FindToolStripButtonByName(buttonName);
 
-                    if (button != null)
-                    {
-                        button.Visible = CanExecuteAction(action);
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// 检查操作权限 - 使用UI控制器
-        /// </summary>
-        /// <param name="actionName">操作名称</param>
-        /// <returns>是否有权限</returns>
-        protected virtual bool CanExecuteAction(string actionName)
-        {
-            if (EditEntity is BaseEntity baseEntity && StateManager != null)
-            {
-                // 将操作名称转换为MenuItemEnums
-                if (Enum.TryParse<MenuItemEnums>(actionName, out var menuAction))
-                {
-                    // 获取当前实体的状态类型和状态值
-                    var statusType = baseEntity.GetStatusType();
-                    var status = baseEntity.GetCurrentStatus();
-
-                    return _stateManager.CanExecuteAction(menuAction, EditEntity, statusType, status);
-                }
-            }
-            return false;
-        }
-
-        /// <summary>
-        /// 检查状态转换权限 - 使用状态管理器
-        /// </summary>
-        /// <param name="targetStatus">目标状态</param>
-        /// <returns>转换结果</returns>
-        protected virtual async Task<StateTransitionCheckResult> CanTransitionToAsync(string targetStatus)
-        {
-            if (EditEntity is BaseEntity baseEntity && StateManager != null)
-            {
-                try
-                {
-                    // 尝试解析为DataStatus
-                    if (Enum.TryParse<DataStatus>(targetStatus, out var dataStatus))
-                    {
-                        var result = await StateManager.ValidateDataStatusTransitionAsync(baseEntity, dataStatus);
-                        return result.IsSuccess
-                            ? StateTransitionCheckResult.Allowed()
-                            : StateTransitionCheckResult.Denied(result.ErrorMessage);
-                    }
-
-                    // 如果目标状态不是DataStatus，检查业务状态
-                    var statusType = FMPaymentStatusHelper.GetStatusType(baseEntity);
-                    if (statusType != null)
-                    {
-                        var statusValue = Enum.Parse(statusType, targetStatus);
-                        var validateMethod = StateManager.GetType().GetMethod("ValidateBusinessStatusTransitionAsync")
-                            .MakeGenericMethod(statusType);
-
-                        var task = (Task<StateTransitionResult>)validateMethod.Invoke(StateManager, new object[] { baseEntity, statusValue });
-                        var result = await task;
-
-                        return result.IsSuccess
-                            ? StateTransitionCheckResult.Allowed()
-                            : StateTransitionCheckResult.Denied(result.ErrorMessage);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    return StateTransitionCheckResult.Denied($"状态转换检查失败: {ex.Message}");
-                }
-            }
-            return StateTransitionCheckResult.Denied("实体或状态管理器不可用");
-        }
-
-        /// <summary>
-        /// 执行状态转换 - 使用统一的状态上下文进行状态转换
-        /// </summary>
-        /// <param name="targetStatus">目标状态</param>
-        /// <param name="reason">转换原因</param>
-        /// <returns>转换结果</returns>
-        public override async Task<StateTransitionResult> TransitionToAsync(DataStatus targetStatus, string reason = "")
-        {
-            // 调用基类的实现，确保状态转换通过统一入口点进行
-            var result = await base.TransitionToAsync(targetStatus, reason);
-
-            // 如果状态转换成功，更新UI状态
-            if (result.IsSuccess && EditEntity is BaseEntity baseEntity)
-            {
-                UpdateAllUIStates(baseEntity);
-            }
-
-            return result;
-        }
-
-        /// <summary>
-        /// 检查是否可以转换到指定的数据状态
-        /// </summary>
-        /// <param name="targetStatus">目标状态</param>
-        /// <returns>是否可转换</returns>
-        public virtual async Task<bool> CanTransitionToDataStatusAsync(DataStatus targetStatus) =>
-            StatusContext != null && await StatusContext.CanTransitionTo(targetStatus);
-
-        /// <summary>
-        /// 获取可用的数据状态转换列表
-        /// </summary>
-        /// <returns>可转换的状态列表</returns>
-        public virtual IEnumerable<DataStatus> GetAvailableDataStatusTransitions() =>
-            StatusContext?.GetAvailableTransitions()
-                .OfType<DataStatus>() ?? Enumerable.Empty<DataStatus>();
 
 
 
@@ -506,41 +354,7 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
-        /// <summary>
-        /// 确保状态上下文被正确初始化
-        /// </summary>
-        /// <param name="entity">实体对象</param>
-        protected new void EnsureStatusContext(BaseEntity entity)
-        {
-            if (entity == null) return;
 
-            // 如果StatusContext为null，尝试从实体中获取
-            if (base.StatusContext == null)
-            {
-                if (base.BoundEntity == null)
-                {
-                    base.BoundEntity = entity;
-                }
-                base.StatusContext = entity.StatusContext;
-            }
-
-            // 如果仍然为null，尝试重新初始化
-            if (base.StatusContext == null && StateManager != null)
-            {
-                try
-                {
-                    // 获取实体当前的数据状态
-                    var currentDataStatus = StateManager.GetDataStatus(entity);
-                    var ServiceProvider = Startup.GetFromFac<IServiceProvider>();
-                    // 使用状态管理器重新创建状态上下文
-                    base.StatusContext = StateManager.CreateDataStatusContext(entity, currentDataStatus, ServiceProvider);
-                }
-                catch (Exception ex)
-                {
-                    logger?.LogError(ex, "重新初始化状态上下文失败: {ex.Message}", ex);
-                }
-            }
-        }
 
         /// <summary>
         /// 统一更新所有UI状态 - 集中处理所有UI状态更新逻辑
@@ -550,17 +364,14 @@ namespace RUINORERP.UI.BaseForm
         {
             // 防止重复更新，使用标志位控制
             if (entity == null || _isUpdatingUIStates) return;
-
             try
             {
                 _isUpdatingUIStates = true;
                 // 暂停布局更新，减少闪烁
                 this.SuspendLayout();
-                // 确保状态上下文被正确初始化
-                EnsureStatusContext(entity);
 
                 // 使用状态管理器获取当前状态，优先使用StateManage
-                DataStatus currentStatus = GetEntityCurrentStatus(entity);
+                EntityStatus currentStatus = StateManager.GetUnifiedStatus(entity);
 
                 // 1. 统一更新所有按钮状态 - 这是最重要的，控制用户操作权限
                 UpdateAllButtonStates(currentStatus);
@@ -568,7 +379,7 @@ namespace RUINORERP.UI.BaseForm
                 // 2. 更新UI控件状态 - 控制界面元素的可用性
                 UpdateUIControlsByState(currentStatus);
 
-                // 3. 更新状态显示 - 提供视觉反馈
+                // 3. 更新状态显示 - 提供状态视觉反馈
                 UpdateStateDisplay();
 
                 // 4. 更新打印状态显示 - 特殊业务逻辑
@@ -583,55 +394,27 @@ namespace RUINORERP.UI.BaseForm
 
                 //7.字段的显示按权限控制
                 UIHelper.ControlForeignFieldInvisible<T>(this, false);
-                // 恢复布局更新
-                this.ResumeLayout();
+
+     
             }
             catch (Exception ex)
             {
                 logger?.LogError(ex, "统一更新UI状态失败: {ex.Message}", ex);
             }
             finally
-            {
+            {           // 恢复布局更新
+                this.ResumeLayout();
                 _isUpdatingUIStates = false;
             }
         }
 
-        /// <summary>
-        /// 获取实体当前状态
-        /// </summary>
-        /// <param name="entity">实体对象</param>
-        /// <returns>当前数据状态</returns>
-        private DataStatus GetEntityCurrentStatus(BaseEntity entity)
-        {
-            try
-            {
-                // 优先使用状态管理器
-                if (StateManager != null)
-                {
-                    return StateManager.GetDataStatus(entity);
-                }
 
-                // 回退到状态上下文
-                if (StatusContext?.CurrentStatus is DataStatus status)
-                {
-                    return status;
-                }
-
-                // 最后回退到实体自身
-                return entity.GetDataStatus();
-            }
-            catch (Exception ex)
-            {
-                logger?.LogError(ex, "获取实体当前状态失败，使用默认状态");
-                return DataStatus.草稿; // 默认状态
-            }
-        }
 
         /// <summary>
         /// 统一更新所有按钮状态 - 集中管理所有工具栏按钮的状态
         /// </summary>
         /// <param name="currentStatus">当前状态</param>
-        protected override void UpdateAllButtonStates(DataStatus currentStatus)
+        protected void UpdateAllButtonStates(EntityStatus currentStatus)
         {
             try
             {
@@ -639,8 +422,6 @@ namespace RUINORERP.UI.BaseForm
                 var entity = EditEntity;
                 if (entity == null) return;
 
-                // 确保状态上下文被正确初始化
-                EnsureStatusContext(entity);
 
                 //根据规则判断按钮状态
                 UpdateButtonStatesUsingUIRules(currentStatus);
@@ -677,7 +458,7 @@ namespace RUINORERP.UI.BaseForm
         /// 使用UIControlRules更新按钮状态
         /// </summary>
         /// <param name="currentStatus">当前数据状态</param>
-        private void UpdateButtonStatesUsingUIRules(DataStatus currentStatus)
+        private void UpdateButtonStatesUsingUIRules(EntityStatus currentStatus)
         {
             if (EditEntity == null || StateManager == null) return;
             // 获取按钮状态规则
@@ -803,65 +584,14 @@ namespace RUINORERP.UI.BaseForm
         }
 
 
-        /// <summary>
-        /// 异步确保状态上下文已初始化
-        /// </summary>
-        /// <param name="entity">实体对象</param>
-        /// <returns>异步任务</returns>
-        protected async Task EnsureStatusContextAsync(BaseEntity entity)
-        {
-            if (_isUpdatingStatusContext) return;
 
-            try
-            {
-                _isUpdatingStatusContext = true;
-
-                // 同步版本的EnsureStatusContext已存在，这里只需调用它
-                EnsureStatusContext(entity);
-
-                // 可以在这里添加额外的异步初始化逻辑
-                await Task.CompletedTask.ConfigureAwait(false);
-            }
-            finally
-            {
-                _isUpdatingStatusContext = false;
-            }
-        }
-
-        /// <summary>
-        /// 异步更新所有按钮状态
-        /// </summary>
-        /// <returns>异步任务</returns>
-        protected async Task UpdateAllButtonStatesAsync()
-        {
-            if (_isUpdatingUIStates) return;
-
-            try
-            {
-                _isUpdatingUIStates = true;
-
-                // 获取当前状态
-                var currentStatus = CurrentDataStatus;
-
-                // 调用带状态参数的异步方法
-                await UpdateAllButtonStatesAsync(currentStatus).ConfigureAwait(false);
-            }
-            catch (Exception ex)
-            {
-                logger?.LogError(ex, "UpdateAllButtonStatesAsync执行失败: {Message}", ex.Message);
-            }
-            finally
-            {
-                _isUpdatingUIStates = false;
-            }
-        }
 
         /// <summary>
         /// 异步更新所有按钮状态
         /// </summary>
         /// <param name="currentStatus">当前状态</param>
         /// <returns>异步任务</returns>
-        protected async Task UpdateAllButtonStatesAsync(DataStatus currentStatus)
+        protected async Task UpdateAllButtonStatesAsync(EntityStatus currentStatus)
         {
             // 切换到UI线程执行UI更新
             await Task.Run(() =>
@@ -893,7 +623,7 @@ namespace RUINORERP.UI.BaseForm
             try
             {
                 // 获取实体的当前状态
-                var currentStatus = GetEntityCurrentStatus(entity);
+                var currentStatus = GetBusinessStatus(entity);
 
                 // 将操作转换为按钮名称
                 var buttonName = ConvertActionToButtonName(action);
@@ -978,12 +708,6 @@ namespace RUINORERP.UI.BaseForm
         {
             try
             {
-                // 确保状态上下文被正确初始化
-                EnsureStatusContext(entity);
-
-                if (StatusContext == null)
-                    return false;
-
                 // 使用状态管理器检查操作权限
                 if (StateManager != null)
                 {
@@ -992,7 +716,7 @@ namespace RUINORERP.UI.BaseForm
                     var status = entity.GetCurrentStatus();
 
                     // 使用状态管理器检查操作权限
-                    return _stateManager.CanExecuteAction(action, EditEntity, statusType, status);
+                    return _stateManager.CanExecuteActionWithMessage(EditEntity, action).CanExecute;
                 }
 
                 return false;
@@ -1043,34 +767,6 @@ namespace RUINORERP.UI.BaseForm
 
 
 
-        /// <summary>
-        /// 判断状态是否可反结案 - 使用新的状态管理系统
-        /// </summary>
-        /// <param name="status">状态对象</param>
-        /// <returns>是否可反结案</returns>
-        private bool CanAntiCloseCaseStatus(object status)
-        {
-            try
-            {
-                // 使用新的状态管理系统检查反结案权限
-                if (_stateManager != null && StateManager != null && EditEntity is BaseEntity entity)
-                {
-                    // 获取当前实体的状态类型和状态值
-                    var statusType = entity.GetStatusType();
-                    var currentStatus = entity.GetCurrentStatus();
-
-                    // 检查反结案操作是否可用
-                    return _stateManager.CanExecuteAction(MenuItemEnums.反结案, EditEntity, statusType, currentStatus);
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"使用状态管理系统检查反结案权限失败: {ex.Message}");
-            }
-
-            // 如果状态管理系统出错，回退到原始逻辑
-            return false;
-        }
 
 
 
@@ -1078,15 +774,12 @@ namespace RUINORERP.UI.BaseForm
         /// 根据状态更新子表操作 - 使用UIControlRules统一管理
         /// </summary>
         /// <param name="status">当前数据状态</param>
-        protected virtual void UpdateChildTableOperations(DataStatus status)
+        protected virtual void UpdateChildTableOperations(EntityStatus status)
         {
             try
             {
                 var entity = EditEntity;
                 if (entity == null) return;
-
-                // 确保状态上下文被正确初始化
-                EnsureStatusContext(entity);
 
                 // 使用UIControlRules获取子表操作权限
                 bool canAdd, canEdit, canDelete;
@@ -1102,8 +795,6 @@ namespace RUINORERP.UI.BaseForm
                 // 启用/禁用子表操作
                 EnableChildTableOperations(canAdd, canEdit, canDelete);
 
-                // 通知子类可以进行额外的子表操作权限调整
-                OnAfterUpdateChildTableOperations(canAdd, canEdit, canDelete, status);
             }
             catch (Exception ex)
             {
@@ -1114,17 +805,7 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
-        /// <summary>
-        /// 在更新子表操作权限后调用，允许子类进行额外的子表操作权限调整
-        /// </summary>
-        /// <param name="canAdd">是否允许添加</param>
-        /// <param name="canEdit">是否允许修改</param>
-        /// <param name="canDelete">是否允许删除</param>
-        /// <param name="currentStatus">当前数据状态</param>
-        protected virtual void OnAfterUpdateChildTableOperations(bool canAdd, bool canEdit, bool canDelete, DataStatus currentStatus)
-        {
-            // 虚方法，子类可以重写以添加额外的子表操作权限调整逻辑
-        }
+
 
 
         /// <summary>
@@ -1271,7 +952,7 @@ namespace RUINORERP.UI.BaseForm
                     formId,
                     OnLockStatusChanged);
 
-         
+
 
                 // 记录日志
                 logger?.LogDebug("窗体 {FormName} 已订阅单据 {BillId} 的锁状态变化", this.GetType().Name, EditEntity.PrimaryKeyID);
@@ -1293,7 +974,7 @@ namespace RUINORERP.UI.BaseForm
                 {
                     _lockStatusNotificationService.UnsubscribeFromLockStatus(EditEntity.PrimaryKeyID, _lockSubscriptionId);
                     _lockSubscriptionId = null;
-              
+
 
                     logger?.LogDebug("窗体 {FormName} 已取消订阅单据 {BillId} 的锁状态变化", this.GetType().Name, EditEntity.PrimaryKeyID);
                 }
@@ -1821,10 +1502,6 @@ namespace RUINORERP.UI.BaseForm
                     BindData(typedEntity);
 
 
-                    if (Entity == null) return;
-                    UIHelper.ControlMasterColumnsInvisible(CurMenuInfo, this);
-
-                 
                     // 加载新单据后检查锁定状态
                     _ = Task.Run(async () => await CheckLockAfterLoad(typedEntity));
 
@@ -1840,7 +1517,7 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
-      
+
 
         /// <summary>
         /// 加载后检查锁定状态
@@ -2026,9 +1703,9 @@ namespace RUINORERP.UI.BaseForm
 
         #endregion
 
- 
 
-      
+
+
         /// <summary>
         /// 检查锁定状态并更新UI（基于实体）
         /// 只处理锁定状态相关的UI，不直接控制业务按钮状态
@@ -2049,8 +1726,7 @@ namespace RUINORERP.UI.BaseForm
                 // 调用基于billId的版本，避免代码重复
                 var result = await CheckLockStatusAndUpdateUI(pkid, logRefresh);
                 // 调用状态管理系统更新UI
-                await EnsureStatusContextAsync(EditEntity);
-                await UpdateAllButtonStatesAsync();
+                // TODO 后面来实现;
 
                 return result;
             }
@@ -2075,18 +1751,13 @@ namespace RUINORERP.UI.BaseForm
 
             try
             {
-                // 记录状态变化
-                logger?.LogDebug("状态变更：{StatusTypeName} = {StatusValue}",
-                    status.GetType().Name, status.ToString());
+
 
                 // 更新当前状态
                 _currentBusinessStatus = status;
 
-                // 确保状态上下文已初始化
-                await EnsureStatusContextAsync(EditEntity);
-
                 // 调用状态管理系统更新所有按钮状态
-                await UpdateAllButtonStatesAsync();
+                // TODO 后面来实现
 
                 // 让子类有机会进行额外处理
                 await OnAfterStatusChangedAsync(status);
@@ -2159,17 +1830,15 @@ namespace RUINORERP.UI.BaseForm
                 {
                     // 记录状态变更前的日志
                     object oldValue = entity.GetPropertyValue(propertyName);
-              
+
 
                     // 设置新状态值
                     ReflectionHelper.SetPropertyValue(entity, propertyName, (int)(object)status);
 
                     // 触发状态变更后的回调
                     await OnAfterStatusChangedAsync(status).ConfigureAwait(false);
-
-                    // 自动更新UI状态
-                    await EnsureStatusContextAsync(entity).ConfigureAwait(false);
-                    await UpdateAllButtonStatesAsync().ConfigureAwait(false);
+                    // TODO 后面来实现
+                    // await UpdateAllButtonStatesAsync().ConfigureAwait(false);
                 }
                 else
                 {
@@ -2257,21 +1926,6 @@ namespace RUINORERP.UI.BaseForm
 
             return result;
         }
-
-        /// <summary>
-        /// 从实体中异步获取业务状态枚举值
-        /// 内部调用优化后的同步版本，添加异步包装
-        /// </summary>
-        /// <param name="entity">单据实体对象</param>
-        /// <returns>找到的业务状态枚举值，如果未找到则返回null</returns>
-        /// <remarks>此方法为GetBusinessStatus的异步包装，复用了相同的缓存机制</remarks>
-        private async Task<Enum> GetBusinessStatusAsync(BaseEntity entity)
-        {
-            // 为了保持一致性和重用缓存，直接调用优化后的同步方法
-            // 在实际应用中，可以根据需要调整为真正的异步实现
-            return await Task.Run(() => GetBusinessStatus(entity)).ConfigureAwait(false);
-        }
-
 
 
 
@@ -2659,7 +2313,7 @@ namespace RUINORERP.UI.BaseForm
             //操作前将数据收集
             this.ValidateChildren(System.Windows.Forms.ValidationConstraints.None);
 
-     
+
 
             switch (menuItem)
             {
@@ -3019,7 +2673,7 @@ namespace RUINORERP.UI.BaseForm
 
         }
 
-        
+
 
         MenuPowerHelper menuPowerHelper = null;
         public async void MenuItem_Click(object sender, EventArgs e)
@@ -3659,7 +3313,7 @@ namespace RUINORERP.UI.BaseForm
                 {
                     // 确认状态下 已经审核并且通过
                     if (EditEntity.GetPropertyValue("DataStatus").ToInt() == (int)DataStatus.确认
-                        && EditEntity.GetPropertyValue("ApprovalStatus").ToInt() == (int)ApprovalStatus.已审核
+                        && EditEntity.GetPropertyValue("ApprovalStatus").ToInt() == (int)ApprovalStatus.审核通过
                         && EditEntity.GetPropertyValue("ApprovalResults") != null
                         && EditEntity.GetPropertyValue("ApprovalResults").ToBool() == true
                         )
@@ -3760,7 +3414,7 @@ namespace RUINORERP.UI.BaseForm
             if (ReflectionHelper.ExistPropertyName<T>("ApprovalStatus") && ReflectionHelper.ExistPropertyName<T>("ApprovalResults"))
             {
                 //审核过，并且通过了，不能再次审核
-                if ((EditEntity.GetPropertyValue("ApprovalStatus").ToInt() == (int)ApprovalStatus.已审核)
+                if ((EditEntity.GetPropertyValue("ApprovalStatus").ToInt() == (int)ApprovalStatus.审核通过)
                     && EditEntity.GetPropertyValue("ApprovalResults") != null
                     && EditEntity.GetPropertyValue("ApprovalResults").ToBool() == true
                     )
@@ -3823,7 +3477,7 @@ namespace RUINORERP.UI.BaseForm
 
                 if (ae.ApprovalResults == true)
                 {
-                    await TransitionToAsync(DataStatus.确认, "审核通过");
+                    StateManager.SetBusinessStatusAsync<DataStatus>(EditEntity, DataStatus.确认, "审核通过");
                 }
                 else
                 {
@@ -3837,7 +3491,7 @@ namespace RUINORERP.UI.BaseForm
                     }
                     if (ReflectionHelper.ExistPropertyName<T>("ApprovalStatus"))
                     {
-                        EditEntity.SetPropertyValue("ApprovalStatus", (int)ApprovalStatus.驳回);
+                        EditEntity.SetPropertyValue("ApprovalStatus", (int)ApprovalStatus.审核驳回);
                     }
                     if (ReflectionHelper.ExistPropertyName<T>("ApprovalResults"))
                     {
@@ -3874,7 +3528,7 @@ namespace RUINORERP.UI.BaseForm
                 }
                 if (ReflectionHelper.ExistPropertyName<T>("ApprovalStatus"))
                 {
-                    EditEntity.SetPropertyValue("ApprovalStatus", (int)ApprovalStatus.已审核);
+                    EditEntity.SetPropertyValue("ApprovalStatus", (int)ApprovalStatus.审核通过);
                 }
                 if (ReflectionHelper.ExistPropertyName<T>("ApprovalResults"))
                 {
@@ -3915,7 +3569,7 @@ namespace RUINORERP.UI.BaseForm
                                 if (rmr.ReturnObjectAsOtherEntity is tb_FM_ReceivablePayable payable)
                                 {
                                     payable.ApprovalOpinions = "系统自动审核";
-                                    payable.ApprovalStatus = (int)ApprovalStatus.已审核;
+                                    payable.ApprovalStatus = (int)ApprovalStatus.审核通过;
                                     payable.ApprovalResults = true;
                                     ReturnResults<tb_FM_ReceivablePayable> autoApproval = await ctrpayable.ApprovalAsync(payable, true);
                                     if (!autoApproval.Succeeded)
@@ -3963,7 +3617,7 @@ namespace RUINORERP.UI.BaseForm
                                     if ((payable.ApprovalStatus.GetValueOrDefault() == (int)ApprovalStatus.未审核) || !payable.ApprovalResults.GetValueOrDefault())
                                     {
                                         payable.ApprovalOpinions = "【销售退回单】审核时，系统自动审核";
-                                        payable.ApprovalStatus = (int)ApprovalStatus.已审核;
+                                        payable.ApprovalStatus = (int)ApprovalStatus.审核通过;
                                         payable.ApprovalResults = true;
                                         ReturnResults<tb_FM_ReceivablePayable> autoApproval = await ctrpayable.ApprovalAsync(payable, true);
                                         if (!autoApproval.Succeeded)
@@ -4005,7 +3659,7 @@ namespace RUINORERP.UI.BaseForm
                                                         {
                                                             //自动审核收款单
                                                             newPaymentRecord.ApprovalOpinions = "【平台单】已退款，销售退回单审核时，自动审核";
-                                                            newPaymentRecord.ApprovalStatus = (int)ApprovalStatus.已审核;
+                                                            newPaymentRecord.ApprovalStatus = (int)ApprovalStatus.审核通过;
                                                             newPaymentRecord.ApprovalResults = true;
 
                                                             ReturnResults<tb_FM_PaymentRecord> rrRecord = await paymentController.ApprovalAsync(newPaymentRecord);
@@ -4075,7 +3729,7 @@ namespace RUINORERP.UI.BaseForm
                                     if (payable.ARAPStatus == (int)ARAPStatus.待审核)
                                     {
                                         payable.ApprovalOpinions = $"由采购入库单确认{payable.SourceBillNo},系统自动审核";
-                                        payable.ApprovalStatus = (int)ApprovalStatus.已审核;
+                                        payable.ApprovalStatus = (int)ApprovalStatus.审核通过;
                                         payable.ApprovalResults = true;
 
                                         //if (PurEntry.tb_purorder != null && !payable.PayeeInfoID.HasValue)
@@ -4188,7 +3842,7 @@ namespace RUINORERP.UI.BaseForm
             if (ReflectionHelper.ExistPropertyName<T>("ApprovalStatus") && ReflectionHelper.ExistPropertyName<T>("ApprovalResults"))
             {
                 //反审，要审核过，并且通过了，才能反审。
-                if (EditEntity.GetPropertyValue("ApprovalStatus").ToInt() == (int)ApprovalStatus.已审核
+                if (EditEntity.GetPropertyValue("ApprovalStatus").ToInt() == (int)ApprovalStatus.审核通过
                     && EditEntity.GetPropertyValue("ApprovalResults") != null
                     && EditEntity.GetPropertyValue("ApprovalResults").ToBool() == true
                     )
@@ -4516,7 +4170,7 @@ namespace RUINORERP.UI.BaseForm
 
             List<T> list = new List<T>();
             EditEntity = Activator.CreateInstance(typeof(T)) as T;
-
+            //StateManager.SetBusinessStatusAsync<DataStatus>(this, initialStatus);
             //StatusMachine.Create();
             try
             {
@@ -4571,7 +4225,6 @@ namespace RUINORERP.UI.BaseForm
             }
 
             StateManager.SetActionStatusAsync(EditEntity, ActionStatus.新增, "新增");
-            UIHelper.ControlMasterColumnsInvisible(CurMenuInfo, this);
         }
 
         protected override void Modify()
@@ -4579,31 +4232,6 @@ namespace RUINORERP.UI.BaseForm
             if (editEntity == null)
             {
                 return;
-            }
-            var EntityStatus = StateManager.GetEntityStatus(editEntity as BaseEntity);
-            if (EntityStatus.dataStatus.HasValue)
-            {
-                // 使用V4状态管理系统检查修改权限
-                if (StateManager != null && editEntity is BaseEntity entity)
-                {
-                    var canModify = _stateManager.CanExecuteActionWithMessage(StateManager, entity, MenuItemEnums.修改);
-                    if (!canModify.IsSuccess)
-                    {
-                        MainForm.Instance.PrintInfoLog($"当前单据状态为{canModify.ErrorMessage}不允许修改!");
-                        return;
-                    }
-                }
-                else
-                {
-                    // 如果状态管理系统不可用，使用原始逻辑
-                    var currentStatus = StatusContext?.CurrentStatus as Enum;
-                    var canModify = _stateManager.CanExecuteActionWithMessage(StateManager, EditEntity, MenuItemEnums.修改);
-                    if (!canModify.IsSuccess)
-                    {
-                        MainForm.Instance.PrintInfoLog($"当前单据状态为{canModify.ErrorMessage}不允许修改!");
-                        return;
-                    }
-                }
             }
 
 
@@ -4752,19 +4380,19 @@ namespace RUINORERP.UI.BaseForm
                     }
                     // 使用ActionOption中的DisplayName，它已经包含了从Description特性获取的显示名称
                     string displayName = actionOption.DisplayName;
-                    
+
                     var menuItem = new ToolStripMenuItem(displayName);
                     menuItem.Enabled = actionOption.IsEnabled;
 
                     // 根据目标单据类型设置图标
                     //menuItem.Image = GetDocumentTypeIcon(actionOption.TargetType);
-                    
+
                     // 添加工具提示，使用实体元数据服务获取的显示名称
                     menuItem.ToolTipText = $"★ 将当前【{actionOption.SourceDocumentDisplayName}】转换为【{actionOption.TargetDocumentDisplayName}】";
-                    
+
                     // 保存转换选项的引用，避免闭包问题
                     var targetType = actionOption.ConverterType.GetInterfaces()
-                        .FirstOrDefault(i => i.IsGenericType && 
+                        .FirstOrDefault(i => i.IsGenericType &&
                                            i.GetGenericTypeDefinition() == typeof(RUINORERP.Business.Document.IDocumentConverter<,>))
                         ?.GetGenericArguments()[1];
                     menuItem.Click += async (sender, e) =>
@@ -4781,7 +4409,7 @@ namespace RUINORERP.UI.BaseForm
                         }
                     };
                     toolStripbtnConvertDocuments.DropDownItems.Add(menuItem);
-                    
+
                     // 记录转换选项加载日志
                     MainForm.Instance.uclog.AddLog($"已加载转换选项: {displayName}", Global.UILogType.普通消息);
                 }
@@ -4789,7 +4417,7 @@ namespace RUINORERP.UI.BaseForm
                 // 根据是否有可转换选项设置按钮可见性
                 toolStripbtnConvertDocuments.Visible = toolStripbtnConvertDocuments.DropDownItems.Count > 0;
                 toolStripbtnConvertDocuments.Text = "联动";
-                
+
                 MainForm.Instance.uclog.AddLog($"共加载了 {toolStripbtnConvertDocuments.DropDownItems.Count} 个转换选项", Global.UILogType.普通消息);
             }
             catch (Exception ex)
@@ -4799,7 +4427,7 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
- 
+
         /// <summary>
         /// 执行单据转换操作
         /// </summary>
@@ -4822,7 +4450,7 @@ namespace RUINORERP.UI.BaseForm
             string targetDisplayName = GetEntityDisplayName(targetType);
             string sourceTypeName = typeof(T).Name.Replace("tb_", "");
             string targetTypeName = targetType?.Name.Replace("tb_", "") ?? "Unknown";
-            
+
             MainForm.Instance.uclog.AddLog($"开始执行单据转换：{sourceDisplayName} -> {targetDisplayName}", Global.UILogType.普通消息);
 
             try
@@ -4847,8 +4475,8 @@ namespace RUINORERP.UI.BaseForm
                 // 使用反射调用正确的泛型方法
                 var method = typeof(RUINORERP.Business.Document.ActionManager)
                     .GetMethods()
-                    .FirstOrDefault(m => m.Name == "ExecuteActionAsync" && 
-                                       m.IsGenericMethod && 
+                    .FirstOrDefault(m => m.Name == "ExecuteActionAsync" &&
+                                       m.IsGenericMethod &&
                                        m.GetParameters().Length == 2 &&
                                        m.GetParameters()[0].ParameterType.IsGenericParameter &&
                                        m.GetParameters()[1].ParameterType.Name == "ActionOptions");
@@ -4876,7 +4504,7 @@ namespace RUINORERP.UI.BaseForm
                         {
                             string message = result.GetFormattedMessages();
                             MainForm.Instance.uclog.AddLog($"单据转换完成：{sourceDisplayName} -> {targetDisplayName}，提示：{message}", Global.UILogType.普通消息);
-                            
+
                             // 显示提示信息对话框
                             MessageBox.Show(message, "转换提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         }
@@ -4884,12 +4512,12 @@ namespace RUINORERP.UI.BaseForm
                         {
                             MainForm.Instance.uclog.AddLog($"单据转换成功：{sourceDisplayName} -> {targetDisplayName}", Global.UILogType.普通消息);
                         }
-                       
+
                         MenuPowerHelper menuPowerHelper;
                         menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
                         string Flag = string.Empty;
                         //付款
-                      //  Flag = typeof(RUINORERP.UI.FM.UCPayable).FullName;
+                        //  Flag = typeof(RUINORERP.UI.FM.UCPayable).FullName;
 
                         tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
                                     && m.EntityName == targetType.Name
@@ -4898,7 +4526,7 @@ namespace RUINORERP.UI.BaseForm
                         .FirstOrDefault();
                         if (RelatedMenuInfo != null)
                         {
-                           await  menuPowerHelper.ExecuteEvents(RelatedMenuInfo, result.Data);
+                            await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, result.Data);
                         }
                     }
                     else if (result != null)
@@ -4909,7 +4537,7 @@ namespace RUINORERP.UI.BaseForm
                         {
                             message = result.ErrorMessage ?? "未知错误";
                         }
-                        
+
                         MainForm.Instance.uclog.AddLog($"单据转换失败：{sourceDisplayName} -> {targetDisplayName}，错误：{message}", Global.UILogType.错误);
                         MessageBox.Show($"单据联动失败: {message}", "操作失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
@@ -4957,8 +4585,8 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
- 
-      
+
+
         /// <summary>
         /// 获取实体的显示名称（从Description特性获取）
         /// </summary>
@@ -5424,11 +5052,6 @@ namespace RUINORERP.UI.BaseForm
         {
             string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
             long pkid = (long)ReflectionHelper.GetPropertyValue(entity, PKCol);
-            if (pkid == 0)
-            {
-                await TransitionToAsync(DataStatus.草稿, "保存为草稿");
-                //entity.SetPropertyValue(typeof(DataStatus).Name, (int)DataStatus.草稿);
-            }
             ReturnMainSubResults<T> rmr = new ReturnMainSubResults<T>();
             BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
             rmr = await ctr.BaseUpdateWithChild(entity);
@@ -5460,8 +5083,6 @@ namespace RUINORERP.UI.BaseForm
 
             if (pkid == 0)
             {
-                await TransitionToAsync(DataStatus.草稿, "保存为草稿");
-                //entity.SetPropertyValue(typeof(DataStatus).Name, (int)DataStatus.草稿);
                 BusinessHelper.Instance.InitEntity(entity);
             }
             else
@@ -5486,7 +5107,7 @@ namespace RUINORERP.UI.BaseForm
                 {
                     if (ReflectionHelper.ExistPropertyName<T>(typeof(DataStatus).Name))
                     {
-                        await TransitionToAsync(DataStatus.草稿, "保存为草稿");
+                        await StateManager.SetBusinessStatusAsync<DataStatus>(editEntity, DataStatus.草稿, "保存时将新建状态重置为草稿");
                         //ReflectionHelper.SetPropertyValue(EditEntity, typeof(DataStatus).Name, (int)DataStatus.草稿);
                     }
                 }
@@ -5538,7 +5159,7 @@ namespace RUINORERP.UI.BaseForm
 
                 if (currentPkid <= 0) return;
 
- 
+
 
                 // 对于新增单据（originalPkid=0），保存后自动获取锁定
                 if (originalPkid == 0 && _integratedLockService != null)
@@ -5588,21 +5209,21 @@ namespace RUINORERP.UI.BaseForm
             {
                 // 核心步骤1: 查询锁定状态
                 var lockInfo = await _integratedLockService.GetLockInfoAsync(billId, CurMenuInfo.MenuID);
-                
+
                 // 判断锁定状态
                 bool isLocked = lockInfo != null && lockInfo.IsLocked;
                 string BillNo = lockInfo?.BillNo;
                 string lockStatusMsg = isLocked ? "已锁定" : "未锁定";
-                
- 
+
+
                 // 核心步骤2: 判断操作权限
                 long currentUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
                 bool isSelfLock = isLocked && (lockInfo?.LockedUserId == currentUserId);
                 bool canPerformCriticalOperations = !isLocked || isSelfLock;
-                
+
                 // 核心步骤3: 更新UI状态
                 UpdateLockUI(isLocked, lockInfo);
-                
+
                 // 记录刷新日志（如果需要）
                 if (logRefresh && isLocked && lockInfo != null)
                 {
@@ -5866,7 +5487,7 @@ namespace RUINORERP.UI.BaseForm
                         ApprovalEntity ae = new ApprovalEntity();
                         ae.ApprovalOpinions = "自动审核";
                         ae.ApprovalResults = true;
-                        ae.ApprovalStatus = (int)ApprovalStatus.已审核;
+                        ae.ApprovalStatus = (int)ApprovalStatus.审核通过;
                         if (cbd.BizType == BizType.销售订单 && AppContext.SysConfig.AutoApprovedSaleOrderAmount > 0)
                         {
                             if (EditEntity is tb_SaleOrder saleOrder)
@@ -5883,7 +5504,7 @@ namespace RUINORERP.UI.BaseForm
                                     };
                                     BusinessHelper.Instance.ApproverEntity(EditEntity);
                                     saleOrder.ApprovalResults = true;
-                                    saleOrder.ApprovalStatus = (int)ApprovalStatus.已审核;
+                                    saleOrder.ApprovalStatus = (int)ApprovalStatus.审核通过;
                                     saleOrder.ApprovalOpinions = "自动审核";
                                     saleOrder.DataStatus = (int)DataStatus.确认;
                                     tb_SaleOrderController<tb_SaleOrder> ctrSO = Startup.GetFromFac<tb_SaleOrderController<tb_SaleOrder>>();
@@ -5927,7 +5548,7 @@ namespace RUINORERP.UI.BaseForm
                                         CloneHelper.SetValues<tb_PurOrder>(EditEntity, oldobj);
                                     };
                                     purOrder.ApprovalResults = true;
-                                    purOrder.ApprovalStatus = (int)ApprovalStatus.已审核;
+                                    purOrder.ApprovalStatus = (int)ApprovalStatus.审核通过;
                                     purOrder.ApprovalOpinions = "自动审核";
                                     purOrder.DataStatus = (int)DataStatus.确认;
                                     BusinessHelper.Instance.ApproverEntity(EditEntity);
@@ -5972,7 +5593,7 @@ namespace RUINORERP.UI.BaseForm
             {
                 if (ReflectionHelper.ExistPropertyName<T>(typeof(DataStatus).Name))
                 {
-                    await TransitionToAsync(DataStatus.新建, "新建单据");
+                    StateManager.SetBusinessStatusAsync<DataStatus>(EditEntity, DataStatus.新建, "保存式提交时设置为新建状态");
                     //ReflectionHelper.SetPropertyValue(EditEntity, typeof(DataStatus).Name, (int)DataStatus.新建);
                 }
                 if (ReflectionHelper.ExistPropertyName<T>(typeof(ApprovalStatus).Name))
@@ -6136,7 +5757,6 @@ namespace RUINORERP.UI.BaseForm
                     if (entity == null) return;
                     UIHelper.ControlMasterColumnsInvisible(CurMenuInfo, this);
                 }
-
 
                 );
 
@@ -6696,8 +6316,8 @@ namespace RUINORERP.UI.BaseForm
             // 停止之前可能存在的刷新任务
             StopLockRefreshTask();
 
-      
-      
+
+
             _lockRefreshTokenSource = new CancellationTokenSource();
 
             // 创建并启动刷新任务，确保token不为null
@@ -6763,15 +6383,15 @@ namespace RUINORERP.UI.BaseForm
                 {
                     _lockRefreshTokenSource = null;
                     _lockRefreshTask = null;
-                  
-               
+
+
                 }
             }
         }
 
 
 
-       
+
 
         #endregion
     }

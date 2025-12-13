@@ -124,7 +124,7 @@ namespace RUINORERP.UI.ASS
             foreach (var item in selectlist)
             {
                 //只有审核状态才可以转换为出库单
-                if (item.DataStatus == (int)DataStatus.确认 && item.ApprovalStatus == (int)ApprovalStatus.已审核 && item.ApprovalResults.HasValue && item.ApprovalResults.Value)
+                if (item.DataStatus == (int)DataStatus.确认 && item.ApprovalStatus == (int)ApprovalStatus.审核通过 && item.ApprovalResults.HasValue && item.ApprovalResults.Value)
                 {
                     if (item.tb_AS_AfterSaleDeliveries != null && item.tb_AS_AfterSaleDeliveries.Count > 0)
                     {
@@ -213,7 +213,7 @@ namespace RUINORERP.UI.ASS
                 return false;
             }
             //已经审核的并且通过的情况才能结案
-            List<tb_AS_AfterSaleApply> needCloseCases = EditEntitys.Where(c => c.DataStatus == (int)DataStatus.确认 && c.ApprovalStatus == (int)ApprovalStatus.已审核 && c.ApprovalResults.HasValue && c.ApprovalResults.Value).ToList();
+            List<tb_AS_AfterSaleApply> needCloseCases = EditEntitys.Where(c => c.DataStatus == (int)DataStatus.确认 && c.ApprovalStatus == (int)ApprovalStatus.审核通过 && c.ApprovalResults.HasValue && c.ApprovalResults.Value).ToList();
             if (needCloseCases.Count == 0)
             {
                 MainForm.Instance.PrintInfoLog($"要结案的数据为：{needCloseCases.Count}:请检查数据！");

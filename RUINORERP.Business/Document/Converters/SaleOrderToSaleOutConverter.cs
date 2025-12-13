@@ -375,7 +375,7 @@ namespace RUINORERP.Business.Document.Converters
                 }
 
                 // 验证销售订单状态是否允许生成出库单
-                if (source.ApprovalStatus != (int)ApprovalStatus.已审核)
+                if (source.ApprovalStatus != (int)ApprovalStatus.审核通过)
                 {
                     result.CanConvert = false;
                     result.ErrorMessage = "仅已审核的销售订单可以生成销售出库单";

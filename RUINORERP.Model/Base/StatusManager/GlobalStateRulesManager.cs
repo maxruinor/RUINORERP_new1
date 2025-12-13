@@ -519,6 +519,9 @@ namespace RUINORERP.Model.Base.StatusManager
             // 初始化应收应付状态UI按钮规则
             InitializeARAPStatusUIButtonRules();
 
+            // 初始化对账状态UI按钮规则
+            InitializeStatementStatusUIButtonRules();
+
             // 初始化EntityStatus UI按钮规则
             InitializeEntityStatusUIButtonRules();
         }
@@ -786,6 +789,75 @@ namespace RUINORERP.Model.Base.StatusManager
             AddButtonRule(ARAPStatus.已冲销, "toolStripbtnReview", false, false);
             AddButtonRule(ARAPStatus.已冲销, "toolStripBtnReverseReview", false, false);
             AddButtonRule(ARAPStatus.已冲销, "toolStripButtonPrint", true, true);
+        }
+
+        /// <summary>
+        /// 初始化对账状态UI按钮规则
+        /// </summary>
+        private void InitializeStatementStatusUIButtonRules()
+        {
+            var statusType = typeof(RUINORERP.Global.EnumExt.StatementStatus);
+            _uiButtonRules[statusType] = new Dictionary<object, Dictionary<string, (bool Enabled, bool Visible)>>();
+
+            // 草稿状态：允许新增、修改、保存、删除、提交
+            AddButtonRule(RUINORERP.Global.EnumExt.StatementStatus.草稿, "toolStripbtnAdd", true, true);
+            AddButtonRule(RUINORERP.Global.EnumExt.StatementStatus.草稿, "toolStripbtnModify", true, true);
+            AddButtonRule(RUINORERP.Global.EnumExt.StatementStatus.草稿, "toolStripButtonSave", true, true);
+            AddButtonRule(RUINORERP.Global.EnumExt.StatementStatus.草稿, "toolStripbtnDelete", true, true);
+            AddButtonRule(RUINORERP.Global.EnumExt.StatementStatus.草稿, "toolStripbtnSubmit", true, true);
+            AddButtonRule(RUINORERP.Global.EnumExt.StatementStatus.草稿, "toolStripbtnReview", false, false);
+            AddButtonRule(RUINORERP.Global.EnumExt.StatementStatus.草稿, "toolStripBtnReverseReview", false, false);
+            AddButtonRule(RUINORERP.Global.EnumExt.StatementStatus.草稿, "toolStripButtonPrint", true, true);
+
+            // 已发送状态：允许修改、保存、确认、结算、作废
+            AddButtonRule(RUINORERP.Global.EnumExt.StatementStatus.已发送, "toolStripbtnAdd", true, true);
+            AddButtonRule(RUINORERP.Global.EnumExt.StatementStatus.已发送, "toolStripbtnModify", true, true);
+            AddButtonRule(RUINORERP.Global.EnumExt.StatementStatus.已发送, "toolStripButtonSave", true, true);
+            AddButtonRule(RUINORERP.Global.EnumExt.StatementStatus.已发送, "toolStripbtnDelete", false, false);
+            AddButtonRule(RUINORERP.Global.EnumExt.StatementStatus.已发送, "toolStripbtnSubmit", false, false);
+            AddButtonRule(RUINORERP.Global.EnumExt.StatementStatus.已发送, "toolStripbtnReview", true, true); // 确认操作
+            AddButtonRule(RUINORERP.Global.EnumExt.StatementStatus.已发送, "toolStripBtnReverseReview", false, false);
+            AddButtonRule(RUINORERP.Global.EnumExt.StatementStatus.已发送, "toolStripButtonPrint", true, true);
+
+            // 已确认状态：允许结算、打印
+            AddButtonRule(RUINORERP.Global.EnumExt.StatementStatus.已确认, "toolStripbtnAdd", false, false);
+            AddButtonRule(RUINORERP.Global.EnumExt.StatementStatus.已确认, "toolStripbtnModify", false, false);
+            AddButtonRule(RUINORERP.Global.EnumExt.StatementStatus.已确认, "toolStripButtonSave", false, false);
+            AddButtonRule(RUINORERP.Global.EnumExt.StatementStatus.已确认, "toolStripbtnDelete", false, false);
+            AddButtonRule(RUINORERP.Global.EnumExt.StatementStatus.已确认, "toolStripbtnSubmit", false, false);
+            AddButtonRule(RUINORERP.Global.EnumExt.StatementStatus.已确认, "toolStripbtnReview", false, false);
+            AddButtonRule(RUINORERP.Global.EnumExt.StatementStatus.已确认, "toolStripBtnReverseReview", true, true);
+            AddButtonRule(RUINORERP.Global.EnumExt.StatementStatus.已确认, "toolStripButtonPrint", true, true);
+
+            // 部分结算状态：允许结算、打印
+            AddButtonRule(RUINORERP.Global.EnumExt.StatementStatus.部分结算, "toolStripbtnAdd", false, false);
+            AddButtonRule(RUINORERP.Global.EnumExt.StatementStatus.部分结算, "toolStripbtnModify", false, false);
+            AddButtonRule(RUINORERP.Global.EnumExt.StatementStatus.部分结算, "toolStripButtonSave", false, false);
+            AddButtonRule(RUINORERP.Global.EnumExt.StatementStatus.部分结算, "toolStripbtnDelete", false, false);
+            AddButtonRule(RUINORERP.Global.EnumExt.StatementStatus.部分结算, "toolStripbtnSubmit", false, false);
+            AddButtonRule(RUINORERP.Global.EnumExt.StatementStatus.部分结算, "toolStripbtnReview", false, false);
+            AddButtonRule(RUINORERP.Global.EnumExt.StatementStatus.部分结算, "toolStripBtnReverseReview", false, false);
+            AddButtonRule(RUINORERP.Global.EnumExt.StatementStatus.部分结算, "toolStripButtonPrint", true, true);
+
+            // 已结清状态：允许打印
+            AddButtonRule(RUINORERP.Global.EnumExt.StatementStatus.已结清, "toolStripbtnAdd", false, false);
+            AddButtonRule(RUINORERP.Global.EnumExt.StatementStatus.已结清, "toolStripbtnModify", false, false);
+            AddButtonRule(RUINORERP.Global.EnumExt.StatementStatus.已结清, "toolStripButtonSave", false, false);
+            AddButtonRule(RUINORERP.Global.EnumExt.StatementStatus.已结清, "toolStripbtnDelete", false, false);
+            AddButtonRule(RUINORERP.Global.EnumExt.StatementStatus.已结清, "toolStripbtnSubmit", false, false);
+            AddButtonRule(RUINORERP.Global.EnumExt.StatementStatus.已结清, "toolStripbtnReview", false, false);
+            AddButtonRule(RUINORERP.Global.EnumExt.StatementStatus.已结清, "toolStripBtnReverseReview", false, false);
+            AddButtonRule(RUINORERP.Global.EnumExt.StatementStatus.已结清, "toolStripButtonPrint", true, true);
+
+            // 已作废状态：允许打印
+            AddButtonRule(RUINORERP.Global.EnumExt.StatementStatus.已作废, "toolStripbtnAdd", false, false);
+            AddButtonRule(RUINORERP.Global.EnumExt.StatementStatus.已作废, "toolStripbtnModify", false, false);
+            AddButtonRule(RUINORERP.Global.EnumExt.StatementStatus.已作废, "toolStripButtonSave", false, false);
+            AddButtonRule(RUINORERP.Global.EnumExt.StatementStatus.已作废, "toolStripbtnDelete", false, false);
+            AddButtonRule(RUINORERP.Global.EnumExt.StatementStatus.已作废, "toolStripbtnSubmit", false, false);
+            AddButtonRule(RUINORERP.Global.EnumExt.StatementStatus.已作废, "toolStripbtnReview", false, false);
+            AddButtonRule(RUINORERP.Global.EnumExt.StatementStatus.已作废, "toolStripBtnReverseReview", false, false);
+            AddButtonRule(RUINORERP.Global.EnumExt.StatementStatus.已作废, "toolStripButtonPrint", true, true);
         }
 
         /// <summary>

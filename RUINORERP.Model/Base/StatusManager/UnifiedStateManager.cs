@@ -400,8 +400,21 @@ namespace RUINORERP.Model.Base.StatusManager
 
             try
             {
-                // 更新状态
-                SetBusinessStatusAsync(entity, statusType, newStatus);
+                // 更新状态 - 直接设置实体的状态属性，而不是调用SetBusinessStatusAsync（避免循环调用）
+                var statusProperty = entity.GetType().GetProperty(statusType.Name);
+                if (statusProperty != null && statusProperty.CanWrite)
+                {
+                    statusProperty.SetValue(entity, newStatus);
+                }
+                else if (statusType == typeof(DataStatus))
+                {
+                    // 对于DataStatus特殊处理
+                    var dataStatusProperty = entity.GetType().GetProperty("DataStatus");
+                    if (dataStatusProperty != null && dataStatusProperty.CanWrite)
+                    {
+                        dataStatusProperty.SetValue(entity, newStatus);
+                    }
+                }
 
                 // 触发状态变更事件
                 TriggerStatusChangedEvent(entity, statusType, oldStatus, newStatus, reason, userId);
@@ -414,7 +427,6 @@ namespace RUINORERP.Model.Base.StatusManager
                 return StateTransitionResult.Failure(oldStatus, newStatus, statusType, ex.Message, ex);
             }
         }
-
 
 
         /// <summary>
@@ -456,7 +468,7 @@ namespace RUINORERP.Model.Base.StatusManager
 
 
         /// <summary>
-        /// 触发状态变更事件
+        /// 触发状态变更事件（Winform桌面程序优化版）
         /// </summary>
         /// <param name="entity">实体对象</param>
         /// <param name="statusType">状态类型</param>
@@ -466,21 +478,33 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <param name="userId">用户ID</param>
         public void TriggerStatusChangedEvent(BaseEntity entity, Type statusType, object oldStatus, object newStatus, string reason = null, string userId = null)
         {
+            // 快速检查是否有订阅者，避免不必要的对象创建
+            if (StatusChanged == null) return;
+            
             try
             {
+                // 创建事件参数，简化构造函数调用（适配我们修改后的StateTransitionEventArgs）
                 var eventArgs = new StateTransitionEventArgs(
                     entity,
                     statusType,
                     oldStatus,
                     newStatus,
                     reason,
-                    userId);
-
-                StatusChanged?.Invoke(this, eventArgs);
+                    userId,
+                    null,
+                    null); // 使用正确的8参数构造函数
+                
+                // 获取事件委托副本，避免多线程情况下的空引用问题
+                var statusChangedEvent = StatusChanged;
+                
+                // 触发事件
+                statusChangedEvent?.Invoke(this, eventArgs);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "触发状态变更事件时发生错误: {ErrorMessage}", ex.Message);
+                // 详细记录错误信息，但不中断程序流程
+                _logger.LogError(ex, "触发状态变更事件时发生错误: {ErrorMessage}，实体类型: {EntityType}，状态类型: {StatusType}", 
+                    ex.Message, entity?.GetType().Name ?? "未知", statusType?.Name ?? "未知");
             }
         }
 
@@ -575,7 +599,7 @@ namespace RUINORERP.Model.Base.StatusManager
             }
 
             // 更新状态
-            var result = UpdateBusinessStatus(entity, typeof(ActionStatus), status, reason, userId);
+            var result = UpdateActionStatus(entity, status.Value, reason, userId);
 
             return await Task.FromResult(result);
         }

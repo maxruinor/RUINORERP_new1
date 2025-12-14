@@ -109,12 +109,37 @@ namespace RUINORERP.UI.BaseForm
 
 
 
+        private BaseEntity _boundEntity;
+
         /// <summary>
         /// 绑定的实体对象
         /// </summary>
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public BaseEntity BoundEntity { get; set; }
+        public BaseEntity BoundEntity 
+        { 
+            get { return _boundEntity; }
+            set
+            { 
+                if (_boundEntity != value)
+                {
+                    // 移除对旧实体的事件监听
+                    if (_boundEntity != null)
+                    {
+                        UnsubscribeEntityEvents(_boundEntity);
+                    }
+                    
+                    _boundEntity = value;
+                    
+                    // 添加对新实体的事件监听
+                    if (_boundEntity != null)
+                    {
+                        SubscribeEntityEvents(_boundEntity);
+                        UpdateAllUIStates(_boundEntity); // 绑定后立即更新UI状态
+                    }
+                }
+            }
+        }
 
 
 
@@ -169,7 +194,7 @@ namespace RUINORERP.UI.BaseForm
         #region 状态管理
 
         /// <summary>
-        /// 绑定实体对象
+        /// 绑定实体对象并设置事件监听
         /// </summary>
         /// <param name="entity">实体对象</param>
         public virtual void BindEntity(BaseEntity entity)
@@ -179,17 +204,24 @@ namespace RUINORERP.UI.BaseForm
                 UnbindEntity();
                 return;
             }
+            
+            // 设置实体
             BoundEntity = entity;
+            
+            // 立即更新UI状态
+            UpdateAllUIStates();
         }
 
 
-
         /// <summary>
-        /// 解绑实体对象
+        /// 解绑实体对象并清理事件监听
         /// </summary>
         public virtual void UnbindEntity()
         {
             BoundEntity = null;
+            
+            // 更新UI状态以反映空实体
+            UpdateAllUIStates();
         }
 
 
@@ -220,26 +252,89 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
+        // 用于存储上次更新的状态，避免不必要的UI刷新
+        private EntityStatus _lastUpdatedStatus = null;
+        
         /// <summary>
-        /// 统一更新所有UI状态
+        /// 统一更新所有UI状态（无参数版本，使用当前绑定的实体）
+        /// 性能优化：避免频繁刷新相同状态
+        /// </summary>
+        protected virtual void UpdateAllUIStates()
+        {
+            UpdateAllUIStates(BoundEntity);
+        }
+
+        /// <summary>
+        /// 统一更新所有UI状态（带参数版本）
+        /// 性能优化：避免频繁刷新相同状态
         /// </summary>
         /// <param name="entity">实体对象</param>
         protected virtual void UpdateAllUIStates(BaseEntity entity)
         {
-           
-            //if (entity == null) return;
+            try
+            {
+                if (entity == null)
+                {
+                    // 只有当上次状态不为空时才清理UI，避免重复清理
+                    if (_lastUpdatedStatus != null)
+                    {
+                        // 清理UI状态，反映空实体状态
+                        UpdateUIControlsByState(null);
+                        _lastUpdatedStatus = null;
+                    }
+                    return;
+                }
+                
+                // 获取实体当前业务状态和状态类型
+                var currentStatus = StateManager?.GetBusinessStatus(entity);
+                var currentStatusType = StateManager?.GetStatusType(entity);
 
-            //var currentStatus = StateManager.GetBusinessStatus(entity);
-            //var currentStatusType = StateManager.GetStatusType(entity);
+                if (currentStatus != null)
+                {
+                    // 更新UI控件状态
+                    if (currentStatus is EntityStatus status)
+                    {
+                        // 性能优化：检查状态是否变化，只有变化时才更新UI
+                        if (!AreStatusEqual(_lastUpdatedStatus, status))
+                        {
+                            UpdateUIControlsByState(status);
+                            
+                            // 更新状态显示
+                            UpdateStatusDisplay(entity);
 
-            //// 更新UI控件状态
-            ////UpdateUIControlsByState(currentStatus);
-
-            //// 更新状态显示
-            //UpdateStatusDisplay(entity);
-
-            //// 更新打印状态显示
-            //UpdatePrintStatusDisplay(entity);
+                            // 更新打印状态显示
+                            UpdatePrintStatusDisplay(entity);
+                            
+                            // 记录本次更新的状态
+                            _lastUpdatedStatus = status;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "更新UI状态失败: {Message}", ex.Message);
+            }
+        }
+        
+        /// <summary>
+        /// 比较两个状态对象是否相等，避免不必要的UI刷新
+        /// </summary>
+        /// <param name="status1">状态1</param>
+        /// <param name="status2">状态2</param>
+        /// <returns>状态是否相等</returns>
+        private bool AreStatusEqual(EntityStatus status1, EntityStatus status2)
+        {
+            // 处理null情况
+            if (status1 == status2) return true;
+            if (status1 == null || status2 == null) return false;
+            
+            // 比较业务状态和操作状态
+            bool businessStatusEqual = Equals(status1.CurrentStatus, status2.CurrentStatus);
+            bool actionStatusEqual = status1.actionStatus == status2.actionStatus;
+            
+            // 两个状态都相等时才认为状态未变化
+            return businessStatusEqual && actionStatusEqual;
         }
 
         /// <summary>
@@ -346,8 +441,8 @@ namespace RUINORERP.UI.BaseForm
                     var control = this.Controls.Find(rule.Key, true).FirstOrDefault();
                     if (control != null)
                     {
-                        //control.Enabled = rule.Value.Enabled;
-                        //control.Visible = rule.Value.Visible;
+                        control.Enabled = rule.Value.Enabled;
+                        control.Visible = rule.Value.Visible;
                     }
                 }
             }
@@ -910,6 +1005,30 @@ namespace RUINORERP.UI.BaseForm
             // 防止重复订阅，先取消再订阅
             entity.StatusChanged -= OnEntityStatusChanged;
             entity.StatusChanged += OnEntityStatusChanged;
+        }
+
+        /// <summary>
+        /// 订阅实体的所有必要事件
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        protected virtual void SubscribeEntityEvents(BaseEntity entity)
+        {
+            if (entity == null) return;
+            
+            // 订阅状态变更事件
+            SubscribeToEntityStatusChanged(entity);
+        }
+
+        /// <summary>
+        /// 取消订阅实体的所有事件
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        protected virtual void UnsubscribeEntityEvents(BaseEntity entity)
+        {
+            if (entity == null) return;
+            
+            // 取消订阅状态变更事件
+            entity.StatusChanged -= OnEntityStatusChanged;
         }
 
         /// <summary>

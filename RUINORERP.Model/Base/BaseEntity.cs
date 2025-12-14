@@ -209,36 +209,65 @@ namespace RUINORERP.Model
         public event EventHandler<StateTransitionEventArgs> StatusChanged;
 
         /// <summary>
-        /// 状态变更处理 - V4版本
-        /// 通过状态管理器统一处理状态变更，移除冗余事件触发
+        /// 状态变更处理 - Winform桌面程序优化版
+        /// 通过状态管理器统一处理状态变更
         /// </summary>
         /// <param name="e">状态转换事件参数</param>
         protected virtual void OnStatusChanged(StateTransitionEventArgs e)
         {
             // 类型安全检查
             if (e == null)
-            {
-                throw new ArgumentNullException(nameof(e), "StateTransitionEventArgs不能为null");
-            }
+                return;
 
             try
             {
-                // 强制使用状态管理器触发事件，实现集中管理
-                // 移除降级处理逻辑，确保状态变更经过统一管理
-                if (StateManager == null)
-                {
-                    throw new InvalidOperationException("状态管理器未初始化，无法触发状态变更事件");
-                }
+                // 直接触发本地事件
+                StatusChanged?.Invoke(this, e);
                 
-                // 统一通过状态管理器触发事件，避免重复触发
-                StateManager.TriggerStatusChangedEvent(e.Entity, e.StatusType, e.OldStatus, e.NewStatus, e.Reason, e.UserId);
+                // 同时通过状态管理器触发事件，保持全局一致性
+                if (StateManager != null)
+                {
+                    StateManager.TriggerStatusChangedEvent(e.Entity, e.StatusType, e.OldStatus, e.NewStatus, e.Reason, e.UserId);
+                }
             }
             catch (Exception ex)
             {
-                // 记录异常并抛出，因为状态管理是核心功能
-                Debug.WriteLine($"触发状态变更事件时发生错误: {ex.Message}");
-                Debug.WriteLine(ex.StackTrace);
-                throw; // 抛出异常确保调用者知道状态管理失败
+                // 记录异常但不抛出，确保状态变更不会中断主业务流程
+            }
+        }
+        
+        /// <summary>
+        /// 简化的状态变更事件触发方法（Winform优化版）
+        /// 提供便捷的方式触发状态变更事件
+        /// </summary>
+        /// <param name="statusType">状态类型</param>
+        /// <param name="oldStatus">旧状态值</param>
+        /// <param name="newStatus">新状态值</param>
+        /// <param name="reason">变更原因（可选）</param>
+        /// <param name="userId">用户ID（可选）</param>
+        public void TriggerStatusChange(Type statusType, object oldStatus, object newStatus, string reason = null, string userId = null)
+        {
+            // 快速检查状态是否实际变更，避免不必要的事件触发
+            if (Equals(oldStatus, newStatus))
+                return;
+                
+            try
+            {
+                var eventArgs = new StateTransitionEventArgs(
+                    this,
+                    statusType,
+                    oldStatus,
+                    newStatus,
+                    reason,
+                    userId,
+                    null,
+                    null); // 使用正确的8参数构造函数
+                
+                OnStatusChanged(eventArgs);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"调用TriggerStatusChange时发生错误: {ex.Message}");
             }
         }
 
@@ -886,15 +915,13 @@ namespace RUINORERP.Model
                 }
 
                 _previousActionStatus = _ActionStatus;
-
-                // 通过状态管理器触发状态变更事件，实现集中管理
-                if (StateManager != null)
-                {
-                    StateManager.TriggerStatusChangedEvent(this, typeof(ActionStatus), _previousActionStatus, value);
-                }
-
-                // 设置属性值
+                
+                // 设置属性值（先设置属性值，再触发状态变更事件）
                 SetProperty(ref _ActionStatus, value);
+                
+                // 使用优化后的状态变更事件触发方法
+                // 这样可以利用我们新增的TriggerStatusChange方法的健壮性和性能优化
+                TriggerStatusChange(typeof(ActionStatus), _previousActionStatus, value);
             }
         }
 

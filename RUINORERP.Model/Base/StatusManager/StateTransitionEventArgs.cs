@@ -15,6 +15,8 @@
 using System;
 using System.Collections.Generic;
 using RUINORERP.Global;
+using RUINORERP.Model.Base;
+
 
 namespace RUINORERP.Model.Base.StatusManager
 {
@@ -127,6 +129,8 @@ namespace RUINORERP.Model.Base.StatusManager
             };
         }
 
+
+
         /// <summary>
         /// 构造函数（V4新增）
         /// </summary>
@@ -154,6 +158,8 @@ namespace RUINORERP.Model.Base.StatusManager
             ChangeTime = changeTime ?? result.TransitionTime;
             AdditionalData = additionalData ?? new Dictionary<string, object>();
         }
+
+
 
         #endregion
 
@@ -237,6 +243,8 @@ namespace RUINORERP.Model.Base.StatusManager
             return new StateTransitionEventArgs(entity, result, additionalData: additionalData);
         }
 
+
+
         /// <summary>
         /// 创建转换事件参数（V4新增）
         /// </summary>
@@ -270,6 +278,14 @@ namespace RUINORERP.Model.Base.StatusManager
             return new StateTransitionEventArgs(entity, result, userId: userId, additionalData: additionalData);
         }
 
+
+
+
+
+
+
         #endregion
     }
+
+
 }

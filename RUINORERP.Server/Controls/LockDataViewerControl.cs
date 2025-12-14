@@ -615,8 +615,11 @@ namespace RUINORERP.Server.Controls
                     return;
                 }
 
+                // 获取所有锁定的文档信息
+                var lockInfos = _lockManagerService.GetAllLockedDocuments();
+                
                 // 执行孤儿锁检测和清理
-                await orphanedLockDetector.DetectAndCleanupAsync();
+                await orphanedLockDetector.DetectAndCleanupAsync(lockInfos);
 
                 // 刷新数据显示
                 if (listBoxTableList.SelectedItem != null)

@@ -100,7 +100,20 @@ namespace RUINORERP.UI.BaseForm
     /// 单据类型的编辑 主表T子表C
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public partial class BaseBillEditGeneric<T, C> : BaseBillEdit, IContextMenuInfoAuth, IToolStripMenuInfoAuth where T : BaseEntity, new() where C : class, new()
+    // ==============================================================================
+// 简化版状态管理系统设计说明
+// 设计目标：保持核心功能的同时简化状态管理流程
+// 核心流程：
+// 1. 实体状态变更触发StatusChanged事件
+// 2. 事件处理程序调用UpdateAllUIStates更新UI
+// 3. UpdateAllUIStates调用UpdateUIControlsByState更新按钮状态
+// 4. 根据GlobalStateRulesManager中的规则设置按钮可见性和可用性
+// 注意事项：
+// - 移除了多余的状态缓存和重复检查逻辑
+// - 保留了必要的重复调用防护机制
+// - 简化了事件订阅和处理流程
+// ==============================================================================
+public partial class BaseBillEditGeneric<T, C> : BaseBillEdit, IContextMenuInfoAuth, IToolStripMenuInfoAuth where T : BaseEntity, new() where C : class, new()
     {
         public virtual List<UControls.ContextMenuController> AddContextMenu()
         {
@@ -235,19 +248,20 @@ namespace RUINORERP.UI.BaseForm
 
 
         /// <summary>
-        /// 实体状态变更事件处理程序 - 统一处理所有状态变更事件
+        /// 实体状态变更事件处理程序 - 简化版
+        /// 当状态变化时，更新UI控件状态
         /// </summary>
         /// <param name="sender">事件发送者</param>
         /// <param name="e">事件参数</param>
         protected virtual void OnEntityStateChanged(object sender, StateTransitionEventArgs e)
         {
+            // 防止重复更新
+            if (_isUpdatingUIStates) return;
+            
             if (e.Entity is BaseEntity entity)
             {
-                // 统一更新所有UI状态
+                // 直接更新UI状态
                 UpdateAllUIStates(entity);
-
-                // 触发子类的特定状态变更处理
-                HandleSpecificStateChange(e.OldStatus, e.NewStatus, e.Reason);
             }
         }
 
@@ -325,28 +339,25 @@ namespace RUINORERP.UI.BaseForm
 
 
         /// <summary>
-        /// 处理状态变更事件 - 统一处理基类和泛型特定的状态变更
+        /// 处理状态变更事件 - 简化版
         /// </summary>
         /// <param name="sender">事件发送者</param>
         /// <param name="e">事件参数</param>
         private void HandleStatusChangedEvent(object sender, StateTransitionEventArgs e)
         {
-            // 防止循环调用和重复处理
+            // 防止循环调用
             if (_isUpdatingUIStates || _isHandlingStatusChanged) return;
 
             try
             {
                 _isHandlingStatusChanged = true;
 
-                if (e.Entity is BaseEntity entity && this.EditEntity == entity)
-                {
-                    // 统一处理状态变更
-                    OnEntityStateChanged(sender, e);
-                }
+                // 直接处理状态变更
+                OnEntityStateChanged(sender, e);
             }
             catch (Exception ex)
             {
-                logger?.LogError(ex, $"处理状态变更事件失败：{ex.Message}");
+                logger?.LogError(ex, "状态变更处理失败: {0}", ex.Message);
             }
             finally
             {

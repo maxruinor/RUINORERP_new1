@@ -42,7 +42,20 @@ using Org.BouncyCastle.Asn1.X509.Qualified;
 
 namespace RUINORERP.UI.BaseForm
 {
-    public partial class BaseBillEdit : UserControl
+    // ==============================================================================
+// 简化版状态管理系统设计说明
+// 设计目标：保持核心功能的同时简化状态管理流程
+// 核心流程：
+// 1. 实体状态变更触发StatusChanged事件
+// 2. 事件处理程序调用UpdateAllUIStates更新UI
+// 3. UpdateAllUIStates调用UpdateUIControlsByState更新按钮状态
+// 4. 根据GlobalStateRulesManager中的规则设置按钮可见性和可用性
+// 注意事项：
+// - 移除了多余的状态缓存和重复检查逻辑
+// - 保留了必要的重复调用防护机制
+// - 简化了事件订阅和处理流程
+// ==============================================================================
+public partial class BaseBillEdit : UserControl
     {
 
         public ApplicationContext AppContext { set; get; }
@@ -109,6 +122,8 @@ namespace RUINORERP.UI.BaseForm
 
 
 
+        // 防止重复UI更新的标志位
+        private bool _isUpdatingUIStates = false;
         private BaseEntity _boundEntity;
 
         /// <summary>
@@ -135,7 +150,15 @@ namespace RUINORERP.UI.BaseForm
                     if (_boundEntity != null)
                     {
                         SubscribeEntityEvents(_boundEntity);
+                        // 清除_lastUpdatedStatus，确保下次绑定会正确更新UI
+                        _lastUpdatedStatus = null;
                         UpdateAllUIStates(_boundEntity); // 绑定后立即更新UI状态
+                    }
+                    else
+                    {
+                        // 清除_lastUpdatedStatus，确保下次绑定会正确更新UI
+                        _lastUpdatedStatus = null;
+                        UpdateAllUIStates(null);
                     }
                 }
             }
@@ -194,34 +217,22 @@ namespace RUINORERP.UI.BaseForm
         #region 状态管理
 
         /// <summary>
-        /// 绑定实体对象并设置事件监听
+        /// 绑定实体对象
+        /// 简化版：直接设置BoundEntity属性，触发UI更新
         /// </summary>
         /// <param name="entity">实体对象</param>
-        public virtual void BindEntity(BaseEntity entity)
+        public void BindEntity(BaseEntity entity)
         {
-            if (entity == null)
-            {
-                UnbindEntity();
-                return;
-            }
-            
-            // 设置实体
             BoundEntity = entity;
-            
-            // 立即更新UI状态
-            UpdateAllUIStates();
         }
 
-
         /// <summary>
-        /// 解绑实体对象并清理事件监听
+        /// 解绑实体对象
+        /// 简化版：清除BoundEntity引用
         /// </summary>
-        public virtual void UnbindEntity()
+        public void UnbindEntity()
         {
             BoundEntity = null;
-            
-            // 更新UI状态以反映空实体
-            UpdateAllUIStates();
         }
 
 
@@ -261,59 +272,53 @@ namespace RUINORERP.UI.BaseForm
         /// </summary>
         protected virtual void UpdateAllUIStates()
         {
+            // 添加重复调用防护
+            if (_isUpdatingUIStates) return;
             UpdateAllUIStates(BoundEntity);
         }
 
         /// <summary>
-        /// 统一更新所有UI状态（带参数版本）
-        /// 性能优化：避免频繁刷新相同状态
+        /// 统一更新所有UI状态（简化版）
+        /// 当实体状态变化时，更新按钮可见性和可用性
         /// </summary>
         /// <param name="entity">实体对象</param>
         protected virtual void UpdateAllUIStates(BaseEntity entity)
         {
+            // 防止重复更新
+            if (_isUpdatingUIStates) return;
+            
             try
             {
+                _isUpdatingUIStates = true;
+                
                 if (entity == null)
                 {
-                    // 只有当上次状态不为空时才清理UI，避免重复清理
-                    if (_lastUpdatedStatus != null)
-                    {
-                        // 清理UI状态，反映空实体状态
-                        UpdateUIControlsByState(null);
-                        _lastUpdatedStatus = null;
-                    }
+                    // 空实体时重置UI状态
+                    UpdateUIControlsByState(null);
+                    _lastUpdatedStatus = null;
                     return;
                 }
                 
-                // 获取实体当前业务状态和状态类型
+                // 获取实体当前业务状态
                 var currentStatus = StateManager?.GetBusinessStatus(entity);
-                var currentStatusType = StateManager?.GetStatusType(entity);
 
-                if (currentStatus != null)
+                // 简化状态处理：直接更新UI控件状态
+                if (currentStatus is EntityStatus status)
                 {
-                    // 更新UI控件状态
-                    if (currentStatus is EntityStatus status)
-                    {
-                        // 性能优化：检查状态是否变化，只有变化时才更新UI
-                        if (!AreStatusEqual(_lastUpdatedStatus, status))
-                        {
-                            UpdateUIControlsByState(status);
-                            
-                            // 更新状态显示
-                            UpdateStatusDisplay(entity);
-
-                            // 更新打印状态显示
-                            UpdatePrintStatusDisplay(entity);
-                            
-                            // 记录本次更新的状态
-                            _lastUpdatedStatus = status;
-                        }
-                    }
+                    UpdateUIControlsByState(status);
+                    UpdateStatusDisplay(entity);
+                    UpdatePrintStatusDisplay(entity);
+                    _lastUpdatedStatus = status;
                 }
             }
             catch (Exception ex)
             {
                 logger?.LogError(ex, "更新UI状态失败: {Message}", ex.Message);
+            }
+            finally
+            {
+                // 确保标志位被重置
+                _isUpdatingUIStates = false;
             }
         }
         
@@ -990,49 +995,51 @@ namespace RUINORERP.UI.BaseForm
         /// <param name="e">事件参数</param>
         private void ListDataSoure_CurrentChanged(object sender, EventArgs e)
         {
-            // 处理当前项变更，订阅实体的StatusChanged事件
-            SubscribeToEntityStatusChanged(ListDataSoure.Current as BaseEntity);
+            // 处理当前项变更，直接更新UI状态
+            UpdateAllUIStates(ListDataSoure.Current as BaseEntity);
         }
 
         /// <summary>
-        /// 订阅实体的StatusChanged事件 - 使用V3状态管理系统优化版本
+        /// 订阅/取消订阅实体的StatusChanged事件
+        /// 简化版：只处理必要的状态变更订阅
         /// </summary>
         /// <param name="entity">实体对象</param>
-        protected void SubscribeToEntityStatusChanged(BaseEntity entity)
+        /// <param name="subscribe">true为订阅，false为取消订阅</param>
+        private void HandleEntityStatusSubscription(BaseEntity entity, bool subscribe)
         {
             if (entity == null) return;
 
-            // 防止重复订阅，先取消再订阅
+            // 先取消订阅，避免重复订阅问题
             entity.StatusChanged -= OnEntityStatusChanged;
-            entity.StatusChanged += OnEntityStatusChanged;
+            
+            // 如果需要订阅，则添加事件处理程序
+            if (subscribe)
+            {
+                entity.StatusChanged += OnEntityStatusChanged;
+            }
         }
 
         /// <summary>
-        /// 订阅实体的所有必要事件
+        /// 订阅实体的状态变更事件
         /// </summary>
         /// <param name="entity">实体对象</param>
-        protected virtual void SubscribeEntityEvents(BaseEntity entity)
+        protected void SubscribeEntityEvents(BaseEntity entity)
         {
-            if (entity == null) return;
-            
-            // 订阅状态变更事件
-            SubscribeToEntityStatusChanged(entity);
+            HandleEntityStatusSubscription(entity, true);
         }
 
         /// <summary>
-        /// 取消订阅实体的所有事件
+        /// 取消订阅实体的状态变更事件
         /// </summary>
         /// <param name="entity">实体对象</param>
-        protected virtual void UnsubscribeEntityEvents(BaseEntity entity)
+        protected void UnsubscribeEntityEvents(BaseEntity entity)
         {
-            if (entity == null) return;
-            
-            // 取消订阅状态变更事件
-            entity.StatusChanged -= OnEntityStatusChanged;
+            HandleEntityStatusSubscription(entity, false);
         }
 
         /// <summary>
         /// 实体状态变更事件处理程序
+        /// 简化版：当实体状态变化时，直接更新UI控件状态
         /// </summary>
         /// <param name="sender">事件发送者</param>
         /// <param name="e">事件参数</param>
@@ -1040,7 +1047,7 @@ namespace RUINORERP.UI.BaseForm
         {
             try
             {
-                // 当实体状态变更时，更新UI
+                // 直接更新UI状态，使用线程安全的方式
                 if (this.InvokeRequired)
                 {
                     this.Invoke(new Action(() => UpdateAllUIStates(e.Entity as BaseEntity)));
@@ -1052,7 +1059,7 @@ namespace RUINORERP.UI.BaseForm
             }
             catch (Exception ex)
             {
-                logger?.LogError(ex, "处理实体状态变更事件失败: {ex.Message}", ex);
+                logger?.LogError(ex, "状态变更事件处理失败: {0}", ex.Message);
             }
         }
 

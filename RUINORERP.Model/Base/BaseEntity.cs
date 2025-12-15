@@ -209,8 +209,8 @@ namespace RUINORERP.Model
         public event EventHandler<StateTransitionEventArgs> StatusChanged;
 
         /// <summary>
-        /// 状态变更处理 - Winform桌面程序优化版
-        /// 通过状态管理器统一处理状态变更
+        /// 状态变更处理（优化版）
+        /// 简化事件触发逻辑，提高执行效率
         /// </summary>
         /// <param name="e">状态转换事件参数</param>
         protected virtual void OnStatusChanged(StateTransitionEventArgs e)
@@ -221,24 +221,20 @@ namespace RUINORERP.Model
 
             try
             {
-                // 直接触发本地事件
+                // 简化版：只触发本地事件，移除重复的状态管理器事件触发
+                // 状态管理器的全局事件应在外部统一管理，避免重复触发
                 StatusChanged?.Invoke(this, e);
-                
-                // 同时通过状态管理器触发事件，保持全局一致性
-                if (StateManager != null)
-                {
-                    StateManager.TriggerStatusChangedEvent(e.Entity, e.StatusType, e.OldStatus, e.NewStatus, e.Reason, e.UserId);
-                }
             }
             catch (Exception ex)
             {
-                // 记录异常但不抛出，确保状态变更不会中断主业务流程
+                // 记录异常但不中断流程
+                Debug.WriteLine($"触发状态变更事件时发生错误: {ex.Message}");
             }
         }
         
         /// <summary>
-        /// 简化的状态变更事件触发方法（Winform优化版）
-        /// 提供便捷的方式触发状态变更事件
+        /// 状态变更事件触发方法（高效版）
+        /// 提供快速、直接的方式触发状态变更事件
         /// </summary>
         /// <param name="statusType">状态类型</param>
         /// <param name="oldStatus">旧状态值</param>
@@ -247,12 +243,13 @@ namespace RUINORERP.Model
         /// <param name="userId">用户ID（可选）</param>
         public void TriggerStatusChange(Type statusType, object oldStatus, object newStatus, string reason = null, string userId = null)
         {
-            // 快速检查状态是否实际变更，避免不必要的事件触发
-            if (Equals(oldStatus, newStatus))
-                return;
+            // 优化：快速检查状态是否实际变更，避免不必要的事件触发
+            if (oldStatus == null && newStatus == null) return;
+            if (oldStatus != null && oldStatus.Equals(newStatus)) return;
                 
             try
             {
+                // 使用构造函数创建事件参数
                 var eventArgs = new StateTransitionEventArgs(
                     this,
                     statusType,
@@ -261,13 +258,16 @@ namespace RUINORERP.Model
                     reason,
                     userId,
                     null,
-                    null); // 使用正确的8参数构造函数
+                    null);
                 
+                // 直接调用OnStatusChanged处理状态变更
                 OnStatusChanged(eventArgs);
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"调用TriggerStatusChange时发生错误: {ex.Message}");
+                // 记录异常信息，但不中断执行流程
+                Debug.WriteLine($"状态变更触发错误: {ex.Message}");
+                Debug.WriteLine($"异常堆栈: {ex.StackTrace}");
             }
         }
 
@@ -896,11 +896,7 @@ namespace RUINORERP.Model
         private ActionStatus _ActionStatus;
         private ActionStatus _previousActionStatus;
 
-        /// <summary>
-        /// 操作状态码,实际的属性变化事件中，调用OnPropertyChanged方法
-        /// 【已过时】请使用新的状态管理体系 - 参见RUINORERP.Model.Base.StateManager命名空间
-        /// 替代方案：使用IStatusProvider.GetOperationStatus()
-        /// </summary>
+       
         [SugarColumn(IsIgnore = true)]
         [Browsable(false)]
         public ActionStatus ActionStatus

@@ -139,7 +139,6 @@ namespace RUINORERP.UI.BaseForm
 
         // 防止循环调用的标志位
         private bool _isUpdatingUIStates = false;
-        private bool _isHandlingStatusChanged = false; // 专门用于防止StatusChanged事件循环调用
 
         // 状态管理相关字段
         private bool _canPerformCriticalOperations = true; // 是否可以执行关键操作
@@ -171,8 +170,8 @@ namespace RUINORERP.UI.BaseForm
 
 
         /// <summary>
-        /// 初始化状态管理系统
-        /// 子类可以重写此方法以添加自定义的状态管理初始化逻辑
+        /// 初始化状态管理系统（简化版）
+        /// 移除不必要的事件订阅，简化初始化流程
         /// </summary>
         protected override void InitializeStateManagement()
         {
@@ -183,87 +182,18 @@ namespace RUINORERP.UI.BaseForm
             {
                 // 调用基类的初始化方法
                 base.InitializeStateManagement();
-
-                // 注册状态变更事件处理程序，确保不重复订阅
-                this.StatusChanged -= HandleStatusChangedEvent;
-                this.StatusChanged += HandleStatusChangedEvent;
-
-
+                
                 _isStateManagementInitialized = true;
             }
             catch (Exception ex)
             {
-                logger?.LogError(ex, "初始化状态管理系统失败: {ex.Message}", ex);
+                logger?.LogError(ex, "初始化状态管理系统失败: {Message}", ex.Message);
             }
         }
 
 
 
 
-        /// <summary>
-        /// 状态变更事件
-        /// 注意：此事件是BaseBillEditGeneric的扩展功能，用于处理泛型特定的状态变更
-        /// </summary>
-        public event EventHandler<StateTransitionEventArgs> StatusChanged;
-
-
-
-
-
-        /// <summary>
-        /// 订阅实体状态变更事件
-        /// </summary>
-        /// <param name="entity">实体</param>
-        protected void SubscribeToEntityStateChanges(BaseEntity entity)
-        {
-            if (entity == null) return;
-
-            // 防止重复订阅，先取消再订阅
-            entity.StatusChanged -= OnEntityStatusChanged;
-            entity.StatusChanged += OnEntityStatusChanged;
-        }
-
-        /// <summary>
-        /// 实体状态变更事件处理程序
-        /// </summary>
-        /// <param name="sender">事件发送者</param>
-        /// <param name="e">事件参数</param>
-        private void OnEntityStatusChanged(object sender, StateTransitionEventArgs e)
-        {
-            // 防止循环调用
-            if (_isUpdatingUIStates) return;
-
-            try
-            {
-                // 触发泛型特定的StatusChanged事件
-                StatusChanged?.Invoke(sender, e);
-            }
-            catch (Exception ex)
-            {
-                logger?.LogError(ex, "处理实体状态变更事件失败: {ex.Message}", ex);
-            }
-        }
-
-
-
-
-        /// <summary>
-        /// 实体状态变更事件处理程序 - 简化版
-        /// 当状态变化时，更新UI控件状态
-        /// </summary>
-        /// <param name="sender">事件发送者</param>
-        /// <param name="e">事件参数</param>
-        protected virtual void OnEntityStateChanged(object sender, StateTransitionEventArgs e)
-        {
-            // 防止重复更新
-            if (_isUpdatingUIStates) return;
-
-            if (e.Entity is BaseEntity entity)
-            {
-                // 直接更新UI状态
-                UpdateAllUIStates(entity);
-            }
-        }
 
 
         /// <summary>
@@ -338,82 +268,61 @@ namespace RUINORERP.UI.BaseForm
 
 
 
-        /// <summary>
-        /// 处理状态变更事件 - 简化版
-        /// </summary>
-        /// <param name="sender">事件发送者</param>
-        /// <param name="e">事件参数</param>
-        private void HandleStatusChangedEvent(object sender, StateTransitionEventArgs e)
-        {
-            // 防止循环调用
-            if (_isUpdatingUIStates || _isHandlingStatusChanged) return;
 
-            try
-            {
-                _isHandlingStatusChanged = true;
-
-                // 直接处理状态变更
-                OnEntityStateChanged(sender, e);
-            }
-            catch (Exception ex)
-            {
-                logger?.LogError(ex, "状态变更处理失败: {0}", ex.Message);
-            }
-            finally
-            {
-                _isHandlingStatusChanged = false;
-            }
-        }
 
 
 
         /// <summary>
-        /// 统一更新所有UI状态 - 集中处理所有UI状态更新逻辑
+        /// 统一更新所有UI状态（优化版）
+        /// 简化状态获取和更新逻辑，提升性能
         /// </summary>
         /// <param name="entity">实体对象</param>
         protected override void UpdateAllUIStates(BaseEntity entity)
         {
-            // 防止重复更新，使用标志位控制
-            if (entity == null || _isUpdatingUIStates) return;
+            // 防止重复更新、无效调用和窗体已释放的情况
+            if (entity == null || _isUpdatingUIStates || this.IsDisposed) return;
+            
             try
             {
                 _isUpdatingUIStates = true;
                 // 暂停布局更新，减少闪烁
                 this.SuspendLayout();
 
-                // 使用状态管理器获取当前状态，优先使用StateManage
-                EntityStatus currentStatus = StateManager.GetUnifiedStatus(entity);
+                // 优化版：直接从状态管理器获取当前状态
+                EntityStatus currentStatus = StateManager?.GetUnifiedStatus(entity);
+                if (currentStatus == null) return; // 如果状态获取失败，提前退出
 
-                // 1. 统一更新所有按钮状态 - 这是最重要的，控制用户操作权限
+                // 1. 统一更新所有按钮状态 - 优先处理
                 UpdateAllButtonStates(currentStatus);
 
-                // 2. 更新UI控件状态 - 控制界面元素的可用性
+                // 2. 更新UI控件状态
                 UpdateUIControlsByState(currentStatus);
 
-                // 3. 更新状态显示 - 提供状态视觉反馈
+                // 3. 更新状态显示
                 UpdateStateDisplay();
 
-                // 4. 更新打印状态显示 - 特殊业务逻辑
+                // 4. 更新打印状态显示
                 UpdatePrintStatusDisplay(entity);
 
-                // 5. 更新子表操作权限 - 关联数据操作
+                // 5. 更新子表操作权限
                 UpdateChildTableOperations(currentStatus);
 
+                //6.权限控制
+                if (CurMenuInfo != null)
+                {
+                    UIHelper.ControlMasterColumnsInvisible(CurMenuInfo, this);
+                }
 
-                //6.权限放到最后生效
-                UIHelper.ControlMasterColumnsInvisible(CurMenuInfo, this);
-
-                //7.字段的显示按权限控制
+                //7.字段显示权限控制
                 UIHelper.ControlForeignFieldInvisible<T>(this, false);
-
-
             }
             catch (Exception ex)
             {
-                logger?.LogError(ex, "统一更新UI状态失败: {ex.Message}", ex);
+                logger?.LogError(ex, "统一更新UI状态失败: {Message}", ex.Message);
             }
             finally
-            {           // 恢复布局更新
+            {
+                // 恢复布局更新
                 this.ResumeLayout();
                 _isUpdatingUIStates = false;
             }
@@ -634,8 +543,8 @@ namespace RUINORERP.UI.BaseForm
             try
             {
                 // 获取实体的当前状态
-                var currentStatus = GetBusinessStatus(entity);
-
+                var currentStatus = StateManager.GetBusinessStatus(entity);
+                var currentStatusType = StateManager.GetStatusType(entity);
                 // 将操作转换为按钮名称
                 var buttonName = ConvertActionToButtonName(action);
                 if (string.IsNullOrEmpty(buttonName))
@@ -645,7 +554,7 @@ namespace RUINORERP.UI.BaseForm
                 }
 
                 // 使用GlobalStateRulesManager检查按钮状态
-                var buttonRules = GlobalStateRulesManager.Instance.GetButtonRules(currentStatus);
+                var buttonRules = GlobalStateRulesManager.Instance.GetButtonRules(currentStatusType,currentStatus);
                 if (buttonRules.TryGetValue(buttonName, out var buttonState))
                 {
                     return buttonState.Enabled;
@@ -682,30 +591,6 @@ namespace RUINORERP.UI.BaseForm
                 MenuItemEnums.打印 => "toolStripbtnPrint",
                 MenuItemEnums.导出 => "toolStripButtonExport",
                 _ => string.Empty
-            };
-        }
-
-        /// <summary>
-        /// 将按钮名称转换为操作类型
-        /// </summary>
-        /// <param name="buttonName">按钮名称</param>
-        /// <returns>操作类型</returns>
-        public static MenuItemEnums? ConvertButtonNameToAction(string buttonName)
-        {
-            return buttonName switch
-            {
-                "toolStripbtnAdd" => MenuItemEnums.新增,
-                "toolStripbtnModify" => MenuItemEnums.修改,
-                "toolStripButtonSave" => MenuItemEnums.保存,
-                "toolStripbtnDelete" => MenuItemEnums.删除,
-                "toolStripbtnSubmit" => MenuItemEnums.提交,
-                "toolStripbtnReview" => MenuItemEnums.审核,
-                "toolStripBtnReverseReview" => MenuItemEnums.反审,
-                "toolStripButtonCaseClosed" => MenuItemEnums.结案,
-                "toolStripButtonAntiClosed" => MenuItemEnums.反结案,
-                "toolStripbtnPrint" => MenuItemEnums.打印,
-                "toolStripButtonExport" => MenuItemEnums.导出,
-                _ => null
             };
         }
 
@@ -1864,117 +1749,7 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
-
-
-        /// <summary>
-        /// 从实体中获取业务状态枚举值 - 同步版本（已优化，添加缓存）
-        /// 支持多种业务状态类型，会按优先级顺序进行检查
-        /// </summary>
-        /// <param name="entity">单据实体对象</param>
-        /// <returns>找到的业务状态枚举值，如果未找到则返回null</returns>
-        /// <remarks>此方法添加了缓存机制以提高性能，对于相同实体多次调用可避免重复反射操作</remarks>
-        private Enum GetBusinessStatus(BaseEntity entity)
-        {
-            if (entity == null)
-            {
-                logger?.LogDebug("尝试从空实体获取业务状态，返回null");
-                return null;
-            }
-
-            Enum result = null;
-            try
-            {
-                // 检测实体中的业务状态属性，按优先级顺序排列
-                // 注意：新增状态类型应在此添加
-                var statusTypes = new[]
-                {
-                    typeof(PrePaymentStatus),
-                    typeof(ARAPStatus),
-                    typeof(PaymentStatus),
-                    typeof(StatementStatus),
-                    typeof(DataStatus) // 通用数据状态
-                };
-
-                foreach (var statusType in statusTypes)
-                {
-                    string propertyName = statusType.Name;
-                    if (entity.ContainsProperty(propertyName))
-                    {
-                        var statusValue = entity.GetPropertyValue(propertyName);
-                        if (statusValue != null)
-                        {
-                            try
-                            {
-                                // 尝试转换为对应的枚举类型
-                                result = (Enum)Enum.Parse(statusType, statusValue.ToString());
-                                logger?.LogDebug("从实体中成功获取业务状态: {StatusTypeName} = {StatusValue}",
-                                    statusType.Name, result.ToString());
-                                break; // 找到后立即跳出循环
-                            }
-                            catch (ArgumentException ex)
-                            {
-                                logger?.LogError(ex, "枚举值无效: {StatusTypeName} = {StatusValue}",
-                                    statusType.Name, statusValue);
-                            }
-                            catch (Exception ex)
-                            {
-                                logger?.LogWarning(ex, "无法将实体属性 {StatusTypeName} 的值 {StatusValue} 转换为枚举类型",
-                                    statusType.Name, statusValue);
-                            }
-                        }
-                    }
-                }
-
-                if (result == null)
-                {
-                    logger?.LogDebug("实体 {EntityType} 中未找到已知的业务状态属性", entity.GetType().Name);
-                }
-            }
-            catch (Exception ex)
-            {
-                logger?.LogError(ex, "获取业务状态时发生异常: {Message}", ex.Message);
-            }
-
-            return result;
-        }
-
-
-
-
-        /// <summary>
-        /// 获取业务状态并更新UI状态
-        /// 这是一个统一的入口点，完全基于V3状态管理系统工作
-        /// </summary>
-        /// <param name="entity">单据实体对象</param>
-        /// <returns>异步任务结果</returns>
-        protected async Task UpdateUIByBusinessStatusAsync(BaseEntity entity)
-        {
-            if (entity == null) return;
-
-            try
-            {
-                // 获取业务状态
-                Enum status = GetBusinessStatus(entity);
-
-                if (status != null)
-                {
-                    // 使用新的异步方法更新UI状态
-                    await EnableOperationsBasedOnStatusAsync(status);
-                }
-                else
-                {
-                    logger?.LogWarning("未找到有效的业务状态，无法更新UI状态");
-                    // 如果无法确定状态，禁用所有按钮以避免状态不一致
-                    DisableAllBusinessButtons();
-                }
-            }
-            catch (Exception ex)
-            {
-                logger?.LogError(ex, "根据业务状态更新UI时发生异常: {ex.Message}", ex);
-                DisableAllBusinessButtons();
-            }
-        }
-
+  
 
 
         #endregion

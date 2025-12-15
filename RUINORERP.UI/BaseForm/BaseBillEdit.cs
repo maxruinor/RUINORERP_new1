@@ -1001,7 +1001,7 @@ public partial class BaseBillEdit : UserControl
 
         /// <summary>
         /// 订阅/取消订阅实体的StatusChanged事件
-        /// 简化版：只处理必要的状态变更订阅
+        /// 简化版：直接高效处理状态变更订阅
         /// </summary>
         /// <param name="entity">实体对象</param>
         /// <param name="subscribe">true为订阅，false为取消订阅</param>
@@ -1039,27 +1039,43 @@ public partial class BaseBillEdit : UserControl
 
         /// <summary>
         /// 实体状态变更事件处理程序
-        /// 简化版：当实体状态变化时，直接更新UI控件状态
+        /// 高效版：直接更新UI状态，避免冗余操作
         /// </summary>
         /// <param name="sender">事件发送者</param>
         /// <param name="e">事件参数</param>
         private void OnEntityStatusChanged(object sender, StateTransitionEventArgs e)
         {
+            // 安全检查
+            if (e?.Entity == null) return;
+            
             try
             {
-                // 直接更新UI状态，使用线程安全的方式
-                if (this.InvokeRequired)
-                {
-                    this.Invoke(new Action(() => UpdateAllUIStates(e.Entity as BaseEntity)));
-                }
-                else
-                {
-                    UpdateAllUIStates(e.Entity as BaseEntity);
-                }
+                // 直接使用异步更新UI状态，避免阻塞主线程
+                UpdateUIStatesAsync(e.Entity as BaseEntity);
             }
             catch (Exception ex)
             {
-                logger?.LogError(ex, "状态变更事件处理失败: {0}", ex.Message);
+                logger?.LogError(ex, "状态变更事件处理失败");
+            }
+        }
+        
+        /// <summary>
+        /// 异步更新UI状态，线程安全且高效
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        private void UpdateUIStatesAsync(BaseEntity entity)
+        {
+            // 使用BeginInvoke确保UI线程安全，同时不阻塞调用线程
+            if (this.IsHandleCreated && !this.IsDisposed)
+            {
+                this.BeginInvoke((Action)(() => 
+                {
+                    // 二次检查，防止在调用过程中窗体已关闭
+                    if (!this.IsDisposed)
+                    {
+                        UpdateAllUIStates(entity);
+                    }
+                }));
             }
         }
 
@@ -1512,7 +1528,6 @@ public partial class BaseBillEdit : UserControl
                 button.Enabled = isEditable;
             }
         }
-
 
     }
 }

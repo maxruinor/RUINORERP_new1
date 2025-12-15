@@ -35,6 +35,7 @@ namespace RUINORERP.Server.Controls
             dataGridViewData = new System.Windows.Forms.DataGridView();
             panelButtons = new System.Windows.Forms.Panel();
             btnRefresh = new System.Windows.Forms.Button();
+            btnCleanupOrphanedLocks = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)splitContainerMain).BeginInit();
             splitContainerMain.Panel1.SuspendLayout();
             splitContainerMain.Panel2.SuspendLayout();

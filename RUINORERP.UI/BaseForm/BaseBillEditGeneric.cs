@@ -467,7 +467,7 @@ namespace RUINORERP.UI.BaseForm
             {
                 var buttonName = rule.Key;
                 var enabled = rule.Value;
-                
+
                 UpdateButtonState(buttonName, enabled);
             }
         }
@@ -496,7 +496,7 @@ namespace RUINORERP.UI.BaseForm
                         // 注意：Visible属性由权限系统统一控制，不在状态管理中处理
                         var enabledProperty = button.GetType().GetProperty("Enabled");
                         enabledProperty?.SetValue(button, enabled);
-                        
+
                         // 移除Visible属性设置，Visible由权限系统管理
                         // 注意：即使是特殊按钮，其Visible状态也应由权限系统统一控制
                     }
@@ -4242,6 +4242,13 @@ namespace RUINORERP.UI.BaseForm
                 return;
             }
 
+            var edit = StateManager.CanExecuteActionWithMessage(editEntity, MenuItemEnums.修改);
+            if (!edit.CanExecute)
+            {
+                MessageBox.Show(edit.Message, "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
             // 获取状态类型和值
             var paymentStatusType = FMPaymentStatusHelper.GetStatusType(editEntity as BaseEntity);
             if (paymentStatusType != null)
@@ -5096,7 +5103,7 @@ namespace RUINORERP.UI.BaseForm
             {
                 // 保存修改时设置编辑属性（在保存时才设置，而不是在点击编辑时）
                 BusinessHelper.Instance.EditEntity(entity);
-                
+
                 // 保存前检查锁定状态 - 优先从本地缓存检查
                 var lockStatusSaveBefore = await CheckLockStatusAndUpdateUI(EditEntity.PrimaryKeyID);
                 if (!lockStatusSaveBefore.CanPerformCriticalOperations)

@@ -74,7 +74,7 @@ namespace RUINORERP.UI.BI
                     list.Add(currency);
                 }
                 List<long> ids = await MainForm.Instance.AppContext.Db.Insertable<tb_Currency>(list).ExecuteReturnSnowflakeIdListAsync();
-                Query();
+                QueryAsync();
                 await base.Add();
                 base.toolStripButtonModify.Enabled = false;
             }

@@ -499,7 +499,7 @@ namespace RUINORERP.UI.BI
 
             frmedit.Text = "关联查询" + "-" + BizTypeText;
             ucBaseList.QueryDtoProxy = new();
-            ucBaseList.Query();
+            ucBaseList.QueryAsync();
             if (frmedit.ShowDialog() == DialogResult.OK)
             {
 

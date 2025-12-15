@@ -26,7 +26,6 @@ using RUINOR.Core;
 using RUINORERP.Common.Helper;
 using Castle.DynamicProxy.Generators.Emitters.SimpleAST;
 using RUINORERP.Global.EnumExt;
-using RUINORERP.Business.StatusManagerService;
 using RUINORERP.Global;
 using RUINORERP.Business.BizMapperService;
 using System.Runtime.InteropServices.ComTypes;
@@ -61,8 +60,8 @@ namespace RUINORERP.Business
                     typeof(StatementStatus),
                     entity.GetPropertyValue(statusProperty)
                 );
-
-                if (!FMPaymentStatusHelper.CanUnapprove(currentStatus, false))
+                var ValidateValue = StateManager.ValidateBusinessStatusTransitionAsync(currentStatus, StatementStatus.已发送 as Enum);
+                if (!ValidateValue.IsSuccess)
                 {
                     rmrs.ErrorMsg = $"状态为【{currentStatus.ToString()}】的{((ReceivePaymentType)entity.ReceivePaymentType).ToString()}对账单不可以反审";
                     return rmrs;
@@ -424,7 +423,7 @@ namespace RUINORERP.Business
                 statement.StatementNo = await bizCodeService.GenerateBizBillNoAsync(BizType.对账单);
                 statement.StartDate = startDate;
                 statement.EndDate = entities.Max(c => c.BusinessDate).Value;
-                
+
                 // 设置收款信息（如果有）
                 if (entities.Count > 0 && entities[0].PayeeInfoID.HasValue)
                 {

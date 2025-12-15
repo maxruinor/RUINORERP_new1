@@ -115,7 +115,7 @@ namespace RUINORERP.UI.UCSourceGrid
 
                         break;
                     case Keys.Enter:
-                        prodQuery.Query();
+                        prodQuery.QueryAsync();
                         break;
                 }
             }

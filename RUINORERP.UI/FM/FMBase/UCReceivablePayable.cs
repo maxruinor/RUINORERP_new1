@@ -49,7 +49,7 @@ using RUINORERP.Business.Security;
 using System.Configuration;
 using RUINORERP.UI.AdvancedUIModule;
 using RUINORERP.Model.CommonModel;
-using RUINORERP.Business.StatusManagerService;
+
 using FastReport;
 using FastReport.Data;
 
@@ -894,7 +894,7 @@ namespace RUINORERP.UI.FM
                 lblBillText.Text = CurMenuInfo.CaptionCN;
             }
             InitDataTocmbbox();
-            
+
 
             grid1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             grid1.Selection.EnableMultiSelection = false;
@@ -987,7 +987,7 @@ namespace RUINORERP.UI.FM
                 return;
             }
 
-            if (!FMPaymentStatusHelper.CanWriteOffBadDebt((ARAPStatus)EditEntity.ARAPStatus))
+            if (!StateManager.IsFinalStatus(EditEntity))
             {
                 MessageBox.Show($"当前单据,状态为【{(ARAPStatus)EditEntity.ARAPStatus}】不允许标记为坏账。");
                 return;

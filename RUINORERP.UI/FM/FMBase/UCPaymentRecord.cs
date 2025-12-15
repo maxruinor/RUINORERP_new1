@@ -36,7 +36,7 @@ using RUINORERP.UI.UCSourceGrid;
 using RUINORERP.Model.Dto;
 using Microsoft.Extensions.Logging;
 using RUINORERP.Model.CommonModel;
-using RUINORERP.Business.StatusManagerService;
+
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
 using LiveChartsCore.Geo;
 
@@ -347,29 +347,6 @@ namespace RUINORERP.UI.FM
             entity.PropertyChanged += async (sender, s2) =>
             {
 
-                if (FMPaymentStatusHelper.CanModify<PaymentStatus>(currentStatus))
-                {
-                    entity.ActionStatus = ActionStatus.修改;
-                }
-
-                // 使用V3状态管理系统检查是否可以修改
-                try
-                {
-                    // 回退到旧逻辑
-                    if (FMPaymentStatusHelper.CanModify<PaymentStatus>(currentStatus))
-                    {
-                        entity.ActionStatus = ActionStatus.修改;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    // 出错时回退到旧逻辑
-                    logger.LogError($"V3状态管理系统检查修改权限失败: {ex.Message}");
-                    if (FMPaymentStatusHelper.CanModify<PaymentStatus>(currentStatus))
-                    {
-                        entity.ActionStatus = ActionStatus.修改;
-                    }
-                }
                 if (s2.PropertyName == entity.GetPropertyName<tb_FM_PaymentRecord>(c => c.Reimburser))
                 {
                     LoadPayeeInfo(entity);

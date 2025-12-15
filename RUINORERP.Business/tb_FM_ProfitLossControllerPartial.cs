@@ -27,7 +27,6 @@ using RUINORERP.Common.Helper;
 using RUINORERP.Business.BizMapperService;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.Global;
-using RUINORERP.Business.StatusManagerService;
 using RUINORERP.Business.CommService;
 using System.Threading;
 
@@ -54,11 +53,13 @@ namespace RUINORERP.Business
                     entity.GetPropertyValue(statusProperty)
                 );
 
-                if (!FMPaymentStatusHelper.CanUnapprove(currentStatus, false))
+                var ValidateValue = StateManager.ValidateBusinessStatusTransitionAsync(currentStatus, DataStatus.新建 as Enum);
+                if (!ValidateValue.IsSuccess)
                 {
                     rmrs.ErrorMsg = $"状态为【{currentStatus.ToString()}】的{((ProfitLossDirection)entity.ProfitLossDirection).ToString()}确认单不可以反审";
                     return rmrs;
                 }
+
 
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();

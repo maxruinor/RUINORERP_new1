@@ -327,7 +327,7 @@ namespace RUINORERP.UI.BI
                     MainForm.Instance.PrintInfoLog($"{buttonInfo.FieldText},{buttonInfo.FieldName}删除成功。");
                 }
             }
-            Query();
+            QueryAsync();
             return rs;
         }
 

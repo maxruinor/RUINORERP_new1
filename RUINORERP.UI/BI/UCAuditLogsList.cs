@@ -263,7 +263,7 @@ namespace RUINORERP.UI.BI
             bool rs = await pctr.DeleteAsync(list.Select(c => c.Audit_ID).ToArray());
             if (rs)
             {
-                Query();
+                QueryAsync();
             }
             return rs;
         }

@@ -346,7 +346,7 @@ namespace RUINORERP.UI.PSI.PUR
                 if (s2.PropertyName == entity.GetPropertyName<tb_PurOrder>(c => c.CustomerVendor_ID))
                 {
                     #region 收款信息可以根据往来单位带出 ，并且可以添加
-
+                    cmbPayeeInfoID.DataBindings.Clear();
                     //创建表达式
                     var lambdaPayeeInfo = Expressionable.Create<tb_FM_PayeeInfo>()
                                 .And(t => t.Is_enabled == true)

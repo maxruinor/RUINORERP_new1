@@ -32,7 +32,6 @@ using RUINORERP.Business.CommService;
 using AutoMapper;
 using System.IO.IsolatedStorage;
 using StackExchange.Redis;
-using RUINORERP.Business.StatusManagerService;
 using System.Drawing.Drawing2D;
 using System.Collections;
 using RUINORERP.Business.BizMapperService;
@@ -77,13 +76,7 @@ namespace RUINORERP.Business
                     typeof(ARAPStatus),
                     entity.GetPropertyValue(statusProperty)
                 );
-
-                if (!FMPaymentStatusHelper.CanUnapprove(currentStatus, false))
-                {
-                    rmrs.ErrorMsg = $"状态为【{currentStatus.ToString()}】的预{((ReceivePaymentType)entity.ReceivePaymentType).ToString()}单不可以反审";
-                    return rmrs;
-                }
-
+ 
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
 

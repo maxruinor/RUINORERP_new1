@@ -136,5 +136,47 @@ namespace RUINORERP.Model.Base.StatusManager
         /// 状态转换事件
         /// </summary>
         event EventHandler<StateTransitionEventArgs> StatusChanged;
+
+        /// <summary>
+        /// 获取业务状态类型
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        /// <returns>业务状态类型</returns>
+        Type GetBusinessStatusType(BaseEntity entity);
+
+        /// <summary>
+        /// 触发状态变更事件
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        /// <param name="statusType">状态类型</param>
+        /// <param name="oldStatus">旧状态</param>
+        /// <param name="newStatus">新状态</param>
+        /// <param name="reason">变更原因</param>
+        /// <param name="userId">用户ID</param>
+        void TriggerStatusChangedEvent(BaseEntity entity, Type statusType, object oldStatus, object newStatus, string reason = null, string userId = null);
+
+        /// <summary>
+        /// 获取UI控件变更
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        /// <param name="action">操作类型</param>
+        /// <returns>UI控件变更</returns>
+        Dictionary<string, bool> GetUIControlChanges(BaseEntity entity, MenuItemEnums action);
+
+        /// <summary>
+        /// 判断指定实体的业务状态是否为终态
+        /// </summary>
+        /// <typeparam name="TEntity">实体类型</typeparam>
+        /// <param name="entity">实体对象</param>
+        /// <returns>是否为终态</returns>
+        bool IsFinalStatus<TEntity>(TEntity entity) where TEntity : BaseEntity;
+
+        /// <summary>
+        /// 判断指定实体是否可以修改
+        /// </summary>
+        /// <typeparam name="TEntity">实体类型</typeparam>
+        /// <param name="entity">实体对象</param>
+        /// <returns>是否可以修改</returns>
+        bool CanModify<TEntity>(TEntity entity) where TEntity : BaseEntity;
     }
 }

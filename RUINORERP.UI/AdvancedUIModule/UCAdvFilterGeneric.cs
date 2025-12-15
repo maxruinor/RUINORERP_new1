@@ -197,7 +197,7 @@ namespace RUINORERP.UI.AdvancedUIModule
             {
                 case MenuItemEnums.查询:
                     toolStripBtnQuery.Select();
-                    Query();
+                    QueryAsync();
                     break;
                 case MenuItemEnums.关闭:
                     Exit(this);
@@ -255,7 +255,7 @@ namespace RUINORERP.UI.AdvancedUIModule
         */
 
 
-        public async override void Query(bool UseAutoNavQuery = false)
+        public async override void QueryAsync(bool UseAutoNavQuery = false)
         {
             if (ValidationHelper.hasValidationErrors(this.Controls))
                 return;

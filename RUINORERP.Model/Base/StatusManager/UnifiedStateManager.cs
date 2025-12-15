@@ -54,7 +54,22 @@ namespace RUINORERP.Model.Base.StatusManager
         public UnifiedStateManager(ILogger<UnifiedStateManager> logger)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
+            // 初始化所有规则
+            InitializeAllRules();
+
+            // 复制规则字典到本地缓存
             _transitionRules = new Dictionary<Type, Dictionary<object, List<object>>>(GlobalStateRulesManager.Instance.StateTransitionRules.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ToDictionary(innerKvp => innerKvp.Key, innerKvp => innerKvp.Value)));
+        }
+
+        /// <summary>
+        /// 初始化所有规则
+        /// </summary>
+        private void InitializeAllRules()
+        {
+            GlobalStateRulesManager.Instance.InitializeAllRules();
+            // 初始化退款状态转换规则
+            GlobalStateRulesManager.Instance.InitializeRefundStatusTransitionRules();
         }
 
         #endregion
@@ -77,7 +92,7 @@ namespace RUINORERP.Model.Base.StatusManager
                 entityStatus.SetBusinessStatus(statusType, entity.GetPropertyValue(statusType.Name));
             }
             entityStatus.actionStatus = entity.ActionStatus;
-            
+
             // 处理审批相关状态
             if (entity.ContainsProperty("ApprovalResults"))
             {
@@ -122,13 +137,13 @@ namespace RUINORERP.Model.Base.StatusManager
 
             // 获取实体的状态类型
             var currentStatusType = new EntityStatus().GetStatusType(entity);
-            
+
             // 如果指定了状态类型且与实体当前状态类型匹配，直接返回该状态
             if (statusType != null && currentStatusType == statusType)
             {
                 return entity.GetPropertyValue(statusType.Name);
             }
-            
+
             // 如果没有指定状态类型（或类型不匹配），返回当前状态类型的整数值
             if (currentStatusType != null)
             {
@@ -142,7 +157,7 @@ namespace RUINORERP.Model.Base.StatusManager
                     _logger.LogError(ex, "获取业务状态值时发生错误");
                 }
             }
-            
+
             return null;
         }
 
@@ -156,7 +171,7 @@ namespace RUINORERP.Model.Base.StatusManager
         {
             if (entity == null)
                 return null;
-            
+
             // 如果指定了状态类型且它是枚举类型，使用泛型方法
             if (statusType != null && statusType.IsEnum)
             {
@@ -172,10 +187,10 @@ namespace RUINORERP.Model.Base.StatusManager
                     _logger.LogError(ex, "调用泛型GetBusinessStatus方法时发生错误");
                 }
             }
-            
+
             // 获取当前状态类型
             var currentStatusType = GetBusinessStatusType(entity);
-            
+
             // 返回当前状态值
             if (currentStatusType != null)
             {
@@ -189,7 +204,7 @@ namespace RUINORERP.Model.Base.StatusManager
                     _logger.LogError(ex, "获取业务状态值时发生错误");
                 }
             }
-            
+
             return null;
         }
 
@@ -199,7 +214,7 @@ namespace RUINORERP.Model.Base.StatusManager
 
         // 使用项目中已有的状态缓存管理器
         private static readonly StatusCacheManager _statusCacheManager = new StatusCacheManager();
-            
+
         /// <summary>
         /// 验证数据状态转换是否合法
         /// </summary>
@@ -210,32 +225,32 @@ namespace RUINORERP.Model.Base.StatusManager
         {
             try
             {
-                
+
                 // 生成缓存键
                 string cacheKey = $"{fromStatus?.GetType().FullName}:{fromStatus}:{toStatus}";
-                
+
                 // 检查缓存
                 List<object> cachedItems;
                 if (fromStatus != null && toStatus != null && (cachedItems = _statusCacheManager.GetTransitionRuleCache(cacheKey)) != null && cachedItems.Count > 0)
                 {
                     return (StateTransitionResult)cachedItems[0];
                 }
-                
+
                 // 参数校验
                 if (fromStatus == null)
                     return StateTransitionResult.Allowed();
-                
+
                 if (toStatus == null)
                     return StateTransitionResult.Denied("目标状态不能为空");
-                
+
                 // 状态相同检查 - 避免不必要的验证
                 if (fromStatus.Equals(toStatus))
                     return StateTransitionResult.Allowed();
-                
+
                 // 验证两个枚举类型是否一致
                 if (fromStatus.GetType() != toStatus.GetType())
                     return StateTransitionResult.Denied($"源状态类型和目标状态类型不一致");
-                
+
                 // 动态检查状态转换是否有效
                 Type statusType = fromStatus.GetType();
                 bool isAllowed = (bool)typeof(GlobalStateRulesManager)
@@ -248,13 +263,13 @@ namespace RUINORERP.Model.Base.StatusManager
                     result = StateTransitionResult.Allowed();
                 else
                     result = StateTransitionResult.Denied($"不允许从{fromStatus}转换到{toStatus}");
-                
+
                 // 缓存结果
                 if (fromStatus != null && toStatus != null)
                 {
                     _statusCacheManager.SetTransitionRuleCache(cacheKey, new List<object> { result });
                 }
-                
+
                 return result;
             }
             catch (Exception ex) when (_logger != null)
@@ -263,7 +278,7 @@ namespace RUINORERP.Model.Base.StatusManager
                 return StateTransitionResult.Denied("验证状态转换时发生异常");
             }
         }
-   
+
 
         /// <summary>
         /// 验证业务状态转换是否合法（泛型版本）
@@ -278,14 +293,14 @@ namespace RUINORERP.Model.Base.StatusManager
             {
                 // 生成缓存键
                 string cacheKey = $"{typeof(T).FullName}:{fromStatus}:{toStatus}";
-                
+
                 // 检查缓存 - 使用状态缓存管理器
                 List<object> cachedItems;
                 if (fromStatus.HasValue && toStatus.HasValue && (cachedItems = _statusCacheManager.GetTransitionRuleCache(cacheKey)) != null && cachedItems.Count > 0)
                 {
                     return (StateTransitionResult)cachedItems[0];
                 }
-                
+
                 // 如果源状态为空，允许设置任何状态
                 if (!fromStatus.HasValue)
                     return StateTransitionResult.Allowed();
@@ -364,7 +379,7 @@ namespace RUINORERP.Model.Base.StatusManager
                 return StateTransitionResult.Failure(null, newStatus, statusType, "状态类型不能为空");
 
             // 获取旧状态
-            object oldStatus = statusType == typeof(DataStatus) 
+            object oldStatus = statusType == typeof(DataStatus)
                 ? GetBusinessStatus(entity)
                 : GetBusinessStatus(entity, statusType);
 
@@ -415,7 +430,7 @@ namespace RUINORERP.Model.Base.StatusManager
             // 增强验证：检查实体有效性
             if (entity == null)
                 return StateTransitionResult.Failure(null, newStatus, typeof(ActionStatus), "实体对象不能为空");
-            
+
             // 获取旧状态
             var oldStatus = entity.ActionStatus;
 
@@ -427,7 +442,7 @@ namespace RUINORERP.Model.Base.StatusManager
             {
                 // 更新状态
                 entity.ActionStatus = newStatus;
-                
+
                 // 优化事件触发：单独异常处理，避免事件处理器异常影响核心功能
                 try
                 {
@@ -462,7 +477,7 @@ namespace RUINORERP.Model.Base.StatusManager
         {
             // 快速检查是否有订阅者，避免不必要的对象创建
             if (StatusChanged == null) return;
-            
+
             try
             {
                 // 创建事件参数 - V4版本兼容
@@ -473,10 +488,10 @@ namespace RUINORERP.Model.Base.StatusManager
                     newStatus,
                     reason,
                     userId);
-                
+
                 // 获取事件委托副本，避免多线程情况下的空引用问题
                 var statusChangedEvent = StatusChanged;
-                
+
                 // 触发事件
                 statusChangedEvent?.Invoke(this, eventArgs);
             }
@@ -562,7 +577,7 @@ namespace RUINORERP.Model.Base.StatusManager
             // 前置验证
             if (entity == null)
                 return StateTransitionResult.Failure(null, status, typeof(ActionStatus), "实体对象不能为空");
-            
+
             // 验证目标状态非空
             if (!status.HasValue)
                 return StateTransitionResult.Failure(entity.ActionStatus, null, typeof(ActionStatus), "目标操作状态不能为空");
@@ -572,13 +587,13 @@ namespace RUINORERP.Model.Base.StatusManager
                 // 验证状态转换合法性
                 var currentStatus = entity.ActionStatus;
                 var validationResult = await ValidateActionStatusTransitionAsync(currentStatus, status);
-                
+
                 if (!validationResult.IsSuccess)
                     return validationResult;
 
                 // 更新状态
                 var result = UpdateActionStatus(entity, status.Value, reason, userId);
-                
+
                 return result;
             }
             catch (Exception ex) when (_logger != null)
@@ -648,8 +663,8 @@ namespace RUINORERP.Model.Base.StatusManager
         private List<MenuItemEnums> GetActionPermissionRules(Type statusType, object statusValue)
         {
             // 使用GlobalStateRulesManager中定义的规则
-            return GlobalStateRulesManager.Instance.ActionPermissionRules.ContainsKey(statusType) && 
-                   GlobalStateRulesManager.Instance.ActionPermissionRules[statusType].ContainsKey(statusValue) ? 
+            return GlobalStateRulesManager.Instance.ActionPermissionRules.ContainsKey(statusType) &&
+                   GlobalStateRulesManager.Instance.ActionPermissionRules[statusType].ContainsKey(statusValue) ?
                    GlobalStateRulesManager.Instance.ActionPermissionRules[statusType][statusValue] : new List<MenuItemEnums>();
         }
 
@@ -662,8 +677,8 @@ namespace RUINORERP.Model.Base.StatusManager
         {
             // 使用GlobalStateRulesManager中定义的规则
             var statusType = typeof(DataStatus);
-            return GlobalStateRulesManager.Instance.ActionPermissionRules.ContainsKey(statusType) && 
-                   GlobalStateRulesManager.Instance.ActionPermissionRules[statusType].ContainsKey(status) ? 
+            return GlobalStateRulesManager.Instance.ActionPermissionRules.ContainsKey(statusType) &&
+                   GlobalStateRulesManager.Instance.ActionPermissionRules[statusType].ContainsKey(status) ?
                    GlobalStateRulesManager.Instance.ActionPermissionRules[statusType][status] : new List<MenuItemEnums>();
         }
 
@@ -718,7 +733,7 @@ namespace RUINORERP.Model.Base.StatusManager
 
             if (statusType == typeof(DataStatus))
                 return GetDataStatusFailureMessage((DataStatus)statusValue, action);
-            
+
             return "当前状态不允许执行此操作";
         }
 
@@ -802,21 +817,21 @@ namespace RUINORERP.Model.Base.StatusManager
             {
                 // 获取实体的统一状态
                 EntityStatus entityStatus = GetUnifiedStatus(entity);
-                
+
                 // 创建结果字典
                 var result = new Dictionary<string, bool>();
-                
+
                 // 尝试获取状态规则管理器的按钮状态并转换格式
                 var statusType = entityStatus.GetType();
-            var buttonStates = GlobalStateRulesManager.Instance.UIButtonRules.TryGetValue(statusType, out var statusRules) && 
-                              statusRules.TryGetValue(entityStatus, out var buttonRules) ? 
-                              buttonRules : new Dictionary<string, bool>();
+                var buttonStates = GlobalStateRulesManager.Instance.UIButtonRules.TryGetValue(statusType, out var statusRules) &&
+                                  statusRules.TryGetValue(entityStatus, out var buttonRules) ?
+                                  buttonRules : new Dictionary<string, bool>();
                 foreach (var state in buttonStates)
                 {
                     // 使用已有的元组值
                     result[state.Key] = state.Value;
                 }
-                
+
                 return result;
             }
             catch (Exception ex) when (_logger != null)
@@ -838,18 +853,18 @@ namespace RUINORERP.Model.Base.StatusManager
             {
                 // 获取所有按钮状态
                 var buttonStates = GetUIControlStates(entity);
-                
+
                 // 返回指定按钮的状态
                 if (buttonStates.TryGetValue(buttonName, out var state))
                 {
                     return state;
                 }
-                return  false; // 默认禁用，可见
+                return false; // 默认禁用，可见
             }
             catch (Exception ex) when (_logger != null)
             {
                 _logger.LogError(ex, $"获取按钮状态失败: {buttonName}");
-                return  false;
+                return false;
             }
         }
 
@@ -872,7 +887,7 @@ namespace RUINORERP.Model.Base.StatusManager
 
             // 根据操作类型预测UI状态变更
             // 这里需要根据实际业务逻辑实现
-            
+
             // 比较并返回变更
             var changes = new Dictionary<string, bool>();
             foreach (var state in currentStates)
@@ -914,6 +929,70 @@ namespace RUINORERP.Model.Base.StatusManager
 
         #endregion
 
+        #region 新增方法 - 状态终态判断
+
+        /// <summary>
+        /// 判断指定实体的业务状态是否为终态
+        /// </summary>
+        /// <typeparam name="TEntity">实体类型</typeparam>
+        /// <param name="entity">实体对象</param>
+        /// <returns>是否为终态</returns>
+        public bool IsFinalStatus<TEntity>(TEntity entity) where TEntity : BaseEntity
+        {
+            if (entity == null)
+                throw new ArgumentNullException(nameof(entity));
+
+            try
+            {
+                // 获取业务状态类型
+                Type businessStatusType = GetBusinessStatusType(entity);
+                if (businessStatusType == null)
+                    return false;
+
+                // 获取业务状态值
+                object businessStatus = GetBusinessStatus(entity, businessStatusType);
+                if (businessStatus == null)
+                    return false;
+
+                // 使用反射调用GlobalStateRulesManager的IsFinalStatus方法
+                var methodInfo = typeof(GlobalStateRulesManager).GetMethod("IsFinalStatus", BindingFlags.Public | BindingFlags.Instance);
+                var genericMethod = methodInfo?.MakeGenericMethod(businessStatusType);
+                return genericMethod != null && (bool)genericMethod.Invoke(GlobalStateRulesManager.Instance, new[] { businessStatus });
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "判断实体终态状态时发生异常");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 判断指定实体是否可以修改
+        /// </summary>
+        /// <typeparam name="TEntity">实体类型</typeparam>
+        /// <param name="entity">实体对象</param>
+        /// <returns>是否可以修改</returns>
+        public bool CanModify<TEntity>(TEntity entity) where TEntity : BaseEntity
+        {
+            if (entity == null)
+                throw new ArgumentNullException(nameof(entity));
+
+            // 检查是否为终态状态
+            bool isFinalStatus = IsFinalStatus(entity);
+            if (isFinalStatus)
+                return false;
+
+            var canModify = CanExecuteAction(entity, MenuItemEnums.修改);
+
+            // 检查提交后是否允许修改
+            if (canModify && !GlobalStateRulesManager.Instance.AllowModifyAfterSubmit(canModify))
+                return false;
+
+            return true;
+        }
+
+        #endregion
+
         #region 释放资源
 
         /// <summary>
@@ -923,9 +1002,9 @@ namespace RUINORERP.Model.Base.StatusManager
         {
             // 清除事件订阅
             StatusChanged = null;
-            
+
             // 清除状态缓存管理器中的相关缓存
-            
+
             // 清理规则字典
             if (_transitionRules != null)
                 _transitionRules.Clear();

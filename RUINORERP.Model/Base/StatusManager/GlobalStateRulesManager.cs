@@ -795,5 +795,132 @@ namespace RUINORERP.Model.Base.StatusManager
         }
 
         #endregion
+        
+        #region 新增方法 - 状态终态判断
+        
+        /// <summary>
+        /// 判断指定状态是否为终态
+        /// </summary>
+        /// <typeparam name="TStatus">状态类型</typeparam>
+        /// <param name="status">状态值</param>
+        /// <returns>是否为终态</returns>
+        public bool IsFinalStatus<TStatus>(TStatus status) where TStatus : struct
+        {
+            var statusType = typeof(TStatus);
+            
+            // 针对不同状态类型的终态判断
+            if (statusType == typeof(DataStatus))
+            {
+                DataStatus dataStatus = (DataStatus)(object)status;
+                return dataStatus == DataStatus.完结 || dataStatus == DataStatus.作废;
+            }
+            else if (statusType == typeof(ActionStatus))
+            {
+                ActionStatus actionStatus = (ActionStatus)(object)status;
+                return actionStatus == ActionStatus.无操作;
+            }
+            else if (statusType == typeof(PaymentStatus))
+            {
+                PaymentStatus paymentStatus = (PaymentStatus)(object)status;
+                return paymentStatus == PaymentStatus.已支付;
+            }
+            else if (statusType == typeof(RefundStatus))
+            {
+                RefundStatus refundStatus = (RefundStatus)(object)status;
+                return refundStatus == RefundStatus.已退款已退货 || refundStatus == RefundStatus.已退款未退货 || refundStatus == RefundStatus.部分退款退货;
+            }
+            else if (statusType == typeof(PrePaymentStatus))
+            {
+                PrePaymentStatus prepayStatus = (PrePaymentStatus)(object)status;
+                return prepayStatus == PrePaymentStatus.已结案;
+            }
+            else if (statusType == typeof(ARAPStatus))
+            {
+                ARAPStatus arapStatus = (ARAPStatus)(object)status;
+                return arapStatus == ARAPStatus.全部支付 || arapStatus == ARAPStatus.已冲销;
+            }
+            else if (statusType == typeof(StatementStatus))
+            {
+                StatementStatus statementStatus = (StatementStatus)(object)status;
+                return statementStatus == StatementStatus.已结清 || statementStatus == StatementStatus.已作废;
+            }
+            
+            // 默认情况下，不是终态
+            return false;
+        }
+        
+        /// <summary>
+        /// 获取状态类型的描述信息
+        /// </summary>
+        /// <param name="statusType">状态类型</param>
+        /// <returns>状态类型描述</returns>
+        public string GetStatusTypeDescription(Type statusType)
+        {
+            if (statusType == typeof(DataStatus))
+                return "数据状态";
+            else if (statusType == typeof(ActionStatus))
+                return "操作状态";
+            else if (statusType == typeof(PaymentStatus))
+                return "付款状态";
+            else if (statusType == typeof(RefundStatus))
+                return "退款状态";
+            else if (statusType == typeof(PrePaymentStatus))
+                return "预付款状态";
+            else if (statusType == typeof(ARAPStatus))
+                return "应收应付状态";
+            else if (statusType == typeof(StatementStatus))
+                return "对账状态";
+            
+            return statusType.Name;
+        }
+        
+        #endregion
+        
+        #region 新增方法 - 退款状态规则初始化
+        
+        /// <summary>
+        /// 初始化退款状态转换规则
+        /// </summary>
+        public void InitializeRefundStatusTransitionRules()
+        {
+            var statusType = typeof(RefundStatus);
+            _stateTransitionRules[statusType] = new Dictionary<object, List<object>>();
+            
+            // 初始化不同状态的转换规则
+            // 未退款等待退货 -> 可转换到已退款等待退货、未退款已退货、部分退款退货
+            _stateTransitionRules[statusType][RefundStatus.未退款等待退货] = new List<object>
+            {
+                RefundStatus.已退款等待退货,
+                RefundStatus.未退款已退货,
+                RefundStatus.部分退款退货
+            };
+            
+            // 未退款已退货 -> 可转换到已退款已退货、部分退款退货
+            _stateTransitionRules[statusType][RefundStatus.未退款已退货] = new List<object>
+            {
+                RefundStatus.已退款已退货,
+                RefundStatus.部分退款退货
+            };
+            
+            // 已退款等待退货 -> 可转换到已退款已退货、部分退款退货
+            _stateTransitionRules[statusType][RefundStatus.已退款等待退货] = new List<object>
+            {
+                RefundStatus.已退款已退货,
+                RefundStatus.部分退款退货
+            };
+            
+            // 已退款未退货 -> 可转换到已退款已退货、部分退款退货
+            _stateTransitionRules[statusType][RefundStatus.已退款未退货] = new List<object>
+            {
+                RefundStatus.已退款已退货,
+                RefundStatus.部分退款退货
+            };
+            
+            // 终态状态不可转换
+            _stateTransitionRules[statusType][RefundStatus.已退款已退货] = new List<object>();
+            _stateTransitionRules[statusType][RefundStatus.部分退款退货] = new List<object>();
+        }
+        
+        #endregion
     }
 }

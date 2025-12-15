@@ -84,7 +84,7 @@ namespace RUINORERP.UI.MRP.BOM
         /// </summary>
         /// <param name="dto"></param>
         //[MustOverride]
-        public async override void Query(bool UseAutoNavQuery = false)
+        public async override void QueryAsync(bool UseAutoNavQuery = false)
         {
             if (Edited)
             {

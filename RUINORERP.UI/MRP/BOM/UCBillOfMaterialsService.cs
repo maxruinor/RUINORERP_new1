@@ -301,7 +301,7 @@ namespace RUINORERP.UI.MRP.BOM
 
         private void btnQueryForGoods_Click(object sender, EventArgs e)
         {
-            Query();
+            QueryAsync();
         }
 
         private void btnCheckInvalidBOM_Click(object sender, EventArgs e)
@@ -349,7 +349,7 @@ namespace RUINORERP.UI.MRP.BOM
         }
 
 
-        public override void Query(bool UseAutoNavQuery = false)
+        public override void QueryAsync(bool UseAutoNavQuery = false)
         {
             if (kryptonNavigator1.SelectedPage != null)
             {

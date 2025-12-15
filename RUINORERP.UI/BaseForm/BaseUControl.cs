@@ -55,7 +55,7 @@ namespace RUINORERP.UI.BaseForm
         }
 
 
-        public virtual void Query(bool UseNavQuery = false)
+        public virtual void QueryAsync(bool UseNavQuery = false)
         {
 
         }
@@ -117,7 +117,7 @@ namespace RUINORERP.UI.BaseForm
                         Exit(this);//csc关闭窗体
                         break;
                     case Keys.Enter:
-                        Query();
+                        QueryAsync();
                         break;
                 }
 

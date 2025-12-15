@@ -103,9 +103,9 @@ namespace RUINORERP.UI.CRM
             QueryConditionFilter.FilterLimitExpressions.Add(lambda);
         }
 
-        public override void Query(bool UseAutoNavQuery = false)
+        public override void QueryAsync(bool UseAutoNavQuery = false)
         {
-            base.Query(true);
+            base.QueryAsync(true);
         }
         private ToolStripMenuItem toolStripMenuItem1;
 
@@ -146,7 +146,7 @@ namespace RUINORERP.UI.CRM
                         if (result.Succeeded)
                         {
                             MainForm.Instance.ShowStatusText("操作成功");
-                            Query();
+                            QueryAsync();
                         }
                         else
                         {

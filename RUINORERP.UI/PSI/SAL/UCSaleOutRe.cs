@@ -1,54 +1,53 @@
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Drawing;
-using System.Data;
-using System.Linq;
-using System.Text;
-using RUINORERP.UI.Network.Services;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-using RUINORERP.Common;
-using RUINORERP.UI.Common;
-using RUINORERP.Model;
-using RUINORERP.Business;
-using RUINORERP.UI.UCSourceGrid;
-using System.Reflection;
-using System.Collections.Concurrent;
-using RUINORERP.Common.CollectionExtension;
-using static RUINORERP.UI.Common.DataBindingHelper;
-using static RUINORERP.UI.Common.GUIUtils;
-using RUINORERP.Model.Dto;
-using DevAge.Windows.Forms;
-using RUINORERP.Common.Helper;
-using RUINORERP.Global.CustomAttribute;
-using RUINORERP.Global;
-using RUINORERP.UI.Report;
-using RUINORERP.UI.BaseForm;
-
-using Microsoft.Extensions.Logging;
-using RUINOR.Core;
-using SqlSugar;
-using FluentValidation.Results;
-using System.Linq.Expressions;
-using Krypton.Toolkit;
 using AutoMapper;
+using DevAge.Windows.Forms;
+using EnumsNET;
+using FluentValidation.Results;
+using Krypton.Toolkit;
+using LiveChartsCore.Geo;
+using Microsoft.Extensions.Logging;
+using Netron.GraphLib;
+using RUINOR.Core;
+using RUINORERP.Business;
 using RUINORERP.Business.AutoMapper;
+using RUINORERP.Business.CommService;
 using RUINORERP.Business.Processor;
 using RUINORERP.Business.Security;
-using SourceGrid;
-using EnumsNET;
-using RUINORERP.UI.PSI.PUR;
-using RUINORERP.Business.CommService;
-using RUINORERP.Global.EnumExt;
-using RUINORERP.UI.AdvancedUIModule;
-using RUINORERP.UI.SysConfig;
-using RUINORERP.Model.CommonModel;
+using RUINORERP.Common;
+using RUINORERP.Common.CollectionExtension;
 using RUINORERP.Common.Extensions;
-using RUINORERP.Business.StatusManagerService;
-using LiveChartsCore.Geo;
+using RUINORERP.Common.Helper;
+using RUINORERP.Global;
+using RUINORERP.Global.CustomAttribute;
+using RUINORERP.Global.EnumExt;
+using RUINORERP.Model;
+using RUINORERP.Model.Base.StatusManager;
+using RUINORERP.Model.CommonModel;
+using RUINORERP.Model.Dto;
+using RUINORERP.UI.AdvancedUIModule;
+using RUINORERP.UI.BaseForm;
+using RUINORERP.UI.Common;
 using RUINORERP.UI.FM;
-using Netron.GraphLib;
+using RUINORERP.UI.Network.Services;
+using RUINORERP.UI.PSI.PUR;
+using RUINORERP.UI.Report;
+using RUINORERP.UI.SysConfig;
+using RUINORERP.UI.UCSourceGrid;
+using SourceGrid;
+using SqlSugar;
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using static RUINORERP.UI.Common.DataBindingHelper;
+using static RUINORERP.UI.Common.GUIUtils;
 
 
 namespace RUINORERP.UI.PSI.SAL
@@ -531,7 +530,7 @@ namespace RUINORERP.UI.PSI.SAL
             ControlBindingHelper.ConfigureControlFilter<tb_SaleOutRe, tb_SaleOut>(entity, txtSaleOutNo, t => t.SaleOut_NO,
               f => f.SaleOutNo, queryFilterSO, a => a.SaleOut_MainID, b => b.SaleOut_MainID, null, false);
 
-             
+
 
             //如果属性变化 则状态为修改
             entity.PropertyChanged += (sender, s2) =>
@@ -1053,9 +1052,9 @@ namespace RUINORERP.UI.PSI.SAL
                 {
                     RefundStatus oldRefundStatus = (RefundStatus)EditEntity.GetOriginalValue(nameof(EditEntity.RefundStatus));
                     RefundStatus newRefundStatus = (RefundStatus)EditEntity.RefundStatus;
-                    if (!RefundStatusHelper.TryValidateTransition(oldRefundStatus, newRefundStatus, out var error))
+                    if (!GlobalStateRulesManager.Instance.IsValidTransition<RefundStatus>(oldRefundStatus, newRefundStatus))
                     {
-                        System.Windows.Forms.MessageBox.Show(error, "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        System.Windows.Forms.MessageBox.Show("退回状态转换错误", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                         return false;
                     }
 

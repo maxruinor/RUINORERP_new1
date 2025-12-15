@@ -111,7 +111,7 @@ namespace RUINORERP.UI.PSI.INV
                                 if (result > 0)
                                 {
                                     MainForm.Instance.ShowStatusText("成本确认成功!");
-                                    Query();
+                                    QueryAsync();
                                 }
                             }
                         }
@@ -149,7 +149,7 @@ namespace RUINORERP.UI.PSI.INV
         /// </summary>
         /// <param name="dto"></param>
         //[MustOverride]
-        public async override void Query(bool UseNavQuery = false)
+        public async override void QueryAsync(bool UseNavQuery = false)
         {
             if (Edited)
             {

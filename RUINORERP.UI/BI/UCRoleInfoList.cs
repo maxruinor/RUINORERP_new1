@@ -101,7 +101,7 @@ namespace RUINORERP.UI.BI
             return list;
         }
 
-        public async override void Query(bool UseAutoNavQuery = false)
+        public async override void QueryAsync(bool UseAutoNavQuery = false)
         {
             if (ValidationHelper.hasValidationErrors(this.Controls))
                 return;
@@ -145,7 +145,7 @@ namespace RUINORERP.UI.BI
                     MainForm.Instance.PrintInfoLog($"{Info.RoleName}删除成功。");
                 }
             }
-            Query();
+            QueryAsync();
             return rs;
         }
 

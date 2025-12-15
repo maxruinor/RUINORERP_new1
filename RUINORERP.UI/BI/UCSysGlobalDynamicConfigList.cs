@@ -69,7 +69,7 @@ namespace RUINORERP.UI.BI
                  rs = await pctr.DeleteAsync(list.Select(c => c.ConfigID).ToArray());
                 if (rs)
                 {
-                    Query();
+                    QueryAsync();
                 }
             }
             return rs;

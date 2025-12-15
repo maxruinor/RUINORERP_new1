@@ -49,7 +49,7 @@ namespace RUINORERP.UI.BI
                     list.Add(new tb_PaymentMethod() { Paytype_Name = item.ToString(), Cash = cash });
                 }
                 await MainForm.Instance.AppContext.Db.Insertable<tb_PaymentMethod>(list).ExecuteReturnSnowflakeIdListAsync();
-                Query();
+                QueryAsync();
                 base.Add();
                 base.toolStripButtonModify.Enabled = false;
             }

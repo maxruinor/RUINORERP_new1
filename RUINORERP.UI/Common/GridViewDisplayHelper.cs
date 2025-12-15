@@ -297,7 +297,7 @@ namespace RUINORERP.UI.Common
 
                             // 使用依赖注入的缓存管理器
                             var schemaInfo = TableSchemaManager.Instance.GetSchemaInfo(mapping.ReferenceTableName);
-                            if (schemaInfo!=null)
+                            if (schemaInfo != null)
                             {
                                 //要显示的默认值是从缓存表中获取的字段名，默认是主键ID字段对应的名称
                                 mapping.ReferenceDefaultDisplayFieldName = schemaInfo.DisplayField;
@@ -407,7 +407,7 @@ namespace RUINORERP.UI.Common
                     string SourceTableName = typeof(tb_Employee).Name;
                     // 使用静态缓存管理器方法获取显示值
                     object objText = EntityCacheHelper.GetDisplayValue(SourceTableName, IdValue);
-               
+
                     if (objText != null && objText.ToString() != "System.Object")
                     {
                         return objText.ToString();
@@ -420,12 +420,25 @@ namespace RUINORERP.UI.Common
                 {
                     if (mapping.MappedTargetFieldName == idColName)
                     {
-                        // 使用静态缓存管理器方法获取显示值
-                        object displayValue = EntityCacheHelper.GetDisplayValue(mapping.ReferenceTableName, IdValue);
-                        if (displayValue != null)
+                        if (!string.IsNullOrEmpty(mapping.CustomDisplayColumnName))
                         {
-                            return displayValue.ToString();
+                            // 使用静态缓存管理器方法获取显示值
+                            object displayObj = EntityCacheHelper.GetEntity(mapping.ReferenceTableName, IdValue);
+                            if (displayObj != null && displayObj.GetPropertyValue(mapping.CustomDisplayColumnName) != null)
+                            {
+                                return displayObj.GetPropertyValue(mapping.CustomDisplayColumnName).ToString();
+                            }
                         }
+                        else
+                        {
+                            // 使用静态缓存管理器方法获取显示值
+                            object displayValue = EntityCacheHelper.GetDisplayValue(mapping.ReferenceTableName, IdValue);
+                            if (displayValue != null)
+                            {
+                                return displayValue.ToString();
+                            }
+                        }
+
                     }
                 }
                 else

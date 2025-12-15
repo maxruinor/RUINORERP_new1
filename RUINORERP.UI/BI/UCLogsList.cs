@@ -77,7 +77,7 @@ namespace RUINORERP.UI.BI
             bool rs = await pctr.DeleteAsync(list.Select(c => c.ID).ToArray());
             if (rs)
             {
-                Query();
+                QueryAsync();
             }
             return rs;
         }

@@ -30,7 +30,6 @@ using RUINORERP.Global;
 using RUINORERP.Business.Security;
 using RUINORERP.Global.EnumExt;
 using AutoMapper;
-using RUINORERP.Business.StatusManagerService;
 using OfficeOpenXml.Export.ToDataTable;
 using RUINORERP.Business.CommService;
 using System.Windows.Forms;
@@ -74,12 +73,13 @@ namespace RUINORERP.Business
                     typeof(PrePaymentStatus),
                     entity.GetPropertyValue(statusProperty)
                 );
-
-                if (!FMPaymentStatusHelper.CanUnapprove(currentStatus, false))
+                var ValidateValue = StateManager.ValidateBusinessStatusTransitionAsync(currentStatus, PrePaymentStatus.已生效 as Enum);
+                if (!ValidateValue.IsSuccess)
                 {
-                    rmrs.ErrorMsg = $"状态为【{currentStatus.ToString()}】的预{((ReceivePaymentType)entity.ReceivePaymentType).ToString()}单不可以反审";
+                    rmrs.ErrorMsg = $"状态为【{currentStatus.ToString()}】的{((ReceivePaymentType)entity.ReceivePaymentType).ToString()}单不可以反审";
                     return rmrs;
                 }
+                 
 
                 var paymentRecordController = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
                 // 开启事务，保证数据一致性

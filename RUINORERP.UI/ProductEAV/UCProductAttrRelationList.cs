@@ -1,26 +1,29 @@
+using AutoMapper;
+using NPOI.SS.Formula.Functions;
+using RUINOR.Core;
+using RUINORERP.Business;
+using RUINORERP.Business.AutoMapper;
+using RUINORERP.Business.LogicaService;
+using RUINORERP.Business.Processor;
+using RUINORERP.Common;
+using RUINORERP.Common.CollectionExtension;
+using RUINORERP.Common.Extensions;
+using RUINORERP.Common.Helper;
+using RUINORERP.Global;
+using RUINORERP.Model;
+using RUINORERP.Model.Base;
+using RUINORERP.UI.Common;
+using SqlSugar;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Drawing;
 using System.Data;
+using System.Drawing;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using RUINORERP.Business.LogicaService;
-using RUINORERP.Model;
-using RUINORERP.UI.Common;
-using RUINORERP.Common;
-using RUINORERP.Common.CollectionExtension;
-using RUINOR.Core;
-using RUINORERP.Common.Helper;
-using RUINORERP.Business;
-using RUINORERP.Model.Base;
-using AutoMapper;
-using RUINORERP.Business.AutoMapper;
-using System.Linq.Expressions;
-using RUINORERP.Common.Extensions;
-using RUINORERP.Business.Processor;
 
 namespace RUINORERP.UI.ProductEAV
 {
@@ -31,7 +34,7 @@ namespace RUINORERP.UI.ProductEAV
         {
             InitializeComponent();
             base.EditForm = typeof(UCProductAttrRelationEdit);
-
+            DisplayTextResolver.AddReferenceKeyMapping<View_ProdDetail, tb_Prod_Attr_Relation>(t => t.ProdDetailID, s => s.ProdDetailID, t => t.SKU);
             // 初始化产品主信息下拉框
             InitProductComboBox();
         }
@@ -49,17 +52,6 @@ namespace RUINORERP.UI.ProductEAV
             BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_Prod_Attr_Relation).Name + "Processor");
             QueryConditionFilter = baseProcessor.GetQueryFilter();
             QueryConditionFilter.FilterLimitExpressions.Clear();
-        }
-
-        /// <summary>
-        /// 自定义查询，根据选定的产品查询其属性关联
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void btnQueryByProduct_Click(object sender, EventArgs e)
-        {
-            // 这里可以根据实际需要实现按产品查询的功能
-            Query();
         }
     }
 }

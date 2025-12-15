@@ -65,7 +65,7 @@ namespace RUINORERP.UI.BI
                     MainForm.Instance.PrintInfoLog($"{Info.MenuName},{Info.CaptionCN}删除成功。");
                 }
             }
-            Query();
+            QueryAsync();
             return rs;
         }
     }

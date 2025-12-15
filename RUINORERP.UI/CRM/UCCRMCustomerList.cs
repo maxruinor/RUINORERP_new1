@@ -316,9 +316,9 @@ namespace RUINORERP.UI.CRM
         /// 因为客户要查出相关的记录计划这些
         /// </summary>
         /// <param name="UseAutoNavQuery"></param>
-        public override void Query(bool UseAutoNavQuery = false)
+        public override void QueryAsync(bool UseAutoNavQuery = false)
         {
-            base.Query(true);
+            base.QueryAsync(true);
         }
 
 
@@ -443,7 +443,7 @@ namespace RUINORERP.UI.CRM
                     if (result > 0)
                     {
                         MainForm.Instance.ShowStatusText($"回收成功{result}条数据!");
-                        Query();
+                        QueryAsync();
                     }
                 }
             }
@@ -522,7 +522,7 @@ namespace RUINORERP.UI.CRM
                                 await MainForm.Instance.AppContext.Db.Updateable(CustomerVendors).UpdateColumns(it => new { it.Employee_ID }).ExecuteCommandAsync();
                                 await MainForm.Instance.AppContext.Db.Ado.CommitTranAsync();
                                 MainForm.Instance.ShowStatusText($"分配成功{result}条数据!");
-                                Query();
+                                QueryAsync();
                             }
 
                         }

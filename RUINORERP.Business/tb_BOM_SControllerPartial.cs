@@ -30,7 +30,6 @@ using RUINORERP.IServices.BASE;
 using RUINORERP.Model.Context;
 using System.Linq;
 using AutoMapper;
-using RUINORERP.Business.StatusManagerService;
 using IMapper = AutoMapper.IMapper;
 using System.Text;
 using System.Windows.Forms;

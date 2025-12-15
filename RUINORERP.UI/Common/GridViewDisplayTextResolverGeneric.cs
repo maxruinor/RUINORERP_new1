@@ -104,26 +104,34 @@ namespace RUINORERP.UI.Common
             {
                 displayHelper.ReferenceKeyMappings = new HashSet<ReferenceKeyMapping>();
             }
-            ReferenceKeyMapping mapping = new ReferenceKeyMapping(typeof(source).Name, Sourceinfo.Name, typeof(target).Name, Targetinfo.Name);
+
+            // 创建新的映射对象
+            ReferenceKeyMapping newMapping = new ReferenceKeyMapping(typeof(source).Name, Sourceinfo.Name, typeof(target).Name, Targetinfo.Name);
             if (typeof(source).Name == typeof(target).Name)
             {
-                mapping.IsSelfReferencing = true;
+                newMapping.IsSelfReferencing = true;
             }
 
-            var schemaInfo = TableSchemaManager.Instance.GetSchemaInfo(mapping.ReferenceTableName);
+            var schemaInfo = TableSchemaManager.Instance.GetSchemaInfo(newMapping.ReferenceTableName);
             if (schemaInfo != null)
             {
                 //要显示的默认值是从缓存表中获取的字段名，默认是主键ID字段对应的名称
-                mapping.ReferenceDefaultDisplayFieldName = schemaInfo.DisplayField;
+                newMapping.ReferenceDefaultDisplayFieldName = schemaInfo.DisplayField;
             }
 
             if (CustomDisplaySourceField != null)
             {
                 MemberInfo CustomDisplayColInfo = CustomDisplaySourceField.GetMemberInfo();
-                mapping.CustomDisplayColumnName = CustomDisplayColInfo.Name;
+                newMapping.CustomDisplayColumnName = CustomDisplayColInfo.Name;
             }
-            //以目标为主键，原始的相同的只能为值
-            displayHelper.ReferenceKeyMappings.Add(mapping);
+
+            // 检查是否已存在相同的映射，如果存在则先移除再添加
+            if (displayHelper.ReferenceKeyMappings.Contains(newMapping))
+            {
+                displayHelper.ReferenceKeyMappings.Remove(newMapping);
+            }
+            // 添加新映射（无论是新增还是更新）
+            displayHelper.ReferenceKeyMappings.Add(newMapping);
         }
 
 
@@ -178,7 +186,11 @@ namespace RUINORERP.UI.Common
         private void DataGridView_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
         {
             DataGridView dataGridView = sender as DataGridView;
-
+            string oldValue = e.Value?.ToString();
+            if (e.FormattingApplied)
+            {
+                return;
+            }
             // 如果列是隐藏的，直接返回
             if (!dataGridView.Columns[e.ColumnIndex].Visible)
             {
@@ -205,18 +217,20 @@ namespace RUINORERP.UI.Common
                         {
                             System.Drawing.Image image = System.Drawing.Image.FromStream(ms);
                             e.Value = image;
+                            e.FormattingApplied = true;
                             return;
                         }
                     }
                 }
             }
-         
+
             e.Value = displayHelper.GetGridViewDisplayText(typeof(T).Name, columnName, e.Value);
+            if (!e.Value.Equals(oldValue))
+            {
+                e.FormattingApplied = true;
+            }
             return;
         }
-
-
-
     }
 
     // 外键映射类 多种情况 

@@ -226,12 +226,17 @@ namespace RUINORERP.UI.BaseForm
 
 
 
-        public GridViewDisplayTextResolverGeneric<T> DisplayTextResolver = new GridViewDisplayTextResolverGeneric<T>();
+        /// <summary>
+        /// 网格显示文本解析器，用于设置特殊的映射关系
+        /// </summary>
+        public GridViewDisplayTextResolverGeneric<T> DisplayTextResolver { get; set; }
 
         public BaseListGeneric()
         {
             InitializeComponent();
             _eventDrivenCacheManager = Startup.GetFromFac<EventDrivenCacheManager>();
+            // 初始化网格显示文本解析器
+            DisplayTextResolver = new GridViewDisplayTextResolverGeneric<T>();
             if (System.ComponentModel.LicenseManager.UsageMode != System.ComponentModel.LicenseUsageMode.Designtime)
             {
                 if (!this.DesignMode)
@@ -681,7 +686,7 @@ namespace RUINORERP.UI.BaseForm
                     break;
                 case MenuItemEnums.查询:
 
-                    Query();
+                    QueryAsync();
 
 
                     break;
@@ -1549,7 +1554,7 @@ namespace RUINORERP.UI.BaseForm
         /// </summary>
         /// <param name="UseNavQuery">是否使用自动导航</param>
         //[MustOverride]
-        public async override void Query(bool UseAutoNavQuery = false)
+        public async override void QueryAsync(bool UseAutoNavQuery = false)
         {
             if (Edited)
             {
@@ -1596,53 +1601,8 @@ namespace RUINORERP.UI.BaseForm
             }
             ToolBarEnabledControl(MenuItemEnums.查询);
 
-
         }
 
-        //[Obsolete("该方法已经废弃，请使用UIHelper.ControlColumnsInvisible")]
-        ///// <summary>
-        ///// 控制字段是否显示，添加到里面的是不显示的
-        ///// </summary>
-        ///// <param name="InvisibleCols"></param>
-        //public void ControlSingleTableColumnsInvisible(HashSet<string> InvisibleCols, HashSet<string> DefaultHideCols = null)
-        //{
-        //    if (!MainForm.Instance.AppContext.IsSuperUser)
-        //    {
-        //        if (CurMenuInfo.tb_P4Fields != null)
-        //        {
-        //            List<tb_P4Field> P4Fields =
-        //           CurMenuInfo.tb_P4Fields
-        //           .Where(p => p.RoleID == MainForm.Instance.AppContext.CurrentUser_Role.RoleID
-        //           && p.tb_fieldinfo.IsChild && !p.IsVisble).ToList();
-        //            foreach (var item in P4Fields)
-        //            {
-        //                if (item != null)
-        //                {
-        //                    if (item.tb_fieldinfo != null)
-        //                    {
-        //                        //if ((!item.tb_fieldinfo.IsEnabled || !item.IsVisble) && item.tb_fieldinfo.IsChild)
-        //                        bool Add = !item.IsVisble && !item.tb_fieldinfo.IsChild && !InvisibleCols.Contains(item.tb_fieldinfo.FieldName);
-        //                        if ((!item.tb_fieldinfo.IsEnabled && !item.tb_fieldinfo.IsChild) || Add)
-        //                        {
-        //                            if (!InvisibleCols.Contains(item.tb_fieldinfo.FieldName))
-        //                            {
-        //                                InvisibleCols.Add(item.tb_fieldinfo.FieldName);
-        //                            }
-        //                        }
-
-        //                        if (DefaultHideCols != null)
-        //                        {
-        //                            if (item.tb_fieldinfo.DefaultHide && !item.tb_fieldinfo.IsChild && !InvisibleCols.Contains(item.tb_fieldinfo.FieldName))
-        //                            {
-        //                                DefaultHideCols.Add(item.tb_fieldinfo.FieldName);
-        //                            }
-        //                        }
-        //                    }
-        //                }
-        //            }
-        //        }
-        //    }
-        //}
 
         private void UcAdv_OnSelectDataRow(T entity)
         {
@@ -1836,13 +1796,13 @@ namespace RUINORERP.UI.BaseForm
             LimitQueryConditionsBuilder();
             if (!Edited)
             {
-                Query();
+                QueryAsync();
             }
             else
             {
                 if (MessageBox.Show(this, "有数据没有保存\r\n你确定要重新加载吗", "询问", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2) == DialogResult.Yes)
                 {
-                    Query();
+                    QueryAsync();
                 }
             }
 
@@ -1966,106 +1926,7 @@ namespace RUINORERP.UI.BaseForm
         {
 
         }
-        /*
-        private void DataGridView_ColumnWidthChanged(object sender, DataGridViewColumnEventArgs e)
-        {
-            //保存在内存中
-            #region 列有变化就保存到内存，关闭时保存到数据库设置中
-            tb_UserPersonalized userPersonalized = MainForm.Instance.AppContext.CurrentUser_Role_Personalized;
-            if (userPersonalized == null)
-            {
-                return;
-            }
-
-            tb_UIMenuPersonalization menuPersonalization = userPersonalized.tb_UIMenuPersonalizations.FirstOrDefault(t => t.MenuID == CurMenuInfo.MenuID && t.UserPersonalizedID == userPersonalized.UserPersonalizedID);
-            //这里是列的控制情况 
-            if (menuPersonalization.tb_UIGridSettings == null)
-            {
-                menuPersonalization.tb_UIGridSettings = new List<tb_UIGridSetting>();
-            }
-            tb_UIGridSetting GridSetting = menuPersonalization.tb_UIGridSettings.FirstOrDefault(c => c.GridKeyName == typeof(T).Name && c.UIMenuPID == menuPersonalization.UIMenuPID);
-            if (GridSetting == null)
-            {
-                GridSetting = new tb_UIGridSetting();
-                GridSetting.GridKeyName = typeof(T).Name;
-                GridSetting.GridType = dataGridView1.GetType().Name;
-                GridSetting.UIMenuPID = menuPersonalization.UIMenuPID;
-                menuPersonalization.tb_UIGridSettings.Add(GridSetting);
-            }
-            List<ColumnDisplayController> originalColumnDisplays = new List<ColumnDisplayController>();
-            //如果数据有则加载，无则加载默认的
-            if (!string.IsNullOrEmpty(GridSetting.ColsSetting))
-            {
-                object objList = JsonConvert.DeserializeObject(GridSetting.ColsSetting);
-                if (objList != null && objList.GetType().Name == "JArray")//(Newtonsoft.Json.Linq.JArray))
-                {
-                    var jsonlist = objList as Newtonsoft.Json.Linq.JArray;
-                    originalColumnDisplays = jsonlist.ToObject<List<ColumnDisplayController>>();
-                }
-            }
-            else
-            {
-                //找到最原始的数据来自于硬编码
-                originalColumnDisplays = UIHelper.GetColumnDisplayList(typeof(T));
-
-                // 获取Graphics对象
-                Graphics graphics = dataGridView1.CreateGraphics();
-                originalColumnDisplays.ForEach(c =>
-                {
-                    c.GridKeyName = typeof(T).Name;
-                    // 计算文本宽度
-                    float textWidth = UITools.CalculateTextWidth(c.ColDisplayText, dataGridView1.Font, graphics);
-                    c.ColWidth = (int)textWidth + 10; // 加上一些额外的空间
-                });
-            }
-
-            if (dataGridView1.ColumnDisplays == null)
-            {
-                dataGridView1.ColumnDisplays = new List<ColumnDisplayController>();
-                foreach (DataGridViewColumn dc in dataGridView1.Columns)
-                {
-                    ColumnDisplayController cdc = new ColumnDisplayController();
-                    cdc.GridKeyName = typeof(T).Name;
-                    cdc.ColDisplayText = dc.HeaderText;
-                    cdc.ColDisplayIndex = dc.DisplayIndex;
-                    cdc.ColWidth = dc.Width;
-                    cdc.ColEncryptedName = dc.Name;
-                    cdc.ColName = dc.Name;
-                    cdc.IsFixed = dc.Frozen;
-                    cdc.Visible = dc.Visible;
-                    cdc.DataPropertyName = dc.DataPropertyName;
-                    originalColumnDisplays.Add(cdc);
-                }
-            }
-
-            // 检查并添加条件
-            foreach (var oldCol in originalColumnDisplays)
-            {
-                // 检查existingConditions中是否已经存在相同的条件
-                if (!dataGridView1.ColumnDisplays.Any(ec => ec.ColName == oldCol.ColName && ec.GridKeyName == typeof(T).Name))
-                {
-                    // 如果不存在 
-                    dataGridView1.ColumnDisplays.Add(oldCol);
-                }
-                else
-                {
-                    //更新一下标题
-                    var colset = dataGridView1.ColumnDisplays.FirstOrDefault(ec => ec.ColName == oldCol.ColName && ec.GridKeyName == typeof(T).Name);
-                    colset = oldCol;
-                }
-            }
-
-            ColumnDisplayController columnDisplay = dataGridView1.ColumnDisplays.FirstOrDefault(c => c.ColName == e.Column.Name);
-            if (columnDisplay != null)
-            {
-                columnDisplay.ColWidth = e.Column.Width;
-            }
-
-            #endregion
-        }
-        */
-
-
+    
         private void kryptonHeaderGroupTop_CollapsedChanged(object sender, EventArgs e)
         {
 
@@ -2121,71 +1982,6 @@ namespace RUINORERP.UI.BaseForm
             this.BaseToolStrip.Items.AddRange(extendButtons);
             return extendButtons;
         }
-
-        /*
-        /// <summary>
-        /// 清理所有正在使用的资源
-        /// </summary>
-        /// <param name="disposing">如果应释放托管资源，为 true；否则为 false</param>
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                // 取消订阅事件以避免内存泄漏
-                this.bindingSourceList.ListChanged -= BindingSourceList_ListChanged;
-
-                // 取消订阅菜单项的Click事件
-                foreach (var item in BaseToolStrip.Items)
-                {
-                    if (item is ToolStripButton btnItem)
-                    {
-                        btnItem.Click -= Item_Click;
-                    }
-                    if (item is ToolStripDropDownButton subItemDr)
-                    {
-                        subItemDr.Click -= Item_Click;
-                        //下一级
-                        if (subItemDr.HasDropDownItems)
-                        {
-                            foreach (var sub in subItemDr.DropDownItems)
-                            {
-                                if (sub is ToolStripMenuItem subStripMenuItem)
-                                {
-                                    subStripMenuItem.Click -= Item_Click;
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // 取消订阅按钮事件
-                // 注意：由于按钮是局部变量创建的，我们需要遍历控件来找到它们
-                foreach (Control control in frm.flowLayoutPanelButtonsArea.Controls)
-                {
-                    if (control is Krypton.Toolkit.KryptonButton button)
-                    {
-                        if (button.Text == "设置查询条件")
-                        {
-                            button.Click -= button设置查询条件_Click;
-                        }
-                        else if (button.Text == "表格显示设置")
-                        {
-                            button.Click -= button表格显示设置_Click;
-                        }
-                    }
-                }
-
-                if (components != null)
-                {
-                    components.Dispose();
-                }
-            }
-            base.Dispose(disposing);
-        }
-        */
-
-
-
     }
 }
 

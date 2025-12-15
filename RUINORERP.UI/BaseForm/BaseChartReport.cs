@@ -402,7 +402,7 @@ namespace RUINORERP.UI.BaseForm
 
                 case MenuItemEnums.查询:
 
-                    Query();
+                    QueryAsync();
 
 
                     break;
@@ -631,7 +631,7 @@ namespace RUINORERP.UI.BaseForm
         /// </summary>
         /// <param name="UseNavQuery">是否使用自动导航</param>
         //[MustOverride]
-        public  override void Query(bool UseAutoNavQuery = false)
+        public  override void QueryAsync(bool UseAutoNavQuery = false)
         {
             if (Edited)
             {
@@ -732,13 +732,13 @@ namespace RUINORERP.UI.BaseForm
             LimitQueryConditionsBuilder();
             if (!Edited)
             {
-                Query();
+                QueryAsync();
             }
             else
             {
                 if (MessageBox.Show(this, "有数据没有保存\r\n你确定要重新加载吗", "询问", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2) == DialogResult.Yes)
                 {
-                    Query();
+                    QueryAsync();
                 }
             }
 

@@ -73,8 +73,9 @@ using System.Windows.Controls.Primitives;
 using RUINORERP.PacketSpec.Models;
 using RUINORERP.Common.LogHelper;
 using RUINORERP.Global.EnumExt;
-using RUINORERP.Business.StatusManagerService;
 using RUINORERP.Model.Base;
+using RUINORERP.Model.Base.StatusManager;
+using RUINORERP.Global;
 using System.Windows.Documents;
 using RUINORERP.UI.Monitoring.Auditing;
 using RUINORERP.UI.FM;
@@ -3430,7 +3431,7 @@ namespace RUINORERP.UI.BaseForm
             long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
             ae.BillID = pkid;
 
-            var statusType = FMPaymentStatusHelper.GetStatusType(EditEntity as BaseEntity);
+            var statusType = EditEntity.StateManager.GetStatusType(EditEntity);
             if (statusType == typeof(DataStatus))
             {
                 Business.BizMapperService.BizEntityInfo entityInfo = _entityInfoService.GetEntityInfo<T>();
@@ -5613,7 +5614,7 @@ namespace RUINORERP.UI.BaseForm
             where TStatus : Enum
         {
             if (EditEntity == null) return false;
-
+          
 
             // 回退到旧的状态管理系统
             // 获取当前状态
@@ -5626,7 +5627,12 @@ namespace RUINORERP.UI.BaseForm
             // 验证状态转换
             try
             {
-                FMPaymentStatusHelper.ValidateTransition(currentStatus, targetStatus);
+                var transitionResult = EditEntity.StateManager.ValidateBusinessStatusTransitionAsync(currentStatus, targetStatus);
+                if (!transitionResult.IsSuccess)
+                {
+                    MainForm.Instance.uclog.AddLog($"提交失败: {transitionResult.ErrorMessage}");
+                    return false;
+                }
             }
             catch (InvalidOperationException ex)
             {
@@ -5634,7 +5640,7 @@ namespace RUINORERP.UI.BaseForm
                 return false;
             }
 
-            if (!FMPaymentStatusHelper.CanSubmit(currentStatus))
+            if (!EditEntity.StateManager.CanExecuteActionWithMessage(EditEntity, MenuItemEnums.提交).CanExecute)
             {
                 MainForm.Instance.uclog.AddLog("单据非草稿状态，提交失败");
                 toolStripbtnSubmit.Enabled = false;

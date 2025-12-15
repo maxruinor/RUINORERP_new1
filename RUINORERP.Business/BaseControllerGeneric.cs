@@ -37,9 +37,9 @@ using RUINORERP.Business.CommService;
 using System.Web.UI.WebControls;
 using AutoMapper;
 using RUINORERP.Global.EnumExt;
-using RUINORERP.Business.StatusManagerService;
 using RUINORERP.Business.RowLevelAuthService;
 using System.Collections;
+using RUINORERP.Model.Base.StatusManager;
 
 namespace RUINORERP.Business
 {
@@ -50,6 +50,7 @@ namespace RUINORERP.Business
     {
         public ApplicationContext _appContext;
 
+        public IUnifiedStateManager StateManager;
         /// <summary>
         /// 本为私有修改为公有，暴露出来方便使用
         /// </summary>
@@ -67,6 +68,7 @@ namespace RUINORERP.Business
         {
             _logger = logger;
             _unitOfWorkManage = unitOfWorkManage;
+            StateManager= appContext.GetRequiredService<IUnifiedStateManager>();
             _appContext = appContext;
             _rowLevelAuthFilter = _appContext.GetRequiredService<SqlSugarRowLevelAuthFilter>();
 
@@ -132,7 +134,7 @@ namespace RUINORERP.Business
 
 
             // 获取状态类型和值
-            var statusType = FMPaymentStatusHelper.GetStatusType(baseEntity);
+            var statusType = StateManager.GetStatusType(baseEntity);
             if (statusType == null)
             {
                 result.ErrorMsg = "提交的单据状态不能为空";
@@ -145,11 +147,11 @@ namespace RUINORERP.Business
             dynamic statusEnum = Enum.ToObject(statusType, statusValue);
 
             // 检查是否可以提交
-            if (!FMPaymentStatusHelper.CanSubmit(statusEnum))
-            {
-                result.ErrorMsg = $"单据当前状态为【{statusEnum}】，无法提交";
-                return result;
-            }
+            //if (!StateManager.ValidateBusinessStatusTransitionAsync(statusEnum,))
+            //{
+            //    result.ErrorMsg = $"单据当前状态为【{statusEnum}】，无法提交";
+            //    return result;
+            //}
 
             try
             {

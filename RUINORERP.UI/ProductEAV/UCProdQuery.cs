@@ -404,11 +404,11 @@ namespace RUINORERP.UI.ProductEAV
 
         private void btnQueryForGoods_Click(object sender, EventArgs e)
         {
-            Query();
+            QueryAsync();
         }
 
 
-        public override void Query(bool UseAutoNavQuery = false)
+        public override void QueryAsync(bool UseAutoNavQuery = false)
         {
             if (kryptonNavigator1.SelectedPage != null)
             {

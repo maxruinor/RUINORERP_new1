@@ -912,6 +912,7 @@ namespace RUINORERP.Model
         /// 2. 改进事件通知机制
         /// 3. 添加性能监控统计
         /// 4. 优化频繁变更场景处理
+        /// 5. 重要：操作状态变更不会将实体标记为HasChanged，因为它只表示UI操作意图而非实际数据变更
         /// </summary>
         [SugarColumn(IsIgnore = true)]
         [Browsable(false)]
@@ -929,17 +930,33 @@ namespace RUINORERP.Model
                 // 记录前一个状态
                 _previousActionStatus = _ActionStatus;
                 
-                // 原子操作：设置属性值
-                SetProperty(ref _ActionStatus, value);
-                
-                // 更新状态变更计数
-                Interlocked.Increment(ref _statusChangeCount);
-                
-                // 优化的状态变更事件触发
-                // 对于频繁变更场景的性能考虑：
-                // - 使用缓存的Type对象
-                // - 避免不必要的对象创建
-                TriggerStatusChange(typeof(ActionStatus), _previousActionStatus, value);
+                // 直接设置属性值，不调用SetProperty方法，避免触发变更追踪
+                bool wasSuppressed = SuppressNotifyPropertyChanged;
+                try
+                {
+                    // 临时禁止属性变更通知，避免HasChanged被设置为true
+                    SuppressNotifyPropertyChanged = true;
+                    
+                    // 原子操作：设置属性值
+                    _ActionStatus = value;
+                    
+                    // 更新状态变更计数
+                    Interlocked.Increment(ref _statusChangeCount);
+                    
+                    // 手动触发PropertyChanged事件，但不会标记实体为已更改
+                    if (PropertyChanged != null)
+                    {
+                        PropertyChanged(this, new PropertyChangedEventArgs("ActionStatus"));
+                    }
+                    
+                    // 触发状态变更事件
+                    TriggerStatusChange(typeof(ActionStatus), _previousActionStatus, value);
+                }
+                finally
+                {
+                    // 恢复原始的抑制状态
+                    SuppressNotifyPropertyChanged = wasSuppressed;
+                }
                 
                 // 可选：添加性能警告（当状态变更过于频繁时）
                 if (_statusChangeCount > 100 && _statusChangeCount % 50 == 0)

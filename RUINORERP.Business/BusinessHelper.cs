@@ -53,12 +53,9 @@ namespace RUINORERP.Business
         public void InitEntity(object entity)
         {
             var curUser = _appContext.CurUserInfo;
-            // if (entity.ContainsProperty("Id"))
-            //    entity.SetPropertyValue("Id", IdHelper.GetLongId());
+
             if (entity.ContainsProperty("Created_at"))
                 entity.SetPropertyValue("Created_at", DateTime.Now);
-            //if (entity.ContainsProperty("UpdateTime"))
-            //    entity.SetPropertyValue("UpdateTime", DateTime.Now);
             if (entity.ContainsProperty("Created_by"))
                 entity.SetPropertyValue("Created_by", curUser?.Id);
             if (entity.ContainsProperty("isdeleted"))

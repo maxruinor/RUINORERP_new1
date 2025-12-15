@@ -31,6 +31,7 @@ public enum ActionStatus
 - **操作开始**：开始具体操作时（如点击新增按钮），应立即设置对应的ActionStatus
 - **操作结束**：操作完成或取消时，应重置为`ActionStatus.无操作`
 - **状态变更**：通过BaseEntity的ActionStatus属性进行设置，确保状态变更通知正常工作
+- **重要设计优化**：ActionStatus变更不会触发实体的HasChanged标志，因为它仅表示UI操作意图而非实际数据变更
 
 ### 3.2 UI层使用规范
 

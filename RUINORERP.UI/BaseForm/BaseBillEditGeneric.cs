@@ -2360,16 +2360,6 @@ namespace RUINORERP.UI.BaseForm
                             hasUnsavedChanges = pkid > 0 || Edited;
                         }
 
-                        // 检查子实体是否有更改
-                        if (bindingSourceSub != null && bindingSourceSub.DataSource != null)
-                        {
-                            List<C> detailEntities = bindingSourceSub.DataSource as List<C>;
-                            if (detailEntities != null && detailEntities.Count > 0)
-                            {
-                                hasUnsavedChanges = true;
-                            }
-                        }
-
                         // 如果有未保存的更改，显示确认提示
                         if (hasUnsavedChanges)
                         {
@@ -4175,11 +4165,8 @@ namespace RUINORERP.UI.BaseForm
 
         protected override void Add()
         {
-
             List<T> list = new List<T>();
             EditEntity = Activator.CreateInstance(typeof(T)) as T;
-            //StateManager.SetBusinessStatusAsync<DataStatus>(this, initialStatus);
-            //StatusMachine.Create();
             try
             {
                 //将预设值写入到新增的实体中
@@ -4214,8 +4201,7 @@ namespace RUINORERP.UI.BaseForm
 
             }
 
-            BusinessHelper.Instance.InitEntity(EditEntity);
-            BusinessHelper.Instance.InitStatusEntity(EditEntity);
+
 
             if (OnBindDataToUIEvent != null)
             {
@@ -4647,7 +4633,6 @@ namespace RUINORERP.UI.BaseForm
 
                 ReflectionHelper.SetPropertyValue(NewEditEntity, billNoColName, string.Empty);
 
-
                 // 重置主实体的主键
                 ResetPrimaryKey(NewEditEntity, PKCol);
 
@@ -5075,6 +5060,7 @@ namespace RUINORERP.UI.BaseForm
             if (pkid == 0)
             {
                 BusinessHelper.Instance.InitEntity(entity);
+                BusinessHelper.Instance.InitStatusEntity(entity);
             }
             else
             {

@@ -18,7 +18,21 @@ namespace RUINORERP.Model.Base.StatusManager
     /// <summary>
     /// 全局状态规则管理器
     /// 统一管理系统中的所有状态转换规则和UI控件规则，采用单例模式确保全局唯一
+    /// 支持全局提交修改模式设置，控制单据提交后的修改权限
     /// </summary>
+    /// <remarks>
+    /// 使用示例 - 提交修改模式设置：
+    /// \code
+    /// // 设置为严格模式（提交后不允许修改）
+    /// GlobalStateRulesManager.Instance.SetSubmitModifyRuleMode(SubmitModifyRuleMode.严格模式);
+    /// 
+    /// // 或设置为灵活模式（提交后允许修改）
+    /// GlobalStateRulesManager.Instance.SetSubmitModifyRuleMode(SubmitModifyRuleMode.灵活模式);
+    /// 
+    /// // 检查是否允许在特定状态下修改
+    /// bool canModify = GlobalStateRulesManager.Instance.AllowModifyAfterSubmit(isSubmittedStatus);
+    /// \endcode
+    /// </remarks>
     public sealed class GlobalStateRulesManager
     {
         #region 单例实现
@@ -77,7 +91,32 @@ namespace RUINORERP.Model.Base.StatusManager
 
         #region 字段和属性
 
+        /// <summary>
+        /// 全局提交修改规则模式
+        /// 控制单据提交后是否允许修改的行为
+        /// 默认值：灵活模式（允许修改）
+        /// </summary>
         public SubmitModifyRuleMode submitModifyRuleMode { get; set; } = SubmitModifyRuleMode.灵活模式;
+
+        /// <summary>
+        /// 设置提交修改模式
+        /// 设置后需要重新初始化规则以应用新的模式设置
+        /// </summary>
+        /// <param name="mode">新的提交修改模式</param>
+        public void SetSubmitModifyRuleMode(SubmitModifyRuleMode mode)
+        {
+            if (submitModifyRuleMode != mode)
+            {
+                submitModifyRuleMode = mode;
+                
+                // 重新初始化规则以应用新模式
+                if (_isInitialized)
+                {
+                    ResetAllRules();
+                    InitializeAllRules();
+                }
+            }
+        }
 
 
         /// <summary>
@@ -351,19 +390,17 @@ namespace RUINORERP.Model.Base.StatusManager
 
         /// <summary>
         /// 初始化数据状态UI按钮规则
+        /// 根据全局提交修改模式设置不同状态下的按钮启用规则
         /// </summary>
         private void InitializeDataStatusUIButtonRules()
         {
             // 为不同状态添加通用按钮规则
             AddStandardButtonRules(DataStatus.草稿, true, true, true, true, true, false, false, false, false, false, true, true);
-            if (submitModifyRuleMode == SubmitModifyRuleMode.灵活模式)
-            {
-                AddStandardButtonRules(DataStatus.新建, true, true, true, true, false, true, false, false, false, true, true, true);
-            }
-            else
-            {
-                AddStandardButtonRules(DataStatus.新建, true, false, true, true, false, true, false, false, false, true, true, true);
-            }
+            
+            // 根据全局提交修改模式设置已新建状态的按钮规则
+            // 灵活模式：允许修改；严格模式：不允许修改
+            bool allowModifyInSubmittedState = submitModifyRuleMode == SubmitModifyRuleMode.灵活模式;
+            AddStandardButtonRules(DataStatus.新建, true, allowModifyInSubmittedState, true, true, false, true, false, false, false, true, true, true);
 
             AddStandardButtonRules(DataStatus.确认, true, false, false, false, false, false, true, true, false, true, true, true);
             AddStandardButtonRules(DataStatus.完结, true, false, false, false, false, false, false, false, true, true, true, true);

@@ -357,7 +357,7 @@
             // 
             // chkOther
             // 
-            this.chkOther.Location = new System.Drawing.Point(315, 208);
+            this.chkOther.Location = new System.Drawing.Point(513, 208);
             this.chkOther.Name = "chkOther";
             this.chkOther.Size = new System.Drawing.Size(19, 13);
             this.chkOther.TabIndex = 70;
@@ -365,11 +365,11 @@
             // 
             // kryptonLabel3
             // 
-            this.kryptonLabel3.Location = new System.Drawing.Point(236, 205);
+            this.kryptonLabel3.Location = new System.Drawing.Point(251, 205);
             this.kryptonLabel3.Name = "kryptonLabel3";
-            this.kryptonLabel3.Size = new System.Drawing.Size(75, 20);
+            this.kryptonLabel3.Size = new System.Drawing.Size(256, 20);
             this.kryptonLabel3.TabIndex = 69;
-            this.kryptonLabel3.Values.Text = "是否为其他";
+            this.kryptonLabel3.Values.Text = "是否为其他【加工厂，物流商等合作单位】";
             // 
             // chk责任人专属
             // 

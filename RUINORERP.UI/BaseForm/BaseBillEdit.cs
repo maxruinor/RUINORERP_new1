@@ -438,16 +438,38 @@ public partial class BaseBillEdit : UserControl
             try
             {
                 // 使用GlobalStateRulesManager获取按钮状态规则
-                var buttonRules = GlobalStateRulesManager.Instance.GetButtonRules(currentStatus);
+                // 获取实体状态的实际值，确保传递非空的值类型给GetButtonRules
+                var buttonRules = new Dictionary<string, bool>();
+                if (currentStatus != null)
+                {
+                    // 获取当前状态值
+                    var statusValue = currentStatus.CurrentStatus;
+                    if (statusValue != null)
+                    {
+                        // 使用动态调用，根据状态值类型自动匹配泛型类型
+                        try
+                                {
+                                    // GlobalStateRulesManager的GetButtonRules方法内部已实现自动类型转换
+                                    buttonRules = GlobalStateRulesManager.Instance.GetButtonRules(currentStatus.CurrentStatusType, statusValue);
+                        }
+                        catch (Exception ex)
+                        {
+                            // 出现异常时使用默认规则，避免UI功能失效
+                            Console.WriteLine($"获取按钮规则异常: {ex.Message}");
+                        }
+                    }
+                }
 
                 // 根据规则更新按钮状态
+                // 注意：按照系统设计规范，此处只控制控件的Enabled状态
+                // Visible状态由权限系统统一管理，不在此处理
                 foreach (var rule in buttonRules)
                 {
                     var control = this.Controls.Find(rule.Key, true).FirstOrDefault();
                     if (control != null)
                     {
-                        control.Enabled = rule.Value.Enabled;
-                        control.Visible = rule.Value.Visible;
+                        // 只设置Enabled属性，Visible属性由权限系统管理
+                        control.Enabled = rule.Value;
                     }
                 }
             }

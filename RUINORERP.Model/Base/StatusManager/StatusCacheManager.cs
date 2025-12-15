@@ -26,9 +26,9 @@ namespace RUINORERP.Model.Base.StatusManager
         private readonly ConcurrentDictionary<string, bool> _transitionRuleCache;
 
         /// <summary>
-        /// UI控件状态缓存
+        /// UI控件状态缓存 - 仅缓存Enabled状态，Visible状态由权限系统管理
         /// </summary>
-        private readonly ConcurrentDictionary<string, (bool Enabled, bool Visible)> _uiControlStateCache;
+        private readonly ConcurrentDictionary<string, bool> _uiControlStateCache;
 
         /// <summary>
         /// 操作权限缓存
@@ -57,7 +57,7 @@ namespace RUINORERP.Model.Base.StatusManager
         {
             _logger = logger;
             _transitionRuleCache = new ConcurrentDictionary<string, bool>();
-            _uiControlStateCache = new ConcurrentDictionary<string, (bool, bool)>();
+            _uiControlStateCache = new ConcurrentDictionary<string, bool>();
             _actionPermissionCache = new ConcurrentDictionary<string, bool>();
             _statusTypeCache = new ConcurrentDictionary<string, string>();
             _generalCache = new ConcurrentDictionary<string, List<object>>();
@@ -133,17 +133,18 @@ namespace RUINORERP.Model.Base.StatusManager
         #region UI控件状态缓存
 
         /// <summary>
-        /// 获取UI控件状态缓存
+        /// 获取UI控件状态缓存 - 仅返回Enabled状态
+        /// 注意：Visible状态由权限系统统一管理，不在此缓存中处理
         /// </summary>
         /// <param name="status">状态</param>
         /// <param name="controlName">控件名称</param>
         /// <param name="statusType">状态类型</param>
-        /// <returns>控件状态，如果缓存中不存在则返回null</returns>
-        public (bool Enabled, bool Visible)? GetUIControlStateCache(Enum status, string controlName, Type statusType)
+        /// <returns>控件Enabled状态，如果缓存中不存在则返回null</returns>
+        public bool? GetUIControlStateCache(Enum status, string controlName, Type statusType)
         {
             string cacheKey = $"{statusType.Name}_{status}_{controlName}";
             
-            if (_uiControlStateCache.TryGetValue(cacheKey, out (bool, bool) cachedValue))
+            if (_uiControlStateCache.TryGetValue(cacheKey, out bool cachedValue))
             {
                 _logger?.LogDebug("从缓存中获取UI控件状态: {CacheKey} = {Value}", cacheKey, cachedValue);
                 return cachedValue;
@@ -153,18 +154,18 @@ namespace RUINORERP.Model.Base.StatusManager
         }
 
         /// <summary>
-        /// 设置UI控件状态缓存
+        /// 设置UI控件状态缓存 - 仅缓存Enabled状态
+        /// 注意：Visible状态由权限系统统一管理，不在此缓存中处理
         /// </summary>
         /// <param name="status">状态</param>
         /// <param name="controlName">控件名称</param>
         /// <param name="statusType">状态类型</param>
         /// <param name="enabled">是否启用</param>
-        /// <param name="visible">是否可见</param>
-        public void SetUIControlStateCache(Enum status, string controlName, Type statusType, bool enabled, bool visible)
+        public void SetUIControlStateCache(Enum status, string controlName, Type statusType, bool enabled)
         {
             string cacheKey = $"{statusType.Name}_{status}_{controlName}";
-            _uiControlStateCache[cacheKey] = (enabled, visible);
-            _logger?.LogDebug("设置UI控件状态缓存: {CacheKey} = ({Enabled}, {Visible})", cacheKey, enabled, visible);
+            _uiControlStateCache[cacheKey] = enabled;
+            _logger?.LogDebug("设置UI控件状态缓存: {CacheKey} = {Enabled}", cacheKey, enabled);
         }
 
         #endregion

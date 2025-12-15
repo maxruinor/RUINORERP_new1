@@ -1,6 +1,6 @@
 /**
  * 文件: EntityStatus.cs
- * 版本: V4 - 状态管理核心实体类
+ * 版本: V4 - 状态管理核心实体类（优化版）
  * 说明: 实体状态类 - 支持DataStatus与业务状态互斥关系
  * 创建日期: 2024年
  * 作者: RUINOR ERP开发团队
@@ -45,7 +45,6 @@ namespace RUINORERP.Model.Base.StatusManager
             _businessStatuses = new Dictionary<Type, object>();
             _approvalStatus = 0; // 默认未审核
             _approvalResults = false; // 默认审核结果为false
-            _stateProperties = new Dictionary<Type, Dictionary<string, object>>();
         }
 
         #region 私有字段
@@ -75,6 +74,13 @@ namespace RUINORERP.Model.Base.StatusManager
         /// </summary>
         private bool? _approvalResults;
 
+        /// <summary>
+        /// 状态属性存储
+        /// 用于存储状态的额外属性信息，支持动态扩展
+        /// Key: 状态类型(Type)
+        /// Value: 属性字典(Dictionary<string, object>)
+        /// </summary>
+        private Dictionary<Type, Dictionary<string, object>> _stateProperties;
 
         #endregion
 
@@ -83,20 +89,13 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <summary>
         /// 数据性状态 - 与业务状态互斥
         /// 表示实体的数据生命周期状态
-        /// 只读属性，仅用于方便取值
+        /// 只读属性，直接返回_dataStatus字段
         /// </summary>
         public DataStatus? dataStatus
         {
             get
             {
-                // 只有当业务状态字典中包含DataStatus类型时，才返回_dataStatus
-                if (_businessStatuses.ContainsKey(typeof(DataStatus)))
-                {
-                    return _dataStatus;
-                }
-                
-                // 其他情况返回null
-                return null;
+                return _dataStatus;
             }
         }
 
@@ -235,27 +234,17 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <param name="status">数据状态值</param>
         public void SetDataStatus(DataStatus? status)
         {
-            // 设置数据状态时，清除所有非DataStatus的业务状态
+            // 设置_dataStatus字段
+            _dataStatus = status;
+            
+            // 重置业务状态字典，确保互斥
+            _businessStatuses.Clear();
+            
+            // 如果status有值，将DataStatus添加到业务状态字典
             if (status.HasValue)
             {
-                // 保留DataStatus类型的状态，清除其他类型
-                var keysToRemove = _businessStatuses.Keys.Where(k => k != typeof(DataStatus)).ToList();
-                foreach (var key in keysToRemove)
-                {
-                    _businessStatuses.Remove(key);
-                }
-                
-                // 将DataStatus添加到业务状态字典
                 _businessStatuses[typeof(DataStatus)] = status.Value;
             }
-            else
-            {
-                // 如果status为null，从业务状态字典中移除DataStatus
-                _businessStatuses.Remove(typeof(DataStatus));
-            }
-            
-            // 同步更新_dataStatus字段
-            _dataStatus = status;
         }
 
         /// <summary>
@@ -277,20 +266,22 @@ namespace RUINORERP.Model.Base.StatusManager
 
         /// <summary>
         /// 设置指定类型的业务状态 - 确保与数据状态互斥
-        /// 设置业务状态时，会自动清除DataStatus状态
+        /// 设置业务状态时，会自动清除其他类型的业务状态
         /// </summary>
         /// <typeparam name="T">业务状态枚举类型</typeparam>
         /// <param name="status">业务状态值</param>
         public void SetBusinessStatus<T>(T status) where T : struct, Enum
         {
-            // 如果是DataStatus类型，同时设置_dataStatus字段
+            // 重置业务状态字典和数据状态，确保互斥性
+            _businessStatuses.Clear();
+            
+            // 根据类型设置状态
             if (typeof(T) == typeof(DataStatus))
             {
                 _dataStatus = (DataStatus)(object)status;
             }
             else
             {
-                // 设置其他业务状态时，清除数据状态
                 _dataStatus = null;
             }
             
@@ -300,7 +291,7 @@ namespace RUINORERP.Model.Base.StatusManager
 
         /// <summary>
         /// 设置指定类型的业务状态 - 确保与数据状态互斥
-        /// 设置业务状态时，会自动清除DataStatus状态
+        /// 设置业务状态时，会自动清除其他类型的业务状态
         /// </summary>
         /// <param name="statusType">业务状态枚举类型</param>
         /// <param name="status">业务状态值</param>
@@ -367,7 +358,7 @@ namespace RUINORERP.Model.Base.StatusManager
 
         /// <summary>
         /// 创建实体状态的副本
-        /// 复制所有状态信息，包括_dataStatus、_businessStatuses、_stateProperties等
+        /// 复制所有状态信息，包括_dataStatus、_businessStatuses等
         /// </summary>
         /// <returns>实体状态副本</returns>
         public EntityStatus Clone()
@@ -378,9 +369,14 @@ namespace RUINORERP.Model.Base.StatusManager
                 actionStatus = actionStatus,
                 _businessStatuses = new Dictionary<Type, object>(_businessStatuses),
                 _approvalStatus = _approvalStatus,
-                _approvalResults = _approvalResults,
-                _stateProperties = new Dictionary<Type, Dictionary<string, object>>(_stateProperties)
+                _approvalResults = _approvalResults
             };
+            
+            // 如果状态属性字典存在，则复制
+            if (_stateProperties != null)
+            {
+                clone._stateProperties = new Dictionary<Type, Dictionary<string, object>>(_stateProperties);
+            }
 
             return clone;
         }
@@ -509,14 +505,6 @@ namespace RUINORERP.Model.Base.StatusManager
         #region 状态属性管理
 
         /// <summary>
-        /// 状态属性存储
-        /// 用于存储状态的额外属性信息，支持动态扩展
-        /// Key: 状态类型(Type)
-        /// Value: 属性字典(Dictionary<string, object>)
-        /// </summary>
-        private Dictionary<Type, Dictionary<string, object>> _stateProperties = new Dictionary<Type, Dictionary<string, object>>();
-
-        /// <summary>
         /// 获取状态属性
         /// 根据状态类型和属性名称获取属性值
         /// </summary>
@@ -526,6 +514,10 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <returns>属性值</returns>
         public TProperty GetStateProperty<TProperty>(Type statusType, string propertyName)
         {
+            // 确保状态属性字典已初始化
+            if (_stateProperties == null)
+                _stateProperties = new Dictionary<Type, Dictionary<string, object>>();
+                
             // 尝试获取指定状态类型的属性字典
             if (_stateProperties.TryGetValue(statusType, out var properties) &&
                 properties.TryGetValue(propertyName, out var value))
@@ -546,6 +538,10 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <param name="value">属性值</param>
         public void SetStateProperty(Type statusType, string propertyName, object value)
         {
+            // 确保状态属性字典已初始化
+            if (_stateProperties == null)
+                _stateProperties = new Dictionary<Type, Dictionary<string, object>>();
+                
             // 如果状态类型不存在，创建新的属性字典
             if (!_stateProperties.ContainsKey(statusType))
             {
@@ -564,6 +560,10 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <returns>状态属性字典</returns>
         public Dictionary<string, object> GetAllStateProperties(Type statusType)
         {
+            // 确保状态属性字典已初始化
+            if (_stateProperties == null)
+                return new Dictionary<string, object>();
+                
             return _stateProperties.TryGetValue(statusType, out var properties)
                 ? new Dictionary<string, object>(properties)
                 : new Dictionary<string, object>();
@@ -578,6 +578,10 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <returns>是否清除成功</returns>
         public bool ClearStateProperty(Type statusType, string propertyName)
         {
+            // 确保状态属性字典已初始化
+            if (_stateProperties == null)
+                return false;
+                
             // 尝试获取指定状态类型的属性字典
             if (_stateProperties.TryGetValue(statusType, out var properties))
             {
@@ -596,6 +600,10 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <returns>是否清除成功</returns>
         public bool ClearAllStateProperties(Type statusType)
         {
+            // 确保状态属性字典已初始化
+            if (_stateProperties == null)
+                return false;
+                
             // 检查状态类型是否存在
             if (_stateProperties.ContainsKey(statusType))
             {

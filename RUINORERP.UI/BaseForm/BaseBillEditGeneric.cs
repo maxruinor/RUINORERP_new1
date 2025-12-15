@@ -182,7 +182,7 @@ namespace RUINORERP.UI.BaseForm
             {
                 // 调用基类的初始化方法
                 base.InitializeStateManagement();
-                
+
                 _isStateManagementInitialized = true;
             }
             catch (Exception ex)
@@ -281,7 +281,7 @@ namespace RUINORERP.UI.BaseForm
         {
             // 防止重复更新、无效调用和窗体已释放的情况
             if (entity == null || _isUpdatingUIStates || this.IsDisposed) return;
-            
+
             try
             {
                 _isUpdatingUIStates = true;
@@ -356,7 +356,27 @@ namespace RUINORERP.UI.BaseForm
                     // 如果不是DataStatus，则需要获取对应的业务状态按钮规则
                     if (statusType != typeof(DataStatus))
                     {
-                        var businessButtonRules = GlobalStateRulesManager.Instance.GetButtonRules(statusType, status);
+                        // 获取实体状态的实际值，确保传递非空的值类型给GetButtonRules
+                        var businessButtonRules = new Dictionary<string, bool>();
+                        if (status != null)
+                        {
+                            // 获取当前状态值
+                            var statusValue = status;
+                            if (statusValue != null)
+                            {
+                                // 使用动态调用，根据状态值类型自动匹配泛型类型
+                                try
+                                {
+                                    // GlobalStateRulesManager的GetButtonRules方法内部已实现自动类型转换
+                                    businessButtonRules = GlobalStateRulesManager.Instance.GetButtonRules(currentStatus.CurrentStatusType, statusValue);
+                                }
+                                catch (Exception ex)
+                                {
+                                    // 出现异常时使用默认规则，避免UI功能失效
+                                    Console.WriteLine($"获取按钮规则异常: {ex.Message}");
+                                }
+                            }
+                        }
                         UpdateButtonStatesFromRules(businessButtonRules);
                     }
                 }
@@ -382,7 +402,27 @@ namespace RUINORERP.UI.BaseForm
         {
             if (EditEntity == null || StateManager == null) return;
             // 获取按钮状态规则
-            var buttonRules = GlobalStateRulesManager.Instance.GetButtonRules(currentStatus);
+            // 获取实体状态的实际值，确保传递非空的值类型给GetButtonRules
+            var buttonRules = new Dictionary<string, bool>();
+            if (currentStatus != null)
+            {
+                // 获取当前状态值
+                var statusValue = currentStatus.CurrentStatus;
+                if (statusValue != null)
+                {
+                    // 使用动态调用，根据状态值类型自动匹配泛型类型
+                    try
+                    {
+                        // GlobalStateRulesManager的GetButtonRules方法内部已实现自动类型转换
+                        buttonRules = GlobalStateRulesManager.Instance.GetButtonRules(currentStatus.CurrentStatusType, statusValue);
+                    }
+                    catch (Exception ex)
+                    {
+                        // 出现异常时使用默认规则，避免UI功能失效
+                        Console.WriteLine($"获取按钮规则异常: {ex.Message}");
+                    }
+                }
+            }
 
             // 更新按钮状态
             UpdateButtonStatesFromRules(buttonRules);
@@ -415,8 +455,10 @@ namespace RUINORERP.UI.BaseForm
         /// <summary>
         /// 根据规则字典更新按钮状态
         /// </summary>
-        /// <param name="buttonRules">按钮规则字典</param>
-        private void UpdateButtonStatesFromRules(Dictionary<string, (bool Enabled, bool Visible)> buttonRules)
+        /// <param name="buttonRules">按钮规则字典 - 仅包含Enabled状态
+        /// 注意：Visible状态由权限系统统一管理，不在此处理
+        /// </param>
+        private void UpdateButtonStatesFromRules(Dictionary<string, bool> buttonRules)
         {
             if (buttonRules == null || buttonRules.Count == 0) return;
 
@@ -424,21 +466,20 @@ namespace RUINORERP.UI.BaseForm
             foreach (var rule in buttonRules)
             {
                 var buttonName = rule.Key;
-                var enabled = rule.Value.Enabled;
-                var visible = rule.Value.Visible;
-
-
-                UpdateButtonState(buttonName, enabled, visible);
+                var enabled = rule.Value;
+                
+                UpdateButtonState(buttonName, enabled);
             }
         }
 
         /// <summary>
         /// 更新单个按钮的状态
+        /// 注意：按照系统设计规范，此处只控制按钮的Enabled状态
+        /// Visible状态由权限系统统一管理，不在此处理
         /// </summary>
         /// <param name="buttonName">按钮名称</param>
         /// <param name="enabled">是否启用</param>
-        /// <param name="visible">是否可见</param>
-        private void UpdateButtonState(string buttonName, bool enabled, bool visible)
+        private void UpdateButtonState(string buttonName, bool enabled)
         {
             try
             {
@@ -451,19 +492,13 @@ namespace RUINORERP.UI.BaseForm
                     var button = buttonField.GetValue(this);
                     if (button != null)
                     {
-                        // 设置Enabled属性
+                        // 只设置Enabled属性
+                        // 注意：Visible属性由权限系统统一控制，不在状态管理中处理
                         var enabledProperty = button.GetType().GetProperty("Enabled");
                         enabledProperty?.SetValue(button, enabled);
-
-                        // 设置Visible属性
-                        var visibleProperty = button.GetType().GetProperty("Visible");
-                        visibleProperty?.SetValue(button, visible);
-
-                        // 特殊处理：反审核按钮的可见性与可用状态一致
-                        if (buttonName == "toolStripBtnReverseReview")
-                        {
-                            visibleProperty?.SetValue(button, enabled);
-                        }
+                        
+                        // 移除Visible属性设置，Visible由权限系统管理
+                        // 注意：即使是特殊按钮，其Visible状态也应由权限系统统一控制
                     }
                 }
             }
@@ -554,10 +589,30 @@ namespace RUINORERP.UI.BaseForm
                 }
 
                 // 使用GlobalStateRulesManager检查按钮状态
-                var buttonRules = GlobalStateRulesManager.Instance.GetButtonRules(currentStatusType,currentStatus);
-                if (buttonRules.TryGetValue(buttonName, out var buttonState))
+                // 获取实体状态的实际值，确保传递非空的值类型给GetButtonRules
+                var buttonRules = new Dictionary<string, bool>();
+                if (currentStatus != null)
                 {
-                    return buttonState.Enabled;
+                    // 获取当前状态值
+                    var statusValue = currentStatus;
+                    if (statusValue != null)
+                    {
+                        // 使用动态调用，根据状态值类型自动匹配泛型类型
+                        try
+                        {
+                            // GlobalStateRulesManager的GetButtonRules方法内部已实现自动类型转换
+                            buttonRules = GlobalStateRulesManager.Instance.GetButtonRules(currentStatusType, statusValue);
+                        }
+                        catch (Exception ex)
+                        {
+                            // 出现异常时使用默认规则，避免UI功能失效
+                            Console.WriteLine($"获取按钮规则异常: {ex.Message}");
+                        }
+                    }
+                }
+                if (buttonRules.TryGetValue(buttonName, out var enabled))
+                {
+                    return enabled;
                 }
 
                 // 如果UIControlRules中没有相关规则，回退到状态管理器
@@ -681,12 +736,32 @@ namespace RUINORERP.UI.BaseForm
                 bool canAdd, canEdit, canDelete;
 
                 // 从GlobalStateRulesManager中获取按钮状态
-                var buttonRules = GlobalStateRulesManager.Instance.GetButtonRules(status);
+                // 获取实体状态的实际值，确保传递非空的值类型给GetButtonRules
+                var buttonRules = new Dictionary<string, bool>();
+                if (status != null)
+                {
+                    // 获取当前状态值
+                    var statusValue = status.CurrentStatus;
+                    if (statusValue != null)
+                    {
+                        // 使用动态调用，根据状态值类型自动匹配泛型类型
+                        try
+                        {
+                            // GlobalStateRulesManager的GetButtonRules方法内部已实现自动类型转换
+                            buttonRules = GlobalStateRulesManager.Instance.GetButtonRules(status.CurrentStatusType, statusValue);
+                        }
+                        catch (Exception ex)
+                        {
+                            // 出现异常时使用默认规则，避免UI功能失效
+                            Console.WriteLine($"获取按钮规则异常: {ex.Message}");
+                        }
+                    }
+                }
 
                 // 检查是否允许子表操作
-                canAdd = buttonRules.TryGetValue("toolStripbtnAdd", out var addState) && addState.Enabled;
-                canEdit = buttonRules.TryGetValue("toolStripbtnModify", out var editState) && editState.Enabled;
-                canDelete = buttonRules.TryGetValue("toolStripbtnDelete", out var deleteState) && deleteState.Enabled;
+                canAdd = buttonRules.TryGetValue("toolStripbtnAdd", out var addEnabled) && addEnabled;
+                canEdit = buttonRules.TryGetValue("toolStripbtnModify", out var editEnabled) && editEnabled;
+                canDelete = buttonRules.TryGetValue("toolStripbtnDelete", out var deleteEnabled) && deleteEnabled;
 
                 // 启用/禁用子表操作
                 EnableChildTableOperations(canAdd, canEdit, canDelete);
@@ -1311,6 +1386,7 @@ namespace RUINORERP.UI.BaseForm
 
         /// <summary>
         /// 绑定数据到UI
+        /// 子类中数据先执行。最后执行基类方法
         /// </summary>
         /// <param name="entity"></param>
         public virtual void BindData(T entity, ActionStatus actionStatus = ActionStatus.无操作)
@@ -1373,6 +1449,24 @@ namespace RUINORERP.UI.BaseForm
                     // 使用V4状态管理系统的按钮控制
                     UpdateAllUIStates(entity);
                     baseEntity.AcceptChanges();
+                    if (bindingSourceSub != null && bindingSourceSub.DataSource != null)
+                    {
+                        List<C> detailEntities = bindingSourceSub.DataSource as List<C>;
+                        if (detailEntities != null && detailEntities.Count > 0)
+                        {
+                            for (int i = 0; i < detailEntities.Count; i++)
+                            {
+                                if (detailEntities[i] is BaseEntity detailEntity)
+                                {
+                                    if (detailEntity.HasChanged)
+                                    {
+                                        detailEntity.AcceptChanges();
+                                    }
+                                }
+                            }
+
+                        }
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -1520,36 +1614,159 @@ namespace RUINORERP.UI.BaseForm
 
 
 
-        // 实体属性变化事件处理
+        // 防抖定时器 - 用于优化UI更新频率
+        private System.Windows.Forms.Timer _debounceTimer;
+        // 记录最后一次需要更新的实体，用于防抖处理
+        private BaseEntity _lastEntityForUpdate;
+
+        /// <summary>
+        /// 实体属性变化事件处理
+        /// 优化点：添加防抖机制，更精确的状态判断，提取公共逻辑，增加异常处理
+        /// </summary>
         private void Entity_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            if (sender is not BaseEntity entity) return;
-
-            string dataStatusPropName = nameof(DataStatus);
-            bool HasDataStatus = entity.ContainsProperty(dataStatusPropName);
-
-            if (HasDataStatus && e.PropertyName == nameof(DataStatus))
+            try
             {
-                #region 
-                // 使用统一的UI状态更新方法
-                UpdateAllUIStates(entity);
-                // 保存状态特殊处理
-                toolStripButtonSave.Enabled = entity.HasChanged;
-                #endregion
+                if (sender is not BaseEntity entity) return;
+
+                // 保存需要更新的实体引用
+                _lastEntityForUpdate = entity;
+
+                // 初始化防抖定时器（如果尚未初始化）
+                if (_debounceTimer == null)
+                {
+                    _debounceTimer = new System.Windows.Forms.Timer
+                    {
+                        Interval = 200, // 200ms防抖间隔
+                        Enabled = false
+                    };
+                    _debounceTimer.Tick += DebounceTimer_Tick;
+                }
+                else
+                {
+                    // 如果定时器已在运行，重置它
+                    _debounceTimer.Stop();
+                }
+
+                // 对于关键属性变化，立即更新（不防抖）
+                if (e.PropertyName == nameof(DataStatus) && entity.ContainsProperty(nameof(DataStatus)))
+                {
+                    UpdateUIStatesImmediate(entity);
+                }
+                else if (e.PropertyName == businessStatus?.GetType().Name)
+                {
+                    UpdateUIStatesImmediate(entity);
+                }
+                else
+                {
+                    // 非关键属性变化，使用防抖处理
+                    _debounceTimer.Start();
+                }
             }
-
-            // 整合逻辑 - 直接获取业务状态
-            // var businessStatus = GetBusinessStatus(entity);
-            var businessStatus = StateManager.GetBusinessStatus(entity);
-            // 数据状态变化会影响按钮变化
-            if (e.PropertyName == businessStatus.GetType().Name)
+            catch (Exception ex)
             {
-                #region 
+                // 添加异常处理，避免UI状态更新出错影响主程序运行
+                MainForm.Instance.uclog.AddLog($"Entity_PropertyChanged事件处理异常: {ex.Message}", UILogType.错误);
+            }
+        }
 
+        /// <summary>
+        /// 防抖定时器触发事件
+        /// 用于批量处理非关键的UI更新操作
+        /// </summary>
+        private void DebounceTimer_Tick(object sender, EventArgs e)
+        {
+            try
+            {
+                _debounceTimer.Stop();
 
+                // 使用上次记录的实体更新UI状态
+                if (_lastEntityForUpdate != null)
+                {
+                    UpdateSaveButtonState(_lastEntityForUpdate);
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.uclog.AddLog($"防抖定时器异常: {ex.Message}", UILogType.错误);
+            }
+        }
 
+        /// <summary>
+        /// 立即更新UI状态（用于关键属性变化）
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        private void UpdateUIStatesImmediate(BaseEntity entity)
+        {
+            UpdateAllUIStates(entity);
+            UpdateSaveButtonState(entity);
+        }
 
-                #endregion
+        /// <summary>
+        /// 更新保存按钮状态
+        /// 优化点：考虑更多因素，实现更精确的状态判断
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        private void UpdateSaveButtonState(BaseEntity entity)
+        {
+            try
+            {
+                if (entity == null) // 空实体或已删除实体不允许保存
+                {
+                    toolStripButtonSave.Enabled = false;
+                    return;
+                }
+
+                // 基本条件：实体有变更
+                bool canSave = entity.HasChanged;
+
+                // 检查单据状态
+                if (entity.ContainsProperty(nameof(DataStatus)))
+                {
+                    var dataStatus = (DataStatus)Convert.ToInt32(entity.GetPropertyValue(nameof(DataStatus)));
+                    // 已完结或确认状态通常不允许直接保存
+                    canSave &= dataStatus != DataStatus.完结 && dataStatus != DataStatus.确认;
+                }
+
+                // 检查锁定状态
+                if (entity.ContainsProperty(typeof(LockInfo).Name))
+                {
+                    var lockInfo = entity.GetPropertyValue(typeof(LockInfo).Name) as LockInfo;
+                    // 被其他用户锁定时不允许保存
+                    if (lockInfo != null && lockInfo.IsLockedByOther(MainForm.Instance.AppContext.CurrentUser.UserID))
+                    {
+                        canSave = false;
+                    }
+                }
+
+                // 最终设置按钮状态
+                toolStripButtonSave.Enabled = canSave;
+            }
+            catch (Exception ex)
+            {
+                // 发生异常时，默认禁用保存按钮以防止数据错误
+                toolStripButtonSave.Enabled = false;
+                MainForm.Instance.uclog.AddLog($"更新保存按钮状态异常: {ex.Message}", UILogType.错误);
+            }
+        }
+
+        // 用于获取业务状态的辅助字段
+        private object businessStatus;
+
+        /// <summary>
+        /// 获取当前业务状态
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        /// <returns>业务状态对象</returns>
+        private object GetBusinessStatus(BaseEntity entity)
+        {
+            try
+            {
+                return StateManager.GetBusinessStatus(entity);
+            }
+            catch
+            {
+                return null; // 出现异常时返回null，避免影响主流程
             }
         }
 
@@ -1749,7 +1966,7 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
-  
+
 
 
         #endregion
@@ -4912,14 +5129,30 @@ namespace RUINORERP.UI.BaseForm
                 if (entity is BaseEntity baseEntity)
                 {
                     baseEntity.AcceptChanges();
+                    if (bindingSourceSub != null && bindingSourceSub.DataSource != null)
+                    {
+                        List<C> detailEntities = bindingSourceSub.DataSource as List<C>;
+                        if (detailEntities != null && detailEntities.Count > 0)
+                        {
+                            for (int i = 0; i < detailEntities.Count; i++)
+                            {
+                                if (detailEntities[i] is BaseEntity detailEntity)
+                                {
+                                    if (detailEntity.HasChanged)
+                                    {
+                                        detailEntity.AcceptChanges();
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
 
-                if (ReflectionHelper.ExistPropertyName<T>(typeof(ActionStatus).Name))
-                {
-                    //注意這里保存的是枚举
-                    ReflectionHelper.SetPropertyValue(entity, typeof(ActionStatus).Name, (int)ActionStatus.加载);
-                }
-
+                //if (ReflectionHelper.ExistPropertyName<T>(typeof(ActionStatus).Name))
+                //{
+                //    //注意這里保存的是枚举
+                //    ReflectionHelper.SetPropertyValue(entity, typeof(ActionStatus).Name, (int)ActionStatus.加载);
+                //}
                 // 保存成功后的锁定状态管理
                 await PostSaveLockManagement(entity, originalPkid);
 

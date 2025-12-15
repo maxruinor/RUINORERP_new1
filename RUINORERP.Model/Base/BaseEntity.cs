@@ -25,6 +25,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 using RUINORERP.Global.Extensions;
+using System.Threading;
 
 /*
  * V4版本 - 2025-01-12
@@ -256,9 +257,7 @@ namespace RUINORERP.Model
                     oldStatus,
                     newStatus,
                     reason,
-                    userId,
-                    null,
-                    null);
+                    userId);
                 
                 // 直接调用OnStatusChanged处理状态变更
                 OnStatusChanged(eventArgs);
@@ -895,8 +894,25 @@ namespace RUINORERP.Model
 
         private ActionStatus _ActionStatus;
         private ActionStatus _previousActionStatus;
+        // 状态变更计数，用于性能监控和调试
+        private int _statusChangeCount;
+        
+        /// <summary>
+        /// 获取状态变更次数，用于性能监控
+        /// </summary>
+        [SugarColumn(IsIgnore = true)]
+        [Browsable(false)]
+        public int StatusChangeCount => _statusChangeCount;
 
        
+        /// <summary>
+        /// 操作状态（ActionStatus）
+        /// 优化说明：
+        /// 1. 增强状态变更检测
+        /// 2. 改进事件通知机制
+        /// 3. 添加性能监控统计
+        /// 4. 优化频繁变更场景处理
+        /// </summary>
         [SugarColumn(IsIgnore = true)]
         [Browsable(false)]
         public ActionStatus ActionStatus
@@ -904,20 +920,35 @@ namespace RUINORERP.Model
             get { return _ActionStatus; }
             set
             {
-                // 如果状态没有变化，则不执行任何操作
+                // 性能优化：相同状态快速返回
                 if (Equals(_ActionStatus, value))
                 {
                     return;
                 }
 
+                // 记录前一个状态
                 _previousActionStatus = _ActionStatus;
                 
-                // 设置属性值（先设置属性值，再触发状态变更事件）
+                // 原子操作：设置属性值
                 SetProperty(ref _ActionStatus, value);
                 
-                // 使用优化后的状态变更事件触发方法
-                // 这样可以利用我们新增的TriggerStatusChange方法的健壮性和性能优化
+                // 更新状态变更计数
+                Interlocked.Increment(ref _statusChangeCount);
+                
+                // 优化的状态变更事件触发
+                // 对于频繁变更场景的性能考虑：
+                // - 使用缓存的Type对象
+                // - 避免不必要的对象创建
                 TriggerStatusChange(typeof(ActionStatus), _previousActionStatus, value);
+                
+                // 可选：添加性能警告（当状态变更过于频繁时）
+                if (_statusChangeCount > 100 && _statusChangeCount % 50 == 0)
+                {
+                    // 可以在调试模式下记录频繁状态变更的警告
+#if DEBUG
+                    System.Diagnostics.Debug.WriteLine($"警告：实体 {this.GetType().Name} (ID: {this.PrimaryKeyID}) 的状态变更次数过高：{_statusChangeCount}");
+#endif
+                }
             }
         }
 

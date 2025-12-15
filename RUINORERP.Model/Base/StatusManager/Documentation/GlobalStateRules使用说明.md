@@ -70,10 +70,13 @@ rulesManager.AddTransitionRule(DataStatus.草稿, DataStatus.新建, DataStatus.
 var buttonRules = rulesManager.UIButtonRules;
 
 // 获取特定状态的按钮规则
+// 注意：返回值从Dictionary<string, (bool Enabled, bool Visible)>变更为Dictionary<string, bool>
+// 状态管理系统现在只控制按钮的可用性(Enabled)，Visible由权限系统管理
 var statusButtonRules = rulesManager.GetButtonRules(DataStatus.草稿);
 
 // 添加自定义按钮规则
-rulesManager.AddButtonRule(DataStatus.草稿, "btnCustom", true, false);
+// 注意：参数从(buttonName, enabled, visible)变更为(buttonName, enabled)
+rulesManager.AddButtonRule(DataStatus.草稿, "btnCustom", true);
 ```
 
 ### 操作权限规则操作

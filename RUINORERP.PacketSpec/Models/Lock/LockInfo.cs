@@ -1,4 +1,4 @@
-﻿using RUINORERP.Global;
+using RUINORERP.Global;
 using RUINORERP.Model.CommonModel;
 using System;
 using System.Runtime.Serialization;
@@ -96,6 +96,16 @@ namespace RUINORERP.PacketSpec.Models.Lock
         /// 最后心跳时间
         /// </summary>
         public DateTime LastHeartbeat { get; set; } = DateTime.Now;
+        
+        /// <summary>
+        /// 检查当前锁定是否由指定用户以外的用户创建
+        /// </summary>
+        /// <param name="userId">当前用户ID</param>
+        /// <returns>如果锁定由其他用户创建则返回true，否则返回false</returns>
+        public bool IsLockedByOther(long userId)
+        {   
+            return IsLocked && LockedUserId != userId;
+        }
 
         /// <summary>
         /// 最后更新时间

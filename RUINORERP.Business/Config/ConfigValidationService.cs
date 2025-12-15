@@ -19,7 +19,7 @@ namespace RUINORERP.Business.Config
     {
         private readonly ILogger<ConfigValidationService> _logger;
         private readonly Dictionary<string, List<ConfigValidationRule>> _customRules;
-        private readonly IValidator<ServerConfig> _serverConfigValidator;
+        private readonly IValidator<ServerGlobalConfig> _serverConfigValidator;
         private readonly IValidator<SystemGlobalConfig> _systemGlobalconfigValidator;
         private readonly IValidator<GlobalValidatorConfig> _globalValidatorConfigValidator;
         
@@ -32,7 +32,7 @@ namespace RUINORERP.Business.Config
         /// <param name="globalValidatorConfigValidator">全局验证配置验证器</param>
         public ConfigValidationService(
             ILogger<ConfigValidationService> logger,
-            IValidator<ServerConfig> serverConfigValidator,
+            IValidator<ServerGlobalConfig> serverConfigValidator,
             IValidator<SystemGlobalConfig> systemGlobalconfigValidator,
             IValidator<GlobalValidatorConfig> globalValidatorConfigValidator)
         {
@@ -193,7 +193,7 @@ namespace RUINORERP.Business.Config
             Type configType = typeof(T);
             
             // 根据配置类型返回对应的验证器
-            if (configType == typeof(ServerConfig))
+            if (configType == typeof(ServerGlobalConfig))
             {
                 return _serverConfigValidator as IValidator<T>;
             }
@@ -298,7 +298,7 @@ namespace RUINORERP.Business.Config
             // 例如，检查数据库连接字符串格式、端口号范围等
             
             // 验证服务器配置中的文件存储路径
-            if (config is ServerConfig serverConfig)
+            if (config is ServerGlobalConfig serverConfig)
             {
                 // 验证FileStoragePath是否为空
                 if (string.IsNullOrEmpty(serverConfig.FileStoragePath))
@@ -475,7 +475,7 @@ namespace RUINORERP.Business.Config
             //    ErrorMessage = "服务器端口必须在1-65535范围内"
             //});
             
-            RegisterCustomRule<ServerConfig>(new ConfigValidationRule
+            RegisterCustomRule<ServerGlobalConfig>(new ConfigValidationRule
             {
                 //RuleName = "DbConnectionStringRequiredRule",
                 //PropertyName = nameof(ServerConfig.DbConnectionString),
@@ -554,7 +554,7 @@ namespace RUINORERP.Business.Config
             // 根据配置类型进行特定验证
             switch (config)
             {
-                case ServerConfig serverConfig:
+                case ServerGlobalConfig serverConfig:
                     ValidateServerConfig(serverConfig, result);
                     break;
                 case SystemGlobalConfig systemConfig:
@@ -569,7 +569,7 @@ namespace RUINORERP.Business.Config
         /// <summary>
         /// 验证服务器配置
         /// </summary>
-        private void ValidateServerConfig(ServerConfig config, ConfigValidationResult result)
+        private void ValidateServerConfig(ServerGlobalConfig config, ConfigValidationResult result)
         {
            
             

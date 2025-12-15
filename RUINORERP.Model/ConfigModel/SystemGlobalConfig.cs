@@ -1,4 +1,5 @@
 using Newtonsoft.Json;
+using RUINORERP.Global;
 using System;
 using System.ComponentModel;
 using System.Linq;
@@ -15,6 +16,14 @@ namespace RUINORERP.Model.ConfigModel
     [DisplayName("客户端系统全局配置")]
     public class SystemGlobalConfig : BaseConfig
     {
+
+        [JsonProperty("系统单据修改模式")]
+        [Category("系统设置")]
+        [Description("提交后修改规则模式枚举")]
+        public SubmitModifyRuleMode 单据修改模式 { get; set; } =  SubmitModifyRuleMode.灵活模式;
+
+
+
         [JsonProperty("客户端自动更新")]
         [Category("系统设置")]
         [Description("客户端自动更新")]

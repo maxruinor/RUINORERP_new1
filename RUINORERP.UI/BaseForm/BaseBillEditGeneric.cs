@@ -4246,41 +4246,18 @@ namespace RUINORERP.UI.BaseForm
             if (!edit.CanExecute)
             {
                 MessageBox.Show(edit.Message, "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                toolStripbtnModify.Enabled = false;
+                toolStripButtonSave.Enabled = false;
                 return;
             }
-
-            // 获取状态类型和值
-            var paymentStatusType = FMPaymentStatusHelper.GetStatusType(editEntity as BaseEntity);
-            if (paymentStatusType != null)
+            else
             {
-                // 动态获取状态值
-                dynamic status = editEntity.GetPropertyValue(paymentStatusType.Name);
-                int statusValue = (int)status;
-                dynamic statusEnum = Enum.ToObject(paymentStatusType, statusValue);
-
-                if (!FMPaymentStatusHelper.CanModify(statusEnum))
-                {
-                    toolStripbtnModify.Enabled = false;
-                    toolStripButtonSave.Enabled = false;
-                    MainForm.Instance.PrintInfoLog($"当前单据状态为{statusEnum}不允许修改!");
-                    return;
-                }
-
-                var dataStatus = (DataStatus)(editEntity.GetPropertyValue(typeof(DataStatus).Name).ToInt());
-                if (dataStatus == DataStatus.新建 || dataStatus == DataStatus.草稿)
-                {
-                    base.Modify();
-                    MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("修改", EditEntity);
-                }
-                else
-                {
-                    toolStripbtnModify.Enabled = false;
-                }
+                toolStripbtnModify.Enabled = false;
             }
 
-            // 移除编辑时直接设置Modify属性的代码，改为在保存时根据状态设置
+ 
             EditEntity.SetPropertyValue(typeof(ActionStatus).Name, ActionStatus.修改);
-            // ToolBarEnabledControl(MenuItemEnums.修改);
+     
         }
 
         protected async override void SpecialDataFix()
@@ -5164,7 +5141,6 @@ namespace RUINORERP.UI.BaseForm
                 //}
                 // 保存成功后的锁定状态管理
                 await PostSaveLockManagement(entity, originalPkid);
-
                 MainForm.Instance.uclog.AddLog("保存成功");
             }
             else

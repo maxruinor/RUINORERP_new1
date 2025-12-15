@@ -296,7 +296,7 @@ namespace RUINORERP.UI.PSI.SAL
                     entity.ApprovalOpinions = string.Empty;
                     entity.SaleDate = System.DateTime.Now;
                     //通过动态参数来设置这个默认值。这样每个公司不同设置按自己的来。
-                    entity.IsFromPlatform = AppContext.GlobalVariableConfig.IsFromPlatform;
+                    entity.IsFromPlatform = AppContext.SystemGlobalConfig.IsFromPlatform;
                     entity.OrderPriority = (int)Priority.正常;
 
 
@@ -1470,7 +1470,7 @@ namespace RUINORERP.UI.PSI.SAL
                 }
 
 
-                if (NeedValidated && AppContext.GlobalVariableConfig.OpenProdTypeForSaleCheck)
+                if (NeedValidated && AppContext.SystemGlobalConfig.OpenProdTypeForSaleCheck)
                 {
                     StringBuilder forSaleTips = new StringBuilder();
 

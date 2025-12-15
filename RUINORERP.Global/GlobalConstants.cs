@@ -39,7 +39,7 @@ namespace RUINORERP.Global
         /// <summary>
         /// 服务器配置类型名称
         /// </summary>
-        public const string ServerConfigType = "ServerConfig";
+        public const string ServerConfigType = "ServerGlobalConfig";
         
         /// <summary>
         /// 全局验证配置类型名称

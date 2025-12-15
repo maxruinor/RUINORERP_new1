@@ -10,7 +10,7 @@ namespace RUINORERP.Model.ConfigModel
     /// </summary>
     [Serializable()]
     [DisplayName("服务器配置")]
-    public class ServerConfig : BaseConfig
+    public class ServerGlobalConfig : BaseConfig
     {
         #region 服务器基础配置
         [JsonProperty("ServerName")]

@@ -77,6 +77,9 @@ namespace RUINORERP.Model.Base.StatusManager
 
         #region 字段和属性
 
+        public SubmitModifyRuleMode submitModifyRuleMode { get; set; } = SubmitModifyRuleMode.灵活模式;
+
+
         /// <summary>
         /// 状态转换规则字典
         /// </summary>
@@ -353,7 +356,15 @@ namespace RUINORERP.Model.Base.StatusManager
         {
             // 为不同状态添加通用按钮规则
             AddStandardButtonRules(DataStatus.草稿, true, true, true, true, true, false, false, false, false, false, true, true);
-            AddStandardButtonRules(DataStatus.新建, true, true, true, true, false, true, false, false, false, true, true, true);
+            if (submitModifyRuleMode == SubmitModifyRuleMode.灵活模式)
+            {
+                AddStandardButtonRules(DataStatus.新建, true, true, true, true, false, true, false, false, false, true, true, true);
+            }
+            else
+            {
+                AddStandardButtonRules(DataStatus.新建, true, false, true, true, false, true, false, false, false, true, true, true);
+            }
+
             AddStandardButtonRules(DataStatus.确认, true, false, false, false, false, false, true, true, false, true, true, true);
             AddStandardButtonRules(DataStatus.完结, true, false, false, false, false, false, false, false, true, true, true, true);
             AddStandardButtonRules(DataStatus.作废, true, false, false, false, false, false, false, false, false, false, false, false);
@@ -436,14 +447,14 @@ namespace RUINORERP.Model.Base.StatusManager
             bool saveEnabled = false, bool deleteEnabled = false, bool submitEnabled = false,
             bool reviewEnabled = false, bool reverseReviewEnabled = false, bool printEnabled = false) where T : struct
         {
-            AddButtonRule(status, "toolStripbtnAdd",  addEnabled);
-            AddButtonRule(status, "toolStripbtnModify",  modifyEnabled);
-            AddButtonRule(status, "toolStripButtonSave",  saveEnabled);
-            AddButtonRule(status, "toolStripbtnDelete",  deleteEnabled);
-            AddButtonRule(status, "toolStripbtnSubmit",  submitEnabled);
-            AddButtonRule(status, "toolStripbtnReview",  reviewEnabled);
-            AddButtonRule(status, "toolStripBtnReverseReview",  reverseReviewEnabled);
-            AddButtonRule(status, "toolStripButtonPrint",  printEnabled);
+            AddButtonRule(status, "toolStripbtnAdd", addEnabled);
+            AddButtonRule(status, "toolStripbtnModify", modifyEnabled);
+            AddButtonRule(status, "toolStripButtonSave", saveEnabled);
+            AddButtonRule(status, "toolStripbtnDelete", deleteEnabled);
+            AddButtonRule(status, "toolStripbtnSubmit", submitEnabled);
+            AddButtonRule(status, "toolStripbtnReview", reviewEnabled);
+            AddButtonRule(status, "toolStripBtnReverseReview", reverseReviewEnabled);
+            AddButtonRule(status, "toolStripButtonPrint", printEnabled);
         }
 
         /// <summary>
@@ -470,15 +481,15 @@ namespace RUINORERP.Model.Base.StatusManager
         {
             AddButtonRule(status, "toolStripbtnAdd", addEnabled);
             AddButtonRule(status, "toolStripbtnModify", modifyEnabled);
-            AddButtonRule(status, "toolStripButtonSave",  saveEnabled);
-            AddButtonRule(status, "toolStripbtnDelete",  deleteEnabled);
-            AddButtonRule(status, "toolStripbtnSubmit",  submitEnabled);
-            AddButtonRule(status, "toolStripbtnReview",  reviewEnabled);
-            AddButtonRule(status, "toolStripBtnReverseReview",  reverseReviewEnabled);
-            AddButtonRule(status, "toolStripButtonCaseClosed",  caseClosedEnabled);
-            AddButtonRule(status, "toolStripButtonAntiClosed",  antiClosedEnabled);
-            AddButtonRule(status, "toolStripButtonPrint",  printVisible);
-            AddButtonRule(status, "toolStripButtonExport",  exportVisible);
+            AddButtonRule(status, "toolStripButtonSave", saveEnabled);
+            AddButtonRule(status, "toolStripbtnDelete", deleteEnabled);
+            AddButtonRule(status, "toolStripbtnSubmit", submitEnabled);
+            AddButtonRule(status, "toolStripbtnReview", reviewEnabled);
+            AddButtonRule(status, "toolStripBtnReverseReview", reverseReviewEnabled);
+            AddButtonRule(status, "toolStripButtonCaseClosed", caseClosedEnabled);
+            AddButtonRule(status, "toolStripButtonAntiClosed", antiClosedEnabled);
+            AddButtonRule(status, "toolStripButtonPrint", printVisible);
+            AddButtonRule(status, "toolStripButtonExport", exportVisible);
         }
 
         /// <summary>
@@ -591,6 +602,24 @@ namespace RUINORERP.Model.Base.StatusManager
             return new Dictionary<string, bool>(buttonRules);
         }
 
+        /// <summary>
+        /// 检查提交后是否允许修改
+        /// 根据全局模式设置和状态判断
+        /// </summary>
+        /// <param name="isSubmittedStatus">是否为已提交状态</param>
+        /// <returns>是否允许修改</returns>
+        public bool AllowModifyAfterSubmit(bool isSubmittedStatus)
+        {
+            // 如果不是已提交状态，始终允许修改
+            if (!isSubmittedStatus)
+                return true;
+
+            // 根据全局模式设置判断
+            // 严格模式：提交后不允许修改
+            // 灵活模式：提交后允许修改
+            return submitModifyRuleMode == SubmitModifyRuleMode.灵活模式;
+        }
+
         #endregion
 
         #region 操作权限规则方法
@@ -613,14 +642,29 @@ namespace RUINORERP.Model.Base.StatusManager
         private void AddDataStatusActionPermissionRules()
         {
             var statusType = typeof(DataStatus);
-            _actionPermissionRules[statusType] = new Dictionary<object, List<MenuItemEnums>>
+            if (submitModifyRuleMode == SubmitModifyRuleMode.灵活模式)
             {
-                [DataStatus.草稿] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.提交 },
-                [DataStatus.新建] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.审核 },
-                [DataStatus.确认] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.反审, MenuItemEnums.结案 },
-                [DataStatus.完结] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.反结案 },
-                [DataStatus.作废] = new List<MenuItemEnums> { MenuItemEnums.新增 }
-            };
+                _actionPermissionRules[statusType] = new Dictionary<object, List<MenuItemEnums>>
+                {
+                    [DataStatus.草稿] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.提交 },
+                    [DataStatus.新建] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.审核 },
+                    [DataStatus.确认] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.反审, MenuItemEnums.结案 },
+                    [DataStatus.完结] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.反结案 },
+                    [DataStatus.作废] = new List<MenuItemEnums> { MenuItemEnums.新增 }
+                };
+            }
+            else
+            {
+                _actionPermissionRules[statusType] = new Dictionary<object, List<MenuItemEnums>>
+                {
+                    [DataStatus.草稿] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.提交 },
+                    [DataStatus.新建] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.删除, MenuItemEnums.审核 },//不能修改
+                    [DataStatus.确认] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.反审, MenuItemEnums.结案 },
+                    [DataStatus.完结] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.反结案 },
+                    [DataStatus.作废] = new List<MenuItemEnums> { MenuItemEnums.新增 }
+                };
+            }
+
         }
 
         /// <summary>

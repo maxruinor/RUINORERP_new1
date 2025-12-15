@@ -11,7 +11,7 @@ namespace RUINORERP.Business
     /// ServerConfig配置验证器
     /// 用于验证服务器配置的合法性
     /// </summary>
-    public class ServerConfigValidator : BaseValidatorGeneric<ServerConfig>
+    public class ServerConfigValidator : BaseValidatorGeneric<ServerGlobalConfig>
     {
         // 配置全局参数
         public readonly IOptionsMonitor<GlobalValidatorConfig> ValidatorConfig;

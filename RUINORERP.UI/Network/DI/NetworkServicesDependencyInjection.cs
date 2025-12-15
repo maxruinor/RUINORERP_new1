@@ -213,15 +213,15 @@ namespace RUINORERP.UI.Network.DI
             // 注册配置相关服务
             // 注册配置类型
             builder.RegisterType<SystemGlobalConfig>().AsSelf().SingleInstance();
-            builder.RegisterType<ServerConfig>().AsSelf().SingleInstance();
+            builder.RegisterType<ServerGlobalConfig>().AsSelf().SingleInstance();
             builder.RegisterType<GlobalValidatorConfig>().AsSelf().SingleInstance();
 
             // 为配置类型注册IOptions - 使用自定义SimpleOptions实现，避免循环依赖
             builder.Register(c => new SimpleOptions<SystemGlobalConfig>(c.Resolve<SystemGlobalConfig>()))
                 .As<IOptions<SystemGlobalConfig>>()
                 .SingleInstance();
-            builder.Register(c => new SimpleOptions<ServerConfig>(c.Resolve<ServerConfig>()))
-                .As<IOptions<ServerConfig>>()
+            builder.Register(c => new SimpleOptions<ServerGlobalConfig>(c.Resolve<ServerGlobalConfig>()))
+                .As<IOptions<ServerGlobalConfig>>()
                 .SingleInstance();
             builder.Register(c => new SimpleOptions<GlobalValidatorConfig>(c.Resolve<GlobalValidatorConfig>()))
                 .As<IOptions<GlobalValidatorConfig>>()

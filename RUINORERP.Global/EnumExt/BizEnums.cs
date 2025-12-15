@@ -7,6 +7,23 @@ using System.Threading.Tasks;
 
 namespace RUINORERP.Global
 {
+
+    /// <summary>
+    /// 提交后修改规则模式枚举
+    /// </summary>
+   public enum SubmitModifyRuleMode
+    {
+        /// <summary>
+        /// 严格模式 - 提交后不允许修改
+        /// </summary>
+        严格模式,
+
+        /// <summary>
+        /// 灵活模式 - 提交后未审核状态下允许修改
+        /// </summary>
+        灵活模式
+    }
+
     /// <summary>
     /// 加密方法枚举
     /// </summary>

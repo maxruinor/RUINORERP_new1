@@ -4242,7 +4242,6 @@ namespace RUINORERP.UI.BaseForm
                 return;
             }
 
-
             // 获取状态类型和值
             var paymentStatusType = FMPaymentStatusHelper.GetStatusType(editEntity as BaseEntity);
             if (paymentStatusType != null)
@@ -4272,7 +4271,7 @@ namespace RUINORERP.UI.BaseForm
                 }
             }
 
-            BusinessHelper.Instance.EditEntity(EditEntity);
+            // 移除编辑时直接设置Modify属性的代码，改为在保存时根据状态设置
             EditEntity.SetPropertyValue(typeof(ActionStatus).Name, ActionStatus.修改);
             // ToolBarEnabledControl(MenuItemEnums.修改);
         }
@@ -5095,6 +5094,9 @@ namespace RUINORERP.UI.BaseForm
             }
             else
             {
+                // 保存修改时设置编辑属性（在保存时才设置，而不是在点击编辑时）
+                BusinessHelper.Instance.EditEntity(entity);
+                
                 // 保存前检查锁定状态 - 优先从本地缓存检查
                 var lockStatusSaveBefore = await CheckLockStatusAndUpdateUI(EditEntity.PrimaryKeyID);
                 if (!lockStatusSaveBefore.CanPerformCriticalOperations)

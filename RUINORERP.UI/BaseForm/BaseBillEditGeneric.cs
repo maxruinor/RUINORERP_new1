@@ -101,19 +101,19 @@ namespace RUINORERP.UI.BaseForm
     /// </summary>
     /// <typeparam name="T"></typeparam>
     // ==============================================================================
-// 简化版状态管理系统设计说明
-// 设计目标：保持核心功能的同时简化状态管理流程
-// 核心流程：
-// 1. 实体状态变更触发StatusChanged事件
-// 2. 事件处理程序调用UpdateAllUIStates更新UI
-// 3. UpdateAllUIStates调用UpdateUIControlsByState更新按钮状态
-// 4. 根据GlobalStateRulesManager中的规则设置按钮可见性和可用性
-// 注意事项：
-// - 移除了多余的状态缓存和重复检查逻辑
-// - 保留了必要的重复调用防护机制
-// - 简化了事件订阅和处理流程
-// ==============================================================================
-public partial class BaseBillEditGeneric<T, C> : BaseBillEdit, IContextMenuInfoAuth, IToolStripMenuInfoAuth where T : BaseEntity, new() where C : class, new()
+    // 简化版状态管理系统设计说明
+    // 设计目标：保持核心功能的同时简化状态管理流程
+    // 核心流程：
+    // 1. 实体状态变更触发StatusChanged事件
+    // 2. 事件处理程序调用UpdateAllUIStates更新UI
+    // 3. UpdateAllUIStates调用UpdateUIControlsByState更新按钮状态
+    // 4. 根据GlobalStateRulesManager中的规则设置按钮可见性和可用性
+    // 注意事项：
+    // - 移除了多余的状态缓存和重复检查逻辑
+    // - 保留了必要的重复调用防护机制
+    // - 简化了事件订阅和处理流程
+    // ==============================================================================
+    public partial class BaseBillEditGeneric<T, C> : BaseBillEdit, IContextMenuInfoAuth, IToolStripMenuInfoAuth where T : BaseEntity, new() where C : class, new()
     {
         public virtual List<UControls.ContextMenuController> AddContextMenu()
         {
@@ -257,7 +257,7 @@ public partial class BaseBillEditGeneric<T, C> : BaseBillEdit, IContextMenuInfoA
         {
             // 防止重复更新
             if (_isUpdatingUIStates) return;
-            
+
             if (e.Entity is BaseEntity entity)
             {
                 // 直接更新UI状态
@@ -406,7 +406,7 @@ public partial class BaseBillEditGeneric<T, C> : BaseBillEdit, IContextMenuInfoA
                 //7.字段的显示按权限控制
                 UIHelper.ControlForeignFieldInvisible<T>(this, false);
 
-     
+
             }
             catch (Exception ex)
             {
@@ -2499,6 +2499,11 @@ public partial class BaseBillEditGeneric<T, C> : BaseBillEdit, IContextMenuInfoA
                                         }
                                     }
                                 }
+                                if (EditEntity.HasChanged)
+                                {
+                                    editEntity.ActionStatus = ActionStatus.修改;
+                                }
+
                                 bool rsSave = await Save(true);
                                 if (!rsSave)
                                 {

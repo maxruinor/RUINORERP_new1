@@ -140,18 +140,20 @@ namespace RUINORERP.Business
                 if (entity.SourceBizType.HasValue && entity.SourceBillId.HasValue)
                 {
                     //审核时 要检测明细中对应的相同业务类型下不能有相同来源单号。除非有正负总金额为0对冲情况。或是两行数据?
-                    var PendingApprovalReceivablePayable = await _appContext.Db.Queryable<tb_FM_ProfitLoss>()
+                    var existingRecords = await _appContext.Db.Queryable<tb_FM_ProfitLoss>()
                         .Includes(c => c.tb_FM_ProfitLossDetails)
-                    .Where(c => c.DataStatus >= (int)DataStatus.确认)
-                    .Where(c => c.SourceBizType == entity.SourceBizType)//相同业务来源的应收付款。是否有重复的检测
-                    .ToListAsync();
+                        .Where(c => c.DataStatus >= (int)DataStatus.确认)
+                        .Where(c => c.SourceBizType == entity.SourceBizType && c.SourceBillId == entity.SourceBillId)
+                        .Select(c => new { c.ProfitLossNo, c.Created_at })
+                        .ToListAsync();
 
-                    //要把自己也算上。不能大于1,entity是等待审核。所以拼一起
-                    PendingApprovalReceivablePayable.Add(entity);
-
-                    if (PendingApprovalReceivablePayable.Count > 1)
+                    //检测是否存在相同业务类型和来源单号的记录
+                    if (existingRecords.Any())
                     {
-                        rmrs.ErrorMsg = "相同业务类型下不能有相同的来源单号生成损溢单费用!审核失败。";
+                        //收集重复的单号信息
+                        var duplicateBillNumbers = string.Join(", ", existingRecords.Select(r => r.ProfitLossNo));
+                        
+                        rmrs.ErrorMsg = $"检测到重复：业务类型{(BizType)entity.SourceBizType}下的来源单号{entity.SourceBillNo}已存在于以下损溢单中：{duplicateBillNumbers}，不允许重复生成损溢单费用！审核失败。";
                         rmrs.Succeeded = false;
                         rmrs.ReturnObject = entity as T;
                         return rmrs;

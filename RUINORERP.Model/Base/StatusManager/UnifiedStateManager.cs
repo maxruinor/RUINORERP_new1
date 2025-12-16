@@ -377,32 +377,49 @@ namespace RUINORERP.Model.Base.StatusManager
 
             if (statusType == null)
                 return StateTransitionResult.Failure(null, newStatus, statusType, "状态类型不能为空");
-
-            // 获取旧状态
-            object oldStatus = statusType == typeof(DataStatus)
-                ? GetBusinessStatus(entity)
-                : GetBusinessStatus(entity, statusType);
+            
+            // 获取旧状态 - 统一使用相同的方法获取，不再对DataStatus特殊处理
+            object oldStatus = GetBusinessStatus(entity, statusType);
+            // 自动转换：如果状态值是int且状态类型是枚举，则进行转换
+            object OldStatusEnum = oldStatus;
+            if (oldStatus is int && statusType.IsEnum)
+            {
+                try
+                {
+                    OldStatusEnum = Enum.ToObject(statusType, oldStatus);
+                }
+                catch
+                {
+                    // 转换失败时使用原始状态值
+                }
+            }
 
             // 检查状态是否实际发生了变更
-            if (Equals(oldStatus, newStatus))
-                return StateTransitionResult.Success(oldStatus, newStatus, statusType, "状态未发生变更");
+            if (Equals(OldStatusEnum, newStatus))
+                return StateTransitionResult.Success(OldStatusEnum, newStatus, statusType, "状态未发生变更");
 
             try
             {
-                // 更新状态 - 直接设置实体的状态属性
+                // 更新状态 - 统一使用属性名设置，不再对DataStatus特殊处理
+                // 首先尝试使用类型名称查找属性
                 var statusProperty = entity.GetType().GetProperty(statusType.Name);
+                
+                // 如果找不到，尝试使用"DataStatus"作为属性名（兼容现有的实体）
+                if (statusProperty == null || !statusProperty.CanWrite)
+                {
+                    statusProperty = entity.GetType().GetProperty("DataStatus");
+                }
+                
+                // 如果找到可写的属性，则设置值
                 if (statusProperty != null && statusProperty.CanWrite)
                 {
-                    statusProperty.SetValue(entity, newStatus);
-                }
-                else if (statusType == typeof(DataStatus))
-                {
-                    // 对于DataStatus特殊处理
-                    var dataStatusProperty = entity.GetType().GetProperty("DataStatus");
-                    if (dataStatusProperty != null && dataStatusProperty.CanWrite)
+                    // 确保设置的值是int类型，将枚举转换为int
+                    object valueToSet = newStatus;
+                    if (newStatus.GetType().IsEnum)
                     {
-                        dataStatusProperty.SetValue(entity, newStatus);
+                        valueToSet = Convert.ToInt32(newStatus);
                     }
+                    statusProperty.SetValue(entity, valueToSet);
                 }
 
                 // 触发状态变更事件

@@ -1,64 +1,61 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Data;
-using System.Drawing;
-using System.IO;
-using System.Windows.Forms;
-using RUINORERP.Business.CommService;
-using System.Linq.Expressions;
-using System.Reflection;
-using System.ComponentModel;
 using Autofac;
-using Krypton.Toolkit;
-using RUINORERP.Common.Helper;
-using Krypton.Workspace;
-using Krypton.Navigator;
-using RUINORERP.Model;
-using RUINOR.Core;
-using RUINORERP.UI.Common;
-using RUINORERP.UI.BI;
-using RUINORERP.Common.CustomAttribute;
-using System.Collections.Concurrent;
-using RUINORERP.Business;
-using RUINORERP.Global.CustomAttribute;
-using ObjectsComparer;
-using RUINORERP.Common.Extensions;
-using RUINORERP.Business.AutoMapper;
 using AutoMapper;
-using RUINORERP.Model.Base;
-using RUINORERP.Common.CollectionExtension;
-using RUINORERP.UI.AdvancedUIModule;
-using RUINORERP.Business.Processor;
+using FastReport.DevComponents.DotNetBar;
+using FastReport.Table;
+using Krypton.Navigator;
+using Krypton.Toolkit;
+using Krypton.Workspace;
 using Microsoft.Extensions.Logging;
+using Netron.NetronLight;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using ObjectsComparer;
 using OfficeOpenXml;
-
-
-using RUINORERP.Model.Models;
-using System.Diagnostics;
+using RUINOR.Core;
+using RUINOR.WinFormsUI.CustomPictureBox;
+using RUINORERP.Business;
+using RUINORERP.Business.AutoMapper;
+using RUINORERP.Business.Cache;
+using RUINORERP.Business.CommService;
+using RUINORERP.Business.Processor;
+using RUINORERP.Common.CollectionExtension;
+using RUINORERP.Common.CustomAttribute;
+using RUINORERP.Common.Extensions;
+using RUINORERP.Common.Helper;
+using RUINORERP.Global;
+using RUINORERP.Global.CustomAttribute;
 using RUINORERP.Global.Model;
+using RUINORERP.Model;
+using RUINORERP.Model.Base;
+using RUINORERP.Model.Models;
+using RUINORERP.UI.AdvancedUIModule;
+using RUINORERP.UI.BI;
+using RUINORERP.UI.Common;
 using RUINORERP.UI.CommonUI;
 using RUINORERP.UI.FormProperty;
-using System.Web.UI;
-using Control = System.Windows.Forms.Control;
-using SqlSugar;
-using SourceGrid.Cells.Models;
-using SixLabors.ImageSharp.Memory;
-using Netron.NetronLight;
-using RUINOR.WinFormsUI.CustomPictureBox;
+using RUINORERP.UI.UControls;
 using RUINORERP.UI.UserCenter;
 using RUINORERP.UI.UserPersonalized;
-using RUINORERP.UI.UControls;
-using Newtonsoft.Json;
-
-using RUINORERP.Global;
-using FastReport.Table;
-using Newtonsoft.Json.Linq;
-using FastReport.DevComponents.DotNetBar;
-
-using RUINORERP.Business.Cache;
+using SixLabors.ImageSharp.Memory;
+using SourceGrid.Cells.Models;
+using SqlSugar;
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Diagnostics;
+using System.Drawing;
+using System.IO;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
+using System.Text;
+using System.Threading.Tasks;
+using System.Web.UI;
+using System.Windows.Forms;
+using Winista.Text.HtmlParser.Lex;
+using Control = System.Windows.Forms.Control;
 
 
 namespace RUINORERP.UI.Common
@@ -84,6 +81,44 @@ namespace RUINORERP.UI.Common
             displayHelper.InitializeFixedDictionaryMappings<T>();
             displayHelper.InitializeReferenceKeyMapping<T>();
             dataGridView.CellFormatting += DataGridView_CellFormatting;
+        }
+
+        /// <summary>
+        /// 注册图片字段信息映射
+        /// </summary>
+        /// <typeparam name="T1">实体类型</typeparam>
+        /// <param name="ImageField">图片字段表达式</param>
+        /// <param name="UseThumbnail">是否使用缩略图</param>
+        /// <param name="IsByteFormat">是否为字节数组格式</param>
+        /// <exception cref="ArgumentNullException">当ImageField为空时抛出</exception>
+        public void RegisterImageInfoDictionaryMapping<T1>(Expression<Func<T1, object>> ImageField, bool UseThumbnail = true, bool IsByteFormat = true)
+        {
+            if (ImageField == null)
+            {
+                throw new ArgumentNullException(nameof(ImageField), "图片字段表达式不能为空");
+            }
+
+            try
+            {
+                MemberInfo ImageFieldInfo = ImageField.GetMemberInfo();
+                if (displayHelper.ImagesColumnsMappings == null)
+                {
+                    displayHelper.ImagesColumnsMappings = new Dictionary<string, (bool IsByteFormat, bool UseThumbnail)>();
+                }
+
+                string fieldName = ImageFieldInfo.Name;
+                // 检查是否已存在相同的映射，如果存在则先移除再添加
+                if (displayHelper.ImagesColumnsMappings.ContainsKey(fieldName))
+                {
+                    displayHelper.ImagesColumnsMappings.Remove(fieldName);
+                }
+                // 添加新映射（无论是新增还是更新）
+                displayHelper.ImagesColumnsMappings.Add(fieldName, (IsByteFormat, UseThumbnail));
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"注册图片字段信息映射失败: {ex.Message}", ex);
+            }
         }
 
 
@@ -216,7 +251,13 @@ namespace RUINORERP.UI.Common
                         using (MemoryStream ms = new MemoryStream((byte[])e.Value))
                         {
                             System.Drawing.Image image = System.Drawing.Image.FromStream(ms);
-                            e.Value = image;
+                            //e.Value = image;
+                            if (image != null)
+                            {
+                                //缩略图 这里用缓存 ?
+                                var thumbnailthumbnail = UITools.CreateThumbnail(image, 100, 100);
+                                e.Value = thumbnailthumbnail;
+                            }
                             e.FormattingApplied = true;
                             return;
                         }

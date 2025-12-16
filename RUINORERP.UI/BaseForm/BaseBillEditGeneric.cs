@@ -3760,18 +3760,8 @@ namespace RUINORERP.UI.BaseForm
 
                         #endregion
 
-
                     }
-
-
-                    //审核成功
-                    //   ToolBarEnabledControl(MenuItemEnums.审核);
-                    //如果审核结果为不通过时，审核不是灰色。
-                    //if (!ae.ApprovalResults)
-                    //{
-                    //    toolStripbtnReview.Enabled = true;
-                    //}
-                    //await ToolBarEnabledControl(EditEntity);
+ 
                     ae.ApprovalResults = true;
                     reviewResult.approval = ae;
                     if (ae.bizType.ToString().Contains("款"))
@@ -3783,8 +3773,6 @@ namespace RUINORERP.UI.BaseForm
                         await MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("审核", EditEntity, $"审核结果：{(ae.ApprovalResults ? "通过" : "拒绝")}-{ae.ApprovalOpinions}");
                     }
 
-
-
                     MainForm.Instance.PrintInfoLog($"{ae.bizName}:{ae.BillNo}审核成功。", Color.Red);
                 }
                 else
@@ -3793,7 +3781,6 @@ namespace RUINORERP.UI.BaseForm
                     command.Undo();
                     ae.ApprovalResults = false;
                     ae.ApprovalStatus = (int)ApprovalStatus.未审核;
-                    //  await ToolBarEnabledControl(EditEntity);
                     reviewResult.approval = ae;
                     // 记录审计日志
                     await MainForm.Instance.AuditLogHelper.CreateAuditLog("审核失败", EditEntity, $"审核结果:{(ae.ApprovalResults ? "通过" : "拒绝")},{rmr.ErrorMsg}");
@@ -3801,13 +3788,9 @@ namespace RUINORERP.UI.BaseForm
                     MainForm.Instance.PrintInfoLog($"{ae.bizName}:{ae.BillNo}审核失败{rmr.ErrorMsg},请联系管理员！", Color.Red);
                     MessageBox.Show($"{ae.bizName}:{ae.BillNo}审核失败。\r\n {rmr.ErrorMsg}", "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
-
-                toolStripbtnReview.Enabled = false;
             }
-            else
-            {
-                toolStripbtnReview.Enabled = true;
-            }
+            
+            UpdateAllUIStates();
             return reviewResult;
         }
 
@@ -4242,9 +4225,9 @@ namespace RUINORERP.UI.BaseForm
                 toolStripbtnModify.Enabled = false;
             }
 
- 
+
             EditEntity.SetPropertyValue(typeof(ActionStatus).Name, ActionStatus.修改);
-     
+
         }
 
         protected async override void SpecialDataFix()
@@ -5614,7 +5597,7 @@ namespace RUINORERP.UI.BaseForm
             where TStatus : Enum
         {
             if (EditEntity == null) return false;
-          
+
 
             // 回退到旧的状态管理系统
             // 获取当前状态

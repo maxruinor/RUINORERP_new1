@@ -801,7 +801,7 @@ namespace RUINORERP.UI.ProductEAV
             this.newSumDataGridView产品.XmlFileName = "";
             this.newSumDataGridView产品.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.kryptonDataGridView1_CellContentClick);
             this.newSumDataGridView产品.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.kryptonDataGridView1_CellDoubleClick);
-            this.newSumDataGridView产品.CellFormatting += new System.Windows.Forms.DataGridViewCellFormattingEventHandler(this.DataGridView1_CellFormatting);
+      
             // 
             // kryptonBOM
             // 
@@ -960,7 +960,7 @@ namespace RUINORERP.UI.ProductEAV
             this.newSumDataGridView产品组合.XmlFileName = "";
             this.newSumDataGridView产品组合.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.newSumDataGridView产品组合_CellContentClick);
             this.newSumDataGridView产品组合.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.newSumDataGridView产品组合_CellDoubleClick);
-            this.newSumDataGridView产品组合.CellFormatting += new System.Windows.Forms.DataGridViewCellFormattingEventHandler(this.newSumDataGridView产品组合_CellFormatting);
+       
             // 
             // btnCancel
             // 

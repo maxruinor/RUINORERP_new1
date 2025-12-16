@@ -48,8 +48,8 @@ namespace RUINORERP.UI.ProductEAV
             if (entity.ActionStatus == ActionStatus.新增)
             {
                 // 新增模式下加载产品下拉框
-                DataBindingHelper.BindData4Cmb<tb_Prod>(entity, k => k.ProdBaseID, v => v.ProductNo + " - " + v.CNName, cmbProduct);
-                DataBindingHelper.BindData4Cmb<tb_ProdDetail>(entity, k => k.ProdDetailID, v => v.SKU, cmbProdDetail);
+                //DataBindingHelper.BindData4Cmb<tb_Prod>(entity, k => k.ProdBaseID, v => v.ProductNo + " - " + v.CNName, cmbProduct);
+                //DataBindingHelper.BindData4Cmb<tb_ProdDetail>(entity, k => k.ProdDetailID, v => v.SKU, cmbProdDetail);
                 DataBindingHelper.BindData4Cmb<tb_ProdProperty>(entity, k => k.Property_ID, v => v.PropertyName, cmbProperty);
                 DataBindingHelper.BindData4Cmb<tb_ProdPropertyValue>(entity, k => k.PropertyValueID, v => v.PropertyValueName, cmbPropertyValue);
                 

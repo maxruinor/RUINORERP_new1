@@ -6,8 +6,10 @@ using Krypton.Toolkit;
 using Krypton.Toolkit.Suite.Extended.TreeGridView;
 using Krypton.Workspace;
 using Netron.GraphLib;
- 
+using Netron.NetronLight;
+using NPOI.SS.Formula.Functions;
 using Org.BouncyCastle.Math;
+using RUINOR.WinFormsUI.CustomPictureBox;
 using RUINORERP.Business;
 using RUINORERP.Common.CollectionExtension;
 using RUINORERP.Common.Extensions;
@@ -36,8 +38,6 @@ using System.Web.UI.WebControls;
 using System.Windows.Forms;
 using static System.Windows.Forms.ListViewItem;
 using Image = System.Drawing.Image;
-using RUINOR.WinFormsUI.CustomPictureBox;
-using Netron.NetronLight;
 namespace RUINORERP.UI.MRP.BOM
 {
 
@@ -55,8 +55,11 @@ namespace RUINORERP.UI.MRP.BOM
         主要返回是产品列表，或者产品ID列表，同时像套装组合时也要返回组合的一个信息，这时套装tab页要显示需要的套装。并返回套装信息和套数。
          */
 
-
-
+        /// <summary>
+        /// 网格显示文本解析器，用于设置特殊的映射关系
+        /// </summary>
+        public GridViewDisplayTextResolverGeneric<tb_Prod> DisplayTextResolver { get; set; }
+        public GridViewDisplayTextResolverGeneric<tb_BOM_S> BOMDisplayTextResolver { get; set; }
         private object _queryValue = string.Empty;
 
         private string _queryField = string.Empty;
@@ -76,7 +79,9 @@ namespace RUINORERP.UI.MRP.BOM
         public UCBillOfMaterialsService()
         {
             InitializeComponent();
-
+            // 初始化网格显示文本解析器
+            DisplayTextResolver = new GridViewDisplayTextResolverGeneric<tb_Prod>();
+            BOMDisplayTextResolver = new GridViewDisplayTextResolverGeneric<tb_BOM_S>();
             List<KeyValuePair<object, string>> kvlist = new List<KeyValuePair<object, string>>();
             kvlist.Add(new KeyValuePair<object, string>(true, "男"));
             kvlist.Add(new KeyValuePair<object, string>(false, "女"));
@@ -90,10 +95,10 @@ namespace RUINORERP.UI.MRP.BOM
             //List<KeyValuePair<object, string>> kvlist1 = new List<KeyValuePair<object, string>>();
             //kvlist1.Add(new KeyValuePair<object, string>(true, "是"));
             //kvlist1.Add(new KeyValuePair<object, string>(false, "否"));
-    
+
             //System.Linq.Expressions.Expression<Func<tb_Employee, bool?>> expr2;
             //expr2 = (p) => p.Is_enabled;// == name;
- 
+
             //string colName2 = expr2.GetMemberInfo().Name;
             //ColNameDataDictionary.TryAdd(colName2, kvlist1);
 
@@ -118,6 +123,10 @@ namespace RUINORERP.UI.MRP.BOM
             newSumDataGridViewBOM.NeedSaveColumnsXml = true;
             newSumDataGridView产品.NeedSaveColumnsXml = true;
             newSumDataGridViewMain.NeedSaveColumnsXml = true;
+            DisplayTextResolver.RegisterImageInfoDictionaryMapping<tb_Prod>(c => c.Images);
+            DisplayTextResolver.Initialize(newSumDataGridView产品);
+            BOMDisplayTextResolver.Initialize(newSumDataGridViewBOM);
+            BOMDisplayTextResolver.RegisterImageInfoDictionaryMapping<tb_BOM_S>(c => c.BOM_Iimage);
         }
 
 
@@ -213,7 +222,7 @@ namespace RUINORERP.UI.MRP.BOM
             }
         }
 
-        UITools  uITools = new UITools();
+        UITools uITools = new UITools();
         private void DataGridView1_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
         {
             //如果列是隐藏的是不是可以不需要控制显示了呢? 后面看是否是导出这块需要不需要 不然可以隐藏的直接跳过
@@ -276,7 +285,7 @@ namespace RUINORERP.UI.MRP.BOM
         }
 
 
-      
+
         private void kryptonDataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
         {
             if (e.ColumnIndex == -1)
@@ -316,12 +325,12 @@ namespace RUINORERP.UI.MRP.BOM
                 // 查询所有BOM记录并包含明细
                 var querySqlQueryable = MainForm.Instance.AppContext.Db.Queryable<tb_BOM_S>()
                     .Includes(c => c.tb_BOM_SDetails);
-                
+
                 var allBoms = querySqlQueryable.ToList();
-                
+
                 // 筛选出明细包含主表母件的错误配方
                 var invalidBoms = new List<tb_BOM_S>();
-                
+
                 foreach (var bom in allBoms)
                 {
                     if (bom.tb_BOM_SDetails != null && bom.tb_BOM_SDetails.Any(detail => detail.ProdDetailID == bom.ProdDetailID))
@@ -329,7 +338,7 @@ namespace RUINORERP.UI.MRP.BOM
                         invalidBoms.Add(bom);
                     }
                 }
-                
+
                 if (invalidBoms.Any())
                 {
                     // 将错误配方显示在BOM页面的表格中
@@ -760,7 +769,7 @@ namespace RUINORERP.UI.MRP.BOM
         /// 这里字段是用来可以主动设置查询条件的
         /// 其他 的实际是可以不设置
         /// </summary>
-        public  void BindData()
+        public void BindData()
         {
             View_ProdDetail entity = QueryObject as View_ProdDetail;
             if (entity == null)

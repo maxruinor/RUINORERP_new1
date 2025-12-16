@@ -84,8 +84,15 @@ namespace RUINORERP.UI.Common
         // 用于存储列的显示类型
         public Dictionary<string, string> ColumnDisplayTypes { get; set; } = new Dictionary<string, string>();
 
-        // 用于存储外键列的映射
+        // 用于存储外键列的映射 
         public Dictionary<string, string> ReferenceKeyColumnMappings { get; set; } = new Dictionary<string, string>();
+
+        /// <summary>
+        /// 用来保存表格显示是处理图片列，是否为内存图片，是否显示为缩略图
+        /// </summary>
+        public Dictionary<string, (bool IsByteFormat, bool UseThumbnail)> ImagesColumnsMappings { get; set; } = new Dictionary<string, (bool IsByteFormat, bool UseThumbnail)>();
+
+
 
         /// <summary>
         /// 用于存储外键表的列表信息
@@ -331,6 +338,7 @@ namespace RUINORERP.UI.Common
         {
 
         }
+
 
 
         public string GetGridViewDisplayText(string tableName, string columnName, object value)

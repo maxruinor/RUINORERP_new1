@@ -29,6 +29,7 @@ namespace RUINORERP.UI.ProductEAV
         private void InitializeComponent()
         {
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
+            this.btnReplaceAttrs = new Krypton.Toolkit.KryptonButton();
             this.btnClearAttrs = new Krypton.Toolkit.KryptonButton();
             this.cmbPropertyValue = new Krypton.Toolkit.KryptonComboBox();
             this.cmbProperty = new Krypton.Toolkit.KryptonComboBox();
@@ -75,7 +76,6 @@ namespace RUINORERP.UI.ProductEAV
             // 
             // btnReplaceAttrs
             // 
-            this.btnReplaceAttrs = new Krypton.Toolkit.KryptonButton();
             this.btnReplaceAttrs.Location = new System.Drawing.Point(350, 120);
             this.btnReplaceAttrs.Name = "btnReplaceAttrs";
             this.btnReplaceAttrs.Size = new System.Drawing.Size(90, 25);
@@ -85,7 +85,7 @@ namespace RUINORERP.UI.ProductEAV
             // 
             // btnClearAttrs
             // 
-            this.btnClearAttrs.Location = new System.Drawing.Point(350, 150);
+            this.btnClearAttrs.Location = new System.Drawing.Point(350, 166);
             this.btnClearAttrs.Name = "btnClearAttrs";
             this.btnClearAttrs.Size = new System.Drawing.Size(90, 25);
             this.btnClearAttrs.TabIndex = 12;
@@ -96,7 +96,7 @@ namespace RUINORERP.UI.ProductEAV
             // 
             this.cmbPropertyValue.DropDownWidth = 150;
             this.cmbPropertyValue.IntegralHeight = false;
-            this.cmbPropertyValue.Location = new System.Drawing.Point(130, 150);
+            this.cmbPropertyValue.Location = new System.Drawing.Point(130, 166);
             this.cmbPropertyValue.Name = "cmbPropertyValue";
             this.cmbPropertyValue.Size = new System.Drawing.Size(200, 21);
             this.cmbPropertyValue.TabIndex = 11;
@@ -119,6 +119,7 @@ namespace RUINORERP.UI.ProductEAV
             this.cmbProdDetail.Name = "cmbProdDetail";
             this.cmbProdDetail.Size = new System.Drawing.Size(200, 21);
             this.cmbProdDetail.TabIndex = 9;
+            this.cmbProdDetail.Visible = false;
             // 
             // cmbProduct
             // 
@@ -128,13 +129,14 @@ namespace RUINORERP.UI.ProductEAV
             this.cmbProduct.Name = "cmbProduct";
             this.cmbProduct.Size = new System.Drawing.Size(200, 21);
             this.cmbProduct.TabIndex = 8;
+            this.cmbProduct.Visible = false;
             this.cmbProduct.SelectedIndexChanged += new System.EventHandler(this.cmbProduct_SelectedIndexChanged);
             // 
             // lblPropertyValue
             // 
-            this.lblPropertyValue.Location = new System.Drawing.Point(30, 150);
+            this.lblPropertyValue.Location = new System.Drawing.Point(30, 166);
             this.lblPropertyValue.Name = "lblPropertyValue";
-            this.lblPropertyValue.Size = new System.Drawing.Size(90, 20);
+            this.lblPropertyValue.Size = new System.Drawing.Size(62, 20);
             this.lblPropertyValue.TabIndex = 7;
             this.lblPropertyValue.Values.Text = "属性值：";
             // 
@@ -142,7 +144,7 @@ namespace RUINORERP.UI.ProductEAV
             // 
             this.lblProperty.Location = new System.Drawing.Point(30, 120);
             this.lblProperty.Name = "lblProperty";
-            this.lblProperty.Size = new System.Drawing.Size(90, 20);
+            this.lblProperty.Size = new System.Drawing.Size(49, 20);
             this.lblProperty.TabIndex = 6;
             this.lblProperty.Values.Text = "属性：";
             // 
@@ -150,25 +152,28 @@ namespace RUINORERP.UI.ProductEAV
             // 
             this.lblProdDetail.Location = new System.Drawing.Point(30, 90);
             this.lblProdDetail.Name = "lblProdDetail";
-            this.lblProdDetail.Size = new System.Drawing.Size(90, 20);
+            this.lblProdDetail.Size = new System.Drawing.Size(105, 20);
             this.lblProdDetail.TabIndex = 5;
             this.lblProdDetail.Values.Text = "产品详情(SKU)：";
+            this.lblProdDetail.Visible = false;
             // 
             // lblProduct
             // 
             this.lblProduct.Location = new System.Drawing.Point(30, 60);
             this.lblProduct.Name = "lblProduct";
-            this.lblProduct.Size = new System.Drawing.Size(90, 20);
+            this.lblProduct.Size = new System.Drawing.Size(88, 20);
             this.lblProduct.TabIndex = 4;
             this.lblProduct.Values.Text = "产品主信息：";
+            this.lblProduct.Visible = false;
             // 
             // lblRAR_ID
             // 
             this.lblRAR_ID.Location = new System.Drawing.Point(30, 30);
             this.lblRAR_ID.Name = "lblRAR_ID";
-            this.lblRAR_ID.Size = new System.Drawing.Size(90, 20);
+            this.lblRAR_ID.Size = new System.Drawing.Size(61, 20);
             this.lblRAR_ID.TabIndex = 3;
             this.lblRAR_ID.Values.Text = "关系ID：";
+            this.lblRAR_ID.Visible = false;
             // 
             // txtRAR_ID
             // 
@@ -177,6 +182,7 @@ namespace RUINORERP.UI.ProductEAV
             this.txtRAR_ID.ReadOnly = true;
             this.txtRAR_ID.Size = new System.Drawing.Size(100, 23);
             this.txtRAR_ID.TabIndex = 2;
+            this.txtRAR_ID.Visible = false;
             // 
             // btnCancel
             // 

@@ -465,10 +465,10 @@ namespace RUINORERP.Business
                     foreach (var item in items)
                     {
                         errorMsgBuilder.AppendLine($"{index}. 单据编号: {item.ARAPNo}");
-                        errorMsgBuilder.AppendLine($"   金额: {item.LocalBalanceAmount}");
+                        errorMsgBuilder.AppendLine($"   未核销本币: {item.LocalBalanceAmount}");
+                        errorMsgBuilder.AppendLine($"   已核销本币: {item.LocalPaidAmount}");
                         errorMsgBuilder.AppendLine($"   交易方向: {(ReceivePaymentType)item.ReceivePaymentType}");
                         errorMsgBuilder.AppendLine($"   创建时间: {item.Created_at}");
-                        errorMsgBuilder.AppendLine($"   创建用户: {item.Created_by}");
                         errorMsgBuilder.AppendLine();
                         index++;
                     }

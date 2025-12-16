@@ -6,9 +6,12 @@ using Krypton.Toolkit;
 using Krypton.Toolkit.Suite.Extended.TreeGridView;
 using Krypton.Workspace;
 using Netron.GraphLib;
-
+using Netron.NetronLight;
+using NPOI.SS.Formula.Functions;
 using Org.BouncyCastle.Math;
+using RUINOR.WinFormsUI.CustomPictureBox;
 using RUINORERP.Business;
+using RUINORERP.Business.CommService;
 using RUINORERP.Common.CollectionExtension;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Common.Helper;
@@ -21,6 +24,7 @@ using RUINORERP.UI.MRP.MP;
 using RUINORERP.UI.ToolForm;
 using SqlSugar;
 using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -36,10 +40,6 @@ using System.Web.UI.WebControls;
 using System.Windows.Forms;
 using static System.Windows.Forms.ListViewItem;
 using Image = System.Drawing.Image;
-using RUINOR.WinFormsUI.CustomPictureBox;
-using Netron.NetronLight;
-using RUINORERP.Business.CommService;
-using System.Collections;
 
 
 
@@ -78,7 +78,7 @@ namespace RUINORERP.UI.ProductEAV
         //三级 还是两级呢。  反向来 一是 KEY VALUE  然后是列名
         ConcurrentDictionary<string, List<KeyValuePair<object, string>>> _DataDictionary = new ConcurrentDictionary<string, List<KeyValuePair<object, string>>>();
 
-    
+
 
 
         /// <summary>
@@ -90,9 +90,10 @@ namespace RUINORERP.UI.ProductEAV
         public UCProdQuery()
         {
             InitializeComponent();
- 
 
-
+            // 初始化网格显示文本解析器
+            DisplayTextResolver = new GridViewDisplayTextResolverGeneric<tb_Prod>();
+            ProdBundleDisplayTextResolver = new GridViewDisplayTextResolverGeneric<tb_ProdBundle>();
             newSumDataGridView产品.NeedSaveColumnsXml = true;
             newSumDataGridView产品组合.NeedSaveColumnsXml = true;
 
@@ -108,7 +109,10 @@ namespace RUINORERP.UI.ProductEAV
             // 初始化Timer
             timer.Interval = 1000;
             timer.Tick += new EventHandler(timer_Tick);
-
+            
+           
+            ProdBundleDisplayTextResolver.Initialize(newSumDataGridView产品组合);
+            DisplayTextResolver.Initialize(newSumDataGridView产品);
         }
 
         private bool isMouseOverHeader = false;
@@ -298,77 +302,15 @@ namespace RUINORERP.UI.ProductEAV
             CloseTheForm(thisform);
         }
 
+
+        /// <summary>
+        /// 网格显示文本解析器，用于设置特殊的映射关系
+        /// </summary>
+        public GridViewDisplayTextResolverGeneric<tb_Prod> DisplayTextResolver { get; set; }
+        public GridViewDisplayTextResolverGeneric<tb_ProdBundle> ProdBundleDisplayTextResolver { get; set; }
+
         UITools uiTools = new UITools();
-        private void DataGridView1_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
-        {
-            //如果列是隐藏的是不是可以不需要控制显示了呢? 后面看是否是导出这块需要不需要 不然可以隐藏的直接跳过
-            if (!newSumDataGridView产品.Columns[e.ColumnIndex].Visible)
-            {
-                return;
-            }
-            if (e.Value == null)
-            {
-                e.Value = "";
-                return;
-            }
-
-            //图片特殊处理 要优化处理。会被覆盖值
-            if (newSumDataGridView产品.Columns[e.ColumnIndex].Name == "Images")
-            {
-                if (e.Value != null && e.Value.GetType() == typeof(byte[]))
-                {
-                    if (!(e.Value is byte[]))
-                    {
-                        return;
-                    }
-                    System.IO.MemoryStream buf = new System.IO.MemoryStream((byte[])e.Value);
-                    Image image = Image.FromStream(buf, true);
-                    if (image != null)
-                    {
-                        //缩略图 这里用缓存 ?
-                        Image thumbnailthumbnail = UITools.CreateThumbnail(image, 100, 100);
-                        e.Value = thumbnailthumbnail;
-                        return;
-                    }
-
-                }
-            }
-
-            //固定字典值显示
-            string colDbName = newSumDataGridView产品.Columns[e.ColumnIndex].Name;
-            if (ColNameDataDictionary.ContainsKey(colDbName))
-            {
-                List<KeyValuePair<object, string>> kvlist = new List<KeyValuePair<object, string>>();
-                //意思是通过列名找，再通过值找到对应的文本
-                ColNameDataDictionary.TryGetValue(colDbName, out kvlist);
-                if (kvlist != null)
-                {
-                    KeyValuePair<object, string> kv = kvlist.FirstOrDefault(t => t.Key.ToString().ToLower() == e.Value.ToString().ToLower());
-                    if (kv.Value != null)
-                    {
-                        e.Value = kv.Value;
-                        return;
-                    }
-
-                }
-            }
-
-
-
-            //动态字典值显示
-            string colName = UIHelper.ShowGridColumnsNameValue<tb_Prod>(colDbName, e.Value);
-            if (!string.IsNullOrEmpty(colName))
-            {
-                e.Value = colName;
-                return;
-            }
-
-
-
-            //处理创建人 修改人，因为这两个字段没有做外键。固定的所以可以统一处理
-
-        }
-
+       
 
 
 
@@ -1678,66 +1620,6 @@ namespace RUINORERP.UI.ProductEAV
                 }
             }
         }
-
-        private void newSumDataGridView产品组合_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
-        {
-            //如果列是隐藏的是不是可以不需要控制显示了呢? 后面看是否是导出这块需要不需要 不然可以隐藏的直接跳过
-            if (!newSumDataGridView产品组合.Columns[e.ColumnIndex].Visible)
-            {
-                return;
-            }
-            if (e.Value == null)
-            {
-                e.Value = "";
-                return;
-            }
-            //固定字典值显示
-            string colDbName = newSumDataGridView产品组合.Columns[e.ColumnIndex].Name;
-            if (ColNameDataDictionary.ContainsKey(colDbName))
-            {
-                List<KeyValuePair<object, string>> kvlist = new List<KeyValuePair<object, string>>();
-                //意思是通过列名找，再通过值找到对应的文本
-                ColNameDataDictionary.TryGetValue(colDbName, out kvlist);
-                if (kvlist != null)
-                {
-                    KeyValuePair<object, string> kv = kvlist.FirstOrDefault(t => t.Key.ToString().ToLower() == e.Value.ToString().ToLower());
-                    if (kv.Value != null)
-                    {
-                        e.Value = kv.Value;
-                        return;
-                    }
-
-                }
-            }
-
-
-
-            //动态字典值显示
-            string colName = UIHelper.ShowGridColumnsNameValue<tb_Prod>(colDbName, e.Value);
-            if (!string.IsNullOrEmpty(colName))
-            {
-                e.Value = colName;
-            }
-
-            //图片特殊处理
-            if (newSumDataGridView产品组合.Columns[e.ColumnIndex].Name == "BundleImage")
-            {
-                if (e.Value != null)
-                {
-                    System.IO.MemoryStream buf = new System.IO.MemoryStream((byte[])e.Value);
-                    Image image = Image.FromStream(buf, true);
-                    if (image != null)
-                    {
-                        //缩略图 这里用缓存 ?
-                        Image thumbnailthumbnail = UITools.CreateThumbnail(image, 100, 100);
-                        e.Value = thumbnailthumbnail;
-                    }
-
-                }
-            }
-
-        }
-
 
     }
 

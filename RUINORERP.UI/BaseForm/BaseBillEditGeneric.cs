@@ -219,7 +219,6 @@ namespace RUINORERP.UI.BaseForm
                     if (lblDataStatus != null && !string.IsNullOrEmpty(statusDesc))
                     {
                         lblDataStatus.Text = statusDesc;
-                        lblDataStatus.ForeColor = GetStatusColor(baseEntity.GetDataStatus());
                     }
 
                     // 更新审核状态显示
@@ -351,7 +350,7 @@ namespace RUINORERP.UI.BaseForm
                 try
                 {
                     // 获取实体的状态类型和当前状态
-                    var statusType = EditEntity.GetStatusType();
+                    var statusType = StateManager.GetStatusType(EditEntity);
                     var status = EditEntity.GetCurrentStatus();
 
                     // 如果不是DataStatus，则需要获取对应的业务状态按钮规则
@@ -664,7 +663,7 @@ namespace RUINORERP.UI.BaseForm
                 if (StateManager != null)
                 {
                     // 获取当前实体的状态类型和状态值
-                    var statusType = entity.GetStatusType();
+                    var statusType = StateManager.GetStatusType(entity);
                     var status = entity.GetCurrentStatus();
 
                     // 使用状态管理器检查操作权限
@@ -1386,25 +1385,55 @@ namespace RUINORERP.UI.BaseForm
 
 
         /// <summary>
-        /// 绑定数据到UI
+        /// 绑定数据到UI（增强版）
         /// 子类中数据先执行。最后执行基类方法
+        /// 优化：统一使用HandleEntityStatusSubscription管理事件订阅，避免重复订阅和内存泄漏
+        /// 增强点：
+        /// 1. 增加更全面的实体空值和类型检查
+        /// 2. 添加详细的状态变更日志记录
+        /// 3. 确保类型转换安全性
+        /// 4. 增加异常处理机制
         /// </summary>
-        /// <param name="entity"></param>
+        /// <param name="entity">实体对象</param>
+        /// <param name="actionStatus">操作状态</param>
         public virtual void BindData(T entity, ActionStatus actionStatus = ActionStatus.无操作)
         {
-            if (entity == null) return;
-            base.BindEntity(entity);
-            // 移除旧的属性变化事件订阅
-            if (EditEntity != null && EditEntity != entity)
+            // 增强的空值检查
+            if (entity == null)
             {
-                EditEntity.PropertyChanged -= Entity_PropertyChanged;
+                return;
             }
-
-            // 设置当前编辑实体
-            EditEntity = (T)entity;
-
-            // 添加属性变化事件订阅
-            EditEntity.PropertyChanged += Entity_PropertyChanged;
+            
+            try
+            {
+                
+                // 1. 统一使用基类的HandleEntityStatusSubscription移除旧实体的事件订阅
+                HandleEntityStatusSubscription(EditEntity as BaseEntity, false);
+                
+                // 移除可能存在的PropertyChanged事件订阅（保持注释，不直接使用PropertyChanged事件）
+                //if (EditEntity != null && EditEntity != entity)
+                //{
+                //    EditEntity.PropertyChanged -= Entity_PropertyChanged;
+                //}
+                
+                // 2. 设置当前编辑实体
+                EditEntity = entity; // 避免不必要的类型转换
+                base.BindEntity(entity);
+                
+                // 3. 统一使用HandleEntityStatusSubscription订阅新实体的StatusChanged事件
+                // 不再直接订阅PropertyChanged事件，避免重复事件处理
+                if (EditEntity is BaseEntity newEntity)
+                {
+                    HandleEntityStatusSubscription(newEntity, true);
+                }
+            }
+            catch (Exception ex)
+            {
+                // 增强的异常处理
+                Debug.WriteLine($"BindData错误: {ex.Message}");
+                logger?.LogError(ex, "BindData方法执行异常");
+                throw; // 重新抛出异常让调用者知道发生了错误
+            }
 
             #region 联查
 
@@ -1437,8 +1466,6 @@ namespace RUINORERP.UI.BaseForm
                 //没人锁定
                 UpdateLockUI(false);
             }
-
-
             #endregion
 
 
@@ -1615,141 +1642,10 @@ namespace RUINORERP.UI.BaseForm
 
 
 
-        // 防抖定时器 - 用于优化UI更新频率
-        private System.Windows.Forms.Timer _debounceTimer;
         // 记录最后一次需要更新的实体，用于防抖处理
         private BaseEntity _lastEntityForUpdate;
 
-        /// <summary>
-        /// 实体属性变化事件处理
-        /// 优化点：添加防抖机制，更精确的状态判断，提取公共逻辑，增加异常处理
-        /// </summary>
-        private void Entity_PropertyChanged(object sender, PropertyChangedEventArgs e)
-        {
-            try
-            {
-                if (sender is not BaseEntity entity) return;
 
-                // 保存需要更新的实体引用
-                _lastEntityForUpdate = entity;
-
-                // 初始化防抖定时器（如果尚未初始化）
-                if (_debounceTimer == null)
-                {
-                    _debounceTimer = new System.Windows.Forms.Timer
-                    {
-                        Interval = 200, // 200ms防抖间隔
-                        Enabled = false
-                    };
-                    _debounceTimer.Tick += DebounceTimer_Tick;
-                }
-                else
-                {
-                    // 如果定时器已在运行，重置它
-                    _debounceTimer.Stop();
-                }
-
-                // 对于关键属性变化，立即更新（不防抖）
-                if (e.PropertyName == nameof(DataStatus) && entity.ContainsProperty(nameof(DataStatus)))
-                {
-                    UpdateUIStatesImmediate(entity);
-                }
-                else if (e.PropertyName == businessStatus?.GetType().Name)
-                {
-                    UpdateUIStatesImmediate(entity);
-                }
-                else
-                {
-                    // 非关键属性变化，使用防抖处理
-                    _debounceTimer.Start();
-                }
-            }
-            catch (Exception ex)
-            {
-                // 添加异常处理，避免UI状态更新出错影响主程序运行
-                MainForm.Instance.uclog.AddLog($"Entity_PropertyChanged事件处理异常: {ex.Message}", UILogType.错误);
-            }
-        }
-
-        /// <summary>
-        /// 防抖定时器触发事件
-        /// 用于批量处理非关键的UI更新操作
-        /// </summary>
-        private void DebounceTimer_Tick(object sender, EventArgs e)
-        {
-            try
-            {
-                _debounceTimer.Stop();
-
-                // 使用上次记录的实体更新UI状态
-                if (_lastEntityForUpdate != null)
-                {
-                    UpdateSaveButtonState(_lastEntityForUpdate);
-                }
-            }
-            catch (Exception ex)
-            {
-                MainForm.Instance.uclog.AddLog($"防抖定时器异常: {ex.Message}", UILogType.错误);
-            }
-        }
-
-        /// <summary>
-        /// 立即更新UI状态（用于关键属性变化）
-        /// </summary>
-        /// <param name="entity">实体对象</param>
-        private void UpdateUIStatesImmediate(BaseEntity entity)
-        {
-            UpdateAllUIStates(entity);
-            UpdateSaveButtonState(entity);
-        }
-
-        /// <summary>
-        /// 更新保存按钮状态
-        /// 优化点：考虑更多因素，实现更精确的状态判断
-        /// </summary>
-        /// <param name="entity">实体对象</param>
-        private void UpdateSaveButtonState(BaseEntity entity)
-        {
-            try
-            {
-                if (entity == null) // 空实体或已删除实体不允许保存
-                {
-                    toolStripButtonSave.Enabled = false;
-                    return;
-                }
-
-                // 基本条件：实体有变更
-                bool canSave = entity.HasChanged;
-
-                // 检查单据状态
-                if (entity.ContainsProperty(nameof(DataStatus)))
-                {
-                    var dataStatus = (DataStatus)Convert.ToInt32(entity.GetPropertyValue(nameof(DataStatus)));
-                    // 已完结或确认状态通常不允许直接保存
-                    canSave &= dataStatus != DataStatus.完结 && dataStatus != DataStatus.确认;
-                }
-
-                // 检查锁定状态
-                if (entity.ContainsProperty(typeof(LockInfo).Name))
-                {
-                    var lockInfo = entity.GetPropertyValue(typeof(LockInfo).Name) as LockInfo;
-                    // 被其他用户锁定时不允许保存
-                    if (lockInfo != null && lockInfo.IsLockedByOther(MainForm.Instance.AppContext.CurrentUser.UserID))
-                    {
-                        canSave = false;
-                    }
-                }
-
-                // 最终设置按钮状态
-                toolStripButtonSave.Enabled = canSave;
-            }
-            catch (Exception ex)
-            {
-                // 发生异常时，默认禁用保存按钮以防止数据错误
-                toolStripButtonSave.Enabled = false;
-                MainForm.Instance.uclog.AddLog($"更新保存按钮状态异常: {ex.Message}", UILogType.错误);
-            }
-        }
 
         // 用于获取业务状态的辅助字段
         private object businessStatus;
@@ -3892,9 +3788,6 @@ namespace RUINORERP.UI.BaseForm
                 //锁定功能全部好后是不是可以去掉？
                 BaseEntity pkentity = (editEntity as T) as BaseEntity;
                 EditEntity = await ctr.BaseQueryByIdNavAsync(pkentity.PrimaryKeyID) as T;
-                EditEntity.PropertyChanged -= Entity_PropertyChanged;
-                EditEntity.PropertyChanged += Entity_PropertyChanged;
-
 
                 rmr = await ctr.AntiApprovalAsync(EditEntity);
                 if (rmr.Succeeded)

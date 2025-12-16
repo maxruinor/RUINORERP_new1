@@ -171,21 +171,8 @@ namespace RUINORERP.Model
             {
                 return property.GetValue(this);
             }
-
             return null;
         }
-
-
-
-        #region 像出库时 成本与分摊双向计算的情况
-        public void RaisePropertyChanged(string propertyName)
-        {
-            OnPropertyChanged(propertyName);
-        }
-
-        #endregion
-
-
 
 
         private readonly Stopwatch _performanceStopwatch = new Stopwatch();
@@ -210,32 +197,56 @@ namespace RUINORERP.Model
         public event EventHandler<StateTransitionEventArgs> StatusChanged;
 
         /// <summary>
-        /// 状态变更处理（优化版）
-        /// 简化事件触发逻辑，提高执行效率
+        /// 状态变更处理（增强版）
+        /// 提供安全、可靠的事件触发机制，确保状态变更通知能够正确传递给所有订阅者
+        /// 关键优化：隔离异常，防止单个订阅者异常影响整体事件传递
         /// </summary>
         /// <param name="e">状态转换事件参数</param>
         protected virtual void OnStatusChanged(StateTransitionEventArgs e)
         {
             // 类型安全检查
             if (e == null)
+            {
+                return;
+            }
+
+            // 安全检查：确保有订阅者才尝试触发事件
+            if (StatusChanged == null)
                 return;
 
             try
             {
-                // 简化版：只触发本地事件，移除重复的状态管理器事件触发
-                // 状态管理器的全局事件应在外部统一管理，避免重复触发
-                StatusChanged?.Invoke(this, e);
+                // 优化：获取所有订阅者的委托列表，并逐个安全触发
+                // 这种方式可以防止某个订阅者抛出异常影响其他订阅者
+                Delegate[] subscribers = StatusChanged.GetInvocationList();
+                foreach (Delegate subscriber in subscribers)
+                {
+                    try
+                    {
+                        // 安全调用单个订阅者
+                        subscriber.DynamicInvoke(this, e);
+                    }
+                    catch (Exception ex)
+                    {
+                        // 隔离单个订阅者的异常
+                        Debug.WriteLine($"状态变更事件订阅者异常: {ex.InnerException?.Message ?? ex.Message}");
+                        Debug.WriteLine($"订阅者类型: {subscriber.Method.DeclaringType?.Name}.{subscriber.Method.Name}");
+                        // 继续执行，不影响其他订阅者
+                    }
+                }
             }
             catch (Exception ex)
             {
-                // 记录异常但不中断流程
-                Debug.WriteLine($"触发状态变更事件时发生错误: {ex.Message}");
+                // 捕获并记录其他可能的异常，但不中断执行流程
+                Debug.WriteLine($"触发状态变更事件时发生系统错误: {ex.Message}");
+                Debug.WriteLine($"错误堆栈: {ex.StackTrace}");
             }
         }
-        
+
         /// <summary>
-        /// 状态变更事件触发方法（高效版）
-        /// 提供快速、直接的方式触发状态变更事件
+        /// 状态变更事件触发方法（增强版）
+        /// 提供安全、高效、可靠的方式触发状态变更事件
+        /// 确保任何状态变更都能被正确处理，无论是通过直接属性修改还是状态管理器操作
         /// </summary>
         /// <param name="statusType">状态类型</param>
         /// <param name="oldStatus">旧状态值</param>
@@ -244,13 +255,36 @@ namespace RUINORERP.Model
         /// <param name="userId">用户ID（可选）</param>
         public void TriggerStatusChange(Type statusType, object oldStatus, object newStatus, string reason = null, string userId = null)
         {
-            // 优化：快速检查状态是否实际变更，避免不必要的事件触发
-            if (oldStatus == null && newStatus == null) return;
-            if (oldStatus != null && oldStatus.Equals(newStatus)) return;
-                
+            // 参数有效性验证
+            if (statusType == null)
+            {
+                return;
+            }
+
+            // 增强版状态变更检测，避免不必要的事件触发
+            bool isChanged;
+            if (oldStatus == null && newStatus == null)
+            {
+                isChanged = false;
+            }
+            else if (oldStatus == null || newStatus == null)
+            {
+                isChanged = true; // 一个为null另一个不为null，视为变更
+            }
+            else
+            {
+                isChanged = !oldStatus.Equals(newStatus); // 值比较
+            }
+
+            // 无变更则直接返回，提高性能
+            if (!isChanged)
+                return;
+
+            DateTime startTime = DateTime.Now;
+
             try
             {
-                // 使用构造函数创建事件参数
+                // 创建状态变更事件参数
                 var eventArgs = new StateTransitionEventArgs(
                     this,
                     statusType,
@@ -258,15 +292,31 @@ namespace RUINORERP.Model
                     newStatus,
                     reason,
                     userId);
-                
-                // 直接调用OnStatusChanged处理状态变更
-                OnStatusChanged(eventArgs);
+
+                // 检查是否有订阅者，避免不必要的事件触发开销
+                if (StatusChanged != null)
+                {
+                    // 直接调用OnStatusChanged处理状态变更
+                    OnStatusChanged(eventArgs);
+                }
+
+                // 性能监控 - 仅在调试模式下记录
+#if DEBUG
+                TimeSpan duration = DateTime.Now - startTime;
+                if (duration.TotalMilliseconds > 10)
+                {
+                    Debug.WriteLine($"状态变更事件处理耗时较长: {duration.TotalMilliseconds}ms - 实体类型: {this.GetType().Name}");
+                }
+#endif
             }
             catch (Exception ex)
             {
-                // 记录异常信息，但不中断执行流程
+                // 增强异常处理，详细记录错误信息
                 Debug.WriteLine($"状态变更触发错误: {ex.Message}");
                 Debug.WriteLine($"异常堆栈: {ex.StackTrace}");
+                Debug.WriteLine($"实体类型: {this.GetType().Name}, 状态类型: {statusType.Name}");
+
+                // 确保异常不会传播，不影响主流程执行
             }
         }
 
@@ -710,10 +760,6 @@ namespace RUINORERP.Model
         public event PropertyChangedEventHandler PropertyChanged;
 
 
-
-
-
-
         /// <summary>
         /// Suppress禁止的意思。 
         /// 禁止通知属性已更改
@@ -736,9 +782,11 @@ namespace RUINORERP.Model
                 {
                     this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
                     HasChanged = true;
-
-                    // 注意：状态变更事件由状态管理器统一管理，不再在此处直接触发
-                    // 状态变更事件将在状态属性的setter中通过状态管理器触发
+                    var statusType = StateManager.GetStatusType(this);
+                    if (statusType.Name == propertyName)
+                    {
+                        TriggerStatusChange(statusType, oldValue, newValue);
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -750,7 +798,6 @@ namespace RUINORERP.Model
 
         protected virtual void OnPropertyChanged<T>(Expression<Func<T>> expr)
         {
-
             this.OnPropertyChanged(Utils.GetMemberName(expr));
         }
 
@@ -780,8 +827,8 @@ namespace RUINORERP.Model
             T oldValue = propField;
             propField = value;
 
+            // 仅调用一次完整的属性变更通知，包含旧值和新值信息
             this.OnPropertyChanged(propName, oldValue, value);
-            this.OnPropertyChanged(propName);
             HasChanged = true;
         }
 
@@ -896,7 +943,7 @@ namespace RUINORERP.Model
         private ActionStatus _previousActionStatus;
         // 状态变更计数，用于性能监控和调试
         private int _statusChangeCount;
-        
+
         /// <summary>
         /// 获取状态变更次数，用于性能监控
         /// </summary>
@@ -904,15 +951,15 @@ namespace RUINORERP.Model
         [Browsable(false)]
         public int StatusChangeCount => _statusChangeCount;
 
-       
+
         /// <summary>
         /// 操作状态（ActionStatus）
-        /// 优化说明：
-        /// 1. 增强状态变更检测
-        /// 2. 改进事件通知机制
-        /// 3. 添加性能监控统计
-        /// 4. 优化频繁变更场景处理
-        /// 5. 重要：操作状态变更不会将实体标记为HasChanged，因为它只表示UI操作意图而非实际数据变更
+        /// 增强版说明：
+        /// 1. 确保任何状态变更都能触发完整的事件通知链
+        /// 2. 统一状态变更事件和属性变更事件的触发机制
+        /// 3. 优化事件触发顺序，确保UI能正确响应所有状态变更
+        /// 4. 重要：无论状态变更来自直接属性修改还是通过状态管理器，都能触发相同的事件通知
+        /// 5. 操作状态变更不会将实体标记为HasChanged，因为它只表示UI操作意图而非实际数据变更
         /// </summary>
         [SugarColumn(IsIgnore = true)]
         [Browsable(false)]
@@ -928,36 +975,36 @@ namespace RUINORERP.Model
                 }
 
                 // 记录前一个状态
-                _previousActionStatus = _ActionStatus;
-                
+                ActionStatus oldStatus = _ActionStatus;
+
                 // 直接设置属性值，不调用SetProperty方法，避免触发变更追踪
                 bool wasSuppressed = SuppressNotifyPropertyChanged;
                 try
                 {
                     // 临时禁止属性变更通知，避免HasChanged被设置为true
                     SuppressNotifyPropertyChanged = true;
-                    
+
                     // 原子操作：设置属性值
                     _ActionStatus = value;
-                    
+                    _previousActionStatus = oldStatus;
+
                     // 更新状态变更计数
                     Interlocked.Increment(ref _statusChangeCount);
-                    
-                    // 手动触发PropertyChanged事件，但不会标记实体为已更改
-                    if (PropertyChanged != null)
-                    {
-                        PropertyChanged(this, new PropertyChangedEventArgs("ActionStatus"));
-                    }
-                    
-                    // 触发状态变更事件
-                    TriggerStatusChange(typeof(ActionStatus), _previousActionStatus, value);
+
+                    // 优化事件触发顺序：
+                    // 1. 先触发状态变更专用事件，供专门监听状态变化的处理程序使用
+                    TriggerStatusChange(typeof(ActionStatus), oldStatus, value);
+
+                    // 2. 再触发PropertyChanged事件，确保任何绑定到该属性的UI元素都能得到更新
+                    // 使用安全的事件触发方式
+                    OnPropertyChanged("ActionStatus");
                 }
                 finally
                 {
                     // 恢复原始的抑制状态
                     SuppressNotifyPropertyChanged = wasSuppressed;
                 }
-                
+
                 // 可选：添加性能警告（当状态变更过于频繁时）
                 if (_statusChangeCount > 100 && _statusChangeCount % 50 == 0)
                 {
@@ -1280,74 +1327,7 @@ namespace RUINORERP.Model
             }
         }
 
-
- 
-        /// <summary>
-        /// 获取实体的数据状态
-        /// </summary>
-        /// <returns>数据状态</returns>
-        public virtual DataStatus GetDataStatus()
-        {
-            try
-            {
-                // 首先检查是否有DataStatus属性
-                var dataStatusProperty = this.GetType().GetProperty("DataStatus");
-                if (dataStatusProperty != null && dataStatusProperty.PropertyType == typeof(DataStatus))
-                {
-                    return (DataStatus)dataStatusProperty.GetValue(this);
-                }
-
-                // 默认返回草稿状态
-                return DataStatus.草稿;
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"获取实体数据状态失败: {ex.Message}");
-                return DataStatus.草稿;
-            }
-        }
-
-
-
- 
-
-
-
-
-
-        /// <summary>
-        /// 获取实体的状态类型
-        /// </summary>
-        /// <returns>状态类型</returns>
-        public virtual Type GetStatusType()
-        {
-            try
-            {
-                // 检查实体是否包含各种状态类型的属性
-                if (this.ContainsProperty(typeof(DataStatus).Name))
-                    return typeof(DataStatus);
-
-                if (this.ContainsProperty(typeof(PrePaymentStatus).Name))
-                    return typeof(PrePaymentStatus);
-
-                if (this.ContainsProperty(typeof(ARAPStatus).Name))
-                    return typeof(ARAPStatus);
-
-                if (this.ContainsProperty(typeof(PaymentStatus).Name))
-                    return typeof(PaymentStatus);
-
-                if (this.ContainsProperty(typeof(StatementStatus).Name))
-                    return typeof(StatementStatus);
-
-                // 默认返回DataStatus类型
-                return typeof(DataStatus);
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"获取状态类型失败: {ex.Message}");
-                return typeof(DataStatus);
-            }
-        }
+       
 
         /// <summary>
         /// 获取实体的当前状态值
@@ -1357,7 +1337,7 @@ namespace RUINORERP.Model
         {
             try
             {
-                var statusType = GetStatusType();
+                var statusType = StateManager.GetStatusType(this); 
                 var propertyName = statusType.Name;
 
                 if (this.ContainsProperty(propertyName))
@@ -1388,6 +1368,7 @@ namespace RUINORERP.Model
 
         /// <summary>
         /// 检查实体是否包含指定的属性
+        /// 优化版本：使用_propertyCache缓存提高性能
         /// </summary>
         /// <param name="propertyName">属性名称</param>
         /// <returns>是否包含该属性</returns>
@@ -1396,21 +1377,28 @@ namespace RUINORERP.Model
             if (string.IsNullOrEmpty(propertyName))
                 return false;
 
-            return this.GetType().GetProperty(propertyName) != null;
+            // 使用缓存的属性列表，避免每次都调用反射
+            var cachedProperties = GetCachedProperties();
+            return cachedProperties.Any(p => p.Name == propertyName);
         }
 
         /// <summary>
         /// 获取实体指定属性的值
+        /// 优化版本：使用_propertyCache缓存提高性能，并先检查属性是否存在
         /// </summary>
         /// <param name="propertyName">属性名称</param>
-        /// <returns>属性值</returns>
+        /// <returns>属性值，若属性不存在则返回null</returns>
         public virtual object GetPropertyValue(string propertyName)
         {
             if (string.IsNullOrEmpty(propertyName))
                 return null;
 
-            var property = this.GetType().GetProperty(propertyName);
-            return property?.GetValue(this);
+            // 使用缓存的属性列表，避免每次都调用反射
+            var cachedProperties = GetCachedProperties();
+            var property = cachedProperties.FirstOrDefault(p => p.Name == propertyName);
+
+            // 如果属性存在且可读，则获取其值
+            return property?.CanRead == true ? property.GetValue(this) : null;
         }
 
 

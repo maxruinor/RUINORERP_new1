@@ -43,19 +43,19 @@ using Org.BouncyCastle.Asn1.X509.Qualified;
 namespace RUINORERP.UI.BaseForm
 {
     // ==============================================================================
-// 简化版状态管理系统设计说明
-// 设计目标：保持核心功能的同时简化状态管理流程
-// 核心流程：
-// 1. 实体状态变更触发StatusChanged事件
-// 2. 事件处理程序调用UpdateAllUIStates更新UI
-// 3. UpdateAllUIStates调用UpdateUIControlsByState更新按钮状态
-// 4. 根据GlobalStateRulesManager中的规则设置按钮可见性和可用性
-// 注意事项：
-// - 移除了多余的状态缓存和重复检查逻辑
-// - 保留了必要的重复调用防护机制
-// - 简化了事件订阅和处理流程
-// ==============================================================================
-public partial class BaseBillEdit : UserControl
+    // 简化版状态管理系统设计说明
+    // 设计目标：保持核心功能的同时简化状态管理流程
+    // 核心流程：
+    // 1. 实体状态变更触发StatusChanged事件
+    // 2. 事件处理程序调用UpdateAllUIStates更新UI
+    // 3. UpdateAllUIStates调用UpdateUIControlsByState更新按钮状态
+    // 4. 根据GlobalStateRulesManager中的规则设置按钮可见性和可用性
+    // 注意事项：
+    // - 移除了多余的状态缓存和重复检查逻辑
+    // - 保留了必要的重复调用防护机制
+    // - 简化了事件订阅和处理流程
+    // ==============================================================================
+    public partial class BaseBillEdit : UserControl
     {
 
         public ApplicationContext AppContext { set; get; }
@@ -131,11 +131,11 @@ public partial class BaseBillEdit : UserControl
         /// </summary>
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public BaseEntity BoundEntity 
-        { 
+        public BaseEntity BoundEntity
+        {
             get { return _boundEntity; }
             set
-            { 
+            {
                 if (_boundEntity != value)
                 {
                     // 移除对旧实体的事件监听
@@ -143,9 +143,9 @@ public partial class BaseBillEdit : UserControl
                     {
                         UnsubscribeEntityEvents(_boundEntity);
                     }
-                    
+
                     _boundEntity = value;
-                    
+
                     // 添加对新实体的事件监听
                     if (_boundEntity != null)
                     {
@@ -263,7 +263,7 @@ public partial class BaseBillEdit : UserControl
 
         // 用于存储上次更新的状态，避免不必要的UI刷新
         private EntityStatus _lastUpdatedStatus = null;
-        
+
         /// <summary>
         /// 统一更新所有UI状态（无参数版本，使用当前绑定的实体）
         /// 性能优化：避免频繁刷新相同状态
@@ -284,11 +284,11 @@ public partial class BaseBillEdit : UserControl
         {
             // 防止重复更新
             if (_isUpdatingUIStates) return;
-            
+
             try
             {
                 _isUpdatingUIStates = true;
-                
+
                 if (entity == null)
                 {
                     // 空实体时重置UI状态
@@ -296,7 +296,7 @@ public partial class BaseBillEdit : UserControl
                     _lastUpdatedStatus = null;
                     return;
                 }
-                
+
                 // 获取实体当前业务状态
                 var currentStatus = StateManager?.GetBusinessStatus(entity);
 
@@ -319,7 +319,7 @@ public partial class BaseBillEdit : UserControl
                 _isUpdatingUIStates = false;
             }
         }
-        
+
         /// <summary>
         /// 比较两个状态对象是否相等，避免不必要的UI刷新
         /// </summary>
@@ -331,11 +331,11 @@ public partial class BaseBillEdit : UserControl
             // 处理null情况
             if (status1 == status2) return true;
             if (status1 == null || status2 == null) return false;
-            
+
             // 比较业务状态和操作状态
             bool businessStatusEqual = Equals(status1.CurrentStatus, status2.CurrentStatus);
             bool actionStatusEqual = status1.actionStatus == status2.actionStatus;
-            
+
             // 两个状态都相等时才认为状态未变化
             return businessStatusEqual && actionStatusEqual;
         }
@@ -374,9 +374,10 @@ public partial class BaseBillEdit : UserControl
 
         #endregion
 
-       
+
 
         #endregion
+
 
 
 
@@ -405,28 +406,6 @@ public partial class BaseBillEdit : UserControl
         }
 
 
-
-        /// <summary>
-        /// 根据状态获取颜色
-        /// </summary>
-        /// <param name="status">状态</param>
-        /// <returns>颜色</returns>
-        protected virtual Color GetStatusColor(DataStatus status)
-        {
-            return status switch
-            {
-                DataStatus.草稿 => Color.Gray,
-                DataStatus.新建 => Color.Blue,
-                DataStatus.确认 => Color.Green,
-                DataStatus.完结 => Color.DarkGreen,
-                DataStatus.作废 => Color.Red,
-                _ => Color.Black
-            };
-        }
-
-
-
-
         /// <summary>
         /// 根据状态更新UI控件（子类可重写）
         /// </summary>
@@ -446,9 +425,9 @@ public partial class BaseBillEdit : UserControl
                     {
                         // 使用动态调用，根据状态值类型自动匹配泛型类型
                         try
-                                {
-                                    // GlobalStateRulesManager的GetButtonRules方法内部已实现自动类型转换
-                                    buttonRules = GlobalStateRulesManager.Instance.GetButtonRules(currentStatus.CurrentStatusType, statusValue);
+                        {
+                            // GlobalStateRulesManager的GetButtonRules方法内部已实现自动类型转换
+                            buttonRules = GlobalStateRulesManager.Instance.GetButtonRules(currentStatus.CurrentStatusType, statusValue);
                         }
                         catch (Exception ex)
                         {
@@ -581,7 +560,7 @@ public partial class BaseBillEdit : UserControl
             }
         }
 
- 
+
 
         private void bwRemoting_progressChanged(object sender, ProgressChangedEventArgs e)
         {
@@ -1020,22 +999,38 @@ public partial class BaseBillEdit : UserControl
         }
 
         /// <summary>
-        /// 订阅/取消订阅实体的StatusChanged事件
-        /// 简化版：直接高效处理状态变更订阅
+        /// 处理实体状态订阅（增强版）
+        /// 优化说明：
+        /// 1. 统一管理实体状态变更事件订阅，避免重复订阅和内存泄漏
+        /// 2. 作为状态管理统一入口，确保所有状态变更都通过此机制处理
+        /// 3. 增强异常处理和日志记录，便于调试
+        /// 4. 确保无论状态变更来自直接属性修改还是状态管理器，都能正确响应
+        /// 5. 防止重复UI更新和潜在的性能问题
         /// </summary>
         /// <param name="entity">实体对象</param>
         /// <param name="subscribe">true为订阅，false为取消订阅</param>
-        private void HandleEntityStatusSubscription(BaseEntity entity, bool subscribe)
+        public void HandleEntityStatusSubscription(BaseEntity entity, bool subscribe)
         {
-            if (entity == null) return;
+            if (entity == null)
+                return;
 
-            // 先取消订阅，避免重复订阅问题
-            entity.StatusChanged -= OnEntityStatusChanged;
-            
-            // 如果需要订阅，则添加事件处理程序
-            if (subscribe)
+            try
             {
-                entity.StatusChanged += OnEntityStatusChanged;
+                // 先取消订阅，避免重复订阅问题
+                entity.StatusChanged -= OnEntityStatusChanged;
+                // 如果需要订阅，则添加事件处理程序
+                if (subscribe)
+                {
+                    entity.StatusChanged += OnEntityStatusChanged;
+                }
+            }
+            catch (Exception ex)
+            {
+                // 增强异常处理和日志记录
+                Debug.WriteLine($"HandleEntityStatusSubscription错误: {ex.Message}");
+                Debug.WriteLine($"实体类型: {entity.GetType().Name}");
+                Debug.WriteLine($"操作类型: {(subscribe ? "订阅" : "取消订阅")}");
+                // 不抛出异常，确保流程继续执行
             }
         }
 
@@ -1067,7 +1062,21 @@ public partial class BaseBillEdit : UserControl
         {
             // 安全检查
             if (e?.Entity == null) return;
-            
+
+            // 检查状态是否真正发生变化（性能优化）
+            if (e.OldStatus?.Equals(e.NewStatus) ?? false)
+            {
+#if DEBUG
+                Debug.WriteLine($"状态未变化，跳过UI更新: 实体={e.Entity.GetType().Name}, 状态={e.NewStatus}");
+#endif
+                return;
+            }
+
+            // 记录状态变更信息（仅调试模式）
+#if DEBUG
+            Debug.WriteLine($"检测到状态变更: 实体={e.Entity.GetType().Name}, 旧状态={e.OldStatus}, 新状态={e.NewStatus}");
+#endif
+
             try
             {
                 // 直接使用异步更新UI状态，避免阻塞主线程
@@ -1075,12 +1084,15 @@ public partial class BaseBillEdit : UserControl
             }
             catch (Exception ex)
             {
+                // 增强的异常日志记录
+                Debug.WriteLine($"状态变更事件处理失败: {ex.Message}");
                 logger?.LogError(ex, "状态变更事件处理失败");
             }
         }
-        
+
         /// <summary>
-        /// 异步更新UI状态，线程安全且高效
+        /// 异步更新UI状态，线程安全且高效（增强版）
+        /// 优化UI更新流程，确保在各种情况下安全更新
         /// </summary>
         /// <param name="entity">实体对象</param>
         private void UpdateUIStatesAsync(BaseEntity entity)
@@ -1088,12 +1100,21 @@ public partial class BaseBillEdit : UserControl
             // 使用BeginInvoke确保UI线程安全，同时不阻塞调用线程
             if (this.IsHandleCreated && !this.IsDisposed)
             {
-                this.BeginInvoke((Action)(() => 
+                this.BeginInvoke((Action)(() =>
                 {
                     // 二次检查，防止在调用过程中窗体已关闭
-                    if (!this.IsDisposed)
+                    if (!this.IsDisposed && !this.Disposing)
                     {
-                        UpdateAllUIStates(entity);
+                        try
+                        {
+                            UpdateAllUIStates(entity);
+                        }
+                        catch (Exception ex)
+                        {
+                            // 捕获UI更新过程中的异常
+                            Debug.WriteLine($"UI状态更新失败: {ex.Message}");
+                            logger?.LogError(ex, "UI状态更新失败");
+                        }
                     }
                 }));
             }
@@ -1551,3 +1572,4 @@ public partial class BaseBillEdit : UserControl
 
     }
 }
+

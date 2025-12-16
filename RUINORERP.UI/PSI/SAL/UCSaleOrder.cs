@@ -75,44 +75,10 @@ namespace RUINORERP.UI.PSI.SAL
             AddPublicEntityObject(typeof(ProductSharePart));
         }
 
- 
-        
-
-        /// <summary>
-        /// 根据状态更新销售订单特定的UI - 重写基类方法
-        /// </summary>
-        protected  void UpdateSaleOrderSpecificUIByState()
-        {
-            if (EditEntity == null) return;
-
-                 
-            // 销售订单特定的额外处理
-            if (EditEntity is BaseEntity baseEntity)
-            {
-                DataStatus currentStatus = baseEntity.GetDataStatus();
-                
-                // 根据不同状态更新销售订单特有的UI元素
-                switch (currentStatus)
-                {
-                    case DataStatus.草稿:
-                    case DataStatus.新建:
-                        // 草稿或新建状态下的UI设置
-                        cmbPayStatus.Enabled = true;
-                        cmbPaytype_ID.Enabled = true;
-                        break;
-                    case DataStatus.确认:
-                    case DataStatus.完结:
-                    case DataStatus.作废:
-                        // 确认、完结、作废状态下的UI设置
-                        cmbPayStatus.Enabled = false;
-                        cmbPaytype_ID.Enabled = false;
-                        break;
-                }
-            }
-        }
 
 
  
+
 
 
         IEntityCacheManager cacheManager = Startup.GetFromFac<IEntityCacheManager>();
@@ -137,18 +103,18 @@ namespace RUINORERP.UI.PSI.SAL
             QueryConditionFilter.SetFieldLimitCondition(lambda);
         }
 
-       
+
         /// <summary>
         /// 销售订单确认时的处理 - 重写基类方法
         /// 销售订单特有的确认处理逻辑
         /// </summary>
-        protected  void OnSaleOrderConfirmed()
+        protected void OnSaleOrderConfirmed()
         {
-         
-            
+
+
             // 销售订单特有的确认处理
             MainForm.Instance.uclog.AddLog("销售订单已确认，准备生成后续单据");
-            
+
             // 可以在这里添加生成出库单、应收单等逻辑
             // 更新库存预留等
         }
@@ -159,11 +125,11 @@ namespace RUINORERP.UI.PSI.SAL
         /// </summary>
         protected void OnSaleOrderCompleted()
         {
-        
-            
+
+
             // 销售订单特有的完结处理
             MainForm.Instance.uclog.AddLog("销售订单已完结，进行最终结算");
-            
+
             // 可以在这里添加结算、归档等逻辑
         }
 
@@ -173,16 +139,16 @@ namespace RUINORERP.UI.PSI.SAL
         /// </summary>
         protected void OnSaleOrderCancelled()
         {
-      
-            
+
+
             // 销售订单特有的作废处理
             MainForm.Instance.uclog.AddLog("销售订单已作废，释放相关资源");
-            
+
             // 可以在这里添加释放库存预留、取消后续单据等逻辑
         }
 
 
-  
+
         protected override async Task LoadRelatedDataToDropDownItemsAsync()
         {
             if (base.EditEntity is tb_SaleOrder saleOrder)
@@ -318,8 +284,8 @@ namespace RUINORERP.UI.PSI.SAL
                     UIHelper.ControlForeignFieldInvisible<tb_SaleOrder>(this, false);
                 }
             }
-            
-          
+
+
             //StatusMachine.CurrentDataStatus = (DataStatus)entity.DataStatus;
             //StatusMachine.ApprovalStatus = (ApprovalStatus)entity.ApprovalStatus;
             if (entity.ApprovalStatus.HasValue)
@@ -537,7 +503,7 @@ namespace RUINORERP.UI.PSI.SAL
                     }
                 }
 
-                 
+
 
                 //如果客户有变化，带出对应有业务员
                 if (entity.CustomerVendor_ID > 0 && s2.PropertyName == entity.GetPropertyName<tb_SaleOrder>(c => c.CustomerVendor_ID))
@@ -644,7 +610,7 @@ namespace RUINORERP.UI.PSI.SAL
             }
             base.BindData(entity);
 
-             DownloadVoucherImageAsync(entity, magicPictureBox订金付款凭证);
+            DownloadVoucherImageAsync(entity, magicPictureBox订金付款凭证);
         }
 
         #region 图片相关
@@ -1715,7 +1681,7 @@ namespace RUINORERP.UI.PSI.SAL
                 return false;
             }
 
-            
+
 
             CommonUI.frmOpinion frm = new CommonUI.frmOpinion();
             string PKCol = BaseUIHelper.GetEntityPrimaryKey<tb_SaleOrder>();
@@ -1885,7 +1851,7 @@ namespace RUINORERP.UI.PSI.SAL
 
         }
 
- 
+
 
 
 

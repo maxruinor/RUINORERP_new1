@@ -316,10 +316,21 @@ namespace RUINORERP.Model.Base.StatusManager
             var statusType = typeof(StatementStatus);
             _stateTransitionRules[statusType] = new Dictionary<object, List<object>>
             {
-                [StatementStatus.草稿] = new List<object> { StatementStatus.新建, StatementStatus.已作废, StatementStatus.草稿 },
-                [StatementStatus.新建] = new List<object> { StatementStatus.确认, StatementStatus.全部结清, StatementStatus.部分结算, StatementStatus.已作废 },
-                [StatementStatus.确认] = new List<object> { StatementStatus.全部结清, StatementStatus.部分结算, StatementStatus.已作废 },
-                [StatementStatus.部分结算] = new List<object> { StatementStatus.全部结清 }
+                // 草稿状态可以转换到新建状态或已作废状态
+                [StatementStatus.草稿] = new List<object> { StatementStatus.新建, StatementStatus.已作废 },
+                
+                // 新建状态可以转换到确认状态或已作废状态
+                [StatementStatus.新建] = new List<object> { StatementStatus.确认, StatementStatus.已作废 },
+                
+                // 确认状态可以转换到部分结算状态、全部结清状态或已作废状态
+                [StatementStatus.确认] = new List<object> { StatementStatus.部分结算, StatementStatus.全部结清, StatementStatus.已作废 },
+                
+                // 部分结算状态可以转换到全部结清状态
+                [StatementStatus.部分结算] = new List<object> { StatementStatus.全部结清 },
+                
+                // 全部结清和已作废是终态，不能再转换
+                [StatementStatus.全部结清] = new List<object> { },
+                [StatementStatus.已作废] = new List<object> { }
             };
         }
 
@@ -397,20 +408,20 @@ namespace RUINORERP.Model.Base.StatusManager
         {
             // 为不同状态添加通用按钮规则
             //草稿状态：允许所有操作，除了审核和反审核
-            AddStandardButtonRules(DataStatus.草稿, true, true, true, true, true, false, false, false, false, false, true, true);
+            AddStandardButtonRules(DataStatus.草稿, true, true, true, true, true, false, false, false, false);
 
             // 根据全局提交修改模式设置已新建状态的按钮规则
             // 灵活模式：允许修改；严格模式：不允许修改
             bool allowModifyInSubmittedState = submitModifyRuleMode == SubmitModifyRuleMode.灵活模式;
-            AddStandardButtonRules(DataStatus.新建, true, allowModifyInSubmittedState, true, true, false, true, false, false, false, true, true, true);
+            AddStandardButtonRules(DataStatus.新建, true, allowModifyInSubmittedState, true, true, false, true, false, false, false);
 
             /// 确认状态：不允许修改和删除，允许反审核
-            AddStandardButtonRules(DataStatus.确认, true, false, false, false, false, false, true, true, false, true, true, true);
+            AddStandardButtonRules(DataStatus.确认, true, false, false, false, false, false, true, false, false);
             // 完结状态：仅允许查看和打印
-            AddStandardButtonRules(DataStatus.完结, true, false, false, false, false, false, false, false, true, true, true, true);
+            AddStandardButtonRules(DataStatus.完结, true, false, false, false, false, false, false, false, false);
 
             /// 作废状态：仅允许查看操作
-            AddStandardButtonRules(DataStatus.作废, true, false, false, false, false, false, false, false, false, false, false, false);
+            AddStandardButtonRules(DataStatus.作废, true, false, false, false, false, false, false, false, false);
         }
 
         /// <summary>
@@ -430,9 +441,9 @@ namespace RUINORERP.Model.Base.StatusManager
         private void InitializePaymentStatusUIButtonRules()
         {
             // 添加付款状态按钮规则
-            AddStandardButtonRules(PaymentStatus.草稿, true, true, true, true, true, false, false, true);
-            AddStandardButtonRules(PaymentStatus.待审核, true, true, true, true, false, true, false, true);
-            AddStandardButtonRules(PaymentStatus.已支付, false, false, false, false, false, false, false, true);
+            AddStandardButtonRules(PaymentStatus.草稿, true, true, true, true, true, false, false, false, false);
+            AddStandardButtonRules(PaymentStatus.待审核, true, true, true, true, false, true, false, false, false);
+            AddStandardButtonRules(PaymentStatus.已支付, false, false, false, false, false, false, false, false, false);
         }
 
         /// <summary>
@@ -441,13 +452,13 @@ namespace RUINORERP.Model.Base.StatusManager
         private void InitializePrePaymentStatusUIButtonRules()
         {
             // 添加预付款状态按钮规则
-            AddStandardButtonRules(PrePaymentStatus.草稿, true, true, true, true, true, false, false, true);
-            AddStandardButtonRules(PrePaymentStatus.待审核, true, true, true, true, false, true, false, true);
-            AddStandardButtonRules(PrePaymentStatus.已生效, false, false, false, false, false, false, true, true);
-            AddStandardButtonRules(PrePaymentStatus.待核销, false, true, true, false, false, false, false, true);
-            AddStandardButtonRules(PrePaymentStatus.部分核销, false, true, true, false, false, false, false, true);
-            AddStandardButtonRules(PrePaymentStatus.全额核销, false, false, false, false, false, false, true, true);
-            AddStandardButtonRules(PrePaymentStatus.已结案, false, false, false, false, false, false, false, true);
+            AddStandardButtonRules(PrePaymentStatus.草稿, true, true, true, true, true, false, false, false, false);
+            AddStandardButtonRules(PrePaymentStatus.待审核, true, true, true, true, false, true, false, false, false);
+            AddStandardButtonRules(PrePaymentStatus.已生效, false, false, false, false, false, false, true, false, false);
+            AddStandardButtonRules(PrePaymentStatus.待核销, false, true, true, false, false, false, false, false, false);
+            AddStandardButtonRules(PrePaymentStatus.部分核销, false, true, true, false, false, false, false, false, false);
+            AddStandardButtonRules(PrePaymentStatus.全额核销, false, false, false, false, false, false, true, false, false);
+            AddStandardButtonRules(PrePaymentStatus.已结案, false, false, false, false, false, false, false, false, false);
         }
 
         /// <summary>
@@ -456,18 +467,18 @@ namespace RUINORERP.Model.Base.StatusManager
         private void InitializeARAPStatusUIButtonRules()
         {
             // 添加应收应付状态按钮规则
-            AddStandardButtonRules(ARAPStatus.草稿, true, true, true, true, true, false, false, true);
-            AddStandardButtonRules(ARAPStatus.待审核, true, true, true, true, false, true, false, true);
+            AddStandardButtonRules(ARAPStatus.草稿, true, true, true, true, true, false, false, false, false);
+            AddStandardButtonRules(ARAPStatus.待审核, true, true, true, true, false, true, false, false, false);
             // 待支付状态：允许查看和打印，不允许修改原始数据
-            AddStandardButtonRules(ARAPStatus.待支付, true, false, false, false, false, false, false, true);
+            AddStandardButtonRules(ARAPStatus.待支付, true, false, false, false, false, false, false, false, false);
             // 部分支付状态：允许查看和打印，不允许修改原始数据
-            AddStandardButtonRules(ARAPStatus.部分支付, true, false, false, false, false, false, false, true);
+            AddStandardButtonRules(ARAPStatus.部分支付, true, false, false, false, false, false, false, false, false);
             // 全部支付状态：终态，只允许查看和打印
-            AddStandardButtonRules(ARAPStatus.全部支付, true, false, false, false, false, false, false, true);
+            AddStandardButtonRules(ARAPStatus.全部支付, true, false, false, false, false, false, false, false, false);
             // 坏账状态：特殊状态，允许查看和打印，可能需要反审核操作
-            AddStandardButtonRules(ARAPStatus.坏账, true, false, false, false, false, false, true, true);
+            AddStandardButtonRules(ARAPStatus.坏账, true, false, false, false, false, false, true, false, false);
             // 已冲销状态：终态，只允许查看和打印
-            AddStandardButtonRules(ARAPStatus.已冲销, true, false, false, false, false, false, false, true);
+            AddStandardButtonRules(ARAPStatus.已冲销, true, false, false, false, false, false, false, false, false);
         }
 
         /// <summary>
@@ -475,14 +486,25 @@ namespace RUINORERP.Model.Base.StatusManager
         /// </summary>
         private void InitializeStatementStatusUIButtonRules()
         {
-            // 添加对账状态按钮规则
-            AddStandardButtonRules(StatementStatus.草稿, true, true, true, true, true, false, false, true);
-            AddStandardButtonRules(StatementStatus.新建, true, false, false, false, false, false, false, true);
-            AddStandardButtonRules(StatementStatus.确认, false, false, false, false, false, false, false, true);
-            AddStandardButtonRules(StatementStatus.部分结算, false, false, false, false, false, false, false, true);
-            AddStandardButtonRules(StatementStatus.全部结清, false, false, false, false, false, false, false, true);
-            // 已作废状态：仅允许查看操作
-            AddStandardButtonRules(StatementStatus.已作废, true, false, false, false, false, false, false, true);
+            // 草稿状态：允许所有操作，除了审核和反审核
+            AddStandardButtonRules(StatementStatus.草稿, true, true, true, true, true, false, false, false, false);
+            
+            // 根据全局提交修改模式设置已新建状态的按钮规则
+            // 灵活模式：允许修改；严格模式：不允许修改
+            bool allowModifyInSubmittedState = submitModifyRuleMode == SubmitModifyRuleMode.灵活模式;
+            AddStandardButtonRules(StatementStatus.新建, true, allowModifyInSubmittedState, true, true, false, true, false, false, false);
+
+            // 确认状态：不允许修改和删除，允许反审核和部分结算
+            AddStandardButtonRules(StatementStatus.确认, true, false, false, false, false, false, true, false, false);
+
+            // 部分结算状态：不允许修改和删除，只允许查看和继续结算操作
+            AddStandardButtonRules(StatementStatus.部分结算, true, false, false, false, false, false, false, false, false);
+            
+            // 全部结清状态：终态，仅允许查看和打印
+            AddStandardButtonRules(StatementStatus.全部结清, true, false, false, false, false, false, false, false, false);
+            
+            // 已作废状态：终态，仅允许查看操作
+            AddStandardButtonRules(StatementStatus.已作废, true, false, false, false, false, false, false, false, false);
         }
 
         /// <summary>
@@ -497,23 +519,8 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <param name="submitEnabled">提交按钮是否启用</param>
         /// <param name="reviewEnabled">审核按钮是否启用</param>
         /// <param name="reverseReviewEnabled">反审核按钮是否启用</param>
-        /// <param name="printEnabled">打印按钮是否启用</param>
-        private void AddStandardButtonRules<T>(T status, bool addEnabled = false, bool modifyEnabled = false,
-            bool saveEnabled = false, bool deleteEnabled = false, bool submitEnabled = false,
-            bool reviewEnabled = false, bool reverseReviewEnabled = false, bool printEnabled = false) where T : struct
-        {
-            AddButtonRule(status, "toolStripbtnAdd", addEnabled);
-            AddButtonRule(status, "toolStripbtnModify", modifyEnabled);
-            AddButtonRule(status, "toolStripButtonSave", saveEnabled);
-            AddButtonRule(status, "toolStripbtnDelete", deleteEnabled);
-            AddButtonRule(status, "toolStripbtnSubmit", submitEnabled);
-            AddButtonRule(status, "toolStripbtnReview", reviewEnabled);
-            AddButtonRule(status, "toolStripBtnReverseReview", reverseReviewEnabled);
-            AddButtonRule(status, "toolStripButtonPrint", printEnabled);
-        }
-
         /// <summary>
-        /// 添加标准按钮规则（扩展版）
+        /// 添加标准按钮规则
         /// </summary>
         /// <typeparam name="T">状态类型</typeparam>
         /// <param name="status">状态值</param>
@@ -526,13 +533,12 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <param name="reverseReviewEnabled">反审核按钮是否启用</param>
         /// <param name="caseClosedEnabled">结案按钮是否启用</param>
         /// <param name="antiClosedEnabled">反结案按钮是否启用</param>
-        /// <param name="exportEnabled">导出按钮是否启用</param>
         /// <param name="exportVisible">导出按钮是否可见</param>
-        /// <param name="printEnabled">打印按钮是否启用</param>
         /// <param name="printVisible">打印按钮是否可见</param>
-        private void AddStandardButtonRules<T>(T status, bool addEnabled, bool modifyEnabled, bool saveEnabled, bool deleteEnabled,
-            bool submitEnabled, bool reviewEnabled, bool reverseReviewEnabled, bool caseClosedEnabled,
-            bool antiClosedEnabled, bool exportEnabled, bool exportVisible, bool printEnabled, bool printVisible = true) where T : struct
+        private void AddStandardButtonRules<T>(T status, bool addEnabled = false, bool modifyEnabled = false, 
+            bool saveEnabled = false, bool deleteEnabled = false, bool submitEnabled = false,
+            bool reviewEnabled = false, bool reverseReviewEnabled = false, bool caseClosedEnabled = false,
+            bool antiClosedEnabled = false,  bool printVisible = true) where T : struct
         {
             AddButtonRule(status, "toolStripbtnAdd", addEnabled);
             AddButtonRule(status, "toolStripbtnModify", modifyEnabled);
@@ -544,7 +550,6 @@ namespace RUINORERP.Model.Base.StatusManager
             AddButtonRule(status, "toolStripButtonCaseClosed", caseClosedEnabled);
             AddButtonRule(status, "toolStripButtonAntiClosed", antiClosedEnabled);
             AddButtonRule(status, "toolStripButtonPrint", printVisible);
-            AddButtonRule(status, "toolStripButtonExport", exportVisible);
         }
 
         /// <summary>
@@ -811,11 +816,20 @@ namespace RUINORERP.Model.Base.StatusManager
             {
                 _actionPermissionRules[statusType] = new Dictionary<object, List<MenuItemEnums>>
                 {
+                    // 草稿状态：允许所有基本操作
                     [StatementStatus.草稿] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.提交 },
+                    
+                    // 新建状态：允许基本操作和审核（灵活模式下允许修改）
                     [StatementStatus.新建] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.审核 },
-                    [StatementStatus.确认] = new List<MenuItemEnums> { },
+                    
+                    // 确认状态：允许反审核操作
+                    [StatementStatus.确认] = new List<MenuItemEnums> { MenuItemEnums.反审 },
+                    
+                    // 部分结算状态：允许继续结算操作
+                    [StatementStatus.部分结算] = new List<MenuItemEnums> { MenuItemEnums.结案 },
+                    
+                    // 全部结清和已作废是终态，不允许操作
                     [StatementStatus.全部结清] = new List<MenuItemEnums> { },
-                    [StatementStatus.部分结算] = new List<MenuItemEnums> { },
                     [StatementStatus.已作废] = new List<MenuItemEnums> { }
                 };
             }
@@ -823,11 +837,20 @@ namespace RUINORERP.Model.Base.StatusManager
             {
                 _actionPermissionRules[statusType] = new Dictionary<object, List<MenuItemEnums>>
                 {
+                    // 草稿状态：允许所有基本操作
                     [StatementStatus.草稿] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.提交 },
+                    
+                    // 新建状态：允许基本操作和审核（严格模式下不允许修改）
                     [StatementStatus.新建] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.删除, MenuItemEnums.审核 },
-                    [StatementStatus.确认] = new List<MenuItemEnums> { },
+                    
+                    // 确认状态：允许反审核操作
+                    [StatementStatus.确认] = new List<MenuItemEnums> { MenuItemEnums.反审 },
+                    
+                    // 部分结算状态：允许继续结算操作
+                    [StatementStatus.部分结算] = new List<MenuItemEnums> { MenuItemEnums.结案 },
+                    
+                    // 全部结清和已作废是终态，不允许操作
                     [StatementStatus.全部结清] = new List<MenuItemEnums> { },
-                    [StatementStatus.部分结算] = new List<MenuItemEnums> { },
                     [StatementStatus.已作废] = new List<MenuItemEnums> { }
                 };
             }

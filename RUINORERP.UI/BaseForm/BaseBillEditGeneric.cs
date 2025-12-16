@@ -362,49 +362,8 @@ namespace RUINORERP.UI.BaseForm
                 // 获取当前编辑实体
                 var entity = EditEntity;
                 if (entity == null) return;
-
-
                 //根据规则判断按钮状态
                 UpdateButtonStatesUsingUIRules(currentStatus, CurrentStatusType);
-
-                // 对于业务状态按钮，需要额外处理by watson
-                try
-                {
-                    // 获取实体的状态类型和当前状态
-                    var statusType = StateManager.GetStatusType(EditEntity);
-                    var status = EditEntity.GetCurrentStatus();
-
-                    // 如果不是DataStatus，则需要获取对应的业务状态按钮规则
-                    if (statusType != typeof(DataStatus))
-                    {
-                        // 获取实体状态的实际值，确保传递非空的值类型给GetButtonRules
-                        var businessButtonRules = new Dictionary<string, bool>();
-                        if (status != null)
-                        {
-                            // 获取当前状态值
-                            var statusValue = status;
-                            if (statusValue != null)
-                            {
-                                // 使用动态调用，根据状态值类型自动匹配泛型类型
-                                try
-                                {
-                                    // GlobalStateRulesManager的GetButtonRules方法内部已实现自动类型转换
-                                    businessButtonRules = GlobalStateRulesManager.Instance.GetButtonRules(CurrentStatusType, statusValue);
-                                }
-                                catch (Exception ex)
-                                {
-                                    // 出现异常时使用默认规则，避免UI功能失效
-                                    Console.WriteLine($"获取按钮规则异常: {ex.Message}");
-                                }
-                            }
-                        }
-                        UpdateButtonStatesFromRules(businessButtonRules);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    logger?.LogError(ex, "更新业务状态按钮失败: {Message}", ex.Message);
-                }
 
             }
             catch (Exception ex)
@@ -502,14 +461,12 @@ namespace RUINORERP.UI.BaseForm
         {
             try
             {
-
                 var control = this.Controls.Find(buttonName, true).FirstOrDefault();
                 if (control != null)
                 {
                     control.Enabled = enabled;
                     return;
                 }
-
             }
             catch (Exception ex)
             {
@@ -532,9 +489,6 @@ namespace RUINORERP.UI.BaseForm
                         // 注意：Visible属性由权限系统统一控制，不在状态管理中处理
                         var enabledProperty = button.GetType().GetProperty("Enabled");
                         enabledProperty?.SetValue(button, enabled);
-
-                        // 移除Visible属性设置，Visible由权限系统管理
-                        // 注意：即使是特殊按钮，其Visible状态也应由权限系统统一控制
                     }
                 }
             }
@@ -543,37 +497,6 @@ namespace RUINORERP.UI.BaseForm
                 logger?.LogError(ex, "更新按钮状态失败: {ButtonName}", buttonName);
             }
         }
-
-
-
-        /// <summary>
-        /// 获取按钮控件
-        /// </summary>
-        /// <param name="buttonName">按钮名称</param>
-        /// <returns>按钮控件</returns>
-        protected virtual Control GetButtonControl(string buttonName)
-        {
-            try
-            {
-                // 首先尝试从字段获取
-                var buttonField = this.GetType().GetField(buttonName,
-                    BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
-
-                if (buttonField != null)
-                {
-                    return buttonField.GetValue(this) as Control;
-                }
-
-                // 如果字段获取失败，尝试从Controls集合获取
-                return this.Controls.Find(buttonName, true).FirstOrDefault();
-            }
-            catch (Exception ex)
-            {
-                logger?.LogError(ex, "获取按钮控件失败: {ButtonName}", buttonName);
-                return null;
-            }
-        }
-
 
 
 

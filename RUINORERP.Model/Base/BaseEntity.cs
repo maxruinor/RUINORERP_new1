@@ -139,7 +139,7 @@ namespace RUINORERP.Model
         {
             return _changedProperties.TryGetValue(propertyName, out var record)
         ? record.OriginalValue
-        : GetCurrentValue(propertyName);
+        : GetPropertyValue(propertyName);
         }
 
 
@@ -159,34 +159,7 @@ namespace RUINORERP.Model
         }
 
 
-        /// <summary>
-        /// 获取属性的当前值
-        /// </summary>
-        /// <param name="propertyName">属性名称</param>
-        /// <returns>属性的当前值</returns>
-        public object GetCurrentValue(string propertyName)
-        {
-            PropertyInfo property = GetType().GetProperty(propertyName);
-            if (property != null && property.CanRead)
-            {
-                return property.GetValue(this);
-            }
-            return null;
-        }
 
-
-        private readonly Stopwatch _performanceStopwatch = new Stopwatch();
-
-        public void StartPerformanceMonitoring()
-        {
-            _performanceStopwatch.Restart();
-        }
-
-        public void StopPerformanceMonitoring(string operationName)
-        {
-            _performanceStopwatch.Stop();
-            Console.WriteLine($"{operationName} took {_performanceStopwatch.ElapsedMilliseconds} ms");
-        }
 
         #region 状态机管理
 
@@ -940,17 +913,10 @@ namespace RUINORERP.Model
 
 
         private ActionStatus _ActionStatus;
-        private ActionStatus _previousActionStatus;
         // 状态变更计数，用于性能监控和调试
         private int _statusChangeCount;
 
-        /// <summary>
-        /// 获取状态变更次数，用于性能监控
-        /// </summary>
-        [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
-        public int StatusChangeCount => _statusChangeCount;
-
+ 
 
         /// <summary>
         /// 操作状态（ActionStatus）
@@ -986,7 +952,6 @@ namespace RUINORERP.Model
 
                     // 原子操作：设置属性值
                     _ActionStatus = value;
-                    _previousActionStatus = oldStatus;
 
                     // 更新状态变更计数
                     Interlocked.Increment(ref _statusChangeCount);
@@ -1327,7 +1292,7 @@ namespace RUINORERP.Model
             }
         }
 
-       
+
 
         /// <summary>
         /// 获取实体的当前状态值
@@ -1337,7 +1302,7 @@ namespace RUINORERP.Model
         {
             try
             {
-                var statusType = StateManager.GetStatusType(this); 
+                var statusType = StateManager.GetStatusType(this);
                 var propertyName = statusType.Name;
 
                 if (this.ContainsProperty(propertyName))
@@ -1401,8 +1366,6 @@ namespace RUINORERP.Model
             return property?.CanRead == true ? property.GetValue(this) : null;
         }
 
-
-
         /// <summary>
         /// 重置状态管理器
         /// </summary>
@@ -1418,8 +1381,6 @@ namespace RUINORERP.Model
                 System.Diagnostics.Debug.WriteLine($"重置状态管理器失败: {ex.Message}");
             }
         }
-
-
 
         #endregion
 

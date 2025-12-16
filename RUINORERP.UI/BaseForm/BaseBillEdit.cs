@@ -479,7 +479,6 @@ namespace RUINORERP.UI.BaseForm
                 case MenuItemEnums.查询:
                     Query();
                     break;
-                    break;
                 case MenuItemEnums.刷新:
                     Refreshs();
                     break;

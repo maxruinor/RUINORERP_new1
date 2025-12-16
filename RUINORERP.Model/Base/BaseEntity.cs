@@ -742,8 +742,7 @@ namespace RUINORERP.Model
         [Browsable(false)]
         public bool SuppressNotifyPropertyChanged { get; set; }
         /// <summary>
-        /// 触发属性变更通知（增强版）
-        /// 确保状态属性变更时，无论PropertyChanged事件是否有订阅者，都能正确触发状态变更通知
+        /// 触发属性变更通知
         /// </summary>
         /// <param name="propertyName">属性名</param>
         /// <param name="oldValue">旧值</param>

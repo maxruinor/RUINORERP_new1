@@ -124,16 +124,16 @@ namespace RUINORERP.Model.Context
         private static readonly ThreadLocal<ApplicationContext> _currentContext = new ThreadLocal<ApplicationContext>();
 
         /// <summary>
-    /// 防止递归获取上下文的标志位
-    /// </summary>
-    [ThreadStatic]
-    private static bool _isGettingContext = false;
+        /// 防止递归获取上下文的标志位
+        /// </summary>
+        [ThreadStatic]
+        private static bool _isGettingContext = false;
 
-    /// <summary>
-    /// 防止递归设置上下文的标志位
-    /// </summary>
-    [ThreadStatic]
-    private static bool _isSettingContext = false;
+        /// <summary>
+        /// 防止递归设置上下文的标志位
+        /// </summary>
+        [ThreadStatic]
+        private static bool _isSettingContext = false;
 
         #region 智能提醒配置字典
         public Dictionary<ReminderBizType, IRuleConfig> RuleConfigDictionary { get; set; }
@@ -575,7 +575,7 @@ namespace RUINORERP.Model.Context
         public T GetRequiredService<T>()
         {
             if (CurrentServiceProvider == null)
-                throw new NullReferenceException(nameof(CurrentServiceProvider));
+                return default(T);
 
             Type serviceType = typeof(T);
 

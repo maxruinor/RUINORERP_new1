@@ -3685,7 +3685,19 @@ namespace RUINORERP.UI.BaseForm
                 //反审前 刷新最新数据才能判断 比方销售订单 没有关掉当前UI时。已经出库。再反审。后面再优化为缓存处理锁单来不用查数据库刷新。
                 //锁定功能全部好后是不是可以去掉？
                 BaseEntity pkentity = (editEntity as T) as BaseEntity;
+                
+                // 保存旧实体的状态订阅引用
+                BaseEntity oldEntity = EditEntity as BaseEntity;
+                
+                // 重新查询实体数据
                 EditEntity = await ctr.BaseQueryByIdNavAsync(pkentity.PrimaryKeyID) as T;
+                
+                // 确保新实体有状态变更事件订阅
+                // 关键修复：重新查询实体后，StatusChanged事件订阅会丢失，需要重新订阅
+                if (EditEntity is BaseEntity newEntity)
+                {
+                    HandleEntityStatusSubscription(newEntity, true);
+                }
 
                 rmr = await ctr.AntiApprovalAsync(EditEntity);
                 if (rmr.Succeeded)
@@ -3718,6 +3730,7 @@ namespace RUINORERP.UI.BaseForm
                     MessageBox.Show($"{ae.bizName}:{ae.BillNo}反审失败。\r\n {rmr.ErrorMsg}", "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
+            EditEntity.AcceptChanges();
             return rs;
         }
 

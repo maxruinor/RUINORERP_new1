@@ -586,7 +586,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                     {
                         FieldName = "StatementStatus",
                         ConditionalType = ConditionalType.Equal,
-                        FieldValue = ((int)StatementStatus.已确认).ToString(),
+                        FieldValue = ((int)StatementStatus.确认).ToString(),
                         CSharpTypeName = "int"
                     }
                 }

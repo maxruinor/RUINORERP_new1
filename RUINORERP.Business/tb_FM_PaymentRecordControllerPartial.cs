@@ -899,7 +899,7 @@ namespace RUINORERP.Business
                                         detail.tb_fm_receivablepayable.AllowAddToStatement = false;
                                     }
                                 }
-                                statement.StatementStatus = (int)StatementStatus.已结清;
+                                statement.StatementStatus = (int)StatementStatus.全部结清;
                             }
                             else
                             {
@@ -958,7 +958,7 @@ namespace RUINORERP.Business
                                             detail.tb_fm_receivablepayable.AllowAddToStatement = false;
                                         }
                                     }
-                                    statement.StatementStatus = (int)StatementStatus.已结清;
+                                    statement.StatementStatus = (int)StatementStatus.全部结清;
                                 }
 
                                 // 记录混合对冲的日志信息

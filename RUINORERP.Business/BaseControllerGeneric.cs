@@ -218,7 +218,7 @@ namespace RUINORERP.Business
             {
                 if (ReflectionHelper.ExistPropertyName<T>(typeof(StatementStatus).Name))
                 {
-                    ReflectionHelper.SetPropertyValue(entity, typeof(StatementStatus).Name, StatementStatus.已发送);
+                    ReflectionHelper.SetPropertyValue(entity, typeof(StatementStatus).Name, StatementStatus.新建);
                 }
             }
             else if (statusName == typeof(PrePaymentStatus).Name)

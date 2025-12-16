@@ -283,7 +283,7 @@ namespace RUINORERP.UI.FM
                 {
                     //权限允许
                     if ((true && entity.StatementStatus == (int)StatementStatus.草稿) ||
-                    (true && entity.StatementStatus == (int)StatementStatus.已发送))
+                    (true && entity.StatementStatus == (int)StatementStatus.新建))
                     {
                         EditEntity.ActionStatus = ActionStatus.修改;
                     }
@@ -303,13 +303,13 @@ namespace RUINORERP.UI.FM
             {
                 //权限允许
                 if ((true && entity.StatementStatus == (int)StatementStatus.草稿)
-                || (true && entity.StatementStatus == (int)StatementStatus.已发送))
+                || (true && entity.StatementStatus == (int)StatementStatus.新建))
                 {
                     EditEntity.ActionStatus = ActionStatus.修改;
                 }
 
 
-                if (entity.PayeeInfoID == null && (entity.StatementStatus == (int)StatementStatus.草稿) || (true && entity.StatementStatus == (int)StatementStatus.已发送))
+                if (entity.PayeeInfoID == null && (entity.StatementStatus == (int)StatementStatus.草稿) || (true && entity.StatementStatus == (int)StatementStatus.新建))
                 {
                     LoadPayeeInfo(entity, true);
 
@@ -942,7 +942,7 @@ namespace RUINORERP.UI.FM
 
         protected override async Task<bool> Submit()
         {
-            bool result = await Submit(StatementStatus.已发送);
+            bool result = await Submit(StatementStatus.新建);
             if (result)
             {
                 UIConfigManager configManager = Startup.GetFromFac<UIConfigManager>();
@@ -971,10 +971,10 @@ namespace RUINORERP.UI.FM
             {
                 //https://www.runoob.com/w3cnote/csharp-enum.html
                 var dataStatus = (StatementStatus)(EditEntity.GetPropertyValue(typeof(StatementStatus).Name).ToLong());
-                if (dataStatus <= StatementStatus.已确认)
+                if (dataStatus <= StatementStatus.确认)
                 {
                     //如果草稿。都可以删除。如果是新建，则提交过了。要创建人或超级管理员才能删除
-                    if ((dataStatus == StatementStatus.已发送 || dataStatus == StatementStatus.已确认) && !AppContext.IsSuperUser)
+                    if ((dataStatus == StatementStatus.新建 || dataStatus == StatementStatus.确认) && !AppContext.IsSuperUser)
                     {
                         if (EditEntity.Created_by.Value != AppContext.CurUserInfo.Id)
                         {

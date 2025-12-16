@@ -108,7 +108,7 @@ namespace RUINORERP.Model.Base.StatusManager
             if (submitModifyRuleMode != mode)
             {
                 submitModifyRuleMode = mode;
-                
+
                 // 重新初始化规则以应用新模式
                 if (_isInitialized)
                 {
@@ -226,7 +226,7 @@ namespace RUINORERP.Model.Base.StatusManager
             {
                 [DataStatus.草稿] = new List<object> { DataStatus.新建, DataStatus.作废 },
                 [DataStatus.新建] = new List<object> { DataStatus.确认, DataStatus.作废 },
-                [DataStatus.确认] = new List<object> { DataStatus.完结, DataStatus.作废 },
+                [DataStatus.确认] = new List<object> { DataStatus.新建, DataStatus.完结, DataStatus.作废 },
                 [DataStatus.完结] = new List<object> { }, // 完结状态不能再转换
                 [DataStatus.作废] = new List<object> { } // 作废状态就不再使用
             };
@@ -269,7 +269,8 @@ namespace RUINORERP.Model.Base.StatusManager
             _stateTransitionRules[statusType] = new Dictionary<object, List<object>>
             {
                 [PaymentStatus.草稿] = new List<object> { PaymentStatus.待审核, PaymentStatus.草稿 },
-                [PaymentStatus.待审核] = new List<object> { PaymentStatus.已支付, PaymentStatus.草稿 }
+                [PaymentStatus.待审核] = new List<object> { PaymentStatus.已支付, PaymentStatus.草稿 },
+                [PaymentStatus.已支付] = new List<object> { }
             };
         }
 
@@ -315,10 +316,10 @@ namespace RUINORERP.Model.Base.StatusManager
             var statusType = typeof(StatementStatus);
             _stateTransitionRules[statusType] = new Dictionary<object, List<object>>
             {
-                [StatementStatus.草稿] = new List<object> { StatementStatus.已发送, StatementStatus.已作废, StatementStatus.草稿 },
-                [StatementStatus.已发送] = new List<object> { StatementStatus.已确认, StatementStatus.已结清, StatementStatus.部分结算, StatementStatus.已作废 },
-                [StatementStatus.已确认] = new List<object> { StatementStatus.已结清, StatementStatus.部分结算, StatementStatus.已作废 },
-                [StatementStatus.部分结算] = new List<object> { StatementStatus.已结清 }
+                [StatementStatus.草稿] = new List<object> { StatementStatus.新建, StatementStatus.已作废, StatementStatus.草稿 },
+                [StatementStatus.新建] = new List<object> { StatementStatus.确认, StatementStatus.全部结清, StatementStatus.部分结算, StatementStatus.已作废 },
+                [StatementStatus.确认] = new List<object> { StatementStatus.全部结清, StatementStatus.部分结算, StatementStatus.已作废 },
+                [StatementStatus.部分结算] = new List<object> { StatementStatus.全部结清 }
             };
         }
 
@@ -395,15 +396,20 @@ namespace RUINORERP.Model.Base.StatusManager
         private void InitializeDataStatusUIButtonRules()
         {
             // 为不同状态添加通用按钮规则
+            //草稿状态：允许所有操作，除了审核和反审核
             AddStandardButtonRules(DataStatus.草稿, true, true, true, true, true, false, false, false, false, false, true, true);
-            
+
             // 根据全局提交修改模式设置已新建状态的按钮规则
             // 灵活模式：允许修改；严格模式：不允许修改
             bool allowModifyInSubmittedState = submitModifyRuleMode == SubmitModifyRuleMode.灵活模式;
             AddStandardButtonRules(DataStatus.新建, true, allowModifyInSubmittedState, true, true, false, true, false, false, false, true, true, true);
 
+            /// 确认状态：不允许修改和删除，允许反审核
             AddStandardButtonRules(DataStatus.确认, true, false, false, false, false, false, true, true, false, true, true, true);
+            // 完结状态：仅允许查看和打印
             AddStandardButtonRules(DataStatus.完结, true, false, false, false, false, false, false, false, true, true, true, true);
+
+            /// 作废状态：仅允许查看操作
             AddStandardButtonRules(DataStatus.作废, true, false, false, false, false, false, false, false, false, false, false, false);
         }
 
@@ -471,10 +477,10 @@ namespace RUINORERP.Model.Base.StatusManager
         {
             // 添加对账状态按钮规则
             AddStandardButtonRules(StatementStatus.草稿, true, true, true, true, true, false, false, true);
-            AddStandardButtonRules(StatementStatus.已发送, true, false, false, false, false, false, false, true);
-            AddStandardButtonRules(StatementStatus.已确认, false, false, false, false, false, false, false, true);
+            AddStandardButtonRules(StatementStatus.新建, true, false, false, false, false, false, false, true);
+            AddStandardButtonRules(StatementStatus.确认, false, false, false, false, false, false, false, true);
             AddStandardButtonRules(StatementStatus.部分结算, false, false, false, false, false, false, false, true);
-            AddStandardButtonRules(StatementStatus.已结清, false, false, false, false, false, false, false, true);
+            AddStandardButtonRules(StatementStatus.全部结清, false, false, false, false, false, false, false, true);
             // 已作废状态：仅允许查看操作
             AddStandardButtonRules(StatementStatus.已作废, true, false, false, false, false, false, false, true);
         }
@@ -726,10 +732,10 @@ namespace RUINORERP.Model.Base.StatusManager
 
             // 为PrePaymentStatus添加操作权限规则
             AddPrePaymentStatusActionPermissionRules();
-            
+
             // 为StatementStatus添加操作权限规则
             AddStatementStatusActionPermissionRules();
-            
+
             // 为ARAPStatus添加操作权限规则
             AddARAPStatusActionPermissionRules();
         }
@@ -740,12 +746,25 @@ namespace RUINORERP.Model.Base.StatusManager
         private void AddPaymentStatusActionPermissionRules()
         {
             var statusType = typeof(PaymentStatus);
-            _actionPermissionRules[statusType] = new Dictionary<object, List<MenuItemEnums>>
+
+            if (submitModifyRuleMode == SubmitModifyRuleMode.灵活模式)
             {
-                [PaymentStatus.草稿] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.提交 },
-                [PaymentStatus.待审核] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.审核 },
-                [PaymentStatus.已支付] = new List<MenuItemEnums> { MenuItemEnums.打印 }
-            };
+                _actionPermissionRules[statusType] = new Dictionary<object, List<MenuItemEnums>>
+                {
+                    [PaymentStatus.草稿] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.提交 },
+                    [PaymentStatus.待审核] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.审核 },
+                    [PaymentStatus.已支付] = new List<MenuItemEnums> { MenuItemEnums.打印 }
+                };
+            }
+            else
+            {
+                _actionPermissionRules[statusType] = new Dictionary<object, List<MenuItemEnums>>
+                {
+                    [PaymentStatus.草稿] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.提交 },
+                    [PaymentStatus.待审核] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.删除, MenuItemEnums.审核 },
+                    [PaymentStatus.已支付] = new List<MenuItemEnums> { MenuItemEnums.打印 }
+                };
+            }
         }
 
         /// <summary>
@@ -754,51 +773,98 @@ namespace RUINORERP.Model.Base.StatusManager
         private void AddPrePaymentStatusActionPermissionRules()
         {
             var statusType = typeof(PrePaymentStatus);
-            _actionPermissionRules[statusType] = new Dictionary<object, List<MenuItemEnums>>
+            if (submitModifyRuleMode == SubmitModifyRuleMode.灵活模式)
             {
-                [PrePaymentStatus.草稿] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.提交 },
-                [PrePaymentStatus.待审核] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.审核 },
-                [PrePaymentStatus.已生效] = new List<MenuItemEnums> { MenuItemEnums.反审 },
-                [PrePaymentStatus.待核销] = new List<MenuItemEnums> { MenuItemEnums.反审 },
-                [PrePaymentStatus.部分核销] = new List<MenuItemEnums> {  },
-                [PrePaymentStatus.全额核销] = new List<MenuItemEnums> {  },
-                [PrePaymentStatus.已结案] = new List<MenuItemEnums> { }
-            };
+                _actionPermissionRules[statusType] = new Dictionary<object, List<MenuItemEnums>>
+                {
+                    [PrePaymentStatus.草稿] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.提交 },
+                    [PrePaymentStatus.待审核] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.审核 },
+                    [PrePaymentStatus.已生效] = new List<MenuItemEnums> { MenuItemEnums.反审 },
+                    [PrePaymentStatus.待核销] = new List<MenuItemEnums> { MenuItemEnums.反审 },
+                    [PrePaymentStatus.部分核销] = new List<MenuItemEnums> { },
+                    [PrePaymentStatus.全额核销] = new List<MenuItemEnums> { },
+                    [PrePaymentStatus.已结案] = new List<MenuItemEnums> { }
+                };
+            }
+            else
+            {
+                _actionPermissionRules[statusType] = new Dictionary<object, List<MenuItemEnums>>
+                {
+                    [PrePaymentStatus.草稿] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.提交 },
+                    [PrePaymentStatus.待审核] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.删除, MenuItemEnums.审核 },
+                    [PrePaymentStatus.已生效] = new List<MenuItemEnums> { MenuItemEnums.反审 },
+                    [PrePaymentStatus.待核销] = new List<MenuItemEnums> { MenuItemEnums.反审 },
+                    [PrePaymentStatus.部分核销] = new List<MenuItemEnums> { },
+                    [PrePaymentStatus.全额核销] = new List<MenuItemEnums> { },
+                    [PrePaymentStatus.已结案] = new List<MenuItemEnums> { }
+                };
+            }
         }
-        
+
         /// <summary>
         /// 添加StatementStatus操作权限规则
         /// </summary>
         private void AddStatementStatusActionPermissionRules()
         {
             var statusType = typeof(StatementStatus);
-            _actionPermissionRules[statusType] = new Dictionary<object, List<MenuItemEnums>>
+            if (submitModifyRuleMode == SubmitModifyRuleMode.灵活模式)
             {
-                [StatementStatus.草稿] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.提交 },
-                [StatementStatus.已发送] = new List<MenuItemEnums> {  MenuItemEnums.修改},
-                [StatementStatus.已确认] = new List<MenuItemEnums> { },
-                [StatementStatus.已结清] = new List<MenuItemEnums> { },
-                [StatementStatus.部分结算] = new List<MenuItemEnums> { },
-                [StatementStatus.已作废] = new List<MenuItemEnums> { }
-            };
+                _actionPermissionRules[statusType] = new Dictionary<object, List<MenuItemEnums>>
+                {
+                    [StatementStatus.草稿] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.提交 },
+                    [StatementStatus.新建] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.审核 },
+                    [StatementStatus.确认] = new List<MenuItemEnums> { },
+                    [StatementStatus.全部结清] = new List<MenuItemEnums> { },
+                    [StatementStatus.部分结算] = new List<MenuItemEnums> { },
+                    [StatementStatus.已作废] = new List<MenuItemEnums> { }
+                };
+            }
+            else
+            {
+                _actionPermissionRules[statusType] = new Dictionary<object, List<MenuItemEnums>>
+                {
+                    [StatementStatus.草稿] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.提交 },
+                    [StatementStatus.新建] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.删除, MenuItemEnums.审核 },
+                    [StatementStatus.确认] = new List<MenuItemEnums> { },
+                    [StatementStatus.全部结清] = new List<MenuItemEnums> { },
+                    [StatementStatus.部分结算] = new List<MenuItemEnums> { },
+                    [StatementStatus.已作废] = new List<MenuItemEnums> { }
+                };
+            }
         }
-        
+
         /// <summary>
         /// 添加ARAPStatus操作权限规则
         /// </summary>
         private void AddARAPStatusActionPermissionRules()
         {
             var statusType = typeof(ARAPStatus);
-            _actionPermissionRules[statusType] = new Dictionary<object, List<MenuItemEnums>>
+            if (submitModifyRuleMode == SubmitModifyRuleMode.灵活模式)
             {
-                [ARAPStatus.草稿] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.提交 },
-                [ARAPStatus.待审核] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.审核 },
-                [ARAPStatus.待支付] = new List<MenuItemEnums> { MenuItemEnums.新增 },
-                [ARAPStatus.部分支付] = new List<MenuItemEnums> { MenuItemEnums.新增 },
-                [ARAPStatus.全部支付] = new List<MenuItemEnums> { },
-                [ARAPStatus.坏账] = new List<MenuItemEnums> { },
-                [ARAPStatus.已冲销] = new List<MenuItemEnums> { }
-            };
+                _actionPermissionRules[statusType] = new Dictionary<object, List<MenuItemEnums>>
+                {
+                    [ARAPStatus.草稿] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.提交 },
+                    [ARAPStatus.待审核] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.审核 },
+                    [ARAPStatus.待支付] = new List<MenuItemEnums> { MenuItemEnums.新增 },
+                    [ARAPStatus.部分支付] = new List<MenuItemEnums> { MenuItemEnums.新增 },
+                    [ARAPStatus.全部支付] = new List<MenuItemEnums> { },
+                    [ARAPStatus.坏账] = new List<MenuItemEnums> { },
+                    [ARAPStatus.已冲销] = new List<MenuItemEnums> { }
+                };
+            }
+            else
+            {
+                _actionPermissionRules[statusType] = new Dictionary<object, List<MenuItemEnums>>
+                {
+                    [ARAPStatus.草稿] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.提交 },
+                    [ARAPStatus.待审核] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.删除, MenuItemEnums.审核 },
+                    [ARAPStatus.待支付] = new List<MenuItemEnums> { MenuItemEnums.新增 },
+                    [ARAPStatus.部分支付] = new List<MenuItemEnums> { MenuItemEnums.新增 },
+                    [ARAPStatus.全部支付] = new List<MenuItemEnums> { },
+                    [ARAPStatus.坏账] = new List<MenuItemEnums> { },
+                    [ARAPStatus.已冲销] = new List<MenuItemEnums> { }
+                };
+            }
         }
 
         /// <summary>
@@ -848,9 +914,9 @@ namespace RUINORERP.Model.Base.StatusManager
         }
 
         #endregion
-        
+
         #region 新增方法 - 状态终态判断
-        
+
         /// <summary>
         /// 判断指定状态是否为终态
         /// </summary>
@@ -860,17 +926,12 @@ namespace RUINORERP.Model.Base.StatusManager
         public bool IsFinalStatus<TStatus>(TStatus status) where TStatus : struct
         {
             var statusType = typeof(TStatus);
-            
+
             // 针对不同状态类型的终态判断
             if (statusType == typeof(DataStatus))
             {
                 DataStatus dataStatus = (DataStatus)(object)status;
                 return dataStatus == DataStatus.完结 || dataStatus == DataStatus.作废;
-            }
-            else if (statusType == typeof(ActionStatus))
-            {
-                ActionStatus actionStatus = (ActionStatus)(object)status;
-                return actionStatus == ActionStatus.无操作;
             }
             else if (statusType == typeof(PaymentStatus))
             {
@@ -895,9 +956,9 @@ namespace RUINORERP.Model.Base.StatusManager
             else if (statusType == typeof(StatementStatus))
             {
                 StatementStatus statementStatus = (StatementStatus)(object)status;
-                return statementStatus == StatementStatus.已结清 || statementStatus == StatementStatus.已作废;
+                return statementStatus == StatementStatus.全部结清 || statementStatus == StatementStatus.已作废;
             }
-            
+
             // 默认情况下，不是终态
             return false;
         }
@@ -915,7 +976,7 @@ namespace RUINORERP.Model.Base.StatusManager
                 return false;
 
             var statusType = typeof(TStatus);
-            
+
             // 根据不同状态类型判断是否可以提交
             if (statusType == typeof(DataStatus))
             {
@@ -942,12 +1003,12 @@ namespace RUINORERP.Model.Base.StatusManager
                 StatementStatus statementStatus = (StatementStatus)(object)status;
                 return statementStatus == StatementStatus.草稿;
             }
-            
+
             // 其他状态类型默认可提交条件：检查是否有提交相关的状态转换规则
             // 或者检查是否有提交操作权限
-            return CanExecuteAction(status, MenuItemEnums.提交) || 
-                   (_stateTransitionRules.ContainsKey(statusType) && 
-                    _stateTransitionRules[statusType].ContainsKey(status) && 
+            return CanExecuteAction(status, MenuItemEnums.提交) ||
+                   (_stateTransitionRules.ContainsKey(statusType) &&
+                    _stateTransitionRules[statusType].ContainsKey(status) &&
                     _stateTransitionRules[statusType][status].Count > 0);
         }
 
@@ -964,12 +1025,17 @@ namespace RUINORERP.Model.Base.StatusManager
                 return false;
 
             var statusType = typeof(TStatus);
-            
+
             // 根据不同状态类型判断是否可以审核
             if (statusType == typeof(DataStatus))
             {
                 DataStatus dataStatus = (DataStatus)(object)status;
                 return dataStatus == DataStatus.新建;
+            }
+            else if (statusType == typeof(StatementStatus))
+            {
+                StatementStatus statementStatus = (StatementStatus)(object)status;
+                return statementStatus == StatementStatus.新建;
             }
             else if (statusType == typeof(PaymentStatus))
             {
@@ -986,11 +1052,11 @@ namespace RUINORERP.Model.Base.StatusManager
                 ARAPStatus arapStatus = (ARAPStatus)(object)status;
                 return arapStatus == ARAPStatus.待审核;
             }
-            
+
             // 通用判断：检查是否有待审核状态或有审核操作权限
             return CanExecuteAction(status, MenuItemEnums.审核);
         }
-        
+
         /// <summary>
         /// 获取状态类型的描述信息
         /// </summary>
@@ -1012,14 +1078,14 @@ namespace RUINORERP.Model.Base.StatusManager
                 return "应收应付状态";
             else if (statusType == typeof(StatementStatus))
                 return "对账状态";
-            
+
             return statusType.Name;
         }
-        
+
         #endregion
-        
+
         #region 新增方法 - 退款状态规则初始化
-        
+
         /// <summary>
         /// 初始化退款状态转换规则
         /// </summary>
@@ -1027,7 +1093,7 @@ namespace RUINORERP.Model.Base.StatusManager
         {
             var statusType = typeof(RefundStatus);
             _stateTransitionRules[statusType] = new Dictionary<object, List<object>>();
-            
+
             // 初始化不同状态的转换规则
             // 未退款等待退货 -> 可转换到已退款等待退货、未退款已退货、部分退款退货
             _stateTransitionRules[statusType][RefundStatus.未退款等待退货] = new List<object>
@@ -1036,33 +1102,33 @@ namespace RUINORERP.Model.Base.StatusManager
                 RefundStatus.未退款已退货,
                 RefundStatus.部分退款退货
             };
-            
+
             // 未退款已退货 -> 可转换到已退款已退货、部分退款退货
             _stateTransitionRules[statusType][RefundStatus.未退款已退货] = new List<object>
             {
                 RefundStatus.已退款已退货,
                 RefundStatus.部分退款退货
             };
-            
+
             // 已退款等待退货 -> 可转换到已退款已退货、部分退款退货
             _stateTransitionRules[statusType][RefundStatus.已退款等待退货] = new List<object>
             {
                 RefundStatus.已退款已退货,
                 RefundStatus.部分退款退货
             };
-            
+
             // 已退款未退货 -> 可转换到已退款已退货、部分退款退货
             _stateTransitionRules[statusType][RefundStatus.已退款未退货] = new List<object>
             {
                 RefundStatus.已退款已退货,
                 RefundStatus.部分退款退货
             };
-            
+
             // 终态状态不可转换
             _stateTransitionRules[statusType][RefundStatus.已退款已退货] = new List<object>();
             _stateTransitionRules[statusType][RefundStatus.部分退款退货] = new List<object>();
         }
-        
+
         #endregion
     }
 }

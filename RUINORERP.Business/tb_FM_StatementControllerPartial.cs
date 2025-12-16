@@ -60,7 +60,7 @@ namespace RUINORERP.Business
                     typeof(StatementStatus),
                     entity.GetPropertyValue(statusProperty)
                 );
-                var ValidateValue = StateManager.ValidateBusinessStatusTransitionAsync(currentStatus, StatementStatus.已发送 as Enum);
+                var ValidateValue = StateManager.ValidateBusinessStatusTransitionAsync(currentStatus, StatementStatus.新建 as Enum);
                 if (!ValidateValue.IsSuccess)
                 {
                     rmrs.ErrorMsg = $"状态为【{currentStatus.ToString()}】的{((ReceivePaymentType)entity.ReceivePaymentType).ToString()}对账单不可以反审";
@@ -120,7 +120,7 @@ namespace RUINORERP.Business
                 }
 
                 // 更新对账单状态为已发送
-                entity.StatementStatus = (int)StatementStatus.已发送;
+                entity.StatementStatus = (int)StatementStatus.新建;
                 entity.ApprovalResults = false;
                 entity.ApprovalStatus = (int)ApprovalStatus.未审核;
                 BusinessHelper.Instance.ApproverEntity(entity);
@@ -185,7 +185,7 @@ namespace RUINORERP.Business
                 }
 
                 // 验证状态是否为已发送
-                if (entity.StatementStatus != (int)StatementStatus.已发送)
+                if (entity.StatementStatus != (int)StatementStatus.新建)
                 {
                     rmrs.ErrorMsg = "只有【已发送】待审核状态的对账单才可以审核";
                     return rmrs;
@@ -295,7 +295,7 @@ namespace RUINORERP.Business
                 // 更新对账单状态为已确认
                 entity.ApprovalStatus = (int)ApprovalStatus.审核通过;
                 entity.ApprovalResults = true;
-                entity.StatementStatus = (int)StatementStatus.已确认;
+                entity.StatementStatus = (int)StatementStatus.确认;
 
                 BusinessHelper.Instance.ApproverEntity(entity);
 
@@ -585,7 +585,7 @@ namespace RUINORERP.Business
             //获取所有已审核未结的对账单，并且结束日期在截至日期之前
             List<tb_FM_Statement> list = await _appContext.Db.CopyNew().Queryable<tb_FM_Statement>()
                 .Where(m => CustomerVendorIds.Contains(m.CustomerVendor_ID))
-                .Where(m => m.StatementStatus == (int)StatementStatus.部分结算 || m.StatementStatus == (int)StatementStatus.已确认)
+                .Where(m => m.StatementStatus == (int)StatementStatus.部分结算 || m.StatementStatus == (int)StatementStatus.确认)
                 .Where(m => m.EndDate < cutoffDate) // 只考虑截至日期之前的对账单
                             .Includes(a => a.tb_FM_StatementDetails, b => b.tb_fm_receivablepayable, c => c.tb_FM_ReceivablePayableDetails)
                             .ToListAsync();

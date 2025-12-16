@@ -452,6 +452,16 @@ namespace RUINORERP.Model.Base.StatusManager
             // 添加应收应付状态按钮规则
             AddStandardButtonRules(ARAPStatus.草稿, true, true, true, true, true, false, false, true);
             AddStandardButtonRules(ARAPStatus.待审核, true, true, true, true, false, true, false, true);
+            // 待支付状态：允许查看和打印，不允许修改原始数据
+            AddStandardButtonRules(ARAPStatus.待支付, true, false, false, false, false, false, false, true);
+            // 部分支付状态：允许查看和打印，不允许修改原始数据
+            AddStandardButtonRules(ARAPStatus.部分支付, true, false, false, false, false, false, false, true);
+            // 全部支付状态：终态，只允许查看和打印
+            AddStandardButtonRules(ARAPStatus.全部支付, true, false, false, false, false, false, false, true);
+            // 坏账状态：特殊状态，允许查看和打印，可能需要反审核操作
+            AddStandardButtonRules(ARAPStatus.坏账, true, false, false, false, false, false, true, true);
+            // 已冲销状态：终态，只允许查看和打印
+            AddStandardButtonRules(ARAPStatus.已冲销, true, false, false, false, false, false, false, true);
         }
 
         /// <summary>
@@ -465,6 +475,8 @@ namespace RUINORERP.Model.Base.StatusManager
             AddStandardButtonRules(StatementStatus.已确认, false, false, false, false, false, false, false, true);
             AddStandardButtonRules(StatementStatus.部分结算, false, false, false, false, false, false, false, true);
             AddStandardButtonRules(StatementStatus.已结清, false, false, false, false, false, false, false, true);
+            // 已作废状态：仅允许查看操作
+            AddStandardButtonRules(StatementStatus.已作废, true, false, false, false, false, false, false, true);
         }
 
         /// <summary>

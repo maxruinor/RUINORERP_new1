@@ -1945,7 +1945,6 @@ namespace RUINORERP.UI.BaseForm
                     // 记录状态变更前的日志
                     object oldValue = entity.GetPropertyValue(propertyName);
 
-
                     // 设置新状态值
                     ReflectionHelper.SetPropertyValue(entity, propertyName, (int)(object)status);
 
@@ -1966,7 +1965,6 @@ namespace RUINORERP.UI.BaseForm
                 throw;
             }
         }
-
 
 
 
@@ -2247,7 +2245,6 @@ namespace RUINORERP.UI.BaseForm
         #endregion
 
 
-
         #region 基础资料下拉添加编辑项
 
 
@@ -2284,7 +2281,6 @@ namespace RUINORERP.UI.BaseForm
         public event BindDataToUIHander OnBindDataToUIEvent;
 
 
-
         string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
         /// <summary>
         /// 控制功能按钮
@@ -2311,13 +2307,10 @@ namespace RUINORERP.UI.BaseForm
             }
 
 
-
             //操作前是不是锁定。自己排除
             long pkid = 0;
             //操作前将数据收集
             this.ValidateChildren(System.Windows.Forms.ValidationConstraints.None);
-
-
 
             switch (menuItem)
             {
@@ -2345,8 +2338,6 @@ namespace RUINORERP.UI.BaseForm
                     break;
 
                 #endregion
-
-
                 case MenuItemEnums.新增:
                     try
                     {

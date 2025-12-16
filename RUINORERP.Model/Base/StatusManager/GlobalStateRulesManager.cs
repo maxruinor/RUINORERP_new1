@@ -726,6 +726,12 @@ namespace RUINORERP.Model.Base.StatusManager
 
             // 为PrePaymentStatus添加操作权限规则
             AddPrePaymentStatusActionPermissionRules();
+            
+            // 为StatementStatus添加操作权限规则
+            AddStatementStatusActionPermissionRules();
+            
+            // 为ARAPStatus添加操作权限规则
+            AddARAPStatusActionPermissionRules();
         }
 
         /// <summary>
@@ -753,10 +759,45 @@ namespace RUINORERP.Model.Base.StatusManager
                 [PrePaymentStatus.草稿] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.提交 },
                 [PrePaymentStatus.待审核] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.审核 },
                 [PrePaymentStatus.已生效] = new List<MenuItemEnums> { MenuItemEnums.反审 },
-                [PrePaymentStatus.待核销] = new List<MenuItemEnums> { MenuItemEnums.修改 },
-                [PrePaymentStatus.部分核销] = new List<MenuItemEnums> { MenuItemEnums.修改 },
-                [PrePaymentStatus.全额核销] = new List<MenuItemEnums> { MenuItemEnums.反审 },
+                [PrePaymentStatus.待核销] = new List<MenuItemEnums> { MenuItemEnums.反审 },
+                [PrePaymentStatus.部分核销] = new List<MenuItemEnums> {  },
+                [PrePaymentStatus.全额核销] = new List<MenuItemEnums> {  },
                 [PrePaymentStatus.已结案] = new List<MenuItemEnums> { }
+            };
+        }
+        
+        /// <summary>
+        /// 添加StatementStatus操作权限规则
+        /// </summary>
+        private void AddStatementStatusActionPermissionRules()
+        {
+            var statusType = typeof(StatementStatus);
+            _actionPermissionRules[statusType] = new Dictionary<object, List<MenuItemEnums>>
+            {
+                [StatementStatus.草稿] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.提交 },
+                [StatementStatus.已发送] = new List<MenuItemEnums> {  MenuItemEnums.修改},
+                [StatementStatus.已确认] = new List<MenuItemEnums> { },
+                [StatementStatus.已结清] = new List<MenuItemEnums> { },
+                [StatementStatus.部分结算] = new List<MenuItemEnums> { },
+                [StatementStatus.已作废] = new List<MenuItemEnums> { }
+            };
+        }
+        
+        /// <summary>
+        /// 添加ARAPStatus操作权限规则
+        /// </summary>
+        private void AddARAPStatusActionPermissionRules()
+        {
+            var statusType = typeof(ARAPStatus);
+            _actionPermissionRules[statusType] = new Dictionary<object, List<MenuItemEnums>>
+            {
+                [ARAPStatus.草稿] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.提交 },
+                [ARAPStatus.待审核] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.审核 },
+                [ARAPStatus.待支付] = new List<MenuItemEnums> { MenuItemEnums.新增 },
+                [ARAPStatus.部分支付] = new List<MenuItemEnums> { MenuItemEnums.新增 },
+                [ARAPStatus.全部支付] = new List<MenuItemEnums> { },
+                [ARAPStatus.坏账] = new List<MenuItemEnums> { },
+                [ARAPStatus.已冲销] = new List<MenuItemEnums> { }
             };
         }
 
@@ -859,6 +900,95 @@ namespace RUINORERP.Model.Base.StatusManager
             
             // 默认情况下，不是终态
             return false;
+        }
+
+        /// <summary>
+        /// 判断指定状态是否可以提交
+        /// </summary>
+        /// <typeparam name="TStatus">状态类型</typeparam>
+        /// <param name="status">状态值</param>
+        /// <returns>是否可以提交</returns>
+        public bool CanSubmit<TStatus>(TStatus status) where TStatus : struct
+        {
+            // 终态不能提交
+            if (IsFinalStatus(status))
+                return false;
+
+            var statusType = typeof(TStatus);
+            
+            // 根据不同状态类型判断是否可以提交
+            if (statusType == typeof(DataStatus))
+            {
+                DataStatus dataStatus = (DataStatus)(object)status;
+                return dataStatus == DataStatus.草稿;
+            }
+            else if (statusType == typeof(PaymentStatus))
+            {
+                PaymentStatus paymentStatus = (PaymentStatus)(object)status;
+                return paymentStatus == PaymentStatus.草稿;
+            }
+            else if (statusType == typeof(PrePaymentStatus))
+            {
+                PrePaymentStatus prepayStatus = (PrePaymentStatus)(object)status;
+                return prepayStatus == PrePaymentStatus.草稿;
+            }
+            else if (statusType == typeof(ARAPStatus))
+            {
+                ARAPStatus arapStatus = (ARAPStatus)(object)status;
+                return arapStatus == ARAPStatus.草稿;
+            }
+            else if (statusType == typeof(StatementStatus))
+            {
+                StatementStatus statementStatus = (StatementStatus)(object)status;
+                return statementStatus == StatementStatus.草稿;
+            }
+            
+            // 其他状态类型默认可提交条件：检查是否有提交相关的状态转换规则
+            // 或者检查是否有提交操作权限
+            return CanExecuteAction(status, MenuItemEnums.提交) || 
+                   (_stateTransitionRules.ContainsKey(statusType) && 
+                    _stateTransitionRules[statusType].ContainsKey(status) && 
+                    _stateTransitionRules[statusType][status].Count > 0);
+        }
+
+        /// <summary>
+        /// 判断指定状态是否可以审核
+        /// </summary>
+        /// <typeparam name="TStatus">状态类型</typeparam>
+        /// <param name="status">状态值</param>
+        /// <returns>是否可以审核</returns>
+        public bool CanApprove<TStatus>(TStatus status) where TStatus : struct
+        {
+            // 终态不能审核
+            if (IsFinalStatus(status))
+                return false;
+
+            var statusType = typeof(TStatus);
+            
+            // 根据不同状态类型判断是否可以审核
+            if (statusType == typeof(DataStatus))
+            {
+                DataStatus dataStatus = (DataStatus)(object)status;
+                return dataStatus == DataStatus.新建;
+            }
+            else if (statusType == typeof(PaymentStatus))
+            {
+                PaymentStatus paymentStatus = (PaymentStatus)(object)status;
+                return paymentStatus == PaymentStatus.待审核;
+            }
+            else if (statusType == typeof(PrePaymentStatus))
+            {
+                PrePaymentStatus prepayStatus = (PrePaymentStatus)(object)status;
+                return prepayStatus == PrePaymentStatus.待审核;
+            }
+            else if (statusType == typeof(ARAPStatus))
+            {
+                ARAPStatus arapStatus = (ARAPStatus)(object)status;
+                return arapStatus == ARAPStatus.待审核;
+            }
+            
+            // 通用判断：检查是否有待审核状态或有审核操作权限
+            return CanExecuteAction(status, MenuItemEnums.审核);
         }
         
         /// <summary>

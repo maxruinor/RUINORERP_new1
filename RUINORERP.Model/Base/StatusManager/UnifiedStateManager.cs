@@ -75,49 +75,43 @@ namespace RUINORERP.Model.Base.StatusManager
         #endregion
 
         #region 状态获取方法
-        /// <summary>
-        /// 获取实体的统一状态
-        /// </summary>
-        /// <param name="entity">实体对象</param>
-        /// <returns>统一状态</returns>
-        public EntityStatus GetUnifiedStatus(BaseEntity entity)
-        {
-            if (entity == null)
-                return null;
 
-            var entityStatus = new EntityStatus();
-            var statusType = entityStatus.GetStatusType(entity);
-            if (statusType != null)
-            {
-                entityStatus.SetBusinessStatus(statusType, entity.GetPropertyValue(statusType.Name));
-            }
-            entityStatus.actionStatus = entity.ActionStatus;
 
-            // 处理审批相关状态
-            if (entity.ContainsProperty("ApprovalResults"))
-            {
-                entityStatus.ApprovalResults = entity.GetPropertyValue("ApprovalResults").ObjToBool();
-            }
-            if (entity.ContainsProperty("ApprovalStatus"))
-            {
-                entityStatus.ApprovalStatus = entity.GetPropertyValue("ApprovalStatus").ObjToInt();
-            }
-            return entityStatus;
-        }
 
         /// <summary>
         /// 获取实体的状态类型
         /// </summary>
-        /// <param name="entity">实体对象</param>
         /// <returns>状态类型</returns>
-        public Type GetStatusType(BaseEntity entity)
+        public virtual Type GetStatusType(BaseEntity entity)
         {
-            if (entity == null)
-                return null;
+            try
+            {
+                // 检查实体是否包含各种状态类型的属性
+                if (entity.ContainsProperty(typeof(DataStatus).Name))
+                    return typeof(DataStatus);
 
-            var entityStatus = new EntityStatus();
-            return entityStatus.GetStatusType(entity);
+                if (entity.ContainsProperty(typeof(PrePaymentStatus).Name))
+                    return typeof(PrePaymentStatus);
+
+                if (entity.ContainsProperty(typeof(ARAPStatus).Name))
+                    return typeof(ARAPStatus);
+
+                if (entity.ContainsProperty(typeof(PaymentStatus).Name))
+                    return typeof(PaymentStatus);
+
+                if (entity.ContainsProperty(typeof(StatementStatus).Name))
+                    return typeof(StatementStatus);
+
+                // 默认返回DataStatus类型
+                return typeof(DataStatus);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"获取状态类型失败: {ex.Message}");
+                return typeof(DataStatus);
+            }
         }
+
 
         /// <summary>
         /// 获取实体的业务状态（整合版本）
@@ -125,7 +119,7 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <typeparam name="T">业务状态枚举类型（可选）</typeparam>
         /// <param name="entity">实体对象</param>
         /// <param name="statusType">业务状态类型（可选）</param>
-        /// <returns>业务状态值</returns>
+        /// <returns>业务状态枚举值</returns>
         public object GetBusinessStatus<T>(BaseEntity entity, Type statusType = null) where T : struct, Enum
         {
             if (entity == null)
@@ -136,21 +130,40 @@ namespace RUINORERP.Model.Base.StatusManager
                 statusType = typeof(T);
 
             // 获取实体的状态类型
-            var currentStatusType = new EntityStatus().GetStatusType(entity);
+            var currentStatusType =  GetStatusType(entity);
 
             // 如果指定了状态类型且与实体当前状态类型匹配，直接返回该状态
             if (statusType != null && currentStatusType == statusType)
             {
-                return entity.GetPropertyValue(statusType.Name);
+                var statusValue = entity.GetPropertyValue(statusType.Name);
+                // 如果状态值是int且状态类型是枚举，则转换为枚举值
+                if (statusValue is int && statusType.IsEnum)
+                {
+                    try
+                    {
+                        return Enum.ToObject(statusType, statusValue);
+                    }
+                    catch (Exception ex) when (_logger != null)
+                    {
+                        _logger.LogError(ex, "转换状态值为枚举时发生错误");
+                        return statusValue; // 转换失败时返回原始值
+                    }
+                }
+                return statusValue;
             }
 
-            // 如果没有指定状态类型（或类型不匹配），返回当前状态类型的整数值
-            if (currentStatusType != null)
+            // 如果没有指定状态类型（或类型不匹配），返回当前状态类型的枚举值
+            if (currentStatusType != null && currentStatusType.IsEnum)
             {
                 try
                 {
                     dynamic status = entity.GetPropertyValue(currentStatusType.Name);
-                    return (int)status;
+                    // 确保返回枚举值而不是int值
+                    if (status is int)
+                    {
+                        return Enum.ToObject(currentStatusType, status);
+                    }
+                    return status;
                 }
                 catch (Exception ex) when (_logger != null)
                 {
@@ -166,33 +179,36 @@ namespace RUINORERP.Model.Base.StatusManager
         /// </summary>
         /// <param name="entity">实体对象</param>
         /// <param name="statusType">业务状态类型（可选）</param>
-        /// <returns>业务状态值</returns>
-        public object GetBusinessStatus(BaseEntity entity, Type statusType = null)
+        /// <returns>业务状态枚举值</returns>
+        public Enum GetBusinessStatus(BaseEntity entity, Type statusType = null)
         {
             if (entity == null)
                 return null;
-
-            // 如果指定了状态类型且它是枚举类型，使用泛型方法
-            if (statusType != null && statusType.IsEnum)
+            if (statusType == null)
             {
                 // 获取当前状态类型
                 var currentStatusType = GetStatusType(entity);
+                statusType = currentStatusType;
+            }
 
-                // 返回当前状态值
-                if (currentStatusType != null)
+            // 如果指定了状态类型且它是枚举类型，确保返回枚举值
+            if (statusType != null && statusType.IsEnum)
+            {
+                try
                 {
-                    try
+                    dynamic status = entity.GetPropertyValue(statusType.Name);
+                    // 确保返回枚举值而不是int值
+                    if (status is int)
                     {
-                        dynamic status = entity.GetPropertyValue(currentStatusType.Name);
-                        return (int)status;
+                        return Enum.ToObject(statusType, status);
                     }
-                    catch (Exception ex) when (_logger != null)
-                    {
-                        _logger.LogError(ex, "获取业务状态值时发生错误");
-                    }
+                    return status;
+                }
+                catch (Exception ex) when (_logger != null)
+                {
+                    _logger.LogError(ex, "获取业务状态值时发生错误");
                 }
             }
-          
 
             return null;
         }
@@ -366,39 +382,28 @@ namespace RUINORERP.Model.Base.StatusManager
 
             if (statusType == null)
                 return StateTransitionResult.Failure(null, newStatus, statusType, "状态类型不能为空");
-            
+
             // 获取旧状态 - 统一使用相同的方法获取，不再对DataStatus特殊处理
+            // GetBusinessStatus方法现在直接返回枚举值，无需额外转换
             object oldStatus = GetBusinessStatus(entity, statusType);
-            // 自动转换：如果状态值是int且状态类型是枚举，则进行转换
-            object OldStatusEnum = oldStatus;
-            if (oldStatus is int && statusType.IsEnum)
-            {
-                try
-                {
-                    OldStatusEnum = Enum.ToObject(statusType, oldStatus);
-                }
-                catch
-                {
-                    // 转换失败时使用原始状态值
-                }
-            }
+            // 直接使用oldStatus，它已经是枚举值（如果状态类型是枚举）
 
             // 检查状态是否实际发生了变更
-            if (Equals(OldStatusEnum, newStatus))
-                return StateTransitionResult.Success(OldStatusEnum, newStatus, statusType, "状态未发生变更");
+            if (Equals(oldStatus, newStatus))
+                return StateTransitionResult.Success(oldStatus, newStatus, statusType, "状态未发生变更");
 
             try
             {
                 // 更新状态 - 统一使用属性名设置，不再对DataStatus特殊处理
                 // 首先尝试使用类型名称查找属性
                 var statusProperty = entity.GetType().GetProperty(statusType.Name);
-                
+
                 // 如果找不到，尝试使用"DataStatus"作为属性名（兼容现有的实体）
                 if (statusProperty == null || !statusProperty.CanWrite)
                 {
                     statusProperty = entity.GetType().GetProperty("DataStatus");
                 }
-                
+
                 // 如果找到可写的属性，则设置值
                 if (statusProperty != null && statusProperty.CanWrite)
                 {
@@ -643,15 +648,14 @@ namespace RUINORERP.Model.Base.StatusManager
         private bool CanExecuteAction(BaseEntity entity, MenuItemEnums action)
         {
             // 获取实体的统一状态
-            var entityStatus = GetUnifiedStatus(entity);
-
             // 如果没有状态信息，默认允许
-            if (entityStatus == null)
+            if (entity == null)
                 return true;
-
-            // 获取当前状态类型和值
             var statusType = GetStatusType(entity);
-            var statusValue = entityStatus;
+            if (statusType == null)
+                return true;
+            // 获取当前状态类型和值
+            var statusValue = GetBusinessStatus(entity, statusType);
 
             // 获取操作权限规则
             var allowedActions = GetActionPermissionRules(statusType, statusValue);
@@ -821,17 +825,21 @@ namespace RUINORERP.Model.Base.StatusManager
         {
             try
             {
-                // 获取实体的统一状态
-                EntityStatus entityStatus = GetUnifiedStatus(entity);
-
                 // 创建结果字典
                 var result = new Dictionary<string, bool>();
 
                 // 尝试获取状态规则管理器的按钮状态并转换格式
-                var statusType = entityStatus.GetType();
+                var statusType = GetStatusType(entity);
+                if (statusType == null)
+                {
+                    return result;
+                }
+                // 获取实体的业务状态值
+                object businessStatus = GetBusinessStatus(entity, statusType);
+                
                 var buttonStates = GlobalStateRulesManager.Instance.UIButtonRules.TryGetValue(statusType, out var statusRules) &&
-                                  statusRules.TryGetValue(entityStatus, out var buttonRules) ?
-                                  buttonRules : new Dictionary<string, bool>();
+                              businessStatus != null && statusRules.TryGetValue(businessStatus, out var buttonRules) ?
+                              buttonRules : new Dictionary<string, bool>();
                 foreach (var state in buttonStates)
                 {
                     // 使用已有的元组值
@@ -906,7 +914,7 @@ namespace RUINORERP.Model.Base.StatusManager
 
             return changes;
         }
- 
+
 
         #endregion
 
@@ -925,24 +933,24 @@ namespace RUINORERP.Model.Base.StatusManager
 
             try
             {
-                // 获取业务状态类型
-                Type businessStatusType = GetStatusType(entity);
-                if (businessStatusType == null)
+                // 获取实体的状态类型
+                Type statusType = GetStatusType(entity);
+                if (statusType == null)
                     return false;
 
-                // 获取业务状态值
-                object businessStatus = GetBusinessStatus(entity, businessStatusType);
+                // 获取实体的业务状态值
+                object businessStatus = GetBusinessStatus(entity, statusType);
                 if (businessStatus == null)
                     return false;
 
                 // 使用反射调用GlobalStateRulesManager的IsFinalStatus方法
                 var methodInfo = typeof(GlobalStateRulesManager).GetMethod("IsFinalStatus", BindingFlags.Public | BindingFlags.Instance);
-                var genericMethod = methodInfo?.MakeGenericMethod(businessStatusType);
+                var genericMethod = methodInfo?.MakeGenericMethod(statusType);
                 return genericMethod != null && (bool)genericMethod.Invoke(GlobalStateRulesManager.Instance, new[] { businessStatus });
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "判断实体终态状态时发生异常");
+                _logger?.LogError(ex, "判断实体状态是否为终态时发生异常");
                 return false;
             }
         }
@@ -959,7 +967,7 @@ namespace RUINORERP.Model.Base.StatusManager
                 throw new ArgumentNullException(nameof(entity));
 
             // 检查是否为终态状态
-            bool isFinalStatus = IsFinalStatus(entity);
+            bool isFinalStatus = IsFinalStatus<TEntity>(entity);
             if (isFinalStatus)
                 return false;
 
@@ -971,6 +979,8 @@ namespace RUINORERP.Model.Base.StatusManager
 
             return true;
         }
+
+
 
         #endregion
 

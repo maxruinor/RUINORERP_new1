@@ -22,13 +22,6 @@ namespace RUINORERP.Model.Base.StatusManager
     public interface IUnifiedStateManager : IDisposable
     {
         /// <summary>
-        /// 获取实体的统一状态
-        /// </summary>
-        /// <param name="entity">实体对象</param>
-        /// <returns>统一状态</returns>
-        EntityStatus GetUnifiedStatus(BaseEntity entity);
-
-        /// <summary>
         /// 获取实体的状态类型
         /// </summary>
         /// <param name="entity">实体对象</param>
@@ -50,7 +43,7 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <param name="entity">实体对象</param>
         /// <param name="statusType">业务状态类型（可选）</param>
         /// <returns>业务状态值</returns>
-        object GetBusinessStatus(BaseEntity entity, Type statusType = null);
+        Enum GetBusinessStatus(BaseEntity entity, Type statusType = null);
 
         /// <summary>
         /// 验证数据状态转换是否合法

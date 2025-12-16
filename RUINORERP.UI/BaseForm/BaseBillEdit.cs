@@ -127,12 +127,9 @@ namespace RUINORERP.UI.BaseForm
                     if (_boundEntity != null)
                     {
                         SubscribeEntityEvents(_boundEntity);
-                        _lastUpdatedStatus = null;
                     }
                     else
                     {
-                        // 清除_lastUpdatedStatus，确保下次绑定会正确更新UI
-                        _lastUpdatedStatus = null;
                         UpdateAllUIStates(null);
                     }
                 }
@@ -208,8 +205,7 @@ namespace RUINORERP.UI.BaseForm
             BoundEntity = null;
         }
 
-        // 用于存储上次更新的状态，避免不必要的UI刷新
-        private EntityStatus _lastUpdatedStatus = null;
+ 
 
 
         /// <summary>

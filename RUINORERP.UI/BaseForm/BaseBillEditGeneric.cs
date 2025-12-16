@@ -297,13 +297,13 @@ namespace RUINORERP.UI.BaseForm
                 _isUpdatingUIStates = true;
                 // 暂停布局更新，减少闪烁
                 this.SuspendLayout();
-
+                var CurrentStatusType = StateManager.GetStatusType(entity);
                 // 优化版：直接从状态管理器获取当前状态
-                EntityStatus currentStatus = StateManager?.GetUnifiedStatus(entity);
+                var currentStatus = StateManager.GetBusinessStatus(entity);
                 if (currentStatus == null) return; // 如果状态获取失败，提前退出
 
                 // 1. 统一更新所有按钮状态 - 优先处理
-                UpdateAllButtonStates(currentStatus);
+                UpdateAllButtonStates(currentStatus, CurrentStatusType);
 
                 // 3. 更新状态显示
                 UpdateStateDisplay(entity);
@@ -311,7 +311,7 @@ namespace RUINORERP.UI.BaseForm
                 UpdatePrintStatusDisplay(entity);
 
                 // 5. 更新子表操作权限
-                UpdateChildTableOperations(currentStatus);
+                UpdateChildTableOperations(currentStatus, CurrentStatusType);
 
                 //6.权限控制
                 if (CurMenuInfo != null)
@@ -355,7 +355,7 @@ namespace RUINORERP.UI.BaseForm
         /// 更新按钮状态 - 协调多个职责单一的子方法
         /// </summary>
         /// <param name="currentStatus">当前状态</param>
-        protected void UpdateAllButtonStates(EntityStatus currentStatus)
+        protected void UpdateAllButtonStates(Enum currentStatus, Type CurrentStatusType)
         {
             try
             {
@@ -365,7 +365,7 @@ namespace RUINORERP.UI.BaseForm
 
 
                 //根据规则判断按钮状态
-                UpdateButtonStatesUsingUIRules(currentStatus);
+                UpdateButtonStatesUsingUIRules(currentStatus, CurrentStatusType);
 
                 // 对于业务状态按钮，需要额外处理by watson
                 try
@@ -389,7 +389,7 @@ namespace RUINORERP.UI.BaseForm
                                 try
                                 {
                                     // GlobalStateRulesManager的GetButtonRules方法内部已实现自动类型转换
-                                    businessButtonRules = GlobalStateRulesManager.Instance.GetButtonRules(currentStatus.CurrentStatusType, statusValue);
+                                    businessButtonRules = GlobalStateRulesManager.Instance.GetButtonRules(CurrentStatusType, statusValue);
                                 }
                                 catch (Exception ex)
                                 {
@@ -419,7 +419,7 @@ namespace RUINORERP.UI.BaseForm
         /// 使用UIControlRules更新按钮状态
         /// </summary>
         /// <param name="currentStatus">当前数据状态</param>
-        private void UpdateButtonStatesUsingUIRules(EntityStatus currentStatus)
+        private void UpdateButtonStatesUsingUIRules(Enum currentStatus, Type CurrentStatusType)
         {
             if (EditEntity == null || StateManager == null) return;
             // 获取按钮状态规则
@@ -428,14 +428,12 @@ namespace RUINORERP.UI.BaseForm
             if (currentStatus != null)
             {
                 // 获取当前状态值
-                var statusValue = currentStatus.CurrentStatus;
+                var statusValue = currentStatus;
                 if (statusValue != null)
                 {
-                    // 使用动态调用，根据状态值类型自动匹配泛型类型
                     try
                     {
-                        // GlobalStateRulesManager的GetButtonRules方法内部已实现自动类型转换
-                        buttonRules = GlobalStateRulesManager.Instance.GetButtonRules(currentStatus.CurrentStatusType, statusValue);
+                        buttonRules = GlobalStateRulesManager.Instance.GetButtonRules(CurrentStatusType, statusValue);
                     }
                     catch (Exception ex)
                     {
@@ -584,22 +582,21 @@ namespace RUINORERP.UI.BaseForm
         /// </summary>
         /// <param name="currentStatus">当前状态</param>
         /// <returns>异步任务</returns>
-        protected async Task UpdateAllButtonStatesAsync(EntityStatus currentStatus)
+        protected async Task UpdateAllButtonStatesAsync(Enum currentStatus, Type CurrentStatusType)
         {
             // 切换到UI线程执行UI更新
             await Task.Run(() =>
             {
                 if (this.InvokeRequired)
                 {
-                    this.Invoke(new Action(() => UpdateAllButtonStates(currentStatus)));
+                    this.Invoke(new Action(() => UpdateAllButtonStates(currentStatus, CurrentStatusType)));
                 }
                 else
                 {
-                    UpdateAllButtonStates(currentStatus);
+                    UpdateAllButtonStates(currentStatus, CurrentStatusType);
                 }
             }).ConfigureAwait(false);
         }
-
 
 
         /// <summary>
@@ -763,7 +760,7 @@ namespace RUINORERP.UI.BaseForm
         /// 根据状态更新子表操作 - 使用UIControlRules统一管理
         /// </summary>
         /// <param name="status">当前数据状态</param>
-        protected virtual void UpdateChildTableOperations(EntityStatus status)
+        protected virtual void UpdateChildTableOperations(Enum currentStatus, Type CurrentStatusType)
         {
             try
             {
@@ -773,27 +770,19 @@ namespace RUINORERP.UI.BaseForm
                 // 使用UIControlRules获取子表操作权限
                 bool canAdd, canEdit, canDelete;
 
-                // 从GlobalStateRulesManager中获取按钮状态
-                // 获取实体状态的实际值，确保传递非空的值类型给GetButtonRules
                 var buttonRules = new Dictionary<string, bool>();
-                if (status != null)
+                if (currentStatus != null)
                 {
-                    // 获取当前状态值
-                    var statusValue = status.CurrentStatus;
-                    if (statusValue != null)
+                    try
                     {
-                        // 使用动态调用，根据状态值类型自动匹配泛型类型
-                        try
-                        {
-                            // GlobalStateRulesManager的GetButtonRules方法内部已实现自动类型转换
-                            buttonRules = GlobalStateRulesManager.Instance.GetButtonRules(status.CurrentStatusType, statusValue);
-                        }
-                        catch (Exception ex)
-                        {
-                            // 出现异常时使用默认规则，避免UI功能失效
-                            Console.WriteLine($"获取按钮规则异常: {ex.Message}");
-                        }
+                        buttonRules = GlobalStateRulesManager.Instance.GetButtonRules(CurrentStatusType, currentStatus);
                     }
+                    catch (Exception ex)
+                    {
+                        // 出现异常时使用默认规则，避免UI功能失效
+                        Console.WriteLine($"获取按钮规则异常: {ex.Message}");
+                    }
+
                 }
 
                 // 检查是否允许子表操作
@@ -1659,24 +1648,7 @@ namespace RUINORERP.UI.BaseForm
 
         #endregion
 
-        #region 辅助方法
-        private Type GetActualStatusType(BaseEntity entity)
-        {
-            if (entity.ContainsProperty(typeof(PrePaymentStatus).Name)) return typeof(PrePaymentStatus);
-            if (entity.ContainsProperty(typeof(ARAPStatus).Name)) return typeof(ARAPStatus);
-            if (entity.ContainsProperty(typeof(PaymentStatus).Name)) return typeof(PaymentStatus);
-            throw new InvalidOperationException("未知状态类型");
-        }
 
-        private Enum GetStatusValue(BaseEntity entity, Type statusType)
-        {
-            object value = entity.GetPropertyValue(statusType.Name);
-            return (Enum)Enum.Parse(statusType, value.ToString());
-        }
-
-
-
-        #endregion
 
 
         #region 状态机处理新2025-6-17

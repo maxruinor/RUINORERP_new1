@@ -175,35 +175,24 @@ namespace RUINORERP.Model.Base.StatusManager
             // 如果指定了状态类型且它是枚举类型，使用泛型方法
             if (statusType != null && statusType.IsEnum)
             {
-                try
+                // 获取当前状态类型
+                var currentStatusType = GetStatusType(entity);
+
+                // 返回当前状态值
+                if (currentStatusType != null)
                 {
-                    // 使用反射调用泛型方法
-                    var method = typeof(UnifiedStateManager).GetMethod("GetBusinessStatus", new[] { typeof(BaseEntity), typeof(Type) });
-                    var genericMethod = method.MakeGenericMethod(statusType);
-                    return genericMethod.Invoke(this, new object[] { entity, statusType });
-                }
-                catch (Exception ex) when (_logger != null)
-                {
-                    _logger.LogError(ex, "调用泛型GetBusinessStatus方法时发生错误");
+                    try
+                    {
+                        dynamic status = entity.GetPropertyValue(currentStatusType.Name);
+                        return (int)status;
+                    }
+                    catch (Exception ex) when (_logger != null)
+                    {
+                        _logger.LogError(ex, "获取业务状态值时发生错误");
+                    }
                 }
             }
-
-            // 获取当前状态类型
-            var currentStatusType = GetBusinessStatusType(entity);
-
-            // 返回当前状态值
-            if (currentStatusType != null)
-            {
-                try
-                {
-                    dynamic status = entity.GetPropertyValue(currentStatusType.Name);
-                    return (int)status;
-                }
-                catch (Exception ex) when (_logger != null)
-                {
-                    _logger.LogError(ex, "获取业务状态值时发生错误");
-                }
-            }
+          
 
             return null;
         }
@@ -917,32 +906,7 @@ namespace RUINORERP.Model.Base.StatusManager
 
             return changes;
         }
-
-        /// <summary>
-        /// 获取业务状态类型
-        /// </summary>
-        /// <param name="entity">实体对象</param>
-        /// <returns>业务状态类型</returns>
-        public Type GetBusinessStatusType(BaseEntity entity)
-        {
-            if (entity == null)
-                return null;
-
-            // 通过反射查找业务状态属性
-            var properties = entity.GetType().GetProperties();
-            foreach (var property in properties)
-            {
-                if (property.PropertyType.IsEnum && property.PropertyType != typeof(DataStatus) && property.PropertyType != typeof(ActionStatus))
-                {
-                    // 判断是否为业务状态枚举
-                    if (property.PropertyType.Name.EndsWith("Status"))
-                        return property.PropertyType;
-                }
-            }
-
-            // 默认返回DataStatus
-            return typeof(DataStatus);
-        }
+ 
 
         #endregion
 
@@ -962,7 +926,7 @@ namespace RUINORERP.Model.Base.StatusManager
             try
             {
                 // 获取业务状态类型
-                Type businessStatusType = GetBusinessStatusType(entity);
+                Type businessStatusType = GetStatusType(entity);
                 if (businessStatusType == null)
                     return false;
 

@@ -137,13 +137,7 @@ namespace RUINORERP.Model.Base.StatusManager
         /// </summary>
         event EventHandler<StateTransitionEventArgs> StatusChanged;
 
-        /// <summary>
-        /// 获取业务状态类型
-        /// </summary>
-        /// <param name="entity">实体对象</param>
-        /// <returns>业务状态类型</returns>
-        Type GetBusinessStatusType(BaseEntity entity);
-
+ 
         /// <summary>
         /// 触发状态变更事件
         /// </summary>

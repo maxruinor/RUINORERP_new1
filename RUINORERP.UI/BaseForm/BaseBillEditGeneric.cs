@@ -94,6 +94,7 @@ using RUINORERP.Business.CommService;
 using RUINOR.WinFormsUI.CustomPictureBox;
 using RUINORERP.PacketSpec.Models.Lock;
 using RUINORERP.Model.Base.StatusManager;
+using System.Windows.Markup.Localizer;
 
 namespace RUINORERP.UI.BaseForm
 {
@@ -138,8 +139,7 @@ namespace RUINORERP.UI.BaseForm
         private LockStatusNotificationService _lockStatusNotificationService;
         private string _lockSubscriptionId; // 当前窗体的锁状态订阅ID
 
-        // 防止循环调用的标志位
-        private bool _isUpdatingUIStates = false;
+        // 注：UI更新控制标志已移至BaseBillEdit基类统一管理
 
         // 状态管理相关字段
         private bool _canPerformCriticalOperations = true; // 是否可以执行关键操作
@@ -194,25 +194,22 @@ namespace RUINORERP.UI.BaseForm
 
 
 
-
-
-
         /// <summary>
         /// 更新状态显示
         /// </summary>
-        protected virtual void UpdateStateDisplay()
+        protected virtual void UpdateStateDisplay(BaseEntity entity)
         {
-            if (EditEntity == null) return;
+            if (entity == null) return;
 
             try
             {
                 // 使用V3状态管理系统获取当前状态描述
-                if (EditEntity is BaseEntity baseEntity)
+                if (entity is BaseEntity baseEntity)
                 {
                     // 获取状态描述
                     string statusDesc = string.Empty;
                     // GetCurrentStatusDescription();
-                    var currentStatus = EditEntity.GetCurrentStatus();
+                    var currentStatus = entity.GetCurrentStatus();
                     statusDesc = currentStatus.GetDescription();
                     // 更新状态标签（如果存在）
                     var lblDataStatus = this.Controls.Find("lblDataStatus", true).FirstOrDefault() as KryptonLabel;
@@ -222,7 +219,7 @@ namespace RUINORERP.UI.BaseForm
                     }
 
                     // 更新审核状态显示
-                    if (EditEntity.ContainsProperty(nameof(ApprovalStatus)))
+                    if (entity.ContainsProperty(nameof(ApprovalStatus)))
                     {
                         try
                         {
@@ -259,16 +256,29 @@ namespace RUINORERP.UI.BaseForm
             {
                 logger?.LogError(ex, "更新状态显示失败");
             }
+
+
+            try
+            {
+                // 尝试查找并更新状态标签
+                var statusLabel = this.Controls.Find("lblStatus", true).FirstOrDefault() as KryptonLabel;
+                var currentStatus = StateManager.GetBusinessStatus(entity);
+                var statusType = StateManager.GetStatusType(entity);
+                if (statusLabel != null && statusType.Name == nameof(DataStatus))
+                {
+                    // 使用Description属性获取显示名称，因为DataStatus没有GetDisplayName方法
+                    var fieldInfo = typeof(DataStatus).GetField(currentStatus.ToString());
+                    var descriptionAttribute = Attribute.GetCustomAttribute(fieldInfo, typeof(DescriptionAttribute)) as DescriptionAttribute;
+                    string displayName = descriptionAttribute?.Description ?? currentStatus.ToString();
+                    statusLabel.Text = $"状态: {displayName}";
+                    //statusLabel.ForeColor = GetStatusColor(currentStatus);
+                }
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "更新状态栏显示失败");
+            }
         }
-
-
-
-
-
-
-
-
-
 
 
 
@@ -277,7 +287,7 @@ namespace RUINORERP.UI.BaseForm
         /// 简化状态获取和更新逻辑，提升性能
         /// </summary>
         /// <param name="entity">实体对象</param>
-        protected override void UpdateAllUIStates(BaseEntity entity)
+        public override void UpdateAllUIStates(BaseEntity entity)
         {
             // 防止重复更新、无效调用和窗体已释放的情况
             if (entity == null || _isUpdatingUIStates || this.IsDisposed) return;
@@ -295,12 +305,8 @@ namespace RUINORERP.UI.BaseForm
                 // 1. 统一更新所有按钮状态 - 优先处理
                 UpdateAllButtonStates(currentStatus);
 
-                // 2. 更新UI控件状态
-                UpdateUIControlsByState(currentStatus);
-
                 // 3. 更新状态显示
-                UpdateStateDisplay();
-
+                UpdateStateDisplay(entity);
                 // 4. 更新打印状态显示
                 UpdatePrintStatusDisplay(entity);
 
@@ -331,7 +337,22 @@ namespace RUINORERP.UI.BaseForm
 
 
         /// <summary>
-        /// 统一更新所有按钮状态 - 集中管理所有工具栏按钮的状态
+        /// 统一更新打印状态显示
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        protected virtual void UpdatePrintStatusDisplay(BaseEntity entity)
+        {
+            // 尝试查找打印状态标签控件
+            var printStatusLabel = this.Controls.Find("lblPrintStatus", true).FirstOrDefault() as KryptonLabel;
+            if (printStatusLabel != null)
+            {
+                ShowPrintStatus(printStatusLabel, entity);
+            }
+        }
+
+
+        /// <summary>
+        /// 更新按钮状态 - 协调多个职责单一的子方法
         /// </summary>
         /// <param name="currentStatus">当前状态</param>
         protected void UpdateAllButtonStates(EntityStatus currentStatus)
@@ -481,6 +502,23 @@ namespace RUINORERP.UI.BaseForm
         /// <param name="enabled">是否启用</param>
         private void UpdateButtonState(string buttonName, bool enabled)
         {
+            try
+            {
+
+                var control = this.Controls.Find(buttonName, true).FirstOrDefault();
+                if (control != null)
+                {
+                    control.Enabled = enabled;
+                    return;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "更新UI控件状态失败: {0}", ex.Message);
+            }
+
+
             try
             {
                 // 使用反射获取按钮控件并更新状态
@@ -1403,23 +1441,23 @@ namespace RUINORERP.UI.BaseForm
             {
                 return;
             }
-            
+
             try
             {
-                
+
                 // 1. 统一使用基类的HandleEntityStatusSubscription移除旧实体的事件订阅
                 HandleEntityStatusSubscription(EditEntity as BaseEntity, false);
-                
+
                 // 移除可能存在的PropertyChanged事件订阅（保持注释，不直接使用PropertyChanged事件）
                 //if (EditEntity != null && EditEntity != entity)
                 //{
                 //    EditEntity.PropertyChanged -= Entity_PropertyChanged;
                 //}
-                
+
                 // 2. 设置当前编辑实体
                 EditEntity = entity; // 避免不必要的类型转换
                 base.BindEntity(entity);
-                
+
                 // 3. 统一使用HandleEntityStatusSubscription订阅新实体的StatusChanged事件
                 // 不再直接订阅PropertyChanged事件，避免重复事件处理
                 if (EditEntity is BaseEntity newEntity)
@@ -3361,11 +3399,7 @@ namespace RUINORERP.UI.BaseForm
                     RestoreSpecificFields(EditEntity, originalFieldValues);
                 };
 
-                if (ae.ApprovalResults == true)
-                {
-                    StateManager.SetBusinessStatusAsync<DataStatus>(EditEntity, DataStatus.确认, "审核通过");
-                }
-                else
+                if (ae.ApprovalResults == false)
                 {
                     //审核了。驳回 时数据状态要更新为新建。要再次修改后提交
                     #region UI驳回直接保存返回。不用进入审核流程了。
@@ -3648,7 +3682,7 @@ namespace RUINORERP.UI.BaseForm
                         #endregion
 
                     }
- 
+
                     ae.ApprovalResults = true;
                     reviewResult.approval = ae;
                     if (ae.bizType.ToString().Contains("款"))
@@ -3676,8 +3710,7 @@ namespace RUINORERP.UI.BaseForm
                     MessageBox.Show($"{ae.bizName}:{ae.BillNo}审核失败。\r\n {rmr.ErrorMsg}", "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
-            
-            UpdateAllUIStates();
+
             return reviewResult;
         }
 

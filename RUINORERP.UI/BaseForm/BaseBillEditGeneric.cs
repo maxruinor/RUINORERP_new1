@@ -1514,7 +1514,11 @@ namespace RUINORERP.UI.BaseForm
                 {
                     // 使用V4状态管理系统的按钮控制
                     UpdateAllUIStates(entity);
-                    baseEntity.AcceptChanges();
+                    if (entity.PrimaryKeyID > 0)
+                    {
+                        baseEntity.AcceptChanges();
+                    }
+
                     if (bindingSourceSub != null && bindingSourceSub.DataSource != null)
                     {
                         List<C> detailEntities = bindingSourceSub.DataSource as List<C>;
@@ -1524,7 +1528,7 @@ namespace RUINORERP.UI.BaseForm
                             {
                                 if (detailEntities[i] is BaseEntity detailEntity)
                                 {
-                                    if (detailEntity.HasChanged)
+                                    if (detailEntity.HasChanged && detailEntity.PrimaryKeyID > 0)
                                     {
                                         detailEntity.AcceptChanges();
                                     }

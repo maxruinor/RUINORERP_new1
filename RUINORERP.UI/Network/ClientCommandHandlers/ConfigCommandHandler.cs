@@ -39,8 +39,6 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
             SetSupportedCommands(GeneralCommands.ConfigSync);
         }
 
-
-
         /// <summary>
         /// 初始化处理器
         /// </summary>

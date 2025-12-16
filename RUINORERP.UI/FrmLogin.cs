@@ -45,11 +45,11 @@ namespace RUINORERP.UI
         /// 保存原始服务器端口，用于变更检测
         /// </summary>
         private string _originalServerPort = string.Empty;
-        private readonly CacheClientService _cacheClientService; // 缓存客户端服务，用于订阅表
-        private readonly ConnectionManager connectionManager;
-        private readonly UserLoginService userLoginService;
-        private readonly TokenManager _tokenManager;
-        private readonly UserLoginService _userLoginService;
+        private readonly CacheClientService _cacheClientService;
+         private readonly ConnectionManager connectionManager;
+         private readonly UserLoginService _userLoginService;
+         private readonly TokenManager _tokenManager;
+         private readonly ConfigSyncService _configSyncService;
         public FrmLogin()
         {
             InitializeComponent();
@@ -57,6 +57,7 @@ namespace RUINORERP.UI
             connectionManager = Startup.GetFromFac<ConnectionManager>();
             _userLoginService = Startup.GetFromFac<UserLoginService>();
             _tokenManager = Startup.GetFromFac<TokenManager>();
+            _configSyncService = Startup.GetFromFac<ConfigSyncService>();
         }
         private bool m_showing = true;
         private void fadeTimer_Tick(object sender, EventArgs e)
@@ -652,7 +653,24 @@ namespace RUINORERP.UI
                 await _cacheClientService.RequestAllCacheSyncMetadataAsync();
 
                 //登陆成功后要去服务器请求最新配置
-                 
+                try
+                {
+                    if (_configSyncService != null)
+                    {
+                        MainForm.Instance.PrintInfoLog("正在请求最新配置文件...");
+                        bool configSyncSuccess = await _configSyncService.RequestCommonConfigsAsync();
+                        if (configSyncSuccess)
+                        {
+                            MainForm.Instance.PrintInfoLog("配置文件请求发送成功，等待服务器响应");
+                        }
+                        
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MainForm.Instance.logger?.LogError(ex, "请求最新配置文件时发生异常");
+                }
+                
 
                 // 获取锁状态列表
                 try

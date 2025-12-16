@@ -34,7 +34,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
             _logger = logger;
             
             // 获取文件存储路径
-            _fileStoragePath = Startup.GetFromFac<Model.ConfigModel.ServerConfig>()?.FileStoragePath ?? "Files";
+            _fileStoragePath = Startup.GetFromFac<Model.ConfigModel.ServerGlobalConfig>()?.FileStoragePath ?? "Files";
 
             // 设置支持的命令
             SetSupportedCommands(

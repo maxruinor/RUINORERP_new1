@@ -385,7 +385,7 @@ namespace RUINORERP.Server
             {
                 (typeof(SystemGlobalConfig), nameof(SystemGlobalConfig)),
                 (typeof(GlobalValidatorConfig), nameof(GlobalValidatorConfig)),
-                (typeof(ServerConfig), nameof(ServerConfig))
+                (typeof(ServerGlobalConfig), nameof(ServerGlobalConfig))
             });
             #endregion
 
@@ -395,7 +395,7 @@ namespace RUINORERP.Server
                 .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
                 .AddJsonFile(Path.Combine("SysConfigFiles", nameof(SystemGlobalConfig) + ".json"), optional: false, reloadOnChange: true)
                 .AddJsonFile(Path.Combine("SysConfigFiles", nameof(GlobalValidatorConfig) + ".json"), optional: false, reloadOnChange: true)
-                .AddJsonFile(Path.Combine("SysConfigFiles", nameof(ServerConfig) + ".json"), optional: false, reloadOnChange: true)
+                .AddJsonFile(Path.Combine("SysConfigFiles", nameof(ServerGlobalConfig) + ".json"), optional: false, reloadOnChange: true)
                 // 添加环境变量支持，提高配置灵活性
                 .AddEnvironmentVariables(prefix: "RUINOR_")
                 .Build();
@@ -406,13 +406,13 @@ namespace RUINORERP.Server
             // 配置Options模式，支持依赖注入IOptions<T>接口
             services.Configure<SystemGlobalConfig>(builder.GetSection(nameof(SystemGlobalConfig)));
             services.Configure<GlobalValidatorConfig>(builder.GetSection(nameof(GlobalValidatorConfig)));
-            services.Configure<ServerConfig>(builder.GetSection(nameof(ServerConfig)));
+            services.Configure<ServerGlobalConfig>(builder.GetSection(nameof(ServerGlobalConfig)));
             
             // 注册ServerConfig单例实例，包含环境变量解析
-            services.AddSingleton<ServerConfig>(provider =>
+            services.AddSingleton<ServerGlobalConfig>(provider =>
             {
-                var serverConfig = new ServerConfig();
-                builder.GetSection(nameof(ServerConfig)).Bind(serverConfig);
+                var serverConfig = new ServerGlobalConfig();
+                builder.GetSection(nameof(ServerGlobalConfig)).Bind(serverConfig);
                 
                 // 解析路径中的环境变量，确保路径正确
                 if (!string.IsNullOrEmpty(serverConfig.FileStoragePath))

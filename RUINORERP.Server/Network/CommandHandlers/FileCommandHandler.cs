@@ -36,7 +36,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         private readonly SessionService _sessionService;
         private readonly ILogger<FileCommandHandler> _logger;
         private readonly string _fileStoragePath;
-        private readonly ServerConfig _serverConfig;
+        private readonly ServerGlobalConfig _serverConfig;
         // 添加业务控制器用于数据库操作
         private readonly tb_FS_FileStorageInfoController<tb_FS_FileStorageInfo> _fileStorageInfoController;
         private readonly tb_FS_BusinessRelationController<tb_FS_BusinessRelation> _businessRelationController;
@@ -81,7 +81,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
             // 统一路径初始化逻辑
             try
             {
-                _serverConfig = Startup.GetFromFac<ServerConfig>();
+                _serverConfig = Startup.GetFromFac<ServerGlobalConfig>();
                 _fileStoragePath = ResolveEnvironmentVariables(_serverConfig.FileStoragePath);
 
                 // 确保存储目录存在

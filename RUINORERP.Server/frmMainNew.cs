@@ -1253,12 +1253,12 @@ namespace RUINORERP.Server
         /// 获取服务器配置实例
         /// 通过依赖注入容器的ServerConfig单例或ConfigManagerService加载配置
         /// </summary>
-        private RUINORERP.Model.ConfigModel.ServerConfig GetServerConfig()
+        private RUINORERP.Model.ConfigModel.ServerGlobalConfig GetServerConfig()
         {
             try
             {
                 // 优先使用依赖注入容器的ServerConfig单例（在Startup.cs中配置）
-                var serverConfig = Startup.GetFromFac<ServerConfig>();
+                var serverConfig = Startup.GetFromFac<ServerGlobalConfig>();
 
                 // 如果需要环境变量解析或其他后处理，使用ConfigManagerService
                 if (serverConfig != null && !string.IsNullOrEmpty(serverConfig.FileStoragePath))

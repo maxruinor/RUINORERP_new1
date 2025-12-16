@@ -32,6 +32,13 @@ namespace RUINORERP.Server.Network.CommandHandlers
         {
             _bizCodeService = bizCodeService;
             _logger = logger;
+            // 使用安全方法设置支持的命令
+            SetSupportedCommands(
+                BizCodeCommands.DeleteRuleConfig,
+                BizCodeCommands.SaveRuleConfig,
+                BizCodeCommands.GenerateBarCode,
+                BizCodeCommands.GetAllRuleConfigs
+            );
         }
 
 

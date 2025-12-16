@@ -2227,7 +2227,11 @@ namespace RUINORERP.UI.BaseForm
                             // 恢复所有非查询按钮的可用状态
                             return;
                         }
-                        await Delete();
+                        var deleteResult = await Delete();
+                        if (deleteResult.Succeeded)
+                        {
+                            Add();
+                        }
                     }
                     catch (Exception ex)
                     {

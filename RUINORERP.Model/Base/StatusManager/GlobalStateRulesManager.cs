@@ -284,7 +284,7 @@ namespace RUINORERP.Model.Base.StatusManager
             {
                 [PrePaymentStatus.草稿] = new List<object> { PrePaymentStatus.待审核, PrePaymentStatus.草稿 },
                 [PrePaymentStatus.待审核] = new List<object> { PrePaymentStatus.已生效, PrePaymentStatus.草稿 },
-                [PrePaymentStatus.已生效] = new List<object> { PrePaymentStatus.待核销, PrePaymentStatus.部分核销, PrePaymentStatus.全额核销, PrePaymentStatus.已结案 },
+                [PrePaymentStatus.已生效] = new List<object> {PrePaymentStatus.待审核, PrePaymentStatus.待核销, PrePaymentStatus.部分核销, PrePaymentStatus.全额核销, PrePaymentStatus.已结案 },
                 [PrePaymentStatus.待核销] = new List<object> { PrePaymentStatus.部分核销, PrePaymentStatus.全额核销, PrePaymentStatus.已结案 },
                 [PrePaymentStatus.部分核销] = new List<object> { PrePaymentStatus.全额核销, PrePaymentStatus.已结案 },
                 [PrePaymentStatus.全额核销] = new List<object> { PrePaymentStatus.已结案 }
@@ -301,10 +301,10 @@ namespace RUINORERP.Model.Base.StatusManager
             {
                 [ARAPStatus.草稿] = new List<object> { ARAPStatus.待审核, ARAPStatus.草稿 },
                 [ARAPStatus.待审核] = new List<object> { ARAPStatus.待支付, ARAPStatus.草稿 },
-                [ARAPStatus.待支付] = new List<object> { ARAPStatus.部分支付, ARAPStatus.全部支付 },
+                [ARAPStatus.待支付] = new List<object> {ARAPStatus.待审核, ARAPStatus.部分支付, ARAPStatus.全部支付,ARAPStatus.坏账 },
                 [ARAPStatus.部分支付] = new List<object> { ARAPStatus.全部支付, ARAPStatus.坏账, ARAPStatus.已冲销 },
                 [ARAPStatus.全部支付] = new List<object> { ARAPStatus.已冲销 },
-                [ARAPStatus.坏账] = new List<object> { ARAPStatus.已冲销 }
+                [ARAPStatus.坏账] = new List<object> {  }
             };
         }
 
@@ -322,8 +322,8 @@ namespace RUINORERP.Model.Base.StatusManager
                 // 新建状态可以转换到确认状态或已作废状态
                 [StatementStatus.新建] = new List<object> { StatementStatus.确认, StatementStatus.已作废 },
                 
-                // 确认状态可以转换到部分结算状态、全部结清状态或已作废状态
-                [StatementStatus.确认] = new List<object> { StatementStatus.部分结算, StatementStatus.全部结清, StatementStatus.已作废 },
+                // 确认状态可以转换到部分结算状态、全部结清状态或已作废状态,也可以反审
+                [StatementStatus.确认] = new List<object> { StatementStatus.新建, StatementStatus.部分结算, StatementStatus.全部结清, StatementStatus.已作废 },
                 
                 // 部分结算状态可以转换到全部结清状态
                 [StatementStatus.部分结算] = new List<object> { StatementStatus.全部结清 },

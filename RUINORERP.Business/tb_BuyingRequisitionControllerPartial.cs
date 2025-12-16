@@ -34,11 +34,7 @@ namespace RUINORERP.Business
 {
     public partial class tb_BuyingRequisitionController<T> : BaseController<T> where T : class
     {
-        /// <summary>
-        /// 统一状态管理器
-        /// </summary>
-        protected readonly IUnifiedStateManager _stateManager;
-
+  
         /// <summary>
         /// 结案
         /// </summary>
@@ -114,8 +110,7 @@ namespace RUINORERP.Business
             try
             {
                 // 使用统一状态管理器检查是否可以审核
-                _stateManager = _appContext.GetRequiredService<IUnifiedStateManager>();
-                if (!_stateManager.CanApproveEntity(entity))
+                if (!StateManager.CanExecuteActionWithMessage(entity,MenuItemEnums.审核).CanExecute)
                 {
                     rmrs.ErrorMsg = "当前状态不允许审核操作";
                     rmrs.Succeeded = false;
@@ -127,7 +122,7 @@ namespace RUINORERP.Business
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
 
                 // 使用统一状态管理器设置状态
-                var statusResult = await _stateManager.SetBusinessStatusAsync(entity, DataStatus.确认, "审核通过");
+                var statusResult = await StateManager.SetBusinessStatusAsync<DataStatus>(entity, DataStatus.确认, "审核通过");
                 if (!statusResult.IsSuccess)
                 {
                     rmrs.ErrorMsg = statusResult.ErrorMessage;
@@ -173,8 +168,7 @@ namespace RUINORERP.Business
             try
             {
                 // 使用统一状态管理器检查是否可以反审
-                _stateManager = _appContext.GetRequiredService<IUnifiedStateManager>();
-                if (!_stateManager.CanAntiApproveEntity(entity))
+                if (!StateManager.CanExecuteActionWithMessage(entity,MenuItemEnums.反审).CanExecute)
                 {
                     rs.ErrorMsg = "当前状态不允许反审操作";
                     rs.Succeeded = false;
@@ -191,7 +185,7 @@ namespace RUINORERP.Business
                 }
 
                 // 使用统一状态管理器设置状态
-                var statusResult = await _stateManager.SetBusinessStatusAsync(entity, DataStatus.新建, "反审核操作");
+                var statusResult = await StateManager.SetBusinessStatusAsync<DataStatus>(entity, DataStatus.新建, "反审核操作");
                 if (!statusResult.IsSuccess)
                 {
                     rs.ErrorMsg = statusResult.ErrorMessage;

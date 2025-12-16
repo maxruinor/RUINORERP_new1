@@ -143,11 +143,48 @@ namespace RUINORERP.Model.Context
 
 
         #region 全局可控件变量
+
+        private SystemGlobalConfig _systemGlobalConfig;
         /// <summary>
         /// 这个类中的值，实际是自动生成了json配置文件。并且系统实时监控这个配置文件中的值
         /// </summary>
-        public SystemGlobalConfig SystemGlobalConfig { get; set; } = new SystemGlobalConfig();
-
+        public SystemGlobalConfig SystemGlobalConfig
+        {
+            get
+            {
+                // 只有当配置实例不存在时才初始化
+                if (_systemGlobalConfig == null)
+                {
+                    // 优先从依赖注入容器获取
+                    if (Current != null)
+                    {
+                        try
+                        {
+                            _systemGlobalConfig = Current.GetRequiredService<SystemGlobalConfig>();
+                        }
+                        catch (Exception)
+                        {
+                            // 如果获取服务失败，则创建新实例
+                            _systemGlobalConfig = new SystemGlobalConfig();
+                        }
+                    }
+                    else
+                    {
+                        // 如果Current为null，创建新实例
+                        _systemGlobalConfig = new SystemGlobalConfig();
+                    }
+                }
+                return _systemGlobalConfig;
+            }
+            set
+            {
+                // 简单地更新本地字段，确保值不为null
+                if (value != null)
+                {
+                    _systemGlobalConfig = value;
+                }
+            }
+        }
         #endregion
 
         #region 业务缓存数据  所属项目级

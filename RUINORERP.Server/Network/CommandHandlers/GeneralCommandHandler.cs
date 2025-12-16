@@ -1,4 +1,6 @@
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using RUINORERP.Model.ConfigModel;
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Models.Common;
 using RUINORERP.PacketSpec.Models.Core;
@@ -6,6 +8,7 @@ using RUINORERP.PacketSpec.Models.Requests;
 using RUINORERP.PacketSpec.Models.Responses; 
 using RUINORERP.Server.Network.Models; 
 using System;
+using System.Collections.Generic;
 using System.Threading; 
 using System.Threading.Tasks; 
 
@@ -68,16 +71,33 @@ namespace RUINORERP.Server.Network.CommandHandlers
         private async Task<IResponse> HandleDataTransferAsync(GeneralRequest request, CommandContext executionContext, CancellationToken cancellationToken) 
         { 
             _logger?.LogDebug("开始处理数据传输请求");
-            
-            var response = new GeneralResponse { Data = request.Data }; 
-            
+            var response = new GeneralResponse { Data = request.Data };
+            var systemGlobalConfig = Startup.GetFromFac<SystemGlobalConfig>();
+            var serverGlobalConfig = Startup.GetFromFac<ServerGlobalConfig>();
+            var globalValidatorConfig = Startup.GetFromFac<GlobalValidatorConfig>();
+            List<BaseConfig> configList = new List<BaseConfig>
+            {
+                systemGlobalConfig,
+                serverGlobalConfig,
+                globalValidatorConfig
+            };
+
+            // 序列化当前配置为JSON
+            foreach (var config in configList)
+            {
+                string configData = JsonConvert.SerializeObject(config, Formatting.Indented);
+                response.Metadata[config.ConfigType] = new Dictionary<string, object>
+                {
+                    { config.ConfigType, configData }
+                };
+            }
+
             try 
             { 
                 // 通用数据传输处理
                 // 这里只是简单地返回成功响应，具体业务逻辑由其他模块实现
                 response.IsSuccess = true;
                 response.Message = "数据传输成功";
-                
                 _logger?.LogInformation($"数据传输成功"); 
             } 
             catch (Exception ex) 

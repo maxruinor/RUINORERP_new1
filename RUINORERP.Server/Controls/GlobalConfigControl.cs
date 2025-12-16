@@ -120,7 +120,7 @@ namespace RUINORERP.Server.Controls
             try
             {
                 // 注册已知的配置类型
-                RegisterConfigType(typeof(ServerConfig), "ServerConfig.json", "ServerConfig");
+                RegisterConfigType(typeof(ServerGlobalConfig), "ServerGlobalConfig.json", "ServerGlobalConfig");
                 RegisterConfigType(typeof(SystemGlobalConfig), "SystemGlobalConfig.json", "SystemGlobalConfig");
                 RegisterConfigType(typeof(GlobalValidatorConfig), "GlobalValidatorConfig.json", "GlobalValidatorConfig");
 
@@ -308,7 +308,7 @@ namespace RUINORERP.Server.Controls
                 _configHistory.Add(historyEntry);
 
                 // 如果是服务器配置，初始化文件存储路径
-                if (_currentConfig is ServerConfig serverConfig)
+                if (_currentConfig is ServerGlobalConfig serverConfig)
                 {
                     FileStorageHelper.InitializeStoragePath(serverConfig);
                 }
@@ -333,7 +333,7 @@ namespace RUINORERP.Server.Controls
         /// </summary>
         private string GetConfigDescription(BaseConfig config)
         {
-            if (config is ServerConfig)
+            if (config is ServerGlobalConfig)
                 return "服务器配置更新";
             else if (config is SystemGlobalConfig)
                 return "系统全局配置更新";
@@ -1042,7 +1042,7 @@ namespace RUINORERP.Server.Controls
                 object defaultValue = null;
 
                 // 对于特定配置类型的特定属性，设置自定义默认值
-                if (configType == typeof(ServerConfig))
+                if (configType == typeof(ServerGlobalConfig))
                 {
                     defaultValue = GetServerConfigDefaultValue(property.Name, property.PropertyType);
                 }
@@ -1070,23 +1070,23 @@ namespace RUINORERP.Server.Controls
         {
             switch (propertyName)
             {
-                case nameof(ServerConfig.ServerName):
+                case nameof(ServerGlobalConfig.ServerName):
                     return "RUINORERP Server";
-                case nameof(ServerConfig.MaxConnections):
+                case nameof(ServerGlobalConfig.MaxConnections):
                     return 100;
-                case nameof(ServerConfig.HeartbeatInterval):
+                case nameof(ServerGlobalConfig.HeartbeatInterval):
                     return 30000;
-                case nameof(ServerConfig.CacheType):
+                case nameof(ServerGlobalConfig.CacheType):
                     return "Memory";
-                case nameof(ServerConfig.CacheConnectionString):
+                case nameof(ServerGlobalConfig.CacheConnectionString):
                     return "";
-                case nameof(ServerConfig.LogLevel):
+                case nameof(ServerGlobalConfig.LogLevel):
                     return "Info";
-                case nameof(ServerConfig.EnableLogging):
+                case nameof(ServerGlobalConfig.EnableLogging):
                     return true;
-                case nameof(ServerConfig.FileStoragePath):
+                case nameof(ServerGlobalConfig.FileStoragePath):
                     return "D:\\RUINORERP\\FileStorage";
-                case nameof(ServerConfig.MaxFileSizeMB):
+                case nameof(ServerGlobalConfig.MaxFileSizeMB):
                     return 10;
 
                 default:

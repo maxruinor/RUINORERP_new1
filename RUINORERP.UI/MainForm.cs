@@ -3602,16 +3602,7 @@ namespace RUINORERP.UI
         {
             try
             {
-                // 创建服务缓存测试窗体实例
-                RUINORERP.UI.Testing.FrmServiceCacheTest cacheTestForm = new RUINORERP.UI.Testing.FrmServiceCacheTest();
-
-                // 设置窗体标题
-                cacheTestForm.Text = "服务实例缓存性能测试工具";
-
-                // 以模态对话框形式显示窗体
-                cacheTestForm.ShowDialog();
-
-                logger.LogInformation("服务缓存测试窗体已打开");
+                 
             }
             catch (Exception ex)
             {

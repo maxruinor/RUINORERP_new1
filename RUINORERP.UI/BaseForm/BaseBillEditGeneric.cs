@@ -3780,40 +3780,6 @@ namespace RUINORERP.UI.BaseForm
                     CloneHelper.SetValues<T>(EditEntity, oldobj);
                 };
 
-
-                //中间中的所有字段，都给值到单据主表中，后面需要处理审核历史这种再完善
-                //PropertyInfo[] array_property = ae.GetType().GetProperties();
-                //{
-                //    foreach (var property in array_property)
-                //    {
-
-                //        // 回退到旧的状态管理系统
-                //        await TransitionToAsync(DataStatus.新建, "新建单据");
-                //        //EditEntity.SetPropertyValue(typeof(DataStatus).Name, (int)DataStatus.新建);
-
-                //        if (ReflectionHelper.ExistPropertyName<T>("ApprovalOpinions"))
-                //        {
-                //            EditEntity.SetPropertyValue("ApprovalOpinions", ae.ApprovalOpinions);
-                //        }
-                //        if (ReflectionHelper.ExistPropertyName<T>("ApprovalStatus"))
-                //        {
-                //            EditEntity.SetPropertyValue("ApprovalStatus", (int)ApprovalStatus.未审核);
-                //        }
-                //        if (ReflectionHelper.ExistPropertyName<T>("ApprovalResults"))
-                //        {
-                //            EditEntity.SetPropertyValue("ApprovalResults", false);
-                //        }
-
-                //        if (ReflectionHelper.ExistPropertyName<T>(property.Name))
-                //        {
-                //            object aeValue = ReflectionHelper.GetPropertyValue(ae, property.Name);
-                //            ReflectionHelper.SetPropertyValue(EditEntity, property.Name, aeValue);
-                //        }
-                //    }
-                //}
-
-
-
                 ReturnResults<T> rmr = new ReturnResults<T>();
                 BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
 
@@ -3838,9 +3804,7 @@ namespace RUINORERP.UI.BaseForm
                                 UNLock(saleOut.tb_saleorder.SOrder_ID);
                             }
                         }
-
                     }
-
                     //这里推送到审核，启动工作流
                     await MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("反审", EditEntity, $"反审原因{ae.ApprovalOpinions}");
                 }
@@ -3849,7 +3813,6 @@ namespace RUINORERP.UI.BaseForm
                     //审核失败 要恢复之前的值
                     command.Undo();
                     rs = false;
-                    //await ToolBarEnabledControl(EditEntity);
                     await MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("反审失败", EditEntity, $"反审原因{ae.ApprovalOpinions},{rmr.ErrorMsg}");
                     MainForm.Instance.logger.LogError($"{cbd.BillNo}反审失败{rmr.ErrorMsg}");
                     MainForm.Instance.PrintInfoLog($"{cbd.BillNo}反审失败{rmr.ErrorMsg},请联系管理员！", Color.Red);

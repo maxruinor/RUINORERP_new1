@@ -651,6 +651,9 @@ namespace RUINORERP.UI
                 // 请求元数据同步
                 await _cacheClientService.RequestAllCacheSyncMetadataAsync();
 
+                //登陆成功后要去服务器请求最新配置
+                 
+
                 // 获取锁状态列表
                 try
                 {

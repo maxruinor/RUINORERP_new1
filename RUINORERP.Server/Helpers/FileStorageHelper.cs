@@ -12,13 +12,13 @@ namespace RUINORERP.Server.Helpers
     /// </summary>
     public static class FileStorageHelper
     {
-        private static ServerConfig _serverConfig;
+        private static ServerGlobalConfig _serverConfig;
         
         /// <summary>
         /// 初始化文件存储路径
         /// </summary>
         /// <param name="serverConfig">服务器配置</param>
-        public static void InitializeStoragePath(ServerConfig serverConfig)
+        public static void InitializeStoragePath(ServerGlobalConfig serverConfig)
         {
             _serverConfig = serverConfig;
             

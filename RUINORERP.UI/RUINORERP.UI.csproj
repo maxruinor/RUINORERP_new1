@@ -2379,14 +2379,6 @@
     <Compile Include="SysConfig\UCClientLockManage.Designer.cs">
       <DependentUpon>UCClientLockManage.cs</DependentUpon>
     </Compile>
-    <Compile Include="Testing\ApplicationContextCacheTest.cs" />
-    <Compile Include="Testing\FrmServiceCacheTest.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Testing\FrmServiceCacheTest.Designer.cs">
-      <DependentUpon>FrmServiceCacheTest.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Testing\ServiceCachePerformanceTest.cs" />
     <Compile Include="UControls\JsonViewer.cs" />
     <Compile Include="UControls\JsonViewer.Designer.cs">
       <DependentUpon>JsonViewer.cs</DependentUpon>
@@ -4659,9 +4651,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SysConfig\UCWorkCenterConfig.resx">
       <DependentUpon>UCWorkCenterConfig.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Testing\FrmServiceCacheTest.resx">
-      <DependentUpon>FrmServiceCacheTest.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ToolForm\frmAdvanceSelectorGeneric.resx">
       <DependentUpon>frmAdvanceSelectorGeneric.cs</DependentUpon>

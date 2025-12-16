@@ -755,8 +755,9 @@ namespace RUINORERP.Model
                 {
                     this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
                     HasChanged = true;
+                    //没有状态类型则没有状态的实体，普通实体非单据
                     var statusType = StateManager.GetStatusType(this);
-                    if (statusType.Name == propertyName)
+                    if (statusType != null && statusType.Name == propertyName)
                     {
                         TriggerStatusChange(statusType, oldValue, newValue);
                     }
@@ -916,7 +917,7 @@ namespace RUINORERP.Model
         // 状态变更计数，用于性能监控和调试
         private int _statusChangeCount;
 
- 
+
 
         /// <summary>
         /// 操作状态（ActionStatus）

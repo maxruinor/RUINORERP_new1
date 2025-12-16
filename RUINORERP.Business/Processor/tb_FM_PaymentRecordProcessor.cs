@@ -49,7 +49,6 @@ namespace RUINORERP.Business.Processor
             queryFilter.SetQueryField<tb_FM_PaymentRecord, tb_CustomerVendor>(c => c.CustomerVendor_ID, lambda);
             //可以根据关联外键自动加载条件，条件用公共虚方法
 
-            queryFilter.SetQueryField<tb_FM_PaymentRecord>(c => c.PaymentNo);
             queryFilter.SetQueryField<tb_FM_PaymentRecord>(c => c.PayeeAccountNo);
             queryFilter.SetQueryField<tb_FM_PaymentRecord>(c => c.Employee_ID);
             queryFilter.SetQueryField<tb_FM_PaymentRecord>(c => c.SourceBillNos);

@@ -6,38 +6,38 @@
 // 作者：Watson
 // 时间：04/29/2025 11:22:29
 // **************************************
+using AutoMapper;
+using FluentValidation.Results;
+using Microsoft.Extensions.Logging;
+using RUINOR.Core;
+using RUINORERP.Business.BizMapperService;
+using RUINORERP.Business.CommService;
+using RUINORERP.Business.Processor;
+using RUINORERP.Common.Extensions;
+using RUINORERP.Common.Helper;
+using RUINORERP.Global;
+using RUINORERP.Global.EnumExt;
+using RUINORERP.IServices;
+using RUINORERP.IServices.BASE;
+using RUINORERP.Model;
+using RUINORERP.Model.Base;
+using RUINORERP.Model.ConfigModel;
+using RUINORERP.Model.Context;
+using RUINORERP.Repository.UnitOfWorks;
+using RUINORERP.Services;
+using StackExchange.Redis;
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Drawing.Drawing2D;
+using System.IO.IsolatedStorage;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
-using RUINORERP.IServices;
-using RUINORERP.Repository.UnitOfWorks;
-using RUINORERP.Model;
-using FluentValidation.Results;
-using RUINORERP.Services;
-
-using RUINORERP.Model.Base;
-using RUINORERP.Common.Extensions;
-using RUINORERP.IServices.BASE;
-using RUINORERP.Model.Context;
-using System.Linq;
-using RUINOR.Core;
-using RUINORERP.Common.Helper;
-using RUINORERP.Global.EnumExt;
-using RUINORERP.Global;
-using RUINORERP.Business.CommService;
-using AutoMapper;
-using System.IO.IsolatedStorage;
-using StackExchange.Redis;
-using System.Drawing.Drawing2D;
-using System.Collections;
-using RUINORERP.Business.BizMapperService;
-using ZXing;
-using RUINORERP.Business.Processor;
 using System.Threading;
+using System.Threading.Tasks;
+using ZXing;
 
 namespace RUINORERP.Business
 {
@@ -187,8 +187,9 @@ namespace RUINORERP.Business
 
                 if (entity.ReceivePaymentType == (int)ReceivePaymentType.付款)
                 {
+                    var containerGlobalConfig = _appContext.GetRequiredService<GlobalValidatorConfig>();
                     //自动审核时不检测
-                    if (!entity.PayeeInfoID.HasValue && !IsAutoApprove)
+                    if (!entity.PayeeInfoID.HasValue && !IsAutoApprove && containerGlobalConfig.收付款账户必填)
                     {
                         rmrs.ErrorMsg = $"{entity.ARAPNo}付款时，对方的收款信息必填!";
                         rmrs.Succeeded = false;

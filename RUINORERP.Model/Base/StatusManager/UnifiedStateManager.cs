@@ -979,8 +979,7 @@ namespace RUINORERP.Model.Base.StatusManager
 
             return true;
         }
-
-
+ 
 
         #endregion
 

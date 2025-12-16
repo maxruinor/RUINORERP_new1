@@ -19,6 +19,7 @@ using FluentValidation.Results;
 using RUINORERP.Services;
 
 using RUINORERP.Model.Base;
+using RUINORERP.Model.Base.StatusManager;
 using RUINORERP.Common.Extensions;
 using RUINORERP.IServices.BASE;
 using RUINORERP.Model.Context;
@@ -33,6 +34,10 @@ namespace RUINORERP.Business
 {
     public partial class tb_BuyingRequisitionController<T> : BaseController<T> where T : class
     {
+        /// <summary>
+        /// 统一状态管理器
+        /// </summary>
+        protected readonly IUnifiedStateManager _stateManager;
 
         /// <summary>
         /// 结案
@@ -108,13 +113,28 @@ namespace RUINORERP.Business
             tb_BuyingRequisition entity = ObjectEntity as tb_BuyingRequisition;
             try
             {
+                // 使用统一状态管理器检查是否可以审核
+                _stateManager = _appContext.GetRequiredService<IUnifiedStateManager>();
+                if (!_stateManager.CanApproveEntity(entity))
+                {
+                    rmrs.ErrorMsg = "当前状态不允许审核操作";
+                    rmrs.Succeeded = false;
+                    return rmrs;
+                }
+
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
 
-
-                //这部分是否能提出到上一级公共部分？
-                entity.DataStatus = (int)DataStatus.确认;
+                // 使用统一状态管理器设置状态
+                var statusResult = await _stateManager.SetBusinessStatusAsync(entity, DataStatus.确认, "审核通过");
+                if (!statusResult.IsSuccess)
+                {
+                    rmrs.ErrorMsg = statusResult.ErrorMessage;
+                    rmrs.Succeeded = false;
+                    _unitOfWorkManage.RollbackTran();
+                    return rmrs;
+                }
 
                 entity.ApprovalStatus = (int)ApprovalStatus.审核通过;
                 BusinessHelper.Instance.ApproverEntity(entity);
@@ -152,9 +172,12 @@ namespace RUINORERP.Business
             tb_BuyingRequisition entity = ObjectEntity as tb_BuyingRequisition;
             try
             {
-                //判断是否能反审?
-                if (entity.DataStatus != (int)DataStatus.确认 || !entity.ApprovalResults.HasValue)
+                // 使用统一状态管理器检查是否可以反审
+                _stateManager = _appContext.GetRequiredService<IUnifiedStateManager>();
+                if (!_stateManager.CanAntiApproveEntity(entity))
                 {
+                    rs.ErrorMsg = "当前状态不允许反审操作";
+                    rs.Succeeded = false;
                     return rs;
                 }
 
@@ -167,8 +190,16 @@ namespace RUINORERP.Business
 
                 }
 
-                //这部分是否能提出到上一级公共部分？
-                entity.DataStatus = (int)DataStatus.新建;
+                // 使用统一状态管理器设置状态
+                var statusResult = await _stateManager.SetBusinessStatusAsync(entity, DataStatus.新建, "反审核操作");
+                if (!statusResult.IsSuccess)
+                {
+                    rs.ErrorMsg = statusResult.ErrorMessage;
+                    rs.Succeeded = false;
+                    _unitOfWorkManage.RollbackTran();
+                    return rs;
+                }
+
                 entity.ApprovalResults = false;
                 entity.ApprovalStatus = (int)ApprovalStatus.未审核;
                 BusinessHelper.Instance.ApproverEntity(entity);

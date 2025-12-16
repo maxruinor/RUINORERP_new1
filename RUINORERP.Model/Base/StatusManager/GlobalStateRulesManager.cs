@@ -942,10 +942,13 @@ namespace RUINORERP.Model.Base.StatusManager
 
         /// <summary>
         /// 判断指定状态是否为终态
+        /// 注意：这个方法已移动到IUnifiedStateManager接口中，这里保留是为了向后兼容
+        /// 建议使用IUnifiedStateManager.IsFinalStatus方法
         /// </summary>
         /// <typeparam name="TStatus">状态类型</typeparam>
         /// <param name="status">状态值</param>
         /// <returns>是否为终态</returns>
+        [Obsolete("请使用IUnifiedStateManager.IsFinalStatus方法替代此方法")]
         public bool IsFinalStatus<TStatus>(TStatus status) where TStatus : struct
         {
             var statusType = typeof(TStatus);
@@ -986,99 +989,7 @@ namespace RUINORERP.Model.Base.StatusManager
             return false;
         }
 
-        /// <summary>
-        /// 判断指定状态是否可以提交
-        /// </summary>
-        /// <typeparam name="TStatus">状态类型</typeparam>
-        /// <param name="status">状态值</param>
-        /// <returns>是否可以提交</returns>
-        public bool CanSubmit<TStatus>(TStatus status) where TStatus : struct
-        {
-            // 终态不能提交
-            if (IsFinalStatus(status))
-                return false;
-
-            var statusType = typeof(TStatus);
-
-            // 根据不同状态类型判断是否可以提交
-            if (statusType == typeof(DataStatus))
-            {
-                DataStatus dataStatus = (DataStatus)(object)status;
-                return dataStatus == DataStatus.草稿;
-            }
-            else if (statusType == typeof(PaymentStatus))
-            {
-                PaymentStatus paymentStatus = (PaymentStatus)(object)status;
-                return paymentStatus == PaymentStatus.草稿;
-            }
-            else if (statusType == typeof(PrePaymentStatus))
-            {
-                PrePaymentStatus prepayStatus = (PrePaymentStatus)(object)status;
-                return prepayStatus == PrePaymentStatus.草稿;
-            }
-            else if (statusType == typeof(ARAPStatus))
-            {
-                ARAPStatus arapStatus = (ARAPStatus)(object)status;
-                return arapStatus == ARAPStatus.草稿;
-            }
-            else if (statusType == typeof(StatementStatus))
-            {
-                StatementStatus statementStatus = (StatementStatus)(object)status;
-                return statementStatus == StatementStatus.草稿;
-            }
-
-            // 其他状态类型默认可提交条件：检查是否有提交相关的状态转换规则
-            // 或者检查是否有提交操作权限
-            return CanExecuteAction(status, MenuItemEnums.提交) ||
-                   (_stateTransitionRules.ContainsKey(statusType) &&
-                    _stateTransitionRules[statusType].ContainsKey(status) &&
-                    _stateTransitionRules[statusType][status].Count > 0);
-        }
-
-        /// <summary>
-        /// 判断指定状态是否可以审核
-        /// </summary>
-        /// <typeparam name="TStatus">状态类型</typeparam>
-        /// <param name="status">状态值</param>
-        /// <returns>是否可以审核</returns>
-        public bool CanApprove<TStatus>(TStatus status) where TStatus : struct
-        {
-            // 终态不能审核
-            if (IsFinalStatus(status))
-                return false;
-
-            var statusType = typeof(TStatus);
-
-            // 根据不同状态类型判断是否可以审核
-            if (statusType == typeof(DataStatus))
-            {
-                DataStatus dataStatus = (DataStatus)(object)status;
-                return dataStatus == DataStatus.新建;
-            }
-            else if (statusType == typeof(StatementStatus))
-            {
-                StatementStatus statementStatus = (StatementStatus)(object)status;
-                return statementStatus == StatementStatus.新建;
-            }
-            else if (statusType == typeof(PaymentStatus))
-            {
-                PaymentStatus paymentStatus = (PaymentStatus)(object)status;
-                return paymentStatus == PaymentStatus.待审核;
-            }
-            else if (statusType == typeof(PrePaymentStatus))
-            {
-                PrePaymentStatus prepayStatus = (PrePaymentStatus)(object)status;
-                return prepayStatus == PrePaymentStatus.待审核;
-            }
-            else if (statusType == typeof(ARAPStatus))
-            {
-                ARAPStatus arapStatus = (ARAPStatus)(object)status;
-                return arapStatus == ARAPStatus.待审核;
-            }
-
-            // 通用判断：检查是否有待审核状态或有审核操作权限
-            return CanExecuteAction(status, MenuItemEnums.审核);
-        }
+ 
 
         /// <summary>
         /// 获取状态类型的描述信息

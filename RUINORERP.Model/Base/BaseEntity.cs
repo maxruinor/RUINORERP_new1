@@ -742,31 +742,38 @@ namespace RUINORERP.Model
         [Browsable(false)]
         public bool SuppressNotifyPropertyChanged { get; set; }
         /// <summary>
-        /// 触发属性变更通知
+        /// 触发属性变更通知（增强版）
+        /// 确保状态属性变更时，无论PropertyChanged事件是否有订阅者，都能正确触发状态变更通知
         /// </summary>
         /// <param name="propertyName">属性名</param>
         /// <param name="oldValue">旧值</param>
         /// <param name="newValue">新值</param>
         protected virtual void OnPropertyChanged(string propertyName, object oldValue = null, object newValue = null)
         {
-            if (this.PropertyChanged != null && !SuppressNotifyPropertyChanged)
+            try
             {
-                try
+                // 标记实体已变更
+                HasChanged = true;
+                // 检查是否是状态属性
+                var statusType = StateManager?.GetStatusType(this);
+                bool isStatusProperty = statusType != null && statusType.Name == propertyName;
+
+                // 触发PropertyChanged事件（如果有订阅者且未被抑制）
+                if (this.PropertyChanged != null && !SuppressNotifyPropertyChanged)
                 {
                     this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
-                    HasChanged = true;
-                    //没有状态类型则没有状态的实体，普通实体非单据
-                    var statusType = StateManager.GetStatusType(this);
-                    if (statusType != null && statusType.Name == propertyName)
-                    {
-                        TriggerStatusChange(statusType, oldValue, newValue);
-                    }
                 }
-                catch (Exception ex)
+
+                // 对于状态属性，确保总是触发状态变更通知
+                if (isStatusProperty)
                 {
-                    // 记录异常但不抛出，避免影响主业务流程
-                    System.Diagnostics.Debug.WriteLine($"属性变更通知异常: {ex.Message}");
+                    TriggerStatusChange(statusType, oldValue, newValue);
                 }
+            }
+            catch (Exception ex)
+            {
+                // 记录异常但不抛出，避免影响主业务流程
+                System.Diagnostics.Debug.WriteLine($"属性变更通知异常: {ex.Message}");
             }
         }
 
@@ -957,13 +964,9 @@ namespace RUINORERP.Model
                     // 更新状态变更计数
                     Interlocked.Increment(ref _statusChangeCount);
 
-                    // 优化事件触发顺序：
-                    // 1. 先触发状态变更专用事件，供专门监听状态变化的处理程序使用
-                    TriggerStatusChange(typeof(ActionStatus), oldStatus, value);
-
-                    // 2. 再触发PropertyChanged事件，确保任何绑定到该属性的UI元素都能得到更新
+                    // 再触发PropertyChanged事件，确保任何绑定到该属性的UI元素都能得到更新
                     // 使用安全的事件触发方式
-                    OnPropertyChanged("ActionStatus");
+                    OnPropertyChanged(nameof(ActionStatus), oldStatus, value);
                 }
                 finally
                 {

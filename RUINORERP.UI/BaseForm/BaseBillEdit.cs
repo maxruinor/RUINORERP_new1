@@ -150,9 +150,7 @@ public partial class BaseBillEdit : UserControl
                     if (_boundEntity != null)
                     {
                         SubscribeEntityEvents(_boundEntity);
-                        // 清除_lastUpdatedStatus，确保下次绑定会正确更新UI
                         _lastUpdatedStatus = null;
-                        UpdateAllUIStates(_boundEntity); // 绑定后立即更新UI状态
                     }
                     else
                     {

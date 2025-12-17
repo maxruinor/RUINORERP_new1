@@ -280,17 +280,16 @@ namespace RUINORERP.UI
             services.Configure<SystemGlobalConfig>(builder.GetSection(nameof(SystemGlobalConfig)));
             services.Configure<GlobalValidatorConfig>(builder.GetSection(nameof(GlobalValidatorConfig)));
 
-            // 注册ConfigManager为单例，并确保它能正确初始化
+            // 使用扩展方法注册配置管理相关服务
+            services.AddConfigManagementServices();
+
+            // 注册UIConfigManager为单例，并确保它能正确初始化
             services.AddSingleton<UIConfigManager>(provider =>
             {
                 var configManager = new UIConfigManager();
                 configManager.Initialize();
                 return configManager;
             });
-
-            // 注册ConfigManagerService为单例，确保全局使用同一个实例
-            // 注意：这里需要确保ConfigManagerService已经在Business层正确注册了依赖服务
-            services.AddSingleton<IConfigManagerService, ConfigManagerService>();
         }
 
         /// <summary>

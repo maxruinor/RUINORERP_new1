@@ -80,6 +80,7 @@ using RUINORERP.Server.Network.Monitoring;
 using RUINORERP.Server.Network.Core;
 using RUINORERP.Server.Services.BizCode;
 using RUINORERP.Business.BNR;
+using RUINORERP.Business.Config;
 
 namespace RUINORERP.Server
 {
@@ -409,16 +410,18 @@ namespace RUINORERP.Server
             // 将IConfiguration注册到服务容器，供ConfigManagerService使用
             services.AddSingleton<IConfiguration>(builder);
 
-            // 配置Options模式，支持依赖注入IOptions<T>接口
+            // 配置Options模式，支持依赖注入IOptions<T>和IOptionsMonitor<T>接口
+            // IOptionsMonitor<T>支持配置变更监听
             services.Configure<SystemGlobalConfig>(builder.GetSection(nameof(SystemGlobalConfig)));
             services.Configure<GlobalValidatorConfig>(builder.GetSection(nameof(GlobalValidatorConfig)));
             services.Configure<ServerGlobalConfig>(builder.GetSection(nameof(ServerGlobalConfig)));
 
-            // 注册ServerConfig单例实例，包含环境变量解析
+            // 注册ServerConfig单例实例，使用IOptionsMonitor<T>支持动态更新
             services.AddSingleton<ServerGlobalConfig>(provider =>
             {
-                var serverConfig = new ServerGlobalConfig();
-                builder.GetSection(nameof(ServerGlobalConfig)).Bind(serverConfig);
+                // 获取IOptionsMonitor实例，用于监听配置变更
+                var monitor = provider.GetRequiredService<IOptionsMonitor<ServerGlobalConfig>>();
+                var serverConfig = monitor.CurrentValue;
 
                 // 解析路径中的环境变量，确保路径正确
                 if (!string.IsNullOrEmpty(serverConfig.FileStoragePath))
@@ -428,8 +431,25 @@ namespace RUINORERP.Server
 
                 return serverConfig;
             });
+            
+            // 注册SystemGlobalConfig单例实例
+            services.AddSingleton<SystemGlobalConfig>(provider =>
+            {
+                var monitor = provider.GetRequiredService<IOptionsMonitor<SystemGlobalConfig>>();
+                return monitor.CurrentValue;
+            });
+            
+            // 注册GlobalValidatorConfig单例实例
+            services.AddSingleton<GlobalValidatorConfig>(provider =>
+            {
+                var monitor = provider.GetRequiredService<IOptionsMonitor<GlobalValidatorConfig>>();
+                return monitor.CurrentValue;
+            });
 
             // 确保ConfigManagerService正确注册，使用新的构造函数
+            
+            // 使用扩展方法注册配置管理相关服务
+            services.AddConfigManagementServices();
 
             services.AddSingleton(typeof(frmMainNew));//MDI最大。才开一次才能单例
 
@@ -488,6 +508,19 @@ namespace RUINORERP.Server
             // 注册内存监控服务
             services.AddSingleton<MemoryMonitoringService>();
 
+        }
+        
+        /// <summary>
+        /// 初始化配置同步
+        /// </summary>
+        /// <param name="serviceProvider">服务提供程序</param>
+        public static void InitializeConfigSync(IServiceProvider serviceProvider)
+        {
+            // 注册所有配置变更事件处理器
+            serviceProvider.RegisterAllConfigChangeHandlers();
+            
+            var logger = serviceProvider.GetRequiredService<ILogger<Startup>>();
+            logger.LogInformation("配置同步服务已初始化");
         }
         #endregion
 

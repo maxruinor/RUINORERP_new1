@@ -3419,11 +3419,12 @@ namespace RUINORERP.UI
                 // 处理配置值
                 logger.LogInformation("获取到最新的验证配置: {Setting}", validatorConfig.SomeSetting);
             }
-
+            var systemGlobalConfig = configManagerService.GetConfig<SystemGlobalConfig>();
             // 避免使用多个不同的配置源，统一使用ConfigManagerService
             // 以下代码已注释，避免配置不一致问题
-            // var validatorMonitor = Startup.GetFromFac<IOptionsMonitor<GlobalValidatorConfig>>();
-
+            var validatorMonitor = Startup.GetFromFac<IOptionsMonitor<ServerGlobalConfig>>();
+            var monitor = Startup.GetFromFac<IOptionsMonitor<GlobalValidatorConfig>>();
+            var serverConfigValidator = Startup.GetFromFac<ServerGlobalConfig>();
 
             await UI.Common.UIBizService.RequestCache<tb_UserInfo>(true);
             MainForm.Instance.logger.LogError("LoginWebServer" + System.DateTime.Now.ToString());

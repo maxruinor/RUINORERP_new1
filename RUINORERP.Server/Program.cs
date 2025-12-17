@@ -154,6 +154,9 @@ namespace RUINORERP.Server
                     //设置服务的提供者
                     Startup.ServiceProvider = services;
                     Program.ServiceProvider = services; // 同时给Program.ServiceProvider赋值
+                    
+                    // 初始化配置同步服务
+                    Startup.InitializeConfigSync(services);
                     AppContextData.SetServiceProvider(services);
                     Startup.AutofacContainerScope = services.GetAutofacRoot();
                     AppContextData.SetAutofacContainerScope(Startup.AutofacContainerScope);

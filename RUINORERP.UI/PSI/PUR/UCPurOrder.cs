@@ -1,4 +1,4 @@
-﻿﻿using System;
+﻿﻿﻿﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -25,7 +25,6 @@ using RUINORERP.Global.CustomAttribute;
 using RUINORERP.Global;
 using RUINORERP.UI.Report;
 using RUINORERP.UI.BaseForm;
-
 using Microsoft.Extensions.Logging;
 using SqlSugar;
 using SourceGrid;
@@ -189,14 +188,19 @@ namespace RUINORERP.UI.PSI.PUR
                 {
                     //如果线索引入相关数据
                     #region 收款信息可以根据往来单位带出 ，并且可以添加
-
+                    cmbPayeeInfoID.DataBindings.Clear();
                     //创建表达式
                     var lambdaPayeeInfo = Expressionable.Create<tb_FM_PayeeInfo>()
                                 .And(t => t.Is_enabled == true)
                                 .And(t => t.CustomerVendor_ID == entity.CustomerVendor_ID)
                                 .ToExpression();//注意 这一句 不能少
+                                
                     BaseProcessor baseProcessorPayeeInfo = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_FM_PayeeInfo).Name + "Processor");
                     QueryFilter queryFilterPayeeInfo = baseProcessorPayeeInfo.GetQueryFilter();
+                    
+                    // 处理表达式中的闭包变量，将其替换为实际值
+                    lambdaPayeeInfo = queryFilterPayeeInfo.ProcessClosureVariables(lambdaPayeeInfo);
+                    
                     queryFilterPayeeInfo.FilterLimitExpressions.Add(lambdaPayeeInfo);
 
                     DataBindingHelper.BindData4Cmb<tb_FM_PayeeInfo>(entity, k => k.PayeeInfoID, v => v.DisplayText, cmbPayeeInfoID, queryFilterPayeeInfo.GetFilterExpression<tb_FM_PayeeInfo>(), true);
@@ -340,7 +344,7 @@ namespace RUINORERP.UI.PSI.PUR
 
             #endregion
 
-            //如果属性变化 则状态为修改
+            //如果属性变化 则状态为修改11
             entity.PropertyChanged += async (sender, s2) =>
             {
                 if (s2.PropertyName == entity.GetPropertyName<tb_PurOrder>(c => c.CustomerVendor_ID))
@@ -352,8 +356,13 @@ namespace RUINORERP.UI.PSI.PUR
                                 .And(t => t.Is_enabled == true)
                                 .And(t => t.CustomerVendor_ID == entity.CustomerVendor_ID)
                                 .ToExpression();//注意 这一句 不能少
+                                
                     BaseProcessor baseProcessorPayeeInfo = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_FM_PayeeInfo).Name + "Processor");
                     QueryFilter queryFilterPayeeInfo = baseProcessorPayeeInfo.GetQueryFilter();
+                    
+                    // 处理表达式中的闭包变量，将其替换为实际值
+                    lambdaPayeeInfo = queryFilterPayeeInfo.ProcessClosureVariables(lambdaPayeeInfo);
+                    
                     queryFilterPayeeInfo.FilterLimitExpressions.Add(lambdaPayeeInfo);
 
                     DataBindingHelper.BindData4Cmb<tb_FM_PayeeInfo>(entity, k => k.PayeeInfoID, v => v.DisplayText, cmbPayeeInfoID, queryFilterPayeeInfo.GetFilterExpression<tb_FM_PayeeInfo>(), true);
@@ -1257,4 +1266,3 @@ namespace RUINORERP.UI.PSI.PUR
         }
     }
 }
-

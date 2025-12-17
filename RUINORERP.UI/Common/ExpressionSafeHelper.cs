@@ -152,6 +152,7 @@ namespace RUINORERP.UI.Common
 
         /// <summary>
         /// 获取用于评估表达式的委托函数
+        /// 增强版：更好地处理闭包变量和复杂表达式
         /// 预处理表达式并编译成高效的委托，避免在循环中重复处理
         /// </summary>
         /// <typeparam name="T">元素类型</typeparam>
@@ -219,21 +220,26 @@ namespace RUINORERP.UI.Common
                 catch (Exception compileEx)
                 {
                     System.Diagnostics.Debug.WriteLine($"表达式编译失败: {compileEx.Message}");
+                    System.Diagnostics.Debug.WriteLine($"表达式详细信息: {expression}");
 
-                    // 最后尝试使用简单的条件评估作为备选
-                    return obj => ExpressionSafeHelper.EvaluateSimpleExpression(obj, expression.Body);
+                    // 最后尝试使用条件提取方法作为备选
+                    return obj => TryFilterWithConditionExtraction<T>(new List<T> { obj }, expression).Any();
                 }
             }
             catch (Exception ex)
             {
                 // 记录错误但返回默认评估函数
                 System.Diagnostics.Debug.WriteLine($"获取评估函数失败: {ex.Message}");
-                return obj => true; // 默认返回true，表示不过滤任何项目
+                System.Diagnostics.Debug.WriteLine($"表达式详细信息: {expression}");
+                
+                // 返回一个使用条件提取方法的委托作为备选方案
+                return obj => TryFilterWithConditionExtraction<T>(new List<T> { obj }, expression).Any();
             }
         }
 
         /// <summary>
         /// 尝试使用条件提取方法进行筛选
+        /// 增强版：更好地处理闭包变量和复杂表达式
         /// </summary>
         public static List<T> TryFilterWithConditionExtraction<T>(List<T> sourceList, Expression<Func<T, bool>> expCondition) where T : class
         {
@@ -262,19 +268,420 @@ namespace RUINORERP.UI.Common
                 if (conditions.Any())
                 {
                     System.Diagnostics.Debug.WriteLine($"成功提取到 {conditions.Count} 个筛选条件");
+                    foreach (var condition in conditions)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"条件: {condition.PropertyName} {condition.Operator} {condition.Value}");
+                    }
+                    
                     var filteredList = sourceList.Where(item => MeetsAllConditions(item, conditions)).ToList();
                     // 只有当筛选有结果时才返回，否则返回原始列表
                     return filteredList.Count > 0 ? filteredList : sourceList.ToList();
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine($"未能提取到任何筛选条件，尝试直接编译表达式");
+                    
+                    // 作为备选方案，尝试直接编译和执行表达式
+                    try
+                    {
+                        // 对于包含闭包的表达式，直接编译会失败，但我们可以尝试
+                        return sourceList.Where(expCondition.Compile()).ToList();
+                    }
+                    catch (Exception directEx)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"直接编译表达式也失败: {directEx.Message}");
+                        
+                        // 如果直接编译失败，尝试手动分析表达式
+                        return ManualFilterWithClosureVariables(sourceList, expCondition);
+                    }
                 }
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"条件提取失败: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"表达式详细信息: {expCondition}");
+                
+                // 最后的备选方案：尝试手动分析表达式
+                return ManualFilterWithClosureVariables(sourceList, expCondition);
             }
-
-            // 所有方法都失败时，返回原始列表
-            return sourceList.ToList();
         }
+        
+        /// <summary>
+        /// 手动处理包含闭包变量的表达式 - 增强版，支持任意闭包变量
+        /// </summary>
+        private static List<T> ManualFilterWithClosureVariables<T>(List<T> sourceList, Expression<Func<T, bool>> expCondition) where T : class
+        {
+            try
+            {
+                // 使用通用的闭包变量解析方法
+                var closureResolver = new ClosureVariableResolver<T>();
+                closureResolver.AnalyzeExpression(expCondition);
+                
+                if (closureResolver.HasClosureVariables)
+                {
+                    System.Diagnostics.Debug.WriteLine($"检测到闭包变量，尝试通用解析方法");
+                    
+                    // 使用解析出的条件进行过滤
+                    return sourceList.Where(item => 
+                    {
+                        return closureResolver.EvaluateConditions(item);
+                    }).ToList();
+                }
+                
+                // 如果没有闭包变量，返回原始列表
+                System.Diagnostics.Debug.WriteLine($"未检测到闭包变量，返回原始列表");
+                return sourceList.ToList();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"通用闭包变量解析失败: {ex.Message}");
+                return sourceList.ToList();
+            }
+        }
+        
+
+        
+        /// <summary>
+        /// 通用闭包变量解析器 - 支持任意类型的闭包变量和条件
+        /// </summary>
+        private class ClosureVariableResolver<T> where T : class
+        {
+            private readonly List<FilterCondition> _conditions = new List<FilterCondition>();
+            private readonly List<LogicalOperator> _logicalOperators = new List<LogicalOperator>();
+            
+            public bool HasClosureVariables { get; private set; }
+            
+            /// <summary>
+            /// 分析表达式，提取所有条件和闭包变量
+            /// </summary>
+            public void AnalyzeExpression(Expression<Func<T, bool>> expression)
+            {
+                _conditions.Clear();
+                _logicalOperators.Clear();
+                HasClosureVariables = false;
+                
+                var analyzer = new ClosureAnalyzer(_conditions, _logicalOperators);
+                analyzer.Analyze(expression);
+                
+                HasClosureVariables = analyzer.HasClosureVariables;
+                System.Diagnostics.Debug.WriteLine($"表达式分析完成，检测到 {_conditions.Count} 个条件，" +
+                    $"包含闭包变量: {HasClosureVariables}");
+            }
+            
+            /// <summary>
+            /// 根据提取的条件评估项目
+            /// </summary>
+            public bool EvaluateConditions(T item)
+            {
+                if (_conditions.Count == 0)
+                    return true;
+                
+                bool result = true;
+                int conditionIndex = 0;
+                int logicalOpIndex = 0;
+                
+                // 第一个条件作为初始结果
+                if (_conditions.Count > 0)
+                {
+                    result = EvaluateCondition(item, _conditions[0]);
+                    conditionIndex++;
+                }
+                
+                // 处理剩余条件和逻辑运算符
+                while (conditionIndex < _conditions.Count && logicalOpIndex < _logicalOperators.Count)
+                {
+                    var condition = _conditions[conditionIndex];
+                    var logicalOp = _logicalOperators[logicalOpIndex];
+                    
+                    bool conditionResult = EvaluateCondition(item, condition);
+                    
+                    if (logicalOp.Type == ExpressionType.AndAlso)
+                    {
+                        result = result && conditionResult;
+                    }
+                    else if (logicalOp.Type == ExpressionType.OrElse)
+                    {
+                        result = result || conditionResult;
+                    }
+                    
+                    conditionIndex++;
+                    logicalOpIndex++;
+                }
+                
+                return result;
+            }
+            
+            private bool EvaluateCondition(T item, FilterCondition condition)
+            {
+                try
+                {
+                    // 获取属性值
+                    object propertyValue = GetPropertyValue(item, condition.PropertyName);
+                    
+                    // 执行比较
+                    return condition.Operator switch
+                    {
+                        ExpressionType.Equal => Equals(propertyValue, condition.Value),
+                        ExpressionType.NotEqual => !Equals(propertyValue, condition.Value),
+                        ExpressionType.GreaterThan => CompareValues(propertyValue, condition.Value) > 0,
+                        ExpressionType.GreaterThanOrEqual => CompareValues(propertyValue, condition.Value) >= 0,
+                        ExpressionType.LessThan => CompareValues(propertyValue, condition.Value) < 0,
+                        ExpressionType.LessThanOrEqual => CompareValues(propertyValue, condition.Value) <= 0,
+                        _ => true // 默认返回true
+                    };
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"条件评估失败: {ex.Message}");
+                    return true;
+                }
+            }
+            
+            private object GetPropertyValue(T item, string propertyName)
+            {
+                var property = typeof(T).GetProperty(propertyName);
+                return property?.GetValue(item);
+            }
+            
+            private int CompareValues(object x, object y)
+            {
+                if (x == null && y == null) return 0;
+                if (x == null) return -1;
+                if (y == null) return 1;
+                
+                // 尝试转换为可比较类型
+                if (x is IComparable comparableX && y is IComparable comparableY)
+                {
+                    return comparableX.CompareTo(comparableY);
+                }
+                
+                // 使用默认比较器
+                return Comparer.Default.Compare(x, y);
+            }
+        }
+        
+        /// <summary>
+        /// 过滤条件
+        /// </summary>
+        private class FilterCondition
+        {
+            public string PropertyName { get; set; }
+            public object Value { get; set; }
+            public ExpressionType Operator { get; set; }
+        }
+        
+        /// <summary>
+        /// 逻辑运算符
+        /// </summary>
+        private class LogicalOperator
+        {
+            public ExpressionType Type { get; set; }
+        }
+        
+        /// <summary>
+        /// 闭包分析器 - 从表达式中提取条件和闭包变量
+        /// </summary>
+        private class ClosureAnalyzer : ExpressionVisitor
+        {
+            private readonly List<FilterCondition> _conditions;
+            private readonly List<LogicalOperator> _logicalOperators;
+            
+            public bool HasClosureVariables { get; private set; }
+            
+            public ClosureAnalyzer(List<FilterCondition> conditions, List<LogicalOperator> logicalOperators)
+            {
+                _conditions = conditions;
+                _logicalOperators = logicalOperators;
+            }
+            
+            public void Analyze<T>(Expression<Func<T, bool>> expression) where T : class
+            {
+                Visit(expression.Body);
+            }
+            
+            protected override Expression VisitBinary(BinaryExpression node)
+            {
+                // 处理逻辑运算符
+                if (node.NodeType == ExpressionType.AndAlso || node.NodeType == ExpressionType.OrElse)
+                {
+                    // 递归处理左右表达式
+                    Visit(node.Left);
+                    
+                    // 添加逻辑运算符
+                    _logicalOperators.Add(new LogicalOperator { Type = node.NodeType });
+                    
+                    Visit(node.Right);
+                    return node;
+                }
+                
+                // 处理比较表达式
+                if (IsComparisonOperator(node.NodeType))
+                {
+                    var condition = ExtractCondition(node);
+                    if (condition != null)
+                    {
+                        _conditions.Add(condition);
+                        
+                        // 检查是否包含闭包变量
+                        if (HasClosureVariable(node) || HasClosureVariableInValue(node))
+                        {
+                            HasClosureVariables = true;
+                        }
+                    }
+                }
+                
+                return base.VisitBinary(node);
+            }
+            
+            private bool IsComparisonOperator(ExpressionType nodeType)
+            {
+                return nodeType == ExpressionType.Equal ||
+                       nodeType == ExpressionType.NotEqual ||
+                       nodeType == ExpressionType.GreaterThan ||
+                       nodeType == ExpressionType.GreaterThanOrEqual ||
+                       nodeType == ExpressionType.LessThan ||
+                       nodeType == ExpressionType.LessThanOrEqual;
+            }
+            
+            private FilterCondition ExtractCondition(BinaryExpression binaryNode)
+            {
+                // 尝试获取属性名和值
+                string propertyName = null;
+                object value = null;
+                
+                // 检查左侧是否是属性访问
+                if (binaryNode.Left is MemberExpression leftMember && 
+                    leftMember.Expression is ParameterExpression)
+                {
+                    propertyName = leftMember.Member.Name;
+                    value = ExtractValueFromNode(binaryNode.Right);
+                }
+                // 检查右侧是否是属性访问
+                else if (binaryNode.Right is MemberExpression rightMember && 
+                         rightMember.Expression is ParameterExpression)
+                {
+                    propertyName = rightMember.Member.Name;
+                    value = ExtractValueFromNode(binaryNode.Left);
+                }
+                
+                if (!string.IsNullOrEmpty(propertyName))
+                {
+                    return new FilterCondition
+                    {
+                        PropertyName = propertyName,
+                        Value = value,
+                        Operator = binaryNode.NodeType
+                    };
+                }
+                
+                return null;
+            }
+            
+            private object ExtractValueFromNode(Expression node)
+            {
+                // 常量表达式
+                if (node is ConstantExpression constExp)
+                {
+                    return constExp.Value;
+                }
+                
+                // 类型转换表达式
+                if (node is UnaryExpression unaryExp && unaryExp.NodeType == ExpressionType.Convert)
+                {
+                    var innerValue = ExtractValueFromNode(unaryExp.Operand);
+                    if (innerValue != null)
+                    {
+                        try
+                        {
+                            return Convert.ChangeType(innerValue, unaryExp.Type);
+                        }
+                        catch
+                        {
+                            // 转换失败，返回原始值
+                        }
+                    }
+                    return innerValue;
+                }
+                
+                // 闭包变量表达式
+                if (node is MemberExpression memberExp)
+                {
+                    return GetClosureVariableValue(memberExp);
+                }
+                
+                return null;
+            }
+            
+            private object GetClosureVariableValue(MemberExpression memberExp)
+            {
+                try
+                {
+                    // 首先检查是否是闭包变量（通常以 value(...) 开头）
+                    string memberStr = memberExp.ToString();
+                    if (memberStr.Contains("value("))
+                    {
+                        // 对于闭包变量，我们需要通过编译表达式来获取值
+                        try
+                        {
+                            var lambda = Expression.Lambda(memberExp);
+                            var compiled = lambda.Compile();
+                            return compiled.DynamicInvoke();
+                        }
+                        catch (Exception ex)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"编译闭包变量表达式失败: {ex.Message}");
+                            // 如果编译失败，尝试其他方法
+                        }
+                    }
+                    
+                    // 递归获取闭包变量值
+                    if (memberExp.Expression is ConstantExpression constExp)
+                    {
+                        object obj = constExp.Value;
+                        if (obj != null)
+                        {
+                            // 获取属性值
+                            if (memberExp.Member is PropertyInfo propInfo)
+                                return propInfo.GetValue(obj);
+                            else if (memberExp.Member is FieldInfo fieldInfo)
+                                return fieldInfo.GetValue(obj);
+                        }
+                    }
+                    else if (memberExp.Expression is MemberExpression parentMemberExp)
+                    {
+                        // 处理嵌套属性访问
+                        var parentValue = GetClosureVariableValue(parentMemberExp);
+                        if (parentValue != null)
+                        {
+                            if (memberExp.Member is PropertyInfo propInfo)
+                                return propInfo.GetValue(parentValue);
+                            else if (memberExp.Member is FieldInfo fieldInfo)
+                                return fieldInfo.GetValue(parentValue);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"获取闭包变量值失败: {ex.Message}");
+                }
+                
+                return null;
+            }
+            
+            private bool HasClosureVariable(Expression expression)
+            {
+                return expression.ToString().Contains("value(") ||
+                       (expression is MemberExpression memberExp && 
+                        memberExp.Expression is ConstantExpression);
+            }
+            
+            private bool HasClosureVariableInValue(BinaryExpression binaryNode)
+            {
+                return HasClosureVariable(binaryNode.Left) || HasClosureVariable(binaryNode.Right);
+            }
+        }
+        
+
 
 
 
@@ -309,6 +716,7 @@ namespace RUINORERP.UI.Common
 
         /// <summary>
         /// 提取单个条件
+        /// 增强版：更好地处理闭包变量和复杂表达式
         /// </summary>
         private static void ExtractSingleCondition(Expression expression, List<SimpleCondition> conditions, ExpressionType logicalOperator)
         {
@@ -320,7 +728,12 @@ namespace RUINORERP.UI.Common
                 {
                     // 尝试获取右侧值，支持常量表达式和类型转换表达式
                     object value = GetExpressionValueFromNode(binary.Right);
-                    if (value != null || binary.Right is ConstantExpression constExp && constExp.Value == null)
+                    
+                    // 允许null值进行比较
+                    if (value != null || 
+                        (binary.Right is ConstantExpression constExp && constExp.Value == null) ||
+                        (binary.Right is UnaryExpression unaryExp && unaryExp.NodeType == ExpressionType.Convert && 
+                         unaryExp.Operand is ConstantExpression unaryConstExp && unaryConstExp.Value == null))
                     {
                         conditions.Add(new SimpleCondition
                         {
@@ -330,24 +743,45 @@ namespace RUINORERP.UI.Common
                             LogicalOperator = logicalOperator
                         });
                     }
+                    else
+                    {
+                        // 如果无法获取值，尝试从DebugView或其他方式获取
+                        System.Diagnostics.Debug.WriteLine($"无法提取表达式的值: {binary.Right}");
+                    }
                 }
             }
         }
 
         /// <summary>
         /// 从表达式节点获取属性名
+        /// 增强版：正确处理不同类型的表达式节点
         /// </summary>
         private static string GetPropertyName(Expression expression)
         {
             if (expression is MemberExpression memberExpr)
             {
-                return memberExpr.Member.Name;
+                // 如果成员表达式是针对参数的（如 t.PropertyName）
+                if (memberExpr.Expression is ParameterExpression)
+                {
+                    return memberExpr.Member.Name;
+                }
+                // 处理嵌套成员访问（如 obj.Property.Name）
+                else if (memberExpr.Expression is MemberExpression parentMemberExpr)
+                {
+                    return memberExpr.Member.Name;
+                }
+                // 处理常量成员访问（如闭包变量）
+                else if (memberExpr.Expression is ConstantExpression)
+                {
+                    return memberExpr.Member.Name;
+                }
             }
             return null;
         }
 
         /// <summary>
         /// 从表达式节点获取值，支持常量表达式和类型转换表达式
+        /// 增强版：更好地处理闭包变量和复杂表达式
         /// </summary>
         private static object GetExpressionValueFromNode(Expression expression)
         {
@@ -358,24 +792,104 @@ namespace RUINORERP.UI.Common
             else if (expression is UnaryExpression unaryExp && unaryExp.NodeType == ExpressionType.Convert)
             {
                 // 处理类型转换表达式，递归获取内部表达式的值
-                return GetExpressionValueFromNode(unaryExp.Operand);
+                var innerValue = GetExpressionValueFromNode(unaryExp.Operand);
+                
+                // 尝试进行类型转换
+                if (innerValue != null && unaryExp.Type != null && unaryExp.Type != innerValue.GetType())
+                {
+                    try
+                    {
+                        // 处理可空类型转换
+                        if (unaryExp.Type.IsGenericType && unaryExp.Type.GetGenericTypeDefinition() == typeof(Nullable<>))
+                        {
+                            var underlyingType = Nullable.GetUnderlyingType(unaryExp.Type);
+                            if (underlyingType != null)
+                            {
+                                return Convert.ChangeType(innerValue, underlyingType);
+                            }
+                        }
+                        
+                        return Convert.ChangeType(innerValue, unaryExp.Type);
+                    }
+                    catch
+                    {
+                        // 转换失败时返回原始值
+                    }
+                }
+                
+                return innerValue;
             }
-            else if (expression is MemberExpression memberExp && memberExp.Expression is ConstantExpression)
+            else if (expression is MemberExpression memberExp)
             {
-                // 处理闭包中的变量引用
-                var memberConstExp = (ConstantExpression)memberExp.Expression;
-                try
+                // 处理闭包中的变量引用（如 value(RUINORERP.UI.PSI.PUR.UCPurOrder+<>c__DisplayClass5_0).entity.CustomerVendor_ID）
+                if (memberExp.Expression is ConstantExpression memberConstExp)
+                {
+                    try
+                    {
+                        var obj = memberConstExp.Value;
+                        
+                        // 递归获取属性值，支持多层属性访问
+                        return GetNestedPropertyValue(obj, memberExp);
+                    }
+                    catch
+                    {
+                        // 获取失败时返回null
+                    }
+                }
+                // 处理字段访问表达式
+                else if (memberExp.Expression.NodeType == ExpressionType.MemberAccess)
+                {
+                    try
+                    {
+                        // 递归处理嵌套的成员访问
+                        var parentValue = GetExpressionValueFromNode(memberExp.Expression);
+                        if (parentValue != null)
+                        {
+                            if (memberExp.Member is PropertyInfo propInfo)
+                                return propInfo.GetValue(parentValue);
+                            else if (memberExp.Member is FieldInfo fieldInfo)
+                                return fieldInfo.GetValue(parentValue);
+                        }
+                    }
+                    catch
+                    {
+                        // 获取失败时返回null
+                    }
+                }
+            }
+            
+            return null;
+        }
+        
+        /// <summary>
+        /// 递归获取嵌套属性的值
+        /// </summary>
+        private static object GetNestedPropertyValue(object obj, MemberExpression memberExp)
+        {
+            if (obj == null) return null;
+            
+            // 如果是直接属性访问
+            if (memberExp.Expression is ConstantExpression)
+            {
+                if (memberExp.Member is PropertyInfo propInfo)
+                    return propInfo.GetValue(obj);
+                else if (memberExp.Member is FieldInfo fieldInfo)
+                    return fieldInfo.GetValue(obj);
+            }
+            
+            // 处理嵌套属性访问
+            if (memberExp.Expression is MemberExpression parentMemberExp)
+            {
+                var parentObj = GetExpressionValueFromNode(parentMemberExp);
+                if (parentObj != null)
                 {
                     if (memberExp.Member is PropertyInfo propInfo)
-                        return propInfo.GetValue(memberConstExp.Value);
+                        return propInfo.GetValue(parentObj);
                     else if (memberExp.Member is FieldInfo fieldInfo)
-                        return fieldInfo.GetValue(memberConstExp.Value);
-                }
-                catch
-                {
-                    // 获取失败时返回null
+                        return fieldInfo.GetValue(parentObj);
                 }
             }
+            
             return null;
         }
 
@@ -550,11 +1064,22 @@ namespace RUINORERP.UI.Common
                     try
                     {
                         var value = GetMemberValue(constExp.Value, node.Member);
-                        _closureValues.Add($"{node.Member.Name}:{(value != null ? value.GetHashCode().ToString() : "null")}");
+                        // 使用实际值而不是哈希码，确保不同值生成不同的缓存键
+                        _closureValues.Add($"{node.Member.Name}:{value}");
                     }
                     catch { }
                 }
                 return base.VisitMember(node);
+            }
+
+            protected override Expression VisitConstant(ConstantExpression node)
+            {
+                // 对于常量表达式，也添加到缓存键中
+                if (node.Value != null)
+                {
+                    _closureValues.Add($"const:{node.Value}");
+                }
+                return base.VisitConstant(node);
             }
 
             private object GetMemberValue(object instance, MemberInfo member)
@@ -592,9 +1117,44 @@ namespace RUINORERP.UI.Common
                     object leftValue = GetExpressionValue(item, binaryExp.Left);
                     object rightValue = GetExpressionValue(item, binaryExp.Right);
 
-                    bool areEqual = object.Equals(leftValue, rightValue);
-                    return binaryExp.NodeType == ExpressionType.Equal ? areEqual : !areEqual;
+                    // 处理可空布尔值比较
+                    if (leftValue is bool leftBool && rightValue is bool rightBool)
+                    {
+                        bool areEqual = leftBool == rightBool;
+                        return binaryExp.NodeType == ExpressionType.Equal ? areEqual : !areEqual;
+                    }
+                    // 处理普通布尔值比较
+                    else if (leftValue is bool leftBool2 && rightValue is bool rightBool2)
+                    {
+                        bool areEqual = leftBool2 == rightBool2;
+                        return binaryExp.NodeType == ExpressionType.Equal ? areEqual : !areEqual;
+                    }
+                    // 处理其他类型的比较
+                    else
+                    {
+                        bool areEqual = object.Equals(leftValue, rightValue);
+                        return binaryExp.NodeType == ExpressionType.Equal ? areEqual : !areEqual;
+                    }
                 }
+            }
+            else if (expression is UnaryExpression unaryExp && unaryExp.NodeType == ExpressionType.Convert)
+            {
+                // 处理类型转换表达式，如 Convert(True)
+                object innerValue = GetExpressionValue(item, unaryExp.Operand);
+                if (innerValue != null)
+                {
+                    try
+                    {
+                        object convertedValue = Convert.ChangeType(innerValue, unaryExp.Type);
+                        return convertedValue as bool? ?? false;
+                    }
+                    catch
+                    {
+                        // 转换失败，尝试返回原始值的布尔表示
+                        return innerValue as bool? ?? false;
+                    }
+                }
+                return false;
             }
             else if (expression is ConstantExpression constExp)
             {
@@ -618,6 +1178,42 @@ namespace RUINORERP.UI.Common
             if (expression is ConstantExpression constExp)
             {
                 return constExp.Value;
+            }
+            else if (expression is UnaryExpression unaryExp && unaryExp.NodeType == ExpressionType.Convert)
+            {
+                // 处理类型转换表达式，如 Convert(True)
+                object innerValue = GetExpressionValue(item, unaryExp.Operand);
+                if (innerValue != null)
+                {
+                    // 尝试转换为目标类型
+                    try
+                    {
+                        // 特殊处理可空值类型的转换
+                        Type targetType = unaryExp.Type;
+                        if (targetType.IsGenericType && targetType.GetGenericTypeDefinition() == typeof(Nullable<>))
+                        {
+                            // 处理可空值类型转换
+                            Type underlyingType = Nullable.GetUnderlyingType(targetType);
+                            if (underlyingType != null)
+                            {
+                                // 先转换为底层类型，再创建可空类型
+                                object convertedValue = Convert.ChangeType(innerValue, underlyingType);
+                                return convertedValue;
+                            }
+                        }
+                        else
+                        {
+                            // 普通类型转换
+                            return Convert.ChangeType(innerValue, targetType);
+                        }
+                    }
+                    catch
+                    {
+                        // 转换失败，返回原始值
+                        return innerValue;
+                    }
+                }
+                return null;
             }
             else if (expression is MemberExpression memberExp)
             {

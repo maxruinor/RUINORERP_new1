@@ -83,7 +83,7 @@ namespace RUINORERP.UI.Network.Services
                     };
 
                     // 发送配置请求命令
-                    _logger?.LogInformation("向服务器请求最新配置文件，配置类型数量: {ConfigTypeCount}, 强制刷新: {ForceRefresh}", 
+                    _logger?.Debug("向服务器请求最新配置文件，配置类型数量: {ConfigTypeCount}, 强制刷新: {ForceRefresh}", 
                         configTypes?.Count ?? 0, forceRefresh);
 
                     var response = await _communicationService.SendCommandWithResponseAsync<GeneralResponse>(
@@ -109,7 +109,7 @@ namespace RUINORERP.UI.Network.Services
                     bool processResult = await ProcessConfigResponseAsync(response);
                     if (processResult)
                     {
-                        _logger?.LogInformation("配置同步成功，已处理服务器返回的配置数据");
+                        _logger?.Debug("配置同步成功，已处理服务器返回的配置数据");
                         return true;
                     }
                     else
@@ -275,7 +275,7 @@ namespace RUINORERP.UI.Network.Services
                         await UpdateContainerConfigAsync<GlobalValidatorConfig>(configData);
                         break;
                     default:
-                        _logger?.LogWarning("未知的配置类型: {ConfigType}", configType);
+                        _logger?.Debug("未知的配置类型: {ConfigType}", configType);
                         break;
                 }
                 

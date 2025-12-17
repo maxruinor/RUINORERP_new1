@@ -181,7 +181,7 @@ namespace RUINORERP.Business.Processor
 
 
         /// <summary>
-        /// 得到And后的所有条件
+        /// 得到And后的所有条件1
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns>如果为空则返回null</returns>
@@ -764,15 +764,203 @@ namespace RUINORERP.Business.Processor
             return queryField;
         }
 
+        /// <summary>
+        /// 处理表达式中的闭包变量，将其替换为实际值
+        /// </summary>
+        /// <typeparam name="T">表达式参数类型</typeparam>
+        /// <param name="expression">原始表达式</param>
+        /// <returns>处理后的表达式</returns>
+        /// <summary>
+        /// 处理表达式中的闭包变量，将闭包变量替换为实际值
+        /// </summary>
+        /// <typeparam name="T">实体类型</typeparam>
+        /// <param name="expression">包含闭包变量的表达式</param>
+        /// <returns>处理后的表达式，闭包变量已替换为实际值</returns>
+        public Expression<Func<T, bool>> ProcessClosureVariables<T>(Expression<Func<T, bool>> expression)
+        {
+            if (expression == null)
+                return null;
 
+            try
+            {
+                // 创建闭包变量替换器
+                var closureReplacer = new ClosureVariableReplacer();
+                var newBody = closureReplacer.Visit(expression.Body);
+                
+                // 如果表达式没有变化，直接返回原始表达式
+                if (newBody == expression.Body)
+                    return expression;
+                
+                // 创建新的Lambda表达式
+                return Expression.Lambda<Func<T, bool>>(newBody, expression.Parameters);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"处理闭包变量失败: {ex.Message}");
+                return expression; // 返回原始表达式
+            }
+        }
+        
+        /// <summary>
+        /// 闭包变量替换器 - 将闭包变量替换为实际值
+        /// </summary>
+        private class ClosureVariableReplacer : ExpressionVisitor
+        {
+            protected override Expression VisitMember(MemberExpression node)
+            {
+                // 检测闭包变量（访问常量对象的成员）
+                if (node.Expression is ConstantExpression constExp)
+                {
+                    try
+                    {
+                        // 获取闭包变量的实际值
+                        var value = GetMemberValue(constExp.Value, node.Member);
+                        // 创建常量表达式替换闭包变量引用
+                        return Expression.Constant(value, node.Type);
+                    }
+                    catch
+                    {
+                        // 如果无法获取值，继续正常处理
+                    }
+                }
+                // 处理嵌套的成员访问，例如 entity.CustomerVendor_ID
+                else if (node.Expression is MemberExpression parentMemberExp)
+                {
+                    try
+                    {
+                        // 递归获取嵌套成员的值
+                        object parentValue = GetNestedMemberValue(parentMemberExp);
+                        if (parentValue != null)
+                        {
+                            // 从父对象获取当前成员的值
+                            var value = GetMemberValue(parentValue, node.Member);
+                            return Expression.Constant(value, node.Type);
+                        }
+                    }
+                    catch
+                    {
+                        // 如果无法获取值，继续正常处理
+                    }
+                }
+                
+                // 继续处理其他类型的成员访问
+                return base.VisitMember(node);
+            }
 
+            protected override Expression VisitBinary(BinaryExpression node)
+            {
+                // 处理二元表达式中的类型转换
+                if (node.NodeType == ExpressionType.Equal || node.NodeType == ExpressionType.NotEqual)
+                {
+                    var left = Visit(node.Left);
+                    var right = Visit(node.Right);
+                    
+                    // 如果左右都是常量表达式，且类型不同，尝试进行类型转换
+                    if (left is ConstantExpression leftConst && right is ConstantExpression rightConst)
+                    {
+                        // 如果是布尔值比较，确保类型一致
+                        if (leftConst.Type == typeof(bool) && rightConst.Type == typeof(bool))
+                        {
+                            return Expression.MakeBinary(node.NodeType, left, right);
+                        }
+                        // 如果一个是布尔值，另一个是可空布尔值，进行类型转换
+                        else if (leftConst.Type == typeof(bool) && rightConst.Type == typeof(bool?))
+                        {
+                            var convertedLeft = Expression.Convert(left, typeof(bool?));
+                            return Expression.MakeBinary(node.NodeType, convertedLeft, right);
+                        }
+                        else if (leftConst.Type == typeof(bool?) && rightConst.Type == typeof(bool))
+                        {
+                            var convertedRight = Expression.Convert(right, typeof(bool?));
+                            return Expression.MakeBinary(node.NodeType, left, convertedRight);
+                        }
+                    }
+                    
+                    // 如果没有类型转换需求，直接返回
+                    if (left != node.Left || right != node.Right)
+                    {
+                        return Expression.MakeBinary(node.NodeType, left, right, node.IsLiftedToNull, node.Method);
+                    }
+                }
+                
+                return base.VisitBinary(node);
+            }
 
+            /// <summary>
+            /// 递归获取嵌套成员的值
+            /// </summary>
+            /// <param name="memberExp">成员表达式</param>
+            /// <returns>成员的值</returns>
+            private object GetNestedMemberValue(MemberExpression memberExp)
+            {
+                // 如果是常量表达式的成员，直接获取
+                if (memberExp.Expression is ConstantExpression constExp)
+                {
+                    return GetMemberValue(constExp.Value, memberExp.Member);
+                }
+                // 如果是嵌套的成员表达式，递归获取
+                else if (memberExp.Expression is MemberExpression parentMemberExp)
+                {
+                    object parentValue = GetNestedMemberValue(parentMemberExp);
+                    if (parentValue != null)
+                    {
+                        return GetMemberValue(parentValue, memberExp.Member);
+                    }
+                }
+                
+                return null;
+            }
 
+            private object GetMemberValue(object instance, MemberInfo member)
+            {
+                if (member is PropertyInfo property)
+                    return property.GetValue(instance);
+                else if (member is FieldInfo field)
+                    return field.GetValue(instance);
+                return null;
+            }
+        }
     }
 
+    /// <summary>
+    /// 闭包变量替换访问者 - 将闭包变量替换为它们的实际值（常量表达式）
+    /// </summary>
+    public class ClosureVariableReplacer : ExpressionVisitor
+    {
+        protected override Expression VisitMember(MemberExpression node)
+        {
+            // 检测闭包变量（访问常量对象的成员）
+            if (node.Expression is ConstantExpression constExp)
+            {
+                try
+                {
+                    // 获取闭包变量的实际值
+                    var value = GetMemberValue(constExp.Value, node.Member);
+                    // 创建常量表达式替换闭包变量引用
+                    return Expression.Constant(value, node.Type);
+                }
+                catch
+                {
+                    // 如果无法获取值，继续正常处理
+                }
+            }
+            // 继续处理其他类型的成员访问
+            return base.VisitMember(node);
+        }
 
+        private object GetMemberValue(object instance, MemberInfo member)
+        {
+            if (member is PropertyInfo property)
+                return property.GetValue(instance);
+            else if (member is FieldInfo field)
+                return field.GetValue(instance);
+            return null;
+        }
+    }
 
-
+    /// <summary>
+    /// 参数替换访问者 - 替换表达式中的参数
+    /// </summary>
     public class ParameterReplacementVisitor : ExpressionVisitor
     {
         private readonly ParameterExpression _parameter;
@@ -797,7 +985,4 @@ namespace RUINORERP.Business.Processor
             return base.VisitParameter(node);
         }
     }
-
-
-
 }

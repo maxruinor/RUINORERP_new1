@@ -525,6 +525,9 @@ namespace RUINORERP.UI.Common
                 }
             }
         }
+ 
+
+
         /// <summary>
         /// 感叹号的快速查询功能
         /// 关联查询时带出的快速查询的功能
@@ -944,6 +947,10 @@ namespace RUINORERP.UI.Common
                 }
             }
         }
+
+        
+
+
 
 
 
@@ -2838,14 +2845,21 @@ namespace RUINORERP.UI.Common
 
 
 
+
+
+
         /// <summary>
         /// 安全地从List中筛选数据
         /// </summary>
         /// <summary>
+        /// <summary>
         /// 安全地从List中筛选数据
-        /// 增强版：改进了对复杂表达式的处理，特别是包含闭包变量和类型转换的表达式
-        /// 性能优化：先预处理表达式并编译成委托，避免在循环中重复处理同一表达式
+        /// 增强版：支持任意闭包变量和复杂表达式，保持强类型表达式的优势
         /// </summary>
+        /// <typeparam name="T">实体类型</typeparam>
+        /// <param name="sourceList">源数据列表</param>
+        /// <param name="expCondition">筛选条件表达式（支持闭包变量）</param>
+        /// <returns>筛选后的结果列表</returns>
         public static List<T> SafeFilterList<T>(List<T> sourceList, Expression<Func<T, bool>> expCondition) where T : class
         {
             if (sourceList == null || !sourceList.Any())
@@ -2856,82 +2870,228 @@ namespace RUINORERP.UI.Common
 
             try
             {
-                // 预处理表达式：先获取或创建用于整个列表的评估函数
-                // 这样可以避免在循环中对每个item重复处理同一个表达式
-                Func<T, bool> evaluationFunc = ExpressionSafeHelper.GetEvaluationFunction(expCondition);
-
-                // 使用预编译的评估函数直接过滤整个列表
-                var result = sourceList.Where(evaluationFunc).ToList();
-
-                // 如果结果为空，可能是评估失败，尝试备选方法
-                if (result.Count == 0)
-                {
-                    System.Diagnostics.Debug.WriteLine($"表达式评估结果为空，尝试使用条件提取方法");
-                    return ExpressionSafeHelper.TryFilterWithConditionExtraction(sourceList, expCondition);
-                }
-
+                // 使用ExpressionSafeHelper获取优化的评估函数
+                // 该函数会自动处理闭包变量，无需修改调用方式
+                var evaluationFunction = ExpressionSafeHelper.GetEvaluationFunction(expCondition);
+                
+                // 使用评估函数筛选数据
+                var result = sourceList.Where(evaluationFunction).ToList();
+                
+                System.Diagnostics.Debug.WriteLine($"表达式筛选成功，找到 {result.Count} 条记录");
                 return result;
             }
             catch (Exception ex)
             {
-                // 发生错误时，记录日志并尝试备选方案
-                System.Diagnostics.Debug.WriteLine($"安全筛选失败: {ex.Message}");
-                return ExpressionSafeHelper.TryFilterWithConditionExtraction(sourceList, expCondition);
+                // 发生错误时，记录日志并尝试使用备选方案
+                System.Diagnostics.Debug.WriteLine($"主要筛选方法失败: {ex.Message}");
+                
+                try
+                {
+                    // 备选方案：使用条件提取方法
+                    var result = ExpressionSafeHelper.TryFilterWithConditionExtraction(sourceList, expCondition);
+                    
+                    if (result != null && result.Any())
+                    {
+                        System.Diagnostics.Debug.WriteLine($"备选方案成功，找到 {result.Count} 条记录");
+                        return result;
+                    }
+                }
+                catch (Exception fallbackEx)
+                {
+                    System.Diagnostics.Debug.WriteLine($"备选方案也失败: {fallbackEx.Message}");
+                }
+                
+                // 所有方法都失败时，返回原始列表
+                System.Diagnostics.Debug.WriteLine($"所有筛选方法都失败，返回原始列表");
+                return sourceList.ToList();
             }
         }
 
 
+        /// <summary>
+        /// 根据条件初始化下拉框数据
+        /// </summary>
+        /// <typeparam name="T">实体类型</typeparam>
+        /// <param name="key">键字段名</param>
+        /// <param name="value">值字段名</param>
+        /// <param name="tableName">表名</param>
+        /// <param name="cmbBox">下拉框控件</param>
+        /// <param name="expCondition">过滤条件表达式</param>
         public static void InitDataToCmbWithCondition<T>(string key, string value, string tableName, KryptonComboBox cmbBox, Expression<Func<T, bool>> expCondition) where T : class
         {
             BindingSource bs = new BindingSource();
-
-            // 初始化筛选后的列表
             List<T> filteredList = new List<T>();
 
-            // 优先从缓存获取数据
-            var EntityList = EntityCacheHelper.GetEntityList<T>(tableName);
-            if (EntityList != null && EntityList.Any())
+            try
             {
-                // 使用完全避免编译的筛选方法
-                filteredList = SafeFilterList(EntityList, expCondition);
-
-                //过滤失败时用原始的缓存数据
-                if (filteredList.Count == 0 && filteredList.Count < EntityList.Count)
+                // 优先从缓存获取数据
+                var EntityList = EntityCacheHelper.GetEntityList<T>(tableName);
+                if (EntityList != null && EntityList.Any())
                 {
-                    filteredList = EntityList;
+                    // 使用SafeFilterList处理闭包变量
+                    filteredList = SafeFilterList(EntityList, expCondition);
+                    System.Diagnostics.Debug.WriteLine($"从缓存获取数据，过滤后得到 {filteredList.Count} 条记录");
+                }
+                else
+                {
+                    // 缓存为空时，尝试从数据库获取
+                    try
+                    {
+                        ICommonController bdc = Startup.GetFromFac<Business.CommService.ICommonController>();
+                        // 不传递条件，获取所有数据后在内存中筛选
+                        var allData = bdc.GetBindSource<T>(tableName);
+                        if (allData != null && allData.Any())
+                        {
+                            filteredList = SafeFilterList(allData.ToList(), expCondition);
+                            System.Diagnostics.Debug.WriteLine($"从数据库获取数据，过滤后得到 {filteredList.Count} 条记录");
+                        }
+                    }
+                    catch (Exception dbEx)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"数据库查询失败: {dbEx.Message}");
+                        // 忽略数据库错误
+                    }
+                }
+
+                // 插入"请选择"项并设置数据源
+                InsertSelectItem<T>(key, value, filteredList);
+                
+                // 直接使用List作为数据源，避免BindingListView的引用问题
+                bs = new BindingSource { DataSource = filteredList };
+                System.Diagnostics.Debug.WriteLine($"使用List绑定数据源");
+
+                cmbBox.Tag = tableName;
+                ComboBoxHelper.InitDropList(bs, cmbBox, key, value, ComboBoxStyle.DropDown, false);
+
+                // 输出调试信息
+                System.Diagnostics.Debug.WriteLine($"最终绑定到控件的数据源包含 {filteredList.Count} 条记录");
+                if (filteredList.Count > 0 && filteredList.Count < 10)
+                {
+                    for (int i = 0; i < filteredList.Count; i++)
+                    {
+                        var item = filteredList[i];
+                        System.Diagnostics.Debug.WriteLine($"记录 {i + 1}: {item}");
+                    }
                 }
             }
-            else
+            catch (Exception ex)
             {
-                // 缓存为空时，尝试从数据库获取
+                System.Diagnostics.Debug.WriteLine($"InitDataToCmbWithCondition 执行失败: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"异常堆栈: {ex.StackTrace}");
+                
+                // 发生异常时，尝试获取所有数据
                 try
                 {
+                    var EntityList = EntityCacheHelper.GetEntityList<T>(tableName);
+                    if (EntityList != null && EntityList.Any())
+                    {
+                        InsertSelectItem<T>(key, value, EntityList);
+                        bs = new BindingSource { DataSource = EntityList };
+                        cmbBox.Tag = tableName;
+                        ComboBoxHelper.InitDropList(bs, cmbBox, key, value, ComboBoxStyle.DropDown, false);
+                        System.Diagnostics.Debug.WriteLine($"异常情况下使用原始缓存数据，共 {EntityList.Count} 条记录");
+                    }
+                }
+                catch (Exception fallbackEx)
+                {
+                    System.Diagnostics.Debug.WriteLine($"异常处理也失败: {fallbackEx.Message}");
+                }
+            }
+        }
+
+        /// <summary>
+        /// 使用预筛选的数据初始化下拉框
+        /// </summary>
+        /// <typeparam name="T">实体类型</typeparam>
+        /// <param name="key">键字段名</param>
+        /// <param name="value">值字段名</param>
+        /// <param name="cmbBox">下拉框控件</param>
+        /// <param name="filteredList">预筛选的数据列表</param>
+        public static void InitDataToCmbWithData<T>(string key, string value, KryptonComboBox cmbBox, List<T> filteredList) where T : class
+        {
+            try
+            {
+                // 添加默认选择项
+                InsertSelectItem<T>(key, value, filteredList);
+                
+                // 创建数据源并绑定
+                var bs = new BindingSource { DataSource = filteredList };
+                ComboBoxHelper.InitDropList(bs, cmbBox, key, value, ComboBoxStyle.DropDown, false);
+                
+                System.Diagnostics.Debug.WriteLine($"使用预筛选数据初始化下拉框，共 {filteredList.Count} 条记录");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"InitDataToCmbWithData 执行失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 使用动态表达式构建器初始化下拉框数据（直接使用表达式）
+        /// 完全动态处理表达式，不预先指定字段名
+        /// </summary>
+        /// <typeparam name="T">实体类型</typeparam>
+        /// <param name="key">键字段名</param>
+        /// <param name="value">值字段名</param>
+        /// <param name="tableName">表名</param>
+        /// <param name="cmbBox">下拉框控件</param>
+        /// <param name="expression">过滤条件表达式</param>
+        public static void InitDataToCmbWithDynamicExpression<T>(
+            string key, 
+            string value, 
+            string tableName, 
+            KryptonComboBox cmbBox,
+            Expression<Func<T, bool>> expression) where T : class
+        {
+            try
+            {
+                // 使用ExpressionSafeHelper处理表达式
+                var evaluationFunction = ExpressionSafeHelper.GetEvaluationFunction(expression);
+                
+                // 获取所有数据并在内存中筛选
+                var EntityList = EntityCacheHelper.GetEntityList<T>(tableName);
+                if (EntityList != null && EntityList.Any())
+                {
+                    var filteredList = EntityList.Where(evaluationFunction).ToList();
+                    InitDataToCmbWithData<T>(key, value, cmbBox, filteredList);
+                }
+                else
+                {
+                    // 如果缓存为空，尝试从数据库获取
                     ICommonController bdc = Startup.GetFromFac<Business.CommService.ICommonController>();
-                    // 不传递条件，获取所有数据后在内存中筛选
                     var allData = bdc.GetBindSource<T>(tableName);
                     if (allData != null && allData.Any())
                     {
-                        filteredList = SafeFilterList(allData.ToList(), expCondition);
+                        var filteredList = allData.Where(evaluationFunction).ToList();
+                        InitDataToCmbWithData<T>(key, value, cmbBox, filteredList);
                     }
                 }
-                catch
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"InitDataToCmbWithDynamicExpression 执行失败: {ex.Message}");
+                
+                // 发生异常时，尝试使用基本方法获取数据
+                try
                 {
-                    // 忽略数据库错误
+                    var EntityList = EntityCacheHelper.GetEntityList<T>(tableName);
+                    if (EntityList != null && EntityList.Any())
+                    {
+                        BindingSource bs = new BindingSource { DataSource = EntityList };
+                        cmbBox.Tag = tableName;
+                        ComboBoxHelper.InitDropList(bs, cmbBox, key, value, ComboBoxStyle.DropDown, false);
+                        System.Diagnostics.Debug.WriteLine($"异常情况下使用原始缓存数据，共 {EntityList.Count} 条记录");
+                    }
+                }
+                catch (Exception fallbackEx)
+                {
+                    System.Diagnostics.Debug.WriteLine($"异常处理也失败: {fallbackEx.Message}");
                 }
             }
-
-
-
-            // 插入"请选择"项并设置数据源
-            InsertSelectItem<T>(key, value, filteredList);
-            var blv = new BindingListView<T>(filteredList);
-            bs = new BindingSource { DataSource = blv };
-
-            cmbBox.Tag = tableName;
-            ComboBoxHelper.InitDropList(bs, cmbBox, key, value, ComboBoxStyle.DropDown, false);
-
-
         }
+
+     
+
 
 
         /// <summary>

@@ -85,7 +85,7 @@ namespace RUINORERP.Server.Workflow.WFApproval
             .StartWith(context => ExecutionResult.Next())
             //.WaitFor("MyEventST", (data, context) => context.Workflow.Id, data => DateTime.Now)
             //     .Output(data => data.DocumentName, step => step.EventData)
-            .Then<WF.WFApproval.Submit>();
+            .Then<SubmitStep>();
             // .Input(step => step.subtext, data => data.BillId);
             // .Then<tb_Stocktake>()
             //    .Input(step => step.ApprovalStatus, data => data.ApprovalStatus);

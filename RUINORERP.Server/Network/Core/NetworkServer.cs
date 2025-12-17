@@ -200,9 +200,9 @@ namespace RUINORERP.Server.Network.Core
 
                            // 确保至少有一个监听器配置
                            serverOptions.Validate();
-                         
 
-                       (_sessionManager as SessionService)!.MaxSessionCount = serverOptions.MaxConnectionCount;
+
+                           (_sessionManager as SessionService)!.MaxSessionCount = serverOptions.MaxConnectionCount;
 
                            // 返回配置节点，以便SuperSocket可以使用
                            return config.GetSection("serverOptions");
@@ -264,7 +264,7 @@ namespace RUINORERP.Server.Network.Core
                    {
                        await _sessionManager.RemoveSessionAsync(session.SessionID);
                    });
-                })
+                   })
                     .ConfigureLogging((hostCtx, loggingBuilder) =>
                     {
                         // 复制全局日志配置，确保日志一致性
@@ -276,6 +276,7 @@ namespace RUINORERP.Server.Network.Core
                             {
                                 loggingBuilder.AddConfiguration(hostCtx.Configuration.GetSection("Logging"));
                                 // 添加全局日志提供者
+                                loggingBuilder.Services.AddSingleton<ILoggerFactory>(globalLoggerFactory);
                             }
                         }
                         loggingBuilder.AddConsole();

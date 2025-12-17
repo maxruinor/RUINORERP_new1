@@ -1,6 +1,7 @@
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using System;
 using RUINORERP.Common.Helper;
 using RUINORERP.Extensions;
@@ -28,7 +29,6 @@ using RUINORERP.Business;
 using RUINORERP.Common.CustomAttribute;
 using SqlSugar;
 using RUINORERP.Model;
-using Microsoft.Extensions.Hosting;
 using AutoMapper;
 using RUINORERP.Model.Context;
 using RUINORERP.Server.Workflow;
@@ -98,7 +98,7 @@ namespace RUINORERP.Server
         /// 服务容器集合
         /// </summary>
         public static IServiceCollection services { get; set; }
-        
+
         /// <summary>
         /// 服务提供者
         /// </summary>
@@ -116,7 +116,7 @@ namespace RUINORERP.Server
         {
 
         }
-        
+
         /// <summary>
         /// 批量确保配置文件存在，如果不存在则创建默认配置文件
         /// </summary>
@@ -131,12 +131,12 @@ namespace RUINORERP.Server
                 {
                     // 创建配置对象实例
                     object configInstance = Activator.CreateInstance(type);
-                    
+
                     // 创建ExpandoObject用于序列化，将配置实例放在以其名称为键的属性下
                     var expandoObject = new System.Dynamic.ExpandoObject();
                     var expandoDict = (System.Collections.Generic.IDictionary<string, object>)expandoObject;
                     expandoDict[name] = configInstance;
-                    
+
                     // 序列化并保存配置文件
                     string configJson = JsonConvert.SerializeObject(expandoObject, Formatting.Indented);
                     File.WriteAllText(configPath, configJson);
@@ -159,24 +159,24 @@ namespace RUINORERP.Server
                 .AsImplementedInterfaces()
                 .AsSelf()
                 .SingleInstance();
-                
+
             // 配置核心服务
             ConfigureServices(services);
-            
+
             // 配置外部DLL依赖注入
             ConfigureContainerForDll(builder);
-       
+
 
             // 注册特定类型和参数
             builder.RegisterType<AutoComplete>()
                 .WithParameter((pi, c) => pi.ParameterType == typeof(SearchType), (pi, c) => SearchType.Document);
-                
-           
+
+
             // 注册AOP拦截器
             builder.RegisterType<BaseDataCacheAOP>(); // 注册拦截器
-            
+
             builder.RegisterType<PersonBus>().EnableClassInterceptors();  // 注册被拦截的类并启用类拦截
-            
+
             builder.RegisterType<tb_DepartmentServices>().As<Itb_DepartmentServices>()
                 .AsImplementedInterfaces()
                 .InstancePerLifetimeScope()
@@ -193,24 +193,24 @@ namespace RUINORERP.Server
             // 初始化表结构（如果不存在）
             // sequenceService.InitializeTable();
             Console.WriteLine("序号表初始化完成");
-            
+
             // 测试序号表功能
             //var testResult = sequenceService.TestSequenceTable();
-          //  Console.WriteLine("数据库序列表测试结果:");
-          //  Console.WriteLine(testResult);
+            //  Console.WriteLine("数据库序列表测试结果:");
+            //  Console.WriteLine(testResult);
 
 
             // 注册业务编码生成相关服务
             builder.RegisterType<DatabaseSequenceService>().AsSelf().SingleInstance(); // 注册数据库序列服务
-            
+
             // 初始化DatabaseSequenceService的批量更新阈值
             // 这里可以根据需要设置初始值，或者从配置文件中读取
             DatabaseSequenceService.SetBatchUpdateThreshold(5);
-            
+
             // 初始化frmMainNew的BufferSize值
             // 这里设置Log4Net的BufferSize初始值
             RUINORERP.Server.frmMainNew.SetLogBufferSize(10);
-            
+
             // 注册缓存管理器 - 为BNRFactory提供依赖
             // 添加CacheManager缓存服务
             services.AddSingleton<ICacheManager<object>>(provider =>
@@ -226,13 +226,13 @@ namespace RUINORERP.Server
 
             // 注册BNR工厂
             builder.RegisterType<BNRFactory>().AsSelf().SingleInstance(); // 注册BNR工厂
-            
+
             // 注册业务编码服务
             builder.RegisterType<ServerBizCodeGenerateService>().AsSelf().SingleInstance(); // 注册业务编码服务
-            
+
             // 注册ProductSKUCodeGenerator服务
             builder.RegisterType<ProductSKUCodeGenerator>().AsSelf().InstancePerLifetimeScope(); // 注册ProductSKUCodeGenerator服务
-           
+
 
             // 配置日志服务
             services.AddLogging(logBuilder =>
@@ -243,11 +243,11 @@ namespace RUINORERP.Server
                 string newconn = HLH.Lib.Security.EncryptionHelper.AesDecrypt(conn, key);
 
                 logBuilder.AddProvider(new Log4NetProviderByCustomeDb("Log4net_db.config", newconn, Program.AppContextData));
-                
+
                 // 设置日志级别过滤规则
                 logBuilder.AddFilter((provider, category, logLevel) =>
                 {
-                    
+
                     // RUINORERP命名空间使用动态日志级别
                     if (category.StartsWith("RUINORERP"))
                     {
@@ -279,7 +279,7 @@ namespace RUINORERP.Server
                  .PropertiesAutowired()
                  .SingleInstance();
 
-           
+
             #endregion
 
             #region 智能提醒服务配置
@@ -350,17 +350,23 @@ namespace RUINORERP.Server
         /// <returns>主机实例</returns>
         public IHost CslaDIPort()
         {
-            var hostBuilder = new HostBuilder()
+            // 使用传统的Host.CreateDefaultBuilder()方法，确保与.NET 8.0兼容
+            var host = Microsoft.Extensions.Hosting.Host.CreateDefaultBuilder()
                 .UseServiceProviderFactory(new AutofacServiceProviderFactory())
-                .ConfigureContainer<ContainerBuilder>(new Action<HostBuilderContext, ContainerBuilder>(cb))
+                .ConfigureContainer<ContainerBuilder>((context, builder) =>
+                {
+                    // 配置Autofac容器
+                    cb(context, builder);
+                })
                 .ConfigureServices((context, services) =>
                 {
+                    // 添加Autofac支持和工作流配置
                     services.AddAutofac();
                     SafetyStockWorkflowConfig.RegisterWorkflow(services);
                 })
                 .Build();
-
-            return hostBuilder;
+            
+            return host;
         }
 
 
@@ -402,27 +408,27 @@ namespace RUINORERP.Server
 
             // 将IConfiguration注册到服务容器，供ConfigManagerService使用
             services.AddSingleton<IConfiguration>(builder);
-            
+
             // 配置Options模式，支持依赖注入IOptions<T>接口
             services.Configure<SystemGlobalConfig>(builder.GetSection(nameof(SystemGlobalConfig)));
             services.Configure<GlobalValidatorConfig>(builder.GetSection(nameof(GlobalValidatorConfig)));
             services.Configure<ServerGlobalConfig>(builder.GetSection(nameof(ServerGlobalConfig)));
-            
+
             // 注册ServerConfig单例实例，包含环境变量解析
             services.AddSingleton<ServerGlobalConfig>(provider =>
             {
                 var serverConfig = new ServerGlobalConfig();
                 builder.GetSection(nameof(ServerGlobalConfig)).Bind(serverConfig);
-                
+
                 // 解析路径中的环境变量，确保路径正确
                 if (!string.IsNullOrEmpty(serverConfig.FileStoragePath))
                 {
                     serverConfig.FileStoragePath = Environment.ExpandEnvironmentVariables(serverConfig.FileStoragePath);
                 }
-                
+
                 return serverConfig;
             });
-            
+
             // 确保ConfigManagerService正确注册，使用新的构造函数
 
             services.AddSingleton(typeof(frmMainNew));//MDI最大。才开一次才能单例
@@ -430,15 +436,15 @@ namespace RUINORERP.Server
             #region 工作流服务配置
             // 这是新增加工作流的服务
             services.AddWorkflowCoreServicesNew();
-            
+
             // 注册临时图片清理工作流
             TempImageCleanupWorkflowConfig.RegisterWorkflow(services);
             #endregion
 
             services.AddScoped(typeof(IBaseRepository<>), typeof(BaseRepository<>)); // 注入仓储
             services.AddTransient<IUnitOfWorkManage, UnitOfWorkManage>(); // 注入工作单元
-            
-            
+
+
 
             //Add Memory Cache
             services.AddOptions();
@@ -446,7 +452,7 @@ namespace RUINORERP.Server
             services.AddMemoryCacheSetup();
             services.AddDistributedMemoryCache();
 
-            
+
 
             IConfigurationBuilder configurationBuilder = new ConfigurationBuilder();
             var cfgBuilder = configurationBuilder.AddJsonFile("appsettings.json");//默认读取：当前运行目录
@@ -470,12 +476,12 @@ namespace RUINORERP.Server
             services.AddNetworkServices();      // 网络服务
             services.AddPacketSpecServices(configuration);   // PacketSpec服务
             services.AddUnifiedCommandHandlers(); // 注册所有命令处理器
-            
+
             // 注册网络监控相关服务
             services.AddSingleton<DiagnosticsService>();
             services.AddSingleton<PerformanceMonitoringService>();
             services.AddSingleton<ErrorAnalysisService>();
-            
+
             // 注册NetworkServer类，使用依赖注入方式
             services.AddSingleton<NetworkServer>();
 
@@ -491,7 +497,7 @@ namespace RUINORERP.Server
         {
 
 
-         
+
 
             #region 使用各项目的DI配置类
             // 配置各项目的依赖注入
@@ -509,7 +515,7 @@ namespace RUINORERP.Server
             #endregion
 
             #region Extensions程序集依赖注入
-        
+
             var dalAssemble_Extensions = System.Reflection.Assembly.LoadFrom("RUINORERP.Extensions.dll");
             builder.RegisterAssemblyTypes(dalAssemble_Extensions)
                   .AsImplementedInterfaces().AsSelf()
@@ -550,7 +556,7 @@ namespace RUINORERP.Server
                 }
                 // ModelTypes.Add(tempModelTypes[i]);
             }
-            
+
             // 获取所有待注入服务类
             //var dependencyService = typeof(IDependencyService);
             // var dependencyServiceArray = GetAllTypes(alldlls).ToArray();//  GlobalData.FxAllTypes
@@ -876,7 +882,7 @@ namespace RUINORERP.Server
                         if (loaderException != null)
                             Console.WriteLine($"  - {loaderException.Message}");
                     }
-                    
+
                     // 添加成功加载的类型
                     var loadedTypes = ex.Types.Where(t => t != null).ToList();
                     var filteredTypes = loadedTypes
@@ -917,7 +923,7 @@ namespace RUINORERP.Server
             #endregion
             return services;
         }
- 
+
 
         /// <summary>
         /// 从Autofac容器获取服务实例
@@ -934,7 +940,7 @@ namespace RUINORERP.Server
                 {
                     // 记录警告日志
                     Console.WriteLine($"警告: 尝试解析服务 {typeof(T).Name} 时，Autofac容器尚未初始化");
-                    
+
                     // 尝试使用ServiceProvider作为备选方案
                     if (ServiceProvider != null)
                     {
@@ -949,7 +955,7 @@ namespace RUINORERP.Server
                     }
                     return default;
                 }
-                
+
                 // 正常解析服务
                 return AutofacContainerScope.Resolve<T>();
             }
@@ -957,7 +963,7 @@ namespace RUINORERP.Server
             {
                 // 记录解析异常
                 Console.WriteLine($"从Autofac容器解析服务 {typeof(T).Name} 失败: {ex.Message}");
-                
+
                 // 尝试使用ServiceProvider作为备选方案
                 if (ServiceProvider != null)
                 {

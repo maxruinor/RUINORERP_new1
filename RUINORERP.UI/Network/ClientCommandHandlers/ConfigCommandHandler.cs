@@ -181,7 +181,22 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                                 {
                                     _logger.LogDebug("系统全局配置同步并持久化成功");
                                     // 刷新配置，确保所有依赖该配置的服务获取到最新值
-                                    await _configManagerService.RefreshConfigAsync<SystemGlobalConfig>();
+                                    SystemGlobalConfig refreshedSystemConfig = await _configManagerService.RefreshConfigAsync<SystemGlobalConfig>();
+                                    // 获取容器中的SystemGlobalConfig实例并更新其属性
+                                    var containerSystemConfig = Startup.GetFromFac<SystemGlobalConfig>();
+                                    if (containerSystemConfig != null)
+                                    {
+                                        // 使用反射将新配置的值复制到容器中的实例
+                                        foreach (var property in typeof(SystemGlobalConfig).GetProperties())
+                                        {
+                                            if (property.CanRead && property.CanWrite)
+                                            {
+                                                var value = property.GetValue(refreshedSystemConfig);
+                                                property.SetValue(containerSystemConfig, value);
+                                            }
+                                        }
+                                        _logger.LogDebug("SystemGlobalConfig已在容器中更新");
+                                    }
                                 }
                                 else
                                 {
@@ -196,29 +211,57 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                                 {
                                     _logger.LogDebug("验证配置同步并持久化成功");
                                     // 刷新配置，确保所有依赖该配置的服务获取到最新值
-                                    GlobalValidatorConfig globalValidatorConfig = await _configManagerService.RefreshConfigAsync<GlobalValidatorConfig>();
+                                    GlobalValidatorConfig refreshedValidatorConfig = await _configManagerService.RefreshConfigAsync<GlobalValidatorConfig>();
                                     // 获取容器中的GlobalValidatorConfig实例并更新其属性
                                     var containerGlobalConfig = Startup.GetFromFac<GlobalValidatorConfig>();
                                     if (containerGlobalConfig != null)
                                     {
-                                        // 使用反射或映射将新配置的值复制到容器中的实例
+                                        // 使用反射将新配置的值复制到容器中的实例
                                         foreach (var property in typeof(GlobalValidatorConfig).GetProperties())
                                         {
                                             if (property.CanRead && property.CanWrite)
                                             {
-                                                var value = property.GetValue(globalValidatorConfig);
+                                                var value = property.GetValue(refreshedValidatorConfig);
                                                 property.SetValue(containerGlobalConfig, value);
                                             }
                                         }
+                                        _logger.LogDebug("GlobalValidatorConfig已在容器中更新");
                                     }
-                                    _logger.LogDebug("GlobalValidatorConfig已在容器中更新");
                                 }
                                 else
                                 {
                                     _logger.LogError("验证配置同步失败，无法持久化");
                                 }
-
-                            
+                                break;
+                            case "ServerGlobalConfig":
+                                var serverConfig = await _configManagerService.LoadConfigFromJsonAsync<ServerGlobalConfig>(configDataJson);
+                                // 持久化配置到文件系统
+                                bool serverConfigSaved = await _configManagerService.SaveConfigAsync(serverConfig);
+                                if (serverConfigSaved)
+                                {
+                                    _logger.LogDebug("服务器配置同步并持久化成功");
+                                    // 刷新配置，确保所有依赖该配置的服务获取到最新值
+                                    ServerGlobalConfig refreshedServerConfig = await _configManagerService.RefreshConfigAsync<ServerGlobalConfig>();
+                                    // 获取容器中的ServerGlobalConfig实例并更新其属性
+                                    var containerServerConfig = Startup.GetFromFac<ServerGlobalConfig>();
+                                    if (containerServerConfig != null)
+                                    {
+                                        // 使用反射将新配置的值复制到容器中的实例
+                                        foreach (var property in typeof(ServerGlobalConfig).GetProperties())
+                                        {
+                                            if (property.CanRead && property.CanWrite)
+                                            {
+                                                var value = property.GetValue(refreshedServerConfig);
+                                                property.SetValue(containerServerConfig, value);
+                                            }
+                                        }
+                                        _logger.LogDebug("ServerGlobalConfig已在容器中更新");
+                                    }
+                                }
+                                else
+                                {
+                                    _logger.LogError("服务器配置同步失败，无法持久化");
+                                }
                                 break;
                             case "Database":
                                 // 数据库配置特殊处理，这里可以根据实际需求实现

@@ -3163,6 +3163,8 @@ namespace RUINORERP.Server
             _logger.Warn("Warn");
             _logger.LogError("error");
 
+            
+             var systemconfig = Startup.GetFromFac<ServerGlobalConfig>();
         }
 
         /// <summary>

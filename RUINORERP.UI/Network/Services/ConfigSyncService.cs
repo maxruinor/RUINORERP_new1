@@ -1,4 +1,6 @@
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using RUINORERP.Model.ConfigModel;
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Requests;
@@ -103,8 +105,18 @@ namespace RUINORERP.UI.Network.Services
                         return false;
                     }
 
-                    _logger?.LogInformation("配置同步请求成功发送，等待服务器响应配置数据");
-                    return true;
+                    // 处理响应中的配置数据
+                    bool processResult = await ProcessConfigResponseAsync(response);
+                    if (processResult)
+                    {
+                        _logger?.LogInformation("配置同步成功，已处理服务器返回的配置数据");
+                        return true;
+                    }
+                    else
+                    {
+                        _logger?.LogError("处理服务器返回的配置数据失败");
+                        return false;
+                    }
                 }
                 finally
                 {
@@ -164,6 +176,163 @@ namespace RUINORERP.UI.Network.Services
             };
 
             return await RequestLatestConfigAsync(commonConfigTypes, forceRefresh, ct);
+        }
+
+        /// <summary>
+        /// 处理服务器返回的配置响应数据
+        /// </summary>
+        /// <param name="response">服务器响应</param>
+        /// <returns>处理是否成功</returns>
+        private async Task<bool> ProcessConfigResponseAsync(GeneralResponse response)
+        {
+            try
+            {
+                // 尝试从Data中获取配置数据
+                if (response.Data is Dictionary<string, object> configDataDict)
+                {
+                    _logger?.LogDebug("从响应Data中获取配置数据，配置数量: {ConfigCount}", configDataDict.Count);
+                    
+                    // 处理每个配置
+                    foreach (var kvp in configDataDict)
+                    {
+                        string configType = kvp.Key;
+                        string configData = kvp.Value?.ToString();
+                        
+                        if (string.IsNullOrEmpty(configData))
+                        {
+                            _logger?.LogWarning("配置类型 {ConfigType} 的数据为空", configType);
+                            continue;
+                        }
+                        
+                        await UpdateConfigInContainerAsync(configType, configData);
+                    }
+                    
+                    return true;
+                }
+                // 如果Data中没有配置数据，尝试从Metadata中获取（兼容性处理）
+                else if (response.Metadata != null && response.Metadata.Count > 0)
+                {
+                    _logger?.LogDebug("从响应Metadata中获取配置数据，配置数量: {ConfigCount}", response.Metadata.Count);
+                    
+                    foreach (var metadataKvp in response.Metadata)
+                    {
+                        string configType = metadataKvp.Key;
+                        
+                        if (metadataKvp.Value is Dictionary<string, object> configDict)
+                        {
+                            foreach (var configKvp in configDict)
+                            {
+                                if (configKvp.Key == configType)
+                                {
+                                    string configData = configKvp.Value?.ToString();
+                                    if (!string.IsNullOrEmpty(configData))
+                                    {
+                                        await UpdateConfigInContainerAsync(configType, configData);
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    
+                    return true;
+                }
+                else
+                {
+                    _logger?.LogWarning("响应中没有找到配置数据");
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "处理配置响应数据时发生异常");
+                return false;
+            }
+        }
+        
+        /// <summary>
+        /// 更新容器中的配置实例
+        /// </summary>
+        /// <param name="configType">配置类型</param>
+        /// <param name="configData">配置数据JSON字符串</param>
+        /// <returns>更新是否成功</returns>
+        private async Task<bool> UpdateConfigInContainerAsync(string configType, string configData)
+        {
+            try
+            {
+                _logger?.LogDebug("开始更新配置类型: {ConfigType}", configType);
+                
+                // 根据配置类型处理
+                switch (configType)
+                {
+                    case "SystemGlobalConfig":
+                        await UpdateContainerConfigAsync<SystemGlobalConfig>(configData);
+                        break;
+                    case "ServerGlobalConfig":
+                        await UpdateContainerConfigAsync<ServerGlobalConfig>(configData);
+                        break;
+                    case "GlobalValidatorConfig":
+                        await UpdateContainerConfigAsync<GlobalValidatorConfig>(configData);
+                        break;
+                    default:
+                        _logger?.LogWarning("未知的配置类型: {ConfigType}", configType);
+                        break;
+                }
+                
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "更新容器中的配置实例失败，配置类型: {ConfigType}", configType);
+                return false;
+            }
+        }
+        
+        /// <summary>
+        /// 更新容器中特定类型的配置实例
+        /// </summary>
+        /// <typeparam name="T">配置类型</typeparam>
+        /// <param name="configData">配置数据JSON字符串</param>
+        /// <returns>更新是否成功</returns>
+        private async Task UpdateContainerConfigAsync<T>(string configData) where T : BaseConfig, new()
+        {
+            try
+            {
+                // 使用Newtonsoft.Json反序列化配置
+                T newConfig = JsonConvert.DeserializeObject<T>(configData);
+                
+                if (newConfig == null)
+                {
+                    _logger?.LogError("反序列化配置失败: {ConfigType}", typeof(T).Name);
+                    return;
+                }
+                
+                // 获取容器中的配置实例
+                var containerConfig = Startup.GetFromFac<T>();
+                
+                if (containerConfig != null)
+                {
+                    // 使用反射将新配置的值复制到容器中的实例
+                    foreach (var property in typeof(T).GetProperties())
+                    {
+                        if (property.CanRead && property.CanWrite)
+                        {
+                            var value = property.GetValue(newConfig);
+                            property.SetValue(containerConfig, value);
+                        }
+                    }
+                    
+                    _logger?.LogDebug("成功更新容器中的配置实例: {ConfigType}", typeof(T).Name);
+                }
+                else
+                {
+                    _logger?.LogWarning("容器中没有找到配置实例: {ConfigType}", typeof(T).Name);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "更新容器配置实例失败: {ConfigType}", typeof(T).Name);
+            }
         }
 
         /// <summary>

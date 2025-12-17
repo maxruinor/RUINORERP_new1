@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,18 +8,18 @@ using System.Threading.Tasks;
 using WorkflowCore.Interface;
 using WorkflowCore.Models;
 
-namespace RUINORERP.WF.WFApproval
+namespace RUINORERP.Server.Workflow.WFApproval
 {
     /// <summary>
     /// 提交
     /// </summary>
-    public class Submit : StepBody
+    public class SubmitStep : StepBody
     {
-        private readonly ILogger<Submit> logger;
+        private readonly ILogger<SubmitStep> logger;
 
         public string subtext;
 
-        public Submit(ILogger<Submit> _logger)
+        public SubmitStep(ILogger<SubmitStep> _logger)
         {
             logger = _logger;
         }
@@ -32,13 +32,13 @@ namespace RUINORERP.WF.WFApproval
         }
     }
 
-    public class Approve : StepBody
+    public class ApproveStep : StepBody
     {
         private ILogger logger;
 
-        public Approve(ILoggerFactory loggerFactory)
+        public ApproveStep(ILoggerFactory loggerFactory)
         {
-            logger = loggerFactory.CreateLogger<Approve>();
+            logger = loggerFactory.CreateLogger<ApproveStep>();
         }
 
         public override ExecutionResult Run(IStepExecutionContext context)
@@ -51,13 +51,13 @@ namespace RUINORERP.WF.WFApproval
     }
 
 
-    public class Cancel : StepBody
+    public class CancelStep : StepBody
     {
         private ILogger logger;
 
-        public Cancel(ILoggerFactory loggerFactory)
+        public CancelStep(ILoggerFactory loggerFactory)
         {
-            logger = loggerFactory.CreateLogger<Cancel>();
+            logger = loggerFactory.CreateLogger<CancelStep>();
         }
 
         public override ExecutionResult Run(IStepExecutionContext context)

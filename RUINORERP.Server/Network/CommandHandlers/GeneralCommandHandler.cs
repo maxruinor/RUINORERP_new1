@@ -82,23 +82,33 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 globalValidatorConfig
             };
 
+            // 创建配置数据字典，同时放入Data和Metadata中确保兼容性
+            var configDataDict = new Dictionary<string, object>();
+            
             // 序列化当前配置为JSON
             foreach (var config in configList)
             {
                 string configData = JsonConvert.SerializeObject(config, Formatting.Indented);
+                
+                // 放入Data中，方便客户端直接访问
+                configDataDict[config.ConfigType] = configData;
+                
+                // 同时保留在Metadata中，保持兼容性
                 response.Metadata[config.ConfigType] = new Dictionary<string, object>
                 {
                     { config.ConfigType, configData }
                 };
             }
+            
+            // 将配置数据字典作为响应的Data
+            response.Data = configDataDict;
 
             try 
             { 
                 // 通用数据传输处理
-                // 这里只是简单地返回成功响应，具体业务逻辑由其他模块实现
                 response.IsSuccess = true;
                 response.Message = "数据传输成功";
-                _logger?.LogInformation($"数据传输成功"); 
+                _logger?.LogInformation($"数据传输成功，返回了{configList.Count}个配置"); 
             } 
             catch (Exception ex) 
             { 

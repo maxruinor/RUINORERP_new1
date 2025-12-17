@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using RUINORERP.Model.Base.StatusManager;
 using RUINORERP.Model.ConfigModel;
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Models.Core;
@@ -8,6 +9,7 @@ using RUINORERP.PacketSpec.Models.Responses;
 using RUINORERP.UI.Network;
 using System;
 using System.Collections.Generic;
+using System.Runtime.Remoting.Contexts;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -68,7 +70,7 @@ namespace RUINORERP.UI.Network.Services
 
                 // 使用信号量限制并发请求
                 await _syncLock.WaitAsync(TimeSpan.FromSeconds(10), ct);
-                
+
                 try
                 {
                     // 创建配置同步请求
@@ -83,13 +85,13 @@ namespace RUINORERP.UI.Network.Services
                     };
 
                     // 发送配置请求命令
-                    _logger?.Debug("向服务器请求最新配置文件，配置类型数量: {ConfigTypeCount}, 强制刷新: {ForceRefresh}", 
+                    _logger?.Debug("向服务器请求最新配置文件，配置类型数量: {ConfigTypeCount}, 强制刷新: {ForceRefresh}",
                         configTypes?.Count ?? 0, forceRefresh);
 
                     var response = await _communicationService.SendCommandWithResponseAsync<GeneralResponse>(
-                        GeneralCommands.ConfigSync, 
-                        request, 
-                        ct, 
+                        GeneralCommands.ConfigSync,
+                        request,
+                        ct,
                         30000); // 30秒超时
 
                     // 检查响应结果
@@ -191,33 +193,33 @@ namespace RUINORERP.UI.Network.Services
                 if (response.Data is Dictionary<string, object> configDataDict)
                 {
                     _logger?.LogDebug("从响应Data中获取配置数据，配置数量: {ConfigCount}", configDataDict.Count);
-                    
+
                     // 处理每个配置
                     foreach (var kvp in configDataDict)
                     {
                         string configType = kvp.Key;
                         string configData = kvp.Value?.ToString();
-                        
+
                         if (string.IsNullOrEmpty(configData))
                         {
                             _logger?.LogWarning("配置类型 {ConfigType} 的数据为空", configType);
                             continue;
                         }
-                        
+
                         await UpdateConfigInContainerAsync(configType, configData);
                     }
-                    
+
                     return true;
                 }
                 // 如果Data中没有配置数据，尝试从Metadata中获取（兼容性处理）
                 else if (response.Metadata != null && response.Metadata.Count > 0)
                 {
                     _logger?.LogDebug("从响应Metadata中获取配置数据，配置数量: {ConfigCount}", response.Metadata.Count);
-                    
+
                     foreach (var metadataKvp in response.Metadata)
                     {
                         string configType = metadataKvp.Key;
-                        
+
                         if (metadataKvp.Value is Dictionary<string, object> configDict)
                         {
                             foreach (var configKvp in configDict)
@@ -234,7 +236,7 @@ namespace RUINORERP.UI.Network.Services
                             }
                         }
                     }
-                    
+
                     return true;
                 }
                 else
@@ -249,7 +251,7 @@ namespace RUINORERP.UI.Network.Services
                 return false;
             }
         }
-        
+
         /// <summary>
         /// 更新容器中的配置实例
         /// </summary>
@@ -261,12 +263,13 @@ namespace RUINORERP.UI.Network.Services
             try
             {
                 _logger?.LogDebug("开始更新配置类型: {ConfigType}", configType);
-                
+
                 // 根据配置类型处理
                 switch (configType)
                 {
                     case "SystemGlobalConfig":
                         await UpdateContainerConfigAsync<SystemGlobalConfig>(configData);
+
                         break;
                     case "ServerGlobalConfig":
                         await UpdateContainerConfigAsync<ServerGlobalConfig>(configData);
@@ -278,7 +281,7 @@ namespace RUINORERP.UI.Network.Services
                         _logger?.Debug("未知的配置类型: {ConfigType}", configType);
                         break;
                 }
-                
+
                 return true;
             }
             catch (Exception ex)
@@ -287,7 +290,7 @@ namespace RUINORERP.UI.Network.Services
                 return false;
             }
         }
-        
+
         /// <summary>
         /// 更新容器中特定类型的配置实例
         /// </summary>
@@ -300,16 +303,21 @@ namespace RUINORERP.UI.Network.Services
             {
                 // 使用Newtonsoft.Json反序列化配置
                 T newConfig = JsonConvert.DeserializeObject<T>(configData);
-                
+
                 if (newConfig == null)
                 {
                     _logger?.LogError("反序列化配置失败: {ConfigType}", typeof(T).Name);
                     return;
                 }
-                
+                Program.AppContextData.SystemGlobalConfig = newConfig as SystemGlobalConfig;
+                var rulesManager = GlobalStateRulesManager.Instance;
+                rulesManager.submitModifyRuleMode = Program.AppContextData.SystemGlobalConfig.单据修改模式;
+                rulesManager.InitializeAllRules();
+
+
                 // 获取容器中的配置实例
                 var containerConfig = Startup.GetFromFac<T>();
-                
+
                 if (containerConfig != null)
                 {
                     // 使用反射将新配置的值复制到容器中的实例
@@ -321,7 +329,7 @@ namespace RUINORERP.UI.Network.Services
                             property.SetValue(containerConfig, value);
                         }
                     }
-                    
+
                     _logger?.LogDebug("成功更新容器中的配置实例: {ConfigType}", typeof(T).Name);
                 }
                 else

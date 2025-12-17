@@ -41,8 +41,12 @@ namespace RUINORERP.Model.Base.StatusManager
             {
                 // 获取全局规则管理器实例并初始化规则
                 var rulesManager = GlobalStateRulesManager.Instance;
-                rulesManager.submitModifyRuleMode = Context.ApplicationContext.Current.SystemGlobalConfig.单据修改模式;
-                rulesManager.InitializeAllRules();
+                if (Context.ApplicationContext.Current != null && Context.ApplicationContext.Current.SystemGlobalConfig != null)
+                {
+                    rulesManager.submitModifyRuleMode = Context.ApplicationContext.Current.SystemGlobalConfig.单据修改模式;
+                    rulesManager.InitializeAllRules();
+                }
+
             }
             catch (Exception)
             {

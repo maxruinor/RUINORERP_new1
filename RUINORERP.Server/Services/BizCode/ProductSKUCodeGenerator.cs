@@ -232,6 +232,8 @@ namespace RUINORERP.Server.Services.BizCode
                 {
                     prod.tb_prodcategories = Business.Cache.EntityCacheHelper.GetEntity<tb_ProdCategories>(prod.Category_ID);
                 }
+                
+
                 var Cate = prod.tb_prodcategories.Category_name.Substring(0, 3);
 
                 string shortcode = _bnrFactory.Create("{CN:{" + Cate + "}}{DB:SHortCode/000}");

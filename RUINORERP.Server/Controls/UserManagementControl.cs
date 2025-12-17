@@ -459,7 +459,7 @@ namespace RUINORERP.Server.Controls
             item.SubItems.Add(sessionInfo.LastHeartbeat.ToString("yy-MM-dd HH:mm:ss")); // 最后心跳时间
             item.SubItems.Add(GetDisplayName(sessionInfo.UserInfo.客户端版本)); // 客户端版本
             item.SubItems.Add(sessionInfo.ClientIp); // 客户端IP
-            item.SubItems.Add(FormatIdleTime(DateTime.Now - sessionInfo.LastHeartbeat)); // 静止时间
+            item.SubItems.Add(FormatIdleTime(TimeSpan.FromSeconds(userInfo.静止时间)));
             item.SubItems.Add(GetSuperUserStatus(userInfo)); // 超级用户
             item.SubItems.Add(sessionInfo.IsConnected ? "在线" : "离线"); // 在线状态
             item.SubItems.Add(GetAuthorizationStatus(userInfo)); // 授权状态
@@ -494,7 +494,7 @@ namespace RUINORERP.Server.Controls
             item.SubItems[7].Text = sessionInfo.LastHeartbeat.ToString("yy-MM-dd HH:mm:ss");
             item.SubItems[8].Text = GetDisplayName(sessionInfo.UserInfo.客户端版本);
             item.SubItems[9].Text = sessionInfo.ClientIp ?? sessionInfo.RemoteEndPoint.ToString();
-            item.SubItems[10].Text = FormatIdleTime(DateTime.Now - sessionInfo.LastHeartbeat);
+            item.SubItems[10].Text = FormatIdleTime(TimeSpan.FromSeconds(userInfo.静止时间));
             item.SubItems[11].Text = GetSuperUserStatus(userInfo);
             item.SubItems[12].Text = sessionInfo.IsConnected ? "在线" : "离线";
             item.SubItems[13].Text = GetAuthorizationStatus(userInfo);
@@ -1372,7 +1372,7 @@ namespace RUINORERP.Server.Controls
                     {
                         frmMainNew.Instance.PrintInfoLog(logMessagenull);
                     }
-             
+
                     return;
                 }
 

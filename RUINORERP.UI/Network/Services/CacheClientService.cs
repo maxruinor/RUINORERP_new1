@@ -38,6 +38,7 @@ namespace RUINORERP.UI.Network.Services
         private readonly EventDrivenCacheManager _eventDrivenCacheManager; // 事件驱动缓存管理器
         private readonly ClientCommunicationService _commService; // 通信服务
         private readonly CacheResponseProcessor _cacheResponseProcessor;
+        private readonly ITableSchemaManager _tableSchemaManager;
         // 私有成员变量
         private bool _disposed = false;
         private readonly string _componentName = nameof(CacheClientService);
@@ -65,7 +66,7 @@ namespace RUINORERP.UI.Network.Services
             _cacheRequestManager = cacheRequestManager ?? throw new ArgumentNullException(nameof(cacheRequestManager));
             _eventDrivenCacheManager = eventDrivenCacheManager ?? throw new ArgumentNullException(nameof(eventDrivenCacheManager));
             _commService = commService ?? throw new ArgumentNullException(nameof(commService));
-
+            _tableSchemaManager = Startup.GetFromFac<ITableSchemaManager>();
             // 订阅的缓存变更事件
             _eventDrivenCacheManager.CacheChanged += OnClientCacheChanged;
             // 订阅的连接状态变化事件
@@ -356,7 +357,7 @@ namespace RUINORERP.UI.Network.Services
             try
             {
                 // 获取指定类型且可缓存的表
-                var tables = TableSchemaManager.Instance.GetCacheableTableNamesByType(tableType);
+                var tables = _tableSchemaManager.GetCacheableTableNamesByType(tableType);
                 var failedTables = new List<string>();
 
                 if (tables.Count == 0)
@@ -488,8 +489,8 @@ namespace RUINORERP.UI.Network.Services
             try
             {
                 // 获取所有可缓存的表名
-                var tableSchemaManager = Startup.GetFromFac<ITableSchemaManager>();
-                var cacheableTables = tableSchemaManager.GetAllTableNames();
+               
+                var cacheableTables = _tableSchemaManager.GetAllTableNames();
 
                 foreach (var tableName in cacheableTables)
                 {
@@ -656,7 +657,7 @@ namespace RUINORERP.UI.Network.Services
                 {
                     Operation = CacheOperation.Remove,
                     TableName = tableName,
-                    PrimaryKeyName = TableSchemaManager.Instance.GetSchemaInfo(tableName).PrimaryKeyField,
+                    PrimaryKeyName = _tableSchemaManager.GetSchemaInfo(tableName).PrimaryKeyField,
                     PrimaryKeyValue = entityId,
                     Timestamp = DateTime.UtcNow
                 });
@@ -714,7 +715,7 @@ namespace RUINORERP.UI.Network.Services
                     return;
 
                 //在基础列表中的才要同步到服务器
-                if (!TableSchemaManager.Instance.CacheableTableNames.Contains(e.Key))
+                if (!_tableSchemaManager.CacheableTableNames.Contains(e.Key))
                     return;
 
 

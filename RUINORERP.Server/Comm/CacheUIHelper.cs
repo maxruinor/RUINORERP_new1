@@ -28,7 +28,7 @@ namespace RUINORERP.Server.Comm
             {
                 // 直接通过ICacheManager接口获取实体列表，然后返回数量
                 // 首先获取实体类型
-                var tableSchemaManager = TableSchemaManager.Instance;
+                var tableSchemaManager = Startup.GetFromFac<ITableSchemaManager>();
                 var schemaInfo = tableSchemaManager.GetSchemaInfo(tableName);
 
                 if (schemaInfo != null)
@@ -71,7 +71,7 @@ namespace RUINORERP.Server.Comm
         {
             try
             {
-                var tableSchemaManager = TableSchemaManager.Instance;
+                var tableSchemaManager = Startup.GetFromFac<ITableSchemaManager>();
                 return tableSchemaManager.GetCacheableTableNamesList();
             }
             catch

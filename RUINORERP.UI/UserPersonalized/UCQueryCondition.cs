@@ -3,6 +3,7 @@ using Krypton.Toolkit;
 using Microsoft.Extensions.Logging;
 using Netron.GraphLib;
 using RUINORERP.Business;
+using RUINORERP.Business.Cache;
 using RUINORERP.Business.CommService;
 using RUINORERP.Business.Processor;
 using RUINORERP.Common;
@@ -87,7 +88,7 @@ namespace RUINORERP.UI.UserPersonalized
                         //只处理需要缓存的表
                         if (queryField.FKTableName.IsNotEmptyOrNull())
                         {
-                            var schemaInfo = Business.Cache.TableSchemaManager.Instance.GetSchemaInfo(queryField.SubQueryTargetType.Name);
+                            var schemaInfo = Startup.GetFromFac<ITableSchemaManager>().GetSchemaInfo(queryField.SubQueryTargetType.Name);
 
                             if (schemaInfo!= null)
                             {

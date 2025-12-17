@@ -40,6 +40,7 @@ using RUINORERP.Global.EnumExt;
 using RUINORERP.Business.RowLevelAuthService;
 using System.Collections;
 using RUINORERP.Model.Base.StatusManager;
+using RUINORERP.Business.Cache;
 
 namespace RUINORERP.Business
 {
@@ -49,7 +50,7 @@ namespace RUINORERP.Business
     public class BaseController<T> : BaseController where T : class
     {
         public ApplicationContext _appContext;
-
+        public ITableSchemaManager _tableSchemaManager;
         public IUnifiedStateManager StateManager;
         /// <summary>
         /// 本为私有修改为公有，暴露出来方便使用
@@ -71,7 +72,7 @@ namespace RUINORERP.Business
             StateManager= appContext.GetRequiredService<IUnifiedStateManager>();
             _appContext = appContext;
             _rowLevelAuthFilter = _appContext.GetRequiredService<SqlSugarRowLevelAuthFilter>();
-
+            _tableSchemaManager = appContext.GetRequiredService<ITableSchemaManager>();
             BizType bizType = BizMapperService.EntityMappingHelper.GetBizType(typeof(T).Name);
             BizTypeText = bizType.ToString();
             BizTypeInt = (int)bizType;
@@ -986,7 +987,7 @@ namespace RUINORERP.Business
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<T>();
 
             // 自动更新导航关系(最多两层)，但对于基础表可以跳过
-            if (!Cache.TableSchemaManager.Instance.GetAllTableNames().Contains(typeof(T).Name) || typeof(T).Name == typeof(tb_Prod).Name)
+            if (!_tableSchemaManager.GetAllTableNames().Contains(typeof(T).Name) || typeof(T).Name == typeof(tb_Prod).Name)
             {
                 querySqlQueryable = querySqlQueryable.IncludesAllFirstLayer();
             }

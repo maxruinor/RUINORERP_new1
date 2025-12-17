@@ -381,7 +381,8 @@ namespace RUINORERP.Business.Cache
         /// </summary>
         public async Task InitializeBaseBusinessTablesAsync()
         {
-            var tables = TableSchemaManager.Instance.GetBaseBusinessTableNames();
+         
+            var tables = _tableSchemaManager.GetBaseBusinessTableNames();
             await InitializeTablesAsync(tables, "初始化基础业务表缓存");
         }
 

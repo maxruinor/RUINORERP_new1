@@ -33,10 +33,10 @@ namespace RUINORERP.UI.UserPersonalized
     public partial class UCInputDataCol : BaseEditGeneric<tb_UIInputDataField>
     {
         private readonly ITableSchemaManager _tableSchemaManager;
-        
-        public UCInputDataCol(ITableSchemaManager tableSchemaManager)
+
+        public UCInputDataCol()
         {
-            _tableSchemaManager = tableSchemaManager ?? throw new ArgumentNullException(nameof(tableSchemaManager));
+            _tableSchemaManager = Startup.GetFromFac<ITableSchemaManager>();
             InitializeComponent();
         }
 
@@ -162,7 +162,7 @@ namespace RUINORERP.UI.UserPersonalized
                         dtpgroup.dtp2.Checked = true;
                         dtpgroup.dtp2.Visible = true; // 确保控件可见
                         dtpgroup.dtp2.ShowCheckBox = true; // 确保显示复选框
-                        
+
                         //时间控件更长为260px，这里要特殊处理
                         dtpgroup.Location = new System.Drawing.Point(txtDefault1.Location.X, txtDefault1.Location.Y);
                         dtpgroup.Size = new System.Drawing.Size(260, 25); // 确保大小正确

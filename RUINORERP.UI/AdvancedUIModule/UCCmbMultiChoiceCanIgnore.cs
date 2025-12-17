@@ -262,7 +262,8 @@ namespace RUINORERP.UI.AdvancedUIModule
                     // 如果没有绑定信息，尝试获取主键字段
                     if (string.IsNullOrEmpty(valueField))
                     {
-                        var tableSchema = TableSchemaManager.Instance.GetSchemaInfo(_targetEntityType.Name);
+                      var tableSchemaManager = Startup.GetFromFac<ITableSchemaManager>();
+                        var tableSchema = tableSchemaManager.GetSchemaInfo(_targetEntityType.Name);
                         if (tableSchema != null)
                         {
                             valueField = tableSchema.PrimaryKeyField;

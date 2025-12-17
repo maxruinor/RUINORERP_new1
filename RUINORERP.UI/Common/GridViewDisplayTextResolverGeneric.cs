@@ -147,7 +147,7 @@ namespace RUINORERP.UI.Common
                 newMapping.IsSelfReferencing = true;
             }
 
-            var schemaInfo = TableSchemaManager.Instance.GetSchemaInfo(newMapping.ReferenceTableName);
+            var schemaInfo = Startup.GetFromFac<ITableSchemaManager>().GetSchemaInfo(newMapping.ReferenceTableName);
             if (schemaInfo != null)
             {
                 //要显示的默认值是从缓存表中获取的字段名，默认是主键ID字段对应的名称

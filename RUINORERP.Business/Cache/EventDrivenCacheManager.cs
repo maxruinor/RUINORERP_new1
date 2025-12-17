@@ -24,10 +24,10 @@ namespace RUINORERP.Business.Cache
         /// </summary>
         /// <param name="cacheManager">缓存管理器</param>
         /// <param name="logger">日志记录器</param>
-        public EventDrivenCacheManager(IEntityCacheManager cacheManager, ILogger<EventDrivenCacheManager> logger = null)
+        public EventDrivenCacheManager(IEntityCacheManager cacheManager, TableSchemaManager tableSchemaManager, ILogger<EventDrivenCacheManager> logger = null)
         {
             _cacheManager = cacheManager ?? throw new ArgumentNullException(nameof(cacheManager));
-            _tableSchemaManager = TableSchemaManager.Instance;
+            _tableSchemaManager = tableSchemaManager;
             _logger = logger;
         }
 

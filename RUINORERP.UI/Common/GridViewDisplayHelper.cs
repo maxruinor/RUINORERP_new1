@@ -303,7 +303,7 @@ namespace RUINORERP.UI.Common
                             ReferenceKeyMapping mapping = new ReferenceKeyMapping(fkrattr.FKTableName, fkrattr.FK_IDColName, tableName);
 
                             // 使用依赖注入的缓存管理器
-                            var schemaInfo = TableSchemaManager.Instance.GetSchemaInfo(mapping.ReferenceTableName);
+                            var schemaInfo =  Startup.GetFromFac<ITableSchemaManager>().GetSchemaInfo(mapping.ReferenceTableName);
                             if (schemaInfo != null)
                             {
                                 //要显示的默认值是从缓存表中获取的字段名，默认是主键ID字段对应的名称
@@ -453,7 +453,7 @@ namespace RUINORERP.UI.Common
                 {
                     #region 没有映射的情况
                     // 使用静态缓存管理器方法获取显示值
-                    var schemaInfo = TableSchemaManager.Instance.GetSchemaInfo(TargetTableName);
+                    var schemaInfo =  Startup.GetFromFac<ITableSchemaManager>().GetSchemaInfo(TargetTableName);
                     // 先尝试直接从目标表获取
                     object nameValue = EntityCacheHelper.GetDisplayValue(TargetTableName, IdValue);
                     if (nameValue != null && !string.IsNullOrWhiteSpace(nameValue.ToString()))

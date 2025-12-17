@@ -2809,7 +2809,7 @@ namespace RUINORERP.UI.Common
             if (cacheManager != null)
             {
                 // 获取表结构管理器以获取显示字段
-                var tableSchemaManager = TableSchemaManager.Instance;
+                var tableSchemaManager =  Startup.GetFromFac<ITableSchemaManager>();
                 var schemaInfo = tableSchemaManager.GetSchemaInfo(tableName);
 
                 if (schemaInfo != null && string.IsNullOrEmpty(value))
@@ -3310,7 +3310,7 @@ namespace RUINORERP.UI.Common
                 #region 从缓存中获取数据源，否则查数据库
                 // 通过依赖注入获取缓存管理器
                 var cacheManager = Startup.GetFromFac<IEntityCacheManager>();
-                if (TableSchemaManager.Instance.GetAllTableNames().Contains(tableName))
+                if ( Startup.GetFromFac<ITableSchemaManager>().GetAllTableNames().Contains(tableName))
                 {
                     BindingSource bs = new BindingSource();
                     List<T> tlist = new List<T>();
@@ -3341,7 +3341,7 @@ namespace RUINORERP.UI.Common
                             if (convertedList != null)
                             {
                                 Type elementType = null;
-                                var schemaInfo = Business.Cache.TableSchemaManager.Instance.GetSchemaInfo(tableName);
+                                var schemaInfo = Startup.GetFromFac<ITableSchemaManager>().GetSchemaInfo(tableName);
                                 if (schemaInfo != null)
                                 {
                                     foreach (var item in convertedList)

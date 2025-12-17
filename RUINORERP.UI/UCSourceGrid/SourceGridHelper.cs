@@ -74,11 +74,11 @@ namespace RUINORERP.UI.UCSourceGrid
         {
             // 通过依赖注入获取缓存管理器
             _cacheManager = Startup.GetFromFac<IEntityCacheManager>();
-            _tableSchemaManager = TableSchemaManager.Instance;
+            _tableSchemaManager = Startup.GetFromFac<ITableSchemaManager>();
         }
 
         public readonly IEntityCacheManager _cacheManager;
-        public readonly TableSchemaManager _tableSchemaManager;
+        public readonly ITableSchemaManager _tableSchemaManager;
 
 
         /// <summary>

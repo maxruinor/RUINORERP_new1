@@ -16,7 +16,7 @@ namespace RUINORERP.Business.Cache
     public class SqlSugarCacheDataProvider : ICacheDataProvider
     {
         private readonly IUnitOfWorkManage _unitOfWorkManage;
-        private readonly TableSchemaManager _tableSchemaManager;
+        private readonly ITableSchemaManager _tableSchemaManager;
         private readonly ILogger<SqlSugarCacheDataProvider> _logger;
 
         /// <summary>
@@ -26,10 +26,11 @@ namespace RUINORERP.Business.Cache
         /// <param name="logger">日志记录器</param>
         public SqlSugarCacheDataProvider(
             IUnitOfWorkManage unitOfWorkManage,
+            ITableSchemaManager tableSchemaManager,
             ILogger<SqlSugarCacheDataProvider> logger)
         {
             _unitOfWorkManage = unitOfWorkManage ?? throw new ArgumentNullException(nameof(unitOfWorkManage));
-            _tableSchemaManager = TableSchemaManager.Instance;
+            _tableSchemaManager = tableSchemaManager;
             _logger = logger;
         }
 

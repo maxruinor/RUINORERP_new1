@@ -156,8 +156,8 @@ namespace RUINORERP.UI.AdvancedUIModule
                             {
                                 //只有下拉等三种情况。才会显示是否多选
                                 queryField.AdvQueryFieldType = AdvQueryProcessType.CmbMultiChoiceCanIgnore;
-                                
-                        }
+
+                            }
                             else
                             {
                                 //只有下拉等三种情况。才会显示是否多选
@@ -313,18 +313,18 @@ namespace RUINORERP.UI.AdvancedUIModule
                 // 根据当前索引计算行列位置
                 int currentRow = c / RowOfColNum;
                 int currentCol = c % RowOfColNum;
-                
+
                 // 计算累计的X偏移量，考虑前面所有列的宽度
                 int cumulativeX = 20;
                 for (int i = 0; i < currentCol; i++)
                 {
                     cumulativeX += columnWidths[i];
                 }
-                
+
                 // 设置当前控件的X和Y坐标
                 _x = cumulativeX;
                 _y = 20 + currentRow * 32; // 32为行高
-                
+
                 QueryField queryField = queryFields[c];
 
                 int currentColIndex = currentCol + 1;
@@ -335,7 +335,7 @@ namespace RUINORERP.UI.AdvancedUIModule
                     // 使用 PadLeft 方法将字符串左边补空格，达到 maxtextLen 的长度,使用全角空格进行填充
                     queryField.Caption = queryField.Caption.PadLeft(maxtextLen, '　');
                 }
-                
+
                 // 保存每行第一个控件的X坐标
                 if (currentCol == 0)
                 {
@@ -343,18 +343,18 @@ namespace RUINORERP.UI.AdvancedUIModule
                 }
                 KryptonLabel lbl = new KryptonLabel();
                 lbl.Text = queryField.Caption;
-                
+
                 // 获取Graphics对象计算文本宽度
                 Graphics graphics = UcPanel.CreateGraphics();
                 float textWidth = UITools.CalculateTextWidth(lbl.Text, lbl.Font, graphics);
-                
+
                 // 设置Label的宽度
                 int labelWidth = (int)textWidth + 10; // 加上一些额外的空间
                 lbl.Width = labelWidth;
-                
+
                 // 设置标签位置
                 lbl.Location = new System.Drawing.Point(_x, _y);
-                
+
                 // 计算控件起始位置，考虑标签宽度 - 间距减少
                 _x = _x + labelWidth + 2; // 标签和控件之间留2px间距（减少为原来的约三分之一）
 
@@ -422,7 +422,7 @@ namespace RUINORERP.UI.AdvancedUIModule
                         tb_box_cmb.Location = new System.Drawing.Point(_x, _y);
                         UcPanel.Controls.Add(tb_box_cmb);
                         UcPanel.Controls.Add(lbl);
-                        
+
                         // 更新_x位置，添加控件间距（3像素）
                         _x = _x + tb_box_cmb.Width + 3; // 控件间距设为3像素
                         #endregion
@@ -443,13 +443,13 @@ namespace RUINORERP.UI.AdvancedUIModule
                         if (queryField.HasSubFilter)
                         {
                             var cacheManager = Startup.GetFromFac<IEntityCacheManager>();
-                            var tableSchema = TableSchemaManager.Instance.GetSchemaInfo(queryField.SubQueryTargetType.Name);
+                            var tableSchema = Startup.GetFromFac<ITableSchemaManager>().GetSchemaInfo(queryField.SubQueryTargetType.Name);
                             if (tableSchema != null)
                             {
-                                    pair = new KeyValuePair<string, string>(tableSchema.PrimaryKeyField, tableSchema.DisplayField);
+                                pair = new KeyValuePair<string, string>(tableSchema.PrimaryKeyField, tableSchema.DisplayField);
                             }
-                                
-                                #region 绑定下拉带子查询条件
+
+                            #region 绑定下拉带子查询条件
                             Type mytype = queryField.SubQueryTargetType;
                             //UI传入过滤条件 下拉可以显示不同的数据
                             ExpConverter expConverter = new ExpConverter();
@@ -487,7 +487,7 @@ namespace RUINORERP.UI.AdvancedUIModule
                         choiceCanIgnore.Location = new System.Drawing.Point(_x, _y);
                         UcPanel.Controls.Add(choiceCanIgnore);
                         UcPanel.Controls.Add(lbl);
-                        
+
                         // 更新_x位置，添加控件间距（3像素）
                         _x = _x + choiceCanIgnore.Width + 3; // 控件间距设为3像素
                         #endregion
@@ -510,7 +510,7 @@ namespace RUINORERP.UI.AdvancedUIModule
                         if (queryField.FKTableName.IsNotEmptyOrNull())
                         {
                             var cacheManager = Startup.GetFromFac<IEntityCacheManager>();
-                            var tableSchema = TableSchemaManager.Instance.GetSchemaInfo(queryField.SubQueryTargetType.Name);
+                            var tableSchema = Startup.GetFromFac<ITableSchemaManager>().GetSchemaInfo(queryField.SubQueryTargetType.Name);
                             if (tableSchema != null)
                             {
                                 pair = new KeyValuePair<string, string>(tableSchema.PrimaryKeyField, tableSchema.DisplayField);
@@ -546,7 +546,7 @@ namespace RUINORERP.UI.AdvancedUIModule
                         cmb.Location = new System.Drawing.Point(_x, _y);
                         UcPanel.Controls.Add(cmb);
                         UcPanel.Controls.Add(lbl);
-                        
+
                         // 更新_x位置，添加控件间距（3像素）
                         _x = _x + cmb.Width + 3; // 控件间距设为3像素
                         #endregion
@@ -573,7 +573,7 @@ namespace RUINORERP.UI.AdvancedUIModule
                         if (queryField.FKTableName.IsNotEmptyOrNull())
                         {
                             var cacheManager = Startup.GetFromFac<IEntityCacheManager>();
-                            var tableSchema = TableSchemaManager.Instance.GetSchemaInfo(queryField.SubQueryTargetType.Name);
+                            var tableSchema = Startup.GetFromFac<ITableSchemaManager>().GetSchemaInfo(queryField.SubQueryTargetType.Name);
                             if (tableSchema != null)
                             {
                                 pair = new KeyValuePair<string, string>(tableSchema.PrimaryKeyField, tableSchema.DisplayField);
@@ -632,7 +632,7 @@ namespace RUINORERP.UI.AdvancedUIModule
                         DefaultCmb.Location = new System.Drawing.Point(_x, _y);
                         UcPanel.Controls.Add(DefaultCmb);
                         UcPanel.Controls.Add(lbl);
-                        
+
                         // 更新_x位置，添加控件间距（3像素）
                         _x = _x + DefaultCmb.Width + 3; // 控件间距设为3像素
                         #endregion
@@ -751,18 +751,18 @@ namespace RUINORERP.UI.AdvancedUIModule
                         {
                             dtpgroup.dtp2.Checked = queryField.EnableDefault2.Value;
                         }
-                    
+
                         // 确保日期控件大小正确
                         dtpgroup.Size = new System.Drawing.Size(265, 25);
                         // 设置日期控件位置
                         dtpgroup.Location = new System.Drawing.Point(_x, _y);
                         dtpgroup.Visible = true;
-                        
+
                         // 添加控件到面板
                         // 先添加标签再添加控件，确保标签不会被覆盖
                         UcPanel.Controls.Add(lbl);
                         UcPanel.Controls.Add(dtpgroup);
-                        
+
                         // 更新_x位置，添加控件间距（3像素）
                         _x = _x + dtpgroup.Width + 3; // 控件间距设为3像素
                         break;
@@ -784,15 +784,15 @@ namespace RUINORERP.UI.AdvancedUIModule
 
                         DataBindingHelper.BindData4DataTime(newDto, datetimeValue, queryField.FieldName, dtp, true);
                         dtp.Checked = true;
-                        
+
                         // 设置控件位置
                         dtp.Location = new System.Drawing.Point(_x, _y);
-                        
+
                         // 添加控件到面板
                         // 先添加标签再添加控件，确保标签不会被覆盖
                         UcPanel.Controls.Add(lbl);
                         UcPanel.Controls.Add(dtp);
-                        
+
                         // 更新_x位置，添加控件间距（3像素）
                         _x = _x + dtp.Width + 3; // 控件间距设为3像素
                         break;
@@ -819,7 +819,7 @@ namespace RUINORERP.UI.AdvancedUIModule
                         tb_box.ContextMenu = menu;
                         UcPanel.Controls.Add(tb_box);
                         UcPanel.Controls.Add(lbl);
-                        
+
                         // 更新_x位置，添加控件间距（3像素）
                         _x = _x + tb_box.Width + 3; // 控件间距设为3像素
                         break;
@@ -833,7 +833,7 @@ namespace RUINORERP.UI.AdvancedUIModule
                         tb_boxEquals.Location = new System.Drawing.Point(_x, _y);
                         UcPanel.Controls.Add(tb_boxEquals);
                         UcPanel.Controls.Add(lbl);
-                        
+
                         // 更新_x位置，添加控件间距（3像素）
                         _x = _x + tb_boxEquals.Width + 3; // 控件间距设为3像素
                         break;
@@ -848,7 +848,7 @@ namespace RUINORERP.UI.AdvancedUIModule
                         chkgroup.Location = new System.Drawing.Point(_x, _y);
                         UcPanel.Controls.Add(chkgroup);
                         UcPanel.Controls.Add(lbl);
-                        
+
                         // 更新_x位置，添加控件间距（3像素）
                         _x = _x + chkgroup.Width + 3; // 控件间距设为3像素
                         break;
@@ -863,7 +863,7 @@ namespace RUINORERP.UI.AdvancedUIModule
                         chk.Location = new System.Drawing.Point(_x, _y);
                         UcPanel.Controls.Add(chk);
                         UcPanel.Controls.Add(lbl);
-                        
+
                         // 更新_x位置，添加控件间距（3像素）
                         _x = _x + chk.Width + 3; // 控件间距设为3像素
                         break;

@@ -824,7 +824,7 @@ namespace RUINORERP.UI.BaseForm
 
                 // 通过依赖注入获取缓存管理器
                 _cacheManager = Startup.GetFromFac<IEntityCacheManager>();
-                _tableSchemaManager = TableSchemaManager.Instance;
+                _tableSchemaManager = Startup.GetFromFac<ITableSchemaManager>();
                 _integratedLockService = Startup.GetFromFac<ClientLockManagementService>();
                 _clientCommunicationService = Startup.GetFromFac<ClientCommunicationService>();
                 _lockStatusNotificationService = Startup.GetFromFac<LockStatusNotificationService>();
@@ -832,7 +832,7 @@ namespace RUINORERP.UI.BaseForm
         }
 
         public readonly IEntityCacheManager _cacheManager;
-        public readonly TableSchemaManager _tableSchemaManager;
+        public readonly ITableSchemaManager _tableSchemaManager;
 
         private async void button录入数据预设_Click(object sender, EventArgs e)
         {

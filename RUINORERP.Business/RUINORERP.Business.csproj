@@ -100,6 +100,7 @@
     <Compile Include="Cache\ICacheSyncMetadata.cs" />
     <Compile Include="Cache\IEntityCacheManager.cs" />
     <Compile Include="Cache\InventoryCacheManager.cs" />
+    <Compile Include="Cache\ITableSchemaManager.cs" />
     <Compile Include="Cache\ObjectExtensions.cs" />
     <Compile Include="Cache\SqlSugarCacheDataProvider.cs" />
     <Compile Include="Cache\TableSchemaInfo.cs" />

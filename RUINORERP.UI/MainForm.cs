@@ -150,7 +150,7 @@ namespace RUINORERP.UI
 
         public UILogManager logManager;
         private readonly IEntityCacheManager _cacheManager;
-        private readonly TableSchemaManager _tableSchemaManager;
+        private readonly ITableSchemaManager _tableSchemaManager;
         private readonly MessageService _messageService;
         /// <summary>
         /// 菜单跟踪器菜单推荐器
@@ -458,7 +458,8 @@ namespace RUINORERP.UI
 
             // 通过依赖注入获取缓存管理器
             _cacheManager = Startup.GetFromFac<IEntityCacheManager>();
-            _tableSchemaManager = TableSchemaManager.Instance;
+            _tableSchemaManager = Startup.GetFromFac<ITableSchemaManager>();
+
             _messageService = Startup.GetFromFac<MessageService>();
 
             lblStatusGlobal.Text = string.Empty;
@@ -3603,7 +3604,7 @@ namespace RUINORERP.UI
         {
             try
             {
-                 
+
             }
             catch (Exception ex)
             {

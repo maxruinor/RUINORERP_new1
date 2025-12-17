@@ -635,7 +635,8 @@ namespace RUINORERP.UI.AdvancedUIModule
 
 
                 //基础表如果没有设置查询条件，则生成最基础的名称查询
-                var schemaInfo = TableSchemaManager.Instance.GetSchemaInfo(typeof(T).Name);
+                var tableSchemaManager = Startup.GetFromFac<ITableSchemaManager>();
+                var schemaInfo = tableSchemaManager.GetSchemaInfo(typeof(T).Name);
                 if (schemaInfo != null && QueryConditionFilter.QueryFields.Count == 0)
                 {
                     QueryField queryField = new QueryField();

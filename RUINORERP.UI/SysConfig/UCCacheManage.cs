@@ -1,4 +1,4 @@
-﻿using AutoUpdateTools;
+using AutoUpdateTools;
 using CacheManager.Core;
 using FastReport.DevComponents.DotNetBar.Controls;
 using FastReport.Table;
@@ -32,7 +32,7 @@ namespace RUINORERP.UI.SysConfig
     public partial class UCCacheManage : UserControl, IContextMenuInfoAuth
     {
         private readonly IEntityCacheManager _cacheManager;
-        private readonly TableSchemaManager _tableSchemaManager;
+        private readonly ITableSchemaManager _tableSchemaManager;
         private readonly CacheSyncMetadataManager _cacheSyncMetadataManager;
         private System.Windows.Forms.Timer _autoRefreshTimer;
         private DateTime _lastTableStatsRefresh = DateTime.MinValue;
@@ -46,7 +46,7 @@ namespace RUINORERP.UI.SysConfig
             InitializeComponent();
             // 使用静态缓存管理器
             _cacheManager = Startup.GetFromFac<IEntityCacheManager>();
-            _tableSchemaManager = TableSchemaManager.Instance;
+            _tableSchemaManager = Startup.GetFromFac<ITableSchemaManager>();
             _cacheSyncMetadataManager = Startup.GetFromFac<CacheSyncMetadataManager>();
             
             // 初始化定时刷新器

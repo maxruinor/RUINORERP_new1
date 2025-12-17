@@ -64,18 +64,18 @@ namespace RUINORERP.UI.ASS
     [MenuAttrAssemblyInfo("售后申请单", ModuleMenuDefine.模块定义.售后管理, ModuleMenuDefine.售后管理.售后流程, BizType.售后申请单)]
     public partial class UCASAfterSaleApply : BaseBillEditGeneric<tb_AS_AfterSaleApply, tb_AS_AfterSaleApplyDetail>, IPublicEntityObject
     {
-        public UCASAfterSaleApply()
+        private readonly IEntityCacheManager _cacheManager;
+        private readonly ITableSchemaManager _tableSchemaManager;
+        
+        public UCASAfterSaleApply(IEntityCacheManager cacheManager, ITableSchemaManager tableSchemaManager)
         {
+            _cacheManager = cacheManager ?? throw new ArgumentNullException(nameof(cacheManager));
+            _tableSchemaManager = tableSchemaManager ?? throw new ArgumentNullException(nameof(tableSchemaManager));
             InitializeComponent();
             //InitDataToCmbByEnumDynamicGeneratedDataSource<tb_AS_AfterSaleApply>(typeof(Priority), e => e.OrderPriority, cmbOrderPriority, false);
             AddPublicEntityObject(typeof(ProductSharePart));
-            // 使用静态缓存管理器
-            _cacheManager = Startup.GetFromFac<IEntityCacheManager>(); 
-            _tableSchemaManager = TableSchemaManager.Instance;
         }
 
-        private readonly IEntityCacheManager _cacheManager;
-        private readonly TableSchemaManager _tableSchemaManager;
         internal override void LoadDataToUI(object Entity)
         {
             ActionStatus actionStatus = ActionStatus.无操作;

@@ -26,7 +26,7 @@ namespace RUINORERP.Business.Cache
     public class EntityCacheManager : IEntityCacheManager
     {
         #region 依赖注入字段
-        private readonly TableSchemaManager _tableSchemaManager;
+        private readonly ITableSchemaManager _tableSchemaManager;
         private readonly ILogger<EntityCacheManager> _logger;
         private readonly ICacheDataProvider _cacheDataProvider;
         private readonly ICacheSyncMetadata _cacheSyncMetadata;
@@ -194,7 +194,7 @@ namespace RUINORERP.Business.Cache
                                     var convertedEntity = Convert.ChangeType(entity, itemType);
                                     ((IList)cachedListObj).Add(convertedEntity);
                                     updated = true;
-                                    _logger?.LogDebug($"已将ID为 {entityId} 的新实体（已转换类型）添加到表 {tableName} 的列表缓存中");
+                                    _logger?.LogDebug($"已将ID为 {entityId} 新实体（已转换类型）添加到表 {tableName} 的列表缓存中");
                                 }
                                 catch (Exception ex)
                                 {
@@ -410,11 +410,12 @@ namespace RUINORERP.Business.Cache
         #region 构造函数
         public EntityCacheManager(
             ILogger<EntityCacheManager> logger,
+            ITableSchemaManager tableSchemaManager,
         ICacheDataProvider cacheDataProvider = null,
             ICacheSyncMetadata cacheSyncMetadata = null)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _tableSchemaManager = TableSchemaManager.Instance;
+            _tableSchemaManager = tableSchemaManager ?? throw new ArgumentNullException(nameof(tableSchemaManager));
             _cacheDataProvider = cacheDataProvider;
             _cacheSyncMetadata = cacheSyncMetadata; // 可选依赖
             // 设置缓存大小阈值（最大大小的80%）

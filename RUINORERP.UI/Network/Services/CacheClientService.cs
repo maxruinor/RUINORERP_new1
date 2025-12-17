@@ -488,7 +488,8 @@ namespace RUINORERP.UI.Network.Services
             try
             {
                 // 获取所有可缓存的表名
-                var cacheableTables = TableSchemaManager.Instance.GetAllTableNames();
+                var tableSchemaManager = Startup.GetFromFac<ITableSchemaManager>();
+                var cacheableTables = tableSchemaManager.GetAllTableNames();
 
                 foreach (var tableName in cacheableTables)
                 {

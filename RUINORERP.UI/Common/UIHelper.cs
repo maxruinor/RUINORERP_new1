@@ -1980,7 +1980,8 @@ namespace RUINORERP.UI.Common
             // 所以设计表时主键ID名称 不要相同 要有意义最好。但是已经设计完了。
 
             // 暂时可以通过主键名找到表名再去找值。
-            var schemaInfos = TableSchemaManager.Instance.GetAllSchemaInfo();
+            var tableSchemaManager = Startup.GetFromFac<ITableSchemaManager>();
+            var schemaInfos = tableSchemaManager.GetAllSchemaInfo();
 
             foreach (var schemaInfo in schemaInfos)
             {

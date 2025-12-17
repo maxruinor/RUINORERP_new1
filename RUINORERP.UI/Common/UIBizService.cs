@@ -1182,7 +1182,7 @@ namespace RUINORERP.UI.Common
             T prodDetail = null;
 
             // 获取表结构管理器实例
-            var tableSchemaManager = TableSchemaManager.Instance;
+            var tableSchemaManager = Startup.GetFromFac<ITableSchemaManager>();
 
             // 检查表是否在缓存表列表中
             if (tableSchemaManager.ContainsTable(typeof(T).Name))
@@ -1293,7 +1293,7 @@ namespace RUINORERP.UI.Common
             {
                 //根据要缓存的列表集合来判断是否需要上传到服务器。让服务器分发到其他客户端
                 // 获取表结构管理器实例
-                var tableSchemaManager = TableSchemaManager.Instance;
+                var tableSchemaManager = Startup.GetFromFac<ITableSchemaManager>();
 
                 //只处理需要缓存的表
                 if (tableSchemaManager.ContainsTable(typeof(tb_CRM_Contact).Name))
@@ -1386,7 +1386,7 @@ namespace RUINORERP.UI.Common
 
                 //根据要缓存的列表集合来判断是否需要上传到服务器。让服务器分发到其他客户端
                 // 获取表结构管理器实例
-                var tableSchemaManager = TableSchemaManager.Instance;
+                var tableSchemaManager = Startup.GetFromFac<ITableSchemaManager>();
 
                 //只处理需要缓存的表
                 if (tableSchemaManager.ContainsTable(typeof(tb_FM_PayeeInfo).Name))
@@ -1472,7 +1472,7 @@ namespace RUINORERP.UI.Common
 
                 //根据要缓存的列表集合来判断是否需要上传到服务器。让服务器分发到其他客户端
                 // 获取表结构管理器实例
-                var tableSchemaManager = TableSchemaManager.Instance;
+                var tableSchemaManager = Startup.GetFromFac<ITableSchemaManager>();
 
                 //只处理需要缓存的表
                 if (tableSchemaManager.ContainsTable(typeof(tb_BillingInformation).Name))
@@ -1591,7 +1591,8 @@ namespace RUINORERP.UI.Common
         /// <returns>是否在缓存表名列表中</returns>
         private static bool IsCacheableTable(string tableName)
         {
-            return TableSchemaManager.Instance.CacheableTableNames.Contains(tableName);
+            var tableSchemaManager = Startup.GetFromFac<ITableSchemaManager>();
+            return tableSchemaManager.CacheableTableNames.Contains(tableName);
         }
 
 
@@ -1646,7 +1647,7 @@ namespace RUINORERP.UI.Common
             
             CacheClientService cacheClient = Startup.GetFromFac<CacheClientService>();
             // 获取表结构管理器实例
-            var tableSchemaManager = TableSchemaManager.Instance;
+            var tableSchemaManager = Startup.GetFromFac<ITableSchemaManager>();
 
             try
             {

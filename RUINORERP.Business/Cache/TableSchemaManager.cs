@@ -11,68 +11,10 @@ namespace RUINORERP.Business.Cache
 {
     /// <summary>
     /// 表结构信息管理器，统一管理所有表的元数据信息
+    /// 已从单例模式重构为依赖注入模式
     /// </summary>
-    public class TableSchemaManager
+    public class TableSchemaManager : ITableSchemaManager
     {
-        #region 单例模式（兼容依赖注入）
-        private static TableSchemaManager _instance;
-        private static readonly object _lock = new object();
-
-        /// <summary>
-        /// 获取TableSchemaManager的单例实例
-        /// 优先从依赖注入容器获取，如果没有则使用传统单例方式
-        /// </summary>
-        public static TableSchemaManager Instance
-        {
-            get
-            {
-                // 首先尝试从依赖注入容器获取实例（可选实现）
-                // 这里暂不实现容器获取逻辑，保留传统单例以确保兼容性
-                // 在未来重构时，可以取消注释下面的代码并移除传统单例实现
-                
-                /*
-                var instance = TryGetFromContainer();
-                if (instance != null)
-                {
-                    return instance;
-                }
-                */
-                
-                // 传统单例实现，保证向后兼容
-                if (_instance == null)
-                {
-                    lock (_lock)
-                    {
-                        if (_instance == null)
-                        {
-                            _instance = new TableSchemaManager();
-                        }
-                    }
-                }
-                return _instance;
-            }
-        }
-        
-        /// <summary>
-        /// 尝试从依赖注入容器获取实例
-        /// 此方法为未来完全依赖注入化预留
-        /// </summary>
-        /// <returns>实例或null</returns>
-        private static TableSchemaManager TryGetFromContainer()
-        {
-            try
-            {
-                // 这里可以根据系统的依赖注入框架实现获取逻辑
-                // 目前返回null，继续使用传统单例
-                return null;
-            }
-            catch
-            {
-                return null;
-            }
-        }
-        #endregion
-
         #region 数据存储
         /// <summary>
         /// 表结构信息字典，键为表名

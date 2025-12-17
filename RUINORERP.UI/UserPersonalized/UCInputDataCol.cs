@@ -1,8 +1,9 @@
-﻿using FastReport.Editor.Dialogs;
+using FastReport.Editor.Dialogs;
 using Krypton.Toolkit;
 using Microsoft.Extensions.Logging;
 using Netron.GraphLib;
 using RUINORERP.Business;
+using RUINORERP.Business.Cache;
 using RUINORERP.Business.CommService;
 using RUINORERP.Business.Processor;
 using RUINORERP.Common;
@@ -31,8 +32,11 @@ namespace RUINORERP.UI.UserPersonalized
     [MenuAttrAssemblyInfo("录入数据字段编辑", true, UIType.单表数据)]
     public partial class UCInputDataCol : BaseEditGeneric<tb_UIInputDataField>
     {
-        public UCInputDataCol()
+        private readonly ITableSchemaManager _tableSchemaManager;
+        
+        public UCInputDataCol(ITableSchemaManager tableSchemaManager)
         {
+            _tableSchemaManager = tableSchemaManager ?? throw new ArgumentNullException(nameof(tableSchemaManager));
             InitializeComponent();
         }
 
@@ -80,7 +84,7 @@ namespace RUINORERP.UI.UserPersonalized
                         //只处理需要缓存的表
                         if (queryField.FKTableName.IsNotEmptyOrNull())
                         {
-                            var schemaInfo = RUINORERP.Business.Cache.TableSchemaManager.Instance.GetSchemaInfo(queryField.SubQueryTargetType.Name);
+                            var schemaInfo = _tableSchemaManager.GetSchemaInfo(queryField.SubQueryTargetType.Name);
                             if (schemaInfo != null)
                             {
                                 //关联要绑定的类型

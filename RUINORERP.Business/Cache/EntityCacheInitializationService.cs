@@ -25,6 +25,8 @@ namespace RUINORERP.Business.Cache
         private readonly ILogger<EntityCacheInitializationService> _logger;
         private readonly ICacheSyncMetadata _cacheSyncMetadata;
         private readonly DynamicQueryHelper _queryHelper;
+        private readonly ITableSchemaManager _tableSchemaManager;
+        
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -36,12 +38,14 @@ namespace RUINORERP.Business.Cache
             IEntityCacheManager cacheManager,
             ICacheSyncMetadata cacheSyncMetadata,
             DynamicQueryHelper queryHelper,
+            ITableSchemaManager tableSchemaManager,
         ILogger<EntityCacheInitializationService> logger)
         {
             _cacheSyncMetadata = cacheSyncMetadata ?? throw new ArgumentNullException(nameof(cacheSyncMetadata));
             _unitOfWorkManage = unitOfWorkManage ?? throw new ArgumentNullException(nameof(unitOfWorkManage));
             _cacheManager = cacheManager ?? throw new ArgumentNullException(nameof(cacheManager));
             _queryHelper = queryHelper;
+            _tableSchemaManager = tableSchemaManager ?? throw new ArgumentNullException(nameof(tableSchemaManager));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
@@ -61,7 +65,7 @@ namespace RUINORERP.Business.Cache
                 InitializeAllTableSchemas();
 
                 // 获取需要缓存的表名
-                var tableNames = TableSchemaManager.Instance.GetCacheableTableNamesList();
+                var tableNames = _tableSchemaManager.GetCacheableTableNamesList();
 
 
                 int successCount = 0;
@@ -202,7 +206,7 @@ namespace RUINORERP.Business.Cache
 
             // 设置表类型
             string tableName = typeof(T).Name;
-            var schemaInfo = TableSchemaManager.Instance.GetSchemaInfo(tableName);
+            var schemaInfo = _tableSchemaManager.GetSchemaInfo(tableName);
             if (schemaInfo != null)
             {
                 schemaInfo.Type = tableType;
@@ -292,7 +296,7 @@ namespace RUINORERP.Business.Cache
             try
             {
                 // 获取表结构信息，特别是需要缓存的字段
-                var schemaInfo = TableSchemaManager.Instance.GetSchemaInfo(tableName);
+                var schemaInfo = _tableSchemaManager.GetSchemaInfo(tableName);
                 if (schemaInfo == null)
                 {
                     _logger.LogWarning($"未找到表 {tableName} 的结构信息");
@@ -368,7 +372,7 @@ namespace RUINORERP.Business.Cache
         /// <param name="tableType">表类型</param>
         public async Task InitializeTablesByTypeAsync(TableType tableType)
         {
-            var tables = TableSchemaManager.Instance.GetCacheableTableNamesByType(tableType);
+            var tables = _tableSchemaManager.GetCacheableTableNamesByType(tableType);
             await InitializeTablesAsync(tables, $"初始化类型为 {tableType} 的表缓存");
         }
 

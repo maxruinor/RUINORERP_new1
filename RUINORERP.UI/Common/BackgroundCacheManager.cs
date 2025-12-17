@@ -382,7 +382,8 @@ namespace RUINORERP.UI.Common
         {
             try
             {
-                return TableSchemaManager.Instance.CacheableTableNames.Contains(tableName);
+                var tableSchemaManager = Startup.GetFromFac<ITableSchemaManager>();
+                return tableSchemaManager.CacheableTableNames.Contains(tableName);
             }
             catch
             {

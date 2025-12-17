@@ -196,6 +196,7 @@
     <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="7.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Log4Net.AspNetCore" Version="7.0.0" />
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="8.0.0" />
+    <PackageReference Include="NPinyin" Version="0.2.6321.26573" />
     <PackageReference Include="RulesEngine" Version="5.0.6" />
     <PackageReference Include="SharpZipLib" Version="1.4.2" />
     <PackageReference Include="SqlSugarCore" Version="5.1.4.130" />

@@ -206,8 +206,11 @@ namespace RUINORERP.Server.Services.BizCode
                 //-格式： [分类代码] - [产品类型] - [年月] - [流水号]
                 //- 示例： ELEC - PHON - 2305 - 0012
                 //- 优点：保留分类信息，便于管理，同时包含时间和序列信息确保唯一性
-
-                string prodno = _bnrFactory.Create("{CN:{" + prod.tb_prodcategories.Category_name.Substring(0, 3) + "}}{DB:ProdNo/0000}");
+                if (prod.tb_prodcategories == null && prod.Category_ID > 0)
+                {
+                    prod.tb_prodcategories = Business.Cache.EntityCacheHelper.GetEntity<tb_ProdCategories>(prod.Category_ID);
+                }
+                string prodno = _bnrFactory.Create("{CN:" + prod.tb_prodcategories.Category_name.Substring(0, 3) + "}{DB:ProdNo/0000}");
                 return prodno;
             }
             catch (Exception ex)
@@ -224,7 +227,7 @@ namespace RUINORERP.Server.Services.BizCode
         {
             try
             {
-                // 如果提供了有效的产品编号，则生成基于产品编号的默认SKU编码
+                // 如果提供了有效的产品编号，则生成基于产品编号的默认SKU编码11
                 //-格式： [产品编号] - [关键属性代码]
                 //- 示例： ELEC - PHON - 2305 - 0012 - 5G
                 //- 优点：将具有相同关键属性的产品变体归为一档，便于库存和销售管理

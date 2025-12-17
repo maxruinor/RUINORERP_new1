@@ -113,6 +113,7 @@
     <PackageReference Include="CacheManager.Microsoft.Extensions.Configuration" Version="2.0.0" />
     <PackageReference Include="F23.StringSimilarity" Version="6.0.0" />
     <PackageReference Include="FluentValidation" Version="11.11.0" />
+    <PackageReference Include="NPinyin" Version="0.2.6321.26573" />
     <PackageReference Include="SqlSugar" Version="5.1.4.160" />
     <PackageReference Include="StackExchange.Redis" Version="2.8.24" />
     <PackageReference Include="ZXing.Net" Version="0.16.10" />

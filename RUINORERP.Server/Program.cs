@@ -140,7 +140,7 @@ namespace RUINORERP.Server
 
                 #region 初始化csla  
                 try
-                    {
+                {
 
 
 
@@ -154,7 +154,7 @@ namespace RUINORERP.Server
                     //设置服务的提供者
                     Startup.ServiceProvider = services;
                     Program.ServiceProvider = services; // 同时给Program.ServiceProvider赋值
-                    
+
                     // 初始化配置同步服务
                     Startup.InitializeConfigSync(services);
                     AppContextData.SetServiceProvider(services);
@@ -196,6 +196,21 @@ namespace RUINORERP.Server
                     }
                     WorkflowHost = host;
 
+                    // 自动初始化表结构信息
+                    try
+                    {
+                        var cacheInitService = Startup.GetFromFac<EntityCacheInitializationService>();
+                        if (cacheInitService != null)
+                        {
+                            // 在后台线程中初始化表结构，不阻塞主线程
+                            cacheInitService.InitializeAllTableSchemas();
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.Error.WriteLine($"获取缓存初始化服务时发生错误: {ex.Message}");
+                    }
+
                     // 提醒服务
                     //var reminderService = services.GetRequiredService<SmartReminderService_old>();
                     //Task.Run(() => reminderService.RunSystemAsync());
@@ -226,7 +241,7 @@ namespace RUINORERP.Server
 
                     /// 初始化实体映射服务
                     EntityMappingHelper.Initialize();
-                    
+
                     // 初始化实体缓存服务
                     IEntityCacheManager entityCacheManager = Startup.GetFromFac<IEntityCacheManager>();
 
@@ -237,7 +252,7 @@ namespace RUINORERP.Server
                     var form1 = Startup.GetFromFac<frmMainNew>();
                     System.Windows.Forms.Application.Run(form1);
                     // var newMainForm = new frmMainNew(logger, workflowHost, config);
-                   // System.Windows.Forms.Application.Run(newMainForm);
+                    // System.Windows.Forms.Application.Run(newMainForm);
 
                 }
                 catch (Exception ex)

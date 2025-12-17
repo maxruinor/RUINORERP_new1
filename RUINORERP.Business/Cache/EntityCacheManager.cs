@@ -650,7 +650,10 @@ namespace RUINORERP.Business.Cache
                 // GetEntityList方法内部已经处理了缓存过期的情况
                 var list = GetEntityList<T>(tableName);
                 var schemaInfo = _tableSchemaManager.GetSchemaInfo(tableName);
-
+                if (schemaInfo==null)
+                {
+                    _logger?.LogDebug($"表 {tableName} 的架构信息不存在，请检查代码。");
+                }
                 if (schemaInfo != null && list != null)
                 {
                     var entityFound = list.FirstOrDefault(e =>
@@ -714,6 +717,7 @@ namespace RUINORERP.Business.Cache
                     }
                     return null;
                 }
+             
 
                 return default;
             }

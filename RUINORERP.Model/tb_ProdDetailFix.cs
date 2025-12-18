@@ -22,13 +22,23 @@ using RUINORERP.Global.EnumExt;
 namespace RUINORERP.Model
 {
     /// <summary>
-    /// 这里是一个例子。
+    /// tb_ProdDetail 扩展类，用于存放临时字段和辅助功能
     /// 后面按这个规律统一处理。如果实现中带有图片的字段。则需要额外处理
     /// 字段名：RowImage
     /// 后面如果支持多图则可能是List<key,value> key是图片名，value是图片对象
     /// </summary>
     public partial class tb_ProdDetail : BaseEntity, ICloneable
     {
+        /// <summary>
+        /// 属性组名称，用于多属性组合显示，此字段不存储到数据库
+        /// </summary>
+        [SugarColumn(IsIgnore = true)]
+        [Browsable(false)]
+        public string GroupName { get; set; }
+
+        /// <summary>
+        /// 产品信息显示文本
+        /// </summary>
         [SugarColumn(IsIgnore = true, ColumnDescription = "产品信息")]
         [Browsable(true)]
         public string DisplayText

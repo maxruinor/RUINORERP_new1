@@ -1186,11 +1186,11 @@ namespace RUINORERP.UI.ProductEAV
 
                                 if (dataGridViewProd.Rows.Count == 0)
                                 {
-                                    //BindToSkulistGrid(new List<Eav_ProdDetails>());
+                                    //BindToSkulistGrid(new List<tb_ProdDetail>());
                                 }
                                 if (EditEntity.ActionStatus != ActionStatus.加载)
                                 {
-                                    Eav_ProdDetails ppg = new Eav_ProdDetails();
+                                    tb_ProdDetail ppg = new tb_ProdDetail();
                                     ppg.GroupName = "";
                                     ppg.SKU = ClientBizCodeService.GetBaseInfoNo(BaseInfoType.SKU_No);
                                     bindingSourceSKU明细.Add(ppg);

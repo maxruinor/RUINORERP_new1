@@ -43,7 +43,8 @@ namespace RUINORERP.Business.AutoMapper
             CreateMap<tb_UnitDto, tb_Unit>();
             CreateMap<tb_Unit, tb_UnitDto>();
             //产品编辑时用 注意主键被覆盖问题
-            CreateMap<tb_ProdDetail, Eav_ProdDetails>();
+            //已移除 Eav_ProdDetails 中间实体，直接使用 tb_ProdDetail
+            //CreateMap<tb_ProdDetail, Eav_ProdDetails>();
 
             CreateMap<tb_PurOrderDetail, tb_PurEntryDetail>();
 
@@ -138,9 +139,10 @@ namespace RUINORERP.Business.AutoMapper
 
 
             //ui TO ENTITY
-            CreateMap<Eav_ProdDetails, tb_ProdDetail>()
+            //已移除 Eav_ProdDetails 中间实体，直接使用 tb_ProdDetail
+            //CreateMap<Eav_ProdDetails, tb_ProdDetail>()
             //如果希望忽略具有空值的所有源属性,则可以使用:
-            .ForAllMembers(opt => opt.Condition(srs => !srs.IsNullOrEmpty()));
+            //.ForAllMembers(opt => opt.Condition(srs => !srs.IsNullOrEmpty()));
 
             CreateMap<tb_ProductionDemandTargetDetail, tb_ProductionDemandDetail>()
             .ForMember(a => a.NeedQuantity, o => o.MapFrom(d => d.NeedQuantity))

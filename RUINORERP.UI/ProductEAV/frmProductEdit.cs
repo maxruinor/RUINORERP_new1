@@ -1,40 +1,40 @@
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Drawing;
-using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-using RUINORERP.UI.BaseForm;
-using RUINORERP.Common;
+using AutoMapper;
+using FluentValidation;
 using Krypton.Navigator;
 using Krypton.Toolkit;
-using RUINORERP.Model;
-using RUINORERP.Business;
-using RUINORERP.UI.Common;
-using RUINORERP.Common.Helper;
-using System.IO;
-using FluentValidation;
-using RUINORERP.Global;
-using System.Collections.Concurrent;
-using AutoMapper;
-using RUINORERP.Business.AutoMapper;
-using ObjectsComparer;
-using RUINORERP.Global.CustomAttribute;
-using static RUINORERP.UI.Common.DataBindingHelper;
 using Microsoft.International.Converters.PinYinConverter;
-using RUINORERP.Common.Extensions;
-using System.Drawing.Imaging;
-using SqlSugar;
-using RUINORERP.Business.Processor;
 using Netron.GraphLib;
+using ObjectsComparer;
 using RUINOR.WinFormsUI.TileListView;
+using RUINORERP.Business;
+using RUINORERP.Business.AutoMapper;
 using RUINORERP.Business.CommService;
-
+using RUINORERP.Business.Processor;
+using RUINORERP.Common;
+using RUINORERP.Common.Extensions;
+using RUINORERP.Common.Helper;
+using RUINORERP.Global;
+using RUINORERP.Global.CustomAttribute;
+using RUINORERP.Model;
+using RUINORERP.UI.BaseForm;
+using RUINORERP.UI.Common;
 using RUINORERP.UI.Network.Services;
+using SqlSugar;
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Drawing.Imaging;
+using System.IO;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using static RUINORERP.UI.Common.DataBindingHelper;
 
 namespace RUINORERP.UI.ProductEAV
 {
@@ -53,6 +53,11 @@ namespace RUINORERP.UI.ProductEAV
         tb_ProdCategoriesController<tb_ProdCategories> mca = Startup.GetFromFac<tb_ProdCategoriesController<tb_ProdCategories>>();
 
         tb_BoxRulesController<tb_BoxRules> ctrBoxRules = Startup.GetFromFac<tb_BoxRulesController<tb_BoxRules>>();
+
+        /// <summary>
+        /// 网格显示文本解析器，用于设置特殊的映射关系
+        /// </summary>
+        public GridViewDisplayTextResolverGeneric<tb_ProdDetail> DisplayTextResolver { get; set; }
 
 
         //定义两个值，为了计算listview的高宽，高是属性的倍数 假设一个属性一行 是50px，有三组则x3
@@ -114,8 +119,11 @@ namespace RUINORERP.UI.ProductEAV
                 prodpropList = mcProperty.Query();
                 // this.bindingSourceList.ListChanged += BindingSourceList_ListChanged;
                 InitListData();
-                SetBaseValue<Eav_ProdDetails>();
+                SetBaseValue<tb_ProdDetail>();
                 InitDataTocmbbox();
+                // 初始化网格显示文本解析器
+                DisplayTextResolver = new GridViewDisplayTextResolverGeneric<tb_ProdDetail>();
+                DisplayTextResolver.Initialize(dataGridView1);
             }
             //this.AllowDrop = true; // 允许窗体接受拖放
             //pictureBox1.AllowDrop = true; // 允许PictureBox接受拖放
@@ -198,14 +206,14 @@ namespace RUINORERP.UI.ProductEAV
 
 
 
-        List<Eav_ProdDetails> removeSkuList = new List<Eav_ProdDetails>();
+        List<tb_ProdDetail> removeSkuList = new List<tb_ProdDetail>();
 
         private void DataGridView1_删除选中行(object sender, EventArgs e)
         {
 
             if (dataGridView1.CurrentRow.Index != -1)
             {
-                Eav_ProdDetails sukProd = dataGridView1.CurrentRow.DataBoundItem as Eav_ProdDetails;
+                tb_ProdDetail sukProd = dataGridView1.CurrentRow.DataBoundItem as tb_ProdDetail;
                 bindingSourceList.Remove(sukProd);
                 //将删除的sku行 暂时加入一个临时列表中
                 removeSkuList.Add(sukProd);
@@ -459,15 +467,15 @@ namespace RUINORERP.UI.ProductEAV
         /// </summary>
         /// <param name="removeList">如果有删除的行，则标识出来为删除状态</param>
         /// <returns></returns>
-        private List<tb_Prod_Attr_Relation> GetRelations(List<Eav_ProdDetails> removeList)
+        private List<tb_Prod_Attr_Relation> GetRelations(List<tb_ProdDetail> removeList)
         {
             //明细超过一行，则为多属性。否则是单属性，或groupName有值就是多属性了
             List<tb_Prod_Attr_Relation> RelationList = new List<tb_Prod_Attr_Relation>();
             foreach (var item in bindingSourceList)
             {
-                if (item is Eav_ProdDetails)
+                if (item is tb_ProdDetail)
                 {
-                    Eav_ProdDetails epd = item as Eav_ProdDetails;
+                    tb_ProdDetail epd = item as tb_ProdDetail;
                     //多属性
                     if (!string.IsNullOrEmpty(epd.GroupName))
                     {
@@ -476,14 +484,14 @@ namespace RUINORERP.UI.ProductEAV
                         {
                             foreach (string propertyValueName in epd.GroupName.Split(','))
                             {
-                                tb_Prod_Attr_Relation rela = SKUDetailToRelateion(item as Eav_ProdDetails, prodpropValueList, propertyValueName);
+                                tb_Prod_Attr_Relation rela = SKUDetailToRelateion(item as tb_ProdDetail, prodpropValueList, propertyValueName);
                                 rela.ActionStatus = epd.ActionStatus;
                                 RelationList.Add(rela);
                             }
                         }
                         else
                         {
-                            tb_Prod_Attr_Relation rela = SKUDetailToRelateion(item as Eav_ProdDetails, prodpropValueList, epd.GroupName);
+                            tb_Prod_Attr_Relation rela = SKUDetailToRelateion(item as tb_ProdDetail, prodpropValueList, epd.GroupName);
                             rela.ActionStatus = epd.ActionStatus;
                             RelationList.Add(rela);
                         }
@@ -528,11 +536,11 @@ namespace RUINORERP.UI.ProductEAV
 
             foreach (var item in removeList)
             {
-                Eav_ProdDetails epd = item as Eav_ProdDetails;
+                tb_ProdDetail epd = item as tb_ProdDetail;
                 foreach (string propertyValueName in epd.GroupName.Split(','))
                 {
                     //关系表中 只保存了 属性及值。
-                    tb_Prod_Attr_Relation rela = SKUDetailToRelateion(item as Eav_ProdDetails, prodpropValueList, propertyValueName);
+                    tb_Prod_Attr_Relation rela = SKUDetailToRelateion(item as tb_ProdDetail, prodpropValueList, propertyValueName);
                     rela.ActionStatus = ActionStatus.删除;
                     RelationList.Add(rela);
                 }
@@ -544,16 +552,16 @@ namespace RUINORERP.UI.ProductEAV
 
 
         //这个方法比较耗时
-        private List<tb_ProdDetail> GetDetailsAndRelations(tb_Prod baseInfo, List<Eav_ProdDetails> removeList)
+        private List<tb_ProdDetail> GetDetailsAndRelations(tb_Prod baseInfo, List<tb_ProdDetail> removeList)
         {
             List<tb_ProdDetail> details = new List<tb_ProdDetail>();
 
 
             foreach (var item in bindingSourceList)
             {
-                if (item is Eav_ProdDetails)
+                if (item is tb_ProdDetail)
                 {
-                    Eav_ProdDetails epd = item as Eav_ProdDetails;
+                    tb_ProdDetail epd = item as tb_ProdDetail;
                     tb_ProdDetail detail = new tb_ProdDetail();
 
                     //为null的不需要，不然会覆盖
@@ -569,14 +577,11 @@ namespace RUINORERP.UI.ProductEAV
                         detail.Modified_by = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID;
                         detail.Modified_at = DateTime.Now;
                     }
-                    if (epd.tb_ProdDetail != null)
+
+                    if (detail.ActionStatus == ActionStatus.无操作 || detail.ActionStatus == ActionStatus.加载)
                     {
-                        detail.ProdBaseID = epd.tb_ProdDetail.ProdBaseID;
-                        if (detail.ActionStatus == ActionStatus.无操作 || detail.ActionStatus == ActionStatus.加载)
-                        {
-                            details.Add(detail);
-                            continue;
-                        }
+                        details.Add(detail);
+                        continue;
                     }
 
                     #region 生成关系
@@ -590,7 +595,7 @@ namespace RUINORERP.UI.ProductEAV
                         {
                             foreach (string propertyValueName in epd.GroupName.Split(','))
                             {
-                                tb_Prod_Attr_Relation rela = SKUDetailToRelateion(item as Eav_ProdDetails, prodpropValueList, propertyValueName);
+                                tb_Prod_Attr_Relation rela = SKUDetailToRelateion(item as tb_ProdDetail, prodpropValueList, propertyValueName);
                                 rela.ActionStatus = epd.ActionStatus;
                                 if (baseInfo.ProdBaseID > 0)
                                 {
@@ -605,7 +610,7 @@ namespace RUINORERP.UI.ProductEAV
                         }
                         else
                         {
-                            tb_Prod_Attr_Relation rela = SKUDetailToRelateion(item as Eav_ProdDetails, prodpropValueList, epd.GroupName);
+                            tb_Prod_Attr_Relation rela = SKUDetailToRelateion(item as tb_ProdDetail, prodpropValueList, epd.GroupName);
                             rela.ActionStatus = epd.ActionStatus;
                             RelationList.Add(rela);
                         }
@@ -644,8 +649,7 @@ namespace RUINORERP.UI.ProductEAV
                 if (item.ProdDetailID > 0)
                 {
                     tb_ProdDetail removeDetail = new tb_ProdDetail();
-                    Eav_ProdDetails epd = item as Eav_ProdDetails;
-                    removeDetail = item.tb_ProdDetail;
+                    removeDetail = MainForm.Instance.mapper.Map<tb_ProdDetail>(item);
                     removeDetail.ActionStatus = ActionStatus.删除;
                     details.Add(removeDetail);
                 }
@@ -658,22 +662,18 @@ namespace RUINORERP.UI.ProductEAV
         /// 得到SKU明细
         /// </summary>
         /// <returns></returns>
-        private List<tb_ProdDetail> GetDetails(List<Eav_ProdDetails> removeList)
+        private List<tb_ProdDetail> GetDetails(List<tb_ProdDetail> removeList)
         {
             List<tb_ProdDetail> details = new List<tb_ProdDetail>();
             foreach (var item in bindingSourceList)
             {
-                if (item is Eav_ProdDetails)
+                if (item is tb_ProdDetail)
                 {
                     tb_ProdDetail detail = new tb_ProdDetail();
-                    Eav_ProdDetails epd = item as Eav_ProdDetails;
+                    tb_ProdDetail epd = item as tb_ProdDetail;
 
                     //为null的不需要，不然会覆盖
                     detail = MainForm.Instance.mapper.Map<tb_ProdDetail>(epd);
-                    if (epd.tb_ProdDetail != null)
-                    {
-                        detail.ProdBaseID = epd.tb_ProdDetail.ProdBaseID;
-                    }
                     details.Add(detail);
                 }
             }
@@ -681,10 +681,9 @@ namespace RUINORERP.UI.ProductEAV
             //多属性才可能被删除一些明细
             foreach (var item in removeList)
             {
-                Eav_ProdDetails epd = item as Eav_ProdDetails;
-                //关系表中 只保存了 属性及值。
-                throw new Exception("完善删除逻辑");
-                //details.Add(rela);
+                tb_ProdDetail epd = item as tb_ProdDetail;
+                epd.ActionStatus = ActionStatus.删除;
+                details.Add(epd);
             }
             return details;
         }
@@ -696,7 +695,7 @@ namespace RUINORERP.UI.ProductEAV
         /// <param name="prodPropertyValues"></param>
         /// <param name="propertyValueName"></param>
         /// <returns></returns>
-        private tb_Prod_Attr_Relation SKUDetailToRelateion(Eav_ProdDetails item, List<tb_ProdPropertyValue> prodPropertyValues, string propertyValueName)
+        private tb_Prod_Attr_Relation SKUDetailToRelateion(tb_ProdDetail item, List<tb_ProdPropertyValue> prodPropertyValues, string propertyValueName)
         {
             tb_Prod_Attr_Relation rela = new tb_Prod_Attr_Relation();
 
@@ -887,11 +886,11 @@ namespace RUINORERP.UI.ProductEAV
 
                                     if (dataGridView1.Rows.Count == 0)
                                     {
-                                        BindToSkulistGrid(new List<Eav_ProdDetails>());
+                                        BindToSkulistGrid(new List<tb_ProdDetail>());
                                     }
                                     if (EditEntity.ActionStatus != ActionStatus.加载)
                                     {
-                                        Eav_ProdDetails ppg = new Eav_ProdDetails();
+                                        tb_ProdDetail ppg = new tb_ProdDetail();
                                         ppg.GroupName = "";
                                         if (EditEntity.Category_ID.HasValue)
                                         {
@@ -942,7 +941,7 @@ namespace RUINORERP.UI.ProductEAV
 
             if (EditEntity.ProdBaseID == 0)
             {
-               // _EditEntity.PropertyType = 1;// cmbPropertyType   1为单属性
+                // _EditEntity.PropertyType = 1;// cmbPropertyType   1为单属性
             }
 
 
@@ -1359,7 +1358,7 @@ namespace RUINORERP.UI.ProductEAV
             if (dataGridView1.Rows.Count == 0)
             {
                 //先绑一个空的架构
-                BindToSkulistGrid(new List<Eav_ProdDetails>());
+                BindToSkulistGrid(new List<tb_ProdDetail>());
                 bindingSourceList.ListChanged += BindingSourceList_ListChanged;
             }
             //显示表格内容 根据sku更新
@@ -1492,13 +1491,13 @@ namespace RUINORERP.UI.ProductEAV
 
         private void BindingSourceList_ListChanged(object sender, ListChangedEventArgs e)
         {
-            Eav_ProdDetails entity = new Eav_ProdDetails();
+            tb_ProdDetail entity = new tb_ProdDetail();
             switch (e.ListChangedType)
             {
                 case ListChangedType.Reset:
                     break;
                 case ListChangedType.ItemAdded:
-                    entity = bindingSourceList.List[e.NewIndex] as Eav_ProdDetails;
+                    entity = bindingSourceList.List[e.NewIndex] as tb_ProdDetail;
                     if (entity.ActionStatus != ActionStatus.加载)
                     {
                         entity.ActionStatus = ActionStatus.新增;
@@ -1507,14 +1506,14 @@ namespace RUINORERP.UI.ProductEAV
                 case ListChangedType.ItemDeleted:
                     if (e.NewIndex < bindingSourceList.Count)
                     {
-                        entity = bindingSourceList.List[e.NewIndex] as Eav_ProdDetails;
+                        entity = bindingSourceList.List[e.NewIndex] as tb_ProdDetail;
                         entity.ActionStatus = ActionStatus.删除;
                     }
                     break;
                 case ListChangedType.ItemMoved:
                     break;
                 case ListChangedType.ItemChanged:
-                    entity = bindingSourceList.List[e.NewIndex] as Eav_ProdDetails;
+                    entity = bindingSourceList.List[e.NewIndex] as tb_ProdDetail;
                     if (entity.ActionStatus == ActionStatus.无操作)
                     {
                         entity.ActionStatus = ActionStatus.修改;
@@ -1549,10 +1548,10 @@ namespace RUINORERP.UI.ProductEAV
         {
             bool isMultProperty = false;
             List<tb_Prod_Attr_Relation> relations = entityProdBase.tb_Prod_Attr_Relations;
-            List<Eav_ProdDetails> propGroups = new List<Eav_ProdDetails>();
-            if (bindingSourceList.DataSource is List<Eav_ProdDetails>)
+            List<tb_ProdDetail> propGroups = new List<tb_ProdDetail>();
+            if (bindingSourceList.DataSource is List<tb_ProdDetail>)
             {
-                propGroups = bindingSourceList.DataSource as List<Eav_ProdDetails>;
+                propGroups = bindingSourceList.DataSource as List<tb_ProdDetail>;
             }
 
             //为了显示属性值中文
@@ -1581,11 +1580,9 @@ namespace RUINORERP.UI.ProductEAV
                     isMultProperty = true;
                 }
 
-                //明细转为中间数据视图
-                Eav_ProdDetails ppg = MainForm.Instance.mapper.Map<Eav_ProdDetails>(detail);
+                //使用现有的tb_ProdDetail对象，添加GroupName临时字段
+                tb_ProdDetail ppg = MainForm.Instance.mapper.Map<tb_ProdDetail>(detail);
                 ppg.GroupName = groupName;
-                ppg.tb_Prod_Attr_Relations = pars;//暂存
-                ppg.tb_ProdDetail = detail;//暂存
                 bindingSourceList.Add(ppg);
                 ppg.ActionStatus = ActionStatus.加载;
             }
@@ -1657,7 +1654,7 @@ namespace RUINORERP.UI.ProductEAV
             }
             if (dataGridView1.Rows.Count == 0)
             {
-                BindToSkulistGrid(new List<Eav_ProdDetails>());
+                BindToSkulistGrid(new List<tb_ProdDetail>());
             }
 
 
@@ -1776,7 +1773,7 @@ namespace RUINORERP.UI.ProductEAV
             }
         }
 
-        private void BindToSkulistGrid(List<Eav_ProdDetails> propGroups)
+        private void BindToSkulistGrid(List<tb_ProdDetail> propGroups)
         {
             //ucskulist.dataGridView1.RowHeadersVisible = false;
             //ucskulist.bindingSourceList.DataSource = propGroups;
@@ -1786,7 +1783,6 @@ namespace RUINORERP.UI.ProductEAV
             dataGridView1.RowHeadersVisible = false;
             bindingSourceList.DataSource = propGroups;
             dataGridView1.DataSource = bindingSourceList;
-            //dataGridView1.ColumnDisplayControl(ucskulist.FieldNameList);?????
 
         }
 
@@ -1839,10 +1835,10 @@ namespace RUINORERP.UI.ProductEAV
 
         private async void CreateSKUList()
         {
-            List<Eav_ProdDetails> propGroups = new List<Eav_ProdDetails>();
-            if (bindingSourceList.DataSource is List<Eav_ProdDetails>)
+            List<tb_ProdDetail> propGroups = new List<tb_ProdDetail>();
+            if (bindingSourceList.DataSource is List<tb_ProdDetail>)
             {
-                propGroups = bindingSourceList.DataSource as List<Eav_ProdDetails>;
+                propGroups = bindingSourceList.DataSource as List<tb_ProdDetail>;
             }
             // 从依赖注入容器中获取服务实例
             var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
@@ -1856,7 +1852,7 @@ namespace RUINORERP.UI.ProductEAV
             //参考凯旋游戏中的 差集合等处理再加上排序
             //按组合先后排序？
             List<string> oldMix = new List<string>();
-            foreach (Eav_ProdDetails epd in propGroups)
+            foreach (tb_ProdDetail epd in propGroups)
             {
                 oldMix.Add(epd.GroupName);
             }
@@ -1868,7 +1864,7 @@ namespace RUINORERP.UI.ProductEAV
                 foreach (var old in oldMix)
                 {
                     //更新删除
-                    Eav_ProdDetails ep = propGroups.Cast<Eav_ProdDetails>().FirstOrDefault(w => w.GroupName == old.Trim());
+                    tb_ProdDetail ep = propGroups.FirstOrDefault(w => w.GroupName == old.Trim());
                     bindingSourceList.Remove(ep);
                     //将删除的sku行 暂时加入一个临时列表中
                     removeSkuList.Add(ep);
@@ -1876,7 +1872,7 @@ namespace RUINORERP.UI.ProductEAV
                 //添加新的
                 foreach (var newItem in newMix)
                 {
-                    Eav_ProdDetails ppg = new Eav_ProdDetails();
+                    tb_ProdDetail ppg = new tb_ProdDetail();
                     ppg.GroupName = newItem;
                     ppg.SKU = await bizCodeService.GenerateProductRelatedCodeAsync(BaseInfoType.SKU_No, EditEntity);
                     if (MainForm.Instance.AppContext.SysConfig.UseBarCode)
@@ -1898,7 +1894,7 @@ namespace RUINORERP.UI.ProductEAV
                     foreach (var item in Item差集)
                     {
                         //更新删除
-                        Eav_ProdDetails ep = propGroups.Cast<Eav_ProdDetails>().FirstOrDefault(w => w.GroupName == item.Trim());
+                        tb_ProdDetail ep = propGroups.FirstOrDefault(w => w.GroupName == item.Trim());
                         bindingSourceList.Remove(ep);
                         //将删除的sku行 暂时加入一个临时列表中
                         removeSkuList.Add(ep);
@@ -1909,7 +1905,7 @@ namespace RUINORERP.UI.ProductEAV
                     var Item差集 = newMix.Except(oldMix);
                     foreach (var item in Item差集)
                     {
-                        Eav_ProdDetails ppg = new Eav_ProdDetails();
+                        tb_ProdDetail ppg = new tb_ProdDetail();
                         ppg.GroupName = item;
                         ppg.SKU = ClientBizCodeService.GetBaseInfoNo(BaseInfoType.SKU_No);
                         bindingSourceList.Add(ppg);
@@ -1921,7 +1917,7 @@ namespace RUINORERP.UI.ProductEAV
         }
 
 
- 
+
 
         private void btnClear_Click(object sender, EventArgs e)
         {
@@ -2066,14 +2062,6 @@ namespace RUINORERP.UI.ProductEAV
         /// </summary>
         public static ConcurrentDictionary<string, string> FKValueColNameTableNameList = new ConcurrentDictionary<string, string>();
 
-
-
-        /// <summary>
-        /// 用来保存外键表名与外键主键列名  通过这个打到对应的名称。
-        /// </summary>
-        // public static ConcurrentDictionary<string, string> FKValueColNameTableNameList = new ConcurrentDictionary<string, string>();
-
-
         public void SetBaseValue<T>()
         {
             string tableName = typeof(T).Name;
@@ -2099,6 +2087,25 @@ namespace RUINORERP.UI.ProductEAV
             //重构？
             dataGridView1.XmlFileName = tableName;
             this.dataGridView1.FieldNameList = UIHelper.GetFieldNameColList(typeof(T));
+
+            HashSet<string> InvisibleCols = new HashSet<string>();
+
+            List<Expression<Func<tb_ProdDetail, object>>> ExpInvisibleCols = new List<Expression<Func<tb_ProdDetail, object>>>();
+            ExpInvisibleCols.Add(c => c.ProdBaseID);
+            ExpInvisibleCols.Add(c => c.ProdDetailID);
+            //如果不启用条码。则不显示
+            if (!MainForm.Instance.AppContext.SysConfig.UseBarCode)
+            {
+                ExpInvisibleCols.Add(c => c.BarCode);
+            }
+
+            InvisibleCols = RuinorExpressionHelper.ExpressionListToHashSet(ExpInvisibleCols);
+            foreach (var item in InvisibleCols)
+            {
+                KeyValuePair<string, bool> kv = new KeyValuePair<string, bool>();
+                dataGridView1.FieldNameList.TryRemove(item, out kv);
+            }
+            dataGridView1.BizInvisibleCols = InvisibleCols;
         }
 
 
@@ -2112,77 +2119,15 @@ namespace RUINORERP.UI.ProductEAV
         public ConcurrentDictionary<string, List<KeyValuePair<object, string>>> ColNameDataDictionary { get => _DataDictionary; set => _DataDictionary = value; }
 
 
- 
-
-        private void DataGridView1_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
-        {
-            if (e.Value == null)
-            {
-                e.Value = "";
-                return;
-            }
-
-            //图片特殊处理 在最先处理
-            if (dataGridView1.Columns[e.ColumnIndex].Name == "Image" || e.Value.GetType().Name == "Byte[]")
-            {
-                if (e.Value != null)
-                {
-                    if (((byte[])e.Value).Length == 0)
-                    {
-                        e.Value = null;
-                        return;
-                    }
-                    System.IO.MemoryStream buf = new System.IO.MemoryStream((byte[])e.Value);
-                    Image image = Image.FromStream(buf, true);
-                    e.Value = image;
-                    //这里用缓存
-                    return;
-                }
-            }
-
-
-
-            //固定字典值显示
-            string colDbName = dataGridView1.Columns[e.ColumnIndex].Name;
-            if (ColNameDataDictionary.ContainsKey(colDbName))
-            {
-                List<KeyValuePair<object, string>> kvlist = new List<KeyValuePair<object, string>>();
-                //意思是通过列名找，再通过值找到对应的文本
-                ColNameDataDictionary.TryGetValue(colDbName, out kvlist);
-                if (kvlist != null)
-                {
-                    KeyValuePair<object, string> kv = kvlist.FirstOrDefault(t => t.Key.ToString().ToLower() == e.Value.ToString().ToLower());
-                    if (kv.Value != null)
-                    {
-                        e.Value = kv.Value;
-                    }
-
-                }
-            }
-
-
-
-            //动态字典值显示
-            string colName = UIHelper.ShowGridColumnsNameValue<tb_ProdDetail>(colDbName, e.Value);
-            if (!string.IsNullOrEmpty(colName))
-            {
-                e.Value = colName;
-            }
-
-
-        }
-
-
-
         private void BindingSourceList_ListChangedSku(object sender, ListChangedEventArgs e)
         {
-            Eav_ProdDetails entity = new Eav_ProdDetails();
+            tb_ProdDetail entity = new tb_ProdDetail();
             switch (e.ListChangedType)
             {
                 case ListChangedType.Reset:
                     break;
                 case ListChangedType.ItemAdded:
-                    entity = bindingSourceList.List[e.NewIndex] as Eav_ProdDetails;
+                    entity = bindingSourceList.List[e.NewIndex] as tb_ProdDetail;
                     if (entity.ActionStatus != ActionStatus.加载)
                     {
                         entity.ActionStatus = ActionStatus.新增;
@@ -2191,14 +2136,14 @@ namespace RUINORERP.UI.ProductEAV
                 case ListChangedType.ItemDeleted:
                     if (e.NewIndex < bindingSourceList.Count)
                     {
-                        entity = bindingSourceList.List[e.NewIndex] as Eav_ProdDetails;
+                        entity = bindingSourceList.List[e.NewIndex] as tb_ProdDetail;
                         entity.ActionStatus = ActionStatus.删除;
                     }
                     break;
                 case ListChangedType.ItemMoved:
                     break;
                 case ListChangedType.ItemChanged:
-                    entity = bindingSourceList.List[e.NewIndex] as Eav_ProdDetails;
+                    entity = bindingSourceList.List[e.NewIndex] as tb_ProdDetail;
                     if (entity.ActionStatus == ActionStatus.无操作)
                     {
                         entity.ActionStatus = ActionStatus.修改;
@@ -2311,6 +2256,9 @@ namespace RUINORERP.UI.ProductEAV
             ListDataSoure = bindingSourceList;
 
             this.dataGridView1.DataSource = ListDataSoure.DataSource;
+
+
+
         }
 
 

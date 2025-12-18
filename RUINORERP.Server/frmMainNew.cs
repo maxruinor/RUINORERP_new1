@@ -1392,7 +1392,22 @@ namespace RUINORERP.Server
                 // 发生错误时重新激活启动按钮
                 SetServerButtonsEnabled(true, false);
 
-                MessageBox.Show($"启动服务器时发生错误: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                // 显示更友好的错误消息，特别是端口占用情况
+                string errorMessage = ex.Message;
+                string errorTitle = "错误";
+                
+                // 检查是否是端口占用错误，提供更友好的显示
+                if (ex.Message.Contains("端口已被占用") || ex.Message.Contains("端口") && ex.Message.Contains("占用"))
+                {
+                    errorTitle = "端口占用错误";
+                    // 端口占用错误已经包含详细解决方案，直接显示
+                }
+                else if (ex is InvalidOperationException)
+                {
+                    errorTitle = "配置错误";
+                }
+                
+                MessageBox.Show(errorMessage, errorTitle, MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 

@@ -181,6 +181,11 @@ namespace RUINORERP.UI.Network
         public event Action HeartbeatFailureThresholdReached;
 
         /// <summary>
+        /// 本地备用重连失败事件，当_clientEventManager失败时使用
+        /// </summary>
+        private event Action _fallbackReconnectFailed;
+
+        /// <summary>
         /// 最后一次心跳时间
         /// </summary>
         public DateTime LastHeartbeatTime => _lastHeartbeatTime;
@@ -348,11 +353,29 @@ namespace RUINORERP.UI.Network
                     _isReconnecting = false;
                 }
                 
-                // 触发客户端事件管理器的重连失败事件
-                _clientEventManager.OnReconnectFailed();
-                
                 // 清空队列中的待处理命令，避免长时间等待
                 ClearQueue("重连失败");
+                
+                // 触发客户端事件管理器的重连失败事件，添加容错处理
+                try
+                {
+                    _clientEventManager.OnReconnectFailed();
+                }
+                catch (Exception ex)
+                {
+                    _logger?.LogError(ex, "触发客户端事件管理器重连失败事件时发生异常");
+                    
+                    // 如果事件管理器失败，直接触发本地事件作为备用方案
+                     try
+                     {
+                         _logger?.LogWarning("事件管理器失败，尝试触发本地备用重连失败事件");
+                         _fallbackReconnectFailed?.Invoke();
+                     }
+                     catch (Exception fallbackEx)
+                     {
+                         _logger?.LogError(fallbackEx, "备用重连失败事件触发也失败");
+                     }
+                }
             }
             catch (Exception ex)
             {
@@ -523,7 +546,16 @@ namespace RUINORERP.UI.Network
                     lock (_heartbeatLock)
                     {
                         _heartbeatFailedAttempts++;
+                        
+                        // 触发失败事件
                         HeartbeatFailed?.Invoke(_heartbeatFailedAttempts);
+                        
+                        // 检查是否达到心跳失败阈值
+                        if (_heartbeatFailedAttempts >= HEARTBEAT_FAILURE_THRESHOLD)
+                        {
+                            _logger?.LogError("心跳失败达到阈值({Threshold})，触发锁定事件", HEARTBEAT_FAILURE_THRESHOLD);
+                            HeartbeatFailureThresholdReached?.Invoke();
+                        }
                     }
                 }
 
@@ -543,9 +575,9 @@ namespace RUINORERP.UI.Network
                 // 检查是否有有效的Session ID
                 if (string.IsNullOrEmpty(MainForm.Instance.AppContext.SessionId))
                 {
-                    // 未登录状态，不发送心跳
+                    // 未登录状态，不发送心跳，但不返回true，让心跳失败计数器正常工作
                     _logger?.LogDebug("未登录状态，跳过心跳发送");
-                    return true; // 返回true避免触发失败计数
+                    return false; // 修改：返回false以触发失败计数，确保心跳失败阈值机制正常工作
                 }
 
                 var heartbeatRequest = new HeartbeatRequest();
@@ -702,8 +734,16 @@ namespace RUINORERP.UI.Network
         /// </summary>
         public event Action ReconnectFailed
         {
-            add => _clientEventManager.ReconnectFailed += value;
-            remove => _clientEventManager.ReconnectFailed -= value;
+            add 
+            { 
+                _clientEventManager.ReconnectFailed += value;
+                _fallbackReconnectFailed += value; // 同时订阅备用事件
+            }
+            remove 
+            { 
+                _clientEventManager.ReconnectFailed -= value;
+                _fallbackReconnectFailed -= value; // 同时取消订阅备用事件
+            }
         }
 
         /// <summary>

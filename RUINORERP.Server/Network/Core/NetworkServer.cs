@@ -133,9 +133,15 @@ namespace RUINORERP.Server.Network.Core
                 {
                     if (await IsPortInUseAsync(port))
                     {
-                        // 端口被占用时抛出异常，以便UI层捕获并显示错误信息
-                        var errorMessage = GetPortInUseErrorMessage(port);
-                        HandlePortAlreadyInUse(port);
+                        // 端口被占用时创建详细错误信息并抛出异常
+                        var errorMessage = BuildPortOccupiedMessage(port);
+                        LogError(errorMessage);
+                        
+                        // 同时在控制台显示彩色错误信息
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.WriteLine(errorMessage);
+                        Console.ResetColor();
+                        
                         throw new InvalidOperationException(errorMessage);
                     }
                 }
@@ -315,23 +321,29 @@ namespace RUINORERP.Server.Network.Core
             }
             catch (Exception ex)
             {
-                // 检查是否是端口占用异常
-                if (IsPortOccupiedException(ex))
-                {
-                    HandlePortOccupiedException(ex);
-                }
-                else
-                {
-                    LogError($"启动服务器失败: {ex.Message}", ex);
-                }
-
                 // 确保在启动失败时清理资源
                 if (_host != null)
                 {
                     _host.Dispose();
                     _host = null;
                 }
-                return null;
+
+                // 检查是否是端口占用异常
+                if (IsPortOccupiedException(ex))
+                {
+                    // 处理端口占用异常，记录详细信息
+                    HandlePortOccupiedException(ex);
+                    
+                    // 创建包含详细解决方案的异常并向上抛出
+                    var detailedErrorMessage = GetPortOccupiedDetailedMessage(ex);
+                    throw new InvalidOperationException(detailedErrorMessage, ex);
+                }
+                else
+                {
+                    LogError($"启动服务器失败: {ex.Message}", ex);
+                    // 对于其他类型的异常，也向上抛出，以便主窗体能够处理
+                    throw;
+                }
             }
         }
 
@@ -606,49 +618,53 @@ namespace RUINORERP.Server.Network.Core
             }
         }
 
+
+
+
+
         /// <summary>
-        /// 获取端口被占用的错误信息
+        /// 生成端口占用的详细错误信息
         /// </summary>
         /// <param name="port">被占用的端口号</param>
-        /// <returns>错误信息</returns>
-        private string GetPortInUseErrorMessage(int port)
+        /// <param name="originalError">原始错误信息（可选）</param>
+        /// <returns>包含详细解决方案的错误信息</returns>
+        private string BuildPortOccupiedMessage(int port, string originalError = null)
         {
-            return $"端口 {port} 已被占用，请检查端口占用情况或修改配置文件中的端口设置。";
+            var message = new System.Text.StringBuilder();
+            message.AppendLine("==========================================");
+            message.AppendLine("端口已被占用！\n");
+                    
+            if (!string.IsNullOrEmpty(originalError))
+            {
+                message.AppendLine($"错误信息: {originalError}");
+            }
+                    
+            message.AppendLine($"当前尝试使用的端口: {port}\n");
+            message.AppendLine("解决方案:");
+            message.AppendLine("1. 检查端口占用情况:");
+            message.AppendLine($"   netstat -ano | findstr :{port}\n");
+            message.AppendLine("2. 查看占用端口的进程:");
+            message.AppendLine($"   for /f \"tokens=5\" %a in ('netstat -ano ^| findstr :{port}') do tasklist | findstr %a\n");
+            message.AppendLine("3. 终止占用端口的进程(可选):");
+            message.AppendLine("   taskkill /PID [进程ID] /F\n");
+            message.AppendLine("4. 或者修改配置文件中的端口设置:");
+            message.AppendLine("   配置文件路径: RUINORERP.Server/appsettings.json");
+            message.AppendLine($"   当前使用端口: {port}\n");
+            message.AppendLine("5. 重启应用程序");
+            message.Append("==========================================");
+                    
+            return message.ToString();
         }
-
+        
         /// <summary>
-        /// 处理端口已被占用的情况，提供友好的错误信息和解决方案
+        /// 获取端口占用的详细错误信息，用于向上抛出异常
         /// </summary>
-        /// <param name="port">被占用的端口号</param>
-        private void HandlePortAlreadyInUse(int port)
+        /// <param name="ex">原始异常</param>
+        /// <returns>包含详细解决方案的错误信息</returns>
+        private string GetPortOccupiedDetailedMessage(Exception ex)
         {
-            var errorMessage = $"=========================================\n";
-            errorMessage += "端口已被占用！\n\n";
-            errorMessage += $"当前尝试使用的端口: {port}\n\n";
-
-            errorMessage += "解决方案:\n";
-            errorMessage += "1. 检查端口占用情况:\n";
-            errorMessage += $"   netstat -ano | findstr :{port}\n\n";
-
-            errorMessage += "2. 查看占用端口的进程:\n";
-            errorMessage += $"   for /f \"tokens=5\" %a in ('netstat -ano ^| findstr :{port}') do tasklist | findstr %a\n\n";
-
-            errorMessage += "3. 终止占用端口的进程(可选):\n";
-            errorMessage += $"   taskkill /PID [进程ID] /F\n\n";
-
-            errorMessage += "4. 或者修改配置文件中的端口设置:\n";
-            errorMessage += "   配置文件路径: RUINORERP.Server/appsettings.json\n";
-            errorMessage += $"   当前使用端口: {port}\n\n";
-
-            errorMessage += "5. 重启应用程序\n";
-            errorMessage += "=========================================";
-
-            LogError(errorMessage);
-
-            // 同时在控制台显示彩色错误信息
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine(errorMessage);
-            Console.ResetColor();
+            return "=========================================="  + Environment.NewLine +
+                   "服务器启动失败：" + BuildPortOccupiedMessage(Serverport, ex.Message);
         }
 
         /// <summary>
@@ -686,30 +702,11 @@ namespace RUINORERP.Server.Network.Core
         /// <param name="ex">异常对象</param>
         private void HandlePortOccupiedException(Exception ex)
         {
-            var errorMessage = $"=========================================\n";
-            errorMessage += "服务器启动失败：端口已被占用！\n\n";
-            errorMessage += $"错误信息: {ex.Message}\n";
-            errorMessage += $"当前尝试使用的端口: {Serverport}\n\n";
-
-            errorMessage += "解决方案:\n";
-            errorMessage += "1. 检查端口占用情况:\n";
-            errorMessage += $"   netstat -ano | findstr :{Serverport}\n\n";
-
-            errorMessage += "2. 查看占用端口的进程:\n";
-            errorMessage += $"   for /f \"tokens=5\" %a in ('netstat -ano ^| findstr :{Serverport}') do tasklist | findstr %a\n\n";
-
-            errorMessage += "3. 终止占用端口的进程(可选):\n";
-            errorMessage += $"   taskkill /PID [进程ID] /F\n\n";
-
-            errorMessage += "4. 或者修改配置文件中的端口设置:\n";
-            errorMessage += "   配置文件路径: RUINORERP.Server/appsettings.json\n";
-            errorMessage += $"   当前使用端口: {Serverport}\n\n";
-
-            errorMessage += "5. 重启应用程序\n";
-            errorMessage += "=========================================";
-
+            var errorMessage = "=========================================="  + Environment.NewLine +
+                               "服务器启动失败：" + BuildPortOccupiedMessage(Serverport, ex.Message);
+        
             LogError(errorMessage);
-
+        
             // 同时在控制台显示彩色错误信息
             Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine(errorMessage);

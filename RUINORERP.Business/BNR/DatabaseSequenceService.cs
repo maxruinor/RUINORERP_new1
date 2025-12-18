@@ -157,10 +157,12 @@ namespace RUINORERP.Business.BNR
                     return;
                 
                 List<SequenceUpdateInfo> batchUpdates = new List<SequenceUpdateInfo>();
+                bool transactionStarted = false;
                 
                 try
                 {
                     _sqlSugarClient.Ado.BeginTran();
+                    transactionStarted = true;
                     
                     int count = 0;
                     
@@ -172,7 +174,11 @@ namespace RUINORERP.Business.BNR
                     }
                     
                     if (batchUpdates.Count == 0)
+                    {
+                        // 如果没有更新项，回滚事务并返回
+                        _sqlSugarClient.Ado.RollbackTran();
                         return;
+                    }
                     
                     // 批量处理更新
                     foreach (var update in batchUpdates)
@@ -217,14 +223,29 @@ namespace RUINORERP.Business.BNR
                         }
                     }
                     
-                    _sqlSugarClient.Ado.CommitTran();
-                    _lastFlushTime = DateTime.Now;
-                    
-                    Console.WriteLine($"成功将 {batchUpdates.Count} 个序列值刷新到数据库");
+                    // 只有在事务已启动且没有异常的情况下才提交
+                    if (transactionStarted)
+                    {
+                        _sqlSugarClient.Ado.CommitTran();
+                        _lastFlushTime = DateTime.Now;
+                        Console.WriteLine($"成功将 {batchUpdates.Count} 个序列值刷新到数据库");
+                    }
                 }
                 catch (Exception ex)
                 {
-                    _sqlSugarClient.Ado.RollbackTran();
+                    // 只有在事务已启动的情况下才回滚
+                    if (transactionStarted)
+                    {
+                        try
+                        {
+                            _sqlSugarClient.Ado.RollbackTran();
+                        }
+                        catch (Exception rollbackEx)
+                        {
+                            Console.WriteLine($"回滚事务时发生异常: {rollbackEx.Message}");
+                        }
+                    }
+                    
                     Console.WriteLine($"刷新序列值到数据库失败: {ex.Message}");
                     
                     // 重新入队失败的更新（简化处理）
@@ -369,9 +390,12 @@ namespace RUINORERP.Business.BNR
         {
             EnsureTableStructure();
             
+            bool transactionStarted = false;
+            
             try
             {
                 _sqlSugarClient.Ado.BeginTran();
+                transactionStarted = true;
                 
                 var sequence = _sqlSugarClient.Queryable<SequenceNumbers>()
                     .Where(s => s.SequenceKey == sequenceKey)
@@ -401,11 +425,27 @@ namespace RUINORERP.Business.BNR
                     _sqlSugarClient.Insertable(newSequence).ExecuteCommand();
                 }
                 
-                _sqlSugarClient.Ado.CommitTran();
+                // 只有在事务已启动且没有异常的情况下才提交
+                if (transactionStarted)
+                {
+                    _sqlSugarClient.Ado.CommitTran();
+                }
             }
             catch (Exception ex)
             {
-                _sqlSugarClient.Ado.RollbackTran();
+                // 只有在事务已启动的情况下才回滚
+                if (transactionStarted)
+                {
+                    try
+                    {
+                        _sqlSugarClient.Ado.RollbackTran();
+                    }
+                    catch (Exception rollbackEx)
+                    {
+                        Console.WriteLine($"回滚事务时发生异常: {rollbackEx.Message}");
+                    }
+                }
+                
                 Console.WriteLine($"更新序列值失败: {ex.Message}");
                 throw;
             }
@@ -533,9 +573,12 @@ namespace RUINORERP.Business.BNR
         {
             EnsureTableStructure();
             
+            bool transactionStarted = false;
+            
             try
             {
                 _sqlSugarClient.Ado.BeginTran();
+                transactionStarted = true;
                 
                 // 查找所有匹配的序列记录（包括动态键）
                 var sequences = _sqlSugarClient.Queryable<SequenceNumbers>()
@@ -554,11 +597,27 @@ namespace RUINORERP.Business.BNR
                     _sqlSugarClient.Updateable(sequence).ExecuteCommand();
                 }
                 
-                _sqlSugarClient.Ado.CommitTran();
+                // 只有在事务已启动且没有异常的情况下才提交
+                if (transactionStarted)
+                {
+                    _sqlSugarClient.Ado.CommitTran();
+                }
             }
             catch (Exception ex)
             {
-                _sqlSugarClient.Ado.RollbackTran();
+                // 只有在事务已启动的情况下才回滚
+                if (transactionStarted)
+                {
+                    try
+                    {
+                        _sqlSugarClient.Ado.RollbackTran();
+                    }
+                    catch (Exception rollbackEx)
+                    {
+                        Console.WriteLine($"回滚事务时发生异常: {rollbackEx.Message}");
+                    }
+                }
+                
                 Console.WriteLine($"重置序列失败: {ex.Message}");
                 throw;
             }
@@ -621,9 +680,12 @@ namespace RUINORERP.Business.BNR
         {
             EnsureTableStructure();
             
+            bool transactionStarted = false;
+            
             try
             {
                 _sqlSugarClient.Ado.BeginTran();
+                transactionStarted = true;
                 
                 var sequence = _sqlSugarClient.Queryable<SequenceNumbers>()
                     .Where(s => s.SequenceKey == key)
@@ -650,11 +712,28 @@ namespace RUINORERP.Business.BNR
                 sequence.LastUpdated = DateTime.Now;
                 
                 _sqlSugarClient.Updateable(sequence).ExecuteCommand();
-                _sqlSugarClient.Ado.CommitTran();
+                
+                // 只有在事务已启动且没有异常的情况下才提交
+                if (transactionStarted)
+                {
+                    _sqlSugarClient.Ado.CommitTran();
+                }
             }
             catch (Exception ex)
             {
-                _sqlSugarClient.Ado.RollbackTran();
+                // 只有在事务已启动的情况下才回滚
+                if (transactionStarted)
+                {
+                    try
+                    {
+                        _sqlSugarClient.Ado.RollbackTran();
+                    }
+                    catch (Exception rollbackEx)
+                    {
+                        Console.WriteLine($"回滚事务时发生异常: {rollbackEx.Message}");
+                    }
+                }
+                
                 Console.WriteLine($"更新序列信息失败: {ex.Message}");
                 throw;
             }
@@ -670,9 +749,12 @@ namespace RUINORERP.Business.BNR
         {
             EnsureTableStructure();
             
+            bool transactionStarted = false;
+            
             try
             {
                 _sqlSugarClient.Ado.BeginTran();
+                transactionStarted = true;
                 
                 var sequence = _sqlSugarClient.Queryable<SequenceNumbers>()
                     .Where(s => s.SequenceKey == key)
@@ -702,11 +784,27 @@ namespace RUINORERP.Business.BNR
                     _sqlSugarClient.Insertable(newSequence).ExecuteCommand();
                 }
                 
-                _sqlSugarClient.Ado.CommitTran();
+                // 只有在事务已启动且没有异常的情况下才提交
+                if (transactionStarted)
+                {
+                    _sqlSugarClient.Ado.CommitTran();
+                }
             }
             catch (Exception ex)
             {
-                _sqlSugarClient.Ado.RollbackTran();
+                // 只有在事务已启动的情况下才回滚
+                if (transactionStarted)
+                {
+                    try
+                    {
+                        _sqlSugarClient.Ado.RollbackTran();
+                    }
+                    catch (Exception rollbackEx)
+                    {
+                        Console.WriteLine($"回滚事务时发生异常: {rollbackEx.Message}");
+                    }
+                }
+                
                 Console.WriteLine($"重置序列值失败: {ex.Message}");
                 throw;
             }

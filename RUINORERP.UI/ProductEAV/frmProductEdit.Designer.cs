@@ -300,7 +300,7 @@ namespace RUINORERP.UI.ProductEAV
             // 
             // kryptonLabel1
             // 
-            this.kryptonLabel1.Location = new System.Drawing.Point(41, 155);
+            this.kryptonLabel1.Location = new System.Drawing.Point(41, 181);
             this.kryptonLabel1.Name = "kryptonLabel1";
             this.kryptonLabel1.Size = new System.Drawing.Size(62, 20);
             this.kryptonLabel1.TabIndex = 146;
@@ -308,23 +308,23 @@ namespace RUINORERP.UI.ProductEAV
             // 
             // txtVendorModelCode
             // 
-            this.txtVendorModelCode.Location = new System.Drawing.Point(112, 156);
+            this.txtVendorModelCode.Location = new System.Drawing.Point(112, 182);
             this.txtVendorModelCode.Name = "txtVendorModelCode";
-            this.txtVendorModelCode.Size = new System.Drawing.Size(274, 23);
+            this.txtVendorModelCode.Size = new System.Drawing.Size(209, 23);
             this.txtVendorModelCode.TabIndex = 147;
             // 
             // cmbSourceType
             // 
             this.cmbSourceType.DropDownWidth = 100;
             this.cmbSourceType.IntegralHeight = false;
-            this.cmbSourceType.Location = new System.Drawing.Point(449, 278);
+            this.cmbSourceType.Location = new System.Drawing.Point(449, 304);
             this.cmbSourceType.Name = "cmbSourceType";
             this.cmbSourceType.Size = new System.Drawing.Size(189, 21);
             this.cmbSourceType.TabIndex = 145;
             // 
             // lblRack_ID
             // 
-            this.lblRack_ID.Location = new System.Drawing.Point(381, 242);
+            this.lblRack_ID.Location = new System.Drawing.Point(381, 268);
             this.lblRack_ID.Name = "lblRack_ID";
             this.lblRack_ID.Size = new System.Drawing.Size(62, 20);
             this.lblRack_ID.TabIndex = 143;
@@ -334,14 +334,14 @@ namespace RUINORERP.UI.ProductEAV
             // 
             this.cmbRack_ID.DropDownWidth = 100;
             this.cmbRack_ID.IntegralHeight = false;
-            this.cmbRack_ID.Location = new System.Drawing.Point(450, 240);
+            this.cmbRack_ID.Location = new System.Drawing.Point(450, 266);
             this.cmbRack_ID.Name = "cmbRack_ID";
             this.cmbRack_ID.Size = new System.Drawing.Size(189, 21);
             this.cmbRack_ID.TabIndex = 144;
             // 
             // lblDepartmentID
             // 
-            this.lblDepartmentID.Location = new System.Drawing.Point(46, 311);
+            this.lblDepartmentID.Location = new System.Drawing.Point(46, 337);
             this.lblDepartmentID.Name = "lblDepartmentID";
             this.lblDepartmentID.Size = new System.Drawing.Size(62, 20);
             this.lblDepartmentID.TabIndex = 141;
@@ -351,14 +351,14 @@ namespace RUINORERP.UI.ProductEAV
             // 
             this.cmbDepartmentID.DropDownWidth = 100;
             this.cmbDepartmentID.IntegralHeight = false;
-            this.cmbDepartmentID.Location = new System.Drawing.Point(112, 310);
+            this.cmbDepartmentID.Location = new System.Drawing.Point(112, 336);
             this.cmbDepartmentID.Name = "cmbDepartmentID";
             this.cmbDepartmentID.Size = new System.Drawing.Size(205, 21);
             this.cmbDepartmentID.TabIndex = 142;
             // 
             // kryptonLabel4
             // 
-            this.kryptonLabel4.Location = new System.Drawing.Point(381, 280);
+            this.kryptonLabel4.Location = new System.Drawing.Point(381, 306);
             this.kryptonLabel4.Name = "kryptonLabel4";
             this.kryptonLabel4.Size = new System.Drawing.Size(62, 20);
             this.kryptonLabel4.TabIndex = 139;
@@ -366,7 +366,7 @@ namespace RUINORERP.UI.ProductEAV
             // 
             // lblSalePublish
             // 
-            this.lblSalePublish.Location = new System.Drawing.Point(355, 313);
+            this.lblSalePublish.Location = new System.Drawing.Point(366, 336);
             this.lblSalePublish.Name = "lblSalePublish";
             this.lblSalePublish.Size = new System.Drawing.Size(62, 20);
             this.lblSalePublish.TabIndex = 137;
@@ -374,7 +374,7 @@ namespace RUINORERP.UI.ProductEAV
             // 
             // chkSalePublish
             // 
-            this.chkSalePublish.Location = new System.Drawing.Point(422, 317);
+            this.chkSalePublish.Location = new System.Drawing.Point(433, 340);
             this.chkSalePublish.Name = "chkSalePublish";
             this.chkSalePublish.Size = new System.Drawing.Size(19, 13);
             this.chkSalePublish.TabIndex = 138;
@@ -382,7 +382,7 @@ namespace RUINORERP.UI.ProductEAV
             // 
             // lblModel
             // 
-            this.lblModel.Location = new System.Drawing.Point(323, 76);
+            this.lblModel.Location = new System.Drawing.Point(323, 102);
             this.lblModel.Name = "lblModel";
             this.lblModel.Size = new System.Drawing.Size(36, 20);
             this.lblModel.TabIndex = 135;
@@ -390,7 +390,7 @@ namespace RUINORERP.UI.ProductEAV
             // 
             // txtModel
             // 
-            this.txtModel.Location = new System.Drawing.Point(366, 76);
+            this.txtModel.Location = new System.Drawing.Point(366, 102);
             this.txtModel.Name = "txtModel";
             this.txtModel.Size = new System.Drawing.Size(274, 23);
             this.txtModel.TabIndex = 136;
@@ -399,14 +399,14 @@ namespace RUINORERP.UI.ProductEAV
             // 
             this.cmbType_ID.DropDownWidth = 205;
             this.cmbType_ID.IntegralHeight = false;
-            this.cmbType_ID.Location = new System.Drawing.Point(112, 346);
+            this.cmbType_ID.Location = new System.Drawing.Point(112, 9);
             this.cmbType_ID.Name = "cmbType_ID";
-            this.cmbType_ID.Size = new System.Drawing.Size(205, 21);
+            this.cmbType_ID.Size = new System.Drawing.Size(528, 21);
             this.cmbType_ID.TabIndex = 134;
             // 
             // lblType_ID
             // 
-            this.lblType_ID.Location = new System.Drawing.Point(42, 346);
+            this.lblType_ID.Location = new System.Drawing.Point(42, 9);
             this.lblType_ID.Name = "lblType_ID";
             this.lblType_ID.Size = new System.Drawing.Size(62, 20);
             this.lblType_ID.TabIndex = 133;
@@ -414,7 +414,7 @@ namespace RUINORERP.UI.ProductEAV
             // 
             // txtis_available
             // 
-            this.txtis_available.Location = new System.Drawing.Point(608, 317);
+            this.txtis_available.Location = new System.Drawing.Point(624, 340);
             this.txtis_available.Name = "txtis_available";
             this.txtis_available.Size = new System.Drawing.Size(19, 13);
             this.txtis_available.TabIndex = 132;
@@ -422,7 +422,7 @@ namespace RUINORERP.UI.ProductEAV
             // 
             // txtis_enabled
             // 
-            this.txtis_enabled.Location = new System.Drawing.Point(508, 317);
+            this.txtis_enabled.Location = new System.Drawing.Point(520, 340);
             this.txtis_enabled.Name = "txtis_enabled";
             this.txtis_enabled.Size = new System.Drawing.Size(19, 13);
             this.txtis_enabled.TabIndex = 132;
@@ -432,7 +432,7 @@ namespace RUINORERP.UI.ProductEAV
             // 
             this.txtLocation_ID.DropDownWidth = 205;
             this.txtLocation_ID.IntegralHeight = false;
-            this.txtLocation_ID.Location = new System.Drawing.Point(112, 240);
+            this.txtLocation_ID.Location = new System.Drawing.Point(112, 266);
             this.txtLocation_ID.Name = "txtLocation_ID";
             this.txtLocation_ID.Size = new System.Drawing.Size(205, 21);
             this.txtLocation_ID.TabIndex = 130;
@@ -441,7 +441,7 @@ namespace RUINORERP.UI.ProductEAV
             // 
             this.cmbCustomerVendor_ID.DropDownWidth = 482;
             this.cmbCustomerVendor_ID.IntegralHeight = false;
-            this.cmbCustomerVendor_ID.Location = new System.Drawing.Point(112, 203);
+            this.cmbCustomerVendor_ID.Location = new System.Drawing.Point(112, 229);
             this.cmbCustomerVendor_ID.Name = "cmbCustomerVendor_ID";
             this.cmbCustomerVendor_ID.Size = new System.Drawing.Size(528, 21);
             this.cmbCustomerVendor_ID.TabIndex = 129;
@@ -450,7 +450,7 @@ namespace RUINORERP.UI.ProductEAV
             // 
             this.chkAutoCreateProdNo.Checked = true;
             this.chkAutoCreateProdNo.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chkAutoCreateProdNo.Location = new System.Drawing.Point(549, 44);
+            this.chkAutoCreateProdNo.Location = new System.Drawing.Point(549, 70);
             this.chkAutoCreateProdNo.Name = "chkAutoCreateProdNo";
             this.chkAutoCreateProdNo.Size = new System.Drawing.Size(101, 20);
             this.chkAutoCreateProdNo.TabIndex = 128;
@@ -461,15 +461,15 @@ namespace RUINORERP.UI.ProductEAV
             // 
             this.txtUnitID.DropDownWidth = 207;
             this.txtUnitID.IntegralHeight = false;
-            this.txtUnitID.Location = new System.Drawing.Point(450, 155);
+            this.txtUnitID.Location = new System.Drawing.Point(393, 182);
             this.txtUnitID.Name = "txtUnitID";
-            this.txtUnitID.Size = new System.Drawing.Size(190, 21);
+            this.txtUnitID.Size = new System.Drawing.Size(245, 21);
             this.txtUnitID.TabIndex = 127;
             // 
             // txtcategory_ID
             // 
             this.txtcategory_ID.FormattingEnabled = true;
-            this.txtcategory_ID.Location = new System.Drawing.Point(112, 12);
+            this.txtcategory_ID.Location = new System.Drawing.Point(112, 38);
             this.txtcategory_ID.Name = "txtcategory_ID";
             this.txtcategory_ID.Size = new System.Drawing.Size(528, 20);
             this.txtcategory_ID.TabIndex = 126;
@@ -477,14 +477,14 @@ namespace RUINORERP.UI.ProductEAV
             // 
             // txtBrand
             // 
-            this.txtBrand.Location = new System.Drawing.Point(112, 278);
+            this.txtBrand.Location = new System.Drawing.Point(112, 304);
             this.txtBrand.Name = "txtBrand";
             this.txtBrand.Size = new System.Drawing.Size(205, 23);
             this.txtBrand.TabIndex = 123;
             // 
             // lblNo
             // 
-            this.lblNo.Location = new System.Drawing.Point(325, 44);
+            this.lblNo.Location = new System.Drawing.Point(325, 70);
             this.lblNo.Name = "lblNo";
             this.lblNo.Size = new System.Drawing.Size(36, 20);
             this.lblNo.TabIndex = 74;
@@ -492,14 +492,14 @@ namespace RUINORERP.UI.ProductEAV
             // 
             // txtNo
             // 
-            this.txtNo.Location = new System.Drawing.Point(366, 44);
+            this.txtNo.Location = new System.Drawing.Point(366, 70);
             this.txtNo.Name = "txtNo";
             this.txtNo.Size = new System.Drawing.Size(177, 23);
             this.txtNo.TabIndex = 75;
             // 
             // lblBrand
             // 
-            this.lblBrand.Location = new System.Drawing.Point(67, 278);
+            this.lblBrand.Location = new System.Drawing.Point(67, 304);
             this.lblBrand.Name = "lblBrand";
             this.lblBrand.Size = new System.Drawing.Size(36, 20);
             this.lblBrand.TabIndex = 122;
@@ -507,7 +507,7 @@ namespace RUINORERP.UI.ProductEAV
             // 
             // lblName
             // 
-            this.lblName.Location = new System.Drawing.Point(70, 76);
+            this.lblName.Location = new System.Drawing.Point(70, 102);
             this.lblName.Name = "lblName";
             this.lblName.Size = new System.Drawing.Size(36, 20);
             this.lblName.TabIndex = 76;
@@ -515,14 +515,14 @@ namespace RUINORERP.UI.ProductEAV
             // 
             // txtName
             // 
-            this.txtName.Location = new System.Drawing.Point(112, 74);
+            this.txtName.Location = new System.Drawing.Point(112, 100);
             this.txtName.Name = "txtName";
             this.txtName.Size = new System.Drawing.Size(205, 23);
             this.txtName.TabIndex = 77;
             // 
             // lblShortCode
             // 
-            this.lblShortCode.Location = new System.Drawing.Point(57, 44);
+            this.lblShortCode.Location = new System.Drawing.Point(57, 70);
             this.lblShortCode.Name = "lblShortCode";
             this.lblShortCode.Size = new System.Drawing.Size(49, 20);
             this.lblShortCode.TabIndex = 78;
@@ -530,14 +530,14 @@ namespace RUINORERP.UI.ProductEAV
             // 
             // txtShortCode
             // 
-            this.txtShortCode.Location = new System.Drawing.Point(112, 42);
+            this.txtShortCode.Location = new System.Drawing.Point(112, 68);
             this.txtShortCode.Name = "txtShortCode";
             this.txtShortCode.Size = new System.Drawing.Size(205, 23);
             this.txtShortCode.TabIndex = 79;
             // 
             // lblSpecifications
             // 
-            this.lblSpecifications.Location = new System.Drawing.Point(70, 117);
+            this.lblSpecifications.Location = new System.Drawing.Point(70, 143);
             this.lblSpecifications.Name = "lblSpecifications";
             this.lblSpecifications.Size = new System.Drawing.Size(36, 20);
             this.lblSpecifications.TabIndex = 82;
@@ -545,14 +545,14 @@ namespace RUINORERP.UI.ProductEAV
             // 
             // txtSpecifications
             // 
-            this.txtSpecifications.Location = new System.Drawing.Point(112, 115);
+            this.txtSpecifications.Location = new System.Drawing.Point(112, 141);
             this.txtSpecifications.Name = "txtSpecifications";
             this.txtSpecifications.Size = new System.Drawing.Size(528, 23);
             this.txtSpecifications.TabIndex = 83;
             // 
             // lblUnitID
             // 
-            this.lblUnitID.Location = new System.Drawing.Point(405, 156);
+            this.lblUnitID.Location = new System.Drawing.Point(351, 185);
             this.lblUnitID.Name = "lblUnitID";
             this.lblUnitID.Size = new System.Drawing.Size(36, 20);
             this.lblUnitID.TabIndex = 87;
@@ -560,7 +560,7 @@ namespace RUINORERP.UI.ProductEAV
             // 
             // lblcategory_ID
             // 
-            this.lblcategory_ID.Location = new System.Drawing.Point(70, 11);
+            this.lblcategory_ID.Location = new System.Drawing.Point(70, 37);
             this.lblcategory_ID.Name = "lblcategory_ID";
             this.lblcategory_ID.Size = new System.Drawing.Size(36, 20);
             this.lblcategory_ID.TabIndex = 88;
@@ -568,7 +568,7 @@ namespace RUINORERP.UI.ProductEAV
             // 
             // lblCustomerVendor_ID
             // 
-            this.lblCustomerVendor_ID.Location = new System.Drawing.Point(67, 204);
+            this.lblCustomerVendor_ID.Location = new System.Drawing.Point(67, 230);
             this.lblCustomerVendor_ID.Name = "lblCustomerVendor_ID";
             this.lblCustomerVendor_ID.Size = new System.Drawing.Size(36, 20);
             this.lblCustomerVendor_ID.TabIndex = 90;
@@ -576,7 +576,7 @@ namespace RUINORERP.UI.ProductEAV
             // 
             // lblLocation_ID
             // 
-            this.lblLocation_ID.Location = new System.Drawing.Point(45, 242);
+            this.lblLocation_ID.Location = new System.Drawing.Point(45, 268);
             this.lblLocation_ID.Name = "lblLocation_ID";
             this.lblLocation_ID.Size = new System.Drawing.Size(62, 20);
             this.lblLocation_ID.TabIndex = 92;
@@ -584,7 +584,7 @@ namespace RUINORERP.UI.ProductEAV
             // 
             // lblis_available
             // 
-            this.lblis_available.Location = new System.Drawing.Point(552, 313);
+            this.lblis_available.Location = new System.Drawing.Point(563, 336);
             this.lblis_available.Name = "lblis_available";
             this.lblis_available.Size = new System.Drawing.Size(62, 20);
             this.lblis_available.TabIndex = 70;
@@ -592,15 +592,15 @@ namespace RUINORERP.UI.ProductEAV
             // 
             // txtNotes
             // 
-            this.txtNotes.Location = new System.Drawing.Point(112, 416);
+            this.txtNotes.Location = new System.Drawing.Point(112, 381);
             this.txtNotes.Multiline = true;
             this.txtNotes.Name = "txtNotes";
-            this.txtNotes.Size = new System.Drawing.Size(482, 136);
+            this.txtNotes.Size = new System.Drawing.Size(526, 176);
             this.txtNotes.TabIndex = 73;
             // 
             // lblNotes
             // 
-            this.lblNotes.Location = new System.Drawing.Point(69, 416);
+            this.lblNotes.Location = new System.Drawing.Point(69, 381);
             this.lblNotes.Name = "lblNotes";
             this.lblNotes.Size = new System.Drawing.Size(36, 20);
             this.lblNotes.TabIndex = 72;
@@ -608,7 +608,7 @@ namespace RUINORERP.UI.ProductEAV
             // 
             // lblis_enabled
             // 
-            this.lblis_enabled.Location = new System.Drawing.Point(450, 313);
+            this.lblis_enabled.Location = new System.Drawing.Point(461, 336);
             this.lblis_enabled.Name = "lblis_enabled";
             this.lblis_enabled.Size = new System.Drawing.Size(62, 20);
             this.lblis_enabled.TabIndex = 68;

@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Logging;
 using NPinyin;
 using RUINORERP.Business.BNR;
@@ -12,6 +13,7 @@ using SqlSugar;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.DirectoryServices.ActiveDirectory;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -29,7 +31,7 @@ namespace RUINORERP.Server.Services.BizCode
         private readonly BNRFactory _bnrFactory;
         private readonly ILogger<ProductSKUCodeGenerator> _logger;
         private readonly ISqlSugarClient _db;
-        
+
         // SKU缓存，用于提高唯一性检查性能
         private static readonly ConcurrentDictionary<string, bool> _skuCache = new ConcurrentDictionary<string, bool>();
 
@@ -71,21 +73,36 @@ namespace RUINORERP.Server.Services.BizCode
 
             try
             {
+                ProductAttributeType attributeType = ProductAttributeType.单属性;
+                if (prod.PropertyType > 0)
+                {
+                    attributeType = (ProductAttributeType)prod.PropertyType;
+                }
+
                 // 1. 获取类目缩写（2-4位）
                 string categoryCode = GetCategoryCode(prod);
-                
+
                 // 2. 获取产品基础码（4-6位） - 基于类目的独立序列
                 string productBaseCode = GetProductBaseCodeByCategoryAsync(prod, categoryCode);
-                
+
                 // 3. 获取属性组合码（按需变长）
                 string attributeCode = GetAttributeCombinationCode(prod);
-                
+
+                string prodType = GetProdType(prod);
+                string attr = string.Empty;
+                if (attributeType == ProductAttributeType.可配置多属性)
+                {
+                    //prod.tb_Prod_Attr_Relations
+
+                    //attr = GenerateAttributeCode();
+                }
+
                 // 4. 组合生成SKU编码
-                string skuCode = $"{categoryCode}{productBaseCode}{attributeCode}";
-                
+                string skuCode = $"{categoryCode}{productBaseCode}{attributeCode}-{prodType}";
+
                 // 5. 检查SKU是否已存在，如果存在则添加序号
                 skuCode = EnsureUniqueSKU(skuCode);
-                
+
                 return skuCode;
             }
             catch (Exception ex)
@@ -115,25 +132,25 @@ namespace RUINORERP.Server.Services.BizCode
                 // 1. 解析现有SKU，提取序号部分
                 // 格式：类目代码 + 序号 + 属性代码
                 // 示例：CZ0001C-W → 类目:CZ, 序号:0001, 属性:C-W
-                
+
                 // 获取类目代码（通常是2-4个字母）
                 string categoryCode = ExtractCategoryCode(existingSku);
-                
+
                 // 获取序号部分（通常是数字）
                 string sequencePart = ExtractSequencePart(existingSku);
-                
+
                 // 2. 生成新的属性组合码
                 string newAttributeCode = GetAttributeCombinationCode(prod);
-                
+
                 // 3. 组合新的SKU编码
                 string newSkuCode = $"{categoryCode}{sequencePart}{newAttributeCode}";
-                
+
                 // 4. 检查SKU是否已存在（排除自身），如果存在则添加序号
                 if (newSkuCode != existingSku)
                 {
                     newSkuCode = EnsureUniqueSKUExceptSelf(newSkuCode, existingSku);
                 }
-                
+
                 return newSkuCode;
             }
             catch (Exception ex)
@@ -156,19 +173,19 @@ namespace RUINORERP.Server.Services.BizCode
             {
                 // 清空现有缓存
                 _skuCache.Clear();
-                
+
                 // 根据是否指定类目编码决定查询范围
                 var query = _db.Queryable<tb_ProdDetail>().Select(p => p.SKU);
-                
-                
+
+
                 // 批量加载SKU到缓存
                 var skus = await query.ToListAsync();
-                
+
                 foreach (var sku in skus)
                 {
                     _skuCache.TryAdd(sku, true);
                 }
-                
+
                 _logger.LogInformation("SKU缓存刷新完成，共加载 {Count} 个SKU", skus.Count);
             }
             catch (Exception ex)
@@ -177,7 +194,51 @@ namespace RUINORERP.Server.Services.BizCode
             }
         }
 
+        /// <summary>
+        /// 获取类目缩写（1位）
+        /// 获取类型名称首字符的拼音首字母大写
+        /// </summary>
+        /// <param name="prod">产品实体</param>
+        /// <returns>类目缩写</returns>
+        private string GetProdType(tb_Prod prod)
+        {
+            try
+            {
+                // 确保产品类目信息已加载
+                if (prod.tb_producttype == null && prod.Type_ID > 0)
+                {
+                    prod.tb_producttype = Business.Cache.EntityCacheHelper.GetEntity<tb_ProductType>(prod.Type_ID);
+                }
 
+                if (prod.tb_producttype == null || string.IsNullOrEmpty(prod.tb_producttype.TypeName))
+                {
+                    return "U";
+                }
+
+                string typeName = prod.tb_producttype.TypeName;
+
+                // 获取第一个字符
+                string firstChar = typeName.Substring(0, 1);
+
+                try
+                {
+                    // 使用NPinyin获取第一个字符的拼音首字母
+                    string pinyinInitial = Pinyin.GetInitials(firstChar).ToUpper();
+
+                    // 确保返回单个字符
+                    return string.IsNullOrEmpty(pinyinInitial) ? "U" : pinyinInitial.Substring(0, 1);
+                }
+                catch
+                {
+                    // 如果NPinyin处理失败，尝试直接返回字符本身
+                    return firstChar.ToUpper();
+                }
+            }
+            catch (Exception ex)
+            {
+                return "U";
+            }
+        }
 
 
         /// <summary>
@@ -206,7 +267,7 @@ namespace RUINORERP.Server.Services.BizCode
                 // 取类目名称的前3个字符，确保生成2-4位的缩写
                 string shortCategoryName = categoryName.Length > 3 ? categoryName.Substring(0, 3) : categoryName;
                 string categoryCode = _bnrFactory.Create("{CN:" + shortCategoryName + "}");
-                
+
                 // 确保类目代码在2-4位之间
                 if (categoryCode.Length > 4)
                 {
@@ -248,7 +309,7 @@ namespace RUINORERP.Server.Services.BizCode
 
                 // 从产品编号中提取数字部分
                 var numericPart = new string(prod.ProductNo.Where(char.IsDigit).ToArray());
-                
+
                 if (string.IsNullOrEmpty(numericPart))
                 {
                     // 如果没有数字部分，使用产品编号的哈希码
@@ -286,7 +347,7 @@ namespace RUINORERP.Server.Services.BizCode
                 // 格式: {categoryCode}/0000 - 每个类目有独立的序列
                 string rule = $"{{DB:{categoryCode}/0000}}";
                 string baseCode = _bnrFactory.Create(rule);
-                
+
                 // 确保生成的代码为4-6位
                 if (baseCode.Length > 6)
                 {
@@ -296,7 +357,7 @@ namespace RUINORERP.Server.Services.BizCode
                 {
                     baseCode = baseCode.PadLeft(4, '0');
                 }
-                
+
                 return baseCode;
             }
             catch (Exception ex)
@@ -322,7 +383,7 @@ namespace RUINORERP.Server.Services.BizCode
                 // TODO: 根据实际的产品属性表结构获取属性信息
                 // 这里需要根据实际的产品属性表结构来实现
                 // 假设产品有属性列表，每个属性有属性名和属性值
-                
+
                 // 示例代码（需要根据实际数据结构调整）:
                 // var attributes = GetProductAttributes(prod.Prod_ID);
                 // foreach (var attr in attributes)
@@ -330,7 +391,7 @@ namespace RUINORERP.Server.Services.BizCode
                 //     string attrCode = GenerateAttributeCode(attr.AttributeName, attr.AttributeValue);
                 //     attributeCodes.Add(attrCode);
                 // }
-                
+
                 // 临时返回空字符串，表示无属性
                 // 实际项目中应该根据产品的属性表来获取属性信息
                 return string.Empty;
@@ -516,8 +577,8 @@ namespace RUINORERP.Server.Services.BizCode
             catch
             {
                 // 如果处理失败，返回前两个字符
-                return propertyValueName.Length > 2 
-                    ? propertyValueName.Substring(0, 2).ToUpper() 
+                return propertyValueName.Length > 2
+                    ? propertyValueName.Substring(0, 2).ToUpper()
                     : propertyValueName.ToUpper();
             }
         }
@@ -540,20 +601,20 @@ namespace RUINORERP.Server.Services.BizCode
                         .Where(p => p.SKU.StartsWith(baseSkuCode))
                         .Select(p => p.SKU)
                         .ToList();
-                    
+
                     // 将查询结果缓存
                     foreach (var sku in similarSkus)
                     {
                         _skuCache.TryAdd(sku, true);
                     }
-                    
+
                     // 如果基础SKU不在缓存中，则它是唯一的
                     if (!_skuCache.ContainsKey(baseSkuCode))
                     {
                         return baseSkuCode;
                     }
                 }
-                
+
                 // 如果SKU已存在，生成唯一变体
                 return GenerateUniqueVariant(baseSkuCode);
             }
@@ -564,7 +625,7 @@ namespace RUINORERP.Server.Services.BizCode
                 return $"{baseSkuCode}{DateTime.Now:HHmm}";
             }
         }
-        
+
         /// <summary>
         /// 生成SKU的唯一变体
         /// 使用更高效的算法生成唯一变体，避免循环查询
@@ -577,13 +638,13 @@ namespace RUINORERP.Server.Services.BizCode
             var existingSkus = _skuCache.Keys
                 .Where(sku => sku.StartsWith(baseSkuCode))
                 .ToList();
-            
+
             // 如果没有匹配的SKU，直接返回基础SKU
             if (!existingSkus.Any())
             {
                 return baseSkuCode;
             }
-            
+
             // 提取所有已使用的序号
             var usedNumbers = new HashSet<int>();
             foreach (var sku in existingSkus)
@@ -595,20 +656,20 @@ namespace RUINORERP.Server.Services.BizCode
                     usedNumbers.Add(number);
                 }
             }
-            
+
             // 找到最小的未使用序号
             int sequence = 1;
             while (usedNumbers.Contains(sequence) && sequence < 100)
             {
                 sequence++;
             }
-            
+
             // 生成新的SKU
             string uniqueSkuCode = $"{baseSkuCode}{sequence:D2}";
-            
+
             // 将新SKU添加到缓存
             _skuCache.TryAdd(uniqueSkuCode, true);
-            
+
             return uniqueSkuCode;
         }
 
@@ -625,13 +686,13 @@ namespace RUINORERP.Server.Services.BizCode
             var existingSkus = _skuCache.Keys
                 .Where(sku => sku.StartsWith(baseSkuCode) && sku != excludeSku)
                 .ToList();
-            
+
             // 如果没有匹配的SKU，直接返回基础SKU
             if (!existingSkus.Any())
             {
                 return baseSkuCode;
             }
-            
+
             // 提取所有已使用的序号
             var usedNumbers = new HashSet<int>();
             foreach (var sku in existingSkus)
@@ -643,20 +704,20 @@ namespace RUINORERP.Server.Services.BizCode
                     usedNumbers.Add(number);
                 }
             }
-            
+
             // 找到最小的未使用序号
             int sequence = 1;
             while (usedNumbers.Contains(sequence) && sequence < 100)
             {
                 sequence++;
             }
-            
+
             // 生成新的SKU
             string uniqueSkuCode = $"{baseSkuCode}{sequence:D2}";
-            
+
             // 将新SKU添加到缓存
             _skuCache.TryAdd(uniqueSkuCode, true);
-            
+
             return uniqueSkuCode;
         }
 
@@ -676,13 +737,13 @@ namespace RUINORERP.Server.Services.BizCode
                 var similarSkus = _skuCache.Keys
                     .Where(sku => sku.StartsWith(baseSkuCode) && sku != excludeSku)
                     .ToList();
-                
+
                 // 如果没有冲突的SKU，则它是唯一的
                 if (!similarSkus.Any())
                 {
                     return baseSkuCode;
                 }
-                
+
                 // 如果SKU已存在，生成唯一变体
                 return GenerateUniqueVariantExcludeSelf(baseSkuCode, excludeSku);
             }
@@ -694,8 +755,8 @@ namespace RUINORERP.Server.Services.BizCode
             }
         }
 
-         
-        
+
+
 
         /// <summary>
         /// 生成默认的SKU编码（适用于无属性或简单产品）
@@ -764,11 +825,11 @@ namespace RUINORERP.Server.Services.BizCode
             {
                 // 获取数字部分
                 string numberPart = match.Groups[1].Value;
-                
+
                 // 补齐到至少4位
                 return numberPart.PadLeft(4, '0');
             }
-            
+
             // 如果无法解析，返回默认值
             return "0001";
         }
@@ -798,15 +859,16 @@ namespace RUINORERP.Server.Services.BizCode
                 // 优化格式：[分类代码][产品序号]
                 // 示例：CZ0001（表示车载CZ类，该类第0001个产品）
                 // 优点：同一类目下的产品编号独立递增，便于分类管理
-                
+
                 string categoryCode = GetCategoryCode(prod);
-                
+
                 // 基于类目的产品编号规则
                 // {categoryCode}/000000 确保每个类目有独立的产品编号序列
                 string rule = $"{{DB:{categoryCode}/000000}}";
                 string productSequence = _bnrFactory.Create(rule);
-                
-                string prodNo = $"{categoryCode}{productSequence}";
+                string prodType = GetProdType(prod);
+
+                string prodNo = $"{categoryCode}{productSequence}-{prodType}";
                 return prodNo;
             }
             catch (Exception ex)
@@ -826,11 +888,11 @@ namespace RUINORERP.Server.Services.BizCode
                 //-格式： [产品编号] - [关键属性代码]
                 //- 示例： ELEC - PHON - 2305 - 0012 - 5G
                 //- 优点：将具有相同关键属性的产品变体归为一档，便于库存和销售管理
-                  var Cate = GetCategoryCode(prod);
-
+                var Cate = GetCategoryCode(prod);
+                string prodType = GetProdType(prod);
                 string shortcode = _bnrFactory.Create("{CN:{" + Cate + "}}{DB:SHortCode/000}");
 
-                return $"{shortcode}";
+                return $"{shortcode}-{prodType}";
             }
             catch (Exception ex)
             {

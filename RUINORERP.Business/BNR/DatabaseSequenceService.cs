@@ -148,111 +148,113 @@ namespace RUINORERP.Business.BNR
         
         /// <summary>
         /// 将缓存中的序列值刷新到数据库
+        /// 使用SqlSugar推荐的using语法糖管理事务，确保事务正确释放
         /// </summary>
         private void FlushCacheToDatabase()
         {
+            // 使用双重检查锁定模式，减少锁竞争
+            if (_updateQueue.IsEmpty)
+                return;
+                
             lock (_queueLock)
             {
                 if (_updateQueue.IsEmpty)
                     return;
                 
                 List<SequenceUpdateInfo> batchUpdates = new List<SequenceUpdateInfo>();
-                bool transactionStarted = false;
+                
+                // 从队列中取出一定数量的更新项
+                int count = 0;
+                while (_updateQueue.TryDequeue(out var updateInfo) && count < 50)
+                {
+                    batchUpdates.Add(updateInfo);
+                    count++;
+                }
+                
+                if (batchUpdates.Count == 0)
+                {
+                    return;
+                }
                 
                 try
                 {
-                    _sqlSugarClient.Ado.BeginTran();
-                    transactionStarted = true;
-                    
-                    int count = 0;
-                    
-                    // 从队列中取出一定数量的更新项
-                    while (_updateQueue.TryDequeue(out var updateInfo) && count < 50)
+                    // 使用SqlSugar推荐的using语法糖管理事务
+                    // 这种方式确保事务在异常情况下正确回滚，在成功情况下正确提交
+                    using (var tran = _sqlSugarClient.UseTran())
                     {
-                        batchUpdates.Add(updateInfo);
-                        count++;
-                    }
-                    
-                    if (batchUpdates.Count == 0)
-                    {
-                        // 如果没有更新项，回滚事务并返回
-                        _sqlSugarClient.Ado.RollbackTran();
-                        return;
-                    }
-                    
-                    // 批量处理更新
-                    foreach (var update in batchUpdates)
-                    {
-                        // 检查记录是否存在
-                        bool exists = _sqlSugarClient.Queryable<SequenceNumbers>()
-                            .Where(s => s.SequenceKey == update.SequenceKey)
-                            .Any();
-                        
-                        if (exists)
+                        try
                         {
-                            // 更新现有记录
-                            _sqlSugarClient.Updateable<SequenceNumbers>()
-                                .SetColumns(s => new SequenceNumbers
-                                {
-                                    CurrentValue = update.Value,
-                                    LastUpdated = DateTime.Now,
-                                    ResetType = update.ResetType,
-                                    FormatMask = update.FormatMask,
-                                    Description = update.Description,
-                                    BusinessType = update.BusinessType
-                                })
-                                .Where(s => s.SequenceKey == update.SequenceKey)
-                                .ExecuteCommand();
-                        }
-                        else
-                        {
-                            // 插入新记录
-                            var newSequence = new SequenceNumbers
+                            // 批量处理更新
+                            foreach (var update in batchUpdates)
                             {
-                                SequenceKey = update.SequenceKey,
-                                CurrentValue = update.Value,
-                                LastUpdated = DateTime.Now,
-                                CreatedAt = DateTime.Now,
-                                ResetType = update.ResetType,
-                                FormatMask = update.FormatMask,
-                                Description = update.Description,
-                                BusinessType = update.BusinessType
-                            };
+                                // 检查记录是否存在
+                                bool exists = _sqlSugarClient.Queryable<SequenceNumbers>()
+                                    .Where(s => s.SequenceKey == update.SequenceKey)
+                                    .Any();
+                                
+                                if (exists)
+                                {
+                                    // 更新现有记录
+                                    _sqlSugarClient.Updateable<SequenceNumbers>()
+                                        .SetColumns(s => new SequenceNumbers
+                                        {
+                                            CurrentValue = update.Value,
+                                            LastUpdated = DateTime.Now,
+                                            ResetType = update.ResetType,
+                                            FormatMask = update.FormatMask,
+                                            Description = update.Description,
+                                            BusinessType = update.BusinessType
+                                        })
+                                        .Where(s => s.SequenceKey == update.SequenceKey)
+                                        .ExecuteCommand();
+                                }
+                                else
+                                {
+                                    // 插入新记录
+                                    var newSequence = new SequenceNumbers
+                                    {
+                                        SequenceKey = update.SequenceKey,
+                                        CurrentValue = update.Value,
+                                        LastUpdated = DateTime.Now,
+                                        CreatedAt = DateTime.Now,
+                                        ResetType = update.ResetType,
+                                        FormatMask = update.FormatMask,
+                                        Description = update.Description,
+                                        BusinessType = update.BusinessType
+                                    };
+                                    
+                                    _sqlSugarClient.Insertable(newSequence).ExecuteCommand();
+                                }
+                            }
                             
-                            _sqlSugarClient.Insertable(newSequence).ExecuteCommand();
+                            // 提交事务
+                            tran.CommitTran();
+                            _lastFlushTime = DateTime.Now;
+                            System.Diagnostics.Debug.WriteLine($"成功将 {batchUpdates.Count} 个序列值刷新到数据库");
                         }
-                    }
-                    
-                    // 只有在事务已启动且没有异常的情况下才提交
-                    if (transactionStarted)
-                    {
-                        _sqlSugarClient.Ado.CommitTran();
-                        _lastFlushTime = DateTime.Now;
-                        System.Diagnostics.Debug.WriteLine($"成功将 {batchUpdates.Count} 个序列值刷新到数据库");
+                        catch (Exception ex)
+                        {
+                            // 记录详细错误信息
+                            System.Diagnostics.Debug.WriteLine($"事务执行失败: {ex.Message}");
+                            System.Diagnostics.Debug.WriteLine($"堆栈跟踪: {ex.StackTrace}");
+                            
+                            // 使用语法糖时，如果未调用CommitTran，事务会自动回滚
+                            // 这里不需要手动回滚
+                            
+                            // 重新入队失败的更新
+                            foreach (var update in batchUpdates)
+                            {
+                                _updateQueue.Enqueue(update);
+                            }
+                            
+                            throw;
+                        }
                     }
                 }
                 catch (Exception ex)
                 {
-                    // 只有在事务已启动的情况下才回滚
-                    if (transactionStarted)
-                    {
-                        try
-                        {
-                            _sqlSugarClient.Ado.RollbackTran();
-                        }
-                        catch (Exception rollbackEx)
-                        {
-                            System.Diagnostics.Debug.WriteLine($"回滚事务时发生异常: {rollbackEx.Message}");
-                        }
-                    }
-                    
                     System.Diagnostics.Debug.WriteLine($"刷新序列值到数据库失败: {ex.Message}");
-                    
-                    // 重新入队失败的更新（简化处理）
-                    foreach (var update in batchUpdates)
-                    {
-                        _updateQueue.Enqueue(update);
-                    }
+                    // 异常已经在using块中处理，这里只记录日志
                 }
             }
         }
@@ -390,62 +392,45 @@ namespace RUINORERP.Business.BNR
         {
             EnsureTableStructure();
             
-            bool transactionStarted = false;
-            
             try
             {
-                _sqlSugarClient.Ado.BeginTran();
-                transactionStarted = true;
-                
-                var sequence = _sqlSugarClient.Queryable<SequenceNumbers>()
-                    .Where(s => s.SequenceKey == sequenceKey)
-                    .First();
-                
-                if (sequence != null)
+                // 使用SqlSugar推荐的using语法糖管理事务
+                using (var tran = _sqlSugarClient.UseTran())
                 {
-                    sequence.CurrentValue = newValue;
-                    sequence.LastUpdated = DateTime.Now;
-                    // 如果业务类型不为空且原记录没有业务类型，则更新业务类型
-                    if (!string.IsNullOrEmpty(businessType) && string.IsNullOrEmpty(sequence.BusinessType))
+                    var sequence = _sqlSugarClient.Queryable<SequenceNumbers>()
+                        .Where(s => s.SequenceKey == sequenceKey)
+                        .First();
+                    
+                    if (sequence != null)
                     {
-                        sequence.BusinessType = businessType;
+                        sequence.CurrentValue = newValue;
+                        sequence.LastUpdated = DateTime.Now;
+                        // 如果业务类型不为空且原记录没有业务类型，则更新业务类型
+                        if (!string.IsNullOrEmpty(businessType) && string.IsNullOrEmpty(sequence.BusinessType))
+                        {
+                            sequence.BusinessType = businessType;
+                        }
+                        _sqlSugarClient.Updateable(sequence).ExecuteCommand();
                     }
-                    _sqlSugarClient.Updateable(sequence).ExecuteCommand();
-                }
-                else
-                {
-                    var newSequence = new SequenceNumbers
+                    else
                     {
-                        SequenceKey = sequenceKey,
-                        CurrentValue = newValue,
-                        LastUpdated = DateTime.Now,
-                        CreatedAt = DateTime.Now,
-                        BusinessType = businessType
-                    };
-                    _sqlSugarClient.Insertable(newSequence).ExecuteCommand();
-                }
-                
-                // 只有在事务已启动且没有异常的情况下才提交
-                if (transactionStarted)
-                {
-                    _sqlSugarClient.Ado.CommitTran();
+                        var newSequence = new SequenceNumbers
+                        {
+                            SequenceKey = sequenceKey,
+                            CurrentValue = newValue,
+                            LastUpdated = DateTime.Now,
+                            CreatedAt = DateTime.Now,
+                            BusinessType = businessType
+                        };
+                        _sqlSugarClient.Insertable(newSequence).ExecuteCommand();
+                    }
+                    
+                    // 提交事务
+                    tran.CommitTran();
                 }
             }
             catch (Exception ex)
             {
-                // 只有在事务已启动的情况下才回滚
-                if (transactionStarted)
-                {
-                    try
-                    {
-                        _sqlSugarClient.Ado.RollbackTran();
-                    }
-                    catch (Exception rollbackEx)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"回滚事务时发生异常: {rollbackEx.Message}");
-                    }
-                }
-                
                 System.Diagnostics.Debug.WriteLine($"更新序列值失败: {ex.Message}");
                 throw;
             }

@@ -144,8 +144,8 @@ namespace Netron.Neon.TextEditor.Document
 				}
 			}
 			done:
-//			Console.WriteLine("ofs : {0} cart:{1}", offset, document.Caret.Offset);
-//			Console.WriteLine("return:" + document.GetText(offset, document.Caret.Offset - offset).Trim());
+//			System.Diagnostics.Debug.WriteLine("ofs : {0} cart:{1}", offset, document.Caret.Offset);
+//			System.Diagnostics.Debug.WriteLine("return:" + document.GetText(offset, document.Caret.Offset - offset).Trim());
 			//// simple exit fails when : is inside comment line or any other character
 			//// we have to check if we got several ids in resulting line, which usually happens when
 			//// id. is typed on next line after comment one
@@ -158,7 +158,7 @@ namespace Netron.Neon.TextEditor.Document
 				//// whitespaces and tabs, which might be inside, will be skipped by trim below
 			}							
 			string expression = document.GetText(offset, textArea.Caret.Offset - offset ).Trim();
-			Console.WriteLine("Expr: >" + expression + "<");
+			System.Diagnostics.Debug.WriteLine("Expr: >" + expression + "<");
 			return expression;
 		}
 		

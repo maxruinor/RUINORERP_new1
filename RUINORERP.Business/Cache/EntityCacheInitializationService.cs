@@ -107,6 +107,10 @@ namespace RUINORERP.Business.Cache
             try
             {
                 _logger.Debug("开始初始化表结构信息");
+                
+                // 添加调试信息，跟踪TableSchemaManager实例
+                System.Diagnostics.Debug.WriteLine($"[EntityCacheInitializationService] InitializeAllTableSchemas开始: TableSchemaManager实例ID {_tableSchemaManager.GetHashCode()}");
+                System.Diagnostics.Debug.WriteLine($"[EntityCacheInitializationService] 初始化前表数: {_tableSchemaManager.GetAllTableNames().Count}");
 
                 // 注册所有需要缓存的表结构信息
                 // 基础数据表
@@ -181,6 +185,8 @@ namespace RUINORERP.Business.Cache
                 // 补充缺失的表
                 RegistInformation<tb_FieldInfo>(k => k.FieldInfo_ID, v => v.FieldName, tableType: TableType.Base);
 
+                // 添加调试信息，跟踪初始化完成情况
+                System.Diagnostics.Debug.WriteLine($"[EntityCacheInitializationService] 所有表注册完成: TableSchemaManager实例ID {_tableSchemaManager.GetHashCode()}, 注册后表数: {_tableSchemaManager.GetAllTableNames().Count}");
                 _logger.Debug("表结构信息初始化完成");
             }
             catch (Exception ex)
@@ -202,6 +208,10 @@ namespace RUINORERP.Business.Cache
             TableType tableType = TableType.Other,
             params Expression<Func<T, object>>[] otherDisplayFieldExpressions) where T : class
         {
+            // 添加调试信息，跟踪表注册过程
+            string tableName = typeof(T).Name;
+            System.Diagnostics.Debug.WriteLine($"[EntityCacheInitializationService] 注册表 {tableName}: TableSchemaManager实例ID {_tableSchemaManager.GetHashCode()}");
+            
             // 直接使用ITableSchemaManager注册表结构
             _tableSchemaManager.RegisterTableSchema(
                 primaryKeyExpression,

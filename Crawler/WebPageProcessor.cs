@@ -32,7 +32,7 @@ namespace Crawler
             }
             try
             {
-                Console.WriteLine("Process Uri: {0}", state.Uri.AbsoluteUri);
+                System.Diagnostics.Debug.WriteLine("Process Uri: {0}", state.Uri.AbsoluteUri);
 
                 WebRequest req = WebRequest.Create(state.Uri);
 
@@ -92,9 +92,9 @@ namespace Crawler
             catch (Exception ex)
             {
                 //frmMain.InstancePicker.PrintInfoLog(ex);
-                Console.WriteLine(ex.ToString());
+                System.Diagnostics.Debug.WriteLine(ex.ToString());
             }
-            Console.WriteLine("Successfull: {0}", state.ProcessSuccessfull);
+            System.Diagnostics.Debug.WriteLine("Successfull: {0}", state.ProcessSuccessfull);
 
             return state.ProcessSuccessfull;
         }
@@ -190,7 +190,7 @@ namespace Crawler
             }
             try
             {
-                Console.WriteLine("Process Uri: {0}", state.Uri.AbsoluteUri);
+                System.Diagnostics.Debug.WriteLine("Process Uri: {0}", state.Uri.AbsoluteUri);
 
                 HttpWebRequest req = HttpWebRequest.Create(state.Uri) as HttpWebRequest;
                 req.KeepAlive = true;
@@ -270,9 +270,9 @@ namespace Crawler
             catch (Exception ex)
             {
                 //frmMain.InstancePicker.PrintInfoLog(ex);
-                Console.WriteLine(ex.ToString());
+                System.Diagnostics.Debug.WriteLine(ex.ToString());
             }
-            Console.WriteLine("Successfull: {0}", state.ProcessSuccessfull);
+            System.Diagnostics.Debug.WriteLine("Successfull: {0}", state.ProcessSuccessfull);
 
             return state.ProcessSuccessfull;
         }
@@ -301,9 +301,9 @@ namespace Crawler
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.ToString());
+                System.Diagnostics.Debug.WriteLine(ex.ToString());
             }
-            Console.WriteLine("Successfull: {0}", state.ProcessSuccessfull);
+            System.Diagnostics.Debug.WriteLine("Successfull: {0}", state.ProcessSuccessfull);
 
             return state.ProcessSuccessfull;
         }

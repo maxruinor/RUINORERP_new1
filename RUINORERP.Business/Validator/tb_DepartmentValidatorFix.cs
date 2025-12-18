@@ -39,7 +39,7 @@ namespace RUINORERP.Business
                 {
                     string propertyName = context.PropertyName;
                     // 在这里使用 propertyName
-                    // Console.WriteLine($"正在验证的属性: {propertyName}");
+                    // System.Diagnostics.Debug.WriteLine($"正在验证的属性: {propertyName}");
                     // 实际的唯一性验证逻辑
                     if (!BeUniqueName(propertyName, value))
                     {

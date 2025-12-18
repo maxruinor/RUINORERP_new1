@@ -2293,7 +2293,7 @@ namespace RUINORERP.UI.Common
                             info.BIBizBaseForm = type.BaseType.Name;
                         }
 
-                        // Console.WriteLine($"注入：{attribute.FormType.Namespace}.{attribute.FormType.Name},{attribute.Describe}");
+                        // System.Diagnostics.Debug.WriteLine($"注入：{attribute.FormType.Namespace}.{attribute.FormType.Name},{attribute.Describe}");
                     }
 
                     //特性标记

@@ -219,7 +219,7 @@ namespace Netron.Neon
 			} 
 			catch (Exception e) 
 			{
-				Console.WriteLine(e.ToString());
+				System.Diagnostics.Debug.WriteLine(e.ToString());
 			}
 		}
 		public  Bitmap GetImage(string name)

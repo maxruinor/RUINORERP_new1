@@ -1042,7 +1042,7 @@ Unicode (UTF-32 Big-Endian)
       Encoding e2 = Encoding.GetEncoding( "utf-32" );
 
       // Check their equality.
-      Console.WriteLine( "e1 equals e2? {0}", e1.Equals( e2 ) );
+      System.Diagnostics.Debug.WriteLine( "e1 equals e2? {0}", e1.Equals( e2 ) );
          */
         /****************************************
           * 函数名称：ReadFile
@@ -1172,19 +1172,19 @@ Unicode (UTF-32 Big-Endian)
             }
             catch (ArgumentNullException)
             {
-                System.Console.WriteLine("Path   is   a   null   reference. ");
+                System.Diagnostics.Debug.WriteLine("Path   is   a   null   reference. ");
             }
             catch (System.Security.SecurityException)
             {
-                System.Console.WriteLine("The   caller   does   not   have   the   required   permission. ");
+                System.Diagnostics.Debug.WriteLine("The   caller   does   not   have   the   required   permission. ");
             }
             catch (ArgumentException)
             {
-                System.Console.WriteLine("Path   is   an   empty   string,   contains   only   white   spaces,   or   contains   invalid   characters. ");
+                System.Diagnostics.Debug.WriteLine("Path   is   an   empty   string,   contains   only   white   spaces,   or   contains   invalid   characters. ");
             }
             catch (System.IO.DirectoryNotFoundException)
             {
-                System.Console.WriteLine("The   path   encapsulated   in   the   Directory   object   does   not   exist. ");
+                System.Diagnostics.Debug.WriteLine("The   path   encapsulated   in   the   Directory   object   does   not   exist. ");
             }
         }
 

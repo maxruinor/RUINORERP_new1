@@ -74,7 +74,7 @@ namespace RUINORERP.Services.DI
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"注册服务失败: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"注册服务失败: {ex.Message}");
             }
         }
     }

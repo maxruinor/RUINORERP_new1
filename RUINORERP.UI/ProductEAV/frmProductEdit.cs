@@ -861,7 +861,7 @@ namespace RUINORERP.UI.ProductEAV
             DataBindingHelper.BindData4CmbByEntity<tb_StorageRack>(entity, k => k.Rack_ID, cmbRack_ID);
             DataBindingHelper.BindData4Cmb<tb_Department>(entity, k => k.DepartmentID, v => v.DepartmentName, cmbDepartmentID);
 
-            DataBindingHelper.BindData4CmbByEnum<tb_Prod, Global.ProductAttributeType>(entity, k => k.PropertyType, cmbPropertyType, false, Global.ProductAttributeType.捆绑, Global.ProductAttributeType.虚拟);
+            DataBindingHelper.BindData4CmbByEnum<tb_Prod, Global.ProductAttributeType>(entity, k => k.PropertyType, cmbPropertyType, true, Global.ProductAttributeType.捆绑, Global.ProductAttributeType.虚拟);
             DataBindingHelper.BindData4TextBox<tb_Prod>(entity, k => k.CNName, txtName, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4CheckBox<tb_Prod>(entity, exp => exp.Is_enabled, txtis_enabled, false);
             DataBindingHelper.BindData4CheckBox<tb_Prod>(entity, exp => exp.Is_available, txtis_available, false);
@@ -1004,7 +1004,7 @@ namespace RUINORERP.UI.ProductEAV
 
             if (EditEntity.ProdBaseID == 0)
             {
-                _EditEntity.PropertyType = 1;// cmbPropertyType   1为单属性
+               // _EditEntity.PropertyType = 1;// cmbPropertyType   1为单属性
             }
 
 
@@ -1032,7 +1032,7 @@ namespace RUINORERP.UI.ProductEAV
         public async Task task_Help()
         {
             await Task.Delay(1000);
-            Console.WriteLine("2秒后执行，方式二 输出语句...");
+            System.Diagnostics.Debug.WriteLine("2秒后执行，方式二 输出语句...");
             base.InitHelpInfoToControl(kryptonPanel1.Controls);
             if (_EditEntity.tb_Prod_Attr_Relations != null)
             {

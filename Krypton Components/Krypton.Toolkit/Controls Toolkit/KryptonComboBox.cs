@@ -220,7 +220,7 @@ namespace Krypton.Toolkit
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine(ex);
+                        System.Diagnostics.Debug.WriteLine(ex);
                         // For some reason when the font `simSun` is used the control.GetPreferredSize throws it's toys out of the pram
                         maxSize = c.Size;
                     }

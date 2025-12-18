@@ -828,7 +828,7 @@ namespace RUINORERP.Common.Helper
             }
             else
             {
-                Console.WriteLine("ERROR: A block must be 16 words");
+                System.Diagnostics.Debug.WriteLine("ERROR: A block must be 16 words");
                 this.words = null;
             }
         }
@@ -848,7 +848,7 @@ namespace RUINORERP.Common.Helper
             }
             else
             {
-                Console.WriteLine("ERROR: A block must be 16 words");
+                System.Diagnostics.Debug.WriteLine("ERROR: A block must be 16 words");
                 this.words = null;
             }
         }
@@ -1071,7 +1071,7 @@ namespace RUINORERP.Common.Helper
         {
             if (X == null)
             {
-                Console.WriteLine("ERROR: The byte array is null");
+                System.Diagnostics.Debug.WriteLine("ERROR: The byte array is null");
                 return null;
             }
 

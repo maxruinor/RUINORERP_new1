@@ -496,10 +496,10 @@ namespace Krypton.Docking
 
         private void DebugOutput(string title)
         {
-            Console.WriteLine(@"{0}", title);
+            System.Diagnostics.Debug.WriteLine(@"{0}", title);
             foreach (Control c in Control.Controls)
             {
-                Console.WriteLine(@"    {0} {1} {2} {3}", c.GetType().Name, c.Visible, c.Size, c.Dock);
+                System.Diagnostics.Debug.WriteLine(@"    {0} {1} {2} {3}", c.GetType().Name, c.Visible, c.Size, c.Dock);
             }
         }
         #endregion

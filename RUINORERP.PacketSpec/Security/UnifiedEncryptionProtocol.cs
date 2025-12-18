@@ -758,7 +758,7 @@ namespace RUINORERP.PacketSpec.Security
             {
                 try
                 {
-                    Console.WriteLine("开始加密解密测试...");
+                    System.Diagnostics.Debug.WriteLine("开始加密解密测试...");
 
                     // 测试1: 基本数据加密解密
                     byte cmd = 0x01;
@@ -766,14 +766,14 @@ namespace RUINORERP.PacketSpec.Security
                     byte[] testData2 = Encoding.UTF8.GetBytes("测试数据第二部分");
                     var originalData = new OriginalData(cmd, testData1, testData2);
 
-                    Console.WriteLine("原始数据:");
-                    Console.WriteLine($"Cmd: {originalData.Cmd}");
-                    Console.WriteLine($"Data1: {Encoding.UTF8.GetString(originalData.One)}");
-                    Console.WriteLine($"Data2: {Encoding.UTF8.GetString(originalData.Two)}");
+                    System.Diagnostics.Debug.WriteLine("原始数据:");
+                    System.Diagnostics.Debug.WriteLine($"Cmd: {originalData.Cmd}");
+                    System.Diagnostics.Debug.WriteLine($"Data1: {Encoding.UTF8.GetString(originalData.One)}");
+                    System.Diagnostics.Debug.WriteLine($"Data2: {Encoding.UTF8.GetString(originalData.Two)}");
 
                     // 服务器加密
                     var encryptedData = EncryptServerDataToClient(originalData);
-                    Console.WriteLine($"加密完成，头部长度: {encryptedData.Head.Length}, 数据1长度: {encryptedData.One.Length}, 数据2长度: {encryptedData.Two.Length}");
+                    System.Diagnostics.Debug.WriteLine($"加密完成，头部长度: {encryptedData.Head.Length}, 数据1长度: {encryptedData.One.Length}, 数据2长度: {encryptedData.Two.Length}");
 
                     // 构建完整的数据包
                     var packetBytes = new byte[encryptedData.Length];
@@ -784,10 +784,10 @@ namespace RUINORERP.PacketSpec.Security
                     // 客户端解密
                     var decryptedData = DecryptServerPacket(packetBytes);
 
-                    Console.WriteLine("解密数据:");
-                    Console.WriteLine($"Cmd: {decryptedData.Cmd}");
-                    Console.WriteLine($"Data1: {Encoding.UTF8.GetString(decryptedData.One)}");
-                    Console.WriteLine($"Data2: {Encoding.UTF8.GetString(decryptedData.Two)}");
+                    System.Diagnostics.Debug.WriteLine("解密数据:");
+                    System.Diagnostics.Debug.WriteLine($"Cmd: {decryptedData.Cmd}");
+                    System.Diagnostics.Debug.WriteLine($"Data1: {Encoding.UTF8.GetString(decryptedData.One)}");
+                    System.Diagnostics.Debug.WriteLine($"Data2: {Encoding.UTF8.GetString(decryptedData.Two)}");
 
                     // 验证
                     bool cmdMatch = decryptedData.Cmd == cmd;
@@ -796,19 +796,19 @@ namespace RUINORERP.PacketSpec.Security
 
                     if (cmdMatch && data1Match && data2Match)
                     {
-                        Console.WriteLine("✅ 加密解密测试成功!");
+                        System.Diagnostics.Debug.WriteLine("✅ 加密解密测试成功!");
                         return true;
                     }
                     else
                     {
-                        Console.WriteLine($"❌ 加密解密测试失败! Cmd匹配: {cmdMatch}, 数据1匹配: {data1Match}, 数据2匹配: {data2Match}");
+                        System.Diagnostics.Debug.WriteLine($"❌ 加密解密测试失败! Cmd匹配: {cmdMatch}, 数据1匹配: {data1Match}, 数据2匹配: {data2Match}");
                         return false;
                     }
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"❌ 测试过程中发生错误: {ex.Message}");
-                    Console.WriteLine(ex.StackTrace);
+                    System.Diagnostics.Debug.WriteLine($"❌ 测试过程中发生错误: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine(ex.StackTrace);
                     return false;
                 }
             }

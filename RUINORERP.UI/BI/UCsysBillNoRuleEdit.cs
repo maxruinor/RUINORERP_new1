@@ -136,7 +136,7 @@ namespace RUINORERP.UI.BI
             catch (Exception ex)
             {
                 // 如果自动生成失败，不抛出异常，让用户手动填写
-                Console.WriteLine($"自动生成RulePattern失败: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"自动生成RulePattern失败: {ex.Message}");
             }
         }
 

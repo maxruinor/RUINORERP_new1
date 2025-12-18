@@ -184,7 +184,7 @@ namespace Netron.Neon.TextEditor
 				return;
 			}
 			textArea.Caret.Position = realmousepos;
-			Console.WriteLine(textArea.Caret.Position.Y);
+			System.Diagnostics.Debug.WriteLine(textArea.Caret.Position.Y);
 			if (minSelection != nilPoint) {
 				ISelection selection = textArea.SelectionManager.SelectionCollection[0];
 				Point min = textArea.SelectionManager.GreaterEqPos(minSelection, maxSelection) ? maxSelection : minSelection;
@@ -227,7 +227,7 @@ namespace Netron.Neon.TextEditor
 							break;
 					
 					}
-					Console.WriteLine("EXTEND");
+					System.Diagnostics.Debug.WriteLine("EXTEND");
 					textArea.SelectionManager.ExtendSelection(minSelection, maxSelection);
 				}
 				// HACK WARNING !!! 

@@ -218,7 +218,7 @@ namespace RUINORERP.UI.UserCenter
                 sp.Offset(0, sy);
                 Image im = Image.FromFile(Application.StartupPath + "\\" + @"UserCenterUI\" + item.IconFile_Path);
                 ImageAttributes ima = new ImageAttributes();
-                //Console.WriteLine(xm.Title+":"+this.focusitem);
+                //System.Diagnostics.Debug.WriteLine(xm.Title+":"+this.focusitem);
                 string xmTitle = item.Title.Trim();
                  if (this.focusitem == item.Title)
                 ima.SetGamma(1.5f);

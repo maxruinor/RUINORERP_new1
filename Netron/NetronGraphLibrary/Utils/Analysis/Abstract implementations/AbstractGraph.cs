@@ -325,7 +325,7 @@ namespace Netron.GraphLib.Analysis
 			{
 				IVertex vertex1 = (IVertex)queue.Dequeue();
 				visitor.PreVisit(vertex1);
-				Console.WriteLine("being in " + vertex1.Number);
+				System.Diagnostics.Debug.WriteLine("being in " + vertex1.Number);
 				IEnumerator iEnumerator = vertex1.Successors.GetEnumerator();
 				try
 				{
@@ -336,7 +336,7 @@ namespace Netron.GraphLib.Analysis
 						{
 							queue.Enqueue(vertex2);
 							visitor.Visit(vertex2);
-							Console.WriteLine("engueueing " + vertex2.Number);
+							System.Diagnostics.Debug.WriteLine("engueueing " + vertex2.Number);
 							flags[vertex2.Number] = true;
 						}
 					}
@@ -1126,7 +1126,7 @@ namespace Netron.GraphLib.Analysis
 
 			public void Finish()
 			{
-				Console.WriteLine();
+				System.Diagnostics.Debug.WriteLine();
 				comma = false;
 			}
 			#endregion

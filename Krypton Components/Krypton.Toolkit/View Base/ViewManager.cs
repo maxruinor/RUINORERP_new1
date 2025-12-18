@@ -183,7 +183,7 @@ namespace Krypton.Toolkit
 
             if (OutputDebug)
             {
-                Console.WriteLine(@"Id:{0} GetPreferredSize Type:{1} Ret:{2} Proposed:{3}",
+                System.Diagnostics.Debug.WriteLine(@"Id:{0} GetPreferredSize Type:{1} Ret:{2} Proposed:{3}",
                     Id,
                     Control.GetType(),
                     retSize,
@@ -338,7 +338,7 @@ namespace Krypton.Toolkit
                     PI.QueryPerformanceCounter(ref outputEnd);
                     var outputDiff = outputEnd - _outputStart;
 
-                    Console.WriteLine(@"Id:{0} Layout Type:{1} Elapsed:{2} Rect:{3}",
+                    System.Diagnostics.Debug.WriteLine(@"Id:{0} Layout Type:{1} Elapsed:{2} Rect:{3}",
                         Id,
                         context.Control.GetType(),
                         outputDiff,
@@ -419,7 +419,7 @@ namespace Krypton.Toolkit
                     PI.QueryPerformanceCounter(ref outputEnd);
                     var outputDiff = outputEnd - _outputStart;
 
-                    Console.WriteLine(@"Id:{0} Paint Type:{1} Elapsed: {2}",
+                    System.Diagnostics.Debug.WriteLine(@"Id:{0} Paint Type:{1} Elapsed: {2}",
                         Id,
                         Control.GetType(),
                         outputDiff);

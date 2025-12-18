@@ -49,7 +49,7 @@ namespace RUINOR.Core
             }
             catch (InvalidOperationException invalidOperationException)
             {
-                Console.WriteLine(invalidOperationException.Message);
+                System.Diagnostics.Debug.WriteLine(invalidOperationException.Message);
             }
         }
 
@@ -72,7 +72,7 @@ namespace RUINOR.Core
             }
             catch (InvalidOperationException invalidOperationException)
             {
-                Console.WriteLine(invalidOperationException.Message);
+                System.Diagnostics.Debug.WriteLine(invalidOperationException.Message);
             }
         }
 

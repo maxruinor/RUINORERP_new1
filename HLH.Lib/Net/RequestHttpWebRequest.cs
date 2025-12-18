@@ -214,7 +214,7 @@
         private void HandException(Exception ex, StateObject state)
         {
             string message = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " : " + state.ResponseInfo.RequestInfo.Url + " : " + ex.Message;
-            Console.WriteLine(message);
+            System.Diagnostics.Debug.WriteLine(message);
         }
     }
 }

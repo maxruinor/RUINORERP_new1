@@ -51,7 +51,7 @@ namespace RUINORERP.Common.Log4Net
             // 使用静态ConcurrentDictionary确保每个名称只创建一个logger实例
             _log = _sharedLogs.GetOrAdd(name, (loggerName) => 
             {
-                Console.WriteLine($"创建新的日志记录器: {loggerName}");
+                System.Diagnostics.Debug.WriteLine($"创建新的日志记录器: {loggerName}");
                 return LogManager.GetLogger(loggerRepository.Name, loggerName);
             });
         }
@@ -117,7 +117,7 @@ namespace RUINORERP.Common.Log4Net
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine("格式化日志消息失败: " + ex.Message);
+                        System.Diagnostics.Debug.WriteLine("格式化日志消息失败: " + ex.Message);
                         message = "无法格式化日志消息: " + state?.ToString();
                     }
                 }
@@ -125,13 +125,13 @@ namespace RUINORERP.Common.Log4Net
                 // 确保应用程序上下文和当前用户不为空
                 if (_appcontext == null)
                 {
-                    Console.WriteLine("警告: 应用程序上下文为空");
+                    System.Diagnostics.Debug.WriteLine("警告: 应用程序上下文为空");
                     return;
                 }
                 
                 if (_appcontext.CurrentUser == null)
                 {
-                    Console.WriteLine("警告: 当前用户上下文为空");
+                    System.Diagnostics.Debug.WriteLine("警告: 当前用户上下文为空");
                     return;
                 }
 
@@ -214,7 +214,7 @@ namespace RUINORERP.Common.Log4Net
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine("处理日志状态对象失败: " + ex.Message);
+                    System.Diagnostics.Debug.WriteLine("处理日志状态对象失败: " + ex.Message);
                 }
                 
                 #endregion
@@ -256,7 +256,7 @@ namespace RUINORERP.Common.Log4Net
             }
             catch (Exception exx)
             {
-                Console.WriteLine($"日志处理异常: {exx.Message}\n{exx.StackTrace}");
+                System.Diagnostics.Debug.WriteLine($"日志处理异常: {exx.Message}\n{exx.StackTrace}");
             }
 
 
@@ -294,13 +294,13 @@ namespace RUINORERP.Common.Log4Net
                             try
                             {
                                 _ConnectionString = CryptoHelper.GetDecryptedConnectionString();
-                                Console.WriteLine("从配置文件获取连接字符串成功");
+                                System.Diagnostics.Debug.WriteLine("从配置文件获取连接字符串成功");
                                 adoNetAppender.ConnectionString = _ConnectionString;
-                                Console.WriteLine("已应用从配置文件获取的连接字符串");
+                                System.Diagnostics.Debug.WriteLine("已应用从配置文件获取的连接字符串");
                             }
                             catch (Exception ex)
                             {
-                                Console.WriteLine("警告：获取连接字符串失败，使用备用连接字符串: " + ex.Message);
+                                System.Diagnostics.Debug.WriteLine("警告：获取连接字符串失败，使用备用连接字符串: " + ex.Message);
                                 // 只有在无法从配置文件获取时才使用备用连接字符串
                                 adoNetAppender.ConnectionString = "Server=192.168.0.254;Database=erpnew;UID=sa;Password=SA!@#123sa;Max Pool Size=1000;MultipleActiveResultSets=True;Min Pool Size=0;Connection Lifetime=0;";
                             }
@@ -309,7 +309,7 @@ namespace RUINORERP.Common.Log4Net
                         {
                             // 如果传入了连接字符串，直接使用
                             adoNetAppender.ConnectionString = _ConnectionString;
-                            Console.WriteLine("已应用传入的连接字符串进行日志数据库连接");
+                            System.Diagnostics.Debug.WriteLine("已应用传入的连接字符串进行日志数据库连接");
                         }
 
                         // 配置INSERT命令和参数 - 调整字段顺序和参数大小以匹配数据库表结构
@@ -336,7 +336,7 @@ namespace RUINORERP.Common.Log4Net
 
                         // 配置仓库使用我们的appender
                         log4net.Config.BasicConfigurator.Configure(_sharedLoggerRepository, adoNetAppender);
-                        Console.WriteLine("日志仓库已成功创建并配置");
+                        System.Diagnostics.Debug.WriteLine("日志仓库已成功创建并配置");
                     }
                 }
             }

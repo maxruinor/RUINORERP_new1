@@ -620,7 +620,7 @@ namespace RUINORERP.Server
             // 监听配置变更
             Globalconfig.OnChange(updatedConfig =>
             {
-                Console.WriteLine($"Configuration has changed: {updatedConfig.SomeSetting}");
+                System.Diagnostics.Debug.WriteLine($"Configuration has changed: {updatedConfig.SomeSetting}");
             });
 
             // 初始化导航按钮事件
@@ -1812,7 +1812,7 @@ namespace RUINORERP.Server
                         // 捕获所有异常，确保日志操作不会影响主程序
                         try
                         {
-                            Console.WriteLine($"日志后台处理错误: {ex.Message}");
+                            System.Diagnostics.Debug.WriteLine($"日志后台处理错误: {ex.Message}");
                         }
                         catch { }
                     }
@@ -2389,7 +2389,7 @@ namespace RUINORERP.Server
         /// </summary>
         private void HandleCtrlPShortcut()
         {
-            Console.WriteLine("Ctrl + P 被按下");
+            System.Diagnostics.Debug.WriteLine("Ctrl + P 被按下");
 
             using (var frmPassword = new frmInput())
             {
@@ -3206,14 +3206,14 @@ namespace RUINORERP.Server
                             adoNetAppender.BufferSize = bufferSize;
                             // 激活选项以应用更改
                             adoNetAppender.ActivateOptions();
-                            Console.WriteLine($"Log4Net BufferSize已更新为{bufferSize}。");
+                            System.Diagnostics.Debug.WriteLine($"Log4Net BufferSize已更新为{bufferSize}。");
                         }
                     }
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"更新Log4Net BufferSize时发生错误: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"更新Log4Net BufferSize时发生错误: {ex.Message}");
             }
         }
     }

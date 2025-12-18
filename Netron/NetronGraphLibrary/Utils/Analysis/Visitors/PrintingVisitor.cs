@@ -33,7 +33,7 @@ namespace Netron.GraphLib.Analysis
 		/// </summary>
 		public void Finish()
 		{
-			Console.WriteLine("\nFinish of the printing visitor.");
+			System.Diagnostics.Debug.WriteLine("\nFinish of the printing visitor.");
 			Trace.WriteLine("\nFinish of the printing visitor.");
 			comma = false;
 		}

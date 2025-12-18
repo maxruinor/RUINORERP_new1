@@ -83,7 +83,7 @@ namespace RUINORERP.Common.Helper
         {
             try
             {
-                Console.WriteLine($"尝试获取连接字符串 '{name}'...");
+                System.Diagnostics.Debug.WriteLine($"尝试获取连接字符串 '{name}'...");
                 string encryptedConnectionString = null;
                 
                 // 1. 安全地从ConnectionStrings配置节获取，避免AccessViolationException
@@ -95,13 +95,13 @@ namespace RUINORERP.Common.Helper
                         if (connSetting != null)
                         {
                             encryptedConnectionString = connSetting.ConnectionString;
-                            Console.WriteLine($"从ConnectionStrings获取到连接字符串 '{name}'");
+                            System.Diagnostics.Debug.WriteLine($"从ConnectionStrings获取到连接字符串 '{name}'");
                         }
                     }
                 }
                 catch (Exception connEx)
                 {
-                    Console.WriteLine($"访问ConnectionStrings时出错: {connEx.Message}");
+                    System.Diagnostics.Debug.WriteLine($"访问ConnectionStrings时出错: {connEx.Message}");
                     // 继续尝试其他方式，不立即抛出异常
                 }
 
@@ -115,13 +115,13 @@ namespace RUINORERP.Common.Helper
                             encryptedConnectionString = ConfigurationManager.AppSettings[name];
                             if (!string.IsNullOrEmpty(encryptedConnectionString))
                             {
-                                Console.WriteLine($"从AppSettings获取到连接字符串 '{name}'");
+                                System.Diagnostics.Debug.WriteLine($"从AppSettings获取到连接字符串 '{name}'");
                             }
                         }
                     }
                     catch (Exception appEx)
                     {
-                        Console.WriteLine($"访问AppSettings时出错: {appEx.Message}");
+                        System.Diagnostics.Debug.WriteLine($"访问AppSettings时出错: {appEx.Message}");
                     }
                 }
 
@@ -129,7 +129,7 @@ namespace RUINORERP.Common.Helper
                 // 避免递归调用导致的潜在问题
                 if (string.IsNullOrEmpty(encryptedConnectionString) && name != "ConnectString")
                 {
-                    Console.WriteLine($"尝试使用通用连接字符串 'ConnectString' 替代 '{name}'");
+                    System.Diagnostics.Debug.WriteLine($"尝试使用通用连接字符串 'ConnectString' 替代 '{name}'");
                     try
                     {
                         // 直接获取ConnectString，避免递归调用
@@ -150,7 +150,7 @@ namespace RUINORERP.Common.Helper
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"获取通用连接字符串时出错: {ex.Message}");
+                        System.Diagnostics.Debug.WriteLine($"获取通用连接字符串时出错: {ex.Message}");
                     }
                 }
 
@@ -162,9 +162,9 @@ namespace RUINORERP.Common.Helper
 
                 // 5. 解密连接字符串
                 string key = "ruinor1234567890";
-                Console.WriteLine("开始解密连接字符串...");
+                System.Diagnostics.Debug.WriteLine("开始解密连接字符串...");
                 string decryptedConnectionString = HLH.Lib.Security.EncryptionHelper.AesDecrypt(encryptedConnectionString, key);
-                Console.WriteLine("连接字符串解密成功");
+                System.Diagnostics.Debug.WriteLine("连接字符串解密成功");
                 
                 // 6. 验证解密后的连接字符串是否有效
                 if (string.IsNullOrEmpty(decryptedConnectionString) || !decryptedConnectionString.ToLower().Contains("server"))
@@ -176,12 +176,12 @@ namespace RUINORERP.Common.Helper
             }
             catch (AccessViolationException ave)
             {
-                Console.WriteLine($"内存访问冲突错误 - 获取连接字符串 '{name}': {ave.Message}");
+                System.Diagnostics.Debug.WriteLine($"内存访问冲突错误 - 获取连接字符串 '{name}': {ave.Message}");
                 throw new ApplicationException($"内存访问冲突: 无法安全访问配置文件中的连接字符串 '{name}'", ave);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"获取或解密连接字符串 '{name}' 失败: " + ex.Message);
+                System.Diagnostics.Debug.WriteLine($"获取或解密连接字符串 '{name}' 失败: " + ex.Message);
                 // 包装异常，提供更多上下文信息
                 throw new ApplicationException($"获取或解密连接字符串 '{name}' 时发生错误: {ex.Message}", ex);
             }
@@ -201,7 +201,7 @@ namespace RUINORERP.Common.Helper
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"获取连接字符串失败，使用默认值: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"获取连接字符串失败，使用默认值: {ex.Message}");
                 return defaultConnectionString;
             }
         }

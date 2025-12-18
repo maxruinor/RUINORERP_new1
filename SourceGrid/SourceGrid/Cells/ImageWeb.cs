@@ -124,7 +124,7 @@ namespace SourceGrid.Cells
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"初始化图片单元格值时出错: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"初始化图片单元格值时出错: {ex.Message}");
             }
         }
 
@@ -178,7 +178,7 @@ namespace SourceGrid.Cells
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"设置图片数据时出错: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"设置图片数据时出错: {ex.Message}");
             }
         }
 
@@ -200,7 +200,7 @@ namespace SourceGrid.Cells
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"清除图片数据时出错: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"清除图片数据时出错: {ex.Message}");
             }
         }
 

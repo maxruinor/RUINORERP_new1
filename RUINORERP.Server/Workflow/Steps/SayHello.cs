@@ -29,7 +29,7 @@ namespace RUINORERP.Server.Workflow.Steps
         public override ExecutionResult Run(IStepExecutionContext context)
         {
             _logger.LogInformation("Hello workflow step executed");
-            Console.WriteLine("Hello");
+            System.Diagnostics.Debug.WriteLine("Hello");
             return ExecutionResult.Next();
         }
     }

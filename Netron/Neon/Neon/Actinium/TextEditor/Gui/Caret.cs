@@ -258,7 +258,7 @@ namespace Netron.Neon.TextEditor
 					currentPos = pos;
 				}
 			} catch (Exception e) {
-				Console.WriteLine("Got exception while update caret position : " + e);
+				System.Diagnostics.Debug.WriteLine("Got exception while update caret position : " + e);
 			}
 			
 		}
@@ -291,7 +291,7 @@ namespace Netron.Neon.TextEditor
 			ArrayList foldings = textArea.Document.FoldingManager.GetFoldingsFromPosition(line, column);
 			bool  shouldUpdate = false;
 			foreach (FoldMarker foldMarker in foldings) {
-				//Console.WriteLine(foldMarker);
+				//System.Diagnostics.Debug.WriteLine(foldMarker);
 				shouldUpdate |= foldMarker.IsFolded;
 				foldMarker.IsFolded = false;
 			}

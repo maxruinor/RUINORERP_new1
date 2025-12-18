@@ -76,7 +76,7 @@ namespace Netron.GraphLib.Analysis
 						continue;
 
 					}
-					Console.WriteLine("Current edge: [" + v + "," + w + "]");
+					System.Diagnostics.Debug.WriteLine("Current edge: [" + v + "," + w + "]");
 					flag = true;
 					return flag;
 				}
@@ -334,7 +334,7 @@ namespace Netron.GraphLib.Analysis
 			matrix[j, i]= edge; //TODO: the DigraphAsMatrix does'nt do this, of course
 			
 			mNumberOfEdges++;
-			Console.WriteLine(mNumberOfEdges);
+			System.Diagnostics.Debug.WriteLine(mNumberOfEdges);
 		}
 
 		/// <summary>

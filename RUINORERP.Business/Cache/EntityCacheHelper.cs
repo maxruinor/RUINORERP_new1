@@ -102,7 +102,7 @@ namespace RUINORERP.Business.Cache
             catch (Exception ex)
             {
                 // 记录异常但不抛出，避免影响应用程序启动
-                Console.WriteLine($"获取实体缓存服务实例时发生异常: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"获取实体缓存服务实例时发生异常: {ex.Message}");
             }
 
             return null;
@@ -178,7 +178,7 @@ namespace RUINORERP.Business.Cache
                 }
 
                 // 降级到控制台输出
-                Console.WriteLine($"警告: {message}");
+                System.Diagnostics.Debug.WriteLine($"警告: {message}");
             }
             catch { }
         }

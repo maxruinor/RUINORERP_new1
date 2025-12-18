@@ -125,7 +125,7 @@ namespace RUINORERP.Business.BNR
                         {
                             // 如果找不到处理器，添加警告信息但继续执行
                             // 这样可以避免因为单个未知处理器导致整个编号生成失败
-                            Console.WriteLine($"警告：找不到参数处理器 '{handlerName}'，跳过处理项 '{item}'");
+                            System.Diagnostics.Debug.WriteLine($"警告：找不到参数处理器 '{handlerName}'，跳过处理项 '{item}'");
                             // 可以选择直接添加原始项，或者忽略
                             sb.Append(item);
                         }
@@ -133,7 +133,7 @@ namespace RUINORERP.Business.BNR
                     catch (Exception ex)
                     {
                         // 记录单个参数处理的错误，但不中断整体处理
-                        Console.WriteLine($"处理参数项 '{item}' 时出错: {ex.Message}");
+                        System.Diagnostics.Debug.WriteLine($"处理参数项 '{item}' 时出错: {ex.Message}");
                         // 可以选择直接添加原始项，保证编号生成不中断
                         sb.Append(item);
                     }
@@ -145,7 +145,7 @@ namespace RUINORERP.Business.BNR
             {
                 // 捕获所有异常并包装为更有意义的错误信息
                 string errorMessage = $"编号生成失败 (规则: {rule}): {ex.Message}";
-                Console.WriteLine(errorMessage);
+                System.Diagnostics.Debug.WriteLine(errorMessage);
                 // 抛出异常，而不是返回空字符串，这样调用者可以捕获并处理异常
                 throw new InvalidOperationException(errorMessage, ex);
             }

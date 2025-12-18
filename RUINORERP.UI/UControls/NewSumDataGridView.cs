@@ -1400,7 +1400,7 @@ namespace RUINORERP.UI.UControls
                         int columnIndex = hitInfo.ColumnIndex;   // 获取列索引
 
                         // 输出选中单元格的值
-                        //Console.WriteLine("Selected Cell Value: " + columnIndex, rowIndex].Value);
+                        //System.Diagnostics.Debug.WriteLine("Selected Cell Value: " + columnIndex, rowIndex].Value);
                         break;
                     case DataGridViewHitTestType.ColumnHeader:
                         DisplayIndexChangedFlag = true;
@@ -1425,10 +1425,10 @@ namespace RUINORERP.UI.UControls
                 return;
             else
             {
-                Console.WriteLine("Changed");
+                System.Diagnostics.Debug.WriteLine("Changed");
             }
           */
-            //Console.WriteLine("{0} 的位置改变到 {1} ", e.Column.Name, e.Column.DisplayIndex);
+            //System.Diagnostics.Debug.WriteLine("{0} 的位置改变到 {1} ", e.Column.Name, e.Column.DisplayIndex);
             if (DisplayIndexChangedFlag)
             {
                 //保存显示顺序

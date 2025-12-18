@@ -17,7 +17,7 @@ namespace RUINORERP.Server.Tests
         /// </summary>
         public static void TestPortCheck()
         {
-            Console.WriteLine("开始测试端口检查功能...\n");
+            System.Diagnostics.Debug.WriteLine("开始测试端口检查功能...\n");
             
             // 测试一些常见端口
             var testPorts = new List<int> { 80, 443, 3009, 3006, 6666, 8080, 2020 };
@@ -25,7 +25,7 @@ namespace RUINORERP.Server.Tests
             foreach (var port in testPorts)
             {
                 bool isPortInUse = IsPortInUse(port);
-                Console.WriteLine($"端口 {port}: {(isPortInUse ? "已被占用" : "可用")}");
+                System.Diagnostics.Debug.WriteLine($"端口 {port}: {(isPortInUse ? "已被占用" : "可用")}");
                 
                 if (isPortInUse)
                 {
@@ -33,7 +33,7 @@ namespace RUINORERP.Server.Tests
                 }
             }
             
-            Console.WriteLine("\n端口检查测试完成。");
+            System.Diagnostics.Debug.WriteLine("\n端口检查测试完成。");
         }
         
         /// <summary>
@@ -74,7 +74,7 @@ namespace RUINORERP.Server.Tests
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"检查端口 {port} 时发生异常: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"检查端口 {port} 时发生异常: {ex.Message}");
                 return false; // 发生异常时假设端口未被占用
             }
         }
@@ -87,8 +87,8 @@ namespace RUINORERP.Server.Tests
         {
             try
             {
-                Console.WriteLine($"  检查端口 {port} 占用详情:");
-                Console.WriteLine($"  命令: netstat -ano | findstr :{port}");
+                System.Diagnostics.Debug.WriteLine($"  检查端口 {port} 占用详情:");
+                System.Diagnostics.Debug.WriteLine($"  命令: netstat -ano | findstr :{port}");
                 
                 // 执行命令获取详细信息
                 var startInfo = new System.Diagnostics.ProcessStartInfo
@@ -109,12 +109,12 @@ namespace RUINORERP.Server.Tests
                         
                         if (!string.IsNullOrWhiteSpace(output))
                         {
-                            Console.WriteLine("  输出:");
+                            System.Diagnostics.Debug.WriteLine("  输出:");
                             foreach (var line in output.Split('\n'))
                             {
                                 if (!string.IsNullOrWhiteSpace(line))
                                 {
-                                    Console.WriteLine($"    {line.Trim()}");
+                                    System.Diagnostics.Debug.WriteLine($"    {line.Trim()}");
                                 }
                             }
                         }
@@ -123,7 +123,7 @@ namespace RUINORERP.Server.Tests
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"  获取端口 {port} 详情时发生错误: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"  获取端口 {port} 详情时发生错误: {ex.Message}");
             }
         }
     }

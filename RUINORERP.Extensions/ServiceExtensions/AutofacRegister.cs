@@ -55,6 +55,7 @@ namespace RUINORERP.Extensions
             
             
             builder.RegisterTypes(types.ToArray())
+               .Where(t => t != typeof(RUINORERP.Business.Cache.TableSchemaManager)) // 排除TableSchemaManager，避免覆盖特定注册
                .AsImplementedInterfaces()
                .PropertiesAutowired()
                .InstancePerDependency()

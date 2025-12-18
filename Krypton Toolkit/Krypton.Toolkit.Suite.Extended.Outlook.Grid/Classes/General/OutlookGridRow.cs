@@ -535,7 +535,7 @@ namespace Krypton.Toolkit.Suite.Extended.Outlook.Grid
         public bool IsAParentNodeOrGroupCollapsed(OutlookGridRow? row, int i)
         {
             i++;
-            //Console.WriteLine(row.ToString());
+            //System.Diagnostics.Debug.WriteLine(row.ToString());
             if (row.ParentNode != null)
             {
                 //if it is not the original group but it is one parent and if it is collapsed just stop here

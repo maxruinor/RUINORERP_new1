@@ -77,7 +77,7 @@ namespace RUINORERP.UI.IM
             catch (Exception ex)
             {
                 // 记录错误
-                Console.WriteLine($"加载消息时发生错误: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"加载消息时发生错误: {ex.Message}");
                 MessageBox.Show("加载消息失败，请稍后重试", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
@@ -325,7 +325,7 @@ namespace RUINORERP.UI.IM
             catch (Exception ex)
             {
                 // 记录错误
-                Console.WriteLine($"导航到业务窗体时发生错误: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"导航到业务窗体时发生错误: {ex.Message}");
             }
         }
 

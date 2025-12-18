@@ -27,7 +27,7 @@ namespace RUINORERP.Server.Services.BizCode
                 var serviceProvider = Startup.ServiceProvider;
                 if (serviceProvider == null)
                 {
-                    Console.WriteLine("服务提供者未初始化");
+                    System.Diagnostics.Debug.WriteLine("服务提供者未初始化");
                     return;
                 }
 
@@ -35,26 +35,26 @@ namespace RUINORERP.Server.Services.BizCode
                 var bizCodeService = serviceProvider.GetService<IBizCodeGenerateService>();
                 if (bizCodeService == null)
                 {
-                    Console.WriteLine("无法获取业务编码服务");
+                    System.Diagnostics.Debug.WriteLine("无法获取业务编码服务");
                     return;
                 }
 
                 // 测试生成基础SKU编号
-                Console.WriteLine("测试生成基础SKU编号...");
+                System.Diagnostics.Debug.WriteLine("测试生成基础SKU编号...");
                 string skuNo = await bizCodeService.GenerateBaseInfoNoAsync(BaseInfoType.SKU_No);
-                Console.WriteLine($"生成的SKU编号: {skuNo}");
+                System.Diagnostics.Debug.WriteLine($"生成的SKU编号: {skuNo}");
 
                 // 测试生成业务单据编号
-                Console.WriteLine("\n测试生成业务单据编号...");
+                System.Diagnostics.Debug.WriteLine("\n测试生成业务单据编号...");
                 string orderNo = await bizCodeService.GenerateBizBillNoAsync(BizType.销售订单);
-                Console.WriteLine($"生成的销售订单编号: {orderNo}");
+                System.Diagnostics.Debug.WriteLine($"生成的销售订单编号: {orderNo}");
 
                 
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"测试过程中发生错误: {ex.Message}");
-                Console.WriteLine($"堆栈跟踪: {ex.StackTrace}");
+                System.Diagnostics.Debug.WriteLine($"测试过程中发生错误: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"堆栈跟踪: {ex.StackTrace}");
             }
         }
     }

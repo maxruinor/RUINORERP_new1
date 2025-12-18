@@ -31,7 +31,7 @@ namespace RUINORERP.Common.Log4Net {
             catch (Exception ex)
             {
                 // 记录初始化过程中的异常
-                System.Console.WriteLine("初始化EnhancedCustomLayout失败: " + ex.Message);
+                System.Diagnostics.Debug.WriteLine("初始化EnhancedCustomLayout失败: " + ex.Message);
             }
         }
     }
@@ -99,7 +99,7 @@ namespace RUINORERP.Common.Log4Net {
             }
             catch (Exception ex)
             {
-                System.Console.WriteLine("查找日志属性失败: " + ex.Message);
+                System.Diagnostics.Debug.WriteLine("查找日志属性失败: " + ex.Message);
                 return null;
             }
         }

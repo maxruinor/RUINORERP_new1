@@ -80,7 +80,7 @@ namespace Krypton.Toolkit.Suite.Extended.Outlook.Grid
         public void UpdateStyle()
         {
             OutlookGridRow? node = OwningNode;
-            //Console.WriteLine(DateTime.Now.ToString() + " " + node.ToString());
+            //System.Diagnostics.Debug.WriteLine(DateTime.Now.ToString() + " " + node.ToString());
             bool hasChildNodes = node != null && node.HasChildren;
             int level = Level;
             int plus = 0;
@@ -109,7 +109,7 @@ namespace Krypton.Toolkit.Suite.Extended.Outlook.Grid
         protected override void Paint(Graphics graphics, Rectangle clipBounds, Rectangle cellBounds, int rowIndex, DataGridViewElementStates cellState, object value, object formattedValue, string errorText, DataGridViewCellStyle cellStyle, DataGridViewAdvancedBorderStyle advancedBorderStyle, DataGridViewPaintParts paintParts)
         {
             OutlookGridRow? node = OwningNode;
-            // Console.WriteLine(DateTime.Now.ToString() + " " + node.ToString());
+            // System.Diagnostics.Debug.WriteLine(DateTime.Now.ToString() + " " + node.ToString());
             //bool hasChildNodes = node.HasChildren;
             //int level = this.Level ;
             //int plus = 0;

@@ -39,7 +39,7 @@ namespace RUINORERP.Business.BizMapperService
             catch (Exception ex)
             {
                 // 记录错误但不影响主流程
-                Console.WriteLine($"生成数据内容失败: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"生成数据内容失败: {ex.Message}");
                 return string.Empty;
             }
         }

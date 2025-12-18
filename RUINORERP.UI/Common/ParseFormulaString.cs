@@ -20,6 +20,6 @@ namespace RUINORERP.UI.Common
 
         //result = parser.Parse(expr); // parsing
 
-        //Console.WriteLine(result); // 38.95
+        //System.Diagnostics.Debug.WriteLine(result); // 38.95
     }
 }

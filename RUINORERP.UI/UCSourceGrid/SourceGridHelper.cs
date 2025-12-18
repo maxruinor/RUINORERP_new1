@@ -1078,7 +1078,7 @@ namespace RUINORERP.UI.UCSourceGrid
             {
                 if (parent.ToString().StartsWith("RUINORERP.UI."))
                 {
-                    //Console.WriteLine("找到了: " + parent.ToString());
+                    //System.Diagnostics.Debug.WriteLine("找到了: " + parent.ToString());
                     find = true;
                     break;
                 }
@@ -1087,7 +1087,7 @@ namespace RUINORERP.UI.UCSourceGrid
                 // 为了避免无限循环，设置一个合理的上限
                 if (parentCount > 10)
                 {
-                    //Console.WriteLine("未找到符合条件的父窗体");
+                    //System.Diagnostics.Debug.WriteLine("未找到符合条件的父窗体");
                     break;
                 }
             }

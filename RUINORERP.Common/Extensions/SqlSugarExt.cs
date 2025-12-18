@@ -661,7 +661,7 @@ namespace RUINORERP.Common.Extensions
             if (expSb.Length != 0)                                     //转换where条件表达式树
             {
                 var exp = expSb.ToString().Remove(expSb.Length - 4, 4);
-                System.Console.WriteLine(exp);
+                System.Diagnostics.Debug.WriteLine(exp);
                 //https://www.coder.work/article/7717381  看这里
                 var e = DynamicExpressionParser.ParseLambda<T, bool>(new ParsingConfig(), true, exp, whereObj);
                 //ew ParsingConfig(), true, "City = @0", "London"

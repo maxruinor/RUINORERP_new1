@@ -885,15 +885,15 @@ namespace HLH.Lib.Helper
   static void Main(string[] args) 
   { 
   CNDate dt = new CNDate(DateTime.Today); 
-  Console.WriteLine("今天是：" + dt.Date.ToString() + dt.GetConstellationName()); 
-  Console.WriteLine(dt.l_GetLunarHolDay()); 
-  Console.WriteLine(dt.GetLunarHolDay()); 
-  Console.WriteLine("闰月" + dt.GetLeapMonth(UInt16.Parse(args[0]))); 
-  Console.WriteLine("2月的天数" + dt.LunarMonthDays(UInt16.Parse(args[0]), UInt16.Parse(args[1]))); 
-  Console.WriteLine("天数" + dt.LunarYearDays(UInt16.Parse(args[0]))); 
-  Console.WriteLine("" + dt.FormatLunarYear()); 
+  System.Diagnostics.Debug.WriteLine("今天是：" + dt.Date.ToString() + dt.GetConstellationName()); 
+  System.Diagnostics.Debug.WriteLine(dt.l_GetLunarHolDay()); 
+  System.Diagnostics.Debug.WriteLine(dt.GetLunarHolDay()); 
+  System.Diagnostics.Debug.WriteLine("闰月" + dt.GetLeapMonth(UInt16.Parse(args[0]))); 
+  System.Diagnostics.Debug.WriteLine("2月的天数" + dt.LunarMonthDays(UInt16.Parse(args[0]), UInt16.Parse(args[1]))); 
+  System.Diagnostics.Debug.WriteLine("天数" + dt.LunarYearDays(UInt16.Parse(args[0]))); 
+  System.Diagnostics.Debug.WriteLine("" + dt.FormatLunarYear()); 
   dt.Date = DateTime.Today.AddDays(1); 
-  Console.WriteLine("明天是：" + dt.Date.ToString() + dt.GetConstellationName()); 
+  System.Diagnostics.Debug.WriteLine("明天是：" + dt.Date.ToString() + dt.GetConstellationName()); 
   } 
   } //class Test 
   }

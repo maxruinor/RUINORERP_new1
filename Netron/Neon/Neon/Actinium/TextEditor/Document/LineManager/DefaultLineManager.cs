@@ -126,7 +126,7 @@ namespace Netron.Neon.TextEditor.Document
 			ISegment nextDelimiter = NextDelimiter(text, 0);
 			if (nextDelimiter == null || nextDelimiter.Offset < 0) {
 				line.TotalLength += text.Length;
-//				Console.WriteLine("1:Line length of line {0} set to {1}", lineNumber, line.TotalLength - line.DelimiterLength);
+//				System.Diagnostics.Debug.WriteLine("1:Line length of line {0} set to {1}", lineNumber, line.TotalLength - line.DelimiterLength);
 				markLines.Add(line);
 				OnLineLengthChanged(new LineLengthEventArgs(document, lineNumber, offset -line.Offset, text.Length));
 				return 0;
@@ -135,7 +135,7 @@ namespace Netron.Neon.TextEditor.Document
 			int restLength = line.Offset + line.TotalLength - offset;
 			
 			if (restLength > 0) {
-//				Console.WriteLine("Insert: Set restline in line {0} to length {1}", lineNumber, restLength);
+//				System.Diagnostics.Debug.WriteLine("Insert: Set restline in line {0} to length {1}", lineNumber, restLength);
 				LineSegment lineRest = new LineSegment(offset, restLength);
 				lineRest.DelimiterLength = line.DelimiterLength;
 				
@@ -153,7 +153,7 @@ namespace Netron.Neon.TextEditor.Document
 			line.DelimiterLength = nextDelimiter.Length;
 			int nextStart = offset + nextDelimiter.Offset + nextDelimiter.Length;
 			line.TotalLength = nextStart - line.Offset;
-//			Console.WriteLine("2:Line length of line {0} set to {1}", lineNumber, line.TotalLength - line.DelimiterLength);
+//			System.Diagnostics.Debug.WriteLine("2:Line length of line {0} set to {1}", lineNumber, line.TotalLength - line.DelimiterLength);
 			
 			markLines.Add(line);
 			text = text.Substring(nextDelimiter.Offset + nextDelimiter.Length);
@@ -172,7 +172,7 @@ namespace Netron.Neon.TextEditor.Document
 			LineSegment line = (LineSegment)lineCollection[lineNumber];
 			if ((lineNumber == lineCollection.Count - 1) && removedLineEnds > 0) {
 				line.TotalLength -= length;
-//				Console.WriteLine("3:Line length of line {0} set to {1}", lineNumber, line.TotalLength - line.DelimiterLength);
+//				System.Diagnostics.Debug.WriteLine("3:Line length of line {0} set to {1}", lineNumber, line.TotalLength - line.DelimiterLength);
 				line.DelimiterLength = 0;
 			} else {
 				++lineNumber;
@@ -186,12 +186,12 @@ namespace Netron.Neon.TextEditor.Document
 					LineSegment line2 = (LineSegment)lineCollection[lineNumber];
 					
 					line.TotalLength += line2.TotalLength;
-//					Console.WriteLine("4:Line length of line {0} set to {1}", lineNumber, line.TotalLength - line.DelimiterLength);
+//					System.Diagnostics.Debug.WriteLine("4:Line length of line {0} set to {1}", lineNumber, line.TotalLength - line.DelimiterLength);
 					line.DelimiterLength = line2.DelimiterLength;
 					lineCollection.RemoveAt(lineNumber);
 				}
 				line.TotalLength -= length;
-//				Console.WriteLine("5:Line length of line {0} set to {1}", lineNumber, line.TotalLength - line.DelimiterLength);
+//				System.Diagnostics.Debug.WriteLine("5:Line length of line {0} set to {1}", lineNumber, line.TotalLength - line.DelimiterLength);
 				
 				if (lineNumber < lineCollection.Count && removedLineEnds > 0) {
 					markLines.Add(lineCollection[lineNumber]);

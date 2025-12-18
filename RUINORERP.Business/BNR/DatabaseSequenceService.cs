@@ -101,7 +101,7 @@ namespace RUINORERP.Business.BNR
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"后台刷新任务异常: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"后台刷新任务异常: {ex.Message}");
                 }
             }
         }
@@ -138,11 +138,11 @@ namespace RUINORERP.Business.BNR
                 // 释放取消令牌
                 _cancellationTokenSource?.Dispose();
                 
-                Console.WriteLine("DatabaseSequenceService 资源已释放，所有缓存已刷新到数据库");
+                System.Diagnostics.Debug.WriteLine("DatabaseSequenceService 资源已释放，所有缓存已刷新到数据库");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"释放 DatabaseSequenceService 资源时出错: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"释放 DatabaseSequenceService 资源时出错: {ex.Message}");
             }
         }
         
@@ -228,7 +228,7 @@ namespace RUINORERP.Business.BNR
                     {
                         _sqlSugarClient.Ado.CommitTran();
                         _lastFlushTime = DateTime.Now;
-                        Console.WriteLine($"成功将 {batchUpdates.Count} 个序列值刷新到数据库");
+                        System.Diagnostics.Debug.WriteLine($"成功将 {batchUpdates.Count} 个序列值刷新到数据库");
                     }
                 }
                 catch (Exception ex)
@@ -242,11 +242,11 @@ namespace RUINORERP.Business.BNR
                         }
                         catch (Exception rollbackEx)
                         {
-                            Console.WriteLine($"回滚事务时发生异常: {rollbackEx.Message}");
+                            System.Diagnostics.Debug.WriteLine($"回滚事务时发生异常: {rollbackEx.Message}");
                         }
                     }
                     
-                    Console.WriteLine($"刷新序列值到数据库失败: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"刷新序列值到数据库失败: {ex.Message}");
                     
                     // 重新入队失败的更新（简化处理）
                     foreach (var update in batchUpdates)
@@ -275,25 +275,25 @@ namespace RUINORERP.Business.BNR
                     _sqlSugarClient.CodeFirst
                         .SetStringDefaultLength(255)
                         .InitTables(typeof(SequenceNumbers));
-                    Console.WriteLine("序号表创建成功");
+                    System.Diagnostics.Debug.WriteLine("序号表创建成功");
                 }
                 else
                 {
                     // 表存在，确保字段完整性
                     EnsureTableStructure();
-                    Console.WriteLine("序号表已存在");
+                    System.Diagnostics.Debug.WriteLine("序号表已存在");
                 }
                 
                 // 检查并创建索引（如果不存在）
                 if (!_sqlSugarClient.DbMaintenance.GetIndexList(tableName).Contains("IX_SequenceNumbers_SequenceKey"))
                 {
                     _sqlSugarClient.DbMaintenance.CreateIndex(tableName, new string[] { "SequenceKey" }, "IX_SequenceNumbers_SequenceKey", true);
-                    Console.WriteLine("创建序号表索引成功");
+                    System.Diagnostics.Debug.WriteLine("创建序号表索引成功");
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"初始化序号表失败: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"初始化序号表失败: {ex.Message}");
                 // 记录日志但不抛出异常，避免影响服务启动
             }
         }
@@ -313,11 +313,11 @@ namespace RUINORERP.Business.BNR
                     .SetStringDefaultLength(255)
                     // 在初始化表时检查表是否存在
                     .InitTables<SequenceNumbers>();
-                Console.WriteLine("表结构同步成功");
+                System.Diagnostics.Debug.WriteLine("表结构同步成功");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"同步表结构时出错: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"同步表结构时出错: {ex.Message}");
                 // 记录异常但不抛出，确保服务继续运行
             }
         }
@@ -375,7 +375,7 @@ namespace RUINORERP.Business.BNR
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"获取当前序列值失败: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"获取当前序列值失败: {ex.Message}");
                 return 0;
             }
         }
@@ -442,11 +442,11 @@ namespace RUINORERP.Business.BNR
                     }
                     catch (Exception rollbackEx)
                     {
-                        Console.WriteLine($"回滚事务时发生异常: {rollbackEx.Message}");
+                        System.Diagnostics.Debug.WriteLine($"回滚事务时发生异常: {rollbackEx.Message}");
                     }
                 }
                 
-                Console.WriteLine($"更新序列值失败: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"更新序列值失败: {ex.Message}");
                 throw;
             }
         }
@@ -550,7 +550,7 @@ namespace RUINORERP.Business.BNR
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"从数据库获取序列值失败: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"从数据库获取序列值失败: {ex.Message}");
                 return 0;
             }
         }
@@ -614,11 +614,11 @@ namespace RUINORERP.Business.BNR
                     }
                     catch (Exception rollbackEx)
                     {
-                        Console.WriteLine($"回滚事务时发生异常: {rollbackEx.Message}");
+                        System.Diagnostics.Debug.WriteLine($"回滚事务时发生异常: {rollbackEx.Message}");
                     }
                 }
                 
-                Console.WriteLine($"重置序列失败: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"重置序列失败: {ex.Message}");
                 throw;
             }
         }
@@ -730,11 +730,11 @@ namespace RUINORERP.Business.BNR
                     }
                     catch (Exception rollbackEx)
                     {
-                        Console.WriteLine($"回滚事务时发生异常: {rollbackEx.Message}");
+                        System.Diagnostics.Debug.WriteLine($"回滚事务时发生异常: {rollbackEx.Message}");
                     }
                 }
                 
-                Console.WriteLine($"更新序列信息失败: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"更新序列信息失败: {ex.Message}");
                 throw;
             }
         }
@@ -801,11 +801,11 @@ namespace RUINORERP.Business.BNR
                     }
                     catch (Exception rollbackEx)
                     {
-                        Console.WriteLine($"回滚事务时发生异常: {rollbackEx.Message}");
+                        System.Diagnostics.Debug.WriteLine($"回滚事务时发生异常: {rollbackEx.Message}");
                     }
                 }
                 
-                Console.WriteLine($"重置序列值失败: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"重置序列值失败: {ex.Message}");
                 throw;
             }
         }
@@ -893,7 +893,7 @@ namespace RUINORERP.Business.BNR
             if (threshold > 0)
             {
                 _batchUpdateThreshold = threshold;
-                Console.WriteLine($"批量更新阈值已设置为: {threshold}");
+                System.Diagnostics.Debug.WriteLine($"批量更新阈值已设置为: {threshold}");
             }
         }
         

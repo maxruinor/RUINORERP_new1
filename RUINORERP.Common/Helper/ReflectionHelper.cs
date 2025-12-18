@@ -529,7 +529,7 @@ namespace RUINORERP.Common.Helper
                         catch (Exception exC)
                         {
                             property.SetValue(obj, Activator.CreateInstance(property.PropertyType));
-                            //Console.WriteLine($"类型转换失败: {ex.Message}");
+                            //System.Diagnostics.Debug.WriteLine($"类型转换失败: {ex.Message}");
                         }
                     }
                 }

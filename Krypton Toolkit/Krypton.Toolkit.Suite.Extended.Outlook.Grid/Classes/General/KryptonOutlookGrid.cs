@@ -700,10 +700,10 @@ namespace Krypton.Toolkit.Suite.Extended.Outlook.Grid
 
                                     foreach (DataGridViewColumn col in listcol.OrderBy(x => x.DisplayIndex))
                                     {
-                                        Console.WriteLine($@"{col.Name} {col.DisplayIndex}");
+                                        System.Diagnostics.Debug.WriteLine($@"{col.Name} {col.DisplayIndex}");
                                     }
 
-                                    Console.WriteLine(@"-----------------");
+                                    System.Diagnostics.Debug.WriteLine(@"-----------------");
 
                                     //*************************************************
                                     //this.Columns.RemoveAt(DragDropSourceIndex);
@@ -1298,7 +1298,7 @@ namespace Krypton.Toolkit.Suite.Extended.Outlook.Grid
         private void ColumnSortChangedEvent(object sender, OutlookGridColumnEventArgs e)
         {
 #if (DEBUG)
-            Console.WriteLine("OutlookGrid - Receives ColumnSortChangedEvent : " + e.Column.Name + " " + e.Column.SortDirection.ToString());
+            System.Diagnostics.Debug.WriteLine("OutlookGrid - Receives ColumnSortChangedEvent : " + e.Column.Name + " " + e.Column.SortDirection.ToString());
 #endif
             _internalColumns[e.Column.Name].SortDirection = e.Column.SortDirection;
             _internalColumns[e.Column.Name].DataGridViewColumn.HeaderCell.SortGlyphDirection = e.Column.SortDirection;
@@ -1316,7 +1316,7 @@ namespace Krypton.Toolkit.Suite.Extended.Outlook.Grid
             //We fill again the grid with the new Grouping info
             Fill();
 #if (DEBUG)
-            Console.WriteLine("OutlookGrid - Receives ColumnGroupAddedEvent : " + e.Column.Name);
+            System.Diagnostics.Debug.WriteLine("OutlookGrid - Receives ColumnGroupAddedEvent : " + e.Column.Name);
 #endif
         }
 
@@ -1331,7 +1331,7 @@ namespace Krypton.Toolkit.Suite.Extended.Outlook.Grid
             //We fill again the grid with the new Grouping info
             Fill();
 #if (DEBUG)
-            Console.WriteLine("OutlookGrid - Receives ColumnGroupRemovedEvent : " + e.Column.Name);
+            System.Diagnostics.Debug.WriteLine("OutlookGrid - Receives ColumnGroupRemovedEvent : " + e.Column.Name);
 #endif
         }
 
@@ -1344,7 +1344,7 @@ namespace Krypton.Toolkit.Suite.Extended.Outlook.Grid
         {
             ClearGroups();
 #if (DEBUG)
-            Console.WriteLine("OutlookGrid - Receives ClearGroupingEvent");
+            System.Diagnostics.Debug.WriteLine("OutlookGrid - Receives ClearGroupingEvent");
 #endif
         }
 
@@ -1357,7 +1357,7 @@ namespace Krypton.Toolkit.Suite.Extended.Outlook.Grid
         {
             CollapseAll();
 #if (DEBUG)
-            Console.WriteLine("OutlookGrid - Receives FullCollapseEvent");
+            System.Diagnostics.Debug.WriteLine("OutlookGrid - Receives FullCollapseEvent");
 #endif
         }
 
@@ -1370,7 +1370,7 @@ namespace Krypton.Toolkit.Suite.Extended.Outlook.Grid
         {
             ExpandAll();
 #if (DEBUG)
-            Console.WriteLine("OutlookGrid - Receives FullExpandEvent");
+            System.Diagnostics.Debug.WriteLine("OutlookGrid - Receives FullExpandEvent");
 #endif
         }
 
@@ -1383,7 +1383,7 @@ namespace Krypton.Toolkit.Suite.Extended.Outlook.Grid
         {
             Expand(e.Column.Name);
 #if (DEBUG)
-            Console.WriteLine("OutlookGrid - Receives GridGroupExpandEvent");
+            System.Diagnostics.Debug.WriteLine("OutlookGrid - Receives GridGroupExpandEvent");
 #endif
         }
 
@@ -1391,7 +1391,7 @@ namespace Krypton.Toolkit.Suite.Extended.Outlook.Grid
         {
             Collapse(e.Column.Name);
 #if (DEBUG)
-            Console.WriteLine("OutlookGrid - Receives GridGroupCollapseEvent");
+            System.Diagnostics.Debug.WriteLine("OutlookGrid - Receives GridGroupCollapseEvent");
 #endif
         }
 
@@ -1402,7 +1402,7 @@ namespace Krypton.Toolkit.Suite.Extended.Outlook.Grid
             Fill(); //to reflect the changes
             ForceRefreshGroupBox();
 #if (DEBUG)
-            Console.WriteLine("OutlookGrid - Receives ColumnGroupIndexChangedEvent");
+            System.Diagnostics.Debug.WriteLine("OutlookGrid - Receives ColumnGroupIndexChangedEvent");
 #endif
         }
 
@@ -1412,7 +1412,7 @@ namespace Krypton.Toolkit.Suite.Extended.Outlook.Grid
             ((OutlookGridDateTimeGroup)col.GroupingType).Interval = ((OutlookGridDateTimeGroup)e.Column.GroupingType).Interval;
             Fill();
 #if (DEBUG)
-            Console.WriteLine("OutlookGrid - Receives GroupIntervalClickEvent");
+            System.Diagnostics.Debug.WriteLine("OutlookGrid - Receives GroupIntervalClickEvent");
 #endif
         }
 
@@ -1428,7 +1428,7 @@ namespace Krypton.Toolkit.Suite.Extended.Outlook.Grid
             }
             Fill();
 #if (DEBUG)
-            Console.WriteLine("OutlookGrid - Receives SortBySummaryCountEvent");
+            System.Diagnostics.Debug.WriteLine("OutlookGrid - Receives SortBySummaryCountEvent");
 #endif
         }
 
@@ -2481,7 +2481,7 @@ namespace Krypton.Toolkit.Suite.Extended.Outlook.Grid
         //        }
         //    }
         //    //sw.Stop();
-        //    //Console.WriteLine(sw.ElapsedMilliseconds.ToString() + " ms" + r.ToString());
+        //    //System.Diagnostics.Debug.WriteLine(sw.ElapsedMilliseconds.ToString() + " ms" + r.ToString());
 
         //}
 
@@ -2796,7 +2796,7 @@ namespace Krypton.Toolkit.Suite.Extended.Outlook.Grid
             //End of Formatting
 #if (DEBUG)
             azer.Stop();
-            Console.WriteLine("Formatting : " + azer.ElapsedMilliseconds + " ms");
+            System.Diagnostics.Debug.WriteLine("Formatting : " + azer.ElapsedMilliseconds + " ms");
             azer.Start();
 #endif
             // this block is used of grouping is turned off
@@ -2976,7 +2976,7 @@ namespace Krypton.Toolkit.Suite.Extended.Outlook.Grid
             Cursor.Current = Cursors.Default;
 #if (DEBUG)
             azer.Stop();
-            Console.WriteLine("FillGrid : " + azer.ElapsedMilliseconds + " ms");
+            System.Diagnostics.Debug.WriteLine("FillGrid : " + azer.ElapsedMilliseconds + " ms");
 #endif
         }
 
@@ -3011,7 +3011,7 @@ namespace Krypton.Toolkit.Suite.Extended.Outlook.Grid
                 }
                 //else
                 //{
-                //    Console.WriteLine("groupCollection[i].Rows" + groupCollection[i].Rows.Count.ToString());
+                //    System.Diagnostics.Debug.WriteLine("groupCollection[i].Rows" + groupCollection[i].Rows.Count.ToString());
                 //    //We sort the rows according to the group sort (useful for alphbetics for example)
                 //    groupCollection[i].Rows.Sort(new OutlookGridRowComparer(groupCollection[i].Column.DataGridViewColumn.Index, internalColumns[groupCollection[i].Column.DataGridViewColumn.Name].SortDirection));
                 //}

@@ -1859,7 +1859,7 @@ namespace RUINORERP.Server.Controls
                     catch (Exception ex)
                     {
                         // 记录日志但不抛出异常
-                        Console.WriteLine($"检查撤销状态失败: {ex.Message}");
+                        System.Diagnostics.Debug.WriteLine($"检查撤销状态失败: {ex.Message}");
                     }
 
                     return false;
@@ -1884,7 +1884,7 @@ namespace RUINORERP.Server.Controls
                     catch (Exception ex)
                     {
                         // 记录日志但不抛出异常
-                        Console.WriteLine($"检查重做状态失败: {ex.Message}");
+                        System.Diagnostics.Debug.WriteLine($"检查重做状态失败: {ex.Message}");
                     }
 
                     return false;

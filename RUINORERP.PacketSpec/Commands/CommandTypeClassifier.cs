@@ -695,8 +695,8 @@ namespace RUINORERP.PacketSpec.Commands
         {
             // 这里可以添加日志记录
             string message = result?.Exception?.Message ?? "unknown reason";
-            // 使用Console.WriteLine作为临时日志记录方式
-            Console.WriteLine($"熔断器已打开，持续时间: {breakDuration.TotalSeconds}秒，原因: {message}");
+            // 使用System.Diagnostics.Debug.WriteLine作为临时日志记录方式
+            System.Diagnostics.Debug.WriteLine($"熔断器已打开，持续时间: {breakDuration.TotalSeconds}秒，原因: {message}");
         }
 
         /// <summary>

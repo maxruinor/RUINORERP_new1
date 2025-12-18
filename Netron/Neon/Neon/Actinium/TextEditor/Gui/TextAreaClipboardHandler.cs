@@ -49,7 +49,7 @@ namespace Netron.Neon.TextEditor
 					IDataObject data = Clipboard.GetDataObject();
 					return data != null && data.GetDataPresent(DataFormats.Text);
 				} catch (Exception e) {
-					Console.WriteLine("Got exception while enablepaste : " + e);
+					System.Diagnostics.Debug.WriteLine("Got exception while enablepaste : " + e);
 					return false;
 				}
 			}
@@ -97,7 +97,7 @@ namespace Netron.Neon.TextEditor
 						Clipboard.SetDataObject(dataObject, true);
 						return true;
 					} catch (Exception e) {
-						Console.WriteLine("Got exception while Copy text to clipboard : " + e);
+						System.Diagnostics.Debug.WriteLine("Got exception while Copy text to clipboard : " + e);
 					}
 					Thread.Sleep(100);
 				}
@@ -140,7 +140,7 @@ namespace Netron.Neon.TextEditor
 						}					}
 				}
 			} catch (Exception ex) {
-				Console.WriteLine("Got exception while Paste : " + ex);
+				System.Diagnostics.Debug.WriteLine("Got exception while Paste : " + ex);
 			}
 		}
 		

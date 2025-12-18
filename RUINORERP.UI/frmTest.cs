@@ -113,7 +113,7 @@ namespace RUINORERP.UI
         private void kryptonButton1_Click(object sender, EventArgs e)
         {
             mc.GetDepartmentByID(99);
-            System.Console.WriteLine("==========");
+            System.System.Diagnostics.Debug.WriteLine("==========");
             return;
             using (var scope = Startup.AutoFacContainer.BeginLifetimeScope())
             {
@@ -156,12 +156,12 @@ namespace RUINORERP.UI
         #region 测试方法
         public static void TestMethod()
         {
-            Console.WriteLine("使用自己new创建的对象无法使用容器提供的ioc");
+            System.Diagnostics.Debug.WriteLine("使用自己new创建的对象无法使用容器提供的ioc");
             var person1 = new Person();
             person1.Method_NoVirtua();
             person1.Method2();
             person1.Method3("person1_p1", "person1_p2");
-            Console.WriteLine();
+            System.Diagnostics.Debug.WriteLine();
             using (var scope = Startup.AutoFacContainer.BeginLifetimeScope())
             {
                 var person = scope.Resolve<Person>();
@@ -197,7 +197,7 @@ namespace RUINORERP.UI
             object ReturnSumInst = Activator.CreateInstance(combinedType);
             //创建实例化
             //object o = ReturnSumInst.InvokeMember("ReturnSum", BindingFlags.InvokeMethod, null, ReturnSumInst, null);//调用方法
-            //Console.WriteLine("Sum:{0}", o.ToString());//显示结果
+            //System.Diagnostics.Debug.WriteLine("Sum:{0}", o.ToString());//显示结果
 
             ///显示列表对应的中文
             System.Collections.Concurrent.ConcurrentQueue<KeyValuePair<string, PropertyInfo>> Ddc = EmitHelper.GetfieldNameList(combinedType);
@@ -273,7 +273,7 @@ namespace RUINORERP.UI
             object ReturnSumInst = Activator.CreateInstance(combinedType);
             //创建实例化
             //object o = ReturnSumInst.InvokeMember("ReturnSum", BindingFlags.InvokeMethod, null, ReturnSumInst, null);//调用方法
-            //Console.WriteLine("Sum:{0}", o.ToString());//显示结果
+            //System.Diagnostics.Debug.WriteLine("Sum:{0}", o.ToString());//显示结果
 
             ///显示列表对应的中文
             System.Collections.Concurrent.ConcurrentQueue<KeyValuePair<string, PropertyInfo>> Ddc = EmitHelper.GetfieldNameList(combinedType);

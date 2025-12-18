@@ -247,7 +247,7 @@ namespace RUINORERP.Server.Controls
                         }
                         catch (Exception ex)
                         {
-                            Console.WriteLine($"解锁单据 {lockInfo.BillID} 失败: {ex.Message}");
+                            System.Diagnostics.Debug.WriteLine($"解锁单据 {lockInfo.BillID} 失败: {ex.Message}");
                             failCount++;
                         }
                     }
@@ -399,7 +399,7 @@ namespace RUINORERP.Server.Controls
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"设置行样式时出错: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"设置行样式时出错: {ex.Message}");
             }
         }
 
@@ -437,7 +437,7 @@ namespace RUINORERP.Server.Controls
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"加载锁定信息列表时出错: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"加载锁定信息列表时出错: {ex.Message}");
                 MessageBox.Show($"加载锁定信息列表失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
@@ -480,7 +480,7 @@ namespace RUINORERP.Server.Controls
 
                 if (string.IsNullOrEmpty(listName))
                 {
-                    Console.WriteLine("列表名称为空，无法加载数据");
+                    System.Diagnostics.Debug.WriteLine("列表名称为空，无法加载数据");
                     return;
                 }
 
@@ -507,7 +507,7 @@ namespace RUINORERP.Server.Controls
                             // 使用BindingList进行更好的数据绑定
                             dataGridViewData.DataSource = new BindingList<LockInfo>(lockInfos);
                             // 记录状态信息到控制台
-                            Console.WriteLine($"共 {lockInfos.Count} 条锁定记录");
+                            System.Diagnostics.Debug.WriteLine($"共 {lockInfos.Count} 条锁定记录");
 
                             // 自动调整列宽以适应内容
                             AutoAdjustColumnWidths();
@@ -519,12 +519,12 @@ namespace RUINORERP.Server.Controls
                             dataGridViewData.Columns.Add("EmptyMessage", "提示");
                             dataGridViewData.Rows.Add("暂无锁定数据");
                             dataGridViewData.ReadOnly = true;
-                            Console.WriteLine("当前没有锁定记录");
+                            System.Diagnostics.Debug.WriteLine("当前没有锁定记录");
                         }
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"获取锁定信息时出错: {ex.Message}");
+                        System.Diagnostics.Debug.WriteLine($"获取锁定信息时出错: {ex.Message}");
                         MessageBox.Show($"无法获取锁定信息数据: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
                     return;
@@ -532,7 +532,7 @@ namespace RUINORERP.Server.Controls
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"加载表数据时出错: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"加载表数据时出错: {ex.Message}");
                 // 确保数据网格视图已清空
                 dataGridViewData.DataSource = null;
                 dataGridViewData.Columns.Clear();
@@ -567,7 +567,7 @@ namespace RUINORERP.Server.Controls
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"自动调整列宽时出错: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"自动调整列宽时出错: {ex.Message}");
             }
         }
 
@@ -647,7 +647,7 @@ namespace RUINORERP.Server.Controls
             catch (Exception ex)
             {
                 // 静默处理统计更新错误，避免频繁弹窗
-                Console.WriteLine($"更新锁定统计信息显示时出错: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"更新锁定统计信息显示时出错: {ex.Message}");
             }
         }
 
@@ -664,11 +664,11 @@ namespace RUINORERP.Server.Controls
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"自动刷新数据时出错: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"自动刷新数据时出错: {ex.Message}");
                 // 使用BeginInvoke确保在UI线程上记录错误
                 BeginInvoke((Action)(() =>
                 {
-                    Console.WriteLine($"UI线程记录: 自动刷新锁定数据异常: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"UI线程记录: 自动刷新锁定数据异常: {ex.Message}");
                 }));
             }
         }
@@ -701,7 +701,7 @@ namespace RUINORERP.Server.Controls
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"更新锁定统计信息显示时出错: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"更新锁定统计信息显示时出错: {ex.Message}");
             }
         }
 

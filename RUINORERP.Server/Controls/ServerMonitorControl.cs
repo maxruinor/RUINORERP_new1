@@ -152,7 +152,7 @@ namespace RUINORERP.Server.Controls
             catch (Exception ex)
             {
                 // 记录错误但不中断程序
-                Console.WriteLine($"刷新监控数据时出错: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"刷新监控数据时出错: {ex.Message}");
                 // 在UI上显示错误信息
                 lblStatusValue.Text = "监控数据刷新错误";
                 lblStatusValue.ForeColor = Color.Red;
@@ -226,7 +226,7 @@ namespace RUINORERP.Server.Controls
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"获取最后会话活动时间时出错: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"获取最后会话活动时间时出错: {ex.Message}");
             }
 
             return null;
@@ -365,7 +365,7 @@ namespace RUINORERP.Server.Controls
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"从SessionService获取统计信息时出错: {ex.Message}");
+                        System.Diagnostics.Debug.WriteLine($"从SessionService获取统计信息时出错: {ex.Message}");
                     }
                 }
 
@@ -399,7 +399,7 @@ namespace RUINORERP.Server.Controls
             catch (Exception ex)
             {
                 // 显示错误信息但保持UI功能
-                Console.WriteLine($"更新服务器状态时出错: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"更新服务器状态时出错: {ex.Message}");
                 lblStatusValue.Text = "数据更新错误";
                 lblStatusValue.ForeColor = Color.Red;
             }
@@ -444,7 +444,7 @@ namespace RUINORERP.Server.Controls
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"更新性能指标时出错: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"更新性能指标时出错: {ex.Message}");
             }
         }
 
@@ -587,7 +587,7 @@ namespace RUINORERP.Server.Controls
             {
                 lblHealthStatusValue.Text = "获取失败";
                 lblHealthStatusValue.ForeColor = Color.Red;
-                Console.WriteLine($"更新系统健康状态时出错: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"更新系统健康状态时出错: {ex.Message}");
             }
         }
 
@@ -609,7 +609,7 @@ namespace RUINORERP.Server.Controls
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"更新实时监控数据时出错: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"更新实时监控数据时出错: {ex.Message}");
             }
         }
 
@@ -838,7 +838,7 @@ namespace RUINORERP.Server.Controls
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"更新熔断器监控指标时出错: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"更新熔断器监控指标时出错: {ex.Message}");
                 // 在UI上显示错误状态
                 cbLblStatusValue.Text = "数据获取失败";
                 cbLblStatusValue.ForeColor = Color.Red;

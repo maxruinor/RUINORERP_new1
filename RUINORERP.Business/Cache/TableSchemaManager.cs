@@ -15,6 +15,15 @@ namespace RUINORERP.Business.Cache
     /// </summary>
     public class TableSchemaManager : ITableSchemaManager
     {
+        /// <summary>
+        /// 构造函数，用于调试跟踪实例创建
+        /// </summary>
+        public TableSchemaManager()
+        {
+            // 添加调试信息，跟踪实例创建
+            System.Diagnostics.Debug.WriteLine($"[TableSchemaManager] 实例创建: {GetHashCode()}");
+        }
+
         #region 数据存储
         /// <summary>
         /// 表结构信息字典，键为表名
@@ -46,6 +55,11 @@ namespace RUINORERP.Business.Cache
         /// </summary>
         public IEnumerable<string> CacheableTableNames =>
             _tableSchemas.Values.Where(t => t.IsCacheable).Select(t => t.TableName);
+
+        /// <summary>
+        /// 检查是否已初始化（是否有表结构信息）
+        /// </summary>
+        public bool IsInitialized => _tableSchemas.Count > 0;
         #endregion
 
         #region 注册方法
@@ -126,9 +140,19 @@ namespace RUINORERP.Business.Cache
             }
 
             // 添加到字典
-            _tableSchemas.TryAdd(tableName, schemaInfo);
-            _typeToTableName.TryAdd(entityType, tableName);
-            _tableNameToType.TryAdd(tableName, entityType);
+            if (_tableSchemas.TryAdd(tableName, schemaInfo))
+            {
+                _typeToTableName.TryAdd(entityType, tableName);
+                _tableNameToType.TryAdd(tableName, entityType);
+                
+                // 添加调试信息，跟踪表注册情况
+                System.Diagnostics.Debug.WriteLine($"[TableSchemaManager] 表 '{tableName}' 注册成功: 实例 {GetHashCode()}, 当前表数 {_tableSchemas.Count}");
+            }
+            else
+            {
+                // 添加调试信息，跟踪重复注册情况
+                System.Diagnostics.Debug.WriteLine($"[TableSchemaManager] 表 '{tableName}' 已存在: 实例 {GetHashCode()}, 当前表数 {_tableSchemas.Count}");
+            }
         }
 
         /// <summary>
@@ -208,9 +232,19 @@ namespace RUINORERP.Business.Cache
             }
 
             // 添加到字典
-            _tableSchemas.TryAdd(tableName, schemaInfo);
-            _typeToTableName.TryAdd(entityType, tableName);
-            _tableNameToType.TryAdd(tableName, entityType);
+            if (_tableSchemas.TryAdd(tableName, schemaInfo))
+            {
+                _typeToTableName.TryAdd(entityType, tableName);
+                _tableNameToType.TryAdd(tableName, entityType);
+                
+                // 添加调试信息，跟踪表注册情况
+                System.Diagnostics.Debug.WriteLine($"[TableSchemaManager] 表 '{tableName}' 注册成功: 实例 {GetHashCode()}, 当前表数 {_tableSchemas.Count}");
+            }
+            else
+            {
+                // 添加调试信息，跟踪重复注册情况
+                System.Diagnostics.Debug.WriteLine($"[TableSchemaManager] 表 '{tableName}' 已存在: 实例 {GetHashCode()}, 当前表数 {_tableSchemas.Count}");
+            }
         }
         #endregion
 
@@ -227,6 +261,9 @@ namespace RUINORERP.Business.Cache
                 return null;
             }
 
+            // 添加调试信息，跟踪实例使用情况
+            System.Diagnostics.Debug.WriteLine($"[TableSchemaManager] GetSchemaInfo('{tableName}'): 实例 {GetHashCode()}, 表数 {_tableSchemas.Count}, 是否初始化 {IsInitialized}");
+            
             _tableSchemas.TryGetValue(tableName, out var schemaInfo);
             return schemaInfo;
         }
@@ -469,6 +506,9 @@ namespace RUINORERP.Business.Cache
         /// <returns>统计信息字符串</returns>
         public string GetStatistics()
         {
+            // 添加调试信息，跟踪实例使用
+            System.Diagnostics.Debug.WriteLine($"[TableSchemaManager] 获取统计信息: 实例 {GetHashCode()}, 表数 {_tableSchemas.Count}");
+            
             var totalTables = _tableSchemas.Count;
             var cacheableTables = _tableSchemas.Values.Count(t => t.IsCacheable);
             var views = _tableSchemas.Values.Count(t => t.IsView);

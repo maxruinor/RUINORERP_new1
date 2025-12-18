@@ -41,11 +41,28 @@ using RUINORERP.Model.ConfigModel;
 using RUINORERP.Business.BizMapperService;
 using RUINORERP.Common.SnowflakeIdHelper;
 using RUINORERP.Business.Cache;
+using RUINORERP.Repository.UnitOfWorks;
+using RUINORERP.Business.CommService;
 
 namespace RUINORERP.Server
 {
     static class Program
     {
+        /// <summary>
+        /// 获取对象的私有字段值（用于调试）
+        /// </summary>
+        /// <typeparam name="TClass">对象类型</typeparam>
+        /// <typeparam name="TField">字段类型</typeparam>
+        /// <param name="obj">对象实例</param>
+        /// <param name="fieldName">字段名称</param>
+        /// <returns>字段值</returns>
+        private static TField GetPrivateField<TClass, TField>(TClass obj, string fieldName)
+        {
+            if (obj == null) return default;
+            
+            var field = typeof(TClass).GetField(fieldName, BindingFlags.NonPublic | BindingFlags.Instance);
+            return field != null ? (TField)field.GetValue(obj) : default;
+        }
 
         public static IWorkflowHost WorkflowHost;
 
@@ -162,6 +179,90 @@ namespace RUINORERP.Server
                     AppContextData.SetAutofacContainerScope(Startup.AutofacContainerScope);
                     BusinessHelper.Instance.SetContext(AppContextData);
 
+                    // 首先初始化表结构信息
+                    try
+                    {
+                        // 强制使用Autofac容器获取服务，确保一致性
+                        if (Startup.AutofacContainerScope == null)
+                        {
+                            throw new InvalidOperationException("Autofac容器尚未初始化，无法获取服务");
+                        }
+                        
+                        // 使用同一个Autofac容器获取所有服务
+                        var tableSchemaManager = Startup.AutofacContainerScope.Resolve<ITableSchemaManager>();
+                        var cacheInitService = Startup.AutofacContainerScope.Resolve<EntityCacheInitializationService>();
+                        
+                        System.Diagnostics.Debug.WriteLine($"使用Autofac容器获取服务");
+                        System.Diagnostics.Debug.WriteLine($"TableSchemaManager实例ID: {tableSchemaManager.GetHashCode()}");
+                        
+                        // 验证EntityCacheInitializationService使用的是同一个TableSchemaManager实例
+                        var cacheInitServiceTableSchemaManager = GetPrivateField<EntityCacheInitializationService, ITableSchemaManager>(cacheInitService, "_tableSchemaManager");
+                        System.Diagnostics.Debug.WriteLine($"cacheInitService中的TableSchemaManager实例ID: {cacheInitServiceTableSchemaManager?.GetHashCode()}");
+                        System.Diagnostics.Debug.WriteLine($"两个实例是否相同: {ReferenceEquals(tableSchemaManager, cacheInitServiceTableSchemaManager)}");
+                        
+                        // 如果不是同一个实例，说明EntityCacheInitializationService使用的是不同的实例
+                        if (!ReferenceEquals(tableSchemaManager, cacheInitServiceTableSchemaManager))
+                        {
+                            System.Diagnostics.Debug.WriteLine("警告：EntityCacheInitializationService使用了不同的TableSchemaManager实例");
+                            // 创建一个新的EntityCacheInitializationService实例，使用正确的TableSchemaManager
+                            var unitOfWorkManage = Startup.AutofacContainerScope.Resolve<IUnitOfWorkManage>();
+                            var cacheManager = Startup.AutofacContainerScope.Resolve<IEntityCacheManager>();
+                            var loggerCache = Startup.AutofacContainerScope.Resolve<Microsoft.Extensions.Logging.ILogger<EntityCacheInitializationService>>();
+                            var cacheSyncMetadata = Startup.AutofacContainerScope.Resolve<ICacheSyncMetadata>();
+                            var queryHelper = Startup.AutofacContainerScope.Resolve<DynamicQueryHelper>();
+                            
+                            cacheInitService = new EntityCacheInitializationService(
+                                unitOfWorkManage,
+                                cacheManager,
+                                cacheSyncMetadata,
+                                queryHelper,
+                                tableSchemaManager,
+                                loggerCache);
+                                
+                            // 验证新实例使用的是正确的TableSchemaManager
+                            var newCacheInitServiceTableSchemaManager = GetPrivateField<EntityCacheInitializationService, ITableSchemaManager>(cacheInitService, "_tableSchemaManager");
+                            System.Diagnostics.Debug.WriteLine($"新EntityCacheInitializationService中的TableSchemaManager实例ID: {newCacheInitServiceTableSchemaManager?.GetHashCode()}");
+                            System.Diagnostics.Debug.WriteLine($"新实例与原始TableSchemaManager是否相同: {ReferenceEquals(tableSchemaManager, newCacheInitServiceTableSchemaManager)}");
+                        }
+                        
+                        // 打印初始化前的状态
+                        System.Diagnostics.Debug.WriteLine($"初始化前 TableCount: {tableSchemaManager.GetAllTableNames().Count}");
+                        System.Diagnostics.Debug.WriteLine($"初始化前 IsInitialized: {tableSchemaManager.IsInitialized}");
+                        
+                        // 再次验证cacheInitService使用的TableSchemaManager实例
+                        var beforeInitCacheInitServiceTableSchemaManager = GetPrivateField<EntityCacheInitializationService, ITableSchemaManager>(cacheInitService, "_tableSchemaManager");
+                        System.Diagnostics.Debug.WriteLine($"初始化前cacheInitService中的TableSchemaManager实例ID: {beforeInitCacheInitServiceTableSchemaManager?.GetHashCode()}");
+                        System.Diagnostics.Debug.WriteLine($"初始化前两个实例是否相同: {ReferenceEquals(tableSchemaManager, beforeInitCacheInitServiceTableSchemaManager)}");
+                                                        
+                        // 同步初始化表结构，确保在后续代码执行前完成
+                        cacheInitService.InitializeAllTableSchemas();
+                        
+                        // 再次验证cacheInitService使用的TableSchemaManager实例
+                        var afterInitCacheInitServiceTableSchemaManager = GetPrivateField<EntityCacheInitializationService, ITableSchemaManager>(cacheInitService, "_tableSchemaManager");
+                        System.Diagnostics.Debug.WriteLine($"初始化后cacheInitService中的TableSchemaManager实例ID: {afterInitCacheInitServiceTableSchemaManager?.GetHashCode()}");
+                        System.Diagnostics.Debug.WriteLine($"初始化后两个实例是否相同: {ReferenceEquals(tableSchemaManager, afterInitCacheInitServiceTableSchemaManager)}");
+                                                        
+                        // 打印初始化后的状态
+                        System.Diagnostics.Debug.WriteLine($"初始化后 TableCount: {tableSchemaManager.GetAllTableNames().Count}");
+                        System.Diagnostics.Debug.WriteLine($"初始化后 IsInitialized: {tableSchemaManager.IsInitialized}");
+                            
+                        if (!tableSchemaManager.IsInitialized)
+                        {
+                            System.Diagnostics.Debug.WriteLine("警告：表结构初始化可能未完成，当前表数量为0");
+                        }
+                        else
+                        {
+                            System.Diagnostics.Debug.WriteLine($"表结构初始化成功，共注册了 {tableSchemaManager.GetAllTableNames().Count} 个表");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"初始化表结构时发生错误: {ex.Message}");
+                        System.Diagnostics.Debug.WriteLine($"异常详情: {ex}");
+                        throw; // 重新抛出异常，以便在调试时能看到完整的堆栈跟踪
+                    }
+
+
                     //Program.AppContextData.SetServiceProvider(services);
                     //Program.AppContextData.Status = "init";
 
@@ -195,21 +296,6 @@ namespace RUINORERP.Server
                         serviceStarted = true;
                     }
                     WorkflowHost = host;
-
-                    // 自动初始化表结构信息
-                    try
-                    {
-                        var cacheInitService = Startup.GetFromFac<EntityCacheInitializationService>();
-                        if (cacheInitService != null)
-                        {
-                            // 在后台线程中初始化表结构，不阻塞主线程
-                            cacheInitService.InitializeAllTableSchemas();
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.Error.WriteLine($"获取缓存初始化服务时发生错误: {ex.Message}");
-                    }
 
                     // 提醒服务
                     //var reminderService = services.GetRequiredService<SmartReminderService_old>();
@@ -426,7 +512,7 @@ namespace RUINORERP.Server
             catch (Exception logEx)
             {
                 // 如果日志记录也失败，确保有基本的错误输出
-                Console.WriteLine("记录线程异常日志失败: " + logEx.Message);
+                System.Diagnostics.Debug.WriteLine("记录线程异常日志失败: " + logEx.Message);
             }
         }
 
@@ -456,7 +542,7 @@ namespace RUINORERP.Server
             catch (Exception logEx)
             {
                 // 如果日志记录也失败，确保有基本的错误输出
-                Console.WriteLine("记录应用程序域异常日志失败: " + logEx.Message);
+                System.Diagnostics.Debug.WriteLine("记录应用程序域异常日志失败: " + logEx.Message);
             }
         }
     }

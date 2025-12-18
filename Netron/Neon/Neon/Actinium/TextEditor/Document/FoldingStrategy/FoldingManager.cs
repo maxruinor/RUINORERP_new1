@@ -148,16 +148,16 @@ namespace Netron.Neon.TextEditor.Document
 		
 		public bool IsFoldStart(int lineNumber)
 		{
-//			Console.WriteLine("is fold start? at " + lineNumber + " --- " + foldMarker.Count);
+//			System.Diagnostics.Debug.WriteLine("is fold start? at " + lineNumber + " --- " + foldMarker.Count);
 			if (foldMarker != null) {
 				foreach (FoldMarker fm in foldMarker) {
-//					Console.WriteLine(fm.StartLine + " --- " + lineNumber);
+//					System.Diagnostics.Debug.WriteLine(fm.StartLine + " --- " + lineNumber);
 					if (fm.StartLine == lineNumber) {
 						return true;
 					}
 				}
 			}
-//			Console.WriteLine("false");
+//			System.Diagnostics.Debug.WriteLine("false");
 			return false;
 		}
 		

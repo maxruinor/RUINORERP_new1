@@ -588,7 +588,7 @@ namespace Krypton.Workspace
         {
             if (Children != null)
             {
-                Console.WriteLine(@"{0}Sequence Count:{1} Visible:{2} Orientation:{3}", new string(' ', indent * 2),
+                System.Diagnostics.Debug.WriteLine(@"{0}Sequence Count:{1} Visible:{2} Orientation:{3}", new string(' ', indent * 2),
                     Children.Count, Visible, Orientation.ToString());
 
                 foreach (object child in Children)

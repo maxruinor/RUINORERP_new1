@@ -72,7 +72,7 @@ namespace AutoUpdate
             catch (Exception ex)
             {
                 // 记录异常但不抛出，确保功能不会中断
-                Console.WriteLine("保存跳过版本信息失败: " + ex.Message);
+                System.Diagnostics.Debug.WriteLine("保存跳过版本信息失败: " + ex.Message);
             }
         }
 
@@ -101,7 +101,7 @@ namespace AutoUpdate
             catch (Exception ex)
             {
                 // 出错时默认返回false，避免影响正常的更新流程
-                Console.WriteLine("检查跳过版本信息失败: " + ex.Message);
+                System.Diagnostics.Debug.WriteLine("检查跳过版本信息失败: " + ex.Message);
                 return false;
             }
         }
@@ -133,7 +133,7 @@ namespace AutoUpdate
             }
             catch (Exception ex)
             {
-                Console.WriteLine("移除跳过版本信息失败: " + ex.Message);
+                System.Diagnostics.Debug.WriteLine("移除跳过版本信息失败: " + ex.Message);
             }
         }
 

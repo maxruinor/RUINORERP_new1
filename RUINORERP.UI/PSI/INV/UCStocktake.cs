@@ -483,7 +483,7 @@ namespace RUINORERP.UI.PSI.INV
 
         public void DoSomething(Func<int, int, int> op)
         {
-            Console.WriteLine(op(5, 2));
+            System.Diagnostics.Debug.WriteLine(op(5, 2));
         }
 
         private void Sgh_OnCalculateColumnValue(object _rowObj, SourceGridDefine myGridDefine, SourceGrid.Position position)

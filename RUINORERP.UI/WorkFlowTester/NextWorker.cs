@@ -12,7 +12,7 @@ namespace RUINORERP.UI.WorkFlowTester
     {
         public override ExecutionResult Run(IStepExecutionContext context)
         {
-            Console.WriteLine("进一步工作");
+            System.Diagnostics.Debug.WriteLine("进一步工作");
             return ExecutionResult.Next();
         }
     }

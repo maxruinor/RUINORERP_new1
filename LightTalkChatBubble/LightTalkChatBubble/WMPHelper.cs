@@ -24,7 +24,7 @@ namespace LightTalkChatBubble
             {
                 currentVoiceBtn.Load(@"icons\voice.png");
                 player.stop();
-                Console.WriteLine("停止播放");
+                System.Diagnostics.Debug.WriteLine("停止播放");
             }
             else
             {
@@ -42,7 +42,7 @@ namespace LightTalkChatBubble
 
                 player.play();
 
-                Console.WriteLine("开始播放" + recordPath);
+                System.Diagnostics.Debug.WriteLine("开始播放" + recordPath);
             }
         }
 

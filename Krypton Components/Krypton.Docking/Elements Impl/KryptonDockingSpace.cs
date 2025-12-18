@@ -439,7 +439,7 @@ namespace Krypton.Docking
                     UpdateStrings();
                     break;
                 case DockingPropogateAction.DebugOutput:
-                    Console.WriteLine(SpaceControl.ToString());
+                    System.Diagnostics.Debug.WriteLine(SpaceControl.ToString());
                     SpaceControl.DebugOutput();
                     break;
             }

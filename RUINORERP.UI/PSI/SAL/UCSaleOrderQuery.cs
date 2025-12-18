@@ -628,7 +628,7 @@ namespace RUINORERP.UI.PSI.SAL
             lambda.And(t => t.isdeleted == false);
 
             // 验证生成的表达式
-            Console.WriteLine(lambda.ToExpression().ToString());
+            System.Diagnostics.Debug.WriteLine(lambda.ToExpression().ToString());
             // 输出示例: t => ((t.Employee_ID == 121) && (t.DepartmentId == 11)) && (t.isdeleted == False)
         }
 

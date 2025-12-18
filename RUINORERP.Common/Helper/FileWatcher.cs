@@ -14,7 +14,7 @@ namespace RUINORERP.Common.Helper
     FileWatcher watcher = new FileWatcher(filePath);
     watcher.StartWatching();
 
-    Console.WriteLine("按任意键停止监视...");
+    System.Diagnostics.Debug.WriteLine("按任意键停止监视...");
     Console.ReadKey();
 
     watcher.StopWatching();
@@ -59,19 +59,19 @@ namespace RUINORERP.Common.Helper
             // 开启事件监听
             _fileWatcher.EnableRaisingEvents = true;
 
-            Console.WriteLine($"已开始监视文件: {_filePath}");
+            System.Diagnostics.Debug.WriteLine($"已开始监视文件: {_filePath}");
         }
 
         private void OnFileChanged(object sender, FileSystemEventArgs e)
         {
             if (e.FullPath == _filePath)
             {
-                Console.WriteLine($"文件已变动: {e.FullPath}");
+                System.Diagnostics.Debug.WriteLine($"文件已变动: {e.FullPath}");
                 // 在这里可以执行文件变动后的逻辑
                 // 在这里可以读取文件内容或执行其他操作
                 string content = File.ReadAllText(_filePath);
-                Console.WriteLine("文件内容：");
-                Console.WriteLine(content);
+                System.Diagnostics.Debug.WriteLine("文件内容：");
+                System.Diagnostics.Debug.WriteLine(content);
             }
         }
 
@@ -86,7 +86,7 @@ namespace RUINORERP.Common.Helper
                 _fileWatcher.Dispose();
                 _fileWatcher = null;
 
-                Console.WriteLine("已停止监视文件");
+                System.Diagnostics.Debug.WriteLine("已停止监视文件");
             }
         }
     }

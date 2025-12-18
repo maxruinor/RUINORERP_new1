@@ -31,7 +31,7 @@ namespace RUINORERP.Plugin
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"插件 {pluginName} 发送数据到主程序时发生错误: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"插件 {pluginName} 发送数据到主程序时发生错误: {ex.Message}");
                 return false;
             }
         }
@@ -52,7 +52,7 @@ namespace RUINORERP.Plugin
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"插件 {pluginName} 从主程序请求数据时发生错误: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"插件 {pluginName} 从主程序请求数据时发生错误: {ex.Message}");
                 return null;
             }
         }
@@ -74,7 +74,7 @@ namespace RUINORERP.Plugin
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"插件 {pluginName} 调用主程序服务 {service} 时发生错误: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"插件 {pluginName} 调用主程序服务 {service} 时发生错误: {ex.Message}");
                 return null;
             }
         }

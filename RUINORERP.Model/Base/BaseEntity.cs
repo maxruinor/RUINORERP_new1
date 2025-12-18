@@ -1225,7 +1225,7 @@ namespace RUINORERP.Model
             catch (Exception ex)
             {
                 // 记录错误，但返回空字符串，不影响主业务流程
-                Console.WriteLine($"生成数据内容失败: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"生成数据内容失败: {ex.Message}");
                 return string.Empty;
             }
         }

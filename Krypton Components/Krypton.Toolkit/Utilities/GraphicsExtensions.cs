@@ -39,7 +39,7 @@ namespace Krypton.Toolkit
             }
             catch (Exception e)
             {
-                //Console.WriteLine("Unable to extract the icon from the binary");
+                //System.Diagnostics.Debug.WriteLine("Unable to extract the icon from the binary");
 
                 ExceptionHandler.CaptureException(e);
             }

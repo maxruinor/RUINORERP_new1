@@ -30,7 +30,7 @@ namespace RUINORERP.Server.Workflow.WFApproval
             builder
              .StartWith(context =>
              {
-                 Console.WriteLine("开始启动流程...");
+                 System.Diagnostics.Debug.WriteLine("开始启动流程...");
                  _logger.LogInformation("开始启动流程...");
                  return ExecutionResult.Next();
              })
@@ -47,7 +47,7 @@ namespace RUINORERP.Server.Workflow.WFApproval
               .Then<NotifyApprovedCompleted>()
               .Then(context =>
                {
-                   Console.WriteLine("Workflow complete");
+                   System.Diagnostics.Debug.WriteLine("Workflow complete");
                    _logger.LogInformation($"Workflow complete");
                   // frmMainNew.Instance.workflowlist.Remove(session as SessionforBiz);
 
@@ -80,7 +80,7 @@ namespace RUINORERP.Server.Workflow.WFApproval
             logger.LogError("rrrrr==");
             logger.LogWarning("wwww===");
             logger.LogInformation("开始启动001wf  " + System.DateTime.Now);
-            Console.WriteLine("开始启动001wf" + System.DateTime.Now);
+            System.Diagnostics.Debug.WriteLine("开始启动001wf" + System.DateTime.Now);
             builder
             .StartWith(context => ExecutionResult.Next())
             //.WaitFor("MyEventST", (data, context) => context.Workflow.Id, data => DateTime.Now)

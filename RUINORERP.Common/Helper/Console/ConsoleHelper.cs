@@ -17,7 +17,7 @@ namespace RUINORERP.Common
             {
                 ConsoleColor currentForeColor = Console.ForegroundColor;
                 Console.ForegroundColor = color;
-                Console.WriteLine(str);
+                System.Diagnostics.Debug.WriteLine(str);
                 Console.ForegroundColor = currentForeColor;
             }
         }
@@ -61,7 +61,7 @@ namespace RUINORERP.Common
         {
             ConsoleColor currentForeColor = Console.ForegroundColor;
             Console.ForegroundColor = color;
-            Console.WriteLine(str);
+            System.Diagnostics.Debug.WriteLine(str);
             Console.ForegroundColor = currentForeColor;
         }
 

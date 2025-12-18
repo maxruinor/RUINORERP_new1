@@ -272,7 +272,7 @@ namespace RUINORERP.Extensions.Redis
             if (_logger != null)
                 _logger.LogInformation(message);
             else
-                Console.WriteLine($"[INFO] {message}");
+                System.Diagnostics.Debug.WriteLine($"[INFO] {message}");
         }
 
         private static void LogWarning(string message)
@@ -280,7 +280,7 @@ namespace RUINORERP.Extensions.Redis
             if (_logger != null)
                 _logger.LogWarning(message);
             else
-                Console.WriteLine($"[WARNING] {message}");
+                System.Diagnostics.Debug.WriteLine($"[WARNING] {message}");
         }
 
         private static void LogError(string message, Exception ex = null)
@@ -294,9 +294,9 @@ namespace RUINORERP.Extensions.Redis
             }
             else
             {
-                Console.WriteLine($"[ERROR] {message}");
+                System.Diagnostics.Debug.WriteLine($"[ERROR] {message}");
                 if (ex != null)
-                    Console.WriteLine($"[EXCEPTION] {ex.Message}\n{ex.StackTrace}");
+                    System.Diagnostics.Debug.WriteLine($"[EXCEPTION] {ex.Message}\n{ex.StackTrace}");
             }
         }
         

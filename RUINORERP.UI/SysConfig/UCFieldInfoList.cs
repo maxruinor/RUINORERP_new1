@@ -233,7 +233,7 @@ namespace RUINORERP.UI.BI
                     catch (Exception ex)
                     {
                         // 记录错误日志，继续处理其他组
-                        Console.WriteLine($"加载类型 {classPath} 时出错: {ex.Message}");
+                        System.Diagnostics.Debug.WriteLine($"加载类型 {classPath} 时出错: {ex.Message}");
                         continue;
                     }
                 }

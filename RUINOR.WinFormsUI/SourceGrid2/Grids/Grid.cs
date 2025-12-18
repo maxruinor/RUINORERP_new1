@@ -1140,7 +1140,7 @@ namespace SourceGrid2
 
 			Excel.Workbooks workbooks = ExcelObj.Workbooks;
 
-			Console.WriteLine ("Adding a new workbook");
+			System.Diagnostics.Debug.WriteLine ("Adding a new workbook");
 		
 			Excel.Workbook newWorkbook = ExcelObj.Workbooks.Add(Excel.XlWBATemplate.xlWBATWorksheet);
 			// get the workbook from the existing spreadsheet

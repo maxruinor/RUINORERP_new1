@@ -20,7 +20,7 @@ namespace RUINORERP.UI.WorkFlowTester
 
         public override ExecutionResult Run(IStepExecutionContext context)
         {
-            Console.WriteLine("循环工作" + System.DateTime.Now.ToString());
+            System.Diagnostics.Debug.WriteLine("循环工作" + System.DateTime.Now.ToString());
             return ExecutionResult.Next();
         }
     }

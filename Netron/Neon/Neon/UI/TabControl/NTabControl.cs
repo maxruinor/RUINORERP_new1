@@ -885,7 +885,7 @@ namespace Netron.Neon
 	//			
 	//				case 0x0114: // WM_HSCROLL
 	//				{
-	//					Console.WriteLine(m.ToString());
+	//					System.Diagnostics.Debug.WriteLine(m.ToString());
 	//					break;
 	//				}
 	//				

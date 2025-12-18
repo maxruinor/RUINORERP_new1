@@ -34,7 +34,7 @@ namespace AutoUpdateTools
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"序列化对象到XML文件失败: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"序列化对象到XML文件失败: {ex.Message}");
                 }
             }
         }
@@ -60,7 +60,7 @@ namespace AutoUpdateTools
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"序列化对象失败: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"序列化对象失败: {ex.Message}");
                 return string.Empty;
             }
         }
@@ -81,7 +81,7 @@ namespace AutoUpdateTools
                 {
                     if (!File.Exists(xmlFileName))
                     {
-                        Console.WriteLine("序列化文件不存在!");
+                        System.Diagnostics.Debug.WriteLine("序列化文件不存在!");
                         return default(T);
                     }
                     else
@@ -92,7 +92,7 @@ namespace AutoUpdateTools
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"反序列化XML文件失败: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"反序列化XML文件失败: {ex.Message}");
                     return default(T);
                 }
             }
@@ -118,7 +118,7 @@ namespace AutoUpdateTools
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"反序列化对象失败: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"反序列化对象失败: {ex.Message}");
                 return default(T);
             }
         }

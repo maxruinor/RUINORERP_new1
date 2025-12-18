@@ -39,7 +39,7 @@ namespace Netron.GraphLib.Analysis
 						throw new InvalidOperationException();
 					}
 					else
-					{Console.WriteLine("Current edge: [" + v + "," + w + "]");
+					{System.Diagnostics.Debug.WriteLine("Current edge: [" + v + "," + w + "]");
 						return graph.matrix[v, w];
 						
 					}

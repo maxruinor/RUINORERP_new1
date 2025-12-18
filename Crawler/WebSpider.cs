@@ -62,10 +62,10 @@ namespace Crawler
 
             DateTime start = DateTime.Now;
 
-            Console.WriteLine("======================================================================================================");
-            Console.WriteLine("Proccess URI: " + m_startUri.AbsoluteUri);
-            Console.WriteLine("Start At    : " + start);
-            Console.WriteLine("------------------------------------------------------------------------------------------------------");
+            System.Diagnostics.Debug.WriteLine("======================================================================================================");
+            System.Diagnostics.Debug.WriteLine("Proccess URI: " + m_startUri.AbsoluteUri);
+            System.Diagnostics.Debug.WriteLine("Start At    : " + start);
+            System.Diagnostics.Debug.WriteLine("------------------------------------------------------------------------------------------------------");
 
             AddWebPage(StartUri, StartUri.AbsoluteUri);
 
@@ -74,7 +74,7 @@ namespace Crawler
                 while (WebPagesPending.Count > 0 &&
                    (UriProcessedCountMax == -1 || UriProcessedCount < UriProcessedCountMax))
                 {
-                    Console.WriteLine("Max URI's: {0}, Processed URI's: {1}, Pending URI's: {2}", UriProcessedCountMax, UriProcessedCount, WebPagesPending.Count);
+                    System.Diagnostics.Debug.WriteLine("Max URI's: {0}, Processed URI's: {1}, Pending URI's: {2}", UriProcessedCountMax, UriProcessedCount, WebPagesPending.Count);
 
                     WebPageState state = (WebPageState)m_webPagesPending.Dequeue();
 
@@ -90,19 +90,19 @@ namespace Crawler
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Failure while running web spider: " + ex.ToString());
+                System.Diagnostics.Debug.WriteLine("Failure while running web spider: " + ex.ToString());
             }
 
             DateTime end = DateTime.Now;
             float elasped = (end.Ticks - start.Ticks) / 10000000;
 
-            Console.WriteLine("------------------------------------------------------------------------------------------------------");
-            Console.WriteLine("URI Finished   : " + m_startUri.AbsoluteUri);
-            Console.WriteLine("Pages Processed: " + UriProcessedCount);
-            Console.WriteLine("Pages Pending  : " + WebPagesPending.Count);
-            Console.WriteLine("End At         : " + end);
-            Console.WriteLine("Elasped Time   : {0} seconds", elasped);
-            Console.WriteLine("======================================================================================================");
+            System.Diagnostics.Debug.WriteLine("------------------------------------------------------------------------------------------------------");
+            System.Diagnostics.Debug.WriteLine("URI Finished   : " + m_startUri.AbsoluteUri);
+            System.Diagnostics.Debug.WriteLine("Pages Processed: " + UriProcessedCount);
+            System.Diagnostics.Debug.WriteLine("Pages Pending  : " + WebPagesPending.Count);
+            System.Diagnostics.Debug.WriteLine("End At         : " + end);
+            System.Diagnostics.Debug.WriteLine("Elasped Time   : {0} seconds", elasped);
+            System.Diagnostics.Debug.WriteLine("======================================================================================================");
         }
 
 
@@ -127,7 +127,7 @@ namespace Crawler
                     m = m.NextMatch();
                 }
 
-                Console.WriteLine("           : {0} new links were added", counter);
+                System.Diagnostics.Debug.WriteLine("           : {0} new links were added", counter);
             }
         }
 

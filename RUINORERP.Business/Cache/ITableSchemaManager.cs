@@ -19,6 +19,11 @@ namespace RUINORERP.Business.Cache
         /// 获取所有需要缓存的表名
         /// </summary>
         IEnumerable<string> CacheableTableNames { get; }
+
+        /// <summary>
+        /// 检查是否已初始化（是否有表结构信息）
+        /// </summary>
+        bool IsInitialized { get; }
         #endregion
 
         #region 注册方法

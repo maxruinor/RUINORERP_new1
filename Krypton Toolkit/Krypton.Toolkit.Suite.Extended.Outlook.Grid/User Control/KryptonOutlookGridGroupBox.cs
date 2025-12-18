@@ -512,7 +512,7 @@ namespace Krypton.Toolkit.Suite.Extended.Outlook.Grid
                     {
                         _isDragging = true;
                         c.IsMoving = true;
-                        //Console.WriteLine(_mouse.ToString());
+                        //System.Diagnostics.Debug.WriteLine(_mouse.ToString());
                     }
                 }
             }

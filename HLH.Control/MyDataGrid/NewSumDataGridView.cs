@@ -260,7 +260,7 @@ namespace HLH.WinControl.MyDataGrid
                         //MethodInfo mt = t.GetMethod(item.ClickEventName, BindingFlags.NonPublic);
                         //if (mt == null)
                         //{
-                        //    Console.WriteLine("没有获取到相应的函数！！");
+                        //    System.Diagnostics.Debug.WriteLine("没有获取到相应的函数！！");
                         //}
                         EventHandler ehh = ContextClickList.Find(
                             delegate (EventHandler eh)

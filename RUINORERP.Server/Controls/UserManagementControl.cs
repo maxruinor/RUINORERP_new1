@@ -637,62 +637,32 @@ namespace RUINORERP.Server.Controls
         {
             try
             {
-                var now = DateTime.Now;
+                if (listView1.IsDisposed) return;
 
-                // 1. 统计信息：每5秒更新一次
-                if (now.Second % 5 == 0)
+                var now = DateTime.Now;
+                
+                // 1. 统计信息：每2秒更新一次
+                if (now.Second % 2 == 0)
                 {
                     UpdateStatistics();
                 }
 
-                // 2. 心跳和空闲时间更新：每5秒更新可见项
-                if (now.Second % 5 == 0)
+                // 2. 心跳和空闲时间更新：每秒更新可见项（更频繁的UI更新）
+                if (now.Millisecond % 1000 < 100) // 每秒执行一次
                 {
-                    // 检查listView1是否已经被释放
-                    if (listView1.IsDisposed) return;
                     UpdateVisibleSessionsHeartbeatAndIdleTime();
                 }
 
-                // 3. 会话同步：每30秒执行一次
-                if (now.Second % 30 == 0)
+                // 3. 完整刷新：每45秒或按需执行
+                if (now.Second % 45 == 0 || _needsFullRefresh)
                 {
-                    SyncWithSessionService();
-                    // 同步后刷新UI确保实时显示
-                    if (!listView1.IsDisposed)
-                    {
-                        BeginInvoke((MethodInvoker)delegate
-                        {
-                            if (!listView1.IsDisposed)
-                                listView1.Refresh();
-                        });
-                    }
-                }
-
-                // 4. 完整刷新：每60秒执行一次
-                if (now.Second % 60 == 0 || _needsFullRefresh)
-                {
-                    // 优先处理需要完整刷新的情况，不等待60秒
-                    if (_needsFullRefresh)
-                    {
-                        _needsFullRefresh = false;
-                    }
+                    _needsFullRefresh = false;
                     FullRefreshFromSessions();
-
-                    // 确保UI完全刷新
-                    if (!listView1.IsDisposed)
-                    {
-                        BeginInvoke((MethodInvoker)delegate
-                        {
-                            if (!listView1.IsDisposed)
-                                listView1.Refresh();
-                        });
-                    }
                 }
             }
             catch (Exception ex)
             {
                 LogError("定时器更新时出错", ex);
-                // 发生错误时，确保下次会重新同步
                 _needsFullRefresh = true;
             }
         }
@@ -704,23 +674,20 @@ namespace RUINORERP.Server.Controls
         {
             _needsFullRefresh = true;
 
-            // 尝试立即触发刷新而不等待定时器周期
-            // 但避免过于频繁的刷新
-            if (DateTime.Now.Subtract(_lastImmediateRefresh).TotalSeconds > 5)
+            // 避免过于频繁的立即刷新
+            if (DateTime.Now.Subtract(_lastImmediateRefresh).TotalSeconds > 2)
             {
                 _lastImmediateRefresh = DateTime.Now;
 
-                // 检查控件句柄是否已创建，避免在句柄创建前调用BeginInvoke导致异常
                 if (IsHandleCreated && !IsDisposed)
-                {                    // 在UI线程上执行刷新
+                {
                     BeginInvoke((MethodInvoker)delegate
                     {
                         try
                         {
                             if (!IsDisposed && !listView1.IsDisposed)
-                            {                                // 执行轻量级同步而不是完整刷新，以避免性能问题
-                                SyncWithSessionService();
-                                listView1.Refresh();
+                            {
+                                FullRefreshFromSessions();
                             }
                         }
                         catch (Exception ex)
@@ -728,10 +695,6 @@ namespace RUINORERP.Server.Controls
                             LogError("立即刷新失败", ex);
                         }
                     });
-                }
-                else
-                {                    // 控件句柄尚未创建，记录日志并依赖定时器刷新
-                    LogStatusChange(null, "控件句柄尚未创建，延迟刷新操作，将由定时器处理");
                 }
             }
         }
@@ -747,10 +710,24 @@ namespace RUINORERP.Server.Controls
 
                 foreach (ListViewItem item in listView1.Items)
                 {
-                    // 只更新可见项
-                    if (listView1.ClientRectangle.IntersectsWith(item.Bounds) && item.Tag is SessionInfo sessionInfo)
+                    if (item.Tag is SessionInfo sessionInfo)
                     {
-                        UpdateSessionIdleTime(item, sessionInfo);
+                        // 更新空闲时间显示
+                        if (item.SubItems.Count > 10)
+                        {
+                            var idleTime = DateTime.Now - sessionInfo.LastHeartbeat;
+                            item.SubItems[10].Text = FormatIdleTime(idleTime);
+                        }
+                        // 更新心跳数
+                        if (item.SubItems.Count > 6)
+                        {
+                            item.SubItems[6].Text = sessionInfo.HeartbeatCount.ToString();
+                        }
+                        // 更新最后心跳时间
+                        if (item.SubItems.Count > 7)
+                        {
+                            item.SubItems[7].Text = sessionInfo.LastHeartbeat.ToString("yy-MM-dd HH:mm:ss");
+                        }
                     }
                 }
             }
@@ -760,26 +737,7 @@ namespace RUINORERP.Server.Controls
             }
         }
 
-        /// <summary>
-        /// 更新会话项的空闲时间
-        /// </summary>
-        /// <param name="item">ListView项</param>
-        /// <param name="sessionInfo">会话信息</param>
-        private void UpdateSessionIdleTime(ListViewItem item, SessionInfo sessionInfo)
-        {
-            try
-            {
-                if (item.SubItems.Count > 10)
-                {
-                    var idleTime = DateTime.Now - sessionInfo.LastHeartbeat;
-                    item.SubItems[10].Text = FormatIdleTime(idleTime);
-                }
-            }
-            catch (Exception ex)
-            {
-                LogError($"更新会话空闲时间时出错: {ex.Message}");
-            }
-        }
+
 
         /// <summary>
         /// 格式化静止时间显示
@@ -1011,121 +969,6 @@ namespace RUINORERP.Server.Controls
             }
         }
 
-        /// <summary>
-        /// 同步会话服务状态
-        /// </summary>
-        /// <summary>
-        /// 清除所有会话项
-        /// </summary>
-        private void ClearAllSessionItems()
-        {
-            if (InvokeRequired)
-            {
-                Invoke(new Action(ClearAllSessionItems));
-                return;
-            }
-
-            try
-            {
-                listView1.BeginUpdate();
-                listView1.Items.Clear();
-                _sessionItemMap.Clear();
-                listView1.EndUpdate();
-
-                LogStatusChange(null, "所有会话项已清除");
-            }
-            catch (Exception ex)
-            {
-                LogError("清除所有会话项时出错", ex);
-                try
-                {
-                    listView1.EndUpdate();
-                }
-                catch { }
-            }
-        }
-
-        private void SyncWithSessionService()
-        {
-            // 检查控件是否已经被释放
-            if (IsDisposed || listView1.IsDisposed)
-            {
-                LogError("SyncWithSessionService: 控件已被释放，无法执行同步操作");
-                return;
-            }
-
-            int updatedCount = 0;
-            bool syncSuccessful = false;
-
-            try
-            {
-                // 获取当前所有会话 - 添加异常处理
-                var currentSessions = new List<SessionInfo>();
-                try
-                {
-                    // 设置获取会话的超时保护
-                    using (var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
-                    {
-                        currentSessions = _sessionService.GetAllUserSessions().ToList();
-                    }
-                }
-                catch (Exception getSessionsEx)
-                {
-                    LogError($"获取会话列表进行同步时出错: {getSessionsEx.Message}", getSessionsEx);
-                    currentSessions = new List<SessionInfo>();
-                }
-
-                foreach (var sessionInfo in currentSessions)
-                {
-                    try
-                    {
-                        if (_sessionItemMap.TryGetValue(sessionInfo.SessionID, out var existingItem))
-                        {
-                            // 检查是否需要更新
-                            UpdateSessionItem(existingItem, sessionInfo);
-                            updatedCount++;
-                        }
-                    }
-                    catch (Exception updateEx)
-                    {
-                        // 记录单个会话更新错误，但继续处理其他会话
-                        LogError($"同步更新会话 {sessionInfo.SessionID} 时出错: {updateEx.Message}", updateEx);
-                    }
-                }
-
-                syncSuccessful = true;
-
-                if (updatedCount > 0)
-                {
-                    LogStatusChange(null, $"同步完成，更新 {updatedCount} 个会话状态");
-
-                    // 同步完成后立即刷新UI
-                    try
-                    {
-                        if (!listView1.IsDisposed)
-                        {
-                            listView1.Refresh();
-                        }
-                    }
-                    catch (Exception uiEx)
-                    {
-                        LogError("同步后刷新UI失败", uiEx);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                LogError($"同步会话服务状态时发生未处理异常: {ex.Message}", ex);
-                // 发生错误时确保下次会重新同步
-                _needsFullRefresh = true;
-            }
-            finally
-            {
-                // 记录同步结果
-                LogStatusChange(null, $"同步操作{(syncSuccessful ? "成功" : "失败")}: 更新={updatedCount}");
-            }
-        }
-
         #endregion
 
         #region 会话事件处理
@@ -1193,41 +1036,31 @@ namespace RUINORERP.Server.Controls
 
             try
             {
-                // 获取用户信息用于日志记录
                 var userInfo = sessionInfo.UserInfo ?? new UserInfo();
                 string userName = GetDisplayUserName(userInfo);
                 string clientIp = sessionInfo.ClientIp ?? "未知IP";
 
                 if (_sessionItemMap.TryGetValue(sessionInfo.SessionID, out var existingItem))
                 {
-                    // 判断是否需要移除会话项还是仅更新状态
-                    // 规则：已认证用户断开连接后，先更新状态显示为"离线"，等待下次完整刷新时移除
-                    // 未认证用户和无效会话可直接移除
-                    if (!userInfo.授权状态 && !sessionInfo.IsAuthenticated)
+                    // 已授权的会话（包括锁定状态）：更新为离线显示，保留在列表中
+                    // 未授权的会话：直接移除
+                    if (userInfo.授权状态 || sessionInfo.IsAuthenticated)
                     {
-                        // 未认证会话直接移除
-                        RemoveSessionItem(sessionInfo.SessionID);
-                        LogStatusChange(sessionInfo, $"未认证会话已断开并移除: {userName} - {clientIp}");
+                        // 已授权用户更新状态为离线，保留在列表
+                        sessionInfo.IsConnected = false;
+                        UpdateSessionItem(existingItem, sessionInfo);
+                        LogStatusChange(sessionInfo, $"会话已断开（离线）: {userName} - {clientIp}");
                     }
                     else
                     {
-                        // 已认证用户更新状态为离线
-                        UpdateSessionItem(existingItem, sessionInfo);
-                        LogStatusChange(sessionInfo, $"已认证会话断开: {userName} - {clientIp}");
+                        // 未授权会话直接移除
+                        RemoveSessionItem(sessionInfo.SessionID);
+                        LogStatusChange(sessionInfo, $"未授权会话已移除: {userName} - {clientIp}");
                     }
                 }
-                else
-                {
-                    // 找不到的会话记录，记录日志但不创建断开记录
-                    // 避免UI中显示不必要的断开记录
-                    LogStatusChange(null, $"接收到未知会话断开事件: {sessionInfo.SessionID} - {userName} - {clientIp}");
-                }
 
-                // 立即更新统计信息
+                // 立即更新统计信息和UI
                 UpdateStatistics();
-                this.Refresh();
-
-                // 标记需要完整刷新，确保下一次刷新时清理所有断开的会话
                 MarkForFullRefresh();
             }
             catch (Exception ex)
@@ -1248,106 +1081,31 @@ namespace RUINORERP.Server.Controls
                 return;
             }
 
-            if (sessionInfo == null) return;
-
-            // 检查控件是否已经被释放
-            if (IsDisposed || listView1.IsDisposed)
-            {
-                LogError("OnSessionUpdated: 控件已被释放，无法处理会话更新事件");
+            if (sessionInfo == null || IsDisposed || listView1.IsDisposed)
                 return;
-            }
 
             try
             {
-                bool isSignificantChange = false;
-
-                // 更新或创建会话项
                 if (_sessionItemMap.TryGetValue(sessionInfo.SessionID, out var existingItem))
                 {
-                    // 记录关键状态变化
-                    var oldSessionInfo = existingItem.Tag as SessionInfo;
-                    bool statusChanged = oldSessionInfo?.IsConnected != sessionInfo.IsConnected ||
-                                       oldSessionInfo?.IsAuthenticated != sessionInfo.IsAuthenticated;
-                    bool heartbeatChanged = Math.Abs(((oldSessionInfo?.LastHeartbeat ?? DateTime.MinValue) - sessionInfo.LastHeartbeat).TotalSeconds) > 5;
-
-                    // 兼容不同版本的属性路径
-                    string oldModule = null;
-                    string newModule = null;
-                    string oldForm = null;
-                    string newForm = null;
-
-                    try
-                    {
-                        oldModule = oldSessionInfo?.UserInfo?.当前模块;
-                        newModule = sessionInfo?.UserInfo?.当前模块;
-                        oldForm = oldSessionInfo?.UserInfo?.当前窗体;
-                        newForm = sessionInfo?.UserInfo?.当前窗体;
-                    }
-                    catch (Exception)
-                    {
-                        // 忽略属性访问错误
-                    }
-
-                    bool moduleChanged = oldModule != newModule;
-                    bool formChanged = oldForm != newForm;
-
-                    // 更新会话信息
                     UpdateSessionItem(existingItem, sessionInfo);
-                    existingItem.Tag = sessionInfo; // 更新引用
-
-                    // 判断是否为重要变化
-                    isSignificantChange = statusChanged || moduleChanged || formChanged;
-
-                    // 只在有关键变化时记录日志
-                    if (statusChanged)
-                    {
-                        LogStatusChange(sessionInfo, $"状态变化 - 连接:{sessionInfo.IsConnected}, 认证:{sessionInfo.IsAuthenticated}");
-                    }
-                    else if (moduleChanged && !string.IsNullOrEmpty(newModule))
-                    {
-                        LogStatusChange(sessionInfo, $"模块变化: {newModule}");
-                    }
-                    else if (formChanged && !string.IsNullOrEmpty(newForm))
-                    {
-                        LogStatusChange(sessionInfo, $"窗体变化: {newForm}");
-                    }
-                    // 心跳变化不记录详细日志，避免日志过多
+                    existingItem.Tag = sessionInfo;
                 }
                 else
                 {
-                    // 新会话，添加到列表
                     AddOrUpdateSessionItem(sessionInfo);
-                    LogStatusChange(sessionInfo, "新会话更新");
-                    isSignificantChange = true;
                 }
 
-                // 在重要状态变化时更新统计信息
-                if (sessionInfo.IsAuthenticated || !sessionInfo.IsConnected || isSignificantChange)
+                // 立即更新统计和UI
+                UpdateStatistics();
+                if (!listView1.IsDisposed)
                 {
-                    UpdateStatistics();
-
-                    // 标记需要完整刷新，确保UI能立即反映所有变化
-                    MarkForFullRefresh();
-                }
-
-                // 立即刷新UI确保用户能看到最新状态
-                try
-                {
-                    if (!listView1.IsDisposed)
-                    {
-                        listView1.Refresh();
-                    }
-                }
-                catch (Exception refreshEx)
-                {
-                    LogError("刷新UI失败", refreshEx);
+                    listView1.Refresh();
                 }
             }
             catch (Exception ex)
             {
                 LogError($"处理会话更新事件时出错: {ex.Message}", ex);
-                // 发生错误时确保下次会重新同步
-                MarkForFullRefresh();
             }
         }
 
@@ -1425,7 +1183,7 @@ namespace RUINORERP.Server.Controls
             catch
             {
                 // 避免日志记录本身出错导致无限递归
-                Console.WriteLine($"[UserManagementControl] {message}");
+                System.Diagnostics.Debug.WriteLine($"[UserManagementControl] {message}");
             }
         }
 

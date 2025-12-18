@@ -30,7 +30,7 @@ namespace RUINORERP.Server.Workflow.WFScheduled
         public void Build(IWorkflowBuilder<GlobalScheduledData> builder)
         {
             builder
-                .StartWith(context => Console.WriteLine("任务开始时间: " + DateTime.Now))
+                .StartWith(context => System.Diagnostics.Debug.WriteLine("任务开始时间: " + DateTime.Now))
               .Recur(data => TimeSpan.FromMinutes(30), data => StopSondition(data))
                   .Do(recur => recur
                   .StartWith<NightlyTaskStep>
@@ -38,13 +38,13 @@ namespace RUINORERP.Server.Workflow.WFScheduled
                   context =>
                   {
 
-                      Console.WriteLine("执行提醒");
+                      System.Diagnostics.Debug.WriteLine("执行提醒");
                       //MessageBox.Show("执行提醒" + System.DateTime.Now);
 
                   }
                   )
                   ).OnError(WorkflowErrorHandling.Retry, TimeSpan.FromMinutes(20))
-                .Then(context => Console.WriteLine("任务结束时间: " + DateTime.Now));
+                .Then(context => System.Diagnostics.Debug.WriteLine("任务结束时间: " + DateTime.Now));
         }
 
         /// <summary>
@@ -133,7 +133,7 @@ namespace RUINORERP.Server.Workflow.WFScheduled
         //      .StartWith(context =>
         //      {
 
-        //          Console.WriteLine("流程在凌晨 2 点开始执行！");
+        //          System.Diagnostics.Debug.WriteLine("流程在凌晨 2 点开始执行！");
         //          return ExecutionResult.Next();
         //      });
         //}

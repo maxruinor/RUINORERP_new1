@@ -150,21 +150,21 @@ namespace RUINORERP.Plugin
                             catch (Exception ex)
                             {
                                 // 记录插件实例化错误
-                                Console.WriteLine($"创建插件实例失败: {pluginType.Name}, 错误: {ex.Message}");
+                                System.Diagnostics.Debug.WriteLine($"创建插件实例失败: {pluginType.Name}, 错误: {ex.Message}");
                             }
                         }
                     }
                     catch (Exception ex)
                     {
                         // 记录插件加载错误
-                        Console.WriteLine($"加载插件失败: {pluginFile}, 错误: {ex.Message}");
+                        System.Diagnostics.Debug.WriteLine($"加载插件失败: {pluginFile}, 错误: {ex.Message}");
                     }
                 }
             }
             catch (Exception ex)
             {
                 // 记录整体扫描错误
-                Console.WriteLine($"扫描插件目录失败: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"扫描插件目录失败: {ex.Message}");
             }
         }
         
@@ -181,7 +181,7 @@ namespace RUINORERP.Plugin
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"执行插件失败: {plugin.Name}, 错误: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"执行插件失败: {plugin.Name}, 错误: {ex.Message}");
                 }
             }
         }
@@ -227,7 +227,7 @@ namespace RUINORERP.Plugin
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"注册插件菜单项失败: {plugin.Name}, 错误: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"注册插件菜单项失败: {plugin.Name}, 错误: {ex.Message}");
                 }
             }
         }
@@ -246,7 +246,7 @@ namespace RUINORERP.Plugin
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"停止插件失败: {plugin.Name}, 错误: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"停止插件失败: {plugin.Name}, 错误: {ex.Message}");
                 }
             }
             

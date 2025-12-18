@@ -28,7 +28,7 @@ namespace RUINORERP.Server.Workflow
 
         //    if (approval != null)
         //    {
-        //        Console.WriteLine("Approval required for " + approval.Parameters);
+        //        System.Diagnostics.Debug.WriteLine("Approval required for " + approval.Parameters);
         //        host.SubmitActivitySuccess(approval.Token, "John Smith");
         //    }
 
@@ -36,7 +36,7 @@ namespace RUINORERP.Server.Workflow
         //    //var approval1 = host.GetPendingActivity("get-approval", "worker1", TimeSpan.FromMinutes(1)).Result;
         //    if (approval != null)
         //    {
-        //        Console.WriteLine("Approval required for " + approval.Parameters);
+        //        System.Diagnostics.Debug.WriteLine("Approval required for " + approval.Parameters);
         //        host.SubmitActivitySuccess(approval.Token, "John Smith");
         //    }
 
@@ -52,7 +52,7 @@ namespace RUINORERP.Server.Workflow
             // var approval = host.GetPendingActivity("get-approval", "worker1", TimeSpan.FromMinutes(1)).Result;
             // if (approval != null)
             // {
-            //     Console.WriteLine("Approval required for " + approval.Parameters);
+            //     System.Diagnostics.Debug.WriteLine("Approval required for " + approval.Parameters);
             //     host.SubmitActivitySuccess(approval.Token, "John Smith");
             // }
             //把ID加入到队列中？
@@ -68,7 +68,7 @@ namespace RUINORERP.Server.Workflow
             // var approval = host.GetPendingActivity("get-approval", "worker1", TimeSpan.FromMinutes(1)).Result;
             // if (approval != null)
             // {
-            //     Console.WriteLine("Approval required for " + approval.Parameters);
+            //     System.Diagnostics.Debug.WriteLine("Approval required for " + approval.Parameters);
             //     host.SubmitActivitySuccess(approval.Token, "John Smith");
             // }
             //把ID加入到队列中？
@@ -84,7 +84,7 @@ namespace RUINORERP.Server.Workflow
             // var approval = host.GetPendingActivity("get-approval", "worker1", TimeSpan.FromMinutes(1)).Result;
             // if (approval != null)
             // {
-            //     Console.WriteLine("Approval required for " + approval.Parameters);
+            //     System.Diagnostics.Debug.WriteLine("Approval required for " + approval.Parameters);
             //     host.SubmitActivitySuccess(approval.Token, "John Smith");
             // }
             //把ID加入到队列中？

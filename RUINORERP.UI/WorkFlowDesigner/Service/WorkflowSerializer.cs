@@ -215,7 +215,7 @@ namespace RUINORERP.UI.WorkFlowDesigner.Service
             //            //一个节点的四个点，分别是上，下，左，右，每条连接线的起始点和终点都有nextnodeid属性的值
             //            if (connPoint.Connections.Count > 0)
             //            {
-            //                Console.WriteLine(connPoint.Name);
+            //                System.Diagnostics.Debug.WriteLine(connPoint.Name);
             //                var targetPoint = connPoint.Connections[0].To;
             //                if (targetPoint.BelongsTo.UID == item.UID)
             //                {
@@ -300,7 +300,7 @@ namespace RUINORERP.UI.WorkFlowDesigner.Service
                             ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
                             ContractResolver = new JsonPropertyContractResolver(new List<string> { "ShopID", "Name", "Count" })
                         });
-                        Console.WriteLine("方法一：" + jsonString);
+                        System.Diagnostics.Debug.WriteLine("方法一：" + jsonString);
                         sb.Append(jsonString);
                         sb.Append("===============");
                         //方法二
@@ -318,7 +318,7 @@ namespace RUINORERP.UI.WorkFlowDesigner.Service
                         settings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
                         settings.ContractResolver = new JsonPropertyContractResolver(new List<string> { "Name", "Price" });
                         string s = JsonConvert.SerializeObject(prod, settings);
-                        Console.WriteLine("方法二" +s );
+                        System.Diagnostics.Debug.WriteLine("方法二" +s );
                         sb.Append(s);
                         sb.Append("===============");
              */

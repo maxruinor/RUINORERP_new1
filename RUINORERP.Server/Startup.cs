@@ -193,12 +193,12 @@ namespace RUINORERP.Server
 
             // 初始化表结构（如果不存在）
             // sequenceService.InitializeTable();
-            Console.WriteLine("序号表初始化完成");
+            System.Diagnostics.Debug.WriteLine("序号表初始化完成");
 
             // 测试序号表功能
             //var testResult = sequenceService.TestSequenceTable();
-            //  Console.WriteLine("数据库序列表测试结果:");
-            //  Console.WriteLine(testResult);
+            //  System.Diagnostics.Debug.WriteLine("数据库序列表测试结果:");
+            //  System.Diagnostics.Debug.WriteLine(testResult);
 
 
             // 注册业务编码生成相关服务
@@ -891,7 +891,7 @@ namespace RUINORERP.Server
                 catch (Exception ex)
                 {
                     // 记录无法加载的程序集
-                    Console.WriteLine($"无法加载程序集 {file}: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"无法加载程序集 {file}: {ex.Message}");
                     // 可以选择继续或抛出异常
                 }
             }
@@ -909,11 +909,11 @@ namespace RUINORERP.Server
                 catch (ReflectionTypeLoadException ex)
                 {
                     // 记录加载类型时的错误
-                    Console.WriteLine($"无法从程序集 {assembly.FullName} 加载所有类型:");
+                    System.Diagnostics.Debug.WriteLine($"无法从程序集 {assembly.FullName} 加载所有类型:");
                     foreach (var loaderException in ex.LoaderExceptions)
                     {
                         if (loaderException != null)
-                            Console.WriteLine($"  - {loaderException.Message}");
+                            System.Diagnostics.Debug.WriteLine($"  - {loaderException.Message}");
                     }
 
                     // 添加成功加载的类型
@@ -925,7 +925,7 @@ namespace RUINORERP.Server
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"处理程序集 {assembly.FullName} 时发生错误: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"处理程序集 {assembly.FullName} 时发生错误: {ex.Message}");
                 }
             }
 
@@ -972,7 +972,7 @@ namespace RUINORERP.Server
                 if (AutofacContainerScope == null)
                 {
                     // 记录警告日志
-                    Console.WriteLine($"警告: 尝试解析服务 {typeof(T).Name} 时，Autofac容器尚未初始化");
+                    System.Diagnostics.Debug.WriteLine($"警告: 尝试解析服务 {typeof(T).Name} 时，Autofac容器尚未初始化");
 
                     // 尝试使用ServiceProvider作为备选方案
                     if (ServiceProvider != null)
@@ -983,7 +983,7 @@ namespace RUINORERP.Server
                         }
                         catch (Exception ex)
                         {
-                            Console.WriteLine($"尝试从ServiceProvider解析服务 {typeof(T).Name} 失败: {ex.Message}");
+                            System.Diagnostics.Debug.WriteLine($"尝试从ServiceProvider解析服务 {typeof(T).Name} 失败: {ex.Message}");
                         }
                     }
                     return default;
@@ -995,7 +995,7 @@ namespace RUINORERP.Server
             catch (Exception ex)
             {
                 // 记录解析异常
-                Console.WriteLine($"从Autofac容器解析服务 {typeof(T).Name} 失败: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"从Autofac容器解析服务 {typeof(T).Name} 失败: {ex.Message}");
 
                 // 尝试使用ServiceProvider作为备选方案
                 if (ServiceProvider != null)

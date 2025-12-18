@@ -170,12 +170,12 @@ namespace Netron.Neon.TextEditor
 
                 if (rect.IntersectsWith(lineRectangle))
                 {
-                    //					Console.WriteLine("first visible line is {0}. logical line", FirstVisibleLine);
+                    //					System.Diagnostics.Debug.WriteLine("first visible line is {0}. logical line", FirstVisibleLine);
                     int fvl = textArea.Document.GetVisibleLine(FirstVisibleLine);
-                    //					Console.WriteLine("first visible line is {0}. visible line", fvl);
-                    //					Console.WriteLine("paint {0}. visible line", fvl + y);
+                    //					System.Diagnostics.Debug.WriteLine("first visible line is {0}. visible line", fvl);
+                    //					System.Diagnostics.Debug.WriteLine("paint {0}. visible line", fvl + y);
                     int currentLine = textArea.Document.GetFirstLogicalLine(textArea.Document.GetVisibleLine(FirstVisibleLine) + y);
-                    //					Console.WriteLine("logical line : " + currentLine);
+                    //					System.Diagnostics.Debug.WriteLine("logical line : " + currentLine);
                     PaintDocumentLine(g, currentLine, lineRectangle);
                 }
             }
@@ -760,12 +760,12 @@ namespace Netron.Neon.TextEditor
 
         public Point GetLogicalColumn(int firstLogicalLine, int xPos)
         {
-            //			Console.WriteLine("GetLogicalColumn: line = {0}, xPos = {1}", firstLogicalLine, xPos);
+            //			System.Diagnostics.Debug.WriteLine("GetLogicalColumn: line = {0}, xPos = {1}", firstLogicalLine, xPos);
             float spaceWidth = GetWidth(' ');
             LineSegment line = firstLogicalLine < Document.TotalNumberOfLines ? Document.GetLineSegment(firstLogicalLine) : null;
             if (line == null)
             {
-                //				Console.WriteLine("LineSegment not found");
+                //				System.Diagnostics.Debug.WriteLine("LineSegment not found");
                 return new Point((int)(xPos / spaceWidth), firstLogicalLine);
             }
 
@@ -784,7 +784,7 @@ namespace Netron.Neon.TextEditor
                 // search for folding
                 if (starts.Count > 0)
                 {
-                    //					Console.WriteLine("Foldings found");
+                    //					System.Diagnostics.Debug.WriteLine("Foldings found");
                     foreach (FoldMarker folding in starts)
                     {
                         if (folding.IsFolded && logicalColumn >= folding.StartColumn && (logicalColumn < folding.EndColumn || lineNumber != folding.EndLine))

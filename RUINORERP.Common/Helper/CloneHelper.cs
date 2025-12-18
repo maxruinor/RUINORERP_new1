@@ -253,8 +253,8 @@ namespace RUINORERP.Common.Helper
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine(propertyInfo.Name + "|" + propertyInfo.PropertyType.Name + "|" + source.ToString());
-                        Console.WriteLine(ex.Message + ex.StackTrace);
+                        System.Diagnostics.Debug.WriteLine(propertyInfo.Name + "|" + propertyInfo.PropertyType.Name + "|" + source.ToString());
+                        System.Diagnostics.Debug.WriteLine(ex.Message + ex.StackTrace);
                     }
 
                 }
@@ -359,7 +359,7 @@ namespace RUINORERP.Common.Helper
                                     catch (InvalidCastException)
                                     {
                                         // 如果无法转换，记录错误但不中断克隆过程
-                                        Console.WriteLine($"无法将类型 {clonedItem.GetType().FullName} 转换为集合元素类型 {elementType.FullName}");
+                                        System.Diagnostics.Debug.WriteLine($"无法将类型 {clonedItem.GetType().FullName} 转换为集合元素类型 {elementType.FullName}");
                                     }
                                 }
                             }
@@ -389,7 +389,7 @@ namespace RUINORERP.Common.Helper
                                 catch (InvalidCastException)
                                 {
                                     // 如果无法转换，记录错误信息但不中断克隆过程
-                                    Console.WriteLine($"无法将类型 {clonedValue.GetType().FullName} 转换为 {property.PropertyType.FullName}，属性：{property.Name}");
+                                    System.Diagnostics.Debug.WriteLine($"无法将类型 {clonedValue.GetType().FullName} 转换为 {property.PropertyType.FullName}，属性：{property.Name}");
                                 }
                             }
                         }
@@ -403,7 +403,7 @@ namespace RUINORERP.Common.Helper
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message + ex.StackTrace);
+                System.Diagnostics.Debug.WriteLine(ex.Message + ex.StackTrace);
             }
 
             return target;

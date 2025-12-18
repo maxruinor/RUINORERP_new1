@@ -15,9 +15,9 @@ namespace RUINORERP.UI.WorkFlowTester
                 .StartWith<NextWorker>()
            .Recur(data => TimeSpan.FromSeconds(5), data => data.Counter > 10)
            .Do(recur => recur
-           .StartWith(context => Console.WriteLine("Doing recurring task"))
+           .StartWith(context => System.Diagnostics.Debug.WriteLine("Doing recurring task"))
            .OnError(WorkflowErrorHandling.Retry, TimeSpan.FromMinutes(2)))
-            .Then(context => Console.WriteLine("Carry on"));
+            .Then(context => System.Diagnostics.Debug.WriteLine("Carry on"));
          
             /*
             builder

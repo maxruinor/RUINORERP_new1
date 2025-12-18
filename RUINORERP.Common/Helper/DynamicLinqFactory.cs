@@ -558,7 +558,7 @@ namespace RUINORERP.Common.Helper
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.Message);
+                System.Diagnostics.Debug.WriteLine(e.Message);
             }
 
             return "";
@@ -587,7 +587,7 @@ namespace RUINORERP.Common.Helper
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.Message);
+                System.Diagnostics.Debug.WriteLine(e.Message);
             }
 
             return "";
@@ -607,7 +607,7 @@ namespace RUINORERP.Common.Helper
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.Message);
+                System.Diagnostics.Debug.WriteLine(e.Message);
             }
 
             return "";
@@ -629,7 +629,7 @@ namespace RUINORERP.Common.Helper
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.Message);
+                System.Diagnostics.Debug.WriteLine(e.Message);
             }
 
             return "";
@@ -655,7 +655,7 @@ namespace RUINORERP.Common.Helper
             catch (Exception e)
             {
                 //InfluxdbHelper.GetInstance().AddLog("Cof_NaocePostFile.Err", ee);
-                Console.WriteLine(e.Message);
+                System.Diagnostics.Debug.WriteLine(e.Message);
             }
 
             return "";

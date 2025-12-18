@@ -397,7 +397,7 @@ namespace RUINORERP.UI.BaseForm
                     catch (Exception ex)
                     {
                         // 出现异常时使用默认规则，避免UI功能失效
-                        Console.WriteLine($"获取按钮规则异常: {ex.Message}");
+                        System.Diagnostics.Debug.WriteLine($"获取按钮规则异常: {ex.Message}");
                     }
                 }
             }
@@ -564,7 +564,7 @@ namespace RUINORERP.UI.BaseForm
                         catch (Exception ex)
                         {
                             // 出现异常时使用默认规则，避免UI功能失效
-                            Console.WriteLine($"获取按钮规则异常: {ex.Message}");
+                            System.Diagnostics.Debug.WriteLine($"获取按钮规则异常: {ex.Message}");
                         }
                     }
                 }
@@ -703,7 +703,7 @@ namespace RUINORERP.UI.BaseForm
                     catch (Exception ex)
                     {
                         // 出现异常时使用默认规则，避免UI功能失效
-                        Console.WriteLine($"获取按钮规则异常: {ex.Message}");
+                        System.Diagnostics.Debug.WriteLine($"获取按钮规则异常: {ex.Message}");
                     }
 
                 }
@@ -4371,7 +4371,7 @@ namespace RUINORERP.UI.BaseForm
             catch (Exception ex)
             {
                 // 记录错误但不中断流程
-                Console.WriteLine($"获取实体 {entityType?.Name} 显示名称失败: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"获取实体 {entityType?.Name} 显示名称失败: {ex.Message}");
                 return entityType?.Name ?? "未知实体";
             }
         }

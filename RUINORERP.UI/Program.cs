@@ -112,12 +112,12 @@ namespace RUINORERP.UI
                 var logRepository = LogManager.GetRepository(Assembly.GetEntryAssembly());
                 BasicConfigurator.Configure(logRepository);
 
-                Console.WriteLine("应用程序启动 - 基础日志系统初始化完成");
+                System.Diagnostics.Debug.WriteLine("应用程序启动 - 基础日志系统初始化完成");
             }
             catch (Exception ex)
             {
                 // 如果日志配置失败，至少确保有控制台输出
-                Console.WriteLine($"日志初始化失败: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"日志初始化失败: {ex.Message}");
             }
         }
 
@@ -352,7 +352,7 @@ namespace RUINORERP.UI
             // 例如，打印所有参数
             if (args.Length > 0)
             {
-                Console.WriteLine("接收到的命令行参数如下：");
+                System.Diagnostics.Debug.WriteLine("接收到的命令行参数如下：");
                 foreach (var arg in args)
                 {
                     ERPVersion = arg;
@@ -388,7 +388,7 @@ namespace RUINORERP.UI
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                System.Diagnostics.Debug.WriteLine(e);
                 throw;
             }
 
@@ -464,7 +464,7 @@ namespace RUINORERP.UI
                         catch (Exception ex)
                         {
                             // 处理异常，例如记录日志
-                            Console.WriteLine($"Failed to register workflow of type {workflowType.FullName}: {ex.Message}");
+                            System.Diagnostics.Debug.WriteLine($"Failed to register workflow of type {workflowType.FullName}: {ex.Message}");
                         }
                     }
 
@@ -530,7 +530,7 @@ namespace RUINORERP.UI
                         s += ex.InnerException.Message + "\r\n" + ex.InnerException.StackTrace;
                     }
                     MessageBox.Show(s);
-                    Console.WriteLine(s);
+                    System.Diagnostics.Debug.WriteLine(s);
                 }
 
                 return;
@@ -550,10 +550,10 @@ namespace RUINORERP.UI
             var logRepository = LogManager.GetRepository();
             var appenders = logRepository.GetAppenders();
 
-            Console.WriteLine($"当前配置的 Appender 数量: {appenders.Length}");
+            System.Diagnostics.Debug.WriteLine($"当前配置的 Appender 数量: {appenders.Length}");
             foreach (var appender in appenders)
             {
-                Console.WriteLine($"Appender: {appender.Name}, Type: {appender.GetType().Name}");
+                System.Diagnostics.Debug.WriteLine($"Appender: {appender.Name}, Type: {appender.GetType().Name}");
             }
 
 

@@ -38,7 +38,8 @@ namespace RUINORERP.Business.DI
             // Register business layer components
             builder.RegisterAssemblyTypes(System.Reflection.Assembly.Load("RUINORERP.Business"))
                   .Where(t => !t.IsAssignableFrom(typeof(RUINORERP.Business.Document.DocumentConverterBase<,>)) &&
-                             !t.Name.EndsWith("Converter"))
+                             !t.Name.EndsWith("Converter") &&
+                             t != typeof(RUINORERP.Business.Cache.TableSchemaManager))
                   .AsImplementedInterfaces()
                   .AsSelf()
                   .PropertiesAutowired()
@@ -70,6 +71,13 @@ namespace RUINORERP.Business.DI
                 .PropertiesAutowired()
                 .SingleInstance();
 
+            // 注册缓存管理器（单例）- 依赖ITableSchemaManager进行表结构管理
+            //这里是单例，批量扫描程序集是 .InstancePerDependency()，这意味着每次请求都会创建一个新的实例
+            builder.RegisterType<EntityCacheManager>()
+                .As<IEntityCacheManager>()
+                .SingleInstance()
+                .PropertiesAutowired();
+
             // 注册新的优化缓存初始化服务
             builder.RegisterType<EntityCacheInitializationService>()
                 .AsSelf()
@@ -87,12 +95,6 @@ namespace RUINORERP.Business.DI
                 .PropertiesAutowired();
 
 
-            // 注册缓存管理器（单例）- 依赖ITableSchemaManager进行表结构管理
-            //这里是单例，批量扫描程序集是 .InstancePerDependency()，这意味着每次请求都会创建一个新的实例
-            builder.RegisterType<EntityCacheManager>()
-                .As<IEntityCacheManager>()
-                .SingleInstance()
-                .PropertiesAutowired();
 
 
 
@@ -292,7 +294,7 @@ namespace RUINORERP.Business.DI
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"注册业务处理器失败: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"注册业务处理器失败: {ex.Message}");
             }
         }
 
@@ -370,7 +372,7 @@ namespace RUINORERP.Business.DI
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"注册验证器失败: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"注册验证器失败: {ex.Message}");
             }
         }
 
@@ -414,7 +416,7 @@ namespace RUINORERP.Business.DI
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"注册行级权限服务失败: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"注册行级权限服务失败: {ex.Message}");
             }
         }
 

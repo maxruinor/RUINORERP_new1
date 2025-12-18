@@ -203,8 +203,8 @@ key = "12345678901234567890123456789012"; // 32个字符
             byte[] key = kdf.GetBytes(32); // 256位 / 8 = 32字节
 
             // 打印密钥和盐值（实际应用中不应该打印密钥）
-            Console.WriteLine("密钥: " + BitConverter.ToString(key));
-            Console.WriteLine("盐值: " + BitConverter.ToString(salt));
+            System.Diagnostics.Debug.WriteLine("密钥: " + BitConverter.ToString(key));
+            System.Diagnostics.Debug.WriteLine("盐值: " + BitConverter.ToString(salt));
 
             return key;
         }

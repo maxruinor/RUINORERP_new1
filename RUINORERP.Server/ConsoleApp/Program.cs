@@ -15,13 +15,13 @@ namespace RUINORERP.Server.ConsoleApp
         /// <param name="args">命令行参数</param>
         static async Task Main(string[] args)
         {
-            Console.WriteLine("RUINORERP 端口检查工具");
-            Console.WriteLine("======================\n");
+            System.Diagnostics.Debug.WriteLine("RUINORERP 端口检查工具");
+            System.Diagnostics.Debug.WriteLine("======================\n");
             
             // 测试端口检查功能
             PortCheckTest.TestPortCheck();
             
-            Console.WriteLine("\n按任意键退出...");
+            System.Diagnostics.Debug.WriteLine("\n按任意键退出...");
             Console.ReadKey();
         }
     }

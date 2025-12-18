@@ -81,7 +81,7 @@ namespace RUINORERP.Server.Controls
             {   
                 picStatusIndicator.BackColor = System.Drawing.Color.Red;
                 lblStatus.Text = "更新失败: " + ex.Message;
-                Console.WriteLine("加载存储信息失败: " + ex.Message);
+                System.Diagnostics.Debug.WriteLine("加载存储信息失败: " + ex.Message);
             }
         }
 

@@ -412,7 +412,7 @@ namespace RUINORERP.UI.Common
         {
             if (!dtnow) return;
             DateTime t = DateTime.Now;
-            Console.WriteLine(action + "--" + t.ToString() + ":" + t.Millisecond.ToString());
+            System.Diagnostics.Debug.WriteLine(action + "--" + t.ToString() + ":" + t.Millisecond.ToString());
         }
 
         public static ArrayList buildarrayList(string typename, Grid grid, GridDefine define)

@@ -147,7 +147,7 @@ namespace RUINORERP.UI.Common
                 }
                 catch (HttpRequestException ex)
                 {
-                    Console.WriteLine($"请求登录时发生错误: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"请求登录时发生错误: {ex.Message}");
                     return null;
                 }
             }
@@ -193,7 +193,7 @@ namespace RUINORERP.UI.Common
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.Message);
+                System.Diagnostics.Debug.WriteLine(e.Message);
                 return null;
             }
         }
@@ -260,7 +260,7 @@ namespace RUINORERP.UI.Common
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.Message);
+                System.Diagnostics.Debug.WriteLine(e.Message);
                 return e.Message;
             }
         }
@@ -530,7 +530,7 @@ namespace RUINORERP.UI.Common
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.Message);
+                System.Diagnostics.Debug.WriteLine(e.Message);
             }
             return null;
         }
@@ -553,7 +553,7 @@ namespace RUINORERP.UI.Common
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.Message);
+                System.Diagnostics.Debug.WriteLine(e.Message);
             }
             return null;
         }

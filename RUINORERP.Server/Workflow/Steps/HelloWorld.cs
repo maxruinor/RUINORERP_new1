@@ -10,7 +10,7 @@ namespace RUINORERP.Server.Workflow.Steps
     {
         public override ExecutionResult Run(IStepExecutionContext context)
         {
-            Console.WriteLine("Hello world");
+            System.Diagnostics.Debug.WriteLine("Hello world");
             return ExecutionResult.Next();
         }
     }

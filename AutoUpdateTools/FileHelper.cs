@@ -46,7 +46,7 @@ namespace AutoUpdateTools
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"写入文件失败: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"写入文件失败: {ex.Message}");
             }
         }
 

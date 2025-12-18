@@ -32,9 +32,9 @@ namespace Crawler
          if ( is1st )
          {
             is1st = false;
-            Console.WriteLine( "Logging       : " + ( isLogging        ? "ON" : "OFF" ) );
-            Console.WriteLine( "Results Output: " + ( isResultsOutput  ? "ON" : "OFF" ) );
-            Console.WriteLine( "Long Running  : " + ( isLongRunning    ? "ON" : "OFF" ) );
+            System.Diagnostics.Debug.WriteLine( "Logging       : " + ( isLogging        ? "ON" : "OFF" ) );
+            System.Diagnostics.Debug.WriteLine( "Results Output: " + ( isResultsOutput  ? "ON" : "OFF" ) );
+            System.Diagnostics.Debug.WriteLine( "Long Running  : " + ( isLongRunning    ? "ON" : "OFF" ) );
          }
       }
   
@@ -238,7 +238,7 @@ namespace Crawler
          {
             foreach( WebPageState state in rs.Pages )
             {
-               Console.WriteLine( "Code: {0,4}, Process Status: {1}, Url: {2}, Desc: {3}", state.StatusCode, ProcessStatus( state ) ,state.Uri.AbsoluteUri, state.StatusDescription );
+               System.Diagnostics.Debug.WriteLine( "Code: {0,4}, Process Status: {1}, Url: {2}, Desc: {3}", state.StatusCode, ProcessStatus( state ) ,state.Uri.AbsoluteUri, state.StatusDescription );
             }
          }
       }

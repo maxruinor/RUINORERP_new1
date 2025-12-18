@@ -136,7 +136,7 @@ namespace RUINORERP.Server.Workflow
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"工作流执行错误: {ex.Message}");
+                        System.Diagnostics.Debug.WriteLine($"工作流执行错误: {ex.Message}");
                     }
 
                     // 改为每天执行一次
@@ -148,7 +148,7 @@ namespace RUINORERP.Server.Workflow
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"工作流注册错误: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"工作流注册错误: {ex.Message}");
                 return false;
             }
         }

@@ -240,11 +240,11 @@ namespace RUINORERP.UI.Common
                 {
                     //通过业务类型找
                     TargetTableKey = CurrentRowEntity.GetPropertyValue(result.Key).ToString();
-                    Console.WriteLine($"找到的键值对: Key = {result.Key}, Value = {result.Value}");
+                    System.Diagnostics.Debug.WriteLine($"找到的键值对: Key = {result.Key}, Value = {result.Value}");
                 }
                 else
                 {
-                    Console.WriteLine($"未找到值为 {GridViewColumnFieldName} 的键值对。");
+                    System.Diagnostics.Debug.WriteLine($"未找到值为 {GridViewColumnFieldName} 的键值对。");
                 }
 
 

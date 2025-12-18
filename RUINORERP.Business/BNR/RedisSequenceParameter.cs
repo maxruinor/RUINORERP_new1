@@ -45,7 +45,7 @@ namespace RUINORERP.Business.BNR
             catch (Exception ex)
             {
                 // 记录错误但不中断程序
-                Console.WriteLine($"获取Redis数据库实例失败: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"获取Redis数据库实例失败: {ex.Message}");
             }
         }
 

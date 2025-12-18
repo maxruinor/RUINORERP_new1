@@ -523,7 +523,7 @@ namespace SourceGrid2.VisualModels
 				}
 				catch(Exception ex)
 				{
-					Console.WriteLine(ex.Message);
+					System.Diagnostics.Debug.WriteLine(ex.Message);
 				}
 			}
 		}

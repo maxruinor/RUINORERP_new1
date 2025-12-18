@@ -31,7 +31,7 @@ namespace Netron.Neon.TextEditor.Actions
 			if (justBeforeCaret != null) {
 				position.Y = justBeforeCaret.StartLine;
 				position.X = justBeforeCaret.StartColumn;
-//				Console.WriteLine("position set to " + position);
+//				System.Diagnostics.Debug.WriteLine("position set to " + position);
 			} else {
 				if (position.X > 0) {
 					--position.X;
@@ -40,7 +40,7 @@ namespace Netron.Neon.TextEditor.Actions
 					position = new Point(lineAbove.Length, position.Y - 1);
 				}
 			}
-//			Console.WriteLine(position);
+//			System.Diagnostics.Debug.WriteLine(position);
 //			ArrayList foldings = textArea.Document.FoldingManager.GetFoldingsFromPosition(position.Y, position.X);
 //			foreach (FoldMarker foldMarker in foldings) {
 //				if (foldMarker.IsFolded) {

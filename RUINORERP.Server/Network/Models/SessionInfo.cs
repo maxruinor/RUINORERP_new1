@@ -125,7 +125,7 @@ namespace RUINORERP.Server.Network.Models
             }
             catch (Exception ex)
             {
-                Console.WriteLine("发送数据时出错：DataQueue AddSendData" + ex.Message);
+                System.Diagnostics.Debug.WriteLine("发送数据时出错：DataQueue AddSendData" + ex.Message);
             }
         }
  
@@ -190,7 +190,7 @@ namespace RUINORERP.Server.Network.Models
                 try
                 {
                     // 尝试记录日志
-                    Console.WriteLine($"Session {SessionID} 发送数据失败: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"Session {SessionID} 发送数据失败: {ex.Message}");
                 }
                 catch
                 {
@@ -240,7 +240,7 @@ namespace RUINORERP.Server.Network.Models
                 LastError = $"处理数据队列时发生异常: {ex.Message}";
                 try
                 {
-                    Console.WriteLine($"Session {SessionID} 处理队列失败: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"Session {SessionID} 处理队列失败: {ex.Message}");
                 }
                 catch
                 {
@@ -275,7 +275,7 @@ namespace RUINORERP.Server.Network.Models
         
         protected override async ValueTask OnSessionClosedAsync(CloseEventArgs e)
         {
-            //Console.WriteLine($@"{DateTime.Now} {SessionName} Session {RemoteEndPoint} closed: {e.Reason}.");
+            //System.Diagnostics.Debug.WriteLine($@"{DateTime.Now} {SessionName} Session {RemoteEndPoint} closed: {e.Reason}.");
             //if (User != null)
             //{
             //    if (User.在线状态)

@@ -282,7 +282,7 @@ namespace RUINORERP.Common.Extensions
                     }
                 }
                 // 创建一个 DataColumn 对象
-                System.Console.WriteLine(newcolType.Name);
+                System.Diagnostics.Debug.WriteLine(newcolType.Name);
                 DataColumn dataColumn = new DataColumn(propertyName, newcolType);
                 dataColumn.Caption = SubPartsfieldNameList[propertyName];
 

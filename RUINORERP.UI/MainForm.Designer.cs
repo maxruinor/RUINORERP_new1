@@ -174,7 +174,7 @@ namespace RUINORERP.UI
             this.kryptonPage2,
             this.kryptonPage4});
             this.kryptonNavigator1.SelectedIndex = 0;
-            this.kryptonNavigator1.Size = new System.Drawing.Size(183, 650); // 增加宽度15像素
+            this.kryptonNavigator1.Size = new System.Drawing.Size(168, 650);
             this.kryptonNavigator1.TabIndex = 0;
             // 
             // buttonSpecNavigator1
@@ -677,7 +677,7 @@ namespace RUINORERP.UI
             // kryptonSeparator1
             // 
             this.kryptonSeparator1.Dock = System.Windows.Forms.DockStyle.Left;
-            this.kryptonSeparator1.Location = new System.Drawing.Point(183, 0); // 向右移动15像素
+            this.kryptonSeparator1.Location = new System.Drawing.Point(168, 0);
             this.kryptonSeparator1.Name = "kryptonSeparator1";
             this.kryptonSeparator1.Size = new System.Drawing.Size(10, 650);
             this.kryptonSeparator1.TabIndex = 3;

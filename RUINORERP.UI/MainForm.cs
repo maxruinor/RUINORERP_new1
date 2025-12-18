@@ -949,7 +949,7 @@ namespace RUINORERP.UI
             watcher.Path = Path.GetDirectoryName(Application.ExecutablePath);
             if (watcher.Path == null)
             {
-                Console.WriteLine("文件路径无效。");
+                System.Diagnostics.Debug.WriteLine("文件路径无效。");
                 return;
             }
 
@@ -957,7 +957,7 @@ namespace RUINORERP.UI
             watcher.Filter = Path.GetFileName(UpdatefilePath);
             if (watcher.Filter == null)
             {
-                Console.WriteLine("文件名无效。");
+                System.Diagnostics.Debug.WriteLine("文件名无效。");
                 return;
             }
 
@@ -969,7 +969,7 @@ namespace RUINORERP.UI
             {
                 if (e.Name == UpdatefilePath && e.ChangeType == WatcherChangeTypes.Changed)
                 {
-                    Console.WriteLine($"文件已修改: {e.FullPath}");
+                    System.Diagnostics.Debug.WriteLine($"文件已修改: {e.FullPath}");
 
                     // 尝试读取文件内容
                     string content = string.Empty;
@@ -988,22 +988,22 @@ namespace RUINORERP.UI
                         catch (IOException ioEx)
                         {
                             // 文件被占用，等待2秒后重试
-                            Console.WriteLine($"文件被占用，正在重试... ({retryCount + 1}/5)");
+                            System.Diagnostics.Debug.WriteLine($"文件被占用，正在重试... ({retryCount + 1}/5)");
                             Thread.Sleep(2000);
                             retryCount++;
                         }
                         catch (Exception ex)
                         {
                             // 其他异常
-                            Console.WriteLine($"读取文件时发生错误: {ex.Message}");
+                            System.Diagnostics.Debug.WriteLine($"读取文件时发生错误: {ex.Message}");
                             break;
                         }
                     }
 
                     if (isFileAccessed)
                     {
-                        Console.WriteLine("文件内容：");
-                        Console.WriteLine(content);
+                        System.Diagnostics.Debug.WriteLine("文件内容：");
+                        System.Diagnostics.Debug.WriteLine(content);
 
                         if (content == "取消升级")
                         {
@@ -1017,7 +1017,7 @@ namespace RUINORERP.UI
                     }
                     else
                     {
-                        Console.WriteLine("文件读取失败，重试次数已用尽。");
+                        System.Diagnostics.Debug.WriteLine("文件读取失败，重试次数已用尽。");
                     }
                 }
             };
@@ -1088,6 +1088,17 @@ namespace RUINORERP.UI
             // 使用CacheInitializationService 只加载要缓存的表结构。缓存从服务器取
             var cacheInitializationService = Startup.GetFromFac<EntityCacheInitializationService>();
             cacheInitializationService.InitializeAllTableSchemas();
+            
+            // 验证初始化是否成功
+            var tableSchemaManager = Startup.GetFromFac<ITableSchemaManager>();
+            if (tableSchemaManager != null && !tableSchemaManager.IsInitialized)
+            {
+                System.Diagnostics.Debug.WriteLine("警告：客户端表结构初始化可能未完成，当前表数量为0");
+            }
+            else if (tableSchemaManager != null)
+            {
+                System.Diagnostics.Debug.WriteLine($"客户端表结构初始化成功，共注册了 {tableSchemaManager.GetAllTableNames().Count} 个表");
+            }
             this.Text = "企业数字化集成ERP v3.2" + "-" + Program.ERPVersion;
             //MessageBox.Show("登陆成功后，请要系统设置中添加公司基本资料。");
             using (StatusBusy busy = new StatusBusy("检测系统是否为最新版本 请稍候"))
@@ -3364,8 +3375,8 @@ namespace RUINORERP.UI
                 // 解析现有配置文件
                 var (version, updateTime, url) = ParseXmlInfo("AutoUpdaterList.xml");
                 // 显示结果
-                Console.WriteLine($"当前版本: {version}");
-                Console.WriteLine($"最后更新时间: {updateTime:yyyy-MM-dd}");
+                System.Diagnostics.Debug.WriteLine($"当前版本: {version}");
+                System.Diagnostics.Debug.WriteLine($"最后更新时间: {updateTime:yyyy-MM-dd}");
                 //重置一下
                 MainForm.Instance.AppContext.CurrentUser.客户端版本 = string.Empty;
                 if (!string.IsNullOrEmpty(version))
@@ -3469,7 +3480,7 @@ namespace RUINORERP.UI
                 //    MainForm.Instance.uclog.AddLog($"{webServerUrl}登陆成功。");
                 //    //var ulid = Ulid.NewUlid();
                 //    //var ulidString = ulid.ToString();
-                //    //Console.WriteLine($"Generated ULID: {ulidString}");
+                //    //System.Diagnostics.Debug.WriteLine($"Generated ULID: {ulidString}");
                 //}
             }
             catch (Exception ex)

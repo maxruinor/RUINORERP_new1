@@ -230,7 +230,7 @@ namespace RUINORERP.Server.Controls
         private void dataGridViewWorkflows_DataError(object sender, DataGridViewDataErrorEventArgs e)
         {
             // 处理数据错误
-            Console.WriteLine($"DataGridView数据错误: {e.Exception?.Message}");
+            System.Diagnostics.Debug.WriteLine($"DataGridView数据错误: {e.Exception?.Message}");
         }
 
         #endregion

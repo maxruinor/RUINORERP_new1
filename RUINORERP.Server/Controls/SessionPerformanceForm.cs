@@ -69,7 +69,7 @@ namespace RUINORERP.Server.Controls
             }
             catch (Exception ex)
             {
-                Console.WriteLine("更新性能数据时出错: " + ex.Message);
+                System.Diagnostics.Debug.WriteLine("更新性能数据时出错: " + ex.Message);
             }
         }
 

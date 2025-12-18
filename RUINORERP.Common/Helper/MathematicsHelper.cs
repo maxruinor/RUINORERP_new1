@@ -68,25 +68,25 @@ namespace RUINORERP.Common.Helper
 
         list.ForEach(p => do1(p));
 
-        Console.WriteLine(sw.Elapsed);
+        System.Diagnostics.Debug.WriteLine(sw.Elapsed);
 
         sw.Restart();
 
         list.ForEach(p => do2(p));
 
-        Console.WriteLine(sw.Elapsed);
+        System.Diagnostics.Debug.WriteLine(sw.Elapsed);
 
         sw.Restart();
 
         list.ForEach(p => do3(p));
 
-        Console.WriteLine(sw.Elapsed);
+        System.Diagnostics.Debug.WriteLine(sw.Elapsed);
 
         sw.Restart();
 
         list.ForEach(p => do1.DynamicInvoke(p));
 
-        Console.WriteLine(sw.Elapsed);
+        System.Diagnostics.Debug.WriteLine(sw.Elapsed);
 
         sw.Stop();
 

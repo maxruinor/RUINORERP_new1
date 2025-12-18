@@ -51,7 +51,7 @@ namespace RUINORERP.UI.ProductEAV
                     m = m.Multiply(new Matrix(array));
             }
             foreach (string s in m.Element)
-                Console.WriteLine(s);
+                System.Diagnostics.Debug.WriteLine(s);
         }
 
         public static List<string> Combination(List<string[]> arrays)
@@ -141,9 +141,9 @@ namespace RUINORERP.UI.ProductEAV
         //    string[] s2 = { "大", "中", "小" };
         //    string[] s3 = { "10克", "20克", "30克" };
         //    PrintResult(s1);
-        //    Console.WriteLine("--------------------------");
+        //    System.Diagnostics.Debug.WriteLine("--------------------------");
         //    PrintResult(s1, s2);
-        //    Console.WriteLine("--------------------------");
+        //    System.Diagnostics.Debug.WriteLine("--------------------------");
         //    PrintResult(s1, s2, s3);
 
         //}

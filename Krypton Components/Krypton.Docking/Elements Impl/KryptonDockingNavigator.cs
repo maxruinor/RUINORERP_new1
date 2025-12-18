@@ -521,7 +521,7 @@ namespace Krypton.Docking
                     }
                     break;
                 case DockingPropogateAction.DebugOutput:
-                    Console.WriteLine(GetType().ToString());
+                    System.Diagnostics.Debug.WriteLine(GetType().ToString());
                     DockableNavigatorControl.DebugOutput();
                     break;
             }

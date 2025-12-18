@@ -603,7 +603,7 @@ namespace RUINORERP.UI.UCSourceGrid
                     bool added = col.RelatedCols.TryAdd(colSourceName, NewKvValueList);
                     if (added)
                     {
-                        //  Console.WriteLine("新数据添加成功。");
+                        //  System.Diagnostics.Debug.WriteLine("新数据添加成功。");
                     }
                 }
                 else
@@ -970,7 +970,7 @@ namespace RUINORERP.UI.UCSourceGrid
                     bool added = col.EditorDataSourceCols.TryAdd(colTargetName, sourceToTargetMatches);
                     if (added)
                     {
-                        //  Console.WriteLine("新数据添加成功。");
+                        //  System.Diagnostics.Debug.WriteLine("新数据添加成功。");
                     }
                 }
                 else

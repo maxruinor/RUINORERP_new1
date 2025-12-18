@@ -1077,11 +1077,11 @@ namespace Krypton.Navigator
         [EditorBrowsable(EditorBrowsableState.Never)]
         public void DebugOutput()
         {
-            Console.WriteLine(@"Navigator Count:{0}", Pages.Count);
+            System.Diagnostics.Debug.WriteLine(@"Navigator Count:{0}", Pages.Count);
 
             foreach (KryptonPage page in Pages)
             {
-                Console.WriteLine(@"  Page Text:{0} Visible:{1}", page.Text, page.LastVisibleSet);
+                System.Diagnostics.Debug.WriteLine(@"  Page Text:{0} Visible:{1}", page.Text, page.LastVisibleSet);
             }
         }
         #endregion

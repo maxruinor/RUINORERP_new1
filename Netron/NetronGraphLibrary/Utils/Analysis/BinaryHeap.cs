@@ -137,10 +137,10 @@ namespace Netron.GraphLib.Analysis
 			for (i = mCount; i > 1 && array[i / 2] > obj; i /= 2)
 			{
 				array[i] = array[i / 2];
-				Console.WriteLine(i/2 + "->" + i);
+				System.Diagnostics.Debug.WriteLine(i/2 + "->" + i);
 			}
 			array[i] = obj;
-			//Console.WriteLine(mCount + " enqueued");
+			//System.Diagnostics.Debug.WriteLine(mCount + " enqueued");
 		}
 
 

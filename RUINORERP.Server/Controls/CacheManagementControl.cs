@@ -59,6 +59,7 @@ namespace RUINORERP.Server.Controls
         private readonly ILogger<CacheManagementControl> _logger;
         private readonly IEntityCacheManager _entityCacheManager;
         private readonly EntityCacheInitializationService _initializationService;
+        private readonly ITableSchemaManager _tableSchemaManager;
         private System.Windows.Forms.Timer _autoRefreshTimer;
         private DateTime _lastTableStatsRefresh = DateTime.MinValue;
         private DateTime _lastItemStatsRefresh = DateTime.MinValue;
@@ -73,7 +74,7 @@ namespace RUINORERP.Server.Controls
             _logger = Startup.GetFromFac<ILogger<CacheManagementControl>>();
             _entityCacheManager = Startup.GetFromFac<IEntityCacheManager>();
             _initializationService = Startup.GetFromFac<EntityCacheInitializationService>();
-            // 移除对ICacheSyncMetadata的直接依赖，改为通过_entityCacheManager间接访问
+            _tableSchemaManager = Startup.GetFromFac<ITableSchemaManager>();
 
             // 初始化定时刷新器
             InitializeAutoRefreshTimer();
@@ -403,7 +404,7 @@ namespace RUINORERP.Server.Controls
                 var cacheManager = _entityCacheManager;
 
                 // 获取所有可缓存的表名
-                List<string> tableNameList = RUINORERP.Server.Comm.CacheUIHelper.GetCacheableTableNames();
+                List<string> tableNameList = _tableSchemaManager.GetAllTableNames();
 
                 if (tableNameList == null || tableNameList.Count == 0)
                 {
@@ -426,7 +427,8 @@ namespace RUINORERP.Server.Controls
                     try
                     {
                         // 获取实体列表数量
-                        int count = RUINORERP.Server.Comm.CacheUIHelper.GetCacheItemCount(cacheManager, tableName);
+                        var List = _entityCacheManager.GetEntityListByTableName(tableName);
+                        int count = 0;
                         var kv = new SuperValue(tableName + $"[{count}]", tableName);
                         lock (itemsToAdd)
                         {
@@ -1092,7 +1094,7 @@ namespace RUINORERP.Server.Controls
 
 
 
-       
+
 
         // 查找并替换原有对_cacheSyncMetadataManager的调用
         private void RefreshMetadataOnTimerTick()

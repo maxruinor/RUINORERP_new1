@@ -46,11 +46,11 @@ namespace HLH.Lib.Security
 
             // 生成注册码
             string registrationCode = RegistrationCodeGenerator.GenerateMachineCode(hardwareInfo, registrationInfo);
-            Console.WriteLine("Generated Registration Code: " + registrationCode);
+            System.Diagnostics.Debug.WriteLine("Generated Registration Code: " + registrationCode);
 
             // 验证注册码
             bool isValid = RegistrationCodeGenerator.ValidateRegistrationCode(registrationCode, hardwareInfo, registrationInfo);
-            Console.WriteLine("Is the registration code valid? " + isValid);
+            System.Diagnostics.Debug.WriteLine("Is the registration code valid? " + isValid);
         }
     }
 }

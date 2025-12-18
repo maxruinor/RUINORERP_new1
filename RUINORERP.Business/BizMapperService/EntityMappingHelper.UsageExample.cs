@@ -36,19 +36,19 @@ namespace RUINORERP.Business.BizMapperService
         {
             // 根据业务类型获取实体信息
             BizEntityInfo saleOrderInfo = EntityMappingHelper.GetEntityInfo(BizType.销售订单);
-            Console.WriteLine($"销售订单实体类型: {saleOrderInfo.EntityType.Name}");
-            Console.WriteLine($"销售订单表名: {saleOrderInfo.TableName}");
+            System.Diagnostics.Debug.WriteLine($"销售订单实体类型: {saleOrderInfo.EntityType.Name}");
+            System.Diagnostics.Debug.WriteLine($"销售订单表名: {saleOrderInfo.TableName}");
 
             // 使用泛型方法获取实体信息
             BizEntityInfo purOrderInfo = EntityMappingHelper.GetEntityInfo<tb_PurOrder>();
-            Console.WriteLine($"采购订单实体类型: {purOrderInfo.EntityType.Name}");
-            Console.WriteLine($"采购订单业务类型: {purOrderInfo.BizType}");
+            System.Diagnostics.Debug.WriteLine($"采购订单实体类型: {purOrderInfo.EntityType.Name}");
+            System.Diagnostics.Debug.WriteLine($"采购订单业务类型: {purOrderInfo.BizType}");
 
             // 根据表名获取实体信息
             BizEntityInfo entityInfoByTable = EntityMappingHelper.GetEntityInfoByTableName("tb_SaleOrder");
             if (entityInfoByTable != null)
             {
-                Console.WriteLine($"表tb_SaleOrder对应的业务类型: {entityInfoByTable.BizType}");
+                System.Diagnostics.Debug.WriteLine($"表tb_SaleOrder对应的业务类型: {entityInfoByTable.BizType}");
             }
         }
 
@@ -59,17 +59,17 @@ namespace RUINORERP.Business.BizMapperService
         {
             // 根据业务类型获取实体类型
             Type saleOrderType = EntityMappingHelper.GetEntityType(BizType.销售订单);
-            Console.WriteLine($"销售订单对应的实体类型: {saleOrderType.Name}");
+            System.Diagnostics.Debug.WriteLine($"销售订单对应的实体类型: {saleOrderType.Name}");
 
             // 根据实体类型获取业务类型
             BizType bizType = EntityMappingHelper.GetBizType(typeof(tb_PurOrder));
-            Console.WriteLine($"tb_PurOrder对应的业务类型: {bizType}");
+            System.Diagnostics.Debug.WriteLine($"tb_PurOrder对应的业务类型: {bizType}");
 
             // 根据表名获取实体类型
             Type entityTypeByTable = EntityMappingHelper.GetEntityTypeByTableName("tb_SaleOrder");
             if (entityTypeByTable != null)
             {
-                Console.WriteLine($"表tb_SaleOrder对应的实体类型: {entityTypeByTable.Name}");
+                System.Diagnostics.Debug.WriteLine($"表tb_SaleOrder对应的实体类型: {entityTypeByTable.Name}");
             }
         }
 
@@ -83,15 +83,15 @@ namespace RUINORERP.Business.BizMapperService
 
             // 根据实体对象获取业务类型
             BizType bizType = EntityMappingHelper.GetBizTypeByEntity(saleOrder);
-            Console.WriteLine($"实体对象对应的业务类型: {bizType}");
+            System.Diagnostics.Debug.WriteLine($"实体对象对应的业务类型: {bizType}");
 
             // 使用泛型方法获取业务类型
             BizType genericBizType = EntityMappingHelper.GetBizType(saleOrder);
-            Console.WriteLine($"泛型方法获取的业务类型: {genericBizType}");
+            System.Diagnostics.Debug.WriteLine($"泛型方法获取的业务类型: {genericBizType}");
 
             // 获取实体对象的ID和名称
             var (id, name) = EntityMappingHelper.GetIdAndName(saleOrder);
-            Console.WriteLine($"实体ID: {id}, 实体名称: {name}");
+            System.Diagnostics.Debug.WriteLine($"实体ID: {id}, 实体名称: {name}");
         }
 
         /// <summary>
@@ -101,15 +101,15 @@ namespace RUINORERP.Business.BizMapperService
         {
             // 检查业务类型是否已注册
             bool isSaleOrderRegistered = EntityMappingHelper.IsRegistered(BizType.销售订单);
-            Console.WriteLine($"销售订单业务类型是否已注册: {isSaleOrderRegistered}");
+            System.Diagnostics.Debug.WriteLine($"销售订单业务类型是否已注册: {isSaleOrderRegistered}");
 
             // 检查实体类型是否已注册
             bool isPurOrderRegistered = EntityMappingHelper.IsRegistered(typeof(tb_PurOrder));
-            Console.WriteLine($"tb_PurOrder实体类型是否已注册: {isPurOrderRegistered}");
+            System.Diagnostics.Debug.WriteLine($"tb_PurOrder实体类型是否已注册: {isPurOrderRegistered}");
 
             // 检查表名是否已注册
             bool isTableRegistered = EntityMappingHelper.IsRegisteredByTableName("tb_SaleOrder");
-            Console.WriteLine($"表tb_SaleOrder是否已注册: {isTableRegistered}");
+            System.Diagnostics.Debug.WriteLine($"表tb_SaleOrder是否已注册: {isTableRegistered}");
         }
 
         /// <summary>
@@ -120,10 +120,10 @@ namespace RUINORERP.Business.BizMapperService
             // 假设tb_FM_PaymentRecord是一个共享表，用于存储收款单和付款单
             // 我们可以通过枚举标志获取对应的实体信息
             BizEntityInfo receiptInfo = EntityMappingHelper.GetEntityInfo(typeof(tb_FM_PaymentRecord), (int)ReceivePaymentType.收款);
-            Console.WriteLine($"收款单对应的业务类型: {receiptInfo.BizType}");
+            System.Diagnostics.Debug.WriteLine($"收款单对应的业务类型: {receiptInfo.BizType}");
 
             BizEntityInfo paymentInfo = EntityMappingHelper.GetEntityInfo(typeof(tb_FM_PaymentRecord), (int)ReceivePaymentType.付款);
-            Console.WriteLine($"付款单对应的业务类型: {paymentInfo.BizType}");
+            System.Diagnostics.Debug.WriteLine($"付款单对应的业务类型: {paymentInfo.BizType}");
         }
     }
 

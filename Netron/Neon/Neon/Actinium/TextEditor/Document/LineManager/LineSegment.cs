@@ -86,7 +86,7 @@ namespace Netron.Neon.TextEditor.Document
 			this.delimiterLength = delimiterLength;
 		
 			this.TotalLength     = end - offset + 1;
-//			Console.WriteLine("delimiterLength = " + delimiterLength);
+//			System.Diagnostics.Debug.WriteLine("delimiterLength = " + delimiterLength);
 
 		}
 		

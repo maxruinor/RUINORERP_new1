@@ -272,7 +272,7 @@ namespace Netron.Neon.TextEditor
 			if (this.secondaryTextArea != null) {
 				this.secondaryTextArea.TextArea.Update();
 			}
-//			Console.WriteLine("-------END");
+//			System.Diagnostics.Debug.WriteLine("-------END");
 		}
 #endregion
 		

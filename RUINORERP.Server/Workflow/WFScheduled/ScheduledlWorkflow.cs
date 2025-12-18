@@ -31,21 +31,21 @@ namespace RUINORERP.Server.Workflow.WFApproval
         public void Build(IWorkflowBuilder<ApprovalWFData> builder)
         {
             builder
-             .StartWith(context => Console.WriteLine("Hello"))
+             .StartWith(context => System.Diagnostics.Debug.WriteLine("Hello"))
              .Schedule(data => TimeSpan.FromSeconds(5)).Do(schedule => schedule
             .StartWith(
-                 context => Console.WriteLine("Doing scheduled tasks"))
+                 context => System.Diagnostics.Debug.WriteLine("Doing scheduled tasks"))
             )
              .Then(
-                context => Console.WriteLine("Doing normal tasks")
+                context => System.Diagnostics.Debug.WriteLine("Doing normal tasks")
              );
         }
     }
 
     //（2）循环任务：比如在工作流步骤中设置一个延迟5分钟进行的循环任务，知道Counter > 5才结束
     //    builder
-    //.StartWith(context=> Console.WriteLine("Hello")).Recur(data=> TimeSpan.FromSeconds(5),data=> data.Counter >5).Do(recur=> recur
-    //    .StartWith(context=> Console.WriteLine("Doing recurring task"))).Then(context=> Console.WriteLine("Carry on"));
+    //.StartWith(context=> System.Diagnostics.Debug.WriteLine("Hello")).Recur(data=> TimeSpan.FromSeconds(5),data=> data.Counter >5).Do(recur=> recur
+    //    .StartWith(context=> System.Diagnostics.Debug.WriteLine("Doing recurring task"))).Then(context=> System.Diagnostics.Debug.WriteLine("Carry on"));
 
 
 

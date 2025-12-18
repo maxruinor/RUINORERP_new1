@@ -34,7 +34,7 @@ namespace RUINORERP.UI.AdvancedQuery
             // save assembly
             assemblyBuilder.Save("Pets.dll");
 
-            Console.WriteLine("Hi, Dennis, a Pets assembly has been generated for you.");
+            System.Diagnostics.Debug.WriteLine("Hi, Dennis, a Pets assembly has been generated for you.");
             Console.ReadLine();
         }
 

@@ -41,7 +41,7 @@ namespace Netron.Neon.TextEditor.Util
 				rtf.Append("}");
 				return rtf.ToString();
 			} catch (Exception e) {
-				Console.WriteLine(e.ToString());
+				System.Diagnostics.Debug.WriteLine(e.ToString());
 			}
 			return null;
 		}

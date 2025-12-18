@@ -63,14 +63,14 @@ namespace RUINORERP.Business.BNR
                 resetType.ToUpper() != "NONE")
             {
                 resetType = "None"; // 无效的重置类型，使用默认值
-                Console.WriteLine($"警告: 无效的重置类型 '{resetType}'，使用默认值 'None'");
+                System.Diagnostics.Debug.WriteLine($"警告: 无效的重置类型 '{resetType}'，使用默认值 'None'");
             }
             
             // 生成规范的序列键
             string sequenceKey = GenerateStandardSequenceKey(keyPattern, resetType);
             
             // 记录生成的序列键，便于调试
-            Console.WriteLine($"正在为序列键 '{sequenceKey}' 生成下一个序号");
+            System.Diagnostics.Debug.WriteLine($"正在为序列键 '{sequenceKey}' 生成下一个序号");
             
             // 获取业务类型（从BNRFactory中获取）
             string businessType = BNRFactory.GetCurrentBusinessType();
@@ -201,7 +201,7 @@ namespace RUINORERP.Business.BNR
                 // 使用默认键格式
                 string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
                 finalKey = $"SEQ_DEFAULT_{timestamp}";
-                Console.WriteLine($"警告: 生成的序列键为空或过长，使用默认键: {finalKey}");
+                System.Diagnostics.Debug.WriteLine($"警告: 生成的序列键为空或过长，使用默认键: {finalKey}");
             }
             
             return finalKey;

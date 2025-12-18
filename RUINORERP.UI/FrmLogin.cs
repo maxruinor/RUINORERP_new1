@@ -133,7 +133,7 @@ namespace RUINORERP.UI
                 chksaveIDpwd.Checked = false;
             }
 
-            Console.WriteLine($"UI: {Thread.CurrentThread.ManagedThreadId}");
+            System.Diagnostics.Debug.WriteLine($"UI: {Thread.CurrentThread.ManagedThreadId}");
 
             // 初始化原始服务器信息，用于IP地址变更检测
             _originalServerIP = txtServerIP.Text.Trim();
@@ -320,7 +320,7 @@ namespace RUINORERP.UI
                 // 转换为 IPv4 地址
                 IPAddress ipv4Address = endpoint.Address.MapToIPv4();
                 string ipv4PortString = $"{ipv4Address}:{endpoint.Port}";
-                //Console.WriteLine(ipv4PortString); // 输出：192.168.0.99:57276
+                //System.Diagnostics.Debug.WriteLine(ipv4PortString); // 输出：192.168.0.99:57276
                 return ipv4PortString;
             }
             else
@@ -328,7 +328,7 @@ namespace RUINORERP.UI
                 // 地址已经是 IPv4 地址
                 string ipv4PortString = $"{endpoint.Address}:{endpoint.Port}";
                 return ipv4PortString;
-                //Console.WriteLine(ipv4PortString);
+                //System.Diagnostics.Debug.WriteLine(ipv4PortString);
             }
         }
 

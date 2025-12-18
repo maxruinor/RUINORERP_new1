@@ -396,7 +396,7 @@ namespace RUINORERP.UI.SysConfig
                 catch (Exception ex)
                 {
                     // 记录错误但继续处理其他表
-                    Console.WriteLine($"处理表 {tableName} 时发生错误: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"处理表 {tableName} 时发生错误: {ex.Message}");
                 }
             }
         }
@@ -474,7 +474,7 @@ namespace RUINORERP.UI.SysConfig
                 }
                 catch (Exception ex)
                 {   
-                    Console.WriteLine($"加载表 {tableName} 数据时发生错误: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"加载表 {tableName} 数据时发生错误: {ex.Message}");
                     dataGridView1.DataSource = null;
                 }
             }
@@ -505,7 +505,7 @@ namespace RUINORERP.UI.SysConfig
                 }
                 catch (Exception ex)
                 {   
-                    Console.WriteLine($"清空表 {tableName} 缓存时发生错误: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"清空表 {tableName} 缓存时发生错误: {ex.Message}");
                     KryptonMessageBox.Show($"清空缓存失败: {ex.Message}", "错误", Krypton.Toolkit.KryptonMessageBoxButtons.OK, Krypton.Toolkit.KryptonMessageBoxIcon.Error);
                 }
             }

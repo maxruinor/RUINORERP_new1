@@ -33,7 +33,7 @@ namespace HLH.Lib.Security
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Error: " + ex.Message);
+                System.Diagnostics.Debug.WriteLine("Error: " + ex.Message);
             }
             return macAddress;
         }
@@ -56,7 +56,7 @@ namespace HLH.Lib.Security
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Error while retrieving CPU ID: " + ex.Message);
+                System.Diagnostics.Debug.WriteLine("Error while retrieving CPU ID: " + ex.Message);
                 return "Error";
             }
         }
@@ -81,7 +81,7 @@ namespace HLH.Lib.Security
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Error while retrieving Hard Disk ID: " + ex.Message);
+                System.Diagnostics.Debug.WriteLine("Error while retrieving Hard Disk ID: " + ex.Message);
                 return "Error";
             }
         }

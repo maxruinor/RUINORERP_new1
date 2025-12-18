@@ -17,13 +17,13 @@ namespace RUINORERP.Server.Comm
         //保存在Log4net_cath
         public static void ShowExceptionMsg(string msg)
         {
-            Console.WriteLine(GetTime() + " > " + msg);
+            System.Diagnostics.Debug.WriteLine(GetTime() + " > " + msg);
             frmMainNew.Instance._logger.Error("ShowExceptionMsg:"+msg);
         }
 
         public static void ShowExceptionMsg(string msg, Exception ex)
         {
-            Console.WriteLine(GetTime() + " > " + msg);
+            System.Diagnostics.Debug.WriteLine(GetTime() + " > " + msg);
             //frmMainNew.Instance.PrintInfoLog(GetTime() + " > " + msg + ex.Message + ex.StackTrace);
         }
     }

@@ -37,7 +37,7 @@ namespace RUINORERP.Common.CollectionExtension
                 throw new ArgumentNullException(nameof(source));
 
             _originalList = source.ToList();
-            //Console.WriteLine("原始数据行：" + _originalList.Count);
+            //System.Diagnostics.Debug.WriteLine("原始数据行：" + _originalList.Count);
 
             // 使用临时列表避免枚举时修改
             var tempList = new List<T>(_originalList);
@@ -48,7 +48,7 @@ namespace RUINORERP.Common.CollectionExtension
             {
                 base.Add(item);
             }
-            Console.WriteLine("base.Count：" + this.Count);
+            System.Diagnostics.Debug.WriteLine("base.Count：" + this.Count);
             this.RaiseListChangedEvents = true;
         }
 

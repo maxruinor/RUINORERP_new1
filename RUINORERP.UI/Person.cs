@@ -21,17 +21,17 @@ namespace RUINORERP.UI
         // 非虚方法不会被拦截到
         public void Method_NoVirtua()
         {
-            Console.WriteLine("Method_NoVirtua");
+            System.Diagnostics.Debug.WriteLine("Method_NoVirtua");
         }
 
         public virtual void Method2()
         {
-            Console.WriteLine("Method2");
+            System.Diagnostics.Debug.WriteLine("Method2");
         }
 
         public virtual string Method3(string para1, string para2)
         {
-            Console.WriteLine("Method3");
+            System.Diagnostics.Debug.WriteLine("Method3");
             return para1 + "&" + para2;
         }
     }

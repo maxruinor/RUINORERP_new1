@@ -136,7 +136,7 @@ namespace Krypton.Toolkit
             if (e.IsDialogWindow)
             {
                 _alreadySetup = false;
-                Console.WriteLine(@"Shell Dialog created");
+                System.Diagnostics.Debug.WriteLine(@"Shell Dialog created");
                 _handle = e.Handle;
                 _cwp.TargetWnd = _handle;
             }
@@ -163,14 +163,14 @@ namespace Krypton.Toolkit
             // Not the first time
             if (_alreadySetup)
             {
-                Console.WriteLine(@"Already configured. Not the first time it is activated!");
+                System.Diagnostics.Debug.WriteLine(@"Already configured. Not the first time it is activated!");
                 return false;
             }
             else
             {
                 _alreadySetup = true;
             }
-            Console.WriteLine(@"Shell Dialog activated");
+            System.Diagnostics.Debug.WriteLine(@"Shell Dialog activated");
 
             // Modify the Shell Dialog window
             PI.SetWindowLong(_handle, PI.GWL_.EXSTYLE,

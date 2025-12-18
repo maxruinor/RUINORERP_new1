@@ -52,12 +52,12 @@ namespace RUINORERP.UI.AdvancedUIModule
         //    P.Name = "张三";
         //    P.Age = 22;
         //    P.Sex = "女"; 
-        //    Console.WriteLine(P.Name);
+        //    System.Diagnostics.Debug.WriteLine(P.Name);
         //    //也可以添加到List集合
         //    List<dynamic> List = new List<dynamic>();
         //    List.Add(P);
         //    foreach (var item in List)
-        //    { Console.WriteLine(item.Name); }
+        //    { System.Diagnostics.Debug.WriteLine(item.Name); }
         //}  //输出结果:张三 原理是利用了Dynamic的特性， Dynamic介绍请点击：C#中dynamic的正确用法
 
     }

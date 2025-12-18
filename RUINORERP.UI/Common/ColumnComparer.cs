@@ -71,7 +71,7 @@ namespace RUINORERP.UI.Common
                     .Where(group => group.Count() > 1)
                     .SelectMany(group => group);
                 // 输出结果
-                //Console.WriteLine("具有相同ColName的元素:");
+                //System.Diagnostics.Debug.WriteLine("具有相同ColName的元素:");
                 //旧数据有重复的键，则清空。 
                 if (OldDuplicateItems.Count() > 0)
                 {

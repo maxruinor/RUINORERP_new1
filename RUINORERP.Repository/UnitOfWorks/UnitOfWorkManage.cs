@@ -202,7 +202,7 @@ namespace RUINORERP.Repository.UnitOfWorks
         //        _tranCount++;
         //        if (_tranCount > 1)
         //        {
-        //            Console.WriteLine($"_tranCount：{_tranCount}");
+        //            System.Diagnostics.Debug.WriteLine($"_tranCount：{_tranCount}");
         //            _logger.LogDebug($"_tranCount：{ _tranCount}");
         //        }
         //        GetDbClient().BeginTran();
@@ -262,7 +262,7 @@ namespace RUINORERP.Repository.UnitOfWorks
         //            }
         //            catch (Exception ex)
         //            {
-        //                Console.WriteLine(ex.Message);
+        //                System.Diagnostics.Debug.WriteLine(ex.Message);
         //                GetDbClient().RollbackTran();
         //            }
         //        }

@@ -55,11 +55,11 @@ namespace RUINORERP.Business.BNR
                 string rule = "{S:SO}{D:yyyyMMdd}{DB:SALES_ORDER/00000}";
                 string orderNumber = bnrFactory.Create(rule);
                 
-                Console.WriteLine($"生成的销售订单编号: {orderNumber}");
+                System.Diagnostics.Debug.WriteLine($"生成的销售订单编号: {orderNumber}");
                 
                 // 查询该业务类型的所有序号
                 var sequences = sequenceService.GetSequencesByBusinessType("SalesOrder");
-                Console.WriteLine($"SalesOrder业务类型共有 {sequences.Count} 个序号记录");
+                System.Diagnostics.Debug.WriteLine($"SalesOrder业务类型共有 {sequences.Count} 个序号记录");
             }
             finally
             {
@@ -83,11 +83,11 @@ namespace RUINORERP.Business.BNR
                 string rule = "{S:PO}{D:yyyyMMdd}{DB:PURCHASE_ORDER/00000}";
                 string orderNumber = bnrFactory.Create(rule);
                 
-                Console.WriteLine($"生成的采购订单编号: {orderNumber}");
+                System.Diagnostics.Debug.WriteLine($"生成的采购订单编号: {orderNumber}");
                 
                 // 查询该业务类型的所有序号
                 var sequences = sequenceService.GetSequencesByBusinessType("PurchaseOrder");
-                Console.WriteLine($"PurchaseOrder业务类型共有 {sequences.Count} 个序号记录");
+                System.Diagnostics.Debug.WriteLine($"PurchaseOrder业务类型共有 {sequences.Count} 个序号记录");
             }
             finally
             {
@@ -111,7 +111,7 @@ namespace RUINORERP.Business.BNR
                 string rule = "{S:DR}{D:yyyyMMdd}{DB:DAILY_REPORT/000/daily}";
                 string reportNumber = bnrFactory.Create(rule);
                 
-                Console.WriteLine($"生成的日报编号: {reportNumber}");
+                System.Diagnostics.Debug.WriteLine($"生成的日报编号: {reportNumber}");
             }
             finally
             {
@@ -134,7 +134,7 @@ namespace RUINORERP.Business.BNR
                 "InventoryCheck");
                 
             string inventoryCheckNumber = $"IC{DateTime.Now:yyyyMMdd}{nextValue:0000}";
-            Console.WriteLine($"生成的库存盘点编号: {inventoryCheckNumber}");
+            System.Diagnostics.Debug.WriteLine($"生成的库存盘点编号: {inventoryCheckNumber}");
             
             // 更新序号信息，添加业务类型
             sequenceService.UpdateSequenceInfo(
@@ -155,18 +155,18 @@ namespace RUINORERP.Business.BNR
         {
             // 查询销售订单相关的序号
             var salesSequences = sequenceService.GetSequencesByBusinessType("SalesOrder");
-            Console.WriteLine($"销售订单相关序号:");
+            System.Diagnostics.Debug.WriteLine($"销售订单相关序号:");
             foreach (var seq in salesSequences)
             {
-                Console.WriteLine($"  键: {seq.SequenceKey}, 当前值: {seq.CurrentValue}, 描述: {seq.Description}");
+                System.Diagnostics.Debug.WriteLine($"  键: {seq.SequenceKey}, 当前值: {seq.CurrentValue}, 描述: {seq.Description}");
             }
             
             // 查询采购订单相关的序号
             var purchaseSequences = sequenceService.GetSequencesByBusinessType("PurchaseOrder");
-            Console.WriteLine($"采购订单相关序号:");
+            System.Diagnostics.Debug.WriteLine($"采购订单相关序号:");
             foreach (var seq in purchaseSequences)
             {
-                Console.WriteLine($"  键: {seq.SequenceKey}, 当前值: {seq.CurrentValue}, 描述: {seq.Description}");
+                System.Diagnostics.Debug.WriteLine($"  键: {seq.SequenceKey}, 当前值: {seq.CurrentValue}, 描述: {seq.Description}");
             }
         }
         
@@ -176,7 +176,7 @@ namespace RUINORERP.Business.BNR
         public void TestSequenceService()
         {
             string testResult = sequenceService.TestSequenceTable();
-            Console.WriteLine($"序号服务测试结果:\n{testResult}");
+            System.Diagnostics.Debug.WriteLine($"序号服务测试结果:\n{testResult}");
         }
         
         /// <summary>
@@ -185,10 +185,10 @@ namespace RUINORERP.Business.BNR
         public void ListAllSequences()
         {
             var allSequences = sequenceService.GetAllSequences();
-            Console.WriteLine($"所有序号列表:");
+            System.Diagnostics.Debug.WriteLine($"所有序号列表:");
             foreach (var seq in allSequences)
             {
-                Console.WriteLine($"  键: {seq.SequenceKey}, 当前值: {seq.CurrentValue}, 业务类型: {seq.BusinessType}, 重置类型: {seq.ResetType}");
+                System.Diagnostics.Debug.WriteLine($"  键: {seq.SequenceKey}, 当前值: {seq.CurrentValue}, 业务类型: {seq.BusinessType}, 重置类型: {seq.ResetType}");
             }
         }
     }

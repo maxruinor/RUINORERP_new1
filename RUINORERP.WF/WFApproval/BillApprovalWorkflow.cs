@@ -43,7 +43,7 @@ namespace RUINORERP.WF.WFApproval
                              .Input(step => step.DocumentName, data => data.DocumentName)
                              )
 
-                     .Then(context => Console.WriteLine("end"));
+                     .Then(context => System.Diagnostics.Debug.WriteLine("end"));
             }
         }
 

@@ -109,7 +109,7 @@ namespace RUINORERP.Common.Helper
                     }
 
                 default:
-                    Console.WriteLine("error:" + name);
+                    System.Diagnostics.Debug.WriteLine("error:" + name);
 
                     return "";
             }

@@ -151,14 +151,14 @@ namespace RUINORERP.Extensions
                 // 获取原生SQL并添加调用方法信息
                 string nativeSql = UtilMethods.GetNativeSql(sql, pars);
                 string sqlWithCaller = $"{callerMethod}:{nativeSql}";
-                Console.WriteLine(sqlWithCaller);
+                System.Diagnostics.Debug.WriteLine(sqlWithCaller);
 
                 // 触发自定义检查事件
                 if (CheckEvent != null)
                 {
                     string formattedSql = Common.DB.SqlProfiler.FormatParam(sql, pars);
                     string formattedSqlWithCaller = $"{callerMethod}:     {formattedSql}";
-                    Console.WriteLine(formattedSqlWithCaller);
+                    System.Diagnostics.Debug.WriteLine(formattedSqlWithCaller);
                     CheckEvent(formattedSqlWithCaller);
                 }
             };
@@ -178,7 +178,7 @@ namespace RUINORERP.Extensions
                     }
                     else
                     {
-                        Console.WriteLine($"SQL执行错误: {exception.Message}, SQL: {errorsql}");
+                        System.Diagnostics.Debug.WriteLine($"SQL执行错误: {exception.Message}, SQL: {errorsql}");
                     }
                     
                     // 检测死锁异常
@@ -197,13 +197,13 @@ namespace RUINORERP.Extensions
                         }
                         else
                         {
-                            Console.WriteLine($"检测到数据库死锁: {JsonConvert.SerializeObject(deadlockInfo)}");
+                            System.Diagnostics.Debug.WriteLine($"检测到数据库死锁: {JsonConvert.SerializeObject(deadlockInfo)}");
                         }
                     }
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"日志记录失败: {ex.Message}\n原始错误: {e.Message}");
+                    System.Diagnostics.Debug.WriteLine($"日志记录失败: {ex.Message}\n原始错误: {e.Message}");
                     if (logger != null)
                     {
                         logger.LogError("记录SQL错误日志时出错", ex);

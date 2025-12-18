@@ -119,7 +119,7 @@ namespace Netron.Neon.TextEditor.Document
 		public void ExtendSelection(Point oldPosition, Point newPosition)
 		{
 			if (oldPosition == newPosition) {
-				Console.WriteLine("BLUB");
+				System.Diagnostics.Debug.WriteLine("BLUB");
 				return;
 			}
 			Point min;
@@ -134,7 +134,7 @@ namespace Netron.Neon.TextEditor.Document
 			}
 			if (!HasSomethingSelected) {
 				SetSelection(new DefaultSelection(document, min, max));
-				Console.WriteLine("SET");
+				System.Diagnostics.Debug.WriteLine("SET");
 
 				return;
 			}
@@ -184,7 +184,7 @@ namespace Netron.Neon.TextEditor.Document
 					}
 				} 
 			}
-			Console.WriteLine("GGG" + changed);
+			System.Diagnostics.Debug.WriteLine("GGG" + changed);
 
 //			if (GreaterEqPos(selection.StartPosition, min) && GreaterEqPos(selection.EndPosition, max)) {
 //				if (oldIsGreater) {

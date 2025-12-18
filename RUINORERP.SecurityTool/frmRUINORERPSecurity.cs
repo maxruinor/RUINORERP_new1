@@ -34,8 +34,8 @@ namespace RUINORERP.SecurityTool
             //获取UUID
             string UUID = hardware.GetComputerHardWareInfo("Win32_ComputerSystemProduct", "UUID");
 
-            //Console.WriteLine("CPU ID: " + hardware.GetCpuId());
-            //Console.WriteLine("Hard Disk ID: " + hardware.GetHardDiskId());
+            //System.Diagnostics.Debug.WriteLine("CPU ID: " + hardware.GetCpuId());
+            //System.Diagnostics.Debug.WriteLine("Hard Disk ID: " + hardware.GetHardDiskId());
             txtOldData.Text = CPU_ID + Board_SN + UUID;
             txtNewData.Text = CreateRegisterCodeWin.EnText(txtOldData.Text.Trim(), txtKey.Text);
 

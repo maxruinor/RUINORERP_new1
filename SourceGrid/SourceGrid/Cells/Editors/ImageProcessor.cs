@@ -129,7 +129,7 @@ namespace SourceGrid.Cells.Editors
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"压缩图片时出错: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"压缩图片时出错: {ex.Message}");
                     throw new InvalidOperationException("图片压缩失败", ex);
                 }
                 finally
@@ -584,7 +584,7 @@ namespace SourceGrid.Cells.Editors
             {
                 // 如果目录不存在，则创建它
                 Directory.CreateDirectory(directoryPath);
-                Console.WriteLine($"Directory created: {directoryPath}");
+                System.Diagnostics.Debug.WriteLine($"Directory created: {directoryPath}");
             }
         }
 

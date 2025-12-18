@@ -519,13 +519,13 @@ namespace AutoUpdate
             }
             catch (WebException e)
             {
-                System.Console.WriteLine("下载失败，请联系系统管理员获取更多信息：" + e);
+                System.Diagnostics.Debug.WriteLine("下载失败，请联系系统管理员获取更多信息：" + e);
                 // MessageBox.Show("下载失败，请联系系统管理员获取更多信息：" + e, "系统提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
 
             }
             catch (IOException e)
             {
-                System.Console.WriteLine("下载失败，请联系系统管理员获取更多信息：" + e);
+                System.Diagnostics.Debug.WriteLine("下载失败，请联系系统管理员获取更多信息：" + e);
                 //  MessageBox.Show("下载失败，请联系系统管理员获取更多信息：" + e, "系统提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
 
             }

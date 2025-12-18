@@ -111,7 +111,7 @@ namespace RUINORERP.Server.Helpers
             catch (Exception ex)
             {
                 // 记录日志但不抛出异常
-                Console.WriteLine($"获取存储使用信息时出错: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"获取存储使用信息时出错: {ex.Message}");
             }
             
             return usageInfo;
@@ -143,7 +143,7 @@ namespace RUINORERP.Server.Helpers
             catch (Exception ex)
             {
                 // 记录日志但不抛出异常
-                Console.WriteLine($"计算目录大小时出错: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"计算目录大小时出错: {ex.Message}");
             }
             
             return size;
@@ -171,7 +171,7 @@ namespace RUINORERP.Server.Helpers
             catch (Exception ex)
             {
                 // 记录日志但不抛出异常
-                Console.WriteLine($"计算文件数量时出错: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"计算文件数量时出错: {ex.Message}");
             }
             
             return count;

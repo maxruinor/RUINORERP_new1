@@ -53,7 +53,7 @@ namespace RUINORERP.UI.CommonUI
             // 5. 执行验证
             if (!_rule.Validate(InputContent, out string err))
             {
-                Console.WriteLine(err);   // 输出具体错误
+                System.Diagnostics.Debug.WriteLine(err);   // 输出具体错误
                 MessageBox.Show(err);
             }
             else

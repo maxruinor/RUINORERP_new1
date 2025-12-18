@@ -45,7 +45,7 @@ namespace RUINORERP.Server.Workflow.WFReminder
                     context =>
                     {
                          
-                        Console.WriteLine("Hello");
+                        System.Diagnostics.Debug.WriteLine("Hello");
                         // MessageBox.Show("开始提示前先提示一下");
                     }
                 )
@@ -60,7 +60,7 @@ namespace RUINORERP.Server.Workflow.WFReminder
                   (
                   context =>
                   {
-                      Console.WriteLine("执行提醒");
+                      System.Diagnostics.Debug.WriteLine("执行提醒");
                       //MessageBox.Show("执行提醒" + System.DateTime.Now);
 
                   }

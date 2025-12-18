@@ -119,7 +119,7 @@ namespace RUINORERP.WF.BizOperation
 
         public override ExecutionResult Run(IStepExecutionContext context)
         {
-            Console.WriteLine("Workflow, Goodbye");
+            System.Diagnostics.Debug.WriteLine("Workflow, Goodbye");
             logger.LogInformation("Goodbye workflow");
 
             return ExecutionResult.Next();
@@ -140,7 +140,7 @@ namespace RUINORERP.WF.BizOperation
 
         public override ExecutionResult Run(IStepExecutionContext context)
         {
-            Console.WriteLine("Workflow, Goodbye");
+            System.Diagnostics.Debug.WriteLine("Workflow, Goodbye");
             logger.LogInformation("Goodbye workflow");
 
             return ExecutionResult.Next();

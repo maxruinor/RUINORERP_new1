@@ -87,7 +87,7 @@ namespace RUINORERP.UI
                 catch (Exception ex)
                 {
                     // 记录日志处理线程中的异常
-                    Console.WriteLine($"Error processing logs: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"Error processing logs: {ex.Message}");
                 }
             }
         }
@@ -130,7 +130,7 @@ namespace RUINORERP.UI
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error updating UI with logs: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Error updating UI with logs: {ex.Message}");
             }
             finally
             {

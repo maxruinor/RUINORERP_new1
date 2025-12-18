@@ -162,7 +162,7 @@ namespace RUINORERP.Business
                         }
                         break;
                     default:
-                        Console.WriteLine($"没有找到对应的处理类型{group.Key.ToString()}。");
+                        System.Diagnostics.Debug.WriteLine($"没有找到对应的处理类型{group.Key.ToString()}。");
                         break;
                 }
 

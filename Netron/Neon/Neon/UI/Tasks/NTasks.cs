@@ -171,7 +171,7 @@ namespace  Netron.Neon
 					epos += this.Columns[i+1].Width;
 				}
 
-				//Console.WriteLine("SUB ITEM SELECTED = " + currentListItem.SubItems[subItemSelected].Text);
+				//System.Diagnostics.Debug.WriteLine("SUB ITEM SELECTED = " + currentListItem.SubItems[subItemSelected].Text);
 				subItemText = currentListItem.SubItems[subItemSelected].Text ;
 				
 				//this causes a problem if the value is empty

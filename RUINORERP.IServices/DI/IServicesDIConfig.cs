@@ -61,7 +61,7 @@ namespace RUINORERP.IServices.DI
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"注册服务接口失败: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"注册服务接口失败: {ex.Message}");
             }
         }
     }

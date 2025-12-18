@@ -26,7 +26,7 @@ namespace RUINORERP.Server.Workflow.WFApproval
 
         public override ExecutionResult Run(IStepExecutionContext context)
         {
-            Console.WriteLine("Submit" + subtext + System.DateTime.Now);
+            System.Diagnostics.Debug.WriteLine("Submit" + subtext + System.DateTime.Now);
             logger.LogInformation("Submit" + subtext + System.DateTime.Now);
             return ExecutionResult.Next();
         }
@@ -43,7 +43,7 @@ namespace RUINORERP.Server.Workflow.WFApproval
 
         public override ExecutionResult Run(IStepExecutionContext context)
         {
-            Console.WriteLine("Workflow, Goodbye");
+            System.Diagnostics.Debug.WriteLine("Workflow, Goodbye");
             logger.LogInformation("Goodbye workflow");
 
             return ExecutionResult.Next();
@@ -62,7 +62,7 @@ namespace RUINORERP.Server.Workflow.WFApproval
 
         public override ExecutionResult Run(IStepExecutionContext context)
         {
-            Console.WriteLine("Workflow, Goodbye");
+            System.Diagnostics.Debug.WriteLine("Workflow, Goodbye");
             logger.LogInformation("Goodbye workflow");
 
             return ExecutionResult.Next();

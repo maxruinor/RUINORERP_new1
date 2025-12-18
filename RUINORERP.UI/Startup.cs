@@ -496,7 +496,7 @@ namespace RUINORERP.UI
             }
             catch (Exception ex)
             {
-                Console.WriteLine("警告：使用模块DI配置类注册服务失败，回退到传统方式注册。错误信息：" + ex.Message);
+                System.Diagnostics.Debug.WriteLine("警告：使用模块DI配置类注册服务失败，回退到传统方式注册。错误信息：" + ex.Message);
 
                 // 回退到传统方式注册
                 ConfigureContainerTodll(builder);
@@ -535,7 +535,7 @@ namespace RUINORERP.UI
             }
             catch (Exception ex)
             {
-                Console.WriteLine(string.Format("注册UCTodoList失败: {0}", ex.Message));
+                System.Diagnostics.Debug.WriteLine(string.Format("注册UCTodoList失败: {0}", ex.Message));
             }
         }
 
@@ -661,7 +661,7 @@ namespace RUINORERP.UI
             catch (Exception ex)
             {
                 // 记录程序集加载失败日志
-                Console.WriteLine($"加载程序集 {assemblyName} 失败: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"加载程序集 {assemblyName} 失败: {ex.Message}");
             }
         }
 
@@ -701,9 +701,9 @@ namespace RUINORERP.UI
 
 
             builder.RegisterAssemblyTypes(System.Reflection.Assembly.GetExecutingAssembly())
-            .Where(type => !typeof(IExcludeFromRegistration).IsAssignableFrom(type)) // 排除实现了 IExcludeFromRegistration 接口的类
-            .AsImplementedInterfaces()
-            .AsSelf();
+                .Where(type => !typeof(IExcludeFromRegistration).IsAssignableFrom(type) && type != typeof(RUINORERP.Business.Cache.TableSchemaManager)) // 排除TableSchemaManager，避免覆盖特定注册
+                .AsImplementedInterfaces()
+                .AsSelf();
 
 
 

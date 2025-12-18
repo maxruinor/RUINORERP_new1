@@ -67,12 +67,12 @@ namespace RUINORERP.Common.Log4Net
                 if (File.Exists(defaultConfigFile))
                 {
                     log4netConfig.Load(File.OpenRead(defaultConfigFile));
-                    Console.WriteLine($"警告：未找到配置文件 {filename}，使用默认配置文件 {defaultConfigFile}");
+                    System.Diagnostics.Debug.WriteLine($"警告：未找到配置文件 {filename}，使用默认配置文件 {defaultConfigFile}");
                 }
                 else
                 {
                     // 如果都不存在，创建一个基本的配置
-                    Console.WriteLine($"警告：未找到配置文件 {filename} 和 {defaultConfigFile}，使用基本配置");
+                    System.Diagnostics.Debug.WriteLine($"警告：未找到配置文件 {filename} 和 {defaultConfigFile}，使用基本配置");
                     XmlElement log4netElement = log4netConfig.CreateElement("log4net");
                     log4netConfig.AppendChild(log4netElement);
                 }
@@ -95,12 +95,12 @@ namespace RUINORERP.Common.Log4Net
                             if (valueAttr.Value.Contains("${ConnectionString}"))
                             {
                                 valueAttr.Value = connectionString;
-                                Console.WriteLine($"已在{filename}中替换连接字符串占位符");
+                                System.Diagnostics.Debug.WriteLine($"已在{filename}中替换连接字符串占位符");
                             }
                             else
                             {
                                 // 如果是加密的连接字符串格式，也进行替换
-                                Console.WriteLine($"已在{filename}中使用传入的解密后连接字符串替换原始连接字符串");
+                                System.Diagnostics.Debug.WriteLine($"已在{filename}中使用传入的解密后连接字符串替换原始连接字符串");
                                 valueAttr.Value = connectionString;
                             }
                         }
@@ -109,8 +109,8 @@ namespace RUINORERP.Common.Log4Net
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"警告：替换{filename}中的连接字符串占位符失败: " + ex.Message);
-                Console.WriteLine($"异常详情: {ex.StackTrace}");
+                System.Diagnostics.Debug.WriteLine($"警告：替换{filename}中的连接字符串占位符失败: " + ex.Message);
+                System.Diagnostics.Debug.WriteLine($"异常详情: {ex.StackTrace}");
             }
             
             return log4netConfig["log4net"];

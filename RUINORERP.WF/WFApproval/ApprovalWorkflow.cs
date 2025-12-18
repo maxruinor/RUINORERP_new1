@@ -46,7 +46,7 @@ namespace RUINORERP.WF.WFApproval
             logger.LogError("rrrrr==");
             logger.LogWarning("wwww===");
             logger.LogInformation("开始启动001wf  " + System.DateTime.Now);
-            Console.WriteLine("开始启动001wf" + System.DateTime.Now);
+            System.Diagnostics.Debug.WriteLine("开始启动001wf" + System.DateTime.Now);
             builder
             .StartWith(context => ExecutionResult.Next())
             //.WaitFor("MyEventST", (data, context) => context.Workflow.Id, data => DateTime.Now)

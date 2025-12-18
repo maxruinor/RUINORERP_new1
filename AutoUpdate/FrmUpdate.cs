@@ -1162,7 +1162,7 @@ namespace AutoUpdate
                 }
 
                 // 控制台输出
-                Console.WriteLine(logEntry.TrimEnd('\r', '\n'));
+                System.Diagnostics.Debug.WriteLine(logEntry.TrimEnd('\r', '\n'));
 
                 // 限制日志文件大小，超过1MB时清理旧日志
                 MaintainLogFileSize();
@@ -1172,7 +1172,7 @@ namespace AutoUpdate
                 // 日志记录失败时，尝试在控制台输出
                 try
                 {
-                    Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] 日志记录失败: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] 日志记录失败: {ex.Message}");
                 }
                 catch { }
             }
@@ -1220,7 +1220,7 @@ namespace AutoUpdate
                 // 尝试记录日志错误
                 try
                 {
-                    Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] 批量日志记录失败: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] 批量日志记录失败: {ex.Message}");
                 }
                 catch { }
             }
@@ -1265,7 +1265,7 @@ namespace AutoUpdate
                 // 日志维护失败时静默处理，避免影响主程序
                 try
                 {
-                    Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] 日志维护失败: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] 日志维护失败: {ex.Message}");
                 }
                 catch { }
             }
@@ -1900,8 +1900,8 @@ namespace AutoUpdate
             Thread.Sleep(500);
             var (version, updateTime, url) = ParseXmlInfo("AutoUpdaterList.xml");
 
-            Console.WriteLine($"当前版本: {version}");
-            Console.WriteLine($"最后更新时间: {updateTime:yyyy-MM-dd}");
+            System.Diagnostics.Debug.WriteLine($"当前版本: {version}");
+            System.Diagnostics.Debug.WriteLine($"最后更新时间: {updateTime:yyyy-MM-dd}");
 
             StartEntryPointExe(NewVersion);
 

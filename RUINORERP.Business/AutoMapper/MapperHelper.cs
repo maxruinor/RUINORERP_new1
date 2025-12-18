@@ -82,7 +82,7 @@ namespace RUINORERP.Business.AutoMapper
                     }
                     catch (Exception)
                     {
-                        Console.WriteLine("转换前后类型不一致");
+                        System.Diagnostics.Debug.WriteLine("转换前后类型不一致");
                     }
                 }
             }
@@ -153,7 +153,7 @@ namespace RUINORERP.Business.AutoMapper
                     }
                     catch (Exception)
                     {
-                        Console.WriteLine("转换前后类型不一致");
+                        System.Diagnostics.Debug.WriteLine("转换前后类型不一致");
                     }
                 }
             }

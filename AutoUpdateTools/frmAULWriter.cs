@@ -1298,7 +1298,7 @@ namespace AULWriter
                 else
                 {
                     richTxtLog.AppendText($"{path}无效的路径。拖入文件失败！\r\n");
-                    Console.WriteLine("无效的路径");
+                    System.Diagnostics.Debug.WriteLine("无效的路径");
                 }
 
 
@@ -1352,12 +1352,12 @@ namespace AULWriter
         //        content = File.ReadAllText(filePath);
 
         //        // 输出文件内容
-        //        //Console.WriteLine(content);
+        //        //System.Diagnostics.Debug.WriteLine(content);
         //    }
         //    catch (Exception ex)
         //    {
         //        // 处理可能的异常，例如文件不存在或网络问题
-        //        Console.WriteLine("Error reading file: " + ex.Message);
+        //        System.Diagnostics.Debug.WriteLine("Error reading file: " + ex.Message);
         //    }
         //    return content;
         //}

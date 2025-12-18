@@ -255,14 +255,14 @@ namespace Netron.Neon.TextEditor
 		public void SetDesiredColumn()
 		{
 			Caret.DesiredColumn = TextView.GetDrawingXPos(Caret.Line, Caret.Column) + (int)(VirtualTop.X * textView.GetWidth(' '));
-//			Console.WriteLine("SetDesiredColumn : " + Caret.DesiredColumn);
+//			System.Diagnostics.Debug.WriteLine("SetDesiredColumn : " + Caret.DesiredColumn);
 		}
 		
 		public void SetCaretToDesiredColumn(int caretLine)
 		{
-//			Console.WriteLine("Calling GetLogicalColumn, DesiredColumn = " + Caret.DesiredColumn);
+//			System.Diagnostics.Debug.WriteLine("Calling GetLogicalColumn, DesiredColumn = " + Caret.DesiredColumn);
 			Caret.Position = textView.GetLogicalColumn(Caret.Line, Caret.DesiredColumn + (int)(VirtualTop.X * textView.GetWidth(' ')));
-//			Console.WriteLine("SetCaretToDesiredColumn : " + Caret.Position);
+//			System.Diagnostics.Debug.WriteLine("SetCaretToDesiredColumn : " + Caret.Position);
 		}
 		
 		public void OptionsChanged()
@@ -350,7 +350,7 @@ namespace Netron.Neon.TextEditor
 				try {
 					updateMargin.Paint(g, updateMargin.DrawingPosition);
 				} catch (Exception ex) {
-					Console.WriteLine("Got exception : " + ex);
+					System.Diagnostics.Debug.WriteLine("Got exception : " + ex);
 				}
 //				clipRectangle.Intersect(updateMargin.DrawingPosition);
    			}
@@ -379,7 +379,7 @@ namespace Netron.Neon.TextEditor
 							try {
 								margin.Paint(g, marginRectangle);
 							} catch (Exception ex) {
-								Console.WriteLine("Got exception : " + ex);
+								System.Diagnostics.Debug.WriteLine("Got exception : " + ex);
 							}
 						}
 					}
@@ -397,7 +397,7 @@ namespace Netron.Neon.TextEditor
 					try {
 						textView.Paint(g, textViewArea);
 					} catch (Exception ex) {
-						Console.WriteLine("Got exception : " + ex);
+						System.Diagnostics.Debug.WriteLine("Got exception : " + ex);
 					}
 				}
 			}
@@ -510,7 +510,7 @@ namespace Netron.Neon.TextEditor
 						}
 					}
 				} catch (Exception e) {
-					Console.WriteLine("Got Exception while executing action " + action + " : " + e.ToString());
+					System.Diagnostics.Debug.WriteLine("Got Exception while executing action " + action + " : " + e.ToString());
 				} finally {
 					motherTextEditorControl.EndUpdate();
 					Caret.UpdateCaretPosition();

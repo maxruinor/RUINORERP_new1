@@ -158,7 +158,7 @@ namespace RUINORERP.UI.WorkFlowDesigner
                 this.Text = $"流程导航图示例 - {navigation?.Description ?? "未选择"}";
 
                 // 可以在这里添加其他处理逻辑
-                Console.WriteLine($"当前流程导航图已切换到：{navigation?.Description}");
+                System.Diagnostics.Debug.WriteLine($"当前流程导航图已切换到：{navigation?.Description}");
             }
             catch (Exception ex)
             {

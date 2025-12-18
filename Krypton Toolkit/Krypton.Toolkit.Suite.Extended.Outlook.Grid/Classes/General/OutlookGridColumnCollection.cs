@@ -193,9 +193,9 @@ namespace Krypton.Toolkit.Suite.Extended.Outlook.Grid
             }
 
 #if (DEBUG)
-            Console.WriteLine("currentGroupIndex=" + currentGroupIndex.ToString());
-            Console.WriteLine("newGroupIndex=" + newGroupIndex.ToString());
-            Console.WriteLine("Before");
+            System.Diagnostics.Debug.WriteLine("currentGroupIndex=" + currentGroupIndex.ToString());
+            System.Diagnostics.Debug.WriteLine("newGroupIndex=" + newGroupIndex.ToString());
+            System.Diagnostics.Debug.WriteLine("Before");
             DebugOutput();
 #endif
 
@@ -218,7 +218,7 @@ namespace Krypton.Toolkit.Suite.Extended.Outlook.Grid
                 }
             }
 #if (DEBUG)
-            Console.WriteLine("After");
+            System.Diagnostics.Debug.WriteLine("After");
             DebugOutput();
 #endif
         }
@@ -230,9 +230,9 @@ namespace Krypton.Toolkit.Suite.Extended.Outlook.Grid
         {
             for (int i = 0; i < Count; i++)
             {
-                Console.WriteLine($"{this[i].Name} , GroupIndex={this[i].GroupIndex}, SortIndex={this[i].SortIndex}");
+                System.Diagnostics.Debug.WriteLine($"{this[i].Name} , GroupIndex={this[i].GroupIndex}, SortIndex={this[i].SortIndex}");
             }
-            Console.WriteLine($"MaxGroupIndex={_maxGroupIndex}, MaxSortIndex={_maxSortIndex}");
+            System.Diagnostics.Debug.WriteLine($"MaxGroupIndex={_maxGroupIndex}, MaxSortIndex={_maxSortIndex}");
         }
     }
 }

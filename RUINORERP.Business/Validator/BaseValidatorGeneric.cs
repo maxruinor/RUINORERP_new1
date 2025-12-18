@@ -63,7 +63,7 @@ namespace RUINORERP.Business
                 catch (Exception ex)
                 {
                     // 记录错误但不抛出异常，避免验证器初始化失败
-                    Console.WriteLine($"刷新全局验证器配置失败: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"刷新全局验证器配置失败: {ex.Message}");
                 }
             }
         }

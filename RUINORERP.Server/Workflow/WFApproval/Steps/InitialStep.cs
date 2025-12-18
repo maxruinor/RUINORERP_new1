@@ -35,7 +35,7 @@ namespace RUINORERP.Server.Workflow.WFApproval.Steps
         public override ExecutionResult Run(IStepExecutionContext context)
         {
             WorkId = context.Workflow.Id;
-            Console.WriteLine($"开始 {WorkId}");
+            System.Diagnostics.Debug.WriteLine($"开始 {WorkId}");
             return ExecutionResult.Next();
         }
     }

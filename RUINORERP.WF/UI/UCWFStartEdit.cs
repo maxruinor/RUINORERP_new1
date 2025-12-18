@@ -67,7 +67,7 @@ namespace RUINORERP.WF.UI
             // 打印出找到的类名
             foreach (var type in implementingTypes)
             {
-                Console.WriteLine(type.FullName);
+                System.Diagnostics.Debug.WriteLine(type.FullName);
             }
             */
 
@@ -91,7 +91,7 @@ namespace RUINORERP.WF.UI
                 catch (Exception ex)
                 {
                     // 处理异常，例如记录日志
-                    Console.WriteLine($"Failed to register workflow of type {workflowType.FullName}: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"Failed to register workflow of type {workflowType.FullName}: {ex.Message}");
                 }
             }
         }

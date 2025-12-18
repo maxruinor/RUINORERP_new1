@@ -22,7 +22,7 @@ namespace RUINORERP.Server.Workflow.Steps
             System.Windows.Forms.MessageBox.Show(Message);
             _logger.Info("测试1", Message);
             _logger.LogInformation("测试2", Message);
-            Console.WriteLine(Message);
+            System.Diagnostics.Debug.WriteLine(Message);
             return ExecutionResult.Next();
         }
     }

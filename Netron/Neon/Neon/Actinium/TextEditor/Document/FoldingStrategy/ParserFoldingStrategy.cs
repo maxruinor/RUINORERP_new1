@@ -34,7 +34,7 @@ namespace Netron.Neon.TextEditor.Document
 //				foreach (IMethod m in c.Methods) {
 //					foldMarkers.Add(new FoldMarker(m.Region.EndLine - 1, m.Region.EndColumn,
 //					                               m.BodyRegion.EndLine - 1, m.BodyRegion.EndColumn - 1, FoldType.MemberBody));
-////					Console.WriteLine("Add folding from {0} to {1}", m.Region, m.BodyRegion);
+////					System.Diagnostics.Debug.WriteLine("Add folding from {0} to {1}", m.Region, m.BodyRegion);
 //				}
 //				
 //				foreach (IIndexer indexer in c.Indexer) {

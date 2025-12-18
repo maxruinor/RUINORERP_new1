@@ -107,18 +107,18 @@ namespace RUINORERP.UI.CRM
             {
                 if (args.InteractionType == InteractionType.Click && args.DataPoint != null)
                 {
-                    Console.WriteLine($"点击了数据点: {args.DataPoint.Label}, 值: {args.DataPoint.YValue}");
+                    System.Diagnostics.Debug.WriteLine($"点击了数据点: {args.DataPoint.Label}, 值: {args.DataPoint.YValue}");
                 }
                 switch (args.InteractionType)
                 {
                     case InteractionType.Click:
-                        Console.WriteLine($"点击了 {args.Series.Name} 系列的 {args.DataPoint.Label}");
+                        System.Diagnostics.Debug.WriteLine($"点击了 {args.Series.Name} 系列的 {args.DataPoint.Label}");
                         break;
                     case InteractionType.RightClick:
-                        Console.WriteLine($"右键点击了 {args.Series.Name} 系列");
+                        System.Diagnostics.Debug.WriteLine($"右键点击了 {args.Series.Name} 系列");
                         break;
                     case InteractionType.Hover:
-                        Console.WriteLine($"悬停在 {args.DataPoint.YValue} 值上");
+                        System.Diagnostics.Debug.WriteLine($"悬停在 {args.DataPoint.YValue} 值上");
                         break;
                 }
             };
@@ -273,7 +273,7 @@ namespace RUINORERP.UI.CRM
             {
                 if (args.InteractionType == InteractionType.Click && args.DataPoint != null)
                 {
-                    Console.WriteLine($"点击了数据点: {args.DataPoint.Label}, 值: {args.DataPoint.YValue}");
+                    System.Diagnostics.Debug.WriteLine($"点击了数据点: {args.DataPoint.Label}, 值: {args.DataPoint.YValue}");
                 }
             };
             var chartControl = await builder.BuildChartControl();
@@ -292,18 +292,18 @@ namespace RUINORERP.UI.CRM
             {
                 if (args.InteractionType == InteractionType.Click && args.DataPoint != null)
                 {
-                    Console.WriteLine($"点击了数据点: {args.DataPoint.Label}, 值: {args.DataPoint.YValue}");
+                    System.Diagnostics.Debug.WriteLine($"点击了数据点: {args.DataPoint.Label}, 值: {args.DataPoint.YValue}");
                 }
                 switch (args.InteractionType)
                 {
                     case InteractionType.Click:
-                        Console.WriteLine($"点击了 {args.Series.Name} 系列的 {args.DataPoint.Label}");
+                        System.Diagnostics.Debug.WriteLine($"点击了 {args.Series.Name} 系列的 {args.DataPoint.Label}");
                         break;
                     case InteractionType.RightClick:
-                        Console.WriteLine($"右键点击了 {args.Series.Name} 系列");
+                        System.Diagnostics.Debug.WriteLine($"右键点击了 {args.Series.Name} 系列");
                         break;
                     case InteractionType.Hover:
-                        Console.WriteLine($"悬停在 {args.DataPoint.YValue} 值上");
+                        System.Diagnostics.Debug.WriteLine($"悬停在 {args.DataPoint.YValue} 值上");
                         break;
                 }
             };

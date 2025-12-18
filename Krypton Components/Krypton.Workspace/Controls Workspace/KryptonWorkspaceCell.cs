@@ -562,12 +562,12 @@ namespace Krypton.Workspace
         [EditorBrowsable(EditorBrowsableState.Never)]
         public void DebugOutput(int indent)
         {
-            Console.WriteLine(@"{0}Cell Count:{1} Visible:{2}", new string(' ', indent++ * 2), Pages.Count, LastVisibleSet);
+            System.Diagnostics.Debug.WriteLine(@"{0}Cell Count:{1} Visible:{2}", new string(' ', indent++ * 2), Pages.Count, LastVisibleSet);
 
             var prefix = new string(' ', indent * 2);
             foreach (KryptonPage page in Pages)
             {
-                Console.WriteLine(@"{0}Page Text:{1} Visible:{2} Type:{3}", prefix, page.Text, page.LastVisibleSet, page.GetType().Name);
+                System.Diagnostics.Debug.WriteLine(@"{0}Page Text:{1} Visible:{2} Type:{3}", prefix, page.Text, page.LastVisibleSet, page.GetType().Name);
             }
         }
         #endregion

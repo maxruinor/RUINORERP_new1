@@ -130,7 +130,7 @@ namespace Netron.GraphLib.Analysis
 			while (!queue.IsEmpty)
 			{
 				ITree tree2 = (ITree)queue.Dequeue();
-				Console.WriteLine(tree2.Key);
+				System.Diagnostics.Debug.WriteLine(tree2.Key);
 				for (int i = 0; i < tree2.Degree; i++)
 				{
 					ITree tree3 = tree2.GetSubtree(i);
@@ -269,7 +269,7 @@ namespace Netron.GraphLib.Analysis
 				{
 					
 					for (int k2 = 0; k2 < vertexCount; k2++)
-					{Console.WriteLine(j2 + "->" + k2);
+					{System.Diagnostics.Debug.WriteLine(j2 + "->" + k2);
 						for (int i2 = 0; i2 < vertexCount; i2++)
 						{
 						
@@ -279,7 +279,7 @@ namespace Netron.GraphLib.Analysis
 							if (distance[j2, k2] > i3)
 							{
 								distance[j2, k2]= i3;
-								Console.WriteLine("  " + i2);
+								System.Diagnostics.Debug.WriteLine("  " + i2);
 							}
 						}
 					}
@@ -384,7 +384,7 @@ namespace Netron.GraphLib.Analysis
 		/// <returns></returns>
 		public static IGraph KruskalsAlgorithm(IGraph g)
 		{
-			Console.WriteLine("Starting...");
+			System.Diagnostics.Debug.WriteLine("Starting...");
 			int i1 = g.NumberOfVertices;
 			IGraph graph1 = new GraphAsLists(i1);
 			for (int j1 = 0; j1 < i1; j1++)
@@ -393,7 +393,7 @@ namespace Netron.GraphLib.Analysis
 			}
 			IPriorityQueue priorityQueue = new BinaryHeap(g.NumberOfEdges);
 			IEnumerator iEnumerator = g.Edges.GetEnumerator();
-			Console.WriteLine("got the edge enumerator...");
+			System.Diagnostics.Debug.WriteLine("got the edge enumerator...");
 			try
 			{
 				while (iEnumerator.MoveNext())
@@ -425,17 +425,17 @@ namespace Netron.GraphLib.Analysis
 					iDisposable.Dispose();
 				}
 			}
-			Console.WriteLine("after the edge enumerator...");
-			Console.WriteLine(priorityQueue.ToString());
+			System.Diagnostics.Debug.WriteLine("after the edge enumerator...");
+			System.Diagnostics.Debug.WriteLine(priorityQueue.ToString());
 			IPartition partition = new PartitionAsForest(i1);
-			Console.WriteLine("The partition: " + partition.Count);
+			System.Diagnostics.Debug.WriteLine("The partition: " + partition.Count);
 			while (!priorityQueue.IsEmpty && (partition.Count > 1))
 			{
 				IEdge edge2 = (IEdge)((Association)priorityQueue.DequeueMin()).Value;
-				Console.WriteLine(edge2.ToString());
+				System.Diagnostics.Debug.WriteLine(edge2.ToString());
 				int i2 = edge2.V0.Number;
 				int j2 = edge2.V1.Number;
-				Console.WriteLine("got vertices (" + i2 + "," + j2 + ")");
+				System.Diagnostics.Debug.WriteLine("got vertices (" + i2 + "," + j2 + ")");
 				ISet set1 = partition.Find(i2);
 				ISet set2 = partition.Find(j2);
 				

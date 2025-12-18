@@ -50,7 +50,7 @@ namespace RUINORERP.Business.CommService
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"[ERROR] DynamicQueryHelper: 静态构造函数初始化失败 - {ex.Message}\n{ex.StackTrace}");
+                    System.Diagnostics.Debug.WriteLine($"[ERROR] DynamicQueryHelper: 静态构造函数初始化失败 - {ex.Message}\n{ex.StackTrace}");
                 }
             }
         
@@ -70,16 +70,16 @@ namespace RUINORERP.Business.CommService
 
                     if (_queryableMethod != null)
                     {
-                        Console.WriteLine("[INFO] DynamicQueryHelper: 成功初始化Queryable方法");
+                        System.Diagnostics.Debug.WriteLine("[INFO] DynamicQueryHelper: 成功初始化Queryable方法");
                     }
                     else
                     {
-                        Console.WriteLine("[ERROR] DynamicQueryHelper: 无法初始化Queryable方法");
+                        System.Diagnostics.Debug.WriteLine("[ERROR] DynamicQueryHelper: 无法初始化Queryable方法");
                     }
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"[ERROR] DynamicQueryHelper: 初始化Queryable方法失败 - {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"[ERROR] DynamicQueryHelper: 初始化Queryable方法失败 - {ex.Message}");
                 }
             }
         

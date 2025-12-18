@@ -213,68 +213,6 @@ namespace RUINORERP.UI.ProductEAV
 
         }
 
-        private void FrmProductEdit_OnShowHelp()
-        {
-            base.toolTipBase.Hide(this);
-            if (ActiveControl.GetType().ToString() == "ComponentFactory.Krypton.Toolkit.KryptonTextBox+InternalTextBox")
-            {
-                KryptonTextBox txt = ActiveControl.Parent as KryptonTextBox;
-                if (txt.DataBindings.Count > 0)
-                {
-                    //txt.DataBindings[0].BindingMemberInfo;
-                }
-            }
-            else
-            {
-
-            }
-            base.toolTipBase.SetToolTip(ActiveControl, "提示");
-            base.toolTipBase.Show(ActiveControl.Name + "asdf", ActiveControl);
-        }
-
-        private void AddTopPage()
-        {
-            // Create a new krypton page to be added
-            KryptonPage page = new KryptonPage();
-
-            page.ClearFlags(KryptonPageFlags.DockingAllowClose);
-            // Set the page title
-            page.Text = "产品资料";
-
-            // Remove the default image for the page
-            page.ImageSmall = null;
-
-            // Set the padding so contained controls are indented
-            page.Padding = new Padding(7);
-
-            // Get the colors to use for this new page
-            Color normal = _normal[_count % _normal.Length];
-            Color select = _select[_count % _select.Length];
-
-            // Set the page colors
-            page.StateNormal.Page.Color1 = select;
-            page.StateNormal.Page.Color2 = normal;
-            page.StateNormal.Tab.Back.Color2 = normal;
-            page.StateSelected.Tab.Back.Color2 = select;
-            page.StateTracking.Tab.Back.Color2 = _hotMain;
-            page.StatePressed.Tab.Back.Color2 = _hotMain;
-
-            // We want the page drawn as a gradient with colors relative to its own area
-            page.StateCommon.Page.ColorAlign = PaletteRectangleAlign.Local;
-            page.StateCommon.Page.ColorStyle = PaletteColorStyle.Sigma;
-
-            // We add an embedded navigator with its own pages to mimic OneNote operation
-            AddEmbeddedNavigator(page);
-            page.ClearFlags(KryptonPageFlags.All);
-            // Add page to end of the navigator collection
-            kryptonNavigator1.Pages.Add(page);
-
-            // Bump the page index to use next
-            _count++;
-
-
-        }
-
 
         private void UCProductEdit_Load(object sender, EventArgs e)
         {
@@ -1983,16 +1921,7 @@ namespace RUINORERP.UI.ProductEAV
         }
 
 
-
-        private void CombinationProperties(KryptonDataGridView dg)
-        {
-            //属性组合+产品详情 
-            Type combinedType = Common.EmitHelper.MergeTypes(true, typeof(Eav_ProdDetails), typeof(tb_ProdDetail));
-            object groupdg = Activator.CreateInstance(combinedType);
-            dg.DataSource = groupdg;
-        }
-
-
+ 
 
         private void btnClear_Click(object sender, EventArgs e)
         {
@@ -2033,8 +1962,6 @@ namespace RUINORERP.UI.ProductEAV
                 default:
                     break;
             }
-
-            // tableLayoutPanel1.Controls.Remove(ucskulist);
 
             #endregion
 
@@ -2185,26 +2112,7 @@ namespace RUINORERP.UI.ProductEAV
         public ConcurrentDictionary<string, List<KeyValuePair<object, string>>> ColNameDataDictionary { get => _DataDictionary; set => _DataDictionary = value; }
 
 
-
-        /// <summary>
-        /// 动态字典值显示 外键才有显示
-        /// </summary>
-        /// <param name="columnIndex"></param>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        //protected virtual string ShowDataGridViewColumnsNameValue(int columnIndex, object value)
-        //{
-        //    string NameValue = string.Empty;
-        //    string tableName = string.Empty;
-        //    if (FKValueColNameTableNameList.TryGetValue(dataGridView1.Columns[columnIndex].Name, out tableName))
-        //    {
-        //        string ValueDisplayColName = string.Empty;
-        //        var obj = RUINORERP.Business.Cache.EntityCacheHelper.GetValue(tableName, value);
-        //        NameValue = obj.ToString();
-
-        //    }
-        //    return NameValue;
-        //}
+ 
 
         private void DataGridView1_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
         {

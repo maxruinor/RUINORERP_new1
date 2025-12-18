@@ -180,7 +180,7 @@ namespace RUINORERP.Business.BNR
                 {
                     // 使用SqlSugar推荐的using语法糖管理事务
                     // 这种方式确保事务在异常情况下正确回滚，在成功情况下正确提交
-                    using (var tran = _sqlSugarClient.UseTran())
+                    using (var tran = _sqlSugarClient.Ado.UseTran())
                     {
                         try
                         {
@@ -395,7 +395,7 @@ namespace RUINORERP.Business.BNR
             try
             {
                 // 使用SqlSugar推荐的using语法糖管理事务
-                using (var tran = _sqlSugarClient.UseTran())
+                using (var tran = _sqlSugarClient.Ado.UseTran())
                 {
                     var sequence = _sqlSugarClient.Queryable<SequenceNumbers>()
                         .Where(s => s.SequenceKey == sequenceKey)
@@ -558,53 +558,36 @@ namespace RUINORERP.Business.BNR
         {
             EnsureTableStructure();
             
-            bool transactionStarted = false;
-            
-            try
+            // 使用SqlSugar推荐的using语法糖管理事务
+            using (var tran = _sqlSugarClient.Ado.UseTran())
             {
-                _sqlSugarClient.Ado.BeginTran();
-                transactionStarted = true;
-                
-                // 查找所有匹配的序列记录（包括动态键）
-                var sequences = _sqlSugarClient.Queryable<SequenceNumbers>()
-                    .Where(s => s.SequenceKey == key || s.SequenceKey.StartsWith($"{key}_"))
-                    .ToList();
-                
-                if (sequences.Count == 0)
+                try
                 {
-                    throw new Exception($"未找到序列键 '{key}' 相关的记录");
-                }
-                
-                foreach (var sequence in sequences)
-                {
-                    sequence.CurrentValue = 1;
-                    sequence.LastUpdated = DateTime.Now;
-                    _sqlSugarClient.Updateable(sequence).ExecuteCommand();
-                }
-                
-                // 只有在事务已启动且没有异常的情况下才提交
-                if (transactionStarted)
-                {
-                    _sqlSugarClient.Ado.CommitTran();
-                }
-            }
-            catch (Exception ex)
-            {
-                // 只有在事务已启动的情况下才回滚
-                if (transactionStarted)
-                {
-                    try
+                    // 查找所有匹配的序列记录（包括动态键）
+                    var sequences = _sqlSugarClient.Queryable<SequenceNumbers>()
+                        .Where(s => s.SequenceKey == key || s.SequenceKey.StartsWith($"{key}_"))
+                        .ToList();
+                    
+                    if (sequences.Count == 0)
                     {
-                        _sqlSugarClient.Ado.RollbackTran();
+                        throw new Exception($"未找到序列键 '{key}' 相关的记录");
                     }
-                    catch (Exception rollbackEx)
+                    
+                    foreach (var sequence in sequences)
                     {
-                        System.Diagnostics.Debug.WriteLine($"回滚事务时发生异常: {rollbackEx.Message}");
+                        sequence.CurrentValue = 1;
+                        sequence.LastUpdated = DateTime.Now;
+                        _sqlSugarClient.Updateable(sequence).ExecuteCommand();
                     }
+                    
+                    // 提交事务
+                    tran.CommitTran();
                 }
-                
-                System.Diagnostics.Debug.WriteLine($"重置序列失败: {ex.Message}");
-                throw;
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"重置序列失败: {ex.Message}");
+                    throw;
+                }
             }
         }
 
@@ -665,62 +648,45 @@ namespace RUINORERP.Business.BNR
         {
             EnsureTableStructure();
             
-            bool transactionStarted = false;
-            
-            try
+            // 使用SqlSugar推荐的using语法糖管理事务
+            using (var tran = _sqlSugarClient.Ado.UseTran())
             {
-                _sqlSugarClient.Ado.BeginTran();
-                transactionStarted = true;
-                
-                var sequence = _sqlSugarClient.Queryable<SequenceNumbers>()
-                    .Where(s => s.SequenceKey == key)
-                    .First();
+                try
+                {
+                    var sequence = _sqlSugarClient.Queryable<SequenceNumbers>()
+                        .Where(s => s.SequenceKey == key)
+                        .First();
                      
-                if (sequence == null)
-                {
-                    throw new Exception($"未找到序列键 '{key}' 的记录");
-                }
-                
-                // 更新非空字段
-                if (!string.IsNullOrEmpty(resetType))
-                    sequence.ResetType = resetType;
-                
-                if (!string.IsNullOrEmpty(formatMask))
-                    sequence.FormatMask = formatMask;
-                
-                if (!string.IsNullOrEmpty(description))
-                    sequence.Description = description;
-                
-                if (!string.IsNullOrEmpty(businessType))
-                    sequence.BusinessType = businessType;
-                
-                sequence.LastUpdated = DateTime.Now;
-                
-                _sqlSugarClient.Updateable(sequence).ExecuteCommand();
-                
-                // 只有在事务已启动且没有异常的情况下才提交
-                if (transactionStarted)
-                {
-                    _sqlSugarClient.Ado.CommitTran();
-                }
-            }
-            catch (Exception ex)
-            {
-                // 只有在事务已启动的情况下才回滚
-                if (transactionStarted)
-                {
-                    try
+                    if (sequence == null)
                     {
-                        _sqlSugarClient.Ado.RollbackTran();
+                        throw new Exception($"未找到序列键 '{key}' 的记录");
                     }
-                    catch (Exception rollbackEx)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"回滚事务时发生异常: {rollbackEx.Message}");
-                    }
+                    
+                    // 更新非空字段
+                    if (!string.IsNullOrEmpty(resetType))
+                        sequence.ResetType = resetType;
+                    
+                    if (!string.IsNullOrEmpty(formatMask))
+                        sequence.FormatMask = formatMask;
+                    
+                    if (!string.IsNullOrEmpty(description))
+                        sequence.Description = description;
+                    
+                    if (!string.IsNullOrEmpty(businessType))
+                        sequence.BusinessType = businessType;
+                    
+                    sequence.LastUpdated = DateTime.Now;
+                    
+                    _sqlSugarClient.Updateable(sequence).ExecuteCommand();
+                    
+                    // 提交事务
+                    tran.CommitTran();
                 }
-                
-                System.Diagnostics.Debug.WriteLine($"更新序列信息失败: {ex.Message}");
-                throw;
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"更新序列信息失败: {ex.Message}");
+                    throw;
+                }
             }
         }
 
@@ -734,64 +700,47 @@ namespace RUINORERP.Business.BNR
         {
             EnsureTableStructure();
             
-            bool transactionStarted = false;
-            
-            try
+            // 使用SqlSugar推荐的using语法糖管理事务
+            using (var tran = _sqlSugarClient.Ado.UseTran())
             {
-                _sqlSugarClient.Ado.BeginTran();
-                transactionStarted = true;
-                
-                var sequence = _sqlSugarClient.Queryable<SequenceNumbers>()
-                    .Where(s => s.SequenceKey == key)
-                    .First();
+                try
+                {
+                    var sequence = _sqlSugarClient.Queryable<SequenceNumbers>()
+                        .Where(s => s.SequenceKey == key)
+                        .First();
                      
-                if (sequence != null)
-                {
-                    sequence.CurrentValue = newValue;
-                    sequence.LastUpdated = DateTime.Now;
-                    // 如果业务类型不为空且原记录没有业务类型，则更新业务类型
-                    if (!string.IsNullOrEmpty(businessType) && string.IsNullOrEmpty(sequence.BusinessType))
+                    if (sequence != null)
                     {
-                        sequence.BusinessType = businessType;
+                        sequence.CurrentValue = newValue;
+                        sequence.LastUpdated = DateTime.Now;
+                        // 如果业务类型不为空且原记录没有业务类型，则更新业务类型
+                        if (!string.IsNullOrEmpty(businessType) && string.IsNullOrEmpty(sequence.BusinessType))
+                        {
+                            sequence.BusinessType = businessType;
+                        }
+                        _sqlSugarClient.Updateable(sequence).ExecuteCommand();
                     }
-                    _sqlSugarClient.Updateable(sequence).ExecuteCommand();
-                }
-                else
-                {
-                    var newSequence = new SequenceNumbers
+                    else
                     {
-                        SequenceKey = key,
-                        CurrentValue = newValue,
-                        LastUpdated = DateTime.Now,
-                        CreatedAt = DateTime.Now,
-                        BusinessType = businessType
-                    };
-                    _sqlSugarClient.Insertable(newSequence).ExecuteCommand();
-                }
-                
-                // 只有在事务已启动且没有异常的情况下才提交
-                if (transactionStarted)
-                {
-                    _sqlSugarClient.Ado.CommitTran();
-                }
-            }
-            catch (Exception ex)
-            {
-                // 只有在事务已启动的情况下才回滚
-                if (transactionStarted)
-                {
-                    try
-                    {
-                        _sqlSugarClient.Ado.RollbackTran();
+                        var newSequence = new SequenceNumbers
+                        {
+                            SequenceKey = key,
+                            CurrentValue = newValue,
+                            LastUpdated = DateTime.Now,
+                            CreatedAt = DateTime.Now,
+                            BusinessType = businessType
+                        };
+                        _sqlSugarClient.Insertable(newSequence).ExecuteCommand();
                     }
-                    catch (Exception rollbackEx)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"回滚事务时发生异常: {rollbackEx.Message}");
-                    }
+                    
+                    // 提交事务
+                    tran.CommitTran();
                 }
-                
-                System.Diagnostics.Debug.WriteLine($"重置序列值失败: {ex.Message}");
-                throw;
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"重置序列值失败: {ex.Message}");
+                    throw;
+                }
             }
         }
 

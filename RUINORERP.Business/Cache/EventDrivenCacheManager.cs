@@ -16,7 +16,7 @@ namespace RUINORERP.Business.Cache
         public event EventHandler<CacheChangedEventArgs> CacheChanged;
 
         private readonly IEntityCacheManager _cacheManager;
-        private readonly TableSchemaManager _tableSchemaManager;
+        private readonly ITableSchemaManager _tableSchemaManager;
         private readonly ILogger<EventDrivenCacheManager> _logger;
 
         /// <summary>
@@ -24,7 +24,7 @@ namespace RUINORERP.Business.Cache
         /// </summary>
         /// <param name="cacheManager">缓存管理器</param>
         /// <param name="logger">日志记录器</param>
-        public EventDrivenCacheManager(IEntityCacheManager cacheManager, TableSchemaManager tableSchemaManager, ILogger<EventDrivenCacheManager> logger = null)
+        public EventDrivenCacheManager(IEntityCacheManager cacheManager, ITableSchemaManager tableSchemaManager, ILogger<EventDrivenCacheManager> logger = null)
         {
             _cacheManager = cacheManager ?? throw new ArgumentNullException(nameof(cacheManager));
             _tableSchemaManager = tableSchemaManager;

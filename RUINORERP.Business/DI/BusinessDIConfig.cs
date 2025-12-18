@@ -103,7 +103,7 @@ namespace RUINORERP.Business.DI
                 .PropertiesAutowired();
 
             // 注册表结构管理器为注入式单例
-            builder.RegisterType<RUINORERP.Business.Cache.TableSchemaManager>()
+            builder.RegisterType<TableSchemaManager>()
                 .As<ITableSchemaManager>()
                 .AsSelf()
                 .SingleInstance()

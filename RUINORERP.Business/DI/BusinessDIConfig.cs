@@ -87,7 +87,7 @@ namespace RUINORERP.Business.DI
                 .PropertiesAutowired();
 
 
-            // 注册新的优化缓存管理器
+            // 注册缓存管理器（单例）- 依赖ITableSchemaManager进行表结构管理
             //这里是单例，批量扫描程序集是 .InstancePerDependency()，这意味着每次请求都会创建一个新的实例
             builder.RegisterType<EntityCacheManager>()
                 .As<IEntityCacheManager>()
@@ -102,7 +102,7 @@ namespace RUINORERP.Business.DI
                 .SingleInstance()
                 .PropertiesAutowired();
 
-            // 注册表结构管理器为注入式单例
+            // 注册表结构管理器为依赖注入式单例 - 所有表结构初始化都由它管理
             builder.RegisterType<TableSchemaManager>()
                 .As<ITableSchemaManager>()
                 .AsSelf()

@@ -25,7 +25,7 @@ namespace RUINORERP.Business.Cache
         private readonly ILogger<EntityCacheInitializationService> _logger;
         private readonly ICacheSyncMetadata _cacheSyncMetadata;
         private readonly DynamicQueryHelper _queryHelper;
-        private readonly ITableSchemaManager _tableSchemaManager;
+        private readonly ITableSchemaManager _tableSchemaManager; // 唯一表结构管理入口
         
         /// <summary>
         /// 构造函数
@@ -191,6 +191,7 @@ namespace RUINORERP.Business.Cache
 
         /// <summary>
         /// 注册表结构信息
+        /// 直接通过ITableSchemaManager进行，无需中间层包装
         /// </summary>
         private void RegistInformation<T>(
             Expression<Func<T, object>> primaryKeyExpression,
@@ -201,8 +202,15 @@ namespace RUINORERP.Business.Cache
             TableType tableType = TableType.Other,
             params Expression<Func<T, object>>[] otherDisplayFieldExpressions) where T : class
         {
-            // 先初始化表结构
-            _cacheManager.InitializeTableSchema(primaryKeyExpression, displayFieldExpression, isView, isCacheable, description, true, otherDisplayFieldExpressions);
+            // 直接使用ITableSchemaManager注册表结构
+            _tableSchemaManager.RegisterTableSchema(
+                primaryKeyExpression,
+                displayFieldExpression,
+                isView,
+                isCacheable,
+                description,
+                true, // cacheWholeRow
+                otherDisplayFieldExpressions);
 
             // 设置表类型
             string tableName = typeof(T).Name;

@@ -32,7 +32,7 @@ namespace RUINORERP.Business.Cache
             /// </summary>
             QueryResult
         }
-        
+
         /// <summary>
         /// 生成缓存键
         /// </summary>
@@ -41,7 +41,7 @@ namespace RUINORERP.Business.Cache
         /// <param name="primaryKeyValue">可选的主键值（用于实体和显示值缓存）</param>
         /// <returns>格式化的缓存键</returns>
         string GenerateCacheKey(CacheKeyType type, string tableName, object primaryKeyValue = null);
-        
+
         #region 缓存查询方法
         /// <summary>
         /// 获取指定类型的实体列表
@@ -67,7 +67,7 @@ namespace RUINORERP.Business.Cache
         /// 获取指定表名的显示值
         /// </summary>
         object GetDisplayValue(string tableName, object idValue);
-        
+
         /// <summary>
         /// 根据表名获取实体列表，返回强类型集合
         /// </summary>
@@ -138,32 +138,11 @@ namespace RUINORERP.Business.Cache
         #endregion
 
         #region 缓存初始化方法
-        /// <summary>
-        /// 初始化表结构信息
-        /// </summary>
-        /// <typeparam name="T">实体类型</typeparam>
-        /// <param name="primaryKeyExpression">主键字段表达式</param>
-        /// <param name="displayFieldExpression">主显示字段表达式</param>
-        /// <param name="isView">是否是视图</param>
-        /// <param name="isCacheable">是否需要缓存</param>
-        /// <param name="description">表描述</param>
-        /// <param name="cacheWholeRow">是否缓存整行数据（true）还是只缓存指定字段（false）</param>
-        /// <param name="otherDisplayFieldExpressions">其他需要缓存的显示字段表达式</param>
-        void InitializeTableSchema<T>(
-            Expression<Func<T, object>> primaryKeyExpression,
-            Expression<Func<T, object>> displayFieldExpression,
-            bool isView = false,
-            bool isCacheable = true,
-            string description = null,
-            bool cacheWholeRow = true,
-            params Expression<Func<T, object>>[] otherDisplayFieldExpressions) where T : class;
-
+         
         /// <summary>
         /// 获取实体类型
         /// </summary>
         Type GetEntityType(string tableName);
-
-      
         #endregion
     }
 }

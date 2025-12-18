@@ -198,9 +198,6 @@ namespace RUINORERP.UI.PSI.PUR
                     BaseProcessor baseProcessorPayeeInfo = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_FM_PayeeInfo).Name + "Processor");
                     QueryFilter queryFilterPayeeInfo = baseProcessorPayeeInfo.GetQueryFilter();
                     
-                    // 处理表达式中的闭包变量，将其替换为实际值
-                    lambdaPayeeInfo = queryFilterPayeeInfo.ProcessClosureVariables(lambdaPayeeInfo);
-                    
                     queryFilterPayeeInfo.FilterLimitExpressions.Add(lambdaPayeeInfo);
 
                     DataBindingHelper.BindData4Cmb<tb_FM_PayeeInfo>(entity, k => k.PayeeInfoID, v => v.DisplayText, cmbPayeeInfoID, queryFilterPayeeInfo.GetFilterExpression<tb_FM_PayeeInfo>(), true);
@@ -359,9 +356,6 @@ namespace RUINORERP.UI.PSI.PUR
                                 
                     BaseProcessor baseProcessorPayeeInfo = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_FM_PayeeInfo).Name + "Processor");
                     QueryFilter queryFilterPayeeInfo = baseProcessorPayeeInfo.GetQueryFilter();
-                    
-                    // 处理表达式中的闭包变量，将其替换为实际值
-                    lambdaPayeeInfo = queryFilterPayeeInfo.ProcessClosureVariables(lambdaPayeeInfo);
                     
                     queryFilterPayeeInfo.FilterLimitExpressions.Add(lambdaPayeeInfo);
 

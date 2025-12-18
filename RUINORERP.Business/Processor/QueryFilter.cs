@@ -32,6 +32,42 @@ namespace RUINORERP.Business.Processor
             _appContext = appContext;
         }
 
+        // 重写FilterLimitExpressions属性以自动处理闭包变量
+        private List<LambdaExpression> _filterLimitExpressions = new List<LambdaExpression>();
+        public List<LambdaExpression> FilterLimitExpressions 
+        { 
+            get { return _filterLimitExpressions; }
+            set { _filterLimitExpressions = value ?? new List<LambdaExpression>(); }
+        }
+
+        /// <summary>
+        /// 为了方便查询框架调用，转换一下格式
+        /// 并且支持多条件
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        private List<Expression<Func<T, bool>>> GetFilterExpressions<T>()
+        {
+            List<Expression<Func<T, bool>>> LimitQueryConditions = new List<Expression<Func<T, bool>>>();
+            ExpConverter expConverter = new ExpConverter();
+            foreach (var _FilterLimitExpression in FilterLimitExpressions)
+            {
+                Expression<Func<T, bool>> LimitQueryCondition;
+                if (_FilterLimitExpression != null)
+                {
+                    // 处理闭包变量
+                    var processedExpression = ProcessClosureVariables<T>((Expression<Func<T, bool>>)_FilterLimitExpression);
+                    var whereExp = expConverter.ConvertToFuncByClassName(typeof(T), processedExpression);
+                    LimitQueryCondition = whereExp as Expression<Func<T, bool>>;
+                }
+                else
+                {
+                    LimitQueryCondition = c => true;// queryFilter.FieldLimitCondition;
+                }
+                LimitQueryConditions.Add(LimitQueryCondition);
+            }
+            return LimitQueryConditions;
+        }
 
 
         public List<string> GetQueryConditions()
@@ -149,39 +185,8 @@ namespace RUINORERP.Business.Processor
 
         */
 
-        public List<LambdaExpression> FilterLimitExpressions { get; set; } = new List<LambdaExpression>();
-
-
         /// <summary>
-        /// 为了方便查询框架调用，转换一下格式
-        /// 并且支持多条件
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        private List<Expression<Func<T, bool>>> GetFilterExpressions<T>()
-        {
-            List<Expression<Func<T, bool>>> LimitQueryConditions = new List<Expression<Func<T, bool>>>();
-            ExpConverter expConverter = new ExpConverter();
-            foreach (var _FilterLimitExpression in FilterLimitExpressions)
-            {
-                Expression<Func<T, bool>> LimitQueryCondition;
-                if (_FilterLimitExpression != null)
-                {
-                    var whereExp = expConverter.ConvertToFuncByClassName(typeof(T), _FilterLimitExpression);
-                    LimitQueryCondition = whereExp as Expression<Func<T, bool>>;
-                }
-                else
-                {
-                    LimitQueryCondition = c => true;// queryFilter.FieldLimitCondition;
-                }
-                LimitQueryConditions.Add(LimitQueryCondition);
-            }
-            return LimitQueryConditions;
-        }
-
-
-        /// <summary>
-        /// 得到And后的所有条件1
+        /// 得到And后的所有条件2
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns>如果为空则返回null</returns>
@@ -277,6 +282,9 @@ namespace RUINORERP.Business.Processor
         /// <param name="expFieldLimitCondition">限制关联结果集合的条件</param>
         public void SetFieldLimitCondition<R>(Expression<Func<R, bool>> expFieldLimitCondition)
         {
+            // 处理表达式中的闭包变量，将其替换为实际值
+            expFieldLimitCondition = ProcessClosureVariables(expFieldLimitCondition);
+            
             ExpConverter expConverter = new ExpConverter();
 
             var whereExp = expConverter.ConvertToLambdaExpression<R>(expFieldLimitCondition);
@@ -710,7 +718,29 @@ namespace RUINORERP.Business.Processor
                             {
                                 queryField.SubFilter.QueryTargetType = Assembly.LoadFrom("RUINORERP.Model.dll").GetType("RUINORERP.Model." + SubQueryTableName);
                             }
-
+                            
+                            // 处理子过滤器中的闭包变量
+                            if (SubFieldLimitExp != null && queryField.SubFilter != null)
+                            {
+                                // 获取正确的泛型参数类型
+                                Type targetType = queryField.SubFilter.QueryTargetType ?? SubQueryTargetType;
+                                if (targetType != null)
+                                {
+                                    // 使用反射调用ProcessClosureVariables方法
+                                    var method = this.GetType().GetMethod("ProcessClosureVariables", BindingFlags.Public | BindingFlags.Instance);
+                                    if (method != null)
+                                    {
+                                        var genericMethod = method.MakeGenericMethod(targetType);
+                                        var processedExpression = genericMethod.Invoke(this, new object[] { SubFieldLimitExp });
+                                        
+                                        // 更新子过滤器的FilterLimitExpressions
+                                        if (processedExpression != null && queryField.SubFilter.FilterLimitExpressions.Count > 0)
+                                        {
+                                            queryField.SubFilter.FilterLimitExpressions[0] = (LambdaExpression)processedExpression;
+                                        }
+                                    }
+                                }
+                            }
 
                             break;
                         }

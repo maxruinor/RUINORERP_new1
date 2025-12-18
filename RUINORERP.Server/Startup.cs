@@ -155,11 +155,20 @@ namespace RUINORERP.Server
             #region 服务注册配置
             services = new ServiceCollection();
 
-            // 注册当前程序集的所有类成员
-            builder.RegisterAssemblyTypes(System.Reflection.Assembly.GetExecutingAssembly())
-                .AsImplementedInterfaces()
-                .AsSelf()
-                .SingleInstance();
+            /// <summary>
+        /// 注册当前程序集的所有类成员
+        // 通用注册放在前面，确保特殊注册可以覆盖它们
+        builder.RegisterAssemblyTypes(System.Reflection.Assembly.GetExecutingAssembly())
+            .AsImplementedInterfaces()
+            .AsSelf()
+            .SingleInstance();
+
+        // 特殊注册放在后面，覆盖通用注册
+        builder.RegisterAssemblyTypes(System.Reflection.Assembly.GetExecutingAssembly())
+            .Where(type => type == typeof(RUINORERP.Business.Cache.TableSchemaManager)) // 只对TableSchemaManager进行特殊注册
+            .AsImplementedInterfaces()
+            .AsSelf()
+            .SingleInstance();
 
             // 配置核心服务
             ConfigureServices(services);
@@ -533,11 +542,15 @@ namespace RUINORERP.Server
 
 
             #region 使用各项目的DI配置类
-            // 配置各项目的依赖注入
-            BusinessDIConfig.ConfigureContainer(builder);      // Business项目
+            // 配置其他项目的依赖注入 - 通用注册放在前面
             ServicesDIConfig.ConfigureContainer(builder);      // Services项目
             RepositoryDIConfig.ConfigureContainer(builder);    // Repository项目
             IServicesDIConfig.ConfigureContainer(builder);     // IServices项目
+            #endregion
+
+            #region 最后注册关键服务，确保单例模式
+            // 最后注册关键业务服务，确保特殊注册覆盖前面的通用注册
+            BusinessDIConfig.ConfigureContainer(builder);      // Business项目 - 最后执行，确保TableSchemaManager等关键服务为单例
             #endregion
 
             #region 网络服务配置
@@ -555,6 +568,9 @@ namespace RUINORERP.Server
                   .InstancePerDependency() //默认模式，每次调用，都会重新实例化对象；每次请求都创建一个新的对象；
                   .PropertiesAutowired();//允许属性注入
             #endregion
+
+            // 最后注册AutofacRegister模块，确保不会覆盖特定注册
+            builder.RegisterModule(new AutofacRegister());
 
             var dalAssemble = System.Reflection.Assembly.LoadFrom("RUINORERP.Model.dll");
             builder.RegisterAssemblyTypes(dalAssemble)
@@ -769,6 +785,7 @@ namespace RUINORERP.Server
             .Where(x => x != ExType)//排除
             .Where(x => x != typeof(BizType))
             .Where(x => x != typeof(EntityCacheManager)) // 排除EntityCacheManager，避免覆盖单例注册
+            .Where(x => x.Namespace != "RUINORERP.Business.Cache") // 排除缓存架构命名空间，使用BusinessDIConfig.cs中的单个注册
              .AsImplementedInterfaces().AsSelf()
             .PropertiesAutowired()
             .InstancePerDependency();//.InstancePerDependency()，这意味着每次请求都会创建一个新的实例

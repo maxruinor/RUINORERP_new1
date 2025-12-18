@@ -35,11 +35,11 @@ namespace RUINORERP.Business.DI
         /// <param name="builder">容器构建器</param>
         public static void ConfigureContainer(ContainerBuilder builder)
         {
-            // Register business layer components
+            // Register business layer components - 通用注册放在前面
             builder.RegisterAssemblyTypes(System.Reflection.Assembly.Load("RUINORERP.Business"))
                   .Where(t => !t.IsAssignableFrom(typeof(RUINORERP.Business.Document.DocumentConverterBase<,>)) &&
                              !t.Name.EndsWith("Converter") &&
-                             t != typeof(RUINORERP.Business.Cache.TableSchemaManager))
+                             t.Namespace != "RUINORERP.Business.Cache") // 排除缓存架构命名空间，使用单个注册方式
                   .AsImplementedInterfaces()
                   .AsSelf()
                   .PropertiesAutowired()
@@ -49,8 +49,9 @@ namespace RUINORERP.Business.DI
 
             // 单独注册转换器类，不启用接口拦截
             builder.RegisterAssemblyTypes(System.Reflection.Assembly.Load("RUINORERP.Business"))
-                  .Where(t => t.IsAssignableFrom(typeof(RUINORERP.Business.Document.DocumentConverterBase<,>)) ||
-                             t.Name.EndsWith("Converter"))
+                  .Where(t => (t.IsAssignableFrom(typeof(RUINORERP.Business.Document.DocumentConverterBase<,>)) ||
+                             t.Name.EndsWith("Converter")) &&
+                             t.Namespace != "RUINORERP.Business.Cache") // 排除缓存架构命名空间，使用单个注册方式
                   .AsImplementedInterfaces()
                   .AsSelf()
                   .PropertiesAutowired()
@@ -104,12 +105,7 @@ namespace RUINORERP.Business.DI
                 .SingleInstance()
                 .PropertiesAutowired();
 
-            // 注册表结构管理器为依赖注入式单例 - 所有表结构初始化都由它管理
-            builder.RegisterType<TableSchemaManager>()
-                .As<ITableSchemaManager>()
-                .AsSelf()
-                .SingleInstance()
-                .PropertiesAutowired();
+
 
             // 注册缓存数据提供者，用于在缓存未命中时从数据库加载数据
             builder.RegisterType<SqlSugarCacheDataProvider>()
@@ -248,6 +244,16 @@ namespace RUINORERP.Business.DI
                 .AsSelf()
                 .PropertiesAutowired()
                 .InstancePerDependency();
+
+
+
+            // 注册表结构管理器为依赖注入式单例 - 所有表结构初始化都由它管理
+            // 特殊注册放在方法末尾，确保覆盖前面的通用注册
+            builder.RegisterType<TableSchemaManager>()
+                .As<ITableSchemaManager>()
+                .AsSelf()
+                .SingleInstance()
+                .PropertiesAutowired();
 
             AddBizMapperService(builder);
         }

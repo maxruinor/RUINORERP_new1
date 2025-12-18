@@ -1126,7 +1126,6 @@ namespace Netron.GraphLib.Analysis
 
 			public void Finish()
 			{
-				System.Diagnostics.Debug.WriteLine();
 				comma = false;
 			}
 			#endregion

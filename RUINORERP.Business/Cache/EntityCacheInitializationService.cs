@@ -208,10 +208,6 @@ namespace RUINORERP.Business.Cache
             TableType tableType = TableType.Other,
             params Expression<Func<T, object>>[] otherDisplayFieldExpressions) where T : class
         {
-            // 添加调试信息，跟踪表注册过程
-            string tableName = typeof(T).Name;
-            System.Diagnostics.Debug.WriteLine($"[EntityCacheInitializationService] 注册表 {tableName}: TableSchemaManager实例ID {_tableSchemaManager.GetHashCode()}");
-            
             // 直接使用ITableSchemaManager注册表结构
             _tableSchemaManager.RegisterTableSchema(
                 primaryKeyExpression,
@@ -269,12 +265,20 @@ namespace RUINORERP.Business.Cache
                 }
 
                 _logger.LogDebug($"开始初始化表 {tableName} 的缓存");
-
+                            
+                // 添加调试信息：检查TableSchemaManager状态
+                System.Diagnostics.Debug.WriteLine($"[InitializeCacheForTable] TableSchemaManager实例ID: {_tableSchemaManager.GetHashCode()}");
+                System.Diagnostics.Debug.WriteLine($"[InitializeCacheForTable] TableSchemaManager已注册表数: {_tableSchemaManager.GetAllTableNames().Count}");
+                System.Diagnostics.Debug.WriteLine($"[InitializeCacheForTable] 已注册的表: {string.Join(", ", _tableSchemaManager.GetAllTableNames())}");
+                System.Diagnostics.Debug.WriteLine($"[InitializeCacheForTable] 尝试获取表: {tableName}");
+                
                 // 获取实体类型
                 var entityType = _cacheManager.GetEntityType(tableName);
                 if (entityType == null)
                 {
                     _logger.LogWarning($"未找到表 {tableName} 对应的实体类型");
+                    System.Diagnostics.Debug.WriteLine($"[InitializeCacheForTable] GetEntityType返回null, 表名: {tableName}");
+                    System.Diagnostics.Debug.WriteLine($"[InitializeCacheForTable] 直接从TableSchemaManager查询: {_tableSchemaManager.GetEntityType(tableName)}");
                     return;
                 }
 

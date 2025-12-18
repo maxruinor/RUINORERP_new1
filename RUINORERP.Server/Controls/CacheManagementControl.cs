@@ -429,6 +429,21 @@ namespace RUINORERP.Server.Controls
                         // 获取实体列表数量
                         var List = _entityCacheManager.GetEntityListByTableName(tableName);
                         int count = 0;
+                        
+                        // 直接转换为 IEnumerable 并计算数量
+                        if (List != null)
+                        {
+                            try
+                            {
+                                count = ((System.Collections.IEnumerable)List).Cast<object>().Count();
+                            }
+                            catch
+                            {
+                                // 如果转换失败，默认为0
+                                count = 0;
+                            }
+                        }
+                        
                         var kv = new SuperValue(tableName + $"[{count}]", tableName);
                         lock (itemsToAdd)
                         {

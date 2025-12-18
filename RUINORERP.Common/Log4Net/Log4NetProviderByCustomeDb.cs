@@ -100,7 +100,7 @@ namespace RUINORERP.Common.Log4Net
                             else
                             {
                                 // 如果是加密的连接字符串格式，也进行替换
-                                System.Diagnostics.Debug.WriteLine($"已在{filename}中使用传入的解密后连接字符串替换原始连接字符串");
+                                //System.Diagnostics.Debug.WriteLine($"已在{filename}中使用传入的解密后连接字符串替换原始连接字符串");
                                 valueAttr.Value = connectionString;
                             }
                         }

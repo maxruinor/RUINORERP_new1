@@ -113,7 +113,7 @@ namespace RUINORERP.UI
         private void kryptonButton1_Click(object sender, EventArgs e)
         {
             mc.GetDepartmentByID(99);
-            System.System.Diagnostics.Debug.WriteLine("==========");
+            System.Diagnostics.Debug.WriteLine("==========");
             return;
             using (var scope = Startup.AutoFacContainer.BeginLifetimeScope())
             {
@@ -161,7 +161,6 @@ namespace RUINORERP.UI
             person1.Method_NoVirtua();
             person1.Method2();
             person1.Method3("person1_p1", "person1_p2");
-            System.Diagnostics.Debug.WriteLine();
             using (var scope = Startup.AutoFacContainer.BeginLifetimeScope())
             {
                 var person = scope.Resolve<Person>();

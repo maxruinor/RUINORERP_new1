@@ -56,7 +56,6 @@ using RUINORERP.Repository.UnitOfWorks;
 using RUINORERP.Services;
 using RUINORERP.Services.DI;
 using RUINORERP.UI.ATechnologyStack;
-using RUINORERP.UI.ATechnologyStack.ServiceRegister;
 using RUINORERP.UI.BaseForm;
 using RUINORERP.UI.BusinessService.SmartMenuService;
 using RUINORERP.UI.Common;
@@ -487,11 +486,13 @@ namespace RUINORERP.UI
         {
             try
             {
-                // 配置各项目的依赖注入
-                BusinessDIConfig.ConfigureContainer(builder);      // Business项目
+                    // 配置其他项目的依赖注入 - 通用注册放在前面
                 ServicesDIConfig.ConfigureContainer(builder);      // Services项目
                 RepositoryDIConfig.ConfigureContainer(builder);    // Repository项目
                 IServicesDIConfig.ConfigureContainer(builder);     // IServices项目
+                
+                // 最后注册关键业务服务，确保特殊注册覆盖通用注册
+                BusinessDIConfig.ConfigureContainer(builder);      // Business项目 - 最后执行，确保TableSchemaManager等关键服务为单例
 
             }
             catch (Exception ex)
@@ -583,7 +584,8 @@ namespace RUINORERP.UI
             // 注册GridViewRelated为单例
             builder.RegisterType<GridViewRelated>().SingleInstance();
 
-            builder.RegisterModule(new AutofacServiceRegister());
+            // 最后注册AutofacServiceRegister模块，确保不会覆盖特定注册
+           // builder.RegisterModule(new AutofacServiceRegister());
         }
 
         /// <summary>
@@ -700,8 +702,12 @@ namespace RUINORERP.UI
 
 
 
+            /// <summary>
+            /// 通用注册放在前面，确保特殊注册可以覆盖它们
+            /// 注意：TableSchemaManager的特殊注册在ConfigureContainer方法中处理，这里不重复注册
+            /// </summary>
             builder.RegisterAssemblyTypes(System.Reflection.Assembly.GetExecutingAssembly())
-                .Where(type => !typeof(IExcludeFromRegistration).IsAssignableFrom(type) && type != typeof(RUINORERP.Business.Cache.TableSchemaManager)) // 排除TableSchemaManager，避免覆盖特定注册
+                .Where(type => !typeof(IExcludeFromRegistration).IsAssignableFrom(type) && type != typeof(RUINORERP.Business.Cache.TableSchemaManager)) // 排除TableSchemaManager，避免重复注册
                 .AsImplementedInterfaces()
                 .AsSelf();
 
@@ -1614,6 +1620,7 @@ DuplicateCheckService 这个 具体类 并不会被注册为可解析的 key。
             .Where(x => x.GetConstructors().Length > 0) //没有构造函数的排除
             .Where(x => x != ExType)//排除
             .Where(x => x != typeof(BizType))
+            .Where(x => x.Namespace != "RUINORERP.Business.Cache") // 排除缓存架构命名空间，使用BusinessDIConfig.cs中的单个注册
              .AsImplementedInterfaces().AsSelf()
             .PropertiesAutowired()
             .InstancePerDependency();
@@ -1708,7 +1715,7 @@ DuplicateCheckService 这个 具体类 并不会被注册为可解析的 key。
             // 注册SqlSugarRowLevelAuthFilter
             builder.RegisterType<SqlSugarRowLevelAuthFilter>().AsSelf().InstancePerDependency();
 
-            builder.RegisterModule(new AutofacServiceRegister());
+            //builder.RegisterModule(new AutofacServiceRegister());
         }
 
 

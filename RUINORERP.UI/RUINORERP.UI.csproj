@@ -1032,7 +1032,6 @@
     </Compile>
     <Compile Include="FM\IFMBillBusinessType.cs" />
     <Compile Include="ATechnologyStack\IValidationRule.cs" />
-    <Compile Include="ATechnologyStack\ServiceRegister\AutofacServiceRegister.cs" />
     <Compile Include="AutoFacBootStrapper.cs" />
     <Compile Include="BaseForm\BaseBillEdit.cs">
       <SubType>UserControl</SubType>
@@ -5277,6 +5276,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="AM\" />
+    <Folder Include="ATechnologyStack\ServiceRegister\" />
     <Folder Include="ChartAnalyzer\" />
     <Folder Include="ChartFramework\DataProviders\Caching\" />
     <Folder Include="ChartFramework\Shared\Extensions\Export\" />

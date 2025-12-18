@@ -144,9 +144,6 @@ namespace RUINORERP.Business.Cache
             {
                 _typeToTableName.TryAdd(entityType, tableName);
                 _tableNameToType.TryAdd(tableName, entityType);
-                
-                // 添加调试信息，跟踪表注册情况
-                System.Diagnostics.Debug.WriteLine($"[TableSchemaManager] 表 '{tableName}' 注册成功: 实例 {GetHashCode()}, 当前表数 {_tableSchemas.Count}");
             }
             else
             {
@@ -236,9 +233,6 @@ namespace RUINORERP.Business.Cache
             {
                 _typeToTableName.TryAdd(entityType, tableName);
                 _tableNameToType.TryAdd(tableName, entityType);
-                
-                // 添加调试信息，跟踪表注册情况
-                System.Diagnostics.Debug.WriteLine($"[TableSchemaManager] 表 '{tableName}' 注册成功: 实例 {GetHashCode()}, 当前表数 {_tableSchemas.Count}");
             }
             else
             {
@@ -260,10 +254,6 @@ namespace RUINORERP.Business.Cache
             {
                 return null;
             }
-
-            // 添加调试信息，跟踪实例使用情况
-            System.Diagnostics.Debug.WriteLine($"[TableSchemaManager] GetSchemaInfo('{tableName}'): 实例 {GetHashCode()}, 表数 {_tableSchemas.Count}, 是否初始化 {IsInitialized}");
-            
             _tableSchemas.TryGetValue(tableName, out var schemaInfo);
             return schemaInfo;
         }
@@ -295,8 +285,17 @@ namespace RUINORERP.Business.Cache
             {
                 return null;
             }
+            
+            // 添加调试信息，跟踪查询过程
+            System.Diagnostics.Debug.WriteLine($"[TableSchemaManager] GetEntityType查询: 表名={tableName}, 实例ID={GetHashCode()}");
+            System.Diagnostics.Debug.WriteLine($"[TableSchemaManager] _tableNameToType字典键数量: {_tableNameToType.Count}");
+            if (_tableNameToType.Count > 0)
+            {
+                System.Diagnostics.Debug.WriteLine($"[TableSchemaManager] 字典中的键: {string.Join(", ", _tableNameToType.Keys.Take(10))}");
+            }
 
             _tableNameToType.TryGetValue(tableName, out var entityType);
+            System.Diagnostics.Debug.WriteLine($"[TableSchemaManager] 查询结果: {(entityType != null ? entityType.Name : "null")}");
             return entityType;
         }
 

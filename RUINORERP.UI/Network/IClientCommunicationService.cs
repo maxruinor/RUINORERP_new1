@@ -77,6 +77,18 @@ namespace RUINORERP.UI.Network
         /// <param name="commandId">命令ID</param>
         /// <param name="handler">处理函数</param>
         void SubscribeCommand(CommandId commandId, Action<PacketModel, object> handler);
+
+        /// <summary>
+        /// 取消所有重连操作并强制断开连接（用于服务器切换）
+        /// </summary>
+        /// <returns>操作是否成功</returns>
+        Task<bool> CancelReconnectAndForceDisconnectAsync();
+
+        /// <summary>
+        /// 检查是否正在进行重连操作
+        /// </summary>
+        /// <returns>是否正在重连</returns>
+        bool IsReconnecting { get; }
     }
 
 }

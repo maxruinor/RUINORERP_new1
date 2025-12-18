@@ -900,13 +900,13 @@ namespace RUINORERP.UI.ProductEAV
                         {
                             string constpara = string.Empty;
                             var para = Cate.Category_name;
-                            if (para.Length < 4)
+                            if (para.Length < 5)
                             {
                                 constpara = para.ToPinYin(true).Substring(0, para.Length);
                             }
                             else
                             {
-                                constpara = para.ToPinYin(true).Substring(0, 4);
+                                constpara = para.ToPinYin(true).Substring(0, 5);
                             }
 
                             _EditEntity.ShortCode = await bizCodeService.GenerateProductRelatedCodeAsync(BaseInfoType.ShortCode, EditEntity, constpara); //推荐

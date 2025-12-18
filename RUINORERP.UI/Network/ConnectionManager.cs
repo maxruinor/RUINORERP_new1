@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -70,6 +70,11 @@ namespace RUINORERP.UI.Network
         /// 当前服务器端口
         /// </summary>
         public int CurrentServerPort => _serverPort;
+
+        /// <summary>
+        /// 是否正在重连
+        /// </summary>
+        public bool IsReconnecting => _isReconnecting;
 
         /// <summary>
         /// 构造函数

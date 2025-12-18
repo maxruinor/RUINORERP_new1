@@ -185,14 +185,16 @@ namespace RUINORERP.UI
                 {
                     try
                     {
-                        MainForm.Instance.PrintInfoLog($"检测到服务器地址变更，从 {currentServerIP}:{currentServerPort} 变更为 {newServerIP}:{newServerPort}，正在断开现有连接...");
-                        await connectionManager.DisconnectAsync();
+                        MainForm.Instance.PrintInfoLog($"检测到服务器地址变更，从 {currentServerIP}:{currentServerPort} 变更为 {newServerIP}:{newServerPort}，正在取消重连并断开现有连接...");
+                        
+                        // 使用新的方法取消重连并强制断开连接
+                        await MainForm.Instance.communicationService.CancelReconnectAndForceDisconnectAsync();
                         isConnected = false;
                         
                     }
                     catch (Exception ex)
                     {
-                       
+                        MainForm.Instance.logger?.LogError(ex, "切换服务器时断开连接失败");
                         // 即使断开连接失败，也继续尝试新连接
                     }
                 }

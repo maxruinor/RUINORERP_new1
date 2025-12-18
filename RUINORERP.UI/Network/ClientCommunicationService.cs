@@ -205,6 +205,11 @@ namespace RUINORERP.UI.Network
         /// </summary>
         public int PendingResponseCount => _pendingRequests.Count;
 
+        /// <summary>
+        /// 检查是否正在进行重连操作
+        /// </summary>
+        public bool IsReconnecting => _connectionManager.IsReconnecting;
+
         #endregion
 
 
@@ -711,6 +716,32 @@ namespace RUINORERP.UI.Network
             await _socketClient?.Disconnect();
             return true;
 
+        }
+
+        /// <summary>
+        /// 取消所有重连操作并强制断开连接（用于服务器切换）
+        /// </summary>
+        /// <returns>操作是否成功</returns>
+        public async Task<bool> CancelReconnectAndForceDisconnectAsync()
+        {
+            try
+            {
+                _logger?.LogDebug("取消重连操作并强制断开连接（服务器切换）");
+
+                // 停止心跳
+                StopHeartbeat();
+
+                // 取消重连操作
+                _connectionManager.StopAutoReconnect();
+
+                // 强制断开连接
+                return await _connectionManager.DisconnectAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "取消重连并强制断开连接时发生异常");
+                return false;
+            }
         }
 
         /// <summary>

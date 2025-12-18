@@ -151,10 +151,10 @@ namespace RUINORERP.Model
 
         private string _ShortCode;
         /// <summary>
-        /// 短码
+        /// 助记码
         /// </summary>
-        [AdvQueryAttribute(ColName = "ShortCode",ColDesc = "短码")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "ShortCode" ,Length=50,IsNullable = true,ColumnDescription = "短码" )]
+        [AdvQueryAttribute(ColName = "ShortCode",ColDesc = "助记码")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "ShortCode" ,Length=50,IsNullable = true,ColumnDescription = "助记码")]
         public string ShortCode
         { 
             get{return _ShortCode;}

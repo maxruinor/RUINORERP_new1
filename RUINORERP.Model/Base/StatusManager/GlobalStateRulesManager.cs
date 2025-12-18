@@ -415,8 +415,8 @@ namespace RUINORERP.Model.Base.StatusManager
             bool allowModifyInSubmittedState = submitModifyRuleMode == SubmitModifyRuleMode.灵活模式;
             AddStandardButtonRules(DataStatus.新建, true, allowModifyInSubmittedState, true, true, false, true, false, false, false);
 
-            /// 确认状态：不允许修改和删除，允许反审核
-            AddStandardButtonRules(DataStatus.确认, true, false, false, false, false, false, true, false, false);
+            /// 确认状态：不允许修改和删除，允许反审核，可以结案
+            AddStandardButtonRules(DataStatus.确认, true, false, false, false, false, false, true, true, false);
             // 完结状态：仅允许查看和打印
             AddStandardButtonRules(DataStatus.完结, true, false, false, false, false, false, false, false, false);
 

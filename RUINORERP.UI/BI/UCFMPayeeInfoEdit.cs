@@ -167,15 +167,17 @@ namespace RUINORERP.UI.BI
         /// <param name="e"></param>
         private void CmbEmployee_ID_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (_EditEntity != null)
+            // 只要除第一次加载时外，有选中项目的变化就隐藏另一个控件
+            bool hasSelection = cmbEmployee_ID.SelectedValue != null && cmbEmployee_ID.SelectedValue != DBNull.Value;
+            
+            // 立即隐藏往来单位控件
+            cmbCustomerVendor_ID.Visible = !hasSelection;
+            lblCustomerVendor_ID.Visible = !hasSelection;
+            
+            // 如果有选择且实体存在，清空往来单位的值
+            if (_EditEntity != null && hasSelection)
             {
-                // 当选择员工时，清空往来单位
-                if (cmbEmployee_ID.SelectedValue != null && cmbEmployee_ID.SelectedValue != DBNull.Value)
-                {
-                    _EditEntity.CustomerVendor_ID = null;
-                    // 立即更新UI控件可见性
-                    UpdateUIControlVisibility();
-                }
+                _EditEntity.CustomerVendor_ID = null;
             }
         }
 
@@ -186,20 +188,22 @@ namespace RUINORERP.UI.BI
         /// <param name="e"></param>
         private void CmbCustomerVendor_ID_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (_EditEntity != null)
+            // 只要除第一次加载时外，有选中项目的变化就隐藏另一个控件
+            bool hasSelection = cmbCustomerVendor_ID.SelectedValue != null && cmbCustomerVendor_ID.SelectedValue != DBNull.Value;
+            
+            // 立即隐藏员工控件
+            cmbEmployee_ID.Visible = !hasSelection;
+            lblEmployee_ID.Visible = !hasSelection;
+            
+            // 如果有选择且实体存在，清空员工的值
+            if (_EditEntity != null && hasSelection)
             {
-                // 当选择往来单位时，清空员工
-                if (cmbCustomerVendor_ID.SelectedValue != null && cmbCustomerVendor_ID.SelectedValue != DBNull.Value)
-                {
-                    _EditEntity.Employee_ID = null;
-                    // 立即更新UI控件可见性
-                    UpdateUIControlVisibility();
-                }
+                _EditEntity.Employee_ID = null;
             }
         }
 
         /// <summary>
-        /// 根据实体当前值更新UI控件的可见性
+        /// 根据实体当前值更新UI控件的可见性（主要用于初始化时设置）
         /// </summary>
         private void UpdateUIControlVisibility()
         {
@@ -212,14 +216,11 @@ namespace RUINORERP.UI.BI
             // 员工ID和客户供应商ID二选一显示
             cmbEmployee_ID.Visible = !hasCustomerVendorId;
             lblEmployee_ID.Visible = !hasCustomerVendorId;
-            // 允许用户在员工和往来单位之间切换，不禁止控件
             cmbEmployee_ID.Enabled = true;
             
             cmbCustomerVendor_ID.Visible = !hasEmployeeId;
             lblCustomerVendor_ID.Visible = !hasEmployeeId;
-            // 允许用户在员工和往来单位之间切换，不禁止控件
             cmbCustomerVendor_ID.Enabled = true;
-
         }
         private void InitLoadSupplierData(tb_FM_PayeeInfo entity)
         {

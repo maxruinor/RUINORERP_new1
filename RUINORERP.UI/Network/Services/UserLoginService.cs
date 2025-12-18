@@ -386,9 +386,25 @@ namespace RUINORERP.UI.Network.Services
             }
         }
 
-
-
-
+        /// <summary>
+        /// 服务器切换时取消重连并断开连接
+        /// </summary>
+        /// <returns>操作是否成功</returns>
+        public async Task<bool> CancelReconnectAndDisconnectForServerSwitchAsync()
+        {
+            try
+            {
+                _logger?.LogDebug("服务器切换：取消重连并断开连接");
+                
+                // 使用通信服务的取消重连和断开连接方法
+                return await _communicationService.CancelReconnectAndForceDisconnectAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "服务器切换时取消重连并断开连接失败");
+                return false;
+            }
+        }
 
         /// <summary>
         /// 释放资源

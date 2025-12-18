@@ -356,6 +356,7 @@ namespace RUINORERP.Global
 
         Location,
         SKU_No,
+        Update_SKU_No,
         StoreCode,
         /// <summary>
         /// 项目代码

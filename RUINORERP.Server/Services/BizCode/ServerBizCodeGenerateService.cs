@@ -564,6 +564,7 @@ namespace RUINORERP.Server.Services.BizCode
         /// <summary>
         /// 生成基础信息编号
         /// 支持显示模式配置：可选择清晰可读或混淆/加密模式
+        /// 支持基于类目的独立序列
         /// </summary>
         /// <param name="infoType">信息类型枚举</param>
         /// <param name="paraConst">常量参数</param>
@@ -575,7 +576,8 @@ namespace RUINORERP.Server.Services.BizCode
         /// 2. 默认配置：如果数据库中没有配置，则使用清晰可读模式和16进制转换
         /// 3. 支持根据配置的显示模式对生成的编号进行处理
         /// 4. 自定义常量：可通过paraConst参数替换规则中的{S:Const}占位符
-        /// 5. 错误处理：当生成过程发生异常时，使用默认规则确保系统可用性
+        /// 5. 支持基于类目的独立序列（对产品类编号特别有效）
+        /// 6. 错误处理：当生成过程发生异常时，使用默认规则确保系统可用性
         /// </remarks>
         public async Task<string> GenerateBaseInfoNoAsync(BaseInfoType infoType, string paraConst = null, CancellationToken ct = default)
         {

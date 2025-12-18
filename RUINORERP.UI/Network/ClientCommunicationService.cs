@@ -353,6 +353,27 @@ namespace RUINORERP.UI.Network
                     _isReconnecting = false;
                 }
                 
+                // 显示重连失败信息到UI
+                try
+                {
+                    if (MainForm.Instance != null && !MainForm.Instance.IsDisposed)
+                    {
+                        MainForm.Instance.Invoke(new Action(() =>
+                        {
+                            // 使用状态标签显示重连失败信息
+                            string statusText = "重连失败，请检查网络连接或手动重试";
+                            MainForm.Instance.ShowStatusText(statusText);
+                            
+                            // 同时添加到日志
+                            MainForm.Instance.PrintInfoLog("重连失败，已达到最大重试次数");
+                        }));
+                    }
+                }
+                catch (Exception uiEx)
+                {
+                    _logger?.LogWarning(uiEx, "更新重连失败UI时发生异常");
+                }
+                
                 // 清空队列中的待处理命令，避免长时间等待
                 ClearQueue("重连失败");
                 
@@ -394,8 +415,26 @@ namespace RUINORERP.UI.Network
             {
                 _logger?.LogDebug("重连尝试：第 {CurrentAttempt}/{MaxAttempts} 次", currentAttempt, maxAttempts);
                 
-                // 可以在这里添加UI通知逻辑，比如显示重连进度
-                // 注意：这个方法在后台线程中执行，如果需要更新UI，需要使用Invoke
+                // 显示重连状态到UI
+                try
+                {
+                    if (MainForm.Instance != null && !MainForm.Instance.IsDisposed)
+                    {
+                        MainForm.Instance.Invoke(new Action(() =>
+                        {
+                            // 使用状态标签显示重连信息
+                            string statusText = $"正在尝试重新连接服务器... ({currentAttempt}/{maxAttempts})";
+                            MainForm.Instance.ShowStatusText(statusText);
+                            
+                            // 同时添加到日志
+                            MainForm.Instance.PrintInfoLog($"重连尝试：第 {currentAttempt}/{maxAttempts} 次");
+                        }));
+                    }
+                }
+                catch (Exception uiEx)
+                {
+                    _logger?.LogWarning(uiEx, "更新重连状态UI时发生异常");
+                }
             }
             catch (Exception ex)
             {
@@ -415,6 +454,27 @@ namespace RUINORERP.UI.Network
                 lock (_reconnectCoordinationLock)
                 {
                     _isReconnecting = false;
+                }
+                
+                // 显示重连成功信息到UI
+                try
+                {
+                    if (MainForm.Instance != null && !MainForm.Instance.IsDisposed)
+                    {
+                        MainForm.Instance.Invoke(new Action(() =>
+                        {
+                            // 使用状态标签显示重连成功信息
+                            string statusText = "已成功重新连接到服务器";
+                            MainForm.Instance.ShowStatusText(statusText);
+                            
+                            // 同时添加到日志
+                            MainForm.Instance.PrintInfoLog("重连成功，已恢复与服务器的连接");
+                        }));
+                    }
+                }
+                catch (Exception uiEx)
+                {
+                    _logger?.LogWarning(uiEx, "更新重连成功UI时发生异常");
                 }
                 
                 // 重连成功后，立即启动队列处理

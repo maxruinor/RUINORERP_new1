@@ -83,6 +83,37 @@ namespace RUINORERP.PacketSpec.Models.BizCodeGenerate
         /// 序号长度 - SKU序号的固定长度
         /// </summary>
         public int SeqLength { get; set; } = 3;
+
+        /// <summary>
+        /// 属性信息列表 - 用于SKU编码生成时获取属性名称和值
+        /// </summary>
+        public List<ProductAttributeInfo> AttributeInfos { get; set; }
+    }
+
+    /// <summary>
+    /// 产品属性信息 - 包含属性名称和值，用于SKU编码生成
+    /// </summary>
+    public class ProductAttributeInfo
+    {
+        /// <summary>
+        /// 属性ID
+        /// </summary>
+        public long PropertyId { get; set; }
+
+        /// <summary>
+        /// 属性名称（中文）
+        /// </summary>
+        public string PropertyName { get; set; }
+
+        /// <summary>
+        /// 属性值ID
+        /// </summary>
+        public long PropertyValueId { get; set; }
+
+        /// <summary>
+        /// 属性值名称（中文）
+        /// </summary>
+        public string PropertyValueName { get; set; }
     }
 
     /// <summary>

@@ -94,12 +94,20 @@ namespace RUINORERP.UI.Network.Services
 
 
         /// <summary>
-        /// 生成基础信息编号（枚举版本）
+        /// 生成产品相关编码（产品编号、SKU编号等）
+        /// 支持SKU属性更新：
+        /// - 编辑已有产品（ProdDetailID > 0）：SKU永远不变
+        /// - 新增产品详情（ProdDetailID == 0）：
+        ///   - 如果SKU已有值 → 使用 UpdateSKUAttributePart 更新（保持序号不变、只更新属性部分）
+        ///   - 如果SKU为空 → 使用 GenerateProductRelatedCodeAsync 生成全新SKU
         /// </summary>
         /// <param name="baseInfoType">基础信息类型枚举</param>
+        /// <param name="prod">产品实体</param>
         /// <param name="PrefixParaConst">参数常量（可选）</param>
+        /// <param name="seqLength">序号长度</param>
+        /// <param name="includeDate">是否包含日期</param>
         /// <param name="ct">取消令牌</param>
-        /// <returns>生成的基础信息编号</returns>
+        /// <returns>生成的编码</returns>
         /// <exception cref="Exception">网络连接相关异常</exception>
         /// <exception cref="Exception">业务逻辑相关异常</exception>
         public async Task<string> GenerateProductRelatedCodeAsync(BaseInfoType baseInfoType, tb_Prod prod, string PrefixParaConst = null, int seqLength = 3, bool includeDate = false, CancellationToken ct = default)
@@ -107,12 +115,45 @@ namespace RUINORERP.UI.Network.Services
             // 将枚举转换为字符串发送到服务器
             var request = new BizCodeRequest { BaseInfoType = baseInfoType, ParaConst = PrefixParaConst };
 
+            // 准备属性信息列表（用于SKU编码生成）
+            List<ProductAttributeInfo> attributeInfos = null;
+            if (baseInfoType == BaseInfoType.SKU_No && prod.tb_Prod_Attr_Relations != null && prod.tb_Prod_Attr_Relations.Count > 0)
+            {
+                attributeInfos = new List<ProductAttributeInfo>();
+                foreach (var relation in prod.tb_Prod_Attr_Relations)
+                {
+                    // 确保有属性ID和属性值ID
+                    if (relation.Property_ID.HasValue && relation.PropertyValueID.HasValue)
+                    {
+                        var attrInfo = new ProductAttributeInfo
+                        {
+                            PropertyId = relation.Property_ID.Value,
+                            PropertyValueId = relation.PropertyValueID.Value
+                        };
+
+                        // 如果导航属性已加载，直接从导航属性获取名称
+                        if (relation.tb_prodproperty != null)
+                        {
+                            attrInfo.PropertyName = relation.tb_prodproperty.PropertyName;
+                        }
+
+                        if (relation.tb_prodpropertyvalue != null)
+                        {
+                            attrInfo.PropertyValueName = relation.tb_prodpropertyvalue.PropertyValueName;
+                        }
+
+                        attributeInfos.Add(attrInfo);
+                    }
+                }
+            }
+
             var ProductParameter = new ProdParameter
             {
                 prod = prod,
                 PrefixParaConst = PrefixParaConst,
                 SeqLength = seqLength,
-                IncludeDate = includeDate
+                IncludeDate = includeDate,
+                AttributeInfos = attributeInfos
             };
 
             request.ProductParameter = ProductParameter;

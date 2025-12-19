@@ -15,6 +15,7 @@ using System.Numerics;
 using Microsoft.Extensions.Logging;
 using RUINORERP.Server.Network.CommandHandlers;
 using RUINORERP.Business.BNR;
+using RUINORERP.PacketSpec.Models.BizCodeGenerate;
 
 namespace RUINORERP.Server.Services.BizCode
 {
@@ -712,15 +713,59 @@ namespace RUINORERP.Server.Services.BizCode
 
 
         /// <summary>
-        /// 生成产品SKU编码
+        /// 生成产品相关编码（产品编号、SKU编号、简码等）
+        /// 支持SKU属性更新逻辑：
+        /// - 编辑已有产品（ProdDetailID > 0）：SKU永远不变
+        /// - 新增产品详情（ProdDetailID == 0）：
+        ///   - 如果SKU已有值 → 使用 UpdateSKUAttributePart 更新（保持序号不变，只更新属性部分）
+        ///   - 如果SKU为空 → 使用 GenerateProductRelatedCodeWithAttributesAsync 生成全新SKU
         /// </summary>
-        /// <param name="productId">产品ID</param>
-        /// <param name="productCode">产品编码</param>
-        /// <param name="attributes">属性组合信息</param>
+        /// <param name="baseInfoType">基础信息类型</param>
+        /// <param name="prod">产品实体</param>
+        /// <param name="attributeInfos">属性信息列表（可选，用于SKU编码生成）</param>
+        /// <param name="PrefixParaConst">前缀参数常量</param>
         /// <param name="seqLength">序号长度</param>
+        /// <param name="includeDate">是否包含日期</param>
         /// <param name="ct">取消令牌</param>
-        /// <returns>生成的产品SKU编码</returns>
-        public async Task<string> GenerateProductRelatedCodeAsync(BaseInfoType baseInfoType, tb_Prod prod, string PrefixParaConst = null, int seqLength = 3, bool includeDate = false, CancellationToken ct = default)
+        /// <returns>生成的产品相关编码</returns>
+        public async Task<string> GenerateProductRelatedCodeAsync(
+            BaseInfoType baseInfoType, 
+            tb_Prod prod,
+            string PrefixParaConst = null, 
+            int seqLength = 3, 
+            bool includeDate = false, 
+            CancellationToken ct = default)
+        {
+            // 调用带有attributeInfos参数的方法，传递null作为默认值
+            return await GenerateProductRelatedCodeWithAttributesAsync(
+                baseInfoType, 
+                prod, 
+                null, // 没有attributeInfos参数，传递null
+                PrefixParaConst, 
+                seqLength, 
+                includeDate, 
+                ct);
+        }
+
+        /// <summary>
+        /// 生成产品相关编码，支持属性信息参数
+        /// </summary>
+        /// <param name="baseInfoType">基础信息类型</param>
+        /// <param name="prod">产品实体</param>
+        /// <param name="attributeInfos">产品属性信息列表</param>
+        /// <param name="PrefixParaConst">前缀常量参数</param>
+        /// <param name="seqLength">序号长度</param>
+        /// <param name="includeDate">是否包含日期</param>
+        /// <param name="ct">取消令牌</param>
+        /// <returns>生成的产品相关编码</returns>
+        public async Task<string> GenerateProductRelatedCodeWithAttributesAsync(
+            BaseInfoType baseInfoType, 
+            tb_Prod prod, 
+            List<ProductAttributeInfo> attributeInfos = null,
+            string PrefixParaConst = null, 
+            int seqLength = 3, 
+            bool includeDate = false, 
+            CancellationToken ct = default)
         {
 
             switch (baseInfoType)
@@ -732,42 +777,64 @@ namespace RUINORERP.Server.Services.BizCode
                     return  _productSKUCodeGenerator.GenerateShortCodeAsync(prod);
                 case BaseInfoType.SKU_No:
                     #region SKU
-                    // 使用ProductSKUCodeGenerator生成SKU编码
-                    // 如果有属性信息，则使用属性生成SKU编码
-                    if (prod.tb_Prod_Attr_Relations != null)
+                    // SKU编码生成逻辑
+                    // 编辑已有产品（ProdDetailID > 0）：SKU永远不变
+                    // 注意：ProdDetailID 来自于 prod.tb_ProdDetails 集合中的详情实体
+                    if (prod?.tb_ProdDetails != null && prod.tb_ProdDetails.Count > 0)
                     {
-                        // 解析属性信息（这里假设attributes是以逗号分隔的属性值ID列表）
-                        //var attributeValueIds = new List<long>();
-                        //if (!string.IsNullOrEmpty(attributes))
-                        //{
-                        //    var ids = attributes.Split(',');
-                        //    foreach (var id in ids)
-                        //    {
-                        //        if (long.TryParse(id.Trim(), out long attributeId))
-                        //        {
-                        //            attributeValueIds.Add(attributeId);
-                        //        }
-                        //    }
-                        //}
+                        var detail = prod.tb_ProdDetails.FirstOrDefault();
+                        if (detail != null && detail.ProdDetailID > 0)
+                        {
+                            // 编辑模式：如果产品详情已保存（ProdDetailID > 0），SKU不再改变
+                            return ""; // 返回空字符串表示不生成新SKU
+                        }
+                    }
 
-                        // 使用ProductSKUCodeGenerator生成基于属性的SKU编码
-                        return  _productSKUCodeGenerator.GenerateSKUCodeAsync(prod);
+                    // 新增产品详情（ProdDetailID == 0）
+                    // 检查是否需要更新SKU属性部分
+                    string existingSku = GetExistingSkuFromProdDetail(prod);
+                    
+                    if (!string.IsNullOrEmpty(existingSku))
+                    {
+                        // 如果SKU已有值，则更新SKU属性部分（保持序号不变）
+                        if ((attributeInfos != null && attributeInfos.Count > 0) || 
+                            (prod.tb_Prod_Attr_Relations != null && prod.tb_Prod_Attr_Relations.Count > 0))
+                        {
+                            // 使用属性信息或产品属性关系更新SKU
+                            return _productSKUCodeGenerator.UpdateSKUAttributePart(existingSku, prod);
+                        }
+                        else
+                        {
+                            // 如果没有属性信息，返回原有SKU
+                            return existingSku;
+                        }
                     }
                     else
                     {
-                        // 如果没有属性信息，则使用默认的SKU编码生成方式
-                        string rule;
-
-                        // 优先从数据库获取规则配置
-                        rule = await GetRuleFromDatabaseAsync(baseInfoType, ct);
-
-                        // 如果数据库中没有配置，则使用默认规则
-                        if (string.IsNullOrEmpty(rule))
+                        // SKU为空，生成全新的SKU
+                        if ((attributeInfos != null && attributeInfos.Count > 0) || 
+                            (prod.tb_Prod_Attr_Relations != null && prod.tb_Prod_Attr_Relations.Count > 0))
                         {
-                            rule = "{S:SK}{Hex:yyMM}{DB:SKU_No/0000}";
+                            // 使用ProductSKUCodeGenerator生成基于属性的SKU编码
+                            // 优先使用attributeInfos，如果为空则使用prod内部的属性关系
+                            return _productSKUCodeGenerator.GenerateSKUCodeAsync(prod, attributeInfos);
                         }
+                        else
+                        {
+                            // 如果没有属性信息，则使用默认的SKU编码生成方式
+                            string rule;
 
-                        return _bnrFactory.Create(rule);
+                            // 优先从数据库获取规则配置
+                            rule = await GetRuleFromDatabaseAsync(baseInfoType, ct);
+
+                            // 如果数据库中没有配置，则使用默认规则
+                            if (string.IsNullOrEmpty(rule))
+                            {
+                                rule = "{S:SK}{Hex:yyMM}{DB:SKU_No/0000}";
+                            }
+
+                            return _bnrFactory.Create(rule);
+                        }
                     }
                     #endregion
                     break;
@@ -778,6 +845,43 @@ namespace RUINORERP.Server.Services.BizCode
 
             return "";
 
+        }
+
+        /// <summary>
+        /// 从产品实体中读取现有的SKU值
+        /// 直接从产品详情集合中视四，无需在转辂对象中准备
+        /// </summary>
+        /// <param name="prod">产品实体（会自动获取tb_ProdDetails集合）</param>
+        /// <returns>现有SKU值（如果不存在则返回空字符串）</returns>
+        private string GetExistingSkuFromProdDetail(tb_Prod prod)
+        {
+            try
+            {
+                // 从产品的详情集合中查找ProdDetailID == 0（新增）的详情，并获取其SKU值
+                if (prod?.tb_ProdDetails != null && prod.tb_ProdDetails.Count > 0)
+                {
+                    // 优先查找ProdDetailID == 0的详情（新增模式）
+                    var newDetail = prod.tb_ProdDetails.FirstOrDefault(d => d.ProdDetailID == 0);
+                    if (newDetail != null && !string.IsNullOrEmpty(newDetail.SKU))
+                    {
+                        return newDetail.SKU;
+                    }
+
+                    // 如果没有新增详情，查找首个有SKU值的详情
+                    var anyDetail = prod.tb_ProdDetails.FirstOrDefault(d => !string.IsNullOrEmpty(d.SKU));
+                    if (anyDetail != null)
+                    {
+                        return anyDetail.SKU;
+                    }
+                }
+
+                return string.Empty;
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "读取现有SKU值失败");
+                return string.Empty;
+            }
         }
 
         /// <summary>

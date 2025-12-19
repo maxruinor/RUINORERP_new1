@@ -26,7 +26,7 @@ namespace RUINORERP.Business
     {
         public override void Initialize()
         {
-            RuleFor(x => x.FollowUpDate).LessThan(System.DateTime.Now).WithMessage("跟进日期要小于当前日期。");
+            RuleFor(x => x.FollowUpDate).GreaterThan(System.DateTime.Now).WithMessage("跟进日期不能大于当前日期。");
             RuleFor(x => x.FollowUpContent).MinimumLength(10).WithMessage("跟进内容:长度要大于10。");
             RuleFor(x => x.LeadID).NotNull().When(c => !c.Customer_id.HasValue).WithMessage("如果目标客户为空时：线索不能为空。");
             RuleFor(x => x.FollowUpMethod).GreaterThan(0).WithMessage("跟进方式：请选择正确的下拉值。");

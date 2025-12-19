@@ -8,6 +8,7 @@ using RUINORERP.IServices;
 using RUINORERP.Model;
 using RUINORERP.Model.Context;
 using RUINORERP.Model.Dto;
+using RUINORERP.PacketSpec.Models.BizCodeGenerate;
 using RUINORERP.Server.Workflow.WFReminder;
 using SqlSugar;
 using System;
@@ -62,8 +63,9 @@ namespace RUINORERP.Server.Services.BizCode
         /// 支持基于类目的独立序列生成
         /// </summary>
         /// <param name="prod">产品实体，包含产品信息和属性</param>
+        /// <param name="attributeInfos">属性信息列表（可选，用于生成属性组合码）</param>
         /// <returns>生成的SKU编码</returns>
-        public string GenerateSKUCodeAsync(tb_Prod prod)
+        public string GenerateSKUCodeAsync(tb_Prod prod, List<ProductAttributeInfo> attributeInfos = null)
         {
             if (prod == null)
             {
@@ -86,7 +88,16 @@ namespace RUINORERP.Server.Services.BizCode
                 string productBaseCode = GetProductBaseCodeByCategoryAsync(prod, categoryCode);
 
                 // 3. 获取属性组合码（按需变长）
-                string attributeCode = GetAttributeCombinationCode(prod);
+                // 如果传入了属性信息列表，优先使用，否则使用产品内部的属性关系
+                string attributeCode = string.Empty;
+                if (attributeInfos != null && attributeInfos.Count > 0)
+                {
+                    attributeCode = GetAttributeCombinationCode(attributeInfos);
+                }
+                else
+                {
+                    attributeCode = GetAttributeCombinationCode(prod);
+                }
 
                 string prodType = GetProdType(prod);
                 string attr = string.Empty;
@@ -369,7 +380,58 @@ namespace RUINORERP.Server.Services.BizCode
         }
 
         /// <summary>
-        /// 获取属性组合码（按需变长）
+        /// 获取属性组合码（按需变长） - 从属性信息列表生成
+        /// 格式：属性名称首字母 + 属性值缩写，多属性则拼接
+        /// 例如：YS-HS（颜色-黑色）、CC-XL（尺寸-特大）
+        /// </summary>
+        /// <param name="attributeInfos">属性信息列表</param>
+        /// <returns>属性组合码</returns>
+        private string GetAttributeCombinationCode(List<ProductAttributeInfo> attributeInfos)
+        {
+            if (attributeInfos == null || attributeInfos.Count == 0)
+            {
+                return string.Empty;
+            }
+
+            try
+            {
+                var attributeCodes = new List<string>();
+
+                // 遍历所有属性信息
+                foreach (var attrInfo in attributeInfos)
+                {
+                    if (string.IsNullOrEmpty(attrInfo.PropertyName) || string.IsNullOrEmpty(attrInfo.PropertyValueName))
+                    {
+                        continue;
+                    }
+
+                    // 生成属性代码
+                    string attrCode = GenerateAttributeCode(attrInfo.PropertyName, attrInfo.PropertyValueName);
+                    if (!string.IsNullOrEmpty(attrCode))
+                    {
+                        attributeCodes.Add(attrCode);
+                    }
+                }
+
+                // 将所有属性代码用连字符拼接
+                string combinedCode = string.Join("-", attributeCodes);
+
+                _logger.LogDebug(
+                    "生成属性组合码: {AttributeCode}, 属性数: {Count}",
+                    combinedCode,
+                    attributeInfos.Count);
+
+                return combinedCode;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "生成属性组合码失败");
+                return string.Empty;
+            }
+        }
+
+        /// <summary>
+        /// 获取属性组合码（按需变长） - 从产品实体生成
         /// 格式：属性类型缩写(1位) + 属性值缩写，多属性则拼接
         /// </summary>
         /// <param name="prod">产品实体</param>

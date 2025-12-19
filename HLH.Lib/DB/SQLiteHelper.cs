@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
@@ -376,8 +376,7 @@ namespace HLH.Lib.DB
             {
                 // string connectionString = string.Format("Data Source={0};Password={1}", this._dataSource, this._password);
                 this._connection = new SQLiteConnection(ConnectionString);
-                if (!string.IsNullOrEmpty(this._password))
-                    this._connection.SetPassword(this._password);
+                // 密码已在连接字符串中设置，不需要单独设置
 
             }
             if (this._connection.State == ConnectionState.Closed)
@@ -639,8 +638,7 @@ namespace HLH.Lib.DB
                     {
                         this._connection = new SQLiteConnection(ConnectionString);
                         SQLiteConnection.CreateFile(this._dataSource);
-                        if (!string.IsNullOrEmpty(this._password))
-                            this._connection.SetPassword(this._password);
+                        // 密码已在连接字符串中设置，不需要单独设置
                     }
                     flag = true;
                 }

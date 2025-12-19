@@ -51,14 +51,14 @@ namespace RUINORERP.UI.ProductEAV
         tb_ProdPropertyController<tb_ProdProperty> mcProperty = Startup.GetFromFac<tb_ProdPropertyController<tb_ProdProperty>>();
         tb_ProdPropertyValueController<tb_ProdPropertyValue> mcPropertyValue = Startup.GetFromFac<tb_ProdPropertyValueController<tb_ProdPropertyValue>>();
         tb_ProdCategoriesController<tb_ProdCategories> mca = Startup.GetFromFac<tb_ProdCategoriesController<tb_ProdCategories>>();
-
+                
         tb_BoxRulesController<tb_BoxRules> ctrBoxRules = Startup.GetFromFac<tb_BoxRulesController<tb_BoxRules>>();
-
+      
         /// <summary>
         /// 网格显示文本解析器，用于设置特殊的映射关系
         /// </summary>
         public GridViewDisplayTextResolverGeneric<tb_ProdDetail> DisplayTextResolver { get; set; }
-
+        private ClientBizCodeService clientBizCodeService;
 
         //定义两个值，为了计算listview的高宽，高是属性的倍数 假设一个属性一行 是50px，有三组则x3
         //宽取每组属性中值的最多个数,的字长，一个字算20px?
@@ -114,10 +114,7 @@ namespace RUINORERP.UI.ProductEAV
                 kryptonPage3.ClearFlags(KryptonPageFlags.All);
                 kryptonPageImage.ClearFlags(KryptonPageFlags.All);
                 //this.OnShowHelp += FrmProductEdit_OnShowHelp;
-                categorylist = mca.Query();
-                prodpropValueList = mcPropertyValue.QueryByNav(c => true);
-                prodpropList = mcProperty.Query();
-                // this.bindingSourceList.ListChanged += BindingSourceList_ListChanged;
+                clientBizCodeService = Startup.GetFromFac<ClientBizCodeService>();
                 InitListData();
                 SetBaseValue<tb_ProdDetail>();
                 InitDataTocmbbox();
@@ -222,8 +219,11 @@ namespace RUINORERP.UI.ProductEAV
         }
 
 
-        private void UCProductEdit_Load(object sender, EventArgs e)
+        private async Task UCProductEdit_LoadAsync(object sender, EventArgs e)
         {
+            categorylist = await mca.QueryAsync();
+            prodpropValueList = await mcPropertyValue.QueryByNavAsync(c => true);
+            prodpropList = await mcProperty.QueryAsync();
             //flowLayoutPanel1.AutoScroll = true;
             UIProdCateHelper.BindToTreeViewNoRootNode(categorylist, txtcategory_ID.TreeView);
             // AddTopPage();
@@ -247,7 +247,6 @@ namespace RUINORERP.UI.ProductEAV
             //InitDataToCmbByEnumDynamicGeneratedDataSource<tb_Prod>(typeof(GoodsSource), e => e.SourceType.ToString(), cmbSourceType);
             //EnumBindingHelper bindingHelper = new EnumBindingHelper();
             //https://www.cnblogs.com/cdaniu/p/15236857.html
-
 
         }
 
@@ -729,6 +728,71 @@ namespace RUINORERP.UI.ProductEAV
         tb_Prod oldOjb = null;
 
 
+        /// <summary>
+        /// 验证生成产品编号规则所需的前置条件
+        /// </summary>
+        /// <param name="product">产品实体</param>
+        /// <returns>验证结果消息，如果为空表示验证通过</returns>
+        private string ValidateProductCodeGeneration(tb_Prod product)
+        {
+            if (product.Type_ID <= 0)
+            {
+                return "请选择产品类型";
+            }
+
+            if (!product.Category_ID.HasValue || product.Category_ID.Value <= 0)
+            {
+                return "请选择产品类目";
+            }
+
+            return string.Empty;
+        }
+
+        /// <summary>
+        /// 生成产品相关编号
+        /// </summary>
+        private async Task GenerateProductCodes()
+        {
+            // 验证生成产品编号规则所需的前置条件
+            string validationMessage = ValidateProductCodeGeneration(EditEntity);
+            if (!string.IsNullOrEmpty(validationMessage))
+            {
+                // 显示验证失败消息并返回
+                MessageBox.Show(validationMessage, "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
+            var obj = RUINORERP.Business.Cache.EntityCacheHelper.GetEntity<tb_ProdCategories>(EditEntity.Category_ID.Value);
+            if (obj != null && obj.ToString() != "System.Object")
+            {
+                if (obj is tb_ProdCategories Cate)
+                {
+                    string constpara = string.Empty;
+                    var para = Cate.Category_name;
+                    if (para.Length < 5)
+                    {
+                        constpara = para.ToPinYin(true).Substring(0, para.Length);
+                    }
+                    else
+                    {
+                        constpara = para.ToPinYin(true).Substring(0, 5);
+                    }
+
+                    _EditEntity.ShortCode = await bizCodeService.GenerateProductRelatedCodeAsync(BaseInfoType.ShortCode, EditEntity, constpara); //推荐
+                }
+            }
+            if (EditEntity.PropertyType == (int)ProductAttributeType.单属性)
+            {
+                //EditEntity.tb_ProdDetails  = await bizCodeService.GenerateProductRelatedCodeAsync(BaseInfoType.SKU_No); //推荐
+            }
+
+            if (bizCodeService != null)
+            {
+                _EditEntity.ProductNo = await bizCodeService.GenerateProductRelatedCodeAsync(BaseInfoType.ProductNo, EditEntity);
+            }
+        }
+
         public async override void BindData(BaseEntity entity)
         {
 
@@ -827,39 +891,18 @@ namespace RUINORERP.UI.ProductEAV
 
             EditEntity.PropertyChanged += async (sender, s2) =>
             {
+                // 监听产品类目变更事件
                 if (EditEntity.Category_ID.HasValue && EditEntity.Category_ID.Value > 0 && s2.PropertyName == entity.GetPropertyName<tb_Prod>(c => c.Category_ID))
-                {  //生成编号和SKU
-                    var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
-                    var obj = RUINORERP.Business.Cache.EntityCacheHelper.GetEntity<tb_ProdCategories>(EditEntity.Category_ID.Value);
-                    if (obj != null && obj.ToString() != "System.Object")
+                {
+                    await GenerateProductCodes();
+                }
+                // 监听产品类型变更事件
+                else if (EditEntity.Type_ID > 0 && s2.PropertyName == entity.GetPropertyName<tb_Prod>(c => c.Type_ID))
+                {
+                    if (EditEntity.Category_ID.HasValue && EditEntity.Category_ID.Value > 0)
                     {
-                        if (obj is tb_ProdCategories Cate)
-                        {
-                            string constpara = string.Empty;
-                            var para = Cate.Category_name;
-                            if (para.Length < 5)
-                            {
-                                constpara = para.ToPinYin(true).Substring(0, para.Length);
-                            }
-                            else
-                            {
-                                constpara = para.ToPinYin(true).Substring(0, 5);
-                            }
-
-                            _EditEntity.ShortCode = await bizCodeService.GenerateProductRelatedCodeAsync(BaseInfoType.ShortCode, EditEntity, constpara); //推荐
-
-                        }
+                        await GenerateProductCodes();
                     }
-                    if (EditEntity.PropertyType == (int)ProductAttributeType.单属性)
-                    {
-                        //EditEntity.tb_ProdDetails  = await bizCodeService.GenerateProductRelatedCodeAsync(BaseInfoType.SKU_No); //推荐
-                    }
-
-                    if (bizCodeService != null)
-                    {
-                        _EditEntity.ProductNo = await bizCodeService.GenerateProductRelatedCodeAsync(BaseInfoType.ProductNo, EditEntity);
-                    }
-
                 }
                 if (EditEntity.PropertyType > 0 && s2.PropertyName == entity.GetPropertyName<tb_Prod>(c => c.PropertyType))
                 {
@@ -892,9 +935,19 @@ namespace RUINORERP.UI.ProductEAV
                                     {
                                         tb_ProdDetail ppg = new tb_ProdDetail();
                                         ppg.GroupName = "";
-                                        if (EditEntity.Category_ID.HasValue)
+                                        // 验证生成产品编号规则所需的前置条件
+                                        string validationMessage3 = ValidateProductCodeGeneration(EditEntity);
+                                        if (!string.IsNullOrEmpty(validationMessage3))
                                         {
-                                            ppg.SKU = ClientBizCodeService.GetBaseInfoNo(BaseInfoType.SKU_No, txtShortCode.Text);
+                                            // 显示验证失败消息并返回
+                                            MessageBox.Show(validationMessage3, "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                                            return;
+                                        }
+
+                                        if (EditEntity.Category_ID.HasValue && EditEntity.ProductNo.Trim().Length > 0)
+                                        {
+                                            EditEntity.tb_ProdDetails.Add(ppg);
+                                            ppg.SKU =await clientBizCodeService.GenerateProductRelatedCodeAsync(BaseInfoType.SKU_No, EditEntity);
                                         }
                                         bindingSourceList.Add(ppg);
                                     }
@@ -938,12 +991,6 @@ namespace RUINORERP.UI.ProductEAV
                     #endregion
                 }
             };
-
-            if (EditEntity.ProdBaseID == 0)
-            {
-                // _EditEntity.PropertyType = 1;// cmbPropertyType   1为单属性
-            }
-
 
             DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID, c => c.IsVendor == true);
 
@@ -1040,29 +1087,29 @@ namespace RUINORERP.UI.ProductEAV
                 if (entity != null)
                 {
                     cevent.Value = entity.Category_ID;
-                    // 使用新的BizCodeService生成产品编号
-                    try
-                    {
-                        var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
-                        if (bizCodeService != null)
-                        {
-                            EditEntity.Category_ID = entity.Category_ID;
-                            EditEntity.tb_prodcategories = entity;
-                            txtNo.Text = await bizCodeService.GenerateProductRelatedCodeAsync(BaseInfoType.ProductNo, EditEntity);
-                        }
-                        else
-                        {
-                            // 降级方案：如果服务不可用，使用原来的方法
-                            // txtNo.Text = BNRFactory.Default.Create("{CN:" + entity.Category_name + "}");
-                            MessageBox.Show("警告：无法使用服务器生成产品编码，已使用本地生成方式", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        // 异常处理：发生错误时使用本地生成方式作为备用
-                        //txtNo.Text = BNRFactory.Default.Create("{CN:" + entity.Category_name + "}");
-                        MessageBox.Show($"生成产品编码时发生错误：{ex.Message}\n已使用本地生成方式作为备用", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
+                    //// 使用新的BizCodeService生成产品编号
+                    //try
+                    //{
+                    //    var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
+                    //    if (bizCodeService != null)
+                    //    {
+                    //        EditEntity.Category_ID = entity.Category_ID;
+                    //        EditEntity.tb_prodcategories = entity;
+                    //        txtNo.Text = await bizCodeService.GenerateProductRelatedCodeAsync(BaseInfoType.ProductNo, EditEntity);
+                    //    }
+                    //    else
+                    //    {
+                    //        // 降级方案：如果服务不可用，使用原来的方法
+                    //        // txtNo.Text = BNRFactory.Default.Create("{CN:" + entity.Category_name + "}");
+                    //        MessageBox.Show("警告：无法使用服务器生成产品编码，已使用本地生成方式", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    //    }
+                    //}
+                    //catch (Exception ex)
+                    //{
+                    //    // 异常处理：发生错误时使用本地生成方式作为备用
+                    //    //txtNo.Text = BNRFactory.Default.Create("{CN:" + entity.Category_name + "}");
+                    //    MessageBox.Show($"生成产品编码时发生错误：{ex.Message}\n已使用本地生成方式作为备用", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    //}
                 }
                 else
                 {
@@ -1874,13 +1921,14 @@ namespace RUINORERP.UI.ProductEAV
                 {
                     tb_ProdDetail ppg = new tb_ProdDetail();
                     ppg.GroupName = newItem;
+                    EditEntity.tb_ProdDetails.Add(ppg);
                     ppg.SKU = await bizCodeService.GenerateProductRelatedCodeAsync(BaseInfoType.SKU_No, EditEntity);
                     if (MainForm.Instance.AppContext.SysConfig.UseBarCode)
                     {
                         //补码
                         // 使用SKU编号作为条码生成的原始编码，确保条码与产品的唯一性关联
                         // 这样即使产品名称相同，由于SKU编号不同，生成的条码也会不同
-                        ppg.BarCode = ClientBizCodeService.GetBarCode(ppg.SKU);
+                        ppg.BarCode =await clientBizCodeService.GenerateBarCodeAsync(ppg.SKU);
                     }
                     bindingSourceList.Add(ppg);
                 }
@@ -1907,7 +1955,7 @@ namespace RUINORERP.UI.ProductEAV
                     {
                         tb_ProdDetail ppg = new tb_ProdDetail();
                         ppg.GroupName = item;
-                        ppg.SKU = ClientBizCodeService.GetBaseInfoNo(BaseInfoType.SKU_No);
+                        ppg.SKU = await clientBizCodeService.GenerateProductRelatedCodeAsync(BaseInfoType.SKU_No, EditEntity);
                         bindingSourceList.Add(ppg);
 
                     }
@@ -2256,9 +2304,6 @@ namespace RUINORERP.UI.ProductEAV
             ListDataSoure = bindingSourceList;
 
             this.dataGridView1.DataSource = ListDataSoure.DataSource;
-
-
-
         }
 
 

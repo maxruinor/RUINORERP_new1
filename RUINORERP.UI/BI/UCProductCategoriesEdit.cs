@@ -28,17 +28,18 @@ namespace RUINORERP.UI.BI
         public UCProductCategoriesEdit()
         {
             InitializeComponent();
+            clientBizCodeService = Startup.GetFromFac<ClientBizCodeService>();
         }
-
+        private ClientBizCodeService clientBizCodeService;
         private tb_ProdCategories _EditEntity;
         public tb_ProdCategories EditEntity { get => _EditEntity; set => _EditEntity = value; }
         public List<tb_ProdCategories> categories { get; set; }
-        public override void BindData(BaseEntity entity)
+        public override async void BindData(BaseEntity entity)
         {
             _EditEntity = entity as tb_ProdCategories;
             if (_EditEntity.Category_ID == 0)
             {
-                _EditEntity.CategoryCode = ClientBizCodeService.GenerateProductRelatedCodeAsync(BaseInfoType.ProductNo);
+                _EditEntity.CategoryCode =await clientBizCodeService.GenerateBaseInfoNoAsync(BaseInfoType.ProCategories);
             }
             DataBindingHelper.BindData4TextBox<tb_ProdCategories>(entity, t => t.Category_name, txtcategory_name, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_ProdCategories>(entity, t => t.CategoryCode, txtcategoryCode, BindDataType4TextBox.Text, false);
@@ -226,11 +227,11 @@ namespace RUINORERP.UI.BI
                 }
                 else
                 {
-                    if (cmbTreeParent_id.Tag!= null && cmbTreeParent_id.Tag is tb_ProdCategories category)
+                    if (cmbTreeParent_id.Tag != null && cmbTreeParent_id.Tag is tb_ProdCategories category)
                     {
-                        EditEntity.CategoryLevel = (category.CategoryLevel??0) + 1; 
+                        EditEntity.CategoryLevel = (category.CategoryLevel ?? 0) + 1;
                     }
-                    
+
                 }
 
             }

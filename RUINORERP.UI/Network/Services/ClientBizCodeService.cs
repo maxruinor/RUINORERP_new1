@@ -380,38 +380,6 @@ namespace RUINORERP.UI.Network.Services
 
         #region 静态方法（兼容旧的调用模式）
 
-        /// <summary>
-        /// 获取条码（静态方法，兼容旧的调用模式）
-        /// 内部使用同步方式调用异步方法
-        /// </summary>
-        /// <param name="originalCode">原始编码</param>
-        /// <param name="paddingChar">补位字符</param>
-        /// <returns>生成的条码</returns>
-        /// <exception cref="Exception">生成失败时抛出异常</exception>
-        public static string GetBarCode(string originalCode, char paddingChar = '0')
-        {
-            try
-            {
-                // 从依赖注入容器中获取服务实例
-                var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
-                if (bizCodeService == null)
-                {
-                    throw new Exception("无法从容器中获取BizCodeService实例");
-                }
-
-                // 同步调用异步方法
-                return Task.Run(async () => await bizCodeService.GenerateBarCodeAsync(originalCode, paddingChar)).Result;
-            }
-            catch (AggregateException ex)
-            {
-                // 解包AggregateException，获取内部异常
-                if (ex.InnerException != null)
-                {
-                    throw ex.InnerException;
-                }
-                throw;
-            }
-        }
 
         /// <summary>
         /// 获取业务单据编号（静态方法，兼容旧的调用模式）

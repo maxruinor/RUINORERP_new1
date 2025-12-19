@@ -426,75 +426,48 @@ namespace RUINORERP.UI.BaseForm
 
 
         /// <summary>
-        /// 特殊显示必填项 
+        /// 特殊显示必填项 1
         /// </summary>
         /// <typeparam name="T">要验证必填的类型</typeparam>
-        /// <param name="rules"></param>
-        /// <param name="Controls"></param>
+        /// <param name="rules">验证器实例</param>
+        /// <param name="Controls">控件集合</param>
         public void InitRequiredToControl(AbstractValidator<T> rules, System.Windows.Forms.Control.ControlCollection Controls)
         {
-            List<string> notEmptyList = new List<string>();
+            List<string> requiredFields = new List<string>();
+            Type entityType = typeof(T);
+            
+            // 遍历验证规则，识别所有必填验证器
             foreach (var item in rules)
             {
                 string colName = item.PropertyName;
                 var rr = item.Components;
+                
                 foreach (var com in item.Components)
                 {
-                    if (com.Validator.Name == "NotEmptyValidator")
+                    // 使用统一的必填验证器判断方法，传入属性名和实体类型
+                    if (IsRequiredValidator(com, colName, entityType))
                     {
-                        //这里找到了不能为空的验证器。为了体验在UI
-                        notEmptyList.Add(colName);
+                        requiredFields.Add(colName);
+                        break; // 找到一个必填验证器就足够了，无需继续检查同一属性的其他验证器
                     }
                 }
             }
 
-
+            // 应用样式到控件
             foreach (var item in Controls)
             {
-                if (item is Control)
+                if (item is Control control && control is VisualControlBase)
                 {
-                    if (item is VisualControlBase)
+                    // 只处理有数据绑定的控件
+                    if (control.DataBindings.Count > 0)
                     {
-                        if (item.GetType().Name == "KryptonTextBox")
+                        string fieldName = control.DataBindings[0].BindingMemberInfo.BindingField;
+                        // 检查是否是必填字段
+                        string requiredField = requiredFields.FirstOrDefault(c => c == fieldName);
+                        
+                        if (requiredField.IsNotEmptyOrNull())
                         {
-                            KryptonTextBox ktb = item as KryptonTextBox;
-                            if ((item as Control).DataBindings.Count > 0)
-                            {
-                                #region 找到绑定的字段
-                                if (ktb.DataBindings.Count > 0)
-                                {
-                                    string filedName = ktb.DataBindings[0].BindingMemberInfo.BindingField;
-                                    string col = notEmptyList.FirstOrDefault(c => c == filedName);
-                                    if (col.IsNotEmptyOrNull())
-                                    {
-                                        ktb.StateCommon.Border.Color1 = Color.FromArgb(255, 128, 128);
-                                    }
-
-                                }
-                                #endregion
-
-
-                            }
-                        }
-                        if (item.GetType().Name == "KryptonComboBox")
-                        {
-                            KryptonComboBox ktb = item as KryptonComboBox;
-                            if ((item as Control).DataBindings.Count > 0)
-                            {
-                                #region 找到绑定的字段
-                                if (ktb.DataBindings.Count > 0)
-                                {
-                                    string filedName = ktb.DataBindings[0].BindingMemberInfo.BindingField;
-                                    string col = notEmptyList.FirstOrDefault(c => c == filedName);
-                                    if (col.IsNotEmptyOrNull())
-                                    {
-                                        ktb.StateCommon.ComboBox.Border.Color1 = Color.FromArgb(255, 128, 128);
-                                    }
-                                }
-                                #endregion
-
-
-                            }
+                            ApplyRequiredFieldStyle(control);
                         }
                     }
                 }
@@ -503,7 +476,94 @@ namespace RUINORERP.UI.BaseForm
 
         #endregion
 
+        #region 辅助方法
 
+        /// <summary>
+        /// 为控件应用必填字段样式
+        /// </summary>
+        /// <param name="control">要应用样式的控件</param>
+        private void ApplyRequiredFieldStyle(Control control)
+        {
+            if (control is KryptonTextBox ktb)
+            {
+                ktb.StateCommon.Border.Color1 = Color.FromArgb(255, 128, 128);
+            }
+            else if (control is KryptonComboBox kcb)
+            {
+                kcb.StateCommon.ComboBox.Border.Color1 = Color.FromArgb(255, 128, 128);
+            }
+            // 可以在这里添加更多控件类型的处理
+        }
+
+        /// <summary>
+        /// 判断验证器组件是否为必填验证器
+        /// </summary>
+        /// <param name="component">验证器组件</param>
+        /// <param name="propertyName">属性名称</param>
+        /// <param name="entityType">实体类型</param>
+        /// <returns>如果是必填验证器返回true，否则返回false</returns>
+        private bool IsRequiredValidator(FluentValidation.Internal.IRuleComponent component, string propertyName, Type entityType)
+        {
+            // 检查常见的必填验证器类型
+            switch (component.Validator.Name)
+            {
+                case "NotEmptyValidator":
+                case "NotNullValidator":
+                    return true;
+                    
+                case "PredicateValidator":
+                    // 对于外键验证器，需要检查属性是否为可空类型
+                    return IsRequiredForeignKeyValidator(component, propertyName, entityType);
+                    
+                default:
+                    return false;
+            }
+        }
+
+        /// <summary>
+        /// 判断验证器组件是否为必填的外键验证器
+        /// </summary>
+        /// <param name="component">验证器组件</param>
+        /// <param name="propertyName">属性名称</param>
+        /// <param name="entityType">实体类型</param>
+        /// <returns>如果是必填的外键验证器返回true，否则返回false</returns>
+        private bool IsRequiredForeignKeyValidator(FluentValidation.Internal.IRuleComponent component, string propertyName, Type entityType)
+        {
+            // 检查是否是PredicateValidator（用于Must方法）
+            if (component.Validator.Name != "PredicateValidator")
+            {
+                return false;
+            }
+
+            // 获取属性信息
+            var propertyInfo = entityType.GetProperty(propertyName);
+            if (propertyInfo == null)
+            {
+                return false;
+            }
+
+            // 检查属性是否有FKRelationAttribute特性，判断是否为外键
+            var fkAttr = propertyInfo.GetCustomAttribute<FKRelationAttribute>(false);
+            if (fkAttr == null)
+            {
+                return false; // 不是外键
+            }
+
+            // 检查属性类型是否为非空类型（非可空类型）
+            // 如果是值类型且不是可空类型，则为必填
+            if (propertyInfo.PropertyType.IsValueType)
+            {
+                // 检查是否是可空值类型
+                var underlyingType = Nullable.GetUnderlyingType(propertyInfo.PropertyType);
+                // 如果underlyingType为null，表示不是可空类型，即为必填
+                return underlyingType == null;
+            }
+
+            // 对于引用类型，通常认为是可空的
+            return false;
+        }
+
+        #endregion
 
         #region 基础资料下拉添加编辑项
 

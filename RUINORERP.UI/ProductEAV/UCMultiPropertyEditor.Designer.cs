@@ -1,4 +1,4 @@
-﻿namespace RUINORERP.UI.ProductEAV
+namespace RUINORERP.UI.ProductEAV
 {
     partial class UCMultiPropertyEditor
     {
@@ -181,7 +181,7 @@
             this.cmbPropertyType.Name = "cmbPropertyType";
             this.cmbPropertyType.Size = new System.Drawing.Size(178, 21);
             this.cmbPropertyType.TabIndex = 173;
-            this.cmbPropertyType.SelectedIndexChanged += new System.EventHandler(this.cmbPropertyType_SelectedIndexChanged);
+            this.cmbPropertyType.SelectedIndexChanged += async (sender, e) => await cmbPropertyType_SelectedIndexChanged(sender, e);
             // 
             // kryptonLabel2
             // 

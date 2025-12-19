@@ -1069,7 +1069,7 @@ namespace RUINORERP.UI.ProductEAV
             this.ClientSize = new System.Drawing.Size(1024, 678);
             this.Controls.Add(this.kryptonSplitContainerBig);
             this.Name = "frmProductEdit";
-            this.Load += new System.EventHandler(this.UCProductEdit_Load);
+            this.Load += async (sender, e) => await UCProductEdit_LoadAsync(sender, e);
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonNavigator1)).EndInit();
             this.kryptonNavigator1.ResumeLayout(false);

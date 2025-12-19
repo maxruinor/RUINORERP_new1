@@ -49,8 +49,9 @@ namespace RUINORERP.UI.ProductEAV
         public UCMultiPropertyEditor()
         {
             InitializeComponent();
+            clientBizCodeService = Startup.GetFromFac<ClientBizCodeService>();
         }
-
+        private ClientBizCodeService clientBizCodeService;
         private void btnQueryForGoods_Click(object sender, EventArgs e)
         {
             Query();
@@ -1161,13 +1162,8 @@ namespace RUINORERP.UI.ProductEAV
 
 
 
-        private void cmbPropertyType_SelectedIndexChanged(object sender, EventArgs e)
+        private async Task cmbPropertyType_SelectedIndexChanged(object sender, EventArgs e)
         {
-            //if (cmbPropertyType.Tag == null)
-            //{
-            //    return;
-            //}
-
             if (cmbPropertyType.SelectedItem != null)
             {
                 object selectObj = cmbPropertyType.SelectedValue;
@@ -1192,7 +1188,7 @@ namespace RUINORERP.UI.ProductEAV
                                 {
                                     tb_ProdDetail ppg = new tb_ProdDetail();
                                     ppg.GroupName = "";
-                                    ppg.SKU = ClientBizCodeService.GetBaseInfoNo(BaseInfoType.SKU_No);
+                                    ppg.SKU =await clientBizCodeService.GenerateProductRelatedCodeAsync(BaseInfoType.SKU_No,EditEntity);
                                     bindingSourceSKU明细.Add(ppg);
                                 }
 
@@ -1228,6 +1224,8 @@ namespace RUINORERP.UI.ProductEAV
                 }
             }
         }
+
+
         tb_Prod oldOjb = null;
         private async void btnOk_Click(object sender, EventArgs e)
         {
@@ -1370,7 +1368,7 @@ namespace RUINORERP.UI.ProductEAV
                 }
                 if (item.SKU.IsNullOrEmpty())
                 {
-                    item.SKU = ClientBizCodeService.GetBaseInfoNo(BaseInfoType.SKU_No);
+                    item.SKU =await clientBizCodeService.GenerateProductRelatedCodeAsync (BaseInfoType.SKU_No,EditEntity);
                     if (item.ActionStatus == ActionStatus.新增)
                     {
                         item.ProdDetailID = 0;

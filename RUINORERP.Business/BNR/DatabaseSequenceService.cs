@@ -26,9 +26,6 @@ namespace RUINORERP.Business.BNR
         // 线程同步锁，用于控制缓存刷新到数据库的操作
         private readonly object _queueLock = new object();
         
-        // 事务锁，用于保护 SqlConnection 的事务操作（避免并发事务冲突）
-        private readonly object _transactionLock = new object();
-        
         // 缓存最大生命周期（毫秒），超过这个时间会强制刷新到数据库
         private const int CACHE_MAX_LIFETIME = 5000;
         
@@ -146,7 +143,7 @@ namespace RUINORERP.Business.BNR
         
         /// <summary>
         /// 将缓存中的序列值刷新到数据库
-        /// 使用事务锁保护并发事务操作，避免 "有其他线程正在该会话中运行" 的错误
+        /// 修复：移除事务锁，使用重试机制处理并发冲突
         /// </summary>
         private void FlushCacheToDatabase()
         {
@@ -174,13 +171,16 @@ namespace RUINORERP.Business.BNR
                     return;
                 }
                 
-                try
+                // 使用重试机制处理并发冲突
+                int retryCount = 0;
+                int maxRetries = 3;
+                bool success = false;
+                
+                while (!success && retryCount < maxRetries)
                 {
-                    // 使用事务锁确保同一时间只有一个线程执行事务操作
-                    // 这是必要的，因为 SqlConnection 的事务操作不能并发
-                    lock (_transactionLock)
+                    try
                     {
-                        // 使用SqlSugar推荐的using语法糖管理事务
+                        // 不使用事务锁，而是使用重试机制
                         using (var tran = _sqlSugarClient.Ado.UseTran())
                         {
                             try
@@ -232,12 +232,25 @@ namespace RUINORERP.Business.BNR
                                 tran.CommitTran();
                                 _lastFlushTime = DateTime.Now;
                                 System.Diagnostics.Debug.WriteLine($"成功将 {batchUpdates.Count} 个序列值刷新到数据库");
+                                success = true;
                             }
                             catch (Exception ex)
                             {
                                 // 记录详细错误信息
                                 System.Diagnostics.Debug.WriteLine($"事务执行失败: {ex.Message}");
                                 System.Diagnostics.Debug.WriteLine($"堆栈跟踪: {ex.StackTrace}");
+                                
+                                // 如果是并发事务冲突，尝试重试
+                                if (ex.Message.Contains("不允许启动新事务") || ex.Message.Contains("already in progress"))
+                                {
+                                    retryCount++;
+                                    if (retryCount < maxRetries)
+                                    {
+                                        System.Diagnostics.Debug.WriteLine($"检测到并发事务冲突，等待后重试 ({retryCount}/{maxRetries})");
+                                        Thread.Sleep(50 * retryCount); // 递增等待时间
+                                        continue;
+                                    }
+                                }
                                 
                                 // 重新入队失败的更新
                                 foreach (var update in batchUpdates)
@@ -249,10 +262,14 @@ namespace RUINORERP.Business.BNR
                             }
                         }
                     }
-                }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine($"刷新序列值到数据库失败: {ex.Message}");
+                    catch (Exception ex)
+                    {
+                        if (retryCount >= maxRetries)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"刷新序列值到数据库失败，已达到最大重试次数: {ex.Message}");
+                            break;
+                        }
+                    }
                 }
             }
         }
@@ -318,16 +335,21 @@ namespace RUINORERP.Business.BNR
 
         /// <summary>
         /// 更新指定序列的值
+        /// 修复：移除事务锁，使用重试机制处理并发冲突
         /// </summary>
         /// <param name="sequenceKey">序列键</param>
         /// <param name="newValue">新值</param>
         /// <param name="businessType">业务类型</param>
         public void UpdateSequenceValue(string sequenceKey, long newValue, string businessType = null)
         {
-            try
+            // 使用重试机制处理并发冲突
+            int retryCount = 0;
+            int maxRetries = 3;
+            bool success = false;
+            
+            while (!success && retryCount < maxRetries)
             {
-                // 使用事务锁保护事务操作
-                lock (_transactionLock)
+                try
                 {
                     using (var tran = _sqlSugarClient.Ado.UseTran())
                     {
@@ -361,13 +383,31 @@ namespace RUINORERP.Business.BNR
                         
                         // 提交事务
                         tran.CommitTran();
+                        success = true;
                     }
                 }
+                catch (Exception ex)
+                {
+                    // 如果是并发事务冲突，尝试重试
+                    if (ex.Message.Contains("不允许启动新事务") || ex.Message.Contains("already in progress"))
+                    {
+                        retryCount++;
+                        if (retryCount < maxRetries)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"UpdateSequenceValue 检测到并发事务冲突，等待后重试 ({retryCount}/{maxRetries})");
+                            Thread.Sleep(50 * retryCount); // 递增等待时间
+                            continue;
+                        }
+                    }
+                    
+                    System.Diagnostics.Debug.WriteLine($"更新序列值失败: {ex.Message}");
+                    throw;
+                }
             }
-            catch (Exception ex)
+            
+            if (!success)
             {
-                System.Diagnostics.Debug.WriteLine($"更新序列值失败: {ex.Message}");
-                throw;
+                throw new Exception($"更新序列值失败，已达到最大重试次数 ({maxRetries})");
             }
         }
         
@@ -494,16 +534,21 @@ namespace RUINORERP.Business.BNR
 
         /// <summary>
         /// 重置指定序列的值为1
+        /// 修复：移除事务锁，使用重试机制处理并发冲突
         /// </summary>
         /// <param name="key">序列键</param>
         public void ResetSequence(string key)
         {
-            // 使用事务锁保护事务操作
-            lock (_transactionLock)
+            // 使用重试机制处理并发冲突
+            int retryCount = 0;
+            int maxRetries = 3;
+            bool success = false;
+            
+            while (!success && retryCount < maxRetries)
             {
-                using (var tran = _sqlSugarClient.Ado.UseTran())
+                try
                 {
-                    try
+                    using (var tran = _sqlSugarClient.Ado.UseTran())
                     {
                         // 查找所有匹配的序列记录（包括动态键）
                         var sequences = _sqlSugarClient.Queryable<SequenceNumbers>()
@@ -524,13 +569,31 @@ namespace RUINORERP.Business.BNR
                         
                         // 提交事务
                         tran.CommitTran();
-                    }
-                    catch (Exception ex)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"重置序列失败: {ex.Message}");
-                        throw;
+                        success = true;
                     }
                 }
+                catch (Exception ex)
+                {
+                    // 如果是并发事务冲突，尝试重试
+                    if (ex.Message.Contains("不允许启动新事务") || ex.Message.Contains("already in progress"))
+                    {
+                        retryCount++;
+                        if (retryCount < maxRetries)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"ResetSequence 检测到并发事务冲突，等待后重试 ({retryCount}/{maxRetries})");
+                            Thread.Sleep(50 * retryCount); // 递增等待时间
+                            continue;
+                        }
+                    }
+                    
+                    System.Diagnostics.Debug.WriteLine($"重置序列失败: {ex.Message}");
+                    throw;
+                }
+            }
+            
+            if (!success)
+            {
+                throw new Exception($"重置序列失败，已达到最大重试次数 ({maxRetries})");
             }
         }
 
@@ -577,6 +640,7 @@ namespace RUINORERP.Business.BNR
         
         /// <summary>
         /// 更新序列信息
+        /// 修复：移除事务锁，使用重试机制处理并发冲突
         /// </summary>
         /// <param name="key">序列键</param>
         /// <param name="resetType">重置类型</param>
@@ -585,18 +649,21 @@ namespace RUINORERP.Business.BNR
         /// <param name="businessType">业务类型</param>
         public void UpdateSequenceInfo(string key, string resetType = null, string formatMask = null, string description = null, string businessType = null)
         {
+            // 使用重试机制处理并发冲突
+            int retryCount = 0;
+            int maxRetries = 3;
+            bool success = false;
             
-            // 使用事务锁保护事务操作
-            lock (_transactionLock)
+            while (!success && retryCount < maxRetries)
             {
-                using (var tran = _sqlSugarClient.Ado.UseTran())
+                try
                 {
-                    try
+                    using (var tran = _sqlSugarClient.Ado.UseTran())
                     {
                         var sequence = _sqlSugarClient.Queryable<SequenceNumbers>()
                             .Where(s => s.SequenceKey == key)
                             .First();
-                         
+                        
                         if (sequence == null)
                         {
                             throw new Exception($"未找到序列键 '{key}' 的记录");
@@ -621,31 +688,53 @@ namespace RUINORERP.Business.BNR
                         
                         // 提交事务
                         tran.CommitTran();
-                    }
-                    catch (Exception ex)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"更新序列信息失败: {ex.Message}");
-                        throw;
+                        success = true;
                     }
                 }
+                catch (Exception ex)
+                {
+                    // 如果是并发事务冲突，尝试重试
+                    if (ex.Message.Contains("不允许启动新事务") || ex.Message.Contains("already in progress"))
+                    {
+                        retryCount++;
+                        if (retryCount < maxRetries)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"UpdateSequenceInfo 检测到并发事务冲突，等待后重试 ({retryCount}/{maxRetries})");
+                            Thread.Sleep(50 * retryCount); // 递增等待时间
+                            continue;
+                        }
+                    }
+                    
+                    System.Diagnostics.Debug.WriteLine($"更新序列信息失败: {ex.Message}");
+                    throw;
+                }
+            }
+            
+            if (!success)
+            {
+                throw new Exception($"更新序列信息失败，已达到最大重试次数 ({maxRetries})");
             }
         }
 
         /// <summary>
         /// 重置序列号到指定值
+        /// 修复：移除事务锁，使用重试机制处理并发冲突
         /// </summary>
         /// <param name="key">序列号键</param>
         /// <param name="newValue">新的值</param>
         /// <param name="businessType">业务类型</param>
         public void ResetSequenceValue(string key, long newValue, string businessType = null)
         {
+            // 使用重试机制处理并发冲突
+            int retryCount = 0;
+            int maxRetries = 3;
+            bool success = false;
             
-            // 使用事务锁保护事务操作
-            lock (_transactionLock)
+            while (!success && retryCount < maxRetries)
             {
-                using (var tran = _sqlSugarClient.Ado.UseTran())
+                try
                 {
-                    try
+                    using (var tran = _sqlSugarClient.Ado.UseTran())
                     {
                         var sequence = _sqlSugarClient.Queryable<SequenceNumbers>()
                             .Where(s => s.SequenceKey == key)
@@ -677,13 +766,31 @@ namespace RUINORERP.Business.BNR
                         
                         // 提交事务
                         tran.CommitTran();
-                    }
-                    catch (Exception ex)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"重置序列值失败: {ex.Message}");
-                        throw;
+                        success = true;
                     }
                 }
+                catch (Exception ex)
+                {
+                    // 如果是并发事务冲突，尝试重试
+                    if (ex.Message.Contains("不允许启动新事务") || ex.Message.Contains("already in progress"))
+                    {
+                        retryCount++;
+                        if (retryCount < maxRetries)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"ResetSequenceValue 检测到并发事务冲突，等待后重试 ({retryCount}/{maxRetries})");
+                            Thread.Sleep(50 * retryCount); // 递增等待时间
+                            continue;
+                        }
+                    }
+                    
+                    System.Diagnostics.Debug.WriteLine($"重置序列值失败: {ex.Message}");
+                    throw;
+                }
+            }
+            
+            if (!success)
+            {
+                throw new Exception($"重置序列值失败，已达到最大重试次数 ({maxRetries})");
             }
         }
 

@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 
 namespace RUINORERP.PacketSpec.Commands
 {
@@ -57,6 +57,12 @@ namespace RUINORERP.PacketSpec.Commands
         /// 提示消息 - 系统提示信息
         /// </summary>
         public static readonly CommandId NotificationMessage = new CommandId(CommandCategory.Message, (byte)(CommandCatalog.Message_NotificationMessage & 0xFF));
+
+        
+        /// <summary>
+        /// 发送任务状态通知 - 发送任务状态变更通知
+        /// </summary>
+        public static readonly CommandId SendTodoNotification = new CommandId(CommandCategory.Message, (byte)(CommandCatalog.Message_SendTodoNotification & 0xFF));
         #endregion
     }
 }

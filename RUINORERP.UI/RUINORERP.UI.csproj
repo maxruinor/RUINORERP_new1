@@ -2301,6 +2301,7 @@
     <Compile Include="Network\ClientCommandHandlers\IClientCommandHandler.cs" />
     <Compile Include="Network\ClientCommandHandlers\LockCommandHandler.cs" />
     <Compile Include="Network\ClientCommandHandlers\MessageCommandHandler.cs" />
+    <Compile Include="Network\ClientCommandHandlers\TodoCommandHandler.cs" />
     <!-- ClientCommandProcessor.cs 已整合到ClientCommunicationService.cs，不再单独编译 -->
     <!-- <Compile Include="Network\ClientCommandProcessor.cs" /> -->
     <Compile Include="Network\ClientEventManager.cs" />
@@ -2350,6 +2351,11 @@
     <Compile Include="Plugin\OrderImport1688Plugin.cs" />
     <Compile Include="Plugin\PluginBase.cs" />
     <Compile Include="Plugin\PluginManager.cs" />
+    <Compile Include="ProductEAV\Core\ProductAttrService.cs" />
+    <Compile Include="ProductEAV\Core\ProductEditService.cs" />
+    <Compile Include="ProductEAV\Core\ProductValidationService.cs" />
+    <Compile Include="ProductEAV\Core\PropertyCombinationService.cs" />
+    <Compile Include="ProductEAV\Core\SkuGenerationService.cs" />
     <Compile Include="ProductEAV\UCProductAttrRelationEdit.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -2362,6 +2368,7 @@
     <Compile Include="ProductEAV\UCProductAttrRelationList.Designer.cs">
       <DependentUpon>UCProductAttrRelationList.cs</DependentUpon>
     </Compile>
+    <Compile Include="ProductEAV\Utils\PropertyCombinationHelper.cs" />
     <Compile Include="Services\ClientSystemInfoService.cs" />
     <Compile Include="SmartReminderClient\DetailForm.cs">
       <SubType>Form</SubType>

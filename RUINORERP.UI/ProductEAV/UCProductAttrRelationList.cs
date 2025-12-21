@@ -35,23 +35,11 @@ namespace RUINORERP.UI.ProductEAV
             InitializeComponent();
             base.EditForm = typeof(UCProductAttrRelationEdit);
             DisplayTextResolver.AddReferenceKeyMapping<View_ProdDetail, tb_Prod_Attr_Relation>(t => t.ProdDetailID, s => s.ProdDetailID, t => t.SKU);
-            // 初始化产品主信息下拉框
-            InitProductComboBox();
-        }
-
-        /// <summary>
-        /// 初始化产品下拉框
-        /// </summary>
-        private void InitProductComboBox()
-        {
-            // 这里可以根据实际需要实现产品下拉框的初始化
         }
 
         public override void QueryConditionBuilder()
         {
-            BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_Prod_Attr_Relation).Name + "Processor");
-            QueryConditionFilter = baseProcessor.GetQueryFilter();
-            QueryConditionFilter.FilterLimitExpressions.Clear();
+            base.QueryConditionBuilder();
         }
     }
 }

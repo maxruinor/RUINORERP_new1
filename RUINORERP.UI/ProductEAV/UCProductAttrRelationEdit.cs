@@ -19,15 +19,19 @@ using RUINORERP.UI.Common;
 using RUINORERP.Global;
 using FastReport.Utils;
 using RUINORERP.Common.Extensions;
+using RUINORERP.UI.ProductEAV.Core;
 
 namespace RUINORERP.UI.ProductEAV
 {
     [MenuAttrAssemblyInfo("产品属性关联编辑", true, UIType.单表数据)]
     public partial class UCProductAttrRelationEdit : BaseEditGeneric<tb_Prod_Attr_Relation>
     {
+        private ProductAttrService _attrService;
+
         public UCProductAttrRelationEdit()
         {
             InitializeComponent();
+            _attrService = new ProductAttrService();
         }
 
         private tb_Prod_Attr_Relation _EditEntity;
@@ -119,28 +123,35 @@ namespace RUINORERP.UI.ProductEAV
         /// <summary>
         /// 初始化下拉框数据（仅在新增模式下调用）
         /// </summary>
-        private void InitComboBoxes()
+        private async void InitComboBoxes()
         {
-            // 加载产品数据
-            var products = MainForm.Instance.AppContext.Db.Queryable<tb_Prod>().ToList();
-            DataBindingHelper.BindData4Cmb<tb_Prod>(products, k => k.ProdBaseID, v => v.ProductNo + " - " + v.CNName, cmbProduct);
-
-            // 如果已经选择了产品，加载该产品的详情
-            if (_EditEntity.ProdBaseID.HasValue)
+            try
             {
-                LoadProdDetails(_EditEntity.ProdBaseID.Value);
-            }
+                // 加载产品数据
+                var products = await _attrService.GetAllProductsAsync();
+                DataBindingHelper.BindData4Cmb<tb_Prod>(products, k => k.ProdBaseID, v => v.ProductNo + " - " + v.CNName, cmbProduct);
 
-            // 加载所有属性
-            var properties = MainForm.Instance.AppContext.Db.Queryable<tb_ProdProperty>().ToList();
-            DataBindingHelper.BindData4Cmb<tb_ProdProperty>(properties, k => k.Property_ID, v => v.PropertyName, cmbProperty);
+                // 如果已经选择了产品，加载该产品的详情
+                if (_EditEntity.ProdBaseID.HasValue)
+                {
+                    await LoadProdDetailsAsync(_EditEntity.ProdBaseID.Value);
+                }
+
+                // 加载所有属性
+                var properties = await _attrService.GetAllPropertiesAsync();
+                DataBindingHelper.BindData4Cmb<tb_ProdProperty>(properties, k => k.Property_ID, v => v.PropertyName, cmbProperty);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"初始化下拉有失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         /// <summary>
-        /// 根据产品加载产品详情
+        /// 根据产品加载产品详情（异步版本）
         /// </summary>
         /// <param name="prodBaseId"></param>
-        private void LoadProdDetails(long prodBaseId)
+        private async Task LoadProdDetailsAsync(long prodBaseId)
         {
             if (prodBaseId <= 0)
             {
@@ -149,11 +160,8 @@ namespace RUINORERP.UI.ProductEAV
             
             try
             {
-                // 查询与指定产品相关的所有详情
-                var details = MainForm.Instance.AppContext.Db.Queryable<tb_ProdDetail>()
-                    .Where(pd => pd.ProdBaseID == prodBaseId)
-                    .OrderBy(pd => pd.SKU) // 按SKU排序
-                    .ToList();
+                // 使用Service加载产品详情
+                var details = await _attrService.GetProductDetailsAsync(prodBaseId);
                 
                 if (details != null && details.Count > 0)
                 {
@@ -201,10 +209,20 @@ namespace RUINORERP.UI.ProductEAV
         }
 
         /// <summary>
-        /// 根据属性加载属性值
+        /// 根据产品加载产品详情（同步版本，用于事件处理）
+        /// </summary>
+        /// <param name="prodBaseId"></param>
+        private void LoadProdDetails(long prodBaseId)
+        {
+            // 调用异步版本的同步包装
+            LoadProdDetailsAsync(prodBaseId).ConfigureAwait(false).GetAwaiter().GetResult();
+        }
+
+        /// <summary>
+        /// 根据属性加载属性值（异步版本）
         /// </summary>
         /// <param name="propertyId"></param>
-        private void LoadPropertyValues(long propertyId)
+        private async Task LoadPropertyValuesAsync(long propertyId)
         {
             if (propertyId <= 0)
             {
@@ -213,11 +231,8 @@ namespace RUINORERP.UI.ProductEAV
             
             try
             {
-                // 查询与指定属性相关的所有属性值
-                var values = MainForm.Instance.AppContext.Db.Queryable<tb_ProdPropertyValue>()
-                    .Where(pv => pv.Property_ID == propertyId)
-                    .OrderBy(pv => pv.SortOrder) // 按排序顺序加载
-                    .ToList();
+                // 使用Service加载属性值
+                var values = await _attrService.GetPropertyValuesAsync(propertyId);
                 
                 if (values != null && values.Count > 0)
                 {
@@ -259,6 +274,16 @@ namespace RUINORERP.UI.ProductEAV
                 cmbPropertyValue.SelectedIndex = 0;
                 cmbPropertyValue.Enabled = false;
             }
+        }
+
+        /// <summary>
+        /// 根据属性加载属性值（同步版本，用于事件处理）
+        /// </summary>
+        /// <param name="propertyId"></param>
+        private void LoadPropertyValues(long propertyId)
+        {
+            // 调用异步版本的同步包装
+            LoadPropertyValuesAsync(propertyId).ConfigureAwait(false).GetAwaiter().GetResult();
         }
 
         /// <summary>

@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 货物类型  成品  半成品  包装材料 下脚料这种内容
     /// </summary>
     [Serializable()]
-    [Description("货物类型  成品  半成品  包装材料 下脚料这种内容")]
+    [Description("货物类型")]
     [SugarTable("tb_ProductType")]
     public partial class tb_ProductType: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("货物类型  成品  半成品  包装材料 下脚料这种内容tb_ProductType" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("货物类型  成品  半成品  包装材料 下脚料 " + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 

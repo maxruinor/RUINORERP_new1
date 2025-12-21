@@ -36,6 +36,7 @@ using System.Linq.Expressions;
 using System.Web.UI;
 using Control = System.Windows.Forms.Control;
 using RUINORERP.Model.Base.StatusManager;
+using RUINORERP.PacketSpec.Enums.Core;
 using UserControl = System.Windows.Forms.UserControl;
 using Org.BouncyCastle.Asn1.X509.Qualified;
 

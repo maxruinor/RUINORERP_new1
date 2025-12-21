@@ -18,7 +18,7 @@ namespace RUINOR.WinFormsUI.ChkComboBox
     /// Martin Lottering : 2007-10-27
     /// --------------------------------
     /// This is a usefull control in Filters. Allows you to save space and can replace a Grouped Box of CheckBoxes.
-    /// Currently used on the TasksFilter for TaskStatusses, which means the user can select which Statusses to include
+    /// Currently used on the TasksFilter for Todoses, which means the user can select which Statusses to include
     /// in the "Search".
     /// This control does not implement a CheckBoxListBox, instead it adds a wrapper for the normal ComboBox and Items. 
     /// See the CheckBoxItems property.

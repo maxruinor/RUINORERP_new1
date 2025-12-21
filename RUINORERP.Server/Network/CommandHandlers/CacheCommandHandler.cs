@@ -359,7 +359,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     foreach (var sessionInfo in sessions)
                     {
                         await sessionInfo.SendAsync(encryptedData.ToArray(), cancellationToken);
-                        //后面来具体实现 TODO 
+                        //后面来具体实现 Todo 
                         // await _sessionService.SendCommandToSession(sessionId, syncCommand, cancellationToken);
                     }
 

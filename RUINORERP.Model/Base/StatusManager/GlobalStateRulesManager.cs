@@ -12,6 +12,8 @@ using RUINORERP.Global.EnumExt;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using System.Text;
 
 namespace RUINORERP.Model.Base.StatusManager
 {
@@ -383,6 +385,203 @@ namespace RUINORERP.Model.Base.StatusManager
             // 检查目标状态是否在有效转换列表中
             return validTransitions.Contains(toStatus);
         }
+        
+        /// <summary>
+        /// 检查是否需要关键操作二次确认
+        /// 用于对关键操作（如删除已审核单据、作废单据等）进行二次确认
+        /// </summary>
+        /// <typeparam name="T">状态类型</typeparam>
+        /// <param name="status">当前状态</param>
+        /// <param name="operationType">操作类型（如"delete", "cancel", "reverseReview"等）</param>
+        /// <returns>是否需要二次确认</returns>
+        public bool NeedConfirmationForCriticalOperation<T>(T status, string operationType) where T : struct
+        {
+            // 检查是否为关键操作
+            var criticalOperations = new[] { "delete", "cancel", "reverseReview", "antiClosed" };
+            if (!criticalOperations.Contains(operationType))
+                return false;
+
+            // 根据不同的状态类型和操作类型判断是否需要二次确认
+            var statusType = typeof(T);
+            
+            // 对于已审核状态的单据，删除、作废、反审核操作均需要二次确认
+            if (statusType == typeof(DataStatus) && status.Equals(DataStatus.确认) || 
+                statusType == typeof(PaymentStatus) && status.Equals(PaymentStatus.已支付) ||
+                statusType == typeof(PrePaymentStatus) && status.Equals(PrePaymentStatus.已生效) ||
+                statusType == typeof(ARAPStatus) && (status.Equals(ARAPStatus.待支付) || status.Equals(ARAPStatus.部分支付) || status.Equals(ARAPStatus.全部支付)) ||
+                statusType == typeof(StatementStatus) && (status.Equals(StatementStatus.确认) || status.Equals(StatementStatus.部分结算) || status.Equals(StatementStatus.全部结清)))
+            {
+                return true;
+            }
+            
+            return false;
+        }
+        
+        /// <summary>
+        /// 获取关键操作确认提示信息
+        /// 用于UI层调用以显示适当的二次确认对话框
+        /// </summary>
+        /// <typeparam name="T">状态类型</typeparam>
+        /// <param name="status">当前状态</param>
+        /// <param name="operationType">操作类型</param>
+        /// <returns>确认提示信息文本</returns>
+        public string GetCriticalOperationConfirmationMessage<T>(T status, string operationType) where T : struct
+        {
+            var statusName = Enum.GetName(typeof(T), status);
+            
+            switch (operationType)
+            {
+                case "delete":
+                    return $"确认要删除状态为【{statusName}】的单据吗？此操作不可撤销！";
+                case "cancel":
+                    return $"确认要作废状态为【{statusName}】的单据吗？此操作将影响相关财务数据！";
+                case "reverseReview":
+                    return $"确认要反审核状态为【{statusName}】的单据吗？此操作将撤销所有已审核的结果！";
+                case "antiClosed":
+                    return $"确认要反结案状态为【{statusName}】的单据吗？请确保您有权限执行此操作！";
+                default:
+                    return "确认要执行此操作吗？";
+            }
+        }
+        
+        /// <summary>
+        /// 记录状态变更操作日志
+        /// 用于记录所有关键状态变更，便于审计追踪
+        /// </summary>
+        /// <typeparam name="T">状态类型</typeparam>
+        /// <param name="entityId">实体ID</param>
+        /// <param name="entityType">实体类型名称</param>
+        /// <param name="fromStatus">原始状态</param>
+        /// <param name="toStatus">目标状态</param>
+        /// <param name="operatorId">操作用户ID</param>
+        /// <param name="operatorName">操作用户名称</param>
+        /// <param name="remarks">备注信息</param>
+        public void LogStatusChangeOperation<T>(long entityId, string entityType, T fromStatus, T toStatus, long operatorId, string operatorName, string remarks = "") where T : struct
+        {
+            try
+            {
+                // 获取状态名称
+                var fromStatusName = Enum.GetName(typeof(T), fromStatus);
+                var toStatusName = Enum.GetName(typeof(T), toStatus);
+                var statusTypeName = typeof(T).Name;
+                
+                // 构建操作日志内容
+                StringBuilder logBuilder = new StringBuilder();
+                logBuilder.AppendLine($"{DateTime.Now:yyyy-MM-dd HH:mm:ss} - 操作日志");
+                logBuilder.AppendLine($"实体ID: {entityId}");
+                logBuilder.AppendLine($"实体类型: {entityType}");
+                logBuilder.AppendLine($"状态类型: {statusTypeName}");
+                logBuilder.AppendLine($"原始状态: {fromStatusName}");
+                logBuilder.AppendLine($"目标状态: {toStatusName}");
+                logBuilder.AppendLine($"操作用户ID: {operatorId}");
+                logBuilder.AppendLine($"操作用户: {operatorName}");
+                
+                // 如果有备注，则添加
+                if (!string.IsNullOrEmpty(remarks))
+                {
+                    logBuilder.AppendLine($"备注: {remarks}");
+                }
+                
+                // 生成操作类型描述
+                string operationType = GetOperationTypeDescription(fromStatusName, toStatusName);
+                logBuilder.AppendLine($"操作类型: {operationType}");
+                
+                // 调用系统日志记录器进行记录
+                // 注意：实际实现时应替换为系统已有的日志记录器组件
+                // RUINORERP.Global.LogManager.Log(logBuilder.ToString(), LogType.Audit);
+                
+                // 为了便于调试，可以输出到控制台或其他日志输出方式
+                System.Diagnostics.Debug.WriteLine(logBuilder.ToString());
+            }
+            catch (Exception ex)
+            {
+                // 记录日志操作本身的异常
+                // RUINORERP.Global.LogManager.LogError("记录状态变更操作日志失败: " + ex.Message, ex);
+                System.Diagnostics.Debug.WriteLine("记录状态变更操作日志失败: " + ex.Message);
+            }
+        }
+        
+        /// <summary>
+        /// 获取操作类型描述
+        /// 根据原始状态和目标状态推断操作类型
+        /// </summary>
+        /// <param name="fromStatusName">原始状态名称</param>
+        /// <param name="toStatusName">目标状态名称</param>
+        /// <returns>操作类型描述文本</returns>
+        private string GetOperationTypeDescription(string fromStatusName, string toStatusName)
+        {
+            // 定义常见的操作类型映射
+            var operationMappings = new Dictionary<string, string>
+            {
+                { "草稿_确认", "提交审核" },
+                { "新建_确认", "提交审核" },
+                { "待审核_已支付", "审核通过" },
+                { "待审核_已生效", "审核通过" },
+                { "待审核_待支付", "审核通过" },
+                { "待审核_确认", "审核通过" },
+                { "确认_作废", "作废单据" },
+                { "确认_草稿", "反审核" },
+                { "已支付_待审核", "反审核" },
+                { "已生效_待审核", "反审核" },
+                { "待支付_待审核", "反审核" },
+                { "部分支付_待审核", "反审核" },
+                { "全部支付_待审核", "反审核" }
+            };
+            
+            // 尝试获取预定义的操作类型
+            string key = $"{fromStatusName}_{toStatusName}";
+            if (operationMappings.TryGetValue(key, out string description))
+            {
+                return description;
+            }
+            
+            // 默认描述
+            return $"状态变更({fromStatusName} → {toStatusName})";
+        }
+        
+        /// <summary>
+        /// 记录关键操作
+        /// 用于记录非状态变更的关键操作，如删除、打印等
+        /// </summary>
+        /// <param name="entityId">实体ID</param>
+        /// <param name="entityType">实体类型名称</param>
+        /// <param name="operationType">操作类型</param>
+        /// <param name="operatorId">操作用户ID</param>
+        /// <param name="operatorName">操作用户名称</param>
+        /// <param name="remarks">备注信息</param>
+        public void LogCriticalOperation(long entityId, string entityType, string operationType, long operatorId, string operatorName, string remarks = "")
+        {
+            try
+            {
+                // 构建操作日志内容
+                StringBuilder logBuilder = new StringBuilder();
+                logBuilder.AppendLine($"{DateTime.Now:yyyy-MM-dd HH:mm:ss} - 关键操作日志");
+                logBuilder.AppendLine($"实体ID: {entityId}");
+                logBuilder.AppendLine($"实体类型: {entityType}");
+                logBuilder.AppendLine($"操作类型: {operationType}");
+                logBuilder.AppendLine($"操作用户ID: {operatorId}");
+                logBuilder.AppendLine($"操作用户: {operatorName}");
+                
+                // 如果有备注，则添加
+                if (!string.IsNullOrEmpty(remarks))
+                {
+                    logBuilder.AppendLine($"备注: {remarks}");
+                }
+                
+                // 调用系统日志记录器进行记录
+                // 注意：实际实现时应替换为系统已有的日志记录器组件
+                // RUINORERP.Global.LogManager.Log(logBuilder.ToString(), LogType.Audit);
+                
+                // 为了便于调试，可以输出到控制台或其他日志输出方式
+                System.Diagnostics.Debug.WriteLine(logBuilder.ToString());
+            }
+            catch (Exception ex)
+            {
+                // 记录日志操作本身的异常
+                // RUINORERP.Global.LogManager.LogError("记录关键操作日志失败: " + ex.Message, ex);
+                System.Diagnostics.Debug.WriteLine("记录关键操作日志失败: " + ex.Message);
+            }
+        }
 
         #endregion
 
@@ -408,20 +607,21 @@ namespace RUINORERP.Model.Base.StatusManager
         {
             // 为不同状态添加通用按钮规则
             //草稿状态：允许所有操作，除了审核和反审核
-            AddStandardButtonRules(DataStatus.草稿, true, true, true, true, true, false, false, false, false);
+            AddStandardButtonRules(DataStatus.草稿, addEnabled: true, modifyEnabled: true, saveEnabled: true, deleteEnabled: true, submitEnabled: true, reviewEnabled: false, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false);
 
             // 根据全局提交修改模式设置已新建状态的按钮规则
             // 灵活模式：允许修改；严格模式：不允许修改
             bool allowModifyInSubmittedState = submitModifyRuleMode == SubmitModifyRuleMode.灵活模式;
-            AddStandardButtonRules(DataStatus.新建, true, allowModifyInSubmittedState, true, true, false, true, false, false, false);
+            AddStandardButtonRules(DataStatus.新建, addEnabled: true, modifyEnabled: allowModifyInSubmittedState, saveEnabled: true, deleteEnabled: true, submitEnabled: false, reviewEnabled: true, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false);
 
             /// 确认状态：不允许修改和删除，允许反审核，可以结案
-            AddStandardButtonRules(DataStatus.确认, true, false, false, false, false, false, true, true, false);
+            AddStandardButtonRules(DataStatus.确认, addEnabled: true, modifyEnabled: false, saveEnabled: false, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: true, caseClosedEnabled: true, antiClosedEnabled: false);
+            // 注意：DataStatus.确认状态不允许直接删除，但可以通过作废操作实现类似功能，确保逻辑一致性
             // 完结状态：仅允许查看和打印
-            AddStandardButtonRules(DataStatus.完结, true, false, false, false, false, false, false, false, false);
+            AddStandardButtonRules(DataStatus.完结, addEnabled: true, modifyEnabled: false, saveEnabled: false, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false);
 
             /// 作废状态：仅允许查看操作
-            AddStandardButtonRules(DataStatus.作废, true, false, false, false, false, false, false, false, false);
+            AddStandardButtonRules(DataStatus.作废, addEnabled: true, modifyEnabled: false, saveEnabled: false, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false);
         }
 
         /// <summary>
@@ -441,9 +641,10 @@ namespace RUINORERP.Model.Base.StatusManager
         private void InitializePaymentStatusUIButtonRules()
         {
             // 添加付款状态按钮规则
-            AddStandardButtonRules(PaymentStatus.草稿, true, true, true, true, true, false, false, false, false);
-            AddStandardButtonRules(PaymentStatus.待审核, true, true, true, true, false, true, false, false, false);
-            AddStandardButtonRules(PaymentStatus.已支付, false, false, false, false, false, false, false, false, false);
+            AddStandardButtonRules(PaymentStatus.草稿, addEnabled: true, modifyEnabled: true, saveEnabled: true, deleteEnabled: true, submitEnabled: true, reviewEnabled: false, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false);
+            // 修改待审核状态的删除按钮权限，已提交审核的单据不允许直接删除
+            AddStandardButtonRules(PaymentStatus.待审核, addEnabled: true, modifyEnabled: true, saveEnabled: true, deleteEnabled: false, submitEnabled: false, reviewEnabled: true, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false);
+            AddStandardButtonRules(PaymentStatus.已支付, addEnabled: false, modifyEnabled: false, saveEnabled: false, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false);
         }
 
         /// <summary>
@@ -452,13 +653,14 @@ namespace RUINORERP.Model.Base.StatusManager
         private void InitializePrePaymentStatusUIButtonRules()
         {
             // 添加预付款状态按钮规则
-            AddStandardButtonRules(PrePaymentStatus.草稿, true, true, true, true, true, false, false, false, false);
-            AddStandardButtonRules(PrePaymentStatus.待审核, true, true, true, true, false, true, false, false, false);
-            AddStandardButtonRules(PrePaymentStatus.已生效, false, false, false, false, false, false, true, false, false);
-            AddStandardButtonRules(PrePaymentStatus.待核销, false, true, true, false, false, false, false, false, false);
-            AddStandardButtonRules(PrePaymentStatus.部分核销, false, true, true, false, false, false, false, false, false);
-            AddStandardButtonRules(PrePaymentStatus.全额核销, false, false, false, false, false, false, true, false, false);
-            AddStandardButtonRules(PrePaymentStatus.已结案, false, false, false, false, false, false, false, false, false);
+            AddStandardButtonRules(PrePaymentStatus.草稿, addEnabled: true, modifyEnabled: true, saveEnabled: true, deleteEnabled: true, submitEnabled: true, reviewEnabled: false, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false);
+            // 修改待审核状态的删除按钮权限，已提交审核的单据不允许直接删除
+            AddStandardButtonRules(PrePaymentStatus.待审核, addEnabled: true, modifyEnabled: true, saveEnabled: true, deleteEnabled: false, submitEnabled: false, reviewEnabled: true, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false);
+            AddStandardButtonRules(PrePaymentStatus.已生效, addEnabled: false, modifyEnabled: false, saveEnabled: false, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: true, caseClosedEnabled: false, antiClosedEnabled: false);
+            AddStandardButtonRules(PrePaymentStatus.待核销, addEnabled: false, modifyEnabled: true, saveEnabled: true, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false);
+            AddStandardButtonRules(PrePaymentStatus.部分核销, addEnabled: false, modifyEnabled: true, saveEnabled: true, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false);
+            AddStandardButtonRules(PrePaymentStatus.全额核销, addEnabled: false, modifyEnabled: false, saveEnabled: false, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: true, caseClosedEnabled: false, antiClosedEnabled: false);
+            AddStandardButtonRules(PrePaymentStatus.已结案, addEnabled: false, modifyEnabled: false, saveEnabled: false, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false);
         }
 
         /// <summary>
@@ -467,18 +669,19 @@ namespace RUINORERP.Model.Base.StatusManager
         private void InitializeARAPStatusUIButtonRules()
         {
             // 添加应收应付状态按钮规则
-            AddStandardButtonRules(ARAPStatus.草稿, true, true, true, true, true, false, false, false, false);
-            AddStandardButtonRules(ARAPStatus.待审核, true, true, true, true, false, true, false, false, false);
-            // 待支付状态：允许查看和打印，不允许修改原始数据
-            AddStandardButtonRules(ARAPStatus.待支付, true, false, false, false, false, false, false, false, false);
+            AddStandardButtonRules(ARAPStatus.草稿, addEnabled: true, modifyEnabled: true, saveEnabled: true, deleteEnabled: true, submitEnabled: true);
+            // 修改待审核状态的删除按钮权限，已提交审核的单据不允许直接删除
+            AddStandardButtonRules(ARAPStatus.待审核, addEnabled: true, modifyEnabled: true, saveEnabled: true, deleteEnabled: false, submitEnabled: false, reviewEnabled: true);
+            // 待支付状态：允许查看和打印，不允许修改原始数据，但允许反审核操作
+            AddStandardButtonRules(ARAPStatus.待支付, addEnabled: true, modifyEnabled: false, saveEnabled: false, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: true, caseClosedEnabled: false, antiClosedEnabled: false);
             // 部分支付状态：允许查看和打印，不允许修改原始数据
-            AddStandardButtonRules(ARAPStatus.部分支付, true, false, false, false, false, false, false, false, false);
+            AddStandardButtonRules(ARAPStatus.部分支付, addEnabled: true, modifyEnabled: false, saveEnabled: false, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false);
             // 全部支付状态：终态，只允许查看和打印
-            AddStandardButtonRules(ARAPStatus.全部支付, true, false, false, false, false, false, false, false, false);
+            AddStandardButtonRules(ARAPStatus.全部支付, addEnabled: true, modifyEnabled: false, saveEnabled: false, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false);
             // 坏账状态：特殊状态，允许查看和打印，可能需要反审核操作
-            AddStandardButtonRules(ARAPStatus.坏账, true, false, false, false, false, false, true, false, false);
+            AddStandardButtonRules(ARAPStatus.坏账, addEnabled: true, modifyEnabled: false, saveEnabled: false, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: false, caseClosedEnabled: true, antiClosedEnabled: false);
             // 已冲销状态：终态，只允许查看和打印
-            AddStandardButtonRules(ARAPStatus.已冲销, true, false, false, false, false, false, false, false, false);
+            AddStandardButtonRules(ARAPStatus.已冲销, addEnabled: true, modifyEnabled: false, saveEnabled: false, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false);
         }
 
         /// <summary>
@@ -487,24 +690,24 @@ namespace RUINORERP.Model.Base.StatusManager
         private void InitializeStatementStatusUIButtonRules()
         {
             // 草稿状态：允许所有操作，除了审核和反审核
-            AddStandardButtonRules(StatementStatus.草稿, true, true, true, true, true, false, false, false, false);
+            AddStandardButtonRules(StatementStatus.草稿, addEnabled: true, modifyEnabled: true, saveEnabled: true, deleteEnabled: true, submitEnabled: true, reviewEnabled: false, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false);
             
             // 根据全局提交修改模式设置已新建状态的按钮规则
             // 灵活模式：允许修改；严格模式：不允许修改
             bool allowModifyInSubmittedState = submitModifyRuleMode == SubmitModifyRuleMode.灵活模式;
-            AddStandardButtonRules(StatementStatus.新建, true, allowModifyInSubmittedState, true, true, false, true, false, false, false);
+            AddStandardButtonRules(StatementStatus.新建, addEnabled: true, modifyEnabled: allowModifyInSubmittedState, saveEnabled: true, deleteEnabled: true, submitEnabled: false, reviewEnabled: true, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false);
 
             // 确认状态：不允许修改和删除，允许反审核和部分结算
-            AddStandardButtonRules(StatementStatus.确认, true, false, false, false, false, false, true, false, false);
+            AddStandardButtonRules(StatementStatus.确认, addEnabled: true, modifyEnabled: false, saveEnabled: false, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: true, caseClosedEnabled: false, antiClosedEnabled: false);
 
             // 部分结算状态：不允许修改和删除，只允许查看和继续结算操作
-            AddStandardButtonRules(StatementStatus.部分结算, true, false, false, false, false, false, false, false, false);
+            AddStandardButtonRules(StatementStatus.部分结算, addEnabled: true, modifyEnabled: false, saveEnabled: false, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false);
             
             // 全部结清状态：终态，仅允许查看和打印
-            AddStandardButtonRules(StatementStatus.全部结清, true, false, false, false, false, false, false, false, false);
+            AddStandardButtonRules(StatementStatus.全部结清, addEnabled: true, modifyEnabled: false, saveEnabled: false, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false);
             
             // 已作废状态：终态，仅允许查看操作
-            AddStandardButtonRules(StatementStatus.已作废, true, false, false, false, false, false, false, false, false);
+            AddStandardButtonRules(StatementStatus.已作废, addEnabled: true, modifyEnabled: false, saveEnabled: false, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false);
         }
 
         /// <summary>
@@ -866,26 +1069,26 @@ namespace RUINORERP.Model.Base.StatusManager
             {
                 _actionPermissionRules[statusType] = new Dictionary<object, List<MenuItemEnums>>
                 {
-                    [ARAPStatus.草稿] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.提交 },
-                    [ARAPStatus.待审核] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.审核 },
-                    [ARAPStatus.待支付] = new List<MenuItemEnums> { MenuItemEnums.新增 },
-                    [ARAPStatus.部分支付] = new List<MenuItemEnums> { MenuItemEnums.新增 },
-                    [ARAPStatus.全部支付] = new List<MenuItemEnums> { },
-                    [ARAPStatus.坏账] = new List<MenuItemEnums> { },
-                    [ARAPStatus.已冲销] = new List<MenuItemEnums> { }
+                    [ARAPStatus.草稿] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.提交, MenuItemEnums.打印 },
+                    [ARAPStatus.待审核] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.审核, MenuItemEnums.打印 },
+                    [ARAPStatus.待支付] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.打印 },
+                    [ARAPStatus.部分支付] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.打印 },
+                    [ARAPStatus.全部支付] = new List<MenuItemEnums> { MenuItemEnums.打印 },
+                    [ARAPStatus.坏账] = new List<MenuItemEnums> { MenuItemEnums.打印 },
+                    [ARAPStatus.已冲销] = new List<MenuItemEnums> { MenuItemEnums.打印 }
                 };
             }
             else
             {
                 _actionPermissionRules[statusType] = new Dictionary<object, List<MenuItemEnums>>
                 {
-                    [ARAPStatus.草稿] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.提交 },
-                    [ARAPStatus.待审核] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.删除, MenuItemEnums.审核 },
-                    [ARAPStatus.待支付] = new List<MenuItemEnums> { MenuItemEnums.新增 },
-                    [ARAPStatus.部分支付] = new List<MenuItemEnums> { MenuItemEnums.新增 },
-                    [ARAPStatus.全部支付] = new List<MenuItemEnums> { },
-                    [ARAPStatus.坏账] = new List<MenuItemEnums> { },
-                    [ARAPStatus.已冲销] = new List<MenuItemEnums> { }
+                    [ARAPStatus.草稿] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.提交, MenuItemEnums.打印 },
+                    [ARAPStatus.待审核] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.删除, MenuItemEnums.审核, MenuItemEnums.打印 },
+                    [ARAPStatus.待支付] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.打印 },
+                    [ARAPStatus.部分支付] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.打印 },
+                    [ARAPStatus.全部支付] = new List<MenuItemEnums> { MenuItemEnums.打印 },
+                    [ARAPStatus.坏账] = new List<MenuItemEnums> { MenuItemEnums.打印 },
+                    [ARAPStatus.已冲销] = new List<MenuItemEnums> { MenuItemEnums.打印 }
                 };
             }
         }

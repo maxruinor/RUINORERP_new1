@@ -442,7 +442,7 @@ namespace RUINORERP.Server.Services.BizCode
             {
                 var attributeCodes = new List<string>();
 
-                // TODO: 根据实际的产品属性表结构获取属性信息
+                // Todo: 根据实际的产品属性表结构获取属性信息
                 // 这里需要根据实际的产品属性表结构来实现
                 // 假设产品有属性列表，每个属性有属性名和属性值
 

@@ -71,14 +71,14 @@ namespace RUINORERP.Server.SmartReminder
             _logger.LogWarning("触发系统管理员提醒");
         }
 
-        // 修改检查方法 TODO  要如果调用修复？
+        // 修改检查方法 Todo  要如果调用修复？
         //private async void CheckInventoryCallback(object state)
         //{
         //    if (!_workingHoursFilter.ShouldCheck()) return;
 
         //    await CheckInventoryAsync();
         //}
-        // TODO 要如果调用修复？
+        // Todo 要如果调用修复？
         //public void AdjustMonitoringInterval(TimeSpan newInterval)
         //{
         //    _timer?.Change(
@@ -86,7 +86,7 @@ namespace RUINORERP.Server.SmartReminder
         //        period: newInterval);
         //}
 
-        // TODO 要如果调用修复？
+        // Todo 要如果调用修复？
         // 根据系统负载自动调整
         //public void AutoAdjustInterval()
         //{

@@ -6,35 +6,38 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Threading;
 using RUINORERP.Global;
+using RUINORERP.PacketSpec.Enums.Core;
+using RUINORERP.PacketSpec.Models.Common;
 
 namespace RUINORERP.UI.UserCenter.DataParts
 {
     /// <summary>
-    /// 任务状态同步管理器
-    /// 负责管理工作台任务清单的实时状态同步，提供状态变更通知机制
+    /// 任务状态同步管理器 - 核心分发中心
+    /// 单一职责：负责集中管理任务状态更新的订阅和高效分发
+    /// 作为UI层状态更新的核心枢纽，连接网络通知和UI组件
     /// </summary>
-    public class TaskStatusSyncManager : IExcludeFromRegistration
+    public class TodoSyncManager : IExcludeFromRegistration
     {
         #region 单例模式
-        private static readonly Lazy<TaskStatusSyncManager> _instance = 
-            new Lazy<TaskStatusSyncManager>(() => new TaskStatusSyncManager());
+        private static readonly Lazy<TodoSyncManager> _instance = 
+            new Lazy<TodoSyncManager>(() => new TodoSyncManager());
 
         /// <summary>
-        /// 获取TaskStatusSyncManager的单例实例
+        /// 获取TodoSyncManager的单例实例
         /// </summary>
-        public static TaskStatusSyncManager Instance => _instance.Value;
+        public static TodoSyncManager Instance => _instance.Value;
 
-        private TaskStatusSyncManager()
+        private TodoSyncManager()
         {
-            _subscribers = new ConcurrentDictionary<Guid, TaskStatusSyncSubscriber>();
-            _pendingUpdates = new ConcurrentQueue<TaskStatusUpdate>();
+            _subscribers = new ConcurrentDictionary<Guid, TodoSyncSubscriber>();
+            _pendingUpdates = new ConcurrentQueue<TodoUpdate>();
             StartUpdateProcessor();
         }
         #endregion
 
         #region 字段
-        private readonly ConcurrentDictionary<Guid, TaskStatusSyncSubscriber> _subscribers;
-        private readonly ConcurrentQueue<TaskStatusUpdate> _pendingUpdates;
+        private readonly ConcurrentDictionary<Guid, TodoSyncSubscriber> _subscribers;
+        private readonly ConcurrentQueue<TodoUpdate> _pendingUpdates;
         private volatile bool _isProcessingUpdates = false;
         private readonly object _updateLock = new object();
         #endregion
@@ -48,12 +51,12 @@ namespace RUINORERP.UI.UserCenter.DataParts
         /// <param name="updateCallback">状态更新回调函数</param>
         /// <param name="businessTypes">感兴趣的业务类型列表，若为空则接收所有业务类型的更新</param>
         /// <returns>订阅ID，用于取消订阅</returns>
-        public Guid Subscribe(Guid subscriberKey, Action<List<TaskStatusUpdate>> updateCallback, List<BizType> businessTypes = null)
+        public Guid Subscribe(Guid subscriberKey, Action<List<TodoUpdate>> updateCallback, List<BizType> businessTypes = null)
         {
             if (updateCallback == null)
                 throw new ArgumentNullException(nameof(updateCallback));
 
-            var subscriber = new TaskStatusSyncSubscriber
+            var subscriber = new TodoSyncSubscriber
             {
                 SubscriberKey = subscriberKey,
                 UpdateCallback = updateCallback,
@@ -78,7 +81,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
         /// 发布任务状态更新
         /// </summary>
         /// <param name="update">任务状态更新信息</param>
-        public void PublishUpdate(TaskStatusUpdate update)
+        public void PublishUpdate(TodoUpdate update)
         {
             if (update == null)
                 throw new ArgumentNullException(nameof(update));
@@ -91,7 +94,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
         /// 批量发布任务状态更新
         /// </summary>
         /// <param name="updates">任务状态更新列表</param>
-        public void PublishUpdates(List<TaskStatusUpdate> updates)
+        public void PublishUpdates(List<TodoUpdate> updates)
         {
             if (updates == null || !updates.Any())
                 return;
@@ -103,20 +106,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
             ProcessPendingUpdates();
         }
 
-        /// <summary>
-        /// 通知所有订阅者刷新整个任务列表
-        /// </summary>
-        public void NotifyFullRefresh()
-        {
-            var refreshUpdate = new TaskStatusUpdate
-            {
-                UpdateType = TaskStatusUpdateType.FullRefresh,
-                BusinessType = BizType.无对应数据,
-                Timestamp = DateTime.Now
-            };
-
-            PublishUpdate(refreshUpdate);
-        }
+     
         #endregion
 
         #region 私有方法
@@ -138,8 +128,8 @@ namespace RUINORERP.UI.UserCenter.DataParts
 
                 try
                 {
-                    var updatesToProcess = new List<TaskStatusUpdate>();
-                    TaskStatusUpdate update;
+                    var updatesToProcess = new List<TodoUpdate>();
+                    TodoUpdate update;
 
                     // 尝试出队最多100个更新进行处理，避免处理时间过长
                     int maxUpdates = 100;
@@ -170,11 +160,11 @@ namespace RUINORERP.UI.UserCenter.DataParts
         /// 分发更新给相关订阅者
         /// </summary>
         /// <param name="updates">需要分发的更新列表</param>
-        private void DistributeUpdatesToSubscribers(List<TaskStatusUpdate> updates)
+        private void DistributeUpdatesToSubscribers(List<TodoUpdate> updates)
         {
             // 对订阅者进行分组，根据其感兴趣的业务类型
-            var subscribersByBusinessType = new Dictionary<BizType, List<TaskStatusSyncSubscriber>>();
-            var globalSubscribers = new List<TaskStatusSyncSubscriber>(); // 订阅所有业务类型的订阅者
+            var subscribersByBusinessType = new Dictionary<BizType, List<TodoSyncSubscriber>>();
+            var globalSubscribers = new List<TodoSyncSubscriber>(); // 订阅所有业务类型的订阅者
 
             foreach (var subscriber in _subscribers.Values)
             {
@@ -188,7 +178,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                     {
                         if (!subscribersByBusinessType.ContainsKey(bizType))
                         {
-                            subscribersByBusinessType[bizType] = new List<TaskStatusSyncSubscriber>();
+                            subscribersByBusinessType[bizType] = new List<TodoSyncSubscriber>();
                         }
                         subscribersByBusinessType[bizType].Add(subscriber);
                     }
@@ -241,6 +231,17 @@ namespace RUINORERP.UI.UserCenter.DataParts
                     }
                 }
             }
+            
+            // 处理网络任务状态更新
+            foreach (var update in updates)
+            {
+                // 检查是否为来自服务器的更新
+                if (update.IsFromServer)
+                {
+                    TodoMonitor.Instance.HandleNetworkTodoUpdate(update);
+                }
+            }
+            
         }
 
         /// <summary>
@@ -265,7 +266,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
         private void LogError(string message, Exception exception = null)
         {
             // 实际项目中应替换为项目的日志系统
-            System.Diagnostics.Debug.WriteLine($"TaskStatusSyncManager错误: {message}");
+            System.Diagnostics.Debug.WriteLine($"TodoSyncManager错误: {message}");
             if (exception != null)
             {
                 System.Diagnostics.Debug.WriteLine($"异常详情: {exception}");
@@ -277,73 +278,9 @@ namespace RUINORERP.UI.UserCenter.DataParts
     #region 辅助类和枚举
 
     /// <summary>
-    /// 任务状态更新类型
-    /// </summary>
-    public enum TaskStatusUpdateType
-    {
-        /// <summary>
-        /// 任务添加
-        /// </summary>
-        Added,
-        /// <summary>
-        /// 任务状态变更
-        /// </summary>
-        StatusChanged,
-        /// <summary>
-        /// 任务删除
-        /// </summary>
-        Deleted,
-        /// <summary>
-        /// 全部刷新
-        /// </summary>
-        FullRefresh
-    }
-
-    /// <summary>
-    /// 任务状态更新信息
-    /// </summary>
-    public class TaskStatusUpdate
-    {
-        /// <summary>
-        /// 更新类型
-        /// </summary>
-        public TaskStatusUpdateType UpdateType { get; set; }
-
-        /// <summary>
-        /// 业务类型
-        /// </summary>
-        public BizType BusinessType { get; set; }
-
-        /// <summary>
-        /// 任务ID
-        /// </summary>
-        public string TaskId { get; set; }
-
-        /// <summary>
-        /// 原状态
-        /// </summary>
-        public string OldStatus { get; set; }
-
-        /// <summary>
-        /// 新状态
-        /// </summary>
-        public string NewStatus { get; set; }
-
-        /// <summary>
-        /// 更新时间戳
-        /// </summary>
-        public DateTime Timestamp { get; set; }
-
-        /// <summary>
-        /// 附加数据
-        /// </summary>
-        public Dictionary<string, object> AdditionalData { get; set; } = new Dictionary<string, object>();
-    }
-
-    /// <summary>
     /// 任务状态同步订阅者
     /// </summary>
-    internal class TaskStatusSyncSubscriber
+    internal class TodoSyncSubscriber
     {
         /// <summary>
         /// 订阅者唯一标识符
@@ -353,7 +290,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
         /// <summary>
         /// 状态更新回调函数
         /// </summary>
-        public Action<List<TaskStatusUpdate>> UpdateCallback { get; set; }
+        public Action<List<TodoUpdate>> UpdateCallback { get; set; }
 
         /// <summary>
         /// 感兴趣的业务类型列表
@@ -365,7 +302,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
         /// 在UI线程上调用回调函数
         /// </summary>
         /// <param name="updates">更新列表</param>
-        public void InvokeCallback(List<TaskStatusUpdate> updates)
+        public void InvokeCallback(List<TodoUpdate> updates)
         {
             if (UpdateCallback == null)
                 return;
@@ -392,5 +329,6 @@ namespace RUINORERP.UI.UserCenter.DataParts
             }
         }
     }
+    
     #endregion
 }

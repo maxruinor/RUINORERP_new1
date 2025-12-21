@@ -41,6 +41,8 @@ using RUINORERP.Business.RowLevelAuthService;
 using System.Collections;
 using RUINORERP.Model.Base.StatusManager;
 using RUINORERP.Business.Cache;
+using RUINORERP.PacketSpec.Enums.Core;
+using RUINORERP.PacketSpec.Models.Common;
 
 namespace RUINORERP.Business
 {
@@ -182,6 +184,7 @@ namespace RUINORERP.Business
                     //更新UI？
                     await AfterSubmit(entity);
 
+
                     result.Succeeded = true;
                 }
                 else
@@ -287,6 +290,26 @@ namespace RUINORERP.Business
             return Task.CompletedTask;
         }
 
+   
+        /// <summary>
+        /// 获取操作描述
+        /// </summary>
+        /// <param name="updateType">更新类型</param>
+        /// <param name="bizType">业务类型</param>
+        /// <returns>操作描述</returns>
+        private string GetOperationDescription(TodoUpdateType updateType, BizType bizType)
+        {
+            return updateType switch
+            {
+                TodoUpdateType.Created => $"创建了{bizType}单据",
+                TodoUpdateType.StatusChanged => $"提交了{bizType}单据",
+                TodoUpdateType.Approved => $"审核了{bizType}单据",
+                TodoUpdateType.Deleted => $"删除了{bizType}单据",
+                _ => $"更新了{bizType}单据状态"
+            };
+        }
+
+      
         #endregion
 
         /// <summary>

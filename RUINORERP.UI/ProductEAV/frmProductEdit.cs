@@ -108,6 +108,7 @@ namespace RUINORERP.UI.ProductEAV
             InitializeComponent();
             if (!this.DesignMode)
             {
+                this.Load += async (sender, e) => await UCProductEdit_LoadAsync(sender, e);
                 kryptonNavigator1.Button.ButtonDisplayLogic = ButtonDisplayLogic.None;
                 kryptonPageMain.ClearFlags(KryptonPageFlags.All);
                 kryptonPage2.ClearFlags(KryptonPageFlags.All);

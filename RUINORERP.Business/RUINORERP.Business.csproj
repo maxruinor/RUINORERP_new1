@@ -45,6 +45,7 @@
     <Compile Remove="CommService\InventoryCacheManager.cs" />
     <Compile Remove="Document\LockAwareActionManager.cs" />
     <Compile Remove="Ean13.cs" />
+    <Compile Remove="Extensions\TaskStatusNotificationExtensions.cs" />
     <Compile Remove="LogicaService\LocTypeController.cs" />
     <Compile Remove="Processor\View_SaleOrderPerformanceAuto.cs" />
     <Compile Remove="SaleOrderController.cs" />
@@ -138,6 +139,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Extensions\" />
     <Folder Include="IocExtensions\" />
     <Folder Include="Services\" />
   </ItemGroup>

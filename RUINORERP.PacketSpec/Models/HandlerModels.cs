@@ -54,7 +54,7 @@ namespace RUINORERP.PacketSpec.Handlers
         Review
     }
 
-    public enum TaskStatus
+    public enum ToDo
     {
         Pending,
         InProgress,
@@ -134,7 +134,7 @@ namespace RUINORERP.PacketSpec.Handlers
         public string WorkflowInstanceId { get; set; }
         public string TaskName { get; set; }
         public TaskType TaskType { get; set; }
-        public TaskStatus Status { get; set; }
+        public ToDo Status { get; set; }
         public string AssignedToUserId { get; set; }
         public string RequiredRole { get; set; }
         public DateTime CreatedDate { get; set; }

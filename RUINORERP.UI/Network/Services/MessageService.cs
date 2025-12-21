@@ -632,6 +632,40 @@ namespace RUINORERP.UI.Network.Services
                 return MessageResponse.Fail(MessageType.System,  $"发送通知失败: {ex.Message}");
             }
         }
+
+        /// <summary>
+        /// 发送业务通知命令
+        /// </summary>
+        /// <param name="command">命令ID</param>
+        /// <param name="request">请求数据</param>
+        /// <param name="ct">取消令牌</param>
+        /// <returns>消息响应</returns>
+        public async Task<MessageResponse> SendCommandAsync(CommandId command, MessageRequest request, CancellationToken ct = default)
+        {
+            try
+            {
+                var response = await _messageSender.Value.SendCommandWithResponseAsync<MessageResponse>(
+                    command, request, ct);
+
+                // 只记录关键信息和错误
+                if (response != null && response.IsSuccess)
+                {
+                    _logger?.LogDebug("业务命令发送成功 - 命令: {Command}", command.Name);
+                }
+                else
+                {
+                    _logger?.LogWarning("业务命令发送失败 - 命令: {Command}, 错误: {ErrorMessage}", 
+                        command.Name, response?.ErrorMessage ?? "未知错误");
+                }
+
+                return response;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "发送业务命令时发生异常 - 命令: {Command}", command.Name);
+                return MessageResponse.Fail(MessageType.Business, $"发送业务命令失败: {ex.Message}");
+            }
+        }
     }
 
     /// <summary>

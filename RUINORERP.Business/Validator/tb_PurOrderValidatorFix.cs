@@ -36,7 +36,27 @@ namespace RUINORERP.Business
         {
             RuleFor(x => x.tb_PurOrderDetails).NotNull().WithMessage("订单明细:不能为空。");
             RuleFor(x => x.tb_PurOrderDetails).Must(list => list.Count > 0).WithMessage("订单明细不能为空。");
+            RuleFor(tb_PurOrder =>tb_PurOrder.Notes)
+                .Custom((notes, context) =>
+                {
+                    if (string.IsNullOrWhiteSpace(notes))
+                    {
+                        return;
+                    }
 
+                    // 定义敏感词汇列表
+                    var sensitiveKeywords = new[] { "价格", "单价", "售价", "成本", "利润", "折扣" };
+                    var notesLower = notes.ToLower();
+
+                    foreach (var keyword in sensitiveKeywords)
+                    {
+                        if (notesLower.Contains(keyword.ToLower()))
+                        {
+                            context.AddFailure($"备注:包含敏感词'{keyword}'。采购订单将提供打印给供应商，不能带价格相关的敏感文字。");
+                            return;
+                        }
+                    }
+                });
             RuleFor(x => x.TotalAmount).Equal(x => x.tb_PurOrderDetails.Sum(c => (c.UnitPrice + c.CustomizedCost) * c.Quantity) + x.ShipCost).WithMessage("总金额：要等于成交价*数量，包含运费。");
 
             RuleFor(customer => customer.PreDeliveryDate)

@@ -26,13 +26,16 @@ namespace RUINORERP.Server.Network.CommandHandlers
     {
         private readonly SessionService _sessionService;
         private readonly ILogger<MessageCommandHandler> _logger;
+        private readonly TodoNotificationService _TodoNotificationService;
 
         public MessageCommandHandler(
             SessionService sessionService,
-            ILogger<MessageCommandHandler> logger = null)
+            ILogger<MessageCommandHandler> logger = null,
+            TodoNotificationService TodoNotificationService = null)
         {
             _sessionService = sessionService;
             _logger = logger;
+            _TodoNotificationService = TodoNotificationService; // 参数名与字段名保持一致，避免混淆
 
             // 设置支持的命令
             SetSupportedCommands(
@@ -41,8 +44,10 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 MessageCommands.SendMessageToUser,
                 MessageCommands.SendMessageToDepartment,
                 MessageCommands.BroadcastMessage,
-                MessageCommands.SendSystemNotification
+                MessageCommands.SendSystemNotification,
+                MessageCommands.SendTodoNotification
             );
+
         }
 
         /// <summary>
@@ -68,8 +73,10 @@ namespace RUINORERP.Server.Network.CommandHandlers
                             await HandleBroadcastMessageAsync(messageRequest, cmd.Packet.ExecutionContext, cancellationToken),
                         var id when id == MessageCommands.SendSystemNotification =>
                             await HandleSendSystemNotificationAsync(messageRequest, cmd.Packet.ExecutionContext, cancellationToken),
+                        var id when id == MessageCommands.SendTodoNotification =>
+                            await HandleSendTodoNotificationAsync(messageRequest, cmd.Packet.ExecutionContext, cancellationToken),
                         _ => ResponseFactory.CreateSpecificErrorResponse(cmd.Packet.ExecutionContext, $"不支持的消息命令: {commandId.Name}")
-                                    
+
                     };
                 }
                 else
@@ -97,7 +104,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 var messageData = request.Data as IDictionary<string, object>;
                 if (messageData == null || !messageData.ContainsKey("TargetUserId") || !messageData.ContainsKey("Message"))
                 {
-                    return MessageResponse.Fail(request.CommandType,  "消息数据格式错误");
+                    return MessageResponse.Fail(request.CommandType, "消息数据格式错误");
                 }
 
                 var targetUserId = messageData["TargetUserId"].ToString();
@@ -109,7 +116,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 if (!targetSessions.Any())
                 {
                     _logger?.LogWarning("发送弹窗消息失败：目标用户不在线 - 用户ID: {TargetUserId}", targetUserId);
-                    return MessageResponse.Fail(request.CommandType,  "目标用户不在线");
+                    return MessageResponse.Fail(request.CommandType, "目标用户不在线");
                 }
 
                 // 向目标用户的所有会话发送消息
@@ -126,15 +133,15 @@ namespace RUINORERP.Server.Network.CommandHandlers
                             Timestamp = DateTime.Now
                         };
 
-                        var response = MessageResponse.Success(MessageType.Prompt , responseMessage);
+                        var response = MessageResponse.Success(MessageType.Prompt, responseMessage);
                         // 使用SessionService发送响应
                         var messageRequest = new MessageRequest(MessageType.Prompt, responseMessage);
                         var success = await _sessionService.SendCommandAsync(
-                            session.SessionID, 
-                            MessageCommands.SendPopupMessage, 
-                            messageRequest, 
+                            session.SessionID,
+                            MessageCommands.SendPopupMessage,
+                            messageRequest,
                             cancellationToken);
-                        
+
                         if (success)
                             sendCount++;
                     }
@@ -156,7 +163,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "处理发送弹窗消息命令时出错");
-                return MessageResponse.Fail(request.CommandType,  $"处理消息失败: {ex.Message}");
+                return MessageResponse.Fail(request.CommandType, $"处理消息失败: {ex.Message}");
             }
         }
 
@@ -173,7 +180,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 var messageData = request.Data as IDictionary<string, object>;
                 if (messageData == null || !messageData.ContainsKey("OriginalMessageId") || !messageData.ContainsKey("TargetUserIds"))
                 {
-                    return MessageResponse.Fail(request.CommandType,  "转发消息数据格式错误");
+                    return MessageResponse.Fail(request.CommandType, "转发消息数据格式错误");
                 }
 
                 var originalMessageId = messageData["OriginalMessageId"].ToString();
@@ -181,7 +188,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
 
                 if (targetUserIds == null)
                 {
-                    return MessageResponse.Fail(request.CommandType,  "目标用户列表格式错误");
+                    return MessageResponse.Fail(request.CommandType, "目标用户列表格式错误");
                 }
 
                 var sendCount = 0;
@@ -201,15 +208,15 @@ namespace RUINORERP.Server.Network.CommandHandlers
                                 ForwardTime = DateTime.Now
                             };
 
-                            var response = MessageResponse.Success( MessageType.Prompt, forwardMessage);
+                            var response = MessageResponse.Success(MessageType.Prompt, forwardMessage);
                             // 使用SessionService发送响应
                             var messageRequest = new MessageRequest(MessageType.Prompt, forwardMessage);
                             var success = await _sessionService.SendCommandAsync(
-                                session.SessionID, 
-                                MessageCommands.ForwardPopupMessage, 
-                                messageRequest, 
+                                session.SessionID,
+                                MessageCommands.ForwardPopupMessage,
+                                messageRequest,
                                 cancellationToken);
-                            
+
                             if (success)
                                 sendCount++;
                         }
@@ -232,7 +239,38 @@ namespace RUINORERP.Server.Network.CommandHandlers
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "处理转发弹窗消息命令时出错");
-                return MessageResponse.Fail(request.CommandType,  $"处理转发消息失败: {ex.Message}");
+                return MessageResponse.Fail(request.CommandType, $"处理转发消息失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 处理发送任务状态通知命令
+        /// </summary>
+        private async Task<ResponseBase> HandleSendTodoNotificationAsync(
+            MessageRequest request,
+            CommandContext executionContext,
+            CancellationToken cancellationToken)
+        {
+            try
+            {
+                // 提取业务数据
+                if (request.Data is MessageData messageData &&
+                    messageData.BizData is TodoUpdate update)
+                {
+                    // 广播任务状态更新给相关用户
+                    await _TodoNotificationService.NotifyTodoChangeAsync(update);
+
+                    return MessageResponse.Success(request.CommandType, "任务状态通知处理成功");
+                }
+                else
+                {
+                    return MessageResponse.Fail(request.CommandType, "任务状态通知数据格式错误");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "处理任务状态通知命令时出错");
+                return MessageResponse.Fail(request.CommandType, $"处理任务状态通知失败: {ex.Message}");
             }
         }
 
@@ -249,7 +287,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 var messageData = request.Data as IDictionary<string, object>;
                 if (messageData == null || !messageData.ContainsKey("TargetUserId") || !messageData.ContainsKey("Message"))
                 {
-                    return MessageResponse.Fail(request.CommandType,  "消息数据格式错误");
+                    return MessageResponse.Fail(request.CommandType, "消息数据格式错误");
                 }
 
                 var targetUserId = messageData["TargetUserId"].ToString();
@@ -261,7 +299,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 if (!targetSessions.Any())
                 {
                     _logger?.LogWarning("发送用户消息失败：目标用户不在线 - 用户ID: {TargetUserId}", targetUserId);
-                    return MessageResponse.Fail(request.CommandType,  "目标用户不在线");
+                    return MessageResponse.Fail(request.CommandType, "目标用户不在线");
                 }
 
                 // 向目标用户的所有会话发送消息
@@ -278,15 +316,15 @@ namespace RUINORERP.Server.Network.CommandHandlers
                             Timestamp = DateTime.Now
                         };
 
-                        var response = MessageResponse.Success( MessageType.Message, userMessage);
+                        var response = MessageResponse.Success(MessageType.Message, userMessage);
                         // 使用SessionService发送响应
                         var messageRequest = new MessageRequest(MessageType.Message, userMessage);
                         var success = await _sessionService.SendCommandAsync(
-                            session.SessionID, 
-                            MessageCommands.SendMessageToUser, 
-                            messageRequest, 
+                            session.SessionID,
+                            MessageCommands.SendMessageToUser,
+                            messageRequest,
                             cancellationToken);
-                        
+
                         if (success)
                             sendCount++;
                     }
@@ -308,11 +346,11 @@ namespace RUINORERP.Server.Network.CommandHandlers
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "处理发送用户消息命令时出错");
-                return MessageResponse.Fail(request.CommandType,  $"处理消息失败: {ex.Message}");
+                return MessageResponse.Fail(request.CommandType, $"处理消息失败: {ex.Message}");
             }
         }
 
-        
+
 
         /// <summary>
         /// 处理广播消息命令
@@ -327,7 +365,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 var messageData = request.Data as IDictionary<string, object>;
                 if (messageData == null || !messageData.ContainsKey("Message"))
                 {
-                    return MessageResponse.Fail(request.CommandType,  "消息数据格式错误");
+                    return MessageResponse.Fail(request.CommandType, "消息数据格式错误");
                 }
 
                 var message = messageData["Message"].ToString();
@@ -349,15 +387,15 @@ namespace RUINORERP.Server.Network.CommandHandlers
                             Timestamp = DateTime.Now
                         };
 
-                        var response = MessageResponse.Success( MessageType.Message, broadcastMessage);
+                        var response = MessageResponse.Success(MessageType.Message, broadcastMessage);
                         // 使用SessionService发送响应
                         var messageRequest = new MessageRequest(MessageType.Message, broadcastMessage);
                         var success = await _sessionService.SendCommandAsync(
-                            session.SessionID, 
-                            MessageCommands.BroadcastMessage, 
-                            messageRequest, 
+                            session.SessionID,
+                            MessageCommands.BroadcastMessage,
+                            messageRequest,
                             cancellationToken);
-                        
+
                         if (success)
                             sendCount++;
                     }
@@ -378,7 +416,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "处理广播消息命令时出错");
-                return MessageResponse.Fail(request.CommandType,  $"处理广播消息失败: {ex.Message}");
+                return MessageResponse.Fail(request.CommandType, $"处理广播消息失败: {ex.Message}");
             }
         }
 
@@ -395,7 +433,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 var messageData = request.Data as IDictionary<string, object>;
                 if (messageData == null || !messageData.ContainsKey("Message"))
                 {
-                    return MessageResponse.Fail(request.CommandType,  "通知数据格式错误");
+                    return MessageResponse.Fail(request.CommandType, "通知数据格式错误");
                 }
 
                 var message = messageData["Message"].ToString();
@@ -420,11 +458,11 @@ namespace RUINORERP.Server.Network.CommandHandlers
                         // 使用SessionService发送响应
                         var messageRequest = new MessageRequest(MessageType.Message, notificationMessage);
                         var success = await _sessionService.SendCommandAsync(
-                            session.SessionID, 
-                            MessageCommands.SendSystemNotification, 
-                            messageRequest, 
+                            session.SessionID,
+                            MessageCommands.SendSystemNotification,
+                            messageRequest,
                             cancellationToken);
-                        
+
                         if (success)
                             sendCount++;
                     }
@@ -445,11 +483,9 @@ namespace RUINORERP.Server.Network.CommandHandlers
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "处理发送系统通知命令时出错");
-                return MessageResponse.Fail(request.CommandType,  $"处理系统通知失败: {ex.Message}");
+                return MessageResponse.Fail(request.CommandType, $"处理系统通知失败: {ex.Message}");
             }
         }
-
-      
 
 
     }

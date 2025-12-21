@@ -611,17 +611,7 @@ namespace RUINORERP.Global
         作废 = 16
     }
 
-
-    //public enum ProductType
-    //{
-    //    成品,
-    //    半成品,
-    //    在制品,
-    //    原料,
-    //    包材,
-    //    线材
-    //}
-
+ 
     /// <summary>
     /// 产品属性类型EVA
     /// 数据库中有对应的表及固定插入值，暂时初始化系统时，同时初始化数据

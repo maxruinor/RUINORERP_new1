@@ -45,6 +45,8 @@ namespace RUINORERP.Server.Network.DI
             // 注册服务器消息服务
             services.AddSingleton<ServerMessageService>();
 
+            // 注册任务状态变更通知服务
+            services.AddSingleton<TodoNotificationService>();
 
             // 注册缓存订阅管理器
             services.AddSingleton<CacheSubscriptionManager>(provider =>
@@ -129,6 +131,7 @@ namespace RUINORERP.Server.Network.DI
             // 使用链式注册确保SessionService和ISessionService指向同一个实例
             builder.RegisterType<SessionService>().AsSelf().As<ISessionService>().SingleInstance();
             builder.RegisterType<ServerMessageService>().AsSelf().SingleInstance();
+            builder.RegisterType<TodoNotificationService>().AsSelf().SingleInstance();
             //    builder.RegisterType<UserService>().As<IUserService>().AsSelf().SingleInstance();
             //builder.RegisterType<SuperSocketAdapter>().AsSelf().SingleInstance();
             //  builder.RegisterType<FileStorageManager>().AsSelf().SingleInstance();

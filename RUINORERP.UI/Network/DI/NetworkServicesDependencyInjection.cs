@@ -191,6 +191,7 @@ namespace RUINORERP.UI.Network.DI
             builder.RegisterType<SimplifiedMessageService>().AsSelf().InstancePerDependency();
             builder.RegisterType<EnhancedMessageManager>().AsSelf().InstancePerLifetimeScope();
             builder.RegisterType<SystemManagementService>().AsSelf().InstancePerDependency();
+           // builder.RegisterType<BusinessNotificationService>().AsSelf().InstancePerLifetimeScope();
 
             // 注册文件管理服务
             builder.RegisterType<FileManagementController>()
@@ -249,6 +250,11 @@ namespace RUINORERP.UI.Network.DI
                 .As<IClientCommandHandler>()
                 .AsSelf()
                 .InstancePerLifetimeScope();
+
+            //builder.RegisterType<BusinessNotificationHandler>()
+            //    .As<IClientCommandHandler>()
+            //    .AsSelf()
+            //    .InstancePerLifetimeScope();
 
             // 注册LockCommandHandler，注入LockStatusNotificationService
             builder.Register(c =>

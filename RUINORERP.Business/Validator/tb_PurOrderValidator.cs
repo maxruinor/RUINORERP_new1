@@ -104,6 +104,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_PurOrder =>tb_PurOrder.Notes).MaximumMixedLength(1500).WithMessage("备注:不能超过最大长度,1500.");
 
+ 
  RuleFor(tb_PurOrder =>tb_PurOrder.CloseCaseOpinions).MaximumMixedLength(200).WithMessage("结案意见:不能超过最大长度,200.");
 
  RuleFor(tb_PurOrder =>tb_PurOrder.ApprovalOpinions).MaximumMixedLength(200).WithMessage("审批意见:不能超过最大长度,200.");

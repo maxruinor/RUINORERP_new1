@@ -190,6 +190,11 @@ namespace RUINORERP.PacketSpec.Commands
         /// 提示消息 - 系统提示信息
         /// </summary>
         public const ushort Message_NotificationMessage = 0x0309;
+
+        /// <summary>
+        /// 发送业务通知 - 发送业务状态变更通知
+        /// </summary>
+        public const ushort Message_SendTodoNotification = 0x030A;
         #endregion
 
         #region 工作流命令 (0x04xx)

@@ -1,5 +1,3 @@
-using System;
-
 namespace RUINORERP.UI.UserCenter.DataParts
 {
     partial class UCTodoList
@@ -8,26 +6,6 @@ namespace RUINORERP.UI.UserCenter.DataParts
         /// 必需的设计器变量。
         /// </summary>
         private System.ComponentModel.IContainer components = null;
-
-        /// <summary> 
-        /// 清理所有正在使用的资源。
-        /// </summary>
-        /// <param name="disposing">如果应释放托管资源，为 true；否则为 false。</param>
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing && (components != null))
-            {
-                // 取消订阅任务状态更新
-                if (_syncSubscriberKey != Guid.Empty)
-                {
-                    TaskStatusSyncManager.Instance.Unsubscribe(_syncSubscriberKey);
-                    _syncSubscriberKey = Guid.Empty;
-                }
-
-                components.Dispose();
-            }
-            base.Dispose(disposing);
-        }
 
         #region 组件设计器生成的代码
 

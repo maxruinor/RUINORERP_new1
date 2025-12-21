@@ -1299,7 +1299,7 @@ namespace RUINORERP.Server.Controls
                 userList.Add(session.UserInfo);
                 HandleSendMessage(userList);
             }
-            // TODO: 实现发送消息功能
+            // Todo: 实现发送消息功能
             MessageBox.Show($"选择了 {selectedSessions.Count} 个会话发送消息", "功能待实现", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
@@ -1512,7 +1512,7 @@ namespace RUINORERP.Server.Controls
                 }
 
             }
-            // TODO: 实现推送系统配置功能
+            // Todo: 实现推送系统配置功能
             MessageBox.Show($"选择了 {selectedSessions.Count} 个会话推送系统配置", "功能待实现", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
@@ -1525,7 +1525,7 @@ namespace RUINORERP.Server.Controls
                 return;
             }
 
-            // TODO: 实现推送缓存功能
+            // Todo: 实现推送缓存功能
             MessageBox.Show($"选择了 {selectedSessions.Count} 个会话推送缓存", "功能待实现", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 

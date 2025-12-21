@@ -28,5 +28,8 @@ namespace RUINORERP.UI.UserCenter
         /// </summary>
         public string UIPropertyIdentifier { get; set; }
         public Type tableType { get; set; }
+        public bool IncludeBillIds { get; internal set; }
+        public string PrimaryKeyFieldName { get; internal set; }
+        public List<long> BillIds { get; internal set; }
     }
 }

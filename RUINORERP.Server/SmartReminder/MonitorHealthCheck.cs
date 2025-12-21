@@ -117,7 +117,7 @@ namespace RUINORERP.Server.SmartReminder
 
 
 
-    // TODO 要如果调用修复？
+    // Todo 要如果调用修复？
     //public Task<HealthCheckResult> CheckHealthAsync(
     //    HealthCheckContext context,
     //    CancellationToken cancellationToken = default)
@@ -133,7 +133,7 @@ namespace RUINORERP.Server.SmartReminder
 }
 
 
-// TODO 要如果调用修复？
+// Todo 要如果调用修复？
 // 注册健康检查
 //services.AddHealthChecks()
 //.AddCheck<MonitorHealthCheck>("inventory_monitor");

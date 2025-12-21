@@ -1,4 +1,6 @@
 using RUINORERP.Global;
+using RUINORERP.PacketSpec.Enums.Core;
+using RUINORERP.PacketSpec.Models.Common;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -9,21 +11,22 @@ using System.Threading.Tasks;
 namespace RUINORERP.UI.UserCenter.DataParts
 {
     /// <summary>
-    /// 任务状态监控器
-    /// 负责监控数据库中任务状态的变化并触发更新通知
+    /// 任务状态监控器 - 状态变更处理器
+    /// 单一职责：处理本地和网络任务状态更新，维护状态历史记录
+    /// 作为状态变更的协调组件，确保状态更新能正确地分发给订阅者
     /// </summary>
-    public class TaskStatusMonitor : IExcludeFromRegistration
+    public class TodoMonitor : IExcludeFromRegistration
     {
         #region 单例模式
-        private static readonly Lazy<TaskStatusMonitor> _instance = 
-            new Lazy<TaskStatusMonitor>(() => new TaskStatusMonitor());
+        private static readonly Lazy<TodoMonitor> _instance = 
+            new Lazy<TodoMonitor>(() => new TodoMonitor());
 
         /// <summary>
-        /// 获取TaskStatusMonitor的单例实例
+        /// 获取TodoMonitor的单例实例
         /// </summary>
-        public static TaskStatusMonitor Instance => _instance.Value;
+        public static TodoMonitor Instance => _instance.Value;
 
-        private TaskStatusMonitor()
+        private TodoMonitor()
         {
             _statusHistory = new ConcurrentDictionary<string, string>();
             _monitoredBusinessTypes = new List<BizType>();
@@ -31,7 +34,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
         #endregion
 
         #region 字段
-        private readonly ConcurrentDictionary<string, string> _statusHistory; // 记录任务状态历史，键为"TaskId_BizType"
+        private readonly ConcurrentDictionary<string, string> _statusHistory; // 记录任务状态历史，键为"BillId_BizType"
         private readonly List<BizType> _monitoredBusinessTypes; // 监控的业务类型列表
         private bool _isMonitoring = false;
         private readonly object _monitorLock = new object();
@@ -40,7 +43,8 @@ namespace RUINORERP.UI.UserCenter.DataParts
         #region 公共方法
 
         /// <summary>
-        /// 开始监控指定的业务类型
+        /// 注册要监控的业务类型
+        /// 注：现在使用基于网络通知的实时同步，不再需要轮询数据库
         /// </summary>
         /// <param name="businessTypes">要监控的业务类型列表</param>
         public void StartMonitoring(List<BizType> businessTypes)
@@ -59,13 +63,8 @@ namespace RUINORERP.UI.UserCenter.DataParts
                     }
                 }
 
-                // 如果还未开始监控，则启动监控
-                if (!_isMonitoring)
-                {
-                    _isMonitoring = true;
-                    InitializeStatusHistory();
-                    StartMonitoringTask();
-                }
+                // 标记为监控中状态，但不再启动轮询任务
+                _isMonitoring = true;
             }
         }
 
@@ -98,250 +97,92 @@ namespace RUINORERP.UI.UserCenter.DataParts
         /// 手动触发任务状态变更通知
         /// 当其他模块修改了任务状态时，可以调用此方法通知监控器
         /// </summary>
-        /// <param name="taskId">任务ID</param>
+        /// <param name="billId">单据主键ID</param>
         /// <param name="bizType">业务类型</param>
         /// <param name="oldStatus">旧状态</param>
         /// <param name="newStatus">新状态</param>
-        public void NotifyTaskStatusChanged(string taskId, BizType bizType, string oldStatus, string newStatus)
+        public void NotifyTodoChanged(long billId, BizType bizType, string oldStatus, string newStatus)
         {
-            if (string.IsNullOrEmpty(taskId) || bizType == BizType.无对应数据 || oldStatus == newStatus)
+            if (billId == 0 || bizType == BizType.无对应数据)
                 return;
 
-            var taskKey = $"{taskId}_{bizType}";
+            var taskKey = $"{billId}_{bizType}";
+            
+            // 检查状态是否真的发生了变化
+            if (_statusHistory.TryGetValue(taskKey, out var currentStatus))
+            {
+                if (currentStatus == newStatus)
+                {
+                    // 状态未发生变化，无需通知
+                    return;
+                }
+            }
+
             _statusHistory[taskKey] = newStatus;
 
             // 发布状态更新通知
-            var update = new TaskStatusUpdate
+            var update = new TodoUpdate
             {
-                UpdateType = TaskStatusUpdateType.StatusChanged,
+                UpdateType = (oldStatus == null) ? 
+                    TodoUpdateType.Created : 
+                    TodoUpdateType.StatusChanged,
                 BusinessType = bizType,
-                TaskId = taskId,
+                BillId = billId,
                 OldStatus = oldStatus,
                 NewStatus = newStatus,
                 Timestamp = DateTime.Now
             };
 
-            TaskStatusSyncManager.Instance.PublishUpdate(update);
+            TodoSyncManager.Instance.PublishUpdate(update);
+        }
+
+        /// <summary>
+        /// 处理来自网络的任务状态更新
+        /// </summary>
+        /// <param name="update">网络任务状态更新信息</param>
+        public void HandleNetworkTodoUpdate(TodoUpdate update)
+        {
+            if (update == null)
+                return;
+
+            var taskKey = $"{update.BillId}_{update.BusinessType}";
+            
+            // 更新本地状态历史
+            if (update.UpdateType == TodoUpdateType.Deleted)
+            {
+                _statusHistory.TryRemove(taskKey, out _);
+            }
+            else
+            {
+                _statusHistory[taskKey] = update.NewStatus;
+            }
+
+            // 发布更新到本地订阅者
+            TodoSyncManager.Instance.PublishUpdate(new TodoUpdate
+            {
+                UpdateType = update.UpdateType,
+                BusinessType = update.BusinessType,
+                BillId = update.BillId,
+                OldStatus = update.OldStatus,
+                NewStatus = update.NewStatus,
+                Timestamp = update.Timestamp
+            });
+            
         }
         #endregion
 
         #region 私有方法
 
         /// <summary>
-        /// 初始化状态历史
-        /// 首次启动监控时，从数据库加载当前任务状态
+        /// 清理不再使用的监控资源
         /// </summary>
-        private void InitializeStatusHistory()
+        public void Cleanup()
         {
-            try
+            lock (_monitorLock)
             {
-                foreach (var bizType in _monitoredBusinessTypes)
-                {
-                    LoadCurrentTaskStatus(bizType);
-                }
-            }
-            catch (Exception ex)
-            {
-                // 记录错误日志
-                System.Diagnostics.Debug.WriteLine($"初始化任务状态历史失败: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// 加载指定业务类型的当前任务状态
-        /// </summary>
-        /// <param name="bizType">业务类型</param>
-        private void LoadCurrentTaskStatus(BizType bizType)
-        {
-            try
-            {
-                // 获取业务类型对应的表和状态字段
-                var (tableType, statusField) = GetTableAndStatusField(bizType);
-                if (tableType == null || string.IsNullOrEmpty(statusField))
-                    return;
-
-                // 查询当前任务状态
-                var data = MainForm.Instance.AppContext.Db.CopyNew()
-                    .Queryable(tableType.Name, "t")
-                    .Select($"t.ID AS TaskId, t.{statusField} AS Status")
-                    .Where($"t.isdeleted = 0")
-                    .ToDataTable();
-
-                // 更新状态历史
-                foreach (DataRow row in data.Rows)
-                {
-                    var taskId = row["TaskId"].ToString();
-                    var status = row["Status"].ToString();
-                    var taskKey = $"{taskId}_{bizType}";
-
-                    _statusHistory[taskKey] = status;
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"加载业务类型 {bizType} 的任务状态失败: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// 启动监控任务
-        /// 定期检查任务状态变化
-        /// </summary>
-        private void StartMonitoringTask()
-        {
-            Task.Run(async () =>
-            {
-                while (_isMonitoring)
-                {
-                    try
-                    {
-                        await CheckTaskStatusChanges();
-                    }
-                    catch (Exception ex)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"检查任务状态变化失败: {ex.Message}");
-                    }
-
-                    // 每秒检查一次状态变化
-                    await Task.Delay(1000);
-                }
-            });
-        }
-
-        /// <summary>
-        /// 检查任务状态变化
-        /// </summary>
-        private async Task CheckTaskStatusChanges()
-        {
-            foreach (var bizType in _monitoredBusinessTypes)
-            {
-                await CheckStatusChangesForBusinessType(bizType);
-            }
-        }
-
-        /// <summary>
-        /// 检查指定业务类型的任务状态变化
-        /// </summary>
-        /// <param name="bizType">业务类型</param>
-        private async Task CheckStatusChangesForBusinessType(BizType bizType)
-        {
-            try
-            {
-                // 获取业务类型对应的表和状态字段
-                var (tableType, statusField) = GetTableAndStatusField(bizType);
-                if (tableType == null || string.IsNullOrEmpty(statusField))
-                    return;
-
-                // 查询当前任务状态
-                var data = await MainForm.Instance.AppContext.Db.CopyNew()
-                    .Queryable(tableType.Name, "t")
-                    .Select($"t.ID AS TaskId, t.{statusField} AS Status")
-                    .Where($"t.isdeleted = 0")
-                    .ToDataTableAsync();
-
-                // 检查新增任务
-                var currentTaskKeys = new HashSet<string>();
-                foreach (DataRow row in data.Rows)
-                {
-                    var taskId = row["TaskId"].ToString();
-                    var currentStatus = row["Status"].ToString();
-                    var taskKey = $"{taskId}_{bizType}";
-                    currentTaskKeys.Add(taskKey);
-
-                    if (_statusHistory.TryGetValue(taskKey, out var oldStatus))
-                    {
-                        // 检查状态变化
-                        if (oldStatus != currentStatus)
-                        {
-                            _statusHistory[taskKey] = currentStatus;
-
-                            // 发布状态更新通知
-                            var update = new TaskStatusUpdate
-                            {
-                                UpdateType = TaskStatusUpdateType.StatusChanged,
-                                BusinessType = bizType,
-                                TaskId = taskId,
-                                OldStatus = oldStatus,
-                                NewStatus = currentStatus,
-                                Timestamp = DateTime.Now
-                            };
-
-                            TaskStatusSyncManager.Instance.PublishUpdate(update);
-                        }
-                    }
-                    else
-                    {
-                        // 新任务
-                        _statusHistory[taskKey] = currentStatus;
-
-                        // 发布新增通知
-                        var update = new TaskStatusUpdate
-                        {
-                            UpdateType = TaskStatusUpdateType.Added,
-                            BusinessType = bizType,
-                            TaskId = taskId,
-                            NewStatus = currentStatus,
-                            Timestamp = DateTime.Now
-                        };
-
-                        TaskStatusSyncManager.Instance.PublishUpdate(update);
-                    }
-                }
-
-                // 检查删除任务
-                var deletedTaskKeys = _statusHistory.Keys
-                    .Where(key => key.EndsWith($"_{bizType}") && !currentTaskKeys.Contains(key))
-                    .ToList();
-
-                foreach (var taskKey in deletedTaskKeys)
-                {
-                    if (_statusHistory.TryRemove(taskKey, out var lastStatus))
-                    {
-                        var taskId = taskKey.Substring(0, taskKey.Length - $"_{bizType}".Length);
-
-                        // 发布删除通知
-                        var update = new TaskStatusUpdate
-                        {
-                            UpdateType = TaskStatusUpdateType.Deleted,
-                            BusinessType = bizType,
-                            TaskId = taskId,
-                            OldStatus = lastStatus,
-                            Timestamp = DateTime.Now
-                        };
-
-                        TaskStatusSyncManager.Instance.PublishUpdate(update);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"检查业务类型 {bizType} 的任务状态变化失败: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// 获取业务类型对应的表类型和状态字段名
-        /// </summary>
-        /// <param name="bizType">业务类型</param>
-        /// <returns>表类型和状态字段名</returns>
-        private (Type, string) GetTableAndStatusField(BizType bizType)
-        {
-            // 根据业务类型获取对应的表名和状态字段
-            // 这里使用简化的实现，实际项目中可能需要更复杂的映射关系
-            switch (bizType)
-            {
-                //case BizType.采购订单:
-                //    return (typeof(采购订单), "ApprovalStatus");
-                //case BizType.销售订单:
-                //    return (typeof(销售订单), "ApprovalStatus");
-                //case BizType.制令单:
-                //    return (typeof(制令单), "DataStatus");
-                //case BizType.应收款单:
-                //case BizType.应付款单:
-                //    return (typeof(应收款单), "ARAPStatus");
-                // 更多业务类型映射...
-                default:
-                    return (null, null);
+                _isMonitoring = false;
+                _monitoredBusinessTypes.Clear();
+                _statusHistory.Clear();
             }
         }
         #endregion

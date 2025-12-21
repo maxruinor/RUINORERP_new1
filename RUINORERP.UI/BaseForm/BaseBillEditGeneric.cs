@@ -88,6 +88,7 @@ using System.Management;
 using RUINORERP.Business.BizMapperService;
 using RUINORERP.UI.Network;
 using RUINORERP.PacketSpec.Commands;
+using RUINORERP.PacketSpec.Enums.Core;
 using RUINORERP.Business.Cache;
 using RUINORERP.UI.Network.Services;
 using RUINORERP.Business.CommService;
@@ -95,6 +96,8 @@ using RUINOR.WinFormsUI.CustomPictureBox;
 using RUINORERP.PacketSpec.Models.Lock;
 using RUINORERP.Model.Base.StatusManager;
 using System.Windows.Markup.Localizer;
+using RUINORERP.UI.UserCenter.DataParts;
+using RUINORERP.PacketSpec.Models.Common;
 
 namespace RUINORERP.UI.BaseForm
 {
@@ -3367,8 +3370,18 @@ namespace RUINORERP.UI.BaseForm
                 {
                     reviewResult.Succeeded = rmr.Succeeded;
 
-                    //如果是出库单审核，则上传到服务器 锁定订单无法修改
-                    if (ae.bizType == BizType.销售出库单)
+                    // 发送任务状态更新通知
+                    var bizType = EntityMappingHelper.GetBillData<T>(EditEntity).BizType;
+                    var taskUpdate = new PacketSpec.Models.Common.TodoUpdate
+                    {
+                        UpdateType = PacketSpec.Enums.Core.TodoUpdateType.Approved,
+                        BusinessType = bizType,
+                        BillId = pkid, // 使用新的BillId字段存储单据主键
+                        NewStatus = "已审核",
+                        Timestamp = DateTime.Now,
+                        IsFromServer = true
+                    };
+                    TodoSyncManager.Instance.PublishUpdate(taskUpdate);                    //如果是出库单审核，则上传到服务器 锁定订单无法修改                    if (ae.bizType == BizType.销售出库单)
                     {
                         //锁定对应的订单
                         if (EditEntity is tb_SaleOut saleOut)
@@ -4900,14 +4913,27 @@ namespace RUINORERP.UI.BaseForm
                     }
                 }
 
-                //if (ReflectionHelper.ExistPropertyName<T>(typeof(ActionStatus).Name))
-                //{
-                //    //注意這里保存的是枚举
-                //    ReflectionHelper.SetPropertyValue(entity, typeof(ActionStatus).Name, (int)ActionStatus.加载);
-                //}
+
+                long newkeyid = rmr.ReturnObject.PrimaryKeyID;
+                pkid = (long)ReflectionHelper.GetPropertyValue(entity, PKCol);
+
                 // 保存成功后的锁定状态管理
-                await PostSaveLockManagement(entity, originalPkid);
+                await PostSaveLockManagement(entity, pkid);
                 MainForm.Instance.uclog.AddLog("保存成功");
+
+        
+                // 发送任务状态更新通知
+                var bizType = EntityMappingHelper.GetBillData<T>(EditEntity).BizType;
+                var taskUpdate = new PacketSpec.Models.Common.TodoUpdate
+                {
+                    UpdateType = originalPkid == 0 ? PacketSpec.Enums.Core.TodoUpdateType.Created : PacketSpec.Enums.Core.TodoUpdateType.StatusChanged,
+                    BusinessType = bizType,
+                    BillId = pkid, // 使用新的BillId字段存储单据主键
+                    NewStatus = originalPkid == 0 ? "已创建" : "已修改",
+                    Timestamp = DateTime.Now,
+                    IsFromServer = false
+                };
+                TodoSyncManager.Instance.PublishUpdate(taskUpdate);
             }
             else
             {
@@ -5188,6 +5214,19 @@ namespace RUINORERP.UI.BaseForm
                         //提示一下删除成功
                         MainForm.Instance.uclog.AddLog("提示", "删除成功");
 
+                        // 发送任务状态删除通知
+                        var bizType = EntityMappingHelper.GetBillData<T>(editEntity as T).BizType;
+                        var taskUpdate = new PacketSpec.Models.Common.TodoUpdate
+                        {
+                            UpdateType = PacketSpec.Enums.Core.TodoUpdateType.Deleted,
+                            BusinessType = bizType,
+                            BillId = PKValue.ToLong(), // 使用新的BillId字段存储单据主键
+                            NewStatus = "已删除",
+                            Timestamp = DateTime.Now,
+                            IsFromServer = true
+                        };
+                        TodoSyncManager.Instance.PublishUpdate(taskUpdate);
+
                         //加载一个空的显示的UI
                         bindingSourceSub.Clear();
                         OnBindDataToUIEvent(Activator.CreateInstance(typeof(T)) as T, ActionStatus.删除);
@@ -5250,6 +5289,20 @@ namespace RUINORERP.UI.BaseForm
                         {
                             baseEntity.AcceptChanges();
                         }
+
+                        #region
+
+                        // 发送任务状态变更通知
+                        //var TodoChangeNotifier = Startup.GetFromFac<TodoChangeNotifier>();
+                        //var currentUser = _appContext.CurUserInfo.UserInfo;
+                        //await entity.NotifyTodoChangeAsync(
+                        //    TodoUpdateType.StatusChanged,
+                        //    "已提交",
+                        //    statusEnum.ToString(),
+                        //    currentUser,
+                        //    TodoChangeNotifier);
+
+                        #endregion
                         //这里推送到审核，启动工作流 后面优化
                         // OriginalData od = ActionForClient.工作流提交(pkid, (int)BizType.盘点单);
                         // MainForm.Instance.ecs.AddSendData(od);]
@@ -5354,6 +5407,19 @@ namespace RUINORERP.UI.BaseForm
                             }
                         }
                         submitrs = true;
+
+                        // 发送任务状态更新通知
+                        var bizType = EntityMappingHelper.GetBillData<T>(EditEntity).BizType;
+                        var taskUpdate = new PacketSpec.Models.Common.TodoUpdate
+                        {
+                            UpdateType = PacketSpec.Enums.Core.TodoUpdateType.StatusChanged,
+                            BusinessType = bizType,
+                            BillId = pkid, // 使用新的BillId字段存储单据主键
+                            NewStatus = "已提交",
+                            Timestamp = DateTime.Now,
+                            IsFromServer = true
+                        };
+                        TodoSyncManager.Instance.PublishUpdate(taskUpdate);
                     }
                     else
                     {

@@ -206,13 +206,13 @@ namespace RUINORERP.UI.FM
                 expressionable = expressionable.And(t => t.CustomerVendor_ID == entity.CustomerVendor_ID);
             }
 
+
             // 最后转换为表达式
             Expression<Func<tb_FM_PayeeInfo, bool>> lambdaPayeeInfo = expressionable.ToExpression();
 
             BaseProcessor baseProcessorPayeeInfo = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_FM_PayeeInfo).Name + "Processor");
             QueryFilter queryFilterPayeeInfo = baseProcessorPayeeInfo.GetQueryFilter();
-            queryFilterPayeeInfo.FilterLimitExpressions.Add(lambdaPayeeInfo);
-
+            queryFilterPayeeInfo.SetFieldLimitCondition(lambdaPayeeInfo);
             // 根据单据状态决定是否允许编辑
             bool canEdit = entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改 ||
                           (entity.ARAPStatus == (int)ARAPStatus.草稿) || (entity.ARAPStatus == (int)ARAPStatus.待审核);

@@ -42,26 +42,16 @@ namespace RUINORERP.Business.Processor
         public override QueryFilter GetQueryFilter()
         {
             QueryFilter queryFilter = new QueryFilter();
-            //var lambda = Expressionable.Create<tb_CustomerVendor>()
-            //           .And(t => t.isdeleted == false)
-            //           .And(t => t.Is_available == true)
-            //           .And(t => t.IsCustomer == true)
-            //           .And(t => t.Is_enabled == true)
-            //           .AndIF(AuthorizeController.GetSaleLimitedAuth(_appContext), t => t.Employee_ID == _appContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户,采购不限制
-            //           .ToExpression();//注意 这一句 不能少
-
-            // queryFilter.SetQueryField<tb_FM_ExpenseClaim, tb_CustomerVendor>(c => c.CustomerVendor_ID, lambda);
-
+            
             //可以根据关联外键自动加载条件，条件用公共虚方法
             queryFilter.SetQueryField<tb_FM_PayeeInfo>(c => c.BelongingBank);
 
             ////这里查询收款账号信息的条件，是员工的，还是供应商的。得在外层来控制。根据具体情况来。
             ////比方 报销时则显示员工。 付款单时则显示供应商
-          
+
             queryFilter.SetQueryField<tb_FM_PayeeInfo>(c => c.Employee_ID);
 
             var lambdaType = Expressionable.Create<tb_CustomerVendor>()
-           .And(t => t.IsVendor == true)
            .And(t => t.isdeleted == false)
            .ToExpression();
             queryFilter.SetQueryField<tb_FM_PayeeInfo>(c => c.CustomerVendor_ID, typeof(tb_CustomerVendor), true, lambdaType);

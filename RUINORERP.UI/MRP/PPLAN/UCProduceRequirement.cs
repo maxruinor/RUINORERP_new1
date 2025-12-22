@@ -58,9 +58,16 @@ namespace RUINORERP.UI.MRP.MP
         public UCProduceRequirement()
         {
             InitializeComponent();
-            // InitDataToCmbByEnumDynamicGeneratedDataSource<tb_ProductionDemand>(typeof(Priority), e => e.Priority, cmbOrderPriority, false);
-            InitializeToolTips();
-            GridRelated = new GridViewRelated();
+
+            if (!this.DesignMode)
+            {
+                InitializeToolTips();
+                GridRelated = new GridViewRelated();
+                DisplayTextResolver = new GridViewDisplayTextResolverGeneric<tb_ProductionDemandDetail>();
+                DisplayTextResolver.AddReferenceKeyMapping<tb_ProductType, tb_Prod>(c => c.Type_ID, t => t.Type_ID, t => t.TypeName);
+                DisplayTextResolver.Initialize(kryptonTreeGridViewStockLess);
+            }
+
         }
 
         private void InitializeToolTips()
@@ -142,6 +149,11 @@ namespace RUINORERP.UI.MRP.MP
             ActionStatus actionStatus = ActionStatus.无操作;
             BindData(Entity as tb_ProductionDemand, actionStatus);
         }
+        /// <summary>
+        /// 网格显示文本解析器，用于设置特殊的映射关系
+        /// </summary>
+        public GridViewDisplayTextResolverGeneric<tb_ProductionDemandDetail> DisplayTextResolver { get; set; }
+
 
         DateTime RequirementDate = System.DateTime.Now;
         public override void BindData(tb_ProductionDemand entityPara, ActionStatus actionStatus)
@@ -296,7 +308,7 @@ namespace RUINORERP.UI.MRP.MP
             DataBindingHelper.InitFilterForControlByExp<tb_ProductionPlan>(entity, txtRefBillNO, c => c.PPNo, queryFilter, null);
 
 
-            if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
+            if (entity.DataStatus == (int)DataStatus.草稿 || entity.DataStatus == (int)DataStatus.新建)
             {
                 base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService<tb_ProductionDemandValidator>(), kryptonPanelMainInfo.Controls);
                 // base.InitEditItemToControl(entity, kryptonPanelMainInfo.Controls);
@@ -308,7 +320,7 @@ namespace RUINORERP.UI.MRP.MP
                 rdbis_available净需求.Enabled = false;
                 rdbis_available毛需求.Enabled = false;
             }
-             
+
 
             //如果属性变化 则状态为修改
             entity.PropertyChanged += async (sender, s2) =>
@@ -316,7 +328,8 @@ namespace RUINORERP.UI.MRP.MP
                 //权限允许
                 if ((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建))
                 {
-
+                    rdbis_available净需求.Enabled = true;
+                    rdbis_available毛需求.Enabled = true;
                 }
                 else
                 {
@@ -698,7 +711,7 @@ namespace RUINORERP.UI.MRP.MP
 
 
             //btnCreateProduction.ToolTipValues.Text = "创建生产单";//需求单据保存审核后才能生成制令单！并且确保不要重复生成。
-            
+
 
 
             System.Linq.Expressions.Expression<Func<tb_ProduceGoodsRecommendDetail, int?>> expRefBizType = (p) => p.RefBillType;
@@ -1499,49 +1512,7 @@ protected async override Task<ApprovalEntity> ReReview()
             AnalysisTargetItems();
         }
 
-        //private void btnAnalysis_Click(object sender, EventArgs e)
-        //{
-        //    if (EditEntity == null || MainForm.Instance?.AppContext?.Db == null)
-        //    {
-        //        return;
-        //    }
 
-        //    //库存不足不能修改。只是显示，
-        //    kryptonTreeGridViewStockLess.ReadOnly = true;
-
-
-        //    if (sgdTarget.BindingSourceLines.DataSource is List<tb_ProductionDemandTargetDetail> _targetDetails)
-        //    {
-        //        var filteredDetails = _targetDetails.Where(c => c.ProdDetailID > 0).ToList();
-        //        //目标中的产品  与 选择的配方的所属
-        //        var productIds = filteredDetails.Select(c => c.ProdDetailID).Distinct().ToList();
-
-        //        List<long> longids = new List<long>();
-        //        foreach (var item in _targetDetails)
-        //        {
-        //            if (!longids.Contains(item.ProdDetailID))
-        //            {
-        //                longids.Add(item.ProdDetailID);
-        //            }
-        //        }
-
-        //        List<tb_BOM_S> boms = MainForm.Instance.AppContext.Db.Queryable<tb_BOM_S>()
-        //               .Includes(c => c.tb_proddetail, d => d.tb_prod)
-        //                  .Where(c => longids.ToArray().Contains(c.ProdDetailID)).ToList();
-
-        //        foreach (var item in _targetDetails)
-        //        {
-        //            if (!boms.Any(c => c.ProdDetailID == item.ProdDetailID))
-        //            {
-        //                //当前目标产品的配方选择不正确。
-        //                MessageBox.Show($"当前目标产品的配方选择不正确。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-        //            }
-        //        }
-        //    }
-
-
-        //    AnalysisTargetItems();
-        //}
 
         /// <summary>
         /// 生成库存不足的列表。用树形式显示
@@ -1632,14 +1603,16 @@ protected async override Task<ApprovalEntity> ReReview()
             ConcurrentDictionary<string, string> BaseProductInfoColNames = UIHelper.GetFieldNameList<BaseProductInfo>(true)
                 .exclude<BaseProductInfo>(expressions);
 
-
-
-
             //将产品详情转换为基本信息列表
             List<BaseProductInfo> BaseProductInfoList = MainForm.Instance.mapper.Map<List<BaseProductInfo>>(MainForm.Instance.View_ProdDetailList);
 
             //合并的实体中有指定的业务主键关联，不然无法给值  TODO:不科学，后面要修改完善！！！数据太多查出来性能不好。
             DataTable dtAll = lastNeedIitems.ToDataTable<BaseProductInfo, tb_ProductionDemandDetail>(BaseProductInfoList, BaseProductInfoColNames, colNames, c => c.ProdDetailID);
+
+            foreach (DataRow item in dtAll.Rows)
+            {
+
+            }
 
             kryptonTreeGridViewStockLess.GridNodes.Clear();
             kryptonTreeGridViewStockLess.Columns.Clear();
@@ -1985,7 +1958,7 @@ protected async override Task<ApprovalEntity> ReReview()
             }
 
             tb_ProductionDemandController<tb_ProductionDemand> ctr = Startup.GetFromFac<tb_ProductionDemandController<tb_ProductionDemand>>();
-            tb_BuyingRequisition buyingRequisition =await ctr.GenerateBuyingRequisition(EditEntity, EditEntity.tb_PurGoodsRecommendDetails);
+            tb_BuyingRequisition buyingRequisition = await ctr.GenerateBuyingRequisition(EditEntity, EditEntity.tb_PurGoodsRecommendDetails);
 
 
             //要把单据信息传过去RUINORERP.UI.PSI.PUR.UCBuyingRequisition
@@ -2281,7 +2254,7 @@ protected async override Task<ApprovalEntity> ReReview()
                         && c.PDCID == target.PDCID).FirstAsync();
                     if (ExistMO != null)
                     {
-                        
+
                         MoRelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == typeof(tb_ManufacturingOrder).Name && m.ClassPath.Contains("RUINORERP.UI.MRP.MP." + typeof(UCManufacturingOrder).Name)).FirstOrDefault();
                         if (MoRelatedBillMenuInfo != null && ExistMO != null)
                         {
@@ -2304,11 +2277,11 @@ protected async override Task<ApprovalEntity> ReReview()
                          .Where(c => c.PDID == EditEntity.PDID
                 && c.ProdDetailID == target.ProdDetailID && c.PDCID == target.PDCID
                 && c.Location_ID == target.Location_ID).FirstAsync();
-              
+
                 if (ExistMO != null)
                 {
 
-                     MoRelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == typeof(tb_ManufacturingOrder).Name && m.ClassPath.Contains("RUINORERP.UI.MRP.MP." + typeof(UCManufacturingOrder).Name)).FirstOrDefault();
+                    MoRelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == typeof(tb_ManufacturingOrder).Name && m.ClassPath.Contains("RUINORERP.UI.MRP.MP." + typeof(UCManufacturingOrder).Name)).FirstOrDefault();
                     if (MoRelatedBillMenuInfo != null && ExistMO != null)
                     {
                         MessageBox.Show("制成品建议中，当前选中目标行产品，已经生成过制令单，无法重复生成,系统将打开已经存在的制令单", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);

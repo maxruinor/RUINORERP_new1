@@ -611,13 +611,19 @@ namespace RUINORERP.UI
 
                     // 获取GlobalStateRulesManager类型（如果在当前程序集中）
                     var globalStateRulesManagerType = assembly.GetType("RUINORERP.Model.Base.StatusManager.GlobalStateRulesManager");
+                    
+                    // 获取TableSchemaManager类型（如果是Business.dll）
+                    var tableSchemaManagerType = assemblyName == "RUINORERP.Business.dll" ? 
+                        assembly.GetType("RUINORERP.Business.Cache.TableSchemaManager") : null;
 
                     // 注册其他类型（排除特殊处理的类型）
                     if (globalStateRulesManagerType != null)
                     {
                         // 如果包含GlobalStateRulesManager，排除它
                         builder.RegisterAssemblyTypes(assembly)
-                            .Where(t => t != bizTypeMapperType && t != globalStateRulesManagerType)
+                            .Where(t => t != bizTypeMapperType && 
+                                        t != globalStateRulesManagerType && 
+                                        (tableSchemaManagerType == null || t != tableSchemaManagerType))
                             .AsImplementedInterfaces()
                             .AsSelf()
                             .InstancePerDependency()
@@ -627,7 +633,8 @@ namespace RUINORERP.UI
                     {
                         // 不包含GlobalStateRulesManager的情况
                         builder.RegisterAssemblyTypes(assembly)
-                            .Where(t => t != bizTypeMapperType)
+                            .Where(t => t != bizTypeMapperType && 
+                                        (tableSchemaManagerType == null || t != tableSchemaManagerType))
                             .AsImplementedInterfaces()
                             .AsSelf()
                             .InstancePerDependency()
@@ -639,11 +646,16 @@ namespace RUINORERP.UI
                     // 获取GlobalStateRulesManager类型（如果在当前程序集中）
                     var globalStateRulesManagerType = assembly.GetType("RUINORERP.Model.Base.StatusManager.GlobalStateRulesManager");
                     
+                    // 获取TableSchemaManager类型（如果是Business.dll）
+                    var tableSchemaManagerType = assemblyName == "RUINORERP.Business.dll" ? 
+                        assembly.GetType("RUINORERP.Business.Cache.TableSchemaManager") : null;
+                    
                     if (globalStateRulesManagerType != null)
                     {
-                        // 常规注册（排除GlobalStateRulesManager）
+                        // 常规注册（排除GlobalStateRulesManager和TableSchemaManager）
                         builder.RegisterAssemblyTypes(assembly)
-                            .Where(t => t != globalStateRulesManagerType)
+                            .Where(t => t != globalStateRulesManagerType && 
+                                        (tableSchemaManagerType == null || t != tableSchemaManagerType))
                             .AsImplementedInterfaces()
                             .AsSelf()
                             .InstancePerDependency()
@@ -651,12 +663,25 @@ namespace RUINORERP.UI
                     }
                     else
                     {
-                        // 常规注册（无GlobalStateRulesManager的程序集）
-                        builder.RegisterAssemblyTypes(assembly)
-                            .AsImplementedInterfaces()
-                            .AsSelf()
-                            .InstancePerDependency()
-                            .PropertiesAutowired();
+                        // 常规注册（排除TableSchemaManager）
+                        if (tableSchemaManagerType != null)
+                        {
+                            builder.RegisterAssemblyTypes(assembly)
+                                .Where(t => t != tableSchemaManagerType)
+                                .AsImplementedInterfaces()
+                                .AsSelf()
+                                .InstancePerDependency()
+                                .PropertiesAutowired();
+                        }
+                        else
+                        {
+                            // 常规注册（无特殊类型需要排除的程序集）
+                            builder.RegisterAssemblyTypes(assembly)
+                                .AsImplementedInterfaces()
+                                .AsSelf()
+                                .InstancePerDependency()
+                                .PropertiesAutowired();
+                        }
                     }
                 }
             }
@@ -828,9 +853,11 @@ namespace RUINORERP.UI
             {
                 _logger.Error("初始化Autofac容器作用域失败", ex);
             }
-
+            
             return hostBuilder;
         }
+
+ 
 
 
         #region 注入窗体-开始

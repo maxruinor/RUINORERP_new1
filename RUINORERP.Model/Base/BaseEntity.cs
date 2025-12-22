@@ -255,6 +255,9 @@ namespace RUINORERP.Model
 
             DateTime startTime = DateTime.Now;
 
+            // 设置防重入标志，防止状态变更事件处理过程中再次触发属性变更通知导致的循环调用
+            _isProcessingStatusChange = true;
+            
             try
             {
                 // 创建状态变更事件参数
@@ -290,6 +293,11 @@ namespace RUINORERP.Model
                 Debug.WriteLine($"实体类型: {this.GetType().Name}, 状态类型: {statusType.Name}");
 
                 // 确保异常不会传播，不影响主流程执行
+            }
+            finally
+            {
+                // 无论处理成功或失败，都必须清除防重入标志
+                _isProcessingStatusChange = false;
             }
         }
 
@@ -747,10 +755,19 @@ namespace RUINORERP.Model
         /// <param name="propertyName">属性名</param>
         /// <param name="oldValue">旧值</param>
         /// <param name="newValue">新值</param>
+        // 防重入标志，用于防止状态变更事件处理过程中再次触发属性变更通知导致的循环调用
+        private bool _isProcessingStatusChange = false;
+        
         protected virtual void OnPropertyChanged(string propertyName, object oldValue = null, object newValue = null)
         {
             try
             {
+                // 如果正在处理状态变更且触发源是PropertyChanged事件，则直接返回以避免循环调用
+                if (_isProcessingStatusChange && this.PropertyChanged != null)
+                {
+                    return;
+                }
+                
                 // 标记实体已变更
                 HasChanged = true;
                 // 检查是否是状态属性
@@ -763,10 +780,28 @@ namespace RUINORERP.Model
                     this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
                 }
 
-                // 对于状态属性，确保总是触发状态变更通知
+                // 对于状态属性，只有当值确实发生变化时才触发状态变更通知
                 if (isStatusProperty)
                 {
-                    TriggerStatusChange(statusType, oldValue, newValue);
+                    // 检查值是否实际发生变化，避免重复触发
+                    bool valueChanged = false;
+                    if (oldValue == null && newValue == null)
+                    {
+                        valueChanged = false;
+                    }
+                    else if (oldValue == null || newValue == null)
+                    {
+                        valueChanged = true;
+                    }
+                    else
+                    {
+                        valueChanged = !oldValue.Equals(newValue);
+                    }
+                    
+                    if (valueChanged)
+                    {
+                        TriggerStatusChange(statusType, oldValue, newValue);
+                    }
                 }
             }
             catch (Exception ex)

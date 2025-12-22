@@ -129,7 +129,8 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 BusinessType = bizType,
                 BillId = billId,
                 OldStatus = oldStatus,
-                NewStatus = newStatus,
+                // 确保即使在创建操作时也有明确的新状态
+                NewStatus = !string.IsNullOrEmpty(newStatus) ? newStatus : "新建",
                 Timestamp = DateTime.Now
             };
 

@@ -79,11 +79,11 @@ namespace RUINORERP.Business
                     }
                     else
                     {
-                        var detail = RUINORERP.Business.Cache.EntityCacheHelper.GetEntity<tb_ProdDetail>(item.ProdDetailID);
+                        var detail = RUINORERP.Business.Cache.EntityCacheHelper.GetEntity<View_ProdDetail>(item.ProdDetailID);
                         if (detail != null)
                         {
-                            item.tb_proddetail = detail;
-                            tipsMsg.Add($"当前维修工单物料中的SKU:{item.tb_proddetail.SKU}已出库数量为{details[i].ActualSentQty}，当前行数据将不会加载到明细！");
+                           // item.tb_proddetail = detail;
+                            tipsMsg.Add($"当前维修工单物料中的SKU:{detail.SKU}已出库数量为{details[i].ActualSentQty}，当前行数据将不会加载到明细！");
                         }
                     }
                     #endregion

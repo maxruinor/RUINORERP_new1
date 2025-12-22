@@ -48,6 +48,9 @@ using MySqlX.XDevAPI.Common;
 using RUINORERP.Business.Security;
 using RUINORERP.UI.CommonUI;
 using ImageHelper = RUINORERP.UI.Common.ImageHelper;
+using RUINORERP.PacketSpec.Models.Common;
+using RUINORERP.UI.UserCenter.DataParts;
+using RUINORERP.Model.Base.StatusManager;
 using Netron.GraphLib;
 using Newtonsoft.Json;
 using RUINORERP.UI.SS;
@@ -4921,19 +4924,24 @@ namespace RUINORERP.UI.BaseForm
                 await PostSaveLockManagement(entity, pkid);
                 MainForm.Instance.uclog.AddLog("保存成功");
 
-        
-                // 发送任务状态更新通知
+
+                // 发送任务状态更新通知 - 使用扩展的BillStatusUpdateData
                 var bizType = EntityMappingHelper.GetBillData<T>(EditEntity).BizType;
-                var taskUpdate = new PacketSpec.Models.Common.TodoUpdate
-                {
-                    UpdateType = originalPkid == 0 ? PacketSpec.Enums.Core.TodoUpdateType.Created : PacketSpec.Enums.Core.TodoUpdateType.StatusChanged,
-                    BusinessType = bizType,
-                    BillId = pkid, // 使用新的BillId字段存储单据主键
-                    NewStatus = originalPkid == 0 ? "已创建" : "已修改",
-                    Timestamp = DateTime.Now,
-                    IsFromServer = false
-                };
-                TodoSyncManager.Instance.PublishUpdate(taskUpdate);
+                // 使用StateManager获取状态类型和状态值
+                var statusType = StateManager.GetStatusType(entity);
+                var currentStatus = StateManager.GetBusinessStatus(entity, statusType);
+
+                // 创建更新数据，传入正确的状态类型和值
+                var updateData = BillStatusUpdateData.Create(
+                    originalPkid == 0 ? PacketSpec.Enums.Core.TodoUpdateType.Created : PacketSpec.Enums.Core.TodoUpdateType.StatusChanged,
+                    bizType,
+                    pkid,
+                  EditEntity
+                );
+
+
+
+                TodoSyncManager.Instance.PublishUpdate(updateData);
             }
             else
             {
@@ -5214,18 +5222,16 @@ namespace RUINORERP.UI.BaseForm
                         //提示一下删除成功
                         MainForm.Instance.uclog.AddLog("提示", "删除成功");
 
-                        // 发送任务状态删除通知
+                        // 发送任务状态删除通知 - 使用扩展的BillStatusUpdateData
                         var bizType = EntityMappingHelper.GetBillData<T>(editEntity as T).BizType;
-                        var taskUpdate = new PacketSpec.Models.Common.TodoUpdate
-                        {
-                            UpdateType = PacketSpec.Enums.Core.TodoUpdateType.Deleted,
-                            BusinessType = bizType,
-                            BillId = PKValue.ToLong(), // 使用新的BillId字段存储单据主键
-                            NewStatus = "已删除",
-                            Timestamp = DateTime.Now,
-                            IsFromServer = true
-                        };
-                        TodoSyncManager.Instance.PublishUpdate(taskUpdate);
+                        var updateData = BillStatusUpdateData.Create(
+                            PacketSpec.Enums.Core.TodoUpdateType.Deleted,
+                            bizType,
+                            PKValue.ToLong(),
+                            EditEntity
+                        );
+
+                        TodoSyncManager.Instance.PublishUpdate(updateData);
 
                         //加载一个空的显示的UI
                         bindingSourceSub.Clear();
@@ -5408,18 +5414,18 @@ namespace RUINORERP.UI.BaseForm
                         }
                         submitrs = true;
 
-                        // 发送任务状态更新通知
+                        // 发送任务状态更新通知 - 使用扩展的BillStatusUpdateData
                         var bizType = EntityMappingHelper.GetBillData<T>(EditEntity).BizType;
-                        var taskUpdate = new PacketSpec.Models.Common.TodoUpdate
-                        {
-                            UpdateType = PacketSpec.Enums.Core.TodoUpdateType.StatusChanged,
-                            BusinessType = bizType,
-                            BillId = pkid, // 使用新的BillId字段存储单据主键
-                            NewStatus = "已提交",
-                            Timestamp = DateTime.Now,
-                            IsFromServer = true
-                        };
-                        TodoSyncManager.Instance.PublishUpdate(taskUpdate);
+                        var updateData = BillStatusUpdateData.Create(
+                            PacketSpec.Enums.Core.TodoUpdateType.StatusChanged,
+                            bizType,
+                            pkid,
+                         EditEntity
+                        );
+
+
+
+                        TodoSyncManager.Instance.PublishUpdate(updateData);
                     }
                     else
                     {

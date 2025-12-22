@@ -40,6 +40,7 @@ using RUINORERP.Business.BizMapperService;
 using HLH.WinControl.MyTypeConverter;
 using RUINORERP.Model.CommonModel;
 using RUINORERP.UI.Network.Services;
+using RUINORERP.Common.Extensions;
 
 namespace RUINORERP.UI.MRP.MP
 {
@@ -170,7 +171,6 @@ namespace RUINORERP.UI.MRP.MP
             DataBindingHelper.BindData4TextBox<tb_ManufacturingOrder>(entity, t => t.ManufacturingQty, txtManufacturingQty, BindDataType4TextBox.Qty, false);
             DataBindingHelper.BindData4TextBox<tb_ManufacturingOrder>(entity, t => t.PeopleQty, txtPeopleQty, BindDataType4TextBox.Qty, false);
             DataBindingHelper.BindData4TextBox<tb_ManufacturingOrder>(entity, t => t.MONO, txtMONO, BindDataType4TextBox.Text, false);
-            DataBindingHelper.BindData4TextBox<tb_ManufacturingOrder>(entity, t => t.ManufacturingQty, txtManufacturingQty, BindDataType4TextBox.Qty, false);
             DataBindingHelper.BindData4DataTime<tb_ManufacturingOrder>(entity, t => t.PreStartDate, dtpPreStartDate, false);
             DataBindingHelper.BindData4DataTime<tb_ManufacturingOrder>(entity, t => t.PreEndDate, dtpPreEndDate, false);
             DataBindingHelper.BindData4TextBox<tb_ManufacturingOrder>(entity, t => t.BOM_No, txtBOM_No, BindDataType4TextBox.Text, false);
@@ -191,7 +191,6 @@ namespace RUINORERP.UI.MRP.MP
             DataBindingHelper.BindData4TextBox<tb_ManufacturingOrder>(entity, t => t.QuantityDelivered, txtQuantityDelivered, BindDataType4TextBox.Qty, false);
             DataBindingHelper.BindData4CheckBox<tb_ManufacturingOrder>(entity, t => t.IsCustomizedOrder, chkIsCustomizedOrder, false);
             txtQuantityDelivered.ReadOnly = true;
-            DataBindingHelper.BindData4TextBox<tb_ManufacturingOrder>(entity, t => t.ManufacturingQty, txtManufacturingQty, BindDataType4TextBox.Qty, false);
             DataBindingHelper.BindData4Cmb<tb_Location>(entity, k => k.Location_ID, v => v.Name, cmbLocation_ID);
 
             //先绑定这个。InitFilterForControl 这个才生效
@@ -300,7 +299,7 @@ namespace RUINORERP.UI.MRP.MP
                             entity.DepartmentID = null;
                         }
                     }
-             
+
                 }
 
                 //影响子件的数量
@@ -320,7 +319,7 @@ namespace RUINORERP.UI.MRP.MP
                             tb_BOM_SDetail bOM_SDetail = EditEntity.tb_bom_s.tb_BOM_SDetails.FirstOrDefault(c => c.ProdDetailID == EditEntity.tb_ManufacturingOrderDetails[i].ProdDetailID);
                             if (bOM_SDetail != null)
                             {
-                                EditEntity.tb_ManufacturingOrderDetails[i].ShouldSendQty = (bOM_SDetail.UsedQty.ToInt() * (EditEntity.ManufacturingQty / bomOutQty)).ToInt();
+                                EditEntity.tb_ManufacturingOrderDetails[i].ShouldSendQty = RUINORERP.Common.Extensions.ExtObject.ToInt((RUINORERP.Common.Extensions.ExtObject.ToInt(bOM_SDetail.UsedQty) * (EditEntity.ManufacturingQty / bomOutQty)));
                             }
                         }
 
@@ -329,8 +328,8 @@ namespace RUINORERP.UI.MRP.MP
                     }
                 }
 
-    
-               
+
+
             };
 
 
@@ -385,7 +384,7 @@ namespace RUINORERP.UI.MRP.MP
 
 
             //InitDataTocmbbox();
-            
+
 
             ///显示列表对应的中文
             //base.FieldNameList = UIHelper.GetFieldNameList<tb_ManufacturingOrderDetail>();
@@ -594,7 +593,15 @@ namespace RUINORERP.UI.MRP.MP
                 var aa = details.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
                 if (NeedValidated && aa.Count > 0)
                 {
-                    System.Windows.Forms.MessageBox.Show("明细中，相同的产品不能多行录入,如有需要,请另建单据保存!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    var detail = Business.Cache.EntityCacheHelper.GetEntity<View_ProdDetail>(aa[0].ToLong());
+                    if (detail != null)
+                    {
+                        System.Windows.Forms.MessageBox.Show($"明细中，相同的产品{detail.SKU}不能多行录入,如有需要,请另建单据保存!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                    else
+                    {
+                        System.Windows.Forms.MessageBox.Show("明细中，相同的产品不能多行录入,如有需要,请另建单据保存!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
                     return false;
                 }
                 EditEntity.tb_ManufacturingOrderDetails = details;
@@ -1003,7 +1010,7 @@ protected override void Print()
         }
 
         // 移除未使用的BizTypeMapper，使用EntityMappingHelper代替
- 
+
 
         private void chkIsOutSourced_CheckedChanged(object sender, EventArgs e)
         {

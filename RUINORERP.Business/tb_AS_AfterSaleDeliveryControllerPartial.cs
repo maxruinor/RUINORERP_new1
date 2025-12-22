@@ -272,12 +272,12 @@ namespace RUINORERP.Business
                         if (!_appContext.SysConfig.CheckNegativeInventory && (group.Inventory.Quantity - group.Qty) < 0)
                         {
                             _unitOfWorkManage.RollbackTran();
-                            var detail = RUINORERP.Business.Cache.EntityCacheHelper.GetEntity<tb_ProdDetail>(group.Inventory.ProdDetailID);
+                            var detail = RUINORERP.Business.Cache.EntityCacheHelper.GetEntity<View_ProdDetail>(group.Inventory.ProdDetailID);
                             if (detail != null)
                             {
-                                group.Inventory.tb_proddetail = detail;
+                               // group.Inventory.tb_proddetail = detail;
                                 // rrs.ErrorMsg = "系统设置不允许负库存，请检查物料出库数量与库存相关数据";
-                                rmrs.ErrorMsg = $"sku:{group.Inventory.tb_proddetail.SKU}库存为：{group.Inventory.Quantity}，要交付的数量为：{group.Qty}\r\n 系统设置不允许负库存， 请检查出库数量与库存相关数据";
+                                rmrs.ErrorMsg = $"sku:{detail.SKU}库存为：{group.Inventory.Quantity}，要交付的数量为：{group.Qty}\r\n 系统设置不允许负库存， 请检查出库数量与库存相关数据";
                             }
                             else
                             {

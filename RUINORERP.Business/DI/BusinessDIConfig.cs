@@ -253,7 +253,8 @@ namespace RUINORERP.Business.DI
                 .As<ITableSchemaManager>()
                 .AsSelf()
                 .SingleInstance()
-                .PropertiesAutowired();
+                .PropertiesAutowired()
+                .PreserveExistingDefaults(); // 确保不会覆盖已经存在的单例注册
 
             AddBizMapperService(builder);
         }

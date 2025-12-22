@@ -3272,6 +3272,7 @@
     <Compile Include="UserCenter\DataParts\DataBoardUnit.cs" />
     <Compile Include="UserCenter\DataParts\TaskStatusMonitor.cs" />
     <Compile Include="UserCenter\DataParts\TaskStatusSyncManager.cs" />
+    <Compile Include="UserCenter\DataParts\TodoListManager.cs" />
     <Compile Include="UserCenter\DataParts\UCCellSetting.cs">
       <SubType>UserControl</SubType>
     </Compile>

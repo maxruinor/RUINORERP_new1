@@ -10,24 +10,24 @@ namespace HLH.WinControl.MyTypeConverter
         /// object 转换为 int
         /// </summary>
         /// <returns></returns>
-        private static int ObjToInt(object obj)
-        {
-            if (obj == null)
-                return 0;
-            if (obj.Equals(DBNull.Value))
-                return 0;
+        //private static int ObjToInt(object obj)
+        //{
+        //    if (obj == null)
+        //        return 0;
+        //    if (obj.Equals(DBNull.Value))
+        //        return 0;
 
-            int returnValue;
+        //    int returnValue;
 
-            if (int.TryParse(obj.ToString(), out returnValue))
-            {
-                return returnValue;
-            }
-            else
-            {
-                return 0;
-            }
-        }
+        //    if (int.TryParse(obj.ToString(), out returnValue))
+        //    {
+        //        return returnValue;
+        //    }
+        //    else
+        //    {
+        //        return 0;
+        //    }
+        //}
 
         /// <summary>
         /// 转换为boolean型
@@ -58,15 +58,15 @@ namespace HLH.WinControl.MyTypeConverter
         /// </summary>
         /// <param name="obj"></param>
         /// <returns></returns>
-        private static int? ObjToIntNull(object obj)
-        {
-            if (obj == null)
-                return null;
-            if (obj.Equals(DBNull.Value))
-                return null;
+        //private static int? ObjToIntNull(object obj)
+        //{
+        //    if (obj == null)
+        //        return null;
+        //    if (obj.Equals(DBNull.Value))
+        //        return null;
 
-            return ObjToInt(obj);
-        }
+        //    return ObjToInt(obj);
+        //}
 
 
         /// <summary>
@@ -150,10 +150,10 @@ namespace HLH.WinControl.MyTypeConverter
         /// object 转换为 int
         /// </summary>
         /// <returns></returns>
-        public static int ToInt(this object obj)
-        {
-            return ObjToInt(obj);
-        }
+        //public static int ToInt(this object obj)
+        //{
+        //    return ObjToInt(obj);
+        //}
 
         /// <summary>
         /// object 转换为 string
@@ -180,10 +180,10 @@ namespace HLH.WinControl.MyTypeConverter
         /// </summary>
         /// <param name="obj"></param>
         /// <returns></returns>
-        public static int? ToIntNull(this object obj)
-        {
-            return ObjToIntNull(obj);
-        }
+        //public static int? ToIntNull(this object obj)
+        //{
+        //    return ObjToIntNull(obj);
+        //}
 
         /// <summary>
         /// object 转换为 decimal?

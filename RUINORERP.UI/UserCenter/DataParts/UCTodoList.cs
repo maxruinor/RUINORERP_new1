@@ -13,8 +13,10 @@ using RUINORERP.Common.Extensions;
 using RUINORERP.Global;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.Model;
+using RUINORERP.Model.Base.StatusManager;
 using RUINORERP.PacketSpec.Enums.Core;
 using RUINORERP.PacketSpec.Models.Common;
+using RUINORERP.UI.UserCenter.DataParts; // 添加对TodoListManager和BillStatusUpdateData的引用
 using RUINORERP.UI.ATechnologyStack;
 using RUINORERP.UI.Common;
 using RUINORERP.UI.FM;
@@ -42,32 +44,70 @@ namespace RUINORERP.UI.UserCenter.DataParts
     public partial class UCTodoList : UserControl
     {
         // 依赖注入的服务
-        private readonly MenuPowerHelper _menuPowerHelper;
+        private  MenuPowerHelper _menuPowerHelper;
         private readonly IEntityMappingService _mapper;
         private readonly EntityLoader _loader;
         private readonly ILogger<UCTodoList> _logger;
         private Guid _syncSubscriberKey;
+        private  ConditionBuilderFactory _conditionBuilderFactory;
+
+        
         public UCTodoList(IEntityMappingService mapper, EntityLoader loader, ILogger<UCTodoList> logger)
         {
             InitializeComponent();
             _logger = logger;
             _mapper = mapper;
             _loader = loader;
-            // 通过依赖注入获取服务实例
-            _menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
-            _conditionBuilderFactory = new ConditionBuilderFactory();
+            
+            // 初始化通用组件
+            InitializeCommonComponents();
         }
 
-
-
-        private readonly ConditionBuilderFactory _conditionBuilderFactory;
         public UCTodoList()
         {
             InitializeComponent();
             // 通过依赖注入获取服务实例
-            _menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
             _mapper = Startup.GetFromFac<IEntityMappingService>();
+            
+            // 初始化通用组件
+            InitializeCommonComponents();
+        }
+        
+        /// <summary>
+        /// 初始化通用组件和服务
+        /// </summary>
+        private void InitializeCommonComponents()
+        {
+            // 获取通用服务
+            _menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
             _conditionBuilderFactory = new ConditionBuilderFactory();
+            
+            // 初始化TodoListManager
+            InitializeTodoListManager();
+        }
+        
+        /// <summary>
+        /// 初始化TodoListManager
+        /// </summary>
+        private void InitializeTodoListManager()
+        {
+            try
+            {
+                // 将当前组件引用传递给TodoListManager，便于其更新UI
+                TodoListManager.Instance.SetTodoListControl(this);
+                
+                if (_logger != null)
+                {
+                    _logger.LogInformation("TodoListManager初始化完成");
+                }
+            }
+            catch (Exception ex)
+            {
+                if (_logger != null)
+                {
+                    _logger.LogError(ex, "初始化TodoListManager失败");
+                }
+            }
         }
 
         public tb_WorkCenterConfig CenterConfig { get; set; }
@@ -169,35 +209,32 @@ namespace RUINORERP.UI.UserCenter.DataParts
 
         /// <summary>
         /// 处理任务状态更新列表 - 实时同步处理
-        /// 从网络接收到任务状态更新时，高效更新UI显示，避免不必要的数据库查询
+        /// 从网络接收到任务状态更新时，委托给TodoListManager进行处理
         /// </summary>
         /// <param name="updates">任务状态更新信息列表</param>
         private void HandleTodoUpdates(List<TodoUpdate> updates)
         {
-            try
+            // 空检查
+            if (updates == null || updates.Count == 0)
+                return;
+
+            // 确保在UI线程中更新
+            if (this.InvokeRequired)
             {
-                // 空检查
-                if (updates == null || !updates.Any())
-                    return;
-
-                // 确保在UI线程中更新
-                if (this.InvokeRequired)
-                {
-                    this.BeginInvoke(new Action<List<TodoUpdate>>(HandleTodoUpdates), updates);
-                    return;
-                }
-
-                _logger.LogTrace($"收到{updates.Count}条任务状态更新");
-
-                // 高效处理每个更新，直接更新UI而不刷新整个列表
-                foreach (var update in updates)
-                {
-                    UpdateTreeNodeForTask(update);
-                }
+                this.BeginInvoke(new Action<List<TodoUpdate>>(HandleTodoUpdates), updates);
+                return;
             }
-            catch (Exception ex)
+
+            // 记录日志
+            if (_logger != null)
             {
-                _logger.LogError(ex, "处理任务状态更新失败");
+                _logger.LogTrace($"收到{updates.Count}条任务状态更新");
+            }
+
+            // 将所有更新委托给TodoListManager处理
+            foreach (var update in updates)
+            {
+                TodoListManager.Instance.ProcessUpdate(update);
             }
         }
 
@@ -206,7 +243,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
         /// 采用本地数据更新方式，避免重复查询数据库
         /// </summary>
         /// <param name="update">任务状态更新信息</param>
-        private void UpdateTreeNodeForTask(TodoUpdate update)
+        private void UpdateTreeNodeForTask(BillStatusUpdateData update)
         {
             if (kryptonTreeViewJobList.Nodes.Count == 0)
                 return;
@@ -350,17 +387,62 @@ namespace RUINORERP.UI.UserCenter.DataParts
         {
             try
             {
-                // 简化处理：对于状态变化，这里只是一个基本实现
-                // 实际应用中，可能需要查询数据库获取最新状态来准确判断
-                // 但我们的目标是避免频繁查询，所以这里采用简化逻辑
-                return true; // 简化处理，实际应根据具体条件判断
+                // 将IConditionalModel列表包装成ConditionGroup列表
+                var conditionGroups = new List<ConditionGroup>
+                {
+                    new ConditionGroup
+                    {
+                        Conditions = conditions,
+                        StatusName = "DynamicCondition",
+                        Identifier = $"Group_{DateTime.Now.Ticks}"
+                    }
+                };
+                
+                // 使用TodoListManager来进行更准确的条件匹配
+                return TodoListManager.Instance.CheckBillMatchesConditions(billId, bizType, conditionGroups);
             }
             catch (Exception ex)
             {
-                _logger.Error($"检查单据条件匹配失败: BillId={billId}", ex);
+                if (_logger != null)
+                {
+                    _logger.Error($"检查单据条件匹配失败: BillId={billId}", ex);
+                }
                 return false;
             }
         }
+        
+        /// <summary>
+        /// 刷新数据节点
+        /// 由TodoListManager调用，用于在状态更新后刷新UI节点
+        /// </summary>
+        /// <param name="updateData">状态更新数据</param>
+        public void RefreshDataNodes(BillStatusUpdateData updateData)
+        {
+            try
+            {
+                // 验证输入参数
+                if (updateData == null || _logger == null)
+                    return;
+                
+                _logger.Info($"刷新数据节点，业务类型：{updateData.BusinessType}，单据ID：{updateData.BillId}");
+                
+                // 确保在UI线程执行
+                if (InvokeRequired)
+                {
+                    BeginInvoke(new Action<BillStatusUpdateData>(RefreshDataNodes), updateData);
+                    return;
+                }
+                
+                // 调用UpdateTreeNodeForTask方法处理更新
+                UpdateTreeNodeForTask(updateData);
+                
+            }
+            catch (Exception ex)
+            {
+                _logger.Error($"刷新数据节点时发生错误，业务类型：{updateData?.BusinessType}，单据ID：{updateData?.BillId}", ex);
+            }
+        }
+        
 
         /// <summary>
         /// 更新节点文本，显示最新的单据数量

@@ -481,19 +481,28 @@ namespace RUINORERP.Common.Extensions
             foreach (PropertyInfo property in propertiesSub.Concat(properties))
             {
                 string propertyName = property.Name;
-                if ((SubPartsfieldNameList.ContainsKey(propertyName) || MainfieldNameList.ContainsKey(propertyName)))
+                if ((SubPartsfieldNameList.ContainsKey(propertyName) || MainfieldNameList.ContainsKey(propertyName))) 
                 {
-                    Type colType = property.PropertyType.IsGenericType && property.PropertyType.GetGenericTypeDefinition() == typeof(Nullable<>) ?
-                        Nullable.GetUnderlyingType(property.PropertyType) : property.PropertyType;
+                    // 确保获取正确的列类型，特别是处理可空类型
+                    Type colType;
+                    if (property.PropertyType.IsGenericType && property.PropertyType.GetGenericTypeDefinition() == typeof(Nullable<>))
+                    {
+                        colType = Nullable.GetUnderlyingType(property.PropertyType);
+                    }
+                    else
+                    {
+                        colType = property.PropertyType;
+                    }
+                    
+                    // 创建列时确保使用原始属性的类型
                     DataColumn column = new DataColumn(propertyName, colType);
                     column.Caption = SubPartsfieldNameList.ContainsKey(propertyName) ? SubPartsfieldNameList[propertyName] : MainfieldNameList[propertyName];
-                    //如果相同列名的列已经存在，则跳过
+                    
+                    // 如果相同列名的列已经存在，则跳过
                     if (!dataTable.Columns.Contains(column.ColumnName))
                     {
                         dataTable.Columns.Add(column);
                     }
-
-
                 }
             }
         }
@@ -526,7 +535,44 @@ namespace RUINORERP.Common.Extensions
                 if (fieldNameList.ContainsKey(propertyName))
                 {
                     object value = property.GetValue(obj);
-                    row[propertyName] = value ?? DBNull.Value;
+                    // 确保数据填充时也能正确保持原始类型
+                    if (value != null && row.Table.Columns.Contains(propertyName))
+                    {
+                        // 获取目标列的类型
+                        Type columnType = row.Table.Columns[propertyName].DataType;
+                        
+                        // 尝试将值转换为列的类型，确保类型兼容性
+                        try
+                        {
+                            // 如果值的类型与列类型兼容，直接赋值
+                            if (columnType.IsAssignableFrom(value.GetType()) || columnType.IsInstanceOfType(value))
+                            {
+                                row[propertyName] = value;
+                            }
+                            else
+                            {
+                                // 对于值类型，尝试显式转换
+                                if (columnType.IsValueType)
+                                {
+                                    row[propertyName] = Convert.ChangeType(value, columnType);
+                                }
+                                else
+                                {
+                                    // 对于引用类型，直接赋值
+                                    row[propertyName] = value;
+                                }
+                            }
+                        }
+                        catch
+                        {
+                            // 如果转换失败，回退到原始赋值方式
+                            row[propertyName] = value;
+                        }
+                    }
+                    else
+                    {
+                        row[propertyName] = DBNull.Value;
+                    }
                 }
             }
         }

@@ -503,6 +503,26 @@ namespace RUINORERP.UI
                     // 在应用程序启动时设置当前实体映射服务
                     // 这通常在依赖注入容器配置完成后调用
                     EntityCacheHelper.SetCurrent(entityCacheManager);
+                    
+                    // 验证TableSchemaManager是否正确注册为单例
+                    try
+                    {
+                        var tableSchemaManager1 = Startup.GetFromFac<ITableSchemaManager>();
+                        var tableSchemaManager2 = Startup.GetFromFac<ITableSchemaManager>();
+                        
+                        if (!ReferenceEquals(tableSchemaManager1, tableSchemaManager2))
+                        {
+                            System.Diagnostics.Debug.WriteLine("[严重错误] Program.cs中的TableSchemaManager未正确注册为单例!");
+                        }
+                        else
+                        {
+                            System.Diagnostics.Debug.WriteLine("[验证通过] Program.cs中的TableSchemaManager正确注册为单例");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"验证TableSchemaManager注册时出错: {ex.Message}");
+                    }
 
 
                     IEntityMappingService entityMappingService = Startup.GetFromFac<IEntityMappingService>();

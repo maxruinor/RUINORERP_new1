@@ -614,29 +614,97 @@ namespace RUINORERP.Model.Base.StatusManager
             }
         }
 
+        /// <summary>
+        /// 通过UI操作类型设置实体状态（通用方法）
+        /// 支持提交、审核、反审等所有预定义的UI操作
+        /// 这是一个简化的通用接口，将UI操作自动映射到具体的状态值
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        /// <param name="action">操作类型（提交、审核、反审等）</param>
+        /// <param name="reason">变更原因</param>
+        /// <param name="userId">用户ID</param>
+        /// <returns>状态转换结果</returns>
+        public Task<StateTransitionResult> SetStatusByActionAsync(BaseEntity entity, MenuItemEnums action, string reason = null, string userId = null)
+        {
+            if (entity == null)
+                return Task.FromResult(StateTransitionResult.Denied("实体不能为空"));
+
+            try
+            {
+                // 获取状态类型
+                var statusType = GetStatusType(entity);
+                
+                // 获取当前状态
+                var currentStatus = GetBusinessStatus(entity, statusType);
+                
+                // 获取目标状态值
+                var targetStatus = StatusActionMapper.MapActionToStatus(entity, action);
+                if (targetStatus == null)
+                    return Task.FromResult(StateTransitionResult.Denied($"无法映射操作类型 '{action}' 到状态值"));
+
+                // 如果目标状态为当前状态，返回提示
+                if (Equals(currentStatus, targetStatus))
+                    return Task.FromResult(StateTransitionResult.Allowed()); // 无需变更
+
+                // 验证状态转换
+                var validationResult = ValidateBusinessStatusTransitionAsync(currentStatus as Enum, targetStatus as Enum);
+                if (!validationResult.IsSuccess)
+                    return Task.FromResult(validationResult);
+
+                // 更新状态
+                var actionDesc = StatusActionMapper.GetActionDescription(action);
+                var finalReason = reason ?? actionDesc;
+
+                var result = UpdateBusinessStatus(entity, statusType, targetStatus, finalReason, userId);
+
+                return Task.FromResult(result);
+            }
+            catch (Exception ex)
+            {
+                return Task.FromResult(StateTransitionResult.Denied($"执行操作时发生错误: {ex.Message}"));
+            }
+        }
+
+  
+
         #endregion
 
         #region 操作权限检查方法
 
         /// <summary>
-        /// 检查是否可以执行指定操作，并返回详细消息
+        /// 验证操作权限（通过UI操作类型）
         /// </summary>
         /// <param name="entity">实体对象</param>
         /// <param name="action">操作类型</param>
-        /// <returns>操作结果</returns>
+        /// <returns>验证结果</returns>
         public (bool CanExecute, string Message) CanExecuteActionWithMessage(BaseEntity entity, MenuItemEnums action)
         {
             if (entity == null)
                 return (false, "实体不能为空");
 
-            // 使用增强规则检查操作权限
-            var canExecute = CanExecuteAction(entity, action);
-
+            // 获取状态类型
+            var statusType = GetStatusType(entity);
+            
+            // 获取当前状态
+            var currentStatus = GetBusinessStatus(entity, statusType);
+            
+            // 获取目标状态
+            var targetStatus = StatusActionMapper.MapActionToStatus(entity, action);
+            if (targetStatus == null)
+                return (false, $"无法映射操作类型 '{action}' 到状态值");
+            
+            // 如果目标状态为当前状态，返回提示
+            if (Equals(currentStatus, targetStatus))
+                return (true, GetSuccessMessage(action));
+            
+            // 验证状态转换
+            var validationResult = ValidateBusinessStatusTransitionAsync(currentStatus as Enum, targetStatus as Enum);
+            
             // 根据操作类型和当前状态返回相应的消息
-            if (canExecute)
+            if (validationResult.IsSuccess)
                 return (true, GetSuccessMessage(action));
             else
-                return (false, GetFailureMessage(entity, action));
+                return (false, validationResult.ErrorMessage ?? "操作失败");
         }
 
         /// <summary>
@@ -647,21 +715,27 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <returns>是否可以执行</returns>
         private bool CanExecuteAction(BaseEntity entity, MenuItemEnums action)
         {
-            // 获取实体的统一状态
-            // 如果没有状态信息，默认允许
-            if (entity == null)
-                return true;
+            // 获取状态类型
             var statusType = GetStatusType(entity);
             if (statusType == null)
                 return true;
-            // 获取当前状态类型和值
-            var statusValue = GetBusinessStatus(entity, statusType);
-
-            // 获取操作权限规则
-            var allowedActions = GetActionPermissionRules(statusType, statusValue);
-
-            // 检查当前状态是否允许执行指定操作
-            return allowedActions.Contains(action);
+                
+            // 获取当前状态
+            var currentStatus = GetBusinessStatus(entity, statusType);
+            
+            // 获取目标状态
+            var targetStatus = StatusActionMapper.MapActionToStatus(entity, action);
+            if (targetStatus == null)
+                return false;
+            
+            // 如果目标状态为当前状态，返回false
+            if (Equals(currentStatus, targetStatus))
+                return false;
+            
+            // 验证状态转换
+            var validationResult = ValidateBusinessStatusTransitionAsync(currentStatus as Enum, targetStatus as Enum);
+            
+            return validationResult.IsSuccess;
         }
 
         /// <summary>
@@ -677,20 +751,42 @@ namespace RUINORERP.Model.Base.StatusManager
                    GlobalStateRulesManager.Instance.ActionPermissionRules[statusType].ContainsKey(statusValue) ?
                    GlobalStateRulesManager.Instance.ActionPermissionRules[statusType][statusValue] : new List<MenuItemEnums>();
         }
-
+        
         /// <summary>
-        /// 获取操作权限规则（基于DataStatus）
+        /// 通过UI操作类型验证实体状态转换是否合法
         /// </summary>
-        /// <param name="status">数据状态</param>
-        /// <returns>操作权限列表</returns>
-        private List<MenuItemEnums> GetActionPermissionRules(DataStatus status)
+        /// <param name="entity">实体对象</param>
+        /// <param name="action">操作类型</param>
+        /// <returns>验证结果</returns>
+        public Task<StateTransitionResult> ValidateActionTransitionAsync(BaseEntity entity, MenuItemEnums action)
         {
-            // 使用GlobalStateRulesManager中定义的规则
-            var statusType = typeof(DataStatus);
-            return GlobalStateRulesManager.Instance.ActionPermissionRules.ContainsKey(statusType) &&
-                   GlobalStateRulesManager.Instance.ActionPermissionRules[statusType].ContainsKey(status) ?
-                   GlobalStateRulesManager.Instance.ActionPermissionRules[statusType][status] : new List<MenuItemEnums>();
+            if (entity == null)
+                return Task.FromResult(StateTransitionResult.Denied("实体不能为空"));
+                
+            try
+            {
+                // 获取状态类型
+                var statusType = GetStatusType(entity);
+                
+                // 获取当前状态
+                var currentStatus = GetBusinessStatus(entity, statusType);
+                
+                // 获取目标状态
+                var targetStatus = StatusActionMapper.MapActionToStatus(entity, action);
+                if (targetStatus == null)
+                    return Task.FromResult(StateTransitionResult.Denied($"无法映射操作类型 '{action}' 到状态值"));
+                
+                // 验证状态转换
+                var result = ValidateBusinessStatusTransitionAsync(currentStatus as Enum, targetStatus as Enum);
+                return Task.FromResult(result);
+            }
+            catch (Exception ex)
+            {
+                return Task.FromResult(StateTransitionResult.Denied($"验证状态转换时发生错误: {ex.Message}"));
+            }
         }
+
+
 
         /// <summary>
         /// 获取操作成功消息
@@ -914,7 +1010,8 @@ namespace RUINORERP.Model.Base.StatusManager
 
             return changes;
         }
-
+        
+       
 
         #endregion
 

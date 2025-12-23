@@ -8,6 +8,7 @@
  */
 
 using RUINORERP.Global;
+using RUINORERP.Global.EnumExt;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -167,6 +168,20 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <param name="entity">实体对象</param>
         /// <returns>是否为终态</returns>
         bool IsFinalStatus<TEntity>(TEntity entity) where TEntity : BaseEntity;
+
+        /// <summary>
+        /// 通过UI操作类型设置实体状态（通用方法）
+        /// 支持提交、审核、反审等所有预定义的UI操作
+        /// 这是一个简化的通用接口，将UI操作自动映射到具体的状态值
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        /// <param name="action">操作类型（提交、审核、反审等）</param>
+        /// <param name="reason">变更原因</param>
+        /// <param name="userId">用户ID</param>
+        /// <returns>状态转换结果</returns>
+        Task<StateTransitionResult> SetStatusByActionAsync(BaseEntity entity, MenuItemEnums action, string reason = null, string userId = null);
+
+ 
 
  
     }

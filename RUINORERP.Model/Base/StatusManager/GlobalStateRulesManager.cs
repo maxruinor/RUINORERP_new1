@@ -912,180 +912,160 @@ namespace RUINORERP.Model.Base.StatusManager
 
         /// <summary>
         /// 添加DataStatus操作权限规则
+        /// 应用submitModifyRuleMode模式不同的权限配置
         /// </summary>
         private void AddDataStatusActionPermissionRules()
         {
             var statusType = typeof(DataStatus);
-            if (submitModifyRuleMode == SubmitModifyRuleMode.灵活模式)
+            var flexibleModeRules = new Dictionary<object, List<MenuItemEnums>>
             {
-                _actionPermissionRules[statusType] = new Dictionary<object, List<MenuItemEnums>>
-                {
-                    [DataStatus.草稿] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.提交, MenuItemEnums.保存 },
-                    [DataStatus.新建] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.审核, MenuItemEnums.保存 },
-                    [DataStatus.确认] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.反审, MenuItemEnums.结案 },
-                    [DataStatus.完结] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.反结案 },
-                    [DataStatus.作废] = new List<MenuItemEnums> { MenuItemEnums.新增 }
-                };
-            }
-            else
-            {
-                _actionPermissionRules[statusType] = new Dictionary<object, List<MenuItemEnums>>
-                {
-                    [DataStatus.草稿] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.提交, MenuItemEnums.保存 },
-                    [DataStatus.新建] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.删除, MenuItemEnums.审核 },//不能修改
-                    [DataStatus.确认] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.反审, MenuItemEnums.结案 },
-                    [DataStatus.完结] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.反结案 },
-                    [DataStatus.作废] = new List<MenuItemEnums> { MenuItemEnums.新增 }
-                };
-            }
+                [DataStatus.草稿] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.提交, MenuItemEnums.保存 },
+                [DataStatus.新建] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.审核, MenuItemEnums.保存 },
+                [DataStatus.确认] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.反审, MenuItemEnums.结案 },
+                [DataStatus.完结] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.反结案 },
+                [DataStatus.作废] = new List<MenuItemEnums> { MenuItemEnums.新增 }
+            };
 
+            var strictModeRules = new Dictionary<object, List<MenuItemEnums>>
+            {
+                [DataStatus.草稿] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.提交, MenuItemEnums.保存 },
+                [DataStatus.新建] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.删除, MenuItemEnums.审核 },//不能修改
+                [DataStatus.确认] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.反审, MenuItemEnums.结案 },
+                [DataStatus.完结] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.反结案 },
+                [DataStatus.作废] = new List<MenuItemEnums> { MenuItemEnums.新增 }
+            };
+
+            _actionPermissionRules[statusType] = submitModifyRuleMode == SubmitModifyRuleMode.灵活模式 ? flexibleModeRules : strictModeRules;
         }
 
  
 
         /// <summary>
         /// 添加PaymentStatus操作权限规则
+        /// 应用submitModifyRuleMode模式不同的权限配置
         /// </summary>
         private void AddPaymentStatusActionPermissionRules()
         {
             var statusType = typeof(PaymentStatus);
+            var flexibleModeRules = new Dictionary<object, List<MenuItemEnums>>
+            {
+                [PaymentStatus.草稿] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.提交, MenuItemEnums.保存 },
+                [PaymentStatus.待审核] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.审核, MenuItemEnums.保存 },
+                [PaymentStatus.已支付] = new List<MenuItemEnums> { MenuItemEnums.打印 }
+            };
 
-            if (submitModifyRuleMode == SubmitModifyRuleMode.灵活模式)
+            var strictModeRules = new Dictionary<object, List<MenuItemEnums>>
             {
-                _actionPermissionRules[statusType] = new Dictionary<object, List<MenuItemEnums>>
-                {
-                    [PaymentStatus.草稿] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.提交, MenuItemEnums.保存 },
-                    [PaymentStatus.待审核] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.审核, MenuItemEnums.保存 },
-                    [PaymentStatus.已支付] = new List<MenuItemEnums> { MenuItemEnums.打印 }
-                };
-            }
-            else
-            {
-                _actionPermissionRules[statusType] = new Dictionary<object, List<MenuItemEnums>>
-                {
-                    [PaymentStatus.草稿] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.提交, MenuItemEnums.保存 },
-                    [PaymentStatus.待审核] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.删除, MenuItemEnums.审核 },
-                    [PaymentStatus.已支付] = new List<MenuItemEnums> { MenuItemEnums.打印 }
-                };
-            }
+                [PaymentStatus.草稿] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.提交, MenuItemEnums.保存 },
+                [PaymentStatus.待审核] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.删除, MenuItemEnums.审核 },
+                [PaymentStatus.已支付] = new List<MenuItemEnums> { MenuItemEnums.打印 }
+            };
+
+            _actionPermissionRules[statusType] = submitModifyRuleMode == SubmitModifyRuleMode.灵活模式 ? flexibleModeRules : strictModeRules;
         }
 
         /// <summary>
         /// 添加PrePaymentStatus操作权限规则
+        /// 应用submitModifyRuleMode模式不同的权限配置
         /// </summary>
         private void AddPrePaymentStatusActionPermissionRules()
         {
             var statusType = typeof(PrePaymentStatus);
-            if (submitModifyRuleMode == SubmitModifyRuleMode.灵活模式)
+            var flexibleModeRules = new Dictionary<object, List<MenuItemEnums>>
             {
-                _actionPermissionRules[statusType] = new Dictionary<object, List<MenuItemEnums>>
-                {
-                    [PrePaymentStatus.草稿] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.提交, MenuItemEnums.保存 },
-                    [PrePaymentStatus.待审核] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.审核, MenuItemEnums.保存 },
-                    [PrePaymentStatus.已生效] = new List<MenuItemEnums> { MenuItemEnums.反审 },
-                    [PrePaymentStatus.待核销] = new List<MenuItemEnums> { MenuItemEnums.反审 },
-                    [PrePaymentStatus.部分核销] = new List<MenuItemEnums> { },
-                    [PrePaymentStatus.全额核销] = new List<MenuItemEnums> { },
-                    [PrePaymentStatus.已结案] = new List<MenuItemEnums> { }
-                };
-            }
-            else
+                [PrePaymentStatus.草稿] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.提交, MenuItemEnums.保存 },
+                [PrePaymentStatus.待审核] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.审核, MenuItemEnums.保存 },
+                [PrePaymentStatus.已生效] = new List<MenuItemEnums> { MenuItemEnums.反审 },
+                [PrePaymentStatus.待核销] = new List<MenuItemEnums> { MenuItemEnums.反审 },
+                [PrePaymentStatus.部分核销] = new List<MenuItemEnums> { },
+                [PrePaymentStatus.全额核销] = new List<MenuItemEnums> { },
+                [PrePaymentStatus.已结案] = new List<MenuItemEnums> { }
+            };
+
+            var strictModeRules = new Dictionary<object, List<MenuItemEnums>>
             {
-                _actionPermissionRules[statusType] = new Dictionary<object, List<MenuItemEnums>>
-                {
-                    [PrePaymentStatus.草稿] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.提交, MenuItemEnums.保存 },
-                    [PrePaymentStatus.待审核] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.删除, MenuItemEnums.审核 },
-                    [PrePaymentStatus.已生效] = new List<MenuItemEnums> { MenuItemEnums.反审 },
-                    [PrePaymentStatus.待核销] = new List<MenuItemEnums> { MenuItemEnums.反审 },
-                    [PrePaymentStatus.部分核销] = new List<MenuItemEnums> { },
-                    [PrePaymentStatus.全额核销] = new List<MenuItemEnums> { },
-                    [PrePaymentStatus.已结案] = new List<MenuItemEnums> { }
-                };
-            }
+                [PrePaymentStatus.草稿] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.提交, MenuItemEnums.保存 },
+                [PrePaymentStatus.待审核] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.删除, MenuItemEnums.审核 },
+                [PrePaymentStatus.已生效] = new List<MenuItemEnums> { MenuItemEnums.反审 },
+                [PrePaymentStatus.待核销] = new List<MenuItemEnums> { MenuItemEnums.反审 },
+                [PrePaymentStatus.部分核销] = new List<MenuItemEnums> { },
+                [PrePaymentStatus.全额核销] = new List<MenuItemEnums> { },
+                [PrePaymentStatus.已结案] = new List<MenuItemEnums> { }
+            };
+
+            _actionPermissionRules[statusType] = submitModifyRuleMode == SubmitModifyRuleMode.灵活模式 ? flexibleModeRules : strictModeRules;
         }
 
         /// <summary>
         /// 添加StatementStatus操作权限规则
+        /// 应用submitModifyRuleMode模式不同的权限配置
         /// </summary>
         private void AddStatementStatusActionPermissionRules()
         {
             var statusType = typeof(StatementStatus);
-            if (submitModifyRuleMode == SubmitModifyRuleMode.灵活模式)
+            var flexibleModeRules = new Dictionary<object, List<MenuItemEnums>>
             {
-                _actionPermissionRules[statusType] = new Dictionary<object, List<MenuItemEnums>>
-                {
-                    // 草稿状态：允许所有基本操作
-                    [StatementStatus.草稿] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.提交, MenuItemEnums.保存 },
+                // 草稿状态：允许所有基本操作
+                [StatementStatus.草稿] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.提交, MenuItemEnums.保存 },
+                // 新建状态：允许基本操作和审核（灵活模式下允许修改）
+                [StatementStatus.新建] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.审核, MenuItemEnums.保存 },
+                // 确认状态：允许反审核操作
+                [StatementStatus.确认] = new List<MenuItemEnums> { MenuItemEnums.反审 },
+                // 部分结算状态：允许继续结算操作
+                [StatementStatus.部分结算] = new List<MenuItemEnums> { MenuItemEnums.结案 },
+                // 全部结清和已作废是终态，不允许操作
+                [StatementStatus.全部结清] = new List<MenuItemEnums> { },
+                [StatementStatus.已作废] = new List<MenuItemEnums> { }
+            };
 
-                    // 新建状态：允许基本操作和审核（灵活模式下允许修改）
-                    [StatementStatus.新建] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.审核, MenuItemEnums.保存 },
-
-                    // 确认状态：允许反审核操作
-                    [StatementStatus.确认] = new List<MenuItemEnums> { MenuItemEnums.反审 },
-
-                    // 部分结算状态：允许继续结算操作
-                    [StatementStatus.部分结算] = new List<MenuItemEnums> { MenuItemEnums.结案 },
-
-                    // 全部结清和已作废是终态，不允许操作
-                    [StatementStatus.全部结清] = new List<MenuItemEnums> { },
-                    [StatementStatus.已作废] = new List<MenuItemEnums> { }
-                };
-            }
-            else
+            var strictModeRules = new Dictionary<object, List<MenuItemEnums>>
             {
-                _actionPermissionRules[statusType] = new Dictionary<object, List<MenuItemEnums>>
-                {
-                    // 草稿状态：允许所有基本操作
-                    [StatementStatus.草稿] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.提交, MenuItemEnums.保存 },
+                // 草稿状态：允许所有基本操作
+                [StatementStatus.草稿] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.提交, MenuItemEnums.保存 },
+                // 新建状态：允许基本操作和审核（严格模式下不允许修改）
+                [StatementStatus.新建] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.删除, MenuItemEnums.审核 },
+                // 确认状态：允许反审核操作
+                [StatementStatus.确认] = new List<MenuItemEnums> { MenuItemEnums.反审 },
+                // 部分结算状态：允许继续结算操作
+                [StatementStatus.部分结算] = new List<MenuItemEnums> { MenuItemEnums.结案 },
+                // 全部结清和已作废是终态，不允许操作
+                [StatementStatus.全部结清] = new List<MenuItemEnums> { },
+                [StatementStatus.已作废] = new List<MenuItemEnums> { }
+            };
 
-                    // 新建状态：允许基本操作和审核（严格模式下不允许修改）
-                    [StatementStatus.新建] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.删除, MenuItemEnums.审核 },
-
-                    // 确认状态：允许反审核操作
-                    [StatementStatus.确认] = new List<MenuItemEnums> { MenuItemEnums.反审 },
-
-                    // 部分结算状态：允许继续结算操作
-                    [StatementStatus.部分结算] = new List<MenuItemEnums> { MenuItemEnums.结案 },
-
-                    // 全部结清和已作废是终态，不允许操作
-                    [StatementStatus.全部结清] = new List<MenuItemEnums> { },
-                    [StatementStatus.已作废] = new List<MenuItemEnums> { }
-                };
-            }
+            _actionPermissionRules[statusType] = submitModifyRuleMode == SubmitModifyRuleMode.灵活模式 ? flexibleModeRules : strictModeRules;
         }
 
         /// <summary>
         /// 添加ARAPStatus操作权限规则
+        /// 应用submitModifyRuleMode模式不同的权限配置
         /// </summary>
         private void AddARAPStatusActionPermissionRules()
         {
             var statusType = typeof(ARAPStatus);
-            if (submitModifyRuleMode == SubmitModifyRuleMode.灵活模式)
+            var flexibleModeRules = new Dictionary<object, List<MenuItemEnums>>
             {
-                _actionPermissionRules[statusType] = new Dictionary<object, List<MenuItemEnums>>
-                {
-                    [ARAPStatus.草稿] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.提交, MenuItemEnums.打印, MenuItemEnums.保存 },
-                    [ARAPStatus.待审核] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.审核, MenuItemEnums.打印, MenuItemEnums.保存 },
-                    [ARAPStatus.待支付] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.打印 },
-                    [ARAPStatus.部分支付] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.打印 },
-                    [ARAPStatus.全部支付] = new List<MenuItemEnums> { MenuItemEnums.打印 },
-                    [ARAPStatus.坏账] = new List<MenuItemEnums> { MenuItemEnums.打印 },
-                    [ARAPStatus.已冲销] = new List<MenuItemEnums> { MenuItemEnums.打印 }
-                };
-            }
-            else
+                [ARAPStatus.草稿] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.提交, MenuItemEnums.打印, MenuItemEnums.保存 },
+                [ARAPStatus.待审核] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.审核, MenuItemEnums.打印, MenuItemEnums.保存 },
+                [ARAPStatus.待支付] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.打印 },
+                [ARAPStatus.部分支付] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.打印 },
+                [ARAPStatus.全部支付] = new List<MenuItemEnums> { MenuItemEnums.打印 },
+                [ARAPStatus.坏账] = new List<MenuItemEnums> { MenuItemEnums.打印 },
+                [ARAPStatus.已冲销] = new List<MenuItemEnums> { MenuItemEnums.打印 }
+            };
+        
+            var strictModeRules = new Dictionary<object, List<MenuItemEnums>>
             {
-                _actionPermissionRules[statusType] = new Dictionary<object, List<MenuItemEnums>>
-                {
-                    [ARAPStatus.草稿] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.提交, MenuItemEnums.打印, MenuItemEnums.保存 },
-                    [ARAPStatus.待审核] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.删除, MenuItemEnums.审核, MenuItemEnums.打印 },
-                    [ARAPStatus.待支付] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.打印 },
-                    [ARAPStatus.部分支付] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.打印 },
-                    [ARAPStatus.全部支付] = new List<MenuItemEnums> { MenuItemEnums.打印 },
-                    [ARAPStatus.坏账] = new List<MenuItemEnums> { MenuItemEnums.打印 },
-                    [ARAPStatus.已冲销] = new List<MenuItemEnums> { MenuItemEnums.打印 }
-                };
-            }
+                [ARAPStatus.草稿] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.提交, MenuItemEnums.打印, MenuItemEnums.保存 },
+                [ARAPStatus.待审核] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.删除, MenuItemEnums.审核, MenuItemEnums.打印 },
+                [ARAPStatus.待支付] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.打印 },
+                [ARAPStatus.部分支付] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.打印 },
+                [ARAPStatus.全部支付] = new List<MenuItemEnums> { MenuItemEnums.打印 },
+                [ARAPStatus.坏账] = new List<MenuItemEnums> { MenuItemEnums.打印 },
+                [ARAPStatus.已冲销] = new List<MenuItemEnums> { MenuItemEnums.打印 }
+            };
+        
+            _actionPermissionRules[statusType] = submitModifyRuleMode == SubmitModifyRuleMode.灵活模式 ? flexibleModeRules : strictModeRules;
         }
 
         /// <summary>

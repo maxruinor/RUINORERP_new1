@@ -231,12 +231,60 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 _logger.LogTrace($"收到{updates.Count}条任务状态更新");
             }
 
-            // 将所有更新委托给TodoListManager处理
-            foreach (var update in updates)
-            {
-                TodoListManager.Instance.ProcessUpdate(update);
-            }
+            // 批量处理所有更新，提高性能
+            TodoListManager.Instance.ProcessUpdates(updates);
         }
+        
+        /// <summary>
+        /// 刷新数据节点 - 批量处理任务状态更新
+        /// 高效处理多个单据的状态同步到工作台
+        /// </summary>
+        /// <param name="updates">任务状态更新信息列表</param>
+        public void RefreshDataNodes(List<TodoUpdate> updates)
+        {
+            // 空检查
+            if (updates == null || updates.Count == 0)
+                return;
+                
+            // 确保在UI线程中更新
+            if (this.InvokeRequired)
+            {
+                this.BeginInvoke(new Action<List<TodoUpdate>>(RefreshDataNodes), updates);
+                return;
+            }
+            
+            // 记录日志
+            _logger?.LogTrace($"开始批量刷新{updates.Count}个数据节点");
+            
+            // 按业务类型分组处理，减少重复查找
+            var updatesByBizType = updates.GroupBy(u => u.BusinessType);
+            
+            foreach (var group in updatesByBizType)
+            {
+                BizType bizType = group.Key;
+                var bizTypeNode = FindBizTypeNode(bizType);
+                
+                if (bizTypeNode == null)
+                {
+                    _logger?.LogWarning($"未找到业务类型节点: {bizType}");
+                    continue;
+                }
+                
+                // 处理同一业务类型的所有更新
+                foreach (var update in group)
+                {
+                    UpdateTreeNodeForTask(update);
+                }
+                
+                // 更新业务类型节点文本
+                UpdateBizTypeNodeText(bizTypeNode);
+            }
+            
+            // 确保树视图展开
+            kryptonTreeViewJobList.ExpandAll();
+            _logger?.LogTrace($"批量刷新数据节点完成");
+        }
+        
 
         /// <summary>
         /// 更新任务对应的树节点
@@ -1499,3 +1547,4 @@ conModels.Add(new ConditionalCollections()
      */
 
 }
+

@@ -212,6 +212,31 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 }
             }
         }
+        
+        /// <summary>
+        /// 批量处理来自TodoSyncManager的任务状态更新
+        /// 高效处理多个单据状态同步到工作台
+        /// </summary>
+        /// <param name="updates">任务状态更新信息列表</param>
+        public void ProcessUpdates(List<TodoUpdate> updates)
+        {
+            // 空检查
+            if (updates == null || updates.Count == 0)
+                return;
+
+            // 简化UI刷新调用
+            if (_todoListControl != null)
+            {
+                try
+                {
+                    _todoListControl.BeginInvoke(new Action(() => _todoListControl.RefreshDataNodes(updates)));
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"批量UI更新委托异常: {ex.Message}");
+                }
+            }
+        }
 
 
         #endregion

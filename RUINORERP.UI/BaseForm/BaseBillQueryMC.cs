@@ -47,7 +47,8 @@ using System.Xml;
 using CommonHelper = RUINORERP.UI.Common.CommonHelper;
 using ContextMenuController = RUINORERP.UI.UControls.ContextMenuController;
 using XmlDocument = System.Xml.XmlDocument;
-
+using RUINORERP.UI.UserCenter;
+using RUINORERP.UI.UserCenter.DataParts;
 namespace RUINORERP.UI.BaseForm
 {
 
@@ -62,6 +63,11 @@ namespace RUINORERP.UI.BaseForm
         /// 统一状态管理器
         /// </summary>
         protected IUnifiedStateManager StateManager { get; set; }
+            // 添加TodoListManager属性
+    /// <summary>
+    /// 工作台任务列表管理器
+    /// </summary>
+    protected TodoListManager TodoListManager { get; set; }
     
         public virtual List<ContextMenuController> AddContextMenu()
         {
@@ -132,6 +138,7 @@ namespace RUINORERP.UI.BaseForm
             if (RUINORERP.Model.Context.ApplicationContext.Current != null)
             {
                 this.StateManager = RUINORERP.Model.Context.ApplicationContext.Current.GetRequiredService<IUnifiedStateManager>();
+                 this.TodoListManager = RUINORERP.Model.Context.ApplicationContext.Current.GetRequiredService<TodoListManager>();
             }
         
             if (System.ComponentModel.LicenseManager.UsageMode != System.ComponentModel.LicenseUsageMode.Designtime)
@@ -378,6 +385,11 @@ namespace RUINORERP.UI.BaseForm
                     break;
                 case MenuItemEnums.提交:
                     Submit();
+                    // 添加同步代码
+                if (TodoListManager != null)
+                {
+                    TodoListManager.ProcessUpdate(selectlist);
+                }
                     break;
                 case MenuItemEnums.属性:
                     Property();
@@ -387,6 +399,11 @@ namespace RUINORERP.UI.BaseForm
                     if (selectlist.Count > 0)
                     {
                         ApprovalEntity ae = await Review(selectlist);
+                        // 添加同步代码
+                    if (TodoListManager != null)
+                    {
+                        TodoListManager.ProcessUpdate(selectlist);
+                    }
                     }
 
                     break;
@@ -395,6 +412,11 @@ namespace RUINORERP.UI.BaseForm
                     {
                         //只操作批一行
                         ApprovalEntity ae = await ReReview(selectlist[0]);
+                        // 添加同步代码
+                    if (TodoListManager != null)
+                    {
+                        TodoListManager.ProcessUpdate(selectlist);
+                    }
                     }
                     break;
                 case MenuItemEnums.结案:
@@ -404,6 +426,11 @@ namespace RUINORERP.UI.BaseForm
                         bool rs = await CloseCase(selectlist);
                         if (rs)
                         {
+                             // 添加同步代码
+                        if (TodoListManager != null)
+                        {
+                            TodoListManager.ProcessUpdate(selectlist);
+                        }
                             await MainForm.Instance.AuditLogHelper.CreateAuditLog<M>("结案", selectlist[0], $"结案意见:{rs}");
                         }
                     }
@@ -440,6 +467,11 @@ namespace RUINORERP.UI.BaseForm
                     break;
                 case MenuItemEnums.删除:
                     Delete(selectlist);
+                     // 添加同步代码
+                if (TodoListManager != null)
+                {
+                    TodoListManager.ProcessUpdate(selectlist);
+                }
                     break;
                 case MenuItemEnums.导出:
                     UIExcelHelper.ExportExcel(_UCBillMasterQuery.newSumDataGridViewMaster);

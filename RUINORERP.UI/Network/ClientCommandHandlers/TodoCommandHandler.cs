@@ -26,7 +26,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
         /// 构造函数
         /// </summary>
         /// <param name="logger">日志记录器</param>
-        public TodoCommandHandler(ILogger<TodoCommandHandler> logger = null) : 
+        public TodoCommandHandler(ILogger<TodoCommandHandler> logger = null) :
             base(logger ?? Startup.GetFromFac<ILogger<BaseClientCommandHandler>>())
         {
             _logger = logger ?? Startup.GetFromFac<ILogger<TodoCommandHandler>>();
@@ -56,27 +56,27 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                 // 从不同类型的请求中提取任务状态更新数据
                 TodoUpdate update = null;
                 MessageData messageData = null;
-                
+
                 // 处理MessageRequest类型的请求
-                if (packet.Request is MessageRequest messageRequest && 
+                if (packet.Request is MessageRequest messageRequest &&
                     messageRequest.Data is MessageData msgData)
                 {
                     messageData = msgData;
-                    
+
                     // 尝试从不同属性获取更新数据，确保兼容性
                     if (msgData.BizData is TodoUpdate bizDataUpdate)
                     {
                         update = bizDataUpdate;
                     }
-                  
+
                 }
-                
-                
+
+
                 // 如果成功提取到更新数据，则进行处理
                 if (update != null)
                 {
                     // 调用核心处理方法
-                    await ProcessTaskStatusChangeAsync(update, messageData);
+                    ProcessTaskStatusChangeAsync(update, messageData);
                 }
                 else
                 {
@@ -94,21 +94,21 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
         /// </summary>
         /// <param name="update">任务状态更新信息</param>
         /// <param name="messageData">原始消息数据（可选）</param>
-        private async Task ProcessTaskStatusChangeAsync(TodoUpdate update, MessageData messageData = null)
+        private void ProcessTaskStatusChangeAsync(TodoUpdate update, MessageData messageData = null)
         {
             try
             {
                 // 标记为来自服务器的更新
                 update.IsFromServer = true;
-                
+
                 // 业务逻辑处理：根据不同业务类型执行特定处理
                 ProcessBusinessSpecificLogic(update);
-                
+
                 // 通知本地任务状态同步管理器
                 TodoSyncManager.Instance.PublishUpdate(update);
-                
+
                 // 同时添加到消息管理器中
-                await AddToMessageManager(update, messageData);
+                AddToMessageManager(update, messageData);
             }
             catch (Exception ex)
             {
@@ -154,7 +154,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                 if (messageService != null)
                 {
                     // 创建消息数据
-                    var message = originalMessageData != null ? 
+                    var message = originalMessageData != null ?
                         new MessageData
                         {
                             Id = originalMessageData.Id,
@@ -166,7 +166,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                             BizData = update,
                             SendTime = originalMessageData.SendTime,
                             IsRead = false
-                        } : 
+                        } :
                         new MessageData
                         {
                             Id = RUINORERP.Common.SnowflakeIdHelper.IdHelper.GetLongId(),
@@ -179,7 +179,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                             SendTime = DateTime.Now,
                             IsRead = false
                         };
-                    
+
                     // 添加到消息管理器
                     messageService.OnBusinessMessageReceived(message);
                     _logger.LogDebug("已将任务状态变更通知添加到消息中心");

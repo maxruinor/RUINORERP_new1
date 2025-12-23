@@ -124,7 +124,7 @@ namespace RUINORERP.UI.BaseForm
     public partial class BaseBillEditGeneric<T, C> : BaseBillEdit, IContextMenuInfoAuth, IToolStripMenuInfoAuth where T : BaseEntity, new() where C : class, new()
     {
 
-      
+
 
         public virtual List<UControls.ContextMenuController> AddContextMenu()
         {
@@ -2305,6 +2305,13 @@ namespace RUINORERP.UI.BaseForm
                                 pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
                                 if (pkid > 0)
                                 {
+                                    var ss = StateManager.IsFinalStatus(EditEntity);
+                                    var canSave = StateManager.CanExecuteActionWithMessage(EditEntity, MenuItemEnums.保存);
+                                    if (!canSave.CanExecute)
+                                    {
+                                        MainForm.Instance.uclog.AddLog(canSave.Message);
+                                        return;
+                                    }
                                     //如果有审核状态才去判断
                                     if (editEntity.ContainsProperty(typeof(DataStatus).Name))
                                     {
@@ -3177,7 +3184,7 @@ namespace RUINORERP.UI.BaseForm
                         EditEntity
                     );
                     TodoSyncManager.Instance.PublishUpdate(updateData);
-                    
+
                     if (frm.CloseCaseImage != null && ReflectionHelper.ExistPropertyName<T>("CloseCaseImagePath"))
                     {
                         string strCloseCaseImagePath = System.DateTime.Now.ToString("yy") + "/" + System.DateTime.Now.ToString("MM") + "/" + Ulid.NewUlid().ToString();
@@ -3735,7 +3742,7 @@ namespace RUINORERP.UI.BaseForm
                 {
                     BusinessHelper.Instance.ApproverEntity(EditEntity);
                     rs = true;
-                    
+
                     // 发送任务状态更新通知
                     var bizType = EntityMappingHelper.GetBillData<T>(EditEntity).BizType;
                     var updateData = TodoUpdate.Create(
@@ -3745,7 +3752,7 @@ namespace RUINORERP.UI.BaseForm
                         EditEntity
                     );
                     TodoSyncManager.Instance.PublishUpdate(updateData);
-                    
+
                     //如果是出库单审核，则上传到服务器 锁定订单无法修改
                     if (ae.bizType == BizType.销售出库单)
                     {

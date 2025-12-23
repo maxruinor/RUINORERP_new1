@@ -69,7 +69,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
         /// <param name="treeNodes">工作台树节点集合</param>
         /// <returns>应更新的目标节点列表</returns>
         public List<TreeNode> DetermineTargetNodesForUpdate(
-            BillStatusUpdateData updateData,
+            TodoUpdate updateData,
             TreeNodeCollection treeNodes)
         {
             var targetNodes = new List<TreeNode>();
@@ -187,7 +187,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
         }
 
 
-     
+
 
         /// <summary>
         /// 处理来自TodoSyncManager的任务状态更新
@@ -198,18 +198,13 @@ namespace RUINORERP.UI.UserCenter.DataParts
             // 空检查
             if (update == null)
                 return;
-            // 使用CreateFromUpdate方法确保OldStatus和NewStatus等所有字段都被正确复制
-            var updateData = BillStatusUpdateData.CreateFromUpdate(
-                update,
-                new BaseEntity()
-            );
 
             // 简化UI刷新调用
             if (_todoListControl != null)
             {
                 try
                 {
-                    _todoListControl.BeginInvoke(new Action(() => _todoListControl.RefreshDataNodes(updateData)));
+                    _todoListControl.BeginInvoke(new Action(() => _todoListControl.RefreshDataNodes(update)));
                 }
                 catch (Exception ex)
                 {
@@ -218,17 +213,17 @@ namespace RUINORERP.UI.UserCenter.DataParts
             }
         }
 
-  
+
         #endregion
 
         #region 私有方法
 
-      
+
         /// <summary>
         /// 查找匹配条件的状态节点
         /// </summary>
         private void FindMatchingStatusNodes(
-            BillStatusUpdateData updateData,
+            TodoUpdate updateData,
             TreeNode bizTypeNode,
             List<TreeNode> targetNodes)
         {
@@ -281,14 +276,18 @@ namespace RUINORERP.UI.UserCenter.DataParts
         /// 仅从传入的entity中提取conditions所需的属性，避免全量反射
         /// </summary>
         private Dictionary<string, object> GetBillConditionValues(
-            object entity, 
+            object entity,
             List<IConditionalModel> conditions)
         {
             var conditionValues = new Dictionary<string, object>();
 
             if (entity == null || conditions == null || !conditions.Any())
                 return conditionValues;
-
+            if (entity is not BaseEntity)
+            {
+                return conditionValues;
+            }
+            var baseEntity = entity as BaseEntity;
             try
             {
                 // 仅提取conditions中需要的字段
@@ -297,24 +296,22 @@ namespace RUINORERP.UI.UserCenter.DataParts
                     if (condition is ConditionalModel sqlCondition)
                     {
                         var fieldName = sqlCondition.FieldName;
-                        
+                      
+
                         // 从entity中反射获取对应字段的值
-                        var property = entity.GetType().GetProperty(
-                            fieldName, 
-                            System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.IgnoreCase);
-                        
-                        if (property != null)
+                        if (baseEntity.ContainsProperty(fieldName))
                         {
                             try
                             {
-                                var value = property.GetValue(entity);
-                                conditionValues[fieldName] = value;
+                                conditionValues[fieldName] = baseEntity.GetPropertyValue(fieldName);
                             }
                             catch (Exception ex)
                             {
                                 System.Diagnostics.Debug.WriteLine($"获取字段{fieldName}值失败: {ex.Message}");
                             }
                         }
+
+
                     }
                 }
             }
@@ -431,7 +428,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
             return string.Compare(value1.ToString(), value2.ToString(), StringComparison.Ordinal);
         }
 
-      
+
         #endregion
     }
 }

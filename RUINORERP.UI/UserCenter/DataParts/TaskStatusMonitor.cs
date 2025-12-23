@@ -18,7 +18,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
     public class TodoMonitor : IExcludeFromRegistration
     {
         #region 单例模式
-        private static readonly Lazy<TodoMonitor> _instance = 
+        private static readonly Lazy<TodoMonitor> _instance =
             new Lazy<TodoMonitor>(() => new TodoMonitor());
 
         /// <summary>
@@ -28,13 +28,11 @@ namespace RUINORERP.UI.UserCenter.DataParts
 
         private TodoMonitor()
         {
-            _statusHistory = new ConcurrentDictionary<string, string>();
             _monitoredBusinessTypes = new List<BizType>();
         }
         #endregion
 
         #region 字段
-        private readonly ConcurrentDictionary<string, string> _statusHistory; // 记录任务状态历史，键为"BillId_BizType"
         private readonly List<BizType> _monitoredBusinessTypes; // 监控的业务类型列表
         private bool _isMonitoring = false;
         private readonly object _monitorLock = new object();
@@ -93,49 +91,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
             }
         }
 
-        /// <summary>
-        /// 手动触发任务状态变更通知
-        /// 当其他模块修改了任务状态时，可以调用此方法通知监控器
-        /// </summary>
-        /// <param name="billId">单据主键ID</param>
-        /// <param name="bizType">业务类型</param>
-        /// <param name="oldStatus">旧状态</param>
-        /// <param name="newStatus">新状态</param>
-        public void NotifyTodoChanged(long billId, BizType bizType, string oldStatus, string newStatus)
-        {
-            if (billId == 0 || bizType == BizType.无对应数据)
-                return;
 
-            var taskKey = $"{billId}_{bizType}";
-            
-            // 检查状态是否真的发生了变化
-            if (_statusHistory.TryGetValue(taskKey, out var currentStatus))
-            {
-                if (currentStatus == newStatus)
-                {
-                    // 状态未发生变化，无需通知
-                    return;
-                }
-            }
-
-            _statusHistory[taskKey] = newStatus;
-
-            // 发布状态更新通知
-            var update = new TodoUpdate
-            {
-                UpdateType = (oldStatus == null) ? 
-                    TodoUpdateType.Created : 
-                    TodoUpdateType.StatusChanged,
-                BusinessType = bizType,
-                BillId = billId,
-                OldStatus = oldStatus,
-                // 确保即使在创建操作时也有明确的新状态
-                NewStatus = !string.IsNullOrEmpty(newStatus) ? newStatus : "新建",
-                Timestamp = DateTime.Now
-            };
-
-            TodoSyncManager.Instance.PublishUpdate(update);
-        }
 
         /// <summary>
         /// 处理来自网络的任务状态更新
@@ -145,30 +101,9 @@ namespace RUINORERP.UI.UserCenter.DataParts
         {
             if (update == null)
                 return;
-
-            var taskKey = $"{update.BillId}_{update.BusinessType}";
-            
-            // 更新本地状态历史
-            if (update.UpdateType == TodoUpdateType.Deleted)
-            {
-                _statusHistory.TryRemove(taskKey, out _);
-            }
-            else
-            {
-                _statusHistory[taskKey] = update.NewStatus;
-            }
-
             // 发布更新到本地订阅者
-            TodoSyncManager.Instance.PublishUpdate(new TodoUpdate
-            {
-                UpdateType = update.UpdateType,
-                BusinessType = update.BusinessType,
-                BillId = update.BillId,
-                OldStatus = update.OldStatus,
-                NewStatus = update.NewStatus,
-                Timestamp = update.Timestamp
-            });
-            
+            TodoSyncManager.Instance.PublishUpdate(update);
+
         }
         #endregion
 
@@ -183,7 +118,6 @@ namespace RUINORERP.UI.UserCenter.DataParts
             {
                 _isMonitoring = false;
                 _monitoredBusinessTypes.Clear();
-                _statusHistory.Clear();
             }
         }
         #endregion

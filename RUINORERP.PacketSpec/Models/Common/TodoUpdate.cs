@@ -28,19 +28,86 @@ namespace RUINORERP.PacketSpec.Models.Common
         public long BillId { get; set; }
 
         /// <summary>
-        /// 原状态
+        /// 实体对象引用
         /// </summary>
-        public string OldStatus { get; set; }
+        public object entity { get; set; } = new object();
 
         /// <summary>
-        /// 新状态
+        /// 条件匹配值集合
+        /// 存储用于条件匹配的字段值
         /// </summary>
-        public string NewStatus { get; set; }
+        public Dictionary<string, object> ConditionValues { get; set; } = new Dictionary<string, object>();
 
         /// <summary>
-        /// 更新时间戳
+        /// 状态类型
         /// </summary>
-        public DateTime Timestamp { get; set; }
+        public string StatusType { get; set; }
+
+        /// <summary>
+        /// 业务状态值
+        /// <summary>
+        public object BusinessStatusValue { get; set; }
+
+        /// <summary>
+        /// 创建BillStatusUpdateData实例的工厂方法
+        /// </summary>
+        /// <param name="updateType">更新类型</param>
+        /// <param name="bizType">业务类型</param>
+        /// <param name="billId">单据ID</param>
+        /// <param name="entity">实体对象</param>
+        /// <param name="statusType">状态类型</param>
+        /// <param name="businessStatusValue">业务状态值</param>
+        /// <returns>创建的BillStatusUpdateData实例</returns>
+        public static TodoUpdate Create(
+            TodoUpdateType updateType,
+            BizType bizType,
+            long billId,
+            object entity,
+            string statusType = null,
+            object businessStatusValue = null
+        )
+        {
+            return new TodoUpdate
+            {
+                UpdateType = updateType,
+                BusinessType = bizType,
+                BillId = billId,
+                entity = entity,
+                StatusType = statusType,
+                BusinessStatusValue = businessStatusValue,
+                AdditionalData = new Dictionary<string, object>(),
+                ConditionValues = new Dictionary<string, object>()
+            };
+        }
+
+        /// <summary>
+        /// 基于TodoUpdate创建BillStatusUpdateData实例的工厂方法
+        /// </summary>
+        /// <param name="update">TodoUpdate实例</param>
+        /// <param name="entity">实体对象</param>
+        /// <param name="statusType">状态类型</param>
+        /// <param name="businessStatusValue">业务状态值</param>
+        /// <returns>创建的BillStatusUpdateData实例</returns>
+        public static TodoUpdate CreateFromUpdate(
+            TodoUpdate update,
+            object entity = null,
+            string statusType = null,
+            object businessStatusValue = null
+        )
+        {
+            return new TodoUpdate
+            {
+                UpdateType = update.UpdateType,
+                BusinessType = update.BusinessType,
+                BillId = update.BillId,
+                entity = entity ?? new BaseEntity(),
+                StatusType = statusType,
+                BusinessStatusValue = businessStatusValue,
+                AdditionalData = new Dictionary<string, object>(update.AdditionalData),
+                ConditionValues = new Dictionary<string, object>()
+            };
+        }
+
 
         /// <summary>
         /// 附加数据
@@ -75,97 +142,5 @@ namespace RUINORERP.PacketSpec.Models.Common
         }
     }
 
-    /// <summary>
-    /// 单据状态更新数据
-    /// 扩展TodoUpdate，支持更丰富的状态信息和条件匹配
-    /// </summary>
-    public class BillStatusUpdateData : TodoUpdate
-    {
-        /// <summary>
-        /// 实体对象引用
-        /// </summary>
-        public object entity { get; set; } = new object();
-
-        /// <summary>
-        /// 条件匹配值集合
-        /// 存储用于条件匹配的字段值
-        /// </summary>
-        public Dictionary<string, object> ConditionValues { get; set; } = new Dictionary<string, object>();
-        
-        /// <summary>
-        /// 状态类型（如"string", "enum", "int"等）
-        /// </summary>
-        public string StatusType { get; set; }
-        
-        /// <summary>
-        /// 业务状态值
-        /// <summary>
-        public object BusinessStatusValue { get; set; }
-
-        /// <summary>
-        /// 创建BillStatusUpdateData实例的工厂方法
-        /// </summary>
-        /// <param name="updateType">更新类型</param>
-        /// <param name="bizType">业务类型</param>
-        /// <param name="billId">单据ID</param>
-        /// <param name="entity">实体对象</param>
-        /// <param name="statusType">状态类型</param>
-        /// <param name="businessStatusValue">业务状态值</param>
-        /// <returns>创建的BillStatusUpdateData实例</returns>
-        public static BillStatusUpdateData Create(
-            TodoUpdateType updateType,
-            BizType bizType,
-            long billId,
-            object entity,
-            string statusType = null,
-            object businessStatusValue = null
-        )
-        {
-            return new BillStatusUpdateData
-            {
-                UpdateType = updateType,
-                BusinessType = bizType,
-                BillId = billId,
-                entity = entity,
-                StatusType = statusType,
-                BusinessStatusValue = businessStatusValue,
-                Timestamp = DateTime.Now,
-                AdditionalData = new Dictionary<string, object>(),
-                ConditionValues = new Dictionary<string, object>()
-            };
-        }
-        
-        /// <summary>
-        /// 基于TodoUpdate创建BillStatusUpdateData实例的工厂方法
-        /// </summary>
-        /// <param name="update">TodoUpdate实例</param>
-        /// <param name="entity">实体对象</param>
-        /// <param name="statusType">状态类型</param>
-        /// <param name="businessStatusValue">业务状态值</param>
-        /// <returns>创建的BillStatusUpdateData实例</returns>
-        public static BillStatusUpdateData CreateFromUpdate(
-            TodoUpdate update,
-            object entity = null,
-            string statusType = null,
-            object businessStatusValue = null
-        )
-        {
-            return new BillStatusUpdateData
-            {
-                UpdateType = update.UpdateType,
-                BusinessType = update.BusinessType,
-                BillId = update.BillId,
-                entity = entity ?? new BaseEntity(),
-                StatusType = statusType,
-                BusinessStatusValue = businessStatusValue,
-                OldStatus = update.OldStatus,
-                NewStatus = update.NewStatus,
-                Timestamp = update.Timestamp,
-                AdditionalData = new Dictionary<string, object>(update.AdditionalData),
-                ConditionValues = new Dictionary<string, object>()
-            };
-        }
-
-        
-    }
+    
 }

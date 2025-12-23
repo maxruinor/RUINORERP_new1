@@ -3170,7 +3170,7 @@ namespace RUINORERP.UI.BaseForm
                 {
                     // 发送任务状态更新通知
                     var bizType = EntityMappingHelper.GetBillData<T>(EditEntity).BizType;
-                    var updateData = BillStatusUpdateData.Create(
+                    var updateData = TodoUpdate.Create(
                         PacketSpec.Enums.Core.TodoUpdateType.StatusChanged,
                         bizType,
                         pkid,
@@ -3388,7 +3388,7 @@ namespace RUINORERP.UI.BaseForm
 
                     // 发送任务状态更新通知
                     var bizType = EntityMappingHelper.GetBillData<T>(EditEntity).BizType;
-                    var updateData = BillStatusUpdateData.Create(
+                    var updateData = TodoUpdate.Create(
                         PacketSpec.Enums.Core.TodoUpdateType.StatusChanged,
                         bizType,
                         pkid,
@@ -3738,7 +3738,7 @@ namespace RUINORERP.UI.BaseForm
                     
                     // 发送任务状态更新通知
                     var bizType = EntityMappingHelper.GetBillData<T>(EditEntity).BizType;
-                    var updateData = BillStatusUpdateData.Create(
+                    var updateData = TodoUpdate.Create(
                         PacketSpec.Enums.Core.TodoUpdateType.StatusChanged,
                         bizType,
                         pkid,
@@ -4947,14 +4947,14 @@ namespace RUINORERP.UI.BaseForm
                 MainForm.Instance.uclog.AddLog("保存成功");
 
 
-                // 发送任务状态更新通知 - 使用扩展的BillStatusUpdateData
+                // 发送任务状态更新通知 - 使用扩展的TodoUpdate
                 var bizType = EntityMappingHelper.GetBillData<T>(EditEntity).BizType;
                 // 使用StateManager获取状态类型和状态值
                 var statusType = StateManager.GetStatusType(entity);
                 var currentStatus = StateManager.GetBusinessStatus(entity, statusType);
 
                 // 创建更新数据，传入正确的状态类型和值
-                var updateData = BillStatusUpdateData.Create(
+                var updateData = TodoUpdate.Create(
                     originalPkid == 0 ? PacketSpec.Enums.Core.TodoUpdateType.Created : PacketSpec.Enums.Core.TodoUpdateType.StatusChanged,
                     bizType,
                     pkid,
@@ -5244,9 +5244,9 @@ namespace RUINORERP.UI.BaseForm
                         //提示一下删除成功
                         MainForm.Instance.uclog.AddLog("提示", "删除成功");
 
-                        // 发送任务状态删除通知 - 使用扩展的BillStatusUpdateData
+                        // 发送任务状态删除通知 - 使用扩展的TodoUpdate
                         var bizType = EntityMappingHelper.GetBillData<T>(editEntity as T).BizType;
-                        var updateData = BillStatusUpdateData.Create(
+                        var updateData = TodoUpdate.Create(
                             PacketSpec.Enums.Core.TodoUpdateType.Deleted,
                             bizType,
                             PKValue.ToLong(),
@@ -5436,9 +5436,9 @@ namespace RUINORERP.UI.BaseForm
                         }
                         submitrs = true;
 
-                        // 发送任务状态更新通知 - 使用扩展的BillStatusUpdateData
+                        // 发送任务状态更新通知 - 使用扩展的TodoUpdate
                         var bizType = EntityMappingHelper.GetBillData<T>(EditEntity).BizType;
-                        var updateData = BillStatusUpdateData.Create(
+                        var updateData = TodoUpdate.Create(
                             PacketSpec.Enums.Core.TodoUpdateType.StatusChanged,
                             bizType,
                             pkid,

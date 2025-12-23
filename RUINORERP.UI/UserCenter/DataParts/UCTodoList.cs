@@ -16,7 +16,7 @@ using RUINORERP.Model;
 using RUINORERP.Model.Base.StatusManager;
 using RUINORERP.PacketSpec.Enums.Core;
 using RUINORERP.PacketSpec.Models.Common;
-using RUINORERP.UI.UserCenter.DataParts; // 添加对TodoListManager和BillStatusUpdateData的引用
+using RUINORERP.UI.UserCenter.DataParts; // 添加对TodoListManager和TodoUpdate的引用
 using RUINORERP.UI.ATechnologyStack;
 using RUINORERP.UI.Common;
 using RUINORERP.UI.FM;
@@ -244,7 +244,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
         /// 实现“删除后重新添加”的逻辑
         /// </summary>
         /// <param name="update">任务状态更新信息</param>
-        private void UpdateTreeNodeForTask(BillStatusUpdateData update)
+        private void UpdateTreeNodeForTask(TodoUpdate update)
         {
             if (kryptonTreeViewJobList.Nodes.Count == 0)
                 return;
@@ -296,7 +296,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
         /// <summary>
         /// 处理单据创建操作
         /// </summary>
-        private void HandleBillCreated(TreeNode bizTypeNode, BillStatusUpdateData update)
+        private void HandleBillCreated(TreeNode bizTypeNode, TodoUpdate update)
         {
             // 遍历所有状态节点，根据实体匹配条件进行添加
             foreach (TreeNode statusNode in bizTypeNode.Nodes)
@@ -355,7 +355,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
         /// 处理单据状态变化操作
         /// 核心逻辑: 先从所有节点中删除，然后根据新状态重新添加
         /// </summary>
-        private void HandleBillStatusChanged(TreeNode bizTypeNode, BillStatusUpdateData update)
+        private void HandleBillStatusChanged(TreeNode bizTypeNode, TodoUpdate update)
         {
             long billId = update.BillId;
 
@@ -399,7 +399,9 @@ namespace RUINORERP.UI.UserCenter.DataParts
                         parameter.BillIds.Add(billId);
                         parameter.IncludeBillIds = true;
                         UpdateNodeText(statusNode, parameter.BillIds.Count);
-                        _logger?.LogDebug($"单据{billId}状态变化，添加到节点: {statusNode.Text}");
+                        //状态更新时，暂时设置为一个单据只会在一个节点中出现
+                        break;
+                        //_logger?.LogDebug($"单据{billId}状态变化，添加到节点: {statusNode.Text}");
                     }
                 }
             }
@@ -411,7 +413,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
         /// 由TodoListManager调用，用于在状态更新后刷新UI节点
         /// </summary>
         /// <param name="updateData">状态更新数据</param>
-        public void RefreshDataNodes(BillStatusUpdateData updateData)
+        public void RefreshDataNodes(TodoUpdate updateData)
         {
             try
             {
@@ -424,7 +426,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 // 确保在UI线程执行
                 if (InvokeRequired)
                 {
-                    BeginInvoke(new Action<BillStatusUpdateData>(RefreshDataNodes), updateData);
+                    BeginInvoke(new Action<TodoUpdate>(RefreshDataNodes), updateData);
                     return;
                 }
                 

@@ -19,46 +19,46 @@ namespace RUINORERP.UI.UserCenter.DataParts
     public class TodoListManager
     {
         #region 单例模式
-    private static readonly Lazy<TodoListManager> _instance = 
-        new Lazy<TodoListManager>(() => new TodoListManager());
+        private static readonly Lazy<TodoListManager> _instance =
+            new Lazy<TodoListManager>(() => new TodoListManager());
 
-    public static TodoListManager Instance => _instance.Value;
+        public static TodoListManager Instance => _instance.Value;
 
-    /// <summary>
-    /// 私有构造函数，用于单例模式内部实例化
-    /// </summary>
-    private TodoListManager()
-    {
-        _conditionBuilderFactory = new ConditionBuilderFactory();
-    }
+        /// <summary>
+        /// 私有构造函数，用于单例模式内部实例化
+        /// </summary>
+        private TodoListManager()
+        {
+            _conditionBuilderFactory = new ConditionBuilderFactory();
+        }
 
-    /// <summary>
-    /// 公共构造函数，用于依赖注入容器实例化
-    /// </summary>
-    public TodoListManager(ConditionBuilderFactory conditionBuilderFactory = null)
-    {
-        _conditionBuilderFactory = conditionBuilderFactory ?? new ConditionBuilderFactory();
-    }
-    #endregion
+        /// <summary>
+        /// 公共构造函数，用于依赖注入容器实例化
+        /// </summary>
+        public TodoListManager(ConditionBuilderFactory conditionBuilderFactory = null)
+        {
+            _conditionBuilderFactory = conditionBuilderFactory ?? new ConditionBuilderFactory();
+        }
+        #endregion
 
-    #region 字段
-    private readonly ConditionBuilderFactory _conditionBuilderFactory;
-    /// <summary>
-    /// 工作台列表控件引用
-    /// </summary>
-    private UCTodoList _todoListControl;
-    #endregion
+        #region 字段
+        private readonly ConditionBuilderFactory _conditionBuilderFactory;
+        /// <summary>
+        /// 工作台列表控件引用
+        /// </summary>
+        private UCTodoList _todoListControl;
+        #endregion
 
-    #region 公共方法
-    /// <summary>
-    /// 设置工作台列表控件引用
-    /// </summary>
-    /// <param name="control">工作台列表控件实例</param>
-    public void SetTodoListControl(UCTodoList control)
-    {
-        _todoListControl = control;
-    }
-    #endregion
+        #region 公共方法
+        /// <summary>
+        /// 设置工作台列表控件引用
+        /// </summary>
+        /// <param name="control">工作台列表控件实例</param>
+        public void SetTodoListControl(UCTodoList control)
+        {
+            _todoListControl = control;
+        }
+        #endregion
 
         #region 公共方法
 
@@ -129,111 +129,65 @@ namespace RUINORERP.UI.UserCenter.DataParts
         }
 
         /// <summary>
-        /// 检查单据是否匹配指定节点的条件
-        /// </summary>
-        /// <param name="billId">单据ID</param>
-        /// <param name="businessType">业务类型</param>
-        /// <param name="queryParameter">查询参数</param>
-        /// <returns>是否匹配</returns>
-        public bool CheckBillMatchesConditions(
-            long billId,
-            BizType businessType,
-            List<ConditionGroup> conditionGroups)
-        {
-            if (conditionGroups == null || !conditionGroups.Any())
-                return false;
-
-            // 获取单据的条件值
-            var billConditionValues = GetBillConditionValues(billId, businessType);
-
-            // 检查是否满足任一条件组
-            return conditionGroups.Any(group => CheckConditionGroup(group, billConditionValues));
-        }
-
-        /// <summary>
-        /// 检查单据是否匹配条件列表（IConditionalModel版本）
+        /// 检查单据是否匹配条件列表（支持AND/OR混合）
         /// </summary>
         public bool CheckBillMatchesConditions(
-            long billId,
-            BizType businessType,
+            object entity,
             List<IConditionalModel> conditions)
         {
-            if (conditions == null || !conditions.Any())
+            if (entity == null || conditions == null || !conditions.Any())
                 return false;
 
-            // 获取单据的条件值
-            var billConditionValues = GetBillConditionValues(billId, businessType);
+            // 如果是ConditionalCollections，则按照AND/OR逻辑处理
+            if (conditions.Count == 1 && conditions[0] is ConditionalCollections collection)
+            {
+                return CheckConditionalCollectionsForEntity(entity, collection);
+            }
 
-            // 所有条件必须满足（AND关系）
+            // 否则按照所有条件都为AND逻辑处理
+            var billConditionValues = GetBillConditionValues(entity, conditions);
             return conditions.All(condition => CheckSqlSugarCondition(condition, billConditionValues));
         }
 
-        /// <summary>
-        /// 从节点中移除指定单据
-        /// </summary>
-        /// <param name="node">树节点</param>
-        /// <param name="billId">单据ID</param>
-        /// <returns>是否移除成功</returns>
-        public bool RemoveBillFromNode(TreeNode node, long billId)
-        {
-            var parameter = node.Tag as QueryParameter;
-            if (parameter == null)
-                return false;
-
-            // 从BillIds列表中移除
-            if (parameter.BillIds != null && parameter.BillIds.Contains(billId))
-            {
-                parameter.BillIds.Remove(billId);
-                node.Text = UpdateNodeTextWithCount(node.Text, parameter.BillIds.Count);
-                return true;
-            }
-
-            // 如果有Data表，也从表中移除
-            //if (parameter.Data is DataTable dataTable)
-            //{
-            //    string primaryKeyField = !string.IsNullOrEmpty(parameter.PrimaryKeyFieldName) 
-            //        ? parameter.PrimaryKeyFieldName : "ID";
-
-            //    DataRow[] rows = dataTable.Select($"{primaryKeyField} = {billId}");
-            //    if (rows.Length > 0)
-            //    {
-            //        foreach (DataRow row in rows)
-            //            dataTable.Rows.Remove(row);
-                    
-            //        dataTable.AcceptChanges();
-            //        return true;
-            //    }
-            //}
-
-            return false;
-        }
 
         /// <summary>
-        /// 添加单据到指定节点
+        /// 检查实体是否匹配ConditionalCollections（支持AND/OR混合）
         /// </summary>
-        /// <param name="node">树节点</param>
-        /// <param name="billId">单据ID</param>
-        /// <returns>是否添加成功</returns>
-        public bool AddBillToNode(TreeNode node, long billId)
+        private bool CheckConditionalCollectionsForEntity(
+            object entity,
+            ConditionalCollections collection)
         {
-            var parameter = node.Tag as QueryParameter;
-            if (parameter == null)
+            if (collection?.ConditionalList == null || collection.ConditionalList.Count == 0)
                 return false;
 
-            // 初始化BillIds列表（如果不存在）
-            if (parameter.BillIds == null)
-                parameter.BillIds = new List<long>();
+            // 获取所有条件值一次
+            var billConditionValues = GetBillConditionValues(entity,
+                collection.ConditionalList.Select(kv => kv.Value).Cast<IConditionalModel>().ToList());
 
-            // 避免重复添加
-            if (!parameter.BillIds.Contains(billId))
+            // 初始化结果
+            bool result = collection.ConditionalList[0].Key == WhereType.And;
+
+            // 逐个条件按照指定的AND/OR运算符进行判断
+            foreach (var item in collection.ConditionalList)
             {
-                parameter.BillIds.Add(billId);
-                node.Text = UpdateNodeTextWithCount(node.Text, parameter.BillIds.Count);
-                return true;
+                var conditionResult = CheckSqlSugarCondition(item.Value, billConditionValues);
+
+                switch (item.Key)
+                {
+                    case WhereType.And:
+                        result &= conditionResult;
+                        break;
+                    case WhereType.Or:
+                        result |= conditionResult;
+                        break;
+                }
             }
 
-            return false;
+            return result;
         }
+
+
+     
 
         /// <summary>
         /// 处理来自TodoSyncManager的任务状态更新
@@ -244,35 +198,12 @@ namespace RUINORERP.UI.UserCenter.DataParts
             // 空检查
             if (update == null)
                 return;
-                
-            // 验证和确保状态字段的完整性
-            ValidateUpdateStatusFields(update);
-
-            // 创建BillStatusUpdateData对象
             // 使用CreateFromUpdate方法确保OldStatus和NewStatus等所有字段都被正确复制
             var updateData = BillStatusUpdateData.CreateFromUpdate(
                 update,
                 new BaseEntity()
-                // 不传递StatusType参数，因为我们不需要覆盖这个值
-                // 让CreateFromUpdate方法自动复制所有状态信息
             );
-            
-            // 缓存并根据更新类型执行对应操作
-            CacheStatusUpdate(updateData);
-            
-            switch (updateData.UpdateType)
-            {
-                case TodoUpdateType.Created:
-                    HandleCreation(updateData);
-                    break;
-                case TodoUpdateType.Deleted:
-                    HandleDeletion(updateData);
-                    break;
-                case TodoUpdateType.StatusChanged:
-                    HandleStatusChange(updateData);
-                    break;
-            }
-            
+
             // 简化UI刷新调用
             if (_todoListControl != null)
             {
@@ -286,105 +217,13 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 }
             }
         }
-        
-        /// <summary>
-        /// 缓存状态更新记录
-        /// </summary>
-        /// <param name="updateData">状态更新数据</param>
-        private void CacheStatusUpdate(BillStatusUpdateData updateData)
-        {
-            // 这里应该实现缓存逻辑，例如使用内存缓存或Redis缓存
-            // 为了简化，这里省略具体实现
-            // 实际项目中，应该使用项目中的缓存管理框架来实现
-        }
 
-        /// <summary>
-        /// 处理创建操作
-        /// </summary>
-        private void HandleCreation(BillStatusUpdateData updateData)
-        {
-            // 实现创建逻辑
-        }
-
-        /// <summary>
-        /// 处理删除操作
-        /// </summary>
-        private void HandleDeletion(BillStatusUpdateData updateData)
-        {
-            // 实现删除逻辑
-        }
-
-        /// <summary>
-        /// 处理状态变更操作
-        /// 确保原状态节点和新状态节点都能正确更新
-        /// </summary>
-        private void HandleStatusChange(BillStatusUpdateData updateData)
-        {
-            // 对于状态变更，我们主要依赖UCtodoList中的RefreshDataNodes方法来处理UI更新
-            // 在这里我们只做一些额外的日志记录和状态缓存
-            
-            // 记录状态变更信息用于调试
-            if (!string.IsNullOrEmpty(updateData.OldStatus) && !string.IsNullOrEmpty(updateData.NewStatus))
-            {
-                System.Diagnostics.Debug.WriteLine($"状态变更: 单据ID={updateData.BillId}, 业务类型={updateData.BusinessType}, 从状态'{updateData.OldStatus}'变更为'{updateData.NewStatus}'");
-            }
-            
-            // 为状态变更更新添加额外信息，确保UCTodoList能正确处理
-            // 添加OldStatus和NewStatus到AdditionalData中作为冗余保障
-            updateData.AdditionalData["OriginalOldStatus"] = updateData.OldStatus;
-            updateData.AdditionalData["OriginalNewStatus"] = updateData.NewStatus;
-            
-            // 确保所有状态信息都被正确传递到UI更新流程
-            // 实际的节点更新逻辑将由UCtodoList中的RefreshDataNodes和UpdateTreeNodeForTask方法处理
-        }
+  
         #endregion
 
         #region 私有方法
-        
-        /// <summary>
-        /// 验证并确保TodoUpdate对象中状态字段的完整性
-        /// </summary>
-        /// <param name="update">需要验证的TodoUpdate对象</param>
-        private void ValidateUpdateStatusFields(TodoUpdate update)
-        {
-            // 根据更新类型确保状态字段的完整性
-            switch (update.UpdateType)
-            {
-                case TodoUpdateType.Created:
-                    // 对于创建操作，确保NewStatus有值
-                    if (string.IsNullOrEmpty(update.NewStatus))
-                    {
-                        update.NewStatus = "新建"; // 设置默认状态
-                    }
-                    break;
-                    
-                case TodoUpdateType.StatusChanged:
-                    // 对于状态变更，确保OldStatus和NewStatus都有值且不同
-                    if (string.IsNullOrEmpty(update.OldStatus))
-                    {
-                        // 如果没有旧状态，但有新状态，将旧状态设为空字符串表示未知
-                        update.OldStatus = "";
-                    }
-                    
-                    if (string.IsNullOrEmpty(update.NewStatus))
-                    {
-                        // 如果没有新状态，但有旧状态，将新状态设为旧状态
-                        // 这是一种保守处理，避免状态丢失
-                        update.NewStatus = update.OldStatus;
-                    }
-                    break;
-                    
-                case TodoUpdateType.Deleted:
-                    // 对于删除操作，确保至少有一个状态字段有值
-                    // 如果都没有，则设置为"已删除"
-                    if (string.IsNullOrEmpty(update.OldStatus) && string.IsNullOrEmpty(update.NewStatus))
-                    {
-                        update.OldStatus = "已删除"; // 标记删除前的最后状态
-                    }
-                    break;
-            }
-        }
 
+      
         /// <summary>
         /// 查找匹配条件的状态节点
         /// </summary>
@@ -399,11 +238,8 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 if (parameter == null || parameter.conditionals == null)
                     continue;
 
-                // 检查是否匹配条件
-                if (CheckBillMatchesConditions(
-                    updateData.BillId,
-                    updateData.BusinessType,
-                    parameter.conditionals))
+                // 检查是否匹配条件，使用entity进行匹配
+                if (CheckBillMatchesConditions(updateData.entity, parameter.conditionals))
                 {
                     targetNodes.Add(statusNode);
                 }
@@ -437,51 +273,60 @@ namespace RUINORERP.UI.UserCenter.DataParts
             if (parameter.BillIds != null && parameter.BillIds.Contains(billId))
                 return true;
 
-            // 检查Data表
-            //if (parameter.Data is DataTable dataTable)
-            //{
-            //    string primaryKeyField = !string.IsNullOrEmpty(parameter.PrimaryKeyFieldName) 
-            //        ? parameter.PrimaryKeyFieldName : "ID";
-
-            //    DataRow[] rows = dataTable.Select($"{primaryKeyField} = {billId}");
-            //    return rows.Length > 0;
-            //}
-
             return false;
         }
 
         /// <summary>
         /// 获取单据的条件值
+        /// 仅从传入的entity中提取conditions所需的属性，避免全量反射
         /// </summary>
-        private Dictionary<string, object> GetBillConditionValues(long billId, BizType businessType)
+        private Dictionary<string, object> GetBillConditionValues(
+            object entity, 
+            List<IConditionalModel> conditions)
         {
-            // 这里简化处理，实际应用中应该根据业务类型从数据库获取完整的单据信息
-            // 并提取条件字段的值
             var conditionValues = new Dictionary<string, object>();
 
-            // 根据业务类型和单据ID查询数据库获取完整信息
-            // 此处省略具体实现
+            if (entity == null || conditions == null || !conditions.Any())
+                return conditionValues;
+
+            try
+            {
+                // 仅提取conditions中需要的字段
+                foreach (var condition in conditions)
+                {
+                    if (condition is ConditionalModel sqlCondition)
+                    {
+                        var fieldName = sqlCondition.FieldName;
+                        
+                        // 从entity中反射获取对应字段的值
+                        var property = entity.GetType().GetProperty(
+                            fieldName, 
+                            System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.IgnoreCase);
+                        
+                        if (property != null)
+                        {
+                            try
+                            {
+                                var value = property.GetValue(entity);
+                                conditionValues[fieldName] = value;
+                            }
+                            catch (Exception ex)
+                            {
+                                System.Diagnostics.Debug.WriteLine($"获取字段{fieldName}值失败: {ex.Message}");
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"获取单据条件值时出错: {ex.Message}");
+            }
 
             return conditionValues;
         }
 
-        /// <summary>
-        /// 检查条件组
-        /// </summary>
-        private bool CheckConditionGroup(ConditionGroup group, Dictionary<string, object> billValues)
-        {
-            if (group == null || group.Conditions == null || !group.Conditions.Any())
-                return false;
 
-            // 所有条件必须满足（AND关系）
-            foreach (var condition in group.Conditions)
-            {
-                if (!CheckSqlSugarCondition(condition, billValues))
-                    return false;
-            }
-
-            return true;
-        }
 
         /// <summary>
         /// 检查SqlSugar条件
@@ -492,7 +337,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 return false;
 
             var sqlCondition = condition as ConditionalModel;
-            
+
             // 检查是否存在对应字段的值
             if (!billValues.TryGetValue(sqlCondition.FieldName, out var billValue))
                 return false;
@@ -531,7 +376,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                     return false;
             }
         }
-        
+
         /// <summary>
         /// 根据CSharpTypeName将字符串值转换为对应类型
         /// </summary>
@@ -562,7 +407,9 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 return value; // 如果转换失败，返回原始值
             }
         }
-        
+
+
+
 
         /// <summary>
         /// 比较两个值
@@ -584,18 +431,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
             return string.Compare(value1.ToString(), value2.ToString(), StringComparison.Ordinal);
         }
 
-        /// <summary>
-        /// 更新节点文本显示计数
-        /// </summary>
-        private string UpdateNodeTextWithCount(string originalText, int count)
-        {
-            // 移除现有的计数
-            int countStartIndex = originalText.IndexOf(" (");
-            string baseText = countStartIndex > 0 ? originalText.Substring(0, countStartIndex) : originalText;
-
-            // 添加新的计数
-            return $"{baseText} ({count})";
-        }
+      
         #endregion
     }
 }

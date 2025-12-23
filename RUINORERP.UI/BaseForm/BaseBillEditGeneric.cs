@@ -3168,6 +3168,16 @@ namespace RUINORERP.UI.BaseForm
                 ReturnResults<bool> rs = await ctr.BatchCloseCaseAsync(needCloseCases);
                 if (rs.Succeeded)
                 {
+                    // 发送任务状态更新通知
+                    var bizType = EntityMappingHelper.GetBillData<T>(EditEntity).BizType;
+                    var updateData = BillStatusUpdateData.Create(
+                        PacketSpec.Enums.Core.TodoUpdateType.StatusChanged,
+                        bizType,
+                        pkid,
+                        EditEntity
+                    );
+                    TodoSyncManager.Instance.PublishUpdate(updateData);
+                    
                     if (frm.CloseCaseImage != null && ReflectionHelper.ExistPropertyName<T>("CloseCaseImagePath"))
                     {
                         string strCloseCaseImagePath = System.DateTime.Now.ToString("yy") + "/" + System.DateTime.Now.ToString("MM") + "/" + Ulid.NewUlid().ToString();
@@ -3378,16 +3388,14 @@ namespace RUINORERP.UI.BaseForm
 
                     // 发送任务状态更新通知
                     var bizType = EntityMappingHelper.GetBillData<T>(EditEntity).BizType;
-                    var taskUpdate = new PacketSpec.Models.Common.TodoUpdate
-                    {
-                        UpdateType = PacketSpec.Enums.Core.TodoUpdateType.Approved,
-                        BusinessType = bizType,
-                        BillId = pkid, // 使用新的BillId字段存储单据主键
-                        NewStatus = "已审核",
-                        Timestamp = DateTime.Now,
-                        IsFromServer = true
-                    };
-                    TodoSyncManager.Instance.PublishUpdate(taskUpdate);                    //如果是出库单审核，则上传到服务器 锁定订单无法修改                    if (ae.bizType == BizType.销售出库单)
+                    var updateData = BillStatusUpdateData.Create(
+                        PacketSpec.Enums.Core.TodoUpdateType.StatusChanged,
+                        bizType,
+                        pkid,
+                        EditEntity
+                    );
+
+                    TodoSyncManager.Instance.PublishUpdate(updateData);                    //如果是出库单审核，则上传到服务器 锁定订单无法修改                    if (ae.bizType == BizType.销售出库单)
                     {
                         //锁定对应的订单
                         if (EditEntity is tb_SaleOut saleOut)
@@ -3727,6 +3735,17 @@ namespace RUINORERP.UI.BaseForm
                 {
                     BusinessHelper.Instance.ApproverEntity(EditEntity);
                     rs = true;
+                    
+                    // 发送任务状态更新通知
+                    var bizType = EntityMappingHelper.GetBillData<T>(EditEntity).BizType;
+                    var updateData = BillStatusUpdateData.Create(
+                        PacketSpec.Enums.Core.TodoUpdateType.StatusChanged,
+                        bizType,
+                        pkid,
+                        EditEntity
+                    );
+                    TodoSyncManager.Instance.PublishUpdate(updateData);
+                    
                     //如果是出库单审核，则上传到服务器 锁定订单无法修改
                     if (ae.bizType == BizType.销售出库单)
                     {

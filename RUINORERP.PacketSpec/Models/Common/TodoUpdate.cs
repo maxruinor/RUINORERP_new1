@@ -84,7 +84,7 @@ namespace RUINORERP.PacketSpec.Models.Common
         /// <summary>
         /// 实体对象引用
         /// </summary>
-        public BaseEntity entity { get; set; } = new BaseEntity();
+        public object entity { get; set; } = new object();
 
         /// <summary>
         /// 条件匹配值集合
@@ -116,7 +116,7 @@ namespace RUINORERP.PacketSpec.Models.Common
             TodoUpdateType updateType,
             BizType bizType,
             long billId,
-            BaseEntity entity,
+            object entity,
             string statusType = null,
             object businessStatusValue = null
         )
@@ -145,7 +145,7 @@ namespace RUINORERP.PacketSpec.Models.Common
         /// <returns>创建的BillStatusUpdateData实例</returns>
         public static BillStatusUpdateData CreateFromUpdate(
             TodoUpdate update,
-            BaseEntity entity = null,
+            object entity = null,
             string statusType = null,
             object businessStatusValue = null
         )

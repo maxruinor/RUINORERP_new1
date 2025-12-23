@@ -241,176 +241,171 @@ namespace RUINORERP.UI.UserCenter.DataParts
         /// <summary>
         /// 更新任务对应的树节点
         /// 采用本地数据更新方式，避免重复查询数据库
+        /// 实现“删除后重新添加”的逻辑
         /// </summary>
         /// <param name="update">任务状态更新信息</param>
         private void UpdateTreeNodeForTask(BillStatusUpdateData update)
         {
             if (kryptonTreeViewJobList.Nodes.Count == 0)
                 return;
-
+        
             // 使用BillId字段
             long billId = update.BillId;
-
-            // 日志记录
-            _logger.LogTrace($"处理任务更新: 业务类型={update.BusinessType}, 更新类型={update.UpdateType}, " +
-                            $"单据ID={billId}, 状态={update.NewStatus}");
-
+        
             // 查找业务类型节点
             var bizTypeNode = FindBizTypeNode(update.BusinessType);
             if (bizTypeNode == null)
+            {
+                _logger?.LogWarning($"未找到符合的业务类型节点: {update.BusinessType}");
                 return;
-
+            }
+        
             // 在UI线程上执行更新操作
             this.Invoke((Action)(() =>
             {
                 try
                 {
-                    // 遍历业务类型节点下的所有状态节点
-                    foreach (TreeNode statusNode in bizTypeNode.Nodes)
+                    switch (update.UpdateType)
                     {
-                        // 获取节点的QueryParameter
-                        var parameter = statusNode.Tag as QueryParameter;
-                        if (parameter == null)
-                            continue;
-
-                        bool nodeUpdated = false;
-                        string primaryKeyFieldName = !string.IsNullOrEmpty(parameter.PrimaryKeyFieldName)
-                            ? parameter.PrimaryKeyFieldName : "ID";
-
-                        switch (update.UpdateType)
-                        {
-                            case TodoUpdateType.Created:
-                                // 创建操作：检查该节点的条件是否匹配新增单据，如果匹配则更新
-                                if (CheckBillMatchesConditions(billId, update.BusinessType, parameter.conditionals))
-                                {
-                                    // 在本地数据中添加一条记录（简化处理，实际应添加完整记录）
-                                    // 这里主要更新BillIds列表和重新计算数量
-                                    if (parameter.BillIds == null)
-                                        parameter.BillIds = new List<long>();
-
-                                    if (!parameter.BillIds.Contains(billId))
-                                    {
-                                        parameter.BillIds.Add(billId);
-                                        parameter.IncludeBillIds = true;
-                                        nodeUpdated = true;
-                                    }
-                                }
-                                break;
-
-                            case TodoUpdateType.Deleted:
-                                // 删除操作：从所有包含该单据的节点中移除
-                                if (parameter.BillIds != null && parameter.BillIds.Contains(billId))
-                                {
-                                    parameter.BillIds.Remove(billId);
-                                    parameter.IncludeBillIds = parameter.BillIds.Any();
-                                    nodeUpdated = true;
-
-                                    // 如果节点没有单据了，应该移除该节点
-                                    if (parameter.BillIds.Count == 0)
-                                    {
-                                        bizTypeNode.Nodes.Remove(statusNode);
-                                        continue; // 继续循环下一个节点
-                                    }
-                                }
-                                break;
-
-                            case TodoUpdateType.StatusChanged:
-                                // 状态变化：从原状态节点移除，添加到新状态节点
-                                // 这里需要检查该单据是否属于当前节点，如果是则移除
-                                if (parameter.BillIds != null && parameter.BillIds.Contains(billId))
-                                {
-                                    // 从当前节点移除
-                                    parameter.BillIds.Remove(billId);
-                                    parameter.IncludeBillIds = parameter.BillIds.Any();
-                                    nodeUpdated = true;
-
-                                    // 如果节点没有单据了，应该移除该节点
-                                    if (parameter.BillIds.Count == 0)
-                                    {
-                                        bizTypeNode.Nodes.Remove(statusNode);
-                                        continue; // 继续循环下一个节点
-                                    }
-                                }
-
-                                // 尝试查找新状态应该属于哪个节点并添加
-                                foreach (TreeNode otherNode in bizTypeNode.Nodes)
-                                {
-                                    var otherParameter = otherNode.Tag as QueryParameter;
-                                    if (otherParameter != null &&
-                                        otherParameter.conditionals != null &&
-                                        CheckBillMatchesConditions(billId, update.BusinessType, otherParameter.conditionals))
-                                    {
-                                        if (otherParameter.BillIds == null)
-                                            otherParameter.BillIds = new List<long>();
-
-                                        if (!otherParameter.BillIds.Contains(billId))
-                                        {
-                                            otherParameter.BillIds.Add(billId);
-                                            otherParameter.IncludeBillIds = true;
-
-                                            // 更新节点文本
-                                            UpdateNodeText(otherNode, otherParameter.BillIds.Count);
-                                        }
-                                    }
-                                }
-                                break;
-                        }
-
-                        // 如果节点有更新，刷新节点文本显示
-                        if (nodeUpdated)
-                        {
-                            UpdateNodeText(statusNode, parameter.BillIds.Count);
-                        }
+                        case TodoUpdateType.Created:
+                            HandleBillCreated(bizTypeNode, update);
+                            break;
+        
+                        case TodoUpdateType.Deleted:
+                            HandleBillDeleted(bizTypeNode, billId);
+                            break;
+        
+                        case TodoUpdateType.StatusChanged:
+                            HandleBillStatusChanged(bizTypeNode, update);
+                            break;
                     }
-
+        
                     // 更新业务类型节点的文本显示
                     UpdateBizTypeNodeText(bizTypeNode);
-
+        
                     // 确保树视图展开
                     kryptonTreeViewJobList.ExpandAll();
                 }
                 catch (Exception ex)
                 {
-                    _logger.Error("本地更新任务节点失败", ex);
+                    _logger?.LogError(ex, "更新任务节点执行失败");
                 }
             }));
         }
-
+        
         /// <summary>
-        /// 检查单据是否匹配指定条件
+        /// 处理单据创建操作
         /// </summary>
-        /// <param name="billId">单据ID</param>
-        /// <param name="bizType">业务类型</param>
-        /// <param name="conditions">条件列表</param>
-        /// <returns>是否匹配</returns>
-        private bool CheckBillMatchesConditions(long billId, BizType bizType, List<IConditionalModel> conditions)
+        private void HandleBillCreated(TreeNode bizTypeNode, BillStatusUpdateData update)
         {
-            try
+            // 遍历所有状态节点，根据实体匹配条件进行添加
+            foreach (TreeNode statusNode in bizTypeNode.Nodes)
             {
-                // 将IConditionalModel列表包装成ConditionGroup列表
-                var conditionGroups = new List<ConditionGroup>
+                var parameter = statusNode.Tag as QueryParameter;
+                if (parameter?.conditionals == null)
+                    continue;
+
+                // 直接用实体和条件判断：仅需entity和conditions
+                if (TodoListManager.Instance.CheckBillMatchesConditions(update.entity, parameter.conditionals))
                 {
-                    new ConditionGroup
+                    if (parameter.BillIds == null)
+                        parameter.BillIds = new List<long>();
+
+                    if (!parameter.BillIds.Contains(update.BillId))
                     {
-                        Conditions = conditions,
-                        StatusName = "DynamicCondition",
-                        Identifier = $"Group_{DateTime.Now.Ticks}"
+                        parameter.BillIds.Add(update.BillId);
+                        parameter.IncludeBillIds = true;
+                        UpdateNodeText(statusNode, parameter.BillIds.Count);
+                        _logger?.LogDebug($"单据{update.BillId}添加到节点: {statusNode.Text}");
                     }
-                };
-                
-                // 使用TodoListManager来进行更准确的条件匹配
-                return TodoListManager.Instance.CheckBillMatchesConditions(billId, bizType, conditionGroups);
-            }
-            catch (Exception ex)
-            {
-                if (_logger != null)
-                {
-                    _logger.Error($"检查单据条件匹配失败: BillId={billId}", ex);
                 }
-                return false;
             }
         }
         
+        /// <summary>
+        /// 处理单据删除操作
+        /// </summary>
+        private void HandleBillDeleted(TreeNode bizTypeNode, long billId)
+        {
+            // 从所有节点中移除该单据
+            foreach (TreeNode statusNode in bizTypeNode.Nodes.Cast<TreeNode>().ToList())
+            {
+                var parameter = statusNode.Tag as QueryParameter;
+                if (parameter?.BillIds != null && parameter.BillIds.Contains(billId))
+                {
+                    parameter.BillIds.Remove(billId);
+                    parameter.IncludeBillIds = parameter.BillIds.Any();
+                            
+                    // 如果节点中没有单据了，也需要移除该节点
+                    if (parameter.BillIds.Count == 0)
+                    {
+                        bizTypeNode.Nodes.Remove(statusNode);
+                        _logger?.LogDebug($"删除空节点: {statusNode.Text}");
+                    }
+                    else
+                    {
+                        UpdateNodeText(statusNode, parameter.BillIds.Count);
+                        _logger?.LogDebug($"单据{billId}从节点{statusNode.Text}中移除");
+                    }
+                }
+            }
+        }
+        
+        /// <summary>
+        /// 处理单据状态变化操作
+        /// 核心逻辑: 先从所有节点中删除，然后根据新状态重新添加
+        /// </summary>
+        private void HandleBillStatusChanged(TreeNode bizTypeNode, BillStatusUpdateData update)
+        {
+            long billId = update.BillId;
+
+            // 第一步：从所有节点中移除此单据
+            foreach (TreeNode statusNode in bizTypeNode.Nodes.Cast<TreeNode>().ToList())
+            {
+                var parameter = statusNode.Tag as QueryParameter;
+                if (parameter?.BillIds != null && parameter.BillIds.Contains(billId))
+                {
+                    parameter.BillIds.Remove(billId);
+                    parameter.IncludeBillIds = parameter.BillIds.Any();
+
+                    if (parameter.BillIds.Count == 0)
+                    {
+                        bizTypeNode.Nodes.Remove(statusNode);
+                    }
+                    else
+                    {
+                        UpdateNodeText(statusNode, parameter.BillIds.Count);
+                    }
+                    //一个单据不会存在多个节点中，所以处理了就直接返回
+                    break;
+                }
+            }
+
+            // 第二步：根据新状态重新添加到匹配的节点
+            foreach (TreeNode statusNode in bizTypeNode.Nodes)
+            {
+                var parameter = statusNode.Tag as QueryParameter;
+                if (parameter?.conditionals == null)
+                    continue;
+
+                // 直接用实体和条件判断
+                if (TodoListManager.Instance.CheckBillMatchesConditions(update.entity, parameter.conditionals))
+                {
+                    if (parameter.BillIds == null)
+                        parameter.BillIds = new List<long>();
+
+                    if (!parameter.BillIds.Contains(billId))
+                    {
+                        parameter.BillIds.Add(billId);
+                        parameter.IncludeBillIds = true;
+                        UpdateNodeText(statusNode, parameter.BillIds.Count);
+                        _logger?.LogDebug($"单据{billId}状态变化，添加到节点: {statusNode.Text}");
+                    }
+                }
+            }
+        }
+
+
         /// <summary>
         /// 刷新数据节点
         /// 由TodoListManager调用，用于在状态更新后刷新UI节点
@@ -817,18 +812,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
             //TreeNode rootNode = new TreeNode("待办事项") { ImageIndex = 0 };
 
             var bizTypes = GetConfiguredBizTypes();
-            //根据类型查找主键。暂时不需要
-            //foreach (var bizType in bizTypes)
-            //{
-            //    Type tableType = _Business.BizMapperService.EntityMappingHelper.GetEntityType(bizType);
-            //    if (!DoesTableHaveData(tableType.Name))
-            //    {
-            //        string pkfeildName = UIHelper.GetPrimaryKeyColName(tableType);
-            //        // 添加缓存项
-            //        AddOrUpdateTablePrimaryKeys(tableType.Name, new[] { pkfeildName });
-            //    }
-            //}
-
+           
             var tasks = new List<Task<TreeNode>>();
 
             // 并行处理每个业务类型
@@ -990,87 +974,13 @@ namespace RUINORERP.UI.UserCenter.DataParts
             if (conditionGroups.Count == 0) return (null, null);
 
             var conModels = BuildConditionalModels(conditionGroups);
-
-
-            // 最终组合条件
-            //var finalCondition = new ConditionalCollections
-            //{
-            //    ConditionalList = conModels
-            //        .Select(c => new KeyValuePair<WhereType, ConditionalModel>(
-            //            WhereType.Or,
-            //            c))
-            //        .ToList()
-            //};
-
-            /*
-            //  var conModels = new List<IConditionalModel>();
-            // 构建组合查询条件（使用OR连接不同状态组:小组第一项目用or，第二项开始就用and）
-            foreach (var item in conditionGroups)
-            {
-                // 每个状态组内部使用AND连接
-                // 不同状态组之间用OR连接
-                var combinedStatusCondition = new ConditionalCollections();
-                List<KeyValuePair<WhereType, ConditionalModel>> ConditionalList = new List<KeyValuePair<WhereType, ConditionalModel>>();
-                var conditions = item.Conditions.Cast<ConditionalModel>().ToList();
-                for (int i = 0; i < conditions.Count; i++)
-                {
-                    var conditionalModel = new ConditionalModel()
-                    {
-                        FieldName = conditions[i].FieldName,
-                        ConditionalType = ConditionalType.Equal,
-                        FieldValue = conditions[i].FieldValue
-                    };
-                    if (i == 0)
-                    {
-                        KeyValuePair<WhereType, ConditionalModel> kv = new KeyValuePair<WhereType, ConditionalModel>(WhereType.Or, conditionalModel);
-                        ConditionalList.Add(kv);
-                    }
-                    else
-                    {
-                        KeyValuePair<WhereType, ConditionalModel> kv = new KeyValuePair<WhereType, ConditionalModel>(WhereType.And, conditionalModel);
-                        ConditionalList.Add(kv);
-                    }
-
-                }
-                combinedStatusCondition.ConditionalList = ConditionalList;
-
-                //集合中的第一个 or 则接上前面
-                //ConditionalList = item.Conditions.Cast<ConditionalModel>().ToList().Select(g =>
-                //   new KeyValuePair<WhereType, ConditionalModel>(
-                //   whereType,
-                //   new ConditionalModel()
-                //   {
-                //       FieldName = g.FieldName,
-                //       ConditionalType = ConditionalType.Equal,
-                //       FieldValue = g.FieldValue
-                //   }
-
-                //   )).ToList();
-
-                //注意：合并两种状态的。
-                conModels.Add(combinedStatusCondition);
-            }
-            */
-
-            // 执行查询
-            //var data = await MainForm.Instance.AppContext.Db.CopyNew()
-            //.Queryable(tableType.Name, "TN")
-            // .Where(conModels)
-            //.ToDataTableAsync();
+ 
+     
 
             //查找主键列各
             string SelectFieldName = "t.*";
             List<string> fields = new List<string>();
-            // 获取主键缓存项
-            //var primaryKeys = GetPrimaryKeys(tableType.Name);
-
-            //foreach (var item in primaryKeys)
-            //{
-            //    if (!pks.Contains("t." + item))
-            //    {
-            //        pks.Add("t." + item);
-            //    }
-            //}
+            
             foreach (var Conditional in conModels.Cast<ConditionalCollections>().ToList())
             {
                 foreach (var item in Conditional.ConditionalList)
@@ -1341,7 +1251,6 @@ namespace RUINORERP.UI.UserCenter.DataParts
 
 
 
-
         private object ConvertValue(string value, string typeName)
         {
             if (string.IsNullOrEmpty(typeName)) return value;
@@ -1357,10 +1266,6 @@ namespace RUINORERP.UI.UserCenter.DataParts
         }
 
 
-
-
-
-        //==
         private List<BizType> GetConfiguredBizTypes()
         {
             List<BizType> bizTypes = new List<BizType>();
@@ -1546,95 +1451,13 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 {
                     parentNode.Nodes.Add(subNode);
                 }
-                //else
-                //{
-                //    parentNode.Nodes.Find(subnodeName, true)[0].Tag = parameter;
-                //}
+                
             }
             return queryList.Rows.Count;
         }
 
 
-        /*
-
-        private List<IConditionalModel> GetNotEndConditions()
-        {
-            var conditions = new List<IConditionalModel>
-            {
-                new ConditionalModel { FieldName = "ApprovalStatus", ConditionalType = ConditionalType.Equal, FieldValue = "1", CSharpTypeName = "int" },
-                new ConditionalModel { FieldName = "DataStatus", ConditionalType = ConditionalType.Equal, FieldValue =((int)DataStatus.确认).ToString(), CSharpTypeName = "int" },
-                new ConditionalModel { FieldName = "isdeleted", ConditionalType = ConditionalType.Equal, FieldValue = "False", CSharpTypeName = "bool" }
-            };
-
-            AddSaleLimitedCondition(conditions);
-
-            return conditions;
-        }
-
-        private List<IConditionalModel> GetWaitingPaymentConditions()
-        {
-            var conditions = new List<IConditionalModel>
-            {
-                new ConditionalModel { FieldName = "PayStatus", ConditionalType = ConditionalType.Equal, FieldValue = "1", CSharpTypeName = "int" },
-                new ConditionalModel { FieldName = "DataStatus", ConditionalType = ConditionalType.Equal, FieldValue = "4", CSharpTypeName = "int" },
-                new ConditionalModel { FieldName = "isdeleted", ConditionalType = ConditionalType.Equal, FieldValue = "False", CSharpTypeName = "bool" }
-            };
-
-            AddSaleLimitedCondition(conditions);
-
-            return conditions;
-        }
-
-        private List<IConditionalModel> GetNotCompletedConditions()
-        {
-            return new List<IConditionalModel>
-            {
-                new ConditionalModel { FieldName = "ApprovalStatus", ConditionalType = ConditionalType.Equal, FieldValue = "1", CSharpTypeName = "int" },
-                new ConditionalModel { FieldName = "DataStatus", ConditionalType = ConditionalType.Equal, FieldValue = "4", CSharpTypeName = "int" },
-                new ConditionalModel { FieldName = "ApprovalResults", ConditionalType = ConditionalType.Equal, FieldValue = "True", CSharpTypeName = "bool" },
-                new ConditionalModel { FieldName = "isdeleted", ConditionalType = ConditionalType.Equal, FieldValue = "False", CSharpTypeName = "bool" }
-            };
-        }
-
-        private List<IConditionalModel> GetPrePaymentToBeVerifiedConditions(ReceivePaymentType paymentType)
-        {
-            var conditions = new List<IConditionalModel>
-            {
-                new ConditionalModel { FieldName = "ReceivePaymentType", ConditionalType = ConditionalType.Equal, FieldValue = ((int)paymentType).ToString(), CSharpTypeName = "int" },
-                new ConditionalModel { FieldName = "PrePaymentStatus", ConditionalType = ConditionalType.Equal, FieldValue = PrePaymentStatus.待核销.ToString(), CSharpTypeName = "int" },
-                new ConditionalModel { FieldName = "isdeleted", ConditionalType = ConditionalType.Equal, FieldValue = "False", CSharpTypeName = "bool" }
-            };
-
-            AddSaleLimitedCondition(conditions);
-
-            return conditions;
-        }
-
-        private List<IConditionalModel> GetARAPToBePaidConditions(ReceivePaymentType paymentType)
-        {
-            var conditions = new List<IConditionalModel>
-            {
-                new ConditionalModel { FieldName = "ReceivePaymentType", ConditionalType = ConditionalType.Equal, FieldValue = ((int)paymentType).ToString(), CSharpTypeName = "int" },
-                new ConditionalModel { FieldName = "ARAPStatus", ConditionalType = ConditionalType.Equal, FieldValue = ((int)ARAPStatus.待支付).ToString(), CSharpTypeName = "int" },
-                new ConditionalModel { FieldName = "isdeleted", ConditionalType = ConditionalType.Equal, FieldValue = "False", CSharpTypeName = "bool" }
-            };
-
-            AddSaleLimitedCondition(conditions);
-
-            return conditions;
-        }
-
-        private List<IConditionalModel> GetPaymentToBeConfirmedConditions(ReceivePaymentType paymentType)
-        {
-            return new List<IConditionalModel>
-            {
-                new ConditionalModel { FieldName = "ReceivePaymentType", ConditionalType = ConditionalType.Equal, FieldValue = ((int)paymentType).ToString(), CSharpTypeName = "int" },
-                new ConditionalModel { FieldName = "PaymentStatus", ConditionalType = ConditionalType.Equal, FieldValue = ((int)PaymentStatus.待审核).ToString(), CSharpTypeName = "int" },
-                new ConditionalModel { FieldName = "isdeleted", ConditionalType = ConditionalType.Equal, FieldValue = "False", CSharpTypeName = "bool" }
-            };
-        }
-
-        */
+    
 
     }
 

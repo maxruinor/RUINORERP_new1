@@ -35,6 +35,7 @@ namespace RUINORERP.Global
         转单,
         结案,
         反结案,
+        作废,
         属性,
         审核,
         反审,

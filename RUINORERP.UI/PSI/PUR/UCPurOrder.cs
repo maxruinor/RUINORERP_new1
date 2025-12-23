@@ -1110,16 +1110,7 @@ namespace RUINORERP.UI.PSI.PUR
 
 
 
-        protected async override Task<bool> Submit()
-        {
-            if (!base.Validator(EditEntity))
-            {
-                return false;
-            }
-            bool rs = await base.Submit();
-            return rs;
-        }
-
+ 
 
         tb_PurOrderController<tb_PurOrder> ctr = Startup.GetFromFac<tb_PurOrderController<tb_PurOrder>>();
 

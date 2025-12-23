@@ -5288,8 +5288,19 @@ namespace RUINORERP.UI.BaseForm
         /// </summary>
         protected async override Task<bool> Submit()
         {
+            if (!Validator(EditEntity))
+            {
+                return false;
+            }
+
             if (EditEntity == null)
             {
+                return false;
+            }
+            StateTransitionResult stateTransitionResult = await StateManager.ValidateActionTransitionAsync(EditEntity, MenuItemEnums.提交);
+            if (!stateTransitionResult.IsSuccess)
+            {
+                MessageBox.Show($"提交失败: {stateTransitionResult.ErrorMessage}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return false;
             }
 
@@ -5297,6 +5308,8 @@ namespace RUINORERP.UI.BaseForm
             {
                 return false;
             }
+
+            //var ctr = Startup.GetFromFacByName<BaseController<T>>($"{typeof(T).Name}Controller");
             BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
             bool submitrs = false;
             string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
@@ -5494,6 +5507,12 @@ namespace RUINORERP.UI.BaseForm
         {
             if (EditEntity == null) return false;
 
+            StateTransitionResult stateTransitionResult = await StateManager.ValidateActionTransitionAsync(EditEntity, MenuItemEnums.提交);
+            if (!stateTransitionResult.IsSuccess)
+            {
+                MessageBox.Show($"提交失败: {stateTransitionResult.ErrorMessage}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
+            }
 
             // 回退到旧的状态管理系统
             // 获取当前状态

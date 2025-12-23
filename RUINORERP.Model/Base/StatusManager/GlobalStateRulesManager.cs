@@ -1389,6 +1389,7 @@ namespace RUINORERP.Model.Base.StatusManager
                 if (action == MenuItemEnums.结案) return DataStatus.完结;
                 if (action == MenuItemEnums.反结案) return DataStatus.新建;
                 if (action == MenuItemEnums.保存) return DataStatus.草稿;
+                if (action == MenuItemEnums.作废) return DataStatus.作废;
                 return currentStatus;
             }
             
@@ -1427,6 +1428,7 @@ namespace RUINORERP.Model.Base.StatusManager
                 if (action == MenuItemEnums.审核) return StatementStatus.确认;
                 if (action == MenuItemEnums.反审) return StatementStatus.新建;
                 if (action == MenuItemEnums.结案) return StatementStatus.全部结清;
+                if (action == MenuItemEnums.作废) return StatementStatus.已作废;
                 if (action == MenuItemEnums.反结案) return StatementStatus.新建;
                 return currentStatus;
             }

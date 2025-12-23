@@ -200,10 +200,6 @@ namespace RUINORERP.UI.UserCenter.DataParts
             // 注册状态更新回调
             TodoSyncManager.Instance.Subscribe(_syncSubscriberKey, HandleTodoUpdates, allBizTypes);
 
-            // 注册需要监控的业务类型
-            // 注意：现在TodoMonitor不再执行数据库轮询，而是完全依赖网络通知
-            TodoMonitor.Instance.StartMonitoring(allBizTypes);
-
             _logger.LogInformation("待办事项列表实时同步已初始化");
         }
 
@@ -259,6 +255,9 @@ namespace RUINORERP.UI.UserCenter.DataParts
             // 按业务类型分组处理，减少重复查找
             var updatesByBizType = updates.GroupBy(u => u.BusinessType);
             
+            // 标记是否需要展开树视图
+            bool needsExpand = false;
+            
             foreach (var group in updatesByBizType)
             {
                 BizType bizType = group.Key;
@@ -273,6 +272,13 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 // 处理同一业务类型的所有更新
                 foreach (var update in group)
                 {
+                    // 只在必要时展开树视图
+                    if (!bizTypeNode.IsExpanded)
+                    {
+                        bizTypeNode.Expand();
+                        needsExpand = true;
+                    }
+                    
                     UpdateTreeNodeForTask(update);
                 }
                 
@@ -280,8 +286,12 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 UpdateBizTypeNodeText(bizTypeNode);
             }
             
-            // 确保树视图展开
-            kryptonTreeViewJobList.ExpandAll();
+            // 仅在有节点被展开时记录日志
+            if (needsExpand)
+            {
+                _logger?.LogTrace($"树视图已展开以显示更新的节点");
+            }
+            
             _logger?.LogTrace($"批量刷新数据节点完成");
         }
         
@@ -308,37 +318,31 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 return;
             }
         
-            // 在UI线程上执行更新操作
-            this.Invoke((Action)(() =>
+            // 已在UI线程中，无需再次Invoke
+            try
             {
-                try
+                switch (update.UpdateType)
                 {
-                    switch (update.UpdateType)
-                    {
-                        case TodoUpdateType.Created:
-                            HandleBillCreated(bizTypeNode, update);
-                            break;
+                    case TodoUpdateType.Created:
+                        HandleBillCreated(bizTypeNode, update);
+                        break;
         
-                        case TodoUpdateType.Deleted:
-                            HandleBillDeleted(bizTypeNode, billId);
-                            break;
+                    case TodoUpdateType.Deleted:
+                        HandleBillDeleted(bizTypeNode, billId);
+                        break;
         
-                        case TodoUpdateType.StatusChanged:
-                            HandleBillStatusChanged(bizTypeNode, update);
-                            break;
-                    }
-        
-                    // 更新业务类型节点的文本显示
-                    UpdateBizTypeNodeText(bizTypeNode);
-        
-                    // 确保树视图展开
-                    kryptonTreeViewJobList.ExpandAll();
+                    case TodoUpdateType.StatusChanged:
+                        HandleBillStatusChanged(bizTypeNode, update);
+                        break;
                 }
-                catch (Exception ex)
-                {
-                    _logger?.LogError(ex, "更新任务节点执行失败");
-                }
-            }));
+        
+                // 更新业务类型节点的文本显示
+                UpdateBizTypeNodeText(bizTypeNode);
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "更新任务节点执行失败");
+            }
         }
         
         /// <summary>

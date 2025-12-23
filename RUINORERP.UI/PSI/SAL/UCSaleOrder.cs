@@ -1,63 +1,62 @@
+using AutoMapper;
+using AutoUpdateTools;
+using DevAge.Windows.Forms;
+using FastReport.DevComponents.DotNetBar.Controls;
+using LiveChartsCore.Geo;
+using MathNet.Numerics;
+using Microsoft.Extensions.Logging;
+using MySqlX.XDevAPI.Common;
+using Netron.GraphLib;
+using NPOI.POIFS.Properties;
+using NPOI.SS.Formula.Functions;
+using RUINOR.Core;
+using RUINOR.WinFormsUI.CustomPictureBox;
+using RUINORERP.Business;
+using RUINORERP.Business.AutoMapper;
+using RUINORERP.Business.BizMapperService;
+using RUINORERP.Business.Cache;
+using RUINORERP.Business.CommService;
+using RUINORERP.Business.Processor;
+using RUINORERP.Business.Security;
+using RUINORERP.Common;
+using RUINORERP.Common.CollectionExtension;
+using RUINORERP.Common.Extensions;
+using RUINORERP.Common.Helper;
+using RUINORERP.Global;
+using RUINORERP.Global.CustomAttribute;
+using RUINORERP.Global.EnumExt;
+using RUINORERP.Model;
+using RUINORERP.Model.Base;
+using RUINORERP.Model.CommonModel;
+using RUINORERP.Model.Dto;
+using RUINORERP.UI.AdvancedUIModule;
+using RUINORERP.UI.BaseForm;
+using RUINORERP.UI.Common;
+using RUINORERP.UI.CommonUI;
+using RUINORERP.UI.Monitoring.Auditing;
+using RUINORERP.UI.Network.Services;
+using RUINORERP.UI.Report;
+using RUINORERP.UI.UCSourceGrid;
+using SourceGrid;
+using SqlSugar;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Drawing;
 using System.Data;
+using System.Diagnostics;
+using System.Drawing;
 using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using RUINORERP.Common;
-using RUINORERP.UI.Common;
-using RUINORERP.Model;
-using RUINORERP.Business;
-using RUINORERP.UI.UCSourceGrid;
-using System.Reflection;
-using System.Collections.Concurrent;
-using RUINORERP.Common.CollectionExtension;
+using static RUINOR.WinFormsUI.CustomPictureBox.MagicPictureBox;
 using static RUINORERP.UI.Common.DataBindingHelper;
 using static RUINORERP.UI.Common.GUIUtils;
-using RUINORERP.Model.Dto;
-using DevAge.Windows.Forms;
-using RUINORERP.Common.Helper;
-using RUINORERP.Global.CustomAttribute;
-using RUINORERP.Global;
-using RUINORERP.UI.Report;
-using RUINORERP.UI.BaseForm;
-using Microsoft.Extensions.Logging;
-using RUINOR.Core;
-using RUINORERP.UI.Network.Services;
-using SqlSugar;
-using System.Linq.Expressions;
-using AutoMapper;
-using RUINORERP.Business.AutoMapper;
-using RUINORERP.Business.Security;
-using RUINORERP.Business.Processor;
-using RUINORERP.Model.CommonModel;
-using SourceGrid;
-using RUINORERP.Business.CommService;
-using NPOI.POIFS.Properties;
-using System.Diagnostics;
-using RUINORERP.Common.Extensions;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
-using MySqlX.XDevAPI.Common;
-using RUINORERP.UI.AdvancedUIModule;
-using FastReport.DevComponents.DotNetBar.Controls;
-using RUINORERP.UI.CommonUI;
-using RUINOR.WinFormsUI.CustomPictureBox;
-
-using RUINORERP.Global.EnumExt;
-using RUINORERP.UI.Monitoring.Auditing;
-using NPOI.SS.Formula.Functions;
-using System.Text.RegularExpressions;
-
-using AutoUpdateTools;
-using LiveChartsCore.Geo;
-using static RUINOR.WinFormsUI.CustomPictureBox.MagicPictureBox;
-using RUINORERP.Business.Cache;
-using MathNet.Numerics;
-using RUINORERP.Business.BizMapperService;
-using RUINORERP.Model.Base;
 
 namespace RUINORERP.UI.PSI.SAL
 {
@@ -1229,7 +1228,31 @@ namespace RUINORERP.UI.PSI.SAL
             //如果订单选择了 非未付款，但又选择了账期也不能通过。
             if (NeedValidated)
             {
+                // 先检查是否需要定制订单确认
+                if (NeedCustomizedOrderConfirmation(EditEntity))
+                {
+                    // 弹出确认对话框
+                    var result = MessageBox.Show(
+                        "备注中包含'定制'二字，但未标记为定制单。\n\n是否确认为定制订单？\n\n点击'是'将标记为定制订单，点击'否'将保持现状。",
+                        "定制订单确认",
+                        MessageBoxButtons.YesNo,
+                        MessageBoxIcon.Question,
+                        MessageBoxDefaultButton.Button1);
 
+                    if (result == DialogResult.Yes)
+                    {
+                        // 用户确认是定制订单，标记为定制单
+                        EditEntity.IsCustomizedOrder = true;
+                        MainForm.Instance.uclog.AddLog("已确认为定制订单");
+                    }
+                    else
+                    {
+                        // 用户确认不是定制订单，保持现状
+                        MainForm.Instance.uclog.AddLog("用户确认不是定制订单，保持现状");
+                    }
+                }
+
+                
                 if (EditEntity.SOrderNo.Trim().Length == 0)
                 {
                     MessageBox.Show("订单编号由系统自动生成，如果不小心清除，请重新生成单据的订单编号。");
@@ -1920,6 +1943,28 @@ namespace RUINORERP.UI.PSI.SAL
             }
 
             return result;
+        }
+
+ 
+
+        /// <summary>
+        /// 检查是否需要定制订单确认
+        /// </summary>
+        /// <param name="entity">销售订单实体</param>
+        /// <returns>是否需要确认</returns>
+        private bool NeedCustomizedOrderConfirmation(tb_SaleOrder entity)
+        {
+            if (entity == null)
+                return false;
+
+            // 检查备注中是否包含"定制"二字
+            bool hasCustomizedInNotes = !string.IsNullOrEmpty(entity.Notes) && entity.Notes.Contains("定制");
+            
+            // 检查是否未标记为定制单
+            bool notMarkedAsCustomized = !entity.IsCustomizedOrder;
+
+            // 需要确认的条件：备注中有"定制"且未标记为定制单
+            return hasCustomizedInNotes && notMarkedAsCustomized;
         }
     }
 }

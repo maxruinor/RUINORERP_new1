@@ -63,72 +63,6 @@ namespace RUINORERP.UI.UserCenter.DataParts
         #region 公共方法
 
         /// <summary>
-        /// 处理单据状态更新并确定其所属工作台节点
-        /// </summary>
-        /// <param name="updateData">单据状态更新数据</param>
-        /// <param name="treeNodes">工作台树节点集合</param>
-        /// <returns>应更新的目标节点列表</returns>
-        public List<TreeNode> DetermineTargetNodesForUpdate(
-            TodoUpdate updateData,
-            TreeNodeCollection treeNodes)
-        {
-            var targetNodes = new List<TreeNode>();
-
-            // 查找对应的业务类型节点
-            var bizTypeNode = FindBizTypeNode(updateData.BusinessType, treeNodes);
-            if (bizTypeNode == null)
-                return targetNodes;
-
-            // 根据更新类型确定处理策略
-            switch (updateData.UpdateType)
-            {
-                case TodoUpdateType.Deleted:
-                    // 删除操作：从所有状态节点中移除
-                    foreach (TreeNode statusNode in bizTypeNode.Nodes)
-                    {
-                        if (IsNodeContainsBill(statusNode, updateData.BillId))
-                            targetNodes.Add(statusNode);
-                    }
-                    break;
-
-                case TodoUpdateType.Created:
-                case TodoUpdateType.StatusChanged:
-                    // 创建或状态变更：查找匹配条件的目标节点
-                    FindMatchingStatusNodes(updateData, bizTypeNode, targetNodes);
-                    break;
-            }
-
-            return targetNodes;
-        }
-
-        /// <summary>
-        /// 根据单据ID查找对应的树节点
-        /// </summary>
-        /// <param name="billId">单据ID</param>
-        /// <param name="businessType">业务类型</param>
-        /// <param name="treeNodes">树节点集合</param>
-        /// <returns>包含该单据的节点列表</returns>
-        public List<TreeNode> FindNodesContainingBill(
-            long billId,
-            BizType businessType,
-            TreeNodeCollection treeNodes)
-        {
-            var containingNodes = new List<TreeNode>();
-
-            var bizTypeNode = FindBizTypeNode(businessType, treeNodes);
-            if (bizTypeNode == null)
-                return containingNodes;
-
-            foreach (TreeNode statusNode in bizTypeNode.Nodes)
-            {
-                if (IsNodeContainsBill(statusNode, billId))
-                    containingNodes.Add(statusNode);
-            }
-
-            return containingNodes;
-        }
-
-        /// <summary>
         /// 检查单据是否匹配条件列表（支持AND/OR混合）
         /// </summary>
         public bool CheckBillMatchesConditions(
@@ -186,9 +120,6 @@ namespace RUINORERP.UI.UserCenter.DataParts
             return result;
         }
 
-
-
-
         /// <summary>
         /// 处理来自TodoSyncManager的任务状态更新
         /// </summary>
@@ -238,63 +169,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
             }
         }
 
-
-        #endregion
-
-        #region 私有方法
-
-
-        /// <summary>
-        /// 查找匹配条件的状态节点
-        /// </summary>
-        private void FindMatchingStatusNodes(
-            TodoUpdate updateData,
-            TreeNode bizTypeNode,
-            List<TreeNode> targetNodes)
-        {
-            foreach (TreeNode statusNode in bizTypeNode.Nodes)
-            {
-                var parameter = statusNode.Tag as QueryParameter;
-                if (parameter == null || parameter.conditionals == null)
-                    continue;
-
-                // 检查是否匹配条件，使用entity进行匹配
-                if (CheckBillMatchesConditions(updateData.entity, parameter.conditionals))
-                {
-                    targetNodes.Add(statusNode);
-                }
-            }
-        }
-
-        /// <summary>
-        /// 查找业务类型节点
-        /// </summary>
-        private TreeNode FindBizTypeNode(BizType businessType, TreeNodeCollection treeNodes)
-        {
-            // 遍历所有顶级节点查找对应的业务类型节点
-            return treeNodes.Cast<TreeNode>()
-                .FirstOrDefault(node =>
-                {
-                    var tag = node.Tag as object[];
-                    return tag != null && tag.Length > 0 && tag[0] is BizType && (BizType)tag[0] == businessType;
-                });
-        }
-
-        /// <summary>
-        /// 检查节点是否包含指定单据
-        /// </summary>
-        private bool IsNodeContainsBill(TreeNode node, long billId)
-        {
-            var parameter = node.Tag as QueryParameter;
-            if (parameter == null)
-                return false;
-
-            // 检查BillIds列表
-            if (parameter.BillIds != null && parameter.BillIds.Contains(billId))
-                return true;
-
-            return false;
-        }
+        #region 私有辅助方法
 
         /// <summary>
         /// 获取单据的条件值
@@ -321,8 +196,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                     if (condition is ConditionalModel sqlCondition)
                     {
                         var fieldName = sqlCondition.FieldName;
-                      
-
+                       
                         // 从entity中反射获取对应字段的值
                         if (baseEntity.ContainsProperty(fieldName))
                         {
@@ -335,8 +209,6 @@ namespace RUINORERP.UI.UserCenter.DataParts
                                 System.Diagnostics.Debug.WriteLine($"获取字段{fieldName}值失败: {ex.Message}");
                             }
                         }
-
-
                     }
                 }
             }
@@ -347,8 +219,6 @@ namespace RUINORERP.UI.UserCenter.DataParts
 
             return conditionValues;
         }
-
-
 
         /// <summary>
         /// 检查SqlSugar条件
@@ -430,9 +300,6 @@ namespace RUINORERP.UI.UserCenter.DataParts
             }
         }
 
-
-
-
         /// <summary>
         /// 比较两个值
         /// </summary>
@@ -453,7 +320,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
             return string.Compare(value1.ToString(), value2.ToString(), StringComparison.Ordinal);
         }
 
-
+        #endregion
         #endregion
     }
 }

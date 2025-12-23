@@ -38,7 +38,6 @@ namespace RUINORERP.UI.UserCenter.DataParts
         #region 字段
         private readonly ConcurrentDictionary<Guid, TodoSyncSubscriber> _subscribers;
         private readonly ConcurrentQueue<TodoUpdate> _pendingUpdates;
-        private volatile bool _isProcessingUpdates = false;
         private readonly object _updateLock = new object();
         #endregion
 
@@ -116,39 +115,24 @@ namespace RUINORERP.UI.UserCenter.DataParts
         /// </summary>
         private void ProcessPendingUpdates()
         {
-            if (_isProcessingUpdates)
-                return;
-
             lock (_updateLock)
             {
-                if (_isProcessingUpdates)
-                    return;
+                var updatesToProcess = new List<TodoUpdate>();
+                TodoUpdate update;
 
-                _isProcessingUpdates = true;
-
-                try
+                // 尝试出队最多100个更新进行处理，避免处理时间过长
+                int maxUpdates = 100;
+                while (updatesToProcess.Count < maxUpdates && _pendingUpdates.TryDequeue(out update))
                 {
-                    var updatesToProcess = new List<TodoUpdate>();
-                    TodoUpdate update;
-
-                    // 尝试出队最多100个更新进行处理，避免处理时间过长
-                    int maxUpdates = 100;
-                    while (updatesToProcess.Count < maxUpdates && _pendingUpdates.TryDequeue(out update))
-                    {
-                        updatesToProcess.Add(update);
-                    }
-
-                    if (updatesToProcess.Any())
-                    {
-                        DistributeUpdatesToSubscribers(updatesToProcess);
-                    }
-                }
-                finally
-                {
-                    _isProcessingUpdates = false;
+                    updatesToProcess.Add(update);
                 }
 
-                // 如果还有未处理的更新，再次处理
+                if (updatesToProcess.Any())
+                {
+                    DistributeUpdatesToSubscribers(updatesToProcess);
+                }
+
+                // 如果还有未处理的更新，异步处理，避免阻塞当前线程
                 if (!_pendingUpdates.IsEmpty)
                 {
                     Task.Run(() => ProcessPendingUpdates());
@@ -232,16 +216,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 }
             }
             
-            // 处理网络任务状态更新
-            foreach (var update in updates)
-            {
-                // 检查是否为来自服务器的更新
-                if (update.IsFromServer)
-                {
-                    TodoMonitor.Instance.HandleNetworkTodoUpdate(update);
-                }
-            }
-            
+
         }
 
         /// <summary>
@@ -250,12 +225,12 @@ namespace RUINORERP.UI.UserCenter.DataParts
         /// </summary>
         private void StartUpdateProcessor()
         {
-            // 每100毫秒检查一次是否有待处理的更新
+            // 每5秒检查一次是否有待处理的更新，进一步减少性能开销
             System.Threading.Timer timer = new System.Threading.Timer(
                 _ => ProcessPendingUpdates(),
                 null,
-                TimeSpan.FromMilliseconds(100),
-                TimeSpan.FromMilliseconds(100));
+                TimeSpan.FromMilliseconds(5000),
+                TimeSpan.FromMilliseconds(5000));
         }
 
         /// <summary>

@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 using RUINORERP.PacketSpec.Models.Messaging;
+using System.Linq;
 
 namespace RUINORERP.UI.Network.Services
 {
@@ -26,6 +27,11 @@ namespace RUINORERP.UI.Network.Services
         private readonly ConcurrentDictionary<string, DateTime> _processedMessages = new ConcurrentDictionary<string, DateTime>();
         // 消息去重的过期时间（毫秒）
         private const int MESSAGE_PROCESS_TIMEOUT = 5000; // 5秒内重复消息不处理
+        
+        // 本地消息存储：存储所有收到的消息
+        private readonly ConcurrentDictionary<long, MessageData> _localMessages = new ConcurrentDictionary<long, MessageData>();
+        // 最大本地消息存储数量
+        private const int MAX_LOCAL_MESSAGES = 1000;
 
         /// <summary>
         /// 当接收到弹窗消息时触发的事件
@@ -88,6 +94,9 @@ namespace RUINORERP.UI.Network.Services
                     _logger?.LogDebug("跳过重复的弹窗消息 - ID: {MessageId}", messageData.Id);
                     return;
                 }
+                
+                // 保存消息到本地存储
+                SaveMessageToLocalStorage(messageData);
                 
                 // 检查事件订阅者
                 if (PopupMessageReceived == null)
@@ -232,6 +241,9 @@ namespace RUINORERP.UI.Network.Services
                     return;
                 }
                 
+                // 保存消息到本地存储
+                SaveMessageToLocalStorage(messageData);
+                
                 // 检查事件订阅者
                 if (BusinessMessageReceived == null)
                 {
@@ -269,6 +281,9 @@ namespace RUINORERP.UI.Network.Services
                     _logger?.LogDebug("跳过重复的部门消息 - ID: {MessageId}", messageData.Id);
                     return;
                 }
+                
+                // 保存消息到本地存储
+                SaveMessageToLocalStorage(messageData);
                 
                 // 检查事件订阅者
                 if (DepartmentMessageReceived == null)
@@ -308,6 +323,9 @@ namespace RUINORERP.UI.Network.Services
                     return;
                 }
                 
+                // 保存消息到本地存储
+                SaveMessageToLocalStorage(messageData);
+                
                 // 检查事件订阅者
                 if (BroadcastMessageReceived == null)
                 {
@@ -345,6 +363,9 @@ namespace RUINORERP.UI.Network.Services
                     _logger?.LogDebug("跳过重复的系统通知 - ID: {MessageId}", messageData.Id);
                     return;
                 }
+                
+                // 保存消息到本地存储
+                SaveMessageToLocalStorage(messageData);
                 
                 // 检查事件订阅者
                 if (SystemNotificationReceived == null)
@@ -666,6 +687,211 @@ namespace RUINORERP.UI.Network.Services
                 return MessageResponse.Fail(MessageType.Business, $"发送业务命令失败: {ex.Message}");
             }
         }
+
+        #region 消息存储与管理
+
+        /// <summary>
+        /// 保存消息到本地存储
+        /// </summary>
+        /// <param name="messageData">消息数据</param>
+        private void SaveMessageToLocalStorage(MessageData messageData)
+        {
+            if (messageData == null)
+                return;
+
+            // 如果消息数量超过最大值，删除最旧的消息
+            if (_localMessages.Count >= MAX_LOCAL_MESSAGES)
+            {
+                // 找到最旧的消息
+                var oldestMessage = _localMessages.OrderBy(m => m.Value.SendTime).FirstOrDefault();
+                if (oldestMessage.Key != 0)
+                {
+                    _localMessages.TryRemove(oldestMessage.Key, out _);
+                }
+            }
+
+            // 添加或更新消息
+            _localMessages[messageData.Id] = messageData;
+            _logger?.LogDebug("消息已保存到本地存储 - ID: {MessageId}", messageData.Id);
+        }
+
+        /// <summary>
+        /// 获取历史消息
+        /// </summary>
+        /// <param name="pageIndex">页码（从1开始）</param>
+        /// <param name="pageSize">每页大小</param>
+        /// <param name="messageType">消息类型（可选，为null则获取所有类型）</param>
+        /// <param name="isRead">是否已读（可选，为null则获取所有状态）</param>
+        /// <returns>消息列表</returns>
+        public List<MessageData> GetMessages(int pageIndex = 1, int pageSize = 20, MessageType? messageType = null, bool? isRead = null)
+        {
+            try
+            {
+                var query = _localMessages.Values.AsQueryable();
+
+                // 根据消息类型过滤
+                if (messageType.HasValue)
+                {
+                    query = query.Where(m => m.MessageType == messageType.Value);
+                }
+
+                // 根据已读状态过滤
+                if (isRead.HasValue)
+                {
+                    query = query.Where(m => m.IsRead == isRead.Value);
+                }
+
+                // 按发送时间倒序排序，最新的消息在前
+                query = query.OrderByDescending(m => m.SendTime);
+
+                // 分页
+                var result = query.Skip((pageIndex - 1) * pageSize).Take(pageSize).ToList();
+                _logger?.LogDebug("获取历史消息 - 页码: {PageIndex}, 每页大小: {PageSize}, 结果数量: {ResultCount}",
+                    pageIndex, pageSize, result.Count);
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "获取历史消息时发生异常");
+                return new List<MessageData>();
+            }
+        }
+
+        /// <summary>
+        /// 获取消息总数
+        /// </summary>
+        /// <param name="messageType">消息类型（可选，为null则获取所有类型）</param>
+        /// <param name="isRead">是否已读（可选，为null则获取所有状态）</param>
+        /// <returns>消息总数</returns>
+        public int GetMessageCount(MessageType? messageType = null, bool? isRead = null)
+        {
+            try
+            {
+                var query = _localMessages.Values.AsQueryable();
+
+                // 根据消息类型过滤
+                if (messageType.HasValue)
+                {
+                    query = query.Where(m => m.MessageType == messageType.Value);
+                }
+
+                // 根据已读状态过滤
+                if (isRead.HasValue)
+                {
+                    query = query.Where(m => m.IsRead == isRead.Value);
+                }
+
+                var count = query.Count();
+                _logger?.LogDebug("获取消息总数 - 类型: {MessageType}, 已读状态: {IsRead}, 数量: {Count}",
+                    messageType, isRead, count);
+
+                return count;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "获取消息总数时发生异常");
+                return 0;
+            }
+        }
+
+        /// <summary>
+        /// 标记消息为已读
+        /// </summary>
+        /// <param name="messageId">消息ID</param>
+        /// <returns>是否成功</returns>
+        public bool MarkAsRead(long messageId)
+        {
+            try
+            {
+                if (_localMessages.TryGetValue(messageId, out var messageData))
+                {
+                    messageData.IsRead = true;
+                    messageData.ReadTime = DateTime.Now;
+                    _localMessages[messageId] = messageData; // 更新存储
+                    _logger?.LogDebug("消息已标记为已读 - ID: {MessageId}", messageId);
+                    return true;
+                }
+                _logger?.LogWarning("未找到要标记为已读的消息 - ID: {MessageId}", messageId);
+                return false;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "标记消息为已读时发生异常 - ID: {MessageId}", messageId);
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 标记所有消息为已读
+        /// </summary>
+        /// <param name="messageType">消息类型（可选，为null则标记所有类型）</param>
+        /// <returns>标记成功的消息数量</returns>
+        public int MarkAllAsRead(MessageType? messageType = null)
+        {
+            try
+            {
+                var count = 0;
+                foreach (var key in _localMessages.Keys.ToList())
+                {
+                    if (_localMessages.TryGetValue(key, out var messageData))
+                    {
+                        // 如果指定了消息类型，只标记该类型的消息
+                        if (messageType.HasValue && messageData.MessageType != messageType.Value)
+                        {
+                            continue;
+                        }
+
+                        messageData.IsRead = true;
+                        messageData.ReadTime = DateTime.Now;
+                        _localMessages[key] = messageData; // 更新存储
+                        count++;
+                    }
+                }
+                _logger?.LogDebug("已标记所有消息为已读 - 类型: {MessageType}, 数量: {Count}", messageType, count);
+                return count;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "标记所有消息为已读时发生异常");
+                return 0;
+            }
+        }
+
+        /// <summary>
+        /// 获取未读消息数量
+        /// </summary>
+        /// <param name="messageType">消息类型（可选，为null则获取所有类型）</param>
+        /// <returns>未读消息数量</returns>
+        public int GetUnreadMessageCount(MessageType? messageType = null)
+        {
+            return GetMessageCount(messageType, false);
+        }
+
+        /// <summary>
+        /// 根据ID获取消息
+        /// </summary>
+        /// <param name="messageId">消息ID</param>
+        /// <returns>消息数据，如果未找到则返回null</returns>
+        public MessageData GetMessageById(long messageId)
+        {
+            try
+            {
+                if (_localMessages.TryGetValue(messageId, out var messageData))
+                {
+                    return messageData;
+                }
+                _logger?.LogWarning("未找到指定ID的消息 - ID: {MessageId}", messageId);
+                return null;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "根据ID获取消息时发生异常 - ID: {MessageId}", messageId);
+                return null;
+            }
+        }
+
+        #endregion
     }
 
     /// <summary>

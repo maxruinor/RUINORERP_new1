@@ -40,9 +40,6 @@ namespace RUINORERP.UI.IM
     {
         private readonly ILogger<EnhancedMessageManager> _logger;
         private readonly MessageService _messageService;
-        private readonly List<MessageData> _messageList = new List<MessageData>();
-        private readonly object _messagesLock = new object();
-        private int _unreadMessageCount = 0;
         private Timer _messageCheckTimer;
         private bool _disposed = false;
 
@@ -173,13 +170,9 @@ namespace RUINORERP.UI.IM
         private void UpdateUnreadMessageCount()
         {
             int unreadCount = GetUnreadMessageCount();
-            if (_unreadMessageCount != unreadCount)
-            {
-                _unreadMessageCount = unreadCount;
-                _logger?.LogDebug($"已更新未读消息计数: {unreadCount}");
-                // 未读消息计数变化时，触发未读消息计数变更事件
-                UnreadMessageCountChanged?.Invoke(this, unreadCount);
-            }
+            _logger?.LogDebug($"已更新未读消息计数: {unreadCount}");
+            // 未读消息计数变化时，触发未读消息计数变更事件
+            UnreadMessageCountChanged?.Invoke(this, unreadCount);
         }
 
         // 处理接收到的弹窗消息
@@ -189,7 +182,6 @@ namespace RUINORERP.UI.IM
             {
                 if (messageData != null)
                 {
-                    AddMessage(messageData);
                     ShowDefaultMessagePrompt(messageData);
                 }
             }
@@ -210,10 +202,7 @@ namespace RUINORERP.UI.IM
         {
             try
             {
-                if (messageData != null)
-                {
-                    AddMessage(messageData);
-                }
+                // 部门消息由MessageService直接处理，我们不需要额外操作
             }
             catch (Exception ex)
             {
@@ -240,42 +229,29 @@ namespace RUINORERP.UI.IM
         // 获取未读消息数量
         public int GetUnreadMessageCount()
         {
-            lock (_messagesLock)
-            {
-                return _messageList.Count(msg => !msg.IsRead);
-            }
+            return _messageService.GetUnreadMessageCount();
         }
 
         // 获取所有消息
         public List<MessageData> GetAllMessages()
         {
-            lock (_messagesLock)
-            {
-                return _messageList.ToList();
-            }
+            return _messageService.GetMessages(1, int.MaxValue);
         }
 
         // 根据ID获取消息
         public MessageData GetMessageById(long id)
         {
-            lock (_messagesLock)
-            {
-                return _messageList.FirstOrDefault(msg => msg.Id == id);
-            }
+            return _messageService.GetMessageById(id);
         }
 
         // 标记消息为已读
         public void MarkAsRead(long id)
         {
-            lock (_messagesLock)
+            _messageService.MarkAsRead(id);
+            var message = GetMessageById(id);
+            if (message != null)
             {
-                var message = GetMessageById(id);
-                if (message != null && !message.IsRead)
-                {
-                    message.IsRead = true;
-                    message.ReadTime = DateTime.Now;
-                    OnMessageStatusChanged(message);
-                }
+                OnMessageStatusChanged(message);
             }
         }
 
@@ -284,22 +260,9 @@ namespace RUINORERP.UI.IM
         {
             try
             {
-                List<MessageData> updatedMessages = new List<MessageData>();
-                lock (_messagesLock)
-                {
-                    foreach (var message in _messageList.Where(msg => !msg.IsRead))
-                    {
-                        message.IsRead = true;
-                        message.ReadTime = DateTime.Now;
-                        updatedMessages.Add(message);
-                    }
-                }
-
-                // 对每个更新的消息触发状态变更事件
-                foreach (var message in updatedMessages)
-                {
-                    OnMessageStatusChanged(message);
-                }
+                int updatedCount = _messageService.MarkAllAsRead();
+                _logger?.LogDebug($"已标记{updatedCount}条消息为已读");
+                OnMessageStatusChanged(null);
             }
             catch (Exception ex)
             {
@@ -311,28 +274,13 @@ namespace RUINORERP.UI.IM
         // 触发消息状态变更事件
         protected virtual void OnMessageStatusChanged(MessageData message)
         {
-            _unreadMessageCount = GetUnreadMessageCount();
             MessageStatusChanged?.Invoke(this, message);
         }
 
         // 删除消息
         public void DeleteMessage(long id)
         {
-            lock (_messagesLock)
-            {
-                var message = GetMessageById(id);
-                if (message != null)
-                {
-                    _messageList.Remove(message);
-                    // 如果删除的是未读消息，更新未读计数
-                    if (!message.IsRead)
-                    {
-                        _unreadMessageCount = Math.Max(0, _unreadMessageCount - 1);
-                    }
-                }
-            }
-
-            // 触发状态变更事件，传递null表示消息已被删除
+            // 目前MessageService不支持删除消息，我们只触发状态变更事件
             OnMessageStatusChanged(null);
         }
 
@@ -341,24 +289,6 @@ namespace RUINORERP.UI.IM
         {
             if (message == null)
                 return;
-
-            bool isNewMessage = false;
-
-            lock (_messagesLock)
-            {
-                bool exists = _messageList.Any(m => m.Id == message.Id);
-                if (!exists)
-                {
-                    _messageList.Insert(0, message);
-                    isNewMessage = true;
-                }
-            }
-
-            // 对于新消息，触发状态变更事件以通知UI更新
-            if (isNewMessage)
-            {
-                OnMessageStatusChanged(message);
-            }
 
             // 更新未读消息计数并触发事件
             UpdateUnreadMessageCount();
@@ -388,25 +318,6 @@ namespace RUINORERP.UI.IM
             try
             {
                 _logger?.LogDebug($"处理业务消息: {messageData.Title}");
-
-                bool isNewMessage = false;
-
-                // 添加到消息列表
-                lock (_messagesLock)
-                {
-                    if (!_messageList.Any(m => m.Id == messageData.Id))
-                    {
-                        _messageList.Add(messageData);
-                        _unreadMessageCount++;
-                        isNewMessage = true;
-                    }
-                }
-
-                // 在锁外触发事件，避免锁重入问题
-                if (isNewMessage)
-                {
-                    OnMessageStatusChanged(messageData);
-                }
 
                 // 根据消息类型显示不同的提示框
                 switch (messageData.MessageType)
@@ -441,25 +352,6 @@ namespace RUINORERP.UI.IM
             try
             {
                 _logger?.LogDebug($"显示系统通知: {messageData.Title}");
-
-                bool isNewMessage = false;
-
-                // 添加到消息列表
-                lock (_messagesLock)
-                {
-                    if (!_messageList.Any(m => m.Id == messageData.Id))
-                    {
-                        _messageList.Add(messageData);
-                        _unreadMessageCount++;
-                        isNewMessage = true;
-                    }
-                }
-
-                // 在锁外触发事件，避免锁重入问题
-                if (isNewMessage)
-                {
-                    OnMessageStatusChanged(messageData);
-                }
 
                 // 创建消息提示窗口
                 var prompt = new MessagePrompt(messageData, this);

@@ -681,6 +681,120 @@ namespace RUINORERP.UI.BaseForm
             return null;
         }
 
+        /// <summary>
+        /// 将实体转换为TodoUpdate对象
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        /// <param name="updateType">更新类型</param>
+        /// <returns>TodoUpdate对象</returns>
+        protected TodoUpdate ConvertToTodoUpdate(T entity, TodoUpdateType updateType)
+        {
+            try
+            {
+                if (entity == null)
+                    return null;
+
+                long billId = entity.PrimaryKeyID;
+                if (billId <= 0)
+                    return null;
+
+                // 获取业务类型
+                var bizType = RUINORERP.Business.BizMapperService.EntityMappingHelper.GetBizType(typeof(T).Name);
+                
+                // 创建TodoUpdate对象
+                TodoUpdate update = TodoUpdate.Create(
+                    updateType,
+                    bizType,
+                    billId,
+                    entity,
+                    nameof(DataStatus),
+                    entity.GetPropertyValue(nameof(DataStatus))
+                );
+
+                // 添加操作描述
+                switch (updateType)
+                {
+                    case TodoUpdateType.StatusChanged:
+                        update.OperationDescription = "单据状态已变更";
+                        break;
+                    case TodoUpdateType.Deleted:
+                        update.OperationDescription = "单据已删除";
+                        break;
+                    case TodoUpdateType.Created:
+                        update.OperationDescription = "单据已创建";
+                        break;
+                }
+
+                // 添加当前用户ID
+                update.InitiatorUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID.ToString();
+
+                return update;
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "转换TodoUpdate失败");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 同步TodoUpdate到服务器并更新本地TodoList
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        /// <param name="updateType">更新类型</param>
+        /// <param name="operationDescription">操作描述</param>
+        /// <returns></returns>
+        protected async Task SyncTodoUpdateToServer(T entity, TodoUpdateType updateType, string operationDescription)
+        {
+            try
+            {
+                // 转换为TodoUpdate
+                var update = ConvertToTodoUpdate(entity, updateType);
+                if (update == null)
+                    return;
+
+                // 更新操作描述
+                update.OperationDescription = operationDescription;
+
+                // 1. 更新本地TodoList
+                var todoListManager = RUINORERP.UI.UserCenter.DataParts.TodoListManager.Instance;
+                if (todoListManager != null)
+                {
+                    todoListManager.ProcessUpdate(update);
+                }
+
+                // 2. 发送到服务器
+                var messageService = Startup.GetFromFac<RUINORERP.UI.Network.Services.MessageService>();
+                if (messageService != null)
+                {
+                    // 构造消息请求
+                    var messageRequest = new RUINORERP.PacketSpec.Models.Messaging.MessageRequest(
+                        MessageType.Business,
+                        new RUINORERP.Model.TransModel.MessageData
+                        {
+                            Id = RUINORERP.Common.SnowflakeIdHelper.IdHelper.GetLongId(),
+                            MessageType = MessageType.Business,
+                            Title = "任务状态变更",
+                            Content = update.OperationDescription,
+                            BizData = update,
+                            SendTime = DateTime.Now
+                        }
+                    );
+
+                    // 发送消息到服务器
+                    await messageService.SendCommandAsync(
+                        RUINORERP.PacketSpec.Commands.MessageCommands.SendTodoNotification,
+                        messageRequest
+                    );
+                }
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "同步Todo更新到服务器失败");
+                MainForm.Instance.uclog.AddLog("错误", $"同步Todo更新到服务器失败：{ex.Message}");
+            }
+        }
+
 
 
 
@@ -2239,6 +2353,8 @@ namespace RUINORERP.UI.BaseForm
                         var deleteResult = await Delete();
                         if (deleteResult.Succeeded)
                         {
+                            // 同步到服务器
+                            await SyncTodoUpdateToServer(EditEntity, TodoUpdateType.Deleted, "单据已删除");
                             Add();
                         }
                     }
@@ -2379,6 +2495,8 @@ namespace RUINORERP.UI.BaseForm
                         {
                             //提交后别人可以审核 
                             UNLock();
+                            // 同步到服务器
+                            await SyncTodoUpdateToServer(EditEntity, TodoUpdateType.StatusChanged, "单据已提交");
                         }
                     }
                     catch (Exception ex)
@@ -2409,6 +2527,11 @@ namespace RUINORERP.UI.BaseForm
                         {
                             UNLock();
                         }
+                        else
+                        {
+                            // 同步到服务器
+                            await SyncTodoUpdateToServer(EditEntity, TodoUpdateType.StatusChanged, "单据已审核");
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -2429,6 +2552,11 @@ namespace RUINORERP.UI.BaseForm
                         if (!rs反审)
                         {
                             UNLock();
+                        }
+                        else
+                        {
+                            // 同步到服务器
+                            await SyncTodoUpdateToServer(EditEntity, TodoUpdateType.StatusChanged, "单据已反审");
                         }
                     }
                     catch (Exception ex)

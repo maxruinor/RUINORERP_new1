@@ -20,6 +20,7 @@ using RUINORERP.Model;
 using RUINORERP.Model.Base;
 using RUINORERP.Model.Base.StatusManager;
 using RUINORERP.Model.CommonModel;
+using RUINORERP.Model.TransModel;
 using RUINORERP.PacketSpec.Enums.Core;
 using RUINORERP.PacketSpec.Models.Common;
 using RUINORERP.UI.AdvancedUIModule;
@@ -389,10 +390,7 @@ namespace RUINORERP.UI.BaseForm
                 case MenuItemEnums.提交:
                     Submit();
                     // 添加同步代码
-                    if (TodoListManager != null)
-                    {
-                        TodoListManager.ProcessUpdates(ConvertToTodoUpdates(selectlist, TodoUpdateType.StatusChanged));
-                    }
+                    await SyncTodoUpdatesToServer(selectlist, TodoUpdateType.StatusChanged, "单据已提交");
                     break;
                 case MenuItemEnums.属性:
                     Property();
@@ -403,10 +401,7 @@ namespace RUINORERP.UI.BaseForm
                     {
                         ApprovalEntity ae = await Review(selectlist);
                         // 添加同步代码
-                        if (TodoListManager != null)
-                        {
-                            TodoListManager.ProcessUpdates(ConvertToTodoUpdates(selectlist, TodoUpdateType.StatusChanged));
-                        }
+                        await SyncTodoUpdatesToServer(selectlist, TodoUpdateType.StatusChanged, "单据已审核");
                     }
 
                     break;
@@ -416,10 +411,7 @@ namespace RUINORERP.UI.BaseForm
                         //只操作批一行
                         ApprovalEntity ae = await ReReview(selectlist[0]);
                         // 添加同步代码
-                        if (TodoListManager != null)
-                        {
-                            TodoListManager.ProcessUpdates(ConvertToTodoUpdates(selectlist, TodoUpdateType.StatusChanged));
-                        }
+                        await SyncTodoUpdatesToServer(selectlist, TodoUpdateType.StatusChanged, "单据已反审");
                     }
                     break;
                 case MenuItemEnums.结案:
@@ -430,10 +422,7 @@ namespace RUINORERP.UI.BaseForm
                         if (rs)
                         {
                             // 添加同步代码
-                            if (TodoListManager != null)
-                            {
-                                TodoListManager.ProcessUpdates(ConvertToTodoUpdates(selectlist, TodoUpdateType.StatusChanged));
-                            }
+                            await SyncTodoUpdatesToServer(selectlist, TodoUpdateType.StatusChanged, "单据已结案");
                             await MainForm.Instance.AuditLogHelper.CreateAuditLog<M>("结案", selectlist[0], $"结案意见:{rs}");
                         }
                     }
@@ -471,10 +460,7 @@ namespace RUINORERP.UI.BaseForm
                 case MenuItemEnums.删除:
                     Delete(selectlist);
                     // 添加同步代码
-                    if (TodoListManager != null)
-                    {
-                        TodoListManager.ProcessUpdates(ConvertToTodoUpdates(selectlist, TodoUpdateType.Deleted));
-                    }
+                    await SyncTodoUpdatesToServer(selectlist, TodoUpdateType.Deleted, "单据已删除");
                     break;
                 case MenuItemEnums.导出:
                     UIExcelHelper.ExportExcel(_UCBillMasterQuery.newSumDataGridViewMaster);
@@ -503,26 +489,44 @@ namespace RUINORERP.UI.BaseForm
             {
                 try
                 {
-                    string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
+                    string PKCol = BaseUIHelper.GetEntityPrimaryKey<M>();
                     long pkValue = (long)ReflectionHelper.GetPropertyValue(entity, PKCol);
                     long billId = Convert.ToInt64(pkValue);
                     if (billId > 0)
                     {  // 发送任务状态更新通知 - 使用扩展的TodoUpdate
-                        var bizType = EntityMappingHelper.GetBillData<T>(entity).BizType;
+                        var bizType = EntityMappingHelper.GetBillData<M>(entity).BizType;
                         // 创建TodoUpdate对象
                         TodoUpdate update = new TodoUpdate
                         {
                             UpdateType = updateType,
                             BusinessType = bizType,
-                            BillId = billId
+                            BillId = billId,
+                            entity = entity, // 添加实体对象引用
+                            StatusType = nameof(DataStatus),
+                            BusinessStatusValue = entity.GetPropertyValue(nameof(DataStatus))
                         };
+                        // 添加操作描述
+                        switch (updateType)
+                        {
+                            case TodoUpdateType.StatusChanged:
+                                update.OperationDescription = "单据状态已变更";
+                                break;
+                            case TodoUpdateType.Deleted:
+                                update.OperationDescription = "单据已删除";
+                                break;
+                            case TodoUpdateType.Created:
+                                update.OperationDescription = "单据已创建";
+                                break;
+                        }
+                        // 添加当前用户ID
+                        update.InitiatorUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID.ToString();
                         updates.Add(update);
                     }
 
                 }
                 catch (Exception ex)
                 {
-
+                    MainForm.Instance.uclog.AddLog("错误", $"转换TodoUpdate失败：{ex.Message}");
                 }
             }
 
@@ -738,6 +742,68 @@ namespace RUINORERP.UI.BaseForm
                 }
             }
             return selectlist;
+        }
+
+        /// <summary>
+        /// 同步TodoUpdate到服务器并更新本地TodoList
+        /// </summary>
+        /// <param name="entities">实体列表</param>
+        /// <param name="updateType">更新类型</param>
+        /// <param name="operationDescription">操作描述</param>
+        /// <returns></returns>
+        protected async Task SyncTodoUpdatesToServer(List<M> entities, TodoUpdateType updateType, string operationDescription)
+        {
+            try
+            {
+                // 转换为TodoUpdate列表
+                List<TodoUpdate> updates = ConvertToTodoUpdates(entities, updateType);
+                if (updates == null || updates.Count == 0)
+                    return;
+
+                // 更新操作描述
+                foreach (var update in updates)
+                {
+                    update.OperationDescription = operationDescription;
+                }
+
+                // 1. 更新本地TodoList
+                if (TodoListManager != null)
+                {
+                    TodoListManager.ProcessUpdates(updates);
+                }
+
+                // 2. 发送到服务器
+                var messageService = Startup.GetFromFac<RUINORERP.UI.Network.Services.MessageService>();
+                if (messageService != null)
+                {
+                    foreach (var update in updates)
+                    {
+                        // 构造消息请求
+                        var messageRequest = new RUINORERP.PacketSpec.Models.Messaging.MessageRequest(
+                            MessageType.Business,
+                            new RUINORERP.Model.TransModel.MessageData
+                            {
+                                Id = RUINORERP.Common.SnowflakeIdHelper.IdHelper.GetLongId(),
+                                MessageType = MessageType.Business,
+                                Title = "任务状态变更",
+                                Content = update.OperationDescription,
+                                BizData = update,
+                                SendTime = DateTime.Now
+                            }
+                        );
+
+                        // 发送消息到服务器
+                        await messageService.SendCommandAsync(
+                            RUINORERP.PacketSpec.Commands.MessageCommands.SendTodoNotification,
+                            messageRequest
+                        );
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.uclog.AddLog("错误", $"同步Todo更新到服务器失败：{ex.Message}");
+            }
         }
 
         public virtual void AdvQuery()

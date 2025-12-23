@@ -98,6 +98,9 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
         {
             try
             {
+                // 标记为来自服务器的更新
+                update.IsFromServer = true;
+                
                 // 业务逻辑处理：根据不同业务类型执行特定处理
                 ProcessBusinessSpecificLogic(update);
                 
@@ -143,12 +146,12 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
         /// </summary>
         /// <param name="update">任务状态更新信息</param>
         /// <param name="originalMessageData">原始消息数据（可选）</param>
-        private async Task AddToMessageManager(TodoUpdate update, MessageData originalMessageData = null)
+        private void AddToMessageManager(TodoUpdate update, MessageData originalMessageData = null)
         {
             try
             {
-                var enhancedMessageManager = Startup.GetFromFac<MessageService>();
-                if (enhancedMessageManager != null)
+                var messageService = Startup.GetFromFac<MessageService>();
+                if (messageService != null)
                 {
                     // 创建消息数据
                     var message = originalMessageData != null ? 
@@ -158,7 +161,9 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                             MessageType = MessageType.Business,
                             Title = originalMessageData.Title,
                             Content = originalMessageData.Content,
-                           // Data = update,
+                            BizType = update.BusinessType,
+                            BizId = update.BillId,
+                            BizData = update,
                             SendTime = originalMessageData.SendTime,
                             IsRead = false
                         } : 
@@ -168,28 +173,27 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                             MessageType = MessageType.Business,
                             Title = "任务状态变更",
                             Content = $"[{update.BusinessType}]{update.OperationDescription}",
-                            //Data = update,
+                            BizType = update.BusinessType,
+                            BizId = update.BillId,
+                            BizData = update,
                             SendTime = DateTime.Now,
                             IsRead = false
                         };
                     
                     // 添加到消息管理器
-                   // enhancedMessageManager.AddMessage(message);
-                    _logger.LogDebug("已将任务状态变更通知添加到消息管理器");
+                    messageService.OnBusinessMessageReceived(message);
+                    _logger.LogDebug("已将任务状态变更通知添加到消息中心");
                 }
                 else
                 {
-                    _logger.LogWarning("无法获取EnhancedMessageManager实例，跳过消息添加");
+                    _logger.LogWarning("无法获取MessageService实例，跳过消息添加");
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "将任务状态变更通知添加到消息管理器时发生异常");
+                _logger.LogError(ex, "将任务状态变更通知添加到消息中心时发生异常");
                 // 这里不抛出异常，因为消息管理器失败不应影响主要功能
             }
-            
-            // 确保异步方法有await
-            await Task.CompletedTask;
         }
     }
 }

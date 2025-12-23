@@ -19,6 +19,7 @@ using System.Linq;
 using RUINORERP.Model.Context;
 using RUINORERP.IServices;
 using System.Threading;
+using RUINORERP.Business.Cache;
 
 namespace RUINORERP.Business.Document.Converters
 {
@@ -34,6 +35,7 @@ namespace RUINORERP.Business.Document.Converters
         private readonly IServiceProvider _serviceProvider;
         private readonly AuthorizeController _authorizeController;
         private readonly ApplicationContext _appContext;
+        private readonly IEntityCacheManager _cacheManager;
 
         /// <summary>
         /// 构造函数，注入必要的依赖服务
@@ -41,9 +43,12 @@ namespace RUINORERP.Business.Document.Converters
         /// <param name="logger">日志记录器</param>
         /// <param name="serviceProvider">服务提供者</param>
         public SaleOrderToSaleOutConverter(
-            ILogger<SaleOrderToSaleOutConverter> logger, IServiceProvider serviceProvider)
+            ILogger<SaleOrderToSaleOutConverter> logger,
+            IEntityCacheManager entityCacheManager,
+            IServiceProvider serviceProvider)
             : base(logger)
         {
+            _cacheManager=entityCacheManager ?? throw new ArgumentNullException(nameof(entityCacheManager));
             _serviceProvider = serviceProvider;
             _mapper = serviceProvider.GetRequiredService<IMapper>();
             _authorizeController = serviceProvider.GetRequiredService<AuthorizeController>();
@@ -281,7 +286,7 @@ namespace RUINORERP.Business.Document.Converters
         /// </summary>
         private async Task<View_ProdDetail> GetProductDetailInfo(long prodDetailId)
         {
-            return await Task.FromResult(Cache.EntityCacheHelper.GetEntity<View_ProdDetail>(prodDetailId));
+            return await Task.FromResult(_cacheManager.GetEntity<View_ProdDetail>(prodDetailId));
         }
 
         /// <summary>
@@ -425,7 +430,7 @@ namespace RUINORERP.Business.Document.Converters
                         // 如果可出库数量小于原订单数量，添加部分出库提示
                         if (deliverableQty < detail.Quantity)
                         {
-                            var prodInfo = Cache.EntityCacheHelper.GetEntity<View_ProdInfo>(detail.ProdDetailID);
+                            var prodInfo = _cacheManager.GetEntity<View_ProdInfo>(detail.ProdDetailID);
                             string prodName = prodInfo?.CNName ?? $"产品ID:{detail.ProdDetailID}";
                             
                             result.AddWarning($"产品【{prodName}】已出库数量为{detail.TotalDeliveredQty}，可出库数量为{deliverableQty}，小于原订单数量{detail.Quantity}");
@@ -436,7 +441,7 @@ namespace RUINORERP.Business.Document.Converters
                         nonDeliverableDetails++;
                         
                         // 添加完全出库提示
-                        var prodInfo = Cache.EntityCacheHelper.GetEntity<View_ProdInfo>(detail.ProdDetailID);
+                        var prodInfo = _cacheManager.GetEntity<View_ProdInfo>(detail.ProdDetailID);
                         string prodName = prodInfo?.CNName ?? $"产品ID:{detail.ProdDetailID}";
                         
                         result.AddWarning($"产品【{prodName}】已全部出库，可出库数量为0，将忽略此明细");

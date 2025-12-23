@@ -1,58 +1,58 @@
-﻿using System;
+﻿using AutoMapper;
+using FastReport.DevComponents.DotNetBar.Controls;
+using FluentValidation.Results;
+using HLH.Lib.Security;
+using Microsoft.Extensions.Logging;
+using Netron.GraphLib;
+using NPOI.POIFS.Properties;
+using NPOI.SS.UserModel;
+using Org.BouncyCastle.Asn1.Cmp;
+using Org.BouncyCastle.Crypto;
+using Org.BouncyCastle.Math.Field;
+using RUINORERP.Business;
+using RUINORERP.Business.AutoMapper;
+using RUINORERP.Business.Cache;
+using RUINORERP.Business.CommService;
+using RUINORERP.Common;
+using RUINORERP.Common.Extensions;
+using RUINORERP.Common.Helper;
+using RUINORERP.Global;
+using RUINORERP.Global.EnumExt;
+using RUINORERP.Global.EnumExt.CRM;
+using RUINORERP.IRepository.Base;
+using RUINORERP.IServices;
+using RUINORERP.IServices.BASE;
+using RUINORERP.Model;
+using RUINORERP.Model.Base;
+using RUINORERP.Model.CommonModel;
+using RUINORERP.Model.Context;
+using RUINORERP.Repository.Base;
+using RUINORERP.Repository.UnitOfWorks;
+using RUINORERP.Services;
+using RUINORERP.UI.Common;
+using RUINORERP.UI.FM;
+using RUINORERP.UI.PSI.PUR;
+using RUINORERP.UI.PSI.SAL;
+using RUINORERP.UI.Report;
+using RUINORERP.UI.SS;
+using RUINORERP.UI.UserCenter.DataParts;
+using RUINORERP.UI.WorkFlowTester;
+using SqlSugar;
+using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Drawing;
 using System.Data;
+using System.Drawing;
 using System.Linq;
+using System.Linq.Expressions;
+using System.Management.Instrumentation;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using RUINORERP.Common;
 using WorkflowCore.Interface;
-using RUINORERP.UI.WorkFlowTester;
-using RUINORERP.Model;
-using RUINORERP.UI.Common;
-using FluentValidation.Results;
-using Microsoft.Extensions.Logging;
-using RUINORERP.IServices.BASE;
-using RUINORERP.Model.Base;
-using RUINORERP.Repository.UnitOfWorks;
-using RUINORERP.Common.Extensions;
-using RUINORERP.IServices;
-using RUINORERP.Services;
-using RUINORERP.Repository.Base;
-using RUINORERP.IRepository.Base;
-using RUINORERP.Global;
-using RUINORERP.Model.Context;
-using System.Linq.Expressions;
-
-using SqlSugar;
-using RUINORERP.UI.Report;
-using System.Reflection;
-using RUINORERP.Common.Helper;
-using RUINORERP.Business;
-using System.Collections.Concurrent;
-using Org.BouncyCastle.Math.Field;
-using RUINORERP.UI.PSI.PUR;
-using FastReport.DevComponents.DotNetBar.Controls;
-using RUINORERP.UI.SS;
-using System.Management.Instrumentation;
-using RUINORERP.Business.CommService;
-using RUINORERP.Model.CommonModel;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
-using Netron.GraphLib;
-using AutoMapper;
-using RUINORERP.Business.AutoMapper;
-using RUINORERP.Global.EnumExt.CRM;
-using HLH.Lib.Security;
-using RUINORERP.UI.PSI.SAL;
-using RUINORERP.UI.UserCenter.DataParts;
-using NPOI.POIFS.Properties;
-using Org.BouncyCastle.Crypto;
-using NPOI.SS.UserModel;
-using Org.BouncyCastle.Asn1.Cmp;
-using RUINORERP.UI.FM;
-using RUINORERP.Global.EnumExt;
 
 
 namespace RUINORERP.UI.SysConfig
@@ -79,7 +79,9 @@ namespace RUINORERP.UI.SysConfig
             LoadTree();
             treeView1.Nodes.Add(new TreeNode("应收付单据业务日期修复"));
         }
-
+        // 在类开始处添加：
+        private static IEntityCacheManager _cacheManager;
+        private static IEntityCacheManager CacheManager => _cacheManager ?? (_cacheManager = Startup.GetFromFac<IEntityCacheManager>());
         private async void treeView1_MouseDoubleClick(object sender, MouseEventArgs e)
         {
             if (treeViewTableList.SelectedNode != null && treeView1.SelectedNode != null)
@@ -98,7 +100,7 @@ namespace RUINORERP.UI.SysConfig
                         string shortName = string.Empty;
                         if (PayeeInfo.CustomerVendor_ID.HasValue && PayeeInfo.CustomerVendor_ID.Value > 0)
                         {
-                            var CustomerVendor = RUINORERP.Business.Cache.EntityCacheHelper.GetEntity<tb_CustomerVendor>(PayeeInfo.CustomerVendor_ID);
+                            var CustomerVendor = _cacheManager.GetEntity<tb_CustomerVendor>(PayeeInfo.CustomerVendor_ID);
                             if (CustomerVendor != null)
                             {
                                 shortName = CustomerVendor.ShortName;
@@ -110,7 +112,7 @@ namespace RUINORERP.UI.SysConfig
                         }
                         else if (PayeeInfo.Employee_ID.HasValue && PayeeInfo.Employee_ID.Value > 0)
                         {
-                            var Employee = RUINORERP.Business.Cache.EntityCacheHelper.GetEntity<tb_Employee>(PayeeInfo.Employee_ID);
+                            var Employee = _cacheManager.GetEntity<tb_Employee>(PayeeInfo.Employee_ID);
                             if (Employee != null)
                             {
                                 shortName = Employee.Employee_Name;

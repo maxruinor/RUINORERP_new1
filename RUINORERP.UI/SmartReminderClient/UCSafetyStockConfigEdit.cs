@@ -86,7 +86,7 @@ namespace RUINORERP.UI.SmartReminderClient
             entity,
             e => e.LocationIds,
             clbLocation_IDs,
-           RUINORERP.Business.Cache.EntityCacheHelper.GetEntityList<tb_Location>(),
+           _cacheManager.GetEntityList<tb_Location>(),
             u => u.Location_ID,
             u => u.Name
             );

@@ -500,9 +500,7 @@ namespace RUINORERP.UI
 
 
                     IEntityCacheManager entityCacheManager = Startup.GetFromFac<IEntityCacheManager>();
-                    // 在应用程序启动时设置当前实体映射服务
-                    // 这通常在依赖注入容器配置完成后调用
-                    EntityCacheHelper.SetCurrent(entityCacheManager);
+                    // 验证EntityCacheManager是否正确注册
                     
                     // 验证TableSchemaManager是否正确注册为单例
                     try

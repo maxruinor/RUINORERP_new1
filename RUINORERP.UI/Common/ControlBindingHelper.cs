@@ -57,6 +57,12 @@ namespace RUINORERP.UI.Common
 {
     public static class ControlBindingHelper
     {
+
+        // 在类开始处添加：
+        private static IEntityCacheManager _cacheManager;
+        private static IEntityCacheManager CacheManager => _cacheManager ?? (_cacheManager = Startup.GetFromFac<IEntityCacheManager>());
+
+       
         /// <summary>
         /// 使用表达式树绑定文本框数据并设置标签查询功能
         /// </summary>
@@ -498,7 +504,7 @@ namespace RUINORERP.UI.Common
                 if (queryFilter.FilterLimitExpressions.Count == 0)
                 {
                     // 使用静态缓存管理器方法获取实体列表
-                    var cacheList = EntityCacheHelper.GetEntityListByTableName(entityType.Name);
+                    var cacheList = CacheManager.GetEntityListByTableName(entityType.Name);
                     if (cacheList != null && cacheList.Count > 0)
                     {
                         entityList = cacheList;

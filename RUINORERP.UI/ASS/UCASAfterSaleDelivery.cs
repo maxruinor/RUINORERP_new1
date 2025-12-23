@@ -278,16 +278,11 @@ namespace RUINORERP.UI.ASS
                     }
                 }
 
-                ////数据状态变化会影响按钮变化
-                //if (s2.PropertyName == entity.GetPropertyName<tb_AS_AfterSaleDelivery>(c => c.DataStatus))
-                //{
-                //    ToolBarEnabledControl(entity);
-                //}
 
                 //如果客户有变化，带出对应有业务员
                 if (entity.CustomerVendor_ID > 0 && s2.PropertyName == entity.GetPropertyName<tb_AS_AfterSaleDelivery>(c => c.CustomerVendor_ID))
                 {
-                    var obj = RUINORERP.Business.Cache.EntityCacheHelper.GetEntity<tb_CustomerVendor>(entity.CustomerVendor_ID);
+                    var obj = _cacheManager.GetEntity<tb_CustomerVendor>(entity.CustomerVendor_ID);
                     if (obj != null && obj.ToString() != "System.Object")
                     {
                         if (obj is tb_CustomerVendor cv)
@@ -657,7 +652,7 @@ namespace RUINORERP.UI.ASS
             {
                 return false;
             }
-         
+
             CommonUI.frmOpinion frm = new CommonUI.frmOpinion();
             string PKCol = BaseUIHelper.GetEntityPrimaryKey<tb_AS_AfterSaleDelivery>();
             long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
@@ -715,7 +710,7 @@ namespace RUINORERP.UI.ASS
             {
                 return false;
             }
-          
+
             CommonUI.frmOpinion frm = new CommonUI.frmOpinion();
             string PKCol = BaseUIHelper.GetEntityPrimaryKey<tb_AS_AfterSaleDelivery>();
             long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
@@ -768,7 +763,7 @@ namespace RUINORERP.UI.ASS
         }
 
 
-        private async  Task AfterSaleDelivery(long? ASApplyID)
+        private async Task AfterSaleDelivery(long? ASApplyID)
         {
             //要加一个判断 值是否有变化
             //新增时才可以

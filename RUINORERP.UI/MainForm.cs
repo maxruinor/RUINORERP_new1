@@ -1141,7 +1141,7 @@ namespace RUINORERP.UI
                 {
                     tb_MenuInfoController<tb_MenuInfo> menuInfoController = Startup.GetFromFac<tb_MenuInfoController<tb_MenuInfo>>();
                     List<tb_MenuInfo> menuList = await menuInfoController.QueryAsync();
-                    //var rslist = RUINORERP.Business.Cache.EntityCacheHelper.CacheEntityList.Get(nameof(tb_MenuInfo));
+                    //var rslist = _cacheManager.CacheEntityList.Get(nameof(tb_MenuInfo));
                     //if (rslist != null)
                     //{
                     MainForm.Instance.AppContext.UserMenuList = menuList;
@@ -2281,7 +2281,7 @@ namespace RUINORERP.UI
 
         private async Task InitCacheConfig(bool LoadData)
         {
-            // RUINORERP.Business.Cache.EntityCacheHelper.InitCacheDict(LoadData); // 已废弃，使用CacheInitializationService替代
+            // _cacheManager.InitCacheDict(LoadData); // 已废弃，使用CacheInitializationService替代
             await Task.Delay(5);
         }
 

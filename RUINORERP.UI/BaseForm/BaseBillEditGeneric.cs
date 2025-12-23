@@ -123,6 +123,9 @@ namespace RUINORERP.UI.BaseForm
     // ==============================================================================
     public partial class BaseBillEditGeneric<T, C> : BaseBillEdit, IContextMenuInfoAuth, IToolStripMenuInfoAuth where T : BaseEntity, new() where C : class, new()
     {
+
+      
+
         public virtual List<UControls.ContextMenuController> AddContextMenu()
         {
             List<UControls.ContextMenuController> list = new List<UControls.ContextMenuController>();

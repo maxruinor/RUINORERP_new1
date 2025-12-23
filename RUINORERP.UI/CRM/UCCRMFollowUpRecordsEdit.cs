@@ -134,7 +134,7 @@ namespace RUINORERP.UI.CRM
                 //引入相关数据
                 if ((record.ActionStatus == ActionStatus.新增 || record.ActionStatus == ActionStatus.修改) && record.PlanID.HasValue && record.PlanID.Value > 0 && s2.PropertyName == entity.GetPropertyName<tb_CRM_FollowUpRecords>(c => c.PlanID))
                 {
-                    var obj = RUINORERP.Business.Cache.EntityCacheHelper.GetEntity<tb_CRM_FollowUpPlans>(record.PlanID);
+                    var obj = _cacheManager.GetEntity<tb_CRM_FollowUpPlans>(record.PlanID);
                     if (obj != null && obj.ToString() != "System.Object")
                     {
                         if (obj is tb_CRM_FollowUpPlans cv)

@@ -61,7 +61,7 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
 
-            Cache.EntityCacheHelper.UpdateEntityList<tb_BOM_SDetail>(list);
+            _cacheManager.UpdateEntityList<tb_BOM_SDetail>(list);
             return list;
         }
 

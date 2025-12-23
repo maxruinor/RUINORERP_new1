@@ -2651,7 +2651,9 @@ namespace RUINORERP.UI.SysConfig
             return id;
         }
 
-
+        // 在类开始处添加：
+        private static IEntityCacheManager _cacheManager;
+        private static IEntityCacheManager CacheManager => _cacheManager ?? (_cacheManager = Startup.GetFromFac<IEntityCacheManager>());
         protected async virtual Task<List<long>> BatchDelete<T>(BindingSource bindingSourceList, bool UseSelectedColumn) where T : class
         {
             List<long> ids = new List<long>();
@@ -2712,7 +2714,7 @@ namespace RUINORERP.UI.SysConfig
                     //提示服务器开启推送工作流
                     //OriginalData beatDataDel = ClientDataBuilder.BaseInfoChangeBuilder(typeof(T).Name);
                     //MainForm.Instance.ecs.AddSendData(beatDataDel);
-                    EntityCacheHelper.DeleteEntity(typeof(T).Name, PKValue.ToLong());
+                    CacheManager.DeleteEntity(typeof(T).Name, PKValue.ToLong());
 
                 }
 

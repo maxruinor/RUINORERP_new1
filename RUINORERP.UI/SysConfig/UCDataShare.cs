@@ -297,13 +297,15 @@ namespace RUINORERP.UI.SysConfig
             }
 
         }
-
+        // 在类开始处添加：
+        private static IEntityCacheManager _cacheManager;
+        private static IEntityCacheManager CacheManager => _cacheManager ?? (_cacheManager = Startup.GetFromFac<IEntityCacheManager>());
         private void 清空选中缓存ToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (listBoxTableList.SelectedItem is SuperValue kv)
             {
                 string tableName = kv.superDataTypeName;
-                EntityCacheHelper.DeleteEntityList(tableName);
+                CacheManager.DeleteEntityList(tableName);
             }
         }
 

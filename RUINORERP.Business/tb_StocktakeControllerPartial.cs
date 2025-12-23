@@ -78,7 +78,7 @@ namespace RUINORERP.Business
 
                             if (view_Prod == null)
                             {
-                                view_Prod = Cache.EntityCacheHelper.GetEntity<View_ProdDetail>(child.ProdDetailID);
+                                view_Prod = _cacheManager.GetEntity<View_ProdDetail>(child.ProdDetailID);
                             }
                             _unitOfWorkManage.RollbackTran();
                             rmrs.ErrorMsg = $"{view_Prod.SKU}=> {view_Prod.CNName}\r\n当前盘点产品在当前仓库中，无库存数据。请使用【期初盘点】方式盘点。";

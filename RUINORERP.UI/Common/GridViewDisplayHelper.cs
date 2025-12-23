@@ -71,8 +71,38 @@ namespace RUINORERP.UI.Common
     /// </summary>
     public class GridViewDisplayHelper
     {
-        // 用于存储固定字典值的映射
-        //private Dictionary<string, List<KeyValuePair<object, string>>> FixedDictionaryMappings { get; set; } = new Dictionary<string, List<KeyValuePair<object, string>>>();
+
+        public GridViewDisplayHelper()
+        {
+            // 使用依赖注入容器获取IEntityCacheManager实例
+            _cacheManager = Startup.GetFromFac<IEntityCacheManager>();
+        }
+
+        // 添加支持DI注入的构造函数
+        public GridViewDisplayHelper(IEntityCacheManager cacheManager)
+        {
+            _cacheManager = cacheManager;
+        }
+
+        // 改为私有字段，并添加null检查的属性访问器
+        private IEntityCacheManager _cacheManager;
+
+        /// <summary>
+        /// 获取缓存管理器实例，确保不为null
+        /// </summary>
+        protected IEntityCacheManager CacheManager
+        {
+            get
+            {
+                // 如果_cacheManager为null，尝试从DI容器获取
+                if (_cacheManager == null)
+                {
+                    _cacheManager = Startup.GetFromFac<IEntityCacheManager>();
+                }
+                return _cacheManager;
+            }
+        }
+
         public HashSet<FixedDictionaryMapping> FixedDictionaryMappings { get; set; } = new HashSet<FixedDictionaryMapping>();
 
         /// <summary>
@@ -98,6 +128,11 @@ namespace RUINORERP.UI.Common
         /// 用于存储外键表的列表信息
         /// </summary>
         public ConcurrentDictionary<string, List<KeyValuePair<string, string>>> ReferenceTableList { get; set; } = new ConcurrentDictionary<string, List<KeyValuePair<string, string>>>();
+
+
+
+
+        // 已在构造函数区域声明，此处删除重复声明
 
         /// <summary>
         /// 指定枚举类型
@@ -303,7 +338,7 @@ namespace RUINORERP.UI.Common
                             ReferenceKeyMapping mapping = new ReferenceKeyMapping(fkrattr.FKTableName, fkrattr.FK_IDColName, tableName);
 
                             // 使用依赖注入的缓存管理器
-                            var schemaInfo =  Startup.GetFromFac<ITableSchemaManager>().GetSchemaInfo(mapping.ReferenceTableName);
+                            var schemaInfo = Startup.GetFromFac<ITableSchemaManager>().GetSchemaInfo(mapping.ReferenceTableName);
                             if (schemaInfo != null)
                             {
                                 //要显示的默认值是从缓存表中获取的字段名，默认是主键ID字段对应的名称
@@ -414,7 +449,7 @@ namespace RUINORERP.UI.Common
                     }
                     string SourceTableName = typeof(tb_Employee).Name;
                     // 使用静态缓存管理器方法获取显示值
-                    object objText = EntityCacheHelper.GetDisplayValue(SourceTableName, IdValue);
+                    object objText = CacheManager?.GetDisplayValue(SourceTableName, IdValue);
 
                     if (objText != null && objText.ToString() != "System.Object")
                     {
@@ -431,7 +466,7 @@ namespace RUINORERP.UI.Common
                         if (!string.IsNullOrEmpty(mapping.CustomDisplayColumnName))
                         {
                             // 使用静态缓存管理器方法获取显示值
-                            object displayObj = EntityCacheHelper.GetEntity(mapping.ReferenceTableName, IdValue);
+                            object displayObj = CacheManager?.GetEntity(mapping.ReferenceTableName, IdValue);
                             if (displayObj != null && displayObj.GetPropertyValue(mapping.CustomDisplayColumnName) != null)
                             {
                                 return displayObj.GetPropertyValue(mapping.CustomDisplayColumnName).ToString();
@@ -440,7 +475,7 @@ namespace RUINORERP.UI.Common
                         else
                         {
                             // 使用静态缓存管理器方法获取显示值
-                            object displayValue = EntityCacheHelper.GetDisplayValue(mapping.ReferenceTableName, IdValue);
+                            object displayValue = CacheManager?.GetDisplayValue(mapping.ReferenceTableName, IdValue);
                             if (displayValue != null)
                             {
                                 return displayValue.ToString();
@@ -453,9 +488,9 @@ namespace RUINORERP.UI.Common
                 {
                     #region 没有映射的情况
                     // 使用静态缓存管理器方法获取显示值
-                    var schemaInfo =  Startup.GetFromFac<ITableSchemaManager>().GetSchemaInfo(TargetTableName);
+                    var schemaInfo = Startup.GetFromFac<ITableSchemaManager>().GetSchemaInfo(TargetTableName);
                     // 先尝试直接从目标表获取
-                    object nameValue = EntityCacheHelper.GetDisplayValue(TargetTableName, IdValue);
+                    object nameValue = CacheManager?.GetDisplayValue(TargetTableName, IdValue);
                     if (nameValue != null && !string.IsNullOrWhiteSpace(nameValue.ToString()))
                     {
                         return nameValue.ToString();

@@ -10,6 +10,7 @@ using RUINORERP.Model;
 using FluentValidation.Results;
 
 using RUINORERP.Model.Context;
+using RUINORERP.Business.Cache;
 
 namespace RUINORERP.Business.LogicaService
 {
@@ -20,10 +21,14 @@ namespace RUINORERP.Business.LogicaService
         private readonly ILogger<UnitController> _logger;
         public Itb_UnitServices _Itb_UnitServices { get; set; }
         private readonly ApplicationContext _appContext;
-        public UnitController(ILogger<UnitController> logger, Itb_UnitServices Itb_UnitServices, IUnitOfWorkManage unitOfWorkManage, ApplicationContext appContext)
+        private readonly IEntityCacheManager _entityCacheManager;
+        public UnitController(ILogger<UnitController> logger, Itb_UnitServices Itb_UnitServices,
+            IEntityCacheManager entityCacheManager,
+            IUnitOfWorkManage unitOfWorkManage, ApplicationContext appContext)
         {
             _logger = logger;
             _unitOfWorkManage = unitOfWorkManage;
+            _entityCacheManager = entityCacheManager;
             _Itb_UnitServices = Itb_UnitServices;
             _appContext = appContext;
         }
@@ -44,8 +49,8 @@ namespace RUINORERP.Business.LogicaService
         {
             tb_Unit unit = await _Itb_UnitServices.AddReEntityAsync(entity);
             //string key = "tb_Unit:Unit_ID:" + entity.Unit_ID.ToString();
-            //Extensions.Middlewares.Cache.EntityCacheHelper.Cache.Add(key, entity.UnitName);
-            Cache.EntityCacheHelper.UpdateEntity<tb_Unit>(entity);
+            //Extensions.Middlewares._cacheManager.Cache.Add(key, entity.UnitName);
+            _entityCacheManager.UpdateEntity<tb_Unit>(entity);
             return unit;
         }
 
@@ -60,7 +65,7 @@ namespace RUINORERP.Business.LogicaService
             bool rs = await _Itb_UnitServices.Update(entity);
             if (rs)
             {
-                Cache.EntityCacheHelper.UpdateEntity<tb_Unit>(entity);
+                _entityCacheManager.UpdateEntity<tb_Unit>(entity);
             }
             return rs;
         }
@@ -70,7 +75,7 @@ namespace RUINORERP.Business.LogicaService
             bool rs = await _Itb_UnitServices.Delete(entity);
             if (rs)
             {
-                Cache.EntityCacheHelper.DeleteEntity<tb_Unit>(entity);
+                _entityCacheManager.DeleteEntity<tb_Unit>(entity);
             }
             return rs;
         }

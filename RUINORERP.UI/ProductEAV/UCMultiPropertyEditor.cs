@@ -1,44 +1,44 @@
+using AutoUpdateTools;
+using FastReport.DevComponents.DotNetBar.Controls;
+using Force.DeepCloner;
+using Krypton.Navigator;
+using Krypton.Workspace;
+using MathNet.Numerics.LinearAlgebra.Factorization;
+using Netron.GraphLib;
+using ObjectsComparer;
+using RUINOR.WinFormsUI;
+using RUINOR.WinFormsUI.TileListView;
 using RUINORERP.Business;
+using RUINORERP.Business.Cache;
+using RUINORERP.Business.CommService;
+using RUINORERP.Common.CollectionExtension;
+using RUINORERP.Common.Extensions;
+using RUINORERP.Common.Helper;
+using RUINORERP.Global;
 using RUINORERP.Model;
+using RUINORERP.Model.Dto;
+using RUINORERP.UI.BaseForm;
+using RUINORERP.UI.Common;
+using RUINORERP.UI.Network.Services;
+using RUINORERP.UI.UCSourceGrid;
 using SqlSugar;
+using SqlSugar.SplitTableExtensions;
 using System;
+using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using RUINORERP.Common.CollectionExtension;
-using RUINORERP.UI.Common;
-using System.Collections.Concurrent;
-using RUINORERP.UI.UCSourceGrid;
-using RUINORERP.Model.Dto;
-using RUINORERP.UI.BaseForm;
-using Netron.GraphLib;
-using RUINORERP.Global;
-using MathNet.Numerics.LinearAlgebra.Factorization;
-using RUINORERP.Common.Extensions;
-using FastReport.DevComponents.DotNetBar.Controls;
-using RUINOR.WinFormsUI.TileListView;
-using RUINOR.WinFormsUI;
-using System.Security.Cryptography;
 using static OfficeOpenXml.ExcelErrorValue;
-using SqlSugar.SplitTableExtensions;
-using System.Diagnostics;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
-using Krypton.Workspace;
-using Krypton.Navigator;
-using RUINORERP.Common.Helper;
-using ObjectsComparer;
-using System.Collections;
-using Force.DeepCloner;
-using AutoUpdateTools;
-using RUINORERP.Business.CommService;
-
-using RUINORERP.UI.Network.Services;
 
 namespace RUINORERP.UI.ProductEAV
 {
@@ -1078,7 +1078,9 @@ namespace RUINORERP.UI.ProductEAV
                 }
             }
         }
-
+        // 在类开始处添加：
+        private static IEntityCacheManager _cacheManager;
+        private static IEntityCacheManager CacheManager => _cacheManager ?? (_cacheManager = Startup.GetFromFac<IEntityCacheManager>());
 
         /// <summary>
         /// 加载树形控件中的节点
@@ -1098,7 +1100,7 @@ namespace RUINORERP.UI.ProductEAV
                 List<tb_Prod_Attr_Relation> ProdAttrRelations = item.tb_Prod_Attr_Relations
                     .OrderBy(p => p.Property_ID).ToList();
                 View_ProdDetail viewProdDetail = null;
-                viewProdDetail = RUINORERP.Business.Cache.EntityCacheHelper.GetEntity<View_ProdDetail>(item.ProdDetailID);
+                viewProdDetail = _cacheManager.GetEntity<View_ProdDetail>(item.ProdDetailID);
                 if (viewProdDetail == null)
                 {
                     //根据产品明细ID查询View_ProdDetail视图

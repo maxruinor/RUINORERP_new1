@@ -317,7 +317,9 @@ namespace RUINORERP.UI.SysConfig
                 item.Checked = !item.Checked;
             }
         }
-
+        // 在类开始处添加：
+        private static IEntityCacheManager _cacheManager;
+        private static IEntityCacheManager CacheManager => _cacheManager ?? (_cacheManager = Startup.GetFromFac<IEntityCacheManager>());
         private void dataGridViewInv_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
         {
             DataGridView dataGridView = sender as DataGridView;
@@ -336,7 +338,7 @@ namespace RUINORERP.UI.SysConfig
 
             // 获取列名
             string columnName = dataGridView.Columns[e.ColumnIndex].Name;
-            object obj = EntityCacheHelper.GetEntity<View_ProdDetail>(e.Value);
+            object obj = CacheManager.GetEntity<View_ProdDetail>(e.Value);
             if (obj != null && obj.GetType().Name != "Object" && obj is View_ProdDetail prodDetail)
             {
                 e.Value = prodDetail.SKU + " " + prodDetail.CNName + prodDetail.prop + prodDetail.Specifications;
@@ -360,7 +362,7 @@ namespace RUINORERP.UI.SysConfig
                 ProdDetailID = inventory.ProdDetailID.Value;
                 child = inventory;
 
-                object obj = EntityCacheHelper.GetEntity<View_ProdDetail>(ProdDetailID);
+                object obj = CacheManager.GetEntity<View_ProdDetail>(ProdDetailID);
                 if (obj != null && obj.GetType().Name != "Object" && obj is View_ProdDetail _prodDetail)
                 {
                     prodDetail = _prodDetail;

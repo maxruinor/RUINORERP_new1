@@ -272,7 +272,7 @@ namespace RUINORERP.Business
                         if (!_appContext.SysConfig.CheckNegativeInventory && (group.Inventory.Quantity - group.Qty) < 0)
                         {
                             _unitOfWorkManage.RollbackTran();
-                            var detail = RUINORERP.Business.Cache.EntityCacheHelper.GetEntity<View_ProdDetail>(group.Inventory.ProdDetailID);
+                            var detail = _cacheManager.GetEntity<View_ProdDetail>(group.Inventory.ProdDetailID);
                             if (detail != null)
                             {
                                // group.Inventory.tb_proddetail = detail;

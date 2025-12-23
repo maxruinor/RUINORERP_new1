@@ -1,17 +1,18 @@
-using RUINORERP.Model;
-using RUINORERP.Business.Document;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using System;
-using System.Linq;
-using RUINORERP.Global;
 using AutoMapper;
+using CacheManager.Core;
 using Microsoft.Extensions.Logging;
-using RUINORERP.Business.CommService;
-using RUINORERP.Business.Cache;
 using RUINORERP.Business.AutoMapper;
+using RUINORERP.Business.Cache;
+using RUINORERP.Business.CommService;
+using RUINORERP.Business.Document;
+using RUINORERP.Global;
 using RUINORERP.IServices;
+using RUINORERP.Model;
 using RUINORERP.Model.Context;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace RUINORERP.Business.Document.Converters
 {
@@ -26,7 +27,7 @@ namespace RUINORERP.Business.Document.Converters
         private readonly ILogger<SaleOutToSaleOutReConverter> _logger;
         private readonly IBizCodeGenerateService _bizCodeService;
         private readonly ApplicationContext _appContext;
-
+        private readonly IEntityCacheManager _cacheManager;
         /// <summary>
         /// 构造函数 - 依赖注入
         /// </summary>
@@ -38,9 +39,11 @@ namespace RUINORERP.Business.Document.Converters
             ILogger<SaleOutToSaleOutReConverter> logger,
             IMapper mapper,
             IBizCodeGenerateService bizCodeService,
+            IEntityCacheManager entityCacheManager,
             ApplicationContext appContext)
             : base(logger)
         {
+            _cacheManager = entityCacheManager;
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             _bizCodeService = bizCodeService ?? throw new ArgumentNullException(nameof(bizCodeService));
             _appContext = appContext ?? throw new ArgumentNullException(nameof(appContext));
@@ -235,7 +238,7 @@ namespace RUINORERP.Business.Document.Converters
         {
             try
             {
-                var prodDetail = Cache.EntityCacheHelper.GetEntity<View_ProdDetail>(detail.ProdDetailID);
+                var prodDetail = _cacheManager.GetEntity<View_ProdDetail>(detail.ProdDetailID);
                 if (prodDetail != null && prodDetail is View_ProdDetail viewProd)
                 {
                     detail.Cost = viewProd.Inv_Cost ?? 0m;
@@ -255,7 +258,7 @@ namespace RUINORERP.Business.Document.Converters
         /// </summary>
         private void AddQuantityWarning(List<string> tipsMsg, tb_SaleOut source, tb_SaleOutDetail outDetail, tb_SaleOutReDetail detail)
         {
-            var prodInfo = Cache.EntityCacheHelper.GetEntity<View_ProdInfo>(detail.ProdDetailID);
+            var prodInfo = _cacheManager.GetEntity<View_ProdInfo>(detail.ProdDetailID);
             if (prodInfo != null)
             {
                 tipsMsg.Add($"销售出库单{source.SaleOutNo}，{prodInfo.CNName + prodInfo.Specifications}已退回数为{outDetail.TotalReturnedQty}，可退库数为{detail.Quantity}，当前行数据忽略！");

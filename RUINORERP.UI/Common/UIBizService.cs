@@ -52,6 +52,25 @@ namespace RUINORERP.UI.Common
 {
     public static class UIBizService
     {
+        /// <summary>
+        /// 缓存管理器实例
+        /// </summary>
+        private static IEntityCacheManager _cacheManager;
+
+        /// <summary>
+        /// 获取缓存管理器实例
+        /// </summary>
+        private static IEntityCacheManager CacheManager
+        {
+            get
+            {
+                if (_cacheManager == null)
+                {
+                    _cacheManager = Startup.GetFromFac<IEntityCacheManager>();
+                }
+                return _cacheManager;
+            }
+        }
         #region 录入数据预设模板
 
         /// <summary>
@@ -381,7 +400,7 @@ namespace RUINORERP.UI.Common
                 // 快速检查本地缓存
                 if (!forceRefresh && IsCacheableTable(tableName))
                 {
-                    var localCache = EntityCacheHelper.GetEntityList<object>(tableName);
+                    var localCache = CacheManager.GetEntityList<object>(tableName);
                     if (localCache != null && localCache.Count > 0)
                     {
                         return true; // 本地有数据，立即返回成功
@@ -1175,7 +1194,7 @@ namespace RUINORERP.UI.Common
         }
 
 
-
+        //
         public static T GetProdDetail<T>(long ProdDetailID) where T : class
         {
             string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
@@ -1191,7 +1210,7 @@ namespace RUINORERP.UI.Common
                 if (schemaInfo != null)
                 {
                     // 直接使用CacheManager的GetEntity方法，内部已实现单例模式
-                    object obj = EntityCacheHelper.GetEntity<T>(ProdDetailID);
+                    object obj = CacheManager.GetEntity<T>(ProdDetailID);
                     if (obj != null && obj.GetType().Name != "Object" && obj is T)
                     {
                         prodDetail = obj as T;
@@ -1246,7 +1265,7 @@ namespace RUINORERP.UI.Common
             List<View_ProdDetail> list = new List<View_ProdDetail>();
 
             // 直接使用CacheManager的GetEntityList方法，内部已实现单例模式
-            list = EntityCacheHelper.GetEntityList<View_ProdDetail>();
+            list = CacheManager.GetEntityList<View_ProdDetail>();
 
             foreach (var item in list)
             {
@@ -1270,7 +1289,7 @@ namespace RUINORERP.UI.Common
                 ////根据要缓存的列表集合来判断是否需要上传到服务器。让服务器分发到其他客户端
                 //KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
                 ////只处理需要缓存的表
-                //if (RUINORERP.Business.Cache.EntityCacheHelper.NewTableList.TryGetValue(typeof(tb_CRM_Collaborator).Name, out pair))
+                //if (_cacheManager.NewTableList.TryGetValue(typeof(tb_CRM_Collaborator).Name, out pair))
                 //{
                 //    //如果有更新变动就上传到服务器再分发到所有客户端
                 //    OriginalData odforCache = ActionForClient.更新缓存<tb_CRM_Collaborator>(result.ReturnObject);
@@ -1510,7 +1529,7 @@ namespace RUINORERP.UI.Common
                 {
                     var logger = Startup.GetFromFac<ILogger<BackgroundCacheManager>>();
                     var cacheClient = Startup.GetFromFac<CacheClientService>();
-                    _backgroundCacheManager = new BackgroundCacheManager(logger, cacheClient);
+                    _backgroundCacheManager = new BackgroundCacheManager(logger, cacheClient, CacheManager);
                 }
                 return _backgroundCacheManager;
             }
@@ -1617,7 +1636,7 @@ namespace RUINORERP.UI.Common
                 {
                     // 立即返回，不等待结果，避免UI线程阻塞
                     _ = BackgroundCacheManager.AddHighPriorityTaskAsync(tableName, type, forceRefresh, timeoutMs);
-                    
+
                     // 记录后台任务已启动
                     MainForm.Instance.logger.LogDebug($"缓存请求已添加到后台任务队列: {tableName}");
                     return;
@@ -1632,7 +1651,7 @@ namespace RUINORERP.UI.Common
             // 快速检查本地缓存，如果已有数据且不需要强制刷新，直接返回
             if (!forceRefresh && IsCacheableTable(tableName))
             {
-                var localCache = EntityCacheHelper.GetEntityListByTableName(tableName);
+                var localCache = CacheManager.GetEntityListByTableName(tableName);
                 if (localCache != null && localCache.Count > 0)
                 {
                     MainForm.Instance.logger.LogDebug($"本地缓存数据可用，跳过网络请求: {tableName}");
@@ -1644,7 +1663,7 @@ namespace RUINORERP.UI.Common
             using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             timeoutCts.CancelAfter(Math.Min(timeoutMs, 800)); // UI场景下最大800ms超时
             var combinedToken = timeoutCts.Token;
-            
+
             CacheClientService cacheClient = Startup.GetFromFac<CacheClientService>();
             // 获取表结构管理器实例
             var tableSchemaManager = Startup.GetFromFac<ITableSchemaManager>();
@@ -1655,7 +1674,7 @@ namespace RUINORERP.UI.Common
                 if (tableSchemaManager.ContainsTable(tableName) && IsCacheableTable(tableName))
                 {
                     // 快速检查，避免重复请求
-                    var entityList = EntityCacheHelper.GetEntityList<object>(tableName);
+                    var entityList = CacheManager.GetEntityList<object>(tableName);
                     if (forceRefresh || entityList == null || entityList.Count == 0)
                     {
                         await cacheClient.RequestCacheAsync(tableName, combinedToken);
@@ -1664,7 +1683,7 @@ namespace RUINORERP.UI.Common
 
                 // 关联表处理 - 限制处理数量，避免UI等待
                 var relatedTables = new List<string>();
-                
+
                 // 处理关联表 - 优先使用实体类型的FKRelations属性（如果提供了类型）
                 if (type != null && typeof(BaseEntity).IsAssignableFrom(type))
                 {
@@ -1673,7 +1692,7 @@ namespace RUINORERP.UI.Common
                         // 创建实体实例来获取FKRelations
                         BaseEntity entityInstance = (BaseEntity)Activator.CreateInstance(type);
                         var fkRelations = entityInstance.FKRelations;
-                        
+
                         // 限制关联表数量，避免UI卡顿
                         foreach (var relation in fkRelations.Take(3))
                         {
@@ -1709,12 +1728,12 @@ namespace RUINORERP.UI.Common
                 foreach (var relatedTable in relatedTables)
                 {
                     // 快速检查本地缓存
-                    var relatedCache = EntityCacheHelper.GetEntityListByTableName(relatedTable);
+                    var relatedCache = CacheManager.GetEntityListByTableName(relatedTable);
                     if (relatedCache == null || relatedCache.Count == 0)
                     {
                         relatedTasks.Add(cacheClient.RequestCacheAsync(relatedTable, combinedToken));
                     }
-                    
+
                     // 限制并发请求数量
                     if (relatedTasks.Count >= 2)
                     {
@@ -1727,7 +1746,7 @@ namespace RUINORERP.UI.Common
                 {
                     using var relatedCts = CancellationTokenSource.CreateLinkedTokenSource(combinedToken);
                     relatedCts.CancelAfter(400); // 关联表最大400ms超时
-                    
+
                     try
                     {
                         await Task.WhenAll(relatedTasks);
@@ -1748,7 +1767,7 @@ namespace RUINORERP.UI.Common
             {
                 // 超时 - 这是预期内的，UI场景下很常见
                 MainForm.Instance.logger.LogDebug($"缓存请求超时({timeoutMs}ms)，将在后台继续: {tableName}");
-                
+
                 // 确保后台任务继续处理
                 if (useBackground)
                 {
@@ -1769,7 +1788,7 @@ namespace RUINORERP.UI.Common
             {
                 // 其他异常 - 记录日志但不影响UI
                 MainForm.Instance.logger.LogWarning(ex, $"缓存请求失败，将在后台重试: {tableName}");
-                
+
                 // 后台重试
                 if (useBackground)
                 {

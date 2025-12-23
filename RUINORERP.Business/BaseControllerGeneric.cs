@@ -54,6 +54,7 @@ namespace RUINORERP.Business
         public ApplicationContext _appContext;
         public ITableSchemaManager _tableSchemaManager;
         public IUnifiedStateManager StateManager;
+        public IEntityCacheManager _cacheManager;
         /// <summary>
         /// 本为私有修改为公有，暴露出来方便使用
         /// </summary>

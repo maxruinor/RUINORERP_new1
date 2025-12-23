@@ -61,7 +61,7 @@ namespace RUINORERP.UI.BI
                 BusinessHelper.Instance.EditEntity(entity);
             }
 
-            UserInfos = RUINORERP.Business.Cache.EntityCacheHelper.GetEntityList<tb_UserInfo>();
+            UserInfos = _cacheManager.GetEntityList<tb_UserInfo>();
 
             DataBindingHelper.BindData4TextBox<tb_ReminderRule>(entity, t => t.RuleName, txtRuleName, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4CmbByEnum<tb_ReminderRule, RuleEngineType>(entity, k => k.RuleEngineType, cmbRuleEngineType, false);

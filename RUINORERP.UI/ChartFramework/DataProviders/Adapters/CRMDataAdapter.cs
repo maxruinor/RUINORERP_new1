@@ -2,6 +2,7 @@ using Castle.Core.Resource;
 using NPOI.SS.UserModel.Charts;
 using Org.BouncyCastle.Asn1.Cms;
 using Org.BouncyCastle.Asn1.Crmf;
+using RUINORERP.Business.Cache;
 using RUINORERP.Business.CommService;
 using RUINORERP.Business.Security;
 using RUINORERP.Common.Extensions;
@@ -494,7 +495,9 @@ namespace RUINORERP.UI.ChartFramework.DataProviders.Adapters
             };
         }
 
-
+        // 在类开始处添加：
+        private static IEntityCacheManager _cacheManager;
+        private static IEntityCacheManager CacheManager => _cacheManager ?? (_cacheManager = Startup.GetFromFac<IEntityCacheManager>());
 
         private ChartData TransformToChartDataSet(List<dynamic> data, DataRequest request)
         {
@@ -522,7 +525,7 @@ namespace RUINORERP.UI.ChartFramework.DataProviders.Adapters
                 foreach (var group in seriesGroups)
                 {
                     string seriesName = group.Key.ToString();
-                    tb_Employee Employee = RUINORERP.Business.Cache.EntityCacheHelper.GetEntity<tb_Employee>(seriesName.ToLong());
+                    tb_Employee Employee = CacheManager. GetEntity<tb_Employee>(seriesName.ToLong());
                     if (Employee != null)
                     {
                         seriesName = Employee.Employee_Name;

@@ -91,7 +91,6 @@
   <ItemGroup>
     <Compile Include="Cache\CacheChangedEventArgs.cs" />
     <Compile Include="Cache\CacheSyncMetadataManager.cs" />
-    <Compile Include="Cache\EntityCacheHelper.cs" />
     <Compile Include="Cache\EventDrivenCacheManager.cs" />
     <Compile Include="Cache\CacheSubscriptionManager.cs" />
     <Compile Include="Cache\EntityCacheInitializationService.cs" />

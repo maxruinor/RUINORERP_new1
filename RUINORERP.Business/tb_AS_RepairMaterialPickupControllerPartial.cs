@@ -79,7 +79,7 @@ namespace RUINORERP.Business
                     }
                     else
                     {
-                        var detail = RUINORERP.Business.Cache.EntityCacheHelper.GetEntity<View_ProdDetail>(item.ProdDetailID);
+                        var detail = _cacheManager.GetEntity<View_ProdDetail>(item.ProdDetailID);
                         if (detail != null)
                         {
                            // item.tb_proddetail = detail;

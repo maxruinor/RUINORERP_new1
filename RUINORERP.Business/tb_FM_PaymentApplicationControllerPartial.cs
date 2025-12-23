@@ -116,7 +116,7 @@ namespace RUINORERP.Business
                 //rrs.Succeeded = true;
                 return true;
                 ////生成时暂时只考虑了一个主键的情况
-                // Cache.EntityCacheHelper.DeleteEntityList<tb_FM_PaymentApplication>(entity);
+                // _cacheManager.DeleteEntityList<tb_FM_PaymentApplication>(entity);
             }
             return false;
         }

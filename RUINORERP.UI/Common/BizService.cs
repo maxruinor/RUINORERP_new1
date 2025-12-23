@@ -12,6 +12,11 @@ namespace RUINORERP.UI.Common
 {
     public static class BizService
     {
+
+        // 在类开始处添加：
+        private static IEntityCacheManager _cacheManager;
+        private static IEntityCacheManager CacheManager => _cacheManager ?? (_cacheManager = Startup.GetFromFac<IEntityCacheManager>());
+
         /// <summary>
         /// 获取对应的汇率，无结果返回null
         /// </summary>
@@ -45,7 +50,7 @@ namespace RUINORERP.UI.Common
             List<tb_CurrencyExchangeRate> rates = new List<tb_CurrencyExchangeRate>();
 
             // 使用静态缓存管理器方法获取实体列表
-            var rslist = EntityCacheHelper.GetEntityList<tb_CurrencyExchangeRate>();
+            var rslist = CacheManager.GetEntityList<tb_CurrencyExchangeRate>();
             if (rslist == null || rslist.Count == 0)
             {
                 rslist = MainForm.Instance.AppContext.Db.CopyNew().Queryable<tb_CurrencyExchangeRate>().ToList();

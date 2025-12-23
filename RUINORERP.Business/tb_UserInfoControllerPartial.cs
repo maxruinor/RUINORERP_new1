@@ -55,7 +55,7 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
 
-            Cache.EntityCacheHelper.UpdateEntityList<tb_UserInfo>(list);
+            _cacheManager.UpdateEntityList<tb_UserInfo>(list);
             return list;
         }
 
@@ -91,7 +91,7 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
 
-            Cache.EntityCacheHelper.UpdateEntityList<tb_UserInfo>(list);
+            _cacheManager.UpdateEntityList<tb_UserInfo>(list);
             return list;
         }
 
@@ -166,10 +166,10 @@ namespace RUINORERP.Business
             }
             if (list != null)
             {
-                Cache.EntityCacheHelper.AddCacheEntityList<List<T>>(list);
+                _cacheManager.AddCacheEntityList<List<T>>(list);
                 foreach (var item in list)
                 {
-                    Cache.EntityCacheHelper.AddCacheEntity <<#= table.ClassName #>>(item);
+                    _cacheManager.AddCacheEntity <<#= table.ClassName #>>(item);
 
                 }
             }
@@ -192,7 +192,7 @@ namespace RUINORERP.Business
      if (rs)
      {
          //////生成时暂时只考虑了一个主键的情况
-         Cache.EntityCacheHelper.DeleteEntityList<T>(model);
+         _cacheManager.DeleteEntityList<T>(model);
      }
      return rs;
  }

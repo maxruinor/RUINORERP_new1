@@ -57,6 +57,10 @@ namespace RUINORERP.UI.Common
 {
     public class DataBindingHelper
     {
+        // 在类开始处添加：
+        private static IEntityCacheManager _cacheManager;
+        private static IEntityCacheManager CacheManager => _cacheManager ?? (_cacheManager = Startup.GetFromFac<IEntityCacheManager>());
+
         public static List<EnumItem> GetTimeSelectTypeItems(Type enumType)
         {
             var items = new List<EnumItem>();
@@ -355,7 +359,7 @@ namespace RUINORERP.UI.Common
                                             // 重新加载数据
                                             BindingSource NewBsList = new BindingSource();
                                             // 使用静态缓存管理器方法获取实体列表
-                                            var rslist = EntityCacheHelper.GetEntityListByTableName(targetEntity.Name);
+                                            var rslist = CacheManager.GetEntityListByTableName(targetEntity.Name);
 
                                             if (rslist != null && queryFilter.FilterLimitExpressions.Count == 0)
                                             {
@@ -746,7 +750,7 @@ namespace RUINORERP.UI.Common
                                             //var lastlist = ((IEnumerable<dynamic>)rslist).Select(item => Activator.CreateInstance(mytype)).ToList();
                                             //有缓存的情况
                                             // 使用静态缓存管理器方法获取实体列表
-                                            var rslist = EntityCacheHelper.GetEntityListByTableName(targetEntity.Name);
+                                            var rslist = CacheManager.GetEntityListByTableName(targetEntity.Name);
                                             //条件如果有限制了。就不能全部加载
                                             if (rslist != null && queryFilter.FilterLimitExpressions.Count == 0)
                                             {
@@ -2925,7 +2929,7 @@ namespace RUINORERP.UI.Common
             try
             {
                 // 优先从缓存获取数据
-                var EntityList = EntityCacheHelper.GetEntityList<T>(tableName);
+                var EntityList = CacheManager.GetEntityList<T>(tableName);
                 if (EntityList != null && EntityList.Any())
                 {
                     // 使用SafeFilterList处理闭包变量
@@ -2982,7 +2986,7 @@ namespace RUINORERP.UI.Common
                 // 发生异常时，尝试获取所有数据
                 try
                 {
-                    var EntityList = EntityCacheHelper.GetEntityList<T>(tableName);
+                    var EntityList = CacheManager.GetEntityList<T>(tableName);
                     if (EntityList != null && EntityList.Any())
                     {
                         InsertSelectItem<T>(key, value, EntityList);
@@ -3049,7 +3053,7 @@ namespace RUINORERP.UI.Common
                 var evaluationFunction = ExpressionSafeHelper.GetEvaluationFunction(expression);
                 
                 // 获取所有数据并在内存中筛选
-                var EntityList = EntityCacheHelper.GetEntityList<T>(tableName);
+                var EntityList = CacheManager.GetEntityList<T>(tableName);
                 if (EntityList != null && EntityList.Any())
                 {
                     var filteredList = EntityList.Where(evaluationFunction).ToList();
@@ -3074,7 +3078,7 @@ namespace RUINORERP.UI.Common
                 // 发生异常时，尝试使用基本方法获取数据
                 try
                 {
-                    var EntityList = EntityCacheHelper.GetEntityList<T>(tableName);
+                    var EntityList = CacheManager.GetEntityList<T>(tableName);
                     if (EntityList != null && EntityList.Any())
                     {
                         BindingSource bs = new BindingSource { DataSource = EntityList };
@@ -3111,7 +3115,7 @@ namespace RUINORERP.UI.Common
             // 初始化筛选后的列表
             List<T> filteredList = new List<T>();
             // 优先从缓存获取数据
-            var EntityList = EntityCacheHelper.GetEntityList<T>(tableName);
+            var EntityList = CacheManager.GetEntityList<T>(tableName);
             if (EntityList != null && EntityList.Any())
             {
                 // 使用完全避免编译的筛选方法

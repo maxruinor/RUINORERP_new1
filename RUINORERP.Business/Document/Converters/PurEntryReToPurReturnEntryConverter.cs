@@ -32,7 +32,7 @@ namespace RUINORERP.Business.Document.Converters
         private readonly ILogger<PurEntryReToPurReturnEntryConverter> _logger;
         private readonly IBizCodeGenerateService _bizCodeService;
         private readonly ApplicationContext _appContext;
-
+        private readonly IEntityCacheManager _cacheManager;
         /// <summary>
         /// 初始化采购退货单到采购退货入库单转换器
         /// </summary>
@@ -44,8 +44,10 @@ namespace RUINORERP.Business.Document.Converters
             IMapper mapper,
             ILogger<PurEntryReToPurReturnEntryConverter> logger,
             IBizCodeGenerateService bizCodeService,
+            IEntityCacheManager cacheManager,
             ApplicationContext appContext) : base(logger)
         {
+            _cacheManager= cacheManager ?? throw new ArgumentNullException(nameof(cacheManager));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _bizCodeService = bizCodeService ?? throw new ArgumentNullException(nameof(bizCodeService));
@@ -238,7 +240,7 @@ namespace RUINORERP.Business.Document.Converters
         {
             try
             {
-                var prodDetail = Cache.EntityCacheHelper.GetEntity<View_ProdDetail>(detail.ProdDetailID);
+                var prodDetail = _cacheManager.GetEntity<View_ProdDetail>(detail.ProdDetailID);
                 if (prodDetail != null && prodDetail is View_ProdDetail viewProd)
                 {
                     detail.UnitPrice = viewProd.Inv_Cost ?? 0m;
@@ -256,7 +258,7 @@ namespace RUINORERP.Business.Document.Converters
         /// </summary>
         private void AddQuantityWarning(List<string> tipsMsg, tb_PurEntryRe source, tb_PurEntryReDetail reDetail, tb_PurReturnEntryDetail detail)
         {
-            var prodInfo = Cache.EntityCacheHelper.GetEntity<View_ProdInfo>(detail.ProdDetailID);
+            var prodInfo = _cacheManager.GetEntity<View_ProdInfo>(detail.ProdDetailID);
             if (prodInfo != null)
             {
                 tipsMsg.Add($"采购退货单{source.PurEntryReNo}，{prodInfo.CNName + prodInfo.Specifications}已交回数为{reDetail.DeliveredQuantity}，可入库数为{detail.Quantity}，当前行数据忽略！");

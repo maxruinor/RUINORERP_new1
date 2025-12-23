@@ -5,6 +5,7 @@ using RUINORERP.Model;
 using RUINORERP.Model.Base;
 using Microsoft.Extensions.Logging;
 using System.ComponentModel;
+using RUINORERP.Business.Cache;
 
 namespace RUINORERP.Business.Document
 {
@@ -18,11 +19,12 @@ namespace RUINORERP.Business.Document
         where TSource : BaseEntity
         where TTarget : BaseEntity, new()
     {
+
+        
         /// <summary>
         /// 日志记录器
         /// </summary>
         protected readonly ILogger _logger;
-
         /// <summary>
         /// 构造函数
         /// </summary>

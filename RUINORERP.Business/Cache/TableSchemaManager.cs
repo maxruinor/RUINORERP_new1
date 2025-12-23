@@ -286,16 +286,16 @@ namespace RUINORERP.Business.Cache
                 return null;
             }
             
-            // 添加调试信息，跟踪查询过程
-            System.Diagnostics.Debug.WriteLine($"[TableSchemaManager] GetEntityType查询: 表名={tableName}, 实例ID={GetHashCode()}");
-            System.Diagnostics.Debug.WriteLine($"[TableSchemaManager] _tableNameToType字典键数量: {_tableNameToType.Count}");
-            if (_tableNameToType.Count > 0)
-            {
-                System.Diagnostics.Debug.WriteLine($"[TableSchemaManager] 字典中的键: {string.Join(", ", _tableNameToType.Keys.Take(10))}");
-            }
+            //// 添加调试信息，跟踪查询过程
+            //System.Diagnostics.Debug.WriteLine($"[TableSchemaManager] GetEntityType查询: 表名={tableName}, 实例ID={GetHashCode()}");
+            //System.Diagnostics.Debug.WriteLine($"[TableSchemaManager] _tableNameToType字典键数量: {_tableNameToType.Count}");
+            //if (_tableNameToType.Count > 0)
+            //{
+            //    //System.Diagnostics.Debug.WriteLine($"[TableSchemaManager] 字典中的键: {string.Join(", ", _tableNameToType.Keys.Take(10))}");
+            //}
 
             _tableNameToType.TryGetValue(tableName, out var entityType);
-            System.Diagnostics.Debug.WriteLine($"[TableSchemaManager] 查询结果: {(entityType != null ? entityType.Name : "null")}");
+            //System.Diagnostics.Debug.WriteLine($"[TableSchemaManager] 查询结果: {(entityType != null ? entityType.Name : "null")}");
             return entityType;
         }
 

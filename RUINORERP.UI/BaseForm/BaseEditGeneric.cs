@@ -29,6 +29,7 @@ using Control = System.Windows.Forms.Control;
 using Netron.GraphLib;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.Global;
+using RUINORERP.Business.Cache;
 
 
 namespace RUINORERP.UI.BaseForm
@@ -37,8 +38,11 @@ namespace RUINORERP.UI.BaseForm
     public partial class BaseEditGeneric<T> : KryptonForm where T : class
     {
 
-        public BaseEditGeneric()
+            protected readonly IEntityCacheManager _cacheManager;
+
+        public BaseEditGeneric(IEntityCacheManager cacheManager = null)
         {
+            _cacheManager = cacheManager;
             InitializeComponent();
             //this.KeyPreview = true;
             //this.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.BaseEdit_KeyPress);
@@ -250,7 +254,7 @@ namespace RUINORERP.UI.BaseForm
                         object obj = ucBaseList.Tag;
                         //从缓存中重新加载 
                         BindingSource NewBsList = new BindingSource();
-                        var cachelist = RUINORERP.Business.Cache.EntityCacheHelper.GetEntityListByTableName(fktableName);
+                        var cachelist = _cacheManager?.GetEntityListByTableName(fktableName);
                         if (cachelist != null)
                         {
                             // 获取原始 List<T> 的类型参数

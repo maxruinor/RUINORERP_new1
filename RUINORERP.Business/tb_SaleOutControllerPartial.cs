@@ -96,7 +96,7 @@ namespace RUINORERP.Business
                             //这时有一种情况就是订单时没有成本。没有产品。出库前有类似采购入库确定的成本
                             if (details[i].Cost == 0)
                             {
-                                View_ProdDetail obj = Cache.EntityCacheHelper.GetEntity<View_ProdDetail>(details[i].ProdDetailID);
+                                View_ProdDetail obj = _cacheManager.GetEntity<View_ProdDetail>(details[i].ProdDetailID);
                                 if (obj != null && obj.GetType().Name != "Object" && obj is View_ProdDetail prodDetail)
                                 {
                                     if (obj.Inv_Cost != null)
@@ -130,7 +130,7 @@ namespace RUINORERP.Business
                             //这时有一种情况就是订单时没有成本。没有产品。出库前有类似采购入库确定的成本
                             if (details[i].Cost == 0)
                             {
-                                View_ProdDetail obj = Cache.EntityCacheHelper.GetEntity<View_ProdDetail>(details[i].ProdDetailID);
+                                View_ProdDetail obj = _cacheManager.GetEntity<View_ProdDetail>(details[i].ProdDetailID);
                                 if (obj != null && obj.GetType().Name != "Object" && obj is View_ProdDetail prodDetail)
                                 {
                                     if (obj.Inv_Cost == null)
@@ -490,7 +490,7 @@ namespace RUINORERP.Business
                                 string LocationName = group.Inventory.tb_location?.Name;
                                 if (group.Inventory.tb_location == null)
                                 {
-                                    var loc = Business.Cache.EntityCacheHelper.GetEntity<tb_Location>(group.Inventory.Location_ID);
+                                    var loc = _cacheManager.GetEntity<tb_Location>(group.Inventory.Location_ID);
                                     if (loc != null)
                                     {
                                         LocationName = loc.Name;
@@ -1307,7 +1307,7 @@ namespace RUINORERP.Business
                         //这时有一种情况就是订单时没有成本。没有产品。出库前有类似采购入库确定的成本
                         if (details[i].Cost == 0)
                         {
-                            View_ProdDetail obj = Cache.EntityCacheHelper.GetEntity<View_ProdDetail>(details[i].ProdDetailID);
+                            View_ProdDetail obj = _cacheManager.GetEntity<View_ProdDetail>(details[i].ProdDetailID);
                             if (obj != null && obj.GetType().Name != "Object" && obj is View_ProdDetail prodDetail)
                             {
                                 if (obj.Inv_Cost != null)
@@ -1325,7 +1325,7 @@ namespace RUINORERP.Business
                         }
                         else
                         {
-                            var prodInfo = Cache.EntityCacheHelper.GetEntity<View_ProdInfo>(details[i].ProdDetailID);
+                            var prodInfo = _cacheManager.GetEntity<View_ProdInfo>(details[i].ProdDetailID);
                             if (prodInfo != null)
                             {
                                 tipsMsg.Add($"销售出库单{saleout.SaleOutNo}，{prodInfo.CNName + prodInfo.Specifications}已退回数为{item.TotalReturnedQty}，可退库数为{details[i].Quantity}，当前行数据忽略！");
@@ -1349,7 +1349,7 @@ namespace RUINORERP.Business
                         //这时有一种情况就是订单时没有成本。没有产品。出库前有类似采购入库确定的成本
                         if (details[i].Cost == 0)
                         {
-                            View_ProdDetail obj = Cache.EntityCacheHelper.GetEntity<View_ProdDetail>(details[i].ProdDetailID);
+                            View_ProdDetail obj = _cacheManager.GetEntity<View_ProdDetail>(details[i].ProdDetailID);
                             if (obj != null && obj.GetType().Name != "Object" && obj is View_ProdDetail prodDetail)
                             {
                                 if (obj.Inv_Cost == null)

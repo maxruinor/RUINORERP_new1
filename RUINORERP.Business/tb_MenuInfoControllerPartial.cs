@@ -155,7 +155,7 @@ namespace RUINORERP.Business
             if (rs)
             {
                 //////生成时暂时只考虑了一个主键的情况
-                Cache.EntityCacheHelper.DeleteEntity<tb_MenuInfo>(model);
+                _cacheManager.DeleteEntity<tb_MenuInfo>(model);
             }
             return rs;
         }

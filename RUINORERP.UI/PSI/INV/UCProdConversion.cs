@@ -450,7 +450,7 @@ namespace RUINORERP.UI.PSI.INV
                         for (global::System.Int32 r = 0; r < zeroDetails.Count; r++)
                         {
                             var zeroDetail = zeroDetails[r];
-                            var prod = RUINORERP.Business.Cache.EntityCacheHelper.GetEntity<View_ProdDetail>(zeroDetail.ProdDetailID_from);
+                            var prod = _cacheManager.GetEntity<View_ProdDetail>(zeroDetail.ProdDetailID_from);
                             if (prod != null && prod.Inv_Cost.HasValue)
                             {
                                 zeroDetail.TargetInitCost = prod.Inv_Cost.Value;

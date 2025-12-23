@@ -23,6 +23,7 @@ namespace RUINORERP.UI.Common
         private readonly SemaphoreSlim _semaphore;
         private readonly CancellationTokenSource _cancellationTokenSource;
         private readonly ConcurrentDictionary<string, TaskCompletionSource<bool>> _loadingTasks;
+        private readonly IEntityCacheManager _entityCacheManager;
         private Task _backgroundWorker;
         private volatile bool _disposed = false;
 
@@ -36,17 +37,18 @@ namespace RUINORERP.UI.Common
         /// </summary>
         /// <param name="logger">日志记录器</param>
         /// <param name="cacheClient">缓存客户端服务</param>
-        public BackgroundCacheManager(ILogger<BackgroundCacheManager> logger, CacheClientService cacheClient)
+        public BackgroundCacheManager(ILogger<BackgroundCacheManager> logger, CacheClientService cacheClient, IEntityCacheManager entityCacheManager)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _cacheClient = cacheClient ?? throw new ArgumentNullException(nameof(cacheClient));
             _semaphore = new SemaphoreSlim(MaxConcurrentRequests, MaxConcurrentRequests);
             _cancellationTokenSource = new CancellationTokenSource();
+            _entityCacheManager = entityCacheManager ?? throw new ArgumentNullException(nameof(entityCacheManager));
             _loadingTasks = new ConcurrentDictionary<string, TaskCompletionSource<bool>>();
 
             // 启动后台工作线程
             _backgroundWorker = Task.Run(() => BackgroundWorkerAsync(_cancellationTokenSource.Token));
-            
+
             _logger.LogDebug("后台缓存管理器已初始化");
         }
 
@@ -148,7 +150,7 @@ namespace RUINORERP.UI.Common
                     return false;
                 }
             }
-            
+
             // 如果没有正在加载的任务，检查缓存是否已存在
             return IsCacheLoaded(tableName);
         }
@@ -170,7 +172,7 @@ namespace RUINORERP.UI.Common
 
             // 检查是否已在加载中
             var existingTask = _loadingTasks.GetOrAdd(tableName, _ => new TaskCompletionSource<bool>());
-            
+
             // 如果不是强制刷新且缓存已存在，直接返回成功
             if (!forceRefresh && IsCacheLoaded(tableName))
             {
@@ -199,7 +201,7 @@ namespace RUINORERP.UI.Common
                 while (!cancellationToken.IsCancellationRequested && !_disposed)
                 {
                     await Task.Delay(TimeSpan.FromSeconds(10), cancellationToken);
-                    
+
                     // 定期清理已完成的任务引用
                     CleanupCompletedTasks();
                 }
@@ -233,7 +235,7 @@ namespace RUINORERP.UI.Common
             }
 
             int retryCount = 0;
-            
+
             while (retryCount <= MaxRetries && !_disposed)
             {
                 try
@@ -259,7 +261,7 @@ namespace RUINORERP.UI.Common
 
                         // 调用缓存服务加载
                         await _cacheClient.RequestCacheAsync(tableName, _cancellationTokenSource.Token);
-                        
+
                         // 异步处理关联表（不阻塞主流程）
                         if (entityType != null && typeof(BaseEntity).IsAssignableFrom(entityType))
                         {
@@ -285,14 +287,14 @@ namespace RUINORERP.UI.Common
                 {
                     retryCount++;
                     _logger.LogWarning(ex, "缓存 {TableName} 加载失败，第 {RetryCount} 次重试", tableName, retryCount);
-                    
+
                     if (retryCount > MaxRetries)
                     {
                         _logger.LogError(ex, "缓存 {TableName} 加载失败，已达到最大重试次数", tableName);
                         completionSource.TrySetResult(false);
                         return;
                     }
-                    
+
                     // 简单的重试延迟
                     await Task.Delay(TimeSpan.FromSeconds(2 * retryCount), _cancellationTokenSource.Token);
                 }
@@ -364,7 +366,7 @@ namespace RUINORERP.UI.Common
         {
             try
             {
-                var entityList = EntityCacheHelper.GetEntityListByTableName(tableName);
+                var entityList = _entityCacheManager.GetEntityListByTableName(tableName);
                 return entityList != null && entityList.Count > 0;
             }
             catch

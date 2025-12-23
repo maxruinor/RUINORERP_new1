@@ -1713,7 +1713,6 @@
     </Compile>
     <Compile Include="Common\BizService.cs" />
     <Compile Include="Common\GridViewDisplayHelper.cs" />
-    <Compile Include="Common\GridViewDisplayNameResolver.cs" />
     <Compile Include="Common\GridViewDisplayTextResolverGeneric.cs" />
     <Compile Include="Common\GridViewDisplayTextResolver.cs" />
     <Compile Include="Common\UICRMRegionHelper.cs" />

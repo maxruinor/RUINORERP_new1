@@ -593,7 +593,7 @@ namespace RUINORERP.UI.MRP.MP
                 var aa = details.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
                 if (NeedValidated && aa.Count > 0)
                 {
-                    var detail = Business.Cache.EntityCacheHelper.GetEntity<View_ProdDetail>(aa[0].ToLong());
+                    var detail =_cacheManager.GetEntity<View_ProdDetail>(aa[0].ToLong());
                     if (detail != null)
                     {
                         System.Windows.Forms.MessageBox.Show($"明细中，相同的产品{detail.SKU}不能多行录入,如有需要,请另建单据保存!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);

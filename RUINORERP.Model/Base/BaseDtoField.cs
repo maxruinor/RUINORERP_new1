@@ -8,8 +8,6 @@ using System.Threading.Tasks;
 
 namespace RUINORERP.Model.Base
 {
-
-
     /// <summary>
     /// 查询实体参数的字段域
     /// </summary>
@@ -17,11 +15,8 @@ namespace RUINORERP.Model.Base
     public class BaseDtoField
     {
         string colName;
-
-      
         string caption;
         string description;
-  
         string fKTableName;
         string fKPrimarykey;
         public SugarColumn SugarCol { get; set; } = new SugarColumn();

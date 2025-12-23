@@ -364,7 +364,8 @@ namespace RUINORERP.UI.UserCenter.DataParts
                         parameter.BillIds.Add(update.BillId);
                         parameter.IncludeBillIds = true;
                         UpdateNodeText(statusNode, parameter.BillIds.Count);
-                        _logger?.LogDebug($"单据{update.BillId}添加到节点: {statusNode.Text}");
+                       break;
+                        //_logger?.LogDebug($"单据{update.BillId}添加到节点: {statusNode.Text}");
                     }
                 }
             }
@@ -393,7 +394,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                     else
                     {
                         UpdateNodeText(statusNode, parameter.BillIds.Count);
-                        _logger?.LogDebug($"单据{billId}从节点{statusNode.Text}中移除");
+                       break;
                     }
                 }
             }

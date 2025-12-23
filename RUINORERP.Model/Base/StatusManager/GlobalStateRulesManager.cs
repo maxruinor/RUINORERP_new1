@@ -1242,5 +1242,200 @@ namespace RUINORERP.Model.Base.StatusManager
         }
 
         #endregion
+
+        #region 状态操作映射方法
+
+        /// <summary>
+        /// 状态操作处理委托
+        /// 用于扩展自定义的操作处理逻辑
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        /// <param name="action">操作类型</param>
+        /// <returns>目标状态值</returns>
+        public delegate object StatusActionHandler(BaseEntity entity, MenuItemEnums action);
+
+        /// <summary>
+        /// 自定义操作处理器字典
+        /// Key: 状态类型 + 操作类型的组合
+        /// Value: 处理器委托
+        /// </summary>
+        private static readonly Dictionary<string, StatusActionHandler> _customHandlers =
+            new Dictionary<string, StatusActionHandler>();
+
+        /// <summary>
+        /// 线程同步锁
+        /// </summary>
+        private static readonly object _syncLock = new object();
+
+        /// <summary>
+        /// 将UI操作映射到具体的状态值
+        /// 基于实体类型和状态类型自动选择合适的目标状态
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        /// <param name="action">操作类型</param>
+        /// <returns>目标状态值</returns>
+        public static object MapActionToStatus(BaseEntity entity, MenuItemEnums action)
+        {
+            if (entity == null)
+                throw new ArgumentNullException(nameof(entity));
+
+            // 获取实体的状态类型
+            var stateManager = entity.StateManager;
+            if (stateManager == null)
+                throw new InvalidOperationException("无法获取状态管理器实例");
+
+            var statusType = stateManager.GetStatusType(entity);
+
+            // 获取当前状态
+            var currentStatus = entity.GetPropertyValue(statusType.Name);
+
+            // 尝试使用自定义处理器
+            var customKey = $"{statusType.FullName}_{action}";
+            lock (_syncLock)
+            {
+                if (_customHandlers.TryGetValue(customKey, out var handler))
+                {
+                    return handler(entity, action);
+                }
+            }
+
+            // 使用默认映射逻辑
+            return MapActionToStatusInternal(statusType, currentStatus, action);
+        }
+
+        /// <summary>
+        /// 获取操作的描述文本
+        /// </summary>
+        /// <param name="action">操作类型</param>
+        /// <returns>操作描述</returns>
+        public static string GetActionDescription(MenuItemEnums action)
+        {
+            if (action == MenuItemEnums.提交) return "提交单据";
+            if (action == MenuItemEnums.审核) return "审核单据";
+            if (action == MenuItemEnums.反审) return "反审单据";
+            if (action == MenuItemEnums.结案) return "结案单据";
+            if (action == MenuItemEnums.反结案) return "反结案单据";
+            if (action == MenuItemEnums.保存) return "保存单据";
+            return "未知操作";
+        }
+
+        /// <summary>
+        /// 注册自定义的操作处理器
+        /// 允许业务模块自定义特定状态类型的操作处理逻辑
+        /// </summary>
+        /// <param name="statusType">状态类型</param>
+        /// <param name="action">操作类型</param>
+        /// <param name="handler">处理器委托</param>
+        public static void RegisterCustomHandler(Type statusType, MenuItemEnums action, StatusActionHandler handler)
+        {
+            if (statusType == null)
+                throw new ArgumentNullException(nameof(statusType));
+
+            if (handler == null)
+                throw new ArgumentNullException(nameof(handler));
+
+            var key = $"{statusType.FullName}_{action}";
+            lock (_syncLock)
+            {
+                _customHandlers[key] = handler;
+            }
+        }
+
+        /// <summary>
+        /// 移除自定义的操作处理器
+        /// </summary>
+        /// <param name="statusType">状态类型</param>
+        /// <param name="action">操作类型</param>
+        public static void UnregisterCustomHandler(Type statusType, MenuItemEnums action)
+        {
+            if (statusType == null)
+                throw new ArgumentNullException(nameof(statusType));
+
+            var key = $"{statusType.FullName}_{action}";
+            lock (_syncLock)
+            {
+                _customHandlers.Remove(key);
+            }
+        }
+
+        /// <summary>
+        /// 清空所有自定义处理器
+        /// 仅用于测试场景，请谨慎使用
+        /// </summary>
+        public static void ClearCustomHandlers()
+        {
+            lock (_syncLock)
+            {
+                _customHandlers.Clear();
+            }
+        }
+
+        /// <summary>
+        /// 内部状态映射逻辑
+        /// 根据状态类型和操作类型返回目标状态值
+        /// </summary>
+        /// <param name="statusType">状态类型</param>
+        /// <param name="currentStatus">当前状态值</param>
+        /// <param name="action">操作类型</param>
+        /// <returns>目标状态值</returns>
+        private static object MapActionToStatusInternal(Type statusType, object currentStatus, MenuItemEnums action)
+        {
+            // 如果是DataStatus类型，直接映射
+            if (statusType == typeof(DataStatus))
+            {
+                if (action == MenuItemEnums.提交) return DataStatus.新建;
+                if (action == MenuItemEnums.审核) return DataStatus.确认;
+                if (action == MenuItemEnums.反审) return DataStatus.新建;
+                if (action == MenuItemEnums.结案) return DataStatus.完结;
+                if (action == MenuItemEnums.反结案) return DataStatus.新建;
+                if (action == MenuItemEnums.保存) return DataStatus.草稿;
+                return currentStatus;
+            }
+            
+            // 如果是PrePaymentStatus类型，映射对应的状态
+            if (statusType == typeof(PrePaymentStatus))
+            {
+                if (action == MenuItemEnums.提交) return PrePaymentStatus.待审核;
+                if (action == MenuItemEnums.审核) return PrePaymentStatus.已生效;
+                if (action == MenuItemEnums.反审) return PrePaymentStatus.待审核;
+                if (action == MenuItemEnums.结案) return PrePaymentStatus.已结案;
+                return currentStatus;
+            }
+            
+            // 如果是ARAPStatus类型，映射对应的状态
+            if (statusType == typeof(ARAPStatus))
+            {
+                if (action == MenuItemEnums.提交) return ARAPStatus.待审核;
+                if (action == MenuItemEnums.审核) return ARAPStatus.待支付;
+                if (action == MenuItemEnums.反审) return ARAPStatus.待审核;
+                return currentStatus;
+            }
+            
+            // 如果是PaymentStatus类型，映射对应的状态
+            if (statusType == typeof(PaymentStatus))
+            {
+                if (action == MenuItemEnums.提交) return PaymentStatus.待审核;
+                if (action == MenuItemEnums.审核) return PaymentStatus.已支付;
+                if (action == MenuItemEnums.反审) return PaymentStatus.待审核;
+                return currentStatus;
+            }
+            
+            // 如果是StatementStatus类型，映射对应的状态
+            if (statusType == typeof(StatementStatus))
+            {
+                if (action == MenuItemEnums.提交) return StatementStatus.新建;
+                if (action == MenuItemEnums.审核) return StatementStatus.确认;
+                if (action == MenuItemEnums.反审) return StatementStatus.新建;
+                if (action == MenuItemEnums.结案) return StatementStatus.全部结清;
+                if (action == MenuItemEnums.反结案) return StatementStatus.新建;
+                return currentStatus;
+            }
+
+            // 其他业务状态类型的处理（需要子类或配置来指定）
+            // 这里返回当前状态，实际使用时应该由业务模块进行自定义处理
+            return currentStatus;
+        }
+
+        #endregion
     }
 }

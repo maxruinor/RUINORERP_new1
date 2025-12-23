@@ -638,7 +638,7 @@ namespace RUINORERP.Model.Base.StatusManager
                 var currentStatus = GetBusinessStatus(entity, statusType);
                 
                 // 获取目标状态值
-                var targetStatus = StatusActionMapper.MapActionToStatus(entity, action);
+                var targetStatus = GlobalStateRulesManager.MapActionToStatus(entity, action);
                 if (targetStatus == null)
                     return Task.FromResult(StateTransitionResult.Denied($"无法映射操作类型 '{action}' 到状态值"));
 
@@ -652,7 +652,7 @@ namespace RUINORERP.Model.Base.StatusManager
                     return Task.FromResult(validationResult);
 
                 // 更新状态
-                var actionDesc = StatusActionMapper.GetActionDescription(action);
+                var actionDesc = GlobalStateRulesManager.GetActionDescription(action);
                 var finalReason = reason ?? actionDesc;
 
                 var result = UpdateBusinessStatus(entity, statusType, targetStatus, finalReason, userId);
@@ -689,7 +689,7 @@ namespace RUINORERP.Model.Base.StatusManager
             var currentStatus = GetBusinessStatus(entity, statusType);
             
             // 获取目标状态
-            var targetStatus = StatusActionMapper.MapActionToStatus(entity, action);
+            var targetStatus = GlobalStateRulesManager.MapActionToStatus(entity, action);
             if (targetStatus == null)
                 return (false, $"无法映射操作类型 '{action}' 到状态值");
             
@@ -724,7 +724,7 @@ namespace RUINORERP.Model.Base.StatusManager
             var currentStatus = GetBusinessStatus(entity, statusType);
             
             // 获取目标状态
-            var targetStatus = StatusActionMapper.MapActionToStatus(entity, action);
+            var targetStatus = GlobalStateRulesManager.MapActionToStatus(entity, action);
             if (targetStatus == null)
                 return false;
             
@@ -771,10 +771,10 @@ namespace RUINORERP.Model.Base.StatusManager
                 // 获取当前状态
                 var currentStatus = GetBusinessStatus(entity, statusType);
                 
-                // 获取目标状态
-                var targetStatus = StatusActionMapper.MapActionToStatus(entity, action);
-                if (targetStatus == null)
-                    return Task.FromResult(StateTransitionResult.Denied($"无法映射操作类型 '{action}' 到状态值"));
+            // 获取目标状态
+            var targetStatus = GlobalStateRulesManager.MapActionToStatus(entity, action);
+            if (targetStatus == null)
+                return Task.FromResult(StateTransitionResult.Denied($"无法映射操作类型 '{action}' 到状态值"));
                 
                 // 验证状态转换
                 var result = ValidateBusinessStatusTransitionAsync(currentStatus as Enum, targetStatus as Enum);
@@ -1079,6 +1079,8 @@ namespace RUINORERP.Model.Base.StatusManager
  
 
         #endregion
+
+
 
         #region 释放资源
 

@@ -181,8 +181,16 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <returns>状态转换结果</returns>
         Task<StateTransitionResult> SetStatusByActionAsync(BaseEntity entity, MenuItemEnums action, string reason = null, string userId = null);
 
- 
+        /// <summary>
+        /// 通过UI操作类型验证实体状态转换是否合法
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        /// <param name="action">操作类型</param>
+        /// <returns>验证结果</returns>
+        Task<StateTransitionResult> ValidateActionTransitionAsync(BaseEntity entity, MenuItemEnums action);
 
  
     }
 }
+
+

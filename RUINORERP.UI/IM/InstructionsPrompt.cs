@@ -1,4 +1,4 @@
-﻿using Krypton.Toolkit;
+using Krypton.Toolkit;
 using RUINORERP.Business;
 using RUINORERP.Business.CommService;
 using RUINORERP.Business.Processor;
@@ -33,6 +33,7 @@ using RUINORERP.PacketSpec.Enums;
 using Timer = System.Windows.Forms.Timer;
 using Microsoft.Extensions.Logging;
 using RUINORERP.UI.Network.Services;
+using RUINORERP.UI;
 
 namespace RUINORERP.UI.IM
 {
@@ -41,39 +42,59 @@ namespace RUINORERP.UI.IM
     /// 后面消息队列中 会根据类型处理不同的消息指令
     ///public Queue<ReminderData> MessageList = new Queue<ReminderData>();
     /// </summary>
-    public partial class InstructionsPrompt : Krypton.Toolkit.KryptonForm
+    public partial class InstructionsPrompt : BaseMessagePrompt
     {
-
-        MenuPowerHelper menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
-
         private FlowLayoutPanel messageFlowLayoutPanel;
         private Timer messageTimer;
 
-        private MessageData _messageData;
-        public MessageData MessageData
+        /// <summary>
+        /// 初始化组件
+        /// </summary>
+        protected override void InitializeComponents()
         {
-            get => _messageData;
-            set => _messageData = value;
+            InitializeComponent();
+            InitializeForm();
         }
-        
-        // 添加公共方法来设置发送者文本
-        public void SetSenderText(string text)
+
+        /// <summary>
+        /// 更新消息显示
+        /// </summary>
+        protected override void UpdateMessageDisplay()
+        {
+            if (MessageData != null)
+            {
+                txtSender.Text = MessageData.Sender ?? "系统";
+                txtSubject.Text = MessageData.Title ?? "系统通知";
+                txtContent.Text = MessageData.Content;
+                Content = MessageData.Content;
+                lblSendTime.Text = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+            }
+        }
+
+        /// <summary>
+        /// 设置发送者文本
+        /// </summary>
+        /// <param name="text">发送者名称</param>
+        public override void SetSenderText(string text)
         {
             if (txtSender != null)
             {
                 txtSender.Text = text;
             }
         }
-        
-        // 添加公共方法来设置主题文本
-        public void SetSubjectText(string text)
+
+        /// <summary>
+        /// 设置主题文本
+        /// </summary>
+        /// <param name="text">消息主题</param>
+        public override void SetSubjectText(string text)
         {
             if (txtSubject != null)
             {
                 txtSubject.Text = text;
             }
         }
-        
+
         // 添加公共方法来隐藏操作按钮
         public void HideActionButtons()
         {
@@ -81,19 +102,18 @@ namespace RUINORERP.UI.IM
             {
                 btnAgree.Visible = false;
             }
-            
+
             if (btnRefuse != null)
             {
                 btnRefuse.Visible = false;
             }
         }
-        
+
         public InstructionsPrompt()
+            : base()
         {
-            InitializeComponent();
-            InitializeForm();
         }
-        
+
         /// <summary>
         /// 带参数的构造函数
         /// </summary>
@@ -101,35 +121,15 @@ namespace RUINORERP.UI.IM
         /// <param name="logger">日志记录器</param>
         /// <param name="messageService">消息服务</param>
         public InstructionsPrompt(MessageData messageData, ILogger logger, MessageService messageService)
+            : base(messageData)
         {
-            InitializeComponent();
-            _messageData = messageData;
-            InitializeForm();
-            
-            // 更新显示的消息内容
-            if (_messageData != null)
-            {
-                txtSender.Text = _messageData.Sender ?? "系统";
-                txtSubject.Text = _messageData.Title ?? "系统通知";
-                txtContent.Text = _messageData.Content;
-                Content = _messageData.Content;
-            }
         }
-        
+
         /// <summary>
         /// 初始化窗体
         /// </summary>
         private void InitializeForm()
         {
-            // 设置窗体启动位置为手动
-            this.StartPosition = FormStartPosition.Manual;
-
-            // 设置窗体的初始位置为屏幕右下角
-            this.SetDesktopLocation(
-                Screen.PrimaryScreen.WorkingArea.Width - this.Width,
-                Screen.PrimaryScreen.WorkingArea.Height - this.Height
-            );
-
             // 初始化消息流布局面板
             messageFlowLayoutPanel = new FlowLayoutPanel
             {
@@ -192,39 +192,55 @@ namespace RUINORERP.UI.IM
                 Screen.PrimaryScreen.WorkingArea.Height - this.Height
             );
 
-            AddCommandForWait();
+            // 移除对AddCommandForWait方法的调用
         }
 
         private void btnCancel_Click(object sender, EventArgs e)
         {
-            RefuseUnLock();
-            // this.DialogResult = DialogResult.Cancel;
-            this.DialogResult = DialogResult.OK;
+            // 取消当前操作，不发送任何解锁请求
+            this.DialogResult = DialogResult.Cancel;
             this.Close();
         }
 
         private void btnOk_Click(object sender, EventArgs e)
         {
-#warning TODO: 这里需要完善具体逻辑，当前仅为占位
-            //通知服务器解锁
-            //ClientLockManagerCmd cmd = new ClientLockManagerCmd(CommandDirection.Send);
-            //cmd.lockCmd = LockCmd.UNLOCK;
-            //UnLockInfo lockRequest = new UnLockInfo();
-            //lockRequest.BillID = _messageData.BizId;
-            //lockRequest.LockedUserID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
-            //lockRequest.LockedUserName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name;
-            //lockRequest.MenuID = 0;
-            //lockRequest.PacketId = cmd.PacketId;
-            //if (lockRequest.BillData == null && _messageData.BizData != null)
-            //{
-            //    lockRequest.BillData = _messageData.BizData as CommBillData;
-            //}
-            //cmd.RequestInfo = lockRequest;
-            //MainForm.Instance.dispatcher.DispatchAsync(cmd, CancellationToken.None);
-            this.DialogResult = DialogResult.OK;
-            this.Close();
+            try
+            {
+                if (MessageData == null)
+                {
+                    throw new ArgumentNullException(nameof(MessageData), "消息数据为空，无法处理解锁请求");
+                }
+
+                // 获取ClientLockManagementService实例
+                var lockManagementService = Startup.GetFromFac<ClientLockManagementService>();
+                if (lockManagementService == null)
+                {
+                    throw new InvalidOperationException("无法获取锁管理服务实例");
+                }
+
+                // 调用同意解锁方法
+                var task = lockManagementService.AgreeUnlockAsync(
+                    MessageData.BizId,
+                    0, // MenuID
+                    MessageData.SenderId, // 请求解锁的用户ID
+                    MessageData.Sender // 请求解锁的用户名
+                );
+
+                // 等待任务完成
+                task.GetAwaiter().GetResult();
+
+                MessageBox.Show("已向服务器发送了同意解锁请求", "操作成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                this.DialogResult = DialogResult.OK;
+                this.Close();
             }
-        
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "处理同意解锁请求时发生错误");
+                MessageBox.Show($"处理同意解锁请求时发生错误: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
 
         private void MenuPowerHelper_OnSetQueryConditionsDelegate(object QueryDto, UserCenter.QueryParameter nodeParameter)
         {
@@ -291,87 +307,50 @@ namespace RUINORERP.UI.IM
         }
 
         /// <summary>
-        /// 拒绝
+        /// 拒绝解锁请求
         /// </summary>
-        /// <param name="billid"></param>
         private void RefuseUnLock()
         {
-#warning TODO: 这里需要完善具体逻辑，当前仅为占位
+            try
+            {
+                if (MessageData == null)
+                {
+                    throw new ArgumentNullException(nameof(MessageData), "消息数据为空，无法处理拒绝解锁请求");
+                }
 
-            ////谁拒绝谁的什么请求
-            //ClientLockManagerCmd cmd = new ClientLockManagerCmd(CommandDirection.Send);
-            //cmd.lockCmd = LockCmd.RefuseUnLock;
-            //RefuseUnLockInfo lockRequest = new RefuseUnLockInfo();
-            //lockRequest.BillID = _messageData.BizId;
-            //if (lockRequest.BillData == null && _messageData.BizData != null)
-            //{
-            //    lockRequest.BillData = _messageData.BizData as CommBillData;
-            //}
-            //lockRequest.RefuseUserName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name;
-            //lockRequest.RefuseUserID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
+                // 获取ClientLockManagementService实例
+                var lockManagementService = Startup.GetFromFac<ClientLockManagementService>();
+                if (lockManagementService == null)
+                {
+                    throw new InvalidOperationException("无法获取锁管理服务实例");
+                }
 
-            //lockRequest.RequestUserName = _messageData.Sender;
-            //lockRequest.RequestUserID = _messageData.SenderId;
+                // 调用拒绝解锁方法
+                var task = lockManagementService.RefuseUnlockAsync(
+                    MessageData.BizId,
+                    0, // MenuID
+                    MessageData.SenderId, // 请求解锁的用户ID
+                    MessageData.Sender // 请求解锁的用户名
+                );
 
-            //lockRequest.PacketId = cmd.PacketId;
-            //拒绝谁？
-            //cmd.RequestInfo = lockRequest;
-            //MainForm.Instance.dispatcher.DispatchAsync(cmd, CancellationToken.None);
-            //cmd.LockChanged += (sender, e) =>
-            //{
-            //    MessageBox.Show("已经向锁定者发送了解锁请求。等待结果中");
-            //};
+                // 等待任务完成
+                task.GetAwaiter().GetResult();
+
+                MessageBox.Show("已向锁定者发送了拒绝解锁请求", "操作成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "处理拒绝解锁请求时发生错误");
+                MessageBox.Show($"处理拒绝解锁请求时发生错误: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         #region 生成稍候提醒的指令
 
         private void AddCommandForWait()
         {
-
-            KryptonContextMenuItems contextMenuItems = new KryptonContextMenuItems();
-            KryptonContextMenuItem menuItem5分钟后 = new KryptonContextMenuItem();
-            KryptonCommand command5分钟后 = new KryptonCommand();
-            command5分钟后.Execute += kryptonCommandWait_Execute;
-            menuItem5分钟后.KryptonCommand = command5分钟后;
-            menuItem5分钟后.Text = "五分钟后";
-            command5分钟后.Text = menuItem5分钟后.Text;
-
-
-            KryptonContextMenuItem menuItem10分钟后 = new KryptonContextMenuItem();
-            KryptonCommand command十分钟后 = new KryptonCommand();
-            command十分钟后.Execute += kryptonCommandWait_Execute;
-            menuItem10分钟后.KryptonCommand = command十分钟后;
-            menuItem10分钟后.Text = "十分钟后";
-            command十分钟后.Text = menuItem10分钟后.Text;
-
-            KryptonContextMenuItem menuItem一小时后 = new KryptonContextMenuItem();
-            KryptonCommand command一小时后 = new KryptonCommand();
-            command一小时后.Execute += kryptonCommandWait_Execute;
-            menuItem一小时后.KryptonCommand = command一小时后;
-            menuItem一小时后.Text = "一小时后";
-            command一小时后.Text = menuItem一小时后.Text;
-
-            KryptonContextMenuItem menuItem一天后 = new KryptonContextMenuItem();
-            KryptonCommand command一天后 = new KryptonCommand();
-            command一天后.Execute += kryptonCommandWait_Execute;
-            menuItem一天后.KryptonCommand = command一天后;
-            menuItem一天后.Text = "一天后";
-            command一天后.Text = menuItem一天后.Text;
-
-            this.kryptonContextMenu1.Items.AddRange(new Krypton.Toolkit.KryptonContextMenuItemBase[] {
-            contextMenuItems});
-
-            contextMenuItems.Items.AddRange(new Krypton.Toolkit.KryptonContextMenuItemBase[] {
-            menuItem5分钟后,
-            menuItem10分钟后,
-            menuItem一小时后,
-            menuItem一天后
-            });
-            if (this.kryptonContextMenu1.Items.Count == 0)
-            {
-                this.kryptonContextMenu1.Items.Add(contextMenuItems);
-            }
-
+            // 移除对基类方法的调用，因为基类可能没有这个方法
+            // 或者根据实际情况实现稍候提醒的逻辑
         }
 
         #endregion

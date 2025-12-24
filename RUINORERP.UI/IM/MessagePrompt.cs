@@ -380,51 +380,8 @@ namespace RUINORERP.UI.IM
 
         private void AddCommandForWait()
         {
-
-            KryptonContextMenuItems contextMenuItems = new KryptonContextMenuItems();
-            KryptonContextMenuItem menuItem5分钟后 = new KryptonContextMenuItem();
-            KryptonCommand command5分钟后 = new KryptonCommand();
-            command5分钟后.Execute += kryptonCommandWait_Execute;
-            menuItem5分钟后.KryptonCommand = command5分钟后;
-            menuItem5分钟后.Text = "五分钟后";
-            command5分钟后.Text = menuItem5分钟后.Text;
-
-
-            KryptonContextMenuItem menuItem10分钟后 = new KryptonContextMenuItem();
-            KryptonCommand command十分钟后 = new KryptonCommand();
-            command十分钟后.Execute += kryptonCommandWait_Execute;
-            menuItem10分钟后.KryptonCommand = command十分钟后;
-            menuItem10分钟后.Text = "十分钟后";
-            command十分钟后.Text = menuItem10分钟后.Text;
-
-            KryptonContextMenuItem menuItem一小时后 = new KryptonContextMenuItem();
-            KryptonCommand command一小时后 = new KryptonCommand();
-            command一小时后.Execute += kryptonCommandWait_Execute;
-            menuItem一小时后.KryptonCommand = command一小时后;
-            menuItem一小时后.Text = "一小时后";
-            command一小时后.Text = menuItem一小时后.Text;
-
-            KryptonContextMenuItem menuItem一天后 = new KryptonContextMenuItem();
-            KryptonCommand command一天后 = new KryptonCommand();
-            command一天后.Execute += kryptonCommandWait_Execute;
-            menuItem一天后.KryptonCommand = command一天后;
-            menuItem一天后.Text = "一天后";
-            command一天后.Text = menuItem一天后.Text;
-
-            this.kryptonContextMenu1.Items.AddRange(new Krypton.Toolkit.KryptonContextMenuItemBase[] {
-            contextMenuItems});
-
-            contextMenuItems.Items.AddRange(new Krypton.Toolkit.KryptonContextMenuItemBase[] {
-            menuItem5分钟后,
-            menuItem10分钟后,
-            menuItem一小时后,
-            menuItem一天后
-            });
-            if (this.kryptonContextMenu1.Items.Count == 0)
-            {
-                this.kryptonContextMenu1.Items.Add(contextMenuItems);
-            }
-
+            // 调用基类的通用方法
+            base.AddCommandForWait(this.kryptonContextMenu1);
         }
 
         #endregion

@@ -40,6 +40,7 @@ namespace RUINORERP.UI.IM
     {
         private readonly ILogger<EnhancedMessageManager> _logger;
         private readonly MessageService _messageService;
+        private MessagePersistenceManager _persistenceManager;
         private Timer _messageCheckTimer;
         private bool _disposed = false;
 
@@ -62,6 +63,9 @@ namespace RUINORERP.UI.IM
         {
             _logger = logger;
             _messageService = messageService;
+
+            // 初始化消息持久化管理器
+            _persistenceManager = new MessagePersistenceManager();
 
             // 初始化只读字段
             _messageCheckTimer = new Timer
@@ -280,7 +284,23 @@ namespace RUINORERP.UI.IM
         // 删除消息
         public void DeleteMessage(long id)
         {
-            // 目前MessageService不支持删除消息，我们只触发状态变更事件
+            // 使用持久化管理器删除消息
+            _persistenceManager.DeleteMessage(id);
+            
+            // 触发消息状态变更事件
+            OnMessageStatusChanged(null);
+        }
+        
+        /// <summary>
+        /// 批量删除消息
+        /// </summary>
+        /// <param name="messageIds">消息ID列表</param>
+        public void DeleteMessages(IEnumerable<long> messageIds)
+        {
+            // 使用持久化管理器删除消息
+            _persistenceManager.DeleteMessages(messageIds);
+            
+            // 触发消息状态变更事件
             OnMessageStatusChanged(null);
         }
 
@@ -527,71 +547,12 @@ namespace RUINORERP.UI.IM
         // 显示消息列表
         public void ShowMessageList()
         {
-            ShowEnhancedMessageList();
+            // 消息列表功能已优化，当前通过MessageListControl控件实现
+            // 此方法保留用于向后兼容
+            _logger?.LogInformation("ShowMessageList called, but this method has been deprecated. Use MessageListControl instead.");
         }
 
-        // 显示增强版消息列表
-        public void ShowEnhancedMessageList()
-        {
-            try
-            {
-                Form messageListForm = new Form
-                {
-                    Text = "消息中心",
-                    Size = new Size(1000, 700),
-                    StartPosition = FormStartPosition.CenterScreen,
-                    Icon = SystemIcons.Information
-                };
-
-                var messagesCopy = GetAllMessages().OrderByDescending(m => m.CreateTime).ToList();
-
-                ToolStrip toolStrip = new ToolStrip
-                {
-                    Dock = DockStyle.Top
-                };
-
-                DataGridView dataGridView = new DataGridView
-                {
-                    Dock = DockStyle.Fill,
-                    AutoGenerateColumns = false,
-                    AllowUserToAddRows = false,
-                    AllowUserToDeleteRows = false,
-                    ReadOnly = true,
-                    SelectionMode = DataGridViewSelectionMode.FullRowSelect,
-                    MultiSelect = true,
-                    AllowUserToResizeRows = false
-                };
-
-                // 添加按钮和列
-                AddToolStripButtons(toolStrip, dataGridView);
-                AddDataGridViewColumns(dataGridView);
-
-                // 设置数据源和样式
-                SetupDataGridViewDataSource(dataGridView, messagesCopy);
-                SetupDataGridViewStyles(dataGridView);
-
-                // 添加底部按钮
-                Panel buttonPanel = new Panel
-                {
-                    Dock = DockStyle.Bottom,
-                    Height = 50,
-                    BorderStyle = BorderStyle.FixedSingle
-                };
-                AddButtonPanelButtons(buttonPanel, dataGridView);
-
-                // 添加控件到窗体
-                messageListForm.Controls.Add(dataGridView);
-                messageListForm.Controls.Add(buttonPanel);
-                messageListForm.Controls.Add(toolStrip);
-
-                messageListForm.ShowDialog();
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "显示消息列表时发生错误");
-                MessageBox.Show("显示消息列表时发生错误: " + ex.Message, "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
+        // 显示消息列表功能已移除，使用更高效的消息管理方式
 
         // 添加工具栏按钮
         private void AddToolStripButtons(ToolStrip toolStrip, DataGridView dataGridView)

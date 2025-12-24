@@ -835,6 +835,10 @@ namespace RUINORERP.UI
         /// <param name="message">变更状态的消息</param>
         private void OnMessageStatusChanged(object sender, MessageData message)
         {
+            if (message==null)
+            {
+                return;
+            }
             // 在这里可以更新UI，例如状态栏的未读消息计数
             logger?.LogDebug($"消息状态已变更: {message.Id}, 已读: {message.IsRead}");
         }

@@ -7,6 +7,7 @@ using RUINORERP.Model.TransModel;
 using RUINORERP.UI.Common;
 using RUINORERP.UI.Network.Services;
 using System;
+using System.Drawing;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -119,7 +120,7 @@ namespace RUINORERP.UI.IM
             if (this.Visible)
             {
                 this.Focus();
-                this.FlashWindow();
+                this.BringToFront();
             }
             else
             {
@@ -129,15 +130,26 @@ namespace RUINORERP.UI.IM
         }
         
         /// <summary>
-        /// 闪烁窗口
-        /// 获取用户注意力
+        /// 设置统一的视觉样式
         /// </summary>
-        protected void FlashWindow()
+        protected void SetUnifiedVisualStyle()
         {
-            // 实现窗口闪烁逻辑
-            this.WindowState = FormWindowState.Minimized;
-            this.WindowState = FormWindowState.Normal;
+            // 设置基础样式
+            this.Font = new Font("微软雅黑", 9);
+            this.BackColor = Color.White;
+            this.FormBorderStyle = FormBorderStyle.FixedSingle;
+            this.MaximizeBox = false;
+            this.MinimizeBox = false;
+            this.StartPosition = FormStartPosition.Manual;
+            
+            // 设置窗口大小
+            this.ClientSize = new Size(400, 280);
+            
+            // 设置窗口标题
+            this.Text = "系统消息";
         }
+        
+
         
         /// <summary>
         /// 处理确认操作
@@ -183,6 +195,9 @@ namespace RUINORERP.UI.IM
             
             // 初始化组件
             InitializeComponents();
+            
+            // 设置统一的视觉样式
+            SetUnifiedVisualStyle();
         }
         
         /// <summary>
@@ -203,6 +218,103 @@ namespace RUINORERP.UI.IM
             {
                 UpdateMessageDisplay();
             }
+        }
+        
+        /// <summary>
+        /// 生成稍候提醒的指令
+        /// </summary>
+        /// <param name="kryptonContextMenu1">上下文菜单</param>
+        protected void AddCommandForWait(KryptonContextMenu kryptonContextMenu1)
+        {
+            KryptonContextMenuItems contextMenuItems = new KryptonContextMenuItems();
+            KryptonContextMenuItem menuItem5分钟后 = new KryptonContextMenuItem();
+            KryptonCommand command5分钟后 = new KryptonCommand();
+            command5分钟后.Execute += kryptonCommandWait_Execute;
+            menuItem5分钟后.KryptonCommand = command5分钟后;
+            menuItem5分钟后.Text = "五分钟后";
+            command5分钟后.Text = menuItem5分钟后.Text;
+
+            KryptonContextMenuItem menuItem10分钟后 = new KryptonContextMenuItem();
+            KryptonCommand command十分钟后 = new KryptonCommand();
+            command十分钟后.Execute += kryptonCommandWait_Execute;
+            menuItem10分钟后.KryptonCommand = command十分钟后;
+            menuItem10分钟后.Text = "十分钟后";
+            command十分钟后.Text = menuItem10分钟后.Text;
+
+            KryptonContextMenuItem menuItem一小时后 = new KryptonContextMenuItem();
+            KryptonCommand command一小时后 = new KryptonCommand();
+            command一小时后.Execute += kryptonCommandWait_Execute;
+            menuItem一小时后.KryptonCommand = command一小时后;
+            menuItem一小时后.Text = "一小时后";
+            command一小时后.Text = menuItem一小时后.Text;
+
+            KryptonContextMenuItem menuItem一天后 = new KryptonContextMenuItem();
+            KryptonCommand command一天后 = new KryptonCommand();
+            command一天后.Execute += kryptonCommandWait_Execute;
+            menuItem一天后.KryptonCommand = command一天后;
+            menuItem一天后.Text = "一天后";
+            command一天后.Text = menuItem一天后.Text;
+
+            kryptonContextMenu1.Items.AddRange(new Krypton.Toolkit.KryptonContextMenuItemBase[] {
+            contextMenuItems});
+
+            contextMenuItems.Items.AddRange(new Krypton.Toolkit.KryptonContextMenuItemBase[] {
+            menuItem5分钟后,
+            menuItem10分钟后,
+            menuItem一小时后,
+            menuItem一天后
+            });
+            if (kryptonContextMenu1.Items.Count == 0)
+            {
+                kryptonContextMenu1.Items.Add(contextMenuItems);
+            }
+        }
+        
+        /// <summary>
+        /// 稍候提醒命令执行事件
+        /// </summary>
+        /// <param name="sender">发送者</param>
+        /// <param name="e">事件参数</param>
+        protected virtual void kryptonCommandWait_Execute(object sender, EventArgs e)
+        {
+            WaitReminder(sender);
+        }
+        
+        /// <summary>
+        /// 稍候提醒处理
+        /// </summary>
+        /// <param name="sender">发送者</param>
+        protected virtual void WaitReminder(object sender)
+        {
+            int interval = 60;
+            if (sender is KryptonDropButton dropButton)
+            {
+                //默认5分钟
+                interval = 60 * 5;
+            }
+            else if (sender is KryptonCommand command)
+            {
+                switch (command.Text)
+                {
+                    case "五分钟后":
+                        interval = 300;
+                        break;
+                    case "十分钟后":
+                        interval = 600;
+                        break;
+                    case "一小时后":
+                        interval = 3600;
+                        break;
+                    case "一天后":
+                        interval = 3600 * 24;
+                        break;
+                    default:
+                        break;
+                }
+            }
+            
+            this.DialogResult = DialogResult.OK;
+            this.Close();
         }
     }
 }

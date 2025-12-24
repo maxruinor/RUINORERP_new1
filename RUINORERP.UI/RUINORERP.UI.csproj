@@ -2113,12 +2113,6 @@
     <Compile Include="IM\BaseMessagePrompt.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="IM\BusinessMessagePrompt.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="IM\BusinessMessagePrompt.Designer.cs">
-      <DependentUpon>BusinessMessagePrompt.cs</DependentUpon>
-    </Compile>
     <Compile Include="IM\EnhancedMessageManager.cs" />
     <Compile Include="IM\MainFormMessageExtensions.cs" />
     <Compile Include="IM\MessageListControl.cs">
@@ -2240,30 +2234,18 @@
     <Compile Include="frmTest.Designer.cs">
       <DependentUpon>frmTest.cs</DependentUpon>
     </Compile>
-    <Compile Include="IM\FormMoveState.cs" />
     <Compile Include="IM\InstructionsPrompt.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="IM\InstructionsPrompt.Designer.cs">
       <DependentUpon>InstructionsPrompt.cs</DependentUpon>
     </Compile>
+    <Compile Include="IM\MessagePersistenceManager.cs" />
     <Compile Include="IM\MessagePrompt.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="IM\MessagePrompt.Designer.cs">
       <DependentUpon>MessagePrompt.cs</DependentUpon>
-    </Compile>
-    <Compile Include="IM\NotificationBox.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="IM\NotificationBox.Designer.cs">
-      <DependentUpon>NotificationBox.cs</DependentUpon>
-    </Compile>
-    <Compile Include="IM\WidgetMessager.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="IM\WidgetMessager.Designer.cs">
-      <DependentUpon>WidgetMessager.cs</DependentUpon>
     </Compile>
     <Compile Include="LoginResult.cs" />
     <Compile Include="LogInterceptor.cs" />
@@ -4279,12 +4261,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="IM\MessagePrompt.resx">
       <DependentUpon>MessagePrompt.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="IM\NotificationBox.resx">
-      <DependentUpon>NotificationBox.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="IM\WidgetMessager.resx">
-      <DependentUpon>WidgetMessager.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Log\UClog.resx">
       <DependentUpon>UClog.cs</DependentUpon>

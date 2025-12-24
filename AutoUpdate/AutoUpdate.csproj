@@ -187,6 +187,7 @@
     <Compile Include="frmDebugInfo.Designer.cs">
       <DependentUpon>frmDebugInfo.cs</DependentUpon>
     </Compile>
+    <Compile Include="SelfUpdateHelper.cs" />
     <Compile Include="SkipVersionManager.cs" />
     <Compile Include="VersionHistoryManager.cs" />
     <Compile Include="VersionRollbackManager.cs" />

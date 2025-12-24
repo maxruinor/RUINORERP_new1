@@ -37,7 +37,7 @@ namespace RUINORERP.Server.SmartReminder
         {
             _configuration = configuration;
         }
-        
+
         // 带日志器的构造函数
         public SmartReminderModule(IConfiguration configuration, ILogger<SmartReminderModule> logger)
         {
@@ -82,12 +82,12 @@ namespace RUINORERP.Server.SmartReminder
 
             // 注册Redis连接
             RegisterRedis(builder);
-            
+
             // 注册单位工作管理器
             builder.RegisterType<UnitOfWorkManage>()
                 .As<IUnitOfWorkManage>()
                 .SingleInstance();
-                
+
             // 注册规则引擎中心
             builder.RegisterType<RuleEngineCenter>().As<IRuleEngineCenter>().SingleInstance();
         }
@@ -105,40 +105,38 @@ namespace RUINORERP.Server.SmartReminder
                 // 从配置中读取Redis连接信息，优先使用标准配置键名
                 string redisServer = "192.168.0.254:6379"; // 用户提供的当前运行服务器IP和端口
                 string redisPassword = string.Empty;
-                
+
                 if (_configuration != null)
                 {
                     // 尝试从标准配置位置读取
                     redisServer = _configuration.GetValue<string>("RedisServer", redisServer);
                     redisPassword = _configuration.GetValue<string>("RedisServerPWD", string.Empty);
-                    
+
                     // 同时支持从SmartReminder特定配置读取
                     redisServer = _configuration.GetValue<string>("SmartReminder:RedisServer", redisServer);
                     redisPassword = _configuration.GetValue<string>("SmartReminder:RedisServerPWD", redisPassword);
                 }
-                
+
                 // 构建连接字符串
                 string redisConnectionString = redisServer;
                 if (!string.IsNullOrEmpty(redisPassword))
                 {
                     redisConnectionString = $"{redisServer},password={redisPassword}";
                 }
-                
+
                 // 添加其他必要的连接参数
                 redisConnectionString = $"{redisConnectionString},allowAdmin=true,abortConnect=false,connectTimeout=5000,syncTimeout=5000,asyncTimeout=5000,connectRetry=3";
-                
-                _logger?.LogInformation("正在配置Redis连接: {ConnectionString}", MaskSensitiveInfo(redisConnectionString));
-                
+
+
                 // 使用RedisConnectionHelper创建连接
                 _redisMultiplexer = RedisConnectionHelper.GetConnectionMultiplexer(redisConnectionString);
-                
+
                 if (_redisMultiplexer != null)
                 {
                     // 验证连接是否成功
                     if (_redisMultiplexer.IsConnected)
                     {
-                        _logger?.LogInformation("Redis连接成功: {EndPoints}", 
-                            string.Join(", ", _redisMultiplexer.GetEndPoints().Select(e => e.ToString())));
+                        _logger?.Debug("Redis连接成功: {EndPoints}", string.Join(", ", _redisMultiplexer.GetEndPoints().Select(e => e.ToString())));
                     }
                     else
                     {
@@ -154,7 +152,7 @@ namespace RUINORERP.Server.SmartReminder
                             try
                             {
                                 multiplexer.Close();
-                                _logger?.LogInformation("Redis连接已关闭");
+                                _logger?.Debug("Redis连接已关闭");
                             }
                             catch (Exception ex)
                             {
@@ -182,43 +180,43 @@ namespace RUINORERP.Server.SmartReminder
             {
                 // 如果Redis连接失败，记录错误但不阻止应用启动
                 _logger?.LogError(ex, "配置Redis时发生异常");
-                
+
                 // 记录异常详情
                 if (ex is SocketException socketEx)
                 {
-                    _logger?.LogError("Socket错误: 代码={ErrorCode}, 消息={Message}", 
+                    _logger?.LogError("Socket错误: 代码={ErrorCode}, 消息={Message}",
                         socketEx.ErrorCode, socketEx.Message);
                 }
                 else if (ex is RedisConnectionException redisEx)
                 {
-                    _logger?.LogError("Redis连接错误: 类型={Type}, 消息={Message}", 
+                    _logger?.LogError("Redis连接错误: 类型={Type}, 消息={Message}",
                         redisEx.FailureType, redisEx.Message);
                 }
             }
         }
-        
+
         // Redis连接事件处理已在RedisConnectionHelper中实现，此处不再重复定义
-        
+
         private string MaskSensitiveInfo(string connectionString)
         {
             // 屏蔽连接字符串中的敏感信息
             if (string.IsNullOrEmpty(connectionString))
                 return connectionString;
-                
+
             // 屏蔽密码等敏感信息
             var masked = connectionString;
             masked = System.Text.RegularExpressions.Regex.Replace(
-                masked, 
-                "password=[^,]*", 
-                "password=***", 
+                masked,
+                "password=[^,]*",
+                "password=***",
                 System.Text.RegularExpressions.RegexOptions.IgnoreCase);
-            
+
             masked = System.Text.RegularExpressions.Regex.Replace(
-                masked, 
-                "pwd=[^,]*", 
-                "pwd=***", 
+                masked,
+                "pwd=[^,]*",
+                "pwd=***",
                 System.Text.RegularExpressions.RegexOptions.IgnoreCase);
-                
+
             return masked;
         }
 

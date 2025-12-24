@@ -48,8 +48,10 @@ namespace RUINORERP.Server.Workflow
         {
             try
             {
-                var count = _snapshotService.GenerateDailySnapshot();
+                var sueccess = _snapshotService.GenerateDailySnapshot();
                 //库存快照生成完成
+                //ExecutionResult executionResult = new ExecutionResult();
+                
             }
             catch (Exception ex)
             {
@@ -96,6 +98,21 @@ namespace RUINORERP.Server.Workflow
 
     public static class InventorySnapshotWorkflowConfig
     {
+        /// <summary>
+        /// 库存快照执行时间配置（默认凌晨1点，可配置为方便调试的时间）
+        /// </summary>
+        public static TimeSpan DailyExecutionTime = new TimeSpan(1, 0, 0); // 默认凌晨1点
+
+        /// <summary>
+        /// 是否启用调试模式（调试模式下可立即执行）
+        /// </summary>
+        public static bool DebugMode = false;
+
+        /// <summary>
+        /// 调试模式下的执行间隔（分钟）
+        /// </summary>
+        public static int DebugExecutionIntervalMinutes = 5;
+
         public static void RegisterWorkflow(IServiceCollection services)
         {
             // 注册步骤和工作流
@@ -106,7 +123,7 @@ namespace RUINORERP.Server.Workflow
         }
 
         /// <summary>
-        /// 库存快照（每天凌晨1点执行）
+        /// 库存快照调度（支持可配置的执行时间点）
         /// </summary>
         public static async Task<bool> ScheduleInventorySnapshot(IWorkflowHost host)
         {
@@ -115,34 +132,16 @@ namespace RUINORERP.Server.Workflow
                 // 注册工作流
                 host.RegisterWorkflow<InventorySnapshotWorkflow>();
 
-                // 计算下次执行时间
-                var now = DateTime.Now;
-                var nextRunTime = new DateTime(now.Year, now.Month, now.Day, 1, 0, 0);
-                if (nextRunTime <= now)
-                    nextRunTime = nextRunTime.AddDays(1);
-
-                // 计算时间间隔
-                var interval = nextRunTime - now;
-
-                // 首次延迟执行
-                var timer = new System.Timers.Timer(interval.TotalMilliseconds);
-                timer.Elapsed += async (sender, e) =>
+                if (DebugMode)
                 {
-                    frmMainNew.Instance.PrintInfoLog($"开始工作流执行: {System.DateTime.Now.ToString()}");
-                    try
-                    {
-                        // 执行工作流
-                        await host.StartWorkflow<InventorySnapshotWorkflow>("InventorySnapshotWorkflow");
-                    }
-                    catch (Exception ex)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"工作流执行错误: {ex.Message}");
-                    }
-
-                    // 改为每天执行一次
-                    timer.Interval = TimeSpan.FromDays(1).TotalMilliseconds;
-                };
-                timer.Start();
+                    // 调试模式：按固定间隔执行
+                    await ScheduleDebugMode(host);
+                }
+                else
+                {
+                    // 生产模式：按指定时间点每天执行一次
+                    await ScheduleProductionMode(host);
+                }
 
                 return true;
             }
@@ -150,6 +149,120 @@ namespace RUINORERP.Server.Workflow
             {
                 System.Diagnostics.Debug.WriteLine($"工作流注册错误: {ex.Message}");
                 return false;
+            }
+        }
+
+        /// <summary>
+        /// 生产模式调度：按指定时间点每天执行一次
+        /// </summary>
+        private static async Task ScheduleProductionMode(IWorkflowHost host)
+        {
+            // 计算下次执行时间
+            var now = DateTime.Now;
+            var nextRunTime = new DateTime(now.Year, now.Month, now.Day,
+                DailyExecutionTime.Hours, DailyExecutionTime.Minutes, DailyExecutionTime.Seconds);
+
+            if (nextRunTime <= now)
+                nextRunTime = nextRunTime.AddDays(1);
+
+            // 计算时间间隔
+            var interval = nextRunTime - now;
+
+            // 首次延迟执行
+            var timer = new System.Timers.Timer(interval.TotalMilliseconds);
+            timer.Elapsed += async (sender, e) =>
+            {
+                SafeLogInfo($"开始库存快照工作流执行: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+                try
+                {
+                    // 执行工作流
+                    await host.StartWorkflow<InventorySnapshotWorkflow>("InventorySnapshotWorkflow");
+                    SafeLogInfo($"库存快照工作流执行完成: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+                }
+                catch (Exception ex)
+                {
+                    SafeLogInfo($"库存快照工作流执行错误: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"工作流执行错误: {ex.Message}");
+                }
+
+                // 改为每天执行一次
+                timer.Interval = TimeSpan.FromDays(1).TotalMilliseconds;
+            };
+            timer.Start();
+
+            SafeLogInfo($"库存快照工作流已调度，下次执行时间: {nextRunTime:yyyy-MM-dd HH:mm:ss}");
+        }
+
+        /// <summary>
+        /// 调试模式调度：按固定间隔执行
+        /// </summary>
+        private static async Task ScheduleDebugMode(IWorkflowHost host)
+        {
+            var timer = new System.Timers.Timer(TimeSpan.FromMinutes(DebugExecutionIntervalMinutes).TotalMilliseconds);
+            timer.Elapsed += async (sender, e) =>
+            {
+                SafeLogInfo($"[调试模式] 开始库存快照工作流执行: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+                try
+                {
+                    // 执行工作流
+                    await host.StartWorkflow<InventorySnapshotWorkflow>("InventorySnapshotWorkflow");
+                    SafeLogInfo($"[调试模式] 库存快照工作流执行完成: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+                }
+                catch (Exception ex)
+                {
+                    SafeLogInfo($"[调试模式] 库存快照工作流执行错误: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"[调试模式] 工作流执行错误: {ex.Message}");
+                }
+            };
+            timer.Start();
+
+            // 立即执行一次
+            await host.StartWorkflow<InventorySnapshotWorkflow>("InventorySnapshotWorkflow");
+            SafeLogInfo($"[调试模式] 库存快照工作流已启动，执行间隔: {DebugExecutionIntervalMinutes}分钟");
+        }
+
+        /// <summary>
+        /// 手动触发库存快照（用于测试和调试）
+        /// </summary>
+        public static async Task<bool> TriggerManually(IWorkflowHost host)
+        {
+            try
+            {
+                SafeLogInfo($"手动触发库存快照工作流: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+                await host.StartWorkflow<InventorySnapshotWorkflow>("InventorySnapshotWorkflow");
+                SafeLogInfo($"手动触发库存快照工作流完成: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                SafeLogInfo($"手动触发库存快照工作流错误: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 安全日志输出方法（避免主窗体未初始化时的空引用异常）
+        /// </summary>
+        private static void SafeLogInfo(string message)
+        {
+            try
+            {
+                if (frmMainNew.Instance != null)
+                {
+                    frmMainNew.Instance.PrintInfoLog(message);
+                }
+                else
+                {
+                    // 主窗体未初始化时，使用控制台输出
+                    System.Diagnostics.Debug.WriteLine($"[工作流日志] {message}");
+                    Console.WriteLine($"[工作流日志] {message}");
+                }
+            }
+            catch (Exception ex)
+            {
+                // 如果日志输出失败，使用最基础的方式输出
+                System.Diagnostics.Debug.WriteLine($"[工作流日志错误] {message} - 错误: {ex.Message}");
+                Console.WriteLine($"[工作流日志错误] {message} - 错误: {ex.Message}");
             }
         }
     }

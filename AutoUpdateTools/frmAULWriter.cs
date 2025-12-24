@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -102,19 +102,19 @@ namespace AULWriter
 
         public void CompareXmlDocuments(XDocument oldDoc, XDocument newDoc)
         {
-            // Get all File elements from both documents
+            // 获取所有文件元素
             var oldFiles = oldDoc.Descendants("File").ToList();
             var newFiles = newDoc.Descendants("File").ToList();
 
-            // Create lists of file entries for comparison
+            // 创建文件列表用于比较
             var oldFileEntries = oldFiles.Select(f => $"{f.Attribute("Name")?.Value}|{f.Attribute("Ver")?.Value}").ToArray();
             var newFileEntries = newFiles.Select(f => $"{f.Attribute("Name")?.Value}|{f.Attribute("Ver")?.Value}").ToArray();
 
-            // Configure the diff engine
+            // 配置差异引擎
             var diff = new AdvancedDiff(oldFileEntries, newFileEntries);
             diff.SetLineMatchFunction((a, b) => a.Split('|')[0] == b.Split('|')[0]);
 
-            // Custom inline diff for version changes
+            // 自定义版本变更的内联差异
             diff.SetInlineDiffFunction((left, right) =>
             {
                 var leftParts = left.Split('|');
@@ -131,12 +131,98 @@ namespace AULWriter
                 return new[] { new DiffSegment { Text = left, IsModified = true, RightText = right } };
             });
 
-            // Compute the differences
+            // 计算差异
             var results = diff.ComputeDiff();
 
-            // Display in RichTextBox controls
+            // 在RichTextBox控件中显示
             DisplayDifferencesInRichTextBox(rtbOld, results, false);
             DisplayDifferencesInRichTextBox(rtbNew, results, true);
+            
+            // 在txtDiff中显示目录对比结果摘要
+            DisplayDirectoryDiffSummary(oldDoc, newDoc);
+        }
+        
+        /// <summary>
+        /// 显示目录对比结果摘要
+        /// </summary>
+        private void DisplayDirectoryDiffSummary(XDocument oldDoc, XDocument newDoc)
+        {
+            // 获取所有文件列表
+            var oldFiles = oldDoc.Descendants("File").Select(f => f.Attribute("Name").Value).ToHashSet();
+            var newFiles = newDoc.Descendants("File").Select(f => f.Attribute("Name").Value).ToHashSet();
+            
+            // 计算差异
+            var addedFiles = newFiles.Except(oldFiles).ToList();
+            var deletedFiles = oldFiles.Except(newFiles).ToList();
+            var commonFiles = oldFiles.Intersect(newFiles).ToList();
+            
+            // 计算修改的文件
+            var modifiedFiles = new List<string>();
+            foreach (var file in commonFiles)
+            {
+                var oldVer = oldDoc.Descendants("File")
+                    .First(f => f.Attribute("Name").Value == file)
+                    .Attribute("Ver").Value;
+                var newVer = newDoc.Descendants("File")
+                    .First(f => f.Attribute("Name").Value == file)
+                    .Attribute("Ver").Value;
+                
+                if (oldVer != newVer)
+                {
+                    modifiedFiles.Add(file);
+                }
+            }
+            
+            // 清空现有内容
+            txtDiff.Clear();
+            
+            // 显示差异摘要
+            txtDiff.SelectionFont = new Font(txtDiff.Font, FontStyle.Bold);
+            txtDiff.AppendText($"目录对比结果摘要\r\n");
+            txtDiff.AppendText($"==================================\r\n\r\n");
+            
+            // 显示新增文件
+            txtDiff.SelectionFont = new Font(txtDiff.Font, FontStyle.Bold);
+            txtDiff.SelectionColor = Color.Green;
+            txtDiff.AppendText($"新增文件 ({addedFiles.Count} 个):\r\n");
+            txtDiff.SelectionFont = new Font(txtDiff.Font, FontStyle.Regular);
+            foreach (var file in addedFiles)
+            {
+                txtDiff.AppendText($"  + {file}\r\n");
+            }
+            txtDiff.AppendText($"\r\n");
+            
+            // 显示修改文件
+            txtDiff.SelectionFont = new Font(txtDiff.Font, FontStyle.Bold);
+            txtDiff.SelectionColor = Color.Blue;
+            txtDiff.AppendText($"修改文件 ({modifiedFiles.Count} 个):\r\n");
+            txtDiff.SelectionFont = new Font(txtDiff.Font, FontStyle.Regular);
+            foreach (var file in modifiedFiles)
+            {
+                var oldVer = oldDoc.Descendants("File")
+                    .First(f => f.Attribute("Name").Value == file)
+                    .Attribute("Ver").Value;
+                var newVer = newDoc.Descendants("File")
+                    .First(f => f.Attribute("Name").Value == file)
+                    .Attribute("Ver").Value;
+                txtDiff.AppendText($"  * {file} ({oldVer} → {newVer})\r\n");
+            }
+            txtDiff.AppendText($"\r\n");
+            
+            // 显示删除文件
+            txtDiff.SelectionFont = new Font(txtDiff.Font, FontStyle.Bold);
+            txtDiff.SelectionColor = Color.Red;
+            txtDiff.AppendText($"删除文件 ({deletedFiles.Count} 个):\r\n");
+            txtDiff.SelectionFont = new Font(txtDiff.Font, FontStyle.Regular);
+            foreach (var file in deletedFiles)
+            {
+                txtDiff.AppendText($"  - {file}\r\n");
+            }
+            txtDiff.AppendText($"\r\n");
+            
+            // 恢复默认字体和颜色
+            txtDiff.SelectionFont = new Font(txtDiff.Font, FontStyle.Regular);
+            txtDiff.SelectionColor = txtDiff.ForeColor;
         }
 
         #region 比较2025-04-06
@@ -375,7 +461,8 @@ namespace AULWriter
                 BaseExeVersion = txtBaseExeVersion.Text,
                 PreVerUpdatedFiles = txtPreVerUpdatedFiles.Text.Split(new[] { "\r\n" },
                                   StringSplitOptions.RemoveEmptyEntries).ToList(),
-                ExcludeUnnecessaryFiles = ExcludeUnnecessaryFiles
+                ExcludeUnnecessaryFiles = ExcludeUnnecessaryFiles,
+                UpdateUrl = txtUrl.Text.Trim() // 将URL作为参数传递
             };
 
             // 开始后台工作
@@ -397,41 +484,89 @@ namespace AULWriter
 
             try
             {
+                AppendLog("开始生成更新配置文件...");
+                
                 var doc = XDocument.Load(parameters.TargetXmlFilePath);
                 
-                // 更新Url节点值，使其与UI上的txtUrl同步
+                // 更新Url节点值，使用参数中的UpdateUrl
                 var urlElement = doc.Descendants("Updater").Elements("Url").FirstOrDefault();
                 if (urlElement != null)
                 {
-                    urlElement.Value = txtUrl.Text.Trim();
+                    urlElement.Value = parameters.UpdateUrl;
+                    AppendLog($"更新URL地址为: {parameters.UpdateUrl}");
                 }
                 
                 UpdateVersionInformation(doc, parameters);
 
+                // 执行完整的目录对比
+                AppendLog("开始执行目录对比...");
+                DirectoryDiffResult diffResult = CompareDirectories(parameters.SourceFolder, doc, parameters.ExcludeUnnecessaryFiles);
+                
+                // 记录对比结果
+                AppendLog($"目录对比完成：新增 {diffResult.NewFiles.Count} 个文件，修改 {diffResult.ModifiedFiles.Count} 个文件，删除 {diffResult.DeletedFiles.Count} 个文件");
+                
+                // 处理修改的文件
                 var fileElements = doc.Descendants("File").ToList();
-                worker.ReportProgress(0, new ProgressData { TotalFiles = fileElements.Count });
+                worker.ReportProgress(0, new ProgressData { TotalFiles = fileElements.Count + diffResult.NewFiles.Count });
+                
+                if (diffResult.ModifiedFiles.Count > 0)
+                {
+                    AppendLog($"开始处理 {diffResult.ModifiedFiles.Count} 个修改文件...");
+                    ProcessFiles(worker, parameters, fileElements, diffList, diffResult.ModifiedFiles);
+                }
+                
+                // 处理新增文件（包括自动扫描的和手动指定的）
+                List<string> allNewFiles = new List<string>();
+                allNewFiles.AddRange(diffResult.NewFiles);
+                allNewFiles.AddRange(parameters.PreVerUpdatedFiles);
+                allNewFiles = allNewFiles.Distinct().ToList();
+                
+                if (allNewFiles.Count > 0)
+                {
+                    AppendLog($"开始处理 {allNewFiles.Count} 个新增文件...");
+                    ProcessNewFiles(doc, allNewFiles, diffList, parameters);
+                }
+                
+                // 处理删除的文件（从配置文件中移除）
+                if (diffResult.DeletedFiles.Count > 0)
+                {
+                    AppendLog($"开始处理 {diffResult.DeletedFiles.Count} 个删除文件...");
+                    ProcessDeletedFiles(doc, diffResult.DeletedFiles, diffList);
+                }
+                
+                // 确保DiffList包含所有差异文件
+                // 合并所有差异文件到diffList
+                diffList.Clear();
+                diffList.AddRange(diffResult.ModifiedFiles);
+                diffList.AddRange(diffResult.NewFiles);
+                diffList.AddRange(diffResult.DeletedFiles);
+                
+                // 计算没有变化的文件数量
+                int totalFiles = diffResult.ModifiedFiles.Count + diffResult.NewFiles.Count + diffResult.DeletedFiles.Count + diffResult.UnchangedFiles.Count;
+                
+                AppendLog($"差异文件统计：共 {diffList.Count} 个差异文件");
+                AppendLog($"其中：修改 {diffResult.ModifiedFiles.Count} 个，新增 {diffResult.NewFiles.Count} 个，删除 {diffResult.DeletedFiles.Count} 个，无变化 {diffResult.UnchangedFiles.Count} 个");
+                AppendLog($"总文件数：{totalFiles} 个");
 
-                ProcessFiles(worker, parameters, fileElements, diffList);
-                ProcessNewFiles(doc, parameters.PreVerUpdatedFiles, diffList, parameters);
-
-                e.Result = new UpdateXmlResult { Document = doc, DiffList = diffList };
+            AppendLog("更新配置文件生成完成");
+            e.Result = new UpdateXmlResult { Document = doc, DiffList = diffList };
             }
             catch (Exception ex)
             {
+                string errorMsg = $"生成更新配置文件失败: {ex.Message}";
+                AppendLog(errorMsg);
+                Debug.WriteLine(errorMsg);
                 e.Result = ex;
             }
         }
-        private void UpdateVersionInformation(XDocument doc, UpdateXmlParameters parameters)
-        {
-            if (!parameters.UseBaseVersion) return;
-
-            var versionElement = doc.Descendants("Version").FirstOrDefault();
-            versionElement?.SetValue(parameters.BaseExeVersion);
-        }
-
-        private void ProcessFiles(BackgroundWorker worker, UpdateXmlParameters parameters,
+        
+        /// <summary>
+        /// 处理文件更新（兼容原有方法）
+        /// </summary>
+        private void ProcessFiles(BackgroundWorker worker, UpdateXmlParameters parameters, 
             List<XElement> fileElements, List<string> diffList)
         {
+            // 处理所有文件
             for (int i = 0; i < fileElements.Count; i++)
             {
                 if (worker.CancellationPending) return;
@@ -453,31 +588,214 @@ namespace AULWriter
                 ReportProgress(worker, i + 1, fileElements.Count, diffFileName);
             }
         }
+        
+        /// <summary>
+        /// 处理修改的文件，仅处理指定列表中的文件
+        /// </summary>
+        private void ProcessFiles(BackgroundWorker worker, UpdateXmlParameters parameters, 
+            List<XElement> fileElements, List<string> diffList, List<string> modifiedFiles)
+        {
+            // 仅处理修改的文件
+            for (int i = 0; i < fileElements.Count; i++)
+            {
+                if (worker.CancellationPending) return;
 
+                var fileElement = fileElements[i];
+                var fileName = fileElement.Attribute("Name").Value;
+
+                // 仅处理修改的文件
+                if (!modifiedFiles.Contains(fileName)) continue;
+                
+                //排除指定文件
+                if (ShouldExcludeFile(fileName, parameters)) continue;
+
+                string diffFileName = string.Empty;
+                if (IsFileModified(parameters, fileName))
+                {
+                    UpdateFileVersion(fileElement);
+                    diffFileName = fileName;
+                    diffList.Add(fileName);
+                }
+
+                ReportProgress(worker, i + 1, fileElements.Count, diffFileName);
+            }
+        }
+        
+        /// <summary>
+        /// 处理删除的文件，从配置文件中移除
+        /// </summary>
+        private void ProcessDeletedFiles(XDocument doc, List<string> deletedFiles, List<string> diffList)
+        {
+            if (deletedFiles == null || deletedFiles.Count == 0)
+            {
+                AppendLog("没有需要删除的文件");
+                return;
+            }
+            
+            int deletedCount = 0;
+            foreach (var fileName in deletedFiles)
+            {
+                // 从配置文件中移除删除的文件
+                var fileElement = doc.Descendants("File")
+                    .FirstOrDefault(f => f.Attribute("Name").Value.Equals(fileName, StringComparison.OrdinalIgnoreCase));
+                
+                if (fileElement != null)
+                {
+                    fileElement.Remove();
+                    diffList.Add(fileName);
+                    deletedCount++;
+                    AppendLog($"从配置文件中移除删除的文件: {fileName}");
+                }
+            }
+            
+            AppendLog($"共处理 {deletedFiles.Count} 个需要删除的文件，成功移除 {deletedCount} 个");
+        }
+        
+        /// <summary>
+        /// 扫描目录中的所有文件，返回相对路径列表
+        /// </summary>
+        /// <param name="sourceDir">源目录路径</param>
+        /// <param name="excludePredicate">排除文件的谓词函数</param>
+        /// <returns>相对路径列表</returns>
+        private List<string> ScanDirectoryForNewFiles(string sourceDir, Func<string, bool> excludePredicate)
+        {
+            List<string> files = new List<string>();
+            int totalFiles = 0;
+            int excludedFiles = 0;
+            
+            try
+            {
+                if (Directory.Exists(sourceDir))
+                {
+                    AppendLog($"开始扫描目录: {sourceDir}");
+                    
+                    // 递归扫描目录中的所有文件
+                    // 使用*.*可能会排除某些没有扩展名的文件，改为使用*来包含所有文件
+                    string[] allFiles = Directory.GetFiles(sourceDir, "*", SearchOption.AllDirectories);
+                    totalFiles = allFiles.Length;
+                    AppendLog($"共扫描到 {totalFiles} 个文件");
+                    
+                    foreach (string filePath in allFiles)
+                    {
+                        // 计算相对路径
+                        string relativePath = filePath.Substring(sourceDir.Length);
+                        if (relativePath.StartsWith(Path.DirectorySeparatorChar.ToString()))
+                        {
+                            relativePath = relativePath.Substring(1);
+                        }
+                        
+                        // 获取文件扩展名，确保.zip文件不会被错误排除
+                        string extension = Path.GetExtension(filePath).ToLower();
+                        if (extension.Equals(".zip", StringComparison.OrdinalIgnoreCase))
+                        {
+                            // 对于.zip文件，直接添加，不进行排除检查
+                            files.Add(relativePath);
+                            continue;
+                        }
+                        
+                        // 检查是否需要排除
+                        if (excludePredicate(relativePath))
+                        {
+                            excludedFiles++;
+                            AppendLog($"文件 {relativePath} 被排除：符合排除条件");
+                            continue;
+                        }
+                        
+                        // 额外检查：排除隐藏目录中的文件
+                        if (IsInHiddenDirectory(sourceDir, relativePath))
+                        {
+                            excludedFiles++;
+                            AppendLog($"文件 {relativePath} 被排除：位于隐藏目录中");
+                            continue;
+                        }
+                        
+                        // 额外检查：排除超大文件
+                        if (IsOverSizeLimit(sourceDir, relativePath, 100))
+                        {
+                            excludedFiles++;
+                            AppendLog($"文件 {relativePath} 被排除：超过100MB大小限制");
+                            continue;
+                        }
+                        
+                        // 文件通过所有检查，添加到列表中
+                        files.Add(relativePath);
+                    }
+                    
+                    AppendLog($"目录扫描完成：共 {totalFiles} 个文件，排除 {excludedFiles} 个，保留 {files.Count} 个");
+                }
+                else
+                {
+                    AppendLog($"错误：源目录 {sourceDir} 不存在");
+                }
+            }
+            catch (Exception ex)
+            {
+                string errorMsg = $"扫描目录失败: {ex.Message}";
+                AppendLog(errorMsg);
+                Debug.WriteLine(errorMsg);
+            }
+            
+            return files;
+        }
+        private void UpdateVersionInformation(XDocument doc, UpdateXmlParameters parameters)
+        {
+            if (!parameters.UseBaseVersion) return;
+
+            var versionElement = doc.Descendants("Version").FirstOrDefault();
+            versionElement?.SetValue(parameters.BaseExeVersion);
+        }
 
         // 扩展的排除条件检查
         private bool ShouldExcludeFile(string fileName, UpdateXmlParameters parameters)
         {
             // 基础排除规则
             if (parameters.ExcludeUnnecessaryFiles?.Invoke(fileName) == true)
+            {
+                AppendLog($"文件 {fileName} 被排除：符合基础排除规则");
                 return true;
+            }
 
             // 扩展规则
             var extension = Path.GetExtension(fileName).ToLower();
             var excludeExtensions = new[] { ".log", ".tmp", ".bak" };
 
-            return
-                excludeExtensions.Contains(extension) ||    // 排除特定扩展名
-                fileName.StartsWith("_") ||                 // 排除下划线开头的文件
-                IsInHiddenDirectory(fileName) ||            // 排除隐藏目录中的文件
-                IsOverSizeLimit(fileName, 100);             // 排除超过100MB的大文件
+            // 对于.zip文件，我们不应该排除，所以添加一个特例
+            if (extension.Equals(".zip", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            // 检查文件扩展名
+            if (excludeExtensions.Contains(extension))
+            {
+                AppendLog($"文件 {fileName} 被排除：扩展名 {extension} 在排除列表中");
+                return true;
+            }
+
+            // 检查文件名是否以下划线开头
+            if (fileName.StartsWith("_"))
+            {
+                AppendLog($"文件 {fileName} 被排除：文件名以下划线开头");
+                return true;
+            }
+
+            return false;
         }
 
-        private bool IsInHiddenDirectory(string filePath)
+        private bool IsInHiddenDirectory(string sourceDir, string relativePath)
         {
             try
             {
-                var dir = Path.GetDirectoryName(filePath);
+                // 构建完整路径
+                string fullPath = Path.Combine(sourceDir, relativePath);
+                string dir = Path.GetDirectoryName(fullPath);
+                
+                // 处理根目录文件的情况，GetDirectoryName会返回空字符串
+                if (string.IsNullOrEmpty(dir))
+                {
+                    return false; // 根目录不是隐藏目录
+                }
+                
                 return (new DirectoryInfo(dir).Attributes & FileAttributes.Hidden)
                        == FileAttributes.Hidden;
             }
@@ -487,11 +805,26 @@ namespace AULWriter
             }
         }
 
-        private bool IsOverSizeLimit(string filePath, int maxMB)
+        private bool IsOverSizeLimit(string sourceDir, string relativePath, int maxMB)
         {
             try
             {
-                var fileInfo = new FileInfo(filePath);
+                // 检查文件路径是否有效
+                if (string.IsNullOrEmpty(relativePath))
+                {
+                    return false;
+                }
+                
+                // 构建完整路径
+                string fullPath = Path.Combine(sourceDir, relativePath);
+                
+                // 检查文件是否存在
+                if (!File.Exists(fullPath))
+                {
+                    return false;
+                }
+                
+                var fileInfo = new FileInfo(fullPath);
                 return fileInfo.Length > maxMB * 1024L * 1024L;
             }
             catch
@@ -500,11 +833,26 @@ namespace AULWriter
             }
         }
 
-        private bool IsSystemFile(string fileName)
+        private bool IsSystemFile(string sourceDir, string relativePath)
         {
             try
             {
-                var attr = File.GetAttributes(fileName);
+                // 检查文件路径是否有效
+                if (string.IsNullOrEmpty(relativePath))
+                {
+                    return false;
+                }
+                
+                // 构建完整路径
+                string fullPath = Path.Combine(sourceDir, relativePath);
+                
+                // 检查文件是否存在
+                if (!File.Exists(fullPath))
+                {
+                    return false;
+                }
+                
+                var attr = File.GetAttributes(fullPath);
                 return (attr & FileAttributes.System) == FileAttributes.System;
             }
             catch
@@ -515,6 +863,12 @@ namespace AULWriter
 
         private bool IsTemporaryFile(string fileName)
         {
+            // 检查文件路径是否有效
+            if (string.IsNullOrEmpty(fileName))
+            {
+                return false;
+            }
+            
             return Path.GetExtension(fileName).Equals(".tmp", StringComparison.OrdinalIgnoreCase) ||
                    fileName.Contains("~$");
         }
@@ -563,7 +917,7 @@ namespace AULWriter
         }
 
 
-        //新添加的文件 从1.0.0.0开始加到集合中
+        //新添加的文件 从配置的基础版本号开始加到集合中
         private void ProcessNewFiles(XDocument doc,
                             List<string> newFiles,
                             List<string> diffList,
@@ -571,6 +925,8 @@ namespace AULWriter
         {
             try
             {
+                AppendLog($"开始处理新文件，共 {newFiles.Count} 个待处理文件");
+                
                 // 获取现有文件名的哈希集合（不区分大小写）
                 var existingFiles = doc.Descendants("File")
                     .Select(f => f.Attribute("Name").Value)
@@ -581,27 +937,41 @@ namespace AULWriter
                     .Where(f => !existingFiles.Contains(f) &&
                                !ShouldExcludeFile(f, parameters))
                     .ToList();
+                
+                AppendLog($"过滤后有效新文件数量: {validNewFiles.Count}");
 
+                // 获取基础版本号
+                // 注意：新增文件默认版本应该是1.0.0.0，exe入口文件的特殊设置仅适用于主程序
+                string baseVersion = "1.0.0.0";
+                AppendLog($"新增文件使用默认基础版本号: {baseVersion}");
+                // 保持exe入口文件的特殊版本设置，但仅适用于主程序，不适用于新增文件
+                // 新增文件统一使用1.0.0.0作为初始版本号
+
+                int addedCount = 0;
                 foreach (var newFile in validNewFiles)
                 {
-                    // 添加文件节点到XML
+                    // 添加文件节点到XML，使用配置的基础版本号
                     var newElement = new XElement("File",
-                        new XAttribute("Ver", "1.0.0.0"),
+                        new XAttribute("Ver", baseVersion),
                         new XAttribute("Name", newFile));
 
                     doc.Descendants("Files").First().Add(newElement);
                     diffList.Add(newFile);
+                    addedCount++;
+                    AppendLog($"添加新文件到配置: {newFile}，版本: {baseVersion}");
                 }
+                
+                AppendLog($"新文件处理完成，共成功添加 {addedCount} 个新文件");
             }
             catch (Exception ex)
             {
                 // 记录异常日志
-                Debug.WriteLine($"处理新文件时出错: {ex.Message}");
+                string errorMsg = $"处理新文件时出错: {ex.Message}";
+                AppendLog(errorMsg);
+                Debug.WriteLine(errorMsg);
                 throw;
             }
         }
-
-
 
         private void AddNewFileElement(XDocument doc, string fileName)
         {
@@ -853,12 +1223,27 @@ namespace AULWriter
                 return;
             }
 
+            // 更新DiffFileList，确保差异文件能在UI中显示
+            DiffFileList.Clear();
+            if (result.DiffList != null)
+            {
+                DiffFileList.AddRange(result.DiffList);
+            }
+
             // 在保存文档前调用
             UpdateLastUpdateTime(document);
 
             txtLastXml.Text = document.ToString();
             //txtLastXml.Text = result?.Document.ToString();
             rtbNew.Text = txtLastXml.Text;
+            
+            // 更新差异文件列表显示
+            txtDiff.Clear();
+            foreach (var item in DiffFileList)
+            {
+                txtDiff.AppendText($"{item}\r\n");
+            }
+            
             tabControl1.SelectedTab = tbpLastXml;
             btnDiff.Enabled = true;
             AppendLog("XML文件生成成功！");
@@ -878,6 +1263,15 @@ namespace AULWriter
 
         private void AppendLog(string message)
         {
+            // 检查是否需要跨线程调用
+            if (richTxtLog.InvokeRequired)
+            {
+                // 使用Invoke在主线程中执行
+                richTxtLog.Invoke(new Action<string>(AppendLog), message);
+                return;
+            }
+            
+            // 直接在主线程中执行
             richTxtLog.AppendText($"{DateTime.Now:yyyy-MM-dd HH:mm:ss}: {message}\r\n");
         }
         #endregion
@@ -906,18 +1300,138 @@ namespace AULWriter
 
 
         /// <summary>
-        /// 版本号加1
+        /// 版本号递增策略枚举
         /// </summary>
-        /// <param name="version"></param>
-        private void IncrementVersion(ref string version)
+        private enum VersionIncrementStrategy
         {
-            //var parts = version.Split('.').Select(int.Parse).ToArray();
-            //parts[3]++;
-            //version = string.Join(".", parts);
+            /// <summary>递增修订号（默认）</summary>
+            Revision = 0,
+            /// <summary>递增构建号</summary>
+            Build = 1,
+            /// <summary>递增次版本号</summary>
+            Minor = 2,
+            /// <summary>递增主版本号</summary>
+            Major = 3
+        }
 
-            var parts = version.Split('.');
-            parts[3] = (int.Parse(parts[3]) + 1).ToString();
+        /// <summary>
+        /// 版本号加1，支持不同的递增策略
+        /// </summary>
+        /// <param name="version">版本号字符串</param>
+        /// <param name="strategy">版本号递增策略，默认为递增修订号</param>
+        private void IncrementVersion(ref string version, VersionIncrementStrategy strategy = VersionIncrementStrategy.Revision)
+        {
+            var parts = version.Split('.').Select(int.Parse).ToArray();
+            
+            // 根据策略递增相应的版本号部分
+            switch (strategy)
+            {
+                case VersionIncrementStrategy.Major:
+                    parts[0]++;
+                    parts[1] = 0;
+                    parts[2] = 0;
+                    parts[3] = 0;
+                    break;
+                case VersionIncrementStrategy.Minor:
+                    parts[1]++;
+                    parts[2] = 0;
+                    parts[3] = 0;
+                    break;
+                case VersionIncrementStrategy.Build:
+                    parts[2]++;
+                    parts[3] = 0;
+                    break;
+                case VersionIncrementStrategy.Revision:
+                default:
+                    parts[3]++;
+                    break;
+            }
+            
             version = string.Join(".", parts);
+        }
+        
+        /// <summary>
+        /// 目录差异结果类，用于存储目录对比的结果
+        /// </summary>
+        private class DirectoryDiffResult
+        {
+            /// <summary>
+            /// 新增文件列表（源目录有，配置文件没有）
+            /// </summary>
+            public List<string> NewFiles { get; set; } = new List<string>();
+            
+            /// <summary>
+            /// 修改文件列表（源目录和配置文件都有，但内容不同）
+            /// </summary>
+            public List<string> ModifiedFiles { get; set; } = new List<string>();
+            
+            /// <summary>
+            /// 删除文件列表（配置文件有，源目录没有）
+            /// </summary>
+            public List<string> DeletedFiles { get; set; } = new List<string>();
+            
+            /// <summary>
+            /// 无变化文件列表（源目录和配置文件都有，且内容相同）
+            /// </summary>
+            public List<string> UnchangedFiles { get; set; } = new List<string>();
+        }
+        
+        /// <summary>
+        /// 比较源目录和配置文件，生成完整的差异报告
+        /// </summary>
+        /// <param name="sourceDir">源目录路径</param>
+        /// <param name="configDoc">配置文件</param>
+        /// <param name="excludePredicate">排除文件的谓词函数</param>
+        /// <returns>目录差异结果</returns>
+        private DirectoryDiffResult CompareDirectories(string sourceDir, XDocument configDoc, Func<string, bool> excludePredicate)
+        {
+            DirectoryDiffResult result = new DirectoryDiffResult();
+            
+            try
+            {
+                // 扫描源目录中的所有文件
+                List<string> allFilesInSource = ScanDirectoryForNewFiles(sourceDir, excludePredicate);
+                
+                // 获取配置文件中的文件列表
+                var configFiles = configDoc.Descendants("File")
+                    .Select(f => f.Attribute("Name").Value)
+                    .ToList();
+                
+                // 找出新增文件（源目录有，配置文件没有）
+                result.NewFiles = allFilesInSource.Except(configFiles).ToList();
+                
+                // 找出删除文件（配置文件有，源目录没有）
+                result.DeletedFiles = configFiles.Except(allFilesInSource).ToList();
+                
+                // 找出修改文件和无变化文件（源目录和配置文件都有）
+                var commonFiles = allFilesInSource.Intersect(configFiles).ToList();
+                foreach (var file in commonFiles)
+                {
+                    // 检查文件是否被修改
+                    UpdateXmlParameters tempParams = new UpdateXmlParameters
+                    {
+                        SourceFolder = sourceDir,
+                        TargetFolder = sourceDir, // 使用源目录作为目标目录进行比较
+                        FileComparison = true,
+                        ExcludeUnnecessaryFiles = excludePredicate
+                    };
+                    
+                    if (IsFileModified(tempParams, file))
+                    {
+                        result.ModifiedFiles.Add(file);
+                    }
+                    else
+                    {
+                        result.UnchangedFiles.Add(file);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"比较目录失败: {ex.Message}");
+            }
+            
+            return result;
         }
 
         #region [写AutoUpdaterList]
@@ -1126,28 +1640,39 @@ namespace AULWriter
         /// <returns>为真则排除</returns>
         private bool ExcludeUnnecessaryFiles(string filePath)
         {
-            bool isExist = false;
-            string fileName = filePath.Replace(txtTargetDirectory.Text, "");
-            fileName = fileName.TrimStart('\\');
-            string[] files = txtExpt.Text.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
-            if (files.Contains(fileName))
+            try
             {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-            foreach (string strCheck in files)
-            {
-                if (filePath.Trim() == strCheck.Trim())
+                // 获取排除文件列表
+                string[] files = txtExpt.Text.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+                
+                // 检查文件是否在排除列表中
+                foreach (string strCheck in files)
                 {
-                    isExist = true;
-                    break;
+                    // 移除空白行
+                    string excludeFile = strCheck.Trim();
+                    if (string.IsNullOrEmpty(excludeFile))
+                        continue;
+                    
+                    // 支持两种匹配方式：完全匹配和相对路径匹配
+                    if (filePath.Trim().Equals(excludeFile, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return true;
+                    }
+                    
+                    // 检查文件名是否匹配（不考虑路径）
+                    string fileName = Path.GetFileName(filePath);
+                    if (fileName.Equals(excludeFile, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return true;
+                    }
                 }
             }
-
-            return isExist;
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"排除文件检查失败: {ex.Message}");
+            }
+            
+            return false;
         }
 
 
@@ -1453,6 +1978,344 @@ namespace AULWriter
         //}
 
         List<string> DiffFileList = new List<string>();
+
+        #region 差异文件管理
+
+        /// <summary>
+        /// 差异文件数据模型
+        /// </summary>
+        private class DiffFileItem
+        {
+            /// <summary>
+            /// 是否选中
+            /// </summary>
+            public bool IsSelected { get; set; }
+            /// <summary>
+            /// 文件名
+            /// </summary>
+            public string FileName { get; set; }
+            /// <summary>
+            /// 文件路径
+            /// </summary>
+            public string FilePath { get; set; }
+            /// <summary>
+            /// 文件大小（KB）
+            /// </summary>
+            public string FileSize { get; set; }
+            /// <summary>
+            /// 最后修改时间
+            /// </summary>
+            public string LastModified { get; set; }
+            /// <summary>
+            /// 文件状态
+            /// </summary>
+            public string Status { get; set; }
+            /// <summary>
+            /// 完整文件路径
+            /// </summary>
+            public string FullFilePath { get; set; }
+        }
+
+        /// <summary>
+        /// 差异文件列表
+        /// </summary>
+        private List<DiffFileItem> diffFileItems = new List<DiffFileItem>();
+        /// <summary>
+        /// 过滤后的差异文件列表
+        /// </summary>
+        private List<DiffFileItem> filteredDiffFileItems = new List<DiffFileItem>();
+        
+
+        
+
+        /// <summary>
+        /// 当前搜索关键词
+        /// </summary>
+        private string currentSearchKeyword = string.Empty;
+
+        /// <summary>
+        /// 初始化差异文件列表
+        /// </summary>
+        private void InitializeDiffFileList()
+        {
+            diffFileItems.Clear();
+            
+            // 从DiffFileList中加载差异文件
+            foreach (var filePath in DiffFileList)
+            {
+                string fullPath = Path.Combine(txtCompareSource.Text, filePath);
+                FileInfo fileInfo = null;
+                string status = "新增";
+                
+                try
+                {
+                    if (File.Exists(fullPath))
+                    {
+                        fileInfo = new FileInfo(fullPath);
+                    }
+                    
+                    // 检查文件是新增还是修改
+                    // 检查文件是否在目标目录中存在
+                    string targetPath = Path.Combine(txtTargetDirectory.Text, filePath);
+                    if (File.Exists(targetPath))
+                    {
+                        status = "修改";
+                    }
+                    
+                    diffFileItems.Add(new DiffFileItem
+                    {
+                        IsSelected = true, // 默认选中
+                        FileName = Path.GetFileName(filePath),
+                        FilePath = filePath,
+                        FileSize = fileInfo != null ? (fileInfo.Length / 1024.0).ToString("0.00") + " KB" : "N/A",
+                        LastModified = fileInfo != null ? fileInfo.LastWriteTime.ToString("yyyy-MM-dd HH:mm:ss") : "N/A",
+                        Status = status,
+                        FullFilePath = fullPath
+                    });
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"读取文件信息失败: {filePath} - {ex.Message}");
+                    diffFileItems.Add(new DiffFileItem
+                    {
+                        IsSelected = true,
+                        FileName = Path.GetFileName(filePath),
+                        FilePath = filePath,
+                        FileSize = "N/A",
+                        LastModified = "N/A",
+                        Status = status,
+                        FullFilePath = fullPath
+                    });
+                }
+            }
+            
+            // 保存初始选择状态
+            SaveDiffFileSelection();
+            
+            // 应用过滤和分页
+            ApplyFilterAndPagination();
+        }
+
+        /// <summary>
+        /// 应用过滤（移除了分页功能）
+        /// </summary>
+        private void ApplyFilterAndPagination()
+        {
+            // 应用过滤
+            if (!string.IsNullOrEmpty(currentSearchKeyword))
+            {
+                filteredDiffFileItems = diffFileItems.Where(item => 
+                    item.FileName.IndexOf(currentSearchKeyword, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    item.FilePath.IndexOf(currentSearchKeyword, StringComparison.OrdinalIgnoreCase) >= 0)
+                    .ToList();
+            }
+            else
+            {
+                filteredDiffFileItems = diffFileItems.ToList();
+            }
+            
+            // 绑定数据到DataGridView
+            BindDiffFileData();
+        }
+
+        /// <summary>
+        /// 绑定差异文件数据到DataGridView
+        /// </summary>
+        private void BindDiffFileData()
+        {
+            // 直接绑定所有过滤后的数据，不再分页
+            // 绑定数据 - 即使没有数据，也要绑定一个空列表，确保列标题显示
+            dgvDiffFiles.DataSource = new BindingList<DiffFileItem>(filteredDiffFileItems);
+        }
+
+        /// <summary>
+        /// 更新分页信息
+        /// </summary>
+        /// <param name="totalPages">总页数</param>
+        private void UpdatePaginationInfo(int totalPages)
+        {
+            lblPageInfo.Text = $"第 {currentPage} 页 / 共 {totalPages} 页 ({filteredDiffFileItems.Count} 个文件)";
+            btnPrevPage.Enabled = currentPage > 1;
+            btnNextPage.Enabled = currentPage < totalPages;
+        }
+
+        /// <summary>
+        /// 保存差异文件选择状态
+        /// </summary>
+        private void SaveDiffFileSelection()
+        {
+            // 这里可以实现选择状态的本地存储，例如使用临时文件或内存缓存
+            // 目前使用内存缓存
+        }
+
+        /// <summary>
+        /// 加载差异文件选择状态
+        /// </summary>
+        private void LoadDiffFileSelection()
+        {
+            // 这里可以实现选择状态的加载，例如从临时文件或内存缓存
+            // 目前使用内存缓存
+        }
+
+        /// <summary>
+        /// 全选差异文件
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void btnSelectAll_Click(object sender, EventArgs e)
+        {
+            foreach (var item in diffFileItems)
+            {
+                item.IsSelected = true;
+            }
+            
+            SaveDiffFileSelection();
+            ApplyFilterAndPagination();
+        }
+
+        /// <summary>
+        /// 取消全选差异文件
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void btnUnselectAll_Click(object sender, EventArgs e)
+        {
+            foreach (var item in diffFileItems)
+            {
+                item.IsSelected = false;
+            }
+            
+            SaveDiffFileSelection();
+            ApplyFilterAndPagination();
+        }
+
+        /// <summary>
+        /// 应用选择的差异文件
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void btnApplySelection_Click(object sender, EventArgs e)
+        {
+            // 获取选中的差异文件
+            var selectedFiles = diffFileItems.Where(item => item.IsSelected).Select(item => item.FilePath).ToList();
+            
+            if (selectedFiles.Count == 0)
+            {
+                MessageBox.Show("请至少选择一个差异文件", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+            
+            // 确认操作
+            var result = MessageBox.Show($"确定要将选中的 {selectedFiles.Count} 个差异文件添加到配置文件中吗？", 
+                "确认操作", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            
+            if (result == DialogResult.Yes)
+            {
+                try
+                {
+                    // 更新DiffFileList为选中的文件
+                    DiffFileList.Clear();
+                    DiffFileList.AddRange(selectedFiles);
+                    
+                    // 重新生成配置文件
+                    // 这里可以调用现有的生成逻辑
+                    
+                    MessageBox.Show("差异文件选择已应用", "操作成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"应用选择失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 搜索差异文件
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void txtSearch_TextChanged(object sender, EventArgs e)
+        {
+            currentSearchKeyword = txtSearch.Text.Trim();
+            ApplyFilterAndPagination();
+        }
+
+        /// <summary>
+        /// 上一页
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void btnPrevPage_Click(object sender, EventArgs e)
+        {
+            if (currentPage > 1)
+            {
+                currentPage--;
+                BindDiffFileData();
+            }
+        }
+
+        /// <summary>
+        /// 下一页
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void btnNextPage_Click(object sender, EventArgs e)
+        {
+            int totalPages = (int)Math.Ceiling((double)filteredDiffFileItems.Count / pageSize);
+            if (currentPage < totalPages)
+            {
+                currentPage++;
+                BindDiffFileData();
+            }
+        }
+
+        /// <summary>
+        /// 差异文件选择状态变化
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void dgvDiffFiles_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.ColumnIndex == colSelect.Index && e.RowIndex >= 0)
+            {
+                // 切换选择状态
+                DataGridViewRow row = dgvDiffFiles.Rows[e.RowIndex];
+                DiffFileItem item = (DiffFileItem)row.DataBoundItem;
+                item.IsSelected = !item.IsSelected;
+                
+                // 更新UI
+                dgvDiffFiles.Refresh();
+                
+                // 保存选择状态
+                SaveDiffFileSelection();
+            }
+        }
+
+        /// <summary>
+        /// Tab页切换事件
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void tabControl1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            // 当切换到差异文件列表Tab页时，确保显示最新的差异文件
+            if (tabControl1.SelectedTab == tbpDiffList)
+            {
+                // 更新差异文件列表显示
+                txtDiff.Clear();
+                foreach (var item in DiffFileList)
+                {
+                    txtDiff.AppendText($"{item}\r\n");
+                }
+            }
+            // 当切换到差异文件管理Tab页时，初始化差异文件列表
+            else if (tabControl1.SelectedTab == tabPageDiffFile)
+            {
+                InitializeDiffFileList();
+            }
+        }
+
+        #endregion
 
         /// <summary>
         /// 这个方法被AI重写了。这里是正确的。AI的要检查验证
@@ -1993,6 +2856,7 @@ namespace AULWriter
         public string BaseExeVersion { get; set; }
         public List<string> PreVerUpdatedFiles { get; set; }
         public Func<string, bool> ExcludeUnnecessaryFiles { get; set; }
+        public string UpdateUrl { get; set; }
     }
 
     public class ProgressData

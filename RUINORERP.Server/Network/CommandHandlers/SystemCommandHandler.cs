@@ -119,7 +119,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     return new SystemCommandResponse();
                    //if (response != null)
                    //{
-                   //    _logger?.LogInformation("电脑状态查询成功 - 目标用户: {TargetUserId}", request.TargetUserId);
+                   //    _logger?.Debug("电脑状态查询成功 - 目标用户: {TargetUserId}", request.TargetUserId);
                    //    return response;
                    //}
                    //else

@@ -43,6 +43,8 @@ using RUINORERP.Server.Network.Services;
 using RUINORERP.Server.Services;
 using RUINORERP.Server.Services.BizCode;
 using RUINORERP.Server.SmartReminder;
+using RUINORERP.Server.SmartReminder.Strategies.SafetyStockStrategies;
+using RUINORERP.Server.Workflow;
 using RUINORERP.Server.Workflow.WFReminder;
 using RUINORERP.Server.Workflow.WFScheduled;
 using SharpYaml.Tokens;
@@ -1048,7 +1050,7 @@ namespace RUINORERP.Server
             // 记录日志级别变更
             var loggerFactory = Program.ServiceProvider.GetService<ILoggerFactory>();
             var logger = loggerFactory?.CreateLogger<frmMainNew>();
-            logger?.LogInformation($"全局日志级别已设置: {logLevel}");
+    
 
             // 更新菜单项选中状态
             Instance?.UpdateLogLevelMenuCheckState();
@@ -1628,6 +1630,11 @@ namespace RUINORERP.Server
                     var sequenceManagementControl = new Controls.SequenceManagementControl();
                     sequenceManagementControl.Dock = DockStyle.Fill;
                     return sequenceManagementControl;
+                case "文件管理":
+                    // 创建文件管理控件实例
+                    var fileManagementControl = new Controls.FileManagementControl();
+                    fileManagementControl.Dock = DockStyle.Fill;
+                    return fileManagementControl;
                 default:
                     return null;
             }
@@ -1645,7 +1652,7 @@ namespace RUINORERP.Server
             return cacheManagementForm;
         }
 
-        private void frmMainNew_Load(object sender, EventArgs e)
+        private async void frmMainNew_Load(object sender, EventArgs e)
         {
             // 检查系统注册状态
             CheckSystemRegistration();
@@ -1654,6 +1661,47 @@ namespace RUINORERP.Server
             InitializeUI();
 
             Initialize();
+
+            // 主窗体初始化完成后，调度工作流（避免空引用异常）
+            await ScheduleWorkflowsAfterInitialization();
+        }
+
+        /// <summary>
+        /// 主窗体初始化完成后调度工作流
+        /// </summary>
+        private async Task ScheduleWorkflowsAfterInitialization()
+        {
+            try
+            {
+                PrintInfoLog("开始调度工作流...");
+
+                // 配置库存快照工作流执行时间（方便调试和测试）
+                #if DEBUG
+                // 调试模式：启用调试模式，每5分钟执行一次
+                InventorySnapshotWorkflowConfig.DebugMode = false;
+                InventorySnapshotWorkflowConfig.DebugExecutionIntervalMinutes = 5;
+                
+                // 或者设置特定执行时间（例如：当前时间+2分钟）
+                // var now = DateTime.Now;
+                // var debugExecutionTime = now.AddMinutes(2);
+                // InventorySnapshotWorkflowConfig.DailyExecutionTime = new TimeSpan(debugExecutionTime.Hour, debugExecutionTime.Minute, debugExecutionTime.Second);
+                #else
+                // 生产模式：默认凌晨1点执行
+                InventorySnapshotWorkflowConfig.DailyExecutionTime = new TimeSpan(1, 0, 0);
+                #endif
+
+                // 调度工作流
+                await SafetyStockWorkflowConfig.ScheduleDailySafetyStockCalculation(WorkflowHost);
+                await InventorySnapshotWorkflowConfig.ScheduleInventorySnapshot(WorkflowHost);
+                await TempImageCleanupWorkflowConfig.ScheduleTempImageCleanup(WorkflowHost);
+
+                PrintInfoLog("工作流调度完成");
+            }
+            catch (Exception ex)
+            {
+                PrintInfoLog($"工作流调度失败: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"工作流调度错误: {ex.Message}");
+            }
         }
 
         #region 已注册的缓存类型
@@ -2773,6 +2821,16 @@ namespace RUINORERP.Server
         private void buttonSequenceManagement_Click(object sender, EventArgs e)
         {
             ShowTabPage("序列管理");
+        }
+
+        /// <summary>
+        /// 文件管理按钮点击事件
+        /// </summary>
+        /// <param name="sender">事件源</param>
+        /// <param name="e">事件参数</param>
+        private void buttonFileManagement_Click(object sender, EventArgs e)
+        {
+            ShowTabPage("文件管理");
         }
 
         /// <summary>

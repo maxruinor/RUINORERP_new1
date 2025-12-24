@@ -113,7 +113,7 @@ namespace RUINORERP.Extensions.AOP
 
 
                     // 如果方案一不行，试试这个方案
-                    //#region 方案二
+                    //#region 方案二 1
 
                     //var type = invocation.Method.ReturnType;
                     //var resultProperty = type.GetProperty("Result");

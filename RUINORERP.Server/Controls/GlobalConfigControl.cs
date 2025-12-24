@@ -158,7 +158,6 @@ namespace RUINORERP.Server.Controls
             if (!_configEntityTypes.Contains(configType))
             {
                 _configEntityTypes.Add(configType);
-                _logger?.LogInformation("成功注册配置类型: {TypeName} 关联文件: {FileName}", configType.Name, fileName);
             }
         }
 
@@ -191,7 +190,7 @@ namespace RUINORERP.Server.Controls
                             {
                                 // 这里可以尝试通过反射找到对应的类型
                                 // 暂时只记录日志
-                                _logger?.LogInformation("发现未注册的配置文件: {FileName}, 根节点: {RootNode}", fileName, rootNode);
+                              
                             }
                         }
                         catch (Exception ex)
@@ -484,7 +483,7 @@ namespace RUINORERP.Server.Controls
                 _currentConfigType = configType;
 
                 // 使用反射调用泛型的配置加载方法
-                _logger?.LogInformation("开始加载配置文件: {FileName}, 类型: {ConfigType}", fileName, configType.Name);
+            
 
                 // 调用配置管理器服务的LoadConfig方法，使用反射以支持任意配置类型
                 // 使用更精确的方法查找，获取无参数版本的LoadConfig泛型方法
@@ -509,7 +508,7 @@ namespace RUINORERP.Server.Controls
                     _currentConfig = config;
                     // 绑定到UI
                     BindConfigurationToUI(config);
-                    _logger?.LogInformation("成功加载配置: {ConfigType}", configType.Name);
+                     
                 }
                 else
                 {
@@ -689,7 +688,7 @@ namespace RUINORERP.Server.Controls
                         });
 
                         File.WriteAllText(saveDialog.FileName, JsonConvert.SerializeObject(historyData, Newtonsoft.Json.Formatting.Indented));
-                        _logger?.LogInformation("历史记录导出成功");
+                     
                         // 获取主窗体实例并打印信息日志
                         var mainForm = Application.OpenForms.OfType<frmMainNew>().FirstOrDefault();
                         mainForm?.PrintInfoLog("历史记录导出成功");
@@ -952,7 +951,7 @@ namespace RUINORERP.Server.Controls
         {
             try
             {
-                _logger?.LogInformation("使用配置管理服务创建默认配置: {ConfigType}", configType.Name);
+        
 
                 // 提取文件名
                 string fileName = Path.GetFileName(filePath);
@@ -978,7 +977,7 @@ namespace RUINORERP.Server.Controls
                                 saveMethod = saveMethod.MakeGenericMethod(configType);
                                 saveMethod.Invoke(_configManagerService, new object[] { defaultConfig, configType.Name });
                             }
-                            _logger?.LogInformation("成功创建默认配置: {ConfigType}", configType.Name);
+                        
                         }
                     }
                 }
@@ -990,7 +989,7 @@ namespace RUINORERP.Server.Controls
 
                     if (defaultConfig != null)
                     {
-                        _logger?.LogInformation("成功创建默认配置: {ConfigType}", configType.Name);
+                       
                     }
                 }
             }
@@ -1277,7 +1276,7 @@ namespace RUINORERP.Server.Controls
         {
             if (string.IsNullOrEmpty(_currentConfigFileName))
             {
-                _logger?.LogInformation("请先选择要管理版本的配置文件");
+    
                 // 获取主窗体实例并打印信息日志
                 var mainForm = Application.OpenForms.OfType<frmMainNew>().FirstOrDefault();
                 mainForm?.PrintInfoLog("请先选择要管理版本的配置文件");
@@ -1378,8 +1377,7 @@ namespace RUINORERP.Server.Controls
                                     item.Tag = version;
                                     listView.Items.Add(item);
                                 }
-
-                                _logger?.LogInformation("配置版本创建成功");
+ 
                                 // 获取主窗体实例并打印信息日志
                                 var mainForm = Application.OpenForms.OfType<frmMainNew>().FirstOrDefault();
                                 mainForm?.PrintInfoLog("配置版本创建成功");
@@ -1415,7 +1413,7 @@ namespace RUINORERP.Server.Controls
             {
                 if (listView.SelectedItems.Count == 0)
                 {
-                    _logger?.LogInformation("请选择要回滚的版本");
+           
                     // 使用单例方式获取主窗体并打印信息日志
                     frmMainNew.Instance?.PrintInfoLog("请选择要回滚的版本");
                     return;
@@ -1427,7 +1425,7 @@ namespace RUINORERP.Server.Controls
 
                 if (selectedVersion.IsActive)
                 {
-                    _logger?.LogInformation("当前已是选中的版本，无需回滚");
+                
                     // 获取主窗体实例并打印信息日志
                     var mainForm = Application.OpenForms.OfType<frmMainNew>().FirstOrDefault();
                     mainForm?.PrintInfoLog("当前已是选中的版本，无需回滚");
@@ -1460,7 +1458,7 @@ namespace RUINORERP.Server.Controls
                             // 重新加载配置到UI
                             BindConfigurationToUI(_currentConfig);
 
-                            _logger?.LogInformation("配置回滚成功");
+                        
                             // 使用单例方式获取主窗体并打印信息日志
                             frmMainNew.Instance?.PrintInfoLog("配置回滚成功");
                         }
@@ -1492,7 +1490,7 @@ namespace RUINORERP.Server.Controls
                             listView.Items.Add(item);
                         }
 
-                        _logger?.LogInformation("配置已成功回滚");
+                
                         // 使用单例方式获取主窗体并打印信息日志
                         frmMainNew.Instance?.PrintInfoLog("配置已成功回滚");
                     }
@@ -1510,7 +1508,7 @@ namespace RUINORERP.Server.Controls
             {
                 if (listView.SelectedItems.Count < 2)
                 {
-                    _logger?.LogInformation("请选择两个版本进行比较");
+              
                     // 获取主窗体实例并打印信息日志
                     var mainForm = Application.OpenForms.OfType<frmMainNew>().FirstOrDefault();
                     mainForm?.PrintInfoLog("请选择两个版本进行比较");
@@ -1519,7 +1517,7 @@ namespace RUINORERP.Server.Controls
 
                 if (listView.SelectedItems.Count > 2)
                 {
-                    _logger?.LogInformation("一次只能比较两个版本");
+                   
                     // 获取主窗体实例并打印信息日志
                     var mainForm = Application.OpenForms.OfType<frmMainNew>().FirstOrDefault();
                     mainForm?.PrintInfoLog("一次只能比较两个版本");
@@ -1612,7 +1610,7 @@ namespace RUINORERP.Server.Controls
             {
                 if (listView.SelectedItems.Count == 0)
                 {
-                    _logger?.LogInformation("请选择要删除的版本");
+                    _logger?.Debug("请选择要删除的版本");
                     // 获取主窗体实例并打印信息日志
                     var mainForm = Application.OpenForms.OfType<frmMainNew>().FirstOrDefault();
                     mainForm?.PrintInfoLog("请选择要删除的版本");
@@ -1625,7 +1623,7 @@ namespace RUINORERP.Server.Controls
 
                 if (selectedVersion.IsActive)
                 {
-                    _logger?.LogInformation("不能删除当前活动的版本");
+                    _logger?.Debug("不能删除当前活动的版本");
                     // 获取主窗体实例并打印信息日志
                     var mainForm = Application.OpenForms.OfType<frmMainNew>().FirstOrDefault();
                     mainForm?.PrintInfoLog("不能删除当前活动的版本");

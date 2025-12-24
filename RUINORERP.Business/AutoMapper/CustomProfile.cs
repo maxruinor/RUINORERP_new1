@@ -28,6 +28,14 @@ namespace RUINORERP.Business.AutoMapper
             //销售退货单时，从主仓出，退到维修仓库时 更新库存时得新建。参考主仓信息
             CreateMap<tb_Inventory, tb_Inventory>();
 
+
+            // 在AutoMapper配置文件中添加
+            CreateMap<tb_Inventory, tb_InventorySnapshot>()
+                .ForMember(dest => dest.SnapshotID, opt => opt.Ignore()) // 快照ID由数据库生成
+                .ForMember(dest => dest.SnapshotTime, o => o.Ignore()); // SnapshotTime在业务逻辑中设置
+
+
+
             #region 财务模块
 
             //加工费用的应付款单

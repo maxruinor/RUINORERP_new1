@@ -201,8 +201,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 string barcode = await _bizCodeService.GenerateBarCodeAsync(request.BarCodeParameter.OriginalCode,
                     request.BarCodeParameter.PaddingChar);
 
-                logger?.LogInformation($"成功生成条码: {barcode}, 原始编码: {request.BarCodeParameter.OriginalCode}");
-
+            
                 // 返回成功响应
                 return new BizCodeResponse
                 {

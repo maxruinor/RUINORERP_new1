@@ -51,6 +51,8 @@ namespace RUINORERP.Business
             RuleFor(x => x.FileStoragePath).Must(BeValidPathWithEnvironmentVariable)
                 .When(x => x.FileStoragePath.Contains("%"))
                 .WithMessage("文件存储路径中的环境变量格式无效");
+            RuleFor(x => x.FileStoragePath).Must(NotBeInProgramDirectory)
+                .WithMessage("文件存储路径不能设置在程序运行目录或其子目录中，以防止重新部署时误删文件");
 
             RuleFor(x => x.MaxFileSizeMB).GreaterThan(0).WithMessage("单个文件最大上传大小必须大于0MB");
             RuleFor(x => x.MaxFileSizeMB).LessThanOrEqualTo(1024).WithMessage("单个文件最大上传大小不能超过1024MB");
@@ -169,6 +171,36 @@ namespace RUINORERP.Business
                 return false;
 
             return path.IndexOfAny(Path.GetInvalidFileNameChars()) < 0;
+        }
+
+        // 检查文件存储路径是否在程序运行目录或其子目录中
+        private bool NotBeInProgramDirectory(string fileStoragePath)
+        {
+            if (string.IsNullOrEmpty(fileStoragePath))
+                return true;
+
+            try
+            {
+                // 解析路径中的环境变量
+                string resolvedPath = System.Environment.ExpandEnvironmentVariables(fileStoragePath);
+                
+                // 如果路径不是绝对路径，无法进行目录关系检查
+                if (!Path.IsPathRooted(resolvedPath))
+                    return true;
+
+                // 获取程序运行目录
+                string programDirectory = AppDomain.CurrentDomain.BaseDirectory;
+                
+                // 检查路径是否在程序运行目录或其子目录中
+                bool isInProgramDirectory = resolvedPath.StartsWith(programDirectory, StringComparison.OrdinalIgnoreCase);
+                
+                return !isInProgramDirectory;
+            }
+            catch (Exception)
+            {
+                // 如果解析路径失败，默认通过验证（避免验证过程本身导致系统问题）
+                return true;
+            }
         }
     }
 }

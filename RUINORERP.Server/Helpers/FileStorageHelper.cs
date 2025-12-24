@@ -26,6 +26,13 @@ namespace RUINORERP.Server.Helpers
             if (!string.IsNullOrEmpty(_serverConfig.FileStoragePath))
             {
                 var resolvedPath = ResolveEnvironmentVariables(_serverConfig.FileStoragePath);
+                
+                // 安全检查：确保存储路径不在程序运行目录或其子目录中
+                if (IsPathInProgramDirectory(resolvedPath))
+                {
+                    throw new InvalidOperationException($"文件存储路径 '{resolvedPath}' 不能设置在程序运行目录或其子目录中。请选择其他目录以防止重新部署时误删文件。");
+                }
+                
                 if (!Directory.Exists(resolvedPath))
                 {
                     Directory.CreateDirectory(resolvedPath);
@@ -40,7 +47,7 @@ namespace RUINORERP.Server.Helpers
         /// </summary>
         /// <param name="path">包含环境变量的路径</param>
         /// <returns>解析后的实际路径</returns>
-        private static string ResolveEnvironmentVariables(string path)
+        public static string ResolveEnvironmentVariables(string path)
         {
             if (string.IsNullOrEmpty(path))
                 return path;
@@ -175,6 +182,154 @@ namespace RUINORERP.Server.Helpers
             }
             
             return count;
+        }
+
+        /// <summary>
+        /// 检查路径是否在程序运行目录或其子目录中
+        /// </summary>
+        /// <param name="filePath">要检查的文件路径</param>
+        /// <returns>true=路径在程序目录中，false=路径安全</returns>
+        private static bool IsPathInProgramDirectory(string filePath)
+        {
+            if (string.IsNullOrEmpty(filePath))
+                return false;
+
+            try
+            {
+                // 如果路径不是绝对路径，无法进行目录关系检查
+                if (!Path.IsPathRooted(filePath))
+                    return false;
+
+                // 获取程序运行目录
+                string programDirectory = AppDomain.CurrentDomain.BaseDirectory;
+                
+                // 检查路径是否在程序运行目录或其子目录中
+                bool isInProgramDirectory = filePath.StartsWith(programDirectory, StringComparison.OrdinalIgnoreCase);
+                
+                return isInProgramDirectory;
+            }
+            catch (Exception ex)
+            {
+                // 如果检查失败，记录日志并返回false（避免安全检查导致系统问题）
+                System.Diagnostics.Debug.WriteLine($"检查路径安全性时出错: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 将绝对路径转换为相对于存储根目录的相对路径
+        /// </summary>
+        /// <param name="absolutePath">绝对路径</param>
+        /// <returns>相对路径</returns>
+        public static string ConvertToRelativePath(string absolutePath)
+        {
+            if (string.IsNullOrEmpty(absolutePath) || !Path.IsPathRooted(absolutePath))
+                return absolutePath;
+
+            try
+            {
+                if (_serverConfig == null || string.IsNullOrEmpty(_serverConfig.FileStoragePath))
+                    return absolutePath;
+
+                var resolvedRootPath = ResolveEnvironmentVariables(_serverConfig.FileStoragePath);
+                
+                // 确保路径格式一致
+                var rootUri = new Uri(resolvedRootPath.TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar);
+                var fileUri = new Uri(absolutePath);
+                
+                // 如果文件路径在根目录下，返回相对路径
+                if (rootUri.IsBaseOf(fileUri))
+                {
+                    var relativeUri = rootUri.MakeRelativeUri(fileUri);
+                    return Uri.UnescapeDataString(relativeUri.ToString()).Replace('/', Path.DirectorySeparatorChar);
+                }
+                
+                // 如果不在根目录下，返回原路径
+                return absolutePath;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"转换相对路径失败: {ex.Message}");
+                return absolutePath;
+            }
+        }
+
+        /// <summary>
+        /// 将相对路径解析为绝对路径
+        /// </summary>
+        /// <param name="relativePath">相对路径</param>
+        /// <returns>绝对路径</returns>
+        public static string ResolveToAbsolutePath(string relativePath)
+        {
+            if (string.IsNullOrEmpty(relativePath))
+                return relativePath;
+
+            try
+            {
+                // 如果已经是绝对路径，直接返回
+                if (Path.IsPathRooted(relativePath))
+                    return relativePath;
+
+                if (_serverConfig == null || string.IsNullOrEmpty(_serverConfig.FileStoragePath))
+                    return relativePath;
+
+                var resolvedRootPath = ResolveEnvironmentVariables(_serverConfig.FileStoragePath);
+                
+                // 组合根目录和相对路径
+                var absolutePath = Path.Combine(resolvedRootPath, relativePath);
+                
+                // 规范化路径（移除多余的..和.）
+                return Path.GetFullPath(absolutePath);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"解析绝对路径失败: {ex.Message}");
+                return relativePath;
+            }
+        }
+
+        /// <summary>
+        /// 检查文件是否存在（支持相对路径和绝对路径）
+        /// </summary>
+        /// <param name="filePath">文件路径（相对或绝对）</param>
+        /// <returns>文件是否存在</returns>
+        public static bool FileExists(string filePath)
+        {
+            if (string.IsNullOrEmpty(filePath))
+                return false;
+
+            try
+            {
+                var absolutePath = ResolveToAbsolutePath(filePath);
+                return File.Exists(absolutePath);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"检查文件存在性失败: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 读取文件内容（支持相对路径和绝对路径）
+        /// </summary>
+        /// <param name="filePath">文件路径（相对或绝对）</param>
+        /// <returns>文件内容字节数组</returns>
+        public static byte[] ReadFileBytes(string filePath)
+        {
+            if (string.IsNullOrEmpty(filePath))
+                return null;
+
+            try
+            {
+                var absolutePath = ResolveToAbsolutePath(filePath);
+                return File.ReadAllBytes(absolutePath);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"读取文件失败: {ex.Message}");
+                return null;
+            }
         }
     }
 }

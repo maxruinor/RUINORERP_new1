@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Logging;
 using NPinyin;
 using RUINORERP.Business.BNR;
+using RUINORERP.Business.Cache;
 using RUINORERP.Global;
 using RUINORERP.IServices;
 using RUINORERP.Model;
@@ -32,6 +33,7 @@ namespace RUINORERP.Server.Services.BizCode
         private readonly BNRFactory _bnrFactory;
         private readonly ILogger<ProductSKUCodeGenerator> _logger;
         private readonly ISqlSugarClient _db;
+        private readonly IEntityCacheManager _entityCacheManager;
 
         // SKU缓存，用于提高唯一性检查性能
         private static readonly ConcurrentDictionary<string, bool> _skuCache = new ConcurrentDictionary<string, bool>();
@@ -46,8 +48,10 @@ namespace RUINORERP.Server.Services.BizCode
         /// <param name="logger">日志记录器</param>
         /// <param name="bnrFactory">编号生成工厂，用于直接生成序号，避免循环依赖</param>
         /// <param name="db">数据库客户端，用于查询产品信息</param>
-        public ProductSKUCodeGenerator(ILogger<ProductSKUCodeGenerator> logger, BNRFactory bnrFactory, ISqlSugarClient db)
+        public ProductSKUCodeGenerator(ILogger<ProductSKUCodeGenerator> logger, IEntityCacheManager entityCacheManager, 
+        BNRFactory bnrFactory, ISqlSugarClient db)
         {
+            _entityCacheManager = entityCacheManager;
             _logger = logger;
             _bnrFactory = bnrFactory;
             _db = db;
@@ -218,7 +222,7 @@ namespace RUINORERP.Server.Services.BizCode
                 // 确保产品类目信息已加载
                 if (prod.tb_producttype == null && prod.Type_ID > 0)
                 {
-                    prod.tb_producttype = Business.Cache.EntityCacheHelper.GetEntity<tb_ProductType>(prod.Type_ID);
+                    prod.tb_producttype = _entityCacheManager.GetEntity<tb_ProductType>(prod.Type_ID);
                 }
 
                 if (prod.tb_producttype == null || string.IsNullOrEmpty(prod.tb_producttype.TypeName))
@@ -265,7 +269,7 @@ namespace RUINORERP.Server.Services.BizCode
                 // 确保产品类目信息已加载
                 if (prod.tb_prodcategories == null && prod.Category_ID > 0)
                 {
-                    prod.tb_prodcategories = Business.Cache.EntityCacheHelper.GetEntity<tb_ProdCategories>(prod.Category_ID);
+                    prod.tb_prodcategories = _entityCacheManager.GetEntity<tb_ProdCategories>(prod.Category_ID);
                 }
 
                 if (prod.tb_prodcategories == null || string.IsNullOrEmpty(prod.tb_prodcategories.Category_name))

@@ -108,7 +108,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 // 通用数据传输处理
                 response.IsSuccess = true;
                 response.Message = "数据传输成功";
-                _logger?.LogInformation($"数据传输成功，返回了{configList.Count}个配置"); 
+                _logger?.Debug($"数据传输成功，返回了{configList.Count}个配置"); 
             } 
             catch (Exception ex) 
             { 

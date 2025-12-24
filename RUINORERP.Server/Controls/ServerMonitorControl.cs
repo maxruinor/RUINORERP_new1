@@ -468,9 +468,9 @@ namespace RUINORERP.Server.Controls
             var currentProcess = System.Diagnostics.Process.GetCurrentProcess();
             var workingSetMemory = currentProcess.WorkingSet64 / (1024 * 1024); // 转换为MB
             var managedMemory = GC.GetTotalMemory(false) / (1024 * 1024); // 转换为MB
-            
+
             lblMemoryUsageValue.Text = $"{workingSetMemory} MB (托管: {managedMemory} MB)";
-            
+
             // 根据内存使用情况设置颜色
             if (workingSetMemory > 2048) // 超过2GB
             {
@@ -633,31 +633,31 @@ namespace RUINORERP.Server.Controls
             {
                 // 重置诊断服务的统计信息
                 _diagnosticsService.ResetAllStatistics();
-                
+
                 // 重置熔断器指标
                 if (_commandDispatcher != null && _commandDispatcher.Metrics != null)
                 {
                     _commandDispatcher.Metrics.ResetAllMetrics();
                 }
-                
+
                 // 重置性能监控服务的统计信息
                 _performanceMonitoringService.ResetStatistics();
-                
+
                 // 重置错误分析服务的统计信息
                 _errorAnalysisService.ResetStatistics();
-                
+
                 // 重置会话统计信息
                 if (_sessionService != null)
                 {
                     _sessionService.ResetStatistics();
                 }
 
-                // 重置缓存统计信息
-                EntityCacheHelper.ResetStatistics();
-                
+                //// 重置缓存统计信息
+                //EntityCacheHelper.ResetStatistics();
+
                 // 刷新数据显示
                 RefreshData();
-            
+
             }
             catch (Exception ex)
             {
@@ -747,7 +747,7 @@ namespace RUINORERP.Server.Controls
             {
                 // 使用CommandDispatcher的Metrics属性获取熔断器指标
                 var circuitBreakerMetrics = _commandDispatcher?.Metrics;
-                
+
                 if (circuitBreakerMetrics == null)
                 {
                     // 如果熔断器指标对象为null，显示默认值
@@ -816,23 +816,23 @@ namespace RUINORERP.Server.Controls
                 {
                     cbLblAvgResponseTimeValue.Text = "0ms";
                 }
-                
+
                 // 显示熔断器开关次数的详情
                 if (globalMetrics.StateChanges > 0)
                 {
                     // 可以在这里添加更多详细信息的显示，如开关历史记录等
                 }
-                
+
                 // 更新新增的熔断器指标
                 // 熔断器打开次数
                 cbLblCircuitOpensValue.Text = globalMetrics.CircuitOpens.ToString();
-                
+
                 // 熔断器关闭次数
                 cbLblCircuitClosesValue.Text = globalMetrics.CircuitCloses.ToString();
-                
+
                 // 熔断器半开次数
                 cbLblCircuitHalfOpensValue.Text = globalMetrics.CircuitHalfOpens.ToString();
-                
+
                 // 当前活跃执行数
                 cbLblActiveExecutionsValue.Text = globalMetrics.ActiveExecutions.ToString();
             }

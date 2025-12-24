@@ -236,12 +236,15 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     await File.WriteAllBytesAsync(filePath, FileStorageInfo.FileData, cancellationToken);
                     _logger?.Debug("文件物理保存成功");
 
+                    // 将绝对路径转换为相对路径保存到数据库
+                    var relativeStoragePath = FileStorageHelper.ConvertToRelativePath(filePath);
+                    
                     // 创建文件信息实体并保存到数据库
                     var fileStorageInfo = FileManagementHelper.CreateFileStorageInfo(
                         FileStorageInfo.OriginalFileName,  // fileName
                         FileStorageInfo.FileData.Length,   // fileSize
                         fileExtension.TrimStart('.'),     // fileType
-                        filePath,                          // storagePath
+                        relativeStoragePath,              // storagePath（保存相对路径）
                         FileStorageInfo.BusinessType != null ? FileStorageInfo.BusinessType.GetHashCode() : 0, // businessType
                         executionContext.UserId,          // userId
                         contentHash);                     // contentHash (可选)
@@ -328,7 +331,8 @@ namespace RUINORERP.Server.Network.CommandHandlers
                         downloadRequest.FileStorageInfo = fileInfo;
                         if (fileInfo != null && !string.IsNullOrEmpty(fileInfo.StoragePath))
                         {
-                            filePath = fileInfo.StoragePath;
+                            // 将相对路径解析为绝对路径
+                            filePath = FileStorageHelper.ResolveToAbsolutePath(fileInfo.StoragePath);
                         }
                     }
                     else
@@ -394,10 +398,22 @@ namespace RUINORERP.Server.Network.CommandHandlers
             
             // 1. 优先使用精确匹配模式
             // 从StoragePath直接尝试（精确路径）
-            if (!string.IsNullOrEmpty(fileInfo.StoragePath) && File.Exists(fileInfo.StoragePath))
+            if (!string.IsNullOrEmpty(fileInfo.StoragePath))
             {
-                _logger?.Debug("StoragePath直接存在，返回完整路径: {Path}", fileInfo.StoragePath);
-                return fileInfo.StoragePath;
+                // 首先尝试将相对路径解析为绝对路径
+                var resolvedPath = FileStorageHelper.ResolveToAbsolutePath(fileInfo.StoragePath);
+                if (File.Exists(resolvedPath))
+                {
+                    _logger?.Debug("解析后的路径存在，返回完整路径: {Path}", resolvedPath);
+                    return resolvedPath;
+                }
+                
+                // 如果解析后的路径不存在，尝试原路径（可能是绝对路径）
+                if (File.Exists(fileInfo.StoragePath))
+                {
+                    _logger?.Debug("StoragePath直接存在，返回完整路径: {Path}", fileInfo.StoragePath);
+                    return fileInfo.StoragePath;
+                }
             }
             
             // 从StoragePath中提取文件名（精确匹配）
@@ -619,22 +635,44 @@ namespace RUINORERP.Server.Network.CommandHandlers
                         if (isPhysicalDelete)
                         {
                             // 优先使用StoragePath直接删除文件
-                            if (!string.IsNullOrEmpty(fileStorageInfo.StoragePath) && File.Exists(fileStorageInfo.StoragePath))
+                            if (!string.IsNullOrEmpty(fileStorageInfo.StoragePath))
                             {
-                                try
+                                // 首先尝试将相对路径解析为绝对路径
+                                var resolvedPath = FileStorageHelper.ResolveToAbsolutePath(fileStorageInfo.StoragePath);
+                                if (File.Exists(resolvedPath))
                                 {
-                                    _logger?.LogDebug("直接使用StoragePath删除文件: {FilePath}", fileStorageInfo.StoragePath);
-                                    File.Delete(fileStorageInfo.StoragePath);
-                                    fileDeleted = true;
-                                    _logger?.LogDebug("使用StoragePath删除文件成功: {FilePath}", fileStorageInfo.StoragePath);
+                                    try
+                                    {
+                                        _logger?.LogDebug("使用解析后的路径删除文件: {FilePath}", resolvedPath);
+                                        File.Delete(resolvedPath);
+                                        fileDeleted = true;
+                                        _logger?.LogDebug("使用解析后的路径删除文件成功: {FilePath}", resolvedPath);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        _logger?.LogError(ex, "使用解析后的路径删除文件失败: {FilePath}", resolvedPath);
+                                    }
                                 }
-                                catch (Exception ex)
+                                
+                                // 如果解析后的路径不存在，尝试原路径（可能是绝对路径）
+                                if (!fileDeleted && File.Exists(fileStorageInfo.StoragePath))
                                 {
-                                    _logger?.LogError(ex, "使用StoragePath删除文件失败: {FilePath}", fileStorageInfo.StoragePath);
-                                    // 即使直接删除失败，也继续尝试搜索删除作为备用方案
+                                    try
+                                    {
+                                        _logger?.LogDebug("直接使用StoragePath删除文件: {FilePath}", fileStorageInfo.StoragePath);
+                                        File.Delete(fileStorageInfo.StoragePath);
+                                        fileDeleted = true;
+                                        _logger?.LogDebug("使用StoragePath删除文件成功: {FilePath}", fileStorageInfo.StoragePath);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        _logger?.LogError(ex, "使用StoragePath删除文件失败: {FilePath}", fileStorageInfo.StoragePath);
+                                        // 即使直接删除失败，也继续尝试搜索删除作为备用方案
+                                    }
                                 }
                             }
-                            else
+                            
+                            if (!fileDeleted)
                             {
                                 _logger?.LogDebug("StoragePath不存在或文件不存在，尝试通过搜索模式查找并删除");
                             }

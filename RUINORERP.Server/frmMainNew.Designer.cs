@@ -88,6 +88,7 @@ namespace RUINORERP.Server
             buttonCacheManage = new System.Windows.Forms.Button();
             buttonUserList = new System.Windows.Forms.Button();
             buttonServerMonitor = new System.Windows.Forms.Button();
+            buttonFileManagement = new System.Windows.Forms.Button();
             tabControlMain = new System.Windows.Forms.TabControl();
             richTextBoxLog = new System.Windows.Forms.RichTextBox();
             splitterLog = new System.Windows.Forms.Splitter();
@@ -410,6 +411,7 @@ namespace RUINORERP.Server
             panelNavigation.Controls.Add(buttonCacheManage);
             panelNavigation.Controls.Add(buttonUserList);
             panelNavigation.Controls.Add(buttonServerMonitor);
+            panelNavigation.Controls.Add(buttonFileManagement);
             panelNavigation.Dock = System.Windows.Forms.DockStyle.Fill;
             panelNavigation.Location = new System.Drawing.Point(0, 0);
             panelNavigation.Margin = new System.Windows.Forms.Padding(4);
@@ -504,6 +506,17 @@ namespace RUINORERP.Server
             buttonServerMonitor.Text = "服务器监控";
             buttonServerMonitor.UseVisualStyleBackColor = true;
             buttonServerMonitor.Click += buttonServerMonitor_Click;
+            // 
+            // buttonFileManagement
+            // 
+            buttonFileManagement.Location = new System.Drawing.Point(13, 511);
+            buttonFileManagement.Margin = new System.Windows.Forms.Padding(4);
+            buttonFileManagement.Name = "buttonFileManagement";
+            buttonFileManagement.Size = new System.Drawing.Size(140, 42);
+            buttonFileManagement.TabIndex = 8;
+            buttonFileManagement.Text = "文件管理";
+            buttonFileManagement.UseVisualStyleBackColor = true;
+            buttonFileManagement.Click += buttonFileManagement_Click;
             // 
             // tabControlMain
             // 
@@ -624,6 +637,7 @@ namespace RUINORERP.Server
         private System.Windows.Forms.Button buttonCacheManage;
         private System.Windows.Forms.Button buttonUserList;
         private System.Windows.Forms.Button buttonServerMonitor;
+        private System.Windows.Forms.Button buttonFileManagement;
         private System.Windows.Forms.TabControl tabControlMain;
         private System.Windows.Forms.RichTextBox richTextBoxLog;
         private System.Windows.Forms.Splitter splitterLog;

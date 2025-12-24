@@ -318,8 +318,7 @@ namespace RUINORERP.Server.Helpers
 
                 // 保存业务关联
                 var result = await businessRelationController.SaveOrUpdate(businessRelation);
-                logger?.LogInformation("业务关联保存成功: FileId={FileId}, BusinessType={BusinessType}, BusinessNo={BusinessNo}",
-                    businessRelation.FileId, businessRelation.BusinessType, businessRelation.BusinessNo);
+                logger?.Debug("没有找到需要迁移的文件记录");
                 
                 return result.Succeeded;
             }
@@ -405,7 +404,7 @@ namespace RUINORERP.Server.Helpers
                     {
                         businessRelation.IsMainFile = false;
                         await relationController.SaveOrUpdate(businessRelation);
-                        logger?.LogInformation("已将原主文件设置为非主文件: RelationId={RelationId}, FileId={FileId}",
+                        logger?.Debug("已将原主文件设置为非主文件: RelationId={RelationId}, FileId={FileId}",
                             businessRelation.RelationId, businessRelation.FileId);
                     }
                 }
@@ -511,7 +510,7 @@ namespace RUINORERP.Server.Helpers
                 var versions = await versionController.BaseQueryAsync($"FileId = {fileId}");
                 // 不再需要设置IsActive属性，版本控制通过VersionNo实现
                 // 新版本总是通过UpdateFileCurrentVersionAsync设置为当前版本
-                logger?.LogInformation("处理文件版本控制: FileId={FileId}, 版本数={VersionCount}", 
+                logger?.Debug("处理文件版本控制: FileId={FileId}, 版本数={VersionCount}", 
                     fileId, versions.Count);
             }
             catch (Exception ex)
@@ -573,7 +572,7 @@ namespace RUINORERP.Server.Helpers
                     {
                         // 不再需要检查IsActive属性，直接删除超出限制的旧版本
                         await versionController.BaseDeleteAsync(version);
-                        logger?.LogInformation("已删除旧文件版本: FileId={FileId}, VersionNo={VersionNo}", 
+                        logger?.Debug("已删除旧文件版本: FileId={FileId}, VersionNo={VersionNo}", 
                             version.FileId, version.VersionNo);
                     }
                 }

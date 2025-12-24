@@ -284,11 +284,6 @@ namespace RUINORERP.Server
                     var json = System.IO.File.ReadAllText(jsonpath);
                     loader.LoadDefinition(json, Deserializers.Json);
 
-
-                    await SafetyStockWorkflowConfig.ScheduleDailySafetyStockCalculation(host);
-                    await InventorySnapshotWorkflowConfig.ScheduleInventorySnapshot(host);
-                    await TempImageCleanupWorkflowConfig.ScheduleTempImageCleanup(host);
-
                     // 启动host服务，避免重复启动
                     if (!serviceStarted)
                     {
@@ -327,13 +322,6 @@ namespace RUINORERP.Server
 
                     /// 初始化实体映射服务
                     EntityMappingHelper.Initialize();
-
-                    // 初始化实体缓存服务
-                    IEntityCacheManager entityCacheManager = Startup.GetFromFac<IEntityCacheManager>();
-
-                    // 设置全局缓存服务实例
-                    RUINORERP.Business.Cache.EntityCacheHelper.SetCurrent(entityCacheManager);
-
 
                     var form1 = Startup.GetFromFac<frmMainNew>();
                     System.Windows.Forms.Application.Run(form1);

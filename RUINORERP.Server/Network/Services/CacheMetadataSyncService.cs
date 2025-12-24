@@ -55,7 +55,7 @@ namespace RUINORERP.Server.Network.Services
 
                 if (serverSyncData == null || serverSyncData.Count == 0)
                 {
-                    _logger?.LogInformation("服务器缓存元数据为空，跳过同步操作");
+                    _logger?.Debug("服务器缓存元数据为空，跳过同步操作");
                     return true; // 不视为错误
                 }
 
@@ -95,14 +95,14 @@ namespace RUINORERP.Server.Network.Services
                 var sessions = _sessionService.GetAllUserSessions();
                 if (sessions == null || sessions.Count() == 0)
                 {
-                    _logger?.LogInformation("没有在线用户，跳过缓存元数据广播");
+                    _logger?.Debug("没有在线用户，跳过缓存元数据广播");
                     return 0;
                 }
 
                 int successCount = 0;
                 int totalCount = sessions.Count();
 
-                _logger?.LogInformation("开始向 {UserCount} 个在线用户广播缓存元数据更新", totalCount);
+                _logger?.Debug("开始向 {UserCount} 个在线用户广播缓存元数据更新", totalCount);
 
                 // 并行发送同步请求
                 var tasks = new Task<bool>[totalCount];
@@ -125,7 +125,7 @@ namespace RUINORERP.Server.Network.Services
                     }
                 }
 
-                _logger?.LogInformation("缓存元数据广播完成，成功 {SuccessCount}/{TotalCount} 个用户",
+                _logger?.Debug("缓存元数据广播完成，成功 {SuccessCount}/{TotalCount} 个用户",
                     successCount, totalCount);
 
                 return successCount;
@@ -154,7 +154,7 @@ namespace RUINORERP.Server.Network.Services
 
                 if (response.IsSuccess)
                 {
-                    _logger?.LogInformation("会话 {SessionId} 缓存元数据同步成功：更新 {UpdatedCount} 个表，跳过 {SkippedCount} 个表",
+                    _logger?.Debug("会话 {SessionId} 缓存元数据同步成功：更新 {UpdatedCount} 个表，跳过 {SkippedCount} 个表",
                         sessionId, response.UpdatedCount, response.SkippedCount);
                 }
                 else

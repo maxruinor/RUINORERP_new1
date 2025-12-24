@@ -1,6 +1,7 @@
-﻿//using OfficeOpenXml.FormulaParsing.Excel.Functions.Math;
+//using OfficeOpenXml.FormulaParsing.Excel.Functions.Math;
 using RUINORERP.Common.CollectionExtension;
 using RUINORERP.Common.Helper;
+using RUINORERP.Global.CustomAttribute;
 using RUINORERP.Model.Dto;
 using System;
 using System.Collections;
@@ -443,7 +444,8 @@ namespace RUINORERP.Common.Extensions
 
         public static DataTable ToDataTable<Sub, M>(this List<M> list, List<Sub> subList,
     ConcurrentDictionary<string, string> SubPartsfieldNameList,
-    ConcurrentDictionary<string, string> MainfieldNameList, Expression<Func<M, object>> RelatedKey) where Sub : class where M : class
+    ConcurrentDictionary<string, string> MainfieldNameList, Expression<Func<M, object>> RelatedKey,
+    Func<DataTable, Type, bool> foreignKeyConversionCallback = null) where Sub : class where M : class
         {
             // 创建一个 DataTable 对象
             DataTable dataTable = new DataTable();
@@ -464,6 +466,13 @@ namespace RUINORERP.Common.Extensions
             // 填充 DataTable 的数据
             FillDataTableData<Sub, M>(dataTable, subList, list, SubPartsfieldNameList, MainfieldNameList, keyBizName);
 
+            // 如果提供了回调函数，调用它进行外键转换
+            if (foreignKeyConversionCallback != null)
+            {
+                foreignKeyConversionCallback(dataTable, typeof(M));
+                foreignKeyConversionCallback(dataTable, typeof(Sub));
+            }
+
             return dataTable;
         }
 
@@ -472,16 +481,31 @@ namespace RUINORERP.Common.Extensions
             ConcurrentDictionary<string, string> MainfieldNameList,
             string keyBizName, Type subType, Type mainType)
         {
-            // 获取 Sub 类型的所有公共属性
-            PropertyInfo[] propertiesSub = subType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
-            // 获取 Main 类型的所有公共属性
-            PropertyInfo[] properties = mainType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
-
-            // 遍历属性并创建 DataColumn
-            foreach (PropertyInfo property in propertiesSub.Concat(properties))
+            // 获取所有属性，用于后续查找
+            Dictionary<string, PropertyInfo> allProperties = new Dictionary<string, PropertyInfo>();
+            foreach (PropertyInfo property in subType.GetProperties(BindingFlags.Public | BindingFlags.Instance))
             {
-                string propertyName = property.Name;
-                if ((SubPartsfieldNameList.ContainsKey(propertyName) || MainfieldNameList.ContainsKey(propertyName))) 
+                if (!allProperties.ContainsKey(property.Name))
+                {
+                    allProperties.Add(property.Name, property);
+                }
+            }
+            foreach (PropertyInfo property in mainType.GetProperties(BindingFlags.Public | BindingFlags.Instance))
+            {
+                if (!allProperties.ContainsKey(property.Name))
+                {
+                    allProperties.Add(property.Name, property);
+                }
+            }
+
+            // 按照字段列表顺序构建列，先处理SubPartsfieldNameList，再处理MainfieldNameList
+            // 这样可以确保列顺序与字段列表中定义的顺序一致
+            
+            // 1. 先处理SubPartsfieldNameList中的列
+            foreach (var kvp in SubPartsfieldNameList.OrderBy(k => k.Key))
+            {
+                string propertyName = kvp.Key;
+                if (allProperties.TryGetValue(propertyName, out PropertyInfo property))
                 {
                     // 确保获取正确的列类型，特别是处理可空类型
                     Type colType;
@@ -493,11 +517,46 @@ namespace RUINORERP.Common.Extensions
                     {
                         colType = property.PropertyType;
                     }
-                    
+
                     // 创建列时确保使用原始属性的类型
                     DataColumn column = new DataColumn(propertyName, colType);
-                    column.Caption = SubPartsfieldNameList.ContainsKey(propertyName) ? SubPartsfieldNameList[propertyName] : MainfieldNameList[propertyName];
-                    
+                    column.Caption = kvp.Value;
+
+                    // 如果相同列名的列已经存在，则跳过
+                    if (!dataTable.Columns.Contains(column.ColumnName))
+                    {
+                        dataTable.Columns.Add(column);
+                    }
+                }
+            }
+
+            // 2. 再处理MainfieldNameList中的列
+            foreach (var kvp in MainfieldNameList.OrderBy(k => k.Key))
+            {
+                string propertyName = kvp.Key;
+                // 如果该列已经在SubPartsfieldNameList中处理过，则跳过
+                if (SubPartsfieldNameList.ContainsKey(propertyName))
+                {
+                    continue;
+                }
+
+                if (allProperties.TryGetValue(propertyName, out PropertyInfo property))
+                {
+                    // 确保获取正确的列类型，特别是处理可空类型
+                    Type colType;
+                    if (property.PropertyType.IsGenericType && property.PropertyType.GetGenericTypeDefinition() == typeof(Nullable<>))
+                    {
+                        colType = Nullable.GetUnderlyingType(property.PropertyType);
+                    }
+                    else
+                    {
+                        colType = property.PropertyType;
+                    }
+
+                    // 创建列时确保使用原始属性的类型
+                    DataColumn column = new DataColumn(propertyName, colType);
+                    column.Caption = kvp.Value;
+
                     // 如果相同列名的列已经存在，则跳过
                     if (!dataTable.Columns.Contains(column.ColumnName))
                     {
@@ -527,6 +586,144 @@ namespace RUINORERP.Common.Extensions
             }
         }
 
+        /// <summary>
+        /// 将DataTable中的外键值转换为显示值
+        /// </summary>
+        /// <param name="dataTable">要转换的DataTable</param>
+        /// <param name="entityType">实体类型</param>
+        /// <param name="getForeignKeyDisplayValuesCallback">获取外键显示值的回调函数</param>
+        public static void ConvertForeignKeysToDisplayValues(DataTable dataTable, Type entityType,
+            Func<string, string, Dictionary<object, string>> getForeignKeyDisplayValuesCallback)
+        {
+            // 获取实体类的所有属性
+            PropertyInfo[] properties = entityType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+
+            foreach (PropertyInfo property in properties)
+            {
+                // 获取 FKRelationAttribute 特性
+                var fkAttr = property.GetCustomAttribute<FKRelationAttribute>(false);
+                if (fkAttr == null)
+                    continue;
+
+                // 检查 DataTable 中是否包含该外键列
+                if (!dataTable.Columns.Contains(property.Name))
+                    continue;
+
+                // 获取外键表名和ID列名
+                string fkTableName = fkAttr.FKTableName;
+                string fkIdColumnName = fkAttr.FK_IDColName;
+
+                // 为该外键列添加一个显示列
+                string displayColumnName = $"{property.Name}_Display";
+                if (!dataTable.Columns.Contains(displayColumnName))
+                {
+                    // 获取原外键列的Caption，用于显示列
+                    string originalCaption = dataTable.Columns[property.Name].Caption;
+                    
+                    // 创建显示列，并设置友好的Caption
+                    DataColumn displayColumn = new DataColumn(displayColumnName, typeof(string));
+                    displayColumn.Caption = originalCaption; // 使用原外键列的标题作为显示列的标题
+                    
+                    // 获取原外键列的位置，将显示列插入到原外键列的旁边
+                    int originalColumnIndex = dataTable.Columns.IndexOf(property.Name);
+                    dataTable.Columns.Add(displayColumn);
+                    
+                    // 将显示列移动到原外键列的后面，保持相关列在一起
+                    displayColumn.SetOrdinal(originalColumnIndex + 1);
+                }
+
+                // 使用回调函数获取外键对应的显示值映射
+                Dictionary<object, string> fkDisplayValues = getForeignKeyDisplayValuesCallback(fkTableName, fkIdColumnName);
+
+                // 遍历 DataTable 行，将外键值转换为显示值
+                foreach (DataRow row in dataTable.Rows)
+                {
+                    if (row[property.Name] != DBNull.Value)
+                    {
+                        var fkValue = row[property.Name];
+                        if (fkDisplayValues.TryGetValue(fkValue, out string displayValue))
+                        {
+                            row[displayColumnName] = displayValue;
+                        }
+                    }
+                }
+            }
+        }
+        
+        /// <summary>
+        /// 将DataTable中的外键值转换为显示值（重载版本，传递更多上下文信息）
+        /// </summary>
+        /// <param name="dataTable">要转换的DataTable</param>
+        /// <param name="entityType">实体类型</param>
+        /// <param name="getForeignKeyDisplayValuesCallback">获取外键显示值的回调函数，参数包括外键表名、外键列名、当前处理的列名和DataTable</param>
+        public static void ConvertForeignKeysToDisplayValues(DataTable dataTable, Type entityType,
+            Func<string, string, string, DataTable, Dictionary<object, string>> getForeignKeyDisplayValuesCallback)
+        {
+            // 获取实体类的所有属性
+            PropertyInfo[] properties = entityType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+
+            foreach (PropertyInfo property in properties)
+            {
+                // 获取 FKRelationAttribute 特性
+                var fkAttr = property.GetCustomAttribute<FKRelationAttribute>(false);
+                if (fkAttr == null)
+                    continue;
+
+                // 检查 DataTable 中是否包含该外键列
+                if (!dataTable.Columns.Contains(property.Name))
+                    continue;
+
+                // 获取外键表名和ID列名
+                string fkTableName = fkAttr.FKTableName;
+                string fkIdColumnName = fkAttr.FK_IDColName;
+
+                // 为该外键列添加一个显示列
+                string displayColumnName = $"{property.Name}_Display";
+                if (!dataTable.Columns.Contains(displayColumnName))
+                {
+                    // 获取原外键列的Caption，用于显示列
+                    string originalCaption = dataTable.Columns[property.Name].Caption;
+                    
+                    // 创建显示列，并设置友好的Caption
+                    DataColumn displayColumn = new DataColumn(displayColumnName, typeof(string));
+                    displayColumn.Caption = originalCaption; // 使用原外键列的标题作为显示列的标题
+                    
+                    // 获取原外键列的位置，将显示列插入到原外键列的旁边
+                    int originalColumnIndex = dataTable.Columns.IndexOf(property.Name);
+                    dataTable.Columns.Add(displayColumn);
+                    
+                    // 将显示列移动到原外键列的后面，保持相关列在一起
+                    displayColumn.SetOrdinal(originalColumnIndex + 1);
+                }
+
+                // 从DataTable中提取出当前列的所有唯一外键值，只处理实际存在的值
+                HashSet<object> uniqueFkValues = new HashSet<object>();
+                foreach (DataRow row in dataTable.Rows)
+                {
+                    if (row[property.Name] != DBNull.Value)
+                    {
+                        uniqueFkValues.Add(row[property.Name]);
+                    }
+                }
+
+                // 使用回调函数获取外键对应的显示值映射，传递当前列名和DataTable
+                Dictionary<object, string> fkDisplayValues = getForeignKeyDisplayValuesCallback(fkTableName, fkIdColumnName, property.Name, dataTable);
+
+                // 遍历 DataTable 行，将外键值转换为显示值
+                foreach (DataRow row in dataTable.Rows)
+                {
+                    if (row[property.Name] != DBNull.Value)
+                    {
+                        var fkValue = row[property.Name];
+                        if (fkDisplayValues.TryGetValue(fkValue, out string displayValue))
+                        {
+                            row[displayColumnName] = displayValue;
+                        }
+                    }
+                }
+            }
+        }
+
         private static void FillDataRow(DataRow row, object obj, ConcurrentDictionary<string, string> fieldNameList, string keyBizName)
         {
             foreach (PropertyInfo property in obj.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance))
@@ -540,7 +737,7 @@ namespace RUINORERP.Common.Extensions
                     {
                         // 获取目标列的类型
                         Type columnType = row.Table.Columns[propertyName].DataType;
-                        
+
                         // 尝试将值转换为列的类型，确保类型兼容性
                         try
                         {
@@ -577,8 +774,5 @@ namespace RUINORERP.Common.Extensions
             }
         }
 
-
     }
-
-
 }

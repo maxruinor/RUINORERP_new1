@@ -892,6 +892,61 @@ namespace RUINORERP.UI.Network.Services
         }
 
         #endregion
+
+        /// <summary>
+        /// 发送任务状态通知
+        /// </summary>
+        /// <param name="messageData">消息数据</param>
+        /// <param name="sendToSelf">是否发送给当前用户（用于测试或特殊情况）</param>
+        /// <param name="ct">取消令牌</param>
+        /// <returns>消息响应</returns>
+        public async Task<MessageResponse> SendTodoNotificationAsync(
+            MessageData messageData,
+            bool sendToSelf = false,
+            CancellationToken ct = default)
+        {
+            try
+            {
+                if (messageData == null)
+                {
+                    _logger?.LogWarning("任务状态通知消息数据为空");
+                    return MessageResponse.Fail(MessageType.Business, "消息数据为空");
+                }
+
+                // 设置发送者信息（用于服务器端过滤）
+                var request = new MessageRequest(MessageType.Business, messageData);
+                
+                // 添加发送者信息，服务器端可以根据此信息决定是否发送给当前用户
+                request.Parameters = new Dictionary<string, object>
+                {
+                    { "SendToSelf", sendToSelf },
+                    { "SenderUserId", MainForm.Instance?.AppContext?.CurUserInfo?.UserInfo?.User_ID.ToString() }
+                };
+
+                var response = await _messageSender.Value.SendCommandWithResponseAsync<MessageResponse>(
+                    MessageCommands.SendTodoNotification, request, ct);
+
+                // 只记录关键信息和错误
+                if (response != null && response.IsSuccess)
+                {
+                    _logger?.LogDebug("任务状态通知发送成功 - 业务类型: {BusinessType}", 
+                        messageData.BizData?.GetType()?.Name ?? "未知");
+                }
+                else
+                {
+                    _logger?.LogWarning("任务状态通知发送失败 - 业务类型: {BusinessType}, 错误: {ErrorMessage}",
+                        messageData.BizData?.GetType()?.Name ?? "未知", response?.ErrorMessage ?? "未知错误");
+                }
+
+                return response;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "发送任务状态通知时发生异常");
+                return MessageResponse.Fail(MessageType.Business, $"发送任务状态通知失败: {ex.Message}");
+            }
+        }
+      
     }
 
     /// <summary>

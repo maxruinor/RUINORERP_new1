@@ -1684,6 +1684,24 @@ namespace AULWriter
                         return true;
                     }
                 }
+                
+                // 检查文件扩展名是否在排除列表中
+                var extension = Path.GetExtension(filePath).ToLower();
+                if (!string.IsNullOrEmpty(extension))
+                {
+                    // 从配置中读取排除后缀名
+                    var excludeExtensions = txtExcludeExtensions.Text
+                        .Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries)
+                        .Select(ext => ext.Trim().ToLower())
+                        .Where(ext => !string.IsNullOrEmpty(ext))
+                        .ToArray();
+                    
+                    // 检查文件扩展名是否在排除列表中
+                    if (excludeExtensions.Contains(extension))
+                    {
+                        return true;
+                    }
+                }
             }
             catch (Exception ex)
             {

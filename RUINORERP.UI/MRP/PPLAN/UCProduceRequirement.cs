@@ -47,6 +47,8 @@ using RUINORERP.Model.CommonModel;
 using ToolTip = System.Windows.Forms.ToolTip;
 using NPOI.SS.Formula.Functions;
 using RUINORERP.UI.Network.Services;
+using System.Diagnostics;
+using RUINORERP.Business.Cache;
 
 namespace RUINORERP.UI.MRP.MP
 {
@@ -55,6 +57,10 @@ namespace RUINORERP.UI.MRP.MP
     [MenuAttrAssemblyInfo("需求分析", ModuleMenuDefine.模块定义.生产管理, ModuleMenuDefine.生产管理.制造规划, BizType.需求分析)]
     public partial class UCProduceRequirement : BaseBillEditGeneric<tb_ProductionDemand, tb_ProductionDemand>
     {
+
+
+        private  IEntityCacheManager entityCacheManager;
+
         public UCProduceRequirement()
         {
             InitializeComponent();
@@ -62,6 +68,7 @@ namespace RUINORERP.UI.MRP.MP
             if (!this.DesignMode)
             {
                 InitializeToolTips();
+                entityCacheManager = Startup.GetFromFac<IEntityCacheManager>();
                 GridRelated = new GridViewRelated();
                 DisplayTextResolver = new GridViewDisplayTextResolverGeneric<tb_ProductionDemandDetail>();
                 DisplayTextResolver.AddReferenceKeyMapping<tb_ProductType, tb_Prod>(c => c.Type_ID, t => t.Type_ID, t => t.TypeName);
@@ -458,24 +465,7 @@ namespace RUINORERP.UI.MRP.MP
             //变化时
             if (s2 != null)
             {
-                ////只有保存过才会显示生成请购单和制令单
-                //if ((demand.actionStatus == ActionStatus.新增 || demand.actionStatus == ActionStatus.修改) && demand.PDID > 0 && s2.PropertyName == demand.GetPropertyName<tb_ProductionDemand>(c => c.PDID))
-                //{
-                //    btnCreatePurRequisition.Enabled = true;
-                //    btnCreateProduction.Enabled = true;
-                //}
 
-
-                //if (demand.ApprovalResults.HasValue && demand.ApprovalResults.Value)
-                //{
-                //    btnCreatePurRequisition.Enabled = true;
-                //    btnCreateProduction.Enabled = true;
-                //}
-                //else
-                //{
-                //    btnCreatePurRequisition.Enabled = false;
-                //    btnCreateProduction.Enabled = false;
-                //}
             }
 
 
@@ -708,11 +698,6 @@ namespace RUINORERP.UI.MRP.MP
 
         private void UcSaleOrderEdit_Load(object sender, EventArgs e)
         {
-
-
-            //btnCreateProduction.ToolTipValues.Text = "创建生产单";//需求单据保存审核后才能生成制令单！并且确保不要重复生成。
-
-
 
             System.Linq.Expressions.Expression<Func<tb_ProduceGoodsRecommendDetail, int?>> expRefBizType = (p) => p.RefBillType;
 
@@ -1153,153 +1138,6 @@ namespace RUINORERP.UI.MRP.MP
             return false;
         }
 
-        /*
-protected async override Task<ApprovalEntity> Review()
-{
-    if (EditEntity == null)
-    {
-        return null;
-    }
-
-    //如果已经审核通过，则不能重复审核
-    if (EditEntity.ApprovalStatus.HasValue)
-    {
-        if (EditEntity.ApprovalStatus.Value == (int)ApprovalStatus.已审核)
-        {
-            if (EditEntity.ApprovalResults.HasValue && EditEntity.ApprovalResults.Value)
-            {
-                MainForm.Instance.uclog.AddLog("已经审核,且【同意】的单据不能重复审核。", UILogType.警告);
-                return null;
-            }
-        }
-    }
-
-    Save(); //有可能出现 自制品还没有生成。就已经审核了。所以先保存。如果不保存一下。自制品就没 有保存生成ID，后面调用会出错。无法保存制令单
-
-    if (EditEntity.tb_ProductionDemandDetails == null || EditEntity.tb_ProductionDemandDetails.Count == 0)
-    {
-        MainForm.Instance.uclog.AddLog("单据中没有明细数据，请确认录入了完整产品数量和金额数据。", UILogType.警告);
-        return null;
-    }
-
-    RevertCommand command = new RevertCommand();
-    //缓存当前编辑的对象。如果撤销就回原来的值
-    tb_ProductionDemand oldobj = CloneHelper.DeepCloneObject<tb_ProductionDemand>(EditEntity);
-    command.UndoOperation = delegate ()
-    {
-        //Undo操作会执行到的代码 意思是如果退审核，内存中审核的数据要变为空白（之前的样子）
-        CloneHelper.SetValues<tb_ProductionDemand>(EditEntity, oldobj);
-    };
-    ApprovalEntity ae = await base.Review();
-    if (EditEntity == null)
-    {
-        return null;
-    }
-    if (ae.ApprovalStatus == (int)ApprovalStatus.未审核)
-    {
-        return null;
-    }
-    //ReturnResults<tb_Stocktake> rmr = new ReturnResults<tb_Stocktake>();
-    // BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
-    //因为只需要更新主表
-    //rmr = await ctr.BaseSaveOrUpdate(EditEntity);
-    // rmr = await ctr.BaseSaveOrUpdateWithChild<T>(EditEntity);
-    tb_ProductionDemandController<tb_ProductionDemand> ctr = Startup.GetFromFac<tb_ProductionDemandController<tb_ProductionDemand>>();
-    ReturnResults<bool> rmrs = await ctr.ApprovalAsync(EditEntity);
-    if (rmrs.Succeeded)
-    {
-        //if (MainForm.Instance.WorkflowItemlist.ContainsKey(""))
-        //{
-
-        //}
-        //这里审核完了的话，如果这个单存在于工作流的集合队列中，则向服务器说明审核完成。
-        //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
-        //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
-        //MainForm.Instance.ecs.AddSendData(od);
-
-        //审核成功
-        base.ToolBarEnabledControl(MenuItemEnums.审核);
-        //如果审核结果为不通过时，审核不是灰色。
-        if (!ae.ApprovalResults)
-        {
-            toolStripbtnReview.Enabled = true;
-        }
-        //
-        if (EditEntity.ApprovalResults.Value)
-        {
-
-        }
-    }
-    else
-    {
-        //审核失败 要恢复之前的值
-        command.Undo();
-        MainForm.Instance.PrintInfoLog($"{ae.bizName}:{ae.BillNo}审核失败,原因是：{rmrs.ErrorMsg},如果无法解决，请联系管理员！", Color.Red);
-    }
-    return ae;
-}
-
-
-
-protected async override Task<ApprovalEntity> ReReview()
-{
-    ApprovalEntity ae = new ApprovalEntity();
-    if (EditEntity == null)
-    {
-        return ae;
-    }
-
-    //反审，要审核过，并且通过了，才能反审。
-    if (EditEntity.ApprovalStatus.Value == (int)ApprovalStatus.已审核 && !EditEntity.ApprovalResults.HasValue)
-    {
-        MainForm.Instance.uclog.AddLog("已经审核,且【同意】的单据才能反审核。");
-        return ae;
-    }
-
-
-    //if (EditEntity.tb_ProductionDemandDetails == null || EditEntity.tb_ProductionDemandDetails.Count == 0)
-    //{
-    //    MainForm.Instance.uclog.AddLog("单据中没有明细数据，请确认录入了完整数量和金额。", UILogType.警告);
-    //    return;
-    //}
-
-    RevertCommand command = new RevertCommand();
-    //缓存当前编辑的对象。如果撤销就回原来的值
-    tb_ProductionDemand oldobj = CloneHelper.DeepCloneObject<tb_ProductionDemand>(EditEntity);
-    command.UndoOperation = delegate ()
-    {
-        //Undo操作会执行到的代码 意思是如果退审核，内存中审核的数据要变为空白（之前的样子）
-        CloneHelper.SetValues<tb_ProductionDemand>(EditEntity, oldobj);
-    };
-
-    tb_ProductionDemandController<tb_ProductionDemand> ctr = Startup.GetFromFac<tb_ProductionDemandController<tb_ProductionDemand>>();
-    ReturnResults<bool> rmrs = await ctr.AntiApprovalAsync(EditEntity);
-    if (rmrs.Succeeded)
-    {
-
-        //if (MainForm.Instance.WorkflowItemlist.ContainsKey(""))
-        //{
-
-        //}
-        //这里审核完了的话，如果这个单存在于工作流的集合队列中，则向服务器说明审核完成。
-        //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
-        //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
-        //MainForm.Instance.ecs.AddSendData(od);
-
-        //审核成功
-        base.ToolBarEnabledControl(MenuItemEnums.反审);
-        toolStripbtnReview.Enabled = true;
-
-    }
-    else
-    {
-        //审核失败 要恢复之前的值
-        command.Undo();
-        MainForm.Instance.PrintInfoLog($"{EditEntity.PDNo}反审失败{rmrs.ErrorMsg},请联系管理员！", Color.Red);
-    }
-    return ae;
-}
-*/
 
         protected async override Task<bool> CloseCaseAsync()
         {
@@ -1607,11 +1445,76 @@ protected async override Task<ApprovalEntity> ReReview()
             List<BaseProductInfo> BaseProductInfoList = MainForm.Instance.mapper.Map<List<BaseProductInfo>>(MainForm.Instance.View_ProdDetailList);
 
             //合并的实体中有指定的业务主键关联，不然无法给值  TODO:不科学，后面要修改完善！！！数据太多查出来性能不好。
-            DataTable dtAll = lastNeedIitems.ToDataTable<BaseProductInfo, tb_ProductionDemandDetail>(BaseProductInfoList, BaseProductInfoColNames, colNames, c => c.ProdDetailID);
+            DataTable dtAll = lastNeedIitems.ToDataTable<BaseProductInfo, tb_ProductionDemandDetail>(BaseProductInfoList, BaseProductInfoColNames, colNames, c => c.ProdDetailID,
+                // 外键转换回调函数
+                (dataTable, entityType) =>
+                {
+                    // 使用 ExtObject.ConvertForeignKeysToDisplayValues 进行外键转换
+                    ExtObject.ConvertForeignKeysToDisplayValues(dataTable, entityType,
+                        // 获取外键显示值的回调函数
+                        (fkTableName, fkIdColumnName) =>
+                        {
+                            // 使用 GridViewDisplayHelper 获取外键显示值
+                            var displayHelper = new GridViewDisplayHelper();
+                            Dictionary<object, string> displayValues = new Dictionary<object, string>();
+
+                            try
+                            {
+                                // 特殊处理：因为tb_ProdDetail没有缓存，使用View_ProdDetail代替
+                                if (fkTableName == "tb_ProdDetail")
+                                {
+                                    fkTableName = "View_ProdDetail";
+                                }
+
+                                // 获取缓存管理器
+                                if (entityCacheManager != null)
+                                {
+                                    // 优化：只获取DataTable中实际存在的外键值对应的显示值
+                                    // 从DataTable中提取出所有需要处理的外键值
+                                    HashSet<object> fkValuesToProcess = new HashSet<object>();
+                                    foreach (DataRow row in dataTable.Rows)
+                                    {
+                                        // 遍历所有列，收集外键值
+                                        foreach (DataColumn col in dataTable.Columns)
+                                        {
+                                            // 检查该列是否为外键列（通过检查是否有对应的Display列）
+                                            string displayColName = $"{col.ColumnName}_Display";
+                                            if (dataTable.Columns.Contains(displayColName))
+                                            {
+                                                if (row[col.ColumnName] != DBNull.Value)
+                                                {
+                                                    fkValuesToProcess.Add(row[col.ColumnName]);
+                                                }
+                                            }
+                                        }
+                                    }
+                                    
+                                    // 只处理实际存在的外键值，避免遍历所有实体
+                                    foreach (object fkValue in fkValuesToProcess)
+                                    {
+                                        object displayValue = entityCacheManager.GetDisplayValue(fkTableName, fkValue);
+                                        if (displayValue != null)
+                                        {
+                                            displayValues.Add(fkValue, displayValue.ToString());
+                                        }
+                                    }
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                // 发生错误时返回空字典，避免影响后续流程
+                                Debug.WriteLine($"获取外键显示值映射时发生错误：{ex.Message}");
+                            }
+
+                            return displayValues;
+                        });
+
+                    return true;
+                });
 
             foreach (DataRow item in dtAll.Rows)
             {
-
+                //item["Type_ID"] = "类型";
             }
 
             kryptonTreeGridViewStockLess.GridNodes.Clear();
@@ -1643,6 +1546,9 @@ protected async override Task<ApprovalEntity> ReReview()
 
             kryptonTreeGridViewStockLess.DataSource = dtAll;
             kryptonTreeGridViewStockLess.Columns[kryptonTreeGridViewStockLess.IdColumnName].Visible = false;
+
+            // 隐藏原始外键列，显示转换后的外键显示列
+            HideForeignKeyColumnsAndShowDisplayColumnsStockLess();
 
             kryptonTreeGridViewStockLess.Columns[0].Width = 180;
         }
@@ -1678,7 +1584,72 @@ protected async override Task<ApprovalEntity> ReReview()
             List<BaseProductInfo> BaseProductInfoList = MainForm.Instance.mapper.Map<List<BaseProductInfo>>(MainForm.Instance.View_ProdDetailList);
 
             //合并的实体中有指定的业务主键关联，不然无法给值
-            DataTable dtAll = lastNeeditems.ToDataTable<BaseProductInfo, tb_ProduceGoodsRecommendDetail>(BaseProductInfoList, BaseProductInfoColNames, colNames, c => c.ProdDetailID);
+            DataTable dtAll = lastNeeditems.ToDataTable<BaseProductInfo, tb_ProduceGoodsRecommendDetail>(BaseProductInfoList, BaseProductInfoColNames, colNames, c => c.ProdDetailID,
+                // 外键转换回调函数
+                (dataTable, entityType) =>
+                {
+                    // 使用 ExtObject.ConvertForeignKeysToDisplayValues 进行外键转换
+                    ExtObject.ConvertForeignKeysToDisplayValues(dataTable, entityType,
+                        // 获取外键显示值的回调函数
+                        (fkTableName, fkIdColumnName) =>
+                        {
+                            // 使用 GridViewDisplayHelper 获取外键显示值
+                            var displayHelper = new GridViewDisplayHelper();
+                            Dictionary<object, string> displayValues = new Dictionary<object, string>();
+
+                            try
+                            {
+                                // 特殊处理：因为tb_ProdDetail没有缓存，使用View_ProdDetail代替
+                                if (fkTableName == "tb_ProdDetail")
+                                {
+                                    fkTableName = "View_ProdDetail";
+                                }
+
+                                // 获取缓存管理器
+                                if (entityCacheManager != null)
+                                {
+                                    // 优化：只获取DataTable中实际存在的外键值对应的显示值
+                                    // 从DataTable中提取出所有需要处理的外键值
+                                    HashSet<object> fkValuesToProcess = new HashSet<object>();
+                                    foreach (DataRow row in dataTable.Rows)
+                                    {
+                                        // 遍历所有列，收集外键值
+                                        foreach (DataColumn col in dataTable.Columns)
+                                        {
+                                            // 检查该列是否为外键列（通过检查是否有对应的Display列）
+                                            string displayColName = $"{col.ColumnName}_Display";
+                                            if (dataTable.Columns.Contains(displayColName))
+                                            {
+                                                if (row[col.ColumnName] != DBNull.Value)
+                                                {
+                                                    fkValuesToProcess.Add(row[col.ColumnName]);
+                                                }
+                                            }
+                                        }
+                                    }
+                                    
+                                    // 只处理实际存在的外键值，避免遍历所有实体
+                                    foreach (object fkValue in fkValuesToProcess)
+                                    {
+                                        object displayValue = entityCacheManager.GetDisplayValue(fkTableName, fkValue);
+                                        if (displayValue != null)
+                                        {
+                                            displayValues.Add(fkValue, displayValue.ToString());
+                                        }
+                                    }
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                // 发生错误时返回空字典，避免影响后续流程
+                                Debug.WriteLine($"获取外键显示值映射时发生错误：{ex.Message}");
+                            }
+
+                            return displayValues;
+                        });
+
+                    return true;
+                });
 
             kryptonTreeGridViewMaking.GridNodes.Clear();
             kryptonTreeGridViewMaking.Columns.Clear();
@@ -1739,14 +1710,14 @@ protected async override Task<ApprovalEntity> ReReview()
                 }
             }
             kryptonTreeGridViewMaking.Columns["Selected"].Visible = true;
-            //设置自制品数量的列背景色突出显示
-
-            //Expression<Func<tb_ProduceGoodsRecommendDetail, object>> expPlanNeedQty = c => c.PlanNeedQty;
-            //设置列的单元格背景色为浅绿色
+            // 设置自制品数量的列背景色为浅绿色
             kryptonTreeGridViewMaking.Columns[expRequirementQty.GetMemberInfo().Name].DefaultCellStyle.BackColor = Color.LightGreen;
             kryptonTreeGridViewMaking.Columns[expSelected.GetMemberInfo().Name].DefaultCellStyle.BackColor = Color.LightGreen;
             kryptonTreeGridViewMaking.Columns[0].Width = 180;
             kryptonTreeGridViewMaking.Columns["Selected"].Width = 40;
+
+            // 隐藏原始外键列，显示转换后的外键显示列
+            HideForeignKeyColumnsAndShowDisplayColumns();
 
             //如果自制品中的行 有生成过。则不可以选择。
             foreach (DataGridViewRow dr in kryptonTreeGridViewMaking.Rows)
@@ -1793,6 +1764,71 @@ protected async override Task<ApprovalEntity> ReReview()
             //dtAll  kryptonTreeGridViewStockLess[e.ColumnIndex, e.RowIndex].Value;
         }
 
+
+        /// <summary>
+        /// 隐藏原始外键列，显示转换后的外键显示列
+        /// </summary>
+        private void HideForeignKeyColumnsAndShowDisplayColumns()
+        {
+            // 遍历所有列，隐藏原始外键列，显示转换后的外键显示列
+            foreach (DataGridViewColumn column in kryptonTreeGridViewMaking.Columns)
+            {
+                // 检查是否有对应的外键显示列
+                string displayColumnName = $"{column.Name}_Display";
+                if (kryptonTreeGridViewMaking.Columns.Contains(displayColumnName))
+                {
+                    // 隐藏原始外键列
+                    column.Visible = false;
+
+                    // 显示转换后的外键显示列
+                    var displayColumn = kryptonTreeGridViewMaking.Columns[displayColumnName];
+                    displayColumn.Visible = true;
+
+                    // 设置显示列的宽度
+                    displayColumn.Width = 150;
+                    
+                    // 确保显示列的标题正确
+                    if (string.IsNullOrEmpty(displayColumn.HeaderText))
+                    {
+                        displayColumn.HeaderText = column.HeaderText;
+                    }
+                    
+                    // 确保显示列在正确的位置
+                    // 由于我们在ConvertForeignKeysToDisplayValues方法中已经设置了列的顺序，这里不需要再次调整
+                }
+            }
+        }
+        
+        /// <summary>
+        /// 为库存不足表格隐藏原始外键列，显示转换后的外键显示列
+        /// </summary>
+        private void HideForeignKeyColumnsAndShowDisplayColumnsStockLess()
+        {
+            // 遍历所有列，隐藏原始外键列，显示转换后的外键显示列
+            foreach (DataGridViewColumn column in kryptonTreeGridViewStockLess.Columns)
+            {
+                // 检查是否有对应的外键显示列
+                string displayColumnName = $"{column.Name}_Display";
+                if (kryptonTreeGridViewStockLess.Columns.Contains(displayColumnName))
+                {
+                    // 隐藏原始外键列
+                    column.Visible = false;
+
+                    // 显示转换后的外键显示列
+                    var displayColumn = kryptonTreeGridViewStockLess.Columns[displayColumnName];
+                    displayColumn.Visible = true;
+
+                    // 设置显示列的宽度
+                    displayColumn.Width = 150;
+                    
+                    // 确保显示列的标题正确
+                    if (string.IsNullOrEmpty(displayColumn.HeaderText))
+                    {
+                        displayColumn.HeaderText = column.HeaderText;
+                    }
+                }
+            }
+        }
 
         //三级 还是两级呢。  反向来 一是 KEY VALUE  然后是列名
         ConcurrentDictionary<string, List<KeyValuePair<object, string>>> _DataDictionary = new ConcurrentDictionary<string, List<KeyValuePair<object, string>>>();
@@ -2350,62 +2386,7 @@ protected async override Task<ApprovalEntity> ReReview()
 
         }
 
-
-        private void kryptonTreeGridViewMaking_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
-        {
-            //如果列是隐藏的是不是可以不需要控制显示了呢? 后面看是否是导出这块需要不需要 不然可以隐藏的直接跳过
-            if (!kryptonTreeGridViewMaking.Columns[e.ColumnIndex].Visible)
-            {
-                return;
-            }
-            if (e.Value == null)
-            {
-                e.Value = "";
-                return;
-            }
-
-            //图片特殊处理
-            if (kryptonTreeGridViewStockLess.Columns[e.ColumnIndex].Name == "Image" || e.Value.GetType().Name == "Byte[]")
-            {
-                if (e.Value != null)
-                {
-                    System.IO.MemoryStream buf = new System.IO.MemoryStream((byte[])e.Value);
-                    Image image = Image.FromStream(buf, true);
-                    e.Value = image;
-                    return;
-                }
-            }
-
-            //固定字典值显示
-            string colDbName = kryptonTreeGridViewMaking.Columns[e.ColumnIndex].Name;
-            if (ColNameDataDicStockLess.ContainsKey(colDbName))
-            {
-                List<KeyValuePair<object, string>> kvlist = new List<KeyValuePair<object, string>>();
-                //意思是通过列名找，再通过值找到对应的文本
-                ColNameDataDicStockLess.TryGetValue(colDbName, out kvlist);
-                if (kvlist != null)
-                {
-                    KeyValuePair<object, string> kv = kvlist.FirstOrDefault(t => t.Key.ToString().ToLower() == e.Value.ToString().ToLower());
-                    if (kv.Value != null)
-                    {
-                        e.Value = kv.Value;
-                        return;
-                    }
-
-                }
-            }
-
-            //动态字典值显示
-            string colName = UIHelper.ShowGridColumnsNameValue<tb_Prod>(colDbName, e.Value);
-            if (!string.IsNullOrEmpty(colName))
-            {
-                e.Value = colName;
-            }
-
-
-            //处理创建人 修改人，因为这两个字段没有做外键。固定的所以可以统一处理
-        }
-
+ 
         private void kryptonTreeGridViewMaking_CellEndEdit(object sender, DataGridViewCellEventArgs e)
         {
             if (EditEntity == null)

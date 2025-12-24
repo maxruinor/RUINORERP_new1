@@ -50,6 +50,9 @@ using RUINORERP.UI.CommonUI;
 using ImageHelper = RUINORERP.UI.Common.ImageHelper;
 using RUINORERP.PacketSpec.Models.Common;
 using RUINORERP.UI.UserCenter.DataParts;
+using RUINORERP.UI.Network.Services;
+using RUINORERP.PacketSpec.Models.Messaging;
+using RUINORERP.Common.SnowflakeIdHelper;
 using RUINORERP.Model.Base.StatusManager;
 using Netron.GraphLib;
 using Newtonsoft.Json;
@@ -77,8 +80,6 @@ using RUINORERP.PacketSpec.Models;
 using RUINORERP.Common.LogHelper;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.Model.Base;
-using RUINORERP.Model.Base.StatusManager;
-using RUINORERP.Global;
 using System.Windows.Documents;
 using RUINORERP.UI.Monitoring.Auditing;
 using RUINORERP.UI.FM;
@@ -93,14 +94,10 @@ using RUINORERP.UI.Network;
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Enums.Core;
 using RUINORERP.Business.Cache;
-using RUINORERP.UI.Network.Services;
 using RUINORERP.Business.CommService;
 using RUINOR.WinFormsUI.CustomPictureBox;
 using RUINORERP.PacketSpec.Models.Lock;
-using RUINORERP.Model.Base.StatusManager;
 using System.Windows.Markup.Localizer;
-using RUINORERP.UI.UserCenter.DataParts;
-using RUINORERP.PacketSpec.Models.Common;
 
 namespace RUINORERP.UI.BaseForm
 {
@@ -3311,7 +3308,15 @@ namespace RUINORERP.UI.BaseForm
                         pkid,
                         EditEntity
                     );
+                    
+                    // 设置操作描述
+                    updateData.OperationDescription = "单据已结案";
+                    
+                    // 先更新本地工作台
                     TodoSyncManager.Instance.PublishUpdate(updateData);
+                    
+                    // 然后发送到服务器（不发送给自己）
+                    await SendTodoUpdateToServerAsync(updateData, false);
 
                     if (frm.CloseCaseImage != null && ReflectionHelper.ExistPropertyName<T>("CloseCaseImagePath"))
                     {
@@ -3529,8 +3534,17 @@ namespace RUINORERP.UI.BaseForm
                         pkid,
                         EditEntity
                     );
+                    
+                    // 设置操作描述
+                    updateData.OperationDescription = "单据已审核通过";
+                    
+                    // 先更新本地工作台
+                    TodoSyncManager.Instance.PublishUpdate(updateData);
+                    
+                    // 然后发送到服务器（不发送给自己）
+                    await SendTodoUpdateToServerAsync(updateData, false);
 
-                    TodoSyncManager.Instance.PublishUpdate(updateData);                    //如果是出库单审核，则上传到服务器 锁定订单无法修改                    if (ae.bizType == BizType.销售出库单)
+                    //如果是出库单审核，则上传到服务器 锁定订单无法修改                    if (ae.bizType == BizType.销售出库单)
                     {
                         //锁定对应的订单
                         if (EditEntity is tb_SaleOut saleOut)
@@ -3879,7 +3893,15 @@ namespace RUINORERP.UI.BaseForm
                         pkid,
                         EditEntity
                     );
+                    
+                    // 设置操作描述
+                    updateData.OperationDescription = "单据已结案";
+                    
+                    // 先更新本地工作台
                     TodoSyncManager.Instance.PublishUpdate(updateData);
+                    
+                    // 然后发送到服务器（不发送给自己）
+                    await SendTodoUpdateToServerAsync(updateData, false);
 
                     //如果是出库单审核，则上传到服务器 锁定订单无法修改
                     if (ae.bizType == BizType.销售出库单)
@@ -5592,10 +5614,15 @@ namespace RUINORERP.UI.BaseForm
                             pkid,
                          EditEntity
                         );
-
-
-
+                        
+                        // 设置操作描述
+                        updateData.OperationDescription = "单据已提交";
+                        
+                        // 先更新本地工作台
                         TodoSyncManager.Instance.PublishUpdate(updateData);
+                        
+                        // 然后发送到服务器（不发送给自己）
+                        await SendTodoUpdateToServerAsync(updateData, false);
                     }
                     else
                     {
@@ -6419,6 +6446,94 @@ namespace RUINORERP.UI.BaseForm
 
 
 
+
+        #endregion
+
+        #region 统一状态同步方法
+
+        /// <summary>
+        /// 统一的状态同步方法 - 同步本地工作台并向服务器广播状态变更
+        /// </summary>
+        /// <param name="update">任务更新数据</param>
+        /// <param name="operationType">操作类型（结案、审核、提交等）</param>
+        /// <param name="sendToSelf">是否发送给当前用户（默认为false，避免自己收到自己的通知）</param>
+        private async Task SyncTodoStatusAsync(TodoUpdate update, string operationType = "状态变更", bool sendToSelf = false)
+        {
+            try
+            {
+                if (update == null)
+                {
+                    MainForm.Instance.logger?.LogWarning("状态同步失败：更新数据为空");
+                    return;
+                }
+
+                // 设置操作描述（如果未设置）
+                if (string.IsNullOrEmpty(update.OperationDescription))
+                {
+                    update.OperationDescription = $"单据{operationType}";
+                }
+
+                // 第一步：更新本地工作台（立即生效，避免网络延迟）
+                TodoSyncManager.Instance.PublishUpdate(update);
+                
+                // 第二步：异步发送到服务器（不发送给自己，避免重复通知）
+                await SendTodoUpdateToServerAsync(update, sendToSelf);
+
+                MainForm.Instance.logger?.LogDebug("状态同步完成 - 操作类型: {OperationType}, 业务类型: {BusinessType}, 单据ID: {BillId}",
+                    operationType, update.BusinessType, update.BillId);
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger?.LogError(ex, "状态同步时发生异常 - 操作类型: {OperationType}", operationType);
+            }
+        }
+
+        /// <summary>
+        /// 发送任务状态更新到服务器
+        /// </summary>
+        /// <param name="update">任务更新数据</param>
+        /// <param name="sendToSelf">是否发送给当前用户</param>
+        private async Task SendTodoUpdateToServerAsync(TodoUpdate update, bool sendToSelf = false)
+        {
+            try
+            {
+                if (update == null)
+                {
+                    MainForm.Instance.logger?.LogWarning("发送任务状态更新失败：更新数据为空");
+                    return;
+                }
+
+                // 构造消息数据
+                var messageData = new MessageData
+                {
+                    Id = RUINORERP.Common.SnowflakeIdHelper.IdHelper.GetLongId(),
+                    MessageType = MessageType.Business,
+                    Title = "任务状态变更",
+                    Content = update.OperationDescription ?? $"[{update.BusinessType}]状态已变更",
+                    BizData = update,
+                    SendTime = DateTime.Now
+                };
+
+                // 获取消息服务并发送
+                var messageService = Startup.GetFromFac<MessageService>();
+                if (messageService != null)
+                {
+                    var response = await messageService.SendTodoNotificationAsync(messageData, sendToSelf);
+                    if (!response.IsSuccess)
+                    {
+                        MainForm.Instance.logger?.LogWarning("发送任务状态通知失败：{ErrorMessage}", response.ErrorMessage);
+                    }
+                }
+                else
+                {
+                    MainForm.Instance.logger?.LogWarning("消息服务未找到，无法发送任务状态通知");
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger?.LogError(ex, "发送任务状态更新时发生异常");
+            }
+        }
 
         #endregion
     }

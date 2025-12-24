@@ -442,7 +442,7 @@
             this.kryptonTreeGridViewMaking.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.kryptonTreeGridViewMaking_CellContentClick);
             this.kryptonTreeGridViewMaking.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.kryptonTreeGridViewMaking_CellEndEdit);
             this.kryptonTreeGridViewMaking.CellEnter += new System.Windows.Forms.DataGridViewCellEventHandler(this.kryptonTreeGridViewMaking_CellEnter);
-            this.kryptonTreeGridViewMaking.CellFormatting += new System.Windows.Forms.DataGridViewCellFormattingEventHandler(this.kryptonTreeGridViewMaking_CellFormatting);
+ 
             // 
             // kryptonGroupBox1
             // 

@@ -100,7 +100,7 @@ namespace RUINORERP.UI.SysConfig
                         string shortName = string.Empty;
                         if (PayeeInfo.CustomerVendor_ID.HasValue && PayeeInfo.CustomerVendor_ID.Value > 0)
                         {
-                            var CustomerVendor = _cacheManager.GetEntity<tb_CustomerVendor>(PayeeInfo.CustomerVendor_ID);
+                            var CustomerVendor = CacheManager.GetEntity<tb_CustomerVendor>(PayeeInfo.CustomerVendor_ID);
                             if (CustomerVendor != null)
                             {
                                 shortName = CustomerVendor.ShortName;
@@ -112,7 +112,7 @@ namespace RUINORERP.UI.SysConfig
                         }
                         else if (PayeeInfo.Employee_ID.HasValue && PayeeInfo.Employee_ID.Value > 0)
                         {
-                            var Employee = _cacheManager.GetEntity<tb_Employee>(PayeeInfo.Employee_ID);
+                            var Employee = CacheManager.GetEntity<tb_Employee>(PayeeInfo.Employee_ID);
                             if (Employee != null)
                             {
                                 shortName = Employee.Employee_Name;

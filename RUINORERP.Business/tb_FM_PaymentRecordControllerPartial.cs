@@ -2146,10 +2146,10 @@ namespace RUINORERP.Business
                             return false;
                         }
 
-                        var currentPaymentAmount = currentSelfRecord.TotalLocalAmount;
+                        var currentPaymentAmount = items[0].LocalAmount;
                         var totalPaidAfterPayment = sourceAmountResult.ReturnObject.HistoricalPaidAmount + currentPaymentAmount;
 
-                        // 检查累计付款金额是否超过来源单据总金额
+                        // 检查累计付款金额是否超过来源单据总金额1
                         if (totalPaidAfterPayment > sourceAmountResult.ReturnObject.TotalAmount)
                         {
                             StringBuilder errorBuilder = new StringBuilder();
@@ -2222,7 +2222,7 @@ namespace RUINORERP.Business
                         return false;
                     }
 
-                    var currentMultiPaymentAmount = currentSelfRecord.TotalLocalAmount;
+                    var currentMultiPaymentAmount = items.Sum(i => i.LocalAmount);
                     var totalMultiPaidAfterPayment = multiSourceAmountResult.ReturnObject.HistoricalPaidAmount + currentMultiPaymentAmount;
 
                     // 检查累计付款金额是否超过来源单据总金额

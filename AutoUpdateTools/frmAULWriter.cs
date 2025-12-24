@@ -1172,6 +1172,9 @@ namespace AULWriter
 
 
 
+        /// <summary>
+        /// 保存配置到文件
+        /// </summary>
         private void saveConfigToFile()
         {
             try
@@ -1192,6 +1195,93 @@ namespace AULWriter
             catch (Exception ex)
             {
                 richTxtLog.AppendText(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + ":保存配置到文件失败:" + ex.Message);
+                richTxtLog.AppendText("\r\n");
+            }
+        }
+
+        /// <summary>
+        /// 保存配置模板
+        /// </summary>
+        private void saveConfigTemplate()
+        {
+            try
+            {
+                // 显示保存文件对话框
+                using (SaveFileDialog saveFileDialog = new SaveFileDialog())
+                {
+                    saveFileDialog.Filter = "配置模板文件 (*.template)|*.template|所有文件 (*.*)|*.*";
+                    saveFileDialog.Title = "保存配置模板";
+                    saveFileDialog.InitialDirectory = Path.GetDirectoryName(configFilePath);
+                    saveFileDialog.FileName = "UpdateConfig.template";
+
+                    if (saveFileDialog.ShowDialog() == DialogResult.OK)
+                    {
+                        // 创建配置对象
+                        DataConfig dataConfig = new DataConfig();
+                        dataConfig.UpdateHttpAddress = txtUrl.Text.Trim();
+                        dataConfig.SavePath = txtAutoUpdateXmlSavePath.Text;
+                        dataConfig.EntryPoint = txtMainExePath.Text;
+                        dataConfig.ExcludeFiles = txtExpt.Text;
+                        dataConfig.UpdatedFiles = txtPreVerUpdatedFiles.Text;
+                        dataConfig.CompareSource = txtCompareSource.Text;
+                        dataConfig.BaseDir = txtTargetDirectory.Text;
+                        dataConfig.BaseExeVersion = txtBaseExeVersion.Text;
+                        dataConfig.UseBaseExeVersion = chkUseBaseVersion.Checked;
+
+                        // 序列化并保存
+                        SerializeXmlHelper.SerializeXml(dataConfig, saveFileDialog.FileName);
+                        richTxtLog.AppendText(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + ":配置模板保存成功:" + saveFileDialog.FileName);
+                        richTxtLog.AppendText("\r\n");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                richTxtLog.AppendText(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + ":保存配置模板失败:" + ex.Message);
+                richTxtLog.AppendText("\r\n");
+            }
+        }
+
+        /// <summary>
+        /// 加载配置模板
+        /// </summary>
+        private void loadConfigTemplate()
+        {
+            try
+            {
+                // 显示打开文件对话框
+                using (OpenFileDialog openFileDialog = new OpenFileDialog())
+                {
+                    openFileDialog.Filter = "配置模板文件 (*.template)|*.template|所有文件 (*.*)|*.*";
+                    openFileDialog.Title = "加载配置模板";
+                    openFileDialog.InitialDirectory = Path.GetDirectoryName(configFilePath);
+
+                    if (openFileDialog.ShowDialog() == DialogResult.OK)
+                    {
+                        // 反序列化配置
+                        DataConfig dataConfig = SerializeXmlHelper.DeserializeXml<DataConfig>(openFileDialog.FileName);
+                        if (dataConfig != null)
+                        {
+                            // 加载配置到UI
+                            txtUrl.Text = dataConfig.UpdateHttpAddress;
+                            txtAutoUpdateXmlSavePath.Text = dataConfig.SavePath;
+                            txtMainExePath.Text = dataConfig.EntryPoint;
+                            txtExpt.Text = dataConfig.ExcludeFiles;
+                            txtPreVerUpdatedFiles.Text = dataConfig.UpdatedFiles;
+                            txtCompareSource.Text = dataConfig.CompareSource;
+                            txtTargetDirectory.Text = dataConfig.BaseDir;
+                            txtBaseExeVersion.Text = dataConfig.BaseExeVersion;
+                            chkUseBaseVersion.Checked = dataConfig.UseBaseExeVersion;
+
+                            richTxtLog.AppendText(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + ":配置模板加载成功:" + openFileDialog.FileName);
+                            richTxtLog.AppendText("\r\n");
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                richTxtLog.AppendText(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + ":加载配置模板失败:" + ex.Message);
                 richTxtLog.AppendText("\r\n");
             }
         }

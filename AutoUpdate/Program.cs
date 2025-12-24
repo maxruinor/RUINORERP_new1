@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
 
@@ -54,8 +54,17 @@ namespace AutoUpdate
         /// 应用程序的主入口点。
         /// </summary>
         [STAThread]
-        static int Main()
+        static int Main(string[] args)
         {
+            // 检查是否需要执行自身更新
+            if (SelfUpdateHelper.IsSelfUpdateRequested(args))
+            {
+                // 执行自身更新逻辑
+                SelfUpdateHelper.ExecuteSelfUpdate(args);
+                return 0;
+            }
+
+            // 正常启动更新程序
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             FrmUpdate frm = new FrmUpdate();

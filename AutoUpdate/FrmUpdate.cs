@@ -1090,13 +1090,24 @@ namespace AutoUpdate
 
                         CreateDirtory(tempPath);
                         FileStream fs = new FileStream(tempPath, FileMode.OpenOrCreate, FileAccess.Write);
-                        fs.Write(bufferbyte, 0, bufferbyte.Length);
-                        srm.Close();
-                        srmReader.Close();
-                        fs.Close();
-                        content += " 状态:下载完毕";
-                        contents.Add(System.DateTime.Now.ToString() + " " + content);
-                        PrintInfoLog(System.DateTime.Now.ToString() + " " + content);
+                fs.Write(bufferbyte, 0, bufferbyte.Length);
+                srm.Close();
+                srmReader.Close();
+                fs.Close();
+                
+                // 计算下载文件的哈希值并验证
+                string fileHash = AppUpdater.CalculateFileHash(tempPath);
+                if (!string.IsNullOrEmpty(fileHash))
+                {
+                    content += $" 状态:下载完毕, MD5: {fileHash}";
+                }
+                else
+                {
+                    content += " 状态:下载完毕, 哈希值计算失败";
+                }
+                
+                contents.Add(System.DateTime.Now.ToString() + " " + content);
+                PrintInfoLog(System.DateTime.Now.ToString() + " " + content);
                     }
                     catch (WebException ex)
                     {
@@ -1110,7 +1121,9 @@ namespace AutoUpdate
             }
             catch (Exception exx)
             {
-                MessageBox.Show("下载文件列表失败:" + exx.Message.ToString() + "\r\n" + exx.StackTrace, "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                string errorMsg = "下载文件列表失败:" + exx.Message.ToString() + "\r\n" + exx.StackTrace;
+                AppendErrorText(errorMsg, exx);
+                MessageBox.Show(errorMsg, "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             Next++;
             btnNext.Enabled = true;
@@ -1143,20 +1156,23 @@ namespace AutoUpdate
         /// <param name="content">要记录的日志内容</param>
         public void AppendAllText(string content)
         {
-            // 只有在调试模式下才写入日志
-            if (!IsDebugMode)
-                return;
-                
             try
             {
-                // 格式化日志条目，包含时间戳
-                string logEntry = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}] {content}\r\n";
+                // 格式化日志条目，包含时间戳和日志级别
+                string logEntry = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}] [INFO] {content}\r\n";
+
+                // 确保日志目录存在
+                string logDirectory = Path.GetDirectoryName(logFilePath);
+                if (!Directory.Exists(logDirectory))
+                {
+                    Directory.CreateDirectory(logDirectory);
+                }
 
                 // 写入日志文件
                 System.IO.File.AppendAllText(logFilePath, logEntry);
 
-                // 在调试窗口中显示（如果有）
-                if (frmDebug != null && !frmDebug.IsDisposed)
+                // 在调试模式下，额外在调试窗口中显示
+                if (IsDebugMode && frmDebug != null && !frmDebug.IsDisposed)
                 {
                     frmDebug.AppendLog(logEntry);
                 }
@@ -1172,7 +1188,62 @@ namespace AutoUpdate
                 // 日志记录失败时，尝试在控制台输出
                 try
                 {
-                    System.Diagnostics.Debug.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] 日志记录失败: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [ERROR] 日志记录失败: {ex.Message}");
+                }
+                catch { }
+            }
+        }
+
+        /// <summary>
+        /// 写入错误日志
+        /// </summary>
+        /// <param name="content">要记录的错误内容</param>
+        /// <param name="ex">异常对象</param>
+        public void AppendErrorText(string content, Exception ex = null)
+        {
+            try
+            {
+                // 格式化日志条目，包含时间戳和错误级别
+                string logEntry = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}] [ERROR] {content}";
+                
+                // 如果有异常，添加异常信息
+                if (ex != null)
+                {
+                    logEntry += $"\r\n异常信息: {ex.Message}\r\n堆栈跟踪: {ex.StackTrace}\r\n";
+                }
+                else
+                {
+                    logEntry += "\r\n";
+                }
+
+                // 确保日志目录存在
+                string logDirectory = Path.GetDirectoryName(logFilePath);
+                if (!Directory.Exists(logDirectory))
+                {
+                    Directory.CreateDirectory(logDirectory);
+                }
+
+                // 写入日志文件
+                System.IO.File.AppendAllText(logFilePath, logEntry);
+
+                // 在调试模式下，额外在调试窗口中显示
+                if (IsDebugMode && frmDebug != null && !frmDebug.IsDisposed)
+                {
+                    frmDebug.AppendLog(logEntry);
+                }
+
+                // 控制台输出
+                System.Diagnostics.Debug.WriteLine(logEntry.TrimEnd('\r', '\n'));
+
+                // 限制日志文件大小，超过1MB时清理旧日志
+                MaintainLogFileSize();
+            }
+            catch (Exception logEx)
+            {
+                // 日志记录失败时，尝试在控制台输出
+                try
+                {
+                    System.Diagnostics.Debug.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [ERROR] 日志记录失败: {logEx.Message}");
                 }
                 catch { }
             }
@@ -1184,10 +1255,6 @@ namespace AutoUpdate
         /// <param name="contents">日志内容列表</param>
         public void AppendAllLines(List<string> contents)
         {
-            // 只有在调试模式下才写入日志
-            if (!IsDebugMode)
-                return;
-                
             try
             {
                 if (contents == null || contents.Count == 0)
@@ -1197,14 +1264,21 @@ namespace AutoUpdate
                 List<string> formattedContents = new List<string>();
                 foreach (string content in contents)
                 {
-                    formattedContents.Add($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}] {content}");
+                    formattedContents.Add($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}] [INFO] {content}");
+                }
+
+                // 确保日志目录存在
+                string logDirectory = Path.GetDirectoryName(logFilePath);
+                if (!Directory.Exists(logDirectory))
+                {
+                    Directory.CreateDirectory(logDirectory);
                 }
 
                 // 批量写入日志文件
                 System.IO.File.AppendAllLines(logFilePath, formattedContents);
 
-                // 在调试窗口中显示
-                if (frmDebug != null && !frmDebug.IsDisposed)
+                // 在调试模式下，额外在调试窗口中显示
+                if (IsDebugMode && frmDebug != null && !frmDebug.IsDisposed)
                 {
                     foreach (string line in formattedContents)
                     {
@@ -1220,7 +1294,7 @@ namespace AutoUpdate
                 // 尝试记录日志错误
                 try
                 {
-                    System.Diagnostics.Debug.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] 批量日志记录失败: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [ERROR] 批量日志记录失败: {ex.Message}");
                 }
                 catch { }
             }
@@ -2744,29 +2818,61 @@ namespace AutoUpdate
         }
 
         /// <summary>
-        /// 应用更新的方法现在没有使用了。因为要优化
+        /// 应用更新，实现可靠的自身更新机制
+        /// 采用双进程方式确保自身更新的可靠性
         /// </summary>
         public void ApplyApp()
         {
-            if (System.IO.File.Exists(System.IO.Path.Combine(tempUpdatePath, currentexeName)))
-            {
-                string filename = Assembly.GetExecutingAssembly().Location;
-                //MessageBox.Show(filename);
-                File.Move(filename, filename + ".delete");                    // 1
-                File.Copy(System.IO.Path.Combine(tempUpdatePath, currentexeName), filename);                // 2
-                // Application.Restart();
-            }
-
             try
             {
-                //������ɺ�copy�ļ�
-                // CopyFile(tempUpdatePath, Directory.GetCurrentDirectory());
+                // 获取当前执行文件信息
+                string currentExePath = Assembly.GetExecutingAssembly().Location;
+                string currentExeName = Path.GetFileName(currentExePath);
+                string currentExeDir = Path.GetDirectoryName(currentExePath);
 
+                // 检查是否需要自身更新
+                bool needSelfUpdate = File.Exists(System.IO.Path.Combine(tempUpdatePath, currentExeName));
+
+                if (needSelfUpdate)
+                {
+                    AppendAllText("检测到更新程序需要更新，准备执行自身更新");
+                    
+                    // 执行自身更新
+                    bool updateSuccess = SelfUpdateHelper.StartUpdateHelper(
+                        currentExePath,
+                        tempUpdatePath
+                    );
+
+                    if (updateSuccess)
+                    {
+                        AppendAllText("自身更新辅助进程已启动，准备退出当前进程");
+                        // 退出当前进程，让辅助进程执行更新
+                        Application.ExitThread();
+                        Application.Exit();
+                        return;
+                    }
+                    else
+                    {
+                        AppendErrorText("启动自身更新辅助进程失败，将使用传统方式更新");
+                        
+                        // 使用传统方式更新（仅作为备选方案）
+                        if (System.IO.File.Exists(System.IO.Path.Combine(tempUpdatePath, currentExeName)))
+                        {
+                            string filename = Assembly.GetExecutingAssembly().Location;
+                            File.Move(filename, filename + ".delete");                    // 1
+                            File.Copy(System.IO.Path.Combine(tempUpdatePath, currentExeName), filename);                // 2
+                        }
+                    }
+                }
+
+                // 复制其他文件
                 CopyFile(tempUpdatePath, AppDomain.CurrentDomain.BaseDirectory);
                 System.IO.Directory.Delete(tempUpdatePath, true);
+                AppendAllText("更新应用成功");
             }
             catch (Exception ex)
             {
+                AppendErrorText("应用更新失败", ex);
                 throw ex;
             }
         }

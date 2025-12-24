@@ -268,6 +268,35 @@ namespace AutoUpdate
 
 
         /// <summary>
+        /// 计算文件的MD5哈希值
+        /// </summary>
+        /// <param name="filePath">文件路径</param>
+        /// <returns>文件的MD5哈希值，如果计算失败则返回空字符串</returns>
+        public static string CalculateFileHash(string filePath)
+        {
+            try
+            {
+                using (var md5 = System.Security.Cryptography.MD5.Create())
+                {
+                    using (var stream = File.OpenRead(filePath))
+                    {
+                        byte[] hashBytes = md5.ComputeHash(stream);
+                        StringBuilder sb = new StringBuilder();
+                        for (int i = 0; i < hashBytes.Length; i++)
+                        {
+                            sb.Append(hashBytes[i].ToString("x2"));
+                        }
+                        return sb.ToString();
+                    }
+                }
+            }
+            catch
+            {
+                return string.Empty;
+            }
+        }
+
+        /// <summary>
         /// 比较两个版本号
         /// CompareVersion("1.0.0.2","1.0.0.11")=-1
         /// 版本号按数字逐段比较

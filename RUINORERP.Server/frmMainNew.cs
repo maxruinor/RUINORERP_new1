@@ -1676,19 +1676,19 @@ namespace RUINORERP.Server
                 PrintInfoLog("开始调度工作流...");
 
                 // 配置库存快照工作流执行时间（方便调试和测试）
-                #if DEBUG
-                // 调试模式：启用调试模式，每5分钟执行一次
-                InventorySnapshotWorkflowConfig.DebugMode = false;
-                InventorySnapshotWorkflowConfig.DebugExecutionIntervalMinutes = 5;
-                
-                // 或者设置特定执行时间（例如：当前时间+2分钟）
-                // var now = DateTime.Now;
-                // var debugExecutionTime = now.AddMinutes(2);
-                // InventorySnapshotWorkflowConfig.DailyExecutionTime = new TimeSpan(debugExecutionTime.Hour, debugExecutionTime.Minute, debugExecutionTime.Second);
-                #else
-                // 生产模式：默认凌晨1点执行
+                //#if DEBUG
+                //// 调试模式：启用调试模式，每5分钟执行一次
+                //InventorySnapshotWorkflowConfig.DebugMode = false;
+                //InventorySnapshotWorkflowConfig.DebugExecutionIntervalMinutes = 5;
+
+                //// 或者设置特定执行时间（例如：当前时间+2分钟）
+                //// var now = DateTime.Now;
+                //// var debugExecutionTime = now.AddMinutes(2);
+                //// InventorySnapshotWorkflowConfig.DailyExecutionTime = new TimeSpan(debugExecutionTime.Hour, debugExecutionTime.Minute, debugExecutionTime.Second);
+                //#else
+                //// 生产模式：默认凌晨1点执行
                 InventorySnapshotWorkflowConfig.DailyExecutionTime = new TimeSpan(1, 0, 0);
-                #endif
+                //#endif
 
                 // 调度工作流
                 await SafetyStockWorkflowConfig.ScheduleDailySafetyStockCalculation(WorkflowHost);

@@ -1428,39 +1428,48 @@ namespace AutoUpdate
                 Application.DoEvents();
                 AppendAllText($"[CopyFile] 初始化进度条，最大值: {files.Length}");
             }
-
-            for (int i = 0; i < files.Length; i++)
+            
+            // 优化文件处理顺序：先处理压缩文件，再处理普通文件
+            // 这样可以确保单个文件的精确更新优先于压缩包中的批量更新
+            var orderedFiles = files.OrderByDescending(f => 
             {
+                string extension = Path.GetExtension(f).ToLower();
+                return extension == ".zip" || extension == ".rar" ? 1 : 0;
+            }).ToArray();
+
+            for (int i = 0; i < orderedFiles.Length; i++)
+            {
+                string file = orderedFiles[i];
                 try
                 {
-                    AppendAllText($"[CopyFile] 处理文件 {i+1}/{files.Length}: {Path.GetFileName(files[i])}");
+                    AppendAllText($"[CopyFile] 处理文件 {i+1}/{orderedFiles.Length}: {Path.GetFileName(file)}");
                     
                     #region 复制文件
                     //如果正在更新自身 避免自身运行时被覆盖
-                    if (files[i] == Path.Combine(sourcePath, currentexeName))
+                    if (file == Path.Combine(sourcePath, currentexeName))
                     {
                         //MessageBox.Show("正在更新自身");
-                        AppendAllText($"[CopyFile] 跳过自身更新文件: {files[i]}");
-                        contents.Add(System.DateTime.Now.ToString() + "正在更新自身:" + files[i]);
+                        AppendAllText($"[CopyFile] 跳过自身更新文件: {file}");
+                        contents.Add(System.DateTime.Now.ToString() + "正在更新自身:" + file);
                         continue;
                     }
                     
                     // 在调试模式下，显示文件详细信息
                     if (IsDebugMode)
                     {
-                        var sourceFileInfo = new FileInfo(files[i]);
+                        var sourceFileInfo = new FileInfo(file);
                         AppendAllText($"[CopyFile] 文件大小: {sourceFileInfo.Length} 字节");
                         AppendAllText($"[CopyFile] 文件修改时间: {sourceFileInfo.LastWriteTime}");
                     }
                     
                     //http://sevenzipsharp.codeplex.com/
                     //如果是压缩文件则解压，否则直接复制
-                    string fileName = System.IO.Path.GetFileName(files[i]);
+                    string fileName = System.IO.Path.GetFileName(file);
                     if (System.IO.Path.GetExtension(fileName).ToLower() == ".zip")
                     {
                         AppendAllText($"[CopyFile] 解压ZIP文件: {fileName}");
-                        ///���Ĭ�Ϸ���������ʱ����������ܸ���
-                        //System.IO.Compression.ZipFile.ExtractToDirectory(System.IO.Path.Combine(sourcePath, fileName), objPath); //��ѹ
+                        
+                        //System.IO.Compression.ZipFile.ExtractToDirectory(System.IO.Path.Combine(sourcePath, fileName), objPath); 
                         string zipPathWithName = System.IO.Path.Combine(sourcePath, fileName);
                         //MessageBox.Show("zipPathWithName:" + zipPathWithName);
                         //MessageBox.Show("objPath:" + objPath);
@@ -1494,23 +1503,11 @@ namespace AutoUpdate
                     else if (System.IO.Path.GetExtension(fileName).ToLower() == ".rar")
                     {
                         AppendAllText($"[CopyFile] 解压RAR文件: {fileName}");
-                        //using (SevenZipExtractor tmp = new SevenZipExtractor(System.IO.Path.Combine(sourcePath, fileName)))
-                        //{
-                        //    for (int f = 0; f < tmp.ArchiveFileData.Count; f++)
-                        //    {
-                        //        tmp.ExtractFiles(objPath, tmp.ArchiveFileData[f].Index);
-                        //    }
-                        //}
+                       
 
                         RARToFileEmail(objPath, System.IO.Path.Combine(sourcePath, fileName));
 
-                        //using (SevenZipExtractor tmp = new SevenZipExtractor(System.IO.Path.Combine(sourcePath, fileName)))
-                        //{
-                        //    for (int f = 0; f < tmp.ArchiveFileData.Count; f++)
-                        //    {
-                        //        tmp.ExtractFiles(objPath, tmp.ArchiveFileData[f].Index);
-                        //    }
-                        //}
+                       
                         
                         AppendAllText($"[CopyFile] RAR文件解压完成");
 
@@ -1527,13 +1524,13 @@ namespace AutoUpdate
                             AppendAllText($"[CopyFile] 目标文件已存在，大小: {destFileInfo.Length} 字节");
                         }
                         
-                        File.Copy(files[i], destFile, true);
+                        File.Copy(file, destFile, true);
                         
                         // 在调试模式下，验证复制后的文件
                         if (IsDebugMode)
                         {
                             var copiedFileInfo = new FileInfo(destFile);
-                            var sourceFileInfo = new FileInfo(files[i]);
+                            var sourceFileInfo = new FileInfo(file);
                             AppendAllText($"[CopyFile] 复制后文件大小: {copiedFileInfo.Length} 字节");
                             
                             if (copiedFileInfo.Length == sourceFileInfo.Length)
@@ -1546,8 +1543,8 @@ namespace AutoUpdate
                             }
                         }
                         
-                        PrintInfoLog(System.DateTime.Now.ToString() + $"复制文件从{files[i]}到{destFile}");
-                        contents.Add(System.DateTime.Now.ToString() + "复制文件成功:" + files[i]);
+                        PrintInfoLog(System.DateTime.Now.ToString() + $"复制文件从{file}到{destFile}");
+                        contents.Add(System.DateTime.Now.ToString() + "复制文件成功:" + file);
                         AppendAllText($"[CopyFile] 文件复制成功: {fileName}");
                     }
                     #endregion
@@ -1602,8 +1599,7 @@ namespace AutoUpdate
 
                 // 递归复制子目录
                 CopyFile(dirs[i], destSubDir);
-                //PrintInfoLog(System.DateTime.Now.ToString() + "复制目录从" + files[i]);
-                //contents.Add(System.DateTime.Now.ToString() + "复制目录成功:" + dirs[i]);
+              
             }
             
             AppendAllLines(contents);
@@ -1683,35 +1679,42 @@ namespace AutoUpdate
                 Application.DoEvents();
                 AppendAllText($"[CopyFile] 初始化进度条，最大值: {files.Length}");
             }
-
-
-            for (int i = 0; i < files.Length; i++)
+            
+            // 优化文件处理顺序：先处理压缩文件，再处理普通文件
+            // 这样可以确保单个文件的精确更新优先于压缩包中的批量更新
+            var orderedFiles = files.OrderByDescending(f => 
             {
+                string extension = Path.GetExtension(f).ToLower();
+                return extension == ".zip" || extension == ".rar" ? 1 : 0;
+            }).ToArray();
+
+            for (int i = 0; i < orderedFiles.Length; i++)
+            {
+                string file = orderedFiles[i];
                 try
                 {
-                    AppendAllText($"[CopyFile] 处理文件 {i+1}/{files.Length}: {Path.GetFileName(files[i])}");
+                    AppendAllText($"[CopyFile] 处理文件 {i+1}/{orderedFiles.Length}: {Path.GetFileName(file)}");
                     
                     #region 复制文件
                     //如果正在更新自身 避免自身运行时被覆盖
-                    if (files[i] == Path.Combine(sourcePath, currentexeName))
+                    if (file == Path.Combine(sourcePath, currentexeName))
                     {
-                        //MessageBox.Show("正在更新自身");
-                        AppendAllText($"[CopyFile] 跳过自身更新文件: {files[i]}");
-                        contents.Add(System.DateTime.Now.ToString() + "正在更新自身:" + files[i]);
+                        AppendAllText($"[CopyFile] 跳过自身更新文件: {file}");
+                        contents.Add(System.DateTime.Now.ToString() + "正在更新自身:" + file);
                         continue;
                     }
                     
                     // 在调试模式下，显示文件详细信息
                     if (IsDebugMode)
                     {
-                        var sourceFileInfo = new FileInfo(files[i]);
+                        var sourceFileInfo = new FileInfo(file);
                         AppendAllText($"[CopyFile] 文件大小: {sourceFileInfo.Length} 字节");
                         AppendAllText($"[CopyFile] 文件修改时间: {sourceFileInfo.LastWriteTime}");
                     }
                     
                     //http://sevenzipsharp.codeplex.com/
                     //如果是压缩文件则解压，否则直接复制
-                    string fileName = System.IO.Path.GetFileName(files[i]);
+                    string fileName = System.IO.Path.GetFileName(file);
                     if (System.IO.Path.GetExtension(fileName).ToLower() == ".zip")
                     {
                         AppendAllText($"[CopyFile] 解压ZIP文件: {fileName}");
@@ -1782,13 +1785,13 @@ namespace AutoUpdate
                             AppendAllText($"[CopyFile] 目标文件已存在，大小: {destFileInfo.Length} 字节");
                         }
                         
-                        File.Copy(files[i], destFile, true);
+                        File.Copy(file, destFile, true);
                         
                         // 在调试模式下，验证复制后的文件
                         if (IsDebugMode)
                         {
                             var copiedFileInfo = new FileInfo(destFile);
-                            var sourceFileInfo = new FileInfo(files[i]);
+                            var sourceFileInfo = new FileInfo(file);
                             AppendAllText($"[CopyFile] 复制后文件大小: {copiedFileInfo.Length} 字节");
                             
                             if (copiedFileInfo.Length == sourceFileInfo.Length)
@@ -1801,8 +1804,8 @@ namespace AutoUpdate
                             }
                         }
                         
-                        PrintInfoLog(System.DateTime.Now.ToString() + $"复制文件从{files[i]}到{destFile}");
-                        contents.Add(System.DateTime.Now.ToString() + "复制文件成功:" + files[i]);
+                        PrintInfoLog(System.DateTime.Now.ToString() + $"复制文件从{file}到{destFile}");
+                        contents.Add(System.DateTime.Now.ToString() + "复制文件成功:" + file);
                         AppendAllText($"[CopyFile] 文件复制成功: {fileName}");
                     }
                     #endregion
@@ -2664,8 +2667,6 @@ namespace AutoUpdate
                 return false;
             }
 
-            //��ȡ�����ļ��б�
-            // Hashtable htUpdateFile = new Hashtable();
 
             serverXmlFile = tempUpdatePath + "\\AutoUpdaterList.xml";
             if (!File.Exists(serverXmlFile))
@@ -2802,14 +2803,12 @@ namespace AutoUpdate
                     catch (WebException ex)
                     {
                         throw ex;
-                        //  MessageBox.Show("�����ļ�����ʧ�ܣ�" + ex.Message.ToString(), "����", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
                 }
             }
             catch (Exception exx)
             {
                 throw exx;
-                // MessageBox.Show("�����ļ�����ʧ�ܣ�" + exx.Message.ToString(), "����", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
 
             InvalidateControl();

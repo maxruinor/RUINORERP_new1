@@ -427,6 +427,18 @@ namespace AULWriter
                         sbupfiles.Append(item).Append("\r\n");
                     }
                     txtPreVerUpdatedFiles.Text = sbupfiles.ToString();
+                    
+                    // 加载排除后缀名配置
+                    StringBuilder sbExcludeExt = new StringBuilder();
+                    if (!string.IsNullOrEmpty(dataConfig.ExcludeExtensions))
+                    {
+                        string[] extFiles = dataConfig.ExcludeExtensions.Split(new string[] { "\n" }, StringSplitOptions.None);
+                        foreach (var item in extFiles)
+                        {
+                            sbExcludeExt.Append(item).Append("\r\n");
+                        }
+                    }
+                    txtExcludeExtensions.Text = sbExcludeExt.ToString();
 
                 }
             }
@@ -757,13 +769,19 @@ namespace AULWriter
 
             // 扩展规则
             var extension = Path.GetExtension(fileName).ToLower();
-            var excludeExtensions = new[] { ".log", ".tmp", ".bak" };
-
+            
             // 对于.zip文件，我们不应该排除，所以添加一个特例
             if (extension.Equals(".zip", StringComparison.OrdinalIgnoreCase))
             {
                 return false;
             }
+
+            // 从配置中读取排除后缀名
+            var excludeExtensions = txtExcludeExtensions.Text
+                .Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(ext => ext.Trim().ToLower())
+                .Where(ext => !string.IsNullOrEmpty(ext))
+                .ToArray();
 
             // 检查文件扩展名
             if (excludeExtensions.Contains(extension))
@@ -1714,6 +1732,7 @@ namespace AULWriter
                 dataConfig.BaseDir = txtTargetDirectory.Text;
                 dataConfig.BaseExeVersion = txtBaseExeVersion.Text;
                 dataConfig.UseBaseExeVersion = chkUseBaseVersion.Checked;
+                dataConfig.ExcludeExtensions = txtExcludeExtensions.Text;
                 string path = configFilePath;
                 SerializeXmlHelper.SerializeXml(dataConfig, path);
             }
@@ -2128,16 +2147,7 @@ namespace AULWriter
             dgvDiffFiles.DataSource = new BindingList<DiffFileItem>(filteredDiffFileItems);
         }
 
-        /// <summary>
-        /// 更新分页信息
-        /// </summary>
-        /// <param name="totalPages">总页数</param>
-        private void UpdatePaginationInfo(int totalPages)
-        {
-            lblPageInfo.Text = $"第 {currentPage} 页 / 共 {totalPages} 页 ({filteredDiffFileItems.Count} 个文件)";
-            btnPrevPage.Enabled = currentPage > 1;
-            btnNextPage.Enabled = currentPage < totalPages;
-        }
+ 
 
         /// <summary>
         /// 保存差异文件选择状态
@@ -2239,35 +2249,7 @@ namespace AULWriter
             currentSearchKeyword = txtSearch.Text.Trim();
             ApplyFilterAndPagination();
         }
-
-        /// <summary>
-        /// 上一页
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void btnPrevPage_Click(object sender, EventArgs e)
-        {
-            if (currentPage > 1)
-            {
-                currentPage--;
-                BindDiffFileData();
-            }
-        }
-
-        /// <summary>
-        /// 下一页
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void btnNextPage_Click(object sender, EventArgs e)
-        {
-            int totalPages = (int)Math.Ceiling((double)filteredDiffFileItems.Count / pageSize);
-            if (currentPage < totalPages)
-            {
-                currentPage++;
-                BindDiffFileData();
-            }
-        }
+ 
 
         /// <summary>
         /// 差异文件选择状态变化
@@ -2556,6 +2538,83 @@ namespace AULWriter
             }
             return copySuccess;
         }
+        
+        /// <summary>
+        /// 复制配置文件中的所有文件到目标目录
+        /// </summary>
+        /// <param name="configDoc">配置文件文档</param>
+        /// <param name="sourceDir">源目录</param>
+        /// <param name="targetDir">目标目录</param>
+        /// <returns>成功复制的文件数量</returns>
+        private int CopyAllConfigFiles(XDocument configDoc, string sourceDir, string targetDir)
+        {
+            int copySuccessCount = 0;
+            
+            try
+            {
+                // 获取配置文件中的所有文件清单
+                var allFilesInConfig = configDoc.Descendants("File")
+                    .Select(f => f.Attribute("Name").Value)
+                    .ToList();
+                
+                if (allFilesInConfig.Count == 0)
+                {
+                    AppendLog("配置文件中没有文件清单");
+                    return 0;
+                }
+                
+                AppendLog($"开始复制配置文件中的所有文件，共 {allFilesInConfig.Count} 个文件");
+                
+                // 创建目标目录（如果不存在）
+                if (!Directory.Exists(targetDir))
+                {
+                    Directory.CreateDirectory(targetDir);
+                    AppendLog($"创建目标目录：{targetDir}");
+                }
+                
+                // 逐个复制文件
+                foreach (var fileName in allFilesInConfig)
+                {
+                    string sourcePath = Path.Combine(sourceDir, fileName);
+                    string targetPath = Path.Combine(targetDir, fileName);
+                    
+                    // 确保目标文件所在的目录存在
+                    string targetFileDir = Path.GetDirectoryName(targetPath);
+                    if (!Directory.Exists(targetFileDir))
+                    {
+                        Directory.CreateDirectory(targetFileDir);
+                    }
+                    
+                    // 复制文件
+                    try
+                    {
+                        if (File.Exists(sourcePath))
+                        {
+                            File.Copy(sourcePath, targetPath, true);
+                            copySuccessCount++;
+                            AppendLog($"成功复制文件：{fileName}");
+                        }
+                        else
+                        {
+                            AppendLog($"警告：源文件不存在，跳过复制：{sourcePath}");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        AppendLog($"复制文件失败：{fileName}，错误：{ex.Message}");
+                    }
+                }
+                
+                AppendLog($"文件复制完成，成功复制 {copySuccessCount} 个文件，失败 {allFilesInConfig.Count - copySuccessCount} 个文件");
+            }
+            catch (Exception ex)
+            {
+                AppendLog($"复制配置文件中的文件失败，错误：{ex.Message}");
+            }
+            
+            return copySuccessCount;
+        }
+        
         //将差异的文件 复制I盘临时目录，再到服务器。并且生成时版本号只对差异的更新  保存配置到文件中
         //先复制 再生成xml
 
@@ -2571,16 +2630,20 @@ namespace AULWriter
             }
 
             int CopySuccessed = 0;
-            foreach (var item in DiffFileList)
+            XDocument newDoc = null;
+            if (!chkTest.Checked)
             {
-                if (!chkTest.Checked)
-                {
-                    if (CopyFile(txtCompareSource.Text, txtTargetDirectory.Text, item))
-                    {
-                        CopySuccessed++;
-                    }
-                }
+                // 1. 解析最新的配置文件
+                newDoc = XDocument.Parse(txtLastXml.Text);
+                
+                // 2. 复制所有配置文件中的文件到目标目录
+                AppendLog("开始发布流程...");
+                AppendLog($"从 {txtCompareSource.Text} 复制到 {txtTargetDirectory.Text}");
+                
+                // 3. 使用新方法复制所有配置文件中的文件
+                CopySuccessed = CopyAllConfigFiles(newDoc, txtCompareSource.Text, txtTargetDirectory.Text);
             }
+            
             if (chkTest.Checked)
             {
                 richTxtLog.AppendText($"测试模式----保存到目标-{txtTargetDirectory.Text}  成功{CopySuccessed}个。");
@@ -2595,13 +2658,18 @@ namespace AULWriter
             }
 
             // 将StringBuilder的内容写入文件
-            XDocument newDoc = XDocument.Parse(txtLastXml.Text);
             var tempPath = Path.Combine(Path.GetTempPath(), this.txtAutoUpdateXmlSavePath.Text.Trim());
 
             // 创建带有UTF-8编码的XML写入设置
             XmlWriterSettings settings = new XmlWriterSettings();
             settings.Encoding = System.Text.Encoding.UTF8;
             settings.Indent = true; // 保持缩进格式
+
+            // 确保newDoc不为null
+            if (newDoc == null)
+            {
+                newDoc = XDocument.Parse(txtLastXml.Text);
+            }
 
             // 使用XmlWriter保存文档
             using (XmlWriter writer = XmlWriter.Create(tempPath, settings))

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace AutoUpdateTools
 {
@@ -55,5 +55,10 @@ namespace AutoUpdateTools
         /// 用于生成软件的版本号会显示到版本UI上,但不用于生成更新包版本号
         /// </summary>
         public string BaseExeVersion { get; set; } = "1.0.0.0";
+        
+        /// <summary>
+        /// 排除的文件后缀名集合，用换行分隔
+        /// </summary>
+        public string ExcludeExtensions { get; set; } = ".log\n.cache\n.tmp\n.bak";
     }
 }

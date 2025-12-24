@@ -90,12 +90,18 @@ namespace RUINORERP.Server.Workflow
         {
             var data = context.Workflow.Data as TempImageCleanupData;
             
-            // 设置默认值
-            data.TempImageDirectory = string.IsNullOrEmpty(TempImageDirectory) 
-                ? Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "TempImages") 
-                : TempImageDirectory;
+            // 设置默认值 - 修复：优先使用步骤参数，其次使用数据中的默认值
+            data.TempImageDirectory = !string.IsNullOrEmpty(TempImageDirectory) 
+                ? TempImageDirectory
+                : !string.IsNullOrEmpty(data.TempImageDirectory)
+                    ? data.TempImageDirectory
+                    : Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "TempImages");
                 
-            data.RetentionDays = RetentionDays <= 0 ? 7 : RetentionDays;
+            data.RetentionDays = RetentionDays > 0 
+                ? RetentionDays
+                : data.RetentionDays > 0
+                    ? data.RetentionDays
+                    : 7;
             
             return ExecutionResult.Next();
         }
@@ -206,17 +212,28 @@ namespace RUINORERP.Server.Workflow
                         // 检查文件最后修改时间是否超过保留期限
                         if (fileInfo.LastWriteTime < cutoffDate)
                         {
-                            // 检查文件是否未被引用
-                            var fileName = Path.GetFileName(file);
-                            if (!referencedFileNames.Contains(fileName, StringComparer.OrdinalIgnoreCase))
+                        // 检查文件是否未被引用
+                        var fileName = Path.GetFileName(file);
+                        if (!referencedFileNames.Contains(fileName, StringComparer.OrdinalIgnoreCase))
+                        {
+                            try
                             {
                                 // 删除未引用且过期的文件
                                 File.Delete(file);
                                 deletedFiles++;
                                 freedBytes += fileInfo.Length;
-
                                 _logger.LogDebug($"已删除临时图片: {file}");
                             }
+                            catch (Exception deleteEx)
+                            {
+                                _logger.LogWarning(deleteEx, $"删除文件失败: {file}");
+                                data.Result.Errors.Add($"删除文件失败: {file} - {deleteEx.Message}");
+                            }
+                        }
+                        else
+                        {
+                            _logger.LogDebug($"文件被引用，跳过删除: {file}");
+                        }
                         }
                     }
                     catch (Exception ex)
@@ -255,16 +272,30 @@ namespace RUINORERP.Server.Workflow
         {
             try
             {
-                foreach (var subDir in Directory.GetDirectories(directoryPath))
+                // 检查目录是否存在
+                if (!Directory.Exists(directoryPath))
+                    return;
+
+                // 获取所有子目录（避免在循环中修改目录结构）
+                var subDirectories = Directory.GetDirectories(directoryPath);
+                
+                foreach (var subDir in subDirectories)
                 {
                     // 递归清理子目录
                     CleanEmptyDirectories(subDir, logger);
 
-                    // 检查并删除空目录
-                    if (Directory.GetFileSystemEntries(subDir).Length == 0)
+                    // 检查并删除空目录（重新检查目录是否存在）
+                    if (Directory.Exists(subDir) && Directory.GetFileSystemEntries(subDir).Length == 0)
                     {
-                        Directory.Delete(subDir);
-                        logger.LogDebug($"已删除空目录: {subDir}");
+                        try
+                        {
+                            Directory.Delete(subDir);
+                            logger.LogDebug($"已删除空目录: {subDir}");
+                        }
+                        catch (Exception deleteEx)
+                        {
+                            logger.LogWarning(deleteEx, $"删除空目录失败: {subDir}");
+                        }
                     }
                 }
             }

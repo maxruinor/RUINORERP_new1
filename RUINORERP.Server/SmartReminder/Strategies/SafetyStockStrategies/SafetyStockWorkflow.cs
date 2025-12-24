@@ -194,20 +194,21 @@ namespace RUINORERP.Server.SmartReminder.Strategies.SafetyStockStrategies
             var endDate = DateTime.Now.Date;
             var startDate = endDate.AddDays(-days);
 
+            // 修复查询条件：包含结束日期当天的数据
             data.CurrentSalesData = await db.Queryable<View_SaleOutItems>()
                 .Where(i => i.ProdDetailID == ProductId
                             && i.OutDate.Value >= startDate
-                            && i.OutDate.Value < endDate)
-                                                                   // .GroupBy(i => (i.OutDate.Value.ToShortDateString()) // 分组键
-                                                                   .GroupBy(i => i.OutDate.Value.Date) // 分组键
-                .Select(g => new SalesHistory  // 使用 g 代表分组结果
+                            && i.OutDate.Value <= endDate) // 修复：改为 <= 包含结束日期
+                .GroupBy(i => i.OutDate.Value.Date) // 按日期分组
+                .Select(g => new SalesHistory
                 {
-                    Date = g.OutDate.Value.Date, // 使用分组键作为日期
+                    Date = g.OutDate.Value.Date, // 修复：使用正确的字段名
                     Quantity = (decimal)SqlFunc.AggregateSum(g.Quantity)
                 })
                 .OrderBy(i => i.Date)
                 .ToListAsync();
-            logger.Error($"GetSalesHistory：{ProductId}");
+            
+            //logger.LogInformation($"获取产品 {ProductId} 的销售历史数据，共 {data.CurrentSalesData?.Count ?? 0} 条记录");
             return ExecutionResult.Next();
         }
     }
@@ -230,26 +231,19 @@ namespace RUINORERP.Server.SmartReminder.Strategies.SafetyStockStrategies
 
         public override ExecutionResult Run(IStepExecutionContext context)
         {
-
             var data = context.Workflow.Data as SafetyStockData;
             var config = data.Config;
 
-
             Result = new SafetyStockResult { ProductId = ProductId };
 
-            
-
             // === 从缓存获取产品信息 ===
-            if ((context.Workflow.Data as SafetyStockData).ProductInfoCache.TryGetValue(
-                ProductId,
-                out View_Inventory product))
+            if (data.ProductInfoCache.TryGetValue(ProductId, out View_Inventory product))
             {
                 Result.ProductName = product.CNName;
                 Result.CurrentStock = product?.Quantity ?? 0;
             }
             else
             {
-                // 缓存中找不到的备选方案
                 Result.ProductName = "未知产品";
                 Result.CurrentStock = 0;
             }
@@ -257,10 +251,10 @@ namespace RUINORERP.Server.SmartReminder.Strategies.SafetyStockStrategies
             // 计算日均需求量
             if (SalesData != null && SalesData.Any())
             {
-                // 计算日均需求
-                var totalDays = (DateTime.Now.Date - SalesData.Min(d => d.Date)).TotalDays;
+                // 修复：使用实际数据天数计算日均需求
+                var actualDays = (SalesData.Max(d => d.Date) - SalesData.Min(d => d.Date)).TotalDays + 1;
                 var totalQuantity = SalesData.Sum(d => d.Quantity);
-                Result.AverageDailyDemand = totalDays > 0 ? (decimal)(totalQuantity / (decimal)totalDays) : 0;
+                Result.AverageDailyDemand = actualDays > 0 ? (decimal)(totalQuantity / (decimal)actualDays) : 0;
 
                 // 计算需求标准差
                 if (SalesData.Count > 1)
@@ -272,18 +266,11 @@ namespace RUINORERP.Server.SmartReminder.Strategies.SafetyStockStrategies
                 {
                     Result.DemandStandardDeviation = 0;
                 }
+
                 // 计算安全库存 = 服务水平系数 × 需求标准差 × √采购提前期
                 Result.SafetyStockLevel = (decimal)(config.ServiceLevelFactor
                     * (double)Result.DemandStandardDeviation
                     * Math.Sqrt(config.PurchaseLeadTimeDays));
-
-
-                // 检查手动指定库存
-                //if (config.ManualSafetyStockLevel)
-                //{
-                //    safetyStock = config.ManualSafetyStockLevel;
-                //}
-
 
                 // 检查是否需要提醒（当前库存低于安全库存）
                 Result.NeedAlert = Result.CurrentStock < Result.SafetyStockLevel;
@@ -291,12 +278,13 @@ namespace RUINORERP.Server.SmartReminder.Strategies.SafetyStockStrategies
                     ? $"产品 {Result.ProductName} 库存不足，当前库存: {Result.CurrentStock}, 安全库存: {Result.SafetyStockLevel}"
                     : $"产品 {Result.ProductName} 库存正常，当前库存: {Result.CurrentStock}, 安全库存: {Result.SafetyStockLevel}";
 
-                logger.Error($"结果{Result.ProductId}{Result.Message}");
+                logger.LogInformation($"安全库存计算结果 - {Result.Message}");
             }
             else
             {
                 Result.Message = $"产品 {Result.ProductName} 没有足够的销售历史数据";
                 Result.NeedAlert = false;
+                logger.LogWarning($"产品 {ProductId} 无销售数据，跳过计算");
             }
 
             return ExecutionResult.Next();
@@ -379,26 +367,20 @@ namespace RUINORERP.Server.SmartReminder.Strategies.SafetyStockStrategies
                         // 获取销售历史数据
                         .StartWith<GetSalesHistory>()
                         .Input(step => step.ProductId, (data, context) => (long)context.Item)
-                        //.Input(step => step.CalculationPeriodDays, data => data.CalculationPeriodDays)
-                        //.Output(data => data.CurrentSalesData, step => step.SalesData)
-                        //.Output(data => data.TempProductId, step => step.ProductId)
                         // 计算安全库存
                         .Then<CalculateSafetyStock>()
                         .Input(step => step.ProductId, (data, context) => (long)context.Item)
-                        //.Input(step => step.PurchaseLeadTimeDays, data => data.PurchaseLeadTimeDays)
-                        //.Input(step => step.ServiceLevelFactor, data => data.ServiceLevelFactor)
-                        //.Input(step => step.SalesData, data => data.CurrentSalesData)
-                        //.Output(data => data.CurrentResult, step => step.Result)
+                        .Input(step => step.SalesData, data => data.CurrentSalesData)
+                        .Output(data => data.CurrentResult, step => step.Result)
 
                         // 保存结果到字典
                         .Then<SaveResultToDictionaryStep>()
-                      .Input(step => step.ProductId, (data, context) => (long)context.Item)
-                      //.Input(step => step.ProductId, (data, context) => (long)context.Item)
-                      //.Input(step => step.Result, data => data.CurrentResult)
-                      //.Input(step => step.ResultsDictionary, data => data.Results)
-                      // 发送提醒
-                      .Then<SendAlertNotification>()
-                    //.Input(step => step.Result, data => data.CurrentResult)
+                        .Input(step => step.ProductId, (data, context) => (long)context.Item)
+                        .Input(step => step.Result, data => data.CurrentResult)
+                        .Input(step => step.ResultsDictionary, data => data.Results)
+                        // 发送提醒
+                        .Then<SendAlertNotification>()
+                        .Input(step => step.Result, data => data.CurrentResult)
                     )
 
                 // 完成处理
@@ -454,19 +436,22 @@ namespace RUINORERP.Server.SmartReminder.Strategies.SafetyStockStrategies
         }
 
         /// <summary>
-        /// 启动安全库存计算工作流（每天凌晨2点执行）
+        /// 启动安全库存计算工作流（每天固定时间执行）
         /// </summary>
         public static async Task<bool> ScheduleDailySafetyStockCalculation(IWorkflowHost host)
         {
-
             try
             {
                 // 注册工作流
                 host.RegisterWorkflow<SafetyStockWorkflow, SafetyStockData>();
 
+                // 配置执行时间（默认为凌晨2点，可配置）
+                var executionTime = new TimeSpan(2, 0, 0); // 凌晨2点
+                
                 // 计算下次执行时间
                 var now = DateTime.Now;
-                var nextRunTime = new DateTime(now.Year, now.Month, now.Day, 18, 22, 0);
+                var nextRunTime = new DateTime(now.Year, now.Month, now.Day, 
+                    executionTime.Hours, executionTime.Minutes, executionTime.Seconds);
                 if (nextRunTime <= now)
                     nextRunTime = nextRunTime.AddDays(1);
 

@@ -62,6 +62,8 @@
             this.label5 = new System.Windows.Forms.Label();
             this.btnExpt = new System.Windows.Forms.Button();
             this.txtExpt = new System.Windows.Forms.TextBox();
+            this.label9 = new System.Windows.Forms.Label();
+            this.txtExcludeExtensions = new System.Windows.Forms.TextBox();
             this.label4 = new System.Windows.Forms.Label();
             this.btnDest = new System.Windows.Forms.Button();
             this.label3 = new System.Windows.Forms.Label();
@@ -86,17 +88,6 @@
             this.tabUsedescribe = new System.Windows.Forms.TabPage();
             this.txt使用说明 = new System.Windows.Forms.TextBox();
             this.tabPageDiffFile = new System.Windows.Forms.TabPage();
-            this.panelDiffFileSearch = new System.Windows.Forms.Panel();
-            this.txtSearch = new System.Windows.Forms.TextBox();
-            this.labelSearch = new System.Windows.Forms.Label();
-            this.panelDiffFileToolbar = new System.Windows.Forms.Panel();
-            this.btnApplySelection = new System.Windows.Forms.Button();
-            this.btnUnselectAll = new System.Windows.Forms.Button();
-            this.btnSelectAll = new System.Windows.Forms.Button();
-            this.panelPagination = new System.Windows.Forms.Panel();
-            this.btnNextPage = new System.Windows.Forms.Button();
-            this.btnPrevPage = new System.Windows.Forms.Button();
-            this.lblPageInfo = new System.Windows.Forms.Label();
             this.dgvDiffFiles = new System.Windows.Forms.DataGridView();
             this.colSelect = new System.Windows.Forms.DataGridViewCheckBoxColumn();
             this.colFileName = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -104,6 +95,13 @@
             this.colSize = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colLastModified = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colStatus = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.panelDiffFileSearch = new System.Windows.Forms.Panel();
+            this.txtSearch = new System.Windows.Forms.TextBox();
+            this.labelSearch = new System.Windows.Forms.Label();
+            this.panelDiffFileToolbar = new System.Windows.Forms.Panel();
+            this.btnApplySelection = new System.Windows.Forms.Button();
+            this.btnUnselectAll = new System.Windows.Forms.Button();
+            this.btnSelectAll = new System.Windows.Forms.Button();
             this.ofdSrc = new System.Windows.Forms.OpenFileDialog();
             this.sfdDest = new System.Windows.Forms.SaveFileDialog();
             this.ofdExpt = new System.Windows.Forms.OpenFileDialog();
@@ -127,10 +125,9 @@
             this.splitContainerDiff.SuspendLayout();
             this.tabUsedescribe.SuspendLayout();
             this.tabPageDiffFile.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvDiffFiles)).BeginInit();
             this.panelDiffFileSearch.SuspendLayout();
             this.panelDiffFileToolbar.SuspendLayout();
-
-            ((System.ComponentModel.ISupportInitialize)(this.dgvDiffFiles)).BeginInit();
             this.SuspendLayout();
             // 
             // panel1
@@ -316,6 +313,8 @@
             this.tbpBase.Controls.Add(this.label5);
             this.tbpBase.Controls.Add(this.btnExpt);
             this.tbpBase.Controls.Add(this.txtExpt);
+            this.tbpBase.Controls.Add(this.label9);
+            this.tbpBase.Controls.Add(this.txtExcludeExtensions);
             this.tbpBase.Controls.Add(this.label4);
             this.tbpBase.Controls.Add(this.btnDest);
             this.tbpBase.Controls.Add(this.label3);
@@ -333,7 +332,7 @@
             // label8
             // 
             this.label8.AutoSize = true;
-            this.label8.Location = new System.Drawing.Point(823, 110);
+            this.label8.Location = new System.Drawing.Point(823, 83);
             this.label8.Name = "label8";
             this.label8.Size = new System.Drawing.Size(263, 12);
             this.label8.TabIndex = 18;
@@ -341,7 +340,7 @@
             // 
             // txtAutoUpdateXmlSavePath
             // 
-            this.txtAutoUpdateXmlSavePath.Location = new System.Drawing.Point(126, 106);
+            this.txtAutoUpdateXmlSavePath.Location = new System.Drawing.Point(126, 79);
             this.txtAutoUpdateXmlSavePath.Name = "txtAutoUpdateXmlSavePath";
             this.txtAutoUpdateXmlSavePath.Size = new System.Drawing.Size(606, 21);
             this.txtAutoUpdateXmlSavePath.TabIndex = 4;
@@ -349,7 +348,7 @@
             // btnBaseDir
             // 
             this.btnBaseDir.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.btnBaseDir.Location = new System.Drawing.Point(738, 51);
+            this.btnBaseDir.Location = new System.Drawing.Point(738, 24);
             this.btnBaseDir.Name = "btnBaseDir";
             this.btnBaseDir.Size = new System.Drawing.Size(58, 21);
             this.btnBaseDir.TabIndex = 17;
@@ -360,7 +359,7 @@
             // txtTargetDirectory
             // 
             this.txtTargetDirectory.AllowDrop = true;
-            this.txtTargetDirectory.Location = new System.Drawing.Point(125, 50);
+            this.txtTargetDirectory.Location = new System.Drawing.Point(125, 23);
             this.txtTargetDirectory.Name = "txtTargetDirectory";
             this.txtTargetDirectory.Size = new System.Drawing.Size(607, 21);
             this.txtTargetDirectory.TabIndex = 16;
@@ -369,7 +368,7 @@
             // label7
             // 
             this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(67, 53);
+            this.label7.Location = new System.Drawing.Point(63, 26);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(59, 12);
             this.label7.TabIndex = 15;
@@ -378,7 +377,7 @@
             // btnCompareSource
             // 
             this.btnCompareSource.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.btnCompareSource.Location = new System.Drawing.Point(738, 181);
+            this.btnCompareSource.Location = new System.Drawing.Point(738, 154);
             this.btnCompareSource.Name = "btnCompareSource";
             this.btnCompareSource.Size = new System.Drawing.Size(58, 21);
             this.btnCompareSource.TabIndex = 14;
@@ -389,7 +388,7 @@
             // txtCompareSource
             // 
             this.txtCompareSource.AllowDrop = true;
-            this.txtCompareSource.Location = new System.Drawing.Point(125, 180);
+            this.txtCompareSource.Location = new System.Drawing.Point(125, 153);
             this.txtCompareSource.Name = "txtCompareSource";
             this.txtCompareSource.Size = new System.Drawing.Size(607, 21);
             this.txtCompareSource.TabIndex = 13;
@@ -398,7 +397,7 @@
             // label6
             // 
             this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(67, 182);
+            this.label6.Location = new System.Drawing.Point(60, 155);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(59, 12);
             this.label6.TabIndex = 12;
@@ -406,7 +405,7 @@
             // 
             // txtUrl
             // 
-            this.txtUrl.Location = new System.Drawing.Point(125, 204);
+            this.txtUrl.Location = new System.Drawing.Point(125, 177);
             this.txtUrl.Name = "txtUrl";
             this.txtUrl.Size = new System.Drawing.Size(607, 21);
             this.txtUrl.TabIndex = 10;
@@ -414,7 +413,7 @@
             // label5
             // 
             this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(67, 206);
+            this.label5.Location = new System.Drawing.Point(60, 179);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(59, 12);
             this.label5.TabIndex = 9;
@@ -423,7 +422,7 @@
             // btnExpt
             // 
             this.btnExpt.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.btnExpt.Location = new System.Drawing.Point(936, 230);
+            this.btnExpt.Location = new System.Drawing.Point(936, 203);
             this.btnExpt.Name = "btnExpt";
             this.btnExpt.Size = new System.Drawing.Size(58, 21);
             this.btnExpt.TabIndex = 8;
@@ -434,19 +433,38 @@
             // txtExpt
             // 
             this.txtExpt.AllowDrop = true;
-            this.txtExpt.Location = new System.Drawing.Point(124, 230);
+            this.txtExpt.Location = new System.Drawing.Point(124, 203);
             this.txtExpt.Multiline = true;
             this.txtExpt.Name = "txtExpt";
             this.txtExpt.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.txtExpt.Size = new System.Drawing.Size(806, 233);
+            this.txtExpt.Size = new System.Drawing.Size(806, 150);
             this.txtExpt.TabIndex = 7;
             this.txtExpt.DragDrop += new System.Windows.Forms.DragEventHandler(this.txtExpt_DragDrop);
             this.txtExpt.DragEnter += new System.Windows.Forms.DragEventHandler(this.txtExpt_DragEnter);
             // 
+            // label9
+            // 
+            this.label9.AutoSize = true;
+            this.label9.Location = new System.Drawing.Point(42, 363);
+            this.label9.Name = "label9";
+            this.label9.Size = new System.Drawing.Size(77, 12);
+            this.label9.TabIndex = 19;
+            this.label9.Text = "排除后缀名：";
+            // 
+            // txtExcludeExtensions
+            // 
+            this.txtExcludeExtensions.AllowDrop = true;
+            this.txtExcludeExtensions.Location = new System.Drawing.Point(124, 363);
+            this.txtExcludeExtensions.Multiline = true;
+            this.txtExcludeExtensions.Name = "txtExcludeExtensions";
+            this.txtExcludeExtensions.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this.txtExcludeExtensions.Size = new System.Drawing.Size(806, 73);
+            this.txtExcludeExtensions.TabIndex = 20;
+            // 
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(67, 229);
+            this.label4.Location = new System.Drawing.Point(60, 202);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(59, 12);
             this.label4.TabIndex = 6;
@@ -455,7 +473,7 @@
             // btnDest
             // 
             this.btnDest.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.btnDest.Location = new System.Drawing.Point(738, 106);
+            this.btnDest.Location = new System.Drawing.Point(738, 79);
             this.btnDest.Name = "btnDest";
             this.btnDest.Size = new System.Drawing.Size(58, 21);
             this.btnDest.TabIndex = 5;
@@ -466,7 +484,7 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(21, 109);
+            this.label3.Location = new System.Drawing.Point(12, 82);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(107, 12);
             this.label3.TabIndex = 3;
@@ -475,7 +493,7 @@
             // btnSrc
             // 
             this.btnSrc.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.btnSrc.Location = new System.Drawing.Point(738, 78);
+            this.btnSrc.Location = new System.Drawing.Point(738, 51);
             this.btnSrc.Name = "btnSrc";
             this.btnSrc.Size = new System.Drawing.Size(58, 21);
             this.btnSrc.TabIndex = 2;
@@ -486,7 +504,7 @@
             // txtMainExePath
             // 
             this.txtMainExePath.AllowDrop = true;
-            this.txtMainExePath.Location = new System.Drawing.Point(125, 79);
+            this.txtMainExePath.Location = new System.Drawing.Point(125, 52);
             this.txtMainExePath.Name = "txtMainExePath";
             this.txtMainExePath.Size = new System.Drawing.Size(607, 21);
             this.txtMainExePath.TabIndex = 1;
@@ -496,7 +514,7 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(55, 82);
+            this.label2.Location = new System.Drawing.Point(48, 55);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(71, 12);
             this.label2.TabIndex = 0;
@@ -704,7 +722,6 @@
             this.tabPageDiffFile.Controls.Add(this.dgvDiffFiles);
             this.tabPageDiffFile.Controls.Add(this.panelDiffFileSearch);
             this.tabPageDiffFile.Controls.Add(this.panelDiffFileToolbar);
-
             this.tabPageDiffFile.Location = new System.Drawing.Point(4, 22);
             this.tabPageDiffFile.Name = "tabPageDiffFile";
             this.tabPageDiffFile.Padding = new System.Windows.Forms.Padding(3);
@@ -712,6 +729,88 @@
             this.tabPageDiffFile.TabIndex = 6;
             this.tabPageDiffFile.Text = "※差异文件管理";
             this.tabPageDiffFile.UseVisualStyleBackColor = true;
+            // 
+            // dgvDiffFiles
+            // 
+            this.dgvDiffFiles.AllowUserToAddRows = false;
+            this.dgvDiffFiles.AllowUserToDeleteRows = false;
+            this.dgvDiffFiles.AllowUserToResizeRows = false;
+            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle1.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.dgvDiffFiles.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
+            this.dgvDiffFiles.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dgvDiffFiles.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+            this.colSelect,
+            this.colFileName,
+            this.colPath,
+            this.colSize,
+            this.colLastModified,
+            this.colStatus});
+            this.dgvDiffFiles.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.dgvDiffFiles.Location = new System.Drawing.Point(3, 70);
+            this.dgvDiffFiles.Name = "dgvDiffFiles";
+            this.dgvDiffFiles.ReadOnly = true;
+            this.dgvDiffFiles.RowHeadersVisible = false;
+            this.dgvDiffFiles.RowTemplate.Height = 23;
+            this.dgvDiffFiles.Size = new System.Drawing.Size(1249, 415);
+            this.dgvDiffFiles.TabIndex = 3;
+            this.dgvDiffFiles.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgvDiffFiles_CellContentClick);
+            // 
+            // colSelect
+            // 
+            this.colSelect.DataPropertyName = "IsSelected";
+            this.colSelect.HeaderText = "选择";
+            this.colSelect.Name = "colSelect";
+            this.colSelect.ReadOnly = true;
+            this.colSelect.Resizable = System.Windows.Forms.DataGridViewTriState.False;
+            this.colSelect.Width = 60;
+            // 
+            // colFileName
+            // 
+            this.colFileName.DataPropertyName = "FileName";
+            this.colFileName.HeaderText = "文件名";
+            this.colFileName.Name = "colFileName";
+            this.colFileName.ReadOnly = true;
+            this.colFileName.Width = 150;
+            // 
+            // colPath
+            // 
+            this.colPath.DataPropertyName = "FilePath";
+            this.colPath.HeaderText = "路径";
+            this.colPath.Name = "colPath";
+            this.colPath.ReadOnly = true;
+            this.colPath.Width = 300;
+            // 
+            // colSize
+            // 
+            this.colSize.DataPropertyName = "FileSize";
+            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight;
+            this.colSize.DefaultCellStyle = dataGridViewCellStyle2;
+            this.colSize.HeaderText = "大小";
+            this.colSize.Name = "colSize";
+            this.colSize.ReadOnly = true;
+            this.colSize.Width = 120;
+            // 
+            // colLastModified
+            // 
+            this.colLastModified.DataPropertyName = "LastModified";
+            this.colLastModified.HeaderText = "修改时间";
+            this.colLastModified.Name = "colLastModified";
+            this.colLastModified.ReadOnly = true;
+            this.colLastModified.Width = 150;
+            // 
+            // colStatus
+            // 
+            this.colStatus.DataPropertyName = "Status";
+            this.colStatus.HeaderText = "状态";
+            this.colStatus.Name = "colStatus";
+            this.colStatus.ReadOnly = true;
+            this.colStatus.Width = 120;
             // 
             // panelDiffFileSearch
             // 
@@ -784,131 +883,6 @@
             this.btnSelectAll.UseVisualStyleBackColor = true;
             this.btnSelectAll.Click += new System.EventHandler(this.btnSelectAll_Click);
             // 
-            // panelPagination
-            // 
-            this.panelPagination.Controls.Add(this.btnNextPage);
-            this.panelPagination.Controls.Add(this.btnPrevPage);
-            this.panelPagination.Controls.Add(this.lblPageInfo);
-            this.panelPagination.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.panelPagination.Location = new System.Drawing.Point(3, 436);
-            this.panelPagination.Name = "panelPagination";
-            this.panelPagination.Size = new System.Drawing.Size(1249, 49);
-            this.panelPagination.TabIndex = 0;
-            // 
-            // btnNextPage
-            // 
-            this.btnNextPage.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnNextPage.Location = new System.Drawing.Point(2215, 13);
-            this.btnNextPage.Name = "btnNextPage";
-            this.btnNextPage.Size = new System.Drawing.Size(75, 23);
-            this.btnNextPage.TabIndex = 2;
-            this.btnNextPage.Text = "下一页";
-            this.btnNextPage.UseVisualStyleBackColor = true;
-            this.btnNextPage.Click += new System.EventHandler(this.btnNextPage_Click);
-            // 
-            // btnPrevPage
-            // 
-            this.btnPrevPage.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnPrevPage.Location = new System.Drawing.Point(2134, 13);
-            this.btnPrevPage.Name = "btnPrevPage";
-            this.btnPrevPage.Size = new System.Drawing.Size(75, 23);
-            this.btnPrevPage.TabIndex = 1;
-            this.btnPrevPage.Text = "上一页";
-            this.btnPrevPage.UseVisualStyleBackColor = true;
-            this.btnPrevPage.Click += new System.EventHandler(this.btnPrevPage_Click);
-            // 
-            // lblPageInfo
-            // 
-            this.lblPageInfo.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.lblPageInfo.AutoSize = true;
-            this.lblPageInfo.Location = new System.Drawing.Point(2049, 18);
-            this.lblPageInfo.Name = "lblPageInfo";
-            this.lblPageInfo.Size = new System.Drawing.Size(107, 12);
-            this.lblPageInfo.TabIndex = 0;
-            this.lblPageInfo.Text = "第 1 页 / 共 1 页";
-            // 
-            // dgvDiffFiles
-            // 
-            this.dgvDiffFiles.AllowUserToAddRows = false;
-            this.dgvDiffFiles.AllowUserToDeleteRows = false;
-            this.dgvDiffFiles.AllowUserToResizeRows = false;
-            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle1.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.dgvDiffFiles.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
-            this.dgvDiffFiles.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dgvDiffFiles.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-            this.colSelect,
-            this.colFileName,
-            this.colPath,
-            this.colSize,
-            this.colLastModified,
-            this.colStatus});
-            this.dgvDiffFiles.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dgvDiffFiles.Location = new System.Drawing.Point(3, 70);
-            this.dgvDiffFiles.Name = "dgvDiffFiles";
-            this.dgvDiffFiles.ReadOnly = true;
-            this.dgvDiffFiles.RowHeadersVisible = false;
-            this.dgvDiffFiles.RowTemplate.Height = 23;
-            this.dgvDiffFiles.Size = new System.Drawing.Size(1249, 366);
-            this.dgvDiffFiles.TabIndex = 3;
-            this.dgvDiffFiles.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgvDiffFiles_CellContentClick);
-            // 
-            // colSelect
-            // 
-            this.colSelect.DataPropertyName = "IsSelected";
-            this.colSelect.HeaderText = "选择";
-            this.colSelect.Name = "colSelect";
-            this.colSelect.ReadOnly = true;
-            this.colSelect.Resizable = System.Windows.Forms.DataGridViewTriState.False;
-            this.colSelect.Width = 60;
-            // 
-            // colFileName
-            // 
-            this.colFileName.DataPropertyName = "FileName";
-            this.colFileName.HeaderText = "文件名";
-            this.colFileName.Name = "colFileName";
-            this.colFileName.ReadOnly = true;
-            this.colFileName.Width = 150;
-            // 
-            // colPath
-            // 
-            this.colPath.DataPropertyName = "FilePath";
-            this.colPath.HeaderText = "路径";
-            this.colPath.Name = "colPath";
-            this.colPath.ReadOnly = true;
-            this.colPath.Width = 300;
-            // 
-            // colSize
-            // 
-            this.colSize.DataPropertyName = "FileSize";
-            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight;
-            this.colSize.DefaultCellStyle = dataGridViewCellStyle2;
-            this.colSize.HeaderText = "大小";
-            this.colSize.Name = "colSize";
-            this.colSize.ReadOnly = true;
-            this.colSize.Width = 120;
-            // 
-            // colLastModified
-            // 
-            this.colLastModified.DataPropertyName = "LastModified";
-            this.colLastModified.HeaderText = "修改时间";
-            this.colLastModified.Name = "colLastModified";
-            this.colLastModified.ReadOnly = true;
-            this.colLastModified.Width = 150;
-            // 
-            // colStatus
-            // 
-            this.colStatus.DataPropertyName = "Status";
-            this.colStatus.HeaderText = "状态";
-            this.colStatus.Name = "colStatus";
-            this.colStatus.ReadOnly = true;
-            this.colStatus.Width = 120;
-            // 
             // ofdSrc
             // 
             this.ofdSrc.DefaultExt = "*.exe";
@@ -974,11 +948,10 @@
             this.tabUsedescribe.ResumeLayout(false);
             this.tabUsedescribe.PerformLayout();
             this.tabPageDiffFile.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.dgvDiffFiles)).EndInit();
             this.panelDiffFileSearch.ResumeLayout(false);
             this.panelDiffFileSearch.PerformLayout();
             this.panelDiffFileToolbar.ResumeLayout(false);
-            
-            ((System.ComponentModel.ISupportInitialize)(this.dgvDiffFiles)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -1055,6 +1028,8 @@
         private System.Windows.Forms.Button btnApplySelection;
         private System.Windows.Forms.TextBox txtSearch;
         private System.Windows.Forms.Label labelSearch;
+        private System.Windows.Forms.Label label9;
+        private System.Windows.Forms.TextBox txtExcludeExtensions;
 
         
     }

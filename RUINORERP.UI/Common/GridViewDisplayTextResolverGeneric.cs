@@ -62,17 +62,16 @@ namespace RUINORERP.UI.Common
 {
     /// <summary>
     /// 用于解析DataGridView显示ID列时，转换为对应名称的工具类
+    /// 泛型版本
     /// </summary>
-    public class GridViewDisplayTextResolverGeneric<T> where T : class
+    public class GridViewDisplayTextResolverGeneric<T> : AbstractGridViewDisplayTextResolver where T : class
     {
-
-
-        public GridViewDisplayTextResolverGeneric()
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        public GridViewDisplayTextResolverGeneric() : base(typeof(T))
         {
-
         }
-
-        GridViewDisplayHelper displayHelper = new GridViewDisplayHelper();
 
         // 初始化方法
         public void Initialize(DataGridView dataGridView)
@@ -84,116 +83,7 @@ namespace RUINORERP.UI.Common
         }
 
         /// <summary>
-        /// 注册图片字段信息映射
-        /// </summary>
-        /// <typeparam name="T1">实体类型</typeparam>
-        /// <param name="ImageField">图片字段表达式</param>
-        /// <param name="UseThumbnail">是否使用缩略图</param>
-        /// <param name="IsByteFormat">是否为字节数组格式</param>
-        /// <exception cref="ArgumentNullException">当ImageField为空时抛出</exception>
-        public void RegisterImageInfoDictionaryMapping<T1>(Expression<Func<T1, object>> ImageField, bool UseThumbnail = true, bool IsByteFormat = true)
-        {
-            if (ImageField == null)
-            {
-                throw new ArgumentNullException(nameof(ImageField), "图片字段表达式不能为空");
-            }
-
-            try
-            {
-                MemberInfo ImageFieldInfo = ImageField.GetMemberInfo();
-                if (displayHelper.ImagesColumnsMappings == null)
-                {
-                    displayHelper.ImagesColumnsMappings = new Dictionary<string, (bool IsByteFormat, bool UseThumbnail)>();
-                }
-
-                string fieldName = ImageFieldInfo.Name;
-                // 检查是否已存在相同的映射，如果存在则先移除再添加
-                if (displayHelper.ImagesColumnsMappings.ContainsKey(fieldName))
-                {
-                    displayHelper.ImagesColumnsMappings.Remove(fieldName);
-                }
-                // 添加新映射（无论是新增还是更新）
-                displayHelper.ImagesColumnsMappings.Add(fieldName, (IsByteFormat, UseThumbnail));
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidOperationException($"注册图片字段信息映射失败: {ex.Message}", ex);
-            }
-        }
-
-
-        /// <summary>
-        /// 手动添加外键关联指向
-        /// </summary>
-        /// <typeparam name="source">from单位表</typeparam>
-        /// <typeparam name="target">to单位换算，产品等引用单位的表，字段和主键不一样时使用</typeparam>
-        /// <param name="SourceField"></param>
-        /// <param name="TargetField"></param>
-        /// <param name="CustomDisplaySourceField">如果有特殊指定显示为其它列时</param>
-        public void AddReferenceKeyMapping<source, target>(Expression<Func<source, object>> SourceField, Expression<Func<target, object>> TargetField, Expression<Func<source, object>> CustomDisplaySourceField = null)
-        {
-            MemberInfo Sourceinfo = SourceField.GetMemberInfo();
-            MemberInfo Targetinfo = TargetField.GetMemberInfo();
-
-            if (displayHelper.ReferenceKeyMappings == null)
-            {
-                displayHelper.ReferenceKeyMappings = new HashSet<ReferenceKeyMapping>();
-            }
-
-            // 创建新的映射对象
-            ReferenceKeyMapping newMapping = new ReferenceKeyMapping(typeof(source).Name, Sourceinfo.Name, typeof(target).Name, Targetinfo.Name);
-            if (typeof(source).Name == typeof(target).Name)
-            {
-                newMapping.IsSelfReferencing = true;
-            }
-
-            var schemaInfo = Startup.GetFromFac<ITableSchemaManager>().GetSchemaInfo(newMapping.ReferenceTableName);
-            if (schemaInfo != null)
-            {
-                //要显示的默认值是从缓存表中获取的字段名，默认是主键ID字段对应的名称
-                newMapping.ReferenceDefaultDisplayFieldName = schemaInfo.DisplayField;
-            }
-
-            if (CustomDisplaySourceField != null)
-            {
-                MemberInfo CustomDisplayColInfo = CustomDisplaySourceField.GetMemberInfo();
-                newMapping.CustomDisplayColumnName = CustomDisplayColInfo.Name;
-            }
-
-            // 检查是否已存在相同的映射，如果存在则先移除再添加
-            if (displayHelper.ReferenceKeyMappings.Contains(newMapping))
-            {
-                displayHelper.ReferenceKeyMappings.Remove(newMapping);
-            }
-            // 添加新映射（无论是新增还是更新）
-            displayHelper.ReferenceKeyMappings.Add(newMapping);
-        }
-
-
-        // 添加固定字典映射
-        public void AddFixedDictionaryMapping(string tableName, string columnName, List<KeyValuePair<object, string>> mappings)
-        {
-            if (typeof(T).GetProperty(tableName) != null)
-            {
-                displayHelper.FixedDictionaryMappings.Add(new FixedDictionaryMapping(typeof(T).Name, columnName, CommonHelper.Instance.GetKeyValuePairs(typeof(DataStatus))));
-                displayHelper.FixedDictionaryMappings.Add(new FixedDictionaryMapping(typeof(T).Name, nameof(ApprovalStatus), CommonHelper.Instance.GetKeyValuePairs(typeof(ApprovalStatus))));
-            }
-        }
-
-        /// <summary>
-        /// 添加枚举类型的固定字典映射，枚举类型做为显示值，枚举的名称做为键值
-        /// </summary>
-        /// <typeparam name="target">指定了目标表</typeparam>
-        /// <param name="TargetField">目标字段表达式</param>
-        /// <param name="enumType">枚举类型</param>
-        public void AddFixedDictionaryMappingByEnum<target>(Expression<Func<target, object>> TargetField, Type enumType)
-        {
-            // 使用displayHelper的AddFixedDictionaryMapping方法添加映射
-            displayHelper.AddFixedDictionaryMapping(TargetField, enumType);
-        }
-
-        /// <summary>
-        /// 目标表为T
+        /// 添加枚举类型的固定字典映射，目标表为T
         /// </summary>
         /// <param name="TargetField">目标字段表达式</param>
         /// <param name="enumType">枚举类型</param>
@@ -201,20 +91,6 @@ namespace RUINORERP.UI.Common
         {
             // 使用displayHelper的AddFixedDictionaryMapping方法添加映射
             displayHelper.AddFixedDictionaryMapping(TargetField, enumType);
-        }
-
-
-
-        // 添加列显示类型
-        public void AddColumnDisplayType(string columnName, string displayType)
-        {
-            displayHelper.ColumnDisplayTypes[columnName] = displayType;
-        }
-
-        // 添加外键列映射
-        public void AddReferenceKeyColumnMapping(string columnName, string foreignKeyColumnName)
-        {
-            displayHelper.ReferenceKeyColumnMappings[columnName] = foreignKeyColumnName;
         }
 
         // 单元格格式化事件处理
@@ -241,31 +117,12 @@ namespace RUINORERP.UI.Common
             // 获取列名
             string columnName = dataGridView.Columns[e.ColumnIndex].Name;
             // 处理特殊列类型（如图片）
-            if (displayHelper.ColumnDisplayTypes.ContainsKey(columnName))
+            if (HandleImageDisplay(e, columnName))
             {
-                string displayType = displayHelper.ColumnDisplayTypes[columnName];
-                if (displayType == "Image")
-                {
-                    if (e.Value is byte[])
-                    {
-                        using (MemoryStream ms = new MemoryStream((byte[])e.Value))
-                        {
-                            System.Drawing.Image image = System.Drawing.Image.FromStream(ms);
-                            //e.Value = image;
-                            if (image != null)
-                            {
-                                //缩略图 这里用缓存 ?
-                                var thumbnailthumbnail = UITools.CreateThumbnail(image, 100, 100);
-                                e.Value = thumbnailthumbnail;
-                            }
-                            e.FormattingApplied = true;
-                            return;
-                        }
-                    }
-                }
+                return;
             }
 
-            e.Value = displayHelper.GetGridViewDisplayText(typeof(T).Name, columnName, e.Value);
+            e.Value = GetGridViewDisplayText(typeof(T).Name, columnName, e.Value);
             if (!e.Value.Equals(oldValue))
             {
                 e.FormattingApplied = true;

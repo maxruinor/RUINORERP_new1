@@ -302,9 +302,8 @@ namespace RUINORERP.UI.Common
 
         public void InitializeFixedDictionaryMappings<T>()
         {
-            // 动态检查类型是否包含指定的属性
-            var type = typeof(T);
-            InitializeFixedDictionaryMappings(type);
+            // 直接调用非泛型版本
+            InitializeFixedDictionaryMappings(typeof(T));
         }
 
 
@@ -357,8 +356,8 @@ namespace RUINORERP.UI.Common
 
         public void InitializeReferenceKeyMapping<T>()
         {
-            var type = typeof(T);
-            InitializeReferenceKeyMapping(type);
+            // 直接调用非泛型版本
+            InitializeReferenceKeyMapping(typeof(T));
         }
         // 添加外键映射
         public void AddReferenceKeyMapping(string columnName, ReferenceKeyMapping mapping)

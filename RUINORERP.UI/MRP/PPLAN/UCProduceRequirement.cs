@@ -59,7 +59,7 @@ namespace RUINORERP.UI.MRP.MP
     {
 
 
-        private  IEntityCacheManager entityCacheManager;
+        private IEntityCacheManager entityCacheManager;
 
         public UCProduceRequirement()
         {
@@ -1488,7 +1488,7 @@ namespace RUINORERP.UI.MRP.MP
                                             }
                                         }
                                     }
-                                    
+
                                     // 只处理实际存在的外键值，避免遍历所有实体
                                     foreach (object fkValue in fkValuesToProcess)
                                     {
@@ -1508,6 +1508,50 @@ namespace RUINORERP.UI.MRP.MP
 
                             return displayValues;
                         });
+
+                    // 枚举值转换逻辑
+                    try
+                    {
+                        // 初始化GridViewDisplayHelper的固定字典映射（包括枚举值）
+                        var displayHelper = new GridViewDisplayHelper();
+                        displayHelper.InitializeFixedDictionaryMappings(entityType);
+                        displayHelper.InitializeReferenceKeyMapping(entityType);
+
+                        // 遍历所有列，处理枚举值
+                        string tableName = entityType.Name;
+                        foreach (DataColumn col in dataTable.Columns)
+                        {
+                            // 检查该列是否需要枚举值转换
+                            var fixedMapping = displayHelper.FixedDictionaryMappings.FirstOrDefault(t => t.TableName == tableName && t.KeyFieldName == col.ColumnName);
+                            if (fixedMapping != null && fixedMapping.KeyValuePairList != null && fixedMapping.KeyValuePairList.Count > 0)
+                            {
+                                // 创建显示列名
+                                string displayColName = $"{col.ColumnName}_Display";
+
+                                // 如果显示列不存在，则创建
+                                if (!dataTable.Columns.Contains(displayColName))
+                                {
+                                    dataTable.Columns.Add(displayColName, typeof(string));
+                                }
+
+                                // 遍历所有行，转换枚举值
+                                foreach (DataRow row in dataTable.Rows)
+                                {
+                                    if (row[col.ColumnName] != DBNull.Value)
+                                    {
+                                        object value = row[col.ColumnName];
+                                        string displayText = displayHelper.GetGridViewDisplayText(tableName, col.ColumnName, value);
+                                        row[displayColName] = displayText;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        // 发生错误时记录日志，避免影响后续流程
+                        Debug.WriteLine($"枚举值转换时发生错误：{ex.Message}");
+                    }
 
                     return true;
                 });
@@ -1627,7 +1671,7 @@ namespace RUINORERP.UI.MRP.MP
                                             }
                                         }
                                     }
-                                    
+
                                     // 只处理实际存在的外键值，避免遍历所有实体
                                     foreach (object fkValue in fkValuesToProcess)
                                     {
@@ -1637,6 +1681,51 @@ namespace RUINORERP.UI.MRP.MP
                                             displayValues.Add(fkValue, displayValue.ToString());
                                         }
                                     }
+
+                                    // 枚举值转换逻辑
+                                    try
+                                    {
+                                        // 初始化GridViewDisplayHelper的固定字典映射（包括枚举值）
+                                        displayHelper.InitializeFixedDictionaryMappings(entityType);
+                                        displayHelper.InitializeReferenceKeyMapping(entityType);
+                                        displayHelper.AddFixedDictionaryMapping<tb_ProduceGoodsRecommendDetail>(c => c.RefBillType, typeof(BizType));
+                                        // 遍历所有列，处理枚举值
+                                        string tableName = entityType.Name;
+                                        foreach (DataColumn col in dataTable.Columns)
+                                        {
+                                            // 检查该列是否需要枚举值转换
+                                            var fixedMapping = displayHelper.FixedDictionaryMappings.FirstOrDefault(t => t.TableName == tableName && t.KeyFieldName == col.ColumnName);
+                                            if (fixedMapping != null && fixedMapping.KeyValuePairList != null && fixedMapping.KeyValuePairList.Count > 0)
+                                            {
+                                                // 创建显示列名
+                                                string displayColName = $"{col.ColumnName}_Display";
+
+                                                // 如果显示列不存在，则创建
+                                                if (!dataTable.Columns.Contains(displayColName))
+                                                {
+                                                    dataTable.Columns.Add(displayColName, typeof(string));
+                                                    dataTable.Columns[displayColName].Caption = dataTable.Columns[col.ColumnName].Caption;
+                                                }
+
+                                                // 遍历所有行，转换枚举值
+                                                foreach (DataRow row in dataTable.Rows)
+                                                {
+                                                    if (row[col.ColumnName] != DBNull.Value)
+                                                    {
+                                                        object value = row[col.ColumnName];
+                                                        string displayText = displayHelper.GetGridViewDisplayText(tableName, col.ColumnName, value);
+                                                        row[displayColName] = displayText;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        // 发生错误时记录日志，避免影响后续流程
+                                        Debug.WriteLine($"枚举值转换时发生错误：{ex.Message}");
+                                    }
+
                                 }
                             }
                             catch (Exception ex)
@@ -1786,19 +1875,19 @@ namespace RUINORERP.UI.MRP.MP
 
                     // 设置显示列的宽度
                     displayColumn.Width = 150;
-                    
+
                     // 确保显示列的标题正确
                     if (string.IsNullOrEmpty(displayColumn.HeaderText))
                     {
                         displayColumn.HeaderText = column.HeaderText;
                     }
-                    
+
                     // 确保显示列在正确的位置
                     // 由于我们在ConvertForeignKeysToDisplayValues方法中已经设置了列的顺序，这里不需要再次调整
                 }
             }
         }
-        
+
         /// <summary>
         /// 为库存不足表格隐藏原始外键列，显示转换后的外键显示列
         /// </summary>
@@ -1820,7 +1909,7 @@ namespace RUINORERP.UI.MRP.MP
 
                     // 设置显示列的宽度
                     displayColumn.Width = 150;
-                    
+
                     // 确保显示列的标题正确
                     if (string.IsNullOrEmpty(displayColumn.HeaderText))
                     {
@@ -2386,7 +2475,7 @@ namespace RUINORERP.UI.MRP.MP
 
         }
 
- 
+
         private void kryptonTreeGridViewMaking_CellEndEdit(object sender, DataGridViewCellEventArgs e)
         {
             if (EditEntity == null)

@@ -218,12 +218,12 @@ namespace RUINORERP.UI.Common
         /// 添加枚举类型的固定字典映射，枚举类型做为显示值，枚举的名称做为键值
         /// </summary>
         /// <typeparam name="target">指定了目标表</typeparam>
-        /// <param name="TargetField"></param>
-        /// <param name="enumType"></param>
+        /// <param name="TargetField">目标字段表达式</param>
+        /// <param name="enumType">枚举类型</param>
         public void AddFixedDictionaryMappingByEnum<target>(Expression<Func<target, object>> TargetField, Type enumType)
         {
-            MemberInfo Targetinfo = TargetField.GetMemberInfo();
-            FixedDictionaryMappings.Add(new FixedDictionaryMapping(typeof(target).Name, Targetinfo.Name, CommonHelper.Instance.GetKeyValuePairs(enumType)));
+            // 使用displayHelper的AddFixedDictionaryMapping方法添加映射
+            displayHelper.AddFixedDictionaryMapping(TargetField, enumType);
         }
 
 

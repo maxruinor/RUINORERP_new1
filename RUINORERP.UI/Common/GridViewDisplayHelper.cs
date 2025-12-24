@@ -374,6 +374,46 @@ namespace RUINORERP.UI.Common
 
         }
 
+        /// <summary>
+        /// 添加指定表名、字段名和枚举类型的固定字典映射
+        /// </summary>
+        /// <param name="tableName">表名</param>
+        /// <param name="columnName">字段名</param>
+        /// <param name="enumType">枚举类型</param>
+        /// <exception cref="ArgumentException">当提供的类型不是枚举类型时抛出</exception>
+        public void AddFixedDictionaryMapping(string tableName, string columnName, Type enumType)
+        {
+            if (enumType == null || !enumType.IsEnum)
+            {
+                throw new ArgumentException("The provided type must be an enum type.", nameof(enumType));
+            }
+            
+            List<KeyValuePair<object, string>> keyValuePairs = Common.CommonHelper.Instance.GetKeyValuePairs(enumType);
+            FixedDictionaryMappings.Add(new FixedDictionaryMapping(tableName, columnName, keyValuePairs));
+        }
+
+        /// <summary>
+        /// 使用泛型和表达式树添加固定字典映射
+        /// </summary>
+        /// <typeparam name="TEntity">实体类型</typeparam>
+        /// <param name="columnExpression">字段表达式</param>
+        /// <param name="enumType">枚举类型</param>
+        /// <exception cref="ArgumentException">当提供的类型不是枚举类型时抛出</exception>
+        public void AddFixedDictionaryMapping<TEntity>(Expression<Func<TEntity, object>> columnExpression, Type enumType)
+        {
+            if (enumType == null || !enumType.IsEnum)
+            {
+                throw new ArgumentException("The provided type must be an enum type.", nameof(enumType));
+            }
+            
+            MemberInfo memberInfo = columnExpression.GetMemberInfo();
+            string tableName = typeof(TEntity).Name;
+            string columnName = memberInfo.Name;
+            
+            List<KeyValuePair<object, string>> keyValuePairs = Common.CommonHelper.Instance.GetKeyValuePairs(enumType);
+            FixedDictionaryMappings.Add(new FixedDictionaryMapping(tableName, columnName, keyValuePairs));
+        }
+
 
 
         public string GetGridViewDisplayText(string tableName, string columnName, object value)
